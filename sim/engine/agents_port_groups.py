@@ -3,6 +3,7 @@ employers whose hands the founder's hiring bids up. Mixed into `SimWorld`."""
 from typing import Any, Dict, List
 
 from sim.agents.api import CONCESSION_PREFIX, Sector, sector_key
+from sim.reporting.api import RecordEvent
 from .units_prose import mass_rate_text, money_text, plain_number
 
 
@@ -148,7 +149,7 @@ class GroupView:
 		last = group_record.last_logged_year
 		if last is None or self.year - last >= year_gap:  # type: ignore[attr-defined]
 			group_record.last_logged_year = self.year  # type: ignore[attr-defined]
-			household.log.append((self.year, text))  # plain line: the caller passes a LogLine (InterestGroup.words)
+			sim.send(RecordEvent.from_line(text))  # the caller passes a LogLine (InterestGroup.words)
 
 	def money_text(self, amount: float, grouped: bool = False, short: bool = False) -> str:
 		return money_text(amount, self._sim, grouped=grouped, short=short)
@@ -158,7 +159,7 @@ class GroupView:
 
 	def say(self, text: str) -> None:
 		"""A line in the founder's log, for a change in who is organised against him."""
-		self._sim.state.household.log.append((self.year, text))  # plain line: the caller passes a LogLine  # type: ignore[attr-defined]
+		self._sim.send(RecordEvent.from_line(text))  # the caller passes a LogLine
 
 	def state_in_deficit(self) -> bool:
 		"""Whether the state could pay all it set out to last year."""

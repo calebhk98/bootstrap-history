@@ -3,9 +3,9 @@
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin. It ran beside the start
 of projects in one step; the start is the projects module's phase now (sim/projects/start_phase.py), and this one
 belongs to the resources and materials topics."""
-from sim.refusal import LogLine
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
-from . import automation_audit, shortage_conditions
+from . import shortage_conditions
+from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent, order_id
 from .shortage_sizing import automatic_policy_on, auto_mine_affordable_tonnes, auto_mine_order_tonnes, nitre_bed_yearly_spend
 from sim.agents.api import edges
 from sim.constants import declare
@@ -72,12 +72,9 @@ class MaterialsPhaseMixin:
                     _hectares_before = self.state.holdings.forest_ha
                     self.buy_forest(min(400.0, _want_ha, _afford_ha))
                     if self.state.holdings.forest_ha > _hectares_before:
-                        automation_audit.record(
-                            self, "auto_forest", "forest",
-                            "%s of coppice" % area_text(self.state.holdings.forest_ha - _hectares_before, self),
-                            "charcoal demand exceeds what %s yield by %s"
+                        self.send(RecordAutomation("auto_forest", "forest", "%s of coppice" % area_text(self.state.holdings.forest_ha - _hectares_before, self), "charcoal demand exceeds what %s yield by %s"
                             % (area_text(_hectares_before, self),
-                               mass_rate_text(max(0.0, _need_t), self, short=False)), _before)
+                               mass_rate_text(max(0.0, _need_t), self, short=False)), _before))
             elif (self.state.holdings.binding in self.MINE_OPEX_MATERIALS
                     and automatic_policy_on(self.state.founder.policy, "auto_mine", self.manual)):
                 # Size the mine from ALL the material keys that feed this
@@ -105,30 +102,22 @@ class MaterialsPhaseMixin:
                 _pending = self.state.holdings.mine_pending.get(self.state.holdings.binding, 0.0)
                 _ordered = auto_mine_order_tonnes(short, self.mine_capacity.get(self.state.holdings.binding, 0.0), _pending,
                                                   self.state.household.capital, self._mine_capex(self.state.holdings.binding))
-                _order = automation_audit.order_id("auto_mine", self.state.holdings.binding, self.state.scenario.year)
+                _order = order_id("auto_mine", self.state.holdings.binding, self.state.scenario.year)
                 self.auto_prospect(self.state.holdings.binding)
                 self.open_mine(self.state.holdings.binding, _ordered, order=_order)
                 if _ordered > 0:
-                    automation_audit.record(
-                        self, "auto_mine", "mine",
-                        "%s of %s ordered" % (mass_rate_text(_ordered, self), self.state.holdings.binding),
-                        "demand %s > active %s; pending capacity considered %s"
+                    self.send(RecordAutomation("auto_mine", "mine", "%s of %s ordered" % (mass_rate_text(_ordered, self), self.state.holdings.binding), "demand %s > active %s; pending capacity considered %s"
                         % (mass_rate_text(short, self),
                            mass_rate_text(self.mine_capacity.get(self.state.holdings.binding, 0.0), self),
-                           mass_rate_text(_pending, self)),
-                        _before, order=_order, reason_kind="mine_ordered", demand=short,
-                        active_capacity=self.mine_capacity.get(self.state.holdings.binding, 0.0),
-                        pending_capacity=_pending, ordered=_ordered)
+                           mass_rate_text(_pending, self)), _before, dict(order=_order, reason_kind="mine_ordered", demand=short, active_capacity=self.mine_capacity.get(self.state.holdings.binding, 0.0), pending_capacity=_pending, ordered=_ordered)))
                 else:
-                    automation_audit.record_skip(
-                        self, "auto_mine", "mine for %s" % self.state.holdings.binding,
-                        "nothing ordered: shortfall %s against %s active and %s pending, "
+                    self.send(RecordAutomationSkip("auto_mine", "mine for %s" % self.state.holdings.binding, "nothing ordered: shortfall %s against %s active and %s pending, "
                         "a quarter of capital buys %s"
                         % (mass_rate_text(short, self),
                            mass_rate_text(self.mine_capacity.get(self.state.holdings.binding, 0.0), self),
                            mass_rate_text(_pending, self),
                            mass_rate_text(auto_mine_affordable_tonnes(
-                               self.state.household.capital, self._mine_capex(self.state.holdings.binding)), self)))
+                               self.state.household.capital, self._mine_capex(self.state.holdings.binding)), self))))
                 # Iron and the base metals are smelted with charcoal, so the
                 # ore is only half the answer.
                 if self.state.holdings.binding in ("iron", "copper", "lead"):
@@ -152,14 +141,11 @@ class MaterialsPhaseMixin:
                 spend = nitre_bed_yearly_spend(self.state.household.capital, self.NITRE_BED_SPEND_CEILING)
                 self.pay_edge(edges.EDGE_BUILDERS, spend, "nitre beds laid down")
                 self.state.holdings.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
-                automation_audit.record(
-                    self, "auto_mine", "nitre", "%s of nitre bed" % area_text(spend / self.NITRE_COST_PER_M2, self, unit="square_metre"),
-                    "saltpetre is the binding shortage; the yearly spend is capped, not sized to the gap",
-                    self.state.household.capital + spend)
-                self.state.household.log.append((self.state.scenario.year, LogLine("nitre_bed_laid", "laid down %s of nitre bed "
+                self.send(RecordAutomation("auto_mine", "nitre", "%s of nitre bed" % area_text(spend / self.NITRE_COST_PER_M2, self, unit="square_metre"), "saltpetre is the binding shortage; the yearly spend is capped, not sized to the gap", self.state.household.capital + spend))
+                self.send(RecordEvent.of("nitre_bed_laid", "laid down %s of nitre bed "
                                      "for %s (auto_mine)"
                                  % (area_text(spend / self.NITRE_COST_PER_M2, self, unit="square_metre"),
-                                    money_text(spend, self)))))
+                                    money_text(spend, self))))
         slowed = shortage_conditions.slowed_projects(self) if thr < 0.6 and self.state.holdings.binding else []
         if slowed:
             # SAY WHAT TO DO ABOUT IT: a bare "SHORT OF SALTPETRE: work at
@@ -169,8 +155,8 @@ class MaterialsPhaseMixin:
             # Only said while a running project draws the material: a shortage nothing running needs slows nothing.
             if shortage_conditions.note_shortage(self, self.state.holdings.binding, thr):
                 names = ", ".join(self.nodes[node_id]["name"] for node_id in slowed[:3])
-                self.state.household.log.append((self.state.scenario.year, LogLine("material_shortage", "SHORT OF %s: %s running at %d%% of plan. %s"
+                self.send(RecordEvent.of("material_shortage", "SHORT OF %s: %s running at %d%% of plan. %s"
                                  % (shortage_conditions.material_words(self.state.holdings.binding).upper(), names,
-                                    thr * 100, self.shortage_remedy(self.state.holdings.binding)))))
+                                    thr * 100, self.shortage_remedy(self.state.holdings.binding))))
         else:
             shortage_conditions.clear_shortage(self)

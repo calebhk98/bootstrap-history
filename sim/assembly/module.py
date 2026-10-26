@@ -1,5 +1,5 @@
 """The base every module implementation derives from: its id, what it was handed, and how it says its state changed."""
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from .clock import Clock
 
@@ -12,6 +12,11 @@ class Module:
 	clock: Clock
 	world: Any = None
 	seat: Any = None
+	seat_slot_of: Optional[Callable[[str], Any]] = None   # set by the engine: another seat's state, by seat id
+
+	def seat_of(self, seat_id: str) -> Any:
+		"""This module's state for the seat `seat_id`, which need not be the acting one (a command that names a seat)."""
+		return self.seat_slot_of(seat_id)
 
 	def setup(self) -> None:
 		"""Called once after assembly; override to build what the module keeps between calls (never saved)."""

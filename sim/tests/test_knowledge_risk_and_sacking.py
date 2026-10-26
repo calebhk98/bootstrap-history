@@ -10,6 +10,7 @@ from .harness import *  # noqa: F401,F403
 from sim.engine.mechanics import MechanicsMixin
 from sim.engine.society_hazards import HazardsMixin
 from sim.refusal import cause_of, facts_of
+from sim.tests import event_stand_in
 
 
 class _FrontOfTheListRNG:
@@ -21,6 +22,7 @@ class _FrontOfTheListRNG:
 
 class _SackGame:
     """Only what the hedge and the corpus-loss rules read."""
+    send = event_stand_in.send
     CORPUS_HEDGE_LOSS_CHANCE_NONE = S.Sim.CORPUS_HEDGE_LOSS_CHANCE_NONE
     CORPUS_HEDGE_FRACTION_LOST_NONE = S.Sim.CORPUS_HEDGE_FRACTION_LOST_NONE
     corpus_hedge = S.Sim.corpus_hedge
@@ -39,7 +41,7 @@ class _SackGame:
         self.state = types.SimpleNamespace(
             projects=types.SimpleNamespace(done=set(built), granted=set(granted), operating=set(built), mothballed=set(),
                                            forgotten={}),
-            household=types.SimpleNamespace(log=[]))
+            household=types.SimpleNamespace(log=[]), scenario=types.SimpleNamespace(year=150))
         self.done_changed = 0
 
     def corpus_hedge_tiers(self):

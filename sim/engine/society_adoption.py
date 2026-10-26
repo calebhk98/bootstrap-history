@@ -15,7 +15,6 @@ their own. Behaviour is unchanged and verified byte-identical.
 """
 
 from sim.constants import declare
-from sim.refusal import LogLine
 from . import value_weight
 from .literacy_census_phrase import census_phrase
 from .literacy_rules import common_ceiling
@@ -24,6 +23,7 @@ from .data import (TECH_EFFECTS, TRADES_ABSENT)
 from .literacy_effect import literacy_after_effect
 from .trade_absorption import (BECOME_ENDEMIC, GROW, RECORD_INTRODUCTION, absorption_step, absorption_years,
                                headcount_toward_ceiling)
+from sim.reporting.api import RecordEvent
 
 
 class AdoptionMixin:
@@ -154,10 +154,8 @@ class AdoptionMixin:
                 changed.append("%s %.1f%% -> %.1f%% (%+.1f points, one step)" % (
                     field, before * 100, after * 100, (after - before) * 100))
         if changed:
-            self.state.household.log.append((self.state.scenario.year, LogLine(
-                "society_changed", "%s changes the society, the whole of it at once rather than one "
-                "site: %s" % (self.nodes[node_id]["name"], "; ".join(sorted(changed))),
-                project=node_id, fields=sorted(changed_fields), changes=changes)))
+            self.send(RecordEvent.of("society_changed", "%s changes the society, the whole of it at once rather than one "
+                "site: %s" % (self.nodes[node_id]["name"], "; ".join(sorted(changed))), project=node_id, fields=sorted(changed_fields), changes=changes))
 
     # ---- EDUCATING A WHOLE SOCIETY, NOT JUST A HOUSEHOLD -------------------
     # A school teaches a little more every year it stays open. What limits
@@ -324,7 +322,7 @@ class AdoptionMixin:
                 bits.append("the lettered and propertied class is now %d%% "
                             "literate" % round(changed["literacy_elite"] * 100))
             school_phrase = census_phrase(year, self.done_year.get(self.school_node()), self.GENERATION_YEARS)
-            self.state.household.log.append((year, LogLine("school_progress", "%s: %s" % (school_phrase, "; ".join(bits)))))
+            self.send(RecordEvent.of("school_progress", "%s: %s" % (school_phrase, "; ".join(bits))))
 
     # ---- A TRADE THE FOUNDER INTRODUCED BECOMES A TRADE THE SOCIETY HAS ----
     # "If I invent electricity, you can't say that after 100 years I still
@@ -406,11 +404,11 @@ class AdoptionMixin:
             elif step == BECOME_ENDEMIC:
                 household.trades_endemic.add(trade)
                 # IN-WORLD, NOT A CHANGE-LOG: a census fact the founder would observe.
-                household.log.append((year, LogLine("trade_no_longer_only_yours", "%s is no longer only your trade: "
+                self.send(RecordEvent.of("trade_no_longer_only_yours", "%s is no longer only your trade: "
                                  "enough schooling has passed through enough "
                                  "hands that this society simply has its own "
                                  "%ss now, the way it always had smiths"
-                                 % (trade, trade))))
+                                 % (trade, trade)))
 
     def _grow_endemic_trade(self, trade):
         """Let a naturalised trade's own headcount drift toward the same

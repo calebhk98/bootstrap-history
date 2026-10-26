@@ -17,6 +17,7 @@ from sim.engine.projects_capability import CapabilityMixin
 from sim.engine.projects_running_gates import RunningGatesMixin, check_running_gates
 from sim.engine.fog import FogMixin
 from sim.engine.projects_staffing import StaffingMixin
+from sim.tests import event_stand_in
 
 GRID, LAMP, TRAM = "grid", "lamp", "tram"
 
@@ -32,6 +33,7 @@ def _nodes():
 
 
 class _Host(RunningGatesMixin, CapabilityMixin, StaffingMixin, FogMixin):
+    send = event_stand_in.send
     fog = False
 
     def __init__(self, done, operating):

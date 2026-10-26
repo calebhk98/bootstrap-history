@@ -21,6 +21,7 @@ from sim.labour.hours_sale_warning import starved_projects, starving_warning
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.state_waiting import _waiting_on
 from sim.ui.proto.techtree import _explain_cost
+from sim.tests import event_stand_in
 
 NODE = {"name": "Slow work", "yrs": 10, "ph": 500, "lab": {}, "cat": "x"}
 
@@ -115,6 +116,7 @@ def gated(blocked_trades=("engineer",), lab_left=None, stalled_years=0):
         labour=SimpleNamespace(market_supply=lambda trade: 0.0 if trade in blocked_trades else 1000.0),
         state=SimpleNamespace(household=SimpleNamespace(log=log), scenario=SimpleNamespace(year=100),
                               projects=SimpleNamespace(active={"p": {}}, bountied=set())))
+    event_stand_in.stood_in(host)
     progress = {"stalled_years": stalled_years, "hours_offered_this_year": 9.0, "hours_effective_this_year": 9.0}
     if lab_left is not None:
         progress["lab_left"] = lab_left

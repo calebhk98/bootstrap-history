@@ -7,7 +7,6 @@ are three age cohorts stepped each year by the same demography as the home count
 fed by the tile's land in the share its working-age people can hold, as many hectares each as a farm worker holds at
 home. A colony whose people die out is lost.
 """
-from sim.refusal import LogLine
 from sim.agents.api import edges
 from sim.geography.api import settlement, tile_owners
 
@@ -17,6 +16,7 @@ from sim.world.farm_labour import REFERENCE_LABOUR_HOURS_PER_HECTARE
 
 from .colony_rules import advance_colony, best_settlement_work, colony_people, founding_refusal, outfit_cost
 from .units_prose import money_text, plain_number
+from sim.reporting.api import RecordEvent
 
 # land one farm worker holds, fallow included: the hours a worker gives a year over the hours a cropped hectare takes
 HOLDING_HECTARES_PER_WORKER = (ANNUAL_LABOUR_HOURS_PER_FARM_WORKER / REFERENCE_LABOUR_HOURS_PER_HECTARE
@@ -75,8 +75,8 @@ class ColoniesMixin:
         self.state.holdings.colonies.append({
             "tile": tile_id, "founded_year": self.state.scenario.year, "by": node_id,
             "children": 0.0, "working_age": settlers, "elderly": 0.0})
-        household.log.append((self.state.scenario.year, LogLine("colony_founded", "a colony of %s settlers is founded on %s, outfitted for %s"
-                              % (plain_number(settlers), tile_id, money_text(cost, self, grouped=True)))))
+        self.send(RecordEvent.of("colony_founded", "a colony of %s settlers is founded on %s, outfitted for %s"
+                              % (plain_number(settlers), tile_id, money_text(cost, self, grouped=True))))
         return True, "founded a colony on %s with %s settlers for %s" % (
             tile_id, plain_number(settlers), money_text(cost, self, grouped=True))
 
@@ -100,5 +100,4 @@ class ColoniesMixin:
                     seat.holdings.colonies.remove(colony)
                     self.transfer_tile(colony["tile"], None, cause="colony died out")
                     if seat_id == self.state.acting_seat:
-                        self.state.household.log.append((year, LogLine(
-                            "colony_died_out", "the colony on %s has died out" % colony["tile"], tile=colony["tile"])))
+                        self.send(RecordEvent.in_year(year, "colony_died_out", "the colony on %s has died out" % colony["tile"], tile=colony["tile"]))

@@ -18,6 +18,14 @@ class LabourWorld:
         self._sim = sim
         self._trade_registry = None
 
+    def send(self, command):
+        """Apply a command through the module that owns it."""
+        return self._sim.send(command)
+
+    def logged_events(self):
+        """How many lines the acting seat's log holds now."""
+        return len(self._sim.view("event_log")())
+
     def home_tiles_held(self):
         """The tiles the home country owns, read from the owner map."""
         return self._sim.home_tiles_held()

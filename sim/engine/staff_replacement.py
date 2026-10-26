@@ -1,5 +1,5 @@
 """The replace-only mode of `auto_hire`: hire back the people lost this year, never grow the staff."""
-from . import automation_audit
+from sim.reporting.api import RecordAutomation, RecordAutomationSkip
 from .staff_phase_rules import hires_needed
 
 REPLACE_ONLY = "replace"
@@ -25,12 +25,10 @@ def replace_lost_staff(sim, lost):
         have = household.employees.get(trade, 0.0)
         hired, refusal = sim.labour.hire_buying_room(trade, int(people))
         if not hired:
-            automation_audit.record_skip(sim, "auto_hire", "replace %d %s" % (people, trade),
-                                         "replace-only mode: " + str(refusal))
+            sim.send(RecordAutomationSkip("auto_hire", "replace %d %s" % (people, trade), "replace-only mode: " + str(refusal)))
             continue
         found = round(household.employees.get(trade, 0.0) - have)
-        automation_audit.record(sim, "auto_hire", "replace", "%d %s" % (found, trade),
-                                "replace-only mode: %d lost this year, none hired beyond that" % people, before)
+        sim.send(RecordAutomation("auto_hire", "replace", "%d %s" % (found, trade), "replace-only mode: %d lost this year, none hired beyond that" % people, before))
 
 
 def grow_trade_toward(sim, trade, want, closure_need=0.0):
@@ -44,21 +42,15 @@ def grow_trade_toward(sim, trade, want, closure_need=0.0):
         before = household.capital
         hired, why = sim.labour.hire_buying_room(trade, change)
         if not hired and closure_need >= 1.0:
-            automation_audit.record_skip(
-                sim, "auto_hire", "hire %d %s" % (change, trade),
-                "concerns shut for want of staff need %.1f more: %s" % (closure_need, why))
+            sim.send(RecordAutomationSkip("auto_hire", "hire %d %s" % (change, trade), "concerns shut for want of staff need %.1f more: %s" % (closure_need, why)))
         if hired:
             found = round(household.employees.get(trade, 0.0) - have)
-            automation_audit.record(
-                sim, "auto_hire", "hire", "%d %s" % (found, trade),
-                "staff target %.1f against %.1f held, with %.1f supervision room"
-                % (want, have, sim.labour.supervision_room()), before)
+            sim.send(RecordAutomation("auto_hire", "hire", "%d %s" % (found, trade), "staff target %.1f against %.1f held, with %.1f supervision room"
+                % (want, have, sim.labour.supervision_room()), before))
     elif change < 0:
         before = household.capital
         sim.labour.fire(trade, -change)
-        automation_audit.record(
-            sim, "auto_hire", "release", "%d %s" % (-change, trade),
-            "staff target %.1f is below the %.1f held" % (want, have), before)
+        sim.send(RecordAutomation("auto_hire", "release", "%d %s" % (-change, trade), "staff target %.1f is below the %.1f held" % (want, have), before))
 
 
 GENERIC_STAFF = ("artisan", "scholar")

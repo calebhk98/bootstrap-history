@@ -1,8 +1,8 @@
 """The staff a household cannot pay leave: whole people, dearest trade first, and the loss is always written in the log."""
 
-from sim.refusal import LogLine
 
 from .payroll_trim import staff_to_let_go
+from sim.reporting.api import RecordEvent
 
 MIN_STAFF_GONE_TO_LOG = 0.005
 
@@ -24,6 +24,5 @@ def shed_unpayable_staff(game, payroll, can_pay):
     labour.resync_pools()
     labour.log_staff_reduction("a payroll you cannot meet", staff_before)
     if gone > MIN_STAFF_GONE_TO_LOG:
-        household.log.append((game.state.scenario.year, LogLine(
-            "staff_left_unpaid", "you cannot pay everyone: %.1f of your staff leave for work that pays" % gone, staff_gone=gone)))
+        game.send(RecordEvent.of("staff_left_unpaid", "you cannot pay everyone: %.1f of your staff leave for work that pays" % gone, staff_gone=gone))
     return gone

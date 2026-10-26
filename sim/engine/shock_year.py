@@ -10,6 +10,7 @@ from . import cause_book, staff_loss_words, value_weight
 from .units_prose import money_text
 from .hazard_merge import mildest_hazard
 from .hazard_toll import staff_loss_toll
+from sim.reporting.api import RecordEvent
 
 
 class ShockYearMixin:
@@ -70,7 +71,7 @@ class ShockYearMixin:
         # Refresh population and wage screens now, not at year end.
         self._refresh_demographic_indexes(year)
         for seat_id, report in reports.items():
-            self.state.seats[seat_id].household.log.append((year, self._staff_loss_message(met[seat_id], report, raw)))  # plain line: already a LogLine
+            self.send(RecordEvent.from_line(self._staff_loss_message(met[seat_id], report, raw), seat_id))  # plain line: already a LogLine
 
     def _staff_loss_of_seat(self, hazard):
         """What one wave takes from the acting seat's people and cash; returns the figures its message needs."""
@@ -139,11 +140,11 @@ class ShockYearMixin:
             said[name] = year
             scenario._said_output = said
             for seat_id, (why, lapsed) in reasons.items():
-                self.state.seats[seat_id].household.log.append((year, LogLine(
+                self.send(RecordEvent.from_line(LogLine(
                     "hazard_output_fall", "%s: trade and output fall to %d%% of normal%s" % (
                         name, economy.output_factor * 100,
                         " (your own strength holds off worse: %s)" % "; ".join(why[:3]) if why else ""),
-                    hazard=name, lapsed_hedges=lapsed)))
+                    hazard=name, lapsed_hedges=lapsed), seat_id))
 
     # ---- real_erosion: debasement, the coin once, each seat's held cash --------------------
 
@@ -171,14 +172,14 @@ class ShockYearMixin:
             scenario._said_debasement = year
             for seat_id, (hazard, why, lost, lapsed) in lines.items():
                 # Report the money lost held, not quoted costs (which reflect reality).
-                self.state.seats[seat_id].household.log.append((year, LogLine(
+                self.send(RecordEvent.from_line(LogLine(
                     "hazard_coin_debased", "%s: the coin is worth %d%% less than it "
                     "was%s. Quoted costs are what a thing really takes to make, so they do not move; what debases "
                     "is the money in your chest, and this year it took %s"
                     % (hazard.get("name", "debasement"), (1 - economy.money_real) * 100,
                        "; you feel less of it (%s)" % "; ".join(why) if why else "",
                        money_text(lost, self, grouped=True) if lost > 0.5 else "nothing, because you were holding none"),
-                    hazard=hazard.get("name", "debasement"), lapsed_hedges=lapsed)))
+                    hazard=hazard.get("name", "debasement"), lapsed_hedges=lapsed), seat_id))
 
     # ---- values: the society's beliefs shift once -------------------------------------------
 
@@ -207,4 +208,4 @@ class ShockYearMixin:
             line = "%s: the society's values are shifting (%s)" % (
                 hazard.get("name", "hazard"), ", ".join("%s now %.2f" % (field, value) for field, value in sorted(changed.items())))
             for seat_id in met:
-                self.state.seats[seat_id].household.log.append((year, LogLine("hazard_values_shift", line)))
+                self.send(RecordEvent.from_line(LogLine("hazard_values_shift", line), seat_id))

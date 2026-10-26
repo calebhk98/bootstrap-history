@@ -5,6 +5,8 @@ test_round8g_display."""
 import unittest
 from types import SimpleNamespace
 
+from sim.refusal import LogLine
+
 from sim.ui.proto.dispatch_labour import _cmd_train
 from sim.ui.proto.dispatch_ventures import _cmd_mothball, _cmd_ventures
 
@@ -46,8 +48,10 @@ class VenturesSeparatesCapabilities(unittest.TestCase):
 
 
 def _mothball_stand_in():
-    return SimpleNamespace(CAPABILITY_INSTITUTIONS=frozenset({CAPABILITY}), year=100, log=[],
+    game = SimpleNamespace(CAPABILITY_INSTITUTIONS=frozenset({CAPABILITY}), year=100, log=[],
                            mothball_work=lambda node_id: (True, "shut " + node_id), upkeep=lambda: 3.0)
+    game.send = lambda command: game.log.append((game.year, LogLine(command.kind, command.text, **command.facts)))
+    return game
 
 
 class MothballWarnsOfALostCapability(unittest.TestCase):

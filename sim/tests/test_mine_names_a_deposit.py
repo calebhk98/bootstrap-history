@@ -11,6 +11,7 @@ import unittest
 from sim.engine.economy_mining import MiningMixin
 from sim.engine.state_holdings import HoldingsState
 from sim.geography import api as geography
+from sim.tests import event_stand_in
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -38,6 +39,7 @@ class _Market:
 
 class _Host(MiningMixin):
     """Just enough of Sim to open, commission and draw down mines."""
+    send = event_stand_in.send
     price_index = 1.0
     MINE_TRADE = "miner"
 

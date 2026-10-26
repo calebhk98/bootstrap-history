@@ -7,12 +7,13 @@ from types import SimpleNamespace
 
 from sim.engine.society_hazards import HazardsMixin
 from sim.refusal import cause_of, facts_of
+from sim.tests import event_stand_in
 
 
 def stand_in_game(known):
     log = []
-    return SimpleNamespace(has=lambda tech_id: tech_id in known, state=SimpleNamespace(
-        scenario=SimpleNamespace(_said_condition=set()), household=SimpleNamespace(log=log))), log
+    return event_stand_in.stood_in(SimpleNamespace(has=lambda tech_id: tech_id in known, state=SimpleNamespace(
+        scenario=SimpleNamespace(_said_condition=set(), year=100), household=SimpleNamespace(log=log)))), log
 
 
 def crossing():

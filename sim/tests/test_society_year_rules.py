@@ -9,6 +9,7 @@ import unittest
 from sim.engine.society_adoption import AdoptionMixin
 from sim.engine.society_diffusion import DiffusionMixin
 from sim.refusal import cause_of
+from sim.tests import event_stand_in
 
 TRADE = "electrician"
 
@@ -76,8 +77,10 @@ class Household:
 
 
 class Absorbing(AdoptionMixin):
+    send = event_stand_in.send
+
     def __init__(self, household, flow=3.0, years_needed=50.0, ceiling=10.0):
-        self.state = types.SimpleNamespace(household=household)
+        self.state = types.SimpleNamespace(household=household, scenario=types.SimpleNamespace(year=150))
         self.flow, self.years_needed = flow, years_needed
         self.set_to = []
         self.labour = types.SimpleNamespace(

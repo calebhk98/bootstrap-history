@@ -7,6 +7,7 @@ import unittest
 
 from sim.engine.payroll_shed import shed_unpayable_staff
 from sim.refusal import cause_of, facts_of
+from sim.tests import event_stand_in
 
 WAGE_PER_YEAR = {"smith": 100.0, "labourer": 10.0}
 
@@ -39,8 +40,8 @@ class _Labour:
 def _game(employees):
     labour = _Labour(employees)
     household = types.SimpleNamespace(employees=employees, log=[])
-    return types.SimpleNamespace(state=types.SimpleNamespace(household=household, scenario=types.SimpleNamespace(year=120)),
-                                 labour=labour)
+    return event_stand_in.stood_in(types.SimpleNamespace(
+        state=types.SimpleNamespace(household=household, scenario=types.SimpleNamespace(year=120)), labour=labour))
 
 
 class ShedUnpayableStaffTest(unittest.TestCase):

@@ -15,6 +15,7 @@ from sim.engine.step_phase_materials import MaterialsPhaseMixin
 from sim.reporting.api import RecordAutomationSkip
 from sim.tests import module_harness, projects_host
 from sim.ui.proto.dispatch_ventures import _cmd_policy
+from sim.tests import event_stand_in
 
 
 class HireStance(unittest.TestCase):
@@ -56,6 +57,7 @@ class PolicyCommand(unittest.TestCase):
 
 class Phase(MaterialsPhaseMixin):
     """The materials phase over a household with nothing but what it reads."""
+    send = event_stand_in.send
     MINE_OPEX_MATERIALS = ("coal",)
     MATERIAL_CHECKS = {"coal_kg": ("coal", "coal")}
     FOREST_COST_PER_HA = 1.0

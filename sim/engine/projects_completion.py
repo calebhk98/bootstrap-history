@@ -15,7 +15,6 @@ These are methods of Sim; they are a mixin only so that they can live in a
 file of their own.
 """
 from sim.constants import declare
-from sim.refusal import LogLine
 from .completion_rules import road_line, severity_of_loss, staff_shortfall
 from .data import closure
 from .failure_cause import failure_cause
@@ -24,6 +23,7 @@ from .permanent_benefit import permanent_parts
 from .risk_rules import attempt_fails
 from .units_prose import money_text, plain_number
 from sim.agents.api import edges
+from sim.reporting.api import RecordEvent
 
 FAILED_PREFIX = "FAILED at"
 MINOR_MARK = "(minor)"
@@ -246,23 +246,21 @@ class CompletionMixin:
             # Built is not open: say what is switched off until it is opened.
             benefit = self.NOT_OPERATING_BENEFIT.get(node_id)
             held = permanent_parts(node, self._tech_effects.get(node_id) or {})
-            household.log.append((scenario.year,
-                LogLine("project_completed", "completed: %s. STATUS: CLOSED / NOT OPERATING. %s%s Open it "
+            self.send(RecordEvent.of("project_completed", "completed: %s. STATUS: CLOSED / NOT OPERATING. %s%s Open it "
                 "('open %s') to begin and to start paying upkeep."
                 % (node["name"],
                    ("In force already, open or not: %s. " % "; ".join(held)) if held else "",
                    ("Not in effect until open: %s." % benefit) if benefit
-                   else "Nothing is earning yet.", node_id))))
+                   else "Nothing is earning yet.", node_id)))
             shortfall = self.opening_shortfall(node_id)
             if shortfall:
-                household.log.append((scenario.year,
-                    LogLine("opening_shortfall", "with today's staff you could not open it: it needs %.1f "
+                self.send(RecordEvent.of("opening_shortfall", "with today's staff you could not open it: it needs %.1f "
                     "scholars and %.1f craftsmen to supervise, and %.1f and %.1f "
-                    "are free." % shortfall)))
+                    "are free." % shortfall))
         else:
-            household.log.append((scenario.year, LogLine("project_completed", "completed: " + node["name"])))
+            self.send(RecordEvent.of("project_completed", "completed: " + node["name"]))
         for line in self.goal_effect_lines(node_id, goal_before):
-            household.log.append((scenario.year, LogLine("goal_effect", line)))
+            self.send(RecordEvent.of("goal_effect", line))
         self.record_goal_reached(node_id, scenario.year)
 
     # -- shocks -------------------------------------------------------------
@@ -338,35 +336,28 @@ class CompletionMixin:
         self.pay_edge(edges.EDGE_DESTROYED, _borne, "failure losses")
         if not claimed:
             for _loss_line in self.lose_what_was_risked(node_id):
-                household.log.append((scenario.year, LogLine("failure_loss", "%s: %s" % (node["name"], _loss_line))))
+                self.send(RecordEvent.of("failure_loss", "%s: %s" % (node["name"], _loss_line)))
         projects.active[node_id]["cost_left"] = (projects.active[node_id].get("cost_left") or 0.0) + (_lost - _borne)
         # A failure always announces itself; its size sets how loudly.
         _next_risk = self.effective_risk(node_id)
         _banked = projects.active[node_id]["yrs"]
         if claimed:
-            household.log.append((scenario.year, LogLine(
-                "project_failed",
-                "%s %s: the claimant's attempt failed. The prize you posted holds "
+            self.send(RecordEvent.of("project_failed", "%s %s: the claimant's attempt failed. The prize you posted holds "
                 "and they try again (attempt %d, chance of failing %d%%); nothing "
                 "more falls on you."
                 % (FAILED_PREFIX, node["name"],
-                   projects.failed_attempts[node_id] + 1, round(_next_risk * 100)),
-                project=node_id, severity="claimed", lost=0.0)))
+                   projects.failed_attempts[node_id] + 1, round(_next_risk * 100)), project=node_id, severity="claimed", lost=0.0))
             return
         if _severity == "minor":
-            household.log.append((scenario.year, LogLine(
-                "project_failed",
-                "%s %s %s: lost %s, %d%% of the hours to redo; "
+            self.send(RecordEvent.of("project_failed", "%s %s %s: lost %s, %d%% of the hours to redo; "
                 "attempt %d, next attempt's live chance of failing %d%%."
                 % (FAILED_PREFIX, node["name"], MINOR_MARK,
                    money_text(max(0.0, _lost), self, grouped=True),
                    round(self.FAILURE_RESET_SHARE * 100),
                    projects.failed_attempts[node_id] + 1,
-                   round(_next_risk * 100)) + (" " + _diagnosis if _diagnosis else ""),
-                project=node_id, severity="minor", lost=max(0.0, _lost))))
+                   round(_next_risk * 100)) + (" " + _diagnosis if _diagnosis else ""), project=node_id, severity="minor", lost=max(0.0, _lost)))
             return
-        household.log.append((scenario.year, LogLine(
-                         "project_failed", FAILED_PREFIX + " %s: it did not work. What failed: %s. "
+        self.send(RecordEvent.of("project_failed", FAILED_PREFIX + " %s: it did not work. What failed: %s. "
                          "%d%% of the hours "
                          "are to do again (%s of your own) and %s is gone. "
                          "Attempt %d. %s the next attempt's live chance of failing "
@@ -383,8 +374,7 @@ class CompletionMixin:
                             if failure_teaches(self, node_id) else "Nothing was learned, so",
                             round(_next_risk * 100),
                             round(_risk_this_attempt * 100),
-                            _banked, _yrs_before, _diagnosis),
-                         project=node_id, severity="major", lost=max(0.0, _lost))))
+                            _banked, _yrs_before, _diagnosis), project=node_id, severity="major", lost=max(0.0, _lost)))
         return
 
     def lose_what_was_risked(self, node_id):

@@ -6,11 +6,11 @@ against the household actor's `employees`, so a firm or state can use them.
 """
 import math
 
-from sim.refusal import LogLine
 from sim.world import demography
 
 from . import trade_data
 from .staff_events import staff_lost_line
+from sim.reporting.api import RecordEvent
 
 
 class StaffLedgerMixin:
@@ -29,7 +29,7 @@ class StaffLedgerMixin:
         world = self._world
         stops = sorted(world.concerns_to_close_for_staffing())
         # plain line: staff_lost_line builds the LogLine and its kind
-        world.state.household.log.append((world.state.scenario.year, staff_lost_line(
+        self._world.send(RecordEvent.from_line(staff_lost_line(
             cause, counts, stops, self.yearly_value_of(stops))))
 
     def yearly_value_of(self, node_ids):
@@ -116,9 +116,8 @@ class StaffLedgerMixin:
         found = int(round(self.employed(trade) - before))
         if not hired or found <= 0:
             return 0
-        household.log.append((self._world.state.scenario.year, LogLine(
-            "policy_hire", "%s: you hire %d %s%s to keep your concerns supervised"
-            % (label, found, trade, "" if found == 1 else "s"), policy=label, trade=trade, count=found)))
+        self._world.send(RecordEvent.of("policy_hire", "%s: you hire %d %s%s to keep your concerns supervised"
+            % (label, found, trade, "" if found == 1 else "s"), policy=label, trade=trade, count=found))
         return found
 
     def replace_lost_foremen(self):

@@ -21,7 +21,6 @@ from .data import WAGES
 from .credit_freeze import (STALL_MINIMUM_INSOLVENT_YEARS, halt_active_projects, is_stalled, loss_makers, settlement_freeze,
                             settlement_owed, standing_net)
 from sim.constants import declare
-from sim.refusal import LogLine
 from . import money_units
 from .units_prose import money_text
 from sim.world import capital_market
@@ -29,6 +28,7 @@ from sim.agents.api import business_review, edges, ledger
 from .agents_port import SimWorld
 from sim.projects.api import funding as project_funding
 from .affordability import appearances_spending, near_limit, reputation_hit_taken, spending_power_of
+from sim.reporting.api import RecordEvent
 
 
 def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0, market_cap=None):
@@ -254,11 +254,11 @@ class CreditMixin:
             in_arrears = household.capital < 0
             # NAME THEM: "stopped maintaining 1 works" tells a player
             # nothing - not which one, not how to get it back.
-            household.log.append((year, LogLine("arrears_closed_concerns", "%sclosed %d concern%s that cost more "
+            self.send(RecordEvent.of("arrears_closed_concerns", "%sclosed %d concern%s that cost more "
                                  "than they returned: %s. You still know how; "
                                  "'restore' reopens one when you can pay for it"
                              % ("in arrears, so " if in_arrears else "", len(shed),
-                                "" if len(shed) == 1 else "s", ", ".join(shed)), concerns=list(shed))))
+                                "" if len(shed) == 1 else "s", ", ".join(shed)), concerns=list(shed)))
 
     DEBT_RATE_REPUTATION_DISCOUNT_CAP = declare(
         "DEBT_RATE_REPUTATION_DISCOUNT_CAP", 0.03, kind="temporary_heuristic",
@@ -305,10 +305,8 @@ class CreditMixin:
         household.interest_paid = (household.interest_paid or 0.0) + paid
         if owed > 0 and (household.insolvent_years in (1, 5, 15)):
             rate = self.debt_interest_rate()
-            household.log.append((year, LogLine(
-                "arrears_interest", "interest on %s of arrears at %.1f%% a year"
-                % (money_text(-household.capital, self), rate * 100), rate=rate,
-                unpaid=owed - paid, arrears_years=household.arrears_years)))
+            self.send(RecordEvent.of("arrears_interest", "interest on %s of arrears at %.1f%% a year"
+                % (money_text(-household.capital, self), rate * 100), rate=rate, unpaid=owed - paid, arrears_years=household.arrears_years))
         return owed
 
     def warn_near_the_limit(self, year):
@@ -326,16 +324,14 @@ class CreditMixin:
         warn, household._said_near_limit, used = near_limit(household.capital, limit, household._said_near_limit)
         if not warn:
             return
-        household.log.append((year, LogLine(
-            "credit_near_limit", "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
+        self.send(RecordEvent.of("credit_near_limit", "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
             "here will advance you (%d%%). Past it every "
             "project in hand is halted unfinished and nobody "
             "funds new work for some years. 'stop' a project, "
             "'mothball' a loss-maker or 'fire' somebody while "
             "it is still your choice"
             % (money_text(-household.capital, self, grouped=True),
-               money_text(limit, self, grouped=True), used * 100),
-            share_of_limit=used)))
+               money_text(limit, self, grouped=True), used * 100), share_of_limit=used))
 
     CREDIT_FREEZE_YEARS_AFTER_HALT = declare(
         "CREDIT_FREEZE_YEARS_AFTER_HALT", 5, kind="temporary_heuristic",
@@ -434,8 +430,7 @@ class CreditMixin:
         if projects.active:
             dropped, _kept = halt_active_projects(projects)
             household.credit_frozen_until = year + self.CREDIT_FREEZE_YEARS_AFTER_HALT
-            household.log.append((year, LogLine(
-                "credit_exhausted", "CREDIT EXHAUSTED: %d project%s stopped, "
+            self.send(RecordEvent.of("credit_exhausted", "CREDIT EXHAUSTED: %d project%s stopped, "
                 "unfinished: %s. The %s already paid "
                 "stands to your credit and comes off the "
                 "bill if you begin again. Nobody will fund new "
@@ -443,8 +438,7 @@ class CreditMixin:
                 % (len(dropped), "" if len(dropped) == 1 else "s",
                    ", ".join(dropped[:4])
                    + (" and others" if len(dropped) > 4 else ""),
-                   money_text(_kept, self, grouped=True), year + self.CREDIT_FREEZE_YEARS_AFTER_HALT),
-                stopped=list(dropped), frozen_until=year + self.CREDIT_FREEZE_YEARS_AFTER_HALT)))
+                   money_text(_kept, self, grouped=True), year + self.CREDIT_FREEZE_YEARS_AFTER_HALT), stopped=list(dropped), frozen_until=year + self.CREDIT_FREEZE_YEARS_AFTER_HALT))
         # let go of what you cannot maintain
         if household.capital < -limit:
             self.mothball_mines()
@@ -459,11 +453,11 @@ class CreditMixin:
             # player cannot understand what they lost, or why it reappeared
             # mothballed rather than gone, from a bare count.
             if taken:
-                household.log.append((year, LogLine("creditors_took", "creditors took what they could: %d concerns "
+                self.send(RecordEvent.of("creditors_took", "creditors took what they could: %d concerns "
                                      "closed and sold up: %s. You keep the "
                                      "knowledge; reopening means paying for the "
                                      "premises again"
-                                     % (len(taken), ", ".join(taken)))))
+                                     % (len(taken), ", ".join(taken))))
         # AND THE HOUSEHOLD GOES: nobody keeps four hundred dependants they
         # cannot feed. Without shedding them, the upkeep of a household a
         # civilisation can no longer feed would consume every denarius of
@@ -477,8 +471,8 @@ class CreditMixin:
             household.freedmen = 0
             household.artisans = max(self.HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR,
                                           household.artisans * self.HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION)
-            household.log.append((year, LogLine("household_disperses", "the household disperses: %d people leave, because "
-                                 "you can no longer feed them" % freed)))
+            self.send(RecordEvent.of("household_disperses", "the household disperses: %d people leave, because "
+                                 "you can no longer feed them" % freed))
 
     def debt_bondage_term_years(self):
         """Years of service a default costs in this society; zero where it had no debt bondage. The founder's
@@ -506,10 +500,10 @@ class CreditMixin:
             household.bondage_years_left = term
             household.bondage_debt = -household.capital
             ledger.settle(self.household, self.edge(edges.EDGE_CREDITORS), 0.0, "debt taken into bondage")
-            household.log.append((year, LogLine("debt_bondage", "BONDAGE: you cannot pay, and you enter service for "
+            self.send(RecordEvent.of("debt_bondage", "BONDAGE: you cannot pay, and you enter service for "
                                  "your debt. For about %d years most of your hours "
                                  "belong to someone else. It is not the end: it is "
-                                 "worked off, and then you are free again" % term)))
+                                 "worked off, and then you are free again" % term))
             return True
         return False
 
@@ -537,9 +531,7 @@ class CreditMixin:
         # a fresh line of credit the following morning.
         _frozen_before = getattr(household, "credit_frozen_until", 0)
         household.credit_frozen_until, _moved = settlement_freeze(_frozen_before, year, self.SETTLEMENT_CREDIT_FREEZE_YEARS)
-        household.log.append((year, LogLine(
-            "insolvency_settled",
-            "INSOLVENCY SETTLED: most of the debt is written "
+        self.send(RecordEvent.of("insolvency_settled", "INSOLVENCY SETTLED: most of the debt is written "
             "off and you still owe about %s. Your "
             "name is worth less for it (reputation %s), and "
             "you keep your knowledge and your practice%s"
@@ -551,9 +543,7 @@ class CreditMixin:
                 "again until from %d out to %d - it moves "
                 "with every settlement, not just the first"
                 % (_frozen_before, household.credit_frozen_until))
-               if _moved else ""),
-            reputation_hit=_rep_hit, credit_frozen_until=household.credit_frozen_until,
-            freeze_moved=bool(_moved), frozen_before=_frozen_before)))
+               if _moved else ""), reputation_hit=_rep_hit, credit_frozen_until=household.credit_frozen_until, freeze_moved=bool(_moved), frozen_before=_frozen_before))
 
     def stall_diagnosis(self):
         """None if the run is going somewhere; otherwise what is wrong and what

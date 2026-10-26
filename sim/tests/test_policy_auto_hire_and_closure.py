@@ -22,6 +22,7 @@ from sim.engine.shock_year import ShockYearMixin
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.dispatch_ventures import _cmd_policy
 from sim.ui.proto.state_waiting import _staff_fraction_note
+from sim.tests import event_stand_in
 
 
 class _Owner(business_review.Reviewable):
@@ -106,8 +107,9 @@ class LogNamesWhatClosed(unittest.TestCase):
 
     def _shed(self, closed, capital):
         household = self._household(capital)
-        host = SimpleNamespace(state=SimpleNamespace(household=household),
-                               review_ventures=lambda rules, year: [business_review.Closure(key, business_review.LOSS_MAKING) for key in closed])
+        host = event_stand_in.stood_in(SimpleNamespace(
+            state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)),
+            review_ventures=lambda rules, year: [business_review.Closure(key, business_review.LOSS_MAKING) for key in closed]))
         CreditMixin.shed_loss_makers(host, 100)
         return household.log
 
@@ -129,10 +131,10 @@ class LogNamesWhatClosed(unittest.TestCase):
 
     def test_creditors_taking_concerns_are_named_in_the_log(self):
         household = SimpleNamespace(capital=-1000.0, log=[], slaves=0, freedmen=0)
-        host = SimpleNamespace(
-            state=SimpleNamespace(household=household, projects=SimpleNamespace(active={})),
+        host = event_stand_in.stood_in(SimpleNamespace(
+            state=SimpleNamespace(household=household, projects=SimpleNamespace(active={}), scenario=SimpleNamespace(year=100)),
             credit_limit=lambda: 0.0, mothball_mines=lambda: None,
-            review_ventures=lambda rules, year: [business_review.Closure("shop", business_review.CREDITOR_SEIZURE)])
+            review_ventures=lambda rules, year: [business_review.Closure("shop", business_review.CREDITOR_SEIZURE)]))
         CreditMixin.answer_exhausted_credit(host, 100)
         taken = [line for _year, line in household.log if cause_of(line) == "creditors_took"]
         self.assertEqual(len(taken), 1)
@@ -142,8 +144,9 @@ class LogNamesWhatClosed(unittest.TestCase):
 
     def test_creditors_who_took_nothing_say_nothing(self):
         household = SimpleNamespace(capital=-1000.0, log=[], slaves=0, freedmen=0)
-        host = SimpleNamespace(state=SimpleNamespace(household=household, projects=SimpleNamespace(active={})),
-                               credit_limit=lambda: 0.0, mothball_mines=lambda: None, review_ventures=lambda rules, year: [])
+        host = event_stand_in.stood_in(SimpleNamespace(
+            state=SimpleNamespace(household=household, projects=SimpleNamespace(active={}), scenario=SimpleNamespace(year=100)),
+            credit_limit=lambda: 0.0, mothball_mines=lambda: None, review_ventures=lambda rules, year: []))
         CreditMixin.answer_exhausted_credit(host, 100)
         self.assertEqual(household.log, [])
 
@@ -298,12 +301,15 @@ class HazardValuesLandGradually(unittest.TestCase):
 
     def _host(self, weights):
         household = SimpleNamespace(log=[])
-        return SimpleNamespace(value_weights=dict(weights), VALUE_WEIGHT_FLOOR=-5.0, VALUE_WEIGHT_CEILING=5.0,
-                               state=SimpleNamespace(seats={"seat": SimpleNamespace(household=household)})), household
+        host = SimpleNamespace(value_weights=dict(weights), VALUE_WEIGHT_FLOOR=-5.0, VALUE_WEIGHT_CEILING=5.0,
+                               state=SimpleNamespace(seats={"seat": SimpleNamespace(household=household)},
+                                                     scenario=SimpleNamespace(year=self.START)))
+        return event_stand_in.stood_in(host), household
 
     def _run(self, hazard, weights, years):
         host, household = self._host(weights)
         for year in years:
+            host.state.scenario.year = year
             ShockYearMixin._shock_values_seats(host, {"seat": hazard}, year, hazard["years"][0], hazard["years"][1])
         return host, household
 

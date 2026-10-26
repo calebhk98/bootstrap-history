@@ -11,6 +11,7 @@ from sim.contracts import FACILITY, Contract
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
                               SimulationState, deserialize_state)
 from sim.refusal import Refusal, cause_of
+from sim.reporting.api import ReportingSeat
 from sim.tests.harness import check
 
 EMPTY_BOOK = {"money": {}, "goods": {}, "gross_money": {}, "gross_goods": {}, "money_by_purpose": {}, "goods_by_purpose": {},
@@ -29,7 +30,7 @@ check("deserialize_state: a scalar is coerced to the class named", deserialize_s
 # ---- the household: None-means-never, defaults for what the save lacks, unknown and plumbing keys ignored
 household = deserialize_state({"capital": 50.0, "wages_earned": None, "last_withdrawal": None, "scandal_last_year": 0.0, "last_settlement": -999,
                                "trades_created": {"__set__": ["baker", "mason"]}, "trade_introduced_year": {"mason": 95},
-                               "employees": {"mason": 2}, "training": [["mason", 2]], "log": [[100, "built a mill"]],
+                               "employees": {"mason": 2}, "training": [["mason", 2]],
                                "cash_flow": {"wages": -12.5}, "cash_mark": None, "cash_periods": [{"year": 99, "net": 3.0}],
                                "unused_hours_reported": {"order:1": [40.0, "no_hands"]}, "_on_change_hook": 1, "not_a_field": 9}, HouseholdState)
 check("deserialize_state: a household's purse, None-means-never fields and zeros are as saved",
@@ -40,7 +41,8 @@ check("deserialize_state: a household's sets are sets, its dicts typed, its list
       and household.trade_introduced_year == {"mason": 95} and household.employees == {"mason": 2.0}
       and household.training == [["mason", 2]] and household.cash_flow == {"wages": -12.5}
       and household.cash_periods == [{"year": 99, "net": 3.0}] and household.unused_hours_reported == {"order:1": [40.0, "no_hands"]}, None)
-check("deserialize_state: a list of pairs annotated as tuples comes back as tuples", household.log == [(100, "built a mill")] and type(household.log[0]) is tuple, household.log)
+_reporting = deserialize_state({"log": [[100, "built a mill"]]}, ReportingSeat)
+check("deserialize_state: a list of pairs annotated as tuples comes back as tuples", _reporting.log == [(100, "built a mill")] and type(_reporting.log[0]) is tuple, _reporting.log)
 check("deserialize_state: a field the save lacks takes its default", household.reputation == 5.0 and household.demand_stance == "comply"
       and household.trades_endemic == set() and household.granted_staff is None and household.work_trade is None, None)
 check("deserialize_state: an unknown key and an `_on_change` key are not set", not hasattr(household, "not_a_field") and not hasattr(household, "_on_change_hook"))

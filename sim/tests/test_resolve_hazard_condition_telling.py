@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from .harness import *  # noqa: F401,F403
 from sim.engine.society_hazards import HazardsMixin
 from sim.refusal import cause_of, facts_of
+from sim.tests import event_stand_in
 
 HAZARD = {"name": "The crossings", "output_factor": 0.6, "sack_chance": 0.1,
           "condition": {"field": "output_factor", "requires_all": ["a", "b"], "outcome": "avert",
@@ -14,9 +15,9 @@ HAZARD = {"name": "The crossings", "output_factor": 0.6, "sack_chance": 0.1,
 
 
 def stand_in(held):
-    return SimpleNamespace(has=lambda tech_id: tech_id in held,
-                           state=SimpleNamespace(scenario=SimpleNamespace(_said_condition=set()),
-                                                 household=SimpleNamespace(log=[])))
+    return event_stand_in.stood_in(SimpleNamespace(
+        has=lambda tech_id: tech_id in held,
+        state=SimpleNamespace(scenario=SimpleNamespace(_said_condition=set(), year=1), household=SimpleNamespace(log=[]))))
 
 
 unmet = stand_in({"a"})

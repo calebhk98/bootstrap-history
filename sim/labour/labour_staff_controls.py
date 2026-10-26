@@ -7,10 +7,10 @@ Both run in the yearly staff step, ahead of the closure rule, and hire through
 """
 import math
 
-from sim.refusal import LogLine
 from collections import defaultdict
 
 from . import trade_data
+from sim.reporting.api import RecordEvent
 
 
 def housing_places_to_buy(count, room, cost_per_place, hiring_outlay, spending_power):
@@ -96,9 +96,7 @@ class StaffControlsMixin:
             return False
         if not self._world.build_worker_housing(places):
             return False
-        self._world.state.household.log.append((self._world.state.scenario.year, LogLine(
-            "policy_housing", "%s: you build housing for %d more people" % (label, places),
-            policy=label, places=places)))
+        self._world.send(RecordEvent.of("policy_housing", "%s: you build housing for %d more people" % (label, places), policy=label, places=places))
         return True
 
     def hire_buying_room(self, trade, count, label="auto_hire"):

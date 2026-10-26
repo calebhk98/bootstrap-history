@@ -11,6 +11,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine.staff_replacement import REPLACE_ONLY, replace_lost_staff
 from sim.ui.proto.typed import parse_typed
+from sim.tests import event_stand_in
 
 def household_that(refuses=()):
     """A household, labour that takes on whole people (refusing the trades named) and an empty audit."""
@@ -23,8 +24,9 @@ def household_that(refuses=()):
         household.capital -= 10.0 * count
         return True, None
 
-    return SimpleNamespace(state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)),
-                           labour=SimpleNamespace(hire_buying_room=hire_buying_room))
+    return event_stand_in.stood_in(SimpleNamespace(
+        state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)),
+        labour=SimpleNamespace(hire_buying_room=hire_buying_room)))
 
 
 # ---- replace-only restores what was lost and never more -----------------------------------------

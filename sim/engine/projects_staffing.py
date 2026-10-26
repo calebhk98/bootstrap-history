@@ -25,6 +25,7 @@ from .staffing_warning_rows import staffing_warning_rows
 from .affordability import deep_in_arrears, opens_in_deep_arrears, payback_years
 from .units_prose import money_text, per_year
 from sim.agents.api import business_review, edges
+from sim.reporting.api import RecordEvent
 
 
 class StaffingMixin:
@@ -95,9 +96,9 @@ class StaffingMixin:
         if closed:
             self.record_staffing_closures(len(closed), shortfalls)
             # plain line: unstaffed_closure_line builds the LogLine and its kind
-            household.log.append((year, unstaffed_closure_line(
+            self.send(RecordEvent.from_line(unstaffed_closure_line(
                 closed, shortfalls, self.staffing_shortfall_words(shortfalls), self.staffing_shut_count(),
-                self.STAFFING_REMEDIES, earnings_stopped)))
+                self.STAFFING_REMEDIES, earnings_stopped), seat=None, year=year))
         return closed
 
     def review_ventures(self, rules=business_review.ALL_RULES, year=None):
@@ -152,14 +153,14 @@ class StaffingMixin:
         if reopened:
             self.record_staffing_reopenings(len(reopened))
             still_shut = self.staffing_shut_count()
-            household.log.append((year, LogLine("concerns_reopened", "you have the people again: %s reopen%s on "
+            self.send(RecordEvent.in_year(year, "concerns_reopened", "you have the people again: %s reopen%s on "
                                  "their own, now that somebody is free to "
                                  "watch %s; %d still shut for want of staff"
                              % (", ".join(sorted(reopened)[:4])
                                 + (" and others" if len(reopened) > 4 else ""),
                                 "" if len(reopened) == 1 else "s",
                                 "it" if len(reopened) == 1 else "them",
-                                still_shut), reopened=sorted(reopened), still_shut=still_shut)))
+                                still_shut), reopened=sorted(reopened), still_shut=still_shut))
         return reopened
 
     # ---- A WARNING BEFORE THE DOOR SHUTS, NOT AN AUTOMATION THAT OPENS IT --
@@ -618,12 +619,11 @@ class StaffingMixin:
             if scenario_year - said.get(node_id, -99) >= 10:
                 said[node_id] = scenario_year
                 household._said_autoopen = said
-                household.log.append((scenario_year,
-                                 LogLine("concern_unprofitable", "%s would earn %s a year against %s of upkeep and "
+                self.send(RecordEvent.in_year(scenario_year, "concern_unprofitable", "%s would earn %s a year against %s of upkeep and "
                                  "is still shut: %s"
                                  % (node_id, money_text(self.nodes[node_id]["rev"], self, grouped=True),
                                     money_text(self.nodes[node_id]["up"], self, grouped=True),
-                                    why or "something is in the way"))))
+                                    why or "something is in the way")))
 
     def mothball_work(self, node_id):
         """Shut a completed work down to stop paying its upkeep.

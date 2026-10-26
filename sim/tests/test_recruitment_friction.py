@@ -11,6 +11,7 @@ from sim.refusal import facts_of
 from sim.labour.labour_market_api import LabourMarket
 from sim.labour.labour_staff_ledger import StaffLedgerMixin
 from sim.labour.staff_book import StaffBookMixin
+from sim.tests import event_stand_in
 
 HOURS = 2000.0
 POOLS = {"common": 5000.0, "rare": 30.0}
@@ -75,6 +76,7 @@ class CoverLabour(StaffLedgerMixin, StaffBookMixin):
         household = SimpleNamespace(employees={}, log=[])
         self._world = SimpleNamespace(state=SimpleNamespace(household=household,
                                                             scenario=SimpleNamespace(year=1)))
+        event_stand_in.stood_in(self._world)
         self._found = found
 
     def hire(self, trade, count):

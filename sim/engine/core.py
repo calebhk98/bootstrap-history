@@ -2,11 +2,9 @@
 import collections, copy, os, random, sys
 
 from sim.constants import declare
-from sim.refusal import LogLine
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from . import money_units
 from . import externalities
-from . import automation_audit
 from .mortality_shock import cut_cohorts
 from .disease_burden import burden_from_holdings
 from .wage_scarcity import wage_index_of
@@ -58,6 +56,7 @@ from .urban_share import UrbanShareMixin
 from .food_supply import FoodSupplyMixin
 from .soil_nitrogen_year import SoilNitrogenMixin
 from .forward_living_stock import ForwardLivingStockMixin
+from .forward_reporting import ReportingForwardsMixin
 from .coin_hoard import CoinHoardMixin
 from .theft_charge import TheftChargeMixin
 from .coin_carriage import CoinCarriageMixin
@@ -110,6 +109,7 @@ from .data import trade_family
 from .invariants import check_simulation_invariants
 from sim.agents.api import Household
 from .agents_port_household import HouseholdPort
+from sim.reporting.api import RecordEvent
 
 
 def _cell_morton_code(lat_degrees, lon_degrees, bits=16):
@@ -217,7 +217,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, ConcernBookSalesMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, SeatBankMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
-          StepPhasesMixin, ForwardLivingStockMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
+          StepPhasesMixin, ForwardLivingStockMixin, ReportingForwardsMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
           FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, UrbanShareMixin, CampaignActorsMixin, CampaignYearMixin, RevoltYearMixin, CaptivesMixin, EconomyPortMixin, NodeRederiveMixin):
     DEFAULT_POPULATION_100AD = declare(
         "DEFAULT_POPULATION_100AD", 65e6, kind="initial_condition",
@@ -1234,13 +1234,11 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         shortfall = (premium / PERCENT_SCALE) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
         if premium > 0.5 and year - self.state.scenario._said_wage_cascade >= 15:
             self.state.scenario._said_wage_cascade = year
-            self.state.household.log.append((year, LogLine(
-                "wage_cascade", "population still %d%% below trend: wages "
+            self.send(RecordEvent.in_year(year, "wage_cascade", "population still %d%% below trend: wages "
                 "(and anything billed in them) are running "
                 "%d%% above normal for here, and will ease "
                 "as the population does"
-                % (round(shortfall * PERCENT_SCALE), round(premium)),
-                population_below_trend_percent=round(shortfall * PERCENT_SCALE), wage_premium_percent=round(premium))))
+                % (round(shortfall * PERCENT_SCALE), round(premium)), population_below_trend_percent=round(shortfall * PERCENT_SCALE), wage_premium_percent=round(premium)))
 
     # -- helpers ------------------------------------------------------------
 
@@ -1831,7 +1829,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
             if self.state.projects.done_year is None:
                 self.state.projects.done_year = {}
             self.state.projects.done_year[node_id] = year
-            self.state.household.log.append((year, LogLine("goal_achieved", "achieved: " + self.nodes[node_id]["name"])))
+            self.send(RecordEvent.in_year(year, "goal_achieved", "achieved: " + self.nodes[node_id]["name"]))
             self.record_goal_reached(node_id, year)
 
     def run(self, goal, horizon=None):

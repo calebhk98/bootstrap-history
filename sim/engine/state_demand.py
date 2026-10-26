@@ -3,10 +3,10 @@
 The rule is the one every actor is levied by (`sim/agents/demand_answer.py`); this reads the household's
 stance, the state's reach and the household's protection off the game and rolls the enforcement.
 """
-from sim.refusal import LogLine
 from typing import Any, Callable, Dict, List, Tuple
 
 from sim.agents.api import demand_answer, edges, ledger
+from sim.reporting.api import RecordEvent
 
 # stances that pay the demand in full and so draw no random number
 _PAYS_IN_FULL = (demand_answer.COMPLY, demand_answer.CONCEAL)
@@ -78,7 +78,7 @@ def settle_household_year(sim: Any) -> Dict[str, float]:
 			sim.pay_edge(edges.EDGE_OFFICIALS, settled["cost"], "concealing wealth")
 		if settled["seized"] > 0.0:
 			ledger.transfer(household, sim.state_treasury(), settled["seized"], "wealth found hidden")
-			household.log.append((sim.state.scenario.year, LogLine("hidden_wealth_found", "The state found wealth you had hidden and took it with a penalty")))
+			sim.send(RecordEvent.of("hidden_wealth_found", "The state found wealth you had hidden and took it with a penalty"))
 		household.concealed = settled["concealed"]
 	if household.defiance > 0.0:
 		household.defiance = demand_answer.defiance_fading(household.defiance)

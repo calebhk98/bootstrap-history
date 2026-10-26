@@ -17,6 +17,7 @@ from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, Ho
 from sim.engine.state_seat import SeatState
 from sim.invalidating import _InvalidatingDict
 from sim.refusal import Refusal
+from sim.reporting.api import ReportingSeat
 from sim.tests.harness import check
 
 
@@ -58,7 +59,7 @@ check("serialize_state: outside `verbatim` a dict is copied", serialize_state({"
 # ---- dataclasses: the household (None-means-never fields, nested containers, tuples)
 household = HouseholdState(capital=50.0, wages_earned=None, last_withdrawal=None, scandal_last_year=0.0,
                            trades_created={"mason", "baker"}, trade_introduced_year={"mason": 95}, employees={"mason": 2.0},
-                           training=[["mason", 2]], log=[(100, "built a mill")], cash_flow={"wages": -12.5}, cash_mark=None,
+                           training=[["mason", 2]], cash_flow={"wages": -12.5}, cash_mark=None,
                            cash_periods=[{"year": 99, "net": 3.0}], cause_mark={"wage": 1.0}, granted_staff=None,
                            unused_hours_reported={"order:1": [40.0, "no_hands"]}, last_settlement=-999)
 blob = serialize_state(household)
@@ -68,9 +69,10 @@ check("serialize_state: None-means-never fields stay None, and a zero stays zero
       and blob["scandal_last_year"] == 0.0 and blob["last_settlement"] == -999, None)
 check("serialize_state: a dataclass's sets, dicts, lists and tuples inside",
       blob["trades_created"] == {"__set__": ["baker", "mason"]} and blob["trade_introduced_year"] == {"mason": 95}
-      and blob["employees"] == {"mason": 2.0} and blob["training"] == [["mason", 2]] and blob["log"] == [[100, "built a mill"]]
+      and blob["employees"] == {"mason": 2.0} and blob["training"] == [["mason", 2]]
       and blob["cash_flow"] == {"wages": -12.5} and blob["cash_periods"] == [{"year": 99, "net": 3.0}]
       and blob["cause_mark"] == {"wage": 1.0} and blob["unused_hours_reported"] == {"order:1": [40.0, "no_hands"]}, None)
+check("serialize_state: a log is a list of pairs", serialize_state(ReportingSeat(log=[(100, "built a mill")]))["log"] == [[100, "built a mill"]])
 check("serialize_state: the household's purse (a property, not a field) is saved as `capital` through the property", blob["capital"] == 50.0, blob["capital"])
 check("serialize_state: the household's own purse links are not saved", "_purses" not in blob and "_account" not in blob and "_local_capital" not in blob)
 

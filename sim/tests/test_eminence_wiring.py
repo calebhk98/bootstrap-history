@@ -9,6 +9,7 @@ import unittest
 from sim.engine import eminence_rules
 from sim.engine.state import HouseholdState, deserialize_state, serialize_state
 from sim.engine.society_state_pressure import StatePressureMixin as Pressure
+from sim.tests import event_stand_in
 
 FLOOR = 20.0
 DANGER = 30.0
@@ -17,6 +18,7 @@ YEAR = 250
 
 class Standin(Pressure):
     """The mixin with only what the two methods read: a household, a year, a floor and no node mechanics."""
+    send = event_stand_in.send
     EMINENCE_DECAY_RATE = 0.9
 
     def __init__(self, reputation=98.0, eminence=39.0, capital=5.0e6, last_withdrawal=None, alive=True):

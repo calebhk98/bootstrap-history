@@ -9,17 +9,19 @@ from types import SimpleNamespace
 from .harness import *  # noqa: F401,F403
 from sim.engine.shock_year import ShockYearMixin
 from sim.refusal import cause_of, facts_of
+from sim.tests import event_stand_in
 
 HAZARD = {"name": "debasement", "real_erosion": 0.2}
 
 
 class StandIn:
+    send = event_stand_in.send
     REAL_EROSION_CASH_LOSS_SHARE = 0.5
 
     def __init__(self, capital=0.0):
         household = SimpleNamespace(capital=capital, log=[])
         self.state = SimpleNamespace(
-            economy=SimpleNamespace(money_real=1.0), scenario=SimpleNamespace(_said_debasement=0), acting_seat="seat",
+            economy=SimpleNamespace(money_real=1.0), scenario=SimpleNamespace(_said_debasement=0, year=210), acting_seat="seat",
             seats={"seat": SimpleNamespace(household=household)}, household=household)
         self.household = household
 

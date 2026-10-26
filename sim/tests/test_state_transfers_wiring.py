@@ -14,10 +14,12 @@ from sim.engine.transfers import TransfersMixin
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
+from sim.tests import event_stand_in
 
 
 class State:
     """A stand-in game: the household's purse, the state's debt and claims, and a pay_state that records."""
+    send = event_stand_in.send
 
     def __init__(self, capital=1000.0, debt=0.0, claims=0.0, per_hour=2.0):
         self.state = SimpleNamespace(household=SimpleNamespace(capital=capital, log=[]), scenario=SimpleNamespace(year=100, _said_condition=set()),

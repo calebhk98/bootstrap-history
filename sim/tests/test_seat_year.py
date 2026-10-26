@@ -35,7 +35,7 @@ check("a template builds a seat with its own purse, knowledge, staff, place and 
       and seat.goal == "g" and seat.country == "han", None)
 other = seat_from_template(template, 500.0, 1e9, {})
 check("two seats from one template share no container",
-      other.projects.done is not seat.projects.done and other.household.log is not seat.household.log
+      other.projects.done is not seat.projects.done and other.household.employees is not seat.household.employees
       and other.founder.policy is not seat.founder.policy, None)
 check("a founder in an immortal run does not die of age", seat.founder.life_left > 1e6 and seat.founder.founder_alive, None)
 
