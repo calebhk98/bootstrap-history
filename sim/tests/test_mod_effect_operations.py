@@ -1,5 +1,5 @@
 """What mod effect operations hand to the normal rules (Complaint 496): money crosses a named edge through the ledger, goods through the
-economy's book against a named edge, a death share cuts the home cohorts or a partner's strata and writes its event, a tile moves
+economy's book against a named edge, a death share is sent to the demography owner, a tile moves
 through the game's own transfer with the cause, and the base game's hazards use kill_people. Each is called on a stand-in game with the
 collaborator replaced by a recorder; the argument rules are test_mod_effects."""
 from types import SimpleNamespace
@@ -63,28 +63,17 @@ with mock.patch.object(mod_effects.economy_api, "move_goods") as unmoved:
         pass
 check("goods from an undeclared edge are refused before the book is touched", not unmoved.called)
 
-# --- killing people: the home society by its cohorts, a partner by its strata; the event carries what died.
-def _death_game(home_total=1000.0):
-    shocks = []
-    strata = [SimpleNamespace(record=SimpleNamespace(members=400.0, country="partner")), SimpleNamespace(record=SimpleNamespace(members=100.0, country="partner")),
-              SimpleNamespace(record=SimpleNamespace(members=7.0, country="other"))]
-    game = SimpleNamespace(civ={"id": "home"}, population=SimpleNamespace(total=home_total), shocks=shocks,
-                           state=SimpleNamespace(scenario=SimpleNamespace(year=100)),
-                           actors=SimpleNamespace(of_kind=lambda kind: strata), strata=strata)
-    game._apply_population_mortality_shock = shocks.append
-    return attach_send(game)
+# --- killing people: the demography owner is sent the death share (it cuts the cohorts or the strata, and writes the event).
+def _death_game():
+    sent = []
+    return SimpleNamespace(send=lambda command: sent.append(command) or {"kind": command.kind}, sent=sent)
 
 
-partner_game = _death_game()
-entry = effects.kill_people(partner_game, "partner", 0.25, "a curse")
-home_game = _death_game()
-effects.kill_people(home_game, "home", 0.1, "a curse")
-check("a death share cuts each of a partner's strata by that share and leaves another country's alone",
-      [stratum.record.members for stratum in partner_game.strata] == [300.0, 75.0, 7.0] and partner_game.shocks == [], partner_game.strata)
-check("the event is the mod's kind, names the country and the cause, and states how many died",
-      entry["kind"] == ACME + ":deaths" and entry["actors"] == ["partner"] and entry["cause"] == "a curse" and abs(entry["facts"]["died"] - 125.0) < 1e-9, entry)
-check("a death share in the home society is applied to its cohorts as a mortality shock and not to the strata", home_game.shocks == [0.1]
-      and [stratum.record.members for stratum in home_game.strata] == [400.0, 100.0, 7.0], home_game.shocks)
+killing = _death_game()
+entry = effects.kill_people(killing, "partner", 0.25, "a curse", tiles=["tile_a"], flood=3)
+check("a death share is sent to the demography owner with the mod's own kind, the country, the cause, the tiles and the facts",
+      killing.sent == [KillPeople("partner", 0.25, "a curse", kind=ACME + ":deaths", tiles=("tile_a",), facts={"flood": 3})]
+      and entry == {"kind": ACME + ":deaths"}, killing.sent)
 refused_shares, untouched = [], []
 for share, cause in ((0.1, ""), (1.5, "too many")):
     refusing = _death_game()
@@ -92,8 +81,8 @@ for share, cause in ((0.1, ""), (1.5, "too many")):
         effects.kill_people(refusing, "partner", share, cause)
     except ModError:
         refused_shares.append(share)
-    untouched.append(refusing.world_event_log.world.world_events == [])
-check("a missing cause or a share above one is refused before anyone dies or any event is written", refused_shares == [0.1, 1.5] and all(untouched))
+    untouched.append(refusing.sent == [])
+check("a missing cause or a share above one is refused before anyone is sent a death", refused_shares == [0.1, 1.5] and all(untouched))
 
 # --- a tile transfer goes through the game's own transfer with the cause.
 transfers = []

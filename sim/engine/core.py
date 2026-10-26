@@ -2,9 +2,9 @@
 import copy, os, sys
 
 from sim.constants import declare
+from sim.demography.api import OpenPopulation
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from . import money_units
-from .mortality_shock import cut_cohorts
 from .disease_burden import burden_from_holdings
 from .wage_scarcity import wage_index_of
 from sim.engine.state import SimulationState, ActiveProjectState
@@ -17,7 +17,6 @@ from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
 from sim.geography.api import regions, tiles_held
-from sim.unit_conversions import PERCENT_SCALE
 
 
 from .territory_required import require_territory
@@ -26,10 +25,7 @@ from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
 from .market_clearing import MarketClearingMixin
 from .forward_foreign_trade import ForwardForeignTradeMixin
-from .food_eaten import FoodEatenMixin
-from .demographic_recovery import DemographicRecoveryMixin
-from .regional_people import RegionalPeopleMixin
-from .urban_share import UrbanShareMixin
+from .forward_demography import ForwardDemographyMixin
 from .forward_agriculture import ForwardAgricultureMixin
 from .forward_living_stock import ForwardLivingStockMixin
 from .forward_reporting import ReportingForwardsMixin
@@ -77,7 +73,6 @@ from .data import trade_family
 from .invariants import check_simulation_invariants
 from sim.agents.api import Household
 from .agents_port_household import HouseholdPort
-from sim.reporting.api import RecordEvent
 from sim.materials.api import RestoreReadings
 
 
@@ -123,24 +118,11 @@ class Sim(
         ForwardAgricultureMixin,
         ForwardResourcesMixin,
         ForwardMaterialsMixin,
-        FoodEatenMixin,
-        DemographicRecoveryMixin,
-        RegionalPeopleMixin,
-        UrbanShareMixin,
+        ForwardDemographyMixin,
         ForwardCampaignsMixin,
         EconomyPortMixin,
         NodeRederiveMixin,
 ):
-    DEFAULT_POPULATION_100AD = declare(
-        "DEFAULT_POPULATION_100AD", 65e6, kind="initial_condition",
-        unit="people", source="Widely cited estimate of the Roman Empire's "
-             "population around 100 AD.",
-        confidence="C",
-        why="Fallback starting population, and the reference population "
-            "pop_scale=1.0 is defined against, for a civilisation file "
-            "that does not set its own `population` field. Every shipped "
-            "civ file does set one; this is the scenario's own initial "
-            "condition, not a tuned game-balance number.")
     FOUNDER_MIN_REMAINING_LIFE_YEARS = declare(
         "FOUNDER_MIN_REMAINING_LIFE_YEARS", 5, kind="temporary_heuristic",
         unit="years", source=None, confidence="D",
@@ -148,14 +130,6 @@ class Sim(
             "an unlucky draw does not end a run in its first years before "
             "anything is possible. Round guard value, not a mortality "
             "estimate.")
-    POP_SCALE_FLOOR = declare(
-        "POP_SCALE_FLOOR", 0.05, kind="temporary_heuristic",
-        unit="dimensionless (minimum pop_scale)", source=None,
-        confidence="D",
-        why="Floor under pop_scale so a tiny starting civilisation "
-            "population never divides a formula by something vanishingly "
-            "small. Guard value, not a demographic claim.")
-
     # DISEASE_BURDEN_TECH_IDS (nodes declaring the `disease_burden` mechanic) is
     # provided by the mechanics module (sim/mechanics); food techs in _TECH_EFFECTS.json do not declare it.
 
@@ -183,7 +157,7 @@ class Sim(
         from sim.engine.state import (
             SimulationState, HouseholdState, ProjectsState, ActorsState,
             EconomyState, GovernanceState, FounderState,
-            ScenarioState, PopulationState
+            ScenarioState
         )
         from . import game_assembly
         from .geography_port import MODS_DIR
@@ -195,7 +169,6 @@ class Sim(
             governance=GovernanceState(),
             founder=FounderState(),
             scenario=ScenarioState(),
-            population=PopulationState(),
             actors=ActorsState(),
             _civ=self.civ.get("id"),
         )
@@ -229,33 +202,8 @@ class Sim(
         self.cfg["start_year"] = int(self.civ.get("year", self.cfg["start_year"]))
         self.price_index = float(self.civ.get("price_index", 1.0))
         self._wage_index_base = float(self.civ.get("wage_index", 1.0))
-        # A PLAGUE IS A HIT TO THE WHOLE LABOUR MARKET, NOT ONLY TO YOU. A
-        # mortality event large enough to take a third of one household's
-        # own staff must not leave everybody ELSE's wages untouched, as if
-        # the rest of the world's labour market saw nothing happen.
-        # pop_scale is a computed property over the age-cohort population;
-        # a mortality shock cuts the cohorts directly.
-        # An age-cohort population (docs/architecture/WIRING_MILESTONE_4.md
-        # SS6), built and proven standalone in sim/world/demography.py, and
-        # read and mutated by pop_scale/wage_index (below) and by _shocks()
-        # (society.py). `Population.stationary()` finds the model's OWN
-        # stable age structure for a population of this civilisation's
-        # configured size, rather than an independently invented split - see
-        # that method's own docstring for why.
-        #
-        # SEEDED, DELIBERATELY NOT FROM self.rng: Population owns its own
-        # generator (for the `jitter=True` path only - see self._demography.py's
-        # NUTRITION_YEAR_TO_YEAR_NOISE_STD), and nothing in this engine ever
-        # passes jitter=True (see _advance_population below), so this seed
-        # never actually gets drawn from. It is derived from the
-        # civilisation's own id, not Python's randomised string hash() (which
-        # would depend on PYTHONHASHSEED and break determinism across
-        # processes), purely so two civilisations do not happen to share one.
-        _population_seed = sum((index + 1) * ord(character) for index, character
-                               in enumerate(str(self.civ.get("id", "civ")))) % (2 ** 32)
-        self.population = self._demography.Population.stationary(
-            float(self.civ.get("population", self.DEFAULT_POPULATION_100AD)),
-            seed=_population_seed)
+        # the nation's people: the age structure its civilisation's size settles into (the demography module owns them)
+        self.send(OpenPopulation())
         # Initial condition: cleared area is what feeds the starting
         # population given the yield of the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
@@ -269,35 +217,7 @@ class Sim(
         self._opening_farmed_hectares = self.farm_land.hectares
         # the weather cells and their correlation are fixed for the life of a run: built now, from the territory as it opens
         self.view("farm_weather_cells")()
-        # THE GRANARY (Complaints/44-no-granary-so-the-baseline-collapses.md).
-        # Started at zero, not at some invented reserve: this is an INITIAL
-        # CONDITION (CLAUDE.md SS3.1's own allowed category, same as
-        # `farm_land` just above), and the honest initial condition for "how
-        # much surplus this civilisation has banked at the moment the
-        # simulation begins observing it" is "none recorded" rather than a
-        # figure picked to soften the first few years - see
-        # GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration (self._agriculture.py)
-        # for where a sourced, physically-grounded number DOES enter this
-        # mechanism (the CEILING on how large a buffer can grow, not the
-        # starting point). What actually answers Complaints/44 is that
-        # `_demographic_recovery` below carries whatever THIS ATTRIBUTE holds
-        # forward from year to year: it must not rebuild an
-        # `self._agriculture.Storage` at stock_kg=0.0 every single year regardless
-        # of what the previous year harvested, or the starting value would
-        # not matter.
-        # SAVE_FIELDS ("farm_stock_kg", sim/engine/saveload.py) is
-        # what makes that survive a --session save/load, exactly the same
-        # concern `pop_children`/`pop_working_age`/`pop_elderly` were added
-        # for a milestone earlier - state a hazard or a harvest can move
-        # away from its constructor default has to round-trip, or a player
-        # who saves and resumes plays a quietly different, easier game than
-        # one who does not.
-        self.farm_stock_kg = 0.0
-        # Diagnostic only - see `_demographic_recovery`'s own comment on
-        # `_last_farm_year` for why this is not a SAVE_FIELDS member.
-        self._last_farm_year = None
-        self._last_demographic_step = None
-        self._last_farm_workers_fte = None
+        # the granary starts empty (an initial condition) and carries over between years (demography's farm year)
         self._farm_technique_this_year = farming_technique.DEFAULT_TECHNIQUE
         self.year = self.cfg["start_year"]
         config = self.cfg
@@ -424,20 +344,12 @@ class Sim(
                 self._wrap_seat_containers()
         finally:
             bind_seat(self.state, acting)
-        cleared = getattr(self.state.holdings, "farm_cleared_hectares", None)
+        from . import game_assembly
+        game_assembly.attach(self)   # the modules read the state as loaded from here on
+        cleared = self.view("farm_holdings")()["cleared_hectares"]
         if cleared is not None:
             self.labour.set_farm_area(cleared)
             self.refresh_farm_territory()
-        # Synchronize demographic cohort floats
-        if self.state.population is not None and hasattr(self, "population"):
-            if self.state.population.pop_children or self.state.population.pop_working_age or self.state.population.pop_elderly:
-                self.population.children = float(self.state.population.pop_children)
-                self.population.working_age = float(self.state.population.pop_working_age)
-                self.population.elderly = float(self.state.population.pop_elderly)
-            else:
-                self.state.population.pop_children = float(self.population.children)
-                self.state.population.pop_working_age = float(self.population.working_age)
-                self.state.population.pop_elderly = float(self.population.elderly)
 
         # Sync civ live state and metadata
         if self.state._weights:
@@ -448,7 +360,6 @@ class Sim(
 
         # Reset transient caches
         self._reset_economic_caches()
-        from . import game_assembly
         game_assembly.attach(self)
         # the demand the last throttle saw is read before the next one, so it is carried
         self.send(RestoreReadings())
@@ -499,39 +410,8 @@ class Sim(
             "answer, which is the thing SS3.2 asks a baseline to reach "
             "independently rather than by construction.")
 
-    # `pop_scale` and `wage_index` are COMPUTED PROPERTIES, not stored
-    # attributes advanced by a hand-written recovery clock (docs/
-    # architecture/WIRING_MILESTONE_4.md SS6-SS7), the same "attribute plus
-    # forwarding property" shape the household extraction uses. That lets
-    # every call site across economy/labour/geography/projects that reads
-    # `self.pop_scale`/`self.wage_index` keep doing so unchanged, while what
-    # backs them can change underneath.
-    #
-    # `pop_scale` must be derived from `self.population`'s age-cohort model,
-    # not from a hand-set scalar decaying on a fixed clock: sim/world/
-    # self._demography.py's own test suite shows two populations that lose an
-    # identical 30% in one year, one sparing working-age adults and one not,
-    # diverge sharply afterwards - a result a scalar deficit decaying on a
-    # clock that knows nothing about WHO was lost can never produce.
-    #
-    # `pop_scale` uses `DEFAULT_POPULATION_100AD` (the default scenario's
-    # configured population) as its reference, so `pop_scale == 1.0` means
-    # "a default-scenario-sized labour market" - every downstream formula is calibrated
-    # against that. The numerator is `self.population.total`, the age-cohort
-    # model's own running headcount.
-    @property
-    def pop_scale(self):
-        return max(self.POP_SCALE_FLOOR, self.population.total / self.DEFAULT_POPULATION_100AD)
-
-    # `wage_index`: LABOUR SCARCER, SO DEARER. The scarcity signal is how
-    # far the age-cohort model's actual `pop_scale` sits below this
-    # civilisation's UNSHOCKED starting trend. A hazard only needs to cut
-    # `self.population`'s cohorts (see `_apply_population_mortality_shock`
-    # below); that lowers `pop_scale` directly, and this property reads the
-    # gap that opens - a hazard never touches `wage_index` itself.
-    #
-    # Recovery is emergent: the cohort model's own births and deaths move
-    # pop_scale back toward the trend, or not, with no clock.
+    # `wage_index` is a COMPUTED PROPERTY over the nation's people (`pop_scale`, the demography module's view): a hazard
+    # only needs to cut the people, and the gap that opens is what this reads.
     @property
     def wage_index(self):
         unshocked_trend = max(
@@ -539,78 +419,6 @@ class Sim(
             float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
             / self.DEFAULT_POPULATION_100AD)
         return wage_index_of(self._wage_index_base, self.WAGE_SCARCITY_ELASTICITY, self.pop_scale, unshocked_trend)
-
-    def _apply_population_mortality_shock(self, raw):
-        """Cut `self.population`'s cohorts by `raw` (a fraction of the whole,
-        e.g. 0.45 for the Black Death), unevenly by age - called from
-        _shocks() (society.py).
-
-        AGE-DIFFERENTIATED BY THE SAME STARVATION_VULNERABILITY_* RATIOS
-        sim/world/demography.py already declares for its own nutrition-
-        driven excess mortality (children hit 1.6x as hard as working-age
-        adults, the elderly 1.4x - see that module for the sourcing), scaled
-        so the POPULATION-WEIGHTED AVERAGE loss equals `raw` exactly. This
-        is what makes two equal-headcount losses diverge afterward depending
-        on who survived - the property sim/tests/test_self._demography.py's own
-        falsification test demands, and a scalar deficit decaying on a fixed
-        clock could never produce (see the comment above pop_scale).
-
-        TEMPORARY_HEURISTIC (CLAUDE.md SS3.4), and flagged as such rather
-        than presented as settled: STARVATION_VULNERABILITY_* was sourced
-        for CALORIC shortfall (Watkins & Menken 1985), not epidemic disease
-        or war mortality, which is what most staff_loss hazards actually
-        are. The direction (children and the elderly are more vulnerable
-        than working-age adults to most mass-mortality events, disease
-        included) is well supported in the historical demography literature
-        generally; reusing this SPECIFIC magnitude for a non-caloric shock
-        is the invented part. docs/architecture/WIRING_MILESTONE_4.md SS1.3
-        names the more principled alternative - routing a food-availability
-        hazard through `Population.step`'s own nutrition_ratio and letting
-        excess mortality fall out of THAT, instead of cutting cohorts
-        directly - as future work, once a hazard can be expressed in
-        calories rather than in a bare staff_loss fraction.
-        """
-        cut_cohorts(self.population, raw, self._demography.STARVATION_VULNERABILITY_CHILD,
-                    self._demography.STARVATION_VULNERABILITY_WORKING_AGE,
-                    self._demography.STARVATION_VULNERABILITY_ELDERLY)
-
-    def _adult_equivalent_population(self, population):
-        """`population`'s food need in ADULT-EQUIVALENT units - the same
-        weighting self._demography.py's own `Population.nutrition_ratio` (and,
-        via `_subsistence_food`, `Population.stationary`) already use
-        internally: a child counts as `CHILD_CALORIE_EQUIVALENT` of an
-        adult, an elderly person as `ELDERLY_CALORIE_EQUIVALENT`, exactly
-        so this file never has its own, second opinion on what a "person"
-        is worth in calories.
-
-        WIRING_MILESTONE_4.md SS4.3's UNIT MISMATCH, AND HOW THIS RESOLVES
-        IT. `self._agriculture.Storage.step` takes a plain `population` argument
-        and uses it exactly once: `food_demand_kg = population *
-        annual_food_demand_kg_per_person(crop)`. Nothing in self._agriculture.py
-        assumes that number is a flat headcount beyond that one line - it
-        is "however many ration-equivalents need feeding" - so the fix
-        needs no change to self._agriculture.py's signature at all: this engine
-        computes the SAME adult-equivalent number self._demography.py already
-        relies on and hands THAT to `Storage.step`'s `population` argument
-        instead of `self.population.total`. Checked against SS4.3's own
-        worked example: if the harvest fed in is exactly enough to meet
-        `food_demand_kg` computed this way, then (since
-        `HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY` and
-        `SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY` are the same 2,200
-        kcal/day figure, declared independently in each module for exactly
-        this reason - see either module's own comment) `food_available_
-        kcal_per_day` comes back at precisely `adult_equivalent_population
-        * 2,200`, which is exactly the denominator `nutrition_ratio`
-        divides by - so an exactly-met harvest reads back as
-        `nutrition_ratio == 1.0`, not persistently 10-15% "too generous",
-        by construction rather than by a tuned fudge factor. The SAME
-        method also sizes `farm_land` at `__init__` and the farm workforce
-        every year in `_demographic_recovery`, so all three uses of
-        "how big is this population" at the agriculture boundary agree.
-        """
-        return (population.children * self._demography.CHILD_CALORIE_EQUIVALENT
-                + population.working_age
-                + population.elderly * self._demography.ELDERLY_CALORIE_EQUIVALENT)
 
     def _disease_burden(self):
         """WIRING ONE (Complaints/closed/47-technology-cannot-stop-people-dying-
@@ -643,26 +451,6 @@ class Sim(
         return burden_from_holdings(
             {tech_id: self._tech_effects[tech_id].get("population", 0.0) for tech_id in tech_ids},
             {tech_id: self.disease_burden_held(tech_id) for tech_id in tech_ids})
-
-    def _refresh_demographic_indexes(self, year):
-        """Say why the wage bill moved, if it moved enough to be worth
-        saying - the only job left here once pop_scale/wage_index became
-        computed properties (see above). Kept as its own method, called
-        both after a year's ordinary advance and immediately after a
-        hazard fires, for the same reason it always was: a shock's
-        announced effects should be visible immediately, not lag a step.
-        """
-        premium = (self.wage_index / self._wage_index_base - 1.0) * PERCENT_SCALE
-        # Recover the shortfall from `premium` so the message and
-        # wage_index cannot drift apart.
-        shortfall = (premium / PERCENT_SCALE) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
-        if premium > 0.5 and year - self.state.scenario._said_wage_cascade >= 15:
-            self.state.scenario._said_wage_cascade = year
-            self.send(RecordEvent.in_year(year, "wage_cascade", "population still %d%% below trend: wages "
-                "(and anything billed in them) are running "
-                "%d%% above normal for here, and will ease "
-                "as the population does"
-                % (round(shortfall * PERCENT_SCALE), round(premium)), population_below_trend_percent=round(shortfall * PERCENT_SCALE), wage_premium_percent=round(premium)))
 
     # -- helpers ------------------------------------------------------------
 

@@ -268,7 +268,7 @@ def gross_harvest_kg(
     sidesteps the guess entirely: `worker_count` alone decides the window
     cap, `labour_hours` alone decides the labour-term intensity, and a
     caller is then responsible for making the two agree - see
-    sim/engine/core.py's `_demographic_recovery` for the one place this
+    sim/demography/recovery.py's `step_population` for the one place this
     project does that today.
     """
     crop = crop or DEFAULT_CROP

@@ -2,7 +2,7 @@
 
 Each view answers through `Sim` as the old mixin methods did; when its owner moves it publishes the same name and the entry
 is deleted. The geography ones hand the module the per-tile sums over the held land. `legacy_dice` is the game's random
-source and `legacy_farm_holdings` the acting seat's farm section, both used in place."""
+source, used in place."""
 from sim.assembly.api import QUOTE
 
 from . import externalities
@@ -106,9 +106,3 @@ def externality_yield_factors(sim, year):
 def legacy_dice(sim):
     """The game's random source; the weather salt is drawn from it once."""
     return sim.rng
-
-
-@bridge_view("legacy_farm_holdings", seat_scoped=True)
-def legacy_farm_holdings(sim):
-    """The acting seat's farm section: hectares, granary, and the last harvest the demographic step records."""
-    return sim.state.holdings

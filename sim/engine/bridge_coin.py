@@ -3,6 +3,7 @@
 Each view answers through `Sim` as the old mixin methods did; when its owner moves it publishes the same name and the
 entry is deleted. `legacy_agent_world` is raw state the module still reads in place (the agent economy's world)."""
 from sim.assembly.api import KEYED, QUOTE
+from sim.demography.api import TakeFromGranary
 from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, TakeGoods
 
 from .bridge import bridge_command, bridge_view
@@ -88,5 +89,5 @@ def take_goods(sim, command):
         stock = sim._material_stock()
         stock[command.good] = max(0.0, stock[command.good] - command.tonnes)
     elif command.store == STORE_GRANARY:
-        sim.farm_stock_kg = max(0.0, sim.farm_stock_kg - command.tonnes * 1000.0)
+        sim.send(TakeFromGranary(command.tonnes * 1000.0))
     sim.edge(command.edge).receive_goods(command.good, command.tonnes)

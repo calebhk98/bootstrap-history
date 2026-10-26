@@ -70,7 +70,7 @@ class BudgetView:
 		farming wants (none known before its first allocation), and the share of the people's food need the last
 		year's supply met, with the state's own granary making up what the harvest lacked."""
 		sim = self._sim
-		hours = sim.state.holdings.farm_hours_needed
+		hours = sim.view("farm_holdings")()["hours_needed"]
 		farm_hands = 0.0 if hours is None else hours / agriculture.ANNUAL_LABOUR_HOURS_PER_FARM_WORKER
 		flows = getattr(sim, "_last_demographic_step", None)
 		ratio = 1.0 if flows is None else float(flows.nutrition_ratio)

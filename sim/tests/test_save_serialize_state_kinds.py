@@ -159,7 +159,7 @@ check("serialize_state: the state's books: money, revenue by form, arrears, know
 
 # ---- the root: seats, aliases and metadata
 first = SeatState(HouseholdState(capital=10.0), ProjectsState(done={"fire"}), FounderState(living_cost_paid=30.0), goal="steam_engine", country="han")
-second = SeatState(HouseholdState(capital=4.0), ProjectsState(), FounderState(), holdings=HoldingsState(farm_stock_kg=1.0))
+second = SeatState(HouseholdState(capital=4.0), ProjectsState(), FounderState(), holdings=HoldingsState(market_pressure=1.0))
 state = SimulationState(seats={"zed": first, "abe": second}, acting_seat="abe", economy=EconomyState(), _civ="rome", _rng=[3, [0, 1], None],
                         _seed="seed text", stores={"granary": {"t1|rome": 4.0}})
 blob = serialize_state(state)
@@ -171,7 +171,7 @@ check("serialize_state: a seat's own fields: goal, country, kind and holder",
       and blob["seats"]["zed"]["kind"] == "household" and blob["seats"]["zed"]["holder"] is None and blob["seats"]["abe"]["goal"] is None, None)
 check("serialize_state: a seat's household, projects and founder are sections of it",
       blob["seats"]["zed"]["household"]["capital"] == 10.0 and blob["seats"]["zed"]["projects"]["done"] == {"__set__": ["fire"]}
-      and blob["seats"]["zed"]["founder"]["living_cost_paid"] == 30.0 and blob["seats"]["abe"]["holdings"]["farm_stock_kg"] == 1.0, None)
+      and blob["seats"]["zed"]["founder"]["living_cost_paid"] == 30.0 and blob["seats"]["abe"]["holdings"]["market_pressure"] == 1.0, None)
 check("serialize_state: the metadata the load needs", blob["_civ"] == "rome" and blob["_rng"] == [3, [0, 1], None] and blob["_seed"] == "seed text"
       and blob["_fog"] is False and blob["_immortal"] is True and blob["_game_version"] is None, None)
 check("serialize_state: the declared stores and the UI's own memory", blob["stores"] == {"granary": {"t1|rome": 4.0}} and blob["interface"] == {})

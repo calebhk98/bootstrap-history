@@ -33,11 +33,6 @@ def state_text(sim):
 	sim.state._seed = getattr(sim, "seed", None)
 	sim.state._game_version = GAME_VERSION
 	sim.state._rng = rng_record(sim.rng)
-	if hasattr(sim, "population") and getattr(sim, "state", None) is not None and sim.state.population is not None:
-		sim.state.population.pop_children = float(sim.population.children)
-		sim.state.population.pop_working_age = float(sim.population.working_age)
-		sim.state.population.pop_elderly = float(sim.population.elderly)
-
 	sim.send(CaptureReadings())      # the demand the last throttle saw is carried in the save
 
 	# the agent economy's record is most of the file and already plain JSON: the encoder takes it as it is
@@ -105,7 +100,7 @@ def _stamp(absolute):
 
 
 REQUIRED_V3_SECTIONS = (
-    "seats", "economy", "scenario", "population",
+    "seats", "economy", "scenario", "modules",
 )
 
 # What each seat holds; the acting seat's sections are checked and searched like root ones.
@@ -133,7 +128,7 @@ def _get_field(blob, field_name):
         return None
     if field_name in blob:
         return blob[field_name]
-    for section in ("economy", "scenario", "population"):
+    for section in ("economy", "scenario"):
         sec = blob.get(section)
         if isinstance(sec, dict) and field_name in sec:
             return sec[field_name]

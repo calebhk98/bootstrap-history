@@ -5,18 +5,10 @@ from typing import Any, Dict, List, Optional
 
 @dataclass
 class HoldingsState:
-	"""A seat's granary, farm and material stock."""
+	"""A seat's material stock and the settlements it has founded."""
 	market_pressure: float = 0.0
 	_material_stock_ledger: Optional[Dict[str, float]] = None
 	_material_stock_opening: Optional[Dict[str, Any]] = None
-	farm_hectares: Optional[float] = None
-	farm_stock_kg: float = 0.0
-	farm_cleared_hectares: Optional[float] = None
-	farm_last_shortfall_kg: Optional[float] = None
-	# gross harvest of the last year the farm closed, in kilograms of grain (0 before the first)
-	farm_last_harvest_kg: float = 0.0
-	farm_last_marginal_product: Optional[float] = None
-	farm_hours_needed: Optional[float] = None
 	_dashboard_history: Optional[List[Any]] = None
 	# settlements the seat has founded on tiles beyond its country's own: tile, year founded, and the three age
 	# cohorts of the people there (sim/engine/colonies.py)

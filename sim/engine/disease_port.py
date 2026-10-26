@@ -66,7 +66,7 @@ class DiseaseWorld:
         else the nation's bands shared by each tile's share of the land's food."""
         sim = self._sim
         held = self.held_tiles()
-        stored = getattr(getattr(sim.state, "population", None), "regions", None)
+        stored = sim.view("regional_people")()
         if stored and sorted(stored) == settlement.tile_ids(held):
             return {tile: dict(zip(BANDS, stored[tile])) for tile in held}
         shares = settlement.population_shares(held)

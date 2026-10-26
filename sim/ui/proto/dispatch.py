@@ -1,6 +1,7 @@
 """The command table: every accepted command name (and alias) mapped to the small handler that answers it, and the dispatcher that resolves names, guards fog, validates the command, and looks the handler up."""
 
 import sim.engine.ui_port as ui_port
+from sim.demography.api import NotePopulationChange
 import importlib
 import os
 import pkgutil
@@ -233,7 +234,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         programme_log.extend(year_log)
         ran += 1
         population_change = sim.population.total / population_before - 1.0 if population_before > 0 else 0.0
-        sim.state.population.population_change_last_year = round(population_change, 4)
+        sim.send(NotePopulationChange(round(population_change, 4)))
         hist = ui_port.dashboard_history(sim)
         if hist is None:
             hist = []
@@ -342,7 +343,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         events, lost,
         [nodes[node_id]["name"] for snap in snapshots for node_id in snap.get("concerns_closed", ())],
         founder_died_this_step, sim.goal_year if goal_year_before is None else None,
-        stopped_early, sim.state.population.population_change_last_year,
+        stopped_early, sim.view("population_change_last_year")(),
         staffing_line=sim.staffing_closure_summary())
     summary = wave_summary(completed, events, goal_before, sim.goal_snapshot())
     for disaster in disasters:

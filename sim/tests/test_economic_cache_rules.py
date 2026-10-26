@@ -34,10 +34,13 @@ class RevenueStandIn(ProductionMixin):
         self.output_factor = 1.0
         self.state = types.SimpleNamespace(
             scenario=types.SimpleNamespace(year=100), economy=types.SimpleNamespace(output_per_head=1.0),
-            holdings=types.SimpleNamespace(farm_hectares=0.0), projects=types.SimpleNamespace(),
-            household=self.household, governance=types.SimpleNamespace(gov=0.0))
+            projects=types.SimpleNamespace(), household=self.household, governance=types.SimpleNamespace(gov=0.0))
+        self.farm_hectares = 0.0
         self.founder_alive = True
         self.labour = types.SimpleNamespace(director_hours_committed=lambda: 0.0, wage_signature=lambda: 0)
+
+    def view(self, name):
+        return lambda: {"hectares": self.farm_hectares}
 
     def state_funding(self):
         return 0.0
@@ -64,7 +67,7 @@ class RevenueMemoTest(unittest.TestCase):
             "workforce": lambda sim: setattr(sim.household, "workforce_version", 1),
             "freedmen": lambda sim: setattr(sim.household, "freedmen", 10.0),
             "year": lambda sim: setattr(sim.state.scenario, "year", 101),
-            "farmland": lambda sim: setattr(sim.state.holdings, "farm_hectares", 5.0),
+            "farmland": lambda sim: setattr(sim, "farm_hectares", 5.0),
             "price level": lambda sim: setattr(sim, "price_level", 1.5),
             "output factor": lambda sim: setattr(sim, "output_factor", 0.5),
         }
@@ -152,8 +155,11 @@ class GoodsStandIn(GoodsMixin):
         self.market_version = 0
         self.household = household()
         self.state = types.SimpleNamespace(scenario=types.SimpleNamespace(year=100), projects=types.SimpleNamespace(),
-                                           economy=types.SimpleNamespace(output_per_head=1.0),
-                                           holdings=types.SimpleNamespace(farm_hectares=0.0))
+                                           economy=types.SimpleNamespace(output_per_head=1.0))
+        self.farm_hectares = 0.0
+
+    def view(self, name):
+        return lambda: {"hectares": self.farm_hectares}
 
     def actor_market_version(self):
         return self.market_version

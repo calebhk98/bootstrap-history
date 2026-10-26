@@ -4,7 +4,6 @@ Each view carries the name its owner will publish (docs/architecture/catalogue),
 did, and is never cached. Each command applies what the old hazard code did inline, in the same order. The `legacy_*`
 views are raw state or the engine's own switches the module still needs; they go when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
-from sim.demography.api import CutPopulation, KillPeople, RefreshDemographicIndexes
 from sim.polity.api import ScaleProtection
 from sim.projects.api import ResetProjectProgress, ShutForgotten
 from sim.reporting.api import RecordEvent
@@ -135,22 +134,6 @@ def report_staff_reduction(sim, command):
 @bridge_command(NoteWageShock)
 def note_wage_shock(sim, command):
     cause_book.record_wage_shock(sim, command.cause, command.index_before)
-
-
-@bridge_command(CutPopulation)
-def cut_population(sim, command):
-    sim._apply_population_mortality_shock(command.share)
-
-
-@bridge_command(RefreshDemographicIndexes)
-def refresh_demographic_indexes(sim, command):
-    sim._refresh_demographic_indexes(command.year)
-
-
-@bridge_command(KillPeople)
-def kill_people(sim, command):
-    return mod_effects.BASE_EFFECTS.kill_people(sim, command.country, command.share, command.cause, kind=command.kind,
-                                                tiles=command.tiles, **command.facts)
 
 
 @bridge_command(ShutForgotten)

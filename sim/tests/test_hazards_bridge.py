@@ -6,7 +6,6 @@ import random
 import unittest
 from types import SimpleNamespace
 
-from sim.demography.api import CutPopulation, RefreshDemographicIndexes
 from sim.engine import bridge_hazards
 from sim.projects.api import ShutForgotten
 from sim.polity.api import ScaleProtection
@@ -56,14 +55,6 @@ class Writes(unittest.TestCase):
         game = SimpleNamespace(labour=SimpleNamespace(log_staff_reduction=lambda cause, before: asked.append((cause, before))))
         bridge_hazards.report_staff_reduction(game, ReportStaffReduction("a sack", {"smith": 3.0}))
         self.assertEqual(asked, [("a sack", {"smith": 3.0})])
-
-    def test_the_population_is_cut_and_its_figures_refreshed_by_the_demographic_owner(self):
-        calls = []
-        game = SimpleNamespace(_apply_population_mortality_shock=lambda share: calls.append(("cut", share)),
-                               _refresh_demographic_indexes=lambda year: calls.append(("refresh", year)))
-        bridge_hazards.cut_population(game, CutPopulation(0.2))
-        bridge_hazards.refresh_demographic_indexes(game, RefreshDemographicIndexes(150))
-        self.assertEqual(calls, [("cut", 0.2), ("refresh", 150)])
 
 
 if __name__ == "__main__":

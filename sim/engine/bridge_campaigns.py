@@ -3,10 +3,8 @@
 Each view answers through `Sim` as the old mixin methods did; when its owner moves it publishes the same name and the entry
 is deleted. Each command is applied the way the old campaign code did the write."""
 from sim.actors.api import RecordConquestContact
-from sim.agents import api as agents_api
 from sim.agents.api import army_raising
 from sim.assembly.api import KEYED, QUOTE
-from sim.demography.api import AddCaptives
 from sim.geography.api import (endemic_people_loss, food_potential, layer_value, reach, route, usable_modes)
 from sim.land.api import TransferTile
 from sim.polity.api import (CloseSuccessionDispute, RecordRising, RegisterPeople, ReplaceRuler, ResetStateUnrest,
@@ -95,12 +93,6 @@ def organised_factions(sim, owner):
             if group.organised() and (group.record.country or home) == owner]
 
 
-@bridge_view("food_eaten")
-def food_eaten(sim):
-    """{tile: share of the people's food need the tile's people ate}."""
-    return sim.state.population.regional_eaten_over_need
-
-
 @bridge_view("store", kind=KEYED)
 def store(sim, name):
     """A declared store as it stands: {default, values: {key: value}}."""
@@ -123,11 +115,6 @@ def write_store(sim, command):
 @bridge_command(RecordConquestContact)
 def record_conquest_contact(sim, command):
     contact_events.after_conquest(sim, command.conqueror, command.previous, command.tile)
-
-
-@bridge_command(AddCaptives)
-def add_captives(sim, command):
-    return agents_api.add_captives(sim.actors, command.winner, command.people)
 
 
 @bridge_command(StrikeFromForce)

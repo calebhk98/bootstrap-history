@@ -43,6 +43,10 @@ class StandInSim(disease_port.DiseasePortMixin):
     def urban_fraction(self):
         return float(self.civ.get("urban_fraction", 0.0))
 
+    def view(self, name):
+        """The demography views the disease step reads: the regions are not tracked here, so the nation is shared by land."""
+        return {"regional_people": lambda: {}}[name]
+
     def _effect_terms(self, channel):
         return []
 

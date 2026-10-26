@@ -6,6 +6,7 @@ mix as one) against a pathogen, stepped at sub-year resolution; `sim/engine/dise
 """
 WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what it needs (sim/engine/disease_port.py)
 
+from .commands import RunEpidemicYear
 from .loader import (CONFIDENCE_TAGS, check_pathogen_data, load_pathogen_plain, load_pathogens, pathogen_ids,
                      pathogen_problems)
 from . import endemic_state, metapopulation, nation, nation_tuning, spread_tuning
@@ -16,6 +17,7 @@ from .year import YearResult, advance_year, is_circulating
 from .types import Patch, Pathogen
 
 __all__ = [
+    "RunEpidemicYear",
     "Pathogen", "Patch", "step_patch", "advance_patch", "step_groups", "advance_groups", "wane_idle", "advance_year",
     "is_circulating", "YearResult", "reproduction_number", "herd_immunity_threshold",
     "step_length_in_days", "load_pathogens", "load_pathogen_plain", "pathogen_ids", "pathogen_problems",

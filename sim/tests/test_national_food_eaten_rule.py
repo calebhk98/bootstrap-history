@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import year_accounts
-from sim.engine import food_eaten
+from sim.demography.api import rules as food_eaten
 from sim.economy.year_accounts import CohortAccount, YearAccounts
 
 

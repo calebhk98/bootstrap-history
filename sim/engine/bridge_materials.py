@@ -25,18 +25,6 @@ def project_versions(sim):
     return (sim.household.active_version, sim.household.done_version)
 
 
-@bridge_view("default_population")
-def default_population(sim):
-    """The population the reference tables (national outputs of the tracked commodities) are stated for."""
-    return sim.DEFAULT_POPULATION_100AD
-
-
-@bridge_view("pop_scale")
-def pop_scale(sim):
-    """The home people against the reference population, never below the floor."""
-    return sim.pop_scale
-
-
 @bridge_view("empire_output")
 def empire_output(sim):
     """The reference empire's yearly output of the tracked commodities, by commodity: {"t_per_yr": ...}."""

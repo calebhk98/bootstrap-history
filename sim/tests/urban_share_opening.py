@@ -2,7 +2,7 @@
 
     python3 -m sim.tests.urban_share_opening [civilisation_id ...]
 
-Prints the typed `urban_fraction` (the opening's initial condition), the share the regions give (`Sim.urban_fraction`),
+Prints the typed `urban_fraction` (the opening's initial condition), the share the regions give (the `urban_fraction` view),
 the most the regions' towns could feed, and the band with its source (data/world/urban_share_bands.json).
 """
 import json
@@ -22,10 +22,10 @@ def bands():
 
 def opening_report(civilisation_id):
     game = unopened_sim(civilisation_id)
-    people = game.people_by_tile() or game._people_for_urban_share()
-    ceilings = game.urban_ceilings()
+    people = game.view("people_by_tile")() or game.assembly.modules["demography"].people_for_urban_share()
+    ceilings = game.view("urban_ceilings")()
     band = urban_share.band_for(civilisation_id, bands())
-    computed = game.urban_fraction()
+    computed = game.view("urban_fraction")()
     return {"civilisation": civilisation_id, "typed_initial_condition": float(game.civ.get("urban_fraction", 0.0)),
             "computed": computed,
             "most_the_towns_could_feed": sum(min(ceilings[tile], people[tile]) for tile in people) / game.population.total,

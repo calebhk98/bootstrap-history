@@ -10,7 +10,7 @@ from types import SimpleNamespace
 
 from sim.diffusion.literacy_rules import literacy_after_effect as target_after_effect
 from sim.diffusion.literacy_rules import common_ceiling
-from sim.engine.mortality_shock import cut_cohorts
+from sim.demography.api import rules as demography_rules
 from sim.engine.projects_completion import goal_movement
 from sim.engine import bridge_hazards
 from sim.workforce.api import SurviveStaff
@@ -30,7 +30,7 @@ class Cohorts:
 def shocked(raw, **cohorts):
     population = Cohorts(**cohorts)
     before = population.total
-    cut_cohorts(population, raw, CHILD, WORKING_AGE, ELDERLY)
+    demography_rules.cut_cohorts(population, raw, CHILD, WORKING_AGE, ELDERLY)
     return population, before
 
 
