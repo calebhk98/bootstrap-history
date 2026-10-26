@@ -49,7 +49,7 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 | 22 | [`projects`](projects.md) | The lifecycle of a project: can it start, what it costs, progress, completion and failure. | 8 | 7 | 96 | 15 |
 | 23 | [`reporting`](reporting.md) | Moved: the seat's log, the automation audit trail and the real-output and price-ratio indicators. The warn-once notes are not here (reporting.md says where they go). | 8 | 6 | 21 | 5 |
 | 24 | [`resources`](resources.md) | Extractive resources: mines, deposits, prospecting, forest and nitre beds. | 5 | 4 | 63 | 14 |
-| 25 | [`seats`](seats.md) | Seats and the acting context: who plays, goals and win conditions, the founder's life, dealings between seats. | 6 | 6 | 42 | 8 |
+| 25 | [`seats`](seats.md) | Seats and the acting context: who plays, goals and win conditions, the founder's life, dealings between seats. **Moved** (`sim/seats/`; the registry, `act_as` and the facades stay on `Sim`). | 18 | 10 | 42 | 8 |
 | 26 | [`stores`](stores.md) | Mod-declared key/value stores (`state.stores`). | 1 | 1 | 1 | 1 |
 | 27 | [`ventures`](ventures.md) | Concerns the seat opens and closes: crews, foremen, staffing closures, quotes and auto-opening. | 4 | 3 | 59 | 19 |
 | 28 | [`workforce`](workforce.md) | People who work: staff by trade, hours, wages, training, slaves and the labour market. | 11 | 8 | 58 | 11 |
@@ -125,10 +125,10 @@ A class split across modules is listed with the number of its methods each modul
 | `CompletionMixin` | `sim/engine/projects_completion.py` | `projects` (9) |
 | `RebuildMixin` | `sim/engine/projects_rebuild.py` | `projects` (6) |
 | `SeatMixin` | `sim/engine/core_seats.py` | `core` (5), `seats` (2) |
-| `SeatRunMixin` | `sim/engine/seat_run.py` | `seats` (11) |
-| `SeatHandoverMixin` | `sim/engine/seat_handover.py` | `seats` (1) |
-| `SeatBuildsMixin` | `sim/engine/seat_builds.py` | `seats` (2) |
-| `SeatSightMixin` | `sim/engine/seat_sight.py` | `seats` (2) |
+| `SeatRunMixin` | `sim/engine/seat_run.py` | `seats` (11, moved) |
+| `SeatHandoverMixin` | `sim/engine/seat_handover.py` | `seats` (1, moved) |
+| `SeatBuildsMixin` | `sim/engine/seat_builds.py` | `seats` (2, moved) |
+| `SeatSightMixin` | `sim/engine/seat_sight.py` | `seats` (2, moved) |
 | `ShockYearMixin` | `sim/engine/shock_year.py` | `hazards` (11) |
 | `WaysMixin` | `sim/engine/ways.py` | `land` (8) |
 | `WorksMixin` | `sim/engine/works.py` | `land` (7) |
@@ -142,7 +142,7 @@ A class split across modules is listed with the number of its methods each modul
 | `ActorsMixin` | `sim/engine/society_actors.py` | `actors` (11), `diffusion` (4), `ledger` (4), `polity` (4) |
 | `DisclosureMixin` | `sim/engine/society_disclosure.py` | `diffusion` (7) |
 | `FounderSalesMixin` | `sim/engine/founder_sales.py` | `production` (3), `agriculture` (1) |
-| `SeatDealingsMixin` | `sim/engine/seat_dealings.py` | `seats` (7) |
+| `SeatDealingsMixin` | `sim/engine/seat_dealings.py` | `seats` (7, moved) |
 | `SeatBankMixin` | `sim/engine/seat_bank.py` | `finance` (1) |
 | `InterestGroupsMixin` | `sim/engine/interest_groups.py` | `polity` (7) |
 | `BenefactionsMixin` | `sim/engine/benefactions.py` | `polity` (0) |
@@ -157,7 +157,7 @@ A class split across modules is listed with the number of its methods each modul
 | `WorldHazardsMixin` | `sim/engine/world_hazards.py` | `hazards` (3) |
 | `RouteDuesMixin` | `sim/engine/route_dues.py` | `freight` (4) |
 | `ForwardingPropertiesMixin` | `sim/engine/core_properties.py` | `workforce` (46), `reporting` (16), `seats` (16), `knowledge` (14), `finance` (12), `polity` (12), `projects` (10), `materials` (8), `resources` (8), `demography` (6), `ledger` (4), `agriculture` (4), `ventures` (3), `production` (2), `hazards` (2), `core` (2) |
-| `GoalsMixin` | `sim/engine/goals.py` | `seats` (4) |
+| `GoalsMixin` | `sim/engine/goals.py` | `seats` (4, moved) |
 | `StepPhasesMixin` | `sim/engine/core_step_phases.py` | `workforce` (4), `core` (3), `finance` (3), `seats` (2), `reporting` (1), `hazards` (1), `polity` (1) |
 | `StaffPhaseMixin` | `sim/engine/step_phase_staff.py` | `workforce` (1) |
 | `MoneyPhaseMixin` | `sim/engine/step_phase_money.py` | `finance` (3), `seats` (1) |
@@ -454,4 +454,5 @@ Limits of the method: it is static. Calls through a local variable, `getattr`, a
 - **`actors` and the agents package.** `sim/agents` is 159 files that already act as a module with its own registry; `actors` here is only the engine's side (registry accessors and `agents_port*`). Whether `Government` and `Firm` become modules of their own, or `polity` and `production` split further, is not decided here.
 - **Names not opened.** Where a module file describes a function module (for example `solve_prices_round.py`, `labour/market/year.py`) from its name and its size rather than from reading it, the file says so in its hard spots only for what was read; treat the rest as unchecked.
 - The per-module `Replaces` lists are the cross-module surface only. Methods used inside a module stay internal and are listed by name in (a) of its file.
+- **What the seats move corrected.** The draft listed state under `seats` by which methods wrote it, which over-claimed: `founder.policy` (read by every owner), `founder.last_patron_death` (hazards' event memory), `seat_progress.dashboard_history_years` (a UI option), `household.saving_for` and `saving_target` (the household's plan) and `household.base_tile` (workforce) were not moved; `visibility.py` turned out to be seats' (sight and disclosure share its rules); `society_techs_now` reads the society's holdings (firms and government), not `techniques_in_use`; `win_condition_text` and `on_road_to_goal` stay bridged because the engine's data table and the `Sim`-held goal cache are shared. A module that moves a seat-scoped field must say what the replacement of a seat keeps: the handover moves every module slot with the seat, so a field that belongs to the seat's founder (alive, years left, why the run ended) has to be put back after the move. See `seats.md`.
 
