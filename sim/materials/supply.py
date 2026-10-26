@@ -165,7 +165,7 @@ class Supply:
         if routes is None:
             sea_routes = self.needs.mechanic["supplies_material_by_sea_route"]
             routes = kept[commodity] = sum(
-                1 for node_id in sea_routes if commodity in sea_routes[node_id]["materials"] and self.needs.running(node_id))
+                1 for node_id in sea_routes if commodity in sea_routes[node_id]["materials"] and self.needs.running[node_id])
         return rules.market_tonnes(national, share, commodity == "charcoal", standing_factor, scale, routes,
                                    self.import_tonnes(commodity))
 
