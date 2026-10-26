@@ -113,10 +113,16 @@ class Models:
         world_map = self.needs.legacy_world_map()
         walking = frozenset(walking_cargo_modes(world_map))
         carrying = frozenset(modes_carrying(cargo, world_map)) if cargo else frozenset()
+        feed_prices = {}
+
+        def feed_price(mode):
+            material = self.carrier_feed_material(mode)
+            if material not in feed_prices:
+                feed_prices[material] = self.needs.material_price[material] or 0.0
+            return feed_prices[material]
         return {mode: freight_cost.freight_money_per_tonne_km(
-                    inputs, self.needs.material_price[self.carrier_feed_material(mode)] or 0.0,
-                    sea_wage if mode == SEA_MODE else land_wage, prices, rate, working_days, imbalance, loss,
-                    cargo_walks=mode in walking)
+                    inputs, feed_price(mode), sea_wage if mode == SEA_MODE else land_wage, prices, rate, working_days,
+                    imbalance, loss, cargo_walks=mode in walking)
                 for mode, (inputs, prices, working_days, loss) in self.carrier_models().items()
                 if (modes is None or mode in modes) and (cargo is None or mode in carrying)}
 
