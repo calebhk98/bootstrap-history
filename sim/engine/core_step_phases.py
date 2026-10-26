@@ -25,6 +25,7 @@ from .invariants import check_labour_market_invariants, check_yearly_invariants
 from .step_phase_money import MoneyPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
 from sim.reporting.api import RecordEvent
+from sim.workforce.api import CloseHoursYear, TakeWageFallback
 
 
 @dataclass(frozen=True)
@@ -63,77 +64,17 @@ class StepPhasesMixin(MoneyPhaseMixin, ProjectProgressPhaseMixin):
         remaining, remaining_after_projects, hours_effective_total = (
             self._step_progress(pool, hired_left))
         # 5b. if there is no work and no money, take a job
-        remaining = self._step_wage_fallback(remaining)
+        remaining = self.send(TakeWageFallback(remaining))
         # 6. reputation, familiarity, protection, scandal
         self._step_reputation(pool, remaining, remaining_after_projects, hours_effective_total)
         self._step_bondage()                   # 6b. serving out a debt
-
-    def _step_wage_fallback(self, remaining):
-        # 5b. IF THERE IS NO WORK AND NO MONEY, TAKE A JOB. A man who arrives
-        #     with four hundred denarii and a lens does not sit watching his
-        #     savings run out; he teaches, or writes, or sets bones for money. It
-        #     is in the protocol as `work` for a player and the optimizer had no
-        #     equivalent, so a single bad year in the opening decade could end a
-        #     run: one Rome seed earned four technologies in five hundred years
-        #     because a fire in 103 took a fifth of everything it had.
-        if (not self.manual and remaining > self.WAGE_FALLBACK_MIN_HOURS
-                and (self.state.household.capital < self.living_cost() * self.WAGE_FALLBACK_LIVING_COST_YEARS
-                     or not self.state.projects.active)):
-            trade = ("scholar" if self.labour.effective_scholars() >= 1 else "scribe")
-            hours = min(remaining, self.WAGE_FALLBACK_MAX_HOURS)
-            # ONLY IF IT PAYS BETTER THAN THE STANDING JOB IT TAKES THE HOURS FROM: a founder who already
-            # sells these hours in a trade does not move them to a worse-paid one.
-            # NOT `pool`: that name already holds the year's project budget,
-            # computed at 4b. Reusing it here would overwrite it, so
-            # hours_this_year would then report "offered_to_projects"
-            # against the WHOLE year instead of against the project budget,
-            # letting a year's hours add up to more than what was actually
-            # available.
-            held_trade = self.held_trade()
-            standing_pay = (self.labour.wage_for_hours(held_trade, hours) if held_trade else 0.0)
-            if self.labour.wage_for_hours(trade, hours) > standing_pay:
-                _, err = self.labour.work_for_wages(trade, hours)
-                # Kept in step with `remaining` so hours_this_year (below) does
-                # not count hours sold for wages here as still unused.
-                if err is None:
-                    remaining -= hours
-        return remaining
 
     def _step_reputation(self, pool, remaining, remaining_after_projects, hours_effective_total):
         # 6. reputation, familiarity, protection, scandal
         #
         # reputation decays toward what the household is known for, and familiarity is renewed: the polity module's
         self.send(RenewStanding())
-        # WHERE THE YEAR'S HOURS WENT: captured here, before the tallies
-        # below reset for the next year, the same way spend_last_year
-        # already captures the year's spending, so a player can see the
-        # breakdown as `hours_this_year` in `state` rather than only a
-        # final hours-left figure with no way to tell where the rest went.
-        self.hours_this_year = {
-            "available": round(self.labour.director_pool(), 1),
-            "wage_work": round(self.state.household.wage_hours_this_year, 1),
-            "teaching": round(self.state.household.teaching_hours_this_year, 1),
-            "moving": round(self.state.household.relocation_hours_this_year or 0.0, 1),
-            "supervising": round(self.state.household.supervision_hours_this_year, 1),
-            "offered_to_projects": round(max(0.0, pool - remaining_after_projects), 1),
-            # OFFERED is what projects were given a shot at; EFFECTIVE is what
-            # actually reduced their founder_hours_left. The gap between the
-            # two is hours that went in and came straight back out again
-            # because a trade or the money to pay for it fell short that year
-            # - see hours_offered_this_year / hours_effective_this_year on
-            # each project in `active`, and underfunded_this_year.
-            "effective_on_projects": round(hours_effective_total, 1),
-            "unused": round(max(0.0, remaining), 1),
-        }
-        # Reset AFTER the progress pass above, which is where the hours you sold
-        # are subtracted from the hours you have left to direct.
-        self.labour.close_wage_year()
-        # Contracted work is bought for a year and expires with it: hours you
-        # paid a shop for in 142 are not still sitting there in 143.
-        self.state.household.contract_hours = {}
-        self.state.household.teaching_hours_this_year = 0.0
-        self.state.household.relocation_hours_this_year = 0.0
-        self.state.household.supervision_hours_this_year = 0.0
+        self.send(CloseHoursYear(pool, remaining, remaining_after_projects, hours_effective_total))
         self.state.household.spend_last_year = getattr(self, "_spend_this_year", 0.0)
         self._spend_this_year = 0.0
         # Sellers restock, so the pressure your buying put on the market fades.

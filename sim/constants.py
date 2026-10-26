@@ -340,6 +340,7 @@ def _import_declaring_modules():
                    "sim.polity.constants",
                    "sim.polity.value_weight",
                    "sim.labour.labour",
+                   "sim.workforce.constants",
                    "sim.labour.learning_curve",
                    "sim.disease.numerics",
                    "sim.disease.nation_tuning",

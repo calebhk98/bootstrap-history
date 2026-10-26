@@ -210,6 +210,12 @@ def staffing_shortfalls(sim, totals, strict=False):
     return sim._staffing_shortfalls(totals, strict)
 
 
+@bridge_view("held_trade")
+def held_trade(sim):
+    """The trade the founder sells hours in (scholar when a held skill asks for scholars, else artisan), or None."""
+    return sim.held_trade()
+
+
 @bridge_view("staffing_closed_hand_shortfall")
 def staffing_closed_hand_shortfall(sim):
     """(scholars, craftsmen) the concerns shut for want of staff still lack."""

@@ -101,3 +101,25 @@ TRADE_REPLACEMENT_AFFORDABILITY_YEARS = declare(
         "taught worker - a buffer so this does not spend the "
         "household into arrears over one specialist. Tuned, not "
         "measured.")
+
+WAGE_FALLBACK_MIN_HOURS = declare(
+    "WAGE_FALLBACK_MIN_HOURS", 100.0, kind="temporary_heuristic",
+    unit="founder-hours", source=None, confidence="D",
+    why="Minimum unused hours before the optimizer's wage-work "
+        "fallback bothers activating - not worth the overhead of "
+        "selling a token amount. Round number, not measured.")
+WAGE_FALLBACK_LIVING_COST_YEARS = declare(
+    "WAGE_FALLBACK_LIVING_COST_YEARS", 2, kind="temporary_heuristic",
+    unit="years of living cost", source=None, confidence="D",
+    why="How thin a cash buffer (in years of living cost) triggers "
+        "the optimizer selling idle hours for wages rather than "
+        "riding out a bad year - see comment above: without this, a "
+        "single early fire could end a run in a handful of years. "
+        "Tuned, not measured.")
+WAGE_FALLBACK_MAX_HOURS = declare(
+    "WAGE_FALLBACK_MAX_HOURS", 1200.0, kind="temporary_heuristic",
+    unit="founder-hours/year", source=None, confidence="D",
+    why="Ceiling on how many hours a year the wage-work fallback will "
+        "sell, so it cannot consume the entire year even when nothing "
+        "else has any claim on the founder's time. Tuned, not "
+        "measured.")

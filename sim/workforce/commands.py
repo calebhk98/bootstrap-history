@@ -79,3 +79,22 @@ class BuildHousing(Command):
 	"""The acting seat's household pays for `places` of worker housing, if its capital covers them. Answers the places
 	built, nothing when the capital does not cover them."""
 	places: float
+
+
+@dataclass(frozen=True)
+class TakeWageFallback(Command):
+	"""The acting seat has `remaining_hours` of its year unspent. When the household has no work and thin means it sells
+	hours for wages (unless the seat is played by hand). Answers the hours still unspent."""
+	remaining_hours: float
+
+
+@dataclass(frozen=True)
+class CloseHoursYear(Command):
+	"""The acting seat's year of hours ends: where they went is kept as last year's breakdown (`pool` was the year's project
+	budget, `remaining` the hours left unspent, `remaining_after_projects` what was left once the projects had theirs and
+	`hours_effective_total` what actually reduced the projects' founder hours), the wage ledger is closed and the year's
+	hour tallies and contracted work reset."""
+	pool: float
+	remaining: float
+	remaining_after_projects: float
+	hours_effective_total: float

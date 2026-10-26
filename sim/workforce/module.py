@@ -12,11 +12,13 @@ from .commands_applied import Applying
 from .prelude import Prelude
 from .staff_hiring import StaffHiring
 from .staff_year import StaffYear
+from .hours_year import HoursYear
 from .views import Views
+from .wage_fallback import WageFallback
 from .world import WorkforceWorld
 
 
-class Workforce(Views, Applying, Apprenticeships, StaffYear, StaffHiring, Prelude, Module):
+class Workforce(Views, Applying, Apprenticeships, StaffYear, StaffHiring, Prelude, WageFallback, HoursYear, Module):
 
 	def setup(self):
 		self.labour = Labour(WorkforceWorld(self.needs, self))

@@ -10,8 +10,8 @@ from sim.ledger.api import PayEdge, ReceiveFromEdge
 from sim.polity.api import AddReputation, ScaleFamiliarity, ScaleProtection
 from sim.reporting.api import DiscardEventsAfter, RecordAutomation, RecordAutomationSkip, RecordEvent
 
-from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, NoteTradeSpread, PressLabour, ReportStaffReduction,
-                       ScaleDeputies, SetEmployed, SurviveStaff, UpdateWages)
+from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, NoteTradeSpread, PressLabour, ReportStaffReduction,
+                       ScaleDeputies, SetEmployed, SurviveStaff, TakeWageFallback, UpdateWages)
 from .module import Workforce
 
 READS_BY_OWNER = {
@@ -33,7 +33,7 @@ READS_BY_OWNER = {
                  "staffing_draw", "staffing_held_totals", "staffing_shortfalls", "concerns_to_close_for_staffing",
                  "venture_foreman", "venture_foremen_used", "venture_staff_free", "shared_answer"),
     "materials": ("material_price_factor",),
-    "finance": ("mine_operating_cost", "credit_limit", "living_cost", "spending_power", "can_pay", "purchase_refusal", "price_index", "home_price_level",
+    "finance": ("mine_operating_cost", "credit_limit", "living_cost", "held_trade", "spending_power", "can_pay", "purchase_refusal", "price_index", "home_price_level",
                 "housing_price_per_place", "trade_school_price_per_seat", "concern_rows_stopped"),
     "actors": ("actor_staff_fte", "actor_staff_nationwide", "actor_staff_total", "teaching_knowledge", "harvest_share_taken",
                "director_overhead_hours", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country",
@@ -80,7 +80,8 @@ MODULE_SPECS = (ModuleSpec(
     applies=((SetEmployed, "set_employed"), (NoteTradeSpread, "note_trade_spread"), (PressLabour, "press_labour"),
              (SurviveStaff, "survive_staff"), (ScaleDeputies, "scale_deputies"), (ReportStaffReduction, "report_staff_reduction"),
              (AllocateFarmWorkforce, "allocate_farm_workforce"), (ApplyLandClearing, "apply_land_clearing"),
-             (UpdateWages, "update_wages")),
+             (UpdateWages, "update_wages"), (TakeWageFallback, "take_wage_fallback"),
+             (CloseHoursYear, "close_hours_year")),
     phases=(PhaseHook("apprenticeships", "step_apprenticeships"), PhaseHook("staff", "step_staff"),
             PhaseHook("seat_prelude", "step_prelude")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
