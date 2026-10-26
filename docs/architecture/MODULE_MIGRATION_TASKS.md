@@ -15,12 +15,12 @@ tier, and reverts on red.
 ### Phase 0: tools and baseline (blocks everything)
 
 - [x] **0.1 (orchestrator)** (base `0be2f72`, worktree `../base-wt`; quick tier 13123 checks green) Tag `mr-base` at the branch head. Make a pinned base worktree at `mr-base` and never edit it. Record the quick-tier counts.
-- [ ] **0.2 (agent)** Profile why a fingerprint scenario build takes over 200 s, when the quick tier builds every civilisation in seconds (`harness._warm_starts`). Fix the slowness if it is in test tooling. Then build `sim/tests/equiv.py`:
+- [x] **0.2** (`sim/tests/equiv.py`; the slow build was the cold agent-economy spin-up, the tool uses the short spin-up and the disk cache) Profile why a fingerprint scenario build takes over 200 s, when the quick tier builds every civilisation in seconds (`harness._warm_starts`). Fix the slowness if it is in test tooling. Then build `sim/tests/equiv.py`:
   - It hashes each field every year and reports the first diverging year, field and key, plus the random state, so a draw made in a different order can be told apart from a changed value.
   - It has a micro tier (about 2 scenarios × 15 years, aiming under a minute) and a full tier (4 scenarios × 40 years).
   - A field-path resolver table, `sim/tests/equiv_fields.py`, maps each baseline field to candidate paths. A move appends its new path in the same commit. This is test tooling, not a save migration.
   - Acceptance: base checked against base is clean, and a planted extra random draw is caught and named.
-- [ ] **0.3 (agent, parallel with 0.2)** Record protocol golden transcripts at `mr-base`: scripted command sequences on a fixed seed, saving the JSON replies. Behaviour tests compare reply values, not wording (CLAUDE.md section 6). This closes the protocol gap before anything moves.
+- [x] **0.3** (`sim/tests/test_protocol_golden.py`, 83 of 99 commands; Complaint 680 found) Record protocol golden transcripts at `mr-base`: scripted command sequences on a fixed seed, saving the JSON replies. Behaviour tests compare reply values, not wording (CLAUDE.md section 6). This closes the protocol gap before anything moves.
 - [ ] **0.4 (read-only agent)** Put the measurement scripts from the appendix in `tools/measure/`. Acceptance: they reproduce 1559 and 906 at `mr-base`.
 - [ ] **0.5 (orchestrator)** Write `tools/done_check.sh`, which prints the done-criteria counts below. Record the equivalence baseline (micro, full and long) at `mr-base` and commit the hash file.
 
