@@ -1,131 +1,97 @@
 # Module `foreign_trade`
 
-Trade with partner countries: their economies, supply, payments in coin, lift capacity, actors' trade books.
+Trade with partner countries: their economies as markets, what they can supply, how trade is paid in coin and lifted by carriers, and the traders' books with them.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** moved (branch `mr/foreign-trade`). The package is `sim/foreign_trade/`; this file now describes what shipped, not the draft proposal. Counts come from the module spec
+(`python3 -c "import sys; sys.path.insert(0,'.'); import sim.engine.core; from sim.foreign_trade.module_spec import MODULE_SPECS as s; print(len(s[0].publishes), len(s[0].applies), len(s[0].reads))"`).
+
+## What changed from the draft
+
+- **Views:** 30 instead of 4, and none of the draft's four names survives as written. The draft's `partners`, `foreign_supply`, `lift` and `actor_trade` each stood for many old methods with different argument lists (a partner id, a route, a material, a commodity); a caller asks one of those questions, so the views are the questions, under the names the migration had already bridged (`partners`, `partner`, `partner_refusal`, `partner_gate`, `partner_landed_price`, `partner_carry`, `foreign_economies`, `partner_coin_standard`, `partner_opening_facts`, `partner_market_book`, `partner_route`, `route_lift_years_per_tonne`, `route_capital_per_lift_tonne`, `lift_capacity_tonnes`, `opening_carriers_per_route`, `foreign_coin_home_units`, `foreign_coin_partner_units`) plus the ones the engine's callers needed: `partners_in_agent_economy`, `partner_facts`, `commodity_materials`, `foreign_supply_tonnes`, `partner_book_entry`, `lift_left_tonnes`, `trade_value_in_year`, `actor_home_trade`, `actors_carry`, `landed_cost`, `partner_price_per_unit`, `partner_price_response`, `cargo_legs`.
+- **Commands:** 8 instead of 5. `SettleFlow`, `RecordStockTaken` and `CloseMarketsTo` already lived here (living stock sends them); `NoteActorTrade`, `NoteActorHomeTrade`, `NoteCargoLeg`, `SettleTraderCargo` and `ClosePartnerBooks` are new. The draft's `NoteActorTrade` stood for two methods (`note_actor_trade`, `note_actor_home_trade`) and `SettleTraderCargo` for two (`settle_trader_cargo`, `note_cargo_leg`); each is its own command. `ClosePartnerBooks` takes no year: the books close on the year that is running. `RecordStockTaken` and `CloseMarketsTo` write a partner's state (an actor of the cast); they stay here because they are what a partner suffers from the buyer, and they reach the actor through the `legacy_actor_registry` debt until the actors module moves.
+- **`ChangeCapacityPool` is not foreign trade's.** `state.economy.capacity_pool` holds the hours-denominated entries (`scholar_hours` and the like) the founder's tonnes ledger sweeps out of itself (`economy_materials.py`); nothing reads it and nothing about it concerns a partner. The draft attributed it by the word "capacity". It stays in `EconomyState` for the materials or ledger module.
+- **`_foreign_ledger` does not create state on first read.** The draft's hard spot is wrong: `create=False` returns a blank ledger that is not stored, and only the settlement and the lift record store one (`create=True`). The read became `ledger_of(partner)` and the two writers create it inside the module's own commands. A partner's ledger cannot be made at load time instead: partners come and go with the year and a ledger made for each would change the saved game.
+- **`_foreign_entry` still opens a book entry on first use**, from the partner's own demand (`partner_entry`). Opening them all when the partner is loaded would add entries for goods the game never asks about, which changes the saved book; so the opening stays lazy, inside the module, behind `partner_book_entry` and `partner_price_response` (both are quotes that write the module's own state; `cached=False`).
+- **The gate is a refusal built here from a knowledge fact.** `partner_gate` is the module's; the question under it (does the acting seat hold the action whose results return this partner) is a view of its own, `partner_reached`, bridged to `partner_gate_refusal` until knowledge moves.
+- **State:** one world dataclass, `ForeignTradeWorld`, holding five of the draft's six fields: `market_book` (was `foreign_market_book`), `actor_trade` (`foreign_actor_trade`), `home_actor_trade`, `ledgers` (`foreign_ledger`) and `trade_by_year` (`foreign_trade_by_year`). The trader cargo legs (`economy.agent_economy["cargo"]`) stay in the agent economy's record, read and written through the `legacy_agent_economy` view: moving them would add an always-present empty field to the save where the base has an absent key, which the equivalence check reports. They go with the markets module.
+- **Not a single owner of the partner's files.** The economies file with mods applied (`foreign_economy_records`), a civilisation file by id (`civilisation_record`), what a partner makes and charges at its own opening technologies (`partner_own_economy`) and what its households buy (`partner_household_demand`) are data loaded by engine functions that read mods and the price solver. The module reads them as bridged views; `foreign_economies.py`, `foreign_capacity.py` and `foreign_payments.py` are gone, and the two plain data functions that remain are `sim/engine/foreign_economy_data.py` and `sim/engine/partner_demand.py`.
+- **Plain modules moved:** `country_trade_years.py` -> `sim/foreign_trade/country_trade_years.py` (pure; the agent economy still keeps the book it counts in, `stored["country_trade_by_year"]`, and calls these functions).
+- **Cycles in the view graph:** coin reads `foreign_coin_*`, `partner_coin_standard`, `partner_opening_facts` and `foreign_economies` from here; here the settlement reads coin's `home_coin_stock`, `partner_coin_opening` and `coin_carriage_units`. Freight reads `partner_route`, `partner_market_book`, `lift_capacity_tonnes`, the `route_*lift*` views and `opening_carriers_per_route`; here the lift reads freight's `carrier_models` and the landed price reads freight's trader quotes. Per view the graph is acyclic (`coin_carriage_units` reads `partner_route_cost`, not the ledger).
 
 ## At a glance
 
 | Measure | Value |
 |---|---|
-| Views / commands proposed | 4 / 5 |
-| Old methods and properties owned (after regrouping) | 40 |
-| Of those, referenced from another module's mixin code | 13 (4 classed read-only or pure by Appendix B, 9 classed writers) |
-| Names used by other modules or by code outside the mixins (ui, agents, ports, mods, function modules) | 28 (13 from mixins, 14 only from outside) |
-| Views per used name | 0.14 |
-| Views that replace exactly one referenced method and no field (one-to-one) | 0 of 4 |
-| Views of other modules it reads | 20, from 12 modules (over the 15-read limit of task 2.4) |
-| Commands of other modules it sends | 2 |
+| Views / commands | 30 / 8 |
+| Views of other modules it reads | 33 (the spec's `READS_BY_OWNER`); none cached |
+| Commands of other modules it sends | `PayActorFromEdge` and `PayEdgeFrom` (the ledger's), `NoteTraderMargin` (the actors') |
+| `legacy_*` reads (debts) | `legacy_actor_registry` (the cast), `legacy_agent_economy` (the cargo legs), `legacy_world_map` |
+| State | `ForeignTradeWorld` (world scope); caches of facts, chains and demand are rebuilt on demand and never saved |
+| Log lines written | none |
+| New commands in other packages | `PayActorFromEdge` (ledger; applied by the ledger module), `NoteTraderMargin` (actors; applied by the bridge) |
 
-**Existing surface and files.** Existing: `sim/world/market.py` partner books; `sim/economy/foreign.py`. Engine: `ForeignEconomiesMixin`, `ForeignCapacityMixin`, `ForeignPaymentsMixin`, `ForeignActorTradeMixin`, `TraderCargoMixin`; `foreign_economy_data.py`, `country_trade_years.py`.
+## Mixin classes absorbed
 
-## (a) Mixin classes and files absorbed
-
-| Class | File | Methods here | Referenced from other modules |
-|---|---|---|---|
-| `ForeignEconomiesMixin` | `sim/engine/foreign_economies.py` | 9 | 7 |
-| `ForeignCapacityMixin` | `sim/engine/foreign_capacity.py` | 6 | 1 |
-| `ForeignPaymentsMixin` | `sim/engine/foreign_payments.py` | 8 | 4 |
-| `ForeignActorTradeMixin` | `sim/engine/foreign_actor_trade.py` | 10 | 1 |
-| `TraderCargoMixin` | `sim/engine/trader_cargo.py` | 7 | 0 |
-
-Methods that stay inside the module (referenced by no other module's mixin code and by nothing outside the mixins): `_foreign_can_make`, `_foreign_demand_and_make`, `_foreign_mineral_share`, `_import_offers`, `_money_per_partner_coin`, `_note_trade_value`, `_partner_outcome`, `_pay_duty`, `_pay_partner`, `_record_lift`, `_tracked_mineral`, `_true_up_trader`, `foreign_opening`.
-
-## (b) State owned
-
-Paths are today's. Seat-scoped fields live on `state.<section>` as the acting seat's alias (`bind_seat`, `sim/engine/state_seat.py`) and are saved once per seat in `state.seats[seat_id]`; world fields live once on the state. Counts are access sites found by the field scan: a mixin method of another module counts under that module, code in a function module, `sim/ui`, `sim/agents` and the like counts under `<area>`.
-
-Proposed slot: a world dataclass `ForeignTradeWorld`, no per-seat state.
-
-| Today's path | Scope | Read by (outside the owner) | Written by (outside the owner) |
-|---|---|---|---|
-| `state.economy.capacity_pool` | world | ledger 1 | ledger 1 |
-| `state.economy.foreign_actor_trade` | world | - | - |
-| `state.economy.foreign_ledger` | world | coin 2 | - |
-| `state.economy.foreign_market_book` | world | freight 1 | - |
-| `state.economy.foreign_trade_by_year` | world | - | - |
-| `state.economy.home_actor_trade` | world | - | - |
-
-## (c) Views
-
-Kind is table (one value), keyed (one value per key, computed on first read of the key) or quote (a question with arguments, never cached). Channels are the version channels the owner bumps; `inputs` are other views the value is derived from (a name without a dot is this module's own).
-
-| View | Kind | Seat | Answers | Replaces (old methods) | Replaces (fields) | Inputs | Channels | Callers today |
-|---|---|---|---|---|---|---|---|---|
-| `partners` | table | no | Partner civilisations, countries, governments and refusals; partners in the agent economy; the facts of each foreign economy. | `partner_civ`, `partner_countries`, `partner_government`, `partner_refusal`, `partners_in_agent_economy`, `foreign_economies`, `_foreign_economy_facts`, `_foreign_entry`, `_commodity_materials`, `economy.foreign` | `economy.foreign_market_book` | `knowledge.techniques_held` | `partners` | 9 |
-| `foreign_supply` | keyed | no | What a partner can make, supplies and its opening. | `foreign_supply_tonnes`, `foreign_opening`, `_foreign_can_make`, `_foreign_demand_and_make`, `_tracked_mineral` | `economy.foreign_market_book` | `partners`, `materials.material_supply` | `partners` | 4 |
-| `lift` | table | no | Lift capacity of a route in tonnes and what is left; years and capital per lift tonne. | `_foreign_ledger`, `foreign_lift_capacity_tonnes`, `foreign_lift_left_tonnes`, `_route_lift_years_per_tonne`, `_route_capital_per_lift_tonne` | `economy.foreign_ledger`, `economy.foreign_trade_by_year`, `economy.capacity_pool` | `freight.route_cost` | `lift` | 5 |
-| `actor_trade` | keyed | no | Actors' home and foreign trade books, landed cost and price response. | `actor_home_trade`, `actors_carry`, `partner_price_per_unit`, `partner_price_response`, `landed_cost`, `cargo_legs` | `economy.foreign_actor_trade`, `economy.home_actor_trade` | `partners`, `freight.trader_economics` | `actor_trade` | 2 |
-
-**Under the three-caller floor** (task 1.5: a view serves at least 3 callers or is a quote): `actor_trade`. Each needs a second consumer found, a merge into a neighbouring view, or a change to a quote.
-
-**Coverage.** 13 methods are referenced from other modules' mixin code: 11 are replaced by a view here, 2 by a command. 14 more names are used only from outside the mixins (ui, agents, ports, mods). Of all 28 used names, 27 are covered by a view or command through the method itself, 0 through a field alias, 0 are year-phase hooks and 1 are package handle members.
-
-**Published as views but still classed as writers** after discounting the lazy creation of `state.actors` (which is what made most of Appendix B's writers; see README). Each is either a read that also fills a cache or lazily creates something, or a real write that must be split into a quote and a command before the view is allowed: `_foreign_entry`, `_foreign_ledger`, `foreign_lift_capacity_tonnes`, `foreign_lift_left_tonnes`, `partner_price_per_unit`, `partner_price_response`.
-
-## (d) Commands
-
-| Command | Fields | Replaces | Write sites cited | Refusal causes | Owned fields it writes |
-|---|---|---|---|---|---|
-| `SettleFlow` | route, tonnes, money | `_settle_flow`, `_record_lift`, `_note_trade_value`: pays partners through ledger and notes the flow. Methods: `_settle_flow`, `close_partner_books` | `sim/engine/foreign_payments.py`, `sim/engine/living_stock_trade.py` | `lift_exhausted` | `economy.foreign_ledger`, `economy.foreign_trade_by_year` |
-| `NoteActorTrade` | actor, good, tonnes, side | `note_actor_trade`, `note_actor_home_trade`. Methods: `note_actor_trade`, `note_actor_home_trade` | `sim/engine/foreign_actor_trade.py:25,42,113` | none: always applies | `economy.foreign_actor_trade`, `economy.home_actor_trade` |
-| `SettleTraderCargo` | legs | `settle_trader_cargo`, `note_cargo_leg`; posts the legs to markets (StageOrder). Methods: `settle_trader_cargo`, `note_cargo_leg` | `sim/engine/trader_cargo.py:30,78` | none: always applies | - |
-| `ClosePartnerBooks` | year | `close_partner_books`. Methods: `close_partner_books` | `sim/engine/foreign_actor_trade.py` | none: always applies | - |
-| `ChangeCapacityPool` | key, amount | Direct edit of the capacity pool by the founder's stock sweep. | `sim/engine/economy_materials.py:772` | none: always applies | `economy.capacity_pool` |
-
-**Direct write sites of owned fields outside this module's mixin files** (AST scan; includes the module's own function modules, and writes made through a forwarding property are marked `alias`). Each becomes a command above.
-
-- `economy.capacity_pool`: 1 site: `sim/engine/economy_materials.py:772`
-
-## (e) Reads and sends
-
-Reads (views of other modules), by provider:
-
-- `actors`: `actors.cast` (actors, actors.actors, actors.get)
-- `coin`: `coin.coin_carriage` (coin_carriage_units); `coin.price_level` (partner_price_level)
-- `finance`: `finance.market_rate` (market_rate)
-- `freight`: `freight.carrier_models` (_carrier_models); `freight.route_cost` (_foreign_route, _route_freight_per_tonne, input of foreign_trade.lift); `freight.trader_economics` (input of foreign_trade.actor_trade)
-- `knowledge`: `knowledge.techniques_held` (input of foreign_trade.partners, projects.done)
-- `land`: `land.build_quote` (partner_gate_refusal); `land.tile_facts` (geography, geography.held_share, world_map)
-- `ledger`: `ledger.goods_stock` (_commodity_ledger)
-- `markets`: `markets.agent_economy` (economy.agent_economy); `markets.household_prices` (goods_market.home_unit_price, goods_market.household_prices); `markets.market_state` (_floor_ratio); `markets.trade_quote` (goods_market)
-- `materials`: `materials.material_pool` (_material_tag); `materials.material_supply` (_national_output_tonnes, input of foreign_trade.foreign_supply)
-- `prices`: `prices.material_prices` (_material_prices)
-- `resources`: `resources.deposits` (geography.tracked_materials)
-- `seats`: `seats.acting_seat` (goods_market.acting_party_id)
-
-Sends (commands of other modules):
-
-- `ledger`: `PayEdge`
-- `markets`: `ClearYear`
-
-## (f) Year phases
-
-Phases of `sim/engine/year_phases.py` `SHIPPED` it takes part in; where a phase is shared with other modules the sub-steps it owns are named (see "The year's shared phases" in the README):
-
-- `market`: `close_partner_books` (`market_clearing.py:199`); `settle_trader_cargo` runs inside the economy year (`economy_port_year.py:240`)
-
-## (g) Callers outside the engine mixins that read its views
-
-| Caller group | Uses | Most-used names |
+| Class | File | Where it went |
 |---|---|---|
-| engine/agents_port* | 16 | `_foreign_economy_facts`, `note_actor_home_trade`, `note_actor_trade`, `partner_countries`, `foreign_economies`, `partner_price_per_unit`, `_foreign_entry`, `actor_home_trade` |
-| engine/economy_port* | 14 | `foreign_economies`, `actors_carry`, `partner_civ`, `_settle_flow`, `partners_in_agent_economy`, `cargo_legs`, `settle_trader_cargo`, `partner_price_per_unit` |
-| engine/(function modules) | 8 | `foreign_supply_tonnes`, `_foreign_economy_facts`, `foreign_lift_left_tonnes`, `partner_civ`, `foreign_economies`, `_commodity_materials` |
-| ui | 1 | `partner_countries` |
+| `ForeignEconomiesMixin` | `foreign_economies.py` (deleted) | `economies.py` (who partners are, their facts, refusals), `capacity.py` (book entries) |
+| `ForeignCapacityMixin` | `foreign_capacity.py` (renamed) | `capacity.py` (supply, openings, chain); the data functions `household_tonnes_by_material` and `budget_scaled_final_tonnes` stay in `sim/engine/partner_demand.py` |
+| `ForeignPaymentsMixin` | `foreign_payments.py` (deleted) | `payments.py` (ledgers, settlement, lift), `rules.py`, `constants.py` |
+| `ForeignActorTradeMixin` | `foreign_actor_trade.py` (deleted) | `actor_trade.py` (tallies, price responses, the year's close), `rules.py` |
+| `TraderCargoMixin` | `trader_cargo.py` (deleted) | `cargo.py` (legs, settlement, duty, true-up) |
 
-The scan matches `sim.`, `s.`, `world.` prefixes, so a few counts include unrelated locals; treat them as orders of magnitude.
+The partner landed price and the carry of a smuggled load (`quotes.py`) came from `bridge_living_stock.py`; the stock-taken and market-closing writes (`governments.py`) from the same file.
 
-agents_port 16 (`_foreign_economy_facts` 4, `note_actor_*`), economy_port 14 (`foreign_economies`, `actors_carry`, `partner_civ`, `_settle_flow` 2), engine functions 8.
+## Views
 
-## (h) Hard spots and caches
+| View | Kind | Answers | Old name |
+|---|---|---|---|
+| `partners`, `partners_in_agent_economy`, `foreign_economies` | table | Enabled economies for the year; those inside the agent economy; those trading by the books. | `partner_countries`, `partners_in_agent_economy`, `foreign_economies` |
+| `partner` | keyed | `{civ, has_government, stock_taken}` for living stock. | bridged `partner` |
+| `partner_coin_standard`, `partner_opening_facts` | keyed | A partner's coin metal and weight; the population and wage its opening coin stock is sized from. | bridged |
+| `partner_gate`, `partner_refusal` | quote | Why a partner cannot be traded with yet; why it will not sell a material. | `partner_gate_refusal`, `partner_refusal` |
+| `partner_facts`, `partner_route` | keyed | Solved materials, population, prices in home money, route and freight of a partner, remembered per seat until the price table, the techniques known or the coin price change; the route alone. | `_foreign_economy_facts` |
+| `commodity_materials` | keyed | Material keys that count as a commodity. | `_commodity_materials` |
+| `foreign_supply_tonnes` | quote | Tonnes a year a partner can sell of a material. | `foreign_supply_tonnes` |
+| `partner_market_book`, `partner_book_entry` | keyed, quote | A partner's book by commodity; one entry, opened on first use. | `foreign_market_book`, `_foreign_entry` |
+| `route_lift_years_per_tonne`, `route_capital_per_lift_tonne`, `lift_capacity_tonnes`, `lift_left_tonnes`, `opening_carriers_per_route` | quote, table | Carrier-years and carriers' capital a tonne of yearly lift needs on a route; the route's yearly lift; what is left this year; the carriers a route opens with. | the same private names |
+| `foreign_coin_home_units`, `foreign_coin_partner_units` | table, keyed | Coin the home society gained over all partners; a partner's gain. | read of `economy.foreign_ledger` |
+| `trade_value_in_year` | quote | Imports and exports in home money in a year the book keeps. | read of `economy.foreign_trade_by_year` |
+| `actor_home_trade`, `actors_carry` | keyed, quote | Tonnes actors landed in and took from the home market; whether actors carry a good toward or from a partner. | same |
+| `landed_cost`, `partner_price_per_unit`, `partner_price_response` | quote | A cargo's cost on landing; a partner's price in home money; the factor a further cargo puts on it. | same |
+| `partner_landed_price`, `partner_carry` | quote | Home money per tonne delivered from a partner; the carrying cost and loss of a load smuggled out. | bridged |
+| `cargo_legs` | table | The legs noted since the last settlement. | `cargo_legs` |
 
-- `_foreign_economy_facts`, `_foreign_entry`, `_settle_flow` are underscore methods called from three modules; they are the real surface.
-- Foreign trade writes `economy.agent_economy` (a markets field) in `trader_cargo.py:30,78`; that becomes a command to markets.
-- `economy.capacity_pool` is written by the founder's stock sweep (ledger) as well as read here.
+## Commands
 
-Caches and version counters held today (feed for task 1.2):
+| Command | Does |
+|---|---|
+| `SettleFlow(partner, tonnes, value)` | Pays the partner in its coin's metal (nothing while the metal has no home price) and notes the flow in the ledger and the year's trade value. |
+| `RecordStockTaken(partner, material, units)`, `CloseMarketsTo(partner, party, until)` | Write the partner's state: stock smugglers took, a shut market. |
+| `NoteActorTrade(partner, material, tonnes, to_partner, landed_cost)`, `NoteActorHomeTrade(material, tonnes, landing)` | Tally an actor's cargo for the partner's book and the home market's price response. |
+| `NoteCargoLeg(...)` | Keep a trader's shipment as a leg until the year's market has cleared. |
+| `SettleTraderCargo(results)` | Settle every leg: pay the partners, count the lift, pay the tariff, true the trader's purse up. |
+| `ClosePartnerBooks()` | Clear every partner's book on the year's cargo and reset the tallies. |
 
-- `_foreign_can_make_cache`, `_foreign_demand_cache` (`foreign_capacity.py:110,134`), `_partner_civs` (`foreign_economies.py:69`), `_commodity_materials_cache`, `_foreign_facts_cache` (`foreign_economies.py:130,159`)
+`SettleTraderCargo` sends the ledger's `PayActorFromEdge` / `PayEdgeFrom` and the actors' `NoteTraderMargin`; the margin is noted first, and a trader the cast does not hold (a refusal) is neither paid nor charged, as before.
 
-Detected by the cache scan in this module's mixin files: `engine/foreign_capacity.py:110 __dict__[_foreign_can_make_cache]`, `engine/foreign_capacity.py:134 __dict__[_foreign_demand_cache]`, `engine/foreign_economies.py:69 __dict__[_partner_civs]`, `engine/foreign_economies.py:159 _commodity_materials_cache`, `engine/foreign_economies.py:130 _foreign_facts_cache`.
+## Reads it needs, by the owner that will publish them
+
+Bridged in `sim/engine/bridge_foreign_trade.py`: `foreign_economy_records`, `civilisation_record`, `partner_own_economy`, `partner_household_demand`, `home_unit_price`, `commodity_record`, `market_floor_ratio`, `national_output`, `tracked_materials`, `mineral_share_of_tiles`, `partner_reached`, and the debt `legacy_agent_economy`; the command `NoteTraderMargin`. Reused: `year`, `civilisation`, `techniques_held`, `acting_seat`, `material_prices`, `household_prices`, `material_commodity`, `market_rate`, `legacy_actor_registry`, `legacy_world_map`, freight's `foreign_route`, `route_freight_per_tonne`, `carrier_models`, `material_route`, `trader_cost_share`, `trader_agent_cost`, `cargo_lost_share`, and coin's `home_coin_stock`, `coin_carriage_units`, `partner_coin_opening`, `partner_price_level`.
+
+## Year phases
+
+None of its own. `ClosePartnerBooks` is sent from the end of the market phase (`market_clearing._step_market`), where `close_partner_books` was called; `SettleTraderCargo` from the economy year (`economy_port_year.run_year`), after the market has cleared.
+
+## Callers outside the module that still use a forwarder
+
+All in `sim/engine/forward_foreign_trade.py`: `partner_countries`, `partners_in_agent_economy`, `foreign_economies` (agents port, economy port setup, goods market offers, tile ownership, world hazards, the UI), `partner_civ` (goods market offers, economy port year), `_foreign_economy_facts` (agents port trade and revenue, economy port partners, goods market offers), `_commodity_materials` (goods market offers), `_foreign_entry` (agents port trade), `foreign_supply_tonnes` (goods market imports and offers, material reach), `foreign_lift_left_tonnes` (goods market imports), `partner_price_per_unit`, `partner_price_response`, `actors_carry`, `actor_home_trade`, `landed_cost`, `note_actor_trade`, `note_actor_home_trade`, `cargo_legs`, `note_cargo_leg`, `settle_trader_cargo` (agents port trade, economy port year) and `close_partner_books` (market clearing). The economy port's two settlements send `SettleFlow` and read `foreign_coin_partner_units` directly.
+
+## Hard spots that remain
+
+- Partner facts are remembered per seat in a dict the module keeps (the old cache lived on the seat's household facade); it is keyed by the price table's identity, so `cached=False` stays until prices are written only through their owner's commands.
+- `partner_book_entry` and `partner_price_response` write the module's own book when they open an entry; a read-only version needs the opening done once per partner when the roster is seeded and the saved book to change with it.
+- `partner_own_economy` and `partner_household_demand` are `lru_cache`d across games in one process (they were before); the module calls the engine's functions through the bridge and cannot see whether mods changed the data.
+- `partner_catch_chance` (living stock's) still sits in `bridge_living_stock.py`: it asks the partner's state for its reach, which is the actors module's world.
+- The cargo legs belong in the module's state once the agent economy's record stops being one dict the markets module will own.
+- `economy.capacity_pool` is unclaimed (see above).
