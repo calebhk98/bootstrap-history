@@ -22,12 +22,6 @@ def legacy_fog(sim):
     return sim.state._fog
 
 
-@bridge_view("legacy_seats")
-def legacy_seats(sim):
-    """Every seat's saved state, by seat id."""
-    return sim.state.seats
-
-
 @bridge_view("category_trait", kind=QUOTE)
 def category_trait(sim, category, trait):
     """Whether the data gives the node category `category` the flag `trait`."""
@@ -38,12 +32,6 @@ def category_trait(sim, category, trait):
 def relied_on_running(sim, node_id):
     """Whether some node requires `node_id` running."""
     return sim.relied_on_running(node_id)
-
-
-@bridge_view("on_road_to_goal", kind=QUOTE)
-def on_road_to_goal(sim, node_id):
-    """Whether the goal needs `node_id` (a yes or no, with no distance, so it names no route the player has not been shown)."""
-    return sim.on_road_to_goal(node_id)
 
 
 @bridge_command(RefreshDoneCaches)

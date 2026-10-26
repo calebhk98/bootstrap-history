@@ -85,7 +85,7 @@ def _test_subsystem_state_owners():
 	p = ProjectsState()
 	e = EconomyState()
 	g = GovernanceState()
-	f = FounderState(founder_alive=True, life_left=40.0)
+	f = FounderState()
 	s = ScenarioState(year=100)
 
 	sim_state = SimulationState(

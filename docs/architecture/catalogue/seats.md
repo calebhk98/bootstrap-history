@@ -1,172 +1,85 @@
 # Module `seats`
 
-Seats and the acting context: who plays, goals and win conditions, the founder's life, dealings between seats.
+Seats and the acting context: who plays, joining and handing over, goals and win conditions, the founder's life, dealings between seats, and what one seat sees of another.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** moved (branch `mr/seats`). The package is `sim/seats/`; this file describes what shipped, not the draft proposal. The seat registry (`state.seats`), `act_as`, `_switch_seat`, the household facades and `sync_seat_facades` stay on `Sim` (plan 4.7): the module reads the registry through the `legacy_seats` view and changes it only by the commands `RegisterSeat` and `MoveSeat`, which `sim/engine/bridge_seats.py` applies for good. Counts come from the spec (`python3 -c "import sys; sys.path.insert(0,'.'); from sim.seats.module_spec import MODULE_SPECS as s; print(len(s[0].publishes), len(s[0].applies), len(s[0].reads), len(s[0].sends))"`).
 
-## At a glance
+## What changed from the draft
 
-| Measure | Value |
+- **Views: 18 instead of 6, and different ones.** The draft's `seat_list` kept its bridged shape (`{joined, playing}`, the first publisher's) and the other seat questions each got their own view, because their callers ask them separately: `ended_seats`, `run_over`, `dead_reasons` (the text of why each ended seat ended, for the seats screen), `acting_country`, `played_countries`, `governed_countries`, `seat_holders`, `built_by_any_seat`, `seat_place` (keyed), `distance_between_seats`. `acting_seat` stays the id (a string), not the draft's table of id, kind, country and holder: the kind, country and holder are fields of the registry's entries and the seats screen reads them from `state.seats`. Dealings are `dealings_listing` and `dealing_party` (the seat as a party to an exchange; the seat bank mutates it, so it is a live handle, not a copy). `goal` and `founder` are seat-scoped tables as proposed (`{node, year, years}` and `{alive, life_left, dead_reason}`). `win_condition_value` and `win_condition_anatomy` are quotes. `dealings` was under the three-caller floor and became the listing.
+- **Commands: 10 applied, 3 sent and applied by the bridge, not 6.** `JoinSeat`, `JoinCastSeats`, `HandOverSeat`, `SetGoal`, `RecordGoalReached`, `ApplyForPatent`, `MakeOffer`, `AnswerOffer`, `EndRun` (the run ends for the acting seat; `announce` False is the "asked for the score" end that logs nothing), `SetFounderLife`. The draft's `FounderDies` is `EndRun` plus the `founder_mortality` phase: a death by age is the phase's, an end by denunciation, a fall or a dissolution is `EndRun`'s. `HearOfOtherSeats` is the `hear_of_other_seats` phase, not a command. `RegisterSeat` and `MoveSeat` (the registry's own changes) and `ForgetGoalCaches` (the goal caches live on `Sim`) are sent by the module and applied by the engine. A refusal is a `Refusal` with a cause (`unknown_starting_techs`, `no_government`, `seat_exists`, the handover's four); the old `join_seat` raised `ValueError` and still does at the forwarder, with the same message.
+- **A new phase, `founder_mortality`.** `_step_founder_mortality` ran at the end of `_run_seat_work`; it is now its own seat phase placed right after `seat_work`, so the order is the old one. `seat_work` keeps its name for the part before it (a mod's `after: seat_work` still runs after the progress, reputation and bondage steps; one that wants to run after the death step names `founder_mortality`).
+- **State moved into the seat slot (`SeatsSeat`)**, each with a relocation in `sim/tests/equiv_fields.py`: `goal_year`, `goal_years` (from `SeatProgressState`); `patents`, `shares_held`, `shares_issued`, `offers`, `offer_serial` (from `HoldingsState`); `founder_alive`, `life_left`, `dead_reason` (from `FounderState`).
+- **Not moved, against the draft.** `seat_progress.dashboard_history_years` is a dashboard option the UI sets (reporting's, not a goal). `household.saving_for` and `saving_target` are the household's savings plan (`dispatch_saving.py`). `founder.last_patron_death` is the memory of the patron-death event (hazards'). `founder._founder_death_aged` and `_year` are the UI's memory of a death it announced. `founder.policy` has readers in every owner (projects, workforce, finance, polity, hazards, ui: `grep -rn "founder.policy" sim | wc -l`); it stays on `FounderState` until those owners move. `household.base_tile` is workforce's (the seat's place is read through `seat_place`). `SeatState.goal` (the chosen goal id), `country`, `kind`, `holder` are the registry's entries and stay with the seat.
+- **Moved to plain-value rules** in `sim/seats/`: `lists.py` (`seats_playing`, `seats_ended`, `run_is_over`), `builds.py` (`builders_of`, `holders_of`, `built_by_any`, `operating_anywhere`, `disclosure_modes`, `licensors_of`), `royalty.py`, `country.py`, `visibility.py` (how much of an invention an onlooker sees: the actors' world and a seat's sight both use it, and `years_to_be_believed` is the disclosure rule), `sight_rules.py`, `join_rules.py`, `handover_rules.py`, `goal_rules.py` (`win_condition_met` included), `dealing_rules.py`, `founder_rules.py` (the mortality arithmetic and the words of the death, the dissolution and the ending).
+- **The win-condition anatomy hook became an extension point.** `GoalsMixin.WIN_CONDITION_ANATOMY` was a class dict of `metric -> function(sim, condition)`; nothing in the repository used it but one test. It is now `win_condition_rows(condition) -> rows or None` (first answer wins), which a mod provides with `api.provide("seats.win_condition_rows", fn)`.
+- **Dead code deleted.** `each_playing_seat` and `seats_that_built` (no callers), `WIN_CONDITION_METRICS` (no readers), `Sim._step_money` and `_step_win_conditions` (nothing called `_step_money`; the `win_conditions` phase is the module's).
+
+## Mixin classes and files absorbed
+
+| Old | Now |
 |---|---|
-| Views / commands proposed | 6 / 6 |
-| Old methods and properties owned (after regrouping) | 42 |
-| Of those, referenced from another module's mixin code | 11 (5 classed read-only or pure by Appendix B, 6 classed writers) |
-| Names used by other modules or by code outside the mixins (ui, agents, ports, mods, function modules) | 33 (11 from mixins, 20 only from outside) |
-| Views per used name | 0.18 |
-| Views that replace exactly one referenced method and no field (one-to-one) | 1 of 6 |
-| Views of other modules it reads | 15, from 11 modules |
-| Commands of other modules it sends | 6 |
+| `SeatRunMixin` (`seat_run.py`) | `run.py` (`Run`), `lists.py`; forwarders in `sim/engine/forward_seats.py` |
+| `SeatHandoverMixin`, `seat_handover.py` | `handover.py` (`Handover`), `handover_rules.py`; the registry move is `sim/engine/seat_move.py` (applied for `MoveSeat`); `seat_handover_empty.py` and `seat_handover_rekey.py` stay in the engine (they read engine state dataclasses and the engine's own stores) |
+| `SeatBuildsMixin`, `seat_builds.py` | `builds.py` (the one method, `seats_that_built`, had no caller; `seat_place` is `Sight.seat_place`) |
+| `SeatSightMixin`, `seat_sight.py` | `sight.py`, `sight_rules.py` |
+| `SeatDealingsMixin`, `seat_dealings.py` | `dealings.py`, `dealing_rules.py` |
+| `GoalsMixin`, `goals.py`; `_win_condition_value`, `_check_win_conditions`, `_win_condition_keys` in `core.py` | `goals.py`, `goal_rules.py` |
+| `seat_royalty.py`, `seat_country.py`, `engine/visibility.py`, `win_condition_rule.py` | `royalty.py`, `country.py`, `visibility.py`, `goal_rules.py` |
+| `_step_founder_mortality`, `_deputy_*`, `_what_survived_the_dissolution` (`core_step_phases.py`) | `founder.py`, `founder_rules.py` |
+| `ForwardingPropertiesMixin.goal_year`, `founder_alive`, `life_left`, `dead_reason` | read the `goal` and `founder` views; `dead_reason` is written by `EndRun`; `goal` (the id) stays an alias of the seat |
 
-**Existing surface and files.** Existing: `sim/assembly/clock.py`, `sim/engine/state_seat.py` (`SeatState`, `bind_seat`). Engine: `SeatMixin` (`act_as`), `SeatRunMixin`, `SeatHandoverMixin`, `SeatBuildsMixin`, `SeatSightMixin`, `SeatDealingsMixin`, `GoalsMixin`, win-condition methods of `Sim`, `_step_founder_mortality`.
+`SeatBankMixin` (`seat_bank.py`) is not in the catalogue's list and stays in the engine; it reads `dealing_party` through a forwarder. `seat_defaults.py` (the default policy) stays: policy stays on `FounderState`.
 
-## (a) Mixin classes and files absorbed
+## State owned
 
-| Class | File | Methods here | Referenced from other modules |
+`SeatsSeat` (`sim/seats/state.py`): `goal_year`, `goal_years`, `patents`, `shares_held`, `shares_issued`, `offers`, `offer_serial`, `founder_alive`, `life_left`, `dead_reason`. No world state. A handover moves the whole slot with the seat except the founder's life: the replacement keeps its own founder, so the module saves the replacement's three fields before `MoveSeat` and writes them back after.
+
+## Views published
+
+| View | Kind | Seat | Answers |
 |---|---|---|---|
-| `Sim` | `sim/engine/core.py` | 2 | 1 |
-| `SeatMixin` | `sim/engine/core_seats.py` | 2 | 1 |
-| `SeatRunMixin` | `sim/engine/seat_run.py` | 11 | 4 |
-| `SeatHandoverMixin` | `sim/engine/seat_handover.py` | 1 | 0 |
-| `SeatBuildsMixin` | `sim/engine/seat_builds.py` | 2 | 0 |
-| `SeatSightMixin` | `sim/engine/seat_sight.py` | 2 | 1 |
-| `SeatDealingsMixin` | `sim/engine/seat_dealings.py` | 7 | 1 |
-| `ForwardingPropertiesMixin` | `sim/engine/core_properties.py` | 16 | 4 |
-| `GoalsMixin` | `sim/engine/goals.py` | 4 | 1 |
-| `StepPhasesMixin` | `sim/engine/core_step_phases.py` | 2 | 0 |
-| `MoneyPhaseMixin` | `sim/engine/step_phase_money.py` | 1 | 0 |
+| `acting_seat` | table | no | the id of the seat acting now (`clock.acting_seat`) |
+| `acting_country` | table | yes | the partner country the acting seat belongs to, or None |
+| `seat_list` | table | no | `{joined, playing}` ids in joining order |
+| `ended_seats`, `dead_reasons`, `run_over` | table | no | the ended seats, why each ended, whether no seat has anything more to play |
+| `played_countries`, `governed_countries` | table | no | the countries a country seat plays; those with a government a country seat can hold |
+| `seat_holders`, `built_by_any_seat` | quote | no | which seats hold a node; which of some nodes a seat built |
+| `seat_place`, `distance_between_seats` | keyed / quote | no | a seat's base tile; great-circle km between two seats |
+| `goal`, `founder` | table | yes | the goal, its year and the years reached; whether the founder lives, years left, why the run ended |
+| `win_condition_value`, `win_condition_anatomy` | quote | yes | the number behind a measurement goal, and its parts |
+| `dealing_party`, `dealings_listing` | table | yes | the seat as a party to an exchange; its patents, shares and waiting offers |
 
-Methods that stay inside the module (referenced by no other module's mixin code and by nothing outside the mixins): `_check_win_conditions`, `_new_founder_years`, `_new_seat_policy`, `_refuse_unsupported`, `_step_founder_mortality`, `_what_survived_the_dissolution`, `distance_between_seats`, `each_playing_seat`, `find_dealer`, `forget_goal_caches`, `seats_that_built`.
+None is cached: the registry, the held sets and the founder's death are written outside the module's commands (see "Debts"). `win_condition_text` and `on_road_to_goal` are still published by the bridge under seats' names (see "Bridged").
 
-## (b) State owned
+## Reads, and what the bridge still answers (`sim/engine/bridge_seats.py`)
 
-Paths are today's. Seat-scoped fields live on `state.<section>` as the acting seat's alias (`bind_seat`, `sim/engine/state_seat.py`) and are saved once per seat in `state.seats[seat_id]`; world fields live once on the state. Counts are access sites found by the field scan: a mixin method of another module counts under that module, code in a function module, `sim/ui`, `sim/agents` and the like counts under `<area>`.
+Real module views: `tree`, `tree_nodes`, `techniques_held`, `techniques_granted` (knowledge); `disclosures`, `copy_difficulty`, `literacy` (diffusion); `running_mechanics`, `corpus_dispersed` (mechanics); `year`, `civilisation`, `price_index` (existing bridge entries of the root). Answered by the bridge, named for the owner that will publish them: `seat_party` (keyed) and `seat_party_with_margins` (actors: the facade lives on `Sim`), `seat_base_tile` (workforce), `seat_holds` (what a handover would overwrite in the engine's own state), `seeded_actor_registry` (actors; reading it seeds the opening cast, a read that writes), `society_techs`, `kit_capital`, `founder_life_terms`, `game_attribute` (an attribute-sourced win condition reads `getattr(sim, path)`), `generation_breakdown` (materials: the breakdown, where the existing `generation` view is only the total), `hazard_relief` and `hazard_relief_entries` (hazards), `patronage` (`{founder_age, deputies, deputy_hours, deputies_carry_the_work}`, mechanics), `dissolution_terms` (the `declare`d constants of a dissolving programme, which stay on `Sim`), `losable_node_ids` (knowledge/mechanics). `legacy_*`: `legacy_seats`, `legacy_projects`, `legacy_fog`, `legacy_dice`, `legacy_actor_registry`, `legacy_agent_world`.
 
-Proposed slot: no world state and a per-seat dataclass `SeatsSeat`.
+**Bridged for good (until the owner moves):** `win_condition_text` (it is `data.win_condition_describe`, which the UI uses too) and `on_road_to_goal` (its cache `_goal_closure` lives on `Sim` and is also read by `labour_port.py`, `society_hazards.py` and the UI). `ForgetGoalCaches` is applied by the engine for the same reason.
 
-| Today's path | Scope | Read by (outside the owner) | Written by (outside the owner) |
-|---|---|---|---|
-| `state.founder._founder_death_aged` | seat | - | <engine-functions> 1 |
-| `state.founder._founder_death_year` | seat | - | <engine-functions> 1 |
-| `state.founder.dead_reason` | seat | <ui> 3 | core 1, hazards 1, <ui> 1 |
-| `state.founder.founder_alive` | seat | <ui> 9, ventures 4, projects 1, polity 1, production 1 | core 1, <ui> 1 |
-| `state.founder.last_patron_death` | seat | hazards 1 | hazards 1 |
-| `state.founder.life_left` | seat | - | <ui> 2, core 1 |
-| `state.founder.policy` | seat | <ui> 10, projects 7, workforce 4, finance 4, polity 1, hazards 1 | core 1, <ui> 1 |
-| `state.holdings.offer_serial` | seat | - | - |
-| `state.holdings.offers` | seat | - | - |
-| `state.holdings.patents` | seat | - | - |
-| `state.holdings.shares_held` | seat | - | - |
-| `state.holdings.shares_issued` | seat | - | - |
-| `state.household.base_tile` | seat | - | - |
-| `state.household.saving_for` | seat | <ui> 1 | <ui> 2 |
-| `state.household.saving_target` | seat | <ui> 1 | <ui> 2 |
-| `state.seat_progress.dashboard_history_years` | seat | <ui> 2 | <ui> 1 |
-| `state.seat_progress.goal_year` | seat | <ui> 25, <engine-functions> 4 | - |
-| `state.seat_progress.goal_years` | seat | <engine-functions> 1 | - |
+## Commands sent
 
-## (c) Views
+`RegisterSeat`, `MoveSeat`, `ForgetGoalCaches` (applied by the bridge), `LearnTechnique`, `ForgetTechnique`, `RevealNodes` (knowledge), `RekeyDisclosures` (diffusion), `RecordEvent` (reporting).
 
-Kind is table (one value), keyed (one value per key, computed on first read of the key) or quote (a question with arguments, never cached). Channels are the version channels the owner bumps; `inputs` are other views the value is derived from (a name without a dot is this module's own).
+## Forwarders left (`sim/engine/forward_seats.py`)
 
-| View | Kind | Seat | Answers | Replaces (old methods) | Replaces (fields) | Inputs | Channels | Callers today |
-|---|---|---|---|---|---|---|---|---|
-| `acting_seat` | table | yes | The acting seat id, kind, country, holder. | `acting_country`, `goods_market.acting`, `goods_market.acting_party_id` | - | - | `seat` | 5 |
-| `seat_list` | table | no | Seats playing, ended, joined; whether the run is over; governed countries; society techs now. | `playing_seats`, `ended_seats`, `run_over`, `governed_countries`, `society_techs_now`, `seats_that_built`, `seat_place` | - | - | `seats` | 9 |
-| `goal` | table | yes | The seat's goal, the year reached, the record of goals reached, the win condition anatomy and value. Replaces the forwarding properties `goal`, `goal_year` (UI: 52 and 30 reads). | `win_condition_anatomy`, `_win_condition_value`, `goal`, `goal_year` | `seat_progress.goal_year`, `seat_progress.goal_years`, `seat_progress.dashboard_history_years`, `household.saving_for`, `household.saving_target` | `knowledge.techniques_held` | `goal` | 10 |
-| `founder` | table | yes | The founder's life: alive, years left, cause of death, policy, last patron death. Replaces forwarding properties `policy`, `founder_alive`, `life_left`, `dead_reason`. | `policy` | `founder.founder_alive`, `founder.life_left`, `founder.dead_reason`, `founder.policy`, `founder.last_patron_death` | - | `founder` | 10 |
-| `seat_party` | keyed | no | A seat as a party to dealings and to the goods market. | `seat_party`, `seat_parties`, `dealing_party` | - | - | `seats` | 6 |
-| `dealings` | table | yes | Offers made and received, patents held, shares held and issued; the listing. | `dealings_listing`, `find_dealer`, `distance_between_seats` | `holdings.patents`, `holdings.shares_held`, `holdings.shares_issued`, `holdings.offers`, `holdings.offer_serial` | - | `dealings` | 1 |
+`playing_seats`, `ended_seats`, `run_over`, `acting_country`, `governed_countries`, `society_techs_now`, `join_seat`, `join_cast_seats`, `hand_over_seat`, `seat_place`, `dealing_party`, `dealings_listing`, `seat_patent`, `seat_offer`, `seat_answer`, `set_goal`, `record_goal_reached`, `win_condition_anatomy`, `_win_condition_value`, `forget_goal_caches`. Callers: the UI (`ui_port`, `dispatch_seats`, `dispatch_dealings`, `goals_watch`, `anatomy`), `year_phases.py`, `agents_port*.py`, `economy_port*.py`, `disease_port.py`, `shock_year.py`, `society_hazards.py`, `world_hazards.py`, `projects_completion.py`, `seat_bank.py`. The properties `goal`, `policy` stay on `ForwardingPropertiesMixin`; `goal_year`, `founder_alive`, `life_left` there are read-only views of the module (`dead_reason`'s setter sends `EndRun`).
 
-**Under the three-caller floor** (task 1.5: a view serves at least 3 callers or is a quote): `dealings`. Each needs a second consumer found, a merge into a neighbouring view, or a change to a quote.
+## Year phases
 
-**Coverage.** 11 methods are referenced from other modules' mixin code: 8 are replaced by a view here, 3 by a command. 20 more names are used only from outside the mixins (ui, agents, ports, mods). Of all 33 used names, 25 are covered by a view or command through the method itself, 5 through a field alias, 1 are year-phase hooks and 2 are package handle members.
+`hear_of_other_seats`, `win_conditions` and the new `founder_mortality` are the module's. `drop_ended_seats` (a world phase that asks `ended_seats`), `begin_seat_year` and `advance_year` stay in `year_phases.py`.
 
-**Published as views but still classed as writers** after discounting the lazy creation of `state.actors` (which is what made most of Appendix B's writers; see README). Each is either a read that also fills a cache or lazily creates something, or a real write that must be split into a quote and a command before the view is allowed: `_win_condition_value`, `dealing_party`, `dealings_listing`, `distance_between_seats`, `find_dealer`, `seat_parties`, `seat_party`, `seat_place`, `win_condition_anatomy`.
+## Debts
 
-## (d) Commands
+- Every outside writer of a founder's death or a seat's goal now sends a command: `core.py` (`SetFounderLife` at the opening), `society_hazards.py` (`_catastrophe` sends `EndRun`), `cli.py` and `cli_interactive.py` (`SetFounderLife`), the `dead_reason` setter (`EndRun`, no log line). Readers of the moved fields in `sim/labour` reach the founder's life through `LabourWorld.founder_alive`.
+- `legacy_seats` is the registry itself; it goes only when `state.seats` does. The module mutates seat entries through it in three places: `SetGoal` writes `SeatState.goal`, `RecordGoalReached` reads it, and the join and handover read `kind`, `country` and the projects' held sets.
+- `legacy_projects().stalled` and `.operating` are written by the dissolution step (projects' fields, not yet commands).
+- A country seat has no founder, but its slot carries `founder_alive`, `life_left`, `dead_reason` at their defaults; on the base they were absent. The equivalence tool's micro tier has no country seat; a run with one would show those three leaves as new.
+- `HouseholdParty` (agents) is handed the slot (`dealings=`), because the agents package cannot name the seats module.
 
-| Command | Fields | Replaces | Write sites cited | Refusal causes | Owned fields it writes |
-|---|---|---|---|---|---|
-| `AddSeat` | template | `add_seat`, `join_seat`, `join_cast_seats`. Methods: `join_cast_seats`, `join_seat` | `sim/engine/core_seats.py`, `sim/engine/seat_run.py` | `seat_exists` | - |
-| `SetGoal` | seat, goal | `set_goal`, `record_goal_reached`. Methods: `record_goal_reached`, `set_goal` | `sim/ui/proto/dispatch_goals.py`, `sim/engine/goals.py` | `unknown_goal` | `seat_progress.goal_year`, `seat_progress.goal_years`, `seat_progress.dashboard_history_years`, `household.saving_for`, `household.saving_target` |
-| `FounderDies` | seat, cause | `_step_founder_mortality`, hazards that kill the founder. | `sim/engine/core_step_phases.py (_step_founder_mortality)`, `sim/engine/society_hazards.py` | none: always applies | `founder.founder_alive`, `founder.life_left`, `founder.dead_reason`, `founder.last_patron_death`, `founder._founder_death_aged`, `founder._founder_death_year`, `founder.policy` |
-| `MakeOffer` | seat, to, kind, terms | `seat_offer`, `seat_answer`, `seat_patent`. Methods: `seat_offer`, `seat_answer`, `seat_patent` | `sim/engine/seat_dealings.py` | `no_such_seat`, `unsupported` | `holdings.patents`, `holdings.shares_held`, `holdings.shares_issued`, `holdings.offers`, `holdings.offer_serial` |
-| `HearOfOtherSeats` | seat, other | `hear_of_other_seats`: a seat that hears of another reveals nodes to it (`observer.revealed.update`); sends RevealNodes. Methods: `hear_of_other_seats` | `sim/engine/seat_sight.py` | none: always applies | - |
-| `HandOverSeat` | seat, to | `hand_over_seat`. Methods: `hand_over_seat` | `sim/engine/seat_handover.py` | `not_playing` | - |
+## Hard spots
 
-**Direct write sites of owned fields outside this module's mixin files** (AST scan; includes the module's own function modules, and writes made through a forwarding property are marked `alias`). Each becomes a command above.
-
-- `founder._founder_death_aged`: 1 site: `sim/engine/ui_port.py:161` (assign (alias))
-- `founder._founder_death_year`: 1 site: `sim/engine/ui_port.py:161` (assign (alias))
-- `founder.dead_reason`: 3 sites: `sim/ui/proto/dispatch_inspection.py:94` (assign (alias)), `sim/engine/society_hazards.py:790`, `sim/engine/core.py:492`
-- `founder.founder_alive`: 2 sites: `sim/ui/cli_interactive.py:809` (assign (alias)), `sim/engine/core.py:491`
-- `founder.last_patron_death`: 1 site: `sim/engine/society_hazards.py:742`
-- `founder.life_left`: 3 sites: `sim/ui/cli.py:1201` (assign (alias)), `sim/ui/cli_interactive.py:807` (assign (alias)), `sim/engine/core.py:495`
-- `founder.policy`: 2 sites: `sim/ui/proto/dispatch_ventures.py:766` (assign (alias)), `sim/engine/core.py:482` (assign (alias))
-- `holdings.offers`: 1 site: `sim/engine/seat_handover_rekey.py:26`
-- `holdings.shares_held`: 1 site: `sim/engine/seat_handover_rekey.py:27` (.pop())
-- `household.base_tile`: 1 site: `sim/labour/labour_settlement.py:203`
-- `household.saving_for`: 2 sites: `sim/ui/proto/dispatch_saving.py:18`, `sim/ui/proto/dispatch_saving.py:29`
-- `household.saving_target`: 2 sites: `sim/ui/proto/dispatch_saving.py:19`, `sim/ui/proto/dispatch_saving.py:30`
-- `seat_progress.dashboard_history_years`: 1 site: `sim/ui/proto/dispatch_game_options.py:43`
-
-## (e) Reads and sends
-
-Reads (views of other modules), by provider:
-
-- `actors`: `actors.cast` (actors, actors.get, actors.government_of, actors.state)
-- `diffusion`: `diffusion.disclosure` (copy_difficulty); `diffusion.literacy` (literacy)
-- `hazards`: `hazards.hazard_relief` (hazard_relief, hazard_relief_entries)
-- `knowledge`: `knowledge.techniques_held` (input of seats.goal, projects.done, projects.done_year, projects.granted); `knowledge.visibility` (projects.revealed)
-- `materials`: `materials.generation` (generation_breakdown_kw)
-- `mechanics`: `mechanics.corpus` (corpus_is_dispersed, losable_node_ids); `mechanics.patronage` (deputies_carry_the_work, founder_age)
-- `polity`: `polity.state_treasury` (state_treasury)
-- `production`: `production.running` (projects.operating, running_with_mechanic); `production.techniques_in_use` (_society_held_techs)
-- `projects`: `projects.active_projects` (projects.stalled)
-- `reporting`: `reporting.event_log` (household.log)
-- `workforce`: `workforce.staff` (labour, labour.base_tile)
-
-Sends (commands of other modules):
-
-- `hazards`: `RunRandomEvents`
-- `knowledge`: `LearnTechnique`, `RevealNodes`
-- `production`: `SetOperating`
-- `projects`: `ResetProgress`
-- `reporting`: `RecordEvent`
-
-## (f) Year phases
-
-Phases of `sim/engine/year_phases.py` `SHIPPED` it takes part in; where a phase is shared with other modules the sub-steps it owns are named (see "The year's shared phases" in the README):
-
-- `begin_seat_year`: `hear_of_other_seats` (`core_step_phases.py:110-116`)
-- `win_conditions`
-- `drop_ended_seats`
-- `seat_work`: `_step_founder_mortality`
-- `advance_year`
-
-## (g) Callers outside the engine mixins that read its views
-
-| Caller group | Uses | Most-used names |
-|---|---|---|
-| ui | 125 | `goal`, `goal_year`, `policy`, `founder_alive`, `dead_reason`, `dealings_listing`, `seat_offer`, `life_left` |
-| engine/(function modules) | 9 | `goal_year`, `ended_seats`, `_step_win_conditions`, `playing_seats` |
-| engine/agents_port* | 8 | `playing_seats`, `seat_party`, `seat_place`, `seat_parties` |
-| engine/ui* | 4 | `_founder_death_aged`, `_founder_death_year`, `set_goal`, `win_condition_anatomy` |
-| engine/economy_port* | 3 | `playing_seats` |
-| engine/saveload* | 2 | `goal` |
-| agents | 1 | `seat_parties` |
-| engine/save* | 1 | `goal` |
-
-The scan matches `sim.`, `s.`, `world.` prefixes, so a few counts include unrelated locals; treat them as orders of magnitude.
-
-sim/ui: `goal` 52, `goal_year` 30, `policy` 11, `founder_alive` 10, `dealings_listing` 3, `seat_offer` 3; agents_port: `act_as` 5, `playing_seats` 3, `seat_party` 3; economy_port: `act_as` 4, `playing_seats` 3; engine functions: `act_as` 8.
-
-## (h) Hard spots and caches
-
-- `act_as` is the only switch (CLAUDE.md, plan 4.2 Seats): it rebinds `state.household/projects/holdings/founder/...` aliases (`bind_seat`, `state_seat.py:61`) and the `_seat_facades` (`core_seats.py`). In the new design it becomes one `bump_seat(seat)` and seat-scoped views read the acting seat; the base module keeps `Sim`'s `act_as` context manager.
-- A country seat has no household or founder (`SeatState.kind == COUNTRY_SEAT`), only an empty placeholder household the aliases need; seat-scoped views must answer for a seat that owns no household.
-- `_seat_facades` and `_wrap_seat_containers` rewrap `_InvalidatingDict`s per seat (`core.py:593-606`).
-
-Caches and version counters held today (feed for task 1.2):
-
-- `_seat_facades` (`core.py:468`), `_founder_death_cache` (`ui_port.py:169`)
+- A read that writes: `governed_countries` seeds the opening cast the first time it is asked (`seeded_actor_registry`), and `seat_base_tile` switches the acting seat for the read (`act_as`). Both are bridge views for that reason.
+- `join_seat` draws the founder's lifespan from the game's random source even for a country seat (which has no founder), and before the registry is checked for a duplicate id. Both are kept: the draw order is part of the game.
+- The handover refusal reads `holds` from two places: the engine's own state (`seat_holds`: works, staff, arrears, holdings, institutions, the remaining progress record) and the module's (disclosures count as works, dealings as holdings, a goal year as a goal record); the refusal lists them in the old order (`HOLD_ORDER`).

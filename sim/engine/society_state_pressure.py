@@ -493,7 +493,7 @@ class StatePressureMixin:
         floor = self.standing_floor()
         danger = self.cfg["eminence_danger"]
         refusal = eminence_rules.withdrawal_refusal(
-            self.state.founder.founder_alive, household.last_withdrawal, self.state.scenario.year, self.WITHDRAW_EVERY,
+            self.founder_alive, household.last_withdrawal, self.state.scenario.year, self.WITHDRAW_EVERY,
             household.eminence, danger, self.WITHDRAW_MIN_EMINENCE_FRACTION, household.reputation, floor)
         if refusal == eminence_rules.WITHDRAW_DEAD:
             return False, "there is nobody left to withdraw"

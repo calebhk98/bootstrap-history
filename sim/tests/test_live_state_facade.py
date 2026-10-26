@@ -12,10 +12,7 @@ from sim.engine.state import (EconomyState, FounderState, HouseholdState, Popula
 SCALARS = {
     "capital": (1250.0, "household.capital"),
     "year": (150, "scenario.year"),
-    "founder_alive": (False, "founder.founder_alive"),
-    "life_left": (22.5, "founder.life_left"),
     "farm_hectares": (45.0, "holdings.farm_hectares"),
-    "goal_year": (300, "seat_progress.goal_year"),
     "fog": (True, "_fog"),
     "goal": ("test_goal", "_goal"),
 }

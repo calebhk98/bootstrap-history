@@ -49,7 +49,7 @@ class _SackGame:
             corpus_hedge=lambda: knowledge_rules.corpus_hedge(tiers, self._held, CORPUS_HEDGE_LOSS_CHANCE_NONE,
                                                               CORPUS_HEDGE_FRACTION_LOST_NONE),
             corpus_nodes=["corpus_dispersed"], mechanic=lambda name: {"corpus_dispersed": {}, "corpus_written": {}},
-            goal=lambda: self.goal, tree_nodes=self.nodes, tree_closure=lambda goal_id: closure(self.nodes, goal_id),
+            goal=lambda: {"node": self.goal}, tree_nodes=self.nodes, tree_closure=lambda goal_id: closure(self.nodes, goal_id),
             losable_node_ids=lambda keep_dispersed=True: self.losable_node_ids(keep_dispersed),
             answers={ForgetTechnique: lambda command: self.knowledge.forget_technique(command),
                      ShutForgotten: lambda command: bridge_hazards.shut_forgotten(self, command)})

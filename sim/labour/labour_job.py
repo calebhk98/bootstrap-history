@@ -16,7 +16,7 @@ class StandingJobMixin:
         businesses, hours already sold on request); none once the founder is dead. TEMPORARY HEURISTIC:
         hours put into the household's own projects are not taken out (they are worked alongside the job)
         until a project's hours are the hours of a seat."""
-        if not self._world.state.founder.founder_alive:
+        if not self._world.founder_alive:
             return 0.0
         return hours_free(self.director_pool(), self.director_hours_committed())
 

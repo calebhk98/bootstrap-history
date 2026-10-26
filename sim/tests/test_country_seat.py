@@ -7,8 +7,8 @@ import types
 
 from .harness import check
 
-from sim.engine.seat_handover import handover_refusal, move_seat_fields
-from sim.engine.seat_run import run_is_over, seats_playing
+from sim.engine.seat_move import move_seat_fields
+from sim.seats.api import SeatsSeat, handover_refusal, run_is_over, seats_playing
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
 from sim.engine.state_seat import COUNTRY_SEAT, FIRST_SEAT_ID, seat_from_template
 from sim.refusal import cause_of
@@ -22,11 +22,14 @@ handlers = command_registry.handlers()
 
 
 def household_seat():
-    return seat_from_template({"starting_techs": ["fire"]}, 100.0, 1e9, {})
+    seat = seat_from_template({"starting_techs": ["fire"]}, 100.0, {})
+    seat.modules["seats"] = SeatsSeat()
+    return seat
 
 
 def country_seat(holder=GOVERNMENT):
-    seat = seat_from_template({"kind": COUNTRY_SEAT, "country": None}, 0.0, 1e9, {})
+    seat = seat_from_template({"kind": COUNTRY_SEAT, "country": None}, 0.0, {})
+    seat.modules["seats"] = SeatsSeat()
     seat.holder = holder
     return seat
 
@@ -41,8 +44,9 @@ class JoinGame:
         self.nodes = {"fire": {}}
         self.joined = []
 
-    def ended_seats(self):
-        return []
+    def view(self, name):
+        assert name == "dead_reasons"
+        return lambda: {}
 
     def society_techs_now(self):
         return {"fire"}
@@ -126,15 +130,15 @@ check("with no household seat playing a step is refused with its cause", reply["
 check("a country seat is not among the playing seats", seats_playing(seats) == [FIRST_SEAT_ID], seats_playing(seats))
 check("a country seat alone does not end the run", run_is_over({"senate": country_seat()}) is False, None)
 ended = household_seat()
-ended.founder.dead_reason = "denounced"
+ended.modules["seats"] = SeatsSeat(dead_reason="denounced")
 check("a run is over when every household seat ended, whatever a country seat does",
       run_is_over({FIRST_SEAT_ID: ended, "senate": country_seat()}) is True, None)
 
 # ---- handover
 check("a country seat cannot be handed to a household seat",
-      cause_of(handover_refusal(seats, "senate", FIRST_SEAT_ID, False)) == "replacement_wrong_kind", None)
+      cause_of(handover_refusal(seats, "senate", FIRST_SEAT_ID, [])) == "replacement_wrong_kind", None)
 seats_two = {"senate": country_seat(), "regent": country_seat(holder=None)}
-check("a country seat can be handed to an empty country seat", handover_refusal(seats_two, "senate", "regent", False) is None, None)
+check("a country seat can be handed to an empty country seat", handover_refusal(seats_two, "senate", "regent", []) is None, None)
 moved = move_seat_fields(seats_two, "senate", "regent")
 check("a country seat is handed over with its kind and holder", moved["from"] == "senate" and moved["to"] == "regent"
       and "senate" not in seats_two and seats_two["regent"].kind == "country" and seats_two["regent"].holder == GOVERNMENT, moved)

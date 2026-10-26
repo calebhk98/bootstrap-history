@@ -19,7 +19,7 @@ def labour(overhead_hours):
                                       bondage_years_left=0, directors_extra=0.0)
     world = types.SimpleNamespace(household=household, director_overhead_hours=lambda: overhead_hours,
                                   cfg={"founder_hours_per_year": POOL_HOURS, "director_hours_per_year": 0.0},
-                                  state=types.SimpleNamespace(founder=types.SimpleNamespace(founder_alive=True), household=household))
+                                  founder_alive=True, state=types.SimpleNamespace(household=household))
     stub = types.SimpleNamespace(_world=world, BONDAGE_HOURS_SHARE=0.25)
     stub.director_pool = lambda: CapacityMixin.director_pool(stub)
     stub.director_hours_committed = lambda: CapacityMixin.director_hours_committed(stub)

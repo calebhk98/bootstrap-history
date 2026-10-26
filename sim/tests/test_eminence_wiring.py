@@ -26,7 +26,8 @@ class Standin(Pressure):
         self.state = types.SimpleNamespace(
             household=types.SimpleNamespace(reputation=reputation, eminence=eminence, capital=capital, familiarity=0.0,
                                             last_withdrawal=last_withdrawal, log=[]),
-            founder=types.SimpleNamespace(founder_alive=alive), scenario=types.SimpleNamespace(year=YEAR))
+            scenario=types.SimpleNamespace(year=YEAR))
+        self.founder_alive = alive
         self.protection_updates = 0
 
     EMINENCE_WEALTH_VISIBLE_THRESHOLD = 1.0e9

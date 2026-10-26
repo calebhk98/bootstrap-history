@@ -27,7 +27,7 @@ from sim.constants import declare
 from . import category_traits, concern_sales, money_units, node_revenue_market, node_upkeep
 from .readable import readable
 from .revenue_ledger import assemble_ledger
-from .seat_country import patron_grant_share
+from sim.seats.api import patron_grant_share
 from sim.world import plant_figures
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
@@ -158,7 +158,6 @@ class ProductionMixin:
         projects = self.state.projects
         household = self.state.household
         governance = self.state.governance
-        founder = self.state.founder
         key = (
             scenario.year,
             self.pop_scale,
@@ -178,7 +177,7 @@ class ProductionMixin:
             getattr(governance, "gov", 0.0) or 0.0,
             self.output_factor,
             household.reputation,
-            founder.founder_alive,
+            self.founder_alive,
             self.state_funding(),
             self.home_price_level(),
         )

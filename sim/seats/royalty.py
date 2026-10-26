@@ -3,7 +3,7 @@ from typing import Any, Callable, List, Mapping, Tuple
 
 from sim.agents.api import licence
 
-from . import seat_builds
+from . import builds
 
 
 def seat_royalties_due(seats: Mapping[str, Any], node_id: str, licensee_id: str, takings: float,
@@ -12,7 +12,7 @@ def seat_royalties_due(seats: Mapping[str, Any], node_id: str, licensee_id: str,
 	takings, in the order the seats joined; a seat whose licence carries no royalty, or takings that are not
 	positive, owe nothing and are left out. `disclosures_of` gives a seat's disclosures by node id."""
 	owed = []
-	for seat_id in seat_builds.licensors_of(seats, node_id, licensee_id, disclosures_of):
+	for seat_id in builds.licensors_of(seats, node_id, licensee_id, disclosures_of):
 		record = disclosures_of(seat_id)[node_id]["licensees"][licensee_id]
 		due = licence.royalty_due(takings, record)
 		if due > 0.0:

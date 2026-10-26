@@ -12,7 +12,6 @@ from sim.projects.api import ShutForgotten
 from sim.polity.api import ScaleProtection
 from sim.projects.api import ResetProjectProgress
 from sim.reporting.api import RecordEvent
-from sim.seats.api import FounderDies
 from sim.workforce import rules as workforce_rules
 from sim.workforce.api import ReportStaffReduction, ScaleDeputies
 
@@ -65,14 +64,6 @@ class Writes(unittest.TestCase):
         bridge_hazards.cut_population(game, CutPopulation(0.2))
         bridge_hazards.refresh_demographic_indexes(game, RefreshDemographicIndexes(150))
         self.assertEqual(calls, [("cut", 0.2), ("refresh", 150)])
-
-    def test_a_founder_who_dies_has_the_reason_set_and_the_run_ends_in_the_log(self):
-        sent = []
-        game = SimpleNamespace(state=SimpleNamespace(founder=SimpleNamespace(dead_reason=None)), send=sent.append)
-        bridge_hazards.founder_dies(game, FounderDies("denounced"))
-        self.assertEqual(game.state.founder.dead_reason, "denounced")
-        self.assertEqual([(command.kind, command.text) for command in sent if isinstance(command, RecordEvent)],
-                         [("run_ends", "RUN ENDS: denounced")])
 
 
 if __name__ == "__main__":

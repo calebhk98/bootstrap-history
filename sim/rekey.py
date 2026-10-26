@@ -1,6 +1,6 @@
 """Renaming an id wherever a store keeps it: as a key, as a value, or as a piece of a composite id.
 
-A seat that leaves a game under another's name (sim/engine/seat_handover.py) must leave nothing behind that is
+A seat that leaves a game under another's name (sim/engine/seat_move.py) must leave nothing behind that is
 keyed by its id. `rekey` rewrites a container in place and returns it; two keys that become one are merged (numbers
 add, mappings and lists join, anything else keeps the newer name's value).
 """

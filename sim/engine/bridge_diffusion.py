@@ -9,7 +9,7 @@ from sim.polity.api import GainReputation, ShiftValueWeight
 from sim.refusal import Refusal
 from sim.workforce.api import NoteTradeSpread, SetEmployed
 
-from . import category_traits, seat_builds, value_weight
+from . import category_traits, value_weight
 from .agents_port_cast import seed_opening_cast
 from .bridge import bridge_command, bridge_view
 from .data import TRADES_ABSENT
@@ -33,33 +33,6 @@ def legacy_country_literacy(sim, country):
 def state_knowledge(sim):
     """The nodes the home government holds."""
     return sim.state_treasury().knowledge
-
-
-@bridge_view("seat_party", kind=KEYED)
-def seat_party(sim, seat_id):
-    return sim.seat_party(seat_id)
-
-
-# ---- seats ----
-
-@bridge_view("seat_list")
-def seat_list(sim):
-    """{joined: every seat's id, playing: the seats still playing}."""
-    return {"joined": list(sim.state.seats), "playing": sim.playing_seats()}
-
-
-@bridge_view("seat_holders", kind=QUOTE)
-def seat_holders(sim, node_id):
-    """Ids of the seats that hold `node_id` at all, built or granted."""
-    return seat_builds.holders_of(sim.state.seats, node_id)
-
-
-@bridge_view("built_by_any_seat", kind=QUOTE)
-def built_by_any_seat(sim, among):
-    """Every node of `among` some seat built itself."""
-    return seat_builds.built_by_any(sim.state.seats, among)
-
-
 
 
 # ---- knowledge and production ----

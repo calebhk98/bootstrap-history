@@ -81,7 +81,7 @@ class WagesMixin(WageLedgerMixin):
         (labour_job.py) does not sell and your own projects cannot have.
         """
         blocker = wage_work_blocker(
-            self._world.state.founder.founder_alive, trade in self._world.wages,
+            self._world.founder_alive, trade in self._world.wages,
             lambda: self.trade_available(trade), hours,
             lambda: self.director_pool() - self.director_hours_committed())
         # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU FOR: the gate is trade_available(), the

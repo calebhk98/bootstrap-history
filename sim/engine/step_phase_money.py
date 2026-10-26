@@ -25,12 +25,6 @@ class MoneyPhaseMixin:
             "one person's base price, so a purchase never spends the purse down to the price. "
             "Tuned, not measured.")
 
-    def _step_money(self):
-        """One seat's money, then the world's year, then the seat's goal check: the whole phase for a game of one seat."""
-        self._step_money_seat()
-        self._step_money_world()
-        self._step_win_conditions()
-
     def _step_money_seat(self):
         # 2. money: the acting seat's takings, costs, credit and insolvency
         living_cost = self.living_cost()
@@ -170,14 +164,3 @@ class MoneyPhaseMixin:
         # decisions rather than lagging a full step behind them.
         self.advance_society(self.state.scenario.year)
         self.advance_actors(self.state.scenario.year)
-
-    def _step_win_conditions(self):
-        # 2c. THRESHOLD GOALS. A node carrying a `win_condition` (see
-        # data.py's WIN_CONDITION_LABELS and the tree's own goals
-        # using one) is never built - start_reason refuses it outright -
-        # it completes itself the moment a live measurement crosses its
-        # target. Checked here, right after the literacy/trade growth this
-        # same measurement usually depends on has moved for the year, so a
-        # threshold crossed this year is seen this year rather than lagging
-        # a full step behind it.
-        self._check_win_conditions(self.state.scenario.year)

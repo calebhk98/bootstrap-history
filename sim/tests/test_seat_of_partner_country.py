@@ -11,8 +11,9 @@ from .harness import check
 
 from sim.engine import economy_port_year, society_actors
 from sim.engine.economy_port_year import AgentEconomy
-from sim.engine.seat_run import SeatRunMixin
 from sim.engine.society_actors import ActorsMixin
+from sim.seats.module import Seats
+from . import module_harness
 
 COIN_PER_UNIT = 2.0
 HOME, NORTH = "home", "north"
@@ -94,19 +95,16 @@ class Seat:
         self.country = country
 
 
-class Seats(SeatRunMixin):
-    civ = {"id": "home"}
-
-    def __init__(self, country):
-        class State:
-            acting_seat = "second"
-            seats = {"second": Seat(country)}
-        self.state = State
+def seats_module(country):
+    """The seats module over a one-seat registry whose seat plays for `country` (None is the game's own)."""
+    module = module_harness.build(Seats, views={"legacy_seats": {"second": Seat(country)}, "civilisation": {"id": "home"}})
+    module.clock.act_as("second")
+    return module
 
 
-check("a seat of the game's own country has no partner country", Seats(None).acting_country() is None
-      and Seats("home").acting_country() is None, None)
-check("a seat of another country names it", Seats("han").acting_country() == "han", None)
+check("a seat of the game's own country has no partner country", seats_module(None).acting_country() is None
+      and seats_module("home").acting_country() is None, None)
+check("a seat of another country names it", seats_module("han").acting_country() == "han", None)
 
 
 class Registry:

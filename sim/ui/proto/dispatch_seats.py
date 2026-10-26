@@ -12,11 +12,11 @@ from .notes_store import hand_over_notes
 def seat_rows(sim):
     """One row per seat: its id, country and whether its run has ended. The addressed seat also shows its own
     purse and what it has built; another seat's purse and work are not shown (they are its own to tell)."""
-    ended = set(sim.ended_seats())
+    ended = sim.view("dead_reasons")()
     rows = []
     for seat_id, seat in sim.state.seats.items():
-        row = {"seat": seat_id, "country": seat.country or sim.civ.get("id"), "ended": seat.founder.dead_reason
-               if seat_id in ended else None, "you": seat_id == sim.state.acting_seat}
+        row = {"seat": seat_id, "country": seat.country or sim.civ.get("id"), "ended": ended.get(seat_id),
+               "you": seat_id == sim.state.acting_seat}
         if not seat.holds_household:
             row.update({"kind": seat.kind, "holder": seat.holder})
         elif seat_id == sim.state.acting_seat:

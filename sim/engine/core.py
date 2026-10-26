@@ -21,7 +21,6 @@ from sim.unit_conversions import PERCENT_SCALE
 
 
 from .territory_required import require_territory
-from .win_condition_rule import win_condition_met
 from sim.knowledge.api import LearnTechnique, declared_starting_techs
 from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
@@ -54,9 +53,8 @@ from .labour_port import LabourPortMixin
 from .projects import ProjectsMixin
 from .core_seats import SeatMixin
 from .year_run import run_year
-from .seat_run import SeatRunMixin
-from .seat_builds import SeatBuildsMixin
-from .seat_sight import SeatSightMixin
+from sim.seats.api import SetFounderLife
+from .forward_seats import ForwardSeatsMixin
 from .forward_hazards import HazardsForwardsMixin
 from .seat_defaults import default_policy
 from .ways import WaysMixin
@@ -65,7 +63,6 @@ from .works import WorksMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
 from .founder_sales import FounderSalesMixin
-from .seat_dealings import SeatDealingsMixin
 from .seat_bank import SeatBankMixin
 from .interest_groups import InterestGroupsMixin
 from .benefactions import BenefactionsMixin
@@ -74,7 +71,6 @@ from .forward_resources import ForwardResourcesMixin
 from .forward_materials import ForwardMaterialsMixin
 from .mod_stores import ModStoresMixin
 from .core_properties import ForwardingPropertiesMixin
-from .goals import GoalsMixin
 from .core_step_phases import StepContext, StepPhasesMixin
 from .economy_port import EconomyPortMixin
 from .data import trade_family
@@ -106,9 +102,7 @@ class Sim(
         LabourPortMixin,
         ProjectsMixin,
         SeatMixin,
-        SeatRunMixin,
-        SeatBuildsMixin,
-        SeatSightMixin,
+        ForwardSeatsMixin,
         HazardsForwardsMixin,
         WaysMixin,
         WorksMixin,
@@ -117,13 +111,11 @@ class Sim(
         ActorsMixin,
         DiffusionForwardsMixin,
         FounderSalesMixin,
-        SeatDealingsMixin,
         SeatBankMixin,
         InterestGroupsMixin,
         BenefactionsMixin,
         ForwardFreightMixin,
         ForwardingPropertiesMixin,
-        GoalsMixin,
         StepPhasesMixin,
         ForwardLivingStockMixin,
         ReportingForwardsMixin,
@@ -170,21 +162,6 @@ class Sim(
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
                  bounty_set=None, civ=None, manual=False, debug=None, defer_economy=False):
         self.nodes = nodes
-        # PRECOMPUTED ONCE: which node ids carry a `win_condition` at all,
-        # sorted for the same reproducibility reason _check_win_conditions
-        # (below) needs a fixed order. self.nodes is the loaded tech tree -
-        # assigned exactly once, right here, and never reassigned or mutated
-        # (checked: `grep -rn "self\.nodes\[.*\]\[.*\] *="` across every file
-        # in this package turns up nothing, and every other write of
-        # `self.nodes` anywhere is a *different* class's unrelated attribute
-        # of the same name in commodities.py's CommodityLedger). So a node's
-        # win_condition membership can never change after this point, so this
-        # list is built once here: `_check_win_conditions` only needs the
-        # handful of node ids that carry a win_condition, and sorting all
-        # ~2,849 node ids from `self.nodes` for that every single year would
-        # be pure waste.
-        self._win_condition_keys = sorted(
-            node_id for node_id, node in nodes.items() if node.get("win_condition"))
         self.order = list(order)
         self.rng = rng
         self._agriculture = agriculture
@@ -383,14 +360,11 @@ class Sim(
         # design against, what death, personal hours or a patron mean for a
         # firm or a government; that is a real design question and this
         # extraction does not answer it by default.
-        self.state.founder.founder_alive = True
-        self.state.founder.dead_reason = None
         self.state.founder.director_hours_spent_founder = 0.0
         # founder remaining lifespan, elite male already aged 35
-        self.state.founder.life_left = (1e9 if self.cfg["immortal"]
-                          else max(self.FOUNDER_MIN_REMAINING_LIFE_YEARS,
-                                    rng.gauss(self.cfg["founder_life_mean"],
-                                              self.cfg["founder_life_sd"])))
+        self.send(SetFounderLife(1e9 if self.cfg["immortal"]
+                                 else max(self.FOUNDER_MIN_REMAINING_LIFE_YEARS,
+                                          rng.gauss(self.cfg["founder_life_mean"], self.cfg["founder_life_sd"]))))
         self.state.founder.living_cost_paid = 0.0
         self._spend_this_year = 0.0
         # --- RAW MATERIAL QUANTITIES -------------------------------------
@@ -1152,78 +1126,6 @@ class Sim(
     # as it did when these were defined here.
 
 
-
-    # ---- THRESHOLD GOALS: completed by measurement, not by labour ---------
-    # A goal need not be a thing you build. "Raise literacy past a fifth" or
-    # "cut most of what epidemics take" are states of the whole
-    # society, not a project with hours and materials - see data/branches/
-    # meta.goals and its own note on why a threshold is still modelled as a
-    # node (so closure()/critical_path()/Sim.run() never need a second idea
-    # of what a goal is) rather than as a second mechanism bolted on beside
-    # the ordinary one.
-    WIN_CONDITION_METRICS = frozenset(
-        ("literacy_general", "literacy_elite", "epidemic_relief"))
-
-    def _win_condition_value(self, condition):
-        """The live number a win_condition's `metric` names, 0..1. Raises for
-        a metric this engine does not know how to read - at load time, via
-        `validate`, not mid-game - rather than silently reading 0 forever for
-        a typo no playtest would otherwise catch."""
-        metric = condition.get("metric")
-        if condition.get("source") == "attribute":
-            path = condition.get("path")
-            if not isinstance(path, str) or path.startswith("_") or "." in path:
-                raise ValueError("invalid win_condition attribute path %r" % path)
-            value = getattr(self, path, None)
-            if not isinstance(value, (int, float)):
-                raise ValueError("win_condition attribute %r is not numeric" % path)
-            return float(value)
-        if condition.get("source") == "generation_share":
-            breakdown = self.generation_breakdown_kw()
-            total = breakdown["total_kw"]
-            return (breakdown["sources_kw"].get(condition.get("key"), 0.0) / total
-                    if total else 0.0)
-        if metric in ("literacy_general", "literacy_elite"):
-            return self.literacy(metric)
-        if metric == "epidemic_relief":
-            # hazard_relief returns the SURVIVING fraction of the harm
-            # (1.0 = no protection at all); relief is what is cut, the rest
-            # of it - see society.py's own docstring on the diminishing,
-            # never-quite-zero shape of that number.
-            return 1.0 - self.hazard_relief("staff_loss")[0]
-        raise ValueError("unknown win_condition metric %r" % metric)
-
-    def _check_win_conditions(self, year):
-        """Once a year: every node carrying a `win_condition` that is not
-        already done gets checked against the live measurement it names,
-        and completes itself - exactly like a normal completion (done,
-        done_year, the log, goal_year if it is the running goal) but with
-        no cost charged and no `apply_tech_effects`/reputation/scandal call,
-        because nobody did any work; a measurement crossed a line. Sorted
-        so the order is reproducible under a fixed PYTHONHASHSEED, the same
-        reasoning `topo_order` and the attrition loop above already give
-        for walking `self.nodes`/`self.household.done` in id order rather than a bare
-        set's own iteration order.
-
-        Walks `self._win_condition_keys` (built once, in __init__, from the
-        static node data - see the comment there), not `sorted(self.nodes)`:
-        that avoids re-sorting every one of the ~2,849 node ids in the whole
-        tree, every single year, to reach the handful that actually carry a
-        win_condition at all - pure self time (`sorted` and dict-get, both
-        C-level, nothing further to profile under it).
-        """
-        for node_id in self._win_condition_keys:
-            if node_id in self.state.projects.done:
-                continue
-            win_condition = self.nodes[node_id]["win_condition"]
-            if not win_condition:
-                continue
-            val = self._win_condition_value(win_condition)
-            if not win_condition_met(win_condition, val):
-                continue
-            self.send(LearnTechnique(node_id, year=year))
-            self.send(RecordEvent.in_year(year, "goal_achieved", "achieved: " + self.nodes[node_id]["name"]))
-            self.record_goal_reached(node_id, year)
 
     def run(self, goal, horizon=None):
         self.goal = goal
