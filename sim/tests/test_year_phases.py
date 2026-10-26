@@ -15,7 +15,7 @@ ALPHA, BETA = "test_alpha_p1xz", "test_beta_p1xz"
 SHIPPED_ORDER = [
     "begin_seat_year", "begin_world_year", "apprenticeships", "staff", "money_seat", "money_world",
     "win_conditions", "dated_shocks", "drop_ended_seats", "seat_prelude", "start_projects", "materials", "seat_work", "market",
-    "wild_stock", "soil_nitrogen", "living_stock",
+    "coin_revaluation", "wage_market_ratios", "wild_stock", "soil_nitrogen", "living_stock",
     "defence_stores", "random_events", "world_hazards", "campaigns", "revolts", "famine_watch", "credit_limit", "advance_year"]
 
 
@@ -68,7 +68,7 @@ class OrderTests(PhaseTestBase):
         year_phases.register_mod_phase(mod_phase(ALPHA, "conflict", after=["market"]))
         names = self.names()
         self.assertEqual(names[names.index("market") + 1], ALPHA + ":conflict")
-        self.assertEqual(names[names.index("market") + 2], "wild_stock")
+        self.assertEqual(names[names.index("market") + 2], "coin_revaluation")
 
     def test_before_runs_right_before_the_phase(self):
         year_phases.register_mod_phase(mod_phase(ALPHA, "magic", before=["seat_work"]))
