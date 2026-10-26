@@ -39,7 +39,7 @@ def build():
     third.holdings.offers.append({"id": "leaver#1", "from": "leaver", "to": "third", "give": {}, "take": {}, "expires": 9})
     leaver.holdings.offers.append({"id": "third#1", "from": "third", "to": "leaver", "give": {}, "take": {}, "expires": 9})
     leaver.holdings.offer_serial = 1
-    third.projects.disclosures["fire"] = {"mode": "licence", "licensees": {"leaver": {"fee": 1.0}}}
+    third.modules["diffusion"].disclosures["fire"] = {"mode": "licence", "licensees": {"leaver": {"fee": 1.0}}}
     game.state.actors.records["firm:1"] = ActorRecord(kind="firm", holdings={"leaver": 0.3}, spun_off_from="leaver",
                                                       royalty_owed={"loom": {"holder": "leaver", "rate": 0.1}})
     return game
@@ -83,7 +83,7 @@ check("the replacement holds the leaver's stake and licence under its own name",
       heir_seat.holdings.shares_held == {"third": 0.1} and heir_seat.holdings.patents["loom"]["licensees"] == ["third"], heir_seat.holdings)
 check("another seat's stake in the leaver, its offer from the leaver and its disclosure licence name the replacement",
       third.holdings.shares_held == {"heir": 0.2} and third.holdings.offers[0]["from"] == "heir"
-      and third.holdings.offers[0]["id"] == "heir#1" and "heir" in third.projects.disclosures["fire"]["licensees"], third.holdings)
+      and third.holdings.offers[0]["id"] == "heir#1" and "heir" in game.view("disclosures")["third"]["fire"]["licensees"], third.holdings)
 check("the leaver's inbox of offers passes with the seat, addressed to the replacement",
       heir_seat.holdings.offers[0]["to"] == "heir" and heir_seat.holdings.offer_serial == 1, heir_seat.holdings.offers)
 record = game.state.actors.records["firm:1"]

@@ -31,10 +31,10 @@ seats = {"leaver": seat_from_template({"scholars": 2.0}, 40.0, 1e9, {}), "heir":
 give(seats["leaver"], ["fire", "wheel"], "han", "steam_engine")
 before = seats["leaver"]
 heir_founder = seats["heir"].founder
-check("an unknown seat is refused with its cause and the choices", cause_of(handover_refusal(seats, "leaver", "ghost")) == "unknown_seat"
-      and handover_refusal(seats, "leaver", "ghost").choices == ["leaver", "heir"], None)
-check("a seat handed to itself is refused", cause_of(handover_refusal(seats, "heir", "heir")) == "same_seat", None)
-check("a good handover has no refusal", handover_refusal(seats, "leaver", "heir") is None, None)
+check("an unknown seat is refused with its cause and the choices", cause_of(handover_refusal(seats, "leaver", "ghost", False)) == "unknown_seat"
+      and handover_refusal(seats, "leaver", "ghost", False).choices == ["leaver", "heir"], None)
+check("a seat handed to itself is refused", cause_of(handover_refusal(seats, "heir", "heir", False)) == "same_seat", None)
+check("a good handover has no refusal", handover_refusal(seats, "leaver", "heir", False) is None, None)
 moved = move_seat_fields(seats, "leaver", "heir")
 heir = seats["heir"]
 check("the replacement knows the same nodes", heir.projects.done == {"fire", "wheel"} and heir.projects.granted == {"fire", "wheel"}, heir.projects)

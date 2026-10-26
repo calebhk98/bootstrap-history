@@ -42,6 +42,7 @@ first.projects.done_year = {"lathe": 120, "loom": 130}
 second.projects.done.add("kiln")
 second.household.base_tile = None
 seats = state.seats
+disclosed = {FIRST_SEAT_ID: {}, "second": {}}   # what each seat chose for its inventions (the diffusion module keeps it)
 
 check("what a seat built excludes what its country already had",
       seat_builds.builders_of(seats, "lathe") == [FIRST_SEAT_ID] and seat_builds.builders_of(seats, "base") == []
@@ -58,18 +59,18 @@ check("what one seat has revealed is not what another has", first.projects.revea
 
 # ---- hearing of another seat's work, as an onlooker does
 first.projects.operating.add("loom")
-first.projects.disclosures["lathe"] = {"mode": "secret", "published_year": None, "licensees": {}}
-heard_near = nodes_heard_of(first.projects, second.projects, 0.0, lambda node_id: 1.0)
+disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "secret", "published_year": None, "licensees": {}}
+heard_near = nodes_heard_of(first.projects, disclosed[FIRST_SEAT_ID], second.projects, 0.0, lambda node_id: 1.0)
 check("a concern run in public is heard of from beside it, a secret is not",
       heard_near == {"loom"}, heard_near)
-heard_far = nodes_heard_of(first.projects, second.projects, 10 * OBSERVATION_RANGE_KM, lambda node_id: 1.0)
+heard_far = nodes_heard_of(first.projects, disclosed[FIRST_SEAT_ID], second.projects, 10 * OBSERVATION_RANGE_KM, lambda node_id: 1.0)
 check("distance hides it", heard_far == set(), heard_far)
-first.projects.disclosures["lathe"] = {"mode": "publish", "published_year": 125, "licensees": {}}
+disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "publish", "published_year": 125, "licensees": {}}
 check("a published invention is heard of from a fair way off",
-      "lathe" in nodes_heard_of(first.projects, second.projects, OBSERVATION_RANGE_KM * 0.5, lambda node_id: 1.0), None)
+      "lathe" in nodes_heard_of(first.projects, disclosed[FIRST_SEAT_ID], second.projects, OBSERVATION_RANGE_KM * 0.5, lambda node_id: 1.0), None)
 second.projects.revealed.add("loom")
 check("what a seat has already heard of is not heard again",
-      "loom" not in nodes_heard_of(first.projects, second.projects, 0.0, lambda node_id: 1.0), None)
+      "loom" not in nodes_heard_of(first.projects, disclosed[FIRST_SEAT_ID], second.projects, 0.0, lambda node_id: 1.0), None)
 check("a secret leaks less than the visibility that makes an invention heard of",
       SECRET_EXPOSURE < PLAYER_VISIBLE_EXPOSURE, (SECRET_EXPOSURE, PLAYER_VISIBLE_EXPOSURE))
 
@@ -83,6 +84,9 @@ class Places:
 class StubSim:
     def __init__(self):
         self.state = state
+
+    def view(self, name):
+        return disclosed
 
     def copy_difficulty(self, node_id):
         return 1.0
@@ -102,17 +106,17 @@ class World(SimWorld):
 world = World(StubSim())
 check("the actors see the inventions of every seat", world.founder_inventions() == ["kiln", "lathe", "loom"], world.founder_inventions())
 check("a concern some seat runs is in public use", world.is_public("loom") and not world.is_public("kiln"), None)
-first.projects.disclosures["lathe"] = {"mode": "secret", "published_year": None, "licensees": {}}
+disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "secret", "published_year": None, "licensees": {}}
 check("an observer at the maker's door sees a secret less than a published work",
       world.exposure("lathe", Places.first) < world.exposure("loom", Places.first), None)
 check("an observer a range away from the maker sees half what one at the door does",
       abs(world.exposure("loom", Places.second) - world.exposure("loom", Places.first) / 2.0) < 1e-9, None)
 second.projects.done.add("lathe")
-second.projects.disclosures["lathe"] = {"mode": "publish", "published_year": 130, "licensees": {}}
+disclosed["second"]["lathe"] = {"mode": "publish", "published_year": 130, "licensees": {}}
 check("a second maker publishing the same invention makes it public knowledge",
       world.disclosure_mode("lathe") == "publish", world.disclosure_mode("lathe"))
 second.projects.done.discard("lathe")
-del second.projects.disclosures["lathe"]
+del disclosed["second"]["lathe"]
 check("the best view of an invention is from the nearest maker's place",
       world.exposure("kiln", Places.second) >= world.exposure("kiln", Places.first), None)
 
@@ -179,11 +183,14 @@ class RoyaltySim:
     def __init__(self):
         self.state = state
 
+    def view(self, name):
+        return disclosed
+
     def seat_party(self, seat_id):
         return maker if seat_id == FIRST_SEAT_ID else buyer
 
 
-first.projects.disclosures["lathe"] = {"mode": "license", "published_year": None,
+disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "license", "published_year": None,
                                        "licensees": {"firm:7": {"fee": 0.0, "royalty": 0.1, "year": 120}}}
 firm = Firm()
 royalty_world = World(RoyaltySim())

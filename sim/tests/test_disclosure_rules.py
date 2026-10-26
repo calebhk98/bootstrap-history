@@ -8,11 +8,12 @@ import unittest
 from unittest import mock
 
 from sim.agents.licence import terms_problem
-from sim.engine import society_disclosure, society_diffusion
-from sim.engine.adoption_share import held_share
-from sim.engine.society_diffusion import DiffusionMixin
-from sim.engine.society_disclosure import DisclosureMixin
+from sim.diffusion import disclosure
+from sim.diffusion.adoption_share import held_share
+from sim.diffusion.module import Diffusion
+from sim.diffusion.state import DiffusionSeat
 from sim.engine.visibility import base_visibility
+from sim.tests import module_harness
 
 SECRET_EXPOSURE = 0.2
 
@@ -73,37 +74,36 @@ class Holdings(unittest.TestCase):
         self.assertEqual(held_share([], {"a"}), 0.0)
 
     def test_the_weapons_the_state_holds_are_the_founders_military_inventions_in_its_knowledge(self):
-        game = types.SimpleNamespace(
-            state=types.SimpleNamespace(seats={}), state_treasury=lambda: types.SimpleNamespace(knowledge={"a", "c"}),
-            _diffusible_ids=lambda trait: ["a", "b", "c"])
-        with mock.patch.object(society_diffusion.seat_builds, "built_by_any", lambda seats, ids: ids):
-            self.assertEqual(DiffusionMixin.state_military_weapons_held(game), 2)
+        class Armed(Diffusion):
+            def diffusible_ids(self, category):
+                return ["a", "b", "c"]
+        module = module_harness.build(Armed, views={"state_knowledge": lambda: {"a", "c"},
+                                                    "built_by_any_seat": lambda among: among})
+        self.assertEqual(module.state_military_weapons_held(), 2)
 
 
-class Licensing(DisclosureMixin):
-    def __init__(self):
-        self.actors = types.SimpleNamespace(get=lambda identity: types.SimpleNamespace(kind="firm"))
-        self.state = types.SimpleNamespace(
-            seats={}, acting_seat="me", scenario=types.SimpleNamespace(year=120),
-            projects=types.SimpleNamespace(disclosures={}))
-
-    def seat_party(self, seat_id):
-        return "party"
+def licensing():
+    """The diffusion module of seat "me" in year 120, with one firm to license to."""
+    registry = types.SimpleNamespace(get=lambda identity: types.SimpleNamespace(kind="firm"))
+    module = module_harness.build(Diffusion, seat=DiffusionSeat(), views={
+        "legacy_actor_registry": lambda: registry, "seat_list": lambda: {"joined": ["me"], "playing": ["me"]},
+        "seat_party": lambda seat_id: "party", "year": 120, "legacy_agent_world": lambda: None})
+    module.clock.act_as("me")
+    return module
 
 
 class ChoosingALicence(unittest.TestCase):
 
     def license(self, problem="", granted=True):
-        game = Licensing()
-        with mock.patch.object(society_disclosure, "SimWorld", lambda sim: None), \
-                mock.patch.object(society_disclosure.licence, "terms_problem", lambda *args: problem), \
-                mock.patch.object(society_disclosure.licence, "grant", lambda *args: granted):
+        game = licensing()
+        with mock.patch.object(disclosure.licence, "terms_problem", lambda *args: problem), \
+                mock.patch.object(disclosure.licence, "grant", lambda *args: granted):
             return game, game._license("x", "firm:a", 1000.0, 0.1)
 
     def test_an_accepted_licence_is_recorded_with_its_terms_and_moves_the_invention_off_the_default(self):
         game, reply = self.license()
         self.assertTrue(reply["ok"])
-        record = game.state.projects.disclosures["x"]
+        record = game.seat.disclosures["x"]
         self.assertEqual(record["mode"], "license")
         self.assertEqual(record["licensees"]["firm:a"], {"fee": 1000.0, "royalty": 0.1, "year": 120})
 
@@ -112,12 +112,12 @@ class ChoosingALicence(unittest.TestCase):
         game, reply = self.license(problem=Refusal("fee_above_value", "no"))
         self.assertFalse(reply["ok"])
         self.assertEqual(reply["cause"], "fee_above_value")
-        self.assertEqual(game.state.projects.disclosures, {})
+        self.assertEqual(game.seat.disclosures, {})
 
     def test_a_licensee_that_can_already_make_it_is_refused_and_nothing_is_recorded(self):
         game, reply = self.license(granted=False)
         self.assertFalse(reply["ok"])
-        self.assertEqual(game.state.projects.disclosures, {})
+        self.assertEqual(game.seat.disclosures, {})
 
 
 if __name__ == "__main__":

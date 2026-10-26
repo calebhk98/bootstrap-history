@@ -2,7 +2,7 @@
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.adoption_share import held_share
+from sim.diffusion.adoption_share import held_share
 
 ids = ["pike", "cannon", "musket", "mortar"]
 check("the founder's military work does not reach a state that holds none of it", held_share(ids, set()) == 0.0)

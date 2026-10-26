@@ -34,11 +34,16 @@ class Party:
 
 
 def seat(done=(), granted=(), licensees=None, node="loom"):
-	"""A seat's projects: it built `node` itself when `node` is in `done` and not in `granted`."""
-	projects = ProjectsState(done=set(done), granted=set(granted))
+	"""A seat's projects: it built `node` itself when `node` is in `done` and not in `granted`; `disclosed` is what it chose."""
+	disclosed = {}
 	if licensees is not None:
-		projects.disclosures[node] = {"mode": "license", "licensees": licensees}
-	return SimpleNamespace(projects=projects)
+		disclosed[node] = {"mode": "license", "licensees": licensees}
+	return SimpleNamespace(projects=ProjectsState(done=set(done), granted=set(granted)), disclosed=disclosed)
+
+
+def due(seats, node, licensee, takings):
+	"""`seat_royalties_due` over the seats' own disclosures."""
+	return seat_royalties_due(seats, node, licensee, takings, lambda seat_id: seats[seat_id].disclosed)
 
 
 def firm_owing(rate, holder="firm:1", node="loom", money=1000.0):
@@ -98,20 +103,20 @@ check("collect_patent_royalty: a royalty on one invention is not owed on another
 seats = {"alpha": seat(["loom"], [], {"firm:2": {"fee": 0.0, "royalty": 0.1}}),
          "beta": seat(["loom"], [], {"firm:2": {"fee": 0.0, "royalty": 0.25}, "firm:3": {"fee": 0.0, "royalty": 0.5}})}
 check("seat_royalties_due: each licensing seat is owed its own share, in joining order",
-      seat_royalties_due(seats, "loom", "firm:2", 1000.0) == [("alpha", 100.0), ("beta", 250.0)])
+      due(seats, "loom", "firm:2", 1000.0) == [("alpha", 100.0), ("beta", 250.0)])
 check("seat_royalties_due: only the seats that licensed this firm are owed",
-      seat_royalties_due(seats, "loom", "firm:3", 1000.0) == [("beta", 500.0)])
-check("seat_royalties_due: a firm nobody licensed owes nothing", seat_royalties_due(seats, "loom", "firm:4", 1000.0) == [])
-check("seat_royalties_due: no takings, nothing owed", seat_royalties_due(seats, "loom", "firm:2", 0.0) == [])
-check("seat_royalties_due: losses owe nothing", seat_royalties_due(seats, "loom", "firm:2", -1000.0) == [])
-check("seat_royalties_due: another invention has no licence", seat_royalties_due(seats, "wheel", "firm:2", 1000.0) == [])
-check("seat_royalties_due: no seats, nothing owed", seat_royalties_due({}, "loom", "firm:2", 1000.0) == [])
+      due(seats, "loom", "firm:3", 1000.0) == [("beta", 500.0)])
+check("seat_royalties_due: a firm nobody licensed owes nothing", due(seats, "loom", "firm:4", 1000.0) == [])
+check("seat_royalties_due: no takings, nothing owed", due(seats, "loom", "firm:2", 0.0) == [])
+check("seat_royalties_due: losses owe nothing", due(seats, "loom", "firm:2", -1000.0) == [])
+check("seat_royalties_due: another invention has no licence", due(seats, "wheel", "firm:2", 1000.0) == [])
+check("seat_royalties_due: no seats, nothing owed", due({}, "loom", "firm:2", 1000.0) == [])
 check("seat_royalties_due: a licence with no royalty owes nothing",
-      seat_royalties_due({"alpha": seat(["loom"], [], {"firm:2": {"fee": 50.0}})}, "loom", "firm:2", 1000.0) == [])
+      due({"alpha": seat(["loom"], [], {"firm:2": {"fee": 50.0}})}, "loom", "firm:2", 1000.0) == [])
 check("seat_royalties_due: a seat that was only granted the invention is not its licensor",
-      seat_royalties_due({"alpha": seat(["loom"], ["loom"], {"firm:2": {"royalty": 0.1}})}, "loom", "firm:2", 1000.0) == [])
+      due({"alpha": seat(["loom"], ["loom"], {"firm:2": {"royalty": 0.1}})}, "loom", "firm:2", 1000.0) == [])
 check("seat_royalties_due: a seat that never disclosed it owes and is owed nothing",
-      seat_royalties_due({"alpha": seat(["loom"])}, "loom", "firm:2", 1000.0) == [])
+      due({"alpha": seat(["loom"])}, "loom", "firm:2", 1000.0) == [])
 
 
 # ---- seat_royalties_paid: what the licensee's purse can pay of what the seats are owed
@@ -126,7 +131,8 @@ check("seat_royalties_paid: a licensee in debt pays nobody", seat_royalties_paid
 # ---- DisclosureView.collect_royalty: seats and the patent holder together, through the ledger
 def view_over(seats, parties, year=100):
 	seat_parties = {seat_id: Party(seat_id, 0.0) for seat_id in seats}
-	simulation = SimpleNamespace(state=SimpleNamespace(seats=seats), seat_party=seat_parties.__getitem__)
+	simulation = SimpleNamespace(state=SimpleNamespace(seats=seats), seat_party=seat_parties.__getitem__,
+	                             view=lambda name: {seat_id: held.disclosed for seat_id, held in seats.items()})
 	return SimpleNamespace(_sim=simulation, _holder=finder(*parties), year=year), seat_parties
 
 

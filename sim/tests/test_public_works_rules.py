@@ -1,12 +1,13 @@
-"""Complaint 640: the free press, grain dole, lit working day and schooling rules (`public_works_rules`) on built inputs."""
+"""Complaint 640: the free press, grain dole and lit working day (`public_works_rules`) and the schooling rules
+(`sim/diffusion/literacy_rules.py`) on built inputs."""
 
 QUICK_TOPIC = True
 
 import unittest
 
 from sim.defence_stores.api import rules as defence_rules
-from sim.engine.public_works_rules import (extra_lit_hours, legitimacy_share, printing_boosted_flow,
-                                           schooling_flow, working_hours_per_year)
+from sim.diffusion.literacy_rules import printing_boosted_flow, schooling_flow
+from sim.engine.public_works_rules import extra_lit_hours, legitimacy_share, working_hours_per_year
 
 relief_kcal_per_day = defence_rules.relief_kcal_per_day
 

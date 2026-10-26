@@ -36,6 +36,7 @@ from .forward_living_stock import ForwardLivingStockMixin
 from .forward_reporting import ReportingForwardsMixin
 from .forward_coin import ForwardCoinMixin
 from .forward_campaigns import ForwardCampaignsMixin
+from .forward_diffusion import DiffusionForwardsMixin
 from .market_demand import MarketDemandMixin
 from .concern_volume import ConcernVolumeMixin
 from .concern_book_sales import ConcernBookSalesMixin
@@ -62,7 +63,6 @@ from .held_works import HeldWorksMixin
 from .works import WorksMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
-from .society_disclosure import DisclosureMixin
 from .founder_sales import FounderSalesMixin
 from .seat_dealings import SeatDealingsMixin
 from .seat_bank import SeatBankMixin
@@ -110,7 +110,7 @@ class Sim(
         HeldWorksMixin,
         SocietyMixin,
         ActorsMixin,
-        DisclosureMixin,
+        DiffusionForwardsMixin,
         FounderSalesMixin,
         SeatDealingsMixin,
         SeatBankMixin,

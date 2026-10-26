@@ -7,11 +7,13 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
+from sim.diffusion import rules
+from sim.diffusion.module import Diffusion
 from sim.engine import category_traits
 from sim.engine.economy_production import ProductionMixin
 from sim.engine.fog import FogMixin
-from sim.engine.society_diffusion import DiffusionMixin
 from sim.engine.tree_source import load_base_tree
+from sim.tests import module_harness
 
 
 class CategoriesReadTheirTraits(unittest.TestCase):
@@ -20,8 +22,7 @@ class CategoriesReadTheirTraits(unittest.TestCase):
         self.categories = sorted({node["cat"] for node in self.nodes.values() if node.get("cat")})
 
     def test_diffusion_category_of_a_node_carrying_two_traits(self):
-        stub = SimpleNamespace()
-        self.assertEqual("food", DiffusionMixin._diffusion_category(stub, {"traits": ["medical", "food"]}))
+        self.assertEqual("food", rules.diffusion_category(["medical", "food"], category_traits.diffusion_trait_names()))
 
     def test_every_node_category_has_an_entry(self):
         self.assertEqual([], category_traits.categories_without_traits(self.nodes.values()))
@@ -60,8 +61,9 @@ class ModAddsCategory(unittest.TestCase):
         names = category_traits.diffusion_trait_names()
         self.assertEqual("ritual", names[-1])
         self.assertEqual(len(names), len(set(names)))
-        self.assertEqual("ritual", DiffusionMixin._diffusion_category(SimpleNamespace(), {"traits": ["ritual"]}))
-        self.assertEqual(50.0, DiffusionMixin._diffusion_half_life_years(SimpleNamespace(), "ritual"))
+        self.assertEqual("ritual", rules.diffusion_category(["ritual"], names))
+        module = module_harness.build(Diffusion, views={"diffusion_traits": category_traits.diffusion_traits()})
+        self.assertEqual(50.0, module.category_half_life_years("ritual"))
 
     def test_unlisted_category_is_reported(self):
         nodes = [{"id": "y", "cat": "test_cat_k3f9:unlisted"}]

@@ -7,10 +7,14 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import society_adoption
-from sim.engine.society_adoption import AdoptionMixin
+from sim.diffusion.api import ApplyTechEffects
+from sim.diffusion.module import Diffusion
+from sim.engine import bridge_diffusion
 from sim.engine.society_hazards import HazardsMixin
-from sim.refusal import cause_of, facts_of
+from sim.polity.api import ShiftValueWeight
+from sim.refusal import cause_of
+from sim.reporting.api import RecordEvent
+from sim.tests import module_harness
 from sim.ui.proto.scandal_trend import years_until_scandal_crosses_the_line
 from sim.ui.proto.state_succession import succession_block
 from sim.tests import event_stand_in
@@ -99,68 +103,70 @@ class Succession(unittest.TestCase):
         self.assertTrue(succession_block(self.game(True, 5.0))["deputies_carry_the_work"])
 
 
-class Society(AdoptionMixin):
-    send = event_stand_in.send
+class Reading:
+    """A country's reading shares that records what it is taught."""
 
     def __init__(self):
-        self.value_weights = {"w_novelty": 0.0}
-        self.literacy_values = {"literacy_general": 0.1, "literacy_elite": 0.5}
+        self.values = {"literacy_general": 0.1, "literacy_elite": 0.5}
         self.taught = []
-        self.state = types.SimpleNamespace(household=types.SimpleNamespace(log=[]), scenario=types.SimpleNamespace(year=100))
-        self.nodes = {"press": {"name": "Press"}}
 
-    def literacy(self, field):
-        return self.literacy_values[field]
-
-    def literacy_ceiling_elite(self):
-        return 0.97
-
-    def literacy_ceiling_general(self):
-        return 0.9
-
-    def literacy_ceiling_common(self):
-        return 0.9
-
-    def country_literacy(self):
-        return types.SimpleNamespace(teach=self.teach)
+    def get(self, field):
+        return self.values[field]
 
     def teach(self, field, target, ceiling):
         self.taught.append((field, target, ceiling))
-        self.literacy_values[field] = target
+        self.values[field] = target
 
-    def coverage_nodes(self):
-        return set()
+
+class Society:
+    """The diffusion module over a tree of one node, a society with one value weight and a country that reads."""
+
+    def __init__(self, effects):
+        self.value_weights = {"w_novelty": 0.0}
+        self.reading = Reading()
+        ceilings = {"literacy_general": 0.9, "literacy_elite": 0.97, "common": 0.9}
+
+        class Taught(Diffusion):
+            def literacy_ceiling(self, field):
+                return ceilings[field]
+        weights_world = types.SimpleNamespace(value_weights=self.value_weights)
+        self.module = module_harness.build(Taught, views={
+            "tech_effects": {"press": effects}.get, "legacy_country_literacy": lambda country: self.reading,
+            "tree": {"press": {"name": "Press"}}.get, "coverage": lambda: set()},
+            answers={ShiftValueWeight: lambda command: bridge_diffusion.shift_value_weight(weights_world, command)})
+
+    def events(self):
+        return [command for command in module_harness.sent(self.module) if isinstance(command, RecordEvent)]
 
 
 class TechEffects(unittest.TestCase):
 
     def apply(self, effects):
-        game = Society()
-        with mock.patch.dict(society_adoption.TECH_EFFECTS, {"press": effects}, clear=False):
-            game.apply_tech_effects("press")
+        game = Society(effects)
+        game.module.apply_tech_effects(ApplyTechEffects("press"))
         return game
 
     def test_a_literacy_effect_logs_the_old_and_new_value_as_a_field(self):
         game = self.apply({"literacy_general": 0.2})
-        (_year, line), = game.state.household.log
-        self.assertEqual(cause_of(line), "society_changed")
-        before, after = facts_of(line)["changes"]["literacy_general"]
+        (event,) = game.events()
+        self.assertEqual(event.kind, "society_changed")
+        before, after = event.facts["changes"]["literacy_general"]
         self.assertEqual(before, 0.1)
-        self.assertEqual(after, game.literacy_values["literacy_general"])
+        self.assertEqual(after, game.reading.values["literacy_general"])
         self.assertGreater(after, before)
 
     def test_a_value_effect_shifts_the_weight_and_logs_before_and_after(self):
         game = self.apply({"w_novelty": 0.3})
-        (_year, line), = game.state.household.log
-        before, after = facts_of(line)["changes"]["w_novelty"]
+        (event,) = game.events()
+        before, after = event.facts["changes"]["w_novelty"]
         self.assertEqual(before, 0.0)
         self.assertEqual(after, game.value_weights["w_novelty"])
         self.assertNotEqual(after, before)
 
     def test_a_tech_with_no_effect_logs_nothing(self):
-        game = Society()
-        game.apply_tech_effects("nothing_here")
-        self.assertEqual(game.state.household.log, [])
+        game = Society(None)
+        game.module.apply_tech_effects(ApplyTechEffects("press"))
+        self.assertEqual(game.events(), [])
 
 
 if __name__ == "__main__":

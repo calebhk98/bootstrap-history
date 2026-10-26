@@ -8,8 +8,8 @@ import random
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.literacy_effect import literacy_after_effect as target_after_effect
-from sim.engine.literacy_rules import common_ceiling
+from sim.diffusion.literacy_rules import literacy_after_effect as target_after_effect
+from sim.diffusion.literacy_rules import common_ceiling
 from sim.engine.mortality_shock import cut_cohorts
 from sim.engine.projects_completion import goal_movement
 from sim.engine.society_hazards import HazardsMixin

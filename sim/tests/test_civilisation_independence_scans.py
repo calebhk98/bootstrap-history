@@ -10,7 +10,7 @@ class ForeignInstitutionsFollowData(unittest.TestCase):
     tag and the marker table, not from which civilisation it is."""
 
     def test_foreignness_follows_the_society_tag(self):
-        from sim.engine import institution_societies as societies
+        from sim.diffusion import institution_societies as societies
         text = "annona_grain_dole"
         owner = societies._table()["markers"]["annona"]
         self.assertFalse(societies.belongs_to_other_society(text, {"id": owner}, "markers"))

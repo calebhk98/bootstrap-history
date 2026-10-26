@@ -8,14 +8,15 @@ from unittest import mock
 
 from .harness import check
 
-from sim.engine import society_adoption
+from sim.diffusion import literacy_rules
+from sim.diffusion.module import Diffusion
 from sim.engine.core import Sim
 from sim.engine.coverage import CoverageMixin
 from sim.engine.projects_capability import CapabilityMixin
-from sim.engine.society_adoption import AdoptionMixin
 from sim.engine.working_day import BASE_WORKING_DAY_HOURS, WorkingDayMixin
 from sim.engine.economy_credit import CreditMixin
 from sim.refusal import cause_of
+from sim.tests import module_harness
 from sim.ui.proto.dispatch_rollout import _cmd_rollout
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
@@ -109,18 +110,17 @@ check("the year every wage quote reads is the working year", CreditMixin.HOURS_P
 
 # ---- the schooling flow
 def schools(values, shut=(), reaches=None):
-    terms = [(node_id, {"required": node_id in shut}) for node_id in values]
-    return SimpleNamespace(_effect_terms=lambda channel: terms, running=lambda node_id: node_id not in shut,
-                           mechanic=lambda node_id, name: {"reaches": (reaches or {}).get(node_id)},
-                           effect_values=lambda channel: list(values.items()))
+    terms = [(node_id, {"required": node_id in shut, "reaches": (reaches or {}).get(node_id)}) for node_id in values]
+    return module_harness.build(Diffusion, views={"effect_terms": lambda channel: terms, "running": lambda node_id: node_id not in shut,
+                                                  "effect_values": lambda channel: list(values.items())})
 
 
 recorded = []
-with mock.patch.object(society_adoption, "schooling_flow", lambda schools_open, field, shut: recorded.append((schools_open, field, shut)) or 7.0):
-    flow = AdoptionMixin._schooling_flow(schools({"school": 1.0, "village": 0.5}, reaches={"village": ["literacy_general"]}), "literacy_general")
+with mock.patch.object(literacy_rules, "schooling_flow", lambda schools_open, field, shut: recorded.append((schools_open, field, shut)) or 7.0):
+    flow = schools({"school": 1.0, "village": 0.5}, reaches={"village": ["literacy_general"]}).schooling_flow("literacy_general")
 check("the flow is the open schools with the fields each reaches, for the figure asked", flow == 7.0
       and recorded == [([(1.0, None), (0.5, ["literacy_general"])], "literacy_general", False)], recorded)
 recorded.clear()
-with mock.patch.object(society_adoption, "schooling_flow", lambda schools_open, field, shut: recorded.append(shut) or 0.0):
-    AdoptionMixin._schooling_flow(schools({"school": 1.0, "village": 0.5}, shut=("school",)))
+with mock.patch.object(literacy_rules, "schooling_flow", lambda schools_open, field, shut: recorded.append(shut) or 0.0):
+    schools({"school": 1.0, "village": 0.5}, shut=("school",)).schooling_flow()
 check("a required school that is shut is passed on as shut", recorded == [True], recorded)

@@ -9,7 +9,7 @@ from sim.agents import enforcement
 from sim.agents.api import Government
 from sim.agents.records import ActorRecord
 from sim.engine.data import load_civ
-from sim.engine.diffusion_rules import medical_relief
+from sim.diffusion.diffusion_rules import medical_relief
 from sim.engine.legitimacy import LegitimacyMixin
 from sim.engine.society_state_pressure import StatePressureMixin
 from .agents_fake_world import FakeWorld

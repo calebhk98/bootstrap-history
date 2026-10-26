@@ -3,7 +3,7 @@
 Under fog a seat sees what it has built, what it has revealed and what it could begin next. Another seat's work
 becomes known to it only when enough of it shows at the observer's distance (the same visibility an actor
 copying from sight gets, sim/engine/visibility.py); a secret shows little, a published invention shows widely."""
-from typing import Callable, Set
+from typing import Any, Callable, Mapping, Set
 
 from sim.agents.api import OBSERVATION_RANGE_KM, PLAYER_VISIBLE_EXPOSURE, SECRET_EXPOSURE
 
@@ -12,12 +12,13 @@ from .state import ProjectsState
 from .visibility import base_visibility, seen_from
 
 
-def nodes_heard_of(builder: ProjectsState, observer: ProjectsState, distance_km: float,
-                   copy_difficulty: Callable[[str], float]) -> Set[str]:
-    """The nodes `builder` made that `observer` has not got or heard of and can see enough of from `distance_km`."""
+def nodes_heard_of(builder: ProjectsState, builder_disclosures: Mapping[str, Any], observer: ProjectsState,
+                   distance_km: float, copy_difficulty: Callable[[str], float]) -> Set[str]:
+    """The nodes `builder` made (and chose `builder_disclosures` for) that `observer` has not got or heard of and can
+    see enough of from `distance_km`."""
     heard = set()
     for node_id in builder.done - builder.granted - observer.done - observer.revealed:
-        mode = (builder.disclosures.get(node_id) or {}).get("mode", "default")
+        mode = (builder_disclosures.get(node_id) or {}).get("mode", "default")
         visibility = base_visibility(mode, node_id in builder.operating, copy_difficulty(node_id), SECRET_EXPOSURE)
         if seen_from(visibility, distance_km, OBSERVATION_RANGE_KM) >= PLAYER_VISIBLE_EXPOSURE:
             heard.add(node_id)
@@ -37,7 +38,7 @@ class SeatSightMixin:
             if builder_id == observer_id or not (builder.projects.done - builder.projects.granted):
                 continue
             distance = self.distance_between_seats(builder_id, observer_id)
-            heard |= nodes_heard_of(builder.projects, observer, distance, self.copy_difficulty)
+            heard |= nodes_heard_of(builder.projects, self.view("disclosures")[builder_id], observer, distance, self.copy_difficulty)
         observer.revealed.update(heard)
         return heard
 

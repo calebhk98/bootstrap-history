@@ -8,14 +8,15 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine import copy_visibility_defaults, data, society_disclosure, validate_copy_visibility
+from sim.diffusion.module import Diffusion
+from sim.engine import copy_visibility_defaults, data, validate_copy_visibility
+from sim.tests import module_harness
 
 NODE_WITH_NOTHING_DECLARED = {"lab": {"smith": 5.0, "carpenter": 5.0}, "mat": {"iron_bar_kg": 1.0, "timber_m3": 1.0}}
 
 
 def difficulty_of(nodes, node_id):
-    world = types.SimpleNamespace(nodes=nodes)
-    return society_disclosure.DisclosureMixin.copy_difficulty(world, node_id)
+    return module_harness.build(Diffusion, views={"tree": nodes.get}).copy_difficulty(node_id)
 
 
 class CopyVisibility(unittest.TestCase):

@@ -4,7 +4,7 @@ test_labour_productivity_scenario)."""
 import types
 import unittest
 
-from sim.engine.diffusion_curve import knowledge_half_life, leaked_share
+from sim.diffusion.diffusion_curve import knowledge_half_life, leaked_share
 from sim.engine import validate_material_gating as _gating
 from sim.labour.api import Labour
 

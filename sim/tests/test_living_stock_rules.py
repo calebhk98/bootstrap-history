@@ -10,7 +10,7 @@ from unittest import mock
 
 from sim.engine import forward_living_stock
 from sim.foreign_trade.module import ForeignTrade
-from sim.engine.society_diffusion import DiffusionMixin
+from sim.tests.diffusion_host import gated
 from sim.agents.api import edges
 from sim.foreign_trade.api import SettleFlow
 from sim.ledger.api import ChangeStock, PayEdge
@@ -105,17 +105,16 @@ class NeedsFirst(unittest.TestCase):
     CIV = {"needs_first": {"draught": {"material": HERD, "units": 5.0, "ids": ["collar"], "node": "import"}}}
 
     def stand_in(self, met, done=()):
-        return types.SimpleNamespace(civ=self.CIV, stock_holds_met=lambda stock: met,
-                                     state=types.SimpleNamespace(projects=types.SimpleNamespace(done=set(done))))
+        return gated(self.CIV, done, met)
 
     def test_a_gate_on_stock_not_held_names_the_node_that_lifts_it(self):
-        self.assertEqual(DiffusionMixin.needs_first(self.stand_in(False), "collar")[0], "import")
+        self.assertEqual(self.stand_in(False).needs_first("collar")[0], "import")
 
     def test_holding_the_stock_lifts_the_gate_with_no_research(self):
-        self.assertEqual(DiffusionMixin.needs_first(self.stand_in(True), "collar"), (None, None))
+        self.assertEqual(self.stand_in(True).needs_first("collar"), (None, None))
 
     def test_the_node_that_lifts_the_gate_done_lifts_it_too(self):
-        self.assertEqual(DiffusionMixin.needs_first(self.stand_in(False, ["import"]), "collar"), (None, None))
+        self.assertEqual(self.stand_in(False, ["import"]).needs_first("collar"), (None, None))
 
 
 class PartnerRefusal(unittest.TestCase):

@@ -5,7 +5,9 @@ The registration and the aliases are test_missing_screens."""
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine.society_adoption import AdoptionMixin
+from sim.diffusion import constants as diffusion_constants
+from sim.diffusion.module import Diffusion
+from sim.tests import module_harness
 from sim.ui.proto import screen_demography, screen_divergence, screen_education, screen_map
 
 from .harness import *  # noqa: F401,F403
@@ -95,25 +97,30 @@ class _Shares:
         self.shares[field] += step * (ceiling - self.shares[field])
 
 
-def _schooling_game():
+def _schooling_game(flow=1.0):
+    """The diffusion module whose schools give `flow`, over a country that reads 0.2 and 0.5, and those strata."""
     strata = _Shares({"literacy_general": 0.2, "literacy_elite": 0.5})
-    return SimpleNamespace(
-        strata=strata, effective_schooling_flow=lambda field=None: 1.0, country_literacy=lambda: strata, literacy_ceiling_elite=lambda: 0.9,
-        literacy_ceiling_common=lambda: 0.8, LITERACY_GROWTH_RATE_ELITE=0.1, LITERACY_GROWTH_RATE_GENERAL=0.1)
+
+    class Schooled(Diffusion):
+        def effective_schooling_flow(self, field=None):
+            return flow
+
+        def literacy_ceiling(self, field):
+            return {"literacy_elite": 0.9, "common": 0.8}[field]
+    module = module_harness.build(Schooled, views={"legacy_country_literacy": lambda country: strata})
+    return module, strata
 
 
-previewing = _schooling_game()
-preview = AdoptionMixin._school_literacy(previewing, preview=True)
-check("a preview of the schooling year reports the gain and leaves the strata where they were",
-      previewing.strata.shares == {"literacy_general": 0.2, "literacy_elite": 0.5} and abs(preview["literacy_general"] - 0.26) < 1e-9, (preview, previewing.strata.shares))
-applying = _schooling_game()
-applied = AdoptionMixin._school_literacy(applying)
-check("the schooling year moves the strata to the figures the preview gave", applied == preview and abs(applying.strata.shares["literacy_general"] - 0.26) < 1e-9, (applied, preview))
-check("with no schooling flow the schooling year changes nothing",
-      AdoptionMixin._school_literacy(SimpleNamespace(effective_schooling_flow=lambda field=None: 0.0)) == {})
-asked = []
-AdoptionMixin.literacy_next_year(SimpleNamespace(_school_literacy=lambda preview=False: asked.append(preview) or {}))
-check("literacy_next_year is the preview of the schooling year", asked == [True], asked)
+with mock.patch.object(diffusion_constants, "LITERACY_GROWTH_RATE_ELITE", 0.1), \
+        mock.patch.object(diffusion_constants, "LITERACY_GROWTH_RATE_GENERAL", 0.1):
+    previewing, previewing_strata = _schooling_game()
+    preview = previewing.literacy_next_year()
+    check("a preview of the schooling year reports the gain and leaves the strata where they were",
+          previewing_strata.shares == {"literacy_general": 0.2, "literacy_elite": 0.5} and abs(preview["literacy_general"] - 0.26) < 1e-9, (preview, previewing_strata.shares))
+    applying, applying_strata = _schooling_game()
+    applied = applying._school_literacy()
+    check("the schooling year moves the strata to the figures the preview gave", applied == preview and abs(applying_strata.shares["literacy_general"] - 0.26) < 1e-9, (applied, preview))
+check("with no schooling flow the schooling year changes nothing", _schooling_game(0.0)[0]._school_literacy() == {})
 
 # --- demography
 flows = SimpleNamespace(start_total=2000.0, births=60.4, deaths=40.6, immigration=1.0, emigration=2.0, deaths_children=10.0,

@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 from .harness import check, NODES, S
 
-from sim.engine.society_diffusion import DiffusionMixin
+from sim.tests.diffusion_host import gated
 from sim.tests import projects_host
 from sim.ui.protocol import render_risk as _render_risk
 from sim.ui.proto.dispatch_inspection_path import route_money_warnings
@@ -87,13 +87,8 @@ GATED_VEHICLES = ("tr_hopper_wagon", "lnd_two_wheel_cart", "lnd_four_wheel_cart"
 gate_node = MEXICA["needs_first"]["draught animals"]["node"]
 
 
-class _Society(DiffusionMixin):
-    def __init__(self, civ, done=()):
-        self.civ = civ
-        self.state = SimpleNamespace(projects=SimpleNamespace(done=set(done)))
-
-    def stock_holds_met(self, holds):
-        return False
+def _Society(civ, done=()):
+    return gated(civ, done)
 
 
 check("the wheeled and animal-powered vehicles are in the same needs_first group as the harnesses, not a separate list",

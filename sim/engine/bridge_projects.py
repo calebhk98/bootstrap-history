@@ -40,21 +40,6 @@ def prerequisite_message(sim, missing, memo):
     return sim.missing_prereq_message(missing, _memo=memo)
 
 
-@bridge_view("needs_first", kind=QUOTE)
-def needs_first(sim, node_id, about_stock):
-    return sim.needs_first(node_id, about_stock=about_stock)
-
-
-@bridge_view("foreign_only", kind=QUOTE)
-def foreign_only(sim, node_id):
-    return sim._is_foreign_only(node_id)
-
-
-@bridge_view("civ_cost_factor", kind=QUOTE)
-def civ_cost_factor(sim, node_id):
-    return sim.civ_cost_factor(node_id)
-
-
 # ---- ventures and production -----------------------------------------------------------------------------------------
 
 @bridge_view("closures", seat_scoped=True)

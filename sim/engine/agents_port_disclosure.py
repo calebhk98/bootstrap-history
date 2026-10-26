@@ -18,7 +18,7 @@ class DisclosureView:
 		seats = self._sim.state.seats
 		if not seat_builds.builders_of(seats, node_id):
 			return str(self._sim.disclosure_of(node_id)["mode"])
-		return most_open_mode(seat_builds.disclosure_modes(seats, node_id))
+		return most_open_mode(seat_builds.disclosure_modes(seats, node_id, self._sim.view("disclosures").__getitem__))
 
 	def secret_exposure(self, node_id: str) -> float:
 		"""Share of full visibility outsiders get of a kept secret: the more trades and materials
@@ -61,7 +61,7 @@ class DisclosureView:
 		purse; the amount paid."""
 		sim = self._sim
 		paid = 0.0
-		owed = seat_royalties_due(sim.state.seats, node_id, firm.actor_id, takings)
+		owed = seat_royalties_due(sim.state.seats, node_id, firm.actor_id, takings, sim.view("disclosures").__getitem__)
 		for seat_id, due in seat_royalties_paid(owed, firm.money):
 			ledger.transfer(firm, sim.seat_party(seat_id), due, "licence")
 			paid += due

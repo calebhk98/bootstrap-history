@@ -2,5 +2,6 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import (CloseSuccessionDispute, RaiseScandal, RecordBribe, RecordRising, RegisterPeople, ReplaceRuler,
-                       ResetStateUnrest, SetGrievanceReference, SetLandTakenMemory, SetTileReading, StrikeFromForce)
+from .commands import (CloseSuccessionDispute, GainReputation, RaiseScandal, RecordBribe, RecordRising, RegisterPeople, ReplaceRuler,
+                       ResetStateUnrest, SetGrievanceReference, SetLandTakenMemory, SetTileReading, ShiftValueWeight,
+                       StrikeFromForce)

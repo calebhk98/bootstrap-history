@@ -33,6 +33,10 @@ RELOCATIONS = [
     ("/modules/agriculture/wild_stock", "/economy/wild_stock"),
     ("/modules/agriculture/soil_nitrogen", "/economy/soil_nitrogen"),
     ("/modules/agriculture/weather_salt", "/scenario/weather_salt"),
+    ("/modules/diffusion/technique_first_run", "/economy/technique_first_run"),
+    ("/modules/diffusion/technique_record_started", "/economy/technique_record_started"),
+    ("/modules/diffusion/literacy_said", "/scenario/_literacy_said"),
+    ("/seats/*/modules/diffusion/disclosures", "/seats/*/projects/disclosures"),
 ]
 
 IGNORED = [

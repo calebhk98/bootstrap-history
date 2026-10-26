@@ -132,9 +132,9 @@ check("a run is over when every household seat ended, whatever a country seat do
 
 # ---- handover
 check("a country seat cannot be handed to a household seat",
-      cause_of(handover_refusal(seats, "senate", FIRST_SEAT_ID)) == "replacement_wrong_kind", None)
+      cause_of(handover_refusal(seats, "senate", FIRST_SEAT_ID, False)) == "replacement_wrong_kind", None)
 seats_two = {"senate": country_seat(), "regent": country_seat(holder=None)}
-check("a country seat can be handed to an empty country seat", handover_refusal(seats_two, "senate", "regent") is None, None)
+check("a country seat can be handed to an empty country seat", handover_refusal(seats_two, "senate", "regent", False) is None, None)
 moved = move_seat_fields(seats_two, "senate", "regent")
 check("a country seat is handed over with its kind and holder", moved["from"] == "senate" and moved["to"] == "regent"
       and "senate" not in seats_two and seats_two["regent"].kind == "country" and seats_two["regent"].holder == GOVERNMENT, moved)
