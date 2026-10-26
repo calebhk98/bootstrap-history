@@ -2,8 +2,6 @@
 
 Each view answers through `Sim` exactly as the old mixin code asked, and is never cached; when its owner moves it
 publishes the same name and the entry is deleted."""
-from sim.labour import trade_data, wage_provider
-
 from .bridge import bridge_view
 
 
@@ -46,12 +44,3 @@ def household_prices(sim):
 
 
 # ---- workforce ----
-
-@bridge_view("wage_materials")
-def wage_materials(sim):
-    """The materials a wage is set against, in order: the staple, and every trade's tool materials."""
-    registry = trade_data.registry_of(sim)
-    materials = {wage_provider.staple_material(sim.civ)}
-    for trade in registry:
-        materials.update(trade_data.tool_basket(registry, trade))
-    return sorted(materials)

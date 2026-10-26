@@ -5,7 +5,6 @@ from sim.constants import declare
 from sim.demography.api import OpenPopulation
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from . import money_units
-from .wage_scarcity import wage_index_of
 from sim.engine.state import SimulationState, ActiveProjectState
 from sim.engine.state_seat import bind_seat
 from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
@@ -43,7 +42,7 @@ from .forward_mechanics import ForwardMechanicsMixin
 from .forward_knowledge import ForwardKnowledgeMixin
 from .forward_disease import DiseaseForwardsMixin
 from .geography_port import GeographyPortMixin
-from .labour_port import LabourPortMixin
+from .forward_workforce import ForwardWorkforceMixin
 from .projects import ProjectsMixin
 from .core_seats import SeatMixin
 from .year_run import run_year
@@ -90,7 +89,7 @@ class Sim(
         FogMixin,
         GeographyPortMixin,
         DiseaseForwardsMixin,
-        LabourPortMixin,
+        ForwardWorkforceMixin,
         ProjectsMixin,
         SeatMixin,
         ForwardSeatsMixin,
@@ -379,38 +378,6 @@ class Sim(
     # explaining why each is a property and never __getattr__. Sim still
     # inherits ForwardingPropertiesMixin below, so every name in that file
     # keeps resolving on a live Sim instance exactly as it did here.
-
-
-    WAGE_SCARCITY_ELASTICITY = declare(
-        "WAGE_SCARCITY_ELASTICITY", 0.9, kind="hardcoded_outcome",
-        unit="dimensionless (wage premium per unit of population shortfall)",
-        source="Phelps Brown and Hopkins' English real-wage index shows "
-             "roughly a doubling across the century after 1348.",
-        confidence="C",
-        why="How much scarcer labour raises its own price - see pop_scale/"
-            "wage_index below: at this elasticity, a Black-Death-sized "
-            "shortfall reproduces roughly the cited real-wage doubling over "
-            "the timescale sim/world/demography.py's own vital rates take "
-            "to close it. FLAGGED AS A CLAUDE.md SS3.1/3.2 RISK: chosen "
-            "specifically to land in the range that reproduces a known "
-            "historical wage-index outcome (Phelps Brown and Hopkins), "
-            "rather than derived from labour supply and demand "
-            "fundamentals - the same shape as economy.py's DEBT_BASE_RATE, "
-            "a real attested figure standing in for a market mechanism "
-            "this project has not built. It is not fitted to the series "
-            "numerically, but it was picked because it lands near the "
-            "answer, which is the thing SS3.2 asks a baseline to reach "
-            "independently rather than by construction.")
-
-    # `wage_index` is a COMPUTED PROPERTY over the nation's people (`pop_scale`, the demography module's view): a hazard
-    # only needs to cut the people, and the gap that opens is what this reads.
-    @property
-    def wage_index(self):
-        unshocked_trend = max(
-            self.POP_SCALE_FLOOR,
-            float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
-            / self.DEFAULT_POPULATION_100AD)
-        return wage_index_of(self._wage_index_base, self.WAGE_SCARCITY_ELASTICITY, self.pop_scale, unshocked_trend)
 
 
     # -- helpers ------------------------------------------------------------

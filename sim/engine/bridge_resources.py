@@ -15,12 +15,6 @@ def start_year(sim):
 	return sim.cfg["start_year"]
 
 
-@bridge_view("labour_quote", kind=QUOTE)
-def labour_quote(sim, trade, hours):
-	"""Money one hour of a trade costs when `hours` of it are bought at once (the price rises with the hours)."""
-	return sim.labour.labour_market.quote(trade, hours)
-
-
 @bridge_view("mineral_scale", kind=KEYED)
 def mineral_scale(sim, material):
 	"""Fraction of a mineral's reference output the civilisation can draw on, from the tiles it holds."""

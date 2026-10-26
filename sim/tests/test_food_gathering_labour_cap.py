@@ -8,7 +8,7 @@ import types
 import unittest
 
 from sim.agriculture.state import AgricultureWorld
-from sim.engine import bridge_agriculture, data
+from sim.engine import data
 from sim.geography.api import Geography
 from sim.labour import api as labour_api
 from sim.tests import agriculture_stand_in
@@ -54,7 +54,7 @@ def society(hours, stock=None):
     geography = Geography(types.SimpleNamespace(civ=civ, world_map=world_map))
     labour = {"hours": dict(hours)}
     farm = agriculture_stand_in.build(world=AgricultureWorld(wild_stock=dict(stock or {})), views={
-        "society_labour_hours": lambda: labour["hours"], "trade_registry": bridge_agriculture.trade_registry(None),
+        "society_labour_hours": lambda: labour["hours"], "trade_registry": {trade_id: {"family": trade.family, **trade.extra} for trade_id, trade in data.TRADE_REGISTRY.items()},
         "farming_technique": DEFAULT_TECHNIQUE, "society_herds": {},
         "crop_sites": geography.crop_sites, "food_kcal_by_source": geography.food_kcal_by_source,
         "game_food_sources": geography.game_food_sources, "huntable_kcal": geography.huntable_kcal,

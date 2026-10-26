@@ -72,3 +72,10 @@ class ApplyLandClearing(Command):
 @dataclass(frozen=True)
 class UpdateWages(Command):
 	"""One year of wage adjustment toward the trades that are short."""
+
+
+@dataclass(frozen=True)
+class BuildHousing(Command):
+	"""The acting seat's household pays for `places` of worker housing, if its capital covers them. Answers the places
+	built, nothing when the capital does not cover them."""
+	places: float

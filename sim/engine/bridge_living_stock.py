@@ -4,12 +4,11 @@ Each view answers through `Sim` as the old mixin methods did; when its owner mov
 entry is deleted. The `partner_*` views carry the foreign-trade and polity arithmetic that used to sit in the
 living-stock mixins (a partner's landed price, the carriage of a smuggled load, a state's chance to catch it)."""
 from sim.agents.api import GOVERNMENT_PREFIX
-from sim.workforce.api import PressLabour
 from sim.assembly.api import KEYED, QUOTE
 from sim.world import stock_dynamics
 
 from . import purchase_rule
-from .bridge import bridge_command, bridge_view
+from .bridge import bridge_view
 from sim.coin.api import visibility_factor
 
 
@@ -46,26 +45,10 @@ def nursery_room_units(sim, place, output_per_batch, hectare_years_per_batch):
 
 # ---- labour and money ----
 
-@bridge_view("hour_wage", kind=KEYED)
-def hour_wage(sim, trade):
-    """Money one hour of a trade costs now."""
-    return sim.labour.market.quote(trade)
-
-
 @bridge_view("can_pay", kind=QUOTE)
 def can_pay(sim, cost):
     """Whether the acting seat's purchase budget covers `cost`."""
     return purchase_rule.can_pay(sim, cost)
-
-
-@bridge_view("hours_per_person_year")
-def hours_per_person_year(sim):
-    return sim.HOURS_PER_PERSON_YEAR
-
-
-@bridge_command(PressLabour)
-def press_labour(sim, command):
-    sim.labour.market.press(command.trade, command.hours)
 
 
 # ---- partners ----

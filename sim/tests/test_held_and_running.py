@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from sim.engine import action_results, validate_action_results
 from sim.engine.geography_port import GeographyWorld
 from sim.engine.held_works import HeldWorksMixin
-from sim.engine.labour_port import LabourWorld
+from sim.workforce.world import WorkforceWorld
 
 NODES = {
     "harbour": {"id": "harbour", "up": 5.0, "rev": 0.0},
@@ -124,8 +124,8 @@ class CallersTests(unittest.TestCase):
         self.assertEqual(GeographyWorld(sim).held_nodes, {"a", "b"})
 
     def test_labour_reads_the_one_answer(self):
-        sim = SimpleNamespace(held_and_running=lambda include_starting=True: frozenset({"a"}))
-        self.assertEqual(LabourWorld(sim).held_and_running(), frozenset({"a"}))
+        needs = SimpleNamespace(held_techniques=lambda include_starting: frozenset({"a"}))
+        self.assertEqual(WorkforceWorld(needs, None).held_and_running(), frozenset({"a"}))
 
     def test_a_partner_an_action_returns_is_refused_until_it_is_held(self):
         host = _Host(done=set(), operating=())

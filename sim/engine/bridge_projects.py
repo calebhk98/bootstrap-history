@@ -128,29 +128,6 @@ def purchase_remedies_text(sim):
 
 # ---- workforce ------------------------------------------------------------------------------------------------------
 
-@bridge_view("hours_available", kind=KEYED, seat_scoped=True)
-def hours_available(sim, pool):
-    labour = sim.labour
-    return {"scholar_hands": labour.scholar_hands_available, "craft_hands": labour.craft_hands_available,
-            "director_pool": labour.director_pool, "director_committed": labour.director_hours_committed,
-            "hired_cap": labour.hired_cap}[pool]()
-
-
-@bridge_view("market_supply", kind=KEYED)
-def market_supply(sim, trade):
-    return sim.labour.market_supply(trade)
-
-
-@bridge_view("trade_available", kind=KEYED)
-def trade_available(sim, trade):
-    return sim.labour.trade_available(trade)
-
-
-@bridge_view("staff_advice", kind=QUOTE)
-def staff_advice(sim, kind, deficit):
-    return sim.labour.staff_advice(kind, deficit)
-
-
 @bridge_view("training_advice", kind=QUOTE)
 def training_advice_view(sim, trade_id):
     return training_advice(sim.labour, trade_id)
@@ -161,19 +138,9 @@ def training_queue(sim):
     return sim.state.household.training
 
 
-@bridge_view("project_staffing_shortfall", kind=QUOTE)
-def project_staffing_shortfall(sim, node):
-    return sim.labour.project_staffing_shortfall(node)
-
-
 @bridge_view("living_cost", kind=QUOTE)
 def living_cost(sim, revenue=None, upkeep=None):
     return sim.living_cost(_rev=revenue, _upkeep=upkeep)
-
-
-@bridge_view("money_per_labour_hour")
-def money_per_labour_hour(sim):
-    return sim.labour.money_per_labour_hour()
 
 
 # ---- living stock -----------------------------------------------------------------------------------------------------

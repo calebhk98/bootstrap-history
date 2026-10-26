@@ -6,8 +6,7 @@ Each topic is its own small mixin; this file only composes them for `Sim`.
 from .colonies import ColoniesMixin
 from .coverage import CoverageMixin
 from .tile_ownership import TileOwnershipMixin
-from .working_day import WorkingDayMixin
 
 
-class BenefactionsMixin(CoverageMixin, WorkingDayMixin, ColoniesMixin, TileOwnershipMixin):
+class BenefactionsMixin(CoverageMixin, ColoniesMixin, TileOwnershipMixin):
     pass

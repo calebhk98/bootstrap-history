@@ -8,7 +8,7 @@ import unittest
 from sim.demography.api import rules as demography_rules
 from sim.hazards import rules
 from sim.hazards.staff_loss_words import defence_kind, national_toll_sentence, staff_clause
-from sim.engine.wage_scarcity import wage_index_of
+from sim.workforce.rules import wage_index_of
 from sim.world.demography import Population
 
 CHILD, WORKING_AGE, ELDERLY = 1.6, 1.0, 1.4   # the vulnerability ratios (sim/world/demography.py)

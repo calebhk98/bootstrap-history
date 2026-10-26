@@ -27,6 +27,7 @@ from sim.living_stock.state import LivingStockWorld
 from sim.polity.api import RaiseScandal
 from sim.tests import module_harness
 from sim.workforce.api import PressLabour
+from sim.workforce.module import Workforce
 from sim.foreign_trade.api import CloseMarketsTo, RecordStockTaken
 from sim.foreign_trade.module import ForeignTrade
 from sim.agents.api import GOVERNMENT_PREFIX
@@ -101,6 +102,8 @@ class Game:
         self.polity = polity_host.build(seat=self.standing)
         self.purse = Purse(capital, self)
         self.labour = type("Labour", (), {"market": Market()})()
+        self.workforce = module_harness.build(Workforce)
+        self.workforce.labour = self.labour
         self.goods_market = type("GoodsMarket", (), {"acting": self.purse, "acting_party_id": "founder"})()
         self.state = type("State", (), {
             "scenario": type("Scenario", (), {"year": 100})(),
@@ -122,7 +125,7 @@ class Game:
             "stock_land": lambda: bridge.stock_land(self), "year": 100, "acting_balance": lambda: self.purse.capital,
             "endemic_stock_loss": lambda place, species: bridge.endemic_stock_loss(self, place, species),
             "nursery_room_units": lambda *arguments: bridge.nursery_room_units(self, *arguments),
-            "hour_wage": lambda trade: bridge.hour_wage(self, trade), "can_pay": self.purse.can_pay,
+            "hour_wage": self.workforce.hour_wage, "can_pay": self.purse.can_pay,
             "partners": self.trade.partners, "partner": self.trade.partner,
             "partner_refusal": self.trade.partner_refusal, "partner_gate": self.trade.partner_gate,
             "partner_carry": self.trade.partner_carry,
@@ -130,7 +133,7 @@ class Game:
         answers = {
             ChangeStock: lambda command: apply_to_own_stock(self, command),
             PayEdge: lambda command: self.purse.pay(command.amount, command.purpose),
-            PressLabour: lambda command: bridge.press_labour(self, command),
+            PressLabour: self.workforce.press_labour,
             RaiseScandal: self.polity.raise_scandal,
             CloseMarketsTo: self.trade.apply_close_markets_to,
             RecordStockTaken: self.trade.apply_record_stock_taken}

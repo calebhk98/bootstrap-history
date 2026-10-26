@@ -7,10 +7,10 @@ import itertools
 import types
 import unittest
 
-from sim.engine import bridge_hazards
 from sim.reporting.api import RecordEvent
 from sim.tests import hazards_host, module_harness
 from sim.workforce.api import SurviveStaff
+from sim.workforce.module import Workforce
 
 
 class AlternatingDice:
@@ -24,18 +24,18 @@ class AlternatingDice:
 
 
 class SackedHousehold:
-    """A household, the dice, and the hazards module over them: a SurviveStaff it sends thins the household as the bridge does."""
+    """A household, the dice, and the hazards module over them: a SurviveStaff it sends thins the household as the workforce module does."""
 
     def __init__(self, corpus_chance=0.0):
         self.dice = AlternatingDice()
         self.household = types.SimpleNamespace(artisans=20.0, scholars=10.0, directors_extra=5.0, capital=1000.0,
                                                employees={"smith": 40.0, "scribe": 30.0, "mason": 20.0})
-        game = types.SimpleNamespace(state=types.SimpleNamespace(household=self.household), rng=self.dice)
+        workforce = module_harness.build(Workforce, views={"legacy_acting_household": self.household, "legacy_dice": self.dice})
         self.module = hazards_host.build(
             legacy_dice=self.dice, staff=lambda: {"scholars": self.household.scholars, "artisans": self.household.artisans,
                                                   "employees": self.household.employees},
             acting_balance=lambda: self.household.capital, corpus_hedge=(corpus_chance, 0.5, "corpus_written"),
-            answers={SurviveStaff: lambda command: bridge_hazards.survive_staff(game, command)})
+            answers={SurviveStaff: workforce.survive_staff})
         self.corpus_loss_asked = []
         self.module.sack_corpus_loss = lambda year, fraction, hedge: self.corpus_loss_asked.append((year, fraction, hedge))
 

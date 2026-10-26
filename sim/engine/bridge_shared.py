@@ -17,13 +17,6 @@ def is_venture(sim, node_id):
 	return sim.is_venture(node_id)
 
 
-@bridge_view("staff", seat_scoped=True)
-def staff(sim):
-	"""The acting seat's household staff: hired hands by trade, and its scholars and artisans."""
-	household = sim.state.household
-	return {"employees": household.employees, "scholars": household.scholars, "artisans": household.artisans}
-
-
 @bridge_view("tile_owner", kind=KEYED)
 def tile_owner(sim, tile):
 	"""Who holds a tile (the sovereign), or None."""
