@@ -111,6 +111,26 @@ def _check_reads(assembly: Assembly) -> None:
 			raise AssemblyError("mod %s provides to %s, which no module declares%s" % (entries[0][0], point, _removal_note(assembly, point)))
 
 
+def _check_view_cycles(assembly: Assembly) -> None:
+	"""Declared view inputs must not form a cycle: a view's freshness is the freshness of its inputs."""
+	inputs = {view.name: [name for name in view.inputs if name in assembly.view_owner]
+	          for spec in assembly.applied.specs.values() for view in spec.publishes}
+	state: Dict[str, int] = {}                      # 1 while on the walk, 2 when finished
+
+	def walk(name: str, trail: List[str]) -> None:
+		if state.get(name) == 2:
+			return
+		if state.get(name) == 1:
+			cycle = trail[trail.index(name):] + [name]
+			raise AssemblyError("view inputs form a cycle: %s" % " -> ".join(cycle))
+		state[name] = 1
+		for following in inputs.get(name, []):
+			walk(following, trail + [name])
+		state[name] = 2
+	for name in sorted(inputs):
+		walk(name, [])
+
+
 def _implementation(assembly: Assembly, module_id: str, spec: ModuleSpec) -> type:
 	if not (isinstance(spec.implementation, type) and issubclass(spec.implementation, Module)):
 		raise AssemblyError("module %s: its implementation must derive from sim.assembly.api.Module" % module_id)
@@ -174,6 +194,7 @@ def assemble(shipped: Sequence[ModuleSpec], operations: Sequence[Operations] = (
 	                    {command: module_id for module_id, spec in removed.items() for command, _handler in spec.applies})
 	_bind_names(assembly)
 	_check_reads(assembly)
+	_check_view_cycles(assembly)
 	_instantiate(assembly)
 	_wire(assembly)
 	for module in assembly.modules.values():

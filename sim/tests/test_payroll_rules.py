@@ -1,6 +1,6 @@
 """Complaint 382: wages and the state's pay reach the people's purses and no money is made or lost on the way. Rule:
 `payroll.pay_wages` shares the amount among the home country's free strata by members, or pays the workers edge while
-there are none; `ActorsMixin.pay_wages` is the founder's household paying through it."""
+there are none; the ledger's wage rule (`sim.ledger.api.rules.pay_wages`) is a seat's household paying through it."""
 QUICK_TOPIC = True
 
 import unittest
@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 from sim.agents import payroll
 from sim.agents.edges import EDGE_WORKERS
-from sim.engine.society_actors import ActorsMixin
+from sim.ledger.api import rules
 
 
 class Purse:
@@ -80,9 +80,7 @@ class PayWagesTests(unittest.TestCase):
 
     def test_the_founders_household_pays_its_wages_through_the_same_rule(self):
         household, people = Purse(1000.0), Purse(members=5.0)
-        founder_world = SimpleNamespace(actors=Registry([people]), state=SimpleNamespace(household=household),
-                                        edge=lambda name: Purse())
-        ActorsMixin.pay_wages(founder_world, 120.0, "living costs")
+        rules.pay_wages(Registry([people]), household, 120.0, "living costs", Purse())
         self.assertEqual((household.money, people.money), (880.0, 120.0))
 
 

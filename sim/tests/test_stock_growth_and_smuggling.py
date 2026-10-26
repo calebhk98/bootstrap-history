@@ -9,6 +9,7 @@ import os
 import types
 
 from .harness import NODES, ROOT, check
+from .ledger_host import apply_to_own_stock
 from sim.refusal import cause_of
 from sim.agents.no_country_economy import NoCountryEconomy
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
@@ -112,6 +113,8 @@ class Game(LivingStockMixin, LivingStockTradeMixin, LivingStockSmugglingMixin, L
 
     def _material_stock(self):
         return self.ledger
+
+    send = apply_to_own_stock
 
     def _material_opening_stock(self):
         return self.opening

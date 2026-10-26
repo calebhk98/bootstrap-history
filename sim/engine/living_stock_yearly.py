@@ -3,6 +3,7 @@ import functools
 import json
 import os
 
+from sim.ledger.api import ChangeStock
 from sim.world import stock_dynamics
 
 from .data import ROOT
@@ -68,9 +69,4 @@ class LivingStockYearlyMixin(LivingStockGrowthMixin):
 
     def change_stock(self, material, units):
         """Add (or, negative, take away) units of a held material: the same ledger entries a grant writes."""
-        tonnes = float(units) * tonnes_per_unit(material)
-        key = self._stock_key(material)
-        self._material_stock()[key] += tonnes
-        opening = self._material_opening_stock()
-        opening[key] = opening.get(key, 0.0) + tonnes
-        self.state.household._stock_throttle_sig = None
+        self.send(ChangeStock(self._stock_key(material), float(units) * tonnes_per_unit(material)))

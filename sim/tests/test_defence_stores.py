@@ -11,6 +11,8 @@ QUICK_TOPIC = True
 import collections
 import random
 import unittest
+
+from sim.tests.ledger_host import apply_to_own_stock
 from types import SimpleNamespace
 
 from sim.engine import cash_remedies  # noqa: F401  (settles the import cycle through project_materials)
@@ -69,6 +71,8 @@ class _Host(DefenceStoresMixin, HazardReliefMixin, HazardsMixin, LivingStockMixi
 
     def _material_stock(self):
         return self.ledger
+
+    send = apply_to_own_stock
 
     def _material_opening_stock(self):
         return {}

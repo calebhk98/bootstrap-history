@@ -24,6 +24,21 @@ class BindingTest(unittest.TestCase):
         self.assertIn("top", str(caught.exception))  # presentation: the error text is the only carrier of the parties
         self.assertIn("double", str(caught.exception))
 
+    def test_view_inputs_that_form_a_cycle_are_refused_naming_the_cycle(self):
+        from sim.assembly.api import assemble
+
+        class Loop(Module):
+            def first(self):
+                return 1
+
+            def second(self):
+                return 2
+        loop = ModuleSpec("loop", Loop, publishes=(ViewSpec("first", "first", inputs=("second",)),
+                                                   ViewSpec("second", "second", inputs=("first",))))
+        with self.assertRaises(AssemblyError) as caught:
+            assemble([loop])
+        self.assertIn("first -> second -> first", str(caught.exception))  # presentation: names the cycle
+
     def test_two_publishers_of_a_view_name_both(self):
         twin = ModuleSpec("twin", Twin, publishes=(ViewSpec("raw", "other_raw"),))
         with self.assertRaises(AssemblyError) as caught:

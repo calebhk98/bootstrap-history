@@ -1740,6 +1740,10 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
             "else has any claim on the founder's time. Tuned, not "
             "measured.")
 
+    def send(self, command):
+        """Apply `command` through the module that owns it now; engine code not yet in a module sends this way."""
+        return self.assembly.handlers[type(command)](command)
+
     def step(self):
         """Advance every seat one year (the order and what runs once or per seat: year_run.py)."""
         run_year(self)

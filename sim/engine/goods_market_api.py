@@ -16,6 +16,7 @@ flows, so they move the clearing price the same way (`sim/world/market.py`); the
 out the asking seat's own orders only, which keep the marginal curves that move a bill as it is filled. The clearing itself
 is in market_clearing.py; who offers what is in goods_market_offers.py.
 """
+from sim.ledger.api import ChangeStock
 import copy
 from sim.world.producer_market import Offer
 
@@ -57,10 +58,7 @@ class SeatParty:
     def _move_stock(self, key, tonnes):
         sim = self._sim
         with sim.act_as(self.party_id):
-            opening = sim._material_opening_stock()
-            sim._material_stock()[key] += tonnes
-            opening[key] = opening.get(key, 0.0) + tonnes
-            sim.state.household._stock_throttle_sig = None
+            sim.send(ChangeStock(key, tonnes))
 
 
 class GoodsMarket(GoodsPricing, GoodsOffers):
