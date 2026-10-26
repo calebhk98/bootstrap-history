@@ -122,7 +122,7 @@ class MarketDemandMixin(StaticBookBasketMixin):
 
     def household_demand_ratios(self):
         """{commodity: demand now over demand at the opening}, from population, income and today's
-        prices against the opening basket (real_output.py); recomputed when the population or the wage
+        prices against the opening basket (sim/reporting/output.py); recomputed when the population or the wage
         moves by a tenth of a percent or the price table changes."""
         return self._household_demand_now()[0]
 

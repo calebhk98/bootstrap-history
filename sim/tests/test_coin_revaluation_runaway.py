@@ -9,26 +9,31 @@ import unittest
 
 from sim.coin.module import Coin
 from sim.coin.state import CoinWorld
-from sim.engine.real_price_ratios import RealPriceRatiosMixin
+from sim.reporting.api import ReportingWorld
+from sim.reporting.module import Reporting
 from sim.tests import module_harness
 
 BASELINE = {"silver_kg": 50.0, "wheat_kg": 1.0, "iron_kg": 4.0, "cloth_kg": 9.0}
 
 
-class AgentCoinage(RealPriceRatiosMixin):
-    """The agent economy's prices in its own coin; the coin module derives the engine's price level from the ratios."""
+class AgentCoinage:
+    """The agent economy's prices in its own coin; the coin module derives the engine's price level from the ratios
+    that the reporting module measures."""
     def __init__(self):
-        self.state = types.SimpleNamespace(economy=types.SimpleNamespace(wage_market_ratios={}, agent_baseline_prices={}))
         self.civ = {"coin_standard": {"material": "silver_kg"}, "staple": "wheat_kg"}
-        self.trade_registry = {}
         self.agent = dict(BASELINE)
-        self.economy = types.SimpleNamespace(agent_prices=lambda: self.agent)
+        self.reporting = module_harness.build(Reporting, world=ReportingWorld(), views={
+            "agent_prices": lambda: self.agent, "home_coin_metal": "silver_kg", "wage_materials": ["wheat_kg"]})
         self.coin = module_harness.build(Coin, world=CoinWorld(), views={
             "civilisation": self.civ, "opening_population": 1000.0, "opening_money_per_labour_hour": 0.5,
-            "foreign_coin_home_units": 0.0, "foreign_economies": [], "coin_value_ratio": self.coin_value_ratio})
+            "foreign_coin_home_units": 0.0, "foreign_economies": [],
+            "coin_value_ratio": self.reporting.coin_value_ratio})
 
-    def home_coin_metal(self):
-        return "silver_kg"
+    def record_wage_market_ratios(self):
+        self.reporting.record_wage_market_ratios()
+
+    def last_market_price_ratio(self, material):
+        return self.reporting.last_market_price_ratio(material)
 
     def revalue_coin_metals(self):
         self.coin.revalue_coin_metals(["seat"])

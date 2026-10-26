@@ -55,3 +55,15 @@ class RecordAutomationSkip(Command):
     what: str
     reason: str
     facts: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class CloseRealOutput(Command):
+    """Measure the year's real output per head once the market has closed, and note the price at which each good
+    households newly want was first offered."""
+
+
+@dataclass(frozen=True)
+class ErodeMoney(Command):
+    """The coin buys `share` less than it did (debasement): the purchasing-power indicator falls by that share."""
+    share: float

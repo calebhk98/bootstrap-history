@@ -1,4 +1,4 @@
-"""The arithmetic of real output (real_output.py) on plain values: the traded measure against the baseline year, and
+"""The arithmetic of real output (sim/reporting/output.py) on plain values: the traded measure against the baseline year, and
 the lines a society's output is the sum of. No game is read here."""
 
 

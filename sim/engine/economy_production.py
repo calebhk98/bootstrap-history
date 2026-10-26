@@ -163,7 +163,7 @@ class ProductionMixin:
         key = (
             scenario.year,
             self.pop_scale,
-            economy.output_per_head,
+            self.real_output_per_head(),
             self.household.operating_version,
             self.household.done_version,
             self.household.workforce_version,

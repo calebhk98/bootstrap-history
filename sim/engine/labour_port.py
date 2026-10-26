@@ -273,7 +273,7 @@ class LabourWorld:
         return self._sim.living_cost(_rev, _upkeep)
 
     def last_market_price_ratio(self, material):
-        return self._sim.last_market_price_ratio(material)
+        return self._sim.view("last_market_price_ratio")[material]
 
     def material_price_factor(self, emp_key):
         return self._sim.material_price_factor(emp_key)
@@ -305,7 +305,7 @@ class LabourWorld:
         return self._sim.price_index
 
     def real_output_per_head(self):
-        return self._sim.real_output_per_head()
+        return self._sim.view("real_output_per_head")()
 
     def reopen_units(self, node_id):
         return self._sim.reopen_units(node_id)

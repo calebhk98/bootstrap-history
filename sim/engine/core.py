@@ -63,13 +63,11 @@ from .campaign_year import CampaignYearMixin
 from .revolt_year import RevoltYearMixin
 from .captives import CaptivesMixin
 from .market_demand import MarketDemandMixin
-from .real_output import RealOutputMixin
 from .concern_volume import ConcernVolumeMixin
 from .concern_book_sales import ConcernBookSalesMixin
 from .techniques_in_use import TechniquesInUseMixin
 from .industry_concern import IndustryConcernMixin
 from .industry_depth import IndustryDepthMixin
-from .real_price_ratios import RealPriceRatiosMixin
 from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
@@ -212,7 +210,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 
 
-class Sim(ModStoresMixin, RealPriceRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, ConcernBookSalesMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
+class Sim(ModStoresMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, ConcernVolumeMixin, ConcernBookSalesMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, SeatBankMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, ForwardLivingStockMixin, ReportingForwardsMixin, ForwardCoinMixin,
           FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, UrbanShareMixin, CampaignActorsMixin, CampaignYearMixin, RevoltYearMixin, CaptivesMixin, EconomyPortMixin, NodeRederiveMixin):
@@ -493,11 +491,9 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, MechanicsMixin, EconomyMixin, Ma
         self.state.founder.living_cost_paid = 0.0
         self._spend_this_year = 0.0
         # WORLD state: monetary and real facts about the whole civilisation,
-        # not about this household. money_real is currency debasement;
-        # output_factor is the health of the whole imperial
+        # not about this household. output_factor is the health of the whole imperial
         # economy relative to 100 AD, crushed by war and plague, not by any
         # one household's fortunes.
-        self.money_real = 1.0     # purchasing power of one coin, 1.0 at the start date
         self.output_factor = 1.0  # real output, crushed by war and plague, not by debasement
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # How much of each material physically exists: a material's

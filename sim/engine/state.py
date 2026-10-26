@@ -319,14 +319,9 @@ class EconomyState:
 	forest_felled: Dict[str, float] = field(default_factory=dict)
 	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
 	output_factor: float = 1.0
-	# real output per person over the opening's, measured when the market closes (real_output.py)
-	output_per_head: float = 1.0
-	# material -> its price in labour hours the first year households were offered it, which values it in real output
-	introduction_prices: Dict[str, float] = field(default_factory=dict)
 	# node -> the year some producer was first seen running it (technique_spread.py)
 	technique_first_run: Dict[str, int] = field(default_factory=dict)
 	technique_record_started: bool = False
-	money_real: float = 1.0
 	# commodity -> society capacity, stock and last price ratio (market_clearing.py)
 	market_book: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# the year's purchases and sales by commodity and party, and the founder's draws (goods_market_api.py)
@@ -337,10 +332,6 @@ class EconomyState:
 	foreign_actor_trade: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
 	# material -> tonnes actors landed in the home market and took from it this year (foreign_actor_trade.py)
 	home_actor_trade: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	# material -> the market price ratio wages read, as of the last year's close (real_price_ratios.py)
-	wage_market_ratios: Dict[str, float] = field(default_factory=dict)
-	# good -> its agent-economy price at the first close, the baseline of real price ratios (real_price_ratios.py)
-	agent_baseline_prices: Dict[str, float] = field(default_factory=dict)
 	# foreign economy id -> goods and coin paid, and the route's lift (foreign_payments.py)
 	foreign_ledger: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	capacity_pool: Dict[str, float] = field(default_factory=dict)

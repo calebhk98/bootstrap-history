@@ -10,8 +10,9 @@ import unittest
 from sim.coin.module import Coin
 from sim.coin.state import CoinWorld
 from sim.engine.foreign_actor_trade import ForeignActorTradeMixin
-from sim.engine.real_price_ratios import RealPriceRatiosMixin
 from sim.labour.labour_wages import WagesMixin
+from sim.reporting.api import ReportingWorld
+from sim.reporting.module import Reporting
 from sim.tests import module_harness
 from sim.tests.test_capital_charge import works_entry
 from sim.tests.test_running_cost_floor import StubGame
@@ -118,20 +119,22 @@ class WageClearingTests(unittest.TestCase):
         self.assertAlmostEqual(dear["tools"], 3.0)
 
 
-class RecordingStub(RealPriceRatiosMixin):
+class RecordingStub:
     """The market computes a landed price, which asks for a wage: the wage must not ask the market back."""
     def __init__(self):
-        self.state = types.SimpleNamespace(economy=types.SimpleNamespace(wage_market_ratios={}))
         self.civ = {"staple": "wheat_kg"}
         self.trade_registry = {"smith": {"tool_basket": ["iron_kg"]}}
         self.live_calls = 0
+        self.reporting = module_harness.build(Reporting, world=ReportingWorld(),
+                                              views={"wage_materials": ["iron_kg", "wheat_kg"]})
+        self.reporting.real_price_ratio = self.market_price_ratio
         self.wages = WageStub({})
         self.wages._world = types.SimpleNamespace(
-            civ=self.civ, trade_registry=self.trade_registry, last_market_price_ratio=self.last_market_price_ratio,
-            material_price_factor=lambda material: 1.0)
+            civ=self.civ, trade_registry=self.trade_registry,
+            last_market_price_ratio=self.reporting.last_market_price_ratio, material_price_factor=lambda material: 1.0)
 
-    def real_price_ratio(self, material):
-        return self.market_price_ratio(material)
+    def record_wage_market_ratios(self):
+        self.reporting.record_wage_market_ratios()
 
     def market_price_ratio(self, material):
         self.live_calls += 1

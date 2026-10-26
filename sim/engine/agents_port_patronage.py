@@ -2,7 +2,7 @@
 funding and the country's real output per head (mixed into `SimWorld`; the home state's ask is `Sim.patron_funding_ask`)."""
 from typing import Any, Dict, List, Optional, Tuple
 
-from . import real_output_measure
+from sim.reporting.api import output_rules
 
 
 class PatronageView:
@@ -25,7 +25,7 @@ class PatronageView:
 	def country_output_per_head(self, country: str, opening_people: float, people: float) -> Optional[float]:
 		"""A country's real output per person over its opening's (one at the baseline), as the economy's markets over its tiles
 		closed last year: its traded quantities of the opening basket's goods at the opening prices, as at home
-		(`real_output.py`), over what its opening basket was worth, and over its people against its opening people. Goods the
+		(`sim/reporting/output.py`), over what its opening basket was worth, and over its people against its opening people. Goods the
 		opening basket did not hold are not counted. None while the economy has no record of the country or no people."""
 		economy = self._sim.economy
 		opened = economy.agent_opening_basket(country)
@@ -34,7 +34,7 @@ class PatronageView:
 		units, prices = opened
 		basket = {"prices": prices, "units": {good: wanted for good, wanted in sorted(units.items())
 											  if wanted > 0.0 and prices.get(good, 0.0) > 0.0}}
-		traded, scale = real_output_measure.traded_measure(
+		traded, scale = output_rules.traded_measure(
 			basket, economy.agent_volume_baseline(country) or {}, economy.agent_traded_volumes(country) or {})
 		opening = sum(basket["units"][good] * basket["prices"][good] for good in traded)
 		if not opening > 0.0:

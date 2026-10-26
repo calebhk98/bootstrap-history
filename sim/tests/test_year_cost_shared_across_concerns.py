@@ -164,6 +164,9 @@ class SpreadAndLending(unittest.TestCase):
 class StandInWorld(ViewShareMixin, TileOwnershipMixin):
     """The few attributes the shared-answer and tile-ownership mixins read."""
 
+    def real_output_per_head(self):
+        return self.state.economy.output_per_head
+
     def __init__(self):
         self.year = 143
         self.state = types.SimpleNamespace(

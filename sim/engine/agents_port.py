@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from sim.agents.api import OBSERVATION_RANGE_KM, business_books, business_plant_books, SECRET_EXPOSURE, demand_answer, payroll, supply
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import real_output_measure
+from sim.reporting.api import output_rules
 from .agents_port_budget import BudgetView
 from .agents_port_capacity import CapacityView
 from .agents_port_capital import CapitalView
@@ -148,10 +148,10 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, Stak
 
 	def society_output(self) -> float:
 		"""Yearly value of what the society's market sells: quantities this year at the opening's prices
-		(real_output.py), in this civilisation's money."""
+		(sim/reporting/output.py), in this civilisation's money."""
 		sim = self._sim
 		def compute() -> float:
-			producing = real_output_measure.share_producing(sim.population.working_age, self.soldiers_under_arms())
+			producing = output_rules.share_producing(sim.population.working_age, self.soldiers_under_arms())
 			return sim.economy.output_value() * producing
 		return self._once("output", compute)
 

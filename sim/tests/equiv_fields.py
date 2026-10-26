@@ -14,6 +14,11 @@ This is test tooling, not a save migration.
 RELOCATIONS = [
     ("/modules/living_stock/society_herds", "/economy/society_herds"),
     ("/modules/coin/metal_ratios", "/economy/coin_metal_ratios"),
+    ("/modules/reporting/output_per_head", "/economy/output_per_head"),
+    ("/modules/reporting/introduction_prices", "/economy/introduction_prices"),
+    ("/modules/reporting/money_real", "/economy/money_real"),
+    ("/modules/reporting/wage_market_ratios", "/economy/wage_market_ratios"),
+    ("/modules/reporting/agent_baseline_prices", "/economy/agent_baseline_prices"),
     ("/seats/*/modules/reporting/log", "/seats/*/household/log"),
     ("/seats/*/modules/reporting/automation_audit", "/seats/*/household/automation_audit"),
 ]

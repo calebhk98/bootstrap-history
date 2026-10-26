@@ -593,14 +593,6 @@ class ForwardingPropertiesMixin:
 		setattr(self.state.holdings, "mines", value)
 
 	@property
-	def money_real(self):
-		return getattr(self.state.economy, "money_real")
-
-	@money_real.setter
-	def money_real(self, value):
-		setattr(self.state.economy, "money_real", value)
-
-	@property
 	def nitre_bed_m2(self):
 		return getattr(self.state.holdings, "nitre_bed_m2")
 

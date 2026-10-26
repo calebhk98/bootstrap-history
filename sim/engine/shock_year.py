@@ -10,7 +10,7 @@ from . import cause_book, staff_loss_words, value_weight
 from .units_prose import money_text
 from .hazard_merge import mildest_hazard
 from .hazard_toll import staff_loss_toll
-from sim.reporting.api import RecordEvent
+from sim.reporting.api import ErodeMoney, RecordEvent
 
 
 class ShockYearMixin:
@@ -158,7 +158,7 @@ class ShockYearMixin:
         economy, scenario = self.state.economy, self.state.scenario
         world_hazard = mildest_hazard(met.values())
         if world_hazard is not None and "real_erosion" in world_hazard:
-            economy.money_real *= (1 - world_hazard["real_erosion"])
+            self.send(ErodeMoney(world_hazard["real_erosion"]))
         lines = {}
         for seat_id, hazard in holders.items():
             with self.act_as(seat_id):
@@ -176,7 +176,7 @@ class ShockYearMixin:
                     "hazard_coin_debased", "%s: the coin is worth %d%% less than it "
                     "was%s. Quoted costs are what a thing really takes to make, so they do not move; what debases "
                     "is the money in your chest, and this year it took %s"
-                    % (hazard.get("name", "debasement"), (1 - economy.money_real) * 100,
+                    % (hazard.get("name", "debasement"), (1 - self.money_real) * 100,
                        "; you feel less of it (%s)" % "; ".join(why) if why else "",
                        money_text(lost, self, grouped=True) if lost > 0.5 else "nothing, because you were holding none"),
                     hazard=hazard.get("name", "debasement"), lapsed_hedges=lapsed), seat_id))

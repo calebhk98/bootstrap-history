@@ -22,6 +22,9 @@ def household(**versions):
 class RevenueStandIn(ProductionMixin):
     """What `revenue` reads, with the uncached sum counted."""
 
+    def real_output_per_head(self):
+        return self.state.economy.output_per_head
+
     def __init__(self):
         self.pop_scale = 1.0
         self.household = household()
@@ -137,6 +140,9 @@ class AnnualMaterialDemandTest(unittest.TestCase):
 
 class GoodsStandIn(GoodsMixin):
     GOODS_TAU_POP_SCALE_EXPONENT = 0.0
+
+    def real_output_per_head(self):
+        return self.state.economy.output_per_head
 
     def __init__(self, concerns):
         self.concerns = concerns

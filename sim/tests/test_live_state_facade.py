@@ -16,7 +16,6 @@ SCALARS = {
     "life_left": (22.5, "founder.life_left"),
     "farm_hectares": (45.0, "holdings.farm_hectares"),
     "forest_ha": (12.5, "holdings.forest_ha"),
-    "money_real": (0.85, "economy.money_real"),
     "output_factor": (1.15, "economy.output_factor"),
     "goal_year": (300, "seat_progress.goal_year"),
     "fog": (True, "_fog"),

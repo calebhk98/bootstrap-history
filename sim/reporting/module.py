@@ -2,7 +2,9 @@
 from sim.assembly.api import Module
 
 from .log import Logging
+from .output import Output
+from .price_ratios import PriceRatios
 
 
-class Reporting(Logging, Module):
+class Reporting(Logging, Output, PriceRatios, Module):
     pass
