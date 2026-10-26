@@ -44,10 +44,6 @@ def diffusion_traits(sim):
     return category_traits.diffusion_traits()
 
 
-
-
-
-
 @bridge_view("venture_opened_year", kind=QUOTE)
 def venture_opened_year(sim, node_id, default):
     return sim.state.projects.business.opened_year_of(node_id, default)

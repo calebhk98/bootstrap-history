@@ -11,6 +11,7 @@ from sim.engine import mod_effects
 from sim.tests import hazards_host, module_harness
 from sim.engine.mod_effects import ModEffects
 from sim.engine.mods import ModError
+from sim.land.api import TransferTile
 from sim.refusal import cause_of
 
 from .bridge_send import attach_send
@@ -84,16 +85,16 @@ for share, cause in ((0.1, ""), (1.5, "too many")):
     untouched.append(refusing.sent == [])
 check("a missing cause or a share above one is refused before anyone is sent a death", refused_shares == [0.1, 1.5] and all(untouched))
 
-# --- a tile transfer goes through the game's own transfer with the cause.
+# --- a tile transfer is a TransferTile command with the cause.
 transfers = []
-tile_game = attach_send(SimpleNamespace(transfer_tile=lambda tile, to_actor, control, cause=None: transfers.append((tile, to_actor, control, cause)) or to_actor))
+tile_game = SimpleNamespace(send=lambda command: transfers.append(command) or command.to_actor)
 effects.transfer_tile(tile_game, "tile_a", "partner", "a treaty", control="garrisoned")
-check("transfer_tile hands the tile, the new holder, the control and the cause to the game's own transfer", transfers == [("tile_a", "partner", "garrisoned", "a treaty")], transfers)
+check("transfer_tile sends the tile, the new holder, the control and the cause to the owner of the tiles", transfers == [TransferTile("tile_a", "partner", "a treaty", "garrisoned")], transfers)
 try:
     effects.transfer_tile(tile_game, "tile_a", "home", " ")
 except ModError:
     transfers.append("refused")
-check("a transfer with no cause is refused and the game is not asked", transfers[-1] == "refused" and len(transfers) == 2, transfers)
+check("a transfer with no cause is refused and the owner is not asked", transfers[-1] == "refused" and len(transfers) == 2, transfers)
 
 # --- the base game's hazards use the same operation, with their kind and loss, and tell every playing seat.
 hazard_module = hazards_host.build(seat_list={"joined": ["seat"], "playing": ["seat"]},

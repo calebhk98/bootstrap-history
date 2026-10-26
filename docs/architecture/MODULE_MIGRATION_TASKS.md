@@ -49,7 +49,9 @@ Full equivalence tier identical at the knowledge merge (`877cff82`). Micro and s
 
 | workforce (partly) | `sim/workforce/` | the labour package behind `WorkforceWorld`, its commands and phases; still to do: the staff and hour fields on the household record become its seat state, and its `legacy_state` and `legacy_game` reads go; Complaint 762 |
 
-In progress: land. `stores` (mod stores) is a framework service and moves with phase 7. Next: the walled packages (land, markets); then finance, production, ventures, the rest of projects.
+| land | `sim/land/` | the owner map, colonies, the map and geography handles; still to do: `improvements`, `ways_under_construction`, `works`, `works_under_construction` and `ways.py` (with transport and works) |
+
+In progress: markets, workforce state. `stores` (mod stores) is a framework service and moves with phase 7. Next: the walled package markets; then finance, production, ventures, the rest of projects.
 
 ## Task list
 

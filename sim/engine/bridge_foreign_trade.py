@@ -41,17 +41,6 @@ def partner_household_demand(sim, civilization_id):
 
 # ---- the map ----
 
-@bridge_view("tracked_materials")
-def tracked_materials(sim):
-    """The materials whose deposits share out their output over tiles."""
-    return sim.geography.tracked_materials()
-
-
-@bridge_view("mineral_share_of_tiles", kind=QUOTE)
-def mineral_share_of_tiles(sim, tiles, commodity):
-    """Share of a mined commodity on the given tiles."""
-    return sim.geography.held_share(tiles, commodity)
-
 
 # ---- knowledge and the cast ----
 

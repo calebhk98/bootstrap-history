@@ -1,4 +1,5 @@
-"""Colony rules as plain functions: what stops a founding, and one year of a colony's people (Complaint 190)."""
+"""Land's rules as plain functions: what stops a colony's founding, one year of a colony's people (Complaint 190), and the
+territory a civilisation must hold."""
 from sim.disease import api as disease
 
 # a country must hold this many working-age people per settler sent
@@ -48,3 +49,11 @@ def outfit_cost(spec, money_per_labour_hour, disease_loss=0.0):
 def colony_people(colony):
     """Everyone in a colony: its three cohorts."""
     return colony["children"] + colony["working_age"] + colony["elderly"]
+
+
+def require_territory(civ, held_tiles):
+    """Refuse a civilisation that holds no tiles, naming where its starting claim is declared. The agent economy runs its
+    markets on the tiles a civilisation holds."""
+    if not held_tiles:
+        raise ValueError("civilisation %r holds no tiles: the agent economy needs a territory to run its markets on; "
+                         "name its starting claim in `home_tiles`" % (civ.get("id"),))

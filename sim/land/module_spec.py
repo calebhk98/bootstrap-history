@@ -1,0 +1,80 @@
+"""The land module's spec (sim/assembly).
+
+The owner map and the colonies are saved in the world and seat slots. The roads built (`legacy_improvements`), the installed
+mods' map overlays and the technologies held are the engine's, published by sim/engine/bridge_land.py. No view is cached: the
+owner map is seeded by its first read, and the geography views follow the held technologies, the ways and the people, which are
+written outside any command of this module."""
+from sim.actors.api import FollowTileTransfer
+from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
+from sim.demography.api import SendSettlers
+from sim.hazards.api import RecordWorldEvent
+from sim.ledger.api import PayEdge
+from sim.reporting.api import RecordEvent
+from sim.stores.api import WriteStore
+
+from .commands import AdvanceColonies, FoundColony, TransferTile
+from .module import Land
+from .state import LandSeat, LandWorld
+
+READS_BY_OWNER = {
+    "core": ("civilisation", "civilisation_record", "year", "map_overlays", "legacy_improvements", "money_text", "plain_number"),
+    "knowledge": ("techniques_held", "held_techniques"),
+    "mechanics": ("mechanic",),
+    "foreign_trade": ("partners_in_agent_economy",),
+    "stores": ("store",),
+    "seats": ("seat_list",),
+    "demography": ("pop_scale", "working_age"),
+    "disease": ("disease_burden", "regional_disease_loss"),
+    "workforce": ("money_per_labour_hour",),
+    "finance": ("spending_power",),
+    "agriculture": ("wild_stock",),
+}
+
+_LIVE = dict(cached=False)
+
+MODULE_SPECS = (ModuleSpec(
+    "land", Land, world_state=LandWorld, seat_state=LandSeat,
+    publishes=(
+        ViewSpec("tile_owner", "tile_owner", kind=KEYED, **_LIVE),
+        ViewSpec("tile_control", "tile_control", kind=KEYED, **_LIVE),
+        ViewSpec("tiles_owned_by", "tiles_owned_by", kind=KEYED, **_LIVE),
+        ViewSpec("tile_owner_map", "tile_owner_map", **_LIVE),
+        ViewSpec("home_tiles_held", "home_tiles_held", **_LIVE),
+        ViewSpec("home_tiles_held_version", "home_tiles_held_version", **_LIVE),
+        ViewSpec("tile_ownership_problems", "tile_ownership_problems", **_LIVE),
+        ViewSpec("settlement_spec", "settlement_spec", kind=QUOTE),
+        ViewSpec("settlement_candidates", "settlement_candidates", kind=QUOTE),
+        ViewSpec("settlement_outfit_cost", "settlement_outfit_cost", kind=QUOTE),
+        ViewSpec("colonies", "colony_rows", seat_scoped=True, **_LIVE),
+        ViewSpec("legacy_world_map", "legacy_world_map", **_LIVE),
+        ViewSpec("legacy_geography", "legacy_geography", **_LIVE),
+        ViewSpec("built_ways", "built_ways", **_LIVE),
+        ViewSpec("tile_known", "tile_known", kind=KEYED, **_LIVE),
+        ViewSpec("borders_among", "borders_among", kind=QUOTE),
+        ViewSpec("tile_facts", "tile_facts", kind=KEYED, **_LIVE),
+        ViewSpec("home_modes", "home_modes", **_LIVE),
+        ViewSpec("route_between", "route_between", kind=QUOTE),
+        ViewSpec("reach_from", "reach_from", kind=QUOTE),
+        ViewSpec("held_tile_geometry", "held_tile_geometry", **_LIVE),
+        ViewSpec("crop_sites", "crop_sites", kind=QUOTE),
+        ViewSpec("food_kcal_by_source", "food_kcal_by_source", kind=QUOTE),
+        ViewSpec("game_food_sources", "game_food_sources", **_LIVE),
+        ViewSpec("huntable_kcal", "huntable_kcal", kind=QUOTE),
+        ViewSpec("take_hunt", "take_hunt", kind=QUOTE),
+        ViewSpec("regrow_wild_stock", "regrow_wild_stock", kind=QUOTE),
+        ViewSpec("tile_soil_nitrogen_factors", "tile_soil_nitrogen_factors", kind=QUOTE),
+        ViewSpec("soil_nitrogen_after_year", "soil_nitrogen_after_year", kind=QUOTE),
+        ViewSpec("tracked_materials", "tracked_materials", **_LIVE),
+        ViewSpec("mineral_share_of_tiles", "mineral_share_of_tiles", kind=QUOTE),
+        ViewSpec("material_source_tiles", "material_source_tiles", kind=KEYED, **_LIVE),
+        ViewSpec("route_km_to", "route_km_to", kind=QUOTE),
+        ViewSpec("mineral_scale", "mineral_scale", kind=KEYED, **_LIVE),
+        ViewSpec("material_cost_factor", "material_cost_factor", kind=QUOTE),
+        ViewSpec("stock_land", "stock_land", **_LIVE),
+        ViewSpec("endemic_stock_loss", "endemic_stock_loss", kind=QUOTE),
+        ViewSpec("nursery_room_units", "nursery_room_units", kind=QUOTE),
+    ),
+    applies=((TransferTile, "transfer_tile"), (AdvanceColonies, "advance_colonies"), (FoundColony, "found_colony")),
+    reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
+    sends=(FollowTileTransfer, PayEdge, RecordEvent, RecordWorldEvent, SendSettlers, WriteStore),
+),)

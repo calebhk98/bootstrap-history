@@ -12,7 +12,8 @@ from .harness import check
 from sim import simulator
 from sim.agriculture import rules
 from sim.agriculture.constants import FARM_WEATHER_POOLED_CELL_CAP
-from sim.engine import bridge_agriculture, data
+from sim.engine import data
+from sim.tests import land_host
 from sim.geography import api as geography_api
 from sim.tests import agriculture_stand_in
 from sim.world import agriculture
@@ -25,7 +26,7 @@ ROME = simulator.load_civ("rome_100ad")
 
 def _cells(civ):
     """The pooled cells over the tiles a civilisation holds."""
-    rows = bridge_agriculture.held_tile_geometry(SimpleNamespace(civ=civ, world_map=None))
+    rows = land_host.build(civ).held_tile_geometry()
     return rules.pooled_cells(rules.raw_cells(rows), FARM_WEATHER_POOLED_CELL_CAP)
 
 

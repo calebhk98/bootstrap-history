@@ -1,5 +1,9 @@
-"""The land package's only door. Only its commands exist here; the engine bridge applies them until the module moves."""
+"""The land package's only door: its commands, and the plain rules."""
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import AdvanceColonies, TransferTile
+from .commands import AdvanceColonies, FoundColony, TransferTile
+from .reference import install_reference_crop_technique
+from . import rules
+
+install_reference_crop_technique()

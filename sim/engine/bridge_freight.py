@@ -1,8 +1,7 @@
 """Bridge entries the freight module reads and sends until the owners behind them move into modules.
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old
-code did, and is never cached. `legacy_world_map` is the map handle the geography package's searches take; it goes when
-the land module publishes its tile facts."""
+code did, and is never cached."""
 from sim.agents.api import EDGE_SAVERS, GOVERNMENT_PREFIX, ledger
 from sim.assembly.api import KEYED, QUOTE
 from sim.ledger.api import PayActor
@@ -30,34 +29,7 @@ def households_loanable_funds(sim):
     return sim.actors.state.purses.offers.get(EDGE_SAVERS, 0.0)
 
 
-
-# ---- land and markets ----
-
-@bridge_view("legacy_world_map")
-def legacy_world_map(sim):
-    return sim.world_map
-
-
-@bridge_view("held_techniques", kind=QUOTE)
-def held_techniques(sim, include_starting):
-    """The techniques and results held and running, with the civilisation's starting ones or without."""
-    return sim.held_and_running(include_starting)
-
-
-@bridge_view("built_ways")
-def built_ways(sim):
-    """The ways built, by way key."""
-    return sim.state.economy.improvements
-
-
-@bridge_view("material_source_tiles", kind=KEYED)
-def material_source_tiles(sim, material):
-    return sim.geography.source_tiles(material)
-
-
-@bridge_view("route_km_to", kind=QUOTE)
-def route_km_to(sim, tiles):
-    return sim.geography.route_km_to(tiles)
+# ---- markets ----
 
 
 # ---- polity and the ledger ----

@@ -1,14 +1,16 @@
 """Complaint 483: an owner map (tile -> owner and control level) seeded from the civilisation files, read by
 `tiles_held`, `country_of` and the ways record, changed only by one transfer, with one owner per tile. Each rule is called on
-an owner map and stand-ins the test builds; the colony and transfer wiring is test_tile_owner_wiring."""
+an owner map and stand-ins the test builds; the module's transfers and colonies are test_land_module."""
 import glob
 import json
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 from sim.economy.api import EconomySetup
-from sim.engine import invariants
 from sim.geography.api import tile_owners, tiles_held
+from sim.land.module import Land
+from sim.land.state import LandSeat, LandWorld
+from sim.tests import module_harness
 
 QUICK_TOPIC = True
 
@@ -77,23 +79,22 @@ check("built ways take their owner from the tiles they stand on",
 
 # ---- the invariant -------------------------------------------------------------------------------------------------
 def stand_in_game(colonies_by_seat):
-    """A game of the pieces the invariant reads: the seats' colonies, the owner map and the control store."""
-    seats = {seat: SimpleNamespace(holdings=SimpleNamespace(colonies=[{"tile": tile} for tile in tiles]))
-             for seat, tiles in colonies_by_seat.items()}
-    return SimpleNamespace(state=SimpleNamespace(seats=seats, economy=SimpleNamespace(tile_owners=owners)),
-                           world_map=None, stores=SimpleNamespace(view=lambda _name: controls))
+    """The land module over the owner map and the control store, the seats' colonies written out."""
+    module = module_harness.build(
+        Land, views={"store": lambda _name: {"default": None, "values": dict(controls.levels)},
+                     "seat_list": {"joined": list(colonies_by_seat)}},
+        world=LandWorld(tile_owners=owners))
+    module._map_cache = SimpleNamespace(tiles={"t1": {}, "t2": {}, "t3": {}})
+    module.seat_slot_of = lambda seat: LandSeat(colonies=[{"tile": tile} for tile in colonies_by_seat[seat]])
+    return module
 
 
 def fails(game):
-    try:
-        invariants.check_tile_owner_invariants(game)
-    except AssertionError:
-        return True
-    return False
+    return bool(game.tile_ownership_problems())
 
 
 tile_owners.transfer(owners, "t1", "home", "garrisoned", controls=controls)
-check("the invariant holds when no colony stands on another's tile", invariants.check_tile_owner_invariants(stand_in_game({"home": []})))
+check("the invariant holds when no colony stands on another's tile", not fails(stand_in_game({"home": []})))
 check("the invariant fails when a colony stands on a tile another actor owns", fails(stand_in_game({"other": ["t1"]})))
 check("the invariant holds when the colony's seat owns its tile", not fails(stand_in_game({"home": ["t1"]})))
 check("the invariant fails when two seats' colonies stand on one tile", fails(stand_in_game({"home": ["t1"], "other": ["t1"]})))

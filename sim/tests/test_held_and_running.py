@@ -8,7 +8,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.engine import action_results, validate_action_results
-from sim.engine.geography_port import GeographyWorld
+from sim.land.map_views import GeographyInputs
 from sim.engine.held_works import HeldWorksMixin
 from sim.workforce.world import WorkforceWorld
 
@@ -120,8 +120,8 @@ class AuthoredDataTests(unittest.TestCase):
 class CallersTests(unittest.TestCase):
 
     def test_geography_reads_the_one_answer(self):
-        sim = SimpleNamespace(held_and_running=lambda include_starting=True: {"a", "b"} if include_starting else {"b"})
-        self.assertEqual(GeographyWorld(sim).held_nodes, {"a", "b"})
+        module = SimpleNamespace(needs=SimpleNamespace(held_techniques=lambda include_starting: {"a", "b"} if include_starting else {"b"}))
+        self.assertEqual(GeographyInputs(module).held_nodes, {"a", "b"})
 
     def test_labour_reads_the_one_answer(self):
         needs = SimpleNamespace(held_techniques=lambda include_starting: frozenset({"a"}))

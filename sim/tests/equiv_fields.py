@@ -115,6 +115,9 @@ RELOCATIONS = [
     ("/modules/disease/introduced", "/disease/introduced"),
     ("/modules/disease/deaths", "/disease/deaths"),
     ("/modules/actors", "/actors"),
+    ("/modules/land/tile_owners", "/economy/tile_owners"),
+    ("/modules/land/tile_claim_conflicts", "/economy/tile_claim_conflicts"),
+    ("/seats/*/modules/land/colonies", "/seats/*/holdings/colonies"),
 ]
 
 IGNORED = [

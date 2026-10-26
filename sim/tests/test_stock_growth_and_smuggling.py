@@ -20,7 +20,7 @@ from sim.agents.api import ActorRegistry, ActorsState, cast_from_civilisations, 
 from sim.tests.world_stand_in import fake_needs
 from sim.engine import bridge_living_stock as bridge
 from sim.polity.state import PolitySeat
-from sim.tests import polity_host
+from sim.tests import land_host, polity_host
 from sim.engine.data import load_civ
 from sim.ledger.api import ChangeStock, PayEdge
 from sim.living_stock.api import ChangeHeld, SmuggleStock, stock_entry, stock_rates
@@ -99,6 +99,8 @@ class Game:
         self.civ = load_civ(HOME)
         self.world_map = open_map()
         self.geography = Geography(types.SimpleNamespace(civ=self.civ, world_map=self.world_map))
+        self.land = land_host.build(self.civ, views={"wild_stock": lambda: {}})
+        self.land._geography_cache = self.geography
         self.ledger, self.opening = collections.defaultdict(float), {}
         self.standing = PolitySeat(scandal=0.0, scandal_last_year=0.0)
         self.polity = polity_host.build(seat=self.standing)
@@ -124,9 +126,9 @@ class Game:
             "cargo_lost_share": lambda route, material=None, civilization_id=None, demand=None: 0.1})
         views = {
             "goods_stock": lambda key: self.ledger.get(key, 0.0), "material_commodity": lambda material: material,
-            "stock_land": lambda: bridge.stock_land(self), "year": 100, "acting_balance": lambda: self.purse.capital,
-            "endemic_stock_loss": lambda place, species: bridge.endemic_stock_loss(self, place, species),
-            "nursery_room_units": lambda *arguments: bridge.nursery_room_units(self, *arguments),
+            "stock_land": self.land.stock_land, "year": 100, "acting_balance": lambda: self.purse.capital,
+            "endemic_stock_loss": self.land.endemic_stock_loss,
+            "nursery_room_units": self.land.nursery_room_units,
             "hour_wage": self.workforce.hour_wage, "can_pay": self.purse.can_pay,
             "partners": self.trade.partners, "partner": self.trade.partner,
             "partner_refusal": self.trade.partner_refusal, "partner_gate": self.trade.partner_gate,
@@ -188,9 +190,9 @@ class Game:
 
 # ---- the stock stands on a tile of the holder's -----------------------------------------------
 game = Game()
-place = bridge.stock_land(game)["place"]
+place = game.land.stock_land()["place"]
 check("held stock stands on one of the tiles its holder holds", place in tiles_held(game.civ, game.world_map), place)
-check("...the same one each time", bridge.stock_land(game)["place"] == place)
+check("...the same one each time", game.land.stock_land()["place"] == place)
 
 # ---- a herd grows by its rule when feed and purse allow, and pays its labour ------------------
 rates = stock_rates()[HERD]

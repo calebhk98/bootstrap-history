@@ -66,12 +66,6 @@ def failure_reset_share(sim):
     return sim.FAILURE_RESET_SHARE
 
 
-@bridge_view("material_cost_factor", kind=QUOTE)
-def material_cost_factor(sim, node_id):
-    """What the geography multiplies a project's material bill by (distance from the sources)."""
-    return sim.geography.material_cost_factor(node_id)
-
-
 @bridge_view("purchase_refusal", kind=QUOTE)
 def purchase_refusal(sim, what, cost):
     """The refusal that states the purchase rule, the budget and the amount short."""

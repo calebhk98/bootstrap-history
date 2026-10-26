@@ -10,11 +10,6 @@ from .bridge import bridge_view
 
 # ---- land and public works -----------------------------------------------------------------------------------------
 
-@bridge_view("home_tiles_held")
-def home_tiles_held(sim):
-    """The tiles the home country owns, sorted."""
-    return sim.home_tiles_held()
-
 
 @bridge_view("coverage_share", kind=KEYED)
 def coverage_share(sim, node_id):

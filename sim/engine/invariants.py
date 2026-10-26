@@ -50,9 +50,7 @@ def check_simulation_invariants(state):
 def check_tile_owner_invariants(sim):
     """Assert every tile has at most one owner: the owner map is well formed, and the tiles each seat's colonies
     stand on are listed by one seat only and owned by it."""
-    from sim.geography.api import tile_owners
-    claims = {seat_id: [colony["tile"] for colony in seat.holdings.colonies] for seat_id, seat in sim.state.seats.items()}
-    found = tile_owners.problems(sim.state.economy.tile_owners, claims, sim.world_map, sim.stores.view("control"))
+    found = sim.view("tile_ownership_problems")()
     assert not found, "tile ownership broken: %r" % (found,)
     return True
 

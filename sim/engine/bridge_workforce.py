@@ -80,11 +80,6 @@ def legacy_state(sim):
 
 # ---- the founder, the acting seat's land and the owner map ----------------------------------------------------------------
 
-@bridge_view("home_tiles_held_version")
-def home_tiles_held_version(sim):
-    """Changes whenever the tiles the home country owns might."""
-    return sim.tile_owner_version()
-
 
 @bridge_view("director_overhead_hours")
 def director_overhead_hours(sim):

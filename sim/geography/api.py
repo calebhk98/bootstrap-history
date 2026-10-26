@@ -1,9 +1,9 @@
 """The geography package's only door: everything outside code may use from sim/geography/.
 
 Outside code imports from here and reaches the simulation's geography through `sim.geography`
-(a `Geography`, built by sim/engine/geography_port.py), never through a submodule or a private name.
+(a `Geography`, built by the land module, sim/land/map_views.py), never through a submodule or a private name.
 """
-WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what it needs (sim/engine/geography_port.py)
+WALL = "two-way"  # nothing here reaches sim/engine/; the land module hands it what it needs (sim/land/map_views.py)
 
 # tile_lookup and the queries first: regions pulls in sim.world modules that import them back from this module.
 from sim.geography import tile_lookup

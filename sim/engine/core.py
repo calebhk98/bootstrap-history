@@ -17,7 +17,7 @@ from sim.world import land
 from sim.geography.api import regions, tiles_held
 
 
-from .territory_required import require_territory
+from sim.land.api import rules as land_rules
 from sim.knowledge.api import LearnTechnique, declared_starting_techs
 from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
@@ -40,7 +40,7 @@ from .fog import FogMixin
 from .forward_mechanics import ForwardMechanicsMixin
 from .forward_knowledge import ForwardKnowledgeMixin
 from .forward_disease import DiseaseForwardsMixin
-from .geography_port import GeographyPortMixin
+from .forward_land import ForwardLandMixin
 from .forward_workforce import ForwardWorkforceMixin
 from .projects import ProjectsMixin
 from .core_seats import SeatMixin
@@ -85,7 +85,7 @@ class Sim(
         IndustryConcernMixin,
         ForwardPricesMixin,
         FogMixin,
-        GeographyPortMixin,
+        ForwardLandMixin,
         DiseaseForwardsMixin,
         ForwardWorkforceMixin,
         ProjectsMixin,
@@ -152,7 +152,7 @@ class Sim(
             ScenarioState
         )
         from . import game_assembly
-        from .geography_port import MODS_DIR
+        from .bridge_land import MODS_DIR
         self.assembly = game_assembly.build(MODS_DIR, self.debug)
         self.state = SimulationState(
             household=HouseholdState(capital=0.0),
@@ -198,7 +198,7 @@ class Sim(
         # population given the yield of the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
         held_tiles = tiles_held(self.civ, self.world_map)
-        require_territory(self.civ, held_tiles)
+        land_rules.require_territory(self.civ, held_tiles)
         territory = land.territory_cropland(self.farm_sites())
         self._farm_ladder = territory.ladder
         self._farm_arable_ceiling = territory.cropped_hectares
