@@ -15,6 +15,8 @@ Properties are categorized strictly by owning subsystem.
 """
 from typing import Any, Iterable, Set
 
+from sim.seats.api import EndRun
+
 
 class ForwardingPropertiesMixin:
 	"""Composition point: backward-compatibility property facade delegating to
@@ -584,27 +586,19 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def dead_reason(self):
-		return getattr(self.state.founder, "dead_reason")
+		return self.view("founder")()["dead_reason"]
 
 	@dead_reason.setter
 	def dead_reason(self, value):
-		setattr(self.state.founder, "dead_reason", value)
+		self.send(EndRun(value, announce=False))
 
 	@property
 	def founder_alive(self):
-		return getattr(self.state.founder, "founder_alive")
-
-	@founder_alive.setter
-	def founder_alive(self, value):
-		setattr(self.state.founder, "founder_alive", value)
+		return self.view("founder")()["alive"]
 
 	@property
 	def life_left(self):
-		return getattr(self.state.founder, "life_left")
-
-	@life_left.setter
-	def life_left(self, value):
-		setattr(self.state.founder, "life_left", value)
+		return self.view("founder")()["life_left"]
 
 	@property
 	def policy(self):
@@ -652,11 +646,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def goal_year(self):
-		return getattr(self.state.seat_progress, "goal_year")
-
-	@goal_year.setter
-	def goal_year(self, value):
-		setattr(self.state.seat_progress, "goal_year", value)
+		return self.view("goal")()["year"]
 
 	@property
 	def year(self):

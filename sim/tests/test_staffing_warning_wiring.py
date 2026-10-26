@@ -29,8 +29,8 @@ class Game(StaffingMixin):
     def __init__(self, operating=("b_mill", "a_forge"), founder_alive=True, immortal=False):
         self.state = SimpleNamespace(
             projects=SimpleNamespace(operating=set(operating)),
-            household=SimpleNamespace(artisans=30.0, scholars=4.0),
-            founder=SimpleNamespace(founder_alive=founder_alive))
+            household=SimpleNamespace(artisans=30.0, scholars=4.0))
+        self.founder_alive = founder_alive
         self.cfg = {"immortal": immortal}
         self.labour = SimpleNamespace(effective_scholars=lambda: 7.5)
 

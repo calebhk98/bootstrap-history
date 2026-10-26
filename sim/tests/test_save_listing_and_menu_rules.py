@@ -18,7 +18,7 @@ from sim.ui.proto import util as proto_util
 
 
 def save_blob(year=100, capital=250.0, alive=True, goal="goal_node"):
-    seat = {"goal": goal, "household": {"capital": capital}, "founder": {"founder_alive": alive}}
+    seat = {"goal": goal, "household": {"capital": capital}, "modules": {"seats": {"founder_alive": alive}}}
     return {"_civ": "rome_100ad", "acting_seat": "a", "seats": {"a": seat}, "scenario": {"year": year}}
 
 

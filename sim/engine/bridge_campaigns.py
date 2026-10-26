@@ -95,13 +95,6 @@ def organised_factions(sim, owner):
             if group.organised() and (group.record.country or home) == owner]
 
 
-@bridge_view("played_countries")
-def played_countries(sim):
-    """The countries a seat plays."""
-    return sorted({seat.country or str(sim.civ["id"]) for seat in sim.state.seats.values()
-                   if getattr(seat, "kind", None) == "country"})
-
-
 @bridge_view("food_eaten")
 def food_eaten(sim):
     """{tile: share of the people's food need the tile's people ate}."""

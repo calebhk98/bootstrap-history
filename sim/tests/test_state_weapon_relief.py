@@ -11,7 +11,7 @@ from .harness import check
 from sim.diffusion import constants
 from sim.diffusion.diffusion_rules import weapons_relief
 from sim.diffusion.module import Diffusion
-from sim.engine import seat_builds
+from sim.seats import api as seat_builds
 from sim.tests import hazards_host, module_harness
 
 MILITARY = ["bronze_sword", "crossbow", "cannon", "rifle"]

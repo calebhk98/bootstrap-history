@@ -9,7 +9,8 @@ from unittest import mock
 
 from sim.engine import core
 from sim.engine.core import Sim
-from sim.engine.core_step_phases import StepPhasesMixin
+from sim.seats.api import SeatsSeat
+from sim.seats.module import Seats
 from sim.knowledge import rules as knowledge_rules
 from sim.mechanics.module import Mechanics
 from sim.tests import module_harness
@@ -54,14 +55,14 @@ class RunningWithMechanicTests(unittest.TestCase):
 
 
 class FounderLifeExtensionTests(unittest.TestCase):
-    def mortality(self, running_with_mechanic):
-        standin = types.SimpleNamespace(
-            state=types.SimpleNamespace(founder=types.SimpleNamespace(founder_alive=True, life_left=10),
-                                    projects=types.SimpleNamespace(stalled=0)),
-            deputies_carry_the_work=lambda: False,
-            running_with_mechanic=running_with_mechanic, SANITATION_LIFE_EXTENSION_YEARS=3)
-        StepPhasesMixin._step_founder_mortality(standin)
-        return standin.state.founder.life_left
+    def mortality(self, running_mechanics):
+        slot = SeatsSeat(founder_alive=True, life_left=10)
+        module = module_harness.build(Seats, seat=slot, views={
+            "dissolution_terms": {"life_extension_years": 3, "years_before_forgetting": 3, "forget_fraction_divisor": 4, "years_until_end": 12},
+            "running_mechanics": running_mechanics, "legacy_projects": types.SimpleNamespace(stalled=0),
+            "patronage": {"founder_age": 50, "deputies": 0.0, "deputy_hours": 0.0, "deputies_carry_the_work": True}})
+        module.founder_mortality()
+        return slot.life_left
 
     def test_a_running_node_declaring_the_mechanic_extends_the_founders_life(self):
         asked = []

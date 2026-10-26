@@ -18,14 +18,6 @@ class HoldingsState:
 	farm_last_marginal_product: Optional[float] = None
 	farm_hours_needed: Optional[float] = None
 	_dashboard_history: Optional[List[Any]] = None
-	# rights and equity the seat holds as an actor: patents by node id, shares held by issuer id, and the part
-	# of the seat's own equity issued to others
-	patents: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-	shares_held: Dict[str, float] = field(default_factory=dict)
-	shares_issued: float = 0.0
-	# offers other actors have made the seat (plain dicts, as the exchange keeps them) and how many it has made
-	offers: List[Dict[str, Any]] = field(default_factory=list)
-	offer_serial: int = 0
 	# settlements the seat has founded on tiles beyond its country's own: tile, year founded, and the three age
 	# cohorts of the people there (sim/engine/colonies.py)
 	colonies: List[Dict[str, Any]] = field(default_factory=list)
@@ -33,9 +25,7 @@ class HoldingsState:
 
 @dataclass
 class SeatProgressState:
-	"""A seat's formal goal record, score reading and the one-time notes shown to its player."""
-	goal_year: Optional[int] = None
-	goal_years: Dict[str, int] = field(default_factory=dict)  # goal id -> year it was reached as the formal goal
+	"""A seat's dashboard cap, score reading and the one-time notes shown to its player."""
 	dashboard_history_years: Optional[int] = None  # cap dashboard history to N most recent years; None = no cap
 	_said_scandal: int = 0
 	_said_parallelism: Optional[bool] = None

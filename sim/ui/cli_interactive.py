@@ -54,6 +54,7 @@ from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
                        load_state, parse_typed, render_final, render_pretty,
                        save_state)
 from sim.constants import declare
+from sim.seats.api import SetFounderLife
 
 # Session/session-file and display-preference helpers live in cli.py because
 # cli_agent.py needs the session helpers too, and _wrap/_apply_display_prefs
@@ -804,9 +805,7 @@ def _ingame_options(sim, session):
                 mean = sim.cfg.get("founder_life_mean", DEFAULTS["founder_life_mean"])
                 std_dev = sim.cfg.get("founder_life_sd", DEFAULTS["founder_life_sd"])
                 sim.cfg["immortal"] = False
-                sim.life_left = max(INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS,
-                                  sim.rng.gauss(mean, std_dev))
-                sim.founder_alive = True
+                sim.send(SetFounderLife(max(INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS, sim.rng.gauss(mean, std_dev))))
                 print("   -- done. Mortality is on from %d AD." % sim.year)
             else:
                 print("   -- unchanged.")

@@ -28,7 +28,7 @@ from .agents_port_review import ReviewView
 from .agents_port_research import ResearchView
 from .agents_port_coinage import CoinageView
 from .agents_port_trade import TradeView
-from . import seat_builds, visibility as visibility_of
+from sim.seats import api as seats_api
 from .data import TRADES_ABSENT
 from .economy_port_setup import unit_mass_kg
 from sim.world import plant_figures
@@ -84,7 +84,7 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, Stak
 
 	def founder_inventions(self) -> List[str]:
 		"""Everything any seat has completed that the society did not have."""
-		return self._once("inventions", lambda: sorted(seat_builds.built_by_any(self._sim.state.seats)))
+		return self._once("inventions", lambda: sorted(seats_api.built_by_any(self._sim.state.seats)))
 
 	def _registry_actors(self) -> List[Any]:
 		registry = getattr(self._sim, "actors", None)
@@ -114,18 +114,18 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, Stak
 	def knowledge_visibility(self, node_id: str, distance_km: float) -> float:
 		"""How much of a node some actor holds shows `distance_km` away: its own opacity, public if a seat runs it."""
 		sim = self._sim
-		visibility = visibility_of.base_visibility("default", self.is_public(node_id), sim.copy_difficulty(node_id), SECRET_EXPOSURE)
-		return visibility_of.seen_from(visibility, distance_km, OBSERVATION_RANGE_KM)
+		visibility = seats_api.base_visibility("default", self.is_public(node_id), sim.copy_difficulty(node_id), SECRET_EXPOSURE)
+		return seats_api.seen_from(visibility, distance_km, OBSERVATION_RANGE_KM)
 
 	def is_public(self, node_id: str) -> bool:
 		"""Whether some seat runs it as a concern, where anyone can see it."""
-		return seat_builds.operating_anywhere(self._sim.state.seats, node_id)
+		return seats_api.operating_anywhere(self._sim.state.seats, node_id)
 
 	def exposure(self, node_id: str, location: Optional[str]) -> float:
 		"""How much of an invention an observer at `location` can learn, 0..1: the best view of any seat
 		that built it, from that seat's own place (the acting seat's when no seat built it)."""
 		sim = self._sim
-		builders = seat_builds.builders_of(sim.state.seats, node_id)
+		builders = seats_api.builders_of(sim.state.seats, node_id)
 		holders = self.actor_held().get(node_id, [])
 		if not builders and not holders:
 			builders = [sim.state.acting_seat]
@@ -133,9 +133,9 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, Stak
 		best = 0.0
 		for seat_id in builders:
 			mode = (sim.view("disclosures")[seat_id].get(node_id) or {}).get("mode", "default")
-			visibility = visibility_of.base_visibility(mode, public, sim.copy_difficulty(node_id), SECRET_EXPOSURE)
+			visibility = seats_api.base_visibility(mode, public, sim.copy_difficulty(node_id), SECRET_EXPOSURE)
 			if location is not None:
-				visibility = visibility_of.seen_from(
+				visibility = seats_api.seen_from(
 					visibility, self.distance_km(location, sim.seat_place(seat_id)), OBSERVATION_RANGE_KM)
 			best = max(best, visibility)
 		for holder in holders:

@@ -32,9 +32,14 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 | knowledge | `sim/knowledge/` | `done`, `granted`, `done_year`, `revealed` stay in the engine behind `legacy_*` (many writers); Complaint 735 |
 | resources | `sim/resources/` | mines, deposits, forest, nitre beds; Complaint 730 |
 
-Full equivalence tier identical at the knowledge merge (`877cff82`).
+| hazards | `sim/hazards/` | dated shocks, world hazards, relief, the world event log, the output factor; Complaints 740, 741 |
+| materials | `sim/materials/` | supply, demand, the throttle (a pure quote plus `ApplyThrottle`), electricity, project materials |
 
-In progress: hazards, seats, materials. Next: prices (after materials), polity, actors; then the walled packages (workforce, land, markets, disease); then finance, production, ventures, the rest of projects.
+Full equivalence tier identical at the knowledge merge (`877cff82`). Micro and stress tiers identical at `c4ed5848`.
+
+| seats | `sim/seats/` | joining, ending, handover, sight, dealings, goals and win conditions, founder death (`EndRun`); the registry and `act_as` stay on `Sim` |
+
+In progress: prices, polity, demography. `stores` (mod stores) is a framework service and moves with phase 7. Next: prices (after materials), polity, actors; then the walled packages (workforce, land, markets, disease); then finance, production, ventures, the rest of projects.
 
 ## Task list
 

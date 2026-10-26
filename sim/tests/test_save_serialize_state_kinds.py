@@ -102,15 +102,14 @@ check("serialize_state: the founder's business is a nested record", blob["busine
 check("serialize_state: nested dicts of floats and sets of exclusions", blob["tenure"] == {"mason": {"arch": 4.5}} and blob["excluded"] == {"__set__": ["category:war"]}, None)
 check("serialize_state: the project fields come in declaration order", list(blob) == saved_field_names(ProjectsState))
 
-# ---- mine stock and tranches, held goods, offers
+# ---- mine stock and tranches, held goods
 mines = ResourcesSeat(
 	mines=[{"id": "m1", "ore": "iron", "capex": 500.0, "open": None}], mine_pending={"m2": 2.0}, mine_ready={"m1": 104},
 	mine_cost_paid=500.0, mine_tranches=[["iron", 3, 2.5], ["tin", 1, 0.5]], deposits_found=[{"id": "d1", "tile": "t1"}],
 	deposit_drawn={"d1": 12.0}, forest_ha=120.0)
 materials = MaterialsSeat(shortages=collections.Counter({"charcoal": 3}), binding=None)
 holdings = HoldingsState(
-	_material_stock_ledger={"iron": 4.0}, patents={"loom": {"granted": 1, "expires": 20, "licensees": ["firm:2"]}},
-	shares_held={"guild": 0.1}, offers=[{"id": "x#1", "from": "x", "to": "y", "give": {}, "take": {}, "expires": 9}], offer_serial=1)
+	_material_stock_ledger={"iron": 4.0})
 blob = serialize_state(mines)
 check("serialize_state: mine stock, in the order the mines were opened, with None inside",
       blob["mines"] == [{"id": "m1", "ore": "iron", "capex": 500.0, "open": None}] and blob["mine_pending"] == {"m2": 2.0}
@@ -120,9 +119,6 @@ check("serialize_state: a tranche list that is None means none (never an empty l
 check("serialize_state: found deposits and the tonnes drawn", blob["deposits_found"] == [{"id": "d1", "tile": "t1"}] and blob["deposit_drawn"] == {"d1": 12.0}, None)
 check("serialize_state: shortages", serialize_state(materials)["shortages"] == {"charcoal": 3})
 blob = serialize_state(holdings)
-check("serialize_state: patents, shares and offers",
-      blob["patents"] == {"loom": {"granted": 1, "expires": 20, "licensees": ["firm:2"]}} and blob["shares_held"] == {"guild": 0.1}
-      and blob["offers"] == [{"id": "x#1", "from": "x", "to": "y", "give": {}, "take": {}, "expires": 9}] and blob["offer_serial"] == 1, None)
 check("serialize_state: underscore-led fields that are not `_on_change` plumbing are saved", blob["_material_stock_ledger"] == {"iron": 4.0})
 
 # ---- the economy's stored record, with its held stock and late recipes
@@ -162,7 +158,7 @@ check("serialize_state: the state's books: money, revenue by form, arrears, know
       and blob["records"]["government:rome"]["exited_year"] is None and blob["home_country"] == "rome", None)
 
 # ---- the root: seats, aliases and metadata
-first = SeatState(HouseholdState(capital=10.0), ProjectsState(done={"fire"}), FounderState(life_left=30.0), goal="steam_engine", country="han")
+first = SeatState(HouseholdState(capital=10.0), ProjectsState(done={"fire"}), FounderState(living_cost_paid=30.0), goal="steam_engine", country="han")
 second = SeatState(HouseholdState(capital=4.0), ProjectsState(), FounderState(), holdings=HoldingsState(farm_stock_kg=1.0))
 state = SimulationState(seats={"zed": first, "abe": second}, acting_seat="abe", economy=EconomyState(), _civ="rome", _rng=[3, [0, 1], None],
                         _seed="seed text", stores={"granary": {"t1|rome": 4.0}})
@@ -175,7 +171,7 @@ check("serialize_state: a seat's own fields: goal, country, kind and holder",
       and blob["seats"]["zed"]["kind"] == "household" and blob["seats"]["zed"]["holder"] is None and blob["seats"]["abe"]["goal"] is None, None)
 check("serialize_state: a seat's household, projects and founder are sections of it",
       blob["seats"]["zed"]["household"]["capital"] == 10.0 and blob["seats"]["zed"]["projects"]["done"] == {"__set__": ["fire"]}
-      and blob["seats"]["zed"]["founder"]["life_left"] == 30.0 and blob["seats"]["abe"]["holdings"]["farm_stock_kg"] == 1.0, None)
+      and blob["seats"]["zed"]["founder"]["living_cost_paid"] == 30.0 and blob["seats"]["abe"]["holdings"]["farm_stock_kg"] == 1.0, None)
 check("serialize_state: the metadata the load needs", blob["_civ"] == "rome" and blob["_rng"] == [3, [0, 1], None] and blob["_seed"] == "seed text"
       and blob["_fog"] is False and blob["_immortal"] is True and blob["_game_version"] is None, None)
 check("serialize_state: the declared stores and the UI's own memory", blob["stores"] == {"granary": {"t1|rome": 4.0}} and blob["interface"] == {})

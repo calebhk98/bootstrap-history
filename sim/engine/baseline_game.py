@@ -33,6 +33,6 @@ def play_baseline(civilisation_id: str, seed: int, years: int) -> List[Dict[str,
     for _year in range(years):
         game.step()
         rows.append(snapshot(game))
-        if game.state.founder.dead_reason:
+        if game.dead_reason:
             break
     return rows

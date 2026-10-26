@@ -24,7 +24,7 @@ class Game:
 
     def __init__(self):
         self.state = SimulationState(household=HouseholdState(capital=100.0), projects=ProjectsState(), founder=FounderState())
-        self.state.seats["northern"] = seat_from_template({"country": "han"}, 50.0, 1e9, {})
+        self.state.seats["northern"] = seat_from_template({"country": "han"}, 50.0, {})
         self.session_seat = None
         self.year = 100
         self.civ = {"id": "rome"}

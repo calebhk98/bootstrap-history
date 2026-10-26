@@ -125,9 +125,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"gov": "governance",
 
 	# FounderState
-	"founder_alive": "founder",
-	"life_left": "founder",
-	"dead_reason": "founder",
 	"director_hours_spent_founder": "founder",
 	"living_cost_paid": "founder",
 	"policy": "founder",
@@ -136,7 +133,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 
 	# ScenarioState
 	"year": "scenario",
-	"goal_year": "seat_progress",
 	"_said_scandal": "seat_progress",
 	"_said_parallelism": "seat_progress",
 	"_said_command_index": "seat_progress",

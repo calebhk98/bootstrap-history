@@ -16,36 +16,37 @@ from .records import ActorRecord
 
 
 class SeatRecord(ActorRecord):
-	"""An actor record whose patents, shares and issued equity are the seat's own, so they persist and write through."""
+	"""An actor record whose patents, shares and issued equity are the seat's own, so they persist and write through.
+	`seat_dealings` is the seat's stored dealings: `patents`, `shares_held`, `shares_issued`, `offers`, `offer_serial`."""
 
-	seat_holdings: Any = None
+	seat_dealings: Any = None
 
 	@property
 	def issued(self) -> float:
-		return self.seat_holdings.shares_issued if self.seat_holdings is not None else 0.0
+		return self.seat_dealings.shares_issued if self.seat_dealings is not None else 0.0
 
 	@issued.setter
 	def issued(self, value: float) -> None:
-		if self.seat_holdings is not None:
-			self.seat_holdings.shares_issued = value
+		if self.seat_dealings is not None:
+			self.seat_dealings.shares_issued = value
 
 	@property
 	def offers(self) -> Any:
-		return self.seat_holdings.offers if self.seat_holdings is not None else []
+		return self.seat_dealings.offers if self.seat_dealings is not None else []
 
 	@offers.setter
 	def offers(self, value: Any) -> None:
-		if self.seat_holdings is not None:
-			self.seat_holdings.offers = value
+		if self.seat_dealings is not None:
+			self.seat_dealings.offers = value
 
 	@property
 	def offer_serial(self) -> int:
-		return self.seat_holdings.offer_serial if self.seat_holdings is not None else 0
+		return self.seat_dealings.offer_serial if self.seat_dealings is not None else 0
 
 	@offer_serial.setter
 	def offer_serial(self, value: int) -> None:
-		if self.seat_holdings is not None:
-			self.seat_holdings.offer_serial = value
+		if self.seat_dealings is not None:
+			self.seat_dealings.offer_serial = value
 
 
 class HouseholdParty:
@@ -54,7 +55,7 @@ class HouseholdParty:
 	kind = "household"
 
 	def __init__(self, household: Any, margins: Optional[Dict[str, float]] = None, seat_id: Optional[str] = None,
-				act_as: Optional[Callable[[str], Any]] = None) -> None:
+				act_as: Optional[Callable[[str], Any]] = None, *, dealings: Any) -> None:
 		self.household = household
 		state = household._state
 		self.actor_id = seat_id if seat_id is not None else state.acting_seat
@@ -63,8 +64,8 @@ class HouseholdParty:
 		# the seat's own business, so opening, closing, patenting and trading shares write through
 		self._business = seat.projects.business
 		self._margins = dict(margins or {})
-		self.record = SeatRecord(kind="household", patents=seat.holdings.patents, holdings=seat.holdings.shares_held)
-		self.record.seat_holdings = seat.holdings
+		self.record = SeatRecord(kind="household", patents=dealings.patents, holdings=dealings.shares_held)
+		self.record.seat_dealings = dealings
 
 	def _acting(self) -> Any:
 		return self._act_as(self.actor_id) if self._act_as is not None else contextlib.nullcontext()

@@ -4,7 +4,7 @@ from typing import Any, List, Optional
 from sim.agents.api import OBSERVATION_RANGE_KM, TRADE_TONNES_FOR_UNIT_CONTACT, research_gate
 from sim.geography.api import flow_ledger
 
-from . import visibility as visibility_of
+from sim.seats import api as seats_api
 
 
 
@@ -40,7 +40,7 @@ class ResearchView:
 		"""News passing between two places in a year: neighbours see each other's work (the range an onlooker
 		sees at), and each tonne carried between them is a visit (`TRADE_TONNES_FOR_UNIT_CONTACT`)."""
 		sim = self._sim
-		neighbour = visibility_of.seen_from(1.0, self.distance_km(place_a, place_b), OBSERVATION_RANGE_KM)
+		neighbour = seats_api.seen_from(1.0, self.distance_km(place_a, place_b), OBSERVATION_RANGE_KM)
 		carried = sim.economy.agent.carried_last_year()
 		tonnes = flow_ledger.tonnes_between(carried, str(place_a), str(place_b)) + flow_ledger.tonnes_between(
 			carried, str(place_b), str(place_a))

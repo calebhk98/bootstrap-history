@@ -37,7 +37,7 @@ class PopulationMixin:
 
     def effective_scholars(self):
         """You are your own natural philosopher; everyone else is hired."""
-        return hands_available(self._world.state.household.scholars, self._world.state.founder.founder_alive, 0.0, 1.0)
+        return hands_available(self._world.state.household.scholars, self._world.founder_alive, 0.0, 1.0)
 
     def scholar_hands_available(self):
         """Scholars you can actually put on a project this year: the ones on

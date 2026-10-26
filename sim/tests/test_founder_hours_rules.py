@@ -34,7 +34,7 @@ check("selling every free hour leaves nothing to spend on projects",
 # --- the standing job sells the hours not spoken for, so a sale takes its pay from the job
 def standing_job(sold):
     labour = SimpleNamespace(
-        _world=SimpleNamespace(state=SimpleNamespace(founder=SimpleNamespace(founder_alive=True))),
+        _world=SimpleNamespace(founder_alive=True),
         director_pool=lambda: 2000.0, director_hours_committed=lambda: sold,
         wage_for_hours=lambda trade, hours: hours * 0.5)
     labour.hours_for_sale = lambda: StandingJobMixin.hours_for_sale(labour)
