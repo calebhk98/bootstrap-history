@@ -81,7 +81,6 @@ def closed_by_choice(sim):
 # ---- polity, workforce, resources, actors ---------------------------------------------------------------------------
 
 
-
 # ---- commands of owners that have not moved -------------------------------------------------------------------------
 
 @bridge_command(NoteWageShock)

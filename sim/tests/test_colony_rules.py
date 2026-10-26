@@ -4,8 +4,8 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.colony_rules import (WORKING_AGE_PER_SETTLER, advance_colony, best_settlement_work, colony_people,
-                                     founding_refusal, outfit_cost)
+from sim.land.rules import (WORKING_AGE_PER_SETTLER, advance_colony, best_settlement_work, colony_people, founding_refusal,
+                            outfit_cost)
 from sim.geography.api import settlement
 from sim.world import demography
 

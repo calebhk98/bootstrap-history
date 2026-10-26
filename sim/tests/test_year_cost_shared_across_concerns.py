@@ -14,11 +14,10 @@ from sim.diffusion.api import NoteFirstRuns
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionWorld
 from sim.prices import prices
-from sim.engine import concern_volume, economy_port_actors, tile_ownership
+from sim.engine import concern_volume, economy_port_actors
 from sim.tests import prices_stand_in
 from sim.engine.state import ActorRecord, ActorsState
 from sim.engine.techniques_in_use import TechniquesInUseMixin
-from sim.engine.tile_ownership import TileOwnershipMixin
 from sim.engine.view_share import ViewShareMixin
 from sim.tests import module_harness
 
@@ -170,8 +169,8 @@ class SpreadAndLending(unittest.TestCase):
         self.assertEqual(world.technique_first_run, {"node_a": 143 - 10000})
 
 
-class StandInWorld(ViewShareMixin, TileOwnershipMixin):
-    """The few attributes the shared-answer and tile-ownership mixins read."""
+class StandInWorld(ViewShareMixin):
+    """The few attributes the shared-answer mixin reads."""
 
     def real_output_per_head(self):
         return self.state.economy.output_per_head
@@ -181,20 +180,15 @@ class StandInWorld(ViewShareMixin, TileOwnershipMixin):
         self.state = types.SimpleNamespace(
             scenario=types.SimpleNamespace(year=143),
             projects=types.SimpleNamespace(done=[], operating={}),
-            economy=types.SimpleNamespace(output_per_head=1.0, tile_owners={"t1": {"owner": "rome"}, "t2": {"owner": "gaul"}}))
+            economy=types.SimpleNamespace(output_per_head=1.0))
         self.household = types.SimpleNamespace(done_version=0, operating_version=0)
         self.population = types.SimpleNamespace(total=100.0)
         self.civ = {"id": "rome"}
         self.world_map = types.SimpleNamespace(tiles={"t1": 1, "t2": 1})
-        self.stores = types.SimpleNamespace(view=lambda _name: types.SimpleNamespace(set=lambda *_arguments: None,
-                                                                                       get=lambda _tile: None))
 
     def view(self, name):
         held = {"forest_hectares": 1.0, "nitre_beds": {"square_metres": 1.0, "tonnes_per_square_metre": 0.001}, "mine_workings": []}
         return lambda: held[name]
-
-    def tile_owner_map(self):
-        return self.state.economy.tile_owners
 
     def send(self, command):
         return None   # the world event log is the hazards module's
@@ -230,24 +224,6 @@ class StandaloneAnswers(unittest.TestCase):
         for _firm in range(5):
             world._shared_answer(("bill", "x"), (), lambda: worked.append(1) or 1.0)
         self.assertEqual(len(worked), 1)
-
-
-class HomeTilesHeld(unittest.TestCase):
-
-    def test_the_owner_map_is_read_once_until_a_tile_changes_hands(self):
-        world, reads = StandInWorld(), []
-        original = tile_ownership.tiles_held
-        with mock.patch.object(tile_ownership, "tiles_held", lambda *arguments: reads.append(1) or original(*arguments)):
-            for _call in range(30):
-                self.assertEqual(world.home_tiles_held(), ["t1"])
-                self.assertEqual(world.tiles_owned_by("gaul"), ["t2"])
-            self.assertEqual(len(reads), 1)
-            version = world.tile_owner_version()
-            world.transfer_tile("t2", "rome")
-            self.assertNotEqual(world.tile_owner_version(), version)
-            self.assertEqual(world.home_tiles_held(), ["t1", "t2"])
-            self.assertEqual(world.tiles_owned_by("gaul"), [])
-            self.assertEqual(len(reads), 2)
 
 
 class PatentHolders(unittest.TestCase):

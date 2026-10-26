@@ -1,4 +1,4 @@
-"""Commands to the owner of who holds each tile."""
+"""Commands to the owner of who holds each tile and of the colonies."""
 from dataclasses import dataclass
 from typing import Optional
 
@@ -20,3 +20,11 @@ class AdvanceColonies(Command):
 	"""One year for every seat's colonies in `year`: the people work the land they can hold and eat what it gives; a colony
 	whose people die out is lost."""
 	year: int
+
+
+@dataclass(frozen=True)
+class FoundColony(Command):
+	"""The acting seat founds a colony on `tile`: the outfit is paid, the settlers leave the country and the tile is held at the
+	settlement level. Answers {tile, settlers, cost, text}, or a Refusal whose cause is tile_held, unreachable,
+	no_settlement_work, too_few_people or cannot_afford."""
+	tile: str

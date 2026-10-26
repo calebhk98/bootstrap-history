@@ -29,7 +29,7 @@ def lent_share(sim):
     return sim.lent_share()
 
 
-# ---- land ----
+# ---- the home country (the actors' cast, behind the coin module's reads) ----
 
 @bridge_view("home_country")
 def home_country(sim):
@@ -37,11 +37,6 @@ def home_country(sim):
     state = sim.actors.state
     home = state.countries.get(state.home_country)
     return {"id": state.home_country, "location": None if home is None else home.location}
-
-
-@bridge_view("tile_known", kind=KEYED)
-def tile_known(sim, tile):
-    return tile in sim.world_map.tiles
 
 
 # ---- commands ----

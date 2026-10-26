@@ -1,14 +1,14 @@
 """Complaints 409 and 410, as wiring on stand-in selves: the engine's map is the base map opened with the installed mods
-in load order (`GeographyPortMixin.world_map`), and the foreign haul asks geography about that map (the freight module's
+in load order (`Land.world_map`), and the foreign haul asks geography about that map (the freight module's
 `foreign_route` resolves the partner's tiles on it, `haul_route` searches and reads modes on it). Collaborators are
 recorders; no game."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 
-from sim.engine import geography_port
+from sim.land import map_views
+from sim.land.module import Land
 from sim.freight import routes
 from sim.freight.module import Freight
 from sim.tests import module_harness
@@ -17,25 +17,23 @@ MAP = object()
 
 
 class WorldMapTests(unittest.TestCase):
-    def read(self, standin):
-        manifests = [types.SimpleNamespace(id="first", directory="/mods/first"),
-                     types.SimpleNamespace(id="second", directory="/mods/second")]
-        with mock.patch.object(geography_port, "get_ordered_mods", return_value=manifests) as ordered, \
-                mock.patch.object(geography_port, "open_map", return_value=MAP) as opened:
-            return geography_port.GeographyPortMixin.world_map.fget(standin), ordered, opened
+    def read(self, overlays):
+        module = module_harness.build(Land, views={"map_overlays": lambda: overlays})
+        with mock.patch.object(map_views, "open_map", return_value=MAP) as opened:
+            return module.world_map, module, opened
 
     def test_the_map_is_opened_with_each_installed_mod_in_load_order(self):
-        world_map, ordered, opened = self.read(types.SimpleNamespace())
+        world_map, _module, opened = self.read([("first", "/mods/first"), ("second", "/mods/second")])
         self.assertIs(world_map, MAP)
-        ordered.assert_called_once_with(geography_port.MODS_DIR)
         opened.assert_called_once_with([("first", "/mods/first"), ("second", "/mods/second")])
 
     def test_a_map_already_opened_is_kept(self):
-        kept = object()
-        standin = types.SimpleNamespace(_world_map=kept)
-        _world_map, _ordered, opened = self.read(standin)
+        _world_map, module, opened = self.read([])
+        opened.reset_mock()
+        with mock.patch.object(map_views, "open_map", return_value=object()) as reopened:
+            self.assertIs(module.world_map, MAP)
+        reopened.assert_not_called()
         opened.assert_not_called()
-        self.assertIs(geography_port.GeographyPortMixin.world_map.fget(standin), kept)
 
 
 class _Searched(Freight):

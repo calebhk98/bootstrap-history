@@ -1,6 +1,6 @@
 """Give a stand-in game a `send` that applies commands the way the engine bridge does (the world event log as the hazards
 module does, and the reporting commands as reporting does), for tests of code that still sends to owners that have not
-moved (`ModEffects` sends `TransferTile`, `RecordWorldEvent` and `WriteStore`). The log is read back through
+moved (`ModEffects` sends `RecordWorldEvent` and `WriteStore`). The log is read back through
 `game.world_event_log` (the hazards module over a fresh world)."""
 from typing import Any
 

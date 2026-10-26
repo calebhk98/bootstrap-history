@@ -3,23 +3,9 @@
 Each view carries the name its owner will publish, asks the engine exactly as the old code did, and is never cached. Each
 command applies what the yearly demographic step did inline, in the same order."""
 from sim.assembly.api import QUOTE
-from sim.land.api import AdvanceColonies
 
 from . import externalities
-from .bridge import bridge_command, bridge_view
-
-
-# ---- land ----
-
-@bridge_view("borders_among", kind=QUOTE)
-def borders_among(sim, tiles):
-    """{tile: the tiles it borders} for each of the tiles on the map."""
-    return sim.geography.borders_among(tiles)
-
-
-@bridge_command(AdvanceColonies)
-def advance_colonies(sim, command):
-    sim.advance_colonies(command.year)
+from .bridge import bridge_view
 
 
 # ---- agriculture: the farm land and the year's technique, which the farm workforce keeps on the engine ----

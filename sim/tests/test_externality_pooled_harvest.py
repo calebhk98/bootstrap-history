@@ -8,15 +8,15 @@ import unittest
 from types import SimpleNamespace
 
 from sim import simulator
-from sim.engine import bridge_agriculture, externalities, mod_code
-from sim.tests import agriculture_stand_in, harness  # noqa: F401  (harness isolates the home directory)
+from sim.engine import externalities, mod_code
+from sim.tests import agriculture_stand_in, harness, land_host  # noqa: F401  (harness isolates the home directory)
 from sim.world.weather_pooling import harm_multiplier, tile_shares
 
 ROME = simulator.load_civ("rome_100ad")
 
 
 def rome_rows():
-    return bridge_agriculture.held_tile_geometry(SimpleNamespace(civ=ROME, world_map=None))
+    return land_host.build(ROME).held_tile_geometry()
 
 
 def farm_over_rome():

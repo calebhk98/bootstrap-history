@@ -72,7 +72,7 @@ REFERENCE_LABOUR_HOURS_PER_HECTARE = declare(
            "2,523 square metres to the iugerum; Halstead and Jones (1989) via Shukurov et al., arXiv 1505.05121 "
            "section 8.1 (secondary), threshing about the same as reaping; person-days at the model's working day. Equals data/production/"
            "40_organics.json wheat_kg labour_hours (tested). sim/world/agriculture.py, sim/world/land.py (as "
-           "LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE) and sim/engine/colonies.py import this declaration.",
+           "LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE) and sim/land/colonies.py import this declaration.",
     confidence="C",
     why="The labour intensity the reference yield is quoted at, and the "
         "anchor every Cobb-Douglas yield curve in either consuming module "

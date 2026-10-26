@@ -1,7 +1,7 @@
 """Where things are, and what that costs to reach: one simulation's geography (`sim.geography`).
 
 It reads the civilisation, its population scale, the technologies it holds and the ways it has built
-through the world it is given (an engine-side adapter, sim/engine/geography_port.py). A region's reach is
+through the world it is given (the land module's `GeographyInputs`, sim/land/map_views.py). A region's reach is
 the fewest days of travel from the tiles the civilisation holds (`reach_bands.py`); mineral access and
 located-material costs follow from it.
 """

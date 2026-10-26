@@ -116,12 +116,12 @@ class NoModuleReadsRegionLabelsForTileDataTests(unittest.TestCase):
         from types import SimpleNamespace
         from sim.agriculture import rules
         from sim.agriculture.constants import FARM_WEATHER_POOLED_CELL_CAP
-        from sim.engine import bridge_agriculture
+        from sim.tests import land_host
         from sim.geography import food_society
         from sim.world import land
 
         def cells_of(civilisation):
-            rows = bridge_agriculture.held_tile_geometry(SimpleNamespace(civ=civilisation, world_map=None))
+            rows = land_host.build(civilisation).held_tile_geometry()
             return rules.pooled_cells(rules.raw_cells(rows), FARM_WEATHER_POOLED_CELL_CAP)
 
         labelled, tiled = self._civilisation(False), self._civilisation(True)

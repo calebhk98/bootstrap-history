@@ -1,5 +1,5 @@
 """World hazards, famine and the yearly checks (Complaints 493 and 640): the hazards are called on the module over plain
-views, the checks on a stand-in game built here from the strata, actors and tile owners they read. The `world_events` command and the
+views, the checks on a stand-in game built here from the strata and actors they read. The `world_events` command and the
 log's save are in test_world_events_command_and_save."""
 QUICK_TOPIC = True
 
@@ -12,19 +12,11 @@ from sim.agents.api import Business
 from sim.agents.business_plant import Plant
 from sim.demography.api import KillPeople
 from sim.engine import invariants
-from sim.engine.tile_ownership import TileOwnershipMixin
 from sim.hazards import world_data
 from sim.reporting.api import RecordEvent
 from sim.tests import event_stand_in, hazards_host, module_harness
 
 HOME, PARTNER = "rome", "han"
-
-
-class Controls(dict):
-    """The `control` tile store: the level each owned tile is held at."""
-
-    def set(self, tile_id, level):
-        self[tile_id] = level
 
 
 def stratum(country, members, food_shortfall=0.0, name="stratum"):
@@ -33,30 +25,25 @@ def stratum(country, members, food_shortfall=0.0, name="stratum"):
     return types.SimpleNamespace(actor_id="%s_%s" % (country, name), record=record)
 
 
-def game(strata=(), actors=(), owners=None, home_people=1000.0, colonies=None):
-    controls = Controls({tile: "garrisoned" for tile in (owners or {})})
+def game(strata=(), actors=(), home_people=1000.0):
     everyone = list(strata) + list(actors)
     sim = types.SimpleNamespace(
         state=types.SimpleNamespace(
             scenario=types.SimpleNamespace(year=100),
-            economy=types.SimpleNamespace(world_events=[], tile_owners=owners if owners is not None else {}, market_book={}),
-            seats={"first": types.SimpleNamespace(holdings=types.SimpleNamespace(colonies=colonies or []),
-                                                  household=types.SimpleNamespace(log=[]))}),
+            economy=types.SimpleNamespace(world_events=[], market_book={}),
+            seats={"first": types.SimpleNamespace(household=types.SimpleNamespace(log=[]))}),
         civ={"id": HOME}, events=True, population=types.SimpleNamespace(total=home_people),
         actors=types.SimpleNamespace(of_kind=lambda kind: [each for each in everyone if each.record.kind == kind],
                                      actors={each.actor_id: each for each in everyone},
                                      world_for=lambda actor, world: None),
         partners_in_agent_economy=lambda: [PARTNER], _farm_year_weather_seed=lambda salt: 7,
         view=lambda name: (lambda: [HOME, PARTNER]),
-        playing_seats=lambda: ["first"], stores=types.SimpleNamespace(view=lambda name: controls), controls=controls,
-        world_map=types.SimpleNamespace(tiles={"t1": {}, "t2": {}, "t3": {}}))
+        playing_seats=lambda: ["first"])
     event_stand_in.stood_in(sim)
-    sim.tile_owner_map = lambda: sim.state.economy.tile_owners
 
     def shock(share):
         sim.population.total *= 1.0 - share
     sim._apply_population_mortality_shock = shock
-    sim.transfer_tile = lambda *arguments, **keywords: TileOwnershipMixin.transfer_tile(sim, *arguments, **keywords)
     return attach_send(sim)
 
 
@@ -111,21 +98,13 @@ def fails(check_function, target):
         return True
 
 
-def tiled():
-    return game(owners={"t1": {"owner": "first"}, "t2": {"owner": PARTNER}}, colonies=[{"tile": "t1"}])
+def owning(problems):
+    return types.SimpleNamespace(view=lambda name: (lambda: problems) if name == "tile_ownership_problems" else None)
 
 
-check("the ownership check holds on well-formed owners", invariants.check_tile_owner_invariants(tiled()) is True)
-bad_level = tiled()
-bad_level.controls["t1"] = "no_such_level"
-check("the ownership check fails on an unknown control level", fails(invariants.check_tile_owner_invariants, bad_level))
-off_map = tiled()
-off_map.state.economy.tile_owners["elsewhere"] = {"owner": HOME}
-off_map.controls["elsewhere"] = "garrisoned"
-check("...on a tile the map lacks", fails(invariants.check_tile_owner_invariants, off_map))
-rival = tiled()
-rival.state.seats["second"] = types.SimpleNamespace(holdings=types.SimpleNamespace(colonies=[{"tile": "t1"}]))
-check("...and on a tile two seats both list", fails(invariants.check_tile_owner_invariants, rival))
+check("the ownership check holds when the land module finds no problem", invariants.check_tile_owner_invariants(owning([])) is True)
+check("the ownership check fails on the problems the land module finds",
+      fails(invariants.check_tile_owner_invariants, owning([{"cause": "double_claim", "tile": "t1", "actors": ["first", "second"]}])))
 
 
 def running(technique, held):

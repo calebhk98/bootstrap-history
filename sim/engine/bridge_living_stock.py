@@ -27,21 +27,6 @@ def producer_capacities(sim):
 
 # ---- land ----
 
-@bridge_view("stock_land")
-def stock_land(sim):
-    """{place: the tile the held stock stands on, pasture_kg: live weight the held tiles' grass carries}."""
-    return {"place": sim.geography.stock_place(), "pasture_kg": sim.geography.held_pasture_kg(sim.view("wild_stock")())}
-
-
-@bridge_view("endemic_stock_loss", kind=QUOTE)
-def endemic_stock_loss(sim, place, species):
-    return sim.geography.endemic_stock_loss(place, species)
-
-
-@bridge_view("nursery_room_units", kind=QUOTE)
-def nursery_room_units(sim, place, output_per_batch, hectare_years_per_batch):
-    return sim.geography.nursery_room_units(place, output_per_batch, hectare_years_per_batch)
-
 
 # ---- labour and money ----
 

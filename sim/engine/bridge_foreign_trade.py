@@ -6,7 +6,7 @@ markets module owns that record."""
 from sim.assembly.api import KEYED, QUOTE
 
 from . import foreign_economy_data, partner_demand
-from .bridge import bridge_command, bridge_view
+from .bridge import bridge_view
 from .data import load_civ, starting_schedule
 
 
@@ -55,17 +55,6 @@ def market_floor_ratio(sim, commodity):
 
 
 # ---- the map ----
-
-@bridge_view("tracked_materials")
-def tracked_materials(sim):
-    """The materials whose deposits share out their output over tiles."""
-    return sim.geography.tracked_materials()
-
-
-@bridge_view("mineral_share_of_tiles", kind=QUOTE)
-def mineral_share_of_tiles(sim, tiles, commodity):
-    """Share of a mined commodity on the given tiles."""
-    return sim.geography.held_share(tiles, commodity)
 
 
 # ---- knowledge and the cast ----

@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.territory_required import require_territory
+from sim.land.rules import require_territory
 
 
 class RefusedWithoutTiles(unittest.TestCase):

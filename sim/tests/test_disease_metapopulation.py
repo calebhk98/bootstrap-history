@@ -9,7 +9,7 @@ import unittest
 from sim.agents import budget_works
 from sim.disease import api as disease
 from sim.disease import endemic_state, metapopulation as spread
-from sim.engine import colony_rules
+from sim.land import rules as colony_rules
 
 BANDS = ("children", "working_age", "elderly")
 

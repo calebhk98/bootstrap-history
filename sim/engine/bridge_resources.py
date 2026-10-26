@@ -2,7 +2,7 @@
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old code
 did, and is never cached."""
-from sim.assembly.api import KEYED, QUOTE
+from sim.assembly.api import QUOTE
 
 from . import purchase_rule
 from .bridge import bridge_view
@@ -13,12 +13,6 @@ from .bridge import bridge_view
 @bridge_view("start_year")
 def start_year(sim):
 	return sim.cfg["start_year"]
-
-
-@bridge_view("mineral_scale", kind=KEYED)
-def mineral_scale(sim, material):
-	"""Fraction of a mineral's reference output the civilisation can draw on, from the tiles it holds."""
-	return sim.geography.mineral_scale(material)
 
 
 # ---- materials ----

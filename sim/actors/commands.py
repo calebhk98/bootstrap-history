@@ -40,3 +40,12 @@ class ScaleStrata(Command):
 	"""Every stratum of the country `country` keeps `1 - share` of its members (a partner's people die by their strata)."""
 	country: str
 	share: float
+
+
+@dataclass(frozen=True)
+class FollowTileTransfer(Command):
+	"""A tile passed from the country `previous` to the country `to_actor` (either may be None or not a country): the countries'
+	profiles move it between their home tiles, so their people and taxes pass with it."""
+	tile: str
+	previous: Optional[str]
+	to_actor: Optional[str]

@@ -24,6 +24,18 @@ class Cast:
 			self._registry = registry
 		return registry
 
+	def follow_tile_transfer(self, command: Any) -> None:
+		"""A foreign country's state reads its tiles from its profile: move the tile between the profiles of the countries that
+		lost and gained it."""
+		registry = self.cast()
+		for country, profile in (registry.state.countries or {}).items():
+			if country == command.previous and command.tile in profile.home_tiles:
+				profile.home_tiles.remove(command.tile)
+			if country == command.to_actor and command.tile not in profile.home_tiles:
+				profile.home_tiles.append(command.tile)
+				profile.home_tiles.sort()
+		registry.__dict__.pop("_tile_owners", None)
+
 	def cast_state(self) -> Any:
 		"""The cast's saved records, for readers that look at them without making the registry."""
 		return self.world
