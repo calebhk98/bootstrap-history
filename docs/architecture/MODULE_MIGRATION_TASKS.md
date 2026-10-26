@@ -26,7 +26,10 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 | freight | `sim/freight/` | |
 | agriculture | `sim/agriculture/` | the farm holding (`state.holdings.farm_*`) waits for demography and workforce |
 
-In progress: diffusion, foreign trade, resources.
+| foreign trade | `sim/foreign_trade/` | trader cargo legs stay in the agent economy's record until markets moves |
+| diffusion | `sim/diffusion/` | literacy, adoption, disclosure; `value_weights` has no owner yet (sent to polity) |
+
+In progress: resources, knowledge.
 
 ## Task list
 
