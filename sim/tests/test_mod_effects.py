@@ -13,6 +13,7 @@ from sim.engine import mod_stores
 from sim.engine.mod_effects import ModEffects
 from sim.engine.mod_stores import ModStoresMixin
 from sim.engine.mods import ModError
+from sim.tests.bridge_send import attach_send
 
 ACME, BETA = "test_acme_k3f9", "test_beta_k3f9"
 
@@ -22,6 +23,7 @@ class Host(ModStoresMixin):
 
     def __init__(self):
         self.state = SimpleNamespace(stores={})
+        attach_send(self)
 
 
 class Names(unittest.TestCase):

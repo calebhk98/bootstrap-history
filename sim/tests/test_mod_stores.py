@@ -10,6 +10,7 @@ from types import SimpleNamespace
 
 from sim.engine import mod_code, mod_stores
 from sim.engine.mods import ModError
+from sim.tests.bridge_send import attach_send
 from sim.engine.mod_effects import ModEffects
 from sim.engine.mod_stores import ModStoresMixin
 from sim.engine.year_phases import MOD_PHASES
@@ -48,6 +49,7 @@ class Host(ModStoresMixin):
 
     def __init__(self):
         self.state = SimpleNamespace(stores={})
+        attach_send(self)
 
 
 class StoreRules(StoreTestBase):

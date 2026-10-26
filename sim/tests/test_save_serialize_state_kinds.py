@@ -120,8 +120,7 @@ record = {"book": {"goods": {"iron": {"t1": 4.0}}}, "loans": [{"contract_id": "l
 economy = EconomyState(
 	agent_economy={"opening": {"recipes": ["bread", "brick"], "prices": {"bread": 1.5}}, "record": record, "cargo": {"leg:1": {"tile": "t1", "tonnes": 2.0}}},
 	tile_owners={"t1": {"owner": "rome", "control": "high"}}, works={"t1": {"mill": 2.0}}, works_under_construction={"t1": {"mill": [105, 1.0]}},
-	forest_felled={"t1": 3.5}, market_flows=None, nodes_money_per_labour_hour=None, foreign_trade_by_year={"100": {"in": 4.0, "out": 3.0}},
-	campaigns={"armies": {"a1": {"owner": "rome"}}, "next_id": 2})
+	forest_felled={"t1": 3.5}, market_flows=None, nodes_money_per_labour_hour=None, foreign_trade_by_year={"100": {"in": 4.0, "out": 3.0}})
 with verbatim(record):
 	blob = serialize_state(economy)
 check("serialize_state: the stored agent economy keeps its opening (the late recipes), record and cargo",
@@ -131,7 +130,7 @@ check("serialize_state: the stored record (its held stock and loans) is written 
       blob["agent_economy"]["record"] is record and record["loans"][0]["principal"] == 40.0, None)
 check("serialize_state: tile-keyed economy stores", blob["tile_owners"] == {"t1": {"owner": "rome", "control": "high"}}
       and blob["works"] == {"t1": {"mill": 2.0}} and blob["works_under_construction"] == {"t1": {"mill": [105, 1.0]}}
-      and blob["forest_felled"] == {"t1": 3.5} and blob["campaigns"] == {"armies": {"a1": {"owner": "rome"}}, "next_id": 2}, None)
+      and blob["forest_felled"] == {"t1": 3.5}, None)
 check("serialize_state: an unset optional economy field is None", blob["market_flows"] is None and blob["nodes_money_per_labour_hour"] is None)
 check("serialize_state: the economy's fields come in declaration order", list(blob) == saved_field_names(EconomyState))
 

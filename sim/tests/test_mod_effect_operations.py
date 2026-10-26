@@ -6,11 +6,12 @@ from types import SimpleNamespace
 from unittest import mock
 
 from sim.agents.api import edges
-from sim.engine import mod_effects, world_hazards
+from sim.engine import bridge_campaigns, mod_effects, world_hazards
 from sim.engine.mod_effects import ModEffects
 from sim.engine.mods import ModError
 from sim.refusal import cause_of
 
+from .bridge_send import attach_send
 from .harness import *  # noqa: F401,F403
 
 QUICK_TOPIC = True
@@ -67,10 +68,10 @@ def _death_game(home_total=1000.0):
     game = SimpleNamespace(civ={"id": "home"}, population=SimpleNamespace(total=home_total), shocks=shocks,
                            actors=SimpleNamespace(of_kind=lambda kind: strata), strata=strata)
     game._apply_population_mortality_shock = shocks.append
-    return game
+    return attach_send(game)
 
 
-with mock.patch.object(mod_effects.world_events, "record", side_effect=lambda game, kind, **fields: dict(kind=kind, **fields)) as recorded:
+with mock.patch.object(bridge_campaigns.world_events, "record", side_effect=lambda game, kind, **fields: dict(kind=kind, **fields)) as recorded:
     partner_game = _death_game()
     entry = effects.kill_people(partner_game, "partner", 0.25, "a curse")
     home_game = _death_game()
@@ -81,7 +82,7 @@ check("the event is the mod's kind, names the country and the cause, and states 
       entry["kind"] == ACME + ":deaths" and entry["actors"] == ["partner"] and entry["cause"] == "a curse" and abs(entry["died"] - 125.0) < 1e-9, entry)
 check("a death share in the home society is applied to its cohorts as a mortality shock and not to the strata", home_game.shocks == [0.1]
       and [stratum.record.members for stratum in home_game.strata] == [400.0, 100.0, 7.0], home_game.shocks)
-with mock.patch.object(mod_effects.world_events, "record") as unrecorded:
+with mock.patch.object(bridge_campaigns.world_events, "record") as unrecorded:
     refused_shares = []
     for share, cause in ((0.1, ""), (1.5, "too many")):
         try:
@@ -92,7 +93,7 @@ check("a missing cause or a share above one is refused before anyone dies or any
 
 # --- a tile transfer goes through the game's own transfer with the cause.
 transfers = []
-tile_game = SimpleNamespace(transfer_tile=lambda tile, to_actor, control, cause=None: transfers.append((tile, to_actor, control, cause)) or to_actor)
+tile_game = attach_send(SimpleNamespace(transfer_tile=lambda tile, to_actor, control, cause=None: transfers.append((tile, to_actor, control, cause)) or to_actor))
 effects.transfer_tile(tile_game, "tile_a", "partner", "a treaty", control="garrisoned")
 check("transfer_tile hands the tile, the new holder, the control and the cause to the game's own transfer", transfers == [("tile_a", "partner", "garrisoned", "a treaty")], transfers)
 try:
