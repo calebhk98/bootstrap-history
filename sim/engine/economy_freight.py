@@ -1,60 +1,19 @@
-"""Freight: moving a material from where it comes from to the buyer, and
-what the market actually charges once scarcity, standing and distance
-are all folded together.
+"""What the market charges for a tracked material once scarcity, standing and distance are folded together, and what a
+shortage of it tells the player.
 
-Every method here answers what a tonne of a
-tracked material actually costs to land at this household, given the
-material's own scarcity (material_price_factor(), reading the demand
-grouping _cached_material_demand()/_cached_demand_by_tag() prepare) and
-the real, physical distance an ox-cart has to haul it from the nearest
-deposit tile that has it (_land_freight_physical_inputs()/
-_material_source_tiles()/material_freight_distance_km()/
-material_freight_cost_per_kg()/material_freight_factor() - see the
-freight section below for sim/geography/transport.py's own physics and
-what this crossing deliberately does and does not cover). Covers, in
-addition: material_price_factor()/_demand_by_emp_key()/
-material_market_factor()/material_market_summary() (the price a
-project actually pays, and the report of it); wire_chain_report()
-(the wire-specific worked example); build_nitre() (buying down a
-saltpetre shortage, the one material this file's own MARKET_SHARE
-holds at zero because there is no open market for it); and
+material_price_factor() reads the demand grouping _cached_material_demand()/_cached_demand_by_tag() prepare, times the
+freight markup the freight module publishes (`material_freight_factor`). Covers, in addition:
+_demand_by_emp_key()/material_market_factor()/material_market_summary() (the price a project actually pays, and the
+report of it); wire_chain_report() (the wire-specific worked example); build_nitre() (buying down a saltpetre
+shortage, the one material this file's own MARKET_SHARE holds at zero because there is no open market for it); and
 shortage_remedy() (what a player is told when something is binding).
 
-FreightMixin is composed into EconomyMixin (economy.py) alongside the
-other economy sub-mixins; see that file for the composition and for
-the grouping evidence. CLAUDE.md's naming/heuristic-labelling
-conventions apply here exactly as they do everywhere else in the
-engine, regardless of which file a method lives in.
+FreightMixin is composed into EconomyMixin (economy.py) alongside the other economy sub-mixins. Carriage itself
+(routes, carriers, dues) is the freight module (sim/freight/).
 
-_cached_material_demand()/_cached_demand_by_tag() live here, not in
-economy_electricity.py: every actual caller of either method -
-material_price_factor() via _demand_by_emp_key(), and
-material_market_summary() - lives in THIS file, and their own
-docstrings say so explicitly (material_market_factor() calling
-material_price_factor() "several times for one project_cost() call" is
-exactly the freight-pricing hot path _cached_demand_by_tag()'s
-docstring describes grouping the demand dict for). resource_throttle()
-in economy_electricity.py only WRITES the cache these two read
-(self.household._material_demand_cache); it never calls either. These
-two methods are grouped by what actually calls them, not by where they
-might look like they belong at a glance.
-
-THE CLASS-LEVEL CACHE. _land_freight_physical_inputs() caches its
-answer on the bare class object FreightMixin itself
-(`getattr(FreightMixin, "...", None)` / `FreightMixin._foo = ...`),
-not on self, because the ox/cart/dirt-track physical inputs it computes
-never differ between one Sim instance and the next in the same
-process - the same reasoning economy_materials.py's own CLASS-LEVEL
-CACHE note gives for its three caches.
-
-TRAP: the literal class name in that getattr/setattr MUST match
-whatever class actually holds this method. If it is ever moved to a
-different class or file, the cache key has to move with it - a
-mismatch breaks the cache silently, invisible to import, to `validate`
-and to compilation, surfacing only when a command that needs a
-material price first runs and finds a cache that was never populated.
-See economy_materials.py's own CLASS-LEVEL CACHE note for the fuller
-account of this hazard.
+_cached_material_demand()/_cached_demand_by_tag() live here, not in economy_electricity.py: every caller of either
+lives in THIS file. resource_throttle() in economy_electricity.py only WRITES the cache these two read
+(self.household._material_demand_cache); it never calls either.
 """
 import math
 
@@ -62,12 +21,11 @@ from . import commodities as _commod
 from sim.constants import declare
 from . import money_units
 from . import purchase_rule
-from .freight_markup import freight_markup, scarcity_factor
+from .material_scarcity import scarcity_factor
 from .units_prose import area_text, mass_per_area_text, mass_rate_text, money_text
 from .shortage_sizing import mine_shortfall_after_sinking, mine_size_tonnes, nitre_bed_square_metres, nitre_deficit_tonnes
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from sim.geography.api import freight_cost, provisions, transport as freight_physics
 from sim.agents.api import edges
 
 
@@ -125,222 +83,13 @@ class FreightMixin:
         self.household._demand_by_tag_cache = (demand, by_tag)
         return by_tag
 
-    # ---- freight: moving a material from where it comes from to you ------
-    #
-    # sim/geography/transport.py derives what an ox team hauling a cart actually
-    # costs per tonne-km from animal metabolism, rolling resistance and a
-    # road surface - real physics, no price anywhere in it (see that
-    # module's own NOT A MONEY FIGURE section for why). Until now nothing in
-    # this engine ever called it: material_price_factor() below priced every
-    # tracked material purely on SCARCITY (demand pressing on the empire's
-    # market) and never asked how far the marginal tonne actually had to
-    # travel to reach this household. CLAUDE.md SS3.1's own worked example -
-    # a Roman soldier's cost must fall out of, among other things, transport,
-    # not be looked up - is exactly this gap: Egypt's grain and Rome's grain
-    # were the same book price here regardless of the thousand-odd
-    # kilometres of open water between them.
-    #
-    # THE CROSSING. the named deposits' output shares (read
-    # by mineral_scale()/_compute_mineral_scale() in geography.py to decide
-    # how much of iron/coal/copper/lead/tin/silver/saltpetre you can BUY)
-    # already say which tiles actually produce each of
-    # those seven materials, with a real position on every deposit.
-    # This is the first place that same geography is also asked what buying
-    # the material should COST: find the nearest tile that has it, price
-    # an ordinary ox-cart haul from there with transport.py's own per-
-    # tonne-km figures, and fold the result into material_price_factor() as
-    # a markup on the book price - see material_freight_factor()'s own
-    # docstring for exactly why a markup, not an added denarii figure.
-    #
-    # WHY THIS MATERIAL SET AND NOT OTHERS. Extending this to gold, or to
-    # commodities.json's own curated wool/cotton/coffee, was deliberately
-    # left alone: the deposit shares are the ONLY located-production data this engine carries at global (not just Roman-province)
-    # coverage - commodities.json's "regions" field for those was written
-    # Rome-centric (its `iron` entry alone lists only Roman provinces, none
-    # of the geography data's other 16 regions, even though the deposit shares credit China with more iron abundance than any
-    # Roman province has) - using it for a non-Roman civilization would
-    # invent a worse-than-nothing answer ("Han China must import all its
-    # iron from across the world") from data that was never meant to
-    # describe Han China at all. One clean, globally-consistent source beats
-    # a wider crossing built on a source that only covers part of the map.
-    #
-    # WHAT THIS DELIBERATELY DOES NOT DO. It does not touch located_
-    # materials (gutta percha, natural rubber, platinum) - geography.
-    # material_cost_factor() already prices those from the geography data's own
-    # reach-based multiplier (see project_cost()'s use of it above), and
-    # that crossing is not flat or absent, only differently sourced (a
-    # hand-set multiplier calibrated to Rome rather than transport.py's
-    # physics); redoing it was out of this task's scope and out of
-    # geography.py, which this file does not own. It does not model sea
-    # freight at all, even though the whole reason this task exists is that
-    # water is roughly an order of magnitude cheaper than land per tonne-
-    # mile: transport.py has no seagoing-hull mode (its CALM_WATER surface
-    # is an animal-towed canal or river barge, explicitly not a sailing
-    # ship - see that module's own WHAT THIS MODULE DOES NOT DO), so a
-    # region reachable only across open water is still charged the full
-    # land-cart rate for the whole great-circle distance - a real
-    # overstatement for a genuinely coastal shipment, and a named
-    # limitation rather than a hidden one: inventing a sea-lane network and
-    # a hull that does not exist in this project would be exactly the
-    # "made-up distance... wearing a plausible face" CLAUDE.md SS3.1 warns
-    # against. Left for the module that eventually gives transport.py a
-    # real seagoing-hull mode. It also does not amortise the cart's own
-    # capital cost or wear (transport.py's own vehicle_wear_fraction_per_
-    # tonne_km) into the price: there is no market price for a cart
-    # anywhere in the production data to convert that fraction into denarii, so
-    # this prices feed and driver time only, which UNDERSTATES the true
-    # cost - a conservative simplification, named per CLAUDE.md SS3.4, not
-    # a hidden one.
-
-    LAND_FREIGHT_TEAM_SIZE = declare(
-        "LAND_FREIGHT_TEAM_SIZE", 2.0, kind="engineering_estimate",
-        unit="draught oxen",
-        source="transport.py's own headline example throughout that "
-               "module's docstring, __main__ block and test suite "
-               "(draught_freight_physical_inputs(OX, 2, CART, ...)); reused "
-               "here rather than a second, unrelated team size invented for "
-               "this one crossing.",
-        confidence="C",
-        why="How many oxen pull the cart this crossing prices ordinary "
-            "market freight with. Paired with DIRT_TRACK, not PAVED_ROAD or "
-            "MUD, because transport.py's own docstring calls dirt track "
-            "'the ordinary, unimproved-road case most freight in this "
-            "period actually moved over' - the middle case, not either "
-            "extreme.")
-
-    # Which existing book price and wage this crossing reuses to turn
-    # transport.py's physical quantities (feed kilograms, driver hours) into
-    # denarii - see material_freight_cost_per_kg()'s own docstring for why
-    # each was chosen and what it approximates. Plain strings, not declare()
-    # (declare() is for numbers; these are which EXISTING number to read).
-    FREIGHT_FEED_PRICE_MATERIAL = "wheat_kg"
-    FREIGHT_DRIVER_WAGE_TRADE = "labourer"
-
-    def _land_freight_physical_inputs(self):
-        """Cached FreightPhysicalInputs for LAND_FREIGHT_TEAM_SIZE oxen
-        pulling a two-wheeled cart on an ordinary dirt track - see the class
-        comment above for why this specific team/vehicle/surface. Cached on
-        the CLASS, the same pattern _material_prices() above already uses:
-        none of animal, vehicle, surface or team size changes during a run,
-        so there is nothing here to recompute per call."""
-        cached = getattr(FreightMixin, "_land_freight_inputs_cache", None)
-        if cached is None:
-            cached = FreightMixin._land_freight_inputs_cache = (
-                freight_physics.draught_freight_physical_inputs(
-                    freight_physics.OX, int(self.LAND_FREIGHT_TEAM_SIZE),
-                    freight_physics.CART, freight_physics.DIRT_TRACK))
-        return cached
-
-    def _material_source_tiles(self, material):
-        """Tiles whose named deposits produce `material` (iron, coal, copper, lead, tin,
-        silver, saltpetre - mineral_scale()'s own tracked set; see
-        geography.py's _compute_mineral_scale, which reads this exact same
-        shares for the QUANTITY question). Nothing here is invented for
-        freight: it is the same geology this file already uses to decide
-        how much of a material you can buy, now also asked what buying it
-        should cost."""
-        return self.geography.source_tiles(material)
-
-    def material_freight_distance_km(self, material):
-        """Kilometres of the cheapest haul from the tiles this civilization holds to the nearest
-        tile whose deposits produce `material`, over the carriage modes it holds and the ways it
-        has built (geography's route; the same "source from the easiest deposit" rule
-        material_reach() uses for located materials).
-
-        Zero if a tile this civilization already HOLDS has a deposit of the material:
-        "home is home", a material you already mine in your own territory costs nothing extra to
-        move within it, by this module's simplification.
-
-        None if no deposit shares out `material` over tiles (everything
-        outside the seven tracked minerals - see _material_source_tiles). An unknown distance is
-        not licence to invent one, so this returns "unknown" and material_freight_cost_per_kg()
-        charges nothing rather than something imaginary when it sees that.
-        """
-        tiles = self._material_source_tiles(material)
-        return self.geography.route_km_to(tiles) if tiles else None
-
-    def material_freight_cost_per_kg(self, material):
-        """Denarii per kilogram to haul `material` from the nearest place it
-        actually comes from to this household, by the cheapest route leg by
-        leg (material_haul_route). Zero if material_freight_distance_km() cannot
-        place the material at all, or places it at distance zero (already
-        produced somewhere this civilization holds) - see that method's own
-        docstring for both cases.
-
-        THE MONEY CONVERSION transport.py deliberately leaves undone (see
-        its own NOT A MONEY FIGURE section): feed_kg_per_tonne_km times a
-        book price for animal feed, plus driver_hours_per_tonne_km times an
-        unskilled wage, both read from this file's OWN existing book-price
-        and wage tables rather than new ones invented for this crossing -
-        the same numeraire (an hour of unskilled labour) sim/engine/solve_prices.py
-        already uses, per transport.py's own docstring pointing at it.
-
-        FEED PRICE IS A LABELLED STAND-IN. transport.py's own FEED_ENERGY_
-        DENSITY_KCAL_PER_KG declaration describes the ration it costs
-        against as hay-heavy, and this project has no hay or fodder price
-        anywhere in the production data - FREIGHT_FEED_PRICE_MATERIAL (wheat_kg) is
-        the closest book price that exists, and wheat is dearer per
-        kilogram than real fodder, so this reads as a conservative
-        (upper-bound), not measured, feed cost.
-
-        THE CARRIER'S CAPITAL, ITS RETURN AND THE DUES ARE INCLUDED, by the
-        one freight function foreign routes use (`domestic_haul_money_per_tonne`
-        in domestic_haul.py): oxen and cart at the market rate, their
-        depreciation, the return trip by last year's domestic flow ledger
-        (empty while none is recorded), and the tolls the geography states
-        for the mode. Living stock walks (droving) at the cost of its own feed.
-        The cargo's own interest and spoilage enter through
-        material_freight_factor().
-        """
-        route = self.material_haul_route(material)
-        if route is None or not route.legs:
-            return 0.0
-        return route.cost_per_tonne / KILOGRAMS_PER_TONNE
-
-    def material_freight_factor(self, emp_key):
-        """Multiplicative markup material_price_factor() applies on top of
-        its scarcity curve, from what transport.py's freight physics say it
-        costs to haul `emp_key` here - see material_freight_cost_per_kg()'s
-        own docstring for the mechanism, and material_freight_distance_km()'s
-        for why an unlocated material gets exactly 1.0, never a guess.
-
-        A MARKUP ON THE BOOK PRICE (1.0 + freight / book_price), not a
-        standalone added charge, because a markup is what project_cost()
-        and material_trade_quote() both actually multiply against: node
-        `_total_cost` and a material's per_kg are already the RAW book
-        value, and every other adjustment this file stacks onto that value
-        (civ_cost_factor(), material_cost_factor(), this function's own
-        scarcity curve) is exactly this shape - a factor, not an addend -
-        so freight has to enter the same way to compose correctly rather
-        than silently double- or under-counting when several of these
-        multiply together in project_cost().
-        """
-        book_price_per_kg = self._material_price_per_kg(emp_key)
-        if not book_price_per_kg or book_price_per_kg <= 0:
-            return 1.0
-        route = self.material_haul_route(emp_key)
-        if route is None or not route.legs:
-            return 1.0
-        return freight_markup(book_price_per_kg, route.cost_per_tonne,
-                              self.domestic_cargo_cost_share(emp_key, route))
-
-    def material_carriage_per_tonne(self, emp_key, price_per_tonne):
-        """Money per tonne to carry a material to the household from the nearest place it comes from, on top of
-        its price where it is sold: the haul over the ways held (material_freight_distance_km) and the cargo's
-        own interest and spoilage as a share of that price. Zero for a material the geography cannot place or
-        that is made where the household holds ground."""
-        route = self.material_haul_route(emp_key)
-        if route is None or not route.legs:
-            return 0.0
-        return route.cost_per_tonne + self.domestic_cargo_cost_share(emp_key, route) * price_per_tonne
-
     def material_price_factor(self, emp_key):
         """What buying MORE of this tracked commodity costs beyond the flat
         catalogue price, from how hard current demand leans on the empire's
         market for it, versus how much of your own supply makes that market
         unnecessary, TIMES what transport.py's freight physics say it costs
         to haul it here from the nearest place it actually comes from (see
-        material_freight_factor() above - 1.0, no change, for a material
+        material_freight_factor, a view of the freight module - 1.0, no change, for a material
         this civilization already produces somewhere in its own territory,
         or that the geography data has no location data for at all).
 
@@ -379,7 +128,7 @@ class FreightMixin:
         demands = [(need, self._own_material_supply(tag)) for tag, need in self._demand_by_emp_key().get(emp_key, ())]
         worst = scarcity_factor(demands, market, self.MATERIAL_PRICE_DEMAND_SHARE_CAP,
                                 self.MATERIAL_PRICE_PRESSURE_SCALE)
-        return worst * self.material_freight_factor(emp_key)
+        return worst * self.view("material_freight_factor")[emp_key]
 
     MATERIAL_PRICE_DEMAND_SHARE_CAP = declare(
         "MATERIAL_PRICE_DEMAND_SHARE_CAP", 1.5, kind="temporary_heuristic",

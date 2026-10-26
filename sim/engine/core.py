@@ -91,7 +91,7 @@ from .seat_dealings import SeatDealingsMixin
 from .seat_bank import SeatBankMixin
 from .interest_groups import InterestGroupsMixin
 from .benefactions import BenefactionsMixin
-from .route_dues import RouteDuesMixin
+from .forward_freight import ForwardFreightMixin
 from .mod_stores import ModStoresMixin
 from .core_properties import ForwardingPropertiesMixin
 from .goals import GoalsMixin
@@ -242,7 +242,7 @@ class Sim(
         SeatBankMixin,
         InterestGroupsMixin,
         BenefactionsMixin,
-        RouteDuesMixin,
+        ForwardFreightMixin,
         ForwardingPropertiesMixin,
         GoalsMixin,
         StepPhasesMixin,

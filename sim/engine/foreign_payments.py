@@ -5,7 +5,7 @@ Per partner the state keeps a ledger: the value of goods in and out, the coin un
 in coin metal (`sim/world/balance_of_payments.py`): a persistent deficit drains the home stock and
 lowers the home price level in traded prices, which makes imports dearer and exports cheaper. A route
 lifts only what its carriers can: the fleet grows from what trade could not be carried, up to what
-yards can build, and its capital is paid for through the freight rate (`foreign_routes.py`).
+yards can build, and its capital is paid for through the freight rate (`sim/freight/`).
 """
 from sim.constants import declare
 from sim.world import balance_of_payments

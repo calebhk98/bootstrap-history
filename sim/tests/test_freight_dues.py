@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.route_dues import dues_money_per_tonne, handling_money_per_tonne
+from sim.freight.rules import dues_money_per_tonne, handling_money_per_tonne
 from sim.geography import api as geography_api
 from sim.geography.api import dues_hours_per_tonne
 

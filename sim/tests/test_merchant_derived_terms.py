@@ -9,9 +9,13 @@ QUICK_TOPIC = True
 import math
 import unittest
 
-from sim.engine import foreign_route_choice, foreign_routes, foreign_traders
+from sim.freight import route_choice
+from sim.freight.constants import SEA_MODE
+from sim.freight.module import Freight
+from sim.freight.route import Leg, Route
 from sim.geography import freight_cost, provisions, sea_freight, transport
 from sim.geography import api as geography
+from sim.tests import module_harness
 from sim.world import market, merchant_house, merchant_terms
 
 CART = transport.draught_freight_physical_inputs(transport.OX, 2, transport.CART, transport.DIRT_TRACK)
@@ -48,48 +52,28 @@ class CrewChoiceTests(unittest.TestCase):
         self.assertEqual(inputs.carried_kg_per_day, provisions.person_provisions_kg_per_day(crew + extra))
 
 
-class _Labour:
-    def wage_per_hour(self, trade):
-        return 2.0
-
-
-class _Economy(foreign_routes.ForeignRoutesMixin):
-    LAND_FREIGHT_TEAM_SIZE = 2.0
-    FREIGHT_FEED_PRICE_MATERIAL = "wheat_kg"
-    FREIGHT_DRIVER_WAGE_TRADE = "labourer"
-
-    def __init__(self, grain_price=1.0):
-        self.prices = {"wheat_kg": grain_price, "wood_kg": 0.5, "coal_kg": 0.4, "iron_bar_kg": 8.0,
-                       "ox": 4000.0, "mule": 3000.0}
-        self.labour = _Labour()
-        self.world_map = geography.open_map()
-
-    def _material_prices(self):
-        return self.prices
-
-    def _material_price_per_kg(self, tag):
-        return self.prices.get(tag)
-
-    def _land_freight_physical_inputs(self):
-        return transport.draught_freight_physical_inputs(transport.OX, 2, transport.CART, transport.DIRT_TRACK)
-
-    def market_rate(self):
-        return 0.05
+def _economy(grain_price=1.0):
+    """The freight module over a price table, a flat wage, the market rate and the real map."""
+    prices = {"wheat_kg": grain_price, "wood_kg": 0.5, "coal_kg": 0.4, "iron_bar_kg": 8.0, "ox": 4000.0, "mule": 3000.0}
+    world_map = geography.open_map()
+    return module_harness.build(Freight, views={
+        "material_prices": lambda: prices, "material_price": lambda tag: prices.get(tag), "wage": lambda trade: 2.0,
+        "market_rate": lambda: 0.05, "legacy_world_map": lambda: world_map})
 
 
 class EngineCrewTests(unittest.TestCase):
 
     def test_the_hull_is_crewed_beyond_its_rig_where_the_cargo_it_risks_is_dear(self):
-        cheap, dear = _Economy(0.001), _Economy(100.0)
+        cheap, dear = _economy(0.001), _economy(100.0)
         rig = sea_freight.crew_to_sail(sea_freight.MERCHANT_HULL_CARGO_TONNES)
-        self.assertGreaterEqual(cheap._sea_crew(), rig)
-        self.assertGreater(dear._sea_crew(), cheap._sea_crew())
+        self.assertGreaterEqual(cheap.sea_crew(), rig)
+        self.assertGreater(dear.sea_crew(), cheap.sea_crew())
 
     def test_the_carrier_model_and_the_loss_rate_use_the_chosen_crew(self):
-        economy = _Economy(100.0)
-        inputs, _prices, _days, loss = economy._carrier_models()[foreign_routes.SEA_MODE]
-        self.assertEqual(inputs.carried_kg_per_day, provisions.person_provisions_kg_per_day(economy._sea_crew()))
-        self.assertEqual(loss, sea_freight.hull_loss_per_thousand_km(economy._sea_crew()))
+        economy = _economy(100.0)
+        inputs, _prices, _days, loss = economy.carrier_models()[SEA_MODE]
+        self.assertEqual(inputs.carried_kg_per_day, provisions.person_provisions_kg_per_day(economy.sea_crew()))
+        self.assertEqual(loss, sea_freight.hull_loss_per_thousand_km(economy.sea_crew()))
 
 
 class RestockingTests(unittest.TestCase):
@@ -129,16 +113,16 @@ class RestockingTests(unittest.TestCase):
                            grain_per_tonne)
 
     def test_a_hull_is_not_restocked_at_sea(self):
-        economy = _Economy()
-        fee = economy._freight_handling_costs()["sail"]
-        legs = (foreign_routes.Leg("a", "b", "sail", 1000.0, 1000.0, 9.0),)
-        priced = economy._with_carried_provisions(foreign_routes.Route(legs))
-        share = provisions.delivered_share(economy._carrier_models()["sail"][0], 1000.0)
+        economy = _economy()
+        fee = economy.freight_handling_costs()["sail"]
+        legs = (Leg("a", "b", "sail", 1000.0, 1000.0, 9.0),)
+        priced = economy.with_carried_provisions(Route(legs))
+        share = provisions.delivered_share(economy.carrier_models()["sail"][0], 1000.0)
         self.assertAlmostEqual(priced.legs[0].cost_per_tonne, fee + (1000.0 - fee) / share, places=6)
 
     def test_a_land_leg_of_any_length_keeps_a_positive_share(self):
-        legs = (foreign_routes.Leg("a", "b", "cart", 1.0e5, 1.0e5, 9.0),)
-        priced = _Economy()._with_carried_provisions(foreign_routes.Route(legs))
+        legs = (Leg("a", "b", "cart", 1.0e5, 1.0e5, 9.0),)
+        priced = _economy().with_carried_provisions(Route(legs))
         self.assertLess(priced.legs[0].cost_per_tonne, float("inf"))
 
 
@@ -157,7 +141,7 @@ class RouteChoiceTests(unittest.TestCase):
         def share_of(mode, route):
             return {"pack": 0.5, "cart": 0.95}[mode]
         self.assertEqual(search(base), "pack")
-        self.assertEqual(foreign_route_choice.choose_route(search, price, base, share_of), "cart")
+        self.assertEqual(route_choice.choose_route(search, price, base, share_of), "cart")
 
     def test_the_cheaper_priced_route_of_those_tried_is_kept(self):
         calls = []
@@ -166,13 +150,13 @@ class RouteChoiceTests(unittest.TestCase):
             calls.append(dict(rates))
             return "far" if len(calls) == 1 else "near"
         prices = {"far": 5.0, "near": 9.0}
-        chosen = foreign_route_choice.choose_route(
+        chosen = route_choice.choose_route(
             search, prices.get, {"a": 1.0}, lambda mode, route: 0.5 if route is None else 0.25)
         self.assertEqual(len(calls), 2)
         self.assertEqual(chosen, "far")
 
     def test_no_route_is_none(self):
-        self.assertIsNone(foreign_route_choice.choose_route(lambda rates: None, lambda route: 0.0, {"a": 1.0},
+        self.assertIsNone(route_choice.choose_route(lambda rates: None, lambda route: 0.0, {"a": 1.0},
                                                             lambda mode, route: 1.0))
 
     def test_the_rates_searched_are_divided_by_the_share_delivered(self):
@@ -181,7 +165,7 @@ class RouteChoiceTests(unittest.TestCase):
         def search(rates):
             seen.append(dict(rates))
             return "route"
-        foreign_route_choice.choose_route(search, lambda route: 1.0, {"a": 2.0}, lambda mode, route: 0.5)
+        route_choice.choose_route(search, lambda route: 1.0, {"a": 2.0}, lambda mode, route: 0.5)
         self.assertAlmostEqual(seen[0]["a"], 4.0)
 
     def test_an_impassable_mode_is_not_searched_as_cheap(self):
@@ -190,7 +174,7 @@ class RouteChoiceTests(unittest.TestCase):
         def search(rates):
             seen.append(dict(rates))
             return "route"
-        foreign_route_choice.choose_route(search, lambda route: 1.0, {"a": 2.0}, lambda mode, route: 0.0)
+        route_choice.choose_route(search, lambda route: 1.0, {"a": 2.0}, lambda mode, route: 0.0)
         self.assertEqual(seen[0]["a"], float("inf"))
 
 
@@ -296,36 +280,36 @@ class WaitTests(unittest.TestCase):
         self.assertAlmostEqual(merchant_terms.season_wait_years(0.5), 0.125)
 
 
-class _Traders(foreign_traders.ForeignTradersMixin):
-    """The cycle of a route as the engine reads it, with its fleet and its market given."""
+class _Traders(Freight):
+    """The cycle of a route as the module reads it, with its fleet and its market given."""
 
     def __init__(self, carriers=10.0):
         self.carriers = carriers
 
-    def _route_carriers(self, civilization_id, route):
+    def route_carriers(self, civilization_id, route):
         return self.carriers
 
-    def _route_houses(self, civilization_id, route):
+    def route_houses(self, civilization_id, route):
         return self.carriers
 
-    def _route_cargo_tonnes(self, route):
+    def route_cargo_tonnes(self, route):
         return 100.0
 
 
 class CycleTests(unittest.TestCase):
 
     def test_a_route_with_sea_legs_waits_for_the_season_and_one_without_does_not(self):
-        sea = foreign_routes.Route((foreign_routes.Leg("a", "b", "sail", 1000.0, 1.0, 10.0),))
-        land = foreign_routes.Route((foreign_routes.Leg("a", "b", "cart", 1000.0, 1.0, 10.0),))
+        sea = Route((Leg("a", "b", "sail", 1000.0, 1.0, 10.0),))
+        land = Route((Leg("a", "b", "cart", 1000.0, 1.0, 10.0),))
         traders = _Traders(1.0e9)
-        self.assertGreater(traders._trader_cycle_years(sea), traders._trader_cycle_years(land))
-        self.assertAlmostEqual(traders._trader_cycle_years(land), 10.0 / 365.0, places=6)
+        self.assertGreater(traders.trader_cycle_years(sea), traders.trader_cycle_years(land))
+        self.assertAlmostEqual(traders.trader_cycle_years(land), 10.0 / 365.0, places=6)
 
     def test_selling_into_a_thin_market_lengthens_the_cycle(self):
-        land = foreign_routes.Route((foreign_routes.Leg("a", "b", "cart", 1000.0, 1.0, 10.0),))
+        land = Route((Leg("a", "b", "cart", 1000.0, 1.0, 10.0),))
         traders = _Traders(1.0e9)
-        thick = traders._trader_cycle_years(land, destination_demand_tonnes=1.0e9)
-        thin = traders._trader_cycle_years(land, destination_demand_tonnes=100.0)
+        thick = traders.trader_cycle_years(land, destination_demand_tonnes=1.0e9)
+        thin = traders.trader_cycle_years(land, destination_demand_tonnes=100.0)
         self.assertGreater(thin, thick)
 
 

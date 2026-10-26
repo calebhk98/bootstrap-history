@@ -123,12 +123,12 @@ def partner_landed_price(sim, civilization_id, material):
     price = facts["prices_in_home_money"].get(material)
     if material not in facts["solved_materials"] or not price:
         return None
-    route = sim._material_route(sim.partner_civ(civilization_id), material, facts["route"])
+    route = sim.view("material_route")(sim.partner_civ(civilization_id), material, facts["route"])
     if route is None:
         return None
     per_tonne = price / tonnes_per_unit(material) * sim.partner_price_level(civilization_id)
-    return (per_tonne * (1.0 + sim._trader_cost_share(route, material, civilization_id))
-            + sim._agent_cost_per_tonne(civilization_id, route) + route.cost_per_tonne)
+    return (per_tonne * (1.0 + sim.view("trader_cost_share")(route, material, civilization_id))
+            + sim.view("trader_agent_cost")(civilization_id, route) + route.cost_per_tonne)
 
 
 @bridge_view("partner_carry", kind=QUOTE)
@@ -136,8 +136,8 @@ def partner_carry(sim, civilization_id, material):
     """(money per tonne to carry a load out of a partner by the agents at the two ends and the freight, the share
     the route loses on the way)."""
     facts = sim._foreign_economy_facts(civilization_id)
-    carry_per_tonne = sim._agent_cost_per_tonne(civilization_id, facts["route"]) + facts["freight_per_tonne"]
-    return carry_per_tonne, sim._cargo_lost_share(facts["route"], material, civilization_id)
+    carry_per_tonne = sim.view("trader_agent_cost")(civilization_id, facts["route"]) + facts["freight_per_tonne"]
+    return carry_per_tonne, sim.view("cargo_lost_share")(facts["route"], material, civilization_id)
 
 
 @bridge_view("partner_catch_chance", kind=QUOTE)

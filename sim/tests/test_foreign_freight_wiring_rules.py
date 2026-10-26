@@ -1,17 +1,18 @@
-"""How a society's own figures reach foreign freight and the coin that pays for it (Complaints/326, 323): each method is
-called on a stand-in that holds only what it reads. The carrier's physics is in test_foreign_freight_balance, the domestic
-haul in test_freight_domestic_haul."""
+"""How a society's own figures reach foreign freight and the coin that pays for it (Complaints/326, 323): the freight module's
+mode costs, handling costs and route quotes on plain views and a written-out carrier table, the flow imbalance as a rule,
+and the coin settlement on a stand-in that holds only what it reads. The carrier's physics is in test_foreign_freight_balance,
+the domestic haul in test_freight_domestic_haul."""
 QUICK_TOPIC = True
 
 import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine import foreign_routes
-from sim.engine.domestic_haul import DomesticHaulMixin
 from sim.engine.foreign_payments import ForeignPaymentsMixin
-from sim.engine.foreign_routes import ForeignRoutesMixin
+from sim.freight import models, rules
+from sim.freight.module import Freight
 from sim.geography import freight_cost, transport
+from sim.tests import module_harness
 
 CART = transport.draught_freight_physical_inputs(transport.OX, 2, transport.CART, transport.DIRT_TRACK)
 SAIL_INPUTS = CART
@@ -19,21 +20,27 @@ PRICES = freight_cost.CarrierPrices(vehicle=100.0, animals=2000.0)
 LAND_WAGE, SEA_WAGE = 1.0, 3.0
 
 
-def freight_game(rate=0.1):
-    return SimpleNamespace(
-        FREIGHT_DRIVER_WAGE_TRADE="driver",
-        labour=SimpleNamespace(wage_per_hour=lambda trade: LAND_WAGE if trade == "driver" else SEA_WAGE),
-        market_rate=lambda: rate, world_map=None,
-        _material_price_per_kg=lambda material: 0.5, _carrier_feed_material=lambda mode: "feed",
-        _carrier_models=lambda: {"cart": (CART, PRICES, 250.0, 0.0), "sail": (SAIL_INPUTS, PRICES, 250.0, 0.0),
-                                 "drove": (CART, freight_cost.CarrierPrices(0.0), 250.0, 0.0)})
+class _Carriers(Freight):
+    """The freight module with its carrier table written out."""
+
+    def carrier_models(self):
+        return {"cart": (CART, PRICES, 250.0, 0.0), "sail": (SAIL_INPUTS, PRICES, 250.0, 0.0),
+                "drove": (CART, freight_cost.CarrierPrices(0.0), 250.0, 0.0)}
+
+    def carrier_feed_material(self, mode):
+        return "feed"
+
+
+def freight_game(rate=0.1, implementation=_Carriers):
+    return module_harness.build(implementation, views={
+        "wage": lambda trade: SEA_WAGE if trade == "sailor" else LAND_WAGE, "market_rate": lambda: rate,
+        "legacy_world_map": lambda: None, "material_price": lambda material: 0.5})
 
 
 def mode_costs(game, **kwargs):
-    with mock.patch.object(foreign_routes, "walking_cargo_modes", return_value=["drove"]), \
-         mock.patch.object(foreign_routes, "modes_carrying", return_value=["cart", "sail"]), \
-         mock.patch.object(foreign_routes, "SEA_MODE", "sail"):
-        return ForeignRoutesMixin._freight_mode_costs(game, **kwargs)
+    with mock.patch.object(models, "walking_cargo_modes", return_value=["drove"]), \
+         mock.patch.object(models, "modes_carrying", return_value=["cart", "sail"]):
+        return game.freight_mode_costs(**kwargs)
 
 
 class FreightModeCostTests(unittest.TestCase):
@@ -61,8 +68,7 @@ class FreightModeCostTests(unittest.TestCase):
 
 class FlowImbalanceTests(unittest.TestCase):
     def imbalance(self, book):
-        game = SimpleNamespace(state=SimpleNamespace(economy=SimpleNamespace(foreign_market_book={"p": book})))
-        return ForeignRoutesMixin._foreign_flow_imbalance(game, "p")
+        return rules.foreign_flow_imbalance(book.values())
 
     def test_flows_that_match_are_balanced(self):
         self.assertEqual(self.imbalance({"iron": {"trade_tonnes": 10.0}, "cloth": {"trade_tonnes": -10.0}}), 0.0)
@@ -76,38 +82,46 @@ class FlowImbalanceTests(unittest.TestCase):
 
 class RouteFreightTests(unittest.TestCase):
     def test_a_route_costs_what_its_route_says_and_no_route_is_infinite(self):
-        game = SimpleNamespace(_foreign_route=lambda civilization, imbalance=None: SimpleNamespace(cost_per_tonne=12.0))
-        self.assertEqual(ForeignRoutesMixin._route_freight_per_tonne(game, "p"), 12.0)
-        game = SimpleNamespace(_foreign_route=lambda civilization, imbalance=None: None)
-        self.assertEqual(ForeignRoutesMixin._route_freight_per_tonne(game, "p"), float("inf"))
+        class Found(Freight):
+            def foreign_route(self, civilization, imbalance=None, cargo="goods"):
+                return SimpleNamespace(cost_per_tonne=12.0)
+
+        class NotFound(Freight):
+            def foreign_route(self, civilization, imbalance=None, cargo="goods"):
+                return None
+        self.assertEqual(module_harness.build(Found).route_freight_per_tonne({"id": "p"}), 12.0)
+        self.assertEqual(module_harness.build(NotFound).route_freight_per_tonne({"id": "p"}), float("inf"))
 
     def test_the_imbalance_asked_for_reaches_the_route(self):
         asked = []
-        game = SimpleNamespace(_foreign_route=lambda civilization, imbalance=None: asked.append(imbalance) or None)
-        ForeignRoutesMixin._route_freight_per_tonne(game, "p", 0.5)
+
+        class Asked(Freight):
+            def foreign_route(self, civilization, imbalance=None, cargo="goods"):
+                asked.append(imbalance)
+        module_harness.build(Asked).route_freight_per_tonne({"id": "p"}, 0.5)
         self.assertEqual(asked, [0.5])
 
 
 class DuesAndStockRouteTests(unittest.TestCase):
-    def test_a_haul_pays_the_modes_dues_hours_at_the_carriers_wage(self):
-        game = SimpleNamespace(_freight_handling_costs=lambda: {"cart": 6.0})
-        self.assertEqual(DomesticHaulMixin.domestic_haul_dues_per_tonne(game, "cart"), 6.0)
-        self.assertEqual(DomesticHaulMixin.domestic_haul_dues_per_tonne(game, "sail"), 0.0)
-
     def test_handling_costs_are_the_geographys_dues_hours_at_the_land_wage(self):
-        game = SimpleNamespace(FREIGHT_DRIVER_WAGE_TRADE="driver", world_map=None,
-                               labour=SimpleNamespace(wage_per_hour=lambda trade: 2.0))
-        with mock.patch.object(foreign_routes, "dues_hours_per_tonne", return_value={"cart": 3.0}), \
-             mock.patch.object(foreign_routes, "handling_money_per_tonne", lambda hours, wage, sea, port: {"cart": hours["cart"] * wage}):
-            self.assertEqual(ForeignRoutesMixin._freight_handling_costs(game), {"cart": 6.0})
+        game = freight_game()
+        with mock.patch.object(models, "dues_hours_per_tonne", return_value={"cart": 3.0}), \
+             mock.patch.object(rules, "handling_money_per_tonne", lambda hours, wage, sea, port: {"cart": hours["cart"] * wage}):
+            self.assertEqual(game.freight_handling_costs(), {"cart": 3.0 * LAND_WAGE})
 
     def test_stock_takes_its_own_route_and_goods_the_one_already_found(self):
         asked = []
-        game = SimpleNamespace(_cargo_class=lambda material: "goods" if material == "iron" else "living_stock",
-                               _foreign_route=lambda civilization, imbalance=None, cargo="goods": asked.append(cargo) or "stock route")
-        found = object()
-        self.assertIs(DomesticHaulMixin._material_route(game, {}, "iron", found), found)
-        self.assertEqual(DomesticHaulMixin._material_route(game, {}, "ox", found), "stock route")
+
+        class Routed(Freight):
+            def cargo_class(self, material):
+                return "goods" if material == "iron" else "living_stock"
+
+            def foreign_route(self, civilization, imbalance=None, cargo="goods"):
+                asked.append(cargo)
+                return "stock route"
+        module, found = module_harness.build(Routed), object()
+        self.assertIs(module.material_route({}, "iron", found), found)
+        self.assertEqual(module.material_route({}, "ox", found), "stock route")
         self.assertEqual(asked, ["living_stock"])
 
 

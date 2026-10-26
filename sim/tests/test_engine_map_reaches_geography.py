@@ -1,14 +1,17 @@
 """Complaints 409 and 410, as wiring on stand-in selves: the engine's map is the base map opened with the installed mods
-in load order (`GeographyPortMixin.world_map`), and the foreign haul asks geography about that map (`_foreign_route`
-resolves the partner's tiles on it, `_haul_route` searches and reads modes on it). Collaborators are recorders; no game."""
+in load order (`GeographyPortMixin.world_map`), and the foreign haul asks geography about that map (the freight module's
+`foreign_route` resolves the partner's tiles on it, `haul_route` searches and reads modes on it). Collaborators are
+recorders; no game."""
 QUICK_TOPIC = True
 
 import types
 import unittest
 from unittest import mock
 
-from sim.engine import foreign_routes, geography_port
-from sim.engine.foreign_routes import ForeignRoutesMixin
+from sim.engine import geography_port
+from sim.freight import routes
+from sim.freight.module import Freight
+from sim.tests import module_harness
 
 MAP = object()
 
@@ -35,14 +38,23 @@ class WorldMapTests(unittest.TestCase):
         self.assertIs(geography_port.GeographyPortMixin.world_map.fget(standin), kept)
 
 
-class HaulRouteTests(unittest.TestCase):
-    def standin(self):
-        return types.SimpleNamespace(
-            world_map=MAP, civ={"id": "home"}, held_and_running=lambda include_starting=True: frozenset({"home_tech"}),
-            _freight_mode_costs=lambda imbalance: {"cart": 1.0},
-            _freight_handling_costs=lambda: {}, _with_carried_provisions=lambda route, rates, searched: route,
-            _share_delivered_on=lambda mode, route: 1.0)
+class _Searched(Freight):
+    """The freight module with its mode costs and provisions written out."""
 
+    def freight_mode_costs(self, imbalance=1.0, modes=None, cargo=None):
+        return {"cart": 1.0}
+
+    def freight_handling_costs(self):
+        return {}
+
+    def with_carried_provisions(self, route, base_rates=None, searched_rates=None):
+        return route
+
+    def share_delivered_on(self, mode, route):
+        return 1.0
+
+
+class HaulRouteTests(unittest.TestCase):
     def haul(self):
         found = object()
         asked = {}
@@ -50,12 +62,15 @@ class HaulRouteTests(unittest.TestCase):
         def choose(search, cost, mode_costs, share):
             return search(mode_costs)
 
-        with mock.patch.object(foreign_routes, "tiles_held", return_value=["home_tile"]) as held, \
-                mock.patch.object(foreign_routes, "usable_route_modes", return_value=["cart"]) as modes, \
-                mock.patch.object(foreign_routes, "route_over_tiles", return_value=found) as searched, \
-                mock.patch.object(foreign_routes, "route_from_geography", side_effect=lambda route: route), \
-                mock.patch.object(foreign_routes.foreign_route_choice, "choose_route", side_effect=choose):
-            ForeignRoutesMixin._haul_route(self.standin(), ["origin_tile"], 0.0, "goods", frozenset({"foreign_tech"}))
+        module = module_harness.build(_Searched, views={
+            "legacy_world_map": lambda: MAP, "civilisation": lambda: {"id": "home"},
+            "held_techniques": lambda include_starting: frozenset({"home_tech"})})
+        with mock.patch.object(routes, "tiles_held", return_value=["home_tile"]) as held, \
+                mock.patch.object(routes, "usable_route_modes", return_value=["cart"]) as modes, \
+                mock.patch.object(routes, "route_over_tiles", return_value=found) as searched, \
+                mock.patch.object(routes, "route_from_geography", side_effect=lambda route: route), \
+                mock.patch.object(routes, "choose_route", side_effect=choose):
+            module.haul_route(["origin_tile"], 0.0, "goods", frozenset({"foreign_tech"}))
         asked.update(held=held, modes=modes, searched=searched)
         return asked
 
@@ -75,13 +90,19 @@ class HaulRouteTests(unittest.TestCase):
 class ForeignRouteTests(unittest.TestCase):
     def test_the_partners_tiles_are_resolved_on_the_engine_map_and_hauled(self):
         hauled = []
-        standin = types.SimpleNamespace(
-            world_map=MAP, nodes={}, _foreign_flow_imbalance=lambda civilization_id: 0.25,
-            _haul_route=lambda *arguments: hauled.append(arguments) or "route")
+
+        class Hauled(Freight):
+            def foreign_flow_imbalance(self, civilization_id):
+                return 0.25
+
+            def haul_route(self, *arguments):
+                hauled.append(arguments)
+                return "route"
+        module = module_harness.build(Hauled, views={
+            "legacy_world_map": lambda: MAP, "techniques_with_results": lambda techniques: frozenset({"a"})})
         partner = {"id": "partner", "starting_techs": ["a"]}
-        with mock.patch.object(foreign_routes, "tiles_held", return_value=["partner_tile"]) as held, \
-                mock.patch.object(foreign_routes.action_results, "expand", return_value=frozenset({"a"})):
-            route = ForeignRoutesMixin._foreign_route(standin, partner)
+        with mock.patch.object(routes, "tiles_held", return_value=["partner_tile"]) as held:
+            route = module.foreign_route(partner)
         held.assert_called_once_with(partner, MAP)
         self.assertEqual(route, "route")
         self.assertEqual(hauled, [(["partner_tile"], 0.25, "goods", frozenset({"a"}))])

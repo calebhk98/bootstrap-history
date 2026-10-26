@@ -31,7 +31,7 @@ docstring first line.
 | Seats and the founder | `core_seats`, `seat_*`, `state_seat`, `state_holdings`, `state_demand`, `founder_sales`, `cash_*`, `goals`, `fog` |
 | Markets and prices | `prices`, `solve_prices*`, `making_cost`, `long_run_costs`, `rent_standin`, `solve_cache`, `goods_market_*`, `market_*`, `incumbent_prices`, `producer_costs`, `entry_cost`, `wage_*`, `money_units`, `real_*` |
 | Node money (revenue, upkeep, capital) | `node_*`, `industry_*`, `concern_*` |
-| Foreign trade, freight, coin | `foreign_*`, `economy_freight`, `domestic_haul`, `trader_cargo`, `coin_*`, `theft_*` |
+| Foreign trade, freight, coin | `foreign_*`, `trader_cargo`, `sim/freight/` (the freight module), `sim/coin/` |
 | Economy port | `economy_port*`; older money, credit, mining and goods code is `economy_*` |
 | Labour port | `labour_port`, `staff_replacement`, `projects_staffing*` |
 | Geography port | `geography_port`, `ways`, `works`, `held_works`, `colonies`, `mine_deposits`, `food_supply` |
