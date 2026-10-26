@@ -10,11 +10,11 @@ from sim.seats.api import EndRun
 
 from . import commands
 from .module import Polity
-from .state import STANDING, PolitySeat
+from .state import STANDING, VALUES, PolitySeat, PolityWorld
 
 READS_BY_OWNER = {
 	"core": ("year", "civilisation", "events_enabled", "automation", "acting_seat", "danger_lines", "legacy_dice", "legacy_said_once",
-	         "legacy_game", "legacy_value_weights", "legacy_constant", "legacy_act_as", "money_text", "mass_text"),
+	         "legacy_game", "legacy_constant", "legacy_act_as", "money_text", "mass_text"),
 	"actors": ("state_treasury", "legacy_actor_registry", "legacy_actors_state", "legacy_agent_world", "country_world"),
 	"ledger": ("acting_balance", "legacy_acting_household", "legacy_household_actor", "transfer_listening"),
 	"mechanics": ("effect_sum", "effect_values", "effect_factor", "effect_best", "running_mechanics", "mechanic",
@@ -36,8 +36,9 @@ _LIVE = dict(cached=False)
 _SEAT = dict(seat_scoped=True, cached=False)
 
 MODULE_SPECS = (ModuleSpec(
-	"polity", Polity, channels=(STANDING,), seat_state=PolitySeat,
+	"polity", Polity, channels=(STANDING, VALUES), world_state=PolityWorld, seat_state=PolitySeat,
 	publishes=(
+		ViewSpec("value_weights", "value_weights", channels=(VALUES,)),
 		ViewSpec("standing", "standing", **_SEAT),
 		ViewSpec("eminence", "eminence", **_SEAT),
 		ViewSpec("state_reach", "state_reach", **_LIVE),
@@ -75,7 +76,7 @@ MODULE_SPECS = (ModuleSpec(
 		(commands.AnswerStateDemands, "answer_state_demands"), (commands.WithdrawFromPublicLife, "withdraw_command"),
 		(commands.SettleWithState, "settle_command"), (commands.CarryOutTransfers, "transfers_command"),
 		(commands.RenewStanding, "renew_command"), (commands.CloseStandingYear, "close_year_command"),
-		(commands.ShiftValueWeight, "shift_value_weight"), (commands.StrikeFromForce, "strike_from_force"),
+		(commands.SetValueWeights, "set_value_weights"), (commands.ShiftValueWeight, "shift_value_weight"), (commands.StrikeFromForce, "strike_from_force"),
 		(commands.SetLandTakenMemory, "set_land_taken_memory"), (commands.RegisterPeople, "register_people"),
 		(commands.SetGrievanceReference, "set_grievance_reference"), (commands.ResetStateUnrest, "reset_state_unrest"),
 		(commands.SetTileReading, "set_tile_reading"), (commands.RecordRising, "record_rising"),

@@ -38,7 +38,7 @@ class RevenueStandIn(ProductionMixin):
         self.state = types.SimpleNamespace(
             scenario=types.SimpleNamespace(year=100), economy=types.SimpleNamespace(output_per_head=1.0),
             holdings=types.SimpleNamespace(farm_hectares=0.0), projects=types.SimpleNamespace(),
-            household=self.household, governance=types.SimpleNamespace(gov=0.0))
+            household=self.household)
         self.founder_alive = True
         self.labour = types.SimpleNamespace(director_hours_committed=lambda: 0.0, wage_signature=lambda: 0)
 

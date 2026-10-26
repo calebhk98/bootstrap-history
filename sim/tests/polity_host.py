@@ -13,7 +13,7 @@ from types import SimpleNamespace
 from typing import Any, Dict, Optional
 
 from sim.polity.module import Polity
-from sim.polity.state import PolitySeat
+from sim.polity.state import PolitySeat, PolityWorld
 from sim.tests import module_harness
 
 VALUE_WEIGHTS = {"w_magic_fear": 0.5, "w_religious_rigidity": 0.5, "w_labour_saving": 0.0, "w_novelty": 0.0, "w_military": 0.0,
@@ -44,7 +44,7 @@ def defaults(seed: int) -> Dict[str, Any]:
 		"year": 100, "civilisation": {"id": "rome", "starting_tax_share": 0.1}, "events_enabled": True,
 		"automation": {"manual": False, "bounty_set": set()}, "acting_seat": "founder",
 		"danger_lines": {"eminence": 100.0, "suspicion": 100.0}, "legacy_dice": random.Random(seed), "legacy_said_once": set(),
-		"legacy_game": SimpleNamespace(), "legacy_value_weights": dict(VALUE_WEIGHTS), "legacy_constant": lambda name: CONSTANTS[name],
+		"legacy_game": SimpleNamespace(), "legacy_constant": lambda name: CONSTANTS[name],
 		"legacy_act_as": _same_seat, "money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),
 		"mass_text": lambda amount, digits=0, grouped=False, short=False, unit="tonne": "%.1f %s" % (amount, unit),
 		"state_treasury": _government(), "legacy_actor_registry": SimpleNamespace(home_actors=lambda kind: [],
@@ -65,14 +65,16 @@ def defaults(seed: int) -> Dict[str, Any]:
 	}
 
 
-def build(seed: int = 1, answers: Optional[Dict[type, Any]] = None, seat: Optional[PolitySeat] = None, **views: Any) -> Polity:
+def build(seed: int = 1, answers: Optional[Dict[type, Any]] = None, seat: Optional[PolitySeat] = None,
+          value_weights: Optional[Dict[str, float]] = None, **views: Any) -> Polity:
 	"""The module with `views` over the quiet defaults, a fresh seat unless given, and `answers`, the replies of owners to
-	commands keyed by command class."""
+	commands keyed by command class; `value_weights` is the society's, held as given (the defaults when not given)."""
 	every_view = defaults(seed)
 	every_view.update(views)
-	return module_harness.build(Polity, views=every_view, answers=answers, world=None, seat=seat or PolitySeat(), module_id="polity")
+	return module_harness.build(Polity, views=every_view, answers=answers, world=PolityWorld(dict(VALUE_WEIGHTS) if value_weights is None else value_weights),
+	                            seat=seat or PolitySeat(), module_id="polity")
 
 
 def shifting(weights: Dict[str, float]):
 	"""The answer the polity module gives `ShiftValueWeight` over this live dict of the society's value weights."""
-	return build(legacy_value_weights=weights).shift_value_weight
+	return build(value_weights=weights).shift_value_weight

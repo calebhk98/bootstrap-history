@@ -1,13 +1,13 @@
 """A seat: everything one player owns, held apart from the world.
 
-The root `SimulationState` fields `household`, `projects`, `founder`, `holdings`, `governance` and
+The root `SimulationState` fields `household`, `projects`, `founder`, `holdings` and
 `seat_progress` are aliases of the acting seat's objects, so mechanism code keeps reading them; `bind_seat` points them at another seat.
 """
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional
 
 from sim.engine import state as state_module
-from sim.engine.state import FounderState, GovernanceState, HouseholdState, ProjectsState
+from sim.engine.state import FounderState, HouseholdState, ProjectsState
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
 
 FIRST_SEAT_ID = "founder"   # the one id the party-id constants agree on
@@ -23,7 +23,6 @@ class SeatState:
 	projects: ProjectsState
 	founder: Optional[FounderState] = None
 	holdings: HoldingsState = field(default_factory=HoldingsState)
-	governance: GovernanceState = field(default_factory=GovernanceState)
 	seat_progress: SeatProgressState = field(default_factory=SeatProgressState)
 	goal: Optional[str] = None
 	country: Optional[str] = None   # the civilisation id the seat belongs to; None is the game's own country
@@ -60,7 +59,6 @@ def bind_seat(state, seat_id: str) -> None:
 	state.projects = seat.projects
 	state.founder = seat.founder
 	state.holdings = seat.holdings
-	state.governance = seat.governance
 	state.seat_progress = seat.seat_progress
 
 

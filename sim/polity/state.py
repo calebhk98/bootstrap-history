@@ -1,8 +1,14 @@
 """The state polity owns: one seat's standing with its society and with the state."""
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Dict, Optional
 
 STANDING = "standing"     # version channel: the seat's reputation, scandal, eminence, familiarity and protection
+VALUES = "values"         # version channel: the society's value weights
+
+
+@dataclass
+class PolityWorld:
+	value_weights: Dict[str, float] = field(default_factory=dict)   # the society's, from its civilisation, moved by ShiftValueWeight
 
 
 @dataclass

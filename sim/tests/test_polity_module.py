@@ -59,14 +59,14 @@ class SeatCommands(unittest.TestCase):
 class ValueWeights(unittest.TestCase):
     def test_a_weight_moves_by_the_delta_and_is_held_between_the_floor_and_the_ceiling(self):
         weights = {"w_novelty": 0.9}
-        module = polity_host.build(legacy_value_weights=weights)
+        module = polity_host.build(value_weights=weights)
         self.assertEqual(module.shift_value_weight(ShiftValueWeight("w_novelty", 0.1)), (0.9, 1.0))
         before, after = module.shift_value_weight(ShiftValueWeight("w_novelty", 100.0))
         self.assertEqual(after, weights["w_novelty"])
         self.assertGreater(after, 1.0)
 
     def test_a_weight_the_society_lacks_is_refused_with_a_cause(self):
-        answer = polity_host.build(legacy_value_weights={}).shift_value_weight(ShiftValueWeight("w_nothing", 0.1))
+        answer = polity_host.build(value_weights={}).shift_value_weight(ShiftValueWeight("w_nothing", 0.1))
         self.assertIsInstance(answer, Refusal)
         self.assertEqual(answer.cause, "not_a_value_weight")
 

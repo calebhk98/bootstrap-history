@@ -27,6 +27,10 @@ class Polity(Reach, Notice, Protection, Eminence, Pressure, Demands, Groups, Tra
 		self._staff_reach_memo = {}       # line name -> the same
 		self._banned_materials_cache = {}
 
+	def value_weights(self):
+		"""The society's value weights, by name."""
+		return self.world.value_weights
+
 	# ---- the views of one seat's figures ----
 
 	def standing(self):
@@ -42,4 +46,4 @@ class Polity(Reach, Notice, Protection, Eminence, Pressure, Demands, Groups, Tra
 		return self.seat.eminence
 
 	def value_weight(self, key):
-		return self.needs.legacy_value_weights()[key]
+		return self.world.value_weights[key]

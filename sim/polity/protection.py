@@ -1,6 +1,6 @@
 """What defends a household against alarm and accusation, and the one lever against prominence.
 
-Needs: legacy_value_weights, effect_values, effect_sum, running_mechanics, revenue_estimate, standing_floor, founder, year,
+Needs: effect_values, effect_sum, running_mechanics, revenue_estimate, standing_floor, founder, year,
 danger_lines, send (RecordEvent)."""
 from sim.reporting.api import RecordEvent
 
@@ -13,7 +13,7 @@ class Protection:
 		"""Standing, office and money all protect: wealth buys advocates, priesthoods, magistracies and, in a society with a
 		high bribability, verdicts."""
 		needs = self.needs
-		weights = needs.legacy_value_weights()
+		weights = self.world.value_weights
 		protection = 0.0
 		for _node_id, patron_protection in needs.effect_values("patron_protection"):
 			protection += patron_protection * weights["patronage_weight"]

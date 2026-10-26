@@ -1,11 +1,11 @@
 """The commands other modules send polity: standing changes of the acting seat, the society's value weights and the records of
 the state of a country (its army, its tiles' unrest, its risings, its ruler).
 
-Needs: legacy_value_weights, legacy_constant, country_world; value weights are the society's own dict until polity holds it."""
+Needs: legacy_constant, country_world."""
 from sim.agents.api import army_raising
 from sim.refusal import Refusal
 
-from .state import STANDING
+from .state import STANDING, VALUES
 from .value_weight import VALUE_WEIGHT_CEILING, VALUE_WEIGHT_FLOOR, shifted
 
 
@@ -72,12 +72,17 @@ class Appliers:
 
 	# ---- the society's value weights ----
 
+	def set_value_weights(self, command):
+		self.world.value_weights = dict(command.weights)
+		self.bump(VALUES)
+
 	def shift_value_weight(self, command):
-		weights = self.needs.legacy_value_weights()
+		weights = self.world.value_weights
 		if command.field not in weights:
 			return Refusal("not_a_value_weight", "the society has no value weight %s" % command.field, field=command.field)
 		before = weights[command.field]
 		weights[command.field] = shifted(before, command.delta, VALUE_WEIGHT_FLOOR, VALUE_WEIGHT_CEILING)
+		self.bump(VALUES)
 		return before, weights[command.field]
 
 	# ---- the records of a country's state ----

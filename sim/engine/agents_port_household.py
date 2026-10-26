@@ -1,7 +1,7 @@
 """What the household actor asks of the engine: a state of its own when it is not handed one."""
 from typing import Any
 
-from .state import (EconomyState, FounderState, GovernanceState, HouseholdState,
+from .state import (EconomyState, FounderState, HouseholdState,
                     PopulationState, ProjectsState, ScenarioState, SimulationState)
 
 
@@ -13,7 +13,6 @@ class HouseholdPort:
             household=HouseholdState(capital=float(starting_capital)),
             projects=ProjectsState(),
             economy=EconomyState(),
-            governance=GovernanceState(),
             founder=FounderState(),
             scenario=ScenarioState(),
             population=PopulationState(),

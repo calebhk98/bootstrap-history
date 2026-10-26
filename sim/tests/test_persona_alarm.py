@@ -19,7 +19,7 @@ class Society:
 
     def __init__(self, protection=0.0, familiarity=0.0, persona_factor=1.0):
         self.module = polity_host.build(
-            seat=PolitySeat(protection=protection, familiarity=familiarity), legacy_value_weights=WEIGHTS,
+            seat=PolitySeat(protection=protection, familiarity=familiarity), value_weights=WEIGHTS,
             effect_factor=lambda channel, start=1.0, exponent=None: start * persona_factor if channel == "alarm_factor" else start)
 
     def alarm_of(self, node):

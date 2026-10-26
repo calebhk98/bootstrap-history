@@ -286,11 +286,6 @@ class EconomyState:
 
 
 @dataclass
-class GovernanceState:
-	"""Institutions and civic administrative units (the seat's governance standing is the polity module's)."""
-
-
-@dataclass
 class FounderState:
 	"""The founder's personal capacity and standing policy (whether the founder lives is the seats module's)."""
 	director_hours_spent_founder: float = 0.0
@@ -329,11 +324,10 @@ class PopulationState:
 @dataclass
 class SimulationState:
 	"""Root coordinator aggregating authoritative persistent subsystem states."""
-	# household, projects, founder, governance, holdings and seat_progress alias the acting seat's objects and are not saved (seats are)
+	# household, projects, founder, holdings and seat_progress alias the acting seat's objects and are not saved (seats are)
 	household: Optional[HouseholdState] = field(default=None, metadata={"alias": True})
 	projects: Optional[ProjectsState] = field(default=None, metadata={"alias": True})
 	economy: Optional[EconomyState] = None
-	governance: Optional[GovernanceState] = field(default=None, metadata={"alias": True})
 	holdings: Optional[HoldingsState] = field(default=None, metadata={"alias": True})
 	seat_progress: Optional[SeatProgressState] = field(default=None, metadata={"alias": True})
 	founder: Optional[FounderState] = field(default=None, metadata={"alias": True})
@@ -343,7 +337,6 @@ class SimulationState:
 	population: Optional[PopulationState] = None
 	actors: Optional[ActorsState] = None
 	_civ: Optional[str] = None
-	_weights: Dict[str, Any] = field(default_factory=dict)
 	_fog: bool = False
 	_fuzzy_estimates: bool = False
 	_fuzzy_salt: int = 0
@@ -361,7 +354,7 @@ class SimulationState:
 		from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
 		if not self.seats:   # built from the three objects directly: they become the first seat
 			self.acting_seat = FIRST_SEAT_ID
-			given = {name: getattr(self, name) for name in ("governance", "holdings", "seat_progress")}
+			given = {name: getattr(self, name) for name in ("holdings", "seat_progress")}
 			self.seats[FIRST_SEAT_ID] = SeatState(
 				self.household, self.projects, self.founder,
 				**{name: value for name, value in given.items() if value is not None})
@@ -387,7 +380,6 @@ ALL_STATE_CLASSES = (
 	HouseholdState,
 	ProjectsState,
 	EconomyState,
-	GovernanceState,
 	FounderState,
 	HoldingsState,
 	SeatProgressState,

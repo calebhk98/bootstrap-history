@@ -19,7 +19,6 @@ def _test_automatic_field_persistence():
 		ActiveProjectState,
 		EconomyState,
 		FounderState,
-		GovernanceState,
 		HoldingsState,
 		HouseholdState,
 		PopulationState,
@@ -43,7 +42,6 @@ def _test_automatic_field_persistence():
 	)
 	econ = EconomyState()
 	holdings = HoldingsState(farm_stock_kg=120.0)
-	gov = GovernanceState()
 	founder = FounderState(living_cost_paid=28.0)
 	scenario = ScenarioState(year=115)
 	pop = PopulationState(pop_children=20e6, pop_working_age=35e6, pop_elderly=10e6)
@@ -53,7 +51,6 @@ def _test_automatic_field_persistence():
 		projects=projects,
 		economy=econ,
 		holdings=holdings,
-		governance=gov,
 		founder=founder,
 		scenario=scenario,
 		population=pop,
@@ -154,7 +151,6 @@ def _test_runtime_type_reconstruction():
 		projects=projects,
 		economy=econ,
 		holdings=holdings,
-		governance=None,
 		founder=None,
 		scenario=None,
 	)
@@ -192,7 +188,6 @@ def _test_transient_cache_exclusion():
 		household=hh,
 		projects=projects,
 		economy=None,
-		governance=None,
 		founder=None,
 		scenario=None,
 	)
@@ -217,12 +212,12 @@ def _valid_save():
 	"""A save blob a state serializes to, with the metadata the writer adds, and the stand-in game that would load it."""
 	from types import SimpleNamespace
 	from sim.engine.state import (
-		EconomyState, FounderState, GovernanceState, HoldingsState, HouseholdState, PopulationState, ProjectsState,
+		EconomyState, FounderState, HoldingsState, HouseholdState, PopulationState, ProjectsState,
 		ScenarioState, SimulationState, serialize_state,
 	)
 	state = SimulationState(
 		household=HouseholdState(capital=1250.0), projects=ProjectsState(done={"stone_cutting"}), economy=EconomyState(),
-		holdings=HoldingsState(), governance=GovernanceState(), founder=FounderState(), scenario=ScenarioState(year=115),
+		holdings=HoldingsState(), founder=FounderState(), scenario=ScenarioState(year=115),
 		population=PopulationState())
 	state._goal = "aqueduct"
 	blob = serialize_state(state)

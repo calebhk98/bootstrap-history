@@ -138,8 +138,7 @@ class RevenueCacheTests(unittest.TestCase):
                                     freedmen=0, slaves=0)
         state = SimpleNamespace(
             scenario=SimpleNamespace(year=100), economy=SimpleNamespace(output_per_head=1.0),
-            holdings=SimpleNamespace(farm_hectares=0.0), projects=None, household=household,
-            governance=SimpleNamespace())
+            holdings=SimpleNamespace(farm_hectares=0.0), projects=None, household=household)
         game = SimpleNamespace(state=state, household=household, founder_alive=True, output_factor=1.0, view=lambda name: (lambda: {"governance": 0.0, "reputation": 1.0}), pop_scale=1.0, real_output_per_head=lambda: 1.0, state_funding=lambda: 0.0, home_price_level=lambda: 1.0,
                                signature=1.0, committed=0.0, computed=[], _compute_revenue_uncached=None)
         game.labour = SimpleNamespace(director_hours_committed=lambda: game.committed, wage_signature=lambda: game.signature)

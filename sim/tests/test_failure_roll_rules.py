@@ -28,7 +28,7 @@ class RollSim(CompletionMixin):
     def __init__(self, draw, risk_by_attempt):
         self.nodes = {NODE_ID: {}}
         self.state = SimpleNamespace(projects=SimpleNamespace(failed_attempts={NODE_ID: 0}), household=None,
-                                     scenario=None, governance=None)
+                                     scenario=None)
         self.rng = RecordingRandom(draw)
         self.risk_by_attempt = risk_by_attempt
         self.rolled_against = []

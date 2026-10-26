@@ -6,7 +6,6 @@ directly through authoritative subsystem owners:
   - self.state.household
   - self.state.projects
   - self.state.economy
-  - self.state.governance
   - self.state.founder
   - self.state.scenario
   - self.state.population
@@ -495,10 +494,6 @@ class ForwardingPropertiesMixin:
 		setattr(self.state.holdings, "farm_stock_kg", value)
 
 	@property
-
-	# =========================================================================
-	# GovernanceState Compatibility Properties
-	# =========================================================================
 
 	# =========================================================================
 	# FounderState Compatibility Properties

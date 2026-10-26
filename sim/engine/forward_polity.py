@@ -2,7 +2,7 @@
 
 The screens, the agents' world, the project completion and the mods still say `sim.state_reach()` or `sim.reputation`; each line
 goes when its last caller reads the view or sends the command itself."""
-from sim.polity.api import (CarryOutTransfers, SettleWithState, WithdrawFromPublicLife, constants)
+from sim.polity.api import (CarryOutTransfers, SetValueWeights, SettleWithState, WithdrawFromPublicLife, constants)
 from . import money_units
 
 
@@ -10,6 +10,14 @@ class PolityForwardsMixin:
 
     # numbers other topics' code, the screens and the tests still read off the game (sim/polity/constants.py declares them)
     vars().update({name: value for name, value in vars(constants).items() if name.isupper()})
+
+    @property
+    def value_weights(self):
+        return self.view("value_weights")()
+
+    def open_value_weights(self):
+        """The society starts with its civilisation's value weights."""
+        self.send(SetValueWeights(tuple(self.civ["values"].items())))
     STATE_FUNDING_BASE = money_units.PricedInLabourHours("STATE_FUNDING_BASE_LABOUR_HOURS")
     EMINENCE_WEALTH_VISIBLE_THRESHOLD = money_units.PricedInLabourHours("EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS")
 

@@ -168,7 +168,7 @@ state = SimulationState(seats={"zed": first, "abe": second}, acting_seat="abe", 
                         _seed="seed text", stores={"granary": {"t1|rome": 4.0}})
 blob = serialize_state(state)
 check("serialize_state: the root's aliases of the acting seat are not saved, the seats are", all(
-	name not in blob for name in ("household", "projects", "founder", "governance", "holdings", "seat_progress")) and "seats" in blob, list(blob))
+	name not in blob for name in ("household", "projects", "founder", "holdings", "seat_progress")) and "seats" in blob, list(blob))
 check("serialize_state: seats are saved in the order they joined, with the acting seat's id", list(blob["seats"]) == ["zed", "abe"] and blob["acting_seat"] == "abe")
 check("serialize_state: a seat's own fields: goal, country, kind and holder",
       blob["seats"]["zed"]["goal"] == "steam_engine" and blob["seats"]["zed"]["country"] == "han"

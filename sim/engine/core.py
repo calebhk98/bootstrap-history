@@ -177,7 +177,7 @@ class Sim(
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
             SimulationState, HouseholdState, ProjectsState, ActorsState,
-            EconomyState, GovernanceState, FounderState,
+            EconomyState, FounderState,
             ScenarioState, PopulationState
         )
         from . import game_assembly
@@ -187,7 +187,6 @@ class Sim(
             household=HouseholdState(capital=0.0),
             projects=ProjectsState(),
             economy=EconomyState(),
-            governance=GovernanceState(),
             founder=FounderState(),
             scenario=ScenarioState(),
             population=PopulationState(),
@@ -218,7 +217,7 @@ class Sim(
         # See the comment on step() 4b and on start_project() for why this
         # exists: without it, "choosing" a node in `play` was cosmetic.
         self.manual = bool(manual)
-        self.value_weights = self.civ["values"]
+        self.open_value_weights()
         # A civilization brings its own date, its own price level and its own
         # capacity to fund things. Norse Scandinavia does not start in 100 AD.
         self.cfg["start_year"] = int(self.civ.get("year", self.cfg["start_year"]))
@@ -435,8 +434,6 @@ class Sim(
                 self.state.population.pop_elderly = float(self.population.elderly)
 
         # Sync civ live state and metadata
-        if self.state._weights:
-            self.value_weights.update(self.state._weights)
         if self.state._rng is not None:
             rng_version, _keys, rng_gaussian = self.state._rng
             self.rng.setstate((rng_version, tuple(int(x) for x in _keys), rng_gaussian))

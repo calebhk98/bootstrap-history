@@ -6,7 +6,7 @@ military supply, press an office on a household, or threaten confiscation. Every
 another purpose, combined freshly for the question; nothing is stored. The state's reach (0..1) is the first factor: a state
 with few officials or long roads caps the product so low that no threshold is crossed.
 
-Needs: danger_lines, base_annual_wage, headcount, acting_balance, legacy_value_weights, labour_state_weights, techniques_held,
+Needs: danger_lines, base_annual_wage, headcount, acting_balance, labour_state_weights, techniques_held,
 techniques_granted, tree_nodes, effect_best, civilisation, mass_text."""
 from sim.agents.api import demand_answer
 from sim.world import military_logistics
@@ -21,7 +21,7 @@ class Notice:
 
 	def state_trait_weights(self):
 		"""What the state cares about, per trait, for this civilisation."""
-		return rules.state_trait_weights(self.needs.labour_state_weights(), self.needs.legacy_value_weights())
+		return rules.state_trait_weights(self.needs.labour_state_weights(), self.world.value_weights)
 
 	def state_interest(self, node_record):
 		return rules.state_interest(node_record.get("traits", []), self.state_trait_weights())
@@ -29,7 +29,7 @@ class Notice:
 	def alarm_of(self, node_record):
 		"""How alarming this technology is to this civilisation, before defences. Not speed, and not money: producing an
 		effect a society has no category for is what frightens it."""
-		alarm = rules.alarm_before_effects(node_record.get("traits", []), self.needs.legacy_value_weights(),
+		alarm = rules.alarm_before_effects(node_record.get("traits", []), self.world.value_weights,
 		                                   self.seat.familiarity, self.seat.protection)
 		# a recognised scholar doing something strange is a scholar; a stranger doing the same thing is a sorcerer
 		return self.needs.effect_factor("alarm_factor", alarm)

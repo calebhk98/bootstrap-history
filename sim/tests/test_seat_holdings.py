@@ -1,4 +1,4 @@
-"""Holder-owned economy, governance and scenario state lives on the seat; the world parts stay on the root."""
+"""Holder-owned economy and scenario state lives on the seat; the world parts stay on the root."""
 import dataclasses
 import json
 
@@ -14,8 +14,8 @@ QUICK_TOPIC = True
 state = HouseholdPort().fresh_state(100.0)
 first = state.seats[FIRST_SEAT_ID]
 
-check("the root holdings, governance and seat progress are the acting seat's objects",
-      state.holdings is first.holdings and state.governance is first.governance
+check("the root holdings and seat progress are the acting seat's objects",
+      state.holdings is first.holdings
       and state.seat_progress is first.seat_progress, None)
 
 state.holdings.farm_stock_kg = 12.0
@@ -26,7 +26,7 @@ state.economy.market_book["grain"] = {"price_ratio": 1.0}
 second = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(), founder=FounderState())
 state.seats["second"] = second
 bind_seat(state, "second")
-check("a second seat starts with empty holdings, governance and progress",
+check("a second seat starts with empty holdings and progress",
       state.holdings.farm_stock_kg == 0.0
       and state.seat_progress.dashboard_history_years is None, None)
 check("the world economy is the same object for both seats", state.economy.market_book.get("grain") is not None, None)
@@ -36,9 +36,9 @@ check("the first seat's holdings are untouched by the second's",
       state.holdings.farm_stock_kg == 12.0 and state.seat_progress.dashboard_history_years == 150, None)
 
 blob = json.loads(json.dumps(serialize_state(state)))
-check("the save holds holdings, governance and progress inside each seat and not at the root",
-      all(name in blob["seats"]["second"] for name in ("holdings", "governance", "seat_progress"))
-      and not any(name in blob for name in ("holdings", "governance", "seat_progress")), sorted(blob))
+check("the save holds holdings and progress inside each seat and not at the root",
+      all(name in blob["seats"]["second"] for name in ("holdings", "seat_progress"))
+      and not any(name in blob for name in ("holdings", "seat_progress")), sorted(blob))
 check("the world economy section no longer carries holder-owned fields",
       "farm_stock_kg" not in blob["economy"] and "farm_cleared_hectares" not in blob["economy"] and "market_book" in blob["economy"],
       sorted(blob["economy"]))
@@ -48,7 +48,7 @@ check("a round trip keeps each seat's own holdings",
       and loaded.seats["second"].seat_progress.dashboard_history_years is None,
       None)
 check("a load binds the root holdings to the acting seat",
-      loaded.holdings is loaded.seats[FIRST_SEAT_ID].holdings and loaded.governance is loaded.seats[FIRST_SEAT_ID].governance, None)
+      loaded.holdings is loaded.seats[FIRST_SEAT_ID].holdings, None)
 
 # the world parts declare none of the seat's fields
 world_economy = {f.name for f in dataclasses.fields(EconomyState)}
@@ -64,7 +64,7 @@ check("the world scenario declares none of the seat's progress fields",
 from sim.engine.saveload import _check_save_shape
 blob["_civ"] = "rome_100ad"
 check("a save with every seat section passes the shape check", _check_save_shape(blob) is None, _check_save_shape(blob))
-for section in ("holdings", "governance", "seat_progress"):
+for section in ("holdings", "seat_progress"):
     broken = json.loads(json.dumps(blob))
     del broken["seats"][FIRST_SEAT_ID][section]
     message = _check_save_shape(broken)

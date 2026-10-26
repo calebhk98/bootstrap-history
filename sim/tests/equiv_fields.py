@@ -12,7 +12,6 @@ This is test tooling, not a save migration.
 """
 
 RELOCATIONS = [
-    ("/seats/*/governance", "/seats/*/emptied_governance"),   # first: it must see only the current build's own paths
     ("/modules/living_stock/society_herds", "/economy/society_herds"),
     ("/modules/coin/metal_ratios", "/economy/coin_metal_ratios"),
     ("/modules/campaigns/armies", "/economy/campaigns/armies"),
@@ -77,6 +76,7 @@ RELOCATIONS = [
     ("/seats/*/modules/polity/familiarity", "/seats/*/household/familiarity"),
     ("/seats/*/modules/polity/protection", "/seats/*/household/protection"),
     ("/seats/*/modules/polity/gov", "/seats/*/governance/gov"),
+    ("/modules/polity/value_weights", "/_weights"),
     ("/seats/*/modules/polity/demand_stance", "/seats/*/household/demand_stance"),
     ("/seats/*/modules/polity/service_offer", "/seats/*/household/service_offer"),
     ("/seats/*/modules/polity/concealed", "/seats/*/household/concealed"),
@@ -99,5 +99,4 @@ IGNORED = [
     ("/modules", "module world slots: empty until a module owns state, then each moved field is relocated"),
     ("/seats/*/modules", "module seat slots, likewise"),
     ("/assembly_record", "which modules wrote the game; bookkeeping, not simulation"),
-    ("/seats/*/emptied_governance", "the seat's governance section holds no field since `gov` moved to polity; delete the section with the seat state"),
 ]

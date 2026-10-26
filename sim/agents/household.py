@@ -10,7 +10,7 @@ field-by-field classification this class is built from.
 
 In the live state architecture, `Household` is a façade backed by the
 authoritative `SimulationState` and its subsystem owners (`HouseholdState`,
-`ProjectsState`, `EconomyState`, `GovernanceState`, `FounderState`,
+`ProjectsState`, `EconomyState`, `FounderState`,
 `ScenarioState`, `PopulationState`). There is NO duplicate storage: every
 persistent read and write delegates directly to the underlying typed state.
 """
@@ -131,7 +131,7 @@ _VERSION_MAP: Dict[str, str] = {
 	"_done_ver": "projects",
 	"_active_ver": "projects",
 	"_workforce_ver": "household",
-	"_inst_units_ver": "governance",
+	"_inst_units_ver": "household",
 }
 
 _LAZY_FIELDS: Set[str] = {
@@ -373,14 +373,11 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 	@property
 	def _inst_units_ver(self) -> int:
-		if self._state.governance is None:
-			return 0
-		return int(getattr(self._state.governance, "_inst_units_ver", 0))
+		return int(getattr(self._state.household, "_inst_units_ver", 0))
 
 	@_inst_units_ver.setter
 	def _inst_units_ver(self, value: int) -> None:
-		if self._state.governance is not None:
-			setattr(self._state.governance, "_inst_units_ver", int(value))
+		setattr(self._state.household, "_inst_units_ver", int(value))
 
 	@property
 	def operating_version(self) -> int:
@@ -427,8 +424,8 @@ class Household(FounderReview, FounderBorrowing, Actor):
 			state.projects._active_ver = 0  # type: ignore[attr-defined]
 		if getattr(state.household, "_workforce_ver", None) is None:
 			state.household._workforce_ver = 0  # type: ignore[attr-defined]
-		if state.governance is not None and getattr(state.governance, "_inst_units_ver", None) is None:
-			state.governance._inst_units_ver = 0  # type: ignore[attr-defined]
+		if getattr(state.household, "_inst_units_ver", None) is None:
+			state.household._inst_units_ver = 0  # type: ignore[attr-defined]
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
 		return self._state.projects.business.opened_year_of(node_id, default)

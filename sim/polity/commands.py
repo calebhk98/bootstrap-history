@@ -88,6 +88,12 @@ class CloseSuccessionDispute(Command):
 
 
 @dataclass(frozen=True)
+class SetValueWeights(Command):
+	"""The society's value weights become `weights` ((name, weight) pairs): the civilisation's own, at the opening."""
+	weights: tuple
+
+
+@dataclass(frozen=True)
 class ShiftValueWeight(Command):
 	"""The society's value weight `field` moves by `delta`, held between the weight floor and ceiling. Answers
 	(before, after), or a `Refusal` (cause `not_a_value_weight`) when the society has no such weight."""

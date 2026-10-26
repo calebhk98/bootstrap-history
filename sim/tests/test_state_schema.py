@@ -75,7 +75,6 @@ def _test_subsystem_state_owners():
 		HouseholdState,
 		ProjectsState,
 		EconomyState,
-		GovernanceState,
 		FounderState,
 		ScenarioState,
 		SimulationState,
@@ -84,7 +83,6 @@ def _test_subsystem_state_owners():
 	h = HouseholdState(capital=1000.0)
 	p = ProjectsState()
 	e = EconomyState()
-	g = GovernanceState()
 	f = FounderState()
 	s = ScenarioState(year=100)
 
@@ -92,7 +90,6 @@ def _test_subsystem_state_owners():
 		household=h,
 		projects=p,
 		economy=e,
-		governance=g,
 		founder=f,
 		scenario=s,
 		_civ="rome_100ad",

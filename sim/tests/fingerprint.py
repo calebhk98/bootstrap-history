@@ -93,7 +93,7 @@ def _resolve_field(sim, field):
     if hasattr(sim, "household") and hasattr(sim.household, field):
         return getattr(sim.household, field)
     if hasattr(sim, "state") and sim.state:
-        for sub_name in ("household", "projects", "economy", "holdings", "governance", "seat_progress", "founder", "scenario", "population"):
+        for sub_name in ("household", "projects", "economy", "holdings", "seat_progress", "founder", "scenario", "population"):
             sub = getattr(sim.state, sub_name, None)
             if sub is not None and hasattr(sub, field):
                 return getattr(sub, field)

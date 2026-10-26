@@ -4,7 +4,7 @@ In an autocracy prominence is not only a shield, it is a target: it rises with r
 multiplied by having got close to the throne, and no amount of patronage reduces it. It feeds scandal rather than killing
 outright, because the usual outcome is a bad year, a confiscation or a lost patron.
 
-Needs: danger_lines, mechanic, running, standing_floor, acting_balance, legacy_value_weights, effect_factor, legacy_constant,
+Needs: danger_lines, mechanic, running, standing_floor, acting_balance, effect_factor, legacy_constant,
 year, money_per_labour_hour."""
 from . import constants, eminence_rules
 
@@ -21,7 +21,7 @@ class Eminence:
 		seat = self.seat
 		return eminence_rules.yearly_hazard(
 			seat.reputation, self.needs.acting_balance(), seat.familiarity,
-			self.needs.legacy_value_weights().get("w_eminence_danger", constants.EMINENCE_DANGER_WEIGHT_DEFAULT),
+			self.world.value_weights.get("w_eminence_danger", constants.EMINENCE_DANGER_WEIGHT_DEFAULT),
 			constants.EMINENCE_REPUTATION_SCALE, self.priced(constants.EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS),
 			constants.EMINENCE_HAZARD_BASE_SCALE, constants.EMINENCE_HAZARD_REPUTATION_SHARE,
 			constants.EMINENCE_HAZARD_WEALTH_SHARE, constants.EMINENCE_FAMILIARITY_RELIEF,

@@ -27,7 +27,6 @@ def state_text(sim):
 	sim.economy.flush_record()
 	sim.state._civ = sim.civ.get("id")
 	sim.state._goal = sim.goal
-	sim.state._weights = dict(sim.value_weights)
 	sim.state._fog = sim.fog
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))
 	sim.state._seed = getattr(sim, "seed", None)
@@ -109,10 +108,10 @@ REQUIRED_V3_SECTIONS = (
 )
 
 # What each seat holds; the acting seat's sections are checked and searched like root ones.
-SEAT_SECTIONS = ("household", "projects", "founder", "holdings", "governance", "seat_progress")
+SEAT_SECTIONS = ("household", "projects", "founder", "holdings", "seat_progress")
 
 REQUIRED_METADATA_FIELDS = (
-    "_civ", "acting_seat", "_weights", "_fog", "_immortal", "_rng",
+    "_civ", "acting_seat", "_fog", "_immortal", "_rng",
 )
 
 REQUIRED_SAVE_FIELDS = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
@@ -192,8 +191,6 @@ def _check_save_scalars(blob, sim):
     """None if the save's simple top-level fields are valid; otherwise the refusal message."""
     if goal_of_blob(blob) not in sim.nodes:
         return "this save's goal is not in the current technology tree"
-    if not isinstance(blob.get("_weights"), dict):
-        return "this save is corrupt: civilization state should be objects"
     try:
         rng_version, rng_keys, rng_gaussian = blob["_rng"]
         probe = random.Random()
@@ -383,8 +380,6 @@ def _apply_blob(sim, blob):
 		sim.seed = state._seed
 	if state._rng is not None:
 		restore_rng(sim.rng, state._rng)
-	if state._weights:
-		sim.value_weights.update(state._weights)
 	if getattr(sim, "_economy_deferred", False):
 		from .opening_money import reprice_tree, saved_tree_pricing
 		figure = saved_tree_pricing(state.economy)

@@ -4,7 +4,7 @@ pressure, scandal, bribery and the two hazards that can end a run (denunciation 
 The engine's `_step_reputation` runs `renew_standing` first, then the hours and spending it tallies for other owners, then
 `close_standing_year`, so the order of the old single step is kept.
 
-Needs: standing_floor, techniques_held, tree_nodes, legacy_value_weights, year, danger_lines, legacy_constant, acting_balance,
+Needs: standing_floor, techniques_held, tree_nodes, year, danger_lines, legacy_constant, acting_balance,
 founder, automation, events_enabled, legacy_dice, patrons_lost_to_eminence, money_text, send (PayEdge, ForgetTechnique, EndRun,
 RecordEvent)."""
 from sim.agents.api import edges
@@ -34,7 +34,7 @@ class Year:
 		seat.reputation = rules.reputation_toward_floor(seat.reputation, floor, constant["REPUTATION_DECAY_TOWARD_FLOOR"])
 		nodes = needs.tree_nodes()
 		publications = sum(1 for node_id in needs.techniques_held() if set(nodes[node_id].get("traits", [])) & {"spectacle", "inexplicable"})
-		seat.familiarity = rules.familiarity_after(needs.legacy_value_weights()["adaptation_rate"], publications, needs.year() - 100,
+		seat.familiarity = rules.familiarity_after(self.world.value_weights["adaptation_rate"], publications, needs.year() - 100,
 		                                           constant["FAMILIARITY_CEILING"], constant["FAMILIARITY_PUBLICATION_WEIGHT"],
 		                                           constant["FAMILIARITY_TENURE_WEIGHT"])
 
@@ -45,7 +45,7 @@ class Year:
 		seat = self.seat
 		constant = needs.legacy_constant
 		year = needs.year()
-		weights = needs.legacy_value_weights()
+		weights = self.world.value_weights
 		danger = needs.danger_lines()["eminence"]
 		# warn before it kills: eminence can end the run outright with nothing in the log ever mentioning it beforehand
 		band = eminence_warning.eminence_band_to_announce(seat.eminence, danger, seat.said_eminence)
