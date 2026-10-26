@@ -2,7 +2,55 @@
 
 People who work: staff by trade, hours, wages, training, slaves and the labour market.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** partly moved, on branch `mr/workforce` (package `sim/workforce/`, bridge `sim/engine/bridge_workforce.py`, forwarders
+`sim/engine/forward_workforce.py`). The tables below are the draft of task 1.5 (a read-only analysis of `e8b004c`); "What the move
+built" says what shipped and what did not. Re-measure with `python3 -c "import sys; sys.path.insert(0,'.'); from sim.workforce import
+module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publishes), len(s.applies), len(s.reads), len(s.sends), len(s.phases))"`.
+
+## What the move built
+
+The module holds `Labour` (`sim/labour/`, unchanged inside) and builds it over `WorkforceWorld` (`sim/workforce/world.py`), which
+answers each of the 100-odd things labour reads of the game from a view the spec declares. `LabourWorld` and `LabourPortMixin`
+(`sim/engine/labour_port.py`) are gone; `Sim.labour` is a property in `forward_workforce.py` that returns the module's `Labour`,
+so the 365 callers outside labour (screens, mods, the economy port, engine mixins) are unchanged.
+
+- **Views published** (all uncached, because the staff and hour fields are still on the household record that the engine, the actors
+  and the screens write): `staff`, `staff_snapshot`, `headcount`, `hours_available`, `literacy_references`, `literacy_capacity`,
+  `farm_share_of_hours`, `trade_spread`, `staff_advice`, `project_staffing_shortfall`, `seat_base_tile`, `market_supply`,
+  `trade_available`, `labour_quote`, `hour_wage`, `wage`, `base_annual_wage`, `trade_population`, `money_per_labour_hour`,
+  `opening_money_per_labour_hour`, `labour_state_weights`, `town_mortality_premium_by_tile`, `wage_index`, `wage_index_terms`,
+  `wage_materials`, `trade_registry` (now with each trade's `training_years`), `society_labour_hours`, `farming_technique`,
+  `farm_land_hectares`, `hours_per_person_year` (the working day: lit hours added by open works, moved from `working_day.py`).
+- **Commands applied**: `SetEmployed`, `NoteTradeSpread`, `PressLabour`, `SurviveStaff`, `ScaleDeputies`, `ReportStaffReduction`,
+  `AllocateFarmWorkforce`, `ApplyLandClearing`, `UpdateWages`, `TakeWageFallback`, `CloseHoursYear`. Two commands of the module are
+  still applied by the bridge because the logic they call sits in files other work owns: `BuildHousing` (`economy_goods.py`) and
+  `NoteWageShock` (`cause_book.py`, shared with projects staffing and the screens).
+- **Phases**: `apprenticeships`, `staff` and `seat_prelude` (teaching the lost trades and the standing work order) are the module's
+  hooks; the wage fallback and the end of the year's hours run inside `seat_work` as the two commands above.
+- **Rules moved beside it**: the wage index, the lit working day, the reteach, staff-phase, payroll and replacement-mode rules, the
+  wave exposure (`sim.workforce.api.wave_exposure`) and the work-order shortfall.
+
+## Not moved, and why
+
+- **The saved staff and hour fields** (the table in (b)) stay on the household record. The household facade (`sim/agents/household.py`)
+  routes each name to that record and the screens, finance, hazards and polity read and write many of them in place, so moving them
+  is a change in the actors' files and in `state.py`; the module reads them as `legacy_acting_household` and writes them only in its
+  own commands and in `Labour`. Until they move, no view is cached and no channel is bumped.
+- **`_step_reputation`'s other two owners** (polity's `RenewStanding` and `CloseStandingYear`, the ledger's `spend_last_year`) stay in
+  the engine around the module's `CloseHoursYear`.
+- **`living_cost`, `training_advice` and `training_queue`** stay bridged: their code is the economy's household bill and projects
+  staffing (`projects_training_advice.py`), which move with those owners.
+- **The farm facts** (`farm_land`, the year's technique, the ladder and the arable ceiling) are plain attributes of `Sim` that
+  agriculture's forwarders and the opening write; the module reads them as views and writes the land and the technique through
+  `legacy_game` (the farm workforce is the only writer).
+- **`wage_schedule.py`** stays in the engine (`data.py` imports it at load); the module asks for a schedule as the view `wage_schedule_for`.
+
+## Debts left (`legacy_*` and shared bridge views the module reads)
+
+`legacy_state`, `legacy_game`, `legacy_acting_household`, `legacy_household_actor`, `legacy_dice`, `legacy_tree`, `legacy_order`,
+`legacy_projects`, `legacy_act_as`; the engine's `game_config`, `civilisation`, the trade tables (`trade_records`, `trades_absent`,
+`trade_notes`, `trade_family`, `starting_wages`), the actors' staff (`actor_staff_*`), and the projects staffing reads (`staffing_*`,
+`venture_*`, `staff_closure_age`, `reopen_units`, `exclusion_reason`, `shared_answer`).
 
 ## At a glance
 

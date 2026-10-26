@@ -33,7 +33,7 @@ docstring first line.
 | Node money (revenue, upkeep, capital) | `node_*`, `industry_*`, `concern_*` |
 | Foreign trade, freight, coin | `foreign_*`, `trader_cargo`, `sim/freight/` (the freight module), `sim/coin/` |
 | Economy port | `economy_port*`; older money, credit, mining and goods code is `economy_*` |
-| Labour port | `labour_port`, `staff_replacement`, `projects_staffing*` |
+| Workforce (labour) | `sim/workforce/` (the module), `bridge_workforce`, `forward_workforce`, `projects_staffing*` |
 | Geography port | `geography_port`, `ways`, `works`, `held_works`, `colonies`, `mine_deposits` |
 | Society and groups | `society*`, `interest_groups`, `legitimacy`, `benefactions`, `visibility` (hazards are `sim/hazards/`) |
 | Geography port | `geography_port`, `ways`, `works`, `held_works`, `colonies` |
@@ -54,7 +54,7 @@ module in `sim/engine/`:
 | Wall | Engine side |
 |---|---|
 | Economy | `economy_port.py` (the one door) and its parts `economy_port_*.py` |
-| Labour | `labour_port.py` |
+| Labour | `sim/workforce/world.py` (its views) and `bridge_workforce.py` |
 | Geography | `geography_port.py` |
 | Agents | `agents_port.py` and its views `agents_port_*.py` |
 | UI | `ui_port.py` (re-exports the engine names the UI uses) |
