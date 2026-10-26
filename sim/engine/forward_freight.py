@@ -23,9 +23,6 @@ class ForwardFreightMixin:
     def material_carriage_per_tonne(self, material, price_per_tonne):
         return self.view("material_carriage_per_tonne")(material, price_per_tonne)
 
-    def material_freight_factor(self, material):
-        return self.view("material_freight_factor")[material]
-
     def _trader_margin_share(self, civilization_id, route, price_flexibility=None):
         return self.view("trader_margin_share")(civilization_id, route, price_flexibility)
 

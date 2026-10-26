@@ -158,11 +158,9 @@ class Game:
     def _foreign_economy_facts(self, civilization_id):
         return {"route": None, "freight_per_tonne": 10.0}
 
-    def _agent_cost_per_tonne(self, civilization_id, route):
-        return 5.0
-
-    def _cargo_lost_share(self, route, material=None, civilization_id=None, destination_demand_tonnes=None):
-        return 0.1
+    def view(self, name):
+        return {"trader_agent_cost": lambda civilization_id, route: 5.0,
+                "cargo_lost_share": lambda route, material=None, civilization_id=None, demand=None: 0.1}[name]
 
 
 # ---- the stock stands on a tile of the holder's -----------------------------------------------

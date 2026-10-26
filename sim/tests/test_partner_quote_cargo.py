@@ -22,9 +22,9 @@ def buyer(named):
         partner_countries=lambda: [PARTNER], partner_refusal=lambda civilization_id, material: None,
         _foreign_economy_facts=lambda civilization_id: {"prices_in_home_money": {RAMIE: 10.0},
                                                         "solved_materials": [RAMIE], "route": "sea"},
-        _material_route=lambda civ, material, route: ROUTE, partner_civ=lambda civilization_id: {},
-        partner_price_level=lambda civilization_id: 1.0, _trader_cost_share=cost_share,
-        _agent_cost_per_tonne=lambda civilization_id, route: 5.0)
+        view=lambda name: {"material_route": lambda civ, material, route: ROUTE, "trader_cost_share": cost_share,
+                           "trader_agent_cost": lambda civilization_id, route: 5.0}[name],
+        partner_civ=lambda civilization_id: {}, partner_price_level=lambda civilization_id: 1.0)
 
 
 named = []
