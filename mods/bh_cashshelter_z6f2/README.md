@@ -9,7 +9,7 @@ Every hazard takes from the acting household's own purse (`household.capital`), 
 
 - fire (`FIRE_CAPITAL_LOSS`), plague (`PLAGUE_CASH_LOSS_SHARE` times the staff share killed) and debasement
   (`REAL_EROSION_CASH_LOSS_SHARE` times the erosion) take a share of the purse and nothing else;
-- a sack and banditry take theft shares by kind of holding (`sim/engine/theft_exposure.py`): most of the purse is
+- a sack and banditry take theft shares by kind of holding (`sim/coin/theft_exposure.py`): most of the purse is
   coin and is mostly guarded, so they take far more of the portable goods than of the purse;
 - a treasury or eminence confiscation takes a share of the purse less what is concealed.
 

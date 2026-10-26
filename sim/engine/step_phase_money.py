@@ -3,6 +3,7 @@
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 from sim.refusal import LogLine
 from . import automation_audit
+from sim.coin.api import ChargeHouseholdTheft
 from sim.constants import declare
 from sim.agents.api import edges
 from .living_cost_charge import living_cost_charged
@@ -46,14 +47,14 @@ class MoneyPhaseMixin:
         mine_cost = self.mine_operating_cost()
         self.state.holdings.mine_cost_paid += mine_cost
         revenue, upkeep = self.revenue(), self.upkeep()
-        keeping_owed, keeping = self.coin_keeping_due(revenue, upkeep, living_cost, mine_cost)
+        keeping_owed, keeping = self.view("coin_keeping_due")(revenue, upkeep, living_cost, mine_cost)
         # the concerns the clearing pays are credited when it clears (economy_port_year `_settle_seats`)
         self.receive_from_edge(edges.EDGE_CUSTOMERS, self.estimated_revenue(), "venture revenue")
         self.pay_edge(edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns")
         self.pay_wages(living_cost, "living costs")
         self.pay_edge(edges.EDGE_SUPPLIERS, mine_cost, "mine running costs")
         self.pay_edge(edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard")
-        self.charge_founder_for_theft(keeping, keeping_owed)
+        self.send(ChargeHouseholdTheft(keeping, keeping_owed))
         # A mine you cannot pay for is a mine you stop working. Without this the
         # opex accrued for ever against a bankrupt enterprise: the England run
         # sank a large mine, lost its revenue and then ran three centuries at

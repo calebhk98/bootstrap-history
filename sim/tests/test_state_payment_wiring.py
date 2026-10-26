@@ -17,8 +17,8 @@ class Society(ActorsMixin):
         self._treasury = treasury
         self.household = household
 
-    def coin_carriage_listening(self):
-        return nullcontext()
+    def view(self, name):
+        return lambda: nullcontext()   # the ledger's transfer_listening
 
     def state_treasury(self):
         return self._treasury

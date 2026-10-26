@@ -1,5 +1,6 @@
 """Actors other than the founder, run once a year inside the simulation."""
 from sim.agents.api import ActorRegistry, true_up_keep, CountryLiteracy, ledger, payroll, seed_strata, SOLDIER_TRADE
+from sim.coin.api import ChargeActorsTheft, ChargeKeeping
 from sim.ledger.api import PayEdge, PayWages, ReceiveFromEdge
 from .actor_kinds_data import register_mod_actor_kinds
 from .agents_port import SimWorld
@@ -148,13 +149,13 @@ class ActorsMixin:
 
     def pay_state(self, amount, purpose):
         """The household pays the state: the founder's loss is the treasury's gain."""
-        with self.coin_carriage_listening():
+        with self.view("transfer_listening")():
             ledger.transfer(self.household, self.state_treasury(), amount, purpose)
 
     def advance_actors(self, year):
         """Give every actor its year: the countries, players, firms, traders and bodies of people. Coin moved
         between actors in different places pays carriage meanwhile."""
-        with self.coin_carriage_listening():
+        with self.view("transfer_listening")():
             self._advance_actors_year(year)
 
     def _advance_actors_year(self, year):
@@ -165,5 +166,5 @@ class ActorsMixin:
         true_up_keep(self.actors, world)
         self.actors.advance(world)
         self.accrue_industry_experience()
-        self.charge_actors_for_keeping_coin()
-        self.charge_actors_for_theft()
+        self.send(ChargeKeeping())
+        self.send(ChargeActorsTheft())

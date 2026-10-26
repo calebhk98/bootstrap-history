@@ -7,28 +7,34 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.coin_revaluation import CoinRevaluationMixin
-from sim.engine.foreign_payments import ForeignPaymentsMixin
+from sim.coin.module import Coin
+from sim.coin.state import CoinWorld
 from sim.engine.real_price_ratios import RealPriceRatiosMixin
+from sim.tests import module_harness
 
 BASELINE = {"silver_kg": 50.0, "wheat_kg": 1.0, "iron_kg": 4.0, "cloth_kg": 9.0}
 
 
-class AgentCoinage(RealPriceRatiosMixin, CoinRevaluationMixin, ForeignPaymentsMixin):
-    """The agent economy's prices in its own coin; the engine's price level is derived from the ratios."""
+class AgentCoinage(RealPriceRatiosMixin):
+    """The agent economy's prices in its own coin; the coin module derives the engine's price level from the ratios."""
     def __init__(self):
-        self.state = types.SimpleNamespace(economy=types.SimpleNamespace(
-            coin_metal_ratios={}, wage_market_ratios={}, agent_baseline_prices={}, foreign_ledger={}))
+        self.state = types.SimpleNamespace(economy=types.SimpleNamespace(wage_market_ratios={}, agent_baseline_prices={}))
         self.civ = {"coin_standard": {"material": "silver_kg"}, "staple": "wheat_kg"}
         self.trade_registry = {}
         self.agent = dict(BASELINE)
         self.economy = types.SimpleNamespace(agent_prices=lambda: self.agent)
+        self.coin = module_harness.build(Coin, world=CoinWorld(), views={
+            "civilisation": self.civ, "opening_population": 1000.0, "opening_money_per_labour_hour": 0.5,
+            "foreign_coin_home_units": 0.0, "foreign_economies": [], "coin_value_ratio": self.coin_value_ratio})
 
-    def _home_opening_coin_units(self):
-        return 100.0
+    def home_coin_metal(self):
+        return "silver_kg"
 
-    def foreign_economies(self):
-        return []
+    def revalue_coin_metals(self):
+        self.coin.revalue_coin_metals(["seat"])
+
+    def home_price_level(self):
+        return self.coin.home_price_level()
 
 
 class RunawayTests(unittest.TestCase):

@@ -198,5 +198,3 @@ class MarketClearingMixin:
         self.record_food_eaten(self.economy.agent.outcomes[-1])
         self.close_partner_books()
         self._close_real_output()
-        self.revalue_coin_metals()
-        self.record_wage_market_ratios()

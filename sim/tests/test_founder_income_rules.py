@@ -83,7 +83,7 @@ class MoneySeatChargeTests(unittest.TestCase):
                                      scenario=SimpleNamespace(year=100))
         game.living_cost.return_value = living
         game.dependants_beyond_means.return_value = shed
-        game.coin_keeping_due.return_value = (0.0, 0.0)
+        game.view.return_value = lambda *call: (0.0, 0.0)    # the coin module's coin_keeping_due quote
         game.reopen_restaffed_ventures.return_value = []
         game.revenue.return_value = game.upkeep.return_value = game.mine_operating_cost.return_value = 0.0
         game.manual = True

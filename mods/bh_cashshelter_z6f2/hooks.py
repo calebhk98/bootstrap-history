@@ -94,13 +94,12 @@ def register(api):
     def yearly_cost(sim, name, amount):
         """The holder's own yearly cost of keeping `amount` of coin: the engine's guard cost plus the engine's
         expected theft on it, at the holder's own visibility."""
-        from sim.engine import theft_exposure
-        from sim.engine.coin_hoard import COIN_GUARD_HOURS_PER_TONNE_YEAR
+        from sim.coin.api import COIN_GUARD_HOURS_PER_TONNE_YEAR, theft_exposure
         actor = holder_actor(sim, name)
         scale = sim.visible_scale(sum(actor.workforce.values()), actor.money, actor.prominence()) if actor else 0.0
         stolen = theft_exposure.expected_theft_loss(
             {"coin": amount}, {"coin": COIN_GUARD_HOURS_PER_TONNE_YEAR}, scale, sim.state_capacity, 0.0)
-        return sim.coin_keeping_cost_per_year(amount) + stolen
+        return sim.view("coin_keeping_cost")(amount) + stolen
 
     def settle(sim, name, seat):
         """Take the custody fee for each year since the claim was last settled, from the claim itself."""
@@ -118,7 +117,7 @@ def register(api):
         return charged
 
     def carry_cost(sim, name, amount):
-        tonnes = max(0.0, amount) * sim.coin_kg_per_unit() / 1000.0
+        tonnes = max(0.0, amount) * sim.view("coin_kg_per_unit")() / 1000.0
         return tonnes * float(holders[name]["carry_hours_per_tonne"]) * sim.labour.money_per_labour_hour()
 
     def arguments(cmd):
@@ -266,13 +265,12 @@ def register(api):
                 "claim_left_on_issuer": round(entry["amount"], 1), "claim_on_receiver": round(arrived["amount"], 1)}
 
     def theft_rows(sim, strength, order_holds):
-        from sim.engine import theft_exposure
-        from sim.engine.coin_hoard import COIN_GUARD_HOURS_PER_TONNE_YEAR
+        from sim.coin.api import COIN_GUARD_HOURS_PER_TONNE_YEAR, theft_exposure
         household = sim.state.household
         capacity, protection = (sim.state_capacity, household.protection) if order_holds else (0.0, 0.0)
-        exposure = sim.founder_exposure()
+        exposure = sim.view("household_exposure")()
         loss = theft_exposure.theft_loss_by_kind(
-            exposure.values, {"coin": COIN_GUARD_HOURS_PER_TONNE_YEAR}, sim.founder_visible_scale(), capacity,
+            exposure.values, {"coin": COIN_GUARD_HOURS_PER_TONNE_YEAR}, sim.view("household_visible_scale")(), capacity,
             protection, strength)
         cash = min(exposure.purse, sum(value for kind, value in loss.items() if kind not in ("goods", "land")))
         return cash, loss.get("goods", 0.0)

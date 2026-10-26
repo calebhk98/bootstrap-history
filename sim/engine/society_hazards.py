@@ -17,6 +17,7 @@ because save/load and the fingerprint tests only reproduce a run
 byte-for-byte if draw order is preserved. These are methods of Sim; they
 are a mixin only so that they can live in a file of their own.
 """
+from sim.coin.api import PlunderHousehold
 from sim.constants import declare
 from sim.refusal import LogLine
 from . import money_units
@@ -553,7 +554,7 @@ class HazardsMixin:
         _people0 = (household.artisans + household.scholars
                     + sum(household.employees.values()))
         _act0 = len(projects.active)
-        self.plunder_founder(self.SACK_TAKE_STRENGTH, "sack and plunder", order_holds=False)
+        self.send(PlunderHousehold(self.SACK_TAKE_STRENGTH, "sack and plunder", False))
         _staff_before = self.labour.staff_snapshot()
         self.apply_staff_survival(self.SACK_STAFF_RETENTION)
         self.labour.log_staff_reduction("the sack of a site", _staff_before)
@@ -770,7 +771,7 @@ class HazardsMixin:
                                 self._loss_words(had)))))
         if rng.random() < self.BANDITRY_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
-            self.plunder_founder(self.BANDITRY_TAKE_STRENGTH, "banditry", order_holds=True)
+            self.send(PlunderHousehold(self.BANDITRY_TAKE_STRENGTH, "banditry", True))
             household.log.append((year, LogLine("banditry", "banditry or a frontier war disrupts supply: "
                                  "it cost you %s" % self._loss_words(had))))
 
