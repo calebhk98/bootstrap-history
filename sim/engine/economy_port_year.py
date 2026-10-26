@@ -19,7 +19,8 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              trade_premium, variable_cost_per_run)
 
 from sim.foreign_trade.api import SettleFlow, country_trade_years
-from . import agents_port_stores, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, material_capacity, solve_cache
+from . import agents_port_stores, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, solve_cache
+from sim.materials.api import ProducerCapacityCache
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
@@ -96,7 +97,7 @@ class AgentEconomy(TilePricesMixin):
         self._country_answers = {}
         self._stale = set()
         self._kinds = None               # (the answers they belong to, {good: kind of its shown price})
-        self._capacity_cache = material_capacity.ProducerCapacityCache()
+        self._capacity_cache = ProducerCapacityCache()
         self._floor_costs = {}           # need floors by country scope, valid until the economy next changes
         self._floor_costs_of = None      # the economy object they were read from
         self.outcomes = collections.deque(maxlen=OUTCOMES_KEPT)   # recent yearly outcomes, for health figures; not saved

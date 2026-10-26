@@ -27,7 +27,7 @@ def material_game():
 def power_game(visible, built=(), total_kw=0.0, demand_kw=0.0):
     return types.SimpleNamespace(
         installed_generation_kw_by_tier=lambda: {}, is_visible=lambda node_id: node_id in visible,
-        has=lambda node_id: node_id in built, binding=None, throttle=1.0,
+        has=lambda node_id: node_id in built, view=lambda name: (lambda: {"material_binding": None, "material_throttle": 1.0}[name]),
         generation_breakdown_kw=lambda: {"total_kw": total_kw, "local_kw": total_kw, "grid_kw": 0.0,
                                          "transmission_kw": 0.0, "mechanical_kw": {}},
         _electricity_demand_kw=lambda: demand_kw)

@@ -5,13 +5,11 @@ file of their own.
 """
 import math
 from sim.constants import declare
+from sim.materials.api import ForgetReadings
 
 from .quote_figures import cost_if_started_now
 from .economy_goods import GoodsMixin
 from .economy_materials import MaterialSupplyMixin
-from .material_reach import MaterialReachMixin
-from .economy_electricity import ElectricityMixin
-from .economy_freight import FreightMixin
 from .economy_credit import CreditMixin
 from .economy_debt_service import DebtServiceMixin
 from .economy_household_bill import HouseholdBillMixin
@@ -20,7 +18,6 @@ from .economy_interest import InterestMixin
 from .economy_absorption import MarketAbsorptionMixin
 from .projects_cost_tail import ProjectCostTailMixin
 from .economy_production import ProductionMixin
-from .project_materials import ProjectMaterialsMixin
 from .view_share import ViewShareMixin
 
 
@@ -76,34 +73,26 @@ REPUTATION_EASE_SCALE = declare(
         "shared multiplier standing in for all of them at once.")
 
 
-class EconomyMixin(GoodsMixin, MaterialSupplyMixin, MaterialReachMixin, ElectricityMixin, FreightMixin,
-                    CreditMixin, HouseholdBillMixin, DebtServiceMixin, CapitalMarketMixin, InterestMixin, MarketAbsorptionMixin, ProjectCostTailMixin, ProductionMixin, ProjectMaterialsMixin, ViewShareMixin):
+class EconomyMixin(GoodsMixin, MaterialSupplyMixin,
+                    CreditMixin, HouseholdBillMixin, DebtServiceMixin, CapitalMarketMixin, InterestMixin, MarketAbsorptionMixin, ProjectCostTailMixin, ProductionMixin, ViewShareMixin):
     """Composition point for the economy sub-mixins, plus what is left over.
 
     EconomyMixin's methods are grouped by subject across sibling modules
     (ore and land in sim/resources/, debt and affordability in
     economy_credit.py, revenue and workshops in economy_production.py,
-    goods-producing concerns in economy_goods.py, raw material supply in
-    economy_materials.py, electricity as a physical quantity in
-    economy_electricity.py, freight in economy_freight.py - see each
-    module's own docstring for the detailed grouping and evidence) as
-    their own mixin classes, which EconomyMixin composes back into one
-    name so core.py's `class Sim(EconomyMixin, ...)` does not have to
-    know about any of them individually.
+    goods-producing concerns in economy_goods.py, the commodity catalogue
+    and price lookups in economy_materials.py - see each module's own
+    docstring for the detailed grouping and evidence) as their own mixin
+    classes, which EconomyMixin composes back into one name so core.py's
+    `class Sim(EconomyMixin, ...)` does not have to know about any of
+    them individually. Raw material supply, electricity, the throttle and
+    project materials are the materials module's (sim/materials/).
 
-    Methods are grouped by what actually calls them, not by where they
-    happen to sit textually: _cached_material_demand() and
-    _cached_demand_by_tag() live in economy_freight.py, not
-    economy_electricity.py, because every real caller of either is in
-    economy_freight.py - see that file's own docstring for the fuller
-    account.
-
-    CLASS-LEVEL CACHES, NAMED DELIBERATELY. Three methods in
-    economy_materials.py and one in economy_freight.py cache their
+    CLASS-LEVEL CACHES, NAMED DELIBERATELY. Two methods in
+    economy_materials.py and the price table cache their
     answer on their own bare class object rather than on self, because
     what they cache (a CommodityLedger, a material-to-commodity-id map,
-    the solved price table, and the ox-cart-and-dirt-track physical
-    inputs freight pricing reuses) does not differ between one Sim
+    the solved price table) does not differ between one Sim
     instance and the next in the same process. TRAP: that class-object
     reference at each cache site MUST match whatever class actually
     holds the method - a stale identifier fails silently, invisible to
@@ -257,15 +246,13 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, MaterialReachMixin, Electric
         self.household._cap_factor = None
         self.household._revenue_cache_key = None
         self.household._revenue_cache_val = None
-        self.household._annual_mat_demand_cache = None
         self.household._rev_up_candidates_cache = None
         self.household._practice_cache = None
         self.household._goods_cat_state_cache = None
         self.household._goods_category_ratios_cache = None
         self.household._income_factor_cache = None
         self.household._goods_mkt_op_factor_cache = None
-        self.household._material_demand_cache = None
-        self.household._demand_by_tag_cache = None
+        self.send(ForgetReadings())      # the materials module's remembered demand tables
         self._done_changed()
         self._reset_operating()
         self._reset_active()

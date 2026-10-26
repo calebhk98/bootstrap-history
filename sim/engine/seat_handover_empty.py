@@ -9,6 +9,7 @@ from typing import List
 
 from sim.engine.state import GovernanceState
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
+from sim.materials.state import MaterialsSeat
 from sim.resources.state import ResourcesSeat
 
 STAFF_FIELDS = ("scholars", "artisans", "directors_extra", "slaves", "freedmen", "reserve_craftsmen", "reserve_scholars")
@@ -54,7 +55,8 @@ def holds_that_would_be_lost(seat, has_disclosures: bool) -> List[str]:
 		found.append("staff")
 	if any(getattr(household, name, 0) for name in OWED_FIELDS) or household.bondage_years_left:
 		found.append("arrears or bondage")
-	if holdings_in_use(seat.holdings) or module_state_in_use(seat.modules.get("resources") or ResourcesSeat()):
+	if (holdings_in_use(seat.holdings) or module_state_in_use(seat.modules.get("resources") or ResourcesSeat())
+			or module_state_in_use(seat.modules.get("materials") or MaterialsSeat())):
 		found.append("holdings")
 	if seat.governance != GovernanceState():
 		found.append("institutions")

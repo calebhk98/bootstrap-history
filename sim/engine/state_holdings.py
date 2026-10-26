@@ -1,16 +1,11 @@
 """What one seat holds and has told its player, apart from the world everyone shares."""
-import collections
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 
 @dataclass
 class HoldingsState:
-	"""A seat's granary, farm, material stock and shortage readings."""
-	shortages: collections.Counter = field(default_factory=collections.Counter)
-	throttle: float = 1.0
-	binding: Optional[str] = None
-	shortage_condition: Optional[Dict[str, Any]] = None
+	"""A seat's granary, farm and material stock."""
 	market_pressure: float = 0.0
 	_material_stock_ledger: Optional[Dict[str, float]] = None
 	_material_stock_opening: Optional[Dict[str, Any]] = None
@@ -22,8 +17,6 @@ class HoldingsState:
 	farm_last_harvest_kg: float = 0.0
 	farm_last_marginal_product: Optional[float] = None
 	farm_hours_needed: Optional[float] = None
-	# tonnes a year per material the last throttle saw; the next year's prices read it before it is recomputed
-	material_demand_at_last_throttle: Optional[Dict[str, float]] = None
 	_dashboard_history: Optional[List[Any]] = None
 	# rights and equity the seat holds as an actor: patents by node id, shares held by issuer id, and the part
 	# of the seat's own equity issued to others

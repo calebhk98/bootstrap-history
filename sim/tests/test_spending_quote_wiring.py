@@ -12,7 +12,6 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.labour.labour_training import TrainingMixin
-from sim.engine.project_materials import ProjectMaterialsMixin
 from sim.agents.api import edges
 from sim.ledger.api import PayEdge
 from sim.projects.api import PostBounty

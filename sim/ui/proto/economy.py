@@ -193,9 +193,9 @@ def _power_generation_block(sim):
     if mech.get("water") or mech.get("steam"):
         block["mechanical_shaft_power_kw"] = {mechanism: round(value, 1)
                                               for mechanism, value in sorted(mech.items()) if value}
-    if sim.binding == "electricity":
+    if sim.view("material_binding")() == "electricity":
         block["electricity_is_the_binding_constraint"] = True
-        block["throttle"] = round(sim.throttle, 3)
+        block["throttle"] = round(sim.view("material_throttle")(), 3)
     block["note"] = ("generation and demand are both averaged continuous "
                      "kilowatts, the same annual-flow convention every other "
                      "tracked resource in this engine uses - not an "
@@ -698,8 +698,8 @@ def _dashboard_snapshot(sim):
         "capital": round(sim.capital, 1),
         "revenue": round(sim.revenue(), 1),
         "credit_limit": round(sim.credit_limit(), 1),
-        "throttle": round(sim.throttle, 3),
-        "binding": sim.binding,
+        "throttle": round(sim.view("material_throttle")(), 3),
+        "binding": sim.view("material_binding")(),
         "operating_count": len(sim.operating),
         "done_earned": len(sim.done - sim.granted),
         "employees_total": round(sum(sim.employees.values()), 2),

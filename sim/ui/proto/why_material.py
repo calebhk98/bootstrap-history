@@ -2,7 +2,7 @@
 shortage line already use."""
 
 import sim.engine.ui_port as ui_port
-from sim.engine.shortage_conditions import material_words
+from sim.engine.ui_port import material_words
 from sim.ui.market_report import priceable_materials
 
 from .economy import _material_capacity_rows

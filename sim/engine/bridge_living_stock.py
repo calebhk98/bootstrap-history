@@ -18,18 +18,9 @@ from sim.coin.api import visibility_factor
 # ---- facts of the world and the game's data ----
 
 
-
 @bridge_view("civilisation")
 def civilisation(sim):
     return sim.civ
-
-
-
-
-@bridge_view("material_commodity", kind=KEYED)
-def material_commodity(sim, material):
-    """The commodity key a material is held under in the tonnes ledger."""
-    return sim._material_tag(material)[0]
 
 
 @bridge_view("producer_capacities")
@@ -74,8 +65,6 @@ def hours_per_person_year(sim):
     return sim.HOURS_PER_PERSON_YEAR
 
 
-
-
 @bridge_command(PressLabour)
 def press_labour(sim, command):
     sim.labour.market.press(command.trade, command.hours)
@@ -104,12 +93,9 @@ def partner_catch_chance(sim, civilization_id, share_of_holding):
 # ---- what is built and running ----
 
 
-
 @bridge_view("operating")
 def operating(sim):
     return sim.state.projects.operating
-
-
 
 
 @bridge_view("institution_units", kind=KEYED)

@@ -9,7 +9,8 @@ from sim.assembly.api import FIRST, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook
 from sim.ledger.api import PayEdge
 
 from .commands import Bribe, PostBounty, StartProject, StopProject
-from .needed_commands import (ClearMothball, CompleteProject, SettleProjectMaterials)
+from sim.materials.api import SettleProjectMaterials
+from .needed_commands import (ClearMothball, CompleteProject)
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 from .projects import ACTIVE, START, Projects
 

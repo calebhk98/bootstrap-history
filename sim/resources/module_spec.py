@@ -4,6 +4,7 @@ Every read is a view of an owner that has not moved yet, published by the engine
 the files it names) under the name the owner will publish, except the `legacy_*` ones: raw state used in place."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.ledger.api import PayEdge, ReceiveFromEdge
+from sim.materials.api import ApplyThrottle
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 
 from .channels import FOREST, MINES, NITRE, TIMBER
@@ -17,7 +18,7 @@ READS_BY_OWNER = {
     "prices": ("price_index", "material_price"),
     "workforce": ("wage", "labour_quote", "money_per_labour_hour"),
     "materials": ("normalized_material", "material_demand", "material_checks", "charcoal_per_hectare", "material_shortfall",
-                  "material_market_tonnes", "material_unsupplied_sentence", "material_binding", "resource_throttle"),
+                  "material_market_tonnes", "material_unsupplied_sentence", "material_binding"),
     "ledger": ("goods_stock", "acting_balance"),
     "finance": ("can_pay", "purchase_budget", "spending_power", "affordable_units", "afford_means"),
     "polity": ("inspection_reach", "forest_reach"),
@@ -68,6 +69,6 @@ MODULE_SPECS = (ModuleSpec(
              (DrawDeposit, "draw_deposit"), (Prospect, "prospect"), (BuyForest, "buy_forest"), (LayNitreBeds, "lay_nitre"),
              (NoteMineCostPaid, "note_mine_cost_paid"), (FellTimber, "fell_timber"), (RegrowTimber, "regrow_timber")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(PayEdge, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip),
+    sends=(ApplyThrottle, PayEdge, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip),
     phases=(PhaseHook("materials", "step_materials"),),
 ),)

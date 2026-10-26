@@ -9,7 +9,7 @@ import unittest
 
 from sim.projects.api import instantaneous
 is_instantaneous = instantaneous.is_instantaneous
-from sim.engine.project_throttle import input_pools, shared_throttle
+from sim.materials.rules import input_pools, shared_throttle
 from sim.resources.sizing import nitre_bed_square_metres, nitre_deficit_tonnes
 from sim.ui.proto import credit_forecast
 from sim.ui.proto.help import _agent_help

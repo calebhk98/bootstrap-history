@@ -377,14 +377,6 @@ class ForwardingPropertiesMixin:
 		setattr(self.household, "_last_buy_refusal", value)
 
 	@property
-	def _material_demand_cache(self):
-		return getattr(self.household, "_material_demand_cache", None)
-
-	@_material_demand_cache.setter
-	def _material_demand_cache(self, value):
-		setattr(self.household, "_material_demand_cache", value)
-
-	@property
 	def _said_stack_caution(self):
 		return getattr(self.household, "_said_stack_caution", None)
 
@@ -525,14 +517,6 @@ class ForwardingPropertiesMixin:
 			setattr(sub, "_dashboard_history", value)
 
 	@property
-	def binding(self):
-		return getattr(self.state.holdings, "binding")
-
-	@binding.setter
-	def binding(self, value):
-		setattr(self.state.holdings, "binding", value)
-
-	@property
 	def farm_hectares(self):
 		sub = getattr(self.state, "holdings", None)
 		if sub is None:
@@ -563,22 +547,6 @@ class ForwardingPropertiesMixin:
 	@output_factor.setter
 	def output_factor(self, value):
 		setattr(self.state.economy, "output_factor", value)
-
-	@property
-	def shortages(self):
-		return getattr(self.state.holdings, "shortages")
-
-	@shortages.setter
-	def shortages(self, value):
-		setattr(self.state.holdings, "shortages", value)
-
-	@property
-	def throttle(self):
-		return getattr(self.state.holdings, "throttle")
-
-	@throttle.setter
-	def throttle(self, value):
-		setattr(self.state.holdings, "throttle", value)
 
 	# =========================================================================
 	# GovernanceState Compatibility Properties

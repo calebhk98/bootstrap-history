@@ -62,14 +62,6 @@ def market_floor_ratio(sim, commodity):
     return sim._floor_ratio(commodity)
 
 
-@bridge_view("national_output", kind=KEYED)
-def national_output(sim, commodity):
-    """(tonnes a year the whole society produces of a commodity, the population that figure is stated for)."""
-    reference = (sim.DEFAULT_POPULATION_100AD if commodity in sim.res["empire_output_100ad"]
-                 else float(sim.civ.get("population") or sim.DEFAULT_POPULATION_100AD))
-    return sim._national_output_tonnes(commodity), reference
-
-
 # ---- the map ----
 
 @bridge_view("tracked_materials")

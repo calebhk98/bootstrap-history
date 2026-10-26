@@ -5,7 +5,7 @@ import dataclasses
 import types
 import unittest
 
-from sim.engine import material_capacity
+from sim.materials import capacity as material_capacity
 
 RECIPES = {"a": types.SimpleNamespace(outputs={"glass_kg": 200.0, "ash_kg": 7.0}),
            "b": types.SimpleNamespace(outputs={"glass_kg": 100.0})}

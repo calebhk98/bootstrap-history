@@ -8,6 +8,7 @@ from sim.refusal import Refusal, cause_of
 from .data import WAGES
 from . import game_assembly
 from sim.knowledge.api import fog_mismatch
+from sim.materials.api import CaptureReadings
 from .rng_record import restore_rng, rng_record
 from sim.engine.state import (
     SAVE_FIELDS,  # noqa: F401 - compatibility export used by protocol.py
@@ -37,8 +38,7 @@ def state_text(sim):
 		sim.state.population.pop_working_age = float(sim.population.working_age)
 		sim.state.population.pop_elderly = float(sim.population.elderly)
 
-	held_demand = sim.household._material_demand_cache
-	sim.state.holdings.material_demand_at_last_throttle = None if held_demand is None else dict(held_demand)
+	sim.send(CaptureReadings())      # the demand the last throttle saw is carried in the save
 
 	# the agent economy's record is most of the file and already plain JSON: the encoder takes it as it is
 	with verbatim(sim.state.economy.agent_economy.get("record")):

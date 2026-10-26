@@ -1,5 +1,5 @@
 """The simulation itself: what one year does, and the loop over years."""
-import collections, copy, os, sys
+import copy, os, sys
 
 from sim.constants import declare
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
@@ -71,6 +71,7 @@ from .interest_groups import InterestGroupsMixin
 from .benefactions import BenefactionsMixin
 from .forward_freight import ForwardFreightMixin
 from .forward_resources import ForwardResourcesMixin
+from .forward_materials import ForwardMaterialsMixin
 from .mod_stores import ModStoresMixin
 from .core_properties import ForwardingPropertiesMixin
 from .goals import GoalsMixin
@@ -81,6 +82,7 @@ from .invariants import check_simulation_invariants
 from sim.agents.api import Household
 from .agents_port_household import HouseholdPort
 from sim.reporting.api import RecordEvent
+from sim.materials.api import RestoreReadings
 
 
 class Sim(
@@ -128,6 +130,7 @@ class Sim(
         ForwardCoinMixin,
         ForwardAgricultureMixin,
         ForwardResourcesMixin,
+        ForwardMaterialsMixin,
         FoodEatenMixin,
         DemographicRecoveryMixin,
         RegionalPeopleMixin,
@@ -479,8 +482,7 @@ class Sim(
         from . import game_assembly
         game_assembly.attach(self)
         # the demand the last throttle saw is read before the next one, so it is carried
-        held_demand = self.state.holdings.material_demand_at_last_throttle
-        self.household._material_demand_cache = None if held_demand is None else collections.Counter(held_demand)
+        self.send(RestoreReadings())
 
     def _wrap_seat_containers(self):
         """Wrap the bound seat's mutation-aware containers and start its version counters."""

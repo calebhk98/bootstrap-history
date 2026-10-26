@@ -3,7 +3,7 @@ explicit name, and each private `Sim` member the UI reads or writes has a public
 delegates exactly. sim/ui/ imports nothing from sim.engine except this module."""
 from sim.engine import (  # noqa: F401
     cash_book, category_traits, cause_book, world_events, civ_start_check, fuzzy_estimates, path_search, planner,
-    purchase_rule, settings, settings_table, shortage_conditions, topic_tags, tree_merge, units,
+    purchase_rule, settings, settings_table, topic_tags, tree_merge, units,
     validate_material_gating, validate_node_money, node_revenue_census, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.engine.blockers import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND  # noqa: F401
 from sim.engine.catalog import load_production_catalog  # noqa: F401
@@ -42,7 +42,9 @@ from sim.engine.save_companions import save_session  # noqa: F401
 from sim.engine.settings_table import normal_seed, valid_seed_text  # noqa: F401
 from sim.projects.api import funding as project_funding
 paid_credit = project_funding.paid_credit
-from sim.engine.shortage_conditions import condition_line  # noqa: F401
+from sim.materials.api import rules as materials_rules
+condition_line = materials_rules.condition_line
+material_words = materials_rules.material_words
 from sim.engine.trade_demand import oversubscription_notes  # noqa: F401
 from sim.engine.units_summary import summary_line  # noqa: F401
 from sim.engine.units import tagged  # noqa: F401
@@ -101,6 +103,11 @@ def material_tag(sim, material):
 
 def electricity_demand_kw(sim):
     return sim._electricity_demand_kw()
+
+
+def shortage_condition_rows(sim):
+    """The standing material shortage as rows for the state screen, empty when none."""
+    return sim.view("shortage_conditions")()
 
 
 def disease_burden(sim):

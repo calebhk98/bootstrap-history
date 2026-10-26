@@ -52,5 +52,5 @@ def _epidemic(sim):
 def _project_throughput(sim):
     # the change since last year is this year's completions
     return {"value": len(sim.done - sim.granted),
-            "drivers": {"active_projects": len(sim.active), "throttle": sim.throttle,
+            "drivers": {"active_projects": len(sim.active), "throttle": sim.view("material_throttle")(),
                         "employees": sum(sim.employees.values())}}

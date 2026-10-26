@@ -1,6 +1,6 @@
 """The ledger's commands: every change of a balance is one of these, sent to the ledger."""
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 from sim.assembly.api import Command
 
@@ -39,6 +39,14 @@ class ChangeStock(Command):
 	# Complaint 681, kept until the migration's last equivalence proof: the old living-stock path took the opening
 	# snapshot after the change, so the year's first change counts twice in the opening stock
 	legacy_snapshot_after_change: bool = False
+
+
+@dataclass(frozen=True)
+class BankStock(Command):
+	"""The acting seat's tonnes of each commodity are set to these figures, in order (a later figure for a commodity
+	wins). The year's opening snapshot is taken first and not changed: this is what the year's material reading leaves
+	of the stock it started from, not a trade."""
+	tonnes: Tuple[Tuple[str, float], ...]
 
 
 @dataclass(frozen=True)
