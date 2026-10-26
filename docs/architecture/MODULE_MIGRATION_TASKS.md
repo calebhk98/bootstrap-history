@@ -1,6 +1,6 @@
 # Module migration tasks
 
-**Status:** in progress on branch `sim-module-registry-plan`, base tag `mr-base`. The design is
+**Status:** in progress on branch `sim-module-registry-plan`, base `mr-base` = `0be2f72` (a local tag; the code there is identical to the branch head before phase 0). The design is
 `MODULE_REGISTRY_PLAN.md`; this file is the execution order and is ticked as each task merges. The work lands as one
 pull request when every box is ticked. `main` is frozen for the duration (owner decision 2026-10-25).
 
