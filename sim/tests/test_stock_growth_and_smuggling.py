@@ -85,10 +85,6 @@ class Game:
     partner_refusal = ForeignEconomiesMixin.partner_refusal
     partner_government = ForeignEconomiesMixin.partner_government
 
-    def view(self, name):
-        """The views the bridge reads of a game: the agriculture module's wild stock, which is whole here."""
-        return {"wild_stock": lambda: {}}[name]
-
     def __init__(self, capital=1e6, governed=True):
         self.civ = load_civ(HOME)
         self.world_map = open_map()
@@ -162,7 +158,9 @@ class Game:
         return {"route": None, "freight_per_tonne": 10.0}
 
     def view(self, name):
-        return {"trader_agent_cost": lambda civilization_id, route: 5.0,
+        """The views the bridge reads of a game: the wild stock (whole here) and the merchants' terms."""
+        return {"wild_stock": lambda: {},
+                "trader_agent_cost": lambda civilization_id, route: 5.0,
                 "cargo_lost_share": lambda route, material=None, civilization_id=None, demand=None: 0.1}[name]
 
 
