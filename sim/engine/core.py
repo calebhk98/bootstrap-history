@@ -59,10 +59,7 @@ from .food_supply import FoodSupplyMixin
 from .soil_nitrogen_year import SoilNitrogenMixin
 from .forward_living_stock import ForwardLivingStockMixin
 from .forward_coin import ForwardCoinMixin
-from .campaign_actors import CampaignActorsMixin
-from .campaign_year import CampaignYearMixin
-from .revolt_year import RevoltYearMixin
-from .captives import CaptivesMixin
+from .forward_campaigns import ForwardCampaignsMixin
 from .market_demand import MarketDemandMixin
 from .real_output import RealOutputMixin
 from .concern_volume import ConcernVolumeMixin
@@ -215,7 +212,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 class Sim(ModStoresMixin, RealPriceRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, ConcernBookSalesMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, SeatBankMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, ForwardLivingStockMixin, ForwardCoinMixin,
-          FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, UrbanShareMixin, CampaignActorsMixin, CampaignYearMixin, RevoltYearMixin, CaptivesMixin, EconomyPortMixin, NodeRederiveMixin):
+          FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, UrbanShareMixin, ForwardCampaignsMixin, EconomyPortMixin, NodeRederiveMixin):
     DEFAULT_POPULATION_100AD = declare(
         "DEFAULT_POPULATION_100AD", 65e6, kind="initial_condition",
         unit="people", source="Widely cited estimate of the Roman Empire's "

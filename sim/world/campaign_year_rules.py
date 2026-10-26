@@ -1,4 +1,4 @@
-"""The rules the yearly campaign phase (`engine/campaign_year.py`) applies between the larger world rules: what a march
+"""The rules the yearly campaign phase (`sim/campaigns/campaign_year.py`) applies between the larger world rules: what a march
 costs in camp days, where losses are booked, how a force is shared out, when a withdrawn or
 routed army goes home and when a taken tile rises in control. Plain functions of the values they are given."""
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple

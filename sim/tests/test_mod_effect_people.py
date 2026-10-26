@@ -13,6 +13,7 @@ from sim.engine.mod_effects import ModEffects, people_of
 from sim.agents.api import edges
 from sim.engine import world_events
 from sim.engine.mods import ModError
+from sim.tests.bridge_send import attach_send
 
 HOME, ABROAD = "home_land", "far_land"
 
@@ -39,6 +40,7 @@ def stand_in_game():
     game = SimpleNamespace(actors=StandInActors([farmers, artisans, foreign, government]), civ={"id": HOME},
                            state=SimpleNamespace(scenario=SimpleNamespace(year=100), economy=SimpleNamespace(world_events=[])),
                            population=SimpleNamespace(total=1200.0))
+    attach_send(game)
     return game, farmers, artisans, foreign
 
 

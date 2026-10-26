@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import types
 from unittest import mock
 
+from .bridge_send import attach_send
 from .harness import check
 from sim.agents.api import Business
 from sim.agents.business_plant import Plant
@@ -50,7 +51,7 @@ def game(strata=(), actors=(), owners=None, home_people=1000.0, colonies=None):
         sim.population.total *= 1.0 - share
     sim._apply_population_mortality_shock = shock
     sim.transfer_tile = lambda *arguments, **keywords: TileOwnershipMixin.transfer_tile(sim, *arguments, **keywords)
-    return sim
+    return attach_send(sim)
 
 
 def always(kind):

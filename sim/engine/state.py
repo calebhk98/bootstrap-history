@@ -306,8 +306,6 @@ class EconomyState:
 	tile_owners: Dict[str, Dict[str, str]] = field(default_factory=dict)
 	# claims the seeding refused because another civilisation file already held the tile: {tile, owner, claimant}
 	tile_claim_conflicts: List[Dict[str, Any]] = field(default_factory=list)
-	# armies, the food they took from tiles this year and the tiles an army took: {armies, drawn, held_since, next_id} (campaign_actors.py)
-	campaigns: Dict[str, Any] = field(default_factory=dict)
 	# dated records of what changed in the world and why, shared by every seat (world_events.py)
 	world_events: List[Dict[str, Any]] = field(default_factory=list)
 	# tile -> {construction node id: capacity built there} (works.py)

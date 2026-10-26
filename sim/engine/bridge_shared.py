@@ -25,3 +25,15 @@ def staff(sim):
 	"""The acting seat's household staff: hired hands by trade, and its scholars and artisans."""
 	household = sim.state.household
 	return {"employees": household.employees, "scholars": household.scholars, "artisans": household.artisans}
+
+
+@bridge_view("tile_owner", kind=KEYED)
+def tile_owner(sim, tile):
+	"""Who holds a tile (the sovereign), or None."""
+	return sim.tile_owner(tile)
+
+
+@bridge_view("tiles_owned_by", kind=KEYED)
+def tiles_owned_by(sim, actor):
+	"""Sorted tiles this country or seat owns, at any control level."""
+	return sim.tiles_owned_by(actor)

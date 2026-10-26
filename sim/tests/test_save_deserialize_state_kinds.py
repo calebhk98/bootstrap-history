@@ -89,13 +89,12 @@ check("deserialize_state: a holdings blob with nothing in it is the defaults", d
 economy = deserialize_state({
 	"agent_economy": {"opening": {"recipes": ["bread", "brick"]}, "record": {"loans": [{"contract_id": "l1"}]}, "cargo": {"leg:1": {"tonnes": 2.0}}},
 	"tile_owners": {"t1": {"owner": "rome", "control": "high"}}, "works_under_construction": {"t1": {"mill": [105, 1]}},
-	"foreign_trade_by_year": {"100": {"in": 4, "out": 3}}, "output_factor": "2", "market_flows": None, "nodes_money_per_labour_hour": None,
-	"campaigns": {"armies": {}, "next_id": 2}}, EconomyState)
+	"foreign_trade_by_year": {"100": {"in": 4, "out": 3}}, "output_factor": "2", "market_flows": None, "nodes_money_per_labour_hour": None}, EconomyState)
 check("deserialize_state: the stored agent economy (opening with its recipes, record, cargo) is as saved",
       economy.agent_economy == {"opening": {"recipes": ["bread", "brick"]}, "record": {"loans": [{"contract_id": "l1"}]}, "cargo": {"leg:1": {"tonnes": 2.0}}}, None)
 check("deserialize_state: tile-keyed stores, with their numbers typed", economy.tile_owners == {"t1": {"owner": "rome", "control": "high"}}
       and economy.works_under_construction == {"t1": {"mill": [105.0, 1.0]}} and economy.foreign_trade_by_year == {"100": {"in": 4.0, "out": 3.0}}
-      and economy.output_factor == 2.0 and economy.campaigns == {"armies": {}, "next_id": 2}, None)
+      and economy.output_factor == 2.0, None)
 check("deserialize_state: unset optional economy fields stay None", economy.market_flows is None and economy.nodes_money_per_labour_hour is None)
 
 # ---- actors: contracts in the purses, the state's books
