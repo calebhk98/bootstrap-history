@@ -2,11 +2,9 @@
 import collections, copy, os, random, sys
 
 from sim.constants import declare
-from sim.refusal import LogLine
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from . import money_units
 from . import externalities
-from . import automation_audit
 from .mortality_shock import cut_cohorts
 from .disease_burden import burden_from_holdings
 from .wage_scarcity import wage_index_of
@@ -58,16 +56,15 @@ from .urban_share import UrbanShareMixin
 from .food_supply import FoodSupplyMixin
 from .soil_nitrogen_year import SoilNitrogenMixin
 from .forward_living_stock import ForwardLivingStockMixin
+from .forward_reporting import ReportingForwardsMixin
 from .forward_coin import ForwardCoinMixin
 from .forward_campaigns import ForwardCampaignsMixin
 from .market_demand import MarketDemandMixin
-from .real_output import RealOutputMixin
 from .concern_volume import ConcernVolumeMixin
 from .concern_book_sales import ConcernBookSalesMixin
 from .techniques_in_use import TechniquesInUseMixin
 from .industry_concern import IndustryConcernMixin
 from .industry_depth import IndustryDepthMixin
-from .real_price_ratios import RealPriceRatiosMixin
 from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
@@ -104,6 +101,7 @@ from .data import trade_family
 from .invariants import check_simulation_invariants
 from sim.agents.api import Household
 from .agents_port_household import HouseholdPort
+from sim.reporting.api import RecordEvent
 
 
 def _cell_morton_code(lat_degrees, lon_degrees, bits=16):
@@ -209,9 +207,9 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 
 
-class Sim(ModStoresMixin, RealPriceRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, ConcernBookSalesMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
+class Sim(ModStoresMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, ConcernVolumeMixin, ConcernBookSalesMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, SeatBankMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
-          StepPhasesMixin, ForwardLivingStockMixin, ForwardCoinMixin,
+          StepPhasesMixin, ForwardLivingStockMixin, ReportingForwardsMixin, ForwardCoinMixin,
           FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, UrbanShareMixin, ForwardCampaignsMixin, EconomyPortMixin, NodeRederiveMixin):
     DEFAULT_POPULATION_100AD = declare(
         "DEFAULT_POPULATION_100AD", 65e6, kind="initial_condition",
@@ -490,11 +488,9 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, MechanicsMixin, EconomyMixin, Ma
         self.state.founder.living_cost_paid = 0.0
         self._spend_this_year = 0.0
         # WORLD state: monetary and real facts about the whole civilisation,
-        # not about this household. money_real is currency debasement;
-        # output_factor is the health of the whole imperial
+        # not about this household. output_factor is the health of the whole imperial
         # economy relative to 100 AD, crushed by war and plague, not by any
         # one household's fortunes.
-        self.money_real = 1.0     # purchasing power of one coin, 1.0 at the start date
         self.output_factor = 1.0  # real output, crushed by war and plague, not by debasement
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # How much of each material physically exists: a material's
@@ -1228,13 +1224,11 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, MechanicsMixin, EconomyMixin, Ma
         shortfall = (premium / PERCENT_SCALE) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
         if premium > 0.5 and year - self.state.scenario._said_wage_cascade >= 15:
             self.state.scenario._said_wage_cascade = year
-            self.state.household.log.append((year, LogLine(
-                "wage_cascade", "population still %d%% below trend: wages "
+            self.send(RecordEvent.in_year(year, "wage_cascade", "population still %d%% below trend: wages "
                 "(and anything billed in them) are running "
                 "%d%% above normal for here, and will ease "
                 "as the population does"
-                % (round(shortfall * PERCENT_SCALE), round(premium)),
-                population_below_trend_percent=round(shortfall * PERCENT_SCALE), wage_premium_percent=round(premium))))
+                % (round(shortfall * PERCENT_SCALE), round(premium)), population_below_trend_percent=round(shortfall * PERCENT_SCALE), wage_premium_percent=round(premium)))
 
     # -- helpers ------------------------------------------------------------
 
@@ -1825,7 +1819,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, MechanicsMixin, EconomyMixin, Ma
             if self.state.projects.done_year is None:
                 self.state.projects.done_year = {}
             self.state.projects.done_year[node_id] = year
-            self.state.household.log.append((year, LogLine("goal_achieved", "achieved: " + self.nodes[node_id]["name"])))
+            self.send(RecordEvent.in_year(year, "goal_achieved", "achieved: " + self.nodes[node_id]["name"]))
             self.record_goal_reached(node_id, year)
 
     def run(self, goal, horizon=None):

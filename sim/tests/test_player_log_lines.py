@@ -36,6 +36,7 @@ def stand_in_game():
     game = SimpleNamespace(log=[], year=100, employees={}, capital=0.0, wages_prepaid=0.0, fog=False,
                            founder_alive=True, forgotten={}, nodes={}, state=SimpleNamespace(interface={}))
     game.labour = StandInLabour(game)
+    game.send = lambda command: game.log.append((game.year, LogLine(command.kind, command.text, **command.facts)))
     game.living_cost = lambda: 0.0
     game.fog_scrub = lambda text: text
     game.deputies_carry_the_work = lambda: False

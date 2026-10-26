@@ -13,7 +13,7 @@ from sim.tests.test_mod_removal_and_civs import ModTestBase
 
 ALPHA, BETA = "test_alpha_p1xz", "test_beta_p1xz"
 SHIPPED_ORDER = [
-    "begin_seat_year", "begin_world_year", "apprenticeships", "staff", "money_seat", "money_world",
+    "begin_seat_year", "trim_audit", "hear_of_other_seats", "begin_world_year", "apprenticeships", "staff", "money_seat", "money_world",
     "win_conditions", "dated_shocks", "drop_ended_seats", "seat_prelude", "start_projects", "materials", "seat_work", "market",
     "coin_revaluation", "wage_market_ratios", "wild_stock", "soil_nitrogen", "living_stock",
     "defence_stores", "random_events", "world_hazards", "campaigns", "revolts", "famine_watch", "credit_limit", "advance_year"]

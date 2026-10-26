@@ -5,8 +5,9 @@ gates beginning the node, switches the node's effects off while a work is shut (
 closes the node when it is open as the work closes. `requires_ways` ({way: kilometres}) asks for a
 length of road or railway the actor has built (sim/engine/ways.py). Nothing here names a node.
 """
-from sim.refusal import LogLine, Refusal
+from sim.refusal import Refusal
 from .blockers import blocker_kind
+from sim.reporting.api import RecordEvent
 
 
 @blocker_kind("closed")
@@ -89,9 +90,7 @@ class RunningGatesMixin:
             if not lapsed:
                 return closed
             node_id = lapsed[0]
-            self.state.household.log.append(
-                (year, LogLine("work_closed_gate_lapsed", "%s closed: the work it needs running (%s) has stopped"
-                               % (node_id, ", ".join(self.unmet_running_gates(node_id))),
-                               work=node_id, gates=list(self.unmet_running_gates(node_id)))))
+            self.send(RecordEvent.of("work_closed_gate_lapsed", "%s closed: the work it needs running (%s) has stopped"
+                               % (node_id, ", ".join(self.unmet_running_gates(node_id))), work=node_id, gates=list(self.unmet_running_gates(node_id))))
             self.close_work(node_id, self.CLOSED_GATE_LAPSED, year, cascade=False)
             closed.append(node_id)

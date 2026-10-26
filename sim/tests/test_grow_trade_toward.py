@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.staff_replacement import grow_trade_toward
+from sim.tests import event_stand_in
 
 
 def world(held, found, accepts=True):
@@ -25,7 +26,8 @@ def world(held, found, accepts=True):
 
     labour = SimpleNamespace(stochastic_round=lambda target: int(target), hire_buying_room=hire_buying_room, fire=fire,
                              supervision_room=lambda: 3.0)
-    return SimpleNamespace(state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)), labour=labour)
+    return event_stand_in.stood_in(SimpleNamespace(
+        state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)), labour=labour))
 
 
 partial = world(held=2.0, found=1)

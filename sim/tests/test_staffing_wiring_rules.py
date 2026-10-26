@@ -11,9 +11,12 @@ from sim.engine import projects_staffing
 from sim.engine.economy_production import ProductionMixin
 from sim.engine.projects_staffing import StaffingMixin
 from sim.refusal import cause_of, facts_of
+from sim.tests import event_stand_in
 
 
 class Closing(StaffingMixin):
+    send = event_stand_in.send
+
     def __init__(self, closed_keys):
         self.state = types.SimpleNamespace(household=types.SimpleNamespace(log=[]))
         self.keys = closed_keys
@@ -59,6 +62,8 @@ class ClosingUnstaffed(unittest.TestCase):
 
 
 class Reopening(StaffingMixin):
+    send = event_stand_in.send
+
     def __init__(self, reopened):
         business = types.SimpleNamespace(review_reopening=lambda household, world: reopened)
         self.state = types.SimpleNamespace(household=types.SimpleNamespace(log=[]), projects=types.SimpleNamespace(business=business))

@@ -1,6 +1,6 @@
 """The static market book's household basket: what households bought of each material at the opening, by the
 engine's demand model, valued at the price table's opening prices. Only the static book (market_demand.py,
-foreign_capacity.py) reads it; real output is the economy's (real_output.py). Goes with the static book in
+foreign_capacity.py) reads it; real output is the economy's (sim/reporting/output.py). Goes with the static book in
 Complaint 507 stage 6."""
 
 def opening_prices_in_hours(held, civ, opening_farmed_hectares):

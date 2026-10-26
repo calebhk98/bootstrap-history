@@ -429,7 +429,7 @@ class GoodsMixin:
         shared_key = (
             scenario.year,
             getattr(self, "pop_scale", 1.0),
-            economy.output_per_head,
+            self.real_output_per_head(),
             self.household.operating_version,
             self.household.done_version,
             self.actor_market_version(),
@@ -630,7 +630,7 @@ class GoodsMixin:
         shared_key = (
             scenario.year,
             getattr(self, "pop_scale", 1.0),
-            economy.output_per_head,
+            self.real_output_per_head(),
             self.household.operating_version,
             self.household.done_version,
             getattr(holdings, "farm_hectares", 0.0) or 0.0,
@@ -683,7 +683,7 @@ class GoodsMixin:
         shared_key = (
             scenario.year,
             getattr(self, "pop_scale", 1.0),
-            economy.output_per_head,
+            self.real_output_per_head(),
             self.household.operating_version,
             self.household.done_version,
             getattr(holdings, "farm_hectares", 0.0) or 0.0,

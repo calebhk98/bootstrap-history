@@ -13,16 +13,18 @@ from .harness import check
 from sim.engine import projects_staffing
 from sim.engine.projects_staffing import StaffingMixin
 from sim.refusal import cause_of, facts_of
+from sim.tests import event_stand_in
 
 
 class Game(StaffingMixin):
     """The parts of a Sim a reopening touches."""
+    send = event_stand_in.send
 
     def __init__(self, reopened, still_shut=2):
         self.asked = []
         self.recorded = []
         self.household = "household-adapter"
-        self.state = SimpleNamespace(household=SimpleNamespace(log=[]), projects=SimpleNamespace(
+        self.state = SimpleNamespace(household=SimpleNamespace(log=[]), scenario=SimpleNamespace(year=100), projects=SimpleNamespace(
             business=SimpleNamespace(review_reopening=lambda household, world: self.asked.append((household, world)) or reopened)))
         self.still_shut = still_shut
 

@@ -10,16 +10,19 @@ from sim.refusal import facts_of
 
 from sim.engine import economy_credit
 from sim.engine.economy_credit import CreditMixin
+from sim.tests import event_stand_in
 
 
 class Debtor(CreditMixin):
     """The parts of a Sim that settling touches; `lines` records what the ledger is told."""
+    send = event_stand_in.send
 
     def __init__(self):
         self.lines = []
         self.state = types.SimpleNamespace(
             household=types.SimpleNamespace(capital=-3000.0, reputation=50.0, log=[], credit_frozen_until=0),
-            projects=types.SimpleNamespace(done={"identity_cover", "civ_road_paved"}, granted=set()))
+            projects=types.SimpleNamespace(done={"identity_cover", "civ_road_paved"}, granted=set()),
+            scenario=types.SimpleNamespace(year=100))
         self.household = self.state.household
 
     def credit_limit(self, _rev=None, _upkeep=None, _capital=None):

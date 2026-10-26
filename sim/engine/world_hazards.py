@@ -9,6 +9,7 @@ import random
 from sim.refusal import LogLine
 
 from . import mod_effects, world_events, world_hazard_data
+from sim.reporting.api import RecordEvent
 
 
 def countries_in_game(sim):
@@ -31,9 +32,9 @@ def hit(sim, country, hazard):
                                                  population_loss=hazard["population_loss"])
     year, died = entry["year"], entry["facts"]["died"]
     for seat_id in sim.playing_seats():
-        sim.state.seats[seat_id].household.log.append((year, LogLine(
+        sim.send(RecordEvent.from_line(LogLine(
             "world_hazard", "%s in %s: about %d people die" % (hazard["cause"], country, round(died)),
-            hazard=hazard["kind"], country=country, died=died)))
+            hazard=hazard["kind"], country=country, died=died), seat_id))
     return entry
 
 

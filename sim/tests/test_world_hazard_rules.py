@@ -12,6 +12,7 @@ from sim.agents.api import Business
 from sim.agents.business_plant import Plant
 from sim.engine import invariants, world_events, world_hazard_data, world_hazards
 from sim.engine.tile_ownership import TileOwnershipMixin
+from sim.tests import event_stand_in
 
 HOME, PARTNER = "rome", "han"
 
@@ -45,6 +46,7 @@ def game(strata=(), actors=(), owners=None, home_people=1000.0, colonies=None):
         partners_in_agent_economy=lambda: [PARTNER], _farm_year_weather_seed=lambda salt: 7,
         playing_seats=lambda: ["first"], stores=types.SimpleNamespace(view=lambda name: controls), controls=controls,
         world_map=types.SimpleNamespace(tiles={"t1": {}, "t2": {}, "t3": {}}))
+    event_stand_in.stood_in(sim)
     sim.tile_owner_map = lambda: sim.state.economy.tile_owners
 
     def shock(share):

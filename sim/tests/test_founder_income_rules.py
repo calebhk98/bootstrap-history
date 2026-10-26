@@ -140,7 +140,7 @@ class RevenueCacheTests(unittest.TestCase):
             scenario=SimpleNamespace(year=100), economy=SimpleNamespace(output_per_head=1.0, output_factor=1.0),
             holdings=SimpleNamespace(farm_hectares=0.0), projects=None, household=household,
             governance=SimpleNamespace(gov=0.0), founder=SimpleNamespace(founder_alive=True))
-        game = SimpleNamespace(state=state, household=household, pop_scale=1.0, state_funding=lambda: 0.0, home_price_level=lambda: 1.0,
+        game = SimpleNamespace(state=state, household=household, pop_scale=1.0, real_output_per_head=lambda: 1.0, state_funding=lambda: 0.0, home_price_level=lambda: 1.0,
                                signature=1.0, committed=0.0, computed=[], _compute_revenue_uncached=None)
         game.labour = SimpleNamespace(director_hours_committed=lambda: game.committed, wage_signature=lambda: game.signature)
         game._compute_revenue_uncached = lambda: game.computed.append(1) or (10.0 * len(game.computed), 0.0)

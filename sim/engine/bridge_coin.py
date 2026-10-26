@@ -73,14 +73,6 @@ def partner_route_cost(sim, civilization_id):
     return None if route is None else route.cost_per_tonne
 
 
-# ---- reporting ----
-
-@bridge_view("coin_value_ratio", kind=KEYED)
-def coin_value_ratio(sim, metal):
-    """What the coin of this metal buys now over what it bought at the baseline; one while the economy opens."""
-    return sim.coin_value_ratio(metal)
-
-
 # ---- finance, polity, agriculture, resources ----
 
 @bridge_view("lent_share")

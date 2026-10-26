@@ -7,10 +7,8 @@ from sim.ledger.api import NoteSpend
 from sim.polity.api import RecordBribe
 from sim.assembly.api import KEYED, QUOTE
 from sim.projects.needed_commands import (ClearMothball, CompleteProject, SettleProjectMaterials)
-from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
-from sim.refusal import LogLine
 
-from . import automation_audit, purchase_rule, projects_precaution
+from . import purchase_rule, projects_precaution
 from .agents_port import SimWorld
 from .bridge import bridge_command, bridge_view
 from .data import win_condition_describe
@@ -352,22 +350,6 @@ def change_standing(sim, command):
     household.bribes_ytd = command.bribes_year_to_date
     household.scandal = command.scandal
     sim.update_protection()
-
-
-@bridge_command(RecordEvent)
-def record_event(sim, command):
-    sim.state.household.log.append((sim.state.scenario.year, LogLine(command.kind, command.text)))
-
-
-@bridge_command(RecordAutomation)
-def record_automation(sim, command):
-    automation_audit.record(sim, command.policy, command.action, command.what, command.reason, command.capital_before,
-                            **command.facts)
-
-
-@bridge_command(RecordAutomationSkip)
-def record_automation_skip(sim, command):
-    automation_audit.record_skip(sim, command.policy, command.what, command.reason, **command.facts)
 
 
 @bridge_command(SettleProjectMaterials)

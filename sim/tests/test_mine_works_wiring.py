@@ -3,6 +3,7 @@ states and what closing refunds. Called on the stand-in founder of test_mine_nam
 out; the works technology that sets the hours per tonne is test_mine_techniques."""
 from .harness import *  # noqa: F401,F403
 from sim.tests.test_mine_names_a_deposit import _Host
+from sim.tests import event_stand_in
 
 QUICK_TOPIC = True
 UNDER_TEST = {"open_mine"}
@@ -12,6 +13,7 @@ NO_DEPOSIT_MATERIAL = "aluminium_kg"   # no deposit data: bounded by the ceiling
 
 class _Mining(_Host):
     """A founder with a written-out ceiling, capex and opex per tonne a year, and a working's depletion scale."""
+    send = event_stand_in.send
 
     def __init__(self, ceiling=40.0, opex=2.0, scale=1.0):
         super().__init__()

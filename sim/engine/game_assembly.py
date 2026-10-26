@@ -60,11 +60,18 @@ def attach(sim: Any) -> None:
 	for module_id, slot in assembly_api.new_slots(assembly, assembly_api.WORLD).items():
 		state.modules.setdefault(module_id, slot)
 	for seat in state.seats.values():
-		for module_id, slot in assembly_api.new_slots(assembly, assembly_api.SEAT).items():
-			seat.modules.setdefault(module_id, slot)
+		give_seat_slots(assembly, seat)
+	for module_id, module in assembly.modules.items():
+		module.seat_slot_of = lambda seat_id, module_id=module_id: sim.state.seats[seat_id].modules[module_id]
 	state.assembly_record = assembly_api.record(assembly)
 	assembly_api.bind_world(assembly, state.modules)
 	switch_seat(sim, state.acting_seat)
+
+
+def give_seat_slots(assembly: assembly_api.Assembly, seat: Any) -> None:
+	"""Build the seat's state for every module that keeps some per seat, for a seat the slots do not cover yet."""
+	for module_id, slot in assembly_api.new_slots(assembly, assembly_api.SEAT).items():
+		seat.modules.setdefault(module_id, slot)
 
 
 def switch_seat(sim: Any, seat_id: str) -> None:

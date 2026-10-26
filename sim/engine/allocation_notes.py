@@ -1,8 +1,9 @@
 """Telling the player their standing `allocate` orders fell short, once per change."""
 import re
 
-from sim.refusal import LogLine, cause_of
+from sim.refusal import cause_of
 from .units_prose import plain_number
+from sim.reporting.api import RecordEvent
 
 
 class AllocationNotesMixin:
@@ -35,13 +36,10 @@ class AllocationNotesMixin:
             signature = [round(directed), re.sub(r"[\d,]+", "#", why)]
             if not self.unused_hours_is_news(node_id, signature):
                 continue
-            household.log.append((self.state.scenario.year, LogLine(
-                "directed_hours_unused",
-                "DIRECTED HOURS UNUSED: you allocated hours to %s this year that it "
+            self.send(RecordEvent.of("directed_hours_unused", "DIRECTED HOURS UNUSED: you allocated hours to %s this year that it "
                 "could not use - %s of them went begging because %s. 'portfolio' "
                 "shows the rest; 'allocate %s %s' lowers the standing order to what "
                 "it can use, or 'allocate %s 0' clears it. This is said once until "
                 "the order or the reason changes."
                 % (self.nodes[node_id]["name"], plain_number(hours), why,
-                   node_id, plain_number(max(0.0, directed - hours)), node_id),
-                project=node_id, hours_unused=hours, reason=cause_of(why))))
+                   node_id, plain_number(max(0.0, directed - hours)), node_id), project=node_id, hours_unused=hours, reason=cause_of(why)))

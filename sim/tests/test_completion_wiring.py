@@ -11,6 +11,7 @@ from .harness import check
 
 from sim.engine.projects_completion import CompletionMixin
 from sim.refusal import cause_of
+from sim.tests import event_stand_in
 
 NODE = "school"
 
@@ -21,6 +22,7 @@ def kinds(game):
 
 class Finishing:
     """A stand-in game with one active project, `school`, whose attempt is about to end."""
+    send = event_stand_in.send
 
     def __init__(self, fails=False, venture=True, auto_open=False, shortfall=None, goal_lines=(), snapshot=None, hire_mode=False):
         household = SimpleNamespace(log=[], hour_allocations={"school": 1.0}, reputation=0.0, scandal=0.0)

@@ -6,11 +6,13 @@ from types import SimpleNamespace
 
 from sim.engine.core import Sim
 from sim.refusal import cause_of, facts_of
+from sim.tests import event_stand_in
 
 
 def game(wage_index, said=-1000, base=1.0, elasticity=0.5):
-    return SimpleNamespace(wage_index=wage_index, _wage_index_base=base, WAGE_SCARCITY_ELASTICITY=elasticity,
-                           state=SimpleNamespace(scenario=SimpleNamespace(_said_wage_cascade=said), household=SimpleNamespace(log=[])))
+    return event_stand_in.stood_in(SimpleNamespace(
+        wage_index=wage_index, _wage_index_base=base, WAGE_SCARCITY_ELASTICITY=elasticity,
+        state=SimpleNamespace(scenario=SimpleNamespace(_said_wage_cascade=said), household=SimpleNamespace(log=[]))))
 
 
 class WageCascadeLog(unittest.TestCase):

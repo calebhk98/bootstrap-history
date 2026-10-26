@@ -369,14 +369,6 @@ class ForwardingPropertiesMixin:
 		setattr(self.state.household, "work_trade", value)
 
 	@property
-	def log(self):
-		return getattr(self.state.household, "log")
-
-	@log.setter
-	def log(self, value):
-		setattr(self.state.household, "log", value)
-
-	@property
 	def _last_buy_refusal(self):
 		return getattr(self.household, "_last_buy_refusal", None)
 
@@ -599,14 +591,6 @@ class ForwardingPropertiesMixin:
 	@mines.setter
 	def mines(self, value):
 		setattr(self.state.holdings, "mines", value)
-
-	@property
-	def money_real(self):
-		return getattr(self.state.economy, "money_real")
-
-	@money_real.setter
-	def money_real(self, value):
-		setattr(self.state.economy, "money_real", value)
 
 	@property
 	def nitre_bed_m2(self):

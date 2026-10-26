@@ -13,6 +13,7 @@ from sim.engine.core_step_phases import StepPhasesMixin
 from sim.refusal import LogLine, cause_of, facts_of
 from sim.ui.proto import event_kinds
 from sim.ui.proto.state_waiting import _founder_death_info
+from sim.tests import event_stand_in
 
 UNTIL_END = 12
 BEFORE_FORGETTING = 3
@@ -20,6 +21,7 @@ BEFORE_FORGETTING = 3
 
 class Game(StepPhasesMixin):
     """The parts of a Sim that the mortality step reads and writes."""
+    send = event_stand_in.send
     DISSOLUTION_YEARS_UNTIL_END = UNTIL_END
     DISSOLUTION_YEARS_BEFORE_FORGETTING = BEFORE_FORGETTING
     DISSOLUTION_FORGET_FRACTION_DIVISOR = 4

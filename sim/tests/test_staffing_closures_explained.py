@@ -19,6 +19,7 @@ from sim.engine.staffing_events import unstaffed_closure_line
 from sim.labour.hire_outcome import craft_trades_report
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.dispatch_ventures import _non_craft_labour_names, _scholar_family_names
+from sim.tests import event_stand_in
 
 STAFF = business_review.STAFF_SHORT
 
@@ -71,6 +72,7 @@ check("a concern shut by choice is not shut for want of staff", by_choice.staffi
 # ---- 205, 206: a standing order that keeps falling short is reported once until it changes -------------------------------
 class Notes(AllocationNotesMixin):
     """The unused-hours report over a household that logs and keeps the standing orders."""
+    send = event_stand_in.send
 
     def __init__(self, orders):
         self.log = []

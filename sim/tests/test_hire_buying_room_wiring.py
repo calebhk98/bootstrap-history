@@ -8,6 +8,7 @@ import unittest
 
 from sim.labour.labour_staff_controls import StaffControlsMixin
 from sim.refusal import Refusal, cause_of
+from sim.tests import event_stand_in
 
 
 class Staff(StaffControlsMixin):
@@ -24,6 +25,7 @@ class Staff(StaffControlsMixin):
             build_worker_housing=lambda places: self.built.append(places) or True,
             state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=7),
                                         household=types.SimpleNamespace(log=self.log)))
+        event_stand_in.stood_in(self._world)
 
     def household_room(self):
         return self.room

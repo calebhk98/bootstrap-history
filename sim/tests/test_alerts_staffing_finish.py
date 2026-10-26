@@ -10,6 +10,7 @@ from sim.labour.labour_staff_ledger import StaffLedgerMixin
 from sim.refusal import cause_of
 from sim.ui.proto.step_alerts import step_alerts, alert_severity
 from sim.ui.proto.step_stops import severe_stop_reason
+from sim.tests import event_stand_in
 
 # --- 129: every start check declares the kind of blocker it reports
 undeclared = [check.cause for check in START_CHECKS if check.kind not in BLOCKER_KINDS]
@@ -55,6 +56,7 @@ def departures(cause, counts, stops=()):
     ledger = SimpleNamespace(_world=SimpleNamespace(
         concerns_to_close_for_staffing=lambda: list(stops), stopped_yearly_value=lambda node_ids: 0.0,
         state=SimpleNamespace(household=SimpleNamespace(log=log), scenario=SimpleNamespace(year=100))))
+    event_stand_in.stood_in(ledger._world)
     ledger.yearly_value_of = lambda node_ids: ledger._world.stopped_yearly_value(node_ids)
     StaffLedgerMixin.log_staff_lost(ledger, cause, counts)
     return [message for _, message in log]

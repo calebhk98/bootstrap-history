@@ -21,9 +21,7 @@ import math
 import random
 from dataclasses import dataclass
 
-from sim.refusal import LogLine
 from sim.unit_conversions import PERCENT_SCALE
-from . import automation_audit
 from .hour_offer import work_order_shortfall
 from .units_prose import money_text, plain_number
 from .bondage_workshop_rules import bondage_repayment, serve_bondage_year
@@ -36,6 +34,7 @@ from .step_phase_materials import MaterialsPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
 from .step_phase_staff import StaffPhaseMixin
 from sim.agents.api import edges, ledger
+from sim.reporting.api import RecordEvent
 
 
 @dataclass(frozen=True)
@@ -76,17 +75,16 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
                         # A trade you taught. They are now yours to pay, and
                         # they are that trade and no other.
                         self.labour.add_employed(trade, count)
-                        self.state.household.log.append((self.state.scenario.year, LogLine("training_finished", "%g %s%s finish their training"
-                                         % (count, trade, "s" if count != 1 else ""))))
+                        self.send(RecordEvent.of("training_finished", "%g %s%s finish their training"
+                                         % (count, trade, "s" if count != 1 else "")))
                         self.labour.resync_pools()
                     else:
                         # They are trained now, so _resync_pools counts them
                         # from the people you actually hold - see the note
                         # there about why adding to self.state.household.artisans directly was
                         # thrown away at the next call.
-                        self.state.household.log.append((self.state.scenario.year,
-                                         LogLine("bought_people_trained", "%g of the people you bought finish "
-                                         "learning the work" % round(cap / 0.55, 1))))
+                        self.send(RecordEvent.of("bought_people_trained", "%g of the people you bought finish "
+                                         "learning the work" % round(cap / 0.55, 1)))
                 else:
                     still.append(row)
             # BEFORE the resync, not after: _resync_pools counts who is still
@@ -113,8 +111,6 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
         # WHERE SCANDAL STOOD WHEN THE PLAYER LAST LOOKED: `state` prints the chance of being denounced from
         # the CURRENT scandal, and scandal moves DURING the step, so the direction needs the year's opening mark.
         self.state.household.scandal_last_year = self.state.household.scandal
-        automation_audit.begin_year(self)
-        self.hear_of_other_seats()
 
     def begin_world_year(self):
         """What the society notes before the year starts."""
@@ -278,10 +274,10 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
                 # never asked again.
                 if taught:
                     _taught[trade_id] = self.state.scenario.year
-                    self.state.household.log.append((self.state.scenario.year, LogLine("teaching_begun", "you begin teaching the first %ss this "
+                    self.send(RecordEvent.of("teaching_begun", "you begin teaching the first %ss this "
                                          "world has ever had" % trade_id if _first else
                                      "the last %ss are gone; you begin teaching "
-                                     "more" % trade_id)))
+                                     "more" % trade_id))
 
     def _step_standing_work_directive(self):
         # 4a(ii). THE STANDING "WORK" DIRECTIVE. `work` (protocol.py) sells
@@ -323,8 +319,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
                 if _wd - (_already + _got) <= 1.0:
                     self.clear_unused_hours_report("work")
                 elif self.unused_hours_is_news("work", [round(_wd), _work_reason]):
-                    self.state.household.log.append((self.state.scenario.year, LogLine(
-                        "directed_hours_unused", "DIRECTED HOURS UNUSED: your standing "
+                    self.send(RecordEvent.of("directed_hours_unused", "DIRECTED HOURS UNUSED: your standing "
                         "order to sell %s hours a year as a "
                         "%s only managed %s this year - %s. "
                         "'allocate' changes or clears it"
@@ -335,8 +330,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
                            "training had theirs"
                            if _room < _want else
                            "nobody here will pay for that trade "
-                           "any longer"),
-                        trade=self.state.household.work_trade, reason="no_hours_left" if _room < _want else "nobody_pays")))
+                           "any longer"), trade=self.state.household.work_trade, reason="no_hours_left" if _room < _want else "nobody_pays"))
 
     def _step_wage_fallback(self, remaining):
         # 5b. IF THERE IS NO WORK AND NO MONEY, TAKE A JOB. A man who arrives
@@ -429,13 +423,13 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
         _band = eminence_band_to_announce(self.state.household.eminence, _danger, self.state.household._said_eminence)
         if _band is not None:
             self.state.household._said_eminence = _band
-            self.state.household.log.append((self.state.scenario.year, LogLine("eminence_warning", "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
+            self.send(RecordEvent.of("eminence_warning", "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
                                  "against a danger line of %.0f. This is the "
                                  "one thing no patron and no bribe protects "
                                  "you from, and it grows with reputation and "
                                  "visible wealth. A wide, dispersed "
                                  "institution is what survives you"
-                             % (self.state.household.eminence, _danger))))
+                             % (self.state.household.eminence, _danger)))
         self.update_protection()
         # THE STATE NOTICES YOU. Requisition, the pressed office, a demand
         # for military supply, and the tail confiscation risk at the top of
@@ -477,14 +471,14 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
             _band = int(self.state.household.scandal / max(1.0, _sd * 0.15))
             if _band > self.state.seat_progress._said_scandal:
                 self.state.seat_progress._said_scandal = _band
-                self.state.household.log.append((self.state.scenario.year, LogLine("scandal_warning", "YOU ARE BEING TALKED ABOUT: scandal %.0f "
+                self.send(RecordEvent.of("scandal_warning", "YOU ARE BEING TALKED ABOUT: scandal %.0f "
                                      "against a line of %.0f. Past it you may be "
                                      "denounced, and that ends the run - about "
                                      "%.0f%% a year at this level. 'bribe' buys "
                                      "advocacy and piety; it falls a tenth a "
                                      "year on its own"
                                  % (self.state.household.scandal, _sd,
-                                    PERCENT_SCALE * max(0.0, (self.state.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE)))))
+                                    PERCENT_SCALE * max(0.0, (self.state.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE))))
         elif self.state.household.scandal < _sd * 0.5:
             self.state.seat_progress._said_scandal = 0
         if self.events and self.state.household.scandal > self.cfg["suspicion_danger"]:
@@ -506,20 +500,20 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
                                                                    "confiscation by the state")
                     if take > 0.0:
                         self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
-                        self.state.household.log.append((self.state.scenario.year, LogLine("prominence_confiscated", "PROMINENCE: property confiscated, %s lost, "
+                        self.send(RecordEvent.of("prominence_confiscated", "PROMINENCE: property confiscated, %s lost, "
                                              "and you withdraw from public life for a while"
-                                             % money_text(take, self, short=True))))
+                                             % money_text(take, self, short=True)))
                     else:
-                        self.state.household.log.append((self.state.scenario.year, LogLine("prominence_demand_kept", "PROMINENCE: the court demanded your "
-                                             "property and you kept it, but you withdraw from public life for a while")))
+                        self.send(RecordEvent.of("prominence_demand_kept", "PROMINENCE: the court demanded your "
+                                             "property and you kept it, but you withdraw from public life for a while"))
                     self.state.household.eminence *= self.EMINENCE_CONFISCATION_RETENTION
                 elif roll < (self.EMINENCE_OUTCOME_CONFISCATION_SHARE + self.EMINENCE_OUTCOME_PATRON_LOST_SHARE):
                     for pat in self.patrons_lost_to_eminence():
                         if pat in self.state.projects.done:
                             self.state.projects.done.discard(pat)
                             self._done_changed()
-                            self.state.household.log.append((self.state.scenario.year, LogLine("prominence_patron_destroyed", "PROMINENCE: your patron is destroyed in "
-                                                 "someone else's quarrel and you lose %s" % pat)))
+                            self.send(RecordEvent.of("prominence_patron_destroyed", "PROMINENCE: your patron is destroyed in "
+                                                 "someone else's quarrel and you lose %s" % pat))
                             break
                     self.state.household.eminence *= self.EMINENCE_PATRON_LOSS_RETENTION
                     self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_PATRON_LOSS_REPUTATION_LOSS)
@@ -538,8 +532,8 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
             household.bondage_years_left, household.bondage_debt, served = serve_bondage_year(
                 household.bondage_years_left, household.bondage_debt, repayment)
             if served:
-                household.log.append((self.state.scenario.year, LogLine("bondage_served", "your term is served and the debt is discharged; "
-                                     "you are your own man again")))
+                self.send(RecordEvent.of("bondage_served", "your term is served and the debt is discharged; "
+                                     "you are your own man again"))
 
     def _deputy_hours_sentence(self):
         if self.state.household.directors_extra <= 0:
@@ -572,11 +566,8 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
                 self.state.founder.life_left += self.SANITATION_LIFE_EXTENSION_YEARS      # you at least do not die of a septic cut
             if self.state.founder.life_left <= 0:
                 self.state.founder.founder_alive = False
-                self.state.household.log.append(
-                    (self.state.scenario.year, LogLine(
-                        "founder_dies", "THE FOUNDER DIES, aged about %d. %s"
-                        % (self.founder_age(), self._deputy_consequence()),
-                        aged=self.founder_age(), deputies_carry_the_work=bool(self.deputies_carry_the_work()))))
+                self.send(RecordEvent.of("founder_dies", "THE FOUNDER DIES, aged about %d. %s"
+                        % (self.founder_age(), self._deputy_consequence()), aged=self.founder_age(), deputies_carry_the_work=bool(self.deputies_carry_the_work())))
         # a programme with no director is not paused, it is dissolving
         if not self.state.founder.founder_alive and not self.deputies_carry_the_work():
             self.state.projects.stalled += 1
@@ -593,12 +584,10 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
                         self.state.projects.done.discard(node_id)
                         self._done_changed()
             if self.state.projects.stalled in (3, 6, 9, 11):
-                self.state.household.log.append((self.state.scenario.year, LogLine(
-                    "programme_dissolving", "THE PROGRAMME IS DISSOLVING: %d year(s) "
+                self.send(RecordEvent.of("programme_dissolving", "THE PROGRAMME IS DISSOLVING: %d year(s) "
                     "since the founder died. %s What you built is being "
                     "forgotten. The run ends at twelve."
-                    % (self.state.projects.stalled, self._deputy_hours_sentence()),
-                    years_since_death=self.state.projects.stalled, run_ends_after_years=self.DISSOLUTION_YEARS_UNTIL_END)))
+                    % (self.state.projects.stalled, self._deputy_hours_sentence()), years_since_death=self.state.projects.stalled, run_ends_after_years=self.DISSOLUTION_YEARS_UNTIL_END))
             if self.state.projects.stalled >= self.DISSOLUTION_YEARS_UNTIL_END:
                 self._catastrophe("the founder died without training successors; "
                                   + self._what_survived_the_dissolution())

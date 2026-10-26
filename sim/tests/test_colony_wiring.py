@@ -16,6 +16,7 @@ from sim.engine.state_seat import seat_from_template
 from sim.refusal import cause_of
 from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
+from sim.tests import event_stand_in
 
 CHARTER = "ben_settlement_charter"
 SPEC = {"settlers": 20, "outfit_hours_per_settler": 50.0}
@@ -23,6 +24,7 @@ SPEC = {"settlers": 20, "outfit_hours_per_settler": 50.0}
 
 class Founding:
     """A stand-in game that holds the charter, with the tile market, the purse and the people written out."""
+    send = event_stand_in.send
 
     def __init__(self, held_by=None, by_land=("t1",), by_sea=("t1", "t2"), spendable=1.0e9, working_age=1000.0, chosen=(CHARTER, SPEC), cost=5000.0):
         self.state = SimpleNamespace(household=SimpleNamespace(log=[]), scenario=SimpleNamespace(year=100), acting_seat="founder",
@@ -87,6 +89,7 @@ class Advancing:
         seat = SimpleNamespace(holdings=SimpleNamespace(colonies=colonies))
         self.state = SimpleNamespace(seats={"founder": seat}, acting_seat="founder", household=SimpleNamespace(log=[]))
         self._demography = SimpleNamespace(Population=None)
+        self.send = event_stand_in.bound(self)
         self.transfers = []
         self.seat = seat
 

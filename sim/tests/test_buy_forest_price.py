@@ -8,9 +8,11 @@ import unittest
 
 from sim.engine.economy_mining import MiningMixin
 from sim.refusal import cause_of
+from sim.tests import event_stand_in
 
 
 class Woodland(MiningMixin):
+    send = event_stand_in.send
     FOREST_COST_PER_HA = 4.0
     price_index = 1.5
 

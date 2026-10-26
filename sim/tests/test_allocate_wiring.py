@@ -15,6 +15,7 @@ from sim.engine.hour_offer import work_order_shortfall
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
 from sim.engine.agents_port_household import HouseholdPort
 from sim.engine.step_phase_projects import ProjectProgressPhaseMixin
+from sim.tests import event_stand_in
 
 
 class WorkOrderShortfall(unittest.TestCase):
@@ -26,6 +27,8 @@ class WorkOrderShortfall(unittest.TestCase):
 
 
 class Directive(AllocationNotesMixin, StepPhasesMixin):
+    send = event_stand_in.send
+
     def __init__(self, directive, sold, room, trade="labourer"):
         household = types.SimpleNamespace(hour_allocations={"work": directive}, work_trade=trade,
                                           wage_hours_this_year=sold, log=[], unused_hours_reported={})

@@ -9,10 +9,12 @@ import unittest
 
 from sim.engine.disease_port import DiseasePortMixin
 from sim.engine.projects_capability import CapabilityMixin
+from sim.tests import event_stand_in
 
 
 class _Seat(DiseasePortMixin):
     """The members `epidemic_hits_seats` reads from the game, recording the survival it is told to apply."""
+    send = event_stand_in.send
     PLAGUE_CASH_LOSS_SHARE = 0.0
 
     def __init__(self, working_age):

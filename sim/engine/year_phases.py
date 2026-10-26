@@ -50,6 +50,8 @@ def _advance_year(sim, seats):
 
 SHIPPED: List[Phase] = [
 	Phase("begin_seat_year", SEAT, lambda sim, seat_id: sim.begin_seat_year()),
+	Phase("trim_audit", SEAT, module_seat_phase("trim_audit")),
+	Phase("hear_of_other_seats", SEAT, lambda sim, seat_id: sim.hear_of_other_seats()),
 	Phase("begin_world_year", WORLD, lambda sim, seats: sim.begin_world_year()),
 	Phase("apprenticeships", SEAT, lambda sim, seat_id: sim._step_apprenticeships()),
 	Phase("staff", SEAT, lambda sim, seat_id: sim._step_staff()),
@@ -64,7 +66,7 @@ SHIPPED: List[Phase] = [
 	Phase("seat_work", SEAT, lambda sim, seat_id: sim._run_seat_work()),
 	Phase("market", WORLD, lambda sim, seats: sim._step_market()),
 	Phase("coin_revaluation", WORLD, module_world_phase("coin_revaluation")),
-	Phase("wage_market_ratios", WORLD, lambda sim, seats: sim.record_wage_market_ratios()),
+	Phase("wage_market_ratios", WORLD, module_world_phase("wage_market_ratios")),
 	Phase("wild_stock", WORLD, lambda sim, seats: sim.step_wild_stock()),
 	Phase("soil_nitrogen", WORLD, lambda sim, seats: sim.step_soil_nitrogen()),
 	Phase("living_stock", SEAT, module_seat_phase("living_stock")),

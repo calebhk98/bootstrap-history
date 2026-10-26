@@ -12,6 +12,7 @@ from sim.agents.api import edges
 from sim.coin.rules import coin_guard_paid, room_under_credit_line
 from sim.engine.project_materials import ProjectMaterialsMixin
 from sim.engine.projects_completion import CompletionMixin
+from sim.tests import event_stand_in
 
 NODE_ID = "kiln"
 
@@ -73,6 +74,7 @@ class CoinGuardTests(unittest.TestCase):
 
 class FailingSim(CompletionMixin):
     """What `_fail_attempt` reads: a project record, a purse with a credit line, and the rules it calls."""
+    send = event_stand_in.send
 
     instrument_spec = None
 

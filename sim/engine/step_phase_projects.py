@@ -2,12 +2,13 @@
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 
-from sim.refusal import LogLine, Refusal
+from sim.refusal import Refusal
 from sim.agents.api import edges
 from .units_prose import plain_number
 from .arrears_hours_line import arrears_hours_line
 from sim.projects.api import funding as project_funding, start_rules
 from .hour_offer import hours_offered, unmet_directive_cause
+from sim.reporting.api import RecordEvent
 
 
 class ProjectProgressPhaseMixin:
@@ -106,9 +107,9 @@ class ProjectProgressPhaseMixin:
             project_state["stalled_years"] = project_state.get("stalled_years", 0) + 1
             project_state["blocked_on_trades"] = blocked
             if project_state["stalled_years"] >= start_rules.STALL_YEARS_BEFORE_ABANDONMENT:
-                self.state.household.log.append((self.state.scenario.year, LogLine("project_halted_no_labour", "HALTED %s: there is nobody here who can "
+                self.send(RecordEvent.of("project_halted_no_labour", "HALTED %s: there is nobody here who can "
                                      "do this work (%s). What you spent is lost"
-                                 % (node_id, ", ".join(blocked[:2])))))
+                                 % (node_id, ", ".join(blocked[:2]))))
                 self.state.projects.active.pop(node_id, None)
                 self.state.projects.bountied.discard(node_id)
             else:
@@ -118,15 +119,13 @@ class ProjectProgressPhaseMixin:
                 # each year, with the number of years left and what would
                 # fix it.
                 _left = start_rules.STALL_YEARS_BEFORE_ABANDONMENT - project_state["stalled_years"]
-                self.state.household.log.append((self.state.scenario.year, LogLine(
-                    "project_cannot_go_on", "%s cannot go on: no %s here. It has "
+                self.send(RecordEvent.of("project_cannot_go_on", "%s cannot go on: no %s here. It has "
                     "%d year%s before it is abandoned and "
                     "what you spent on it is lost. Teach "
                     "the trade, or 'stop %s' now and keep "
                     "your hours"
                     % (node_id, " or ".join(blocked[:2]), _left,
-                       "" if _left == 1 else "s", node_id),
-                    project=node_id, trades=list(blocked), years_left=_left)))
+                       "" if _left == 1 else "s", node_id), project=node_id, trades=list(blocked), years_left=_left))
                 # Nothing happened here this year - say so, rather than
                 # leaving last year's hours_offered/effective sitting on
                 # the entry looking like they still applied.
@@ -251,7 +250,7 @@ class ProjectProgressPhaseMixin:
         # call site only has to act on what it returns.
         hired_hours, worst, frac, _abandon = self.lab_year_draw(node_id, project_state, frac, hired_left)
         if _abandon:
-            self.state.household.log.append((self.state.scenario.year, LogLine("project_abandoned", "ABANDONED %s: %s" % (node_id, _abandon))))
+            self.send(RecordEvent.of("project_abandoned", "ABANDONED %s: %s" % (node_id, _abandon)))
             self.state.projects.active.pop(node_id, None)
             self.state.projects.bountied.discard(node_id)
             return None
@@ -504,7 +503,7 @@ class ProjectProgressPhaseMixin:
         # all. Named per project, so 'why <id>' and this line never disagree
         # about which project or how much.
         if _arrears_hours_lost:
-            self.state.household.log.append((self.state.scenario.year, arrears_hours_line(_arrears_hours_lost)))  # plain line: arrears_hours_line builds the LogLine and its kind
+            self.send(RecordEvent.from_line(arrears_hours_line(_arrears_hours_lost)))  # plain line: arrears_hours_line builds the LogLine and its kind
 
         # A STANDING ALLOCATION THE PLAYER GAVE, AND DID NOT GET - SAID, NOT
         # LEFT FOR THEM TO NOTICE. `allocate` is a promise about the one

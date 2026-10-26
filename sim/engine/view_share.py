@@ -36,7 +36,7 @@ class ViewShareMixin:
                  self.household.done_version, self.household.operating_version,
                  len(projects.done), len(projects.operating),
                  holdings.forest_ha, holdings.nitre_bed_m2, self.population.total,
-                 economy.output_per_head, len(holdings.mines)))
+                 self.real_output_per_head(), len(holdings.mines)))
 
     def _standalone_stamp(self):
         """The world stamp of an answer shared outside a view: what changes the people, the techniques in
@@ -45,7 +45,7 @@ class ViewShareMixin:
         projects = self.state.projects
         return ((), (self.state.scenario.year, self.household.done_version, self.household.operating_version,
                      len(projects.done), len(projects.operating), holdings.forest_ha, holdings.nitre_bed_m2,
-                     self.population.total, self.state.economy.output_per_head, len(holdings.mines)))
+                     self.population.total, self.real_output_per_head(), len(holdings.mines)))
 
     def _shared_answer(self, key, inputs, compute, standalone=False):
         """`compute()` reused while the world stamp holds and `inputs` (what the answer reads that

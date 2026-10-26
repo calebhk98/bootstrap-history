@@ -8,6 +8,7 @@ import json
 import unittest
 
 from sim.engine.household_demand_key import demand_key, population_of_key
+from sim.reporting.api import ReportingSeat
 from sim.engine.state import HoldingsState, HouseholdState, ProjectsState, deserialize_state, serialize_state
 from sim.refusal import LogLine, Refusal, cause_of, choices_of, facts_of
 
@@ -58,7 +59,7 @@ class SavedStateTests(unittest.TestCase):
 class LogRoundTripTests(unittest.TestCase):
     @staticmethod
     def household():
-        return HouseholdState(capital=0.0, log=[
+        return ReportingSeat(log=[
             (100, LogLine("probe_kind", "a probe line", amount=3, names=["a", "b"])),
             (100, "a plain line"),
             (101, Refusal("probe_cause", "a probe refusal", choices=["x", "y"], figure=2.5))])

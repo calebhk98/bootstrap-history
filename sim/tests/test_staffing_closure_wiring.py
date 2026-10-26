@@ -19,6 +19,7 @@ from sim.engine.projects_staffing import StaffingMixin
 from sim.engine.projects_staffing_shortfall import StaffingShortfallMixin
 from sim.engine.projects_ventures import VenturesMixin
 from sim.refusal import cause_of, facts_of
+from sim.tests import event_stand_in
 
 NODES = {"mill": {"rev": 900.0, "up": 300.0}, "forge": {"rev": 500.0, "up": 450.0}}
 
@@ -50,10 +51,11 @@ check("the concerns flagged to stay staffed and the game's own shortfall reading
 
 class Closer(StaffingMixin):
     """The parts of a Sim that the yearly closure touches."""
+    send = event_stand_in.send
     STAFFING_REMEDIES = "remedies"
 
     def __init__(self, planned, closures):
-        self.state = SimpleNamespace(household=SimpleNamespace(log=[]))
+        self.state = SimpleNamespace(household=SimpleNamespace(log=[]), scenario=SimpleNamespace(year=100))
         self.planned, self.closures = planned, closures
         self.recorded = []
         self.review_asked = []

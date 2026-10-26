@@ -9,12 +9,14 @@ from .harness import check
 
 from sim.engine.economy_credit import CreditMixin
 from sim.refusal import cause_of, facts_of
+from sim.tests import event_stand_in
 
 LIMIT = 1000.0
 
 
 class Owing:
     """A household owing `share` of its credit limit, with projects in hand."""
+    send = event_stand_in.send
 
     CREDIT_FREEZE_YEARS_AFTER_HALT = 5
     HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR = 1.0
@@ -23,7 +25,8 @@ class Owing:
     def __init__(self, share, slaves=0, closures=()):
         self.state = SimpleNamespace(
             household=SimpleNamespace(capital=-share * LIMIT, log=[], _said_near_limit=False, credit_frozen_until=0, slaves=slaves, freedmen=0, artisans=10.0),
-            projects=SimpleNamespace(active={"a_project": {"spent": 40.0}}, bountied=set(), paid_towards={}))
+            projects=SimpleNamespace(active={"a_project": {"spent": 40.0}}, bountied=set(), paid_towards={}),
+            scenario=SimpleNamespace(year=100))
         self.closures, self.mothballed, self.manumitted = list(closures), [], []
         self.labour = SimpleNamespace(manumit=self.manumitted.append)
         self.civ = {"id": "rome_100ad"}

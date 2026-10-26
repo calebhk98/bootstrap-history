@@ -1,8 +1,7 @@
 """The yearly money phase: the founder's takings and costs, credit, insolvency, then society and the actors' year.
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
-from sim.refusal import LogLine
-from . import automation_audit
+from sim.reporting.api import RecordAutomation, RecordEvent
 from sim.coin.api import ChargeHouseholdTheft
 from sim.constants import declare
 from sim.agents.api import edges
@@ -75,10 +74,7 @@ class MoneyPhaseMixin:
         _before = self.state.household.capital
         _reopened = self.reopen_restaffed_ventures(self.state.scenario.year)
         if _reopened:
-            automation_audit.record(
-                self, "reopen (always on, not a policy)", "reopen", ", ".join(_reopened),
-                "a staffing closure, and the people to watch it are free again", _before,
-                ids=list(_reopened))
+            self.send(RecordAutomation("reopen (always on, not a policy)", "reopen", ", ".join(_reopened), "a staffing closure, and the people to watch it are free again", _before, dict(ids=list(_reopened))))
         self.close_lapsed_dependents(self.state.scenario.year)
         self.close_unstaffed_ventures(self.state.scenario.year)
         # Open what plainly pays for itself, before the books are struck: a
@@ -87,10 +83,7 @@ class MoneyPhaseMixin:
             _before = self.state.household.capital
             _opened = self.auto_open_ventures()
             if _opened:
-                automation_audit.record(
-                    self, "auto_open", "open", ", ".join(_opened),
-                    "net-positive concerns already built, within the staff and money available",
-                    _before, ids=list(_opened))
+                self.send(RecordAutomation("auto_open", "open", ", ".join(_opened), "net-positive concerns already built, within the staff and money available", _before, dict(ids=list(_opened))))
         self.charge_interest(self.state.scenario.year)
         self.note_venture_year()
         self.shed_loss_makers(self.state.scenario.year)
@@ -135,8 +128,8 @@ class MoneyPhaseMixin:
                 self.state.household.artisans = max(self.INSOLVENCY_ARTISAN_FLOOR, self.state.household.artisans * (1.0 - bleed))
                 self.state.household.scholars = max(self.INSOLVENCY_SCHOLAR_FLOOR, self.state.household.scholars * (1.0 - bleed * self.INSOLVENCY_SCHOLAR_BLEED_DISCOUNT))
                 if self.state.household.insolvent_years in (3, 6, 12, 25):
-                    self.state.household.log.append((self.state.scenario.year, LogLine("arrears_staff_leaving", "IN ARREARS for %d years: staff are leaving "
-                                         "because you cannot pay them" % self.state.household.insolvent_years)))
+                    self.send(RecordEvent.of("arrears_staff_leaving", "IN ARREARS for %d years: staff are leaving "
+                                         "because you cannot pay them" % self.state.household.insolvent_years))
                 # Works it can no longer maintain were let go above, by the business's loss rule (shed_loss_makers).
         else:
             self.state.household.insolvent_years = 0
@@ -150,12 +143,12 @@ class MoneyPhaseMixin:
             if self.state.household.capital > self.AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES * self.labour.SLAVE_BASE_PRICE and self.state.household.artisans < 12 and self.running_with_mechanic("hosts_bought_people"):
                 got = self.labour.buy_slaves(min(6, int(self.state.household.capital // (self.AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES * self.labour.SLAVE_BASE_PRICE))))
                 if got:
-                    self.state.household.log.append((self.state.scenario.year, LogLine("people_bought", "bought %d people for the workshop" % got)))
+                    self.send(RecordEvent.of("people_bought", "bought %d people for the workshop" % got))
         if self.state.founder.policy.get("auto_manumit", not self.manual) and self.state.household.slaves:
             if self.rng.random() < self.AUTO_MANUMIT_ANNUAL_CHANCE:
                 freed = self.labour.manumit(max(1, self.state.household.slaves // self.AUTO_MANUMIT_SHARE_DIVISOR))
                 if freed:
-                    self.state.household.log.append((self.state.scenario.year, LogLine("people_freed", "freed %d people" % freed)))
+                    self.send(RecordEvent.of("people_freed", "freed %d people" % freed))
 
     def _step_money_world(self):
         """The society's own year: output recovery, population, literacy and trades, the actors. Once a year."""

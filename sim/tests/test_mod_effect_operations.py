@@ -13,6 +13,7 @@ from sim.refusal import cause_of
 
 from .bridge_send import attach_send
 from .harness import *  # noqa: F401,F403
+from sim.tests import event_stand_in
 
 QUICK_TOPIC = True
 
@@ -104,7 +105,9 @@ check("a transfer with no cause is refused and the game is not asked", transfers
 
 # --- the base game's hazards use the same operation, with their kind and loss, and tell every playing seat.
 seat_log = []
-hazard_game = SimpleNamespace(playing_seats=lambda: ["seat"], state=SimpleNamespace(seats={"seat": SimpleNamespace(household=SimpleNamespace(log=seat_log))}))
+hazard_game = event_stand_in.stood_in(SimpleNamespace(
+    playing_seats=lambda: ["seat"],
+    state=SimpleNamespace(seats={"seat": SimpleNamespace(household=SimpleNamespace(log=seat_log))}, scenario=SimpleNamespace(year=100))))
 with mock.patch.object(mod_effects.BASE_EFFECTS, "kill_people", return_value={"year": 100, "facts": {"died": 321.0}}) as kill:
     world_hazards.hit(hazard_game, "partner", {"kind": "flood", "cause": "a flood", "population_loss": 0.1})
 check("a hazard's hit is a kill_people call by the base game with the hazard's loss, cause and kind",

@@ -330,7 +330,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         stopped_early, stopped_kind, out["year_failed"] = step_atomic.partial_step_failure(failure, ran, years)
     if programme_log:
         out["programme"] = programme_log
-    automation_rows = rows_of_years_stepped(ui_port.automation_audit.rows(sim, years), first_year_stepped)
+    automation_rows = rows_of_years_stepped(sim.view("automation_rows")(years), first_year_stepped)
     if automation_rows:
         out["automation"] = automation_rows
     if years > 1 and lone_dependencies:

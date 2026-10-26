@@ -11,12 +11,12 @@ start, at the immune state their own numbers imply. When one spreads, who dies a
 a technology."""
 import functools
 
-from sim.refusal import LogLine
 
 from sim.disease import api as disease
 from . import externalities
 from .units_prose import money_text
 from sim.geography.api import endemic_people_loss, reach, settlement, tile_facts, tiles_held, usable_modes
+from sim.reporting.api import RecordEvent
 
 nation, tuning, spread = disease.nation, disease.nation_tuning, disease.metapopulation
 BANDS = tuning.BANDS
@@ -307,8 +307,6 @@ class DiseasePortMixin:
                 if cash > 0.5:
                     parts.append("%s of takings lost while the trade stood idle" % money_text(cash, self, grouped=True))
                 took_nothing = not parts
-                household.log.append((year, LogLine(
-                    "hazard_hit", "%s: %s. Empire-wide, %d%% of working-age people died" % (
-                        name, ", ".join(parts) or "you had nothing it could take", round(share * 100)),
-                    hazard=name, took_nothing=took_nothing, lapsed_hedges=[])))
+                self.send(RecordEvent.in_year(year, "hazard_hit", "%s: %s. Empire-wide, %d%% of working-age people died" % (
+                        name, ", ".join(parts) or "you had nothing it could take", round(share * 100)), hazard=name, took_nothing=took_nothing, lapsed_hedges=[]))
         return share

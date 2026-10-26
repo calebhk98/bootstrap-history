@@ -2,10 +2,9 @@
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 
-from sim.refusal import LogLine
 from sim.labour.api import scholar_target
 from sim.world import demography
-from . import automation_audit
+from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 from .units_prose import plain_number
 from .payroll_shed import shed_unpayable_staff
 from .payroll_trim import payroll_means
@@ -160,10 +159,8 @@ class StaffPhaseMixin:
             _closed_sc *= self.household._staff_scale
             _closed_ar *= self.household._staff_scale
             if _closed_unscaled >= 1.0 and _closed_sc + _closed_ar < 1.0:
-                automation_audit.record_skip(
-                    self, "auto_hire", "hire for shut concerns",
-                    "concerns shut for want of staff need %.1f more people, but the income that pays staff covers "
-                    "%.0f%% of them" % (_closed_unscaled, 100.0 * self.household._staff_scale))
+                self.send(RecordAutomationSkip("auto_hire", "hire for shut concerns", "concerns shut for want of staff need %.1f more people, but the income that pays staff covers "
+                    "%.0f%% of them" % (_closed_unscaled, 100.0 * self.household._staff_scale)))
             _grow_to("artisan", artisan_goal(craft, specials, self.state.household.employees.get("artisan", 0.0), _closed_ar),
                      closure_need=_closed_ar)
             if desired_sc > 0 or _closed_sc > 0:
@@ -197,9 +194,7 @@ class StaffPhaseMixin:
                     _before = self.state.household.capital
                     self.labour.set_employed(trade_id, have + short)
                     self.pay_edge(edges.EDGE_WORKERS, short * self.labour.market.quote_annual(trade_id), "wages advanced for replacement staff")
-                    automation_audit.record(
-                        self, "auto_hire", "replace", "%.1f %s" % (short, trade_id),
-                        "something draws on the trade and %.1f are held against a target of %.1f" % (have, want), _before)
+                    self.send(RecordAutomation("auto_hire", "replace", "%.1f %s" % (short, trade_id), "something draws on the trade and %.1f are held against a target of %.1f" % (have, want), _before))
             self.labour.resync_pools()
         self.labour.hold_staff_reserve()
         # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY:
@@ -212,10 +207,7 @@ class StaffPhaseMixin:
             _before = self.state.household.capital
             _commissioned = self.labour.auto_commission_for_blocked()
             if _commissioned:
-                automation_audit.record(
-                    self, "auto_commission", "commission",
-                    "%.0f hours of %s" % (_commissioned[2], _commissioned[1]),
-                    "%s is blocked only on craftsmen's hands" % _commissioned[0], _before)
+                self.send(RecordAutomation("auto_commission", "commission", "%.0f hours of %s" % (_commissioned[2], _commissioned[1]), "%s is blocked only on craftsmen's hands" % _commissioned[0], _before))
         self.state.household.directors_extra = directors_next(self.state.household.directors_extra, di_cap,
                                                               self.DIRECTORS_EXTRA_APPROACH_RATE, attrition_rate)
         self.state.household.artisans = max(0.0, self.state.household.artisans)
@@ -227,9 +219,9 @@ class StaffPhaseMixin:
         _whole = int(self.state.household.directors_extra)
         if _whole > self.state.household._said_deputies:
             self.state.household._said_deputies = _whole
-            self.state.household.log.append((self.state.scenario.year, LogLine("deputies_directing", "you now have %d deput%s directing work in "
+            self.send(RecordEvent.of("deputies_directing", "you now have %d deput%s directing work in "
                                  "your name: your year is %s hours instead of "
                                  "%s. They came with the institutions you built"
                              % (_whole, "y" if _whole == 1 else "ies",
                                 plain_number(self.labour.director_pool()),
-                                plain_number(self.cfg["founder_hours_per_year"])))))
+                                plain_number(self.cfg["founder_hours_per_year"]))))

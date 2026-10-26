@@ -23,6 +23,7 @@ posted price leaves out the founder's flows and counts everyone else's.
 agent economy's record of last year.
 """
 from sim.world import market
+from sim.reporting.api import CloseRealOutput
 
 from .goods_market_api import GoodsMarket
 
@@ -197,4 +198,4 @@ class MarketClearingMixin:
         self.economy.run_agent_year()
         self.record_food_eaten(self.economy.agent.outcomes[-1])
         self.close_partner_books()
-        self._close_real_output()
+        self.send(CloseRealOutput())

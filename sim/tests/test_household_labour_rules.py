@@ -16,6 +16,7 @@ from sim.labour.labour_training import TrainingMixin
 from sim.labour.labour_wages import WagesMixin
 from sim.refusal import cause_of
 from sim.ui.proto.dispatch_labour import _cmd_hire
+from sim.tests import event_stand_in
 
 
 class HeldTrade(ProductionMixin):
@@ -176,6 +177,8 @@ class SupplyChannels(unittest.TestCase):
 
 
 class Apprentices(StepPhasesMixin):
+    send = event_stand_in.send
+
     def __init__(self, rows):
         self.joined = []
         self.state = types.SimpleNamespace(

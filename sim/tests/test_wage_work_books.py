@@ -9,6 +9,7 @@ import unittest
 from sim.refusal import cause_of, facts_of
 from sim.labour.labour_wage_ledger import WageLedgerMixin
 from sim.ui.proto.dispatch_labour import _cmd_work
+from sim.tests import event_stand_in
 
 
 def household(**fields):
@@ -24,7 +25,9 @@ class Books(WageLedgerMixin):
         self.held = held or household()
         self._world = types.SimpleNamespace(
             state=types.SimpleNamespace(household=self.held, scenario=types.SimpleNamespace(year=year)),
-            plain_number=lambda number: "%g" % number, money_text=lambda money, grouped=False, short=False: "%g" % money)
+            plain_number=lambda number: "%g" % number, money_text=lambda money, grouped=False, short=False: "%g" % money,
+            logged_events=lambda: len(self.held.log))
+        event_stand_in.stood_in(self._world)
 
     def work_for_wages(self, trade, hours):
         self.held.capital += 30.0

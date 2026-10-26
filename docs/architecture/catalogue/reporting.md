@@ -2,7 +2,32 @@
 
 Indicators, the event log and warn-once notes; everything computed to be read, not to act on.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** moved (branch `mr/reporting`). The package is `sim/reporting/`; this file describes what shipped, not the draft proposal. The draft's tables below the "Draft proposal" line are kept for the record, measured at `e8b004c`; re-measure before acting on one. Counts of what shipped come from the module spec (`python3 -c "import sys; sys.path.insert(0,'.'); from sim.reporting.module_spec import MODULE_SPECS as s; print(len(s[0].publishes), len(s[0].applies), len(s[0].reads))"`).
+
+## What changed from the draft
+
+- **Warn-once notes are not reporting's.** The draft's `NoteOnce` over the `_said_*` flags is dropped. Of the five fields it named, `_last_buy_refusal`, `_said_stack_caution`, `_said_command_index`, `_said_parallelism` and `_dashboard_history` are the screens' own memory (written only by `sim/ui` through `ui_port.py`, read by no rule); they belong in `state.interface`, "the UI's own memory; the engine never reads it", not in a module. `_said_scandal` is a warning band for the scandal rule (`core_step_phases.py`) and goes with `polity`. Nothing about them moved here (`grep -rnE "_said_scandal|_said_parallelism|_dashboard_history" sim --include=*.py | grep -v /tests/` lists them).
+- **World events are not here.** `state.economy.world_events` is the hazards module's (`hazards.md`).
+- **Views:** 8 instead of 3. A caller asks one question (the per-head figure is read in the cache keys of five hot paths, the hours twice a year), so each is its own view: `event_log`, `automation_rows`, `real_output_per_head`, `real_output_hours`, `money_real`, `real_price_ratio`, `last_market_price_ratio`, `coin_value_ratio`. `price_ratios` (the draft's view under the three-caller floor) is not a view: its callers are `coin_value_ratio` (the coin module), `last_market_price_ratio` (the labour package's wage rule) and the module's own phase.
+- **Commands:** 6. `RecordEvent`, `RecordAutomation`, `RecordAutomationSkip` (they existed, applied by the engine bridge), `DiscardEventsAfter`, `CloseRealOutput`, `ErodeMoney`. The draft's `RecordIndicator` is two commands because its two writers carry different facts: the market's close sends nothing but "the year has closed", a debasement carries its share. `RecordEvent` gained `facts`, `seat` (the hazards write to every playing seat's log, acting or not) and `year` (the year a recovery or a closure reports is not always the current one).
+- **`DiscardEventsAfter` is a debt, not a design.** `work_for_wages_dry_run` (labour) logs as it runs, restores every book and then truncates the log. The right fix is a pure quote of the sale; until then the command takes the lines back.
+- **Phases:** `trim_audit` (the audit trail drops rows older than the years kept) is split out of `begin_seat_year`, with `hear_of_other_seats` named as its own phase after it, so the three steps keep their order. `wage_market_ratios` is the module's phase. The close of real output stays at the end of `_step_market` as the command `CloseRealOutput` (a mod running `after: market` must see the closed figure).
+- **A read that writes, kept.** `agent_basket` fixes the baseline prices at the first read that finds prices, in the module's own state, inside views that are not cached (they read the agent economy's prices, which legacy code writes). Making the baseline an explicit command would change which year fixes it if the first reader changed.
+- **State** (relocated in `sim/tests/equiv_fields.py`): per seat `ReportingSeat` (`log`, `automation_audit`); per game `ReportingWorld` (`output_per_head`, `introduction_prices`, `money_real`, `wage_market_ratios`, `agent_baseline_prices`). `_base_basket_cache` is a never-saved cache on the module, keyed to the world slot it was read for, so a load drops it.
+- **A framework gap met:** a command can name a seat that is not the acting one, but a module only saw the acting seat's slot. `Module.seat_of(seat_id)` (set by `game_assembly.attach`) answers another seat's state, and `game_assembly.give_seat_slots` builds the slots of a seat added after the game began.
+
+## As shipped
+
+| Measure | Value |
+|---|---|
+| Views / commands | 8 / 6 (+ the phases `trim_audit`, `wage_market_ratios`) |
+| Views of other modules it reads | 13: `year`, `acting_balance`, `money_per_labour_hour`, `opening_population`, `home_coin_metal` (published), and `agent_prices`, `agent_opening_basket`, `agent_volume_baseline`, `agent_traded_volumes`, `new_goods_units`, `household_prices`, `population_total`, `wage_materials` (bridged in `sim/engine/bridge_reporting.py`; they go when `markets`, `demography` and `workforce` publish theirs) |
+| `legacy_*` reads (debts) | none |
+| Log writes converted | 100 `.log.append` sites in the engine, labour and the UI became `RecordEvent` sends; 14 audit calls became `RecordAutomation` / `RecordAutomationSkip` sends. No household-log append remains: `grep -rn "\.log\.append" sim mods --include=*.py \| grep -v /tests/` finds the module's own append and the armies' `army.log`, which is not the seat's log |
+| Forwarders left (`sim/engine/forward_reporting.py`) | `Sim.log`, `Sim.money_real`, `Sim.real_output_per_head`, `Sim.real_output_hours`, `Sim.last_market_price_ratio` |
+| Files absorbed | `real_output.py`, `real_price_ratios.py`, `automation_audit.py` deleted; `real_output_measure.py` became `sim/reporting/output_rules.py` |
+
+## Draft proposal (task 1.5, measured at `e8b004c`)
 
 ## At a glance
 

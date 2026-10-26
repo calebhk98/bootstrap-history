@@ -12,6 +12,7 @@ from sim.engine import colonies, tile_ownership
 from sim.engine.colonies import ColoniesMixin
 from sim.engine.tile_ownership import TileOwnershipMixin
 from sim.geography.api import tile_owners
+from sim.tests import event_stand_in
 
 
 class ControlStore:
@@ -80,6 +81,7 @@ class TransferTileTests(unittest.TestCase):
 
 class Colonist(ColoniesMixin):
     """The parts of a Sim that founding a colony reads and writes; `transfer_tile` records its calls."""
+    send = event_stand_in.send
 
     def __init__(self, owner_of_tile=None, spendable=1000.0):
         self.transfers = []

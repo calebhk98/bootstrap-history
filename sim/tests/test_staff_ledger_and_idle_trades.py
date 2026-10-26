@@ -12,6 +12,7 @@ from .harness import check
 from sim.engine.seat_defaults import default_policy
 from sim.engine.staff_replacement import replacement_wanted
 from sim.labour.labour_staff_ledger import StaffLedgerMixin
+from sim.tests import event_stand_in
 
 TARGET = 3.0
 
@@ -33,6 +34,7 @@ class Ledger(StaffLedgerMixin):
             venture_foremen_used=lambda: {trade: 1.0 for trade in foremen.values()},
             venture_foreman=lambda node_id: (foremen[node_id], 1.0),
             concerns_to_close_for_staffing=lambda: [], stopped_yearly_value=lambda node_ids: 0.0)
+        event_stand_in.stood_in(self._world)
 
     def employed_by_trade(self):
         return dict(self.employees)

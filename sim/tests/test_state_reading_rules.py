@@ -13,6 +13,7 @@ from sim.engine.society_hazards import HazardsMixin
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.scandal_trend import years_until_scandal_crosses_the_line
 from sim.ui.proto.state_succession import succession_block
+from sim.tests import event_stand_in
 
 
 class ScandalTrend(unittest.TestCase):
@@ -41,6 +42,8 @@ class Rolls:
 
 
 class PatronDeath(HazardsMixin):
+    send = event_stand_in.send
+
     def __init__(self, scandal_last_year):
         self.rng = Rolls()
         self.civ = {}
@@ -50,7 +53,8 @@ class PatronDeath(HazardsMixin):
         self.policy = {"auto_court_heir": False}
         self.state = types.SimpleNamespace(
             founder=types.SimpleNamespace(last_patron_death=None),
-            household=types.SimpleNamespace(scandal=10.0, scandal_last_year=scandal_last_year, protection=0.9, log=[]))
+            household=types.SimpleNamespace(scandal=10.0, scandal_last_year=scandal_last_year, protection=0.9, log=[]),
+            scenario=types.SimpleNamespace(year=100))
 
     def running_with_mechanic(self, name):
         return True
@@ -96,6 +100,8 @@ class Succession(unittest.TestCase):
 
 
 class Society(AdoptionMixin):
+    send = event_stand_in.send
+
     def __init__(self):
         self.value_weights = {"w_novelty": 0.0}
         self.literacy_values = {"literacy_general": 0.1, "literacy_elite": 0.5}

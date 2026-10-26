@@ -123,10 +123,12 @@ check("shipped events carry causes", carrying > 0)
 # the yearly driver: a skipped event is told once, in the log, with the failed cause
 from sim.engine import validate_event_causes
 from sim.engine.society_hazards import HazardsMixin
+from sim.tests import event_stand_in
 
 driver = fake_sim(population=100.0)
-driver.state = SimpleNamespace(scenario=SimpleNamespace(_said_condition=set()),
+driver.state = SimpleNamespace(scenario=SimpleNamespace(_said_condition=set(), year=110),
                                household=SimpleNamespace(log=[]))
+event_stand_in.stood_in(driver)
 check("the driver drops an event whose cause fails",
       HazardsMixin._apply_event_causes(driver, hazard, 110, 110) is None)
 HazardsMixin._apply_event_causes(driver, hazard, 110, 110)

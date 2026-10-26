@@ -34,7 +34,7 @@ class DiffusionMixin:
     # ---- WHAT YOU BUILT DOES NOT STAY YOURS ---------------------------------
     # "To make it even more interesting, you could make it so others try to
     # figure your stuff out, to sell it themselves... over a generation or
-    # two." The empire-wide half of the story is real output (real_output.py):
+    # two." The empire-wide half of the story is real output (sim/reporting/output.py):
     # a technique cheapens the goods its entries make. What is missing, and IS this file's
     # job, is the other half: a NUMBER, per venture, for how much of the one
     # thing YOU personally run has leaked to imitators - not a price, which
@@ -133,7 +133,7 @@ class DiffusionMixin:
         FOR THE MARKET AGENT: a revenue formula that wants to spend this
         number honestly should reduce what THIS venture earns by up to this
         share while the wider economy is credited with the matching gain through
-        the goods' prices (real_output.py), which follow the techniques producers run
+        the goods' prices (sim/reporting/output.py), which follow the techniques producers run
         regardless of this function, so the two are additive, not double-counting the same escape.
         """
         projects = self.state.projects
