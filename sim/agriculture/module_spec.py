@@ -1,8 +1,9 @@
 """Agriculture's module spec (sim/assembly).
 
 Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_agriculture.py)
-under the name the owner will publish, except the `legacy_*` ones: raw state or the game's dice, used in place."""
+under the name the owner will publish, except the `legacy_*` one: the game's dice, used in place."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
+from sim.demography.api import ChangeFarmland
 from sim.ledger.api import PayEdge, ReceiveFromEdge
 
 from .commands import InvestFarm, SellFarm
@@ -20,7 +21,7 @@ READS_BY_OWNER = {
     "prices": ("price_index",),
     "ledger": ("acting_balance",),
     "seats": ("legacy_dice",),
-    "demography": ("legacy_farm_holdings",),
+    "demography": ("farm_holdings",),
 }
 
 # not cached: they read the engine's household state, the held land or the mods' externalities, written outside any command
@@ -37,11 +38,10 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("farm_territory", "farm_territory", **_LIVE),
         ViewSpec("food_potential", "food_potential", **_LIVE),
         ViewSpec("wild_stock", "wild_stock", channels=(WILD_STOCK,)),
-        ViewSpec("farm_holdings", "farm_holdings", seat_scoped=True, **_LIVE),
         ViewSpec("farm_land_price", "farm_land_price", **_LIVE),
     ),
     applies=((InvestFarm, "invest_farm"), (SellFarm, "sell_farm")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(PayEdge, ReceiveFromEdge),
+    sends=(ChangeFarmland, PayEdge, ReceiveFromEdge),
     phases=(PhaseHook("wild_stock", "step_wild_stock"), PhaseHook("soil_nitrogen", "step_soil_nitrogen")),
 ),)

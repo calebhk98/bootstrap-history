@@ -21,7 +21,7 @@ CURRENT_FTE = 100.0
 class World:
     def __init__(self, wage=WAGE, price=PRICE, marginal_product=MARGINAL_PRODUCT, taken=0.0):
         self.civ = {"staple": STAPLE}
-        self.state = SimpleNamespace(holdings=SimpleNamespace(farm_last_marginal_product=marginal_product))
+        self.farm_holdings = lambda: {"last_marginal_product": marginal_product}
         self.farm_land = SimpleNamespace(hectares=1e9)
         self._wage, self._price, self._taken = wage, price, taken
         self.economy = SimpleNamespace(agent_prices=lambda: {STAPLE: self._price} if self._price else {})

@@ -11,7 +11,7 @@ field-by-field classification this class is built from.
 In the live state architecture, `Household` is a façade backed by the
 authoritative `SimulationState` and its subsystem owners (`HouseholdState`,
 `ProjectsState`, `EconomyState`, `FounderState`,
-`ScenarioState`, `PopulationState`). There is NO duplicate storage: every
+`ScenarioState`). There is NO duplicate storage: every
 persistent read and write delegates directly to the underlying typed state.
 """
 from collections import defaultdict
@@ -97,13 +97,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	# EconomyState
 	"market_pressure": "holdings",
 	"_material_stock_ledger": "holdings",
-	"farm_hectares": "holdings",
-	"farm_stock_kg": "holdings",
-	"farm_cleared_hectares": "holdings",
-	"farm_last_shortfall_kg": "holdings",
-	"farm_last_harvest_kg": "holdings",
-	"farm_hours_needed": "holdings",
-	"farm_last_marginal_product": "holdings",
 	"society_labour_hours": "economy",
 	"_dashboard_history": "holdings",
 
@@ -119,11 +112,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"_said_parallelism": "seat_progress",
 	"_said_command_index": "seat_progress",
 	"_said_explanations": "seat_progress",
-
-	# PopulationState
-	"pop_children": "population",
-	"pop_working_age": "population",
-	"pop_elderly": "population",
 }
 
 _VERSION_MAP: Dict[str, str] = {
@@ -144,7 +132,6 @@ _LAZY_FIELDS: Set[str] = {
 	"worker_housing_places",
 	"done_year",
 	"_material_stock_ledger",
-	"farm_hectares",
 	"_dashboard_history",
 }
 

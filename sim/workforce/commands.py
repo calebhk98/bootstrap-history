@@ -55,3 +55,20 @@ class NoteWageShock(Command):
 	it is now."""
 	cause: str
 	index_before: float
+
+
+@dataclass(frozen=True)
+class AllocateFarmWorkforce(Command):
+	"""The society's farm workforce for a year is sized for a people of `adult_equivalent_population`, the year's farming
+	technique is chosen and the farm's hours needed are set. Answers the full-time equivalents on the farm."""
+	adult_equivalent_population: float
+
+
+@dataclass(frozen=True)
+class ApplyLandClearing(Command):
+	"""Hands beyond what the farm can crop spent the year clearing: the farm area grows by what they cleared."""
+
+
+@dataclass(frozen=True)
+class UpdateWages(Command):
+	"""One year of wage adjustment toward the trades that are short."""

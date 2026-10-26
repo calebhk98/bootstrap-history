@@ -8,6 +8,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
+from sim.demography.api import SendSettlers
 from sim.engine import colonies, tile_ownership
 from sim.engine.colonies import ColoniesMixin
 from sim.engine.tile_ownership import TileOwnershipMixin
@@ -84,7 +85,11 @@ class TransferTileTests(unittest.TestCase):
 
 class Colonist(ColoniesMixin):
     """The parts of a Sim that founding a colony reads and writes; `transfer_tile` records its calls."""
-    send = event_stand_in.send
+    def send(self, command):
+        if isinstance(command, SendSettlers):
+            self.population.working_age -= command.people
+            return None
+        return event_stand_in.send(self, command)
 
     def __init__(self, owner_of_tile=None, spendable=1000.0):
         self.transfers = []

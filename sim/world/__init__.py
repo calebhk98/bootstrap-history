@@ -22,15 +22,14 @@ CURRENT CONTENTS. `demography.py`: age-cohort population dynamics, with
 nutrition as the mechanism linking food to births and deaths.
 
 BOTH `demography.py` AND `agriculture.py` ARE WIRED INTO THE ENGINE.
-`sim/engine/core.py` imports `demography` and holds a real `Population` on
-`Sim`, so the three age cohorts are live state that saves and loads, and
-`Sim._demographic_recovery` steps them. A hazard's mortality is applied
+`sim/engine/core.py` imports `demography`; the demography module holds the three age cohorts as saved state, and
+the demography module's yearly step (sim/demography/recovery.py) steps them. A hazard's mortality is applied
 unevenly across the cohorts, so two shocks of equal headcount diverge
 afterwards depending on who died - a property a single population scalar
 could not express.
 
 `sim/engine/core.py:33` does `from world import agriculture`, and
-`_demographic_recovery` computes a real year of `agriculture.Storage.step`
+the demography module's yearly step computes a real year of `agriculture.Storage.step`
 from land, labour and weather, which is what lets a bad year drive
 `nutrition_ratio` below 1.0. The `agriculture_wiring` test topic pins that
 seam, which neither module's own standalone suite can see, because the seam

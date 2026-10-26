@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.mortality_shock import cut_cohorts
+from sim.demography.api import rules as demography_rules
 from sim.hazards import rules
 from sim.hazards.staff_loss_words import defence_kind, national_toll_sentence, staff_clause
 from sim.engine.wage_scarcity import wage_index_of
@@ -42,7 +42,7 @@ class ExposureTests(unittest.TestCase):
         for raw in (0.28, 0.45):
             population = Population(300.0, 600.0, 100.0)
             before = population.total
-            cut_cohorts(population, raw, CHILD, WORKING_AGE, ELDERLY)
+            demography_rules.cut_cohorts(population, raw, CHILD, WORKING_AGE, ELDERLY)
             lost.append(1.0 - population.total / before)
         self.assertAlmostEqual(lost[0], 0.28)
         self.assertAlmostEqual(lost[1], 0.45)

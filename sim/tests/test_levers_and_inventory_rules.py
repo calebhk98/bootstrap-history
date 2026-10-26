@@ -24,7 +24,7 @@ class FarmlandTests(unittest.TestCase):
         def ratio(farm_hectares):
             stand_in = types.SimpleNamespace(
                 ESSENTIAL_CATEGORIES=frozenset(), goods_category_price_ratio=lambda category: None,
-                household=types.SimpleNamespace(farm_hectares=farm_hectares),
+                view=lambda name: lambda: {"hectares": farm_hectares},
                 HOUSEHOLD_FARM_PRICE_RATIO_FLOOR=GoodsMixin.HOUSEHOLD_FARM_PRICE_RATIO_FLOOR,
                 HOUSEHOLD_FARM_HECTARES_HALF_EFFECT=GoodsMixin.HOUSEHOLD_FARM_HECTARES_HALF_EFFECT)
             return GoodsMixin.essential_price_ratio(stand_in)

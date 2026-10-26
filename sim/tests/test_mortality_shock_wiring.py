@@ -1,26 +1,31 @@
-"""Complaints 17 to 24: a mortality shock reaches the displayed population at once. `Sim._apply_population_mortality_shock` hands the
-society's cohorts and the declared vulnerability ratios to the cut (`cut_cohorts`, replaced here by a recorder), and
-`PopulationMixin.population_report` shows the cohort model's population against the civilisation's reference. Each runs on a stand-in `self`."""
+"""Complaints 17 to 24: a mortality shock reaches the displayed population at once. The demography module's `cut_population` cuts the
+society's cohorts by the share, unevenly by the declared vulnerability of each age, and
+`PopulationMixin.population_report` shows the cohort model's population against the civilisation's reference."""
 
 QUICK_TOPIC = True
 
 from types import SimpleNamespace
-from unittest import mock
 
 from .harness import check
 
-import sim.engine.core as core
-from sim.engine.core import Sim
+from sim.demography.api import CutPopulation
+from sim.demography.module import Demography
+from sim.demography.state import DemographyWorld
 from sim.labour.labour_population import PopulationMixin
+from sim.tests import module_harness
+from sim.world import demography
 
 # ---- the shock reaches the cohorts
-recorded = []
-population = object()
-game = SimpleNamespace(population=population, _demography=SimpleNamespace(
-    STARVATION_VULNERABILITY_CHILD=1.6, STARVATION_VULNERABILITY_WORKING_AGE=1.0, STARVATION_VULNERABILITY_ELDERLY=1.4))
-with mock.patch.object(core, "cut_cohorts", lambda *arguments: recorded.append(arguments)):
-    Sim._apply_population_mortality_shock(game, 0.28)
-check("the shock cuts the society's own cohorts by the share, with the declared vulnerability of each age", recorded == [(population, 0.28, 1.6, 1.0, 1.4)], recorded)
+world = DemographyWorld(pop_children=300.0, pop_working_age=600.0, pop_elderly=100.0)
+module = module_harness.build(Demography, world=world)
+module.cut_population(CutPopulation(0.28))
+total = world.pop_children + world.pop_working_age + world.pop_elderly
+check("the shock takes the share of the whole from the society's own cohorts", abs(total - 1000.0 * 0.72) < 1e-6, total)
+lost = (1.0 - world.pop_children / 300.0, 1.0 - world.pop_working_age / 600.0, 1.0 - world.pop_elderly / 100.0)
+check("children and the elderly lose a larger share than the whole, working-age adults a smaller", lost[0] > 0.28 and lost[2] > 0.28 > lost[1], lost)
+check("the cut is the declared ratio between the ages",
+      abs((1.0 - world.pop_children / 300.0) / (1.0 - world.pop_working_age / 600.0)
+          - demography.STARVATION_VULNERABILITY_CHILD / demography.STARVATION_VULNERABILITY_WORKING_AGE) < 1e-9, None)
 
 
 # ---- the screen shows the cohort model's population against the reference

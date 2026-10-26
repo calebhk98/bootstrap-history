@@ -88,7 +88,7 @@ def _buy_farm(sim, cmd, quantity):
     if got <= 0:
         return {"ok": False, "error": "cannot afford that farmland"}
     return {"ok": True, "bought_farm_hectares": got,
-            "farm_hectares": round(sim.farm_hectares, 1),
+            "farm_hectares": round(sim.view("farm_holdings")()["hectares"], 1),
             "food_cost_factor": round(sim.essential_price_ratio(), 3),
             "capital": round(sim.capital, 1)}
 

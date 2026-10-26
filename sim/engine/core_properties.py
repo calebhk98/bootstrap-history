@@ -8,7 +8,6 @@ directly through authoritative subsystem owners:
   - self.state.economy
   - self.state.founder
   - self.state.scenario
-  - self.state.population
 
 Properties are categorized strictly by owning subsystem.
 """
@@ -470,30 +469,6 @@ class ForwardingPropertiesMixin:
 			setattr(sub, "_dashboard_history", value)
 
 	@property
-	def farm_hectares(self):
-		sub = getattr(self.state, "holdings", None)
-		if sub is None:
-			raise AttributeError("farm_hectares")
-		val = getattr(sub, "farm_hectares", None)
-		if val is None:
-			raise AttributeError("farm_hectares")
-		return val
-
-	@farm_hectares.setter
-	def farm_hectares(self, value):
-		sub = getattr(self.state, "holdings", None)
-		if sub is not None:
-			setattr(sub, "farm_hectares", value)
-
-	@property
-	def farm_stock_kg(self):
-		return getattr(self.state.holdings, "farm_stock_kg")
-
-	@farm_stock_kg.setter
-	def farm_stock_kg(self, value):
-		setattr(self.state.holdings, "farm_stock_kg", value)
-
-	@property
 
 	# =========================================================================
 	# FounderState Compatibility Properties
@@ -621,41 +596,3 @@ class ForwardingPropertiesMixin:
 	def goal(self, value):
 		self.state._goal = value
 		self.forget_goal_caches()
-
-	# =========================================================================
-	# PopulationState Compatibility Properties
-	# =========================================================================
-
-	@property
-	def pop_children(self):
-		return self.population.children
-
-	@pop_children.setter
-	def pop_children(self, value):
-		val = float(value)
-		self.population.children = val
-		if hasattr(self, "state") and self.state is not None and self.state.population is not None:
-			self.state.population.pop_children = val
-
-	@property
-	def pop_working_age(self):
-		return self.population.working_age
-
-	@pop_working_age.setter
-	def pop_working_age(self, value):
-		val = float(value)
-		self.population.working_age = val
-		if hasattr(self, "state") and self.state is not None and self.state.population is not None:
-			self.state.population.pop_working_age = val
-
-	@property
-	def pop_elderly(self):
-		return self.population.elderly
-
-	@pop_elderly.setter
-	def pop_elderly(self, value):
-		val = float(value)
-		self.population.elderly = val
-		if hasattr(self, "state") and self.state is not None and self.state.population is not None:
-			self.state.population.pop_elderly = val
-

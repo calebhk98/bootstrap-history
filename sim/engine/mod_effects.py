@@ -11,6 +11,7 @@ from sim.agents import api as agents_api
 from sim.agents.api import edges as edge_names
 from . import economy_port_effects as economy_api
 
+from sim.demography.api import KillPeople
 from sim.hazards.api import RecordWorldEvent
 from sim.land.api import TransferTile
 from sim.stores.api import WriteStore
@@ -88,14 +89,7 @@ class ModEffects:
         cause = self.need_cause(cause)
         if not 0.0 <= share <= 1.0:
             raise ModError("%s: a death share is between 0 and 1, not %r" % (self.label(), share))
-        before = people_of(sim, country)
-        if country == sim.civ["id"]:
-            sim._apply_population_mortality_shock(share)
-        else:
-            for actor in strata_of(sim, country):
-                actor.record.members *= 1.0 - share
-        return sim.send(RecordWorldEvent(self.kind(kind), actors=(country,), tiles=tuple(tiles), cause=cause,
-                                         facts=dict(died=before - people_of(sim, country), **facts)))
+        return sim.send(KillPeople(country, share, cause, kind=self.kind(kind), tiles=tuple(tiles), facts=dict(facts)))
 
     def move_people(self, sim: Any, from_stratum_id: str, to_stratum_id: str, count: float, cause: str) -> dict:
         """Move people between two strata (migration, or reassignment to another class); the total stays the same."""

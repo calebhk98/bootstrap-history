@@ -26,7 +26,7 @@ class GeographyWorld:
 
     @property
     def pop_scale(self):
-        return self._sim.pop_scale
+        return self._sim.view("pop_scale")()
 
     @property
     def world_map(self):

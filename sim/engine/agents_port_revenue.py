@@ -35,7 +35,7 @@ class RevenueView(CollectionView):
 		"""Grain the farm harvested last, in tonnes. Before the first harvest, TEMPORARY HEURISTIC (CLAUDE.md
 		4.4): the people are taken to have harvested what they eat."""
 		sim = self._sim
-		kilograms = sim.state.holdings.farm_last_harvest_kg
+		kilograms = sim.view("farm_holdings")()["last_harvest_kg"]
 		if not kilograms > 0.0:
 			technique = sim._farm_technique_this_year
 			kilograms = (sim._adult_equivalent_population(sim.population)

@@ -22,7 +22,7 @@ class HomeView(BudgetView):
         flows = None if nutrition is None else SimpleNamespace(nutrition_ratio=nutrition)
         self._sim = SimpleNamespace(
             population=SimpleNamespace(working_age=WORKING_AGE, total=4.0 * WORKING_AGE),
-            state=SimpleNamespace(holdings=SimpleNamespace(farm_hours_needed=farm_hours)),
+            view=lambda name: lambda: {"hours_needed": farm_hours},
             _last_demographic_step=flows, civ={})
         self._record = record
 

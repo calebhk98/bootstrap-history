@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from sim.agriculture.commands import InvestFarm, SellFarm
 from sim.agriculture.constants import FARM_LABOUR_HOURS_PER_HA
 from sim.agents.api import edges
+from sim.demography.api import ChangeFarmland
 from sim.ledger.api import PayEdge, ReceiveFromEdge
 from sim.refusal import Refusal
 from sim.tests import agriculture_stand_in, module_harness
@@ -18,10 +19,16 @@ PRICE = FARM_LABOUR_HOURS_PER_HA * MONEY_PER_HOUR * PRICE_INDEX
 
 
 def farm(owned=100.0, capital=1.0e9):
+    """The module over a holding of `owned` hectares that the demography owner's command changes as it would."""
     holdings = SimpleNamespace(farm_hectares=owned, farm_stock_kg=0.0)
+
+    def change(command):
+        holdings.farm_hectares = (holdings.farm_hectares or 0.0) + command.hectares
+        return holdings.farm_hectares
     module = agriculture_stand_in.build(views={
         "money_per_labour_hour": MONEY_PER_HOUR, "price_index": PRICE_INDEX, "acting_balance": capital,
-        "legacy_farm_holdings": holdings})
+        "farm_holdings": lambda: {"hectares": holdings.farm_hectares, "stock_kg": holdings.farm_stock_kg}},
+        answers={ChangeFarmland: change})
     return module, holdings
 
 
@@ -35,7 +42,7 @@ class SellTests(unittest.TestCase):
         module, holdings = farm(100.0)
         answer = module.sell_farm(SellFarm(40.0))
         self.assertEqual((answer, holdings.farm_hectares), ({"hectares": 40.0, "price": 40.0 * PRICE, "remaining": 60.0}, 60.0))
-        self.assertEqual(module_harness.sent(module), [ReceiveFromEdge(edges.EDGE_LANDOWNERS, 40.0 * PRICE, "farmland sold")])
+        self.assertEqual(module_harness.sent(module), [ChangeFarmland(-40.0), ReceiveFromEdge(edges.EDGE_LANDOWNERS, 40.0 * PRICE, "farmland sold")])
 
     def test_more_than_is_owned_is_refused_and_changes_nothing(self):
         module, holdings = farm(60.0)
@@ -52,7 +59,7 @@ class InvestTests(unittest.TestCase):
     def test_buying_adds_the_hectares_and_pays_the_edge(self):
         module, holdings = farm(10.0)
         self.assertEqual(module.invest_farm(InvestFarm(5.0)), 5.0)
-        self.assertEqual((holdings.farm_hectares, module_harness.sent(module)), (15.0, [PayEdge(edges.EDGE_LANDOWNERS, 5.0 * PRICE, "farmland bought")]))
+        self.assertEqual((holdings.farm_hectares, module_harness.sent(module)), (15.0, [PayEdge(edges.EDGE_LANDOWNERS, 5.0 * PRICE, "farmland bought"), ChangeFarmland(5.0)]))
 
     def test_the_first_farm_starts_from_nothing_held(self):
         module, holdings = farm(None)

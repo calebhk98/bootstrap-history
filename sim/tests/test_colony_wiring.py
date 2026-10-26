@@ -10,6 +10,7 @@ from unittest import mock
 from .harness import check
 
 import sim.engine.colonies as colonies_module
+from sim.demography.api import SendSettlers
 from sim.engine.colonies import ColoniesMixin
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
 from sim.engine.state_seat import seat_from_template
@@ -24,7 +25,11 @@ SPEC = {"settlers": 20, "outfit_hours_per_settler": 50.0}
 
 class Founding:
     """A stand-in game that holds the charter, with the tile market, the purse and the people written out."""
-    send = event_stand_in.send
+    def send(self, command):
+        if isinstance(command, SendSettlers):
+            self.population.working_age -= command.people
+            return None
+        return event_stand_in.send(self, command)
 
     def __init__(self, held_by=None, by_land=("t1",), by_sea=("t1", "t2"), spendable=1.0e9, working_age=1000.0, chosen=(CHARTER, SPEC), cost=5000.0):
         self.state = SimpleNamespace(household=SimpleNamespace(log=[]), scenario=SimpleNamespace(year=100), acting_seat="founder",
