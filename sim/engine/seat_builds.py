@@ -2,7 +2,7 @@
 
 Pure functions over the seats mapping, then the Sim methods that use them. A seat builds a node when it is in
 the seat's `done` and not in its `granted` (what its country already had)."""
-from typing import Iterable, List, Mapping, Optional, Set
+from typing import Any, Callable, Iterable, List, Mapping, Optional, Set
 
 from .state_seat import SeatState
 
@@ -40,16 +40,17 @@ def operating_anywhere(seats: Mapping[str, SeatState], node_id: str) -> bool:
 	return any(node_id in seat.projects.operating for seat in seats.values())
 
 
-def disclosure_modes(seats: Mapping[str, SeatState], node_id: str) -> List[str]:
-	"""What each builder of `node_id` chose to do with it."""
-	return [(seats[seat_id].projects.disclosures.get(node_id) or {}).get("mode", "default")
-	        for seat_id in builders_of(seats, node_id)]
+def disclosure_modes(seats: Mapping[str, SeatState], node_id: str,
+                     disclosures_of: Callable[[str], Mapping[str, Any]]) -> List[str]:
+	"""What each builder of `node_id` chose to do with it; `disclosures_of` gives a seat's disclosures by node id."""
+	return [(disclosures_of(seat_id).get(node_id) or {}).get("mode", "default") for seat_id in builders_of(seats, node_id)]
 
 
-def licensors_of(seats: Mapping[str, SeatState], node_id: str, licensee_id: str) -> List[str]:
+def licensors_of(seats: Mapping[str, SeatState], node_id: str, licensee_id: str,
+                 disclosures_of: Callable[[str], Mapping[str, Any]]) -> List[str]:
 	"""The seats that licensed `node_id` to `licensee_id`."""
 	return [seat_id for seat_id in builders_of(seats, node_id)
-	        if licensee_id in ((seats[seat_id].projects.disclosures.get(node_id) or {}).get("licensees") or {})]
+	        if licensee_id in ((disclosures_of(seat_id).get(node_id) or {}).get("licensees") or {})]
 
 
 class SeatBuildsMixin:

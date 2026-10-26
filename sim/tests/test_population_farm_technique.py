@@ -12,7 +12,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.constants import REGISTRY
-from sim.engine.literacy_rules import common_ceiling
+from sim.diffusion.literacy_rules import common_ceiling
 from sim.labour import labour_allocation
 from sim.labour.labour import Labour
 from sim.tests.harness import NODES

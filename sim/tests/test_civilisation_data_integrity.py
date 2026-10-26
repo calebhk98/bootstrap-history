@@ -58,16 +58,14 @@ check("...and Rome, which the tree is written from, is left alone",
 # --- the needs-first gate ----------------------------------------------------------------------------------------
 # BREAK: the Mexica menu says "no draught animals, no iron, no wheel in practical use" and horse_collar was startable
 # on arrival in the Valley of Mexico in 1500. `needs_first` is called with the civilisation's own data on a stub game.
-import types
-from sim.engine.society_diffusion import DiffusionMixin
+from sim.tests.diffusion_host import gated
 
 _HORSE = "horse_collar"
 
 
 def _gated(civ_id, done=(), stock_met=False):
-    game = types.SimpleNamespace(civ=S.load_civ(civ_id), state=types.SimpleNamespace(projects=types.SimpleNamespace(done=set(done))),
-                                 stock_holds_met=lambda _stock: stock_met)
-    return DiffusionMixin.needs_first(game, _HORSE), game
+    game = gated(S.load_civ(civ_id), done, stock_met)
+    return game.needs_first(_HORSE), game
 
 
 (_node, _because), _mexica_game = _gated("mexica_1500")
@@ -78,11 +76,11 @@ check("...and bringing the animals across (the node done) opens it",
 check("...and holding enough of the animals opens it without the node",
       _gated("mexica_1500", stock_met=True)[0] == (None, None), "still gated")
 check("...a gate that rests on stock is not asked about knowledge alone",
-      DiffusionMixin.needs_first(_mexica_game, _HORSE, about_stock=False) == (None, None), "gated on knowledge")
+      _mexica_game.needs_first(_HORSE, about_stock=False) == (None, None), "gated on knowledge")
 check("a society that HAS horses is not gated at all (the control case)",
       _gated("rome_100ad")[0] == (None, None), _gated("rome_100ad")[0])
 check("a node that is not behind the gate is not gated",
-      DiffusionMixin.needs_first(_mexica_game, "corpus_written") == (None, None), "gated")
+      _mexica_game.needs_first("corpus_written") == (None, None), "gated")
 
 
 # --- BREAK: rubber was priced at 99,999 a kilo, a sentinel left over from the

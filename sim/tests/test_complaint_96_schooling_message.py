@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.literacy_census_phrase import census_phrase
+from sim.diffusion.literacy_rules import census_phrase
 
 GENERATION = 25
 

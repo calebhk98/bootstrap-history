@@ -8,29 +8,45 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.diffusion_rules import weapons_relief
+from sim.diffusion import constants
+from sim.diffusion.diffusion_rules import weapons_relief
+from sim.diffusion.module import Diffusion
+from sim.engine import seat_builds
 from sim.engine.hazard_relief import HazardReliefMixin
-from sim.engine.society_diffusion import DiffusionMixin
+from sim.tests import module_harness
 
 MILITARY = ["bronze_sword", "crossbow", "cannon", "rifle"]
 KINDS = ("output_factor", "sack_chance")
 
 
-class Game(HazardReliefMixin, DiffusionMixin):
+class Armed(Diffusion):
+    def diffusible_ids(self, category):
+        return tuple(MILITARY) if category == "military" else ()
+
+
+class Game(HazardReliefMixin):
     """Holds only what the relief reads: the founder's finished nodes, the government's knowledge, the military ids."""
 
     HAZARD_COUNTERS = {}
+    STATE_MIL_RELIEF_PER_WEAPON_OUTPUT = constants.STATE_MIL_RELIEF_PER_WEAPON_OUTPUT
+    STATE_MIL_RELIEF_PER_WEAPON_SACK = constants.STATE_MIL_RELIEF_PER_WEAPON_SACK
 
     def __init__(self):
         self.built = set()
         self.held = set()
         self.state = SimpleNamespace(seats={"founder": SimpleNamespace(projects=SimpleNamespace(done=self.built, granted=set()))})
-
-    def state_treasury(self):
-        return SimpleNamespace(knowledge=self.held)
+        self.diffusion = module_harness.build(Armed, views={
+            "state_knowledge": lambda: self.held,
+            "built_by_any_seat": lambda among: seat_builds.built_by_any(self.state.seats, among)})
 
     def _diffusible_ids(self, category):
-        return tuple(MILITARY) if category == "military" else ()
+        return self.diffusion.diffusible_ids(category)
+
+    def state_military_diffusion(self):
+        return self.diffusion.diffusion_index("military")
+
+    def _state_military_diffusion_relief(self, per_weapon):
+        return self.diffusion.diffusion_relief("military", per_weapon)
 
     def _military_war_relief(self):
         return 1.0, None

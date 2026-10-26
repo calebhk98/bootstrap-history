@@ -5,11 +5,11 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.diffusion_rules import medical_relief
-from sim.engine.society_diffusion import DiffusionMixin
+from sim.diffusion import constants
+from sim.diffusion.diffusion_rules import medical_relief
 from sim.tests.plague_exposure_stub import HISTORICAL_STAFF_LOSS, PlagueNation, bare, sanitised
 
-COMPLIANCE_BASE = DiffusionMixin.MEDICAL_COMPLIANCE_BASE
+COMPLIANCE_BASE = constants.MEDICAL_COMPLIANCE_BASE
 
 
 class InstitutionVersusKnowledge(unittest.TestCase):
@@ -43,7 +43,7 @@ class HouseholdIsExposedToTheCountry(unittest.TestCase):
 class NationalRelief(unittest.TestCase):
 
     def test_full_coverage_exceeds_the_old_fixed_cap(self):
-        self.assertFalse(hasattr(DiffusionMixin, "MEDICAL_DIFFUSION_RELIEF_CAP"))
+        self.assertFalse(hasattr(constants, "MEDICAL_DIFFUSION_RELIEF_CAP"))
         self.assertGreater(medical_relief(1.0, COMPLIANCE_BASE, 1.0), 0.85)
 
     def test_weak_state_leaves_a_residual_through_compliance(self):

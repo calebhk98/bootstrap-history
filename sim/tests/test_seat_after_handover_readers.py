@@ -19,6 +19,10 @@ from sim.engine.state_seat import SeatState, bind_seat
 from sim.tests.harness import check
 
 
+# what each seat chose for its inventions (the diffusion module keeps it)
+DISCLOSED = {"heir": {"wheel": {"mode": "license", "licensees": {"firm:7": {"fee": 0.0, "royalty": 0.1}}}}, "third": {}}
+
+
 def post_handover_state():
 	"""Seats "third" and "heir", "heir" acting; the heir carries the leaver's household, nodes, holdings, goal and country."""
 	heir = SeatState(
@@ -28,7 +32,6 @@ def post_handover_state():
 		holdings=HoldingsState(patents={"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}, shares_held={"guild": 3.0}),
 		seat_progress=SeatProgressState(goal_year=None),
 		goal="steam_engine", country="han")
-	heir.projects.disclosures["wheel"] = {"mode": "license", "licensees": {"firm:7": {"fee": 0.0, "royalty": 0.1}}}
 	third = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(done={"fire"}, granted={"fire"}),
 	                  founder=FounderState(life_left=50.0), goal="printing_press")
 	return SimulationState(seats={"third": third, "heir": heir}, acting_seat="heir", actors=ActorsState(home_country="rome"))
@@ -91,8 +94,8 @@ check("patron_grant_share: the heir is asked about its own country and not the h
 state = post_handover_state()
 check("builders_of: the heir built what the leaver built and was not granted", seat_builds.builders_of(state.seats, "wheel") == ["heir"])
 check("builders_of: a granted node has no builder", seat_builds.builders_of(state.seats, "fire") == [])
-check("licensors_of: the heir licensed its invention to the firm", seat_builds.licensors_of(state.seats, "wheel", "firm:7") == ["heir"])
-check("disclosure_modes: the heir's choice stands", seat_builds.disclosure_modes(state.seats, "wheel") == ["license"])
+check("licensors_of: the heir licensed its invention to the firm", seat_builds.licensors_of(state.seats, "wheel", "firm:7", DISCLOSED.get) == ["heir"])
+check("disclosure_modes: the heir's choice stands", seat_builds.disclosure_modes(state.seats, "wheel", DISCLOSED.get) == ["license"])
 
 # ---- the seat as an actor
 state = post_handover_state()

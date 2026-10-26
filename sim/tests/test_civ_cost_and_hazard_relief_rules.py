@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.civ_cost import civ_cost_factor, multiplier_for
+from sim.diffusion.civ_cost import civ_cost_factor, multiplier_for
 from sim.engine.core import Sim
 from sim.engine.economy import EconomyMixin
 from sim.engine.hazard_relief import HazardReliefMixin

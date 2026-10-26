@@ -14,7 +14,7 @@ from sim.engine.economy_credit import CreditMixin
 from sim.engine.mechanics import MechanicsMixin
 from sim.engine.project_materials import ProjectMaterialsMixin
 from sim.engine.shortage_sizing import nitre_bed_yearly_spend
-from sim.engine.society_adoption import AdoptionMixin
+from sim.diffusion.rules import staff_sources
 from sim.labour.labour_bondage import BondageMixin
 from sim.labour.labour_capacity import CapacityMixin
 from sim.labour.labour_training import TrainingMixin
@@ -110,14 +110,14 @@ check("hiring scribes does not inflate the trained-scholar headcount; scholars a
       household.scholars == 2.0 + 1.0 and household.artisans == 4.0, (household.scholars, household.artisans))
 
 
-class Advice(MechanicsMixin, AdoptionMixin):
+class Advice(MechanicsMixin):
     nodes = NODES
 
 
 check("the advice on how to get scholars never points at a different trade family's trade, which would not even count",
       all("scribe" not in why and "chemist" not in why and "merchant" not in why and "engineer" not in why   # presentation: the authored wording of the advice
-          for _node, why in Advice().STAFF_SOURCES.get("scholars", [])),
-      Advice().STAFF_SOURCES.get("scholars"))
+          for _node, why in staff_sources(Advice()._effect_terms("staff_advice")).get("scholars", [])),
+      staff_sources(Advice()._effect_terms("staff_advice")).get("scholars"))
 
 # --- SAVE INTEGRITY, JOB 2a: FOG CAN BE REWOUND. `revealed` is a ratchet: assigning to it may grow what this running
 # session has seen, never shrink it.

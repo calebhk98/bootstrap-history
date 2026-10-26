@@ -30,7 +30,7 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 | 3 | [`campaigns`](campaigns.md) | Armies, campaigns, conquest, captives and revolts. Moved: 1 view, 4 commands, sends 14 (see the file). | 1 | 4 | 46 | 0 |
 | 4 | [`coin`](coin.md) | Coin as a metal: stock and price level, revaluation, keeping, carriage and theft. **Moved** (`sim/coin/`). | 13 | 4 | 29 | 11 |
 | 5 | [`demography`](demography.md) | Population: counts by age, by tile, urban share, food eaten, recovery after shocks. | 4 | 4 | 19 | 5 |
-| 6 | [`diffusion`](diffusion.md) | How knowledge spreads: literacy, schooling, diffusion indices, disclosure and licensing, tech effects on society. | 5 | 4 | 48 | 12 |
+| 6 | [`diffusion`](diffusion.md) | How knowledge spreads: literacy, schooling, diffusion indices, disclosure and licensing, tech effects on society. **Moved** (`sim/diffusion/`; see the file). | 24 | 5 | 48 | 12 |
 | 7 | [`disease`](disease.md) | Epidemics and endemic disease: the disease package, burden, forecasts and medical coverage. | 3 | 2 | 17 | 9 |
 | 8 | [`finance`](finance.md) | Debt: credit limits, interest, arrears, insolvency, bondage and the capital market. | 7 | 7 | 50 | 7 |
 | 9 | [`foreign_trade`](foreign_trade.md) | Trade with partner countries: their economies, supply, payments in coin, lift capacity, actors' trade books. | 4 | 5 | 40 | 13 |

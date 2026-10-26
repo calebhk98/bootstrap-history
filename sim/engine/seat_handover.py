@@ -14,14 +14,16 @@ from typing import Mapping, Optional
 
 from sim.refusal import Refusal
 
+from . import game_assembly
 from .seat_handover_empty import holds_that_would_be_lost
 from .seat_handover_rekey import rename_seat_references
 
-MOVED_FIELDS = ("household", "projects", "holdings", "governance", "seat_progress", "goal", "country", "kind", "holder")
+MOVED_FIELDS = ("household", "projects", "holdings", "governance", "seat_progress", "goal", "country", "kind", "holder", "modules")
 
 
-def handover_refusal(seats: Mapping, from_id: str, to_id: str) -> Optional[Refusal]:
-	"""Why `from_id` cannot hand over to `to_id`, or None when it can."""
+def handover_refusal(seats: Mapping, from_id: str, to_id: str, has_disclosures: bool) -> Optional[Refusal]:
+	"""Why `from_id` cannot hand over to `to_id`, or None when it can. `has_disclosures` says whether `to_id` has
+	chosen what to do with an invention."""
 	known = list(seats)
 	for role, seat_id in (("from", from_id), ("to", to_id)):
 		if seat_id not in seats:
@@ -33,7 +35,7 @@ def handover_refusal(seats: Mapping, from_id: str, to_id: str) -> Optional[Refus
 		return Refusal("replacement_wrong_kind", "seat %r is a %s seat and %r is a %s seat; a seat passes only to a seat of its own kind "
 		               "(join adds one). Nothing was changed." % (from_id, seats[from_id].kind, to_id, seats[to_id].kind),
 		               seat=to_id, kind=seats[from_id].kind)
-	holds = holds_that_would_be_lost(seats[to_id])
+	holds = holds_that_would_be_lost(seats[to_id], has_disclosures)
 	if holds:
 		return Refusal("replacement_not_empty", "seat %r already has %s, which a handover would overwrite. Hand over to an empty "
 		               "seat (join adds one). Nothing was changed." % (to_id, ", ".join(holds)), seat=to_id, holds=holds)
@@ -56,7 +58,8 @@ class SeatHandoverMixin:
 	def hand_over_seat(self, from_id: str, to_id: str):
 		"""Pass `from_id`'s seat to `to_id`: fields (above), its account with the debts and claims, and whatever else is
 		keyed by its id; it leaves the year. Returns a Refusal that changed nothing, or the dict `move_seat_fields` answers."""
-		refusal = handover_refusal(self.state.seats, from_id, to_id)
+		disclosed = to_id in self.state.seats and bool(self.view("disclosures")[to_id])
+		refusal = handover_refusal(self.state.seats, from_id, to_id, disclosed)
 		if refusal:
 			return refusal
 		moved = move_seat_fields(self.state.seats, from_id, to_id)
@@ -65,6 +68,8 @@ class SeatHandoverMixin:
 		self.state.attach_purses()
 		if self.state.acting_seat == from_id:
 			self._switch_seat(to_id)
+		else:
+			game_assembly.switch_seat(self, self.state.acting_seat)   # the modules' seat state moved with the seat
 		if getattr(self, "session_seat", None) == from_id:
 			self.session_seat = to_id
 		self._reset_economic_caches()

@@ -59,6 +59,7 @@ from .forward_living_stock import ForwardLivingStockMixin
 from .forward_reporting import ReportingForwardsMixin
 from .forward_coin import ForwardCoinMixin
 from .forward_campaigns import ForwardCampaignsMixin
+from .forward_diffusion import DiffusionForwardsMixin
 from .market_demand import MarketDemandMixin
 from .concern_volume import ConcernVolumeMixin
 from .concern_book_sales import ConcernBookSalesMixin
@@ -85,7 +86,6 @@ from .held_works import HeldWorksMixin
 from .works import WorksMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
-from .society_disclosure import DisclosureMixin
 from .founder_sales import FounderSalesMixin
 from .seat_dealings import SeatDealingsMixin
 from .seat_bank import SeatBankMixin
@@ -208,7 +208,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 
 class Sim(ModStoresMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, ConcernVolumeMixin, ConcernBookSalesMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
-          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, SeatBankMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
+          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DiffusionForwardsMixin, FounderSalesMixin, SeatDealingsMixin, SeatBankMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, ForwardLivingStockMixin, ReportingForwardsMixin, ForwardCoinMixin,
           FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, UrbanShareMixin, ForwardCampaignsMixin, EconomyPortMixin, NodeRederiveMixin):
     DEFAULT_POPULATION_100AD = declare(

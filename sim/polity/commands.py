@@ -85,3 +85,17 @@ class ReplaceRuler(Command):
 class CloseSuccessionDispute(Command):
 	"""The challenger to the succession in the state of `owner` is dropped."""
 	owner: str
+
+
+@dataclass(frozen=True)
+class ShiftValueWeight(Command):
+	"""The society's value weight `field` moves by `delta`, held between the weight floor and ceiling. Answers
+	(before, after), or a `Refusal` (cause `not_a_value_weight`) when the society has no such weight."""
+	field: str
+	delta: float
+
+
+@dataclass(frozen=True)
+class GainReputation(Command):
+	"""The acting seat's reputation rises by `amount`, never above the top of the reputation scale."""
+	amount: float

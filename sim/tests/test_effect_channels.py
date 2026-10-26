@@ -1,11 +1,13 @@
 """The effect channels a work declares in its `mechanics` (Complaint 190's benefactions use them). Each method is called once on a
 stand-in `self` whose attributes are written out and whose collaborators are plain lambdas: `MechanicsMixin.effect_value`,
-`effect_values`, `effect_sum`, `effect_factor`; the readers `standing_floor`, `goods_reach_factor`, `_schooling_flow`; and
+`effect_values`, `effect_sum`, `effect_factor`; the readers `standing_floor`, `goods_reach_factor`, and the diffusion module's `schooling_flow`; and
 `institution_unit_cost`. No game is built. What the benefactions branch declares is test_complaint_190_benefactions."""
 import unittest
 from types import SimpleNamespace
 
+from sim.diffusion.module import Diffusion
 from sim.engine.core import Sim
+from sim.tests import module_harness
 from sim.engine.mechanics import MechanicsMixin
 
 QUICK_TOPIC = True
@@ -126,25 +128,30 @@ class GoodsReach(unittest.TestCase):
 
 
 def school_game(running, values, reaches=None):
-    return SimpleNamespace(running=lambda node_id: running, _effect_terms=lambda channel: [("school", {"required": True})],
-                           effect_values=lambda channel: values, mechanic=lambda node_id, name: {"reaches": reaches})
+    return module_harness.build(Diffusion, views={
+        "running": lambda node_id: running, "effect_terms": lambda channel: [("school", {"required": True, "reaches": reaches})],
+        "effect_values": lambda channel: values})
+
+
+def _flow(game, field=None):
+    return game.schooling_flow(field)
 
 
 class SchoolingFlow(unittest.TestCase):
 
     def test_it_is_nothing_when_the_required_school_is_shut(self):
-        self.assertEqual(Sim._schooling_flow(school_game(False, [("school", 0.5)])), 0.0)
+        self.assertEqual(_flow(school_game(False, [("school", 0.5)])), 0.0)
 
     def test_it_is_the_open_schools_flow(self):
-        self.assertEqual(Sim._schooling_flow(school_game(True, [("school", 0.5)])), 0.5)
+        self.assertEqual(_flow(school_game(True, [("school", 0.5)])), 0.5)
 
     def test_it_is_nothing_with_no_school(self):
-        self.assertEqual(Sim._schooling_flow(school_game(True, [])), 0.0)
+        self.assertEqual(_flow(school_game(True, [])), 0.0)
 
     def test_a_school_that_names_fields_teaches_only_those(self):
         game = school_game(True, [("school", 0.5)], reaches=["general"])
-        self.assertEqual(Sim._schooling_flow(game, "general"), 0.5)
-        self.assertEqual(Sim._schooling_flow(game, "scientific"), 0.0)
+        self.assertEqual(_flow(game, "general"), 0.5)
+        self.assertEqual(_flow(game, "scientific"), 0.0)
 
 
 class InstitutionUnitCost(unittest.TestCase):

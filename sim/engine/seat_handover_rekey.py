@@ -5,6 +5,7 @@ Moved by renaming the leaver's id to the replacement's, so nothing is paid and n
 claims and goods (sim/agents/purses.py, sim/economy/api.py), the other seats' offers, shares, licences and
 disclosures, the other actors' records, and the year's market flows.
 """
+from sim.diffusion.api import RekeyDisclosures
 from sim.rekey import rekey
 
 
@@ -20,9 +21,9 @@ def rename_seat_references(sim, from_id: str, to_id: str) -> None:
 		agent_economy.rename_agent(from_id, to_id)
 	if state.economy is not None and state.economy.market_flows:
 		rekey(state.economy.market_flows, from_id, to_id)
-	for seat in state.seats.values():
+	for seat_id, seat in state.seats.items():
 		rekey(seat.holdings, from_id, to_id)
-		rekey(seat.projects.disclosures, from_id, to_id)
+		sim.send(RekeyDisclosures(seat_id, from_id, to_id))
 		seat.holdings.offers[:] = [offer for offer in seat.holdings.offers if offer.get("from") != offer.get("to")]
 	state.seats[to_id].holdings.shares_held.pop(to_id, None)   # a stake in oneself is no stake
 	parties = getattr(getattr(sim, "goods_market", None), "forget_seat_party", None)

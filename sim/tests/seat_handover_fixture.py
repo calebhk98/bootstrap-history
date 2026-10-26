@@ -1,4 +1,5 @@
 """Two or three seats on the real root state, with the alias rebinding a handover needs (shared by the handover tests)."""
+from sim.engine import game_assembly
 from sim.engine.mod_stores import StoreBook
 from sim.engine.seat_handover import SeatHandoverMixin
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
@@ -20,9 +21,18 @@ class Game(SeatHandoverMixin):
         self.session_seat = None
         self.year = 100
         self.civ = {"id": "home"}
+        self.assembly = game_assembly.build(None, False)
+        game_assembly.attach(self)
+
+    def view(self, name):
+        return self.assembly.views[name]
+
+    def send(self, command):
+        return self.assembly.handlers[type(command)](command)
 
     def _switch_seat(self, seat_id):
         bind_seat(self.state, seat_id)
+        game_assembly.switch_seat(self, seat_id)
 
     def _reset_economic_caches(self):
         pass

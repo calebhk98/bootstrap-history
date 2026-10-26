@@ -25,6 +25,10 @@ RELOCATIONS = [
     ("/modules/reporting/agent_baseline_prices", "/economy/agent_baseline_prices"),
     ("/seats/*/modules/reporting/log", "/seats/*/household/log"),
     ("/seats/*/modules/reporting/automation_audit", "/seats/*/household/automation_audit"),
+    ("/modules/diffusion/technique_first_run", "/economy/technique_first_run"),
+    ("/modules/diffusion/technique_record_started", "/economy/technique_record_started"),
+    ("/modules/diffusion/literacy_said", "/scenario/_literacy_said"),
+    ("/seats/*/modules/diffusion/disclosures", "/seats/*/projects/disclosures"),
 ]
 
 IGNORED = [

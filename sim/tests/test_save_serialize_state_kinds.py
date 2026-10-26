@@ -11,6 +11,7 @@ import json
 
 from sim.agents.api import ActorRecord, ActorsState
 from sim.contracts import FACILITY, Contract
+from sim.diffusion.api import DiffusionSeat
 from sim.engine.economy import _InvalidatingSet
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
                               SimulationState, serialize_state, verbatim)
@@ -82,7 +83,6 @@ projects = ProjectsState(
 	active={"z_mill": ActiveProjectState(ph_left=80.0, cost_left=300.0, yrs=1.5, spent=100.0, lab_left={"mason": 15.0}),
 	        "a_forge": ActiveProjectState(ph_left=10.0, cost_left=20.0, yrs=0.5, spent=5.0)},
 	done={"stone_cutting", "fire"}, done_year={"fire": 3, "stone_cutting": 10}, failed_attempts=retries,
-	disclosures={"fire": {"mode": "license", "published_year": None, "licensees": {"firm:2": {"fee": 5.0, "royalty": 0.1, "year": 101}}}},
 	tenure={"mason": {"arch": 4.5}}, excluded={"category:war"})
 blob = serialize_state(projects)
 check("serialize_state: the retry counts are a dict of integers", blob["failed_attempts"] == {"printing": 3, "alloy": 1})
@@ -91,9 +91,11 @@ check("serialize_state: active projects are records, written in the order they w
 		"ph_left": 80.0, "yrs": 1.5, "spent": 100.0, "cost_left": 300.0, "status": "ACTIVE", "lab_left": {"mason": 15.0}}, blob["active"])
 check("serialize_state: done nodes are a sorted set and their years a dict",
       blob["done"] == {"__set__": ["fire", "stone_cutting"]} and blob["done_year"] == {"fire": 3, "stone_cutting": 10}, None)
+disclosure_blob = serialize_state(DiffusionSeat(disclosures={"fire": {"mode": "license", "published_year": None, "licensees": {
+	"firm:2": {"fee": 5.0, "royalty": 0.1, "year": 101}}}}))
 check("serialize_state: a disclosure record keeps its None and its nested licensee",
-      blob["disclosures"] == {"fire": {"mode": "license", "published_year": None,
-                                      "licensees": {"firm:2": {"fee": 5.0, "royalty": 0.1, "year": 101}}}}, blob["disclosures"])
+      disclosure_blob["disclosures"] == {"fire": {"mode": "license", "published_year": None,
+                                                  "licensees": {"firm:2": {"fee": 5.0, "royalty": 0.1, "year": 101}}}}, disclosure_blob)
 check("serialize_state: the founder's business is a nested record", blob["businesses"] == [{"business_id": "founder", "owner_id": "", "plants": []}], blob["businesses"])
 check("serialize_state: nested dicts of floats and sets of exclusions", blob["tenure"] == {"mason": {"arch": 4.5}} and blob["excluded"] == {"__set__": ["category:war"]}, None)
 check("serialize_state: the project fields come in declaration order", list(blob) == saved_field_names(ProjectsState))

@@ -7,9 +7,9 @@ baseline for a good no incumbent makes (incumbent_prices.py); it does not set a 
 the cost of its own entry (producer_costs.py) and the market clears the offers.
 
 A concern in the same line of business as a producer reaches the producer's technique only after the copying
-time (technique_spread.py), so a new technique shows first in its adopter's volume and later in the others'.
+time (the diffusion module's `techniques_spread`), so a new technique shows first in its adopter's volume and later
+in the others'.
 """
-from . import technique_spread
 
 
 class TechniquesInUseMixin:
@@ -41,20 +41,3 @@ class TechniquesInUseMixin:
             in_use = cached[1]      # the same set stays the same object, so what is keyed on it holds
         self._techniques_in_use_cache = (epoch, in_use, projects.done, projects.operating)
         return in_use
-
-    def techniques_spread(self):
-        """The techniques in use that concerns in the same line of business have had time to copy."""
-        in_use = self.techniques_in_use()
-        year = self.state.scenario.year
-        economy = self.state.economy
-        first_run = economy.technique_first_run
-        granted = frozenset(self.state.projects.granted)
-        stamp = (year, granted, len(first_run), economy.technique_record_started)
-        cached = getattr(self, "_techniques_spread_cache", None)
-        if cached is not None and cached[0] is in_use and cached[1] is first_run and cached[2] == stamp:
-            return cached[3]    # the same techniques seen in the same year: nothing new to note or to spread
-        technique_spread.note_first_run(first_run, in_use, year, not economy.technique_record_started)
-        economy.technique_record_started = True
-        spread = technique_spread.spread_techniques(in_use, granted, first_run, self.nodes, year)
-        self._techniques_spread_cache = (in_use, first_run, (year, granted, len(first_run), True), spread)
-        return spread

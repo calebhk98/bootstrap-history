@@ -132,7 +132,7 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, Stak
 		public = self.is_public(node_id)
 		best = 0.0
 		for seat_id in builders:
-			mode = (sim.state.seats[seat_id].projects.disclosures.get(node_id) or {}).get("mode", "default")
+			mode = (sim.view("disclosures")[seat_id].get(node_id) or {}).get("mode", "default")
 			visibility = visibility_of.base_visibility(mode, public, sim.copy_difficulty(node_id), SECRET_EXPOSURE)
 			if location is not None:
 				visibility = visibility_of.seen_from(

@@ -4,7 +4,7 @@ A technique one producer runs reaches the other concerns in its line of business
 actor to copy it (agents/imitation.py `copy_years`), counted from the year it was first seen running; until
 then those concerns keep the entries they held. Techniques the society started with are held from the start.
 """
-from typing import Any, Dict, FrozenSet, Iterable
+from typing import Any, Callable, Dict, FrozenSet, Iterable
 
 from sim.agents.api import imitation
 
@@ -21,13 +21,14 @@ def note_first_run(first_run: Dict[str, int], in_use: Iterable[str], year: int, 
 
 
 def spread_techniques(in_use: Iterable[str], granted: Iterable[str], first_run: Dict[str, int],
-                      nodes: Dict[str, Any], year: int) -> FrozenSet[str]:
-    """The techniques in use that the rest of the society has had time to copy by `year`."""
+                      node_of: Callable[[str], Any], year: int) -> FrozenSet[str]:
+    """The techniques in use that the rest of the society has had time to copy by `year`; `node_of` gives a node's
+    record, or None for an id the tree lacks."""
     spread = set(granted)
     for node_id in in_use:
         if node_id in spread:
             continue
-        node = nodes.get(node_id)
+        node = node_of(node_id)
         if node is None or year - first_run.get(node_id, year) >= imitation.copy_years(node):
             spread.add(node_id)
     return frozenset(spread)

@@ -1,6 +1,6 @@
 """Complaints 103, 185, 287: an actor chooses what to do with an invention (keep it secret, publish it), and
 how hard it is to copy and how long it takes to be believed follow from that choice. Complaint 640: the rules
-are called on a stub game and plain nodes built here; licensing, saving and the command on a whole game are in
+are called on the diffusion module over views and plain nodes built here; licensing, saving and the command on a whole game are in
 test_invention_disclosure_scenario."""
 QUICK_TOPIC = True
 
@@ -8,8 +8,13 @@ import types
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.society_disclosure import DisclosureMixin
-from sim.engine.visibility import copy_difficulty_of, years_to_be_believed
+from sim.diffusion.api import Disclose, copy_difficulty_of
+from sim.diffusion.module import Diffusion
+from sim.diffusion.state import DiffusionSeat
+from sim.engine import bridge_diffusion
+from sim.engine.visibility import years_to_be_believed
+from sim.polity.api import GainReputation
+from sim.tests import module_harness
 
 # --- how hard an invention is to copy from sight.
 check("a declared copy visibility gives its reciprocal as difficulty", copy_difficulty_of({"copy_visibility": 0.25}) == 4.0)
@@ -30,17 +35,24 @@ check("the harder to copy, the longer a secret is in being believed",
 
 
 # --- choosing what to do with an invention.
-class _DisclosureGame(DisclosureMixin):
-    REPUTATION_CEILING = 10.0
+class _DisclosureGame:
+    """The diffusion module of a seat that made `made`, was granted `granted` and chose nothing yet."""
 
-    def __init__(self, made=("alpha",), granted=(), reputation=1.0):
-        self.nodes = {"alpha": {}, "beta": {}, "gamma": {}}
-        self.state = types.SimpleNamespace(
-            projects=types.SimpleNamespace(done=set(made) | set(granted), granted=set(granted), disclosures={}, operating=set()),
-            scenario=types.SimpleNamespace(year=120), household=types.SimpleNamespace(reputation=reputation))
+    def __init__(self, made=("alpha",), granted=()):
+        self.done = set(made) | set(granted)
+        self.module = module_harness.build(Diffusion, seat=DiffusionSeat(), views={
+            "tree": {"alpha": {}, "beta": {}, "gamma": {}}.get, "techniques_held": lambda: self.done,
+            "techniques_granted": lambda: set(granted), "operating": lambda: set(), "year": 120,
+            "reputation_gain_of": lambda node_id: 2.0})
 
-    def reputation_gain_of(self, node):
-        return 2.0
+    def disclose(self, node_id, mode):
+        return self.module.disclose(Disclose(node_id, mode))
+
+    def disclosure_of(self, node_id):
+        return self.module.disclosure(node_id)
+
+    def reputation_gained(self):
+        return [command.amount for command in module_harness.sent(self.module) if isinstance(command, GainReputation)]
 
 
 _game = _DisclosureGame()
@@ -54,16 +66,15 @@ check("choosing for a granted technology (not made by the founder) is refused",
 check("a mode that is not a choice is refused", not _game.disclose("alpha", "gift")["ok"])
 check("'default' is not a choice to make", not _game.disclose("alpha", "default")["ok"])
 
-_reputation_before = _game.state.household.reputation
 _published = _game.disclose("alpha", "publish")
 check("publishing is accepted, raises the publisher's reputation and notes the year",
-      _published["ok"] and _game.state.household.reputation == _reputation_before + 2.0
-      and _game.disclosure_of("alpha")["published_year"] == 120, (_published, _game.state.household.reputation))
+      _published["ok"] and _game.reputation_gained() == [2.0] and _game.disclosure_of("alpha")["published_year"] == 120,
+      (_published, _game.reputation_gained()))
 check("publishing cannot be taken back", not _game.disclose("alpha", "secret")["ok"] and _game.disclosure_of("alpha")["mode"] == "publish")
-check("publishing again earns nothing more", not _game.disclose("alpha", "publish")["ok"]
-      and _game.state.household.reputation == _reputation_before + 2.0)
-_near_ceiling = _DisclosureGame(reputation=9.5)
-_near_ceiling.disclose("alpha", "publish")
-check("reputation from publishing stops at the ceiling", _near_ceiling.state.household.reputation == 10.0, _near_ceiling.state.household.reputation)
+check("publishing again earns nothing more", not _game.disclose("alpha", "publish")["ok"] and _game.reputation_gained() == [2.0])
+_household = types.SimpleNamespace(reputation=9.5)
+bridge_diffusion.gain_reputation(types.SimpleNamespace(state=types.SimpleNamespace(household=_household), REPUTATION_CEILING=10.0),
+                                 GainReputation(2.0))
+check("reputation from publishing stops at the ceiling", _household.reputation == 10.0, _household.reputation)
 check("the listing carries every invention of the founder's with its mode",
-      [(row["id"], row["mode"]) for row in _game.disclosure_listing()] == [("alpha", "publish")], _game.disclosure_listing())
+      [(row["id"], row["mode"]) for row in _game.module.disclosure_listing()] == [("alpha", "publish")], _game.module.disclosure_listing())

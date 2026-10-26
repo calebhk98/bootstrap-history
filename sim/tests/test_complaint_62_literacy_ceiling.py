@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CountryLiteracy
-from sim.engine.literacy_effect import literacy_after_effect
+from sim.diffusion.literacy_rules import literacy_after_effect
 
 CEILING = 0.99
 

@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 from .harness import check
 from sim.refusal import cause_of, facts_of
-from sim.engine.society_adoption import AdoptionMixin
+from sim.diffusion.rules import staff_hire_advice
 from sim.projects.api import staff_gate
 craftsmen_gate_text, scholar_gate_text = staff_gate.craftsmen_gate_text, staff_gate.scholar_gate_text
 from sim.labour.buy_cap import over_room_refusal
@@ -75,7 +75,7 @@ check("one hired hand is enough beside the founder for a project needing two",
 
 def hire_advice(deficit):
     steps = staff_remedies("scholars", [("HIRE", "hire somebody")], deficit, set(), set(), lambda node: False,
-                           lambda node: False, lambda node: False, lambda kind, count: AdoptionMixin.staff_hire_advice(None, kind, count))
+                           lambda node: False, lambda node: False, lambda kind, count: staff_hire_advice(kind, count))
     return steps[0][0]
 
 

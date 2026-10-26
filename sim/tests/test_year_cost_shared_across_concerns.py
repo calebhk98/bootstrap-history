@@ -10,12 +10,16 @@ from unittest import mock
 from sim.agents.business import Business
 from sim.agents import patent
 from sim.agents.registry import ActorRegistry
+from sim.diffusion.api import NoteFirstRuns
+from sim.diffusion.module import Diffusion
+from sim.diffusion.state import DiffusionWorld
 from sim.engine import concern_volume, economy_port_actors, prices, tile_ownership
 from sim.engine.economy_materials import MaterialSupplyMixin
 from sim.engine.state import ActorRecord, ActorsState
 from sim.engine.techniques_in_use import TechniquesInUseMixin
 from sim.engine.tile_ownership import TileOwnershipMixin
 from sim.engine.view_share import ViewShareMixin
+from sim.tests import module_harness
 
 
 class ConcernPriceTables(unittest.TestCase):
@@ -141,24 +145,29 @@ class ConcernSetVersion(unittest.TestCase):
 class SpreadAndLending(unittest.TestCase):
 
     def test_techniques_spread_is_worked_out_once_a_year_for_the_same_techniques(self):
-        economy = types.SimpleNamespace(technique_first_run={}, technique_record_started=False)
+        now = {"year": 143}
         in_use = frozenset(["node_a"])
-        world = types.SimpleNamespace(
-            state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=143), economy=economy,
-                                        projects=types.SimpleNamespace(granted={"node_g"})),
-            techniques_in_use=lambda: in_use, nodes={"node_a": {"id": "node_a"}})
+        world = DiffusionWorld()
+        module = module_harness.build(
+            Diffusion, world=world,
+            views={"year": lambda: now["year"], "tree": {"node_a": {"id": "node_a"}}.get,
+                   "techniques_granted": lambda: {"node_g"}, "techniques_in_use": lambda: in_use})
         spreads = []
 
-        def spread(in_use_now, granted, first_run, nodes, year):
+        def spread(in_use_now, granted, first_run, node_of, year):
             spreads.append(year)
             return frozenset(granted) | frozenset(in_use_now)
-        with mock.patch("sim.engine.technique_spread.spread_techniques", spread):
-            answers = [TechniquesInUseMixin.techniques_spread(world) for _concern in range(30)]
-            world.state.scenario.year = 144
-            TechniquesInUseMixin.techniques_spread(world)
+
+        def ask():
+            module.note_first_runs(NoteFirstRuns(in_use))
+            return module.techniques_spread()
+        with mock.patch("sim.diffusion.technique_spread.spread_techniques", spread):
+            answers = [ask() for _concern in range(30)]
+            now["year"] = 144
+            ask()
         self.assertEqual(spreads, [143, 144])
         self.assertEqual(answers[0], frozenset(["node_a", "node_g"]))
-        self.assertEqual(economy.technique_first_run, {"node_a": 143 - 10000})
+        self.assertEqual(world.technique_first_run, {"node_a": 143 - 10000})
 
 
 class StandInWorld(ViewShareMixin, TileOwnershipMixin):
