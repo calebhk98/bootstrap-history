@@ -69,4 +69,5 @@ class LivingStockYearlyMixin(LivingStockGrowthMixin):
 
     def change_stock(self, material, units):
         """Add (or, negative, take away) units of a held material: the same ledger entries a grant writes."""
-        self.send(ChangeStock(self._stock_key(material), float(units) * tonnes_per_unit(material)))
+        self.send(ChangeStock(self._stock_key(material), float(units) * tonnes_per_unit(material),
+                              legacy_snapshot_after_change=True))

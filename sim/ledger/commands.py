@@ -36,3 +36,6 @@ class ChangeStock(Command):
 	stock, counted in this year's opening stock as well, so the year's accounting sees it as held from the start."""
 	commodity: str
 	tonnes: float
+	# Complaint 681, kept until the migration's last equivalence proof: the old living-stock path took the opening
+	# snapshot after the change, so the year's first change counts twice in the opening stock
+	legacy_snapshot_after_change: bool = False

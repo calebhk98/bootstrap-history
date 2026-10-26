@@ -113,6 +113,7 @@ tier, and reverts on red.
 
 - [ ] `python3 -m sim.tests --slow` green.
 - [ ] Long equivalence tier and fingerprint against `mr-base`, with every divergence explained by naming its step.
+- [ ] Then, and only then, fix the bugs the migration kept on purpose so every step stayed provable (each is a `legacy_*` flag or a Complaint marked "kept until the final equivalence proof"): Complaint 681. Each fix gets its regression test; re-record the baselines after.
 - [ ] Baseline ensemble checks.
 - [ ] Update `sim/ARCHITECTURE.md`, `PACKAGE_WALLS.md`, CLAUDE.md section 3, and the Complaints this closes (508, 661, and part of 507).
 - [ ] Open the single PR (template sections if the repo has one), then subscribe to it.

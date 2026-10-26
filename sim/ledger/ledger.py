@@ -31,8 +31,14 @@ class Ledger(Module):
 		self.bump_seat(MONEY)
 
 	def change_stock(self, command: Any) -> None:
-		opening = self.needs.legacy_opening_stock()      # first: the year's snapshot is taken before the change
-		rules.add_tonnes(self.needs.legacy_stock_ledger(), opening, command.commodity, command.tonnes)
+		if command.legacy_snapshot_after_change:
+			stock = self.needs.legacy_stock_ledger()
+			stock[command.commodity] += command.tonnes
+			opening = self.needs.legacy_opening_stock()
+			opening[command.commodity] = opening.get(command.commodity, 0.0) + command.tonnes
+		else:
+			opening = self.needs.legacy_opening_stock()      # first: the year's snapshot is taken before the change
+			rules.add_tonnes(self.needs.legacy_stock_ledger(), opening, command.commodity, command.tonnes)
 		self.needs.legacy_acting_household()._stock_throttle_sig = None
 		self.bump_seat(STOCK)
 
