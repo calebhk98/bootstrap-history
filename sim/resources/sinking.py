@@ -6,7 +6,7 @@ from sim.ledger.api import PayEdge, ReceiveFromEdge
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
 
-from . import ceilings, rules
+from . import ceilings
 from .commands import CloseMine, MothballMines, NoteMineCostPaid, OpenMine
 from .constants import MINE_LEAD_YEARS, MOTHBALL_CUT_SHARE
 from .deposits import NO_DEPOSIT_TEXT

@@ -1,5 +1,5 @@
 """Standing timber: the tiles' felled ledger, cut by the firms that fell wood and regrown a year at a time."""
-from typing import Any, Dict
+from typing import Dict
 
 import sim.geography.api as geography
 
