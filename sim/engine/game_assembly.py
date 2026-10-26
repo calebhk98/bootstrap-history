@@ -12,6 +12,7 @@ from sim.assembly import api as assembly_api
 from .mods import get_ordered_mods
 from .mods_base import ancestors
 
+DISCOVERS = "sim.*.module_spec"   # imported by name below; the spin-up cache's source closure follows it (source_closure.py)
 _SIM_DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SHADOW_CHECK_EVERY = 61   # in debug mode, every this-many cached view reads is recomputed and compared
 
