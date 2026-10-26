@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple
 
 from .auto_start import judge_start_candidate
 from .commands import PostBounty
-from .needed_commands import RecordAutomation, RecordAutomationSkip
+from sim.reporting.api import RecordAutomation, RecordAutomationSkip
 from .phase_rules import candidates_in_order, max_active_projects, money_is_thin, non_bountied_count
 
 

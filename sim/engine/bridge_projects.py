@@ -6,7 +6,8 @@ state the module still mutates in place; they go when that state moves."""
 from sim.ledger.api import NoteSpend
 from sim.polity.api import RecordBribe
 from sim.assembly.api import KEYED, QUOTE
-from sim.projects.needed_commands import (ClearMothball, CompleteProject, RecordAutomation, RecordAutomationSkip, RecordEvent, SettleProjectMaterials)
+from sim.projects.needed_commands import (ClearMothball, CompleteProject, SettleProjectMaterials)
+from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 from sim.refusal import LogLine
 
 from . import automation_audit, purchase_rule, projects_precaution

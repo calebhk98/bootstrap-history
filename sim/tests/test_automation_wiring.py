@@ -12,7 +12,7 @@ from sim.engine import step_phase_materials
 from sim.engine.economy_mining import MiningMixin
 from sim.engine.staff_replacement import GROW_STANCE, REPLACE_ONLY, REPLACE_STANCE, hire_stance
 from sim.engine.step_phase_materials import MaterialsPhaseMixin
-from sim.projects.api import RecordAutomationSkip
+from sim.reporting.api import RecordAutomationSkip
 from sim.tests import module_harness, projects_host
 from sim.ui.proto.dispatch_ventures import _cmd_policy
 

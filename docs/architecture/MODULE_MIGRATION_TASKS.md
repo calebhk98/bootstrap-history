@@ -21,8 +21,8 @@ tier, and reverts on red.
   - A field-path resolver table, `sim/tests/equiv_fields.py`, maps each baseline field to candidate paths. A move appends its new path in the same commit. This is test tooling, not a save migration.
   - Acceptance: base checked against base is clean, and a planted extra random draw is caught and named.
 - [x] **0.3** (`sim/tests/test_protocol_golden.py`, 83 of 99 commands; Complaint 680 found) Record protocol golden transcripts at `mr-base`: scripted command sequences on a fixed seed, saving the JSON replies. Behaviour tests compare reply values, not wording (CLAUDE.md section 6). This closes the protocol gap before anything moves.
-- [ ] **0.4 (read-only agent)** Put the measurement scripts from the appendix in `tools/measure/`. Acceptance: they reproduce 1559 and 906 at `mr-base`.
-- [ ] **0.5 (orchestrator)** Write `tools/done_check.sh`, which prints the done-criteria counts below. Record the equivalence baseline (micro, full and long) at `mr-base` and commit the hash file.
+- [x] **0.4** Put the measurement scripts from the appendix in `tools/measure/`. Acceptance: they reproduce 1559 and 906 at `mr-base`.
+- [x] **0.5** Write `tools/done_check.sh`, which prints the done-criteria counts below. Record the equivalence baseline (micro, full and long) at `mr-base` and commit the hash file.
 
 ### Phase 1: framework (`sim/modules/`, engine unchanged)
 
@@ -47,24 +47,24 @@ tier, and reverts on red.
   - Removing a module removes its fields.
   - The orchestrator applies the hub-file wiring.
   - Acceptance: a toy module's state survives a save round trip, and it appears and disappears in the save fields as the module is added and removed.
-- [ ] **1.4 (agent, parallel)** `sim/tests/helpers/views.py`: `make_views(**plain_dicts)` and a recording `FakeCommands`. Also the test migration rules in `docs/architecture/TEST_MIGRATION.md`.
-- [ ] **1.5 (read-only agent, parallel)** Catalogue drafts in `docs/architecture/catalogue/<owner>.md`, one per Complaint 508 owner:
+- [x] **1.4** (`sim/tests/module_harness.py`; the rules are in `MODULE_MIGRATION_GUIDE.md`) `sim/tests/helpers/views.py`: `make_views(**plain_dicts)` and a recording `FakeCommands`. Also the test migration rules in `docs/architecture/TEST_MIGRATION.md`.
+- [x] **1.5** (`catalogue/`) Catalogue drafts in `docs/architecture/catalogue/<owner>.md`, one per Complaint 508 owner:
   - Group cross-mixin reads by what the consumer wants to know.
   - Map writes onto the command vocabulary.
   - Draft limits: a view serves at least 3 callers or is a quote; about 25 views at most per owner.
   - Also inventory every cache, port object and invalidation point. This feeds 1.2.
-- [ ] **1.6 (orchestrator)** Merge phase 1. The equivalence tool must be unchanged and the quick tier green.
+- [x] **1.6** Merge phase 1. The equivalence tool must be unchanged and the quick tier green.
 
 ### Phase 2: prototype gate (serial)
 
-- [ ] **2.1 (agent)** Living stock (`living_stock*.py`, `defence_stores.py`, `food_relief.py`) becomes a module:
+- [x] **2.1** (`sim/living_stock/`, `sim/defence_stores/`) Living stock (`living_stock*.py`, `defence_stores.py`, `food_relief.py`) becomes a module:
   - Its rules become plain functions over views.
   - It writes through goods, pay and settle commands.
   - Its tests are rewritten.
   - During the move, the old mixin methods become one-line forwarders, deleted when the mixin goes.
-- [ ] **2.2 (agent)** The ledger as a command owner. First, `Transfer`, `Pay` and `PayEdge` commands wrap today's `ledger.transfer` and `pay_edge`. Then a few call-site batches are routed through them. Every other path that moves money is listed for phase 3.
-- [ ] **2.3 (agent)** Project starting (`projects_starting.py` `StartingMixin`, `step_phase_project_start.py`, staffing, ventures). It is the heavy reader: credit, production, labour, capabilities, fog and mechanics.
-- [ ] **2.4 (orchestrator)** Gate report, `docs/architecture/PROTOTYPE_REPORT.md`. Stop and regroup if any of these holds:
+- [x] **2.2** (`sim/ledger/`) The ledger as a command owner. First, `Transfer`, `Pay` and `PayEdge` commands wrap today's `ledger.transfer` and `pay_edge`. Then a few call-site batches are routed through them. Every other path that moves money is listed for phase 3.
+- [x] **2.3** (`sim/projects/`) Project starting (`projects_starting.py` `StartingMixin`, `step_phase_project_start.py`, staffing, ventures). It is the heavy reader: credit, production, labour, capabilities, fog and mechanics.
+- [x] **2.4** (`PROTOTYPE_REPORT.md`: go; the read limit is dropped) Gate report, `docs/architecture/PROTOTYPE_REPORT.md`. Stop and regroup if any of these holds:
   - a domain's catalogue comes out near one view per old method (more than 20% one-to-one);
   - a domain needs more than about 15 declared reads;
   - there is an equivalence divergence nobody can explain;
