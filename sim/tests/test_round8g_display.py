@@ -8,8 +8,8 @@ from types import SimpleNamespace
 
 from .harness import check, NODES, S
 
-from sim.engine.projects_starting import StartingMixin
 from sim.engine.society_diffusion import DiffusionMixin
+from sim.tests import projects_host
 from sim.ui.protocol import render_risk as _render_risk
 from sim.ui.proto.dispatch_inspection_path import route_money_warnings
 
@@ -63,28 +63,23 @@ check("a combined bill exactly what can be raised is not over it",
 
 
 # --- the substitution gate: the best option of each group, multiplied; none in a group means none at all
-class _Gate(StartingMixin):
-    def __init__(self, nodes, bests):
-        self.nodes = nodes
-        self.bests = bests
-        self.household = SimpleNamespace(_last_subst_gap="stale")
-        self.gaps = []
-
-    def _substitution_group_best(self, node_id, group):
-        return self.bests[group["group"]]
-
-    def _record_substitution_gap(self, group):
-        self.gaps.append(group["group"])
+def _gate(nodes, bests):
+    """The projects module over a tree, with the best option of each `req_any` group given."""
+    module = projects_host.build(tree=nodes)
+    module._group_best = lambda node_id, group, done: bests[group["group"]]
+    return module
 
 
 _groups = {"engine": {"req_any": [{"group": "fuel"}, {"group": "vessel"}]}, "plain": {"req_any": []}}
 check("a node with no req_any gate clears it trivially, at full quality",
-      _Gate(_groups, {}).substitution_quality("plain") == (1.0, True))
+      _gate(_groups, {})._substitution_quality("plain") == (1.0, True))
+passing = _gate(_groups, {"fuel": 0.5, "vessel": 0.8})
 check("each group's best option multiplies into the quality",
-      _Gate(_groups, {"fuel": 0.5, "vessel": 0.8}).substitution_quality("engine") == (0.4, True))
-dead = _Gate(_groups, {"fuel": 0.5, "vessel": 0.0})
+      passing._substitution_quality("engine") == (0.4, True) and passing.last_substitution_gap() is None)
+dead = _gate(_groups, {"fuel": 0.5, "vessel": 0.0})
 check("a group with no option at all fails the gate and records which group was short",
-      dead.substitution_quality("engine") == (0.0, False) and dead.gaps == ["vessel"], dead.gaps)
+      dead._substitution_quality("engine") == (0.0, False) and dead.last_substitution_gap() == ("a vessel", []),
+      dead.last_substitution_gap())
 
 # --- what the society must have first: the Mexica's draught animals gate the animal-drawn vehicles, and no others
 MEXICA = S.load_civ("mexica_1500")

@@ -6,9 +6,8 @@ from sim.refusal import LogLine, Refusal
 from sim.agents.api import edges
 from .units_prose import plain_number
 from .arrears_hours_line import arrears_hours_line
-from .project_funding import fund_year, project_purse, year_bill
+from sim.projects.api import funding as project_funding, start_rules
 from .hour_offer import hours_offered, unmet_directive_cause
-from .projects_trade_wait import STALL_YEARS_BEFORE_ABANDONMENT
 
 
 class ProjectProgressPhaseMixin:
@@ -106,7 +105,7 @@ class ProjectProgressPhaseMixin:
         if blocked:
             project_state["stalled_years"] = project_state.get("stalled_years", 0) + 1
             project_state["blocked_on_trades"] = blocked
-            if project_state["stalled_years"] >= STALL_YEARS_BEFORE_ABANDONMENT:
+            if project_state["stalled_years"] >= start_rules.STALL_YEARS_BEFORE_ABANDONMENT:
                 self.state.household.log.append((self.state.scenario.year, LogLine("project_halted_no_labour", "HALTED %s: there is nobody here who can "
                                      "do this work (%s). What you spent is lost"
                                  % (node_id, ", ".join(blocked[:2])))))
@@ -118,7 +117,7 @@ class ProjectProgressPhaseMixin:
                 # spent is taken at once, gives no chance to act. Say it
                 # each year, with the number of years left and what would
                 # fix it.
-                _left = STALL_YEARS_BEFORE_ABANDONMENT - project_state["stalled_years"]
+                _left = start_rules.STALL_YEARS_BEFORE_ABANDONMENT - project_state["stalled_years"]
                 self.state.household.log.append((self.state.scenario.year, LogLine(
                     "project_cannot_go_on", "%s cannot go on: no %s here. It has "
                     "%d year%s before it is abandoned and "
@@ -295,7 +294,7 @@ class ProjectProgressPhaseMixin:
         # smaller than a year's instalment - a geometric decay that
         # approaches zero and never reaches it, while completion needs the
         # bill down to half a denarius.
-        money = year_bill(project_state["cost_left"], self.project_cost(node_id), frac)
+        money = project_funding.year_bill(project_state["cost_left"], self.project_cost(node_id), frac)
         hired_left -= hired_hours
         return hired_left, money, refunded
 
@@ -339,10 +338,10 @@ class ProjectProgressPhaseMixin:
             + upkeep
             + mine_operating
         )
-        purse = project_purse(self.state.household.capital, self.credit_limit(_rev=revenue, _upkeep=upkeep), fixed, revenue)
+        purse = project_funding.project_purse(self.state.household.capital, self.credit_limit(_rev=revenue, _upkeep=upkeep), fixed, revenue)
         # A project with nothing left to pay asks for no money, so a purse gone negative from arrears that are not
         # its own does not stop it making calendar-waiting progress (fund_year).
-        funding = fund_year(money, purse, spent_hours, refunded, per, self.state.household.capital < 0)
+        funding = project_funding.fund_year(money, purse, spent_hours, refunded, per, self.state.household.capital < 0)
         if funding.underfunded:
             project_state["ph_left"] += funding.gave_back
             project_state["underfunded_this_year"] = True

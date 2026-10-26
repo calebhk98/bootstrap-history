@@ -7,7 +7,8 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.instantaneous_project import is_instantaneous
+from sim.projects.api import instantaneous
+is_instantaneous = instantaneous.is_instantaneous
 from sim.engine.project_throttle import input_pools, shared_throttle
 from sim.engine.shortage_sizing import nitre_bed_square_metres, nitre_deficit_tonnes
 from sim.ui.proto import credit_forecast

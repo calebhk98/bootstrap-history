@@ -32,7 +32,7 @@ from .state_demand import answer_confiscation
 from .invariants import check_labour_market_invariants, check_yearly_invariants
 from .eminence_warning import eminence_band_to_announce
 from .step_phase_money import MoneyPhaseMixin
-from .step_phase_project_start import ProjectStartPhaseMixin
+from .step_phase_materials import MaterialsPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
 from .step_phase_staff import StaffPhaseMixin
 from sim.agents.api import edges, ledger
@@ -45,9 +45,10 @@ class StepContext:
     invariant_checker: object
 
 
-class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, ProjectProgressPhaseMixin):
+class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, ProjectProgressPhaseMixin):
     """Composition point for the named phases Sim.step() calls, in order. The staff, money,
-    project-start and project-progress phases live in step_phase_*.py and come in through the
+    materials and project-progress phases live in step_phase_*.py (the start of projects is the projects module's
+    phase) and come in through the
     bases above; the rest are below. Sim inherits this mixin, so step() calls
     self._step_whatever() exactly as if these methods were defined directly on Sim.
     """
@@ -122,12 +123,15 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         # open every book entry at the year's start, so a read before the first step cannot open one at another state
         self._open_market_book()
 
-    def _run_seat_work(self):
-        """What the acting seat does with its year once the money and the shocks are settled."""
+    def _run_seat_prelude(self):
+        """What the acting seat does before it starts new projects."""
         self._step_teach_trades()              # 4a. teach the trades this society does not have
         self._step_standing_work_directive()   # 4a(ii). the standing "work" directive
-        pool, hired_left = self._step_start_projects()   # 4b. start new projects
-        self._step_materials()                 # 4c. materials
+
+    def _run_seat_work(self):
+        """What the acting seat does with its year once the projects are started and the materials seen to (the
+        phases `seat_prelude`, `start_projects` and `materials` before it)."""
+        pool, hired_left = self.view("start_hours")()   # 4b. measured by the start of projects
         # 5. progress, director hours
         remaining, remaining_after_projects, hours_effective_total = (
             self._step_progress(pool, hired_left))

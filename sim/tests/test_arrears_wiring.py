@@ -8,7 +8,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import project_funding
+from sim.projects.api import funding as project_funding
 from sim.engine.step_phase_projects import ProjectProgressPhaseMixin
 from sim.ui.proto import dispatch_inspection_stuck
 from sim.ui.proto.dispatch_inspection_stuck import _stuck_work_in_hand

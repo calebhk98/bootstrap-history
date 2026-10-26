@@ -78,6 +78,11 @@ class FakeSim:
         self.ends_in_shocks = set(ends_in_shocks)
         self.calls = []
 
+    @property
+    def assembly(self):
+        """The phases a module runs are recorded as `module:<phase>` with the seat acting."""
+        return types.SimpleNamespace(phase_handler=lambda name: lambda *arguments: self._record("module:" + name))
+
     def playing_seats(self):
         return [seat_id for seat_id in self.seat_ids if seat_id not in self.state.ended]
 

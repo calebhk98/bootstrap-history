@@ -23,7 +23,7 @@ from sim.ledger.api import ChangeStock, PayEdge
 from sim.living_stock.api import ChangeHeld, SmuggleStock, stock_entry, stock_rates
 from sim.living_stock.module import LivingStock
 from sim.living_stock.state import LivingStockWorld
-from sim.polity.api import ChangeStanding
+from sim.polity.api import RaiseScandal
 from sim.tests import module_harness
 from sim.workforce.api import PressLabour
 from sim.foreign_trade.api import CloseMarketsTo, RecordStockTaken
@@ -118,7 +118,7 @@ class Game:
             ChangeStock: lambda command: apply_to_own_stock(self, command),
             PayEdge: lambda command: self.purse.pay(command.amount, command.purpose),
             PressLabour: lambda command: bridge.press_labour(self, command),
-            ChangeStanding: lambda command: bridge.change_standing(self, command),
+            RaiseScandal: lambda command: bridge.raise_scandal(self, command),
             CloseMarketsTo: lambda command: bridge.close_markets_to(self, command),
             RecordStockTaken: lambda command: bridge.record_stock_taken(self, command)}
         self.module = module_harness.build(LivingStock, views=views, answers=answers, world=LivingStockWorld())

@@ -39,3 +39,10 @@ class ChangeStock(Command):
 	# Complaint 681, kept until the migration's last equivalence proof: the old living-stock path took the opening
 	# snapshot after the change, so the year's first change counts twice in the opening stock
 	legacy_snapshot_after_change: bool = False
+
+
+@dataclass(frozen=True)
+class NoteSpend(Command):
+	"""The acting seat's household counts `amount` in the year's spending, beside the payment that moved it
+	(accounting only; applied by the engine bridge until the cash book moves into the ledger)."""
+	amount: float

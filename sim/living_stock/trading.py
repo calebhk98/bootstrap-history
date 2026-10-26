@@ -11,7 +11,7 @@ from sim.agents.api import edges
 from sim.constants import declare
 from sim.foreign_trade.api import CloseMarketsTo, RecordStockTaken, SettleFlow
 from sim.ledger.api import ChangeStock, PayEdge
-from sim.polity.api import ChangeStanding
+from sim.polity.api import RaiseScandal
 from sim.refusal import Refusal, cause_of
 from sim.world import stock_dynamics
 from sim.world.material_units import tonnes_per_unit
@@ -33,7 +33,7 @@ SMUGGLING_SCANDAL = declare(
 class Trading:
     """The quotes and the two settlements (needs: partners, partner, partner_refusal, partner_gate,
     partner_landed_price, partner_carry, partner_catch_chance, can_pay, acting_balance, year; sends PayEdge,
-    ChangeStock, SettleFlow, RecordStockTaken, CloseMarketsTo, ChangeStanding)."""
+    ChangeStock, SettleFlow, RecordStockTaken, CloseMarketsTo, RaiseScandal)."""
 
     def partner_holding(self, civilization_id, material):
         partner = self.needs.partner[civilization_id]
@@ -148,4 +148,4 @@ class Trading:
             until = self.needs.year() + SMUGGLING_CLOSURE_YEARS
             self.needs.send(CloseMarketsTo(outcome["partner"], self.clock.acting_seat, until))
             outcome["closed_until"] = until
-        self.needs.send(ChangeStanding(scandal=SMUGGLING_SCANDAL))
+        self.needs.send(RaiseScandal(SMUGGLING_SCANDAL))

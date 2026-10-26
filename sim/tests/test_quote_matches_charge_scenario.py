@@ -133,7 +133,11 @@ def _run_project(node_id):
     for _year in range(8):
         if node_id in game.done:
             break
-        game._run_seat_work()   # the year's project payments and materials; the ledger bill is all this reads
+        # the year's project payments and materials (its seat phases, in order); the ledger bill is all this reads
+        game._run_seat_prelude()
+        game.assembly.phase_handler("start_projects")(game.state.acting_seat)
+        game._step_materials()
+        game._run_seat_work()
     return game, quoted, reply
 
 

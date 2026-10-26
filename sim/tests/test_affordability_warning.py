@@ -5,7 +5,8 @@ capacity (`funding_parts`), tested on built numbers. The callers
 QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.project_funding import funding_parts
+from sim.projects.api import funding
+funding_parts = funding.funding_parts
 from sim.ui.proto.start_commitment import stacked_commitment
 
 # --- the warning: only when several projects together owe more than the cash held

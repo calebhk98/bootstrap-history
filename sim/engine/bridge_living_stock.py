@@ -4,7 +4,7 @@ Each view answers through `Sim` as the old mixin methods did; when its owner mov
 entry is deleted. The `partner_*` views carry the foreign-trade and polity arithmetic that used to sit in the
 living-stock mixins (a partner's landed price, the carriage of a smuggled load, a state's chance to catch it)."""
 from sim.foreign_trade.api import CloseMarketsTo, RecordStockTaken, SettleFlow
-from sim.polity.api import ChangeStanding
+from sim.polity.api import RaiseScandal
 from sim.workforce.api import PressLabour
 from sim.assembly.api import KEYED, QUOTE
 from sim.world import stock_dynamics
@@ -18,9 +18,6 @@ from .theft_exposure import visibility_factor
 
 # ---- facts of the world and the game's data ----
 
-@bridge_view("year")
-def year(sim):
-    return sim.state.scenario.year
 
 
 @bridge_view("civilisation")
@@ -28,10 +25,6 @@ def civilisation(sim):
     return sim.civ
 
 
-@bridge_view("tree", kind=KEYED)
-def tree(sim, node_id):
-    """The tech tree's node `node_id`, or None when the tree has none."""
-    return sim.nodes.get(node_id)
 
 
 @bridge_view("material_commodity", kind=KEYED)
@@ -82,9 +75,6 @@ def hours_per_person_year(sim):
     return sim.HOURS_PER_PERSON_YEAR
 
 
-@bridge_view("staff")
-def staff(sim):
-    return {"employees": sim.state.household.employees}
 
 
 @bridge_command(PressLabour)
@@ -92,8 +82,8 @@ def press_labour(sim, command):
     sim.labour.market.press(command.trade, command.hours)
 
 
-@bridge_command(ChangeStanding)
-def change_standing(sim, command):
+@bridge_command(RaiseScandal)
+def raise_scandal(sim, command):
     sim.scandal += command.scandal
     if sim.scandal_last_year is not None:
         sim.scandal_last_year += command.scandal
@@ -197,9 +187,6 @@ def operating(sim):
     return sim.state.projects.operating
 
 
-@bridge_view("is_venture", kind=KEYED)
-def is_venture(sim, node_id):
-    return sim.is_venture(node_id)
 
 
 @bridge_view("institution_units", kind=KEYED)

@@ -13,7 +13,7 @@ from sim.foreign_trade.api import SettleFlow
 from sim.ledger.api import ChangeStock, PayEdge
 from sim.living_stock.api import BuyStock, SmuggleStock
 from sim.living_stock.module import LivingStock
-from sim.polity.api import ChangeStanding
+from sim.polity.api import RaiseScandal
 from sim.refusal import Refusal
 from sim.tests import module_harness
 from sim.ui.proto import stock_purchases
@@ -83,8 +83,8 @@ for caught in (False, True):
 check("...and delivers the stock less the route's loss only when not caught",
       any(isinstance(sent, ChangeStock) and sent.tonnes > 0.0 for sent in smuggle(False)[0]) and smuggle(False)[1]["delivered_units"] == 90.0
       and not any(isinstance(sent, ChangeStock) for sent in smuggle(True)[0]) and smuggle(True)[1]["delivered_units"] == 0.0)
-check("a caught smuggler's scandal rises", any(isinstance(sent, ChangeStanding) for sent in smuggle(True)[0])
-      and not any(isinstance(sent, ChangeStanding) for sent in smuggle(False)[0]))
+check("a caught smuggler's scandal rises", any(isinstance(sent, RaiseScandal) for sent in smuggle(True)[0])
+      and not any(isinstance(sent, RaiseScandal) for sent in smuggle(False)[0]))
 broke = stock_module(can_pay=False)
 check("a taker who cannot pay the carrying is refused and charged nothing",
       isinstance(broke.smuggle_stock(SmuggleStock(MATERIAL, "han_china_100ad", 100.0, 0.1, COST, 90.0, 0.25)), Refusal)

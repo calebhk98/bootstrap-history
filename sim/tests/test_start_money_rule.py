@@ -2,7 +2,8 @@
 QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.start_money_rule import start_shortfall
+from sim.projects.api import start_money
+start_shortfall = start_money.start_shortfall
 
 check("a bill inside cash plus credit has no shortfall",
       start_shortfall(price=900.0, owed_on_work_in_hand=0.0, extra_owed=0.0, capital=400.0, credit_limit=600.0)[2] == 0.0)

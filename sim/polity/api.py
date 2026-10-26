@@ -2,4 +2,4 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import ChangeStanding
+from .commands import RaiseScandal, RecordBribe

@@ -25,11 +25,10 @@ unchanged, to inherit from:
                              auto-opening what plainly pays - plus
                              mothballing and restoring a completed work
                              (StaffingMixin)
-    projects_starting.py    whether a project may begin (start_reason,
-                             can_start), the money-for-progress levers and
-                             substitution rule that change that answer
-                             (bribe, bounty, substitution_quality), and
-                             starting/stopping one (StartingMixin)
+    forward_projects.py     one-line forwarders to the projects module
+                             (sim/projects), which now owns whether a project
+                             may begin, starting, stopping and buying one
+                             (ProjectsForwardsMixin)
     projects_progress.py    what happens to an ACTIVE project every further
                              year: hired-labour hours, failure risk, and
                              calendar time (ProgressMixin)
@@ -47,7 +46,7 @@ STAFF_CLOSURE_GRACE, RESTORE_COST_SHARE_OF_BUILD) are genuinely read from
 more than one of the six sub-mixins - CAPABILITY_INSTITUTIONS and
 SCALABLE_INSTITUTIONS from projects_capability.py, projects_ventures.py and
 projects_staffing.py; the other five across whichever two of projects_
-ventures.py/projects_staffing.py/projects_starting.py actually share them;
+ventures.py/projects_staffing.py actually share them;
 see each constant's own comment for the specific pair. Moving any one of
 them into a single sub-mixin would leave the others reaching across module
 boundaries for a constant that isn't theirs, the same reasoning economy.py
@@ -55,7 +54,7 @@ already gives for keeping its own cross-cutting constants on ITS
 composition point rather than in one of ITS four sub-mixins - so these stay
 here, on the composition point all six inherit from, instead.
 """
-from .blockers import BlockersMixin
+from .forward_projects import ProjectsForwardsMixin
 from .projects_capability import CapabilityMixin
 from .projects_ventures import VenturesMixin
 from .projects_running_gates import RunningGatesMixin
@@ -66,7 +65,6 @@ from .projects_open_gate import OpenGateMixin
 from .allocation_notes import AllocationNotesMixin
 from .projects_venture_quotes import VentureQuotesMixin
 from .projects_hour_queue import HourQueueMixin
-from .projects_starting import StartingMixin
 from .projects_exclusions import ExclusionsMixin
 from .projects_progress import ProgressMixin
 from .projects_completion import CompletionMixin
@@ -75,7 +73,7 @@ from sim.constants import declare
 
 
 class ProjectsMixin(
-        BlockersMixin,
+        ProjectsForwardsMixin,
         CapabilityMixin,
         VenturesMixin,
         RunningGatesMixin,
@@ -86,7 +84,6 @@ class ProjectsMixin(
         AllocationNotesMixin,
         VentureQuotesMixin,
         HourQueueMixin,
-        StartingMixin,
         ExclusionsMixin,
         ProgressMixin,
         CompletionMixin,
