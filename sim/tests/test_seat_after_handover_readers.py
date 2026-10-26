@@ -34,7 +34,7 @@ def post_handover_state():
 		modules={"seats": SeatsSeat(patents={"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}, shares_held={"guild": 3.0})})
 	third = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(done={"fire"}, granted={"fire"}),
 	                  founder=FounderState(living_cost_paid=50.0), goal="printing_press", modules={"seats": SeatsSeat()})
-	return SimulationState(seats={"third": third, "heir": heir}, acting_seat="heir", actors=ActorsState(home_country="rome"))
+	return SimulationState(seats={"third": third, "heir": heir}, acting_seat="heir", modules={"actors": ActorsState(home_country="rome")})
 
 
 def saved(state):

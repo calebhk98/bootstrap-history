@@ -60,6 +60,32 @@ class Views:
 		with self.needs.legacy_act_as(seat_id):
 			return self.labour.base_tile()
 
+	def available_trades(self):
+		return self.labour.available_trades()
+
+	def is_craft_trade(self, trade):
+		return self.labour.is_craft_trade(trade)
+
+	def taught_trade_people(self, trade):
+		return self.labour.taught_trade_people(trade)
+
+	def people_who_exist(self, trade):
+		return self.labour.people_who_exist(trade)
+
+	def reachable_trade_population(self, trade):
+		return self.labour.reachable_trade_population(trade)
+
+	def local_market_share(self):
+		return self.labour.local_market_share()
+
+	def base_tile(self):
+		"""Where the acting seat works from."""
+		return self.labour.base_tile()
+
+	def labour_market(self):
+		"""The one labour market every employer asks: quote, hire, release, read the pressure (the object itself)."""
+		return self.labour.market
+
 	# ---- the market and the wage ----
 
 	def market_supply(self, trade):

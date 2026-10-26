@@ -24,7 +24,7 @@ READS_BY_OWNER = {
                 "trader_agent_cost", "cargo_lost_share"),
     "coin": ("home_coin_stock", "coin_carriage_units", "partner_coin_opening", "partner_price_level"),
     "finance": ("market_rate",),
-    "actors": ("legacy_actor_registry", "legacy_agent_economy"),
+    "actors": ("cast", "legacy_agent_economy"),
     "mods": ("foreign_economy_records",),
 }
 

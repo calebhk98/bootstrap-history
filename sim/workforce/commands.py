@@ -58,6 +58,14 @@ class NoteWageShock(Command):
 
 
 @dataclass(frozen=True)
+class ReleaseStaff(Command):
+	"""`people` of a trade leave the payroll of the seat `seat_id` and go back to the pool the labour market draws on."""
+	seat_id: str
+	trade: str
+	people: float
+
+
+@dataclass(frozen=True)
 class AllocateFarmWorkforce(Command):
 	"""The society's farm workforce for a year is sized for a people of `adult_equivalent_population`, the year's farming
 	technique is chosen and the farm's hours needed are set. Answers the full-time equivalents on the farm."""

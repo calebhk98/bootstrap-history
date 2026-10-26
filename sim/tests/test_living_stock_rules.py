@@ -124,7 +124,7 @@ class PartnerRefusal(unittest.TestCase):
         return module_harness.build(ForeignTrade, views={
             "partner_reached": lambda partner: gate is None,
             "civilisation_record": lambda partner: {"name": "Han", "state_monopolies": monopolies},
-            "legacy_actor_registry": registry, "acting_seat": "home", "year": 100})
+            "cast": registry, "acting_seat": "home", "year": 100})
 
     def refusal(self, stand_in):
         return stand_in.partner_refusal("han", EGGS)

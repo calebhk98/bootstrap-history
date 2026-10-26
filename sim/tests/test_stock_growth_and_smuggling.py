@@ -15,7 +15,9 @@ from sim.refusal import Refusal, cause_of
 from sim.agents.no_country_economy import NoCountryEconomy
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
+from sim.actors.world import ActorWorld
 from sim.agents.api import ActorRegistry, ActorsState, cast_from_civilisations, seed_cast
+from sim.tests.world_stand_in import fake_needs
 from sim.engine import bridge_living_stock as bridge
 from sim.polity.state import PolitySeat
 from sim.tests import polity_host
@@ -116,7 +118,7 @@ class Game:
         self.trade = module_harness.build(StubbedPartners, views={
             "foreign_economy_records": [{"civilization": PARTNER, "enabled": True, "from_year": -1000, "until_year": 3000}],
             "year": 100, "civilisation": {"id": HOME}, "civilisation_record": load_civ, "partner_reached": lambda civ: True,
-            "legacy_actor_registry": self.actors,
+            "cast": self.actors,
             "acting_seat": lambda: self.goods_market.acting_party_id,
             "trader_agent_cost": lambda civilization_id, route: 5.0,
             "cargo_lost_share": lambda route, material=None, civilization_id=None, demand=None: 0.1})
@@ -177,8 +179,11 @@ class Game:
         return self.trade.partner_refusal(civilization_id, material)
 
     def view(self, name):
-        """The views the bridge reads of a game: the wild stock (whole here)."""
-        return {"wild_stock": lambda: {}}[name]
+        """The views the bridge reads of a game: the wild stock (whole here), the seeded cast and the actors' world over this game."""
+        needs = fake_needs(labour_market=lambda: self.labour.market, civilisation=self.civ, hours_per_person_year=HOURS_PER_PERSON_YEAR,
+                           year=100, agent_country=lambda country: self.economy.agent_country(country))
+        world = ActorWorld(types.SimpleNamespace(needs=needs, cast=lambda: self.actors))
+        return {"wild_stock": lambda: {}, "seeded_actor_registry": lambda: self.actors, "actor_world": lambda: world}[name]
 
 
 # ---- the stock stands on a tile of the holder's -----------------------------------------------

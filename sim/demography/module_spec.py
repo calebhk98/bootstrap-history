@@ -20,7 +20,7 @@ from .module import Demography
 from .state import DemographySeat, DemographyWorld
 
 READS_BY_OWNER = {
-    "core": ("civilisation", "year", "legacy_actor_registry"),
+    "core": ("civilisation", "year", "cast"),
     "land": ("home_tiles_held", "borders_among", "built_ways", "held_techniques"),
     "disease": ("disease_burden", "endemic_death_rates", "epidemic_deaths_by_tile"),
     "hazards (externalities)": ("externality_deaths",),

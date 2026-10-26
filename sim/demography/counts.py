@@ -111,7 +111,7 @@ class Counts:
         return sum(stratum["members"] for stratum in self.needs.country_strata[country])
 
     def add_captives(self, command):
-        return agents_api.add_captives(self.needs.legacy_actor_registry(), command.winner, command.people)
+        return agents_api.add_captives(self.needs.cast(), command.winner, command.people)
 
     def refresh_demographic_indexes(self, command):
         self._refresh_indexes(command.year)

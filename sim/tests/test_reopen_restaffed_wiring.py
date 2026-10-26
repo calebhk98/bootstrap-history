@@ -28,6 +28,9 @@ class Game(StaffingMixin):
             business=SimpleNamespace(review_reopening=lambda household, world: self.asked.append((household, world)) or reopened)))
         self.still_shut = still_shut
 
+    def view(self, name):
+        return lambda: ("world-of", self)
+
     def record_staffing_reopenings(self, count):
         self.recorded.append(count)
 
@@ -37,8 +40,7 @@ class Game(StaffingMixin):
 
 def reopen(reopened, **keywords):
     game = Game(reopened, **keywords)
-    with mock.patch.object(projects_staffing, "SimWorld", side_effect=lambda sim: ("world-of", sim)):
-        result = game.reopen_restaffed_ventures(130)
+    result = game.reopen_restaffed_ventures(130)
     return game, result
 
 

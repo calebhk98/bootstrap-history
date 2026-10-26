@@ -10,14 +10,15 @@ from types import SimpleNamespace
 from unittest import mock
 
 from sim.engine import economy_port_year
-from sim.engine.agents_port_trade import TradeView
+from sim.actors.world_trade import TradeView
 from sim.engine.economy_port_year import AgentEconomy
 from sim.foreign_trade import rules
-from sim.foreign_trade.commands import ClosePartnerBooks
+from sim.foreign_trade.commands import ClosePartnerBooks, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
 from sim.foreign_trade.constants import BOUGHT, SOLD
 from sim.foreign_trade.module import ForeignTrade
 from sim.foreign_trade.state import ForeignTradeWorld
 from sim.tests import module_harness
+from sim.tests.world_stand_in import fake_needs
 
 PARTNER = "partner"
 
@@ -93,15 +94,19 @@ class PartnerOutcomeTests(unittest.TestCase):
 
 class ShipTests(unittest.TestCase):
     def ship(self, source, destination):
-        calls = []
-        sim = SimpleNamespace(
-            note_actor_home_trade=lambda *args: calls.append(("home",) + args),
-            note_actor_trade=lambda *args: calls.append(("partner",) + args),
-            landed_cost=lambda paid, carriage: paid + carriage, note_cargo_leg=lambda *args, **kwargs: None)
+        needs = fake_needs(landed_cost=lambda paid, carriage: paid + carriage)
         view = SimpleNamespace(
             duty_between=lambda *args: 0.0, price_at=lambda material, place: 2.0, _home_place=lambda: "home",
-            freight_between=lambda *args: 1.0, _sim=sim, _delivered=lambda: {})
+            freight_between=lambda *args: 1.0, needs=needs, _delivered=lambda: {})
         paid_received = TradeView.ship(view, "trader", "wheat", 3.0, source, destination)
+        calls = []
+        for command in needs.sent:
+            if isinstance(command, NoteActorHomeTrade):
+                calls.append(("home", command.material, command.tonnes, command.landing))
+            elif isinstance(command, NoteActorTrade):
+                calls.append(("partner", command.partner, command.material, command.tonnes, command.to_partner, command.landed_cost))
+            else:
+                self.assertIsInstance(command, NoteCargoLeg)
         return paid_received, calls
 
     def test_a_cargo_to_a_partner_is_tallied_there_with_its_landed_cost_and_taken_from_home(self):
@@ -111,7 +116,7 @@ class ShipTests(unittest.TestCase):
 
     def test_a_cargo_from_a_partner_is_tallied_there_and_landed_at_home(self):
         _, calls = self.ship(PARTNER, "home")
-        self.assertEqual(calls, [("home", "wheat", 3.0, True), ("partner", PARTNER, "wheat", 3.0, False)])
+        self.assertEqual(calls, [("home", "wheat", 3.0, True), ("partner", PARTNER, "wheat", 3.0, False, 0.0)])
 
     def test_a_cargo_of_nothing_moves_nothing(self):
         self.assertEqual(self.ship("home", PARTNER)[0], (6.0, 6.0))

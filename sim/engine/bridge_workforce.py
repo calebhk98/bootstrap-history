@@ -6,7 +6,6 @@ they go when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
 
 from . import data, director_overhead, units_prose, wage_schedule
-from .agents_port import SimWorld
 from sim.workforce.api import BuildHousing
 
 from .bridge import bridge_command, bridge_view
@@ -115,29 +114,13 @@ def farm_arable_ceiling(sim):
 
 # ---- the actors and the agent economy ----------------------------------------------------------------------------------------
 
-@bridge_view("actor_staff_fte", kind=KEYED)
-def actor_staff_fte(sim, trade):
-    """People of the trade firms and governments employ out of the reachable pool the seat hires from."""
-    return sim.actor_staff_fte(trade)
-
-
-@bridge_view("actor_staff_nationwide", kind=KEYED)
-def actor_staff_nationwide(sim, trade):
-    return sim.actor_staff_nationwide(trade)
-
-
-@bridge_view("actor_staff_total")
-def actor_staff_total(sim):
-    return sim.actor_staff_total()
-
-
 @bridge_view("teaching_knowledge")
 def teaching_knowledge(sim):
     """(nodes held by each active actor, what the society already knows, what has been demonstrated)."""
     registry = getattr(sim, "actors", None)
     by_actor = {actor.identity(): set(actor.knowledge) for actor in (registry.actors.values() if registry is not None else ())
                 if actor.record.exited_year is None}
-    return by_actor, set(sim.state.projects.granted), SimWorld(sim).demonstrated()
+    return by_actor, set(sim.state.projects.granted), sim.view("actor_world")().demonstrated()
 
 
 @bridge_view("harvest_share_taken", kind=KEYED)
@@ -146,7 +129,7 @@ def harvest_share_taken(sim, material):
     from sim.agents.api import tax_burden
     if sim.actors.government_of(None) is None:
         return 0.0
-    return tax_burden.harvest_share_taken(SimWorld(sim), material)
+    return tax_burden.harvest_share_taken(sim.view("actor_world")(), material)
 
 
 @bridge_view("agent_people_by_trade")
@@ -157,11 +140,6 @@ def agent_people_by_trade(sim):
 @bridge_view("agent_people_by_tile_and_trade")
 def agent_people_by_tile_and_trade(sim):
     return sim.economy.agent_people_by_tile_and_trade()
-
-
-@bridge_view("agent_country", kind=KEYED)
-def agent_country(sim, country):
-    return sim.economy.agent_country(country)
 
 
 @bridge_view("agent_unskilled_wage")

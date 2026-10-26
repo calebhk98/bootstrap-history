@@ -22,7 +22,6 @@ def held(sim):
     government = sim.actors.government_of(None)
     if government is None:
         return ()
-    from .agents_port import SimWorld
-    world = SimWorld(sim)
+    world = sim.view("actor_world")()
     return institutions_of({mechanic for mechanic in MECHANIC_INSTITUTIONS
                             if any(government.knows(node_id, world) for node_id in sim.nodes_with_mechanic(mechanic))})

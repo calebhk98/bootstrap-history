@@ -7,7 +7,6 @@ from sim.agents.api import CountryLiteracy, seed_strata
 from sim.assembly.api import KEYED, QUOTE
 
 from . import category_traits
-from .agents_port_cast import seed_opening_cast
 from .bridge import bridge_view
 
 
@@ -16,7 +15,7 @@ from .bridge import bridge_view
 @bridge_view("legacy_country_literacy", kind=KEYED)
 def legacy_country_literacy(sim, country):
     """The reading shares of `country` (the home country when None), owned only by the country's strata."""
-    seed_opening_cast(sim)
+    sim.view("seeded_actor_registry")()
     if not sim.actors.of_kind("stratum"):
         seed_strata(sim.actors, None)
     home = sim.actors.state.home_country

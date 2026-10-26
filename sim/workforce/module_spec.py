@@ -11,7 +11,7 @@ from sim.polity.api import AddReputation, ScaleFamiliarity, ScaleProtection
 from sim.reporting.api import DiscardEventsAfter, RecordAutomation, RecordAutomationSkip, RecordEvent
 
 from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, NoteTradeSpread, PressLabour, ReportStaffReduction,
-                       ScaleDeputies, SetEmployed, SurviveStaff, TakeWageFallback, UpdateWages)
+                       ReleaseStaff, ScaleDeputies, SetEmployed, SurviveStaff, TakeWageFallback, UpdateWages)
 from .module import Workforce
 
 READS_BY_OWNER = {
@@ -35,7 +35,7 @@ READS_BY_OWNER = {
     "materials": ("material_price_factor",),
     "finance": ("mine_operating_cost", "credit_limit", "living_cost", "held_trade", "spending_power", "can_pay", "purchase_refusal", "price_index", "home_price_level",
                 "housing_price_per_place", "trade_school_price_per_seat", "concern_rows_stopped"),
-    "actors": ("actor_staff_fte", "actor_staff_nationwide", "actor_staff_total", "teaching_knowledge", "harvest_share_taken",
+    "actors": ("actor_staff", "actor_staff_nationwide", "actor_staff_total", "teaching_knowledge", "harvest_share_taken",
                "director_overhead_hours", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country",
                "agent_unskilled_wage"),
 }
@@ -72,6 +72,14 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("wage_index", "wage_index", **_LIVE),
         ViewSpec("wage_materials", "wage_materials", **_LIVE),
         ViewSpec("trade_registry", "trade_registry", **_LIVE),
+        ViewSpec("labour_market", "labour_market", **_LIVE),
+        ViewSpec("available_trades", "available_trades", **_LIVE),
+        ViewSpec("is_craft_trade", "is_craft_trade", kind=KEYED, **_LIVE),
+        ViewSpec("taught_trade_people", "taught_trade_people", kind=KEYED, **_LIVE),
+        ViewSpec("people_who_exist", "people_who_exist", kind=KEYED, **_LIVE),
+        ViewSpec("reachable_trade_population", "reachable_trade_population", kind=KEYED, **_LIVE),
+        ViewSpec("local_market_share", "local_market_share", **_LIVE),
+        ViewSpec("base_tile", "base_tile", **_SEAT),
         ViewSpec("society_labour_hours", "society_labour_hours", **_LIVE),
         ViewSpec("farming_technique", "farming_technique", **_LIVE),
         ViewSpec("farm_land_hectares", "farm_land_hectares", **_LIVE),
@@ -80,7 +88,7 @@ MODULE_SPECS = (ModuleSpec(
     applies=((SetEmployed, "set_employed"), (NoteTradeSpread, "note_trade_spread"), (PressLabour, "press_labour"),
              (SurviveStaff, "survive_staff"), (ScaleDeputies, "scale_deputies"), (ReportStaffReduction, "report_staff_reduction"),
              (AllocateFarmWorkforce, "allocate_farm_workforce"), (ApplyLandClearing, "apply_land_clearing"),
-             (UpdateWages, "update_wages"), (TakeWageFallback, "take_wage_fallback"),
+             (UpdateWages, "update_wages"), (ReleaseStaff, "release_staff"), (TakeWageFallback, "take_wage_fallback"),
              (CloseHoursYear, "close_hours_year")),
     phases=(PhaseHook("apprenticeships", "step_apprenticeships"), PhaseHook("staff", "step_staff"),
             PhaseHook("seat_prelude", "step_prelude")),

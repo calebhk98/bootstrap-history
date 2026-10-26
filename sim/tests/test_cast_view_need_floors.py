@@ -6,11 +6,13 @@ from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 from sim.agents.api import FOOD_NEED
-from sim.engine.agents_port_cast import CastView
+from sim.actors.world_cast import CastView
+
+from .world_stand_in import fake_needs
 
 
 def stand_in(floors):
-    return SimpleNamespace(_sim=SimpleNamespace(economy=SimpleNamespace(agent_need_floor_costs=lambda: floors)),
+    return SimpleNamespace(needs=fake_needs(agent_need_floor_costs=lambda: floors),
                            need_floor_costs_per_person_year=lambda: floors)
 
 

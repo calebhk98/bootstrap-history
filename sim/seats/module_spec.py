@@ -22,7 +22,7 @@ READS_BY_OWNER = {
     "mechanics": ("running_mechanics", "corpus_dispersed", "patronage", "losable_node_ids"),
     "projects": ("legacy_projects",),
     "diffusion": ("disclosures", "copy_difficulty", "literacy"),
-    "actors": ("seeded_actor_registry", "legacy_actor_registry", "legacy_agent_world", "seat_party", "seat_party_with_margins"),
+    "actors": ("seeded_actor_registry", "cast", "actor_world", "seat_party", "seat_party_with_margins"),
     "workforce": ("seat_base_tile",),
     "materials": ("generation_breakdown",),
     "hazards": ("hazard_relief", "hazard_relief_entries"),

@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 
 from sim.economy import api as economy_api
-from sim.engine import agents_port, economy_port_institutions
+from sim.engine import economy_port_institutions
 
 
 class Government:
@@ -21,14 +21,11 @@ class Government:
 
 def game(government, nodes_by_mechanic):
     return types.SimpleNamespace(actors=types.SimpleNamespace(government_of=lambda actor: government),
-                                 nodes_with_mechanic=lambda mechanic: nodes_by_mechanic.get(mechanic, []))
+                                 nodes_with_mechanic=lambda mechanic: nodes_by_mechanic.get(mechanic, []),
+                                 view=lambda name: lambda: None)
 
 
 class Held(unittest.TestCase):
-    def setUp(self):
-        patch = mock.patch.object(agents_port, "SimWorld", lambda sim: None)
-        patch.start()
-        self.addCleanup(patch.stop)
 
     def test_a_government_that_knows_a_banking_node_gives_the_economy_deposit_banking_and_nothing_else(self):
         sim = game(Government({"fin_bank"}), {"deposit_banking": ["fin_bank"], "bond_market": ["fin_bonds"]})

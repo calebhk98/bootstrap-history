@@ -16,7 +16,7 @@ from sim.prices import rules as price_rules
 from sim.engine.market_clearing import MarketClearingMixin
 from sim.engine.market_demand import household_demand_by_material
 from sim.engine.material_units import tonnes_per_unit
-from sim.engine.society_actors import ActorsMixin
+from sim.engine.forward_actors import ActorsForwardsMixin as ActorsMixin
 from sim.world import market
 
 QUICK_TOPIC = True

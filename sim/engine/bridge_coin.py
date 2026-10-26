@@ -1,7 +1,7 @@
 """Bridge entries the coin module uses until the modules that own these facts move.
 
 Each view answers through `Sim` as the old mixin methods did; when its owner moves it publishes the same name and the
-entry is deleted. `legacy_agent_world` is raw state the module still reads in place (the agent economy's world)."""
+entry is deleted."""
 from sim.assembly.api import KEYED
 from sim.demography.api import TakeFromGranary
 from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, TakeGoods
@@ -42,14 +42,6 @@ def home_country(sim):
 @bridge_view("tile_known", kind=KEYED)
 def tile_known(sim, tile):
     return tile in sim.world_map.tiles
-
-
-# ---- actors ----
-
-@bridge_view("legacy_agent_world")
-def agent_world(sim):
-    from .agents_port import SimWorld
-    return SimWorld(sim)
 
 
 # ---- commands ----

@@ -49,6 +49,6 @@ MODULE_SPECS = (ModuleSpec(
            "corpus_diffusion_pace", "school_node", "tech_effects", "coverage", "disease_burden", "disease_burden_held",
            "disease_burden_weights", "diffusion_traits", "seat_holders", "built_by_any_seat", "earliest_done_year",
            "state_knowledge", "state_reach", "stock_holds_met", "reputation_gain_of", "seat_list", "seat_party",
-           "legacy_actor_registry", "legacy_agent_world"),
+           "cast", "actor_world"),
     sends=(RecordEvent, ShiftValueWeight, GainReputation, NoteTradeSpread, SetEmployed),
 ),)

@@ -110,6 +110,7 @@ RELOCATIONS = [
     ("/modules/disease/records", "/disease/records"),
     ("/modules/disease/introduced", "/disease/introduced"),
     ("/modules/disease/deaths", "/disease/deaths"),
+    ("/modules/actors", "/actors"),
 ]
 
 IGNORED = [

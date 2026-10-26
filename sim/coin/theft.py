@@ -18,7 +18,7 @@ from .constants import COIN_GUARD_HOURS_PER_TONNE_YEAR, GUARDED_KINDS, THEFT_CAU
 class Theft:
     """The exposure views and the theft commands (needs: civilisation, acting_balance, lent_share, held_goods, goods_quote,
     farm_holdings, farm_land_price, forest_holding, headcount, eminence, standing, visible_scale, order_reach,
-    legacy_actor_registry, legacy_agent_world; sends PayEdge, PayEdgeFrom, TakeGoods)."""
+    cast, actor_world; sends PayEdge, PayEdgeFrom, TakeGoods)."""
 
     def household_exposure(self):
         """What the acting household keeps: purse, material stock and granary, farm and forest land."""
@@ -62,7 +62,7 @@ class Theft:
         """Every home-country actor in business (a state, a firm) loses its expected theft of what it keeps. Guarding is
         the keeping cost `ChargeKeeping` charges in full; the state's order is the share of its people its employed
         guards watch."""
-        registry, world = self.needs.legacy_actor_registry(), self.needs.legacy_agent_world()
+        registry, world = self.needs.cast(), self.needs.actor_world()
         lent_share = self.needs.lent_share()   # theft moves coin out of purses, never into a loan: one reading serves every actor
         for actor_id, actor in sorted(registry.actors.items()):  # id order, as a loaded game wraps them
             record = actor.record

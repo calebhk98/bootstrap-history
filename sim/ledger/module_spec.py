@@ -4,7 +4,7 @@ from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, Vie
 from .commands import BankStock, ChangeStock, PayActorFromEdge, PayEdge, PayEdgeFrom, PayWages, ReceiveFromEdge
 from .ledger import MONEY, STOCK, Ledger
 
-LEGACY_READS = ("legacy_acting_household", "legacy_edge_account", "legacy_actor_registry", "legacy_stock_ledger",
+LEGACY_READS = ("legacy_acting_household", "legacy_edge_account", "cast", "legacy_stock_ledger",
                 "legacy_opening_stock", "legacy_opening_record", "year")
 
 MODULE_SPECS = (ModuleSpec(

@@ -13,7 +13,6 @@ from .data import kit_capital as kit_capital_of, win_condition_describe
 from .seat_defaults import default_policy
 from .seat_handover_empty import holds_that_would_be_lost
 from .seat_move import move_seat
-from .society_actors import seed_opening_cast
 from .state_seat import COUNTRY_SEAT, seat_from_template
 
 # ---- the seat registry ----
@@ -41,13 +40,6 @@ def seat_party_with_margins(sim, seat_id, margins):
 def seat_holds(sim, seat_id):
     """What the seat holds in the engine's own state that a handover to it would overwrite."""
     return holds_that_would_be_lost(sim.state.seats[seat_id])
-
-
-@bridge_view("seeded_actor_registry")
-def seeded_actor_registry(sim):
-    """The actor registry once the civilisation's opening cast is in it (seeding is the first read's side effect)."""
-    seed_opening_cast(sim)
-    return sim.actors
 
 
 @bridge_view("society_techs", seat_scoped=True)

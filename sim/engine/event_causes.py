@@ -33,8 +33,7 @@ class Quantity(NamedTuple):
 
 
 def _world(sim: Any) -> Any:
-    from sim.engine.agents_port import SimWorld
-    return SimWorld(sim)
+    return sim.view("actor_world")()
 
 
 def _held_tiles(sim: Any) -> Tuple[List[str], List[str]]:

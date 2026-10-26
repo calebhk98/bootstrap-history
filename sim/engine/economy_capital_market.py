@@ -83,9 +83,8 @@ class CapitalMarketMixin:
 
     def refresh_lender_offers(self):
         """The year's meeting of lenders: the pool pays the interest it holds, then who offers what is fixed."""
-        from .agents_port import SimWorld
         self.settle_lender_interest()
-        self.actors.state.purses.set_offers(self.lender_offers(self.market_funds(SimWorld(self))))
+        self.actors.state.purses.set_offers(self.lender_offers(self.market_funds(self.view("actor_world")())))
 
     def lent_share(self):
         """Share of lenders' funds out on loan: what the actors owe and the economy the simulation does not model

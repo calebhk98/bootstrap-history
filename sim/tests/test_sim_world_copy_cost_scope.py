@@ -1,4 +1,4 @@
-"""SimWorld.copy_cost prices a project inside the view's table of shared answers, the same table for every ask of
+"""ActorWorld.copy_cost prices a project inside the view's table of shared answers, the same table for every ask of
 that view, and leaves the game's own pricing outside any scope afterwards. The table's rules are
 test_complaint_321_shared_project_bills."""
 QUICK_TOPIC = True
@@ -6,8 +6,10 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.agents_port import SimWorld
+from sim.actors.world import ActorWorld
+from sim.engine import bridge_actors
 from sim.engine.view_share import ViewShareMixin
+from sim.tests.world_stand_in import fake_needs
 
 
 class _Game(ViewShareMixin):
@@ -22,6 +24,12 @@ class _Game(ViewShareMixin):
         if node_id == "broken":
             raise ValueError(node_id)
         return 12.5
+
+
+def SimWorld(game):
+    """The actors' world over the engine's own shared-answers scope (the bridge's view) and the game's project cost."""
+    needs = fake_needs(shared_answers=lambda table: bridge_actors.shared_answers(game, table), project_cost=game.economy.project_cost)
+    return ActorWorld(types.SimpleNamespace(needs=needs))
 
 
 class CopyCostScopeTests(unittest.TestCase):

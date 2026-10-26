@@ -8,9 +8,10 @@ from sim.geography.api import arable_hectares, settlement, tiles_held, usable_mo
 
 
 class RevenueView(CollectionView):
-	"""Read-only questions behind a state's revenue; mixed into `SimWorld`."""
+	"""Read-only questions behind a state's revenue; mixed into `ActorWorld`."""
 
-	_sim: Any
+	needs: Any
+	registry: Any
 
 	def revenue_forms(self) -> List[Dict[str, Any]]:
 		"""The forms of revenue the civilisation's state raises, as its data declares them."""
@@ -18,8 +19,7 @@ class RevenueView(CollectionView):
 
 	def fugitive_share(self) -> float:
 		"""Share of the country's people who are away, having fled the state's take (the economy's fugitives, by tile)."""
-		agent = self._sim.economy.agent
-		away = {} if agent is None else agent.fugitive_share_by_tile()
+		away = self.needs.agent_fugitive_share_by_tile()
 		people = self.collection_people_by_tile()  # type: ignore[attr-defined]
 		total = sum(people.values())
 		return sum(count * away.get(tile, 0.0) for tile, count in people.items()) / total if total > 0.0 else 0.0
@@ -34,18 +34,15 @@ class RevenueView(CollectionView):
 	def harvest_tonnes(self) -> float:
 		"""Grain the farm harvested last, in tonnes. Before the first harvest, TEMPORARY HEURISTIC (CLAUDE.md
 		4.4): the people are taken to have harvested what they eat."""
-		sim = self._sim
-		kilograms = sim.view("farm_holdings")()["last_harvest_kg"]
+		kilograms = self.needs.farm_holdings()["last_harvest_kg"]
 		if not kilograms > 0.0:
-			technique = sim._farm_technique_this_year
-			kilograms = (sim._adult_equivalent_population(sim.population)
-						 * sim._agriculture.annual_food_demand_kg_per_person(technique.crop))
+			kilograms = self.needs.farm_food_demand_kg()
 		return kilograms / 1000.0
 
 	def output_tonnes(self, material: str, tiles: Optional[FrozenSet[str]] = None) -> float:
 		"""Tonnes of a material the producers on the state's tiles (only `tiles` when given) made last year."""
 		held = set(self.held_tiles()) if tiles is None else set(tiles)
-		by_tile = self._sim.economy.agent_output_tonnes_by_tile()
+		by_tile = self.needs.agent_output_tonnes_by_tile()
 		return sum(row.get(material, 0.0) for tile, row in by_tile.items() if tile in held)
 
 	def material_price(self, material: str) -> float:
@@ -54,30 +51,30 @@ class RevenueView(CollectionView):
 
 	def trade_value(self, direction: str) -> float:
 		"""Money's worth of goods imported ("in") or exported ("out") in the last completed year."""
-		trade = self._sim.view("trade_value_in_year")(self.year - 1)  # type: ignore[attr-defined]
+		trade = self.needs.trade_value_in_year(self.year - 1)  # type: ignore[attr-defined]
 		return float(trade.get(direction, 0.0))
 
 	def coin_stock_value(self) -> float:
 		"""Money's worth of the coin this society holds, from its coin standard."""
-		return self._sim.economy.coin_stock_value()
+		return self.needs.coin_stock_value()
 
 	def held_tiles(self) -> List[str]:
-		return tiles_held(self._sim.civ)
+		return tiles_held(self.needs.civilisation())
 
 	def collection_people_by_tile(self) -> Dict[str, float]:
 		"""People on each tile the state holds: the tracked regions' where they cover the tiles, else the nation spread by settlement."""
-		tracked = self._sim.people_by_tile()
+		tracked = self.needs.people_by_tile()
 		if tracked is not None:
 			return dict(tracked)
 		held = self.held_tiles()
-		return collection.spread_people(self._sim.population.total, settlement.population_shares(held))
+		return collection.spread_people(self.needs.population_total(), settlement.population_shares(held))
 
 	def collection_modes(self) -> List[str]:
 		"""The route modes the state's held technologies open."""
-		return usable_modes([self._sim.held_and_running()], self._sim.world_map)
+		return usable_modes([self.needs.held_techniques(True)], self.needs.legacy_world_map())
 
 	def collection_world_map(self) -> Any:
-		return self._sim.world_map
+		return self.needs.legacy_world_map()
 
 	def arable_share(self, tiles: FrozenSet[str]) -> float:
 		"""The share of the arable land the state holds that lies on `tiles`."""
@@ -86,16 +83,16 @@ class RevenueView(CollectionView):
 		return sum(arable_hectares(tile) for tile in held if tile in tiles) / total if total > 0.0 else 0.0
 
 	def land_rent_paid_by_tile(self) -> Dict[str, float]:
-		return self._sim.economy.agent_land_rent_paid_by_tile()
+		return self.needs.agent_land_rent_paid_by_tile()
 
 	def land_rent_owners(self, tiles: Optional[FrozenSet[str]] = None) -> List[Tuple[Any, float]]:
 		"""(stratum, rent received) of the rent paid on `tiles` (all when none): the agent economy keeps rent with its
 		household cohorts by what each owns, and the strata are slices of the cohorts ranked by income, so each
 		stratum received the rent of its slice. Empty while the economy opens, when the tax is drawn from the edge."""
-		curve = self._sim.economy.agent_cohort_land_rents(tiles)  # type: ignore[attr-defined]
+		curve = self.needs.agent_cohort_land_rents(tiles)  # type: ignore[attr-defined]
 		if not curve:
 			return []
-		home = [actor for actor in self._sim.actors.of_kind("stratum")  # type: ignore[attr-defined]
+		home = [actor for actor in self.registry.of_kind("stratum")  # type: ignore[attr-defined]
 				if actor.record.country is None and actor.record.exited_year is None]
 		received = observed_incomes(home, self, curve)
 		return [(stratum, received[stratum.record.stratum]) for stratum in home if received.get(stratum.record.stratum, 0.0) > 0.0]

@@ -101,7 +101,7 @@ class KeepingByAnyActor(unittest.TestCase):
         registry = types.SimpleNamespace(actors=actors, state=types.SimpleNamespace(home_country="home"))
         world = types.SimpleNamespace(pay_per_person_year=lambda trade: 100.0)
         module = module_harness.build(Coin, views={"civilisation": HOME_COIN, "money_per_labour_hour": MONEY_PER_HOUR,
-                                                   "legacy_actor_registry": registry, "legacy_agent_world": world})
+                                                   "cast": registry, "actor_world": world})
         module.charge_keeping(ChargeKeeping())
         commands = module_harness.sent(module)
         self.assertTrue(all(isinstance(command, PayEdgeFrom) for command in commands))

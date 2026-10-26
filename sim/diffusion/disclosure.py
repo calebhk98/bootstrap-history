@@ -1,7 +1,7 @@
 """What a seat does with an invention it made: keep it secret, license it, or publish it.
 
 Needs: tree, techniques_held, techniques_granted, operating, year, reputation_gain_of, seat_list, seat_party,
-legacy_actor_registry, legacy_agent_world, acting_seat."""
+cast, actor_world, acting_seat."""
 from typing import Any, Dict, List, Optional
 
 from sim.agents.api import licence
@@ -58,16 +58,16 @@ class Disclosure:
 
     def _license(self, node_id: str, licensee_id: Optional[str], fee: float, royalty: float) -> Dict[str, Any]:
         acting = self.clock.acting_seat
-        licensee = self.needs.legacy_actor_registry().get(licensee_id) if licensee_id else None
+        licensee = self.needs.cast().get(licensee_id) if licensee_id else None
         if licensee is None and licensee_id in self.needs.seat_list()["joined"] and licensee_id != acting:
             licensee = self.needs.seat_party[licensee_id]   # another player
         if licensee is None or licensee.kind == "interest_group":
             return {"ok": False, "error": "name a firm or the state to license it to: %s" % (
                 ", ".join(self.licensable_actor_ids()) or "none exist yet")}
-        problem = licence.terms_problem(licensee, fee, royalty, node_id, self.needs.legacy_agent_world())
+        problem = licence.terms_problem(licensee, fee, royalty, node_id, self.needs.actor_world())
         if problem:
             return rules.refusal_reply(problem)
-        if not licence.grant(self.needs.seat_party[acting], licensee, node_id, fee, self.needs.legacy_agent_world()):
+        if not licence.grant(self.needs.seat_party[acting], licensee, node_id, fee, self.needs.actor_world()):
             return {"ok": False, "error": "the licensee can already make it"}
         record = self._record(node_id)
         if record["mode"] == "default":
@@ -79,7 +79,7 @@ class Disclosure:
         """Firms, the state and the other seats still playing."""
         acting = self.clock.acting_seat
         others = [seat_id for seat_id in self.needs.seat_list()["playing"] if seat_id != acting]
-        registry = self.needs.legacy_actor_registry()
+        registry = self.needs.cast()
         return [actor.identity() for kind in ("firm", "government") for actor in registry.of_kind(kind)
                 if getattr(actor.record, "exited_year", None) is None] + others
 

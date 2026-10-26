@@ -7,7 +7,7 @@ stock against what a founding-size concern's own staff would take years to maste
 for a small shop and shallow for a large mill. Techniques the society runs at the opening are seeded once.
 Nothing is read from the tree: a technique nobody runs has no depth however old it is.
 
-Depth shortens a concern's ramp (venture_ramp, agents_port.ramp), lowers the failure risk of a node
+Depth shortens a concern's ramp (venture_ramp, ActorWorld.ramp), lowers the failure risk of a node
 (effective_risk; a diagnosed failed attempt adds its staff's worker-years to the stock), lifts the scale a
 firm can grow a concern to (sim/agents/firm_expansion.py) and frees a concern of its founder once its staff
 hold a year's running in it (venture_hands). industry_learning.py turns the same stock into scrap, labour

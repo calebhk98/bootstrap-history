@@ -3,9 +3,7 @@
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine as the old mixin code did, and
 is never cached. `legacy_agent_economy` is the agent economy's record, where the traders' cargo legs are kept; it goes when the
 markets module owns that record."""
-from sim.actors.api import NoteTraderMargin
 from sim.assembly.api import KEYED, QUOTE
-from sim.refusal import Refusal
 
 from . import foreign_economy_data, partner_demand
 from .bridge import bridge_command, bridge_view
@@ -83,11 +81,3 @@ def legacy_agent_economy(sim):
     return sim.state.economy.agent_economy
 
 
-@bridge_command(NoteTraderMargin)
-def note_trader_margin(sim, command):
-    """The trader's last margin follows what its cargo made against what it was booked at."""
-    trader = sim.actors.actors.get(command.trader)
-    if trader is None:
-        return Refusal("no_such_actor", "the cast holds no trader %s" % command.trader)
-    trader.record.last_margin += command.amount
-    return None

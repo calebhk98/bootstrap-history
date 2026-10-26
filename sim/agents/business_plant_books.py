@@ -26,16 +26,6 @@ def home_costs(world: Any, entry_key: str) -> Tuple[float, float]:
 	return world.upkeep(entry_key), world.concern_wage_bill(entry_key)
 
 
-def book_takings(sim: Any, node_id: str, ramp: float) -> float:
-	"""One founding size's yearly takings of a concern at `ramp` in the tree's book coin: no cost scale, no hazard factor."""
-	return float(sim.concern_takings(node_id, ramp, with_output_factor=False, cost_scale=1.0))
-
-
-def book_upkeep(sim: Any, node_id: str) -> float:
-	"""One founding size's yearly upkeep of a concern without its crew's pay, in the tree's book coin."""
-	return float(sim.economy.concern_upkeep(node_id, 1.0, cost_scale=1.0))
-
-
 def wage_bill_at(staff: Mapping[str, float], size: float, span_factor: float,
 				 pay_per_person_year: Callable[[str], Optional[float]]) -> Optional[float]:
 	"""Yearly wages of a plant run at `size` founding sizes, each trade's people paid what a person-year of it pays in the

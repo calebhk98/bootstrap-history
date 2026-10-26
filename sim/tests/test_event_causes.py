@@ -24,7 +24,7 @@ def fake_sim(population=1000.0, start_population=1000.0, funded=True, held=()):
 		civ={"population": population, "literacy_general": 0.1, "hazards": []},
 		start_civ={"population": start_population, "literacy_general": 0.1},
 		state_treasury=lambda: SimpleNamespace(record=record, knows=lambda node, world: node in held),
-		cfg={"start_year": 100}, year=120)
+		cfg={"start_year": 100}, year=120, view=lambda name: lambda: "world")
 
 
 def cause(quantity, op, value, **extra):

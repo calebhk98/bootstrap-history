@@ -2,11 +2,10 @@
 
 Each view carries the name its owner will publish, asks the engine exactly as the old code did, and is never cached. Each
 command applies what the yearly demographic step did inline, in the same order."""
-from sim.actors.api import RecordMigrantContact, ScaleStrata
 from sim.assembly.api import QUOTE
 from sim.land.api import AdvanceColonies
 
-from . import contact_events, externalities, mod_effects
+from . import externalities
 from .bridge import bridge_command, bridge_view
 
 
@@ -45,12 +44,3 @@ def externality_deaths(sim, deaths_by_band, year):
     return externalities.add_deaths(deaths_by_band, sim, year)
 
 
-@bridge_command(RecordMigrantContact)
-def record_migrant_contact(sim, command):
-    contact_events.after_migration(sim, command.pairs)
-
-
-@bridge_command(ScaleStrata)
-def scale_strata(sim, command):
-    for actor in mod_effects.strata_of(sim, command.country):
-        actor.record.members *= 1.0 - command.share

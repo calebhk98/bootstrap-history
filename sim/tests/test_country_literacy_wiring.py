@@ -5,7 +5,6 @@ player does runs at its own country's lettered share, and the hours a project ca
 QUICK_TOPIC = True
 
 from types import SimpleNamespace
-from unittest import mock
 
 from .harness import check
 
@@ -29,12 +28,12 @@ class Society:
 
     def __init__(self):
         self.actors = SimpleNamespace(of_kind=lambda kind: list(STRATA), state=SimpleNamespace(home_country="home"))
+        self.view = lambda name: lambda: self.actors   # the seeded registry
 
 
 def literacy_of(country=None, field="literacy_general"):
     game = Society()
-    with mock.patch.object(bridge_diffusion, "seed_opening_cast", lambda sim: None):
-        return bridge_diffusion.legacy_country_literacy(game, country).get(field)
+    return bridge_diffusion.legacy_country_literacy(game, country).get(field)
 
 
 check("the home country's literacy is read from the home strata, whether named or not", abs(literacy_of() - 0.18) < 1e-12

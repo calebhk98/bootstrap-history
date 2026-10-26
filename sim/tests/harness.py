@@ -258,14 +258,12 @@ def ready_for_entry(game, money=None):
     is seeded first when it has not been. `money` is the savings of each free home stratum; by default the
     entrepreneurial share of a year's output between them. Returns the game."""
     if not game.actors.state.home_country:
-        from sim.engine.agents_port_cast import seed_opening_cast
-        seed_opening_cast(game)
+        game.view("seeded_actor_registry")()
     free = [stratum for stratum in game.actors.of_kind("stratum")
             if stratum.record.country is None and not stratum.is_bonded()]
     if money is None:
         from sim.agents.tuning import ENTREPRENEURIAL_CAPITAL_SHARE
-        from sim.engine.agents_port import SimWorld
-        money = SimWorld(game).society_output() * ENTREPRENEURIAL_CAPITAL_SHARE / max(1, len(free))
+        money = game.view("actor_world")().society_output() * ENTREPRENEURIAL_CAPITAL_SHARE / max(1, len(free))
     for stratum in free:
         stratum.money = money
     return game

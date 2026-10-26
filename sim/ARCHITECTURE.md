@@ -56,7 +56,7 @@ module in `sim/engine/`:
 | Economy | `economy_port.py` (the one door) and its parts `economy_port_*.py` |
 | Labour | `sim/workforce/world.py` (its views) and `bridge_workforce.py` |
 | Geography | `geography_port.py` |
-| Agents | `agents_port.py` and its views `agents_port_*.py` |
+| Agents | the actors module's world, `sim/actors/world.py` and its views `world_*.py` |
 | UI | `ui_port.py` (re-exports the engine names the UI uses) |
 | Disease | `disease_port.py` |
 

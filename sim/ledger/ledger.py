@@ -23,12 +23,12 @@ class Ledger(Module):
 		self.bump_seat(MONEY)
 
 	def pay_edge_from(self, command: Any) -> None:
-		actor = self.needs.legacy_actor_registry().actors[command.actor]
+		actor = self.needs.cast().actors[command.actor]
 		ledger.transfer(actor, self.edge(command.edge), command.amount, command.purpose)
 		self.bump(MONEY)
 
 	def pay_actor_from_edge(self, command: Any) -> Any:
-		payee = self.needs.legacy_actor_registry().get(command.payee)
+		payee = self.needs.cast().get(command.payee)
 		if payee is None:
 			return Refusal("no_such_actor", "the cast holds no actor %s" % command.payee)
 		ledger.transfer(self.edge(command.edge), payee, command.amount, command.purpose)
@@ -40,7 +40,7 @@ class Ledger(Module):
 		self.bump_seat(MONEY)
 
 	def pay_wages(self, command: Any) -> None:
-		payer, registry = self.needs.legacy_acting_household(), self.needs.legacy_actor_registry()
+		payer, registry = self.needs.legacy_acting_household(), self.needs.cast()
 		rules.pay_wages(registry, payer, command.amount, command.purpose, self.edge(edges.EDGE_WORKERS))
 		self.bump_seat(MONEY)
 

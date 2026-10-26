@@ -2,4 +2,4 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import NoteDraw, NotePurchase, ResetDraws
+from .commands import ForgetActorOrders, NoteActorPurchase, NoteActorSale, NoteDraw, NotePurchase, ResetDraws

@@ -1,52 +1,51 @@
 """What interest groups can see of the stakes of workers out of a job, a church and an academy: the labour core's
 unhired hours, the technique that displaced them, the rent of land, and the sales of goods a tithe falls on.
-Mixed into `SimWorld`."""
+Mixed into `ActorWorld`."""
 from typing import Any, Dict, Tuple
 
 from sim.agents.api import Sector
-from . import need_substitutes
 
 
 class StakeView:
 	"""Read-only questions behind the stakes the strata, foundations and the state's servants have."""
 
-	_sim: Any
+	needs: Any
+	registry: Any
 
 	def idle_hours_by_trade(self) -> Dict[str, Tuple[float, float]]:
 		"""(hours offered and not hired, hours offered) of each trade in the last clearing of the labour core."""
-		return self._sim.economy.agent_idle_hours_by_trade()  # type: ignore[no-any-return]
+		return self.needs.agent_idle_hours_by_trade()  # type: ignore[no-any-return]
 
 	def running_techniques(self) -> Dict[str, int]:
 		"""Every technique someone runs now (the founder, the firms and the other actors) and the year it was opened."""
-		sim = self._sim
 		running: Dict[str, int] = {}
-		projects = sim.state.projects
+		projects = self.needs.legacy_projects()
 		for node_id in projects.operating:
 			running[node_id] = int(projects.business.opened_year_of(node_id, 0))
-		for actor in sim.actors.of_kind("firm"):
+		for actor in self.registry.of_kind("firm"):
 			for node_id in actor.concerns:
 				running[node_id] = max(running.get(node_id, 0), int(actor.opened_year_of(node_id, 0)))
 		return running
 
 	def displacing_technique(self, trade: str) -> Any:
 		"""The running technique that most recently began doing its category's work with fewer hands of `trade`, or None."""
-		return Sector.displacing_technique(trade, self.running_techniques(), self._sim.nodes)
+		return Sector.displacing_technique(trade, self.running_techniques(), self.needs.tree_nodes())
 
 	def technique_name(self, node_id: str) -> str:
-		return str(self._sim.nodes.get(node_id, {}).get("name", node_id))
+		return str(self.needs.tree_nodes().get(node_id, {}).get("name", node_id))
 
 	def land_rent_per_hectare(self) -> float:
 		"""Mean rent per hectare-year the land market let land at last year, in coin (zero while the economy opens)."""
-		rent = self._sim.economy.agent_land_rent_per_hectare()
+		rent = self.needs.agent_land_rent_per_hectare()
 		return 0.0 if rent is None else float(rent)
 
 	def tithable_sales_value(self, need_id: str) -> float:
 		"""Money's worth of what the society's producers sold this year of the commodities of the goods that serve one need."""
-		sim = self._sim
-		commodities = {sim.economy.commodity_of(material) for material in need_substitutes.serving(need_id)}
+		needs = self.needs
+		commodities = {needs.material_commodity[material] for material in needs.materials_serving[need_id]}
 		total = 0.0
 		for commodity in sorted(commodities):
-			state = sim.market_state(commodity)
+			state = needs.market_state[commodity]
 			quote = self._commodity_quote(commodity)  # type: ignore[attr-defined]
 			if state is not None and quote is not None:
 				total += state["society_sales_tonnes"] * quote["buy_per_tonne"]
@@ -54,4 +53,4 @@ class StakeView:
 
 	def substitutes_of(self, material: str) -> Any:
 		"""The materials that serve a need `material` serves."""
-		return need_substitutes.substitutes_of(material)
+		return self.needs.material_substitutes[material]

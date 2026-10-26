@@ -9,9 +9,9 @@ from unittest import mock
 
 from .harness import check
 
-from sim.engine import economy_port_year, society_actors
+from sim.actors.module import Actors
+from sim.engine import economy_port_year
 from sim.engine.economy_port_year import AgentEconomy
-from sim.engine.society_actors import ActorsMixin
 from sim.seats.module import Seats
 from . import module_harness
 
@@ -119,22 +119,13 @@ class Registry:
         return "the home government"
 
 
-class Treasury(ActorsMixin):
-    civ = {"id": "home", "name": "Home"}
-
-    def __init__(self, country):
-        self._registry = Registry()
-        self._country = country
-
-    @property
-    def actors(self):
-        return self._registry
-
-    def acting_country(self):
-        return self._country
-
-
-society_actors.seed_opening_cast = lambda sim: []
+def Treasury(country):
+    """The actors module over a stand-in cast, acting for a seat of `country`."""
+    module = module_harness.build(Actors, views={"acting_country": lambda: country, "civilisation": {"id": "home", "name": "Home"}})
+    registry = Registry()
+    module.cast = lambda: registry
+    module.seed_opening_cast = lambda: []
+    return module
 # not text: a stub treasury's descriptor
 check("a partner country's seat pays the state of its own country", Treasury("han").state_treasury() == "the partner's government", None)
 # not text: a stub treasury's descriptor

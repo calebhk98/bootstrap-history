@@ -1,7 +1,6 @@
-"""Goods the market delivers into an actor's stores; kept apart from `economy_port_year.py`, which never reads an actor's record."""
+"""Goods the market delivers into an actor's stores; kept apart from the engine's year of the economy, which never reads an actor's record."""
 from sim.agents.api import stock_keeping
-
-from .material_units import tonnes_per_unit
+from sim.world.material_units import tonnes_per_unit
 
 
 def keep_deliveries(known, delivered):

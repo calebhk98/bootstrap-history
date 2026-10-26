@@ -60,6 +60,7 @@ def attach(sim: Any) -> None:
 		assembly.modules[BRIDGE_ID].sim = sim
 	for module_id, slot in assembly_api.new_slots(assembly, assembly_api.WORLD).items():
 		state.modules.setdefault(module_id, slot)
+	state.attach_purses()   # the actors' book is one of those slots: the households keep their purses in it
 	for seat in state.seats.values():
 		give_seat_slots(assembly, seat)
 	for module_id, module in assembly.modules.items():

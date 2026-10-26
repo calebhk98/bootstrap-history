@@ -7,7 +7,7 @@ from sim.assembly.api import KEYED, QUOTE
 from sim.projects.api import ResetProjectProgress, ShutForgotten
 from sim.workforce.api import NoteWageShock
 
-from . import cause_book, event_causes, mod_effects
+from . import cause_book, event_causes
 from .bridge import bridge_command, bridge_view
 from .data import closure, critical_path
 
@@ -80,10 +80,6 @@ def closed_by_choice(sim):
 
 # ---- polity, workforce, resources, actors ---------------------------------------------------------------------------
 
-@bridge_view("country_strata", kind=KEYED)
-def country_strata(sim, country):
-    """[{members, shortfall}] of the country's strata: how many they are and the share of each need they leave unmet."""
-    return [{"members": actor.record.members, "shortfall": actor.record.shortfall} for actor in mod_effects.strata_of(sim, country)]
 
 
 # ---- commands of owners that have not moved -------------------------------------------------------------------------

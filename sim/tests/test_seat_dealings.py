@@ -53,8 +53,8 @@ class Game:
     def build(self, world):
         self.module = module_harness.build(
             Seats, seat=self.slot,
-            views={"legacy_agent_world": lambda: world, "legacy_projects": self.state.projects, "seat_party_with_margins": self.seat_party,
-                   "seat_party": self.seat_party, "legacy_seats": self.state.seats, "legacy_actor_registry": self.actors, "year": 100})
+            views={"actor_world": lambda: world, "legacy_projects": self.state.projects, "seat_party_with_margins": self.seat_party,
+                   "seat_party": self.seat_party, "legacy_seats": self.state.seats, "cast": self.actors, "year": 100})
 
     def seat_patent(self, node_id):
         return self.module.apply_for_patent(ApplyForPatent(node_id))

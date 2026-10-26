@@ -25,7 +25,6 @@ from . import money_units
 from .units_prose import money_text
 from sim.world import capital_market
 from sim.agents.api import business_review, edges, ledger
-from .agents_port import SimWorld
 from sim.projects.api import funding as project_funding
 from .affordability import appearances_spending, near_limit, reputation_hit_taken, spending_power_of
 from sim.polity.api import SetReputation
@@ -302,7 +301,7 @@ class CreditMixin:
         household = self.state.household
         if household.capital >= 0 and household.interest_arrears <= 0.0:
             return 0.0
-        owed, paid = self.household.settle_interest(SimWorld(self))
+        owed, paid = self.household.settle_interest(self.view("actor_world")())
         household.interest_paid = (household.interest_paid or 0.0) + paid
         if owed > 0 and (household.insolvent_years in (1, 5, 15)):
             rate = self.debt_interest_rate()

@@ -28,7 +28,7 @@ class StartProjectTests(unittest.TestCase):
     def start(self, begin, refusal=None, precaution=False, spec=object()):
         module = projects_host.build(
             start_refusal=lambda node_id, extra_owed=0.0: refusal, tree={NODE: {"name": "Smithing"}},
-            research_world="world", precaution_spec=lambda node_id: spec)
+            actor_world="world", precaution_spec=lambda node_id: spec)
         with mock.patch.object(starting.research, "begin", begin), \
              mock.patch.object(starting, "SeatResearcher", lambda projects, precaution=False: ("seat", precaution)):
             return module.start_project(StartProject(NODE, precaution))

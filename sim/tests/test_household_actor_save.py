@@ -36,16 +36,14 @@ class HouseholdIsAnActor(unittest.TestCase):
 
 class ActorRecordsSave(unittest.TestCase):
     def test_the_actors_records_round_trip_through_the_serialised_state(self):
-        facade = Household(starting_capital=100.0, port=HouseholdPort())
-        state = facade._state
-        state.actors = ActorsState(home_country="rome_100ad")
-        state.actors.records["firm:1"] = ActorRecord(kind="firm", money=500.0, target="mill")
-        state.actors.records["firm:1"].income["takings"] = 40.0
+        state = ActorsState(home_country="rome_100ad")   # the actors module's world slot
+        state.records["firm:1"] = ActorRecord(kind="firm", money=500.0, target="mill")
+        state.records["firm:1"].income["takings"] = 40.0
         saved = json.loads(json.dumps(serialize_state(state)))
-        self.assertIn("firm:1", saved["actors"]["records"])
-        loaded = deserialize_state(saved, SimulationState)
-        self.assertEqual(loaded.actors.records, state.actors.records)
-        self.assertEqual(loaded.actors.records["firm:1"].income, {"takings": 40.0})
+        self.assertIn("firm:1", saved["records"])
+        loaded = deserialize_state(saved, ActorsState)
+        self.assertEqual(loaded.records, state.records)
+        self.assertEqual(loaded.records["firm:1"].income, {"takings": 40.0})
 
 
 if __name__ == "__main__":

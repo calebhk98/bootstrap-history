@@ -17,8 +17,7 @@ class HouseholdBillMixin:
         floors = self.economy.agent_need_floor_costs_at()
         if floors:
             return dict(floors)
-        from .agents_port import SimWorld
-        return SimWorld(self).need_floor_costs_per_person_year()
+        return self.view("actor_world")().need_floor_costs_per_person_year()
 
     def household_bill_per_person(self):
         """One person's yearly bill for every need's floor: the figure the founder and an economy household pay."""

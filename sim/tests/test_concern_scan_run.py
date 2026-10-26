@@ -5,7 +5,6 @@ summary are test_concerns_that_pay."""
 QUICK_TOPIC = True
 
 from types import SimpleNamespace
-from unittest import mock
 
 from .harness import check
 
@@ -41,7 +40,7 @@ class FakeWorld:
 
 def game(done=("pays", "loses", "knowledge"), seats=(("founder", ["pays"]),), actors=(("firm:1", ["loses"]),)):
     return SimpleNamespace(
-        done=set(done), is_concern_node=lambda node_id: node_id != "knowledge",
+        view=lambda name: FakeWorld, done=set(done), is_concern_node=lambda node_id: node_id != "knowledge",
         state=SimpleNamespace(seats={seat_id: SimpleNamespace(projects=SimpleNamespace(business=Business.running(plants))) for seat_id, plants in seats}),
         actors=SimpleNamespace(actors={actor_id: SimpleNamespace(record=SimpleNamespace(business=Business.running(plants))) for actor_id, plants in actors},
                                state=SimpleNamespace(home_country=None)))
@@ -55,13 +54,11 @@ check("the held business runs one plant of each concern and belongs to no one",
 order = [owner for owner, _business in concern_scan_run.running_businesses(game(seats=(("second", []), ("founder", [])), actors=(("firm:2", []), ("firm:1", []))))]
 check("every owner's business is read, seats first and then actors, each in id order", order == ["founder", "second", "firm:1", "firm:2"], order)
 
-with mock.patch.object(concern_scan_run, "SimWorld", FakeWorld):
-    result = concern_scan_run.scan_game(stand_in)
+result = concern_scan_run.scan_game(stand_in)
 check("the scan covers every concern the society holds, each row carrying the fields", result["count"] == 2
       and all(set(row) == FIELDS for row in result["pay"] + result["losers"]), result)
 running = result["running"]
 check("the plants the owners run are scanned too, each with its owner", running["count"] == 2
       and {row["owner"] for row in running["pay"] + running["losers"]} == {"founder", "firm:1"}, running)
-with mock.patch.object(concern_scan_run, "SimWorld", FakeWorld):
-    nothing = concern_scan_run.scan_game(game(done=(), seats=(("founder", []),), actors=()))
+nothing = concern_scan_run.scan_game(game(done=(), seats=(("founder", []),), actors=()))
 check("a society holding nothing and running nothing scans zero", nothing["count"] == 0 and nothing["running"]["count"] == 0, nothing)

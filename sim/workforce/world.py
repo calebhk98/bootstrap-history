@@ -347,7 +347,7 @@ class WorkforceWorld:
     # ---- the actors and the hours still wanted ----
 
     def actor_staff_fte(self, trade):
-        return self._needs.actor_staff_fte[trade]
+        return self._needs.actor_staff[trade]
 
     def actors_staff_nationwide(self, trade):
         return self._needs.actor_staff_nationwide[trade]

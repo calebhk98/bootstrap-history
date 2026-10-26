@@ -32,6 +32,10 @@ class Applying:
 			else:
 				household.employees.pop(trade)
 
+	def release_staff(self, command):
+		with self.needs.legacy_act_as(command.seat_id):
+			self.labour.fire(command.trade, command.people)
+
 	def scale_deputies(self, command):
 		self.needs.legacy_acting_household().directors_extra *= command.share
 

@@ -8,7 +8,8 @@ from types import SimpleNamespace
 import unittest
 from unittest import mock
 
-from sim.engine.agents_port_budget import BudgetView
+from sim.actors.world_budget import BudgetView
+from sim.tests.world_stand_in import fake_needs
 from sim.resources import constants as resource_constants
 from sim.tests import resources_stand_in
 from sim.tests import polity_host
@@ -25,7 +26,7 @@ def reach_stand_in(unfunded, shares, year=100):
     calls = []
     world_shares = {name: (lambda value=value, name=name: calls.append(name) or value) for name, value in shares.items()}
     world = SimpleNamespace(government=lambda: SimpleNamespace(record=SimpleNamespace(unfunded=unfunded)), **world_shares)
-    module = polity_host.build(legacy_agent_world=world, year=year, legacy_done_versions=(1, 1), population_total=1000.0)
+    module = polity_host.build(actor_world=world, year=year, legacy_done_versions=(1, 1), population_total=1000.0)
     return module, world, calls
 
 
@@ -85,7 +86,7 @@ class StateReach(unittest.TestCase):
         self.assertEqual(calls, ["collectible_share", "collectible_share"])
 
     def test_the_agents_view_of_the_state_reads_the_games_authority(self):
-        stand_in = SimpleNamespace(_sim=SimpleNamespace(state_authority=lambda: 0.42))
+        stand_in = SimpleNamespace(needs=fake_needs(state_authority=lambda: 0.42))
         self.assertEqual(BudgetView.state_reach(stand_in), 0.42)
 
     def test_a_partners_chance_to_catch_is_its_own_governments_reach_against_how_visible_the_bite_is(self):
@@ -93,10 +94,8 @@ class StateReach(unittest.TestCase):
         world = SimpleNamespace(state_reach=lambda: 1)
         actors = SimpleNamespace(world_for=lambda government, home: asked.append((government, home)) or world,
                                  get=lambda actor_id: actor_id)
-        stand_in = SimpleNamespace(actors=actors)
-        with mock.patch("sim.engine.agents_port_cast.seed_opening_cast"), \
-                mock.patch("sim.engine.agents_port.SimWorld", lambda sim: "home world"):
-            chance = partner_catch_chance(stand_in, "han_china_100ad", 0.5)
+        stand_in = SimpleNamespace(view=lambda name: lambda: {"seeded_actor_registry": actors, "actor_world": "home world"}[name])
+        chance = partner_catch_chance(stand_in, "han_china_100ad", 0.5)
         self.assertEqual((chance, asked), (stock_dynamics.catch_chance(1.0, visibility_factor(0.5)),
                                            [("government:han_china_100ad", "home world")]))
 

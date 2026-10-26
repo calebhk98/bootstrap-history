@@ -11,9 +11,10 @@ import unittest
 from sim.agents.api import ActorRecord, Sector
 from sim.agents.group import InterestGroup
 from sim.agents.group_tuning import GRIEVANCE_RETENTION, GROUP_PULL_SCALE
-from sim.engine.agents_port_groups import GroupView
+from sim.actors.world_groups import GroupView
 from sim.polity.state import PolitySeat
 from sim.tests import polity_host
+from sim.tests.world_stand_in import fake_needs
 from sim.refusal import cause_of
 
 REVENUE = 1.0e6
@@ -152,7 +153,7 @@ class GroupYear(unittest.TestCase):
 def founder_reads(records, unfunded=None):
     """The polity module's reading side over a given list of group records."""
     module = polity_host.build(state_treasury=types.SimpleNamespace(record=types.SimpleNamespace(unfunded=unfunded or {})),
-                               legacy_actors_state=types.SimpleNamespace(records=records))
+                               cast_state=types.SimpleNamespace(records=records))
     module._group_records = lambda: records
     return module
 
@@ -192,7 +193,7 @@ class FounderReadsOfGroups(unittest.TestCase):
 def prohibition(ban=None, protection=0.0, state_interest=0.0):
     """The polity module over a stated ban, a founder's protection and the state's interest in the node."""
     module = polity_host.build(seat=PolitySeat(protection=protection), tree_nodes={"press": {"name": "Press"}},
-                               legacy_actors_state=types.SimpleNamespace(records=[1]))
+                               cast_state=types.SimpleNamespace(records=[1]))
     module._technique_bans = lambda: {} if ban is None else {"press": ban}
     module.state_interest = lambda node: state_interest
     return module
@@ -231,17 +232,14 @@ class StartGate(unittest.TestCase):
 class HurtSectors(unittest.TestCase):
 
     def view(self, state, quote, pressured=None, factor=1.0):
-        economy = types.SimpleNamespace(
-            goods=types.SimpleNamespace(commodities_sold_by=lambda party: ["iron"]), main_material_of=lambda commodity: commodity,
-            trade_quote=lambda material: quote,
-            labour=types.SimpleNamespace(pressured_trades=lambda: pressured or [], price_factor=lambda trade: factor,
-                                         unscarce_annual=lambda trade: 100.0))
-        sim = types.SimpleNamespace(
-            economy=economy, goods_market=types.SimpleNamespace(acting_party_id="founder"), market_state=lambda commodity: state,
-            HOURS_PER_PERSON_YEAR=2000.0, labour=types.SimpleNamespace(market_supply=lambda trade: 2.0e6, local_market_share=lambda: 0.8),
-            civ={})
         view = GroupView()
-        view._sim = sim
+        view.needs = fake_needs(
+            commodities_sold_by_acting_party=["iron"], main_material_of=lambda commodity: commodity,
+            material_trade_quote=lambda material: quote, market_state=lambda commodity: state,
+            market_supply=lambda trade: 2.0e6, local_market_share=0.8, mass_rate_text=lambda amount, **options: "%s a year" % amount)
+        view.labour_market = types.SimpleNamespace(pressured_trades=lambda: pressured or [], price_factor=lambda trade: factor,
+                                                   unscarce_annual=lambda trade: 100.0)
+        view.hours_per_person_year = 2000.0
         view.pay_per_person_year = lambda trade: 100.0
         return view
 

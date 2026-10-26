@@ -5,7 +5,8 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine.agents_port import SimWorld
+from sim.actors.world import ActorWorld
+from sim.tests.world_stand_in import fake_needs
 from sim.labour import labour_market_api
 from sim.labour.labour_market_api import LabourMarket
 
@@ -63,10 +64,9 @@ class WorldReadsTheOneMarketTests(unittest.TestCase):
         market = types.SimpleNamespace(
             quote=lambda trade, hours=0.0: RATES[trade],
             quote_annual=lambda trade, people=0.0: RATES[trade] * HOURS_PER_YEAR)
-        sim = types.SimpleNamespace(
-            economy=types.SimpleNamespace(labour=market), HOURS_PER_PERSON_YEAR=HOURS_PER_YEAR,
-            concern_staff_by_trade=lambda node_id: {"artisan": 2.0, "scribe": 1.0})
-        return SimWorld(sim), market
+        needs = fake_needs(labour_market=market, hours_per_person_year=HOURS_PER_YEAR,
+                           concern_staff=lambda node_id: {"artisan": 2.0, "scribe": 1.0})
+        return ActorWorld(types.SimpleNamespace(needs=needs)), market
 
     def test_the_world_hands_every_actor_the_one_market(self):
         world, market = self.world()

@@ -6,6 +6,12 @@ from sim.assembly.api import Command
 
 
 @dataclass(frozen=True)
+class AdvanceActors(Command):
+	"""The year of every actor other than the founder's household: the countries, players, firms, traders and bodies of people
+	each decide, pay and post. Coin moved between actors in different places pays carriage meanwhile."""
+
+
+@dataclass(frozen=True)
 class RecordConquestContact(Command):
 	"""A conquest of `tile` from `previous` (None when it was nobody's): the conqueror's actors become aware of what the
 	overrun country's people know."""
