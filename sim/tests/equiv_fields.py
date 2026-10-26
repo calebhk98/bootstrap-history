@@ -23,6 +23,11 @@ RELOCATIONS = [
     ("/modules/reporting/money_real", "/economy/money_real"),
     ("/modules/reporting/wage_market_ratios", "/economy/wage_market_ratios"),
     ("/modules/reporting/agent_baseline_prices", "/economy/agent_baseline_prices"),
+    ("/modules/foreign_trade/market_book", "/economy/foreign_market_book"),
+    ("/modules/foreign_trade/actor_trade", "/economy/foreign_actor_trade"),
+    ("/modules/foreign_trade/home_actor_trade", "/economy/home_actor_trade"),
+    ("/modules/foreign_trade/ledgers", "/economy/foreign_ledger"),
+    ("/modules/foreign_trade/trade_by_year", "/economy/foreign_trade_by_year"),
     ("/seats/*/modules/reporting/log", "/seats/*/household/log"),
     ("/seats/*/modules/reporting/automation_audit", "/seats/*/household/automation_audit"),
 ]

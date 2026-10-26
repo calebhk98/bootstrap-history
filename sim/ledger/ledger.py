@@ -6,6 +6,7 @@ from typing import Any
 
 from sim.agents.api import edges, ledger
 from sim.assembly.api import Module
+from sim.refusal import Refusal
 
 from . import rules
 
@@ -25,6 +26,14 @@ class Ledger(Module):
 		actor = self.needs.legacy_actor_registry().actors[command.actor]
 		ledger.transfer(actor, self.edge(command.edge), command.amount, command.purpose)
 		self.bump(MONEY)
+
+	def pay_actor_from_edge(self, command: Any) -> Any:
+		payee = self.needs.legacy_actor_registry().get(command.payee)
+		if payee is None:
+			return Refusal("no_such_actor", "the cast holds no actor %s" % command.payee)
+		ledger.transfer(self.edge(command.edge), payee, command.amount, command.purpose)
+		self.bump(MONEY)
+		return None
 
 	def receive_from_edge(self, command: Any) -> None:
 		ledger.transfer(self.edge(command.edge), self.needs.legacy_acting_household(), command.amount, command.purpose)

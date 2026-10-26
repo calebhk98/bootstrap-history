@@ -18,7 +18,8 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import agents_port_stores, country_trade_years, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, material_capacity, solve_cache
+from sim.foreign_trade.api import SettleFlow, country_trade_years
+from . import agents_port_stores, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, material_capacity, solve_cache
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
@@ -75,7 +76,7 @@ FOREIGN_TRADE_SHARE = declare(
     "FOREIGN_TRADE_SHARE", 0.1, kind="temporary_heuristic",
     unit="share of the home market a good's imports or exports can reach in a year", source=None, confidence="D",
     why="How much can cross a border in a year is set by ships, carts and merchants on the routes; the "
-        "engine's carrier fleet (foreign_payments, OPENING_CARRIERS_PER_ROUTE) is not yet the economy's. "
+        "engine's carrier fleet (sim/foreign_trade, OPENING_CARRIERS_PER_ROUTE) is not yet the economy's. "
         "A share of the home market stands in so trade is bounded.")
 PARTNER_SPEND_SHARE_PER_YEAR = declare(
     "PARTNER_SPEND_SHARE_PER_YEAR", 0.05, kind="temporary_heuristic",
@@ -404,7 +405,7 @@ class AgentEconomy(TilePricesMixin):
         """Imports offered at the cheapest partner's landed price and exports bid for at the partner's
         own price less carriage, on the port tile (sim/economy/foreign.py). How much can cross is a
         share of the home market, standing in for the carriers' capacity (FOREIGN_TRADE_SHARE). A good the
-        trader actors carry in a direction this year is theirs to carry that way (foreign_actor_trade.py)."""
+        trader actors carry in a direction this year is theirs to carry that way (sim/foreign_trade/actor_trade.py)."""
         sim, economy = self._sim, self._economy
         partners = sim.foreign_economies()
         if not partners:
@@ -470,12 +471,12 @@ class AgentEconomy(TilePricesMixin):
             if not metal_price:
                 continue
             held = (sim._partner_coin_opening_units(partner)
-                    + sim._foreign_ledger(partner)["partner_coin_units"])
+                    + sim.view("foreign_coin_partner_units")[partner])
             total += max(0.0, held) * standard["kg_per_unit"] * metal_price
         return total * PARTNER_SPEND_SHARE_PER_YEAR
 
     def _settle_foreign_coin(self):
-        """The year's foreign trade paid for in the partners' ledgers (foreign_payments): imports pay coin
+        """The year's foreign trade paid for in the partners' ledgers (sim/foreign_trade): imports pay coin
         to them and exports draw coin from them, so a partner paying out coin sees its price level fall
         and buys less (price-specie flow). Trade with several partners is split evenly among them; the
         economy's external edge does not yet say which partner each good went to."""
@@ -492,11 +493,10 @@ class AgentEconomy(TilePricesMixin):
             metal_price = sim.goods_market.home_unit_price(standard["material"])
             if not metal_price:
                 continue
-            per_partner_coin = standard["kg_per_unit"] * metal_price
             if imports > 0.0:
-                sim._settle_flow(partner, 1.0, imports / len(partners), per_partner_coin)
+                sim.send(SettleFlow(partner, 1.0, imports / len(partners)))
             if exports > 0.0:
-                sim._settle_flow(partner, -1.0, exports / len(partners), per_partner_coin)
+                sim.send(SettleFlow(partner, -1.0, exports / len(partners)))
         return imports, exports
 
     def _note_off_map_trade(self, imports, exports):

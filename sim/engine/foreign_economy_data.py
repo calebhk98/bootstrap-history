@@ -27,3 +27,15 @@ def foreign_economy_document():
                 untraded.extend(json.load(handle).get("not_traded_materials") or ())
     document["not_traded_materials"] = sorted(set(untraded))
     return document
+
+
+@functools.lru_cache(maxsize=None)
+def foreign_economy_records():
+    """The economies the data file names, with installed mods applied."""
+    return tuple(foreign_economy_document()["economies"])
+
+
+@functools.lru_cache(maxsize=None)
+def not_traded_materials():
+    """Materials that cannot cross a border, from the data file."""
+    return frozenset(foreign_economy_document()["not_traded_materials"])

@@ -1,8 +1,8 @@
 """Trader actors own the goods they carry between countries (Complaints/115, 405): a cargo is tallied per partner and
-direction (`note_actor_trade`, `actors_carry`), the partner's book closes on the tally and clears it
-(`close_partner_books`), a cargo sold to a partner is extra supply that lowers its price (`_partner_outcome`), and the
-economy's stand-in external orders leave alone a good the actors carry in that direction
-(`AgentEconomy._external_orders`). Each rule is called on a stand-in that holds only what it reads."""
+direction (`rules.note_actor_trade`, `rules.actors_carry`), the partner's book closes on the tally and clears it
+(`ForeignTrade.apply_close_partner_books`), a cargo sold to a partner is extra supply that lowers its price
+(`rules.clear_partner`), and the economy's stand-in external orders leave alone a good the actors carry in that direction
+(`AgentEconomy._external_orders`). Each rule is called on plain values or on a stand-in that holds only what it reads."""
 QUICK_TOPIC = True
 
 import unittest
@@ -12,92 +12,78 @@ from unittest import mock
 from sim.engine import economy_port_year
 from sim.engine.agents_port_trade import TradeView
 from sim.engine.economy_port_year import AgentEconomy
-from sim.engine.foreign_actor_trade import BOUGHT, SOLD, ForeignActorTradeMixin
+from sim.foreign_trade import rules
+from sim.foreign_trade.commands import ClosePartnerBooks
+from sim.foreign_trade.constants import BOUGHT, SOLD
+from sim.foreign_trade.module import ForeignTrade
+from sim.foreign_trade.state import ForeignTradeWorld
+from sim.tests import module_harness
 
 PARTNER = "partner"
 
 
-def book_game(entry=None):
-    class Game(ForeignActorTradeMixin):
-        def __init__(self):
-            self.state = SimpleNamespace(economy=SimpleNamespace(
-                foreign_actor_trade={}, home_actor_trade={"wheat": {}},
-                foreign_market_book={PARTNER: {"grain": entry}} if entry else {}))
-            self.entry = entry
-
-        def _foreign_economy_facts(self, partner):
-            return {}
-
-        def _import_offers(self, partner, cargo):
-            return {}, {commodity_of(material): flow[SOLD] for material, flow in cargo.items()}
-
-        def _material_tag(self, material):
-            return (commodity_of(material), 0)
-
-        def _foreign_entry(self, partner, commodity, facts):
-            return self.entry
-
-        def _partner_outcome(self, entry, commodity, sold, bought, imports=()):
-            self.cleared_on = (sold, bought)
-            return SimpleNamespace(price_ratio=0.8)
-
-    return Game()
-
-
-def commodity_of(material):
-    return "grain"
-
-
 class TallyTests(unittest.TestCase):
     def test_a_cargo_is_tallied_per_partner_material_and_direction(self):
-        game = book_game()
-        game.note_actor_trade(PARTNER, "wheat", 3.0, True, landed_cost=6.0)
-        game.note_actor_trade(PARTNER, "wheat", 1.0, False)
-        flow = game.state.economy.foreign_actor_trade[PARTNER]["wheat"]
+        tally = {}
+        rules.note_actor_trade(tally, PARTNER, "wheat", 3.0, True, landed_cost=6.0)
+        rules.note_actor_trade(tally, PARTNER, "wheat", 1.0, False)
+        flow = tally[PARTNER]["wheat"]
         self.assertEqual((flow[SOLD], flow[BOUGHT], flow["landed_cost_money"]), (3.0, 1.0, 6.0))
 
     def test_part_of_a_cargo_taken_back_takes_its_share_of_the_landed_cost_with_it(self):
-        game = book_game()
-        game.note_actor_trade(PARTNER, "wheat", 4.0, True, landed_cost=8.0)
-        game.note_actor_trade(PARTNER, "wheat", -1.0, True)
-        flow = game.state.economy.foreign_actor_trade[PARTNER]["wheat"]
+        tally = {PARTNER: {"wheat": {SOLD: 4.0, BOUGHT: 0.0, "landed_cost_money": 8.0}}}
+        rules.note_actor_trade(tally, PARTNER, "wheat", -1.0, True)
+        flow = tally[PARTNER]["wheat"]
         self.assertEqual((flow[SOLD], flow["landed_cost_money"]), (3.0, 6.0))
 
     def test_actors_carry_a_good_only_in_the_direction_and_to_the_partner_it_was_tallied(self):
-        game = book_game()
-        game.note_actor_trade(PARTNER, "wheat", 3.0, True)
-        self.assertTrue(game.actors_carry("wheat", True))
-        self.assertTrue(game.actors_carry("wheat", True, PARTNER))
-        self.assertFalse(game.actors_carry("wheat", False))
-        self.assertFalse(game.actors_carry("wheat", True, "elsewhere"))
-        self.assertFalse(game.actors_carry("iron", True))
+        tally = {PARTNER: {"wheat": {SOLD: 3.0, BOUGHT: 0.0}}}
+        self.assertTrue(rules.actors_carry(tally, "wheat", True))
+        self.assertTrue(rules.actors_carry(tally, "wheat", True, PARTNER))
+        self.assertFalse(rules.actors_carry(tally, "wheat", False))
+        self.assertFalse(rules.actors_carry(tally, "wheat", True, "elsewhere"))
+        self.assertFalse(rules.actors_carry(tally, "iron", True))
 
     def test_the_landed_cost_is_the_purchase_plus_a_years_return_plus_carriage(self):
-        game = book_game()
-        game.market_rate = lambda: 0.1
-        self.assertAlmostEqual(game.landed_cost(100.0, 7.0), 117.0)
+        self.assertAlmostEqual(rules.landed_cost(100.0, 7.0, 0.1), 117.0)
 
 
 class CloseBooksTests(unittest.TestCase):
     ENTRY = {"capacity_tonnes": 10.0, "stock_tonnes": 5.0, "price_ratio": 1.0, "trade_tonnes": 0.0}
 
     def test_the_book_clears_on_the_years_cargo_records_the_outcome_and_empties_the_tally(self):
-        game = book_game(dict(self.ENTRY))
-        game.note_actor_trade(PARTNER, "wheat", 3.0, True)
-        game.note_actor_trade(PARTNER, "wheat", 1.0, False)
-        with mock.patch("sim.engine.foreign_actor_trade.market.adjusted_capacity", return_value=9.0), \
-             mock.patch("sim.engine.foreign_actor_trade.market.stock_after_year", return_value=4.0):
-            game.close_partner_books()
-        self.assertEqual(game.cleared_on, (3.0, 1.0))
-        self.assertEqual(game.entry, {"capacity_tonnes": 9.0, "stock_tonnes": 4.0, "price_ratio": 0.8, "trade_tonnes": 2.0})
-        self.assertEqual((game.state.economy.foreign_actor_trade, game.state.economy.home_actor_trade), ({}, {}))
+        cleared = []
+
+        class Booked(ForeignTrade):
+            def partner_facts(self, partner):
+                return {}
+
+            def _import_offers(self, partner, cargo):
+                return {}, {"grain": sum(flow[SOLD] for flow in cargo.values())}
+
+            def partner_entry(self, partner, commodity, facts):
+                return entry
+
+            def _partner_outcome(self, entry, commodity, sold, bought, imports=()):
+                cleared.append((sold, bought))
+                return SimpleNamespace(price_ratio=0.8)
+        entry = dict(self.ENTRY)
+        module = module_harness.build(Booked, views={"material_commodity": lambda material: "grain"}, world=ForeignTradeWorld(
+            market_book={PARTNER: {"grain": entry}}, home_actor_trade={"wheat": {}}))
+        rules.note_actor_trade(module.world.actor_trade, PARTNER, "wheat", 3.0, True)
+        rules.note_actor_trade(module.world.actor_trade, PARTNER, "wheat", 1.0, False)
+        with mock.patch("sim.foreign_trade.rules.market.adjusted_capacity", return_value=9.0), \
+             mock.patch("sim.foreign_trade.rules.market.stock_after_year", return_value=4.0):
+            module.apply_close_partner_books(ClosePartnerBooks())
+        self.assertEqual(cleared, [(3.0, 1.0)])
+        self.assertEqual(entry, {"capacity_tonnes": 9.0, "stock_tonnes": 4.0, "price_ratio": 0.8, "trade_tonnes": 2.0})
+        self.assertEqual((module.world.actor_trade, module.world.home_actor_trade), ({}, {}))
 
 
 class PartnerOutcomeTests(unittest.TestCase):
     def outcome(self, sold):
-        game = SimpleNamespace(_commodity_ledger=lambda: SimpleNamespace(commodities={}), _floor_ratio=lambda commodity: 0.6)
         entry = {"reference_tonnes": 100.0, "capacity_tonnes": 100.0, "stock_tonnes": 0.0}
-        return ForeignActorTradeMixin._partner_outcome(game, entry, "grain", sold, 0.0)
+        return rules.clear_partner(entry, 0.6, 6.0, sold, 0.0)
 
     def test_a_cargo_sold_to_the_partner_lowers_its_price_and_never_raises_it(self):
         base = self.outcome(0.0).price_ratio

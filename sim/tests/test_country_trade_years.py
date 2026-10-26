@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.economy import carried_book, country_figures
-from sim.engine import country_trade_years
+from sim.foreign_trade.api import country_trade_years
 from sim.engine.economy_port_country import CountryAnswers
 from sim.tests.country_stand_in import NORTH, two_country_economy
 

@@ -132,7 +132,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"farm_cleared_hectares": "holdings",
 	"farm_last_shortfall_kg": "holdings",
 	"farm_last_harvest_kg": "holdings",
-	"foreign_trade_by_year": "economy",
 	"farm_hours_needed": "holdings",
 	"farm_last_marginal_product": "holdings",
 	"society_labour_hours": "economy",

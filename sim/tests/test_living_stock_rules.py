@@ -9,7 +9,7 @@ import unittest
 from unittest import mock
 
 from sim.engine import forward_living_stock
-from sim.engine.foreign_economies import ForeignEconomiesMixin
+from sim.foreign_trade.module import ForeignTrade
 from sim.engine.society_diffusion import DiffusionMixin
 from sim.agents.api import edges
 from sim.foreign_trade.api import SettleFlow
@@ -120,15 +120,15 @@ class NeedsFirst(unittest.TestCase):
 
 class PartnerRefusal(unittest.TestCase):
     def stand_in(self, monopolies, government=None, gate=None):
-        return types.SimpleNamespace(
-            partner_gate_refusal=lambda partner: gate, partner_civ=lambda partner: {
-                "name": "Han", "state_monopolies": monopolies},
-            partner_government=lambda partner: government,
-            goods_market=types.SimpleNamespace(acting_party_id="home"),
-            state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=100)))
+        """The foreign-trade module over a partner whose file, state and gate the test writes out."""
+        registry = types.SimpleNamespace(get=lambda actor_id: government)
+        return module_harness.build(ForeignTrade, views={
+            "partner_reached": lambda partner: gate is None,
+            "civilisation_record": lambda partner: {"name": "Han", "state_monopolies": monopolies},
+            "legacy_actor_registry": registry, "acting_seat": "home", "year": 100})
 
     def refusal(self, stand_in):
-        return ForeignEconomiesMixin.partner_refusal(stand_in, "han", EGGS)
+        return stand_in.partner_refusal("han", EGGS)
 
     def test_a_state_monopoly_on_the_good_holds_the_export_back(self):
         self.assertEqual(cause_of(self.refusal(self.stand_in([EGGS]))), "partner_export_held_back")

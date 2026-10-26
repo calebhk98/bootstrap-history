@@ -6,7 +6,6 @@ from sim.assembly.api import KEYED, QUOTE
 from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, TakeGoods
 
 from .bridge import bridge_command, bridge_view
-from .data import load_civ, starting_schedule
 
 
 # ---- workforce and markets ----
@@ -30,39 +29,6 @@ def opening_population(sim):
 def goods_quote(sim, material):
     """The market's buy and sell terms for a tonne of a material, or None when it has no price."""
     return sim.goods_market.quote(material)
-
-
-# ---- foreign trade ----
-
-@bridge_view("foreign_economies")
-def foreign_economies(sim):
-    return sim.foreign_economies()
-
-
-@bridge_view("foreign_coin_home_units")
-def foreign_coin_home_units(sim):
-    """Coin units the home society gained (negative: paid out) in trade with every partner."""
-    return sum(ledger["home_coin_units"] for ledger in sim.state.economy.foreign_ledger.values())
-
-
-@bridge_view("foreign_coin_partner_units", kind=KEYED)
-def foreign_coin_partner_units(sim, civilization_id):
-    """Coin units a partner gained (negative: paid out) in trade with the home society; none where nothing is booked."""
-    return sim._foreign_ledger(civilization_id)["partner_coin_units"]
-
-
-@bridge_view("partner_coin_standard", kind=KEYED)
-def partner_coin_standard(sim, civilization_id):
-    return sim.partner_civ(civilization_id)["coin_standard"]
-
-
-@bridge_view("partner_opening_facts", kind=KEYED)
-def partner_opening_facts(sim, civilization_id):
-    """{population, money_per_labour_hour}: what a partner's opening coin stock is sized from."""
-    return {"population": load_civ(civilization_id).get("population"),
-            "money_per_labour_hour": starting_schedule(civilization_id).money_per_labour_hour}
-
-
 
 
 # ---- finance, polity, agriculture, resources ----

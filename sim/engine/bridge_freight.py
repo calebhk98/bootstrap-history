@@ -94,41 +94,6 @@ def working_age(sim):
     return sim.population.working_age
 
 
-# ---- foreign trade ----
-
-@bridge_view("partner_market_book", kind=KEYED)
-def partner_market_book(sim, civilization_id):
-    """The partner's market book by commodity (empty when it has none)."""
-    return sim.state.economy.foreign_market_book.get(civilization_id, {})
-
-
-@bridge_view("partner_route", kind=KEYED)
-def partner_route(sim, civilization_id):
-    """The route the partner's economy facts hold for the year, or None."""
-    return sim._foreign_economy_facts(civilization_id)["route"]
-
-
-@bridge_view("route_lift_years_per_tonne", kind=QUOTE)
-def route_lift_years_per_tonne(sim, route):
-    return sim._route_lift_years_per_tonne(route)
-
-
-@bridge_view("route_capital_per_lift_tonne", kind=QUOTE)
-def route_capital_per_lift_tonne(sim, route):
-    return sim._route_capital_per_lift_tonne(route)
-
-
-@bridge_view("lift_capacity_tonnes", kind=QUOTE)
-def lift_capacity_tonnes(sim, civilization_id, route):
-    return sim.foreign_lift_capacity_tonnes(civilization_id, route)
-
-
-@bridge_view("opening_carriers_per_route")
-def opening_carriers_per_route(sim):
-    from .foreign_payments import OPENING_CARRIERS_PER_ROUTE
-    return OPENING_CARRIERS_PER_ROUTE
-
-
 # ---- polity and the ledger ----
 
 @bridge_view("holder_treasury", kind=KEYED)

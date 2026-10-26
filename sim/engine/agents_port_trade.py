@@ -8,8 +8,8 @@ place buy for themselves in a year is the depth a trader sizes its cargo to.
 from typing import Any, Dict, List, Optional, Tuple
 
 from . import trade_duty
-from .foreign_capacity import budget_scaled_final_tonnes, household_tonnes_by_material
-from .foreign_economies import not_traded_materials
+from .foreign_economy_data import not_traded_materials
+from .partner_demand import budget_scaled_final_tonnes, household_tonnes_by_material
 from .material_units import tonnes_per_unit
 
 
@@ -146,8 +146,8 @@ class TradeView:
 
 	def ship(self, trader_id: str, material: str, tonnes: float, source: str, destination: str) -> Tuple[float, float]:
 		"""Buy at the source and sell at the destination; (money paid, money received), the quotes the trader is
-		booked at. The cargo is noted as a leg and settled once the year's market has cleared (trader_cargo.py): its
-		home side is orders in the book; a partner's side is tallied for its market book to close on (foreign_actor_trade.py)."""
+		booked at. The cargo is noted as a leg and settled once the year's market has cleared (sim/foreign_trade/cargo.py): its
+		home side is orders in the book; a partner's side is tallied for its market book to close on (sim/foreign_trade/actor_trade.py)."""
 		if tonnes <= 0.0:
 			return 0.0, 0.0
 		if self.duty_between(source, destination, material, tonnes) == float("inf"):

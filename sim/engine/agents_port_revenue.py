@@ -54,7 +54,7 @@ class RevenueView(CollectionView):
 
 	def trade_value(self, direction: str) -> float:
 		"""Money's worth of goods imported ("in") or exported ("out") in the last completed year."""
-		trade = self._sim.state.economy.foreign_trade_by_year.get(str(self.year - 1), {})  # type: ignore[attr-defined]
+		trade = self._sim.view("trade_value_in_year")(self.year - 1)  # type: ignore[attr-defined]
 		return float(trade.get(direction, 0.0))
 
 	def coin_stock_value(self) -> float:

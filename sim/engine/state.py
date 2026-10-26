@@ -324,18 +324,7 @@ class EconomyState:
 	market_book: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# the year's purchases and sales by commodity and party, and the founder's draws (goods_market_api.py)
 	market_flows: Optional[Dict[str, Any]] = None
-	# foreign economy id -> commodity -> its capacity, stock and price ratio (foreign_economies.py)
-	foreign_market_book: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
-	# foreign economy id -> material -> tonnes actors carried to and from it this year (foreign_actor_trade.py)
-	foreign_actor_trade: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
-	# material -> tonnes actors landed in the home market and took from it this year (foreign_actor_trade.py)
-	home_actor_trade: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	# foreign economy id -> goods and coin paid, and the route's lift (foreign_payments.py)
-	foreign_ledger: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	capacity_pool: Dict[str, float] = field(default_factory=dict)
-	# year -> value of goods this society imported ("in") and exported ("out") that year, in its money;
-	# the state's customs read the last completed year (foreign_payments.py)
-	foreign_trade_by_year: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	society_labour_hours: Dict[str, float] = field(default_factory=dict)
 	wage_tightness_factors: Dict[str, float] = field(default_factory=dict)
 	# whether the money an hour of work is worth is the agent economy's unskilled wage (set when the economy

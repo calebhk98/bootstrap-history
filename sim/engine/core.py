@@ -48,7 +48,7 @@ from .starting_techs import declared_starting_techs, grant_starting_techs
 from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
 from .market_clearing import MarketClearingMixin
-from .foreign_economies import ForeignEconomiesMixin
+from .forward_foreign_trade import ForwardForeignTradeMixin
 from .food_eaten import FoodEatenMixin
 from .demographic_recovery import DemographicRecoveryMixin
 from .regional_people import RegionalPeopleMixin
@@ -212,7 +212,7 @@ class Sim(
         ForwardMechanicsMixin,
         EconomyMixin,
         MarketClearingMixin,
-        ForeignEconomiesMixin,
+        ForwardForeignTradeMixin,
         MarketDemandMixin,
         ConcernVolumeMixin,
         ConcernBookSalesMixin,

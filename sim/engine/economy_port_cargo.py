@@ -4,7 +4,7 @@ Part of the port (it imports `sim.economy.api`). Each cargo leg between home and
 book. A landing cargo ("in") arrives over the partner's edge and is offered at any price; a taking cargo ("out")
 is bought with the money the trader put in and handed to the partner's edge. After the clear the account is
 closed: its money goes back to the trader's purse, the goods nobody took go back over the partner's edge.
-A leg is a plain dict (`sim/engine/trader_cargo.py` makes it); money in a leg is the engine's, the book's is the
+A leg is a plain dict (`sim/foreign_trade/cargo.py` makes it); money in a leg is the engine's, the book's is the
 economy's coin, converted by `coin_per_unit`.
 """
 from sim.economy import api as economy_api

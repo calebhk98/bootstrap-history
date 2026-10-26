@@ -1,6 +1,6 @@
 """How a society's own figures reach foreign freight and the coin that pays for it (Complaints/326, 323): the freight module's
 mode costs, handling costs and route quotes on plain views and a written-out carrier table, the flow imbalance as a rule,
-and the coin settlement on a stand-in that holds only what it reads. The carrier's physics is in test_foreign_freight_balance,
+(the coin settlement is in test_foreign_trade_rules). The carrier's physics is in test_foreign_freight_balance,
 the domestic haul in test_freight_domestic_haul."""
 QUICK_TOPIC = True
 
@@ -8,7 +8,6 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine.foreign_payments import ForeignPaymentsMixin
 from sim.freight import models, rules
 from sim.freight.module import Freight
 from sim.geography import freight_cost, transport
@@ -123,36 +122,6 @@ class DuesAndStockRouteTests(unittest.TestCase):
         self.assertIs(module.material_route({}, "iron", found), found)
         self.assertEqual(module.material_route({}, "ox", found), "stock route")
         self.assertEqual(asked, ["living_stock"])
-
-
-class SettleFlowTests(unittest.TestCase):
-    OPENING = 1000.0
-
-    def game(self, home_stock):
-        ledger = {"goods_in_value": 0.0, "goods_out_value": 0.0, "home_coin_units": 0.0, "partner_coin_units": 0.0,
-                  "coin_carriage_units": 0.0}
-        return SimpleNamespace(
-            _foreign_ledger=lambda civilization, create=False: ledger, _note_trade_value=lambda tonnes, value: None,
-            home_coin_stock_units=lambda: home_stock + ledger["home_coin_units"],
-            _partner_coin_opening_units=lambda civilization: self.OPENING,
-            coin_carriage_units=lambda civilization, units, rate: 0.0), ledger
-
-    def test_an_import_is_paid_in_coin_that_leaves_home_and_arrives_at_the_partner(self):
-        game, ledger = self.game(home_stock=1000.0)
-        ForeignPaymentsMixin._settle_flow(game, "p", 5.0, 100.0, 2.0)
-        self.assertEqual((ledger["home_coin_units"], ledger["partner_coin_units"], ledger["goods_in_value"]),
-                         (-100.0, 50.0, 100.0))
-
-    def test_an_import_beyond_the_coin_held_is_paid_only_as_far_as_the_stock_goes(self):
-        game, ledger = self.game(home_stock=30.0)
-        ForeignPaymentsMixin._settle_flow(game, "p", 5.0, 100.0, 2.0)
-        self.assertEqual((ledger["home_coin_units"], ledger["partner_coin_units"]), (-30.0, 15.0))
-
-    def test_an_export_brings_coin_home_and_draws_it_from_the_partner(self):
-        game, ledger = self.game(home_stock=1000.0)
-        ForeignPaymentsMixin._settle_flow(game, "p", -5.0, 100.0, 2.0)
-        self.assertEqual((ledger["home_coin_units"], ledger["partner_coin_units"], ledger["goods_out_value"]),
-                         (100.0, -50.0, 100.0))
 
 
 if __name__ == "__main__":

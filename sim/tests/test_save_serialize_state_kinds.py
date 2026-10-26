@@ -122,7 +122,7 @@ record = {"book": {"goods": {"iron": {"t1": 4.0}}}, "loans": [{"contract_id": "l
 economy = EconomyState(
 	agent_economy={"opening": {"recipes": ["bread", "brick"], "prices": {"bread": 1.5}}, "record": record, "cargo": {"leg:1": {"tile": "t1", "tonnes": 2.0}}},
 	tile_owners={"t1": {"owner": "rome", "control": "high"}}, works={"t1": {"mill": 2.0}}, works_under_construction={"t1": {"mill": [105, 1.0]}},
-	forest_felled={"t1": 3.5}, market_flows=None, nodes_money_per_labour_hour=None, foreign_trade_by_year={"100": {"in": 4.0, "out": 3.0}})
+	forest_felled={"t1": 3.5}, market_flows=None, nodes_money_per_labour_hour=None)
 with verbatim(record):
 	blob = serialize_state(economy)
 check("serialize_state: the stored agent economy keeps its opening (the late recipes), record and cargo",

@@ -1,7 +1,7 @@
 """The ledger's module spec (sim/assembly)."""
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, ViewSpec
 
-from .commands import ChangeStock, PayEdge, PayEdgeFrom, PayWages, ReceiveFromEdge
+from .commands import ChangeStock, PayActorFromEdge, PayEdge, PayEdgeFrom, PayWages, ReceiveFromEdge
 from .ledger import MONEY, STOCK, Ledger
 
 LEGACY_READS = ("legacy_acting_household", "legacy_edge_account", "legacy_actor_registry", "legacy_stock_ledger",
@@ -17,7 +17,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("transfer_listening", "transfer_listening", kind=QUOTE),
 	),
 	extension_points=(ExtensionPoint("transfer_surcharge", LIST),),   # (payer, payee, amount, purpose) -> (edge, amount, cause) or None
-	applies=((PayEdge, "pay_edge"), (PayEdgeFrom, "pay_edge_from"), (ReceiveFromEdge, "receive_from_edge"), (PayWages, "pay_wages"),
+	applies=((PayEdge, "pay_edge"), (PayEdgeFrom, "pay_edge_from"), (PayActorFromEdge, "pay_actor_from_edge"), (ReceiveFromEdge, "receive_from_edge"), (PayWages, "pay_wages"),
 	         (ChangeStock, "change_stock")),
 	reads=LEGACY_READS,
 ),)

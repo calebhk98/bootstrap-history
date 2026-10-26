@@ -12,7 +12,8 @@ from sim.engine.data import load_civ
 from sim.engine.economy_port import EconomyPort
 from sim.engine.goods_market_api import GoodsMarket
 from sim.engine.material_units import tonnes_per_unit
-from sim.engine.trader_cargo import TraderCargoMixin
+from sim.foreign_trade.module import ForeignTrade
+from sim.tests import module_harness
 
 WHEAT = "wheat_kg"
 COIN_METAL = "silver_kg"
@@ -127,17 +128,19 @@ port = SimpleNamespace(_sim=SimpleNamespace(civ={"coin_standard": coin}, goods_m
 expected_stock = 2000.0 * coin["kg_per_unit"] * metal_price
 check("the coin the society holds is counted at that price",
       abs(EconomyPort.coin_stock_value(port) - expected_stock) <= 1e-9 * expected_stock, (EconomyPort.coin_stock_value(port), expected_stock))
-cargo = SimpleNamespace(goods_market=market)
+def trade_over(goods_market):
+    return module_harness.build(ForeignTrade, views={"civilisation_record": load_civ,
+                                                     "home_unit_price": goods_market.home_unit_price})
+
+
 for partner in ("han_china_100ad", "mexica_1500"):
     standard = load_civ(partner)["coin_standard"]
     own_price = 0.5
-    cargo.goods_market = _Market({standard["material"]: 0.5})
-    in_cargo = TraderCargoMixin._money_per_partner_coin(cargo, partner)
+    in_cargo = trade_over(_Market({standard["material"]: 0.5})).money_per_partner_coin(partner)
     check("a partner's coin in cargo is its metal at the economy's price: %s" % partner,
           abs(in_cargo - standard["kg_per_unit"] * own_price) <= 1e-9 * in_cargo, (in_cargo, own_price))
-cargo.goods_market = _Market({})
 check("a partner's coin whose metal has no price is not counted",
-      TraderCargoMixin._money_per_partner_coin(cargo, "han_china_100ad") is None)
+      trade_over(_Market({})).money_per_partner_coin("han_china_100ad") is None)
 
 # the price follows the economy as it moves
 before = market.quote(WHEAT)["price_at_tile_per_tonne"]

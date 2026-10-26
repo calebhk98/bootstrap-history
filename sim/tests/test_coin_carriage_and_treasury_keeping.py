@@ -1,6 +1,6 @@
 """Complaint 273: coin moved across a route pays carriage by its mass, and a state's or firm's coin pays the
-yearly keeping cost the household's does. The foreign settlement is called on a stub game
-(`ForeignPaymentsMixin._settle_flow`) whose carriage is the coin module's `coin_carriage_units` quote; the actors' keeping is
+yearly keeping cost the household's does. The foreign settlement is the foreign-trade
+module's `settle_flow` over plain views, its carriage the coin module's `coin_carriage_units` quote; the actors' keeping is
 the coin module's `charge_keeping` command handler over plain actors; the household's own charge in a step is
 test_coin_keeping_charged."""
 QUICK_TOPIC = True
@@ -13,7 +13,8 @@ from sim.agents.edges import EDGE_COIN_GUARDS
 from sim.coin.commands import ChargeKeeping
 from sim.coin.constants import COIN_GUARD_HOURS_PER_TONNE_YEAR, KEEPING_CAUSE
 from sim.coin.module import Coin
-from sim.engine.foreign_payments import ForeignPaymentsMixin
+from sim.foreign_trade.module import ForeignTrade
+from sim.foreign_trade.state import ForeignTradeWorld
 from sim.ledger.api import PayEdgeFrom
 from sim.tests import module_harness
 from sim.world import coin_metal
@@ -25,28 +26,23 @@ MONEY_PER_HOUR = 2.0
 HOME_COIN = {"id": "home", "coin_standard": {"material": "silver_kg", "kg_per_unit": KG_PER_UNIT, "source": "test"}}
 
 
-def settlement_game(carriage_share):
-    """A stub game for `_settle_flow` with a partner whose coin weighs KG_PER_UNIT, carried by a route that takes
+def settlement_module(carriage_share):
+    """The foreign-trade module settling with a partner whose coin weighs KG_PER_UNIT, carried by a route that takes
     `carriage_share` of the coin's own value per tonne-equivalent."""
-    ledger_book = {"goods_in_value": 0.0, "goods_out_value": 0.0, "home_coin_units": 0.0, "partner_coin_units": 0.0,
-                   "coin_carriage_units": 0.0}
     per_tonne = carriage_share * PER_COIN * 1000.0 / KG_PER_UNIT
     coin = module_harness.build(Coin, views={"partner_coin_standard": {"partner": {"kg_per_unit": KG_PER_UNIT}},
                                              "partner_route_cost": {"partner": per_tonne}})
-    game = types.SimpleNamespace(
-        _foreign_ledger=lambda _civ, create=False: ledger_book, _note_trade_value=lambda *_args: None,
-        home_coin_stock_units=lambda: HOME_STOCK_UNITS, _partner_coin_opening_units=lambda _civ: 1.0e9,
-        coin_carriage_units=coin.coin_carriage_units)
-    game.ledger = ledger_book
-    return game
+    return module_harness.build(ForeignTrade, world=ForeignTradeWorld(), views={
+        "year": 100, "home_coin_stock": HOME_STOCK_UNITS, "partner_coin_opening": lambda _civ: 1.0e9,
+        "coin_carriage_units": coin.coin_carriage_units})
 
 
 def settled(carriage_share, flow_tonnes):
     """(the ledger after one settlement of 5% of the home coin stock, the units owed)."""
-    game = settlement_game(carriage_share)
+    module = settlement_module(carriage_share)
     value = 0.05 * HOME_STOCK_UNITS * PER_COIN
-    ForeignPaymentsMixin._settle_flow(game, "partner", flow_tonnes, value, PER_COIN)
-    return game.ledger, value / PER_COIN
+    module.settle_flow("partner", flow_tonnes, value, PER_COIN)
+    return module.world.ledgers["partner"], value / PER_COIN
 
 
 class Carriage(unittest.TestCase):
@@ -85,9 +81,9 @@ class Carriage(unittest.TestCase):
 
     def test_carriers_are_paid_so_an_import_or_an_export_leaves_the_total_coin_unchanged(self):
         for flow in (5.0, -5.0):
-            game = settlement_game(0.2)
-            ForeignPaymentsMixin._settle_flow(game, "partner", flow, 0.05 * HOME_STOCK_UNITS * PER_COIN, PER_COIN)
-            book = game.ledger
+            module = settlement_module(0.2)
+            module.settle_flow("partner", flow, 0.05 * HOME_STOCK_UNITS * PER_COIN, PER_COIN)
+            book = module.world.ledgers["partner"]
             total = book["home_coin_units"] + book["partner_coin_units"] * PER_COIN
             self.assertGreater(book["coin_carriage_units"], 0.0, flow)
             self.assertAlmostEqual(total, 0.0, delta=1e-9 * book["coin_carriage_units"] * KG_PER_UNIT * 1e6, msg=flow)

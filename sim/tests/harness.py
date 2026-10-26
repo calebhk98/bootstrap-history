@@ -194,20 +194,19 @@ def unopened_sim(civ="rome_100ad", capital=None, manual=True, events=False, surv
 def build_unopened(factory):
     """`factory()` (a call that builds a `Sim`) with the agent economy left unopened: see `unopened_sim`."""
     from unittest import mock
+    from sim.engine import foreign_economy_data
     from sim.engine.economy_port import EconomyPort
-    from sim.engine.foreign_economies import foreign_economy_records
-    inside = {record["civilization"] for record in foreign_economy_records() if record.get("agent_economy", False)}
-    every_partner = S.Sim.partner_countries
+    every_record = foreign_economy_data.foreign_economy_records
 
-    def supported_partners(game):
-        return [partner for partner in every_partner(game) if partner not in inside]
+    def supported_records():
+        return tuple(record for record in every_record() if not record.get("agent_economy", False))
 
     # The opening cast may be seeded during construction, before the economy opens.
     with mock.patch.object(EconomyPort, "open_agent", lambda self: None), \
-            mock.patch.object(S.Sim, "partner_countries", supported_partners):
+            mock.patch.object(foreign_economy_data, "foreign_economy_records", supported_records):
         game = factory()
     game.economy._opening = True
-    game.partner_countries = lambda: supported_partners(game)
+    game.assembly.modules["foreign_trade"].needs.foreign_economy_records = supported_records   # the partners of the books only
     return game
 
 

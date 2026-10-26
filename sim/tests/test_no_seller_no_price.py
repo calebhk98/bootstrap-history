@@ -13,8 +13,12 @@ import unittest
 from unittest import mock
 
 from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
-from sim.engine import foreign_capacity, material_availability, prices as engine_prices, solve_prices
+from sim.engine import material_availability, prices as engine_prices, solve_prices
 from sim.engine.goods_market_offers import GoodsOffers, HOME_SELLER
+from sim.foreign_trade.constants import FOREIGN_OUTPUT_PER_POPULATION_SHARE
+from sim.foreign_trade.module import ForeignTrade
+from sim.foreign_trade.state import ForeignTradeWorld
+from sim.tests import module_harness
 
 
 def _wage_document():
@@ -143,7 +147,7 @@ class SellerInReachTests(unittest.TestCase):
         self.assertIsNone(offers.unit_price("cassia_kg"))
 
     def test_a_partner_that_will_not_let_it_cross_a_border_does_not_sell_it(self):
-        with mock.patch("sim.engine.foreign_economies.not_traded_materials", lambda: frozenset({"cassia_kg"})):
+        with mock.patch("sim.engine.foreign_economy_data.not_traded_materials", lambda: frozenset({"cassia_kg"})):
             offers = _Offers(self.sim)
             self.assertIsNone(offers.offered_by("cassia_kg"))
 
@@ -204,36 +208,27 @@ class ImportVolumeTests(unittest.TestCase):
         self.assertEqual(self._offers(supply=300.0, lift_in=0.0).import_tonnes_available("cassia_kg"), 0.0)
 
 
-class _Partner(foreign_capacity.ForeignCapacityMixin):
-    DEFAULT_POPULATION_100AD = 100.0
+def _Partner(can_make=True, opening=(0.0, 0.0), mined=False, book=None, curated=True, own_population=50.0):
+    """The foreign-trade module over one partner whose facts, chain and opening are written out; the national output of
+    every commodity is 1000 tonnes, stated for 100 people (a curated commodity) or for this society's own population."""
+    class Stubbed(ForeignTrade):
+        def partner_facts(self, civilization_id):
+            return {"solved_materials": frozenset({"ore_kg"})}
 
-    def __init__(self, can_make=True, opening=(0.0, 0.0), mined=False, book=None, curated=True, own_population=50.0):
-        self.res = {"empire_output_100ad": {"ore_kg": 1.0} if curated else {}}
-        self.civ = {"population": own_population}
-        self.state = types.SimpleNamespace(economy=types.SimpleNamespace(
-            foreign_market_book={"partner": book or {}}))
-        self._can_make, self._opening, self._mined = can_make, opening, mined
+        def partner_civ(self, civilization_id):
+            return {"population": 10.0}
 
-    def _foreign_economy_facts(self, civilization_id):
-        return {"solved_materials": frozenset({"ore_kg"})}
+        def _can_make(self, civilization_id, material, solved, _seen=None):
+            return can_make
 
-    def _material_tag(self, material):
-        return material, material
+        def foreign_opening(self, civilization_id, commodity, solved):
+            return opening
 
-    def partner_civ(self, civilization_id):
-        return {"population": 10.0}
-
-    def _foreign_can_make(self, civilization_id, material, solved):
-        return self._can_make
-
-    def foreign_opening(self, civilization_id, commodity, solved):
-        return self._opening
-
-    def _tracked_mineral(self, commodity):
-        return self._mined
-
-    def _national_output_tonnes(self, commodity):
-        return 1000.0
+        def _tracked_mineral(self, commodity):
+            return mined
+    return module_harness.build(Stubbed, world=ForeignTradeWorld(market_book={"partner": book or {}}), views={
+        "material_commodity": lambda material: material,
+        "national_output": lambda commodity: (1000.0, 100.0 if curated else own_population)})
 
 
 class PartnerSupplyTests(unittest.TestCase):
@@ -257,10 +252,10 @@ class PartnerSupplyTests(unittest.TestCase):
         self.assertEqual(self._supply(_Partner(mined=True)), 0.0)
 
     def test_an_input_only_good_follows_the_partners_size_against_the_table_it_is_stated_for(self):
-        self.assertAlmostEqual(self._supply(_Partner()), 1000.0 * 10.0 / 100.0 * foreign_capacity.FOREIGN_OUTPUT_PER_POPULATION_SHARE)
+        self.assertAlmostEqual(self._supply(_Partner()), 1000.0 * 10.0 / 100.0 * FOREIGN_OUTPUT_PER_POPULATION_SHARE)
 
     def test_a_good_outside_the_reference_table_follows_this_societys_own_size(self):
-        self.assertAlmostEqual(self._supply(_Partner(curated=False)), 1000.0 * 10.0 / 50.0 * foreign_capacity.FOREIGN_OUTPUT_PER_POPULATION_SHARE)
+        self.assertAlmostEqual(self._supply(_Partner(curated=False)), 1000.0 * 10.0 / 50.0 * FOREIGN_OUTPUT_PER_POPULATION_SHARE)
 
 
 class ProjectNeedsASellerTests(unittest.TestCase):

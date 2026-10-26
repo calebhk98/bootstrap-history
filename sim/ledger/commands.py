@@ -68,6 +68,16 @@ class PayActor(Command):
 	purpose: Any
 
 
+@dataclass(frozen=True)
+class PayActorFromEdge(Command):
+	"""A named edge pays an actor of the cast (named by its id). Refused with the cause `no_such_actor` when the cast holds
+	no such actor."""
+	edge: str
+	payee: str
+	amount: float
+	purpose: Any
+
+
 # where TakeGoods takes from
 STORE_ACTOR = "actor store"       # a material in an actor's own stores (`actor` names it)
 STORE_STOCK = "stock ledger"      # a commodity in the acting seat's tonnes ledger

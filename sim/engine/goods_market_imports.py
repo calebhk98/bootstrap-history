@@ -1,7 +1,7 @@
 """How much of a good a trading partner can bring in a year.
 
 A partner sells no more than it makes and holds, and the route's carriers lift no more than their lift
-(foreign_payments.py); the home market's own output curves say nothing about either. What households and
+(sim/foreign_trade/payments.py); the home market's own output curves say nothing about either. What households and
 the founder have already bought of the good this year comes off what is left."""
 import math
 

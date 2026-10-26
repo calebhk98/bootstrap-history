@@ -9,8 +9,9 @@ from types import SimpleNamespace
 
 from sim.agents.registry import ActorRegistry
 from sim.engine.economy_capital_market import EDGE_SAVERS, CapitalMarketMixin
-from sim.engine.foreign_economies import ForeignEconomiesMixin, foreign_economy_records
-from sim.tests import harness  # noqa: F401  (isolates the home directory)
+from sim.engine.foreign_economy_data import foreign_economy_records
+from sim.foreign_trade.module import ForeignTrade
+from sim.tests import harness, module_harness  # noqa: F401  (harness isolates the home directory)
 
 
 def actor(actor_id, lends, exited_year=None):
@@ -56,8 +57,8 @@ class Lenders(unittest.TestCase):
 
 class VariantPartners(unittest.TestCase):
     def partners(self, civ):
-        stub = SimpleNamespace(civ=civ, state=SimpleNamespace(scenario=SimpleNamespace(year=100)))
-        return ForeignEconomiesMixin.partner_countries(stub)
+        return module_harness.build(ForeignTrade, views={
+            "foreign_economy_records": foreign_economy_records(), "year": 100, "civilisation": civ}).partners()
 
     def test_a_variant_is_played_without_its_base_as_a_partner(self):
         partner = next(record["civilization"] for record in foreign_economy_records()

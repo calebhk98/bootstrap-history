@@ -18,7 +18,6 @@ from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from sim.agents.api import ActorRegistry, ActorsState, cast_from_civilisations, seed_cast
 from sim.engine import bridge_living_stock as bridge
 from sim.engine.data import load_civ
-from sim.engine.foreign_economies import ForeignEconomiesMixin
 from sim.ledger.api import ChangeStock, PayEdge
 from sim.living_stock.api import ChangeHeld, SmuggleStock, stock_entry, stock_rates
 from sim.living_stock.module import LivingStock
@@ -27,6 +26,8 @@ from sim.polity.api import RaiseScandal
 from sim.tests import module_harness
 from sim.workforce.api import PressLabour
 from sim.foreign_trade.api import CloseMarketsTo, RecordStockTaken
+from sim.foreign_trade.module import ForeignTrade
+from sim.agents.api import GOVERNMENT_PREFIX
 from sim.world.material_units import tonnes_per_unit
 from sim.geography import stock_land
 from sim.geography.api import Geography, open_map, tiles_held
@@ -76,14 +77,18 @@ class StubEconomy:
         return CountryAnswers()
 
 
+class StubbedPartners(ForeignTrade):
+    """The foreign-trade module with the facts of the partner's economy written out: no route, a stated freight."""
+
+    def partner_facts(self, civilization_id):
+        return {"route": None, "freight_per_tonne": 10.0}
+
+
 class Game:
     """Just enough of the game for held stock: the home society is Rome, the partner is Han. `module` is the living-stock
     module whose views are the engine bridge's, read from this stand-in as the bridge reads a game."""
     STATE_CAPACITY_DEFAULT = 0.7
     HOURS_PER_PERSON_YEAR = HOURS_PER_PERSON_YEAR
-    partner_civ = ForeignEconomiesMixin.partner_civ
-    partner_refusal = ForeignEconomiesMixin.partner_refusal
-    partner_government = ForeignEconomiesMixin.partner_government
 
     def __init__(self, capital=1e6, governed=True):
         self.civ = load_civ(HOME)
@@ -103,24 +108,30 @@ class Game:
         if governed:
             home, entries, profiles = cast_from_civilisations(self.civ, [load_civ(PARTNER)])
             seed_cast(self.actors, home, entries, profiles)
+        self.trade = module_harness.build(StubbedPartners, views={
+            "foreign_economy_records": [{"civilization": PARTNER, "enabled": True, "from_year": -1000, "until_year": 3000}],
+            "year": 100, "civilisation": {"id": HOME}, "civilisation_record": load_civ, "partner_reached": lambda civ: True,
+            "legacy_actor_registry": self.actors,
+            "acting_seat": lambda: self.goods_market.acting_party_id,
+            "trader_agent_cost": lambda civilization_id, route: 5.0,
+            "cargo_lost_share": lambda route, material=None, civilization_id=None, demand=None: 0.1})
         views = {
             "goods_stock": lambda key: self.ledger.get(key, 0.0), "material_commodity": lambda material: material,
             "stock_land": lambda: bridge.stock_land(self), "year": 100, "acting_balance": lambda: self.purse.capital,
             "endemic_stock_loss": lambda place, species: bridge.endemic_stock_loss(self, place, species),
             "nursery_room_units": lambda *arguments: bridge.nursery_room_units(self, *arguments),
             "hour_wage": lambda trade: bridge.hour_wage(self, trade), "can_pay": self.purse.can_pay,
-            "partners": lambda: bridge.partners(self), "partner": lambda civ: bridge.partner(self, civ),
-            "partner_refusal": lambda civ, material: bridge.partner_refusal(self, civ, material),
-            "partner_gate": lambda civ: bridge.partner_gate(self, civ),
-            "partner_carry": lambda civ, material: bridge.partner_carry(self, civ, material),
+            "partners": self.trade.partners, "partner": self.trade.partner,
+            "partner_refusal": self.trade.partner_refusal, "partner_gate": self.trade.partner_gate,
+            "partner_carry": self.trade.partner_carry,
             "partner_catch_chance": lambda civ, share: bridge.partner_catch_chance(self, civ, share)}
         answers = {
             ChangeStock: lambda command: apply_to_own_stock(self, command),
             PayEdge: lambda command: self.purse.pay(command.amount, command.purpose),
             PressLabour: lambda command: bridge.press_labour(self, command),
             RaiseScandal: lambda command: bridge.raise_scandal(self, command),
-            CloseMarketsTo: lambda command: bridge.close_markets_to(self, command),
-            RecordStockTaken: lambda command: bridge.record_stock_taken(self, command)}
+            CloseMarketsTo: self.trade.apply_close_markets_to,
+            RecordStockTaken: self.trade.apply_record_stock_taken}
         self.module = module_harness.build(LivingStock, views=views, answers=answers, world=LivingStockWorld())
         self.module.clock.act_as("founder")
 
@@ -146,21 +157,11 @@ class Game:
     def _material_opening_stock(self):
         return self.opening
 
-    def foreign_economies(self):
-        return [PARTNER]
+    def partner_government(self, civilization_id):
+        return self.actors.get(GOVERNMENT_PREFIX + civilization_id)
 
-    def partner_countries(self):
-        return [PARTNER]
-
-    def partner_gate_refusal(self, civilization_id):
-        return None
-
-    def _foreign_economy_facts(self, civilization_id):
-        return {"route": None, "freight_per_tonne": 10.0}
-
-    def view(self, name):
-        return {"trader_agent_cost": lambda civilization_id, route: 5.0,
-                "cargo_lost_share": lambda route, material=None, civilization_id=None, demand=None: 0.1}[name]
+    def partner_refusal(self, civilization_id, material):
+        return self.trade.partner_refusal(civilization_id, material)
 
 
 # ---- the stock stands on a tile of the holder's -----------------------------------------------

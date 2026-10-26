@@ -9,7 +9,7 @@ import unittest
 
 from sim.coin.module import Coin
 from sim.coin.state import CoinWorld
-from sim.engine.foreign_actor_trade import ForeignActorTradeMixin
+from sim.foreign_trade.module import ForeignTrade
 from sim.labour.labour_wages import WagesMixin
 from sim.reporting.api import ReportingWorld
 from sim.reporting.module import Reporting
@@ -82,16 +82,14 @@ class StockBoundTests(unittest.TestCase):
         self.assertAlmostEqual(market.clear_market(conditions).price_ratio, 0.2, places=3)
 
 
-class PartnerBookStub(ForeignActorTradeMixin, StubGame):
-    def _commodity_ledger(self):
-        return types.SimpleNamespace(commodities={"widget": {"price_floor_factor": 0.99, "price_ceiling_factor": 3.0}})
-
-
 class PartnerFloorTests(unittest.TestCase):
     def test_a_partners_book_uses_the_running_share_floor(self):
-        game = PartnerBookStub(works_entry())
+        game = StubGame(works_entry())
+        partner_books = module_harness.build(ForeignTrade, views={
+            "market_floor_ratio": game._floor_ratio,
+            "commodity_record": {"widget": {"price_floor_factor": 0.99, "price_ceiling_factor": 3.0}}})
         entry = {"reference_tonnes": 10.0, "capacity_tonnes": 100.0, "stock_tonnes": 0.0}
-        outcome = game._partner_outcome(entry, "widget", 0.0, 0.0)
+        outcome = partner_books._partner_outcome(entry, "widget", 0.0, 0.0)
         self.assertAlmostEqual(outcome.price_ratio, game.commodity_floor_ratio("widget"), places=3)
         self.assertLess(outcome.price_ratio, 0.99)
 
