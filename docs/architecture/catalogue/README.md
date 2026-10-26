@@ -105,7 +105,7 @@ A class split across modules is listed with the number of its methods each modul
 | `ProducerCostsMixin` | `sim/engine/producer_costs.py` | `prices` (8) |
 | `FogMixin` | `sim/engine/fog.py` | `knowledge` (10, moved), `hazards` (2) |
 | `GeographyPortMixin` | `sim/engine/geography_port.py` | `land` (2) |
-| `DiseasePortMixin` | `sim/engine/disease_port.py` | `disease` (8) |
+| `DiseasePortMixin` (moved, `sim/engine/disease_port.py` is gone) | `sim/disease/` | `disease` (8) |
 | `LabourPortMixin` | `sim/engine/labour_port.py` | `workforce` (1) |
 | `ProjectsMixin` | `sim/engine/projects.py` | `projects` (0) |
 | `BlockersMixin` | `sim/engine/blockers.py` | `projects` (6) |

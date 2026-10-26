@@ -1,4 +1,4 @@
-"""A provider's deaths reach the population step: `DiseasePortMixin.epidemic_year`, the year's epidemic deaths handed to the
+"""A provider's deaths reach the population step: `DiseaseForwardsMixin.epidemic_year`, the year's epidemic deaths handed to the
 step, adds what the registered externality providers say, band by band. The registry's own arithmetic is test_externalities;
 the yield factor reaching land-bound producers is test_externality_pooled_harvest. A stand-in carries only what the method
 reads."""
@@ -6,27 +6,26 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import disease_port, externalities
+from sim.disease.api import HitSeatsWithEpidemic, RunEpidemicYear
+from sim.engine import externalities
+from sim.engine.forward_disease import DiseaseForwardsMixin
 
 
-class Epidemics(disease_port.DiseasePortMixin):
+class Epidemics(DiseaseForwardsMixin):
     """A game whose own epidemics killed a fixed number, and which records the deaths its seats were cut by."""
 
     def __init__(self, deaths):
         self.deaths = deaths
         self.cut_seats_by = None
 
-    def disease_year(self, food, year):
-        return dict(self.deaths)
+    def send(self, command):
+        if isinstance(command, RunEpidemicYear):
+            return dict(self.deaths)
+        assert isinstance(command, HitSeatsWithEpidemic)
+        self.cut_seats_by = dict(command.deaths_by_band)
 
-    def epidemic_hits_seats(self, deaths_by_band, year):
-        self.cut_seats_by = dict(deaths_by_band)
-
-    def _disease_burden(self):
-        return 1.0
-
-    def endemic_death_rates(self):
-        return {"children": 0.0}
+    def view(self, name):
+        return {"disease_burden": lambda: 1.0, "endemic_death_rates": lambda: {"children": 0.0}}[name]
 
 
 class ExternalityDeathsTests(unittest.TestCase):

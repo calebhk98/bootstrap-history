@@ -17,7 +17,7 @@ topic_rules = [("steps", r"^(core_step_phases|step_phase_|year_run|shock_year|co
     ("economy_port", r"^economy_port"), ("economy_old", r"^economy"),
     ("labour", r"^(labour_port|staff|projects_staffing|payroll|apprentice)"),
     ("geography", r"^(geography_port|ways|works|held_works|colonies|mine_|food_|soil_|regional_|urban_|demographic)"),
-    ("society", r"^(society|interest_groups|legitimacy|benefactions|hazard_|visibility|world_hazards|campaign|revolt|captives|disease_port)"),
+    ("society", r"^(society|interest_groups|legitimacy|benefactions|hazard_|visibility|world_hazards|campaign|revolt|captives|forward_disease)"),
     ("living_stock", r"^(living_stock|food_relief|defence_stores)"), ("mods", r"^(mods|mod_)"),
     ("properties", r"^core_properties"), ("mechanics", r"^(mechanics|techniques|material_|capability)")]
 def topic(klass):

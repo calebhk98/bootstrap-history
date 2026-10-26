@@ -343,7 +343,7 @@ def _import_declaring_modules():
                    "sim.labour.learning_curve",
                    "sim.disease.numerics",
                    "sim.disease.nation_tuning",
-                   "sim.engine.disease_port",
+                   "sim.disease.module",
                    "sim.engine.projects",
                    "sim.unit_conversions",
                    "sim.world.agriculture",

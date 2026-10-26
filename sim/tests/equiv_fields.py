@@ -90,6 +90,9 @@ RELOCATIONS = [
     ("/seats/*/modules/polity/said_requisition", "/seats/*/household/_said_requisition"),
     ("/seats/*/modules/polity/said_notice_approach", "/seats/*/household/_said_notice_approach"),
     ("/seats/*/modules/polity/said_confiscation_band", "/seats/*/household/_said_confiscation_band"),
+    ("/modules/disease/records", "/disease/records"),
+    ("/modules/disease/introduced", "/disease/introduced"),
+    ("/modules/disease/deaths", "/disease/deaths"),
 ]
 
 IGNORED = [

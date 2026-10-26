@@ -5,7 +5,6 @@ from sim.constants import declare
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from . import money_units
 from .mortality_shock import cut_cohorts
-from .disease_burden import burden_from_holdings
 from .wage_scarcity import wage_index_of
 from sim.engine.state import SimulationState, ActiveProjectState
 from sim.engine.state_seat import bind_seat
@@ -46,7 +45,7 @@ from .forward_prices import ForwardPricesMixin
 from .fog import FogMixin
 from .forward_mechanics import ForwardMechanicsMixin
 from .forward_knowledge import ForwardKnowledgeMixin
-from .disease_port import DiseasePortMixin
+from .forward_disease import DiseaseForwardsMixin
 from .geography_port import GeographyPortMixin
 from .labour_port import LabourPortMixin
 from .projects import ProjectsMixin
@@ -95,7 +94,7 @@ class Sim(
         ForwardPricesMixin,
         FogMixin,
         GeographyPortMixin,
-        DiseasePortMixin,
+        DiseaseForwardsMixin,
         LabourPortMixin,
         ProjectsMixin,
         SeatMixin,
@@ -607,38 +606,6 @@ class Sim(
         return (population.children * self._demography.CHILD_CALORIE_EQUIVALENT
                 + population.working_age
                 + population.elderly * self._demography.ELDERLY_CALORIE_EQUIVALENT)
-
-    def _disease_burden(self):
-        """WIRING ONE (Complaints/closed/47-technology-cannot-stop-people-dying-
-        young.md): this civilisation's CURRENT disease burden, 1.0 being
-        the full pre-industrial infectious environment sim/world/
-        self._demography.py already assumes by default, 0.0 being clean water,
-        sanitation, germ-theory hygiene and vaccination all present -
-        `self._demography.py`'s own module docstring names the derivation this
-        reuses rather than inventing: sum the `population` weights of
-        whichever of `DISEASE_BURDEN_TECH_IDS` (above) this civilisation
-        currently holds (`self.has`, which `starting_techs` and completed
-        nodes both feed - see Household.__init__'s own comment), and
-        express that as a fraction of ALL EIGHT unlocked (rather than
-        hardcoding the 0.15 those eight happen to sum to today, so this
-        stays correct if `_TECH_EFFECTS.json` ever reweights them):
-
-            disease_burden = 1.0 - unlocked_weight / total_weight
-
-        Read fresh every call from `self.has(...)`: a standing fact about
-        this civilisation ("it now boils its water"). Food technologies act
-        through the farming technique instead (see `_farming_technique`).
-
-        Clamped to [0, 1] defensively (a total of exactly 0.15 measured
-        directly against `_TECH_EFFECTS.json` today makes this unreachable
-        in practice, but a future edit to that file changing the eight
-        weights' sum should not be able to hand `self._demography.Population.
-        step` a burden outside the range it declares valid).
-        """
-        tech_ids = self.DISEASE_BURDEN_TECH_IDS
-        return burden_from_holdings(
-            {tech_id: self._tech_effects[tech_id].get("population", 0.0) for tech_id in tech_ids},
-            {tech_id: self.disease_burden_held(tech_id) for tech_id in tech_ids})
 
     def _refresh_demographic_indexes(self, year):
         """Say why the wage bill moved, if it moved enough to be worth

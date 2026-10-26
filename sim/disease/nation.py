@@ -1,6 +1,6 @@
 """One nation's disease year over three age bands, for any country that holds its people that way.
 
-The home nation (`sim/engine/disease_port.py`) and each foreign country (`sim/agents/country_disease.py`) call
+The home nation (the disease module, `sim/disease/module.py`) and each foreign country (`sim/agents/country_disease.py`) call
 the same functions; the caller supplies the people, the food, the state to rewrite and the tuning numbers.
 """
 import math

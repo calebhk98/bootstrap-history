@@ -5,10 +5,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
-from unittest import mock
 
-from sim.engine import core
-from sim.engine.core import Sim
 from sim.seats.api import SeatsSeat
 from sim.seats.module import Seats
 from sim.knowledge import rules as knowledge_rules
@@ -114,16 +111,6 @@ class DiseaseBurdenTests(unittest.TestCase):
     def test_the_disease_technologies_are_exactly_the_nodes_declaring_the_burden(self):
         module = mechanics_over({"germ": node({"disease_burden": {}}), "well": node({"disease_burden": {}}), "plain": node({})})
         self.assertEqual(tuple(module.mechanic("disease_burden")), ("germ", "well"))
-
-    def test_the_burden_is_worked_from_those_nodes_weights_and_holdings(self):
-        standin = types.SimpleNamespace(
-            DISEASE_BURDEN_TECH_IDS=("germ", "well"),
-            _tech_effects={"germ": {"population": 0.05}, "well": {}},
-            disease_burden_held=lambda tech_id: {"germ": 1.0, "well": 0.25}[tech_id])
-        with mock.patch.object(core, "burden_from_holdings", return_value=0.4) as worked:
-            burden = Sim._disease_burden(standin)
-        worked.assert_called_once_with({"germ": 0.05, "well": 0.0}, {"germ": 1.0, "well": 0.25})
-        self.assertEqual(burden, 0.4)
 
 
 if __name__ == "__main__":

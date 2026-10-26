@@ -17,13 +17,6 @@ class CoverageMixin:
         """Ids of the works that declare `coverage`."""
         return self.nodes_with_mechanic("coverage")
 
-    def disease_burden_held(self, node_id):
-        """The share of a `disease_burden` node's weight that counts: all of it once built, or, for a work that
-        declares `coverage`, the share of the people it serves while it is open."""
-        if not self.has(node_id):
-            return 0.0
-        return self.coverage_share(node_id) if node_id in self.coverage_nodes() else 1.0
-
     def people_per_unit(self, node_id):
         """How many people one unit of the work serves: its yearly staff hours over the hours each person needs."""
         spec = self.mechanic(node_id, "coverage")
