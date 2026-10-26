@@ -85,7 +85,7 @@ class _Host(ForwardMechanicsMixin):
             counter_supply_gap=lambda node_id, kind, label: self.counter_supply_gap(node_id, kind, label),
             civ_diffusion=self.civ_diffusion)
         self.defence = module_harness.build(DefenceStores, views={
-            "tree": self.nodes.get, "techniques_done": lambda: self.state.projects.done,
+            "tree": self.nodes.get, "techniques_held": lambda: self.state.projects.done,
             "operating": lambda: self.state.projects.operating, "is_venture": self.is_venture,
             "staff": lambda: {"employees": self.state.household.employees},
             "stock_held": self.stock_held, "year": lambda: self.state.scenario.year,

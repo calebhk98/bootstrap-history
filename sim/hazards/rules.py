@@ -104,16 +104,6 @@ def closure_words(record: Optional[Dict[str, Any]], reason_words: Dict[str, str]
 
 # ---- the corpus: what a sack can take ----
 
-def corpus_hedge(tiers: Iterable[Tuple[str, float, float]], held: Any, none_chance: float, none_fraction: float
-		) -> Tuple[float, float, Optional[str]]:
-	"""(loss_chance, fraction_lost, hedge_name) a sacking faces: the first corpus tier whose node is held, else the
-	unhedged figures."""
-	for node_id, loss_chance, fraction_lost in tiers:
-		if node_id in held:
-			return loss_chance, fraction_lost, node_id
-	return none_chance, none_fraction, None
-
-
 def losable_after_roll(losable: List[str], fraction: float) -> int:
 	"""How many of the losable technologies a sack that takes any takes (at least one)."""
 	return max(1, int(len(losable) * fraction))

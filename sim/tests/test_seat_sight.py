@@ -11,12 +11,18 @@ from .harness import check
 from sim.agents import licence
 from sim.agents.api import Household, HouseholdParty, OBSERVATION_RANGE_KM, PLAYER_VISIBLE_EXPOSURE, SECRET_EXPOSURE
 from sim.engine import seat_builds
+from sim.knowledge.rules import earliest_done_year as _earliest
 from sim.engine.agents_port import SimWorld
 from sim.engine.agents_port_household import HouseholdPort
 from sim.engine.seat_sight import nodes_heard_of
 from sim.engine.state import FounderState, HouseholdState, ProjectsState
 from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
 from sim.engine.visibility import base_visibility, most_open_mode, seen_from
+
+
+def earliest_done_year(seats, node_id, default):
+    return _earliest([(seat.projects.done, seat.projects.done_year) for seat in seats.values()], node_id, default)
+
 
 # ---- pure visibility
 check("a published invention shows in full, a secret by its leak over its difficulty",
@@ -50,10 +56,10 @@ check("what a seat built excludes what its country already had",
 check("the society counts every seat's work, a node built by the second seat alone included",
       seat_builds.built_by_any(seats) == {"lathe", "loom", "kiln"}, None)
 check("the society copies from whichever seat finished it first",
-      seat_builds.earliest_done_year(seats, "lathe", 200) == 120 and seat_builds.earliest_done_year(seats, "kiln", 200) == 200, None)
+      earliest_done_year(seats, "lathe", 200) == 120 and earliest_done_year(seats, "kiln", 200) == 200, None)
 second.projects.done.add("lathe")
 second.projects.done_year = {"lathe": 110}
-check("a node both built is as old as the earlier maker's", seat_builds.earliest_done_year(seats, "lathe", 200) == 110, None)
+check("a node both built is as old as the earlier maker's", earliest_done_year(seats, "lathe", 200) == 110, None)
 second.projects.done.discard("lathe")
 check("what one seat has revealed is not what another has", first.projects.revealed is not second.projects.revealed, None)
 

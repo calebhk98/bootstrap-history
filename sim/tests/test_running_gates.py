@@ -15,7 +15,7 @@ from unittest import mock
 from sim.engine import validate_running_gates
 from sim.engine.projects_capability import CapabilityMixin
 from sim.engine.projects_running_gates import RunningGatesMixin, check_running_gates
-from sim.engine.fog import FogMixin
+from sim.knowledge import rules as knowledge_rules
 from sim.engine.projects_staffing import StaffingMixin
 from sim.tests import event_stand_in
 
@@ -32,7 +32,7 @@ def _nodes():
     }
 
 
-class _Host(RunningGatesMixin, CapabilityMixin, StaffingMixin, FogMixin):
+class _Host(RunningGatesMixin, CapabilityMixin, StaffingMixin):
     send = event_stand_in.send
     fog = False
 
@@ -162,10 +162,9 @@ class ReliedOnWorkTests(unittest.TestCase):
 
     def test_the_road_to_the_goal_no_longer_shields_a_work_others_rely_on(self):
         host = _host()
-        for node in host.nodes.values():
-            node["cat"] = "nowhere"
-        self.assertFalse(host.never_abandon(GRID))
-        self.assertTrue(host.never_abandon(TRAM))
+        for node_id, expected in ((GRID, False), (TRAM, True)):
+            self.assertEqual(knowledge_rules.never_abandon(False, host.relied_on_running(node_id), host.on_road_to_goal(node_id)),
+                             expected)
 
 
 class ValidationTests(unittest.TestCase):

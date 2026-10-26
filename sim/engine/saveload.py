@@ -7,7 +7,7 @@ from sim.refusal import Refusal, cause_of
 
 from .data import WAGES
 from . import game_assembly
-from .save_fog import fog_mismatch
+from sim.knowledge.api import fog_mismatch
 from .rng_record import restore_rng, rng_record
 from sim.engine.state import (
     SAVE_FIELDS,  # noqa: F401 - compatibility export used by protocol.py

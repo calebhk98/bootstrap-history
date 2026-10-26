@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.engine.economy_materials import MaterialSupplyMixin
-from sim.engine.shortage_sizing import auto_mine_affordable_tonnes, auto_mine_order_tonnes
+from sim.resources.sizing import auto_mine_affordable_tonnes, auto_mine_order_tonnes
 
 RICH = 1e12
 CAPEX = 100.0

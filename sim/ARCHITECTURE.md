@@ -36,6 +36,7 @@ docstring first line.
 | Labour port | `labour_port`, `staff_replacement`, `projects_staffing*` |
 | Geography port | `geography_port`, `ways`, `works`, `held_works`, `colonies`, `mine_deposits` |
 | Society and groups | `society*`, `interest_groups`, `legitimacy`, `benefactions`, `visibility` (hazards are `sim/hazards/`) |
+| Geography port | `geography_port`, `ways`, `works`, `held_works`, `colonies` |
 | Living stock | `living_stock*`, `food_relief`, `defence_stores` |
 | Mods | `mods*`, `mod_*`, `actor_kinds_data` |
 | Data loading and validation | `data`, `tree_source`, `tree_merge`, `catalog`, `validate_*`, `*_check` |

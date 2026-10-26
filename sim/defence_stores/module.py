@@ -24,7 +24,7 @@ class DefenceStores(Module):
         shut always."""
         operating = self.needs.operating()
         claims = {}
-        for node_id in sorted(self.needs.techniques_done()):
+        for node_id in sorted(self.needs.techniques_held()):
             node = self.needs.tree[node_id]
             if not node or not node.get("garrison"):
                 continue
@@ -52,7 +52,7 @@ class DefenceStores(Module):
     def draw_defence_stores(self, year):
         """Spend each built counter's `draws` from the ledger in a year a threat of its kind is live."""
         live = self.needs.live_hazard_kinds(year)
-        for node_id in sorted(self.needs.techniques_done()):
+        for node_id in sorted(self.needs.techniques_held()):
             for counter in ((self.needs.tree[node_id].get("mechanics") or {}).get("hazard_counters") or ()):
                 if counter["kind"] not in live:
                     continue

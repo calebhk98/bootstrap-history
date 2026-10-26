@@ -6,10 +6,10 @@ catalogued under (docs/architecture/catalogue)."""
 from sim.assembly.api import QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.coin.api import PlunderHousehold
 from sim.demography.api import CutPopulation, KillPeople, RefreshDemographicIndexes
-from sim.knowledge.api import ForgetTechniques
+from sim.knowledge.api import ForgetTechnique
 from sim.ledger.api import PayEdge
 from sim.polity.api import RaiseScandal, ScaleProtection, ShiftValueWeight
-from sim.projects.api import ResetProjectProgress
+from sim.projects.api import ResetProjectProgress, ShutForgotten
 from sim.reporting.api import ErodeMoney, RecordEvent
 from sim.workforce.api import NoteWageShock, ReportStaffReduction, ScaleDeputies, SurviveStaff
 
@@ -22,7 +22,7 @@ READS_BY_OWNER = {
 	         "effective_hazard"),
 	"seats": ("seat_list", "ended_seats", "founder", "goal", "automation"),
 	"knowledge": ("techniques_held", "techniques_granted", "tree", "tree_nodes", "visible_to_player", "losable_node_ids",
-	              "tree_closure", "critical_path"),
+	              "tree_closure", "critical_path", "corpus_hedge"),
 	"mechanics": ("hazard_counter_rows", "corpus_hedge_tiers", "corpus_nodes", "mechanic", "running_mechanics"),
 	"production": ("running",),
 	"projects": ("start_check", "project_cost", "active_projects", "closure_record", "closed_by_choice"),
@@ -57,7 +57,6 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("hazard_timeline", "hazard_timeline", **_QUOTE),
 		ViewSpec("staff_loss_exposure", "staff_loss_exposure", **_QUOTE),
 		ViewSpec("national_public_health_sources", "national_public_health_sources", **_QUOTE),
-		ViewSpec("corpus_hedge", "corpus_hedge", seat_scoped=True, cached=False),
 		ViewSpec("live_hazard_kinds", "live_hazard_kinds", kind=QUOTE),
 		ViewSpec("disaster_this_year", "disaster", cached=False),
 		ViewSpec("countries_in_game", "countries_in_game", cached=False),
@@ -66,7 +65,7 @@ MODULE_SPECS = (ModuleSpec(
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(PayEdge, PlunderHousehold, ErodeMoney, RecordEvent, RaiseScandal, ScaleProtection, ShiftValueWeight, SurviveStaff,
 	       ScaleDeputies, ReportStaffReduction, NoteWageShock, CutPopulation, RefreshDemographicIndexes, KillPeople,
-	       ForgetTechniques, ResetProjectProgress),
+	       ForgetTechnique, ResetProjectProgress, ShutForgotten),
 	phases=(PhaseHook("dated_shocks", "step_dated_shocks"), PhaseHook("random_events", "step_random_events"),
 	        PhaseHook("world_hazards", "step_world_hazards"), PhaseHook("famine_watch", "step_famine_watch")),
 ),)

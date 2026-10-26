@@ -25,7 +25,7 @@ def _recurring_net(sim):
             "revenue": sim.revenue_capacity(),
             "running costs of concerns": -sim.upkeep(),
             "living costs": -sim.living_cost(),
-            "mine running costs": -sim.mine_operating_cost(),
+            "mine running costs": -sim.view("mine_operating_cost")(),
             "interest on arrears": -interest,
         },
         "drivers": {"price_index": sim.price_index, "wage_index": sim.wage_index},

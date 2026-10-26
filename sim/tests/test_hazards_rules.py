@@ -79,13 +79,6 @@ class DefencesTests(unittest.TestCase):
 
 
 class CorpusTests(unittest.TestCase):
-    TIERS = [("dispersed", 0.2, 0.08), ("written", 0.5, 0.22)]
-
-    def test_the_strongest_corpus_held_is_the_hedge_and_none_leaves_the_unhedged_figures(self):
-        self.assertEqual(rules.corpus_hedge(self.TIERS, {"written"}, 0.8, 0.4), (0.5, 0.22, "written"))
-        self.assertEqual(rules.corpus_hedge(self.TIERS, {"written", "dispersed"}, 0.8, 0.4), (0.2, 0.08, "dispersed"))
-        self.assertEqual(rules.corpus_hedge(self.TIERS, set(), 0.8, 0.4), (0.8, 0.4, None))
-
     def test_a_sack_that_takes_anything_takes_at_least_one(self):
         self.assertEqual(rules.losable_after_roll(["a", "b", "c", "d"], 0.5), 2)
         self.assertEqual(rules.losable_after_roll(["a", "b", "c", "d"], 0.01), 1)

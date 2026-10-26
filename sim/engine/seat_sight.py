@@ -7,6 +7,7 @@ from typing import Any, Callable, Mapping, Set
 
 from sim.agents.api import OBSERVATION_RANGE_KM, PLAYER_VISIBLE_EXPOSURE, SECRET_EXPOSURE
 
+from sim.knowledge.api import RevealNodes
 from .agents_port import SimWorld
 from .state import ProjectsState
 from .visibility import base_visibility, seen_from
@@ -39,7 +40,7 @@ class SeatSightMixin:
                 continue
             distance = self.distance_between_seats(builder_id, observer_id)
             heard |= nodes_heard_of(builder.projects, self.view("disclosures")[builder_id], observer, distance, self.copy_difficulty)
-        observer.revealed.update(heard)
+        self.send(RevealNodes(tuple(sorted(heard))))
         return heard
 
     def distance_between_seats(self, first_id: str, second_id: str) -> float:

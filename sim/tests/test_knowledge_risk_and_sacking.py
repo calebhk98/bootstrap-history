@@ -10,8 +10,11 @@ from .harness import *  # noqa: F401,F403
 from sim.engine import bridge_hazards
 from sim.engine.data import closure
 from sim.engine.forward_mechanics import ForwardMechanicsMixin
-from sim.hazards import constants
-from sim.knowledge.api import ForgetTechniques
+from sim.knowledge import rules as knowledge_rules
+from sim.knowledge.api import (CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE, ForgetTechnique, KnowledgeSeat,
+                               RefreshDoneCaches)
+from sim.knowledge.module import Knowledge
+from sim.projects.api import ShutForgotten
 from sim.reporting.api import RecordEvent
 from sim.tests import hazards_host, module_harness
 
@@ -36,15 +39,20 @@ class _SackGame:
         self.nodes["j"] = {"win_condition": True, "pre": []}
         self.goal = goal
         self.state = types.SimpleNamespace(
-            projects=types.SimpleNamespace(done=set(built), granted=set(granted), operating=set(built), mothballed=set(),
-                                           forgotten={}))
+            projects=types.SimpleNamespace(done=set(built), granted=set(granted), operating=set(built), mothballed=set()))
         self.done_changed = 0
+        self.knowledge = module_harness.build(Knowledge, views={"legacy_projects": self.state.projects},
+                                              answers={RefreshDoneCaches: lambda command: self._done_changed()},
+                                              seat=KnowledgeSeat())
         self.module = hazards_host.build(
-            legacy_dice=_FrontOfTheListRNG(), corpus_hedge_tiers=tiers, techniques_held=self._held,
+            legacy_dice=_FrontOfTheListRNG(),
+            corpus_hedge=lambda: knowledge_rules.corpus_hedge(tiers, self._held, CORPUS_HEDGE_LOSS_CHANCE_NONE,
+                                                              CORPUS_HEDGE_FRACTION_LOST_NONE),
             corpus_nodes=["corpus_dispersed"], mechanic=lambda name: {"corpus_dispersed": {}, "corpus_written": {}},
             goal=lambda: self.goal, tree_nodes=self.nodes, tree_closure=lambda goal_id: closure(self.nodes, goal_id),
             losable_node_ids=lambda keep_dispersed=True: self.losable_node_ids(keep_dispersed),
-            answers={ForgetTechniques: lambda command: bridge_hazards.forget_techniques(self, command)})
+            answers={ForgetTechnique: lambda command: self.knowledge.forget_technique(command),
+                     ShutForgotten: lambda command: bridge_hazards.shut_forgotten(self, command)})
 
     def corpus_is_dispersed(self, node_id):
         return node_id in self._dispersed
@@ -61,11 +69,11 @@ class _SackGame:
 
 # --- the hedge a sacking faces: the strongest corpus held, whether or not it runs.
 check("with no corpus held the undefended chance and fraction apply and no hedge is named",
-      _SackGame().module.corpus_hedge() == (constants.CORPUS_HEDGE_LOSS_CHANCE_NONE, constants.CORPUS_HEDGE_FRACTION_LOST_NONE, None))
+      _SackGame().module.needs.corpus_hedge() == (CORPUS_HEDGE_LOSS_CHANCE_NONE, CORPUS_HEDGE_FRACTION_LOST_NONE, None))
 check("a written corpus held is credited with its own chance and fraction",
-      _SackGame(held=("corpus_written",)).module.corpus_hedge() == (0.5, 0.22, "corpus_written"))
+      _SackGame(held=("corpus_written",)).module.needs.corpus_hedge() == (0.5, 0.22, "corpus_written"))
 check("a dispersed corpus held is credited, and it is the stronger",
-      _SackGame(held=("corpus_written", "corpus_dispersed")).module.corpus_hedge() == (0.2, 0.08, "corpus_dispersed"))
+      _SackGame(held=("corpus_written", "corpus_dispersed")).module.needs.corpus_hedge() == (0.2, 0.08, "corpus_dispersed"))
 
 # --- which technologies a sack can take.
 _built = ("corpus_dispersed", "corpus_written", "a", "b", "c", "d", "e", "f", "g", "j")
@@ -79,29 +87,29 @@ check("...and a dispersed corpus counts when asked for",
 _sacked = _SackGame(built=_built, granted=("a", "b"))
 _sacked.sack(0.5, "corpus_dispersed")
 check("the sack takes the stated fraction of what it can take, and no more",
-      len(_sacked.state.projects.forgotten) == int(6 * 0.5), _sacked.state.projects.forgotten)
+      len(_sacked.knowledge.seat.forgotten) == int(6 * 0.5), _sacked.knowledge.seat.forgotten)
 check("what is forgotten is no longer built, running or mothballed, and is dated",
       all(node_id not in _sacked.state.projects.done and node_id not in _sacked.state.projects.operating
-          and year == 150 for node_id, year in _sacked.state.projects.forgotten.items()), _sacked.state.projects.forgotten)
+          and year == 150 for node_id, year in _sacked.knowledge.seat.forgotten.items()), _sacked.knowledge.seat.forgotten)
 check("a dispersed corpus and inherited technologies survive a sack",
       {"corpus_dispersed", "a", "b"} <= _sacked.state.projects.done, _sacked.state.projects.done)
 check("the built set is told to refresh", _sacked.done_changed == 1)
 _tiny = _SackGame(built=("corpus_written",))
 _tiny.sack(0.01, "corpus_dispersed")
-check("a sack that takes anything takes at least one technology", len(_tiny.state.projects.forgotten) == 1)
+check("a sack that takes anything takes at least one technology", len(_tiny.knowledge.seat.forgotten) == 1)
 _nothing = _SackGame(built=("corpus_dispersed",))
 _nothing.sack(0.5, "corpus_dispersed")
-check("with nothing it can take it forgets nothing and says nothing", not _nothing.state.projects.forgotten
+check("with nothing it can take it forgets nothing and says nothing", not _nothing.knowledge.seat.forgotten
       and not _nothing.lines() and module_harness.sent(_nothing.module) == [])
 
 # --- what the announcement carries.
 _lines = _sacked.lines()
 check("a sack names the technologies it destroyed", len(_lines) == 1 and _lines[0].kind == "knowledge_lost"
-      and sorted(_lines[0].facts["forgotten"]) == sorted(_sacked.state.projects.forgotten), _lines)
+      and sorted(_lines[0].facts["forgotten"]) == sorted(_sacked.knowledge.seat.forgotten), _lines)
 _spared = _SackGame(built=_built, granted=("a", "b"))
 _spared.sack(0.2, "corpus_dispersed")
 check("a sack that does not reach the written corpus never claims the corpus went, nor that it was never dispersed",
-      "corpus_written" not in _spared.state.projects.forgotten and not _spared.lines()[0].facts["corpus_went"]
+      "corpus_written" not in _spared.knowledge.seat.forgotten and not _spared.lines()[0].facts["corpus_went"]
       and not _spared.lines()[0].facts["corpus_never_dispersed"], _spared.lines()[0].facts)
 _undispersed = _SackGame(built=_built, granted=("a", "b"))
 _undispersed.sack(0.5, "corpus_written")

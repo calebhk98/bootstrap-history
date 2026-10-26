@@ -1,1 +1,1 @@
-"""Knowledge: what each seat has built, lost and can see. Only its commands exist here until the module moves."""
+"""The knowledge module: what each seat knows and can see (techniques held, forgotten, heard of) and the tree itself."""

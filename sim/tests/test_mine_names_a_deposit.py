@@ -3,80 +3,64 @@ prospecting finds hidden deposits and the finds are kept; a worked-out deposit c
 QUICK_TOPIC = True
 UNDER_TEST = {"open_mine", "commission_mines"}
 
-import json
-import os
 import types
 import unittest
 
-from sim.engine.economy_mining import MiningMixin
-from sim.engine.state_holdings import HoldingsState
 from sim.geography import api as geography
-from sim.tests import event_stand_in
-
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-def _rome():
-    with open(os.path.join(ROOT, "data", "civilizations", "rome_100ad.json"), encoding="utf-8") as handle:
-        return json.load(handle)
+from sim.ledger.api import PayEdge
+from sim.refusal import Refusal
+from sim.reporting.api import RecordEvent
+from sim.resources.api import DrawDeposit, OpenMine, Prospect
+from sim.resources.state import ResourcesSeat
+from sim.tests import module_harness, resources_stand_in
 
 
-class _Household:
-    def __init__(self, holdings):
-        self._holdings = holdings
-        self.log = []
-        self.capital = 1e15
+class _Host:
+    """The resources module with the figures a mine's price and ceiling would read written out (capex ten, opex one, no
+    ceiling), under the names the tests of mines use: `holdings` is the seat's state, `paid` what it paid."""
+
+    def __init__(self, budget=1e18):
+        self.state = types.SimpleNamespace(scenario=types.SimpleNamespace(year=100))
+        self.module = resources_stand_in.build(budget=budget, views={"year": lambda: self.state.scenario.year})
+        module = self.module
+        module.mine_capex = lambda material: 10.0
+        module.mine_opex = lambda material: 1.0
+        module.mine_land_ceiling = lambda material: 1e12
+        module.mine_trade = lambda: "miner"
+        self.holdings = module.seat
+        self.world_map, self.civ = geography.open_map(), resources_stand_in.rome()
+        self.mine_refusal = None
 
     @property
-    def mines(self):
-        return self._holdings.mines
+    def paid(self):
+        return resources_stand_in.paid(self.module)
 
+    @property
+    def household(self):
+        return types.SimpleNamespace(log=[(self.state.scenario.year, command.text) for command in module_harness.sent(self.module)
+                                          if isinstance(command, RecordEvent)])
 
-class _Market:
-    def quote(self, trade, hours=0.0, employer=None, pay_premium=0.0):
-        return 1.0
+    def open_mine(self, material, tonnes, partial=True, order="", deposit=None):
+        answer = self.module.open_mine(OpenMine(material, tonnes, partial, order, deposit))
+        self.mine_refusal = answer if isinstance(answer, Refusal) and answer.cause == "no_deposit_found" else None
+        return 0.0 if isinstance(answer, Refusal) else answer
 
+    def prospect_deposits(self, tile, material, person_days):
+        answer = self.module.prospect(Prospect(tile, material, person_days))
+        return (False, str(answer)) if isinstance(answer, Refusal) else (True, answer["message"])
 
-class _Host(MiningMixin):
-    """Just enough of Sim to open, commission and draw down mines."""
-    send = event_stand_in.send
-    price_index = 1.0
-    MINE_TRADE = "miner"
+    def draw_deposit(self, deposit_id, tonnes):
+        return self.module.draw_deposit(DrawDeposit(deposit_id, tonnes))
 
-    def __init__(self):
-        self.world_map = geography.open_map()
-        self.civ = _rome()
-        self.holdings = HoldingsState()
-        self.household = _Household(self.holdings)
-        self.state = types.SimpleNamespace(holdings=self.holdings, household=self.household,
-                                           scenario=types.SimpleNamespace(year=100))
-        self.cfg = {"start_year": 100}
-        self.labour = types.SimpleNamespace(labour_market=_Market())
-        self.paid = []
+    def send(self, command):   # the timber commands of the port's hooks: no recipe here fells wood
+        return None
 
-    def _normalize_material_name(self, mat):
-        return mat
+    def view(self, name):
+        return lambda: {}
 
-    def _mine_capex(self, mat):
-        return 10.0
-
-    def _mine_opex(self, mat):
-        return 1.0
-
-    def mining_cost_scale(self, mat):
-        return 1.0
-
-    def mine_land_ceiling(self, mat):
-        return 1e12
-
-    def spending_power(self, kind):
-        return 1e18
-
-    def pay_edge(self, edge, money, text):
-        self.paid.append(money)
-
-    def _farm_year_weather_seed(self, year, region=None):
-        return 17
+    def __getattr__(self, name):
+        return {"mine_yield_t_for": "yield_of"}.get(name) and getattr(self.module, {"mine_yield_t_for": "yield_of"}[name]) \
+            or getattr(self.module, name)
 
 
 class MineNamesADepositTests(unittest.TestCase):
@@ -211,7 +195,7 @@ class ProspectingTests(unittest.TestCase):
         from sim.engine.state import deserialize_state, serialize_state
         self.host.prospect_deposits(self.tile, "coal", 1e9)
         self.host.draw_deposit("anywhere", 3.0)
-        copy = deserialize_state(serialize_state(self.host.holdings), HoldingsState)
+        copy = deserialize_state(serialize_state(self.host.holdings), ResourcesSeat)
         self.assertEqual(copy.deposits_found, self.host.holdings.deposits_found)
         self.assertEqual(copy.deposit_drawn, self.host.holdings.deposit_drawn)
         self.assertEqual(copy.prospected_person_days, self.host.holdings.prospected_person_days)

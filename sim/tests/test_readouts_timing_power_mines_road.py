@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from sim.tests import projects_host
 from sim.engine.completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
 from sim.engine.economy_electricity import ElectricityMixin
-from sim.engine.economy_freight import FreightMixin
+from sim.tests import resources_stand_in
 from sim.engine.fog import FogMixin
 from sim.ui.proto.economy import _power_tiers
 
@@ -134,9 +134,10 @@ class MineAlreadyBeingSunk(unittest.TestCase):
     """Complaints/235: a mine already being sunk is subtracted from the shortfall."""
 
     def _plan(self, tranches, shortfall=100.0):
-        host = SimpleNamespace(MINE_OPEX_MATERIALS=("coal", "lead"), mine_capacity={}, civ={},
-                               state=SimpleNamespace(holdings=SimpleNamespace(mine_tranches=tranches)))
-        return FreightMixin.shortage_remedy_plan(host, "coal", shortfall)
+        module = resources_stand_in.build()
+        module.works_materials = lambda: ("coal", "lead")
+        module.seat.mine_tranches = tranches
+        return module.shortage_remedy_plan("coal", shortfall)
 
     def test_with_nothing_sunk_the_plan_proposes_the_full_mine(self):
         self.assertIn("buy mine coal 100", self._plan([])["commands"])

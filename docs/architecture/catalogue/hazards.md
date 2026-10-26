@@ -11,38 +11,38 @@ sim.hazards import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publishes)
 
 ## What the move changed in this draft
 
-- **Views: fifteen quotes and tables, not four.** The draft grouped the figures into `hazard_figures`, `hazard_relief`, `knowledge_risk`
+- **Views: fourteen quotes and tables, not four.** The draft grouped the figures into `hazard_figures`, `hazard_relief`, `knowledge_risk`
   and `output_factor`. Callers ask for one figure with arguments (the kind of harm, the hazard, the nodes to assume running), so
   each is a quote (`hazard_figure`, `hazard_relief_entries`, `hazard_relief`, `hazard_relief_detail`, `hazard_effect_preview`,
   `hazard_advice`, `hazard_timeline`, `staff_loss_exposure`, `national_public_health_sources`), which never needs a cache and
-  clears the three-caller floor by being a quote. Tables: `output_factor`, `corpus_hedge`, `disaster_this_year`, `countries_in_game`;
+  clears the three-caller floor by being a quote. Tables: `output_factor`, `disaster_this_year`, `countries_in_game`;
   quotes of the log and the calendar: `world_events`, `live_hazard_kinds` (was published by the living-stock bridge, now here).
 - **`knowledge_risk` and `_epidemic_risk` stay in `fog.py`** (the knowledge module owns that file). Nothing in this module calls
   them: the screens and `knowledge_warning` call `sim.knowledge_risk`, which reads this module's figures through the forwarders. They
-  go to whichever module takes `fog.py`; `corpus_hedge` and `losable_node_ids` were their other inputs.
+  go to whichever module takes `fog.py`; `losable_node_ids` was their other input; `corpus_hedge` is the knowledge module's (it moved there first).
 - **Commands applied: three, not two.** `RecordWorldEvent` (the log's one writer; was applied by the campaigns bridge),
   `LoseCapital` (a catastrophe destroys a share of what the acting household holds; the epidemic step and the state's demands still
   call `lose_capital`) and `RecoverOutput` (the year's recovery of the output factor, sent by the money phase). `SetOutputFactor` is
   not a command: the factor falls only inside this module's shocks and rises only by `RecoverOutput`. `RunRandomEvents` is the
   phase `random_events`, not a command.
-- **Commands sent: sixteen, of which eleven are new classes** in the owners' packages and applied by `bridge_hazards.py`: workforce
+- **Commands sent: seventeen, of which eleven are new classes** in the owners' packages and applied by `bridge_hazards.py`: workforce
   `SurviveStaff`, `ScaleDeputies`, `ReportStaffReduction`, `NoteWageShock`; demography `CutPopulation`, `RefreshDemographicIndexes`,
-  `KillPeople`; polity `ScaleProtection`; projects `ResetProjectProgress`; knowledge `ForgetTechniques`; seats `FounderDies`.
+  `KillPeople`; polity `ScaleProtection`; projects `ResetProjectProgress`, `ShutForgotten`; seats `FounderDies`; the knowledge module's `ForgetTechnique` carries the lost nodes.
   The draft's `ChangeStanding` is not one command (the invented command meant different things in two prototypes): scandal is
   `RaiseScandal` (existing), protection is `ScaleProtection`. `LearnTechnique`, `StartProject`, `SetOperating`, `Hire`, `Fire`,
   `CloseWork`, `ChargeTheft` and `PayEdge` as listed in the draft are not sent: the old code never hired, fired or started anything,
   and `ChargeTheft` is `PlunderHousehold`.
-- **`ForgetTechniques` is one batch, not one command per node.** The old loop dropped every node and then told the caches once
-  (`_done_changed()`); the version counter is saved, so a command per node would count differently and fail the equivalence check.
+- **A sack sends `ShutForgotten` (the works stop running or sit shut) and then one `ForgetTechnique` with all the nodes.** The old
+  loop told the caches once; the knowledge module bumps once per command, so one command keeps the saved counter identical.
 - **State: four world fields and one seat field, not two world fields.** `HazardsWorld`: `output_factor`, `world_events`,
   `said_output`, `said_debasement` (the last two were `ScenarioState._said_output` and `_said_debasement`); `HazardsSeat`:
   `last_patron_death` (was `FounderState.last_patron_death`). `_said_condition` stays in `ScenarioState`: the concern levy writes to
   it as well (`legacy_said_once`, a debt). Relocations are in `sim/tests/equiv_fields.py`.
 - **`_catastrophe` is not hazards'.** Nothing in this module calls it; the three callers are in `core_step_phases.py` (denounced, too
   eminent, no successors). It is the seats' command `FounderDies`; `Sim._catastrophe` forwards.
-- **Constants moved with the module** (`sim/hazards/constants.py`): the seventeen declared numbers of the three mixins, the corpus
-  hedge pair and the output recovery rate from `core.py`, and the two own-mine counter shares from `projects_completion.py`
-  (22 `declare` calls, `grep -c "= declare(" sim/hazards/constants.py`).
+- **Constants moved with the module** (`sim/hazards/constants.py`): the seventeen declared numbers of the three mixins, the
+  output recovery rate from `core.py` (the corpus hedge pair went to knowledge), and the two own-mine counter shares from `projects_completion.py`
+  (20 `declare` calls, `grep -c "= declare(" sim/hazards/constants.py`).
   `PATRON_DEATH_COURTING_GIFT` (a descriptor pricing the hours in the coin) is gone: the module multiplies the hours by
   `money_per_labour_hour` and the price index itself, in the old order.
 - **Pure helpers moved in** (`git mv`): `hazard_condition`, `hazard_window`, `hazard_hedge_timing`, `hazard_merge`, `hazard_toll`,
@@ -86,7 +86,6 @@ facts}`, the last `event_log_years_kept` years), `said_output`, `said_debasement
 | `hazard_advice`, `hazard_timeline` | quote | yes | what kind of thing helps, with first steps and lead time; one line per hazard ahead | - |
 | `staff_loss_exposure` | quote | yes | the staff a household loses to one wave | - |
 | `national_public_health_sources` | quote | yes | the medical work that has spread through the country | - |
-| `corpus_hedge` | table | yes | the chance and fraction a sack faces, and the corpus held | no: techniques are written outside commands |
 | `live_hazard_kinds` | quote | no | the kinds of hazard in progress in a year | - |
 | `disaster_this_year` | table | no | this year's dated hazards and what the acting seat's log said of them | no |
 | `countries_in_game` | table | no | the home country and the partners whose people live in the agent economy | no |
@@ -109,7 +108,7 @@ facts}`, the last `event_log_years_kept` years), `said_output`, `said_debasement
 
 `PayEdge` (ledger), `PlunderHousehold` (coin), `ErodeMoney`, `RecordEvent` (reporting), `RaiseScandal`, `ScaleProtection`,
 `ShiftValueWeight` (polity), `SurviveStaff`, `ScaleDeputies`, `ReportStaffReduction`, `NoteWageShock` (workforce), `CutPopulation`,
-`RefreshDemographicIndexes`, `KillPeople` (demography), `ForgetTechniques` (knowledge), `ResetProjectProgress` (projects).
+`RefreshDemographicIndexes`, `KillPeople` (demography), `ForgetTechnique` (knowledge), `ResetProjectProgress`, `ShutForgotten` (projects).
 
 ## Reads
 
@@ -122,7 +121,7 @@ Views of finished modules: `year`, `civilisation`, `seat_list`, `techniques_held
 Published by `bridge_hazards.py` under the name the owner will publish (each is deleted when its owner moves): `events_enabled`,
 `ended_seats`, `founder`, `goal` (seats); `losable_node_ids`, `critical_path`, `tree_closure` (knowledge and the tree); `active_projects`,
 `closure_record`, `closed_by_choice` (projects and ventures); `military_leverage` (polity); `staff_snapshot`, `wage_index`
-(workforce); `mine_capacity` (resources); `country_strata` (actors); `effective_hazard` (the event-cause evaluator, which reads a
+(workforce); `country_strata` (actors); `effective_hazard` (the event-cause evaluator, which reads a
 dozen owners and stays in the engine).
 
 Debts, raw objects or switches the module cannot do without: `legacy_act_as` (the module has no way to switch seats; the world
@@ -131,8 +130,8 @@ phases act as each seat in turn), `legacy_said_once` (the `_said_condition` set 
 ## Forwarders left (`sim/engine/forward_hazards.py`)
 
 `hazard_figure`, `hazard_relief_entries`, `hazard_relief`, `hazard_effect_preview`, `hazard_advice`, `hazard_timeline`,
-`staff_loss_exposure`, `national_public_health_sources`, `corpus_hedge`, `output_floor`, the properties `output_factor` and
-`disaster_this_year`, `check_yearly_world`, `lose_capital`, `apply_staff_survival`, `_surviving_people`, `_catastrophe`, and twelve
+`staff_loss_exposure`, `national_public_health_sources`, `output_floor`, the properties `output_factor` and
+`disaster_this_year`, `check_yearly_world`, `lose_capital`, `apply_staff_survival`, `_surviving_people`, `_catastrophe`, and ten
 constants other code and mods still read off the game. Callers: the screens (`sim/ui`), `fog.py`, `goals.py`,
 `disease_port.py`, `state_demand.py`, `projects_completion.py`, `projects_rebuild.py`, `core.py`, `core_step_phases.py` and the
 `bh_cashshelter_z6f2` mod.

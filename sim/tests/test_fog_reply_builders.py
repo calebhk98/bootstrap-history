@@ -3,7 +3,7 @@ written-out known and hidden nodes and reads the returned values.
 
 Which commands go through the shared filter and which build their own:
 
-Shared filter (`scrub_hidden_ids`, reached through `FogMixin.fog_scrub`; `missing_prereq_message` is the one way to turn a
+Shared filter (`scrub_hidden_ids`, reached through the module's `fog_scrub`; `missing_prereq_message` is the one way to turn a
 missing list into words, tested in test_fog_leak3): `why` (start_blocked_reason and the blockers' text), `bounty`
 (missing_prereq_message), `log` (_log_scrub), and every command that takes an id (the guard in the command dispatch,
 tested in test_fog_reply_rules and test_names_and_fog).
@@ -19,7 +19,9 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine.fog import FogMixin, HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
+from sim.knowledge.api import HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
+from sim.knowledge.module import Knowledge
+from sim.tests import module_harness
 from sim.ui.proto import anatomy, economy, goals_watch, tree_filters
 from sim.ui.proto.dispatch_notes import _entry, _project_name
 from sim.ui.proto.dispatch_options import _fogged
@@ -74,9 +76,10 @@ class SharedFilterTests(unittest.TestCase):
                          "mod:%s and %s" % (HIDDEN, HIDDEN_ID_PLACEHOLDER))
 
     def fog_scrub(self, text, fog=True):
-        game = stand_in(fog=fog)
-        game.state = types.SimpleNamespace(_fog=fog)
-        return FogMixin.fog_scrub(game, text)
+        knowledge = module_harness.build(Knowledge, views={
+            "legacy_fog": fog, "legacy_tree": NODES, "legacy_projects": types.SimpleNamespace(done=set(), active={}, revealed={KNOWN}),
+            "start_check": lambda node_id, ignore_trade, memo, why: (False, None)})
+        return knowledge.fog_scrub(text)
 
     def test_fog_scrub_hides_ids_the_player_has_not_heard_of(self):
         self.assertEqual(seen(self.fog_scrub(self.text())), [])

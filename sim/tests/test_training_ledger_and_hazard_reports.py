@@ -17,7 +17,7 @@ from sim.hazards.hedge_steps import hedge_wants, startable_first
 from sim.projects.api import funding
 year_bill = funding.year_bill
 from sim.engine.revenue_ledger import assemble_ledger
-from sim.engine.starting_techs import declared_starting_techs
+from sim.knowledge.api import declared_starting_techs
 
 
 class ProjectYearTests(unittest.TestCase):

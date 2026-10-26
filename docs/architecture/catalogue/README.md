@@ -35,8 +35,8 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 | 8 | [`finance`](finance.md) | Debt: credit limits, interest, arrears, insolvency, bondage and the capital market. | 7 | 7 | 50 | 7 |
 | 9 | [`foreign_trade`](foreign_trade.md) | Trade with partner countries: their economies, supply, payments in coin, lift capacity, actors' trade books. **Moved** (`sim/foreign_trade/`). | 30 | 8 | 40 | 13 |
 | 10 | [`freight`](freight.md) | Carriage of goods at home and abroad: carriers and their costs, routes, what merchants add, route dues. **Moved** (`sim/freight/`). | 15 | 1 | 50 | 10 |
-| 11 | [`hazards`](hazards.md) | Dated shocks and world hazards, and what counters them: dated and yearly shocks, famine watch, relief, the world event log and the output factor. **Moved** (`sim/hazards/`: 15 views, 3 commands applied, sends 16; see the file). | 15 | 3 | 52 | 7 |
-| 12 | [`knowledge`](knowledge.md) | What each seat knows and can see: techniques held, forgotten, revealed (fog), and the tree itself. | 3 | 3 | 19 | 8 |
+| 11 | [`hazards`](hazards.md) | Dated shocks and world hazards, and what counters them: dated and yearly shocks, famine watch, relief, the world event log and the output factor. **Moved** (`sim/hazards/`: 14 views, 3 commands applied, sends 17; see the file). | 14 | 3 | 52 | 7 |
+| 12 | [`knowledge`](knowledge.md) | What each seat knows and can see: techniques held, forgotten, revealed (fog), and the tree itself. **Moved in part** (`sim/knowledge/`; the held and heard-of records and the tree wait for their writers). | 14 | 4 | 19 | 8 |
 | 13 | [`land`](land.md) | Land and the map: tile ownership, claims, roads and ports, works, colonies, and the geography package. | 7 | 4 | 37 | 12 |
 | 14 | [`ledger`](ledger.md) | Money and goods balances: the one writer of what an actor holds. | 5 | 10 | 10 | 9 |
 | 15 | [`living_stock`](living_stock.md) | Herds and defence stores: holding, growing, buying, smuggling and drawing animals and arms. | 4 | 5 | 45 | 7 |
@@ -48,7 +48,7 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 | 21 | [`production`](production.md) | What runs: operating techniques and capability, revenue and upkeep of concerns, industry experience, techniques in use. | 7 | 4 | 74 | 31 |
 | 22 | [`projects`](projects.md) | The lifecycle of a project: can it start, what it costs, progress, completion and failure. | 8 | 7 | 96 | 15 |
 | 23 | [`reporting`](reporting.md) | Moved: the seat's log, the automation audit trail and the real-output and price-ratio indicators. The warn-once notes are not here (reporting.md says where they go). | 8 | 6 | 21 | 5 |
-| 24 | [`resources`](resources.md) | Extractive resources: mines, deposits, prospecting, forest and nitre beds. | 5 | 4 | 63 | 14 |
+| 24 | [`resources`](resources.md) | Extractive resources: mines, deposits, prospecting, forest and nitre beds, standing timber. **Moved** (`sim/resources/`). | 27 | 10 | 63 | 14 |
 | 25 | [`seats`](seats.md) | Seats and the acting context: who plays, goals and win conditions, the founder's life, dealings between seats. | 6 | 6 | 42 | 8 |
 | 26 | [`stores`](stores.md) | Mod-declared key/value stores (`state.stores`). | 1 | 1 | 1 | 1 |
 | 27 | [`ventures`](ventures.md) | Concerns the seat opens and closes: crews, foremen, staffing closures, quotes and auto-opening. | 4 | 3 | 59 | 19 |
@@ -103,7 +103,7 @@ A class split across modules is listed with the number of its methods each modul
 | `IndustryConcernMixin` | `sim/engine/industry_concern.py` | `production` (4) |
 | `IncumbentPricesMixin` | `sim/engine/incumbent_prices.py` | `prices` (4) |
 | `ProducerCostsMixin` | `sim/engine/producer_costs.py` | `prices` (8) |
-| `FogMixin` | `sim/engine/fog.py` | `knowledge` (10), `hazards` (2) |
+| `FogMixin` | `sim/engine/fog.py` | `knowledge` (10, moved), `hazards` (2) |
 | `GeographyPortMixin` | `sim/engine/geography_port.py` | `land` (2) |
 | `DiseasePortMixin` | `sim/engine/disease_port.py` | `disease` (8) |
 | `LabourPortMixin` | `sim/engine/labour_port.py` | `workforce` (1) |

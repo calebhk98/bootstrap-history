@@ -194,7 +194,7 @@ def _stuck_raw_material(sim):
     if binding and throttle < 0.95:
         return {"what": "a raw material", "kind": "supply",
                 "why": "%s: work is running at %d%% of plan. %s"
-                       % (binding, throttle * 100, sim.shortage_remedy(binding))}
+                       % (binding, throttle * 100, sim.view("shortage_remedy_plan")(binding)["text"])}
     return None
 
 

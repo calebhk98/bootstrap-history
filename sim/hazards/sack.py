@@ -3,13 +3,13 @@
 The dice draws below have an exact place in the sequence `shocks` makes its draws in: the yearly chance of an attack coming
 to nothing, the chance of a sack, and the chance and the sample of the corpus lost.
 
-Needs: legacy_dice, acting_balance, staff, staff_snapshot, active_projects, money_text, corpus_nodes, mechanic, goal,
+Needs: corpus_hedge, legacy_dice, acting_balance, staff, staff_snapshot, active_projects, money_text, corpus_nodes, mechanic, goal,
 tree_nodes, tree_closure, losable_node_ids."""
 from typing import Any, Dict, List
 
 from sim.coin.api import PlunderHousehold
-from sim.knowledge.api import ForgetTechniques
-from sim.projects.api import ResetProjectProgress
+from sim.knowledge.api import ForgetTechnique
+from sim.projects.api import ResetProjectProgress, ShutForgotten
 from sim.reporting.api import RecordEvent
 from sim.workforce.api import ReportStaffReduction, ScaleDeputies, SurviveStaff
 
@@ -61,7 +61,7 @@ class Sack:
 		name = hazard.get("name", "crisis")
 		self.needs.send(RecordEvent.of("site_sacked", "%s: a site is sacked - %s" % (name, ", ".join(took) or "you had nothing it could take"),
 		                               hazard=name, took_nothing=not took, people_gone=round(people_before - people_after, 2)))
-		loss_probability, fraction, hedge_before = self.corpus_hedge()
+		loss_probability, fraction, hedge_before = self.needs.corpus_hedge()
 		if dice.random() < loss_probability:
 			self.sack_corpus_loss(year, fraction, hedge_before)
 
@@ -71,7 +71,8 @@ class Sack:
 		losable = self.needs.losable_node_ids()
 		if losable:
 			drop = self.needs.legacy_dice().sample(losable, rules.losable_after_roll(losable, fraction))
-			self.needs.send(ForgetTechniques(tuple(drop), year))
+			self.needs.send(ShutForgotten(tuple(drop)))
+			self.needs.send(ForgetTechnique(tuple(drop), year=year))   # dated, for rebuilding
 			self.log_corpus_loss(drop, hedge_before)
 
 	def best_corpus_node(self) -> Any:

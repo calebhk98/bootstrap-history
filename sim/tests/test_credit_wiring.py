@@ -21,13 +21,16 @@ class Household(CreditMixin):
         self.civ = {"starting_interest_rate": 0.1}
         self.state = types.SimpleNamespace(
             household=types.SimpleNamespace(capital=capital, reputation=0.0, insolvent_years=STALL_MINIMUM_INSOLVENT_YEARS),
-            holdings=types.SimpleNamespace(forest_ha=0.0), projects=types.SimpleNamespace(operating=set()),
+            projects=types.SimpleNamespace(operating=set()),
             acting_seat="founder")
         self.nodes = {}
         self.labour = types.SimpleNamespace(money_per_labour_hour=lambda: 2.0)
 
     def credit_limit(self, _rev=None, _upkeep=None, _capital=None):
         return self.line
+
+    def view(self, name):   # no woodland held
+        return lambda: 0.0
 
 
 class SpendingPower(unittest.TestCase):

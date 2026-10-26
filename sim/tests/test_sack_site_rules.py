@@ -34,8 +34,7 @@ class SackedHousehold:
         self.module = hazards_host.build(
             legacy_dice=self.dice, staff=lambda: {"scholars": self.household.scholars, "artisans": self.household.artisans,
                                                   "employees": self.household.employees},
-            acting_balance=lambda: self.household.capital, corpus_hedge_tiers=[("corpus_written", corpus_chance, 0.5)],
-            techniques_held={"corpus_written"},
+            acting_balance=lambda: self.household.capital, corpus_hedge=(corpus_chance, 0.5, "corpus_written"),
             answers={SurviveStaff: lambda command: bridge_hazards.survive_staff(game, command)})
         self.corpus_loss_asked = []
         self.module.sack_corpus_loss = lambda year, fraction, hedge: self.corpus_loss_asked.append((year, fraction, hedge))

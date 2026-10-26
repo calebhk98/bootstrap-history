@@ -20,7 +20,8 @@ def material_game():
         annual_material_demand=lambda: {}, _demand_by_supply_tag=lambda demand: {},
         demand_and_own_supply_by_material=lambda by_tag: {"iron": (300.0, 500.0), "copper": (900.0, 100.0)},
         _material_market_tonnes=lambda material: 50.0, material_shortfall_t=lambda material, by_tag: 0.0,
-        _own_material_supply=lambda tag: 70.0, mine_capacity={"coal": 1.0}, mine_depletion_note=lambda material: None)
+        _own_material_supply=lambda tag: 70.0,
+        view=lambda name: {"mine_capacity": lambda: {"coal": 1.0}, "mine_depletion_note": {"coal": None}}[name])
 
 
 def power_game(visible, built=(), total_kw=0.0, demand_kw=0.0):

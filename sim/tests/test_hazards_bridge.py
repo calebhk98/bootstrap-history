@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 from sim.demography.api import CutPopulation, RefreshDemographicIndexes
 from sim.engine import bridge_hazards
-from sim.knowledge.api import ForgetTechniques
+from sim.projects.api import ShutForgotten
 from sim.polity.api import ScaleProtection
 from sim.projects.api import ResetProjectProgress
 from sim.reporting.api import RecordEvent
@@ -39,13 +39,11 @@ class Writes(unittest.TestCase):
         bridge_hazards.scale_protection(game, ScaleProtection(0.5))
         self.assertEqual((game.state.household.directors_extra, game.state.household.protection), (2.0, 0.4))
 
-    def test_forgotten_techniques_leave_every_set_are_dated_and_the_caches_told_once(self):
-        projects = SimpleNamespace(operating={"a", "b"}, done={"a", "b", "c"}, mothballed={"a"}, forgotten={})
-        told = []
-        game = SimpleNamespace(state=SimpleNamespace(projects=projects), _done_changed=lambda: told.append(1))
-        bridge_hazards.forget_techniques(game, ForgetTechniques(("a", "b"), 150))
-        self.assertEqual((projects.operating, projects.done, projects.mothballed), (set(), {"c"}, set()))
-        self.assertEqual((projects.forgotten, told), ({"a": 150, "b": 150}, [1]))
+    def test_works_of_forgotten_techniques_are_no_longer_running_or_shut(self):
+        projects = SimpleNamespace(operating={"a", "b", "c"}, mothballed={"a", "c"})
+        game = SimpleNamespace(state=SimpleNamespace(projects=projects))
+        bridge_hazards.shut_forgotten(game, ShutForgotten(("a", "b")))
+        self.assertEqual((projects.operating, projects.mothballed), ({"c"}, {"c"}))
 
     def test_every_project_in_hand_goes_back_to_the_beginning(self):
         active = {"b": {"ph_left": 1.0, "yrs": 3.0}, "a": {"ph_left": 2.0, "yrs": 1.0}}

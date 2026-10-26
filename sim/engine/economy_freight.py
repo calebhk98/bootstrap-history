@@ -4,9 +4,9 @@ shortage of it tells the player.
 material_price_factor() reads the demand grouping _cached_material_demand()/_cached_demand_by_tag() prepare, times the
 freight markup the freight module publishes (`material_freight_factor`). Covers, in addition:
 _demand_by_emp_key()/material_market_factor()/material_market_summary() (the price a project actually pays, and the
-report of it); wire_chain_report() (the wire-specific worked example); build_nitre() (buying down a saltpetre
-shortage, the one material this file's own MARKET_SHARE holds at zero because there is no open market for it); and
-shortage_remedy() (what a player is told when something is binding).
+report of it); wire_chain_report() (the wire-specific worked example); and material_shortfall_t() (the tonnes
+a year neither the seat's workings nor the market cover). What would end a shortage is the resources module's
+(`shortage_remedy_plan`).
 
 FreightMixin is composed into EconomyMixin (economy.py) alongside the other economy sub-mixins. Carriage itself
 (routes, carriers, dues) is the freight module (sim/freight/).
@@ -15,18 +15,9 @@ _cached_material_demand()/_cached_demand_by_tag() live here, not in economy_elec
 lives in THIS file. resource_throttle() in economy_electricity.py only WRITES the cache these two read
 (self.household._material_demand_cache); it never calls either.
 """
-import math
-
 from . import commodities as _commod
 from sim.constants import declare
-from . import money_units
-from . import purchase_rule
 from .material_scarcity import scarcity_factor
-from .units_prose import area_text, mass_per_area_text, mass_rate_text, money_text
-from .shortage_sizing import mine_shortfall_after_sinking, mine_size_tonnes, nitre_bed_square_metres, nitre_deficit_tonnes
-from sim.unit_conversions import KILOGRAMS_PER_TONNE
-
-from sim.agents.api import edges
 
 
 class FreightMixin:
@@ -264,61 +255,6 @@ class FreightMixin:
         ledger = _commod.CommodityLedger(supply_override={"copper": supply_t})
         return ledger.propagate_demand("copper_wire", max(0.0, float(wire_t_per_yr)))
 
-    # Two denarii the square metre, which is the figure step() has always used
-    # (spend / 2.0) written down where a quote can read it. A nitre bed is a
-    # heap of dung, straw and ash turned for two years; it is cheap to lay and
-    # slow to yield, which is exactly why nobody builds one until they are
-    # already short.
-    NITRE_LABOUR_HOURS_PER_M2 = declare(
-        "NITRE_LABOUR_HOURS_PER_M2", 40.0, kind="temporary_heuristic",
-        unit="labour hours per square metre", source=
-        "The figure step() used before this was given a proper `quote` "
-        "path (spend / 2.0), carried forward unchanged so buying a bed the "
-        "new way costs exactly what the old automatic policy always paid.",
-        confidence="D",
-        why="Cost to lay one square metre of nitre bed. Not sourced to any "
-            "attested saltpetre-works price; a carried-forward implementation "
-            "constant.")
-    NITRE_COST_PER_M2 = money_units.PricedInLabourHours("NITRE_LABOUR_HOURS_PER_M2")
-    NITRE_YIELD_T_PER_M2 = declare(
-        "NITRE_YIELD_T_PER_M2", 0.0008, kind="temporary_heuristic",
-        unit="tonnes saltpetre/square metre/year", source=None,
-        confidence="D",
-        why="How much saltpetre one square metre of nitre bed yields a "
-            "year. No attested nitre-bed yield figure backs this; it is "
-            "sized only to be 'cheap to lay and slow to yield' (see the "
-            "comment above), a qualitative target rather than a measured "
-            "rate.")
-
-    def build_nitre(self, square_metres):
-        """Lay down nitre beds. Saltpetre is not dug and not grown; it is made.
-
-        There was no way for a player to do this at all. The only thing that
-        laid a bed was step(), which took five per cent of your capital every
-        year you were short, said nothing, and did it whether or not you had
-        turned the automatic policies off. A shortage the game will not let you
-        act on is not a constraint, it is a wall.
-        """
-        square_metres = float(square_metres)
-        if square_metres <= 0:
-            return 0.0
-        cost = square_metres * self.NITRE_COST_PER_M2 * self.price_index
-        if not purchase_rule.can_pay(self, cost):
-            return 0.0
-        self.pay_edge(edges.EDGE_BUILDERS, cost, "nitre beds laid down")
-        self.state.holdings.nitre_bed_m2 += square_metres
-        return square_metres
-
-    NITRE_SHORTAGE_SAFETY_BUFFER = declare(
-        "NITRE_SHORTAGE_SAFETY_BUFFER", 1.20, kind="temporary_heuristic",
-        unit="multiple on the bare tonnage deficit", source=None,
-        confidence="D",
-        why="Extra bed recommended over the bare measured deficit, so a "
-            "tiny later change in the portfolio does not put the player "
-            "straight back into shortage. Twenty per cent is a round, "
-            "plausible safety margin, not derived from how much the "
-            "portfolio typically moves.")
-
     def material_shortfall_t(self, material, by_tag=None):
         """Tonnes per year of `material` demand that neither your own
         workings nor the market cover: the one shortfall figure the capacity
@@ -329,84 +265,3 @@ class FreightMixin:
         if need <= 0.0:
             return 0.0
         return max(0.0, need - own - self._material_market_tonnes(material))
-
-    def shortage_remedy(self, binding, shortfall_t=None):
-        """One sentence on what would end this shortage, in things you can type."""
-        return self.shortage_remedy_plan(binding, shortfall_t)["text"]
-
-    def shortage_remedy_plan(self, binding, shortfall_t=None):
-        """{"text", "commands"} for what would end this shortage.
-
-        Must say what fixes it, not only the material and the percentage:
-        naming a shortage without a remedy tells a player they are stuck
-        without telling them it is fixable. `shortfall_t` is the tonnes per
-        year still uncovered (material_shortfall_t() when omitted); every
-        command's size comes from it, so the suggestion covers the shortfall
-        the capacity screen reports.
-        """
-        if not binding:
-            return {"text": "", "commands": []}
-        if binding == "charcoal":
-            need = max(0.0, self.annual_material_demand().get("charcoal_kg", 0.0)
-                       / KILOGRAMS_PER_TONNE - self.state.holdings.forest_ha * self.CHARCOAL_PER_HA)
-            hectares_needed = max(1.0, round(need / max(self.CHARCOAL_PER_HA, 1e-9)))
-            return {"text": (
-                "Charcoal is grown, not bought: about %s more of "
-                "coppice would cover it ('buy forest %d', roughly %s"
-                "). Ask the price first with 'quote forest %d'."
-                % (area_text(hectares_needed, self, grouped=True), hectares_needed,
-                   money_text(hectares_needed * self.FOREST_COST_PER_HA * self.price_index, self, grouped=True),
-                   hectares_needed)),
-                "commands": ["quote forest %d" % hectares_needed, "buy forest %d" % hectares_needed]}
-        if shortfall_t is None:
-            shortfall_t = self.material_shortfall_t(binding)
-        if binding == "saltpetre":
-            demand = self.annual_material_demand().get("saltpetre_kg", 0.0) / KILOGRAMS_PER_TONNE
-            deficit = nitre_deficit_tonnes(
-                shortfall_t, demand, self.state.holdings.nitre_bed_m2, self.NITRE_YIELD_T_PER_M2,
-                self._material_market_tonnes("saltpetre"), self._material_stock().get("saltpetre", 0.0))
-            # Twenty per cent headroom prevents a tiny change in the portfolio
-            # putting the player straight back into shortage, without turning a
-            # one-tonne deficit into the old fixed sixteen-tonne recommendation.
-            square_meters = nitre_bed_square_metres(deficit, self.NITRE_SHORTAGE_SAFETY_BUFFER, self.NITRE_YIELD_T_PER_M2)
-            return {"text": (
-                "Saltpetre is made in nitre beds, not mined: you are about "
-                "%s short. With a 20%% safety buffer, 'buy "
-                "nitre %d' lays enough bed at %s "
-                "per year (about %s)."
-                % (mass_rate_text(deficit, self, digits=2, short=False), square_meters,
-                   mass_per_area_text(self.NITRE_YIELD_T_PER_M2, self, digits=4),
-                   money_text(square_meters * self.NITRE_COST_PER_M2
-                              * self.price_index, self, grouped=True))),
-                "commands": ["buy nitre %d" % square_meters]}
-        if binding in self.MINE_OPEX_MATERIALS:
-            sinking_tonnes, ready_year, shortfall_t = mine_shortfall_after_sinking(
-                binding, shortfall_t, self.state.holdings.mine_tranches)
-            if sinking_tonnes > 0.0:
-                sinking_text = ("A working of %s is already being sunk, ready in %d. "
-                                % (mass_rate_text(sinking_tonnes, self, grouped=True, short=False), ready_year))
-                if shortfall_t < 1.0:
-                    return {"text": sinking_text + "It covers the shortfall; wait for it.", "commands": []}
-            else:
-                sinking_text = ""
-            tonnes_short = mine_size_tonnes(shortfall_t)
-            return {"text": sinking_text + (
-                "The market will not sell you enough %s, so you have to dig "
-                "it: %s. 'quote mine %s %d' for the price, then 'buy mine "
-                "%s %d'. A shaft takes a few years to come into production."
-                % (binding,
-                   ("you are about %s short"
-                    % mass_rate_text(shortfall_t, self, grouped=True, short=False)) if shortfall_t >= 1.0
-                   else "your own workings already cover the demand you have "
-                        "today, so this is the market, not you"
-                   if self.mine_capacity.get(binding, 0.0) > 0.0
-                   else "you have no working of it yet, so sink one",
-                   binding, tonnes_short, binding, tonnes_short)),
-                "commands": ["quote mine %s %d" % (binding, tonnes_short),
-                             "buy mine %s %d" % (binding, tonnes_short)],
-                "kind": "dig_mine", "has_working": self.mine_capacity.get(binding, 0.0) > 0.0,
-                "short_tonnes": shortfall_t}
-        return {"text": (
-            self.material_unsupplied_sentence(binding)
-            or "Nothing you own supplies %s and the market is out of it; the work waits until something "
-               "upstream of it is built." % binding), "commands": []}

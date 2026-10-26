@@ -44,8 +44,7 @@ def _test_automatic_field_persistence():
 	)
 	econ = EconomyState()
 	holdings = HoldingsState(
-		mines=[{"id": "m1", "ore": "iron", "capex": 500.0}],
-		forest_ha=120.0,
+		farm_stock_kg=120.0,
 		shortages={"charcoal": 3},
 	)
 	gov = GovernanceState(gov=0.5)

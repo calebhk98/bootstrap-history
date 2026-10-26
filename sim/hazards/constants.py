@@ -142,21 +142,6 @@ BANDITRY_TAKE_STRENGTH = declare(
         "actually taken is this share scaled by theft_exposure: "
         "portability of each kind of holding, guarding, visibility and "
         "the state's order. Tuned, not measured.")
-CORPUS_HEDGE_LOSS_CHANCE_NONE = declare(
-    "CORPUS_HEDGE_LOSS_CHANCE_NONE", 0.80, kind="temporary_heuristic",
-    unit="dimensionless (probability a sack takes any corpus at all)",
-    source=None, confidence="D",
-    why="Chance a sack takes any of the corpus with no written hedge "
-        "at all - the founder's own head and workshop are the only "
-        "copy. Tuned to make an unhedged corpus genuinely dangerous "
-        "to hold; not measured.")
-CORPUS_HEDGE_FRACTION_LOST_NONE = declare(
-    "CORPUS_HEDGE_FRACTION_LOST_NONE", 0.40, kind="temporary_heuristic",
-    unit="dimensionless (fraction of losable technologies taken)",
-    source=None, confidence="D",
-    why="If a sack does take from an unhedged corpus, how much of "
-        "what is still losable it takes - largest of the three "
-        "states. Tuned, not measured.")
 OUTPUT_RECOVERY_RATE = declare(
     "OUTPUT_RECOVERY_RATE", 0.006, kind="temporary_heuristic",
     unit="dimensionless per year (base recovery toward output_factor "

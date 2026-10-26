@@ -5,7 +5,7 @@ import json
 import unittest
 
 from sim.engine.data import load_civ
-from sim.engine.fog import prerequisite_label, prerequisite_names
+from sim.knowledge.api import prerequisite_label, prerequisite_names
 from sim.ui.proto.util import _localise_words
 
 QUICK_TOPIC = True

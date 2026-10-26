@@ -22,7 +22,7 @@ from sim.unit_conversions import PERCENT_SCALE
 
 from .territory_required import require_territory
 from .win_condition_rule import win_condition_met
-from .starting_techs import declared_starting_techs, grant_starting_techs
+from sim.knowledge.api import LearnTechnique, declared_starting_techs
 from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
 from .market_clearing import MarketClearingMixin
@@ -47,6 +47,7 @@ from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
 from .forward_mechanics import ForwardMechanicsMixin
+from .forward_knowledge import ForwardKnowledgeMixin
 from .disease_port import DiseasePortMixin
 from .geography_port import GeographyPortMixin
 from .labour_port import LabourPortMixin
@@ -69,6 +70,7 @@ from .seat_bank import SeatBankMixin
 from .interest_groups import InterestGroupsMixin
 from .benefactions import BenefactionsMixin
 from .forward_freight import ForwardFreightMixin
+from .forward_resources import ForwardResourcesMixin
 from .mod_stores import ModStoresMixin
 from .core_properties import ForwardingPropertiesMixin
 from .goals import GoalsMixin
@@ -84,6 +86,7 @@ from sim.reporting.api import RecordEvent
 class Sim(
         ModStoresMixin,
         ForwardMechanicsMixin,
+        ForwardKnowledgeMixin,
         EconomyMixin,
         MarketClearingMixin,
         ForwardForeignTradeMixin,
@@ -124,6 +127,7 @@ class Sim(
         ReportingForwardsMixin,
         ForwardCoinMixin,
         ForwardAgricultureMixin,
+        ForwardResourcesMixin,
         FoodEatenMixin,
         DemographicRecoveryMixin,
         RegionalPeopleMixin,
@@ -405,7 +409,8 @@ class Sim(
         # raise ValueError on an unknown starting technology) - state this
         # class deliberately does not hold a reference to.
         starting_techs = declared_starting_techs(self.civ, self.nodes)
-        grant_starting_techs(self.state.projects, starting_techs, self._done_changed)
+        for tech_id in starting_techs:
+            self.send(LearnTechnique(tech_id, granted=True))
         self.send(GrantOpeningStock())
         # Starting ownership is deliberately exhausted by starting_techs.
         # Tier and zero cost describe a node's position in the universal graph;
@@ -694,9 +699,6 @@ class Sim(
             "trade and the next, so restoring it is an event rather than "
             "a habit the optimizer leans on every year. Round number, not "
             "measured.")
-
-    def has(self, node_id):
-        return node_id in self.state.projects.done
 
     # ---- GEOGRAPHY: reach and material cost, FOR THE CIVILIZATION IN PLAY --
     # Reach must be computed from the ACTUAL civilization's own home
@@ -1217,11 +1219,7 @@ class Sim(
             val = self._win_condition_value(win_condition)
             if not win_condition_met(win_condition, val):
                 continue
-            self.state.projects.done.add(node_id)
-            self._done_changed()
-            if self.state.projects.done_year is None:
-                self.state.projects.done_year = {}
-            self.state.projects.done_year[node_id] = year
+            self.send(LearnTechnique(node_id, year=year))
             self.send(RecordEvent.in_year(year, "goal_achieved", "achieved: " + self.nodes[node_id]["name"]))
             self.record_goal_reached(node_id, year)
 

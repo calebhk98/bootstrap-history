@@ -5,9 +5,8 @@ did, and is never cached. Each command applies what the old hazard code did inli
 views are raw state or the engine's own switches the module still needs; they go when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
 from sim.demography.api import CutPopulation, KillPeople, RefreshDemographicIndexes
-from sim.knowledge.api import ForgetTechniques
 from sim.polity.api import ScaleProtection
-from sim.projects.api import ResetProjectProgress
+from sim.projects.api import ResetProjectProgress, ShutForgotten
 from sim.reporting.api import RecordEvent
 from sim.seats.api import FounderDies
 from sim.workforce.api import NoteWageShock, ReportStaffReduction, ScaleDeputies, SurviveStaff, rules as workforce_rules
@@ -122,12 +121,6 @@ def wage_index(sim):
     return sim.wage_index
 
 
-@bridge_view("mine_capacity", seat_scoped=True)
-def mine_capacity(sim):
-    """{material: rated capacity of the seat's own workings, summed}."""
-    return sim.mine_capacity
-
-
 @bridge_view("country_strata", kind=KEYED)
 def country_strata(sim, country):
     """[{members, shortfall}] of the country's strata: how many they are and the share of each need they leave unmet."""
@@ -181,15 +174,12 @@ def kill_people(sim, command):
                                                 tiles=command.tiles, **command.facts)
 
 
-@bridge_command(ForgetTechniques)
-def forget_techniques(sim, command):
+@bridge_command(ShutForgotten)
+def shut_forgotten(sim, command):
     projects = sim.state.projects
     for node_id in command.node_ids:
         projects.operating.discard(node_id)
-        projects.done.discard(node_id)
         projects.mothballed.discard(node_id)
-        projects.forgotten[node_id] = command.year   # kept to rebuild
-    sim._done_changed()
 
 
 @bridge_command(ResetProjectProgress)

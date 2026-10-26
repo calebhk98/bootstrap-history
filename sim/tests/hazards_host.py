@@ -34,7 +34,7 @@ def defaults(seed: int) -> Dict[str, Any]:
 		"techniques_held": set(), "techniques_granted": set(), "tree": lambda node_id: None, "tree_nodes": {},
 		"visible_to_player": lambda node_id: True, "losable_node_ids": lambda keep_dispersed=True: [],
 		"tree_closure": lambda goal_id: set(), "critical_path": lambda goal_id: (0.0, []),
-		"hazard_counter_rows": {}, "corpus_hedge_tiers": [], "corpus_nodes": [], "mechanic": lambda name: {},
+		"hazard_counter_rows": {}, "corpus_hedge": (0.8, 0.4, None), "corpus_nodes": [], "mechanic": lambda name: {},
 		"running_mechanics": lambda name: [], "running": lambda node_id: False,
 		"start_check": lambda node_id, ignore_trade=False, memo=None, why=True: (True, None),
 		"project_cost": lambda node_id: 0.0, "active_projects": {}, "closure_record": lambda node_id: None,

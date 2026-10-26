@@ -19,8 +19,6 @@ class HazardsForwardsMixin:
     FIRE_CAPITAL_LOSS = constants.FIRE_CAPITAL_LOSS
     BANDITRY_ANNUAL_CHANCE = constants.BANDITRY_ANNUAL_CHANCE
     BANDITRY_TAKE_STRENGTH = constants.BANDITRY_TAKE_STRENGTH
-    CORPUS_HEDGE_LOSS_CHANCE_NONE = constants.CORPUS_HEDGE_LOSS_CHANCE_NONE
-    CORPUS_HEDGE_FRACTION_LOST_NONE = constants.CORPUS_HEDGE_FRACTION_LOST_NONE
     HAZARD_EROSION_OWN_GOLD = constants.HAZARD_EROSION_OWN_GOLD
     HAZARD_EROSION_OWN_SILVER = constants.HAZARD_EROSION_OWN_SILVER
 
@@ -49,9 +47,6 @@ class HazardsForwardsMixin:
 
     def national_public_health_sources(self, limit=3):
         return self.view("national_public_health_sources")(limit)
-
-    def corpus_hedge(self):
-        return self.view("corpus_hedge")()
 
     def output_floor(self, hazard_factor, relief):
         return rules.output_floor(hazard_factor, relief)

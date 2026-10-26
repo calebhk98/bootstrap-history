@@ -180,7 +180,6 @@ class StandInWorld(ViewShareMixin, TileOwnershipMixin):
         self.year = 143
         self.state = types.SimpleNamespace(
             scenario=types.SimpleNamespace(year=143),
-            holdings=types.SimpleNamespace(forest_ha=1.0, nitre_bed_m2=1.0, mines=[]),
             projects=types.SimpleNamespace(done=[], operating={}),
             economy=types.SimpleNamespace(output_per_head=1.0, tile_owners={"t1": {"owner": "rome"}, "t2": {"owner": "gaul"}}))
         self.household = types.SimpleNamespace(done_version=0, operating_version=0)
@@ -189,6 +188,10 @@ class StandInWorld(ViewShareMixin, TileOwnershipMixin):
         self.world_map = types.SimpleNamespace(tiles={"t1": 1, "t2": 1})
         self.stores = types.SimpleNamespace(view=lambda _name: types.SimpleNamespace(set=lambda *_arguments: None,
                                                                                        get=lambda _tile: None))
+
+    def view(self, name):
+        held = {"forest_hectares": 1.0, "nitre_beds": {"square_metres": 1.0, "tonnes_per_square_metre": 0.001}, "mine_workings": []}
+        return lambda: held[name]
 
     def tile_owner_map(self):
         return self.state.economy.tile_owners

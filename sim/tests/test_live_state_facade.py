@@ -15,7 +15,6 @@ SCALARS = {
     "founder_alive": (False, "founder.founder_alive"),
     "life_left": (22.5, "founder.life_left"),
     "farm_hectares": (45.0, "holdings.farm_hectares"),
-    "forest_ha": (12.5, "holdings.forest_ha"),
     "goal_year": (300, "seat_progress.goal_year"),
     "fog": (True, "_fog"),
     "goal": ("test_goal", "_goal"),
@@ -24,7 +23,7 @@ SCALARS = {
 COLLECTIONS = {
     "active": "projects.active", "done": "projects.done", "operating": "projects.operating",
     "revealed": "projects.revealed", "mothballed": "projects.mothballed", "paid_towards": "projects.paid_towards",
-    "policy": "founder.policy", "mines": "holdings.mines", "employees": "household.employees",
+    "policy": "founder.policy", "employees": "household.employees",
 }
 
 

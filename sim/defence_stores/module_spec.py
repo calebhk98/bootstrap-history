@@ -14,7 +14,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("counter_supply_gap", "counter_supply_gap", kind=QUOTE, **_LIVE),
         ViewSpec("relief_kcal_per_day", "relief_kcal_per_day", kind=TABLE, **_LIVE),
     ),
-    reads=("tree", "techniques_done", "operating", "is_venture", "staff", "stock_held", "year", "live_hazard_kinds",
+    reads=("tree", "techniques_held", "operating", "is_venture", "staff", "stock_held", "year", "live_hazard_kinds",
            "running_mechanics", "hours_per_person_year", "institution_units", "effects_in_force"),
     sends=(ChangeHeld,),
     phases=(PhaseHook("defence_stores", "step_defence_stores"),),

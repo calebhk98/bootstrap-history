@@ -3,80 +3,13 @@
 These are methods of Sim; they are a mixin only so that they can live in
 a file of their own.
 """
-import re
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from sim.agents.api import Household
-from . import category_traits
 from .data import closure, JSONDict, Nodes
 from . import event_causes
 from sim.hazards.api import add_timing_to_steps, hazards_not_yet_past
 from .staff_loss_waves import wave_exposure
-
-def prerequisite_label(nodes, prereq_id):
-    """The id with the node's name beside it, so the id is identifiable."""
-    name = nodes.get(prereq_id, {}).get("name")
-    return "%s (%s)" % (prereq_id, name) if name and name != prereq_id else prereq_id
-
-
-def prerequisite_names(nodes, prerequisite_ids):
-    """{id: name} for each prerequisite the tree knows, in the words of the civilisation the nodes were built for."""
-    return {prereq_id: nodes[prereq_id]["name"] for prereq_id in prerequisite_ids if prereq_id in nodes}
-
-
-# What a node id the player has not heard of is replaced with.
-HIDDEN_ID_PLACEHOLDER = "something you have not heard of"
-
-# Removes sentences where a node grades itself against the rest of the tree.
-# Matches exact phrases like "pivot", "highest-value", "costs more than any
-# single technology", or meta-ranking patterns (mentioning "game"/"tree" + ranking
-# words). [temporary_heuristic]
-_SELF_PLAY_PHRASES = (
-    "pivot of the entire game",
-    "costs more than any single",
-    "highest expected-value node in the tree",
-    "highest expected-value defensive investment",
-    "highest-leverage thing you can spend money on",
-    "is simply the highest-leverage",
-    "largest single call on your personal hours",
-    "must not cut",
-    # Imperative phrases that say what to build first (same offence as ranking)
-    "do this before writing any other recipe down",
-    "build it first, use it to learn",
-)
-_SELF_PLAY_META = re.compile(
-    r"\b(the game|this game|the entire game|the tree|this tree)\b", re.I)
-_SELF_PLAY_RANK = re.compile(
-    r"\bhighest\b|\blargest\b|\bpivot\b|\bmost important\b|\bsingle most\b", re.I)
-
-
-def strip_self_play_advice(text: Optional[str]) -> Optional[str]:
-    """Drop any sentence that ranks a node against the game or the tree,
-    and hand back what is left. See the block comment above for why, and
-    for exactly what does and does not qualify.
-    """
-    if not text:
-        return text
-    parts = re.split(r'(?<=[.!?]) ', text)
-
-    def _is_self_play(sentence: str) -> bool:
-        low = sentence.lower()
-        if any(phrase in low for phrase in _SELF_PLAY_PHRASES):
-            return True
-        return bool(_SELF_PLAY_META.search(sentence) and _SELF_PLAY_RANK.search(sentence))
-
-    return " ".join(sentence for sentence in parts if not _is_self_play(sentence)).strip()
-
-
-def scrub_hidden_ids(text: str, node_ids: Any, is_visible: Callable[[str], bool]) -> str:
-    """Replace every whole node id the player cannot see; longest ids first."""
-    scrubbed = text
-    for node_id in sorted(node_ids, key=lambda candidate: -len(candidate)):
-        if not is_visible(node_id):
-            # Whole ids only; ':' joins a namespaced id, so it is not a boundary either
-            pattern = r'(?<![\w:])' + re.escape(node_id) + r'(?![\w:])'
-            scrubbed = re.sub(pattern, HIDDEN_ID_PLACEHOLDER, scrubbed)
-    return scrubbed
 
 
 class FogMixin:
@@ -100,170 +33,6 @@ class FogMixin:
     hazard_relief: Callable[[str], Tuple[float, List[str]]]
     hazard_timeline: Callable[..., List[Dict[str, Any]]]
     capability_gaps: Callable[[], List[Dict[str, Any]]]
-
-    def reveal_from(self, node_id: str) -> None:
-        """Completing something teaches you what it leads towards, vaguely."""
-        if not self.state._fog:
-            return
-        projects = self.state.projects
-        projects.revealed.add(node_id)
-        for other, node in self.nodes.items():
-            if node_id in node.get("pre", []):
-                projects.revealed.add(other)
-            for group in node.get("req_any", []):
-                if node_id in (group.get("options") or {}):
-                    projects.revealed.add(other)
-
-    def is_visible(self, node_id: str, _memo: Optional[Dict[str, bool]] = None) -> bool:
-        """Can the player see this node at all?
-
-        _memo: an optional dict shared across one recursive descent. is_visible
-        calls start_reason, and start_reason calls is_visible on every missing
-        prerequisite of a node with missing prerequisites - which, on a node
-        deep in the tree, is every one of ITS missing prerequisites too. Without
-        sharing one memo down that whole call tree, checking visibility of a
-        single deep node re-derived the visibility of common ancestors once per
-        path to them, which is exponential in the depth of the tree. A profiler
-        on `can_start('dynamo')` on a late civilisation under fog counted 12,465 nested
-        calls to start_reason from three top-level ones, at 0.45s each; a plain
-        `available` call, which checks all ~2,800 nodes this way, did not return
-        in 60 seconds. The memo makes one recursive descent O(nodes touched)
-        instead of O(paths to them); a fresh dict per outward-facing call (the
-        default) keeps it exact - nothing here is cached ACROSS commands, so a
-        node built or revealed between one call and the next is seen correctly
-        next time.
-        """
-        if not self.state._fog:
-            return True
-        projects = self.state.projects
-        if node_id in projects.done or node_id in projects.active:
-            return True
-        if node_id in getattr(projects, "revealed", set()):
-            return True
-        memo = {} if _memo is None else _memo
-        if node_id in memo:
-            return memo[node_id]
-        memo[node_id] = False  # provisional guard against cycles in DAG
-        # Anything startable now is visible; _why=False avoids building messages
-        # at every recursive level, only at the outermost call.
-        result = self.start_reason(node_id, _memo=memo, _why=False)[0]
-        memo[node_id] = result
-        return result
-
-    def prerequisite_label(self, prereq_id: str) -> str:
-        """The id with the node's name beside it, so the id is identifiable."""
-        return prerequisite_label(self.nodes, prereq_id)
-
-    def missing_prereq_message(self, missing: List[str],
-                               _memo: Optional[Dict[str, bool]] = None) -> Optional[str]:
-        """Format a list of not-yet-done prerequisite ids as one player-facing
-        message, filtered through the same visibility test `start_reason`
-        (and so `why`) applies. A second caller computing its own missing
-        list and printing the ids raw is exactly how `bounty` leaked
-        industrial zinc's power_grid, the getter's induction-coupling
-        prerequisite and the vacuum tube's hidden cathode: the filter lived
-        in start_reason alone, and nothing stopped a second command from
-        skipping it. There must be exactly one way to turn "missing" into
-        words.
-        """
-        if not missing:
-            return None
-        known = [prereq_id for prereq_id in missing if self.is_visible(prereq_id, _memo=_memo)]
-        hidden = len(missing) - len(known)
-        if not self.state._fog or not hidden:
-            msg = "missing prerequisites: " + ", ".join(self.prerequisite_label(prereq_id) for prereq_id in missing)
-            return msg + self._free_prereq_hint(missing)
-        bits = []
-        if known:
-            bits.append("missing prerequisites: " + ", ".join(self.prerequisite_label(prereq_id) for prereq_id in known))
-        hidden_kinds = self._hidden_prerequisite_kinds([prereq_id for prereq_id in missing if prereq_id not in known])
-        bits.append("%d other thing%s you have not heard of yet%s"
-                    % (hidden, "" if hidden == 1 else "s",
-                       " (%s)" % ", ".join(hidden_kinds) if hidden_kinds else ""))
-        msg = "; and ".join(bits) if known else \
-            ("this needs %s, and you do not yet know what %s"
-             % (bits[-1], "they are" if hidden > 1 else "it is"))
-        # ONLY EVER THE VISIBLE ONES. `known` is already the fog filter this
-        # whole method exists to apply, so the hint is built from it and a
-        # hidden prerequisite is never named by the hint either.
-        return msg + self._free_prereq_hint(known)
-
-    # Plain words for a node's kind, so a hidden blocker keeps its identity but shows what sort of thing it is.
-    FOG_KIND_HINTS = {
-        "ENGINEERING": "a technique or device", "SCIENCE": "an idea or body of theory",
-        "INSTITUTION": "an institution or social arrangement", "RESOURCE": "a material or its source",
-        "INFRASTRUCTURE": "a built facility", "CAPABILITY": "a measurement or power capability",
-    }
-    # A hidden prerequisite shows its kind only when this share of its own prerequisites is already done.
-    FOG_HINT_NEARNESS = 0.5
-
-    def _hidden_prerequisite_kinds(self, hidden_ids: List[str]) -> List[str]:
-        """Kind phrases for hidden prerequisites the player has built enough nearby knowledge to place."""
-        done = self.state.projects.done
-        kinds: List[str] = []
-        for node_id in hidden_ids:
-            node = self.nodes.get(node_id) or {}
-            prereqs = node.get("pre") or []
-            near = (sum(1 for prereq_id in prereqs if prereq_id in done) / len(prereqs) >= self.FOG_HINT_NEARNESS
-                    if prereqs else True)
-            phrase = self.FOG_KIND_HINTS.get(node.get("kind"))
-            if near and phrase and phrase not in kinds:
-                kinds.append(phrase)
-        return kinds
-
-    # Capability nodes (cap_measure_*, cap_power_*) cost nothing, take no time.
-    # A refusal naming one must say it is free and startable now, not just the name.
-    FREE_PREREQ_NAMED_AT_MOST = 3
-
-    def _free_prereq_hint(self, missing: List[str]) -> str:
-        """", and X costs nothing..." for whichever missing prerequisites are
-        free, instant and startable right now - or "" when none are."""
-        ready: List[str] = []
-        for node_id in missing:
-            node = self.nodes.get(node_id)
-            if not node:
-                continue
-            if ((node.get("_total_cost") or 0) > 1 or (node.get("ph") or 0) > 0
-                    or (node.get("yrs") or 0) > 0 or (node.get("risk") or 0) > 0):
-                continue
-            # ONLY IF THEY CAN ACT ON IT NOW. Naming a free node that is
-            # itself blocked is not help, it is a second refusal wearing the
-            # first one's clothes.
-            if all(prereq_id in self.state.projects.done for prereq_id in node["pre"]):
-                ready.append(node_id)
-        if not ready:
-            return ""
-        ready = ready[:self.FREE_PREREQ_NAMED_AT_MOST]
-        if len(ready) == 1:
-            return (". %s costs nothing, takes no time and cannot fail: "
-                    "start %s" % (ready[0], ready[0]))
-        return (". %s cost nothing, take no time and cannot fail: start "
-                "them now (%s)"
-                % (", ".join(ready), ", ".join("start " + node_id for node_id in ready)))
-
-    def fog_scrub(self, text: Optional[str]) -> Optional[str]:
-        """Strip node ids the player has not discovered out of a message."""
-        if not text or not self.state._fog:
-            return text
-        return scrub_hidden_ids(text, self.nodes, self.is_visible)
-
-    def fog_summary(self, node_id: str) -> str:
-        """One sentence. Deliberately not the whole note, and never the unlocks."""
-        # Stripped before the first sentence is taken, not after: school_
-        # founded's note OPENS with "The pivot of the entire game." - the
-        # exact sentence fog_summary would otherwise hand back as the whole
-        # answer, under fog, for the one command whose entire job is to stay
-        # vague. See strip_self_play_advice above.
-        note = strip_self_play_advice((self.nodes[node_id].get("note") or "").strip())
-        if not note:
-            return self.nodes[node_id]["name"]
-        for sep in (". ", "? ", "! "):
-            if sep in note:
-                note = note.split(sep)[0].strip() + "."
-                break
-        # Hard cap. A "one sentence" summary that runs to 160 characters, times
-        # thirty entries in a list, is most of the reply.
-        return note if len(note) <= 110 else note[:107].rstrip(" ,;") + "..."
 
     def _epidemic_risk(self) -> Dict[str, Any]:
         """What the disease model forecasts for the coming year (infections now, contact between tiles, and the
@@ -295,9 +64,10 @@ class FogMixin:
         # the only way to discover a loss is one cryptic refusal at a time
         # - "missing prerequisites: <thing you built two hundred years
         # ago>".
-        _gone = sorted((node_id for node_id, _year in (getattr(projects, "forgotten", None) or {}).items()
+        forgotten = self.forgotten
+        _gone = sorted((node_id for node_id, _year in (forgotten or {}).items()
                         if node_id not in projects.done),
-                       key=lambda k: -(projects.forgotten[k]))
+                       key=lambda k: -(forgotten[k]))
         upcoming = []
         for hazard, year_start, year_end, in_progress in hazards_not_yet_past(
                 self.civ, scenario.year):
@@ -396,7 +166,7 @@ class FogMixin:
             "critical_capabilities_not_operating": self.capability_gaps() or None,
             **({"you_have_already_lost": len(_gone),
                 "and_have_to_build_again": _gone[:10],
-                "the_most_recent_went_in": projects.forgotten[_gone[0]]} if _gone else {}),
+                "the_most_recent_went_in": forgotten[_gone[0]]} if _gone else {}),
             # Under fog, do not name a node the player has not discovered:
             # the hedge named here has to pass the same visibility test
             # `why` uses, or the two commands would contradict each other
@@ -411,25 +181,6 @@ class FogMixin:
             "known_hazards_ahead": upcoming,
             "timeline": timeline,
         }
-
-    # Categories flagged never_abandoned (data/world/category_traits.json)
-    # protect knowledge that carries upkeep and cannot be lost without
-    # softlocking the run. Institutions (patron_local, collegium_licensed,
-    # etc.) are not flagged: they can and must lapse.
-
-    def never_abandon(self, node_id: str) -> bool:
-        """Protected: knowledge, and anything the goal actually needs.
-
-        Keying the softlock guard on the GOAL CLOSURE rather than on a list of
-        category names is what makes both halves work. You can let a patron go
-        and rebuild him later; you cannot have the game quietly delete a step
-        you need and then refuse to fund rebuilding it.
-        """
-        if category_traits.has_trait(self.nodes[node_id]["cat"], "never_abandoned"):
-            return True
-        if self.relied_on_running(node_id):
-            return False
-        return self.on_road_to_goal(node_id)
 
     def on_road_to_goal(self, node_id: str) -> bool:
         """Whether the goal needs this node. A yes/no with no distance, so it

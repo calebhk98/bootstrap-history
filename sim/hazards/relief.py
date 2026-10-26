@@ -177,9 +177,3 @@ class Relief:
 						preview.append({"name": hazard.get("name", "hazard"), "kind": kind, "years": [year_start, year_end],
 						                "now": now, "with_it": with_it})
 		return preview
-
-	def corpus_hedge(self) -> Tuple[float, float, Optional[str]]:
-		"""(loss_chance, fraction_lost, hedge_name) a sacking faces right now. `held`, not `running`: books already in
-		other people's hands outlast the scriptorium. `hedge_name` is None if neither corpus exists yet."""
-		return rules.corpus_hedge(self.needs.corpus_hedge_tiers(), self.needs.techniques_held(),
-		                          constants.CORPUS_HEDGE_LOSS_CHANCE_NONE, constants.CORPUS_HEDGE_FRACTION_LOST_NONE)

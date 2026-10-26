@@ -202,8 +202,8 @@ def _agent_state_risk_and_pressure(sim, full=True):
         "years_until_scandal_crosses_the_line": years_until_scandal_crosses_the_line(
             sim.scandal, getattr(sim, "scandal_last_year", None), sim.cfg["suspicion_danger"]),
         "resource_throttle": round(sim.throttle, 3), "throttle_binding": sim.binding,
-        "forest_ha": round(sim.forest_ha, 1),
-        "mine_capacity": {material: round(value, 1) for material, value in sim.mine_capacity.items()},
+        "forest_ha": round(sim.view("forest_hectares")(), 1),
+        "mine_capacity": {material: round(value, 1) for material, value in sim.view("mine_capacity")().items()},
         "slaves": sim.slaves, "freedmen": sim.freedmen,
         "scholars_including_you": round(sim.labour.effective_scholars(), 2),
     }

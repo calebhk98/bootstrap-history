@@ -5,7 +5,7 @@ Part of the port with economy_port_setup.py. Which good a resource yields is the
 has no single good to hold and is reported as a gap rather than guessed.
 """
 from sim.geography.api import mine_demand_goods, mined_before
-from .deposit_history import historical_rates
+from sim.resources.api import historical_rates
 
 
 def opening_store_values(world_map, tile_ids, start_year):
