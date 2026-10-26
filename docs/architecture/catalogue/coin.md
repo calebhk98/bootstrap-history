@@ -1,123 +1,117 @@
 # Module `coin`
 
-Coin as a metal: stock and price level, revaluation, hoarding, carriage and theft.
+Coin as a metal: stock and price level, revaluation, keeping, carriage and theft.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** moved (branch `mr/coin`). The package is `sim/coin/`; this file now describes what shipped, not the draft
+proposal. Where the draft differed, "What changed from the draft" says how. Counts below come from the module spec
+(`python3 -c "import sys; sys.path.insert(0,'.'); from sim.coin.module_spec import MODULE_SPECS as s; print(len(s[0].publishes), len(s[0].applies))"`).
+
+## What changed from the draft
+
+- **Views:** 13 instead of 5, and no `coin_metal`, `price_level`, `exposure` or `coin_carriage` as proposed. The proposal
+  merged views by topic (stock, hoard and report under `coin_stock`); a caller wants one question answered, so the views
+  are the questions: the home and a partner's price level are two views (a table and a keyed view, as their callers
+  read them), the
+  hoard and its rounded report are two (the screens round, the rules do not), and the exposure is the household's
+  (`household_exposure`), since another holder's exposure is built inside the theft command from the actor registry.
+  `coin_metal` (the draft's view under the three-caller floor) is not a view: the ratio by metal is the module's own
+  state, read by the module's own price levels and written by its phase.
+- **Commands:** `ChargeKeeping` (actors), `ChargeActorsTheft`, `ChargeHouseholdTheft`, `PlunderHousehold`. `Revalue` is
+  the phase `coin_revaluation`, not a command: nothing but the year sends it. The draft's `ChargeTheft(holder, share)` is
+  three commands because the three callers (the actors' year, the household's money step, a sack or a bandit year) carry
+  different facts; a holder is not a field a caller can name, since the module reads who holds what itself.
+- **Exposure holds amounts only.** The draft's hard spot (`Exposure` lots carried `take` closures that mutate purse,
+  stock and granary) is gone: a lot names its `store` and the theft sends the ledger's `TakeGoods` command (a command
+  the ledger lacks, so it lives in `sim/ledger/commands.py` and the bridge applies it) and `PayEdge` / `PayEdgeFrom`.
+- **Coin carriage became an answer to a ledger extension point.** `sim/agents/ledger.py` `AFTER_TRANSFER` is a global the
+  engine switched on with `coin_carriage_listening()` around the actors' year and `pay_state`. It is now the ledger
+  module's: the view `transfer_listening` (a quote returning the context) installs the ledger's `after_transfer`, which
+  asks the extension point `transfer_surcharge` (LIST) for `(edge, amount, cause)` answers and posts each one from the
+  payer to the edge, inside the same switched-off window as before, so order and amounts are unchanged. Coin
+  provides `coin.carriage`; a mod withdraws it by that name. A provider receives the two parties as objects, since the
+  hook sits inside a free function; reading what they are (record, location) is the one duck-typed read left.
+- **State:** `CoinWorld.metal_ratios` (was `economy.coin_metal_ratios`), relocated in `sim/tests/equiv_fields.py`. The
+  society's opening coin (`_opening_coin_value`) and each partner's opening stock are never-saved caches on the module.
 
 ## At a glance
 
 | Measure | Value |
 |---|---|
-| Views / commands proposed | 5 / 3 |
-| Old methods and properties owned (after regrouping) | 29 |
-| Of those, referenced from another module's mixin code | 11 (2 classed read-only or pure by Appendix B, 9 classed writers) |
-| Names used by other modules or by code outside the mixins (ui, agents, ports, mods, function modules) | 19 (11 from mixins, 6 only from outside) |
-| Views per used name | 0.26 |
-| Views that replace exactly one referenced method and no field (one-to-one) | 0 of 5 |
-| Views of other modules it reads | 25, from 13 modules (over the 15-read limit of task 2.4) |
-| Commands of other modules it sends | 2 |
+| Views / commands | 13 / 4 (+ the phase `coin_revaluation`, one provision to `transfer_surcharge`) |
+| Views of other modules it reads | 30, none cached (see the spec's `READS_BY_OWNER`) |
+| Commands of other modules it sends | `PayEdge`, `PayEdgeFrom`, `TakeGoods` (all the ledger's) |
+| `legacy_*` reads (debts) | `legacy_acting_household`, `legacy_actor_registry`, `legacy_agent_world` |
+| Log lines written | none (the draft's mixins wrote none; nothing converted to `RecordEvent`) |
 
-**Existing surface and files.** Existing: `sim/economy/mint.py`, `metal_stock.py`, `currency.py`, `sim/agents/tuning_coinage.py`. Engine: `CoinHoardMixin`, `CoinCarriageMixin`, `CoinRevaluationMixin`, `TheftChargeMixin`, `HoldingsExposureMixin`, coin pieces of `ForeignPaymentsMixin`.
+## Mixin classes absorbed
 
-## (a) Mixin classes and files absorbed
-
-| Class | File | Methods here | Referenced from other modules |
-|---|---|---|---|
-| `CoinRevaluationMixin` | `sim/engine/coin_revaluation.py` | 4 | 2 |
-| `ForeignPaymentsMixin` | `sim/engine/foreign_payments.py` | 6 | 2 |
-| `CoinHoardMixin` | `sim/engine/coin_hoard.py` | 8 | 3 |
-| `CoinCarriageMixin` | `sim/engine/coin_carriage.py` | 4 | 1 |
-| `TheftChargeMixin` | `sim/engine/theft_charge.py` | 5 | 3 |
-| `HoldingsExposureMixin` | `sim/engine/holdings_exposure.py` | 2 | 0 |
-
-Methods that stay inside the module (referenced by no other module's mixin code and by nothing outside the mixins): `_coin_carriage_money_per_tonne`, `_home_opening_coin_units`, `_opening_coin_units`, `actor_exposure`, `charge_coin_carriage`, `coin_hoard`, `coin_metal_ratio`, `home_carriage_per_tonne`, `home_coin_stock_units`, `partner_coin_metal`, `place_of`, `steal_from`.
-
-## (b) State owned
-
-Paths are today's. Seat-scoped fields live on `state.<section>` as the acting seat's alias (`bind_seat`, `sim/engine/state_seat.py`) and are saved once per seat in `state.seats[seat_id]`; world fields live once on the state. Counts are access sites found by the field scan: a mixin method of another module counts under that module, code in a function module, `sim/ui`, `sim/agents` and the like counts under `<area>`.
-
-Proposed slot: a world dataclass `CoinWorld`, no per-seat state.
-
-| Today's path | Scope | Read by (outside the owner) | Written by (outside the owner) |
-|---|---|---|---|
-| `state.economy.coin_metal_ratios` | world | - | - |
-
-## (c) Views
-
-Kind is table (one value), keyed (one value per key, computed on first read of the key) or quote (a question with arguments, never cached). Channels are the version channels the owner bumps; `inputs` are other views the value is derived from (a name without a dot is this module's own).
-
-| View | Kind | Seat | Answers | Replaces (old methods) | Replaces (fields) | Inputs | Channels | Callers today |
-|---|---|---|---|---|---|---|---|---|
-| `coin_stock` | table | no | Coin units in circulation (home and partner), the hoard and its report, kg per unit. | `home_coin_stock_units`, `_home_opening_coin_units`, `_opening_coin_units`, `_partner_coin_opening_units`, `coin_hoard`, `coin_kg_per_unit`, `coin_hoard_report` | - | - | `coin` | 3 |
-| `price_level` | keyed | no | Price level by country. | `home_price_level`, `partner_price_level` | - | `coin_stock`, `markets.market_state` | `coin` | 4 |
-| `coin_metal` | table | no | Coin metal ratios by country. | `coin_metal_ratio`, `home_coin_metal`, `partner_coin_metal`, `economy.metal_stock`, `economy.currency` | `economy.coin_metal_ratios` | `prices.material_prices` | `coin` | 2 |
-| `exposure` | quote | yes | How exposed a holder's wealth is to theft and visible to the state. | `actor_exposure`, `founder_exposure`, `founder_visible_scale`, `coin_keeping_cost_per_year` | - | `ledger.balance`, `polity.visible_scale`, `resources.forest_and_nitre`, `agriculture.farm_holdings` | - | 1 |
-| `coin_carriage` | quote | no | The cost of carrying coin over a route. | `coin_carriage_units`, `coin_carriage_listening`, `home_carriage_per_tonne`, `_coin_carriage_money_per_tonne`, `place_of` | - | `freight.route_cost` | - | 3 |
-
-**Under the three-caller floor** (task 1.5: a view serves at least 3 callers or is a quote): `coin_metal`. Each needs a second consumer found, a merge into a neighbouring view, or a change to a quote.
-
-**Coverage.** 11 methods are referenced from other modules' mixin code: 5 are replaced by a view here, 6 by a command. 6 more names are used only from outside the mixins (ui, agents, ports, mods). Of all 19 used names, 17 are covered by a view or command through the method itself, 0 through a field alias, 0 are year-phase hooks and 2 are package handle members.
-
-**Published as views but still classed as writers** after discounting the lazy creation of `state.actors` (which is what made most of Appendix B's writers; see README). Each is either a read that also fills a cache or lazily creates something, or a real write that must be split into a quote and a command before the view is allowed: `founder_exposure`, `partner_price_level`.
-
-## (d) Commands
-
-| Command | Fields | Replaces | Write sites cited | Refusal causes | Owned fields it writes |
-|---|---|---|---|---|---|
-| `ChargeKeeping` | actors | `charge_actors_for_keeping_coin`, `coin_keeping_due`. Methods: `charge_actors_for_keeping_coin`, `coin_keeping_due` | `sim/engine/step_phase_money.py:55` | none: always applies | - |
-| `ChargeTheft` | holder, share | `charge_actors_for_theft`, `charge_founder_for_theft`, `plunder_founder`, `steal_from`. Methods: `charge_actors_for_theft`, `charge_founder_for_theft`, `plunder_founder` | `sim/engine/theft_charge.py` | none: always applies | - |
-| `Revalue` | year | `revalue_coin_metals`. Methods: `revalue_coin_metals` | `sim/engine/coin_revaluation.py` | none: always applies | `economy.coin_metal_ratios` |
-
-## (e) Reads and sends
-
-Reads (views of other modules), by provider:
-
-- `actors`: `actors.cast` (actors, actors.actors, actors.get, actors.state ...)
-- `agriculture`: `agriculture.farm_holdings` (farm_stock_kg, holdings.farm_hectares, holdings.farm_stock_kg, input of coin.exposure); `agriculture.farm_land_quote` (farm_price_per_hectare)
-- `finance`: `finance.capital_market` (lent_share); `finance.credit_limit` (credit_limit)
-- `foreign_trade`: `foreign_trade.lift` (economy.foreign_ledger); `foreign_trade.partners` (_foreign_economy_facts, foreign_economies, partner_civ)
-- `freight`: `freight.route_cost` (_freight_handling_costs, _freight_mode_costs, _with_carried_provisions, input of coin.coin_carriage)
-- `land`: `land.tile_facts` (world_map, world_map.tiles); `land.transport` (held_and_running)
-- `ledger`: `ledger.acting_balance` (capital, household.capital); `ledger.balance` (input of coin.exposure); `ledger.goods_stock` (_material_stock)
-- `markets`: `markets.household_demand` (_opening_population); `markets.market_state` (input of coin.price_level); `markets.trade_quote` (goods_market, goods_market.quote)
-- `polity`: `polity.standing` (household.eminence, household.protection); `polity.state_reach` (order_reach); `polity.visible_scale` (input of coin.exposure, visible_scale)
-- `prices`: `prices.material_prices` (input of coin.coin_metal)
-- `reporting`: `reporting.price_ratios` (coin_value_ratio)
-- `resources`: `resources.forest_and_nitre` (forest_ha, holdings.forest_ha, input of coin.exposure)
-- `workforce`: `workforce.labour_market` (labour.money_per_labour_hour); `workforce.staff` (labour, labour.headcount); `workforce.wage` (labour.opening_wage_schedule)
-
-Sends (commands of other modules):
-
-- `agriculture`: `RecordFarmYear`
-- `ledger`: `PayEdge`
-
-## (f) Year phases
-
-Phases of `sim/engine/year_phases.py` `SHIPPED` it takes part in; where a phase is shared with other modules the sub-steps it owns are named (see "The year's shared phases" in the README):
-
-- `money_seat`: `coin_keeping_due`, `charge_founder_for_theft` (`step_phase_money.py:49,56`); `charge_actors_for_keeping_coin` inside the actors' year (`society_actors.py:166`)
-- `market`: `revalue_coin_metals` (`market_clearing.py:201`)
-
-## (g) Callers outside the engine mixins that read its views
-
-| Caller group | Uses | Most-used names |
+| Class | File | Where it went |
 |---|---|---|
-| mods | 4 | `coin_keeping_cost_per_year`, `coin_kg_per_unit`, `founder_exposure`, `founder_visible_scale` |
-| ui | 2 | `coin_hoard_report` |
-| engine/economy_port* | 1 | `_partner_coin_opening_units` |
-| engine/(function modules) | 1 | `partner_price_level` |
+| `CoinRevaluationMixin` | `coin_revaluation.py` (deleted) | `sim/coin/prices.py` |
+| `CoinHoardMixin` | `coin_hoard.py` (deleted) | `sim/coin/keeping.py` |
+| `CoinCarriageMixin` | `coin_carriage.py` (deleted) | `sim/coin/carriage.py` |
+| `TheftChargeMixin`, `HoldingsExposureMixin` | `theft_charge.py`, `holdings_exposure.py` (deleted) | `sim/coin/theft.py`, `sim/coin/exposure.py` |
+| `ForeignPaymentsMixin` | `foreign_payments.py` | its coin half moved to `prices.py`; the ledger of partners, `_settle_flow` and the lift stay for `foreign_trade` |
+| `theft_exposure.py`, `coin_guard_rule.py` | engine | `sim/coin/theft_exposure.py`, `sim/coin/rules.py` |
 
-The scan matches `sim.`, `s.`, `world.` prefixes, so a few counts include unrelated locals; treat them as orders of magnitude.
+## Views
 
-ui: `coin_hoard_report` 2; mods: `coin_keeping_cost_per_year`, `coin_kg_per_unit`, `founder_exposure`, `founder_visible_scale`.
+| View | Kind | Seat | Answers | Old name |
+|---|---|---|---|---|
+| `home_coin_metal` | table | no | The home society's coin metal. | `home_coin_metal` |
+| `home_coin_stock` | table | no | Coin units the society holds: its opening stock plus what trade brought in. | `home_coin_stock_units` |
+| `home_price_level` | table | no | The one price level the engine reads. | `home_price_level` |
+| `partner_price_level` | keyed | no | A partner's price level. | `partner_price_level` |
+| `partner_coin_opening` | keyed | no | Coin a partner opened with. | `_partner_coin_opening_units` |
+| `coin_kg_per_unit` | table | no | Metal in one coin of the home standard. | `coin_kg_per_unit` |
+| `coin_keeping_cost` | quote | no | Yearly cost of keeping an amount of money as coin. | `coin_keeping_cost_per_year` |
+| `coin_keeping_due` | quote | yes | What keeping the household's coin costs this year and what its purse and credit can pay. | `coin_keeping_due` |
+| `coin_hoard`, `coin_hoard_report` | table | yes | The household's money as coin: metal, mass, keeping cost; and the rounded form for screens. | `coin_hoard`, `coin_hoard_report` |
+| `coin_carriage_units` | quote | no | Partner coin units the carriers take to move an amount over the route to a partner. | `coin_carriage_units` |
+| `household_exposure` | table | yes | What the household keeps by kind, for theft, sack and banditry. | `founder_exposure` |
+| `household_visible_scale` | table | yes | How visible the household is to thieves and the state. | `founder_visible_scale` |
 
-## (h) Hard spots and caches
+None is cached: each reads the foreign ledgers, the purse or the stock, all still written outside their owners' commands.
 
-- `home_coin_stock_units` is a second tally of the society's coin, separate from the book (STATE_OWNERSHIP_MAP.md): a ledger-derived view or a deliberate duplicate.
-- `actor_exposure` sums farm stock, forest, mines and material stock across modules (`holdings_exposure.py`); it is a pure derived quote over five other modules' views. Its `Exposure` lots carry `take` closures that mutate the purse, stock and granary (`holdings_exposure.py:60-85`): a read that returns write capability. The quote must return amounts only, and the theft must go through one `TakeGoods` command.
+## Commands
 
-Caches and version counters held today (feed for task 1.2):
+| Command | Does |
+|---|---|
+| `ChargeKeeping` | Every cast actor in business that holds money pays its guards (a foreign actor at its own country's pay). |
+| `ChargeActorsTheft` | Every home-country cast actor loses its expected theft. |
+| `ChargeHouseholdTheft(keeping_paid, keeping_owed)` | The acting household loses its expected theft; its guard counts for the share of keeping its purse paid. Answers the money taken. |
+| `PlunderHousehold(strength, cause, order_holds)` | A sack or a bandit year, by the same exposure. Answers the money taken. |
 
-- `__dict__['_home_carriage_cache']` (`coin_carriage.py:54`)
+## Reads it needs, by the owner that will publish them
 
-Detected by the cache scan in this module's mixin files: `engine/coin_carriage.py:54 __dict__[_home_carriage_cache]`.
+Bridged in `sim/engine/bridge_coin.py` under the name the owner will publish, except the ledger's `held_goods`
+(published by the ledger module): `opening_money_per_labour_hour`, `headcount`, `opening_population`, `goods_quote`,
+`foreign_economies`, `foreign_coin_home_units`, `foreign_coin_partner_units`, `partner_coin_standard`,
+`partner_opening_facts`, `partner_route_cost`, `coin_value_ratio`, `lent_share`, `visible_scale`, `order_reach`,
+`eminence`, `farm_holdings`, `farm_land_price`, `forest_holding`, `home_country`, `tile_known`, `tile_haul_cost`,
+`legacy_agent_world`. Reused: `civilisation`, `money_per_labour_hour`, `credit_limit`, `standing`, `acting_balance`,
+`legacy_acting_household`, `legacy_actor_registry`.
+
+## Year phases
+
+- `coin_revaluation` (world), after `market`: records the market ratio of the home coin metal and of each partner's.
+  The market phase ended with this and `record_wage_market_ratios`; the latter is now the phase `wage_market_ratios`
+  right after, so the order is unchanged.
+- The household's keeping due (a quote) and `ChargeHouseholdTheft` are called from the money step, the actors'
+  `ChargeKeeping` and `ChargeActorsTheft` from the actors' year, `PlunderHousehold` from the sack and banditry
+  hazards. Each sits between steps that belong to other modules, so none is a phase of its own: the due must be read
+  before the year's payments and the theft after the guards are paid.
+
+## Callers outside the module that still use a forwarder
+
+`home_coin_metal` (real price ratios), `home_price_level` (techniques in use, production, labour port),
+`partner_price_level` (foreign actor trade, goods market offers, the living-stock bridge), `home_coin_stock_units`
+(economy port), `_partner_coin_opening_units` (economy port year), `coin_carriage_units` (`_settle_flow`),
+`coin_hoard_report` (the screens). All in `sim/engine/forward_coin.py`.
+
+## Hard spots that remain
+
+- `home_coin_stock` is a second tally of the society's coin beside the book (`STATE_OWNERSHIP_MAP.md`): the opening
+  stock plus the sum of the partners' ledgers (`foreign_coin_home_units`), the latter foreign trade's.
+- The carriage provider reads a party's `record.country` and `location()` off the objects the hook hands it.
+- `tile_haul_cost` keeps its per-year route cache in the bridge (`sim.__dict__`), as the mixin did.
