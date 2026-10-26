@@ -29,7 +29,12 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 | foreign trade | `sim/foreign_trade/` | trader cargo legs stay in the agent economy's record until markets moves |
 | diffusion | `sim/diffusion/` | literacy, adoption, disclosure; `value_weights` has no owner yet (sent to polity) |
 
-In progress: resources, knowledge.
+| knowledge | `sim/knowledge/` | `done`, `granted`, `done_year`, `revealed` stay in the engine behind `legacy_*` (many writers); Complaint 735 |
+| resources | `sim/resources/` | mines, deposits, forest, nitre beds; Complaint 730 |
+
+Full equivalence tier identical at the knowledge merge (`877cff82`).
+
+In progress: hazards, seats, materials. Next: prices (after materials), polity, actors; then the walled packages (workforce, land, markets, disease); then finance, production, ventures, the rest of projects.
 
 ## Task list
 
