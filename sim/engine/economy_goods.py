@@ -11,9 +11,8 @@ Covers: goods_reach_factor() (how much of the population you can
 actually reach); _goods_category_state()/_nodes_in_cat()/
 _goods_category_ratios()/goods_category_price_ratio() (the shared
 per-category state several of the others read); essential_price_ratio()
-(the staples side of the income effect); invest_farm()/
-build_worker_housing() (buying down that same essential price and
-housing cost); income_factor() (turning the price ratio into
+(the staples side of the income effect);
+build_worker_housing() (buying down housing cost); income_factor() (turning the price ratio into
 discretionary spending power); goods_category_factor() and
 goods_category_factor_with_entrants() (the price itself, for the
 concerns actors run).
@@ -520,14 +519,6 @@ class GoodsMixin:
             "from seed rate, fold return and labour instead of asserting "
             "one.")
 
-    FARM_LABOUR_HOURS_PER_HA = declare(
-        "FARM_LABOUR_HOURS_PER_HA", 1500.0, kind="temporary_heuristic",
-        unit="labour hours per hectare", source=None, confidence="D",
-        why="Purchase price of one hectare of productive farmland for the "
-            "household's own staple supply. Not tied to FOREST_COST_PER_HA "
-            "or to any attested land price; an independent, invented "
-            "figure for a different land use.")
-    FARM_COST_PER_HA = money_units.PricedInLabourHours("FARM_LABOUR_HOURS_PER_HA")
     HOUSING_LABOUR_HOURS_PER_PLACE = declare(
         "HOUSING_LABOUR_HOURS_PER_PLACE", 12000.0, kind="temporary_heuristic",
         unit="labour hours per place", source=None, confidence="D",
@@ -544,26 +535,9 @@ class GoodsMixin:
             "vocational training.")
     TRADE_SCHOOL_COST_PER_SEAT = money_units.PricedInLabourHours("TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT")
 
-    def farm_price_per_hectare(self):
-        """What one hectare of farmland costs now (`buy farm`, `quote farm`)."""
-        return self.FARM_COST_PER_HA * self.price_index
-
     def trade_school_price_per_seat(self):
         """What one trade-school seat costs now (`buy school`, `quote school`)."""
         return self.TRADE_SCHOOL_COST_PER_SEAT * self.price_index
-
-    def invest_farm(self, hectares):
-        """Buy productive farmland that lowers the household staple price."""
-        hectares = float(hectares)
-        cost = hectares * self.farm_price_per_hectare()
-        household = self.state.household
-        if hectares <= 0 or cost > household.capital:
-            return 0.0
-        self.pay_edge(edges.EDGE_LANDOWNERS, cost, "farmland bought")
-        economy = self.state.economy
-        holdings = self.state.holdings
-        holdings.farm_hectares = (getattr(holdings, "farm_hectares", 0.0) or 0.0) + hectares
-        return hectares
 
     def housing_price_per_place(self):
         """What one place of worker housing costs now (`buy housing`, `quote housing`, room advice)."""

@@ -6,7 +6,7 @@ from sim import simulator
 
 
 def assert_single_draw_fallback(test_case, test_sim, agriculture, year=137):
-    test_sim._farm_weather_cells = []
+    test_sim.assembly.modules["agriculture"]._cells = []
     expected = agriculture.draw_weather_multiplier(
         random.Random(test_sim._farm_year_weather_seed(year)),
         agriculture.DEFAULT_SOIL.weather_stdev_fraction,

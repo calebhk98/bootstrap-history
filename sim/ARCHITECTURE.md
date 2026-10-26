@@ -34,7 +34,7 @@ docstring first line.
 | Foreign trade, freight, coin | `foreign_*`, `economy_freight`, `domestic_haul`, `trader_cargo`, `coin_*`, `theft_*` |
 | Economy port | `economy_port*`; older money, credit, mining and goods code is `economy_*` |
 | Labour port | `labour_port`, `staff_replacement`, `projects_staffing*` |
-| Geography port | `geography_port`, `ways`, `works`, `held_works`, `colonies`, `mine_deposits`, `food_supply` |
+| Geography port | `geography_port`, `ways`, `works`, `held_works`, `colonies`, `mine_deposits` |
 | Society and groups | `society*`, `interest_groups`, `legitimacy`, `benefactions`, `hazard_*`, `visibility` |
 | Living stock | `living_stock*`, `food_relief`, `defence_stores` |
 | Mods | `mods*`, `mod_*`, `actor_kinds_data` |

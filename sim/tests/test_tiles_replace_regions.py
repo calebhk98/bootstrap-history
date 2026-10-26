@@ -114,21 +114,21 @@ class NoModuleReadsRegionLabelsForTileDataTests(unittest.TestCase):
 
     def test_farm_land_and_weather_cells_follow_the_tiles_held(self):
         from types import SimpleNamespace
-        from sim.engine.core import Sim
+        from sim.agriculture import rules
+        from sim.agriculture.constants import FARM_WEATHER_POOLED_CELL_CAP
+        from sim.engine import bridge_agriculture
         from sim.geography import food_society
         from sim.world import land
 
-        def stand_in(civilisation):
-            game = SimpleNamespace(civ=civilisation, world_map=None)
-            game._cap_pooled_farm_weather_cells = lambda cells: Sim._cap_pooled_farm_weather_cells(game, cells)
-            game._raw_farm_weather_cells = lambda: Sim._raw_farm_weather_cells(game)
-            return game
+        def cells_of(civilisation):
+            rows = bridge_agriculture.held_tile_geometry(SimpleNamespace(civ=civilisation, world_map=None))
+            return rules.pooled_cells(rules.raw_cells(rows), FARM_WEATHER_POOLED_CELL_CAP)
 
         labelled, tiled = self._civilisation(False), self._civilisation(True)
-        territory = Sim._compute_farm_weather_cells(stand_in(tiled))
+        territory = cells_of(tiled)
         self.assertTrue(territory)
         self.assertEqual([cell.cell_id for cell in territory],
-                         [cell.cell_id for cell in Sim._compute_farm_weather_cells(stand_in(labelled))])
+                         [cell.cell_id for cell in cells_of(labelled)])
         self.assertAlmostEqual(sum(cell.weight for cell in territory), 1.0)
         tiled_sites = food_society.crop_sites(tiled, None, 0.7, {})
         labelled_sites = food_society.crop_sites(labelled, None, 0.7, {})
