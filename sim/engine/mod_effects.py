@@ -11,7 +11,10 @@ from sim.agents import api as agents_api
 from sim.agents.api import edges as edge_names
 from . import economy_port_effects as economy_api
 
-from . import world_events
+from sim.hazards.api import RecordWorldEvent
+from sim.land.api import TransferTile
+from sim.stores.api import WriteStore
+
 from .mods_base import ModError
 from .mods_ids import SEPARATOR
 
@@ -91,8 +94,8 @@ class ModEffects:
         else:
             for actor in strata_of(sim, country):
                 actor.record.members *= 1.0 - share
-        return world_events.record(sim, self.kind(kind), actors=[country], tiles=tiles, cause=cause,
-                                   died=before - people_of(sim, country), **facts)
+        return sim.send(RecordWorldEvent(self.kind(kind), actors=(country,), tiles=tuple(tiles), cause=cause,
+                                         facts=dict(died=before - people_of(sim, country), **facts)))
 
     def move_people(self, sim: Any, from_stratum_id: str, to_stratum_id: str, count: float, cause: str) -> dict:
         """Move people between two strata (migration, or reassignment to another class); the total stays the same."""
@@ -102,22 +105,23 @@ class ModEffects:
         source.record.members -= moved
         target.record.members += moved
         countries = [source.record.country or sim.civ["id"], target.record.country or sim.civ["id"]]
-        return world_events.record(sim, self.kind("people_moved"), actors=sorted(set(countries)), cause=cause,
-                                   moved=moved, from_stratum=from_stratum_id, to_stratum=to_stratum_id)
+        return sim.send(RecordWorldEvent(self.kind("people_moved"), actors=tuple(sorted(set(countries))), cause=cause,
+                                         facts=dict(moved=moved, from_stratum=from_stratum_id, to_stratum=to_stratum_id)))
 
     # ---- tiles, stores, events ----------------------------------------------------------------------------
 
     def transfer_tile(self, sim: Any, tile_id: str, to_actor: Optional[str], cause: str, control: Optional[str] = None) -> Optional[str]:
         """Give a tile to a country or seat (None releases it); the world event log records it with the cause."""
-        return sim.transfer_tile(tile_id, to_actor, control, cause=self.need_cause(cause))
+        return sim.send(TransferTile(tile_id, to_actor, self.need_cause(cause), control))
 
     def write_store(self, sim: Any, name: str, key: Any, value: Any) -> None:
         """Write one value of a store this owner declared; another owner's store is an error."""
-        sim.stores.write(name, key, value, self.owner)
+        sim.send(WriteStore(name, key, value, self.owner))
 
     def record_event(self, sim: Any, kind: str, cause: str, actors: Iterable[str] = (), tiles: Iterable[str] = (), **facts: Any) -> dict:
         """Write a record to the world event log."""
-        return world_events.record(sim, self.kind(kind), actors=actors, tiles=tiles, cause=self.need_cause(cause), **facts)
+        return sim.send(RecordWorldEvent(self.kind(kind), actors=tuple(actors), tiles=tuple(tiles), cause=self.need_cause(cause),
+                                         facts=dict(facts)))
 
     # ---- helpers ------------------------------------------------------------------------------------------
 

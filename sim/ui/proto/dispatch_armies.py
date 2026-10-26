@@ -2,7 +2,7 @@
 them and stands them down (Complaint 485).
 
 The rules are in `sim/world/campaign_*.py`, `battle.py` and `sim/agents/army_raising.py`, the records and orders in
-`sim/engine/campaign_actors.py`; this module finds the seat's own country, hands the request over and shapes the
+`sim/campaigns/armies.py`; this module finds the seat's own country, hands the request over and shapes the
 reply. A seat commands only its own country's armies. An army that ends its march on another actor's tile besieges
 and storms it in the year's campaign phase; there is no declaration of war."""
 from sim.refusal import Refusal

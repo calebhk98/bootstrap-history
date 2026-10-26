@@ -13,6 +13,10 @@ This is test tooling, not a save migration.
 
 RELOCATIONS = [
     ("/modules/living_stock/society_herds", "/economy/society_herds"),
+    ("/modules/campaigns/armies", "/economy/campaigns/armies"),
+    ("/modules/campaigns/drawn", "/economy/campaigns/drawn"),
+    ("/modules/campaigns/held_since", "/economy/campaigns/held_since"),
+    ("/modules/campaigns/next_id", "/economy/campaigns/next_id"),
 ]
 
 IGNORED = [
