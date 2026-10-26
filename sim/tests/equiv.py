@@ -32,6 +32,17 @@ from sim.tests import equiv_core
 VALUE_WIDTH = 100
 
 
+def scenario_name(scenario):
+    """Fingerprint's name, plus the stress tier's marks so its scenarios do not share one."""
+    from sim.tests import fingerprint
+    name = fingerprint.name_of(scenario)
+    if scenario.get("stress"):
+        name += "+stress"
+    if scenario.get("seats", 1) > 1:
+        name += "+%dseats" % scenario["seats"]
+    return name
+
+
 def tier_scenarios(tier):
     """The scenarios of a tier; the scenario definitions are fingerprint's."""
     from sim.tests import fingerprint
@@ -120,7 +131,7 @@ def record(path, tier, jobs, spin_up=None):
     results = _map(_record_worker, [(scenario, spin_up) for scenario in scenarios], jobs or default_jobs(len(scenarios)))
     output = {"meta": {"tier": tier, "spin_up": spin_up}, "scenarios": {}}
     for scenario, (years, seconds) in zip(scenarios, results):
-        name = fingerprint.name_of(scenario)
+        name = scenario_name(scenario)
         output["scenarios"][name] = {"scenario": scenario, "years": years}
         print("  %-42s %4d years  %7.1fs" % (name, len(years), seconds))
     with open(path, "w") as handle:
