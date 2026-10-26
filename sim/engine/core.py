@@ -67,6 +67,7 @@ from .seat_bank import SeatBankMixin
 from .interest_groups import InterestGroupsMixin
 from .benefactions import BenefactionsMixin
 from .forward_freight import ForwardFreightMixin
+from .forward_resources import ForwardResourcesMixin
 from .mod_stores import ModStoresMixin
 from .core_properties import ForwardingPropertiesMixin
 from .core_step_phases import StepContext, StepPhasesMixin
@@ -118,6 +119,7 @@ class Sim(
         ReportingForwardsMixin,
         ForwardCoinMixin,
         ForwardAgricultureMixin,
+        ForwardResourcesMixin,
         FoodEatenMixin,
         DemographicRecoveryMixin,
         RegionalPeopleMixin,

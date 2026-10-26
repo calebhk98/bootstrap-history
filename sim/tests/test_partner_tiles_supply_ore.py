@@ -48,7 +48,7 @@ class PartnerOreSiteTests(unittest.TestCase):
     def test_what_firms_raise_on_a_partner_tile_is_drawn_from_its_deposit(self):
         row = self.host.partner_deposits("iron", self.partner_tiles)[0]
         economy_port_sites.deplete(self.host, {("iron_ore_kg", row["tile_id"]): 10.0}, self.outputs)
-        self.assertGreater(self.host.state.holdings.deposit_drawn.get(row["id"], 0.0), 0.0)
+        self.assertGreater(self.host.holdings.deposit_drawn.get(row["id"], 0.0), 0.0)
 
 
 if __name__ == "__main__":

@@ -103,6 +103,14 @@ meant, and name the new parts after their owners.
 - A source edit invalidates the spin-up caches: the first run after it rebuilds each civilisation's opening (minutes
   each). Batch your edits before verifying.
 
+## Before you report
+
+Merge the integration branch into yours (`git fetch origin sim-module-registry-plan && git merge
+origin/sim-module-registry-plan`): other modules land while you work. Resolve the conflicts with their intent kept
+(their commands, their view names), make sure no view is published twice (`python3 -c "import sys;
+sys.path.insert(0,'.'); from sim.engine import game_assembly as g; g.build(None, True)"` raises on a duplicate), and
+run the checks again on the merged tree.
+
 ## Report
 
 Files moved and created, the views and commands (and which are bridged, with the `legacy_*` debts), state fields

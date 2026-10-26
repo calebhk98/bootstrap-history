@@ -109,7 +109,7 @@ def _agent_state_headline_money(sim, end_year):
         # screens the welcome text calls essential.
         "living_cost": round(sim.living_cost() - sim.labour.wage_bill(), 1),
         "wage_bill": round(sim.labour.wage_bill(), 1),
-        "mine_operating_cost": round(sim.mine_operating_cost(), 1),
+        "mine_operating_cost": round(sim.view("mine_operating_cost")(), 1),
     }
 
 
@@ -182,7 +182,7 @@ def _agent_state_spend_and_net(sim):
                                          - sim.recurring_living_cost(sim.revenue(), sim.upkeep())
                                          + min(sim.recurring_living_cost(sim.revenue(), sim.upkeep()),
                                                sim.wages_prepaid)
-                                         - sim.mine_operating_cost()
+                                         - sim.view("mine_operating_cost")()
                                          - max(0.0, -sim.capital) * sim.debt_interest_rate()
                                          - getattr(sim, "spend_last_year", 0.0), 1),
         # THE STANDING FIGURE HAS TO READ THE STANDING REVENUE: this counts

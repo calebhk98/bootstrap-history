@@ -234,11 +234,6 @@ def money_per_labour_hour(sim):
 
 
 
-@bridge_view("mine_operating_cost", seat_scoped=True)
-def mine_operating_cost(sim):
-    return sim.mine_operating_cost()
-
-
 # ---- living stock -----------------------------------------------------------------------------------------------------
 
 @bridge_view("start_gate_unheld_stock", kind=QUOTE)

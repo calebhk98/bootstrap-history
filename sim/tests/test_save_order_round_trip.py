@@ -5,7 +5,8 @@ QUICK_TOPIC = True
 
 import json
 
-from sim.engine.state import HoldingsState, ProjectsState, deserialize_state, serialize_state
+from sim.engine.state import ProjectsState, deserialize_state, serialize_state
+from sim.resources.api import ResourcesSeat
 from sim.tests.harness import check
 
 IDS = ["mill", "forge", "loom", "kiln"]
@@ -21,8 +22,8 @@ check("sets: two sets built in different orders are saved as the same text, sort
       and through_json(two_orders[0])["done"] == {"__set__": sorted(IDS)}, None)
 check("sets: the loaded set is equal to the saved one", deserialize_state(through_json(two_orders[1]), ProjectsState).done == set(IDS))
 
-held = HoldingsState(mine_ready={"zinc": 3, "iron": 1, "tin": 2}, mine_tranches=[["tin", 1, 0.5], ["iron", 3, 2.5]])
-loaded = deserialize_state(through_json(held), HoldingsState)
+held = ResourcesSeat(mine_ready={"zinc": 3, "iron": 1, "tin": 2}, mine_tranches=[["tin", 1, 0.5], ["iron", 3, 2.5]])
+loaded = deserialize_state(through_json(held), ResourcesSeat)
 check("dicts and lists: a loaded dict iterates in the order it was saved and a list keeps its order",
       list(loaded.mine_ready) == ["zinc", "iron", "tin"] and loaded.mine_tranches == [["tin", 1, 0.5], ["iron", 3, 2.5]], list(loaded.mine_ready))
 

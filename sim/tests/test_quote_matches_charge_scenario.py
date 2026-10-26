@@ -136,7 +136,8 @@ def _run_project(node_id):
         # the year's project payments and materials (its seat phases, in order); the ledger bill is all this reads
         game._run_seat_prelude()
         game.assembly.phase_handler("start_projects")(game.state.acting_seat)
-        game._step_materials()
+        game.assembly.phase_handler("materials")(game.state.acting_seat)
+        game._step_material_shortage_notes()
         game._run_seat_work()
     return game, quoted, reply
 

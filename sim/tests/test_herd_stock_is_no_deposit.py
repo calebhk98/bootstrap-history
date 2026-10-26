@@ -1,20 +1,12 @@
 """Complaints/532: a herd good named like a catalogue herd animal (cattle_kg, cattle) is not a mined deposit."""
 from .harness import *  # noqa: F401,F403
 
-import sim.geography.api as geography
-from sim.engine.mine_deposits import MineDepositsMixin
+from sim.tests import resources_stand_in
 
 QUICK_TOPIC = True
 
 
-class MapOnly(MineDepositsMixin):
-    """The mine lookup reads the world map and nothing else of the game."""
-
-    def __init__(self):
-        self.world_map = geography.open_map()
-
-
-host = MapOnly()
+host = resources_stand_in.build()   # the mine lookup reads the world map and nothing else of the game
 for material in ("cattle_kg", "sheep_kg", "goat_kg", "cattle", "sheep", "goat"):
     check("%s names no deposit resource" % material, host.mine_resource_id(material) is None,
           host.mine_resource_id(material))

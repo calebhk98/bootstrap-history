@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.deposit_history import historical_rates
+from sim.resources.deposit_history import historical_rates
 from sim.geography import api as geography
 from sim.tests.test_mine_names_a_deposit import _Host
 

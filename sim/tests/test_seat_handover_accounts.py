@@ -13,6 +13,8 @@ from sim.contracts import Contract, TERM_LOAN
 from sim.rekey import rekey, rename_text
 from sim.refusal import cause_of
 
+from sim.resources.state import ResourcesSeat
+
 from .seat_handover_fixture import Game
 
 
@@ -115,7 +117,7 @@ check("the book no longer knows the leaver", not purses.book.knows("leaver"), pu
 
 # ---- a replacement that holds works is refused with a cause and nothing changes
 game = build()
-game.state.seats["heir"].holdings.mines.append({"material": "iron_ore"})
+game.state.seats["heir"].modules["resources"] = ResourcesSeat(mines=[{"material": "iron_ore"}])
 refused = game.hand_over_seat("leaver", "heir")
 check("a replacement with workings of its own is refused", cause_of(refused) == "replacement_not_empty" and refused.facts["holds"] == ["holdings"], refused)
 check("a refused handover changed nothing", "leaver" in game.state.seats and game.state.actors.purses.debt("leaver") > 0.0, None)

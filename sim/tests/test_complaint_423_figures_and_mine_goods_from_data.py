@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.economy_mining import MiningMixin
+from sim.tests import resources_stand_in
 from sim.engine.mods_base import ModError
 from sim.geography.api import open_map
 from sim.ui import figures as figure_registry
@@ -78,7 +78,7 @@ class FigureTests(unittest.TestCase):
                 figures_data.register_data_figures(mods_dir)
 
     def test_a_mod_figure_reading_a_path_that_is_not_readable_is_refused_naming_the_path(self):
-        for bad_path in ("open_mine", "_mine_capex", "population.__class__"):
+        for bad_path in ("mothball_mines", "_workings_of", "population.__class__"):
             with tempfile.TemporaryDirectory() as mods_dir:
                 write_mod(mods_dir, {MOD_ID + ":bad": {"label": "x", "value": bad_path}})
                 with self.assertRaises(ModError) as caught:
@@ -92,7 +92,7 @@ class FigureTests(unittest.TestCase):
 
 class MineGoodsTests(unittest.TestCase):
     def goods(self, material):
-        return MiningMixin.mine_demand_goods(SimpleNamespace(world_map=open_map()), material)
+        return resources_stand_in.build().mine_demand_goods(material)
 
     def test_the_goods_a_mine_supplies_come_from_the_catalogue_and_equal_the_old_table(self):
         for material, goods in OLD_DEMAND_KEYS.items():

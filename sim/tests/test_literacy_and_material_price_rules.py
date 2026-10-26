@@ -8,7 +8,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import economy_mining
+from sim.tests import resources_stand_in
 from sim.engine.economy_freight import FreightMixin
 from sim.labour import labour_capacity
 from sim.labour.labour_capacity import CapacityMixin
@@ -106,14 +106,14 @@ class MaterialPriceFactor(unittest.TestCase):
 
 class MineableMaterials(unittest.TestCase):
     def test_a_name_that_prices_nothing_is_not_mineable_and_has_no_quote(self):
-        stand_in = types.SimpleNamespace(_normalize_material_name=lambda name: name,
-                                         _mine_capex=lambda name: None, _mine_capex_opex=lambda name: (None, None))
-        self.assertFalse(economy_mining.MiningMixin.mineable(stand_in, "not_a_real_material"))
-        self.assertIsNone(economy_mining.MiningMixin.mine_quote(stand_in, "not_a_real_material", 100.0))
+        module = resources_stand_in.build(views={"material_price": lambda material: None})
+        self.assertFalse(module.mineable("not_a_real_material"))
+        self.assertIsNone(module.mine_quote("not_a_real_material", 100.0))
 
     def test_a_priced_material_is_mineable(self):
-        stand_in = types.SimpleNamespace(_normalize_material_name=lambda name: name, _mine_capex=lambda name: 5.0)
-        self.assertTrue(economy_mining.MiningMixin.mineable(stand_in, "aluminium_kg"))
+        module = resources_stand_in.build()
+        module.mine_capex = lambda material: 5.0
+        self.assertTrue(module.mineable("aluminium_kg"))
 
 
 if __name__ == "__main__":

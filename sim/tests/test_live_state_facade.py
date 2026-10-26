@@ -13,7 +13,6 @@ SCALARS = {
     "capital": (1250.0, "household.capital"),
     "year": (150, "scenario.year"),
     "farm_hectares": (45.0, "holdings.farm_hectares"),
-    "forest_ha": (12.5, "holdings.forest_ha"),
     "output_factor": (1.15, "economy.output_factor"),
     "fog": (True, "_fog"),
     "goal": ("test_goal", "_goal"),
@@ -22,7 +21,7 @@ SCALARS = {
 COLLECTIONS = {
     "active": "projects.active", "done": "projects.done", "operating": "projects.operating",
     "revealed": "projects.revealed", "mothballed": "projects.mothballed", "paid_towards": "projects.paid_towards",
-    "policy": "founder.policy", "mines": "holdings.mines", "employees": "household.employees",
+    "policy": "founder.policy", "employees": "household.employees",
 }
 
 

@@ -33,6 +33,9 @@ class StubSim:
     def draw_deposit(self, deposit_id, tonnes):
         self.drawn.append((deposit_id, tonnes))
 
+    def send(self, command):   # no forest to regrow
+        return None
+
 
 ORE_KG_PER_RUN = 50.0
 outputs = {"iron_ore_kg": {"iron_ore_kg": ORE_KG_PER_RUN}, "wheat_kg": {"wheat_kg": 1.0}}

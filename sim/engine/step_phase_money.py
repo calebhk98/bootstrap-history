@@ -3,6 +3,7 @@
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 from sim.reporting.api import RecordAutomation, RecordEvent
 from sim.coin.api import ChargeHouseholdTheft
+from sim.resources.api import NoteMineCostPaid
 from sim.constants import declare
 from sim.agents.api import edges
 from .living_cost_charge import living_cost_charged
@@ -38,7 +39,7 @@ class MoneyPhaseMixin:
         self.state.household.wages_prepaid = 0.0
         self.state.founder.living_cost_paid += living_cost
         mine_cost = self.mine_operating_cost()
-        self.state.holdings.mine_cost_paid += mine_cost
+        self.send(NoteMineCostPaid(mine_cost))
         revenue, upkeep = self.revenue(), self.upkeep()
         keeping_owed, keeping = self.view("coin_keeping_due")(revenue, upkeep, living_cost, mine_cost)
         # the concerns the clearing pays are credited when it clears (economy_port_year `_settle_seats`)

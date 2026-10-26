@@ -6,23 +6,11 @@ from typing import Any, Dict, List, Optional
 
 @dataclass
 class HoldingsState:
-	"""A seat's extractive workings, land, granary, material stock and shortage readings."""
-	mines: List[Dict[str, Any]] = field(default_factory=list)
-	mine_pending: Dict[str, float] = field(default_factory=dict)
-	mine_ready: Dict[str, int] = field(default_factory=dict)
-	mine_cost_paid: float = 0.0
-	mine_tranches: Optional[List[Any]] = None
-	# hidden deposits the seat's prospecting found (as geography's prospect returns them), the tonnes drawn from
-	# each deposit by id, and the person-days spent prospecting each "tile:resource" (mine_deposits.py)
-	deposits_found: List[Dict[str, Any]] = field(default_factory=list)
-	deposit_drawn: Dict[str, float] = field(default_factory=dict)
-	prospected_person_days: Dict[str, float] = field(default_factory=dict)
+	"""A seat's granary, farm, material stock and shortage readings."""
 	shortages: collections.Counter = field(default_factory=collections.Counter)
 	throttle: float = 1.0
 	binding: Optional[str] = None
 	shortage_condition: Optional[Dict[str, Any]] = None
-	forest_ha: float = 0.0
-	nitre_bed_m2: float = 0.0
 	market_pressure: float = 0.0
 	_material_stock_ledger: Optional[Dict[str, float]] = None
 	_material_stock_opening: Optional[Dict[str, Any]] = None

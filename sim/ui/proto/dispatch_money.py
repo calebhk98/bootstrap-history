@@ -9,6 +9,7 @@ these live in a separate file).
 """
 
 from sim.refusal import Refusal
+from sim.resources.api import BuyForest, CloseMine, LayNitreBeds, OpenMine
 import sim.engine.ui_port as ui_port
 from sim.engine import sale_orders
 from sim.engine.ui_port import area_text, mass_per_area_text, mass_rate_text, money_text
@@ -46,12 +47,14 @@ def _cmd_bounty(sim, nodes, cmd, ended):
 
 
 def _buy_forest(sim, cmd, quantity):
-    got = sim.buy_forest(quantity)
+    got = sim.send(BuyForest(quantity))
+    got = 0.0 if isinstance(got, Refusal) else got
     if got <= 0:
-        cost = quantity * sim.FOREST_COST_PER_HA * sim.price_index
+        forest = sim.view("forest_holding")()
+        cost = quantity * forest["base_cost_per_hectare"] * forest["price_index"]
         return {"ok": False, "error": purchase_rule.refusal_text(
             sim, "%s of coppice woodland" % area_text(quantity, sim), cost)}
-    return {"ok": True, "bought_ha": got, "forest_ha": round(sim.forest_ha, 1),
+    return {"ok": True, "bought_ha": got, "forest_ha": round(sim.view("forest_hectares")(), 1),
             "capital": round(sim.capital, 1)}
 
 
@@ -65,16 +68,18 @@ def _share_of_limit_used(sim):
 
 
 def _buy_nitre(sim, cmd, quantity):
-    got = sim.build_nitre(quantity)
+    got = sim.send(LayNitreBeds(quantity))
+    got = 0.0 if isinstance(got, Refusal) else got
+    nitre = sim.view("nitre_beds")()
     if got <= 0:
         return {"ok": False,
                 "error": purchase_rule.refusal_text(
                     sim, "%s of nitre bed" % area_text(quantity, sim, unit="square_metre"),
-                    quantity * sim.NITRE_COST_PER_M2 * sim.price_index)}
+                    quantity * sim.view("nitre_price")() * sim.price_index)}
     return {"ok": True, "laid_m2": got,
-            "nitre_bed_m2": round(sim.nitre_bed_m2, 1),
+            "nitre_bed_m2": round(nitre["square_metres"], 1),
             "saltpetre_it_yields_per_year_tonnes":
-                round(sim.nitre_bed_m2 * sim.NITRE_YIELD_T_PER_M2, 3),
+                round(nitre["square_metres"] * nitre["tonnes_per_square_metre"], 3),
             "capital": round(sim.capital, 1)}
 
 
@@ -126,16 +131,17 @@ def _buy_mine(sim, cmd, quantity):
     # bug: "no mine, no supply lever" for anything else the tree ever
     # asks a node to buy). The membership check lives in economy.py's
     # mineable(); this file calls it rather than keeping its own list.
-    if not sim.mineable(mat):
-        return {"ok": False, "error": Refusal("unknown_material", "material must be one of: " + sim.mine_catalog_hint(),
-                                              choices=sorted(sim.MINE_OPEX_MATERIALS))}
+    if not sim.view("mineable")[mat]:
+        return {"ok": False, "error": Refusal("unknown_material", "material must be one of: " + sim.view("mine_catalog_hint")(),
+                                              choices=sorted(sim.view("mine_works_materials")()))}
     # partial=False: a mine you ask for by name must be bought in full or
     # not at all, never spend every denarius you have and hand back a
     # fraction without asking.
-    price = sim.mine_quote(mat, quantity).get("to_sink_it") if hasattr(sim, "mine_quote") else None
-    got = sim.open_mine(mat, quantity, partial=False, deposit=cmd.get("deposit"))
-    if got <= 0 and sim.mine_refusal:
-        return {"ok": False, "error": sim.mine_refusal}
+    price = sim.view("mine_quote")(mat, quantity).get("to_sink_it")
+    answer = sim.send(OpenMine(mat, quantity, partial=False, deposit=cmd.get("deposit")))
+    got = 0.0 if isinstance(answer, Refusal) else answer
+    if isinstance(answer, Refusal) and answer.cause == "no_deposit_found":
+        return {"ok": False, "error": answer}
     if got <= 0:
         if price is not None and not purchase_rule.can_pay(sim, price):
             return {"ok": False,
@@ -151,7 +157,7 @@ def _buy_mine(sim, cmd, quantity):
     # ready_year was always null so there was no way to know whether the
     # workings would appear in four years or ninety-five. Both of those
     # are the model being coy about its own arithmetic.
-    tranche = [entry for entry in getattr(sim, "mine_tranches", []) if entry[0] == mat]
+    tranche = [entry for entry in sim.view("mines_being_sunk")()["tranches"] if entry[0] == mat]
     ready = min((entry[2] for entry in tranche), default=None)
     asked = float(quantity)
     reply = {"ok": True, "material": mat,
@@ -163,7 +169,7 @@ def _buy_mine(sim, cmd, quantity):
              "ready_year": (None if ready is None else ready + 1),
              "years_until_producing": (None if ready is None
                                        else round(ready - sim.year, 1)),
-             "already_producing_t_per_yr": round(sim.mine_capacity.get(mat, 0.0), 2),
+             "already_producing_t_per_yr": round(sim.view("mine_capacity")().get(mat, 0.0), 2),
              "capital": round(sim.capital, 1)}
     if got < asked * 0.999:
         reply["note"] = ("less than you asked for: limited by capital, by the "
@@ -299,7 +305,7 @@ def _cmd_money(sim, nodes, cmd, ended):
     _living = sim.recurring_living_cost(sim.revenue(), sim.upkeep())
     _prepaid = min(_living, sim.wages_prepaid)
     fixed = (sim.upkeep() + _living - _prepaid
-             + sim.mine_operating_cost())
+             + sim.view("mine_operating_cost")())
     _ramp = sim.still_ramping()
     # A PLAYER MUST SEE IT (data/review/COMMODITY_DYNAMISM.md):
     # material_price_factor() responds for every material a node
@@ -337,7 +343,7 @@ def _cmd_money(sim, nodes, cmd, ended):
                 "wages": round(sim.labour.wage_bill(), 1),
                 "of_which_already_paid_as_hiring_advances":
                     round(_prepaid, 1) or None,
-                "mines_standing": round(sim.mine_operating_cost(), 1),
+                "mines_standing": round(sim.view("mine_operating_cost")(), 1),
                 # A COST LIKE ANY OTHER: this must be included in the net
                 # figures below, not left as a line the net ignores, or a
                 # debt spiral can show a positive net while capital is
@@ -406,7 +412,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
         n_f, err_f = read_target_quantity(cmd, "n", 100, "forest", sim)
         if err_f:
             return {"ok": False, "error": err_f}
-        per = sim.forest_price_per_hectare()
+        per = sim.view("forest_price")()
         return {"ok": True, "what": "forest", "hectares": n_f,
                 "to_buy_it": round(per * n_f, 1),
                 "per_hectare": round(per, 2),
@@ -422,7 +428,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
         n_n, err_n = read_target_quantity(cmd, "n", 10000, "nitre", sim)
         if err_n:
             return {"ok": False, "error": err_n}
-        per_n = sim.NITRE_COST_PER_M2 * sim.price_index
+        per_n = sim.view("nitre_price")() * sim.price_index
         return {"ok": True, "what": "nitre bed", "square_metres": n_n,
                 "to_lay_it": round(per_n * n_n, 1),
                 "per_square_metre": round(per_n, 2),
@@ -431,7 +437,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
                 "you_can_afford_about": purchase_rule.affordable_units(sim, per_n, decimals=0),
                 "afford_means": purchase_rule.afford_means(),
                 "it_yields_per_square_metre_per_year":
-                    "%s of saltpetre" % mass_per_area_text(sim.NITRE_YIELD_T_PER_M2, sim, digits=4),
+                    "%s of saltpetre" % mass_per_area_text(sim.view("nitre_beds")()["tonnes_per_square_metre"], sim, digits=4),
                 "note": "Saltpetre is made, not mined: dung, straw and ash "
                         "turned for a couple of years. Cheap by the metre "
                         "and thin by the metre, so beds are laid in "
@@ -468,7 +474,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
     quantity, err = read_target_quantity(cmd, "n", 1, "mine", sim)
     if err:
         return {"ok": False, "error": err}
-    quote = sim.mine_quote(cmd.get("material"), quantity)
+    quote = sim.view("mine_quote")(cmd.get("material"), quantity)
     if quote is None and cmd.get("material") in nodes:
         return {"ok": False, "error": "%r is a project, not something to buy. Quote what it costs "
                 "to run with 'quote open %s', or a prize for it with 'quote bounty %s'; "
@@ -477,7 +483,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
                     cmd.get("material"), ", ".join(target_names() + list(SPENDING_QUOTERS)))}
     if quote is None:
         return {"ok": False, "error": "no such material: %r. %s"
-                % (cmd.get("material"), sim.mine_catalog_hint())}
+                % (cmd.get("material"), sim.view("mine_catalog_hint")())}
     return dict(ok=True, **quote)
 
 
@@ -494,11 +500,14 @@ def _cmd_close(sim, nodes, cmd, ended):
         return {"ok": False, "error": "%r is a project or concern, not a mine: 'close' shuts mines "
                 "(close <material>). To stop a finished concern's upkeep use 'mothball %s'; "
                 "'ventures' lists what you run." % (target, target)}
-    mine_closed, msg = sim.close_mine(target)
-    if not mine_closed:
-        return {"ok": False, "error": msg}
+    answer = sim.send(CloseMine(target))
+    if isinstance(answer, Refusal):
+        return {"ok": False, "error": str(answer)}
+    msg = ("the %s workings are closed. You stop paying %.0f a year. "
+           "What you spent sinking them is gone, and reopening means "
+           "sinking them again." % (answer["material"], answer["saved_per_year"]))
     return {"ok": True, "closed": msg,
-            "mine_operating_cost": round(sim.mine_operating_cost(), 1)}
+            "mine_operating_cost": round(sim.view("mine_operating_cost")(), 1)}
 
 
 

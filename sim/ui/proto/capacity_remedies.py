@@ -5,7 +5,7 @@ import math
 from sim.engine.ui_port import mass_rate_text, plain_number
 
 def _material_remedy(sim, row):
-    plan = sim.shortage_remedy_plan(row["material"], row["shortfall_t_per_yr"])
+    plan = sim.view("shortage_remedy_plan")(row["material"], row["shortfall_t_per_yr"])
     return {"shortage": row["material"],
             "short": mass_rate_text(row["shortfall_t_per_yr"], sim, grouped=True),
             "commands": plan["commands"], "how": plan["text"]}

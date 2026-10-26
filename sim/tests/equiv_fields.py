@@ -48,6 +48,17 @@ RELOCATIONS = [
     ("/seats/*/modules/seats/founder_alive", "/seats/*/founder/founder_alive"),
     ("/seats/*/modules/seats/life_left", "/seats/*/founder/life_left"),
     ("/seats/*/modules/seats/dead_reason", "/seats/*/founder/dead_reason"),
+    ("/modules/resources/forest_felled", "/economy/forest_felled"),
+    ("/seats/*/modules/resources/mines", "/seats/*/holdings/mines"),
+    ("/seats/*/modules/resources/mine_pending", "/seats/*/holdings/mine_pending"),
+    ("/seats/*/modules/resources/mine_ready", "/seats/*/holdings/mine_ready"),
+    ("/seats/*/modules/resources/mine_cost_paid", "/seats/*/holdings/mine_cost_paid"),
+    ("/seats/*/modules/resources/mine_tranches", "/seats/*/holdings/mine_tranches"),
+    ("/seats/*/modules/resources/deposits_found", "/seats/*/holdings/deposits_found"),
+    ("/seats/*/modules/resources/deposit_drawn", "/seats/*/holdings/deposit_drawn"),
+    ("/seats/*/modules/resources/prospected_person_days", "/seats/*/holdings/prospected_person_days"),
+    ("/seats/*/modules/resources/forest_ha", "/seats/*/holdings/forest_ha"),
+    ("/seats/*/modules/resources/nitre_bed_m2", "/seats/*/holdings/nitre_bed_m2"),
 ]
 
 IGNORED = [

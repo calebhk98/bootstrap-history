@@ -559,46 +559,6 @@ class ForwardingPropertiesMixin:
 		setattr(self.state.holdings, "farm_stock_kg", value)
 
 	@property
-	def forest_ha(self):
-		return getattr(self.state.holdings, "forest_ha")
-
-	@forest_ha.setter
-	def forest_ha(self, value):
-		setattr(self.state.holdings, "forest_ha", value)
-
-	@property
-	def mine_tranches(self):
-		sub = getattr(self.state, "holdings", None)
-		if sub is None:
-			raise AttributeError("mine_tranches")
-		val = getattr(sub, "mine_tranches", None)
-		if val is None:
-			raise AttributeError("mine_tranches")
-		return val
-
-	@mine_tranches.setter
-	def mine_tranches(self, value):
-		sub = getattr(self.state, "holdings", None)
-		if sub is not None:
-			setattr(sub, "mine_tranches", value)
-
-	@property
-	def mines(self):
-		return getattr(self.state.holdings, "mines")
-
-	@mines.setter
-	def mines(self, value):
-		setattr(self.state.holdings, "mines", value)
-
-	@property
-	def nitre_bed_m2(self):
-		return getattr(self.state.holdings, "nitre_bed_m2")
-
-	@nitre_bed_m2.setter
-	def nitre_bed_m2(self, value):
-		setattr(self.state.holdings, "nitre_bed_m2", value)
-
-	@property
 	def output_factor(self):
 		return getattr(self.state.economy, "output_factor")
 

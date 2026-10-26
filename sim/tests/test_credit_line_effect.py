@@ -24,8 +24,11 @@ class FakeSim(CreditMixin):
         self.civ = {"starting_interest_rate": STARTING_RATE}
         self.labour = SimpleNamespace(money_per_labour_hour=lambda: MONEY_PER_LABOUR_HOUR)
         self.state = SimpleNamespace(acting_seat=acting_seat, household=SimpleNamespace(reputation=reputation),
-                                     holdings=SimpleNamespace(forest_ha=0.0))
+                                     )
         self.room = room
+
+    def view(self, name):   # no woodland held
+        return lambda: 0.0
 
     def effect_sum(self, channel, start=0.0):
         terms = sorted(self.specs.items()) if channel == "credit_line" else []

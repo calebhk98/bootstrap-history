@@ -4,10 +4,11 @@ Part of the port. A production entry that names `extracted_from: "standing timbe
 to the runs the tile's standing wood allows; a tile with no forest has no limit, so the recipe does not run
 there. As the felled area spreads out from the settlement the haul to the nearest standing wood lengthens,
 which lowers the wood a run delivers (the yield factor) and so raises its cost. What the firms fell is read
-back each year and drawn from the tile's stock (`state.economy.forest_felled`); the stock then regrows.
+back each year and drawn from the tile's stock (the resources module's `timber_felled`); the stock then regrows.
 """
 from sim.economy.api import SiteLimit
-from sim.geography.api import fell_timber, modes_carrying, carriage_rates, regrow_timber, standing_timber_tonnes, timber_haul_km
+from sim.geography.api import modes_carrying, carriage_rates, standing_timber_tonnes, timber_haul_km
+from sim.resources.api import FellTimber, RegrowTimber
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import demand
 
@@ -39,7 +40,7 @@ def limits(sim, outputs_by_recipe, tile_ids):
     if not recipes:
         return []
     world_map = sim.world_map
-    felled = sim.state.economy.forest_felled
+    felled = sim.view("timber_felled")()
     hours_per_tonne_km = haul_hours_per_tonne_km(world_map)
     found = []
     for tile in sorted(tile_ids):
@@ -59,16 +60,11 @@ def fell(sim, extraction, outputs_by_recipe):
     recipes = timber_recipes(outputs_by_recipe)
     if not recipes:
         return
-    world_map = sim.world_map
-    felled = sim.state.economy.forest_felled
-    for (recipe_id, tile), runs in sorted(extraction.items()):
-        if recipe_id in recipes and runs > 0.0:
-            felled = fell_timber(felled, tile, runs * recipes[recipe_id][0] / KILOGRAMS_PER_TONNE, world_map)
-    sim.state.economy.forest_felled = felled
+    cuts = tuple((tile, runs * recipes[recipe_id][0] / KILOGRAMS_PER_TONNE)
+                 for (recipe_id, tile), runs in sorted(extraction.items()) if recipe_id in recipes and runs > 0.0)
+    sim.send(FellTimber(cuts))
 
 
 def regrow(sim):
     """The stock a year on."""
-    economy = getattr(sim.state, "economy", None)
-    if economy is not None and economy.forest_felled:
-        economy.forest_felled = regrow_timber(economy.forest_felled, sim.world_map)
+    sim.send(RegrowTimber())
