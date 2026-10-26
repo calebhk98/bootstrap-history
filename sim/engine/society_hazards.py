@@ -32,6 +32,7 @@ from .capital_loss import capital_lost
 from .hazard_toll import sack_toll
 from .hedge_steps import hedge_wants, startable_first
 from sim.agents.api import edges, ledger
+from sim.knowledge.api import ForgetTechnique
 from sim.reporting.api import RecordEvent
 
 
@@ -597,13 +598,10 @@ class HazardsMixin:
         losable = self.losable_node_ids()
         if losable:
             drop = rng.sample(losable, max(1, int(len(losable) * frac)))
-            _lost = projects.forgotten
             for node_id in drop:
                 projects.operating.discard(node_id)
-                projects.done.discard(node_id)
                 projects.mothballed.discard(node_id)
-                _lost[node_id] = year  # Track for rebuilding.
-            self._done_changed()
+            self.send(ForgetTechnique(tuple(drop), year=year))  # dated, for rebuilding
             self._log_corpus_loss(year, drop, _hedge_before)
 
     def _log_corpus_loss(self, year, drop, _hedge_before):

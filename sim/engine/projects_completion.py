@@ -23,6 +23,7 @@ from .permanent_benefit import permanent_parts
 from .risk_rules import attempt_fails
 from .units_prose import money_text, plain_number
 from sim.agents.api import edges
+from sim.knowledge.api import LearnTechnique
 from sim.reporting.api import RecordEvent
 
 FAILED_PREFIX = "FAILED at"
@@ -200,14 +201,10 @@ class CompletionMixin:
         # order aimed at this id would otherwise sit in `allocate`'s list
         # for ever, pointed at nothing.
         household.hour_allocations.pop(node_id, None)
-        projects.done.add(node_id)
-        self._done_changed()
+        self.send(LearnTechnique(node_id, year=scenario.year))
         for material, units in (node.get("grants") or {}).items():
             self.grant_stock(material, units)
         self.carry_out_transfers(node_id)
-        if projects.done_year is None:
-            projects.done_year = {}
-        projects.done_year[node_id] = scenario.year
         # A technology changes the society that built it. Only for work YOU
         # completed: a society is not altered by owning something it always had.
         # The alarm is read before the work's own effects apply, which is

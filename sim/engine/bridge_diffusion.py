@@ -60,10 +60,6 @@ def built_by_any_seat(sim, among):
     return seat_builds.built_by_any(sim.state.seats, among)
 
 
-@bridge_view("earliest_done_year", kind=QUOTE)
-def earliest_done_year(sim, node_id, default):
-    """The year the first seat to hold `node_id` finished it (`default` for a seat with no record)."""
-    return seat_builds.earliest_done_year(sim.state.seats, node_id, default)
 
 
 # ---- knowledge and production ----
@@ -80,15 +76,8 @@ def diffusion_traits(sim):
     return category_traits.diffusion_traits()
 
 
-@bridge_view("techniques_granted", seat_scoped=True)
-def techniques_granted(sim):
-    return sim.state.projects.granted
 
 
-@bridge_view("done_year", seat_scoped=True)
-def done_year(sim):
-    """{node id: the year the seat finished it}."""
-    return sim.done_year
 
 
 @bridge_view("venture_opened_year", kind=QUOTE)

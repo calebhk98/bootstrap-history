@@ -7,6 +7,7 @@ work a rebuild does not have to redo. Everything is read from current state;
 the only constant is the ceiling on how much of a lost node can ever survive.
 """
 from sim.constants import declare
+from sim.knowledge.api import CORPUS_HEDGE_LOSS_CHANCE_NONE
 
 
 class RebuildMixin:
@@ -34,7 +35,7 @@ class RebuildMixin:
     def is_being_rebuilt(self, node_id):
         """Whether `node_id` was built once, was lost, and is not held now."""
         projects = self.state.projects
-        return node_id in (projects.forgotten or {}) and node_id not in projects.done
+        return node_id in (self.forgotten or {}) and node_id not in projects.done
 
     def rebuild_survivals(self, node_id):
         """{what survives: share 0..1} for a forgotten node, from current state:
@@ -42,7 +43,7 @@ class RebuildMixin:
         trades still worked by people you keep, `plant` the share of what was
         built on it that still stands."""
         node = self.nodes[node_id]
-        none_chance = self.CORPUS_HEDGE_LOSS_CHANCE_NONE
+        none_chance = CORPUS_HEDGE_LOSS_CHANCE_NONE
         chance, _fraction, _hedge = self.corpus_hedge()
         copy = max(0.0, (none_chance - chance) / none_chance) if none_chance > 0 else 0.0
         employees = self.state.household.employees
@@ -84,7 +85,7 @@ class RebuildMixin:
         retained = self.rebuild_retained_share(node_id)
         return ("forgotten in %d. A rebuild redoes %d%% of the original work, money and "
                 "calendar (%d%% is saved) because %s."
-                % (self.state.projects.forgotten[node_id],
+                % (self.forgotten[node_id],
                    round((1.0 - retained) * 100), round(retained * 100),
                    " and ".join(kept) if kept else
                    "nothing of it survives: no copy, no practitioners, no plant, "

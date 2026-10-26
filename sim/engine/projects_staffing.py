@@ -25,6 +25,7 @@ from .staffing_warning_rows import staffing_warning_rows
 from .affordability import deep_in_arrears, opens_in_deep_arrears, payback_years
 from .units_prose import money_text, per_year
 from sim.agents.api import business_review, edges
+from sim.knowledge.api import LearnTechnique
 from sim.reporting.api import RecordEvent
 
 
@@ -749,8 +750,7 @@ class StaffingMixin:
             return False, ("you no longer have what it stands on: "
                            + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in projects.done))
         self.pay_edge(edges.EDGE_WORKERS, fee, "known technique restored")
-        projects.done.add(node_id)
-        self._done_changed()
+        self.send(LearnTechnique(node_id))
         # Back in service means back in OPERATION: restore is what a player types to reopen something they
         # shut, so a concern goes back on the books; any other work just stops being shut.
         if self.is_venture(node_id):

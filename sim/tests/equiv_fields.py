@@ -37,6 +37,7 @@ RELOCATIONS = [
     ("/modules/diffusion/technique_record_started", "/economy/technique_record_started"),
     ("/modules/diffusion/literacy_said", "/scenario/_literacy_said"),
     ("/seats/*/modules/diffusion/disclosures", "/seats/*/projects/disclosures"),
+    ("/seats/*/modules/knowledge/forgotten", "/seats/*/projects/forgotten"),
 ]
 
 IGNORED = [

@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from sim.engine.fog import HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
+from sim.knowledge.api import HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
 from sim.engine.mods import ModError, get_ordered_mods, load_mod_production, load_mod_tree
 from sim.ui.proto.typed import parse_typed
 

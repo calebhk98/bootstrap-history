@@ -17,9 +17,10 @@ class RiskGame(FogMixin):
         self._losable = ["node%d" % i for i in range(at_risk)]
         self._hedge = hedge
         self.nodes = {}
+        self.forgotten = forgotten or {}
         self.state = types.SimpleNamespace(
             _fog=fog, scenario=types.SimpleNamespace(year=100),
-            projects=types.SimpleNamespace(done=set(done), forgotten=forgotten or {}))
+            projects=types.SimpleNamespace(done=set(done)))
 
     def corpus_hedge(self):
         return 0.5, 0.22, self._hedge

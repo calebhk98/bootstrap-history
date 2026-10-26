@@ -34,6 +34,7 @@ from .step_phase_materials import MaterialsPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
 from .step_phase_staff import StaffPhaseMixin
 from sim.agents.api import edges, ledger
+from sim.knowledge.api import ForgetTechnique
 from sim.reporting.api import RecordEvent
 
 
@@ -510,8 +511,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
                 elif roll < (self.EMINENCE_OUTCOME_CONFISCATION_SHARE + self.EMINENCE_OUTCOME_PATRON_LOST_SHARE):
                     for pat in self.patrons_lost_to_eminence():
                         if pat in self.state.projects.done:
-                            self.state.projects.done.discard(pat)
-                            self._done_changed()
+                            self.send(ForgetTechnique((pat,)))
                             self.send(RecordEvent.of("prominence_patron_destroyed", "PROMINENCE: your patron is destroyed in "
                                                  "someone else's quarrel and you lose %s" % pat))
                             break
@@ -581,8 +581,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
                 if losable:
                     for node_id in self.rng.sample(losable, max(1, len(losable) // self.DISSOLUTION_FORGET_FRACTION_DIVISOR)):
                         self.state.projects.operating.discard(node_id)
-                        self.state.projects.done.discard(node_id)
-                        self._done_changed()
+                        self.send(ForgetTechnique((node_id,)))
             if self.state.projects.stalled in (3, 6, 9, 11):
                 self.send(RecordEvent.of("programme_dissolving", "THE PROGRAMME IS DISSOLVING: %d year(s) "
                     "since the founder died. %s What you built is being "

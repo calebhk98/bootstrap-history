@@ -7,7 +7,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine.save_fog import fog_mismatch
+from sim.knowledge.api import fog_mismatch
 from sim.refusal import cause_of
 from sim.ui import cli
 

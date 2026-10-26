@@ -7,7 +7,7 @@ import unittest
 
 from .harness import NODES
 from sim.engine.data import load_civ
-from sim.engine.starting_techs import declared_starting_techs
+from sim.knowledge.api import declared_starting_techs
 
 ROMAN_MARKERS = ("_roman", "_rome", "annona", "insula", "societas", "collegium",
                  "argentarii", "latifundi", "cursus", "pharos")

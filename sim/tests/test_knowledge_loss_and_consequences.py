@@ -8,15 +8,14 @@ import unittest
 from types import SimpleNamespace
 
 from sim.engine.projects_rebuild import RebuildMixin
+from sim.knowledge.api import CORPUS_HEDGE_LOSS_CHANCE_NONE
 
 NODE = "furnace"
-NONE_CHANCE = 0.5      # the corpus hedge's loss chance with no copy dispersed
+NONE_CHANCE = CORPUS_HEDGE_LOSS_CHANCE_NONE   # the corpus hedge's loss chance with no copy dispersed
 
 
 class Society(RebuildMixin):
     """A society holding a forgotten node, with the survivors given."""
-    CORPUS_HEDGE_LOSS_CHANCE_NONE = NONE_CHANCE
-
     def __init__(self, forgotten=True, hedge_chance=NONE_CHANCE, practitioners=(), dependents_done=0, dependents=4):
         self.nodes = {NODE: {"pre": [], "lab": {"smith": 1.0, "miner": 1.0}}}
         done = set()
@@ -26,9 +25,10 @@ class Society(RebuildMixin):
             if index < dependents_done:
                 done.add(dependent)
         self.state = SimpleNamespace(
-            projects=SimpleNamespace(forgotten={NODE: 100} if forgotten else {}, done=done, active={}),
+            projects=SimpleNamespace(done=done, active={}),
             household=SimpleNamespace(employees={trade: 5.0 for trade in practitioners}))
         self.hedge_chance = hedge_chance
+        self.forgotten = {NODE: 100} if forgotten else {}
 
     def corpus_hedge(self):
         return self.hedge_chance, None, None
