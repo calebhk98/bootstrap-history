@@ -306,6 +306,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
             actors=ActorsState(),
             _civ=self.civ.get("id"),
         )
+        game_assembly.attach(self)   # the modules answer from here on: the opening below already sends commands
         # SET HERE SO EVERY READER CAN READ THEM DIRECTLY. Both are assigned
         # afterwards by whoever builds the game - cli_interactive, cli_agent,
         # sim/tests/fingerprint.py - and both round-trip through saveload's `_fog`
@@ -1739,6 +1740,10 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
             "sell, so it cannot consume the entire year even when nothing "
             "else has any claim on the founder's time. Tuned, not "
             "measured.")
+
+    def view(self, name):
+        """The published view `name` (call it, or index a keyed one); engine and UI code not in a module reads this way."""
+        return self.assembly.views[name]
 
     def send(self, command):
         """Apply `command` through the module that owns it now; engine code not yet in a module sends this way."""
