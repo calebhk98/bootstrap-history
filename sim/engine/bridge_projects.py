@@ -200,7 +200,7 @@ def purchase_remedies_text(sim):
     return purchase_rule.remedies_text(sim)
 
 
-# ---- polity and mechanics -------------------------------------------------------------------------------------------
+# ---- polity -------------------------------------------------------------------------------------------
 
 @bridge_view("standing", seat_scoped=True)
 def standing(sim):
@@ -216,11 +216,6 @@ def state_interest(sim, node):
 @bridge_view("value_weight", kind=KEYED)
 def value_weight(sim, key):
     return sim.value_weights[key]
-
-
-@bridge_view("approval_patron", kind=QUOTE)
-def approval_patron(sim, gate):
-    return sim.approval_patron(gate)
 
 
 @bridge_view("start_gate_group_prohibition", kind=QUOTE)

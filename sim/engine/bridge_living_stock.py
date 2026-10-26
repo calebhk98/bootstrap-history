@@ -194,18 +194,6 @@ def institution_units(sim, node_id):
     return sim.institution_units(node_id)
 
 
-@bridge_view("running_mechanics", kind=QUOTE)
-def running_mechanics(sim, name):
-    """[(node id, parameters)] of the running nodes that declare mechanic `name`."""
-    return [(node_id, sim.mechanic(node_id, name)) for node_id in sim.running_with_mechanic(name)]
-
-
-@bridge_view("effects_in_force", kind=QUOTE)
-def effects_in_force(sim, channel):
-    """[(node id, spec)] declaring effect `channel` that are switched on, in declared order."""
-    return [(node_id, spec) for node_id, spec in sim._effect_terms(channel) if sim.effect_holds(node_id, spec)]
-
-
 @bridge_view("live_hazard_kinds", kind=QUOTE)
 def live_hazard_kinds(sim, year_now):
     """The kinds of hazard in progress in `year_now`."""

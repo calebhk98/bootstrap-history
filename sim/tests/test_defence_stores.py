@@ -18,8 +18,9 @@ from sim.defence_stores.module import DefenceStores
 from sim.engine import cash_remedies  # noqa: F401  (settles the import cycle through project_materials)
 from sim.engine import bridge_living_stock
 from sim.engine import validate_defence_stores
+from sim.engine.forward_mechanics import ForwardMechanicsMixin
 from sim.engine.hazard_relief import HazardReliefMixin
-from sim.engine.mechanics import MechanicsMixin
+from sim.mechanics.module import Mechanics
 from sim.living_stock.api import ChangeHeld
 from sim.tests import module_harness
 from sim.engine.projects_open_gate import OpenGateMixin
@@ -46,7 +47,15 @@ def _nodes():
     }
 
 
-class _Host(HazardReliefMixin, HazardsMixin, MechanicsMixin):
+class _Keyed:
+    def __init__(self, answer):
+        self.answer = answer
+
+    def __getitem__(self, key):
+        return self.answer(key)
+
+
+class _Host(HazardReliefMixin, HazardsMixin, ForwardMechanicsMixin):
     """The fake game the other mixins run on, with the defence-stores module built over it by the harness: its views are
     this host's plain values, and a ChangeHeld it sends changes the host's ledger (kilograms are a thousandth of a tonne)."""
     HOURS_PER_PERSON_YEAR = 2000.0
@@ -69,16 +78,24 @@ class _Host(HazardReliefMixin, HazardsMixin, MechanicsMixin):
             projects=SimpleNamespace(done=done, granted=set(), operating=operating, closures={}),
             household=SimpleNamespace(employees={"soldier": soldiers}, log=[], _stock_throttle_sig=None),
             scenario=SimpleNamespace(year=year))
+        self.mechanics = module_harness.build(Mechanics, views={
+            "tree_nodes": self.nodes, "running": self.running,
+            "techniques_held": lambda: self.state.projects.done, "institution_units": self.institution_units,
+            "money_per_labour_hour": 1.0})
         self.defence = module_harness.build(DefenceStores, views={
             "tree": self.nodes.get, "techniques_done": lambda: self.state.projects.done,
             "operating": lambda: self.state.projects.operating, "is_venture": self.is_venture,
             "staff": lambda: {"employees": self.state.household.employees},
             "stock_held": self.stock_held, "year": lambda: self.state.scenario.year,
             "live_hazard_kinds": lambda year: bridge_living_stock.live_hazard_kinds(self, year),
-            "running_mechanics": lambda name: bridge_living_stock.running_mechanics(self, name),
+            "running_mechanics": self.mechanics.running_mechanics,
             "hours_per_person_year": lambda: self.HOURS_PER_PERSON_YEAR, "institution_units": self.institution_units,
-            "effects_in_force": lambda channel: bridge_living_stock.effects_in_force(self, channel)},
+            "effects_in_force": self.mechanics.effects_in_force},
             answers={ChangeHeld: self.change_held})
+
+    def view(self, name):
+        """The published view `name`, as the mechanics module answers it."""
+        return _Keyed(self.mechanics.mechanic) if name == "mechanic" else getattr(self.mechanics, name)
 
     def stock_held(self, material):
         return self.ledger.get(material, 0.0) * 1000.0

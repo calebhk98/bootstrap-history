@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.engine.economy_credit import CreditMixin
-from sim.engine.mechanics import MechanicsMixin
+from sim.mechanics import rules
 
 MONEY_PER_LABOUR_HOUR = 2.0
 FLOOR = 100.0
@@ -15,7 +15,7 @@ EARNING = 1000.0
 STARTING_RATE = 0.1
 
 
-class FakeSim(CreditMixin, MechanicsMixin):
+class FakeSim(CreditMixin):
     """Just what credit_limit reads: one seat's reputation and forest, an earning, and the effect terms."""
 
     def __init__(self, specs, reputation=0.0, acting_seat="founder", room=None):
@@ -27,11 +27,11 @@ class FakeSim(CreditMixin, MechanicsMixin):
                                      holdings=SimpleNamespace(forest_ha=0.0))
         self.room = room
 
-    def _effect_terms(self, channel):
-        return sorted(self.specs.items()) if channel == "credit_line" else []
-
-    def effect_holds(self, node_id, spec):
-        return True
+    def effect_sum(self, channel, start=0.0):
+        terms = sorted(self.specs.items()) if channel == "credit_line" else []
+        values = rules.grouped_values(terms, lambda node_id, spec: True,
+                                      lambda node_id, spec: rules.effect_size(spec, lambda: 1.0, lambda: MONEY_PER_LABOUR_HOUR))
+        return rules.sum_in_order(values, start)
 
     def revenue_capacity(self):
         return EARNING

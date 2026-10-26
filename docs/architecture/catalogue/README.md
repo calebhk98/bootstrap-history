@@ -42,7 +42,7 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 | 15 | [`living_stock`](living_stock.md) | Herds and defence stores: holding, growing, buying, smuggling and drawing animals and arms. | 4 | 5 | 45 | 7 |
 | 16 | [`markets`](markets.md) | Orders and market outcomes: goods market quotes, clearing, household demand, goods-category factors, the agent economy record. | 8 | 5 | 33 | 5 |
 | 17 | [`materials`](materials.md) | Material supply and demand, the resource throttle, electricity and the materials a project consumes. | 6 | 1 | 63 | 22 |
-| 18 | [`mechanics`](mechanics.md) | What the tree's effects add up to: an index over tech-tree mechanics and effect lookups. | 5 | 0 | 32 | 24 |
+| 18 | [`mechanics`](mechanics.md) | What the tree's effects add up to: an index over tech-tree mechanics and effect lookups. **Moved** (`sim/mechanics/`). | 22 | 0 | 32 | 24 |
 | 19 | [`polity`](polity.md) | The state and the household's standing with it: reputation, scandal, eminence, protection, levies, reach, interest groups. | 7 | 4 | 58 | 13 |
 | 20 | [`prices`](prices.md) | Calculated prices: the material price table, cost books, entry cost ratios. | 4 | 0 | 15 | 5 |
 | 21 | [`production`](production.md) | What runs: operating techniques and capability, revenue and upkeep of concerns, industry experience, techniques in use. | 7 | 4 | 74 | 31 |

@@ -25,3 +25,9 @@ def staff(sim):
 	"""The acting seat's household staff: hired hands by trade, and its scholars and artisans."""
 	household = sim.state.household
 	return {"employees": household.employees, "scholars": household.scholars, "artisans": household.artisans}
+
+
+@bridge_view("tree_nodes")
+def tree_nodes(sim):
+	"""The whole tech tree, node data by id (the object itself: a re-derivation replaces it)."""
+	return sim.nodes

@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 from .harness import NODES, check
 
 from sim.engine import economy_port_institutions
-from sim.engine.mechanics import nodes_declaring
+from sim.mechanics.api import nodes_declaring
 from sim.economy import api as economy_api
 
 MECHANICS = {"share_trading": economy_api.SHARE_TRADING, "bond_market": economy_api.BOND_MARKET,
