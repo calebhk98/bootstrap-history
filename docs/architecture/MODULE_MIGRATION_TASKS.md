@@ -22,8 +22,11 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 | coin | `sim/coin/` | carriage is the ledger's `transfer_surcharge` point |
 | campaigns | `sim/campaigns/` | |
 | reporting | `sim/reporting/` | the seat log and audit trail; world events are hazards' |
+| mechanics | `sim/mechanics/` | a query service: many narrow views, no state |
+| freight | `sim/freight/` | |
+| agriculture | `sim/agriculture/` | the farm holding (`state.holdings.farm_*`) waits for demography and workforce |
 
-In progress: mechanics, freight, diffusion.
+In progress: diffusion, foreign trade, resources.
 
 ## Task list
 
