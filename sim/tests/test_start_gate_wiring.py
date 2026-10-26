@@ -37,20 +37,7 @@ class CommittedSpend(unittest.TestCase):
 
 def director(funding_capacity, committed_spend, project_cost=9000.0, manual=False):
     """The projects module, its start phase ready to run: every candidate can start, and the room is what is given."""
-    state = projects_host.projects_state()
-    module = projects_host.build(
-        legacy_projects=state, tree=lambda node_id: {"name": node_id, "rev": 0.0, "up": 0.0}, legacy_order=["a", "b"],
-        funding_capacity=funding_capacity, committed_cost=committed_spend, project_cost=lambda node_id: project_cost,
-        automation={"manual": manual, "bounty_set": set()}, revenue_estimate=1e6, acting_balance=1e7, year=0,
-        start_check=lambda *arguments: (True, None),
-        project_limits={"base": 5.0, "per_director_hours": 2000.0, "per_scholar": 12.0, "per_artisan": 40.0})
-    module.started = []
-
-    def initialize_project(node_id):
-        module.started.append(node_id)
-        state.active[node_id] = {}
-    module.initialize_project = initialize_project
-    return module
+    return projects_host.start_phase_module(funding_capacity, committed_spend, project_cost, manual)
 
 
 class StartPhase(unittest.TestCase):

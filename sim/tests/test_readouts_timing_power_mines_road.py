@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.blockers import BlockersMixin
+from sim.tests import projects_host
 from sim.engine.completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
 from sim.engine.economy_electricity import ElectricityMixin
 from sim.engine.economy_freight import FreightMixin
@@ -110,20 +110,9 @@ class PowerCapabilityReadouts(unittest.TestCase):
     def _gate_host(self, done):
         nodes = self.NODES
 
-        class Host(BlockersMixin):
-            state = SimpleNamespace(projects=SimpleNamespace(done=set(done)))
-            nodes = None
-
-            def _visible_to_player(self, node_id):
-                return True
-
-            def missing_prereq_message(self, missing):
-                return "needs " + ", ".join(missing)
-
-            def generation_capacity_kw(self):
-                return 120.0
-        Host.nodes = nodes
-        return Host()
+        return projects_host.build(
+            tree=lambda node_id: nodes.get(node_id), techniques_held=set(done), visible_to_player=lambda node_id: True,
+            prerequisite_message=lambda missing, memo: "needs " + ", ".join(missing), generation=120.0)
 
     def test_a_missing_power_capability_is_a_power_gate_that_installed_generation_does_not_satisfy(self):
         entries = self._gate_host({"en_alternator"})._missing_prereq_entries(

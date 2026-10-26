@@ -70,13 +70,14 @@ def substitution_gap(group: Dict[str, Any]) -> Tuple[str, List[str]]:
     return (name or "one of the things it can be made from", sorted(options, key=lambda option: -float(options[option]))[:4])
 
 
-def bounty_possible(category: str, craft_categories: Sequence[str], prerequisites_done: bool, cost_factor: float,
-                    cost_advantage: float) -> bool:
+def bounty_possible(category: str, craft_categories: Sequence[str], prerequisites_done: bool,
+                    cost_factor: Callable[[], float], cost_advantage: float) -> bool:
     """Whether a public prize can buy this: the craft already exists in the society (a craft category, or one the
-    society is measurably good at) and its prerequisites are known."""
+    society is measurably good at, `cost_factor()` under `cost_advantage`) and its prerequisites are known. The cost
+    factor is asked for only when the category is not a craft one."""
     if category in craft_categories:
         return prerequisites_done
-    if cost_factor < cost_advantage:
+    if cost_factor() < cost_advantage:
         return prerequisites_done
     return False
 

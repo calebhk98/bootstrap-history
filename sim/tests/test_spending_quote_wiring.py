@@ -13,7 +13,10 @@ from .harness import check
 
 from sim.labour.labour_training import TrainingMixin
 from sim.engine.project_materials import ProjectMaterialsMixin
-from sim.engine.projects_starting import StartingMixin
+from sim.agents.api import edges
+from sim.ledger.api import PayEdge
+from sim.projects.api import PostBounty
+from sim.tests import module_harness, projects_host
 from sim.refusal import Refusal
 from sim.ui.proto import quote_spending
 
@@ -125,32 +128,20 @@ refusing_payer.commission_check = lambda trade, hours: (None, "refused")
 check("a commission refused by its check pays nothing", refusing_payer.commission("smith", 100) == (False, "refused") and not refusing_payer.paid)
 
 
-class Poster(StartingMixin):
-    """The parts of a Sim a bounty touches."""
-
-    def __init__(self, capital, price):
-        self.nodes = {"mill": {"name": "Mill"}}
-        self.state = SimpleNamespace(
-            household=SimpleNamespace(capital=capital, total_spend=0.0, bounties_paid=0, log=[]),
-            projects=SimpleNamespace(active={}, bountied=set()), scenario=SimpleNamespace(year=100))
-        self.price = price
-        self.paid = []
-
-    def bounty_price(self, node_id):
-        return self.price
-
-    def pay_edge(self, edge, money, purpose):
-        self.paid.append((money, purpose))
-
-    def initialize_project(self, node_id, **fields):
-        self.state.projects.active[node_id] = {}
-
-    def money_text(self, money, *arguments, **keywords):
-        return "%.0f" % money
+def poster(capital, price):
+    """The projects module with what a bounty touches: the prize and the purse."""
+    state = projects_host.projects_state()
+    module = projects_host.build(tree={"mill": {"name": "Mill"}}, bounty_price=lambda node_id: price, acting_balance=capital,
+                                 legacy_projects=state)
+    module.initialize_project = lambda node_id, **fields: state.active.update({node_id: {}})
+    return module
 
 
-poster = Poster(10000.0, 9000.06)
+paying = poster(10000.0, 9000.06)
 check("post_bounty pays exactly bounty_price, the figure quote bounty shows",
-      poster.post_bounty("mill") is True and poster.paid == [(9000.06, "bounties posted")], poster.paid)
-broke = Poster(100.0, 9000.06)
-check("post_bounty pays nothing when the prize passes the cash", broke.post_bounty("mill") is False and not broke.paid)
+      paying.post_bounty(PostBounty("mill")) is True
+      and [command for command in module_harness.sent(paying) if isinstance(command, PayEdge)]
+      == [PayEdge(edges.EDGE_WORKERS, 9000.06, "bounties posted")], module_harness.sent(paying))
+broke = poster(100.0, 9000.06)
+check("post_bounty pays nothing when the prize passes the cash",
+      broke.post_bounty(PostBounty("mill")) is False and not module_harness.sent(broke))

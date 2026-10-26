@@ -11,10 +11,10 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.projects.api import funding
+from sim.projects.api import StopProject, funding
+from sim.tests import projects_host
 cash_covers_start, paid_credit = funding.cash_covers_start, funding.paid_credit
 from sim.engine.projects_progress import ProgressMixin
-from sim.engine.projects_starting import StartingMixin
 from sim.engine.projects_trade_wait import STALL_YEARS_BEFORE_ABANDONMENT
 from sim.engine.step_phase_projects import ProjectProgressPhaseMixin
 from sim.labour.hours_sale_warning import starved_projects, starving_warning
@@ -143,15 +143,15 @@ check("a project with its trades again has its countdown cleared", not stopped a
 
 # --- stopping keeps the money that was paid; beginning again bills only the remainder
 def stopped_game(spent):
-    host = SimpleNamespace(state=SimpleNamespace(projects=SimpleNamespace(active={"p": {"spent": spent, "ph_left": 100.0}},
-                                                                           bountied=set(), paid_towards=None)), civ={})
-    return host, StartingMixin.stop_project(host, "p")
-host, (ok, message) = stopped_game(300.0)
-check("stopping a project keeps the money already paid", ok and host.state.projects.paid_towards == {"p": 300.0}, host.state.projects.paid_towards)
-host, (ok, message) = stopped_game(0.2)
-check("a project that had paid next to nothing keeps nothing", ok and not host.state.projects.paid_towards, host.state.projects.paid_towards)
-host, (ok, message) = stopped_game(1.0)
-check("stopping something that is not active is refused", StartingMixin.stop_project(host, "q") == (False, "not active"))
+    state = projects_host.projects_state(active={"p": {"spent": spent, "ph_left": 100.0}}, paid_towards=None)
+    module = projects_host.build(legacy_projects=state)
+    return state, module, module.stop_project(StopProject("p"))
+state, _module, (ok, message) = stopped_game(300.0)
+check("stopping a project keeps the money already paid", ok and state.paid_towards == {"p": 300.0}, state.paid_towards)
+state, _module, (ok, message) = stopped_game(0.2)
+check("a project that had paid next to nothing keeps nothing", ok and not state.paid_towards, state.paid_towards)
+state, module, (ok, message) = stopped_game(1.0)
+check("stopping something that is not active is refused", module.stop_project(StopProject("q")) == (False, "not active"))
 check("money already paid comes off the bill, never more than the price",
       paid_credit(1000.0, 300.0) == 300.0 and paid_credit(1000.0, 5000.0) == 1000.0 and paid_credit(1000.0, None) == 0.0
       and paid_credit(1000.0, -5.0) == 0.0)

@@ -237,9 +237,10 @@ class StartGate(unittest.TestCase):
         game = Prohibition(ban=("producers of iron", 0.6), state_interest=1.0)
         self.assertIsNone(game.group_prohibition_of("press"))
 
-    def test_the_prohibition_is_one_of_the_start_gates_checks(self):
-        from sim.engine.core import Sim
-        self.assertIn(check_group_prohibition, Sim._START_REASON_CHECKS)
+    def test_the_prohibition_is_one_of_the_start_gates_checks_and_both_name_the_same_kind_of_blocker(self):
+        from sim.projects.api import START_CHECKS
+        gate = next(check for check in START_CHECKS if check.cause == "group_prohibition")
+        self.assertEqual((gate.source, gate.kind), ("start_gate_group_prohibition", check_group_prohibition.blocker_kind))
 
 
 class HurtSectors(unittest.TestCase):

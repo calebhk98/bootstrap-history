@@ -1,14 +1,11 @@
 """Complaint 120: starting a project with the precaution adds the quoted cost to its bill and the quoted hours to its founder
-hours and marks it; one a node does not offer is refused before anything starts. `begin_seat_project` and `start_project`
-called once each on a stand-in game written out here, with the precaution's figures (extra cost, extra hours, whether a node offers
-one) replaced by recorders. The figures themselves are test_risk_precaution."""
+hours and marks it; one a node does not offer is refused before anything starts. `begin_project` and `start_project`
+called once each on the projects module built with the precaution's figures (extra cost, extra hours, whether a node offers
+one) answered by recorders. The figures themselves are test_risk_precaution."""
 import unittest
-from types import SimpleNamespace
 
-from unittest import mock
-
-from sim.engine import projects_starting
-from sim.engine.projects_starting import StartingMixin
+from sim.projects.api import SettleProjectMaterials, StartProject
+from sim.tests import module_harness, projects_host
 
 QUICK_TOPIC = True
 UNDER_TEST = {"start_project"}
@@ -17,89 +14,62 @@ BILL = 1000.0
 HOURS = 200.0
 NODE = {"name": "Heat", "ph": HOURS, "lab": {"smith": 5.0}, "mechanics": {"precaution": {"kind": "pilot_plant"}}}
 PLAIN = {"name": "Plain", "ph": HOURS, "lab": {"smith": 5.0}, "mechanics": {}}
-
-
-class _Game(StartingMixin):
-
-    def __init__(self):
-        self.nodes = {"declared": NODE, "plain": PLAIN}
-        self.order = ["plain", "declared"]
-        self.state = SimpleNamespace(
-            projects=SimpleNamespace(paid_towards={}, mothballed=set(), active={}),
-            household=SimpleNamespace(log=[]), scenario=SimpleNamespace(year=100))
-        self.begun_through_research = []
-
-    def project_cost(self, node_id):
-        return BILL
-
-    def rebuild_work_factor(self, node_id):
-        return 1.0
-
-    def mechanic(self, node_id, name):
-        return self.nodes[node_id]["mechanics"].get(name)
-
-    def settle_project_materials(self, node_id):
-        return BILL, 0.0
-
-    def initialize_project(self, node_id, spent, cost_left, bill):
-        self.state.projects.active[node_id] = {"spent": spent, "cost_left": cost_left, "bill": bill, "ph_left": self.nodes[node_id]["ph"]}
-
-    def effective_risk(self, node_id, precaution=None):
-        return 0.4
-
-    def calendar_floor(self, node_id):
-        return 3.0
-
-    def start_refusal(self, node_id):
-        return None
-
-
 EXTRA_COST, EXTRA_HOURS = 50.0, 7.0
 
 
+def game(**views):
+    """The module and the raw project state and order it writes."""
+    state = projects_host.projects_state()
+    order = ["plain", "declared"]
+    module = projects_host.build(
+        answers={SettleProjectMaterials: (BILL, 0.0)}, tree={"declared": NODE, "plain": PLAIN}, legacy_projects=state,
+        legacy_order=order, project_cost=lambda node_id: BILL, effective_risk=lambda node_id: 0.4,
+        calendar_floor=lambda node_id: 3.0, precaution_extra_cost=lambda node_id, bill: EXTRA_COST,
+        precaution_extra_hours=lambda node_id: EXTRA_HOURS, start_refusal=lambda node_id: None, **views)
+    return module, state, order
+
+
 def begun(precaution):
-    game = _Game()
-    with mock.patch.object(projects_starting, "precaution_extra_cost", lambda sim, node_id, bill: EXTRA_COST), \
-            mock.patch.object(projects_starting, "precaution_extra_hours", lambda sim, node_id: EXTRA_HOURS):
-        outcome = game.begin_seat_project("declared", precaution)
-    return game, outcome, game.state.projects.active["declared"]
+    module, state, order = game()
+    outcome = module.begin_project("declared", precaution)
+    return order, outcome, state.active["declared"]
 
 
-class BeginSeatProject(unittest.TestCase):
+class BeginProject(unittest.TestCase):
 
     def test_the_plain_start_has_the_plain_bill_and_hours_and_no_mark(self):
-        _game, outcome, record = begun(False)
+        _order, outcome, record = begun(False)
         self.assertEqual(outcome, "begun")
         self.assertEqual((record["bill"], record["ph_left"]), (BILL, HOURS))
         self.assertNotIn("precaution", record)
 
     def test_the_bought_start_adds_the_quoted_cost_to_the_bill_and_the_quoted_hours_to_the_founder_hours(self):
-        game, _outcome, record = begun(True)
+        _order, _outcome, record = begun(True)
         self.assertEqual(record["bill"], BILL + EXTRA_COST)
         self.assertEqual(record["ph_left"], HOURS + EXTRA_HOURS)
 
     def test_the_bought_start_is_marked_so_the_dice_use_the_lowered_chance(self):
-        _game, _outcome, record = begun(True)
+        _order, _outcome, record = begun(True)
         self.assertIs(record["precaution"], True)
 
     def test_the_money_still_to_pay_is_the_whole_bill_with_the_precaution(self):
-        _game, _outcome, record = begun(True)
+        _order, _outcome, record = begun(True)
         self.assertAlmostEqual(record["cost_left"], record["bill"])
 
     def test_the_project_goes_to_the_front_of_the_order(self):
-        game, _outcome, _record = begun(True)
-        self.assertEqual(game.order[0], "declared")
+        order, _outcome, _record = begun(True)
+        self.assertEqual(order[0], "declared")
 
 
 class StartProjectRefusesAnUnofferedPrecaution(unittest.TestCase):
 
     def test_a_node_that_offers_none_is_refused_and_nothing_starts(self):
-        game = _Game()
-        with mock.patch.object(projects_starting, "precaution_spec", lambda sim, node_id: None):
-            started, why = game.start_project("plain", precaution=True)
+        module, state, _order = game(precaution_spec=lambda node_id: None)
+        started, why = module.start_project(StartProject("plain", precaution=True))
         self.assertFalse(started)
         self.assertTrue(why)
-        self.assertEqual(game.state.projects.active, {})
+        self.assertEqual(state.active, {})
+        self.assertEqual([type(command) for command in module_harness.sent(module)], [])
 
 
 if __name__ == "__main__":

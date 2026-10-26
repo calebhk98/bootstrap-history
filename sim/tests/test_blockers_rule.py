@@ -4,7 +4,9 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.blockers import classify_plain_check, collect_blockers
+from sim.projects.api import blocker_rules
+
+classify_plain_check, collect_blockers = blocker_rules.classify_plain_check, blocker_rules.collect_blockers
 
 
 def make_checks(*kinds):
@@ -60,24 +62,24 @@ class CollectBlockers(unittest.TestCase):
 
 
 class ClassifyPlainCheck(unittest.TestCase):
-    def test_cause_is_the_check_name_without_its_prefix(self):
-        entry = classify_plain_check("_check_absent_trades", "specialists", "t", [], None, False)
+    def test_cause_is_the_one_the_check_is_named_by(self):
+        entry = classify_plain_check("absent_trades", "specialists", "t", [], None, False)
         self.assertEqual((entry["kind"], entry["cause"]), ("specialists", "absent_trades"))
 
     def test_supply_carries_its_options_and_other_kinds_do_not(self):
-        self.assertEqual(classify_plain_check("check_x", "supply", "t", ["a"], None, False)["ids"], ["a"])
-        self.assertEqual(classify_plain_check("check_x", "money", "t", ["a"], None, False)["ids"], [])
+        self.assertEqual(classify_plain_check("x", "supply", "t", ["a"], None, False)["ids"], ["a"])
+        self.assertEqual(classify_plain_check("x", "money", "t", ["a"], None, False)["ids"], [])
 
     def test_done_on_a_shut_venture_is_closed_with_the_shut_text(self):
-        entry = classify_plain_check("_check_already_done", "done", "done", [], "shut", False)
+        entry = classify_plain_check("already_done", "done", "done", [], "shut", False)
         self.assertEqual((entry["kind"], entry["cause"], entry["text"]), ("closed", "built_but_shut", "shut"))
 
     def test_done_on_a_running_work_stays_done(self):
-        entry = classify_plain_check("_check_already_done", "done", "done", [], None, False)
+        entry = classify_plain_check("already_done", "done", "done", [], None, False)
         self.assertEqual((entry["kind"], entry["cause"]), ("done", "already_done"))
 
     def test_mothballed_is_closed_with_its_own_cause(self):
-        entry = classify_plain_check("_check_already_done", "done", "done", [], "shut", True)
+        entry = classify_plain_check("already_done", "done", "done", [], "shut", True)
         self.assertEqual((entry["kind"], entry["cause"]), ("closed", "mothballed"))
 
 

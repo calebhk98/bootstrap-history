@@ -92,7 +92,7 @@ class Starting:
 	# ---- the commands -------------------------------------------------------------------------------------------
 
 	def start_project(self, command: StartProject) -> Tuple[bool, Any]:
-		refusal = self.start_refusal(command.node_id)
+		refusal = self.needs.start_refusal(command.node_id)       # the quote the player was shown, adjusters included
 		if refusal:
 			return False, refusal
 		if command.precaution and self.needs.precaution_spec(command.node_id) is None:

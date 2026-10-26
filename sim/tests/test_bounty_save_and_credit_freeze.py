@@ -24,78 +24,70 @@ check("a household in arrears covers no start with cash but a free one", not cas
 check("saveload has no SAVE_VERSION", not hasattr(_saveload_module, "SAVE_VERSION"))
 
 
-# --- the freeze check and the bounty, called on stand-in games
+# --- the freeze check and the bounty, called on the projects module built with what they read
 import types
 
-from sim.engine import blockers
+from sim.agents.api import edges
+from sim.ledger.api import PayEdge
 from sim.engine.projects_progress import ProgressMixin
-from sim.engine.projects_starting import StartingMixin
+from sim.projects.api import PostBounty, blocker_rules
+from sim.tests import module_harness, projects_host
 
 
-def frozen_game(year, frozen_until, covered, end_year=None):
-    household = types.SimpleNamespace(credit_frozen_until=frozen_until)
-    game = types.SimpleNamespace(state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=year), household=household),
-                                 cfg={"start_year": 100, "horizon_years": 500}, end_year=end_year,
-                                 _cash_covers_start=lambda node_id: covered)
-    return game
+def frozen_game(year, frozen_until, covered, end_year=1000):
+    module = projects_host.build(year=year, debt_status={"credit_frozen_until": frozen_until, "insolvent_years": 0},
+                                 horizon_end_year=end_year)
+    module._cash_covers_start = lambda node_id: covered
+    return module
 
 
-check_frozen = StartingMixin._check_credit_frozen
-check("during a freeze a start the cash does not cover is refused",
-      check_frozen(frozen_game(100, 103, False), "node", {}, None, {}, True)[0] is False)
-check("...and one the cash covers is allowed", check_frozen(frozen_game(100, 103, True), "node", {}, None, {}, True) is None)
-check("...and once the freeze has lifted a start is not refused for it",
-      check_frozen(frozen_game(103, 103, False), "node", {}, None, {}, True) is None)
-check("...and a household never frozen is not refused for it", check_frozen(frozen_game(100, None, False), "node", {}, None, {}, True) is None)
+def check_frozen(module):
+    return module._check_credit_frozen("node", {}, False, None, True)
+
+
+check("during a freeze a start the cash does not cover is refused", check_frozen(frozen_game(100, 103, False))[0] is False)
+check("...and one the cash covers is allowed", check_frozen(frozen_game(100, 103, True)) is None)
+check("...and once the freeze has lifted a start is not refused for it", check_frozen(frozen_game(103, 103, False)) is None)
+check("...and a household never frozen is not refused for it", check_frozen(frozen_game(100, None, False)) is None)
+frozen_check = next(entry for entry in blocker_rules.START_CHECKS if entry.cause == "credit_frozen")
 check("the freeze check is a money blocker, reported under the cause credit_frozen",
-      check_frozen.blocker_kind == "money"
-      and blockers.classify_plain_check(check_frozen.__name__, check_frozen.blocker_kind, "text", [], None, False)["cause"] == "credit_frozen")
+      frozen_check.kind == "money"
+      and blocker_rules.classify_plain_check(frozen_check.cause, frozen_check.kind, "text", [], None, False)["cause"] == "credit_frozen")
 
 # the cash a start needs: its price less what is paid towards it, on top of what work in hand still owes
-cash_game = types.SimpleNamespace(
-    project_cost=lambda node_id: 1000.0,
-    state=types.SimpleNamespace(
-        projects=types.SimpleNamespace(active={"a": {"cost_left": 200.0}, "b": {"cost_left": None}}, paid_towards={"node": 300.0}),
-        household=types.SimpleNamespace(capital=900.0)))
+cash_state = projects_host.projects_state(active={"a": {"cost_left": 200.0}, "b": {"cost_left": None}}, paid_towards={"node": 300.0})
+cash_module = projects_host.build(project_cost=lambda node_id: 1000.0, legacy_projects=cash_state, acting_balance=900.0)
 check("the cash that covers a start counts what is owed on active work and what is paid towards it",
-      StartingMixin._cash_covers_start(cash_game, "node") is True)
-cash_game.state.household.capital = 899.0
-check("...and is not covered one unit short", StartingMixin._cash_covers_start(cash_game, "node") is False)
+      cash_module._cash_covers_start("node") is True)
+cash_module = projects_host.build(project_cost=lambda node_id: 1000.0, legacy_projects=cash_state, acting_balance=899.0)
+check("...and is not covered one unit short", cash_module._cash_covers_start("node") is False)
 
 
 # a bounty pays the price, draws no poster hours, and is not counted as hours the founder still has to give
-class _Poster(StartingMixin):
-    def __init__(self, capital, price):
-        self.nodes = {"node": {"name": "Node", "ph": 500.0, "yrs": 2.0}}
-        self.state = types.SimpleNamespace(
-            household=types.SimpleNamespace(capital=capital, total_spend=0.0, bounties_paid=0, log=[]),
-            projects=types.SimpleNamespace(active={}, bountied=set()),
-            scenario=types.SimpleNamespace(year=100))
-        self._price = price
-        self.paid, self.started = [], []
+def poster(capital, price):
+    state = projects_host.projects_state()
+    household = types.SimpleNamespace(bounties_paid=0, employees={})
+    module = projects_host.build(
+        tree={"node": {"name": "Node", "ph": 500.0, "yrs": 2.0}}, legacy_projects=state, bounty_price=lambda node_id: price,
+        acting_balance=capital, legacy_acting_household=household)
+    module.started = []
 
-    def bounty_price(self, node_id):
-        return self._price
-
-    def pay_edge(self, edge, amount, cause):
-        self.paid.append((amount, cause))
-
-    def initialize_project(self, node_id, **keywords):
-        self.started.append(keywords)
-        self.state.projects.active[node_id] = {"ph_left": keywords["ph_left"]}
+    def initialize_project(node_id, **keywords):
+        module.started.append(keywords)
+        state.active[node_id] = {"ph_left": keywords["ph_left"]}
+    module.initialize_project = initialize_project
+    return module, state
 
 
-import sim.engine.projects_starting as _projects_starting
-from unittest import mock
-
-poster = _Poster(1000.0, 400.0)
-with mock.patch.object(_projects_starting, "money_text", lambda amount, sim, **keywords: "money"):
-    posted_ok = poster.post_bounty("node")
+poster_module, poster_state = poster(1000.0, 400.0)
+posted_ok = poster_module.post_bounty(PostBounty("node"))
 check("a bounty the poster can pay is posted", posted_ok is True)
+paid = [command for command in module_harness.sent(poster_module) if isinstance(command, PayEdge)]
 check("...it pays the price under its cause and spends no poster hours or hired trades",
-      poster.paid == [(400.0, "bounties posted")] and poster.started[0]["ph_left"] == 0.0
-      and poster.started[0]["include_labor"] is False and poster.started[0]["cost_left"] == 0.0, (poster.paid, poster.started))
-check("...and marks the project as bountied", poster.state.projects.bountied == {"node"})
+      paid == [PayEdge(edges.EDGE_WORKERS, 400.0, "bounties posted")] and poster_module.started[0]["ph_left"] == 0.0
+      and poster_module.started[0]["include_labour"] is False and poster_module.started[0]["cost_left"] == 0.0,
+      (paid, poster_module.started))
+check("...and marks the project as bountied", poster_state.bountied == {"node"})
 bounty_projects = types.SimpleNamespace(active={"node": {"ph_left": 500.0}}, bountied={"node"})
 bounty_game = types.SimpleNamespace(state=types.SimpleNamespace(projects=bounty_projects), nodes={"node": {"ph": 500.0, "yrs": 2.0}})
 check("a bountied project asks for no hours of the founder", ProgressMixin.project_hour_pace(bounty_game, "node") == 0.0)
@@ -103,7 +95,8 @@ check("a project asking for hours is listed with them and one asking for none is
       ProgressMixin.active_hours_still_wanted(types.SimpleNamespace(
           state=types.SimpleNamespace(projects=types.SimpleNamespace(active_keys_sorted=lambda: ["a", "b"])),
           nodes={"a": {}, "b": {}}, project_hour_pace=lambda node_id: {"a": 40.0, "b": 0.0}[node_id])) == {"a": 40.0})
-broke = _Poster(300.0, 400.0)
-check("a bounty beyond the purse is refused and nothing is paid", broke.post_bounty("node") is False and broke.paid == [])
+broke_module, _broke_state = poster(300.0, 400.0)
+check("a bounty beyond the purse is refused and nothing is paid",
+      broke_module.post_bounty(PostBounty("node")) is False and module_harness.sent(broke_module) == [])
 check("the bounty set is saved as node ids, checked against the tree on load",
       "bountied" in _saveload_module._SET_FIELDS_OF_NODE_IDS, _saveload_module._SET_FIELDS_OF_NODE_IDS)

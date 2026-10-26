@@ -77,3 +77,25 @@ def build(answers: Dict[str, Any] = None, **views: Any) -> Projects:
 
 def declared_reads() -> tuple:
 	return module_spec.MODULE_SPECS[0].reads
+
+
+def start_phase_module(funding_capacity: float = 1e9, committed_cost: float = 0.0, project_cost: float = 10.0,
+                       manual: bool = False, **views: Any) -> Projects:
+	"""The module ready to run its start phase: two candidates, every one startable, money in hand and the given room.
+	`started` lists what `initialize_project` was asked to begin."""
+	state = projects_state()
+	arguments = dict(
+		legacy_projects=state, tree=lambda node_id: {"name": node_id, "rev": 0.0, "up": 0.0}, legacy_order=["a", "b"],
+		funding_capacity=funding_capacity, committed_cost=committed_cost, project_cost=lambda node_id: project_cost,
+		automation={"manual": manual, "bounty_set": set()}, revenue_estimate=1e6, acting_balance=1e7, year=0,
+		start_check=lambda *call: (True, None),
+		project_limits={"base": 5.0, "per_director_hours": 2000.0, "per_scholar": 12.0, "per_artisan": 40.0})
+	arguments.update(views)
+	module = build(**arguments)
+	module.started = []
+
+	def initialize_project(node_id):
+		module.started.append(node_id)
+		state.active[node_id] = {}
+	module.initialize_project = initialize_project
+	return module

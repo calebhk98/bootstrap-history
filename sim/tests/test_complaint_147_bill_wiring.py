@@ -13,9 +13,10 @@ from .harness import check
 from sim.engine.economy import EconomyMixin
 from sim.engine.goods_market_api import GoodsMarket
 from sim.engine.project_materials import ProjectMaterialsMixin
-from sim.engine.projects_starting import StartingMixin
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
 from sim.engine.state_seat import seat_from_template
+from sim.projects.api import SettleProjectMaterials
+from sim.tests import projects_host
 from sim.ui.proto.quote_purchases import _quote_material
 from sim.ui.proto.techtree import _explain_cost
 
@@ -106,12 +107,12 @@ game, bought = settling(up_front=0.0, paid=0.0)
 check("with no materials to buy up front nothing is bought and the whole cost is left", ProjectMaterialsMixin.settle_project_materials(game, "node") == (1000.0, 0.0)
       and bought == [], bought)
 
-game = SimpleNamespace(nodes={"node": {"ph": 10.0, "lab": {"smith": 4.0}}}, state=SimpleNamespace(projects=SimpleNamespace(active={})),
-                       project_own_output_claim=lambda node_id: {"forest": 2.0}, rebuild_work_factor=lambda node_id: 1.0,
-                       settle_project_materials=lambda node_id: (700.0, 300.0))
-record = StartingMixin.initialize_project(game, "node")
+module = projects_host.build(
+    answers={SettleProjectMaterials: (700.0, 300.0)}, tree={"node": {"ph": 10.0, "lab": {"smith": 4.0}}},
+    legacy_projects=projects_host.projects_state(), own_output_claim=lambda node_id: {"forest": 2.0})
+record = module.initialize_project("node")
 check("a started project's bill is fixed at what was left after paying the materials", record["bill"] == 700.0 and record["cost_left"] == 700.0
-      and game.state.projects.active["node"] is record, record)
+      and module.needs.legacy_projects().active["node"] is record, record)
 check("a started project records the own output it claims and the labour it needs", record["own_output_claim"] == {"forest": 2.0}
       and record["lab_left"] == {"smith": 4.0} and record["ph_left"] == 10.0, record)
 
