@@ -103,9 +103,6 @@ def partner_catch_chance(sim, civilization_id, share_of_holding):
 
 # ---- what is built and running ----
 
-@bridge_view("techniques_done")
-def techniques_done(sim):
-    return sim.state.projects.done
 
 
 @bridge_view("operating")

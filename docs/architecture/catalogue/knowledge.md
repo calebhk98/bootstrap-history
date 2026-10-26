@@ -2,114 +2,120 @@
 
 What each seat knows and can see: techniques held, forgotten, revealed (fog), and the tree itself.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** moved in part (branch `mr/knowledge`). The package is `sim/knowledge/`; this file describes what shipped and
+what is left, not the draft proposal. The held, granted, done-year and heard-of records and the tree itself are still
+stored where the engine keeps them and are read and written through `legacy_*` views (section "Debts"); what a seat has
+forgotten is the module's own state. Counts come from the module spec
+(`python3 -c "import sys; sys.path.insert(0,'.'); from sim.knowledge.module_spec import MODULE_SPECS as s; print(len(s[0].publishes), len(s[0].applies))"`).
 
-## At a glance
+## What changed from the draft
 
-| Measure | Value |
+- **Views: 14 instead of 3.** The draft folded eleven fog methods into one keyed `visibility` and the held set into one
+  `techniques_held` table. Callers ask separate questions with separate shapes (a yes-or-no with a shared memo, a sentence
+  from a list of ids, a scrubbed text, a one-sentence summary), so each is a view. Names kept from the bridge, shapes
+  unchanged, bridge entries deleted: `tree`, `tree_nodes`, `techniques_held`, `techniques_granted`, `done_year`,
+  `earliest_done_year`, `visibility`, `visible_to_player`, `prerequisite_message`. `techniques_done` (living stock's bridge)
+  was a second view of the same set as `techniques_held`; defence stores now reads `techniques_held` and the entry is gone.
+  New: `techniques_forgotten`, `corpus_hedge`, `fog_scrub`, `fog_summary`, `never_abandon`.
+- **`visibility` is a quote, not keyed.** It takes the shared memo of one recursive descent (the start test asks it of each
+  missing prerequisite, which asks the start test of its own), and a keyed view would key on the memo too.
+- **Commands: 4 applied and 1 sent, not 3.** `LearnTechnique(node_id, year, granted)`, `ForgetTechnique(node_ids, year)`,
+  `RevealNodes(node_ids)` and `RevealFrom(node_id)`. The draft's `RevealNodes` covered both hearing of another seat's work
+  and finishing a node; they differ (one computes its targets from the tree, under fog only), so they are two. The draft's
+  `seat` and `cause` fields are dropped: a command is for the acting seat, and nothing reads a cause. `via` is `granted`.
+  No refusals: learning what is held and forgetting what is not are no-ops that still tell the caches, exactly as the old
+  inline writes did. `RefreshDoneCaches` (sent, applied by the bridge) is the engine's `_done_changed`.
+- **Moved to `rules.py` / `fog_words.py`** as functions of plain values: `in_tree_order`, `reveal_targets`,
+  `earliest_done_year`, `corpus_hedge`, `never_abandon`, and the fog words (`prerequisite_label`, `prerequisite_names`,
+  `strip_self_play_advice`, `scrub_hidden_ids`, `summary_sentence`, `hidden_prerequisite_kinds`, `free_prereq_hint`,
+  `missing_prereq_message`). `starting_techs.py` and `save_fog.py` moved in as they were; `grant_starting_techs` is gone
+  (the opening sends `LearnTechnique(granted=True)` once per technique).
+- **Not knowledge's, left where they are.** `visibility.py` (how much of an invention an onlooker sees) belongs to diffusion
+  and the seats' sight; `node_rederive.py` is production's (it prices the tree); `knowledge_risk` and `_epidemic_risk` in
+  `FogMixin` are hazards' (a report on sack hazards that happens to read the forgotten record); `on_road_to_goal` stays in
+  `FogMixin` because the goal-closure cache it fills is shared with `labour_port.py` and `society_hazards.py`, so it is
+  seats' and reaches this module as the `on_road_to_goal` view (bridge). `knowledge_warning.py` is knowledge's by the
+  catalogue but is a screen over `knowledge_risk`; it reads `has`, `is_visible` and `corpus_hedge_tiers` through the
+  forwarders and did not need to change.
+- **`done_in_order` and `_done_changed` stay in `economy.py`.** They are the engine's caches over the held set
+  (`household._done_seq`, `_cap_factor`, `done_version`), read by production, materials, markets and legitimacy. The module
+  bumps its own `done` channel on every write and tells the engine through `RefreshDoneCaches`; the hand-made counter goes
+  only when its readers move, and every view here is uncached until then (the writers listed below bypass the commands).
+- **The three-caller floor** is moot for `tree`: it has the readers of every module (`grep -rn '"tree"' sim --include=module_spec.py`).
+- **Fog is not per seat.** The mode of the game (`state._fog`, `_fuzzy_estimates`, `_fuzzy_salt`) is read by the module through
+  `legacy_fog`; it is set at the game's start and by a load, and has no module owner yet.
+
+## Mixin classes and files absorbed
+
+| Old | Now |
 |---|---|
-| Views / commands proposed | 3 / 3 |
-| Old methods and properties owned (after regrouping) | 19 |
-| Of those, referenced from another module's mixin code | 8 (7 classed read-only or pure by Appendix B, 1 classed writers) |
-| Names used by other modules or by code outside the mixins (ui, agents, ports, mods, function modules) | 16 (8 from mixins, 8 only from outside) |
-| Views per used name | 0.19 |
-| Views that replace exactly one referenced method and no field (one-to-one) | 0 of 3 |
-| Views of other modules it reads | 4, from 2 modules |
-| Commands of other modules it sends | 0 |
+| `FogMixin` (`sim/engine/fog.py`) | `is_visible`, `missing_prereq_message`, `fog_scrub`, `fog_summary`, `never_abandon`, `reveal_from` and the free functions moved to `sim/knowledge/`; `knowledge_risk`, `_epidemic_risk`, `on_road_to_goal` stay (see above) |
+| `Sim.has`, `Sim.corpus_hedge`, `CORPUS_HEDGE_*` (`core.py`) | `sim/knowledge/module.py`, `rules.py`, `constants.py` |
+| `starting_techs.py`, `save_fog.py` | `sim/knowledge/` (same functions; `grant_starting_techs` replaced by the command) |
+| `ForwardingPropertiesMixin.forgotten` | the `techniques_forgotten` view; the field left `ProjectsState` |
 
-**Existing surface and files.** Engine: `FogMixin`, `done_in_order`, `Sim.has`, `starting_techs.py`, `tree_source.py`/`tree_merge.py` (the tree), `knowledge_warning.py`, `save_fog.py`. Complaint 508: 'knowledge and actor objectives'.
+## State owned
 
-## (a) Mixin classes and files absorbed
+`KnowledgeSeat.forgotten` (node id to the year a sacking took it). Relocated in `sim/tests/equiv_fields.py`:
+`/seats/*/modules/knowledge/forgotten` was `/seats/*/projects/forgotten`.
 
-| Class | File | Methods here | Referenced from other modules |
+## Views published
+
+| View | Kind | Seat | Answers |
 |---|---|---|---|
-| `Sim` | `sim/engine/core.py` | 1 | 1 |
-| `EconomyMixin` | `sim/engine/economy.py` | 1 | 1 |
-| `FogMixin` | `sim/engine/fog.py` | 10 | 4 |
-| `ForwardingPropertiesMixin` | `sim/engine/core_properties.py` | 14 | 4 |
+| `tree`, `tree_nodes` | keyed / table | no | the tech tree, by id and whole |
+| `techniques_held`, `techniques_granted`, `techniques_forgotten`, `done_year` | table | yes | the live sets and records of the acting seat |
+| `earliest_done_year` | quote | no | the year the first seat to hold a node finished it |
+| `corpus_hedge` | table | yes | (loss chance, fraction lost, hedge node) a sacking faces |
+| `visibility`, `visible_to_player`, `prerequisite_message`, `fog_scrub`, `fog_summary` | quote | yes / no | what fog lets the acting seat see, in words |
+| `never_abandon` | keyed | yes | whether letting a node go costs what cannot be rebuilt |
 
-Methods that stay inside the module (referenced by no other module's mixin code and by nothing outside the mixins): `_free_prereq_hint`, `_hidden_prerequisite_kinds`, `prerequisite_label`.
+None is cached: see "Debts".
 
-## (b) State owned
+## Reads
 
-Paths are today's. Seat-scoped fields live on `state.<section>` as the acting seat's alias (`bind_seat`, `sim/engine/state_seat.py`) and are saved once per seat in `state.seats[seat_id]`; world fields live once on the state. Counts are access sites found by the field scan: a mixin method of another module counts under that module, code in a function module, `sim/ui`, `sim/agents` and the like counts under `<area>`.
+All through the bridge (`sim/engine/bridge_knowledge.py`) until their owners move: `legacy_tree`, `legacy_fog`,
+`legacy_seats`, `category_trait`, `relied_on_running` (projects' running gates, keyed), `on_road_to_goal` (seats), plus
+`legacy_projects` (existing, projects') and `start_check` (projects, published). Mechanics' `corpus_hedge_tiers` is a real
+module view. `relied_on_running` is named for what it answers; the catalogue called the projects topic `running_gates`.
 
-Proposed slot: no world state and a per-seat dataclass `KnowledgeSeat`.
+## Debts: state still shared with the engine, and every outside writer
 
-| Today's path | Scope | Read by (outside the owner) | Written by (outside the owner) |
-|---|---|---|---|
-| `state.projects.done` | seat | <ui> 70, projects 18, <engine-functions> 15, materials 9, ventures 9, core 5, +13 more | seats 2, projects 1, polity 1, hazards 1, ventures 1 |
-| `state.projects.done_year` | seat | diffusion 2, <ui> 2, seats 1, projects 1, markets 1, production 1 | seats 2, projects 2, <ui> 2, core 1 |
-| `state.projects.forgotten` | seat | hazards 3, <ui> 3, projects 2 | - |
-| `state.projects.granted` | seat | production 17, <ui> 16, <engine-functions> 9, prices 6, land 4, seats 2, +9 more | - |
-| `state.projects.revealed` | seat | seats 1, <ui> 1, <engine-functions> 1 | <ui> 3, seats 1 |
+Each goes when the field moves. A write that is not through a command is a reason a view cannot be cached.
 
-## (c) Views
+- `projects.done`: `sim/agents/household_party.py:106,112` (`learn`, `accept_licence` of a seat as an actor: also does not
+  tell the caches, Complaint 735), `sim/agents/household.py:347` (facade setter), `sim/engine/seat_handover.py:48` (merge),
+  the `done` setter of `core_properties.py`.
+- `projects.granted`: `sim/agents/household_party.py:113`, `sim/engine/seat_handover.py:49`.
+- `projects.done_year`: `sim/engine/core.py` (`run` starts it empty), `sim/engine/baseline_game.py:31`,
+  `sim/engine/opening_checks_run.py:76`, `sim/ui/cli_interactive.py:256`, `cli_agent.py:66`, `cli_economy_check.py:43`,
+  `cli_economy_accounts.py:56` (each starts it empty).
+- `projects.revealed`: `sim/ui/replay.py:57`, `cli_interactive.py:264`, `cli_agent.py:70` (through the `revealed` setter,
+  which only grows), `sim/agents/household.py:402`, `sim/engine/core_properties.py:438`, `sim/engine/saveload.py:372`
+  (a load keeps what the running game had heard). Readers: `sim.revealed` in `sim/ui/proto`, `seat_sight.py`.
+- The tree: `sim.nodes` is replaced by `node_rederive.refresh_derived_nodes` and `opening_money.reprice_tree`, and built in
+  `Sim.__init__`; 263 read sites in `sim/engine` (`grep -rnE '(self|sim)\.nodes\b' sim/engine --include=*.py | wc -l`).
+- The fog switch: `core_properties.py` (`fog`, `fuzzy_estimates` setters), `saveload.py`.
+- The engine's caches over the held set, which nothing but `RefreshDoneCaches` tells: `household._done_seq`,
+  `household._cap_factor`, `done_version` (read by `techniques_in_use.py`, `held_works.py`, `economy_goods.py`,
+  `economy_materials.py`, `economy_production.py`, `economy_mining.py`, `legitimacy.py`, `view_share.py`).
+- `_done_changed` is also called for a changed tree (`node_rederive.py`, `opening_money.py`), after the economy opens
+  (`core.py`) and on a load (`economy.py`): not knowledge events.
 
-Kind is table (one value), keyed (one value per key, computed on first read of the key) or quote (a question with arguments, never cached). Channels are the version channels the owner bumps; `inputs` are other views the value is derived from (a name without a dot is this module's own).
+## Forwarders left (`sim/engine/forward_knowledge.py`)
 
-| View | Kind | Seat | Answers | Replaces (old methods) | Replaces (fields) | Inputs | Channels | Callers today |
-|---|---|---|---|---|---|---|---|---|
-| `techniques_held` | table | yes | Techniques the seat has finished (in tree order), when, which were granted at the start, which are forgotten. Replaces `projects.done` (the most-read project field: 70 UI reads, 18 projects, 12 materials) and the forwarding properties `done`, `granted`, `forgotten`, `done_year`. | `has`, `done_in_order`, `done_year` | `projects.done`, `projects.done_year`, `projects.granted`, `projects.forgotten` | `tree` | `done` | 24 |
-| `visibility` | keyed | yes | Whether a node is visible to the seat, which prerequisites are hidden, the labels and hints, and whether to keep walking toward the goal. | `is_visible`, `fog_scrub`, `fuzzy_estimates`, `prerequisite_label`, `missing_prereq_message`, `_hidden_prerequisite_kinds`, `_free_prereq_hint`, `fog_summary`, `never_abandon`, `on_road_to_goal`, `fog` | `projects.revealed` | `techniques_held`, `seats.goal` | `done`, `revealed` | 10 |
-| `tree` | keyed | no | The tech tree: node data by id, as built from `data/branches/` and re-derived when society's techniques change. Replaces `self.nodes`, read in 99 files (263 sites in sim/engine alone: `grep -rnE '(self/sim)\.nodes\b' sim/engine --include=*.py / wc -l`). | - | - | - | `tree` | 1 |
+`has`, `corpus_hedge`, `is_visible`, `missing_prereq_message`, `fog_scrub`, `fog_summary`, `never_abandon`, `reveal_from`.
+The properties `done`, `granted`, `done_year`, `revealed`, `fog`, `fuzzy_estimates` of `core_properties.py` stay as aliases
+of the legacy state; `forgotten` reads the view.
 
-**Under the three-caller floor** (task 1.5: a view serves at least 3 callers or is a quote): `tree`. Each needs a second consumer found, a merge into a neighbouring view, or a change to a quote.
+## Year phases
 
-**Coverage.** 8 methods are referenced from other modules' mixin code: 7 are replaced by a view here, 1 by a command. 8 more names are used only from outside the mixins (ui, agents, ports, mods). Of all 16 used names, 12 are covered by a view or command through the method itself, 4 through a field alias, 0 are year-phase hooks and 0 are package handle members.
+None.
 
-## (d) Commands
+## Hard spots
 
-| Command | Fields | Replaces | Write sites cited | Refusal causes | Owned fields it writes |
-|---|---|---|---|---|---|
-| `LearnTechnique` | seat, node, year, via | `projects.done.add`, `done_year[...] =`, `_done_changed()`. | `sim/engine/projects_completion.py:203,210`, `sim/engine/core.py:1824,1828`, `sim/engine/projects_staffing.py:752`, `sim/engine/starting_techs.py:18`, `sim/agents/household_party.py:106,112` | `already_known`, `unknown_node` | `projects.done`, `projects.done_year`, `projects.granted` |
-| `ForgetTechnique` | seat, node, cause | Loss by hazards and by completion rules. | `sim/engine/society_hazards.py:607`, `sim/engine/core_step_phases.py:515,589` | `not_known` | `projects.forgotten` |
-| `RevealNodes` | seat, nodes, cause | `reveal_from`, hearing of other seats. Methods: `reveal_from` | `sim/engine/fog.py (reveal_from)`, `sim/engine/seat_sight.py` | none: always applies | `projects.revealed` |
-
-**Direct write sites of owned fields outside this module's mixin files** (AST scan; includes the module's own function modules, and writes made through a forwarding property are marked `alias`). Each becomes a command above.
-
-- `projects.done`: 9 sites: `sim/agents/household.py:353`, `sim/engine/society_hazards.py:607` (.discard()), `sim/engine/core_step_phases.py:589` (.discard()), `sim/engine/core_step_phases.py:515` (.discard()), `sim/engine/core.py:1824` (.add()), `sim/engine/seat_handover.py:46`, `sim/engine/projects_staffing.py:752` (.add()), `sim/engine/starting_techs.py:18` (.add()), `sim/engine/projects_completion.py:203` (.add())
-- `projects.done_year`: 11 sites: `sim/ui/cli_interactive.py:256` (assign (alias)), `sim/ui/cli_economy_check.py:43` (assign (alias)), `sim/ui/cli_agent.py:66` (assign (alias)), `sim/ui/cli_economy_accounts.py:56` (assign (alias)), `sim/engine/core.py:1834`, `sim/engine/core.py:1828`, `sim/engine/core.py:1827`, `sim/engine/baseline_game.py:31` (assign (alias)), `sim/engine/opening_checks_run.py:76` (assign (alias)), `sim/engine/projects_completion.py:210` and 1 more
-- `projects.granted`: 2 sites: `sim/engine/seat_handover.py:47`, `sim/engine/starting_techs.py:20` (.add())
-- `projects.revealed`: 6 sites: `sim/ui/replay.py:57` (assign (alias)), `sim/ui/cli_interactive.py:264` (assign (alias)), `sim/ui/cli_agent.py:70` (assign (alias)), `sim/agents/household.py:408`, `sim/engine/core_properties.py:446`, `sim/engine/saveload.py:372`
-
-## (e) Reads and sends
-
-Reads (views of other modules), by provider:
-
-- `projects`: `projects.active_projects` (projects.active); `projects.running_gates` (relied_on_running); `projects.start_check` (start_reason)
-- `seats`: `seats.goal` (input of knowledge.visibility)
-
-Sends: none.
-
-## (f) Year phases
-
-Phases of `sim/engine/year_phases.py` `SHIPPED` it takes part in; where a phase is shared with other modules the sub-steps it owns are named (see "The year's shared phases" in the README):
-
-- none of its own; `LearnTechnique` is sent from project completion and hazards
-
-## (g) Callers outside the engine mixins that read its views
-
-| Caller group | Uses | Most-used names |
-|---|---|---|
-| ui | 219 | `done`, `fog`, `is_visible`, `granted`, `fuzzy_estimates`, `done_year`, `has`, `revealed` |
-| engine/(function modules) | 20 | `done`, `granted`, `done_year`, `never_abandon`, `has`, `fog`, `is_visible` |
-| mods | 5 | `done`, `has` |
-| engine/saveload* | 4 | `fog`, `fuzzy_estimates` |
-| engine/save* | 1 | `done` |
-
-The scan matches `sim.`, `s.`, `world.` prefixes, so a few counts include unrelated locals; treat them as orders of magnitude.
-
-sim/ui: `done` 75 reads, `fog` 64, `is_visible` 29, `granted` 17, `fuzzy_estimates` 7, `done_year` 6, `has` 6, `revealed` 5; `saveload` writes `fog` and `fuzzy_estimates`; mods: `done`, `has`.
-
-## (h) Hard spots and caches
-
-- The done set is invalidated by hand at twelve places (`economy.py:293-299` comment); every write becomes `LearnTechnique`/`ForgetTechnique` which bumps the `done` channel, which is the point of the module.
-- Sums over `done` must go in tree order (`done_in_order`); this view fixes that order once.
-- The tree is shared static data that `refresh_derived_nodes` mutates (production); it needs a version, or the mutation must become a command here.
-- Fog is a mode of the game (`_fog`), per game, not per seat; `fuzzy_estimates` too.
-
-Caches and version counters held today (feed for task 1.2):
-
-- `household._done_seq` (`economy.py:221`), `done_version`
-- `_diffusible_ids_cache` is diffusion's, keyed by the done set
+- Sums over the held set must go in tree order (`done_in_order`, still in `economy.py`; `rules.in_tree_order` is its rule).
+- `LearnTechnique` from a completed project records the year before the project's stock grants and transfers run (they
+  read neither the year record nor the held set's order). Everything else keeps its old order.
+- The goal closure cache (`_goal_closure`) is never invalidated when the goal changes and is shared by three callers;
+  `on_road_to_goal` keeps that behaviour.

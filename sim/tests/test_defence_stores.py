@@ -83,7 +83,7 @@ class _Host(HazardReliefMixin, HazardsMixin, ForwardMechanicsMixin):
             "techniques_held": lambda: self.state.projects.done, "institution_units": self.institution_units,
             "money_per_labour_hour": 1.0})
         self.defence = module_harness.build(DefenceStores, views={
-            "tree": self.nodes.get, "techniques_done": lambda: self.state.projects.done,
+            "tree": self.nodes.get, "techniques_held": lambda: self.state.projects.done,
             "operating": lambda: self.state.projects.operating, "is_venture": self.is_venture,
             "staff": lambda: {"employees": self.state.household.employees},
             "stock_held": self.stock_held, "year": lambda: self.state.scenario.year,

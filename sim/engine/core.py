@@ -22,7 +22,7 @@ from sim.unit_conversions import PERCENT_SCALE
 
 from .territory_required import require_territory
 from .win_condition_rule import win_condition_met
-from .starting_techs import declared_starting_techs, grant_starting_techs
+from sim.knowledge.api import LearnTechnique, declared_starting_techs
 from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
 from .market_clearing import MarketClearingMixin
@@ -47,6 +47,7 @@ from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
 from .forward_mechanics import ForwardMechanicsMixin
+from .forward_knowledge import ForwardKnowledgeMixin
 from .disease_port import DiseasePortMixin
 from .geography_port import GeographyPortMixin
 from .labour_port import LabourPortMixin
@@ -84,6 +85,7 @@ from sim.reporting.api import RecordEvent
 class Sim(
         ModStoresMixin,
         ForwardMechanicsMixin,
+        ForwardKnowledgeMixin,
         EconomyMixin,
         MarketClearingMixin,
         ForwardForeignTradeMixin,
@@ -410,7 +412,8 @@ class Sim(
         # raise ValueError on an unknown starting technology) - state this
         # class deliberately does not hold a reference to.
         starting_techs = declared_starting_techs(self.civ, self.nodes)
-        grant_starting_techs(self.state.projects, starting_techs, self._done_changed)
+        for tech_id in starting_techs:
+            self.send(LearnTechnique(tech_id, granted=True))
         self.send(GrantOpeningStock())
         # Starting ownership is deliberately exhausted by starting_techs.
         # Tier and zero cost describe a node's position in the universal graph;
@@ -699,48 +702,6 @@ class Sim(
             "trade and the next, so restoring it is an event rather than "
             "a habit the optimizer leans on every year. Round number, not "
             "measured.")
-
-    def has(self, node_id):
-        return node_id in self.state.projects.done
-
-    # THE ONE PLACE that answers "what is my corpus worth against a
-    # sacking" - called from both SocietyMixin._shocks (the sack itself)
-    # and FogMixin.knowledge_risk (the player-facing `risk` reply), never
-    # re-derived in either place. A corpus that is written and dispersed
-    # does not stop existing because the scriptorium that produced it
-    # closed - copies already in other people's hands are still in other
-    # people's hands - so this table's hedge-state logic (`has()` vs
-    # `running()`, and which of the loss-chance/fraction-lost pairs below
-    # applies) is genuinely easy to get subtly different between two
-    # independent copies. Calling this from both places is the only way to
-    # make the two screens unable to disagree with each other.
-    CORPUS_HEDGE_LOSS_CHANCE_NONE = declare(
-        "CORPUS_HEDGE_LOSS_CHANCE_NONE", 0.80, kind="temporary_heuristic",
-        unit="dimensionless (probability a sack takes any corpus at all)",
-        source=None, confidence="D",
-        why="Chance a sack takes any of the corpus with no written hedge "
-            "at all - the founder's own head and workshop are the only "
-            "copy. Tuned to make an unhedged corpus genuinely dangerous "
-            "to hold; not measured.")
-    CORPUS_HEDGE_FRACTION_LOST_NONE = declare(
-        "CORPUS_HEDGE_FRACTION_LOST_NONE", 0.40, kind="temporary_heuristic",
-        unit="dimensionless (fraction of losable technologies taken)",
-        source=None, confidence="D",
-        why="If a sack does take from an unhedged corpus, how much of "
-            "what is still losable it takes - largest of the three "
-            "states. Tuned, not measured.")
-
-    def corpus_hedge(self):
-        """(loss_chance, fraction_lost, hedge_name) a sacking faces right now.
-
-        `has`, not `running`: see the comment above `has` itself and
-        FogMixin.knowledge_risk for the fuller argument. `hedge_name` is
-        None if neither corpus exists yet.
-        """
-        for node_id, loss_chance, fraction_lost in self.corpus_hedge_tiers():
-            if self.has(node_id):
-                return loss_chance, fraction_lost, node_id
-        return self.CORPUS_HEDGE_LOSS_CHANCE_NONE, self.CORPUS_HEDGE_FRACTION_LOST_NONE, None
 
     # ---- GEOGRAPHY: reach and material cost, FOR THE CIVILIZATION IN PLAY --
     # Reach must be computed from the ACTUAL civilization's own home
@@ -1272,11 +1233,7 @@ class Sim(
             val = self._win_condition_value(win_condition)
             if not win_condition_met(win_condition, val):
                 continue
-            self.state.projects.done.add(node_id)
-            self._done_changed()
-            if self.state.projects.done_year is None:
-                self.state.projects.done_year = {}
-            self.state.projects.done_year[node_id] = year
+            self.send(LearnTechnique(node_id, year=year))
             self.send(RecordEvent.in_year(year, "goal_achieved", "achieved: " + self.nodes[node_id]["name"]))
             self.record_goal_reached(node_id, year)
 

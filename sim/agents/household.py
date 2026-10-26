@@ -103,7 +103,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"granted": "projects",
 	"opened_year": "projects",
 	"paid_towards": "projects",
-	"forgotten": "projects",
 	"trade_hours_used": "projects",
 	"revealed": "projects",
 	"stalled": "projects",

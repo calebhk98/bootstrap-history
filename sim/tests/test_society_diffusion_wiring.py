@@ -13,6 +13,7 @@ from sim.diffusion import constants
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionWorld
 from sim.engine import category_traits, seat_builds
+from sim.knowledge import rules as knowledge_rules
 from sim.tests import module_harness
 
 FOOD, WEAPON, WEAPON_TWO, PLAIN = "rotation", "cannon", "mortar", "workshop"
@@ -30,7 +31,8 @@ class Game:
             "state_knowledge": lambda: self.knowledge,
             "seat_holders": lambda node_id: seat_builds.holders_of(seats, node_id),
             "built_by_any_seat": lambda among: seat_builds.built_by_any(seats, among),
-            "earliest_done_year": lambda node_id, default: seat_builds.earliest_done_year(seats, node_id, default)})
+            "earliest_done_year": lambda node_id, default: knowledge_rules.earliest_done_year(
+                [(held.projects.done, held.projects.done_year) for held in seats.values()], node_id, default)})
 
 
 def seat(done, years=None, granted=()):

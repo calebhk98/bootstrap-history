@@ -5,7 +5,7 @@ built. The tree data checks are test_reputation."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.data import load_civ
-from sim.engine.starting_techs import declared_starting_techs
+from sim.knowledge.api import declared_starting_techs
 
 QUICK_TOPIC = True
 

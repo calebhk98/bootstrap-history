@@ -223,7 +223,6 @@ class ProjectsState:
 	bountied: Set[str] = field(default_factory=set)
 	granted: Set[str] = field(default_factory=set)
 	paid_towards: Dict[str, float] = field(default_factory=dict)
-	forgotten: Dict[str, int] = field(default_factory=dict)
 	trade_hours_used: Dict[str, float] = field(default_factory=dict)
 	revealed: Set[str] = field(default_factory=set)
 	# concerns whose staff the yearly step hires for before the closure rule (`keep <id> staffed`)

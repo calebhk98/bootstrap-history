@@ -11,7 +11,7 @@ from sim.diffusion import rules
 from sim.diffusion.module import Diffusion
 from sim.engine import category_traits
 from sim.engine.economy_production import ProductionMixin
-from sim.engine.fog import FogMixin
+from sim.knowledge.module import Knowledge
 from sim.engine.tree_source import load_base_tree
 from sim.tests import module_harness
 
@@ -72,11 +72,11 @@ class ModAddsCategory(unittest.TestCase):
 
 class FogUsesTraits(unittest.TestCase):
     def test_protected_category(self):
-        stub = SimpleNamespace(nodes={"a": {"cat": "physics"}, "b": {"cat": "rail"}},
-                               on_road_to_goal=lambda node_id: False,
-                               relied_on_running=lambda node_id: False)
-        self.assertTrue(FogMixin.never_abandon(stub, "a"))
-        self.assertFalse(FogMixin.never_abandon(stub, "b"))
+        knowledge = module_harness.build(Knowledge, views={
+            "legacy_tree": {"a": {"cat": "physics"}, "b": {"cat": "rail"}}, "category_trait": category_traits.has_trait,
+            "on_road_to_goal": lambda node_id: False, "relied_on_running": lambda node_id: False})
+        self.assertTrue(knowledge.never_abandon("a"))
+        self.assertFalse(knowledge.never_abandon("b"))
 
 
 if __name__ == "__main__":

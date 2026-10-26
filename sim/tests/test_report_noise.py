@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.engine import shortage_conditions
-from sim.engine.fog import FogMixin
+from sim.knowledge.api import FOG_KIND_HINTS, hidden_prerequisite_kinds, missing_prereq_message
 from sim.ui.cli_interactive import _play_print_welcome
 from sim.ui.proto.event_groups import group_disaster_events
 from sim.ui.proto.help import _agent_help
@@ -89,30 +89,31 @@ NODES_OF_KIND = {
 }
 
 
-class _Fogged(FogMixin):
-    civ = {"name": "Stubland"}
-
-    def __init__(self, done):
-        self.nodes = NODES_OF_KIND
-        self.state = SimpleNamespace(_fog=True, projects=SimpleNamespace(done=set(done), active={}, revealed=set()))
-
-    def is_visible(self, node_id, _memo=None):
-        return node_id not in ("near_hidden", "far_hidden")
+def _visible_but_for_the_two_hidden(node_id):
+    return node_id not in ("near_hidden", "far_hidden")
 
 
-near = _Fogged(done={"done_one"})
+def _hidden_kinds(hidden_ids, done):
+    return hidden_prerequisite_kinds(NODES_OF_KIND, hidden_ids, done)
+
+
+def _message(missing, done):
+    return missing_prereq_message(NODES_OF_KIND, missing, _visible_but_for_the_two_hidden, True, done)
+
+
+done_one = {"done_one"}
 check("a hidden prerequisite near known work (half its own prerequisites built) names its kind",
-      near._hidden_prerequisite_kinds(["near_hidden"]) == [FogMixin.FOG_KIND_HINTS["INSTITUTION"]])
-check("one far from anything known gets no kind hint", near._hidden_prerequisite_kinds(["far_hidden"]) == [])
-message = near.missing_prereq_message(["near_hidden"])
+      _hidden_kinds(["near_hidden"], done_one) == [FOG_KIND_HINTS["INSTITUTION"]])
+check("one far from anything known gets no kind hint", _hidden_kinds(["far_hidden"], done_one) == [])
+message = _message(["near_hidden"], done_one)
 check("a hidden prerequisite still hides its identity", "near_hidden" not in message and "Near" not in message, message)
 # presentation: the fog sentence names the kind of thing
 check("...and the message names its kind", "institution" in message.lower(), message)
 check("the message for the far one carries no kind",
-      "institution" not in near.missing_prereq_message(["far_hidden"]).lower()
-      and "idea or body" not in near.missing_prereq_message(["far_hidden"]).lower())
+      "institution" not in _message(["far_hidden"], done_one).lower()
+      and "idea or body" not in _message(["far_hidden"], done_one).lower())
 check("a hidden prerequisite with no prerequisites of its own counts as near",
-      near._hidden_prerequisite_kinds(["leaf_resource"]) == [FogMixin.FOG_KIND_HINTS["RESOURCE"]])
+      _hidden_kinds(["leaf_resource"], done_one) == [FOG_KIND_HINTS["RESOURCE"]])
 
 # --- 99 and 102: the first-screen help points at the beginner index and at sittings
 help_reply = _agent_help(SimpleNamespace(fog=False), "commands")

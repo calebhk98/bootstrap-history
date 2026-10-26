@@ -1,6 +1,6 @@
 """fog_scrub_prefix: hidden ids are replaced as whole ids, so an id that prefixes another does not corrupt it."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.fog import HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
+from sim.knowledge.api import HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
 
 QUICK_TOPIC = True
 

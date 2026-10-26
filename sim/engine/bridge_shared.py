@@ -9,10 +9,6 @@ def year(sim):
 	return sim.state.scenario.year
 
 
-@bridge_view("tree", kind=KEYED)
-def tree(sim, node_id):
-	"""The tech tree's node `node_id`, or None when the tree has none."""
-	return sim.nodes.get(node_id)
 
 
 @bridge_view("is_venture", kind=KEYED)
@@ -37,9 +33,3 @@ def tile_owner(sim, tile):
 def tiles_owned_by(sim, actor):
 	"""Sorted tiles this country or seat owns, at any control level."""
 	return sim.tiles_owned_by(actor)
-
-
-@bridge_view("tree_nodes")
-def tree_nodes(sim):
-	"""The whole tech tree, node data by id (the object itself: a re-derivation replaces it)."""
-	return sim.nodes

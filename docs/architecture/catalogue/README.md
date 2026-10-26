@@ -36,7 +36,7 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 | 9 | [`foreign_trade`](foreign_trade.md) | Trade with partner countries: their economies, supply, payments in coin, lift capacity, actors' trade books. **Moved** (`sim/foreign_trade/`). | 30 | 8 | 40 | 13 |
 | 10 | [`freight`](freight.md) | Carriage of goods at home and abroad: carriers and their costs, routes, what merchants add, route dues. **Moved** (`sim/freight/`). | 15 | 1 | 50 | 10 |
 | 11 | [`hazards`](hazards.md) | Disasters and shocks: random events, dated shocks, world hazards, famine watch, relief and the output factor. | 4 | 2 | 52 | 7 |
-| 12 | [`knowledge`](knowledge.md) | What each seat knows and can see: techniques held, forgotten, revealed (fog), and the tree itself. | 3 | 3 | 19 | 8 |
+| 12 | [`knowledge`](knowledge.md) | What each seat knows and can see: techniques held, forgotten, revealed (fog), and the tree itself. **Moved in part** (`sim/knowledge/`; the held and heard-of records and the tree wait for their writers). | 14 | 4 | 19 | 8 |
 | 13 | [`land`](land.md) | Land and the map: tile ownership, claims, roads and ports, works, colonies, and the geography package. | 7 | 4 | 37 | 12 |
 | 14 | [`ledger`](ledger.md) | Money and goods balances: the one writer of what an actor holds. | 5 | 10 | 10 | 9 |
 | 15 | [`living_stock`](living_stock.md) | Herds and defence stores: holding, growing, buying, smuggling and drawing animals and arms. | 4 | 5 | 45 | 7 |
@@ -103,7 +103,7 @@ A class split across modules is listed with the number of its methods each modul
 | `IndustryConcernMixin` | `sim/engine/industry_concern.py` | `production` (4) |
 | `IncumbentPricesMixin` | `sim/engine/incumbent_prices.py` | `prices` (4) |
 | `ProducerCostsMixin` | `sim/engine/producer_costs.py` | `prices` (8) |
-| `FogMixin` | `sim/engine/fog.py` | `knowledge` (10), `hazards` (2) |
+| `FogMixin` | `sim/engine/fog.py` | `knowledge` (10, moved), `hazards` (2) |
 | `GeographyPortMixin` | `sim/engine/geography_port.py` | `land` (2) |
 | `DiseasePortMixin` | `sim/engine/disease_port.py` | `disease` (8) |
 | `LabourPortMixin` | `sim/engine/labour_port.py` | `workforce` (1) |

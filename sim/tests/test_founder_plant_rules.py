@@ -100,7 +100,7 @@ class RestoreWorkTests(unittest.TestCase):
             state=SimpleNamespace(projects=projects, household=SimpleNamespace(capital=0.0), scenario=SimpleNamespace(year=100)),
             running_gate_refusal=lambda node_id: None, nodes={NODE: {"pre": []}}, reopen_fee=lambda node_id, units: 5.0,
             reopen_units=lambda node_id: 1.0, staff_closure_age=lambda node_id: None, STAFF_CLOSURE_GRACE=2,
-            spending_power=lambda kind: 10.0, pay_edge=lambda edge, fee, why: paid.append(fee), _done_changed=lambda: None,
+            spending_power=lambda kind: 10.0, pay_edge=lambda edge, fee, why: paid.append(fee), send=lambda command: None,
             is_venture=lambda node_id: venture)
         with mock.patch("sim.engine.projects_staffing.cause_book"), mock.patch("sim.engine.projects_staffing.money_text", return_value="m"):
             ok, _reply = StaffingMixin.restore_work(game, NODE)

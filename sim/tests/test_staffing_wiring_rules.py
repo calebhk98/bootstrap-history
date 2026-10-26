@@ -104,6 +104,10 @@ class Restoring(StaffingMixin):
         self.nodes = {"press": {"pre": []}}
         self.age, self.fee, self.cash = closure_age, fee, cash
         self.paid = []
+        self.sent = []
+
+    def send(self, command):
+        self.sent.append(command)
 
     def running_gate_refusal(self, node_id):
         return None
@@ -122,9 +126,6 @@ class Restoring(StaffingMixin):
 
     def pay_edge(self, edge, fee, text):
         self.paid.append(fee)
-
-    def _done_changed(self):
-        pass
 
     def is_venture(self, node_id):
         return True

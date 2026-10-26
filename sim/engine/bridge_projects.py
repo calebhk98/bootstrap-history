@@ -16,30 +16,6 @@ from .projects_training_advice import training_advice
 from .units_prose import money_text
 
 
-# ---- knowledge: the tree, what is known, what the player may see ----------------------------------------------------
-
-
-
-@bridge_view("techniques_held", seat_scoped=True)
-def techniques_held(sim):
-    return sim.state.projects.done
-
-
-@bridge_view("visibility", kind=QUOTE)
-def visibility(sim, node_id, memo):
-    return sim.is_visible(node_id, _memo=memo)
-
-
-@bridge_view("visible_to_player", kind=QUOTE)
-def visible_to_player(sim, node_id):
-    return not sim.fog or node_id in sim.nodes and sim.is_visible(node_id)
-
-
-@bridge_view("prerequisite_message", kind=QUOTE)
-def prerequisite_message(sim, missing, memo):
-    return sim.missing_prereq_message(missing, _memo=memo)
-
-
 # ---- ventures and production -----------------------------------------------------------------------------------------
 
 @bridge_view("closures", seat_scoped=True)

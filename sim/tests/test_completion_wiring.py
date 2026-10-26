@@ -10,8 +10,10 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.engine.projects_completion import CompletionMixin
+from sim.knowledge.api import KnowledgeSeat, LearnTechnique, RefreshDoneCaches
+from sim.knowledge.module import Knowledge
 from sim.refusal import cause_of
-from sim.tests import event_stand_in
+from sim.tests import event_stand_in, module_harness
 
 NODE = "school"
 
@@ -22,13 +24,19 @@ def kinds(game):
 
 class Finishing:
     """A stand-in game with one active project, `school`, whose attempt is about to end."""
-    send = event_stand_in.send
+
+    def send(self, command):
+        if isinstance(command, LearnTechnique):
+            return self.knowledge.learn_technique(command)
+        return event_stand_in.send(self, command)
 
     def __init__(self, fails=False, venture=True, auto_open=False, shortfall=None, goal_lines=(), snapshot=None, hire_mode=False):
         household = SimpleNamespace(log=[], hour_allocations={"school": 1.0}, reputation=0.0, scandal=0.0)
         self.state = SimpleNamespace(
             projects=SimpleNamespace(active={NODE: {}}, bountied={NODE}, done=set(), done_year=None, failed_attempts=Counter()),
             household=household, scenario=SimpleNamespace(year=100), governance=SimpleNamespace(gov=0.0))
+        self.knowledge = module_harness.build(Knowledge, views={"legacy_projects": self.state.projects},
+                                              answers={RefreshDoneCaches: None}, seat=KnowledgeSeat())
         self.nodes = {NODE: {"name": "A school"}}
         self.rng = SimpleNamespace(random=lambda: 0.5)
         self.fails, self.venture, self.auto_open, self.shortfall = fails, venture, auto_open, shortfall
@@ -48,9 +56,6 @@ class Finishing:
 
     def goal_snapshot(self):
         return self.snapshot
-
-    def _done_changed(self):
-        pass
 
     def carry_out_transfers(self, node_id):
         self.transfers.append(node_id)

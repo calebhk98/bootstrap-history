@@ -1,6 +1,6 @@
 """Complaint 640 rules: the expected calendar cost of a risky node with retries (`expected_calendar_years`), the hazard timeline's
 escalating urgency (`hazard_timeline`), the one-shot first-timer tip (`_worth_knowing_early`), the free-prerequisite hint
-(`_free_prereq_hint`) and a process controller's relief on a node's risk (`effective_risk`). Each is called on a stand-in `self`
+(`free_prereq_hint`) and a process controller's relief on a node's risk (`effective_risk`). Each is called on a stand-in `self`
 carrying only what it reads. The banked calendar arithmetic is test_retry_calendar; retry learning on the risk is
 test_industry_depth; the save contract of the retry counts is the `--session` round trip."""
 QUICK_TOPIC = True
@@ -10,9 +10,9 @@ import unittest
 from unittest import mock
 
 from sim.engine import society_hazards
-from sim.engine.fog import FogMixin
 from sim.engine.projects_progress import ProgressMixin
 from sim.engine.society_hazards import HazardsMixin
+from sim.knowledge.api import free_prereq_hint
 from sim.tests.test_industry_depth import world
 from sim.ui import protocol
 from sim.ui.proto import state_waiting
@@ -145,28 +145,25 @@ class FirstTimerTip(unittest.TestCase):
         self.assertIn("_said_command_index", protocol.SAVE_FIELDS)
 
 
-def hint_game(done=()):
-    nodes = {"cap_free": {"pre": [], "ph": 0, "yrs": 0, "risk": 0, "_total_cost": 0},
-             "cap_free_blocked": {"pre": ["thermometer"], "ph": 0, "yrs": 0, "risk": 0, "_total_cost": 0},
-             "costly": {"pre": [], "ph": 100, "yrs": 1, "risk": 0.1, "_total_cost": 5000}}
-    return types.SimpleNamespace(nodes=nodes, state=types.SimpleNamespace(projects=types.SimpleNamespace(done=set(done))),
-                                 FREE_PREREQ_NAMED_AT_MOST=FogMixin.FREE_PREREQ_NAMED_AT_MOST)
+HINT_NODES = {"cap_free": {"pre": [], "ph": 0, "yrs": 0, "risk": 0, "_total_cost": 0},
+              "cap_free_blocked": {"pre": ["thermometer"], "ph": 0, "yrs": 0, "risk": 0, "_total_cost": 0},
+              "costly": {"pre": [], "ph": 100, "yrs": 1, "risk": 0.1, "_total_cost": 5000}}
 
 
 class FreePrerequisiteHint(unittest.TestCase):
     def test_a_free_startable_prerequisite_says_so_and_gives_the_command(self):
-        hint = FogMixin._free_prereq_hint(hint_game(), ["cap_free"])
+        hint = free_prereq_hint(HINT_NODES, ["cap_free"], set())
         self.assertIn("cap_free", hint)
         self.assertIn("start cap_free", hint)
 
     def test_a_free_node_that_is_itself_blocked_is_not_offered(self):
-        self.assertEqual(FogMixin._free_prereq_hint(hint_game(), ["cap_free_blocked"]), "")
+        self.assertEqual(free_prereq_hint(HINT_NODES, ["cap_free_blocked"], set()), "")
 
     def test_it_is_offered_once_what_blocked_it_is_done(self):
-        self.assertIn("start cap_free_blocked", FogMixin._free_prereq_hint(hint_game(done={"thermometer"}), ["cap_free_blocked"]))
+        self.assertIn("start cap_free_blocked", free_prereq_hint(HINT_NODES, ["cap_free_blocked"], {"thermometer"}))
 
     def test_an_ordinary_expensive_prerequisite_gets_no_hint(self):
-        self.assertEqual(FogMixin._free_prereq_hint(hint_game(), ["costly"]), "")
+        self.assertEqual(free_prereq_hint(HINT_NODES, ["costly"], set()), "")
 
 
 class FreeCapabilityPremise(unittest.TestCase):

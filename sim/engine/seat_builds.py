@@ -28,13 +28,6 @@ def built_by_any(seats: Mapping[str, SeatState], among: Optional[Iterable[str]] 
 	return built
 
 
-def earliest_done_year(seats: Mapping[str, SeatState], node_id: str, default: int) -> int:
-	"""The year the first seat to hold `node_id` finished it (`default` for a seat with no record)."""
-	years = [(seat.projects.done_year or {}).get(node_id, default) for seat in seats.values()
-	         if node_id in seat.projects.done]
-	return min(years) if years else default
-
-
 def operating_anywhere(seats: Mapping[str, SeatState], node_id: str) -> bool:
 	"""Whether some seat runs `node_id` as a concern: it is then in public use."""
 	return any(node_id in seat.projects.operating for seat in seats.values())

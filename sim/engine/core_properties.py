@@ -478,11 +478,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def forgotten(self):
-		return getattr(self.state.projects, "forgotten")
-
-	@forgotten.setter
-	def forgotten(self, value):
-		setattr(self.state.projects, "forgotten", value)
+		return self.view("techniques_forgotten")()
 
 	@property
 	def failed_attempts(self):
