@@ -7,7 +7,7 @@ from sim.geography.api import territory
 
 
 class BudgetView:
-	"""Read-only questions behind a state's standing need; mixed into `SimWorld`."""
+	"""Read-only questions behind a state's standing need; mixed into `ActorWorld`."""
 
 	needs: Any
 	registry: Any

@@ -8,7 +8,7 @@ from sim.seats.api import (base_visibility, builders_of, disclosure_modes, most_
 
 
 class DisclosureView:
-	"""Mixed into `SimWorld`: reads the founder's choice per invention."""
+	"""Mixed into `ActorWorld`: reads the founder's choice per invention."""
 
 	needs: Any
 	registry: Any

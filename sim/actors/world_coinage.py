@@ -2,7 +2,7 @@
 
 
 class CoinageView:
-	"""Mixed into `SimWorld`."""
+	"""Mixed into `ActorWorld`."""
 
 	def coin_regime(self) -> str:
 		"""The civilisation's coin standard: struck coin, weighed metal, a commodity or fiat."""

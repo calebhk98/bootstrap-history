@@ -2,8 +2,8 @@
 
 Every party the founder deals with is an actor in `ActorRegistry`. That includes other players, the
 home state, foreign states, competitor firms, traders and the bodies of people (strata). The engine
-sees only the registry, through `api.py` and its adapters (`sim/engine/agents_port*.py`,
-`sim/engine/society_actors.py`). One actor or fifty, nothing outside this package changes.
+sees only the registry, through `api.py` and its adapters (`sim/actors/world*.py`,
+`sim/actors/module.py`). One actor or fifty, nothing outside this package changes.
 
 Research behind the choices: `RESEARCH.md`.
 
@@ -14,7 +14,7 @@ holds one `CountryProfile` per country. Both are seeded once, at the first actor
 with the game. Each save therefore keeps the world it began with: a Rome start and a Han start get
 different casts, and nothing about either is in code.
 
-Where the seed comes from (engine adapter `agents_port_cast.py`):
+Where the seed comes from (the actors module, `sim/actors/cast.py`):
 
 1. The civilisation the game was started with. It becomes `home_country` and gets the home
    government.

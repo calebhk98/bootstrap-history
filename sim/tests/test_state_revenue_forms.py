@@ -11,7 +11,8 @@ from .harness import check, S
 from sim.agents import revenue, revenue_labour
 from sim.agents.api import Government
 from sim.agents.records import ActorRecord
-from sim.engine.agents_port_revenue import RevenueView
+from sim.actors.world_revenue import RevenueView
+from sim.tests.world_stand_in import fake_needs
 
 from .agents_fake_world import FakeWorld
 
@@ -71,7 +72,7 @@ class StateView(RevenueView):
     """The revenue questions over a stand-in game: its declared forms, its government and the bases of BasesWorld."""
 
     def __init__(self, civ, forms_world):
-        self._sim = SimpleNamespace(civ=civ)
+        self.needs = fake_needs(civilisation=civ)
         self._forms_world = forms_world
         self._government = Government("government:home", ActorRecord(kind="government", revenue_forms=list(civ.get("state_revenue") or ())))
 

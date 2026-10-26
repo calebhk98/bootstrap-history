@@ -8,7 +8,7 @@ from sim.geography.api import arable_hectares, settlement, tiles_held, usable_mo
 
 
 class RevenueView(CollectionView):
-	"""Read-only questions behind a state's revenue; mixed into `SimWorld`."""
+	"""Read-only questions behind a state's revenue; mixed into `ActorWorld`."""
 
 	needs: Any
 	registry: Any

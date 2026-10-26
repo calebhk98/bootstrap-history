@@ -9,7 +9,8 @@ from sim.agents.api import DUES_CAUSE
 from unittest import mock
 
 from sim.engine import bridge_freight
-from sim.engine.agents_port_trade import TradeView
+from sim.actors.world_trade import TradeView
+from sim.tests.world_stand_in import fake_needs
 from sim.freight import rules
 from sim.freight.commands import PayRouteDues
 from sim.freight.module import Freight
@@ -22,6 +23,7 @@ QUICK_TOPIC = True
 
 ROUTE = Route((Leg("a", "b", "river_boat", 10.0, 1.0), Leg("b", "c", "sail", 50.0, 1.0)))
 WAGE = 5.0
+PAYER = SimpleNamespace(actor_id="payer")
 
 
 class DuesPayments(unittest.TestCase):
@@ -113,8 +115,9 @@ class Cargo(TradeView):
     """The real trade view over a sim that holds partners' routes and pays dues for them."""
 
     def __init__(self, facts, dues_paid):
-        self._sim = SimpleNamespace(civ={"id": "home"}, _foreign_economy_facts=facts.get,
-                                    pay_route_dues=lambda payer, route, tonnes, limit=None: dues_paid(route, tonnes, limit))
+        self.needs = fake_needs(
+            {PayRouteDues: lambda command: dues_paid(command.route, command.tonnes, command.limit)},
+            civilisation={"id": "home"}, partner_facts=facts.get)
 
 
 class PartnerCargo(unittest.TestCase):
@@ -123,22 +126,22 @@ class PartnerCargo(unittest.TestCase):
         asked = []
         facts = {"han": {"route": ROUTE, "freight_per_tonne": 4.0}}
         cargo = Cargo(facts, lambda route, tonnes, limit: asked.append((route, tonnes, limit)) or 7.0)
-        paid = cargo.pay_route_dues("payer", "home", "han", "grain", 10.0)
+        paid = cargo.pay_route_dues(PAYER, "home", "han", "grain", 10.0)
         self.assertEqual(asked, [(ROUTE, 10.0, 40.0)])
         self.assertEqual(paid, 7.0)
 
     def test_a_partner_with_no_route_pays_nothing(self):
         cargo = Cargo({"han": {"route": None, "freight_per_tonne": 4.0}}, lambda route, tonnes, limit: 99.0)
-        self.assertEqual(cargo.pay_route_dues("payer", "home", "han", "grain", 10.0), 0.0)
+        self.assertEqual(cargo.pay_route_dues(PAYER, "home", "han", "grain", 10.0), 0.0)
 
     def test_a_cargo_that_goes_nowhere_pays_nothing(self):
-        self.assertEqual(Cargo({}, lambda route, tonnes, limit: 99.0).pay_route_dues("payer", "home", "home", "grain", 10.0), 0.0)
+        self.assertEqual(Cargo({}, lambda route, tonnes, limit: 99.0).pay_route_dues(PAYER, "home", "home", "grain", 10.0), 0.0)
 
     def test_both_ends_pay_when_neither_is_home(self):
         asked = []
         facts = {"han": {"route": ROUTE, "freight_per_tonne": 4.0}, "norse": {"route": ROUTE, "freight_per_tonne": 6.0}}
         cargo = Cargo(facts, lambda route, tonnes, limit: asked.append(limit) or 1.0)
-        self.assertEqual(cargo.pay_route_dues("payer", "han", "norse", "grain", 10.0), 2.0)
+        self.assertEqual(cargo.pay_route_dues(PAYER, "han", "norse", "grain", 10.0), 2.0)
         self.assertEqual(asked, [40.0, 60.0])
 
 

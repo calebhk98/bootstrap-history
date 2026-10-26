@@ -1,6 +1,6 @@
 """The actors package's only door: code outside sim/agents/ imports from here and nowhere else."""
 
-WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what it needs (sim/engine/agents_port*.py)
+WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what it needs (sim/actors/world*.py)
 
 from .base import Actor, RecordedActor
 from .business import Business

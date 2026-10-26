@@ -5,6 +5,7 @@ seat's work (stand-ins and a household facade, no game)."""
 QUICK_TOPIC = True
 
 import contextlib
+from types import SimpleNamespace
 
 from .harness import check
 
@@ -12,8 +13,9 @@ from sim.agents import licence
 from sim.agents.api import Household, HouseholdParty, OBSERVATION_RANGE_KM, PLAYER_VISIBLE_EXPOSURE, SECRET_EXPOSURE
 from sim.seats import api as seat_builds
 from sim.knowledge.rules import earliest_done_year as _earliest
-from sim.engine.agents_port import SimWorld
+from sim.actors.world import ActorWorld
 from sim.engine.agents_port_household import HouseholdPort
+from sim.tests.world_stand_in import fake_needs
 from sim.engine.state import FounderState, HouseholdState, ProjectsState
 from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
 from sim.seats.api import SeatsSeat, base_visibility, most_open_mode, nodes_heard_of, seen_from
@@ -86,29 +88,23 @@ class Places:
     first, second = "near", "far"
 
 
-class StubSim:
+class StubModule:
+    """The actors module over the seats of this test: the views the world reads."""
+
     def __init__(self):
-        self.state = state
-
-    def view(self, name):
-        return disclosed
-
-    def copy_difficulty(self, node_id):
-        return 1.0
-
-    def seat_place(self, seat_id):
-        return Places.first if seat_id == FIRST_SEAT_ID else Places.second
-
-    def disclosure_of(self, node_id):
-        return {"mode": "default", "licensees": {}}
+        self.cast = lambda: SimpleNamespace(actors={})
+        self.needs = fake_needs(
+            legacy_seats=state.seats, techniques_granted=lambda: state.projects.granted, tree_nodes={}, acting_seat=lambda: state.acting_seat, disclosures=disclosed,
+            copy_difficulty=lambda node_id: 1.0, seat_place=lambda seat_id: Places.first if seat_id == FIRST_SEAT_ID else Places.second,
+            disclosure=lambda node_id: {"mode": "default", "licensees": {}})
 
 
-class World(SimWorld):
+class World(ActorWorld):
     def distance_km(self, place_a, place_b):
         return 0.0 if place_a == place_b else OBSERVATION_RANGE_KM
 
 
-world = World(StubSim())
+world = World(StubModule())
 check("the actors see the inventions of every seat", world.founder_inventions() == ["kiln", "lathe", "loom"], world.founder_inventions())
 check("a concern some seat runs is in public use", world.is_public("loom") and not world.is_public("kiln"), None)
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "secret", "published_year": None, "licensees": {}}
@@ -185,14 +181,12 @@ class Firm:
 
 
 class RoyaltySim:
+    """The actors module over the seats of this test: the views the royalty reads."""
+
     def __init__(self):
-        self.state = state
-
-    def view(self, name):
-        return disclosed
-
-    def seat_party(self, seat_id):
-        return maker if seat_id == FIRST_SEAT_ID else buyer
+        self.cast = lambda: SimpleNamespace(actors={}, patent_holders=lambda node_id: [], get=lambda actor_id: None)
+        self.needs = fake_needs(legacy_seats=state.seats, disclosures=disclosed,
+                                seat_party=lambda seat_id: maker if seat_id == FIRST_SEAT_ID else buyer)
 
 
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "license", "published_year": None,

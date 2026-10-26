@@ -4,7 +4,6 @@ Opens concerns whose goods the economy trades (default two), steps a few years a
 founder received by purpose, the forecast `revenue()` read before the year and `upkeep()`. Run it on two checkouts and compare the lines."""
 import argparse
 
-from sim.engine.agents_port import SimWorld
 
 from .harness import sim
 
@@ -15,7 +14,7 @@ def open_book_concerns(game, count):
     """Open up to `count` concerns of the default Rome game with an output the economy trades; their ids."""
     traded = set(game.economy.agent_prices_at() or {})
     game.state.household.artisans += 20.0 * count    # hands to supervise them
-    world = SimWorld(game)
+    world = game.view("actor_world")()
     opened = []
     for node_id, node in sorted(game.nodes.items()):
         if len(opened) >= count:

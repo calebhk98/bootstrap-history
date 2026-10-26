@@ -3,7 +3,7 @@ that of the entrants already waiting reaches the market, and enters only while t
 the market's rate; nothing caps the number of firms.
 
 `ActorRegistry.consider_entry` is called on the fake world with a concern whose takings are shared among its sellers.
-The wiring of `SimWorld.entry_gross` and the rate is test_entry_gross_rule."""
+The wiring of `ActorWorld.entry_gross` and the rate is test_entry_gross_rule."""
 QUICK_TOPIC = True
 
 import unittest

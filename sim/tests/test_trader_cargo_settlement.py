@@ -12,8 +12,8 @@ import unittest
 
 from sim.actors.api import NoteTraderMargin
 from sim.agents import edges
-from sim.engine.agents_port_trade import TradeView
-from sim.foreign_trade.api import NoteCargoLeg, SettleTraderCargo
+from sim.actors.world_trade import TradeView
+from sim.foreign_trade.api import NoteActorHomeTrade, NoteCargoLeg, SettleTraderCargo
 from sim.foreign_trade.module import ForeignTrade
 from sim.foreign_trade.state import ForeignTradeWorld
 from sim.ledger.api import PayActorFromEdge, PayEdgeFrom
@@ -144,17 +144,19 @@ class Shipping(TradeView):
         self.module = trade_module()
         module = self.module
 
-        class Game:
+        class Needs:
+            """The views and the commands the trade view uses, with the cargo leg going to the module's leg book."""
             landed_cost = staticmethod(lambda paid, carriage: paid + carriage)
-            note_actor_home_trade = staticmethod(lambda *args: self_notes.append(("home", args)))
-            note_actor_trade = staticmethod(lambda *args: self_notes.append(("partner", args)))
+            border_duty_per_tonne = staticmethod(lambda source, destination, price: 0.0)
 
             @staticmethod
-            def note_cargo_leg(trader_id, material, tonnes, source, destination, paid, received, carriage, home, duty=0.0):
-                module.apply_note_cargo_leg(NoteCargoLeg(trader_id, material, tonnes, source, destination, paid, received,
-                                                         carriage, home, duty))
+            def send(command):
+                if isinstance(command, NoteCargoLeg):
+                    module.apply_note_cargo_leg(command)
+                else:
+                    self_notes.append(("home" if isinstance(command, NoteActorHomeTrade) else "partner", command))
         self_notes = self.notes
-        self._sim = Game()
+        self.needs = Needs()
 
     def _home_place(self):
         return "home"

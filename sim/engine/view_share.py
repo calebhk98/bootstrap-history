@@ -2,7 +2,7 @@
 
 An actor's turn prices the same projects and the same trades once per firm,
 though the answer is a fact about the world, not about the actor asking. A
-view that asks many questions (`SimWorld`) opens a scope here, and an answer
+view that asks many questions (`ActorWorld`) opens a scope here, and an answer
 is computed once while everything it read is unchanged. A hit is confirmed by
 identity on the objects the world rebuilds when it changes (the price table,
 the year's demand, the actors' demand tally) and by value on the counters and

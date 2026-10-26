@@ -5,7 +5,7 @@ from sim.agents.api import MANAGEMENT_SPAN_EXPONENT, imitation
 
 
 class CapacityView:
-	"""Read-only questions about growing a concern; mixed into `SimWorld`."""
+	"""Read-only questions about growing a concern; mixed into `ActorWorld`."""
 
 	needs: Any
 

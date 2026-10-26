@@ -118,12 +118,12 @@ check("relief is no more than the surplus", abs(world.state.record.outlays.get("
 
 # ---- the home state taxes its own country's strata only, and reports the levy -------------------------
 from types import SimpleNamespace
-from sim.engine.agents_port_budget import BudgetView
+from sim.actors.world_budget import BudgetView
 
 
 class BudgetStubView(BudgetView):
 	def __init__(self, strata):
-		self._sim = SimpleNamespace(actors=SimpleNamespace(of_kind=lambda kind: strata))
+		self.registry = SimpleNamespace(of_kind=lambda kind: strata)
 
 
 home_body = make_stratum("rich", 1.0e3, 1.0e6, 5.0e6)

@@ -7,7 +7,7 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 
 class EnterpriseView:
-	"""Read-only questions behind a state's plants; mixed into `SimWorld`."""
+	"""Read-only questions behind a state's plants; mixed into `ActorWorld`."""
 
 	needs: Any
 

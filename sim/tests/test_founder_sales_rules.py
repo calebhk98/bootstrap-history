@@ -19,12 +19,12 @@ class SaleSetupTests(unittest.TestCase):
         game = SimpleNamespace(
             state=SimpleNamespace(projects=SimpleNamespace(operating=set(operating), granted=set(granted)), acting_seat=0),
             seat_party=lambda seat, margins: SimpleNamespace(actor_id="seat:0", margins=margins),
+            view=lambda name: lambda: SimpleNamespace(concern_margin=lambda node_id: 7.0),
             actors=SimpleNamespace(
                 of_kind=lambda kind: [SimpleNamespace(record=SimpleNamespace(exited_year=None), actor_id=kind + ":live"),
                                       SimpleNamespace(record=SimpleNamespace(exited_year=90), actor_id=kind + ":gone")],
                 get=lambda actor_id: "found " + actor_id))
-        with mock.patch.object(founder_sales, "SimWorld", lambda sim: SimpleNamespace(concern_margin=lambda node_id: 7.0)):
-            return FounderSalesMixin._concern_sale_setup(game, NODE)
+        return FounderSalesMixin._concern_sale_setup(game, NODE)
 
     def test_a_concern_the_founder_does_not_run_has_nothing_to_sell(self):
         self.assertIsNone(self.setup(operating=set())[0])

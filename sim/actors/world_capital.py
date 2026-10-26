@@ -6,7 +6,7 @@ from sim.finance.api import DefaultOnDebt
 from sim.world import demand
 
 class CapitalView:
-	"""Read-only questions about the market and about saving; mixed into `SimWorld`."""
+	"""Read-only questions about the market and about saving; mixed into `ActorWorld`."""
 
 	needs: Any
 

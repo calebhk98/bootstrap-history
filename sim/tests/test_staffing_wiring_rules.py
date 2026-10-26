@@ -70,6 +70,9 @@ class Reopening(StaffingMixin):
         self.household = self.state.household
         self.recorded = []
 
+    def view(self, name):
+        return lambda: None
+
     def record_staffing_reopenings(self, count):
         self.recorded.append(count)
 
@@ -81,15 +84,13 @@ class ReopeningRestaffed(unittest.TestCase):
 
     def test_what_the_business_reopens_is_returned_counted_and_logged(self):
         game = Reopening(["press"])
-        with mock.patch.object(projects_staffing, "SimWorld", lambda sim: None):
-            self.assertEqual(game.reopen_restaffed_ventures(100), ["press"])
+        self.assertEqual(game.reopen_restaffed_ventures(100), ["press"])
         self.assertEqual(game.recorded, [1])
         self.assertEqual(cause_of(game.state.household.log[0][1]), "concerns_reopened")
 
     def test_when_nothing_reopens_nothing_is_logged(self):
         game = Reopening([])
-        with mock.patch.object(projects_staffing, "SimWorld", lambda sim: None):
-            self.assertEqual(game.reopen_restaffed_ventures(100), [])
+        self.assertEqual(game.reopen_restaffed_ventures(100), [])
         self.assertEqual(game.state.household.log, [])
 
 

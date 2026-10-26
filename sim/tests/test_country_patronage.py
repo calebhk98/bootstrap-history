@@ -11,10 +11,11 @@ from .harness import check
 from sim.agents import patronage
 from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
 from sim.agents.no_country_economy import NoCountryEconomy
-from sim.engine.agents_port_patronage import PatronageView
+from sim.actors.world_patronage import PatronageView
 from sim.tests import polity_host
 
 from .country_state_world import StateWorld
+from .world_stand_in import fake_needs
 
 TERMS = {"base_hours": 100.0, "population_scale": 4.0, "exponent": 0.5, "governance_scale": 25.0}
 BASE_PAY = 10.0       # money for a person-year of unskilled work in the country
@@ -112,22 +113,14 @@ unpaid[1].actors["government:far"].pay_patron(0.5, unpaid[0])
 check("a state that left need unpaid funds nobody", unpaid[1].actors["government:far"].record.patron_grant == 0.0)
 
 
-# ---- the engine's side ---------------------------------------------------------------------------------------
-class Engine:
-	STATE_FUNDING_BASE_LABOUR_HOURS = 100.0
-	STATE_FUNDING_POP_SCALE_EXPONENT = 0.4
-	STATE_FUNDING_GOV_QUALITY_SCALE = 25.0
-	POP_SCALE_FLOOR = 0.05
-	DEFAULT_POPULATION_100AD = 1000.0
-
-	def patron_clients(self, country):
-		return [("a", 3.0, 1.1), ("b", 0.0, 1.0)]
-
+# ---- the module's side ---------------------------------------------------------------------------------------
+CONSTANTS = {"STATE_FUNDING_BASE_LABOUR_HOURS": 100.0, "STATE_FUNDING_POP_SCALE_EXPONENT": 0.4, "STATE_FUNDING_GOV_QUALITY_SCALE": 25.0,
+			 "POP_SCALE_FLOOR": 0.05, "DEFAULT_POPULATION_100AD": 1000.0}
 
 view = PatronageView()
-view._sim = Engine()
+view.needs = fake_needs(legacy_constant=CONSTANTS, patron_clients=lambda country: [("a", 3.0, 1.1), ("b", 0.0, 1.0)])
 check("the funding terms carry the size of the country against the reference one, floored",
-	  view.state_funding_terms(500.0)["population_scale"] == 0.5 and view.state_funding_terms(1.0)["population_scale"] == Engine.POP_SCALE_FLOOR)
+	  view.state_funding_terms(500.0)["population_scale"] == 0.5 and view.state_funding_terms(1.0)["population_scale"] == CONSTANTS["POP_SCALE_FLOOR"])
 check("the clients a country's state is asked about are the seats' governance and reputation", view.patron_clients("far") == [(3.0, 1.1), (0.0, 1.0)])
 
 
@@ -147,7 +140,9 @@ class FakeEconomy:
 
 
 def output_per_head(economy, opening_people, people):
-	view._sim = SimpleNamespace(economy=economy)
+	view.needs = fake_needs(country_opening_basket=lambda country: economy.agent_opening_basket(country),
+							country_volume_baseline=lambda country: economy.agent_volume_baseline(country),
+							country_traded_volumes=lambda country: economy.agent_traded_volumes(country))
 	return view.country_output_per_head("far", opening_people, people)
 
 
@@ -169,7 +164,7 @@ def funding(acting, seats_funded, grant):
 		civilisation={"id": "home"}, acting_seat=acting,
 		legacy_seats={"founder": SimpleNamespace(country=None), "visitor": SimpleNamespace(country="far"),
 		              "friend": SimpleNamespace(country="far")},
-		legacy_actors_state=SimpleNamespace(records={"government:home": SimpleNamespace(patron_grant=500.0),
+		cast_state=SimpleNamespace(records={"government:home": SimpleNamespace(patron_grant=500.0),
 		                                             "government:far": SimpleNamespace(patron_grant=grant)}))
 	module.patron_clients = lambda country: [(seat, 0.0, 1.0) for seat in seats_funded]
 	return module

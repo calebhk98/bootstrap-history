@@ -86,8 +86,8 @@ def licensing():
     """The diffusion module of seat "me" in year 120, with one firm to license to."""
     registry = types.SimpleNamespace(get=lambda identity: types.SimpleNamespace(kind="firm"))
     module = module_harness.build(Diffusion, seat=DiffusionSeat(), views={
-        "legacy_actor_registry": lambda: registry, "seat_list": lambda: {"joined": ["me"], "playing": ["me"]},
-        "seat_party": lambda seat_id: "party", "year": 120, "legacy_agent_world": lambda: None})
+        "cast": lambda: registry, "seat_list": lambda: {"joined": ["me"], "playing": ["me"]},
+        "seat_party": lambda seat_id: "party", "year": 120, "actor_world": lambda: None})
     module.clock.act_as("me")
     return module
 

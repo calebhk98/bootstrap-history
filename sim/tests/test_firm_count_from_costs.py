@@ -84,9 +84,11 @@ check("a spike over a settled market draws fewer than the same takings met fresh
 
 
 # ---- site rent: every concern occupies a plot from its staff; land it works comes on top
-from sim.engine.agents_port_site import SiteView, FLOOR_AREA_PER_WORKER_SQUARE_METRES
+from sim.actors.world_site import SiteView, FLOOR_AREA_PER_WORKER_SQUARE_METRES
 from sim.agents.api import supply
 from sim.world import merchant_terms
+
+from .world_stand_in import fake_needs
 
 
 class LandMarket:
@@ -101,12 +103,8 @@ class LandMarket:
 		return self.by_tile.get(tile, self.mean)
 
 
-class StandInSim:
-	economy = LandMarket()
-
-
 class Site(SiteView):
-	_sim = StandInSim()
+	needs = fake_needs(agent_land_rent_at=LandMarket().agent_land_rent_at)
 	nodes = {"ag2_sugar_voyage": {"annual_output_t": 120.0}, "workshop": {}}
 	engine_land_price = 7.0
 

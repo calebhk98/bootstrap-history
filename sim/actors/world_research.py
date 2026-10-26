@@ -1,4 +1,4 @@
-"""What a researching actor asks of the world: hands, sellers and substitutes (mixed into `SimWorld`)."""
+"""What a researching actor asks of the world: hands, sellers and substitutes (mixed into `ActorWorld`)."""
 from typing import Any, List, Optional
 
 from sim.agents.api import OBSERVATION_RANGE_KM, TRADE_TONNES_FOR_UNIT_CONTACT, research_gate

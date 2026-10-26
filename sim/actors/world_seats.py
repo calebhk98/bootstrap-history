@@ -5,7 +5,7 @@ from sim.workforce.api import ReleaseStaff
 
 
 class SeatView:
-	"""Mixed into `SimWorld`: a seat is a business whose staff can leave and whose margin shareholders are paid from."""
+	"""Mixed into `ActorWorld`: a seat is a business whose staff can leave and whose margin shareholders are paid from."""
 
 	needs: Any
 

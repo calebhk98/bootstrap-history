@@ -2,7 +2,7 @@
 
 The cast of other actors: governments and firms, their records and registry, and the agents package's world adapters.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** moved (`sim/actors/`; "As shipped" at the end of this file). Draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
 
 ## At a glance
 
@@ -102,3 +102,21 @@ Caches and version counters held today (feed for task 1.2):
 
 - `_actor_registry` (`society_actors.py`: rebuilt when `state.actors` is replaced)
 - `_memo` (`agents_port.py:45`), `sim/agents/registry.py` two version counters, `sim/agents/patent_index.py`, `sim/agents/collection_world.py`
+
+## As shipped
+
+`sim/actors/` holds the module (`module.py`, `cast.py`, `staff.py`, `year.py`, `contact.py`), its rules (`rules.py`), the agents'
+world (`world.py`, `world_*.py`, built over the module's reads) and the plain functions the engine's economy still calls
+(`flight_values.py`, `land_decree.py`, `delivered_goods.py`). The records stay `ActorsState` (sim/agents/records.py) but live in the
+module's world slot; `SimulationState.actors` is a property over it for the callers that read the state directly.
+
+- Views: `cast` (the registry), `cast_state` (the saved records), `state_treasury` (seat), `seeded_actor_registry`,
+  `legacy_edge_account` (keyed), `actor_world` (a fresh world each read), `country_world` (keyed), `concern_counts` (keyed by
+  category), `concern_versions`, `actor_staff` and `actor_staff_nationwide` (keyed by trade), `actor_staff_total`, `country_strata`
+  (keyed). They replace `legacy_actor_registry`, `legacy_actors_state` and `legacy_agent_world`.
+- Commands applied: `AdvanceActors` (no fields), `RecordConquestContact`, `RecordMigrantContact`, `ScaleStrata`, `NoteTraderMargin`.
+  `RegisterActor` is not built: no caller sends it. Sent: `RefreshLenderOffers`, `DefaultOnDebt` (finance), `AccrueExperience`
+  (production), `ForgetActorOrders`, `NoteActorSale`, `NoteActorPurchase` (markets), `ReleaseStaff` (workforce), applied by
+  `sim/engine/bridge_actors.py` until those owners move.
+- Reads that the owners have not published yet are bridged in `sim/engine/bridge_actors.py`, one engine call each, under narrow
+  names (the catalogue's names for the markets and workforce views are coarser than the calls).

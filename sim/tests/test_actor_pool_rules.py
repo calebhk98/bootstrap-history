@@ -9,11 +9,12 @@ import types
 import unittest
 
 from sim.agents.base import Actor
-from sim.engine.agents_port import SimWorld
+from sim.actors.world import ActorWorld
 from sim.labour.labour import Labour
 from sim.labour.labour_market_api import LabourMarket
 from sim.refusal import cause_of
 from sim.tests.labour_stand_in import stand_in_world
+from sim.tests.world_stand_in import fake_needs
 
 HOURS = 2000.0
 
@@ -91,10 +92,10 @@ class PressNewStaff(unittest.TestCase):
 class VisibleScale(unittest.TestCase):
     def test_any_actor_is_seen_by_its_staff_its_wealth_and_its_prominence(self):
         seen = []
-        sim = types.SimpleNamespace(visible_scale=lambda *args: seen.append(args) or 0.4)
+        module = types.SimpleNamespace(needs=fake_needs(visible_scale=lambda *args: seen.append(args) or 0.4))
         actor = types.SimpleNamespace(workforce={"smith": 3.0, "mason": 2.0}, money=500.0, concealed_wealth=lambda: 100.0,
                                       prominence=lambda: 0.25, defiance=lambda: 0.5)
-        self.assertEqual(SimWorld(sim).visible_scale_of(actor), 0.4)
+        self.assertEqual(ActorWorld(module).visible_scale_of(actor), 0.4)
         headcount, wealth, eminence, defiance = seen[0]
         self.assertEqual((headcount, eminence, defiance), (5.0, 0.25, 0.5))
         self.assertLess(wealth, 500.0)      # what is hidden is not counted
@@ -102,12 +103,12 @@ class VisibleScale(unittest.TestCase):
 
 class ConcernTakings(unittest.TestCase):
     def _world(self, category, factor=0.5):
-        sim = types.SimpleNamespace(
-            nodes={"loom": {"cat": category}}, GOODS_CATEGORIES=("textiles",),
-            cfg={"revenue_ramp_years": 5}, state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=10)),
+        module = types.SimpleNamespace(needs=fake_needs(
+            tree_nodes={"loom": {"cat": category}}, legacy_constant={"GOODS_CATEGORIES": ("textiles",)},
+            game_setting={"revenue_ramp_years": 5}, year=10, ramp_share_at_full_depth=0.5,
             industry_depth=lambda node_id: 0.0, concern_takings=lambda node_id, ramp: 1000.0,
-            node_output_market_factor=lambda node: 1.0, goods_category_factor=lambda cat: factor)
-        return SimWorld(sim)
+            node_output_market_factor=lambda node: 1.0, goods_category_factor=lambda cat: factor))
+        return ActorWorld(module)
 
     def test_a_goods_category_shares_one_market_among_every_seller(self):
         self.assertEqual(self._world("textiles", 0.5).concern_takings("loom", 10, rivals=3.0, capacity=2.0), 2000.0 * 0.5)

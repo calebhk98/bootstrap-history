@@ -1,5 +1,5 @@
 """What interest groups can see of who is hurt: producers the founder's sales displace and
-employers whose hands the founder's hiring bids up. Mixed into `SimWorld`."""
+employers whose hands the founder's hiring bids up. Mixed into `ActorWorld`."""
 from typing import Any, Dict, List
 
 from sim.agents.api import CONCESSION_PREFIX, Sector, sector_key

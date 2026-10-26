@@ -15,7 +15,7 @@ from sim.agents.trader import route_terms
 from sim.economy.tariffs import duty_transfers
 from sim.economy.types import EDGE_EXTERNAL
 from sim.engine import trade_duty
-from sim.engine.agents_port_trade import TradeView
+from sim.actors.world_trade import TradeView
 from sim.engine.mod_stores import StoreBook
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
 from sim.engine.state_seat import bind_seat, seat_from_template
@@ -24,6 +24,7 @@ import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import run_as_seat
 
 from .test_no_seller_no_price import _Offers, _fake_sim
+from .world_stand_in import fake_needs
 
 
 def _stores():
@@ -119,6 +120,9 @@ class _Sim:
 class _View(TradeView):
     def __init__(self, sim):
         self._sim = sim
+        self.needs = fake_needs(
+            civilisation=sim.civ, foreign_economies=sim.foreign_economies, partner_facts=sim._foreign_economy_facts,
+            border_duty_per_tonne=lambda source, destination, price: trade_duty.duty_per_tonne(sim, source, destination, price))
 
     def price_at(self, material, place):
         return self._sim.prices[place]

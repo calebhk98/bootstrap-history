@@ -1,7 +1,7 @@
 """The founder's business and a firm's are one object (stage 3a of docs/architecture/FIRMS_OWN_PLANTS_PLAN.md): the plant
 keeps its size and age through a mothball and a restore (`Business.mothball`, `Business.restore`) and leaves its owner whole
 (`release_plant`); the founder's verbs and quotes call the same rules a firm's do (`close_work`, `close_venture`,
-`venture_hands`, `venture_upkeep_quote`, `venture_real_earnings`, `venture_ramp`, `SimWorld.concern_takings`). Each is called
+`venture_hands`, `venture_upkeep_quote`, `venture_real_earnings`, `venture_ramp`, `ActorWorld.concern_takings`). Each is called
 on a stand-in that holds only what it reads."""
 QUICK_TOPIC = True
 
@@ -12,8 +12,11 @@ from unittest import mock
 from sim.agents.business import Business
 from sim.agents.business_closing import release_plant
 from sim.agents.business_plant import MOTHBALLED, OPERATING, Plant
-from sim.engine import agents_port, economy_production, projects_ventures, projects_venture_quotes
-from sim.engine.agents_port import SimWorld
+from sim.actors import world as actors_world
+from sim.actors.world import ActorWorld
+from sim.engine import economy_production, projects_ventures, projects_venture_quotes
+
+from .world_stand_in import fake_needs
 from sim.engine.concern_earnings import quoted_ramp, quoted_units
 from sim.engine.economy_production import ProductionMixin
 from sim.engine.projects_staffing import StaffingMixin
@@ -181,21 +184,20 @@ class RampTests(unittest.TestCase):
 class FirmSideTests(unittest.TestCase):
     def test_a_firms_takings_go_through_the_same_size_arithmetic_as_the_founders(self):
         seen = {}
-        sim = SimpleNamespace(concern_takings=lambda node_id, ramp: 100.0, node_output_market_factor=lambda node: 0.9,
-                              GOODS_CATEGORIES=set(), nodes={NODE: {"cat": "other"}})
-        world = SimpleNamespace(nodes=sim.nodes, _sim=sim, ramp=lambda opened_year, node_id=None: 0.5)
-        with mock.patch.object(agents_port.business_books, "takings_of_size",
+        needs = fake_needs(concern_takings=lambda node_id, ramp: 100.0, node_output_market_factor=lambda node: 0.9)
+        world = SimpleNamespace(nodes={NODE: {"cat": "other"}}, needs=needs, goods_category_names=set(),
+                                ramp=lambda opened_year, node_id=None: 0.5)
+        with mock.patch.object(actors_world.business_books, "takings_of_size",
                                lambda takings, size, market: seen.update(takings=takings, size=size, market=market) or takings * size):
-            result = SimWorld.concern_takings(world, NODE, 90, rivals=1.0, capacity=2.0)
+            result = ActorWorld.concern_takings(world, NODE, 90, rivals=1.0, capacity=2.0)
         self.assertEqual(seen, {"takings": 100.0, "size": 2.0, "market": 0.9})
         self.assertEqual(result, 200.0 / 3.0)
 
     def test_a_firms_crew_and_upkeep_are_the_engines_for_that_concern(self):
-        sim = SimpleNamespace(concern_staff_by_trade=lambda node_id: {"smith": 2.0},
-                              economy=SimpleNamespace(concern_upkeep=lambda node_id, capacity: 7.0 * capacity))
-        world = SimpleNamespace(_sim=sim)
-        self.assertEqual(SimWorld.concern_staff(world, NODE), {"smith": 2.0})
-        self.assertEqual(SimWorld.upkeep(world, NODE, 2.0), 14.0)
+        needs = fake_needs(concern_staff=lambda node_id: {"smith": 2.0}, concern_upkeep=lambda node_id, capacity: 7.0 * capacity)
+        world = SimpleNamespace(needs=needs)
+        self.assertEqual(ActorWorld.concern_staff(world, NODE), {"smith": 2.0})
+        self.assertEqual(ActorWorld.upkeep(world, NODE, 2.0), 14.0)
 
 
 if __name__ == "__main__":

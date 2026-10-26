@@ -9,7 +9,7 @@ from sim.agents.group import blame_after_protection, protection_needed
 from sim.agents.group_reach import subjects_reached
 from sim.agents.strata_seed import strata_spawner
 from sim.agents.tuning_strata import STRATUM_WORKING_SHARE
-from sim.engine.agents_port_groups import founder_share_of_sellers
+from sim.actors.rules import founder_share_of_sellers
 
 from .agents_fake_world import FakeWorld
 

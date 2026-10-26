@@ -15,7 +15,7 @@ FLOOR_AREA_PER_WORKER_SQUARE_METRES = declare(
 
 
 class SiteView:
-	"""Read-only questions about the site of a concern; mixed into `SimWorld`."""
+	"""Read-only questions about the site of a concern; mixed into `ActorWorld`."""
 
 	needs: Any
 

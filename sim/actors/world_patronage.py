@@ -1,5 +1,5 @@
 """What a country's state asks of the engine when it funds the clients of its own: the seats it patronises, the terms of the
-funding and the country's real output per head (mixed into `SimWorld`; the home state's ask is `Sim.patron_funding_ask`)."""
+funding and the country's real output per head (mixed into `ActorWorld`; the home state's ask is `Sim.patron_funding_ask`)."""
 from typing import Any, Dict, List, Optional, Tuple
 
 from sim.reporting.api import output_rules

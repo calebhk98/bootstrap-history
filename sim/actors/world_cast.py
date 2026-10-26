@@ -24,7 +24,7 @@ def _place_coordinates(place: str) -> Optional[Tuple[float, float]]:
 
 
 class CastView:
-	"""Mixed into `SimWorld`."""
+	"""Mixed into `ActorWorld`."""
 
 	def _founder_place(self) -> str:
 		return str(self.needs.base_tile())  # type: ignore[attr-defined]

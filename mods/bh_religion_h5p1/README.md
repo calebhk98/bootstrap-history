@@ -51,6 +51,6 @@ All figures sit in the cast entry (`members`, `endowment_hectares`, and `plan`: 
 * The three civilisations are `variant_of` patches (`mods/README.md`, Civilisations): each file names only its
   house, so a change to the shipped civilisation reaches the variant. A variant of Han is played without the shipped
   Han economy as a foreign partner.
-* A house does not join the sector/grievance machinery (`agents_port_groups.py` collects only the `church` and
+* A house does not join the sector/grievance machinery (`sim/actors/world_groups.py` collects only the `church` and
   `academy` kinds), so the political risk of a dissolved house is not wired.
 * Houses do not grow their headcount, take donations or found new houses.

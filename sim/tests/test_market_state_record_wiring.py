@@ -7,9 +7,10 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import agents_port_stakes, market_clearing
-from sim.engine.agents_port_stakes import StakeView
+from sim.actors.world_stakes import StakeView
+from sim.engine import market_clearing
 from sim.engine.market_clearing import MarketClearingMixin
+from sim.tests.world_stand_in import fake_needs
 
 CLOSING = types.SimpleNamespace(price_ratio=1.1, society_sales_tonnes=7.0, unsold_tonnes=8.0, unmet_demand_tonnes=9.0)
 
@@ -53,12 +54,10 @@ class MarketState(unittest.TestCase):
 
 class TithableSales(unittest.TestCase):
     def value(self, quotes, states):
-        sim = types.SimpleNamespace(
-            economy=types.SimpleNamespace(commodity_of=lambda material: material),
-            market_state=lambda commodity: states.get(commodity))
-        view = types.SimpleNamespace(_sim=sim, _commodity_quote=lambda commodity: quotes.get(commodity))
-        with mock.patch.object(agents_port_stakes.need_substitutes, "serving", lambda need: ["wheat", "rice", "ghost"]):
-            return StakeView.tithable_sales_value(view, "food")
+        needs = fake_needs(material_commodity=lambda material: material, market_state=lambda commodity: states.get(commodity),
+                           materials_serving=lambda need: ["wheat", "rice", "ghost"])
+        view = types.SimpleNamespace(needs=needs, _commodity_quote=lambda commodity: quotes.get(commodity))
+        return StakeView.tithable_sales_value(view, "food")
 
     def test_the_value_is_the_sold_tonnes_at_the_buy_quote_summed_over_the_needs_commodities(self):
         quotes = {"wheat": {"buy_per_tonne": 10.0}, "rice": {"buy_per_tonne": 20.0}}

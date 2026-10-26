@@ -120,20 +120,21 @@ check("the rent paid on a tile is shared among its cohorts by what each owns",
 only_b = land_rents.rent_received_by_cohort(SimpleNamespace(land_per_run={"farm": 1.0}), rent_record, frozenset({"b"}))
 check("limited to tiles, only those tiles' cohorts receive rent", only_b == {"household:b:0": 5.0}, only_b)
 
-from sim.engine.agents_port_revenue import RevenueView
+from sim.actors.world_revenue import RevenueView
+from sim.tests.world_stand_in import fake_needs
 
 
 class StubSim:
 	"""Only what `land_rent_owners` reads: the cohorts' rent curve and the home strata."""
 
 	def __init__(self, curve, strata):
-		self.economy = SimpleNamespace(agent_cohort_land_rents=lambda tiles=None: curve)
-		self.actors = SimpleNamespace(of_kind=lambda kind: strata)
+		self.needs = fake_needs(agent_cohort_land_rents=lambda tiles=None: curve)
+		self.registry = SimpleNamespace(of_kind=lambda kind: strata)
 
 
 class StubView(RevenueView):
 	def __init__(self, sim):
-		self._sim = sim
+		self.needs, self.registry = sim.needs, sim.registry
 
 	def pay_per_person_year(self, trade):
 		return 1.0

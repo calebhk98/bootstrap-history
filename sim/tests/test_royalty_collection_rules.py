@@ -6,7 +6,8 @@ QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from sim.agents.licence import collect_patent_royalty, royalty_due
-from sim.engine.agents_port_disclosure import DisclosureView
+from sim.actors.world_disclosure import DisclosureView
+from sim.tests.world_stand_in import fake_needs
 from sim.seats.api import seat_royalties_due, seat_royalties_paid
 from sim.engine.state import ProjectsState
 from sim.tests.harness import check
@@ -131,9 +132,9 @@ check("seat_royalties_paid: a licensee in debt pays nobody", seat_royalties_paid
 # ---- DisclosureView.collect_royalty: seats and the patent holder together, through the ledger
 def view_over(seats, parties, year=100):
 	seat_parties = {seat_id: Party(seat_id, 0.0) for seat_id in seats}
-	simulation = SimpleNamespace(state=SimpleNamespace(seats=seats), seat_party=seat_parties.__getitem__,
-	                             view=lambda name: {seat_id: held.disclosed for seat_id, held in seats.items()})
-	return SimpleNamespace(_sim=simulation, _holder=finder(*parties), year=year), seat_parties
+	needs = fake_needs(legacy_seats=seats, seat_party=seat_parties.__getitem__,
+	                   disclosures={seat_id: held.disclosed for seat_id, held in seats.items()})
+	return SimpleNamespace(needs=needs, _holder=finder(*parties), year=year), seat_parties
 
 
 firm, holder = firm_owing(0.1), holder_with(110)

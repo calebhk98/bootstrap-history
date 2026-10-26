@@ -1,6 +1,6 @@
 """What interest groups can see of the stakes of workers out of a job, a church and an academy: the labour core's
 unhired hours, the technique that displaced them, the rent of land, and the sales of goods a tithe falls on.
-Mixed into `SimWorld`."""
+Mixed into `ActorWorld`."""
 from typing import Any, Dict, Tuple
 
 from sim.agents.api import Sector

@@ -13,7 +13,7 @@ from sim.world.material_units import tonnes_per_unit
 
 
 class TradeView:
-	"""Mixed into `SimWorld`."""
+	"""Mixed into `ActorWorld`."""
 
 	def _home_place(self) -> str:
 		return str(self.needs.civilisation().get("id"))  # type: ignore[attr-defined]
