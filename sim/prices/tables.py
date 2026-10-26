@@ -78,11 +78,6 @@ class Tables:
         key = rules.priced_key(tag, prices, self.commodity_record(tag))
         return None if key is None else prices[key]
 
-    def material_reach(self, material: str) -> Optional[str]:
-        """"solved" (a technique some producer runs), "gated" (one nobody runs yet, within reach) or None, from the
-        solver alone."""
-        return self.price_tables()[1].get(material)
-
     def material_price_basis(self, material: str) -> Optional[str]:
         """"solved", "gated", "imported" (no home producer in reach; a trading partner sells it) or None (no one does)."""
         return rules.basis_with_imports(self.price_tables()[1].get(material), self.needs.material_seller[material])

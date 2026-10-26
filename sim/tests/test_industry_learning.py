@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from unittest import mock
 
 from sim.engine import industry_concern, industry_learning as learning
 from sim.engine.industry_concern import IndustryConcernMixin as Concern
@@ -94,7 +95,10 @@ def concern_world(producers, days, depths=None):
 class ConcernInputs(unittest.TestCase):
 
     def setUp(self):
-        industry_concern.default_production_entries = lambda: {"mine_ore": {"requires_node": "mining"}, "grow": {"requires_node": None}}
+        patched = mock.patch.object(industry_concern.price_solver, "default_production_entries", lambda: {
+            "mine_ore": {"requires_node": "mining"}, "grow": {"requires_node": None}})
+        patched.start()
+        self.addCleanup(patched.stop)
 
     def test_the_depth_of_the_supplying_industry_and_the_haul_set_the_loss(self):
         shallow = concern_world({"ore": [("hills", "mine_ore")]}, 365.0 / 2.0)

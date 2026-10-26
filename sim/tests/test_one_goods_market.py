@@ -12,7 +12,7 @@ from .harness import *  # noqa: F401,F403
 from sim.engine import goods_market_offers
 from sim.engine.goods_market_api import GoodsMarket
 from sim.engine.goods_market_imports import HOME_SELLER
-from sim.engine.incumbent_prices import IncumbentPricesMixin
+from sim.prices import rules as price_rules
 from sim.engine.market_clearing import MarketClearingMixin
 from sim.engine.market_demand import household_demand_by_material
 from sim.engine.material_units import tonnes_per_unit
@@ -104,7 +104,7 @@ with no_tariff, signature:
     home_only = stand_in(foreign_economies=lambda: [])
     market_home = GoodsMarket(home_only)
     home_only.goods_market = market_home
-    check("pepper has no price: nothing in reach makes it", IncumbentPricesMixin.material_price_basis(home_only, "pepper_kg") is None)
+    check("pepper has no price: nothing in reach makes it", price_rules.basis_with_imports(home_only._price_tables()[1].get("pepper_kg"), market_home.offered_by("pepper_kg")) is None)
     check("...so it cannot be quoted or bought", not market_home.can_be_bought("pepper_kg"))
     check("no home technique in reach and no partner offers pepper", market_home.offered_by("pepper_kg") is None)
     prices = market_home.household_prices()
@@ -119,7 +119,7 @@ with no_tariff, signature:
     partnered_prices = partnered.goods_market.household_prices()
     check("a partner offers cassia, so it is an import and can be bought",
           partnered.goods_market.offered_by("cassia_kg") == "han"
-          and IncumbentPricesMixin.material_price_basis(partnered, "cassia_kg") == "imported"
+          and price_rules.basis_with_imports(partnered._price_tables()[1].get("cassia_kg"), partnered.goods_market.offered_by("cassia_kg")) == "imported"
           and partnered.goods_market.can_be_bought("cassia_kg"), partnered.goods_market.offered_by("cassia_kg"))
     cost = 2.0 * 1.0
     share = partnered.goods_market.merchants_cost_share(partnered._foreign_route(None), None, "han")

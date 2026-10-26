@@ -26,7 +26,7 @@ def compute():
 
 
 try:
-    with mock.patch.object(solve_cache.shipped_openings, "read", return_value=None):
+    with mock.patch.object(solve_cache.engine_seam, "shipped_opening", return_value=None):
         cold = solve_cache.cached_json("key_a", compute, directory)
         warm = solve_cache.cached_json("key_a", compute, directory)
         check("a miss computes once and a hit does not compute again", len(calls) == 1, calls)
@@ -52,7 +52,7 @@ finally:
 shipped_directory = tempfile.mkdtemp(prefix="solve_cache_shipped_")
 computed = []
 try:
-    with mock.patch.object(solve_cache.shipped_openings, "read", return_value={"prices": {"iron": 9.0}}) as shipped:
+    with mock.patch.object(solve_cache.engine_seam, "shipped_opening", return_value={"prices": {"iron": 9.0}}) as shipped:
         value = solve_cache.cached_json("key_s", lambda: computed.append(1) or {"prices": {}}, shipped_directory)
         check("a miss with an entry shipped for the key reads it and does not compute", value == {"prices": {"iron": 9.0}} and not computed, computed)
         check("the shipped entry is asked for by the cache's name and the key",

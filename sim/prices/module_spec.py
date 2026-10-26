@@ -24,7 +24,7 @@ MODULE_SPECS = (ModuleSpec(
     publishes=(
         ViewSpec("material_prices", "material_prices", **_LIVE),
         ViewSpec("material_price", "material_price", kind=KEYED, **_LIVE),
-        ViewSpec("material_reach", "material_reach", kind=KEYED, **_LIVE),
+        ViewSpec("price_tables", "price_tables", **_LIVE),
         ViewSpec("material_price_basis", "material_price_basis", kind=KEYED, **_LIVE),
         ViewSpec("price_index", "price_index", **_LIVE),
         ViewSpec("commodity_record", "commodity_record", kind=KEYED, **_LIVE),

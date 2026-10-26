@@ -15,7 +15,7 @@ from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionWorld
 from sim.prices import prices
 from sim.engine import concern_volume, economy_port_actors, tile_ownership
-from sim.engine.economy_materials import MaterialSupplyMixin
+from sim.tests import prices_stand_in
 from sim.engine.state import ActorRecord, ActorsState
 from sim.engine.techniques_in_use import TechniquesInUseMixin
 from sim.engine.tile_ownership import TileOwnershipMixin
@@ -84,26 +84,25 @@ class TechniquesInReach(unittest.TestCase):
 
 class ProducerListMemo(unittest.TestCase):
 
-    def world(self, stamp):
-        return types.SimpleNamespace(economy=types.SimpleNamespace(producers_stamp=lambda: stamp[0]))
+    def module(self, stamp):
+        return prices_stand_in.build(producers_stamp=lambda: stamp[0])
 
     def test_the_list_is_kept_while_the_producers_are_unchanged(self):
         stamp = [0]
-        world = self.world(stamp)
+        module = self.module(stamp)
         built = []
         for _concern in range(30):
-            MaterialSupplyMixin._producers_memo(world, "producers_by_good", 143, lambda: built.append(1) or {"ore": []})
+            module.producers_memo("producers_by_good", 143, lambda: built.append(1) or {"ore": []})
         self.assertEqual(len(built), 1)
         stamp[0] = 1
-        MaterialSupplyMixin._producers_memo(world, "producers_by_good", 143, lambda: built.append(1) or {"ore": []})
+        module.producers_memo("producers_by_good", 143, lambda: built.append(1) or {"ore": []})
         self.assertEqual(len(built), 2)
 
     def test_an_unanswered_question_is_asked_again(self):
-        world = self.world([0])
+        module = self.module([0])
         asked = []
         for _concern in range(3):
-            self.assertIsNone(MaterialSupplyMixin._producers_memo(world, "producers_by_good", 143,
-                                                                  lambda: asked.append(1)))
+            self.assertIsNone(module.producers_memo("producers_by_good", 143, lambda: asked.append(1)))
         self.assertEqual(len(asked), 3)
 
 

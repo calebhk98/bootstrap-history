@@ -12,7 +12,8 @@ from unittest import mock
 
 from sim.prices import solve_prices
 from sim.prices import energy_prices, prices
-from sim.engine import data, incumbent_prices, node_output, node_revenue
+from . import prices_stand_in
+from sim.engine import data, node_output, node_revenue
 from sim.world import capital_market, plant_figures
 from sim.labour.labour_market import production_data
 
@@ -197,36 +198,28 @@ class InventoryAndLiveRate(unittest.TestCase):
 
 class IncumbentTablesFollowTheLiveRate(unittest.TestCase):
 
-    def sim(self, rates):
-        class Stub(incumbent_prices.IncumbentPricesMixin):
-            civ = {"id": "x", "starting_interest_rate": 0.05}
-            state = mock.Mock(projects=mock.Mock(granted=frozenset({"a"})))
-            farm_land = mock.Mock(hectares=100.0)
-
-            def techniques_in_use(self):
-                return self.state.projects.granted
-
-            def market_rate(self):
-                return rates[0]
-        return Stub()
+    def module(self, rates):
+        granted = frozenset({"a"})
+        return prices_stand_in.build(civilisation={"id": "x", "starting_interest_rate": 0.05}, techniques_granted=granted,
+                                     techniques_in_use=granted, farm_land_hectares=100.0, market_rate=lambda: rates[0])
 
     def test_the_solve_takes_the_banded_live_rate_and_repeats_only_when_a_band_moves(self):
         rates = [0.05]
-        stub = self.sim(rates)
+        module = self.module(rates)
         with mock.patch("sim.engine.data.calculated_goods_table", return_value=({}, {})) as solve:
-            stub._price_tables()
+            module.price_tables()
             rates[0] = 0.05 + prices.INTEREST_RATE_BAND * 0.2
-            stub._price_tables()
+            module.price_tables()
             self.assertEqual(solve.call_count, 1)
             rates[0] = 0.05 + prices.INTEREST_RATE_BAND * 4
-            stub._price_tables()
+            module.price_tables()
             self.assertEqual(solve.call_count, 2)
             self.assertAlmostEqual(solve.call_args.kwargs["interest_rate"], 0.09)
 
     def test_a_market_rate_that_needs_the_prices_answers_the_starting_rate_instead_of_recursing(self):
-        stub = self.sim([0.2])
-        stub.market_rate = lambda: stub._banded_market_rate() + 0.2
-        self.assertAlmostEqual(stub._banded_market_rate(), 0.25)
+        module = self.module([0.2])
+        module.needs.market_rate = lambda: module.banded_market_rate() + 0.2
+        self.assertAlmostEqual(module.banded_market_rate(), 0.25)
 
 
 if __name__ == "__main__":

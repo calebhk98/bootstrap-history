@@ -123,7 +123,7 @@ class GoodsOffers(GoodsImports):
 
     def _home_basis(self, material):
         """How the home price table reaches a material ("solved", "gated"), None when it does not."""
-        return self._sim.view("material_reach")[material]
+        return self._sim._price_tables()[1].get(material)
 
     def _partner_made_materials(self, partners):
         """Materials some trading partner makes with its own technologies."""

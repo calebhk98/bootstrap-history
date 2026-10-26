@@ -1,31 +1,24 @@
-"""Clearing land moves the rent the solver prices: `IncumbentPricesMixin._price_tables` hands the solver the banded area
+"""Clearing land moves the rent the solver prices: the prices module's `price_tables` hands the solver the banded area
 the farm has cleared, so a farm cleared into another band is re-priced and one moved within a band is not.
 `prices.band_farmed_hectares` is the banding. The solver is a recorder; the stand-in game holds only what the method reads."""
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 from unittest import mock
 
 from sim.prices import prices
 
 from sim.engine import data
-from sim.engine.incumbent_prices import IncumbentPricesMixin
+from sim.tests import prices_stand_in
 
 GRANTED = frozenset({"fire"})
 
 
-class Incumbents(IncumbentPricesMixin):
-    def __init__(self, hectares):
-        self.state = SimpleNamespace(projects=SimpleNamespace(granted=GRANTED))
-        self.civ = {"id": "test_civ"}
-        self.farm_land = SimpleNamespace(hectares=hectares)
-
-    def techniques_in_use(self):
-        return GRANTED
-
-    def _banded_market_rate(self):
-        return 0.1
+def module_with(hectares):
+    module = prices_stand_in.build(civilisation={"id": "test_civ", "starting_interest_rate": 0.1}, techniques_granted=GRANTED,
+                                   techniques_in_use=GRANTED, farm_land_hectares=hectares)
+    module.banded_market_rate = lambda: 0.1
+    return module
 
 
 def farmed_hectares_given_to_the_solver(hectares):
@@ -36,7 +29,7 @@ def farmed_hectares_given_to_the_solver(hectares):
         return {"hectare_land": 1.0}, {"hectare_land": "derived"}
 
     with mock.patch.object(data, "calculated_goods_table", solver):
-        Incumbents(hectares)._price_tables()
+        module_with(hectares).price_tables()
     return asked
 
 
