@@ -29,6 +29,15 @@ class ExtensionPoint:
 
 
 @dataclass(frozen=True)
+class Provision:
+	"""A shipped module's answer to an extension point: `method` on the module, known to mods as
+	`<module_id>.<name>` (the name a mod withdraws it by)."""
+	point: str
+	method: str
+	name: str
+
+
+@dataclass(frozen=True)
 class PhaseHook:
 	name: str                                     # a name in the year's phase list (sim/engine/year_phases.py)
 	method: str
@@ -53,6 +62,7 @@ class ModuleSpec:
 	sends: Tuple[type, ...] = ()                  # command classes it may send
 	phases: Tuple[PhaseHook, ...] = ()
 	extension_points: Tuple[ExtensionPoint, ...] = ()
+	provides: Tuple[Provision, ...] = ()          # answers to extension points (its own or other modules')
 
 
 @dataclass
@@ -65,6 +75,7 @@ class Operations:
 	layers: Dict[str, Tuple[type, ...]] = field(default_factory=dict)              # module id -> classes over it
 	adjusters: Dict[str, Tuple[Tuple[Callable, Tuple[str, ...]], ...]] = field(default_factory=dict)  # view -> (function, reads)
 	provided: Dict[str, Tuple[Callable, ...]] = field(default_factory=dict)        # extension point -> functions
+	withdrawn: Tuple[str, ...] = ()                                                # "<module_id>.<name>" provisions taken out
 
 
 def view_names(spec: ModuleSpec) -> Tuple[str, ...]:
@@ -82,6 +93,6 @@ def handler_of(spec: ModuleSpec) -> Dict[type, str]:
 def declared_methods(spec: ModuleSpec) -> Tuple[str, ...]:
 	"""The methods other parts of the assembly call by name: view computations, command handlers and phases."""
 	return tuple(view.compute for view in spec.publishes) + tuple(name for _command, name in spec.applies) \
-		+ tuple(hook.method for hook in spec.phases)
+		+ tuple(hook.method for hook in spec.phases) + tuple(provision.method for provision in spec.provides)
 
 

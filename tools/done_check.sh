@@ -25,10 +25,10 @@ echo "register globals:" \
   "$(grep -rn '^def register\|^    def register' sim --include=*.py | grep -v tests | wc -l)"
 
 echo "test files mentioning Mixin:" \
-  "$(grep -rl Mixin sim/tests | wc -l)"
+  "$(grep -rl --include=*.py Mixin sim/tests | wc -l)"
 
 echo "test files importing sim.engine:" \
-  "$(grep -rlE 'from sim\.engine|import sim\.engine' sim/tests | wc -l)"
+  "$(grep -rlE --include=*.py 'from sim\.engine|import sim\.engine' sim/tests | wc -l)"
 
 echo "mods importing sim.engine outside mod_code:" \
   "$(grep -rn 'from sim\.engine\|import sim\.engine' mods --include=*.py | grep -v 'mod_code' | wc -l)"

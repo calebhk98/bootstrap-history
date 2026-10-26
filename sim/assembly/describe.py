@@ -21,6 +21,7 @@ def record(assembly: Assembly) -> Dict[str, Any]:
 		"removed": dict(sorted(applied.removed_by.items())),
 		"adjusters": {view: [mod_id for mod_id, _function, _reads in entries] for view, entries in sorted(applied.adjusters.items())},
 		"provided": {point: [mod_id for mod_id, _function in entries] for point, entries in sorted(applied.provided.items())},
+		"withdrawn": dict(sorted(applied.withdrawn.items())),
 	}
 
 

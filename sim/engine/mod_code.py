@@ -118,6 +118,10 @@ class ModCodeApi:
         entry = (function, tuple(reads))
         self.operations.adjusters[view] = self.operations.adjusters.get(view, ()) + (entry,)
 
+    def withdraw(self, provision: str) -> None:
+        """Take a shipped module's answer out of an extension point, by its `<module_id>.<name>`."""
+        self.operations.withdrawn = self.operations.withdrawn + (provision,)
+
     def provide(self, point: str, function: Callable) -> None:
         """Add an answer to a module's extension point."""
         self.operations.provided[point] = self.operations.provided.get(point, ()) + (function,)

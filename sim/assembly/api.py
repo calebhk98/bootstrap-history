@@ -8,6 +8,6 @@ from .describe import dependency_lines, record
 from .errors import AssemblyError, StaleView
 from .module import Module
 from .needs import Needs, Point
-from .spec import FIRST, KEYED, LIST, QUOTE, SUM, TABLE, Command, ExtensionPoint, ModuleSpec, Operations, PhaseHook, ViewSpec
+from .spec import FIRST, KEYED, LIST, QUOTE, SUM, TABLE, Command, ExtensionPoint, ModuleSpec, Operations, PhaseHook, Provision, ViewSpec
 from .views import View
 from .slots import SEAT, WORLD, bind_seat, bind_world, new_slots, revive_slots

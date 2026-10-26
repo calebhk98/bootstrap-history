@@ -31,6 +31,7 @@ class Applied:
 		self.layers: Dict[str, List[Tuple[str, type]]] = {}
 		self.adjusters: Dict[str, List[Tuple[str, Callable, Tuple[str, ...]]]] = {}
 		self.provided: Dict[str, List[Tuple[str, Callable]]] = {}
+		self.withdrawn: Dict[str, str] = {}          # "<module_id>.<name>" -> the mod that withdrew it
 		for spec in shipped:
 			if spec.module_id in self.specs:
 				raise AssemblyError("two shipped modules are both called %s" % spec.module_id)
@@ -76,6 +77,8 @@ class Applied:
 			self.adjusters.setdefault(view, []).extend((mod_id, function, reads) for function, reads in entries)
 		for point, functions in operations.provided.items():
 			self.provided.setdefault(point, []).extend((mod_id, function) for function in functions)
+		for name in operations.withdrawn:
+			self.withdrawn[name] = mod_id
 
 
 def apply_all(shipped: Sequence[ModuleSpec], operations: Sequence[Operations],

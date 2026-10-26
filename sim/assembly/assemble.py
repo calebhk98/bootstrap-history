@@ -106,6 +106,16 @@ def _check_reads(assembly: Assembly) -> None:
 					raise AssemblyError("mod %s's adjuster of %s reads %s, an extension point; an adjuster reads views only" % (mod_id, view, name))
 				if name not in assembly.view_owner:
 					raise _missing(assembly, "mod %s's adjuster of %s" % (mod_id, view), name)
+	shipped_names = set()
+	for module_id, spec in assembly.applied.specs.items():
+		for provision in spec.provides:
+			shipped_names.add("%s.%s" % (module_id, provision.name))
+			if provision.point not in assembly.point_owner:
+				raise AssemblyError("module %s provides to %s, which no module declares%s" % (
+					module_id, provision.point, _removal_note(assembly, provision.point)))
+	for name, mod_id in assembly.applied.withdrawn.items():
+		if name not in shipped_names:
+			raise AssemblyError("mod %s withdraws the provision %s, which no module makes" % (mod_id, name))
 	for point, entries in assembly.applied.provided.items():
 		if point not in assembly.point_owner:
 			raise AssemblyError("mod %s provides to %s, which no module declares%s" % (entries[0][0], point, _removal_note(assembly, point)))
@@ -178,6 +188,10 @@ def _wire(assembly: Assembly) -> None:
 		for _mod_id, function, reads in assembly.applied.adjusters.get(name, []):
 			needs = _needs_for(assembly, "an adjuster of %s" % name, reads, (), ())
 			view.adjusters.append((function, needs, [assembly.views[read] for read in reads]))
+	for module_id, spec in assembly.applied.specs.items():
+		for provision in spec.provides:
+			if "%s.%s" % (module_id, provision.name) not in assembly.applied.withdrawn:
+				assembly.points[provision.point].providers.append(getattr(assembly.modules[module_id], provision.method))
 	for name, entries in assembly.applied.provided.items():
 		assembly.points[name].providers.extend(function for _mod_id, function in entries)
 
