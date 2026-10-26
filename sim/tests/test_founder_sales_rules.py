@@ -1,6 +1,6 @@
-"""The founder sells (Complaint 288): a concern goes to the buyer the exchange picks at the price it sets, farmland goes back to
-the land market at what `buy farm` charges. The exchange's own terms are in test_exchange_sale_terms. Each method is called on
-a stand-in that holds only what it reads."""
+"""The founder sells (Complaint 288): a concern goes to the buyer the exchange picks at the price it sets. Farmland sales are
+test_farm_land_trade; the exchange's own terms are in test_exchange_sale_terms. Each method is called on a stand-in that holds
+only what it reads."""
 QUICK_TOPIC = True
 
 import unittest
@@ -60,30 +60,6 @@ class SellConcernTests(unittest.TestCase):
 
     def test_a_concern_not_run_is_refused_with_the_setups_reason(self):
         self.assertEqual(self.sell("none"), {"ok": False, "error": "not running"})
-
-
-class SellFarmTests(unittest.TestCase):
-    def sell(self, hectares, owned=100.0):
-        received = []
-        holdings = SimpleNamespace(farm_hectares=owned)
-        game = SimpleNamespace(state=SimpleNamespace(economy=None, holdings=holdings), farm_price_per_hectare=lambda: 3.0,
-                               household=SimpleNamespace(capital=500.0),
-                               receive_from_edge=lambda edge, amount, why: received.append(amount))
-        with mock.patch.object(founder_sales, "area_text", lambda value, sim, digits=1: str(value)):
-            reply = FounderSalesMixin.sell_farm(game, hectares)
-        return reply, holdings.farm_hectares, received
-
-    def test_selling_farmland_removes_the_hectares_and_pays_what_buying_charges_per_hectare(self):
-        reply, left, received = self.sell(40.0)
-        self.assertEqual((reply["ok"], left, received, reply["price"]), (True, 60.0, [120.0], 120.0))
-
-    def test_more_than_is_owned_is_refused_and_changes_nothing(self):
-        reply, left, received = self.sell(61.0, owned=60.0)
-        self.assertEqual((reply["ok"], left, received), (False, 60.0, []))
-
-    def test_a_sale_of_nothing_is_refused(self):
-        reply, left, received = self.sell(0.0)
-        self.assertEqual((reply["ok"], left, received), (False, 100.0, []))
 
 
 if __name__ == "__main__":

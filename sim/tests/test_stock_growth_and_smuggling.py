@@ -85,6 +85,10 @@ class Game:
     partner_refusal = ForeignEconomiesMixin.partner_refusal
     partner_government = ForeignEconomiesMixin.partner_government
 
+    def view(self, name):
+        """The views the bridge reads of a game: the agriculture module's wild stock, which is whole here."""
+        return {"wild_stock": lambda: {}}[name]
+
     def __init__(self, capital=1e6, governed=True):
         self.civ = load_civ(HOME)
         self.world_map = open_map()
@@ -96,7 +100,6 @@ class Game:
         self.goods_market = type("GoodsMarket", (), {"acting": self.purse, "acting_party_id": "founder"})()
         self.state = type("State", (), {
             "scenario": type("Scenario", (), {"year": 100})(),
-            "economy": type("Economy", (), {"wild_stock": {}})(),
             "household": type("Household", (), {})()})()
         self.actors = ActorRegistry(ActorsState())
         self.economy = StubEconomy()

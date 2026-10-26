@@ -2,7 +2,7 @@
 
 The wild stock is plain data the game saves ({tile: {species: share left}}, food_wild_stock.py). The wild stock,
 the farming technique and the soil nitrogen factors come in as arguments, so this module reads nothing from the
-simulation; the labour bound on hunting stays with the caller (sim/engine/food_supply.py).
+simulation; the labour bound on hunting stays with the caller (sim/agriculture/food.py).
 """
 from sim.geography.queries import crop_site, draw_wild_stock, food_potential, hunted_kcal
 from sim.geography.tile_holdings import tiles_held

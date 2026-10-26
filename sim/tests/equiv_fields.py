@@ -25,6 +25,9 @@ RELOCATIONS = [
     ("/modules/reporting/agent_baseline_prices", "/economy/agent_baseline_prices"),
     ("/seats/*/modules/reporting/log", "/seats/*/household/log"),
     ("/seats/*/modules/reporting/automation_audit", "/seats/*/household/automation_audit"),
+    ("/modules/agriculture/wild_stock", "/economy/wild_stock"),
+    ("/modules/agriculture/soil_nitrogen", "/economy/soil_nitrogen"),
+    ("/modules/agriculture/weather_salt", "/scenario/weather_salt"),
 ]
 
 IGNORED = [

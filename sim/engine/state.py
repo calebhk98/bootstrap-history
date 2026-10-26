@@ -309,10 +309,6 @@ class EconomyState:
 	works: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# tile -> {construction node id: [year it is finished, capacity]} of works paid for and being built (works.py)
 	works_under_construction: Dict[str, Dict[str, List[float]]] = field(default_factory=dict)
-	# tile -> {species id: share of the game left} for hunted species below a full stock (food_supply.py)
-	wild_stock: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	# tile -> share of its native soil nitrogen pool left, for cropped tiles below native (soil_nitrogen_year.py)
-	soil_nitrogen: Dict[str, float] = field(default_factory=dict)
 	# tile -> tonnes of standing timber felled below the tile's full stock; a missing tile is untouched (economy_port_timber.py)
 	forest_felled: Dict[str, float] = field(default_factory=dict)
 	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
@@ -369,7 +365,6 @@ class FounderState:
 class ScenarioState:
 	"""Simulation scenario configuration and timeline."""
 	year: int = 100
-	weather_salt: int = 0     # this game's own weather history, drawn from its dice (Complaint 384)
 	_said_debasement: Optional[int] = None
 	_said_output: Optional[Dict[str, int]] = None
 	_said_wage_cascade: int = -999    # last year a wage-cascade note was printed

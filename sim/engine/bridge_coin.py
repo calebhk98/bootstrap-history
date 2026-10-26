@@ -65,7 +65,7 @@ def partner_opening_facts(sim, civilization_id):
 
 
 
-# ---- finance, polity, agriculture, resources ----
+# ---- finance, polity, resources ----
 
 @bridge_view("lent_share")
 def lent_share(sim):
@@ -85,17 +85,6 @@ def order_reach(sim):
 @bridge_view("eminence", seat_scoped=True)
 def eminence(sim):
     return sim.state.household.eminence
-
-
-@bridge_view("farm_holdings", seat_scoped=True)
-def farm_holdings(sim):
-    """{hectares: farmland held, or None before a farm; stock_kg: the granary}."""
-    return {"hectares": sim.state.holdings.farm_hectares, "stock_kg": sim.farm_stock_kg}
-
-
-@bridge_view("farm_land_price")
-def farm_land_price(sim):
-    return sim.farm_price_per_hectare()
 
 
 @bridge_view("forest_holding", seat_scoped=True)

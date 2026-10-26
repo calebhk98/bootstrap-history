@@ -2,130 +2,146 @@
 
 Farming: farmland, farm weather, soil nitrogen, wild stock and food potential.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** moved in part (branch `mr/agriculture`). The package is `sim/agriculture/`; this file describes what shipped, not
+the draft proposal. The farm holding itself (hectares, granary, last harvest) is still the engine's `state.holdings`, which
+demography and the farm workforce write; "Not moved" says what waits for them. Counts come from the module spec
+(`python3 -c "import sys; sys.path.insert(0,'.'); from sim.agriculture.module_spec import MODULE_SPECS as s; print(len(s[0].publishes), len(s[0].applies), len(s[0].reads))"`).
+
+## What changed from the draft
+
+- **Views:** 10 instead of 5. The draft folded the geography handle's food members (`crop_sites`, `food_kcal_by_source`,
+  `huntable_kcal`, `take_hunt`, `regrow_wild_stock`, `soil_nitrogen_factors`, `step_soil_nitrogen`) into agriculture's
+  `farm_sites` and `wild_stock` as methods it would "replace". They stay geography's (the land module's): agriculture
+  reads each as a view of the walled handle and hands it the society's rotation, crop and herd. Published: `farm_weather`
+  (keyed by year), `harvest_weather` (a quote, the pooled multiplier), `weather_seed` (a quote), `farm_weather_cells`,
+  `farm_sites`, `farm_territory`, `food_potential`, `wild_stock`, `farm_holdings`, `farm_land_price`.
+- **Weather is not a phase.** The draft said the first read of `farm_weather` consumes randomness, so it should be a phase
+  that fills it. It does not: every cell is drawn from a fresh generator seeded by (civilisation, cell, year, salt), so the
+  weather is a pure function of those. The only draw from the game's dice is the salt, once, at the first seed asked for.
+  That lazy draw has to stay lazy (drawing it at setup would move it in the random sequence), so `weather_seed` is a quote
+  that writes the module's own `weather_salt` the first time. The salt moved from `scenario.weather_salt` to
+  `AgricultureWorld.weather_salt`.
+- **`farm_land_quote` became `farm_land_price`, a table.** The coin module already reads that name (bridged since coin
+  moved); the price of a hectare takes no argument. It is derived: the hours constant, the money per labour hour and the
+  price index.
+- **Commands:** `InvestFarm` and `SellFarm`, as drafted. `RecordFarmYear` is not built (see "Not moved"). Both answer a
+  value or a `Refusal` (`not_positive`, `cannot_afford`, `not_owned`); the engine forwarders turn them into the replies the
+  screens read, so the wording and the unit text stay in the presentation layer.
+- **`society_food_potential` is a view, `food_potential`,** though nothing outside tests reads it: it is the module's own
+  headline answer (what the held land can feed), and it was already a method with a test. Under the three-caller floor,
+  with `wild_stock` (one reader, living stock) and `farm_territory` (one reader, the engine's farm refresh).
+- **State:** `AgricultureWorld` holds `wild_stock`, `soil_nitrogen` (from `state.economy`) and `weather_salt` (from
+  `state.scenario`), relocated in `sim/tests/equiv_fields.py`. No seat state yet. The weather cells, their Cholesky factor
+  and the tiles' arable shares are never-saved caches on the module, built from the held tiles at `Sim.__init__` (the same
+  moment as before) by one read of `farm_weather_cells`.
+- **Constants:** `FARM_WEATHER_POOLED_CELL_CAP` and `FARM_LABOUR_HOURS_PER_HA` moved to `sim/agriculture/constants.py`
+  (same names, values and kinds). `Sim.FARM_COST_PER_HA` is gone; the price is `farm_land_price`.
 
 ## At a glance
 
 | Measure | Value |
 |---|---|
-| Views / commands proposed | 5 / 2 |
-| Old methods and properties owned (after regrouping) | 22 |
-| Of those, referenced from another module's mixin code | 6 (3 classed read-only or pure by Appendix B, 3 classed writers) |
-| Names used by other modules or by code outside the mixins (ui, agents, ports, mods, function modules) | 24 (6 from mixins, 5 only from outside) |
-| Views per used name | 0.21 |
-| Views that replace exactly one referenced method and no field (one-to-one) | 1 of 5 |
-| Views of other modules it reads | 7, from 5 modules |
-| Commands of other modules it sends | 2 |
+| Views / commands | 10 / 2 (+ the phases `wild_stock` and `soil_nitrogen`) |
+| Views of other modules it reads | 20, bridged (the geography members, the labour technique and hours, the externalities, the dice) |
+| Commands of other modules it sends | 2 (`PayEdge`, `ReceiveFromEdge`) |
+| Forwarders left on `Sim` | 8, in `sim/engine/forward_agriculture.py` |
+| Old methods removed from `Sim` | `FoodSupplyMixin` and `SoilNitrogenMixin` (both deleted), the farm-weather block of `core.py` (about 540 lines), `farm_price_per_hectare`, `invest_farm`, `sell_farm` |
 
-**Existing surface and files.** Existing: `sim/world/agriculture.py`, `sim/world/farming_technique.py`, `sim/world/weather_pooling.py`, `sim/geography` food functions. Engine: `FoodSupplyMixin`, `SoilNitrogenMixin`, the farm-weather methods inside `Sim` (`core.py`), farm pricing in `GoodsMixin`.
+Existing surface the module sits on: `sim/world/agriculture.py`, `sim/world/farming_technique.py`,
+`sim/world/weather_pooling.py` (all pure), and the walled `sim/geography` food functions.
 
-## (a) Mixin classes and files absorbed
+## Files
 
-| Class | File | Methods here | Referenced from other modules |
+| File | Holds |
+|---|---|
+| `sim/agriculture/weather.py` | the cells, the seed, the pooled multiplier and the per-tile multipliers |
+| `sim/agriculture/food.py` | farm sites, territory, food potential, the wild stock and its yearly step |
+| `sim/agriculture/soil.py` | soil nitrogen factors, the draught herd's manure, the yearly step |
+| `sim/agriculture/farm.py` | the holding view, the land price, buying and selling |
+| `sim/agriculture/rules.py` | the arithmetic as plain functions (cells, capping, seed, draws, manure, refusals) |
+| `sim/engine/bridge_agriculture.py` | what the module reads until its owners move |
+| `sim/engine/forward_agriculture.py` | the forwarders |
+
+## State owned
+
+| Path now | Was | Scope | Read by | Written by |
+|---|---|---|---|---|
+| `modules.agriculture.wild_stock` | `economy.wild_stock` | world | living stock (through `wild_stock`) | the module |
+| `modules.agriculture.soil_nitrogen` | `economy.soil_nitrogen` | world | the module | the module |
+| `modules.agriculture.weather_salt` | `scenario.weather_salt` | world | the module | the module |
+
+## Views
+
+| View | Kind | Answers | Replaces | Readers |
+|---|---|---|---|---|
+| `farm_weather` | keyed by year | the year's multiplier on each weather cell that is a tile | `farm_weather_by_tile` | the economy port |
+| `harvest_weather` | quote (year, stdev, harmed) | the pooled harvest multiplier, less what the externalities take | `_pooled_farm_weather_multiplier` | demography, the economy port |
+| `weather_seed` | quote (year, region) | the seed of a year's draw; the first call draws the salt | `_farm_year_weather_seed` | demography, hazards, prospecting, disease |
+| `farm_weather_cells` | table | the pooled cells and their arable shares | `_compute_farm_weather_cells` | the engine (builds them at start) |
+| `farm_sites` | table | the crop site of each held tile under the rotation | `farm_sites` | the economy port, the farm refresh |
+| `farm_territory` | table | the ladder and ceiling of the cropland | the body of `refresh_farm_territory` | the engine's farm refresh |
+| `food_potential` | table | kcal a year by source, bounded by the gatherers' hours | `society_food_potential` | none yet |
+| `wild_stock` | table (cached, channel `wild_stock`) | game left by tile | `economy.wild_stock` | living stock |
+| `farm_holdings` | table, seat | hectares and granary stock | the bridged view coin read | coin |
+| `farm_land_price` | table | money for one hectare | `farm_price_per_hectare`, `FARM_COST_PER_HA` | coin, the screens |
+
+Only `wild_stock` is cached; the rest read the engine's household state, the held land or the mods' externalities, which are
+written outside any command.
+
+## Commands
+
+| Command | Fields | Answers | Refusal causes |
 |---|---|---|---|
-| `Sim` | `sim/engine/core.py` | 8 | 2 |
-| `GoodsMixin` | `sim/engine/economy_goods.py` | 2 | 1 |
-| `FounderSalesMixin` | `sim/engine/founder_sales.py` | 1 | 0 |
-| `ForwardingPropertiesMixin` | `sim/engine/core_properties.py` | 4 | 2 |
-| `FoodSupplyMixin` | `sim/engine/food_supply.py` | 4 | 1 |
-| `SoilNitrogenMixin` | `sim/engine/soil_nitrogen_year.py` | 5 | 1 |
+| `InvestFarm` | hectares | hectares bought | `not_positive`, `cannot_afford` |
+| `SellFarm` | hectares | {hectares, price, remaining} | `not_positive`, `not_owned` (facts: owned, hectares) |
 
-Methods that stay inside the module (referenced by no other module's mixin code and by nothing outside the mixins): `_cap_pooled_farm_weather_cells`, `_compute_farm_tile_arable_share`, `_compute_farm_weather_cells`, `_compute_farm_weather_correlation_cholesky`, `_draught_manure_kg`, `_gathering_caps`, `_raw_farm_weather_cells`, `_rotation_cropped_share`, `sell_farm`, `society_food_potential`, `soil_nitrogen_factors`.
+Both write `farm_hectares` through `legacy_farm_holdings` and move money by the ledger's `PayEdge` and `ReceiveFromEdge`.
 
-## (b) State owned
+## Reads (all bridged, in `sim/engine/bridge_agriculture.py` unless noted)
 
-Paths are today's. Seat-scoped fields live on `state.<section>` as the acting seat's alias (`bind_seat`, `sim/engine/state_seat.py`) and are saved once per seat in `state.seats[seat_id]`; world fields live once on the state. Counts are access sites found by the field scan: a mixin method of another module counts under that module, code in a function module, `sim/ui`, `sim/agents` and the like counts under `<area>`.
+- land: `held_tile_geometry`, `crop_sites`, `food_kcal_by_source`, `game_food_sources`, `huntable_kcal`, `take_hunt`,
+  `regrow_wild_stock`, `tile_soil_nitrogen_factors`, `soil_nitrogen_after_year` (the old in-place step, now a quote that
+  returns the new stock)
+- workforce: `farming_technique`, `society_labour_hours`, `trade_registry`, `money_per_labour_hour` (existing, `bridge_projects.py`)
+- other: `civilisation` (existing), `society_herds` (living stock), `acting_balance` (ledger), `price_index`,
+  `externality_yield_factors` (the mods' externalities)
+- debts: `legacy_dice` (the game's random source, for the salt) and `legacy_farm_holdings` (the acting seat's farm section)
 
-Proposed slot: a world dataclass `AgricultureWorld` and a per-seat dataclass `AgricultureSeat`.
+## Year phases
 
-| Today's path | Scope | Read by (outside the owner) | Written by (outside the owner) |
-|---|---|---|---|
-| `state.economy.soil_nitrogen` | world | - | - |
-| `state.economy.wild_stock` | world | living_stock 2 | - |
-| `state.holdings.farm_cleared_hectares` | seat | - | - |
-| `state.holdings.farm_hectares` | seat | coin 1, <ui> 1 | - |
-| `state.holdings.farm_hours_needed` | seat | <engine-functions> 1 | - |
-| `state.holdings.farm_last_harvest_kg` | seat | <engine-functions> 1 | demography 1 |
-| `state.holdings.farm_last_marginal_product` | seat | - | demography 1 |
-| `state.holdings.farm_last_shortfall_kg` | seat | - | demography 1 |
-| `state.holdings.farm_stock_kg` | seat | coin 2, demography 1 | core 1, demography 1, coin 1 |
+`wild_stock` and `soil_nitrogen` are `PhaseHook`s of the module (`step_wild_stock`, `step_soil_nitrogen`). `begin_world_year`
+stays the engine's and calls the forwarder `refresh_farm_territory`.
 
-## (c) Views
+## Forwarders left on `Sim`
 
-Kind is table (one value), keyed (one value per key, computed on first read of the key) or quote (a question with arguments, never cached). Channels are the version channels the owner bumps; `inputs` are other views the value is derived from (a name without a dot is this module's own).
+`farm_sites`, `refresh_farm_territory`, `_farm_year_weather_seed`, `_pooled_farm_weather_multiplier`,
+`farm_weather_by_tile`, `farm_price_per_hectare`, `invest_farm`, `sell_farm`. `refresh_farm_territory` is more than one
+line: it sets `_farm_ladder`, `_farm_arable_ceiling` and the farm area, which are the farm workforce's, from the module's
+`farm_territory`.
 
-| View | Kind | Seat | Answers | Replaces (old methods) | Replaces (fields) | Inputs | Channels | Callers today |
-|---|---|---|---|---|---|---|---|---|
-| `farm_holdings` | table | yes | Hectares farmed, stock in kg, the last harvest, marginal product, shortfall and hours needed. Replaces the forwarding properties `farm_hectares`, `farm_stock_kg`. | `farm_stock_kg` | `holdings.farm_hectares`, `holdings.farm_stock_kg`, `holdings.farm_cleared_hectares`, `holdings.farm_last_shortfall_kg`, `holdings.farm_last_harvest_kg`, `holdings.farm_last_marginal_product`, `holdings.farm_hours_needed` | - | `farm` | 5 |
-| `farm_weather` | keyed | no | The growing-season weather multiplier by tile for the year. | `farm_weather_by_tile`, `_pooled_farm_weather_multiplier`, `_farm_year_weather_seed` | - | `land.tile_facts` | `weather` | 3 |
-| `farm_sites` | table | no | Tiles farmable by the society and the territory refresh. | `farm_sites`, `refresh_farm_territory`, `geography.crop_sites`, `geography.food_kcal_by_source`, `geography.game_food_sources`, `geography.huntable_kcal`, `geography.held_pasture_kg`, `geography.soil_nitrogen_factors` | - | `land.tiles_owned_by` | `farm` | 3 |
-| `farm_land_quote` | quote | no | Price per hectare of farmland and the cost to invest. | `farm_price_per_hectare` | - | `prices.material_prices` | - | 2 |
-| `wild_stock` | table | no | Wild game and gatherable stock by tile. | `geography.take_hunt`, `geography.regrow_wild_stock`, `geography.step_soil_nitrogen` | `economy.wild_stock`, `economy.soil_nitrogen` | - | `farm` | 1 |
+## Not moved (and why)
 
-**Under the three-caller floor** (task 1.5: a view serves at least 3 callers or is a quote): `wild_stock`. Each needs a second consumer found, a merge into a neighbouring view, or a change to a quote.
+- **The farm holding** (`holdings.farm_hectares`, `farm_stock_kg`, `farm_cleared_hectares`, `farm_last_*`,
+  `farm_hours_needed`) and **`RecordFarmYear`**. Nine files outside the module write or read them: the demographic step
+  (`demographic_recovery.py`), the farm workforce (`sim/labour/labour_allocation.py`), the coin exposure code
+  (`holdings_exposure.py`, `bridge_coin.py`'s `TakeGoods`), the household facade in `sim/agents/household.py`, the agent
+  ports (`agents_port_budget.py`, `agents_port_revenue.py`), `invariants.py` and `labour_port.py`. They belong to demography,
+  workforce, coin and actors; the holding moves with the last of them, and `RecordFarmYear` is the command demography and
+  workforce then send. Until then `farm_holdings` is published here over `legacy_farm_holdings`.
+- **`_farm_ladder`, `_farm_arable_ceiling`, `farm_land`** stay on `Sim`: the farm workforce reads them through its world
+  adapter.
+- **`ForwardingPropertiesMixin.farm_hectares` and `farm_stock_kg`** stay with the holding.
 
-**Coverage.** 6 methods are referenced from other modules' mixin code: 6 are replaced by a view here, 0 by a command. 5 more names are used only from outside the mixins (ui, agents, ports, mods). Of all 24 used names, 8 are covered by a view or command through the method itself, 1 through a field alias, 2 are year-phase hooks and 13 are package handle members.
+## Hard spots
 
-**Published as views but still classed as writers** after discounting the lazy creation of `state.actors` (which is what made most of Appendix B's writers; see README). Each is either a read that also fills a cache or lazily creates something, or a real write that must be split into a quote and a command before the view is allowed: `_farm_year_weather_seed`, `_pooled_farm_weather_multiplier`, `farm_weather_by_tile`, `refresh_farm_territory`.
+- The salt is the one draw from the game's dice and must stay lazy and in the same place in the random sequence. The
+  equivalence tool hashes the random state each year, so a draw out of order shows at once.
+- The weather cells are built once at `Sim.__init__` from the civilisation as it opens (the same moment as before); a lazy
+  build at the first harvest would read a civilisation that has drifted.
+- A real smell kept on purpose: `farm_weather_by_tile` pools only cells that are tiles; a tile merged into a pooled cell
+  has no per-tile weather and callers give it the pooled multiplier.
 
-## (d) Commands
+## Caches held
 
-| Command | Fields | Replaces | Write sites cited | Refusal causes | Owned fields it writes |
-|---|---|---|---|---|---|
-| `InvestFarm` | seat, hectares | `invest_farm`, `sell_farm`. Methods: `invest_farm`, `sell_farm` | `sim/engine/economy_goods.py:562-565`, `sim/engine/founder_sales.py:65-66` | `cannot_afford`, `no_land` | `holdings.farm_hectares` |
-| `RecordFarmYear` | seat, harvest_kg, marginal_product, shortfall_kg | Year results from the demographic step and the farm workforce allocation. Methods: `labour.set_farm_area`, `labour.allocate_farm_workforce`, `labour.apply_land_clearing`, `labour.stochastic_round` | `sim/engine/demographic_recovery.py:155-166`, `sim/labour/labour_allocation.py:213,357` | none: always applies | `holdings.farm_stock_kg`, `holdings.farm_last_harvest_kg`, `holdings.farm_last_marginal_product`, `holdings.farm_last_shortfall_kg`, `holdings.farm_cleared_hectares`, `holdings.farm_hours_needed` |
-
-**Direct write sites of owned fields outside this module's mixin files** (AST scan; includes the module's own function modules, and writes made through a forwarding property are marked `alias`). Each becomes a command above.
-
-- `holdings.farm_cleared_hectares`: 1 site: `sim/labour/labour_allocation.py:213`
-- `holdings.farm_hectares`: 2 sites: `sim/engine/founder_sales.py:65`, `sim/engine/economy_goods.py:565`
-- `holdings.farm_hours_needed`: 1 site: `sim/labour/labour_allocation.py:357`
-- `holdings.farm_last_harvest_kg`: 1 site: `sim/engine/demographic_recovery.py:165`
-- `holdings.farm_last_marginal_product`: 1 site: `sim/engine/demographic_recovery.py:166`
-- `holdings.farm_last_shortfall_kg`: 1 site: `sim/engine/demographic_recovery.py:164`
-- `holdings.farm_stock_kg`: 3 sites: `sim/engine/core.py:423` (assign (alias)), `sim/engine/demographic_recovery.py:155` (assign (alias)), `sim/engine/holdings_exposure.py:89` (assign (alias))
-
-## (e) Reads and sends
-
-Reads (views of other modules), by provider:
-
-- `land`: `land.tile_facts` (geography, input of agriculture.farm_weather, world_map); `land.tiles_owned_by` (input of agriculture.farm_sites)
-- `ledger`: `ledger.acting_balance` (household.capital)
-- `living_stock`: `living_stock.stock_status` (economy.society_herds)
-- `prices`: `prices.material_prices` (input of agriculture.farm_land_quote)
-- `workforce`: `workforce.labour_market` (economy.society_labour_hours, labour.farming_technique); `workforce.staff` (labour)
-
-Sends (commands of other modules):
-
-- `ledger`: `PayEdge`, `ReceiveFromEdge`
-
-## (f) Year phases
-
-Phases of `sim/engine/year_phases.py` `SHIPPED` it takes part in; where a phase is shared with other modules the sub-steps it owns are named (see "The year's shared phases" in the README):
-
-- `begin_world_year`: `refresh_farm_territory`
-- `wild_stock`
-- `soil_nitrogen`
-
-## (g) Callers outside the engine mixins that read its views
-
-| Caller group | Uses | Most-used names |
-|---|---|---|
-| ui | 3 | `invest_farm`, `farm_hectares`, `farm_price_per_hectare` |
-| engine/economy_port* | 3 | `farm_sites`, `_pooled_farm_weather_multiplier`, `farm_weather_by_tile` |
-| engine/(function modules) | 2 | `step_wild_stock`, `step_soil_nitrogen` |
-
-The scan matches `sim.`, `s.`, `world.` prefixes, so a few counts include unrelated locals; treat them as orders of magnitude.
-
-sim/ui: `farm_hectares`, `invest_farm`, `farm_price_per_hectare`; economy_port: `farm_sites`, `farm_weather_by_tile`; `sim/geography` has 27 members used from the engine, several for food (`food_kcal_by_source`, `huntable_kcal`, `take_hunt`, `regrow_wild_stock`).
-
-## (h) Hard spots and caches
-
-- Farm weather is a Cholesky-pooled draw from the shared random source (`core.py` `_compute_farm_weather_*`); order of draws must not change (CLAUDE.md, order must not depend on history). It is a keyed view per year but its first read consumes randomness: model it as a phase that fills it, not a lazily computed view.
-- `farm_stock_kg` is written by Sim, demography and coin exposure code (three writers). Only agriculture may write it.
-- Workforce allocates farm labour (`allocate_farm_workforce`, `set_farm_area` in `sim/labour`) and writes `farm_cleared_hectares` and `farm_hours_needed` directly (`labour_allocation.py:213,357`).
-
-Caches and version counters held today (feed for task 1.2):
-
-- `_farm_weather_cells`, `_farm_weather_correlation_cholesky`, pooled-cell caches in `Sim` (`core.py`)
-- `_farm_arable_ceiling`, `_farm_ladder` (`soil_nitrogen_year.py`)
+- Never saved, on the module: the weather cells, the correlation factor, the tiles' arable shares.
+- Still on `Sim` (the farm workforce's): `_farm_ladder`, `_farm_arable_ceiling`.

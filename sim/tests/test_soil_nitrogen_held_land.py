@@ -6,8 +6,9 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.agriculture.state import AgricultureWorld
 from sim.engine.data import load_civ
-from sim.engine.state import EconomyState, deserialize_state, serialize_state
+from sim.engine.state import deserialize_state, serialize_state
 from sim.geography import food_society, soil_nitrogen
 from sim.geography.api import crop_site, open_map, tiles_held
 from sim.world import agriculture_tile
@@ -26,9 +27,8 @@ class HeldLandTests(unittest.TestCase):
 
     def test_the_stock_round_trips_through_a_save(self):
         tile_id = sorted(self.world_map.tiles)[0]
-        economy = EconomyState()
-        economy.soil_nitrogen = {tile_id: 0.6}
-        self.assertEqual(deserialize_state(serialize_state(economy), EconomyState).soil_nitrogen, {tile_id: 0.6})
+        world = AgricultureWorld(soil_nitrogen={tile_id: 0.6})
+        self.assertEqual(deserialize_state(serialize_state(world), AgricultureWorld).soil_nitrogen, {tile_id: 0.6})
 
     def test_a_year_of_cropping_draws_the_held_cropland_down(self):
         stock = {}
