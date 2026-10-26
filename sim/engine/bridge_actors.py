@@ -10,12 +10,11 @@ from sim.assembly.api import KEYED, QUOTE
 from sim.finance.api import DefaultOnDebt, RefreshLenderOffers
 from sim.markets.api import ForgetActorOrders, NoteActorPurchase, NoteActorSale
 from sim.production.api import AccrueExperience
-from sim.workforce.api import ReleaseStaff
 
 from . import market_demand, partner_demand, trade_duty
 from .actor_kinds_data import register_mod_actor_kinds
 from .bridge import bridge_command, bridge_view
-from .data import TRADES_ABSENT, load_civ
+from .data import load_civ
 from .economy_debt_service import DebtServiceMixin
 from .economy_port_setup import unit_mass_kg
 from .foreign_economy_data import not_traded_materials as declared_not_traded_materials
@@ -69,64 +68,10 @@ def shared_answers(sim, table):
 # ---- workforce ----
 
 
-@bridge_view("labour_market")
-def labour_market(sim):
-    """The one labour market every employer asks: quote, hire, release, read the pressure (the object itself)."""
-    return sim.economy.labour
-
-
-@bridge_view("available_trades")
-def available_trades(sim):
-    return sim.labour.available_trades()
-
-
-@bridge_view("is_craft_trade", kind=KEYED)
-def is_craft_trade(sim, trade):
-    return sim.labour.is_craft_trade(trade)
-
-
-@bridge_view("taught_trade_people", kind=KEYED)
-def taught_trade_people(sim, trade):
-    return sim.labour.taught_trade_people(trade)
-
-
-@bridge_view("people_who_exist", kind=KEYED)
-def people_who_exist(sim, trade):
-    return sim.labour.people_who_exist(trade)
-
-
-@bridge_view("reachable_trade_population", kind=KEYED)
-def reachable_trade_population(sim, trade):
-    return sim.labour.reachable_trade_population(trade)
-
-
-@bridge_view("local_market_share")
-def local_market_share(sim):
-    return sim.labour.local_market_share()
-
-
-@bridge_view("base_tile", seat_scoped=True)
-def base_tile(sim):
-    """Where the acting seat works from."""
-    return sim.labour.base_tile()
-
-
-@bridge_view("trades_absent")
-def trades_absent(sim):
-    """The trades nobody practises at the opening."""
-    return TRADES_ABSENT
-
-
 @bridge_view("concern_staff", kind=KEYED)
 def concern_staff(sim, node_id):
     """People of each trade one plant of the concern needs."""
     return sim.concern_staff_by_trade(node_id)
-
-
-@bridge_command(ReleaseStaff)
-def release_staff(sim, command):
-    with sim.act_as(command.seat_id):
-        sim.labour.fire(command.trade, command.people)
 
 
 # ---- production: concerns, their takings and the industry's experience ----

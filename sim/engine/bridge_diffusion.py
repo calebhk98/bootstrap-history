@@ -5,11 +5,9 @@ code did, and is never cached. Each command applies what the old code did inline
 state the module still mutates in place (the strata of the actors' cast); it goes when actors move."""
 from sim.agents.api import CountryLiteracy, seed_strata
 from sim.assembly.api import KEYED, QUOTE
-from sim.workforce.api import NoteTradeSpread, SetEmployed
 
 from . import category_traits
-from .bridge import bridge_command, bridge_view
-from .data import TRADES_ABSENT
+from .bridge import bridge_view
 
 
 # ---- actors: the strata that hold the reading shares ----
@@ -69,36 +67,6 @@ def reputation_gain_of(sim, node_id):
 
 # ---- mechanics (delete each when the mechanics module publishes it) ----
 
-# ---- workforce ----
-
-@bridge_view("literacy_references")
-def literacy_references(sim):
-    """The literacy figures hiring and research are measured against."""
-    labour = sim.labour
-    return {"factor_cap": labour.LITERACY_FACTOR_CAP, "reference_elite": labour.LITERACY_REFERENCE_ELITE,
-            "reference_general": labour.LITERACY_REFERENCE_GENERAL}
-
-
-@bridge_view("literacy_capacity", kind=KEYED, seat_scoped=True)
-def literacy_capacity(sim, trade):
-    """The most people of `trade` the country's literacy lets the seat hire or teach."""
-    return sim.labour.literate_capacity(trade)
-
-
-@bridge_view("farm_share_of_hours", seat_scoped=True)
-def farm_share_of_hours(sim):
-    return sim.labour.farm_share_of_hours()
-
-
-@bridge_view("trade_spread", seat_scoped=True)
-def trade_spread(sim):
-    """{absent: the trades that do not exist until taught, created: those the seat taught, endemic: those the society
-    has, introduced_year: the year each was first seen taught}; the last three are live."""
-    household = sim.state.household
-    return {"absent": sorted(TRADES_ABSENT), "created": household.trades_created, "endemic": household.trades_endemic,
-            "introduced_year": household.trade_introduced_year}
-
-
 # ---- public works and the state ----
 
 @bridge_view("coverage")
@@ -106,19 +74,3 @@ def coverage(sim):
     """Ids of the works that declare `coverage`."""
     return sim.coverage_nodes()
 
-
-# ---- commands ----
-
-@bridge_command(SetEmployed)
-def set_employed(sim, command):
-    sim.labour.set_employed(command.trade, command.headcount)
-    sim.labour.resync_pools()
-
-
-@bridge_command(NoteTradeSpread)
-def note_trade_spread(sim, command):
-    household = sim.state.household
-    if command.introduced_year is not None:
-        household.trade_introduced_year[command.trade] = command.introduced_year
-    if command.endemic:
-        household.trades_endemic.add(command.trade)

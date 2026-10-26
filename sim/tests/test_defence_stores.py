@@ -16,7 +16,6 @@ from types import SimpleNamespace
 
 from sim.defence_stores.module import DefenceStores
 from sim.engine import cash_remedies  # noqa: F401  (settles the import cycle through project_materials)
-from sim.engine import bridge_hazards
 from sim.engine import validate_defence_stores
 from sim.engine.forward_mechanics import ForwardMechanicsMixin
 from sim.mechanics.module import Mechanics
@@ -27,6 +26,7 @@ from sim.engine.projects_staffing_shortfall import StaffingShortfallMixin
 from sim.engine.projects_ventures import VenturesMixin
 from sim.tests import hazards_host
 from sim.workforce.api import SurviveStaff
+from sim.workforce.module import Workforce
 
 POWDER_KG = "gunpowder_kg"
 WORKS, GUNS, WALL = "powder_works", "gun", "wall"
@@ -223,7 +223,7 @@ class HazardLabelsFollowTheMechanics(unittest.TestCase):
 
 
 class _Survivors:
-    """The people of a household and the dice that decide who lives (the bridge's SurviveStaff)."""
+    """The people of a household and the dice that decide who lives (the workforce module's SurviveStaff)."""
 
     def __init__(self, seed):
         self.rng = random.Random(seed)
@@ -231,7 +231,8 @@ class _Survivors:
             scholars=7.0, artisans=9.0, employees={"carpenter": 3.0, "smith": 5.0}))
 
     def apply_staff_survival(self, survival_share):
-        bridge_hazards.survive_staff(self, SurviveStaff(survival_share))
+        workforce = module_harness.build(Workforce, views={"legacy_acting_household": self.state.household, "legacy_dice": self.rng})
+        workforce.survive_staff(SurviveStaff(survival_share))
 
 
 class PeopleStayWhole(unittest.TestCase):

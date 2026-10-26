@@ -3,7 +3,7 @@ values built here, no game. (The payroll trim, the replacement and the scholar t
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.staff_phase_rules import (approach, artisan_goal, can_afford_replacement, craft_headcount, directors_next,
+from sim.workforce.staff_phase_rules import (approach, artisan_goal, can_afford_replacement, craft_headcount, directors_next,
                                             has_room_to_hire, hires_needed, scholar_goal)
 
 # --- room to hire

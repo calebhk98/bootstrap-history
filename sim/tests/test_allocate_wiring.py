@@ -9,13 +9,12 @@ import types
 import unittest
 
 from sim.agents.api import Household
-from sim.engine.allocation_notes import AllocationNotesMixin
-from sim.engine.core_step_phases import StepPhasesMixin
-from sim.engine.hour_offer import work_order_shortfall
+from sim.workforce.rules import work_order_shortfall
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
 from sim.engine.agents_port_household import HouseholdPort
 from sim.engine.step_phase_projects import ProjectProgressPhaseMixin
 from sim.tests import event_stand_in
+from sim.tests.workforce_host import workforce_over
 
 
 class WorkOrderShortfall(unittest.TestCase):
@@ -26,8 +25,7 @@ class WorkOrderShortfall(unittest.TestCase):
         self.assertEqual(work_order_shortfall(100.0, 0.0), 100.0)
 
 
-class Directive(AllocationNotesMixin, StepPhasesMixin):
-    send = event_stand_in.send
+class Directive:
 
     def __init__(self, directive, sold, room, trade="labourer"):
         household = types.SimpleNamespace(hour_allocations={"work": directive}, work_trade=trade,
@@ -37,6 +35,7 @@ class Directive(AllocationNotesMixin, StepPhasesMixin):
         self.sold = []
         self.labour = types.SimpleNamespace(director_pool=lambda: room, director_hours_committed=lambda: 0.0,
                                             work_for_wages=self._work)
+        self.module = workforce_over(self)
 
     def _work(self, trade, hours):
         self.sold.append((trade, hours))
@@ -47,24 +46,24 @@ class Directive(AllocationNotesMixin, StepPhasesMixin):
 class StandingWorkDirective(unittest.TestCase):
     def test_it_sells_only_what_the_hand_sold_hours_leave_of_the_directive(self):
         game = Directive(directive=100.0, sold=40.0, room=1000.0)
-        game._step_standing_work_directive()
+        game.module.step_standing_work_directive()
         self.assertEqual(game.sold, [("labourer", 60.0)])
         self.assertEqual(game.state.household.wage_hours_this_year, 100.0)
         self.assertEqual(game.state.household.log, [])
 
     def test_a_directive_the_hand_has_met_sells_nothing(self):
         game = Directive(directive=100.0, sold=100.0, room=1000.0)
-        game._step_standing_work_directive()
+        game.module.step_standing_work_directive()
         self.assertEqual(game.sold, [])
 
     def test_no_trade_named_sells_nothing(self):
         game = Directive(directive=100.0, sold=0.0, room=1000.0, trade=None)
-        game._step_standing_work_directive()
+        game.module.step_standing_work_directive()
         self.assertEqual(game.sold, [])
 
     def test_with_less_room_than_the_directive_it_sells_the_room_and_says_the_hours_ran_out(self):
         game = Directive(directive=100.0, sold=0.0, room=30.0)
-        game._step_standing_work_directive()
+        game.module.step_standing_work_directive()
         self.assertEqual(game.sold, [("labourer", 30.0)])
         facts = [line[1].facts for line in game.state.household.log]
         self.assertEqual([fact["reason"] for fact in facts], ["no_hours_left"])

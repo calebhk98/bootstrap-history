@@ -61,18 +61,6 @@ def concern_revenue(sim, node_id):
 	return sim.concern_revenue(node_id)
 
 
-@bridge_view("base_annual_wage", kind=KEYED)
-def base_annual_wage(sim, trade):
-	"""A year's wage of a trade on the opening schedule."""
-	return sim.labour.base_annual_wage(trade)
-
-
-@bridge_view("labour_state_weights")
-def labour_state_weights(sim):
-	"""The weight the labour market's own trait table gives each trait the state cares about."""
-	return sim.labour.STATE_WEIGHTS
-
-
 @bridge_view("material_substitutes", kind=KEYED)
 def material_substitutes(sim, material):
 	"""The materials that serve a need `material` serves."""

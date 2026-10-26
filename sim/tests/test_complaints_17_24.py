@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.staff_loss_waves import wave_exposure
+from sim.workforce.api import wave_exposure
 from sim.ui.proto import tree_filters
 
 # --- the staff-loss wave exposure over the years left (the rule behind the `risk` reply)

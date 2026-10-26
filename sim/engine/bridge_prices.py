@@ -6,12 +6,6 @@ from sim.assembly.api import KEYED
 from .bridge import bridge_view
 
 
-@bridge_view("farm_land_hectares")
-def farm_land_hectares(sim):
-    """The hectares the society's farm workforce works (the area the farmland model is sized for)."""
-    return sim.farm_land.hectares
-
-
 @bridge_view("material_seller", kind=KEYED)
 def material_seller(sim, material):
     """Who sells a material to the home society: the home society's own id, a trading partner, or None when no one does."""

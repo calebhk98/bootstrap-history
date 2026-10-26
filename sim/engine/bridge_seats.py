@@ -36,13 +36,6 @@ def seat_party_with_margins(sim, seat_id, margins):
     return sim.seat_party(seat_id, margins)
 
 
-@bridge_view("seat_base_tile", kind=KEYED)
-def seat_base_tile(sim, seat_id):
-    """Where the seat works from (its household's base tile, else the capital's)."""
-    with sim.act_as(seat_id):
-        return sim.labour.base_tile()
-
-
 @bridge_view("seat_holds", kind=KEYED)
 def seat_holds(sim, seat_id):
     """What the seat holds in the engine's own state that a handover to it would overwrite."""

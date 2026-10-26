@@ -11,16 +11,6 @@ from .bridge import bridge_command, bridge_view
 
 # ---- workforce and markets ----
 
-@bridge_view("opening_money_per_labour_hour")
-def opening_money_per_labour_hour(sim):
-    return sim.labour.opening_wage_schedule().opening_money_per_labour_hour
-
-
-@bridge_view("headcount", seat_scoped=True)
-def headcount(sim):
-    return sim.labour.headcount()
-
-
 @bridge_view("opening_population")
 def opening_population(sim):
     return sim._opening_population()

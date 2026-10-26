@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.engine.seat_defaults import default_policy
-from sim.engine.staff_replacement import replacement_wanted
+from sim.workforce.staff_replacement import replacement_wanted
 from sim.labour.labour_staff_ledger import StaffLedgerMixin
 from sim.tests import event_stand_in
 

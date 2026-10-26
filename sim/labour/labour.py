@@ -1,7 +1,7 @@
 """People: hiring them, teaching them, buying them, paying them.
 
 `Labour` is the labour of one simulation (`sim.labour`). It reads the rest of the simulation through
-the world it is given (an engine-side adapter, sim/engine/labour_port.py) and holds nothing of the
+the world it is given (the workforce module's `WorkforceWorld`, sim/workforce/world.py) and holds nothing of the
 engine itself.
 
 This file is a pure composition point: one file holding all of a household's labour mechanics

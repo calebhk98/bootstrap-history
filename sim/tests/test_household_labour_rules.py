@@ -8,15 +8,15 @@ import types
 import unittest
 
 from sim.engine import data
-from sim.engine.core_step_phases import StepPhasesMixin
 from sim.engine.economy_production import ProductionMixin
-from sim.engine.reteach_rules import PROJECT_IN_HAND_SCORE, past_cooldown, teaching_budget, trade_is_gone
+from sim.workforce.reteach_rules import PROJECT_IN_HAND_SCORE, past_cooldown, teaching_budget, trade_is_gone
 from sim.labour.labour_job import StandingJobMixin
 from sim.labour.labour_training import TrainingMixin
 from sim.labour.labour_wages import WagesMixin
 from sim.refusal import cause_of
 from sim.ui.proto.dispatch_labour import _cmd_hire
 from sim.tests import event_stand_in
+from sim.tests.workforce_host import workforce_over
 
 
 class HeldTrade(ProductionMixin):
@@ -176,8 +176,7 @@ class SupplyChannels(unittest.TestCase):
         self.assertEqual(Channels(contracted=400.0).hours_reserved("scribe"), 400.0)
 
 
-class Apprentices(StepPhasesMixin):
-    send = event_stand_in.send
+class Apprentices:
 
     def __init__(self, rows):
         self.joined = []
@@ -185,25 +184,26 @@ class Apprentices(StepPhasesMixin):
             household=types.SimpleNamespace(training=rows, log=[]), scenario=types.SimpleNamespace(year=102))
         self.labour = types.SimpleNamespace(add_employed=lambda trade, count: self.joined.append((trade, count)),
                                             resync_pools=lambda: None)
+        self.module = workforce_over(self)
 
 
 class ApprenticesJoin(unittest.TestCase):
 
     def test_a_cohort_promised_for_a_year_is_on_the_books_in_that_year(self):
         game = Apprentices([[0.0, 102, "machinist", 2.0], [0.0, 103, "machinist", 1.0]])
-        game._step_apprenticeships()
+        game.module.step_apprenticeships()
         self.assertEqual(game.joined, [("machinist", 2.0)])
         self.assertEqual(game.state.household.training, [[0.0, 103, "machinist", 1.0]])
 
     def test_a_joining_is_logged_with_its_kind(self):
         game = Apprentices([[0.0, 101, "machinist", 2.0]])
-        game._step_apprenticeships()
+        game.module.step_apprenticeships()
         (_year, line), = game.state.household.log
         self.assertEqual(cause_of(line), "training_finished")
 
     def test_nobody_joins_before_their_year(self):
         game = Apprentices([[0.0, 105, "machinist", 2.0]])
-        game._step_apprenticeships()
+        game.module.step_apprenticeships()
         self.assertEqual(game.joined, [])
 
 

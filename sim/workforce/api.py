@@ -2,6 +2,8 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import (AllocateFarmWorkforce, ApplyLandClearing, NoteTradeSpread, NoteWageShock, PressLabour, ReleaseStaff, ReportStaffReduction,
+from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, NoteTradeSpread, NoteWageShock, PressLabour,
+                       ReleaseStaff, ReportStaffReduction, TakeWageFallback,
                        ScaleDeputies, SetEmployed, SurviveStaff, UpdateWages)
 from . import rules
+from .staff_loss_waves import wave_exposure

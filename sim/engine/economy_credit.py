@@ -762,8 +762,3 @@ class CreditMixin:
             "household bug this fixed. The specific three-quarters share "
             "is tuned game balance, not derived from any household-budget "
             "study.")
-
-    @property
-    def HOURS_PER_PERSON_YEAR(self):
-        """Hours a person gives in a year, the working day's length counted (sim/engine/working_day.py)."""
-        return self.working_hours_per_person_year()

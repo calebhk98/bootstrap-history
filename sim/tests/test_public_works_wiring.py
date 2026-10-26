@@ -12,12 +12,13 @@ from sim.diffusion import literacy_rules
 from sim.diffusion.module import Diffusion
 from sim.engine.coverage import CoverageMixin
 from sim.engine.projects_capability import CapabilityMixin
-from sim.engine.working_day import BASE_WORKING_DAY_HOURS, WorkingDayMixin
-from sim.engine.economy_credit import CreditMixin
+from sim.engine.forward_workforce import ForwardWorkforceMixin
 from sim.refusal import cause_of
 from sim.tests import module_harness
 from sim.ui.proto.dispatch_rollout import _cmd_rollout
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
+from sim.workforce.constants import BASE_WORKING_DAY_HOURS
+from sim.workforce.module import Workforce
 
 CLINICS, LIGHTS = "ben_district_clinics", "ben_city_electric_lighting"
 
@@ -76,20 +77,22 @@ check("rollout with a work and no share is refused", _cmd_rollout(game, {}, {"id
 
 # ---- the lit working day
 def lit_game(works_on, shares):
-    return SimpleNamespace(nodes_with_mechanic=lambda name: works_on, running=lambda node_id: node_id in shares,
-                           coverage_nodes=lambda: [node for node in works_on if node in shares and shares[node] is not None],
-                           coverage_share=lambda node_id: shares[node_id], mechanic=lambda node_id, name: {"extra_hours_per_day": 2.0})
+    return module_harness.build(Workforce, views={
+        "mechanic": {"working_day": {node: {"extra_hours_per_day": 2.0} for node in works_on}},
+        "running": lambda node_id: node_id in shares,
+        "coverage": lambda: [node for node in works_on if node in shares and shares[node] is not None],
+        "coverage_share": lambda node_id: shares[node_id]})
 
 
-check("lights over half the people add half their lit hours", WorkingDayMixin.extra_lit_hours_per_day(lit_game([LIGHTS], {LIGHTS: 0.5})) == 1.0, None)
-check("lights built but not open add nothing", WorkingDayMixin.extra_lit_hours_per_day(lit_game([LIGHTS], {})) == 0.0, None)
-check("a lit work that declares no coverage lights the day for everyone", WorkingDayMixin.extra_lit_hours_per_day(lit_game([LIGHTS], {LIGHTS: None})) == 2.0, None)
+check("lights over half the people add half their lit hours", lit_game([LIGHTS], {LIGHTS: 0.5}).extra_lit_hours_per_day() == 1.0, None)
+check("lights built but not open add nothing", lit_game([LIGHTS], {}).extra_lit_hours_per_day() == 0.0, None)
+check("a lit work that declares no coverage lights the day for everyone", lit_game([LIGHTS], {LIGHTS: None}).extra_lit_hours_per_day() == 2.0, None)
 check("with no work declaring a working day the year is the convention",
-      WorkingDayMixin.working_hours_per_person_year(SimpleNamespace(nodes_with_mechanic=lambda name: [])) == HOURS_PER_PERSON_YEAR, None)
+      lit_game([], {}).hours_per_person_year() == HOURS_PER_PERSON_YEAR, None)
 check("a longer day gives a longer year in the same proportion",
-      abs(WorkingDayMixin.working_hours_per_person_year(SimpleNamespace(nodes_with_mechanic=lambda name: [LIGHTS], extra_lit_hours_per_day=lambda: 1.0))
+      abs(lit_game([LIGHTS], {LIGHTS: 0.5}).hours_per_person_year()
           - HOURS_PER_PERSON_YEAR * (1.0 + 1.0 / BASE_WORKING_DAY_HOURS)) < 1e-9, None)
-check("the year every wage quote reads is the working year", CreditMixin.HOURS_PER_PERSON_YEAR.fget(SimpleNamespace(working_hours_per_person_year=lambda: 1234.0)) == 1234.0, None)
+check("the year every wage quote reads is the working year", ForwardWorkforceMixin.HOURS_PER_PERSON_YEAR.fget(SimpleNamespace(view=lambda name: lambda: 1234.0)) == 1234.0, None)
 
 # ---- the schooling flow
 def schools(values, shut=(), reaches=None):

@@ -9,7 +9,7 @@ from sim.agents.api import Household
 from .data import closure, JSONDict, Nodes
 from . import event_causes
 from sim.hazards.api import add_timing_to_steps, hazards_not_yet_past
-from .staff_loss_waves import wave_exposure
+from sim.workforce.api import wave_exposure
 
 
 class FogMixin:

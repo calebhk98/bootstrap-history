@@ -5,10 +5,9 @@ did, and is never cached. Each command applies what the old hazard code did inli
 views are raw state or the engine's own switches the module still needs; they go when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
 from sim.projects.api import ResetProjectProgress, ShutForgotten
-from sim.reporting.api import RecordEvent
-from sim.workforce.api import NoteWageShock, ReportStaffReduction, ScaleDeputies, SurviveStaff, rules as workforce_rules
+from sim.workforce.api import NoteWageShock
 
-from . import cause_book, event_causes, mod_effects
+from . import cause_book, event_causes
 from .bridge import bridge_command, bridge_view
 from .data import closure, critical_path
 
@@ -81,42 +80,9 @@ def closed_by_choice(sim):
 
 # ---- polity, workforce, resources, actors ---------------------------------------------------------------------------
 
-@bridge_view("staff_snapshot", seat_scoped=True)
-def staff_snapshot(sim):
-    """Headcount by trade now, to diff against after something trims it."""
-    return sim.labour.staff_snapshot()
-
-
-@bridge_view("wage_index")
-def wage_index(sim):
-    return sim.wage_index
 
 
 # ---- commands of owners that have not moved -------------------------------------------------------------------------
-
-@bridge_command(SurviveStaff)
-def survive_staff(sim, command):
-    household = sim.state.household
-    survive = workforce_rules.surviving_people
-    household.scholars = survive(sim.rng, household.scholars, command.survival_share)
-    household.artisans = survive(sim.rng, household.artisans, command.survival_share)
-    for trade in sorted(household.employees):
-        survivors = survive(sim.rng, household.employees[trade], command.survival_share)
-        if survivors > 0:
-            household.employees[trade] = survivors
-        else:
-            household.employees.pop(trade)
-
-
-@bridge_command(ScaleDeputies)
-def scale_deputies(sim, command):
-    sim.state.household.directors_extra *= command.share
-
-
-@bridge_command(ReportStaffReduction)
-def report_staff_reduction(sim, command):
-    sim.labour.log_staff_reduction(command.cause, command.before)
-
 
 @bridge_command(NoteWageShock)
 def note_wage_shock(sim, command):

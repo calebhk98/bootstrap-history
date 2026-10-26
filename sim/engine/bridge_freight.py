@@ -19,18 +19,6 @@ def techniques_with_results(sim, techniques):
     return action_results.expand(sim.nodes, techniques)
 
 
-@bridge_view("wage", kind=KEYED)
-def wage(sim, trade):
-    """Money one hour of a trade is worth on the wage schedule (the labour market's quote is `hour_wage`)."""
-    return sim.labour.wage_per_hour(trade)
-
-
-@bridge_view("trade_population", kind=KEYED)
-def trade_population(sim, trade):
-    """An estimate of the people who ply a trade across the country."""
-    return sim.labour.national_trade_population(trade)
-
-
 @bridge_view("market_rate")
 def market_rate(sim):
     return sim.market_rate()

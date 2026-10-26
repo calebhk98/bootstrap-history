@@ -144,15 +144,15 @@ dead_before = FakeSim([FIRST_SEAT_ID, "second"])
 dead_before.state.ended.add(FIRST_SEAT_ID)
 run_year(dead_before)
 check("a seat that ended earlier is not stepped again",
-      names(dead_before, "_step_money_seat") == ["second"] and names(dead_before, "_step_apprenticeships") == ["second"], dead_before.calls)
+      names(dead_before, "_step_money_seat") == ["second"] and names(dead_before, "step_apprenticeships") == ["second"], dead_before.calls)
 
 single = FakeSim([FIRST_SEAT_ID])
 run_year(single)
 check("one seat runs the phases in the order a one-seat year always had",
       [call for call, _ in single.calls if call in (
-          "_step_apprenticeships", "_step_staff", "_step_money_seat", "_step_money_world", "step_win_conditions",
+          "step_apprenticeships", "step_staff", "_step_money_seat", "_step_money_world", "step_win_conditions",
           "step_dated_shocks", "_run_seat_work", "_step_market", "step_living_stock", "step_defence_stores", "step_random_events",
           "enforce_credit_limit")] == [
-          "_step_apprenticeships", "_step_staff", "_step_money_seat", "_step_money_world", "step_win_conditions",
+          "step_apprenticeships", "step_staff", "_step_money_seat", "_step_money_world", "step_win_conditions",
           "step_dated_shocks", "_run_seat_work", "_step_market", "step_living_stock", "step_defence_stores", "step_random_events",
           "enforce_credit_limit"], single.calls)

@@ -12,8 +12,9 @@ from sim.diffusion.literacy_rules import literacy_after_effect as target_after_e
 from sim.diffusion.literacy_rules import common_ceiling
 from sim.demography.api import rules as demography_rules
 from sim.engine.projects_completion import goal_movement
-from sim.engine import bridge_hazards
+from sim.tests import module_harness
 from sim.workforce.api import SurviveStaff
+from sim.workforce.module import Workforce
 
 CHILD, WORKING_AGE, ELDERLY = 1.6, 1.0, 1.4   # the vulnerability ratios (sim/world/demography.py)
 
@@ -61,9 +62,9 @@ class EventLossInvariants(unittest.TestCase):
     def test_staff_survival_never_adds_people(self):
         for share in (0.0, 0.3, 0.9, 1.0):
             household = SimpleNamespace(scholars=40.0, artisans=60.0, employees={"smith": 25.0, "miller": 3.0})
-            game = SimpleNamespace(state=SimpleNamespace(household=household), rng=random.Random(1))
+            workforce = module_harness.build(Workforce, views={"legacy_acting_household": household, "legacy_dice": random.Random(1)})
             before = household.scholars + household.artisans + sum(household.employees.values())
-            bridge_hazards.survive_staff(game, SurviveStaff(share))
+            workforce.survive_staff(SurviveStaff(share))
             after = household.scholars + household.artisans + sum(household.employees.values())
             self.assertLessEqual(after, before + 1e-9, share)
             self.assertTrue(all(count > 0 for count in household.employees.values()))
@@ -71,8 +72,8 @@ class EventLossInvariants(unittest.TestCase):
     def test_a_survival_share_of_one_keeps_everyone_and_zero_keeps_no_one(self):
         for share, kept in ((1.0, 128.0), (0.0, 0.0)):
             household = SimpleNamespace(scholars=40.0, artisans=60.0, employees={"smith": 25.0, "miller": 3.0})
-            game = SimpleNamespace(state=SimpleNamespace(household=household), rng=random.Random(1))
-            bridge_hazards.survive_staff(game, SurviveStaff(share))
+            workforce = module_harness.build(Workforce, views={"legacy_acting_household": household, "legacy_dice": random.Random(1)})
+            workforce.survive_staff(SurviveStaff(share))
             self.assertEqual(household.scholars + household.artisans + sum(household.employees.values()), kept)
 
 

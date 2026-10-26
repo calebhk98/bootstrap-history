@@ -7,7 +7,7 @@ from sim.assembly.api import QUOTE
 
 from . import externalities
 from .bridge import bridge_view
-from .data import TRADE_REGISTRY, load_geography
+from .data import load_geography
 from sim.geography.api import tiles_held
 
 
@@ -72,24 +72,6 @@ def soil_nitrogen_after_year(sim, stock, cropped_share, reference_cropped_share,
 
 
 # ---- labour, prices, hazards and the game's own state ----
-
-@bridge_view("farming_technique")
-def farming_technique(sim):
-    """The society's farming technique (rotation, toolkit, crop) from what it knows."""
-    return sim.labour.farming_technique()
-
-
-@bridge_view("society_labour_hours")
-def society_labour_hours(sim):
-    """{trade: labour hours the society's workers of the trade give in a year}."""
-    return sim.state.economy.society_labour_hours
-
-
-@bridge_view("trade_registry")
-def trade_registry(sim):
-    """{trade id: {family, ...the trade's extra fields}}: what the gatherers' hours bound reads of each trade."""
-    return {trade_id: {"family": trade.family, **trade.extra} for trade_id, trade in TRADE_REGISTRY.items()}
-
 
 @bridge_view("externality_yield_factors", kind=QUOTE)
 def externality_yield_factors(sim, year):
