@@ -14,7 +14,7 @@ tier, and reverts on red.
 
 ### Phase 0: tools and baseline (blocks everything)
 
-- [ ] **0.1 (orchestrator)** Tag `mr-base` at the branch head. Make a pinned base worktree at `mr-base` and never edit it. Record the quick-tier counts.
+- [x] **0.1 (orchestrator)** (base `0be2f72`, worktree `../base-wt`; quick tier 13123 checks green) Tag `mr-base` at the branch head. Make a pinned base worktree at `mr-base` and never edit it. Record the quick-tier counts.
 - [ ] **0.2 (agent)** Profile why a fingerprint scenario build takes over 200 s, when the quick tier builds every civilisation in seconds (`harness._warm_starts`). Fix the slowness if it is in test tooling. Then build `sim/tests/equiv.py`:
   - It hashes each field every year and reports the first diverging year, field and key, plus the random state, so a draw made in a different order can be told apart from a changed value.
   - It has a micro tier (about 2 scenarios × 15 years, aiming under a minute) and a full tier (4 scenarios × 40 years).
@@ -26,21 +26,21 @@ tier, and reverts on red.
 
 ### Phase 1: framework (`sim/modules/`, engine unchanged)
 
-- [ ] **1.1 (agent)** The core types:
+- [x] **1.1** The core types (`sim/assembly/`, tests `test_assembly_*.py`):
   - `ModuleSpec`, `ViewSpec`, derived and keyed views, quotes, the command base class (refusals use `sim/refusal.py`);
   - assembly and its errors: a missing provider, a doubled provider, removal refused naming the reader, an optional view absent;
   - phases tied to `year_phases`;
   - extension points with one clash rule, view adjusters, extend layers;
   - the assembly record and the dependency printout.
   - Tests are on toy modules, one function per test.
-- [ ] **1.2 (same agent)** View freshness:
+- [x] **1.2** View freshness (`sim/assembly/clock.py`, `views.py`):
   - Each owner keeps a version per view, plus a version per seat for seat-scoped views.
   - A derived-view cache stores the tuple of its input versions and recomputes when the tuple changes.
   - Owner commands bump the versions of the views they touch.
   - In debug mode (on by default), a shadow check recomputes every N reads and raises, naming the view, if the cached value differs. This catches a missed bump.
   - Seat switch becomes one `bump_seat(seat)`.
   - Load calls `assembly.rebind(state)`, which drops caches and rebinds the module instances.
-- [ ] **1.3 (agent, parallel)** State registration:
+- [ ] **1.3** State registration (slots, save record and seat rebinding done: `sim/assembly/slots.py`, `sim/engine/game_assembly.py`; deriving `ALL_STATE_CLASSES`/`SAVE_FIELDS` waits for the first moved fields):
   - `ModuleSpec.owns` registers dataclasses into a per-module slot on `SimulationState` and `SeatState`, saved through the existing dataclass walk.
   - `ALL_STATE_CLASSES` and `SAVE_FIELDS` are derived from the assembly.
   - Seat aliases are declared per module, and `bind_seat` loops over them.
