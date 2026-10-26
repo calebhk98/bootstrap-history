@@ -7,7 +7,8 @@ import unittest
 
 from sim.defence_stores.api import rules as defence_rules
 from sim.diffusion.literacy_rules import printing_boosted_flow, schooling_flow
-from sim.engine.public_works_rules import extra_lit_hours, legitimacy_share, working_hours_per_year
+from sim.engine.public_works_rules import extra_lit_hours, working_hours_per_year
+from sim.polity.rules import legitimacy_share
 
 relief_kcal_per_day = defence_rules.relief_kcal_per_day
 

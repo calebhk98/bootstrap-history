@@ -28,6 +28,7 @@ from sim.agents.api import business_review, edges, ledger
 from .agents_port import SimWorld
 from sim.projects.api import funding as project_funding
 from .affordability import appearances_spending, near_limit, reputation_hit_taken, spending_power_of
+from sim.polity.api import SetReputation
 from sim.reporting.api import RecordEvent
 
 
@@ -139,7 +140,7 @@ class CreditMixin:
         base = earning * self.CREDIT_LINE_EARNING_MULTIPLE
         # A collegium's credit is linear in its units (collateral, not fame); land is real collateral.
         base = self.effect_sum("credit_line", base)
-        base += max(0.0, self.state.household.reputation) * self.CREDIT_LINE_PER_REPUTATION_POINT
+        base += max(0.0, self.reputation) * self.CREDIT_LINE_PER_REPUTATION_POINT
         base += self.view("forest_hectares")() * self.CREDIT_LINE_PER_FOREST_HA                   # also collateral
         # Floor of one year's running costs: everyone can run a tab for a season.
         # One upkeep() call; if already provided, reuse it to avoid silent duplication.
@@ -287,7 +288,7 @@ class CreditMixin:
         """
         discount = sum(discount for _node_id, discount in self.effect_values("debt_rate_discount"))
         discount += min(self.DEBT_RATE_REPUTATION_DISCOUNT_CAP,
-                        max(0.0, self.state.household.reputation) / self.DEBT_RATE_REPUTATION_SCALE)
+                        max(0.0, self.reputation) / self.DEBT_RATE_REPUTATION_SCALE)
         used = 0.0
         if self.state.household.capital < 0:
             limit = self.credit_limit()
@@ -513,18 +514,18 @@ class CreditMixin:
         household = self.state.household
         household.last_settlement = year
         # The balance left is measured against the line that stands once the name has been marked down, so it never starts outside it.
-        _rep_before = household.reputation
-        household.reputation = max(0.0, _rep_before - self.SETTLEMENT_REPUTATION_HIT)
+        _rep_before = self.reputation
+        self.send(SetReputation(max(0.0, _rep_before - self.SETTLEMENT_REPUTATION_HIT)))
         owed = settlement_owed(limit, self.credit_limit(), self.SETTLEMENT_CAPITAL_RETAINED_FRACTION)
-        household.reputation = _rep_before
+        self.send(SetReputation(_rep_before))
         ledger.settle(self.household, self.edge(edges.EDGE_CREDITORS), -owed, "debts written off in settlement")
         # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED: quoting a
         # fixed "reputation -12" against a reputation of 4.9 would say
         # the same thing twice while the second application does
         # nothing at all - a penalty that cannot be paid should not be
         # quoted as though it were.
-        _rep_hit = reputation_hit_taken(self.SETTLEMENT_REPUTATION_HIT, household.reputation)
-        household.reputation = max(0.0, household.reputation - self.SETTLEMENT_REPUTATION_HIT)
+        _rep_hit = reputation_hit_taken(self.SETTLEMENT_REPUTATION_HIT, self.reputation)
+        self.send(SetReputation(max(0.0, self.reputation - self.SETTLEMENT_REPUTATION_HIT)))
         # AND NOBODY LENDS TO YOU FOR A WHILE. Without this, walking away
         # from a debt cost a little standing and nothing else, and standing
         # grows back. A person who has just been written off does not get

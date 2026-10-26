@@ -10,7 +10,7 @@ from sim.engine.core import Sim
 from sim.hazards import constants
 from sim.tests import hazards_host
 from sim.engine.economy import EconomyMixin
-from sim.engine.value_weight import shifted
+from sim.polity.value_weight import shifted
 from sim.labour.labour_population import PopulationMixin
 
 MULTIPLIERS = {"ships": 0.5, "infrastructure": 2.0, "commerce": 1.5, "chemical": 3.0}

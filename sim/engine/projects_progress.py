@@ -412,7 +412,7 @@ class ProgressMixin:
         diffusion of the hundred-and-first from zero credibility.
         """
         return calendar_floor_years(
-            self.nodes[node_id]["yrs"], self.state.household.reputation, self.rebuild_work_factor(node_id),
+            self.nodes[node_id]["yrs"], self.reputation, self.rebuild_work_factor(node_id),
             self.DIFFUSION_LIMITED_YEARS_THRESHOLD, self.CALENDAR_FLOOR_MIN_YEARS, self.CALENDAR_FLOOR_REPUTATION_SCALE)
 
     def payment_schedule_years(self, node_id):

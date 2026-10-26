@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine import eminence_rules
+from sim.polity import eminence_rules
 from sim.engine.state import HouseholdState, deserialize_state, serialize_state
 from sim.engine.society_state_pressure import StatePressureMixin as Pressure
 from sim.tests import event_stand_in

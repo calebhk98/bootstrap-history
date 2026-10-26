@@ -37,7 +37,6 @@ class SeatProgressState:
 	goal_year: Optional[int] = None
 	goal_years: Dict[str, int] = field(default_factory=dict)  # goal id -> year it was reached as the formal goal
 	dashboard_history_years: Optional[int] = None  # cap dashboard history to N most recent years; None = no cap
-	_said_scandal: int = 0
 	_said_parallelism: Optional[bool] = None
 	_said_command_index: Optional[bool] = None
 	_said_explanations: Optional[Dict[str, int]] = None

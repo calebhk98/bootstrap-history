@@ -1,11 +1,5 @@
-"""Rules of the public works as plain functions of numbers: the state's consent, grain handed out, the lit working day
+"""Rules of the public works as plain functions of numbers: grain handed out, the lit working day
 (Complaint 190, 640)."""
-
-
-def legitimacy_share(summed_effects, floor, ceiling):
-    """The share of its reach the people's consent leaves the state: the works' effects summed, held between the floor
-    (force and habit still collect something) and the ceiling (no praise makes a state stronger than that)."""
-    return max(floor, min(ceiling, summed_effects))
 
 
 def extra_lit_hours(works):

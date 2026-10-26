@@ -22,6 +22,10 @@ class LabourWorld:
         """Apply a command through the module that owns it."""
         return self._sim.send(command)
 
+    def reputation(self):
+        """The acting seat's reputation."""
+        return self._sim.view("standing")()["reputation"]
+
     def logged_events(self):
         """How many lines the acting seat's log holds now."""
         return len(self._sim.view("event_log")())

@@ -1,5 +1,5 @@
 """Actors other than the founder, run once a year inside the simulation."""
-from sim.agents.api import ActorRegistry, true_up_keep, ledger, payroll, SOLDIER_TRADE
+from sim.agents.api import ActorRegistry, true_up_keep, payroll, SOLDIER_TRADE
 from sim.coin.api import ChargeActorsTheft, ChargeKeeping
 from sim.ledger.api import PayEdge, PayWages, ReceiveFromEdge
 from .actor_kinds_data import register_mod_actor_kinds
@@ -80,19 +80,6 @@ class ActorsMixin:
         """Tonnes of a commodity that governments bought on the market this year."""
         return self.goods_market.others_bought_tonnes(commodity)
 
-    def state_levy_rates(self):
-        """(requisition, office) share of income the state takes at full notice; nothing
-        before the state has budgeted a year."""
-        state = self.state.actors
-        record = None if state is None else state.records.get("government:" + str(self.civ.get("id")))
-        if record is None:
-            return 0.0, 0.0
-        return record.levy_requisition_rate, record.levy_office_rate
-
-    def state_military_ask(self, taxable, scale):
-        """What the state asks of one militarily useful taxpayer in arms this year."""
-        return self.state_treasury().military_ask(taxable, scale, SimWorld(self))
-
     def actor_concerns_in(self, category):
         """How many concerns in a goods category actors run, each sharing the founder's market."""
         state = self.state.actors
@@ -124,11 +111,6 @@ class ActorsMixin:
             if government is not None:
                 return government
         return self.actors.ensure_government(str(self.civ.get("id")), self.civ.get("name", ""))
-
-    def pay_state(self, amount, purpose):
-        """The household pays the state: the founder's loss is the treasury's gain."""
-        with self.view("transfer_listening")():
-            ledger.transfer(self.household, self.state_treasury(), amount, purpose)
 
     def advance_actors(self, year):
         """Give every actor its year: the countries, players, firms, traders and bodies of people. Coin moved

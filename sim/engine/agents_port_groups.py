@@ -3,6 +3,7 @@ employers whose hands the founder's hiring bids up. Mixed into `SimWorld`."""
 from typing import Any, Dict, List
 
 from sim.agents.api import CONCESSION_PREFIX, Sector, sector_key
+from sim.polity.api import AddScandal
 from sim.reporting.api import RecordEvent
 from .units_prose import mass_rate_text, money_text, plain_number
 
@@ -139,13 +140,12 @@ class GroupView:
 		return max(1e-9, self.state_revenue() * scope)  # type: ignore[attr-defined,no-any-return]
 
 	def founder_protection(self) -> float:
-		return float(self._sim.state.household.protection)
+		return float(self._sim.view("standing")()["protection"])
 
 	def lodge_blame(self, amount: float, text: str, year_gap: int, group_record: Any) -> None:
 		"""A group's petition puts blame on the founder; the log says who and why, once in a while."""
 		sim = self._sim
-		household = sim.state.household
-		household.scandal += amount
+		sim.send(AddScandal(amount))
 		last = group_record.last_logged_year
 		if last is None or self.year - last >= year_gap:  # type: ignore[attr-defined]
 			group_record.last_logged_year = self.year  # type: ignore[attr-defined]

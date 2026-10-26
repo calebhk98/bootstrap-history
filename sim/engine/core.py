@@ -58,16 +58,15 @@ from .seat_run import SeatRunMixin
 from .seat_builds import SeatBuildsMixin
 from .seat_sight import SeatSightMixin
 from .forward_hazards import HazardsForwardsMixin
+from .forward_polity import PolityForwardsMixin
 from .seat_defaults import default_policy
 from .ways import WaysMixin
 from .held_works import HeldWorksMixin
 from .works import WorksMixin
-from .society import SocietyMixin
 from .society_actors import ActorsMixin
 from .founder_sales import FounderSalesMixin
 from .seat_dealings import SeatDealingsMixin
 from .seat_bank import SeatBankMixin
-from .interest_groups import InterestGroupsMixin
 from .benefactions import BenefactionsMixin
 from .forward_freight import ForwardFreightMixin
 from .forward_resources import ForwardResourcesMixin
@@ -110,16 +109,15 @@ class Sim(
         SeatBuildsMixin,
         SeatSightMixin,
         HazardsForwardsMixin,
+        PolityForwardsMixin,
         WaysMixin,
         WorksMixin,
         HeldWorksMixin,
-        SocietyMixin,
         ActorsMixin,
         DiffusionForwardsMixin,
         FounderSalesMixin,
         SeatDealingsMixin,
         SeatBankMixin,
-        InterestGroupsMixin,
         BenefactionsMixin,
         ForwardFreightMixin,
         ForwardingPropertiesMixin,

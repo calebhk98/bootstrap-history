@@ -1,7 +1,7 @@
-"""Commands to the owner of a seat's standing with its society and state (polity, not moved yet: the bridge applies
+"""Commands to the owner of a seat's standing with its society and state (polity), and to the state's records (campaigns send
 them)."""
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from sim.assembly.api import Command
 
@@ -105,3 +105,70 @@ class GainReputation(Command):
 class ScaleProtection(Command):
 	"""The acting household's protection is multiplied by `share` (a patron dies and takes part of his cover with him)."""
 	share: float
+
+
+@dataclass(frozen=True)
+class AddScandal(Command):
+	"""The acting seat's scandal rises by `amount` (this year's figure only: the year's opening mark stays)."""
+	amount: float
+
+
+@dataclass(frozen=True)
+class AddReputation(Command):
+	"""The acting seat's reputation rises by `amount`, with no ceiling."""
+	amount: float
+
+
+@dataclass(frozen=True)
+class SetReputation(Command):
+	"""The acting seat's reputation is set to `value` (a trial figure the caller sets and puts back)."""
+	value: float
+
+
+@dataclass(frozen=True)
+class ScaleFamiliarity(Command):
+	"""The acting seat's familiarity is multiplied by `share` (people who knew the household no longer see it every day)."""
+	share: float
+
+
+@dataclass(frozen=True)
+class AddGovernance(Command):
+	"""The acting seat's governance standing rises by `amount`: a work finished that the state's own interests value."""
+	amount: float
+
+
+@dataclass(frozen=True)
+class AnswerStateDemands(Command):
+	"""The acting household answers the state's demands by `stance` from now on, offering `service` (money's worth) when it
+	negotiates. Answers what the stance risks, in words."""
+	stance: str
+	service: float = 0.0
+
+
+@dataclass(frozen=True)
+class WithdrawFromPublicLife(Command):
+	"""The acting household becomes a smaller man: reputation and eminence fall. Answers (done, text)."""
+
+
+@dataclass(frozen=True)
+class SettleWithState(Command):
+	"""The acting household pays the state `amount`, or all of what `target` (`debt` or `claims`) names. Answers (paid, text)."""
+	target: str
+	amount: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class CarryOutTransfers(Command):
+	"""A finished work `node_id` that declares a `transfer` pays what it asks of the household once, and says so."""
+	node_id: str
+
+
+@dataclass(frozen=True)
+class RenewStanding(Command):
+	"""The first part of the acting seat's year of standing: reputation decays toward the floor and familiarity is renewed."""
+
+
+@dataclass(frozen=True)
+class CloseStandingYear(Command):
+	"""The rest of the acting seat's year of standing: protection, the state's pressure, scandal, bribery and the hazards of
+	denunciation and prominence."""

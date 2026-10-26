@@ -4,7 +4,7 @@ The screens, the labour market, the hazards and the agents' port still say `sim.
 `sim.civ_diffusion(node)`; each line goes when its last caller reads the view or sends the command itself."""
 from sim.diffusion.api import AdvanceSociety, ApplyTechEffects, Disclose, NoteFirstRuns, constants
 
-from . import value_weight
+from sim.polity.api import value_weight
 
 
 class DiffusionForwardsMixin:

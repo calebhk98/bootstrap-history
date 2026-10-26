@@ -44,7 +44,7 @@ def _advance_year(sim, seats):
 
 
 SHIPPED: List[Phase] = [
-	Phase("begin_seat_year", SEAT, lambda sim, seat_id: sim.begin_seat_year()),
+	Phase("begin_seat_year", SEAT, module_seat_phase("begin_seat_year")),
 	Phase("trim_audit", SEAT, module_seat_phase("trim_audit")),
 	Phase("hear_of_other_seats", SEAT, lambda sim, seat_id: sim.hear_of_other_seats()),
 	Phase("begin_world_year", WORLD, lambda sim, seats: sim.begin_world_year()),

@@ -5,11 +5,9 @@ code did, and is never cached. Each command applies what the old code did inline
 state the module still mutates in place (the strata of the actors' cast); it goes when actors move."""
 from sim.agents.api import CountryLiteracy, seed_strata
 from sim.assembly.api import KEYED, QUOTE
-from sim.polity.api import GainReputation, ShiftValueWeight
-from sim.refusal import Refusal
 from sim.workforce.api import NoteTradeSpread, SetEmployed
 
-from . import category_traits, seat_builds, value_weight
+from . import category_traits, seat_builds
 from .agents_port_cast import seed_opening_cast
 from .bridge import bridge_command, bridge_view
 from .data import TRADES_ABSENT
@@ -153,29 +151,7 @@ def disease_burden_weights(sim):
     return {tech_id: sim._tech_effects[tech_id].get("population", 0.0) for tech_id in sim.DISEASE_BURDEN_TECH_IDS}
 
 
-@bridge_view("state_reach")
-def state_reach(sim):
-    return sim.state_reach()
-
-
 # ---- commands ----
-
-@bridge_command(ShiftValueWeight)
-def shift_value_weight(sim, command):
-    weights = sim.value_weights
-    if command.field not in weights:
-        return Refusal("not_a_value_weight", "the society has no value weight %s" % command.field, field=command.field)
-    before = weights[command.field]
-    weights[command.field] = value_weight.shifted(before, command.delta, value_weight.VALUE_WEIGHT_FLOOR,
-                                                  value_weight.VALUE_WEIGHT_CEILING)
-    return before, weights[command.field]
-
-
-@bridge_command(GainReputation)
-def gain_reputation(sim, command):
-    household = sim.state.household
-    household.reputation = min(sim.REPUTATION_CEILING, household.reputation + command.amount)
-
 
 @bridge_command(SetEmployed)
 def set_employed(sim, command):

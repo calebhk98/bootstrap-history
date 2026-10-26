@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import eminence_rules
+from sim.polity import eminence_rules
 from sim.engine.society_state_pressure import StatePressureMixin as Pressure
 
 DANGER = 30.0

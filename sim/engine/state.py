@@ -33,29 +33,13 @@ class HouseholdState:
 	wages_prepaid: float = 0.0
 	wages_earned: Optional[float] = None
 	interest_paid: Optional[float] = None
-	reputation: float = 5.0
-	scandal: float = 0.0
-	scandal_last_year: Optional[float] = None
-	eminence: float = 0.0
-	familiarity: float = 0.0
-	protection: float = 0.0
-	# how the household answers the state's demands: "comply" or "refuse" (sim/agents/demand_answer.py)
-	demand_stance: str = "comply"
-	# money's worth of service offered the state when negotiating; wealth held out of its sight; and how far
-	# the state holds the household's refusals against it (0..1)
-	service_offer: float = 0.0
-	concealed: float = 0.0
-	defiance: float = 0.0
-	bribes_ytd: float = 0.0
 	slaves: int = 0
 	freedmen: int = 0
 	manumitted_total: int = 0
-	atrocity: int = 0
 	bondage_years_left: float = 0.0
 	bondage_debt: float = 0.0
 	credit_frozen_until: int = 0
 	insolvent_years: int = 0
-	last_withdrawal: Optional[int] = None
 	last_settlement: int = -999
 	# interest the household could not draw on its facility, and the consecutive years it has owed some (sim/agents/borrowing.py)
 	interest_arrears: float = 0.0
@@ -109,11 +93,6 @@ class HouseholdState:
 	_said_deputies: int = 0
 	_said_near_limit: Optional[bool] = None
 	_said_autoopen: Optional[Dict[str, int]] = None
-	_said_eminence: int = -999
-	_said_requisition: int = -999
-	_said_notice_approach: int = 0
-	last_military_demand: int = -999
-	_said_confiscation_band: int = -1
 
 	# ---- the purse: an account in the actors' book (sim/agents/purses.py) once the state is attached to it ----
 	def attach(self, purses: Any, account: str) -> None:
@@ -168,18 +147,6 @@ class HouseholdState:
 	def add_capital(self, amount: float, purpose: Any = "receipts") -> None:
 		"""Credit capital into household purse."""
 		self.credit(amount, purpose)
-
-	def add_reputation(self, delta: float) -> None:
-		"""Increase household reputation standing."""
-		self.reputation += float(delta)
-
-	def deduct_reputation(self, delta: float) -> None:
-		"""Decrease household reputation standing."""
-		self.reputation -= float(delta)
-
-	def add_scandal(self, delta: float) -> None:
-		"""Increase accumulated scandal."""
-		self.scandal += float(delta)
 
 	def record_spend(self, amount: float) -> None:
 		"""Record spend without altering capital balance directly."""
@@ -320,8 +287,7 @@ class EconomyState:
 
 @dataclass
 class GovernanceState:
-	"""Institutions and civic administrative units."""
-	gov: float = 0.0
+	"""Institutions and civic administrative units (the seat's governance standing is the polity module's)."""
 
 
 @dataclass

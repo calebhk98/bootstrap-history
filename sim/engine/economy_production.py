@@ -19,7 +19,6 @@ ProductionMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for the
 grouping evidence, and for why this lives in a separate file.
 """
-from sim.agents.api import patronage
 from .bondage_workshop_rules import workshop_craft_wages, workshop_output_value
 from .concern_earnings import ledger_row, output_market_factor, takings_at
 from .data import trade_family
@@ -27,73 +26,11 @@ from sim.constants import declare
 from . import category_traits, concern_sales, money_units, node_revenue_market, node_upkeep
 from .readable import readable
 from .revenue_ledger import assemble_ledger
-from .seat_country import patron_grant_share
 from sim.world import plant_figures
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
 class ProductionMixin:
-
-    STATE_FUNDING_BASE_LABOUR_HOURS = declare(
-        "STATE_FUNDING_BASE_LABOUR_HOURS", 50400.0, kind="temporary_heuristic",
-        unit="labour hours/year at output_per_head=1, state_reach=1, pop_scale=1",
-        source=None, confidence="D",
-        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
-            "What an imperial patron is worth in direct funding at a "
-            "reference civilisation size and state reach. No fiscal "
-            "record backs this figure; a real answer needs a state budget "
-            "model - tax revenue, the fiscus's own spending priorities - "
-            "that this engine does not have, per CLAUDE.md 3.1's ban on "
-            "asserting a state revenue outright.")
-    STATE_FUNDING_BASE = money_units.PricedInLabourHours("STATE_FUNDING_BASE_LABOUR_HOURS")
-    STATE_FUNDING_POP_SCALE_EXPONENT = declare(
-        "STATE_FUNDING_POP_SCALE_EXPONENT", 0.4, kind="temporary_heuristic",
-        unit="dimensionless exponent on pop_scale", source=None,
-        confidence="D",
-        why="How much faster a larger population's state can fund you, on "
-            "a sub-linear curve so state funding does not simply track "
-            "population one-for-one. Shape is plausible (bigger states have "
-            "more surplus but not proportionally more to spare on one "
-            "founder); the exponent itself is tuned, not fitted to any "
-            "fiscal data.")
-    STATE_FUNDING_GOV_QUALITY_SCALE = declare(
-        "STATE_FUNDING_GOV_QUALITY_SCALE", 25.0, kind="temporary_heuristic",
-        unit="household.gov points per +100% funding", source=None,
-        confidence="D",
-        why="How much a better-governed household multiplies its own state "
-            "funding. household.gov has no independent calibration of its "
-            "own scale, so this denominator is picked to make the term feel "
-            "proportionate rather than derived from anything.")
-
-    def patron_funding_ask(self):
-        """What a patron state would give the founder in a year if its treasury could spare it."""
-        if not self.running_with_mechanic("state_funding"):
-            return 0.0
-        return patronage.ask(self.STATE_FUNDING_BASE, self.real_output_per_head(), self.state_reach(), self.pop_scale,
-                             self.STATE_FUNDING_POP_SCALE_EXPONENT, self.state.governance.gov,
-                             self.STATE_FUNDING_GOV_QUALITY_SCALE, self.rep_factor())
-
-    def patron_clients(self, country):
-        """(seat id, governance, reputation factor) of the playing seats of `country` whose techniques run the
-        `state_funding` mechanic: the clients its state is asked to fund (a seat with no country is the home country's)."""
-        home = str(self.civ.get("id"))
-        clients = []
-        for seat_id in self.playing_seats():
-            if (self.state.seats[seat_id].country or home) != country:
-                continue
-            with self.act_as(seat_id):
-                if self.running_with_mechanic("state_funding"):
-                    clients.append((seat_id, max(0.0, self.state.governance.gov), self.rep_factor()))
-        return clients
-
-    def state_funding(self):
-        """What the treasury has paid the founder this year; the government decides it
-        (Government.pay_patron) from its purse after its standing need. A seat of another country is paid by that
-        country's state, its grant shared among the seats that state funds."""
-        state = self.state.actors
-        if state is None:
-            return 0.0
-        return patron_grant_share(state.records, self.state.seats, self.state.acting_seat, str(self.civ.get("id")), self.patron_clients)
 
     def venture_ramp(self, node_id):
         """How much of its full takings a concern is making, 0..1.
@@ -157,7 +94,7 @@ class ProductionMixin:
         holdings = self.state.holdings
         projects = self.state.projects
         household = self.state.household
-        governance = self.state.governance
+        standing = self.view("standing")()
         founder = self.state.founder
         key = (
             scenario.year,
@@ -175,9 +112,9 @@ class ProductionMixin:
             getattr(holdings, "farm_hectares", 0.0) or 0.0,
             getattr(household, "freedmen", 0.0) or 0.0,
             getattr(household, "slaves", 0.0) or 0.0,
-            getattr(governance, "gov", 0.0) or 0.0,
+            standing["governance"] or 0.0,
             self.output_factor,
-            household.reputation,
+            standing["reputation"],
             founder.founder_alive,
             self.state_funding(),
             self.home_price_level(),

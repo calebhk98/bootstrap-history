@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.military_rules import leverage_of
+from sim.polity.military_rules import leverage_of
 from sim.hazards import constants
 from sim.hazards.rules import war_relief
 from sim.tests import hazards_host
