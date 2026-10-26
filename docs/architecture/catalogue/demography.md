@@ -19,9 +19,8 @@ sim.demography import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publish
   `jitter=True`), so dropping the object and its seed loses nothing.
 - **Views: sixteen, not four.** The draft's `population`, `people_by_tile`, `food_eaten` and `yearly_record` stand, but the callers
   ask narrower questions than the draft's grouping: `population` (the bands), `population_total`, `working_age`, `pop_scale`,
-  `default_population`, `population_change_last_year`, `yearly_record`, `people_by_tile`, `regional_people` (the regions by band, which
-  the disease step reads), `urban_people_by_tile`, `urban_ceilings`, `urban_fraction`, `food_eaten`, `demographic_flows` and
-  `regional_flows` (the last yearly step's flows, kept in memory, never saved), `farm_holdings`. Four of the names were already
+  `default_population`, `population_change_last_year`, `yearly_record`, `people_by_tile`, `legacy_regions_of_people` (the raw regions by band: a debt, the name the disease module reads), `people_by_band`, `nutrition_ratio` (a quote), `urban_people_by_tile`, `urban_ceilings`, `urban_fraction`, `food_eaten`, `demographic_flows` and
+  `regional_flows_last_year` (the last yearly step's flows, kept in memory, never saved), `farm_holdings`. Four of the names were already
   published by the bridge for other modules (`food_eaten` by campaigns, `working_age` by freight, `population_total` by reporting, `pop_scale`
   and `default_population` by materials) and the module publishes them under the same names and shapes; the bridge entries are deleted.
   `household_food_kcal_per_day` and its rule `food_kcal_per_day` had no caller outside tests and are gone.
@@ -44,8 +43,9 @@ sim.demography import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publish
 - **The yearly step reads the farm workforce's work as commands to workforce.** `AllocateFarmWorkforce`, `ApplyLandClearing` and
   `UpdateWages` (new, in `sim/workforce/commands.py`, applied by the bridge) replace `self.labour.allocate_farm_workforce`,
   `apply_land_clearing` and `update_wages`. The colonies' yearly step is `AdvanceColonies` (land's, `sim/land/commands.py`), the
-  epidemic year `RunEpidemicYear` (disease's, `sim/disease/commands.py`; its answer carries the deaths, the burden, the endemic rates and
-  the deaths by tile the old code read afterwards), the migrants' contact `RecordMigrantContact` and a partner's strata `ScaleStrata`
+  epidemic year `RunEpidemicYear` then `HitSeatsWithEpidemic` (disease's; the mods' externalities add their deaths between them through the
+  bridged quote `externality_deaths`, and the burden, the endemic rates and the deaths by tile are read as disease's views afterwards: the
+  order `forward_disease.epidemic_year` keeps), the migrants' contact `RecordMigrantContact` and a partner's strata `ScaleStrata`
   (actors'). The order inside the step is the old one.
 - **`wage_index` and `_disease_burden` are not demography's.** `wage_index` is workforce's (the catalogue's own `workforce.wage_index`); it
   stays on `Sim` and reads `pop_scale`. The module reads it as the view `wage_index` hazards already used, plus a new bridged
@@ -98,10 +98,10 @@ built ways, which are written outside any command of this module.
 | `population_total`, `working_age`, `pop_scale`, `default_population` | the figures others read as numbers | reporting, freight, materials |
 | `population_change_last_year`, `yearly_record` | what the demography screen and the year report print | the screens |
 | `people_by_tile` | people per tile once the regions cover the tiles held, else `None` | labour, the agent ports |
-| `regional_people` | the regions as `[children, working_age, elderly]` | the disease step |
+| `legacy_regions_of_people`, `people_by_band`, `nutrition_ratio` | the regions as `[children, working_age, elderly]`, the nation's bands, the food against need | the disease module |
 | `urban_people_by_tile`, `urban_ceilings`, `urban_fraction` | the town share and what each town can feed | labour, the agent ports, the disease step |
 | `food_eaten` | each tile's food eaten over its need, as the economy booked it | campaigns |
-| `demographic_flows`, `regional_flows` | the last yearly step's flows (births, deaths, nutrition ratio), `None` before the first | the budget view, the event causes, the screens, the disease step |
+| `demographic_flows`, `regional_flows_last_year` | the last yearly step's flows (births, deaths, nutrition ratio), `None` before the first | the budget view, the event causes, the screens, the disease step |
 | `farm_holdings` (seat) | hectares, granary, area cleared, the last farm year's shortfall, harvest and marginal product, the hours the farm needs | coin, agriculture, labour, the price code, the agent ports |
 
 ## Commands
@@ -130,7 +130,7 @@ Reads, all bridged or published by a module that moved (`sim/engine/bridge_demog
 `farm_technique_this_year`; hazards `country_strata`; core `civilisation`, `year`, and the debt `legacy_actor_registry` (for
 `AddCaptives`, until the actors move).
 
-Sends: workforce `AllocateFarmWorkforce`, `ApplyLandClearing`, `UpdateWages`; land `AdvanceColonies`; disease `RunEpidemicYear`; actors
+Sends: workforce `AllocateFarmWorkforce`, `ApplyLandClearing`, `UpdateWages`; land `AdvanceColonies`; disease `RunEpidemicYear`, `HitSeatsWithEpidemic`; actors
 `RecordMigrantContact`, `ScaleStrata`; hazards `RecordWorldEvent`; reporting `RecordEvent`.
 
 ## Year phases
@@ -141,7 +141,7 @@ before literacy and the actors); the booking of the food eaten is `RecordFoodEat
 ## Forwarders left on `Sim`
 
 `population`, `pop_scale`, `_adult_equivalent_population`, `people_by_tile`, `urban_fraction`, `_last_demographic_step`,
-`_last_regional_step`, `farm_stock_kg` (all reads), `record_food_eaten`, and the two constants `DEFAULT_POPULATION_100AD` and
+`farm_stock_kg` (all reads), `record_food_eaten`, and the two constants `DEFAULT_POPULATION_100AD` and
 `POP_SCALE_FLOOR`. Their callers are the engine's mixins, the agent ports, the screens and the mods that read `sim.population.total`.
 
 ## Not moved
