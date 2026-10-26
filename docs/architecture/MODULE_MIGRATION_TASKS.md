@@ -1,0 +1,123 @@
+# Module migration tasks
+
+**Status:** in progress on branch `sim-module-registry-plan`, base tag `mr-base`. The design is
+`MODULE_REGISTRY_PLAN.md`; this file is the execution order and is ticked as each task merges. The work lands as one
+pull request when every box is ticked. `main` is frozen for the duration (owner decision 2026-10-25).
+
+Operating rules: only the orchestrating session merges; agents work in worktrees on `mr/<task>` branched from the
+integration branch, own named files, never edit `core.py`, `state.py`, `state_seat.py`, `core_seats.py`,
+`year_phases.py` or `saveload.py` (they describe the wiring instead), run only targeted topics and the micro
+equivalence tier, and hand long runs back. After every merge the orchestrator runs the equivalence tool and the quick
+tier, and reverts on red.
+
+## Task list
+
+### Phase 0: tools and baseline (blocks everything)
+
+- [ ] **0.1 (orchestrator)** Tag `mr-base` at the branch head. Make a pinned base worktree at `mr-base` and never edit it. Record the quick-tier counts.
+- [ ] **0.2 (agent)** Profile why a fingerprint scenario build takes over 200 s, when the quick tier builds every civilisation in seconds (`harness._warm_starts`). Fix the slowness if it is in test tooling. Then build `sim/tests/equiv.py`:
+  - It hashes each field every year and reports the first diverging year, field and key, plus the random state, so a draw made in a different order can be told apart from a changed value.
+  - It has a micro tier (about 2 scenarios × 15 years, aiming under a minute) and a full tier (4 scenarios × 40 years).
+  - A field-path resolver table, `sim/tests/equiv_fields.py`, maps each baseline field to candidate paths. A move appends its new path in the same commit. This is test tooling, not a save migration.
+  - Acceptance: base checked against base is clean, and a planted extra random draw is caught and named.
+- [ ] **0.3 (agent, parallel with 0.2)** Record protocol golden transcripts at `mr-base`: scripted command sequences on a fixed seed, saving the JSON replies. Behaviour tests compare reply values, not wording (CLAUDE.md section 6). This closes the protocol gap before anything moves.
+- [ ] **0.4 (read-only agent)** Put the measurement scripts from the appendix in `tools/measure/`. Acceptance: they reproduce 1559 and 906 at `mr-base`.
+- [ ] **0.5 (orchestrator)** Write `tools/done_check.sh`, which prints the done-criteria counts below. Record the equivalence baseline (micro, full and long) at `mr-base` and commit the hash file.
+
+### Phase 1: framework (`sim/modules/`, engine unchanged)
+
+- [ ] **1.1 (agent)** The core types:
+  - `ModuleSpec`, `ViewSpec`, derived and keyed views, quotes, the command base class (refusals use `sim/refusal.py`);
+  - assembly and its errors: a missing provider, a doubled provider, removal refused naming the reader, an optional view absent;
+  - phases tied to `year_phases`;
+  - extension points with one clash rule, view adjusters, extend layers;
+  - the assembly record and the dependency printout.
+  - Tests are on toy modules, one function per test.
+- [ ] **1.2 (same agent)** View freshness:
+  - Each owner keeps a version per view, plus a version per seat for seat-scoped views.
+  - A derived-view cache stores the tuple of its input versions and recomputes when the tuple changes.
+  - Owner commands bump the versions of the views they touch.
+  - In debug mode (on by default), a shadow check recomputes every N reads and raises, naming the view, if the cached value differs. This catches a missed bump.
+  - Seat switch becomes one `bump_seat(seat)`.
+  - Load calls `assembly.rebind(state)`, which drops caches and rebinds the module instances.
+- [ ] **1.3 (agent, parallel)** State registration:
+  - `ModuleSpec.owns` registers dataclasses into a per-module slot on `SimulationState` and `SeatState`, saved through the existing dataclass walk.
+  - `ALL_STATE_CLASSES` and `SAVE_FIELDS` are derived from the assembly.
+  - Seat aliases are declared per module, and `bind_seat` loops over them.
+  - Removing a module removes its fields.
+  - The orchestrator applies the hub-file wiring.
+  - Acceptance: a toy module's state survives a save round trip, and it appears and disappears in the save fields as the module is added and removed.
+- [ ] **1.4 (agent, parallel)** `sim/tests/helpers/views.py`: `make_views(**plain_dicts)` and a recording `FakeCommands`. Also the test migration rules in `docs/architecture/TEST_MIGRATION.md`.
+- [ ] **1.5 (read-only agent, parallel)** Catalogue drafts in `docs/architecture/catalogue/<owner>.md`, one per Complaint 508 owner:
+  - Group cross-mixin reads by what the consumer wants to know.
+  - Map writes onto the command vocabulary.
+  - Draft limits: a view serves at least 3 callers or is a quote; about 25 views at most per owner.
+  - Also inventory every cache, port object and invalidation point. This feeds 1.2.
+- [ ] **1.6 (orchestrator)** Merge phase 1. The equivalence tool must be unchanged and the quick tier green.
+
+### Phase 2: prototype gate (serial)
+
+- [ ] **2.1 (agent)** Living stock (`living_stock*.py`, `defence_stores.py`, `food_relief.py`) becomes a module:
+  - Its rules become plain functions over views.
+  - It writes through goods, pay and settle commands.
+  - Its tests are rewritten.
+  - During the move, the old mixin methods become one-line forwarders, deleted when the mixin goes.
+- [ ] **2.2 (agent)** The ledger as a command owner. First, `Transfer`, `Pay` and `PayEdge` commands wrap today's `ledger.transfer` and `pay_edge`. Then a few call-site batches are routed through them. Every other path that moves money is listed for phase 3.
+- [ ] **2.3 (agent)** Project starting (`projects_starting.py` `StartingMixin`, `step_phase_project_start.py`, staffing, ventures). It is the heavy reader: credit, production, labour, capabilities, fog and mechanics.
+- [ ] **2.4 (orchestrator)** Gate report, `docs/architecture/PROTOTYPE_REPORT.md`. Stop and regroup if any of these holds:
+  - a domain's catalogue comes out near one view per old method (more than 20% one-to-one);
+  - a domain needs more than about 15 declared reads;
+  - there is an equivalence divergence nobody can explain;
+  - the quick tier slows by more than 15%, or the micro tier by more than 25%.
+
+  Otherwise, revise the framework and catalogue, and record what changed in `MODULE_REGISTRY_PLAN.md`.
+
+### Phase 3: owners of conserved quantities
+
+- [ ] **3.1** Ledger, in batches of about 15 files by directory:
+  - Route every `ledger.transfer` site, every `pay_edge` site and the other paths that move money.
+  - Remove the direct `.capital =` and `.money =` writes and the `record.book.transfer` calls outside the ledger module.
+  - Goods move through `MoveGoods`.
+- [ ] **3.2 to 3.4** Workforce hours (`CommitHours`), land (`TransferTile`), people (`KillPeople`, `MovePeople`). Two of these may run at once only if their file sets are disjoint. Proof: the full equivalence tier, the conservation tests and a save round trip.
+
+### Phase 4: walled packages become modules (serial)
+
+- [ ] Labour becomes workforce, geography becomes land, the economy becomes markets, and disease becomes its own module.
+- [ ] Their adapters (`LabourWorld`, `GeographyWorld`, `SimWorld`) become declared view lists, and the lazy port properties go.
+- [ ] After the phase: the long equivalence tier.
+
+### Phase 5: remaining mixins, leaves to hub
+
+- [ ] **5.0 (read-only agent)** Re-measure and fix the order. Expected: campaigns, revolts and captives; hazards; coin and theft; foreign trade; society; projects; production; the older economy code last.
+- [ ] **5.x** One topic per task. Up to 2 agents at once on topics that neither read each other nor share files.
+  - A task is done only when its mixin leaves `Sim`'s bases, its forwarders and its test fakes are gone, and its caches are views.
+  - The orchestrator runs the full equivalence tier and the quick tier per merge, and the long tier every fifth merge.
+
+### Phase 6: UI and protocol
+
+- [ ] `ui_port` and the forwarders in `core_properties.py` become view lists and commands.
+- [ ] The protocol golden transcripts from 0.3 must still match.
+- [ ] A final sweep of leftover mixin fakes in the tests.
+
+### Phase 7: mods
+
+- [ ] Replace the 12 process-global registries in `mod_code.py` and the packages with per-assembly registrations under one clash rule.
+- [ ] Rewrite each shipped code mod onto the new interface (one agent per mod).
+- [ ] Add one SMOKE test per mod operation: replace, remove, add, extend, adjust, provide.
+
+### Phase 8: kernels
+
+- [ ] Complaint 661: kernels for the largest computations Complaint 497 measures, with the equivalence check as their test fixture.
+
+### Phase 9: finish
+
+- [ ] `python3 -m sim.tests --slow` green.
+- [ ] Long equivalence tier and fingerprint against `mr-base`, with every divergence explained by naming its step.
+- [ ] Baseline ensemble checks.
+- [ ] Update `sim/ARCHITECTURE.md`, `PACKAGE_WALLS.md`, CLAUDE.md section 3, and the Complaints this closes (508, 661, and part of 507).
+- [ ] Open the single PR (template sections if the repo has one), then subscribe to it.
+
+
+## Done criteria
+
+Printed by `tools/done_check.sh`: `Sim`'s MRO is only the composition root and defines no rule; money and goods writes only inside their owners; no module imports another's internals; no `register_*` global outside assembly; no `Mixin` in `sim/tests`; shipped mods import only the mod interface; the dependency printout is committed.
