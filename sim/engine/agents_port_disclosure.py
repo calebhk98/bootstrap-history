@@ -3,9 +3,8 @@ from typing import Any
 
 from sim.agents.api import PROOF_YEARS, SECRET_EXPOSURE, ledger, licence
 
-from . import seat_builds
-from .seat_royalty import seat_royalties_due, seat_royalties_paid
-from .visibility import base_visibility, most_open_mode, years_to_be_believed
+from sim.seats.api import (base_visibility, builders_of, disclosure_modes, most_open_mode, seat_royalties_due, seat_royalties_paid,
+						   years_to_be_believed)
 
 
 class DisclosureView:
@@ -16,9 +15,9 @@ class DisclosureView:
 	def disclosure_mode(self, node_id: str) -> str:
 		"""What the makers of an invention chose: the widest choice any seat that built it made."""
 		seats = self._sim.state.seats
-		if not seat_builds.builders_of(seats, node_id):
+		if not builders_of(seats, node_id):
 			return str(self._sim.disclosure_of(node_id)["mode"])
-		return most_open_mode(seat_builds.disclosure_modes(seats, node_id, self._sim.view("disclosures").__getitem__))
+		return most_open_mode(disclosure_modes(seats, node_id, self._sim.view("disclosures").__getitem__))
 
 	def secret_exposure(self, node_id: str) -> float:
 		"""Share of full visibility outsiders get of a kept secret: the more trades and materials
@@ -48,7 +47,7 @@ class DisclosureView:
 		"""The live patent on an invention as {"holder", "expires", "licensees"}, or None."""
 		sim = self._sim
 		holders = sim.actors.patent_holders(node_id) + [sim.seat_party(seat_id) for seat_id, seat in sim.state.seats.items()
-													  if node_id in seat.holdings.patents]
+													  if node_id in seat.modules["seats"].patents]
 		return licence.live_patent(holders, node_id, self.year)
 
 	def _holder(self, holder_id: str) -> Any:

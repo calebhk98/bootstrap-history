@@ -4,7 +4,8 @@ The figures are derived at the gate technologies held (`node_revenue.for_civilis
 per held gate set); research that adds a gate changes what can be made and at what cost, so the Sim
 re-derives when that set changes.
 """
-from . import money_units, node_revenue, opening_money, prices as price_solver, society_holdings
+from sim.prices.api import prices as price_solver
+from . import money_units, node_revenue, opening_money, society_holdings
 from .wage_schedule import build_schedule
 
 

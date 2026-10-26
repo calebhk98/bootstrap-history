@@ -36,9 +36,9 @@ class SeatState:
 		return self.kind != COUNTRY_SEAT
 
 
-def seat_from_template(template: Mapping[str, Any], capital: float, life_left: float, policy: Dict[str, Any]) -> SeatState:
+def seat_from_template(template: Mapping[str, Any], capital: float, policy: Dict[str, Any]) -> SeatState:
 	"""A new seat from data: `template` may carry `starting_techs`, `scholars`, `artisans`, `base_tile`, `goal` and
-	`country`. `capital` is already in the society's coin; `life_left` is the founder's years (huge when immortal)."""
+	`country`. `capital` is already in the society's coin."""
 	if template.get("kind") == COUNTRY_SEAT:
 		# the household here is an empty placeholder the engine's aliases need; the seat acts through its government
 		return SeatState(household=HouseholdState(capital=0.0), projects=ProjectsState(), founder=None,
@@ -47,7 +47,7 @@ def seat_from_template(template: Mapping[str, Any], capital: float, life_left: f
 	                           artisans=float(template.get("artisans", 0.0)), base_tile=template.get("base_tile"))
 	granted = set(template.get("starting_techs") or ())
 	projects = ProjectsState(done=set(granted), granted=set(granted))
-	founder = FounderState(founder_alive=True, life_left=float(life_left), policy=dict(policy))
+	founder = FounderState(policy=dict(policy))
 	return SeatState(household=household, projects=projects, founder=founder, goal=template.get("goal"),
 	                 country=template.get("country"))
 

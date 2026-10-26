@@ -25,7 +25,8 @@ sys.setrecursionlimit(20000)
 import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
-from .identity_cache import IdentityCache
+from sim.prices.api import identity_cache
+IdentityCache = identity_cache.IdentityCache
 from sim.geography.api import haversine_km, load_geography
 from .mods import ModError, get_ordered_mods, load_mod_tree
 from .mods_base import MissingVariantBase
@@ -34,7 +35,8 @@ from .mods_world import merge_mod_map
 from .tree_source import load_base_tree
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
-from . import copy_visibility_defaults, energy_prices, money_units, node_revenue
+from sim.prices.api import energy_prices
+from . import copy_visibility_defaults, money_units, node_revenue
 from sim.labour.api import wage_provider
 from .default_civilisation import default_civilisation_id
 from . import wage_schedule
@@ -323,13 +325,13 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
     under `held_technology_ids`, in the civilisation's coin; a material only a
     technology not yet held can make is priced at the nearest technique that
     makes it, with the technologies held for everything else (see
-    `sim.engine.prices.priced_goods_table`). A material nothing makes is absent.
+    `sim.prices.prices.priced_goods_table`). A material nothing makes is absent.
     Left as `None`, `held_technology_ids` is the starting technologies of
     `civilization_id` (the reference civilisation if none), so a concern's
     derived revenue is priced against techniques some civilisation holds.
 
     `civilization_id` decides whose coin and whose held territory prices are
-    stated against (see `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION);
+    stated against (see `sim/prices/prices.py`'s RENT NEEDS A CIVILIZATION);
     the default is the reference civilisation.
     """
     manifests = get_ordered_mods(MODDIR)
@@ -343,7 +345,7 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
     document = schedule.document()
     if held_technology_ids is None:
         held_technology_ids = load_civ(civilization_id)["starting_techs"]
-    from . import prices as price_solver
+    from sim.prices.api import prices as price_solver
     goods, _provenance = price_solver.priced_goods_table(
         held_technology_ids, document, civilization_id=civilization_id)
     production = load_production_catalog(ROOT, MODDIR)
@@ -371,13 +373,13 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
                       civilization: Optional[JSONDict] = None) -> Dict[str, str]:
     """{material: "solved" | "gated"} for every material the solver prices:
     "gated" ones are priced at a technique not held but within reach; a material
-    nothing in reach makes is absent (see `sim.engine.prices.priced_goods_table`).
+    nothing in reach makes is absent (see `sim.prices.prices.priced_goods_table`).
 
     `civilization_id` should be the SAME civilization `held_technology_ids`
     came from: land rent is solved against its territory, and left at `None`
     it is the reference civilisation's.
     """
-    from . import prices as price_solver
+    from sim.prices.api import prices as price_solver
     schedule = (schedule_of_civilisation(civilization) if civilization is not None
                 else starting_schedule(civilization_id))
     _goods, provenance = price_solver.priced_goods_table(
@@ -393,7 +395,7 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
                             ) -> Dict[str, float]:
     """The calculated material-price table for an era, in the civilisation's
     coin or, when `money_per_labour_hour` is given, in that coin."""
-    from . import prices as price_solver
+    from sim.prices.api import prices as price_solver
     schedule = (schedule_of_civilisation(civilization) if civilization is not None
                 else starting_schedule(civilization_id))
     document = schedule.document()
@@ -412,7 +414,7 @@ def calculated_goods_table(held_technology_ids: Iterable[str] = (),
                            interest_rate: Optional[float] = None
                            ) -> Tuple[Dict[str, float], Dict[str, str]]:
     """(labour-hour price, provenance) of every material the solver prices, from one solve."""
-    from . import prices as price_solver
+    from sim.prices.api import prices as price_solver
     schedule = (schedule_of_civilisation(civilization) if civilization is not None
                 else starting_schedule(civilization_id))
     document = schedule.document()

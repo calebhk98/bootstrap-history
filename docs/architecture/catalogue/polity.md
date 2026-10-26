@@ -57,8 +57,6 @@ sim.polity import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publishes),
   `value_weight`, `state_demand` (now the claims registry and `describe_stance`); `legitimacy_share` moved from `public_works_rules.py`
   into `rules.py`, with the new rules (alarm, protection, visible scale, familiarity, the scandal warning band, transfer size, the
   levy sum, the patron's grant share).
-- **`patron_grant_share` is copied, not moved.** `sim/engine/seat_country.py` (the seats' file) still holds its own copy and a test
-  imports it; the seats owner deletes it.
 
 ## Mixin classes and files absorbed
 
@@ -116,7 +114,7 @@ is two commands the engine's `_step_reputation` sends around the hours and spend
 
 ## Commands sent to other owners
 
-`PayEdge` (ledger), `RecordEvent` (reporting), `ForgetTechnique` (knowledge), `FounderDies` (seats).
+`PayEdge` (ledger), `RecordEvent` (reporting), `ForgetTechnique` (knowledge), `EndRun` (seats).
 
 ## Reads
 

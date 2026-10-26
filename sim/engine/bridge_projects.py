@@ -10,7 +10,6 @@ from sim.projects.needed_commands import (ClearMothball, CompleteProject)
 from . import purchase_rule, projects_precaution
 from .agents_port import SimWorld
 from .bridge import bridge_command, bridge_view
-from .data import win_condition_describe
 from .projects_training_advice import training_advice
 from .units_prose import money_text
 
@@ -190,16 +189,6 @@ def start_gate_unheld_stock(sim, node_id, node, ignore_trade, memo, why):
 @bridge_view("money_text", kind=QUOTE)
 def money_text_view(sim, amount, grouped=False, short=False):
     return money_text(amount, sim, grouped=grouped, short=short)
-
-
-@bridge_view("win_condition_text", kind=QUOTE)
-def win_condition_text(sim, node):
-    return win_condition_describe(node)
-
-
-@bridge_view("acting_seat")
-def acting_seat(sim):
-    return sim.state.acting_seat
 
 
 @bridge_view("automation")

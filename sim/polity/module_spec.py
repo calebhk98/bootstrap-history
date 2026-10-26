@@ -6,7 +6,7 @@ from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.knowledge.api import ForgetTechnique
 from sim.ledger.api import PayEdge
 from sim.reporting.api import RecordEvent
-from sim.seats.api import FounderDies
+from sim.seats.api import EndRun
 
 from . import commands
 from .module import Polity
@@ -82,6 +82,6 @@ MODULE_SPECS = (ModuleSpec(
 		(commands.ReplaceRuler, "replace_ruler"), (commands.CloseSuccessionDispute, "close_succession_dispute"),
 	),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(PayEdge, RecordEvent, ForgetTechnique, FounderDies),
+	sends=(PayEdge, RecordEvent, ForgetTechnique, EndRun),
 	phases=(PhaseHook("begin_seat_year", "step_begin_seat_year"),),
 ),)

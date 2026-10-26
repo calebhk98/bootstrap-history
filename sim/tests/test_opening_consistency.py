@@ -20,8 +20,8 @@ class OpeningSeedsAreCostsTests(unittest.TestCase):
         cls.wage_provider = wage_provider
 
     def _cost_of_one_step(self, good):
-        from sim.engine import long_run_costs, making_cost
-        from sim.engine.prices import default_production_entries
+        from sim.prices import long_run_costs, making_cost
+        from sim.prices.prices import default_production_entries
         game, prices = self.game, self.opening["prices"]
         production = default_production_entries()
         techniques = frozenset(game.state.projects.granted) | frozenset(game.techniques_in_use())
@@ -49,7 +49,7 @@ class OpeningSeedsAreCostsTests(unittest.TestCase):
 
     def test_a_good_the_economy_has_not_priced_is_seeded_at_a_cost_of_making_at_live_prices(self):
         from sim.engine import economy_port_late
-        from sim.engine.prices import default_production_entries
+        from sim.prices.prices import default_production_entries
         known = dict(self.opening["prices"])
         staple = self.wage_provider.staple_material(self.game.civ)
         gone = known.pop(staple)

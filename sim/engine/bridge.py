@@ -10,6 +10,7 @@ from typing import Any, Callable, List, Tuple
 from sim.assembly.api import TABLE, Module, ModuleSpec, ViewSpec
 
 BRIDGE_ID = "engine"
+DISCOVERS = "sim.engine.bridge_*"   # imported by name in bridge_spec; the source closure follows it
 
 
 class EngineBridge(Module):

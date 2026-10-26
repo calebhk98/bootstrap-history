@@ -10,7 +10,7 @@ and wage is lower in coin by the same share; the metal's price in coin is fixed 
 from sim import cache_root
 from sim.economy import api as economy_api
 
-from . import solve_cache
+from sim.prices.api import solve_cache
 from .economy_port_key import SPIN_UP_SOURCE_MODULES, setup_digest
 from .economy_port_setup import build_setup
 

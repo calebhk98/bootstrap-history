@@ -64,9 +64,11 @@ check("...then the home default", _from_default == os.path.join(os.path.expandus
 
 # --- the in-game options menu, on a stand-in game and scripted answers
 def options_game(immortal=True):
-    return types.SimpleNamespace(
+    game = types.SimpleNamespace(
         cfg={"start_year": 100, "horizon_years": 500, "immortal": immortal}, civ={"id": "rome_100ad", "name": "Rome"},
         fog=False, fuzzy_estimates=False, year=130, end_year=600, rng=random.Random(1), life_left=None, founder_alive=True)
+    game.send = lambda command: setattr(game, "life_left", command.years)   # the seats module's SetFounderLife
+    return game
 
 
 def run_options(game, session, *answers):

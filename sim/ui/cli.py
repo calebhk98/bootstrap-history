@@ -53,6 +53,7 @@ from .founder_budget import founder_budget, path_is_feasible_alone
 # imports its own copies of what it needs straight from .protocol.
 from .protocol import civ_of_save, goal_of_save
 from sim.constants import declare
+from sim.seats.api import SetFounderLife
 from sim.game_version import GAME_VERSION
 
 
@@ -1198,7 +1199,7 @@ def _run_sweep_point(nodes, order, bounties, goal, args, cfg, life):
         sim = Sim(nodes, order, random.Random(args.seed + i), events=True, cfg=cfg,
                   bounty_set=bounties)
         if life is not None:
-            sim.life_left = float(life)
+            sim.send(SetFounderLife(float(life)))
         res.append(sim.run(goal, args.horizon))
     return res
 

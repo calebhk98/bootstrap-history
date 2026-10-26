@@ -6,7 +6,9 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import prices, shipped_rate_bands
+from sim.prices import prices
+
+from sim.engine import shipped_rate_bands
 from sim.world import capital_market
 
 

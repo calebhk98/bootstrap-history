@@ -74,7 +74,8 @@ class Offer(ProjectProgressPhaseMixin):
     def __init__(self, directive):
         self.state = types.SimpleNamespace(
             household=types.SimpleNamespace(hour_allocations={"b": directive} if directive else {}),
-            founder=types.SimpleNamespace(director_hours_spent_founder=0.0, founder_alive=True))
+            founder=types.SimpleNamespace(director_hours_spent_founder=0.0))
+        self.founder_alive = True
 
     def project_hour_pace(self, node_id):
         return 3000.0

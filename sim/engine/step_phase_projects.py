@@ -176,7 +176,7 @@ class ProjectProgressPhaseMixin:
         # never did.
         spent_hours = min(per, project_state["ph_left"])
         project_state["ph_left"] = max(0.0, project_state["ph_left"] - per)
-        self.state.founder.director_hours_spent_founder += per if self.state.founder.founder_alive else 0
+        self.state.founder.director_hours_spent_founder += per if self.founder_alive else 0
         # Hours OFFERED this year vs hours that actually did anything.
         # `refunded` tracks the difference: hours credited back to
         # ph_left below because a trade or the money to pay for it

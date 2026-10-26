@@ -1,7 +1,7 @@
 """Ricardian rent: why a scarce deposit is not priced at its own digging cost.
 
 WHAT THIS IS FOR. Complaints/32 measured the actual defect in this project's
-price solver: `sim/engine/solve_prices.py` fixes rent on every extracted material at
+price solver: `sim/prices/solve_prices.py` fixes rent on every extracted material at
 zero (`RENT_IS_ZERO`), so a computed price is exactly the labour embodied in
 the good, valued at relative wages, with no claim on it from scarcity at all.
 Cinnabar comes out at 0.035 labour-hours/kg - two minutes of digging -
@@ -32,7 +32,7 @@ because it is the only quantity this project already has for these metals.
 STANDALONE ON PURPOSE, LIKE ITS SIBLINGS. Nothing here imports sim/engine/
 or any other sim/world/ module - see sim/world/__init__.py for why a module
 built this way survives other agents editing sim/engine/economy.py and
-sim/engine/solve_prices.py concurrently with this
+sim/prices/solve_prices.py concurrently with this
 file's construction. It reads two data files that already exist
 (the map folder (data/world/geography/), data/world/resources.json) and one new one this
 task adds (the geography deposit catalogue), as plain JSON - that is data, not an

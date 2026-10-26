@@ -12,7 +12,7 @@ from sim.diffusion import disclosure
 from sim.diffusion.adoption_share import held_share
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionSeat
-from sim.engine.visibility import base_visibility
+from sim.seats.api import base_visibility
 from sim.tests import module_harness
 
 SECRET_EXPOSURE = 0.2

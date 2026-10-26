@@ -1,1 +1,1 @@
-"""Seats: who plays, and the founder's life. Only its commands exist here until the module moves."""
+"""The seats module: who plays, what a seat does as a player (joining, handing over, goals, dealings, sight)."""

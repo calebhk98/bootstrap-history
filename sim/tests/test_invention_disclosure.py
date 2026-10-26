@@ -11,7 +11,7 @@ from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionSeat
 from sim.polity.state import PolitySeat
 from sim.tests import polity_host
-from sim.engine.visibility import years_to_be_believed
+from sim.seats.api import years_to_be_believed
 from sim.polity.api import GainReputation
 from sim.tests import module_harness
 

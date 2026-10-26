@@ -60,7 +60,7 @@ from sim import simulator as S
 # use PLANNER, and test_literacy_market_pricing.py and
 # test_commodities_wired_in.py use COMMOD, bare and without their own import.
 from sim.engine import planner as PLANNER
-from sim.engine import commodities as COMMOD
+from sim.prices import commodities as COMMOD
 
 TREE, PRICES, NODES, WAGES, GOODS = S.load()
 GOAL = TREE["meta"]["goal_node"]

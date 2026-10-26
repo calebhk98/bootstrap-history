@@ -10,14 +10,13 @@ from .harness import check
 
 from sim.agents import licence
 from sim.agents.api import Household, HouseholdParty, OBSERVATION_RANGE_KM, PLAYER_VISIBLE_EXPOSURE, SECRET_EXPOSURE
-from sim.engine import seat_builds
+from sim.seats import api as seat_builds
 from sim.knowledge.rules import earliest_done_year as _earliest
 from sim.engine.agents_port import SimWorld
 from sim.engine.agents_port_household import HouseholdPort
-from sim.engine.seat_sight import nodes_heard_of
 from sim.engine.state import FounderState, HouseholdState, ProjectsState
 from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
-from sim.engine.visibility import base_visibility, most_open_mode, seen_from
+from sim.seats.api import SeatsSeat, base_visibility, most_open_mode, nodes_heard_of, seen_from
 
 
 def earliest_done_year(seats, node_id, default):
@@ -140,8 +139,8 @@ def act_as(seat_id):
     return switch()
 
 
-maker = HouseholdParty(state_facade, seat_id=FIRST_SEAT_ID, act_as=act_as)
-buyer = HouseholdParty(state_facade, seat_id="second", act_as=act_as)
+maker = HouseholdParty(state_facade, seat_id=FIRST_SEAT_ID, act_as=act_as, dealings=SeatsSeat())
+buyer = HouseholdParty(state_facade, seat_id="second", act_as=act_as, dealings=SeatsSeat())
 
 
 class LicenceWorld:

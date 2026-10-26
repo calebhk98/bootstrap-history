@@ -79,7 +79,7 @@ class PricePressure(unittest.TestCase):
 
 
 # --- COMMODITY FRAMEWORK (data/world/COMMODITIES.md,
-# sim/engine/commodities.py). Standalone from Sim, so these checks
+# sim/prices/commodities.py). Standalone from Sim, so these checks
 # build a CommodityLedger directly off commodities.json and the tech tree's
 # NODES rather than going through `sim()`/`proto()`. See the design doc for
 # what each claim below is meant to prove and why.

@@ -86,16 +86,13 @@ mines = deserialize_state({
 	"mine_tranches": [["iron", 3, 2.5], ["tin", 1, 0.5]], "deposit_drawn": {"d1": 12}}, ResourcesSeat)
 materials = deserialize_state({"shortages": {"charcoal": "3"}}, MaterialsSeat)
 holdings = deserialize_state({
-	"patents": {"loom": {"granted": 1, "expires": 20, "licensees": ["firm:2"]}}, "shares_held": {"guild": 0.1},
-	"offers": [{"id": "x#1", "expires": 9}], "offer_serial": 1, "_material_stock_ledger": {"iron": 4.0}}, HoldingsState)
+	"_material_stock_ledger": {"iron": 4.0}}, HoldingsState)
 check("deserialize_state: mine stock keeps its entries and order, None inside", mines.mines == [{"id": "m1", "ore": "iron", "capex": 500.0, "open": None}]
       and mines.mine_pending == {"m2": 2.0} and mines.mine_ready == {"m1": 104}, None)
 check("deserialize_state: mine tranches are the saved lists, in order", mines.mine_tranches == [["iron", 3, 2.5], ["tin", 1, 0.5]], mines.mine_tranches)
 check("deserialize_state: tranches the save holds as None stay None", deserialize_state({"mine_tranches": None}, ResourcesSeat).mine_tranches is None)
 check("deserialize_state: shortages are a counter of integers", type(materials.shortages) is collections.Counter and materials.shortages == {"charcoal": 3}, materials.shortages)
-check("deserialize_state: patents, shares, offers and underscore-led fields",
-      holdings.patents == {"loom": {"granted": 1, "expires": 20, "licensees": ["firm:2"]}} and holdings.shares_held == {"guild": 0.1}
-      and holdings.offers == [{"id": "x#1", "expires": 9}] and holdings.offer_serial == 1 and holdings._material_stock_ledger == {"iron": 4.0}, None)
+check("deserialize_state: underscore-led fields", holdings._material_stock_ledger == {"iron": 4.0}, None)
 check("deserialize_state: a holdings blob with nothing in it is the defaults", deserialize_state({}, HoldingsState) == HoldingsState())
 
 # ---- the economy's stored record, tile-keyed stores
@@ -134,14 +131,14 @@ check("deserialize_state: a coded refusal is a Refusal with its code, choices an
 
 # ---- the root: seats in saved order, the acting seat's aliases, metadata
 state = deserialize_state({
-	"seats": {"zed": {"household": {"capital": 10.0}, "projects": {"done": {"__set__": ["fire"]}}, "founder": {"life_left": 30.0},
+	"seats": {"zed": {"household": {"capital": 10.0}, "projects": {"done": {"__set__": ["fire"]}}, "founder": {"living_cost_paid": 30.0},
 	                  "holdings": {"farm_stock_kg": 3.0}, "goal": "steam_engine", "country": "han", "kind": "household", "holder": None},
 	          "abe": {"household": {"capital": 4.0}, "projects": {}, "founder": None, "goal": None}},
 	"acting_seat": "abe", "economy": {}, "scenario": {"year": 115}, "_civ": "rome", "_rng": [3, [0, 1], None], "_seed": "seed text",
 	"stores": {"granary": {"t1|rome": 4.0}}, "interface": {"panel": "map"}}, SimulationState)
 check("deserialize_state: seats come back in the saved order and as seats",
       list(state.seats) == ["zed", "abe"] and state.seats["zed"].goal == "steam_engine" and state.seats["zed"].country == "han"
-      and state.seats["zed"].projects.done == {"fire"} and state.seats["zed"].founder.life_left == 30.0
+      and state.seats["zed"].projects.done == {"fire"} and state.seats["zed"].founder.living_cost_paid == 30.0
       and state.seats["zed"].holdings.farm_stock_kg == 3.0 and state.seats["abe"].founder is None, None)
 check("deserialize_state: the acting seat's objects are the root's household, projects and holdings",
       state.acting_seat == "abe" and state.household is state.seats["abe"].household and state.projects is state.seats["abe"].projects

@@ -58,7 +58,7 @@ class StaffingShortfallMixin:
         keeps a running concern from being shut.
         """
         household = self.state.household
-        own = self.FOUNDER_IS_WORTH if self.state.founder.founder_alive else 0.0
+        own = self.FOUNDER_IS_WORTH if self.founder_alive else 0.0
         return staffing_allowances(trades, self.labour.effective_scholars(), household.artisans + own,
                                    household.employees, self.STAFFING_CLOSURE_SLACK, strict)
 

@@ -2,7 +2,8 @@
 the simulation keeps its `Labour`."""
 from sim.agents.api import edges, tax_burden
 from sim.labour.api import Labour
-from . import data, director_overhead, purchase_rule, solve_prices_core, units_prose, wage_schedule
+from sim.prices.api import solve_prices_core
+from . import data, director_overhead, purchase_rule, units_prose, wage_schedule
 
 
 class LabourWorld:
@@ -25,6 +26,10 @@ class LabourWorld:
     def reputation(self):
         """The acting seat's reputation."""
         return self._sim.view("standing")()["reputation"]
+    @property
+    def founder_alive(self):
+        """Whether the acting seat's founder lives."""
+        return self._sim.founder_alive
 
     def logged_events(self):
         """How many lines the acting seat's log holds now."""

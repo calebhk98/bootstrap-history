@@ -24,7 +24,7 @@ class LeverGame:
     """What the lever commands read: the acting seat, the country's government and its people, the goods and techniques."""
 
     def __init__(self, acting_kind=COUNTRY_SEAT, governed=True):
-        seat = seat_from_template({"kind": acting_kind, "country": None}, 10.0, 1e9, {})
+        seat = seat_from_template({"kind": acting_kind, "country": None}, 10.0, {})
         self.state = types.SimpleNamespace(seats={"senate": seat}, acting_seat="senate")
         self.civ = {"id": HOME}
         self.population = types.SimpleNamespace(total=1234.0)

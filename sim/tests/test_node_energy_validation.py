@@ -2,7 +2,9 @@
 The rules on hand-written bands are test_energy_prices_rules."""
 import unittest
 
-from sim.engine import data, energy_prices, node_output
+from sim.prices import energy_prices
+
+from sim.engine import data, node_output
 from sim.labour.labour_market import production_data
 
 

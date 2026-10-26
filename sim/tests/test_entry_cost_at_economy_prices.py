@@ -1,14 +1,14 @@
 """Complaints/507 stage 5: what an entry costs a producer is the calculator at the economy's prices, wages, rate and rent.
 A plant that exists offers at its running cost, a new one is judged at its full cost, and the cost moves with the economy's
 input prices and wages (not with the long-run table). `CostBook` is called with price and wage functions the test builds,
-and `ProducerCostsMixin.entry_cost_ratio` on a stub game; the cost book a game builds from the economy's prices is
+and the prices module's `entry_cost_ratio` on a stand-in; the cost book a game builds from the economy's prices is
 `test_economy_cost_book_wiring`."""
 QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import entry_cost
-from sim.engine.producer_costs import ProducerCostsMixin
+from sim.prices import entry_cost
+from sim.tests import prices_stand_in
 from sim.tests.test_capital_charge import works_entry
 
 RATE = 0.12
@@ -20,18 +20,9 @@ def book(ore_price=1.0, wage=1.0, rate=RATE, entry=None):
                                production={ENTRY: entry or works_entry()})
 
 
-class StubGame(ProducerCostsMixin):
+def stub_game(cost_book):
     """One good made by one entry, the incumbents' own."""
-
-    def __init__(self, cost_book):
-        self.cost_book = cost_book
-        self.memo = {}
-
-    def _cost_book(self):
-        return None, self.cost_book, self.memo
-
-    def _reference_entry(self, material):
-        return ENTRY
+    return prices_stand_in.build_over_book(cost_book, ENTRY)
 
 
 class CostAtEconomyPricesTests(unittest.TestCase):
@@ -61,11 +52,11 @@ class CostAtEconomyPricesTests(unittest.TestCase):
 
 class EntryCostRatioTests(unittest.TestCase):
     def test_the_incumbents_own_entry_costs_the_same_as_itself(self):
-        self.assertAlmostEqual(StubGame(book()).entry_cost_ratio(ENTRY, ENTRY), 1.0)
+        self.assertAlmostEqual(stub_game(book()).entry_cost_ratio(ENTRY, ENTRY), 1.0)
 
     def test_its_running_ratio_is_the_running_cost_over_the_full_cost(self):
         cost_book = book()
-        ratio = StubGame(cost_book).entry_cost_ratio(ENTRY, ENTRY, running=True)
+        ratio = stub_game(cost_book).entry_cost_ratio(ENTRY, ENTRY, running=True)
         self.assertLess(ratio, 1.0)
         self.assertAlmostEqual(ratio, cost_book.running_unit_cost(ENTRY, ENTRY) / cost_book.unit_cost(ENTRY, ENTRY))
 

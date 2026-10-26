@@ -3,8 +3,8 @@
 A technology that is held (researched, copied) but run by no producer changes no cost and no supply, so it
 changes no price. The set is the techniques the society started with, the nodes the founder operates, and
 the nodes any firm's concerns run. It decides which entries a concern may run (concern_volume.py) and the
-baseline for a good no incumbent makes (incumbent_prices.py); it does not set a price: each producer offers at
-the cost of its own entry (producer_costs.py) and the market clears the offers.
+baseline for a good no incumbent makes (sim/prices/tables.py); it does not set a price: each producer offers at
+the cost of its own entry (sim/prices/cost_books.py) and the market clears the offers.
 
 A concern in the same line of business as a producer reaches the producer's technique only after the copying
 time (the diffusion module's `techniques_spread`), so a new technique shows first in its adopter's volume and later

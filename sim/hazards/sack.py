@@ -83,7 +83,7 @@ class Sack:
 		"""Name what a sack's corpus loss took, and what it does to the goal road. Makes no dice draws: `drop` is decided."""
 		corpus = [tech_id for tech_id in self.needs.mechanic["corpus"] if tech_id in drop]
 		on_road = 0
-		goal = self.needs.goal()
+		goal = self.needs.goal()["node"]
 		if goal and goal in self.needs.tree_nodes():
 			try:
 				if self._goal_closure is None:

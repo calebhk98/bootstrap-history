@@ -5,7 +5,7 @@ Consumers may still accept an explicit production mapping for small unit tests,
 but their default view must come from here.
 """
 import dataclasses
-from sim.engine import capital_builds
+from sim.world import capital_builds
 from dataclasses import dataclass
 import json
 import os

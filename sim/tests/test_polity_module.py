@@ -165,13 +165,6 @@ class Rules(unittest.TestCase):
         self.assertEqual(rules.legitimacy_share(-5.0, 0.5, 1.25), 0.5)
         self.assertEqual(rules.legitimacy_share(5.0, 0.5, 1.25), 1.25)
 
-    def test_a_patron_state_shares_a_partners_grant_among_the_seats_it_funds(self):
-        records = {"government:rome": SimpleNamespace(patron_grant=500.0), "government:han": SimpleNamespace(patron_grant=90.0)}
-        seats = {"a": SimpleNamespace(country=None), "b": SimpleNamespace(country="han")}
-        self.assertEqual(rules.patron_grant_share(records, seats, "a", "rome", lambda country: []), 500.0)
-        self.assertEqual(rules.patron_grant_share(records, seats, "b", "rome", lambda country: [("b", 0.0, 1.0), ("c", 0.0, 1.0)]), 45.0)
-        self.assertEqual(rules.patron_grant_share(records, seats, "b", "rome", lambda country: [("c", 0.0, 1.0)]), 0.0)
-
 
 if __name__ == "__main__":
     unittest.main()

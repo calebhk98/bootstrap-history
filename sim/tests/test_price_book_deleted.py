@@ -8,8 +8,9 @@ transitional), and nothing in the engine opens a price file.
 import os
 import unittest
 
-from sim.engine import data, disposal_cost, prices as engine_prices
+from sim.prices import disposal_cost, prices as engine_prices
 
+from sim.engine import data
 BASE_CIVS = ["rome_100ad", "mexica_1500"]
 
 

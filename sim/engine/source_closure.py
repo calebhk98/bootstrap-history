@@ -1,6 +1,9 @@
 """The source files a module can run: itself, its packages, and every sim module it imports,
 directly or through others, at the top or inside a function. Found by reading the syntax
-tree, so nothing is imported. Imports named by a runtime string are not seen."""
+tree, so nothing is imported. A module that imports others by a runtime string says which with
+a module-level `DISCOVERS` (a dotted pattern or a tuple of them, `*` for one name part), and
+those are followed too; other runtime imports are not seen."""
+import fnmatch
 import ast
 import hashlib
 import json
@@ -33,6 +36,32 @@ def _imported_names(path: str, package: str) -> List[str]:
                 base = node.module or ""
             # `from package import name` may name a submodule; a name that is not one is skipped.
             names += [base] + [base + "." + alias.name for alias in node.names]
+    return names
+
+
+def _discovered_names(path: str, root: str) -> List[str]:
+    """The modules a file's `DISCOVERS` patterns match under `root`."""
+    with open(path, encoding="utf-8") as handle:
+        tree = ast.parse(handle.read(), filename=path)
+    patterns: List[str] = []
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "DISCOVERS"
+                                                 for target in node.targets):
+            value = ast.literal_eval(node.value)
+            patterns += [value] if isinstance(value, str) else list(value)
+    names = []
+    for pattern in patterns:
+        parts = pattern.split(".")
+        directory_parts, last = parts[:-1], parts[-1]
+        directories = [root]
+        for part in directory_parts:
+            directories = [os.path.join(directory, entry) for directory in directories
+                           for entry in sorted(os.listdir(directory)) if fnmatch.fnmatchcase(entry, part)
+                           and os.path.isdir(os.path.join(directory, entry))]
+        for directory in directories:
+            for entry in sorted(os.listdir(directory)):
+                if entry.endswith(".py") and fnmatch.fnmatchcase(entry[:-3], last):
+                    names.append(".".join(os.path.relpath(os.path.join(directory, entry[:-3]), root).split(os.sep)))
     return names
 
 
@@ -90,4 +119,5 @@ def _closure(root: str, modules: Iterable[str], top_package: str) -> List[str]:
         pending += [".".join(parts[:count]) for count in range(1, len(parts))]
         package = module if path.endswith("__init__.py") else ".".join(parts[:-1])
         pending += _imported_names(path, package)
+        pending += _discovered_names(path, root)
     return sorted(path for path in found.values() if path)

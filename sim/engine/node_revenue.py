@@ -19,7 +19,8 @@ from sim.constants import declare
 
 from sim.world import plant_figures
 
-from . import energy_prices, node_capital, node_output, node_upkeep
+from sim.prices.api import energy_prices
+from . import node_capital, node_output, node_upkeep
 
 # fields `apply_revenue` sets on a node: what a civilisation's derivation replaces
 DERIVED_FIELDS = ("rev_hours", "up_hours", "_revenue_basis", "_upkeep_basis", "_output_per_year",
@@ -102,8 +103,7 @@ def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule
     """Copies of `nodes` with revenue and upkeep derived at this civilisation's prices and wages, in its
     coin, for the techniques held (default: its starting techniques). Cached on what the figures depend
     on: the civilisation, the gate technologies held, its wages and the nodes."""
-    from sim.engine import solve_prices
-    from . import prices as price_solver
+    from sim.prices.api import prices as price_solver, solve_prices
     civilization_id = civ["id"]
     held = list(civ["starting_techs"] if held_techs is None else held_techs)
     held_gates = frozenset(price_solver.all_gate_nodes()) & frozenset(held)

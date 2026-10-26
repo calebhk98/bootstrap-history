@@ -5,7 +5,9 @@ only the caching and wiring are called."""
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine import node_rederive, node_revenue, prices as price_solver, solve_prices
+from sim.prices import prices as price_solver, solve_prices
+
+from sim.engine import node_rederive, node_revenue
 from sim.engine.node_rederive import NodeRederiveMixin, held_gate_set
 
 from .harness import *  # noqa: F401,F403

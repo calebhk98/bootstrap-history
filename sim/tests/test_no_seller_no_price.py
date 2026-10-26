@@ -13,7 +13,7 @@ import unittest
 from unittest import mock
 
 from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
-from sim.engine import prices as engine_prices, solve_prices
+from sim.prices import prices as engine_prices, solve_prices
 from sim.engine.goods_market_offers import GoodsOffers, HOME_SELLER
 from sim.foreign_trade.constants import FOREIGN_OUTPUT_PER_POPULATION_SHARE
 from sim.foreign_trade.module import ForeignTrade

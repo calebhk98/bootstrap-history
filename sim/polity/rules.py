@@ -118,17 +118,3 @@ def concern_levy_due(takings_and_shares: Sequence) -> Dict[str, float]:
 SIZED_BY_DEBT = "debt"
 SIZED_BY_CLAIMS = "claims"
 
-
-def patron_grant_share(records, seats, acting_seat, home_country, clients_of):
-	"""What the acting seat is paid by its country's state: the home state's whole grant, or a partner state's grant shared
-	among the seats `clients_of(country)` lists; nothing when the acting seat is not among them or the state has no record. A
-	seat missing from `seats` is the home country's."""
-	seat = seats.get(acting_seat)
-	country = (None if seat is None else seat.country) or home_country
-	record = records.get("government:" + country)
-	if record is None:
-		return 0.0
-	if country == home_country:
-		return record.patron_grant
-	clients = clients_of(country)
-	return record.patron_grant / len(clients) if any(seat_id == acting_seat for seat_id, _gov, _rep in clients) else 0.0

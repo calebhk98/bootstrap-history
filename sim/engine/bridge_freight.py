@@ -42,17 +42,6 @@ def households_loanable_funds(sim):
     return sim.actors.state.purses.offers.get(EDGE_SAVERS, 0.0)
 
 
-@bridge_view("material_prices")
-def material_prices(sim):
-    """The price table: the same object while the prices are unchanged."""
-    return sim._material_prices()
-
-
-@bridge_view("material_price", kind=KEYED)
-def material_price(sim, tag):
-    """Money per kg of a material key or curated commodity; None if it cannot be priced."""
-    return sim._material_price_per_kg(tag)
-
 
 # ---- land and markets ----
 

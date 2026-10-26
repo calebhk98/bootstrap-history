@@ -2,9 +2,9 @@
 
 Each commodity has a book entry: the society's producing capacity, stock held
 over, and the capacity it started with. The year's posted price ratio (spot
-price over the incumbents' cost, incumbent_prices.py) comes from `sim/world/market.py`,
+price over the incumbents' cost, sim/prices/tables.py) comes from `sim/world/market.py`,
 clearing that capacity, the stock, the producers' offers (each at its own cost, from
-the entry it runs; producer_costs.py) and the actors' output against household demand
+the entry it runs; sim/prices/cost_books.py) and the actors' output against household demand
 (population and income, see market_demand.py). Quotes and purchase bills
 multiply the incumbents' price by this ratio.
 

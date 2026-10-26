@@ -50,12 +50,6 @@ def home_unit_price(sim, material):
     return sim.goods_market.home_unit_price(material)
 
 
-@bridge_view("commodity_record", kind=KEYED)
-def commodity_record(sim, commodity):
-    """The curated commodity's record (its material keys, its price ceiling factor), or an empty one."""
-    return sim._commodity_ledger().commodities.get(commodity) or {}
-
-
 @bridge_view("market_floor_ratio", kind=KEYED)
 def market_floor_ratio(sim, commodity):
     """The lowest price over the incumbents' cost their producers sell a commodity at."""

@@ -95,7 +95,6 @@ class ProductionMixin:
         projects = self.state.projects
         household = self.state.household
         standing = self.view("standing")()
-        founder = self.state.founder
         key = (
             scenario.year,
             self.pop_scale,
@@ -115,7 +114,7 @@ class ProductionMixin:
             standing["governance"] or 0.0,
             self.output_factor,
             standing["reputation"],
-            founder.founder_alive,
+            self.founder_alive,
             self.state_funding(),
             self.home_price_level(),
         )

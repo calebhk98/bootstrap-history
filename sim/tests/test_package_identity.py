@@ -16,7 +16,7 @@ from sim.engine.data import ROOT
 QUICK_TOPIC = True
 
 BARE_NAMES = ("constants", "engine", "world", "simulator", "data")
-ENTRY_POINTS = ("sim.simulator", "sim.engine.validate_production", "sim.engine.solve_prices", "sim.tests.fingerprint")
+ENTRY_POINTS = ("sim.simulator", "sim.engine.validate_production", "sim.prices.solve_prices", "sim.tests.fingerprint")
 CANONICAL = ("sim.constants", "sim.engine.core", "sim.world.demography", "sim.engine.saveload")
 
 

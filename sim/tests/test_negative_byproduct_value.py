@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import math
 import unittest
 
-from sim.engine import disposal_cost, joint_allocation, solve_prices, solve_prices_core
+from sim.prices import disposal_cost, joint_allocation, solve_prices, solve_prices_core
 from sim.world import demand
 
 OUTPUTS = {"tar_kg": 1000.0, "charcoal_kg": 2500.0}
@@ -128,7 +128,7 @@ class MaterialDisposalCostTests(unittest.TestCase):
         self.assertGreater(self.cost("tar_kg", minimum_dump_distance_kilometres=free * 5.0), self.cost("tar_kg"))
 
     def test_a_civilisations_rule_is_read_from_its_record_and_defaults_to_none(self):
-        from sim.engine import prices as price_engine
+        from sim.prices import prices as price_engine
         self.assertEqual(price_engine.waste_dump_minimum_distance({"id": "anywhere"}), 0.0)
         self.assertEqual(price_engine.waste_dump_minimum_distance(None), 0.0)
         record = {"id": "anywhere", "waste_dump_minimum_distance_kilometres": 7.5}

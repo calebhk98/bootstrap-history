@@ -31,7 +31,7 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
     coin: one unit is `kg_per_unit` of the coin material, worth its solved
     labour hours, so a labour hour is the reciprocal of that in money.
     """
-    from sim.engine import prices as price_solver
+    from sim.prices.api import prices as price_solver
     standard = wage_provider.coin_standard(civ)
     civilisation_id = civ.get("id")
     opening = wages.WageSchedule(

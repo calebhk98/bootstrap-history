@@ -7,7 +7,6 @@ from sim.assembly.api import KEYED, QUOTE
 from sim.demography.api import CutPopulation, KillPeople, RefreshDemographicIndexes
 from sim.projects.api import ResetProjectProgress, ShutForgotten
 from sim.reporting.api import RecordEvent
-from sim.seats.api import FounderDies
 from sim.workforce.api import NoteWageShock, ReportStaffReduction, ScaleDeputies, SurviveStaff, rules as workforce_rules
 
 from . import cause_book, event_causes, mod_effects
@@ -39,26 +38,6 @@ def legacy_said_once(sim):
 def effective_hazard(sim, hazard):
     """(the dated event as its stated causes leave it now, or None; the report of which causes hold)."""
     return event_causes.effective_hazard(sim, hazard)
-
-
-# ---- seats ----------------------------------------------------------------------------------------------------------
-
-@bridge_view("ended_seats")
-def ended_seats(sim):
-    return sim.ended_seats()
-
-
-@bridge_view("founder", seat_scoped=True)
-def founder(sim):
-    """The acting seat's founder: alive, years left, cause of death and the standing policy (the object itself)."""
-    held = sim.state.founder
-    return {"alive": held.founder_alive, "life_left": held.life_left, "dead_reason": held.dead_reason, "policy": held.policy}
-
-
-@bridge_view("goal", seat_scoped=True)
-def goal(sim):
-    """The acting seat's goal node id, or None."""
-    return sim.goal
 
 
 # ---- knowledge and the tree -----------------------------------------------------------------------------------------
@@ -183,7 +162,3 @@ def reset_project_progress(sim, command):
         projects.active[node_id]["yrs"] = 0.0
 
 
-@bridge_command(FounderDies)
-def founder_dies(sim, command):
-    sim.state.founder.dead_reason = command.reason
-    sim.send(RecordEvent.of("run_ends", "RUN ENDS: " + command.reason))

@@ -172,7 +172,7 @@ class RentReadsTheFarmedAreaTests(unittest.TestCase):
         self.assertAlmostEqual(sum(a.arable_hectares_supplied for a in large.allocations), total * 0.6, delta=total * 0.01)
 
     def test_nearby_areas_share_one_solve(self):
-        from sim.engine import prices
+        from sim.prices import prices
         self.assertEqual(prices.band_farmed_hectares(1000.0), prices.band_farmed_hectares(1001.0))
         self.assertNotEqual(prices.band_farmed_hectares(1000.0), prices.band_farmed_hectares(2000.0))
 

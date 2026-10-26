@@ -3,8 +3,9 @@
 Needs: running_mechanics, real_output_per_head, state_reach, pop_scale, rep_factor, money_per_labour_hour, civilisation,
 seat_list, legacy_act_as, legacy_seats, legacy_actors_state, acting_seat."""
 from sim.agents.api import patronage
+from sim.seats.api import patron_grant_share
 
-from . import constants, rules
+from . import constants
 
 
 class Patronage:
@@ -39,5 +40,5 @@ class Patronage:
 		state = self.needs.legacy_actors_state()
 		if state is None:
 			return 0.0
-		return rules.patron_grant_share(state.records, self.needs.legacy_seats(), self.needs.acting_seat(),
+		return patron_grant_share(state.records, self.needs.legacy_seats(), self.needs.acting_seat(),
 		                                str(self.needs.civilisation().get("id")), self.patron_clients)

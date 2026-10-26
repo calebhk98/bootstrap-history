@@ -3,9 +3,9 @@ starting guess. Everything the solve calls resolvable has a chosen technique."""
 
 import unittest
 
-from sim.engine import solve_prices
-from sim.engine import prices as price_engine
-from sim.engine.solve_prices_reach import solve_priced_materials
+from sim.prices import solve_prices
+from sim.prices import prices as price_engine
+from sim.prices.solve_prices_reach import solve_priced_materials
 
 QUICK_TOPIC = True
 

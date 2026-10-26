@@ -4,7 +4,7 @@ The screens, the fog, the epidemic step and the state's demands still say `sim.h
 `sim.lose_capital(fraction)`; each line goes when its last caller reads the view or sends the command itself."""
 from sim.agents.api import ledger
 from sim.hazards.api import LoseCapital, capital_lost, constants, rules
-from sim.seats.api import FounderDies
+from sim.seats.api import EndRun
 from sim.workforce.api import SurviveStaff, rules as workforce_rules
 
 
@@ -85,4 +85,4 @@ class HazardsForwardsMixin:
         return workforce_rules.surviving_people(self.rng, headcount, survival_share)
 
     def _catastrophe(self, why):
-        return self.send(FounderDies(why))
+        return self.send(EndRun(why))

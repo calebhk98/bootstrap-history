@@ -44,7 +44,7 @@ def _test_automatic_field_persistence():
 	econ = EconomyState()
 	holdings = HoldingsState(farm_stock_kg=120.0)
 	gov = GovernanceState()
-	founder = FounderState(founder_alive=True, life_left=28.0)
+	founder = FounderState(living_cost_paid=28.0)
 	scenario = ScenarioState(year=115)
 	pop = PopulationState(pop_children=20e6, pop_working_age=35e6, pop_elderly=10e6)
 

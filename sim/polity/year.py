@@ -5,13 +5,13 @@ The engine's `_step_reputation` runs `renew_standing` first, then the hours and 
 `close_standing_year`, so the order of the old single step is kept.
 
 Needs: standing_floor, techniques_held, tree_nodes, legacy_value_weights, year, danger_lines, legacy_constant, acting_balance,
-founder, automation, events_enabled, legacy_dice, patrons_lost_to_eminence, money_text, send (PayEdge, ForgetTechnique, FounderDies,
+founder, automation, events_enabled, legacy_dice, patrons_lost_to_eminence, money_text, send (PayEdge, ForgetTechnique, EndRun,
 RecordEvent)."""
 from sim.agents.api import edges
 from sim.knowledge.api import ForgetTechnique
 from sim.ledger.api import PayEdge
 from sim.reporting.api import RecordEvent
-from sim.seats.api import FounderDies
+from sim.seats.api import EndRun
 from sim.unit_conversions import PERCENT_SCALE
 
 from . import constants, eminence_warning, rules
@@ -93,7 +93,7 @@ class Year:
 		if needs.events_enabled() and seat.scandal > needs.danger_lines()["suspicion"]:
 			probability = (seat.scandal - needs.danger_lines()["suspicion"]) / constant["SCANDAL_HAZARD_SCALE"]
 			if needs.legacy_dice().random() < probability:
-				needs.send(FounderDies("denounced: %s" % ("as a sorcerer" if weights["w_magic_fear"] > 0.5 else "as a subversive")))
+				needs.send(EndRun("denounced: %s" % ("as a sorcerer" if weights["w_magic_fear"] > 0.5 else "as a subversive")))
 
 	def roll_eminence(self, constant):
 		"""The eminence hazard is separate and unbribable. Its usual outcome is a bad year rather than a death: a confiscation,
@@ -130,4 +130,4 @@ class Year:
 			seat.eminence *= constant["EMINENCE_PATRON_LOSS_RETENTION"]
 			seat.reputation = max(0.0, seat.reputation - constant["EMINENCE_PATRON_LOSS_REPUTATION_LOSS"])
 		else:
-			needs.send(FounderDies("too eminent: brought down not for what you built but for how large you had become"))
+			needs.send(EndRun("too eminent: brought down not for what you built but for how large you had become"))

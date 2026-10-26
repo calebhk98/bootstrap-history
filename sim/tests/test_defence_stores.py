@@ -314,7 +314,7 @@ class _Staffed(VenturesMixin, OpenGateMixin, StaffingShortfallMixin, _Host):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.state.household.artisans = 100.0
-        self.state.founder = SimpleNamespace(founder_alive=False)
+        self.founder_alive = False
         self.state.projects.keep_staffed = set()
 
     def venture_hands(self, node_id):

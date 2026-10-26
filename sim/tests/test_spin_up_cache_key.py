@@ -12,8 +12,9 @@ import tempfile
 import unittest
 from typing import Any, Dict
 
-from sim.engine import economy_port_key, solve_cache, source_closure
+from sim.prices import solve_cache
 
+from sim.engine import economy_port_key, source_closure
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
