@@ -27,7 +27,7 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 |---|---|---|---|---|---|---|
 | 1 | [`actors`](actors.md) | The cast of other actors: governments and firms, their records and registry, and the agents package's world adapters. | 3 | 2 | 11 | 5 |
 | 2 | [`agriculture`](agriculture.md) | Farming: farmland, farm weather, soil nitrogen, wild stock and food potential. | 5 | 2 | 22 | 4 |
-| 3 | [`campaigns`](campaigns.md) | Armies, campaigns, conquest, captives and revolts. | 3 | 5 | 46 | 0 |
+| 3 | [`campaigns`](campaigns.md) | Armies, campaigns, conquest, captives and revolts. Moved: 1 view, 4 commands, sends 14 (see the file). | 1 | 4 | 46 | 0 |
 | 4 | [`coin`](coin.md) | Coin as a metal: stock and price level, revaluation, hoarding, carriage and theft. | 5 | 3 | 29 | 11 |
 | 5 | [`demography`](demography.md) | Population: counts by age, by tile, urban share, food eaten, recovery after shocks. | 4 | 4 | 19 | 5 |
 | 6 | [`diffusion`](diffusion.md) | How knowledge spreads: literacy, schooling, diffusion indices, disclosure and licensing, tech effects on society. | 5 | 4 | 48 | 12 |
