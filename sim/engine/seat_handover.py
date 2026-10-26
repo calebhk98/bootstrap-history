@@ -18,6 +18,7 @@ from .seat_handover_empty import holds_that_would_be_lost
 from .seat_handover_rekey import rename_seat_references
 
 MOVED_FIELDS = ("household", "projects", "holdings", "governance", "seat_progress", "goal", "country", "kind", "holder")
+MOVED_MODULE_STATE = ("resources",)   # the module seat slots that hold what the seat holds (its workings, woodland and beds)
 
 
 def handover_refusal(seats: Mapping, from_id: str, to_id: str) -> Optional[Refusal]:
@@ -47,6 +48,9 @@ def move_seat_fields(seats: dict, from_id: str, to_id: str) -> dict:
 	source.projects.granted |= target.projects.granted
 	for name in MOVED_FIELDS:
 		setattr(target, name, getattr(source, name))
+	for module_id in MOVED_MODULE_STATE:
+		if module_id in source.modules:
+			target.modules[module_id] = source.modules[module_id]
 	del seats[from_id]
 	return {"from": from_id, "to": to_id, "known_nodes": len(target.projects.done), "country": target.country}
 

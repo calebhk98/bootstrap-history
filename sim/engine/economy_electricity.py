@@ -464,8 +464,8 @@ class ElectricityMixin:
         holdings = self.state.holdings
         scenario = self.state.scenario
         sig = (scenario.year, tuple(sorted(industrial.items())), tuple(sorted(lab.items())),
-               tuple(sorted(self.mine_capacity.items())), holdings.forest_ha,
-               holdings.nitre_bed_m2, tuple(sorted(stock.items())),
+               tuple(sorted(self.mine_capacity.items())), self.view("forest_hectares")(),
+               self.view("nitre_beds")()["square_metres"], tuple(sorted(stock.items())),
                elec_need, elec_have)
         if sig == getattr(self.household, "_stock_throttle_sig", None):
             holdings.throttle, holdings.binding = self.household._stock_throttle_cache

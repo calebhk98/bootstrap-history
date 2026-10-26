@@ -8,7 +8,7 @@ import json
 import os
 import unittest
 
-from sim.engine.economy_mining import MiningMixin
+from sim.tests import resources_stand_in
 from sim.world import deposits, mine_fire_setting, mine_technique, mine_works
 
 BRANCH_DIRECTORY = os.path.join(os.path.dirname(__file__), "..", "..", "data", "branches")
@@ -40,20 +40,11 @@ def _nodes():
     return nodes
 
 
-class _Host(MiningMixin):
-    """Just enough of Sim for the mixin's technique collection."""
-
-    def __init__(self, specs, running):
-        self._specs, self._running = specs, running
-
-    def _running_kept(self, name):
-        return self.__dict__.setdefault("_kept_" + name, {})
-
-    def _effect_terms(self, channel):
-        return sorted(self._specs.items()) if channel == "mine_works" else []
-
-    def running(self, node_id):
-        return node_id in self._running
+def _host(specs, running):
+    """The resources module with the specs of the mine_works channel and the running nodes written out."""
+    return resources_stand_in.build(views={
+        "effect_terms": lambda channel: sorted(specs.items()) if channel == "mine_works" else [],
+        "running": lambda node_id: node_id in running})
 
 
 class MineTechniques(unittest.TestCase):
@@ -61,7 +52,7 @@ class MineTechniques(unittest.TestCase):
     def test_only_running_techniques_reach_the_works(self):
         specs = {"screw": {"drainage_lift_efficiency": 0.45},
                  "adit": {"gravity_drained_head_share": 0.4}}
-        host = _Host(specs, running={"screw"})
+        host = _host(specs, running={"screw"})
         self.assertEqual(host.mine_works_effects(), {"drainage_lift_efficiency": 0.45})
 
     def test_a_technique_with_no_declared_effect_changes_nothing(self):

@@ -2,8 +2,8 @@
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.forest_ceiling import forest_ceiling_hectares
-from sim.engine.mine_ceiling import mine_ceiling_tonnes, room_under_ceiling
+from sim.resources.ceilings import forest_ceiling_hectares
+from sim.resources.ceilings import mine_ceiling_tonnes, room_under_ceiling
 
 FAVOUR = {"base": 1000.0, "state_scale": 4000.0}
 

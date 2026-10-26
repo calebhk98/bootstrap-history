@@ -14,11 +14,7 @@ COST_PER_TONNE_A_YEAR = 10.0   # the host's capex, at its price level of one
 
 class Budgeted(_Host):
     def __init__(self, budget):
-        super().__init__()
-        self.budget = budget
-
-    def spending_power(self, kind):
-        return self.budget
+        super().__init__(budget=budget)
 
 
 class OpenMineAffordability(unittest.TestCase):

@@ -8,6 +8,9 @@ import unittest
 from sim.engine import economy_port_timber
 from sim.geography import api as geography
 from sim.geography import forest_timber
+from sim.resources.api import FellTimber, RegrowTimber
+from sim.resources.state import ResourcesWorld
+from sim.tests import resources_stand_in
 from sim.world import demand
 
 FIREWOOD = "firewood_kg"
@@ -16,8 +19,11 @@ WORLD_MAP = geography.open_map()
 
 
 def _host(felled=None):
-    economy = types.SimpleNamespace(forest_felled=dict(felled or {}))
-    return types.SimpleNamespace(world_map=WORLD_MAP, state=types.SimpleNamespace(economy=economy))
+    """A game for the port's timber hooks: the resources module holds the felled ledger and applies the commands."""
+    module = resources_stand_in.build(world=ResourcesWorld(forest_felled=dict(felled or {})))
+    handlers = {FellTimber: module.fell_timber, RegrowTimber: module.regrow_timber}
+    return types.SimpleNamespace(world_map=WORLD_MAP, module=module, view=lambda name: module.timber_felled,
+                                 send=lambda command: handlers[type(command)](command))
 
 
 def _forest_tile():
@@ -87,9 +93,9 @@ class StockTests(unittest.TestCase):
         full = forest_timber.full_tonnes(WORLD_MAP, tile)
         runs = full / 4.0
         economy_port_timber.fell(host, {(FIREWOOD, tile): runs}, OUTPUTS)
-        self.assertAlmostEqual(host.state.economy.forest_felled[tile], runs)
+        self.assertAlmostEqual(host.module.world.forest_felled[tile], runs)
         economy_port_timber.regrow(host)
-        self.assertLess(host.state.economy.forest_felled[tile], runs)
+        self.assertLess(host.module.world.forest_felled[tile], runs)
 
     def test_the_haul_to_standing_wood_lengthens_as_more_is_cut(self):
         tile = _forest_tile()

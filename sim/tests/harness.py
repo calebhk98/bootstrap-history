@@ -220,15 +220,16 @@ def found_deposits_of(game, material):
     """Give the game the deposits of `material` that thorough prospecting of its held tiles would find, without
     paying for the search, so a test can open a mine (a mine names a deposit it has found)."""
     from sim.geography import api as _geography
-    resource_id = game.mine_resource_id(material)
+    resources = game.assembly.modules["resources"]
+    resource_id = resources.mine_resource_id(material)
     if resource_id is None:
         return []
     seed = "tests"
     held = _geography.tiles_held(game.civ, game.world_map)
     for tile in sorted(held, key=lambda tile: -_geography.endowment(tile, resource_id, game.world_map)["undiscovered_expected"]):
         found = _geography.prospect(tile, resource_id, 1e12, seed, game.world_map)
-        known = {row["id"] for row in game.state.holdings.deposits_found}
-        game.state.holdings.deposits_found.extend(dict(row) for row in found if row["id"] not in known)
+        known = {row["id"] for row in resources.seat.deposits_found}
+        resources.seat.deposits_found.extend(dict(row) for row in found if row["id"] not in known)
     return game.found_deposits(material)
 
 

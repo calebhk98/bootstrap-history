@@ -15,7 +15,7 @@ DEFAULT_MATERIAL_PAGE = 40
 def priceable_materials(sim):
     """Every material key the game can quote a price for, sorted."""
     keys = set(ui_port.material_prices(sim)) | set(ui_port.commodity_ledger(sim).commodities)
-    keys |= set(ui_port.material_stock(sim)) | set(sim.mine_capacity)
+    keys |= set(ui_port.material_stock(sim)) | set(sim.view("mine_capacity")())
     keys |= {pair[0] for pair in sim.MATERIAL_CHECKS.values()}
     return sorted(key for key in keys if sim.material_trade_quote(key) is not None)
 

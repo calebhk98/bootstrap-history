@@ -14,7 +14,7 @@ from sim.engine.economy_credit import CreditMixin
 from sim.mechanics.module import Mechanics
 from sim.tests import module_harness
 from sim.engine.project_materials import ProjectMaterialsMixin
-from sim.engine.shortage_sizing import nitre_bed_yearly_spend
+from sim.resources.sizing import nitre_bed_yearly_spend
 from sim.engine.society_adoption import AdoptionMixin
 from sim.labour.labour_bondage import BondageMixin
 from sim.labour.labour_capacity import CapacityMixin

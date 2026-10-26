@@ -812,7 +812,7 @@ def _summarise_shortages(results, run_count):
 
 
 def _summarise_misc_stats(results):
-    forest_hectares = sorted(run.forest_ha for run in results)
+    forest_hectares = sorted(run.view("forest_hectares")() for run in results)
     print("coppice woodland owned: median %.0f hectares" % forest_hectares[len(forest_hectares) // 2])
     reputations = sorted(run.reputation for run in results)
     print("final reputation    : median %.0f/100" % reputations[len(reputations) // 2])

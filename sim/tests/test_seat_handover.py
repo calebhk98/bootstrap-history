@@ -14,13 +14,15 @@ from sim.ui.proto import command_registry
 from sim.ui.proto.notes_store import add_note, all_notes, hand_over_notes
 from sim.ui.proto.seat_address import run_as_seat
 
+from sim.resources.state import ResourcesSeat
+
 from .seat_handover_fixture import Game
 
 
 def give(seat, techs, country, goal):
     seat.projects.done |= set(techs)
     seat.projects.granted |= set(techs)
-    seat.holdings.mines.append({"material": "iron_ore"})
+    seat.modules["resources"] = ResourcesSeat(mines=[{"material": "iron_ore"}])
     seat.holdings.patents["loom"] = {"owner": "x"}
     seat.holdings.shares_held["guild"] = 3.0
     seat.country, seat.goal = country, goal
@@ -39,7 +41,7 @@ moved = move_seat_fields(seats, "leaver", "heir")
 heir = seats["heir"]
 check("the replacement knows the same nodes", heir.projects.done == {"fire", "wheel"} and heir.projects.granted == {"fire", "wheel"}, heir.projects)
 check("the replacement holds the same workings, patents and shares",
-      heir.holdings is before.holdings and heir.holdings.mines == [{"material": "iron_ore"}]
+      heir.holdings is before.holdings and heir.modules["resources"].mines == [{"material": "iron_ore"}]
       and "loom" in heir.holdings.patents and heir.holdings.shares_held == {"guild": 3.0}, heir.holdings)
 check("the household, goal and country pass on", heir.household is before.household and heir.household.scholars == 2.0
       and heir.goal == "steam_engine" and heir.country == "han", None)
@@ -88,12 +90,12 @@ check("a seat the caller does not own is refused", refused["ok"] is False and re
       and "third" in game.state.seats, refused)
 refused = send(game, {"cmd": "handover"})
 check("no replacement named is refused", refused["ok"] is False and refused["cause"] == "no_replacement", refused)
-game.state.seats["heir"].holdings.mines.append({"material": "iron_ore"})
+game.state.seats["heir"].modules["resources"] = ResourcesSeat(mines=[{"material": "iron_ore"}])
 refused = send(game, {"cmd": "handover", "to": "heir"})
 check("a replacement with workings of its own is refused with what it holds and nothing changes",
       refused["ok"] is False and refused["cause"] == "replacement_not_empty" and refused["holds"] == ["holdings"]
       and "leaver" in game.state.seats, refused)
-game.state.seats["heir"].holdings.mines.clear()
+game.state.seats["heir"].modules["resources"].mines.clear()
 game.session_seat = "leaver"
 reply = send(game, {"cmd": "handover", "to": "heir"})
 check("a handover answers with what moved", reply["ok"] is True and reply["from"] == "leaver" and reply["to"] == "heir"

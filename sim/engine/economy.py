@@ -5,7 +5,6 @@ file of their own.
 """
 import math
 from sim.constants import declare
-from . import money_units
 
 from .quote_figures import cost_if_started_now
 from .economy_goods import GoodsMixin
@@ -13,7 +12,6 @@ from .economy_materials import MaterialSupplyMixin
 from .material_reach import MaterialReachMixin
 from .economy_electricity import ElectricityMixin
 from .economy_freight import FreightMixin
-from .economy_mining import MiningMixin
 from .economy_credit import CreditMixin
 from .economy_debt_service import DebtServiceMixin
 from .economy_household_bill import HouseholdBillMixin
@@ -79,11 +77,11 @@ REPUTATION_EASE_SCALE = declare(
 
 
 class EconomyMixin(GoodsMixin, MaterialSupplyMixin, MaterialReachMixin, ElectricityMixin, FreightMixin,
-                    MiningMixin, CreditMixin, HouseholdBillMixin, DebtServiceMixin, CapitalMarketMixin, InterestMixin, MarketAbsorptionMixin, ProjectCostTailMixin, ProductionMixin, ProjectMaterialsMixin, ViewShareMixin):
+                    CreditMixin, HouseholdBillMixin, DebtServiceMixin, CapitalMarketMixin, InterestMixin, MarketAbsorptionMixin, ProjectCostTailMixin, ProductionMixin, ProjectMaterialsMixin, ViewShareMixin):
     """Composition point for the economy sub-mixins, plus what is left over.
 
     EconomyMixin's methods are grouped by subject across sibling modules
-    (ore and land in economy_mining.py, debt and affordability in
+    (ore and land in sim/resources/, debt and affordability in
     economy_credit.py, revenue and workshops in economy_production.py,
     goods-producing concerns in economy_goods.py, raw material supply in
     economy_materials.py, electricity as a physical quantity in
@@ -122,7 +120,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, MaterialReachMixin, Electric
     sub-mixin reads through self
     (done_in_order/_done_changed/_operating_changed/_reset_operating,
     alongside _InvalidatingSet above, which the last two use), and a
-    handful of constants (FOREST_COST_PER_HA)
+    handful of constants
     that are genuinely read from more than one sub-mixin, so moving any
     one of them into a single sub-mixin would leave the others reaching
     across module boundaries for a constant that isn't theirs - they
@@ -302,14 +300,3 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, MaterialReachMixin, Electric
             seq = self.household._done_seq = [node_id for node_id in self.nodes if node_id in self.state.projects.done]
         return seq
 
-    # Named so that `quote forest` and the
-    # purchase itself cannot drift apart: a player must be able to ask the
-    # price of coppice before spending capital on it, not only after.
-    FOREST_LABOUR_HOURS_PER_HA = declare(
-        "FOREST_LABOUR_HOURS_PER_HA", 5000.0, kind="temporary_heuristic",
-        unit="labour hours per hectare", source=None, confidence="D",
-        why="Purchase price of a hectare of coppice woodland. No attested "
-            "attested land-price figure backs this; it exists mainly so "
-            "`quote forest` and the purchase itself agree on a real price "
-            "at all, per the comment above.")
-    FOREST_COST_PER_HA = money_units.PricedInLabourHours("FOREST_LABOUR_HOURS_PER_HA")

@@ -24,7 +24,7 @@ class Host:
     def __init__(self, rows):
         self.rows, self.drawn = rows, []
         self.world_map = WORLD_MAP
-        self.state = types.SimpleNamespace(economy=types.SimpleNamespace(forest_felled={}))
+        self.state = types.SimpleNamespace(economy=types.SimpleNamespace())
 
     def found_deposits(self, resource_id):
         return list(self.rows) if resource_id == "iron" else []
@@ -34,6 +34,12 @@ class Host:
 
     def draw_deposit(self, deposit_id, tonnes):
         self.drawn.append((deposit_id, tonnes))
+
+    def send(self, command):   # the felled-timber commands: no recipe here fells wood
+        return None
+
+    def view(self, name):
+        return lambda: {}
 
 
 class SiteLimitTests(unittest.TestCase):
