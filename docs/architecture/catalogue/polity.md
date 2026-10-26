@@ -56,7 +56,7 @@ sim.polity import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publishes),
 - **Pure rules moved in** (`git mv`): `eminence_rules`, `state_notice_rules`, `eminence_warning`, `military_rules` (`leverage_of`),
   `value_weight`, `state_demand` (now the claims registry and `describe_stance`); `legitimacy_share` moved from `public_works_rules.py`
   into `rules.py`, with the new rules (alarm, protection, visible scale, familiarity, the scandal warning band, transfer size, the
-  levy sum, the patron's grant share).
+  levy sum). The patron's grant share is the seats' (`sim.seats.api.patron_grant_share`).
 
 ## Mixin classes and files absorbed
 
