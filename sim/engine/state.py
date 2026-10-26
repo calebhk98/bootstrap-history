@@ -449,6 +449,8 @@ class SimulationState:
 	_game_version: Optional[str] = None  # which build wrote the save; shown to people, never checked on load
 	# declared store -> {tile, actor or "actor|actor" key: value differing from the default} (mod_stores.py)
 	stores: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+	modules: Dict[str, Any] = field(default_factory=dict)          # module id -> its world state (sim/assembly slots)
+	assembly_record: Dict[str, Any] = field(default_factory=dict)  # which modules, layers and mods wrote this game
 	interface: Dict[str, Any] = field(default_factory=dict)  # the UI's own memory; the engine never reads it
 
 	def __post_init__(self) -> None:

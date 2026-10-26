@@ -29,6 +29,7 @@ class SeatState:
 	country: Optional[str] = None   # the civilisation id the seat belongs to; None is the game's own country
 	kind: str = HOUSEHOLD_SEAT      # COUNTRY_SEAT: the holder is that country's government, with no founder and no household of its own
 	holder: Optional[str] = None    # a country seat's government actor id; a household seat's holder is its household
+	modules: Dict[str, Any] = field(default_factory=dict)   # module id -> this seat's state (sim/assembly slots)
 
 	@property
 	def holds_household(self) -> bool:

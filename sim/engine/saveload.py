@@ -6,6 +6,7 @@ from sim.game_version import GAME_VERSION
 from sim.refusal import Refusal, cause_of
 
 from .data import WAGES
+from . import game_assembly
 from .save_fog import fog_mismatch
 from .rng_record import restore_rng, rng_record
 from sim.engine.state import (
@@ -369,6 +370,7 @@ def _apply_blob(sim, blob):
 		state._fuzzy_salt = state._fuzzy_salt or asked_salt
 	if old_revealed and getattr(state, "projects", None):
 		state.projects.revealed = set(state.projects.revealed or set()) | old_revealed
+	game_assembly.revive(sim, state, deserialize_state)
 	sim.state = state
 	sim._reconnect_state_hooks()
 	if state._fog is not None:

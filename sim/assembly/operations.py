@@ -56,7 +56,7 @@ class Applied:
 		for module_id, spec in operations.replaced.items():
 			old = self._existing(module_id, mod_id, "replaces")
 			earlier = self.replaced_by.get(module_id)
-			if earlier is not None and not related(earlier, mod_id):
+			if earlier is not None and earlier != mod_id and not related(earlier, mod_id):
 				raise AssemblyError("mods %s and %s both replace module %s; make one depend on the other to choose" % (earlier, mod_id, module_id))
 			if spec.module_id != module_id:
 				raise AssemblyError("mod %s replaces module %s with a spec named %s" % (mod_id, module_id, spec.module_id))

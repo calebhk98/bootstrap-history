@@ -292,6 +292,9 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
             EconomyState, GovernanceState, FounderState,
             ScenarioState, PopulationState
         )
+        from . import game_assembly
+        from .geography_port import MODS_DIR
+        self.assembly = game_assembly.build(MODS_DIR, self.debug)
         self.state = SimulationState(
             household=HouseholdState(capital=0.0),
             projects=ProjectsState(),
@@ -582,6 +585,8 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
 
         # Reset transient caches
         self._reset_economic_caches()
+        from . import game_assembly
+        game_assembly.attach(self)
         # the demand the last throttle saw is read before the next one, so it is carried
         held_demand = self.state.holdings.material_demand_at_last_throttle
         self.household._material_demand_cache = None if held_demand is None else collections.Counter(held_demand)

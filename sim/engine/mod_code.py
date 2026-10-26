@@ -28,6 +28,7 @@ CODE_PERMISSION = "code"
 # Commands that mod code registered, waiting for the command registry (sim/ui) to take them: (mod_id, name, fields, handler)
 COMMAND_REGISTRATIONS: List[tuple] = []
 LOADED: Dict[str, str] = {}      # mod id -> "ran" or the reason it did not
+MOD_OPERATIONS: Dict[str, Any] = {}   # mod id -> its sim.assembly Operations (modules added, replaced, removed, extended)
 
 
 def code_files(manifest: ModManifest) -> Dict[str, str]:
@@ -90,6 +91,36 @@ class ModCodeApi:
 
     def __init__(self, mod_id: str):
         self.mod_id = mod_id
+
+    @property
+    def operations(self) -> Any:
+        from sim.assembly.api import Operations
+        return MOD_OPERATIONS.setdefault(self.mod_id, Operations(self.mod_id))
+
+    def add_module(self, spec: Any) -> None:
+        """A new module (sim/assembly): its id is `<mod_id>:<name>`, with its own state, views, commands and phases."""
+        self.operations.added = self.operations.added + (spec,)
+
+    def replace_module(self, module_id: str, spec: Any) -> None:
+        """Stand in for a module: the spec must publish every view and apply every command the replaced one did."""
+        self.operations.replaced[module_id] = spec
+
+    def remove_module(self, module_id: str) -> None:
+        """Take a module out; refused while any remaining module reads one of its views or sends it a command."""
+        self.operations.removed = self.operations.removed + (module_id,)
+
+    def extend_module(self, module_id: str, layer: type) -> None:
+        """A class laid over the module's implementation: its methods override, `super()` reaches the layer below."""
+        self.operations.layers[module_id] = self.operations.layers.get(module_id, ()) + (layer,)
+
+    def adjust_view(self, view: str, function: Callable, reads: Any = ()) -> None:
+        """`function(needs, value, *key_or_arguments) -> value` over a published view; `needs` holds `reads`."""
+        entry = (function, tuple(reads))
+        self.operations.adjusters[view] = self.operations.adjusters.get(view, ()) + (entry,)
+
+    def provide(self, point: str, function: Callable) -> None:
+        """Add an answer to a module's extension point."""
+        self.operations.provided[point] = self.operations.provided.get(point, ()) + (function,)
 
     def qualified(self, name: str) -> str:
         return name if name.startswith(self.mod_id + SEPARATOR) else self.mod_id + SEPARATOR + name

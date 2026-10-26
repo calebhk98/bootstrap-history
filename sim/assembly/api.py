@@ -10,3 +10,4 @@ from .module import Module
 from .needs import Needs, Point
 from .spec import FIRST, KEYED, LIST, QUOTE, SUM, TABLE, Command, ExtensionPoint, ModuleSpec, Operations, PhaseHook, ViewSpec
 from .views import View
+from .slots import SEAT, WORLD, bind_seat, bind_world, new_slots, revive_slots

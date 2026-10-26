@@ -3,6 +3,7 @@ import contextlib
 
 from sim.agents.api import Household, HouseholdParty
 from .agents_port_household import HouseholdPort
+from . import game_assembly
 from .state_seat import SeatState, bind_seat
 
 
@@ -48,6 +49,7 @@ class SeatMixin:
 		bind_seat(self.state, seat_id)
 		self.household = self._seat_facades[seat_id]
 		self._reset_economic_caches()
+		game_assembly.switch_seat(self, seat_id)
 
 	@contextlib.contextmanager
 	def act_as(self, seat_id: str):

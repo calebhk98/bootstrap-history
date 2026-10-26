@@ -167,8 +167,6 @@ class RemoveTest(unittest.TestCase):
         assembly = build(Empty_spec(), operations=ops)
         self.assertNotIn("loner", assembly.applied.layers)
 
-    # Bug: only a view's reader error names the remover; a command's sender error does not.
-    @unittest.expectedFailure
     def test_removal_refused_while_a_module_sends_a_command_names_the_remover(self):
         sender = ModuleSpec("sender", Empty, sends=(SetValue,))
         no_top = [changed(BASE, publishes=())]
@@ -176,8 +174,6 @@ class RemoveTest(unittest.TestCase):
             build(sender, operations=[Operations("strip", removed=("base",))], shipped=no_top)
         self.assertIn("strip", str(caught.exception))  # presentation: the error text names the parties
 
-    # Bug: providing to a point whose declaring module was removed does not name the remover.
-    @unittest.expectedFailure
     def test_providing_to_a_removed_modules_point_names_the_remover(self):
         from sim.assembly.api import ExtensionPoint
         town = ModuleSpec("town", Empty, extension_points=(ExtensionPoint("town_size"),))
@@ -186,8 +182,6 @@ class RemoveTest(unittest.TestCase):
             build(town, operations=ops)
         self.assertIn("strip", str(caught.exception))  # presentation: the error text names the parties
 
-    # Bug: adjusting a view of a removed module does not name the remover.
-    @unittest.expectedFailure
     def test_adjusting_a_removed_modules_view_names_the_remover(self):
         lonely = ModuleSpec("lonely", Empty, publishes=(ViewSpec("temple_count", "provided"),))
         ops = [Operations("strip", removed=("lonely",)), Operations("giver", adjusters={"temple_count": ((lambda needs, value: value, ()),)})]

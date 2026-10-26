@@ -11,10 +11,12 @@ from .views import View
 
 
 class Assembly:
-	def __init__(self, applied: Applied, clock: Clock, removed_views: Dict[str, Tuple[str, ...]]):
+	def __init__(self, applied: Applied, clock: Clock, removed_views: Dict[str, Tuple[str, ...]],
+	             removed_commands: Dict[type, str]):
 		self.applied = applied
 		self.clock = clock
-		self.removed_views = removed_views                        # removed module id -> the views it published
+		self.removed_views = removed_views                        # removed module id -> the views and points it published
+		self.removed_commands = removed_commands                  # command class -> the removed module that applied it
 		self.modules: Dict[str, Module] = {}
 		self.views: Dict[str, View] = {}
 		self.points: Dict[str, Point] = {}
@@ -58,10 +60,18 @@ def _bind_names(assembly: Assembly) -> None:
 			assembly.command_owner[command] = module_id
 
 
+def _removal_note(assembly: Assembly, name: str = "", command: Optional[type] = None) -> str:
+	if command is not None:
+		removed = [assembly.removed_commands[command]] if command in assembly.removed_commands else []
+	else:
+		removed = [module_id for module_id, names in assembly.removed_views.items() if name in names]
+	if not removed:
+		return ""
+	return " (module %s provided it; mod %s removed it)" % (removed[0], assembly.applied.removed_by[removed[0]])
+
+
 def _missing(assembly: Assembly, reader: str, name: str) -> AssemblyError:
-	removed = [module_id for module_id, views in assembly.removed_views.items() if name in views]
-	cause = " (module %s published it; mod %s removed it)" % (removed[0], assembly.applied.removed_by[removed[0]]) if removed else ""
-	return AssemblyError("%s reads %s, which no module provides%s" % (reader, name, cause))
+	return AssemblyError("%s reads %s, which no module provides%s" % (reader, name, _removal_note(assembly, name)))
 
 
 def _check_reads(assembly: Assembly) -> None:
@@ -71,7 +81,8 @@ def _check_reads(assembly: Assembly) -> None:
 				raise _missing(assembly, "module %s" % module_id, name)
 		for command in spec.sends:
 			if command not in assembly.command_owner:
-				raise AssemblyError("module %s sends %s, which no module applies" % (module_id, command.__name__))
+				raise AssemblyError("module %s sends %s, which no module applies%s" % (
+					module_id, command.__name__, _removal_note(assembly, command=command)))
 		own = {view.name for view in spec.publishes}
 		for view in spec.publishes:
 			for name in view.inputs:
@@ -82,13 +93,15 @@ def _check_reads(assembly: Assembly) -> None:
 	for view, entries in assembly.applied.adjusters.items():
 		for mod_id, _function, reads in entries:
 			if view not in assembly.view_owner:
-				raise AssemblyError("mod %s adjusts the view %s, which no module publishes" % (mod_id, view))
+				raise AssemblyError("mod %s adjusts the view %s, which no module publishes%s" % (mod_id, view, _removal_note(assembly, view)))
 			for name in reads:
+				if name in assembly.point_owner:
+					raise AssemblyError("mod %s's adjuster of %s reads %s, an extension point; an adjuster reads views only" % (mod_id, view, name))
 				if name not in assembly.view_owner:
 					raise _missing(assembly, "mod %s's adjuster of %s" % (mod_id, view), name)
 	for point, entries in assembly.applied.provided.items():
 		if point not in assembly.point_owner:
-			raise AssemblyError("mod %s provides to %s, which no module declares" % (entries[0][0], point))
+			raise AssemblyError("mod %s provides to %s, which no module declares%s" % (entries[0][0], point, _removal_note(assembly, point)))
 
 
 def _implementation(assembly: Assembly, module_id: str, spec: ModuleSpec) -> type:
@@ -145,12 +158,13 @@ def _wire(assembly: Assembly) -> None:
 def assemble(shipped: Sequence[ModuleSpec], operations: Sequence[Operations] = (),
              related: Optional[Callable[[str, str], bool]] = None, shadow_every: int = 0) -> Assembly:
 	"""The game's modules: the shipped set changed by each mod's operations in load order; AssemblyError names the parties."""
-	published = {spec.module_id: view_names(spec) + point_names(spec) for spec in shipped}
+	every_spec = {spec.module_id: spec for spec in shipped}
 	for entry in operations:
-		published.update({spec.module_id: view_names(spec) + point_names(spec) for spec in entry.added})
+		every_spec.update({spec.module_id: spec for spec in entry.added})
 	applied = apply_all(shipped, operations, related)
-	removed = {module_id: names for module_id, names in published.items() if module_id in applied.removed_by}
-	assembly = Assembly(applied, Clock(shadow_every), removed)
+	removed = {module_id: every_spec[module_id] for module_id in applied.removed_by if module_id in every_spec}
+	assembly = Assembly(applied, Clock(shadow_every), {module_id: view_names(spec) + point_names(spec) for module_id, spec in removed.items()},
+	                    {command: module_id for module_id, spec in removed.items() for command, _handler in spec.applies})
 	_bind_names(assembly)
 	_check_reads(assembly)
 	_instantiate(assembly)
