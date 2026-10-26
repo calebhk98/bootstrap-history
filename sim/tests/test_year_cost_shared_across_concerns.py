@@ -160,15 +160,6 @@ class SpreadAndLending(unittest.TestCase):
         self.assertEqual(answers[0], frozenset(["node_a", "node_g"]))
         self.assertEqual(economy.technique_first_run, {"node_a": 143 - 10000})
 
-    def test_an_exposure_given_the_lent_share_does_not_read_the_loans_again(self):
-        from sim.engine.holdings_exposure import HoldingsExposureMixin
-        reads = []
-        world = types.SimpleNamespace(lent_share=lambda: reads.append(1) or 0.5)
-        actor = types.SimpleNamespace(money=10.0, record=types.SimpleNamespace(stores={}, holdings={}))
-        view = HoldingsExposureMixin.actor_exposure(world, actor, lambda material: 1.0, lambda issuer: None, 0.25)
-        self.assertEqual(reads, [])
-        self.assertAlmostEqual(view.values["loans"], 2.5)
-
 
 class StandInWorld(ViewShareMixin, TileOwnershipMixin):
     """The few attributes the shared-answer and tile-ownership mixins read."""

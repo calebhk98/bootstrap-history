@@ -1,85 +1,76 @@
-"""Complaint 273: theft, sack and banditry read the same exposure of everything an actor keeps (coin, goods, land,
+"""Complaint 273: theft, sack and banditry read the same exposure of everything a holder keeps (coin, goods, land,
 loans, shares); stolen goods leave the holder's stock for the thieves' edge and stolen money lands with the thieves,
-never destroyed."""
+never destroyed. The coin module sends the ledger's commands for both (`TakeGoods`, `PayEdge`, `PayEdgeFrom`)."""
 
 QUICK_TOPIC = True
 
 import types
 import unittest
 
-from sim.agents.purses import Purses
-from sim.agents.edges import Edge, EDGE_THIEVES
-from sim.engine import theft_exposure
-from sim.engine.holdings_exposure import Exposure, GoodsLot, HoldingsExposureMixin, split_purse
-from sim.engine.theft_charge import TheftChargeMixin
+from sim.agents.edges import EDGE_THIEVES
+from sim.coin import exposure as exposures
+from sim.coin import theft_exposure
+from sim.coin.commands import ChargeActorsTheft, PlunderHousehold
+from sim.coin.exposure import Exposure, GoodsLot, split_purse
+from sim.coin.module import Coin
+from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, PayEdge, PayEdgeFrom, TakeGoods
+from sim.tests import module_harness
 
 CALM = dict(guard_hours_per_tonne_year={"coin": 0.0}, visible_scale=0.5, state_reach=0.0, protection=0.0)
 EVENT = 0.5
 
 
-class Purse:
-    def __init__(self, money):
-        self.money = money
-
-    def credit(self, amount, purpose):
-        self.money += amount
-
-    def debit(self, amount, purpose):
-        self.money -= amount
-
-
-def world_with_thieves():
-    balances, goods = Purses(), {}
-    thieves = Edge(EDGE_THIEVES, balances, goods)
-    return types.SimpleNamespace(edge=lambda name: thieves), thieves, balances
+def thief():
+    return module_harness.build(Coin)
 
 
 def exposure_of(purse, coin, goods_tonnes, price=10.0, land=500.0, loans=200.0):
-    stock = {"iron": goods_tonnes}
-
-    def take(tonnes):
-        stock["iron"] -= tonnes
-
-    lots = [GoodsLot("iron", goods_tonnes, price, take)]
+    lots = [GoodsLot("iron", goods_tonnes, price, STORE_STOCK)]
     values = {"coin": coin, "goods": goods_tonnes * price, "land": land, "loans": loans}
-    return Exposure(values=values, lots=lots, purse=purse.money), stock
+    return Exposure(values=values, lots=lots, purse=purse)
+
+
+def money_sent(module):
+    return sum(command.amount for command in module_harness.sent(module) if isinstance(command, (PayEdge, PayEdgeFrom)))
+
+
+def goods_sent(module):
+    return {command.good: command.tonnes for command in module_harness.sent(module) if isinstance(command, TakeGoods)}
 
 
 class StolenGoodsLeaveTheStock(unittest.TestCase):
 
-    def test_goods_taken_leave_the_stock_and_reach_the_thieves_edge(self):
-        world, thieves, balances = world_with_thieves()
-        purse = Purse(1000.0)
-        exposure, stock = exposure_of(purse, coin=1000.0, goods_tonnes=100.0)
-        TheftChargeMixin.steal_from(world, purse, exposure, EVENT, **CALM)
-        taken = thieves.goods_held()["iron"]
-        self.assertGreater(taken, 0.0)
-        self.assertAlmostEqual(stock["iron"] + taken, 100.0)
+    def test_goods_taken_are_asked_of_the_stock_for_the_thieves_edge(self):
+        module = thief()
+        module.steal_from(None, exposure_of(1000.0, coin=1000.0, goods_tonnes=100.0), EVENT, **CALM)
+        (command,) = [sent for sent in module_harness.sent(module) if isinstance(sent, TakeGoods)]
+        self.assertEqual((command.store, command.good, command.edge, command.actor), (STORE_STOCK, "iron", EDGE_THIEVES, None))
+        self.assertGreater(command.tonnes, 0.0)
+        self.assertLess(command.tonnes, 100.0)
 
-    def test_land_is_never_lifted_and_money_is_conserved(self):
-        world, thieves, balances = world_with_thieves()
-        purse = Purse(1000.0)
-        exposure, stock = exposure_of(purse, coin=1000.0, goods_tonnes=0.0, land=1e6, loans=0.0)
-        taken = TheftChargeMixin.steal_from(world, purse, exposure, EVENT, **CALM)
+    def test_land_is_never_lifted_and_the_money_asked_is_the_coins_share(self):
+        module = thief()
+        taken = module.steal_from(None, exposure_of(1000.0, coin=1000.0, goods_tonnes=0.0, land=1e6, loans=0.0), EVENT, **CALM)
         self.assertGreater(taken, 0.0)
-        self.assertAlmostEqual(purse.money + balances.purse(EDGE_THIEVES), 1000.0)
+        self.assertEqual(goods_sent(module), {})
         self.assertAlmostEqual(taken, 1000.0 * theft_exposure.share_taken("coin", EVENT, **CALM))
+        self.assertEqual(module_harness.sent(module), [PayEdge(EDGE_THIEVES, taken, "theft")])
 
     def test_goods_lose_a_smaller_share_than_coin(self):
-        world, thieves, _ = world_with_thieves()
-        purse = Purse(1000.0)
-        exposure, stock = exposure_of(purse, coin=1000.0, goods_tonnes=100.0, loans=0.0)
-        TheftChargeMixin.steal_from(world, purse, exposure, EVENT, **CALM)
-        self.assertLess(thieves.goods_held()["iron"] / 100.0, (1000.0 - purse.money) / 1000.0)
+        module = thief()
+        taken = module.steal_from(None, exposure_of(1000.0, coin=1000.0, goods_tonnes=100.0, loans=0.0), EVENT, **CALM)
+        self.assertLess(goods_sent(module)["iron"] / 100.0, taken / 1000.0)
 
     def test_claims_are_paid_from_the_purse_and_never_beyond_it(self):
-        world, thieves, balances = world_with_thieves()
-        purse = Purse(30.0)
-        exposure = Exposure(values={"loans": 1e9}, lots=[], purse=purse.money)
-        taken = TheftChargeMixin.steal_from(world, purse, exposure, 1.0, **CALM)
+        module = thief()
+        taken = module.steal_from(None, Exposure(values={"loans": 1e9}, lots=[], purse=30.0), 1.0, **CALM)
         self.assertLessEqual(taken, 30.0)
-        self.assertGreaterEqual(purse.money, 0.0)
-        self.assertAlmostEqual(purse.money + balances.purse(EDGE_THIEVES), 30.0)
+        self.assertAlmostEqual(money_sent(module), taken)
+
+    def test_an_actors_theft_is_paid_from_that_actor(self):
+        module = thief()
+        taken = module.steal_from("firm:1", Exposure(values={"coin": 100.0}, lots=[], purse=100.0), EVENT, **CALM)
+        self.assertEqual(module_harness.sent(module), [PayEdgeFrom("firm:1", EDGE_THIEVES, taken, "theft")])
 
     def test_a_bigger_event_takes_proportionally_more_of_what_is_portable(self):
         for kind in ("coin", "goods", "loans"):
@@ -99,83 +90,72 @@ class WhatAnActorKeeps(unittest.TestCase):
         self.assertEqual(split_purse(-5.0, 0.25), (0.0, 0.0))
 
     def test_a_state_holds_stores_as_goods_and_a_firm_holds_none(self):
-        sim = types.SimpleNamespace(lent_share=lambda: 0.0)
-        state = types.SimpleNamespace(money=100.0, record=types.SimpleNamespace(stores={"grain": 50.0}, holdings={}),
-                                      kind="government")
-        firm = types.SimpleNamespace(money=100.0, record=types.SimpleNamespace(stores={}, holdings={}), kind="firm")
-        state_view = HoldingsExposureMixin.actor_exposure(sim, state, lambda material: 4.0, lambda issuer_id: None)
-        firm_view = HoldingsExposureMixin.actor_exposure(sim, firm, lambda material: 4.0, lambda issuer_id: None)
+        state_view = exposures.actor_exposure("state", 100.0, {"grain": 50.0}, lambda material: 4.0, lambda: 0.0, 0.0)
+        firm_view = exposures.actor_exposure("firm", 100.0, {}, lambda material: 4.0, lambda: 0.0, 0.0)
         self.assertAlmostEqual(state_view.values["goods"], 200.0)
         self.assertNotIn("goods", firm_view.values)
         self.assertNotIn("land", firm_view.values)
-        state_view.lots[0].take(10.0)
-        self.assertAlmostEqual(state.record.stores["grain"], 40.0)
+        self.assertEqual(state_view.lots, [GoodsLot("grain", 50.0, 4.0, STORE_ACTOR, "state")])
 
     def test_a_firm_holds_shares_as_claims(self):
-        sim = types.SimpleNamespace(lent_share=lambda: 0.0)
-        issuer = types.SimpleNamespace(record=types.SimpleNamespace(last_margin=10.0))
-        firm = types.SimpleNamespace(money=0.0, kind="firm",
-                                     record=types.SimpleNamespace(stores={}, holdings={"other": 0.5}))
-        view = HoldingsExposureMixin.actor_exposure(sim, firm, lambda material: 1.0, lambda issuer_id: issuer)
-        self.assertGreater(view.values["shares"], 0.0)
+        view = exposures.actor_exposure("firm", 0.0, {}, lambda material: 1.0, lambda: 12.5, 0.0)
+        self.assertEqual(view.values["shares"], 12.5)
+
+    def test_every_actor_of_a_year_shares_one_reading_of_the_lent_share(self):
+        reads = []
+        record = types.SimpleNamespace(exited_year=None, stratum=None, country=None, stores={}, holdings={})
+        actors = {name: types.SimpleNamespace(record=record, money=100.0, workforce={}, prominence=lambda: 0.0)
+                  for name in ("a", "b", "c")}
+        registry = types.SimpleNamespace(actors=actors, state=types.SimpleNamespace(home_country="home"), get=lambda _id: None)
+        module = module_harness.build(Coin, views={
+            "legacy_actor_registry": registry, "legacy_agent_world": types.SimpleNamespace(material_price=lambda m: 1.0),
+            "lent_share": lambda: reads.append(1) or 0.25, "visible_scale": lambda *call: 0.5, "order_reach": 0.0})
+        module.charge_actors_theft(ChargeActorsTheft())
+        self.assertEqual(len(reads), 1)
+        self.assertEqual([command.actor for command in module_harness.sent(module)], ["a", "b", "c"])
 
 
-class FounderSeat(types.SimpleNamespace):
-    """The parts of `Sim` the founder's exposure and plunder read."""
+def household_module(farm_hectares=10.0, order_reach=0.0):
+    """The coin module over a household of 2000 with iron in stock, a granary, a farm and a forest."""
+    return module_harness.build(Coin, views={
+        "civilisation": {"staple": "wheat"}, "acting_balance": 2000.0, "lent_share": 0.1, "held_goods": {"iron": 40.0},
+        "goods_quote": lambda material: {"sell_per_tonne": 5.0}, "farm_holdings": {"hectares": farm_hectares, "stock_kg": 20000.0},
+        "farm_land_price": 50.0, "forest_holding": {"hectares": 2.0, "base_cost_per_hectare": 100.0, "price_index": 1.0},
+        "headcount": 3, "eminence": 0.0, "visible_scale": lambda *call: 0.5, "order_reach": order_reach,
+        "standing": {"protection": 0.0}})
 
 
-def founder_seat(farm_hectares=10.0):
-    stock = {"iron": 40.0}
-    balances, goods = Purses(), {}
-    thieves = Edge(EDGE_THIEVES, balances, goods)
-    household = Purse(2000.0)
-    household.capital = 0.0
-    household.protection = 0.0
-    seat = FounderSeat(
-        state=types.SimpleNamespace(household=household, holdings=types.SimpleNamespace(farm_hectares=farm_hectares)),
-        civ={"staple": "wheat"}, price_index=1.0, farm_stock_kg=20000.0, forest_ha=2.0, FOREST_COST_PER_HA=100.0, order_reach=0.0,
-        lent_share=lambda: 0.1, farm_price_per_hectare=lambda: 50.0, _material_stock=lambda: stock,
-        goods_market=types.SimpleNamespace(quote=lambda material: {"sell_per_tonne": 5.0}),
-        edge=lambda name: thieves, visible_scale=lambda *args: 0.5, labour=types.SimpleNamespace(headcount=lambda: 3),
-        thieves=thieves, balances=balances, stock=stock)
-    household.capital = household.money
-    household.eminence = 0.0
-    seat.founder_visible_scale = lambda: 0.5
-    seat.steal_from = lambda *args, **kwargs: TheftChargeMixin.steal_from(seat, *args, **kwargs)
-    seat.founder_exposure = lambda: HoldingsExposureMixin.founder_exposure(seat)
-    return seat
+class HouseholdHoldings(unittest.TestCase):
 
-
-class FounderHoldings(unittest.TestCase):
-
-    def test_the_founder_exposes_coin_loans_goods_and_land(self):
-        view = HoldingsExposureMixin.founder_exposure(founder_seat())
+    def test_the_household_exposes_coin_loans_goods_and_land(self):
+        view = household_module().household_exposure()
         self.assertAlmostEqual(view.values["coin"], 1800.0)
         self.assertAlmostEqual(view.values["loans"], 200.0)
         self.assertAlmostEqual(view.values["goods"], (40.0 + 20.0) * 5.0)
         self.assertAlmostEqual(view.values["land"], 10.0 * 50.0 + 2.0 * 100.0)
         self.assertEqual({lot.name for lot in view.lots}, {"iron", "wheat"})
+        self.assertEqual({lot.name: lot.store for lot in view.lots}, {"iron": STORE_STOCK, "wheat": STORE_GRANARY})
 
-    def test_a_founder_with_no_farm_yet_exposes_only_the_forest_as_land(self):
-        view = HoldingsExposureMixin.founder_exposure(founder_seat(farm_hectares=None))
+    def test_a_household_with_no_farm_yet_exposes_only_the_forest_as_land(self):
+        view = household_module(farm_hectares=None).household_exposure()
         self.assertAlmostEqual(view.values["land"], 2.0 * 100.0)
 
-    def test_a_sack_takes_money_and_stock_by_the_same_exposure_and_destroys_nothing(self):
-        seat = founder_seat()
-        household = seat.state.household
-        taken = TheftChargeMixin.plunder_founder(seat, 0.6, "sack and plunder", order_holds=False)
+    def test_a_sack_takes_money_and_stock_by_the_same_exposure_and_asks_for_both_from_the_thieves_edge(self):
+        module = household_module()
+        taken = module.plunder_household(PlunderHousehold(0.6, "sack and plunder", False))
         self.assertGreater(taken, 0.0)
-        self.assertAlmostEqual(household.money + seat.balances.purse(EDGE_THIEVES), 2000.0)
-        self.assertLess(seat.stock["iron"], 40.0)
-        self.assertLess(seat.farm_stock_kg, 20000.0)
-        self.assertAlmostEqual(seat.thieves.goods_held()["iron"], 40.0 - seat.stock["iron"])
-        self.assertEqual(seat.state.holdings.farm_hectares, 10.0)
+        self.assertEqual([command for command in module_harness.sent(module) if isinstance(command, PayEdge)],
+                         [PayEdge(EDGE_THIEVES, taken, "sack and plunder")])
+        stolen = goods_sent(module)
+        self.assertEqual(set(stolen), {"iron", "wheat"})
+        self.assertLess(stolen["iron"], 40.0)
+        self.assertLess(stolen["wheat"], 20.0)
+        self.assertTrue(all(command.edge == EDGE_THIEVES for command in module_harness.sent(module)
+                            if isinstance(command, TakeGoods)))
 
     def test_an_ordered_state_makes_banditry_cost_less_than_a_sack_of_equal_strength(self):
-        orderly, fallen = founder_seat(), founder_seat()
-        orderly.order_reach = lambda: 0.8
-        kept = TheftChargeMixin.plunder_founder(orderly, 0.3, "banditry", order_holds=True)
-        lost = TheftChargeMixin.plunder_founder(fallen, 0.3, "sack and plunder", order_holds=False)
+        kept = household_module(order_reach=0.8).plunder_household(PlunderHousehold(0.3, "banditry", True))
+        lost = household_module().plunder_household(PlunderHousehold(0.3, "sack and plunder", False))
         self.assertLess(kept, lost)
 
 

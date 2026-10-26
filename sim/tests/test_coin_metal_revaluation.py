@@ -7,11 +7,12 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.coin_revaluation import CoinRevaluationMixin
+from sim.coin.module import Coin
+from sim.coin.state import CoinWorld
 from sim.engine.foreign_actor_trade import ForeignActorTradeMixin
-from sim.engine.foreign_payments import ForeignPaymentsMixin
 from sim.engine.real_price_ratios import RealPriceRatiosMixin
 from sim.labour.labour_wages import WagesMixin
+from sim.tests import module_harness
 from sim.tests.test_capital_charge import works_entry
 from sim.tests.test_running_cost_floor import StubGame
 from sim.world import market
@@ -21,64 +22,45 @@ CONDITIONS = dict(
     actor_supply_tonnes=0.0, founder_sales_tonnes=0.0, stock_tonnes=0.0, floor_ratio=0.6, ceiling_ratio=6.0)
 
 
-class Coinage(CoinRevaluationMixin, ForeignPaymentsMixin):
-    """The price level, with the coin stock stubbed."""
-    def __init__(self):
-        self.state = types.SimpleNamespace(economy=types.SimpleNamespace(coin_metal_ratios={}, foreign_ledger={}))
-        self.civ = {"coin_standard": {"material": "silver_kg"}}
-        self.stock_level = 1.0
-
-    def _home_opening_coin_units(self):
-        return 100.0
-
-    def home_coin_stock_units(self):
-        return 100.0 * self.stock_level
-
-    def _foreign_ledger(self, civilization_id, create=False):
-        return {"partner_coin_units": 0.0, "home_coin_units": 0.0}
-
-    def _partner_coin_opening_units(self, civilization_id):
-        return 100.0
-
-    def partner_coin_metal(self, civilization_id):
-        return "gold_kg"
-
-    def real_price_ratio(self, material):
-        return self.market_price_ratio(material)
-
-    coin_value_ratio = real_price_ratio
+def coinage(measured=None):
+    """The coin module over a home silver standard and one partner on gold; `measured` is the market's ratio by metal."""
+    measured = measured or {}
+    return module_harness.build(Coin, world=CoinWorld(), views={
+        "civilisation": {"coin_standard": {"material": "silver_kg"}}, "opening_population": 1000.0,
+        "opening_money_per_labour_hour": 0.5, "foreign_coin_home_units": 0.0, "foreign_economies": ["x"],
+        "foreign_coin_partner_units": {"x": 0.0}, "partner_coin_standard": {"x": {"material": "gold_kg"}},
+        "partner_opening_facts": {"x": {"population": 1000.0, "money_per_labour_hour": 0.5}},
+        "coin_value_ratio": lambda metal: measured.get(metal, 1.0)})
 
 
 class RevaluationTests(unittest.TestCase):
     def test_a_glut_of_the_coin_metal_raises_the_price_level(self):
-        game = Coinage()
+        game = coinage()
         before = game.home_price_level()
-        game.state.economy.coin_metal_ratios["silver_kg"] = 0.5
+        game.world.metal_ratios["silver_kg"] = 0.5
         self.assertAlmostEqual(game.home_price_level(), before * 2.0)
 
     def test_a_shortage_lowers_it(self):
-        game = Coinage()
-        game.state.economy.coin_metal_ratios["silver_kg"] = 2.0
+        game = coinage()
+        game.world.metal_ratios["silver_kg"] = 2.0
         self.assertAlmostEqual(game.home_price_level(), 0.5)
 
     def test_another_metal_leaves_the_level_alone(self):
-        game = Coinage()
-        game.state.economy.coin_metal_ratios["gold_kg"] = 0.5
+        game = coinage()
+        game.world.metal_ratios["gold_kg"] = 0.5
         self.assertAlmostEqual(game.home_price_level(), 1.0)
 
     def test_a_partners_price_level_follows_its_coin_metal(self):
-        game = Coinage()
+        game = coinage()
         flat = game.partner_price_level("x")
-        game.state.economy.coin_metal_ratios["gold_kg"] = 0.25
+        game.world.metal_ratios["gold_kg"] = 0.25
         self.assertAlmostEqual(game.partner_price_level("x"), flat * 4.0)
 
     def test_revaluing_stores_the_market_ratio_of_each_coin_metal(self):
-        game = Coinage()
-        game.foreign_economies = lambda: ["x"]
-        game.market_price_ratio = {"silver_kg": 0.8, "gold_kg": 1.5}.get
+        game = coinage({"silver_kg": 0.8, "gold_kg": 1.5})
         for _year in range(60):
-            game.revalue_coin_metals()    # damped: it closes on the measured value over the years
-        ratios = game.state.economy.coin_metal_ratios
+            game.revalue_coin_metals(["seat"])    # damped: it closes on the measured value over the years
+        ratios = game.world.metal_ratios
         self.assertAlmostEqual(ratios["silver_kg"], 0.8, places=4)
         self.assertAlmostEqual(ratios["gold_kg"], 1.5, places=4)
 

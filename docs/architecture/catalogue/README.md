@@ -28,7 +28,7 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 | 1 | [`actors`](actors.md) | The cast of other actors: governments and firms, their records and registry, and the agents package's world adapters. | 3 | 2 | 11 | 5 |
 | 2 | [`agriculture`](agriculture.md) | Farming: farmland, farm weather, soil nitrogen, wild stock and food potential. | 5 | 2 | 22 | 4 |
 | 3 | [`campaigns`](campaigns.md) | Armies, campaigns, conquest, captives and revolts. | 3 | 5 | 46 | 0 |
-| 4 | [`coin`](coin.md) | Coin as a metal: stock and price level, revaluation, hoarding, carriage and theft. | 5 | 3 | 29 | 11 |
+| 4 | [`coin`](coin.md) | Coin as a metal: stock and price level, revaluation, keeping, carriage and theft. **Moved** (`sim/coin/`). | 13 | 4 | 29 | 11 |
 | 5 | [`demography`](demography.md) | Population: counts by age, by tile, urban share, food eaten, recovery after shocks. | 4 | 4 | 19 | 5 |
 | 6 | [`diffusion`](diffusion.md) | How knowledge spreads: literacy, schooling, diffusion indices, disclosure and licensing, tech effects on society. | 5 | 4 | 48 | 12 |
 | 7 | [`disease`](disease.md) | Epidemics and endemic disease: the disease package, burden, forecasts and medical coverage. | 3 | 2 | 17 | 9 |
@@ -266,7 +266,7 @@ workforce       .  .  .  .  .  .  .  .  .  .  .  .  .  1  .  .  .  .  .  .  .  .
 | `actors` | 3 | 2 | 29 | 0.10 | 0 | 1 | 4 | 3 | 11 | 1 |
 | `agriculture` | 5 | 2 | 24 | 0.21 | 3 | 1 | 7 | 5 | 4 | 2 |
 | `campaigns` | 3 | 5 | 8 | 0.38 | 0 | 0 | 9 | 5 | 0 | 0 |
-| `coin` | 5 | 3 | 19 | 0.26 | 2 | 0 | 25 | 13 | 6 | 4 |
+| `coin` (moved; views, commands and reads re-counted from the spec, the rest not re-measured) | 13 | 4 | 19 | 0.68 | 2 | - | 30 | - | 6 | 4 |
 | `demography` | 4 | 4 | 8 | 0.50 | 3 | 0 | 10 | 6 | 9 | 3 |
 | `diffusion` | 5 | 4 | 28 | 0.18 | 5 | 1 | 23 | 12 | 7 | 2 |
 | `disease` | 3 | 2 | 12 | 0.25 | 8 | 0 | 11 | 8 | 6 | 1 |
@@ -309,7 +309,7 @@ Task 2.4 stops the plan if "a domain's catalogue comes out near one view per old
 | `actors` | 3 | 1 | 33% **flag** | - |
 | `agriculture` | 5 | 1 | 20% **flag** | `wild_stock` |
 | `campaigns` | 3 | 0 | 0% | `armies`, `campaign_sites`, `stability` |
-| `coin` | 5 | 0 | 0% | `coin_metal` |
+| `coin` | 13 | - | - | - (not re-measured) |
 | `demography` | 4 | 0 | 0% | `food_eaten`, `yearly_record` |
 | `diffusion` | 5 | 1 | 20% **flag** | - |
 | `disease` | 3 | 0 | 0% | - |
@@ -374,7 +374,7 @@ Modules with one-to-one share at or above 20%: `actors` 1 of 3; `agriculture` 1 
 | `_market_flows` | `markets` | accrues `economy.market_flows` while reporting them | 1: `_market_flows` | accrue in the clearing phase only |
 | `_material_opening_stock` | `ledger` | writes the year's opening snapshot the first time it is read in a year | 1: `_material_opening_stock` | write it in `begin_seat_year` (`ChangeStock`-free snapshot command) |
 | `expected_calendar_years` | `projects` | sets `projects.failed_attempts[node]` to a trial value and restores it | 1: `expected_calendar_years` | compute from a copy |
-| `founder_exposure` | `coin` | builds `take` closures that mutate purse, stock and granary | 1: `founder_exposure` | return amounts; theft goes through one `TakeGoods` command |
+| `founder_exposure` | `coin` | built `take` closures that mutate purse, stock and granary (done: `household_exposure` returns amounts, the theft sends `TakeGoods`) | 1: `founder_exposure` | done |
 | `refresh_farm_territory` | `agriculture` | calls `labour.set_farm_area` | 1: `refresh_farm_territory` | a command to workforce (`AllocateFarmLabour`), made in the phase |
 | `clear_unused_hours_report` | `workforce` | pops `household.unused_hours_reported` as it reports | 1: `report_unused_directed_hours` | report and clear are two steps; clear is a command in the phase |
 | `revenue_capacity` | `production` | assigns `household.wage_hours_this_year` while computing capacity | 1: `revenue_capacity` | a real write inside a read; send `CommitHours` from the phase and make capacity pure |

@@ -21,6 +21,11 @@ class Ledger(Module):
 		ledger.transfer(self.needs.legacy_acting_household(), self.edge(command.edge), command.amount, command.purpose)
 		self.bump_seat(MONEY)
 
+	def pay_edge_from(self, command: Any) -> None:
+		actor = self.needs.legacy_actor_registry().actors[command.actor]
+		ledger.transfer(actor, self.edge(command.edge), command.amount, command.purpose)
+		self.bump(MONEY)
+
 	def receive_from_edge(self, command: Any) -> None:
 		ledger.transfer(self.edge(command.edge), self.needs.legacy_acting_household(), command.amount, command.purpose)
 		self.bump_seat(MONEY)
@@ -47,3 +52,19 @@ class Ledger(Module):
 
 	def acting_balance(self) -> float:
 		return self.needs.legacy_acting_household().capital
+
+	def held_goods(self) -> Any:
+		"""The acting seat's tonnes ledger by commodity key: read it, never write it."""
+		return self.needs.legacy_stock_ledger()
+
+	def transfer_listening(self) -> Any:
+		"""A context in which every transfer between two parties asks the `transfer_surcharge` providers what moving
+		the money costs, and the payer pays each answer to the edge it names. The surcharge's own postings are not
+		charged again (sim/agents/ledger.py switches the hook off while it runs)."""
+		return ledger.listening(self.after_transfer)
+
+	def after_transfer(self, payer: Any, payee: Any, amount: float, purpose: Any) -> None:
+		for charge in self.needs.transfer_surcharge(payer, payee, amount, purpose):
+			if charge is not None:
+				edge_name, charged, cause = charge
+				ledger.transfer(payer, self.edge(edge_name), charged, cause)

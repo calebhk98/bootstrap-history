@@ -9,7 +9,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.agents.api import edges
-from sim.engine.coin_guard_rule import coin_guard_paid, room_under_credit_line
+from sim.coin.rules import coin_guard_paid, room_under_credit_line
 from sim.engine.project_materials import ProjectMaterialsMixin
 from sim.engine.projects_completion import CompletionMixin
 from sim.tests import event_stand_in

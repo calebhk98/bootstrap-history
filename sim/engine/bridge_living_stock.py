@@ -13,7 +13,7 @@ from sim.world.material_units import tonnes_per_unit
 from . import purchase_rule
 from .bridge import bridge_command, bridge_view
 from .hazard_window import hazards_not_yet_past
-from .theft_exposure import visibility_factor
+from sim.coin.api import visibility_factor
 
 
 # ---- facts of the world and the game's data ----

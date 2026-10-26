@@ -12,8 +12,10 @@ from sim.engine.agents_port_budget import BudgetView
 from sim.engine.economy_mining import MiningMixin
 from sim.engine.legitimacy import LegitimacyMixin
 from sim.engine.bridge_living_stock import partner_catch_chance
-from sim.engine.theft_charge import TheftChargeMixin
-from sim.engine.theft_exposure import visibility_factor
+from sim.coin.commands import PlunderHousehold
+from sim.coin.module import Coin
+from sim.coin.theft_exposure import visibility_factor
+from sim.tests import module_harness
 from sim.world import stock_dynamics
 
 
@@ -123,12 +125,11 @@ class CeilingsReadOnlyTheirOwnStaff(unittest.TestCase):
 class PlunderReadsTheGuards(unittest.TestCase):
     def plunder(self, order_holds):
         taken = []
-        household = SimpleNamespace(protection=0.3)
-        stand_in = SimpleNamespace(
-            state=SimpleNamespace(household=household), order_reach=lambda: 0.7, founder_exposure=lambda: "exposure",
-            founder_visible_scale=lambda: 2.0,
-            steal_from=lambda *arguments: taken.append(arguments) or 5.0)
-        result = TheftChargeMixin.plunder_founder(stand_in, 0.2, "bandits", order_holds)
+        module = module_harness.build(Coin, views={"order_reach": 0.7, "standing": {"protection": 0.3}})
+        module.household_exposure = lambda: "exposure"
+        module.household_visible_scale = lambda: 2.0
+        module.steal_from = lambda *arguments: taken.append(arguments) or 5.0
+        result = module.plunder_household(PlunderHousehold(0.2, "bandits", order_holds))
         return result, taken[0]
 
     def test_where_order_holds_the_guards_reach_and_the_households_protection_stand_against_the_thief(self):

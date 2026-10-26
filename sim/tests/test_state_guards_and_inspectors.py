@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 from sim.agents import budget, collection, order
 from sim.engine.mine_ceiling import mine_ceiling_tonnes
-from sim.engine.theft_exposure import order_factor
+from sim.coin.api import order_factor
 from .agents_fake_world import FakeWorld
 
 WORKING_DAYS = 200.0

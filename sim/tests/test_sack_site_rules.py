@@ -39,8 +39,8 @@ class SackedHousehold(HazardsMixin):
             projects=types.SimpleNamespace(active={}), scenario=types.SimpleNamespace(year=100))
         self.labour = types.SimpleNamespace(staff_snapshot=lambda: {}, log_staff_reduction=lambda name, before: None)
 
-    def plunder_founder(self, strength, reason, order_holds=True):
-        pass
+    def send(self, command):
+        pass   # the coin module's PlunderHousehold
 
     def corpus_hedge(self):
         return self.corpus_chance, 0.5, "corpus_written"

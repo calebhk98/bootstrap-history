@@ -43,6 +43,9 @@ applies throughout (names spelled out, short comments, a test calls one function
 
 - Move the fields you own into your `world_state` / `seat_state` dataclasses and delete them from the old
   dataclass. Every reader of the old path changes to your view (grep `sim/`, `sim/ui/`, `sim/agents/`, `mods/`).
+- When you delete a field from an old dataclass, check it is gone (`grep -n "<field>" sim/engine/state.py`): those
+  files use tabs, and an edit that matched nothing leaves the field behind, which the equivalence check reports as an
+  empty leaf on the current side.
 - In the same commit, add a relocation to `sim/tests/equiv_fields.py` (`(current prefix, base prefix)`, `*` for a
   seat id) for each moved field, so the equivalence check still compares it.
 - Write your state only inside your module, and bump the channel your views declare. A view is `cached=True` only
@@ -55,6 +58,19 @@ applies throughout (names spelled out, short comments, a test calls one function
 
 Your year phases become `PhaseHook`s in your spec, and their entries in `sim/engine/year_phases.py` `SHIPPED`
 become `module_seat_phase("<name>")` or `module_world_phase("<name>")`. Edit only your own lines there.
+
+A step of yours that runs in the middle of another topic's phase (read something before the year's payments, act
+after them) stays where it is as a view your module publishes plus a command it applies; split a phase only when
+the whole step is yours. When you split a shared phase, keep the old name on the part a mod's `after:` most likely
+meant, and name the new parts after their owners.
+
+## Holders, hooks and points
+
+- A command names who holds what by id: `None` for the acting seat's household, otherwise an actor id. Never put an
+  object in a command.
+- A rule that runs inside a free function of a walled package (a transfer hook, a listener) becomes an extension
+  point of the owner: the owner installs the hook and posts what its providers answer as plain tuples
+  (`sim/ledger/` `transfer_surcharge` is the example).
 
 ## The old mixin
 

@@ -7,14 +7,8 @@ lowers the home price level in traded prices, which makes imports dearer and exp
 lifts only what its carriers can: the fleet grows from what trade could not be carried, up to what
 yards can build, and its capital is paid for through the freight rate (`foreign_routes.py`).
 """
-import functools
-
 from sim.constants import declare
 from sim.world import balance_of_payments
-from sim.unit_conversions import HOURS_PER_PERSON_YEAR
-
-from .data import load_civ
-from sim.labour.api import people_fed_per_worker
 
 OPENING_CARRIERS_PER_ROUTE = declare(
     "OPENING_CARRIERS_PER_ROUTE", 10.0, kind="temporary_heuristic",
@@ -26,15 +20,6 @@ OPENING_CARRIERS_PER_ROUTE = declare(
 def _lift_years_per_tonne(inputs, working_days, days_on_leg):
     """Carrier-years a leg uses to move a tonne one way: a round trip, empty back."""
     return 2.0 * days_on_leg / (inputs.cargo_tonnes * working_days)
-
-
-@functools.lru_cache(maxsize=None)
-def _partner_opening_units(civilization_id):
-    from .data import starting_schedule
-    civilization = load_civ(civilization_id)
-    workers = float(civilization.get("population") or 0.0) / people_fed_per_worker()
-    return balance_of_payments.opening_stock_units(
-        workers, starting_schedule(civilization_id).money_per_labour_hour * HOURS_PER_PERSON_YEAR)
 
 
 class ForeignPaymentsMixin:
@@ -53,45 +38,6 @@ class ForeignPaymentsMixin:
             return blank
         ledgers[civilization_id] = blank
         return blank
-
-    # ---- coin ---------------------------------------------------------------
-
-    def _opening_coin_units(self, wage_per_year):
-        workers = self._opening_population() / people_fed_per_worker()
-        return balance_of_payments.opening_stock_units(workers, wage_per_year)
-
-    def _home_opening_coin_units(self):
-        """Coin the society opened with, at the opening's money (not today's price level)."""
-        opening = self.__dict__.get("_opening_coin_value")
-        if opening is None:
-            opening = self._opening_coin_value = self._opening_coin_units(
-                self.labour.opening_wage_schedule().opening_money_per_labour_hour * HOURS_PER_PERSON_YEAR)
-        return opening
-
-    def home_coin_stock_units(self):
-        """Coin this society holds: its opening stock plus what trade has brought in."""
-        return self._home_opening_coin_units() + sum(
-            ledger["home_coin_units"] for ledger in self.state.economy.foreign_ledger.values())
-
-    def home_price_level(self):
-        """Price level of this society against its opening one: its coin stock against the opening's, the
-        level of every good and wage in the home money, traded or not. This is the one price level the
-        engine reads (wages, caches, clearing); the agent economy's `basket_price_level` is its own
-        index of its own prices, kept for its households' and state's expectations."""
-        opening = self.__dict__.get("_opening_coin_value") or self._home_opening_coin_units()
-        stock = opening + sum(ledger["home_coin_units"] for ledger in self.state.economy.foreign_ledger.values())
-        return (balance_of_payments.money_stock_price_level(stock, opening)
-                / self.coin_metal_ratio(self.home_coin_metal()))
-
-    def _partner_coin_opening_units(self, civilization_id):
-        return _partner_opening_units(civilization_id)
-
-    def partner_price_level(self, civilization_id):
-        ledger = self._foreign_ledger(civilization_id)
-        opening = self._partner_coin_opening_units(civilization_id)
-        return (balance_of_payments.money_stock_price_level(opening + ledger["partner_coin_units"], opening)
-                / self.coin_metal_ratio(self.partner_coin_metal(civilization_id)))
-
 
     TRADE_YEARS_KEPT = 3
 
