@@ -68,12 +68,6 @@ def earliest_done_year(sim, node_id, default):
 
 # ---- knowledge and production ----
 
-@bridge_view("tree_nodes")
-def tree_nodes(sim):
-    """The whole tech tree: node data by id."""
-    return sim.nodes
-
-
 @bridge_view("tech_effects", kind=KEYED)
 def tech_effects(sim, node_id):
     """What finishing `node_id` does to the society (the effects table), or None."""

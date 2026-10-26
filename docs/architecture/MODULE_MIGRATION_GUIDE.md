@@ -48,6 +48,8 @@ applies throughout (names spelled out, short comments, a test calls one function
   empty leaf on the current side.
 - In the same commit, add a relocation to `sim/tests/equiv_fields.py` (`(current prefix, base prefix)`, `*` for a
   seat id) for each moved field, so the equivalence check still compares it.
+- Seat-scoped module state lives in `seat.modules` and moves with the seat on a handover (`seat_handover*.py`
+  carries the whole slot); a module that keeps ids inside its seat state rekeys them there.
 - Write your state only inside your module, and bump the channel your views declare. A view is `cached=True` only
   when every write to everything it depends on happens inside its owners' commands; otherwise `cached=False` with
   a comment naming the outside writer.
@@ -96,6 +98,10 @@ meant, and name the new parts after their owners.
   behaviour, and name it in your report. The orchestrator decides whether a fix rides along (one rule with two
   drifted copies made one, like Complaint 681, is the usual exception).
 - Never run the full suite, `--slow` or the full and long equivalence tiers; the orchestrator does.
+- Never kill processes by pattern (`pkill`, `killall`): other agents and the orchestrator run the same commands on
+  this machine. Stop only what you started, by its own id.
+- A source edit invalidates the spin-up caches: the first run after it rebuilds each civilisation's opening (minutes
+  each). Batch your edits before verifying.
 
 ## Report
 
