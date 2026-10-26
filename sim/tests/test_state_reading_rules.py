@@ -10,11 +10,13 @@ from unittest import mock
 from sim.diffusion.api import ApplyTechEffects
 from sim.diffusion.module import Diffusion
 from sim.engine import bridge_diffusion
-from sim.engine.society_hazards import HazardsMixin
+from sim.engine import bridge_living_stock
+from sim.hazards import constants
+from sim.polity.api import RaiseScandal, ScaleProtection
 from sim.polity.api import ShiftValueWeight
 from sim.refusal import cause_of
 from sim.reporting.api import RecordEvent
-from sim.tests import module_harness
+from sim.tests import hazards_host, module_harness
 from sim.ui.proto.scandal_trend import years_until_scandal_crosses_the_line
 from sim.ui.proto.state_succession import succession_block
 from sim.tests import event_stand_in
@@ -45,45 +47,38 @@ class Rolls:
         return 0.0 if self.calls == 1 else 0.99
 
 
-class PatronDeath(HazardsMixin):
-    send = event_stand_in.send
+class PatronDeath:
+    """The hazards module for one seat whose patron dies this year (the first draw is low), and the commands it sends."""
 
-    def __init__(self, scandal_last_year):
-        self.rng = Rolls()
-        self.civ = {}
-        self.manual = False
-        self.price_index = 1.0
-        self.labour = types.SimpleNamespace(money_per_labour_hour=lambda: 1.0)
-        self.policy = {"auto_court_heir": False}
-        self.state = types.SimpleNamespace(
-            founder=types.SimpleNamespace(last_patron_death=None),
-            household=types.SimpleNamespace(scandal=10.0, scandal_last_year=scandal_last_year, protection=0.9, log=[]),
-            scenario=types.SimpleNamespace(year=100))
+    def __init__(self):
+        self.module = hazards_host.build(
+            legacy_dice=Rolls(), running_mechanics=lambda name: [("a patron", {})],
+            founder={"alive": True, "life_left": 30.0, "dead_reason": None, "policy": {"auto_court_heir": False}},
+            standing={"protection": 0.9, "scandal": 10.0, "bribes_year_to_date": 0.0})
+        self.module.random_events_for_seat(100)
 
-    def running_with_mechanic(self, name):
-        return True
+    def sent(self, kind):
+        return [command for command in module_harness.sent(self.module) if isinstance(command, kind)]
 
 
 class PatronDies(unittest.TestCase):
 
-    def test_the_scandal_jumps_and_last_years_mark_moves_with_it_so_the_jump_is_no_trend(self):
-        game = PatronDeath(scandal_last_year=10.0)
-        game._random_events_for_seat(100)
-        household = game.state.household
-        self.assertEqual(household.scandal, 10.0 + game.PATRON_DEATH_SCANDAL)
-        self.assertEqual(household.scandal - household.scandal_last_year, 0.0)
+    def test_the_death_raises_the_scandal_by_the_declared_jump(self):
+        raised, = PatronDeath().sent(RaiseScandal)
+        self.assertEqual(raised.scandal, constants.PATRON_DEATH_SCANDAL)
 
-    def test_with_no_mark_to_move_the_scandal_still_jumps(self):
-        game = PatronDeath(scandal_last_year=None)
-        game._random_events_for_seat(100)
-        self.assertEqual(game.state.household.scandal, 10.0 + game.PATRON_DEATH_SCANDAL)
-        self.assertIsNone(game.state.household.scandal_last_year)
+    def test_the_scandal_jump_moves_last_years_mark_with_it_so_the_jump_is_no_trend(self):
+        for last_year, expected in ((10.0, 10.0 + constants.PATRON_DEATH_SCANDAL), (None, None)):
+            game = types.SimpleNamespace(scandal=10.0, scandal_last_year=last_year)
+            bridge_living_stock.raise_scandal(game, RaiseScandal(constants.PATRON_DEATH_SCANDAL))
+            self.assertEqual(game.scandal, 10.0 + constants.PATRON_DEATH_SCANDAL)
+            self.assertEqual(game.scandal_last_year, expected)
 
     def test_protection_falls_by_the_retention_share_and_the_death_is_logged_with_its_kind(self):
-        game = PatronDeath(scandal_last_year=10.0)
-        game._random_events_for_seat(100)
-        self.assertAlmostEqual(game.state.household.protection, 0.9 * game.PATRON_DEATH_PROTECTION_RETENTION)
-        self.assertEqual(cause_of(game.state.household.log[0][1]), "patron_dies")
+        game = PatronDeath()
+        scaled, = game.sent(ScaleProtection)
+        self.assertEqual(scaled.share, constants.PATRON_DEATH_PROTECTION_RETENTION)
+        self.assertEqual([event.kind for event in game.sent(RecordEvent)], ["patron_dies"])
 
 
 class Succession(unittest.TestCase):

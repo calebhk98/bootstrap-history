@@ -122,20 +122,19 @@ check("shipped events carry causes", carrying > 0)
 
 # the yearly driver: a skipped event is told once, in the log, with the failed cause
 from sim.engine import validate_event_causes
-from sim.engine.society_hazards import HazardsMixin
-from sim.tests import event_stand_in
+from sim.reporting.api import RecordEvent
+from sim.tests import hazards_host, module_harness
 
 driver = fake_sim(population=100.0)
 driver.state = SimpleNamespace(scenario=SimpleNamespace(_said_condition=set(), year=110),
                                household=SimpleNamespace(log=[]))
-event_stand_in.stood_in(driver)
-check("the driver drops an event whose cause fails",
-      HazardsMixin._apply_event_causes(driver, hazard, 110, 110) is None)
-HazardsMixin._apply_event_causes(driver, hazard, 110, 110)
-check("and says why once", len(driver.state.household.log) == 1
-      and "fixture reasoning" in driver.state.household.log[0][1])
-check("the driver passes an event that states no causes",
-      HazardsMixin._apply_event_causes(driver, plain, 110, 110) is plain)
+module = hazards_host.build(effective_hazard=lambda event: event_causes.effective_hazard(driver, event),
+                            legacy_said_once=driver.state.scenario._said_condition)
+told = lambda: [command for command in module_harness.sent(module) if isinstance(command, RecordEvent)]
+check("the driver drops an event whose cause fails", module.apply_event_causes(hazard, 110, 110) is None)
+module.apply_event_causes(hazard, 110, 110)
+check("and says why once", len(told()) == 1 and "fixture reasoning" in told()[0].text)
+check("the driver passes an event that states no causes", module.apply_event_causes(plain, 110, 110) is plain)
 
 # validate reports a bad cause from any civilisation
 errors = validate_event_causes.check_event_causes(

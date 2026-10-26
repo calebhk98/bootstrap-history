@@ -17,7 +17,6 @@ class MarketAbsorptionMixin:
         values add up to `deduction`, the figure the ledger deducts."""
         if deduction <= 0:
             return []
-        economy = self.state.economy
         rows = self.ledger_concern_rows()
         groups = {}
         for node_id, amount in rows.items():
@@ -25,7 +24,7 @@ class MarketAbsorptionMixin:
             group = groups.setdefault(category, {"nominal": 0.0, "members": []})
             group["nominal"] += amount
             group["members"].append((amount, node_id))
-        workshop = self.workshop_output() * economy.output_factor
+        workshop = self.workshop_output() * self.output_factor
         if workshop > 0.5:
             groups[WORKSHOP_CATEGORY] = {"nominal": workshop, "members": []}
         squeezed_total = sum(group["nominal"] for group in groups.values())

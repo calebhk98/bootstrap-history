@@ -31,8 +31,9 @@ class RevenueStandIn(ProductionMixin):
         self.computed = 0
         self.year = 100
         self.price_level = 1.0
+        self.output_factor = 1.0
         self.state = types.SimpleNamespace(
-            scenario=types.SimpleNamespace(year=100), economy=types.SimpleNamespace(output_per_head=1.0, output_factor=1.0),
+            scenario=types.SimpleNamespace(year=100), economy=types.SimpleNamespace(output_per_head=1.0),
             holdings=types.SimpleNamespace(farm_hectares=0.0), projects=types.SimpleNamespace(),
             household=self.household, governance=types.SimpleNamespace(gov=0.0), founder=types.SimpleNamespace(founder_alive=True))
         self.labour = types.SimpleNamespace(director_hours_committed=lambda: 0.0, wage_signature=lambda: 0)
@@ -64,7 +65,7 @@ class RevenueMemoTest(unittest.TestCase):
             "year": lambda sim: setattr(sim.state.scenario, "year", 101),
             "farmland": lambda sim: setattr(sim.state.holdings, "farm_hectares", 5.0),
             "price level": lambda sim: setattr(sim, "price_level", 1.5),
-            "output factor": lambda sim: setattr(sim.state.economy, "output_factor", 0.5),
+            "output factor": lambda sim: setattr(sim, "output_factor", 0.5),
         }
         for name, change in sorted(changes.items()):
             sim = RevenueStandIn()

@@ -38,13 +38,16 @@ class Ownership(TileOwnershipMixin):
         self.stores = SimpleNamespace(view=lambda _name: self.controls)
         self.world_map = None
         self.actors = None
+        self.sent = []
+
+    def send(self, command):
+        self.sent.append(command)
 
 
 class TransferTileTests(unittest.TestCase):
     def transfer(self, game, tile, to_actor, control=None):
-        with mock.patch.object(tile_ownership.world_events, "record") as record:
-            previous = game.transfer_tile(tile, to_actor, control, cause="test")
-        return previous, record
+        previous = game.transfer_tile(tile, to_actor, control, cause="test")
+        return previous, game.sent
 
     def test_a_transfer_returns_the_previous_owner_and_moves_the_tile_at_the_given_level(self):
         game = Ownership()
@@ -64,13 +67,13 @@ class TransferTileTests(unittest.TestCase):
 
     def test_every_transfer_is_written_to_the_world_event_log_with_its_cause_and_both_owners(self):
         game = Ownership()
-        _previous, record = self.transfer(game, "t1", "rival", "garrisoned")
-        arguments, facts = record.call_args
-        self.assertEqual(arguments[1], "tile_transfer")
-        self.assertEqual(facts["tiles"], ["t1"])
-        self.assertEqual(facts["cause"], "test")
-        self.assertEqual((facts["from_owner"], facts["to_owner"], facts["control"]), ("home", "rival", "garrisoned"))
-        self.assertEqual(facts["actors"], ["home", "rival"])
+        _previous, sent = self.transfer(game, "t1", "rival", "garrisoned")
+        record, = sent
+        self.assertEqual(record.kind, "tile_transfer")
+        self.assertEqual(record.tiles, ("t1",))
+        self.assertEqual(record.cause, "test")
+        self.assertEqual((record.facts["from_owner"], record.facts["to_owner"], record.facts["control"]), ("home", "rival", "garrisoned"))
+        self.assertEqual(record.actors, ("home", "rival"))
 
     def test_a_transfer_is_counted_so_memoised_tile_lists_are_rebuilt(self):
         game = Ownership()

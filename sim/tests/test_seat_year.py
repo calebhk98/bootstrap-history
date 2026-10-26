@@ -8,7 +8,7 @@ import types
 
 from .harness import check
 
-from sim.engine.hazard_merge import mildest_hazard
+from sim.hazards.merge import mildest_hazard
 from sim.engine.seat_run import run_is_over, seat_ended, seats_playing
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, seat_from_template
@@ -78,11 +78,6 @@ class FakeSim:
         self.ends_in_shocks = set(ends_in_shocks)
         self.calls = []
 
-    @property
-    def assembly(self):
-        """The phases a module runs are recorded as `module:<phase>` with the seat acting."""
-        return types.SimpleNamespace(phase_handler=lambda name: lambda *arguments: self._record("module:" + name))
-
     def playing_seats(self):
         return [seat_id for seat_id in self.seat_ids if seat_id not in self.state.ended]
 
@@ -101,14 +96,16 @@ class FakeSim:
     def _record(self, name, *arguments):
         self.calls.append((name, self.state.acting_seat))
 
-    def _step_dated_shocks(self, seats):
-        self._record("shocks")
-        self.state.ended |= self.ends_in_shocks
-
     @property
     def assembly(self):
-        """The assembly's phase lookup: a module's phase `name` records as `step_<name>`."""
-        return types.SimpleNamespace(phase_handler=lambda name: (lambda *arguments: self._record("step_" + name)))
+        """The assembly's phase lookup: a module's phase `name` records as `step_<name>`; the year's dated shocks may end seats."""
+        def phase(name):
+            def run(*arguments):
+                self._record("step_" + name)
+                if name == "dated_shocks":
+                    self.state.ended |= self.ends_in_shocks
+            return run
+        return types.SimpleNamespace(phase_handler=phase)
 
     def __getattr__(self, name):
         return lambda *arguments: self._record(name, *arguments)
@@ -124,7 +121,7 @@ check("each seat phase runs once for each seat, in joining order",
       names(two, "_step_money_seat") == [FIRST_SEAT_ID, "second"] and names(two, "_run_seat_work") == [FIRST_SEAT_ID, "second"]
       and names(two, "enforce_credit_limit") == [FIRST_SEAT_ID, "second"], two.calls)
 check("each world phase runs once", all(len(names(two, phase)) == 1 for phase in
-      ("_step_money_world", "shocks", "_step_market", "step_wild_stock", "begin_world_year")), two.calls)
+      ("_step_money_world", "step_dated_shocks", "_step_market", "step_wild_stock", "begin_world_year")), two.calls)
 check("the market closes after every seat's work and before the credit check",
       [call for call, _ in two.calls].index("_step_market") > max(i for i, (call, _) in enumerate(two.calls) if call == "_run_seat_work")
       and [call for call, _ in two.calls].index("_step_market") < [call for call, _ in two.calls].index("enforce_credit_limit"), None)
@@ -154,10 +151,10 @@ run_year(single)
 check("one seat runs the phases in the order a one-seat year always had",
       [call for call, _ in single.calls if call in (
           "_step_apprenticeships", "_step_staff", "_step_money_seat", "_step_money_world", "_step_win_conditions",
-          "shocks", "_run_seat_work", "_step_market", "step_living_stock", "step_defence_stores", "_random_events",
+          "step_dated_shocks", "_run_seat_work", "_step_market", "step_living_stock", "step_defence_stores", "step_random_events",
           "enforce_credit_limit")] == [
           "_step_apprenticeships", "_step_staff", "_step_money_seat", "_step_money_world", "_step_win_conditions",
-          "shocks", "_run_seat_work", "_step_market", "step_living_stock", "step_defence_stores", "_random_events",
+          "step_dated_shocks", "_run_seat_work", "_step_market", "step_living_stock", "step_defence_stores", "step_random_events",
           "enforce_credit_limit"], single.calls)
 
 

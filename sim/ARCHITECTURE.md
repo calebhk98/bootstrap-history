@@ -26,7 +26,7 @@ docstring first line.
 
 | Topic | Prefixes and files |
 |---|---|
-| Step phases (what one year does, in order) | `core_step_phases`, `step_phase_*`, `year_run`, `shock_year` |
+| Step phases (what one year does, in order) | `core_step_phases`, `step_phase_*`, `year_run` |
 | Projects (start, progress, finish, staffing) | `projects*`, `project_materials`, `blockers`, `failure_*`, `planner`, `path_search` |
 | Seats and the founder | `core_seats`, `seat_*`, `state_seat`, `state_holdings`, `state_demand`, `founder_sales`, `cash_*`, `goals`, `fog` |
 | Markets and prices | `prices`, `solve_prices*`, `making_cost`, `long_run_costs`, `rent_standin`, `solve_cache`, `goods_market_*`, `market_*`, `incumbent_prices`, `producer_costs`, `entry_cost`, `wage_*`, `money_units`, `real_*` |
@@ -34,8 +34,9 @@ docstring first line.
 | Foreign trade, freight, coin | `foreign_*`, `trader_cargo`, `sim/freight/` (the freight module), `sim/coin/` |
 | Economy port | `economy_port*`; older money, credit, mining and goods code is `economy_*` |
 | Labour port | `labour_port`, `staff_replacement`, `projects_staffing*` |
+| Geography port | `geography_port`, `ways`, `works`, `held_works`, `colonies`, `mine_deposits` |
+| Society and groups | `society*`, `interest_groups`, `legitimacy`, `benefactions`, `visibility` (hazards are `sim/hazards/`) |
 | Geography port | `geography_port`, `ways`, `works`, `held_works`, `colonies` |
-| Society and groups | `society*`, `interest_groups`, `legitimacy`, `benefactions`, `hazard_*`, `visibility` |
 | Living stock | `living_stock*`, `food_relief`, `defence_stores` |
 | Mods | `mods*`, `mod_*`, `actor_kinds_data` |
 | Data loading and validation | `data`, `tree_source`, `tree_merge`, `catalog`, `validate_*`, `*_check` |

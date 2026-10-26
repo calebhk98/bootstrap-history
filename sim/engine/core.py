@@ -57,7 +57,7 @@ from .year_run import run_year
 from .seat_run import SeatRunMixin
 from .seat_builds import SeatBuildsMixin
 from .seat_sight import SeatSightMixin
-from .shock_year import ShockYearMixin
+from .forward_hazards import HazardsForwardsMixin
 from .seat_defaults import default_policy
 from .ways import WaysMixin
 from .held_works import HeldWorksMixin
@@ -107,7 +107,7 @@ class Sim(
         SeatRunMixin,
         SeatBuildsMixin,
         SeatSightMixin,
-        ShockYearMixin,
+        HazardsForwardsMixin,
         WaysMixin,
         WorksMixin,
         HeldWorksMixin,
@@ -390,11 +390,6 @@ class Sim(
                                               self.cfg["founder_life_sd"])))
         self.state.founder.living_cost_paid = 0.0
         self._spend_this_year = 0.0
-        # WORLD state: monetary and real facts about the whole civilisation,
-        # not about this household. output_factor is the health of the whole imperial
-        # economy relative to 100 AD, crushed by war and plague, not by any
-        # one household's fortunes.
-        self.output_factor = 1.0  # real output, crushed by war and plague, not by debasement
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # How much of each material physically exists: a material's
         # existence somewhere does not mean an unlimited quantity of it is
@@ -795,17 +790,6 @@ class Sim(
         why="How large a bite auto-manumission takes when it fires - "
             "roughly a quarter of current slaves, at least one. Tuned, "
             "not measured.")
-    OUTPUT_RECOVERY_RATE = declare(
-        "OUTPUT_RECOVERY_RATE", 0.006, kind="temporary_heuristic",
-        unit="dimensionless per year (base recovery toward output_factor "
-             "1.0)", source=None, confidence="D",
-        why="Base yearly recovery rate of output_factor after a war or "
-            "other output shock, doubled at full military leverage (see "
-            "comment above) - an armed empire recovers roughly twice as "
-            "fast as an unarmed one, not instantly. Tuned to make a war's "
-            "damage linger for decades, not measured against any attested "
-            "postwar recovery rate.")
-
     INSOLVENCY_FLOOR_MIN_LABOUR_HOURS = declare(
         "INSOLVENCY_FLOOR_MIN_LABOUR_HOURS", 80600.0, kind="temporary_heuristic",
         unit="labour hours", source=None, confidence="D",

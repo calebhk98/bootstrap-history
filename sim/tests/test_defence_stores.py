@@ -16,17 +16,17 @@ from types import SimpleNamespace
 
 from sim.defence_stores.module import DefenceStores
 from sim.engine import cash_remedies  # noqa: F401  (settles the import cycle through project_materials)
-from sim.engine import bridge_living_stock
+from sim.engine import bridge_hazards
 from sim.engine import validate_defence_stores
 from sim.engine.forward_mechanics import ForwardMechanicsMixin
-from sim.engine.hazard_relief import HazardReliefMixin
 from sim.mechanics.module import Mechanics
 from sim.living_stock.api import ChangeHeld
 from sim.tests import module_harness
 from sim.engine.projects_open_gate import OpenGateMixin
 from sim.engine.projects_staffing_shortfall import StaffingShortfallMixin
 from sim.engine.projects_ventures import VenturesMixin
-from sim.engine.society_hazards import HazardsMixin
+from sim.tests import hazards_host
+from sim.workforce.api import SurviveStaff
 
 POWDER_KG = "gunpowder_kg"
 WORKS, GUNS, WALL = "powder_works", "gun", "wall"
@@ -55,13 +55,10 @@ class _Keyed:
         return self.answer(key)
 
 
-class _Host(HazardReliefMixin, HazardsMixin, ForwardMechanicsMixin):
+class _Host(ForwardMechanicsMixin):
     """The fake game the other mixins run on, with the defence-stores module built over it by the harness: its views are
     this host's plain values, and a ChangeHeld it sends changes the host's ledger (kilograms are a thousandth of a tonne)."""
     HOURS_PER_PERSON_YEAR = 2000.0
-    STATE_MIL_RELIEF_PER_WEAPON_SACK = 0.0
-    HAZARD_EROSION_OWN_GOLD = HAZARD_EROSION_OWN_SILVER = 0.0
-    mine_capacity = {}
     civ_diffusion_share = 0.0
 
     def civ_diffusion(self, node_id):
@@ -82,12 +79,17 @@ class _Host(HazardReliefMixin, HazardsMixin, ForwardMechanicsMixin):
             "tree_nodes": self.nodes, "running": self.running,
             "techniques_held": lambda: self.state.projects.done, "institution_units": self.institution_units,
             "money_per_labour_hour": 1.0})
+        self.hazards = hazards_host.build(
+            civilisation=self.civ, year=lambda: self.state.scenario.year, hazard_counter_rows=self.mechanics.hazard_counter_rows,
+            techniques_held=lambda: self.state.projects.done, running=self.running, tree=self.nodes.get,
+            counter_supply_gap=lambda node_id, kind, label: self.counter_supply_gap(node_id, kind, label),
+            civ_diffusion=self.civ_diffusion)
         self.defence = module_harness.build(DefenceStores, views={
             "tree": self.nodes.get, "techniques_held": lambda: self.state.projects.done,
             "operating": lambda: self.state.projects.operating, "is_venture": self.is_venture,
             "staff": lambda: {"employees": self.state.household.employees},
             "stock_held": self.stock_held, "year": lambda: self.state.scenario.year,
-            "live_hazard_kinds": lambda year: bridge_living_stock.live_hazard_kinds(self, year),
+            "live_hazard_kinds": self.hazards.live_hazard_kinds,
             "running_mechanics": self.mechanics.running_mechanics,
             "hours_per_person_year": lambda: self.HOURS_PER_PERSON_YEAR, "institution_units": self.institution_units,
             "effects_in_force": self.mechanics.effects_in_force},
@@ -127,8 +129,14 @@ class _Host(HazardReliefMixin, HazardsMixin, ForwardMechanicsMixin):
     def institution_units(self, node_id):
         return 1.0 if self.running(node_id) else 0.0
 
-    def _state_military_diffusion_relief(self, _weight):
-        return 1.0, None
+    def hazard_relief_entries(self, kind, beyond_national=False):
+        return self.hazards.hazard_relief_entries(kind, beyond_national)
+
+    def hazard_relief(self, kind, beyond_national=False):
+        return self.hazards.hazard_relief(kind, beyond_national)
+
+    def _entry_words(self, entry):
+        return self.hazards._entry_words(entry)
 
 
 def _factor(host, label):
@@ -214,13 +222,16 @@ class HazardLabelsFollowTheMechanics(unittest.TestCase):
         self.assertLess(entry["factor"], 1.0)
 
 
-class _Survivors(HazardsMixin):
-    """The people of a household and the dice that decide who lives (`apply_staff_survival`)."""
+class _Survivors:
+    """The people of a household and the dice that decide who lives (the bridge's SurviveStaff)."""
 
     def __init__(self, seed):
         self.rng = random.Random(seed)
         self.state = SimpleNamespace(household=SimpleNamespace(
             scholars=7.0, artisans=9.0, employees={"carpenter": 3.0, "smith": 5.0}))
+
+    def apply_staff_survival(self, survival_share):
+        bridge_hazards.survive_staff(self, SurviveStaff(survival_share))
 
 
 class PeopleStayWhole(unittest.TestCase):

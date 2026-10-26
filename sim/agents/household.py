@@ -114,7 +114,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"throttle": "holdings",
 	"binding": "holdings",
 	"market_pressure": "holdings",
-	"output_factor": "economy",
 	"_material_stock_ledger": "holdings",
 	"farm_hectares": "holdings",
 	"farm_stock_kg": "holdings",
@@ -136,15 +135,12 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"director_hours_spent_founder": "founder",
 	"living_cost_paid": "founder",
 	"policy": "founder",
-	"last_patron_death": "founder",
 	"_founder_death_aged": "founder",
 	"_founder_death_year": "founder",
 
 	# ScenarioState
 	"year": "scenario",
 	"goal_year": "seat_progress",
-	"_said_debasement": "scenario",
-	"_said_output": "scenario",
 	"_said_scandal": "seat_progress",
 	"_said_parallelism": "seat_progress",
 	"_said_command_index": "seat_progress",

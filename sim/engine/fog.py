@@ -8,9 +8,8 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 from sim.agents.api import Household
 from .data import closure, JSONDict, Nodes
 from . import event_causes
-from .hazard_window import hazards_not_yet_past
+from sim.hazards.api import add_timing_to_steps, hazards_not_yet_past
 from .staff_loss_waves import wave_exposure
-from .hazard_hedge_timing import add_timing_to_steps
 
 
 class FogMixin:

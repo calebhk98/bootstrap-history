@@ -557,12 +557,6 @@ class ForwardingPropertiesMixin:
 		setattr(self.state.holdings, "farm_stock_kg", value)
 
 	@property
-	def output_factor(self):
-		return getattr(self.state.economy, "output_factor")
-
-	@output_factor.setter
-	def output_factor(self, value):
-		setattr(self.state.economy, "output_factor", value)
 
 	@property
 	def shortages(self):

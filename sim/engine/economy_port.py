@@ -390,7 +390,7 @@ class EconomyPort:
     def output_value(self):
         """Money's worth of the society's yearly output at today's prices."""
         sim = self._sim
-        return sim.real_output_hours() * sim.labour.money_per_labour_hour() * sim.state.economy.output_factor
+        return sim.real_output_hours() * sim.labour.money_per_labour_hour() * sim.output_factor
 
     def concern_gross(self, node_id):
         """Yearly takings of a concern once ramped up, with the market's price for its goods applied."""

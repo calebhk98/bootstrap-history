@@ -3,9 +3,7 @@ import functools
 import json
 import os
 
-from .data import ROOT
-
-FILE = os.path.join(ROOT, "data", "world", "world_hazards.json")
+FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "world", "world_hazards.json")
 
 
 @functools.lru_cache(maxsize=1)

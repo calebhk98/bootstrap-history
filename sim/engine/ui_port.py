@@ -2,7 +2,7 @@
 explicit name, and each private `Sim` member the UI reads or writes has a public function that
 delegates exactly. sim/ui/ imports nothing from sim.engine except this module."""
 from sim.engine import (  # noqa: F401
-    cash_book, category_traits, cause_book, world_events, civ_start_check, fuzzy_estimates, path_search, planner,
+    cash_book, category_traits, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
     purchase_rule, settings, settings_table, shortage_conditions, topic_tags, tree_merge, units,
     validate_material_gating, validate_node_money, node_revenue_census, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.engine.blockers import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND  # noqa: F401
@@ -23,7 +23,7 @@ from sim.engine import mod_stores  # noqa: F401
 from sim.engine.mods_constants import constant_overrides  # noqa: F401
 from sim.engine.ui_commands import load_command_specs  # noqa: F401
 from sim.engine.foreign_economy_data import foreign_economy_document  # noqa: F401
-from sim.engine.hazard_window import hazards_not_yet_past  # noqa: F401
+from sim.hazards.api import hazards_not_yet_past  # noqa: F401
 from sim.engine.identity_cache import IdentityCache  # noqa: F401
 from sim.engine.mods import get_ordered_mods  # noqa: F401
 from sim.labour.api import format_occupational_report, hours_by_trade_of_all_employers, occupational_report, people_by_trade_of_all_employers  # noqa: F401

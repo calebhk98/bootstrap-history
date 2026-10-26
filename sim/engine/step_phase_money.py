@@ -3,6 +3,7 @@
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 from sim.reporting.api import RecordAutomation, RecordEvent
 from sim.coin.api import ChargeHouseholdTheft
+from sim.hazards.api import RecoverOutput
 from sim.resources.api import NoteMineCostPaid
 from sim.constants import declare
 from sim.agents.api import edges
@@ -155,20 +156,8 @@ class MoneyPhaseMixin:
         """The society's own year: output recovery, population, literacy and trades, the actors. Once a year."""
         # currency debasement and war damage now come from the civilization's
         # own hazard list, not from Rome's dates baked into the engine
-        if self.state.economy.output_factor < 1.0:
-            # A STATE THAT CAN DEFEND ITSELF REBUILDS FASTER: the recovery
-            # rate must scale with military_leverage(), or a civilization
-            # that built the whole military branch and one that ignored it
-            # would recover from the SAME war at the SAME speed regardless of
-            # either one's investment. military_leverage() is
-            # the same count update_protection() and
-            # hazard_relief("output_factor") (society.py) already read off
-            # self.state.projects.done; at full leverage the recovery rate doubles, so an
-            # armed empire is back to normal trade in roughly half the years
-            # an unarmed one takes, not instantly - the war still happened
-            # and the years it cost are not given back.
-            self.state.economy.output_factor = min(1.0, self.state.economy.output_factor
-                                     + self.OUTPUT_RECOVERY_RATE * (1.0 + self.military_leverage()))
+        # a state that can defend itself rebuilds faster: the hazards module owns the factor and the recovery rate
+        self.send(RecoverOutput())
         # Population and the wage premium it drives recover/build in on their
         # own clock too, and must run before this year's shocks get a chance
         # to add a fresh deficit - see _demographic_recovery for why.

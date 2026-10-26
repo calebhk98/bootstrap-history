@@ -8,7 +8,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.engine.hazard_hedge_timing import add_timing_to_steps, hedge_timing
+from sim.hazards.hedge_timing import add_timing_to_steps, hedge_timing
 from sim.ui.proto.render_screen_why import render_why
 from sim.ui.proto.render_screens_economy import _money_funding_lines
 from sim.ui.proto.render_screens_status import render_risk

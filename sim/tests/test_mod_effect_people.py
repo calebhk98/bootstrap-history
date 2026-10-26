@@ -11,7 +11,6 @@ from sim.agents.api import Stratum, stratum_id
 from sim.agents.records import ActorRecord
 from sim.engine.mod_effects import ModEffects, people_of
 from sim.agents.api import edges
-from sim.engine import world_events
 from sim.engine.mods import ModError
 from sim.tests.bridge_send import attach_send
 
@@ -38,7 +37,7 @@ def stand_in_game():
     farmers, artisans, foreign = stratum(None, "farmers", 1000.0), stratum(None, "artisans", 200.0), stratum(ABROAD, "farmers", 50.0)
     government = SimpleNamespace(actor_id="government:home", record=ActorRecord(kind="government"))
     game = SimpleNamespace(actors=StandInActors([farmers, artisans, foreign, government]), civ={"id": HOME},
-                           state=SimpleNamespace(scenario=SimpleNamespace(year=100), economy=SimpleNamespace(world_events=[])),
+                           state=SimpleNamespace(scenario=SimpleNamespace(year=100)),
                            population=SimpleNamespace(total=1200.0))
     attach_send(game)
     return game, farmers, artisans, foreign
@@ -102,13 +101,13 @@ class NamesAndEventsTests(unittest.TestCase):
         game, *_ = stand_in_game()
         entry = ModEffects("test_mod").record_event(game, "omen", "a comet", actors=[HOME], brightness=2)
         self.assertEqual((entry["kind"], entry["cause"], entry["facts"]), ("test_mod:omen", "a comet", {"brightness": 2}))
-        self.assertEqual(world_events.rows(game, "test_mod:omen"), [entry])
+        self.assertEqual(game.world_event_log.world_events("test_mod:omen"), [entry])
 
     def test_an_event_without_a_cause_is_refused_and_not_recorded(self):
         game, *_ = stand_in_game()
         with self.assertRaises(ModError):
             ModEffects("test_mod").record_event(game, "omen", "")
-        self.assertEqual(game.state.economy.world_events, [])
+        self.assertEqual(game.world_event_log.world.world_events, [])
 
 
 if __name__ == "__main__":

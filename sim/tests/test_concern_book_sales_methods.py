@@ -16,8 +16,8 @@ class _Game(ConcernBookSalesMixin):
 
     def __init__(self, operating=("mill",), granted=(), ventures=("mill", "school"), baskets=None, economy_prices=None):
         self.state = types.SimpleNamespace(
-            projects=types.SimpleNamespace(operating=set(operating), granted=set(granted)),
-            economy=types.SimpleNamespace(output_factor=0.5))
+            projects=types.SimpleNamespace(operating=set(operating), granted=set(granted)))
+        self.output_factor = 0.5
         self.ventures = set(ventures)
         self.baskets = baskets
         self.economy = types.SimpleNamespace(agent_trades_good=lambda good: good in TRADED, agent_prices_at=lambda: economy_prices)

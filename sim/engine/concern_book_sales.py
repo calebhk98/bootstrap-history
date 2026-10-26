@@ -11,7 +11,7 @@ class ConcernBookSalesMixin:
     def concern_book_scale(self, node_id):
         """The share of the concern's full-staffing year it runs now: its ramp, size and the hazard and war factor."""
         units = self.institution_units(node_id) if node_id in self.SCALABLE_INSTITUTIONS else 1.0
-        return self.venture_ramp(node_id) * units * self.state.economy.output_factor
+        return self.venture_ramp(node_id) * units * self.output_factor
 
     def concern_book_offer(self, node_id):
         """{material: units} the concern puts in this year's clearing; empty for a concern the engine's estimate covers
