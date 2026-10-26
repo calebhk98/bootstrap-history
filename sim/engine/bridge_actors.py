@@ -47,6 +47,12 @@ def game_setting(sim, name):
     return sim.cfg[name]
 
 
+@bridge_view("legacy_constant", kind=KEYED)
+def legacy_constant(sim, name):
+    """A number `Sim` still declares (the goods categories, the state's funding terms, the population scale), read as the game has it."""
+    return getattr(sim, name)
+
+
 @bridge_view("shared_answers", kind=QUOTE)
 def shared_answers(sim, table):
     """A context in which the answers asked of the engine are shared through `table` (engine/view_share.py)."""
@@ -395,27 +401,11 @@ def default_on_debt(sim, command):
 # ---- demography, agriculture, diffusion, mechanics ----
 
 
-@bridge_view("people_by_tile")
-def people_by_tile(sim):
-    """{tile: people} of the tracked regions, or None where they do not cover the tiles."""
-    return sim.people_by_tile()
-
-
 @bridge_view("nutrition_ratio_last_year")
 def nutrition_ratio_last_year(sim):
     """The share of the people's food need the last year's supply met, or None before a year has been stepped."""
     flows = getattr(sim, "_last_demographic_step", None)
     return None if flows is None else float(flows.nutrition_ratio)
-
-
-@bridge_view("farm_hours_needed", seat_scoped=True)
-def farm_hours_needed(sim):
-    return sim.state.holdings.farm_hours_needed
-
-
-@bridge_view("farm_last_harvest_kg", seat_scoped=True)
-def farm_last_harvest_kg(sim):
-    return sim.state.holdings.farm_last_harvest_kg
 
 
 @bridge_view("farm_food_demand_kg")

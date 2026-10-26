@@ -8,6 +8,7 @@ fed by the tile's land in the share its working-age people can hold, as many hec
 home. A colony whose people die out is lost.
 """
 from sim.agents.api import edges
+from sim.demography.api import SendSettlers
 from sim.geography.api import settlement, tile_owners
 
 from sim.world.shared_constants import (
@@ -70,7 +71,7 @@ class ColoniesMixin:
             return False, "outfitting %s settlers costs %s, more than you can raise" % (
                 plain_number(settlers), money_text(cost, self, grouped=True))
         self.pay_edge(edges.EDGE_BUILDERS, cost, "outfitting a settlement")
-        self.population.working_age -= settlers
+        self.send(SendSettlers(settlers))
         self.transfer_tile(tile_id, self.state.acting_seat, tile_owners.settlement_level(), "colony founded")
         self.state.holdings.colonies.append({
             "tile": tile_id, "founded_year": self.state.scenario.year, "by": node_id,

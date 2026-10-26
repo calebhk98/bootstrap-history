@@ -309,7 +309,7 @@ def _agent_state(sim, nodes, cmd=None):
     warning = knowledge_loss_warning(sim)
     if warning:
         out["knowledge_loss_warning"] = warning
-    emergency = demographic_emergency(sim.state.population.population_change_last_year)
+    emergency = demographic_emergency(sim.view("population_change_last_year")())
     if emergency:
         out["demographic_emergency"] = emergency
     conditions = shortage_condition_rows(sim)

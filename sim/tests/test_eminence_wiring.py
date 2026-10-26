@@ -55,7 +55,7 @@ class EminenceReportTests(unittest.TestCase):
 
     def test_it_settles_where_the_rule_says(self):
         self.assertEqual(self.report["settles_at_if_nothing_changes"],
-                         round(eminence_rules.settling_eminence(3.0, polity_host.CONSTANTS["EMINENCE_DECAY_RATE"]), 1))
+                         round(eminence_rules.settling_eminence(3.0, constants.EMINENCE_DECAY_RATE), 1))
 
     def test_the_chance_of_ruin_is_the_rules_chance_at_the_present_eminence(self):
         self.assertEqual(self.report["chance_of_ruin_this_year"],

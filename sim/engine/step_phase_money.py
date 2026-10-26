@@ -4,6 +4,7 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 from sim.actors.api import AdvanceActors
 from sim.reporting.api import RecordAutomation, RecordEvent
 from sim.coin.api import ChargeHouseholdTheft
+from sim.demography.api import StepPopulation
 from sim.hazards.api import RecoverOutput
 from sim.resources.api import NoteMineCostPaid
 from sim.constants import declare
@@ -155,8 +156,8 @@ class MoneyPhaseMixin:
         self.send(RecoverOutput())
         # Population and the wage premium it drives recover/build in on their
         # own clock too, and must run before this year's shocks get a chance
-        # to add a fresh deficit - see _demographic_recovery for why.
-        self._demographic_recovery(self.state.scenario.year)
+        # to add a fresh deficit (the demography module's yearly step).
+        self.send(StepPopulation(self.state.scenario.year))
         # Literacy and taught-trade naturalisation move on the same kind of
         # slow, generational clock as population above - see
         # SocietyMixin.advance_society (society.py) for the mechanism. Run

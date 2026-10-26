@@ -1,10 +1,11 @@
 """The commands other modules send polity: standing changes of the acting seat, the society's value weights and the records of
 the state of a country (its army, its tiles' unrest, its risings, its ruler).
 
-Needs: legacy_constant, country_world."""
+Needs: country_world."""
 from sim.agents.api import army_raising
 from sim.refusal import Refusal
 
+from . import constants
 from .state import STANDING, VALUES
 from .value_weight import VALUE_WEIGHT_CEILING, VALUE_WEIGHT_FLOOR, shifted
 
@@ -37,7 +38,7 @@ class Appliers:
 		self.bump(STANDING)
 
 	def gain_reputation(self, command):
-		self.seat.reputation = min(self.needs.legacy_constant["REPUTATION_CEILING"], self.seat.reputation + command.amount)
+		self.seat.reputation = min(constants.REPUTATION_CEILING, self.seat.reputation + command.amount)
 		self.bump(STANDING)
 
 	def add_reputation(self, command):

@@ -21,15 +21,22 @@ class RecordConquestContact(Command):
 
 
 @dataclass(frozen=True)
-class RecordMigrationContact(Command):
-	"""People moved between places, as (origin, destination, people) rows: the actors where they arrive become aware of what
-	the people of the place they left know."""
-	moves: Tuple[Tuple[str, str, float], ...]
-
-
-@dataclass(frozen=True)
 class NoteTraderMargin(Command):
 	"""A trader actor's last margin changes by `amount` (what its cargo made against what it was booked at). Refused with the
 	cause `no_such_actor` when the cast holds no such trader."""
 	trader: str
 	amount: float
+
+
+@dataclass(frozen=True)
+class RecordMigrantContact(Command):
+	"""Migrants moved as `pairs` of (origin tile, destination tile, people): the actors where they arrive become aware of what
+	the people of the place they left know."""
+	pairs: Tuple[Tuple[str, str, float], ...]
+
+
+@dataclass(frozen=True)
+class ScaleStrata(Command):
+	"""Every stratum of the country `country` keeps `1 - share` of its members (a partner's people die by their strata)."""
+	country: str
+	share: float

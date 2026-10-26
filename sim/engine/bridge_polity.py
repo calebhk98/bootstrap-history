@@ -9,18 +9,12 @@ from . import need_substitutes
 from .bridge import bridge_view
 
 
-# ---- core: the game and what it still declares ----------------------------------------------------------------------------
+# ---- core: the game ----------------------------------------------------------------------------------------------
 
 @bridge_view("legacy_game")
 def legacy_game(sim):
 	"""The game itself: a mod's wealth-claim readers and seizers (sim.polity.api.register_wealth_claims) take it."""
 	return sim
-
-
-@bridge_view("legacy_constant", kind=KEYED)
-def legacy_constant(sim, name):
-	"""A number `Sim` still declares (reputation decay, scandal and bribery rates, eminence retention), read as the game has it."""
-	return getattr(sim, name)
 
 
 @bridge_view("danger_lines")

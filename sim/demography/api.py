@@ -1,5 +1,10 @@
-"""The demography package's only door. Only its commands exist here; the engine bridge applies them until the module moves."""
+"""The demography package's only door."""
 
-WALL = "two-way"  # nothing here imports sim/engine/
+WALL = "two-way"  # nothing here imports sim/engine/; the engine bridge hands it what it still reads from the engine
 
-from .commands import AddCaptives, CutPopulation, KillPeople, RefreshDemographicIndexes
+from .commands import (AddCaptives, ChangeFarmland, CutPopulation, KillPeople, NotePopulationChange, OpenPopulation,
+                       RecordFoodEaten, RefreshDemographicIndexes, SendSettlers, SetClearedFarmland, SetFarmHoursNeeded,
+                       StepPopulation, TakeFromGranary)
+from .constants import DEFAULT_POPULATION_100AD, POP_SCALE_FLOOR
+from .people import People
+from . import rules

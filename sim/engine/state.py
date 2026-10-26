@@ -299,26 +299,7 @@ class FounderState:
 class ScenarioState:
 	"""Simulation scenario configuration and timeline."""
 	year: int = 100
-	_said_wage_cascade: int = -999    # last year a wage-cascade note was printed
 	_said_condition: Set[str] = field(default_factory=set)  # hazard-condition messages already printed once
-
-
-@dataclass
-class PopulationState:
-	"""World demography and agriculture state linkage."""
-	pop_children: float = 0.0
-	pop_working_age: float = 0.0
-	pop_elderly: float = 0.0
-	population_change_last_year: Optional[float] = None
-	# the nation's people-weighted food eaten over need in the economy's last closed year (food_eaten.py)
-	food_eaten_over_need: Optional[float] = None
-	# the same by tile, and the people by tile as [children, working_age, elderly] (regional_people.py)
-	regional_eaten_over_need: Dict[str, float] = field(default_factory=dict)
-	regions: Dict[str, List[float]] = field(default_factory=dict)
-	# the share of each region's people living in town, seeded at the opening from the civilisation's typed urban share (urban_share.py)
-	urban_share_of_people: Dict[str, float] = field(default_factory=dict)
-	# one dict per simulated year: year, population, births, deaths, nutrition_ratio
-	yearly_record: List[Any] = field(default_factory=list)
 
 
 @dataclass
@@ -334,7 +315,6 @@ class SimulationState:
 	seats: Dict[str, "SeatState"] = field(default_factory=dict)
 	acting_seat: str = "founder"
 	scenario: Optional[ScenarioState] = None
-	population: Optional[PopulationState] = None
 	_civ: Optional[str] = None
 	_fog: bool = False
 	_fuzzy_estimates: bool = False
@@ -395,7 +375,6 @@ ALL_STATE_CLASSES = (
 	HoldingsState,
 	SeatProgressState,
 	ScenarioState,
-	PopulationState,
 	ActorsState,
 )
 

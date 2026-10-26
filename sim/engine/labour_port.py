@@ -1,6 +1,7 @@
 """The engine's side of the labour wall: what the labour package reads from the simulation, and where
 the simulation keeps its `Labour`."""
 from sim.agents.api import edges, tax_burden
+from sim.demography.api import rules as demography_rules
 from sim.labour.api import Labour
 from sim.prices.api import solve_prices_core
 from . import data, director_overhead, purchase_rule, units_prose, wage_schedule
@@ -40,8 +41,8 @@ class LabourWorld:
         return self._sim.home_tiles_held()
 
     def people_by_tile(self):
-        """{tile: people} from the regions the engine tracks, or None before they cover the tiles held."""
-        return self._sim.people_by_tile()
+        """{tile: people} from the regions the demography module tracks, or None before they cover the tiles held."""
+        return self._sim.view("people_by_tile")()
 
     def home_tiles_held_version(self):
         """Changes whenever the tiles the home country owns might."""
@@ -122,8 +123,8 @@ class LabourWorld:
         return self._sim.economy.unskilled_wage()
 
     def urban_fraction(self):
-        """Share of the nation's people living in town, from its regions (urban_share.py)."""
-        return self._sim.urban_fraction()
+        """Share of the nation's people living in town, from its regions (the demography module)."""
+        return self._sim.view("urban_fraction")()
 
     def harvest_share_taken(self, material):
         """Share of the harvest of a material the home state's forms take from growers; none without a government."""
@@ -167,7 +168,7 @@ class LabourWorld:
         return self._sim.actor_staff_total()
 
     def adult_equivalent_population(self, population):
-        return self._sim._adult_equivalent_population(population)
+        return demography_rules.adult_equivalents(population)
 
     def build_worker_housing(self, places):
         return self._sim.build_worker_housing(places)
@@ -227,9 +228,9 @@ class LabourWorld:
     def farm_land(self, value):
         self._sim.farm_land = value
 
-    @property
-    def farm_stock_kg(self):
-        return self._sim.farm_stock_kg
+    def farm_holdings(self):
+        """The acting seat's farm: hectares, granary, what the last farm year left and the hours the farm needs."""
+        return self._sim.view("farm_holdings")()
 
     @property
     def farm_technique_this_year(self):
@@ -301,11 +302,11 @@ class LabourWorld:
 
     @property
     def pop_scale(self):
-        return self._sim.pop_scale
+        return self._sim.view("pop_scale")()
 
     @property
     def population(self):
-        return self._sim.population
+        return self._sim.view("population")()
 
     @property
     def price_index(self):

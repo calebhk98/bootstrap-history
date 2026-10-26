@@ -12,12 +12,12 @@ from sim.agriculture.state import AgricultureWorld
 from sim.tests import module_harness
 
 
-def build(rows=(), civ_id="rome_100ad", salt=12345, dice_seed=1, burnt_draws=0, yield_factors=None, views=None, world=None):
+def build(rows=(), civ_id="rome_100ad", salt=12345, dice_seed=1, burnt_draws=0, yield_factors=None, views=None, world=None, answers=None):
     dice = random.Random(dice_seed)
     for _draw in range(burnt_draws):
         dice.random()
     plain = {"civilisation": {"id": civ_id}, "held_tile_geometry": list(rows), "legacy_dice": dice,
              "externality_yield_factors": lambda year: dict(yield_factors or {})}
     plain.update(views or {})
-    return module_harness.build(Agriculture, views=plain, world=world if world is not None else AgricultureWorld(weather_salt=salt),
-                                module_id="agriculture")
+    return module_harness.build(Agriculture, views=plain, answers=answers,
+                                world=world if world is not None else AgricultureWorld(weather_salt=salt), module_id="agriculture")

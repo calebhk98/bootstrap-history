@@ -80,7 +80,7 @@ class ProductionMixin:
           - director_hours_committed(): teaching, moving and supervising hours the standing job does not sell
           - labour.wage_signature(): recent hiring that moves the market wage the standing job is paid
           - self.household.directors_extra, bondage_years_left: the own hours the standing job sells
-          - self.household.farm_hectares: household farmland staples affecting food price ratio
+          - the acting seat's farm_holdings hectares: household farmland staples affecting food price ratio
           - self.household.gov: governance quality affecting state funding
           - self.household._inst_units_ver: scalable institution units
           - self.output_factor: hazard/war output scaling
@@ -91,7 +91,6 @@ class ProductionMixin:
         Serialized: no
         """
         scenario = self.state.scenario
-        holdings = self.state.holdings
         projects = self.state.projects
         household = self.state.household
         standing = self.view("standing")()
@@ -108,7 +107,7 @@ class ProductionMixin:
             self.labour.wage_signature(),
             household.directors_extra,
             household.bondage_years_left,
-            getattr(holdings, "farm_hectares", 0.0) or 0.0,
+            self.view("farm_holdings")()["hectares"] or 0.0,
             getattr(household, "freedmen", 0.0) or 0.0,
             getattr(household, "slaves", 0.0) or 0.0,
             standing["governance"] or 0.0,

@@ -397,7 +397,7 @@ def stock_to_carry_forward_kg(flows: "YearFlows") -> float:
     that still rebuilds it fresh at stock_kg=0.0 every step, as this
     module's whole test suite still does for calls that are not
     specifically testing multi-year carry) has no reason to call this at
-    all - it exists for exactly one job, the one Sim._demographic_recovery
-    (sim/engine/core.py) now does.
+    all - it exists for exactly one job, the one the demography module's yearly step
+    (sim/demography/recovery.py) does.
     """
     return flows.stock_after_kg + flows.seed_retained_kg

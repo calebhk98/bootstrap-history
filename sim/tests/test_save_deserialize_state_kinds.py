@@ -132,14 +132,14 @@ check("deserialize_state: a coded refusal is a Refusal with its code, choices an
 # ---- the root: seats in saved order, the acting seat's aliases, metadata
 state = deserialize_state({
 	"seats": {"zed": {"household": {"capital": 10.0}, "projects": {"done": {"__set__": ["fire"]}}, "founder": {"living_cost_paid": 30.0},
-	                  "holdings": {"farm_stock_kg": 3.0}, "goal": "steam_engine", "country": "han", "kind": "household", "holder": None},
+	                  "holdings": {"market_pressure": 3.0}, "goal": "steam_engine", "country": "han", "kind": "household", "holder": None},
 	          "abe": {"household": {"capital": 4.0}, "projects": {}, "founder": None, "goal": None}},
 	"acting_seat": "abe", "economy": {}, "scenario": {"year": 115}, "_civ": "rome", "_rng": [3, [0, 1], None], "_seed": "seed text",
 	"stores": {"granary": {"t1|rome": 4.0}}, "interface": {"panel": "map"}}, SimulationState)
 check("deserialize_state: seats come back in the saved order and as seats",
       list(state.seats) == ["zed", "abe"] and state.seats["zed"].goal == "steam_engine" and state.seats["zed"].country == "han"
       and state.seats["zed"].projects.done == {"fire"} and state.seats["zed"].founder.living_cost_paid == 30.0
-      and state.seats["zed"].holdings.farm_stock_kg == 3.0 and state.seats["abe"].founder is None, None)
+      and state.seats["zed"].holdings.market_pressure == 3.0 and state.seats["abe"].founder is None, None)
 check("deserialize_state: the acting seat's objects are the root's household, projects and holdings",
       state.acting_seat == "abe" and state.household is state.seats["abe"].household and state.projects is state.seats["abe"].projects
       and state.holdings is state.seats["abe"].holdings and state.household.capital == 4.0, None)

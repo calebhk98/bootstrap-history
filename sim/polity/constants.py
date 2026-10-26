@@ -522,3 +522,153 @@ STATE_FUNDING_GOV_QUALITY_SCALE = declare(
         "funding. household.gov has no independent calibration of its "
         "own scale, so this denominator is picked to make the term feel "
         "proportionate rather than derived from anything.")
+REPUTATION_DECAY_TOWARD_FLOOR = declare(
+    "REPUTATION_DECAY_TOWARD_FLOOR", 0.97, kind="temporary_heuristic",
+    unit="dimensionless (fraction of the gap above the standing floor "
+         "kept per year)", source=None, confidence="D",
+    why="How much of reputation's gap above the standing floor "
+        "survives each year - reputation decays toward what a "
+        "founder is actually known for (the floor), not toward zero "
+        "(see comment above). A slow decay, tuned so novelty fades "
+        "over decades rather than years; not measured against any "
+        "attested reputation-decay rate.")
+FAMILIARITY_CEILING = declare(
+    "FAMILIARITY_CEILING", 0.9, kind="temporary_heuristic",
+    unit="dimensionless (0..1)", source=None, confidence="D",
+    why="Ceiling on familiarity, however long or publicly the founder "
+        "has worked - a society never becomes fully unable to be "
+        "surprised. Round figure, not measured.")
+FAMILIARITY_PUBLICATION_WEIGHT = declare(
+    "FAMILIARITY_PUBLICATION_WEIGHT", 0.5, kind="temporary_heuristic",
+    unit="dimensionless (weight per spectacle/inexplicable node done)",
+    source=None, confidence="D",
+    why="How much each publicly astonishing thing the founder has "
+        "done adds to familiarity's growth, relative to the passage "
+        "of time (FAMILIARITY_TENURE_WEIGHT). Tuned, not measured.")
+FAMILIARITY_TENURE_WEIGHT = declare(
+    "FAMILIARITY_TENURE_WEIGHT", 0.25, kind="temporary_heuristic",
+    unit="dimensionless (weight per year since year 100)", source=None,
+    confidence="D",
+    why="How much the mere passage of time (being a known fixture) "
+        "adds to familiarity's growth, relative to specific "
+        "publications (FAMILIARITY_PUBLICATION_WEIGHT). Tuned, not "
+        "measured.")
+SCANDAL_DECAY_RATE = declare(
+    "SCANDAL_DECAY_RATE", 0.90, kind="temporary_heuristic",
+    unit="dimensionless (fraction kept per year)", source=None,
+    confidence="D",
+    why="How much of last year's scandal survives, absent any fresh "
+        "cause or bribery - scandal fades on its own, slower than "
+        "market pressure but faster than reputation moves toward its "
+        "floor. Tuned, not measured.")
+EMINENCE_DECAY_RATE = declare(
+    "EMINENCE_DECAY_RATE", 0.93, kind="temporary_heuristic",
+    unit="dimensionless (fraction kept per year, before this year's "
+         "hazard is added)", source=None, confidence="D",
+    why="How much of last year's eminence survives before adding this "
+        "year's prominence_hazard() - see society.py's eminence_report "
+        "and prominence_hazard, which both reference this same rate "
+        "(as self.EMINENCE_DECAY_RATE) so the reported settling value "
+        "can never disagree with what actually accumulates here. "
+        "Tuned so eminence settles at a level roughly proportionate to "
+        "sustained hazard, not measured.")
+AUTO_BRIBE_SCANDAL_THRESHOLD = declare(
+    "AUTO_BRIBE_SCANDAL_THRESHOLD", 8, kind="temporary_heuristic",
+    unit="scandal points", source=None, confidence="D",
+    why="Scandal level above which the optimizer's standing bribery "
+        "policy actually starts spending - below it, scandal is not "
+        "yet worth buying down. Tuned, not measured.")
+AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS = declare(
+    "AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS", 40300.0, kind="temporary_heuristic",
+    unit="labour hours", source=None, confidence="D",
+    why="Minimum capital before the optimizer's bribery policy will spend at "
+        'all, so a poor household is not bled dry bribing away scandal it might'
+        ' survive anyway. Round number, not measured. Capital is a stock of '
+        'labour-valued goods and coin, so the threshold is the hours of work it'
+        ' represents.')
+AUTO_BRIBE_CAPITAL_SHARE = declare(
+    "AUTO_BRIBE_CAPITAL_SHARE", 0.12, kind="temporary_heuristic",
+    unit="dimensionless (share of capital)", source=None,
+    confidence="D",
+    why="Ceiling on how much of current capital one year's bribery "
+        "spend can be, so buying down scandal cannot alone bankrupt "
+        "the household. Tuned, not measured.")
+AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT = declare(
+    "AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT", 5240.0, kind="temporary_heuristic",
+    unit="labour hours per scandal point", source=None, confidence="D",
+    why='What buying down one point of scandal costs, capping total spend '
+        'alongside AUTO_BRIBE_CAPITAL_SHARE. Invented figure, not sourced to '
+        'any attested bribe schedule. An official accepts a payment worth the '
+        'work and risk he gives up, so the sum is the hours of unskilled labour'
+        ' it buys.')
+BRIBES_YTD_DECAY = declare(
+    "BRIBES_YTD_DECAY", 0.7, kind="temporary_heuristic",
+    unit="dimensionless (fraction kept per year)", source=None,
+    confidence="D",
+    why="How much of the running bribes_ytd total (itself the "
+        "denominator update_protection() reads for the bribery "
+        "protection term) survives into next year - a bribe's "
+        "protective effect fades rather than accumulating forever. "
+        "Tuned, not measured.")
+BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT = declare(
+    "BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT", 6050.0, kind="temporary_heuristic",
+    unit="labour hours per scandal point removed (before bribability)", source=None, confidence="D",
+    why='How much bribery spend it takes to remove one point of scandal, scaled'
+        " further by this society's own bribability weight. Invented figure, "
+        'not sourced to any attested bribe schedule. An official accepts a '
+        'payment worth the work and risk he gives up, so the sum is the hours '
+        'of unskilled labour it buys.')
+SCANDAL_HAZARD_SCALE = declare(
+    "SCANDAL_HAZARD_SCALE", 60.0, kind="temporary_heuristic",
+    unit="scandal points per unit of yearly denunciation probability",
+    source=None, confidence="D",
+    why="How much scandal above the danger line it takes to add a "
+        "full 100% to this year's denunciation chance - shared with "
+        "the 'YOU ARE BEING TALKED ABOUT' warning text so the number "
+        "quoted there can never disagree with the one that fires. "
+        "Tuned, not measured against any attested denunciation rate.")
+EMINENCE_CONFISCATION_CAPITAL_LOSS = declare(
+    "EMINENCE_CONFISCATION_CAPITAL_LOSS", 0.55, kind="temporary_heuristic",
+    unit="dimensionless (fraction of capital)", source=None,
+    confidence="D",
+    why="Fraction of capital the eminence-driven confiscation outcome "
+        "takes - distinct from society.py's state-notice-driven "
+        "CONFISCATION_CAPITAL_LOSS, this is the court's jealousy of a "
+        "great man, unbribable by design (see prominence_hazard's own "
+        "docstring). Tuned, not measured.")
+EMINENCE_CONFISCATION_REPUTATION_LOSS = declare(
+    "EMINENCE_CONFISCATION_REPUTATION_LOSS", 18, kind="temporary_heuristic",
+    unit="reputation points", source=None, confidence="D",
+    why="Reputation lost to an eminence-driven confiscation and forced "
+        "retirement - the largest single reputation hit in this file, "
+        "reflecting public disgrace on top of the property loss. "
+        "Tuned, not measured.")
+EMINENCE_CONFISCATION_RETENTION = declare(
+    "EMINENCE_CONFISCATION_RETENTION", 0.45, kind="temporary_heuristic",
+    unit="dimensionless (fraction of eminence kept)", source=None,
+    confidence="D",
+    why="Fraction of eminence kept after a confiscation and forced "
+        "withdrawal - the outcome itself lowers prominence sharply. "
+        "Tuned, not measured.")
+EMINENCE_PATRON_LOSS_RETENTION = declare(
+    "EMINENCE_PATRON_LOSS_RETENTION", 0.5, kind="temporary_heuristic",
+    unit="dimensionless (fraction of eminence kept)", source=None,
+    confidence="D",
+    why="Fraction of eminence kept after a patron is destroyed in "
+        "someone else's quarrel - a smaller drop than "
+        "EMINENCE_CONFISCATION_RETENTION since the founder's own "
+        "position is not directly struck. Tuned, not measured.")
+EMINENCE_PATRON_LOSS_REPUTATION_LOSS = declare(
+    "EMINENCE_PATRON_LOSS_REPUTATION_LOSS", 10, kind="temporary_heuristic",
+    unit="reputation points", source=None, confidence="D",
+    why="Reputation lost when a patron is destroyed - smaller than "
+        "EMINENCE_CONFISCATION_REPUTATION_LOSS since the disgrace is "
+        "the patron's, not directly the founder's. Tuned, not "
+        "measured.")
+REPUTATION_CEILING = declare(
+    "REPUTATION_CEILING", 100.0, kind="temporary_heuristic",
+    unit="reputation points", source=None, confidence="D",
+    why="The top of the reputation scale this engine uses throughout "
+        "(REPUTATION_EASE_SCALE in economy.py reads reputation "
+        "against this same implicit ceiling). A scale choice, not a "
+        "measured social fact.")

@@ -45,13 +45,6 @@ def household_prices(sim):
     return sim.goods_market.household_prices()
 
 
-# ---- demography ----
-
-@bridge_view("population_total")
-def population_total(sim):
-    return sim.population.total
-
-
 # ---- workforce ----
 
 @bridge_view("wage_materials")

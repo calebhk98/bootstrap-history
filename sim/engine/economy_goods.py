@@ -491,7 +491,7 @@ class GoodsMixin:
         # Household-backed farms supply staples even before a processing
         # concern exists. Diminishing returns reach the same 0.55 floor as the
         # established food market rather than making subsistence free.
-        farm_ha = max(0.0, getattr(self.household, "farm_hectares", 0.0))
+        farm_ha = max(0.0, self.view("farm_holdings")()["hectares"] or 0.0)
         farm_ratio = max(self.HOUSEHOLD_FARM_PRICE_RATIO_FLOOR,
                          1.0 / (1.0 + farm_ha / self.HOUSEHOLD_FARM_HECTARES_HALF_EFFECT))
         return min(market_ratio, farm_ratio)
@@ -599,7 +599,6 @@ class GoodsMixin:
         # Not serialized because: pure transient derived state recomputed on load
         scenario = self.state.scenario
         economy = self.state.economy
-        holdings = self.state.holdings
         projects = self.state.projects
         shared_key = (
             scenario.year,
@@ -607,7 +606,7 @@ class GoodsMixin:
             self.real_output_per_head(),
             self.household.operating_version,
             self.household.done_version,
-            getattr(holdings, "farm_hectares", 0.0) or 0.0,
+            self.view("farm_holdings")()["hectares"] or 0.0,
             self.actor_market_version(),
         )
         cache = getattr(self.household, "_income_factor_cache", None)
@@ -648,7 +647,6 @@ class GoodsMixin:
         projects = self.state.projects
         scenario = self.state.scenario
         economy = self.state.economy
-        holdings = self.state.holdings
 
         # Cached value: category-level operating revenue factor
         # Dependencies: shared_key and household farm_hectares
@@ -660,7 +658,7 @@ class GoodsMixin:
             self.real_output_per_head(),
             self.household.operating_version,
             self.household.done_version,
-            getattr(holdings, "farm_hectares", 0.0) or 0.0,
+            self.view("farm_holdings")()["hectares"] or 0.0,
             self.actor_market_version(),
         )
         cache = getattr(self.household, "_goods_mkt_op_factor_cache", None)

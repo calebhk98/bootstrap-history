@@ -133,13 +133,13 @@ check("last year's births and deaths are the flows' figures rounded, with the ra
 no_start = SimpleNamespace(**{**flows.__dict__, "start_total": 0.0})
 with mock.patch.object(screen_demography.ui_port, "last_demographic_step", lambda game: no_start):
     check("a year that began with nobody has no rate per thousand", screen_demography._last_year(SimpleNamespace())["births_per_thousand"] is None)
-record_game = SimpleNamespace(state=SimpleNamespace(population=SimpleNamespace(
-    yearly_record=[{"year": 100, "births": 5, "deaths": 4, "nutrition_ratio": 1.0}, {"year": 101, "births": 7, "deaths": 6, "nutrition_ratio": 0.9}])))
+record_game = SimpleNamespace(view=lambda name: lambda: [{"year": 100, "births": 5, "deaths": 4, "nutrition_ratio": 1.0},
+                                                          {"year": 101, "births": 7, "deaths": 6, "nutrition_ratio": 0.9}])
 with mock.patch.object(screen_demography.ui_port, "last_demographic_step", lambda game: None):
     from_record = screen_demography._last_year(record_game)
     check("with no flows held the last year is the newest record's births, deaths and nutrition",
           from_record == {"births": 7, "deaths": 6, "nutrition_ratio": 0.9, "year": 101}, from_record)
-    empty_record = SimpleNamespace(state=SimpleNamespace(population=SimpleNamespace(yearly_record=[])))
+    empty_record = SimpleNamespace(view=lambda name: lambda: [])
     check("with no flows and no record there is no last year", screen_demography._last_year(empty_record) is None)
 
 # --- divergence

@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
+from sim.demography.api import SetClearedFarmland
 from sim.labour.labour_allocation import LabourAllocationMixin
 from sim.world import agriculture
 
@@ -16,9 +17,9 @@ CLEARING_HOURS_PER_HECTARE = agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE
 
 class Farm(LabourAllocationMixin):
     def __init__(self, hectares, ladder=LADDER, ceiling=300.0):
+        self.sent = []
         self._world = SimpleNamespace(farm_ladder=ladder, farm_arable_ceiling=ceiling,
-                                      farm_land=agriculture.Land(hectares, 1.0),
-                                      state=SimpleNamespace(holdings=SimpleNamespace(farm_cleared_hectares=0.0)))
+                                      farm_land=agriculture.Land(hectares, 1.0), send=self.sent.append)
 
     def sized(self):
         self._set_farm_area(self._world.farm_land.hectares)
@@ -32,7 +33,7 @@ class FarmAreaTests(unittest.TestCase):
 
     def test_the_cleared_area_is_recorded(self):
         farm = Farm(150.0).sized()
-        self.assertEqual(farm._world.state.holdings.farm_cleared_hectares, 150.0)
+        self.assertEqual(farm.sent, [SetClearedFarmland(150.0)])
         self.assertEqual(farm._world.farm_land.hectares, 150.0)
 
     def test_a_farm_that_covers_only_the_best_parcel_has_its_fertility(self):

@@ -78,11 +78,6 @@ def goods_carried_last_year(sim):
     return sim.economy.agent.carried_last_year()
 
 
-@bridge_view("working_age")
-def working_age(sim):
-    return sim.population.working_age
-
-
 # ---- polity and the ledger ----
 
 @bridge_view("holder_treasury", kind=KEYED)

@@ -4,7 +4,6 @@ Each view carries the name its owner will publish (docs/architecture/catalogue),
 did, and is never cached. Each command applies what the old hazard code did inline, in the same order. The `legacy_*`
 views are raw state or the engine's own switches the module still needs; they go when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
-from sim.demography.api import CutPopulation, KillPeople, RefreshDemographicIndexes
 from sim.projects.api import ResetProjectProgress, ShutForgotten
 from sim.reporting.api import RecordEvent
 from sim.workforce.api import NoteWageShock, ReportStaffReduction, ScaleDeputies, SurviveStaff, rules as workforce_rules
@@ -93,12 +92,6 @@ def wage_index(sim):
     return sim.wage_index
 
 
-@bridge_view("country_strata", kind=KEYED)
-def country_strata(sim, country):
-    """[{members, shortfall}] of the country's strata: how many they are and the share of each need they leave unmet."""
-    return [{"members": actor.record.members, "shortfall": actor.record.shortfall} for actor in mod_effects.strata_of(sim, country)]
-
-
 # ---- commands of owners that have not moved -------------------------------------------------------------------------
 
 @bridge_command(SurviveStaff)
@@ -128,22 +121,6 @@ def report_staff_reduction(sim, command):
 @bridge_command(NoteWageShock)
 def note_wage_shock(sim, command):
     cause_book.record_wage_shock(sim, command.cause, command.index_before)
-
-
-@bridge_command(CutPopulation)
-def cut_population(sim, command):
-    sim._apply_population_mortality_shock(command.share)
-
-
-@bridge_command(RefreshDemographicIndexes)
-def refresh_demographic_indexes(sim, command):
-    sim._refresh_demographic_indexes(command.year)
-
-
-@bridge_command(KillPeople)
-def kill_people(sim, command):
-    return mod_effects.BASE_EFFECTS.kill_people(sim, command.country, command.share, command.cause, kind=command.kind,
-                                                tiles=command.tiles, **command.facts)
 
 
 @bridge_command(ShutForgotten)

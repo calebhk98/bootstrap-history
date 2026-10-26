@@ -70,7 +70,7 @@ class BudgetView:
 		farming wants (none known before its first allocation), and the share of the people's food need the last
 		year's supply met, with the state's own granary making up what the harvest lacked."""
 		needs = self.needs
-		hours = needs.farm_hours_needed()
+		hours = needs.farm_holdings()["hours_needed"]
 		farm_hands = 0.0 if hours is None else hours / agriculture.ANNUAL_LABOUR_HOURS_PER_FARM_WORKER
 		last_ratio = needs.nutrition_ratio_last_year()
 		ratio = 1.0 if last_ratio is None else last_ratio

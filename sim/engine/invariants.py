@@ -6,10 +6,11 @@ VALID_PROJECT_STATUSES = frozenset(("ACTIVE", "PAUSED", "BLOCKED", "BLOCKED_INPU
 
 def check_simulation_invariants(state):
     """Assert cross-subsystem rules without repairing or consulting globals."""
+    people = state.modules["demography"]
     demographics = {
-        "children": state.population.pop_children,
-        "working_age": state.population.pop_working_age,
-        "elderly": state.population.pop_elderly,
+        "children": people.pop_children,
+        "working_age": people.pop_working_age,
+        "elderly": people.pop_elderly,
     }
     for key, value in demographics.items():
         assert math.isfinite(value) and value >= 0.0, \
@@ -19,8 +20,9 @@ def check_simulation_invariants(state):
     for key, value in (holdings._material_stock_ledger or {}).items():
         assert math.isfinite(value) and value >= -1e-9, \
             "negative or non-finite physical stockpile %s=%r" % (key, value)
-    assert math.isfinite(holdings.farm_stock_kg) and holdings.farm_stock_kg >= -1e-9, \
-        "negative or non-finite physical stockpile grain=%r" % holdings.farm_stock_kg
+    granary_kg = state.seats[state.acting_seat].modules["demography"].farm_stock_kg
+    assert math.isfinite(granary_kg) and granary_kg >= -1e-9, \
+        "negative or non-finite physical stockpile grain=%r" % granary_kg
     for key, value in (getattr(economy, "commodity_prices", None) or {}).items():
         assert math.isfinite(value) and value >= 0.0, \
             "negative or non-finite commodity price %s=%r" % (key, value)

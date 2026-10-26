@@ -4,7 +4,7 @@ Large-economy defects are found by `python3 -m sim.tests.fingerprint`."""
 import json
 import unittest
 
-from sim.engine.state import (EconomyState, FounderState, HoldingsState, HouseholdState, PopulationState,
+from sim.engine.state import (EconomyState, FounderState, HoldingsState, HouseholdState,
                               ProjectsState, ScenarioState, SimulationState, deserialize_state, serialize_state)
 
 QUICK_TOPIC = True
@@ -14,8 +14,7 @@ def state(fog=False, civ=None, reserve=(0, 0), policy=None, said=None):
     built = SimulationState(
         household=HouseholdState(capital=1250.0, reserve_craftsmen=reserve[0], reserve_scholars=reserve[1]),
         projects=ProjectsState(done={"stone_cutting", "bronze"}), economy=EconomyState(), holdings=HoldingsState(),
-        founder=FounderState(policy=policy or {}), scenario=ScenarioState(year=115),
-        population=PopulationState())
+        founder=FounderState(policy=policy or {}), scenario=ScenarioState(year=115))
     built._fog, built._civ = fog, civ
     built.seat_progress._said_explanations = said
     return built
