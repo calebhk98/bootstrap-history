@@ -45,7 +45,9 @@ Full equivalence tier identical at the knowledge merge (`877cff82`). Micro and s
 
 | demography | `sim/demography/` | the three age bands, regions, urban share, food eaten, the farm holding; the age bands are the only copy (no `Sim.population` mirror) |
 
-In progress: actors, workforce. `stores` (mod stores) is a framework service and moves with phase 7. Next: the walled packages (land, markets); then finance, production, ventures, the rest of projects.
+| actors | `sim/actors/` | the cast, its records and the actors' world (was the engine's `agents_port*`); `state.actors` is a property over the slot |
+
+In progress: workforce. `stores` (mod stores) is a framework service and moves with phase 7. Next: the walled packages (land, markets); then finance, production, ventures, the rest of projects.
 
 ## Task list
 
