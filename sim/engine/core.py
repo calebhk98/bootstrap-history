@@ -68,7 +68,7 @@ from .industry_depth import IndustryDepthMixin
 from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
-from .mechanics import MechanicsMixin
+from .forward_mechanics import ForwardMechanicsMixin
 from .disease_port import DiseasePortMixin
 from .geography_port import GeographyPortMixin
 from .labour_port import LabourPortMixin
@@ -207,10 +207,58 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 
 
-class Sim(ModStoresMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, ConcernVolumeMixin, ConcernBookSalesMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
-          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, SeatBankMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
-          StepPhasesMixin, ForwardLivingStockMixin, ReportingForwardsMixin, ForwardCoinMixin,
-          FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, UrbanShareMixin, ForwardCampaignsMixin, EconomyPortMixin, NodeRederiveMixin):
+class Sim(
+        ModStoresMixin,
+        ForwardMechanicsMixin,
+        EconomyMixin,
+        MarketClearingMixin,
+        ForeignEconomiesMixin,
+        MarketDemandMixin,
+        ConcernVolumeMixin,
+        ConcernBookSalesMixin,
+        TechniquesInUseMixin,
+        IndustryDepthMixin,
+        IndustryConcernMixin,
+        IncumbentPricesMixin,
+        ProducerCostsMixin,
+        FogMixin,
+        GeographyPortMixin,
+        DiseasePortMixin,
+        LabourPortMixin,
+        ProjectsMixin,
+        SeatMixin,
+        SeatRunMixin,
+        SeatBuildsMixin,
+        SeatSightMixin,
+        ShockYearMixin,
+        WaysMixin,
+        WorksMixin,
+        HeldWorksMixin,
+        SocietyMixin,
+        ActorsMixin,
+        DisclosureMixin,
+        FounderSalesMixin,
+        SeatDealingsMixin,
+        SeatBankMixin,
+        InterestGroupsMixin,
+        BenefactionsMixin,
+        RouteDuesMixin,
+        ForwardingPropertiesMixin,
+        GoalsMixin,
+        StepPhasesMixin,
+        ForwardLivingStockMixin,
+        ReportingForwardsMixin,
+        ForwardCoinMixin,
+        FoodSupplyMixin,
+        SoilNitrogenMixin,
+        FoodEatenMixin,
+        DemographicRecoveryMixin,
+        RegionalPeopleMixin,
+        UrbanShareMixin,
+        ForwardCampaignsMixin,
+        EconomyPortMixin,
+        NodeRederiveMixin,
+):
     DEFAULT_POPULATION_100AD = declare(
         "DEFAULT_POPULATION_100AD", 65e6, kind="initial_condition",
         unit="people", source="Widely cited estimate of the Roman Empire's "
@@ -237,7 +285,7 @@ class Sim(ModStoresMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, For
             "small. Guard value, not a demographic claim.")
 
     # DISEASE_BURDEN_TECH_IDS (nodes declaring the `disease_burden` mechanic) is
-    # provided by MechanicsMixin; food techs in _TECH_EFFECTS.json do not declare it.
+    # provided by the mechanics module (sim/mechanics); food techs in _TECH_EFFECTS.json do not declare it.
 
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
                  bounty_set=None, civ=None, manual=False, debug=None, defer_economy=False):

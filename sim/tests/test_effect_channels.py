@@ -1,12 +1,14 @@
 """The effect channels a work declares in its `mechanics` (Complaint 190's benefactions use them). Each method is called once on a
-stand-in `self` whose attributes are written out and whose collaborators are plain lambdas: `MechanicsMixin.effect_value`,
-`effect_values`, `effect_sum`, `effect_factor`; the readers `standing_floor`, `goods_reach_factor`, `_schooling_flow`; and
+stand-in `self` whose attributes are written out and whose collaborators are plain lambdas: the mechanics rules `effect_size`,
+`grouped_values`, `sum_in_order`, `factor_product`, and the module's `effect_holds`; the readers `standing_floor`, `goods_reach_factor`, `_schooling_flow`; and
 `institution_unit_cost`. No game is built. What the benefactions branch declares is test_complaint_190_benefactions."""
 import unittest
 from types import SimpleNamespace
 
 from sim.engine.core import Sim
-from sim.engine.mechanics import MechanicsMixin
+from sim.mechanics import rules
+from sim.mechanics.module import Mechanics
+from sim.tests import module_harness
 
 QUICK_TOPIC = True
 
@@ -14,8 +16,7 @@ QUICK_TOPIC = True
 class EffectValue(unittest.TestCase):
 
     def value(self, spec, units=4.0, money_per_hour=2.0):
-        game = SimpleNamespace(institution_units=lambda node_id: units, labour=SimpleNamespace(money_per_labour_hour=lambda: money_per_hour))
-        return MechanicsMixin.effect_value(game, "school", spec)
+        return rules.effect_size(spec, lambda: units, lambda: money_per_hour)
 
     def test_a_flat_effect_is_its_flat_value(self):
         self.assertEqual(self.value({"flat": 1.5}), 1.5)
@@ -33,9 +34,7 @@ class EffectValue(unittest.TestCase):
 class EffectValues(unittest.TestCase):
 
     def values(self, terms, holds):
-        game = SimpleNamespace(_effect_terms=lambda channel: terms, effect_holds=lambda node_id, spec: node_id in holds,
-                               effect_value=lambda node_id, spec: spec["flat"])
-        return MechanicsMixin.effect_values(game, "standing")
+        return rules.grouped_values(terms, lambda node_id, spec: node_id in holds, lambda node_id, spec: spec["flat"])
 
     def test_a_work_that_does_not_hold_contributes_nothing(self):
         self.assertEqual(self.values([("a", {"flat": 1.0})], holds=()), [])
@@ -55,8 +54,9 @@ class EffectValues(unittest.TestCase):
 class EffectHolds(unittest.TestCase):
 
     def holds(self, spec, running, built):
-        game = SimpleNamespace(running=lambda node_id: running, has=lambda node_id: built)
-        return MechanicsMixin.effect_holds(game, "x", spec)
+        module = module_harness.build(Mechanics, views={"running": lambda node_id: running,
+                                                        "techniques_held": {"x"} if built else set()})
+        return module.effect_holds("x", spec)
 
     def test_an_ordinary_effect_needs_the_work_running(self):
         self.assertFalse(self.holds({}, running=False, built=True))
@@ -69,21 +69,18 @@ class EffectHolds(unittest.TestCase):
 class EffectSumAndFactor(unittest.TestCase):
 
     def test_the_sum_starts_from_the_base_and_adds_each_value(self):
-        game = SimpleNamespace(effect_values=lambda channel: [("a", 0.5), ("b", 0.25)])
-        self.assertEqual(MechanicsMixin.effect_sum(game, "schooling_flow", 10.0), 10.75)
+        self.assertEqual(rules.sum_in_order([("a", 0.5), ("b", 0.25)], 10.0), 10.75)
 
     def test_the_sum_of_nothing_is_the_base(self):
-        self.assertEqual(MechanicsMixin.effect_sum(SimpleNamespace(effect_values=lambda channel: []), "x", 3.0), 3.0)
+        self.assertEqual(rules.sum_in_order([], 3.0), 3.0)
 
     def test_factors_multiply(self):
-        game = SimpleNamespace(_effect_terms=lambda channel: [("a", {"factor": 1.5}), ("b", {"factor": 1.6})],
-                               effect_holds=lambda node_id, spec: True)
-        self.assertAlmostEqual(MechanicsMixin.effect_factor(game, "reach"), 2.4)
+        terms = [("a", {"factor": 1.5}), ("b", {"factor": 1.6})]
+        self.assertAlmostEqual(rules.factor_product(terms, lambda node_id, spec: True, None, 1.0, None), 2.4)
 
     def test_a_factor_of_a_work_that_does_not_hold_is_left_out(self):
-        game = SimpleNamespace(_effect_terms=lambda channel: [("a", {"factor": 1.5}), ("b", {"factor": 1.6})],
-                               effect_holds=lambda node_id, spec: node_id == "b")
-        self.assertAlmostEqual(MechanicsMixin.effect_factor(game, "reach"), 1.6)
+        terms = [("a", {"factor": 1.5}), ("b", {"factor": 1.6})]
+        self.assertAlmostEqual(rules.factor_product(terms, lambda node_id, spec: node_id == "b", None, 1.0, None), 1.6)
 
 
 def standing_game(extra, scandal=0.0):

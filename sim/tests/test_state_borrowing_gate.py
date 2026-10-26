@@ -12,7 +12,7 @@ from sim.agents.api import ActorRecord
 from sim.agents.budget_line import Line
 from sim.agents.government import Government
 from sim.agents.policy import CallbackPolicy
-from sim.engine.mechanics import nodes_declaring
+from sim.mechanics.api import nodes_declaring
 
 from .agents_fake_world import FakeWorld
 

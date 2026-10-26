@@ -2,99 +2,92 @@
 
 What the tree's effects add up to: an index over tech-tree mechanics and effect lookups.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** moved (branch `mr/mechanics`). The package is `sim/mechanics/`; this file now describes what shipped, not
+the draft proposal. Counts come from the module spec
+(`python3 -c "import sys; sys.path.insert(0,'.'); from sim.mechanics.module_spec import MODULE_SPECS as s; print(len(s[0].publishes), len(s[0].applies))"`).
 
-## At a glance
+## What changed from the draft
 
-| Measure | Value |
-|---|---|
-| Views / commands proposed | 5 / 0 |
-| Old methods and properties owned (after regrouping) | 32 |
-| Of those, referenced from another module's mixin code | 24 (24 classed read-only or pure by Appendix B, 0 classed writers) |
-| Names used by other modules or by code outside the mixins (ui, agents, ports, mods, function modules) | 26 (24 from mixins, 2 only from outside) |
-| Views per used name | 0.19 |
-| Views that replace exactly one referenced method and no field (one-to-one) | 0 of 5 |
-| Views of other modules it reads | 7, from 4 modules |
-| Commands of other modules it sends | 0 |
-
-**Existing surface and files.** Engine only: `MechanicsMixin` (33 methods; 115 inbound references, all reads). Function modules `corpus_hedge`-style helpers in `hazard_hedge_timing.py`, `hedge_steps.py`.
+- **Views:** 22 instead of 5. The draft merged by topic (`effect` for six old methods, `corpus` for seven, `patronage` for
+  six). A caller asks one question, and the six effect methods differ in arithmetic (a sum, a product, a maximum, a
+  grouped list), so each is a view: `effect_sum`, `effect_factor`, `effect_best`, `effect_values`, `effects_in_force`,
+  with `effect_holds` and `effect_value` for the callers that still walk terms themselves, and `effect_terms` for the
+  declared order. `mechanic` is keyed by mechanic name and answers `{node: parameters}`, which covers `mechanic`,
+  `nodes_with_mechanic` and the index; the draft's `mechanic` mixed that with effect terms.
+- **Names kept:** `running_mechanics`, `effects_in_force` (both first published by the living-stock bridge) and
+  `approval_patron` (the projects bridge) keep their name and shape; the three bridge entries are deleted and the readers
+  (defence stores, projects) did not change.
+- **Not mechanics:** `deputy_hours`, `deputies_carry_the_work`, `founder_age` read the household, the scenario and the
+  config, and `losable_node_ids` reads the techniques held and granted. None reads a mechanic except
+  `losable_node_ids` (corpus dispersal, through `corpus_dispersed`). They stay as plain methods in
+  `sim/engine/forward_mechanics.py` until `seats` and `knowledge` exist; the draft's `patronage` view is dropped for that
+  reason (`approval_patron`, `school_node` and `patrons_lost_to_eminence` are separate views).
+- **Dropped:** `dispersed_corpus_running`, `corpus_nodes_best_first` as a method (it is the view `corpus_nodes`), and
+  `_mechanics_index`, `_capability_sets`. `dispersed_corpus_running` had no caller (`grep -rn dispersed_corpus_running sim`).
+- **`running_with_mechanic` stays here**, not in production as the draft proposed: it is `running_mechanics` read for
+  names, and mechanics reads only the `running` view of production, so the two do not read each other.
+- **Class constants:** `CAPABILITY_INSTITUTIONS`, `SCALABLE_INSTITUTIONS` and `NOT_OPERATING_BENEFIT` are one view,
+  `capability_sets`. The other sets stay one view each (`staff_capacity_sources`, `room_sources`,
+  `labour_productivity_sources`); the draft's single `capability_sets` table of eight different shapes would have made
+  every caller unpack by name. `DISEASE_BURDEN_TECH_IDS` is `mechanic["disease_burden"]` and has no view of its own.
+- **`HAZARD_COUNTERS`:** the module answers the node rows (`hazard_counter_rows`); the two own-mine counters are not
+  nodes and their shares are declared with the hazards, so the engine forwarder merges them in
+  (`rules.hazard_counters`) in the order the old property produced.
+- **No state, no commands, no relocations.** As drafted. The index cache is private to the module and keyed on the tree
+  object, as before; every view is `cached=False` because the engine replaces the tree (re-derivation) and writes what is
+  running outside any command.
 
 ## (a) Mixin classes and files absorbed
 
-| Class | File | Methods here | Referenced from other modules |
-|---|---|---|---|
-| `MechanicsMixin` | `sim/engine/mechanics.py` | 32 | 24 |
-
-Methods that stay inside the module (referenced by no other module's mixin code and by nothing outside the mixins): `LABOUR_PRODUCTIVITY_SOURCES`, `ROOM_SOURCES`, `_capability_sets`, `_mechanics_index`, `corpus_nodes_best_first`, `dispersed_corpus_running`.
+`MechanicsMixin` (`sim/engine/mechanics.py`, deleted). Its module-level helpers `nodes_declaring` and
+`staff_capacity_sources` are in `sim/mechanics/rules.py`, reached through `sim.mechanics.api`.
 
 ## (b) State owned
 
-Paths are today's. Seat-scoped fields live on `state.<section>` as the acting seat's alias (`bind_seat`, `sim/engine/state_seat.py`) and are saved once per seat in `state.seats[seat_id]`; world fields live once on the state. Counts are access sites found by the field scan: a mixin method of another module counts under that module, code in a function module, `sim/ui`, `sim/agents` and the like counts under `<area>`.
-
-Proposed slot: no world state, no per-seat state.
-
-| Today's path | Scope | Read by (outside the owner) | Written by (outside the owner) |
-|---|---|---|---|
-| none: this module owns derived values only, no stored field | | | |
+None.
 
 ## (c) Views
 
-Kind is table (one value), keyed (one value per key, computed on first read of the key) or quote (a question with arguments, never cached). Channels are the version channels the owner bumps; `inputs` are other views the value is derived from (a name without a dot is this module's own).
+All uncached. Quotes unless noted. `seat` means seat scoped (the answer depends on what the acting seat holds or runs).
 
-| View | Kind | Seat | Answers | Replaces (old methods) | Replaces (fields) | Inputs | Channels | Callers today |
-|---|---|---|---|---|---|---|---|---|
-| `mechanic` | keyed | no | Nodes carrying a mechanic and the effect terms of a node. | `mechanic`, `nodes_with_mechanic`, `_effect_terms`, `_mechanics_index`, `_capability_sets` | - | `knowledge.tree` | `tree` | 17 |
-| `effect` | quote | yes | The value, sum, factor, best or truth of an effect for the techniques held and running. | `effect_value`, `effect_values`, `effect_sum`, `effect_factor`, `effect_best`, `effect_holds` | - | `knowledge.techniques_held`, `production.running` | `done`, `operating` | 12 |
-| `capability_sets` | table | no | Named sets: capability institutions, scalable institutions, staff-capacity, room and labour-productivity sources, hazard counters, disease burden tech ids. | `CAPABILITY_INSTITUTIONS`, `SCALABLE_INSTITUTIONS`, `NOT_OPERATING_BENEFIT`, `STAFF_CAPACITY_SOURCES`, `ROOM_SOURCES`, `LABOUR_PRODUCTIVITY_SOURCES`, `HAZARD_COUNTERS`, `DISEASE_BURDEN_TECH_IDS` | - | `knowledge.tree` | `tree` | 8 |
-| `corpus` | quote | yes | Corpus nodes best first, hedge tiers, whether the corpus is dispersed, nodes that can be lost. | `best_corpus_node`, `corpus_nodes_best_first`, `corpus_hedge_tiers`, `corpus_is_dispersed`, `dispersed_corpus_running`, `losable_node_ids`, `corpus_diffusion_pace` | - | `knowledge.techniques_held`, `production.running` | `done` | 4 |
-| `patronage` | quote | yes | Approval patron, school node, patrons lost to eminence, deputies and the founder's age. | `approval_patron`, `school_node`, `patrons_lost_to_eminence`, `deputies_carry_the_work`, `deputy_hours`, `founder_age` | - | `knowledge.techniques_held`, `seats.founder` | `done` | 6 |
-
-**Coverage.** 24 methods are referenced from other modules' mixin code: 24 are replaced by a view here, 0 by a command. 2 more names are used only from outside the mixins (ui, agents, ports, mods). Of all 26 used names, 26 are covered by a view or command through the method itself, 0 through a field alias, 0 are year-phase hooks and 0 are package handle members.
+| View | Kind | Seat | Answers |
+|---|---|---|---|
+| `mechanic` | keyed by name | no | `{node: parameters}` of the nodes declaring it, in id order |
+| `running_mechanics` | quote | yes | `[(node, parameters)]` of the running ones |
+| `capability_sets` | table | no | (capability ids, scalable ids, `{id: lost benefit}`) |
+| `staff_capacity_sources`, `room_sources`, `labour_productivity_sources`, `hazard_counter_rows` | table | no | the tuples the labour and hazards code walks |
+| `effect_terms` | quote | no | `[(node, spec)]` declaring a channel, in (order, id) sequence |
+| `effects_in_force`, `effect_values`, `effect_sum`, `effect_factor`, `effect_best`, `effect_holds`, `effect_value` | quote | yes | the effect arithmetic, gated by held or running |
+| `corpus_nodes`, `corpus_hedge_tiers`, `corpus_dispersed`, `corpus_diffusion_pace` | table / quote | pace only | the corpus hedge against a sacking |
+| `approval_patron`, `school_node`, `patrons_lost_to_eminence` | quote / table | no | patrons and schooling |
 
 ## (d) Commands
 
-None: this module owns no state that others change; it only publishes views.
+None.
 
-## (e) Reads and sends
+## (e) Reads
 
-Reads (views of other modules), by provider:
-
-- `knowledge`: `knowledge.techniques_held` (has, input of mechanics.corpus, input of mechanics.effect, input of mechanics.patronage ...); `knowledge.tree` (input of mechanics.capability_sets, input of mechanics.mechanic)
-- `production`: `production.institution_units` (institution_units); `production.running` (input of mechanics.corpus, input of mechanics.effect, running)
-- `seats`: `seats.founder` (input of mechanics.patronage)
-- `workforce`: `workforce.labour_market` (labour.money_per_labour_hour); `workforce.staff` (household.directors_extra, labour)
-
-Sends: none.
+All through the bridge until their owners move: `tree_nodes` (the whole tree; new, in `bridge_shared.py`, because the
+keyed `tree` cannot be enumerated), `techniques_held`, `running`, `institution_units`, `money_per_labour_hour`. No
+`legacy_*` view.
 
 ## (f) Year phases
 
-Phases of `sim/engine/year_phases.py` `SHIPPED` it takes part in; where a phase is shared with other modules the sub-steps it owns are named (see "The year's shared phases" in the README):
+None.
 
-- none of its own
+## (g) Forwarders left
 
-## (g) Callers outside the engine mixins that read its views
+`sim/engine/forward_mechanics.py` (`ForwardMechanicsMixin`): `mechanic`, `nodes_with_mechanic`, `running_with_mechanic`,
+`_effect_terms`, `effect_holds`, `effect_value`, `effect_values`, `effect_sum`, `effect_factor`, `effect_best`,
+`approval_patron`, `school_node`, `patrons_lost_to_eminence`, `corpus_hedge_tiers`, `corpus_is_dispersed`,
+`corpus_diffusion_pace`, `best_corpus_node`, and the properties `CAPABILITY_INSTITUTIONS`, `SCALABLE_INSTITUTIONS`,
+`NOT_OPERATING_BENEFIT`, `DISEASE_BURDEN_TECH_IDS`, `STAFF_CAPACITY_SOURCES`, `ROOM_SOURCES`,
+`LABOUR_PRODUCTIVITY_SOURCES`, `HAZARD_COUNTERS`. The unmoved callers are listed by
+`grep -rn "\.mechanic(\|nodes_with_mechanic\|effect_sum" sim --include=*.py`.
 
-| Caller group | Uses | Most-used names |
-|---|---|---|
-| ui | 19 | `CAPABILITY_INSTITUTIONS`, `deputy_hours`, `deputies_carry_the_work`, `SCALABLE_INSTITUTIONS`, `STAFF_CAPACITY_SOURCES`, `founder_age`, `effect_holds`, `effect_value` |
-| engine/(function modules) | 4 | `mechanic`, `CAPABILITY_INSTITUTIONS`, `corpus_hedge_tiers` |
-| engine/agents_port* | 2 | `nodes_with_mechanic` |
-| agents | 1 | `nodes_with_mechanic` |
-| engine/economy_port* | 1 | `nodes_with_mechanic` |
-| engine/ui* | 1 | `_effect_terms` |
+## (h) Hard spots
 
-The scan matches `sim.`, `s.`, `world.` prefixes, so a few counts include unrelated locals; treat them as orders of magnitude.
-
-sim/ui: `CAPABILITY_INSTITUTIONS` 9, `deputy_hours` 3, `deputies_carry_the_work` 2; agents_port: `nodes_with_mechanic` 3; economy_port 1.
-
-## (h) Hard spots and caches
-
-- `running_with_mechanic` reads production's `running`; with production also reading mechanics, the two would read each other. It moves to production (derived from `mechanic` and `running`), leaving mechanics reading only knowledge.
-- `_mechanics_index` is built once from the tree (`__dict__['_mechanics_index_cache']`, `mechanics.py:36`) and must be rebuilt when `RederiveNodes` changes the tree.
-- Class constants (`CAPABILITY_INSTITUTIONS`, `HAZARD_COUNTERS`) are content data read as names; they become the `capability_sets` table.
-
-Caches and version counters held today (feed for task 1.2):
-
-- `__dict__['_mechanics_index_cache']` (`mechanics.py:36`)
-
-Detected by the cache scan in this module's mixin files: `engine/mechanics.py:36 __dict__[_mechanics_index_cache]`.
+- `HAZARD_COUNTERS` needs two heuristics declared in `projects_completion.py` (`HAZARD_EROSION_OWN_GOLD`,
+  `HAZARD_EROSION_OWN_SILVER`); they leave with the hazards.
+- The tree is replaced by a re-derivation (`node_rederive.py`); the module rebuilds its index when the object it reads
+  is not the one it indexed.

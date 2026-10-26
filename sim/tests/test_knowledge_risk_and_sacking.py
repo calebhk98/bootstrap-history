@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import types
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.mechanics import MechanicsMixin
+from sim.engine.forward_mechanics import ForwardMechanicsMixin
 from sim.engine.society_hazards import HazardsMixin
 from sim.refusal import cause_of, facts_of
 from sim.tests import event_stand_in
@@ -26,7 +26,7 @@ class _SackGame:
     CORPUS_HEDGE_LOSS_CHANCE_NONE = S.Sim.CORPUS_HEDGE_LOSS_CHANCE_NONE
     CORPUS_HEDGE_FRACTION_LOST_NONE = S.Sim.CORPUS_HEDGE_FRACTION_LOST_NONE
     corpus_hedge = S.Sim.corpus_hedge
-    losable_node_ids = MechanicsMixin.losable_node_ids
+    losable_node_ids = ForwardMechanicsMixin.losable_node_ids
     _sack_corpus_loss = HazardsMixin._sack_corpus_loss
     _log_corpus_loss = HazardsMixin._log_corpus_loss
 

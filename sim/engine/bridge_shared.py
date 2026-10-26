@@ -37,3 +37,9 @@ def tile_owner(sim, tile):
 def tiles_owned_by(sim, actor):
 	"""Sorted tiles this country or seat owns, at any control level."""
 	return sim.tiles_owned_by(actor)
+
+
+@bridge_view("tree_nodes")
+def tree_nodes(sim):
+	"""The whole tech tree, node data by id (the object itself: a re-derivation replaces it)."""
+	return sim.nodes

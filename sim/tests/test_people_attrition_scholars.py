@@ -11,7 +11,8 @@ from sim.refusal import cause_of
 
 from sim.agents.household import Household
 from sim.engine.economy_credit import CreditMixin
-from sim.engine.mechanics import MechanicsMixin
+from sim.mechanics.module import Mechanics
+from sim.tests import module_harness
 from sim.engine.project_materials import ProjectMaterialsMixin
 from sim.engine.shortage_sizing import nitre_bed_yearly_spend
 from sim.engine.society_adoption import AdoptionMixin
@@ -110,8 +111,11 @@ check("hiring scribes does not inflate the trained-scholar headcount; scholars a
       household.scholars == 2.0 + 1.0 and household.artisans == 4.0, (household.scholars, household.artisans))
 
 
-class Advice(MechanicsMixin, AdoptionMixin):
+class Advice(AdoptionMixin):
     nodes = NODES
+
+    def _effect_terms(self, channel):
+        return module_harness.build(Mechanics, views={"tree_nodes": NODES}).effect_terms(channel)
 
 
 check("the advice on how to get scholars never points at a different trade family's trade, which would not even count",
@@ -369,7 +373,7 @@ check("...and does not order them, which was measured and made Rome's run "
       "perpetual upkeep against a household that starts with four hundred",
       all(node_id not in _p_order for node_id in _p_staff),
       [node_id for node_id in _p_staff if node_id in _p_order])
-from sim.engine.mechanics import staff_capacity_sources
+from sim.mechanics.api import staff_capacity_sources
 _staff_sources = staff_capacity_sources(NODES)
 check("the staffing list is read from the same table staff_capacity() "
       "itself iterates, so the two cannot drift apart",
