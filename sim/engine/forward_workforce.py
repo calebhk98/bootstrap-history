@@ -20,6 +20,3 @@ class ForwardWorkforceMixin:
     def HOURS_PER_PERSON_YEAR(self):
         """Hours a person gives in a year, the working day's length counted."""
         return self.view("hours_per_person_year")()
-
-    def working_hours_per_person_year(self):
-        return self.view("hours_per_person_year")()

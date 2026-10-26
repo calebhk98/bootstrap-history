@@ -27,7 +27,7 @@ engine stay off `sim.economy` too (only `sim/engine/economy_port*.py` may import
 | Package | Import door | Object on `Sim`, and the engine adapter that feeds it |
 |---|---|---|
 | `sim/economy/` | `sim/economy/api.py`, imported only by `sim/engine/economy_port*.py` | `sim.economy` |
-| `sim/labour/` | `sim/labour/api.py` | `sim.labour` (a `Labour`); `LabourWorld` in `sim/engine/labour_port.py`; the labour market every employer asks is `sim.labour.market` |
+| `sim/labour/` | `sim/labour/api.py` | the `workforce` module (`sim/workforce/module.py`) holds the `Labour` this package implements; `WorkforceWorld` (`sim/workforce/world.py`) answers what labour reads of the game from the module's declared views (the engine side is `sim/engine/bridge_workforce.py`); the game reaches it through views and commands, and `sim.labour` (`sim/engine/forward_workforce.py`) is what callers not yet in a module still use; the labour market every employer asks is `sim.labour.market` |
 | `sim/geography/` | `sim/geography/api.py` | `sim.geography` (a `Geography`); `GeographyWorld` in `sim/engine/geography_port.py` |
 | `sim/agents/` | `sim/agents/api.py` | none; the engine adapters (`society_actors.py`, `society_disclosure.py`, `interest_groups.py`) consume the api, and `sim/engine/agents_port*.py` (`SimWorld`) is what actors ask of the world (`sim/agents/protocols.py`) |
 | `sim/disease/` | `sim/disease/api.py` | the `disease` module (`sim/disease/module.py`: the yearly step and the contact heuristic; the game reaches it through views and commands, `sim/engine/forward_disease.py` is what is left of the old mixin), `sim/agents/country_disease.py` (foreign countries, through `disease.nation`), `sim/engine/validate_disease_data.py` (for `validate`) |
@@ -47,7 +47,7 @@ When code outside a package needs something new from it:
 2. Call it through the door from outside.
 
 When a package needs something new from the engine, add a member to its engine adapter
-(`LabourWorld`, `GeographyWorld`, `SimWorld`, `ui_port`) rather than importing the engine.
+(`WorkforceWorld`'s views, `GeographyWorld`, `SimWorld`, `ui_port`) rather than importing the engine.
 
 Do not reach past a surface because it is quicker: a call that needs a package's internals means
 the surface is missing a member.
@@ -62,6 +62,6 @@ through their surfaces. Two kinds of data still cross:
   `state.household` record, which carries labour's fields (`employees`, the wage ledgers) beside
   the household's own. Giving each package its own saved state, and routing the engine's reads of
   it through the package, is the next step.
-- **Adapter breadth.** `LabourWorld` and `SimWorld` expose many engine members because the
+- **Adapter breadth.** `WorkforceWorld` and `SimWorld` expose many engine members because the
   packages' code reached for many. Each member is a named dependency now, so narrowing them is
   ordinary work inside one package and its adapter.

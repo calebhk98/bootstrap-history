@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.staff_replacement import GROW_STANCE, REPLACE_ONLY, REPLACE_STANCE, hire_stance
+from sim.workforce.staff_replacement import GROW_STANCE, REPLACE_ONLY, REPLACE_STANCE, hire_stance
 from sim.ledger.api import PayEdge
 from sim.materials.api import ApplyThrottle
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip

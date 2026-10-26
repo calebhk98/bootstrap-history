@@ -210,6 +210,12 @@ def staffing_shortfalls(sim, totals, strict=False):
     return sim._staffing_shortfalls(totals, strict)
 
 
+@bridge_view("staffing_closed_hand_shortfall")
+def staffing_closed_hand_shortfall(sim):
+    """(scholars, craftsmen) the concerns shut for want of staff still lack."""
+    return sim.staffing_closed_hand_shortfall()
+
+
 @bridge_view("concerns_to_close_for_staffing")
 def concerns_to_close_for_staffing(sim):
     return sim.concerns_to_close_for_staffing()

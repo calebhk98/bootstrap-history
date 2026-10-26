@@ -14,7 +14,7 @@ from sim.constants import REGISTRY
 from sim.engine import data as engine_data
 from sim.engine.economy_credit import CreditMixin
 from sim.hazards.window import hazards_not_yet_past
-from sim.engine.payroll_trim import payroll_means, staff_to_let_go
+from sim.workforce.payroll_trim import payroll_means, staff_to_let_go
 from sim.engine.projects_review import SeatReview
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
 from sim.engine.seat_defaults import default_policy

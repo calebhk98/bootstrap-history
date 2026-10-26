@@ -134,7 +134,7 @@ def _run_project(node_id):
         if node_id in game.done:
             break
         # the year's project payments and materials (its seat phases, in order); the ledger bill is all this reads
-        game._run_seat_prelude()
+        game.assembly.phase_handler("seat_prelude")(game.state.acting_seat)
         game.assembly.phase_handler("start_projects")(game.state.acting_seat)
         game.assembly.phase_handler("materials")(game.state.acting_seat)
         game._step_material_shortage_notes()

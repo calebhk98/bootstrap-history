@@ -1,13 +1,12 @@
 """A household that cannot meet its payroll loses staff, dearest trade first, and the loss is logged with its count
-(`payroll_shed.shed_unpayable_staff`, called by the staff phase). The game is a stand-in carrying the labour calls the rule makes."""
+(`Workforce.shed_unpayable_staff`, called by the staff phase). The game is a stand-in carrying the labour calls the rule makes."""
 QUICK_TOPIC = True
 
 import types
 import unittest
 
-from sim.engine.payroll_shed import shed_unpayable_staff
 from sim.refusal import cause_of, facts_of
-from sim.tests import event_stand_in
+from sim.tests.workforce_host import workforce_over
 
 WAGE_PER_YEAR = {"smith": 100.0, "labourer": 10.0}
 
@@ -40,14 +39,16 @@ class _Labour:
 def _game(employees):
     labour = _Labour(employees)
     household = types.SimpleNamespace(employees=employees, log=[])
-    return event_stand_in.stood_in(types.SimpleNamespace(
-        state=types.SimpleNamespace(household=household, scenario=types.SimpleNamespace(year=120)), labour=labour))
+    host = types.SimpleNamespace(state=types.SimpleNamespace(household=household, scenario=types.SimpleNamespace(year=120)),
+                                 labour=labour)
+    host.module = workforce_over(host)
+    return host
 
 
 class ShedUnpayableStaffTest(unittest.TestCase):
     def test_staff_who_cannot_be_paid_leave_and_the_loss_is_logged_with_its_count(self):
         game = _game({"smith": 5.0})
-        gone = shed_unpayable_staff(game, payroll=500.0, can_pay=200.0)
+        gone = game.module.shed_unpayable_staff(payroll=500.0, can_pay=200.0)
         self.assertGreater(gone, 0.0)
         self.assertAlmostEqual(game.state.household.employees["smith"], 5.0 - gone)
         (year, line), = game.state.household.log
@@ -58,14 +59,14 @@ class ShedUnpayableStaffTest(unittest.TestCase):
 
     def test_a_payroll_the_means_cover_loses_nobody_and_logs_nothing(self):
         game = _game({"smith": 5.0})
-        self.assertEqual(shed_unpayable_staff(game, payroll=500.0, can_pay=500.0), 0.0)
+        self.assertEqual(game.module.shed_unpayable_staff(payroll=500.0, can_pay=500.0), 0.0)
         self.assertEqual(game.state.household.employees["smith"], 5.0)
         self.assertEqual(game.state.household.log, [])
         self.assertEqual(game.labour.reductions, [])
 
     def test_a_household_with_no_staff_has_nobody_to_lose(self):
         game = _game({})
-        self.assertEqual(shed_unpayable_staff(game, payroll=500.0, can_pay=0.0), 0.0)
+        self.assertEqual(game.module.shed_unpayable_staff(payroll=500.0, can_pay=0.0), 0.0)
         self.assertEqual(game.state.household.log, [])
 
 

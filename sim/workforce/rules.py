@@ -25,3 +25,9 @@ def extra_lit_hours(works):
 def working_hours_per_year(convention_hours, extra_hours_per_day, base_day_hours):
 	"""Hours one person gives in a year: the convention stretched in proportion to the lit hours added to a day."""
 	return convention_hours * (1.0 + extra_hours_per_day / base_day_hours)
+
+
+def work_order_shortfall(directive_hours, already_sold):
+	"""The hours a standing work order still has to sell this year: the directive less what was already sold by
+	hand, so the order tops up and never sells the same hours twice; never negative."""
+	return max(0.0, directive_hours - already_sold)

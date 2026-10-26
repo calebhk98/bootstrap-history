@@ -4,18 +4,18 @@ Every read is a view of an owner that has not moved yet, published by the engine
 the other bridge files) under the name the owner will publish, or a view of a module that has moved. Every view the module
 publishes is uncached: the staff and hour fields are still on the household record, which the engine, the actors and the
 screens write directly, so no channel can say when they changed."""
-from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
+from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.demography.api import SetClearedFarmland, SetFarmHoursNeeded
 from sim.ledger.api import PayEdge, ReceiveFromEdge
 from sim.polity.api import AddReputation, ScaleFamiliarity, ScaleProtection
-from sim.reporting.api import DiscardEventsAfter, RecordEvent
+from sim.reporting.api import DiscardEventsAfter, RecordAutomation, RecordAutomationSkip, RecordEvent
 
 from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, NoteTradeSpread, PressLabour, ReportStaffReduction,
                        ScaleDeputies, SetEmployed, SurviveStaff, UpdateWages)
 from .module import Workforce
 
 READS_BY_OWNER = {
-    "core": ("civilisation", "game_config", "opening_wage_index", "legacy_state", "legacy_game", "legacy_order", "legacy_tree",
+    "core": ("year", "automation", "civilisation", "game_config", "opening_wage_index", "legacy_state", "legacy_game", "legacy_order", "legacy_tree",
              "legacy_dice", "legacy_act_as", "starting_wages", "trades_absent", "trade_notes", "trade_records", "trade_family",
              "wage_schedule_for", "plain_number", "money_text", "legacy_acting_household", "legacy_household_actor"),
     "seats": ("founder", "acting_country"),
@@ -29,11 +29,11 @@ READS_BY_OWNER = {
                   "labour_productivity_sources", "room_sources", "staff_capacity_sources"),
     "diffusion": ("literacy", "research_productivity", "staff_hire_advice", "staff_sources"),
     "production": ("running", "institution_units", "upkeep", "revenue_estimate", "is_venture"),
-    "projects": ("start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
+    "projects": ("legacy_projects", "staffing_closed_hand_shortfall", "start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
                  "staffing_draw", "staffing_held_totals", "staffing_shortfalls", "concerns_to_close_for_staffing",
                  "venture_foreman", "venture_foremen_used", "venture_staff_free", "shared_answer"),
     "materials": ("material_price_factor",),
-    "finance": ("living_cost", "spending_power", "can_pay", "purchase_refusal", "price_index", "home_price_level",
+    "finance": ("mine_operating_cost", "credit_limit", "living_cost", "spending_power", "can_pay", "purchase_refusal", "price_index", "home_price_level",
                 "housing_price_per_place", "trade_school_price_per_seat", "concern_rows_stopped"),
     "actors": ("actor_staff_fte", "actor_staff_nationwide", "actor_staff_total", "teaching_knowledge", "harvest_share_taken",
                "director_overhead_hours", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country",
@@ -81,7 +81,9 @@ MODULE_SPECS = (ModuleSpec(
              (SurviveStaff, "survive_staff"), (ScaleDeputies, "scale_deputies"), (ReportStaffReduction, "report_staff_reduction"),
              (AllocateFarmWorkforce, "allocate_farm_workforce"), (ApplyLandClearing, "apply_land_clearing"),
              (UpdateWages, "update_wages")),
+    phases=(PhaseHook("apprenticeships", "step_apprenticeships"), PhaseHook("staff", "step_staff"),
+            PhaseHook("seat_prelude", "step_prelude")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(PayEdge, ReceiveFromEdge, RecordEvent, DiscardEventsAfter, AddReputation, ScaleFamiliarity, ScaleProtection,
+    sends=(PayEdge, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, DiscardEventsAfter, AddReputation, ScaleFamiliarity, ScaleProtection,
            SetClearedFarmland, SetFarmHoursNeeded, BuildHousing),
 ),)

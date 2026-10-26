@@ -1,13 +1,13 @@
 """The only door into sim/labour/: what code outside the package may import.
 
 Outside code imports from here and reaches the simulation's labour through `sim.labour`
-(a `Labour`, built by sim/engine/labour_port.py), never through a submodule or a private name.
+(a `Labour`, held by the workforce module, sim/workforce/module.py), never through a submodule or a private name.
 
 `Labour` loads on first use (module `__getattr__`): the engine data modules import this door
 for the wage constants while they are themselves still loading, and the labour mixins would
 import them back.
 """
-WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what it needs (sim/engine/labour_port.py)
+WALL = "two-way"  # nothing here reaches sim/engine/; the workforce module hands it what it needs (sim/workforce/world.py)
 
 from . import wage_provider, wages
 from .market.clearing import clear_all as clear_labour_markets
