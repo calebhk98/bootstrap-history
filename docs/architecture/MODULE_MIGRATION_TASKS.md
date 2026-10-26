@@ -10,6 +10,21 @@ integration branch, own named files, never edit `core.py`, `state.py`, `state_se
 equivalence tier, and hand long runs back. After every merge the orchestrator runs the equivalence tool and the quick
 tier, and reverts on red.
 
+## Modules moved
+
+Each row merged with the micro equivalence tier identical to the base and the protocol transcripts unchanged.
+
+| Module | Package | Notes |
+|---|---|---|
+| ledger (commands side) | `sim/ledger/` | state still in the purses and the tonnes ledger (`legacy_*` views) |
+| living stock, defence stores | `sim/living_stock/`, `sim/defence_stores/` | |
+| projects (starting) | `sim/projects/` | progress, completion, staffing still mixins |
+| coin | `sim/coin/` | carriage is the ledger's `transfer_surcharge` point |
+| campaigns | `sim/campaigns/` | |
+| reporting | `sim/reporting/` | the seat log and audit trail; world events are hazards' |
+
+In progress: mechanics, freight, diffusion.
+
 ## Task list
 
 ### Phase 0: tools and baseline (blocks everything)
