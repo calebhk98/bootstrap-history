@@ -7,7 +7,7 @@ from sim.agents.api import MANAGEMENT_SPAN_EXPONENT, imitation
 class CapacityView:
 	"""Read-only questions about growing a concern; mixed into `SimWorld`."""
 
-	_sim: Any
+	needs: Any
 
 	def span_factor(self, capacity: float) -> float:
 		"""Wages of a concern at `capacity` times its founding size, over one founding-size wage bill."""
@@ -20,12 +20,12 @@ class CapacityView:
 	def expansion_gain(self, node_id: str, opened_year: int, capacity: float, step: float, rivals: float) -> float:
 		"""Yearly margin gained by growing a concern from `capacity` to `capacity + step`: the takings
 		at the price the larger supply leaves, less the upkeep and wages of the added size."""
-		sim = self._sim
-		base = sim.concern_takings(node_id, self.ramp(opened_year, node_id))  # type: ignore[attr-defined]
+		needs = self.needs
+		base = needs.concern_takings(node_id, self.ramp(opened_year, node_id))  # type: ignore[attr-defined]
 		category = self.nodes[node_id].get("cat")  # type: ignore[attr-defined]
-		if category in sim.GOODS_CATEGORIES:
-			before = capacity * base * sim.goods_category_factor(category)
-			after = (capacity + step) * base * sim.goods_category_factor_with_entrants(category, step)
+		if category in self.goods_category_names:  # type: ignore[attr-defined]
+			before = capacity * base * needs.goods_category_factor(category)
+			after = (capacity + step) * base * needs.goods_category_factor_with_entrants(category, step)
 		else:
 			before = base * capacity / (capacity + rivals)
 			after = base * (capacity + step) / (capacity + step + rivals)

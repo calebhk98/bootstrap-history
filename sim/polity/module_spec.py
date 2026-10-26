@@ -15,7 +15,7 @@ from .state import STANDING, VALUES, PolitySeat, PolityWorld
 READS_BY_OWNER = {
 	"core": ("year", "civilisation", "events_enabled", "automation", "acting_seat", "danger_lines", "legacy_dice", "legacy_said_once",
 	         "legacy_game", "legacy_constant", "legacy_act_as", "money_text", "mass_text"),
-	"actors": ("state_treasury", "legacy_actor_registry", "legacy_actors_state", "legacy_agent_world", "country_world"),
+	"actors": ("state_treasury", "cast", "cast_state", "actor_world", "country_world"),
 	"ledger": ("acting_balance", "legacy_acting_household", "legacy_household_actor", "transfer_listening"),
 	"mechanics": ("effect_sum", "effect_values", "effect_factor", "effect_best", "running_mechanics", "mechanic",
 	              "patrons_lost_to_eminence"),

@@ -335,7 +335,6 @@ class SimulationState:
 	acting_seat: str = "founder"
 	scenario: Optional[ScenarioState] = None
 	population: Optional[PopulationState] = None
-	actors: Optional[ActorsState] = None
 	_civ: Optional[str] = None
 	_fog: bool = False
 	_fuzzy_estimates: bool = False
@@ -361,11 +360,23 @@ class SimulationState:
 		bind_seat(self, self.acting_seat)
 		self.attach_purses()
 
+	@property
+	def actors(self) -> Optional[ActorsState]:
+		"""The actors' records: the actors module's world slot (None before the assembly has made it; a save read back holds
+		it as plain data until the module set revives it)."""
+		held = self.modules.get("actors")
+		return held if isinstance(held, ActorsState) else None
+
+	@actors.setter
+	def actors(self, value: Optional[ActorsState]) -> None:
+		self.modules["actors"] = value
+
 	def attach_purses(self) -> None:
 		"""Every seat's household keeps its purse in the actors' book, under the seat's id."""
-		if self.actors is not None:
+		actors = self.actors
+		if actors is not None:
 			for seat_id, seat in self.seats.items():
-				seat.household.attach(self.actors.purses, seat_id)
+				seat.household.attach(actors.purses, seat_id)
 
 	@property
 	def _goal(self) -> Optional[str]:

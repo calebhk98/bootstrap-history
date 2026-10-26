@@ -9,7 +9,6 @@ from typing import Any, Dict, Optional
 from sim.refusal import Refusal
 
 from . import economy_port_bank
-from .agents_port import SimWorld
 
 BANKING_MECHANIC = "deposit_banking"
 
@@ -31,7 +30,7 @@ class SeatBankMixin:
     def seat_found_bank(self, capital: Any) -> Dict[str, Any]:
         """The acting seat puts `capital` of its money into a new bank."""
         party = self.dealing_party()
-        world = SimWorld(self)
+        world = self.view("actor_world")()
         knows = any(party.knows(node_id, world) for node_id in self.nodes_with_mechanic(BANKING_MECHANIC))
         refusal = refusal_for(knows, capital, party.money)
         if refusal is None and not self.economy.agent.opened():

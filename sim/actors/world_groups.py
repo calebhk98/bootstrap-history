@@ -5,7 +5,8 @@ from typing import Any, Dict, List
 from sim.agents.api import CONCESSION_PREFIX, Sector, sector_key
 from sim.polity.api import AddScandal
 from sim.reporting.api import RecordEvent
-from .units_prose import mass_rate_text, money_text, plain_number
+
+from .rules import plain_number
 
 
 def founder_share_of_sellers(sellers, other_actors_concerns):
@@ -17,25 +18,25 @@ def founder_share_of_sellers(sellers, other_actors_concerns):
 class GroupView:
 	"""Read-only questions behind who organises and what it asks of the state."""
 
-	_sim: Any
+	needs: Any
+	registry: Any
 
 	def _annual_labourer_wage(self) -> float:
 		return max(1e-9, self.pay_per_person_year("labourer"))
 
 	def _commodity_quote(self, commodity: str) -> Any:
 		"""The quote for the first priced material the commodity is made of (its main product)."""
-		sim = self._sim
-		material = sim.economy.main_material_of(commodity)
-		return None if material is None else sim.economy.trade_quote(material)
+		material = self.needs.main_material_of[commodity]
+		return None if material is None else self.needs.material_trade_quote[material]
 
 	def displaced_producers(self) -> List[Sector]:
 		"""Producers of each commodity the founder sold into the market this year: what the
 		society's own producers sell less at the price, and the people that income keeps."""
-		sim = self._sim
+		needs = self.needs
 		wage = self._annual_labourer_wage()
 		sectors = []
-		for commodity in sim.economy.goods.commodities_sold_by(sim.goods_market.acting_party_id):
-			state = sim.market_state(commodity)
+		for commodity in needs.commodities_sold_by_acting_party():
+			state = needs.market_state[commodity]
 			quote = self._commodity_quote(commodity)
 			if state is None or quote is None:
 				continue
@@ -47,7 +48,7 @@ class GroupView:
 			base = (state["society_sales_tonnes"] + displaced) * price
 			sectors.append(Sector(
 				"displaced_producers", commodity, "producers of " + commodity,
-				"your sales of %s take %s from their market" % (commodity, mass_rate_text(displaced, sim, grouped=True, short=False)),
+				"your sales of %s take %s from their market" % (commodity, needs.mass_rate_text(displaced, grouped=True, short=False)),
 				lost, base, lost / wage, 1.0))
 		return sectors
 
@@ -56,21 +57,22 @@ class GroupView:
 		above the wage table. With a fixed budget they can no longer afford the share of the town's
 		hands that the premium prices out, and the hands the founder and the firms keep are hands
 		they cannot hire; the value lost is those hands at the going wage."""
-		sim = self._sim
+		needs = self.needs
+		labour_market = self.labour_market  # type: ignore[attr-defined]
 		sectors = []
-		for trade in sim.economy.labour.pressured_trades():
-			factor = sim.economy.labour.price_factor(trade)
+		for trade in labour_market.pressured_trades():
+			factor = labour_market.price_factor(trade)
 			if factor <= 1.0 + 1e-9:
 				continue
-			pool = sim.labour.market_supply(trade) / sim.HOURS_PER_PERSON_YEAR
+			pool = needs.market_supply[trade] / self.hours_per_person_year  # type: ignore[attr-defined]
 			priced_out = pool * (1.0 - 1.0 / factor)
-			wage = sim.economy.labour.unscarce_annual(trade)
+			wage = labour_market.unscarce_annual(trade)
 			sectors.append(Sector(
 				"squeezed_employers", trade, "employers of %s in the founder's town" % trade,
 				"hiring by you and the firms has raised the going price of %s by %d%% and priced out about %s hands"
 				% (trade, round((factor - 1.0) * 100), plain_number(priced_out)),
 				priced_out * wage, pool * wage * factor, priced_out * wage / self._annual_labourer_wage(),
-				sim.labour.local_market_share()))
+				needs.local_market_share()))
 		return sectors
 
 	def goods_categories(self) -> Dict[str, Dict[str, Any]]:
@@ -78,36 +80,37 @@ class GroupView:
 		what it sells has fallen from its opening level, and the share of each trade's work that goes
 		to it (TEMPORARY HEURISTIC, CLAUDE.md 4.4: the trade's hours in the category's techniques over
 		its hours in every technique of the tree, until recipes give each trade's work by good)."""
-		sim = self._sim
+		needs = self.needs
+		nodes = needs.tree_nodes()
 		hours: Dict[str, Dict[str, float]] = {}
-		for category in sorted(sim.GOODS_CATEGORIES):
-			for node_id in sim._nodes_in_cat(category):
-				for trade, trade_hours in (sim.nodes[node_id].get("lab") or {}).items():
+		for category in sorted(self.goods_category_names):  # type: ignore[attr-defined]
+			for node_id in needs.nodes_in_category[category]:
+				for trade, trade_hours in (nodes[node_id].get("lab") or {}).items():
 					hours.setdefault(category, {})[trade] = hours.get(category, {}).get(trade, 0.0) + trade_hours
 		totals: Dict[str, float] = {}
-		for node in sim.nodes.values():
+		for node in nodes.values():
 			for trade, trade_hours in (node.get("lab") or {}).items():
 				totals[trade] = totals.get(trade, 0.0) + trade_hours
 		categories = {}
 		for category in sorted(hours):
-			ratio = sim.goods_category_price_ratio(category)
+			ratio = needs.goods_category_price_ratio[category]
 			if ratio is None or ratio >= 1.0:
 				continue
-			sellers = sim._goods_category_state(category)[0]
+			sellers = needs.goods_category_state[category][0]
 			categories[category] = {"price_depression": 1.0 - ratio, "trade_weights": {
 				trade: trade_hours / totals[trade] for trade, trade_hours in hours[category].items()},
-				"founder_share": founder_share_of_sellers(sellers, sim.actor_concerns_in(category))}
+				"founder_share": founder_share_of_sellers(sellers, self.module.actor_concerns_in(category))}
 		return categories
 
 	def sectors(self) -> Dict[str, Sector]:
 		"""Everyone hurt this year, by key."""
 		def compute() -> Dict[str, Sector]:
-			strata = self._sim.actors.home_actors("stratum")  # type: ignore[attr-defined]
+			strata = self.registry.home_actors("stratum")
 			goods = Sector.of_goods(strata, self.goods_categories(), self) if strata else []
 			caused = self.displaced_producers() + goods + self.squeezed_employers()
-			firms = self._sim.actors.home_actors("firm")  # type: ignore[attr-defined]
-			foundations = [foundation for kind in ("church", "academy") for foundation in self._sim.actors.home_actors(kind)]  # type: ignore[attr-defined]
-			governments = [government for government in self._sim.actors.of_kind("government")  # type: ignore[attr-defined]
+			firms = self.registry.home_actors("firm")
+			foundations = [foundation for kind in ("church", "academy") for foundation in self.registry.home_actors(kind)]
+			governments = [government for government in self.registry.of_kind("government")
 						   if government.record.country is None]
 			servants = [sector for government in governments for sector in Sector.of_servants(government, self)]
 			falling = Sector.of_strata(strata, self) + Sector.of_firms(firms, self) + Sector.of_foundations(foundations) + servants
@@ -127,39 +130,38 @@ class GroupView:
 	def group_claims(self) -> Dict[str, float]:
 		"""What the state has undertaken to make good to each organised group, by budget line name."""
 		return {CONCESSION_PREFIX + group.actor_id: group.record.claim
-				for group in self._sim.actors.home_actors("interest_group") if group.organised()}  # type: ignore[attr-defined]
+				for group in self.registry.home_actors("interest_group") if group.organised()}
 
 	def faction_backing(self) -> Dict[str, float]:
 		"""The weight each organised group can put behind a claimant to the throne: its strength."""
 		return {group.actor_id: group.record.strength
-				for group in self._sim.actors.home_actors("interest_group")
-				if group.organised() and group.record.strength > 0.0}  # type: ignore[attr-defined]
+				for group in self.registry.home_actors("interest_group")
+				if group.organised() and group.record.strength > 0.0}
 
 	def scope_revenue(self, scope: float) -> float:
 		"""The state's yearly revenue from a territory holding `scope` of the whole."""
 		return max(1e-9, self.state_revenue() * scope)  # type: ignore[attr-defined,no-any-return]
 
 	def founder_protection(self) -> float:
-		return float(self._sim.view("standing")()["protection"])
+		return float(self.needs.standing()["protection"])
 
 	def lodge_blame(self, amount: float, text: str, year_gap: int, group_record: Any) -> None:
 		"""A group's petition puts blame on the founder; the log says who and why, once in a while."""
-		sim = self._sim
-		sim.send(AddScandal(amount))
+		self.needs.send(AddScandal(amount))
 		last = group_record.last_logged_year
 		if last is None or self.year - last >= year_gap:  # type: ignore[attr-defined]
 			group_record.last_logged_year = self.year  # type: ignore[attr-defined]
-			sim.send(RecordEvent.from_line(text))  # the caller passes a LogLine (InterestGroup.words)
+			self.needs.send(RecordEvent.from_line(text))  # the caller passes a LogLine (InterestGroup.words)
 
 	def money_text(self, amount: float, grouped: bool = False, short: bool = False) -> str:
-		return money_text(amount, self._sim, grouped=grouped, short=short)
+		return self.needs.money_text(amount, grouped=grouped, short=short)
 
 	def plain_number(self, value: float) -> str:
 		return plain_number(value)
 
 	def say(self, text: str) -> None:
 		"""A line in the founder's log, for a change in who is organised against him."""
-		self._sim.send(RecordEvent.from_line(text))  # the caller passes a LogLine
+		self.needs.send(RecordEvent.from_line(text))  # the caller passes a LogLine
 
 	def state_in_deficit(self) -> bool:
 		"""Whether the state could pay all it set out to last year."""

@@ -34,7 +34,8 @@ READS_BY_OWNER = {
 	"ledger": ("acting_balance", "goods_stock", "legacy_acting_household"),
 	"reporting": ("money_text",),
 	"seats": ("win_condition_text", "acting_seat", "automation"),
-	"core": ("society_name", "year", "horizon_end_year", "legacy_order", "project_limits", "research_world"),
+	"actors": ("actor_world",),
+	"core": ("society_name", "year", "horizon_end_year", "legacy_order", "project_limits"),
 }
 
 MODULE_SPECS = (ModuleSpec(

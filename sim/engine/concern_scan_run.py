@@ -6,8 +6,6 @@ from typing import Any, Dict, Iterator, List, Tuple
 
 from sim.agents.api import Business, concern_scan
 
-from .agents_port import SimWorld
-
 HELD_BUSINESS_ID = "held concerns"
 
 
@@ -34,7 +32,7 @@ def running_businesses(game) -> Iterator[Tuple[str, Business]]:
 def scan_game(game) -> Dict[str, Any]:
     """The summary (concern_scan.summary) of the concerns `game`'s society holds, at its current prices, with the summary of
     the plants its owners run now under `running`."""
-    world = SimWorld(game)
+    world = game.view("actor_world")()
     result = concern_scan.summary(concern_scan.scan_business(held_business(game), game.actors, world))
     result["running"] = concern_scan.summary(concern_scan.scan_businesses(running_businesses(game), game.actors, world))
     return result

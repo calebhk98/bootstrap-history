@@ -2,7 +2,7 @@
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old code did, and
 is never cached. The `legacy_*` views are raw state or the engine's own objects the module still needs; they go when that state
-moves: the actors (`legacy_actor_registry`, `legacy_actors_state`, `state_treasury`), the household's purse and facade, and the constants `Sim` still declares (`legacy_constant`)."""
+moves: the household's purse and facade, and the constants `Sim` still declares (`legacy_constant`)."""
 from sim.assembly.api import KEYED
 
 from . import need_substitutes
@@ -30,18 +30,6 @@ def danger_lines(sim):
 
 
 # ---- actors ----------------------------------------------------------------------------------------------------------------
-
-@bridge_view("legacy_actors_state")
-def legacy_actors_state(sim):
-	"""The cast's saved state, or None before any actor exists (reading it never makes one)."""
-	return sim.state.actors
-
-
-@bridge_view("state_treasury", seat_scoped=True)
-def state_treasury(sim):
-	"""The government actor of the acting seat's country (the object itself)."""
-	return sim.state_treasury()
-
 
 # ---- the ledger ------------------------------------------------------------------------------------------------------------
 

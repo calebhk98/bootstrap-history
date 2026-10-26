@@ -78,12 +78,11 @@ class LabourWorld:
     def teaching_knowledge(self):
         """(nodes held by each active actor, what the society already knows, what has been demonstrated): who
         can teach a trade (labour trade_formation.teachers_of)."""
-        from .agents_port import SimWorld
         sim = self._sim
         registry = getattr(sim, "actors", None)
         by_actor = {actor.identity(): set(actor.knowledge) for actor in (registry.actors.values() if registry is not None else ())
                     if actor.record.exited_year is None}
-        return by_actor, set(sim.state.projects.granted), SimWorld(sim).demonstrated()
+        return by_actor, set(sim.state.projects.granted), sim.view("actor_world")().demonstrated()
 
     @property
     def trades_absent(self):
@@ -130,8 +129,7 @@ class LabourWorld:
         """Share of the harvest of a material the home state's forms take from growers; none without a government."""
         if self._sim.actors.government_of(None) is None:
             return 0.0
-        from .agents_port import SimWorld
-        return tax_burden.harvest_share_taken(SimWorld(self._sim), material)
+        return tax_burden.harvest_share_taken(self._sim.view("actor_world")(), material)
 
     def build_wage_schedule(self, civ, tightness_factors=None):
         return wage_schedule.build_schedule(data.TRADE_REGISTRY, civ, tightness_factors=tightness_factors)

@@ -101,7 +101,7 @@ class Starting:
 		if command.precaution and self.needs.precaution_spec(command.node_id) is None:
 			return False, "%s offers no pilot plant or redundant team to pay for." % self.needs.tree[command.node_id]["name"]
 		try:
-			research.begin(SeatResearcher(self, command.precaution), command.node_id, self.needs.research_world())
+			research.begin(SeatResearcher(self, command.precaution), command.node_id, self.needs.actor_world())
 		except CommandRejected as reason:
 			return False, reason.args[0]
 		return True, None

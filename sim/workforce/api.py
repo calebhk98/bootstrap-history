@@ -2,5 +2,5 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import NoteTradeSpread, NoteWageShock, PressLabour, ReportStaffReduction, ScaleDeputies, SetEmployed, SurviveStaff
+from .commands import NoteTradeSpread, NoteWageShock, PressLabour, ReleaseStaff, ReportStaffReduction, ScaleDeputies, SetEmployed, SurviveStaff
 from . import rules

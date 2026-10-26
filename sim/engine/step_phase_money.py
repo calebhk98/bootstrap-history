@@ -1,6 +1,7 @@
 """The yearly money phase: the founder's takings and costs, credit, insolvency, then society and the actors' year.
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
+from sim.actors.api import AdvanceActors
 from sim.reporting.api import RecordAutomation, RecordEvent
 from sim.coin.api import ChargeHouseholdTheft
 from sim.hazards.api import RecoverOutput
@@ -163,4 +164,4 @@ class MoneyPhaseMixin:
         # a year's schooling gain is visible to this same year's teaching
         # decisions rather than lagging a full step behind them.
         self.advance_society(self.state.scenario.year)
-        self.advance_actors(self.state.scenario.year)
+        self.send(AdvanceActors())

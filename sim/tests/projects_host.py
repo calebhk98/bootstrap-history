@@ -57,7 +57,7 @@ def defaults() -> Dict[str, Any]:
 		"automation": {"manual": False, "bounty_set": set()}, "society_name": "Testland", "year": 100,
 		"horizon_end_year": 1000, "legacy_order": [], "project_limits": {
 			"base": 2, "per_director_hours": 2000.0, "per_scholar": 12.0, "per_artisan": 25.0},
-		"research_world": None, "legacy_acting_household": types.SimpleNamespace(bounties_paid=0, employees={}),
+		"actor_world": None, "legacy_acting_household": types.SimpleNamespace(bounties_paid=0, employees={}),
 		"start_gate_running": lambda *arguments: None, "start_gate_unheld_stock": lambda *arguments: None,
 		"start_gate_material_seller": lambda *arguments: None, "start_gate_group_prohibition": lambda *arguments: None,
 		"extra_start_checks": lambda *arguments: None,

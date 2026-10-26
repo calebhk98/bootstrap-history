@@ -1,16 +1,14 @@
 """The home government's side of the tax-flight inputs: what its record says about the take, reach, amnesty and immunity.
-Kept apart from `economy_port_flight.py` so the module that talks to the economy never reads a government's record."""
+Kept apart from the engine's flight module so the module that talks to the economy never reads a government's record."""
 from sim.agents.api import flight_inputs, government_levers, government_levers_tax
 
 
-def government_flight_values(sim, away_by_tile):
+def government_flight_values(world, away_by_tile):
     """{field of YearInputs: value} for the state's take by tile, its reach, amnesty and immunity, given the share of
-    each tile's people already away; empty without a government."""
-    government = sim.actors.government_of(None)
+    each tile's people already away; empty without a government. `world` is the actors' world."""
+    government = world.registry.government_of(None)
     if government is None:
         return {}
-    from .agents_port import SimWorld
-    world = SimWorld(sim)
     record = government.record
     people = {tile: count * (1.0 - away_by_tile.get(tile, 0.0)) for tile, count in world.collection_people_by_tile().items() if count > 0.0}
     reach = world.collection_shares()

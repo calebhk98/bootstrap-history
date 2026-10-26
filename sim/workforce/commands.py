@@ -55,3 +55,11 @@ class NoteWageShock(Command):
 	it is now."""
 	cause: str
 	index_before: float
+
+
+@dataclass(frozen=True)
+class ReleaseStaff(Command):
+	"""`people` of a trade leave the payroll of the seat `seat_id` and go back to the pool the labour market draws on."""
+	seat_id: str
+	trade: str
+	people: float

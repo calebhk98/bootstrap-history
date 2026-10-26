@@ -8,7 +8,6 @@ from sim.assembly.api import KEYED, QUOTE
 from sim.projects.needed_commands import (ClearMothball, CompleteProject)
 
 from . import purchase_rule, projects_precaution
-from .agents_port import SimWorld
 from .bridge import bridge_command, bridge_view
 from .projects_training_advice import training_advice
 from .units_prose import money_text
@@ -210,11 +209,6 @@ def horizon_end_year(sim):
 def project_limits(sim):
     return {"base": sim.MAX_ACTIVE_PROJECTS_BASE, "per_director_hours": sim.MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS,
             "per_scholar": sim.MAX_ACTIVE_PROJECTS_PER_SCHOLAR, "per_artisan": sim.MAX_ACTIVE_PROJECTS_PER_ARTISAN}
-
-
-@bridge_view("research_world")
-def research_world(sim):
-    return SimWorld(sim)
 
 
 # ---- commands of owners that have not moved -----------------------------------------------------------------------

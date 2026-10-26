@@ -1,6 +1,6 @@
 """What happens to a partner's state when the founder's people deal with it.
 
-(needs: legacy_actor_registry)"""
+(needs: cast)"""
 from typing import Any
 
 

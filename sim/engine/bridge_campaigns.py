@@ -2,7 +2,6 @@
 
 Each view answers through `Sim` as the old mixin methods did; when its owner moves it publishes the same name and the entry
 is deleted. Each command is applied the way the old campaign code did the write."""
-from sim.actors.api import RecordConquestContact
 from sim.agents import api as agents_api
 from sim.assembly.api import KEYED, QUOTE
 from sim.demography.api import AddCaptives
@@ -10,13 +9,7 @@ from sim.geography.api import (endemic_people_loss, food_potential, layer_value,
 from sim.land.api import TransferTile
 from sim.stores.api import WriteStore
 
-from . import contact_events
 from .bridge import bridge_command, bridge_view
-
-
-def _country_world(sim, owner):
-    from .agents_port import SimWorld
-    return sim.actors.world_of_country(owner, SimWorld(sim))
 
 
 # ---- land ----
@@ -69,12 +62,6 @@ def has_state(sim, owner):
     return owner == str(sim.civ["id"]) or owner in sim.actors.state.countries
 
 
-@bridge_view("country_world", kind=KEYED)
-def country_world(sim, owner):
-    """The world the owner's state sees (the shared one for the home country, else its country's scope)."""
-    return _country_world(sim, owner)
-
-
 @bridge_view("countries")
 def countries(sim):
     return list(sim.actors.state.countries)
@@ -111,11 +98,6 @@ def transfer_tile(sim, command):
 @bridge_command(WriteStore)
 def write_store(sim, command):
     sim.stores.write(command.store, command.key, command.value, command.owner)
-
-
-@bridge_command(RecordConquestContact)
-def record_conquest_contact(sim, command):
-    contact_events.after_conquest(sim, command.conqueror, command.previous, command.tile)
 
 
 @bridge_command(AddCaptives)

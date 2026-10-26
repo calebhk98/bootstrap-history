@@ -15,8 +15,8 @@ from .constants import COIN_GUARD_HOURS_PER_TONNE_YEAR, KEEPING_CAUSE, KEEPING_P
 
 class Keeping:
     """The views of the hoard and its keeping cost, and the command `ChargeKeeping` (needs: civilisation,
-    money_per_labour_hour, acting_balance, credit_limit, partner_coin_standard, partner_route_cost, legacy_actor_registry,
-    legacy_agent_world; sends PayEdgeFrom)."""
+    money_per_labour_hour, acting_balance, credit_limit, partner_coin_standard, partner_route_cost, cast,
+    actor_world; sends PayEdgeFrom)."""
 
     def coin_kg_per_unit(self):
         return wage_provider.coin_standard(self.needs.civilisation())["kg_per_unit"]
@@ -53,7 +53,7 @@ class Keeping:
     def charge_keeping(self, command):
         """Every actor in business that holds money (a state, a firm) pays to keep it as coin. A foreign country's
         actor pays at its country's own pay level (its own labour markets) to its own country's guards."""
-        registry, world = self.needs.legacy_actor_registry(), self.needs.legacy_agent_world()
+        registry, world = self.needs.cast(), self.needs.actor_world()
         home_pay = max(1e-9, world.pay_per_person_year(KEEPING_PAY_TRADE))
         for actor_id, actor in sorted(registry.actors.items()):  # id order, as a loaded game wraps them
             record = actor.record

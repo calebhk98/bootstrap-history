@@ -18,7 +18,6 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 from sim.refusal import LogLine, Refusal
 from sim.constants import declare
 from . import cause_book, category_traits
-from .agents_port import SimWorld
 from .staffing_events import unstaffed_closure_line
 from .closure_grace import grace_note, within_grace
 from .staffing_warning_rows import staffing_warning_rows
@@ -105,13 +104,13 @@ class StaffingMixin:
     def review_ventures(self, rules=business_review.ALL_RULES, year=None):
         """The seat's business under the yearly review (sim/agents/business_review.py); what closed and why.
         Plants it shuts are dated `year` (the scenario's when not given)."""
-        world = SimWorld(self)
+        world = self.view("actor_world")()
         world.review_year = year
         return self.state.projects.business.review(self.household, world, rules)
 
     def note_venture_year(self):
         """Tally each running plant's margin, and the years running it has lost money (the loss rule's input)."""
-        SimWorld(self).founder_review().tally(self.state.projects.business)
+        self.view("actor_world")().founder_review().tally(self.state.projects.business)
 
     def staffing_closed_hand_shortfall(self):
         """(scholars, craftsmen) the household lacks to reopen every concern shut for want of staff.
@@ -150,7 +149,7 @@ class StaffingMixin:
         `mothball` never reappears on its own - that is still their call.
         """
         household = self.state.household
-        reopened = self.state.projects.business.review_reopening(self.household, SimWorld(self))
+        reopened = self.state.projects.business.review_reopening(self.household, self.view("actor_world")())
         if reopened:
             self.record_staffing_reopenings(len(reopened))
             still_shut = self.staffing_shut_count()

@@ -6,7 +6,7 @@ state's reach is the share of what is due that the officials it pays collect ove
 (`sim/agents/collection.py`); its authority, what it can collect, enforce and borrow against, is that reach times this share.
 No civilisation file states either.
 
-Needs: effect_sum, legacy_agent_world, year, legacy_done_versions, population_total."""
+Needs: effect_sum, actor_world, year, legacy_done_versions, population_total."""
 from . import constants, rules
 
 
@@ -28,7 +28,7 @@ class Reach:
 	def state_reach(self):
 		"""The share of what is due that the home state's paid officials collect, kept for as long as the year, the works held,
 		the people and the officials' unpaid share are unchanged."""
-		world = self.needs.legacy_agent_world()
+		world = self.needs.actor_world()
 		unfunded = world.government().record.unfunded.get("administration", 0.0)
 		key = self._reach_key(unfunded)
 		memo = self._state_reach_memo
@@ -49,7 +49,7 @@ class Reach:
 		return self._staff_reach("foresters", "forest_share")
 
 	def _staff_reach(self, line_name, share_name):
-		world = self.needs.legacy_agent_world()
+		world = self.needs.actor_world()
 		unfunded = world.government().record.unfunded.get(line_name, 0.0)
 		key = self._reach_key(unfunded)
 		memo = self._staff_reach_memo.get(line_name)

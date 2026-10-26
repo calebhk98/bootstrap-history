@@ -5,7 +5,7 @@ A work declares `mechanics.transfer` (see data/branches/MECHANICS.md) and pays w
 hand. Both go through `pay_state`, so the state's purse, its debt and the claims it funds from that purse are the ordinary ones.
 A node declares `mechanics.state_levy = {"share": s}`; while it is open the state is paid `s` of its revenue each year.
 
-Needs: state_treasury, transfer_listening, legacy_household_actor, acting_balance, legacy_actor_registry, mechanic, tree,
+Needs: state_treasury, transfer_listening, legacy_household_actor, acting_balance, cast, mechanic, tree,
 money_text, money_per_labour_hour, running_mechanics, operating, concern_revenue, output_factor, legacy_said_once."""
 from sim.agents.api import ledger
 from sim.reporting.api import RecordEvent
@@ -26,7 +26,7 @@ class Transfers:
 
 	def state_claims(self):
 		"""What the state has undertaken to make good to organised interest groups this year."""
-		return sum(group.record.claim for group in self.needs.legacy_actor_registry().home_actors("interest_group")
+		return sum(group.record.claim for group in self.needs.cast().home_actors("interest_group")
 		           if group.organised())
 
 	def transfer_size(self, spec):

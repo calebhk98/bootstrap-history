@@ -9,6 +9,7 @@ import collections
 import math
 import os
 
+from sim.actors import api as actors_api
 from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR, EDGE_EXCHANGE as COIN_EXCHANGE, PURSE_CURRENCY
 from sim.constants import declare
 from sim.economy import api as economy_api
@@ -19,7 +20,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              trade_premium, variable_cost_per_run)
 
 from sim.foreign_trade.api import SettleFlow, country_trade_years
-from . import agents_port_stores, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities
+from . import trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities
 from sim.materials.api import ProducerCapacityCache
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
@@ -335,7 +336,7 @@ class AgentEconomy(TilePricesMixin):
 
     def _keep_deliveries(self, delivered):
         """Goods a buyer that keeps its purchases bought at the market join its stores, in tonnes."""
-        agents_port_stores.keep_deliveries(self._sim.actors.actors, delivered)
+        actors_api.keep_deliveries(self._sim.actors.actors, delivered)
 
     def _strike_state_coin(self, economy):
         """The cut the home state decided on this year lowers the metal in the coin it issues."""

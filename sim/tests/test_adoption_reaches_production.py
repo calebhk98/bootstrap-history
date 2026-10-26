@@ -5,8 +5,8 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.agents import adoption, awareness, stock_keeping
-from sim.agents.api import ActorRecord, Firm
-from sim.engine import contact_events
+from sim.agents.api import ActorRecord, Firm, MIGRANT_CONTACT_VOLUME_PER_PERSON
+from sim.actors.api import rules
 from sim.labour.api import migrant_pairs, moves_between_regions, totals_of_pairs
 from sim.world.demography import Population
 
@@ -25,11 +25,11 @@ check("an event's contact is recorded for every place on every receiver", learne
 
 places = {"previous": ["tile_b", None, "tile_c"], "other": ["tile_z"]}
 check("a conquest gives contact with the tile and the overrun country's places only",
-	  contact_events.conquest_contacts(places, "previous", "tile_t") == ["tile_b", "tile_c", "tile_t"])
+	  rules.conquest_contacts(places, "previous", "tile_t") == ["tile_b", "tile_c", "tile_t"])
 check("a conquest of ground nobody held gives contact with the tile alone",
-	  contact_events.conquest_contacts(places, None, "tile_t") == ["tile_t"])
+	  rules.conquest_contacts(places, None, "tile_t") == ["tile_t"])
 
-arrivals = contact_events.migrants_arriving([("a", "b", 1000.0), ("a", "b", 500.0), ("c", "b", 0.0)])
+arrivals = rules.migrants_arriving([("a", "b", 1000.0), ("a", "b", 500.0), ("c", "b", 0.0)], MIGRANT_CONTACT_VOLUME_PER_PERSON)
 check("migrants arriving give the destination contact with the origin in proportion to their number",
 	  list(arrivals) == ["b"] and list(arrivals["b"]) == ["a"] and arrivals["b"]["a"] > 0.0)
 

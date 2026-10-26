@@ -8,7 +8,7 @@ coin's metal at the home price of that metal.
 
 (needs: foreign_economy_records, civilisation, civilisation_record, partner_own_economy, year, acting_seat, techniques_held,
 material_prices, home_unit_price, household_prices, material_commodity, commodity_record, partner_reached,
-legacy_actor_registry, foreign_route, route_freight_per_tonne)"""
+cast, foreign_route, route_freight_per_tonne)"""
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
@@ -48,7 +48,7 @@ class Economies:
 
     def partner_government(self, civilization_id: str) -> Any:
         """The actor that is the partner country's state, or None before the roster is seeded."""
-        return self.needs.legacy_actor_registry().get(GOVERNMENT_PREFIX + civilization_id)
+        return self.needs.cast().get(GOVERNMENT_PREFIX + civilization_id)
 
     def partner(self, civilization_id: str) -> Dict[str, Any]:
         """{civ: the partner's civilisation record, has_government, stock_taken: {material: units smugglers took}}."""

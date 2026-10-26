@@ -8,7 +8,6 @@ from sim.assembly.api import KEYED, QUOTE
 from sim.workforce.api import NoteTradeSpread, SetEmployed
 
 from . import category_traits
-from .agents_port_cast import seed_opening_cast
 from .bridge import bridge_command, bridge_view
 from .data import TRADES_ABSENT
 
@@ -18,7 +17,7 @@ from .data import TRADES_ABSENT
 @bridge_view("legacy_country_literacy", kind=KEYED)
 def legacy_country_literacy(sim, country):
     """The reading shares of `country` (the home country when None), owned only by the country's strata."""
-    seed_opening_cast(sim)
+    sim.view("seeded_actor_registry")()
     if not sim.actors.of_kind("stratum"):
         seed_strata(sim.actors, None)
     home = sim.actors.state.home_country

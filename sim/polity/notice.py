@@ -101,7 +101,7 @@ class Notice:
 
 	def state_levy_rates(self):
 		"""(requisition, office) share of income the state takes at full notice; nothing before the state has budgeted a year."""
-		state = self.needs.legacy_actors_state()
+		state = self.needs.cast_state()
 		record = None if state is None else state.records.get("government:" + str(self.needs.civilisation().get("id")))
 		if record is None:
 			return 0.0, 0.0
@@ -136,7 +136,7 @@ class Notice:
 
 	def state_military_ask(self, taxable, scale):
 		"""What the state asks of one militarily useful taxpayer in arms this year."""
-		return self.needs.state_treasury().military_ask(taxable, scale, self.needs.legacy_agent_world())
+		return self.needs.state_treasury().military_ask(taxable, scale, self.needs.actor_world())
 
 	def confiscation_risk(self):
 		"""(yearly probability, [what is holding it off]) of the treasury's tail risk at the top of the state-notice scale: a

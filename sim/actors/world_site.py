@@ -2,8 +2,8 @@
 from typing import Any, Optional
 
 from sim.agents.api import supply
-from sim.constants import declare
 from sim.labour.api import production_data
+from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 SQUARE_METRES_PER_HECTARE = 10000.0
@@ -17,7 +17,7 @@ FLOOR_AREA_PER_WORKER_SQUARE_METRES = declare(
 class SiteView:
 	"""Read-only questions about the site of a concern; mixed into `SimWorld`."""
 
-	_sim: Any
+	needs: Any
 
 	def worked_hectares(self, node_id: str, capacity: float = 1.0) -> float:
 		"""Hectare-years of land a year of a concern run at `capacity` times its founding size works: for
@@ -50,7 +50,7 @@ class SiteView:
 	def land_rent_at(self, tile: Optional[str]) -> float:
 		"""Yearly rent of a hectare on a tile: the agent economy's land market's rent there (the mean rent
 		of the land let where none was let on the tile); the engine's land price while the economy opens."""
-		rent = self._sim.economy.agent_land_rent_at(tile)
+		rent = self.needs.agent_land_rent_at(tile)
 		if rent is None or rent <= 0.0:
 			return float(self.material_price("hectare_land"))  # type: ignore[attr-defined]
 		return float(rent)

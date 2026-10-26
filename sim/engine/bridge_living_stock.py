@@ -74,10 +74,8 @@ def press_labour(sim, command):
 def partner_catch_chance(sim, civilization_id, share_of_holding):
     """Chance the partner's state finds out a taking of this share of what it holds: its reach (what its paid
     officials collect of what is due over its roads) against how visible the bite is."""
-    from .agents_port import SimWorld
-    from .agents_port_cast import seed_opening_cast
-    seed_opening_cast(sim)
-    reach = float(sim.actors.world_for(sim.actors.get(GOVERNMENT_PREFIX + civilization_id), SimWorld(sim)).state_reach())
+    registry = sim.view("seeded_actor_registry")()
+    reach = float(registry.world_for(registry.get(GOVERNMENT_PREFIX + civilization_id), sim.view("actor_world")()).state_reach())
     return stock_dynamics.catch_chance(reach, visibility_factor(share_of_holding))
 
 

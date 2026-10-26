@@ -17,13 +17,13 @@ READS_BY_OWNER = {
     "foreign_trade": ("foreign_economies", "foreign_coin_home_units", "foreign_coin_partner_units", "partner_coin_standard",
                       "partner_opening_facts", "partner_route_cost"),
     "reporting": ("coin_value_ratio",),
-    "ledger": ("acting_balance", "held_goods", "legacy_acting_household", "legacy_actor_registry"),
+    "ledger": ("acting_balance", "held_goods", "legacy_acting_household", "cast"),
     "finance": ("credit_limit", "lent_share"),
     "polity": ("standing", "eminence", "visible_scale", "order_reach"),
     "agriculture": ("farm_holdings", "farm_land_price"),
     "resources": ("forest_holding",),
     "land": ("home_country", "tile_known", "tile_haul_cost"),
-    "actors": ("legacy_agent_world",),
+    "actors": ("actor_world",),
 }
 
 # not cached: the foreign ledgers, the purse and the stock they read are still written outside their owners' commands

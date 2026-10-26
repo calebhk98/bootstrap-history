@@ -2,7 +2,7 @@
 from sim.agents.api import government_levers, land_moves, policy_land, tax_burden
 from sim.economy import api as economy_api
 
-from . import agents_port_land
+from sim.actors.api import land_decree
 
 
 def debt_relief_tiles(sim, economy):
@@ -19,12 +19,12 @@ def title_moves(sim, economy):
     government = sim.actors.government_of(None)
     if government is None:
         return ()
-    confiscate, cap = agents_port_land.decree(government)
+    confiscate, cap = land_decree.decree(government)
     if confiscate <= 0.0 and cap is None:
         return ()
     held, tenancies = economy_api.title_holdings(economy, sim.tiles_owned_by(str(sim.civ["id"])))
     plan = land_moves.planned(held, tenancies, government.actor_id, confiscate, cap)
-    agents_port_land.record_decree(government, plan)
+    land_decree.record_decree(government, plan)
     return tuple((tile, move.giver, move.receiver, move.share) for tile, moves in sorted(plan.items()) for move in moves)
 
 
@@ -48,5 +48,4 @@ def land_tax_share_of_rent(sim):
     """Share of a rent the home state's forms on land take from the owner; none without a government."""
     if sim.actors.government_of(None) is None:
         return 0.0
-    from .agents_port import SimWorld
-    return tax_burden.land_tax_share_of_rent(SimWorld(sim))
+    return tax_burden.land_tax_share_of_rent(sim.view("actor_world")())

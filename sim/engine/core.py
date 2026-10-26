@@ -59,7 +59,7 @@ from .seat_defaults import default_policy
 from .ways import WaysMixin
 from .held_works import HeldWorksMixin
 from .works import WorksMixin
-from .society_actors import ActorsMixin
+from .forward_actors import ActorsForwardsMixin
 from .founder_sales import FounderSalesMixin
 from .seat_bank import SeatBankMixin
 from .benefactions import BenefactionsMixin
@@ -104,7 +104,7 @@ class Sim(
         WaysMixin,
         WorksMixin,
         HeldWorksMixin,
-        ActorsMixin,
+        ActorsForwardsMixin,
         DiffusionForwardsMixin,
         FounderSalesMixin,
         SeatBankMixin,
@@ -176,7 +176,7 @@ class Sim(
         self._remember_derived_gates(self.civ["starting_techs"])
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
-            SimulationState, HouseholdState, ProjectsState, ActorsState,
+            SimulationState, HouseholdState, ProjectsState,
             EconomyState, FounderState,
             ScenarioState, PopulationState
         )
@@ -190,7 +190,6 @@ class Sim(
             founder=FounderState(),
             scenario=ScenarioState(),
             population=PopulationState(),
-            actors=ActorsState(),
             _civ=self.civ.get("id"),
         )
         game_assembly.attach(self)   # the modules answer from here on: the opening below already sends commands

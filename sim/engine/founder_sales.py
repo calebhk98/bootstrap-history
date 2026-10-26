@@ -1,7 +1,6 @@
 """The founder sells a built concern to another actor through the exchange."""
 from sim.agents.api import CommandRejected, exchange_sale
 
-from .agents_port import SimWorld
 
 
 class FounderSalesMixin:
@@ -11,7 +10,7 @@ class FounderSalesMixin:
         projects = self.state.projects
         if node_id not in projects.operating or node_id in projects.granted:
             return None, "you are not running %s, so there is nothing to sell" % node_id
-        world = SimWorld(self)
+        world = self.view("actor_world")()
         party = self.seat_party(self.state.acting_seat, {node_id: world.concern_margin(node_id)})
 
         def find_actor(actor_id):

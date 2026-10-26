@@ -9,9 +9,9 @@ from sim.agents.api import edges
 class SeatReview:
 	"""The hooks of `Reviewable` for the acting seat, answered from the simulation."""
 
-	def __init__(self, world, year=None):
+	def __init__(self, world, year=None, sim=None):
 		self._world = world
-		self._sim = world._sim
+		self._sim = sim if sim is not None else world._sim
 		self._year = self._sim.state.scenario.year if year is None else year
 
 	def tally(self, business):

@@ -9,16 +9,6 @@ def acting_household(sim):
 	return sim.state.household
 
 
-@bridge_view("legacy_edge_account", kind=KEYED)
-def edge_account(sim, name):
-	return sim.edge(name)
-
-
-@bridge_view("legacy_actor_registry")
-def actor_registry(sim):
-	return sim.actors
-
-
 @bridge_view("legacy_stock_ledger", seat_scoped=True)
 def stock_ledger(sim):
 	"""The seat's tonnes ledger, made on first use, with the capacity keys swept into the economy's capacity pool."""

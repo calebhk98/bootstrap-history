@@ -1,8 +1,14 @@
 """Commands to the owner of the cast of other actors and what they are aware of."""
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
 
 from sim.assembly.api import Command
+
+
+@dataclass(frozen=True)
+class AdvanceActors(Command):
+	"""The year of every actor other than the founder's household: the countries, players, firms, traders and bodies of people
+	each decide, pay and post. Coin moved between actors in different places pays carriage meanwhile."""
 
 
 @dataclass(frozen=True)
@@ -12,6 +18,13 @@ class RecordConquestContact(Command):
 	conqueror: str
 	previous: Optional[str]
 	tile: str
+
+
+@dataclass(frozen=True)
+class RecordMigrationContact(Command):
+	"""People moved between places, as (origin, destination, people) rows: the actors where they arrive become aware of what
+	the people of the place they left know."""
+	moves: Tuple[Tuple[str, str, float], ...]
 
 
 @dataclass(frozen=True)

@@ -79,9 +79,8 @@ def check_labour_market_invariants(sim):
 def check_technique_invariants(sim):
     """Assert no actor runs a plant of a technique it does not hold (its own knowledge, its country's baseline,
     or a licence it pays royalty under)."""
-    from .agents_port import SimWorld
     registry = sim.actors
-    world = SimWorld(sim)
+    world = sim.view("actor_world")()
     for actor in registry.actors.values():
         business = getattr(actor.record, "business", None)
         if business is None:
