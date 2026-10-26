@@ -4,7 +4,6 @@ The phase is `start_projects` of sim/engine/year_phases.py. What it leaves for t
 free and the hired-labour room, both measured before any start) is the view `start_hours`."""
 from typing import Dict, List, Optional, Tuple
 
-from . import constants
 from .auto_start import judge_start_candidate
 from .commands import PostBounty
 from .needed_commands import RecordAutomation, RecordAutomationSkip

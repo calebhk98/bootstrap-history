@@ -5,7 +5,7 @@ calls it for every node in the tree, so no sentence is built then (several are t
 through `visibility`, which calls back into this test on each missing prerequisite). Each check returns None ("no
 verdict, ask the next check") or the (ok, message) this test should return right now, so the FIRST check with an
 opinion wins. The order of `START_CHECKS` (blocker_rules.py) is the contract."""
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from sim.agents.api import research_gate
 from sim.refusal import Refusal
