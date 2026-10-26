@@ -80,7 +80,7 @@ class EconomyPort:
     def unskilled_wage(self):
         """Money one hour of the unskilled trade is paid in the agent economy, or None until the game's money is
         priced at the economy (the economy's opening reprices it, see reprice_opening_money)."""
-        if not self._sim.state.economy.money_from_economy or self._opening:
+        if not self._sim.view("money_from_economy")() or self._opening:
             return None
         agent = self._answering_agent()
         return None if agent is None else agent.unskilled_wage_per_hour()
@@ -296,7 +296,7 @@ class EconomyPort:
         agent = self.agent
         if agent is None:
             return
-        priced = self._sim.state.economy.money_from_economy
+        priced = self._sim.view("money_from_economy")()
         if priced and agent.opened():
             return
         before = None if priced else self._sim.labour.money_per_labour_hour()

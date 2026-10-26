@@ -96,17 +96,20 @@ check("deserialize_state: underscore-led fields", holdings._material_stock_ledge
 check("deserialize_state: a holdings blob with nothing in it is the defaults", deserialize_state({}, HoldingsState) == HoldingsState())
 
 # ---- the economy's stored record, tile-keyed stores
-economy = deserialize_state({
+from sim.markets.state import MarketsWorld
+markets = deserialize_state({
 	"agent_economy": {"opening": {"recipes": ["bread", "brick"]}, "record": {"loans": [{"contract_id": "l1"}]}, "cargo": {"leg:1": {"tonnes": 2.0}}},
+	"market_flows": None}, MarketsWorld)
+economy = deserialize_state({
 	"tile_owners": {"t1": {"owner": "rome", "control": "high"}}, "works_under_construction": {"t1": {"mill": [105, 1]}},
-	"market_flows": None, "nodes_money_per_labour_hour": None}, EconomyState)
+	"nodes_money_per_labour_hour": None}, EconomyState)
 check("deserialize_state: the stored agent economy (opening with its recipes, record, cargo) is as saved",
-      economy.agent_economy == {"opening": {"recipes": ["bread", "brick"]}, "record": {"loans": [{"contract_id": "l1"}]}, "cargo": {"leg:1": {"tonnes": 2.0}}}, None)
+      markets.agent_economy == {"opening": {"recipes": ["bread", "brick"]}, "record": {"loans": [{"contract_id": "l1"}]}, "cargo": {"leg:1": {"tonnes": 2.0}}}, None)
 check("deserialize_state: tile-keyed stores, with their numbers typed", economy.tile_owners == {"t1": {"owner": "rome", "control": "high"}}
       and economy.works_under_construction == {"t1": {"mill": [105.0, 1.0]}}, None)
 check("deserialize_state: a module's world state types its nested numbers",
       deserialize_state({"trade_by_year": {"100": {"in": 4, "out": 3}}}, ForeignTradeWorld).trade_by_year == {"100": {"in": 4.0, "out": 3.0}})
-check("deserialize_state: unset optional economy fields stay None", economy.market_flows is None and economy.nodes_money_per_labour_hour is None)
+check("deserialize_state: unset optional economy fields stay None", markets.market_flows is None and economy.nodes_money_per_labour_hour is None)
 
 # ---- actors: contracts in the purses, the state's books
 actors = deserialize_state({

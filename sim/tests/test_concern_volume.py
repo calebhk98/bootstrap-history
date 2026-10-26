@@ -9,7 +9,9 @@ from .harness import *  # noqa: F401,F403
 import copy
 from types import SimpleNamespace
 
-from sim.engine.market_demand import MEAN_INCOME_HOURS_PER_CAPITA, MarketDemandMixin
+from sim.markets.api import MEAN_INCOME_HOURS_PER_CAPITA
+from sim.markets.module import Markets
+from sim.tests import module_harness
 from sim.labour.labour_market_api import LabourMarket
 
 
@@ -32,9 +34,8 @@ check("the scarcity is read against the opening's index, not against one",
       abs(wage_market(1.2, 1.2, 1.0, 0.0).household_wage_ratio() - 1.0) < 1e-12)
 
 
-class IncomeFromWage(MarketDemandMixin):
-    def __init__(self, ratio):
-        self.labour = SimpleNamespace(market=SimpleNamespace(household_wage_ratio=lambda: ratio))
+def IncomeFromWage(ratio):
+    return module_harness.build(Markets, views={"labour_market": SimpleNamespace(household_wage_ratio=lambda: ratio)})
 
 
 check("household income is the mean income carried by what an hour pays now against the opening",

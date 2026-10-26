@@ -3,20 +3,27 @@ leaves out only the asking seat's orders (small fixture, no game)."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.agents_port_household import HouseholdPort
 from sim.engine.goods_market_api import GoodsMarket
-from sim.engine.market_clearing import MarketClearingMixin
+from sim.markets.module import Markets
+from sim.markets.state import MarketsWorld
+from sim.tests import module_harness
 from sim.engine.state import FounderState, HouseholdState, ProjectsState
 from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
 
 QUICK_TOPIC = True
 
 
-class FixtureSim(MarketClearingMixin):
+class FixtureSim:
     """The state and the seat switch; the market code reads nothing else for flows."""
 
     def __init__(self):
         self.state = HouseholdPort().fresh_state(100.0)
         self.state.seats["second"] = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(),
                                                founder=FounderState())
+        self.markets = module_harness.build(Markets, world=MarketsWorld(), views={
+            "year": lambda: self.state.scenario.year, "seat_list": lambda: {"joined": list(self.state.seats)}})
+
+    def _market_flows(self):
+        return self.markets.legacy_market_flows()
 
     def act_as(self, seat_id):
         sim = self

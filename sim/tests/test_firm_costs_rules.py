@@ -2,7 +2,7 @@
 either), the founder and an actor are quoted the same upkeep for the same concern, and a goods category's takings are the
 market's price times volume shared among its sellers. Rules: `node_upkeep.non_labour_upkeep_money`,
 `EconomyPort.concern_upkeep` against `ProductionMixin.institution_upkeep` (the founder's), and
-`goods_seller_share.seller_revenue_factor`. That pay follows output per head by a share is test_concern_volume; the one
+`rules.seller_revenue_factor`. That pay follows output per head by a share is test_concern_volume; the one
 wage for every employer is test_one_labour_market_wiring."""
 QUICK_TOPIC = True
 
@@ -12,7 +12,7 @@ from types import SimpleNamespace
 from sim.engine import node_upkeep
 from sim.engine.economy_port import EconomyPort
 from sim.engine.economy_production import ProductionMixin
-from sim.engine.goods_seller_share import seller_revenue_factor
+from sim.markets.rules import seller_revenue_factor
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
 
 NODE = {"up": 5000.0, "_upkeep_hours_parts": {"staff": 3.0, "plant": 1.0}, "_upkeep_basis": None}   # a quarter of the upkeep is not crew

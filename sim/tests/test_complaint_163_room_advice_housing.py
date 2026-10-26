@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.economy_goods import GoodsMixin
+from sim.engine.economy_housing import HousingPriceMixin as GoodsMixin
 from sim.labour.room_advice import hire_room_refusal, room_advice, sources_to_build, sources_to_reopen
 from sim.refusal import cause_of, facts_of
 

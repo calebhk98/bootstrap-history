@@ -48,3 +48,42 @@ class NoteActorPurchase(Command):
 	commodity: str
 	tonnes: float
 	budget: float = 0.0
+
+
+@dataclass(frozen=True)
+class ResetMarketCaches(Command):
+	"""The acting seat's remembered goods-category figures are dropped (a seat switch, a load, a handover)."""
+
+
+@dataclass(frozen=True)
+class OpenMarketBook(Command):
+	"""Every commodity the price table names gets its book entry, at the society's present output."""
+
+
+@dataclass(frozen=True)
+class RenameMarketSeat(Command):
+	"""A seat moved to another id: its place in the year's flows, the agent economy's books and the goods market's seat
+	parties follows."""
+	from_id: str
+	to_id: str
+
+
+@dataclass(frozen=True)
+class MarkMoneyPricedAtEconomy(Command):
+	"""The game's money is now counted at the agent economy's unskilled wage."""
+
+
+@dataclass(frozen=True)
+class BuyMaterial(Command):
+	"""The acting seat buys `tonnes` of a material at the market (cut to what is offered and affordable); answers the tonnes
+	bought."""
+	material: str
+	tonnes: float
+
+
+@dataclass(frozen=True)
+class SellMaterial(Command):
+	"""The acting seat sells `tonnes` of its stock of a material at the market (cut to what is held and absorbed); answers
+	the tonnes sold."""
+	material: str
+	tonnes: float

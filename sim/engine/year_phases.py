@@ -61,7 +61,7 @@ SHIPPED: List[Phase] = [
 	Phase("material_shortage_notes", SEAT, module_seat_phase("material_shortage_notes")),
 	Phase("seat_work", SEAT, lambda sim, seat_id: sim._run_seat_work()),
 	Phase("founder_mortality", SEAT, module_seat_phase("founder_mortality")),
-	Phase("market", WORLD, lambda sim, seats: sim._step_market()),
+	Phase("market", WORLD, module_world_phase("market")),
 	Phase("coin_revaluation", WORLD, module_world_phase("coin_revaluation")),
 	Phase("wage_market_ratios", WORLD, module_world_phase("wage_market_ratios")),
 	Phase("wild_stock", WORLD, module_world_phase("wild_stock")),

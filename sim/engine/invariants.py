@@ -115,7 +115,7 @@ def check_capacity_invariants(sim):
         if country in people and people[country] > 0.0:
             assert staff <= people[country] + 1e-6, \
                 "%s employs %.1f, more than the %.1f people of %s" % (actor.actor_id, staff, people[country], country)
-    for commodity, book in (sim.state.economy.market_book or {}).items():
+    for commodity, book in (sim.state.modules["markets"].market_book or {}).items():
         capacity = book.get("capacity_tonnes", 0.0)
         assert math.isfinite(capacity) and capacity >= -1e-9, "commodity %s has capacity %r" % (commodity, capacity)
     return True

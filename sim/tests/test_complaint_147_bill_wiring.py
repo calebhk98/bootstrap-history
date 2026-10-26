@@ -12,7 +12,8 @@ from .harness import check
 
 from sim.engine.economy import EconomyMixin
 from sim.engine.goods_market_api import GoodsMarket
-from sim.engine.economy_materials import MaterialSupplyMixin
+from sim.markets.module import Markets
+from sim.tests import module_harness
 from sim.materials.api import SettleProjectMaterials as SettleCommand
 from sim.tests import materials_stand_in
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
@@ -69,7 +70,7 @@ check("a material nobody sells is refused", _quote_material(unpriced, {"material
 # ---- the material cost reaches the market's quote
 asked = []
 game = SimpleNamespace(goods_market=SimpleNamespace(quote_buy=lambda material, tonnes, already: asked.append((material, tonnes, already)) or (1.0, 1.0)))
-MaterialSupplyMixin.material_purchase_cost(game, "coal_kg", 3.0, 2.0)
+module_harness.build(Markets, views={"legacy_game": game}).purchase_quote("coal_kg", 3.0, 2.0)
 check("the bill's price of an order is the goods market's quote for it", asked == [("coal_kg", 3.0, 2.0)], asked)
 
 # ---- why shows the engine's cost

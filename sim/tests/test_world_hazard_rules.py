@@ -39,7 +39,8 @@ def game(strata=(), actors=(), owners=None, home_people=1000.0, colonies=None):
     sim = types.SimpleNamespace(
         state=types.SimpleNamespace(
             scenario=types.SimpleNamespace(year=100),
-            economy=types.SimpleNamespace(world_events=[], tile_owners=owners if owners is not None else {}, market_book={}),
+            economy=types.SimpleNamespace(world_events=[], tile_owners=owners if owners is not None else {}),
+            modules={"markets": types.SimpleNamespace(market_book={})},
             seats={"first": types.SimpleNamespace(holdings=types.SimpleNamespace(colonies=colonies or []),
                                                   household=types.SimpleNamespace(log=[]))}),
         civ={"id": HOME}, events=True, population=types.SimpleNamespace(total=home_people),

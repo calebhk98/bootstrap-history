@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.household_new_goods import new_goods_units, prices_in_hours
+from sim.markets.new_goods import new_goods_units, prices_in_hours
 from sim.reporting.api import CloseRealOutput, ReportingWorld
 from sim.reporting.module import Reporting
 from sim.tests import module_harness

@@ -4,7 +4,8 @@ method `money` reads, and the market squeeze rows sum to the deduction. Each is 
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine.economy_absorption import MarketAbsorptionMixin
+from sim.markets.module import Markets
+from sim.tests import module_harness
 from sim.ui.proto import techtree
 from sim.ui.proto.dispatch_labour import _cmd_train
 from sim.ui.proto.quote_spending import _quote_train
@@ -65,16 +66,10 @@ check("state reads sustainable_debt from the sim method, rounded to one place",
       _agent_state_spend_and_net(debtor)["sustainable_debt"] == 1234.6)
 
 # --- the squeeze rows add up to the deduction and each names its concerns.
-class _Absorbing(MarketAbsorptionMixin):
-    def __init__(self):
-        self.nodes = {"mill": {"cat": "textiles"}, "loom": {"cat": "textiles"}, "forge": {"cat": "metals"}}
-        self.output_factor = 1.0
-
-    def ledger_concern_rows(self):
-        return {"mill": 300.0, "loom": 100.0, "forge": 600.0}
-
-    def workshop_output(self):
-        return 0.0
+def _Absorbing():
+    return module_harness.build(Markets, views={
+        "tree_nodes": lambda: {"mill": {"cat": "textiles"}, "loom": {"cat": "textiles"}, "forge": {"cat": "metals"}},
+        "output_factor": 1.0, "concern_market": {"mill": 300.0, "loom": 100.0, "forge": 600.0}, "workshop_output": 0.0})
 
 
 squeeze = _Absorbing().market_absorption_by_category(250.0)

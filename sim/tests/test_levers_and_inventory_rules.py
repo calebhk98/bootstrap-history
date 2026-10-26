@@ -7,7 +7,8 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.economy_goods import GoodsMixin
+from sim.engine.economy_housing import HousingPriceMixin as GoodsMixin
+from sim.markets import rules
 from sim.labour.labour_capacity import CapacityMixin
 from sim.labour.labour_population import PopulationMixin
 from sim.ledger.api import rules as ledger_rules
@@ -22,12 +23,7 @@ def household(**fields):
 class FarmlandTests(unittest.TestCase):
     def test_farmland_lowers_the_essential_price_ratio_below_neutral(self):
         def ratio(farm_hectares):
-            stand_in = types.SimpleNamespace(
-                ESSENTIAL_CATEGORIES=frozenset(), goods_category_price_ratio=lambda category: None,
-                view=lambda name: lambda: {"hectares": farm_hectares},
-                HOUSEHOLD_FARM_PRICE_RATIO_FLOOR=GoodsMixin.HOUSEHOLD_FARM_PRICE_RATIO_FLOOR,
-                HOUSEHOLD_FARM_HECTARES_HALF_EFFECT=GoodsMixin.HOUSEHOLD_FARM_HECTARES_HALF_EFFECT)
-            return GoodsMixin.essential_price_ratio(stand_in)
+            return rules.essential_price_ratio([None], farm_hectares)
         self.assertEqual(ratio(0.0), 1.0)
         self.assertLess(ratio(120.0), 1.0)
 

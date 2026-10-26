@@ -127,20 +127,24 @@ check("serialize_state: underscore-led fields that are not `_on_change` plumbing
 
 # ---- the economy's stored record, with its held stock and late recipes
 record = {"book": {"goods": {"iron": {"t1": 4.0}}}, "loans": [{"contract_id": "l1", "principal": 40.0, "kind": "term_loan"}]}
-economy = EconomyState(
+from sim.markets.state import MarketsWorld
+markets_world = MarketsWorld(
 	agent_economy={"opening": {"recipes": ["bread", "brick"], "prices": {"bread": 1.5}}, "record": record, "cargo": {"leg:1": {"tile": "t1", "tonnes": 2.0}}},
+	market_flows=None)
+economy = EconomyState(
 	tile_owners={"t1": {"owner": "rome", "control": "high"}}, works={"t1": {"mill": 2.0}}, works_under_construction={"t1": {"mill": [105, 1.0]}},
-	market_flows=None, nodes_money_per_labour_hour=None)
+	nodes_money_per_labour_hour=None)
 with verbatim(record):
+	blob_markets = serialize_state(markets_world)
 	blob = serialize_state(economy)
 check("serialize_state: the stored agent economy keeps its opening (the late recipes), record and cargo",
-      blob["agent_economy"]["opening"] == {"recipes": ["bread", "brick"], "prices": {"bread": 1.5}}
-      and blob["agent_economy"]["cargo"] == {"leg:1": {"tile": "t1", "tonnes": 2.0}}, blob["agent_economy"])
+      blob_markets["agent_economy"]["opening"] == {"recipes": ["bread", "brick"], "prices": {"bread": 1.5}}
+      and blob_markets["agent_economy"]["cargo"] == {"leg:1": {"tile": "t1", "tonnes": 2.0}}, blob_markets["agent_economy"])
 check("serialize_state: the stored record (its held stock and loans) is written as it is, untouched",
-      blob["agent_economy"]["record"] is record and record["loans"][0]["principal"] == 40.0, None)
+      blob_markets["agent_economy"]["record"] is record and record["loans"][0]["principal"] == 40.0, None)
 check("serialize_state: tile-keyed economy stores", blob["tile_owners"] == {"t1": {"owner": "rome", "control": "high"}}
       and blob["works"] == {"t1": {"mill": 2.0}} and blob["works_under_construction"] == {"t1": {"mill": [105, 1.0]}}, None)
-check("serialize_state: an unset optional economy field is None", blob["market_flows"] is None and blob["nodes_money_per_labour_hour"] is None)
+check("serialize_state: an unset optional economy field is None", blob_markets["market_flows"] is None and blob["nodes_money_per_labour_hour"] is None)
 check("serialize_state: the economy's fields come in declaration order", list(blob) == saved_field_names(EconomyState))
 
 # ---- actors: the contracts in the purses and the state's books

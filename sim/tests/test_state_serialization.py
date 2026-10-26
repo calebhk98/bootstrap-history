@@ -228,11 +228,11 @@ def _test_cache_reset_after_load():
 	from types import SimpleNamespace
 	from sim.engine.economy import EconomyMixin
 
+	from sim.markets.api import ResetMarketCaches
 	from sim.materials.api import ForgetReadings
 
 	caches = ("_done_seq", "_cap_factor", "_revenue_cache_key", "_revenue_cache_val",
-	          "_rev_up_candidates_cache", "_practice_cache", "_goods_cat_state_cache", "_goods_category_ratios_cache",
-	          "_income_factor_cache", "_goods_mkt_op_factor_cache")
+	          "_rev_up_candidates_cache", "_practice_cache")
 	household = SimpleNamespace(**{name: 1.7 for name in caches})
 	rewrapped = []
 	sent = []
@@ -246,7 +246,7 @@ def _test_cache_reset_after_load():
 		return False, f"caches still held after the reset: {held}"
 	if rewrapped != ["done", "operating", "active", "workforce"]:
 		return False, f"containers not re-wrapped: {rewrapped}"
-	if sent != [ForgetReadings()]:
+	if sent != [ResetMarketCaches(), ForgetReadings()]:
 		return False, f"the materials module was not told to forget its demand tables: {sent}"
 	return True, "Cache reset after load verified"
 

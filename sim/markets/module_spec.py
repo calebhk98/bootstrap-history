@@ -1,16 +1,33 @@
 """The markets module's spec (sim/assembly).
 
-The engine's market objects (`Sim.economy` over the agent economy, `Sim.goods_market`) and the mixins that clear the year have
-not moved into the module yet, so it reaches them through `legacy_game` and every view it publishes is uncached: the
-engine still writes the book, the flows and the agent economy's record directly."""
-from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
+The module owns the book, the year's flows, the agent economy's record and the money flag (`MarketsWorld`), the clearing, the
+goods categories, household demand and the market ceiling's attribution. The engine's goods market and the port over the agent
+economy have not moved into the package yet, so the module reaches them through `legacy_game` and every view it publishes is
+uncached: they write the flows and the record in place."""
+from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
+from sim.demography.api import RecordFoodEaten
+from sim.foreign_trade.api import ClosePartnerBooks
+from sim.reporting.api import CloseRealOutput
 
-from .commands import ForgetActorOrders, NoteActorPurchase, NoteActorSale, NoteDraw, NotePurchase, ResetDraws
+from .commands import (BuyMaterial, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale, NoteDraw,
+                       NotePurchase, OpenMarketBook, RenameMarketSeat, ResetDraws, ResetMarketCaches, SellMaterial)
 from .module import Markets
+from .state import MarketsWorld
 
 READS_BY_OWNER = {
-	"core": ("legacy_game",),
+	"core": ("legacy_game", "year", "civilisation", "output_factor", "opening_farmed_hectares", "household_demand_units"),
+	"seats": ("seat_list",),
+	"demography": ("population_total", "pop_scale", "default_population", "farm_holdings"),
+	"actors": ("concern_versions", "concern_counts"),
+	"mechanics": ("effect_factor",),
+	"knowledge": ("tree_nodes", "done_year", "techniques_granted"),
+	"projects": ("legacy_done_versions", "operating", "venture_opened_year"),
+	"prices": ("society_output", "concern_offers", "commodity_record", "commodity_floor_ratio", "material_prices", "material_pool",
+	           "calculated_goods_prices"),
 	"materials": ("material_commodity",),
+	"reporting": ("real_output_per_head",),
+	"workforce": ("labour_market", "money_per_labour_hour"),
+	"production": ("workshop_output", "concern_market"),
 }
 
 _LIVE = dict(cached=False)
@@ -33,6 +50,9 @@ _VIEWS = (
 	("producers_stamp", None), ("producer_capacities", None), ("goods_carried_last_year", None),
 	("country_opening_basket", KEYED), ("country_volume_baseline", KEYED), ("country_traded_volumes", KEYED),
 	("fleet_goods", QUOTE), ("economy_output_value", None), ("coin_stock_value", None),
+	("market_entry", KEYED), ("goods_category_ratios", QUOTE), ("essential_price_ratio", None),
+	("market_absorption_by_category", QUOTE), ("legacy_market_flows", None), ("legacy_agent_economy", None),
+	("money_from_economy", None),
 )
 
 
@@ -41,10 +61,15 @@ def _view(name, kind):
 
 
 MODULE_SPECS = (ModuleSpec(
-	"markets", Markets,
+	"markets", Markets, world_state=MarketsWorld,
 	publishes=tuple(_view(name, kind) for name, kind in _VIEWS),
 	applies=((ResetDraws, "reset_draws"), (NoteDraw, "note_draw"), (NotePurchase, "note_purchase"),
 	         (ForgetActorOrders, "forget_actor_orders"), (NoteActorSale, "note_actor_sale"),
-	         (NoteActorPurchase, "note_actor_purchase")),
+	         (NoteActorPurchase, "note_actor_purchase"), (ResetMarketCaches, "reset_market_caches"),
+	         (OpenMarketBook, "open_market_book_command"), (RenameMarketSeat, "rename_market_seat"),
+	         (MarkMoneyPricedAtEconomy, "mark_money_priced_at_economy"), (BuyMaterial, "buy_material"),
+	         (SellMaterial, "sell_material")),
+	phases=(PhaseHook("market", "step_market"),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
+	sends=(RecordFoodEaten, ClosePartnerBooks, CloseRealOutput),
 ),)

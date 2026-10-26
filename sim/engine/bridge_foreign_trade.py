@@ -61,8 +61,3 @@ def partner_reached(sim, civilization_id):
     return sim.partner_gate_refusal(civilization_id) is None
 
 
-@bridge_view("legacy_agent_economy")
-def legacy_agent_economy(sim):
-    return sim.state.economy.agent_economy
-
-

@@ -13,14 +13,15 @@ from unittest import mock
 
 from sim.engine import opening_money
 from sim.engine.economy_credit import calculate_credit_ceiling
+from sim.markets.api import MarkMoneyPricedAtEconomy
 
 
 def fake_sim(wage_after, seats):
     """A stand-in with the three things `reprice_opening_money` touches: the economy flag, the labour package's
     money per hour, and seats whose households are read through `act_as`."""
     households = {seat_id: SimpleNamespace(capital=capital, cash_mark=capital) for seat_id, capital in seats.items()}
-    state = SimpleNamespace(economy=SimpleNamespace(money_from_economy=False), seats=list(households),
-                            household=None)
+    state = SimpleNamespace(seats=list(households), household=None)
+    sent = []
 
     @contextlib.contextmanager
     def act_as(seat_id):
@@ -28,7 +29,7 @@ def fake_sim(wage_after, seats):
         yield
 
     labour = SimpleNamespace(money_per_labour_hour=lambda: wage_after)
-    return SimpleNamespace(state=state, labour=labour, act_as=act_as), households
+    return SimpleNamespace(state=state, labour=labour, act_as=act_as, sent=sent, send=sent.append), households
 
 
 class OpeningPurseTests(unittest.TestCase):
@@ -51,7 +52,7 @@ class OpeningPurseTests(unittest.TestCase):
 
     def test_the_economy_is_marked_as_the_source_of_money_so_a_second_open_does_not_reprice_again(self):
         sim, _households = self.reprice(1.0, 0.5, {"founder": 10.0})
-        self.assertTrue(sim.state.economy.money_from_economy)
+        self.assertEqual(sim.sent, [MarkMoneyPricedAtEconomy()])
 
 
 class CreditFloorTests(unittest.TestCase):

@@ -18,8 +18,9 @@ CACHE_KEY = "opening-key"
 def _stand_in_game():
     adopted = []
     purses = types.SimpleNamespace(adopt_book=lambda book, contracts: adopted.append((book, contracts)))
-    state = types.SimpleNamespace(economy=types.SimpleNamespace(agent_economy={}), actors=types.SimpleNamespace(purses=purses))
-    return types.SimpleNamespace(state=state, civ={"id": "home"}), adopted
+    state = types.SimpleNamespace(actors=types.SimpleNamespace(purses=purses))
+    record = {}
+    return types.SimpleNamespace(state=state, civ={"id": "home"}, view=lambda name: lambda: record), adopted
 
 
 class OpeningRecordTests(unittest.TestCase):
@@ -56,7 +57,7 @@ class OpeningRecordTests(unittest.TestCase):
     def test_the_opening_is_kept_and_the_purses_adopt_the_economys_book(self):
         shipped_openings.write("agent_economy", CACHE_KEY, {"shipped": True})
         self.agent.economy()
-        self.assertEqual(self.game.state.economy.agent_economy["opening"], {"values": 1})
+        self.assertEqual(self.game.view("legacy_agent_economy")()["opening"], {"values": 1})
         self.assertEqual(self.adopted, [("book", "contracts")])
 
     def test_with_nothing_shipped_the_economy_spins_up_once_and_the_record_is_cached(self):

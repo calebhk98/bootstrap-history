@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import json
 import unittest
 
-from sim.engine.household_demand_key import demand_key, population_of_key
+from sim.markets.demand_key import demand_key, population_of_key
 from sim.reporting.api import ReportingSeat
 from sim.materials.state import MaterialsSeat
 from sim.engine.state import HouseholdState, ProjectsState, deserialize_state, serialize_state

@@ -10,7 +10,7 @@ from sim.assembly.api import KEYED, QUOTE
 from sim.finance.api import DefaultOnDebt, RefreshLenderOffers
 from sim.production.api import AccrueExperience
 
-from . import market_demand, partner_demand, trade_duty
+from . import partner_demand, trade_duty
 from .actor_kinds_data import register_mod_actor_kinds
 from .bridge import bridge_command, bridge_view
 from .data import load_civ
@@ -144,11 +144,6 @@ def accrue_experience(sim, command):
 def materials_serving(sim, need_id):
     from . import need_substitutes
     return need_substitutes.serving(need_id)
-
-
-@bridge_view("household_basket")
-def household_basket(sim):
-    return market_demand.household_basket(sim.civ, sim.world_map)
 
 
 # ---- finance ----

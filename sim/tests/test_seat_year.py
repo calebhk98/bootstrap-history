@@ -121,10 +121,10 @@ check("each seat phase runs once for each seat, in joining order",
       names(two, "_step_money_seat") == [FIRST_SEAT_ID, "second"] and names(two, "_run_seat_work") == [FIRST_SEAT_ID, "second"]
       and names(two, "enforce_credit_limit") == [FIRST_SEAT_ID, "second"], two.calls)
 check("each world phase runs once", all(len(names(two, phase)) == 1 for phase in
-      ("_step_money_world", "step_dated_shocks", "_step_market", "step_wild_stock", "begin_world_year")), two.calls)
+      ("_step_money_world", "step_dated_shocks", "step_market", "step_wild_stock", "begin_world_year")), two.calls)
 check("the market closes after every seat's work and before the credit check",
-      [call for call, _ in two.calls].index("_step_market") > max(i for i, (call, _) in enumerate(two.calls) if call == "_run_seat_work")
-      and [call for call, _ in two.calls].index("_step_market") < [call for call, _ in two.calls].index("enforce_credit_limit"), None)
+      [call for call, _ in two.calls].index("step_market") > max(i for i, (call, _) in enumerate(two.calls) if call == "_run_seat_work")
+      and [call for call, _ in two.calls].index("step_market") < [call for call, _ in two.calls].index("enforce_credit_limit"), None)
 check("the year advances once", two.state.scenario.year == 101, two.state.scenario.year)
 
 ended = FakeSim([FIRST_SEAT_ID, "second"], ends_in_shocks=[FIRST_SEAT_ID])
@@ -132,13 +132,13 @@ run_year(ended)
 check("a seat ended by the year's shocks takes no further part in it, the other carries on",
       names(ended, "_step_money_seat") == [FIRST_SEAT_ID, "second"] and names(ended, "_run_seat_work") == ["second"]
       and names(ended, "step_living_stock") == ["second"] and names(ended, "enforce_credit_limit") == ["second"], ended.calls)
-check("world phases after the shocks run as a seat still playing", names(ended, "_step_market") == ["second"], ended.calls)
+check("world phases after the shocks run as a seat still playing", names(ended, "step_market") == ["second"], ended.calls)
 check("the year still advances", ended.state.scenario.year == 101, None)
 
 alone = FakeSim([FIRST_SEAT_ID, "second"], ends_in_shocks=[FIRST_SEAT_ID, "second"])
 run_year(alone)
 check("when every seat ends in the shocks the year stops there, as a one-seat game does",
-      names(alone, "_run_seat_work") == [] and names(alone, "_step_market") == [] and alone.state.scenario.year == 100, alone.calls)
+      names(alone, "_run_seat_work") == [] and names(alone, "step_market") == [] and alone.state.scenario.year == 100, alone.calls)
 
 dead_before = FakeSim([FIRST_SEAT_ID, "second"])
 dead_before.state.ended.add(FIRST_SEAT_ID)
@@ -151,8 +151,8 @@ run_year(single)
 check("one seat runs the phases in the order a one-seat year always had",
       [call for call, _ in single.calls if call in (
           "step_apprenticeships", "step_staff", "_step_money_seat", "_step_money_world", "step_win_conditions",
-          "step_dated_shocks", "_run_seat_work", "_step_market", "step_living_stock", "step_defence_stores", "step_random_events",
+          "step_dated_shocks", "_run_seat_work", "step_market", "step_living_stock", "step_defence_stores", "step_random_events",
           "enforce_credit_limit")] == [
           "step_apprenticeships", "step_staff", "_step_money_seat", "_step_money_world", "step_win_conditions",
-          "step_dated_shocks", "_run_seat_work", "_step_market", "step_living_stock", "step_defence_stores", "step_random_events",
+          "step_dated_shocks", "_run_seat_work", "step_market", "step_living_stock", "step_defence_stores", "step_random_events",
           "enforce_credit_limit"], single.calls)

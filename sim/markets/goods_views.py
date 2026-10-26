@@ -55,39 +55,6 @@ class GoodsViews:
 	def main_material_of(self, commodity):
 		return self._economy().main_material_of(commodity)
 
-	# ---- the year's book ----
-
-	def market_state(self, commodity):
-		return self._game().market_state(commodity)
-
-	def market_floor_ratio(self, commodity):
-		"""The lowest price over the incumbents' cost their producers sell a commodity at."""
-		return self._game()._floor_ratio(commodity)
-
-	def opening_population(self):
-		return self._game()._opening_population()
-
-	def new_goods_units(self):
-		"""{material: units a year households want} of goods offered now that the opening did not offer."""
-		return self._game().household_new_goods_units()
-
-	# ---- the goods categories ----
-
-	def goods_category_factor(self, category):
-		return self._game().goods_category_factor(category)
-
-	def goods_category_factor_with_entrants(self, category, entrants):
-		return self._game().goods_category_factor_with_entrants(category, entrants)
-
-	def goods_category_price_ratio(self, category):
-		return self._game().goods_category_price_ratio(category)
-
-	def goods_category_state(self, category):
-		return self._game()._goods_category_state(category)
-
-	def nodes_in_category(self, category):
-		return self._game()._nodes_in_cat(category)
-
 	# ---- the market's actors ----
 
 	def actor_supply(self, material):

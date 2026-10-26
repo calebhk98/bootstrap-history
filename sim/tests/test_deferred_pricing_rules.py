@@ -52,15 +52,12 @@ class RepriceTreeTest(unittest.TestCase):
 
 
 class SavedPricingTest(unittest.TestCase):
-    def economy(self, priced, figure):
-        return types.SimpleNamespace(money_from_economy=priced, nodes_money_per_labour_hour=figure)
-
     def test_a_priced_save_gives_its_figure(self):
-        self.assertEqual(opening_money.saved_tree_pricing(self.economy(True, 1.5)), 1.5)
+        self.assertEqual(opening_money.saved_tree_pricing(True, 1.5), 1.5)
 
     def test_a_save_that_never_priced_the_tree_gives_none(self):
-        self.assertIsNone(opening_money.saved_tree_pricing(self.economy(False, 1.5)))
-        self.assertIsNone(opening_money.saved_tree_pricing(self.economy(True, None)))
+        self.assertIsNone(opening_money.saved_tree_pricing(False, 1.5))
+        self.assertIsNone(opening_money.saved_tree_pricing(True, None))
 
 
 if __name__ == "__main__":

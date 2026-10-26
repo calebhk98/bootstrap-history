@@ -14,7 +14,6 @@ from sim.engine import goods_market_offers
 from sim.engine.goods_market_api import GoodsMarket
 from sim.engine.goods_market_imports import HOME_SELLER
 from sim.prices import rules as price_rules
-from sim.engine.market_clearing import MarketClearingMixin
 from sim.engine.market_demand import household_demand_by_material
 from sim.engine.material_units import tonnes_per_unit
 from sim.markets.module import Markets
@@ -28,7 +27,8 @@ FOUNDER = "seat:founder"
 
 def markets_over(game):
     """The markets module reading `game` as the engine's market objects."""
-    return module_harness.build(Markets, views={"legacy_game": game, "material_commodity": lambda material: material})
+    return module_harness.build(Markets, views={"legacy_game": game, "material_commodity": lambda material: material,
+                                                    "concern_offers": lambda commodity: game.founder_concern_offers(commodity)})
 
 
 def stand_in(**changes):
@@ -58,7 +58,7 @@ def stand_in(**changes):
 def figures(game, with_flows):
     game.goods_market = GoodsMarket(game)
     game.founder_concern_offers = lambda commodity: ()
-    return MarketClearingMixin._market_flow_figures(game, MATERIAL, with_flows)
+    return markets_over(game).market_flow_figures(MATERIAL, with_flows)
 
 
 def cleared(committed=0.0, founder_sales=0.0, actor_supply=0.0, actor_demand=0.0):

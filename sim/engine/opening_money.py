@@ -5,6 +5,8 @@ the price solver). The economy then settles its own wage for an hour of work, an
 money per labour hour: the founder's purse, seats' purses and the tree's money fields, all counted in
 hours at construction, are repriced to it when the economy first opens.
 """
+from sim.markets.api import MarkMoneyPricedAtEconomy
+
 from . import money_units
 from .data import TRADE_REGISTRY
 from .wage_schedule import build_schedule
@@ -13,7 +15,7 @@ from .wage_schedule import build_schedule
 def reprice_opening_money(sim, before):
     """From now the money an hour of work is worth is the economy's unskilled wage. `before` is the figure
     the game's money was counted at; purses and the tree move by the ratio of the two."""
-    sim.state.economy.money_from_economy = True
+    sim.send(MarkMoneyPricedAtEconomy())
     after = sim.labour.money_per_labour_hour()
     ratio = after / before
     for seat_id in list(sim.state.seats):
@@ -44,7 +46,7 @@ def priced_nodes(sim, nodes, schedule, money_per_labour_hour=None):
 
 
 
-def saved_tree_pricing(economy_state):
+def saved_tree_pricing(money_from_economy, nodes_money_per_labour_hour):
     """The money an hour of work was worth when a save's tree was priced, or None when the save never priced it
     (a game that resumes it without opening its economy cannot count the tree's money fields)."""
-    return economy_state.nodes_money_per_labour_hour if economy_state.money_from_economy else None
+    return nodes_money_per_labour_hour if money_from_economy else None
