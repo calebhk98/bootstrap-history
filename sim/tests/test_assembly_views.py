@@ -109,6 +109,9 @@ class ViewFreshnessTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.views["double"][1]
 
+    def test_a_quote_takes_its_arguments_by_keyword(self):
+        self.assertEqual(self.views["quote"](extra=10), 11)
+
     def test_a_quote_always_computes(self):
         self.assertEqual(self.views["quote"](10), 11)
         self.assertEqual(self.views["quote"](10), 11)

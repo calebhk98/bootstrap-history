@@ -24,7 +24,7 @@ def bridge_view(name: str, kind: str = TABLE, seat_scoped: bool = False) -> Call
 	"""Publish `function(sim, *key_or_arguments)` as the view `name`."""
 	def register(function: Callable) -> Callable:
 		method = "view_" + name
-		setattr(EngineBridge, method, lambda bridge, *arguments: function(bridge.sim, *arguments))
+		setattr(EngineBridge, method, lambda bridge, *arguments, **keywords: function(bridge.sim, *arguments, **keywords))
 		VIEWS.append(ViewSpec(name, method, kind=kind, seat_scoped=seat_scoped, cached=False))
 		return function
 	return register

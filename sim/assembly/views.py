@@ -35,19 +35,19 @@ class View:
 		self.memo_epoch = clock.epoch
 		return self.memo_signature
 
-	def fresh(self, *arguments: Any) -> Any:
-		value = self.compute(*arguments)
+	def fresh(self, *arguments: Any, **keywords: Any) -> Any:
+		value = self.compute(*arguments, **keywords)
 		for function, needs, _reads in self.adjusters:
-			value = function(needs, value, *arguments)
+			value = function(needs, value, *arguments, **keywords)
 		return value
 
-	def __call__(self, *arguments: Any) -> Any:
+	def __call__(self, *arguments: Any, **keywords: Any) -> Any:
 		kind = self.spec.kind
 		if kind == KEYED:
 			raise TypeError("view %s is keyed: read it as view[key]" % self.spec.name)
 		if kind == QUOTE or not self.spec.cached:
-			return self.fresh(*arguments)
-		if arguments:
+			return self.fresh(*arguments, **keywords)
+		if arguments or keywords:
 			raise TypeError("view %s is a table and takes no arguments" % self.spec.name)
 		signature = self.signature()
 		seat = self.clock.acting_seat if self.spec.seat_scoped else None
