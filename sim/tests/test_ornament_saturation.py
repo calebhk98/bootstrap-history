@@ -66,10 +66,10 @@ class OrnamentSaturationTest(unittest.TestCase):
     def test_shipped_households_buy_a_plausible_mass_of_bright_metal(self):
         # Validation only: a few grams a head a year is the order a durable ornament stock wears and
         # is lost at; thousands of tonnes for a first-century empire is not.
-        from sim.engine import foreign_capacity
+        from sim.engine import partner_demand
         from sim.engine.data import load_civ
         for civilization_id in ("rome_100ad", "han_china_100ad"):
-            tonnes = foreign_capacity.household_tonnes_by_material(civilization_id)
+            tonnes = partner_demand.household_tonnes_by_material(civilization_id)
             grams_per_head = (tonnes.get("silver_kg", 0.0) + tonnes.get("gold_kg", 0.0)) * 1e6 \
                 / float(load_civ(civilization_id)["population"])
             self.assertLessEqual(grams_per_head, 2.0, civilization_id)

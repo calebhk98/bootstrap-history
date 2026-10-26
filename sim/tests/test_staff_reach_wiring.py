@@ -93,8 +93,9 @@ class StateReach(unittest.TestCase):
     def test_a_partners_chance_to_catch_is_its_own_governments_reach_against_how_visible_the_bite_is(self):
         asked = []
         world = SimpleNamespace(state_reach=lambda: 1)
-        actors = SimpleNamespace(world_for=lambda government, home: asked.append((government, home)) or world)
-        stand_in = SimpleNamespace(actors=actors, partner_government=lambda civilization_id: "government:" + civilization_id)
+        actors = SimpleNamespace(world_for=lambda government, home: asked.append((government, home)) or world,
+                                 get=lambda actor_id: actor_id)
+        stand_in = SimpleNamespace(actors=actors)
         with mock.patch("sim.engine.agents_port_cast.seed_opening_cast"), \
                 mock.patch("sim.engine.agents_port.SimWorld", lambda sim: "home world"):
             chance = partner_catch_chance(stand_in, "han_china_100ad", 0.5)
