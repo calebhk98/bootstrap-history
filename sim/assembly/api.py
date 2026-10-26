@@ -1,0 +1,12 @@
+"""The assembly package's only door: modules, mods and the engine import from here and nowhere else."""
+
+WALL = "two-way"  # nothing here imports sim/engine/ or another package
+
+from .assemble import Assembly, assemble
+from .clock import Clock
+from .describe import dependency_lines, record
+from .errors import AssemblyError, StaleView
+from .module import Module
+from .needs import Needs, Point
+from .spec import FIRST, KEYED, LIST, QUOTE, SUM, TABLE, Command, ExtensionPoint, ModuleSpec, Operations, PhaseHook, ViewSpec
+from .views import View
