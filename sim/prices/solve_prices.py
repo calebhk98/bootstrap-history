@@ -724,12 +724,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
-from sim.engine.validate_production import load_production, materials_the_tree_consumes  # noqa: E402
+from sim.prices.engine_seam import load_production, materials_the_tree_consumes  # noqa: E402
 
 # The price algebra lives in sim/engine/solve_prices_core.py; this module
 # re-exports it so `solve_prices.<name>` call sites and the mechanism essay
 # above stay in one place.
-from sim.engine.solve_prices_core import (                  # noqa: E402
+from sim.prices.solve_prices_core import (                  # noqa: E402
     CAPABILITY_CAP_FIELDS,
     CONVERGENCE_TOLERANCE,
     DAMPING_FACTOR,
@@ -765,7 +765,7 @@ from sim.engine.solve_prices_core import (                  # noqa: E402
 
 # The rent the opening carries when a caller supplies none (a temporary stand-in, Complaints/507); the solver
 # itself charges only the rent it is handed.
-from sim.engine.rent_standin import (                       # noqa: E402,F401
+from sim.prices.rent_standin import (                       # noqa: E402,F401
     DEFAULT_LAND_CIVILIZATION,
     land_rent_hours_per_hectare,
     rent_hours_per_kg_by_ore_material,

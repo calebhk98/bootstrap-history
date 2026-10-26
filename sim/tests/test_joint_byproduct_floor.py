@@ -6,8 +6,8 @@ import math
 import sys
 import unittest
 
-from sim.engine import disposal_cost, joint_allocation
-from sim.engine import prices as price_engine
+from sim.prices import disposal_cost, joint_allocation
+from sim.prices import prices as price_engine
 from sim.engine.data import load_civ
 
 

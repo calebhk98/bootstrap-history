@@ -13,7 +13,7 @@ import shutil
 import tempfile
 import unittest
 
-from sim.engine import solve_cache
+from sim.prices import solve_cache
 
 _WAGES = {"labourer": 1.0, "smith": 2.0}
 

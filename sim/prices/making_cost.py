@@ -11,8 +11,8 @@ import collections
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, FrozenSet, Iterable, Mapping, Optional, Union
 
-from sim.engine import disposal_cost, solve_prices_core as core, solve_prices_round
-from sim.engine import prices as price_engine
+from sim.prices import disposal_cost, solve_prices_core as core, solve_prices_round
+from sim.prices import prices as price_engine
 
 LAND_MATERIAL = "hectare_land"
 

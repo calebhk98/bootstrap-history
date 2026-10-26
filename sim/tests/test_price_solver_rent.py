@@ -24,7 +24,7 @@ Pins rent_hours_per_kg_by_ore_material and the iron blast-furnace/bloomery fallb
 import unittest
 from unittest import mock
 
-from sim.engine import solve_prices
+from sim.prices import solve_prices
 from sim.tests.price_solver_helpers import engine_solve_converges
 from sim import simulator
 from sim.world import deposits

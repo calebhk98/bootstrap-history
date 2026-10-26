@@ -8,7 +8,7 @@ QUICK_TOPIC = True
 import copy
 import unittest
 
-from sim.engine import prices as price_solver
+from sim.prices import prices as price_solver
 
 GATE = "three_wire_node"
 LOSSY = 1.25

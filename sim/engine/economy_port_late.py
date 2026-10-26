@@ -7,7 +7,8 @@ economy is then given what it lacks from a setup built from them (`AgentEconomy.
 same setup a resumed game builds from its saved opening.
 """
 from .economy_port_setup import allowed_entries
-from .making_cost import cost_of_making
+from sim.prices.api import making_cost
+cost_of_making = making_cost.cost_of_making
 
 
 def techniques_held(sim):

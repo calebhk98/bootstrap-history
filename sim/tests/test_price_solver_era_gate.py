@@ -23,7 +23,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import solve_prices
+from sim.prices import solve_prices
 
 
 def entry(requires_node="__absent__"):

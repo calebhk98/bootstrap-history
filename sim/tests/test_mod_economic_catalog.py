@@ -12,7 +12,8 @@ from sim.engine.catalog import (load_production_catalog, load_trade_registry,
                                 validate_mod_material_paths)
 from sim.engine.mods import get_ordered_mods, load_mod_tree
 from sim.engine.tree_source import load_base_tree
-from sim.engine import data, prices, wage_schedule
+from sim.prices import prices
+from sim.engine import data, wage_schedule
 from sim.labour import wage_provider
 from sim.engine.validate_production import check
 from sim.world import demand

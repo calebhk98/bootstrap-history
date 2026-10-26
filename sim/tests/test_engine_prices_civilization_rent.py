@@ -9,7 +9,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import prices
+from sim.prices import prices
 
 DEFAULT_CIVILISATION = "default_civ"
 STORED = {"prices_in_labour_hours": {"hectare_land": 1.0}, "resolvable_materials": ["hectare_land"],

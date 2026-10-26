@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import json
 import unittest
 
-from sim.engine.prices import _default_production_entries
+from sim.prices.prices import _default_production_entries
 from sim.world import deposits, ore_dressing
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -179,7 +179,7 @@ class GoldFromDeposits(unittest.TestCase):
             ore["labour_hours"]["miner"] / deposits.vein_hours_per_tonne_ore(deposit), 1.0, delta=0.05)
 
     def test_gold_is_priced_by_the_marginal_gold_deposit(self):
-        from sim.engine.prices import solved_prices
+        from sim.prices.prices import solved_prices
         import os
         root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         with open(os.path.join(root, "data", "civilizations", "rome_100ad.json")) as handle:

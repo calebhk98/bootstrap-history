@@ -11,7 +11,7 @@ import json
 import os
 import unittest
 
-from sim.engine import disposal_cost
+from sim.prices import disposal_cost
 from sim.world import demand
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

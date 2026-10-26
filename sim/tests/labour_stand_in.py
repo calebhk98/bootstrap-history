@@ -1,7 +1,9 @@
 """A stand-in world for `Labour` (a real civilisation file and a real `Population`), so labour rules run with no game built."""
 from types import SimpleNamespace
 
-from sim.engine import data, solve_prices_core
+from sim.prices import solve_prices_core
+
+from sim.engine import data
 from sim.geography import api as geography
 from sim.world import demography
 

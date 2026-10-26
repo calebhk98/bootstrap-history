@@ -9,8 +9,8 @@ rent per hectare and a mine's own marginal cost replace it (ONE_PRICE_OWNER_PLAN
 import json
 
 from sim.constants import declare
-from sim.engine.default_civilisation import default_civilisation_id
-from sim.engine.solve_prices_core import recipe_cost_and_allocation
+from sim.default_civilisation import default_civilisation_id
+from sim.prices.solve_prices_core import recipe_cost_and_allocation
 from sim.world import deposits
 from sim.world import land
 

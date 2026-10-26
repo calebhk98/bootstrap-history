@@ -12,7 +12,8 @@ from sim import cache_root
 from sim.engine.economy_port_trace import traded_staple
 import sim.geography.api as geography
 
-from . import concern_scan_run, economy_port_trace, opening_checks, solve_cache
+from sim.prices.api import solve_cache
+from . import concern_scan_run, economy_port_trace, opening_checks
 from .data import load, load_civ
 from .economy_port_key import SPIN_UP_SOURCE_MODULES, spin_up_key
 from .economy_port_setup import build_setup

@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import entry_cost
+from sim.prices import entry_cost
 from sim.engine.producer_costs import ProducerCostsMixin
 from sim.tests.test_capital_charge import works_entry
 

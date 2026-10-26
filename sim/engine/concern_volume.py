@@ -19,7 +19,8 @@ every line is run whatever the wage, in both baskets alike (the loaded figure ap
 import json
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
-from . import energy_prices, node_output
+from sim.prices.api import energy_prices
+from . import node_output
 
 # (civilisation as text, {techniques held: labour-hour prices}); a solve reads only these two
 _PRICES_IN_HOURS: List[Any] = [None, {}]
@@ -109,7 +110,7 @@ class ConcernVolumeMixin:
         held = self.techniques_spread()
 
         def work_out():
-            from . import prices as price_solver
+            from sim.prices.api import prices as price_solver
             granted = frozenset(self.state.projects.granted)
             prices = self._done_memo("concern_opening_prices", granted,
                                      lambda: self._concern_prices_in_hours(granted))

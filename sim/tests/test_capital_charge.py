@@ -10,8 +10,9 @@ QUICK_TOPIC = True
 import unittest
 from unittest import mock
 
-from sim.engine import solve_prices
-from sim.engine import data, energy_prices, incumbent_prices, node_output, node_revenue, prices
+from sim.prices import solve_prices
+from sim.prices import energy_prices, prices
+from sim.engine import data, incumbent_prices, node_output, node_revenue
 from sim.world import capital_market, plant_figures
 from sim.labour.labour_market import production_data
 

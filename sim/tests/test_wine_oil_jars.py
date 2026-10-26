@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import os
 import unittest
 
-from sim.engine import solve_prices
+from sim.prices import solve_prices
 from sim.engine.catalog import load_production_catalog
 from sim.world import capital_market
 

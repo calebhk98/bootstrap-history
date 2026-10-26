@@ -9,7 +9,7 @@ from unittest import mock
 
 from sim.engine import economy_cost_book as cost_book_module
 from sim.engine import producer_costs
-from sim.engine.making_cost import LAND_MATERIAL
+from sim.prices.making_cost import LAND_MATERIAL
 from sim.engine.producer_costs import ProducerCostsMixin
 
 CIV = {"id": "somewhere"}

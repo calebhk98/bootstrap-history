@@ -13,7 +13,8 @@ from sim.agents.registry import ActorRegistry
 from sim.diffusion.api import NoteFirstRuns
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionWorld
-from sim.engine import concern_volume, economy_port_actors, prices, tile_ownership
+from sim.prices import prices
+from sim.engine import concern_volume, economy_port_actors, tile_ownership
 from sim.engine.economy_materials import MaterialSupplyMixin
 from sim.engine.state import ActorRecord, ActorsState
 from sim.engine.techniques_in_use import TechniquesInUseMixin

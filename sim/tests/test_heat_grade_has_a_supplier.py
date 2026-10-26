@@ -5,9 +5,9 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import energy_prices, node_output
+from sim.prices import energy_prices
 
-
+from sim.engine import node_output
 def _heat_entry(reaches):
     return {"outputs": {"thermal_mj": 1.0}, "inputs": {}, "labour_hours": {"labourer": 1.0},
             "temperature_reached_c": reaches}

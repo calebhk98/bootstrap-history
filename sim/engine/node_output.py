@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Mapping, Optional
 from sim.world import plant_figures
 from sim.world.plant_figures import Baskets, ENERGY_CARRIERS  # noqa: F401  (re-exported for callers)
 
-from . import energy_prices
+from sim.prices.api import energy_prices
 
 # (production table, {node id: entries run}); the table is kept so a hit is confirmed with `is`
 _ENTRIES_BY_NODE: List[Any] = [None, None]

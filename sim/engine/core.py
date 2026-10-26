@@ -43,8 +43,7 @@ from .concern_book_sales import ConcernBookSalesMixin
 from .techniques_in_use import TechniquesInUseMixin
 from .industry_concern import IndustryConcernMixin
 from .industry_depth import IndustryDepthMixin
-from .incumbent_prices import IncumbentPricesMixin
-from .producer_costs import ProducerCostsMixin
+from .forward_prices import ForwardPricesMixin
 from .fog import FogMixin
 from .forward_mechanics import ForwardMechanicsMixin
 from .forward_knowledge import ForwardKnowledgeMixin
@@ -98,8 +97,7 @@ class Sim(
         TechniquesInUseMixin,
         IndustryDepthMixin,
         IndustryConcernMixin,
-        IncumbentPricesMixin,
-        ProducerCostsMixin,
+        ForwardPricesMixin,
         FogMixin,
         GeographyPortMixin,
         DiseasePortMixin,

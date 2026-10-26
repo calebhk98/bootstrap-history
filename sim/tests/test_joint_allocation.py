@@ -10,7 +10,7 @@ import unittest
 import warnings
 
 from sim import simulator
-from sim.engine import rent_standin, solve_prices, joint_allocation
+from sim.prices import rent_standin, solve_prices, joint_allocation
 
 
 def joint_entry():

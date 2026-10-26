@@ -19,14 +19,14 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              trade_premium, variable_cost_per_run)
 
 from sim.foreign_trade.api import SettleFlow, country_trade_years
-from . import agents_port_stores, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, solve_cache
+from . import agents_port_stores, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities
 from sim.materials.api import ProducerCapacityCache
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
 from .economy_port_tiles import TilePricesMixin
 from .material_units import tonnes_per_unit
-from .prices import default_production_entries
+from sim.prices.api import prices as price_solver, solve_cache
 from .spin_up_gap import SPIN_UP_RATE_FLOOR, change_gap, price_gap, window_gaps
 
 OUTCOMES_KEPT = 100   # yearly outcomes held in memory for the health figures
@@ -161,7 +161,7 @@ class AgentEconomy(TilePricesMixin):
         if held == self._techniques_admitted:
             return
         self._techniques_admitted = held
-        production = default_production_entries()
+        production = price_solver.default_production_entries()
         grown = economy_port_late.opening_with_techniques(self._sim, self.stored["opening"], held, production)
         if grown is None:
             return
@@ -255,7 +255,7 @@ class AgentEconomy(TilePricesMixin):
 
     def fleet_goods(self, buyer):
         economy = self.economy()
-        production = default_production_entries()
+        production = price_solver.default_production_entries()
         return [{"material": good, "life": economy.setup.specs[good].service_life_years,
                  "held": self.held_units(buyer, good), "crew": entry["naval_crew"]}
                 for good, entry in sorted(production.items()) if entry.get("naval_crew")
@@ -382,10 +382,9 @@ class AgentEconomy(TilePricesMixin):
         """The least the seat takes for a unit of a concern's output: the unit's share, by value, of
         the variable cost of the cheapest technique the concern holds that the economy knows, at the
         economy's live prices and wages. With no such technique it sells at what the market pays."""
-        from .prices import default_production_entries
-        from .producer_costs import entry_keys_held_for
+        from sim.prices.api import prices as price_solver, rules as price_rules
         recipes = self._economy.setup.recipes
-        keys = entry_keys_held_for(node_id, default_production_entries(), self._sim.techniques_spread())
+        keys = price_rules.entry_keys_held_for(node_id, price_solver.default_production_entries(), self._sim.techniques_spread())
         best = None
         for key in sorted(keys):
             recipe = recipes.get(key)

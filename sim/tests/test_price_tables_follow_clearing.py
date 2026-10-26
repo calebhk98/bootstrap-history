@@ -7,7 +7,9 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine import data, prices
+from sim.prices import prices
+
+from sim.engine import data
 from sim.engine.incumbent_prices import IncumbentPricesMixin
 
 GRANTED = frozenset({"fire"})

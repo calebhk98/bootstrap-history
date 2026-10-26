@@ -16,7 +16,7 @@ import tempfile
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from sim import cache_root
-from sim.engine import shipped_openings, source_closure
+from sim.prices import engine_seam
 
 try:
     import fcntl
@@ -61,7 +61,7 @@ def environment_digest(source_modules: Optional[Tuple[str, ...]] = None) -> str:
             _digest_tree(digest, os.path.join(_ROOT, "sim"), (".py",), skip_directories=("tests",))
         else:
             closure_cache = os.path.join(os.path.dirname(DEFAULT_CACHE_DIRECTORY), "source_closure")
-            for path in source_closure.source_files(_ROOT, source_modules, cache_directory=closure_cache):
+            for path in engine_seam.source_files(_ROOT, source_modules, cache_directory=closure_cache):
                 _digest_file(digest, path)
         _environment_digests[source_modules] = digest.hexdigest()
     return _environment_digests[source_modules]
@@ -95,7 +95,7 @@ def cached_json(key: str, compute: Callable[[], Any],
         stored = _read(path)
         if stored is not None:
             return stored
-        shipped = shipped_openings.read(os.path.basename(directory), key)
+        shipped = engine_seam.shipped_opening(os.path.basename(directory), key)
         text = json.dumps(compute() if shipped is None else shipped)
         try:
             handle_fd, temporary = tempfile.mkstemp(dir=directory, suffix=".tmp")

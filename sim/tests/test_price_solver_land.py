@@ -23,7 +23,7 @@ Land-limited materials state land_hectare_years and the solver charges rent for 
 """
 import unittest
 
-from sim.engine import solve_prices
+from sim.prices import solve_prices
 from sim.tests.price_solver_helpers import engine_solve_converges, solver_context
 
 

@@ -4,7 +4,8 @@ import os
 import random
 from typing import List, Tuple
 
-from . import shipped_openings, shipped_rate_bands, solve_cache
+from sim.prices.api import solve_cache
+from . import shipped_openings, shipped_rate_bands
 from .core import Sim
 from .data import load, load_civ
 from .economy_port_year import SPIN_UP_YEARS_ENV

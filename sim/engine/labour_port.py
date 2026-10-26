@@ -2,7 +2,8 @@
 the simulation keeps its `Labour`."""
 from sim.agents.api import edges, tax_burden
 from sim.labour.api import Labour
-from . import data, director_overhead, purchase_rule, solve_prices_core, units_prose, wage_schedule
+from sim.prices.api import solve_prices_core
+from . import data, director_overhead, purchase_rule, units_prose, wage_schedule
 
 
 class LabourWorld:

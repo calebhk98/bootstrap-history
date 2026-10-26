@@ -24,9 +24,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
-from sim.engine import capital_builds, disposal_cost  # noqa: E402
-from sim.engine.joint_allocation import allocate_joint_cost, outputs_split_by_mass  # noqa: E402
-from sim.engine.price_change import relative_price_change  # noqa: E402
+from sim.world import capital_builds
+from sim.prices import disposal_cost  # noqa: E402
+from sim.prices.joint_allocation import allocate_joint_cost, outputs_split_by_mass  # noqa: E402
+from sim.prices.price_change import relative_price_change  # noqa: E402
 from sim.world.capital_market import stand_yearly_share  # noqa: E402  (CAPITAL)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
 # GUESS_HOURS and GROWTH_BOUND_HOURS live in sim/algorithm_parameters.py and
@@ -313,7 +314,7 @@ def load_starting_interest_rate(civilization_id):
     if os.path.exists(path):
         with open(path) as handle:
             return float(json.load(handle)["starting_interest_rate"])
-    from sim.engine.data import load_civ        # a civilisation a mod defines is not a file of its own
+    from sim.prices.engine_seam import load_civ        # a civilisation a mod defines is not a file of its own
     return float(load_civ(civilization_id)["starting_interest_rate"])
 
 
@@ -1061,7 +1062,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
     final_residual = float("inf")
     iterations_run = 0
     joint_materials = disposal_cost.joint_output_materials(production_entries)
-    from sim.engine import solve_prices_round  # imports this module, so only once it is loaded
+    from sim.prices import solve_prices_round  # imports this module, so only once it is loaded
     plans = solve_prices_round.build_plans(
         production_entries, recipe_ids_in_order, resolvable_materials, wage_by_trade,
         rent_hours_per_kg_by_material or {}, interest_rate, floor_by_carrier)

@@ -45,18 +45,6 @@ def empire_output(sim):
 
 # ---- the catalogue of commodities, the price epoch and the producers ----
 
-@bridge_view("material_commodity_map")
-def material_commodity_map(sim):
-    """{material key: curated commodity id} from the commodity catalogue."""
-    return sim._material_commodity_map()
-
-
-@bridge_view("commodity_country_output", kind=QUOTE)
-def commodity_country_output(sim, commodity):
-    """Tonnes a year the society brings to market of a catalogued commodity, which knows what built works raise it."""
-    return sim._commodity_ledger().country_output(commodity, built=sim.state.projects.done)
-
-
 @bridge_view("price_epoch")
 def price_epoch(sim):
     """Changes whenever the techniques in use might, or the price level does."""

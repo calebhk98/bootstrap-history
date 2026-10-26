@@ -13,7 +13,7 @@ from unittest import mock
 
 from .harness import check
 
-from sim.engine import prices, solve_cache
+from sim.prices import prices, solve_cache
 
 # ---- cached_json
 directory = tempfile.mkdtemp(prefix="solve_cache_rule_")

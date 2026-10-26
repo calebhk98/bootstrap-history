@@ -17,7 +17,7 @@ import unittest
 DELETED = (
     ("sim.agents.household", "MineWorking"),
     ("sim.engine.economy_materials", "MaterialSupplyMixin.capacity_reserves"),
-    ("sim.engine.commodities", "Ledger.on_hand"),
+    ("sim.prices.commodities", "Ledger.on_hand"),
     ("sim.world.demography", "Population.working_age_population"),
     ("sim.world.demand", "consumers_of"),
     ("sim.world.demand", "joint_output_value_shares_for_recipe"),

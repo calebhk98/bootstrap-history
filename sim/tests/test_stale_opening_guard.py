@@ -5,7 +5,7 @@ import os
 import tempfile
 import unittest
 
-from sim.engine import solve_cache
+from sim.prices import solve_cache
 from sim.tests.full_length_opening_support import StaleShippedOpening, refusing_to_compute_openings
 
 QUICK_TOPIC = True

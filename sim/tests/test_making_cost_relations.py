@@ -8,9 +8,9 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import prices as price_engine
-from sim.engine.long_run_costs import long_run_costs
-from sim.engine.making_cost import cost_of_making
+from sim.prices import prices as price_engine
+from sim.prices.long_run_costs import long_run_costs
+from sim.prices.making_cost import cost_of_making
 
 LABOURER = "labourer"
 CAPITAL = [{"build_materials": {"steel_kg": 10.0}, "build_labour_hours": {LABOURER: 100.0},

@@ -10,9 +10,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from sim.engine import catalog, data, prices as engine_prices, wage_schedule
+from sim.prices import prices as engine_prices
+
+from sim.engine import catalog, data, wage_schedule
 from sim.labour import wage_provider
-from sim.engine.solve_prices_core import wage_ratios_by_trade
+from sim.prices.solve_prices_core import wage_ratios_by_trade
 from sim.labour import wages
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

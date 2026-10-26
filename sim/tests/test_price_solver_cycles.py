@@ -27,7 +27,7 @@ QUICK_TOPIC = True
 import collections
 import unittest
 
-from sim.engine import solve_prices
+from sim.prices import solve_prices
 
 
 class ResolvabilityAcceptsProductiveCyclesTests(unittest.TestCase):

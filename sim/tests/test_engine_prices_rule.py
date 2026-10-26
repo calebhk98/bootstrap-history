@@ -21,7 +21,7 @@ sim/engine/prices.py: solver prices cached on held gate nodes, per-material solv
 QUICK_TOPIC = True
 import unittest
 
-from sim.engine import prices as engine_prices
+from sim.prices import prices as engine_prices
 
 
 def _prices_json(labourer_rate=2.0, smith_rate=4.0, money_per_labour_hour=None):

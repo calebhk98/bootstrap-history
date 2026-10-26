@@ -10,7 +10,7 @@ from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 from .industry_depth import mastery_worker_years
 from .industry_learning import (input_availability, learning_multiplier, learning_value_ratio,
                                 repair_hours_by_trade, running_availability, work_hours_by_trade)
-from .prices import default_production_entries
+from sim.prices.api import prices as price_solver
 
 
 class IndustryConcernMixin:
@@ -53,7 +53,7 @@ class IndustryConcernMixin:
         if producers is None:   # nothing runs while the economy opens
             return 1.0
         base_tile = self.labour.base_tile()
-        entries = default_production_entries()
+        entries = price_solver.default_production_entries()
 
         def gate(recipe):
             entry = entries.get(recipe)
