@@ -1,4 +1,4 @@
-"""Checks `sim/engine/prices.py` - the first wiring of the price solver into
+"""Checks `sim/prices/prices.py` - the first wiring of the price solver into
 the engine, per the stakeholder's "prices.json should be slowly deleted."
 
 Two things this pins, because getting any one of them wrong would defeat
@@ -16,7 +16,7 @@ test_price_solver_cycles.py and test_price_solver_era_gate.py, so this does
 not depend on the real, changing contents of data/production/. The real tree is
 test_engine_prices.py.
 
-sim/engine/prices.py: solver prices cached on held gate nodes, per-material solved/gated provenance.
+sim/prices/prices.py: solver prices cached on held gate nodes, per-material solved/gated provenance.
 """
 QUICK_TOPIC = True
 import unittest

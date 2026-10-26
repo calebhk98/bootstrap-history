@@ -1,4 +1,4 @@
-"""Pins the fix for Complaints/32's own follow-up finding: `sim/engine/solve_prices.py`
+"""Pins the fix for Complaints/32's own follow-up finding: `sim/prices/solve_prices.py`
 printed "Rent on extracted materials is fixed at 0.0 this round (RENT_IS_ZERO)"
 on every run, although `sim/world/deposits.py` sat unimported next to it with a
 complete, tested Ricardian rent model (extensive margin, intensive margin,

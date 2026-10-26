@@ -325,13 +325,13 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
     under `held_technology_ids`, in the civilisation's coin; a material only a
     technology not yet held can make is priced at the nearest technique that
     makes it, with the technologies held for everything else (see
-    `sim.engine.prices.priced_goods_table`). A material nothing makes is absent.
+    `sim.prices.prices.priced_goods_table`). A material nothing makes is absent.
     Left as `None`, `held_technology_ids` is the starting technologies of
     `civilization_id` (the reference civilisation if none), so a concern's
     derived revenue is priced against techniques some civilisation holds.
 
     `civilization_id` decides whose coin and whose held territory prices are
-    stated against (see `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION);
+    stated against (see `sim/prices/prices.py`'s RENT NEEDS A CIVILIZATION);
     the default is the reference civilisation.
     """
     manifests = get_ordered_mods(MODDIR)
@@ -373,7 +373,7 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
                       civilization: Optional[JSONDict] = None) -> Dict[str, str]:
     """{material: "solved" | "gated"} for every material the solver prices:
     "gated" ones are priced at a technique not held but within reach; a material
-    nothing in reach makes is absent (see `sim.engine.prices.priced_goods_table`).
+    nothing in reach makes is absent (see `sim.prices.prices.priced_goods_table`).
 
     `civilization_id` should be the SAME civilization `held_technology_ids`
     came from: land rent is solved against its territory, and left at `None`

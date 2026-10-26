@@ -27,7 +27,7 @@ gives for its own HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY: a cross-import
 between standalone modules is exactly the wiring none of them are supposed
 to do yet.
 
-NOT A MONEY FIGURE. `sim/engine/solve_prices.py`'s numeraire is one hour of
+NOT A MONEY FIGURE. `sim/prices/solve_prices.py`'s numeraire is one hour of
 unskilled labour (see its own docstring, "PRICE SOLVER - numeraire is one
 hour of unskilled..."), and this module's job stops one step short of a
 price: every function here returns PHYSICAL quantities per tonne-km -
@@ -210,7 +210,7 @@ FEED_ENERGY_DENSITY_KCAL_PER_KG = declare(
            "such a mixed ration implies.",
     confidence="C",
     why="Converts every feed requirement this module computes from kcal "
-        "into kilograms - the physical unit `sim/engine/solve_prices.py`'s "
+        "into kilograms - the physical unit `sim/prices/solve_prices.py`'s "
         "numeraire (an hour of unskilled labour) can eventually be asked "
         "to price, the same role WHEAT_ENERGY_KCAL_PER_KG plays in "
         "sim/world/agriculture.py.")

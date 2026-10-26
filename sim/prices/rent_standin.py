@@ -155,7 +155,7 @@ def land_rent_hours_per_hectare(production_entries, wage_by_trade,
     THE ALGEBRA. sim/world/land.py's own `margin_outcome_for_civilization`
     returns a supply-weighted average rent in kilograms of grain-equivalent
     per hectare - a PHYSICAL quantity, not a price (see that module's own
-    WHY THE HOURS CONVERSION LIVES IN sim/engine/solve_prices.py, NOT HERE
+    WHY THE HOURS CONVERSION LIVES IN sim/prices/solve_prices.py, NOT HERE
     section for why the conversion happens here rather than there).
     Multiplying by wheat_kg's own ZERO-LAND-RENT price (labour only, exactly
     like rent_hours_per_kg_by_ore_material's own `ore_base_price_per_kg`)

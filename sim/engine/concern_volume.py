@@ -11,7 +11,7 @@ Two ratios against the opening, both from baskets worked out in labour hours:
 - `concern_value_ratio`: net sales (outputs less purchases) at the incumbents' prices, over the opening's.
   Takings multiply the loaded figure by it, then by the market's spot-over-incumbent ratio, so they are the
   volume times the price the market clears at; what a cheaper entry saves shows as fewer purchases and hours
-  per unit, and its seller's cost (producer_costs.py) is what it will not sell below.
+  per unit, and its seller's cost (sim/prices/cost_books.py) is what it will not sell below.
 
 TEMPORARY HEURISTIC (CLAUDE.md 4.4): energy a line draws or makes is valued at the pool price, and
 every line is run whatever the wage, in both baskets alike (the loaded figure applies a wage test).

@@ -1,4 +1,4 @@
-"""Checks the fix for Complaints/31: `sim/engine/solve_prices.py` used to refuse
+"""Checks the fix for Complaints/31: `sim/prices/solve_prices.py` used to refuse
 every recipe cycle, although its own module docstring said cycles were
 expected and used one as its worked example. `compute_resolvable_materials`
 now runs a strongly-connected-component productiveness test (Hawkins-Simon)
@@ -147,7 +147,7 @@ class ResolvabilityAcceptsProductiveCyclesTests(unittest.TestCase):
 class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
     """Complaints/32's third gap: `thermal_mj`, `mechanical_mj` and
     `electrical_mj` are real dependencies now (see `_dependency_materials`
-    and ENERGY in sim/engine/solve_prices.py's module docstring), not a scalar the
+    and ENERGY in sim/prices/solve_prices.py's module docstring), not a scalar the
     resolvability pass could ignore the way it correctly ignores the
     still-uncosted `energy_mj`. These tests are the same shape as the
     capital-cycle tests above, just for the energy fields: a material that
@@ -198,7 +198,7 @@ class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
         # this round added. aluminium_kg's own real dependency (see
         # data/production/20_nonferrous.json) is exactly this shape now -
         # electrical_mj, not mechanical_mj - which is the fix THE ALUMINIUM
-        # DEFECT (sim/engine/solve_prices.py's module docstring) describes.
+        # DEFECT (sim/prices/solve_prices.py's module docstring) describes.
         entries = {
             "bauxite": {"outputs": {"bauxite_kg": 1.0}, "inputs": {},
                        "labour_hours": {"labourer": 1.0}},
@@ -262,7 +262,7 @@ class EnergyDependenciesAreTrackedForResolvabilityTests(unittest.TestCase):
             "a two-deep conversion chain (thermal -> mechanical -> "
             "electrical) failed to resolve a material that only reaches a "
             "price through both conversions - see CONVERSIONS in "
-            "sim/engine/solve_prices.py's module docstring.")
+            "sim/prices/solve_prices.py's module docstring.")
 
     def test_recipe_cost_and_allocation_prices_the_energy_terms(self):
         # The dependency graph seeing the edge is necessary but not

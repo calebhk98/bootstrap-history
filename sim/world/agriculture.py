@@ -60,7 +60,7 @@ checks it, so the two cannot drift apart unnoticed.
 The physically right form of that entry lists seed among wheat's own inputs
 and outputs the gross yield, which would make seed corn a visible first
 claim on the harvest (and a famine eating next year's seed a representable
-event). It is written net instead because `sim/engine/solve_prices.py`'s
+event). It is written net instead because `sim/prices/solve_prices.py`'s
 resolvability pass refuses any material that appears among its own inputs -
 see Complaints/31.
 

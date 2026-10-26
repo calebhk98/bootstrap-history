@@ -68,7 +68,7 @@ file. Each constant's own original comment moved WITH it, verbatim
 them), so nothing explaining WHY a value is what it is was lost in the
 move - only WHERE it lives changed.
 
-WHY THE OLD LOCATIONS STILL WORK UNCHANGED. sim/engine/solve_prices.py does
+WHY THE OLD LOCATIONS STILL WORK UNCHANGED. sim/prices/solve_prices.py does
 `from solve_prices_core import (..., DAMPING_FACTOR, CONVERGENCE_TOLERANCE,
 ...)` - a real, working import this task did not want to edit, outside its own ownership boundary in
 spirit if not in the letter of CLAUDE.md's file list, just to relocate a

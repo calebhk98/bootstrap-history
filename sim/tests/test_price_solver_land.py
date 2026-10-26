@@ -1,6 +1,6 @@
 """Pins the fix for Complaints/48 ("land rent reaches no crop"): two rounds of
 work built a real, per-civilization Ricardian rent on `hectare_land` in
-`sim/world/land.py`, and `sim/engine/solve_prices.py` already turned that into
+`sim/world/land.py`, and `sim/prices/solve_prices.py` already turned that into
 `hectare_land`'s own solved price - but nothing in `data/production/` ever
 consumed `hectare_land`. `wheat_kg` had `inputs={}`, and so did every other
 material whose own prose said it came "from arable land", "from pasture" or

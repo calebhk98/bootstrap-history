@@ -118,7 +118,7 @@ def cost_of_making(good: str,
     `techniques` is the held gate nodes, or one recipe id to cost that recipe alone. `rent_of(key)` is money
     per unit of an extracted good (and per hectare-year of land); None charges none. `reference_price_of(good)`
     is what a joint run's outputs are worth, to split the run's cost by value; an output it gives none for is
-    valued at what its cheapest sole-output route costs now, else by mass (sim/engine/joint_allocation.py).
+    valued at what its cheapest sole-output route costs now, else by mass (sim/prices/joint_allocation.py).
     `include_plant` False is the running cost of a plant already built. `civilization` supplies the state's
     waste-dumping rule.
     """
