@@ -12,16 +12,16 @@ import collections
 import random
 import unittest
 
-from sim.tests.ledger_host import apply_to_own_stock
 from types import SimpleNamespace
 
+from sim.defence_stores.module import DefenceStores
 from sim.engine import cash_remedies  # noqa: F401  (settles the import cycle through project_materials)
-from sim.engine.defence_stores import DefenceStoresMixin
+from sim.engine import bridge_living_stock
 from sim.engine import validate_defence_stores
 from sim.engine.hazard_relief import HazardReliefMixin
-from sim.engine.living_stock import LivingStockMixin
-from sim.engine.living_stock_yearly import LivingStockYearlyMixin
 from sim.engine.mechanics import MechanicsMixin
+from sim.living_stock.api import ChangeHeld
+from sim.tests import module_harness
 from sim.engine.projects_open_gate import OpenGateMixin
 from sim.engine.projects_staffing_shortfall import StaffingShortfallMixin
 from sim.engine.projects_ventures import VenturesMixin
@@ -46,8 +46,9 @@ def _nodes():
     }
 
 
-class _Host(DefenceStoresMixin, HazardReliefMixin, HazardsMixin, LivingStockMixin, LivingStockYearlyMixin,
-            MechanicsMixin):
+class _Host(HazardReliefMixin, HazardsMixin, MechanicsMixin):
+    """The fake game the other mixins run on, with the defence-stores module built over it by the harness: its views are
+    this host's plain values, and a ChangeHeld it sends changes the host's ledger (kilograms are a thousandth of a tonne)."""
     HOURS_PER_PERSON_YEAR = 2000.0
     STATE_MIL_RELIEF_PER_WEAPON_SACK = 0.0
     HAZARD_EROSION_OWN_GOLD = HAZARD_EROSION_OWN_SILVER = 0.0
@@ -68,20 +69,34 @@ class _Host(DefenceStoresMixin, HazardReliefMixin, HazardsMixin, LivingStockMixi
             projects=SimpleNamespace(done=done, granted=set(), operating=operating, closures={}),
             household=SimpleNamespace(employees={"soldier": soldiers}, log=[], _stock_throttle_sig=None),
             scenario=SimpleNamespace(year=year))
+        self.defence = module_harness.build(DefenceStores, views={
+            "tree": self.nodes.get, "techniques_done": lambda: self.state.projects.done,
+            "operating": lambda: self.state.projects.operating, "is_venture": self.is_venture,
+            "staff": lambda: {"employees": self.state.household.employees},
+            "stock_held": self.stock_held, "year": lambda: self.state.scenario.year,
+            "live_hazard_kinds": lambda year: bridge_living_stock.live_hazard_kinds(self, year),
+            "running_mechanics": lambda name: bridge_living_stock.running_mechanics(self, name),
+            "hours_per_person_year": lambda: self.HOURS_PER_PERSON_YEAR, "institution_units": self.institution_units,
+            "effects_in_force": lambda channel: bridge_living_stock.effects_in_force(self, channel)},
+            answers={ChangeHeld: self.change_held})
 
-    def _material_stock(self):
-        return self.ledger
+    def stock_held(self, material):
+        return self.ledger.get(material, 0.0) * 1000.0
 
-    send = apply_to_own_stock
+    def change_held(self, command):
+        self.ledger[command.material] = self.ledger.get(command.material, 0.0) + command.units / 1000.0
 
-    def _material_opening_stock(self):
-        return {}
+    def venture_garrison(self, node_id, units=1.0):
+        return self.defence.venture_garrison(node_id, units)
 
-    def _material_tag(self, material):
-        return (material, "mine:" + material)
+    def garrison_claims(self):
+        return self.defence.garrison_claims()
 
-    def material_stock_t(self, emp_key):
-        return self.ledger.get(emp_key, 0.0)
+    def counter_supply_gap(self, node_id, kind, label):
+        return self.defence.counter_supply_gap(node_id, kind, label)
+
+    def step_defence_stores(self):
+        self.defence.step_defence_stores("seat")
 
     def has(self, node_id):
         return node_id in self.state.projects.done

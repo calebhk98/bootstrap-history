@@ -1,11 +1,11 @@
 """A partner quote prices the cargo's own spoilage (Complaints/340): the material is named to the merchants' terms.
-`partner_quote_per_tonne` is called on a stub that holds only what it reads."""
+`partner_landed_price` (the engine bridge's view of a partner's price) is called on a stub that holds only what it reads."""
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.living_stock import LivingStockMixin
-from sim.engine.material_units import tonnes_per_unit
+from sim.engine.bridge_living_stock import partner_landed_price
+from sim.world.material_units import tonnes_per_unit
 
 QUICK_TOPIC = True
 
@@ -28,7 +28,7 @@ def buyer(named):
 
 
 named = []
-quote = LivingStockMixin.partner_quote_per_tonne(buyer(named), RAMIE, PARTNER)
+quote = partner_landed_price(buyer(named), PARTNER, RAMIE)
 check("a partner quote is made", quote is not None and quote > 0, quote)
 check("the merchants' terms are asked for the material quoted", named == [RAMIE], named)
 check("the quote adds the merchants' share to the price and then the agent's and the route's carriage",

@@ -10,7 +10,7 @@ import json
 from sim.geography.api import flow_ledger, freight_cost, walking_cargo_modes
 
 from .haul_route import Leg, Route, cargo_class_of, domestic_haul_mode, unjoined_haul_cost
-from .living_stock_yearly import stock_rates
+from sim.living_stock.api import stock_rates
 
 DOMESTIC_CART_MODE = "cart"
 MATERIAL_ROUTES_KEPT = 512

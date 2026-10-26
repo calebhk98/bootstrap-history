@@ -11,7 +11,9 @@ IGNORED: (prefix, reason) pairs dropped after relocation, for bookkeeping that e
 This is test tooling, not a save migration.
 """
 
-RELOCATIONS = []
+RELOCATIONS = [
+    ("/modules/living_stock/society_herds", "/economy/society_herds"),
+]
 
 IGNORED = [
     ("/modules", "module world slots: empty until a module owns state, then each moved field is relocated"),

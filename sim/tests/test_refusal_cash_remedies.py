@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.engine import cash_remedies, purchase_rule
-from sim.engine.living_stock_yearly import stock_rates
+from sim.living_stock.api import stock_rates
 from sim.refusal import facts_of
 
 QUICK_TOPIC = True
@@ -22,7 +22,8 @@ def _actor(stock=None, upkeep=None, mines=None, employees=None, wages=None, budg
     projects = SimpleNamespace(operating=set(upkeep), done=set(upkeep), granted=set())
     return SimpleNamespace(
         SPENDING_DRAW_SHARE_ORDINARY=0.5, capital=cash, civ={"id": "stub"},
-        _stock_key=lambda material: material, _material_stock=lambda: stock,
+        view=lambda name: {"material_commodity": {material: material for material in set(stock) | set(stock_rates())}}[name],
+        _material_stock=lambda: stock,
         material_stock_t=lambda material: stock[material],
         goods_market=SimpleNamespace(quote_sell=lambda material, tonnes: (material, tonnes, 30.0 * tonnes)),
         state=SimpleNamespace(projects=projects, household=SimpleNamespace(employees=employees or {})),

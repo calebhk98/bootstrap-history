@@ -320,8 +320,6 @@ class EconomyState:
 	soil_nitrogen: Dict[str, float] = field(default_factory=dict)
 	# tile -> tonnes of standing timber felled below the tile's full stock; a missing tile is untouched (economy_port_timber.py)
 	forest_felled: Dict[str, float] = field(default_factory=dict)
-	# stock material -> units of the held herd the society's producers keep, which the founder is not billed to raise
-	society_herds: Dict[str, float] = field(default_factory=dict)
 	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
 	output_factor: float = 1.0
 	# real output per person over the opening's, measured when the market closes (real_output.py)

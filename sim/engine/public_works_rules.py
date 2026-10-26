@@ -8,11 +8,6 @@ def legitimacy_share(summed_effects, floor, ceiling):
     return max(floor, min(ceiling, summed_effects))
 
 
-def relief_kcal_per_day(handouts, days_per_year):
-    """Food energy a day over the whole nation that open works hand out: `handouts` are (kilograms a year, kcal per kilogram)."""
-    return sum(kilograms * kcal_per_kg for kilograms, kcal_per_kg in handouts) / days_per_year
-
-
 def extra_lit_hours(works):
     """Hours a day that lit works add: `works` are (extra hours a day, share of the people covered)."""
     total = 0.0

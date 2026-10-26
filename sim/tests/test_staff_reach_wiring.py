@@ -11,8 +11,10 @@ from unittest import mock
 from sim.engine.agents_port_budget import BudgetView
 from sim.engine.economy_mining import MiningMixin
 from sim.engine.legitimacy import LegitimacyMixin
-from sim.engine.living_stock_smuggling import LivingStockSmugglingMixin
+from sim.engine.bridge_living_stock import partner_catch_chance
 from sim.engine.theft_charge import TheftChargeMixin
+from sim.engine.theft_exposure import visibility_factor
+from sim.world import stock_dynamics
 
 
 def reach_stand_in(unfunded, shares, year=100):
@@ -86,15 +88,16 @@ class StateReach(unittest.TestCase):
         stand_in = SimpleNamespace(_sim=SimpleNamespace(state_authority=lambda: 0.42))
         self.assertEqual(BudgetView.state_reach(stand_in), 0.42)
 
-    def test_a_partners_reach_is_its_own_governments_view_as_a_float(self):
+    def test_a_partners_chance_to_catch_is_its_own_governments_reach_against_how_visible_the_bite_is(self):
         asked = []
         world = SimpleNamespace(state_reach=lambda: 1)
         actors = SimpleNamespace(world_for=lambda government, home: asked.append((government, home)) or world)
         stand_in = SimpleNamespace(actors=actors, partner_government=lambda civilization_id: "government:" + civilization_id)
         with mock.patch("sim.engine.agents_port_cast.seed_opening_cast"), \
                 mock.patch("sim.engine.agents_port.SimWorld", lambda sim: "home world"):
-            reach = LivingStockSmugglingMixin.partner_state_reach(stand_in, "han_china_100ad")
-        self.assertEqual((reach, asked), (1.0, [("government:han_china_100ad", "home world")]))
+            chance = partner_catch_chance(stand_in, "han_china_100ad", 0.5)
+        self.assertEqual((chance, asked), (stock_dynamics.catch_chance(1.0, visibility_factor(0.5)),
+                                           [("government:han_china_100ad", "home world")]))
 
 
 class CeilingsReadOnlyTheirOwnStaff(unittest.TestCase):

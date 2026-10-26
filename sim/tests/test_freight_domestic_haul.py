@@ -102,7 +102,7 @@ class Droving(unittest.TestCase):
 
     def test_only_stock_marked_walks_goes_by_drove(self):
         from sim.engine.domestic_haul import DomesticHaulMixin
-        from sim.engine.living_stock_yearly import stock_rates
+        from sim.living_stock.api import stock_rates
         classes = {material: DomesticHaulMixin._cargo_class(None, material) for material in stock_rates()}
         walking = {material for material, cargo in classes.items() if cargo == "living_stock"}
         self.assertTrue(walking)

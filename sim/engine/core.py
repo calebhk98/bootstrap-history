@@ -3,6 +3,7 @@ import collections, copy, os, random, sys
 
 from sim.constants import declare
 from sim.refusal import LogLine
+from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from . import money_units
 from . import externalities
 from . import automation_audit
@@ -56,15 +57,10 @@ from .regional_people import RegionalPeopleMixin
 from .urban_share import UrbanShareMixin
 from .food_supply import FoodSupplyMixin
 from .soil_nitrogen_year import SoilNitrogenMixin
-from .living_stock import LivingStockMixin
-from .living_stock_opening import LivingStockOpeningMixin
+from .forward_living_stock import ForwardLivingStockMixin
 from .coin_hoard import CoinHoardMixin
 from .theft_charge import TheftChargeMixin
 from .coin_carriage import CoinCarriageMixin
-from .living_stock_smuggling import LivingStockSmugglingMixin
-from .living_stock_trade import LivingStockTradeMixin
-from .living_stock_yearly import LivingStockYearlyMixin
-from .defence_stores import DefenceStoresMixin
 from .campaign_actors import CampaignActorsMixin
 from .campaign_year import CampaignYearMixin
 from .revolt_year import RevoltYearMixin
@@ -221,8 +217,8 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, ConcernBookSalesMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, SeatBankMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
-          StepPhasesMixin, LivingStockMixin, LivingStockOpeningMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
-          LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, UrbanShareMixin, DefenceStoresMixin, CampaignActorsMixin, CampaignYearMixin, RevoltYearMixin, CaptivesMixin, EconomyPortMixin, NodeRederiveMixin):
+          StepPhasesMixin, ForwardLivingStockMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
+          FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, UrbanShareMixin, CampaignActorsMixin, CampaignYearMixin, RevoltYearMixin, CaptivesMixin, EconomyPortMixin, NodeRederiveMixin):
     DEFAULT_POPULATION_100AD = declare(
         "DEFAULT_POPULATION_100AD", 65e6, kind="initial_condition",
         unit="people", source="Widely cited estimate of the Roman Empire's "
@@ -526,7 +522,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         # class deliberately does not hold a reference to.
         starting_techs = declared_starting_techs(self.civ, self.nodes)
         grant_starting_techs(self.state.projects, starting_techs, self._done_changed)
-        self.grant_opening_stock()
+        self.send(GrantOpeningStock())
         # Starting ownership is deliberately exhausted by starting_techs.
         # Tier and zero cost describe a node's position in the universal graph;
         # they do not mean every society on Earth already owns it.  In
@@ -544,7 +540,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         self._economy_deferred = bool(defer_economy)
         if not defer_economy:
             self.economy.open_agent()
-            self.grant_opening_herds()
+            self.send(GrantOpeningHerds())
             self._done_changed()
             self.join_cast_seats()
 

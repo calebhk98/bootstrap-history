@@ -4,6 +4,7 @@ QUICK_TOPIC = True
 
 import contextlib
 import random
+import types
 
 from .harness import check
 
@@ -98,6 +99,11 @@ class FakeSim:
     def _step_dated_shocks(self, seats):
         self._record("shocks")
         self.state.ended |= self.ends_in_shocks
+
+    @property
+    def assembly(self):
+        """The assembly's phase lookup: a module's phase `name` records as `step_<name>`."""
+        return types.SimpleNamespace(phase_handler=lambda name: (lambda *arguments: self._record("step_" + name)))
 
     def __getattr__(self, name):
         return lambda *arguments: self._record(name, *arguments)

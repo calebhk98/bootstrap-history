@@ -1,6 +1,6 @@
 """Stock bought from a partner is charged what it was quoted. The quote handlers (`quote_living_stock`, `quote_smuggled_stock`) and the
-settlements (`settle_stock_purchase`, `settle_stock_smuggle`) read one terms dict, so the figure the quote shows is the figure the
-buyer pays, caught or not. Each runs on a stand-in `self`; the dispatcher-wide table is test_quote_matches_charge_scenario."""
+settlements (`BuyStock`, `SmuggleStock`, applied by the living-stock module) read one terms dict, so the figure the quote shows is the figure the
+buyer pays, caught or not. The module is built by the harness, the screen runs on a stand-in game; the dispatcher-wide table is test_quote_matches_charge_scenario."""
 QUICK_TOPIC = True
 
 from types import SimpleNamespace
@@ -8,27 +8,18 @@ from unittest import mock
 
 from .harness import check
 
-from sim.engine.living_stock_smuggling import LivingStockSmugglingMixin
-from sim.engine.living_stock_trade import LivingStockTradeMixin
+from sim.agents.api import edges
+from sim.foreign_trade.api import SettleFlow
+from sim.ledger.api import ChangeStock, PayEdge
+from sim.living_stock.api import BuyStock, SmuggleStock
+from sim.living_stock.module import LivingStock
+from sim.polity.api import ChangeStanding
+from sim.refusal import Refusal
+from sim.tests import module_harness
 from sim.ui.proto import stock_purchases
 
 MATERIAL = "ramie_stock_kg"
 COST = 123.456
-
-
-class Buyer:
-    def __init__(self, can_pay=True):
-        self.paid, self.can = [], can_pay
-        self.delivered = []
-
-    def can_pay(self, money):
-        return self.can
-
-    def pay(self, money, purpose):
-        self.paid.append((money, purpose))
-
-    def take_delivery(self, key, tonnes):
-        self.delivered.append((key, tonnes))
 
 
 def terms(**more):
@@ -36,59 +27,69 @@ def terms(**more):
                 chance_caught=0.25, arrives_units=90.0, **more)
 
 
+def stock_module(can_pay=True, has_government=False):
+    return module_harness.build(LivingStock, views={
+        "can_pay": lambda cost: can_pay, "material_commodity": lambda material: material, "year": 100,
+        "acting_balance": 500.0, "partner": lambda partner: {"has_government": has_government, "civ": {}, "stock_taken": {}}})
+
+
 # --- stock bought from a partner that sells it
-class Trade(LivingStockTradeMixin):
-    pass
+paying = stock_module()
+bought = terms()
+check("the purchase settles the quoted cost, not a second estimate",
+      paying.buy_stock(BuyStock(bought["material"], bought["partner"], bought["tonnes"], bought["cost"])) is True
+      and module_harness.sent(paying) == [PayEdge(edges.EDGE_MARKET, COST, "stock bought abroad"),
+                                          ChangeStock(MATERIAL, 0.1), SettleFlow("han_china_100ad", 0.1, COST)],
+      module_harness.sent(paying))
+broke = stock_module(can_pay=False)
+check("a buyer who cannot pay the quote is refused and charged nothing",
+      isinstance(broke.buy_stock(BuyStock(bought["material"], bought["partner"], bought["tonnes"], bought["cost"])), Refusal)
+      and module_harness.sent(broke) == [])
 
 
-trade = Trade()
-buyer = Buyer()
-imports = []
-trade.goods_market = SimpleNamespace(acting=buyer, settle_import=lambda who, key, tonnes, cost, purpose: imports.append((cost, purpose)),
-                                     home_unit_price=lambda material: None)
-trade._stock_key = lambda material: material
-trade.partner_civ = lambda partner: {"coin_standard": {"material": "silver_kg", "kg_per_unit": 0.01}}
-check("the purchase settles the quoted cost, not a second estimate", trade.settle_stock_purchase(terms()) and imports == [(COST, "stock bought abroad")], imports)
-check("a buyer who cannot pay the quote is refused and charged nothing", Trade.settle_stock_purchase(
-    SimpleNamespace(goods_market=SimpleNamespace(acting=Buyer(can_pay=False), settle_import=lambda *args: imports.append("charged"))), terms()) is False
-      and imports == [(COST, "stock bought abroad")], imports)
+class Screen:
+    """The game as the purchase screen reads it: one quote view."""
 
-quoting = SimpleNamespace(stock_purchase_quote=lambda material, quantity, partner: terms(), capital=1000.0)
+    def __init__(self, quote):
+        self.quote, self.capital = quote, 1000.0
+
+    def view(self, name):
+        return lambda *arguments: self.quote
+
+
 from sim.engine.ui_port import purchase_rule  # noqa: E402
 with mock.patch.object(purchase_rule, "purchase_budget", lambda sim: 1000.0):
-    reply = stock_purchases.quote_living_stock(quoting, {"material": MATERIAL}, 100.0)
+    reply = stock_purchases.quote_living_stock(Screen(terms()), {"material": MATERIAL}, 100.0)
 check("the living-stock quote shows the terms' cost", reply["ok"] and reply["to_buy_it"] == round(COST, 1), reply)
 refusal = stock_purchases.quote_living_stock(
-    SimpleNamespace(stock_purchase_quote=lambda *args: {"ok": False, "cause": "no_partner_sells", "error": "nobody sells it"}),
-    {"material": MATERIAL}, 100.0)
+    Screen({"ok": False, "cause": "no_partner_sells", "error": "nobody sells it"}), {"material": MATERIAL}, 100.0)
 check("a quote no partner can fill carries the cause and changes nothing", refusal["ok"] is False and refusal["cause"] == "no_partner_sells", refusal)
 
 
 # --- stock smuggled: the carrying is charged whether or not the taker is caught
-class Smuggle(LivingStockSmugglingMixin):
-    pass
-
-
 def smuggle(caught):
-    taker = Buyer()
-    host = Smuggle()
-    host.goods_market = SimpleNamespace(acting=taker)
-    host._smuggling_draw = lambda quoted: 0.0 if caught else 0.99
-    host.partner_government = lambda partner: None
-    host._stock_key = lambda material: material
-    host._punish_smuggler = lambda government, outcome: outcome.update(closed_until=200)
-    return taker, host.settle_stock_smuggle(terms())
+    taker = stock_module()
+    taker.smuggling_draw = lambda quoted: 0.0 if caught else 0.99
+    quoted = terms()
+    outcome = taker.smuggle_stock(SmuggleStock(quoted["material"], quoted["partner"], quoted["units"], quoted["tonnes"],
+                                               quoted["cost"], quoted["arrives_units"], quoted["chance_caught"]))
+    return module_harness.sent(taker), outcome
 
 
 for caught in (False, True):
-    taker, outcome = smuggle(caught)
+    sent, outcome = smuggle(caught)
     check("smuggling charges the quoted carrying once (caught: %s)" % caught,
-          taker.paid == [(COST, "stock smuggled")] and outcome["caught"] is caught, (taker.paid, outcome))
+          sent.count(PayEdge(edges.EDGE_MARKET, COST, "stock smuggled")) == 1 and outcome["caught"] is caught, (sent, outcome))
 check("...and delivers the stock less the route's loss only when not caught",
-      smuggle(False)[0].delivered[0][1] > 0.0 and smuggle(False)[1]["delivered_units"] == 90.0
-      and smuggle(True)[0].delivered == [] and smuggle(True)[1]["delivered_units"] == 0.0)
-quoted = stock_purchases.quote_smuggled_stock(SimpleNamespace(stock_smuggle_quote=lambda material, quantity, partner: terms(), capital=1.0),
-                                              {"material": MATERIAL}, 100.0)
+      any(isinstance(sent, ChangeStock) and sent.tonnes > 0.0 for sent in smuggle(False)[0]) and smuggle(False)[1]["delivered_units"] == 90.0
+      and not any(isinstance(sent, ChangeStock) for sent in smuggle(True)[0]) and smuggle(True)[1]["delivered_units"] == 0.0)
+check("a caught smuggler's scandal rises", any(isinstance(sent, ChangeStanding) for sent in smuggle(True)[0])
+      and not any(isinstance(sent, ChangeStanding) for sent in smuggle(False)[0]))
+broke = stock_module(can_pay=False)
+check("a taker who cannot pay the carrying is refused and charged nothing",
+      isinstance(broke.smuggle_stock(SmuggleStock(MATERIAL, "han_china_100ad", 100.0, 0.1, COST, 90.0, 0.25)), Refusal)
+      and module_harness.sent(broke) == [])
+quoted = stock_purchases.quote_smuggled_stock(Screen(terms()), {"material": MATERIAL}, 100.0)
 check("the smuggling quote shows the terms' cost and chance of capture", quoted["to_buy_it"] == round(COST, 1) and quoted["chance_caught"] == 0.25, quoted)
 
 

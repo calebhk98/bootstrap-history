@@ -4,8 +4,11 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.defence_stores.api import rules as defence_rules
 from sim.engine.public_works_rules import (extra_lit_hours, legitimacy_share, printing_boosted_flow,
-                                           relief_kcal_per_day, schooling_flow, working_hours_per_year)
+                                           schooling_flow, working_hours_per_year)
+
+relief_kcal_per_day = defence_rules.relief_kcal_per_day
 
 FLOOR, CEILING = 0.5, 1.25
 

@@ -2,7 +2,7 @@
 command itself uses, for refusals to list. Any actor with a household,
 material stock, concerns, mines and staff can be asked."""
 
-from .living_stock_yearly import stock_rates
+from sim.living_stock.api import stock_rates
 from .units_prose import money_text
 
 REMEDY_LIMIT = 6
@@ -12,7 +12,7 @@ def cash_remedies(actor):
     """Lines like "sell iron 40 (brings 1,200 now)", largest amount first."""
     found = []
     # Living stock is the means of breeding more; it is not offered as cash.
-    breeding_stock = {actor._stock_key(material) for material in stock_rates()}
+    breeding_stock = {actor.view("material_commodity")[material] for material in stock_rates()}
     for material in sorted(actor._material_stock()):
         if material in breeding_stock:
             continue

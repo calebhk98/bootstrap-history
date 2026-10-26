@@ -6,9 +6,9 @@ import os
 import types
 import unittest
 
-from sim.engine.living_stock_growth import LivingStockGrowthMixin
-from sim.engine.living_stock_opening import LivingStockOpeningMixin
-from sim.engine.living_stock_yearly import stock_rates
+from sim.living_stock.api import stock_rates
+from sim.living_stock.module import LivingStock
+from sim.tests import module_harness
 from sim.geography import api as geography
 from sim.geography.api import Geography
 from sim.geography import endemic, food_pasture
@@ -21,13 +21,11 @@ COOL_DRY_TILE = "ukraine_04"
 SAHEL_TILE = "burkina_faso_02"  # inside the box, too dry for the vector
 
 
-class Holder(LivingStockOpeningMixin, LivingStockGrowthMixin):
-    def __init__(self, world_map, place):
-        self.world_map, self._place = world_map, place
-        self.geography = Geography(types.SimpleNamespace(world_map=world_map))
-
-    def stock_place(self):
-        return self._place
+def holder(world_map, place):
+    """The living-stock module standing at `place`, whose geography answers the endemic loss of a species there."""
+    land = Geography(types.SimpleNamespace(world_map=world_map))
+    return module_harness.build(LivingStock, views={"stock_land": {"place": place, "pasture_kg": 0.0},
+                                                    "endemic_stock_loss": land.endemic_stock_loss}), land
 
 
 class EndemicDiseaseTests(unittest.TestCase):
@@ -58,11 +56,11 @@ class EndemicDiseaseTests(unittest.TestCase):
 
     def test_a_belt_tile_offers_no_draught_team_and_a_temperate_tile_does(self):
         rates = stock_rates()["draught_animal_kg"]
-        belt, temperate = Holder(self.world_map, BELT_TILE), Holder(self.world_map, TEMPERATE_TILE)
+        (belt, belt_land), (temperate, temperate_land) = holder(self.world_map, BELT_TILE), holder(self.world_map, TEMPERATE_TILE)
         self.assertEqual(belt.endemic_keeping("draught_animal_kg"), 0.0)
         self.assertEqual(temperate.endemic_keeping("draught_animal_kg"), 1.0)
-        self.assertGreater(belt.endemic_stock_loss(rates), rates["natural_increase"])
-        self.assertEqual(temperate.endemic_stock_loss(rates), 0.0)
+        self.assertGreater(belt_land.endemic_stock_loss(BELT_TILE, rates.get("species")), rates["natural_increase"])
+        self.assertEqual(temperate_land.endemic_stock_loss(TEMPERATE_TILE, rates.get("species")), 0.0)
 
     def test_malaria_raises_mortality_on_a_hot_wet_tile_against_a_cool_dry_one(self):
         hot = geography.endemic_people_loss([BELT_TILE], self.world_map)

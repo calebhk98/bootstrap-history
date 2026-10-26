@@ -21,7 +21,7 @@ from .project_funding import cash_covers_start, paid_credit
 from .projects_training_advice import training_advice, training_advice_text
 from .projects_trade_wait import trade_wait_outlasts_the_project
 from .interest_groups import check_group_prohibition
-from .living_stock import check_unheld_stock
+from .forward_living_stock import check_unheld_stock
 from .instantaneous_project import is_instantaneous
 from .projects_running_gates import check_running_gates
 from .material_availability import check_materials_have_a_seller

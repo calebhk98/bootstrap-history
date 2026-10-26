@@ -6,7 +6,6 @@ Each topic is its own small mixin; this file only composes them for `Sim`.
 from .colonies import ColoniesMixin
 from .concern_levy import ConcernLevyMixin
 from .coverage import CoverageMixin
-from .food_relief import FoodReliefMixin
 from .legitimacy import LegitimacyMixin
 from .tile_ownership import TileOwnershipMixin
 from .world_hazards import WorldHazardsMixin
@@ -14,6 +13,6 @@ from .transfers import TransfersMixin
 from .working_day import WorkingDayMixin
 
 
-class BenefactionsMixin(TransfersMixin, ConcernLevyMixin, CoverageMixin, FoodReliefMixin, LegitimacyMixin,
+class BenefactionsMixin(TransfersMixin, ConcernLevyMixin, CoverageMixin, LegitimacyMixin,
                         WorkingDayMixin, ColoniesMixin, TileOwnershipMixin, WorldHazardsMixin):
     pass
