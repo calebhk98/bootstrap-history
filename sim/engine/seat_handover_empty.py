@@ -9,6 +9,7 @@ from typing import List
 
 from sim.engine.state import GovernanceState
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
+from sim.resources.state import ResourcesSeat
 
 STAFF_FIELDS = ("scholars", "artisans", "directors_extra", "slaves", "freedmen", "reserve_craftsmen", "reserve_scholars")
 OWED_FIELDS = ("bondage_debt", "interest_arrears")
@@ -32,6 +33,16 @@ def holdings_in_use(holdings) -> bool:
 	return False
 
 
+def module_state_in_use(state) -> bool:
+	"""Whether a module's seat state holds anything: a field at its default, or an empty container where none was made, does not."""
+	fresh = type(state)()
+	for field in dataclasses.fields(state):
+		value, default = getattr(state, field.name), getattr(fresh, field.name)
+		if value != default and (bool(value) or bool(default)):
+			return True
+	return False
+
+
 def holds_that_would_be_lost(seat, has_disclosures: bool) -> List[str]:
 	"""What `seat` holds beyond cash, debts and known techniques, named for the player; empty for an empty seat.
 	`has_disclosures` says whether it has chosen what to do with an invention."""
@@ -43,7 +54,7 @@ def holds_that_would_be_lost(seat, has_disclosures: bool) -> List[str]:
 		found.append("staff")
 	if any(getattr(household, name, 0) for name in OWED_FIELDS) or household.bondage_years_left:
 		found.append("arrears or bondage")
-	if holdings_in_use(seat.holdings):
+	if holdings_in_use(seat.holdings) or module_state_in_use(seat.modules.get("resources") or ResourcesSeat()):
 		found.append("holdings")
 	if seat.governance != GovernanceState():
 		found.append("institutions")

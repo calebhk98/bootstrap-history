@@ -14,8 +14,8 @@ class _FakeView:
 	def __init__(self, value: Any):
 		self.value = value
 
-	def __call__(self, *arguments: Any) -> Any:
-		return self.value(*arguments) if callable(self.value) else self.value
+	def __call__(self, *arguments: Any, **keywords: Any) -> Any:
+		return self.value(*arguments, **keywords) if callable(self.value) else self.value
 
 	def __getitem__(self, key: Any) -> Any:
 		return self.value(key) if callable(self.value) else self.value[key]

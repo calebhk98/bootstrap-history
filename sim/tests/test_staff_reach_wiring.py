@@ -9,7 +9,8 @@ import unittest
 from unittest import mock
 
 from sim.engine.agents_port_budget import BudgetView
-from sim.engine.economy_mining import MiningMixin
+from sim.resources import constants as resource_constants
+from sim.tests import resources_stand_in
 from sim.engine.legitimacy import LegitimacyMixin
 from sim.engine.bridge_living_stock import partner_catch_chance
 from sim.coin.commands import PlunderHousehold
@@ -104,23 +105,22 @@ class StateReach(unittest.TestCase):
 
 
 class CeilingsReadOnlyTheirOwnStaff(unittest.TestCase):
-    def mining_stand_in(self, **reaches):
-        return SimpleNamespace(
-            effect_best=lambda effect: None, MINE_CEILING_BASE_STRANGER=1000.0, MINE_CEILING_STATE_SCALE_STRANGER=5000.0,
-            REVENUE_SCALE_DENARII=1.0e6, REVENUE_SCALE_CAP_MULTIPLE=4.0, revenue=lambda: 0.0,
-            geography=SimpleNamespace(mineral_scale=lambda material: 1.0),
-            FOREST_HA_PER_MILLION_KM2_BASE=100.0, FOREST_HA_PER_MILLION_KM2_PER_SC=400.0,
-            home_land_area_km2=lambda: 1.0e6, **reaches)
+    def module(self, **reaches):
+        module = resources_stand_in.build(views=reaches)
+        module.home_land_area_km2 = lambda: 1.0e6
+        return module
 
     def test_the_mine_ceiling_rises_with_the_inspectors_reach_alone(self):
-        low = MiningMixin.mine_land_ceiling(self.mining_stand_in(inspection_reach=lambda: 0.2), "iron")
-        high = MiningMixin.mine_land_ceiling(self.mining_stand_in(inspection_reach=lambda: 0.8), "iron")
-        self.assertEqual((low, high), (2000.0, 5000.0))
+        low = self.module(inspection_reach=0.2).mine_land_ceiling("iron")
+        high = self.module(inspection_reach=0.8).mine_land_ceiling("iron")
+        base, scale = resource_constants.MINE_CEILING_BASE_STRANGER, resource_constants.MINE_CEILING_STATE_SCALE_STRANGER
+        self.assertEqual((low, high), (base + scale * 0.2, base + scale * 0.8))
 
     def test_the_forest_ceiling_rises_with_the_foresters_reach_alone(self):
-        low = MiningMixin.forest_land_ceiling(self.mining_stand_in(forest_reach=lambda: 0.0))
-        high = MiningMixin.forest_land_ceiling(self.mining_stand_in(forest_reach=lambda: 0.5))
-        self.assertEqual((low, high), (100.0, 300.0))
+        low = self.module(forest_reach=0.0).forest_land_ceiling()
+        high = self.module(forest_reach=0.5).forest_land_ceiling()
+        base, per_reach = resource_constants.FOREST_HA_PER_MILLION_KM2_BASE, resource_constants.FOREST_HA_PER_MILLION_KM2_PER_SC
+        self.assertEqual((low, high), (base, base + per_reach * 0.5))
 
 
 class PlunderReadsTheGuards(unittest.TestCase):

@@ -13,14 +13,9 @@ class _Founder:
     def __init__(self, yield_per_capacity):
         self._factor = yield_per_capacity
 
-    def mine_yield_t_for(self, working):
-        return self._factor * working["capacity"]
-
-    def mine_operating_cost_for(self, working):
-        return 0.0
-
-    def mine_depletion_note_for(self, working):
-        return ""
+    def view(self, name):
+        assert name == "mine_working_report"
+        return lambda working: {"yield_tonnes": self._factor * working["capacity"], "operating_cost": 0.0, "note": ""}
 
 
 def _rows(factor, workings, want):

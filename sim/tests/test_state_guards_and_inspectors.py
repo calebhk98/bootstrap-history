@@ -5,7 +5,7 @@ from .harness import *  # noqa: F401,F403
 QUICK_TOPIC = True
 
 from sim.agents import budget, collection, order
-from sim.engine.mine_ceiling import mine_ceiling_tonnes
+from sim.resources.ceilings import mine_ceiling_tonnes
 from sim.coin.api import order_factor
 from .agents_fake_world import FakeWorld
 
@@ -30,7 +30,7 @@ check("the same guards at a nearer tile leave less theft",
 check("more guards leave less theft on the tile", order_factor(many["far"], 0.0) < order_factor(few["far"], 0.0))
 
 # ---- foresters keep woodland tenure by the same time rule; the forest ceiling reads their reach ---------------------
-from sim.engine.forest_ceiling import forest_ceiling_hectares
+from sim.resources.ceilings import forest_ceiling_hectares
 
 check("more foresters raise the share of a tile whose woodland is kept",
       shares_for(2.0, per_person=order.FORESTER_DAYS_PER_PERSON)["far"] > shares_for(1.0, per_person=order.FORESTER_DAYS_PER_PERSON)["far"])

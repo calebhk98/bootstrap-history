@@ -48,7 +48,7 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 | 21 | [`production`](production.md) | What runs: operating techniques and capability, revenue and upkeep of concerns, industry experience, techniques in use. | 7 | 4 | 74 | 31 |
 | 22 | [`projects`](projects.md) | The lifecycle of a project: can it start, what it costs, progress, completion and failure. | 8 | 7 | 96 | 15 |
 | 23 | [`reporting`](reporting.md) | Moved: the seat's log, the automation audit trail and the real-output and price-ratio indicators. The warn-once notes are not here (reporting.md says where they go). | 8 | 6 | 21 | 5 |
-| 24 | [`resources`](resources.md) | Extractive resources: mines, deposits, prospecting, forest and nitre beds. | 5 | 4 | 63 | 14 |
+| 24 | [`resources`](resources.md) | Extractive resources: mines, deposits, prospecting, forest and nitre beds, standing timber. **Moved** (`sim/resources/`). | 27 | 10 | 63 | 14 |
 | 25 | [`seats`](seats.md) | Seats and the acting context: who plays, goals and win conditions, the founder's life, dealings between seats. | 6 | 6 | 42 | 8 |
 | 26 | [`stores`](stores.md) | Mod-declared key/value stores (`state.stores`). | 1 | 1 | 1 | 1 |
 | 27 | [`ventures`](ventures.md) | Concerns the seat opens and closes: crews, foremen, staffing closures, quotes and auto-opening. | 4 | 3 | 59 | 19 |

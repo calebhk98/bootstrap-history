@@ -53,12 +53,6 @@ def eminence(sim):
     return sim.state.household.eminence
 
 
-@bridge_view("forest_holding", seat_scoped=True)
-def forest_holding(sim):
-    """{hectares, base_cost_per_hectare, price_index}: the forest held and what a hectare costs, before the price index."""
-    return {"hectares": sim.forest_ha, "base_cost_per_hectare": sim.FOREST_COST_PER_HA, "price_index": sim.price_index}
-
-
 # ---- land ----
 
 @bridge_view("home_country")

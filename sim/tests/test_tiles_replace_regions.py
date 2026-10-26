@@ -88,14 +88,14 @@ class ForestAreaReadsTilesTests(unittest.TestCase):
 
     def test_home_land_area_is_the_sum_of_the_tiles(self):
         from sim.engine.data import load_civ
-        from sim.engine.forest_ceiling import held_land_area_km2
+        from sim.resources.ceilings import held_land_area_km2
         civilisation = load_civ("rome_100ad")
         tiles = _geography()["land_tiles"]["tiles"]
         expected = sum(tiles[tile_id]["land_area_km2"] for tile_id in tiles_held(civilisation))
         self.assertAlmostEqual(held_land_area_km2(civilisation), expected, places=6)
 
     def test_a_civilisation_holding_no_tile_has_no_land(self):
-        from sim.engine.forest_ceiling import held_land_area_km2
+        from sim.resources.ceilings import held_land_area_km2
         self.assertEqual(held_land_area_km2({"home_tiles": []}), 0.0)
 
 

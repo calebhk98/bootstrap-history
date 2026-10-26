@@ -140,7 +140,7 @@ class MaterialSupplyMixin:
         confidence="D",
         why=_MARKET_SHARE_WHY + " Zero specifically because there is "
             "no open saltpetre market at all in this period; it is "
-            "made in nitre beds, not bought (see build_nitre).")
+            "made in nitre beds, not bought (see the resources module's `LayNitreBeds`).")
     MARKET_SHARE_GOLD = declare(
         "MARKET_SHARE_GOLD", 0.01, kind="temporary_heuristic",
         unit="fraction of national output",
@@ -528,13 +528,13 @@ class MaterialSupplyMixin:
         """Tonnes a year of a tracked commodity you supply yourself, not
         bought from anyone: mines you sank, woodland you bought, nitre beds
         you built. See MATERIAL_CHECKS for which tag means what."""
-        holdings = self.state.holdings
         if tag == "forest1":
-            return holdings.forest_ha * self.CHARCOAL_PER_HA
+            return self.view("forest_hectares")() * self.CHARCOAL_PER_HA
         if tag == "forest4":
-            return holdings.forest_ha * self.CHARCOAL_PER_HA * self.FIREWOOD_PER_CHARCOAL_MASS_RATIO
+            return self.view("forest_hectares")() * self.CHARCOAL_PER_HA * self.FIREWOOD_PER_CHARCOAL_MASS_RATIO
         if tag == "nitre":
-            return holdings.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
+            nitre = self.view("nitre_beds")()
+            return nitre["square_metres"] * nitre["tonnes_per_square_metre"]
         if tag.startswith("mine:"):
             mat = tag[5:]
             # DEPLETION, not the nominal tonnage you sank capital into.
@@ -872,10 +872,9 @@ class MaterialSupplyMixin:
         _own_material_supply already knows how to read, curated commodity
         or not."""
         out = {(material, "mine:" + material) for material, capacity in self.mine_capacity.items() if capacity > 0}
-        holdings = self.state.holdings
-        if holdings.forest_ha > 0:
+        if self.view("forest_hectares")() > 0:
             out.add(("charcoal", "forest1"))
             out.add(("charcoal", "forest4"))
-        if holdings.nitre_bed_m2 > 0:
+        if self.view("nitre_beds")()["square_metres"] > 0:
             out.add(("saltpetre", "nitre"))
         return out

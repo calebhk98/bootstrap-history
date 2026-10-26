@@ -305,8 +305,6 @@ class EconomyState:
 	works: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# tile -> {construction node id: [year it is finished, capacity]} of works paid for and being built (works.py)
 	works_under_construction: Dict[str, Dict[str, List[float]]] = field(default_factory=dict)
-	# tile -> tonnes of standing timber felled below the tile's full stock; a missing tile is untouched (economy_port_timber.py)
-	forest_felled: Dict[str, float] = field(default_factory=dict)
 	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
 	output_factor: float = 1.0
 	# commodity -> society capacity, stock and last price ratio (market_clearing.py)

@@ -108,7 +108,7 @@ def _material_capacity_rows(sim):
             "shortfall_t_per_yr": round(sim.material_shortfall_t(emp_key, by_tag), 1)}
     # OWNED CAPACITY WITH NO CURRENT DEMAND. A mine you sank and no longer
     # need does not simply vanish from what you could still supply.
-    for mat in sim.mine_capacity:
+    for mat in sim.view("mine_capacity")():
         if mat in rows:
             continue
         own = ui_port.own_material_supply(sim, "mine:" + mat)
@@ -122,8 +122,8 @@ def _material_capacity_rows(sim):
             "surplus_t_per_yr": round(own + market, 1),
             "shortfall_t_per_yr": 0.0}
     for mat, row in rows.items():
-        if mat in sim.mine_capacity:
-            note = sim.mine_depletion_note(mat)
+        if mat in sim.view("mine_capacity")():
+            note = sim.view("mine_depletion_note")[mat]
             if note:
                 row["yield_note"] = note
     # WORST SHORTFALL FIRST - the bottleneck a player actually has to reason
@@ -281,7 +281,7 @@ def _mine_pending_workings(sim):
     actually makes it one - so these stay grouped by material, as before.
     """
     pending = {}
-    for tranche in sorted(getattr(sim, "mine_tranches", [])):
+    for tranche in sorted(sim.view("mines_being_sunk")()["tranches"]):
         material, amt, ready = tranche[0], tranche[1], tranche[2]
         pending.setdefault(material, [0.0, ready])
         pending[material][0] += amt
@@ -307,7 +307,8 @@ def _mine_rows_for_material(sim, material, workings, want):
         # capacity, and a player whose coal yield has halved over eighty
         # years has to be able to see that here, not just infer it from a
         # lower revenue somewhere else.
-        actual = sim.mine_yield_t_for(working)
+        report = sim.view("mine_working_report")(working)
+        actual = report["yield_tonnes"]
         # UTILISATION: share of what the working raises that is really drawn -
         # the question the player actually asked. Demand for this material
         # is shared across its workings in proportion to their own rated
@@ -332,7 +333,7 @@ def _mine_rows_for_material(sim, material, workings, want):
             "rated_capacity_t_per_yr": round(working["capacity"], 2),
             "actual_output_t_per_yr": round(actual, 2),
             "material_demand_t_per_yr": round(want, 2),
-            "costs_you_a_year": round(sim.mine_operating_cost_for(working), 1),
+            "costs_you_a_year": round(report["operating_cost"], 1),
             "utilization": ("%d%%" % round(100.0 * util))
                            if actual > 0 else "-",
             # WHETHER IT IS ACTUALLY SUPPLYING ANYTHING, as a plain flag,
@@ -341,7 +342,7 @@ def _mine_rows_for_material(sim, material, workings, want):
             # a mine as real supply, or only as an economic asset sitting
             # on the books?
             "actually_supplying_demand": bool(drawn > 1e-9),
-            "yield_note": sim.mine_depletion_note_for(working),
+            "yield_note": report["note"],
             "shut_it_with": "close %s" % material})
     return rows
 
@@ -359,7 +360,7 @@ def _mine_pending_rows(sim, dem, pending):
             "actual_output_t_per_yr": 0.0,
             "material_demand_t_per_yr":
                 round(sum(dem.get(demand_key, 0.0)
-                          for demand_key in sim.mine_demand_goods(material)), 2),
+                          for demand_key in sim.view("mine_demand_goods")[material]), 2),
             "costs_you_a_year": 0.0,
             "utilization": "sinking",
             "actually_supplying_demand": False,
@@ -402,17 +403,17 @@ def _agent_mines(sim):
     # deterministic across hash seeds - only the final row order does,
     # hence the explicit sort key below.
     by_mat = {}
-    for working in sim.mines:
+    for working in sim.view("mine_workings")():
         by_mat.setdefault(working["material"], []).append(working)
     rows = []
     for material in sorted(by_mat):
         want = sum(dem.get(demand_key, 0.0)
-                   for demand_key in sim.mine_demand_goods(material))
+                   for demand_key in sim.view("mine_demand_goods")[material])
         rows.extend(_mine_rows_for_material(sim, material, by_mat[material], want))
     rows.extend(_mine_pending_rows(sim, dem, pending))
     return {"ok": True,
             "mines_you_own": rows or "none",
-            "they_cost_you_a_year_in_all": round(sim.mine_operating_cost(), 1),
+            "they_cost_you_a_year_in_all": round(sim.view("mine_operating_cost")(), 1),
             "your_revenue_is": round(sim.revenue(), 1),
             "still_being_sunk": {material: value[1] for material, value in sorted(pending.items())},
             "note": "Workings are charged every year they stand, whether or "
@@ -704,7 +705,7 @@ def _dashboard_snapshot(sim):
         "employees_total": round(sum(sim.employees.values()), 2),
         "scholars": round(sim.scholars, 2),
         "artisans": round(sim.artisans, 2),
-        "mine_capacity": {material: round(value, 1) for material, value in sim.mine_capacity.items()},
+        "mine_capacity": {material: round(value, 1) for material, value in sim.view("mine_capacity")().items()},
         "scandal": round(sim.scandal, 2),
         "reputation": round(sim.reputation, 1),
         "eminence": round(sim.eminence, 2),

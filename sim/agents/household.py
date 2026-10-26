@@ -110,19 +110,9 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"ever_closed_for_staff": "projects",
 
 	# EconomyState
-	"mines": "holdings",
-	"mine_pending": "holdings",
-	"mine_ready": "holdings",
-	"mine_cost_paid": "holdings",
-	"mine_tranches": "holdings",
-	"deposits_found": "holdings",
-	"deposit_drawn": "holdings",
-	"prospected_person_days": "holdings",
 	"shortages": "holdings",
 	"throttle": "holdings",
 	"binding": "holdings",
-	"forest_ha": "holdings",
-	"nitre_bed_m2": "holdings",
 	"market_pressure": "holdings",
 	"output_factor": "economy",
 	"_material_stock_ledger": "holdings",
@@ -183,7 +173,6 @@ _LAZY_FIELDS: Set[str] = {
 	"trade_schools",
 	"worker_housing_places",
 	"done_year",
-	"mine_tranches",
 	"_material_stock_ledger",
 	"farm_hectares",
 	"_dashboard_history",
@@ -361,17 +350,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 	@employees.setter
 	def employees(self, value: Any) -> None:
 		self._state.household.employees = value
-
-	@property
-	def mines(self) -> Any:
-		if self._state.economy is None:
-			return []
-		return self._state.holdings.mines
-
-	@mines.setter
-	def mines(self, value: Any) -> None:
-		if self._state.economy is not None:
-			self._state.holdings.mines = value
 
 	@property
 	def shortages(self) -> Any:

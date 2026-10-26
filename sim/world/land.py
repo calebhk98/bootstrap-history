@@ -252,7 +252,7 @@ hand-drawn region is sized and named by whoever drew the map, so using one
 as the atomic parcel would make a civilization's own numbers depend on how
 many boxes its territory happens to be filed under, rather than on how much
 land, of what quality, it actually holds - the same defect Complaints/45
-found in `forest_land_ceiling` (`sim/engine/economy_mining.py`) and
+found in `forest_land_ceiling` (`sim/resources/woodland.py`) and
 Complaints/49 found in weather pooling (`sim/agriculture/` - see
 `rules.pooled_cells`). `north_africa` (5,750,000 km2, one
 `fertility_quality_multiplier` of 1.35, "96% Sahara, rated on the strength
