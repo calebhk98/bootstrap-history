@@ -1,5 +1,5 @@
 """historical_events: what a dated hazard becomes under its `condition` (Complaint 640: rules on built
-hazards; the telling is in test_resolve_hazard_condition_telling)."""
+hazards; the telling is in test_hazard_condition_telling_rule)."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403

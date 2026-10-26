@@ -60,11 +60,6 @@ def game(strata=(), actors=(), owners=None, home_people=1000.0, colonies=None):
     return attach_send(sim)
 
 
-def always(kind):
-    entry = next(each for each in world_hazard_data.hazards() if each["kind"] == kind)
-    return entry, mock.patch.object(world_hazard_data, "hazards", lambda: [dict(entry, annual_chance=1.0)])
-
-
 # ---- a hazard hits each country: a KillPeople command, and a line in every playing seat's log
 def hazard_module(strata=(), partners=(PARTNER,)):
     by_country = {}

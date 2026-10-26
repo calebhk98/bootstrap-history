@@ -35,7 +35,7 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 | 8 | [`finance`](finance.md) | Debt: credit limits, interest, arrears, insolvency, bondage and the capital market. | 7 | 7 | 50 | 7 |
 | 9 | [`foreign_trade`](foreign_trade.md) | Trade with partner countries: their economies, supply, payments in coin, lift capacity, actors' trade books. **Moved** (`sim/foreign_trade/`). | 30 | 8 | 40 | 13 |
 | 10 | [`freight`](freight.md) | Carriage of goods at home and abroad: carriers and their costs, routes, what merchants add, route dues. **Moved** (`sim/freight/`). | 15 | 1 | 50 | 10 |
-| 11 | [`hazards`](hazards.md) | Disasters and shocks: random events, dated shocks, world hazards, famine watch, relief and the output factor. | 4 | 2 | 52 | 7 |
+| 11 | [`hazards`](hazards.md) | Dated shocks and world hazards, and what counters them: dated and yearly shocks, famine watch, relief, the world event log and the output factor. **Moved** (`sim/hazards/`: 15 views, 3 commands applied, sends 16; see the file). | 15 | 3 | 52 | 7 |
 | 12 | [`knowledge`](knowledge.md) | What each seat knows and can see: techniques held, forgotten, revealed (fog), and the tree itself. | 3 | 3 | 19 | 8 |
 | 13 | [`land`](land.md) | Land and the map: tile ownership, claims, roads and ports, works, colonies, and the geography package. | 7 | 4 | 37 | 12 |
 | 14 | [`ledger`](ledger.md) | Money and goods balances: the one writer of what an actor holds. | 5 | 10 | 10 | 9 |
