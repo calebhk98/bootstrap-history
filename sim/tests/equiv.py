@@ -146,6 +146,8 @@ def explain_with_base(scenario, year_index, sections, base_checkout, spin_up, li
         base_leaves, _ = equiv_run.read_dump(base_path)
     shown, total = equiv_core.diff_leaves(base_leaves, current_leaves, limit, sections or None)
     print("      %d differing leaves; first %d:" % (total, len(shown)))
+    if not total:
+        print("      every value is equal: only the random draws differ (a draw made in another order or count)")
     for leaf_path, base_value, current_value in shown:
         print("        %s\n            base    %s\n            current %s"
               % (leaf_path, _clip(base_value), _clip(current_value)))
