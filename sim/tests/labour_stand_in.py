@@ -18,9 +18,8 @@ def stand_in_world(civ_id="rome_100ad", total=None):
         workforce=household, society=SimpleNamespace(society_labour_hours={}, wage_tightness_factors={}),
         civ=civ, urban_fraction=lambda: float(civ.get("urban_fraction", 0.0)), home_tiles_held=lambda: geography.tiles_held(civ), people_by_tile=lambda: None, pop_scale=1.0,
         population=population, state=SimpleNamespace(household=household,
-                                                     economy=SimpleNamespace(improvements={}),
                                                      projects=SimpleNamespace(done=set())),
-        held_and_running=lambda: frozenset(civ.get("starting_techs", ())), trades_absent=set(), wages=data.WAGES, trade_family=data.trade_family,
+        held_and_running=lambda: frozenset(civ.get("starting_techs", ())), built_ways=lambda: {}, trades_absent=set(), wages=data.WAGES, trade_family=data.trade_family,
         literacy=lambda field: 0.05, HOURS_PER_PERSON_YEAR=2000.0, actor_staff_fte=lambda trade: 0.0, economy=SimpleNamespace(agent_people_by_trade=lambda: None),
         techniques_available_to=solve_prices_core.techniques_available_to,
         trade_registry={trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}

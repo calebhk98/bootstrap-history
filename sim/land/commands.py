@@ -1,4 +1,4 @@
-"""Commands to the owner of who holds each tile and of the colonies."""
+"""Commands to the owner of who holds each tile, the ways and works built, and the colonies."""
 from dataclasses import dataclass
 from typing import Optional
 
@@ -34,3 +34,30 @@ class FoundColony(Command):
 class FinishWays(Command):
 	"""Open the ways whose build time has passed, so routes, reach and the economy's carriage see them (the works register finishes
 	on the same beat). Sent at the start of the market phase; answers nothing."""
+
+
+@dataclass(frozen=True)
+class BuildWay(Command):
+	"""The acting seat's household builds `way` ("road", "rail", "canal", "bridge", "sea_canal", or "port" on one tile, named
+	twice) between two bordering tiles its nation holds: the quote is paid, a crew is taken from the labour market and the way
+	opens when its build time has passed. Answers (ok, text); a failure's text is a Refusal when it has a cause."""
+	tile_a: str
+	tile_b: str
+	way: str
+
+
+@dataclass(frozen=True)
+class BuildWork(Command):
+	"""The acting seat's household builds `capacity` of the known construction `node` on a tile its nation holds. Answers
+	(ok, text)."""
+	tile: str
+	node: str
+	capacity: float = 1.0
+
+
+@dataclass(frozen=True)
+class LoseWork(Command):
+	"""Take up to `capacity` of a work away from a tile (destroyed, abandoned, sacked). Answers nothing."""
+	tile: str
+	node: str
+	capacity: float

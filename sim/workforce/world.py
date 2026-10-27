@@ -115,6 +115,10 @@ class WorkforceWorld:
     def held_and_running(self, include_starting=True):
         return self._needs.held_techniques(include_starting)
 
+    def built_ways(self):
+        """The roads, track, canals, bridges and ports built, {edge key: {way: true}} (the record itself)."""
+        return self._needs.built_ways()
+
     def is_visible(self, node_id, _memo=None):
         return self._needs.visibility(node_id, _memo)
 

@@ -148,7 +148,7 @@ class HaulDays(unittest.TestCase):
     def stub(self, base):
         return production_host.build(types.SimpleNamespace(
             labour=types.SimpleNamespace(base_tile=lambda: base, held_technologies=lambda: set()),
-            state=types.SimpleNamespace(economy=types.SimpleNamespace(improvements={}))))
+            view=lambda name: (lambda: {})))
 
     def test_the_days_come_from_geography_between_the_nearest_producer_tile_and_the_base(self):
         from sim.geography import api as geography

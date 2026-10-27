@@ -47,6 +47,6 @@ def partner_household_demand(sim, civilization_id):
 @bridge_view("partner_reached", kind=QUOTE)
 def partner_reached(sim, civilization_id):
     """Whether trade with a partner can begin: no action returns it, or the acting seat holds the one that does."""
-    return sim.partner_gate_refusal(civilization_id) is None
+    return sim.view("partner_gate_refusal")(civilization_id) is None
 
 

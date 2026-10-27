@@ -4,7 +4,7 @@
 node. A `route:` or `partner:` token in a mode's or lane's `requires_nodes` must be returned by some node."""
 from typing import Any, Iterable, List, Mapping
 
-from . import action_results
+from sim.land.api import action_results
 
 
 def check_action_results(nodes: Mapping[str, Mapping[str, Any]], gated_entries: Iterable[Mapping[str, Any]]) -> List[str]:

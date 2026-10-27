@@ -82,5 +82,5 @@ class Learning:
 		if base in tiles:
 			return 0.0
 		held = game.labour.held_technologies()
-		hauled = route(tiles, [base], usable_modes([held]), game.state.economy.improvements, held_nodes=held, fastest=True)
+		hauled = route(tiles, [base], usable_modes([held]), game.view("built_ways")(), held_nodes=held, fastest=True)
 		return None if hauled is None else hauled["days"]

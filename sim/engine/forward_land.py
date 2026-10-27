@@ -2,7 +2,7 @@
 
 The screens, the economy's setup and the engine's mixins still say `sim.world_map`, `sim.geography`, `sim.tile_owner_map()` or
 `sim.found_colony(tile)`; each line goes when its last caller reads the view (`sim.view(name)`) or sends the command itself."""
-from sim.land.api import FoundColony
+from sim.land.api import BuildWay, FoundColony
 from sim.refusal import Refusal
 
 
@@ -41,3 +41,16 @@ class ForwardLandMixin:
         if isinstance(answer, Refusal):
             return False, answer
         return True, answer["text"]
+
+    def way_quote(self, tile_a, tile_b, way):
+        return self.view("way_quote")(tile_a, tile_b, way)
+
+    def way_refusal(self, tile_a, tile_b, way):
+        return self.view("way_refusal")(tile_a, tile_b, way)
+
+    def build_way(self, tile_a, tile_b, way):
+        """(ok, text): build `way` between two tiles the nation holds."""
+        return self.send(BuildWay(tile_a, tile_b, way))
+
+    def built_way_km(self, way):
+        return self.view("built_way_km")(way)

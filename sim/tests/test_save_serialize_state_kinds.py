@@ -137,9 +137,9 @@ from sim.markets.state import MarketsWorld
 markets_world = MarketsWorld(
 	agent_economy={"opening": {"recipes": ["bread", "brick"], "prices": {"bread": 1.5}}, "record": record, "cargo": {"leg:1": {"tile": "t1", "tonnes": 2.0}}},
 	market_flows=None)
-economy = EconomyState(
-	works={"t1": {"mill": 2.0}}, works_under_construction={"t1": {"mill": [105, 1.0]}},
-	nodes_money_per_labour_hour=None)
+economy = EconomyState(nodes_money_per_labour_hour=None)
+from sim.land.state import LandWorld
+land = LandWorld(works={"t1": {"mill": 2.0}}, works_under_construction={"t1": {"mill": [105, 1.0]}})
 with verbatim(record):
 	blob_markets = serialize_state(markets_world)
 	blob = serialize_state(economy)
@@ -148,7 +148,8 @@ check("serialize_state: the stored agent economy keeps its opening (the late rec
       and blob_markets["agent_economy"]["cargo"] == {"leg:1": {"tile": "t1", "tonnes": 2.0}}, blob_markets["agent_economy"])
 check("serialize_state: the stored record (its held stock and loans) is written as it is, untouched",
       blob_markets["agent_economy"]["record"] is record and record["loans"][0]["principal"] == 40.0, None)
-check("serialize_state: tile-keyed economy stores", blob["works"] == {"t1": {"mill": 2.0}} and blob["works_under_construction"] == {"t1": {"mill": [105, 1.0]}}, None)
+blob_land = serialize_state(land)
+check("serialize_state: tile-keyed land stores", blob_land["works"] == {"t1": {"mill": 2.0}} and blob_land["works_under_construction"] == {"t1": {"mill": [105, 1.0]}}, None)
 check("serialize_state: an unset optional economy field is None", blob_markets["market_flows"] is None and blob["nodes_money_per_labour_hour"] is None)
 check("serialize_state: the economy's fields come in declaration order", list(blob) == saved_field_names(EconomyState))
 

@@ -41,7 +41,7 @@ def _food_reach(sim, tiles, days):
     """{tile: {tile within haul: days}} over the routes the nation's technologies open."""
     held = sim.labour.held_technologies()
     modes = geography.usable_modes([held])
-    built = sim.state.economy.improvements
+    built = sim.view("built_ways")()
     return {tile: {other: spent for other, spent in geography.reach([tile], modes, days, built, held_nodes=held).items()
                    if other in tiles}
             for tile in tiles}

@@ -1,7 +1,7 @@
 """What a completed action returns besides living stock: knowledge, a route, a trading partner.
 
 A node's `returns` is {kind: [ids]}. A result stands while the action that returned it is held and
-running (sim/engine/held_works.py). Knowledge is the named node, held as if it were done; a route or a
+running (sim/land/held.py). Knowledge is the named node, held as if it were done; a route or a
 partner is the token `kind:id`, which a carriage mode, a sea lane or a partner asks for in
 `requires_nodes` in place of a node. Nothing here names a content id.
 """

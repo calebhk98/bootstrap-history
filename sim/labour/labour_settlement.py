@@ -119,7 +119,7 @@ class SettlementMixin:
         base = self.base_tile()
         if base is None:
             return {}
-        built = self._world.state.economy.improvements
+        built = self._world.built_ways()
         key = (base, held, days_budget, repr(sorted((edge, sorted(ways)) for edge, ways in built.items())))
         cache = self.__dict__.setdefault("_reachable_tiles_cache", {})
         if key not in cache:
@@ -156,7 +156,7 @@ class SettlementMixin:
         (geography's route over the ways built, weighted by time); None when no route joins the tiles."""
         held = self.held_technologies()
         found = geography.route([self.base_tile()], [tile], geography.usable_modes([held]),
-                                self._world.state.economy.improvements, held_nodes=held, fastest=True)
+                                self._world.built_ways(), held_nodes=held, fastest=True)
         return None if found is None else found["days"]
 
     def relocation_quote(self, tile):

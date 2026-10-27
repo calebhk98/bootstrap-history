@@ -36,7 +36,7 @@ READS_BY_OWNER = {
 	"production": ("workshop_output", "concern_market", "concern_book_offer", "concern_book_inputs_cost", "concern_takings",
 	               "node_output_market_factor", "techniques_in_use"),
 	# what the port and the goods market read of the game (port_world.py)
-	"port: seats and actors": ("legacy_seats", "legacy_projects", "legacy_improvements", "legacy_world_map", "legacy_edge_account",
+	"port: seats and actors": ("legacy_seats", "legacy_projects", "built_ways", "legacy_world_map", "legacy_edge_account",
 	                           "cast", "cast_state", "actor_world", "state_treasury", "state_reach", "acting_country"),
 	"port: workforce": ("base_tile", "farming_technique", "wage", "settlement_tiles", "labour_need_shares", "trade_registry",
 	                    "hours_per_person_year"),

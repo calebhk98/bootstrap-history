@@ -205,10 +205,10 @@ class WhatTheGeographyReads(unittest.TestCase):
         self.assertEqual(world.civilisation("gaul"), {"id": "gaul"})
         self.assertIsNone(world.civilisation("nobody"))
 
-    def test_the_ways_built_are_the_economys_record_in_place(self):
-        record = {"t1|t2": {"road": True}}
-        module, _levels = built(views={"legacy_improvements": lambda: record})
-        self.assertIs(module.built_ways(), record)
+    def test_the_ways_built_are_the_worlds_record_in_place(self):
+        module, _levels = built()
+        module.world.improvements["t1|t2"] = {"road": True}
+        self.assertIs(module.built_ways(), module.world.improvements)
 
     def test_a_tile_known_is_one_the_map_has(self):
         module, _levels = built()
