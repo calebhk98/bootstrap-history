@@ -20,7 +20,8 @@ from .module import Markets
 from .state import MarketsWorld
 
 READS_BY_OWNER = {
-	"core": ("year", "civilisation", "game_config", "legacy_tree", "output_factor", "opening_farmed_hectares", "household_demand_units",
+	"core": ("year", "civilisation", "game_config", "legacy_tree", "output_factor", "opening_farmed_hectares", "installed_mod_ids",
+	         "household_need_data",
 	         "price_index", "legacy_act_as"),
 	"seats": ("seat_list",),
 	"demography": ("population", "population_total", "pop_scale", "default_population", "farm_holdings"),
@@ -48,7 +49,7 @@ READS_BY_OWNER = {
 	                                    "foreign_supply_tonnes", "lift_left_tonnes", "partner_price_per_unit", "actors_carry",
 	                                    "cargo_legs", "foreign_route", "freight_mode_costs", "material_carriage_per_tonne",
 	                                    "trader_margin_share", "cargo_lost_share", "trader_cycle_years", "trader_agent_cost",
-	                                    "partner_price_level", "partner_coin_opening", "foreign_coin_partner_units", "border_terms"),
+	                                    "partner_price_level", "partner_coin_opening", "foreign_coin_partner_units", "border_terms", "partner_own_economy"),
 	"port: land, farm and resources": ("farm_sites", "farm_weather", "harvest_weather", "externality_yield_factors", "tile_owner_map",
 	                                   "tiles_owned_by", "timber_felled", "found_deposits", "partner_deposits"),
 }
@@ -76,6 +77,7 @@ _VIEWS = (
 	("market_entry", KEYED), ("goods_category_ratios", QUOTE), ("essential_price_ratio", None),
 	("market_absorption_by_category", QUOTE), ("legacy_market_flows", None), ("legacy_agent_economy", None),
 	("money_from_economy", None), ("unit_mass_kg", QUOTE), ("border_duty_per_tonne", QUOTE),
+	("household_demand_units", QUOTE), ("household_basket", None), ("home_household_tonnes", QUOTE), ("partner_household_demand", KEYED),
 )
 
 

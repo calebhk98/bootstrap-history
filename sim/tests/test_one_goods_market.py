@@ -15,7 +15,9 @@ from sim.markets import goods_offers
 from sim.markets.goods_market import GoodsMarket
 from sim.markets.goods_imports import HOME_SELLER
 from sim.prices import rules as price_rules
-from sim.engine.market_demand import household_demand_by_material
+from sim.engine import need_data
+from sim.engine.data import ROOT
+from sim.markets import household_needs
 from sim.engine.material_units import tonnes_per_unit
 from sim.markets.module import Markets
 from sim.world import market
@@ -138,5 +140,6 @@ with no_tariff, signature:
     check("a good the home makes is still sold by the home when a partner makes it too, unless the partner is cheaper",
           partnered.goods_market.offered_by("wheat_kg") == HOME_SELLER, partnered.goods_market.offered_by("wheat_kg"))
 
-wanted = household_demand_by_material({"wheat_kg": 1.0}, 1_000_000.0, 550.0)
+model, _final_goods = household_needs.household_model((), lambda: need_data.load_needs(ROOT))
+wanted = household_needs.demand_by_material(model, {"wheat_kg": 1.0}, 1_000_000.0, 550.0)
 check("a need served by a good nobody prices draws no spending on it", wanted.get("pepper_kg", 0.0) == 0.0, wanted.get("pepper_kg"))

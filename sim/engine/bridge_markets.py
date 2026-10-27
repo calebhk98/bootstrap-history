@@ -1,15 +1,15 @@
 """Bridge entries the markets module reads until the owners behind them move into modules.
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine as the old mixin code did,
-and is never cached. `household_demand_units` is the household need model (market_demand.py), which the partner economies'
-demand calls as well; `household_basket` is the need basket the actors' budgets read."""
+and is never cached."""
 from sim.agents.api import relations
 from sim.assembly.api import KEYED, QUOTE
 from sim.markets.api import RepriceOpeningMoney
 
-from . import market_demand, need_substitutes, opening_money
+from . import need_data, need_substitutes, opening_money
 from .bridge import bridge_command, bridge_view
-from .data import calculated_goods_table
+from .data import MODDIR, ROOT, calculated_goods_table
+from .mods import get_ordered_mods
 
 
 # ---- core: facts of the game the module cannot read from an owner yet ----
@@ -20,16 +20,16 @@ def opening_farmed_hectares(sim):
     return sim._opening_farmed_hectares
 
 
-@bridge_view("household_demand_units", kind=QUOTE)
-def household_demand_units(sim, prices_in_hours, population, income_per_capita):
-    """{material: units a year} households (and what they buy through recipes) want at these labour-hour prices, with the
-    warmth, clothing and shelter floors the civilisation's tiles' climate sets."""
-    return market_demand.household_demand_by_material(prices_in_hours, population, income_per_capita, sim.civ, sim.world_map)
+@bridge_view("installed_mod_ids")
+def installed_mod_ids(sim):
+    """The ids of the installed mods in load order: what the content the household need model is built from depends on."""
+    return tuple(manifest.id for manifest in get_ordered_mods(MODDIR))
 
 
-@bridge_view("household_basket")
-def household_basket(sim):
-    return market_demand.household_basket(sim.civ, sim.world_map)
+@bridge_view("household_need_data")
+def household_need_data(sim):
+    """{"needs", "goods"}: the needs households spend on and the goods that serve them, from the base file and each mod's."""
+    return need_data.load_needs(ROOT)
 
 
 # ---- prices ----

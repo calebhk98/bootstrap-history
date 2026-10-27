@@ -13,6 +13,7 @@ from .category_views import Categories
 from .clearing import Clearing
 from .commands_applied import Applying
 from .demand import Demand
+from .household_views import HouseholdNeeds
 from .goods_market import GoodsMarket
 from .goods_views import GoodsViews
 from .port import EconomyPort
@@ -22,10 +23,11 @@ from .port_world import PortWorld
 _DROPPED_ON_RESET = ("goods_cat_state", "goods_category_ratios", "income_factor", "goods_mkt_op_factor")
 
 
-class Markets(Clearing, Categories, Demand, Absorption, GoodsViews, AgentViews, Applying, Module):
+class Markets(Clearing, Categories, Demand, HouseholdNeeds, Absorption, GoodsViews, AgentViews, Applying, Module):
 
 	def setup(self):
 		self._caches = {}                  # (seat id, name) -> a remembered figure; never saved
+		self._partner_demand = {}          # civilisation id -> tonnes a year its households buy; data, frozen for the game
 		self._nodes_by_category = None     # category -> node ids, in the tree's order; the tree does not change after load
 		self.reads = PortWorld(self.needs, self)
 		self.economy = EconomyPort(self.reads)       # opens the agent economy when first asked, or on the opening command

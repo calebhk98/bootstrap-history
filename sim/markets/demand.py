@@ -3,7 +3,7 @@
 Households are priced only for goods something offers (`GoodsMarket.household_prices`): a good nothing offers has no price,
 so the need it served draws no spending on it.
 
-The household demand model (sim/world/need_demand.py, reached through the `household_demand_units` view) turns population
+The household demand model (sim/world/need_demand.py, household_views.py) turns population
 and income into units wanted per year, through needs, goods and the recipes that make them. Its absolute quantities do not
 match the resource tables (it omits many uses), so the market uses only its change: demand now over demand at the opening,
 at the same prices. The society's capacity at the opening is what built up to meet the opening demand, so that ratio is what
@@ -68,7 +68,7 @@ class Demand:
 			prices, per_hour, basket["prices"],
 			{material: market_api.offered_by(material) == HOME_SELLER
 			 for material, price in prices.items() if price > 0.0 and material not in basket["prices"]})
-		now = self.needs.household_demand_units(prices_in_hours, population_of_key(key, opening_population), key[1])
+		now = self.household_demand_units(prices_in_hours, population_of_key(key, opening_population), key[1])
 		opening_by_commodity, now_by_commodity = {}, {}
 		for material, units in basket["units"].items():
 			commodity = basket["commodity"][material]
@@ -100,7 +100,7 @@ class Demand:
 			return cached
 		in_hours = self.needs.calculated_goods_prices(frozenset(self.needs.techniques_granted()), self.needs.opening_farmed_hectares())
 		prices = {material: price for material, price in sorted(in_hours.items()) if price > 0.0}
-		units = self.needs.household_demand_units(prices, self.opening_population(), constants.MEAN_INCOME_HOURS_PER_CAPITA)
+		units = self.household_demand_units(prices, self.opening_population(), constants.MEAN_INCOME_HOURS_PER_CAPITA)
 		units = {material: wanted for material, wanted in sorted(units.items()) if wanted > 0.0 and material in prices}
 		basket = {"prices": prices, "units": units,
 		          "commodity": {material: self.needs.material_pool[material][0] for material in units}}

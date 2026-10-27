@@ -33,12 +33,6 @@ def partner_own_economy(sim, civilization_id):
             "money_per_labour_hour": starting_schedule(civilization_id).money_per_labour_hour}
 
 
-@bridge_view("partner_household_demand", kind=KEYED)
-def partner_household_demand(sim, civilization_id):
-    """{material: tonnes a year} a civilisation's households buy at its own solved prices."""
-    return partner_demand.household_tonnes_by_material(civilization_id)
-
-
 # ---- the map ----
 
 

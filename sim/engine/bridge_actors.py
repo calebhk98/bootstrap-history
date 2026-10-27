@@ -8,7 +8,6 @@ import contextlib
 from sim.agents.api import cast_from_civilisations
 from sim.assembly.api import KEYED, QUOTE
 
-from . import partner_demand
 from .actor_kinds_data import register_mod_actor_kinds
 from .bridge import bridge_command, bridge_view
 from .data import load_civ
@@ -121,9 +120,3 @@ def nodes_with_mechanic(sim, mechanic):
 @bridge_view("not_traded_materials")
 def not_traded_materials(sim):
     return declared_not_traded_materials()
-
-
-@bridge_view("home_household_tonnes", kind=QUOTE)
-def home_household_tonnes(sim, prices_in_hours):
-    """{material: tonnes a year} the home households buy at these prices (labour hours a unit), scaled to the opening's people."""
-    return partner_demand.budget_scaled_final_tonnes(prices_in_hours, sim._opening_population())
