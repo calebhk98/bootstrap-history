@@ -18,10 +18,11 @@ from sim.seats.api import RecordGoalReached
 from sim.workforce.api import DrawTradeHours, GrantStaff, LoseCrew, ReleaseHours, ResetTradeHours, SpendDirectorHours
 
 from .commands import (AdvanceProjects, AutoOpenVentures, Bribe, CloseLapsedDependents, CloseUnstaffedVentures, CloseWork,
-                       CompleteProject, MothballWork, NoteVentureYear, PostBounty, ReopenRestaffedVentures, ResetProjectProgress,
+                       CompleteProject, Exclude, Include, KeepStaffed, MothballWork, NoteVentureYear, PostBounty, ReopenRestaffedVentures, ResetProjectProgress,
                        RestoreWork, ReviewVentures, StartProject, StopProject)
 from .needed_commands import ClearMothball, NoteConcernChange, NoteYearSpend, OpenVenture
 from .projects import ACTIVE, START, Projects
+from .state import ProjectsSeat
 
 READS_BY_OWNER = {
 	"knowledge": ("tree", "tree_nodes", "tree_closure", "techniques_held", "techniques_forgotten", "visibility", "visible_to_player",
@@ -84,7 +85,8 @@ _VIEWS = (
 	("staffing_closure_summary", "staffing_closure_summary", None, True), ("staffing_closure_warnings", "staffing_closure_warnings", QUOTE, True),
 	("staffing_shut_count", "staffing_shut_count", None, True),
 	("seat_review", "seat_review", QUOTE, True), ("committed_cost", "committed_cost", None, True),
-	("active_projects", "active_projects", None, True),
+	("active_projects", "active_projects", None, True), ("exclusions", "exclusions", None, True),
+	("keep_staffed", "keep_staffed", None, True), ("ever_closed_for_staff", "ever_closed_for_staff", None, True),
 )
 
 
@@ -94,7 +96,7 @@ def _view(name, compute, kind, seat_scoped):
 
 
 MODULE_SPECS = (ModuleSpec(
-	"projects", Projects, channels=(ACTIVE, START),
+	"projects", Projects, channels=(ACTIVE, START), seat_state=ProjectsSeat,
 	publishes=tuple(_view(*row) for row in _VIEWS) + (
 		# written only by the module's own start phase, which bumps START
 		ViewSpec("start_hours", "start_hours", channels=(START,), seat_scoped=True),
@@ -106,7 +108,8 @@ MODULE_SPECS = (ModuleSpec(
 	         (CloseWork, "apply_close_work"), (CloseLapsedDependents, "apply_close_lapsed_dependents"),
 	         (CloseUnstaffedVentures, "apply_close_unstaffed_ventures"), (ReopenRestaffedVentures, "apply_reopen_restaffed_ventures"),
 	         (AutoOpenVentures, "apply_auto_open_ventures"), (NoteVentureYear, "apply_note_venture_year"),
-	         (ReviewVentures, "apply_review_ventures"), (MothballWork, "apply_mothball_work"), (RestoreWork, "apply_restore_work")),
+	         (ReviewVentures, "apply_review_ventures"), (MothballWork, "apply_mothball_work"), (RestoreWork, "apply_restore_work"),
+	         (Exclude, "apply_exclude"), (Include, "apply_include"), (KeepStaffed, "apply_keep_staffed")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(PayEdge, NoteSpend, ReceiveFromEdge, RecordBribe, RecordEvent, RecordAutomation, RecordAutomationSkip, SettleProjectMaterials,
 	       ClearMothball, NoteConcernChange, NoteYearSpend, OpenVenture, ReleaseHours, LearnTechnique, RevealFrom, ChangeHeld,

@@ -7,6 +7,8 @@ import types
 import unittest
 
 from sim.projects import exclusion_rules
+from sim.projects.api import Exclude, Include
+from sim.tests import projects_host
 from sim.ui.proto.dispatch_exclusions import _cmd_exclude, _cmd_include
 
 NODES = {"plough": {"cat": "agriculture", "traits": ["tool"], "name": "Plough"},
@@ -17,7 +19,17 @@ NODES = {"plough": {"cat": "agriculture", "traits": ["tool"], "name": "Plough"},
 class _Game:
     def __init__(self, fog=False):
         self.nodes, self.fog = NODES, fog
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(excluded=set()))
+        self.module = projects_host.build(tree=NODES)
+
+    @property
+    def excluded(self):
+        return self.module.seat.excluded
+
+    def view(self, name):
+        return {"exclusions": self.module.exclusions}[name]
+
+    def send(self, command):
+        return {Exclude: self.module.apply_exclude, Include: self.module.apply_include}[type(command)](command)
 
     def is_visible(self, node_id):
         return node_id != "slave_market"
@@ -52,23 +64,23 @@ class ExcludeAndIncludeTest(unittest.TestCase):
         reply = _cmd_exclude(game, NODES, {"what": "plough"}, None)
         self.assertTrue(reply["ok"])
         self.assertEqual(reply["excluded"], ["plough"])
-        self.assertEqual(game.state.projects.excluded, {"plough"})
+        self.assertEqual(game.excluded, {"plough"})
         self.assertTrue(_cmd_include(game, NODES, {"what": "plough"}, None)["ok"])
-        self.assertEqual(game.state.projects.excluded, set())
+        self.assertEqual(game.excluded, set())
 
     def test_category_and_trait_entries_are_recorded_and_all_empties_the_list(self):
         game = _Game()
         _cmd_exclude(game, NODES, {"what": "category:agriculture"}, None)
         _cmd_exclude(game, NODES, {"what": "TRAIT:buys_people"}, None)
-        self.assertEqual(game.state.projects.excluded, {"category:agriculture", "trait:buys_people"})
+        self.assertEqual(game.excluded, {"category:agriculture", "trait:buys_people"})
         self.assertTrue(_cmd_include(game, NODES, {"what": "all"}, None)["ok"])
-        self.assertEqual(game.state.projects.excluded, set())
+        self.assertEqual(game.excluded, set())
 
     def test_an_unknown_name_is_refused_and_so_is_including_what_was_never_excluded(self):
         game = _Game()
         self.assertIs(_cmd_exclude(game, NODES, {"what": "no_such_node_anywhere"}, None)["ok"], False)
         self.assertIs(_cmd_include(game, NODES, {"what": "plough"}, None)["ok"], False)
-        self.assertEqual(game.state.projects.excluded, set())
+        self.assertEqual(game.excluded, set())
 
     def test_under_fog_a_node_not_heard_of_cannot_be_excluded(self):
         game = _Game(fog=True)
@@ -77,7 +89,7 @@ class ExcludeAndIncludeTest(unittest.TestCase):
 
     def test_bare_exclude_lists_the_entries(self):
         game = _Game()
-        game.state.projects.excluded.add("mill")
+        game.excluded.add("mill")
         self.assertEqual(_cmd_exclude(game, NODES, {}, None)["excluded"], ["mill"])
 
 

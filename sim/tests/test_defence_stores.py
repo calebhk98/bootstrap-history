@@ -317,7 +317,6 @@ class _Staffed(VenturesMixin, _Host):
         super().__init__(**kwargs)
         self.state.household.artisans = 100.0
         self.founder_alive = False
-        self.state.projects.keep_staffed = set()
         self.projects_module = projects_host.build(
             tree=self.nodes, operating=lambda: self.state.projects.operating, legacy_projects=self.state.projects,
             institution_units=self.institution_units, venture_foreman=self.venture_foreman, venture_garrison=self.venture_garrison,

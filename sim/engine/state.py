@@ -44,7 +44,6 @@ class HouseholdState:
 	# a planned project and the cash target put by for it (`saving`)
 	saving_for: Optional[str] = None
 	saving_target: float = 0.0
-	_said_autoopen: Optional[Dict[str, int]] = None
 
 	# ---- the purse: an account in the actors' book (sim/agents/purses.py) once the state is attached to it ----
 	def attach(self, purses: Any, account: str) -> None:
@@ -137,15 +136,7 @@ class ProjectsState:
 	granted: Set[str] = field(default_factory=set)
 	paid_towards: Dict[str, float] = field(default_factory=dict)
 	revealed: Set[str] = field(default_factory=set)
-	# concerns whose staff the yearly step hires for before the closure rule (`keep <id> staffed`)
-	keep_staffed: Set[str] = field(default_factory=set)
-	# node ids, `category:<cat>` and `trait:<trait>` the automatic starters (rush, auto_open, auto_commission) skip
-	excluded: Set[str] = field(default_factory=set)
 	stalled: int = 0
-	# every work ever shut for want of staff; kept after it reopens
-	ever_closed_for_staff: Set[str] = field(default_factory=set)
-	# this year's staffing closures and reopenings: year, closed, reopened, short (resource -> amount)
-	staffing_tally: Dict[str, object] = field(default_factory=dict)
 
 	@property
 	def business(self) -> Business:

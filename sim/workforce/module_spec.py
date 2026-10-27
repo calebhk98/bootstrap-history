@@ -32,7 +32,7 @@ READS_BY_OWNER = {
                   "labour_productivity_sources", "room_sources", "staff_capacity_sources"),
     "diffusion": ("literacy", "research_productivity", "staff_hire_advice", "staff_sources"),
     "production": ("running", "institution_units", "upkeep", "revenue_estimate", "is_venture"),
-    "projects": ("legacy_projects", "staffing_closed_hand_shortfall", "start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
+    "projects": ("legacy_projects", "keep_staffed", "staffing_closed_hand_shortfall", "start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
                  "staffing_draw", "staffing_held_totals", "staffing_shortfalls", "concerns_to_close_for_staffing",
                  "venture_foreman", "venture_foremen_used", "venture_staff_free", "shared_answer"),
     "materials": ("material_price_factor",),

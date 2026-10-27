@@ -32,7 +32,9 @@ class ScoreGame:
         self.slaves = 0
         self.manumitted_total = 0
         self.founder_alive = True
-        self.view = lambda name: (lambda: {"slaves": self.slaves, "manumitted_total": self.manumitted_total})
+        self.ever_closed_for_staff = set()
+        self.view = lambda name: ((lambda: self.ever_closed_for_staff) if name == "ever_closed_for_staff"
+                                  else (lambda: {"slaves": self.slaves, "manumitted_total": self.manumitted_total}))
         self.units = {}
         self.literacy_values = {"literacy_general": 0.05, "literacy_elite": 0.5}
         self.general_ceiling = 0.2

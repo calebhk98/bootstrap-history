@@ -11,8 +11,9 @@ from sim.ui.proto.score import _score_achievements
 def stand_in(ever_closed_for_staff=(), shut_for_staff=None, forgotten=None, insolvent_years=0, slaves=0):
     return SimpleNamespace(
         goal="goal", goal_year=150, cfg={"start_year": 100}, forgotten=forgotten, shut_for_staff=shut_for_staff,
-        state=SimpleNamespace(projects=SimpleNamespace(ever_closed_for_staff=set(ever_closed_for_staff))),
-        insolvent_years=insolvent_years, interest_paid=0.0, view=lambda name: (lambda: {"slaves": slaves, "manumitted_total": 0}))
+        state=SimpleNamespace(projects=SimpleNamespace()),
+        insolvent_years=insolvent_years, interest_paid=0.0,
+        view=lambda name: (lambda: set(ever_closed_for_staff)) if name == "ever_closed_for_staff" else (lambda: {"slaves": slaves, "manumitted_total": 0}))
 
 
 def won(sim, name):

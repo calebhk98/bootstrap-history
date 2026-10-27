@@ -18,7 +18,7 @@ class Closures:
 		closing_year = needs.year() if year is None else year
 		projects.business.mothball(node_id, closing_year, reason)
 		if reason == self.CLOSED_FOR_STAFF:
-			projects.ever_closed_for_staff.add(node_id)
+			self.seat.ever_closed_for_staff.add(node_id)
 		needs.send(NoteConcernChange("closure", node_id, reason))
 		if cascade:
 			self.close_lapsed_dependents(closing_year)
@@ -40,6 +40,10 @@ class Closures:
 		if record is None or record["reason"] != self.CLOSED_FOR_STAFF:
 			return None
 		return self.needs.year() - record["year"]
+
+	def ever_closed_for_staff(self):
+		"""Every work ever shut for want of staff, kept after it reopens (the live set)."""
+		return self.seat.ever_closed_for_staff
 
 	def closed_by_choice(self):
 		"""The closure reason of a work the founder shut by choice."""

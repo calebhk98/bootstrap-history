@@ -1,11 +1,12 @@
 """The exclude and include commands: what rush and the automatic policies must never begin."""
 
+from sim.projects.api import Exclude, Include
 from .command_registry import command
 from sim.engine.ui_port import CATEGORY_PREFIX, TRAIT_PREFIX
 
 
 def _listing(sim):
-    return sorted(sim.state.projects.excluded)
+    return sorted(sim.view("exclusions")())
 
 
 def _normalise(sim, nodes, entry):
@@ -45,7 +46,7 @@ def _cmd_exclude(sim, nodes, cmd, ended):
     entry, error = _normalise(sim, nodes, what)
     if error:
         return {"ok": False, "error": error}
-    sim.state.projects.excluded.add(entry)
+    sim.send(Exclude(entry))
     return {"ok": True, "excluded": _listing(sim),
             "note": "%s is excluded: rush, rush preview, auto_open and auto_commission leave it out. "
                     "'include %s' undoes this." % (entry, entry)}
@@ -59,14 +60,14 @@ def _cmd_exclude(sim, nodes, cmd, ended):
          description="The reverse of 'exclude'.")
 def _cmd_include(sim, nodes, cmd, ended):
     what = cmd.get("what") or cmd.get("id")
-    excluded = sim.state.projects.excluded
+    excluded = sim.view("exclusions")()
     if what is None:
         return {"ok": False, "error": "say what to include, e.g. 'include <id>' or 'include all'"}
     if str(what).strip().lower() == "all":
-        excluded.clear()
+        sim.send(Include())
     else:
         entry, error = _normalise(sim, nodes, what)
         if error or entry not in excluded:
             return {"ok": False, "error": "%s is not on your exclusion list; 'exclude' shows it" % what}
-        excluded.discard(entry)
+        sim.send(Include(entry))
     return {"ok": True, "excluded": _listing(sim) or "none"}

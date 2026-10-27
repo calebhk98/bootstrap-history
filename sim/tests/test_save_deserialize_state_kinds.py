@@ -68,7 +68,7 @@ projects = deserialize_state({
 	           "a_forge": {"ph_left": 10, "cost_left": 20, "yrs": 0.5, "spent": 5, "status": "ACTIVE"}},
 	"done": {"__set__": ["fire", "stone_cutting"]}, "done_year": {"fire": "3", "stone_cutting": 10}, "failed_attempts": {"printing": "3", "alloy": 1},
 	"businesses": [{"business_id": "founder", "owner_id": "", "plants": []}],
-	"excluded": {"__set__": ["category:war"]}}, ProjectsState)
+	}, ProjectsState)
 check("deserialize_state: the retry counts are a default dict of integers that counts from zero",
       type(projects.failed_attempts) is collections.defaultdict and dict(projects.failed_attempts) == {"printing": 3, "alloy": 1}
       and projects.failed_attempts["never_tried"] == 0, projects.failed_attempts)
@@ -77,8 +77,8 @@ check("deserialize_state: active projects are rebuilt as records, in the saved o
       and (projects.active["z_mill"].ph_left, projects.active["z_mill"].cost_left, projects.active["z_mill"].spent,
            projects.active["z_mill"].lab_left, projects.active["z_mill"].status) == (80.0, 300.0, 100.0, {"mason": 15.0}, "ACTIVE")
       and projects.active["a_forge"].lab_left is None, None)
-check("deserialize_state: done and excluded are sets, years are integers", projects.done == {"fire", "stone_cutting"} and type(projects.done) is set
-      and projects.excluded == {"category:war"} and projects.done_year == {"fire": 3, "stone_cutting": 10}, None)
+check("deserialize_state: done is a set, years are integers", projects.done == {"fire", "stone_cutting"} and type(projects.done) is set
+      and projects.done_year == {"fire": 3, "stone_cutting": 10}, None)
 check("deserialize_state: the founder's business is a Business", projects.businesses == [Business(business_id="founder")], projects.businesses)
 disclosures = deserialize_state({"disclosures": {"fire": {"mode": "license", "published_year": None, "licensees": {
 	"firm:2": {"fee": 5.0, "royalty": 0.1, "year": 101}}}}}, DiffusionSeat).disclosures

@@ -120,3 +120,24 @@ class MothballWork(Command):
 class RestoreWork(Command):
     """Bring a mothballed work back and open its doors again. Answers (did it, the reply)."""
     node_id: str
+
+
+@dataclass(frozen=True)
+class Exclude(Command):
+    """Put an entry (a node id, `category:<category>` or `trait:<trait>`) on the acting seat's exclusion list: the automatic
+    starters leave it out."""
+    entry: str
+
+
+@dataclass(frozen=True)
+class Include(Command):
+    """Take an entry off the exclusion list; `entry` None empties the list. Answers whether the entry was on it (True for an
+    emptied list)."""
+    entry: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class KeepStaffed(Command):
+    """Flag a concern to be hired for each year before the closure rule (`kept`), or take the flag off."""
+    node_id: str
+    kept: bool = True

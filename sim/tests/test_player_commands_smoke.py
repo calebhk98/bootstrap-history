@@ -23,7 +23,7 @@ class RushPreviewAndExclusionsTest(unittest.TestCase):
         game = unopened_sim(capital=2_000_000)
         victim = next(node_id for node_id in game.order if game.can_start(node_id))
         self.assertTrue(_typed(game, "exclude %s" % victim)["ok"])
-        self.assertIn(victim, game.state.projects.excluded)
+        self.assertIn(victim, game.view("exclusions")())
         preview = _typed(game, "rush preview limit:3")
         self.assertFalse(game.active)
         self.assertNotIn(victim, _ids(preview["would_start"]))
@@ -39,7 +39,7 @@ class RushPreviewAndExclusionsTest(unittest.TestCase):
         venture = next(node_id for node_id in NODES if game.is_venture(node_id) and NODES[node_id]["rev"] > NODES[node_id]["up"])
         game.done.add(venture)
         game._done_changed()
-        game.state.projects.excluded.add(venture)
+        game.view("exclusions")().add(venture)
         game.auto_open_ventures()
         self.assertNotIn(venture, game.operating)
 

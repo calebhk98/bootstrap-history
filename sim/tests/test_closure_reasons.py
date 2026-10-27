@@ -132,7 +132,7 @@ class CloseWorkRecordsTheReason(unittest.TestCase):
 
 	def game(self, year):
 		business = a_business_running("mill")
-		projects = types.SimpleNamespace(business=business, ever_closed_for_staff=set())
+		projects = types.SimpleNamespace(business=business)
 		module = projects_host.build(legacy_projects=projects, year=year)
 		module.close_lapsed_dependents = lambda year: None
 		return module, business
@@ -141,14 +141,14 @@ class CloseWorkRecordsTheReason(unittest.TestCase):
 		module, business = self.game(40)
 		module.close_work("mill", STAFF)
 		self.assertEqual(business.closures()["mill"], {"reason": STAFF, "year": 40})
-		self.assertEqual(module.needs.legacy_projects().ever_closed_for_staff, {"mill"})
+		self.assertEqual(module.seat.ever_closed_for_staff, {"mill"})
 		self.assertIn(NoteConcernChange("closure", "mill", STAFF), module_harness.sent(module))
 
 	def test_a_manual_closure_is_dated_with_the_year_given(self):
 		module, business = self.game(40)
 		module.close_work("mill", MANUAL, year=70)
 		self.assertEqual(business.closures()["mill"], {"reason": MANUAL, "year": 70})
-		self.assertEqual(module.needs.legacy_projects().ever_closed_for_staff, set())
+		self.assertEqual(module.seat.ever_closed_for_staff, set())
 
 
 if __name__ == "__main__":

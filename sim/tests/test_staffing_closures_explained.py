@@ -27,7 +27,7 @@ STAFF = business_review.STAFF_SHORT
 # ---- 233: the closure line says why, how many are still shut, and names the remedies ---------------------------------
 def Report(shut=(), year=100):
     """The projects module over a record of what is shut."""
-    projects = SimpleNamespace(staffing_tally={}, closures={node_id: {"reason": STAFF, "year": year - 1} for node_id in shut},
+    projects = SimpleNamespace(closures={node_id: {"reason": STAFF, "year": year - 1} for node_id in shut},
                                mothballed=set(shut))
     return projects_host.build(legacy_projects=projects, year=year)
 
@@ -58,8 +58,8 @@ check("the summary reflects the reopening and the shut count falls", re.search(r
       and re.search(r"still shut 0\b", report.staffing_closure_summary()), report.staffing_closure_summary())
 check("no summary when nothing has closed", Report().staffing_closure_summary() is None)
 last_year = Report()
-last_year.needs.legacy_projects().staffing_tally = {"year": 99, "closed": 3, "reopened": 0, "short": {}}
-check("a new year starts the tally afresh", last_year.staffing_closure_summary() is None, last_year.needs.legacy_projects().staffing_tally)
+last_year.seat.staffing_tally = {"year": 99, "closed": 3, "reopened": 0, "short": {}}
+check("a new year starts the tally afresh", last_year.staffing_closure_summary() is None, last_year.seat.staffing_tally)
 by_choice = Report()
 by_choice.needs.legacy_projects().closures["m"] = {"reason": closure_reasons.CLOSED_BY_CHOICE, "year": 90}
 by_choice.needs.legacy_projects().mothballed.add("m")

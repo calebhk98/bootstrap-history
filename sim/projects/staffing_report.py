@@ -10,11 +10,11 @@ class StaffingReport:
 
 	def _staffing_tally(self):
 		"""This year's closed and reopened counts, started afresh each year."""
-		projects = self.needs.legacy_projects()
+		seat = self.seat
 		year = self.needs.year()
-		if projects.staffing_tally.get("year") != year:
-			projects.staffing_tally = {"year": year, "closed": 0, "reopened": 0, "short": {}}
-		return projects.staffing_tally
+		if seat.staffing_tally.get("year") != year:
+			seat.staffing_tally = {"year": year, "closed": 0, "reopened": 0, "short": {}}
+		return seat.staffing_tally
 
 	def record_staffing_closures(self, count, shortfalls):
 		tally = self._staffing_tally()

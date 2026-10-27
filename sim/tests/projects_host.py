@@ -10,6 +10,7 @@ import types
 from typing import Any, Dict
 
 from sim.projects.projects import Projects
+from sim.projects.state import ProjectsSeat
 from sim.projects import module_spec
 from sim.tests import module_harness
 
@@ -69,14 +70,14 @@ def defaults() -> Dict[str, Any]:
 	}
 
 
-def build(answers: Dict[str, Any] = None, **views: Any) -> Projects:
+def build(answers: Dict[str, Any] = None, seat: ProjectsSeat = None, **views: Any) -> Projects:
 	"""The module with `views` (and `answers`, the replies of owners to commands, keyed by command class)."""
 	every_view = defaults()
 	every_view.update(views)
 	if isinstance(every_view["tree"], dict):
 		every_view.setdefault("tree_nodes", every_view["tree"])
 	every_view.setdefault("tree_nodes", {})
-	module = module_harness.build(Projects, views=every_view, answers=answers)
+	module = module_harness.build(Projects, views=every_view, answers=answers, seat=seat or ProjectsSeat(), module_id="projects")
 	for name in OWN_VIEWS:
 		if name not in views:
 			setattr(module.needs, name, module_harness._FakeView(getattr(module, name)))

@@ -71,4 +71,4 @@ class StaffingShortfall:
 		nodes = self.needs.tree_nodes()
 		net_value = {node_id: nodes[node_id]["rev"] - nodes[node_id]["up"] for node_id in draws}
 		# A concern flagged with `keep <id> staffed` is protected: it closes only after every unflagged one.
-		return closures_for_shortfall(draws, net_value, self.needs.legacy_projects().keep_staffed, self._staffing_shortfalls)
+		return closures_for_shortfall(draws, net_value, self.seat.keep_staffed, self._staffing_shortfalls)

@@ -16,6 +16,7 @@ from sim.agents.business import Business
 from sim.agents.business_plant import MOTHBALLED, Plant
 from sim.agents.api import business_review
 from sim.projects import staffing_shortfall
+from sim.projects.state import ProjectsSeat
 from sim.engine.projects_ventures import VenturesMixin
 from sim.reporting.api import RecordEvent
 from sim.tests import module_harness, projects_host
@@ -25,7 +26,7 @@ NODES = {"mill": {"rev": 900.0, "up": 300.0}, "forge": {"rev": 500.0, "up": 450.
 
 def Shortfall(keep_staffed=()):
     """The projects module with what choosing closures reads."""
-    module = projects_host.build(tree=NODES, legacy_projects=SimpleNamespace(keep_staffed=set(keep_staffed)))
+    module = projects_host.build(tree=NODES, seat=ProjectsSeat(keep_staffed=set(keep_staffed)))
     module._staffing_draws = lambda: {"mill": {"craftsmen": 3.0}, "forge": {"craftsmen": 2.0}}
     module._staffing_shortfalls = lambda totals: {}
     return module

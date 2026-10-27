@@ -393,6 +393,9 @@ class WorkforceWorld:
     def staff_closure_age(self, node_id):
         return self._needs.staff_closure_age[node_id]
 
+    def keep_staffed(self):
+        return self._needs.keep_staffed()
+
     def staffing_draw_of(self, node_id, foreman_units=None):
         return self._needs.staffing_draw(node_id, foreman_units)
 

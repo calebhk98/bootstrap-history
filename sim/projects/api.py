@@ -4,12 +4,13 @@ WALL = "two-way"  # nothing here imports sim/engine/; the engine bridge hands it
 
 from sim.polity.api import RecordBribe
 from .commands import (AdvanceProjects, AutoOpenVentures, Bribe, CloseLapsedDependents, CloseUnstaffedVentures, CloseWork,
-                       CompleteProject, MothballWork, NoteVentureYear, PostBounty, ReopenRestaffedVentures, ResetProjectProgress,
+                       CompleteProject, Exclude, Include, KeepStaffed, MothballWork, NoteVentureYear, PostBounty, ReopenRestaffedVentures, ResetProjectProgress,
                        RestoreWork, ReviewVentures, ShutForgotten, StartProject, StopProject)
 from sim.materials.api import SettleProjectMaterials
 from .needed_commands import ClearMothball, NoteConcernChange, NoteYearSpend, OpenVenture
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 from .blocker_rules import BLOCKER_KINDS, BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND, START_CHECKS
+from .state import ProjectsSeat
 from .failure_text import FAILED_PREFIX, MINOR_MARK
 from .goal_rules import goal_movement
 from .permanent_benefit import permanent_parts

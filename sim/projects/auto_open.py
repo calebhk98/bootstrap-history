@@ -225,12 +225,11 @@ class AutoOpen:
 		if blocked and not opened:
 			needs = self.needs
 			node_id, why = blocked
-			household = needs.legacy_acting_household()
 			scenario_year = needs.year()
-			said = household._said_autoopen or {}
+			said = self.seat.said_autoopen or {}
 			if scenario_year - said.get(node_id, -99) >= 10:
 				said[node_id] = scenario_year
-				household._said_autoopen = said
+				self.seat.said_autoopen = said
 				node = needs.tree_nodes()[node_id]
 				needs.send(RecordEvent.in_year(scenario_year, "concern_unprofitable", "%s would earn %s a year against %s of upkeep and "
 				           "is still shut: %s"

@@ -35,7 +35,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"cash_periods": "household",
 	"spend_last_year": "household",
 	"base_tile": "household",
-	"_said_autoopen": "household",
 
 	# ProjectsState
 	"active": "projects",
@@ -51,7 +50,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"revealed": "projects",
 	"stalled": "projects",
 	"closures": "projects",
-	"ever_closed_for_staff": "projects",
 
 	# EconomyState
 	"market_pressure": "holdings",
