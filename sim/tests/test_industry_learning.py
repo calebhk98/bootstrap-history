@@ -147,7 +147,7 @@ class PortListing(unittest.TestCase):
 class HaulDays(unittest.TestCase):
 
     def stub(self, base):
-        return production_host.build(types.SimpleNamespace(
+        return production_host.build(Game(
             labour=types.SimpleNamespace(base_tile=lambda: base, held_technologies=lambda: set()),
             view=lambda name: (lambda: {})))
 
@@ -167,7 +167,7 @@ class WholeRatio(unittest.TestCase):
 
     def stub(self, experience, tenure):
         baskets = Baskets({"metal": 10.0}, {"ore": 10.0}, {}, {}, {"smith": 800.0}, [(FURNACE, 1.0)])
-        stub = production_host.build(types.SimpleNamespace(_done_memo=lambda name, key, compute: compute()))
+        stub = production_host.build(Game(_done_memo=lambda name, key, compute: compute()))
         stub.concern_baskets_now = lambda node_id: baskets
         stub.techniques_in_use = lambda: frozenset()
         stub._concern_prices_in_hours = lambda held: {"metal": 20.0, "ore": 5.0}

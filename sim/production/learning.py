@@ -33,7 +33,7 @@ class Learning:
 		if baskets is None:
 			return 1.0
 		held = self.techniques_in_use()
-		prices = game._done_memo("concern_prices_held", held, lambda: self._concern_prices_in_hours(held))
+		prices = game.view("done_memo")("concern_prices_held", held, lambda: self._concern_prices_in_hours(held))
 		founding = self.founding_worker_years(node_id)
 		multiplier = learning_multiplier(self.industry_experience(node_id), founding, mastery_worker_years(founding))
 		purchases = {material: quantity * prices.get(material, 0.0) for material, quantity in baskets.purchases.items()}
@@ -51,7 +51,7 @@ class Learning:
 			return 1.0
 		game = self._game()
 		year = game.state.scenario.year
-		producers = game._producers_memo("producers_by_good", year, game.view("legacy_economy")().agent_producers_by_good)
+		producers = game.view("producers_memo")("producers_by_good", year, game.view("legacy_economy")().agent_producers_by_good)
 		if producers is None:   # nothing runs while the economy opens
 			return 1.0
 		base_tile = game.labour.base_tile()
@@ -68,8 +68,7 @@ class Learning:
 			# a technique that needs no technology is established wherever it is run
 			depth[material] = max((self.industry_depth(gate(recipe)) if gate(recipe) else 1.0
 			                       for _tile, recipe in found), default=0.0)
-			days = game._producers_memo("input_days", (year, material, base_tile),
-			                            lambda: self.days_from_producers(found))
+			days = game.view("producers_memo")("input_days", (year, material, base_tile), lambda: self.days_from_producers(found))
 			lead[material] = None if days is None else days / CIVIL_DAYS_PER_YEAR
 		return input_availability(purchases_value, depth, lead)
 

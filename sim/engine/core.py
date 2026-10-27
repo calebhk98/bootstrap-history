@@ -24,7 +24,6 @@ from .forward_demography import ForwardDemographyMixin
 from .forward_agriculture import ForwardAgricultureMixin
 from .forward_reporting import ReportingForwardsMixin
 from .forward_diffusion import DiffusionForwardsMixin
-from .forward_prices import ForwardPricesMixin
 from .forward_mechanics import ForwardMechanicsMixin
 from .forward_workforce import ForwardWorkforceMixin
 from .projects import ProjectsMixin
@@ -53,7 +52,6 @@ class Sim(
         ForwardMechanicsMixin,
         ForwardMarketsMixin,
         ForwardProductionMixin,
-        ForwardPricesMixin,
         ForwardWorkforceMixin,
         ProjectsMixin,
         ForwardSeatsMixin,

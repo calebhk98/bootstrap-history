@@ -40,10 +40,9 @@ class Volume:
 
 		def work_out():
 			granted = frozenset(game.state.projects.granted)
-			prices = game._done_memo("concern_opening_prices", granted,
-			                         lambda: self._concern_prices_in_hours(granted))
+			prices = game.view("done_memo")("concern_opening_prices", granted, lambda: self._concern_prices_in_hours(granted))
 			return volume_rules.ratios(node, price_solver.default_production_entries(), (granted, prices), (held, prices))
-		return game._done_memo("concern_ratios", (node_id, held), work_out)
+		return game.view("done_memo")("concern_ratios", (node_id, held), work_out)
 
 	def concern_volume_ratio(self, node_id):
 		"""What the concern turns out now over what it turned out at the opening, from the same staff."""

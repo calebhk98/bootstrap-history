@@ -59,7 +59,7 @@ def price_ratios(game) -> Dict[str, Dict[str, float]]:
     only goods whose markets cleared lately (a stale good's shown price is its cost, not a trade)."""
     agent = game.view("legacy_economy")().agent
     setup = agent.economy().setup
-    prices, costs, stale = game.view("legacy_economy")().agent_prices(), game._material_prices(), agent.stale_goods()
+    prices, costs, stale = game.view("legacy_economy")().agent_prices(), game.view("material_prices")(), agent.stale_goods()
     named = {"staple": traded_staple(agent, stale), "coin_metal": setup.currency.backing_good}
     ratios = {"sited_ores": sited_ore_ratios(game, prices, costs, stale)}
     for group, good in named.items():

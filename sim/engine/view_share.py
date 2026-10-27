@@ -46,7 +46,7 @@ class ViewShare:
         if demand is None:
             return None
         projects = sim.state.projects
-        return ((sim._material_prices(), demand),
+        return ((sim.view("material_prices")(), demand),
                 (sim.view("legacy_goods_market")().others_stamp(), sim.state.scenario.year,
                  sim.household.done_version, sim.household.operating_version,
                  len(projects.done), len(projects.operating),
@@ -101,5 +101,5 @@ class ViewShare:
     def _shared_bill_keys(self, node_id):
         """The commodities a node's bill draws on; these change only with the done set."""
         sim = self.sim
-        return sim._done_memo("bill_keys", node_id, lambda: tuple(sorted({
+        return sim.view("done_memo")("bill_keys", node_id, lambda: tuple(sorted({
             sim.view("material_pool")[material][0] for material in sim.view("project_material_needs")[node_id]})))

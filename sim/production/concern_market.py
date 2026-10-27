@@ -1,6 +1,8 @@
 """What a concern sells at and takes in: whether the economy prices its goods, the market over long-run price for what it makes
 and buys, what the share counted as sold stands on, and its takings and upkeep at a given ramp and capacity.
 Needs: legacy_game, money_per_labour_hour."""
+from sim.prices.api import rules as price_rules
+
 from . import concern_sales, node_revenue_market
 from .concern_earnings import output_market_factor, takings_at
 
@@ -19,7 +21,7 @@ class ConcernMarket:
 		paid = game.view("legacy_economy")().agent_prices_at()
 		if baskets is None or paid is None:
 			return True
-		return all(game._priced_key(material, paid) is not None for material in baskets.outputs)
+		return all(price_rules.priced_key(material, paid, game.view("commodity_record")[material]) is not None for material in baskets.outputs)
 
 	def node_output_market_factor(self, node, selling_seat=None):
 		"""This year's market over long-run prices for what an output-derived node sells and buys; one otherwise.
@@ -32,7 +34,7 @@ class ConcernMarket:
 		return output_market_factor(
 			baskets is not None and self.concern_goods_have_market(node["id"]),
 			lambda: node_revenue_market.basket_market_factor(
-				baskets.outputs, baskets.purchases, game._material_prices(), game.view("legacy_goods_market")().home_unit_price, outlook))
+				baskets.outputs, baskets.purchases, game.view("material_prices")(), game.view("legacy_goods_market")().home_unit_price, outlook))
 
 	def basket_market_factor(self, sold, bought, long_run_prices, price_now):
 		return node_revenue_market.basket_market_factor(sold, bought, long_run_prices, price_now)
