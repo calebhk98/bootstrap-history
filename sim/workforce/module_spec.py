@@ -26,7 +26,7 @@ READS_BY_OWNER = {
     "reporting": ("event_log", "last_market_price_ratio", "real_output_per_head", "agent_prices", "agent_wage"),
     "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction", "farm_holdings"),
     "agriculture": ("farm_land", "farm_technique_this_year", "farm_ladder", "farm_arable_ceiling"),
-    "land": ("home_tiles_held", "home_tiles_held_version", "coverage", "coverage_share"),
+    "land": ("home_tiles_held", "home_tiles_held_version", "coverage", "coverage_share", "built_ways"),
     "knowledge": ("techniques_held", "held_techniques", "visibility", "tree_closure"),
     "mechanics": ("mechanic", "effect_factor", "effect_holds", "effect_sum", "effect_terms", "effect_value",
                   "labour_productivity_sources", "room_sources", "staff_capacity_sources"),

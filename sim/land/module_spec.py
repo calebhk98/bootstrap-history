@@ -1,9 +1,8 @@
 """The land module's spec (sim/assembly).
 
-The owner map and the colonies are saved in the world and seat slots. The roads built (`legacy_improvements`), the installed
-mods' map overlays and the technologies held are the engine's, published by sim/engine/bridge_land.py. No view is cached: the
-owner map is seeded by its first read, and the geography views follow the held technologies, the ways and the people, which are
-written outside any command of this module."""
+The owner map, the ways and works and the colonies are saved in the world and seat slots. The installed mods' map overlays are
+the engine's, published by sim/engine/bridge_land.py. No view is cached: the owner map is seeded by its first read, and the
+geography views follow the held technologies and the people, which are written outside any command of this module."""
 from sim.actors.api import FollowTileTransfer
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.demography.api import SendSettlers
@@ -12,21 +11,24 @@ from sim.ledger.api import PayEdge
 from sim.reporting.api import RecordEvent
 from sim.stores.api import WriteStore
 
-from .commands import AdvanceColonies, FoundColony, TransferTile
+from .commands import AdvanceColonies, BuildWay, BuildWork, FinishWays, FoundColony, LoseWork, TransferTile
 from .module import Land
 from .state import LandSeat, LandWorld
 
 READS_BY_OWNER = {
-    "core": ("civilisation", "civilisation_record", "year", "map_overlays", "legacy_improvements", "money_text", "plain_number"),
-    "knowledge": ("techniques_held", "held_techniques"),
+    "core": ("civilisation", "civilisation_record", "year", "map_overlays", "money_text", "plain_number", "legacy_constant"),
+    "knowledge": ("techniques_held", "techniques_granted", "tree_nodes"),
+    "projects": ("legacy_done_versions", "project_cost_now"),
+    "markets": ("purchase_quote",),
+    "workforce": ("labour_market", "settlement_tiles", "money_per_labour_hour"),
+    "finance": ("can_pay", "afford_means", "spending_power"),
     "mechanics": ("mechanic",),
+    "production": ("is_venture", "running"),
     "foreign_trade": ("partners_in_agent_economy",),
     "stores": ("store",),
     "seats": ("seat_list",),
     "demography": ("pop_scale", "working_age"),
     "disease": ("disease_burden", "regional_disease_loss"),
-    "workforce": ("money_per_labour_hour",),
-    "finance": ("spending_power",),
     "agriculture": ("wild_stock",),
 }
 
@@ -49,6 +51,14 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("legacy_world_map", "legacy_world_map", **_LIVE),
         ViewSpec("legacy_geography", "legacy_geography", **_LIVE),
         ViewSpec("built_ways", "built_ways", **_LIVE),
+        ViewSpec("built_way_km", "built_way_km", kind=QUOTE),
+        ViewSpec("way_quote", "way_quote", kind=QUOTE),
+        ViewSpec("way_refusal", "way_refusal", kind=QUOTE),
+        ViewSpec("works_at", "works_at", kind=KEYED, **_LIVE),
+        ViewSpec("work_capacity", "work_capacity", kind=KEYED, **_LIVE),
+        ViewSpec("work_quote", "work_quote", kind=QUOTE),
+        ViewSpec("held_techniques", "held_techniques", kind=QUOTE),
+        ViewSpec("partner_gate_refusal", "partner_gate_refusal", kind=QUOTE),
         ViewSpec("tile_known", "tile_known", kind=KEYED, **_LIVE),
         ViewSpec("borders_among", "borders_among", kind=QUOTE),
         ViewSpec("tile_facts", "tile_facts", kind=KEYED, **_LIVE),
@@ -74,7 +84,8 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("endemic_stock_loss", "endemic_stock_loss", kind=QUOTE),
         ViewSpec("nursery_room_units", "nursery_room_units", kind=QUOTE),
     ),
-    applies=((TransferTile, "transfer_tile"), (AdvanceColonies, "advance_colonies"), (FoundColony, "found_colony")),
+    applies=((TransferTile, "transfer_tile"), (AdvanceColonies, "advance_colonies"), (FoundColony, "found_colony"),
+             (BuildWay, "build_way"), (FinishWays, "finish_ways"), (BuildWork, "build_work"), (LoseWork, "lose_work")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(FollowTileTransfer, PayEdge, RecordEvent, RecordWorldEvent, SendSettlers, WriteStore),
 ),)

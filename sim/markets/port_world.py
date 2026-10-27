@@ -31,7 +31,7 @@ class StateReads:
 
 	@property
 	def economy(self):
-		return SimpleNamespace(improvements=self._needs.legacy_improvements())
+		return SimpleNamespace(improvements=self._needs.built_ways())
 
 	@property
 	def scenario(self):

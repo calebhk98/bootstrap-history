@@ -25,39 +25,27 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 | mechanics | `sim/mechanics/` | a query service: many narrow views, no state |
 | freight | `sim/freight/` | |
 | agriculture | `sim/agriculture/` | the farm holding is demography's |
-
 | foreign trade | `sim/foreign_trade/` | trader cargo legs stay in the agent economy's record until markets moves |
 | diffusion | `sim/diffusion/` | literacy, adoption, disclosure |
-
 | knowledge | `sim/knowledge/` | `done`, `granted`, `done_year`, `revealed` stay in the engine behind `legacy_*` (many writers); Complaint 735 |
 | resources | `sim/resources/` | mines, deposits, forest, nitre beds; Complaint 730 |
-
 | hazards | `sim/hazards/` | dated shocks, world hazards, relief, the world event log, the output factor; Complaints 740, 741 |
 | materials | `sim/materials/` | supply, demand, the throttle (a pure quote plus `ApplyThrottle`), electricity, project materials |
-
-Full equivalence tier identical at the knowledge merge (`877cff82`). Micro and stress tiers identical at `c4ed5848`.
-
 | seats | `sim/seats/` | joining, ending, handover, sight, dealings, goals and win conditions, founder death (`EndRun`); the registry and `act_as` stay on `Sim` |
-
 | prices | `sim/prices/` | the price solver's callers read quotes; the spin-up cache follows modules named in `DISCOVERS` |
 | polity | `sim/polity/` | standing, state notice, demands, patronage, the society's value weights; Complaint 760 |
 | disease | `sim/disease/` | the epidemic year runs inside demography's regional step, as two commands around the externality door |
-
 | demography | `sim/demography/` | the three age bands, regions, urban share, food eaten, the farm holding; the age bands are the only copy (no `Sim.population` mirror) |
-
 | actors | `sim/actors/` | the cast, its records and the actors' world (was the engine's `agents_port*`); `state.actors` is a property over the slot |
-
 | workforce | `sim/workforce/` | the labour package behind `WorkforceWorld`; the staff, hours and pay books are its seat state; still to do: its remaining `legacy_state` reads (purse, bondage, built ways, the projects' sets) and cached views once Labour's in-place writes become commands; Complaints 762, 764 |
-
-| land | `sim/land/` | the owner map, colonies, the map and geography handles; still to do: `improvements`, `ways_under_construction`, `works`, `works_under_construction` and `ways.py` (with transport and works) |
-
+| land | `sim/land/` | the owner map, colonies, the map and geography handles, the built ways, the works and improvements, the held techniques; `BuildWay` and `BuildWork` answer `(ok, text)` so the protocol replies keep their wording |
 | markets | `sim/markets/` | the market book, flows, clearing, goods categories, household demand ratios, the goods market object and the port over the agent economy (`port*.py`, `goods_*.py`; the module builds `economy` and `goods_market`, which read the game through `PortWorld`); `Sim.economy` and `Sim.goods_market` are forwarders. Still bridged: the household need model (`market_demand.py`, `partner_demand.py`: `household_demand_units`, `household_basket`, `home_household_tonnes`, `partner_household_demand`), the repricing of the opening's money (`RepriceOpeningMoney`). The shipped openings must be regenerated (`simulator.py openings`): the spin-up source moved, so the shipped keys no longer match |
-
 | finance | `sim/finance/` | credit limit, interest and arrears, insolvency, debt bondage, purchases and affordability, the seat bank; the agent economy's own credit and bank files in `sim/economy/` stay behind its api; Complaint 763 |
-
 | production | `sim/production/` | revenue, upkeep, concerns and their book sales, volume, industry depth and learning, techniques in use, capability; still to do: `projects.operating` and the revenue caches on the household, `node_rederive.py` (shared tree pricing), and its `legacy_game` reads |
 
-`stores` (mod stores) is a framework service and moves with phase 7. Next: finance, production, ventures, the rest of projects.
+Full equivalence tier identical at the prices, demography, land, markets and production merges; stress tier and protocol transcripts identical after each module (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
+
+In progress: projects (progress, completion, staffing, reviews). `stores` (mod stores) is a framework service and moves with phase 7. Next: ventures, the household need model, the ledger's state; then phases 6 to 9.
 
 ## Task list
 

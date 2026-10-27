@@ -45,7 +45,7 @@ class _Settlement(labour_settlement.SettlementMixin):
     def __init__(self, pool=1000.0, payroll=5000.0, modes=FOOT_AND_CART):
         self.asked = []
         self._pool, self._payroll = pool, payroll
-        self._world = SimpleNamespace(state=SimpleNamespace(economy=SimpleNamespace(improvements={})))
+        self._world = SimpleNamespace(built_ways=lambda: {})
         self.modes = modes
 
     def base_tile(self):
