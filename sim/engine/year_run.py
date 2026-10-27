@@ -7,12 +7,13 @@ seat phases from then on; the others carry on. The market closes once, after eve
 so a seat never sees another's draws within the year: a mechanism that wants another seat's state reads
 last year's. `sim` is the Sim, or anything with the same phase methods."""
 from .year_phases import run_phases
+from . import year_steps
 
 
 def run_year(sim):
 	"""Advance the game one year."""
 	run_phases(sim)
 	if sim.debug:
-		sim.verify_step_invariants()
+		year_steps.verify_step_invariants(sim)
 	else:
 		sim.check_yearly_world()

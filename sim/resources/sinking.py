@@ -109,5 +109,10 @@ class Sinking:
             self.needs.send(RecordEvent.of("mines_mothballed", "MOTHBALLED half the %s workings; you could "
                                            "not pay to keep them running" % material))
 
+    def auto_mothball_mines(self, command=None) -> None:
+        """A mine you cannot pay for is a mine you stop working: the opex would otherwise accrue for ever against a bankrupt enterprise."""
+        if self.needs.acting_balance() < 0 and self.mine_capacity() and self.needs.founder()["policy"].get("auto_mothball", True):
+            self.mothball_mines()
+
     def note_mine_cost_paid(self, command: NoteMineCostPaid) -> None:
         self.seat.mine_cost_paid += command.amount

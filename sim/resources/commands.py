@@ -32,6 +32,12 @@ class MothballMines(Command):
 
 
 @dataclass(frozen=True)
+class AutoMothballMines(Command):
+    """The acting seat's standing policy to mothball: when it is switched on (it is, unless the seat set it off), the household's
+    balance is negative and workings exist, runs `MothballMines`."""
+
+
+@dataclass(frozen=True)
 class DrawDeposit(Command):
     """`tonnes` of the resource are taken out of a deposit. Answers the tonnes."""
     deposit: str

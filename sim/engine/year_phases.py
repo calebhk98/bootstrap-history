@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Sequence
 
 from .mods_base import ModError
+from . import year_steps
 
 SEAT = "seat"
 WORLD = "world"
@@ -47,11 +48,11 @@ SHIPPED: List[Phase] = [
 	Phase("begin_seat_year", SEAT, module_seat_phase("begin_seat_year")),
 	Phase("trim_audit", SEAT, module_seat_phase("trim_audit")),
 	Phase("hear_of_other_seats", SEAT, module_seat_phase("hear_of_other_seats")),
-	Phase("begin_world_year", WORLD, lambda sim, seats: sim.begin_world_year()),
+	Phase("begin_world_year", WORLD, lambda sim, seats: year_steps.begin_world_year(sim)),
 	Phase("apprenticeships", SEAT, module_seat_phase("apprenticeships")),
 	Phase("staff", SEAT, module_seat_phase("staff")),
-	Phase("money_seat", SEAT, lambda sim, seat_id: sim._step_money_seat()),
-	Phase("money_world", WORLD, lambda sim, seats: sim._step_money_world()),
+	Phase("money_seat", SEAT, lambda sim, seat_id: year_steps.money_seat(sim)),
+	Phase("money_world", WORLD, lambda sim, seats: year_steps.money_world(sim)),
 	Phase("win_conditions", SEAT, module_seat_phase("win_conditions")),
 	Phase("dated_shocks", WORLD, module_world_phase("dated_shocks")),
 	Phase("drop_ended_seats", WORLD, _still_playing),
@@ -59,7 +60,7 @@ SHIPPED: List[Phase] = [
 	Phase("start_projects", SEAT, module_seat_phase("start_projects")),
 	Phase("materials", SEAT, module_seat_phase("materials")),
 	Phase("material_shortage_notes", SEAT, module_seat_phase("material_shortage_notes")),
-	Phase("seat_work", SEAT, lambda sim, seat_id: sim._run_seat_work()),
+	Phase("seat_work", SEAT, lambda sim, seat_id: year_steps.seat_work(sim)),
 	Phase("founder_mortality", SEAT, module_seat_phase("founder_mortality")),
 	Phase("market", WORLD, module_world_phase("market")),
 	Phase("coin_revaluation", WORLD, module_world_phase("coin_revaluation")),

@@ -143,3 +143,55 @@ HOUSEHOLD_DEPENDANT_PEOPLE = declare(
     source=None, confidence="D",
     why="How many kin and retainers a founder arrives keeping; each is a person with the full need floors. "
         "A real figure would come from the civilisation's household structure.")
+
+AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES = declare(
+    "AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES", 20.0, kind="temporary_heuristic",
+    unit="base prices of one person", source=None, confidence="D",
+    why="Capital the optimizer must hold, as a number of what one person costs to buy, before its "
+        "standing policy buys people. A price multiple, so it follows the cost of a person in any coin. "
+        "Tuned, not measured.")
+AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES = declare(
+    "AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES", 5.0, kind="temporary_heuristic",
+    unit="base prices of one person", source=None, confidence="D",
+    why="Capital kept in reserve per person the optimizer's standing policy buys, as a multiple of "
+        "one person's base price, so a purchase never spends the purse down to the price. "
+        "Tuned, not measured.")
+
+AUTO_MANUMIT_ANNUAL_CHANCE = declare(
+    "AUTO_MANUMIT_ANNUAL_CHANCE", 0.25, kind="temporary_heuristic",
+    unit="dimensionless (yearly probability, optimizer only)",
+    source=None, confidence="D",
+    why="Yearly chance the optimizer's standing policy manumits some "
+        "slaves, when it holds any. Invented frequency, not fitted to "
+        "any attested manumission rate.")
+AUTO_MANUMIT_SHARE_DIVISOR = declare(
+    "AUTO_MANUMIT_SHARE_DIVISOR", 4, kind="temporary_heuristic",
+    unit="dimensionless (divisor; frees roughly a quarter)",
+    source=None, confidence="D",
+    why="How large a bite auto-manumission takes when it fires - "
+        "roughly a quarter of current slaves, at least one. Tuned, "
+        "not measured.")
+
+MARKET_PRESSURE_DECAY = declare(
+    "MARKET_PRESSURE_DECAY", 0.55, kind="temporary_heuristic",
+    unit="dimensionless (fraction kept per year)", source=None,
+    confidence="D",
+    why="How much of last year's market pressure (the price bump a "
+        "household's own buying caused) survives into this year - "
+        "sellers restock, so the pressure fades. Tuned, not measured.")
+MARKET_PRESSURE_ANNUAL_FADE = declare(
+    "MARKET_PRESSURE_ANNUAL_FADE", 2.0, kind="temporary_heuristic",
+    unit="market-pressure points", source=None, confidence="D",
+    why="Flat yearly reduction in market pressure on top of "
+        "MARKET_PRESSURE_DECAY's proportional fade, so a small "
+        "residual pressure reaches exactly zero rather than decaying "
+        "forever. Tuned, not measured.")
+ARTISAN_CEILING_FOR_AUTO_BUY = declare(
+    "ARTISAN_CEILING_FOR_AUTO_BUY", 12, kind="temporary_heuristic",
+    unit="artisans", source=None, confidence="D", retire="Complaint 810",
+    why="The optimizer's standing policy stops buying people once the workshop holds this many artisans. A round "
+        "number, not derived from the hands the household's concerns lack.")
+MOST_PEOPLE_AUTO_BOUGHT_PER_YEAR = declare(
+    "MOST_PEOPLE_AUTO_BOUGHT_PER_YEAR", 6, kind="temporary_heuristic",
+    unit="people a year", source=None, confidence="D", retire="Complaint 810",
+    why="The most people the standing policy buys in one year. A round number, the same for any size of workshop.")

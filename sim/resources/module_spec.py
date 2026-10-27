@@ -8,7 +8,7 @@ from sim.materials.api import ApplyThrottle
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 
 from .channels import FOREST, MINES, NITRE, TIMBER
-from .commands import (BuyForest, CloseMine, DrawDeposit, FellTimber, LayNitreBeds, MothballMines, NoteMineCostPaid, OpenMine,
+from .commands import (AutoMothballMines, BuyForest, CloseMine, DrawDeposit, FellTimber, LayNitreBeds, MothballMines, NoteMineCostPaid, OpenMine,
                        Prospect, RegrowTimber)
 from .module import Resources
 from .state import ResourcesSeat, ResourcesWorld
@@ -26,7 +26,7 @@ READS_BY_OWNER = {
     "mechanics": ("effect_best", "effect_terms"),
     "land": ("mineral_scale", "legacy_world_map"),
     "agriculture": ("weather_seed",),
-    "seats": ("automatic_policy",),
+    "seats": ("automatic_policy", "founder"),
     "reporting": ("money_text", "mass_text", "area_text", "mass_rate_text", "mass_per_area_text"),
 }
 
@@ -65,7 +65,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("nitre_price", "nitre_base_cost", **_LIVE),
         ViewSpec("shortage_remedy_plan", "shortage_remedy_plan", kind=QUOTE, seat_scoped=True, **_LIVE),
     ),
-    applies=((OpenMine, "open_mine"), (CloseMine, "close_mine"), (MothballMines, "mothball_mines"),
+    applies=((OpenMine, "open_mine"), (CloseMine, "close_mine"), (MothballMines, "mothball_mines"), (AutoMothballMines, "auto_mothball_mines"),
              (DrawDeposit, "draw_deposit"), (Prospect, "prospect"), (BuyForest, "buy_forest"), (LayNitreBeds, "lay_nitre"),
              (NoteMineCostPaid, "note_mine_cost_paid"), (FellTimber, "fell_timber"), (RegrowTimber, "regrow_timber")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),

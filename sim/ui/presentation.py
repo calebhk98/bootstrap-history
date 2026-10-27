@@ -20,7 +20,7 @@ small slice bounds inside otherwise hand-written sentences - `"; ".join(
 why[:3])` inside one specific denunciation message in sim/engine/
 society_hazards.py, `reopen[:2]` inside one specific "you can reopen these"
 sentence in sim/labour/labour_capacity.py, and dozens more like them across
-sim/engine/core_step_phases.py, sim/finance/insolvency.py, projects_staffing.py and
+sim/engine/year_steps.py, sim/finance/insolvency.py, projects_staffing.py and
 others. Those were surveyed for this file and deliberately left where they
 are: each one is load-bearing for the GRAMMAR of the one sentence it sits
 inside (moving "3" out to a shared PLAYER_LOG_REASONS_SHOWN constant used by

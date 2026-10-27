@@ -65,6 +65,12 @@ class NoteSpend(Command):
 
 
 @dataclass(frozen=True)
+class CloseSpendYear(Command):
+	"""The year's count of what was paid on projects becomes last year's and starts again from nothing
+	(accounting only; applied by the engine bridge until the cash book moves into the ledger)."""
+
+
+@dataclass(frozen=True)
 class PayEdgeFrom(Command):
 	"""An actor of the cast (named by its id) pays a named edge. Never refused for lack of money."""
 	actor: str
