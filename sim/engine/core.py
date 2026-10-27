@@ -26,7 +26,6 @@ from .forward_agriculture import ForwardAgricultureMixin
 from .forward_living_stock import ForwardLivingStockMixin
 from .forward_reporting import ReportingForwardsMixin
 from .forward_coin import ForwardCoinMixin
-from .forward_campaigns import ForwardCampaignsMixin
 from .forward_diffusion import DiffusionForwardsMixin
 from .forward_prices import ForwardPricesMixin
 from .forward_mechanics import ForwardMechanicsMixin
@@ -81,7 +80,6 @@ class Sim(
         ForwardResourcesMixin,
         ForwardMaterialsMixin,
         ForwardDemographyMixin,
-        ForwardCampaignsMixin,
 ):
     FOUNDER_MIN_REMAINING_LIFE_YEARS = declare(
         "FOUNDER_MIN_REMAINING_LIFE_YEARS", 5, kind="temporary_heuristic",
