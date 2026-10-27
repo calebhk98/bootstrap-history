@@ -64,7 +64,7 @@ def abatement(sim):
     """{species: share of the emission that escapes}, from the cleanup technologies the nation holds."""
     escaping = {}
     for entry in table()["abatement"]:
-        if not sim.has(entry["node"]):
+        if not (entry["node"] in sim.view("techniques_held")()):
             continue
         for species in entry["species"]:
             escaping[species] = escaping.get(species, 1.0) * (1.0 - entry["efficiency"])
@@ -136,7 +136,7 @@ def assess(sim):
                       "drivers": {source: {species: round(kilograms, 1) for species, kilograms in sorted(species_kg.items())}
                                   for source, species_kg in sorted(drivers[tile].items())}})
     return {"tiles": tiles, "deaths_by_band": deaths_by_band, "yield_factor_by_tile": yield_factor_by_tile,
-            "cleanup_held": sorted(entry["node"] for entry in table()["abatement"] if sim.has(entry["node"]))}
+            "cleanup_held": sorted(entry["node"] for entry in table()["abatement"] if (entry["node"] in sim.view("techniques_held")()))}
 
 
 def externalities(sim, year):

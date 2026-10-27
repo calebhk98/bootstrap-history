@@ -27,7 +27,6 @@ from .forward_reporting import ReportingForwardsMixin
 from .forward_diffusion import DiffusionForwardsMixin
 from .forward_prices import ForwardPricesMixin
 from .forward_mechanics import ForwardMechanicsMixin
-from .forward_knowledge import ForwardKnowledgeMixin
 from .forward_land import ForwardLandMixin
 from .forward_workforce import ForwardWorkforceMixin
 from .projects import ProjectsMixin
@@ -54,7 +53,6 @@ from sim.materials.api import RestoreReadings
 
 class Sim(
         ForwardMechanicsMixin,
-        ForwardKnowledgeMixin,
         ForwardMarketsMixin,
         ForwardProductionMixin,
         ForwardPricesMixin,

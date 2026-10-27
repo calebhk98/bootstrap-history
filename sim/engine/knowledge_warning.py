@@ -14,9 +14,9 @@ def _hedge_options(sim):
     """Hedges stronger than the one held, each with its distance and cost."""
     options = []
     for hedge_id, _chance, fraction_lost in sim.corpus_hedge_tiers():
-        if sim.has(hedge_id):
+        if hedge_id in sim.view("techniques_held")():
             break
-        if hedge_id not in sim.nodes or (sim.fog and not sim.is_visible(hedge_id)):
+        if hedge_id not in sim.nodes or (sim.fog and not sim.view("visibility")(hedge_id, None)):
             continue
         missing = [node_id for node_id in closure(sim.nodes, hedge_id)
                    if node_id not in sim.done]
