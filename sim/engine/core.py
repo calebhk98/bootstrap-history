@@ -22,7 +22,6 @@ from sim.knowledge.api import LearnTechnique, declared_starting_techs
 from .forward_markets import ForwardMarketsMixin
 from .forward_demography import ForwardDemographyMixin
 from .forward_agriculture import ForwardAgricultureMixin
-from .forward_living_stock import ForwardLivingStockMixin
 from .forward_reporting import ReportingForwardsMixin
 from .forward_diffusion import DiffusionForwardsMixin
 from .forward_prices import ForwardPricesMixin
@@ -64,7 +63,6 @@ class Sim(
         ForwardFinanceMixin,
         ForwardFreightMixin,
         ForwardingPropertiesMixin,
-        ForwardLivingStockMixin,
         ReportingForwardsMixin,
         ForwardAgricultureMixin,
         ForwardResourcesMixin,

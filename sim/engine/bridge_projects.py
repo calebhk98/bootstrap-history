@@ -28,7 +28,7 @@ def legacy_order(sim):
 
 @bridge_view("start_gate_unheld_stock", kind=QUOTE)
 def start_gate_unheld_stock(sim, node_id, node, ignore_trade, memo, why):
-    from .forward_living_stock import check_unheld_stock
+    from .blocker_unheld_stock import check_unheld_stock
     return check_unheld_stock(sim, node_id, node, ignore_trade, memo, why)
 
 
