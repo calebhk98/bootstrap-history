@@ -55,7 +55,7 @@ class Views:
 		        "hours_each": labour.training_hours_per_person(trade_id, source) if source else None,
 		        "years": labour.training_years_from(trade_id, source) if source else None}
 
-	def staff_advice(self, kind, deficit):
+	def staff_advice(self, kind, deficit=None):
 		return self.labour.staff_advice(kind, deficit)
 
 	def project_staffing_shortfall(self, node):

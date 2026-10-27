@@ -49,23 +49,23 @@ class HourStandingIsLive(unittest.TestCase):
 
     def test_rank_and_count_follow_the_live_active_list(self):
         game = _HourGame(["gamma", "alpha", "beta"])
-        self.assertEqual([game.hour_standing(name)[:2] for name in ("alpha", "beta", "gamma")], [(1, 3), (2, 3), (3, 3)])
+        self.assertEqual([game.view("hour_standing")(name)[:2] for name in ("alpha", "beta", "gamma")], [(1, 3), (2, 3), (3, 3)])
 
     def test_a_standing_allocation_moves_a_project_to_the_front(self):
         game = _HourGame(["alpha", "beta", "gamma"], allocations={"gamma": 40.0})
-        self.assertEqual(game.hour_standing("gamma")[0], 1)
-        self.assertEqual(game.hour_standing("alpha")[0], 2)
+        self.assertEqual(game.view("hour_standing")("gamma")[0], 1)
+        self.assertEqual(game.view("hour_standing")("alpha")[0], 2)
 
     def test_a_project_not_in_hand_has_no_standing(self):
         self.assertIsNone(_HourGame(["alpha"]).hour_standing("delta"))
 
     def test_pool_is_the_hours_not_yet_committed(self):
         game = _HourGame(["alpha", "beta"], pool=120.0, committed=20.0)
-        self.assertAlmostEqual(game.hour_standing("alpha")[2], 100.0)
+        self.assertAlmostEqual(game.view("hour_standing")("alpha")[2], 100.0)
 
     def test_pool_never_goes_below_zero(self):
         game = _HourGame(["alpha"], pool=10.0, committed=50.0)
-        self.assertEqual(game.hour_standing("alpha")[2], 0.0)
+        self.assertEqual(game.view("hour_standing")("alpha")[2], 0.0)
 
     def test_the_builder_reads_standing_not_the_stale_record(self):
         game = _HourGame(["beta", "alpha"], pool=120.0, committed=20.0)
