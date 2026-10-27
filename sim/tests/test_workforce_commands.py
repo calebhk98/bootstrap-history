@@ -8,9 +8,10 @@ from types import SimpleNamespace
 from sim.tests import module_harness
 from sim.workforce import rules as workforce_rules
 from sim.workforce.api import NoteTradeSpread, PressLabour, ReportStaffReduction, ScaleDeputies, SetEmployed, TakeWageFallback
-from sim.workforce.api import CloseHoursYear
+from sim.workforce.api import CloseHoursYear, SettleLivingCost
 from sim.workforce.constants import WAGE_FALLBACK_LIVING_COST_YEARS, WAGE_FALLBACK_MAX_HOURS, WAGE_FALLBACK_MIN_HOURS
 from sim.workforce.module import Workforce
+from sim.workforce.state import WorkforceSeat
 
 
 class SurvivingPeople(unittest.TestCase):
@@ -111,6 +112,13 @@ class HoursYear(unittest.TestCase):
         self.assertEqual([entry["kept"] is household.hours_this_year for entry in closed], [True])   # kept before the ledger closed
         self.assertEqual((household.contract_hours, household.teaching_hours_this_year, household.relocation_hours_this_year,
                           household.supervision_hours_this_year), ({}, 0.0, 0.0, 0.0))
+
+
+class LivingCost(unittest.TestCase):
+    def test_settling_the_living_cost_uses_up_the_advance_and_adds_the_bill_to_what_was_paid(self):
+        seat = WorkforceSeat(wages_prepaid=20.0, living_cost_paid=100.0)
+        module_harness.build(Workforce, seat=seat, views={}).settle_living_cost(SettleLivingCost(50.0))
+        self.assertEqual((seat.wages_prepaid, seat.living_cost_paid), (0.0, 150.0))
 
 
 if __name__ == "__main__":

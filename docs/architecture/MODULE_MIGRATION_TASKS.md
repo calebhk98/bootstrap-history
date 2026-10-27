@@ -47,7 +47,7 @@ Full equivalence tier identical at the knowledge merge (`877cff82`). Micro and s
 
 | actors | `sim/actors/` | the cast, its records and the actors' world (was the engine's `agents_port*`); `state.actors` is a property over the slot |
 
-| workforce (partly) | `sim/workforce/` | the labour package behind `WorkforceWorld`, its commands and phases; still to do: the staff and hour fields on the household record become its seat state, and its `legacy_state` and `legacy_game` reads go; Complaint 762 |
+| workforce | `sim/workforce/` | the labour package behind `WorkforceWorld`; the staff, hours and pay books are its seat state; still to do: its remaining `legacy_state` reads (purse, bondage, built ways, the projects' sets) and cached views once Labour's in-place writes become commands; Complaints 762, 764 |
 
 | land | `sim/land/` | the owner map, colonies, the map and geography handles; still to do: `improvements`, `ways_under_construction`, `works`, `works_under_construction` and `ways.py` (with transport and works) |
 
@@ -55,7 +55,7 @@ Full equivalence tier identical at the knowledge merge (`877cff82`). Micro and s
 
 | finance | `sim/finance/` | credit limit, interest and arrears, insolvency, debt bondage, purchases and affordability, the seat bank; the agent economy's own credit and bank files in `sim/economy/` stay behind its api; Complaint 763 |
 
-In progress: workforce state. `stores` (mod stores) is a framework service and moves with phase 7. Next: the rest of markets (the goods market object and the economy port); then finance, production, ventures, the rest of projects.
+In progress: production. `stores` (mod stores) is a framework service and moves with phase 7. Next: the rest of markets (the goods market object and the economy port); then finance, production, ventures, the rest of projects.
 
 ## Task list
 
