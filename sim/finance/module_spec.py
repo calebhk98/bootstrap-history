@@ -28,11 +28,10 @@ READS_BY_OWNER = {
 	"resources": ("forest_hectares", "mine_operating_cost"),
 	"workforce": ("staff", "money_per_labour_hour", "labour_market", "wage_bill", "household_dependant_people",
 	              "held_trade"),
-	"markets": ("household_bill_per_person",),
 	"production": ("revenue_capacity", "revenue_estimate", "upkeep", "operating", "cash_remedies"),
 	"projects": ("committed_cost", "legacy_projects"),
 	"knowledge": ("tree_nodes",),
-	"markets": ("agent_rate", "agent_credit_room", "agent_economy_opened", "agent_economy"),
+	"markets": ("agent_rate", "agent_credit_room", "agent_economy_opened", "agent_economy", "household_bill_per_person"),
 }
 
 _LIVE = dict(cached=False)
