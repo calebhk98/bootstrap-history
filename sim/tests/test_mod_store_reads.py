@@ -33,7 +33,7 @@ check("a layer puts the store's value on every tile row and every next-door row"
       [row["layer_value"] for row in shown["tiles"] + shown["next_door"]] == [5.0, 0.0, 0.0], shown)
 check("a layer states the store, its unit, its default and the tiles that differ from the default",
       shown["layer"] == {"store": MANA, "unit": "mana", "default": 0.0, "tiles_off_default": {"tile_7": 5.0}}, shown["layer"])
-check("a store that is not tile-keyed is not offered as a layer", mod_stores.tile_layer(game, "no_such_store") is None)
+check("a store that is not tile-keyed is not offered as a layer", game.stores.tile_layer("no_such_store") is None)
 
 # --- tile control is the base game's control store (test_land_module reads it through the land module).
-check("the base game declares control as a tile store with no owning mod", mod_stores.DECLARED["control"].owner == "" and mod_stores.DECLARED["control"].keyed_by == "tile")
+check("the base game declares control as a tile store with no owning mod", any(spec.name == "control" and spec.owner == "" and spec.keyed_by == "tile" for spec in mod_stores.base_declarations()))

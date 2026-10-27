@@ -141,7 +141,7 @@ Phase 6 (a) is done: `sim/ui/` reads views and sends commands (`tools/check_ui_v
 ### Phase 7: mods
 
 - [x] Replace the process-global registries of the actors, workforce, polity, demography, agriculture, year phases and stores with per-assembly registrations (extension points; `ModCodeApi` records into the mod's `Operations`).
-- [ ] The same for the ui's registries (`sim/ui/proto/command_registry.py`, `sim/ui/figures.py`, `sim/ui/figures_data.py`), and `COMMAND_REGISTRATIONS` in `mod_code.py`; then `screen_map` reads `sim.stores.declared()` and `mod_stores.DECLARED` goes.
+- [ ] The same for the ui's registries (`sim/ui/proto/command_registry.py`, `sim/ui/figures.py`, `sim/ui/figures_data.py`) and `COMMAND_REGISTRATIONS` in `mod_code.py`: they are still process-global, filled by `mod_commands.load` and `register_data_figures`.
 - [ ] Rewrite each shipped code mod onto the new interface (one agent per mod).
 - [ ] Add one SMOKE test per mod operation: replace, remove, add, extend, adjust, provide.
 

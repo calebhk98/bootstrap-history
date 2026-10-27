@@ -1,6 +1,6 @@
 # The map's list of tile-store layers names only the base game's stores
 
-**Status:** open - waits for `sim/ui/` to be free of the phase-6 work
+**Status:** closed - `screen_map` reads `sim.stores.declared()`; `mod_stores.DECLARED`, `TILE` and `tile_layer` are gone
 
 `sim/ui/proto/screen_map.py` (the unknown-layer reply of `map`) lists the layers it offers from `mod_stores.DECLARED`. The declared
 stores are now a game's own (the stores module's `store_declarations` point), so that dictionary holds the base game's stores only

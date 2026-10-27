@@ -3,10 +3,10 @@
 A store is declared in data (`data/world/stores.json` for the base game, `data/stores.json` in a mod) or by a mod's code through
 `api.store`. The stores module keeps the declarations of one game and their saved values; this file only reads the data files."""
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 from sim.json_files import read_json
-from sim.stores.api import TILE, StoreSpec
+from sim.stores.api import StoreSpec
 
 from .mods import get_ordered_mods
 from .mods_base import ModError
@@ -43,11 +43,3 @@ def data_declarations(mods_dir: str) -> List[StoreSpec]:
             found.extend(_specs_in(path, manifest.id, manifest))
     return found
 
-
-# The base game's stores, for the map screen's list of layers; a game's own stores (a mod's too) are `sim.stores.declared()`.
-DECLARED: Dict[str, StoreSpec] = {spec.name: spec for spec in base_declarations()}
-
-
-def tile_layer(sim: Any, name: str) -> Optional[Any]:
-    """The tile-keyed store a map layer shows, or None when it is not a declared tile store."""
-    return sim.stores.tile_layer(name)
