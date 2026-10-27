@@ -5,8 +5,7 @@ QUICK_TOPIC = True
 import json
 import unittest
 
-from sim.agents import registry as registry_module
-from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, register_declared_kinds
+from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, declared_kind_classes, shipped_extensions
 from sim.agents.declared_kind import DeclaredKind
 from sim.engine import mod_code
 from sim.engine.actor_kinds_data import load_kind_declarations
@@ -35,10 +34,9 @@ class ElfWorld(FakeWorld):
 
 class KindTestBase(ModTestBase):
     def tearDown(self):
-        registry_module.ACTOR_CLASSES.pop(KIND, None)
-        registry_module.ACTOR_CLASSES.pop(ACME + ":golem", None)
         mod_code.LOADED.clear()
         mod_code.COMMAND_REGISTRATIONS.clear()
+        mod_code.MOD_OPERATIONS.clear()
         super().tearDown()
 
     def write_kinds(self, kinds):
@@ -52,12 +50,13 @@ class KindTestBase(ModTestBase):
 
 class DeclaredKindTests(KindTestBase):
     def species(self, world, members=1000.0):
-        register_declared_kinds({KIND: DECLARATION})
-        registry = ActorRegistry(ActorsState(home_country="home"))
+        extensions = shipped_extensions()
+        extensions.kinds.update(declared_kind_classes({KIND: DECLARATION}))
+        registry = ActorRegistry(ActorsState(home_country="home"), extensions)
         actor = registry.add("elf:one", ActorRecord(kind=KIND, name="elves", members=members, money=0.0))
         return actor, world
 
-    def test_a_declared_kind_is_registered_and_built_from_the_registry(self):
+    def test_a_declared_kind_is_provided_and_built_from_the_registry(self):
         actor, _world = self.species(ElfWorld())
         self.assertIsInstance(actor, DeclaredKind)
         self.assertEqual(actor.kind, KIND)
@@ -130,7 +129,7 @@ def register(api):
 
 
 class CodeKindTests(KindTestBase):
-    def test_consented_code_registers_a_prefixed_kind(self):
+    def test_consented_code_provides_a_prefixed_kind(self):
         self.add_mod(ACME)
         folder = self.mods_dir / ACME
         (folder / "golem.py").write_text(CODE)
@@ -138,11 +137,12 @@ class CodeKindTests(KindTestBase):
         manifest.update(code=["golem.py"], permissions=["code"])
         (folder / "mod.json").write_text(json.dumps(manifest))
         mod_code.run_mod_code(str(self.mods_dir))
-        self.assertNotIn(ACME + ":golem", registry_module.ACTOR_CLASSES)
+        self.assertEqual(mod_code.operations_of(str(self.mods_dir)), [])
         mod_code.allow(str(self.mods_dir), ACME)
         mod_code.run_mod_code(str(self.mods_dir))
-        self.assertIn(ACME + ":golem", registry_module.ACTOR_CLASSES)
-        self.assertNotIn("golem", registry_module.ACTOR_CLASSES)
+        (operations,) = mod_code.operations_of(str(self.mods_dir))
+        (answer,) = operations.provided["actor_kinds"]
+        self.assertEqual(list(answer()), [ACME + ":golem"])
 
 
 if __name__ == "__main__":

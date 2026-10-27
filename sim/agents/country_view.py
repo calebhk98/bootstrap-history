@@ -19,7 +19,6 @@ from .no_country_economy import NoCountryEconomy
 from .protocols import World
 from .records import CountryProfile
 from .literacy import CountryLiteracy
-from .registry import register_world_scope
 from .stratum_year import FOOD_NEED
 from .tuning_country import COUNTRY_OBSERVATION_RANGE_KM
 
@@ -163,6 +162,3 @@ for _name, _member in inspect.getmembers(World):
 		forward_world_member(_name, isinstance(_member, property))
 for _name in EXTRA_FORWARDED:
 	forward_world_member(_name)
-
-
-register_world_scope(lambda world, profile, holder: CountryWorld(world, profile, holder))

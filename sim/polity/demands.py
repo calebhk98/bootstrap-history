@@ -44,7 +44,8 @@ class Demands:
 		first and then from the claims. Returns (the answer, what was demanded, what was taken)."""
 		game = self.needs.legacy_game()
 		capital = self.needs.acting_balance()
-		claims = sum(max(0.0, reader(game)) for reader, _seizer in state_demand.WEALTH_CLAIMS)
+		registered = self.needs.wealth_claims()
+		claims = sum(max(0.0, reader(game)) for reader, _seizer in registered)
 		demanded = demand_answer.visible_wealth(capital + claims, self.seat.concealed) * max(0.0, min(1.0, fraction))
 		answer = self.answer_state_demand(demanded)
 		taken = 0.0
@@ -54,7 +55,7 @@ class Demands:
 			taken = self.lose_capital_to(purse_part / capital, cause, self.needs.state_treasury().actor_id)
 			paid -= purse_part
 		if paid > 0.0:
-			for _reader, seizer in state_demand.WEALTH_CLAIMS:
+			for _reader, seizer in registered:
 				seized = max(0.0, seizer(game, paid, self.needs.state_treasury()))
 				taken += seized
 				paid -= seized

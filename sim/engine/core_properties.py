@@ -20,6 +20,12 @@ class ForwardingPropertiesMixin:
 	"""Composition point: backward-compatibility property facade delegating to
 	authoritative subsystem live state.
 	"""
+
+	@property
+	def stores(self):
+		"""Every declared store of the game (the stores module's book): `sim.stores.<name>.<key>`, `.view(name)`, `.write(...)`."""
+		return self.assembly.views["store_book"]()
+
 	# =========================================================================
 	# HouseholdState Compatibility Properties
 	# =========================================================================

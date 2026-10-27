@@ -1,11 +1,10 @@
 """Bridge entries the campaigns module uses until the modules that own these facts move.
 
 Each view answers through `Sim` as the old mixin methods did; when its owner moves it publishes the same name and the entry
-is deleted. Each command is applied the way the old campaign code did the write."""
+is deleted."""
 from sim.assembly.api import KEYED
-from sim.stores.api import WriteStore
 
-from .bridge import bridge_command, bridge_view
+from .bridge import bridge_view
 
 
 # ---- actors and the states ----
@@ -27,20 +26,3 @@ def organised_factions(sim, owner):
     home = str(sim.civ["id"])
     return [(group.record.members, group.record.grievance) for group in sim.view("cast")().of_kind("interest_group")
             if group.organised() and (group.record.country or home) == owner]
-
-
-@bridge_view("store", kind=KEYED)
-def store(sim, name):
-    """A declared store as it stands: {default, values: {key: value}}."""
-    declared = sim.stores.view(name)
-    return {"default": declared.spec.default, "values": dict(declared.values)}
-
-
-# ---- commands of owners that have not moved ----
-
-
-@bridge_command(WriteStore)
-def write_store(sim, command):
-    sim.stores.write(command.store, command.key, command.value, command.owner)
-
-

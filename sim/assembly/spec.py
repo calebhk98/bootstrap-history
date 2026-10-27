@@ -1,6 +1,6 @@
 """What a module declares: its state, the views it publishes, the commands it applies, what it reads and sends."""
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple
 
 TABLE = "table"        # one whole value: `needs.name()`
 KEYED = "keyed"        # one value per key, computed on first read of that key: `needs.name[key]`
@@ -76,6 +76,7 @@ class Operations:
 	adjusters: Dict[str, Tuple[Tuple[Callable, Tuple[str, ...]], ...]] = field(default_factory=dict)  # view -> (function, reads)
 	provided: Dict[str, Tuple[Callable, ...]] = field(default_factory=dict)        # extension point -> functions
 	withdrawn: Tuple[str, ...] = ()                                                # "<module_id>.<name>" provisions taken out
+	phases: Tuple[Any, ...] = ()                                                   # year phases the engine places (it owns their shape)
 
 
 def view_names(spec: ModuleSpec) -> Tuple[str, ...]:

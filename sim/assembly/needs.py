@@ -13,6 +13,10 @@ class Point:
 		self.combine = combine
 		self.providers: List[Callable] = []
 
+	@property
+	def has_providers(self) -> bool:
+		return bool(self.providers)
+
 	def __call__(self, *arguments: Any) -> Any:
 		if self.combine == SUM:
 			return sum(provider(*arguments) for provider in self.providers)

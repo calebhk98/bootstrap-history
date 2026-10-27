@@ -175,7 +175,7 @@ check("serialize_state: the state's books: money, revenue by form, arrears, know
 first = SeatState(HouseholdState(capital=10.0), ProjectsState(done={"fire"}), FounderState(_founder_death_year=30), goal="steam_engine", country="han")
 second = SeatState(HouseholdState(capital=4.0), ProjectsState(), FounderState(), holdings=HoldingsState(market_pressure=1.0))
 state = SimulationState(seats={"zed": first, "abe": second}, acting_seat="abe", economy=EconomyState(), _civ="rome", _rng=[3, [0, 1], None],
-                        _seed="seed text", stores={"granary": {"t1|rome": 4.0}})
+                        _seed="seed text")
 blob = serialize_state(state)
 check("serialize_state: the root's aliases of the acting seat are not saved, the seats are", all(
 	name not in blob for name in ("household", "projects", "founder", "holdings", "seat_progress")) and "seats" in blob, list(blob))
@@ -188,5 +188,5 @@ check("serialize_state: a seat's household, projects and founder are sections of
       and blob["seats"]["zed"]["founder"]["_founder_death_year"] == 30 and blob["seats"]["abe"]["holdings"]["market_pressure"] == 1.0, None)
 check("serialize_state: the metadata the load needs", blob["_civ"] == "rome" and blob["_rng"] == [3, [0, 1], None] and blob["_seed"] == "seed text"
       and blob["_fog"] is False and blob["_immortal"] is True and blob["_game_version"] is None, None)
-check("serialize_state: the declared stores and the UI's own memory", blob["stores"] == {"granary": {"t1|rome": 4.0}} and blob["interface"] == {})
+check("serialize_state: the UI's own memory", blob["interface"] == {})
 check("serialize_state: the whole state is JSON text", json.loads(json.dumps(blob)) == blob)

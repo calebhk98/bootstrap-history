@@ -47,7 +47,6 @@ from .forward_production import ForwardProductionMixin
 from .forward_freight import ForwardFreightMixin
 from .forward_resources import ForwardResourcesMixin
 from .forward_materials import ForwardMaterialsMixin
-from .mod_stores import ModStoresMixin
 from .core_properties import ForwardingPropertiesMixin
 from .year_steps import StepContext
 from .data import trade_family
@@ -58,7 +57,6 @@ from sim.materials.api import RestoreReadings
 
 
 class Sim(
-        ModStoresMixin,
         ForwardMechanicsMixin,
         ForwardKnowledgeMixin,
         ForwardMarketsMixin,

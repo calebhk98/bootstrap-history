@@ -13,7 +13,7 @@ from .bridge import bridge_view
 
 @bridge_view("legacy_game")
 def legacy_game(sim):
-	"""The game itself: a mod's wealth-claim readers and seizers (sim.polity.api.register_wealth_claims) take it."""
+	"""The game itself: a mod's wealth-claim readers and seizers (provided to the polity module's `wealth_claims` point) take it."""
 	return sim
 
 

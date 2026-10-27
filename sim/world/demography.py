@@ -1074,7 +1074,7 @@ class Population(object):
         start_total = self.total
         ratio = self.nutrition_ratio(food_available_calories_per_day, jitter=jitter)
         # Excess baseline mortality of crowded towns, as a share of the baseline rate, supplied by a town provider
-        # (sim/labour/town_providers.py); zero when no provider gives one.
+        # (the workforce module's `town_mortality_premium` point); zero when no provider gives one.
         urban_premium = max(0.0, urban_mortality_premium)
 
         deaths_children = self.children * min(

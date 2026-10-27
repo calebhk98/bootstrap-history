@@ -9,20 +9,21 @@ import unittest
 from types import SimpleNamespace
 
 from sim.agents.api import edges
-from sim.engine import mod_stores
 from sim.engine.mod_effects import ModEffects
-from sim.engine.mod_stores import ModStoresMixin
 from sim.engine.mods import ModError
+from sim.stores.api import StoreSpec
 from sim.tests.bridge_send import attach_send
+from sim.tests.store_stand_in import StoreHost
 
 ACME, BETA = "test_acme_k3f9", "test_beta_k3f9"
 
 
-class Host(ModStoresMixin):
-    """A game with nothing but its saved stores."""
+class Host(StoreHost):
+    """A game with nothing but its stores."""
 
-    def __init__(self):
-        self.state = SimpleNamespace(stores={})
+    def __init__(self, *specs):
+        super().__init__(*specs)
+        self.state = SimpleNamespace()
         attach_send(self)
 
 
@@ -76,12 +77,7 @@ class Arguments(unittest.TestCase):
 class StoreWrites(unittest.TestCase):
 
     def setUp(self):
-        mod_stores.forget_mod_stores()
-        mod_stores.declare(mod_stores.StoreSpec(ACME + ":mana", ACME, "tile", 0.0, "mana"), "test")
-        self.host = Host()
-
-    def tearDown(self):
-        mod_stores.forget_mod_stores()
+        self.host = Host(StoreSpec(ACME + ":mana", ACME, "tile", 0.0, "mana"))
 
     def test_a_store_write_is_the_declaring_mods_only(self):
         ModEffects(ACME).write_store(self.host, ACME + ":mana", "tile_1", 3.0)

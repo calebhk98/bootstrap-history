@@ -11,7 +11,6 @@ from typing import Any, List, Optional
 from . import business_books, enforcement, firm_entry, ledger
 from .edges import EDGE_POOLED_CAPITAL
 from .records import ActorRecord
-from .registry import register_spawner
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE, ENTRY_STAKE_BUFFER, VALUE_HORIZON_YEARS
 from .tuning_spinoff import SPINOFF_CHANCE_PER_STAFF_YEAR, SPINOFF_MIN_YEARS
 
@@ -137,6 +136,3 @@ def _found_rival(registry: Any, world: Any, parent: Any, node_id: str, pool: Lis
 		ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), firm, own, EDGE_POOLED_CAPITAL)
 	firm.business.open_plant(node_id, world.year, tile)
 	return firm_id
-
-
-register_spawner("spinoffs", consider_spinoffs)

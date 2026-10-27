@@ -12,6 +12,7 @@ from sim.ui.proto import screen_demography, screen_divergence, screen_education,
 
 from .harness import *  # noqa: F401,F403
 from sim.tests.ui_stand_in import Game
+from sim.tests import store_stand_in
 
 QUICK_TOPIC = True
 
@@ -41,8 +42,8 @@ check("the base is stated with its people and the town's estimate",
       report["you_are_based_at"]["tile"] == "t1" and report["you_are_based_at"]["people"] == 50
       and report["you_are_based_at"]["town_people"] == 78, report["you_are_based_at"])
 check("the report counts the tiles held and the neighbours", report["tiles_held"] == 3 and report["next_door_total"] == 2, report)
-with mock.patch.object(screen_map, "map_report", side_effect=lambda game, full=False: {"tiles": [], "next_door": []}), \
-        mock.patch.object(screen_map.mod_stores, "tile_layer", return_value=None):
+map_game.stores = store_stand_in.base_book()
+with mock.patch.object(screen_map, "map_report", side_effect=lambda game, full=False: {"tiles": [], "next_door": []}):
     refused = screen_map.map_screen(map_game, {"layer": "no_such_store"})
 check("a layer that names no tile store is refused with cause unknown_layer", refused["ok"] is False and refused["cause"] == "unknown_layer", refused)
 many = {"t%d" % number: float(number) for number in range(30)}

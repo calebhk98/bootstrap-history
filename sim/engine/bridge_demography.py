@@ -2,9 +2,6 @@
 
 Each view carries the name its owner will publish, asks the engine exactly as the old code did, and is never cached. Each
 command applies what the yearly demographic step did inline, in the same order."""
-from sim.assembly.api import QUOTE
-
-from . import externalities
 from .bridge import bridge_view
 
 
@@ -20,13 +17,3 @@ def farm_land(sim):
 def farm_technique_this_year(sim):
     """The farming technique the farm workforce chose for the year."""
     return sim._farm_technique_this_year
-
-
-# ---- the mods' externalities and the actors ----
-
-@bridge_view("externality_deaths", kind=QUOTE)
-def externality_deaths(sim, deaths_by_band, year):
-    """`deaths_by_band` plus what the mods' externalities add to the year's deaths."""
-    return externalities.add_deaths(deaths_by_band, sim, year)
-
-

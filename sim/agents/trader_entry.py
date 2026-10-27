@@ -74,8 +74,3 @@ def trader_entry(registry: Any, world: Any) -> List[str]:
 		ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), trader, route["capital"], EDGE_POOLED_CAPITAL)
 		founded.append(trader_id)
 	return founded
-
-
-from .registry import register_spawner  # noqa: E402
-
-register_spawner("trader_entry", trader_entry)

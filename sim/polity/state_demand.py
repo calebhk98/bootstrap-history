@@ -1,21 +1,9 @@
-"""What the state's demands on a household are answered with: the claims a confiscation can count and take, and the player's
-words for each way of answering. The rule is the one every actor is levied by (`sim/agents/demand_answer.py`)."""
-from typing import Any, Callable, List, Tuple
-
+"""The player's words for each way of answering the state's demands. The rule is the one every actor is levied by
+(`sim/agents/demand_answer.py`)."""
 from sim.agents.api import demand_answer
 
 # stances that pay the demand in full and so draw no random number
 PAYS_IN_FULL = (demand_answer.COMPLY, demand_answer.CONCEAL)
-
-# Claims the acting household holds on other actors, which the state can count and seize: (reader, seizer) pairs.
-# reader(game) -> money the household is owed; seizer(game, amount, taker) -> money actually handed to `taker`.
-WEALTH_CLAIMS: List[Tuple[Callable[[Any], float], Callable[[Any, float, Any], float]]] = []
-
-
-def register_wealth_claims(reader: Callable[[Any], float], seizer: Callable[[Any, float, Any], float]) -> None:
-	"""Let a confiscation count (and, once the purse is empty, take) what the household is owed by other actors."""
-	if (reader, seizer) not in WEALTH_CLAIMS:
-		WEALTH_CLAIMS.append((reader, seizer))
 
 
 def describe_stance(stance: str, capacity: float, standing: float, service: float = 0.0) -> str:

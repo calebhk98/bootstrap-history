@@ -16,11 +16,7 @@ from typing import Any, Dict, List
 from . import ledger
 from .base import RecordedActor
 from .edges import EDGE_ECONOMY
-from .registry import register_actor_kind
 from .stratum_year import pay_tier, unmet
-
-DECLARATIONS: Dict[str, Dict[str, Any]] = {}
-
 
 class DeclaredKind(RecordedActor):
 	kind = "declared"
@@ -56,8 +52,7 @@ class DeclaredKind(RecordedActor):
 		record.members = max(0.0, members * (1.0 + record.last_growth))
 
 
-def register_declared_kinds(declarations: Dict[str, Dict[str, Any]]) -> None:
-	"""Make each declared kind id build a `DeclaredKind` with its declaration; safe to call again."""
-	for kind, declaration in declarations.items():
-		DECLARATIONS[kind] = declaration
-		register_actor_kind(kind, type("DeclaredKind", (DeclaredKind,), {"kind": kind, "declaration": declaration}))
+def declared_kind_classes(declarations: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+	"""For each declared kind id, the class that builds its actors from its declaration."""
+	return {kind: type("DeclaredKind", (DeclaredKind,), {"kind": kind, "declaration": declaration})
+	        for kind, declaration in declarations.items()}

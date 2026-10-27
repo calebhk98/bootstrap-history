@@ -9,7 +9,6 @@ import math
 from typing import Any, Dict, Iterable, List
 
 from . import ledger
-from .registry import register_spawner
 from .tuning import VALUE_HORIZON_YEARS
 from .tuning_patent import DIVIDEND_PAYOUT_SHARE
 
@@ -129,6 +128,3 @@ def dividends(registry: Any, world: Any) -> List[str]:
 	"""Yearly: pay dividends. Founds no actors."""
 	pay_dividends(registry, world)
 	return []
-
-
-register_spawner("dividends", dividends)

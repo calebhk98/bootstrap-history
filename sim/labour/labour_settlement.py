@@ -9,7 +9,6 @@ from sim.constants import declare
 import sim.geography.api as geography
 from sim.geography.api import settlement
 from sim.polity.api import ScaleFamiliarity, ScaleProtection
-from sim.labour import town_providers
 from sim.ledger.api import NoteSpend, PayEdge
 
 
@@ -81,7 +80,7 @@ class SettlementMixin:
         nominal = (self.TOWN_POPULATION_REFERENCE * place
                    * (self.POP_SCALE_FLOOR_SHARE
                       + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
-        provided = town_providers.provided_town_population(self, tile, nominal)
+        provided = self._world.provided_town_population(self, tile, nominal)
         if provided is not None:
             return min(provided, tile_people)
         return min(nominal, tile_people * self.TOWN_MAX_SHARE_OF_TILE)
@@ -90,12 +89,12 @@ class SettlementMixin:
         """{tile: premium} for the tiles whose town carries a mortality premium from a registered provider: the premium
         of the town's people averaged over all the tile's people (a share of the baseline death rate). Empty with
         no provider."""
-        if not town_providers.PREMIUMS:
+        if not self._world.has_town_premiums():
             return {}
         found = {}
         for tile, people in sorted(self.settlement_tiles().items()):
             town = self._town_population_at(tile)
-            premium = town_providers.provided_mortality_premium(self, tile, town)
+            premium = self._world.provided_mortality_premium(self, tile, town)
             if premium and town > 0.0 and people > 0.0:
                 found[tile] = premium * min(1.0, town / people)
         return found

@@ -17,10 +17,11 @@ READS_BY_OWNER = {
              "regrow_wild_stock", "tile_soil_nitrogen_factors", "soil_nitrogen_after_year"),
     "workforce": ("farming_technique", "society_labour_hours", "trade_registry", "money_per_labour_hour"),
     "living_stock": ("society_herds",),
-    "hazards": ("externality_yield_factors",),
+    "demography (externalities)": ("externality",),
     "prices": ("price_index",),
     "ledger": ("acting_balance",),
     "seats": ("legacy_dice",),
+    "core": ("legacy_game",),
     "demography": ("farm_holdings",),
 }
 
@@ -32,6 +33,7 @@ MODULE_SPECS = (ModuleSpec(
     publishes=(
         ViewSpec("farm_weather", "farm_weather", kind=KEYED, **_LIVE),
         ViewSpec("harvest_weather", "harvest_weather", kind=QUOTE),
+        ViewSpec("externality_yield_factors", "externality_yield_factors", kind=QUOTE),
         ViewSpec("weather_seed", "weather_seed", kind=QUOTE),   # the first call draws the game's salt from its dice
         ViewSpec("farm_weather_cells", "weather_cells", **_LIVE),
         ViewSpec("farm_sites", "farm_sites", **_LIVE),

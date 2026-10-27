@@ -63,7 +63,7 @@ check("a caught infringer pays the holder its margin", holder.money == 1500.0 an
 check("a licensee is left alone", licensed.money == 1000.0)
 check("the holder never sues itself", holder.record.income.get("damages", 0.0) == 500.0)
 check("damages move through the ledger and conserve money", abs(total_money(registry.actors.values()) - before) < 1e-9)
-check("the spawner is registered", "patent_enforcement" in dict(__import__("sim.agents.registry", fromlist=["SPAWNERS"]).SPAWNERS))
+check("the spawner is shipped", "patent_enforcement" in dict(__import__("sim.agents.shipped", fromlist=["shipped_spawners"]).shipped_spawners()))
 
 # ---- a state with no reach catches nobody ------------------------------------------------------------
 world, registry, holder, infringer, licensed = setup(0.0)

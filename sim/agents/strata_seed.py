@@ -3,7 +3,6 @@ from typing import Any, Dict, List
 
 from .country_population import people_counted, step_foreign_populations
 from .records import ActorRecord, CountryProfile
-from .registry import register_spawner
 from .stratum import stratum_id
 from .stratum_year import settle_strata
 from .tuning_strata import (DEFAULT_ARTISAN_SHARE_OF_URBAN, DEFAULT_BONDED_SHARE, DEFAULT_MERCHANT_SHARE_OF_URBAN,
@@ -112,6 +111,3 @@ def strata_spawner(registry: Any, world: Any) -> List[str]:
 		follow_population(registry, world)
 		follow_foreign_populations(registry)
 	return founded
-
-
-register_spawner("strata", strata_spawner)

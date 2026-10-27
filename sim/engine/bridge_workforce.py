@@ -5,7 +5,7 @@ labour adapter did, and is never cached. The `legacy_*` views are raw state the 
 they go when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
 
-from . import data, director_overhead, units_prose, view_share, wage_schedule
+from . import data, units_prose, view_share, wage_schedule
 
 from .bridge import bridge_view
 
@@ -71,12 +71,6 @@ def legacy_state(sim):
 
 
 # ---- the founder, the acting seat's land and the owner map ----------------------------------------------------------------
-
-
-@bridge_view("director_overhead_hours")
-def director_overhead_hours(sim):
-    """Hours of the directed-hours pool that registered overhead functions charge (none unless a mod registered some)."""
-    return director_overhead.total_hours(sim)
 
 
 @bridge_view("farm_ladder")

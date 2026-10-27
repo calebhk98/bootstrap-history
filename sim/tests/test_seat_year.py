@@ -108,7 +108,7 @@ class FakeSim:
                 if name == "dated_shocks":
                     self.state.ended |= self.ends_in_shocks
             return run
-        return types.SimpleNamespace(phase_handler=phase)
+        return types.SimpleNamespace(phase_handler=phase, applied=types.SimpleNamespace(phases=[]))
 
     def __getattr__(self, name):
         return lambda *arguments: self._record(name, *arguments)

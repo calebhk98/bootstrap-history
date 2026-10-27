@@ -38,7 +38,7 @@ def defaults(seed: int) -> Dict[str, Any]:
 		"year": 100, "civilisation": {"id": "rome", "starting_tax_share": 0.1}, "events_enabled": True,
 		"automation": {"manual": False, "bounty_set": set()}, "acting_seat": "founder",
 		"danger_lines": {"eminence": 100.0, "suspicion": 100.0}, "legacy_dice": random.Random(seed), "legacy_said_once": set(),
-		"legacy_game": SimpleNamespace(),
+		"legacy_game": SimpleNamespace(), "wealth_claims": lambda: [],
 		"legacy_act_as": _same_seat, "money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),
 		"mass_text": lambda amount, digits=0, grouped=False, short=False, unit="tonne": "%.1f %s" % (amount, unit),
 		"state_treasury": _government(), "cast": SimpleNamespace(home_actors=lambda kind: [],

@@ -9,7 +9,7 @@ from sim.refusal import cause_of
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
 from sim.agents.business_plant import Plant
 from sim.agents import exchange, exchange_commands, player  # noqa: F401  (player registers its kind)
-from sim.agents import registry as registry_module
+from sim.agents.shipped import shipped_spawners
 from sim.agents.player_commands import CommandRejected, run_orders
 
 from .agents_fake_world import FakeWorld, make_node, total_money
@@ -151,8 +151,8 @@ human.record.stores["grain"] = 100.0
 good = exchange.make_offer(human, robot, {"stores": {"grain": 50.0}}, {"money": 100.0}, world)
 bad = exchange.make_offer(human, robot, {"stores": {"grain": 5.0}}, {"money": 400.0}, world)
 before = total_money([human, robot])
-dict(registry_module.SPAWNERS)["exchange_answers"](registry, world)
-check("the spawner is registered", "exchange_answers" in dict(registry_module.SPAWNERS))
+dict(shipped_spawners())["exchange_answers"](registry, world)
+check("the spawner is shipped", "exchange_answers" in dict(shipped_spawners()))
 check("an AI actor accepts a good deal", robot.record.stores.get("grain") == 50.0 and robot.money == 900.0, (robot.money, robot.record.stores))
 check("an AI actor declines a bad one", human.money == 1100.0 and robot.record.offers == [])
 check("the AI's deals conserve money", abs(total_money([human, robot]) - before) < 1e-9)

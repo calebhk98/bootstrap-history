@@ -1,6 +1,7 @@
 """A player's commands: plain dicts queued in `record.orders`, run in order on its turn.
 
-Each command names a handler in `COMMANDS`; a mod adds one with `register_command`. A handler is
+Each command names a handler in the game's command table (the actors module's `player_commands` point; a mod adds one by
+providing to it). A handler is
 `handler(player, order, world) -> detail text` and refuses by raising `CommandRejected`. Every
 command, run or refused, leaves one entry in the player's journal; nothing here raises to the caller.
 """
@@ -11,14 +12,6 @@ from .tuning_player import PLAYER_JOURNAL_LIMIT
 
 class CommandRejected(Exception):
 	"""A command that cannot be carried out; the message is the reason."""
-
-
-COMMANDS: Dict[str, Callable[[Any, Dict[str, Any], Any], str]] = {}
-
-
-def register_command(name: str, handler: Callable[[Any, Dict[str, Any], Any], str]) -> None:
-	"""Make `{"command": name, ...}` run `handler`; registering a name again replaces it."""
-	COMMANDS[name] = handler
 
 
 def write_journal(player: Any, year: int, name: Any, ok: bool, detail: str) -> None:
@@ -32,9 +25,13 @@ def run_orders(player: Any, world: Any) -> None:
 	"""Run and clear the player's queued orders, journalling each."""
 	orders = list(player.record.orders)
 	player.record.orders.clear()
+	commands = player.command_table
+	if commands is None:   # a player made outside a registry runs the shipped commands
+		from .shipped import shipped_commands
+		commands = shipped_commands()
 	for order in orders:
 		name = order.get("command") if isinstance(order, dict) else None
-		handler = COMMANDS.get(name) if isinstance(name, str) else None
+		handler = commands.get(name) if isinstance(name, str) else None
 		if handler is None:
 			write_journal(player, world.year, name, False, "unknown command")
 			continue
@@ -71,7 +68,5 @@ def transfer(player: Any, order: Dict[str, Any], world: Any) -> str:
 	return player.send_money(order.get("to"), float(order.get("amount", 0.0)))
 
 
-register_command("research", research)
-register_command("open", open_concern)
-register_command("close", close_concern)
-register_command("transfer", transfer)
+def base_commands() -> Dict[str, Callable[[Any, Dict[str, Any], Any], str]]:
+	return {"research": research, "open": open_concern, "close": close_concern, "transfer": transfer}

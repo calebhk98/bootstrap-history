@@ -6,7 +6,7 @@ reference population is cached: the
 people's are three floats, which cost less to build than a signature to check, and the rest read the held land, the labour
 market and the built ways, all written outside any command of this module."""
 from sim.actors.api import RecordMigrantContact, ScaleStrata
-from sim.assembly.api import QUOTE, ModuleSpec, ViewSpec
+from sim.assembly.api import LIST, QUOTE, ExtensionPoint, ModuleSpec, ViewSpec
 from sim.disease.api import HitSeatsWithEpidemic, RunEpidemicYear
 from sim.hazards.api import RecordWorldEvent
 from sim.land.api import AdvanceColonies
@@ -20,10 +20,9 @@ from .module import Demography
 from .state import DemographySeat, DemographyWorld
 
 READS_BY_OWNER = {
-    "core": ("civilisation", "year", "cast"),
+    "core": ("civilisation", "year", "cast", "legacy_game"),
     "land": ("home_tiles_held", "borders_among", "built_ways", "held_techniques"),
     "disease": ("disease_burden", "endemic_death_rates", "epidemic_deaths_by_tile"),
-    "hazards (externalities)": ("externality_deaths",),
     "workforce": ("farming_technique", "town_mortality_premium_by_tile", "wage_index", "wage_index_terms"),
     "defence_stores": ("relief_kcal_per_day",),
     "agriculture": ("weather_seed", "harvest_weather", "farm_land", "farm_technique_this_year"),
@@ -45,6 +44,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("people_by_tile", "people_by_tile", **_LIVE),
         ViewSpec("people_by_band", "people_by_band", **_LIVE),
         ViewSpec("nutrition_ratio", "nutrition_ratio", kind=QUOTE),
+        ViewSpec("externality_deaths", "externality_deaths", kind=QUOTE),
         ViewSpec("legacy_regions_of_people", "legacy_regions_of_people", **_LIVE),
         ViewSpec("urban_people_by_tile", "urban_people_by_tile", **_LIVE),
         ViewSpec("urban_ceilings", "urban_ceilings", **_LIVE),
@@ -60,6 +60,10 @@ MODULE_SPECS = (ModuleSpec(
              (NotePopulationChange, "note_population_change"), (ChangeFarmland, "change_farmland"),
              (SetClearedFarmland, "set_cleared_farmland"), (SetFarmHoursNeeded, "set_farm_hours_needed"),
              (TakeFromGranary, "take_from_granary")),
+    # (game, year) -> {"deaths_by_band": {band: people}, "yield_factor_by_tile": {tile: factor}} (either key optional): harm that
+    # activity does to people (added to the year's epidemic deaths) and to land (multiplies the yield of land-bound producers,
+    # which the agriculture module reads from this point); the answers add and multiply, so a provider needs no knowledge of another
+    extension_points=(ExtensionPoint("externality", LIST),),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(AdvanceColonies, AllocateFarmWorkforce, ApplyLandClearing, HitSeatsWithEpidemic, RecordEvent, RecordMigrantContact,
            RecordWorldEvent, RunEpidemicYear, ScaleStrata, UpdateWages),

@@ -125,7 +125,6 @@ def seed_cast(registry: Any, home_country: str, entries: List[CastEntry],
 	comes from outside the modelled actors, so it is booked as the edge "edge:opening". An entry whose kind
 	is not registered yet stays in the roster and is created by a later call once the kind exists.
 	"""
-	from .registry import ACTOR_CLASSES
 	state = registry.state
 	state.home_country = home_country
 	for country, profile in profiles.items():
@@ -133,7 +132,7 @@ def seed_cast(registry: Any, home_country: str, entries: List[CastEntry],
 	created: List[str] = []
 	for entry in entries:
 		state.cast.setdefault(entry.actor_id, copy.deepcopy(entry))
-		if entry.actor_id in registry.actors or entry.actor_id in state.records or entry.kind not in ACTOR_CLASSES:
+		if entry.actor_id in registry.actors or entry.actor_id in state.records or entry.kind not in registry.extensions.kinds:
 			continue
 		actor = registry.add(entry.actor_id, _record_for(entry))
 		if entry.money:

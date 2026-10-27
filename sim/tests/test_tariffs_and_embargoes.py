@@ -16,7 +16,7 @@ from sim.economy.tariffs import duty_transfers
 from sim.economy.types import EDGE_EXTERNAL
 from sim.markets import trade_duty
 from sim.actors.world_trade import TradeView
-from sim.engine.mod_stores import StoreBook
+from sim.tests.store_stand_in import base_book
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
 from sim.engine.state_seat import bind_seat, seat_from_template
 from sim.ui.proto import command_registry
@@ -29,7 +29,7 @@ from sim.tests.ui_stand_in import FactViews
 
 
 def _stores():
-    return StoreBook({})
+    return base_book()
 
 
 def _border_terms(sim):
@@ -201,10 +201,11 @@ class Game(FactViews):
         self.session_seat = None
         self.year = 100
         self.civ = {"id": "rome"}
+        self.saved_stores = {}
 
     @property
     def stores(self):
-        return StoreBook(self.state.stores)
+        return base_book(self.saved_stores)
 
     def partner_countries(self):
         return ["han", "parthia"]

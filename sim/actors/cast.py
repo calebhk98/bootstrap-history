@@ -2,7 +2,7 @@
 the opening roster, and the world the actors are handed."""
 from typing import Any, List, Optional
 
-from sim.agents.api import ActorRegistry, seed_cast
+from sim.agents.api import ActorExtensions, ActorRegistry, combine_extensions, seed_cast, shipped_extensions
 
 from .world import ActorWorld
 
@@ -13,14 +13,40 @@ class Cast:
 	needs: Any
 	world: Any
 	_registry: Optional[ActorRegistry] = None   # over the world slot; made again when a load replaces it
+	_extensions: Optional[ActorExtensions] = None   # what the game's providers answered; asked once per game
+
+	def extensions(self) -> ActorExtensions:
+		"""The kinds, founding rules, policies and commands the shipped game and its mods give the actors."""
+		if self._extensions is None:
+			self._extensions = combine_extensions(self.needs.actor_kinds(), self.needs.actor_spawners(), self.needs.actor_world_scope(),
+			                                      self.needs.actor_policies(), self.needs.player_commands())
+		return self._extensions
+
+	def shipped_actor_kinds(self) -> dict:
+		return shipped_extensions().kinds
+
+	def shipped_actor_spawners(self) -> list:
+		return shipped_extensions().spawners
+
+	def shipped_actor_world_scope(self) -> Any:
+		return shipped_extensions().world_scope
+
+	def shipped_actor_policies(self) -> dict:
+		return shipped_extensions().policies
+
+	def shipped_player_commands(self) -> dict:
+		return shipped_extensions().commands
+
+	def provide_declared_kinds(self) -> dict:
+		"""The kinds the installed mods declare in data (a body of people with needs and a growth rule)."""
+		return self.needs.declared_actor_kinds()
 
 	def cast(self) -> ActorRegistry:
 		"""The registry of governments and firms, rebuilt whenever the state object is replaced."""
 		state = self.world
 		registry = self._registry
 		if registry is None or registry.state is not state:
-			self.needs.actor_kinds_registered()
-			registry = ActorRegistry(state)
+			registry = ActorRegistry(state, self.extensions())
 			self._registry = registry
 		return registry
 

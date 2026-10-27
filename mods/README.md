@@ -176,7 +176,11 @@ Data is the default and covers most needs. A mod that needs Python lists files i
 
 Each file defines `register(api)`. The `api` object registers commands (`@api.command(name, group=..., summary=...,
 usage=[...], description=...)` with a handler `(sim, nodes, cmd, ended) -> dict`), actor kinds (`api.actor_kind`),
-policies (`api.policy`) and spawners (`api.spawner`); every name is forced into `<mod_id>:`. A handler keeps its
+policies (`api.policy`), spawners (`api.spawner`) and a player actor's orders (`api.player_command`); every name is
+forced into `<mod_id>:`. Each of these records an answer to an extension point of the module that owns it; `api.provide(point,
+function)` adds an answer to any point directly (`actor_kinds`, `actor_spawners`, `actor_policies`, `player_commands`,
+`wealth_claims`, `town_population`, `town_mortality_premium`, `director_overhead`, `externality`, `store_declarations`, and
+a module's own). What a mod records is kept per mod, so two games in one process run the mods of their own set. A handler keeps its
 state only in `api.state(sim.state.interface)`, a plain dict that is saved with the game, and draws random numbers
 only from `api.rng(world, ...)`, so saves and the fingerprint stay reproducible.
 
@@ -193,20 +197,20 @@ together is a load error naming the mod and the phase.
 
 ### Feeding the town, the deaths and the harvest
 
-Four more doors take a provider; none changes the game unless a mod registers one.
+Four more doors take a provider; none changes the game unless a mod provides one.
 
 * `api.director_overhead(function)`: `function(sim) -> hours` a year charged against the directed-hours pool
-  (`sim/engine/director_overhead.py`). The hours count as committed, so every free-hours check sees them; a negative
-  answer counts as zero.
+  (the workforce module's `director_overhead` point). The hours count as committed, so every free-hours check sees them;
+  a negative answer counts as zero; the answers are added.
 * `api.town_provider(name, function, mortality_premium=None)`: `function(labour, tile, nominal_people) -> people or None`
-  says how many people live in a tile's town (`sim/labour/town_providers.py`). `None` declines; the answer is bounded
-  by the tile's own people. The labour market, `map` and every hire reach read it. The optional
+  says how many people live in a tile's town (the workforce module's `town_population` point). `None` declines; the last
+  provider in mod load order that answers wins, and the answer is bounded by the tile's own people. The labour market, `map` and every hire reach read it. The optional
   `mortality_premium(labour, tile, town_people) -> share or None` is the town's excess over the baseline death rate; it
   is averaged over the tile's people and reaches `Population.step` (`urban_mortality_premium`). A provider reads the
   game through `labour.simulation_for_providers()` and should read a store a phase wrote, so a loaded game answers
   as the live one did.
 * `api.externality(provider)`: `provider(sim, year) -> {"deaths_by_band": {band: people}, "yield_factor_by_tile":
-  {tile: factor}}` (either key optional; `sim/engine/externalities.py`). Deaths join the year's epidemic deaths before
+  {tile: factor}}` (either key optional; the demography module's `externality` point, which agriculture reads too). Deaths join the year's epidemic deaths before
   the demographic step; a factor from 0 to 1 scales the yield of land-bound producers on that tile. Factors from
   several providers multiply. The pooled national harvest the people eat is scaled too, by the tile's share of the
   arable land times its loss (`weather_pooling.harm_multiplier`).

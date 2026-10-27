@@ -356,7 +356,4 @@ def register(api):
                 taken += paid
         return taken
 
-    from sim.polity import api as polity_api
-    hook = getattr(polity_api, "register_wealth_claims", None)   # absent until the engine counts claims
-    if hook is not None:
-        hook(claims_owed, seize_claims)
+    api.provide("wealth_claims", lambda: (claims_owed, seize_claims))
