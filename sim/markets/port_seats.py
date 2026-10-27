@@ -6,6 +6,7 @@ result is stored with the economy (`stored["seat_sales"]`, in coin) and read bac
 """
 from sim.agents.api import edges
 from sim.economy import api as economy_api
+from sim.ledger.api import PayEdge, ReceiveFromEdge
 
 from sim.production.api import concern_sales
 
@@ -42,8 +43,8 @@ def settle_seats(sim, economy, offered_by_seat, inputs_by_seat, edge_id):
                for seat_id in sorted(sim.state.seats)}
     for seat_id in sorted(offered_by_seat):
         with sim.act_as(seat_id):
-            sim.receive_from_edge(edges.EDGE_CUSTOMERS, takings.get(seat_id, 0.0), "concern sales")
-            sim.pay_edge(edges.EDGE_SUPPLIERS, inputs_by_seat.get(seat_id, 0.0), "inputs of concerns sold in the book")
+            sim.send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, takings.get(seat_id, 0.0), "concern sales"))
+            sim.send(PayEdge(edges.EDGE_SUPPLIERS, inputs_by_seat.get(seat_id, 0.0), "inputs of concerns sold in the book"))
     return sold, takings
 
 

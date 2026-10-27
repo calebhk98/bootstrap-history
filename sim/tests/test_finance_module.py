@@ -4,17 +4,16 @@ call are tested where they are (test_credit_freeze_rules, test_affordability_and
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 from types import SimpleNamespace
 from unittest import mock
 
 from sim.agents.api import EDGE_SAVERS
 from sim.agents.api import edges
-from sim.finance import insolvency
 from sim.finance.commands import NoteLenderPosting
 from sim.finance.constants import (DEBT_BONDAGE_DEFAULT_TERM_YEARS, INSOLVENCY_ARTISAN_FLOOR, INSOLVENCY_YEARS_BEFORE_BLEED)
 from sim.finance.state import FinanceSeat
+from sim.ledger.api import SettleWithEdge
 from sim.reporting.api import RecordEvent
 from sim.tests import finance_host, module_harness
 
@@ -93,28 +92,24 @@ class EnterDebtBondage(unittest.TestCase):
     def module(self, civilisation, years_left=0.0):
         module = finance_host.build(seat=FinanceSeat(bondage_years_left=years_left), civilisation=civilisation, acting_balance=-700.0,
                                     legacy_edge_account={edges.EDGE_CREDITORS: "creditors"})
-        settled = []
-        ledger_stub = types.SimpleNamespace(settle=lambda actor, edge, amount, text: settled.append((edge, amount)))
-        return module, settled, ledger_stub
+        return module
 
     def test_a_society_with_debt_bondage_puts_the_debtor_into_service_for_the_term(self):
-        module, settled, ledger_stub = self.module({"debt_bondage": True, "bondage_years": 8.0})
-        with mock.patch.object(insolvency, "ledger", ledger_stub):
-            self.assertTrue(module.enter_debt_bondage(100))
+        module = self.module({"debt_bondage": True, "bondage_years": 8.0})
+        self.assertTrue(module.enter_debt_bondage(100))
+        settled = [(command.edge, command.balance) for command in module_harness.sent(module) if isinstance(command, SettleWithEdge)]
         self.assertEqual((module.seat.bondage_years_left, module.seat.bondage_debt), (8.0, 700.0))
-        self.assertEqual(settled, [("creditors", 0.0)])
+        self.assertEqual(settled, [(edges.EDGE_CREDITORS, 0.0)])
         self.assertEqual([event.kind for event in events(module)], ["debt_bondage"])
 
     def test_a_society_without_it_does_not(self):
-        module, settled, ledger_stub = self.module({"debt_bondage": False})
-        with mock.patch.object(insolvency, "ledger", ledger_stub):
-            self.assertFalse(module.enter_debt_bondage(100))
-        self.assertEqual((module.seat.bondage_years_left, settled), (0.0, []))
+        module = self.module({"debt_bondage": False})
+        self.assertFalse(module.enter_debt_bondage(100))
+        self.assertEqual((module.seat.bondage_years_left, [c for c in module_harness.sent(module) if isinstance(c, SettleWithEdge)]), (0.0, []))
 
     def test_a_debtor_already_in_service_is_not_put_in_again(self):
-        module, settled, ledger_stub = self.module({"debt_bondage": True}, years_left=3.0)
-        with mock.patch.object(insolvency, "ledger", ledger_stub):
-            self.assertFalse(module.enter_debt_bondage(100))
+        module = self.module({"debt_bondage": True}, years_left=3.0)
+        self.assertFalse(module.enter_debt_bondage(100))
         self.assertEqual(module.seat.bondage_years_left, 3.0)
 
     def test_the_default_term_stands_when_the_civilisation_names_none(self):

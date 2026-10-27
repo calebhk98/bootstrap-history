@@ -4,7 +4,7 @@ Until the founder's purse and tonnes ledger move into the ledger's own state, it
 bridge's `legacy_*` views; those reads go when the state moves (docs/architecture/MODULE_MIGRATION_TASKS.md)."""
 from typing import Any
 
-from sim.agents.api import edges, ledger
+from sim.agents.api import GOVERNMENT_PREFIX, edges, ledger
 from sim.assembly.api import Module
 from sim.refusal import Refusal
 
@@ -34,6 +34,48 @@ class Ledger(Module):
 		ledger.transfer(self.edge(command.edge), payee, command.amount, command.purpose)
 		self.bump(MONEY)
 		return None
+
+	def pay_actor(self, command: Any) -> None:
+		payer = self.needs.cast().get(command.payer)
+		if command.payee in self.needs.legacy_seats():
+			payee = self.needs.seat_party[command.payee]
+		else:
+			cast = self.needs.cast()
+			payee = cast.get(command.payee) or cast.ensure_government(command.payee[len(GOVERNMENT_PREFIX):])
+		ledger.transfer(payer, payee, command.amount, command.purpose)
+		self.bump(MONEY)
+
+	def pay_actor_from_household(self, command: Any) -> Any:
+		payee = self.needs.cast().get(command.payee)
+		if payee is None:
+			return Refusal("no_such_actor", "the cast holds no actor %s" % command.payee)
+		ledger.transfer(self.needs.legacy_household_actor(), payee, command.amount, command.purpose)
+		self.bump_seat(MONEY)
+		return None
+
+	def take_from_household_purse(self, command: Any) -> Any:
+		taker = self.needs.cast().get(command.taker)
+		if taker is None:
+			return Refusal("no_such_actor", "the cast holds no actor %s" % command.taker)
+		ledger.transfer(self.needs.legacy_acting_household(), taker, command.amount, command.purpose)
+		self.bump_seat(MONEY)
+		return None
+
+	def settle_with_edge(self, command: Any) -> None:
+		ledger.settle(self.needs.legacy_household_actor(), self.edge(command.edge), command.balance, command.purpose)
+		self.bump_seat(MONEY)
+
+	def rescale_household_money(self, command: Any) -> None:
+		household = self.needs.legacy_acting_household()
+		household.capital = household.capital * command.ratio
+		if household.cash_mark is not None:
+			household.cash_mark = household.cash_mark * command.ratio
+		self.bump_seat(MONEY)
+
+	def withdraw_household_money(self, command: Any) -> None:
+		household = self.needs.legacy_household_actor()
+		household.money = household.money - command.amount
+		self.bump_seat(MONEY)
 
 	def receive_from_edge(self, command: Any) -> None:
 		ledger.transfer(self.edge(command.edge), self.needs.legacy_acting_household(), command.amount, command.purpose)

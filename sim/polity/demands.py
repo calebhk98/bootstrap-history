@@ -5,9 +5,9 @@ draws no random number, so complying leaves the game's stream as it was.
 
 Needs: legacy_dice, state_treasury, legacy_game, acting_balance, legacy_acting_household, transfer_listening, send (PayEdge,
 RecordEvent)."""
-from sim.agents.api import demand_answer, edges, ledger
+from sim.agents.api import demand_answer, edges
 from sim.hazards.api import capital_lost
-from sim.ledger.api import PayEdge
+from sim.ledger.api import PayEdge, TakeFromHouseholdPurse
 from sim.reporting.api import RecordEvent
 
 from . import state_demand
@@ -30,12 +30,12 @@ class Demands:
 			seat.scandal += demand_answer.blame_for_refusal(True)
 		return answer
 
-	def lose_capital_to(self, fraction, cause, taker):
-		"""A fraction of what the household holds goes to `taker` (the state's treasury is not a named edge); the sum taken."""
+	def lose_capital_to(self, fraction, cause, taker_id):
+		"""A fraction of what the household holds goes to the actor `taker_id` (the state's treasury is not a named edge); the sum taken."""
 		lost = capital_lost(self.needs.legacy_acting_household().capital, fraction)
 		if lost <= 0.0:
 			return 0.0
-		ledger.transfer(self.needs.legacy_acting_household(), taker, lost, cause)
+		self.needs.send(TakeFromHouseholdPurse(taker_id, lost, cause))
 		return lost
 
 	def answer_confiscation(self, fraction, cause):
@@ -51,7 +51,7 @@ class Demands:
 		paid = answer["paid"]
 		if paid > 0.0 and capital > 0.0:
 			purse_part = min(paid, capital)
-			taken = self.lose_capital_to(purse_part / capital, cause, self.needs.state_treasury())
+			taken = self.lose_capital_to(purse_part / capital, cause, self.needs.state_treasury().actor_id)
 			paid -= purse_part
 		if paid > 0.0:
 			for _reader, seizer in state_demand.WEALTH_CLAIMS:
@@ -73,8 +73,7 @@ class Demands:
 			if settled["cost"] > 0.0:
 				self.needs.send(PayEdge(edges.EDGE_OFFICIALS, settled["cost"], "concealing wealth"))
 			if settled["seized"] > 0.0:
-				ledger.transfer(self.needs.legacy_acting_household(), self.needs.state_treasury(), settled["seized"],
-				                "wealth found hidden")
+				self.needs.send(TakeFromHouseholdPurse(self.needs.state_treasury().actor_id, settled["seized"], "wealth found hidden"))
 				self.needs.send(RecordEvent.of("hidden_wealth_found", "The state found wealth you had hidden and took it with a penalty"))
 			seat.concealed = settled["concealed"]
 		if seat.defiance > 0.0:

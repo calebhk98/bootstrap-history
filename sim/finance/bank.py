@@ -4,6 +4,7 @@ Needs: dealing_party, actor_world, nodes_with_mechanic, agent_economy_opened, ag
 from typing import Any, Dict
 
 from sim.economy import api as economy_api
+from sim.ledger.api import WithdrawHouseholdMoney
 from sim.refusal import Refusal
 
 from . import bank_rules
@@ -29,6 +30,6 @@ class Bank:
 		if bank is None:
 			refusal = Refusal("capital_not_positive", "Nothing went into the bank.")
 			return {"ok": False, "error": refusal, "cause": refusal.cause}
-		party.money = party.money - float(capital)
+		needs.send(WithdrawHouseholdMoney(float(capital)))
 		return {"ok": True, "bank": bank.agent_id, "capital": float(capital),
 		        "note": "Households with savings now deposit with it; its earnings above its capital are paid to you."}

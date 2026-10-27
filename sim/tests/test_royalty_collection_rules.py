@@ -5,6 +5,8 @@ QUICK_TOPIC = True
 
 from types import SimpleNamespace
 
+from sim.agents.api import ledger
+from sim.ledger.api import PayActor
 from sim.agents.licence import collect_patent_royalty, royalty_due
 from sim.actors.world_disclosure import DisclosureView
 from sim.tests.world_stand_in import fake_needs
@@ -130,32 +132,34 @@ check("seat_royalties_paid: a licensee in debt pays nobody", seat_royalties_paid
 
 
 # ---- DisclosureView.collect_royalty: seats and the patent holder together, through the ledger
-def view_over(seats, parties, year=100):
+def view_over(seats, parties, firm, year=100):
+	"""The view over written-out seats; the ledger's answer to `PayActor` is the ledger's own transfer from `firm` to the seat's party."""
 	seat_parties = {seat_id: Party(seat_id, 0.0) for seat_id in seats}
-	needs = fake_needs(legacy_seats=seats, seat_party=seat_parties.__getitem__,
+	needs = fake_needs({PayActor: lambda command: ledger.transfer(firm, seat_parties[command.payee], command.amount, command.purpose)},
+	                   legacy_seats=seats, seat_party=seat_parties.__getitem__,
 	                   disclosures={seat_id: held.disclosed for seat_id, held in seats.items()})
 	return SimpleNamespace(needs=needs, _holder=finder(*parties), year=year), seat_parties
 
 
 firm, holder = firm_owing(0.1), holder_with(110)
-view, seat_parties = view_over({"alpha": seat(["loom"], [], {"firm:2": {"royalty": 0.2}})}, [holder])
+view, seat_parties = view_over({"alpha": seat(["loom"], [], {"firm:2": {"royalty": 0.2}})}, [holder], firm)
 paid = DisclosureView.collect_royalty(view, firm, "loom", 1000.0)
 check("collect_royalty: the seat and the patent holder are each paid their share, and the firm pays both",
       paid == 300.0 and seat_parties["alpha"].money == 200.0 and holder.money == 200.0 and firm.money == 700.0,
       (paid, seat_parties["alpha"].money, holder.money, firm.money))
 firm = Party("firm:2", 1000.0)
-view, seat_parties = view_over({"alpha": seat(["loom"])}, [])
+view, seat_parties = view_over({"alpha": seat(["loom"])}, [], firm)
 paid = DisclosureView.collect_royalty(view, firm, "loom", 1000.0)
 check("collect_royalty: with no licence and no patent nobody is paid", paid == 0.0 and seat_parties["alpha"].money == 0.0 and firm.money == 1000.0, paid)
 firm = Party("firm:2", 1000.0)
-view, seat_parties = view_over({}, [])
+view, seat_parties = view_over({}, [], firm)
 check("collect_royalty: with no seats and no holder there is nothing to collect", DisclosureView.collect_royalty(view, firm, "loom", 1000.0) == 0.0 and firm.money == 1000.0)
 firm = firm_owing(0.1)
-view, _ = view_over({}, [holder_with(110)])
+view, _ = view_over({}, [holder_with(110)], firm)
 check("collect_royalty: a patent holder alone is paid", DisclosureView.collect_royalty(view, firm, "loom", 1000.0) == 100.0 and firm.money == 900.0)
 firm = Party("firm:2", 150.0)
 two_seats = {"alpha": seat(["loom"], [], {"firm:2": {"royalty": 0.1}}), "beta": seat(["loom"], [], {"firm:2": {"royalty": 0.25}})}
-view, seat_parties = view_over(two_seats, [])
+view, seat_parties = view_over(two_seats, [], firm)
 paid = DisclosureView.collect_royalty(view, firm, "loom", 1000.0)
 check("collect_royalty: a firm short of money pays the seats only what its purse holds and never goes below zero",
       paid == 150.0 and seat_parties["alpha"].money == 100.0 and seat_parties["beta"].money == 50.0 and firm.money == 0.0,

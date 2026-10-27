@@ -12,6 +12,8 @@ from sim.tests import polity_host
 
 
 class Treasury:
+	actor_id = "government:test"
+
 	def __init__(self):
 		self.received = 0.0
 
@@ -38,7 +40,8 @@ def fixture(capital, owed):
 		taker.received += seized
 		return seized
 
-	module = polity_host.build(acting_balance=lambda: household.capital, legacy_acting_household=household, state_treasury=treasury)
+	module = polity_host.build(acting_balance=lambda: household.capital, legacy_acting_household=household, state_treasury=treasury,
+	                           answers=polity_host.takes_from_purse(household, treasury))
 	module.state_reach = lambda: 0.5
 	return module, household, treasury, owed_box, reader, seizer
 

@@ -2,12 +2,11 @@
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old
 code did, and is never cached."""
-from sim.agents.api import GOVERNMENT_PREFIX, ledger
+from sim.agents.api import GOVERNMENT_PREFIX
 from sim.assembly.api import KEYED, QUOTE
 from sim.land.api import action_results
-from sim.ledger.api import PayActor
 
-from .bridge import bridge_command, bridge_view
+from .bridge import bridge_view
 
 
 # ---- knowledge ----
@@ -19,7 +18,7 @@ def techniques_with_results(sim, techniques):
 
 
 
-# ---- polity and the ledger ----
+# ---- polity ----
 
 @bridge_view("holder_treasury", kind=KEYED)
 def holder_treasury(sim, holder):
@@ -29,13 +28,3 @@ def holder_treasury(sim, holder):
         return holder
     government = sim.actors.government_of(holder)
     return government.actor_id if government is not None else GOVERNMENT_PREFIX + str(holder)
-
-
-@bridge_command(PayActor)
-def pay_actor(sim, command):
-    """The payer pays the payee through the ledger's transfer; a government not yet in the cast is opened."""
-    if command.payee in sim.state.seats:
-        payee = sim.seat_party(command.payee)
-    else:
-        payee = sim.actors.get(command.payee) or sim.actors.ensure_government(command.payee[len(GOVERNMENT_PREFIX):])
-    ledger.transfer(sim.actors.get(command.payer), payee, command.amount, command.purpose)

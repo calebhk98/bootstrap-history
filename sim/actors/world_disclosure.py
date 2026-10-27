@@ -1,7 +1,8 @@
 """What the world view says about how each invention was disclosed (kept secret, licensed, published)."""
 from typing import Any
 
-from sim.agents.api import PROOF_YEARS, SECRET_EXPOSURE, ledger, licence
+from sim.agents.api import PROOF_YEARS, SECRET_EXPOSURE, licence
+from sim.ledger.api import PayActor
 
 from sim.seats.api import (base_visibility, builders_of, disclosure_modes, most_open_mode, seat_royalties_due, seat_royalties_paid,
 						   years_to_be_believed)
@@ -63,6 +64,6 @@ class DisclosureView:
 		paid = 0.0
 		owed = seat_royalties_due(needs.legacy_seats(), node_id, firm.actor_id, takings, needs.disclosures.__getitem__)
 		for seat_id, due in seat_royalties_paid(owed, firm.money):
-			ledger.transfer(firm, needs.seat_party[seat_id], due, "licence")
+			needs.send(PayActor(firm.actor_id, seat_id, due, "licence"))
 			paid += due
 		return paid + licence.collect_patent_royalty(self, self._holder, firm, node_id, takings)

@@ -1,11 +1,12 @@
 """The ledger's module spec (sim/assembly)."""
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, ViewSpec
 
-from .commands import BankStock, ChangeStock, PayActorFromEdge, PayEdge, PayEdgeFrom, PayWages, ReceiveFromEdge
+from .commands import (BankStock, ChangeStock, PayActor, PayActorFromEdge, PayActorFromHousehold, PayEdge, PayEdgeFrom, PayWages,
+                       ReceiveFromEdge, RescaleHouseholdMoney, SettleWithEdge, TakeFromHouseholdPurse, WithdrawHouseholdMoney)
 from .ledger import MONEY, STOCK, Ledger
 
-LEGACY_READS = ("legacy_acting_household", "legacy_edge_account", "cast", "legacy_stock_ledger",
-                "legacy_opening_stock", "legacy_opening_record", "year")
+LEGACY_READS = ("legacy_acting_household", "legacy_household_actor", "legacy_edge_account", "cast", "legacy_seats", "seat_party",
+                "legacy_stock_ledger", "legacy_opening_stock", "legacy_opening_record", "year")
 
 MODULE_SPECS = (ModuleSpec(
 	"ledger", Ledger, channels=(MONEY, STOCK),
@@ -18,7 +19,10 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("transfer_listening", "transfer_listening", kind=QUOTE),
 	),
 	extension_points=(ExtensionPoint("transfer_surcharge", LIST),),   # (payer, payee, amount, purpose) -> (edge, amount, cause) or None
-	applies=((PayEdge, "pay_edge"), (PayEdgeFrom, "pay_edge_from"), (PayActorFromEdge, "pay_actor_from_edge"), (ReceiveFromEdge, "receive_from_edge"), (PayWages, "pay_wages"),
+	applies=((PayEdge, "pay_edge"), (PayEdgeFrom, "pay_edge_from"), (PayActorFromEdge, "pay_actor_from_edge"), (PayActor, "pay_actor"),
+	         (PayActorFromHousehold, "pay_actor_from_household"), (TakeFromHouseholdPurse, "take_from_household_purse"),
+	         (SettleWithEdge, "settle_with_edge"), (RescaleHouseholdMoney, "rescale_household_money"),
+	         (WithdrawHouseholdMoney, "withdraw_household_money"), (ReceiveFromEdge, "receive_from_edge"), (PayWages, "pay_wages"),
 	         (ChangeStock, "change_stock"), (BankStock, "bank_stock")),
 	reads=LEGACY_READS,
 ),)

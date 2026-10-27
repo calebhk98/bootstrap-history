@@ -8,6 +8,7 @@ registry and the game itself (the ventures' review and the labour market's quote
 Nothing it publishes is cached: the agents' shared arrears rule writes `interest_arrears` and `arrears_years` behind the module
 through the household's `arrears_book`, and every answer reads the economy, the actors' book and the household directly."""
 from sim.assembly.api import QUOTE, ModuleSpec, PhaseHook, ViewSpec
+from sim.ledger.api import SettleWithEdge, WithdrawHouseholdMoney
 from sim.polity.api import SetReputation
 from sim.reporting.api import RecordEvent
 from sim.resources.api import MothballMines
@@ -80,5 +81,5 @@ MODULE_SPECS = (ModuleSpec(
 	),
 	phases=(PhaseHook("credit_limit", "step_credit_limit"),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(RecordEvent, SetReputation, MothballMines, BleedStaff, DisperseDependants),
+	sends=(RecordEvent, SetReputation, SettleWithEdge, WithdrawHouseholdMoney, MothballMines, BleedStaff, DisperseDependants),
 ),)

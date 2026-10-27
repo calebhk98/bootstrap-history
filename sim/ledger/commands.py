@@ -102,3 +102,45 @@ class TakeGoods(Command):
 	tonnes: float
 	edge: str
 	actor: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class PayActorFromHousehold(Command):
+	"""The acting seat's household, as a party in the actors' book, pays an actor of the cast (named by its id): one posting
+	in the book, entered in the cash book and in the payee's record. Refused with the cause `no_such_actor` when the cast
+	holds no such actor."""
+	payee: str
+	amount: float
+	purpose: Any
+
+
+@dataclass(frozen=True)
+class TakeFromHouseholdPurse(Command):
+	"""An actor of the cast (named by its id) takes money out of the acting seat's household purse: the purse is debited by
+	the figure and the taker credited, as the household's own state does it (not as one posting in the book). Refused with
+	the cause `no_such_actor` when the cast holds no such actor."""
+	taker: str
+	amount: float
+	purpose: Any
+
+
+@dataclass(frozen=True)
+class SettleWithEdge(Command):
+	"""The acting seat's household is brought to `balance` by moving the difference to or from a named edge."""
+	edge: str
+	balance: float
+	purpose: Any
+
+
+@dataclass(frozen=True)
+class RescaleHouseholdMoney(Command):
+	"""The acting seat's purse, and the cash mark its cash book measures from, are multiplied by `ratio`: the money's unit
+	changed, nothing was paid."""
+	ratio: float
+
+
+@dataclass(frozen=True)
+class WithdrawHouseholdMoney(Command):
+	"""The acting seat's household money falls by `amount` with no posting on the ledger's side: the money entered the
+	agent economy's own book at the same moment (a bank's capital)."""
+	amount: float

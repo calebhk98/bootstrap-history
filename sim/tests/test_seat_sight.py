@@ -10,7 +10,8 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.agents import licence
-from sim.agents.api import Household, HouseholdParty, OBSERVATION_RANGE_KM, PLAYER_VISIBLE_EXPOSURE, SECRET_EXPOSURE
+from sim.agents.api import Household, HouseholdParty, OBSERVATION_RANGE_KM, PLAYER_VISIBLE_EXPOSURE, SECRET_EXPOSURE, ledger
+from sim.ledger.api import PayActor
 from sim.seats import api as seat_builds
 from sim.knowledge.rules import earliest_done_year as _earliest
 from sim.actors.world import ActorWorld
@@ -185,8 +186,9 @@ class RoyaltySim:
 
     def __init__(self):
         self.cast = lambda: SimpleNamespace(actors={}, patent_holders=lambda node_id: [], get=lambda actor_id: None)
-        self.needs = fake_needs(legacy_seats=state.seats, disclosures=disclosed,
-                                seat_party=lambda seat_id: maker if seat_id == FIRST_SEAT_ID else buyer)
+        parties = lambda seat_id: maker if seat_id == FIRST_SEAT_ID else buyer
+        self.needs = fake_needs({PayActor: lambda command: ledger.transfer(firm, parties(command.payee), command.amount, command.purpose)},
+                                legacy_seats=state.seats, disclosures=disclosed, seat_party=parties)
 
 
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "license", "published_year": None,

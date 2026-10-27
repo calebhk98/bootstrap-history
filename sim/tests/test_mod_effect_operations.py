@@ -12,6 +12,7 @@ from sim.tests import hazards_host, module_harness
 from sim.engine.mod_effects import ModEffects
 from sim.engine.mods import ModError
 from sim.land.api import TransferTile
+from sim.ledger.api import PayActor, PayActorFromEdge, PayEdgeFrom
 from sim.refusal import cause_of
 
 from .bridge_send import attach_send
@@ -23,27 +24,31 @@ QUICK_TOPIC = True
 ACME = "test_acme_k3f9"
 effects = ModEffects(ACME)
 
-# --- money through a named edge: payer to the edge, and the edge to the payee.
-government, edge_account = object(), object()
-money_game = SimpleNamespace(actors=SimpleNamespace(get=lambda actor_id: government if actor_id == "government:x" else None),
-                             edge=lambda name: edge_account if name == edges.EDGE_OFFICIALS else None)
-with mock.patch.object(mod_effects.agents_api.ledger, "transfer") as transfer:
-    effects.pay_edge(money_game, "government:x", edges.EDGE_OFFICIALS, 10.0, "a bribe")
-    effects.receive_from_edge(money_game, "government:x", edges.EDGE_OFFICIALS, 4.0, "returned")
-check("pay_edge moves the amount from the actor to the named edge through the ledger, with its purpose",
-      transfer.call_args_list[0].args == (government, edge_account, 10.0, "a bribe"), transfer.call_args_list)
-check("receive_from_edge moves it the other way", transfer.call_args_list[1].args == (edge_account, government, 4.0, "returned"), transfer.call_args_list)
-with mock.patch.object(mod_effects.agents_api.ledger, "transfer") as untouched:
-    refused = []
-    for edge, amount in ((edges.EDGE_OFFICIALS, -1.0), ("nowhere", 1.0)):
-        try:
-            effects.pay_edge(money_game, "government:x", edge, amount, "x")
-        except ModError:
-            refused.append(edge)
-check("a negative amount or an undeclared edge is refused before the ledger is touched", refused == [edges.EDGE_OFFICIALS, "nowhere"] and not untouched.called)
-with mock.patch.object(mod_effects.agents_api.ledger, "transfer") as own_edge:
-    effects.pay_edge(SimpleNamespace(actors=money_game.actors, edge=lambda name: name), "government:x", "edge:%s:tithe" % ACME, 1.0, "own edge")
-check("the mod's own namespaced edge is accepted", own_edge.call_args.args[1] == "edge:%s:tithe" % ACME)
+# --- money: the ledger is sent the payment (an actor to an edge, an edge to an actor, an actor to an actor).
+government = object()
+sent_money = []
+money_game = SimpleNamespace(actors=SimpleNamespace(get=lambda actor_id: government if actor_id in ("government:x", "government:y") else None),
+                             send=sent_money.append)
+effects.pay_edge(money_game, "government:x", edges.EDGE_OFFICIALS, 10.0, "a bribe")
+effects.receive_from_edge(money_game, "government:x", edges.EDGE_OFFICIALS, 4.0, "returned")
+effects.pay(money_game, "government:x", "government:y", 2.0, "a gift")
+check("pay_edge sends the ledger the actor, the named edge, the amount and the purpose", sent_money[0] == PayEdgeFrom("government:x", edges.EDGE_OFFICIALS, 10.0, "a bribe"), sent_money)
+check("receive_from_edge sends the payment the other way", sent_money[1] == PayActorFromEdge(edges.EDGE_OFFICIALS, "government:x", 4.0, "returned"), sent_money)
+check("pay sends the payer, the payee, the amount and the purpose", sent_money[2] == PayActor("government:x", "government:y", 2.0, "a gift"), sent_money)
+refused = []
+for edge, amount in ((edges.EDGE_OFFICIALS, -1.0), ("nowhere", 1.0)):
+    try:
+        effects.pay_edge(money_game, "government:x", edge, amount, "x")
+    except ModError:
+        refused.append(edge)
+try:
+    effects.pay(money_game, "government:x", "nobody", 1.0, "x")
+except ModError:
+    refused.append("nobody")
+check("a negative amount, an undeclared edge or an unknown actor is refused before the ledger is sent anything",
+      refused == [edges.EDGE_OFFICIALS, "nowhere", "nobody"] and len(sent_money) == 3, refused)
+effects.pay_edge(money_game, "government:x", "edge:%s:tithe" % ACME, 1.0, "own edge")
+check("the mod's own namespaced edge is accepted", sent_money[-1].edge == "edge:%s:tithe" % ACME)
 
 # --- goods: a move from the named edge into the account (added) or from the account to the edge (removed), at a tile.
 economy = object()

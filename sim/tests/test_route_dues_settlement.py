@@ -6,7 +6,6 @@ import unittest
 from types import SimpleNamespace
 
 from sim.agents.api import DUES_CAUSE
-from unittest import mock
 
 from sim.engine import bridge_freight
 from sim.actors.world_trade import TradeView
@@ -73,7 +72,7 @@ class PayRouteDuesCommand(unittest.TestCase):
 
 
 class TreasuryOfAHolder(unittest.TestCase):
-    """The bridge's `holder_treasury` view and its `PayActor` handler, on a stand-in sim."""
+    """The bridge's `holder_treasury` view on a stand-in sim (the ledger's `PayActor` is test_ledger_commands)."""
 
     def sim(self, governments=()):
         opened = []
@@ -89,26 +88,6 @@ class TreasuryOfAHolder(unittest.TestCase):
         self.assertEqual(bridge_freight.holder_treasury(sim, "seat1"), "seat1")
         self.assertEqual(bridge_freight.holder_treasury(sim, "rome"), "government:rome")
         self.assertEqual(bridge_freight.holder_treasury(sim, "carthage"), "government:carthage")
-
-    def pay(self, sim, payee):
-        paid = []
-        with mock.patch.object(bridge_freight.ledger, "transfer", lambda payer, to, amount, cause: paid.append((payer.actor_id, to.actor_id, amount, cause))):
-            bridge_freight.pay_actor(sim, PayActor("trader", payee, 4.0, DUES_CAUSE))
-        return paid
-
-    def test_a_seat_is_paid_as_its_party(self):
-        sim, _opened = self.sim()
-        self.assertEqual(self.pay(sim, "seat1"), [("trader", "party of seat1", 4.0, DUES_CAUSE)])
-
-    def test_a_government_the_cast_holds_is_paid_without_opening_another(self):
-        sim, opened = self.sim(governments=("rome",))
-        self.assertEqual(self.pay(sim, "government:rome"), [("trader", "government:rome", 4.0, DUES_CAUSE)])
-        self.assertEqual(opened, [])
-
-    def test_a_government_the_cast_lacks_is_opened_for_the_payment(self):
-        sim, opened = self.sim()
-        self.assertEqual(self.pay(sim, "government:carthage"), [("trader", "government:carthage", 4.0, DUES_CAUSE)])
-        self.assertEqual(opened, ["carthage"])
 
 
 class Cargo(TradeView):

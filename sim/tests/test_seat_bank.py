@@ -12,7 +12,8 @@ from sim.economy.accounts import Book
 from sim.economy.types import EDGE_MINT, Transfer
 from sim.finance import bank_rules as seat_bank
 from sim.finance.commands import FoundBank
-from sim.tests import finance_host
+from sim.ledger.api import WithdrawHouseholdMoney
+from sim.tests import finance_host, module_harness
 from sim.ui.proto import command_registry
 from sim.ui.proto import dispatch_bank, typed  # noqa: F401  (registers the command and its parser)
 
@@ -51,7 +52,7 @@ class TheBank(unittest.TestCase):
         module.clock.acting_seat = "seat:player"
         answer = module.found_bank(FoundBank(500.0 * coin))
         self.assertTrue(answer["ok"])
-        self.assertEqual(party.money, 5000.0 - 500.0 * coin)
+        self.assertEqual(module_harness.sent(module), [WithdrawHouseholdMoney(500.0 * coin)])
         bank = self.record.banks[answer["bank"]]
         self.assertEqual(bank.founder, "seat:player")
         self.assertAlmostEqual(bank.paid_in, 500.0)
