@@ -46,7 +46,7 @@ def check_one(nodes, civ_id, seed, years, metals, staple=None, occupations=None)
         game.step()
     if occupations is not None:
         occupations.extend(occupation_lines(game))
-    return game.economy.health(metals, staple)
+    return game.view("legacy_economy")().health(metals, staple)
 
 
 def cmd_economy_check(args):

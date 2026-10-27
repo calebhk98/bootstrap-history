@@ -116,3 +116,9 @@ def shared_answer(sim, key, inputs, compute, standalone=False):
     return view_share.of(sim)._shared_answer(key, inputs, compute, standalone)
 
 
+
+
+@bridge_view("legacy_labour")
+def legacy_labour(sim):
+    """The workforce module's labour implementation, for engine code and mods that still call its members."""
+    return sim.assembly.modules["workforce"].labour

@@ -47,7 +47,7 @@ class ViewShare:
             return None
         projects = sim.state.projects
         return ((sim._material_prices(), demand),
-                (sim.goods_market.others_stamp(), sim.state.scenario.year,
+                (sim.view("legacy_goods_market")().others_stamp(), sim.state.scenario.year,
                  sim.household.done_version, sim.household.operating_version,
                  len(projects.done), len(projects.operating),
                  sim.view("forest_hectares")(), sim.view("nitre_beds")()["square_metres"], sim.view("population")().total,

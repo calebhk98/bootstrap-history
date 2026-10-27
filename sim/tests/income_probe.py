@@ -14,7 +14,7 @@ RAMPED_YEARS = 10    # opened this long ago, so no concern is still ramping or s
 
 def open_book_concerns(game, count):
     """Open up to `count` concerns of the default Rome game with an output the economy trades; their ids."""
-    traded = set(game.economy.agent_prices_at() or {})
+    traded = set(game.view("legacy_economy")().agent_prices_at() or {})
     game.state.household.artisans += 20.0 * count    # hands to supervise them
     world = game.view("actor_world")()
     opened = []

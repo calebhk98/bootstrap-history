@@ -11,6 +11,7 @@ from sim.production import industry_learning as learning
 from sim.production import learning as concern_learning
 from sim.production.node_output import Baskets
 from sim.tests import production_host
+from sim.tests.ui_stand_in import Game
 
 FURNACE = {"good": "furnace", "build_labour_hours": {"mason": 300.0, "smith": 100.0}, "service_life_years": 10}
 
@@ -82,7 +83,7 @@ class InputSupply(unittest.TestCase):
 
 def concern_world(producers, days, depths=None):
     """A stand-in Sim for the input supply: `producers` {good: [(tile, recipe)]}, `days` to the base."""
-    stub = types.SimpleNamespace(
+    stub = Game(
         economy=types.SimpleNamespace(agent_producers_by_good=lambda: producers),
         state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=10)))
     stub._done_memo = lambda name, key, compute: compute()

@@ -17,7 +17,7 @@ def cash_remedies(actor):
         if material in breeding_stock:
             continue
         stock = actor.material_stock_t(material)
-        _key, tonnes, money = actor.goods_market.quote_sell(material, stock)
+        _key, tonnes, money = actor.view("legacy_goods_market")().quote_sell(material, stock)
         if money > 0:
             found.append((money, "sell %s %s (brings %s now)" % (
                 material, "{:,.1f}".format(tonnes), money_text(money, actor, grouped=True))))

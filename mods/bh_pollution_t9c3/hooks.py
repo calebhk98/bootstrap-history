@@ -33,10 +33,10 @@ def _kilograms_per_unit(material):
 def emissions_by_tile(sim):
     """({tile: {species: kg}}, {tile: {source id: {species: kg}}}) from the producers' last full year, empty before
     the economy has run."""
-    if not sim.economy.agent.opened():
+    if not sim.view("legacy_economy")().agent.opened():
         return {}, {}
     from sim.economy import api as economy_api
-    economy = sim.economy.agent.economy()
+    economy = sim.view("legacy_economy")().agent.economy()
     recipes = economy.setup.recipes
     sources = table()["sources"]
     by_tile, drivers = {}, {}

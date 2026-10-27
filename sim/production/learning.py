@@ -51,7 +51,7 @@ class Learning:
 			return 1.0
 		game = self._game()
 		year = game.state.scenario.year
-		producers = game._producers_memo("producers_by_good", year, game.economy.agent_producers_by_good)
+		producers = game._producers_memo("producers_by_good", year, game.view("legacy_economy")().agent_producers_by_good)
 		if producers is None:   # nothing runs while the economy opens
 			return 1.0
 		base_tile = game.labour.base_tile()

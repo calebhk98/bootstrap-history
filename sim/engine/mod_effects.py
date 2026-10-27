@@ -143,7 +143,7 @@ class ModEffects:
 
     @staticmethod
     def _economy(sim: Any) -> Any:
-        return sim.economy.agent.economy()
+        return sim.view("legacy_economy")().agent.economy()
 
 
 def strata_of(sim: Any, country: str) -> list:

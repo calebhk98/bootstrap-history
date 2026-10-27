@@ -25,7 +25,7 @@ class BookSales:
 		baskets = self.concern_baskets_now(node_id)
 		if baskets is None:
 			return {}
-		return concern_sales.offered_units(baskets.outputs, self.concern_book_scale(node_id), game.economy.agent_trades_good)
+		return concern_sales.offered_units(baskets.outputs, self.concern_book_scale(node_id), game.view("legacy_economy")().agent_trades_good)
 
 	def concern_sells_on_book(self, node_id):
 		"""Whether the clearing pays this concern, so the estimate leaves it out."""
@@ -40,7 +40,7 @@ class BookSales:
 		if baskets is None:
 			return 0.0
 
-		economy_prices = game.economy.agent_prices_at() or {}
+		economy_prices = game.view("legacy_economy")().agent_prices_at() or {}
 
 		def price_of(material):
 			key = game._priced_key(material, economy_prices)

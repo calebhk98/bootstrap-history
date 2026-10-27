@@ -101,7 +101,7 @@ class Depth:
 	def opening_worker_years_by_node(self):
 		"""Worker-years a year the agent economy's producers put into each technique's own entries; None
 		while the economy opens."""
-		by_recipe = self._game().economy.agent_worker_years_by_recipe()
+		by_recipe = self._game().view("legacy_economy")().agent_worker_years_by_recipe()
 		if by_recipe is None:
 			return None
 		gate = {key: entry.get("requires_node") for key, entry in price_solver.default_production_entries().items()}

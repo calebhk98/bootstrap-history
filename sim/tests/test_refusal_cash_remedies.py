@@ -9,6 +9,7 @@ from sim.engine import cash_remedies
 from sim.living_stock.api import stock_rates
 from sim.refusal import facts_of
 from sim.tests import finance_host
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -21,7 +22,7 @@ def _actor(stock=None, upkeep=None, mines=None, employees=None, wages=None, budg
     mines = {} if mines is None else mines
     wages = {} if wages is None else wages
     projects = SimpleNamespace(operating=set(upkeep), done=set(upkeep), granted=set())
-    return SimpleNamespace(
+    return Game(
         SPENDING_DRAW_SHARE_ORDINARY=0.5, capital=cash, civ={"id": "stub"},
         view=lambda name: ((lambda: {"employees": employees or {}}) if name == "staff" else {"material_commodity": {material: material for material in set(stock) | set(stock_rates())}}[name]),
         _material_stock=lambda: stock,
