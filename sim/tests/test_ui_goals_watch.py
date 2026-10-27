@@ -7,6 +7,7 @@ import types
 import unittest
 from unittest import mock
 
+from sim.tests.ui_stand_in import StandIn
 from sim.ui.proto import goals_watch
 from sim.ui.proto.render_typed import render_pretty
 from sim.ui.proto.typed import parse_typed
@@ -21,15 +22,16 @@ def _game(fog=False, visible=("steam", "radio", "formal"), goal="formal", goal_y
              "radio": {"name": "Radio", "pre": ["steam"]},
              "genes": {"name": "Genetics", "pre": ["base"]},
              "formal": {"name": "The formal goal", "pre": ["steam", "radio"]}}
-    game = types.SimpleNamespace(
-        nodes=nodes, goal=goal, goal_year=goal_year, fog=fog, done=set(done),
-        state=types.SimpleNamespace(interface={}))
+    game = StandIn(tree_nodes=nodes, goal=lambda: {"node": game.goal, "year": game.goal_year}, legacy_fog=lambda: game.fog,
+                   techniques_held=lambda: game.done, visibility=lambda node_id, memo=None: game.is_visible(node_id))
+    game.goal, game.goal_year, game.fog, game.done = goal, goal_year, fog, set(done)
+    game.state = types.SimpleNamespace(interface={})
     game.is_visible = lambda node_id: node_id in visible
     return game
 
 
 def _in(game, function, *arguments):
-    with mock.patch.object(goals_watch, "_catalog", lambda sim: [goal for goal in CATALOG if goal["node"] in sim.nodes]):
+    with mock.patch.object(goals_watch, "_catalog", lambda sim: [goal for goal in CATALOG if goal["node"] in sim.view("tree_nodes")()]):
         return function(game, *arguments)
 
 

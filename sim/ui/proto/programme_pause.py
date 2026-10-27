@@ -9,8 +9,8 @@ PAUSE_KEYS = ("pause_debt", "pause_war_risk", "pause_shortage")
 
 def war_risk(sim):
     """Yearly chance a site is sacked by the hazards running now, after what the founder has built."""
-    return sum(sim.hazard_figure("sack_chance", hazard)
-               for hazard, _start, _end, in_progress in hazards_not_yet_past(sim.civ, sim.year)
+    return sum(sim.view("hazard_figure")("sack_chance", hazard)
+               for hazard, _start, _end, in_progress in hazards_not_yet_past(sim.view("civilisation")(), sim.view("year")())
                if in_progress and hazard.get("sack_chance"))
 
 
@@ -25,7 +25,7 @@ def shortage_loss(sim):
 def tripped(sim, pauses):
     """(kind, material, text) for the player-set pause condition that holds now, or None."""
     limit = pauses.get("pause_debt")
-    if limit is not None and -sim.capital > limit:
+    if limit is not None and -sim.view("acting_balance")() > limit:
         return "debt_over_limit", None, "debt over the %s you allowed" % money_text(limit, sim, grouped=True)
     limit = pauses.get("pause_war_risk")
     risk = war_risk(sim) if limit is not None else 0.0

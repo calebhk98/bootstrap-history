@@ -10,12 +10,13 @@ from sim.tests.harness import NODES, ORDER
 from sim.ui.proto.render_screen_state import render_state
 from sim.ui.proto.render_screens_economy import render_money
 from sim.ui.proto.state_waiting import _waiting_on
+from sim.tests.ui_stand_in import Game
 
 
 class WaitingOn(unittest.TestCase):
 
     def setUp(self):
-        self.game = SimpleNamespace(trade_demand_vs_supply=lambda: {}, labour=SimpleNamespace(hours_you_can_call_on=lambda trade: 0.0, director_pool=lambda: 5000.0,
+        self.game = Game(trade_demand_vs_supply=lambda: {}, labour=Game(hours_you_can_call_on=lambda trade: 0.0, director_pool=lambda: 5000.0,
                                                            director_hours_committed=lambda: 0.0),
                                     trade_shortage_kind=lambda trade, need, demand: None,
                                     peek_project_resource_throttle=lambda node_id: (1.0, None),

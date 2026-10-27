@@ -10,9 +10,10 @@ from types import SimpleNamespace
 from sim.engine.readable import readable
 from sim.ui import figures as figure_registry
 from sim.ui.proto import dispatch_figures, dispatch_inspection
+from sim.tests.ui_stand_in import FactViews
 
 
-class Game:
+class Game(FactViews):
     """What the data-declared figures and `cash` read."""
 
     year = 1300

@@ -17,9 +17,10 @@ from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import run_as_seat
 from sim.agents.api import relations
+from sim.tests.ui_stand_in import FactViews
 
 
-class Game:
+class Game(FactViews):
     """The root state with the real alias rebinding, the stores and the country questions a handler asks."""
 
     def __init__(self):

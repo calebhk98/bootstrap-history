@@ -10,10 +10,10 @@ from sim.polity.api import AnswerStateDemands
          usage=["risk", "risk json"], options={"json": "the raw reply"},
          description="The hazards in play and what blunts them.")
 def _cmd_risk(sim, nodes, cmd, ended):
-    knowledge_risk = sim.knowledge_risk()
-    return {"ok": True, "knowledge_risk": knowledge_risk, "year": sim.year,
-            "confiscation": sim.confiscation_status(),
-            "interest_groups": sim.interest_groups(),
+    knowledge_risk = sim.view("knowledge_risk")()
+    return {"ok": True, "knowledge_risk": knowledge_risk, "year": sim.view("year")(),
+            "confiscation": sim.view("confiscation_status")(),
+            "interest_groups": sim.view("interest_groups")(),
             "note": "What history is about to do to you, and what you have "
                     "built that blunts it. Every hazard here is fightable."}
 
@@ -28,7 +28,7 @@ def _cmd_risk(sim, nodes, cmd, ended):
                      "from its purse, raises the rest from taxpayers it sees, or forbids the "
                      "technique.")
 def _cmd_groups(sim, nodes, cmd, ended):
-    report = sim.interest_groups_report()
+    report = sim.view("interest_groups_report")()
     report["ok"] = True
     return report
 

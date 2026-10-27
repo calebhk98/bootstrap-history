@@ -39,9 +39,6 @@ class ForwardLivingStockMixin:
     def held_living_stock(self):
         return self.view("held_living_stock")()
 
-    def grant_stock(self, material, units):
-        self.send(ChangeHeld(material, units))
-
     def change_stock(self, material, units):
         self.send(ChangeHeld(material, units))
 

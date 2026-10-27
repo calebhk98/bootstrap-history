@@ -22,8 +22,7 @@ def _cmd_keep(sim, nodes, cmd, ended):
     node_id = cmd.get("id")
     if node_id is None:
         return {"ok": True, "keep_staffed": _keep_listing(sim)}
-    projects = sim.state.projects
-    if node_id not in projects.done or not sim.is_venture(node_id):
+    if node_id not in sim.view("techniques_held")() or not sim.view("is_venture")[node_id]:
         return {"ok": False,
                 "error": "you can only keep a concern you know how to run staffed; "
                          "'ventures' lists them"}
@@ -56,5 +55,5 @@ def _cmd_reserve(sim, nodes, cmd, ended):
     return {"ok": True,
             "reserve": {"craftsmen": staff["reserve_craftsmen"],
                         "scholars": staff["reserve_scholars"]},
-            "policy_reserve_staff": bool(sim.policy.get("reserve_staff", False)),
+            "policy_reserve_staff": bool(sim.view("founder")()["policy"].get("reserve_staff", False)),
             "note": "Spare hands are kept only while 'policy reserve_staff on'."}

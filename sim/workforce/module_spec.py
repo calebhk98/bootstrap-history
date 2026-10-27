@@ -12,6 +12,8 @@ from sim.reporting.api import DiscardEventsAfter, RecordAutomation, RecordAutoma
 
 from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread, PressLabour, ReportStaffReduction,
                        ReleaseStaff, ScaleDeputies, SetEmployed, SurviveStaff, TakeWageFallback, UpdateWages)
+from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase, TrainStaff,
+                              WorkForWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
                              ResetTradeHours, SetReserve, SetWageHoursSold, SettleLivingCost, SpendDirectorHours, WatchStaff)
 from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, FadeMarketPressure
@@ -101,6 +103,33 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("housing_price_per_place", "housing_price_per_place", **_LIVE),
         ViewSpec("trade_school_price_per_seat", "trade_school_price_per_seat", **_LIVE),
         ViewSpec("household_dependant_people", "household_dependant_people", **_SEAT),
+        # what the screens tell the player about its people: room, reports, and what an order would do
+        ViewSpec("household_room", "household_room", **_SEAT),
+        ViewSpec("room_advice", "room_advice", **_SEAT),
+        ViewSpec("supervision_room", "supervision_room", **_SEAT),
+        ViewSpec("supervision_room_from", "supervision_room_from", **_SEAT),
+        ViewSpec("sole_supervisors", "sole_supervisors", **_SEAT),
+        ViewSpec("idle_specialists", "idle_specialists", **_SEAT),
+        ViewSpec("population_report", "population_report", **_SEAT),
+        ViewSpec("workforce_report", "workforce_report", **_SEAT),
+        ViewSpec("craft_trades_report", "craft_trades_report", **_SEAT),
+        ViewSpec("wage_work_this_year", "wage_work_this_year", **_SEAT),
+        ViewSpec("home_town_population_estimate", "home_town_population_estimate", **_SEAT),
+        ViewSpec("literate_trades", "literate_trades", **_LIVE),
+        ViewSpec("slave_base_price", "slave_base_price", **_LIVE),
+        ViewSpec("market_supply_split", "market_supply_split", kind=KEYED, **_SEAT),
+        ViewSpec("hours_reserved", "hours_reserved", kind=KEYED, **_SEAT),
+        ViewSpec("trade_headcount_pending", "trade_headcount_pending", kind=KEYED, **_SEAT),
+        ViewSpec("literacy_factor", "literacy_factor", kind=KEYED, **_SEAT),
+        ViewSpec("relocation_quote", "relocation_quote", kind=KEYED, **_SEAT),
+        ViewSpec("slave_quote", "slave_quote", kind=KEYED, **_SEAT),
+        ViewSpec("training_hours_per_person", "training_hours_per_person", kind=QUOTE, **_SEAT),
+        ViewSpec("hire_check", "hire_check", kind=QUOTE, **_SEAT),
+        ViewSpec("commission_check", "commission_check", kind=QUOTE, **_SEAT),
+        ViewSpec("train_check", "train_check", kind=QUOTE, **_SEAT),
+        ViewSpec("trainee_wage_bill", "trainee_wage_bill", kind=QUOTE, **_SEAT),
+        # puts every book back after trying the sale: a quote that writes and restores (retire when wage work has a pure rule)
+        ViewSpec("work_for_wages_dry_run", "work_for_wages_dry_run", kind=QUOTE, **_SEAT),
     ),
     applies=((SetEmployed, "set_employed"), (NoteTradeSpread, "note_trade_spread"), (PressLabour, "press_labour"),
              (SurviveStaff, "survive_staff"), (GrantStaff, "grant_staff"), (ScaleDeputies, "scale_deputies"), (ReportStaffReduction, "report_staff_reduction"),
@@ -112,7 +141,10 @@ MODULE_SPECS = (ModuleSpec(
              (SettleLivingCost, "settle_living_cost"), (SetWageHoursSold, "set_wage_hours_sold"), (SetReserve, "set_reserve"),
              (BleedStaff, "bleed_staff"), (DisperseDependants, "disperse_dependants"), (LoseCrew, "lose_crew"), (WatchStaff, "watch_staff"),
              (BuildHousing, "build_housing"), (ChargeLivingCost, "charge_living_cost"), (AutoBuyPeople, "auto_buy_people"),
-             (AutoManumit, "auto_manumit"), (FadeMarketPressure, "fade_market_pressure")),
+             (AutoManumit, "auto_manumit"), (FadeMarketPressure, "fade_market_pressure"),
+             (HireStaff, "hire_staff"), (FireStaff, "fire_staff"), (TrainStaff, "train_staff"), (CommissionHours, "commission_hours"),
+             (WorkForWages, "work_for_wages"), (BuySlaves, "buy_slaves"), (Manumit, "manumit"), (FoundTradeSchool, "found_trade_school"),
+             (MoveBase, "move_base")),
     phases=(PhaseHook("apprenticeships", "step_apprenticeships"), PhaseHook("staff", "step_staff"),
             PhaseHook("seat_prelude", "step_prelude")),
     extension_points=(

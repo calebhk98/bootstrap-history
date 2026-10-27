@@ -60,7 +60,7 @@ def _agent_values(sim):
     # test that asserts the list is non-empty noticed. Sim.__init__ always
     # assigns this, so there is no absent case to defend against, and a
     # direct read fails loudly if that ever stops being true.
-    weights = dict(sim.value_weights or {})
+    weights = dict(sim.view("value_weights")() or {})
     rows = [{"field": field, "value": round(weights[field], 3), "means": _VALUE_MEANINGS.get(field)}
             for field in sorted(weights) if not field.startswith("_")]
     return {"ok": True, "values": rows,
@@ -91,12 +91,12 @@ def _material_capacity_rows(sim):
     (see economy.py's _own_material_supply/_material_market_tonnes), laid
     out for every material instead of only the worst.
     """
-    demand = sim.annual_material_demand()
+    demand = sim.view("material_demand")()
     by_tag = ui_port.demand_by_supply_tag(sim, demand)
     rows = {}
     # One row per material: firewood and charcoal draw on the same forest,
     # so their demands are combined rather than one overwriting the other.
-    for emp_key, (need, own) in sim.demand_and_own_supply_by_material(by_tag).items():
+    for emp_key, (need, own) in sim.view("own_supply_by_commodity")(by_tag).items():
         market = ui_port.material_market_tonnes(sim, emp_key)
         rows[emp_key] = {
             "material": emp_key,
@@ -105,7 +105,7 @@ def _material_capacity_rows(sim):
             "market_capacity_t_per_yr": round(market, 1),
             "demand_t_per_yr": round(need, 1),
             "surplus_t_per_yr": round(own + market - need, 1),
-            "shortfall_t_per_yr": round(sim.material_shortfall_t(emp_key, by_tag), 1)}
+            "shortfall_t_per_yr": round(sim.view("material_shortfall")(emp_key, by_tag), 1)}
     # OWNED CAPACITY WITH NO CURRENT DEMAND. A mine you sank and no longer
     # need does not simply vanish from what you could still supply.
     for mat in sim.view("mine_capacity")():
@@ -155,11 +155,11 @@ def _power_tiers(sim, nodes):
     """
     tiers = []
     highest = None
-    installed_by_tier = sim.installed_generation_kw_by_tier()
+    installed_by_tier = sim.view("generation_by_tier")()
     for nid, label in _power_ladder(nodes):
-        if nid not in nodes or not sim.is_visible(nid):
+        if nid not in nodes or not sim.view("visibility")(nid):
             continue
-        built = sim.has(nid)
+        built = nid in sim.view("techniques_held")()
         installed_kw = round(installed_by_tier.get(nid, 0.0), 1)
         tiers.append({"capability": label, "id": nid, "built": built,
                       "installed_kw": installed_kw,
@@ -177,7 +177,7 @@ def _power_generation_block(sim):
     _power_status's own docstring for where these numbers come from and why
     they are safe to show under fog; this only reads them.
     """
-    gen = sim.generation_breakdown_kw()
+    gen = sim.view("generation_breakdown")()
     demand_kw = ui_port.electricity_demand_kw(sim)
     total_kw = gen["total_kw"]
     block = {
@@ -212,12 +212,12 @@ def _power_waiting_on(sim, nodes, grid_known):
     workshop_scale, grid_scale = [], []
     grid_id, workshop_id = _power_scale_node(nodes, "grid"), _power_scale_node(nodes, "workshop")
     for node_id, node in nodes.items():
-        if node_id in sim.done or not sim.is_visible(node_id):
+        if node_id in sim.view("techniques_held")() or not sim.view("visibility")(node_id):
             continue
         pre = node.get("pre") or []
-        if grid_known and not sim.has(grid_id) and grid_id in pre:
+        if grid_known and not grid_id in sim.view("techniques_held")() and grid_id in pre:
             grid_scale.append(node_id)
-        elif not sim.has(workshop_id) and workshop_id in pre:
+        elif not workshop_id in sim.view("techniques_held")() and workshop_id in pre:
             workshop_scale.append(node_id)
     out = {}
     if workshop_scale:
@@ -265,8 +265,8 @@ def _power_status(sim, nodes):
         out["note"] = ("nothing discovered yet: no generation, no demand.")
         return out
     out.update(_power_generation_block(sim))
-    elec_known = sim.is_visible(_power_scale_node(nodes, "workshop"))
-    grid_known = sim.is_visible(_power_scale_node(nodes, "grid"))
+    elec_known = sim.view("visibility")(_power_scale_node(nodes, "workshop"))
+    grid_known = sim.view("visibility")(_power_scale_node(nodes, "grid"))
     if elec_known:
         out.update(_power_waiting_on(sim, nodes, grid_known))
     return out
@@ -393,7 +393,7 @@ def _agent_mines(sim):
     a player close the ones that are losing money, since neither is visible
     from the verbs to sink one and to shut one alone.
     """
-    dem = sim.annual_material_demand()
+    dem = sim.view("material_demand")()
     # sim.mine_demand_goods reads the resource catalogue; a material without a row is its own demand key.
     pending = _mine_pending_workings(sim)
     # GROUPED BY MATERIAL, ordered by commissioning year within it (done in
@@ -414,7 +414,7 @@ def _agent_mines(sim):
     return {"ok": True,
             "mines_you_own": rows or "none",
             "they_cost_you_a_year_in_all": round(sim.view("mine_operating_cost")(), 1),
-            "your_revenue_is": round(sim.revenue(), 1),
+            "your_revenue_is": round(sim.view("revenue_estimate")(), 1),
             "still_being_sunk": {material: value[1] for material, value in sorted(pending.items())},
             "note": "Workings are charged every year they stand, whether or "
                     "not you use what they raise. One you no longer need is "
@@ -539,11 +539,11 @@ def _spare_capacity(sim, state_out):
     """
     families = {}
     for trade in WAGES:
-        if not sim.labour.trade_available(trade):
+        if not sim.view("trade_available")[trade]:
             continue
         fam = trade_family(trade)
         pair = families.setdefault(fam, [0.0, 0.0])
-        supply = sim.labour.hours_you_can_call_on(trade)
+        supply = sim.view("hours_you_can_call_on")[trade]
         used = min(supply, sim.view("hour_commitments")()["trade_hours_used"].get(trade, 0.0))
         pair[0] += supply
         pair[1] += used
@@ -555,13 +555,13 @@ def _spare_capacity(sim, state_out):
         rows.append({"trade_family": fam,
                      "spare_hours_this_year": round(spare, 0),
                      "spare_people_equivalent": round(
-                         spare / sim.HOURS_PER_PERSON_YEAR, 1)})
+                         spare / sim.view("hours_per_person_year")(), 1)})
     return {
         "founder_hours_available": state_out.get("founder_hours_available"),
         "free_hours_going_unused": state_out.get("free_hours_going_unused"),
         "spare_by_trade_family": rows or "none",
-        "you_could_raise_right_now": round(sim.spending_power("buy"), 1),
-        "credit_limit": round(sim.credit_limit(), 1),
+        "you_could_raise_right_now": round(sim.view("spending_power")("buy"), 1),
+        "credit_limit": round(sim.view("credit_limit")(), 1),
         "standing_net_per_year": state_out.get("net_per_year"),
         # WHERE THE HEADROOM COMES FROM, because a starting grant was
         # invisible. Rome alone begins with fin_societas and so oversees ten
@@ -570,8 +570,8 @@ def _spare_capacity(sim, state_out):
         # they were missing. supervision_room_from (labour.py) walks the same
         # sources supervision_room sums, so this cannot drift from the figure
         # it explains.
-        "people_you_can_oversee": round(sim.labour.supervision_room(), 1),
-        "and_where_that_comes_from": sim.labour.supervision_room_from(),
+        "people_you_can_oversee": round(sim.view("supervision_room")(), 1),
+        "and_where_that_comes_from": sim.view("supervision_room_from")(),
         "note": "standing net per year is this household's own ordinary-year "
                 "surplus or deficit before this year's project spend - "
                 "roughly how much more annual project spend you could "
@@ -590,7 +590,7 @@ def _trade_demand_rows(sim):
     portfolio, not a founder-hours problem at all.
     """
     rows = []
-    for trade, detail in sim.trade_demand_vs_supply().items():
+    for trade, detail in sim.view("trade_demand_vs_supply")().items():
         rows.append({
             "trade": trade, "trade_family": trade_family(trade),
             "demand_hours_this_year": detail["demand_hours_this_year"],
@@ -690,28 +690,28 @@ def _dashboard_snapshot(sim):
     cash_book.close_period(sim)
     cause_book.close_period(sim)
     return {
-        "year": sim.year,
-        "price_index": round(sim.price_index, 4),
-        "wage_index": round(sim.wage_index, 4),
-        "literacy_general": round(float(sim.literacy("literacy_general")), 4),
-        "literacy_elite": round(float(sim.literacy("literacy_elite")), 4),
-        "capital": round(sim.capital, 1),
-        "revenue": round(sim.revenue(), 1),
-        "credit_limit": round(sim.credit_limit(), 1),
+        "year": sim.view("year")(),
+        "price_index": round(sim.view("price_index")(), 4),
+        "wage_index": round(sim.view("wage_index")(), 4),
+        "literacy_general": round(float(sim.view("literacy")("literacy_general")), 4),
+        "literacy_elite": round(float(sim.view("literacy")("literacy_elite")), 4),
+        "capital": round(sim.view("acting_balance")(), 1),
+        "revenue": round(sim.view("revenue_estimate")(), 1),
+        "credit_limit": round(sim.view("credit_limit")(), 1),
         "throttle": round(sim.view("material_throttle")(), 3),
         "binding": sim.view("material_binding")(),
-        "operating_count": len(sim.operating),
-        "done_earned": len(sim.done - sim.granted),
+        "operating_count": len(sim.view("operating")()),
+        "done_earned": len(sim.view("techniques_held")() - sim.view("techniques_granted")()),
         "employees_total": round(sum(sim.view("staff")()["employees"].values()), 2),
         "scholars": round(sim.view("staff")()["scholars"], 2),
         "artisans": round(sim.view("staff")()["artisans"], 2),
         "mine_capacity": {material: round(value, 1) for material, value in sim.view("mine_capacity")().items()},
-        "scandal": round(sim.scandal, 2),
-        "reputation": round(sim.reputation, 1),
-        "eminence": round(sim.eminence, 2),
+        "scandal": round(sim.view("standing")()["scandal"], 2),
+        "reputation": round(sim.view("standing")()["reputation"], 1),
+        "eminence": round(sim.view("eminence")(), 2),
         "figures": figure_snapshot(sim),
         "project_hours_effective": {node_id: progress.get("hours_effective_this_year", 0.0)
-                                    for node_id, progress in sim.active.items()},
+                                    for node_id, progress in sim.view("active_projects")().items()},
     }
 
 
@@ -729,7 +729,7 @@ def _agent_economy(sim, cmd=None):
     if hist:
         now = hist[-1]
         for n_yrs in (5, 10):
-            cutoff = sim.year - n_yrs
+            cutoff = sim.view("year")() - n_yrs
             base = None
             for rec in hist:
                 if rec["year"] <= cutoff:
@@ -744,15 +744,15 @@ def _agent_economy(sim, cmd=None):
                         now["literacy_general"] - base["literacy_general"], 4)}
     out = {
         "ok": True,
-        "price_index": round(sim.price_index, 4),
-        "wage_index": round(sim.wage_index, 4),
-        "cost_of_living_a_year": round(sim.living_cost() - sim.labour.wage_bill(), 1),
-        "literacy": {"general": round(float(sim.literacy("literacy_general")), 3),
-                     "elite": round(float(sim.literacy("literacy_elite")), 3)},
+        "price_index": round(sim.view("price_index")(), 4),
+        "wage_index": round(sim.view("wage_index")(), 4),
+        "cost_of_living_a_year": round(sim.view("living_cost")() - sim.view("wage_bill")(), 1),
+        "literacy": {"general": round(float(sim.view("literacy")("literacy_general")), 3),
+                     "elite": round(float(sim.view("literacy")("literacy_elite")), 3)},
         "household_places_used_of_all": "%.1f of %.1f" % (
-            sim.labour.headcount(), sim.labour.headcount() + max(0.0, sim.labour.household_room())),
-        "where_the_money_comes_from": sim.revenue_sources(),
-        "materials_at_a_premium": sim.material_market_summary(),
+            sim.view("headcount")(), sim.view("headcount")() + max(0.0, sim.view("household_room")())),
+        "where_the_money_comes_from": sim.view("revenue_sources")(),
+        "materials_at_a_premium": sim.view("material_market_summary")(),
         "what_moved_most": moved or "not enough history yet - step forward "
                                     "and ask again",
         "more_detail": '{"cmd":"economy","full":true}',
@@ -763,24 +763,24 @@ def _agent_economy(sim, cmd=None):
         # note is built from, for every tracked commodity rather than just
         # the worst one.
         rows, seen = [], set()
-        for pair in sim.MATERIAL_CHECKS.values():
+        for pair in sim.view("material_checks")().values():
             material_key = pair[0]
             if material_key in seen:
                 continue
             seen.add(material_key)
             rows.append({"material": material_key,
-                        "price_factor_over_book": round(sim.material_price_factor(material_key), 3)})
+                        "price_factor_over_book": round(sim.view("material_price_factor")[material_key], 3)})
         out["tracked_material_prices"] = sorted(rows, key=lambda r: -r["price_factor_over_book"])
         # THE SAME FORMULA `labour`'s own row() uses for "a_year_of_one", not
         # a second version of a wage this file already prints elsewhere.
         out["wages_by_trade"] = [
-            {"trade": trade, "a_year_of_one": round(sim.labour.market.quote_annual(trade), 0),
+            {"trade": trade, "a_year_of_one": round(sim.view("labour_market")().quote_annual(trade), 0),
              "wage_foundation": {
-                 "base_for_skill_and_difficulty": round(sim.labour.base_annual_wage(trade), 2),
-                 **{factor_key: round(value, 3) for factor_key, value in sim.labour.market.cost_factors(trade).items()},
-                 "demographic_scarcity": round(sim.wage_index, 3),
-                 "local_trade_scarcity": round(sim.labour.market.price_factor(trade), 3)}}
-            for trade in sorted(WAGES) if sim.labour.trade_available(trade)]
+                 "base_for_skill_and_difficulty": round(sim.view("base_annual_wage")[trade], 2),
+                 **{factor_key: round(value, 3) for factor_key, value in sim.view("labour_market")().cost_factors(trade).items()},
+                 "demographic_scarcity": round(sim.view("wage_index")(), 3),
+                 "local_trade_scarcity": round(sim.view("labour_market")().price_factor(trade), 3)}}
+            for trade in sorted(WAGES) if sim.view("trade_available")[trade]]
     return out
 
 
@@ -908,8 +908,8 @@ def _changes_tech_events(hist, cutoff):
 def _changes_notable_events(sim, cutoff):
     """The log lines of the window whose kind is listed as notable (event_kinds.py): what happened TO this
     player, a political event rather than ordinary bookkeeping."""
-    return [{"year": year, "message": message, **event_codes(message)} for year, message in sim.log
-            if cutoff < year <= sim.year and is_notable(message)]
+    return [{"year": year, "message": message, **event_codes(message)} for year, message in sim.view("event_log")()
+            if cutoff < year <= sim.view("year")() and is_notable(message)]
 
 
 def _agent_changes(sim, nodes, cmd=None):
@@ -924,8 +924,8 @@ def _agent_changes(sim, nodes, cmd=None):
     if error:
         return error
     hist = ui_port.dashboard_history(sim) or []
-    cutoff = sim.year - years
-    now, baseline, error = _changes_baseline(hist, cutoff, sim.year)
+    cutoff = sim.view("year")() - years
+    now, baseline, error = _changes_baseline(hist, cutoff, sim.view("year")())
     if error:
         return error
     result = {

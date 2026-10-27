@@ -10,7 +10,6 @@ class ForwardFinanceMixin:
 
 	# the numbers other topics' code, the screens and the tests still read off the game (sim/finance/constants.py declares them)
 	vars().update({name: value for name, value in vars(constants).items() if name.isupper()})
-	CREDIT_LINE_PER_REPUTATION_POINT = money_units.PricedInLabourHours("CREDIT_LINE_LABOUR_HOURS_PER_REPUTATION_POINT")
 	CREDIT_LINE_PER_FOREST_HA = money_units.PricedInLabourHours("CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA")
 	INSOLVENCY_FLOOR_MIN = money_units.PricedInLabourHours("INSOLVENCY_FLOOR_MIN_LABOUR_HOURS")
 
@@ -111,6 +110,3 @@ class ForwardFinanceMixin:
 
 	def note_lender_posting(self, account, signed, label):
 		self.send(NoteLenderPosting(account, signed, label))
-
-	def seat_found_bank(self, capital):
-		return self.send(FoundBank(capital))

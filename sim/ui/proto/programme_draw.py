@@ -8,9 +8,9 @@ STARTED_KEY = "started_ids"
 
 def standing_draw(sim, programme):
     """Annual draw of projects this programme started that are still running; forgets finished ones."""
-    running = [node_id for node_id in programme.get(STARTED_KEY, []) if node_id in sim.active]
+    running = [node_id for node_id in programme.get(STARTED_KEY, []) if node_id in sim.view("active_projects")()]
     programme[STARTED_KEY] = running
-    return sum(annual_absorption(_rush_cost_left(sim, node_id), sim.nodes[node_id]) for node_id in running)
+    return sum(annual_absorption(_rush_cost_left(sim, node_id), sim.view("tree_nodes")()[node_id]) for node_id in running)
 
 
 def remember_starts(programme, started):

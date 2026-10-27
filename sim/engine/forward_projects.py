@@ -52,10 +52,6 @@ class ProjectsForwardsMixin:
     def _visible_to_player(self, node_id):
         return self.view("visible_to_player")(node_id)
 
-    @property
-    def materials_paid_at_last_start(self):
-        return self.view("last_start")()
-
     # ---- risk, calendar and cost ----
 
     def calendar_floor(self, node_id):

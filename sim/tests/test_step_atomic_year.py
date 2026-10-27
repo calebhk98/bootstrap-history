@@ -8,6 +8,7 @@ from unittest import mock
 
 from sim.refusal import Refusal
 from sim.ui.proto import step_atomic
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -17,7 +18,7 @@ HELD = '{"year":100}'
 class YearTransaction(unittest.TestCase):
 
     def setUp(self):
-        self.game = SimpleNamespace(year=103)
+        self.game = Game(year=103)
         self.effects = []
 
     def run_year(self, fail):

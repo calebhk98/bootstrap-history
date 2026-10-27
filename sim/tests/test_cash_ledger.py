@@ -9,11 +9,12 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine import cash_book
 from sim.engine.state import HouseholdState
+from sim.tests.ui_stand_in import Game
 
 # --- the household's postings keep the book reconciled -----------------------------------------
 def household_game(capital=1000.0, year=100):
     household = HouseholdState(capital=capital)
-    return types.SimpleNamespace(workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household), year=year)
+    return Game(workforce=household, view=workforce_stand_in.view_of(household), state=Game(household=household), year=year)
 
 
 def reconciles(game):
@@ -55,13 +56,13 @@ check("a write around the ledger shows as unaccounted cash", abs(cash_book.unacc
       cash_book.unaccounted(game))
 
 for year in range(101, 101 + 3 * cash_book.PERIODS_KEPT):
-    cash_book.close_period(types.SimpleNamespace(state=game.state, year=year))
+    cash_book.close_period(Game(state=game.state, year=year))
 check("the ledger keeps only the last few closed periods", len(household.cash_periods) == cash_book.PERIODS_KEPT,
       len(household.cash_periods))
 
 game = household_game()
 game.state.household.credit(10.0, "a")
-cash_book.close_period(types.SimpleNamespace(state=game.state, year=101))
+cash_book.close_period(Game(state=game.state, year=101))
 game.state.household.credit(5.0, "a")
 game.state.household.debit(2.0, "b")
 check("causes since a year add the closed periods after it to the open one",
@@ -76,9 +77,9 @@ check("the book shows opening plus causes equal to closing",
 from sim.ui import figures as figure_registry
 from sim.ui import figures_headline  # noqa: F401  (registers the cash figure)
 
-this_year_household = types.SimpleNamespace(capital=1300.0, cash_periods=[],
+this_year_household = Game(capital=1300.0, cash_periods=[],
                                             cash_flow={"venture revenue": 500.0, "living costs": -200.0})
-this_year_game = types.SimpleNamespace(capital=1300.0, year=101, workforce=this_year_household, view=workforce_stand_in.view_of(this_year_household), state=types.SimpleNamespace(household=this_year_household))
+this_year_game = Game(capital=1300.0, year=101, workforce=this_year_household, state=Game(household=this_year_household))
 last_year = [{"year": 100, "figures": {"cash": {"value": 1000.0, "components": {}, "flows": {}, "drivers": {}}}}]
 explained = figure_registry.explain_figure(this_year_game, "cash", last_year)
 check("the cash figure's change is this year's movement of the purse", explained["change"] == 300.0, explained)

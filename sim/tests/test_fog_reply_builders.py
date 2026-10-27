@@ -31,6 +31,7 @@ from sim.ui.proto.screen_commitments import _goal, _institutions
 from sim.ui.proto.screen_education import _schools
 from sim.ui.proto.state_log import _log_scrub
 from sim.ui.proto.techtree import _explain_visible_prerequisites
+from sim.tests.ui_stand_in import Game
 
 KNOWN, HIDDEN, HIDDEN_LONGER = "iron_smelting", "zz_hidden_theory", "zz_hidden_theory_applied"
 IDS = {KNOWN: "Iron smelting", HIDDEN: "Hidden theory", HIDDEN_LONGER: "Hidden theory applied"}
@@ -51,7 +52,7 @@ def seen(reply):
 
 def stand_in(fog=True, **fields):
     heard = fields.pop("heard", {KNOWN})
-    game = types.SimpleNamespace(
+    game = Game(
         nodes=NODES, fog=fog, goal=HIDDEN_LONGER, done=set(), granted=set(), active={}, forgotten={},
         is_visible=lambda node_id, _memo=None: (not fog) or node_id in heard)
     game.__dict__.update(fields)
@@ -77,7 +78,7 @@ class SharedFilterTests(unittest.TestCase):
 
     def fog_scrub(self, text, fog=True):
         knowledge = module_harness.build(Knowledge, views={
-            "legacy_fog": fog, "legacy_tree": NODES, "legacy_projects": types.SimpleNamespace(done=set(), active={}, revealed={KNOWN}),
+            "legacy_fog": fog, "legacy_tree": NODES, "legacy_projects": Game(done=set(), active={}, revealed={KNOWN}),
             "start_check": lambda node_id, ignore_trade, memo, why: (False, None)})
         return knowledge.fog_scrub(text)
 
@@ -242,7 +243,7 @@ class MetricAndEconomyTests(unittest.TestCase):
 
     def test_power_tiers_name_only_the_rungs_the_player_has_heard_of(self):
         nodes = self.power_nodes()
-        game = stand_in(nodes=nodes, has=lambda node_id: node_id == KNOWN, installed_generation_kw_by_tier=lambda: {KNOWN: 5.0})
+        game = stand_in(nodes=nodes, done={KNOWN}, installed_generation_kw_by_tier=lambda: {KNOWN: 5.0})
         tiers, highest = economy._power_tiers(game, nodes)
         self.assertEqual([tier["id"] for tier in tiers], [KNOWN])
         self.assertEqual(highest, "workshop power")
@@ -251,7 +252,7 @@ class MetricAndEconomyTests(unittest.TestCase):
     def test_projects_waiting_on_power_leave_out_hidden_ones(self):
         nodes = dict(self.power_nodes(), **{"seen_user": node("Seen user", pre=[KNOWN]),
                                             "hidden_user": node("Hidden user", pre=[KNOWN])})
-        game = stand_in(nodes=nodes, heard={KNOWN, "seen_user"}, has=lambda node_id: False)
+        game = stand_in(nodes=nodes, heard={KNOWN, "seen_user"})
         reply = economy._power_waiting_on(game, nodes, False)
         self.assertEqual(json.dumps(reply).count("hidden_user"), 0)
         self.assertIn("seen_user", json.dumps(reply))

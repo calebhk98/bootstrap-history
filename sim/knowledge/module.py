@@ -29,6 +29,10 @@ class Knowledge(Module):
         """The nodes the acting seat holds, finished or granted (the live set)."""
         return self.needs.legacy_projects().done
 
+    def techniques_revealed(self):
+        """The nodes the acting seat has heard of under fog (the live set)."""
+        return self.needs.legacy_projects().revealed
+
     def techniques_granted(self):
         """The held nodes its country already had, which are never counted as earned and never lost to a sack."""
         return self.needs.legacy_projects().granted
@@ -52,7 +56,7 @@ class Knowledge(Module):
                                   CORPUS_HEDGE_LOSS_CHANCE_NONE, CORPUS_HEDGE_FRACTION_LOST_NONE)
 
     # ---- what fog lets the acting seat see
-    def visibility(self, node_id, memo):
+    def visibility(self, node_id, memo=None):
         """Whether the acting seat can see `node_id` at all: held, in hand, heard of, or startable now.
 
         `memo` is shared down one recursive descent (the start test asks visibility of each missing prerequisite, which

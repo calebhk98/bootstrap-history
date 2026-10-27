@@ -14,6 +14,7 @@ from .render_screen_state_views import SECTIONS
 from .state import _agent_state
 from .state_log import _agent_log
 from .techtree import _agent_available, _node_explain
+from sim.engine import ui_port
 
 
 @command("state", group="overview", aliases=("s", "st", "status"),
@@ -91,7 +92,7 @@ def _cmd_score(sim, nodes, cmd, ended):
                      "but the run stays ended.")
 def _cmd_finish(sim, nodes, cmd, ended):
     if not ended:
-        sim.dead_reason = "you finished the run in %d AD and asked for the score" % sim.year
+        sim.send(ui_port.EndRun("you finished the run in %d AD and asked for the score" % sim.view("year")(), announce=False))
     return {"ok": True, **final_report(sim, nodes)}
 
 
@@ -109,8 +110,8 @@ def _cmd_why(sim, nodes, cmd, ended):
         return figure_reply(sim, node_id)
     # The goal is the one thing you were told the name of on arrival; see
     # the _goal_why note on the fog guard above for why it is `why` alone.
-    if (isinstance(node_id, str) and node_id in nodes and not sim.is_visible(node_id)
-            and node_id != sim.goal):
+    if (isinstance(node_id, str) and node_id in nodes and not sim.view("visibility")(node_id)
+            and node_id != sim.view("goal")()["node"]):
         return {"ok": False,
                 "error": "you have never heard of that. You know what you have "
                          "built and what you could begin now; use 'available'."}
@@ -132,7 +133,7 @@ def _cmd_why(sim, nodes, cmd, ended):
                 % (node_id, ", ".join(_did_you_mean(node_id, nodes, sim=sim))
                    or ("no idea, and under fog of war I can only suggest "
                        "things you have heard of"
-                       if sim.fog
+                       if sim.view("legacy_fog")()
                        else "no idea - nothing in the tree is spelled much "
                             "like that"))}
     explained = _node_explain(sim, nodes, node_id)
@@ -147,8 +148,8 @@ def _cmd_why(sim, nodes, cmd, ended):
     # The floor still ahead: finished nodes count nothing, active ones what
     # is left of them. critical_path_years stays the from-scratch floor.
     explained["critical_path_years_remaining"] = (
-        None if sim.fog else round(remaining_critical_path_years(
-            nodes, node_id, sim.done, active_years_left(nodes, sim.active)), 1))
+        None if sim.view("legacy_fog")() else round(remaining_critical_path_years(
+            nodes, node_id, sim.view("techniques_held")(), active_years_left(nodes, sim.view("active_projects")())), 1))
     notes = notes_for(sim, node_id)
     if notes:
         explained["your_notes"] = ["%s: %s" % (note["year"], note["text"]) for note in notes]

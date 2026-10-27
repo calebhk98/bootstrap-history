@@ -12,6 +12,7 @@ from sim.ui.proto import command_registry
 from sim.ui.proto.dispatch_anatomy import _cmd_anatomy
 from sim.ui.proto.render_typed import render_pretty
 from sim.ui.proto.typed import parse_typed
+from sim.tests.ui_stand_in import FactViews
 
 _EDUCATION = {
     "literacy": {"general": 0.05, "general_ceiling": 0.4, "general_next_year": 0.06,
@@ -21,7 +22,7 @@ _EDUCATION = {
     "literacy_limited_by": "schools", "recent_change": {"note": "no census yet"}}
 
 
-class _Game:
+class _Game(FactViews):
     """Only what the anatomy command reads."""
 
     def __init__(self, nodes, goal=None, fog=False, visible=(), done=(), civ=None, **attributes):

@@ -12,6 +12,7 @@ from sim.ui.proto.dispatch_inspection_society import _cmd_risk
 from sim.ui.proto.render_screens_status import render_risk, render_score
 from sim.ui.proto.score_total import score_total
 from sim.ui.proto.step_problems import step_problems, problems_lines, route_nodes, route_startable
+from sim.tests.ui_stand_in import Game
 
 events = [{"year": 101, "message": "interest on 330 denarii of arrears at 10.9% a year", "event_kind": "arrears_interest"},
           {"year": 102, "message": "CREDIT EXHAUSTED: 3 projects stopped", "event_kind": "credit_exhausted"},
@@ -35,7 +36,7 @@ check("the step screen ends with the problems block, then the one pointer line",
 
 # ---- the goal route and whether anything on it can be begun -------------------------------------------------
 nodes = {"goal": {"pre": ["middle"]}, "middle": {"pre": ["root"]}, "root": {"pre": []}, "side": {"pre": []}}
-route_game = SimpleNamespace(goal="goal", nodes=nodes, done=set(), active={}, can_start=lambda node_id: node_id == "root")
+route_game = Game(goal="goal", nodes=nodes, done=set(), active={}, can_start=lambda node_id: node_id == "root")
 route = route_nodes(route_game)
 check("the goal route is the goal and everything it needs, and nothing beside it", route == {"goal", "middle", "root"}, route)
 check("a route with a startable step is startable", route_startable(route_game, route) is True)
@@ -43,7 +44,7 @@ route_game.can_start = lambda node_id: False
 check("a route with nothing startable is not", route_startable(route_game, route) is False)
 route_game.done = set(route)
 check("a finished route has nothing to start", route_startable(route_game, route) is None)
-check("a game with no goal has no route", route_nodes(SimpleNamespace(goal=None, nodes=nodes)) == set())
+check("a game with no goal has no route", route_nodes(Game(goal=None, nodes=nodes)) == set())
 
 
 # ---- a lapsed hedge names the concern whose closure lapsed it ----------------------------------------------
@@ -78,7 +79,7 @@ def pressure_module():
 status = pressure_module().confiscation_status()
 check("the confiscation status gives the chance, what holds it off and what is not yet in force",
       status == {"chance_this_year": 0.1235, "held_off_by": [LABELS[0]], "not_yet_in_force": list(LABELS[1:])}, status)
-risk_game = SimpleNamespace(knowledge_risk=lambda: {}, year=100, confiscation_status=lambda: status, interest_groups=lambda: [])
+risk_game = Game(knowledge_risk=lambda: {}, year=100, confiscation_status=lambda: status, interest_groups=lambda: [])
 risk_reply = _cmd_risk(risk_game, {}, {"cmd": "risk"}, None)
 check("risk reply carries the confiscation block", risk_reply["confiscation"] == status, sorted(risk_reply))
 risk_text = render_risk(risk_reply)

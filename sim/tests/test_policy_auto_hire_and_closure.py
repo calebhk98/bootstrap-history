@@ -25,6 +25,7 @@ from sim.ui.proto.dispatch_ventures import _cmd_policy
 from sim.ui.proto.state_waiting import _staff_fraction_note
 from sim.finance.state import FinanceSeat
 from sim.tests import finance_host
+from sim.tests.ui_stand_in import Game
 
 
 class _Owner(business_review.Reviewable):
@@ -88,9 +89,9 @@ class SeatSparesWhatItMustKeep(unittest.TestCase):
     """The founder's seat spares knowledge (never abandoned) and what the society granted; the rest it may shed."""
 
     def _seat(self, never_abandoned=(), granted=()):
-        module = projects_host.build(legacy_projects=SimpleNamespace(granted=set(granted)), year=1,
+        module = projects_host.build(legacy_projects=Game(granted=set(granted)), year=1,
                                      never_abandon=lambda node_id: node_id in never_abandoned)
-        return SeatReview(module, SimpleNamespace())
+        return SeatReview(module, Game())
 
     def test_knowledge_and_what_is_granted_are_spared(self):
         seat = self._seat(never_abandoned={"theory"}, granted={"road"})
@@ -108,15 +109,15 @@ class LogNamesWhatClosed(unittest.TestCase):
         return [command for command in module_harness.sent(module) if isinstance(command, RecordEvent)]
 
     def _shed(self, closed, capital):
-        module = finance_host.build(acting_balance=capital, legacy_game=SimpleNamespace(
+        module = finance_host.build(acting_balance=capital, legacy_game=Game(
             review_ventures=lambda rules, year: [business_review.Closure(key, business_review.LOSS_MAKING) for key in closed]))
         module.shed_loss_makers(100)
         return self._events(module)
 
     def _owing(self, closures):
-        household = SimpleNamespace(capital=-1000.0, slaves=0, freedmen=0, artisans=0, scholars=0)
+        household = Game(capital=-1000.0, slaves=0, freedmen=0, artisans=0, scholars=0)
         module = finance_host.build(
-            legacy_acting_household=household, legacy_projects=SimpleNamespace(active={}), legacy_game=SimpleNamespace(
+            legacy_acting_household=household, legacy_projects=Game(active={}), legacy_game=Game(
                 review_ventures=lambda rules, year: [business_review.Closure(key, business_review.CREDITOR_SEIZURE) for key in closures]))
         module.credit_limit = lambda revenue=None, upkeep=None, capital=None: 0.0
         module.answer_exhausted_credit(100)
@@ -204,10 +205,10 @@ class SwitchThatCannotAct(unittest.TestCase):
     """`policy` says which switches are on but cannot act today."""
 
     def _policy_reply(self, capital, frozen_until=0, year=100):
-        household = SimpleNamespace(reserve_craftsmen=0, reserve_scholars=0)
-        game = SimpleNamespace(policy={"auto_hire": True, "auto_open": True}, capital=capital, year=year,
-                               credit_frozen_until=frozen_until, workforce=household, view=workforce_stand_in.view_of(household, exclusions=set, keep_staffed=set), state=SimpleNamespace(household=household,
-                                                                                     projects=SimpleNamespace(excluded=set())))
+        household = Game(reserve_craftsmen=0, reserve_scholars=0)
+        game = Game(policy={"auto_hire": True, "auto_open": True}, capital=capital, year=year,
+                               credit_frozen_until=frozen_until, workforce=household, view=workforce_stand_in.view_of(household, exclusions=set, keep_staffed=set), state=Game(household=household,
+                                                                                     projects=Game(excluded=set())))
         return _cmd_policy(game, {}, {"cmd": "policy"}, None)
 
     def test_in_arrears_hiring_and_opening_say_they_cannot_act(self):
@@ -225,10 +226,10 @@ class StallDiagnosis(unittest.TestCase):
     """A run that has effectively stopped says so and what would restart it; a solvent one is not told it is stuck."""
 
     def _host(self, capital=-900.0, insolvent_years=12, revenue=0.0, standing_pay=0.0, would_earn=500.0, hours=2000.0):
-        labour = SimpleNamespace(hours_for_sale=lambda: hours, best_wage_trade=lambda: "scribe",
+        labour = Game(hours_for_sale=lambda: hours, best_wage_trade=lambda: "scribe",
                                  work_for_wages_dry_run=lambda trade, hours: (would_earn, None), standing_job_pay=lambda trade: standing_pay)
         module = finance_host.build(seat=FinanceSeat(insolvent_years=insolvent_years), acting_balance=capital, revenue_capacity=revenue,
-                                    upkeep=100.0, legacy_game=SimpleNamespace(labour=labour))
+                                    upkeep=100.0, legacy_game=Game(labour=labour))
         module.debt_interest_rate = lambda: 0.05
         module.living_cost = lambda revenue=0, upkeep=0, capital=None: 200.0
         return module
@@ -256,7 +257,7 @@ class StallDiagnosis(unittest.TestCase):
 
 class StaffFractions(unittest.TestCase):
     def _staff(self, scholars, artisans, employees=None):
-        return SimpleNamespace(view=lambda name: (lambda: {"scholars": scholars, "artisans": artisans, "employees": employees or {}}))
+        return Game(view=lambda name: (lambda: {"scholars": scholars, "artisans": artisans, "employees": employees or {}}))
 
     def test_a_fractional_staff_count_comes_with_an_explanation(self):
         self.assertTrue(_staff_fraction_note(self._staff(1.32, 3.0)))
@@ -293,7 +294,7 @@ class HazardValuesLandGradually(unittest.TestCase):
     START, END = 995, 1100
 
     def _host(self, weights):
-        game = SimpleNamespace(value_weights=dict(weights))
+        game = Game(value_weights=dict(weights))
         module = hazards_host.build(answers={ShiftValueWeight: polity_host.shifting(game.value_weights)})
         return game, module
 

@@ -9,10 +9,11 @@ from .harness import check
 
 from sim.ui.proto.explain_once import already_explained
 from sim.ui.proto.render_screen_state_blocks import _state_concerns, _state_running
+from sim.tests.ui_stand_in import Game
 
 
 def stand_in_game():
-    return SimpleNamespace(year=100, state=SimpleNamespace(seat_progress=SimpleNamespace(_said_explanations=None)))
+    return Game(year=100, state=Game(seat_progress=Game(_said_explanations=None)))
 
 
 game = stand_in_game()

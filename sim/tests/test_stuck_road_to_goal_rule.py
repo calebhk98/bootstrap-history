@@ -10,12 +10,13 @@ from unittest import mock
 from .harness import check
 
 from sim.ui.proto import dispatch_inspection_stuck as stuck
+from sim.tests.ui_stand_in import Game
 
 NODES = {"goal": {}, "road_a": {}, "road_b": {}}
 
 
 def game(startable=()):
-    return SimpleNamespace(goal="goal", done=set(), start_reason=lambda node_id: (node_id in startable, ""))
+    return Game(goal="goal", done=set(), start_reason=lambda node_id: (node_id in startable, ""))
 
 
 def road(fog, goal_game=None, nodes=NODES):

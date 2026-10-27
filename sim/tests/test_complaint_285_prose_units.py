@@ -14,6 +14,7 @@ from types import SimpleNamespace
 from sim.engine import units as U
 from sim.engine import units_prose as P
 from sim.ui.proto import quantity_units, typed
+from sim.tests.ui_stand_in import Game
 
 ROME_WORDS = {"long": "denarii", "short": "den"}
 BLOBS = {
@@ -27,8 +28,8 @@ NATIVE_WORD = re.compile(r"\btonnes?\b|\bhectares?\b|\bdenarii\b|\bden\b|degrees
 
 def fake_game(civ_id="rome_100ad"):
     """A stand-in game: two coin to the labour hour, so one coin is half an hour."""
-    labour = SimpleNamespace(money_per_labour_hour=lambda: 0.5)
-    return SimpleNamespace(civ={"id": civ_id, "currency_words": ROME_WORDS}, labour=labour)
+    labour = Game(money_per_labour_hour=lambda: 0.5)
+    return Game(civ={"id": civ_id, "currency_words": ROME_WORDS}, labour=labour)
 
 
 class UnitSetup(unittest.TestCase):

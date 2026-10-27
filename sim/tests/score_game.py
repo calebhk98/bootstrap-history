@@ -5,7 +5,10 @@ from types import SimpleNamespace
 from sim.engine.state import FounderState, ProjectsState
 
 
-class ScoreGame:
+from sim.tests.ui_stand_in import FactViews
+
+
+class ScoreGame(FactViews):
     """What `score_report` reads of a game. Every number is a plain attribute."""
 
     CAPABILITY_INSTITUTIONS = frozenset({"workshop_first", "school_founded", "identity_cover"})
@@ -33,8 +36,6 @@ class ScoreGame:
         self.manumitted_total = 0
         self.founder_alive = True
         self.ever_closed_for_staff = set()
-        self.view = lambda name: ((lambda: self.ever_closed_for_staff) if name == "ever_closed_for_staff"
-                                  else (lambda: {"slaves": self.slaves, "manumitted_total": self.manumitted_total}))
         self.units = {}
         self.literacy_values = {"literacy_general": 0.05, "literacy_elite": 0.5}
         self.general_ceiling = 0.2
@@ -49,6 +50,10 @@ class ScoreGame:
             headcount=lambda: self.headcount,
             base_annual_wage=lambda trade: self.wage,
             market=SimpleNamespace(in_current_money=lambda amount: amount))
+
+    @property
+    def staff(self):
+        return {"slaves": self.slaves, "manumitted_total": self.manumitted_total}
 
     def literacy(self, name):
         return self.literacy_values[name]

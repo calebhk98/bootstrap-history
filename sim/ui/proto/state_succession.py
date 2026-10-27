@@ -7,23 +7,23 @@ from sim.engine.ui_port import plain_number
 def succession_block(sim):
     """Deputy count, yearly hours, the threshold, and a named objective."""
     deputies = sim.view("staff")()["directors_extra"]
-    needed = sim.DEPUTIES_CARRY_THE_WORK_FROM
-    carry = sim.deputies_carry_the_work()
+    needed = sim.view("legacy_constant")["DEPUTIES_CARRY_THE_WORK_FROM"]
+    carry = sim.view("patronage")()["deputies_carry_the_work"]
     block = {
         "deputies": round(deputies, 2),
-        "deputy_hours_a_year": round(sim.deputy_hours(), 1),
+        "deputy_hours_a_year": round(sim.view("staff")()["directors_extra"] * sim.view("game_config")()["director_hours_per_year"], 1),
         "deputies_needed_to_carry_the_work": needed,
         "deputies_carry_the_work": carry,
     }
     if carry:
         block["objective"] = ("train a successor: met. Your deputies carry the work "
                               "(%s hours a year) if you are lost."
-                              % plain_number(sim.deputy_hours()))
+                              % plain_number(sim.view("staff")()["directors_extra"] * sim.view("game_config")()["director_hours_per_year"]))
         return block
-    sources = sorted(sim.nodes[node_id]["name"]
+    sources = sorted(sim.view("tree_nodes")()[node_id]["name"]
                      for node_id, _scholars, _artisans, directors, _scales, _running
-                     in sim.STAFF_CAPACITY_SOURCES
-                     if directors > 0 and sim.has(node_id))
+                     in sim.view("staff_capacity_sources")()
+                     if directors > 0 and node_id in sim.view("techniques_held")())
     where = ("deputies come from institutions you keep open, such as %s"
              % ", ".join(sources) if sources
              else "deputies come from institutions that grant them; 'why' on an "
@@ -32,5 +32,5 @@ def succession_block(sim):
                           "needed to carry the work without you (they work %s hours a "
                           "year now, which still counts as work). %s."
                           % (deputies, max(0.0, needed - deputies),
-                             plain_number(sim.deputy_hours()), where))
+                             plain_number(sim.view("staff")()["directors_extra"] * sim.view("game_config")()["director_hours_per_year"]), where))
     return block

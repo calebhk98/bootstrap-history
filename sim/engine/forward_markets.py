@@ -34,12 +34,6 @@ class ForwardMarketsMixin:
     def market_state(self, material):
         return self.view("market_state")[material]
 
-    def _open_market_book(self):
-        return self.send(OpenMarketBook())
-
-    def _opening_population(self):
-        return self.view("opening_population")()
-
     # ---- the goods categories and what the screens read ----
 
     def _goods_category_ratios(self, category, extra=0):
@@ -61,6 +55,3 @@ class ForwardMarketsMixin:
 
     def buy_material_stock(self, material, tonnes):
         return self.send(BuyMaterial(material, tonnes))
-
-    def sell_material_stock(self, material, tonnes):
-        return self.send(SellMaterial(material, tonnes))

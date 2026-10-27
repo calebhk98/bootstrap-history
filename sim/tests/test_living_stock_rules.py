@@ -23,6 +23,7 @@ from sim.refusal import Refusal, cause_of
 from sim.tests import finance_host, module_harness
 from sim.ui.proto import stock_purchases
 from sim.world.material_units import tonnes_per_unit
+from sim.tests.ui_stand_in import Game
 
 EGGS, HERD = "eggs_kg", "herd_kg"
 
@@ -91,13 +92,13 @@ class NeededRows(unittest.TestCase):
 
 class UnheldStockBlocker(unittest.TestCase):
     def test_a_node_with_stock_short_is_refused_naming_the_stock(self):
-        stand_in = types.SimpleNamespace(stock_missing=lambda node_id: [(EGGS, 0.02)])
+        stand_in = Game(stock_missing=lambda node_id: [(EGGS, 0.02)])
         refused, why = forward_living_stock.check_unheld_stock(stand_in, "silk", {}, False, {}, True)
         self.assertFalse(refused)
         self.assertIn(EGGS, why)
 
     def test_a_node_with_nothing_short_is_not_blocked(self):
-        stand_in = types.SimpleNamespace(stock_missing=lambda node_id: [])
+        stand_in = Game(stock_missing=lambda node_id: [])
         self.assertIsNone(forward_living_stock.check_unheld_stock(stand_in, "silk", {}, False, {}, True))
 
 
@@ -120,7 +121,7 @@ class NeedsFirst(unittest.TestCase):
 class PartnerRefusal(unittest.TestCase):
     def stand_in(self, monopolies, government=None, gate=None):
         """The foreign-trade module over a partner whose file, state and gate the test writes out."""
-        registry = types.SimpleNamespace(get=lambda actor_id: government)
+        registry = Game(get=lambda actor_id: government)
         return module_harness.build(ForeignTrade, views={
             "partner_reached": lambda partner: gate is None,
             "civilisation_record": lambda partner: {"name": "Han", "state_monopolies": monopolies},
@@ -140,8 +141,8 @@ class PartnerRefusal(unittest.TestCase):
         self.assertEqual(cause_of(self.refusal(self.stand_in([], gate=gate))), "partner_not_reached")
 
     def test_markets_shut_to_the_buyer_refuse_with_the_reopening_year(self):
-        government = types.SimpleNamespace(markets_closed_until=lambda party, year: 130, decision_policy=None,
-                                           record=types.SimpleNamespace(state_monopolies=set()))
+        government = Game(markets_closed_until=lambda party, year: 130, decision_policy=None,
+                                           record=Game(state_monopolies=set()))
         self.assertEqual(cause_of(self.refusal(self.stand_in([], government))), "partner_market_shut")
 
 
@@ -226,7 +227,7 @@ class BuyCommand(unittest.TestCase):
         self.assertEqual(purse["capital"], 100.0)
 
     def test_no_material_named_is_refused(self):
-        self.assertFalse(stock_purchases.buy_living_stock(types.SimpleNamespace(), {}, 1.0)["ok"])
+        self.assertFalse(stock_purchases.buy_living_stock(Game(), {}, 1.0)["ok"])
 
 
 class _Capital:
@@ -245,6 +246,8 @@ class _Capital:
     def view(self, name):
         if name in ("can_pay", "purchase_budget", "affordable_units"):
             return finance_host.purchase_views(self.spending_power)(name)
+        if name == "acting_balance":
+            return lambda: self.capital
         return (lambda *arguments: self.quote) if name == "stock_purchase_quote" else _Held()
 
     def send(self, command):

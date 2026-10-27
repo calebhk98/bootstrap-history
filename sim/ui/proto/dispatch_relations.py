@@ -22,13 +22,13 @@ def _stances():
 
 def own_country(sim):
     """The country the acting seat plays for."""
-    return sim.state.seats[sim.state.acting_seat].country or sim.civ["id"]
+    return sim.view("legacy_seats")()[sim.view("acting_seat")()].country or sim.view("civilisation")()["id"]
 
 
 def countries(sim):
     """Every country a relation can name: the home one, the seats' and the partners'."""
-    seat_countries = {seat.country for seat in sim.state.seats.values() if seat.country}
-    return sorted({sim.civ["id"]} | seat_countries | set(sim.partner_countries()))
+    seat_countries = {seat.country for seat in sim.view("legacy_seats")().values() if seat.country}
+    return sorted({sim.view("civilisation")()["id"]} | seat_countries | set(sim.view("partners")()))
 
 
 def _refusal(cause, error, **fields):

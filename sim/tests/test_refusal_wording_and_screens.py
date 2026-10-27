@@ -11,6 +11,7 @@ from sim.tests import projects_host
 from sim.engine.ui_port import downstream_count
 from sim.ui import protocol as _PROTO
 from sim.ui.proto.techtree import _explain_unlocks, _rests_band
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -103,7 +104,7 @@ check("...and every band has a short form for the column that renders it",
       all(_rests_band(count) in _PROTO._RESTS_SHORT for count in (0, 1, 4, 41, 301, 1201)), sorted(_PROTO._RESTS_SHORT))
 
 # the two pairs a player reported, through the part of `why` that states it (under fog, where it is banded)
-fog_game = SimpleNamespace(fog=True, goal="nowhere")
+fog_game = Game(fog=True, goal="nowhere")
 for prerequisite, dependent in (("met_ore_crushing_sorting", "met_jigging_gravity"),
                                 ("in2_tape_measure_steel", "in2_baseline_measurement_apparatus")):
     dependents = downstream_count(NODES, prerequisite)
@@ -112,8 +113,8 @@ for prerequisite, dependent in (("met_ore_crushing_sorting", "met_jigging_gravit
           prerequisite in NODES[dependent]["pre"] and dependents >= 1 and not rests.startswith("nothing else"),
           (rests, NODES[dependent]["pre"]))
 check("off fog `why` gives the exact count and no band",
-      _explain_unlocks(SimpleNamespace(fog=False, goal="nowhere"), NODES, "met_ore_crushing_sorting", [], 7)["downstream_count"] == 7
-      and _explain_unlocks(SimpleNamespace(fog=False, goal="nowhere"), NODES, "met_ore_crushing_sorting", [], 7)["how_much_rests_on_this"] is None)
+      _explain_unlocks(Game(fog=False, goal="nowhere"), NODES, "met_ore_crushing_sorting", [], 7)["downstream_count"] == 7
+      and _explain_unlocks(Game(fog=False, goal="nowhere"), NODES, "met_ore_crushing_sorting", [], 7)["how_much_rests_on_this"] is None)
 
 # and the class: no node with a dependent may say nothing rests on it
 dependents_of = collections.Counter()

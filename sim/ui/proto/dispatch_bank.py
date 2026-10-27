@@ -1,6 +1,7 @@
 """The found command: a seat that holds the deposit-banking institution puts capital into a bank of its own."""
 
 from .command_registry import command
+from sim.engine import ui_port
 
 
 @command("found", group="money",
@@ -14,4 +15,4 @@ from .command_registry import command
 def _cmd_found(sim, nodes, cmd, ended):
     if cmd.get("what") != "bank":
         return {"ok": False, "error": "found what? 'found bank <amount>' founds a bank."}
-    return sim.seat_found_bank(cmd.get("capital"))
+    return sim.send(ui_port.FoundBank(cmd.get("capital")))

@@ -22,6 +22,7 @@ from sim.projects.api import SettleProjectMaterials
 from sim.tests import projects_host
 from sim.ui.proto.quote_purchases import _quote_material
 from sim.ui.proto.techtree import _explain_cost
+from sim.tests.ui_stand_in import Game
 
 
 class Buyer:
@@ -37,7 +38,7 @@ class Buyer:
 # ---- the quote is what buying charges
 def stand_in_market(room):
     settled = []
-    market = SimpleNamespace(
+    market = Game(
         quote=lambda material: {"material": material, "stock_key": "coal"},
         bought_tonnes=lambda key, party: 0.0, market_room_tonnes=lambda quote, bought: room,
         purchase_cost=lambda material, tonnes, already=0.0: (7.0 * tonnes + tonnes * tonnes, 7.0 + tonnes),
@@ -53,7 +54,7 @@ got = GoodsMarket.buy(market, Buyer(), "coal_kg", 10.0)
 check("an order beyond the market's room is cut and the cut order is what is charged", got == 4.0 and settled == [("coal", 4.0, 44.0)], settled)
 
 quoted_orders = []
-game = SimpleNamespace(
+game = Game(
     material_trade_quote=lambda material: {"material": material, "buy_per_tonne": 7.0, "sell_per_tonne": 6.0,
                                            "market_available_tonnes_per_year": 100.0},
     material_purchase_cost=lambda material, tonnes: quoted_orders.append((material, tonnes)) or (170.0, 17.0),
@@ -65,19 +66,19 @@ check("the material quote's cost for an order is the purchase cost of that order
 reply = _quote_material(game, {"material": "coal_kg"}, 500.0)
 check("the quote is for the order cut to what the market offers a year", quoted_orders[-1] == ("coal_kg", 100.0), quoted_orders)
 check("the quote's average a tonne is its cost over the tonnes", reply["average_per_tonne_for_this_order"] == 1.7, reply)
-unpriced = SimpleNamespace(material_trade_quote=lambda material: None)
+unpriced = Game(material_trade_quote=lambda material: None)
 check("a material nobody sells is refused", _quote_material(unpriced, {"material": "ghost_kg"}, 1.0)["ok"] is False, None)
 
 # ---- the material cost reaches the market's quote
 asked = []
-game = SimpleNamespace(goods_market=SimpleNamespace(quote_buy=lambda material, tonnes, already: asked.append((material, tonnes, already)) or (1.0, 1.0)))
+game = Game(goods_market=Game(quote_buy=lambda material, tonnes, already: asked.append((material, tonnes, already)) or (1.0, 1.0)))
 market_stand_in.markets_over(goods_market=game.goods_market).purchase_quote("coal_kg", 3.0, 2.0)
 check("the bill's price of an order is the goods market's quote for it", asked == [("coal_kg", 3.0, 2.0)], asked)
 
 # ---- why shows the engine's cost
 BILL = {"rows": [], "cost_of_missing": 123.456}
-game = SimpleNamespace(
-    project_material_bill=lambda node_id: BILL, civ_cost_factor=lambda node_id: 1.1, geography=SimpleNamespace(material_cost_factor=lambda node_id: 1.2),
+game = Game(
+    project_material_bill=lambda node_id: BILL, civ_cost_factor=lambda node_id: 1.1, geography=Game(material_cost_factor=lambda node_id: 1.2),
     opposition_factor=lambda node_id: 1.0, rebuild_work_factor=lambda node_id: 1.0, cost_money_factor=lambda: 1.0, money_real=1.0, project_cost=lambda node_id: 987.654, year=100,
     done=set(), active={}, paid_towards={})
 cost = _explain_cost(game, {}, "node", {"_labour_cost": 10.0, "cap": 5.0})

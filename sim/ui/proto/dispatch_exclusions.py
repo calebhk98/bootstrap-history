@@ -20,9 +20,9 @@ def _normalise(sim, nodes, entry):
     else:
         if text not in nodes:
             text = next((node_id for node_id in nodes if node_id.lower() == lowered), text)
-    if sim.fog and text in nodes and not sim.is_visible(text):
+    if sim.view("legacy_fog")() and text in nodes and not sim.view("visibility")(text):
         return None, "no node called %r that you have heard of" % text
-    if not sim.exclusion_entry_known(text):
+    if not sim.view("exclusion_entry_known")(text):
         return None, ("%r names no technology, category or trait. Use a node id, "
                       "category:<category> or trait:<trait>" % text)
     return text, None

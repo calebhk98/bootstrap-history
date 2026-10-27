@@ -11,6 +11,7 @@ from .harness import check
 from sim.diffusion.module import Diffusion
 from sim.tests import module_harness
 from sim.ui.proto.available_economics import specialist_foreman
+from sim.tests.ui_stand_in import Game
 
 
 def schooling(flow, printing):
@@ -40,5 +41,5 @@ game.effective_schooling_flow("literacy_general")
 check("the figure asked about is passed to the schools that teach it", asked == ["literacy_general"], asked)
 
 check("a concern's row names the foreman trade and his share of the year, rounded",
-      specialist_foreman(SimpleNamespace(venture_foreman=lambda node_id: ("glassblower", 0.254)), "mirror") == {"trade": "glassblower", "fte": 0.25}, None)
-check("a concern that needs no specialist names none", specialist_foreman(SimpleNamespace(venture_foreman=lambda node_id: (None, 0.0)), "plain") is None, None)
+      specialist_foreman(Game(venture_foreman=lambda node_id: ("glassblower", 0.254)), "mirror") == {"trade": "glassblower", "fte": 0.25}, None)
+check("a concern that needs no specialist names none", specialist_foreman(Game(venture_foreman=lambda node_id: (None, 0.0)), "plain") is None, None)

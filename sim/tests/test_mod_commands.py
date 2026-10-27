@@ -13,15 +13,16 @@ from sim.engine.ui_commands import policy_defaults
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 from sim.ui.proto import command_registry, mod_commands
 from sim.ui.proto.dispatch import _agent_dispatch_inner
+from sim.tests.ui_stand_in import Game
 
 ACME = "test_acme_k3f9"
 BETA = "test_beta_k3f9"
 
 
 def fake_sim():
-    return SimpleNamespace(
+    return Game(
         nodes={}, fog=False, cfg={"start_year": 0, "horizon_years": 10}, dead_reason=None, year=1, end_year=10,
-        population=SimpleNamespace(total=1234.567), policy={ACME + ":pulse": True}, ran=[])
+        population=Game(total=1234.567), policy={ACME + ":pulse": True}, ran=[])
 
 
 class CommandTestBase(ModTestBase):

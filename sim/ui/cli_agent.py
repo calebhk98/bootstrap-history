@@ -24,6 +24,7 @@ from sim.ui.proto import step_progress
 # with), so they live in cli.py rather than in either front end alone.
 from .cli import (DetRNG, _civ_for_session, _goal_for_session,
                   _is_claimed_slot, _pick_session_filename, load_strategy)
+from sim.engine import ui_port
 
 
 # ----------------------------------------------------------------------------
@@ -62,12 +63,8 @@ def cmd_agent(args):
             cfg=cfg, civ=load_civ(_civ_for_session(args)), bounty_set=set(), manual=True)
     sim.seed = seed
     sim.session_seat = getattr(args, "seat", None)
-    sim.goal = goal
-    sim.done_year = {}
-    sim.end_year = sim.cfg["start_year"] + args.horizon
-    sim.fog = bool(getattr(args, "fog", False))
-    sim.fuzzy_estimates = bool(getattr(args, "fuzzy_estimates", False))
-    sim.revealed = set()
+    ui_port.begin_game(sim, goal, sim.view("game_config")()["start_year"] + args.horizon, bool(getattr(args, "fog", False)),
+                       bool(getattr(args, "fuzzy_estimates", False)))
     pretty = bool(getattr(args, "pretty", False))
 
     session = getattr(args, "session", None)
@@ -88,7 +85,7 @@ def cmd_agent(args):
         # protocol itself did not ask for.
         if settings.is_checkpoint(session):
             checkpoint_source = session
-            session = _pick_session_filename(sim.civ.get("id") or "game")
+            session = _pick_session_filename(sim.view("civilisation")().get("id") or "game")
             save_session(sim, session)
             sys.stderr.write(json.dumps(
                 {"checkpoint_resumed":
@@ -100,14 +97,14 @@ def cmd_agent(args):
     # after the load, so a resumed game keeps its carried routes
     route_file = getattr(args, "known_routes", None)
     if route_file:
-        if not sim.fog:
+        if not sim.view("legacy_fog")():
             sys.stderr.write(json.dumps({"known_routes": replay.fog_off_note()}) + "\n")
         else:
             applied = replay.apply_known_routes(sim, replay.read_known_routes(route_file), nodes)
             sys.stderr.write(json.dumps({"known_routes_carried": len(applied)}) + "\n")
 
     def emit(obj, command_name=None):
-        emit_reply(obj, command_name, sim.civ, pretty)
+        emit_reply(obj, command_name, sim.view("civilisation")(), pretty)
 
     # A player who has been told nothing but the path to this file must still be
     # able to start. On a new game the first line out is the whole briefing,

@@ -27,7 +27,7 @@ def _pools(sim, kind, rows, trade_rows, pool_total, throttle, binding):
                 for row in trade_rows if members & set(row["projects_drawing_on_it"])]
     if kind == "money":
         return [tagged({"pool": "capital", "demand": round(sum(row["still_to_pay"] or 0.0 for row in rows), 1),
-                        "supply": round(sim.spending_power("start"), 1)}, demand="money:civ_coin", supply="money:civ_coin")]
+                        "supply": round(sim.view("spending_power")("start"), 1)}, demand="money:civ_coin", supply="money:civ_coin")]
     if kind == "hours":
         return [{"pool": "directed hours",
                  "demand_hours_this_year": round(sum(row["founder_hours_left"] or 0.0 for row in rows), 1),

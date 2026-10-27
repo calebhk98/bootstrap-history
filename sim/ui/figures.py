@@ -85,7 +85,7 @@ def explain_figure(sim, name, history):
     digits = entry["digits"]
     now = read_figure(sim, name)
     earlier = [record for record in (history or [])
-               if record.get("year", sim.year) < sim.year and name in (record.get("figures") or {})]
+               if record.get("year", sim.view("year")()) < sim.view("year")() and name in (record.get("figures") or {})]
     before = earlier[-1]["figures"][name] if earlier else None
     out = {"ok": True, "name": name, "label": entry["label"], "unit": entry["unit"],
            "current": now["value"], "previous": None if before is None else before["value"],

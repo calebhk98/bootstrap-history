@@ -29,8 +29,10 @@ check("a seat id that is not a string is a refusal", seat is None and refusal["o
 check("the addressing key is not an argument of the handler", without_seat({"cmd": "step", "as": "second", "years": 2}) == {"cmd": "step", "years": 2}, None)
 
 
+from sim.tests.ui_stand_in import FactViews
+
 # ---- the same command, different households
-class Game:
+class Game(FactViews):
     """The root state with the real alias rebinding, which is all a handler reads."""
 
     def __init__(self):
@@ -62,8 +64,9 @@ class Game:
         return seats_ended(self.state.seats)
 
     def view(self, name):
-        assert name == "dead_reasons"
-        return lambda: {seat_id: self.state.seats[seat_id].modules["seats"].dead_reason for seat_id in self.ended_seats()}
+        if name == "dead_reasons":
+            return lambda: {seat_id: self.state.seats[seat_id].modules["seats"].dead_reason for seat_id in self.ended_seats()}
+        return FactViews.view(self, name)
 
 
 game = Game()

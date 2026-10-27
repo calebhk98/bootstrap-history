@@ -20,6 +20,7 @@ from sim.labour.hire_outcome import craft_trades_report
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.dispatch_ventures import _non_craft_labour_names, _scholar_family_names
 from sim.tests import module_harness, projects_host
+from sim.tests.ui_stand_in import Game
 
 STAFF = business_review.STAFF_SHORT
 
@@ -27,7 +28,7 @@ STAFF = business_review.STAFF_SHORT
 # ---- 233: the closure line says why, how many are still shut, and names the remedies ---------------------------------
 def Report(shut=(), year=100):
     """The projects module over a record of what is shut."""
-    projects = SimpleNamespace(closures={node_id: {"reason": STAFF, "year": year - 1} for node_id in shut},
+    projects = Game(closures={node_id: {"reason": STAFF, "year": year - 1} for node_id in shut},
                                mothballed=set(shut))
     return projects_host.build(legacy_projects=projects, year=year)
 
@@ -120,8 +121,8 @@ craft_trades = sorted(trade for trade, family in TRADE_FAMILY.items() if family 
 sentence = _scholar_family_names()
 check("every scholar-family trade is named in the sentence", bool(scholar_trades) and all(trade + "s" in sentence for trade in scholar_trades), sentence)
 check("no craft trade is called a scholar in the sentence", bool(craft_trades) and not any(trade + "s" in sentence for trade in craft_trades), sentence)
-labour = SimpleNamespace(craft_trades_report=lambda: craft_trades_report(["smith", "chemist", "potter", "labourer"], lambda trade: trade in ("smith", "potter")))
+labour = Game(craft_trades_report=lambda: craft_trades_report(["smith", "chemist", "potter", "labourer"], lambda trade: trade in ("smith", "potter")))
 check("the labouring trades named are those the supervision check says are not craft, and not the scholar family's",
-      _non_craft_labour_names(SimpleNamespace(labour=labour)) == ("labourers" if TRADE_FAMILY.get("chemist") == "scholar" else "chemists, labourers"),
-      _non_craft_labour_names(SimpleNamespace(labour=labour)))
+      _non_craft_labour_names(Game(labour=labour)) == ("labourers" if TRADE_FAMILY.get("chemist") == "scholar" else "chemists, labourers"),
+      _non_craft_labour_names(Game(labour=labour)))
 check("the craft test splits the trades", craft_trades_report(["b", "a", "c"], lambda trade: trade == "a") == {"craft": ["a"], "not_craft": ["b", "c"]})

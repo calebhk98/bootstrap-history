@@ -21,7 +21,7 @@ def _ids(rows):
 class RushPreviewAndExclusionsTest(unittest.TestCase):
     def test_preview_starts_nothing_and_lists_the_ids_rush_then_starts_leaving_out_an_excluded_node(self):
         game = unopened_sim(capital=2_000_000)
-        victim = next(node_id for node_id in game.order if game.can_start(node_id))
+        victim = next(node_id for node_id in game.order if game.view("start_check")(node_id, False, None, False)[0])
         self.assertTrue(_typed(game, "exclude %s" % victim)["ok"])
         self.assertIn(victim, game.view("exclusions")())
         preview = _typed(game, "rush preview limit:3")

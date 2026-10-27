@@ -4,7 +4,7 @@ _PAYBACK_HORIZON_YEARS = 100
 
 
 def net_per_year(sim, node_id):
-    return sim.venture_real_earnings(node_id) - sim.venture_real_upkeep(node_id)
+    return sim.view("venture_real_earnings")(node_id) - sim.view("venture_real_upkeep")(node_id)
 
 
 def payback_years(sim, node_id, cost):
@@ -13,11 +13,11 @@ def payback_years(sim, node_id, cost):
     Upkeep is paid in full from the first year while takings ramp up over
     the configured ramp, the same shape as Sim.venture_ramp.
     """
-    full_earnings = sim.venture_real_earnings(node_id)
-    upkeep = sim.venture_real_upkeep(node_id)
+    full_earnings = sim.view("venture_real_earnings")(node_id)
+    upkeep = sim.view("venture_real_upkeep")(node_id)
     if full_earnings <= 0 or full_earnings - upkeep <= 0:
         return None
-    ramp_years = sim.cfg["revenue_ramp_years"]
+    ramp_years = sim.view("game_config")()["revenue_ramp_years"]
     earned = 0.0
     for age in range(_PAYBACK_HORIZON_YEARS):
         year_net = full_earnings * min(1.0, (age + 1) / ramp_years) - upkeep
@@ -28,13 +28,13 @@ def payback_years(sim, node_id, cost):
 
 
 def specialist_foreman(sim, node_id):
-    trade, fte = sim.venture_foreman(node_id)
+    trade, fte = sim.view("venture_foreman")[node_id]
     return {"trade": trade, "fte": round(fte, 2)} if trade else None
 
 
 def sort_payback(sim, nodes, node_id):
     """Sort key: quickest payback first, never-paying rows last."""
-    years = payback_years(sim, node_id, sim.project_cost(node_id))
+    years = payback_years(sim, node_id, sim.view("project_cost")(node_id))
     return float("inf") if years is None else years
 
 
@@ -43,7 +43,7 @@ def row_fields(sim, node_id, node):
     the digest replies short.
     """
     fields = {"net_per_year": round(net_per_year(sim, node_id), 1),
-              "payback_years": payback_years(sim, node_id, sim.project_cost(node_id)),
+              "payback_years": payback_years(sim, node_id, sim.view("project_cost")(node_id)),
               "specialist_foreman": specialist_foreman(sim, node_id),
-              "living_stock": sim.stock_needed_by(node_id) or None}
+              "living_stock": sim.view("stock_status")[node_id]["needed_by"] or None}
     return {key: value for key, value in fields.items() if value is not None}

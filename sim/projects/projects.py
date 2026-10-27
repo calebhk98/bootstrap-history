@@ -124,6 +124,35 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 		"""{node id: the project's record} of the acting seat's projects in hand (the object itself)."""
 		return self.needs.legacy_projects().active
 
+	def mothballed_works(self):
+		"""The works the acting seat has mothballed (the live set)."""
+		return self.needs.legacy_projects().mothballed
+
+	def bountied_nodes(self):
+		"""The nodes the acting seat has posted a bounty on (the live set)."""
+		return self.needs.legacy_projects().bountied
+
+	def failed_attempt_counts(self):
+		"""{node id: how many times the acting seat's attempt at it has failed} (the live record)."""
+		return self.needs.legacy_projects().failed_attempts
+
+	def paid_towards_projects(self):
+		"""{node id: the money already paid into the project in hand} for the acting seat (the live record)."""
+		return self.needs.legacy_projects().paid_towards
+
+	def bounties_paid_total(self):
+		"""How many bounties the acting seat's household has paid out."""
+		return self.needs.legacy_acting_household().bounties_paid
+
+	def shut_for_staff(self):
+		"""{work id: the year it was shut} of the acting seat's works closed for want of staff."""
+		closures = self.needs.legacy_projects().closures
+		return {node_id: record["year"] for node_id, record in closures.items() if record["reason"] == "staff"}
+
+	def spend_last_year(self):
+		"""What the acting seat's household spent on projects in the year just closed, or None before the first year ends."""
+		return self.needs.legacy_acting_household().spend_last_year
+
 	def committed_cost(self):
 		"""What is still owed, in total, across every project in hand: they all draw on the same purse and the same credit
 		line."""

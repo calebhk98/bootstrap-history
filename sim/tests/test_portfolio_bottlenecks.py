@@ -11,8 +11,9 @@ from sim.engine.blockers import BLOCKER_KINDS
 from sim.ui.proto.economy import _portfolio_rows
 from sim.ui.proto.portfolio_bottlenecks import bottleneck_groups
 from sim.ui.proto.render_screens_economy import render_portfolio
+from sim.tests.ui_stand_in import Game
 
-stub_game = SimpleNamespace(spending_power=lambda purpose: 500.0)
+stub_game = Game(spending_power=lambda purpose: 500.0)
 nodes = {name: {"yrs": 4} for name in ("a", "b", "c", "d", "e")}
 active = {
     "a": {"name": "A", "waiting_on": "nobody to do the work: smiths", "founder_hours_left": 100.0, "still_to_pay": 10.0},

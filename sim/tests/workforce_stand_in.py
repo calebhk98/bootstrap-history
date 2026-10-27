@@ -1,6 +1,8 @@
 """A stand-in for the workforce module's views over a plain object that holds a seat's fields (a test fake of a game)."""
 from types import SimpleNamespace
 
+from sim.tests.ui_stand_in import FactViews
+
 STAFF_FIELDS = ("employees", "scholars", "artisans", "directors_extra", "slaves", "freedmen", "manumitted_total",
                 "reserve_craftsmen", "reserve_scholars")
 HOURS = {"allocations": "hour_allocations", "work_trade": "work_trade", "wage_hours": "wage_hours_this_year",
@@ -40,7 +42,10 @@ def views_over(seat):
 def view_of(seat, **more):
     """A `view(name)` function for a fake game: the workforce views over `seat`, and any `more` (name=callable)."""
     table = dict(views_over(seat), **more)
-    return lambda name: table[name]
+
+    def view(name):
+        return table[name] if name in table else FactViews.view(seat, name)   # the facts the screens read, held as attributes
+    return view
 
 
 def seat_of(**fields):
