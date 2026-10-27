@@ -169,7 +169,7 @@ class Sim(
         # offer; later clearing works down the same best-first ladder.
         held_tiles = tiles_held(self.civ, self.world_map)
         land_rules.require_territory(self.civ, held_tiles)
-        territory = land.territory_cropland(self.farm_sites())
+        territory = land.territory_cropland(self.view("farm_sites")())
         self._farm_ladder = territory.ladder
         self._farm_arable_ceiling = territory.cropped_hectares
         self.labour.set_farm_area(self._agriculture.farmland_for_population(

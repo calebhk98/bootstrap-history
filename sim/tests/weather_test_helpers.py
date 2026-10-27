@@ -8,11 +8,11 @@ from sim import simulator
 def assert_single_draw_fallback(test_case, test_sim, agriculture, year=137):
     test_sim.assembly.modules["agriculture"]._cells = []
     expected = agriculture.draw_weather_multiplier(
-        random.Random(test_sim._farm_year_weather_seed(year)),
+        random.Random(test_sim.view("weather_seed")(year, None)),
         agriculture.DEFAULT_SOIL.weather_stdev_fraction,
     )
     test_case.assertEqual(
-        test_sim._pooled_farm_weather_multiplier(year), expected)
+        test_sim.view("harvest_weather")(year, None, True), expected)
 
 
 def assert_matching_century(test_case, make_sim, years=100):
