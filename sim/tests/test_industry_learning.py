@@ -7,9 +7,10 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import industry_concern, industry_learning as learning
+from sim.engine import industry_concern
+from sim.production import industry_learning as learning
 from sim.engine.industry_concern import IndustryConcernMixin as Concern
-from sim.engine.node_output import Baskets
+from sim.production.node_output import Baskets
 
 FURNACE = {"good": "furnace", "build_labour_hours": {"mason": 300.0, "smith": 100.0}, "service_life_years": 10}
 

@@ -7,7 +7,8 @@ change without them knowing. This is the only engine module that may import `sim
 the agent economy answers, and the engine's own opening figures answer
 while it opens.
 """
-from . import node_upkeep, opening_money
+from . import opening_money
+from sim.production.api import node_upkeep
 
 
 class EconomyPort:

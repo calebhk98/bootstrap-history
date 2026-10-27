@@ -10,7 +10,7 @@ import sys
 from collections import Counter
 from typing import Any, Iterable, List, Mapping, Set, Tuple
 
-from sim.engine.node_output import entries_gated_by
+from sim.production.api import node_output
 
 ALLOWED_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                             "data", "unlinked_upkeep_nodes.txt")
@@ -37,7 +37,7 @@ def check_unlinked_upkeep(nodes: Mapping[str, Mapping[str, Any]], production: Ma
 def unlinked_nodes(nodes: Mapping[str, Mapping[str, Any]], production: Mapping[str, Any]) -> List[Mapping[str, Any]]:
     """Nodes with upkeep hours that gate or operate no production entry, in id order."""
     return [node for node_id, node in sorted(nodes.items())
-            if (node.get("up_hours") or 0) > 0 and not entries_gated_by(node_id, production)]
+            if (node.get("up_hours") or 0) > 0 and not node_output.entries_gated_by(node_id, production)]
 
 
 def report_lines(nodes: Mapping[str, Mapping[str, Any]], production: Mapping[str, Any]) -> List[str]:

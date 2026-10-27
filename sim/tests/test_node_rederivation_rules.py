@@ -7,7 +7,8 @@ from unittest import mock
 
 from sim.prices import prices as price_solver, solve_prices
 
-from sim.engine import node_rederive, node_revenue
+from sim.engine import node_rederive
+from sim.production import node_revenue
 from sim.engine.node_rederive import NodeRederiveMixin, held_gate_set
 
 from .harness import *  # noqa: F401,F403

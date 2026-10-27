@@ -2,7 +2,7 @@
 from sim.agents.api import business_books
 from .closure_grace import fee_after_grace
 from .quote_figures import upkeep_quote
-from .concern_earnings import forecast_basis, quoted_ramp, quoted_units
+from sim.production.api import concern_earnings
 
 
 class VentureQuotesMixin:
@@ -16,8 +16,8 @@ class VentureQuotesMixin:
         `with_output_factor` False leaves out the hazard and war factor, which `revenue` applies to its total.
         """
         running = node_id in self.state.projects.operating
-        ramp = quoted_ramp(running, fully_ramped, lambda: self.venture_ramp(node_id))
-        units = quoted_units(running, node_id in self.SCALABLE_INSTITUTIONS, lambda: self.institution_units(node_id), units)
+        ramp = concern_earnings.quoted_ramp(running, fully_ramped, lambda: self.venture_ramp(node_id))
+        units = concern_earnings.quoted_units(running, node_id in self.SCALABLE_INSTITUTIONS, lambda: self.institution_units(node_id), units)
         market = self.node_output_market_factor(self.nodes[node_id], self.state.acting_seat)
         return business_books.takings_of_size(self.concern_takings(node_id, ramp, with_output_factor), units, market)
 
@@ -25,7 +25,7 @@ class VentureQuotesMixin:
         """What the quote of a concern's earnings stands on: `market` (the economy prices its goods) or
         `long_run_no_market_yet` (nobody has sold them, so the quote is at long-run cost and the price
         they fetch once sold may differ a great deal)."""
-        return forecast_basis(self.concern_goods_have_market(node_id))
+        return concern_earnings.forecast_basis(self.concern_goods_have_market(node_id))
 
     def venture_sale_basis(self, node_id):
         """How much of the output the quote counts as sold: what the seat's last clearing sold, what the market's

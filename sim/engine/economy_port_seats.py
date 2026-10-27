@@ -7,7 +7,7 @@ result is stored with the economy (`stored["seat_sales"]`, in coin) and read bac
 from sim.agents.api import edges
 from sim.economy import api as economy_api
 
-from . import concern_sales
+from sim.production.api import concern_sales
 
 
 def unsold_units(economy, seat_id):

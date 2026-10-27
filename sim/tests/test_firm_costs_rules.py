@@ -9,7 +9,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine import node_upkeep
+from sim.production import node_upkeep
 from sim.engine.economy_port import EconomyPort
 from sim.engine.economy_production import ProductionMixin
 from sim.markets.rules import seller_revenue_factor

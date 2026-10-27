@@ -17,7 +17,7 @@ from sim.actors.world import ActorWorld
 from sim.engine import economy_production, projects_ventures, projects_venture_quotes
 
 from .world_stand_in import fake_needs
-from sim.engine.concern_earnings import quoted_ramp, quoted_units
+from sim.production.concern_earnings import quoted_ramp, quoted_units
 from sim.engine.economy_production import ProductionMixin
 from sim.engine.projects_staffing import StaffingMixin
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
