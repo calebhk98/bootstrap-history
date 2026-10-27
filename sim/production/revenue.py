@@ -8,8 +8,10 @@ the held-skill and candidate-set caches that `revenue` and `upkeep` share.
 
 The caches live on the household object because the engine drops them there when what they read changes
 (`_done_changed`, `_operating_changed`, `_reset_economic_caches` in economy.py).
-Needs: legacy_game, money_per_labour_hour, category_trait, trade_family, mechanic, standing."""
+Needs: legacy_game, money_per_labour_hour, category_trait, trade_family, staff, staff_version, hour_commitments, standing."""
 from sim.world import plant_figures
+
+from sim.workforce.api import SetWageHoursSold
 
 from . import rules
 from .bondage_workshop_rules import workshop_craft_wages, workshop_output_value
@@ -42,13 +44,12 @@ class Revenue:
 	def revenue_capacity(self):
 		"""What you would earn in an ordinary year, with your own hands on your own work, none of this year's hours sold on
 		request. Used where a swing in ONE year should not count - a lender does not cut your line because you took a job this year."""
-		household = self._game().state.household
-		_sold = household.wage_hours_this_year
-		household.wage_hours_this_year = 0.0
+		_sold = self.needs.hour_commitments()["wage_hours"]
+		self.needs.send(SetWageHoursSold(0.0))
 		try:
 			return self.revenue()
 		finally:
-			household.wage_hours_this_year = _sold
+			self.needs.send(SetWageHoursSold(_sold))
 
 	def revenue(self):
 		"""Total annual revenue across all active concerns, workshops, and state funding.
@@ -60,24 +61,24 @@ class Revenue:
 		"""
 		game = self._game()
 		scenario = game.state.scenario
-		household = game.state.household
 		standing = game.view("standing")()
+		staff = self.needs.staff()
 		key = (
 			scenario.year,
 			game.pop_scale,
 			game.real_output_per_head(),
 			game.household.operating_version,
 			game.household.done_version,
-			game.household.workforce_version,
+			self.needs.staff_version(),
 			game.household.institution_units_version,
-			household.wage_hours_this_year,
+			self.needs.hour_commitments()["wage_hours"],
 			game.labour.director_hours_committed(),
 			game.labour.wage_signature(),
-			household.directors_extra,
+			staff["directors_extra"],
 			game.bondage_years_left,
 			game.view("farm_holdings")()["hectares"] or 0.0,
-			getattr(household, "freedmen", 0.0) or 0.0,
-			getattr(household, "slaves", 0.0) or 0.0,
+			staff["freedmen"] or 0.0,
+			staff["slaves"] or 0.0,
 			standing["governance"] or 0.0,
 			game.output_factor,
 			standing["reputation"],
@@ -141,11 +142,11 @@ class Revenue:
 		game = self._game()
 		if not game.running_with_mechanic("workshop_site"):
 			return 0.0
-		household = game.state.household
+		staff = self.needs.staff()
 		market = game.labour.market
 		wage = workshop_craft_wages(
-			household.employees, lambda trade: self.needs.trade_family[trade] == "craft", market.quote_annual,
-			household.freedmen + household.slaves * SLAVE_LABOUR_PRODUCTIVITY_SHARE, market.quote_annual("artisan"))
+			staff["employees"], lambda trade: self.needs.trade_family[trade] == "craft", market.quote_annual,
+			staff["freedmen"] + staff["slaves"] * SLAVE_LABOUR_PRODUCTIVITY_SHARE, market.quote_annual("artisan"))
 		mark = WORKSHOP_WAGE_MARKUP_BASE
 		mark = game.effect_sum("workshop_markup", mark)
 		# Knowing how to do a thing earns nothing on its own; it makes the workshop you staff and pay for more productive,

@@ -35,12 +35,6 @@ def agent_economy(sim):
 
 # ---- production and workforce ----
 
-@bridge_view("revenue_capacity", seat_scoped=True)
-def revenue_capacity(sim):
-	"""What the acting seat would earn in an ordinary year, with none of this year's hours sold on request."""
-	return sim.revenue_capacity()
-
-
 @bridge_view("wage_bill", seat_scoped=True)
 def wage_bill(sim):
 	return sim.labour.wage_bill()

@@ -16,13 +16,6 @@ def start_year(sim):
 
 # ---- materials ----
 
-@bridge_view("running_stamp")
-def running_stamp(sim):
-	"""(the projects record, the counts and versions of what is built, granted and operating, the tree): a table derived
-	from what is running stays good while this is unchanged."""
-	return sim._running_kept_stamp()
-
-
 # ---- finance, polity and the seat's policy ----
 
 

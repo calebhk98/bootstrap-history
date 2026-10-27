@@ -10,11 +10,6 @@ def year(sim):
 	return sim.state.scenario.year
 
 
-@bridge_view("is_venture", kind=KEYED)
-def is_venture(sim, node_id):
-	return sim.is_venture(node_id)
-
-
 # ---- quantities in sentences: the units the player chose, the civilisation's coin (the reporting module's, when it moves) ----
 
 @bridge_view("mass_text", kind=QUOTE)

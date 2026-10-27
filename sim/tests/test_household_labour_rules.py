@@ -9,24 +9,20 @@ import unittest
 from sim.tests import workforce_stand_in
 
 from sim.engine import data
-from sim.engine.economy_production import ProductionMixin
 from sim.workforce.reteach_rules import PROJECT_IN_HAND_SCORE, past_cooldown, teaching_budget, trade_is_gone
 from sim.labour.labour_job import StandingJobMixin
 from sim.labour.labour_training import TrainingMixin
 from sim.labour.labour_wages import WagesMixin
 from sim.refusal import cause_of
 from sim.ui.proto.dispatch_labour import _cmd_hire
-from sim.tests import event_stand_in
+from sim.tests import event_stand_in, production_host
 from sim.tests.workforce_host import workforce_over
 
 
-class HeldTrade(ProductionMixin):
-    def __init__(self, held):
-        self.nodes = {node_id: {"sch": scholars} for node_id, scholars in held.items()}
-        self._held = set(held)
-
-    def _practice_set(self):
-        return self._held
+def HeldTrade(held):
+    module = production_host.build(types.SimpleNamespace(nodes={node_id: {"sch": scholars} for node_id, scholars in held.items()}))
+    module._practice_set = lambda: set(held)
+    return module
 
 
 class HeldTradeRule(unittest.TestCase):

@@ -3,7 +3,7 @@
 A concern whose goods the economy trades is paid what the year's clearing pays for the units buyers took
 (economy_port_year `_settle_seats`), like a firm's plant; the engine's estimate (`revenue`) covers only the rest.
 The offer and the inputs bought are one rule here, read by the clearing, the estimate and the forecast alike.
-Needs: legacy_game."""
+Needs: legacy_game, capability_sets."""
 from . import concern_sales
 
 
@@ -12,7 +12,7 @@ class BookSales:
 	def concern_book_scale(self, node_id):
 		"""The share of the concern's full-staffing year it runs now: its ramp, size and the hazard and war factor."""
 		game = self._game()
-		units = self.institution_units(node_id) if node_id in game.SCALABLE_INSTITUTIONS else 1.0
+		units = self.institution_units(node_id) if node_id in self.needs.capability_sets()[1] else 1.0
 		return self.venture_ramp(node_id) * units * game.output_factor
 
 	def concern_book_offer(self, node_id):

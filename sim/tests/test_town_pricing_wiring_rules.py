@@ -6,8 +6,11 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.bondage_workshop_rules import workshop_craft_wages
-from sim.engine.economy_production import ProductionMixin
+from sim.production.bondage_workshop_rules import workshop_craft_wages
+from unittest import mock
+
+from sim.production import revenue as production_revenue
+from sim.tests import production_host
 from sim.finance.constants import BONDAGE_LABOUR_SHARE, BONDAGE_WAGE_MARKUP
 from sim.finance.rules import bondage_repayment, serve_bondage_year
 from sim.finance.state import FinanceSeat
@@ -20,21 +23,14 @@ def bondage_module(labourer_quote):
                               labour_market=types.SimpleNamespace(quote=lambda trade: labourer_quote[trade]))
 
 
-class WorkshopGame(ProductionMixin):
-    WORKSHOP_WAGE_MARKUP_BASE = 1.5
-
-    def __init__(self, annual_quote):
-        self.view = lambda name: (lambda: {"employees": {"smith": 2.0}, "freedmen": 0.0, "slaves": 0.0})
-        self.labour = types.SimpleNamespace(market=types.SimpleNamespace(quote_annual=annual_quote))
-
-    def running_with_mechanic(self, mechanic):
-        return True
-
-    def effect_sum(self, name, base):
-        return base
-
-    def capability_factor(self):
-        return 1.0
+def WorkshopGame(annual_quote):
+    """The production module over a workshop of two smiths and a labour market quoting `annual_quote`."""
+    game = types.SimpleNamespace(
+        labour=types.SimpleNamespace(market=types.SimpleNamespace(quote_annual=annual_quote)),
+        running_with_mechanic=lambda mechanic: True, effect_sum=lambda name, base: base)
+    module = production_host.build(game, staff={"employees": {"smith": 2.0}, "freedmen": 0.0, "slaves": 0.0})
+    module.capability_factor = lambda: 1.0
+    return module
 
 
 class BondageYear(unittest.TestCase):
@@ -60,6 +56,11 @@ class BondageYear(unittest.TestCase):
 
 
 class WorkshopOutput(unittest.TestCase):
+
+    def setUp(self):
+        patched = mock.patch.object(production_revenue, "WORKSHOP_WAGE_MARKUP_BASE", 1.5)
+        patched.start()
+        self.addCleanup(patched.stop)
 
     def test_craft_hands_are_valued_at_the_markets_annual_wage_whatever_the_wage_is(self):
         for wage in (100.0, 250.0):

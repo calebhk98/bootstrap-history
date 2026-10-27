@@ -14,25 +14,23 @@ from sim.diffusion.api import NoteFirstRuns
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionWorld
 from sim.prices import prices
-from sim.engine import concern_volume, economy_port_actors
+from sim.engine import economy_port_actors
 from sim.tests import prices_stand_in
 from sim.engine.state import ActorRecord, ActorsState
-from sim.engine.techniques_in_use import TechniquesInUseMixin
 from sim.engine.view_share import ViewShareMixin
-from sim.tests import module_harness
+from sim.tests import module_harness, production_host
 
 
 class ConcernPriceTables(unittest.TestCase):
 
     def asking(self, held_sets, civilisation):
-        world = types.SimpleNamespace(civ=civilisation)
+        module = production_host.build(types.SimpleNamespace(civ=civilisation), held_goods_prices_in_hours=lambda held: solve(held))
         solves = []
 
         def solve(held, **_arguments):
             solves.append(frozenset(held))
             return {"grain_kg": 2.0, "dust_kg": 0.0}
-        with mock.patch("sim.engine.data.calculated_goods_prices", solve):
-            answers = [concern_volume.ConcernVolumeMixin._concern_prices_in_hours(world, held) for held in held_sets]
+        answers = [module._concern_prices_in_hours(held) for held in held_sets]
         return solves, answers
 
     def test_concerns_asking_about_the_same_techniques_share_one_solve(self):
@@ -131,13 +129,14 @@ class ConcernSetVersion(unittest.TestCase):
         walks = []
         original = registry.concerns_of_active_firms
         registry.concerns_of_active_firms = lambda: walks.append(1) or original()
-        first = TechniquesInUseMixin.techniques_in_use(world)
+        module = production_host.build(world)
+        first = module.techniques_in_use()
         for _firm in range(25):
             registry.note_capacity_change("firm:000")
-            TechniquesInUseMixin.techniques_in_use(world)
+            module.techniques_in_use()
         self.assertEqual(len(walks), 1)
         registry.actors["firm:000"].concerns.add("node_1")
-        self.assertEqual(TechniquesInUseMixin.techniques_in_use(world), first | {"node_1"})
+        self.assertEqual(module.techniques_in_use(), first | {"node_1"})
         self.assertEqual(len(walks), 2)
 
 

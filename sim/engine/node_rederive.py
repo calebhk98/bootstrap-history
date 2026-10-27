@@ -5,7 +5,8 @@ per held gate set); research that adds a gate changes what can be made and at wh
 re-derives when that set changes.
 """
 from sim.prices.api import prices as price_solver
-from . import money_units, node_revenue, opening_money, society_holdings
+from . import money_units, opening_money, society_holdings
+from sim.production.api import node_revenue
 from .wage_schedule import build_schedule
 
 

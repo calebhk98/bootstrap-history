@@ -133,12 +133,6 @@ class ProjectsState:
 	# the founder's businesses and their plants: what is running, switched off, how big and since when
 	businesses: List[Business] = field(default_factory=lambda: [Business(business_id="founder")])
 	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
-	# trade -> technique -> retained worker-years of anyone running it (sim/labour/tenure.py, industry_depth.py)
-	tenure: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	tenure_headcount: Dict[str, float] = field(default_factory=dict)
-	industry_seeded: bool = False
-	# technique -> worker-years a year the society's opening producers put in (industry_depth.py)
-	industry_opening_rate: Dict[str, float] = field(default_factory=dict)
 	bountied: Set[str] = field(default_factory=set)
 	granted: Set[str] = field(default_factory=set)
 	paid_towards: Dict[str, float] = field(default_factory=dict)

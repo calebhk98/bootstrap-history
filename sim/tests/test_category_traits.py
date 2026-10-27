@@ -10,10 +10,9 @@ from types import SimpleNamespace
 from sim.diffusion import rules
 from sim.diffusion.module import Diffusion
 from sim.engine import category_traits
-from sim.engine.economy_production import ProductionMixin
 from sim.knowledge.module import Knowledge
 from sim.engine.tree_source import load_base_tree
-from sim.tests import module_harness
+from sim.tests import module_harness, production_host
 
 
 class CategoriesReadTheirTraits(unittest.TestCase):
@@ -47,15 +46,18 @@ class ModAddsCategory(unittest.TestCase):
         category_traits.MODS_DIRECTORY = self.saved
         self.tmp.cleanup()
 
+    def production(self, nodes):
+        return production_host.build(SimpleNamespace(nodes=nodes), category_trait=category_traits.has_trait)
+
     def test_new_category_trait_takes_effect_in_engine(self):
         nodes = {"x": {"cat": "test_cat_k3f9:rites", "traits": []}}
         self.assertTrue(category_traits.has_trait("test_cat_k3f9:rites", "never_abandoned"))
-        self.assertTrue(ProductionMixin._practisable(SimpleNamespace(nodes=nodes), "x"))
+        self.assertTrue(self.production(nodes)._practisable("x"))
         self.assertEqual([], category_traits.categories_without_traits(nodes.values()))
 
     def test_override_of_existing_category(self):
         nodes = {"x": {"cat": "dentistry"}}
-        self.assertFalse(ProductionMixin._practisable(SimpleNamespace(nodes=nodes), "x"))
+        self.assertFalse(self.production(nodes)._practisable("x"))
 
     def test_new_diffusion_trait_is_last_and_usable(self):
         names = category_traits.diffusion_trait_names()

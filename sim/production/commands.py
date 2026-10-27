@@ -1,4 +1,4 @@
-"""Commands to the owner of what runs and the experience it builds (production, not moved yet: the bridge applies them)."""
+"""Commands to the owner of what runs and the experience it builds."""
 from dataclasses import dataclass
 
 from sim.assembly.api import Command
@@ -7,3 +7,9 @@ from sim.assembly.api import Command
 @dataclass(frozen=True)
 class AccrueExperience(Command):
 	"""Fade every trade's tenure, then add this year's worker-years of running each technique to the industry's experience."""
+
+
+@dataclass(frozen=True)
+class LearnFromFailure(Command):
+	"""A diagnosed failure at `node_id`: the worker-years its attempt spent stay in the industry's experience."""
+	node_id: str

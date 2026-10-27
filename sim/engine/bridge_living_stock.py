@@ -32,12 +32,3 @@ def partner_catch_chance(sim, civilization_id, share_of_holding):
 
 # ---- what is built and running ----
 
-
-@bridge_view("operating")
-def operating(sim):
-    return sim.state.projects.operating
-
-
-@bridge_view("institution_units", kind=KEYED)
-def institution_units(sim, node_id):
-    return sim.institution_units(node_id)

@@ -4,7 +4,8 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.industry_depth import RISK_SHARE_AT_FULL_DEPTH, depth_risk_multiplier
+from sim.production.constants import RISK_SHARE_AT_FULL_DEPTH
+from sim.production.rules import depth_risk_multiplier
 from sim.engine.risk_rules import control_relief_multiplier, effective_risk_of
 
 FACTOR = 0.65

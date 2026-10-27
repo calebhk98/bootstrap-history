@@ -7,7 +7,6 @@ import contextlib
 
 from sim.agents.api import cast_from_civilisations
 from sim.assembly.api import KEYED, QUOTE
-from sim.production.api import AccrueExperience
 
 from . import partner_demand, trade_duty
 from .actor_kinds_data import register_mod_actor_kinds
@@ -15,8 +14,6 @@ from .bridge import bridge_command, bridge_view
 from .data import load_civ
 from .economy_port_setup import unit_mass_kg
 from .foreign_economy_data import not_traded_materials as declared_not_traded_materials
-from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
-from .node_revenue_market import basket_market_factor
 from .projects_review import SeatReview
 
 # ---- the cast's own data: the kinds mods bring and the roster a game opens with ----
@@ -74,51 +71,6 @@ def concern_staff(sim, node_id):
 # ---- production: concerns, their takings and the industry's experience ----
 
 
-@bridge_view("concern_takings", kind=QUOTE)
-def concern_takings(sim, node_id, ramp, **options):
-    return sim.concern_takings(node_id, ramp, **options)
-
-
-@bridge_view("concern_gross", kind=QUOTE)
-def concern_gross(sim, node_id):
-    return sim.economy.concern_gross(node_id)
-
-
-@bridge_view("concern_upkeep", kind=QUOTE)
-def concern_upkeep(sim, node_id, capacity=1.0, **options):
-    return sim.economy.concern_upkeep(node_id, capacity, **options)
-
-
-@bridge_view("node_output_market_factor", kind=QUOTE)
-def node_output_market_factor(sim, node):
-    return sim.node_output_market_factor(node)
-
-
-@bridge_view("concern_volume_ratio", kind=QUOTE)
-def concern_volume_ratio(sim, node_id):
-    return sim.concern_volume_ratio(node_id)
-
-
-@bridge_view("industry_depth", kind=KEYED)
-def industry_depth(sim, node_id):
-    return sim.industry_depth(node_id)
-
-
-@bridge_view("industry_scale_ceiling", kind=KEYED)
-def industry_scale_ceiling(sim, node_id):
-    return sim.industry_scale_ceiling(node_id)
-
-
-@bridge_view("ramp_share_at_full_depth")
-def ramp_share_at_full_depth(sim):
-    return RAMP_SHARE_AT_FULL_DEPTH
-
-
-@bridge_view("basket_market_factor", kind=QUOTE)
-def basket_market_factor_view(sim, sold, bought, long_run_prices, price_now):
-    return basket_market_factor(sold, bought, long_run_prices, price_now)
-
-
 @bridge_view("unit_mass_kg", kind=QUOTE)
 def unit_mass(sim, material):
     return unit_mass_kg(material)
@@ -128,11 +80,6 @@ def unit_mass(sim, material):
 def seat_review(sim, world, year):
     """The founder's seat's answers to a business review (engine/projects_review.py)."""
     return SeatReview(world, year, sim)
-
-
-@bridge_command(AccrueExperience)
-def accrue_experience(sim, command):
-    sim.accrue_industry_experience()
 
 
 # ---- markets: goods categories, the agent economy's book and the orders the actors place ----

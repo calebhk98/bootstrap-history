@@ -11,10 +11,9 @@ from .harness import check
 from sim.diffusion import literacy_rules
 from sim.diffusion.module import Diffusion
 from sim.engine.coverage import CoverageMixin
-from sim.engine.projects_capability import CapabilityMixin
 from sim.engine.forward_workforce import ForwardWorkforceMixin
 from sim.refusal import cause_of
-from sim.tests import module_harness
+from sim.tests import module_harness, production_host
 from sim.ui.proto.dispatch_rollout import _cmd_rollout
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from sim.workforce.constants import BASE_WORKING_DAY_HOURS
@@ -45,8 +44,8 @@ check("a shut work covers nothing", CoverageMixin.coverage_share(game, CLINICS) 
 game, _ = works()
 check("the units that serve half the people are asked of the people and the unit's reach", CoverageMixin.units_for_coverage(game, CLINICS, 0.5) == 5.0, None)
 check("the most units the nation can fill is the units that serve everyone",
-      CapabilityMixin.institution_unit_ceiling(SimpleNamespace(
-          SCALABLE_INSTITUTIONS={CLINICS}, coverage_nodes=lambda: [CLINICS], units_for_coverage=lambda node_id, share: 10.0 * share), CLINICS) == 10.0, None)
+      production_host.build(SimpleNamespace(coverage_nodes=lambda: [CLINICS], units_for_coverage=lambda node_id, share: 10.0 * share),
+                             capability_sets=(set(), {CLINICS}, {})).institution_unit_ceiling(CLINICS) == 10.0, None)
 
 # ---- the roll-out
 game, opened = works()

@@ -44,14 +44,3 @@ def calculated_goods_prices(sim, held, farmed_hectares):
 
 
 # ---- production ----
-
-@bridge_view("workshop_output")
-def workshop_output(sim):
-    """Money the seat's own workshop takes in a year, before the market ceiling."""
-    return sim.workshop_output()
-
-
-@bridge_view("concern_market")
-def concern_market(sim):
-    """{node id: yearly takings} of every concern the seat's ledger counts."""
-    return sim.ledger_concern_rows()

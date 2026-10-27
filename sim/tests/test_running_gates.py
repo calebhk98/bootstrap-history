@@ -13,7 +13,7 @@ from sim.engine.state import ProjectsState
 from unittest import mock
 
 from sim.engine import validate_running_gates
-from sim.engine.projects_capability import CapabilityMixin
+from sim.tests import production_host
 from sim.engine.projects_running_gates import RunningGatesMixin, check_running_gates
 from sim.knowledge import rules as knowledge_rules
 from sim.engine.projects_staffing import StaffingMixin
@@ -32,7 +32,7 @@ def _nodes():
     }
 
 
-class _Host(RunningGatesMixin, CapabilityMixin, StaffingMixin):
+class _Host(RunningGatesMixin, StaffingMixin):
     send = event_stand_in.send
     fog = False
 
@@ -42,6 +42,16 @@ class _Host(RunningGatesMixin, CapabilityMixin, StaffingMixin):
             projects=ProjectsState(done=set(done), granted=set()),
             scenario=SimpleNamespace(year=100), household=SimpleNamespace(log=[]))
         self.state.projects.operating = set(operating)
+        self.production = production_host.build(self)
+
+    def running(self, node_id):
+        return self.production.running(node_id)
+
+    def is_venture(self, node_id):
+        return self.production.is_venture(node_id)
+
+    def is_concern_node(self, node_id):
+        return self.production.is_concern_node(node_id)
 
     def on_road_to_goal(self, node_id):
         return True

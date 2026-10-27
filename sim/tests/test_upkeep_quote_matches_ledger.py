@@ -5,26 +5,17 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.economy_production import ProductionMixin
+from sim.tests import production_host
 
 
-class _Household:
-    """Only what `upkeep` and `upkeep_by_concern` read; each concern's quote is a figure set here."""
-    upkeep = ProductionMixin.upkeep
-    upkeep_by_concern = ProductionMixin.upkeep_by_concern
-
-    def __init__(self, quotes, operating, practice=()):
-        self._quotes, self._practice = dict(quotes), set(practice)
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(operating=set(operating)))
-
-    def _practice_set(self):
-        return self._practice
-
-    def _revenue_upkeep_candidates(self):
-        return sorted(self._quotes)
-
-    def venture_real_upkeep(self, node_id, units=None):
-        return self._quotes[node_id]
+def _Household(quotes, operating, practice=()):
+    """The production module over the concerns that are open, each concern's quote a figure set here."""
+    module = production_host.build(types.SimpleNamespace(state=types.SimpleNamespace(projects=types.SimpleNamespace(operating=set(operating))),
+                                                         venture_real_upkeep=lambda node_id, units=None: quotes[node_id]))
+    module._practice_set = lambda: set(practice)
+    module._revenue_upkeep_candidates = lambda: sorted(quotes)
+    module.venture_real_upkeep = module._game().venture_real_upkeep
+    return module
 
 
 class UpkeepQuoteMatchesLedger(unittest.TestCase):

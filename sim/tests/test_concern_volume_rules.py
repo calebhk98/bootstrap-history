@@ -7,7 +7,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.agents import supply
-from sim.engine import concern_volume
+from sim.production import volume_rules as concern_volume
 from sim.production.concern_earnings import takings_at
 from sim.markets.api import MEAN_INCOME_HOURS_PER_CAPITA
 from sim.markets.module import Markets

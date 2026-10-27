@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.projects_capability import CapabilityMixin
+from sim.tests import production_host
 from sim.engine.projects_completion import CompletionMixin
 
 QUICK_TOPIC = True
@@ -40,12 +40,9 @@ check("the gain reads only the node and the state's regard, so a node finished a
       _Finishing(1.0).reputation_gain_of({"rev": 1}) > _base)
 
 
-class _Concerns(CapabilityMixin):
+def _Concerns(nodes, granted=()):
     """What makes a node a going concern: it earns or costs to keep, and the society did not already have it."""
-
-    def __init__(self, nodes, granted=()):
-        self.nodes = nodes
-        self.state = SimpleNamespace(projects=SimpleNamespace(granted=set(granted)))
+    return production_host.build(SimpleNamespace(nodes=nodes, state=SimpleNamespace(projects=SimpleNamespace(granted=set(granted)))))
 
 
 _nodes = {"theory": {"rev": 0.0, "up": 0.0}, "shop": {"rev": 10.0, "up": 0.0}, "plant": {"rev": 0.0, "up": 5.0}}

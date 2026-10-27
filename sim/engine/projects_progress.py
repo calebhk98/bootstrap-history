@@ -22,7 +22,7 @@ from sim.workforce.api import DrawTradeHours
 from .completion_schedule import (calendar_floor_years, earliest_completion_years, expected_years_to_succeed,
                                  payment_schedule_years)
 from .failure_diagnosis import failure_teaches
-from .industry_depth import depth_risk_multiplier
+from sim.production.api import depth_risk_multiplier
 from .retry_calendar import retry_calendar_retain
 from .trade_demand import trade_demand_table
 from .risk_rules import control_relief_multiplier, effective_risk_of

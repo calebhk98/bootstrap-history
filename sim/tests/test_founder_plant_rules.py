@@ -14,11 +14,12 @@ from sim.agents.business_closing import release_plant
 from sim.agents.business_plant import MOTHBALLED, OPERATING, Plant
 from sim.actors import world as actors_world
 from sim.actors.world import ActorWorld
-from sim.engine import economy_production, projects_ventures, projects_venture_quotes
+from sim.engine import projects_ventures, projects_venture_quotes
+from sim.production import revenue as production_revenue
+from sim.tests import production_host
 
 from .world_stand_in import fake_needs
 from sim.production.concern_earnings import quoted_ramp, quoted_units
-from sim.engine.economy_production import ProductionMixin
 from sim.engine.projects_staffing import StaffingMixin
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
 from sim.engine.projects_ventures import VenturesMixin
@@ -167,11 +168,12 @@ class RampTests(unittest.TestCase):
         seen = {}
         projects = SimpleNamespace(business=Business(plants=[Plant(entry_key=NODE, opened_year=opened_year)] if opened_year is not None else []),
                                    done_year={NODE: done_year} if done_year is not None else {})
-        game = SimpleNamespace(state=SimpleNamespace(projects=projects, scenario=SimpleNamespace(year=100)),
-                               cfg={"revenue_ramp_years": 5}, industry_depth=lambda node_id: 0.5)
-        with mock.patch.object(economy_production.plant_figures, "ramp",
+        module = production_host.build(SimpleNamespace(state=SimpleNamespace(projects=projects, scenario=SimpleNamespace(year=100)),
+                                                       cfg={"revenue_ramp_years": 5}))
+        module.industry_depth = lambda node_id: 0.5
+        with mock.patch.object(production_revenue.plant_figures, "ramp",
                                lambda age, years, depth, share: seen.update(age=age, years=years, depth=depth) or 0.7):
-            self.assertEqual(ProductionMixin.venture_ramp(game, NODE), 0.7)
+            self.assertEqual(module.venture_ramp(NODE), 0.7)
         return seen
 
     def test_the_ramp_counts_from_the_year_it_was_opened(self):

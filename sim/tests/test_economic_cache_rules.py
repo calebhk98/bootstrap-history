@@ -7,8 +7,8 @@ import types
 import unittest
 
 from sim.markets.module import Markets
-from sim.engine.economy_production import ProductionMixin
-from sim.tests import materials_stand_in, module_harness
+from sim.tests import materials_stand_in, module_harness, production_host
+from sim.workforce.api import SetWageHoursSold
 
 
 def household(**versions):
@@ -19,8 +19,8 @@ def household(**versions):
     return types.SimpleNamespace(**fields)
 
 
-class RevenueStandIn(ProductionMixin):
-    """What `revenue` reads, with the uncached sum counted."""
+class RevenueStandIn:
+    """The game `revenue` reads, under a production module whose uncached sum is counted."""
     bondage_years_left = 0.0
 
     def real_output_per_head(self):
@@ -39,18 +39,21 @@ class RevenueStandIn(ProductionMixin):
         self.farm_hectares = 0.0
         self.founder_alive = True
         self.labour = types.SimpleNamespace(director_hours_committed=lambda: 0.0, wage_signature=lambda: 0)
+        self.module = production_host.build(
+            self, staff=lambda: {key: getattr(self.household, key) for key in ("directors_extra", "freedmen", "slaves", "employees")},
+            staff_version=lambda: self.household.workforce_version,
+            hour_commitments=lambda: {"wage_hours": self.household.wage_hours_this_year},
+            answers={SetWageHoursSold: lambda command: setattr(self.household, "wage_hours_this_year", command.hours)})
+        self.module._compute_revenue_uncached = self._compute_revenue_uncached
 
-    def view(self, name):   # the polity module's standing, the demography module's farm and the workforce module's books
-        if name == "staff_version":
-            return lambda: self.household.workforce_version
-        if name == "hour_commitments":
-            return lambda: {"wage_hours": self.household.wage_hours_this_year}
-        if name == "staff":
-            return lambda: {key: getattr(self.household, key) for key in ("directors_extra", "freedmen", "slaves", "employees")}
+    def revenue(self):
+        return self.module.revenue()
+
+    def revenue_capacity(self):
+        return self.module.revenue_capacity()
+
+    def view(self, name):   # the polity module's standing and the demography module's farm
         return lambda: {"governance": 0.0, "reputation": 0.0, "hectares": self.farm_hectares}
-
-    def send(self, command):
-        self.household.wage_hours_this_year = command.hours
 
     def state_funding(self):
         return 0.0

@@ -16,7 +16,7 @@ from sim.hazards.toll import sack_toll, staff_loss_toll
 from sim.hazards.hedge_steps import hedge_wants, startable_first
 from sim.projects.api import funding
 year_bill = funding.year_bill
-from sim.engine.revenue_ledger import assemble_ledger
+from sim.production.revenue_ledger import assemble_ledger
 from sim.knowledge.api import declared_starting_techs
 
 
