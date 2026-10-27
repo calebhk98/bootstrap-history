@@ -56,15 +56,6 @@ def shared_answers(sim, table):
     return scope()
 
 
-# ---- workforce ----
-
-
-@bridge_view("concern_staff", kind=KEYED)
-def concern_staff(sim, node_id):
-    """People of each trade one plant of the concern needs."""
-    return sim.concern_staff_by_trade(node_id)
-
-
 # ---- production: concerns, their takings and the industry's experience ----
 
 

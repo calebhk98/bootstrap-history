@@ -1,7 +1,7 @@
 """closure_reasons: a closed work records why and since when, and only its own cause clears it.
 
 The rules are called on a business built here (`Business`, `business_review.reopen`); the staffing-closure age and the
-closing of a work on the projects module over plain values, and the discounted reopening fee on a stub game.
+closing of a work on the projects module over plain values, and the discounted reopening fee on the ventures module.
 The loss-making and creditor-seizure closures (reasons "loss_making" and "creditor_seizure") are held by
 test_business_review (LossRuleIsOneRule, the seizure tests)."""
 QUICK_TOPIC = True
@@ -12,10 +12,10 @@ import unittest
 from sim.agents import business_review
 from sim.agents.api import Business
 from sim.agents.business_plant import MOTHBALLED, Plant
-from sim.engine.projects_venture_quotes import VentureQuotesMixin
 from sim.projects import closure_reasons, constants
 from sim.projects.needed_commands import NoteConcernChange
-from sim.tests import module_harness, projects_host
+from sim.tests import module_harness, projects_host, ventures_host
+from sim.ventures import constants as venture_constants
 
 STAFF = business_review.STAFF_SHORT
 MANUAL = closure_reasons.CLOSED_BY_CHOICE
@@ -100,21 +100,18 @@ class StaffingClosureDiscount(unittest.TestCase):
 		business.mothball("mill", shut_year, reason)
 		projects = types.SimpleNamespace(mothballed=business.mothballed(), closures=business.closures())
 		module = projects_host.build(legacy_projects=projects, year=year)
-		game = types.SimpleNamespace(
-			state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=year), projects=projects),
-			CLOSED_FOR_STAFF=closure_reasons.CLOSED_FOR_STAFF, STAFF_CLOSURE_GRACE=self.GRACE,
-			STAFF_CLOSURE_DISCOUNT=self.DISCOUNT, is_venture=lambda _node: True, venture_capex=lambda _node: 1000.0)
-		game.closure_of = module.closure_of
-		game.staff_closure_age = module.staff_closure_age
-		return game
+		# the build cost that makes opening the concern cost 1000
+		ventures = ventures_host.build(
+			tree_nodes={"mill": {"up": 0.0}}, project_cost=lambda _node: 1000.0 / venture_constants.VENTURE_CAPEX_SHARE_OF_BUILD_COST,
+			staff_closure_age=module.staff_closure_age)
+		return module, ventures
 
 	def fee(self, reason, shut_year, year):
-		game = self.game_with(reason, shut_year, year)
-		return VentureQuotesMixin.reopen_fee(game, "mill")
+		return self.game_with(reason, shut_year, year)[1].reopen_fee("mill")
 
 	def test_a_staffing_closure_has_an_age_and_a_manual_one_has_none(self):
-		self.assertEqual(self.game_with(STAFF, 40, 43).staff_closure_age("mill"), 3)
-		self.assertIsNone(self.game_with(MANUAL, 40, 43).staff_closure_age("mill"))
+		self.assertEqual(self.game_with(STAFF, 40, 43)[0].staff_closure_age("mill"), 3)
+		self.assertIsNone(self.game_with(MANUAL, 40, 43)[0].staff_closure_age("mill"))
 
 	def test_within_the_grace_window_reopening_costs_the_discounted_fraction(self):
 		self.assertAlmostEqual(self.fee(STAFF, 40, 40 + self.GRACE), 1000.0 * self.DISCOUNT)

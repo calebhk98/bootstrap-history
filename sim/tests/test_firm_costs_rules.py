@@ -12,22 +12,22 @@ from types import SimpleNamespace
 from sim.production import node_upkeep
 from sim.markets.port import EconomyPort
 from sim.markets.rules import seller_revenue_factor
-from sim.engine.projects_venture_quotes import VentureQuotesMixin
-from sim.tests import production_host
+from sim.tests import production_host, ventures_host
 
 NODE = {"up": 5000.0, "_upkeep_hours_parts": {"staff": 3.0, "plant": 1.0}, "_upkeep_basis": None}   # a quarter of the upkeep is not crew
 
 
-class Founder(VentureQuotesMixin):
+class Founder:
     """The founder's side of a plain concern: no scalable institution, no capability gate."""
 
     def __init__(self, price_index):
-        self.nodes = {"shop": NODE}
-        self.price_index = price_index
-        self.production = production_host.build(self, capability_sets=((), (), {}))
+        game = SimpleNamespace(nodes={"shop": NODE}, price_index=price_index)
+        self.production = production_host.build(game, capability_sets=((), (), {}))
+        self.ventures = ventures_host.build(
+            tree_nodes=game.nodes, price_index=price_index, institution_upkeep=self.production.institution_upkeep)
 
-    def institution_upkeep(self, node_id, units=None, fully_staffed=False):
-        return self.production.institution_upkeep(node_id, units, fully_staffed)
+    def venture_real_upkeep(self, node_id):
+        return self.ventures.venture_real_upkeep(node_id)
 
 
 class UpkeepTests(unittest.TestCase):

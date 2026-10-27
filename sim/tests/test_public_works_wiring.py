@@ -10,10 +10,9 @@ from .harness import check
 
 from sim.diffusion import literacy_rules
 from sim.diffusion.module import Diffusion
-from sim.engine.coverage import CoverageMixin
 from sim.engine.forward_workforce import ForwardWorkforceMixin
 from sim.refusal import cause_of
-from sim.tests import module_harness, production_host
+from sim.tests import module_harness, production_host, ventures_host
 from sim.ui.proto.dispatch_rollout import _cmd_rollout
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from sim.workforce.constants import BASE_WORKING_DAY_HOURS
@@ -23,44 +22,43 @@ CLINICS, LIGHTS = "ben_district_clinics", "ben_city_electric_lighting"
 
 
 def works(open_units=0.0, is_open=True, known=True, nodes=(CLINICS,)):
-    """A game with a coverage work: 100 people to a unit, 1000 who can use it, `open_units` open."""
+    """The ventures module over a coverage work: 100 people to a unit, 1000 who can use it, `open_units` open."""
     opened = []
-    game = SimpleNamespace(
-        nodes={node: {"name": "Clinics"} for node in nodes}, running=lambda node_id: is_open,
-        institution_units=lambda node_id: open_units, people_per_unit=lambda node_id: 100.0, people_who_can_use=lambda node_id: 1000.0,
-        coverage_nodes=lambda: list(nodes), state=SimpleNamespace(projects=SimpleNamespace(done={CLINICS} if known else set())),
-        has=lambda node_id: known)
-    game.coverage_share = lambda node_id: CoverageMixin.coverage_share(game, node_id)
-    game.units_for_coverage = lambda node_id, share: CoverageMixin.units_for_coverage(game, node_id, share)
-    game.open_venture = lambda node_id, units=None: opened.append((node_id, units)) or (True, "opened")
-    return game, opened
+    module = ventures_host.build(
+        tree_nodes={node: {"name": "Clinics"} for node in nodes}, running=lambda node_id: is_open,
+        institution_units=lambda node_id: open_units, techniques_held={CLINICS} if known else set())
+    module.people_per_unit = lambda node_id: 100.0
+    module.people_who_can_use = lambda node_id: 1000.0
+    module.coverage_nodes = lambda: list(nodes)
+    module.open_venture = lambda node_id, units=None: opened.append((node_id, units)) or (True, "opened")
+    return module, opened
 
 
 # ---- coverage
 game, _ = works(open_units=2.0)
-check("an open work covers its units' people over those who can use it", abs(CoverageMixin.coverage_share(game, CLINICS) - 0.2) < 1e-12, None)
+check("an open work covers its units' people over those who can use it", abs(game.coverage_share(CLINICS) - 0.2) < 1e-12, None)
 game, _ = works(open_units=2.0, is_open=False)
-check("a shut work covers nothing", CoverageMixin.coverage_share(game, CLINICS) == 0.0, None)
+check("a shut work covers nothing", game.coverage_share(CLINICS) == 0.0, None)
 game, _ = works()
-check("the units that serve half the people are asked of the people and the unit's reach", CoverageMixin.units_for_coverage(game, CLINICS, 0.5) == 5.0, None)
+check("the units that serve half the people are asked of the people and the unit's reach", game.units_for_coverage(CLINICS, 0.5) == 5.0, None)
 check("the most units the nation can fill is the units that serve everyone",
       production_host.build(SimpleNamespace(coverage_nodes=lambda: [CLINICS], units_for_coverage=lambda node_id, share: 10.0 * share),
                              capability_sets=(set(), {CLINICS}, {})).institution_unit_ceiling(CLINICS) == 10.0, None)
 
 # ---- the roll-out
 game, opened = works()
-ok, text = CoverageMixin.roll_out(game, CLINICS, 0.1)
+ok, text = game.roll_out(CLINICS, 0.1)
 check("rolling out a work not yet open opens it at the units the share needs", ok and opened == [(CLINICS, 1.0)], opened)
 game, opened = works(open_units=3.0)
-ok, text = CoverageMixin.roll_out(game, CLINICS, 0.1)
+ok, text = game.roll_out(CLINICS, 0.1)
 check("a share already covered opens nothing and says why", not ok and opened == [] and cause_of(text) == "already_covered", text)
 game, opened = works(open_units=1.0)
-CoverageMixin.roll_out(game, CLINICS, 0.5)
+game.roll_out(CLINICS, 0.5)
 check("a work part open opens only what is still wanted", opened == [(CLINICS, 4.0)], opened)
 game, opened = works(nodes=())
-check("a work that cannot be rolled out is refused", CoverageMixin.roll_out(game, CLINICS, 0.5)[0] is False and opened == [], None)
+check("a work that cannot be rolled out is refused", game.roll_out(CLINICS, 0.5)[0] is False and opened == [], None)
 game, opened = works(known=False)
-check("a work not yet known is refused", CoverageMixin.roll_out(game, CLINICS, 0.5) == (False, "you have not worked out how to do that yet") and opened == [], None)
+check("a work not yet known is refused", game.roll_out(CLINICS, 0.5) == (False, "you have not worked out how to do that yet") and opened == [], None)
 
 # ---- the rollout command
 rolled = []

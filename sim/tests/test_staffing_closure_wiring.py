@@ -17,9 +17,9 @@ from sim.agents.business_plant import MOTHBALLED, Plant
 from sim.agents.api import business_review
 from sim.projects import staffing_shortfall
 from sim.projects.state import ProjectsSeat
-from sim.engine.projects_ventures import VenturesMixin
+from sim.projects import constants as project_constants
 from sim.reporting.api import RecordEvent
-from sim.tests import module_harness, projects_host
+from sim.tests import module_harness, projects_host, ventures_host
 
 NODES = {"mill": {"rev": 900.0, "up": 300.0}, "forge": {"rev": 500.0, "up": 450.0}}
 
@@ -81,22 +81,21 @@ check("when the review shuts nothing nothing is recorded or logged", quiet.close
       and logged(quiet) == [])
 
 
-class Opener(VenturesMixin):
-    """The parts of a Sim that the charge for opening reads."""
-    SCALABLE_INSTITUTIONS = {"school"}
-    STARTER_FOUNDING_MIN_UNITS = 0.25
+FLOOR = project_constants.STARTER_FOUNDING_MIN_UNITS
 
-    def reopen_units(self, node_id):
-        return 0.8
 
-    def reopen_fee(self, node_id, unit_count=1.0):
-        return 1000.0 * unit_count
+def Opener():
+    """The ventures module with the size a reopening restores and the fee at a size fixed."""
+    module = ventures_host.build(capability_sets=(frozenset(), frozenset({"school"}), {}))
+    module.reopen_units = lambda node_id: 0.8
+    module.reopen_fee = lambda node_id, unit_count=1.0: 1000.0 * unit_count
+    return module
 
 
 check("opening a concern charges the reopening fee at the size it reopens at",
       Opener().opening_fee("mill") == (800.0, 0.8))
 check("a starter founding of a scalable institution is charged at the size asked, never under the floor",
-      Opener().opening_fee("school", 0.5) == (500.0, 0.5) and Opener().opening_fee("school", 0.1) == (250.0, 0.25))
+      Opener().opening_fee("school", 0.5) == (500.0, 0.5) and Opener().opening_fee("school", FLOOR / 2) == (1000.0 * FLOOR, FLOOR))
 check("units asked of what is not scalable are ignored", Opener().opening_fee("mill", 3) == (800.0, 0.8))
 
 business = Business(plants=[Plant(entry_key="mill", opened_year=100, state=MOTHBALLED, since_year=105, reason="staff_short")])

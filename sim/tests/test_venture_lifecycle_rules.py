@@ -11,10 +11,8 @@ import unittest
 from unittest import mock
 
 from sim.production import revenue as production_revenue
-from sim.tests import production_host, projects_host
-from sim.engine.projects_venture_quotes import VentureQuotesMixin
-from sim.engine.projects_ventures import VenturesMixin
-from sim.engine.venture_net_loss import flags_net_loss
+from sim.tests import production_host, projects_host, ventures_host
+from sim.ventures.net_loss import flags_net_loss
 from sim.refusal import cause_of
 from sim.ui.proto.shut_concerns import shut_concerns_yearly_value
 
@@ -77,28 +75,13 @@ class CapabilityGaps(unittest.TestCase):
         self.assertEqual(self.ids({"university", "school"}, set()), ["school", "university"])
 
 
-class Reopening(VentureQuotesMixin):
-    SCALABLE_INSTITUTIONS = frozenset()
-    STAFF_CLOSURE_GRACE = 6
-    STAFF_CLOSURE_DISCOUNT = 0.1
-    RESTORE_COST_SHARE_OF_BUILD = 0.3
-    RESTORE_COST_MIN_UPKEEP_YEARS = 2.0
-
-    def __init__(self, venture=True, closure_age=None, capex=1000.0):
-        self.venture, self.age, self.capex = venture, closure_age, capex
-        self.nodes = {"shop": {"up": 50.0}}
-
-    def is_venture(self, node_id):
-        return self.venture
-
-    def venture_capex(self, node_id):
-        return self.capex
-
-    def project_cost(self, node_id):
-        return 2000.0
-
-    def staff_closure_age(self, node_id):
-        return self.age
+def Reopening(venture=True, closure_age=None, up=50.0):
+    """The ventures module over a one-concern tree: a concern's opening fee is 1000 and building it again cost 2000."""
+    module = ventures_host.build(
+        tree_nodes={"shop": {"up": up}}, is_venture=lambda node_id: venture, project_cost=lambda node_id: 2000.0,
+        staff_closure_age=lambda node_id: closure_age)
+    module.venture_capex = lambda node_id: 1000.0
+    return module
 
 
 class ReopenFee(unittest.TestCase):
@@ -118,9 +101,7 @@ class ReopenFee(unittest.TestCase):
         self.assertEqual(Reopening(venture=False).reopen_fee("shop"), 2000.0 * 0.3)
 
     def test_that_share_is_never_less_than_some_years_of_its_upkeep(self):
-        game = Reopening(venture=False)
-        game.nodes["shop"]["up"] = 1000.0
-        self.assertEqual(game.reopen_fee("shop"), 2000.0)
+        self.assertEqual(Reopening(venture=False, up=1000.0).reopen_fee("shop"), 2000.0)
 
 
 def Mothballing(upkeep=0.0, hands=(0.0, 0.0), running=True, granted=False, done=True):
@@ -185,22 +166,12 @@ def Ramp(opened=None, done_year=None, year=130):
     return module
 
 
-class Opening(VenturesMixin):
-    """The tree and what is known, granted and running, for the refusals that come before any money moves."""
-    SCALABLE_INSTITUTIONS = frozenset()
-
-    def __init__(self, done=True, granted=False, practisable=False, venture=True, operating=False):
-        self.nodes = {"shop": {}}
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(
-            done={"shop"} if done else set(), granted={"shop"} if granted else set(),
-            operating={"shop"} if operating else set()))
-        self.practisable, self.venture = practisable, venture
-
-    def _practisable(self, node_id):
-        return self.practisable
-
-    def is_venture(self, node_id):
-        return self.venture
+def Opening(done=True, granted=False, practisable=False, venture=True, operating=False):
+    """The ventures module over the tree and what is known, granted and running, for the refusals that come before any money moves."""
+    return ventures_host.build(
+        tree_nodes={"shop": {}}, is_venture=lambda node_id: venture, practisable=lambda node_id: practisable,
+        legacy_projects=ventures_host.projects_record(
+            done={"shop"} if done else set(), granted={"shop"} if granted else set(), operating={"shop"} if operating else set()))
 
 
 class OpenRefusals(unittest.TestCase):

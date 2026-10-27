@@ -4,12 +4,12 @@ household's capability depends on even at a loss it can carry.
 Default ON for the optimizer and OFF for a player, like every other automation in this game."""
 from sim.finance.api import deep_in_arrears, opens_in_deep_arrears, payback_years
 from sim.reporting.api import RecordEvent
+from sim.ventures.api import OpenVenture
 
 from .constants import (AUTO_EXPAND_MIN_OCCUPANCY, AUTO_EXPAND_MIN_ROOM_UNITS, AUTO_EXPAND_MIN_STEP_UNITS,
                         AUTO_EXPAND_SURPLUS_SHARE, AUTO_OPEN_CREDIT_LINE_BLEED_SHARE, AUTO_OPEN_DEEP_ARREARS_CREDIT_SHARE,
                         AUTO_OPEN_INSTITUTION_ARREARS_SHARE, AUTO_OPEN_PAYBACK_LIMIT_YEARS, AUTO_OPEN_SURPLUS_SHARE_FOR_BLEED,
                         STARTER_FOUNDING_MIN_UNITS)
-from .needed_commands import OpenVenture
 
 
 class AutoOpen:

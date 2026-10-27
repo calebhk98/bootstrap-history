@@ -13,8 +13,8 @@ from sim.ledger.api import PayEdge
 from . import bribe_rules, constants, funding, instantaneous, record_rules, start_rules
 from .commands import Bribe, PostBounty, StartProject, StopProject
 from sim.materials.api import SettleProjectMaterials
-from .needed_commands import ClearMothball
 from sim.reporting.api import RecordEvent
+from sim.ventures.api import ClearMothball
 from .researcher import SeatResearcher
 
 BOUNTY_CRAFT_CATEGORIES = ("glass_optics", "metallurgy", "precision", "power", "agriculture", "information", "instruments")

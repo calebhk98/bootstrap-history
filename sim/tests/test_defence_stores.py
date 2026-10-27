@@ -21,8 +21,7 @@ from sim.engine.forward_mechanics import ForwardMechanicsMixin
 from sim.mechanics.module import Mechanics
 from sim.living_stock.api import ChangeHeld
 from sim.tests import module_harness
-from sim.engine.projects_ventures import VenturesMixin
-from sim.tests import hazards_host, projects_host
+from sim.tests import hazards_host, projects_host, ventures_host
 from sim.workforce.api import SurviveStaff
 from sim.workforce.module import Workforce
 
@@ -306,30 +305,25 @@ class TheGarrisonMustBePresent(unittest.TestCase):
         self.assertEqual(host.venture_garrison(WORKS), {})
 
 
-class _Staffed(VenturesMixin, _Host):
-    """The host with the ventures' methods and the projects module's staffing rule built over it."""
-    CAPABILITY_INSTITUTIONS = frozenset()
-    FOUNDER_IS_WORTH = 0.0
-    STAFFING_CLOSURE_SLACK = 0.5
-    labour = SimpleNamespace(effective_scholars=lambda: 100.0)
+class _Staffed(_Host):
+    """The host with the ventures module and the projects module's staffing rule built over it."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.state.household.artisans = 100.0
-        self.founder_alive = False
+        staff = lambda: {"artisans": 100.0, "scholars": 0.0, "employees": self.state.household.employees}
+        self.ventures_module = ventures_host.build(
+            tree_nodes=self.nodes, operating=self.state.projects.operating, institution_units=self.institution_units,
+            venture_garrison=self.venture_garrison, staff=staff, unskilled_trade="labourer")
         self.projects_module = projects_host.build(
             tree=self.nodes, operating=lambda: self.state.projects.operating, legacy_projects=self.state.projects,
-            institution_units=self.institution_units, venture_foreman=self.venture_foreman, venture_garrison=self.venture_garrison,
-            venture_foreman_free=self.venture_foreman_free, venture_hands=lambda node_id: (0.0, 0.0),
-            venture_staff_free=lambda: (10.0, 10.0), effective_scholars=100.0,
-            staff=lambda: {"artisans": 100.0, "scholars": 0.0, "employees": self.state.household.employees},
-            founder={"alive": False, "life_left": 0.0, "dead_reason": None, "policy": {}})
+            institution_units=self.institution_units, venture_foreman=self.ventures_module.venture_foreman,
+            venture_garrison=self.venture_garrison, venture_foreman_free=self.ventures_module.venture_foreman_free,
+            venture_hands=lambda node_id: (0.0, 0.0), venture_staff_free=lambda: (10.0, 10.0), effective_scholars=100.0,
+            staff=staff, founder={"alive": False, "life_left": 0.0, "dead_reason": None, "policy": {}})
 
-    def venture_hands(self, node_id):
-        return 0.0, 0.0
-
-    def venture_staff_free(self):
-        return 10.0, 10.0
+    def venture_foremen_used(self, excluding=None):
+        return self.ventures_module.venture_foremen_used(excluding)
 
     def staffing_open_refusal(self, node_id, unit_count=1.0, with_advice=True):
         return self.projects_module.staffing_open_refusal(node_id, unit_count, with_advice)

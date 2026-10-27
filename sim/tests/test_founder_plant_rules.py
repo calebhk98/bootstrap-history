@@ -1,6 +1,6 @@
 """The founder's business and a firm's are one object (stage 3a of docs/architecture/FIRMS_OWN_PLANTS_PLAN.md): the plant
 keeps its size and age through a mothball and a restore (`Business.mothball`, `Business.restore`) and leaves its owner whole
-(`release_plant`); the founder's verbs and quotes call the same rules a firm's do (`close_work`, `close_venture`,
+(`release_plant`); the founder's verbs and quotes call the same rules a firm's do (`close_work`,
 `venture_hands`, `venture_upkeep_quote`, `venture_real_earnings`, `venture_ramp`, `ActorWorld.concern_takings`). Each is called
 on a stand-in that holds only what it reads."""
 QUICK_TOPIC = True
@@ -14,15 +14,13 @@ from sim.agents.business_closing import release_plant
 from sim.agents.business_plant import MOTHBALLED, OPERATING, Plant
 from sim.actors import world as actors_world
 from sim.actors.world import ActorWorld
-from sim.engine import projects_ventures, projects_venture_quotes
+from sim.ventures import crew, quotes
 from sim.production import revenue as production_revenue
 from sim.ledger.api import PayEdge
-from sim.tests import module_harness, production_host, projects_host
+from sim.tests import module_harness, production_host, projects_host, ventures_host
 
 from .world_stand_in import fake_needs
 from sim.production.concern_earnings import quoted_ramp, quoted_units
-from sim.engine.projects_venture_quotes import VentureQuotesMixin
-from sim.engine.projects_ventures import VenturesMixin
 
 NODE = "concern"
 
@@ -78,19 +76,6 @@ class ClosingTests(unittest.TestCase):
         module.close_work(NODE, module.CLOSED_FOR_STAFF, cascade=False)
         self.assertEqual(module.seat.ever_closed_for_staff, {NODE})
 
-    def close_venture(self, operating):
-        closed = []
-        game = SimpleNamespace(state=SimpleNamespace(projects=SimpleNamespace(operating=operating)), CLOSED_BY_CHOICE="by_choice",
-                               close_work=lambda node_id, reason: closed.append((node_id, reason)), nodes={NODE: {"up": 1.0, "rev": 2.0}})
-        with mock.patch.object(projects_ventures, "money_text", return_value="m"):
-            return VenturesMixin.close_venture(game, NODE)[0], closed
-
-    def test_closing_a_concern_you_run_closes_it_by_choice(self):
-        self.assertEqual(self.close_venture({NODE}), (True, [(NODE, "by_choice")]))
-
-    def test_closing_a_concern_you_do_not_run_is_refused_and_closes_nothing(self):
-        self.assertEqual(self.close_venture(set()), (False, []))
-
 
 class RestoreWorkTests(unittest.TestCase):
     def restore(self, venture):
@@ -115,28 +100,28 @@ class RestoreWorkTests(unittest.TestCase):
 
 class QuoteWiringTests(unittest.TestCase):
     def test_hands_are_the_crew_rules_for_the_plants_own_figures(self):
-        game = SimpleNamespace(crew_figures=lambda node_id: ("figures", node_id), concern_runs_without_founder=lambda node_id: False)
-        with mock.patch.object(projects_ventures.business_crew_rule, "hands", lambda figures, runs: (figures, runs())):
-            self.assertEqual(VenturesMixin.venture_hands(game, NODE), (("figures", NODE), False))
+        module = ventures_host.build(concern_runs_without_founder=lambda node_id: False)
+        module.crew_figures = lambda node_id: ("figures", node_id)
+        with mock.patch.object(crew.business_crew_rule, "hands", lambda figures, runs: (figures, runs())):
+            self.assertEqual(module.venture_hands(NODE), (("figures", NODE), False))
 
     def test_the_upkeep_quote_is_now_and_fully_staffed_at_the_price_level(self):
         calls = []
-        game = SimpleNamespace(institution_upkeep=lambda node_id, units, fully_staffed=False: calls.append(fully_staffed) or (9.0 if fully_staffed else 4.0),
-                               price_index=2.0)
-        with mock.patch.object(projects_venture_quotes, "upkeep_quote", lambda now, full, index: {"now": now * index, "at_full_staffing": full * index}):
-            self.assertEqual(VentureQuotesMixin.venture_upkeep_quote(game, NODE), {"now": 8.0, "at_full_staffing": 18.0})
+        module = ventures_host.build(
+            institution_upkeep=lambda node_id, units=None, fully_staffed=False: calls.append(fully_staffed) or (9.0 if fully_staffed else 4.0),
+            price_index=2.0)
+        self.assertEqual(module.venture_upkeep_quote(NODE), {"now": 8.0, "at_full_staffing": 18.0})
         self.assertEqual(calls, [False, True])
 
     def earnings(self, running, **kwargs):
         seen = {}
-        game = SimpleNamespace(
-            state=SimpleNamespace(projects=SimpleNamespace(operating={NODE} if running else set()), acting_seat=0),
-            SCALABLE_INSTITUTIONS={NODE}, venture_ramp=lambda node_id: 0.4, institution_units=lambda node_id: 3.0,
-            node_output_market_factor=lambda node, seat: 0.9, nodes={NODE: {}},
+        module = ventures_host.build(
+            tree_nodes={NODE: {}}, operating={NODE} if running else set(), capability_sets=(frozenset(), frozenset({NODE}), {}),
+            venture_ramp=lambda node_id: 0.4, institution_units=lambda node_id: 3.0, node_output_market_factor=lambda node, seat: 0.9,
             concern_takings=lambda node_id, ramp, with_output_factor=True: seen.update(ramp=ramp) or 100.0)
-        with mock.patch.object(projects_venture_quotes.business_books, "takings_of_size",
+        with mock.patch.object(quotes.business_books, "takings_of_size",
                                lambda takings, units, market: seen.update(units=units, market=market) or takings):
-            VentureQuotesMixin.venture_real_earnings(game, NODE, **kwargs)
+            module.venture_real_earnings(NODE, **kwargs)
         return seen
 
     def test_a_running_scalable_concern_is_quoted_at_its_own_ramp_and_units(self):

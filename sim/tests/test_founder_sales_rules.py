@@ -8,23 +8,23 @@ from types import SimpleNamespace
 from unittest import mock
 
 from sim.agents.api import CommandRejected
-from sim.engine import founder_sales
-from sim.engine.founder_sales import FounderSalesMixin
+from sim.tests import ventures_host
+from sim.ventures import sales
 
 NODE = "inn"
 
 
 class SaleSetupTests(unittest.TestCase):
     def setup(self, operating, granted=()):
-        game = SimpleNamespace(
-            state=SimpleNamespace(projects=SimpleNamespace(operating=set(operating), granted=set(granted)), acting_seat=0),
-            seat_party=lambda seat, margins: SimpleNamespace(actor_id="seat:0", margins=margins),
-            view=lambda name: lambda: SimpleNamespace(concern_margin=lambda node_id: 7.0),
-            actors=SimpleNamespace(
+        module = ventures_host.build(
+            legacy_projects=ventures_host.projects_record(operating=set(operating), granted=set(granted)),
+            seat_party_with_margins=lambda seat, margins: SimpleNamespace(actor_id="seat:0", margins=margins),
+            actor_world=SimpleNamespace(concern_margin=lambda node_id: 7.0),
+            cast=SimpleNamespace(
                 of_kind=lambda kind: [SimpleNamespace(record=SimpleNamespace(exited_year=None), actor_id=kind + ":live"),
                                       SimpleNamespace(record=SimpleNamespace(exited_year=90), actor_id=kind + ":gone")],
                 get=lambda actor_id: "found " + actor_id))
-        return FounderSalesMixin._concern_sale_setup(game, NODE)
+        return module._concern_sale_setup(NODE)
 
     def test_a_concern_the_founder_does_not_run_has_nothing_to_sell(self):
         self.assertIsNone(self.setup(operating=set())[0])
@@ -42,15 +42,15 @@ class SaleSetupTests(unittest.TestCase):
 
 class SellConcernTests(unittest.TestCase):
     def sell(self, outcome):
-        game = SimpleNamespace(_concern_sale_setup=lambda node_id: (("party", [], None, "world"), None) if outcome != "none" else (None, "not running"),
-                               household=SimpleNamespace(capital=1234.56), state=SimpleNamespace(projects=None))
+        module = ventures_host.build(acting_balance=1234.56)
+        module._concern_sale_setup = lambda node_id: (("party", [], None, "world"), None) if outcome != "none" else (None, "not running")
 
         def sold(party, node_id, buyers, find_actor, world):
             if outcome == "refused":
                 raise CommandRejected("no buyer")
             return {"buyer": "firm:rich", "price": 99.94}
-        with mock.patch.object(founder_sales.exchange_sale, "sell_concern", sold):
-            return FounderSalesMixin.sell_concern(game, NODE)
+        with mock.patch.object(sales.exchange_sale, "sell_concern", sold):
+            return module.sell_concern(NODE)
 
     def test_a_sale_reports_the_buyer_the_price_and_the_founders_capital(self):
         self.assertEqual(self.sell("sold"), {"ok": True, "sold": NODE, "buyer": "firm:rich", "price": 99.9, "capital": 1234.6})

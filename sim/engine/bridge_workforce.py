@@ -132,24 +132,3 @@ def shared_answer(sim, key, inputs, compute, standalone=False):
     return sim._shared_answer(key, inputs, compute, standalone)
 
 
-# ---- projects: what a concern needs of the staff -----------------------------------------------------------------------------
-
-
-@bridge_view("venture_foreman", kind=KEYED)
-def venture_foreman(sim, node_id):
-    return sim.venture_foreman(node_id)
-
-
-@bridge_view("venture_foremen_used", kind=QUOTE)
-def venture_foremen_used(sim, excluding=None):
-    return sim.venture_foremen_used(excluding)
-
-
-@bridge_view("venture_staff_free")
-def venture_staff_free(sim):
-    return sim.venture_staff_free()
-
-
-@bridge_view("reopen_units", kind=KEYED)
-def reopen_units(sim, node_id):
-    return sim.reopen_units(node_id)

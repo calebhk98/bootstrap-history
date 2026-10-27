@@ -44,16 +44,5 @@ def diffusion_traits(sim):
     return category_traits.diffusion_traits()
 
 
-@bridge_view("venture_opened_year", kind=QUOTE)
-def venture_opened_year(sim, node_id, default):
-    return sim.state.projects.business.opened_year_of(node_id, default)
-
-
 # ---- mechanics (delete each when the mechanics module publishes it) ----
 
-# ---- public works and the state ----
-
-@bridge_view("coverage")
-def coverage(sim):
-    """Ids of the works that declare `coverage`."""
-    return sim.coverage_nodes()

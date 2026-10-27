@@ -15,12 +15,13 @@ from sim.polity.api import AddGovernance, AddScandal, CarryOutTransfers, GainRep
 from sim.production.api import LearnFromFailure
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 from sim.seats.api import RecordGoalReached
+from sim.ventures.api import ClearMothball, OpenVenture
 from sim.workforce.api import DrawTradeHours, GrantStaff, LoseCrew, ReleaseHours, ResetTradeHours, SpendDirectorHours
 
 from .commands import (AdvanceProjects, AutoOpenVentures, Bribe, CloseLapsedDependents, CloseUnstaffedVentures, CloseWork,
                        CompleteProject, Exclude, Include, KeepStaffed, MothballWork, NoteVentureYear, PostBounty, ReopenRestaffedVentures, ResetProjectProgress,
                        RestoreWork, ReviewVentures, StartProject, StopProject)
-from .needed_commands import ClearMothball, NoteConcernChange, NoteYearSpend, OpenVenture
+from .needed_commands import NoteConcernChange, NoteYearSpend
 from .projects import ACTIVE, START, Projects
 from .state import ProjectsSeat
 

@@ -16,12 +16,11 @@ from sim.engine import data as engine_data
 from sim.hazards.window import hazards_not_yet_past
 from sim.workforce.payroll_trim import payroll_means, staff_to_let_go
 from sim.projects.review import SeatReview
-from sim.engine.projects_venture_quotes import VentureQuotesMixin
 from sim.engine.seat_defaults import default_policy
 from sim.tests import polity_host
 from sim.polity.api import ShiftValueWeight
 from sim.reporting.api import RecordEvent
-from sim.tests import hazards_host, module_harness, projects_host
+from sim.tests import hazards_host, module_harness, projects_host, ventures_host
 from sim.ui.proto.dispatch_ventures import _cmd_policy
 from sim.ui.proto.state_waiting import _staff_fraction_note
 from sim.finance.state import FinanceSeat
@@ -271,22 +270,21 @@ class ReopeningIsNeverFree(unittest.TestCase):
     """Shutting a work down and bringing it back costs at least some years of its upkeep, however cheap it was to build."""
 
     def _host(self, upkeep, build_cost, venture=False):
-        return SimpleNamespace(
-            nodes={"w": {"up": upkeep}}, is_venture=lambda node_id: venture, venture_capex=lambda node_id: 7.0,
-            project_cost=lambda node_id: build_cost, RESTORE_COST_SHARE_OF_BUILD=0.3,
-            RESTORE_COST_MIN_UPKEEP_YEARS=REGISTRY["RESTORE_COST_MIN_UPKEEP_YEARS"]["value"],
-            staff_closure_age=lambda node_id: None, STAFF_CLOSURE_GRACE=3, STAFF_CLOSURE_DISCOUNT=0.1)
+        return ventures_host.build(
+            tree_nodes={"w": {"up": upkeep}}, is_venture=lambda node_id: venture, project_cost=lambda node_id: build_cost,
+            staff_closure_age=lambda node_id: None)
 
     def test_the_floor_is_the_declared_years_of_upkeep(self):
         self.assertGreaterEqual(REGISTRY["RESTORE_COST_MIN_UPKEEP_YEARS"]["value"], 1.0)
-        host = self._host(upkeep=20.0, build_cost=1.0)
-        self.assertEqual(VentureQuotesMixin.reopen_fee(host, "w"), 20.0 * host.RESTORE_COST_MIN_UPKEEP_YEARS)
+        self.assertEqual(self._host(upkeep=20.0, build_cost=1.0).reopen_fee("w"),
+                         20.0 * REGISTRY["RESTORE_COST_MIN_UPKEEP_YEARS"]["value"])
 
     def test_a_costly_build_costs_its_share_to_restore(self):
-        self.assertEqual(VentureQuotesMixin.reopen_fee(self._host(upkeep=1.0, build_cost=1000.0), "w"), 300.0)
+        self.assertEqual(self._host(upkeep=1.0, build_cost=1000.0).reopen_fee("w"),
+                         1000.0 * REGISTRY["RESTORE_COST_SHARE_OF_BUILD"]["value"])
 
     def test_a_round_trip_costs_at_least_a_year_of_upkeep(self):
-        self.assertGreaterEqual(VentureQuotesMixin.reopen_fee(self._host(upkeep=20.0, build_cost=0.0), "w"), 20.0)
+        self.assertGreaterEqual(self._host(upkeep=20.0, build_cost=0.0).reopen_fee("w"), 20.0)
 
 
 class HazardValuesLandGradually(unittest.TestCase):

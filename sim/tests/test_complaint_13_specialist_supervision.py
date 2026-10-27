@@ -7,31 +7,23 @@ test_business_crew_rule) and the screen on a built
 reply; the ventures row's specialist field is test_craftsmen_wording_rules."""
 QUICK_TOPIC = True
 
-import types
-from sim.tests import workforce_stand_in
-
 from .harness import *
-from sim.agents import business_crew_rule
-from sim.tests import projects_host
-from sim.engine.projects_ventures import VenturesMixin
+from sim.tests import projects_host, ventures_host
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.render import render_pretty
+from sim.ventures import constants as venture_constants
 
-SHARE = VenturesMixin.VENTURE_FOREMAN_SHARE
+SHARE = venture_constants.VENTURE_FOREMAN_SHARE
 
 
 def a_game(nodes, employees=None, operating=(), capabilities=()):
-    household = types.SimpleNamespace(employees=dict(employees or {}))
-    game = types.SimpleNamespace(
-        nodes=nodes, CAPABILITY_INSTITUTIONS=set(capabilities), VENTURE_FOREMAN_SHARE=SHARE,
-        workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household, projects=types.SimpleNamespace(operating=set(operating))),
-        institution_units=lambda node_id: 1.0, venture_garrison=lambda node_id, units: {},
-        venture_staff_free=lambda: (99.0, 99.0), venture_hands=lambda node_id: (0.0, 0.0))
-    game.venture_foreman = lambda node_id: business_crew_rule.foreman(business_crew_rule.figures_of(
-        nodes[node_id], lambda: "labourer", 2000.0, 0.5, lambda: 300.0, SHARE, node_id in game.CAPABILITY_INSTITUTIONS, {}))
-    game.venture_foremen_used = lambda excluding=None: VenturesMixin.venture_foremen_used(game, excluding)
-    game.venture_foreman_free = lambda trade, excluding=None: VenturesMixin.venture_foreman_free(game, trade, excluding)
-    return game
+    """The ventures module over a tree, with the projects gate's other reads stubbed to plenty of free hands."""
+    module = ventures_host.build(
+        tree_nodes=nodes, capability_sets=(frozenset(capabilities), frozenset(), {}), operating=set(operating),
+        staff={"scholars": 0.0, "artisans": 0.0, "employees": dict(employees or {})})
+    module.venture_staff_free = lambda: (99.0, 99.0)
+    module.venture_hands = lambda node_id: (0.0, 0.0)
+    return module
 
 
 MIRROR = {"rev": 50.0, "lab": {"artisan": 400.0, "glassblower": 300.0, "smith": 100.0}}
@@ -60,7 +52,7 @@ check("one specialist has a bounded span of control: four quarter-FTE concerns, 
 def gate(game, node_id="new"):
     module = projects_host.build(
         venture_staff_free=game.venture_staff_free, venture_hands=game.venture_hands, venture_foreman=game.venture_foreman,
-        venture_foreman_free=game.venture_foreman_free, venture_garrison=game.venture_garrison)
+        venture_foreman_free=game.venture_foreman_free, venture_garrison=lambda node_id, units=1.0: {})
     return module.staffing_open_refusal(node_id)
 
 

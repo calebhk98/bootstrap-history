@@ -11,7 +11,6 @@ from sim.materials.api import ForgetReadings
 from .quote_figures import cost_if_started_now
 from .economy_housing import HousingPriceMixin
 from .economy_household_bill import HouseholdBillMixin
-from .projects_cost_tail import ProjectCostTailMixin
 from .view_share import ViewShareMixin
 
 
@@ -68,7 +67,7 @@ REPUTATION_EASE_SCALE = declare(
 
 
 class EconomyMixin(HousingPriceMixin,
-                    HouseholdBillMixin, ProjectCostTailMixin, ViewShareMixin):
+                    HouseholdBillMixin, ViewShareMixin):
     """Composition point for the economy sub-mixins, plus what is left over.
 
     EconomyMixin's methods are grouped by subject across sibling modules
