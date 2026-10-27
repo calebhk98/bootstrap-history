@@ -4,7 +4,8 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.engine.projects_training_advice import training_advice
+from sim.tests import module_harness
+from sim.workforce.module import Workforce
 
 
 class FakeLabour:
@@ -19,6 +20,13 @@ class FakeLabour:
 
     def training_years_from(self, trade_id, source):
         return 3.5 if source == "smith" else -1.0
+
+
+def training_advice(labour, trade_id):
+    """The workforce module's `training_advice` over this labour market."""
+    module = module_harness.build(Workforce)
+    module.labour = labour
+    return module.training_advice(trade_id)
 
 
 taught = training_advice(FakeLabour("smith"), "engineer")

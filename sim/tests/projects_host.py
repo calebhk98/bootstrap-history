@@ -10,6 +10,7 @@ import types
 from typing import Any, Dict
 
 from sim.projects.projects import Projects
+from sim.projects.state import ProjectsSeat
 from sim.projects import module_spec
 from sim.tests import module_harness
 
@@ -20,7 +21,9 @@ def projects_state(**fields: Any) -> types.SimpleNamespace:
 	"""The raw `state.projects` the module still mutates in place."""
 	values = dict(active={}, done=set(), paid_towards={}, bountied=set(), mothballed=set())
 	values.update(fields)
-	return types.SimpleNamespace(**values)
+	state = types.SimpleNamespace(**values)
+	state.active_keys_sorted = lambda: sorted(state.active)
+	return state
 
 
 def defaults() -> Dict[str, Any]:
@@ -35,8 +38,7 @@ def defaults() -> Dict[str, Any]:
 		"is_venture": lambda node_id: False, "running": lambda node_id: False,
 		"revenue_estimate": 0.0, "upkeep": 0.0, "living_cost": lambda revenue=None, upkeep=None: 0.0,
 		"mine_operating_cost": 0.0, "money_per_labour_hour": 1.0,
-		"project_cost": lambda node_id: 0.0, "calendar_floor": lambda node_id: 0.0, "effective_risk": lambda node_id: 0.0,
-		"rebuild_work_factor": lambda node_id: 1.0, "committed_cost": 0.0, "funding_capacity": 0.0,
+		"project_cost": lambda node_id: 0.0, "funding_capacity": 0.0,
 		"own_output_claim": lambda node_id: {}, "bounty_price": lambda node_id: 0.0,
 		"material_upfront_refusal": lambda node_id: None, "material_pool": lambda material: (material, material),
 		"generation": 0.0, "goods_stock": lambda commodity: 0.0,
@@ -50,25 +52,32 @@ def defaults() -> Dict[str, Any]:
 		"staff_advice": lambda kind, deficit: "hire", "training_advice": lambda trade: {
 			"trade": trade, "source_trade": None, "hours_each": None, "years": None},
 		"training_queue": [], "project_staffing_shortfall": lambda node: None, "staff": {"scholars": 0.0, "artisans": 0.0, "employees": {}},
-		"precaution_spec": lambda node_id: None, "precaution_extra_cost": lambda node_id, bill: 0.0,
-		"precaution_extra_hours": lambda node_id: 0.0,
+		"mechanic": lambda name: {}, "techniques_forgotten": {}, "corpus_hedge": (1.0, 0.0, None), "operating": set(),
+		"hour_commitments": {"allocations": {}, "trade_hours_used": {}, "unused_reported": {}},
+		"hours_you_can_call_on": lambda trade: 0.0, "industry_depth": lambda node_id: 0.0, "resource_throttle": lambda node_id: (1.0, None),
+		"material_binding": None, "founder": {"alive": True, "life_left": 10.0, "dead_reason": None, "policy": {}},
+		"goal": {"node": "goal", "year": None, "years": {}}, "automatic_policy": lambda name: True, "capability_sets": (frozenset(), frozenset(), {}),
 		"money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),
+		"plain_number": lambda value, digits=0: format(value, ",.%df" % digits),
 		"win_condition_text": lambda node: "the goal is met", "acting_seat": "founder",
 		"automation": {"manual": False, "bounty_set": set()}, "society_name": "Testland", "year": 100,
 		"horizon_end_year": 1000, "legacy_order": [], "project_limits": {
 			"base": 2, "per_director_hours": 2000.0, "per_scholar": 12.0, "per_artisan": 25.0},
 		"actor_world": None, "legacy_acting_household": types.SimpleNamespace(bounties_paid=0, employees={}),
-		"start_gate_running": lambda *arguments: None, "start_gate_unheld_stock": lambda *arguments: None,
+		"start_gate_unheld_stock": lambda *arguments: None,
 		"start_gate_material_seller": lambda *arguments: None, "start_gate_group_prohibition": lambda *arguments: None,
 		"extra_start_checks": lambda *arguments: None,
 	}
 
 
-def build(answers: Dict[str, Any] = None, **views: Any) -> Projects:
+def build(answers: Dict[str, Any] = None, seat: ProjectsSeat = None, **views: Any) -> Projects:
 	"""The module with `views` (and `answers`, the replies of owners to commands, keyed by command class)."""
 	every_view = defaults()
 	every_view.update(views)
-	module = module_harness.build(Projects, views=every_view, answers=answers)
+	if isinstance(every_view["tree"], dict):
+		every_view.setdefault("tree_nodes", every_view["tree"])
+	every_view.setdefault("tree_nodes", {})
+	module = module_harness.build(Projects, views=every_view, answers=answers, seat=seat or ProjectsSeat(), module_id="projects")
 	for name in OWN_VIEWS:
 		if name not in views:
 			setattr(module.needs, name, module_harness._FakeView(getattr(module, name)))
@@ -86,12 +95,13 @@ def start_phase_module(funding_capacity: float = 1e9, committed_cost: float = 0.
 	state = projects_state()
 	arguments = dict(
 		legacy_projects=state, tree=lambda node_id: {"name": node_id, "rev": 0.0, "up": 0.0}, legacy_order=["a", "b"],
-		funding_capacity=funding_capacity, committed_cost=committed_cost, project_cost=lambda node_id: project_cost,
+		funding_capacity=funding_capacity, project_cost=lambda node_id: project_cost,
 		automation={"manual": manual, "bounty_set": set()}, revenue_estimate=1e6, acting_balance=1e7, year=0,
 		start_check=lambda *call: (True, None),
 		project_limits={"base": 5.0, "per_director_hours": 2000.0, "per_scholar": 12.0, "per_artisan": 40.0})
 	arguments.update(views)
 	module = build(**arguments)
+	module.committed_cost = lambda: committed_cost
 	module.started = []
 
 	def initialize_project(node_id):

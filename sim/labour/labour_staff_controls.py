@@ -38,7 +38,7 @@ class StaffControlsMixin:
     def keep_staffed_concerns(self):
         """Flagged concerns that are running, or shut for want of staff."""
         projects = self._world.state.projects
-        return [node_id for node_id in sorted(projects.keep_staffed)
+        return [node_id for node_id in sorted(self._world.keep_staffed())
                 if node_id in projects.done and node_id in self._world.nodes
                 and (node_id in projects.operating or self._world.staff_closure_age(node_id) is not None)]
 

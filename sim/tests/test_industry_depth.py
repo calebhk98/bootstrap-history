@@ -10,12 +10,12 @@ import types
 import unittest
 
 from sim.agents.api import Business, business_crew_rule
-from sim.engine.projects_progress import ProgressMixin
+from sim.projects import constants as projects_constants
 from sim.production.state import ProductionSeat
-from sim.tests import production_host
+from sim.tests import production_host, projects_host
 
 
-def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, granted=None, opening=None, people=None):
+def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, granted=None, opening=None, people=None, mechanic=None):
     """A bare stand-in for the Sim with only what the depth, ramp and risk code read. `experience` is
     worker-years a node holds in the artisan trade."""
     tenure = {"artisan": {node: years for node, years in (experience or {}).items()}} if experience else {}
@@ -26,7 +26,7 @@ def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, grant
     stub = types.SimpleNamespace(
         state=types.SimpleNamespace(projects=projects, scenario=types.SimpleNamespace(year=10)),
         cfg={"revenue_ramp_years": 4.0}, nodes={"loom": {"risk": 0.3, "ph": 4000.0}},
-        CONTROL_RELIEF_FACTOR=ProgressMixin.CONTROL_RELIEF_FACTOR, HOURS_PER_PERSON_YEAR=2000.0,
+        CONTROL_RELIEF_FACTOR=projects_constants.CONTROL_RELIEF_FACTOR, HOURS_PER_PERSON_YEAR=2000.0,
         labour=types.SimpleNamespace(people_who_exist=lambda trade: (people or {}).get(trade, 100.0)))
     module = stub.module = production_host.build(stub, seat=seat)
     module.founding_staff_by_trade = lambda node_id: {"artisan": founding_staff}
@@ -39,9 +39,10 @@ def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, grant
     stub.industry_experience = lambda node_id: module.industry_experience(node_id)
     stub.learn_from_failed_attempt = lambda node_id: module.learn_from_failed_attempt(node_id)
     stub.after_failed_attempts = lambda node_id, count: module.after_failed_attempts(node_id, count)
-    stub.nodes_with_mechanic = lambda name: []
-    stub.mechanic = lambda node_id, name: None
-    stub._control_relief_multiplier = lambda node_id: 1.0
+    views = {} if mechanic is None else {"mechanic": mechanic}
+    stub.projects = projects_host.build(
+        tree_nodes=lambda: stub.nodes, legacy_projects=projects, industry_depth=lambda node_id: module.industry_depth(node_id),
+        failed_attempts_trial=lambda node_id, count: module.after_failed_attempts(node_id, count), **views)
     return stub
 
 
@@ -91,15 +92,15 @@ class IndustryDepth(unittest.TestCase):
 
     def test_an_established_industry_fails_less_than_the_first_of_its_kind(self):
         first, established = world(), world(experience={"loom": 40.0})
-        self.assertAlmostEqual(ProgressMixin.effective_risk(first, "loom", precaution=False), 0.3)
-        self.assertLess(ProgressMixin.effective_risk(established, "loom", precaution=False), 0.3)
+        self.assertAlmostEqual(first.projects.effective_risk("loom", precaution=False), 0.3)
+        self.assertLess(established.projects.effective_risk("loom", precaution=False), 0.3)
 
     def test_a_diagnosed_failed_attempt_adds_to_the_same_stock(self):
         stub = world()
-        before = ProgressMixin.effective_risk(stub, "loom", precaution=False)
+        before = stub.projects.effective_risk("loom", precaution=False)
         stub.learn_from_failed_attempt("loom")
         self.assertAlmostEqual(stub.industry_experience("loom"), 2.0)
-        self.assertLess(ProgressMixin.effective_risk(stub, "loom", precaution=False), before)
+        self.assertLess(stub.projects.effective_risk("loom", precaution=False), before)
 
     def test_quoting_odds_after_more_failures_leaves_the_stock_as_it_was(self):
         stub = world(experience={"loom": 3.0})
@@ -163,7 +164,7 @@ class IndustryDepth(unittest.TestCase):
     def test_nothing_reads_a_depth_written_on_the_tree(self):
         stub = world()
         stub.nodes = {"loom": {"risk": 0.3, "ph": 4000.0, "depth": 0.9, "supplier_depth": 0.9, "maturity": 0.9}}
-        self.assertAlmostEqual(ProgressMixin.effective_risk(stub, "loom", precaution=False), 0.3)
+        self.assertAlmostEqual(stub.projects.effective_risk("loom", precaution=False), 0.3)
         self.assertEqual(stub.industry_depth("loom"), 0.0)
 
 

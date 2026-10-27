@@ -9,6 +9,7 @@ from sim.engine import bridge_hazards
 from sim.projects.api import ShutForgotten
 from sim.projects.api import ResetProjectProgress
 from sim.reporting.api import RecordEvent
+from sim.tests import projects_host
 
 
 class Writes(unittest.TestCase):
@@ -20,9 +21,8 @@ class Writes(unittest.TestCase):
 
     def test_every_project_in_hand_goes_back_to_the_beginning(self):
         active = {"b": {"ph_left": 1.0, "yrs": 3.0}, "a": {"ph_left": 2.0, "yrs": 1.0}}
-        game = SimpleNamespace(state=SimpleNamespace(projects=SimpleNamespace(active=active)),
-                               nodes={"a": {"ph": 100.0}, "b": {"ph": 50.0}})
-        bridge_hazards.reset_project_progress(game, ResetProjectProgress())
+        module = projects_host.build(legacy_projects=SimpleNamespace(active=active), tree={"a": {"ph": 100.0}, "b": {"ph": 50.0}})
+        module.apply_reset_project_progress(ResetProjectProgress())
         self.assertEqual(active, {"a": {"ph_left": 100.0, "yrs": 0.0}, "b": {"ph_left": 50.0, "yrs": 0.0}})
 
 

@@ -1,5 +1,5 @@
-"""Complaints 81, 83 and 127: what a finished or failed project logs, by kind and facts. `CompletionMixin._complete`, `failure_severity`,
-`opening_shortfall` and `goal_effect_lines` run on a stand-in `self` carrying only what they read; the severity, shortfall and goal
+"""Complaints 81, 83 and 127: what a finished or failed project logs, by kind and facts. The projects module's `_complete`, `failure_severity`,
+`opening_shortfall` and `goal_effect_lines` run over plain values carrying only what they read; the severity, shortfall and goal
 movement rules are test_completion_messaging."""
 
 QUICK_TOPIC = True
@@ -9,8 +9,11 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.projects_completion import CompletionMixin
-from sim.knowledge.api import KnowledgeSeat, LearnTechnique, RefreshDoneCaches
+from sim.tests import projects_host
+from sim.diffusion.api import ApplyTechEffects
+from sim.knowledge.api import KnowledgeSeat, LearnTechnique, RefreshDoneCaches, RevealFrom
+from sim.seats.api import RecordGoalReached
+from sim.workforce.api import GrantStaff
 from sim.knowledge.module import Knowledge
 from sim.polity.api import AddGovernance, AddScandal, CarryOutTransfers, GainReputation
 from sim.refusal import cause_of
@@ -26,7 +29,41 @@ def kinds(game):
 class Finishing:
     """A stand-in game with one active project, `school`, whose attempt is about to end."""
 
+    def __init__(self, fails=False, venture=True, auto_open=False, shortfall=None, goal_lines=(), snapshot=None, hire_mode=False):
+        household = SimpleNamespace(log=[], hour_allocations={"school": 1.0})
+        self.state = SimpleNamespace(
+            projects=SimpleNamespace(active={NODE: {}}, bountied={NODE}, done=set(), done_year=None, failed_attempts=Counter()),
+            household=household, scenario=SimpleNamespace(year=100))
+        self.polity = polity_host.build()
+        self.knowledge = module_harness.build(Knowledge, views={"legacy_projects": self.state.projects},
+                                              answers={RefreshDoneCaches: None}, seat=KnowledgeSeat())
+        self.failed, self.applied, self.granted_staff, self.transfers = [], [], [], []
+        policy = {"auto_open": auto_open, "auto_hire": hire_mode}
+        module = self.module = projects_host.build(
+            tree={NODE: {"name": "A school"}}, legacy_projects=self.state.projects, legacy_dice=SimpleNamespace(random=lambda: 0.5),
+            alarm_of=lambda node: 2.0, state_interest=lambda node: 1.0, year=100, is_venture=lambda node_id: venture,
+            mechanic=lambda name: {NODE: {"scholars": 1.0}} if name == "staff_grant" else {}, tech_effects=lambda node_id: None,
+            automatic_policy=lambda name: policy[name], capability_sets=(frozenset(), frozenset(), {}))
+        module.needs.send = self.send
+        module.effective_risk = lambda node_id: 1.0 if fails else 0.0
+        module._fail_attempt = lambda node_id, risk: self.failed.append((node_id, risk))
+        module.goal_snapshot = lambda: snapshot
+        module.reputation_gain_of = lambda node: 3.0
+        module.opening_shortfall = lambda node_id: shortfall
+        module.goal_effect_lines = lambda node_id, before: list(goal_lines)
+
     def send(self, command):
+        if isinstance(command, ApplyTechEffects):
+            self.applied.append(command.node_id)
+            return None
+        if isinstance(command, GrantStaff):
+            self.granted_staff.append({"scholars": command.scholars})
+            return None
+        if isinstance(command, RecordGoalReached):
+            self.goal_reached = (command.node_id, command.year)
+            return None
+        if isinstance(command, RevealFrom):
+            return None
         if isinstance(command, LearnTechnique):
             return self.knowledge.learn_technique(command)
         if isinstance(command, CarryOutTransfers):
@@ -40,71 +77,9 @@ class Finishing:
             return self.polity.add_governance(command)
         return event_stand_in.send(self, command)
 
-    def __init__(self, fails=False, venture=True, auto_open=False, shortfall=None, goal_lines=(), snapshot=None, hire_mode=False):
-        household = SimpleNamespace(log=[], hour_allocations={"school": 1.0})
-        self.state = SimpleNamespace(
-            projects=SimpleNamespace(active={NODE: {}}, bountied={NODE}, done=set(), done_year=None, failed_attempts=Counter()),
-            household=household, scenario=SimpleNamespace(year=100))
-        self.polity = polity_host.build()
-        self.knowledge = module_harness.build(Knowledge, views={"legacy_projects": self.state.projects},
-                                              answers={RefreshDoneCaches: None}, seat=KnowledgeSeat())
-        self.nodes = {NODE: {"name": "A school"}}
-        self.rng = SimpleNamespace(random=lambda: 0.5)
-        self.fails, self.venture, self.auto_open, self.shortfall = fails, venture, auto_open, shortfall
-        self.goal_lines, self.snapshot, self.hire_mode = list(goal_lines), snapshot, hire_mode
-        self.REPUTATION_CEILING = 100.0
-        self.NOT_OPERATING_BENEFIT = {}
-        self.policy = {"auto_open": auto_open, "auto_hire": hire_mode}
-        self.manual = True
-        self._tech_effects = {}
-        self.failed, self.applied, self.granted_staff, self.transfers = [], [], [], []
-
-    def effective_risk(self, node_id):
-        return 1.0 if self.fails else 0.0
-
-    def _fail_attempt(self, node_id, risk):
-        self.failed.append((node_id, risk))
-
-    def goal_snapshot(self):
-        return self.snapshot
-
-    def alarm_of(self, node):
-        return 2.0
-
-    def apply_tech_effects(self, node_id):
-        self.applied.append(node_id)
-
-    def reveal_from(self, node_id):
-        pass
-
-    def reputation_gain_of(self, node):
-        return 3.0
-
-    def state_interest(self, node):
-        return 1.0
-
-    def mechanic(self, node_id, name):
-        return {"scholars": 1.0} if name == "staff_grant" else {}
-
-    @property
-    def labour(self):
-        return SimpleNamespace(grant_staff=lambda **grant: self.granted_staff.append(grant))
-
-    def is_venture(self, node_id):
-        return self.venture
-
-    def opening_shortfall(self, node_id):
-        return self.shortfall
-
-    def goal_effect_lines(self, node_id, before):
-        return self.goal_lines
-
-    def record_goal_reached(self, node_id, year):
-        self.goal_reached = (node_id, year)
-
 
 def complete(game):
-    CompletionMixin._complete(game, NODE)
+    game.module._complete(NODE)
     return game
 
 
@@ -137,20 +112,28 @@ game = complete(Finishing(hire_mode=True))
 check("with automatic hiring the grant is left to the staff ceiling", game.granted_staff == [], game.granted_staff)
 
 # ---- the rules the log reads
-severity_game = SimpleNamespace(goal_closure_ids=lambda: {"on_the_road"}, MINOR_FAILURE_SHARE=0.05, GOAL_PATH_FAILURE_WEIGHT=2.0)
-check("a small loss off the goal's road reads minor", CompletionMixin.failure_severity(severity_game, "off_road", 30.0, 1000.0) == "minor", None)
-check("the same loss on the goal's road reads major", CompletionMixin.failure_severity(severity_game, "on_the_road", 30.0, 1000.0) == "major", None)
-staff = SimpleNamespace(venture_hands=lambda node_id: (5.0, 5.0), venture_staff_free=lambda: (0.0, 9.0))
-check("the opening shortfall is the concern's hands against the free staff", CompletionMixin.opening_shortfall(staff, NODE) == (5.0, 5.0, 0.0, 9.0), None)
-staff = SimpleNamespace(venture_hands=lambda node_id: (5.0, 5.0), venture_staff_free=lambda: (50.0, 50.0))
-check("no shortfall when the free staff cover it", CompletionMixin.opening_shortfall(staff, NODE) is None, None)
+severity_game = projects_host.build()
+severity_game.goal_closure_ids = lambda: {"on_the_road"}
+check("a small loss off the goal's road reads minor", severity_game.failure_severity("off_road", 30.0, 1000.0) == "minor", None)
+check("the same loss on the goal's road reads major", severity_game.failure_severity("on_the_road", 30.0, 1000.0) == "major", None)
+staff = projects_host.build(venture_hands=lambda node_id: (5.0, 5.0), venture_staff_free=lambda: (0.0, 9.0))
+check("the opening shortfall is the concern's hands against the free staff", staff.opening_shortfall(NODE) == (5.0, 5.0, 0.0, 9.0), None)
+staff = projects_host.build(venture_hands=lambda node_id: (5.0, 5.0), venture_staff_free=lambda: (50.0, 50.0))
+check("no shortfall when the free staff cover it", staff.opening_shortfall(NODE) is None, None)
 
 before = {"measures": {"literacy general": (0.10, True)}, "road_done": 3, "road_total": 9}
 after = {"measures": {"literacy general": (0.15, True)}, "road_done": 4, "road_total": 9}
-goal = SimpleNamespace(goal_snapshot=lambda: after, goal="top", goal_closure_ids=lambda: {NODE}, fog=False, state=SimpleNamespace(projects=SimpleNamespace(done=set())))
-lines = CompletionMixin.goal_effect_lines(goal, NODE, before)
+
+
+def goal_game(snapshot, done, closure):
+    game = projects_host.build(tree={"top": {"name": "Top"}}, goal={"node": "top", "year": None, "years": {}}, legacy_fog=False, legacy_projects=SimpleNamespace(done=done))
+    game.goal_snapshot = lambda: snapshot
+    game.goal_closure_ids = lambda: closure
+    return game
+
+
+goal = goal_game(after, set(), {NODE})
+lines = goal.goal_effect_lines(NODE, before)
 check("a measure that moved gives a goal effect line and a node on the road adds the road line", len(lines) == 2 and lines[0].startswith("goal effect: literacy general"), lines)
-goal.state.projects.done = {"top"}
-check("with the goal itself done there is no road line", len(CompletionMixin.goal_effect_lines(goal, NODE, before)) == 1, None)
-check("with no goal snapshot before there is nothing to report", CompletionMixin.goal_effect_lines(
-    SimpleNamespace(goal_snapshot=lambda: None, goal="top", goal_closure_ids=lambda: set(), fog=False, state=goal.state), NODE, None) == [], None)
+check("with the goal itself done there is no road line", len(goal_game(after, {"top"}, {NODE}).goal_effect_lines(NODE, before)) == 1, None)
+check("with no goal snapshot before there is nothing to report", goal_game(None, set(), set()).goal_effect_lines(NODE, None) == [], None)

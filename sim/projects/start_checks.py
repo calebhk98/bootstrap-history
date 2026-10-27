@@ -259,11 +259,6 @@ class StartChecks:
 			        % (in_world, ", ".join(seen) if seen else "something you have not heard of yet"))
 		return "get %s first: 'start %s'" % (in_world, node_id)
 
-	def trade_wait_outlasts(self, trade_id: str) -> bool:
-		wait = start_rules.trade_wait_years(self.needs.market_supply[trade_id], self.needs.year(),
-		                                    self.needs.training_queue(), trade_id)
-		return start_rules.trade_wait_outlasts(wait, start_rules.STALL_YEARS_BEFORE_ABANDONMENT)
-
 	def _owed_on_work_in_hand(self) -> float:
 		active = self.needs.legacy_projects().active
 		return sum(active[active_id].get("cost_left") or 0.0 for active_id in sorted(active))

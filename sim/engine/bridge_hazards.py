@@ -3,8 +3,8 @@
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old code
 did, and is never cached. Each command applies what the old hazard code did inline, in the same order. The `legacy_*`
 views are raw state or the engine's own switches the module still needs; they go when that state moves."""
-from sim.assembly.api import KEYED, QUOTE
-from sim.projects.api import ResetProjectProgress, ShutForgotten
+from sim.assembly.api import QUOTE
+from sim.projects.api import ShutForgotten
 from sim.workforce.api import NoteWageShock
 
 from . import cause_book, event_causes
@@ -60,23 +60,6 @@ def tree_closure(sim, goal_id):
 
 # ---- projects and ventures ------------------------------------------------------------------------------------------
 
-@bridge_view("active_projects", seat_scoped=True)
-def active_projects(sim):
-    """{node id: the project's record} of the acting seat's projects in hand (the object itself)."""
-    return sim.state.projects.active
-
-
-@bridge_view("closure_record", kind=KEYED, seat_scoped=True)
-def closure_record(sim, node_id):
-    """{reason, year} of a shut work that records why, or None."""
-    return sim.state.projects.closures.get(node_id)
-
-
-@bridge_view("closed_by_choice")
-def closed_by_choice(sim):
-    """The closure reason of a work the founder shut by choice."""
-    return sim.CLOSED_BY_CHOICE
-
 
 # ---- polity, workforce, resources, actors ---------------------------------------------------------------------------
 
@@ -94,13 +77,3 @@ def shut_forgotten(sim, command):
     for node_id in command.node_ids:
         projects.operating.discard(node_id)
         projects.mothballed.discard(node_id)
-
-
-@bridge_command(ResetProjectProgress)
-def reset_project_progress(sim, command):
-    projects = sim.state.projects
-    for node_id in sorted(projects.active):
-        projects.active[node_id]["ph_left"] = sim.nodes[node_id]["ph"]
-        projects.active[node_id]["yrs"] = 0.0
-
-

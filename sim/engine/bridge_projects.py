@@ -3,13 +3,12 @@
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old
 code did, and is never cached. Each command applies what the old code did inline. The `legacy_*` views are raw
 state the module still mutates in place; they go when that state moves."""
-from sim.ledger.api import NoteSpend
 from sim.assembly.api import KEYED, QUOTE
-from sim.projects.needed_commands import (ClearMothball, CompleteProject)
+from sim.ledger.api import NoteSpend
+from sim.projects.needed_commands import ClearMothball, NoteConcernChange, NoteYearSpend, OpenVenture
 
-from . import projects_precaution
+from . import cause_book
 from .bridge import bridge_command, bridge_view
-from .projects_training_advice import training_advice
 from .units_prose import money_text
 
 
@@ -25,7 +24,46 @@ def reopen_fee(sim, node_id):
     return sim.reopen_fee(node_id, sim.reopen_units(node_id))
 
 
-# ---- projects itself, until progress and completion move ------------------------------------------------------------
+@bridge_view("opening_fee", kind=QUOTE)
+def opening_fee(sim, node_id, units=None):
+    """(charge, size) for opening a concern now; `open` charges exactly this."""
+    return sim.opening_fee(node_id, units)
+
+
+@bridge_view("venture_hands", kind=KEYED)
+def venture_hands(sim, node_id):
+    """(scholars, craftsmen) of your own that running the concern ties up."""
+    return sim.venture_hands(node_id)
+
+
+@bridge_view("venture_foreman_free", kind=QUOTE)
+def venture_foreman_free(sim, trade, excluding=None):
+    """Employed specialists of `trade` still free to supervise another concern."""
+    return sim.venture_foreman_free(trade, excluding)
+
+
+@bridge_view("venture_staff_used")
+def venture_staff_used(sim):
+    """(scholars, craftsmen) tied up supervising what is already open."""
+    return sim.venture_staff_used()
+
+
+@bridge_view("venture_capex", kind=KEYED)
+def venture_capex(sim, node_id):
+    return sim.venture_capex(node_id)
+
+
+@bridge_view("venture_real_earnings", kind=QUOTE)
+def venture_real_earnings(sim, node_id, units=None, fully_ramped=False, with_output_factor=True):
+    return sim.venture_real_earnings(node_id, units, fully_ramped, with_output_factor)
+
+
+@bridge_view("venture_real_upkeep", kind=QUOTE)
+def venture_real_upkeep(sim, node_id, units=None):
+    return sim.venture_real_upkeep(node_id, units)
+
+
+# ---- projects itself: the record of what is in hand, until it moves ------------------------------------------------
 
 @bridge_view("legacy_projects", seat_scoped=True)
 def legacy_projects(sim):
@@ -40,57 +78,6 @@ def legacy_order(sim):
 @bridge_view("project_cost", kind=QUOTE)
 def project_cost(sim, node_id):
     return sim.project_cost(node_id)
-
-
-@bridge_view("calendar_floor", kind=QUOTE)
-def calendar_floor(sim, node_id):
-    return sim.calendar_floor(node_id)
-
-
-@bridge_view("effective_risk", kind=QUOTE)
-def effective_risk(sim, node_id):
-    return sim.effective_risk(node_id)
-
-
-@bridge_view("rebuild_work_factor", kind=QUOTE)
-def rebuild_work_factor(sim, node_id):
-    return sim.rebuild_work_factor(node_id)
-
-
-@bridge_view("committed_cost", seat_scoped=True)
-def committed_cost(sim):
-    """What is still owed, in total, across every project in hand: they all draw on the same purse and the same credit line."""
-    projects = sim.state.projects
-    return sum(projects.active[node_id].get("cost_left") or 0.0 for node_id in projects.active_keys_sorted())
-
-
-@bridge_view("precaution_spec", kind=QUOTE)
-def precaution_spec(sim, node_id):
-    return projects_precaution.spec(sim, node_id)
-
-
-@bridge_view("precaution_extra_cost", kind=QUOTE)
-def precaution_extra_cost(sim, node_id, bill):
-    return projects_precaution.extra_cost(sim, node_id, bill)
-
-
-@bridge_view("precaution_extra_hours", kind=QUOTE)
-def precaution_extra_hours(sim, node_id):
-    return projects_precaution.extra_hours(sim, node_id)
-
-
-@bridge_view("start_gate_running", kind=QUOTE)
-def start_gate_running(sim, node_id, node, ignore_trade, memo, why):
-    from .projects_running_gates import check_running_gates
-    return check_running_gates(sim, node_id, node, ignore_trade, memo, why)
-
-
-# ---- workforce ------------------------------------------------------------------------------------------------------
-
-@bridge_view("training_advice", kind=QUOTE)
-def training_advice_view(sim, trade_id):
-    return training_advice(sim.labour, trade_id)
-
 
 
 # ---- living stock -----------------------------------------------------------------------------------------------------
@@ -136,11 +123,21 @@ def note_spend(sim, command):
     sim.state.household.total_spend += command.amount
 
 
+@bridge_command(NoteYearSpend)
+def note_year_spend(sim, command):
+    sim._spend_this_year = getattr(sim, "_spend_this_year", 0.0) + command.amount
+
+
 @bridge_command(ClearMothball)
 def clear_mothball(sim, command):
     sim.state.projects.mothballed.discard(command.node_id)
 
 
-@bridge_command(CompleteProject)
-def complete_project(sim, command):
-    sim._complete(command.node_id)
+@bridge_command(NoteConcernChange)
+def note_concern_change(sim, command):
+    cause_book.record_concern(sim, command.kind, command.node_id, command.cause)
+
+
+@bridge_command(OpenVenture)
+def open_venture(sim, command):
+    return sim.open_venture(command.node_id, units=command.units)

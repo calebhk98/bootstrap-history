@@ -35,6 +35,9 @@ class Applying:
 		with self.needs.legacy_act_as(command.seat_id):
 			self.labour.fire(command.trade, command.people)
 
+	def grant_staff(self, command):
+		self.labour.grant_staff(command.scholars, command.artisans)
+
 	def scale_deputies(self, command):
 		self.seat.directors_extra *= command.share
 

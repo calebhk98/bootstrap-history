@@ -11,7 +11,7 @@ from types import SimpleNamespace
 from sim.diffusion.literacy_rules import literacy_after_effect as target_after_effect
 from sim.diffusion.literacy_rules import common_ceiling
 from sim.demography.api import rules as demography_rules
-from sim.engine.projects_completion import goal_movement
+from sim.projects.goal_rules import goal_movement
 from sim.tests import module_harness
 from sim.workforce.api import SurviveStaff
 from sim.workforce.module import Workforce

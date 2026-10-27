@@ -23,9 +23,13 @@ def game(**views):
     order = ["plain", "declared"]
     module = projects_host.build(
         answers={SettleProjectMaterials: (BILL, 0.0)}, tree={"declared": NODE, "plain": PLAIN}, legacy_projects=state,
-        legacy_order=order, project_cost=lambda node_id: BILL, effective_risk=lambda node_id: 0.4,
-        calendar_floor=lambda node_id: 3.0, precaution_extra_cost=lambda node_id, bill: EXTRA_COST,
-        precaution_extra_hours=lambda node_id: EXTRA_HOURS, start_refusal=lambda node_id: None, **views)
+        legacy_order=order, project_cost=lambda node_id: BILL, start_refusal=lambda node_id: None)
+    module.effective_risk = lambda node_id, precaution=None: 0.4
+    module.calendar_floor = lambda node_id: 3.0
+    module.precaution_extra_cost = lambda node_id, bill: EXTRA_COST
+    module.precaution_extra_hours = lambda node_id: EXTRA_HOURS
+    for name, value in views.items():
+        setattr(module, name, value)
     return module, state, order
 
 

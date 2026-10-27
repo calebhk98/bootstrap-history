@@ -6,22 +6,10 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.projects_staffing import StaffingMixin
 from sim.projects.api import blocker_rules
 from sim.tests import projects_host
 
 WORK = "md2_sand_filtration"
-
-
-def _game(done=(), mothballed=(), absent_trades=(), craft_short=False):
-    """The stand-in game `restore_work` (the ventures topic, not moved) is called on."""
-    projects = types.SimpleNamespace(done=set(done), mothballed=set(mothballed))
-    labour = types.SimpleNamespace(trade_available=lambda trade: trade not in absent_trades,
-                                   craft_hands_available=lambda: 0.0 if craft_short else 5.0,
-                                   staff_advice=lambda kind, deficit: "hire", market_supply=lambda trade: 1.0)
-    return types.SimpleNamespace(state=types.SimpleNamespace(projects=projects, household=types.SimpleNamespace(),
-                                                         scenario=types.SimpleNamespace(year=100)), labour=labour,
-                                 reopen_fee=lambda node_id, units: 40.0, reopen_units=lambda node_id: 1.0, civ={})
 
 
 def _module(done=(), mothballed=(), absent_trades=(), craft_short=False):
@@ -29,6 +17,12 @@ def _module(done=(), mothballed=(), absent_trades=(), craft_short=False):
         techniques_held=set(done), closures=set(mothballed), reopen_fee=lambda node_id: 40.0,
         trade_available=lambda trade: trade not in absent_trades,
         hours_available={"scholar_hands": 5.0, "craft_hands": 0.0 if craft_short else 5.0})
+
+
+def _restoring(done=(), mothballed=()):
+    """The module `restore_work` is called on: what is built and what is shut."""
+    projects = types.SimpleNamespace(done=set(done), mothballed=set(mothballed), closures={})
+    return projects_host.build(legacy_projects=projects, techniques_held=projects.done)
 
 
 class AlreadyDoneCheckTest(unittest.TestCase):
@@ -60,11 +54,11 @@ class MothballedCauseTest(unittest.TestCase):
 
 class RestoreRefusalsTest(unittest.TestCase):
     def test_a_work_that_was_not_shut_cannot_be_restored(self):
-        ok, _message = StaffingMixin.restore_work(_game(done={WORK}), WORK)
+        ok, _message = _restoring(done={WORK}).restore_work(WORK)
         self.assertFalse(ok)
 
     def test_a_work_whose_knowledge_is_gone_cannot_be_restored_and_the_start_command_is_named(self):
-        ok, message = StaffingMixin.restore_work(_game(mothballed={WORK}), WORK)
+        ok, message = _restoring(mothballed={WORK}).restore_work(WORK)
         self.assertFalse(ok)
         self.assertIn('"cmd":"start"', message)   # presentation: the refusal carries the command that builds it again
 

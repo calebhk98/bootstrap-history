@@ -1,14 +1,14 @@
 """Project scheduling made legible: what a project is waiting on (five precise reasons), the portfolio's demand against
 each trade's supply, the note when a start would oversubscribe a trade, and the warning before a multi-year step wastes
-hours. Each rule runs on tables or a stand-in game the test builds (no game): the real `_waiting_on` and the real
-`trade_shortage_kind` over a stand-in of trades, money and queue. The allocator's stored shares are
+hours. Each rule runs on tables or a stand-in game the test builds (no game): the real `_waiting_on` and the projects module's
+shortage rule over a stand-in of trades, money and queue. The allocator's stored shares are
 test_step_progress_pool_standing."""
 from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.projects_progress import ProgressMixin
-from sim.engine.trade_demand import oversubscription_notes, trade_demand_table
+from sim.projects import progress_rules
+from sim.projects.trade_demand import oversubscription_notes, trade_demand_table
 from sim.refusal import cause_of
 from sim.ui.proto.economy import _portfolio_constraint as _PCON
 from sim.ui.proto.multi_year_warning import multi_year_hours_warning
@@ -54,7 +54,7 @@ check("with no other project drawing on the trade the note counts none",
 
 
 # --- 3. five precise reasons, not a blurred "nobody to do the work"
-class _Stub(ProgressMixin):
+class _Stub:
     """A game as `_waiting_on` reads it: a trade's supply, the portfolio's demand, money, the throttle and the queue."""
 
     def __init__(self, supply=None, demand=None, spending=1.0e9, cost=1000.0, throttle=(1.0, None), standing=None,
@@ -79,6 +79,9 @@ class _Stub(ProgressMixin):
 
     def hour_standing(self, node_id):
         return self._standing
+
+    def trade_shortage_kind(self, trade_id, need, total_demand=None):
+        return progress_rules.shortage_kind(self.labour.hours_you_can_call_on(trade_id), need, total_demand)
 
 
 NODE = {"yrs": 2, "ph": 100, "lab": {"chemist": 1000.0}}

@@ -49,12 +49,6 @@ def venture_opened_year(sim, node_id, default):
     return sim.state.projects.business.opened_year_of(node_id, default)
 
 
-@bridge_view("reputation_gain_of", kind=QUOTE)
-def reputation_gain_of(sim, node_id):
-    """The standing finishing `node_id` adds."""
-    return sim.reputation_gain_of(sim.nodes[node_id])
-
-
 # ---- mechanics (delete each when the mechanics module publishes it) ----
 
 # ---- public works and the state ----
@@ -63,4 +57,3 @@ def reputation_gain_of(sim, node_id):
 def coverage(sim):
     """Ids of the works that declare `coverage`."""
     return sim.coverage_nodes()
-

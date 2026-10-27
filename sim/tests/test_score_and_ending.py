@@ -91,7 +91,7 @@ check("a sacking that forgot one technology costs only the corpus achievement",
       not sacked["corpus_intact"]["won"] and sacked["never_understaffed"]["won"]
       and sacked["free_hands_only"]["won"] and sacked["clean_ledger"]["won"], sacked)
 game = _game()
-game.state.projects.ever_closed_for_staff.add("workshop_first")
+game.ever_closed_for_staff.add("workshop_first")
 game.goal_year = game.year + 1
 understaffed = _score(game, NODES)["achievements"]
 check("a concern once closed for want of staff costs only that achievement",

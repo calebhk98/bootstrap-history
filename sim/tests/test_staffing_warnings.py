@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.engine.staffing_warning_rows import staffing_warning_rows
+from sim.projects.staffing_warning_rows import staffing_warning_rows
 from sim.ui.proto.render_screen_state_blocks import _staffing_warning_sentences
 
 SLACK, BAND, NO_SLACK_BAND = 0.5, 5.0, 1.0

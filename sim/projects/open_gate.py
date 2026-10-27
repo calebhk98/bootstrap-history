@@ -1,0 +1,54 @@
+"""The gates `open` applies for want of running works and of people, as one function."""
+from sim.refusal import Refusal
+
+
+class OpenGate:
+	def open_refusal(self, node_id, unit_count=None, with_advice=True):
+		"""Why a built concern cannot be opened now for want of a running work or of people, else None.
+
+		The one answer `open` refuses with and `stuck` recommends against; `unit_count` is the size `open` would found
+		(what `opening_fee` says unless given)."""
+		gate_refusal = self.running_gate_refusal(node_id)
+		if gate_refusal:
+			return gate_refusal
+		if unit_count is None:
+			unit_count = self.needs.opening_fee(node_id)[1]
+		return self.staffing_open_refusal(node_id, unit_count, with_advice)
+
+	def staffing_open_refusal(self, node_id, unit_count=1.0, with_advice=True):
+		"""Why the people to run this concern are not free now, else None.
+
+		`open` refuses with this text and `stuck` recommends only what passes it, so the two cannot disagree."""
+		needs = self.needs
+		sch_free, art_free = needs.venture_staff_free()
+		need_sch, need_art = needs.venture_hands[node_id]
+		need_sch, need_art = need_sch * unit_count, need_art * unit_count
+		foreman_trade, foreman_fte = needs.venture_foreman[node_id]
+		foreman_fte *= unit_count
+		if need_sch > sch_free + 0.01 or need_art > art_free + 0.01:
+			return Refusal("supervisors_missing", "nobody free to keep an eye on it: it needs %.2f "
+			               "scholars and %.2f craftsmen to supervise (a continuous "
+			               "share of their year, not a headcount), and you have "
+			               "%.2f and %.2f not already watching something else.%s"
+			               % (need_sch, need_art, sch_free, art_free,
+			                  " Hire, teach, or close something." if with_advice else ""),
+			               scholars_needed=need_sch, craftsmen_needed=need_art,
+			               scholars_free=sch_free, craftsmen_free=art_free)
+		if foreman_trade and foreman_fte > needs.venture_foreman_free(foreman_trade) + 0.01:
+			return Refusal("foreman_missing", "no qualified foreman is free: this concern needs "
+			               "%.2f %s FTE to supervise its specialist work, and "
+			               "you have %.2f free. Hire a %s or close another "
+			               "concern using one. Generic artisans cannot "
+			               "substitute for this trade."
+			               % (foreman_fte, foreman_trade,
+			                  needs.venture_foreman_free(foreman_trade), foreman_trade),
+			               trade=foreman_trade, needed=foreman_fte, free=needs.venture_foreman_free(foreman_trade))
+		for trade, people in needs.venture_garrison(node_id, unit_count).items():
+			free = needs.venture_foreman_free(trade)
+			if people > free + 0.01:
+				return Refusal("garrison_missing", "no garrison is free: this work needs %.2f %s to man it, and you have %.2f free. "
+				               "%s" % (people, trade, free,
+				                       ("Hire %ss from the labour market or close another work using them."
+				                        % trade) if with_advice else ""),
+				               trade=trade, needed=people, free=free)
+		return None

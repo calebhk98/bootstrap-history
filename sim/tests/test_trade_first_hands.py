@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.projects_trade_wait import STALL_YEARS_BEFORE_ABANDONMENT
+from sim.projects.start_rules import STALL_YEARS_BEFORE_ABANDONMENT
 from sim.labour import trade_formation as formation
 from sim.labour import trade_first_hands as hands
 

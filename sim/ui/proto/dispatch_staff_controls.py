@@ -1,11 +1,12 @@
 """The keep and reserve commands: hold named concerns staffed, and a reserve of spare hands."""
 
+from sim.projects.api import KeepStaffed
 from sim.workforce.api import SetReserve
 from .command_registry import command
 
 
 def _keep_listing(sim):
-    return sorted(sim.state.projects.keep_staffed)
+    return sorted(sim.view("keep_staffed")())
 
 
 @command("keep", group="projects",
@@ -29,10 +30,7 @@ def _cmd_keep(sim, nodes, cmd, ended):
     flag = cmd.get("staffed", True)
     if isinstance(flag, str):
         flag = flag.strip().lower() not in ("off", "false", "no", "0")
-    if flag:
-        projects.keep_staffed.add(node_id)
-    else:
-        projects.keep_staffed.discard(node_id)
+    sim.send(KeepStaffed(node_id, bool(flag)))
     return {"ok": True, "keep_staffed": _keep_listing(sim),
             "note": ("%s will be hired for each year before the closure rule" % node_id
                      if flag else "%s is no longer kept staffed" % node_id)}

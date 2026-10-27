@@ -8,12 +8,18 @@ from unittest import mock
 
 from sim.labour import labour_staff_controls
 from sim.labour.labour_staff_controls import StaffControlsMixin
+from sim.projects.api import KeepStaffed
+from sim.tests import projects_host
 from sim.ui.proto.dispatch_staff_controls import _cmd_keep
 
 
 def keeping(done=("mill",), venture=True):
-    projects = types.SimpleNamespace(done=set(done), keep_staffed=set())
-    return types.SimpleNamespace(state=types.SimpleNamespace(projects=projects), is_venture=lambda node_id: venture)
+    module = projects_host.build()
+    projects = types.SimpleNamespace(done=set(done))
+    return types.SimpleNamespace(
+        state=types.SimpleNamespace(projects=projects), is_venture=lambda node_id: venture, module=module,
+        keep_staffed=module.seat.keep_staffed, view=lambda name: module.keep_staffed,
+        send=lambda command: module.apply_keep_staffed(command))
 
 
 class KeepCommand(unittest.TestCase):
@@ -21,27 +27,27 @@ class KeepCommand(unittest.TestCase):
     def test_keep_flags_a_concern_you_know_and_off_clears_it(self):
         game = keeping()
         self.assertTrue(_cmd_keep(game, {}, {"id": "mill"}, None)["ok"])
-        self.assertEqual(game.state.projects.keep_staffed, {"mill"})
+        self.assertEqual(game.keep_staffed, {"mill"})
         self.assertTrue(_cmd_keep(game, {}, {"id": "mill", "staffed": "off"}, None)["ok"])
-        self.assertEqual(game.state.projects.keep_staffed, set())
+        self.assertEqual(game.keep_staffed, set())
 
     def test_bare_keep_lists_what_is_flagged(self):
         game = keeping()
-        game.state.projects.keep_staffed.update({"b", "a"})
+        game.keep_staffed.update({"b", "a"})
         self.assertEqual(_cmd_keep(game, {}, {}, None)["keep_staffed"], ["a", "b"])
 
     def test_a_concern_you_do_not_know_or_that_is_not_a_concern_is_refused_and_not_flagged(self):
         for game in (keeping(done=()), keeping(venture=False)):
             self.assertFalse(_cmd_keep(game, {}, {"id": "mill"}, None)["ok"])
-            self.assertEqual(game.state.projects.keep_staffed, set())
+            self.assertEqual(game.keep_staffed, set())
 
 
 class Household(StaffControlsMixin):
     def __init__(self, flagged, operating, closure_age, shortfalls, draws):
-        projects = types.SimpleNamespace(keep_staffed=set(flagged), done={"a", "b", "c"}, operating=set(operating))
+        projects = types.SimpleNamespace(done={"a", "b", "c"}, operating=set(operating))
         self.hired = []
         self._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(projects=projects), nodes={"a": 1, "b": 1, "c": 1},
+            state=types.SimpleNamespace(projects=projects), nodes={"a": 1, "b": 1, "c": 1}, keep_staffed=lambda: set(flagged),
             staff_closure_age=lambda node_id: closure_age.get(node_id), staffing_held_totals=lambda: {},
             staffing_draw_of=lambda node_id, units: draws[node_id], reopen_units=lambda node_id: 1,
             staffing_shortfalls=lambda totals, strict=False: shortfalls)

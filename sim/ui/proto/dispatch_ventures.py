@@ -18,7 +18,7 @@ import os
 import tempfile
 
 from sim.engine.ui_port import TRADE_FAMILY, downstream_count
-from sim.engine.ui_port import purchase_budget, trades_the_project_waits_for
+from sim.engine.ui_port import purchase_budget
 from .available_economics import specialist_foreman
 from .nodes import _did_you_mean
 from .quantity_units import read_quantity
@@ -177,7 +177,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     if _warn_staff:
         out["but"] = _warn_staff
     # trade -> years until its first hands (None when nobody is on the way)
-    _waits = trades_the_project_waits_for(sim, node_id)
+    _waits = sim.trades_the_project_waits_for(node_id)
     if _waits:
         out["waits_for_trades"] = _waits
     # BUILD STAFF AND OPERATING STAFF ARE DIFFERENT NUMBERS, and a player
@@ -677,7 +677,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
            "capabilities_you_know_how_to_run_but_have_not_opened":
                [dict(_vrow(node_id), to_open_it=round(sim.venture_capex(node_id), 1))
                 for node_id in _idle_capability] or "nothing",
-           "keep_staffed": sorted(sim.state.projects.keep_staffed) or "none",
+           "keep_staffed": sorted(sim.view("keep_staffed")()) or "none",
            "people_free_to_run_something_new": {
                "scholars": round(sch_free, 2), "craftsmen": round(art_free, 2)},
            # YOU ARE IN THAT COUNT: leaving this unsaid would make
@@ -871,7 +871,7 @@ def _cmd_policy(sim, nodes, cmd, ended):
                              "much you need it; open those yourself with "
                              "'open <id>'",
             },
-            "excluded_from_automation": sorted(sim.state.projects.excluded) or "none ('exclude <id>' adds)",
+            "excluded_from_automation": sorted(sim.view("exclusions")()) or "none ('exclude <id>' adds)",
             "note": "Anything switched off here you can still do by hand: hire, "
                     "train, buy, commission, mothball, restore, bribe.",
             # A note that reads as covering everything the game ever does

@@ -16,11 +16,11 @@ from sim.actors import world as actors_world
 from sim.actors.world import ActorWorld
 from sim.engine import projects_ventures, projects_venture_quotes
 from sim.production import revenue as production_revenue
-from sim.tests import production_host
+from sim.ledger.api import PayEdge
+from sim.tests import module_harness, production_host, projects_host
 
 from .world_stand_in import fake_needs
 from sim.production.concern_earnings import quoted_ramp, quoted_units
-from sim.engine.projects_staffing import StaffingMixin
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
 from sim.engine.projects_ventures import VenturesMixin
 
@@ -63,23 +63,20 @@ class ReleasePlantTests(unittest.TestCase):
 class ClosingTests(unittest.TestCase):
     def test_close_work_mothballs_the_plant_for_the_reason_and_closes_what_depends_on_it(self):
         business = Business(plants=[Plant(entry_key=NODE)])
-        game = SimpleNamespace(state=SimpleNamespace(projects=SimpleNamespace(business=business, ever_closed_for_staff=set()),
-                                                     scenario=SimpleNamespace(year=100)),
-                               CLOSED_FOR_STAFF="staff", dependents_closed_in=[])
-        game.close_lapsed_dependents = game.dependents_closed_in.append
-        with mock.patch("sim.engine.projects_staffing.cause_book"):
-            StaffingMixin.close_work(game, NODE, "by_choice")
-        self.assertEqual((business.state_of(NODE), business.plant_of(NODE).reason, game.dependents_closed_in),
+        module = projects_host.build(legacy_projects=SimpleNamespace(business=business), year=100)
+        dependents_closed_in = []
+        module.close_lapsed_dependents = dependents_closed_in.append
+        module.close_work(NODE, "by_choice")
+        self.assertEqual((business.state_of(NODE), business.plant_of(NODE).reason, dependents_closed_in),
                          (MOTHBALLED, "by_choice", [100]))
 
     def test_close_work_for_staff_is_remembered_and_cascade_can_be_turned_off(self):
         business = Business(plants=[Plant(entry_key=NODE)])
-        projects = SimpleNamespace(business=business, ever_closed_for_staff=set())
-        game = SimpleNamespace(state=SimpleNamespace(projects=projects, scenario=SimpleNamespace(year=100)),
-                               CLOSED_FOR_STAFF="staff", close_lapsed_dependents=lambda year: self.fail("cascade was off"))
-        with mock.patch("sim.engine.projects_staffing.cause_book"):
-            StaffingMixin.close_work(game, NODE, "staff", cascade=False)
-        self.assertEqual(projects.ever_closed_for_staff, {NODE})
+        projects = SimpleNamespace(business=business)
+        module = projects_host.build(legacy_projects=projects, year=100)
+        module.close_lapsed_dependents = lambda year: self.fail("cascade was off")
+        module.close_work(NODE, module.CLOSED_FOR_STAFF, cascade=False)
+        self.assertEqual(module.seat.ever_closed_for_staff, {NODE})
 
     def close_venture(self, operating):
         closed = []
@@ -98,16 +95,12 @@ class ClosingTests(unittest.TestCase):
 class RestoreWorkTests(unittest.TestCase):
     def restore(self, venture):
         business = Business(plants=[Plant(entry_key=NODE, state=MOTHBALLED, reason="by_choice", size=2.0, opened_year=92)])
-        projects = SimpleNamespace(mothballed={NODE}, done={NODE}, business=business)
-        paid = []
-        game = SimpleNamespace(
-            state=SimpleNamespace(projects=projects, household=SimpleNamespace(capital=0.0), scenario=SimpleNamespace(year=100)),
-            running_gate_refusal=lambda node_id: None, nodes={NODE: {"pre": []}}, reopen_fee=lambda node_id, units: 5.0,
-            reopen_units=lambda node_id: 1.0, staff_closure_age=lambda node_id: None, STAFF_CLOSURE_GRACE=2,
-            spending_power=lambda kind: 10.0, pay_edge=lambda edge, fee, why: paid.append(fee), send=lambda command: None,
-            is_venture=lambda node_id: venture)
-        with mock.patch("sim.engine.projects_staffing.cause_book"), mock.patch("sim.engine.projects_staffing.money_text", return_value="m"):
-            ok, _reply = StaffingMixin.restore_work(game, NODE)
+        projects = SimpleNamespace(mothballed={NODE}, done={NODE}, business=business, closures=business.closures())
+        module = projects_host.build(
+            legacy_projects=projects, tree={NODE: {"pre": []}}, reopen_fee=lambda node_id: 5.0, spending_power=lambda kind: 10.0,
+            acting_balance=0.0, is_venture=lambda node_id: venture, year=100)
+        ok, _reply = module.restore_work(NODE)
+        paid = [command.amount for command in module_harness.sent(module) if isinstance(command, PayEdge)]
         return ok, paid, business
 
     def test_restoring_a_concern_pays_the_fee_and_puts_the_same_plant_back_to_work(self):

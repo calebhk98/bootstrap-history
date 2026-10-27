@@ -12,7 +12,6 @@ from .actor_kinds_data import register_mod_actor_kinds
 from .bridge import bridge_command, bridge_view
 from .data import load_civ
 from .foreign_economy_data import not_traded_materials as declared_not_traded_materials
-from .projects_review import SeatReview
 
 # ---- the cast's own data: the kinds mods bring and the roster a game opens with ----
 
@@ -69,12 +68,6 @@ def concern_staff(sim, node_id):
 # ---- production: concerns, their takings and the industry's experience ----
 
 
-
-
-@bridge_view("seat_review", kind=QUOTE)
-def seat_review(sim, world, year):
-    """The founder's seat's answers to a business review (engine/projects_review.py)."""
-    return SeatReview(world, year, sim)
 
 
 # ---- markets: goods categories, the agent economy's book and the orders the actors place ----

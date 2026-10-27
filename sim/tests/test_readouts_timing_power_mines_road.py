@@ -6,7 +6,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.tests import projects_host
-from sim.engine.completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
+from sim.projects.completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
 from sim.tests import materials_stand_in, resources_stand_in
 from sim.engine.fog import FogMixin
 from sim.ui.proto.economy import _power_tiers

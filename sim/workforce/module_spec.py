@@ -10,7 +10,7 @@ from sim.ledger.api import PayEdge, ReceiveFromEdge
 from sim.polity.api import AddReputation, ScaleFamiliarity, ScaleProtection
 from sim.reporting.api import DiscardEventsAfter, RecordAutomation, RecordAutomationSkip, RecordEvent
 
-from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, NoteTradeSpread, PressLabour, ReportStaffReduction,
+from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread, PressLabour, ReportStaffReduction,
                        ReleaseStaff, ScaleDeputies, SetEmployed, SurviveStaff, TakeWageFallback, UpdateWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
                              ResetTradeHours, SetReserve, SetWageHoursSold, SettleLivingCost, SpendDirectorHours, WatchStaff)
@@ -32,7 +32,7 @@ READS_BY_OWNER = {
                   "labour_productivity_sources", "room_sources", "staff_capacity_sources"),
     "diffusion": ("literacy", "research_productivity", "staff_hire_advice", "staff_sources"),
     "production": ("running", "institution_units", "upkeep", "revenue_estimate", "is_venture"),
-    "projects": ("legacy_projects", "staffing_closed_hand_shortfall", "start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
+    "projects": ("legacy_projects", "keep_staffed", "staffing_closed_hand_shortfall", "start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
                  "staffing_draw", "staffing_held_totals", "staffing_shortfalls", "concerns_to_close_for_staffing",
                  "venture_foreman", "venture_foremen_used", "venture_staff_free", "shared_answer"),
     "materials": ("material_price_factor",),
@@ -60,11 +60,14 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("staff_snapshot", "staff_snapshot", **_SEAT),
         ViewSpec("headcount", "headcount", **_SEAT),
         ViewSpec("hours_available", "hours_available", kind=KEYED, **_SEAT),
+        ViewSpec("hours_you_can_call_on", "hours_you_can_call_on", kind=KEYED, **_SEAT),
+        ViewSpec("effective_scholars", "effective_scholars", **_SEAT),
         ViewSpec("literacy_references", "literacy_references", **_LIVE),
         ViewSpec("literacy_capacity", "literacy_capacity", kind=KEYED, **_SEAT),
         ViewSpec("farm_share_of_hours", "farm_share_of_hours", **_SEAT),
         ViewSpec("trade_spread", "trade_spread", **_SEAT),
         ViewSpec("staff_advice", "staff_advice", kind=QUOTE, **_LIVE),
+        ViewSpec("training_advice", "training_advice", kind=QUOTE, **_LIVE),
         ViewSpec("project_staffing_shortfall", "project_staffing_shortfall", kind=QUOTE, **_LIVE),
         ViewSpec("seat_base_tile", "seat_base_tile", kind=KEYED, **_LIVE),
         ViewSpec("market_supply", "market_supply", kind=KEYED, **_LIVE),
@@ -96,7 +99,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("hours_per_person_year", "hours_per_person_year", **_LIVE),
     ),
     applies=((SetEmployed, "set_employed"), (NoteTradeSpread, "note_trade_spread"), (PressLabour, "press_labour"),
-             (SurviveStaff, "survive_staff"), (ScaleDeputies, "scale_deputies"), (ReportStaffReduction, "report_staff_reduction"),
+             (SurviveStaff, "survive_staff"), (GrantStaff, "grant_staff"), (ScaleDeputies, "scale_deputies"), (ReportStaffReduction, "report_staff_reduction"),
              (AllocateFarmWorkforce, "allocate_farm_workforce"), (ApplyLandClearing, "apply_land_clearing"),
              (UpdateWages, "update_wages"), (ReleaseStaff, "release_staff"), (TakeWageFallback, "take_wage_fallback"),
              (CloseHoursYear, "close_hours_year"),

@@ -10,8 +10,11 @@ from types import SimpleNamespace
 
 from sim.agents.api import edges
 from sim.coin.rules import coin_guard_paid, room_under_credit_line
-from sim.engine.projects_completion import CompletionMixin
-from sim.tests import event_stand_in, materials_stand_in
+from sim.ledger.api import PayEdge
+from sim.production.api import LearnFromFailure
+from sim.projects import constants as projects_constants
+from sim.reporting.api import RecordEvent
+from sim.tests import materials_stand_in, projects_host
 
 NODE_ID = "kiln"
 
@@ -63,17 +66,16 @@ class CoinGuardTests(unittest.TestCase):
         self.assertEqual(coin_guard_paid(40.0, 0.0), 0.0)
 
 
-class FailingSim(CompletionMixin):
+class FailingSim:
     """What `_fail_attempt` reads: a project record, a purse with a credit line, and the rules it calls."""
-    send = event_stand_in.send
 
     instrument_spec = None
 
     can_bear = 1e18
+    FAILURE_RESET_SHARE = projects_constants.FAILURE_RESET_SHARE
 
     def __init__(self, capital, loss, claimed):
-        self.nodes = {NODE_ID: {"name": "Kiln", "ph": 100.0, "risk": 0.2, "mat": {}, "lab": {}},
-                      "gauge": {"name": "Gauge"}}
+        nodes = {NODE_ID: {"name": "Kiln", "ph": 100.0, "risk": 0.2, "mat": {}, "lab": {}}, "gauge": {"name": "Gauge"}}
         self.state = SimpleNamespace(
             projects=SimpleNamespace(
                 done=set(),
@@ -85,44 +87,36 @@ class FailingSim(CompletionMixin):
         self.loss = loss
         self.paid = []
         self.learned = []
+        self.rng = SimpleNamespace(uniform=lambda low, high: low)
+        module = self.module = projects_host.build(
+            tree=nodes, legacy_projects=self.state.projects, funding_capacity=1000.0, state_interest=lambda node: 0,
+            failure_loss=lambda node_id: self.loss, bearable_part_of=self.bearable_part_of,
+            mechanic=lambda name: {NODE_ID: self.instrument_spec} if name == "diagnosis_instrument" and self.instrument_spec else {},
+            legacy_dice=self.rng, money_text=lambda amount, grouped=False, short=False: "%d" % amount,
+            plain_number=lambda value, digits=0: "%d" % value)
+        module.needs.send = self.send
+        module.failure_severity = lambda node_id, lost, means: "major"
+        module.rebuild_work_factor = lambda node_id: 0.5
+        module._retry_calendar_retain = lambda node_id, attempt_index=None: 0.25
+        module.effective_risk = lambda node_id, precaution=None: 0.1
+        module.lose_what_was_risked = lambda node_id: []
 
     def bearable_part_of(self, amount):
         self.asked_to_bear = amount
         return min(amount, self.can_bear)
 
-    def pay_edge(self, edge_name, amount, purpose):
-        self.paid.append((edge_name, amount))
-        self.state.household.capital -= amount
+    def send(self, command):
+        if isinstance(command, PayEdge):
+            self.paid.append((command.edge, command.amount))
+            self.state.household.capital -= command.amount
+        elif isinstance(command, LearnFromFailure):
+            self.learned.append(command.node_id)
+        elif isinstance(command, RecordEvent):
+            self.state.household.log.append((self.state.scenario.year, command))
+        return None
 
-    def mechanic(self, node_id, name):
-        return self.instrument_spec if name == "diagnosis_instrument" else None
-
-    def learn_from_failed_attempt(self, node_id):
-        self.learned.append(node_id)
-
-    def failure_loss(self, node_id):
-        return self.loss
-
-    def failure_severity(self, node_id, lost, means):
-        return "major"
-
-    def funding_capacity(self):
-        return 1000.0
-
-    def rebuild_work_factor(self, node_id):
-        return 0.5
-
-    def _retry_calendar_retain(self, node_id):
-        return 0.25
-
-    def effective_risk(self, node_id):
-        return 0.1
-
-    def lose_what_was_risked(self, node_id):
-        return []
-
-    def state_interest(self, node):
-        return 0
+    def _fail_attempt(self, node_id, risk):
+        self.module._fail_attempt(node_id, risk)
 
 
 class FailedAttemptChargeTests(unittest.TestCase):
@@ -181,7 +175,6 @@ class FailureTeachesTests(unittest.TestCase):
         sim.instrument_spec = self.SPEC
         if holds_instrument:
             sim.state.projects.done.add("gauge")
-        sim.rng = SimpleNamespace(uniform=lambda low, high: low)
         sim._fail_attempt(NODE_ID, 0.2)
         return sim
 

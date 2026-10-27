@@ -10,31 +10,31 @@ import unittest
 from types import SimpleNamespace
 
 from sim.engine import tree_merge, validate_action_results
-from sim.engine.projects_completion import CompletionMixin
-from sim.engine.forward_hazards import HazardsForwardsMixin
-from sim.tests import module_harness
+from sim.living_stock.api import ChangeHeld
+from sim.tests import module_harness, projects_host
 from sim.workforce.module import Workforce
 
 
-class _Host(HazardsForwardsMixin):
-    lose_what_was_risked = CompletionMixin.lose_what_was_risked
+class _Host:
+    """The projects module over a household of employees, a stock ledger and a seeded dice."""
 
     def __init__(self, risks, employees=None, stock=None, seed=1):
         self.nodes = {"voyage": {"id": "voyage", "risks": risks} if risks is not None else {"id": "voyage"}}
         self.state = SimpleNamespace(household=SimpleNamespace(employees=dict(employees or {})))
         self.rng = random.Random(seed)
-        self.view = lambda name: (lambda: {"employees": self.state.household.employees})
         self.stock = dict(stock or {})
+        self.module = projects_host.build(tree=self.nodes, stock_held=lambda material: self.stock.get(material, 0.0))
+        self.module.needs.send = self.send
 
     def send(self, command):
+        if isinstance(command, ChangeHeld):
+            self.stock[command.material] = self.stock.get(command.material, 0.0) + command.units
+            return None
         module = module_harness.build(Workforce, seat=self.state.household, views={"legacy_dice": self.rng})
         return module.lose_crew(command)
 
-    def stock_held(self, material):
-        return self.stock.get(material, 0.0)
-
-    def change_stock(self, material, units):
-        self.stock[material] = self.stock.get(material, 0.0) + units
+    def lose_what_was_risked(self, node_id):
+        return self.module.lose_what_was_risked(node_id)
 
 
 class FailedVoyageTests(unittest.TestCase):

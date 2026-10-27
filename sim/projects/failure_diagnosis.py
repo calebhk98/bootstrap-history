@@ -6,6 +6,8 @@ node whose possession lets a household measure it. Without that node a failure
 teaches nothing and says why; with it the report gives the figure reached
 against the figure needed.
 """
+from typing import Any, Collection, Mapping, Optional
+
 from sim.constants import declare
 
 SHORTFALL_FACTOR_RANGE = declare(
@@ -18,30 +20,23 @@ SHORTFALL_FACTOR_RANGE = declare(
         "would give the shortfall; the range is a placeholder, not measured.")
 
 
-def _spec(sim, node_id):
-    return sim.mechanic(node_id, "diagnosis_instrument")
+def failure_teaches(spec: Optional[Mapping[str, Any]], held: Collection[str]) -> bool:
+    """True when a failure of a node declaring `spec` (its `diagnosis_instrument` mechanic, or None) can be diagnosed:
+    it needs no instrument, or the household holds the one it names."""
+    return spec is None or spec["instrument"] in held
 
 
-def failure_teaches(sim, node_id):
-    """True when a failure of this node can be diagnosed: it needs no
-    instrument, or the household holds the one it names."""
-    spec = _spec(sim, node_id)
-    return spec is None or spec["instrument"] in sim.state.projects.done
+def measured_report(spec: Mapping[str, Any], factor: float, instrument_name: str) -> str:
+    """The sentence for a failure measured with the instrument: the figure reached (`factor` times what was needed)
+    against the figure needed."""
+    reached = spec["needed"] * factor
+    return ("Measured with %s: %s reached %.3g %s against %.3g needed (%s)."
+            % (instrument_name, spec["quantity"], reached, spec["unit"], spec["needed"], spec["needed_words"]))
 
 
-def note_failure(sim, node_id):
-    """Record a failure that was or was not diagnosable and return the
-    sentence for the report ("" when the node needs no instrument)."""
-    spec = _spec(sim, node_id)
-    if spec is None:
-        return ""
-    if failure_teaches(sim, node_id):
-        low, high = SHORTFALL_FACTOR_RANGE
-        reached = spec["needed"] * sim.rng.uniform(low, high)
-        return ("Measured with %s: %s reached %.3g %s against %.3g needed (%s)."
-                % (sim.nodes[spec["instrument"]]["name"], spec["quantity"],
-                   reached, spec["unit"], spec["needed"], spec["needed_words"]))
+def unmeasured_report(spec: Mapping[str, Any], instrument_name: str) -> str:
+    """The sentence for a failure nothing held can measure."""
     return ("You cannot tell why: this work needs %s, and nothing you hold can "
             "measure it. %s would. This failure teaches nothing, so the next "
             "attempt is no safer."
-            % (spec["needed_words"], sim.nodes[spec["instrument"]]["name"]))
+            % (spec["needed_words"], instrument_name))

@@ -6,7 +6,6 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.bridge_projects import committed_cost
 from sim.tests import projects_host
 from sim.ui.proto.techtree import _digest_stack_caution
 
@@ -22,8 +21,12 @@ class Projects:
 
 
 def purse(active):
-    """The game as `committed_cost` reads it: the projects in hand."""
-    return types.SimpleNamespace(state=types.SimpleNamespace(projects=Projects(active)))
+    """The projects module as `committed_cost` reads it: the projects in hand."""
+    return projects_host.build(legacy_projects=Projects(active))
+
+
+def committed_cost(module):
+    return module.committed_cost()
 
 
 class CommittedSpend(unittest.TestCase):

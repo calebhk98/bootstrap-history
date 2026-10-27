@@ -6,7 +6,7 @@ import unittest
 
 from sim.production.constants import RISK_SHARE_AT_FULL_DEPTH
 from sim.production.rules import depth_risk_multiplier
-from sim.engine.risk_rules import control_relief_multiplier, effective_risk_of
+from sim.projects.risk_rules import control_relief_multiplier, effective_risk_of
 
 FACTOR = 0.65
 

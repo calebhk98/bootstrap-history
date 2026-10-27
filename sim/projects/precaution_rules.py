@@ -8,6 +8,8 @@ with a `source` saying where the figure comes from. A project started with the
 precaution pays both shares through the ordinary bill and hours, and its
 failure chance is divided by the relief the money bought.
 """
+from typing import Any, Dict, Mapping, Optional
+
 from sim.constants import declare
 
 _NO_SOURCE_WHY = ("The sim does not yet model which failure causes this "
@@ -58,9 +60,8 @@ KINDS = {
 }
 
 
-def spec(sim, node_id):
-    """The node's resolved precaution (label and the three figures), or None."""
-    declared = sim.mechanic(node_id, "precaution")
+def resolve(declared: Optional[Mapping[str, Any]]) -> Optional[Dict[str, Any]]:
+    """The node's resolved precaution (label and the three figures) from the parameters it declares, or None."""
     if declared is None:
         return None
     resolved = dict(KINDS[declared["kind"]])
@@ -70,38 +71,30 @@ def spec(sim, node_id):
     return resolved
 
 
-def chosen(sim, node_id):
-    """True when the running project for this node bought the precaution."""
-    return bool((sim.state.projects.active.get(node_id) or {}).get("precaution"))
-
-
-def relief_multiplier(sim, node_id, bought):
-    declared = spec(sim, node_id)
-    if not bought or declared is None:
+def relief_multiplier(spec: Optional[Mapping[str, Any]], bought: bool) -> float:
+    """What the failure chance is multiplied by once the precaution is bought (1.0 when it is not, or none is offered)."""
+    if not bought or spec is None:
         return 1.0
-    return 1.0 / (1.0 + declared["relief_per_cost_share"] * declared["cost_share"])
+    return 1.0 / (1.0 + spec["relief_per_cost_share"] * spec["cost_share"])
 
 
-def extra_cost(sim, node_id, bill):
-    declared = spec(sim, node_id)
-    return 0.0 if declared is None else bill * declared["cost_share"]
+def extra_cost(spec: Optional[Mapping[str, Any]], bill: float) -> float:
+    return 0.0 if spec is None else bill * spec["cost_share"]
 
 
-def extra_hours(sim, node_id):
-    declared = spec(sim, node_id)
-    if declared is None:
+def extra_hours(spec: Optional[Mapping[str, Any]], node_hours: float, rebuild_factor: float) -> float:
+    if spec is None:
         return 0.0
-    return sim.nodes[node_id]["ph"] * sim.rebuild_work_factor(node_id) * declared["hours_share"]
+    return node_hours * rebuild_factor * spec["hours_share"]
 
 
-def quote(sim, node_id):
-    """What the precaution would cost and buy before the project starts,
-    or None when the node offers none."""
-    declared = spec(sim, node_id)
-    if declared is None:
+def quote(spec: Optional[Mapping[str, Any]], bill: float, node_hours: float, rebuild_factor: float,
+          risk_without: float, risk_with: float) -> Optional[Dict[str, Any]]:
+    """What the precaution would cost and buy before the project starts, or None when the node offers none."""
+    if spec is None:
         return None
-    return {"label": declared["label"],
-            "extra_cost": round(extra_cost(sim, node_id, sim.project_cost(node_id)), 1),
-            "extra_founder_hours": round(extra_hours(sim, node_id), 1),
-            "chance_of_failure_without": sim.effective_risk(node_id, precaution=False),
-            "chance_of_failure_with": sim.effective_risk(node_id, precaution=True)}
+    return {"label": spec["label"],
+            "extra_cost": round(extra_cost(spec, bill), 1),
+            "extra_founder_hours": round(extra_hours(spec, node_hours, rebuild_factor), 1),
+            "chance_of_failure_without": risk_without,
+            "chance_of_failure_with": risk_with}
