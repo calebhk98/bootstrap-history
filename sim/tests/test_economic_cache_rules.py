@@ -55,7 +55,7 @@ class RevenueStandIn:
     def view(self, name):   # the polity module's standing and the demography module's farm
         if name == "home_price_level":
             return lambda: self.price_level
-        return lambda: {"governance": 0.0, "reputation": 0.0, "hectares": self.farm_hectares}
+        return lambda: {"governance": 0.0, "reputation": 0.0, "hectares": self.farm_hectares, "bondage_years_left": 0.0}
 
     def state_funding(self):
         return 0.0

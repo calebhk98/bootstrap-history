@@ -75,7 +75,7 @@ class Revenue:
 			game.labour.director_hours_committed(),
 			game.labour.wage_signature(),
 			staff["directors_extra"],
-			game.bondage_years_left,
+			game.view("debt_status")()["bondage_years_left"],
 			game.view("farm_holdings")()["hectares"] or 0.0,
 			staff["freedmen"] or 0.0,
 			staff["slaves"] or 0.0,

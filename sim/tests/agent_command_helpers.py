@@ -41,5 +41,5 @@ def starved_game(cost_left, supply=0.02, arrears=0.8, capital=20000.0):
     game.active["identity_cover"]["cost_left"] = cost_left
     real_supply = game.labour.market_supply
     game.labour.market_supply = lambda trade, _fallback=real_supply: _fallback(trade) * supply
-    game.capital = -game.credit_limit() * arrears      # in arrears, inside the limit
+    game.capital = -game.view("credit_limit")(None, None, None) * arrears      # in arrears, inside the limit
     return game

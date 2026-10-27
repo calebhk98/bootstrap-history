@@ -136,7 +136,7 @@ class RevenueCacheTests(unittest.TestCase):
             projects=None, household=household)
         views = {"staff_version": lambda: household.workforce_version, "hour_commitments": lambda: {"wage_hours": household.wage_hours_this_year},
                  "staff": lambda: {"directors_extra": household.directors_extra, "freedmen": household.freedmen, "slaves": household.slaves}}
-        game = SimpleNamespace(state=state, household=household, founder_alive=True, output_factor=1.0, bondage_years_left=0, view=lambda name: views.get(name, lambda: {"governance": 0.0, "reputation": 1.0, "hectares": 0.0}), pop_scale=1.0, real_output_per_head=lambda: 1.0, state_funding=lambda: 0.0, home_price_level=lambda: 1.0,
+        game = SimpleNamespace(state=state, household=household, founder_alive=True, output_factor=1.0, bondage_years_left=0, view=lambda name: views.get(name, lambda: {"governance": 0.0, "reputation": 1.0, "hectares": 0.0, "bondage_years_left": 0}), pop_scale=1.0, real_output_per_head=lambda: 1.0, state_funding=lambda: 0.0, home_price_level=lambda: 1.0,
                                signature=1.0, committed=0.0, computed=[])
         game.labour = SimpleNamespace(director_hours_committed=lambda: game.committed, wage_signature=lambda: game.signature)
         game.module = production_host.build(game, **views)
