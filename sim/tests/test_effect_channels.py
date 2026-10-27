@@ -14,6 +14,7 @@ from sim.markets.module import Markets
 from sim.mechanics.module import Mechanics
 from sim.polity.state import PolitySeat
 from sim.tests import module_harness, polity_host, production_host
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -159,7 +160,7 @@ class SchoolingFlow(unittest.TestCase):
 class InstitutionUnitCost(unittest.TestCase):
 
     def cost(self, have_units, add_units, convexity=0.5, capex=1000.0):
-        module = production_host.build(SimpleNamespace(venture_capex=lambda node_id: capex))
+        module = production_host.build(Game(venture_capex=lambda node_id: capex))
         with mock.patch.object(capability, "INSTITUTION_EXPANSION_CONVEXITY", convexity):
             return module.institution_unit_cost("college", have_units, add_units)
 

@@ -45,8 +45,8 @@ class Depth:
 	def founding_staff_by_trade(self, node_id):
 		"""People of each trade one founding-size concern ties up for a year (founder-staffed)."""
 		game = self._game()
-		scholars, craftsmen = game.venture_hands_founder_staffed(node_id)
-		foreman_trade, foreman_fte = game.venture_foreman(node_id)
+		scholars, craftsmen = game.view("venture_hands_founder_staffed")[node_id]
+		foreman_trade, foreman_fte = game.view("venture_foreman")[node_id]
 		staff = {"scholar": scholars, "artisan": craftsmen}
 		if foreman_trade:
 			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte

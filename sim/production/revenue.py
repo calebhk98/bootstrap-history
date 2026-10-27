@@ -99,7 +99,7 @@ class Revenue:
 
 	def concern_revenue(self, node_id):
 		"""What one open concern earns in a year before the output factor: the figure the screens quote."""
-		return self._game().venture_real_earnings(node_id, with_output_factor=False)
+		return self._game().view("venture_real_earnings")(node_id, None, False, False)
 
 	def _compute_revenue_uncached(self):
 		"""(the estimate, the forecast of the concerns the clearing pays), both after the output factor."""
@@ -194,7 +194,7 @@ class Revenue:
 			if not game.nodes[node_id]["rev"]:
 				continue
 			# The figure `ventures` and `why` print, and the factor revenue() applies, so the ledger's parts add up to its total.
-			row = ledger_row(game.venture_real_earnings(node_id))
+			row = ledger_row(game.view("venture_real_earnings")(node_id, None, False, True))
 			if row is not None:
 				rows[node_id] = row
 		return rows
