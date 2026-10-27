@@ -154,6 +154,12 @@ class RemoveTest(unittest.TestCase):
         assembly = build(operations=[stand_in_ops], shipped=[changed(BASE, applies=()), TOP])
         self.assertEqual(assembly.views["derived"](), 6)
 
+    def test_removal_allowed_when_another_mod_provides_the_view(self):
+        stand_in = ModuleSpec("other:base", Empty, publishes=(ViewSpec("double", "provided"),))
+        operations = [Operations("strip", removed=("base",)), Operations("other", added=(stand_in,))]
+        assembly = build(operations=operations, shipped=[changed(BASE, applies=()), TOP])
+        self.assertEqual(assembly.views["derived"](), 6)
+
     def test_a_reader_with_an_optional_read_gets_none_after_removal(self):
         reader = ModuleSpec("reader", Empty, optional_reads=("side",))
         only_side = changed(BASE, publishes=(BASE.publishes[2],), applies=())
