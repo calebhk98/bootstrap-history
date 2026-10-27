@@ -8,8 +8,7 @@ from sim.constants import declare
 from sim.geography.api import haversine_km, settlement, tile_facts, tiles_held
 from sim.world import census as census_module, demand
 
-from .data import load_civ
-from .economy_port_setup import allowed_entries
+from .port_setup import allowed_entries
 
 SPREAD_BY_FOOD_CAPACITY = declare(
     "PARTNER_POPULATION_SPREAD_BY_FOOD_CAPACITY", 1.0, kind="temporary_heuristic",
@@ -24,7 +23,7 @@ POPULATION_BY_FOOD_CAPACITY = "food capacity (heuristic)"
 def partner_opening(sim, partner_id):
     """What the setup takes from one partner at the opening: its tiles (those the home country does not
     hold), the people on each, the recipes its techniques allow and its goods priced where the home has none."""
-    civ = load_civ(partner_id)
+    civ = sim.civilisation_record(partner_id)
     home_tiles = set(tiles_held(sim.civ, sim.world_map))
     tile_ids = [tile for tile in tiles_held(civ, sim.world_map) if tile not in home_tiles]
     people, farthest, source = _people_by_tile(sim, civ, tile_ids)

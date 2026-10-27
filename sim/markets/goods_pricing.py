@@ -10,8 +10,8 @@ the order, since the economy has not yet seen them. Nothing here reads a ratio o
 """
 import math
 
-from .goods_market_imports import HOME_SELLER
-from .material_units import tonnes_per_unit
+from .goods_imports import HOME_SELLER
+from sim.world.material_units import tonnes_per_unit
 
 # Points along an order at which the economy's response is read; the order's mean climb is their mean.
 PRICE_SLICES = 8

@@ -16,7 +16,7 @@ import math
 from sim.world import trader_response
 
 from . import trade_duty
-from .goods_market_imports import HOME_SELLER, GoodsImports
+from .goods_imports import HOME_SELLER, GoodsImports
 
 
 RATE_DECIMALS = 3
@@ -47,12 +47,12 @@ class GoodsOffers(GoodsImports):
         the merchants' costs as a share of that, the freight and the home state's tariff on the partner's
         goods (`with_duty` False leaves it out). None when the partner does not make it, it may not cross
         a border, no route joins the two, or the home state embargoes the partner."""
-        from .foreign_economy_data import not_traded_materials
-        from .material_units import tonnes_per_unit
-        facts = self._sim._foreign_economy_facts(civilization_id)
+        from sim.world.material_units import tonnes_per_unit
+        sim = self._sim
+        facts = sim._foreign_economy_facts(civilization_id)
         route = route or self._route_from(civilization_id)
         if (route is None or material not in facts["solved_materials"]
-                or material in not_traded_materials()):
+                or material in sim.not_traded_materials()):
             return None
         partner_price = facts["prices_in_home_money"].get(material)
         if not partner_price:
@@ -76,11 +76,11 @@ class GoodsOffers(GoodsImports):
         paid = sim.economy.agent_prices_at()
         if paid is None:
             return table
-        held = getattr(sim.household, "_home_prices_cache", None)
+        held = sim.remembered("home_prices")
         if held is not None and held[0] is table and held[1] is paid:
             return held[2]
         merged = {material: paid.get(material, cost) for material, cost in table.items()}
-        sim.household._home_prices_cache = (table, paid, merged)
+        sim.remember("home_prices", (table, paid, merged))
         return merged
 
     def home_unit_price(self, material):
@@ -101,8 +101,8 @@ class GoodsOffers(GoodsImports):
                round(sim.market_rate(), RATE_DECIMALS),
                tuple(self.partner_price_level(partner) for partner in partners),
                trade_duty.signature(sim, partners))
-        cache_name = "_goods_offers_cost_cache" if at_cost else "_goods_offers_cache"
-        cache = getattr(sim.household, cache_name, None)
+        cache_name = "goods_offers_cost" if at_cost else "goods_offers"
+        cache = sim.remembered(cache_name)
         if cache is not None and cache[0] is prices and cache[1] == key:
             return cache[2], cache[3]
         routes = {partner: self._route_from(partner) for partner in partners}
@@ -118,7 +118,7 @@ class GoodsOffers(GoodsImports):
                       and sim.foreign_supply_tonnes(partner, material) > 0.0]
             if offers and min(offers)[0] < household.get(material, math.inf):
                 household[material], sellers[material] = min(offers)[0], min(offers)[1]
-        setattr(sim.household, cache_name, (prices, key, household, sellers))
+        sim.remember(cache_name, (prices, key, household, sellers))
         return household, sellers
 
     def _home_basis(self, material):

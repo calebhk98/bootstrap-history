@@ -9,7 +9,7 @@ from .harness import check
 from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
 from sim.agents.no_country_economy import NoCountryEconomy
 from sim.economy import country_figures
-from sim.engine.economy_port_country import CountryAnswers
+from sim.markets.port_country import CountryAnswers
 from sim.tests.country_stand_in import HOME, NORTH, two_country_economy
 
 from .country_state_world import StateWorld

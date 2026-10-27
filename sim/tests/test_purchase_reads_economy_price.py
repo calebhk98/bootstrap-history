@@ -9,8 +9,9 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.engine.data import load_civ
-from sim.engine.economy_port import EconomyPort
-from sim.engine.goods_market_api import GoodsMarket
+from sim.tests import market_stand_in
+from sim.markets.port import EconomyPort
+from sim.markets.goods_market import GoodsMarket
 from sim.engine.material_units import tonnes_per_unit
 from sim.foreign_trade.module import ForeignTrade
 from sim.tests import module_harness
@@ -50,7 +51,7 @@ class _Market(GoodsMarket):
     def __init__(self, paid, cost_table=None):
         self.economy = _Economy(paid)
         sim = SimpleNamespace(
-            economy=self.economy, household=SimpleNamespace(), state=SimpleNamespace(acting_seat="seat"),
+            economy=self.economy, **market_stand_in.market_memory(), state=SimpleNamespace(acting_seat="seat"),
             _material_prices=lambda: dict(cost_table if cost_table is not None else paid),
             _priced_key=lambda material, prices: material if material in prices else None,
             _material_tag=lambda material: (material, None),

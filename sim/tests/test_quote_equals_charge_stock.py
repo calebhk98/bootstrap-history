@@ -107,7 +107,7 @@ class Seller:
         self.received.append((money, purpose))
 
 
-from sim.engine.goods_market_api import GoodsMarket  # noqa: E402
+from sim.markets.goods_market import GoodsMarket  # noqa: E402
 
 market = SimpleNamespace(quote_sell=lambda material, tonnes, seller=None: ("iron_stock", 25.0, 750.0), note_sale=lambda *args: None)
 seller = Seller()

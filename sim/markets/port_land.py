@@ -48,4 +48,4 @@ def land_tax_share_of_rent(sim):
     """Share of a rent the home state's forms on land take from the owner; none without a government."""
     if sim.actors.government_of(None) is None:
         return 0.0
-    return tax_burden.land_tax_share_of_rent(sim.view("actor_world")())
+    return tax_burden.land_tax_share_of_rent(sim.actor_world())

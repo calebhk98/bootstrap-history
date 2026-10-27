@@ -10,8 +10,8 @@ from unittest import mock
 from .harness import check
 
 from sim.actors.module import Actors
-from sim.engine import economy_port_year
-from sim.engine.economy_port_year import AgentEconomy
+from sim.markets import port_year
+from sim.markets.port_year import AgentEconomy
 from sim.seats.module import Seats
 from . import module_harness
 
@@ -33,8 +33,8 @@ STORED = Stored(on=True)
 class FakeSim:
     civ = {"id": HOME}
 
-    def view(self, name):
-        return lambda: STORED
+    def agent_record(self):
+        return STORED
 
 
 def seat_economy():
@@ -56,7 +56,7 @@ def answers_over_readers(call):
     readers = {"wages_by_trade_weighted": lambda economy, country=None: WAGES[country],
                "shown_prices_of": lambda economy, country=None: (PRICES[country], set()),
                "interest_rate": lambda economy: 0.05}
-    with mock.patch.multiple(economy_port_year.economy_api, **readers):
+    with mock.patch.multiple(port_year.economy_api, **readers):
         return call(seat_economy())
 
 

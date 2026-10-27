@@ -6,7 +6,7 @@ import json
 import os
 import unittest
 
-from sim.engine.economy_port_stores import opening_store_values
+from sim.markets.port_stores import opening_store_values
 from sim.geography.api import open_map, tiles_held
 
 DATA = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "civilizations")

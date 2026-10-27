@@ -6,7 +6,7 @@ import types
 import unittest
 
 from sim.economy.types import TileSpec
-from sim.engine.economy_port_cropland import follow_farm_sites
+from sim.markets.port_cropland import follow_farm_sites
 
 AREA_KM2 = 100.0
 HECTARES = AREA_KM2 * 100.0

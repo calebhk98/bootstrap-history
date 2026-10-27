@@ -7,7 +7,7 @@ import types
 import unittest
 
 from sim.engine.critical_path_remaining import active_years_left
-from sim.engine.goods_market_offers import GoodsOffers
+from sim.markets.goods_offers import GoodsOffers
 from sim.ui.proto.techtree import _staffing_standing_crew
 
 

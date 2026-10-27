@@ -1,12 +1,10 @@
 """One-line forwarders from the old `Sim` names of the markets topic to the markets module, for callers not yet in a module.
 
-The goods market's own objects (`goods_market`, the port `economy`) are still built here; the screens, the port and the goods
+The goods market and the port over the agent economy are the markets module's (`economy`, `goods_market`); the screens, the port and the goods
 market itself still say `sim._market_flows()`, `sim.market_state(...)` or `sim.buy_material_stock(...)`. Each line goes when its
 last caller reads the view (`sim.view(name)`) or sends the command (`sim.send(command)`) itself."""
 from sim.markets import categories
 from sim.markets.api import BuyMaterial, OpenMarketBook, SellMaterial
-
-from .goods_market_api import GoodsMarket
 
 
 class ForwardMarketsMixin:
@@ -17,11 +15,13 @@ class ForwardMarketsMixin:
 
     @property
     def goods_market(self):
-        """The one goods market every buyer and seller asks."""
-        market_api = self.__dict__.get("_goods_market")
-        if market_api is None:
-            market_api = self._goods_market = GoodsMarket(self)
-        return market_api
+        """The one goods market every buyer and seller asks (the markets module's)."""
+        return self.assembly.modules["markets"].goods_market
+
+    @property
+    def economy(self):
+        """The port over the agent economy (the markets module's)."""
+        return self.assembly.modules["markets"].economy
 
     # ---- the book and the year's flows ----
 

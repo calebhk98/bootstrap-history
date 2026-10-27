@@ -14,7 +14,7 @@ from sim.diffusion.api import NoteFirstRuns
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionWorld
 from sim.prices import prices
-from sim.engine import economy_port_actors
+from sim.markets import port_actors
 from sim.tests import prices_stand_in
 from sim.engine.state import ActorRecord, ActorsState
 from sim.engine.view_share import ViewShareMixin
@@ -295,8 +295,8 @@ class NotedSales(unittest.TestCase):
     def test_each_note_is_a_lookup_not_a_scan_of_the_sales(self):
         sales, index = self.CountingList(), [None, 0, {}]
         for number in range(60):
-            economy_port_actors.note_sale(sales, "firm:%03d" % number, "wheat", 1.0, None, index)
-        economy_port_actors.note_sale(sales, "firm:007", "wheat", 2.0, [("node_a", 1.0)], index)
+            port_actors.note_sale(sales, "firm:%03d" % number, "wheat", 1.0, None, index)
+        port_actors.note_sale(sales, "firm:007", "wheat", 2.0, [("node_a", 1.0)], index)
         self.assertLessEqual(self.CountingList.scans, 2)
         self.assertEqual(len(sales), 60)
         seventh = [sale for sale in list(sales) if sale["seller"] == "firm:007"][0]
@@ -304,9 +304,9 @@ class NotedSales(unittest.TestCase):
 
     def test_a_list_rebuilt_elsewhere_is_indexed_again(self):
         sales, index = [], [None, 0, {}]
-        economy_port_actors.note_sale(sales, "a", "wheat", 1.0, None, index)
+        port_actors.note_sale(sales, "a", "wheat", 1.0, None, index)
         rebuilt = [dict(sale) for sale in sales]
-        economy_port_actors.note_sale(rebuilt, "a", "wheat", 1.0, None, index)
+        port_actors.note_sale(rebuilt, "a", "wheat", 1.0, None, index)
         self.assertEqual([sale["tonnes"] for sale in rebuilt], [2.0])
 
 

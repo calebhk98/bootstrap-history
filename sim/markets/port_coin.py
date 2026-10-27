@@ -11,8 +11,8 @@ from sim import cache_root
 from sim.economy import api as economy_api
 
 from sim.prices.api import solve_cache
-from .economy_port_key import SPIN_UP_SOURCE_MODULES, setup_digest
-from .economy_port_setup import build_setup
+from .port_key import SPIN_UP_SOURCE_MODULES, setup_digest
+from .port_setup import build_setup
 
 MARGIN_CACHE_DIRECTORY = cache_root.cache_directory("backing_margin")
 

@@ -1,14 +1,15 @@
-"""The one door between the engine and the economy.
+"""The markets module's port over the agent economy.
 
 The tree, the founder, projects, actors and screens ask this port about prices, wages, rates, money
 and what a concern takes, and post their purchases, sales and hires through it. They do not read
 the price tables, the coin stock or the market book directly, so the model behind the port can
-change without them knowing. This is the only engine module that may import `sim.economy`;
+change without them knowing. The port files (port*.py) are the only code that imports `sim.economy`;
 the agent economy answers, and the engine's own opening figures answer
-while it opens.
+while it opens. The port reads the game through `PortWorld` (port_world.py).
 """
-from . import opening_money
 from sim.production.api import node_upkeep
+
+from .commands import RepriceOpeningMoney
 
 
 class EconomyPort:
@@ -18,12 +19,17 @@ class EconomyPort:
         self._sim = sim
         self._agent = None
 
-    # ---- the agent economy (economy_port_year.py), the game's one economy ---------------------------
+    @property
+    def world(self):
+        """What the port reads of the game (port_world.py)."""
+        return self._sim
+
+    # ---- the agent economy (port_year.py), the game's one economy ---------------------------
     @property
     def agent(self):
         """The game's agent economy (it opens when first asked, or at the game's start)."""
         if self._agent is None:
-            from .economy_port_year import AgentEconomy
+            from .port_year import AgentEconomy
             self._agent = AgentEconomy(self._sim)
         return self._agent
 
@@ -81,7 +87,7 @@ class EconomyPort:
     def unskilled_wage(self):
         """Money one hour of the unskilled trade is paid in the agent economy, or None until the game's money is
         priced at the economy (the economy's opening reprices it, see reprice_opening_money)."""
-        if not self._sim.view("money_from_economy")() or self._opening:
+        if not self._sim.money_from_economy() or self._opening:
             return None
         agent = self._answering_agent()
         return None if agent is None else agent.unskilled_wage_per_hour()
@@ -225,7 +231,7 @@ class EconomyPort:
         agent = self._answering_agent()
         if agent is not None:
             return agent.fleet_goods(buyer)
-        from .economy_port_setup import _load, allowed_entries
+        from .port_setup import _load, allowed_entries
         from sim.prices.api import prices as price_solver
         production = price_solver.default_production_entries()
         lives = _load("world", "service_lives.json").get("years", {})
@@ -276,12 +282,12 @@ class EconomyPort:
             self._agent.flush_record()
 
     def health(self, metals=(), staple=None):
-        """The agent economy's health figures over the years this game has played (economy_port_health.py);
+        """The agent economy's health figures over the years this game has played (port_health.py);
         None while the economy opens."""
         agent = self.agent
         if agent is None:
             return None
-        from .economy_port_health import health_report
+        from .port_health import health_report
         return health_report(agent, metals, staple)
 
     def spin_up_result(self):
@@ -297,7 +303,7 @@ class EconomyPort:
         agent = self.agent
         if agent is None:
             return
-        priced = self._sim.view("money_from_economy")()
+        priced = self._sim.money_from_economy()
         if priced and agent.opened():
             return
         before = None if priced else self._sim.labour.money_per_labour_hour()
@@ -308,12 +314,12 @@ class EconomyPort:
             finally:
                 self._opening = False
         if not priced:
-            opening_money.reprice_opening_money(self._sim, before)
+            self._sim.send(RepriceOpeningMoney(before))
 
     # ---- goods and labour: the two market facades ------------------------------------------
     @property
     def goods(self):
-        """The goods market every buyer and seller asks (goods_market_api.GoodsMarket)."""
+        """The goods market every buyer and seller asks (goods_market.GoodsMarket)."""
         return self._sim.goods_market
 
     @property
@@ -323,7 +329,7 @@ class EconomyPort:
 
     def material_price(self, material):
         """Money for one tonne of a material at today's market quote; 0.0 when it has no price."""
-        quote = self._sim.material_purchase_cost(material, 1.0)
+        quote = self.purchase_cost(material, 1.0)
         return 0.0 if quote is None else quote[0]
 
     def material_prices(self):
@@ -346,13 +352,13 @@ class EconomyPort:
 
     def trade_quote(self, material):
         """The market's quote for a material (buy and sell terms), or None if it has no price."""
-        return self._sim.material_trade_quote(material)
+        return self.goods.quote(material)
 
 
     def purchase_cost(self, material, tonnes, already=0.0):
         """(money, mean money per tonne) to buy `tonnes` more, given `already` bought this year;
         None when the material has no price."""
-        return self._sim.material_purchase_cost(material, tonnes, already)
+        return self.goods.quote_buy(material, tonnes, already)
 
     # ---- money --------------------------------------------------------------------------------
     def cost_scale(self):
@@ -408,13 +414,3 @@ class EconomyPort:
         """What a project costs to carry out now."""
         return self._sim.project_cost(node_id)
 
-
-class EconomyPortMixin:
-    """Gives `Sim` its port as `sim.economy`. Not saved: it holds nothing but the simulation."""
-
-    @property
-    def economy(self):
-        port = self.__dict__.get("_economy_port")
-        if port is None:
-            port = self.__dict__["_economy_port"] = EconomyPort(self)
-        return port

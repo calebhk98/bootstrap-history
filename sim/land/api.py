@@ -2,7 +2,7 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import AdvanceColonies, FoundColony, TransferTile
+from .commands import AdvanceColonies, FinishWays, FoundColony, TransferTile
 from .reference import install_reference_crop_technique
 from . import rules
 

@@ -6,12 +6,13 @@ test_complaint_147_project_materials."""
 
 QUICK_TOPIC = True
 
+from sim.tests import market_stand_in
 from types import SimpleNamespace
 
 from .harness import check
 
 from sim.engine.economy import EconomyMixin
-from sim.engine.goods_market_api import GoodsMarket
+from sim.markets.goods_market import GoodsMarket
 from sim.markets.module import Markets
 from sim.tests import finance_host, module_harness
 from sim.materials.api import SettleProjectMaterials as SettleCommand
@@ -71,7 +72,7 @@ check("a material nobody sells is refused", _quote_material(unpriced, {"material
 # ---- the material cost reaches the market's quote
 asked = []
 game = SimpleNamespace(goods_market=SimpleNamespace(quote_buy=lambda material, tonnes, already: asked.append((material, tonnes, already)) or (1.0, 1.0)))
-module_harness.build(Markets, views={"legacy_game": game}).purchase_quote("coal_kg", 3.0, 2.0)
+market_stand_in.markets_over(goods_market=game.goods_market).purchase_quote("coal_kg", 3.0, 2.0)
 check("the bill's price of an order is the goods market's quote for it", asked == [("coal_kg", 3.0, 2.0)], asked)
 
 # ---- why shows the engine's cost

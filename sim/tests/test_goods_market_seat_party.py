@@ -2,7 +2,7 @@
 leaves out only the asking seat's orders (small fixture, no game)."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.agents_port_household import HouseholdPort
-from sim.engine.goods_market_api import GoodsMarket
+from sim.markets.goods_market import GoodsMarket
 from sim.markets.module import Markets
 from sim.markets.state import MarketsWorld
 from sim.tests import module_harness

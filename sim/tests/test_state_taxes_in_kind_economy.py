@@ -10,7 +10,7 @@ from .harness import check
 
 from sim.actors.world_revenue import RevenueView
 from sim.tests.world_stand_in import fake_needs
-from sim.engine.economy_port_year import AgentEconomy
+from sim.markets.port_year import AgentEconomy
 
 GOOD = "cloth_kg"
 UNITS_BY_TILE = {"a": {GOOD: 4000.0, "wheat_kg": 9000.0}, "b": {GOOD: 1000.0}, "far": {GOOD: 7000.0}}

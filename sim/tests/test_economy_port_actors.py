@@ -8,7 +8,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import economy_port_actors as actors_port
+from sim.markets import port_actors as actors_port
 
 GRAIN, FARMS, COIN = "grain_kg", "farms", "coin"
 

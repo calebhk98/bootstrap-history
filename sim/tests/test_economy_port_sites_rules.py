@@ -1,10 +1,10 @@
-"""economy_port_sites.site_limits and deplete on stub deposits: the seat's found deposits plus the partner economies' tiles, one limit a tile
+"""port_sites.site_limits and deplete on stub deposits: the seat's found deposits plus the partner economies' tiles, one limit a tile
 in runs of ore a year, and what the firms raised drawn from the tile's deposits, most left first (Complaint 416)."""
 import types
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine import economy_port_sites
+from sim.markets import port_sites
 
 QUICK_TOPIC = True
 
@@ -41,7 +41,7 @@ ORE_KG_PER_RUN = 50.0
 outputs = {"iron_ore_kg": {"iron_ore_kg": ORE_KG_PER_RUN}, "wheat_kg": {"wheat_kg": 1.0}}
 stub = StubSim(found=[deposit_row("a1", "tile_a", 10.0), deposit_row("a2", "tile_a", 5.0), deposit_row("w", "tile_w", 0.0)],
                partner=[deposit_row("p1", "tile_p", 20.0, grade_kg_per_tonne=250.0), deposit_row("q1", "tile_q", 99.0)])
-all_limits = economy_port_sites.site_limits(stub, outputs, ("tile_p",))
+all_limits = port_sites.site_limits(stub, outputs, ("tile_p",))
 limits = {limit.tile: limit for limit in all_limits}
 check("the ore recipe is sited on the seat's found tiles and the economy's partner tiles, and nowhere else",
       set(limits) == {"tile_a", "tile_w", "tile_p"} and all(limit.recipe_id == "iron_ore_kg" for limit in all_limits),
@@ -56,11 +56,11 @@ check("a tile whose deposits are worked out keeps a limit of nothing, so the rec
 # --- what the firms raised is drawn from the tile's deposits, the one with most left first.
 drawing = StubSim(found=[deposit_row("small", "tile_a", 1.0, remaining_tonnes=10.0),
                          deposit_row("big", "tile_a", 1.0, remaining_tonnes=500.0)], partner=[])
-economy_port_sites.deplete(drawing, {("iron_ore_kg", "tile_a"): 4000.0}, outputs)
+port_sites.deplete(drawing, {("iron_ore_kg", "tile_a"): 4000.0}, outputs)
 raised_ore_tonnes = 4000.0 * ORE_KG_PER_RUN / 1000.0
 check("firms' ore is drawn from the tile's deposit with most left first, in tonnes of the resource",
       drawing.drawn == [("big", raised_ore_tonnes / 2.0)], drawing.drawn)
 drawing.drawn.clear()
-economy_port_sites.deplete(drawing, {("iron_ore_kg", "tile_a"): 40000.0}, outputs)
+port_sites.deplete(drawing, {("iron_ore_kg", "tile_a"): 40000.0}, outputs)
 check("when the first deposit is emptied the next is drawn, and no deposit is drawn below nothing",
       drawing.drawn == [("big", 500.0), ("small", 10.0)], drawing.drawn)

@@ -28,3 +28,9 @@ class FoundColony(Command):
 	settlement level. Answers {tile, settlers, cost, text}, or a Refusal whose cause is tile_held, unreachable,
 	no_settlement_work, too_few_people or cannot_afford."""
 	tile: str
+
+
+@dataclass(frozen=True)
+class FinishWays(Command):
+	"""Open the ways whose build time has passed, so routes, reach and the economy's carriage see them (the works register finishes
+	on the same beat). Sent at the start of the market phase; answers nothing."""

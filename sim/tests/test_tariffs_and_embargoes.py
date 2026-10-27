@@ -14,7 +14,7 @@ from sim.agents import relations
 from sim.agents.trader import route_terms
 from sim.economy.tariffs import duty_transfers
 from sim.economy.types import EDGE_EXTERNAL
-from sim.engine import trade_duty
+from sim.markets import trade_duty
 from sim.actors.world_trade import TradeView
 from sim.engine.mod_stores import StoreBook
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
@@ -31,9 +31,16 @@ def _stores():
     return StoreBook({})
 
 
+def _border_terms(sim):
+    """What the `border_terms` view answers: the relations store's tariff and embargo of one country toward another."""
+    return lambda destination, source: (relations.tariff_on(sim.stores, destination, source),
+                                        relations.embargoes(sim.stores, destination, source))
+
+
 def _priced_game():
     sim = _fake_sim(home_prices={}, partner_makes={"cassia_kg"}, partner_prices={"cassia_kg": 50.0})
     sim.stores, sim.civ = _stores(), {"id": "rome"}
+    sim.border_terms = _border_terms(sim)
     return sim
 
 
@@ -110,6 +117,9 @@ class _Sim:
         self.stores, self.civ = _stores(), {"id": "rome"}
         self.prices = prices
 
+    def border_terms(self, destination, source):
+        return _border_terms(self)(destination, source)
+
     def foreign_economies(self):
         return [place for place in self.prices if place != "rome"]
 
@@ -172,8 +182,8 @@ class MerchantsSeeTheCharge(unittest.TestCase):
 
 class TradeDutyReads(unittest.TestCase):
 
-    def test_a_game_without_stores_charges_nothing(self):
-        self.assertEqual(trade_duty.terms(types.SimpleNamespace(), "rome", "han"), (0.0, False))
+    def test_a_pair_the_store_has_no_record_of_charges_nothing(self):
+        self.assertEqual(trade_duty.terms(_Sim({}), "rome", "han"), (0.0, False))
 
     def test_a_country_charges_nothing_on_itself(self):
         sim = _Sim({})

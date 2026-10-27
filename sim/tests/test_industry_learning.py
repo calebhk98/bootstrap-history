@@ -129,7 +129,7 @@ class ConcernInputs(unittest.TestCase):
 class PortListing(unittest.TestCase):
 
     def test_the_port_lists_each_good_with_the_tiles_and_recipes_that_make_it(self):
-        from sim.engine.economy_port_year import AgentEconomy
+        from sim.markets.port_year import AgentEconomy
         from sim.economy.producers import Producer
         from sim.economy.types import Recipe
         recipes = {"dig": Recipe("dig", {"ore": 1000.0}, {}, {"miner": 40.0}),

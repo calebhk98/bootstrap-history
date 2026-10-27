@@ -381,7 +381,7 @@ def _import_declaring_modules():
                    "sim.economy.producers_close",
                    "sim.economy.tile_costs",
                    "sim.economy.year_labour",
-                   "sim.engine.economy_port_year"):
+                   "sim.markets.port_year"):
         try:
             __import__(module)
         except Exception as exc:                      # noqa: BLE001

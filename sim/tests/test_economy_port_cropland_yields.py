@@ -1,11 +1,11 @@
-"""`economy_port_setup.cropland_yields`: only the recipes that grow on arable land carry a tile's yield factor, one per
+"""`port_setup.cropland_yields`: only the recipes that grow on arable land carry a tile's yield factor, one per
 tile; pasture, forest and mine recipes do not. Hand-written production entries and tiles; no game."""
 QUICK_TOPIC = True
 
 import unittest
 
 from sim.economy.setup import recipe_tile_key
-from sim.engine import economy_port_setup
+from sim.markets import port_setup
 from sim.economy.types import TileSpec
 
 PRODUCTION = {"wheat": {"extracted_from": "arable land"},
@@ -21,7 +21,7 @@ def tiles():
 
 class CroplandYieldsTests(unittest.TestCase):
     def setUp(self):
-        self.yields = economy_port_setup.cropland_yields(PRODUCTION, PRODUCTION, tiles())
+        self.yields = port_setup.cropland_yields(PRODUCTION, PRODUCTION, tiles())
 
     def test_a_crop_recipe_carries_each_tiles_fertility(self):
         self.assertEqual(self.yields[recipe_tile_key("wheat", "good")], 1.4)

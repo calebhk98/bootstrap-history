@@ -10,7 +10,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.production import node_upkeep
-from sim.engine.economy_port import EconomyPort
+from sim.markets.port import EconomyPort
 from sim.markets.rules import seller_revenue_factor
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
 from sim.tests import production_host

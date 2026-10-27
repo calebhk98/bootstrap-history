@@ -1,23 +1,29 @@
 """The markets module's spec (sim/assembly).
 
 The module owns the book, the year's flows, the agent economy's record and the money flag (`MarketsWorld`), the clearing, the
-goods categories, household demand and the market ceiling's attribution. The engine's goods market and the port over the agent
-economy have not moved into the package yet, so the module reaches them through `legacy_game` and every view it publishes is
-uncached: they write the flows and the record in place."""
+goods categories, household demand and the market ceiling's attribution. The module builds the goods market and the port over the
+agent economy (they read the game through the views declared here, port_world.py), and every view it publishes is uncached: they
+write the flows and the record in place."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.demography.api import RecordFoodEaten
-from sim.foreign_trade.api import ClosePartnerBooks
+from sim.diffusion.api import NoteFirstRuns
+from sim.foreign_trade.api import ClosePartnerBooks, SettleFlow, SettleTraderCargo
+from sim.land.api import FinishWays
+from sim.ledger.api import ChangeStock, PayEdge, ReceiveFromEdge
 from sim.reporting.api import CloseRealOutput
+from sim.resources.api import DrawDeposit, FellTimber, RegrowTimber
 
 from .commands import (BuyMaterial, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale, NoteDraw,
-                       NotePurchase, OpenMarketBook, RenameMarketSeat, ResetDraws, ResetMarketCaches, SellMaterial)
+                       NotePurchase, OpenMarketBook, RenameMarketSeat, RepriceOpeningMoney, ResetDraws, ResetMarketCaches,
+                       SellMaterial)
 from .module import Markets
 from .state import MarketsWorld
 
 READS_BY_OWNER = {
-	"core": ("legacy_game", "year", "civilisation", "output_factor", "opening_farmed_hectares", "household_demand_units"),
+	"core": ("year", "civilisation", "game_config", "legacy_tree", "output_factor", "opening_farmed_hectares", "household_demand_units",
+	         "price_index", "legacy_act_as"),
 	"seats": ("seat_list",),
-	"demography": ("population_total", "pop_scale", "default_population", "farm_holdings"),
+	"demography": ("population", "population_total", "pop_scale", "default_population", "farm_holdings"),
 	"actors": ("concern_versions", "concern_counts"),
 	"mechanics": ("effect_factor",),
 	"knowledge": ("tree_nodes", "done_year", "techniques_granted"),
@@ -27,7 +33,24 @@ READS_BY_OWNER = {
 	"materials": ("material_commodity",),
 	"reporting": ("real_output_per_head",),
 	"workforce": ("labour_market", "money_per_labour_hour"),
-	"production": ("workshop_output", "concern_market"),
+	"production": ("workshop_output", "concern_market", "concern_book_offer", "concern_book_inputs_cost", "concern_takings",
+	               "node_output_market_factor", "techniques_in_use"),
+	# what the port and the goods market read of the game (port_world.py)
+	"port: seats and actors": ("legacy_seats", "legacy_projects", "legacy_improvements", "legacy_world_map", "legacy_edge_account",
+	                           "cast", "cast_state", "actor_world", "state_treasury", "state_reach", "acting_country"),
+	"port: workforce": ("base_tile", "farming_technique", "wage", "settlement_tiles", "labour_need_shares", "trade_registry",
+	                    "hours_per_person_year"),
+	"port: money and prices": ("market_rate", "credit_room", "credit_line_sought", "debt_bondage_term_years", "home_coin_stock",
+	                           "price_tables", "material_price", "material_commodity_map", "material_market_tonnes", "goods_stock",
+	                           "commodity_materials", "not_traded_materials", "material_serves_a_need", "can_pay", "project_cost",
+	                           "real_output_hours", "literacy", "held_techniques", "techniques_spread", "mechanic"),
+	"port: foreign trade and freight": ("foreign_economies", "partner", "partner_facts", "partners_in_agent_economy", "civilisation_record",
+	                                    "foreign_supply_tonnes", "lift_left_tonnes", "partner_price_per_unit", "actors_carry",
+	                                    "cargo_legs", "foreign_route", "freight_mode_costs", "material_carriage_per_tonne",
+	                                    "trader_margin_share", "cargo_lost_share", "trader_cycle_years", "trader_agent_cost",
+	                                    "partner_price_level", "partner_coin_opening", "foreign_coin_partner_units", "border_terms"),
+	"port: land, farm and resources": ("farm_sites", "farm_weather", "harvest_weather", "externality_yield_factors", "tile_owner_map",
+	                                   "tiles_owned_by", "timber_felled", "found_deposits", "partner_deposits"),
 }
 
 _LIVE = dict(cached=False)
@@ -52,7 +75,7 @@ _VIEWS = (
 	("fleet_goods", QUOTE), ("economy_output_value", None), ("coin_stock_value", None),
 	("market_entry", KEYED), ("goods_category_ratios", QUOTE), ("essential_price_ratio", None),
 	("market_absorption_by_category", QUOTE), ("legacy_market_flows", None), ("legacy_agent_economy", None),
-	("money_from_economy", None),
+	("money_from_economy", None), ("unit_mass_kg", QUOTE), ("border_duty_per_tonne", QUOTE),
 )
 
 
@@ -71,5 +94,6 @@ MODULE_SPECS = (ModuleSpec(
 	         (SellMaterial, "sell_material")),
 	phases=(PhaseHook("market", "step_market"),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(RecordFoodEaten, ClosePartnerBooks, CloseRealOutput),
+	sends=(RecordFoodEaten, ClosePartnerBooks, CloseRealOutput, FinishWays, RepriceOpeningMoney, PayEdge, ReceiveFromEdge, ChangeStock,
+	       SettleFlow, SettleTraderCargo, FellTimber, RegrowTimber, DrawDeposit, NoteFirstRuns),
 ),)

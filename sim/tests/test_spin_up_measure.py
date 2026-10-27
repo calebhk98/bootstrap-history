@@ -7,14 +7,14 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import economy_port_year, spin_up_gap
+from sim.markets import port_year, spin_up_gap
 from sim.book import Book, GoodsMove
 from sim.economy import year_close
 from sim.economy.spin_up_state import spin_up_state as year_state_of   # a pure read of a record, not a builder
 from sim.economy.households_cohort import Cohort
 
-FULL_GAME = {key: value for key, value in os.environ.items() if key != economy_port_year.SPIN_UP_YEARS_ENV}
-TOLERANCE = economy_port_year.SPIN_UP_TOLERANCE
+FULL_GAME = {key: value for key, value in os.environ.items() if key != port_year.SPIN_UP_YEARS_ENV}
+TOLERANCE = port_year.SPIN_UP_TOLERANCE
 
 
 class ChangeGapTests(unittest.TestCase):
@@ -69,19 +69,19 @@ class FinalResultTests(unittest.TestCase):
 
     def test_the_result_is_settled_only_when_the_final_window_is(self):
         steady = [_state() for _year in range(4)]
-        result = economy_port_year.AgentEconomy.final_result(self.first, steady, 22)
+        result = port_year.AgentEconomy.final_result(self.first, steady, 22)
         self.assertTrue(result["settled"])
         self.assertEqual(result["years"], 22)
         self.assertEqual(result["measured_years"], 4)
         self.assertEqual(result["first_stage"], self.first)
         self.assertEqual(result["final"]["real_output"], 100.0)
         moving = steady[:3] + [_state(real_output=200.0)]
-        result = economy_port_year.AgentEconomy.final_result(self.first, moving, 22)
+        result = port_year.AgentEconomy.final_result(self.first, moving, 22)
         self.assertFalse(result["settled"])
         self.assertAlmostEqual(result["gap"], 1.0)
 
     def test_a_final_state_with_too_few_years_to_compare_is_not_settled(self):
-        result = economy_port_year.AgentEconomy.final_result(self.first, [_state()], 8)
+        result = port_year.AgentEconomy.final_result(self.first, [_state()], 8)
         self.assertFalse(result["settled"])
         self.assertEqual(result["measured_years"], 1)
 
@@ -97,7 +97,7 @@ class StopRuleTests(unittest.TestCase):
             return types.SimpleNamespace(basket_price_level=1.0, prices={"wheat_kg": 1.0})
         economy.step = step
         with mock.patch.dict(os.environ, FULL_GAME, clear=True):
-            result = economy_port_year.AgentEconomy._settle(economy, object(), ["wheat_kg"])
+            result = port_year.AgentEconomy._settle(economy, object(), ["wheat_kg"])
         self.assertTrue(result["settled"])
 
 
@@ -105,19 +105,19 @@ class OrderTests(unittest.TestCase):
     def test_the_recorded_result_is_measured_after_the_workforce_is_trimmed_and_trimmed_again_before_play(self):
         calls = []
         window = [_state() for _year in range(4)]
-        agent = economy_port_year.AgentEconomy.__new__(economy_port_year.AgentEconomy)
+        agent = port_year.AgentEconomy.__new__(port_year.AgentEconomy)
         agent._economy = types.SimpleNamespace(setup=types.SimpleNamespace(opening_prices={}, working_share=0.5))
-        api = economy_port_year.economy_api
+        api = port_year.economy_api
         first = {"settled": True, "years": 3, "gap": 0.0}
         with mock.patch.object(api, "opening_quantities", lambda economy: {}), \
-                mock.patch.object(economy_port_year.economy_port_sites, "crop_yields", lambda economy: {}), \
+                mock.patch.object(port_year.port_sites, "crop_yields", lambda economy: {}), \
                 mock.patch.object(api, "trim_workforce_to_expected_hours", lambda economy: calls.append("trim")), \
                 mock.patch.object(api, "finish_spin_up", lambda economy: calls.append("finish")), \
                 mock.patch.object(api, "note_spin_up_result",
                                   lambda economy, result: calls.append(("note", result))), \
-                mock.patch.object(economy_port_year.AgentEconomy, "_settle",
+                mock.patch.object(port_year.AgentEconomy, "_settle",
                                   staticmethod(lambda economy, inputs, watched: calls.append("settle") or first)), \
-                mock.patch.object(economy_port_year.AgentEconomy, "_settle_trimmed",
+                mock.patch.object(port_year.AgentEconomy, "_settle_trimmed",
                                   staticmethod(lambda economy, inputs, watched: calls.append("trimmed") or window)):
             agent._spin_up()
         self.assertEqual(calls[:5], ["settle", "trim", "trimmed", "trim", "finish"])

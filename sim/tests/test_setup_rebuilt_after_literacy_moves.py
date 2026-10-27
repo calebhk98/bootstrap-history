@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.economy import households
-from sim.engine.economy_port_setup import LITERACY_FIELDS, society_at_opening
+from sim.markets.port_setup import LITERACY_FIELDS, society_at_opening
 
 NEED_DATA = {"needs": {
     "food": {"subsistence_per_capita_per_year": 100.0, "surplus_budget_share": 0.5},

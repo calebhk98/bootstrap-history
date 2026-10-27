@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.economy_port import EconomyPort
+from sim.markets.port import EconomyPort
 from sim.reporting.api import CloseRealOutput, ReportingWorld, output_rules
 from sim.reporting.module import Reporting
 from sim.tests import module_harness

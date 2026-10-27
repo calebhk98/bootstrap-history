@@ -1,7 +1,7 @@
 """The cached spin-ups (the agent economy's hidden years) are keyed on
 what they start from and on the source that runs them, and on nothing else.
 
-sim/engine/economy_port_key.py.
+sim/markets/port_key.py.
 """
 QUICK_TOPIC = True
 
@@ -14,7 +14,8 @@ from typing import Any, Dict
 
 from sim.prices import solve_cache
 
-from sim.engine import economy_port_key, source_closure
+from sim.engine import source_closure
+from sim.markets import port_key
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
@@ -36,11 +37,11 @@ def _write(root, relative, text):
 
 class SetupDigestTests(unittest.TestCase):
     def test_every_field_changes_the_key(self):
-        base = economy_port_key.setup_digest(_Setup())
-        self.assertEqual(base, economy_port_key.setup_digest(_Setup()))
+        base = port_key.setup_digest(_Setup())
+        self.assertEqual(base, port_key.setup_digest(_Setup()))
         for change in ({"civ_id": "china_100ad"}, {"working_hours_per_year": 2500.0},
                        {"prices": {"wheat": 1.1}}, {"world_map": {"tiles": [1, 3]}}):
-            self.assertNotEqual(base, economy_port_key.setup_digest(_Setup(**change)), change)
+            self.assertNotEqual(base, port_key.setup_digest(_Setup(**change)), change)
 
 
 class FloatNoiseTests(unittest.TestCase):
@@ -50,12 +51,12 @@ class FloatNoiseTests(unittest.TestCase):
     def test_a_last_place_float_difference_does_not_change_the_key(self):
         value, next_float = 0.0009109426184587683, 0.0009109426184587684
         self.assertNotEqual(value, next_float)
-        self.assertEqual(economy_port_key.setup_digest(_Setup(prices={"wheat": value})),
-                         economy_port_key.setup_digest(_Setup(prices={"wheat": next_float})))
+        self.assertEqual(port_key.setup_digest(_Setup(prices={"wheat": value})),
+                         port_key.setup_digest(_Setup(prices={"wheat": next_float})))
 
     def test_a_real_change_of_a_float_still_changes_the_key(self):
-        self.assertNotEqual(economy_port_key.setup_digest(_Setup(prices={"wheat": 1.0})),
-                            economy_port_key.setup_digest(_Setup(prices={"wheat": 1.000001})))
+        self.assertNotEqual(port_key.setup_digest(_Setup(prices={"wheat": 1.0})),
+                            port_key.setup_digest(_Setup(prices={"wheat": 1.000001})))
 
 
 class CoinTests(unittest.TestCase):
@@ -63,11 +64,11 @@ class CoinTests(unittest.TestCase):
     their coin share one spin-up."""
 
     def test_the_coin_does_not_change_the_spin_up_key(self):
-        self.assertEqual(economy_port_key.spin_up_key(_Setup()), economy_port_key.spin_up_key(_Setup(coin_per_unit=0.4)))
+        self.assertEqual(port_key.spin_up_key(_Setup()), port_key.spin_up_key(_Setup(coin_per_unit=0.4)))
 
     def test_the_coin_does_not_change_the_key_of_shortened_years_either(self):
-        self.assertEqual(economy_port_key.spin_up_key(_Setup(), (3, 2)),
-                         economy_port_key.spin_up_key(_Setup(coin_per_unit=0.4), (3, 2)))
+        self.assertEqual(port_key.spin_up_key(_Setup(), (3, 2)),
+                         port_key.spin_up_key(_Setup(coin_per_unit=0.4), (3, 2)))
 
 
 class _Map:
@@ -82,46 +83,46 @@ class ObjectContentTests(unittest.TestCase):
         first = _Setup(world_map=_Map("m", {"a": {"food": 1}}, os.path.join(ROOT, "data", "maps")))
         second = _Setup(world_map=_Map("m", {"a": {"food": 1}}, os.path.join(ROOT, "data", "maps")))
         self.assertIsNot(first.world_map, second.world_map)
-        self.assertEqual(economy_port_key.setup_digest(first), economy_port_key.setup_digest(second))
+        self.assertEqual(port_key.setup_digest(first), port_key.setup_digest(second))
 
     def test_a_different_map_gives_a_different_digest(self):
         first = _Setup(world_map=_Map("m", {"a": {"food": 1}}, ROOT))
         second = _Setup(world_map=_Map("m", {"a": {"food": 2}}, ROOT))
-        self.assertNotEqual(economy_port_key.setup_digest(first), economy_port_key.setup_digest(second))
+        self.assertNotEqual(port_key.setup_digest(first), port_key.setup_digest(second))
 
     def test_paths_inside_the_checkout_do_not_depend_on_where_it_is(self):
-        plain = economy_port_key._plain(os.path.join(ROOT, "data", "maps"))
+        plain = port_key._plain(os.path.join(ROOT, "data", "maps"))
         self.assertEqual(plain, os.path.join("data", "maps"))
 
     def test_a_memo_kept_on_the_map_does_not_change_the_digest(self):
         empty = _Setup(world_map=_Map("m", {"a": {"food": 1}}, ROOT))
         filled = _Setup(world_map=_Map("m", {"a": {"food": 1}}, ROOT))
         filled.world_map.__dict__["_route_rates"] = {"road": [1.0, 2.0]}
-        self.assertEqual(economy_port_key.setup_digest(empty), economy_port_key.setup_digest(filled))
+        self.assertEqual(port_key.setup_digest(empty), port_key.setup_digest(filled))
 
     def test_a_memo_pointing_back_at_its_map_is_keyed_without_walking_the_cycle(self):
         world_map = _Map("m", {"a": {"food": 1}}, ROOT)
         memo = _Map("memo", {}, ROOT)
         memo.world_map = world_map
         world_map.__dict__["_route_rates"] = memo
-        plain = economy_port_key._plain(_Setup(world_map=world_map))
+        plain = port_key._plain(_Setup(world_map=world_map))
         self.assertNotIn("_route_rates", plain["world_map"]["content"])
 
     def test_a_cycle_through_public_fields_is_refused(self):
         world_map = _Map("m", {}, ROOT)
         world_map.parent = world_map
         with self.assertRaises(TypeError):
-            economy_port_key.setup_digest(_Setup(world_map=world_map))
+            port_key.setup_digest(_Setup(world_map=world_map))
 
     def test_a_value_with_no_content_to_key_on_is_refused(self):
         with self.assertRaises(TypeError):
-            economy_port_key.setup_digest(_Setup(world_map=object()))
+            port_key.setup_digest(_Setup(world_map=object()))
 
     def test_a_plain_function_is_keyed_by_its_name_and_the_same_function_keys_alike(self):
         from sim.agents import api as agents_api
-        first = economy_port_key.setup_digest(_Setup(world_map=agents_api.evasion.hidden_share))
-        self.assertEqual(first, economy_port_key.setup_digest(_Setup(world_map=agents_api.evasion.hidden_share)))
-        self.assertNotEqual(first, economy_port_key.setup_digest(_Setup(world_map=agents_api.evasion.declared_income)))
+        first = port_key.setup_digest(_Setup(world_map=agents_api.evasion.hidden_share))
+        self.assertEqual(first, port_key.setup_digest(_Setup(world_map=agents_api.evasion.hidden_share)))
+        self.assertNotEqual(first, port_key.setup_digest(_Setup(world_map=agents_api.evasion.declared_income)))
 
 
 def _rule_one(rate, reach):
@@ -142,18 +143,18 @@ class RuleFieldTests(unittest.TestCase):
     """A setup may carry a rule (a function) the port hands in; it is keyed by what it is, not refused."""
 
     def test_a_setup_holding_a_function_is_keyed(self):
-        self.assertEqual(economy_port_key.setup_digest(_SetupWithRule()), economy_port_key.setup_digest(_SetupWithRule()))
+        self.assertEqual(port_key.setup_digest(_SetupWithRule()), port_key.setup_digest(_SetupWithRule()))
 
     def test_a_different_function_gives_a_different_key(self):
-        self.assertNotEqual(economy_port_key.setup_digest(_SetupWithRule()),
-                            economy_port_key.setup_digest(_SetupWithRule(hiding=_rule_two)))
+        self.assertNotEqual(port_key.setup_digest(_SetupWithRule()),
+                            port_key.setup_digest(_SetupWithRule(hiding=_rule_two)))
 
 
 class ScopedSourceTests(unittest.TestCase):
     def setUp(self):
         self.root = tempfile.mkdtemp(prefix="spin_up_key_")
         self.original_root = solve_cache._ROOT
-        self.original_modules = economy_port_key.SPIN_UP_SOURCE_MODULES
+        self.original_modules = port_key.SPIN_UP_SOURCE_MODULES
         for relative, text in {"data/a.json": "1", "sim/__init__.py": "",
                                "sim/engine/__init__.py": "",
                                "sim/engine/year.py": "from sim.economy import api\n",
@@ -161,20 +162,20 @@ class ScopedSourceTests(unittest.TestCase):
                                "sim/ui/__init__.py": "", "sim/ui/screen.py": "y = 1\n"}.items():
             _write(self.root, relative, text)
         solve_cache._ROOT = self.root
-        economy_port_key.SPIN_UP_SOURCE_MODULES = ("sim.engine.year",)
+        port_key.SPIN_UP_SOURCE_MODULES = ("sim.engine.year",)
         solve_cache.forget_environment_digest()
 
     def tearDown(self):
         solve_cache._ROOT = self.original_root
-        economy_port_key.SPIN_UP_SOURCE_MODULES = self.original_modules
+        port_key.SPIN_UP_SOURCE_MODULES = self.original_modules
         solve_cache.forget_environment_digest()
         shutil.rmtree(self.root, ignore_errors=True)
 
     def _key_after_edit(self, relative):
-        before = economy_port_key.spin_up_key(_Setup())
+        before = port_key.spin_up_key(_Setup())
         _write(self.root, relative, "z = 1\n")
         solve_cache.forget_environment_digest()
-        return before, economy_port_key.spin_up_key(_Setup())
+        return before, port_key.spin_up_key(_Setup())
 
     def test_editing_the_ui_keeps_the_key(self):
         before, after = self._key_after_edit("sim/ui/screen.py")
@@ -186,20 +187,20 @@ class ScopedSourceTests(unittest.TestCase):
             self.assertNotEqual(before, after, relative)
 
     def test_a_setup_input_changes_the_key(self):
-        self.assertNotEqual(economy_port_key.spin_up_key(_Setup()),
-                            economy_port_key.spin_up_key(_Setup(working_hours_per_year=2500.0)))
+        self.assertNotEqual(port_key.spin_up_key(_Setup()),
+                            port_key.spin_up_key(_Setup(working_hours_per_year=2500.0)))
 
 
 class RealClosureTests(unittest.TestCase):
     def test_the_spin_up_closure_holds_the_economy_and_not_the_ui(self):
-        files = source_closure.source_files(ROOT, economy_port_key.SPIN_UP_SOURCE_MODULES)
+        files = source_closure.source_files(ROOT, port_key.SPIN_UP_SOURCE_MODULES)
         relative = {os.path.relpath(path, ROOT) for path in files}
-        self.assertIn(os.path.join("sim", "engine", "economy_port_year.py"), relative)
+        self.assertIn(os.path.join("sim", "markets", "port_year.py"), relative)
         self.assertIn(os.path.join("sim", "economy", "api.py"), relative)
         self.assertFalse([path for path in relative if path.startswith(os.path.join("sim", "ui") + os.sep)])
 
     def test_the_rules_the_port_hands_the_economy_are_in_the_closure(self):
-        files = source_closure.source_files(ROOT, economy_port_key.SPIN_UP_SOURCE_MODULES)
+        files = source_closure.source_files(ROOT, port_key.SPIN_UP_SOURCE_MODULES)
         relative = {os.path.relpath(path, ROOT) for path in files}
         self.assertIn(os.path.join("sim", "agents", "evasion.py"), relative)
 

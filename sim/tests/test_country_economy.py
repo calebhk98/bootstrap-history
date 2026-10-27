@@ -9,7 +9,7 @@ import unittest
 from sim.economy import api as economy_api
 from sim.economy import country_figures
 from sim.economy.year_close import foreign_agents
-from sim.engine.economy_port_country import CountryAnswers
+from sim.markets.port_country import CountryAnswers
 from sim.tests import economy_fixture as fixture
 from sim.tests.country_stand_in import COIN_PER_UNIT, HOME, HOME_TILES, NORTH, NORTH_TILES, two_country_economy
 

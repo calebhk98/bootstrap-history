@@ -40,7 +40,7 @@ def limits(sim, outputs_by_recipe, tile_ids):
     if not recipes:
         return []
     world_map = sim.world_map
-    felled = sim.view("timber_felled")()
+    felled = sim.timber_felled()
     hours_per_tonne_km = haul_hours_per_tonne_km(world_map)
     found = []
     for tile in sorted(tile_ids):

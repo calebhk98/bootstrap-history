@@ -1,6 +1,6 @@
 """The agent economy inside a game: opening it, its year, and what the engine's seams read.
 
-Part of the port (with economy_port.py and economy_port_setup.py, the only engine modules that import
+Part of the port (with economy_port.py and port_setup.py, the only engine modules that import
 `sim.economy`). Its whole state lives in the markets module's `agent_economy` record, so a saved game resumes the
 same economy. The engine's own price, wage and rate code asks `answers()`; while the economy opens (it
 reads the engine's own opening figures to build its setup) those figures answer instead.
@@ -20,55 +20,20 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              trade_premium, variable_cost_per_run)
 
 from sim.foreign_trade.api import SettleFlow, country_trade_years
-from . import trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities
+from . import trade_duty, port_bondage, port_levy, port_actors, port_cargo, port_cropland, port_flight, port_institutions, port_land, port_late, port_seats, port_sites
 from sim.materials.api import ProducerCapacityCache
-from .economy_port_key import spin_up_key
-from .economy_port_coin import priced_at_the_margin
-from .economy_port_setup import build_setup, opening_values
-from .economy_port_tiles import TilePricesMixin
-from .material_units import tonnes_per_unit
+from .port_key import spin_up_key
+from .port_coin import priced_at_the_margin
+from .port_setup import build_setup, opening_values
+from .port_tiles import TilePricesMixin
+from sim.world.material_units import tonnes_per_unit
 from sim.prices.api import prices as price_solver, solve_cache
+from .spin_up import (SPIN_UP_CACHE_DIRECTORY, SPIN_UP_MAXIMUM_YEARS, SPIN_UP_MEASURED_YEARS, SPIN_UP_TOLERANCE,  # noqa: F401
+                      SPIN_UP_TRIMMED_YEARS, SPIN_UP_YEARS_ENV, spin_up_years)
 from .spin_up_gap import SPIN_UP_RATE_FLOOR, change_gap, price_gap, window_gaps
 
 OUTCOMES_KEPT = 100   # yearly outcomes held in memory for the health figures
-SPIN_UP_CACHE_DIRECTORY = os.path.join(os.path.dirname(solve_cache.DEFAULT_CACHE_DIRECTORY), "agent_economy")
-SPIN_UP_TOLERANCE = declare(
-    "SPIN_UP_TOLERANCE", 0.02, kind="temporary_heuristic",
-    unit="largest yearly relative change of the price level and the main prices", source=None, confidence="D",
-    why="The hidden years before a game run until the economy stops moving more than this a year, so the "
-        "first year the player sees is the economy's own and not the price solver's. A looser figure "
-        "starts sooner and further from settled.")
-SPIN_UP_MAXIMUM_YEARS = declare(
-    "SPIN_UP_MAXIMUM_YEARS", 30, kind="temporary_heuristic",
-    unit="years", source=None, confidence="D",
-    why="A bound on the hidden years, so a economy that keeps moving still starts in a known time.")
-SPIN_UP_TRIMMED_YEARS = declare(
-    "SPIN_UP_TRIMMED_YEARS", 15, kind="temporary_heuristic",
-    unit="years", source=None, confidence="D",
-    why="After the workforce is trimmed to the hours employers want, the skilled trades need a few years for "
-        "wages to leave the market's ceiling and for entry to fill the thinned trades. Their wages swing by "
-        "multiples a year in thin labour markets and never meet a tolerance, so the stage is a fixed length, "
-        "as long as that takes and no longer (shorter lengths left trades glutted or the staffing wage "
-        "reference too high in some civilisations; found by trying lengths against the opening-workforce tests). "
-        "A model of hiring and training would derive it per trade.")
-SPIN_UP_MEASURED_YEARS = declare(
-    "SPIN_UP_MEASURED_YEARS", 4, kind="temporary_heuristic",
-    unit="consecutive final years", source=None, confidence="D", retire="Complaints/473",
-    why="The opening's reported `spin_up_result` compares this many consecutive last years of the trimmed stage "
-        "(one fewer changes), so one quiet year between swings is not read as settled.")
 SPIN_UP_WATCHED_GOODS = 12
-# `<first-stage years>,<trimmed years>` in this variable shortens the spin-up (the test suite sets it); the years
-# then enter the cache key, so a full game never reads a shortened record.
-SPIN_UP_YEARS_ENV = "ROME_SPIN_UP_YEARS"
-
-
-def spin_up_years():
-    """(most first-stage years, trimmed years): SPIN_UP_YEARS_ENV when set, else the declared bounds."""
-    named = os.environ.get(SPIN_UP_YEARS_ENV)
-    if named:
-        first, trimmed = (int(part) for part in named.split(","))
-        return first, trimmed
-    return int(SPIN_UP_MAXIMUM_YEARS), int(SPIN_UP_TRIMMED_YEARS)
 
 
 def _spin_up_cache_key(setup):
@@ -109,7 +74,7 @@ class AgentEconomy(TilePricesMixin):
 
     @property
     def stored(self):
-        return self._sim.view("legacy_agent_economy")()
+        return self._sim.agent_record()
 
     def spin_up_result(self):
         """The saved opening's first-stage result (see `_settle`); empty before the opening is saved."""
@@ -158,12 +123,12 @@ class AgentEconomy(TilePricesMixin):
     def admit_techniques(self):
         """Give the economy the entries the society's techniques now allow, when its held nodes changed since
         it last looked: they enter the saved opening (so a resumed game rebuilds them) and the live economy."""
-        held = economy_port_late.techniques_held(self._sim)
+        held = port_late.techniques_held(self._sim)
         if held == self._techniques_admitted:
             return
         self._techniques_admitted = held
         production = price_solver.default_production_entries()
-        grown = economy_port_late.opening_with_techniques(self._sim, self.stored["opening"], held, production)
+        grown = port_late.opening_with_techniques(self._sim, self.stored["opening"], held, production)
         if grown is None:
             return
         self.stored["opening"] = grown
@@ -218,29 +183,29 @@ class AgentEconomy(TilePricesMixin):
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
         economy = self.economy()
-        economy_port_cropland.follow_farm_sites(self._sim, economy.setup)
+        port_cropland.follow_farm_sites(self._sim, economy.setup)
         economy.setup.state_capacity = self._sim.state_reach()
         self.sync_ways()
         self.admit_techniques()
         orders = self._seat_orders()
         orders.update(self._external_orders())
-        from .material_units import tonnes_per_unit
+        from sim.world.material_units import tonnes_per_unit
         legs = self._sim.cargo_legs()
-        moves, cargo_orders, fundings = economy_port_cargo.cargo_orders(economy, legs, tonnes_per_unit)
+        moves, cargo_orders, fundings = port_cargo.cargo_orders(economy, legs, tonnes_per_unit)
         economy_api.move_goods(economy, moves)
         economy_api.post_transfers(economy, fundings)
         orders.update(cargo_orders)
         self._strike_state_coin(economy)
         sales, purchases = self._actor_trade_orders(orders)
         economy_api.watch_tiles(economy, self._seat_tiles())
-        outcome = economy.step(self._inputs(orders, economy_port_cargo.border_accounts(economy, legs)))
+        outcome = economy.step(self._inputs(orders, port_cargo.border_accounts(economy, legs)))
         self._floor_costs = {}
-        economy_port_bondage.settle_purchases(self._sim, economy, outcome)
-        economy_port_sites.deplete(self._sim, outcome.extraction, self._recipe_outputs())
+        port_bondage.settle_purchases(self._sim, economy, outcome)
+        port_sites.deplete(self._sim, outcome.extraction, self._recipe_outputs())
         self.outcomes.append(outcome)
         self._settle_actor_trade(sales, purchases)
         self._settle_seats()
-        self._sim.settle_trader_cargo(economy_port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
+        self._sim.settle_trader_cargo(port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
         self._note_off_map_trade(*self._settle_foreign_coin())
         self._answers = None
         self._country_answers = {}
@@ -250,9 +215,9 @@ class AgentEconomy(TilePricesMixin):
         self._note_volume_baseline()
         return outcome
 
-    # ---- firms', states' and traders' sales and purchases (economy_port_actors.py) ------------------
+    # ---- firms', states' and traders' sales and purchases (port_actors.py) ------------------
     def held_units(self, buyer, material):
-        return economy_port_actors.held_units(self.economy(), buyer, material)
+        return port_actors.held_units(self.economy(), buyer, material)
 
     def fleet_goods(self, buyer):
         economy = self.economy()
@@ -264,11 +229,11 @@ class AgentEconomy(TilePricesMixin):
                 and economy.setup.recipe_allowed(good, self._actor_tile(buyer))]
 
     def note_sale(self, seller, material, tonnes, from_concerns):
-        economy_port_actors.note_sale(self.stored.setdefault("sales", []), seller, material, tonnes, from_concerns,
+        port_actors.note_sale(self.stored.setdefault("sales", []), seller, material, tonnes, from_concerns,
                                       self.__dict__.setdefault("_sale_index", [None, 0, {}]))
 
     def note_purchase(self, buyer, commodity, tonnes, budget):
-        economy_port_actors.note_purchase(self.stored.setdefault("purchases", []), buyer, commodity, tonnes, budget)
+        port_actors.note_purchase(self.stored.setdefault("purchases", []), buyer, commodity, tonnes, budget)
 
     def forget_orders(self, actor_id):
         for kind, key in (("sales", "seller"), ("purchases", "buyer")):
@@ -302,22 +267,22 @@ class AgentEconomy(TilePricesMixin):
         known = sim.actors.actors
         sales = [sale for sale in self.stored.pop("sales", []) if sale["seller"] in known]
         purchases = [purchase for purchase in self.stored.pop("purchases", []) if purchase["buyer"] in known]
-        from .material_units import tonnes_per_unit
+        from sim.world.material_units import tonnes_per_unit
         view = economy.view()
 
         def reservation(seller, node_id, material, tile):
             return self._concern_reservation(node_id, material, tile, view, seller)
 
-        moves, sale_orders = economy_port_actors.sale_orders(economy, sales, tonnes_per_unit, self._actor_tile, reservation)
+        moves, sale_orders = port_actors.sale_orders(economy, sales, tonnes_per_unit, self._actor_tile, reservation)
         coin = economy.setup.coin_per_unit
-        purchase_orders, funding = economy_port_actors.purchase_orders(
+        purchase_orders, funding = port_actors.purchase_orders(
             economy, purchases, tonnes_per_unit, self._actor_tile, sim.economy.materials_in, coin)
         economy_api.move_goods(economy, moves)
         purses = sim.actors.state.purses
         for buyer, coin_spent, _units in funding:
             purses.transfer(buyer, COIN_EXCHANGE, coin_spent, "exchange")
             known[buyer].note_outlay("market purchases", coin_spent)
-        economy_port_actors.fund(economy, funding)
+        port_actors.fund(economy, funding)
         orders.update(sale_orders)
         orders.update(purchase_orders)
         return sales, purchases
@@ -325,7 +290,7 @@ class AgentEconomy(TilePricesMixin):
     def _settle_actor_trade(self, sales, purchases):
         """What the actors' sales fetched and their budgets left over turn back into their coin; the goods unsold go
         back out. Bought capital assets stay with their buyer and materials are used up."""
-        proceeds, refunds, _bought, delivered = economy_port_actors.close(self._economy, sales, purchases)
+        proceeds, refunds, _bought, delivered = port_actors.close(self._economy, sales, purchases)
         self._keep_deliveries(delivered)
         coin = self._economy.setup.coin_per_unit
         purses, known = self._sim.actors.state.purses, self._sim.actors.actors
@@ -411,7 +376,7 @@ class AgentEconomy(TilePricesMixin):
         partners = sim.foreign_economies()
         if not partners:
             return {}
-        from .material_units import tonnes_per_unit
+        from sim.world.material_units import tonnes_per_unit
         offers_api = sim.goods_market
         routes = {partner: offers_api._route_from(partner) for partner in partners}
         volumes = economy_api.traded_volumes(economy)
@@ -454,7 +419,7 @@ class AgentEconomy(TilePricesMixin):
         """Factor on a material's price once more tonnes land in its market or are taken out, from the book the
         market last cleared: at the port when no tile is named (the price the economy shows nationally), else on the
         tile's own area. None when the market has none."""
-        from .material_units import tonnes_per_unit
+        from sim.world.material_units import tonnes_per_unit
         per_unit = tonnes_per_unit(material)
         if not per_unit or per_unit <= 0.0 or material not in self.economy().area_map.goods():
             return None
@@ -472,7 +437,7 @@ class AgentEconomy(TilePricesMixin):
             if not metal_price:
                 continue
             held = (sim._partner_coin_opening_units(partner)
-                    + sim.view("foreign_coin_partner_units")[partner])
+                    + sim.foreign_coin_partner_units(partner))
             total += max(0.0, held) * standard["kg_per_unit"] * metal_price
         return total * PARTNER_SPEND_SHARE_PER_YEAR
 
@@ -508,10 +473,10 @@ class AgentEconomy(TilePricesMixin):
 
     def _settle_seats(self):
         """What each seat's goods fetched goes to its ledger, less what its concerns' inputs cost; what did not sell goes
-        back to the engine (economy_port_seats.settle_seats)."""
+        back to the engine (port_seats.settle_seats)."""
         offered = self.__dict__.pop("_seat_offered", {})
         inputs = self.__dict__.pop("_seat_inputs", {})
-        sold, takings = economy_port_seats.settle_seats(self._sim, self._economy, offered, inputs, EDGE_LEGACY)
+        sold, takings = port_seats.settle_seats(self._sim, self._economy, offered, inputs, EDGE_LEGACY)
         self.stored["seat_sales"] = {**self.stored.get("seat_sales", {}), **sold}
         self.stored["seat_takings"] = takings
 
@@ -520,7 +485,7 @@ class AgentEconomy(TilePricesMixin):
         price, else what the market's buyers took last year (concern_sales.outlook); None when the economy is not open."""
         if not self.opened():
             return None
-        return economy_port_seats.outlook(self.economy(), self.stored.get("seat_sales", {}), seat_id, material, quantity)
+        return port_seats.outlook(self.economy(), self.stored.get("seat_sales", {}), seat_id, material, quantity)
 
     def _inputs(self, engine_orders, border_accounts=((), ())) -> YearInputs:
         sim = self._sim
@@ -528,29 +493,29 @@ class AgentEconomy(TilePricesMixin):
         total = float(population.total)
         weather = sim._pooled_farm_weather_multiplier(sim.state.scenario.year, harmed=False)   # harm is applied per producer below
         economy = self._economy
-        harmed = externalities.yield_factors(sim, sim.state.scenario.year)
-        yields = economy_port_sites.crop_yields(economy, weather, sim.farm_weather_by_tile(sim.state.scenario.year))
-        yields = economy_port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
+        harmed = sim.externality_yield_factors(sim.state.scenario.year)
+        yields = port_sites.crop_yields(economy, weather, sim.farm_weather_by_tile(sim.state.scenario.year))
+        yields = port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
         entrant_share, attrition_share = working_age_turnover(population)
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
                           entrant_share=entrant_share, attrition_share=attrition_share,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
-                          labour_levy_hours_per_worker=economy_port_levy.levy_hours_per_worker(sim),
-                          debt_relief_tiles=economy_port_land.debt_relief_tiles(sim, economy),
-                          title_moves=economy_port_land.title_moves(sim, economy),
-                          farmed_forms=economy_port_land.farmed_forms(sim, economy),
-                          tax_rates=economy_port_land.tax_rates(sim),
-                          land_tax_share_of_rent=economy_port_land.land_tax_share_of_rent(sim),
-                          **economy_port_flight.flight_values(sim, economy),
-                          institutions=economy_port_institutions.held(sim),
-                          durable_users=tuple(economy_port_actors.held_account(buyer)
+                          labour_levy_hours_per_worker=port_levy.levy_hours_per_worker(sim),
+                          debt_relief_tiles=port_land.debt_relief_tiles(sim, economy),
+                          title_moves=port_land.title_moves(sim, economy),
+                          farmed_forms=port_land.farmed_forms(sim, economy),
+                          tax_rates=port_land.tax_rates(sim),
+                          land_tax_share_of_rent=port_land.land_tax_share_of_rent(sim),
+                          **port_flight.flight_values(sim, economy),
+                          institutions=port_institutions.held(sim),
+                          durable_users=tuple(port_actors.held_account(buyer)
                                               for buyer in sorted(sim.actors.actors)),
-                          bondage_tiles=economy_port_bondage.bondage_tiles(sim, economy),
-                          bonded_for_sale=economy_port_bondage.bonded_for_sale(sim, economy),
+                          bondage_tiles=port_bondage.bondage_tiles(sim, economy),
+                          bonded_for_sale=port_bondage.bonded_for_sale(sim, economy),
                           standing_bids=self._founder_standing_bids(), credit_asks=self._credit_asks(),
-                          site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs(), self._economy.setup.tiles)))
+                          site_limits=tuple(port_sites.site_limits(sim, self._recipe_outputs(), self._economy.setup.tiles)))
 
     def _credit_asks(self):
         """Each playing seat's credit line, as a request for the year's clearing: the line its name and earning
@@ -567,12 +532,12 @@ class AgentEconomy(TilePricesMixin):
         return tuple(asks)
 
     def _founder_standing_bids(self):
-        """The founder's year of draws on materials, as bids for firm entry to read (economy_port_actors.standing_bids)."""
+        """The founder's year of draws on materials, as bids for firm entry to read (port_actors.standing_bids)."""
         sim, seats = self._sim, self._sim.state.seats
         tiles = sorted(self._seat_tiles())
         if not tiles:
             return ()
-        return economy_port_actors.standing_bids(self._economy, sim._market_flows(), seats, tiles[0], tonnes_per_unit,
+        return port_actors.standing_bids(self._economy, sim._market_flows(), seats, tiles[0], tonnes_per_unit,
                                                  sim.economy.materials_in)
 
     def _seat_tiles(self):
@@ -596,7 +561,7 @@ class AgentEconomy(TilePricesMixin):
         prices = economy.setup.opening_prices
         watched = sorted(basket, key=lambda good: -basket[good] * prices.get(good, 0.0))[:SPIN_UP_WATCHED_GOODS]
         inputs = YearInputs(year=0, population_by_tile={}, working_age_share=economy.setup.working_share,
-                            yield_factor_by_producer=economy_port_sites.crop_yields(economy), engine_orders={})
+                            yield_factor_by_producer=port_sites.crop_yields(economy), engine_orders={})
         first_stage = self._settle(economy, inputs, watched)
         economy_api.trim_workforce_to_expected_hours(economy)
         final_states = self._settle_trimmed(economy, inputs, watched)
@@ -782,7 +747,7 @@ class AgentEconomy(TilePricesMixin):
         economy = self.economy()
         if country == economy.setup.civ_id or country not in economy.setup.countries():
             return None
-        from .economy_port_country import CountryAnswers
+        from .port_country import CountryAnswers
         year = self._sim.state.scenario.year
         book = self.stored.get("country_trade_by_year", {})
         answers = CountryAnswers(economy, country, lambda direction: country_trade_years.value(book, country, year - 1, direction))
@@ -825,7 +790,7 @@ class AgentEconomy(TilePricesMixin):
 
     def output_tonnes_by_tile(self):
         """Tonnes of each good the producers made on each tile last year."""
-        from .material_units import tonnes_per_unit
+        from sim.world.material_units import tonnes_per_unit
         return {tile: {good: units * tonnes_per_unit(good) for good, units in row.items()}
                 for tile, row in economy_api.output_by_tile(self.economy()).items()}
 

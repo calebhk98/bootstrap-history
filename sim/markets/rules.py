@@ -6,6 +6,11 @@ HOME_SELLER = "home"   # the seller id of the home society's own producers, as o
 MINIMUM_FLOOR_RATIO = 0.01   # the clearing searches between floor and ceiling in logs, so the floor stays above nothing
 
 
+def tonnes_sold(asked, held, market_room):
+	"""An order is cut to what is held and to what the market will still take this year."""
+	return min(asked, held, market_room)
+
+
 def seller_revenue_factor(price_ratio, quantity_ratio, active_sellers, income_factor=1.0):
 	"""One seller's revenue relative to day one: the category's price ratio times quantity ratio shared among the
 	active sellers, times `income_factor` (one for an essential category)."""

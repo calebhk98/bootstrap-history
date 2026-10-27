@@ -5,8 +5,8 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.goods_market_api import GoodsMarket
-from sim.engine.goods_market_pricing import GoodsPricing
+from sim.markets.goods_market import GoodsMarket
+from sim.markets.goods_pricing import GoodsPricing
 from sim.ui.proto import dispatch_money
 
 

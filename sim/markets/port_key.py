@@ -9,7 +9,7 @@ import types
 from sim.prices.api import solve_cache
 
 # The spin-up runs the port's year module and, through it, the economy package; the interface never loads.
-SPIN_UP_SOURCE_MODULES = ("sim.engine.economy_port_year",)
+SPIN_UP_SOURCE_MODULES = ("sim.markets.port_year",)
 
 
 KEY_FLOAT_DIGITS = 12

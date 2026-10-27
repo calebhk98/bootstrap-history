@@ -4,20 +4,18 @@ Part of the port. `long_run_costs.long_run_costs` at the opening wages, the mark
 stand-in; no price table, no demand, no income. The economy's markets then move prices off these.
 """
 from sim.prices.api import long_run_costs
-from . import need_substitutes
 from sim.prices.api import prices as price_solver
 
 
 def wage_function(sim, production):
     """Money an hour of each trade pays at the opening: the labour market's quote, or for a trade it has not
     met (a plant's builders) the training rule's ratio to the unskilled hour."""
-    from .data import TRADE_REGISTRY
     numeraire_trade = long_run_costs.solve_prices.NUMERAIRE_TRADE
     unskilled = sim.economy.labour.quote(numeraire_trade)
     ratios = price_solver.solver_wage_ratios(production, {})
 
     def wage_of(trade):
-        quote = sim.economy.labour.quote(trade) if trade in TRADE_REGISTRY else 0.0
+        quote = sim.economy.labour.quote(trade) if trade in sim.trade_registry else 0.0
         return quote if quote > 0.0 else unskilled * ratios.get(trade, 1.0)
     return wage_of
 
@@ -34,4 +32,4 @@ def opening_costs(sim):
     # A household good only a technique not yet held makes has no supplier at the opening, so it is seeded no
     # price that would draw demand to it; a founder's research or a partner's price brings it in.
     return {good: cost.cost for good, cost in costs.items()
-            if cost.cost > 0.0 and not (cost.provenance == "gated" and need_substitutes.serves_a_need(good))}
+            if cost.cost > 0.0 and not (cost.provenance == "gated" and sim.serves_a_need(good))}

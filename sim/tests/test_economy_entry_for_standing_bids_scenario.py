@@ -8,10 +8,10 @@ class RomeCarriersAreMakeableTests(unittest.TestCase):
     walk, so a Rome without it priced none of the three and no merchant could bid for a replacement."""
 
     def test_rome_prices_the_carriers_its_merchants_wear(self):
-        from sim.engine import economy_port_setup
+        from sim.markets import port_setup
         from sim.tests.harness import unopened_sim
         game = unopened_sim()
-        setup = economy_port_setup.build_setup(game)
+        setup = port_setup.build_setup(game.economy.world)
         for carrier in ("pack_saddle", "river_barge", "merchant_ship"):
             self.assertIn(carrier, setup.opening_prices, carrier)
 

@@ -6,7 +6,7 @@ import unittest
 from unittest import mock
 
 from sim.engine.economy_household_bill import HouseholdBillMixin
-from sim.engine.economy_port_year import AgentEconomy
+from sim.markets.port_year import AgentEconomy
 
 QUICK_TOPIC = True
 
@@ -18,7 +18,7 @@ class SeatFloorsTests(unittest.TestCase):
     def test_the_seats_floors_are_the_economys_floors_at_its_tile_in_its_coin(self):
         economy = types.SimpleNamespace(setup=types.SimpleNamespace(coin_per_unit=COIN_PER_UNIT))
         port = types.SimpleNamespace(economy=lambda: economy)
-        with mock.patch("sim.engine.economy_port_year.economy_api.country_figures.tile_need_floor_costs",
+        with mock.patch("sim.markets.port_year.economy_api.country_figures.tile_need_floor_costs",
                         return_value=dict(FLOORS_IN_ECONOMY_UNITS)) as floors_at:
             floors = AgentEconomy.need_floor_costs_at_tile(port, "town")
         floors_at.assert_called_once_with(economy, "town")

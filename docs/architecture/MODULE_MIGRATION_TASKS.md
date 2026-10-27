@@ -51,13 +51,13 @@ Full equivalence tier identical at the knowledge merge (`877cff82`). Micro and s
 
 | land | `sim/land/` | the owner map, colonies, the map and geography handles; still to do: `improvements`, `ways_under_construction`, `works`, `works_under_construction` and `ways.py` (with transport and works) |
 
-| markets (partly) | `sim/markets/` | the market book, flows, clearing, goods categories, household demand ratios; still to do: the goods market object and the economy port (`Sim.economy`, `Sim.goods_market`, `economy_port*.py`), reached today through `legacy_game` |
+| markets | `sim/markets/` | the market book, flows, clearing, goods categories, household demand ratios, the goods market object and the port over the agent economy (`port*.py`, `goods_*.py`; the module builds `economy` and `goods_market`, which read the game through `PortWorld`); `Sim.economy` and `Sim.goods_market` are forwarders. Still bridged: the household need model (`market_demand.py`, `partner_demand.py`: `household_demand_units`, `household_basket`, `home_household_tonnes`, `partner_household_demand`), the repricing of the opening's money (`RepriceOpeningMoney`). The shipped openings must be regenerated (`simulator.py openings`): the spin-up source moved, so the shipped keys no longer match |
 
 | finance | `sim/finance/` | credit limit, interest and arrears, insolvency, debt bondage, purchases and affordability, the seat bank; the agent economy's own credit and bank files in `sim/economy/` stay behind its api; Complaint 763 |
 
 | production | `sim/production/` | revenue, upkeep, concerns and their book sales, volume, industry depth and learning, techniques in use, capability; still to do: `projects.operating` and the revenue caches on the household, `node_rederive.py` (shared tree pricing), and its `legacy_game` reads |
 
-In progress: markets (the goods market object and the economy port). `stores` (mod stores) is a framework service and moves with phase 7. Next: the rest of markets (the goods market object and the economy port); then finance, production, ventures, the rest of projects.
+`stores` (mod stores) is a framework service and moves with phase 7. Next: finance, production, ventures, the rest of projects.
 
 ## Task list
 

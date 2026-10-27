@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import market_stand_in
 from unittest import mock
 
 from sim.actors.world_stakes import StakeView
@@ -21,13 +22,12 @@ def stand_in(record):
         floor_ratio=0.5, ceiling_ratio=2.0, household_demand_at_anchor_tonnes=3.0, actor_supply_tonnes=1.0,
         actor_demand_tonnes=2.0, founder_sales_tonnes=0.0)
     outcome = types.SimpleNamespace(price_ratio=1.0)
-    module = module_harness.build(Markets, views={
-        "material_pool": lambda material: (material, None),
-        "legacy_game": types.SimpleNamespace(
-            economy=types.SimpleNamespace(agent_market_record=lambda commodity: record),
-            goods_market=types.SimpleNamespace(
-                bought_tonnes=lambda commodity, party: 0.0, drawn_tonnes=lambda commodity: 0.0,
-                acting_party_id="founder", others_offers=lambda commodity: []))})
+    module = market_stand_in.markets_over(
+        economy=types.SimpleNamespace(agent_market_record=lambda commodity: record),
+        goods_market=types.SimpleNamespace(
+            bought_tonnes=lambda commodity, party: 0.0, drawn_tonnes=lambda commodity: 0.0,
+            acting_party_id="founder", others_offers=lambda commodity: []),
+        material_pool=lambda material: (material, None))
     module.market_outcome = lambda commodity, with_flows=False: (
         (conditions, CLOSING) if with_flows else (conditions, outcome))
     module.market_entry = lambda commodity: {"capacity_tonnes": 1.0, "reference_tonnes": 2.0, "stock_tonnes": 3.0}

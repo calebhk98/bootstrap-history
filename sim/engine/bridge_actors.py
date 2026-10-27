@@ -8,11 +8,10 @@ import contextlib
 from sim.agents.api import cast_from_civilisations
 from sim.assembly.api import KEYED, QUOTE
 
-from . import partner_demand, trade_duty
+from . import partner_demand
 from .actor_kinds_data import register_mod_actor_kinds
 from .bridge import bridge_command, bridge_view
 from .data import load_civ
-from .economy_port_setup import unit_mass_kg
 from .foreign_economy_data import not_traded_materials as declared_not_traded_materials
 
 # ---- the cast's own data: the kinds mods bring and the roster a game opens with ----
@@ -70,9 +69,6 @@ def concern_staff(sim, node_id):
 # ---- production: concerns, their takings and the industry's experience ----
 
 
-@bridge_view("unit_mass_kg", kind=QUOTE)
-def unit_mass(sim, material):
-    return unit_mass_kg(material)
 
 
 # ---- markets: goods categories, the agent economy's book and the orders the actors place ----
@@ -124,9 +120,3 @@ def not_traded_materials(sim):
 def home_household_tonnes(sim, prices_in_hours):
     """{material: tonnes a year} the home households buy at these prices (labour hours a unit), scaled to the opening's people."""
     return partner_demand.budget_scaled_final_tonnes(prices_in_hours, sim._opening_population())
-
-
-@bridge_view("border_duty_per_tonne", kind=QUOTE)
-def border_duty_per_tonne(sim, source, destination, price_per_tonne):
-    """Money the destination country's state charges on a tonne bought at `price_per_tonne` in `source`; infinite on an embargo."""
-    return trade_duty.duty_per_tonne(sim, source, destination, price_per_tonne)

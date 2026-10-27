@@ -14,7 +14,7 @@ from unittest import mock
 
 from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 from sim.prices import prices as engine_prices, solve_prices
-from sim.engine.goods_market_offers import GoodsOffers, HOME_SELLER
+from sim.markets.goods_offers import GoodsOffers, HOME_SELLER
 from sim.foreign_trade.constants import FOREIGN_OUTPUT_PER_POPULATION_SHARE
 from sim.foreign_trade.module import ForeignTrade
 from sim.foreign_trade.state import ForeignTradeWorld
@@ -76,7 +76,10 @@ class _Route:
 
 def _fake_sim(home_prices, partner_makes, partner_prices, gated=(), supply=None, lift_in=math.inf):
     supply = supply or {}
+    remembered = {}     # what the market keeps for the acting seat
     return types.SimpleNamespace(
+        civ={"id": "home"}, remembered=remembered.get, remember=remembered.__setitem__, not_traded_materials=frozenset,
+        border_terms=lambda destination, source: (0.0, False),
         _price_tables=lambda: ({}, {material: ("gated" if material in gated else "solved")
                                     for material in home_prices}),
         foreign_supply_tonnes=lambda partner, material: supply.get(material, 1000.0),
@@ -88,7 +91,6 @@ def _fake_sim(home_prices, partner_makes, partner_prices, gated=(), supply=None,
                                     scenario=types.SimpleNamespace(year=100)),
         market_rate=lambda: 0.05,
         partner_price_level=lambda partner: 1.0,
-        household=types.SimpleNamespace(),
         _foreign_economy_facts=lambda partner: {"solved_materials": frozenset(partner_makes),
                                                 "prices_in_home_money": partner_prices},
         _trader_margin_share=lambda partner, route: 0.1,
@@ -148,9 +150,9 @@ class SellerInReachTests(unittest.TestCase):
         self.assertIsNone(offers.unit_price("cassia_kg"))
 
     def test_a_partner_that_will_not_let_it_cross_a_border_does_not_sell_it(self):
-        with mock.patch("sim.engine.foreign_economy_data.not_traded_materials", lambda: frozenset({"cassia_kg"})):
-            offers = _Offers(self.sim)
-            self.assertIsNone(offers.offered_by("cassia_kg"))
+        self.sim.not_traded_materials = lambda: frozenset({"cassia_kg"})
+        offers = _Offers(self.sim)
+        self.assertIsNone(offers.offered_by("cassia_kg"))
 
 
 class CheapestSellerInReachTests(unittest.TestCase):

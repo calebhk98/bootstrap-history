@@ -59,7 +59,6 @@ from .forward_materials import ForwardMaterialsMixin
 from .mod_stores import ModStoresMixin
 from .core_properties import ForwardingPropertiesMixin
 from .core_step_phases import StepContext, StepPhasesMixin
-from .economy_port import EconomyPortMixin
 from .data import trade_family
 from .invariants import check_simulation_invariants
 from sim.agents.api import Household
@@ -104,7 +103,6 @@ class Sim(
         ForwardMaterialsMixin,
         ForwardDemographyMixin,
         ForwardCampaignsMixin,
-        EconomyPortMixin,
         NodeRederiveMixin,
 ):
     FOUNDER_MIN_REMAINING_LIFE_YEARS = declare(

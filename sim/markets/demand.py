@@ -31,7 +31,7 @@ class Demand:
 		"""What a person's income buys of the opening basket now over what it bought at the opening: income in hours over
 		the opening's, over the basket's cost at today's prices against its cost then."""
 		basket = self.static_book_basket()
-		prices = self._market().household_cost_prices()
+		prices = self.goods_market.household_cost_prices()
 		per_hour = self.needs.money_per_labour_hour()
 		opening_cost = now_cost = 0.0
 		for material, units in basket["units"].items():
@@ -52,7 +52,7 @@ class Demand:
 		return self.household_demand_now()[1]
 
 	def household_demand_now(self):
-		market_api = self._market()
+		market_api = self.goods_market
 		prices = market_api.household_cost_prices()
 		opening_population = self.opening_population()
 		key = demand_key(self.needs.population_total(), opening_population, self.household_income_hours_per_capita())

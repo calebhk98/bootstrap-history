@@ -6,7 +6,7 @@ labelled estimate."""
 import math
 from typing import Callable, Dict, Optional
 
-from .material_units import tonnes_per_unit
+from sim.world.material_units import tonnes_per_unit
 from sim.economy.api import carried_book, cohort_land_rents, country_figures, land_rent_at_tile, trade_premium
 
 
