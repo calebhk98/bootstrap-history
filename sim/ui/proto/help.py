@@ -9,7 +9,7 @@ command_registry.py); topics register with @help_topic below.
 import json
 
 from sim.engine.ui_port import money_unit_note
-from sim.engine.ui_port import Sim
+from sim.resources.api import base_mine_catalog_hint
 from . import command_registry
 from .nodes import NODE_IDS
 from .help_commands import JSON_MODE_NOTE, _command_text, commands_page, full_listing
@@ -219,7 +219,7 @@ def _topic_economy(sim):
                         '{"cmd":"quote","what":"mine","material":"coal",'
                         '"n":500}, and close it with '
                         '{"cmd":"close","material":"coal"}. Materials: '
-                        + Sim.base_mine_catalog_hint(),
+                        + base_mine_catalog_hint(),
             "buy slaves": '{"cmd":"buy","what":"slaves","n":5}. This is '
                           "available because it was the ordinary condition of "
                           "production in most of these societies, and a model "

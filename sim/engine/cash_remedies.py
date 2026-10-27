@@ -28,7 +28,7 @@ def cash_remedies(actor):
             if saving > 0.5:
                 found.append((saving, "mothball %s (stops %s a year of upkeep)" % (
                     node_id, money_text(saving, actor, grouped=True))))
-    for material in sorted(actor.mine_capacity):
+    for material in sorted(actor.view("mine_capacity")()):
         saving = sum(actor.mine_operating_cost_for(working)
                      for working in actor._workings_of(material))
         if saving > 0.5:

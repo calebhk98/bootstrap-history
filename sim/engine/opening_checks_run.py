@@ -50,7 +50,7 @@ def opening_trace(game) -> List[dict]:
 def sited_ore_ratios(game, prices, costs, stale) -> Dict[str, float]:
     """{ore: price over making cost} of the ores of resources the seat has found a deposit of whose markets cleared lately."""
     return {ore: prices[ore] / costs[ore]
-            for resource, ores in geography.ore_goods().items() if game.found_deposits(resource)
+            for resource, ores in geography.ore_goods().items() if game.view("found_deposits")[resource]
             for ore in ores if prices.get(ore) and costs.get(ore) and ore not in stale}
 
 
