@@ -207,7 +207,7 @@ class SwitchThatCannotAct(unittest.TestCase):
     def _policy_reply(self, capital, frozen_until=0, year=100):
         household = SimpleNamespace(reserve_craftsmen=0, reserve_scholars=0)
         game = SimpleNamespace(policy={"auto_hire": True, "auto_open": True}, capital=capital, year=year,
-                               credit_frozen_until=frozen_until, workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household,
+                               credit_frozen_until=frozen_until, workforce=household, view=workforce_stand_in.view_of(household, exclusions=set, keep_staffed=set), state=SimpleNamespace(household=household,
                                                                                      projects=SimpleNamespace(excluded=set())))
         return _cmd_policy(game, {}, {"cmd": "policy"}, None)
 

@@ -13,7 +13,7 @@ from sim.ui.proto.dispatch_ventures import _cmd_policy
 def _reply(manual):
     household = types.SimpleNamespace(reserve_craftsmen=0, reserve_scholars=0)
     game = types.SimpleNamespace(policy=default_policy(manual), capital=1000.0, year=100, credit_frozen_until=0,
-                                 workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household, projects=types.SimpleNamespace(excluded=set())))
+                                 workforce=household, view=workforce_stand_in.view_of(household, exclusions=set, keep_staffed=set), state=types.SimpleNamespace(household=household, projects=types.SimpleNamespace(excluded=set())))
     return _cmd_policy(game, {}, {"cmd": "policy"}, None)
 
 
