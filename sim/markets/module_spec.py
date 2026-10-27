@@ -9,7 +9,7 @@ from sim.demography.api import RecordFoodEaten
 from sim.diffusion.api import NoteFirstRuns
 from sim.foreign_trade.api import ClosePartnerBooks, SettleFlow, SettleTraderCargo
 from sim.land.api import FinishWays
-from sim.ledger.api import ChangeStock, PayEdge, ReceiveFromEdge
+from sim.ledger.api import ChangeStock, PayEdge, PayExchange, ReceiveFromEdge, ReceiveFromExchange
 from sim.reporting.api import CloseRealOutput
 from sim.resources.api import DrawDeposit, FellTimber, RegrowTimber
 
@@ -96,6 +96,6 @@ MODULE_SPECS = (ModuleSpec(
 	         (SellMaterial, "sell_material")),
 	phases=(PhaseHook("market", "step_market"),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(RecordFoodEaten, ClosePartnerBooks, CloseRealOutput, FinishWays, RepriceOpeningMoney, PayEdge, ReceiveFromEdge, ChangeStock,
+	sends=(RecordFoodEaten, ClosePartnerBooks, CloseRealOutput, FinishWays, RepriceOpeningMoney, PayEdge, ReceiveFromEdge, ChangeStock, PayExchange, ReceiveFromExchange,
 	       SettleFlow, SettleTraderCargo, FellTimber, RegrowTimber, DrawDeposit, NoteFirstRuns),
 ),)

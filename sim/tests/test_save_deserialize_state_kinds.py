@@ -93,13 +93,13 @@ mines = deserialize_state({
 	"mine_tranches": [["iron", 3, 2.5], ["tin", 1, 0.5]], "deposit_drawn": {"d1": 12}}, ResourcesSeat)
 materials = deserialize_state({"shortages": {"charcoal": "3"}}, MaterialsSeat)
 holdings = deserialize_state({
-	"_material_stock_ledger": {"iron": 4.0}}, HoldingsState)
+	"_dashboard_history": [{"year": 100}]}, HoldingsState)
 check("deserialize_state: mine stock keeps its entries and order, None inside", mines.mines == [{"id": "m1", "ore": "iron", "capex": 500.0, "open": None}]
       and mines.mine_pending == {"m2": 2.0} and mines.mine_ready == {"m1": 104}, None)
 check("deserialize_state: mine tranches are the saved lists, in order", mines.mine_tranches == [["iron", 3, 2.5], ["tin", 1, 0.5]], mines.mine_tranches)
 check("deserialize_state: tranches the save holds as None stay None", deserialize_state({"mine_tranches": None}, ResourcesSeat).mine_tranches is None)
 check("deserialize_state: shortages are a counter of integers", type(materials.shortages) is collections.Counter and materials.shortages == {"charcoal": 3}, materials.shortages)
-check("deserialize_state: underscore-led fields", holdings._material_stock_ledger == {"iron": 4.0}, None)
+check("deserialize_state: underscore-led fields", holdings._dashboard_history == [{"year": 100}], None)
 check("deserialize_state: a holdings blob with nothing in it is the defaults", deserialize_state({}, HoldingsState) == HoldingsState())
 
 # ---- the economy's stored record, tile-keyed stores

@@ -151,6 +151,8 @@ check("an actor that stops concealing brings the wealth back, and the state's me
 
 # ---- the founder's household ----------------------------------------------------------------------------------------------
 class Treasury:
+    actor_id = "government:test"
+
     def __init__(self):
         self.money = 0.0
 
@@ -169,7 +171,8 @@ def founder_game(capital=1000.0, capacity=0.9, protection=0.0, seed=1, stance="c
     treasury = Treasury()
     rng = random.Random(seed)
     module = polity_host.build(seat=PolitySeat(demand_stance=stance, protection=protection), legacy_dice=rng,
-                               acting_balance=lambda: purse.capital, legacy_acting_household=purse, state_treasury=treasury)
+                               acting_balance=lambda: purse.capital, legacy_acting_household=purse, state_treasury=treasury,
+                               answers=polity_host.takes_from_purse(purse, treasury))
     module.state_reach = lambda: capacity
     module.treasury, module.purse, module.rng = treasury, purse, rng
     return module

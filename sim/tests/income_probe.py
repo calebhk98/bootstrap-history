@@ -5,6 +5,8 @@ founder received by purpose, the forecast `revenue()` read before the year and `
 import argparse
 
 
+from sim.ledger.api import PayEdge, ReceiveFromEdge
+
 from .harness import sim
 
 RAMPED_YEARS = 10    # opened this long ago, so no concern is still ramping or shed as a young loss
@@ -41,16 +43,15 @@ def open_book_concerns(game, count):
 def tally_credits(game):
     """{purpose: coin} the founder's household receives from the edges (paid out is negative), filled as the game steps."""
     totals = {}
-    received, paid = game.receive_from_edge, game.pay_edge
+    sent = game.send
 
-    def receive(edge_name, amount, purpose):
-        totals[purpose] = totals.get(purpose, 0.0) + amount
-        return received(edge_name, amount, purpose)
-
-    def pay(edge_name, amount, purpose):
-        totals[purpose] = totals.get(purpose, 0.0) - amount
-        return paid(edge_name, amount, purpose)
-    game.receive_from_edge, game.pay_edge = receive, pay
+    def tally(command):
+        if isinstance(command, ReceiveFromEdge):
+            totals[command.purpose] = totals.get(command.purpose, 0.0) + command.amount
+        elif isinstance(command, PayEdge):
+            totals[command.purpose] = totals.get(command.purpose, 0.0) - command.amount
+        return sent(command)
+    game.send = tally
     return totals
 
 

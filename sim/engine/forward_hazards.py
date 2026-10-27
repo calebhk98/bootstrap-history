@@ -2,8 +2,7 @@
 
 The screens, the fog, the epidemic step and the state's demands still say `sim.hazard_figure(kind, hazard)` or
 `sim.lose_capital(fraction)`; each line goes when its last caller reads the view or sends the command itself."""
-from sim.agents.api import ledger
-from sim.hazards.api import LoseCapital, capital_lost, constants, rules
+from sim.hazards.api import LoseCapital, constants, rules
 from sim.seats.api import EndRun
 from sim.workforce.api import SurviveStaff, rules as workforce_rules
 
@@ -69,14 +68,8 @@ class HazardsForwardsMixin:
 
     # ---- what a hazard does to the acting seat ----
 
-    def lose_capital(self, fraction, cause="losses", taker=None):
-        if taker is None:
-            return self.send(LoseCapital(fraction, cause))
-        lost = capital_lost(self.state.household.capital, fraction)   # taken for the state: its treasury is not a named edge
-        if lost <= 0.0:
-            return 0.0
-        ledger.transfer(self.state.household, taker, lost, cause)
-        return lost
+    def lose_capital(self, fraction, cause="losses"):
+        return self.send(LoseCapital(fraction, cause))
 
     def apply_staff_survival(self, survival_share):
         return self.send(SurviveStaff(survival_share))

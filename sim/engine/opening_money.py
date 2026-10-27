@@ -5,6 +5,7 @@ the price solver). The economy then settles its own wage for an hour of work, an
 money per labour hour: the founder's purse, seats' purses and the tree's money fields, all counted in
 hours at construction, are repriced to it when the economy first opens.
 """
+from sim.ledger.api import RescaleHouseholdMoney
 from sim.markets.api import MarkMoneyPricedAtEconomy
 
 from . import money_units
@@ -20,10 +21,7 @@ def reprice_opening_money(sim, before):
     ratio = after / before
     for seat_id in list(sim.state.seats):
         with sim.act_as(seat_id):
-            household = sim.state.household
-            household.capital = household.capital * ratio
-            if household.cash_mark is not None:
-                household.cash_mark = household.cash_mark * ratio
+            sim.send(RescaleHouseholdMoney(ratio))
     reprice_tree(sim)
 
 

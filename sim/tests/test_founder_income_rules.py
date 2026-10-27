@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 from sim.finance.rules import dependants_beyond_means_of
+from sim.ledger.api import PayWages
 from sim.production import revenue
 from sim.tests import production_host
 from sim.workforce.api import SettleLivingCost
@@ -95,12 +96,12 @@ class MoneySeatChargeTests(unittest.TestCase):
 
     def test_the_wages_paid_are_the_living_cost_less_the_dependants_shed_and_the_advance(self):
         game, household, founder = self.run_phase(living=100.0, shed=30.0, prepaid=20.0)
-        game.pay_wages.assert_called_once_with(50.0, "living costs")
+        game.send.assert_any_call(PayWages(50.0, "living costs"))
         game.send.assert_any_call(SettleLivingCost(50.0))
 
     def test_an_advance_larger_than_the_cost_nets_it_to_nothing_and_is_used_up(self):
         game, household, founder = self.run_phase(living=100.0, shed=0.0, prepaid=500.0)
-        game.pay_wages.assert_called_once_with(0.0, "living costs")
+        game.send.assert_any_call(PayWages(0.0, "living costs"))
         game.send.assert_any_call(SettleLivingCost(0.0))
 
 

@@ -20,6 +20,7 @@ from sim.constants import declare
 from sim.polity.api import AddReputation
 from . import trade_data
 from .buy_cap import over_room_refusal
+from sim.ledger.api import PayEdge
 
 
 class BondageMixin:
@@ -274,7 +275,7 @@ class BondageMixin:
         if not self._world.can_pay(price):
             household._last_buy_refusal = self._world.refusal_text("%d slaves" % n_people, price)
             return 0
-        self._world.pay_edge(self._world.EDGE_SLAVE_TRADERS, price, "slaves bought")
+        self._world.send(PayEdge(self._world.EDGE_SLAVE_TRADERS, price, "slaves bought"))
         workforce.slaves += n_people
         holdings.market_pressure = holdings.market_pressure + n_people
         # Untrained on arrival. They become productive through the workforce's training queue.

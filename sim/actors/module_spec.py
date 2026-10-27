@@ -11,6 +11,7 @@ from sim.coin.api import ChargeActorsTheft, ChargeKeeping
 from sim.finance.api import DefaultOnDebt, RefreshLenderOffers
 from sim.foreign_trade.api import NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
 from sim.freight.api import PayRouteDues
+from sim.ledger.api import PayActor
 from sim.markets.api import ForgetActorOrders, NoteActorPurchase, NoteActorSale
 from sim.polity.api import AddScandal
 from sim.production.api import AccrueExperience
@@ -81,5 +82,5 @@ MODULE_SPECS = (ModuleSpec(
 	         (commands.FollowTileTransfer, "follow_tile_transfer")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(ChargeKeeping, ChargeActorsTheft, RefreshLenderOffers, DefaultOnDebt, AccrueExperience, ForgetActorOrders, NoteActorSale,
-	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, PayRouteDues, AddScandal, RecordEvent),
+	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, PayRouteDues, AddScandal, RecordEvent, PayActor),
 ),)

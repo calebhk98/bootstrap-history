@@ -194,7 +194,6 @@ class ProjectsState:
 @dataclass
 class EconomyState:
 	"""Physical plants, extractive workings, durable inventory, and material flows."""
-	capacity_pool: Dict[str, float] = field(default_factory=dict)
 	# the money an hour of work was worth when the tree's money fields were last counted (opening_money.py)
 	nodes_money_per_labour_hour: Optional[float] = None
 

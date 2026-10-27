@@ -57,7 +57,7 @@ def labour_world(capital, trade_known=True, schools=None):
     world = types.SimpleNamespace(
         wages={"chemist": 1.0} if trade_known else {}, trades_absent=set(), workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household),
         trade_school_price_per_seat=lambda: SEAT_PRICE, EDGE_WORKERS="edge:workers",
-        pay_edge=lambda edge, cost, purpose: paid.append((edge, cost, purpose)))
+        send=lambda command: paid.append((command.edge, command.amount, command.purpose)))
     return types.SimpleNamespace(_world=world, trade_available=lambda trade: PopulationMixin.trade_available(
         types.SimpleNamespace(_world=world), trade)), household, paid
 

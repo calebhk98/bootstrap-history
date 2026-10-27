@@ -2,7 +2,6 @@
 
 The registry handle `sim.actors` and the staff and concern figures are read by the engine's economy, the labour port, the screens
 and the mods; each line goes when its last caller reads the view or sends the command itself."""
-from sim.ledger.api import PayEdge, PayWages, ReceiveFromEdge
 
 
 class ActorsForwardsMixin:
@@ -36,16 +35,3 @@ class ActorsForwardsMixin:
 
     def concern_set_version(self):
         return self.view("concern_versions")()[1]
-
-    # the three below forward to the ledger's commands until their callers send them themselves
-    def pay_edge(self, edge_name, amount, purpose):
-        """The acting seat's household pays a named edge: its loss is nobody's purse, and the edge keeps it."""
-        self.send(PayEdge(edge_name, amount, purpose))
-
-    def pay_wages(self, amount, purpose):
-        """The acting seat's household pays wages: the home country's people receive them."""
-        self.send(PayWages(amount, purpose))
-
-    def receive_from_edge(self, edge_name, amount, purpose):
-        """A named edge pays the acting seat's household."""
-        self.send(ReceiveFromEdge(edge_name, amount, purpose))

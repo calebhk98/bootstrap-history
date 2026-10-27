@@ -27,6 +27,7 @@ from .request_rules import (commission_request_refusal, fire_refusal, teaching_f
                             train_request_refusal)
 from .room_advice import hire_room_refusal
 from .staff_moves import (apprentices_of, commission_spare_hours, crosses_literacy_wall, dismiss)
+from sim.ledger.api import PayEdge
 
 
 class TrainingMixin:
@@ -296,7 +297,7 @@ class TrainingMixin:
         if refusal:
             return False, refusal
         workforce = self._world.workforce
-        self._world.pay_edge(self._world.EDGE_WORKERS, fee, "hiring fee and first year's wages")
+        self._world.send(PayEdge(self._world.EDGE_WORKERS, fee, "hiring fee and first year's wages"))
         # CARRIED FORWARD, so the next step does not bill the same year twice.
         # See step() 2, where it is netted off living_cost.
         workforce.wages_prepaid = (workforce.wages_prepaid or 0.0) + fee
@@ -483,7 +484,7 @@ class TrainingMixin:
         count, frm, hours, fee, years = plan["count"], plan["from"], plan["hours"], plan["fee"], plan["years"]
         workforce = self._world.workforce
         current_year = self._world.year
-        self._world.pay_edge(self._world.EDGE_WORKERS, fee, "training fees")
+        self._world.send(PayEdge(self._world.EDGE_WORKERS, fee, "training fees"))
         workforce.teaching_hours_this_year = (workforce.teaching_hours_this_year or 0.0) + hours
         workforce.trades_created.add(trade)
         rows = trade_first_hands.cohort_rows(
@@ -654,7 +655,7 @@ class TrainingMixin:
         if refusal:
             return False, refusal
         workforce = self._world.workforce
-        self._world.pay_edge(self._world.EDGE_WORKERS, fee, "commissioned craftsmen")
+        self._world.send(PayEdge(self._world.EDGE_WORKERS, fee, "commissioned craftsmen"))
         workforce.contract_hours[trade] = workforce.contract_hours.get(trade, 0.0) + hours
         workforce.commissioned[trade] = workforce.commissioned.get(trade, 0.0) + hours
         self.labour_market.hire(workforce, trade, hours)

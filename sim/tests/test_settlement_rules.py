@@ -2,13 +2,11 @@
 
 QUICK_TOPIC = True
 
-import types
 import unittest
-from unittest import mock
 
 from sim.agents.api import edges
-from sim.finance import insolvency
 from sim.finance.constants import SETTLEMENT_CAPITAL_RETAINED_FRACTION, SETTLEMENT_CREDIT_FREEZE_YEARS, SETTLEMENT_REPUTATION_HIT
+from sim.ledger.api import SettleWithEdge
 from sim.polity.api import SetReputation
 from sim.reporting.api import RecordEvent
 from sim.tests import finance_host, module_harness
@@ -35,9 +33,8 @@ class Debtor:
 
 
 def settle(debtor, year=100, limit=1000.0):
-    ledger_stub = types.SimpleNamespace(settle=lambda book, edge, amount, text: debtor.lines.append(amount))
-    with mock.patch.object(insolvency, "ledger", ledger_stub):
-        debtor.module.settle_insolvency(year, limit)
+    debtor.module.settle_insolvency(year, limit)
+    debtor.lines = [command.balance for command in module_harness.sent(debtor.module) if isinstance(command, SettleWithEdge)]
 
 
 class SettleInsolvency(unittest.TestCase):

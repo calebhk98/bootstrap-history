@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from types import SimpleNamespace
 from typing import Any, Dict, Optional
 
+from sim.ledger.api import TakeFromHouseholdPurse
 from sim.polity.module import Polity
 from sim.polity.state import PolitySeat, PolityWorld
 from sim.tests import module_harness
@@ -66,6 +67,15 @@ def build(seed: int = 1, answers: Optional[Dict[type, Any]] = None, seat: Option
 	every_view.update(views)
 	return module_harness.build(Polity, views=every_view, answers=answers, world=PolityWorld(dict(VALUE_WEIGHTS) if value_weights is None else value_weights),
 	                            seat=seat or PolitySeat(), module_id="polity")
+
+
+def takes_from_purse(purse: Any, treasury: Any) -> Dict[type, Any]:
+	"""The ledger's answer to `TakeFromHouseholdPurse` over a stand-in purse and treasury: the purse is debited and the
+	treasury credited, as the ledger does it (the ledger's own test is test_ledger_commands)."""
+	def take(command: Any) -> None:
+		purse.debit(command.amount, command.purpose)
+		treasury.credit(command.amount, command.purpose)
+	return {TakeFromHouseholdPurse: take}
 
 
 def shifting(weights: Dict[str, float]):
