@@ -7,6 +7,7 @@ from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, C
                        ScaleDeputies, SetEmployed, SurviveStaff, UpdateWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
                              ResetTradeHours, SetReserve, SetWageHoursSold, SettleLivingCost, SpendDirectorHours, WatchStaff)
+from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, FadeMarketPressure
 from .state import WorkforceSeat, WorkforceSociety
 from . import rules
 from .staff_loss_waves import wave_exposure

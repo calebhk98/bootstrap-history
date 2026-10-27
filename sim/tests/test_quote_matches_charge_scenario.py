@@ -8,6 +8,7 @@ rules each quote reads are in the tests of the module that prices it (test_purch
 """
 from unittest import mock
 
+from sim.engine import year_steps
 from sim.finance import credit_line as finance_credit_line
 from sim.workforce import constants as workforce_constants
 from .harness import *  # noqa: F401,F403
@@ -143,7 +144,7 @@ def _run_project(node_id):
         game.assembly.phase_handler("start_projects")(game.state.acting_seat)
         game.assembly.phase_handler("materials")(game.state.acting_seat)
         game.assembly.phase_handler("material_shortage_notes")(game.state.acting_seat)
-        game._run_seat_work()
+        year_steps.seat_work(game)
     return game, quoted, reply
 
 
@@ -182,7 +183,7 @@ with mock.patch.object(finance_credit_line, "LIVING_COST_STATUS_PER_CAPITAL", 0.
     _hire_quote = S._agent_dispatch(_hired, NODES, {"cmd": "quote", "what": "hire", "trade": "smith", "n": 1})
     S._agent_dispatch(_hired, NODES, {"cmd": "hire", "trade": "smith", "n": 1})
     for _game in (_hired, _twin):
-        _game._step_money_seat()   # the year's wages and living costs, which is where the hire's charge lands
+        year_steps.money_seat(_game)   # the year's wages and living costs, which is where the hire's charge lands
 _hire_charged = (_ledger_outflow(_hired, "hiring fee and first year's wages")
                  + _ledger_outflow(_hired, "living costs") - _ledger_outflow(_twin, "living costs"))
 check("hire wage: the first year's charge through the ledger is the quoted yearly wage",

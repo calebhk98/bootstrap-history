@@ -5,12 +5,15 @@ QUICK_TOPIC = True
 import contextlib
 import types
 
+from unittest import mock
+
 from .harness import check
 
 from sim.hazards.merge import mildest_hazard
 from sim.seats.api import SeatsSeat, run_is_over, seat_ended, seats_playing
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, seat_from_template
+from sim.engine import year_steps
 from sim.engine.year_run import run_year
 
 # ---- the hazard the world meets is the mildest any seat's works leave
@@ -111,12 +114,29 @@ class FakeSim:
         return lambda *arguments: self._record(name, *arguments)
 
 
+_ROOT_STEPS = {"begin_world_year": "begin_world_year", "money_seat": "_step_money_seat", "money_world": "_step_money_world",
+               "seat_work": "_run_seat_work"}
+
+
+def run_recorded(sim):
+    """run_year with the root's own steps (year_steps) recording as calls of the stand-in, under the names the checks use."""
+    patches = [mock.patch.object(year_steps, function, lambda target, recorded=recorded: target._record(recorded))
+               for function, recorded in _ROOT_STEPS.items()]
+    for patch in patches:
+        patch.start()
+    try:
+        run_year(sim)
+    finally:
+        for patch in patches:
+            patch.stop()
+
+
 def names(sim, phase):
     return [seat for call, seat in sim.calls if call == phase]
 
 
 two = FakeSim([FIRST_SEAT_ID, "second"])
-run_year(two)
+run_recorded(two)
 check("each seat phase runs once for each seat, in joining order",
       names(two, "_step_money_seat") == [FIRST_SEAT_ID, "second"] and names(two, "_run_seat_work") == [FIRST_SEAT_ID, "second"]
       and names(two, "step_credit_limit") == [FIRST_SEAT_ID, "second"], two.calls)
@@ -128,7 +148,7 @@ check("the market closes after every seat's work and before the credit check",
 check("the year advances once", two.state.scenario.year == 101, two.state.scenario.year)
 
 ended = FakeSim([FIRST_SEAT_ID, "second"], ends_in_shocks=[FIRST_SEAT_ID])
-run_year(ended)
+run_recorded(ended)
 check("a seat ended by the year's shocks takes no further part in it, the other carries on",
       names(ended, "_step_money_seat") == [FIRST_SEAT_ID, "second"] and names(ended, "_run_seat_work") == ["second"]
       and names(ended, "step_living_stock") == ["second"] and names(ended, "step_credit_limit") == ["second"], ended.calls)
@@ -136,18 +156,18 @@ check("world phases after the shocks run as a seat still playing", names(ended, 
 check("the year still advances", ended.state.scenario.year == 101, None)
 
 alone = FakeSim([FIRST_SEAT_ID, "second"], ends_in_shocks=[FIRST_SEAT_ID, "second"])
-run_year(alone)
+run_recorded(alone)
 check("when every seat ends in the shocks the year stops there, as a one-seat game does",
       names(alone, "_run_seat_work") == [] and names(alone, "step_market") == [] and alone.state.scenario.year == 100, alone.calls)
 
 dead_before = FakeSim([FIRST_SEAT_ID, "second"])
 dead_before.state.ended.add(FIRST_SEAT_ID)
-run_year(dead_before)
+run_recorded(dead_before)
 check("a seat that ended earlier is not stepped again",
       names(dead_before, "_step_money_seat") == ["second"] and names(dead_before, "step_apprenticeships") == ["second"], dead_before.calls)
 
 single = FakeSim([FIRST_SEAT_ID])
-run_year(single)
+run_recorded(single)
 check("one seat runs the phases in the order a one-seat year always had",
       [call for call, _ in single.calls if call in (
           "step_apprenticeships", "step_staff", "_step_money_seat", "_step_money_world", "step_win_conditions",

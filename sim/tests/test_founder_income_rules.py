@@ -1,6 +1,6 @@
 """What the founder is charged and paid, each rule called on a stand-in that holds only what it reads (Complaints 518, 524):
 a derived upkeep leaves out the crew's pay (`institution_upkeep`), the living cost charged nets off the dependants the income
-cannot carry and the wages paid in advance (`dependants_beyond_means_of`, `_step_money_seat`), and the founder's job is the
+cannot carry and the wages paid in advance (`dependants_beyond_means_of`, the workforce's `charge_living_cost`), and the founder's job is the
 hours not spoken for sold in the held trade (`held_trade`, `founder_wage_income`, `revenue_sources`, `revenue`). The share rule
 on nodes is in test_founder_crew_paid_once, the job's arithmetic in test_founder_job."""
 QUICK_TOPIC = True
@@ -10,11 +10,12 @@ from types import SimpleNamespace
 from unittest import mock
 
 from sim.finance.rules import dependants_beyond_means_of
-from sim.ledger.api import PayWages
 from sim.production import revenue
 from sim.tests import production_host
-from sim.workforce.api import SettleLivingCost
-from sim.engine.step_phase_money import MoneyPhaseMixin
+from sim.tests import module_harness
+from sim.workforce.api import ChargeLivingCost
+from sim.workforce.module import Workforce
+from sim.workforce.state import WorkforceSeat
 
 NODE = "workshop"
 
@@ -77,32 +78,19 @@ class DependantsBeyondMeansTests(unittest.TestCase):
             self.assertTrue(paid <= max(interest_free_room, living - dependants) + 1e-9, (case, paid))
 
 
-class MoneySeatChargeTests(unittest.TestCase):
-    def run_phase(self, living, shed, prepaid):
-        household = SimpleNamespace(wages_prepaid=prepaid, capital=1000.0, log=[], slaves=0)
-        founder = SimpleNamespace(living_cost_paid=0.0, policy={"auto_mothball": False, "auto_open": False,
-                                                                 "auto_buy_people": False, "auto_manumit": False})
-        game = mock.MagicMock()
-        game.state = SimpleNamespace(household=household, founder=founder, holdings=SimpleNamespace(mine_cost_paid=0.0),
-                                     scenario=SimpleNamespace(year=100))
-        game.living_cost.return_value = living
-        game.dependants_beyond_means.return_value = shed
-        game.view.side_effect = lambda name: (lambda *call: {"prepaid": household.wages_prepaid} if name == "pay_book" else (0.0, 0.0))    # the coin module's quote
-        game.reopen_restaffed_ventures.return_value = []
-        game.revenue.return_value = game.upkeep.return_value = game.mine_operating_cost.return_value = 0.0
-        game.manual = True
-        MoneyPhaseMixin._step_money_seat(game)
-        return game, household, founder
+class ChargeLivingCostTests(unittest.TestCase):
+    def charge(self, living, shed, prepaid):
+        seat = WorkforceSeat(wages_prepaid=prepaid, living_cost_paid=0.0)
+        charged = module_harness.build(Workforce, seat=seat, views={}).charge_living_cost(ChargeLivingCost(living, shed))
+        return charged, seat
 
-    def test_the_wages_paid_are_the_living_cost_less_the_dependants_shed_and_the_advance(self):
-        game, household, founder = self.run_phase(living=100.0, shed=30.0, prepaid=20.0)
-        game.send.assert_any_call(PayWages(50.0, "living costs"))
-        game.send.assert_any_call(SettleLivingCost(50.0))
+    def test_the_cost_charged_is_the_living_cost_less_the_dependants_shed_and_the_advance(self):
+        charged, seat = self.charge(living=100.0, shed=30.0, prepaid=20.0)
+        self.assertEqual((charged, seat.living_cost_paid, seat.wages_prepaid), (50.0, 50.0, 0.0))
 
     def test_an_advance_larger_than_the_cost_nets_it_to_nothing_and_is_used_up(self):
-        game, household, founder = self.run_phase(living=100.0, shed=0.0, prepaid=500.0)
-        game.send.assert_any_call(PayWages(0.0, "living costs"))
-        game.send.assert_any_call(SettleLivingCost(0.0))
+        charged, seat = self.charge(living=100.0, shed=0.0, prepaid=500.0)
+        self.assertEqual((charged, seat.living_cost_paid, seat.wages_prepaid), (0.0, 0.0, 0.0))
 
 
 class FoundersJobTests(unittest.TestCase):

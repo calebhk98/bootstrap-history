@@ -35,7 +35,7 @@ from .forward_disease import DiseaseForwardsMixin
 from .forward_land import ForwardLandMixin
 from .forward_workforce import ForwardWorkforceMixin
 from .projects import ProjectsMixin
-from .core_seats import SeatMixin
+from . import seat_registry, year_steps
 from .year_run import run_year
 from sim.seats.api import SetFounderLife
 from .forward_seats import ForwardSeatsMixin
@@ -50,7 +50,7 @@ from .forward_resources import ForwardResourcesMixin
 from .forward_materials import ForwardMaterialsMixin
 from .mod_stores import ModStoresMixin
 from .core_properties import ForwardingPropertiesMixin
-from .core_step_phases import StepContext, StepPhasesMixin
+from .year_steps import StepContext
 from .data import trade_family
 from .invariants import check_simulation_invariants
 from sim.agents.api import Household
@@ -70,7 +70,6 @@ class Sim(
         DiseaseForwardsMixin,
         ForwardWorkforceMixin,
         ProjectsMixin,
-        SeatMixin,
         ForwardSeatsMixin,
         HazardsForwardsMixin,
         PolityForwardsMixin,
@@ -79,7 +78,6 @@ class Sim(
         ForwardFinanceMixin,
         ForwardFreightMixin,
         ForwardingPropertiesMixin,
-        StepPhasesMixin,
         ForwardLivingStockMixin,
         ReportingForwardsMixin,
         ForwardCoinMixin,
@@ -358,37 +356,6 @@ class Sim(
     # civilization has never seen, would be reach 0. Everything below
     # computes reach from the ACTUAL civilization's own home ground.
 
-    AUTO_MANUMIT_ANNUAL_CHANCE = declare(
-        "AUTO_MANUMIT_ANNUAL_CHANCE", 0.25, kind="temporary_heuristic",
-        unit="dimensionless (yearly probability, optimizer only)",
-        source=None, confidence="D",
-        why="Yearly chance the optimizer's standing policy manumits some "
-            "slaves, when it holds any. Invented frequency, not fitted to "
-            "any attested manumission rate.")
-    AUTO_MANUMIT_SHARE_DIVISOR = declare(
-        "AUTO_MANUMIT_SHARE_DIVISOR", 4, kind="temporary_heuristic",
-        unit="dimensionless (divisor; frees roughly a quarter)",
-        source=None, confidence="D",
-        why="How large a bite auto-manumission takes when it fires - "
-            "roughly a quarter of current slaves, at least one. Tuned, "
-            "not measured.")
-
-    MARKET_PRESSURE_DECAY = declare(
-        "MARKET_PRESSURE_DECAY", 0.55, kind="temporary_heuristic",
-        unit="dimensionless (fraction kept per year)", source=None,
-        confidence="D",
-        why="How much of last year's market pressure (the price bump a "
-            "household's own buying caused) survives into this year - "
-            "sellers restock, so the pressure fades. Tuned, not measured.")
-    MARKET_PRESSURE_ANNUAL_FADE = declare(
-        "MARKET_PRESSURE_ANNUAL_FADE", 2.0, kind="temporary_heuristic",
-        unit="market-pressure points", source=None, confidence="D",
-        why="Flat yearly reduction in market pressure on top of "
-            "MARKET_PRESSURE_DECAY's proportional fade, so a small "
-            "residual pressure reaches exactly zero rather than decaying "
-            "forever. Tuned, not measured.")
-
-
     SANITATION_LIFE_EXTENSION_YEARS = declare(
         "SANITATION_LIFE_EXTENSION_YEARS", 0.12, kind="temporary_heuristic",
         unit="years added per year of founder mortality roll",
@@ -479,14 +446,29 @@ class Sim(
         """Advance every seat one year (the order and what runs once or per seat: year_run.py)."""
         run_year(self)
 
-    # ---- THE YEAR'S PHASES ------------------------------------------------
-    # _step_apprenticeships through _step_founder_mortality - the fourteen
-    # named phases step() calls above, in the same order - moved to
-    # sim/engine/core_step_phases.py's StepPhasesMixin. Sim still inherits
-    # StepPhasesMixin below, so step() calls self._step_whatever() exactly
-    # as it did when these were defined here.
+    # ---- the seat registry (sim/engine/seat_registry.py) ----
 
+    def add_seat(self, seat_id, seat):
+        seat_registry.add_seat(self, seat_id, seat)
 
+    def _new_facade(self, seat_id):
+        return seat_registry.new_facade(self, seat_id)
+
+    def seat_party(self, seat_id, margins=None):
+        return seat_registry.seat_party(self, seat_id, margins)
+
+    def seat_parties(self):
+        return seat_registry.seat_parties(self)
+
+    def _switch_seat(self, seat_id):
+        seat_registry.switch_seat(self, seat_id)
+
+    def act_as(self, seat_id):
+        """Run the body as `seat_id`, then restore the seat that was acting."""
+        return seat_registry.act_as(self, seat_id)
+
+    def sync_seat_facades(self):
+        seat_registry.sync_seat_facades(self)
 
     def run(self, goal, horizon=None):
         self.goal = goal

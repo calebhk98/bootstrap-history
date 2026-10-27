@@ -1,17 +1,17 @@
 """A seat holds one player's household, projects, founder and goal; the root fields alias the acting seat. The rules are
-called on a `SimulationState` and on the real `SeatMixin` over a stub (no household facade is built); the save and load of the
+called on a `SimulationState` and on the real `seat_registry` functions over a stub (no household facade is built); the save and load of the
 seats are the state's own serialisation."""
 
 QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.engine.core_seats import SeatMixin
+from sim.engine import seat_registry
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState, deserialize_state, serialize_state
 from sim.engine.state_seat import FIRST_SEAT_ID, SeatState
 
 
-class Seats(SeatMixin):
+class Seats:
     """The seat switching of a game over a bare state: each seat's facade is a marker object."""
 
     def __init__(self, state):
@@ -22,6 +22,15 @@ class Seats(SeatMixin):
 
     def _new_facade(self, seat_id):
         return object()
+
+    def add_seat(self, seat_id, seat):
+        seat_registry.add_seat(self, seat_id, seat)
+
+    def act_as(self, seat_id):
+        return seat_registry.act_as(self, seat_id)
+
+    def _switch_seat(self, seat_id):
+        seat_registry.switch_seat(self, seat_id)
 
     def _reset_economic_caches(self):
         self.resets += 1

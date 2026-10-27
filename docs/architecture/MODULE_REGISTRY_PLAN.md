@@ -299,9 +299,9 @@ for klass in Sim.__mro__:
         for name, value in vars(klass).items():
             if callable(value) or isinstance(value, (property, staticmethod, classmethod)):
                 definer.setdefault(name, klass)
-topic_rules = [("steps", r"^(core_step_phases|step_phase_|year_run|shock_year|core$)"),
+topic_rules = [("steps", r"^(year_steps|step_phase_|year_run|shock_year|core$)"),
     ("projects", r"^(projects|project_|blockers|failure_|planner|path_search|completion|capital_builds|seat_builds)"),
-    ("seats", r"^(core_seats|seat_|state_seat|founder_sales|cash_|goals|fog|win_)"),
+    ("seats", r"^(seat_|state_seat|founder_sales|cash_|goals|fog|win_)"),
     ("markets", r"^(prices|solve_prices|making_cost|long_run|rent_standin|solve_cache|goods_market|market_|incumbent|producer_costs|entry_cost|wage_|money_units|real_|economy_goods|economy_cost)"),
     ("node_money", r"^(node_|industry_|concern_)"),
     ("foreign_coin", r"^(foreign_|economy_freight|domestic_haul|trader_cargo|coin_|theft_|route_dues)"),

@@ -4,7 +4,7 @@ Each view carries the name its owner will publish (docs/architecture/catalogue),
 code did, and is never cached. Each command applies what the old code did inline. The `legacy_*` views are raw
 state the module still mutates in place; they go when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
-from sim.ledger.api import NoteSpend
+from sim.ledger.api import CloseSpendYear, NoteSpend
 from sim.projects.needed_commands import NoteConcernChange, NoteYearSpend
 
 from . import cause_book
@@ -70,6 +70,12 @@ def note_spend(sim, command):
 @bridge_command(NoteYearSpend)
 def note_year_spend(sim, command):
     sim._spend_this_year = getattr(sim, "_spend_this_year", 0.0) + command.amount
+
+
+@bridge_command(CloseSpendYear)
+def close_spend_year(sim, command):
+    sim.state.household.spend_last_year = getattr(sim, "_spend_this_year", 0.0)
+    sim._spend_this_year = 0.0
 
 
 @bridge_command(NoteConcernChange)

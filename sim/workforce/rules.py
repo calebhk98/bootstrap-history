@@ -41,3 +41,29 @@ def price_of_labour_hours(hours, money_per_labour_hour, price_index):
 def dependant_people(kin_and_retainers, freedmen, slaves):
 	"""People the household keeps besides the founder: the kin and retainers it arrived with, and its freedmen and slaves."""
 	return kin_and_retainers + freedmen + slaves
+
+
+def living_cost_charged(living_cost, dependants_beyond_means, wages_prepaid):
+	"""The living cost to pay this year: the whole cost less the dependants the income cannot carry, less the wages already
+	paid in advance (never below zero for the advance: an advance larger than the cost nets it to zero)."""
+	carried = living_cost - dependants_beyond_means
+	return carried - min(carried, wages_prepaid)
+
+
+def market_pressure_after_a_year(pressure, kept_share, flat_fade):
+	"""The pressure the household's own buying put on the people market after sellers restock: a share is kept, a flat amount fades,
+	never below zero."""
+	return max(0.0, pressure * kept_share - flat_fade)
+
+
+def people_to_buy(capital, base_price, artisans, capital_floor_in_prices, capital_per_person_in_prices, artisan_ceiling, most_per_year):
+	"""How many people the standing policy buys this year: none unless the purse holds the floor (in base prices of one person) and
+	the artisans are under the ceiling; then as many as the purse holds at the per-person reserve, at most `most_per_year`."""
+	if capital > capital_floor_in_prices * base_price and artisans < artisan_ceiling:
+		return min(most_per_year, int(capital // (capital_per_person_in_prices * base_price)))
+	return 0
+
+
+def people_to_free(slaves, share_divisor):
+	"""How many of the slaves held the standing policy frees when it fires: a share of them, at least one."""
+	return max(1, slaves // share_divisor)

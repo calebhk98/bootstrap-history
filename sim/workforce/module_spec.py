@@ -14,6 +14,7 @@ from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, C
                        ReleaseStaff, ScaleDeputies, SetEmployed, SurviveStaff, TakeWageFallback, UpdateWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
                              ResetTradeHours, SetReserve, SetWageHoursSold, SettleLivingCost, SpendDirectorHours, WatchStaff)
+from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, FadeMarketPressure
 from .state import STAFF, WorkforceSeat, WorkforceSociety
 from .module import Workforce
 
@@ -29,7 +30,7 @@ READS_BY_OWNER = {
     "land": ("home_tiles_held", "home_tiles_held_version", "coverage", "coverage_share", "built_ways"),
     "knowledge": ("techniques_held", "held_techniques", "visibility", "tree_closure"),
     "mechanics": ("mechanic", "effect_factor", "effect_holds", "effect_sum", "effect_terms", "effect_value",
-                  "labour_productivity_sources", "room_sources", "staff_capacity_sources"),
+                  "labour_productivity_sources", "room_sources", "staff_capacity_sources", "running_mechanics"),
     "diffusion": ("literacy", "research_productivity", "staff_hire_advice", "staff_sources"),
     "production": ("running", "institution_units", "upkeep", "revenue_estimate", "is_venture"),
     "projects": ("legacy_projects", "keep_staffed", "staffing_closed_hand_shortfall", "start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
@@ -110,7 +111,8 @@ MODULE_SPECS = (ModuleSpec(
              (DrawTradeHours, "draw_trade_hours"), (ResetTradeHours, "reset_trade_hours"), (SpendDirectorHours, "spend_director_hours"),
              (SettleLivingCost, "settle_living_cost"), (SetWageHoursSold, "set_wage_hours_sold"), (SetReserve, "set_reserve"),
              (BleedStaff, "bleed_staff"), (DisperseDependants, "disperse_dependants"), (LoseCrew, "lose_crew"), (WatchStaff, "watch_staff"),
-             (BuildHousing, "build_housing")),
+             (BuildHousing, "build_housing"), (ChargeLivingCost, "charge_living_cost"), (AutoBuyPeople, "auto_buy_people"),
+             (AutoManumit, "auto_manumit"), (FadeMarketPressure, "fade_market_pressure")),
     phases=(PhaseHook("apprenticeships", "step_apprenticeships"), PhaseHook("staff", "step_staff"),
             PhaseHook("seat_prelude", "step_prelude")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),

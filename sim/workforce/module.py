@@ -11,6 +11,7 @@ from .applying_hours import ApplyingHours
 from .commands_applied import Applying
 from .prelude import Prelude
 from .staff_hiring import StaffHiring
+from .standing_bondage import StandingBondage
 from .staff_watch import StaffWatch
 from .staff_year import StaffYear
 from .hours_year import HoursYear
@@ -21,7 +22,7 @@ from .wage_fallback import WageFallback
 from .world import WorkforceWorld
 
 
-class Workforce(Views, ViewsState, Applying, ApplyingHours, StaffWatch, Apprenticeships, StaffYear, StaffHiring, Prelude, WageFallback, HoursYear, HousingPrices, Module):
+class Workforce(StandingBondage, Views, ViewsState, Applying, ApplyingHours, StaffWatch, Apprenticeships, StaffYear, StaffHiring, Prelude, WageFallback, HoursYear, HousingPrices, Module):
 
 	def setup(self):
 		self.labour = Labour(WorkforceWorld(self.needs, self))

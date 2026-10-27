@@ -111,10 +111,11 @@ class YearlyChecksTests(unittest.TestCase):
 
     def test_debug_runs_the_full_step_invariants_instead(self):
         game = _game(debug=True)
-        game.verify_step_invariants = mock.Mock()
-        with mock.patch.object(year_run, "run_phases", lambda target: None):
+        verified = []
+        with mock.patch.object(year_run, "run_phases", lambda target: None), \
+                mock.patch.object(year_run.year_steps, "verify_step_invariants", lambda target: verified.append(target)):
             year_run.run_year(game)
-        game.verify_step_invariants.assert_called_once_with()
+        self.assertEqual(verified, [game])
 
 
 if __name__ == "__main__":

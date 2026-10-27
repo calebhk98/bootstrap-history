@@ -8,8 +8,9 @@ from types import SimpleNamespace
 from sim.tests import module_harness
 from sim.workforce import rules as workforce_rules
 from sim.workforce.api import NoteTradeSpread, PressLabour, ReportStaffReduction, ScaleDeputies, SetEmployed, TakeWageFallback
-from sim.workforce.api import CloseHoursYear, SettleLivingCost
-from sim.workforce.constants import WAGE_FALLBACK_LIVING_COST_YEARS, WAGE_FALLBACK_MAX_HOURS, WAGE_FALLBACK_MIN_HOURS
+from sim.workforce.api import AutoBuyPeople, AutoManumit, CloseHoursYear, FadeMarketPressure, SettleLivingCost
+from sim.reporting.api import RecordEvent
+from sim.workforce.constants import AUTO_MANUMIT_ANNUAL_CHANCE, MARKET_PRESSURE_ANNUAL_FADE, MARKET_PRESSURE_DECAY, WAGE_FALLBACK_LIVING_COST_YEARS, WAGE_FALLBACK_MAX_HOURS, WAGE_FALLBACK_MIN_HOURS
 from sim.workforce.module import Workforce
 from sim.workforce.state import WorkforceSeat
 
@@ -119,6 +120,69 @@ class LivingCost(unittest.TestCase):
         seat = WorkforceSeat(wages_prepaid=20.0, living_cost_paid=100.0)
         module_harness.build(Workforce, seat=seat, views={}).settle_living_cost(SettleLivingCost(50.0))
         self.assertEqual((seat.wages_prepaid, seat.living_cost_paid), (0.0, 150.0))
+
+
+class StandingPolicyRules(unittest.TestCase):
+    def buy(self, capital=1000.0, artisans=3.0):
+        return workforce_rules.people_to_buy(capital, 10.0, artisans, 20.0, 5.0, 12, 6)
+
+    def test_nobody_is_bought_under_the_capital_floor_or_with_the_artisans_at_the_ceiling(self):
+        self.assertEqual((self.buy(capital=200.0), self.buy(artisans=12.0)), (0, 0))
+
+    def test_as_many_are_bought_as_the_reserve_per_person_allows_up_to_the_yearly_most(self):
+        self.assertEqual((self.buy(capital=1000.0), self.buy(capital=210.0), self.buy(capital=100000.0)), (6, 4, 6))
+
+    def test_a_share_of_the_slaves_is_freed_and_never_fewer_than_one(self):
+        self.assertEqual((workforce_rules.people_to_free(40, 4), workforce_rules.people_to_free(2, 4)), (10, 1))
+
+    def test_pressure_keeps_a_share_loses_a_flat_amount_and_stops_at_zero(self):
+        self.assertEqual((workforce_rules.market_pressure_after_a_year(100.0, 0.5, 2.0), workforce_rules.market_pressure_after_a_year(1.0, 0.5, 2.0)), (48.0, 0.0))
+
+
+class StandingPolicies(unittest.TestCase):
+    def build(self, policy, slaves=8.0, capital=1000.0, dice=None, mechanics=("hosts",), manual=False):
+        calls = []
+        household = SimpleNamespace(capital=capital)
+        workforce = module_harness.build(Workforce, seat=WorkforceSeat(), views={
+            "founder": lambda: {"policy": policy}, "automation": lambda: {"manual": manual}, "legacy_acting_household": household,
+            "legacy_dice": lambda: dice, "running_mechanics": lambda name: list(mechanics)})
+        workforce.staff = lambda: {"artisans": 3.0, "slaves": slaves}
+        workforce.labour = SimpleNamespace(SLAVE_BASE_PRICE=10.0, buy_slaves=lambda count: calls.append(("buy", count)) or count,
+                                           manumit=lambda count: calls.append(("free", count)) or count)
+        return workforce, calls
+
+    def test_the_policy_buys_people_when_on_and_records_it(self):
+        workforce, calls = self.build({"auto_buy_people": True})
+        workforce.auto_buy_people(AutoBuyPeople())
+        self.assertEqual(calls, [("buy", 6)])
+        self.assertEqual([command.kind for command in module_harness.sent(workforce) if isinstance(command, RecordEvent)], ["people_bought"])
+
+    def test_the_policy_buys_nobody_when_off_or_when_no_mechanic_hosts_bought_people(self):
+        for policy, mechanics in (({"auto_buy_people": False}, ("hosts",)), ({}, ("hosts",)), ({"auto_buy_people": True}, ())):
+            workforce, calls = self.build(policy, mechanics=mechanics)
+            workforce.auto_buy_people(AutoBuyPeople())
+            self.assertEqual(calls, [], policy)
+
+    def test_the_policy_frees_a_share_on_a_hit_and_draws_once(self):
+        dice = random.Random(5)
+        mirror = random.Random(5)
+        workforce, calls = self.build({"auto_manumit": True}, dice=dice)
+        workforce.auto_manumit(AutoManumit())
+        self.assertEqual(calls, [("free", 2)] if mirror.random() < AUTO_MANUMIT_ANNUAL_CHANCE else [])
+        self.assertEqual(dice.random(), mirror.random())
+
+    def test_the_policy_draws_nothing_when_off_or_when_there_are_no_slaves(self):
+        for policy, slaves in (({"auto_manumit": False}, 8.0), ({"auto_manumit": True}, 0.0)):
+            dice = random.Random(5)
+            workforce, calls = self.build(policy, slaves=slaves, dice=dice)
+            workforce.auto_manumit(AutoManumit())
+            self.assertEqual((calls, dice.random()), ([], random.Random(5).random()))
+
+    def test_the_market_pressure_fades_on_the_acting_seats_holdings(self):
+        holdings = SimpleNamespace(market_pressure=100.0)
+        workforce = module_harness.build(Workforce, seat=WorkforceSeat(), views={"legacy_state": SimpleNamespace(holdings=holdings)})
+        workforce.fade_market_pressure(FadeMarketPressure())
+        self.assertAlmostEqual(holdings.market_pressure, 100.0 * MARKET_PRESSURE_DECAY - MARKET_PRESSURE_ANNUAL_FADE)
 
 
 if __name__ == "__main__":
