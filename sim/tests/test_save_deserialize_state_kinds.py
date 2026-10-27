@@ -9,6 +9,7 @@ import collections
 from sim.agents.api import ActorsState, Business
 from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
+from sim.finance.api import FinanceSeat
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
@@ -33,14 +34,17 @@ check("deserialize_state: a scalar is coerced to the class named", deserialize_s
       and deserialize_state(5, str) == "5" and deserialize_state("true", bool) is True and deserialize_state("0", bool) is False)
 
 # ---- the household: None-means-never, defaults for what the save lacks, unknown and plumbing keys ignored
-household = deserialize_state({"capital": 50.0, "wages_earned": None, "last_settlement": -999,
+household = deserialize_state({"capital": 50.0, "wages_earned": None,
                                "trades_created": {"__set__": ["baker", "mason"]}, "trade_introduced_year": {"mason": 95},
                                "employees": {"mason": 2}, "training": [["mason", 2]],
                                "cash_flow": {"wages": -12.5}, "cash_mark": None, "cash_periods": [{"year": 99, "net": 3.0}],
                                "unused_hours_reported": {"order:1": [40.0, "no_hands"]}, "_on_change_hook": 1, "not_a_field": 9}, HouseholdState)
 check("deserialize_state: a household's purse, None-means-never fields and zeros are as saved",
       household.capital == 50.0 and household.wages_earned is None
-      and household.cash_mark is None and household.last_settlement == -999, None)
+      and household.cash_mark is None, None)
+_debt = deserialize_state({"interest_paid": None, "last_settlement": -999, "insolvent_years": 0}, FinanceSeat)
+check("deserialize_state: a finance seat's None-means-never fields, negative defaults and zeros are as saved, and what the save lacks is the default",
+      _debt.interest_paid is None and _debt.last_settlement == -999 and _debt.insolvent_years == 0 and _debt.credit_frozen_until == 0, None)
 _standing = deserialize_state({"last_withdrawal": None, "scandal_last_year": 0.0}, PolitySeat)
 check("deserialize_state: a polity seat's None-means-never fields and zeros are as saved, and what the save lacks is the default",
       _standing.last_withdrawal is None and _standing.scandal_last_year == 0.0 and _standing.reputation == 5.0

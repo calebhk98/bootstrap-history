@@ -2,7 +2,7 @@
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old
 code did, and is never cached."""
-from sim.agents.api import EDGE_SAVERS, GOVERNMENT_PREFIX, ledger
+from sim.agents.api import GOVERNMENT_PREFIX, ledger
 from sim.assembly.api import KEYED, QUOTE
 from sim.ledger.api import PayActor
 
@@ -10,26 +10,13 @@ from . import action_results
 from .bridge import bridge_command, bridge_view
 
 
-# ---- knowledge, workforce, finance and prices ----
+# ---- knowledge ----
 
 @bridge_view("techniques_with_results", kind=QUOTE)
 def techniques_with_results(sim, techniques):
     """`techniques` with the routes, partners and knowledge their nodes return."""
     return action_results.expand(sim.nodes, techniques)
 
-
-@bridge_view("market_rate")
-def market_rate(sim):
-    return sim.market_rate()
-
-
-@bridge_view("households_loanable_funds")
-def households_loanable_funds(sim):
-    """Funds households put into the loanable pool at the last meeting of the capital market; none before it has met."""
-    return sim.actors.state.purses.offers.get(EDGE_SAVERS, 0.0)
-
-
-# ---- markets ----
 
 
 # ---- polity and the ledger ----

@@ -4,6 +4,7 @@ The register is saved state beside the ways (`works`, `works_under_construction`
 
 QUICK_TOPIC = True
 
+from sim.finance import purchase_rules
 import dataclasses
 import unittest
 from types import SimpleNamespace
@@ -38,6 +39,10 @@ class _Host(WorksMixin):
 
     def spending_power(self, kind="buy"):
         return self.cash
+
+    def view(self, name):
+        """The finance module's `can_pay` over this stand-in's spending power."""
+        return lambda cost: purchase_rules.can_pay(cost, self.spending_power("buy"))
 
 
 class WorksRegisterTests(unittest.TestCase):

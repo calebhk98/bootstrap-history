@@ -6,8 +6,8 @@ callers over stand-ins are test_credit_wiring, test_cash_gates_wiring and test_a
 
 QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
-from sim.engine import affordability
-from sim.engine.economy_credit import calculate_credit_ceiling
+from sim.finance.api import affordability
+from sim.finance.rules import calculate_credit_ceiling
 from sim.world import capital_market
 
 # --- spending_power: what could be raised for each kind of spend

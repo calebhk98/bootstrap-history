@@ -12,7 +12,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 from sim.engine import opening_money
-from sim.engine.economy_credit import calculate_credit_ceiling
+from sim.finance.rules import calculate_credit_ceiling
 from sim.markets.api import MarkMoneyPricedAtEconomy
 
 

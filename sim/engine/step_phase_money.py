@@ -5,6 +5,7 @@ from sim.actors.api import AdvanceActors
 from sim.reporting.api import RecordAutomation, RecordEvent
 from sim.coin.api import ChargeHouseholdTheft
 from sim.demography.api import StepPopulation
+from sim.finance.api import ChargeInterest, EnforceCreditLimit, JudgeInsolvency, ShedLossMakers, WarnNearLimit
 from sim.hazards.api import RecoverOutput
 from sim.resources.api import NoteMineCostPaid
 from sim.constants import declare
@@ -82,55 +83,13 @@ class MoneyPhaseMixin:
             _opened = self.auto_open_ventures()
             if _opened:
                 self.send(RecordAutomation("auto_open", "open", ", ".join(_opened), "net-positive concerns already built, within the staff and money available", _before, dict(ids=list(_opened))))
-        self.charge_interest(self.state.scenario.year)
+        self.send(ChargeInterest(self.state.scenario.year))
         self.note_venture_year()
-        self.shed_loss_makers(self.state.scenario.year)
-        self.warn_near_the_limit(self.state.scenario.year)
-        self.enforce_credit_limit(self.state.scenario.year)
+        self.send(ShedLossMakers(self.state.scenario.year))
+        self.send(WarnNearLimit(self.state.scenario.year))
+        self.send(EnforceCreditLimit(self.state.scenario.year))
 
-        # INSOLVENCY MUST HAVE A CONSEQUENCE: capital sitting deeply negative
-        # for years with no event, no block and no attrition would not be a
-        # hard game made easy, it would be an accounting fiction that
-        # quietly makes every cost in the model optional.
-        #
-        # The consequence is deliberately the realistic one rather than a
-        # dramatic one. Nobody arrests you for debt. What happens is that people
-        # you cannot pay stop turning up, and nobody will extend you credit for
-        # something new while you are in arrears.
-        if self.state.household.capital < 0:
-            # BEING IN DEBT IS NOT THE SAME AS BEING INSOLVENT: counting a
-            # year of arrears for every year capital is below zero,
-            # regardless of what the household is earning, would keep a
-            # household running a surplus and paying its debt down
-            # classified as insolvent and refused permission to start
-            # anything - which is exactly what would keep it from ever
-            # climbing out. A household running a surplus is paying its
-            # creditors, and nobody calls that insolvency; the counter is
-            # for a household whose income does not cover its costs.
-            _net = (self.revenue() - self.upkeep() - self.recurring_living_cost(self.revenue(), self.upkeep())
-                    - self.mine_operating_cost())
-            if _net > 0:
-                self.state.household.insolvent_years = 0
-            else:
-                self.state.household.insolvent_years = self.state.household.insolvent_years + 1
-            floor = -max(self.INSOLVENCY_FLOOR_MIN, self.revenue() * self.INSOLVENCY_FLOOR_REVENUE_MULTIPLE)
-            if self.state.household.capital < floor and self.state.household.insolvent_years >= self.INSOLVENCY_YEARS_BEFORE_BLEED:
-                # wages unpaid: freedmen leave first, they are free to
-                # A FLOOR: staff must not bleed without limit, or fewer people
-                # earn less, which deepens the arrears, which bleeds more
-                # people - an unrecoverable doom loop. Insolvency should
-                # cost you your expansion, not trap you in a state you can
-                # never leave: a household that has shed everything also
-                # stops paying for it, and can climb back.
-                bleed = min(self.INSOLVENCY_BLEED_CAP, self.INSOLVENCY_BLEED_RATE * self.state.household.insolvent_years)
-                self.state.household.artisans = max(self.INSOLVENCY_ARTISAN_FLOOR, self.state.household.artisans * (1.0 - bleed))
-                self.state.household.scholars = max(self.INSOLVENCY_SCHOLAR_FLOOR, self.state.household.scholars * (1.0 - bleed * self.INSOLVENCY_SCHOLAR_BLEED_DISCOUNT))
-                if self.state.household.insolvent_years in (3, 6, 12, 25):
-                    self.send(RecordEvent.of("arrears_staff_leaving", "IN ARREARS for %d years: staff are leaving "
-                                         "because you cannot pay them" % self.state.household.insolvent_years))
-                # Works it can no longer maintain were let go above, by the business's loss rule (shed_loss_makers).
-        else:
-            self.state.household.insolvent_years = 0
+        self.send(JudgeInsolvency())
         # A standing workforce policy, and ONLY when the optimizer is playing:
         # buying people automatically in manual mode, with no command issued
         # and no log line, would be lying about the acquisition - the game's

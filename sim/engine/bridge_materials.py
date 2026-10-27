@@ -4,7 +4,6 @@ Each view carries the name its owner will publish (docs/architecture/catalogue),
 did, and is never cached."""
 from sim.assembly.api import KEYED, QUOTE
 
-from . import purchase_rule
 from .bridge import bridge_view
 from .data import hard_pre
 
@@ -64,9 +63,3 @@ def cost_money_factor(sim):
 def failure_reset_share(sim):
     """The share of a failed project's bill that is lost."""
     return sim.FAILURE_RESET_SHARE
-
-
-@bridge_view("purchase_refusal", kind=QUOTE)
-def purchase_refusal(sim, what, cost):
-    """The refusal that states the purchase rule, the budget and the amount short."""
-    return purchase_rule.refusal_text(sim, what, cost)

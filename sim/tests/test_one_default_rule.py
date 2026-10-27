@@ -62,7 +62,7 @@ class FounderStandIn(FounderBorrowing, Borrower):
 
 	def __init__(self, money):
 		self.money = money
-		self._state = type("StandInState", (), {"household": FounderBook()})()
+		self._state = type("StandInState", (), {"seats": {"founder": type("Seat", (), {"modules": {"finance": FounderBook()}})()}, "acting_seat": "founder"})()
 
 
 class FounderWorld(FakeWorld):

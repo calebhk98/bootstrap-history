@@ -125,7 +125,7 @@ game = build()
 game.state.seats["heir"].household.scholars = 2.0
 check("a replacement with staff is refused", game.hand_over_seat("leaver", "heir").facts["holds"] == ["staff"], None)
 game = build()
-game.state.seats["heir"].household.interest_arrears = 3.0
+game.state.seats["heir"].modules["finance"].interest_arrears = 3.0
 check("a replacement with arrears is refused", game.hand_over_seat("leaver", "heir").facts["holds"] == ["arrears or bondage"], None)
 game = build()
 game.state.seats["heir"].projects.done |= {"wheel"}

@@ -4,7 +4,6 @@ Each view carries the name its owner will publish (docs/architecture/catalogue),
 did, and is never cached."""
 from sim.assembly.api import QUOTE
 
-from . import purchase_rule
 from .bridge import bridge_view
 
 
@@ -26,26 +25,8 @@ def running_stamp(sim):
 
 # ---- finance, polity and the seat's policy ----
 
-@bridge_view("spending_power", kind=QUOTE)
-def spending_power(sim, kind="buy"):
-	return sim.spending_power(kind)
 
 
-@bridge_view("purchase_budget", seat_scoped=True)
-def purchase_budget(sim):
-	"""Most the acting seat can spend on one outright purchase right now."""
-	return purchase_rule.purchase_budget(sim)
-
-
-@bridge_view("affordable_units", kind=QUOTE)
-def affordable_units(sim, unit_cost, decimals=1):
-	"""Units the purchase budget buys at `unit_cost`, rounded down so the figure is buyable."""
-	return purchase_rule.affordable_units(sim, unit_cost, decimals=decimals)
-
-
-@bridge_view("afford_means")
-def afford_means(sim):
-	return purchase_rule.afford_means()
 
 
 @bridge_view("automatic_policy", kind=QUOTE, seat_scoped=True)

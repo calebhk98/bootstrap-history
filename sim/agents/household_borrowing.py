@@ -8,8 +8,9 @@ class FounderBorrowing:
 
 	@property
 	def arrears_book(self) -> Any:
-		"""Where the arrears are kept: the household's finances."""
-		return self._state.household  # type: ignore[attr-defined]
+		"""Where the arrears are kept: the acting seat's debt state, which the finance module owns."""
+		state = self._state  # type: ignore[attr-defined]
+		return state.seats[state.acting_seat].modules["finance"]
 
 	def credit_ceiling(self, world: Any) -> float:
 		return world.founder_credit_limit()

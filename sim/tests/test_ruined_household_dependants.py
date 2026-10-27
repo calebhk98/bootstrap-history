@@ -3,7 +3,7 @@ debt stops growing past the credit limit. The rule is called on inputs the test 
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.economy_debt_service import dependants_beyond_means_of
+from sim.finance.rules import dependants_beyond_means_of
 
 QUICK_TOPIC = True
 

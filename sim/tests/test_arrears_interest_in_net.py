@@ -2,7 +2,7 @@
 QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.economy_debt_service import interest_on_arrears, net_after_interest
+from sim.finance.rules import interest_on_arrears, net_after_interest
 
 check("interest on arrears is the debt times the rate", abs(interest_on_arrears(-3000.0, 0.12) - 360.0) < 1e-9)
 check("a purse in credit pays no interest", interest_on_arrears(500.0, 0.12) == 0.0)

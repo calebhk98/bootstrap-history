@@ -23,7 +23,8 @@ def labour(wages=None, alive=True, wage_hours=0.0, teaching=0.0, relocation=0.0,
                           relocation_hours_this_year=relocation, supervision_hours_this_year=supervision,
                           bondage_years_left=0, directors_extra=0.0)
     world = SimpleNamespace(household=household, director_overhead_hours=lambda: 0.0, cfg={"founder_hours_per_year": POOL_HOURS, "director_hours_per_year": 0.0},
-                            founder_alive=alive, state=SimpleNamespace(household=household))
+                            founder_alive=alive, state=SimpleNamespace(household=household),
+                            simulation=lambda: SimpleNamespace(bondage_years_left=0))
     stub = SimpleNamespace(_world=world, BONDAGE_HOURS_SHARE=0.25)
     stub.director_pool = lambda: CapacityMixin.director_pool(stub)
     stub.director_hours_committed = lambda: CapacityMixin.director_hours_committed(stub)

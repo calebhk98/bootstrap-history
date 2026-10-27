@@ -32,18 +32,9 @@ class HouseholdState:
 	wages_paid: float = 0.0
 	wages_prepaid: float = 0.0
 	wages_earned: Optional[float] = None
-	interest_paid: Optional[float] = None
 	slaves: int = 0
 	freedmen: int = 0
 	manumitted_total: int = 0
-	bondage_years_left: float = 0.0
-	bondage_debt: float = 0.0
-	credit_frozen_until: int = 0
-	insolvent_years: int = 0
-	last_settlement: int = -999
-	# interest the household could not draw on its facility, and the consecutive years it has owed some (sim/agents/borrowing.py)
-	interest_arrears: float = 0.0
-	arrears_years: int = 0
 	spend_last_year: Optional[float] = None
 	# the cash book (sim/engine/cash_book.py): the open period's entries by cause, cash at its start,
 	# and the last few closed years
@@ -91,7 +82,6 @@ class HouseholdState:
 	saving_for: Optional[str] = None
 	saving_target: float = 0.0
 	_said_deputies: int = 0
-	_said_near_limit: Optional[bool] = None
 	_said_autoopen: Optional[Dict[str, int]] = None
 
 	# ---- the purse: an account in the actors' book (sim/agents/purses.py) once the state is attached to it ----

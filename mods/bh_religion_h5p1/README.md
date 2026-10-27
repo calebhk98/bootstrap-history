@@ -46,7 +46,7 @@ All figures sit in the cast entry (`members`, `endowment_hectares`, and `plan`: 
 ## Known limits
 
 * A house's purse is lent: the credit market offers the purse of every actor whose class sets `lends_from_purse`
-  (`lender_offers`, `sim/engine/economy_capital_market.py`), as it offers a firm's. The land market has no owners, so
+  (`lender_offers`, `sim/finance/capital_market.py`), as it offers a firm's. The land market has no owners, so
   land a house buys does not leave the founder's market; land titles are `Complaints/538`.
 * The three civilisations are `variant_of` patches (`mods/README.md`, Civilisations): each file names only its
   house, so a change to the shipped civilisation reaches the variant. A variant of Han is played without the shipped

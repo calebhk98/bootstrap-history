@@ -17,7 +17,7 @@ def register(api):
 	class ReligiousHouse(foundation.Church):
 		"""A church with mill tolls, a lending purse, and land bought from surplus."""
 		kind = "religious_house"
-		# the credit market offers this actor's purse to borrowers (`lender_offers`, sim/engine/economy_capital_market.py)
+		# the credit market offers this actor's purse to borrowers (`lender_offers`, sim/finance/capital_market.py)
 		lends_from_purse = True
 
 		def terms(self):

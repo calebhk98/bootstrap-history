@@ -3,6 +3,7 @@ builds bridges, ports, canals and engineered ways; the roads, bridges and ports 
 geography's routes read."""
 QUICK_TOPIC = True
 
+from sim.finance import purchase_rules
 import types
 import unittest
 
@@ -54,6 +55,10 @@ class _Builder(ways.WaysMixin):
 
     def spending_power(self, kind):
         return 1e18
+
+    def view(self, name):
+        """The finance module's `can_pay` over this stand-in's spending power."""
+        return lambda cost: purchase_rules.can_pay(cost, self.spending_power("buy"))
 
     def pay_edge(self, edge, money, text):
         self.paid.append(money)

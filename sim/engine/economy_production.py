@@ -106,7 +106,7 @@ class ProductionMixin:
             self.labour.director_hours_committed(),
             self.labour.wage_signature(),
             household.directors_extra,
-            household.bondage_years_left,
+            self.bondage_years_left,
             self.view("farm_holdings")()["hectares"] or 0.0,
             getattr(household, "freedmen", 0.0) or 0.0,
             getattr(household, "slaves", 0.0) or 0.0,

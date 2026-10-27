@@ -118,6 +118,15 @@ RELOCATIONS = [
     ("/modules/land/tile_owners", "/economy/tile_owners"),
     ("/modules/land/tile_claim_conflicts", "/economy/tile_claim_conflicts"),
     ("/seats/*/modules/land/colonies", "/seats/*/holdings/colonies"),
+    ("/seats/*/modules/finance/interest_paid", "/seats/*/household/interest_paid"),
+    ("/seats/*/modules/finance/bondage_years_left", "/seats/*/household/bondage_years_left"),
+    ("/seats/*/modules/finance/bondage_debt", "/seats/*/household/bondage_debt"),
+    ("/seats/*/modules/finance/credit_frozen_until", "/seats/*/household/credit_frozen_until"),
+    ("/seats/*/modules/finance/insolvent_years", "/seats/*/household/insolvent_years"),
+    ("/seats/*/modules/finance/last_settlement", "/seats/*/household/last_settlement"),
+    ("/seats/*/modules/finance/interest_arrears", "/seats/*/household/interest_arrears"),
+    ("/seats/*/modules/finance/arrears_years", "/seats/*/household/arrears_years"),
+    ("/seats/*/modules/finance/said_near_limit", "/seats/*/household/_said_near_limit"),
 ]
 
 IGNORED = [

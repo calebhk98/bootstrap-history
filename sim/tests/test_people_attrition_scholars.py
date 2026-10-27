@@ -10,7 +10,6 @@ from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
 
 from sim.agents.household import Household
-from sim.engine.economy_credit import CreditMixin
 from sim.mechanics.module import Mechanics
 from sim.tests import module_harness
 from sim.tests import materials_stand_in

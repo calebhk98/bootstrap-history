@@ -94,7 +94,7 @@ class CapacityMixin:
     def director_pool(self):
         # In bondage most of your hours are owed to somebody else, not all: the evenings are where the work gets done.
         return hours_pool(self._world.founder_alive, self._world.cfg["founder_hours_per_year"],
-                          self._world.state.household.bondage_years_left > 0, self.BONDAGE_HOURS_SHARE,
+                          self._world.simulation().bondage_years_left > 0, self.BONDAGE_HOURS_SHARE,
                           self._world.state.household.directors_extra, self._world.cfg["director_hours_per_year"])
 
     # ---- literacy bounds who you can hire ----------------------------------

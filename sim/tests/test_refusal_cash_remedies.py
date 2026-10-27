@@ -1,13 +1,14 @@
 """An unaffordable purchase's refusal lists the commands that raise cash, with the amounts those commands themselves
-charge or pay. `cash_remedies`, `remedies_text` and `refusal_text` run on a stand-in actor holding stock, concerns,
-mines and staff (no game). What a sale pays is `GoodsMarket.sell` in test_quote_equals_charge_stock."""
+charge or pay. `cash_remedies` runs on a stand-in actor holding stock, concerns, mines and staff (no game); the finance module's
+`purchase_remedies_text` and `purchase_refusal` run over the lines it gives. What a sale pays is `GoodsMarket.sell` in test_quote_equals_charge_stock."""
 from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine import cash_remedies, purchase_rule
+from sim.engine import cash_remedies
 from sim.living_stock.api import stock_rates
 from sim.refusal import facts_of
+from sim.tests import finance_host
 
 QUICK_TOPIC = True
 
@@ -70,11 +71,19 @@ check("at most six remedies are listed, the largest amount first",
       and ordered[1].startswith("mothball concern_9"), ordered)
 
 # --- the text a refusal carries
-check("no remedy line when nothing is on offer", purchase_rule.remedies_text(_actor()) == "")
+def finance_of(actor):
+    """The finance module over the remedies the actor offers, a budget of a hundred and a line of five thousand."""
+    module = finance_host.build(acting_balance=actor.capital, cash_remedies=cash_remedies.cash_remedies(actor))
+    module.spending_power = lambda kind: 100.0
+    module.credit_limit = lambda revenue=None, upkeep=None, capital=None: 5000.0
+    return module
+
+
+check("no remedy line when nothing is on offer", finance_of(_actor()).purchase_remedies_text() == "")
 # presentation: the sentence joining the remedies names each command
 check("remedies join into one sentence naming each command",
-      "sell iron" in purchase_rule.remedies_text(stocked) and "To raise cash" in purchase_rule.remedies_text(stocked))
-refusal = purchase_rule.refusal_text(stocked, "a loom", 900.0)
+      "sell iron" in finance_of(stocked).purchase_remedies_text() and "To raise cash" in finance_of(stocked).purchase_remedies_text())
+refusal = finance_of(stocked).purchase_refusal("a loom", 900.0)
 check("the refusal states its cost, the budget and the shortfall as values",
       refusal.cause == "cash_short" and facts_of(refusal)["cost"] == 900.0 and facts_of(refusal)["budget"] == 100.0
       and facts_of(refusal)["short"] == 800.0, facts_of(refusal))
