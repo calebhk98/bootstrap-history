@@ -87,6 +87,9 @@ meant, and name the new parts after their owners.
   a rule is tested by calling the function in `rules.py`, the module by `sim.tests.module_harness.build` with plain
   values for its views. A test no longer imports `sim.engine` for code you moved.
 - A test that builds a whole game stays as it is.
+- A test that sets what you moved on the game (`game.SOME_CONSTANT = 0.0`, `game.artisans = 40`) keeps passing while
+  doing nothing once the code reads your module: grep `sim/tests` for every name you move, the slow tier's scenario
+  tests included, and point those writes at your module's state or constants.
 
 ## Behaviour must not change
 

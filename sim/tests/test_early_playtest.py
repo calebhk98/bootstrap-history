@@ -71,9 +71,10 @@ check("a mine can be priced before it is bought",
 
 # --- SCENARIO 2: Rome, one game: turn-one state, and what a player can and cannot do
 rome = unopened_sim(capital=200000.0)
+_rome_staff = rome.view("staff")()
 check("you arrive with no employees and no slaves",
-      not rome.employees and rome.slaves == 0 and rome.freedmen == 0 and rome.artisans == 0.0,
-      "employees %r artisans %.1f" % (rome.employees, rome.artisans))
+      not _rome_staff["employees"] and _rome_staff["slaves"] == 0 and _rome_staff["freedmen"] == 0 and _rome_staff["artisans"] == 0.0,
+      "employees %r artisans %.1f" % (_rome_staff["employees"], _rome_staff["artisans"]))
 
 # the two doctrines whose prerequisites Rome holds, and which a trade Rome lacks holds back (the rest wait on a prerequisite:
 # test_early_playtest_data)
@@ -89,8 +90,8 @@ check("a trade this society does not have cannot be hired",
 rome.capital = 20000.0
 ok_train, _ = rome.labour.train("machinist", 2)
 check("you can teach a trade into existence",
-      ok_train and "machinist" in rome.trades_created and not rome.labour.trade_available("chemist"),
-      "trained %s created %r" % (ok_train, sorted(rome.trades_created)))
+      ok_train and "machinist" in rome.view("trade_spread")()["created"] and not rome.labour.trade_available("chemist"),
+      "trained %s created %r" % (ok_train, sorted(rome.view("trade_spread")()["created"])))
 # a finished work can be shut to stop its upkeep without forgetting how it worked
 rome.labour.hire("artisan", 2)
 rome.done.add("fin_restaurant")
@@ -108,20 +109,20 @@ check("shutting a concern down does not make you forget how it worked",
 
 rome.capital = 5000.0
 capital_before_commission = rome.capital
-employees_before_commission = dict(rome.employees)
+employees_before_commission = dict(rome.view("staff")()["employees"])
 ok_job, _ = rome.labour.commission("smith", 200)
 check("you can buy a job without employing anybody",
-      ok_job and rome.employees == employees_before_commission and rome.capital < capital_before_commission,
-      "ok %s employees %r" % (ok_job, rome.employees))
+      ok_job and rome.view("staff")()["employees"] == employees_before_commission and rome.capital < capital_before_commission,
+      "ok %s employees %r" % (ok_job, rome.view("staff")()["employees"]))
 
 
 # buying people then freeing them must not mint labour or skip the training lag
-artisans_before = rome.artisans
+artisans_before = rome.view("staff")()["artisans"]
 rome.capital = 200000.0
 rome.labour.buy_slaves(10)
 rome.labour.manumit(10)
 check("freeing untrained people does not skip the training lag",
-      rome.artisans - artisans_before < 0.01, "instant gain %.2f" % (rome.artisans - artisans_before))
+      rome.view("staff")()["artisans"] - artisans_before < 0.01, "instant gain %.2f" % (rome.view("staff")()["artisans"] - artisans_before))
 
 def spend(slices, per):
     spend_sim = unopened_sim(capital=1e9)

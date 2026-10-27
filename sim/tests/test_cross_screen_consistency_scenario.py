@@ -54,7 +54,8 @@ check("the free-hands count says that one of them is you",
 # engine charges supervision - a quarter of it, and never the number the
 # refusal quotes.
 s_vv = unopened_sim(capital=5000000.0)
-s_vv.artisans = s_vv.scholars = 40.0
+_vv_staff = s_vv.state.seats[s_vv.state.acting_seat].modules["workforce"]
+_vv_staff.artisans = _vv_staff.scholars = 40.0
 _opened = 0
 for _k in sorted(node_id for node_id in NODES if NODES[node_id]["rev"] > 0):
     if _opened < 3 and s_vv.is_venture(_k):
@@ -86,9 +87,9 @@ s_cn.labour.commission("mason", 4000.0)
 _why_cn = S._node_explain(s_cn, NODES, _kn)
 check("`why` counts the same artisans `start` does: yourself and hours bought",
       abs(_why_cn["you_have"]["artisans"] - round(s_cn.labour.craft_hands_available(), 1)) < 0.05,
-      (_why_cn["you_have"], s_cn.labour.craft_hands_available(), s_cn.artisans))
+      (_why_cn["you_have"], s_cn.labour.craft_hands_available(), s_cn.view("staff")()["artisans"]))
 check("...and says which people it is counting",
       "yourself" in str(_why_cn.get("you_have_counts")), _why_cn.get("you_have_counts"))
 check("...and it is more than the bare payroll, having bought a mason's year",
-      _why_cn["you_have"]["artisans"] > s_cn.artisans + 0.5,
-      (_why_cn["you_have"]["artisans"], s_cn.artisans))
+      _why_cn["you_have"]["artisans"] > s_cn.view("staff")()["artisans"] + 0.5,
+      (_why_cn["you_have"]["artisans"], s_cn.view("staff")()["artisans"]))

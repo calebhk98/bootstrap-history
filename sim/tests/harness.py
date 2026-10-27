@@ -463,12 +463,13 @@ def _mk_loom_sim(n_looms, age_years):
                         if loom_sim.is_venture(node_id) and loom_sim.concern_takings(node_id, 1.0) > 0)
     assert len(candidates) >= n_looms, "not enough output-earning venture nodes in the tree"
     chosen = candidates[:n_looms]
-    loom_sim.artisans = loom_sim.scholars = 100.0 * n_looms
+    staff = loom_sim.state.seats[loom_sim.state.acting_seat].modules["workforce"]
+    staff.artisans = staff.scholars = 100.0 * n_looms
     # These fixtures exercise goods-market arithmetic, not labour scarcity.
     # Supply every qualified trade so each selected historical concern can
     # obtain both its workers and its specialist foreman.
     for trade in S.WAGES:
-        loom_sim.employees[trade] = 100.0 * n_looms
+        staff.employees[trade] = 100.0 * n_looms
     loom_sim.year = 100
     for node_id in chosen:
         loom_sim.done.add(node_id)
