@@ -9,7 +9,7 @@ from sim.diffusion.civ_cost import civ_cost_factor, multiplier_for
 from sim.engine.core import Sim
 from sim.hazards import constants
 from sim.tests import hazards_host
-from sim.engine.economy import EconomyMixin
+from sim.tests import projects_host
 from sim.polity.value_weight import shifted
 from sim.labour.labour_population import PopulationMixin
 
@@ -64,10 +64,11 @@ class CivCostTests(unittest.TestCase):
 
 class MoneyFactorTests(unittest.TestCase):
     def test_a_quoted_cost_means_the_price_level_and_not_the_coins_silver(self):
-        stub = SimpleNamespace(price_index=1.7, money_real=1.0)
-        before = EconomyMixin.cost_money_factor(stub)
-        stub.money_real = 0.005
-        self.assertEqual(EconomyMixin.cost_money_factor(stub), before)
+        money_real = [1.0]
+        module = projects_host.build(price_index=1.7, money_real=lambda: money_real[0])
+        before = module.cost_money_factor()
+        money_real[0] = 0.005
+        self.assertEqual(module.cost_money_factor(), before)
         self.assertEqual(before, 1.7)
 
 

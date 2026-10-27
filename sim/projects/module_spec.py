@@ -33,9 +33,10 @@ READS_BY_OWNER = {
 	             "venture_staff_free", "venture_staff_used", "venture_real_earnings", "venture_real_upkeep", "opening_fee"),
 	"production": ("is_venture", "running", "operating", "revenue_estimate", "upkeep", "institution_units", "institution_unit_ceiling",
 	               "institution_places", "institution_upkeep", "industry_depth", "failed_attempts_trial"),
-	"projects (not moved)": ("project_cost", "legacy_projects"),
+	"projects (not moved)": ("legacy_projects",),
 	"materials": ("own_output_claim", "bounty_price", "material_upfront_refusal", "material_pool", "generation", "material_binding",
-	              "resource_throttle", "failure_loss", "start_gate_material_seller"),
+	              "resource_throttle", "failure_loss", "start_gate_material_seller", "project_material_parts",
+	              "project_cost_without_materials"),
 	"finance": ("debt_status", "credit_limit", "funding_capacity", "purchase_remedies_text", "living_cost", "spending_power",
 	            "bearable_part_of", "concern_rows_stopped"),
 	"polity": ("standing", "state_interest", "value_weight", "alarm_of", "start_gate_group_prohibition"),
@@ -49,7 +50,8 @@ READS_BY_OWNER = {
 	"reporting": ("money_text",),
 	"seats": ("win_condition_text", "win_condition_value", "acting_seat", "automation", "founder", "goal", "automatic_policy"),
 	"actors": ("actor_world",),
-	"land": ("built_way_km",),
+	"land": ("built_way_km", "material_cost_factor"),
+	"prices": ("price_index",),
 	"core": ("society_name", "year", "horizon_end_year", "legacy_order", "project_limits", "game_config", "legacy_dice", "legacy_fog",
 	         "category_trait", "plain_number"),
 }
@@ -99,6 +101,11 @@ def _view(name, compute, kind, seat_scoped):
 MODULE_SPECS = (ModuleSpec(
 	"projects", Projects, channels=(ACTIVE, START), seat_state=ProjectsSeat,
 	publishes=tuple(_view(*row) for row in _VIEWS) + (
+		# the active record is written outside the module's commands (the screens, hazards, the credit freeze): never cached
+		ViewSpec("project_cost", "project_cost", kind=QUOTE, seat_scoped=True, cached=False),
+		ViewSpec("project_cost_now", "project_cost_now", kind=QUOTE, seat_scoped=True, cached=False),
+		ViewSpec("opposition_factor", "opposition_factor", kind=QUOTE, seat_scoped=True, cached=False),
+		ViewSpec("cost_money_factor", "cost_money_factor", seat_scoped=True, cached=False),
 		# written only by the module's own start phase, which bumps START
 		ViewSpec("start_hours", "start_hours", channels=(START,), seat_scoped=True),
 		# not cached: read once, right after the start that set it

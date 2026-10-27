@@ -19,8 +19,6 @@ from sim.geography.api import regions, tiles_held
 
 from sim.land.api import rules as land_rules
 from sim.knowledge.api import LearnTechnique, declared_starting_techs
-from .economy import EconomyMixin
-from .node_rederive import NodeRederiveMixin
 from .forward_markets import ForwardMarketsMixin
 from .forward_foreign_trade import ForwardForeignTradeMixin
 from .forward_demography import ForwardDemographyMixin
@@ -31,7 +29,6 @@ from .forward_coin import ForwardCoinMixin
 from .forward_campaigns import ForwardCampaignsMixin
 from .forward_diffusion import DiffusionForwardsMixin
 from .forward_prices import ForwardPricesMixin
-from .fog import FogMixin
 from .forward_mechanics import ForwardMechanicsMixin
 from .forward_knowledge import ForwardKnowledgeMixin
 from .forward_disease import DiseaseForwardsMixin
@@ -65,12 +62,10 @@ class Sim(
         ModStoresMixin,
         ForwardMechanicsMixin,
         ForwardKnowledgeMixin,
-        EconomyMixin,
         ForwardMarketsMixin,
         ForwardForeignTradeMixin,
         ForwardProductionMixin,
         ForwardPricesMixin,
-        FogMixin,
         ForwardLandMixin,
         DiseaseForwardsMixin,
         ForwardWorkforceMixin,
@@ -93,7 +88,6 @@ class Sim(
         ForwardMaterialsMixin,
         ForwardDemographyMixin,
         ForwardCampaignsMixin,
-        NodeRederiveMixin,
 ):
     FOUNDER_MIN_REMAINING_LIFE_YEARS = declare(
         "FOUNDER_MIN_REMAINING_LIFE_YEARS", 5, kind="temporary_heuristic",
@@ -332,7 +326,7 @@ class Sim(
 
     def _wrap_seat_containers(self):
         """Wrap the bound seat's mutation-aware containers and start its version counters."""
-        from sim.engine.economy import _InvalidatingDict, _InvalidatingSet
+        from sim.invalidating import _InvalidatingDict, _InvalidatingSet
         from sim.engine.state import ActiveProjectState
         self.state.projects.business.watch = self._operating_changed
         self.state.projects.active = _InvalidatingDict(

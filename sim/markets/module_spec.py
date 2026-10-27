@@ -78,6 +78,7 @@ _VIEWS = (
 	("market_absorption_by_category", QUOTE), ("legacy_market_flows", None), ("legacy_agent_economy", None),
 	("money_from_economy", None), ("unit_mass_kg", QUOTE), ("border_duty_per_tonne", QUOTE),
 	("household_demand_units", QUOTE), ("household_basket", None), ("home_household_tonnes", QUOTE), ("partner_household_demand", KEYED),
+	("household_need_floors_per_person", None), ("household_bill_per_person", None),
 )
 
 

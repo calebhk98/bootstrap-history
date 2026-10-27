@@ -5,7 +5,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine.economy_household_bill import HouseholdBillMixin
+from sim.tests import market_stand_in
 from sim.markets.port_year import AgentEconomy
 
 QUICK_TOPIC = True
@@ -25,8 +25,9 @@ class SeatFloorsTests(unittest.TestCase):
         self.assertEqual(floors, {"food": 30.0, "shelter": 12.0})
 
     def test_a_persons_bill_is_the_sum_of_the_floors_so_founder_and_cohort_households_of_one_size_pay_alike(self):
-        game = types.SimpleNamespace(household_need_floors_per_person=lambda: {"food": 30.0, "shelter": 12.0})
-        bill = HouseholdBillMixin.household_bill_per_person(game)
+        markets = market_stand_in.markets_over(
+            economy=types.SimpleNamespace(agent_need_floor_costs_at=lambda: {"food": 30.0, "shelter": 12.0}))
+        bill = markets.household_bill_per_person()
         people = 3.0
         self.assertAlmostEqual(bill * people, people * sum({"food": 30.0, "shelter": 12.0}.values()))
         self.assertEqual(bill, 42.0)

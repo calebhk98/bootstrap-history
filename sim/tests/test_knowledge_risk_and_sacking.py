@@ -11,8 +11,8 @@ from sim.engine import bridge_hazards
 from sim.engine.data import closure
 from sim.engine.forward_mechanics import ForwardMechanicsMixin
 from sim.knowledge import rules as knowledge_rules
-from sim.knowledge.api import (CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE, ForgetTechnique, KnowledgeSeat,
-                               RefreshDoneCaches)
+from sim.knowledge.api import (CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE, ForgetTechnique, KnowledgeSeat)
+from sim.production.api import RefreshDoneCaches
 from sim.knowledge.module import Knowledge
 from sim.projects.api import ShutForgotten
 from sim.reporting.api import RecordEvent

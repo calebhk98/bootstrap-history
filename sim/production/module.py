@@ -5,9 +5,10 @@ what a concern makes from the techniques its society runs, how deep an industry'
 uses. It owns each seat's stock of industry experience (`ProductionSeat`). The record of what is done, operating and granted, the
 household, the tree and the economy's objects have not moved yet, so the module reaches them through `legacy_game` and every view it
 publishes is uncached: legacy code writes that state directly. The revenue and candidate caches live on the household object because
-the engine drops them there (economy.py `_done_changed`, `_operating_changed`)."""
+the engine drops them through `caches` (its household hooks call the same functions the commands here do)."""
 from sim.assembly.api import Module
 
+from . import caches
 from .book_sales import BookSales
 from .capability import Capability
 from .concern_market import ConcernMarket
@@ -34,6 +35,11 @@ class Production(Revenue, Upkeep, ConcernMarket, BookSales, Volume, Learning, De
 		"""The acting seat's concerns and capabilities that are open (the live set: the engine adds and discards in place)."""
 		return self._game().state.projects.operating
 
+	def done_in_order(self):
+		"""Everything the acting seat has finished, in the tree's own order (the memo lives on the household)."""
+		game = self._game()
+		return caches.done_in_order(game.household, game.nodes, game.state.projects.done)
+
 	def running_stamp(self):
 		"""(the projects record, the counts and versions of what is built, granted and operating, the tree): a table derived
 		from what is running stays good while this is unchanged."""
@@ -56,6 +62,9 @@ class Production(Revenue, Upkeep, ConcernMarket, BookSales, Volume, Learning, De
 		return self.after_failed_attempts(node_id, count)
 
 	# ---- the commands ----
+
+	def apply_refresh_done_caches(self, command):
+		caches.forget_done(self._game().household)
 
 	def apply_accrue_experience(self, command):
 		self.accrue_industry_experience()

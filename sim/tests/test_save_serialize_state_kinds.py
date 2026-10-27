@@ -13,7 +13,7 @@ from sim.agents.api import ActorRecord, ActorsState
 from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
 from sim.finance.api import FinanceSeat
-from sim.engine.economy import _InvalidatingSet
+from sim.invalidating import _InvalidatingSet
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
 from sim.production.api import ProductionSeat

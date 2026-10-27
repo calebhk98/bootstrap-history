@@ -9,7 +9,7 @@ from sim.assembly.api import Module
 from . import fog_words, rules
 from .commands import ForgetTechnique, LearnTechnique, RevealFrom, RevealNodes
 from .constants import CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE
-from .needed_commands import RefreshDoneCaches
+from sim.production.api import RefreshDoneCaches
 
 DONE = "done"
 REVEALED = "revealed"

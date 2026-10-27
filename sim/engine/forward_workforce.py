@@ -31,3 +31,11 @@ class ForwardWorkforceMixin:
     def build_worker_housing(self, places):
         """Add durable worker housing and relieve household crowding; the places built, or 0.0 when the purse does not cover them."""
         return self.send(BuildHousing(places))
+
+    # ---- what housing and a school seat cost ----
+
+    def housing_price_per_place(self):
+        return self.view("housing_price_per_place")()
+
+    def trade_school_price_per_seat(self):
+        return self.view("trade_school_price_per_seat")()

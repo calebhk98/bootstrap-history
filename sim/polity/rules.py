@@ -118,3 +118,19 @@ def concern_levy_due(takings_and_shares: Sequence) -> Dict[str, float]:
 SIZED_BY_DEBT = "debt"
 SIZED_BY_CLAIMS = "claims"
 
+
+
+def earned_standing(built: int, granted: int) -> float:
+	"""The reputation kept for what has been finished and not been given: a square root, because a third schoolhouse does not make
+	its founder three times as well known as the first (the standing a school buys is mostly in having founded one at all)."""
+	return constants.STANDING_BASE_FLOOR + constants.STANDING_PER_SQRT_EARNED * math.sqrt(max(0, built - granted))
+
+
+def standing_after_scandal(standing: float, scandal: float) -> float:
+	"""Scandal eats into standing rather than sitting alongside it: being notorious is not the same as being unknown."""
+	return max(0.0, standing - constants.STANDING_SCANDAL_PENALTY_PER_POINT * scandal)
+
+
+def reputation_ease(reputation: float) -> float:
+	"""How much easier reputation makes everything; 1.0 at zero reputation."""
+	return 1.0 + reputation / constants.REPUTATION_EASE_SCALE

@@ -5,7 +5,7 @@ labour adapter did, and is never cached. The `legacy_*` views are raw state the 
 they go when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
 
-from . import data, director_overhead, units_prose, wage_schedule
+from . import data, director_overhead, units_prose, view_share, wage_schedule
 
 from .bridge import bridge_view
 
@@ -79,16 +79,6 @@ def director_overhead_hours(sim):
     return director_overhead.total_hours(sim)
 
 
-@bridge_view("housing_price_per_place")
-def housing_price_per_place(sim):
-    return sim.housing_price_per_place()
-
-
-@bridge_view("trade_school_price_per_seat")
-def trade_school_price_per_seat(sim):
-    return sim.trade_school_price_per_seat()
-
-
 @bridge_view("farm_ladder")
 def farm_ladder(sim):
     return sim._farm_ladder
@@ -129,6 +119,6 @@ def concern_rows_stopped(sim, node_ids):
 @bridge_view("shared_answer", kind=QUOTE)
 def shared_answer(sim, key, inputs, compute, standalone=False):
     """`compute()` reused while the engine's world stamp and `inputs` hold."""
-    return sim._shared_answer(key, inputs, compute, standalone)
+    return view_share.of(sim)._shared_answer(key, inputs, compute, standalone)
 
 

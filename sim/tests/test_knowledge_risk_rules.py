@@ -1,47 +1,32 @@
-"""knowledge_risk on a stand-in game: the expected loss per sacking, the separate chance of any loss, what is
+"""knowledge_risk on the hazards module: the expected loss per sacking, the separate chance of any loss, what is
 already lost and must be rebuilt, and the hedge named under fog."""
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 
-from sim.engine.fog import FogMixin
+from sim.tests import hazards_host
 
 
-class RiskGame(FogMixin):
-    """Only what `knowledge_risk` reads, with a sack ahead in the civilisation's hazards."""
+def risk_module(at_risk=300, fog=False, forgotten=None, done=(), hedge="corpus_written", sack_ahead=True):
+    """The hazards module over a civilisation with a sack ahead (or none) and the views the report reads."""
+    module = hazards_host.build(
+        civilisation={"hazards": [{"name": "test sack", "years": [200, 210], "sack_chance": 0.3}] if sack_ahead else []},
+        losable_node_ids=lambda keep_dispersed=True: ["node%d" % i for i in range(at_risk)],
+        corpus_hedge=(0.5, 0.22, hedge), techniques_forgotten=forgotten or {}, techniques_held=set(done),
+        legacy_fog=fog, visibility=lambda node_id, memo=None: False, corpus_nodes=["corpus_dispersed"])
+    module.hazard_figure = lambda kind, hazard, assume_running=(): hazard[kind]
+    return module
 
-    def __init__(self, at_risk=300, fog=False, forgotten=None, done=(), hedge="corpus_written", sack_ahead=True):
-        self.civ = {"hazards": [{"name": "test sack", "years": [200, 210], "sack_chance": 0.3}] if sack_ahead else []}
-        self._losable = ["node%d" % i for i in range(at_risk)]
-        self._hedge = hedge
-        self.nodes = {}
-        self.forgotten = forgotten or {}
-        self.state = types.SimpleNamespace(
-            _fog=fog, scenario=types.SimpleNamespace(year=100),
-            projects=types.SimpleNamespace(done=set(done)))
 
-    def corpus_hedge(self):
-        return 0.5, 0.22, self._hedge
+class RiskGame:
+    """The report's inputs, as the tests below state them."""
 
-    def losable_node_ids(self, keep_dispersed=True):
-        return list(self._losable)
+    def __init__(self, **inputs):
+        self.module = risk_module(**inputs)
 
-    def best_corpus_node(self):
-        return "corpus_dispersed"
-
-    def is_visible(self, node_id):
-        return False
-
-    def hazard_figure(self, kind, hazard):
-        return hazard[kind]
-
-    def _epidemic_risk(self):
-        return {}
-
-    def capability_gaps(self):
-        return []
+    def knowledge_risk(self, advice=True, chronology=True):
+        return self.module.knowledge_risk(advice, chronology)
 
 
 class KnowledgeRisk(unittest.TestCase):

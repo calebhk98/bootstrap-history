@@ -6,7 +6,7 @@ commands that change it are applied here for good. The `legacy_*` views are stat
 when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
 from sim.refusal import Refusal
-from sim.seats.api import ForgetGoalCaches, MoveSeat, RegisterSeat
+from sim.seats.api import ForgetGoalCaches, MoveSeat, RegisterSeat, RememberGoalClosure
 
 from .bridge import bridge_command, bridge_view
 from .data import kit_capital as kit_capital_of, win_condition_describe
@@ -80,6 +80,11 @@ def apply_move_seat(sim, command):
     return move_seat(sim, command.from_id, command.to_id)
 
 
+@bridge_command(RememberGoalClosure)
+def remember_goal_closure(sim, command):
+    sim._goal_closure = command.nodes
+
+
 @bridge_command(ForgetGoalCaches)
 def forget_goal_caches(sim, command):
     sim.forget_goal_caches()
@@ -109,10 +114,10 @@ def win_condition_text(sim, node):
     return win_condition_describe(node)
 
 
-@bridge_view("on_road_to_goal", kind=QUOTE)
-def on_road_to_goal(sim, node_id):
-    """Whether the goal needs `node_id` (a yes or no, with no distance, so it names no route the player has not been shown)."""
-    return sim.on_road_to_goal(node_id)
+@bridge_view("legacy_goal_closure")
+def legacy_goal_closure(sim):
+    """What the goal needs, as the game keeps it for the labour package and the screens too (None until worked out): a debt."""
+    return getattr(sim, "_goal_closure", None)
 
 
 @bridge_view("game_attribute", kind=QUOTE)

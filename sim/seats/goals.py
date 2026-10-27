@@ -5,7 +5,7 @@ from sim.knowledge.api import LearnTechnique
 from sim.reporting.api import RecordEvent
 
 from . import goal_rules
-from .commands import ForgetGoalCaches, RecordGoalReached, SetGoal
+from .commands import ForgetGoalCaches, RecordGoalReached, RememberGoalClosure, SetGoal
 from .goal_rules import AnatomyRow
 
 
@@ -16,6 +16,18 @@ class Goals:
         goal id was reached as the formal goal (the live record)}."""
         seat = self.needs.legacy_seats()[self.clock.acting_seat]
         return {"node": seat.goal, "year": self.seat.goal_year, "years": self.seat.goal_years}
+
+    def on_road_to_goal(self, node_id: str) -> bool:
+        """Whether the goal needs this node. A yes or no with no distance, so it names no route the player has not already been
+        shown. What the goal needs is worked out once and kept (the engine's other readers of it share the same set)."""
+        needed = self.needs.legacy_goal_closure()
+        if needed is None:
+            try:
+                needed = self.needs.tree_closure(self.goal()["node"])
+            except Exception:
+                needed = set()
+            self.needs.send(RememberGoalClosure(needed))
+        return node_id in needed
 
     def set_goal(self, command: SetGoal) -> None:
         """Make a node the formal goal. A goal reached before keeps the year it was reached in."""

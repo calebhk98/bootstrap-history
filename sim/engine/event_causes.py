@@ -12,6 +12,7 @@ event. The engine knows quantity names only, never an event or technology id.
 """
 import operator
 
+from sim.hazards.api import weakened
 from sim.refusal import Refusal
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple
 
@@ -21,8 +22,6 @@ OPERATORS: Dict[str, Callable[[float, float], bool]] = {
     ">": operator.gt, ">=": operator.ge, "<": operator.lt, "<=": operator.le, "==": operator.eq}
 LOWER_BOUNDS = (">", ">=")
 EFFECTS = ("skip", "scale")
-# hazard fields a weakened event shrinks, and how
-SCALED_FIELDS = ("sack_chance", "staff_loss", "real_erosion")
 
 
 class Quantity(NamedTuple):
@@ -137,20 +136,6 @@ def evaluate_causes(sim: Any, hazard: Dict[str, Any]) -> Dict[str, Any]:
     if hazard.get("causes_effect", "skip") == "skip":
         strength = 0.0 if failed else 1.0
     return {"checked": bool(causes), "conditions": rows, "failed": failed, "strength": strength}
-
-
-def weakened(hazard: Dict[str, Any], strength: float) -> Dict[str, Any]:
-    """A copy of the event at `strength` of its size; the original is untouched."""
-    adjusted = dict(hazard)
-    for field in SCALED_FIELDS:
-        if field in adjusted:
-            adjusted[field] = adjusted[field] * strength
-    if "output_factor" in adjusted:
-        adjusted["output_factor"] = 1.0 - (1.0 - adjusted["output_factor"]) * strength
-    if isinstance(adjusted.get("values"), dict):
-        adjusted["values"] = {key: (shift * strength if isinstance(shift, (int, float)) else shift)
-                              for key, shift in adjusted["values"].items()}
-    return adjusted
 
 
 def effective_hazard(sim: Any, hazard: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:

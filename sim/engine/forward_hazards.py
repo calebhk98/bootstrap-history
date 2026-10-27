@@ -24,6 +24,9 @@ class HazardsForwardsMixin:
 
     # ---- the figures ----
 
+    def knowledge_risk(self, advice=True, chronology=True):
+        return self.view("knowledge_risk")(advice, chronology)
+
     def hazard_figure(self, kind, hazard, assume_running=()):
         return self.view("hazard_figure")(kind, hazard, assume_running)
 

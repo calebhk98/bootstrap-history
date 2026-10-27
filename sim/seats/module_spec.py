@@ -11,13 +11,13 @@ from sim.knowledge.api import ForgetTechnique, LearnTechnique, RevealNodes
 from sim.reporting.api import RecordEvent
 
 from .commands import (AnswerOffer, ApplyForPatent, EndRun, ForgetGoalCaches, HandOverSeat, JoinCastSeats, JoinSeat, MakeOffer,
-                       MoveSeat, RecordGoalReached, RegisterSeat, SetFounderLife, SetGoal)
+                       MoveSeat, RecordGoalReached, RegisterSeat, RememberGoalClosure, SetFounderLife, SetGoal)
 from .module import Seats
 from .state import SeatsSeat
 
 READS_BY_OWNER = {
     "core": ("legacy_seats", "legacy_fog", "legacy_dice", "civilisation", "year", "price_index", "kit_capital",
-             "founder_life_terms", "game_attribute"),
+             "founder_life_terms", "game_attribute", "legacy_goal_closure", "tree_closure"),
     "knowledge": ("tree", "tree_nodes", "techniques_held", "techniques_granted"),
     "mechanics": ("running_mechanics", "corpus_dispersed", "patronage", "losable_node_ids"),
     "projects": ("legacy_projects",),
@@ -46,6 +46,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("seat_place", "seat_place", kind=KEYED, **_LIVE),
         ViewSpec("distance_between_seats", "distance_between_seats", kind=QUOTE, **_LIVE),
         ViewSpec("goal", "goal", seat_scoped=True, **_LIVE),
+        ViewSpec("on_road_to_goal", "on_road_to_goal", kind=QUOTE, seat_scoped=True, **_LIVE),
         ViewSpec("founder", "founder", seat_scoped=True, **_LIVE),
         ViewSpec("dead_reasons", "dead_reasons", **_LIVE),
         ViewSpec("win_condition_value", "win_condition_value", kind=QUOTE, seat_scoped=True, **_LIVE),
@@ -58,7 +59,7 @@ MODULE_SPECS = (ModuleSpec(
              (MakeOffer, "make_offer"), (AnswerOffer, "answer_offer"), (EndRun, "end_run"),
              (SetFounderLife, "set_founder_life")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(RegisterSeat, MoveSeat, ForgetGoalCaches, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent),
+    sends=(RegisterSeat, MoveSeat, ForgetGoalCaches, RememberGoalClosure, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent),
     phases=(PhaseHook("hear_of_other_seats", "hear_of_other_seats"), PhaseHook("win_conditions", "check_win_conditions"),
             PhaseHook("founder_mortality", "founder_mortality")),
     # (condition) -> [(label, value, unit)] rows for a measurement goal's anatomy, or None for the shipped rows

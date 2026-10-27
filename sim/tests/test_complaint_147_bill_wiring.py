@@ -11,10 +11,9 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.economy import EconomyMixin
 from sim.markets.goods_market import GoodsMarket
 from sim.markets.module import Markets
-from sim.tests import finance_host, module_harness
+from sim.tests import finance_host, module_harness, projects_host
 from sim.materials.api import SettleProjectMaterials as SettleCommand
 from sim.tests import materials_stand_in
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
@@ -87,16 +86,22 @@ check("why's materials line is the cost of the missing part of the bill and the 
       cost["materials"] == 123.5 and cost["base_total"] == 138.5, cost)
 
 # ---- what a project costs
-frozen = SimpleNamespace(state=SimpleNamespace(projects=SimpleNamespace(active={"node": {"bill": 500.0}})), project_cost_now=lambda node_id: 900.0)
-check("a running project costs its frozen bill whatever the market does since", EconomyMixin.project_cost(frozen, "node") == 500.0, None)
-frozen.state.projects.active = {"node": {}}
-check("a running project with no frozen bill costs what starting today would", EconomyMixin.project_cost(frozen, "node") == 900.0, None)
-frozen.state.projects.active = {}
-check("a project not yet started costs what starting today would", EconomyMixin.project_cost(frozen, "node") == 900.0, None)
-game = SimpleNamespace(project_material_parts=lambda node_id: (40.0, 30.0), project_cost_without_materials=lambda node_id: 60.0,
-                       geography=SimpleNamespace(material_cost_factor=lambda node_id: 1.5), opposition_factor=lambda node_id: 2.0)
+def costing(active, now=None, **views):
+    """The projects module over a record of projects in hand; `now` stands in for what starting today would cost."""
+    module = projects_host.build(legacy_projects=projects_host.projects_state(active=active), **views)
+    if now is not None:
+        module.project_cost_now = lambda node_id: now
+    return module
+
+
+check("a running project costs its frozen bill whatever the market does since", costing({"node": {"bill": 500.0}}, now=900.0).project_cost("node") == 500.0, None)
+check("a running project with no frozen bill costs what starting today would", costing({"node": {}}, now=900.0).project_cost("node") == 900.0, None)
+check("a project not yet started costs what starting today would", costing({}, now=900.0).project_cost("node") == 900.0, None)
+module = costing({}, project_material_parts=lambda node_id: (40.0, 30.0), project_cost_without_materials=lambda node_id: 60.0,
+                 material_cost_factor=lambda node_id: 1.5, tree={"node": {"name": "node"}}, state_interest=lambda node: -4.0)
+module.opposition_factor = lambda node_id: 2.0
 check("starting today costs labour, capital and missing materials times the distance and opposition factors",
-      EconomyMixin.project_cost_now(game, "node") == (60.0 + 40.0) * 1.5 * 2.0, None)
+      module.project_cost_now("node") == (60.0 + 40.0) * 1.5 * 2.0, None)
 
 # ---- starting pays for the materials and fixes the bill
 def settling(up_front, paid):

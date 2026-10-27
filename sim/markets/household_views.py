@@ -41,3 +41,15 @@ class HouseholdNeeds:
 			answer = self._partner_demand[civilization_id] = household_needs.budget_scaled_final_tonnes(
 				units, prices_in_hours, population, final)
 		return answer
+
+	def household_need_floors_per_person(self):
+		"""What one person's floor of each need costs a year on the seat's tile: the economy's prices and the tile's climate
+		floors (the need basket). While the economy opens, the same basket on the goods market."""
+		floors = self.economy.agent_need_floor_costs_at()
+		if floors:
+			return dict(floors)
+		return self.needs.actor_world().need_floor_costs_per_person_year()
+
+	def household_bill_per_person(self):
+		"""One person's yearly bill for every need's floor: the figure the founder and an economy household pay."""
+		return sum(self.household_need_floors_per_person().values())

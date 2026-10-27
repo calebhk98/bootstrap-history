@@ -9,6 +9,7 @@ from sim.assembly.api import Module
 
 from .advice import Advice
 from .events import Events
+from .knowledge_risk import KnowledgeRisk
 from .random_events import RandomEvents
 from .relief import Relief
 from .sack import Sack
@@ -16,7 +17,7 @@ from .shocks import Shocks
 from .world import WorldHazards
 
 
-class Hazards(Relief, Advice, Shocks, RandomEvents, Sack, WorldHazards, Events, Module):
+class Hazards(Relief, Advice, KnowledgeRisk, Shocks, RandomEvents, Sack, WorldHazards, Events, Module):
 
 	def setup(self) -> None:
 		self._counters_cache = None      # (the mechanics rows it was built from, the counters)

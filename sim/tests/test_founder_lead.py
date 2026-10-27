@@ -51,7 +51,7 @@ class Rederivation(unittest.TestCase):
                 mock.patch.object(node_rederive, "held_gate_set", lambda held: frozenset(held)), \
                 mock.patch.object(node_rederive, "build_schedule", lambda *arguments: schedule), \
                 mock.patch.object(node_rederive.money_units, "price_nodes", lambda *arguments: None):
-            node_rederive.NodeRederiveMixin.refresh_derived_nodes(fake)
+            node_rederive.refresh_derived_nodes(fake)
         self.assertEqual(seen, [{"fire"}])
 
 

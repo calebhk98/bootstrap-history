@@ -4,7 +4,7 @@ and the quote of opening a concern is test_spending_quote_wiring."""
 QUICK_TOPIC = True
 
 from .harness import check
-from sim.engine.quote_figures import cost_if_started_now
+from sim.projects.cost_rules import cost_if_started_now
 from sim.ventures.rules import upkeep_quote
 
 check("a project costs labour and capital plus the missing materials",

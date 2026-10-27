@@ -62,3 +62,8 @@ class Forecast:
         if not frontier:
             return 0.0
         return sum(self.regional_disease_loss(tile) for tile in frontier) / len(frontier)
+
+    def epidemic_risk(self):
+        """What the model forecasts for the coming year, without the deaths tile by tile: infections now, contact between
+        tiles, and the chance each pathogen reaches the nation. The risk of epidemics read from the model, not from a dated list."""
+        return {key: value for key, value in self.epidemic_forecast().items() if key != "expected_deaths_by_tile"}

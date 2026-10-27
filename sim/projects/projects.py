@@ -16,6 +16,7 @@ from .blocker_views import BlockerViews
 from .closures import Closures
 from .completion import Completion
 from .cost_tail import CostTail
+from .costs import Costs
 from .exclusions import Exclusions
 from .hour_queue import HourQueue
 from .mothball import Mothball
@@ -40,7 +41,7 @@ START = "start"          # the seat's start phase measured the year's hours
 
 
 class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, ProgressHours, Risk, Precaution, Completion,
-               Rebuild, RunningGates, Closures, Exclusions, OpenGate, HourQueue, AllocationNotes, CostTail, Staffing,
+               Rebuild, RunningGates, Closures, Exclusions, OpenGate, HourQueue, AllocationNotes, CostTail, Costs, Staffing,
                StaffingShortfall, StaffingReport, AutoOpen, Mothball, TradeWait, Module):
 	def setup(self) -> None:
 		self._setup_start_checks()

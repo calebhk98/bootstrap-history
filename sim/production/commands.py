@@ -13,3 +13,9 @@ class AccrueExperience(Command):
 class LearnFromFailure(Command):
 	"""A diagnosed failure at `node_id`: the worker-years its attempt spent stay in the industry's experience."""
 	node_id: str
+
+
+@dataclass(frozen=True)
+class RefreshDoneCaches(Command):
+	"""What the acting seat holds has changed, so every figure derived from it (revenue, upkeep, capability, material demand)
+	is stale."""

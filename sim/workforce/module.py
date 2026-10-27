@@ -14,13 +14,14 @@ from .staff_hiring import StaffHiring
 from .staff_watch import StaffWatch
 from .staff_year import StaffYear
 from .hours_year import HoursYear
+from .housing_prices import HousingPrices
 from .views import Views
 from .views_state import ViewsState
 from .wage_fallback import WageFallback
 from .world import WorkforceWorld
 
 
-class Workforce(Views, ViewsState, Applying, ApplyingHours, StaffWatch, Apprenticeships, StaffYear, StaffHiring, Prelude, WageFallback, HoursYear, Module):
+class Workforce(Views, ViewsState, Applying, ApplyingHours, StaffWatch, Apprenticeships, StaffYear, StaffHiring, Prelude, WageFallback, HoursYear, HousingPrices, Module):
 
 	def setup(self):
 		self.labour = Labour(WorkforceWorld(self.needs, self))

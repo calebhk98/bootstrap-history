@@ -6,7 +6,8 @@ import unittest
 from types import SimpleNamespace
 
 from sim.knowledge import rules
-from sim.knowledge.api import (ForgetTechnique, KnowledgeSeat, LearnTechnique, RefreshDoneCaches, RevealFrom, RevealNodes)
+from sim.knowledge.api import (ForgetTechnique, KnowledgeSeat, LearnTechnique, RevealFrom, RevealNodes)
+from sim.production.api import RefreshDoneCaches
 from sim.knowledge.module import DONE, REVEALED, Knowledge
 from sim.tests import module_harness
 

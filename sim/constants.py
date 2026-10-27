@@ -334,7 +334,6 @@ def _import_declaring_modules():
     for module in ("sim.engine.data",
                    "sim.materials.constants",
                    "sim.materials.capacity",
-                   "sim.engine.economy",
                    "sim.ui.cli",
                    "sim.engine.core",
                    "sim.polity.constants",

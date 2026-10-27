@@ -7,13 +7,13 @@ from unittest import mock
 from types import SimpleNamespace
 
 from sim.diffusion.module import Diffusion
-from sim.engine.core import Sim
 from sim.production import capability
 from sim.mechanics import rules
 from sim.markets import categories
 from sim.markets.module import Markets
 from sim.mechanics.module import Mechanics
-from sim.tests import module_harness, production_host
+from sim.polity.state import PolitySeat
+from sim.tests import module_harness, polity_host, production_host
 
 QUICK_TOPIC = True
 
@@ -88,28 +88,30 @@ class EffectSumAndFactor(unittest.TestCase):
         self.assertAlmostEqual(rules.factor_product(terms, lambda node_id, spec: node_id == "b", None, 1.0, None), 1.6)
 
 
-def standing_game(extra, scandal=0.0):
+def standing_module(extra, scandal=0.0):
+    """The polity module over a mechanics channel that adds `extra` and a seat with this scandal; `asked` lists the channels read."""
     asked = []
 
     def effect_sum(channel, start=0.0):
         asked.append(channel)
         return start + extra
-    return SimpleNamespace(effect_sum=effect_sum, asked=asked, scandal=scandal,
-                           state=SimpleNamespace(projects=SimpleNamespace(done=set(), granted=set())))
+    module = polity_host.build(seat=PolitySeat(scandal=scandal), effect_sum=effect_sum)
+    module.asked = asked
+    return module
 
 
 class StandingFloor(unittest.TestCase):
 
     def test_it_asks_the_standing_channel(self):
-        game = standing_game(1.0)
-        Sim.standing_floor(game)
-        self.assertEqual(game.asked, ["standing"])
+        module = standing_module(1.0)
+        module.standing_floor()
+        self.assertEqual(module.asked, ["standing"])
 
     def test_it_rises_by_what_the_channel_adds(self):
-        self.assertAlmostEqual(Sim.standing_floor(standing_game(1.0)) - Sim.standing_floor(standing_game(0.0)), 1.0)
+        self.assertAlmostEqual(standing_module(1.0).standing_floor() - standing_module(0.0).standing_floor(), 1.0)
 
     def test_scandal_lowers_it(self):
-        self.assertLess(Sim.standing_floor(standing_game(0.0, scandal=3.0)), Sim.standing_floor(standing_game(0.0)))
+        self.assertLess(standing_module(0.0, scandal=3.0).standing_floor(), standing_module(0.0).standing_floor())
 
 
 class GoodsReach(unittest.TestCase):

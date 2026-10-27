@@ -16,11 +16,12 @@ from .patronage import Patronage
 from .pressure import Pressure
 from .protection import Protection
 from .reach import Reach
+from .standing_floor import StandingFloor
 from .transfers import Transfers
 from .year import Year
 
 
-class Polity(Reach, Notice, Protection, Eminence, Pressure, Demands, Groups, Transfers, Patronage, Year, Appliers, Module):
+class Polity(Reach, Notice, Protection, StandingFloor, Eminence, Pressure, Demands, Groups, Transfers, Patronage, Year, Appliers, Module):
 
 	def setup(self) -> None:
 		self._state_reach_memo = None     # (the key it was worked out for, the share): never saved

@@ -40,18 +40,6 @@ def wage_bill(sim):
 	return sim.labour.wage_bill()
 
 
-@bridge_view("household_bill_per_person", seat_scoped=True)
-def household_bill_per_person(sim):
-	"""One person's yearly bill for every need's floor: the figure the founder and an economy household pay."""
-	return sim.household_bill_per_person()
-
-
-@bridge_view("household_dependant_people", seat_scoped=True)
-def household_dependant_people(sim):
-	"""People the household keeps besides the founder: each a person with needs of their own."""
-	return sim.household_dependant_people()
-
-
 @bridge_view("cash_remedies", seat_scoped=True)
 def remedies(sim):
 	"""Lines naming the commands that raise cash or cut costs, largest amount first."""

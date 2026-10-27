@@ -225,3 +225,23 @@ def draw_seed(weather_seed: Any, country: str, kind: str, year: int) -> str:
 def failed_causes_words(report: Dict[str, Any]) -> str:
 	"""Why an event's stated causes do not hold, in the words its data gives."""
 	return "; ".join(row["why"] or row["quantity"] for row in report["failed"])
+
+
+# ---- an event whose causes only partly hold ----
+
+# hazard fields a weakened event shrinks, and how
+SCALED_FIELDS = ("sack_chance", "staff_loss", "real_erosion")
+
+
+def weakened(hazard: Dict[str, Any], strength: float) -> Dict[str, Any]:
+    """A copy of the event at `strength` of its size; the original is untouched."""
+    adjusted = dict(hazard)
+    for field in SCALED_FIELDS:
+        if field in adjusted:
+            adjusted[field] = adjusted[field] * strength
+    if "output_factor" in adjusted:
+        adjusted["output_factor"] = 1.0 - (1.0 - adjusted["output_factor"]) * strength
+    if isinstance(adjusted.get("values"), dict):
+        adjusted["values"] = {key: (shift * strength if isinstance(shift, (int, float)) else shift)
+                              for key, shift in adjusted["values"].items()}
+    return adjusted

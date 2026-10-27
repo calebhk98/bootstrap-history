@@ -8,7 +8,10 @@ from types import SimpleNamespace
 from sim.tests import projects_host
 from sim.projects.completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
 from sim.tests import materials_stand_in, resources_stand_in
-from sim.engine.fog import FogMixin
+from sim.engine.data import closure
+from sim.seats.module import Seats
+from sim.seats.state import SeatsSeat
+from sim.tests import module_harness
 from sim.ui.proto.economy import _power_tiers
 
 THRESHOLD, MINIMUM, SCALE = 5, 2.0, 90.0
@@ -156,19 +159,22 @@ class MineAlreadyBeingSunk(unittest.TestCase):
 class OnTheRoadToTheGoal(unittest.TestCase):
     """Complaints/264: a fog-safe yes or no for what lies on the road to the goal."""
 
-    def _host(self):
+    def _seats(self):
         nodes = {"goal": {"pre": ["middle"], "req_any": []}, "middle": {"pre": ["root"], "req_any": []},
                  "root": {"pre": [], "req_any": []}, "side": {"pre": ["root"], "req_any": []}}
-        return SimpleNamespace(nodes=nodes, state=SimpleNamespace(_goal="goal"))
+        module = module_harness.build(Seats, seat=SeatsSeat(), views={"legacy_goal_closure": None, "tree_closure": lambda goal: closure(nodes, goal)})
+        module.needs.legacy_goal_closure = module_harness._FakeView(None)
+        module.goal = lambda: {"node": "goal"}
+        return module
 
     def test_a_node_the_goal_needs_is_on_the_road_and_one_it_does_not_is_off_it(self):
-        host = self._host()
-        self.assertTrue(FogMixin.on_road_to_goal(host, "middle"))
-        self.assertTrue(FogMixin.on_road_to_goal(host, "root"))
-        self.assertFalse(FogMixin.on_road_to_goal(host, "side"))
+        module = self._seats()
+        self.assertTrue(module.on_road_to_goal("middle"))
+        self.assertTrue(module.on_road_to_goal("root"))
+        self.assertFalse(module.on_road_to_goal("side"))
 
     def test_the_answer_is_a_bool_with_no_distance(self):
-        self.assertIsInstance(FogMixin.on_road_to_goal(self._host(), "middle"), bool)
+        self.assertIsInstance(self._seats().on_road_to_goal("middle"), bool)
 
 
 if __name__ == "__main__":

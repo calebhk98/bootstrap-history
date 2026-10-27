@@ -9,7 +9,7 @@ from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 
 from .commands import ForgetTechnique, LearnTechnique, RevealFrom, RevealNodes
 from .module import DONE, REVEALED, Knowledge
-from .needed_commands import RefreshDoneCaches
+from sim.production.api import RefreshDoneCaches
 from .state import KnowledgeSeat
 
 READS_BY_OWNER = {

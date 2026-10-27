@@ -16,8 +16,6 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits
 
 PHYSICAL_COSTS = {
-    "HOUSING_COST_PER_PLACE": "HOUSING_LABOUR_HOURS_PER_PLACE",
-    "TRADE_SCHOOL_COST_PER_SEAT": "TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT",
     "INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD": "INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD",
     "CREDIT_LINE_PER_FOREST_HA": "CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA",
     "CAPABILITY_FACTOR_HALF_SATURATION_REV": "CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS",
@@ -25,6 +23,8 @@ PHYSICAL_COSTS = {
     "STATE_FUNDING_BASE": "STATE_FUNDING_BASE_LABOUR_HOURS",
 }
 SLAVE_PRICE = ("SLAVE_BASE_PRICE", "SLAVE_BASE_PRICE_LABOUR_HOURS")
+# priced by the workforce module (`housing_price_per_place`, `trade_school_price_per_seat`) as hours times what an hour is worth, at the price level
+WORKFORCE_PRICES = (("HOUSING_COST_PER_PLACE", "HOUSING_LABOUR_HOURS_PER_PLACE"), ("TRADE_SCHOOL_COST_PER_SEAT", "TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT"))
 PATRON_GIFT = ("a patron's courting gift", "PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS")   # priced in the coin by the hazards module
 HANDS_PRICE = ("one pair of hands per this takings", "VENTURE_HANDS_PER_REVENUE_LABOUR_HOURS")   # priced by the ventures module's `crew_figures`
 FARM_PRICE = ("FARM_LAND_PRICE", "FARM_LABOUR_HOURS_PER_HA")   # priced by the agriculture module's `farm_land_price`
@@ -42,7 +42,7 @@ def _deposit(name, grade, depth="surface"):
 class PhysicalConstantsAreInHours(unittest.TestCase):
 
     def test_each_is_declared_in_labour_hours(self):
-        for money_name, hours_name in list(PHYSICAL_COSTS.items()) + [SLAVE_PRICE, FARM_PRICE, PATRON_GIFT, HANDS_PRICE] + list(RESOURCES_PRICES):
+        for money_name, hours_name in list(PHYSICAL_COSTS.items()) + [SLAVE_PRICE, FARM_PRICE, PATRON_GIFT, HANDS_PRICE] + list(RESOURCES_PRICES) + list(WORKFORCE_PRICES):
             self.assertTrue(hours_name in REGISTRY, hours_name)
             self.assertIn("labour hour", REGISTRY[hours_name]["unit"], hours_name)
 

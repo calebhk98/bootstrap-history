@@ -2,9 +2,13 @@
 
 The screens, the project phases, the agent economy's port, the labour core and the tests still say `sim.running(node)`, `sim.revenue()` or
 `sim.industry_depth(node)`; each line goes when its last caller reads the view or sends the command itself."""
-from sim.production.api import AccrueExperience, LearnFromFailure, constants
+from sim.markets.api import ResetMarketCaches
+from sim.materials.api import ForgetReadings
+from sim.production.api import AccrueExperience, LearnFromFailure, caches, constants
 
-from . import money_units
+from sim.invalidating import _InvalidatingDict
+
+from . import money_units, node_rederive, society_holdings
 from .readable import readable
 
 
@@ -168,3 +172,52 @@ class ForwardProductionMixin:
 
 	def price_epoch(self):
 		return self.view("price_epoch")()
+
+	# ---- the memos over what is done and operating ----
+	# Plain calls on the household, not commands: the household's hooks fire while a game is still being built, before any module exists.
+
+	def done_in_order(self):
+		return self.view("done_in_order")()
+
+	def _done_changed(self):
+		"""Call after anything adds to or removes from the set of techniques done (or granted)."""
+		caches.forget_done(self.household)
+
+	def _operating_changed(self):
+		"""Call after anything adds to or removes from what is operating."""
+		caches.forget_operating(self.household)
+
+	def _active_changed(self):
+		"""Call after anything adds to, removes from, or updates the projects in hand."""
+		caches.forget_active(self.household)
+
+	def _reset_operating(self):
+		"""Point the seat's business at the invalidation hook and invalidate once."""
+		self.state.projects.business.watch = self._operating_changed
+		self._operating_changed()
+
+	def _reset_active(self):
+		"""Re-wrap the projects in hand in a fresh invalidating dict and invalidate once."""
+		self.state.projects.active = _InvalidatingDict(self.state.projects.active or {}, on_change=self._active_changed)
+		self._active_changed()
+
+	def _reset_economic_caches(self):
+		"""Wipe all transient economic derived-state caches and re-wrap containers on save/load and on a seat switch."""
+		caches.forget_revenue(self.household)
+		self.send(ResetMarketCaches())      # the markets module's remembered goods-category figures
+		self.send(ForgetReadings())      # the materials module's remembered demand tables
+		self._done_changed()
+		self._reset_operating()
+		self._reset_active()
+		self._reset_workforce()
+
+	# ---- the tree's derived figures (composition: node_rederive.py) ----
+
+	def refresh_derived_nodes(self):
+		node_rederive.refresh_derived_nodes(self)
+
+	def _remember_derived_gates(self, held_techs):
+		node_rederive.remember_derived_gates(self, held_techs)
+
+	def _society_held_techs(self):
+		return society_holdings.society_techs(self)

@@ -35,18 +35,6 @@ def legacy_household_actor(sim):
 
 # ---- projects and the household's versions ---------------------------------------------------------------------------------
 
-@bridge_view("standing_floor", seat_scoped=True)
-def standing_floor(sim):
-	"""The reputation the acting seat keeps for what it has built, whatever else happens."""
-	return sim.standing_floor()
-
-
-@bridge_view("rep_factor", seat_scoped=True)
-def rep_factor(sim):
-	"""How much easier reputation makes everything: 1.0 at zero reputation."""
-	return sim.rep_factor()
-
-
 @bridge_view("legacy_done_versions", seat_scoped=True)
 def legacy_done_versions(sim):
 	"""(the version of the techniques held, the version of those running) of the acting seat: what a memo is keyed by."""

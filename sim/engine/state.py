@@ -351,7 +351,7 @@ def serialize_state(obj: Any) -> Any:
 			val = getattr(obj, f.name)
 			out[f.name] = serialize_state(val)
 		return out
-	from sim.engine.economy import _InvalidatingSet
+	from sim.invalidating import _InvalidatingSet
 	if isinstance(obj, (set, _InvalidatingSet)):
 		return {"__set__": sorted(serialize_state(x) for x in obj)}
 	if isinstance(obj, (dict, _InvalidatingDict, collections.defaultdict, collections.Counter)):

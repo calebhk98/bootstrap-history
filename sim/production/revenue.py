@@ -171,7 +171,7 @@ class Revenue:
 			return cached
 		weight = 0.0
 		projects = game.state.projects
-		for node_id in game.done_in_order():
+		for node_id in self.done_in_order():
 			if node_id in projects.granted or node_id in projects.operating:
 				continue
 			node = game.nodes[node_id]
@@ -188,7 +188,7 @@ class Revenue:
 		game = self._game()
 		rows = {}
 		projects = game.state.projects
-		for node_id in game.done_in_order():
+		for node_id in self.done_in_order():
 			if node_id in projects.granted or node_id not in projects.operating:
 				continue
 			if not game.nodes[node_id]["rev"]:
@@ -285,7 +285,7 @@ class Revenue:
 		allocation, so two different objects compare equal by id() often enough to replay a stale answer.
 		"""
 		game = self._game()
-		seq = game.done_in_order()
+		seq = self.done_in_order()
 		practice_set = self._practice_set()
 		projects = game.state.projects
 		operating_version = game.household.operating_version

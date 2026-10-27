@@ -9,9 +9,13 @@ rules each quote reads are in the tests of the module that prices it (test_purch
 from unittest import mock
 
 from sim.finance import credit_line as finance_credit_line
+from sim.workforce import constants as workforce_constants
 from .harness import *  # noqa: F401,F403
 
 _CAPITAL = 4000000.0
+# a hire's takings carry some dependants, which would offset part of its wage; stopped at the end of the file
+_NO_DEPENDANTS = mock.patch.object(workforce_constants, "HOUSEHOLD_DEPENDANT_PEOPLE", 0.0)
+_NO_DEPENDANTS.start()
 
 
 def _fresh():
@@ -97,7 +101,6 @@ def _ledger_outflow(game, *causes):
 def _ledger_game():
     game = unopened_sim(capital=_CAPITAL, surveyed=())
     game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
-    game.HOUSEHOLD_DEPENDANT_PEOPLE = 0.0   # a hire's takings carry some dependants, which would offset part of its wage
     return game
 
 
@@ -185,3 +188,4 @@ _hire_charged = (_ledger_outflow(_hired, "hiring fee and first year's wages")
 check("hire wage: the first year's charge through the ledger is the quoted yearly wage",
       abs(_hire_charged - _hire_quote["from_next_year_per_year"]) <= 0.11,
       (_hire_charged, _hire_quote["from_next_year_per_year"]))
+_NO_DEPENDANTS.stop()

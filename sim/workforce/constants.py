@@ -123,3 +123,23 @@ WAGE_FALLBACK_MAX_HOURS = declare(
         "sell, so it cannot consume the entire year even when nothing "
         "else has any claim on the founder's time. Tuned, not "
         "measured.")
+
+HOUSING_LABOUR_HOURS_PER_PLACE = declare(
+    "HOUSING_LABOUR_HOURS_PER_PLACE", 12000.0, kind="temporary_heuristic",
+    unit="labour hours per place", source=None, confidence="D",
+    why="Cost to build one place of durable worker housing. Not "
+        "sourced to any attested construction cost; an invented figure "
+        "sized to make the lever meaningful without being free.")
+TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT = declare(
+    "TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT", 24000.0, kind="temporary_heuristic",
+    unit="labour hours per seat", source=None, confidence="D",
+    why="Cost to found one seat of a named trade school (see "
+        "labour.py's consumer of this figure, outside this file's "
+        "scope). Not sourced to any attested cost of pre-industrial "
+        "vocational training.")
+HOUSEHOLD_DEPENDANT_PEOPLE = declare(
+    "HOUSEHOLD_DEPENDANT_PEOPLE", 1.0, kind="initial_condition",
+    unit="people besides the founder and the household's freedmen and slaves",
+    source=None, confidence="D",
+    why="How many kin and retainers a founder arrives keeping; each is a person with the full need floors. "
+        "A real figure would come from the civilisation's household structure.")

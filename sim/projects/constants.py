@@ -518,3 +518,13 @@ RESTORE_COST_SHARE_OF_BUILD = declare(
         "different figures for the same thing. Tuned discount, not "
         "measured.")
 
+
+OPPOSITION_COST_PER_UNIT = declare(
+    "OPPOSITION_COST_PER_UNIT", 0.25, kind="temporary_heuristic",
+    unit="fraction of cost added per unit of state opposition",
+    source=None, confidence="D",
+    why="How much bribes, delay and working through a front man add to "
+        "a project's cost per unit of state_interest() opposition. "
+        "state_interest() itself has no independent calibration against "
+        "attested bribery or delay costs, so this conversion rate is "
+        "tuned to feel like a real friction, not measured from one.")

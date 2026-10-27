@@ -17,7 +17,7 @@ from sim.prices import prices
 from sim.markets import port_actors
 from sim.tests import prices_stand_in
 from sim.engine.state import ActorRecord, ActorsState
-from sim.engine.view_share import ViewShareMixin
+from sim.engine.view_share import ViewShare
 from sim.tests import module_harness, production_host
 
 
@@ -168,13 +168,14 @@ class SpreadAndLending(unittest.TestCase):
         self.assertEqual(world.technique_first_run, {"node_a": 143 - 10000})
 
 
-class StandInWorld(ViewShareMixin):
-    """The few attributes the shared-answer mixin reads."""
+class StandInWorld(ViewShare):
+    """The few attributes the shared-answer service reads of the game, which is also the service."""
 
     def real_output_per_head(self):
         return self.state.economy.output_per_head
 
     def __init__(self):
+        super().__init__(self)
         self.year = 143
         self.state = types.SimpleNamespace(
             scenario=types.SimpleNamespace(year=143),

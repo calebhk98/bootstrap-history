@@ -6,13 +6,14 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.view_share import ViewShareMixin
+from sim.engine.view_share import ViewShare
 
 
-class World(ViewShareMixin):
+class World(ViewShare):
     """A world that has a price table (compared by identity), a year and a stock count (compared by value)."""
 
     def __init__(self):
+        super().__init__(self)     # the world is also the game the service reads the stock of
         self.prices = {"iron": 5.0}
         self.year = 100
         self.stock = {"iron": 0.0}

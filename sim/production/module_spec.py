@@ -7,7 +7,7 @@ directly (the record of what is done, operating and granted, the caches on the h
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.workforce.api import SetWageHoursSold
 
-from .commands import AccrueExperience, LearnFromFailure
+from .commands import AccrueExperience, LearnFromFailure, RefreshDoneCaches
 from .module import Production
 from .state import ProductionSeat
 
@@ -26,7 +26,7 @@ _LIVE = dict(cached=False)
 _VIEWS = (
 	("running", "running", KEYED, False), ("is_venture", "is_venture", KEYED, False),
 	("is_concern_node", "is_concern_node", KEYED, False), ("operating", "operating", None, False),
-	("running_stamp", "running_stamp", None, False), ("practice_set", "practice_set", None, False),
+	("done_in_order", "done_in_order", None, True), ("running_stamp", "running_stamp", None, False), ("practice_set", "practice_set", None, False),
 	("practisable", "practisable", KEYED, False), ("capability_gaps", "capability_gaps", None, False),
 	("institution_units", "institution_units", KEYED, False), ("institution_places", "institution_places", KEYED, False),
 	("institution_unit_ceiling", "institution_unit_ceiling", KEYED, False),
@@ -65,7 +65,8 @@ def _view(name, compute, kind, seat_scoped):
 MODULE_SPECS = (ModuleSpec(
 	"production", Production, seat_state=ProductionSeat,
 	publishes=tuple(_view(*row) for row in _VIEWS),
-	applies=((AccrueExperience, "apply_accrue_experience"), (LearnFromFailure, "apply_learn_from_failure")),
+	applies=((AccrueExperience, "apply_accrue_experience"), (LearnFromFailure, "apply_learn_from_failure"),
+	         (RefreshDoneCaches, "apply_refresh_done_caches")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(SetWageHoursSold,),
 ),)

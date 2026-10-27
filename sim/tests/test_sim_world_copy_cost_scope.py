@@ -8,11 +8,11 @@ import unittest
 
 from sim.actors.world import ActorWorld
 from sim.engine import bridge_actors
-from sim.engine.view_share import ViewShareMixin
+from sim.engine import view_share
 from sim.tests.world_stand_in import fake_needs
 
 
-class _Game(ViewShareMixin):
+class _Game:
     """The parts of a Sim that pricing a project through a view touches."""
 
     def __init__(self):
@@ -20,7 +20,7 @@ class _Game(ViewShareMixin):
         self.economy = types.SimpleNamespace(project_cost=self._project_cost)
 
     def _project_cost(self, node_id):
-        self.scopes_seen.append(self._view_scope)
+        self.scopes_seen.append(view_share.of(self)._view_scope)
         if node_id == "broken":
             raise ValueError(node_id)
         return 12.5
@@ -57,13 +57,13 @@ class CopyCostScopeTests(unittest.TestCase):
     def test_no_scope_is_left_open_on_the_game_afterwards(self):
         game = _Game()
         SimWorld(game).copy_cost("iron_works")
-        self.assertIsNone(game._view_scope)
+        self.assertIsNone(view_share.of(game)._view_scope)
 
     def test_no_scope_is_left_open_when_the_pricing_fails(self):
         game = _Game()
         with self.assertRaises(ValueError):
             SimWorld(game).copy_cost("broken")
-        self.assertIsNone(game._view_scope)
+        self.assertIsNone(view_share.of(game)._view_scope)
 
 
 if __name__ == "__main__":

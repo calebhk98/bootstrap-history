@@ -76,6 +76,18 @@ class ProjectsForwardsMixin:
     def precaution_quote(self, node_id):
         return self.view("precaution_quote")(node_id)
 
+    def project_cost(self, node_id):
+        return self.view("project_cost")(node_id)
+
+    def project_cost_now(self, node_id):
+        return self.view("project_cost_now")(node_id)
+
+    def opposition_factor(self, node_id):
+        return self.view("opposition_factor")(node_id)
+
+    def cost_money_factor(self):
+        return self.view("cost_money_factor")()
+
     def reputation_gain_of(self, node_id):
         return self.view("reputation_gain_of")(node_id)
 

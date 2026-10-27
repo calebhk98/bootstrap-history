@@ -84,6 +84,12 @@ class ForgetGoalCaches(Command):
 
 
 @dataclass(frozen=True)
+class RememberGoalClosure(Command):
+    """Keep `nodes`, the set of nodes the acting seat's goal needs, for the engine's other readers of it (applied by the engine)."""
+    nodes: Any
+
+
+@dataclass(frozen=True)
 class EndRun(Command):
     """The acting seat's run ends for `reason` (None clears it). Announced in the seat's log unless `announce` is False."""
     reason: Optional[str]

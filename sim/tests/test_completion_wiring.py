@@ -11,7 +11,8 @@ from .harness import check
 
 from sim.tests import projects_host
 from sim.diffusion.api import ApplyTechEffects
-from sim.knowledge.api import KnowledgeSeat, LearnTechnique, RefreshDoneCaches, RevealFrom
+from sim.knowledge.api import KnowledgeSeat, LearnTechnique, RevealFrom
+from sim.production.api import RefreshDoneCaches
 from sim.seats.api import RecordGoalReached
 from sim.workforce.api import GrantStaff
 from sim.knowledge.module import Knowledge

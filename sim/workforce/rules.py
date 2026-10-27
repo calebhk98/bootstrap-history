@@ -31,3 +31,13 @@ def work_order_shortfall(directive_hours, already_sold):
 	"""The hours a standing work order still has to sell this year: the directive less what was already sold by
 	hand, so the order tops up and never sells the same hours twice; never negative."""
 	return max(0.0, directive_hours - already_sold)
+
+
+def price_of_labour_hours(hours, money_per_labour_hour, price_index):
+	"""What a cost declared in labour hours is now: the hours in the coin of the civilisation, at its price level."""
+	return hours * money_per_labour_hour * price_index
+
+
+def dependant_people(kin_and_retainers, freedmen, slaves):
+	"""People the household keeps besides the founder: the kin and retainers it arrived with, and its freedmen and slaves."""
+	return kin_and_retainers + freedmen + slaves

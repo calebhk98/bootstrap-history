@@ -4,10 +4,9 @@ Each view carries the name its owner will publish (docs/architecture/catalogue),
 did, and is never cached. The `legacy_*` views are state the module shares with the engine; they go when that state moves
 (docs/architecture/catalogue/knowledge.md lists each outside writer)."""
 from sim.assembly.api import QUOTE
-from sim.knowledge.needed_commands import RefreshDoneCaches
 
 from . import category_traits
-from .bridge import bridge_command, bridge_view
+from .bridge import bridge_view
 
 
 @bridge_view("legacy_tree")
@@ -26,8 +25,3 @@ def legacy_fog(sim):
 def category_trait(sim, category, trait):
     """Whether the data gives the node category `category` the flag `trait`."""
     return category_traits.has_trait(category, trait)
-
-
-@bridge_command(RefreshDoneCaches)
-def refresh_done_caches(sim, command):
-    sim._done_changed()

@@ -7,7 +7,6 @@ from .constants import CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE
 from .fog_words import (FOG_KIND_HINTS, FREE_PREREQ_NAMED_AT_MOST, HIDDEN_ID_PLACEHOLDER, free_prereq_hint,
                         hidden_prerequisite_kinds, missing_prereq_message, prerequisite_label, prerequisite_names,
                         scrub_hidden_ids, strip_self_play_advice, summary_sentence)
-from .needed_commands import RefreshDoneCaches
 from .save_fog import fog_mismatch
 from .starting_techs import declared_starting_techs
 from .state import KnowledgeSeat

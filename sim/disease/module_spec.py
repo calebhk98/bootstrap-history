@@ -38,6 +38,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("endemic_death_rates", "endemic_death_rates", cached=False),
         ViewSpec("epidemic_deaths_by_tile", "epidemic_deaths_by_tile", channels=(EPIDEMICS,)),
         ViewSpec("epidemic_forecast", "epidemic_forecast", kind=QUOTE),
+        ViewSpec("epidemic_risk", "epidemic_risk", cached=False),
         ViewSpec("regional_disease_loss", "regional_disease_loss", kind=QUOTE),
         ViewSpec("frontier_disease_loss", "frontier_disease_loss", cached=False),
     ),

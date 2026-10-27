@@ -6,8 +6,12 @@ import unittest
 from types import SimpleNamespace
 
 from sim.engine.core_properties import ForwardingPropertiesMixin
-from sim.engine.fog import FogMixin
+from sim.engine.data import closure
 from sim.engine.forward_seats import ForwardSeatsMixin
+from sim.seats.api import RememberGoalClosure
+from sim.seats.module import Seats
+from sim.seats.state import SeatsSeat
+from sim.tests import module_harness
 
 # a chain a <- b <- c, and a separate goal d needing only e
 NODES = {"a": {"pre": []}, "b": {"pre": ["a"]}, "c": {"pre": ["b"]}, "d": {"pre": ["e"]}, "e": {"pre": []}}
@@ -16,7 +20,15 @@ NODES = {"a": {"pre": []}, "b": {"pre": ["a"]}, "c": {"pre": ["b"]}, "d": {"pre"
 class StubGame(ForwardSeatsMixin):
     """The real cache dropping and the real `goal` property over a plain state."""
     goal = ForwardingPropertiesMixin.goal
-    on_road_to_goal = FogMixin.on_road_to_goal
+
+    def on_road_to_goal(self, node_id):
+        """The seats module's answer, over the goal this game holds and the memo it keeps on itself."""
+        module = module_harness.build(
+            Seats, seat=SeatsSeat(), views={"legacy_goal_closure": lambda: getattr(self, "_goal_closure", None),
+                                            "tree_closure": lambda goal: closure(NODES, goal)},
+            answers={RememberGoalClosure: lambda command: setattr(self, "_goal_closure", command.nodes)})
+        module.goal = lambda: {"node": self.goal}
+        return module.on_road_to_goal(node_id)
 
     def __init__(self, goal):
         self.nodes = NODES

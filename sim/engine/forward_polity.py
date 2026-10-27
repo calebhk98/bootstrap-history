@@ -47,6 +47,12 @@ class PolityForwardsMixin:
     def familiarity(self):
         return self.view("standing")()["familiarity"]
 
+    def standing_floor(self):
+        return self.view("standing_floor")()
+
+    def rep_factor(self):
+        return self.view("rep_factor")()
+
     # ---- what the state notices and asks ----
 
     def state_trait_weights(self):

@@ -114,7 +114,7 @@ check("Nested project state reconstruction", _ok, _detail)
 
 def _test_runtime_type_reconstruction():
 	"""Verify sets, Counters, defaultdicts, and invalidating collections have correct runtime types."""
-	from sim.engine.economy import _InvalidatingDict, _InvalidatingSet
+	from sim.invalidating import _InvalidatingDict, _InvalidatingSet
 	from sim.engine.state import (
 		ActiveProjectState,
 		EconomyState,
@@ -220,7 +220,7 @@ def _valid_save():
 def _test_cache_reset_after_load():
 	"""Verify the caches a game derives from its state are wiped, and its containers re-wrapped, on save and load."""
 	from types import SimpleNamespace
-	from sim.engine.economy import EconomyMixin
+	from sim.engine.forward_production import ForwardProductionMixin
 
 	from sim.markets.api import ResetMarketCaches
 	from sim.materials.api import ForgetReadings
@@ -234,7 +234,7 @@ def _test_cache_reset_after_load():
 	                       _reset_operating=lambda: rewrapped.append("operating"),
 	                       _reset_active=lambda: rewrapped.append("active"),
 	                       _reset_workforce=lambda: rewrapped.append("workforce"))
-	EconomyMixin._reset_economic_caches(game)
+	ForwardProductionMixin._reset_economic_caches(game)
 	held = [name for name in caches if getattr(household, name) is not None]
 	if held:
 		return False, f"caches still held after the reset: {held}"

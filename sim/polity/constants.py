@@ -672,3 +672,45 @@ REPUTATION_CEILING = declare(
         "(REPUTATION_EASE_SCALE in economy.py reads reputation "
         "against this same implicit ceiling). A scale choice, not a "
         "measured social fact.")
+
+# ---- reputation and standing: a scoreboard, not yet a social mechanism ----
+#
+# None of the numbers below are measured facts about anything; they are a hand-tuned scoring function for "how well known and
+# well regarded are you", invented because no lower-level model of patronage, gossip or audience reach exists yet. A real
+# mechanism would derive standing from who actually knows what you have done and how far that spreads through a real social
+# network (patrons, students, guild membership, literacy and travel time all bound how far reputation can propagate).
+STANDING_BASE_FLOOR = declare(
+    "STANDING_BASE_FLOOR", 0.5, kind="temporary_heuristic",
+    unit="reputation points (dimensionless)", source=None, confidence="D",
+    why="The reputation floor of someone who has founded and finished "
+        "nothing yet - not zero, because arriving with a plan and a "
+        "household is itself a small, visible fact. A real mechanism would "
+        "derive this from how a stranger is actually perceived on arrival "
+        "in a given society, not assign a flat starting score.")
+STANDING_PER_SQRT_EARNED = declare(
+    "STANDING_PER_SQRT_EARNED", 0.55, kind="temporary_heuristic",
+    unit="reputation points per sqrt(finished works)", source=None,
+    confidence="D",
+    why="How much each additional finished, ungranted work adds to standing, "
+        "on a sqrt curve so the first few matter far more than the "
+        "hundredth. The sqrt SHAPE is a real claim (reputation saturates, it "
+        "does not accumulate linearly); the 0.55 coefficient is simply "
+        "tuned until the early game felt right. A real mechanism needs a "
+        "model of who hears about a given work and how impressed they are.")
+STANDING_SCANDAL_PENALTY_PER_POINT = declare(
+    "STANDING_SCANDAL_PENALTY_PER_POINT", 0.5, kind="temporary_heuristic",
+    unit="reputation points lost per point of household.scandal",
+    source=None, confidence="D",
+    why="How much a point of scandal erodes standing, one-for-one at half "
+        "weight. Scandal itself has no source model (who spreads it, how "
+        "fast, whether it fades) so this coefficient is a placeholder for "
+        "that whole missing mechanism, not a measured rate of anything.")
+REPUTATION_EASE_SCALE = declare(
+    "REPUTATION_EASE_SCALE", 120.0, kind="temporary_heuristic",
+    unit="reputation points per unit of ease (dimensionless denominator)",
+    source=None, confidence="D",
+    why="How much reputation it takes to make everything else roughly "
+        "twice as easy (rep_factor = 1 + reputation/120). No independent "
+        "source; a real figure needs a model of what reputation actually "
+        "buys (lower prices, faster favours, less friction) instead of one "
+        "shared multiplier standing in for all of them at once.")

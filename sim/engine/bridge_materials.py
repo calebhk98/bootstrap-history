@@ -4,6 +4,7 @@ Each view carries the name its owner will publish (docs/architecture/catalogue),
 did, and is never cached."""
 from sim.assembly.api import KEYED, QUOTE
 
+from . import view_share
 from .bridge import bridge_view
 from .data import hard_pre
 
@@ -35,22 +36,7 @@ def empire_output(sim):
 @bridge_view("shared_bill", kind=QUOTE)
 def shared_bill(sim, node_id, compute):
     """A project's material bill, reused inside a view's scope while the world and the node's stock hold."""
-    return sim._shared_bill(node_id, compute)
-
-
-@bridge_view("project_cost_now", kind=QUOTE)
-def project_cost_now(sim, node_id):
-    return sim.project_cost_now(node_id)
-
-
-@bridge_view("opposition_factor", kind=QUOTE)
-def opposition_factor(sim, node_id):
-    return sim.opposition_factor(node_id)
-
-
-@bridge_view("cost_money_factor")
-def cost_money_factor(sim):
-    return sim.cost_money_factor()
+    return view_share.of(sim)._shared_bill(node_id, compute)
 
 
 @bridge_view("failure_reset_share")

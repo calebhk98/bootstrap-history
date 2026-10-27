@@ -61,6 +61,9 @@ class ForwardSeatsMixin:
     def seat_answer(self, offer_id, accept):
         return self.send(AnswerOffer(offer_id, accept))
 
+    def on_road_to_goal(self, node_id):
+        return self.view("on_road_to_goal")(node_id)
+
     def set_goal(self, node_id):
         self.send(SetGoal(node_id))
 

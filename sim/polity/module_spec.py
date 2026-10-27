@@ -21,7 +21,7 @@ READS_BY_OWNER = {
 	              "patrons_lost_to_eminence"),
 	"knowledge": ("techniques_held", "techniques_granted", "tree", "tree_nodes"),
 	"production": ("running", "revenue_estimate", "concern_revenue", "operating"),
-	"projects": ("standing_floor", "rep_factor", "legacy_done_versions"),
+	"projects": ("legacy_done_versions",),
 	"workforce": ("headcount", "base_annual_wage", "labour_state_weights", "money_per_labour_hour"),
 	"seats": ("seat_list", "legacy_seats", "founder"),
 	"demography": ("population_total", "pop_scale"),
@@ -40,6 +40,8 @@ MODULE_SPECS = (ModuleSpec(
 	publishes=(
 		ViewSpec("value_weights", "value_weights", channels=(VALUES,)),
 		ViewSpec("standing", "standing", **_SEAT),
+		ViewSpec("standing_floor", "standing_floor", **_SEAT),
+		ViewSpec("rep_factor", "rep_factor", **_SEAT),
 		ViewSpec("eminence", "eminence", **_SEAT),
 		ViewSpec("state_reach", "state_reach", **_LIVE),
 		ViewSpec("order_reach", "order_reach", **_LIVE),

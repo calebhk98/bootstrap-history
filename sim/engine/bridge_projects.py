@@ -24,11 +24,6 @@ def legacy_order(sim):
     return sim.order
 
 
-@bridge_view("project_cost", kind=QUOTE)
-def project_cost(sim, node_id):
-    return sim.project_cost(node_id)
-
-
 # ---- living stock -----------------------------------------------------------------------------------------------------
 
 @bridge_view("start_gate_unheld_stock", kind=QUOTE)
