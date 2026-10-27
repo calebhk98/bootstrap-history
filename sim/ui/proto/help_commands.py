@@ -13,7 +13,7 @@ JSON_MODE_NOTE = (
     "explanation; 'stuck' gives blockers. Other commands ignore 'compact'")
 
 
-def _command_text(table, name, fog):
+def _command_text(name, fog, table=command_registry.SHIPPED):
     entry = table.commands[name]
     if fog and entry["fog_hidden"]:
         return "not available under fog of war"
@@ -55,7 +55,7 @@ def group_page(sim, group):
                 "did you mean": [word for word in near if word in groups]}
     names = groups[group]
     return {"group": group,
-            "commands": {name: _command_text(table, name, sim.view("legacy_fog")()) for name in names},
+            "commands": {name: _command_text(name, sim.view("legacy_fog")(), table) for name in names},
             "usage": {name: table.commands[name]["usage"] for name in names},
             "more": "help <command> for one command's usage and options"}
 
@@ -75,7 +75,7 @@ def full_listing(sim, limit=None, offset=0):
             page["paging"]["next"] = "help commands all limit %d offset %d" % (limit, offset + len(shown))
     page.update({
         "commands": {"json / compact": JSON_MODE_NOTE,
-                     **{name: _command_text(table, name, sim.view("legacy_fog")()) for name in shown}},
+                     **{name: _command_text(name, sim.view("legacy_fog")(), table) for name in shown}},
         "usage": {name: table.commands[name]["usage"] for name in shown},
         "groups": table.grouped(),
         "aliases": table.alias_map(),
