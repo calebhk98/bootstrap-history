@@ -91,7 +91,7 @@ def forget_goal_caches(sim, command):
 def patronage(sim):
     """The founder's age and the deputies the programme could go on with: {founder_age, deputies, deputy_hours,
     deputies_carry_the_work}."""
-    return {"founder_age": sim.founder_age(), "deputies": sim.state.household.directors_extra, "deputy_hours": sim.deputy_hours(),
+    return {"founder_age": sim.founder_age(), "deputies": sim.view("staff")()["directors_extra"], "deputy_hours": sim.deputy_hours(),
             "deputies_carry_the_work": sim.deputies_carry_the_work()}
 
 
@@ -118,6 +118,7 @@ def on_road_to_goal(sim, node_id):
 @bridge_view("game_attribute", kind=QUOTE)
 def game_attribute(sim, path):
     """What the game holds under a plain attribute name, or None (an attribute-sourced win condition reads it)."""
-    return getattr(sim, path, None)
+    held = getattr(sim, path, None)
+    return sim.view("staff")().get(path) if held is None else held   # the people the workforce module holds (slaves, scholars, ...)
 
 

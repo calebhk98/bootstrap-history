@@ -10,14 +10,14 @@ class AllocationNotesMixin:
 
     def unused_hours_is_news(self, key, signature):
         """True the first time this order falls short this way, False while it repeats."""
-        reported = self.state.household.unused_hours_reported
+        reported = self.view("hour_commitments")()["unused_reported"]
         if reported.get(key) == signature:
             return False
         reported[key] = signature
         return True
 
     def clear_unused_hours_report(self, key):
-        self.state.household.unused_hours_reported.pop(key, None)
+        self.view("hour_commitments")()["unused_reported"].pop(key, None)
 
     def report_unused_directed_hours(self, unused):
         """Log each standing project order that could not use its hours.
@@ -27,12 +27,12 @@ class AllocationNotesMixin:
         its figures) is not repeated; once it recovers or changes it is
         reported afresh.
         """
-        household = self.state.household
-        for node_id in [key for key in household.unused_hours_reported
+        commitments = self.view("hour_commitments")()
+        for node_id in [key for key in commitments["unused_reported"]
                         if key != "work" and key not in {row[0] for row in unused}]:
             self.clear_unused_hours_report(node_id)
         for node_id, hours, why in sorted(unused):
-            directed = household.hour_allocations.get(node_id, 0.0)
+            directed = commitments["allocations"].get(node_id, 0.0)
             signature = [round(directed), re.sub(r"[\d,]+", "#", why)]
             if not self.unused_hours_is_news(node_id, signature):
                 continue

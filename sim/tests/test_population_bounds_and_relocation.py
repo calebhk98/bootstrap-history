@@ -45,7 +45,7 @@ class InvariantCheckerTests(unittest.TestCase):
         labour = SimpleNamespace(home_town_population_estimate=lambda: town, available_trades=lambda: ["smith"],
                                  reachable_trade_population=lambda trade: reachable, people_who_exist=lambda trade: exist)
         return SimpleNamespace(population=SimpleNamespace(total=nation, working_age=working_age), labour=labour,
-                               state=SimpleNamespace(household=SimpleNamespace(employees={"smith": staff})))
+                               view=lambda name: (lambda: {"employees": {"smith": staff}}))
 
     def test_a_consistent_labour_market_passes(self):
         self.assertTrue(check_labour_market_invariants(self._game()))

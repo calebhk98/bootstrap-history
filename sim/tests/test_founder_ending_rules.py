@@ -18,7 +18,7 @@ class FounderAgeTests(unittest.TestCase):
     def reply(self, immortal, alive):
         game = SimpleNamespace(
             cfg={"immortal": immortal, "founder_arrival_age": 40, "founder_life_mean": 30, "founder_life_sd": 5},
-            founder_alive=alive, founder_age=lambda: 47, scholars=0.0, artisans=0.0, directors_extra=0.0,
+            founder_alive=alive, founder_age=lambda: 47, view=lambda name: (lambda: {"scholars": 0.0, "artisans": 0.0, "directors_extra": 0.0, "slaves": 0, "freedmen": 0, "employees": {}}),
             state=SimpleNamespace(acting_seat=0, seats=[0]))
         with mock.patch.object(state, "succession_block", return_value={}), \
              mock.patch.object(state, "_founder_death_info", return_value=None):

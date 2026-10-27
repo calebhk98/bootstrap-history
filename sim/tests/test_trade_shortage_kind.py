@@ -21,9 +21,16 @@ class ProgressGame(ProgressMixin):
 
     def __init__(self, supply):
         self.nodes = {NODE: {"lab": {TRADE: HOURS_WANTED}, "yrs": YEARS}}
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(trade_hours_used={}))
+        self.state = types.SimpleNamespace(projects=types.SimpleNamespace())
+        self.used = {}
         self.labour = types.SimpleNamespace(hours_you_can_call_on=lambda trade: supply)
         self.project_state = {"lab_left": None, "yrs": 0.0}
+
+    def view(self, name):
+        return lambda: {"trade_hours_used": self.used}
+
+    def send(self, command):
+        self.used[command.trade] = self.used.get(command.trade, 0.0) + command.hours
 
     def _effective_lab_left(self, node_id, project_state):
         return dict(self.nodes[node_id]["lab"])
@@ -48,7 +55,7 @@ class TradeShortageKind(unittest.TestCase):
 
     def test_booked_by_a_second_project_is_booked(self):
         game = ProgressGame(supply=1.5 * PACE)
-        game.state.projects.trade_hours_used = {TRADE: 1.5 * PACE}   # another project took all of it
+        game.used[TRADE] = 1.5 * PACE   # another project took all of it
         game.draw()
         self.assertEqual(game.project_state["short_of_trade"], [TRADE])
         self.assertEqual(game.project_state["short_of_trade_staffing"], [])

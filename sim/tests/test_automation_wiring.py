@@ -31,8 +31,8 @@ class PolicyCommand(unittest.TestCase):
     def _sim(self):
         return types.SimpleNamespace(
             policy={"auto_hire": True, "auto_open": True}, capital=100.0, year=0, credit_frozen_until=0,
-            state=types.SimpleNamespace(household=types.SimpleNamespace(reserve_craftsmen=0, reserve_scholars=0),
-                                        projects=types.SimpleNamespace(excluded=set())))
+            view=lambda name: (lambda: {"reserve_craftsmen": 0, "reserve_scholars": 0}),
+            state=types.SimpleNamespace(projects=types.SimpleNamespace(excluded=set())))
 
     def test_replace_sets_the_replace_only_mode_and_off_turns_it_off(self):
         sim = self._sim()

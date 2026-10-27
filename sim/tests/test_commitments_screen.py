@@ -4,6 +4,7 @@ checked to exist on `Sim`."""
 QUICK_TOPIC = True
 
 import types
+from sim.tests import workforce_stand_in
 from unittest import mock
 
 from .harness import *  # noqa: F401,F403
@@ -21,7 +22,7 @@ def stub_game(**overrides):
     household = types.SimpleNamespace(reserve_craftsmen=3, reserve_scholars=1)
     game = types.SimpleNamespace(
         fog=False, goal="goal_node", goal_year=None, nodes=NODES_STUB, done={"school", "mill", "senate"}, policy={},
-        state=types.SimpleNamespace(household=household), is_visible=lambda node_id: node_id != "senate",
+        workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household), is_visible=lambda node_id: node_id != "senate",
         running=lambda node_id: node_id == "school", institution_units=lambda node_id: 2.0,
         literacy=lambda which: 0.1234567 if which == "literacy_general" else 0.05,
         literacy_ceiling_general=lambda: 0.4, literacy_ceiling_elite=lambda: 0.0)

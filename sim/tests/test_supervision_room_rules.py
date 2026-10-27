@@ -22,7 +22,7 @@ class Labour(CapacityMixin):
         holds = lambda key, spec: key in held
         value = lambda key, spec: spec["flat"] if "flat" in spec else spec["per_unit"] * units
         self._world = SimpleNamespace(
-            state=SimpleNamespace(household=SimpleNamespace(directors_extra=directors_extra, worker_housing_places=housing)),
+            workforce=SimpleNamespace(directors_extra=directors_extra, worker_housing_places=housing),
             effect_terms=lambda channel: terms, effect_holds=holds, effect_value=value,
             effect_sum=lambda channel, start=0.0: start + sum(value(key, spec) for key, spec in terms if holds(key, spec)))
 

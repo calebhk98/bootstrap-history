@@ -208,7 +208,7 @@ class ActorWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, St
 		if not needs.trade_available[trade]:
 			return None
 		exist = needs.taught_trade_people[trade] if trade in needs.trades_absent() else needs.people_who_exist[trade]
-		founder = sum(seat.household.employees.get(trade, 0.0) for seat in needs.legacy_seats().values())
+		founder = needs.staff_on_all_books[trade]
 		return max(0.0, exist - founder - self.registry.home_staff_fte(trade, excluding=actor_id))
 
 	def copy_cost(self, node_id: str) -> float:

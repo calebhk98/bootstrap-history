@@ -62,7 +62,7 @@ class EventLossInvariants(unittest.TestCase):
     def test_staff_survival_never_adds_people(self):
         for share in (0.0, 0.3, 0.9, 1.0):
             household = SimpleNamespace(scholars=40.0, artisans=60.0, employees={"smith": 25.0, "miller": 3.0})
-            workforce = module_harness.build(Workforce, views={"legacy_acting_household": household, "legacy_dice": random.Random(1)})
+            workforce = module_harness.build(Workforce, seat=household, views={"legacy_acting_household": household, "legacy_dice": random.Random(1)})
             before = household.scholars + household.artisans + sum(household.employees.values())
             workforce.survive_staff(SurviveStaff(share))
             after = household.scholars + household.artisans + sum(household.employees.values())
@@ -72,7 +72,7 @@ class EventLossInvariants(unittest.TestCase):
     def test_a_survival_share_of_one_keeps_everyone_and_zero_keeps_no_one(self):
         for share, kept in ((1.0, 128.0), (0.0, 0.0)):
             household = SimpleNamespace(scholars=40.0, artisans=60.0, employees={"smith": 25.0, "miller": 3.0})
-            workforce = module_harness.build(Workforce, views={"legacy_acting_household": household, "legacy_dice": random.Random(1)})
+            workforce = module_harness.build(Workforce, seat=household, views={"legacy_acting_household": household, "legacy_dice": random.Random(1)})
             workforce.survive_staff(SurviveStaff(share))
             self.assertEqual(household.scholars + household.artisans + sum(household.employees.values()), kept)
 

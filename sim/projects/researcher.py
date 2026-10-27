@@ -15,7 +15,7 @@ class SeatResearcher:
 		self._needs = projects.needs
 		self.precaution = precaution
 		self.works = self._needs.legacy_projects().active
-		self.workforce = self._needs.legacy_acting_household().employees
+		self.workforce = self._needs.staff()["employees"]
 
 	def identity(self) -> str:
 		return "seat:%s" % self._needs.acting_seat()

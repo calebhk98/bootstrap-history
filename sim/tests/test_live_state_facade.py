@@ -19,7 +19,7 @@ SCALARS = {
 COLLECTIONS = {
     "active": "projects.active", "done": "projects.done", "operating": "projects.operating",
     "revealed": "projects.revealed", "mothballed": "projects.mothballed", "paid_towards": "projects.paid_towards",
-    "policy": "founder.policy", "employees": "household.employees",
+    "policy": "founder.policy",
 }
 
 

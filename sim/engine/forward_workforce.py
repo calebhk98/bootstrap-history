@@ -2,11 +2,7 @@
 
 The screens, the economy port, the mods and the engine's mixins still say `sim.labour.<member>`, `sim.wage_index` or
 `sim.HOURS_PER_PERSON_YEAR`; each line goes when its last caller reads the view (`sim.view(name)`) or sends the command
-(`sim.send(command)`) itself.
-
-This mixin stands before `EconomyMixin` in `Sim`'s bases: three names the economy mixins still define (`economy.py`,
-`economy_goods.py`, files the markets work owns) write fields that moved into the module, so these forwarders shadow them
-until their definitions go."""
+(`sim.send(command)`) itself."""
 from sim.workforce.api import BuildHousing, WatchStaff
 
 
@@ -26,10 +22,7 @@ class ForwardWorkforceMixin:
         """Hours a person gives in a year, the working day's length counted."""
         return self.view("hours_per_person_year")()
 
-    # ---- the payroll's watch and the housing, shadowing economy.py and economy_goods.py ----
-
-    def _workforce_changed(self):
-        self.assembly.modules["workforce"].staff_changed()
+    # ---- the payroll's watch and the housing ----
 
     def _reset_workforce(self):
         """The acting seat's payroll reports its changes from here on (a seat switch or a load needs it again)."""

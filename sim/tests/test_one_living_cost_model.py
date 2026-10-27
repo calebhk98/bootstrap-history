@@ -18,7 +18,7 @@ def seat(freedmen=0, slaves=0, capital=0.0, tax_share=0.0, wages=0.0, status_per
     stub = SimpleNamespace(
         HOUSEHOLD_DEPENDANT_PEOPLE=1.0, LIVING_COST_STATUS_PER_CAPITAL=status_per_capital,
         LIVING_COST_APPEARANCES_SHARE_OF_ROOM=0.5, price_index=1.0, civ={"starting_tax_share": tax_share},
-        state=SimpleNamespace(household=SimpleNamespace(freedmen=freedmen, slaves=slaves, capital=capital)),
+        state=SimpleNamespace(household=SimpleNamespace(capital=capital)), view=lambda name: (lambda: {"freedmen": freedmen, "slaves": slaves}),
         labour=SimpleNamespace(wage_bill=lambda: wages),
         household_need_floors_per_person=lambda: dict(FLOORS),
         effect_values=lambda name: [], upkeep=lambda: 0.0, revenue=lambda: 0.0)

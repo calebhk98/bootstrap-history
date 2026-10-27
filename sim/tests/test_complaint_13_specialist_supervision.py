@@ -8,6 +8,7 @@ reply; the ventures row's specialist field is test_craftsmen_wording_rules."""
 QUICK_TOPIC = True
 
 import types
+from sim.tests import workforce_stand_in
 
 from .harness import *
 from sim.agents import business_crew_rule
@@ -23,7 +24,7 @@ def a_game(nodes, employees=None, operating=(), capabilities=()):
     household = types.SimpleNamespace(employees=dict(employees or {}))
     game = types.SimpleNamespace(
         nodes=nodes, CAPABILITY_INSTITUTIONS=set(capabilities), VENTURE_FOREMAN_SHARE=SHARE,
-        state=types.SimpleNamespace(household=household, projects=types.SimpleNamespace(operating=set(operating))),
+        workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household, projects=types.SimpleNamespace(operating=set(operating))),
         institution_units=lambda node_id: 1.0, venture_garrison=lambda node_id, units: {},
         venture_staff_free=lambda: (99.0, 99.0), venture_hands=lambda node_id: (0.0, 0.0))
     game.venture_foreman = lambda node_id: business_crew_rule.foreman(business_crew_rule.figures_of(

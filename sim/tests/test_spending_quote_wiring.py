@@ -7,6 +7,7 @@ what it reads, with the sim's cost functions returning figures written out here.
 QUICK_TOPIC = True
 UNDER_TEST = {"hire"}   # the method this module tests, called on a stand-in
 
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from .harness import check
@@ -82,7 +83,7 @@ class Payer(TrainingMixin):
         self.paid = []
         household = SimpleNamespace(wages_prepaid=0.0, contract_hours={}, commissioned={})
         self._world = SimpleNamespace(
-            wages={"smith": 1.0}, state=SimpleNamespace(household=household), EDGE_WORKERS="workers", HOURS_PER_PERSON_YEAR=2000.0,
+            wages={"smith": 1.0}, workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household), EDGE_WORKERS="workers", HOURS_PER_PERSON_YEAR=2000.0,
             pay_edge=lambda edge, money, purpose: self.paid.append((edge, money, purpose)), money_text=lambda money, grouped=False: "%.0f" % money)
         self.labour_market = SimpleNamespace(hire=lambda *arguments: None)
         self.fee = fee

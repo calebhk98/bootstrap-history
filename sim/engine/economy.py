@@ -230,15 +230,6 @@ class EconomyMixin(HousingPriceMixin,
         )
         self._active_changed()
 
-    def _workforce_changed(self):
-        """Call after anything mutates workforce state."""
-        self.household.bump_workforce_version()
-
-    def _reset_workforce(self):
-        """Re-wrap employees in a fresh `_InvalidatingDict` and invalidate once."""
-        self.state.household.employees = _InvalidatingDict(self.state.household.employees or {}, on_change=self._workforce_changed)
-        self._workforce_changed()
-
     def _reset_economic_caches(self):
         """Wipe all transient economic derived-state caches and re-wrap containers on save/load."""
         self.household._done_seq = None

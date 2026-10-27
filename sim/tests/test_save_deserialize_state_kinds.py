@@ -11,6 +11,7 @@ from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
+from sim.workforce.api import WorkforceSeat
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
                               SimulationState, deserialize_state)
 from sim.foreign_trade.api import ForeignTradeWorld
@@ -33,27 +34,28 @@ check("deserialize_state: a scalar is coerced to the class named", deserialize_s
       and deserialize_state(5, str) == "5" and deserialize_state("true", bool) is True and deserialize_state("0", bool) is False)
 
 # ---- the household: None-means-never, defaults for what the save lacks, unknown and plumbing keys ignored
-household = deserialize_state({"capital": 50.0, "wages_earned": None, "last_settlement": -999,
-                               "trades_created": {"__set__": ["baker", "mason"]}, "trade_introduced_year": {"mason": 95},
-                               "employees": {"mason": 2}, "training": [["mason", 2]],
+household = deserialize_state({"capital": 50.0, "last_settlement": -999,
                                "cash_flow": {"wages": -12.5}, "cash_mark": None, "cash_periods": [{"year": 99, "net": 3.0}],
-                               "unused_hours_reported": {"order:1": [40.0, "no_hands"]}, "_on_change_hook": 1, "not_a_field": 9}, HouseholdState)
+                               "_on_change_hook": 1, "not_a_field": 9}, HouseholdState)
+workforce = deserialize_state({"wages_earned": None, "trades_created": {"__set__": ["baker", "mason"]}, "trade_introduced_year": {"mason": 95},
+                               "employees": {"mason": 2}, "training": [["mason", 2]],
+                               "unused_hours_reported": {"order:1": [40.0, "no_hands"]}, "_on_change_hook": 1, "not_a_field": 9}, WorkforceSeat)
 check("deserialize_state: a household's purse, None-means-never fields and zeros are as saved",
-      household.capital == 50.0 and household.wages_earned is None
+      household.capital == 50.0 and workforce.wages_earned is None
       and household.cash_mark is None and household.last_settlement == -999, None)
 _standing = deserialize_state({"last_withdrawal": None, "scandal_last_year": 0.0}, PolitySeat)
 check("deserialize_state: a polity seat's None-means-never fields and zeros are as saved, and what the save lacks is the default",
       _standing.last_withdrawal is None and _standing.scandal_last_year == 0.0 and _standing.reputation == 5.0
       and _standing.demand_stance == "comply", None)
-check("deserialize_state: a household's sets are sets, its dicts typed, its lists kept",
-      household.trades_created == {"baker", "mason"} and type(household.trades_created) is set
-      and household.trade_introduced_year == {"mason": 95} and household.employees == {"mason": 2.0}
-      and household.training == [["mason", 2]] and household.cash_flow == {"wages": -12.5}
-      and household.cash_periods == [{"year": 99, "net": 3.0}] and household.unused_hours_reported == {"order:1": [40.0, "no_hands"]}, None)
+check("deserialize_state: a seat's sets are sets, its dicts typed, its lists kept",
+      workforce.trades_created == {"baker", "mason"} and type(workforce.trades_created) is set
+      and workforce.trade_introduced_year == {"mason": 95} and workforce.employees == {"mason": 2.0}
+      and workforce.training == [["mason", 2]] and household.cash_flow == {"wages": -12.5}
+      and household.cash_periods == [{"year": 99, "net": 3.0}] and workforce.unused_hours_reported == {"order:1": [40.0, "no_hands"]}, None)
 _reporting = deserialize_state({"log": [[100, "built a mill"]]}, ReportingSeat)
 check("deserialize_state: a list of pairs annotated as tuples comes back as tuples", _reporting.log == [(100, "built a mill")] and type(_reporting.log[0]) is tuple, _reporting.log)
-check("deserialize_state: a field the save lacks takes its default", household.trades_endemic == set() and household.granted_staff is None and household.work_trade is None, None)
-check("deserialize_state: an unknown key and an `_on_change` key are not set", not hasattr(household, "not_a_field") and not hasattr(household, "_on_change_hook"))
+check("deserialize_state: a field the save lacks takes its default", workforce.trades_endemic == set() and workforce.granted_staff is None and workforce.work_trade is None, None)
+check("deserialize_state: an unknown key and an `_on_change` key are not set", not hasattr(workforce, "not_a_field") and not hasattr(workforce, "_on_change_hook"))
 
 # ---- the retry counts, nested records and sets of the projects
 projects = deserialize_state({
@@ -133,14 +135,14 @@ check("deserialize_state: a coded refusal is a Refusal with its code, choices an
 
 # ---- the root: seats in saved order, the acting seat's aliases, metadata
 state = deserialize_state({
-	"seats": {"zed": {"household": {"capital": 10.0}, "projects": {"done": {"__set__": ["fire"]}}, "founder": {"living_cost_paid": 30.0},
+	"seats": {"zed": {"household": {"capital": 10.0}, "projects": {"done": {"__set__": ["fire"]}}, "founder": {"_founder_death_year": 30},
 	                  "holdings": {"market_pressure": 3.0}, "goal": "steam_engine", "country": "han", "kind": "household", "holder": None},
 	          "abe": {"household": {"capital": 4.0}, "projects": {}, "founder": None, "goal": None}},
 	"acting_seat": "abe", "economy": {}, "scenario": {"year": 115}, "_civ": "rome", "_rng": [3, [0, 1], None], "_seed": "seed text",
 	"stores": {"granary": {"t1|rome": 4.0}}, "interface": {"panel": "map"}}, SimulationState)
 check("deserialize_state: seats come back in the saved order and as seats",
       list(state.seats) == ["zed", "abe"] and state.seats["zed"].goal == "steam_engine" and state.seats["zed"].country == "han"
-      and state.seats["zed"].projects.done == {"fire"} and state.seats["zed"].founder.living_cost_paid == 30.0
+      and state.seats["zed"].projects.done == {"fire"} and state.seats["zed"].founder._founder_death_year == 30
       and state.seats["zed"].holdings.market_pressure == 3.0 and state.seats["abe"].founder is None, None)
 check("deserialize_state: the acting seat's objects are the root's household, projects and holdings",
       state.acting_seat == "abe" and state.household is state.seats["abe"].household and state.projects is state.seats["abe"].projects

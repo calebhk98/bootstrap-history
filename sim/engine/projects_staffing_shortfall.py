@@ -57,10 +57,10 @@ class StaffingShortfallMixin:
         `strict` drops the closure slack: what `open` weighs, not what
         keeps a running concern from being shut.
         """
-        household = self.state.household
+        staff = self.view("staff")()
         own = self.FOUNDER_IS_WORTH if self.founder_alive else 0.0
-        return staffing_allowances(trades, self.labour.effective_scholars(), household.artisans + own,
-                                   household.employees, self.STAFFING_CLOSURE_SLACK, strict)
+        return staffing_allowances(trades, self.labour.effective_scholars(), staff["artisans"] + own,
+                                   staff["employees"], self.STAFFING_CLOSURE_SLACK, strict)
 
     def _staffing_shortfalls(self, totals, strict=False):
         """Resource -> amount held beyond what the household carries (short ones only)."""

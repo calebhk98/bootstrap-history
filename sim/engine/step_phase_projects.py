@@ -10,6 +10,7 @@ from sim.projects.api import funding as project_funding, start_rules
 from .hour_offer import hours_offered, unmet_directive_cause
 from sim.reporting.api import RecordEvent
 from sim.materials.api import ApplyThrottle
+from sim.workforce.api import ResetTradeHours, SpendDirectorHours
 
 
 class ProjectProgressPhaseMixin:
@@ -159,7 +160,7 @@ class ProjectProgressPhaseMixin:
         # (active_sorted, above) and that an undirected project
         # never crowds this one out of the share the player asked
         # for it to have.
-        _dir_hours = self.state.household.hour_allocations.get(node_id)
+        _dir_hours = self.view("hour_commitments")()["allocations"].get(node_id)
         _pace_cap = self.project_hour_pace(node_id)
         _project_throttle = self.send(ApplyThrottle(node_id))
         per = hours_offered(remaining, _pace_cap, _dir_hours, _project_throttle)
@@ -176,7 +177,7 @@ class ProjectProgressPhaseMixin:
         # never did.
         spent_hours = min(per, project_state["ph_left"])
         project_state["ph_left"] = max(0.0, project_state["ph_left"] - per)
-        self.state.founder.director_hours_spent_founder += per if self.founder_alive else 0
+        self.send(SpendDirectorHours(per if self.founder_alive else 0))
         # Hours OFFERED this year vs hours that actually did anything.
         # `refunded` tracks the difference: hours credited back to
         # ph_left below because a trade or the money to pay for it
@@ -445,7 +446,7 @@ class ProjectProgressPhaseMixin:
         #
         active_sorted = self.hour_priority_queue()
         remaining = pool
-        self.state.projects.trade_hours_used = {}
+        self.send(ResetTradeHours())
         # Summed as the loop runs, not re-read from self.state.projects.active afterwards,
         # because a project that completes THIS year is popped from
         # self.state.projects.active before we would get to it. See the hours_this_year

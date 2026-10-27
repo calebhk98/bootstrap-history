@@ -21,7 +21,7 @@ READS_BY_OWNER = {
     "core": ("year", "automation", "civilisation", "game_config", "opening_wage_index", "legacy_state", "legacy_game", "legacy_order", "legacy_tree",
              "legacy_dice", "legacy_act_as", "starting_wages", "trades_absent", "trade_notes", "trade_records", "trade_family",
              "wage_schedule_for", "plain_number", "money_text", "legacy_acting_household", "legacy_household_actor"),
-    "seats": ("founder", "acting_country"),
+    "seats": ("founder", "acting_country", "legacy_seats"),
     "polity": ("standing", "rep_factor"),
     "reporting": ("event_log", "last_market_price_ratio", "real_output_per_head", "agent_prices", "agent_wage"),
     "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction", "farm_holdings"),
@@ -51,6 +51,7 @@ MODULE_SPECS = (ModuleSpec(
     publishes=(
         ViewSpec("staff", "staff", **_SEAT),
         ViewSpec("staff_version", "staff_version", **_SEAT),
+        ViewSpec("staff_on_all_books", "staff_on_all_books", kind=KEYED, **_LIVE),
         ViewSpec("training_queue", "training_queue", **_SEAT),
         ViewSpec("hour_commitments", "hour_commitments", **_SEAT),
         ViewSpec("pay_book", "pay_book", **_SEAT),

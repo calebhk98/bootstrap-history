@@ -100,13 +100,13 @@ check("...though it asks for more when the wall is open, so the check above meas
 
 # ONLY `scholar` COUNTS AS A TRAINED SCHOLAR, though the market groups scribes with them.
 pools = SimpleNamespace(
-    _world=SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(
-        freedmen=0.0, slaves=0.0, training=[], granted_staff={"scholars": 1.0}, scholars=0.0, artisans=0.0))),
+    _world=SimpleNamespace(workforce=SimpleNamespace(
+        freedmen=0.0, slaves=0.0, training=[], granted_staff={"scholars": 1.0}, scholars=0.0, artisans=0.0)),
     employed_by_trade=lambda: {"scribe": 3.0, "scholar": 2.0, "smith": 4.0},
     is_craft_trade=lambda trade: trade == "smith", employed=lambda trade: {"scribe": 3.0, "scholar": 2.0}.get(trade, 0.0),
     WORKER_EQUIVALENT_UNTRAINED=1.0, FREEDMAN_ARTISAN_PRODUCTIVITY=1.0, TRAINED_SLAVE_ARTISAN_PRODUCTIVITY=1.0)
 BondageMixin._resync_pools(pools)
-household = pools._world.state.household
+household = pools._world.workforce
 check("hiring scribes does not inflate the trained-scholar headcount; scholars and what an institution granted count",
       household.scholars == 2.0 + 1.0 and household.artisans == 4.0, (household.scholars, household.artisans))
 

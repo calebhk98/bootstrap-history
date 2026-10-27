@@ -33,14 +33,3 @@ class HousingPriceMixin:
         """What one place of worker housing costs now (`buy housing`, `quote housing`, room advice)."""
         return self.HOUSING_COST_PER_PLACE * self.price_index
 
-    def build_worker_housing(self, places):
-        """Add durable worker housing and relieve household crowding."""
-        places = float(places)
-        cost = places * self.housing_price_per_place()
-        household = self.state.household
-        if places <= 0 or cost > household.capital:
-            return 0.0
-        self.pay_edge(edges.EDGE_BUILDERS, cost, "worker housing built")
-        household.worker_housing_places = (getattr(household, "worker_housing_places", 0.0) or 0.0) + places
-        return places
-

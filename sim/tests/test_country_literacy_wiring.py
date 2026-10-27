@@ -79,7 +79,7 @@ check("a foreign player reads the literacy of its own country's strata", abs(vie
 class Labour(TrainingMixin):
     def __init__(self, supply, contract, productivity):
         self.supply, self.productivity = supply, productivity
-        self._world = SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(contract_hours={"scholar": contract})))
+        self._world = SimpleNamespace(workforce=SimpleNamespace(contract_hours={"scholar": contract}))
 
     def market_supply(self, trade):
         return self.supply

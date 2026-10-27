@@ -8,6 +8,7 @@ from sim.demography.api import DEFAULT_POPULATION_100AD, POP_SCALE_FLOOR
 from sim.tests import module_harness
 from sim.workforce.constants import WAGE_SCARCITY_ELASTICITY
 from sim.workforce.module import Workforce
+from sim.workforce.api import WorkforceSeat
 
 
 class WageIndex(unittest.TestCase):
@@ -37,13 +38,15 @@ class WageIndex(unittest.TestCase):
 
 class StaffViews(unittest.TestCase):
     def test_the_staff_view_is_the_household_people_by_class(self):
-        household = SimpleNamespace(employees={"smith": 2.0}, scholars=3.0, artisans=4.0)
-        workforce = module_harness.build(Workforce, views={"legacy_acting_household": household})
-        self.assertEqual(workforce.staff(), {"employees": {"smith": 2.0}, "scholars": 3.0, "artisans": 4.0})
+        seat = WorkforceSeat(employees={"smith": 2.0}, scholars=3.0, artisans=4.0, slaves=5)
+        workforce = module_harness.build(Workforce, seat=seat)
+        self.assertEqual(workforce.staff(), {"employees": {"smith": 2.0}, "scholars": 3.0, "artisans": 4.0, "directors_extra": 0.0,
+                                             "slaves": 5, "freedmen": 0, "manumitted_total": 0, "reserve_craftsmen": 0,
+                                             "reserve_scholars": 0})
 
     def test_the_trade_spread_view_names_the_absent_trades_sorted_and_the_live_records(self):
         household = SimpleNamespace(trades_created={"smith"}, trades_endemic=set(), trade_introduced_year={"smith": 90})
-        workforce = module_harness.build(Workforce, views={"legacy_acting_household": household,
+        workforce = module_harness.build(Workforce, seat=household, views={"legacy_acting_household": household,
                                                            "trades_absent": frozenset({"b", "a"})})
         spread = workforce.trade_spread()
         self.assertEqual(spread["absent"], ["a", "b"])

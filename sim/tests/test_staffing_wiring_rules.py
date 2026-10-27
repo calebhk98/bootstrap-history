@@ -169,11 +169,17 @@ class RestoreWork(unittest.TestCase):
 
 class StandingRevenue(ProductionMixin):
     def __init__(self):
-        self.state = types.SimpleNamespace(household=types.SimpleNamespace(wage_hours_this_year=700.0))
+        self.hours = 700.0
         self.seen = []
 
+    def view(self, name):
+        return lambda: {"wage_hours": self.hours}
+
+    def send(self, command):
+        self.hours = command.hours
+
     def revenue(self):
-        self.seen.append(self.state.household.wage_hours_this_year)
+        self.seen.append(self.hours)
         return 1000.0
 
 
@@ -187,7 +193,7 @@ class RevenueCapacity(unittest.TestCase):
     def test_the_hours_sold_are_put_back_afterwards(self):
         game = StandingRevenue()
         game.revenue_capacity()
-        self.assertEqual(game.state.household.wage_hours_this_year, 700.0)
+        self.assertEqual(game.hours, 700.0)
 
 
 if __name__ == "__main__":

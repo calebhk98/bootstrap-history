@@ -16,7 +16,7 @@ from sim.tests.labour_stand_in import stand_in_world
 
 def _labour(paid, price_level=1.0):
     world = stand_in_world()
-    world.state.economy.wage_tightness_factors = {}
+    world.society.wage_tightness_factors = {}
     world.build_wage_schedule = lambda civ, tightness_factors=None: build_schedule(
         data.TRADE_REGISTRY, civ, tightness_factors=tightness_factors)
     world.economy_unskilled_wage = lambda: paid

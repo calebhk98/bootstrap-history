@@ -49,7 +49,7 @@ def defaults() -> Dict[str, Any]:
 		"market_supply": lambda trade: 1.0, "trade_available": lambda trade: True,
 		"staff_advice": lambda kind, deficit: "hire", "training_advice": lambda trade: {
 			"trade": trade, "source_trade": None, "hours_each": None, "years": None},
-		"training_queue": [], "project_staffing_shortfall": lambda node: None, "staff": {"scholars": 0.0, "artisans": 0.0},
+		"training_queue": [], "project_staffing_shortfall": lambda node: None, "staff": {"scholars": 0.0, "artisans": 0.0, "employees": {}},
 		"precaution_spec": lambda node_id: None, "precaution_extra_cost": lambda node_id, bill: 0.0,
 		"precaution_extra_hours": lambda node_id: 0.0,
 		"money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),

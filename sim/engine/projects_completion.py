@@ -26,6 +26,7 @@ from sim.agents.api import edges
 from sim.knowledge.api import LearnTechnique
 from sim.polity.api import AddGovernance, AddScandal, CarryOutTransfers, GainReputation
 from sim.reporting.api import RecordEvent
+from sim.workforce.api import LoseCrew, ReleaseHours
 
 FAILED_PREFIX = "FAILED at"
 MINOR_MARK = "(minor)"
@@ -193,7 +194,7 @@ class CompletionMixin:
         # `_paid_now` - there is no "again" once it is done, so a standing
         # order aimed at this id would otherwise sit in `allocate`'s list
         # for ever, pointed at nothing.
-        household.hour_allocations.pop(node_id, None)
+        self.send(ReleaseHours(node_id))
         self.send(LearnTechnique(node_id, year=scenario.year))
         for material, units in (node.get("grants") or {}).items():
             self.grant_stock(material, units)
@@ -211,17 +212,17 @@ class CompletionMixin:
         self.send(GainReputation(self.reputation_gain_of(node)))
         self.send(AddScandal(alarm))
         self.send(AddGovernance(self.state_interest(node)))
-        # _grant_staff, NOT a bare += on household.scholars/household.artisans:
+        # _grant_staff, NOT a bare += on the scholars/the artisans:
         # _resync_pools(), which step() calls unconditionally every year,
-        # always treats household.scholars and household.artisans
-        # as computed purely from household.employees, so a bare
+        # always treats the scholars and the artisans
+        # as computed purely from the employees, so a bare
         # direct addition here would be overwritten out of existence the
         # very next time it runs. See _grant_staff.
         #
         # ONLY WITHOUT auto_hire: with it on - the optimizer's default, off
         # for a player - staff_capacity() already counts this same
         # institution toward sc_cap/ar_cap and step()'s smoothing grows
-        # household.scholars/household.artisans toward that ceiling on its own; the
+        # the scholars/the artisans toward that ceiling on its own; the
         # long civilization runs are calibrated against that smoothing alone
         # (see core.py, "1. staff"). Granting it a second time here as well
         # would double-count every one of these three institutions against
@@ -372,14 +373,8 @@ class CompletionMixin:
         if not risks:
             return []
         lines = []
-        employees = self.state.household.employees
-        for trade, share in sorted((risks.get("crew") or {}).items()):
-            have = employees.get(trade, 0.0)
-            kept = self._surviving_people(have, 1.0 - share)
-            if kept > 0:
-                employees[trade] = kept
-            else:
-                employees.pop(trade, None)
+        crew = tuple(sorted((risks.get("crew") or {}).items()))
+        for trade, have, kept in (self.send(LoseCrew(crew)) if crew else ()):
             if round(have) - kept > 0:
                 lines.append("crew lost: %d of %d %s" % (round(have) - kept, round(have), trade))
         for kind in STOCK_RISKS:

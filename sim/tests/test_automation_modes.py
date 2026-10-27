@@ -5,6 +5,7 @@ on its own. The mode the staff phase takes, the policy switch and the mine order
 in test_automation_wiring."""
 
 QUICK_TOPIC = True
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
@@ -24,7 +25,7 @@ def household_that(refuses=()):
         household.capital -= 10.0 * count
         return True, None
 
-    host = SimpleNamespace(state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)),
+    host = SimpleNamespace(workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)),
                            labour=SimpleNamespace(hire_buying_room=hire_buying_room))
     host.module = workforce_over(host)
     return host

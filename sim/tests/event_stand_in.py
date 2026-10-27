@@ -7,7 +7,7 @@
 
 The host needs `state.household` (with `log`, and for audit rows `automation_audit` and `capital`) and
 `state.scenario.year` unless the command names its year. An event for a named seat lands in
-`state.seats[seat].household`. Only the reporting commands are understood."""
+`state.seats[seat].household`. Only the reporting commands and the workforce module's are understood."""
 from sim.reporting import rules
 from sim.reporting.api import DiscardEventsAfter, RecordAutomation, RecordAutomationSkip, RecordEvent
 
@@ -30,9 +30,20 @@ def send(host, command):
         row = rules.audit_row(state.scenario.year, command.policy, "skipped", command.what, command.reason,
                               household.capital, household.capital, command.facts)
     else:
-        raise AssertionError("the stand-in does not apply %s" % type(command).__name__)
+        return _workforce_command(household, command)
     household.automation_audit.append(row)
     return row
+
+
+def _workforce_command(household, command):
+    """The workforce module's own handler applies a workforce command to the household object standing in for its seat."""
+    from sim.tests import module_harness
+    from sim.workforce.module import Workforce
+    from sim.workforce.module_spec import MODULE_SPECS
+    handlers = dict(MODULE_SPECS[0].applies)
+    if type(command) not in handlers:
+        raise AssertionError("the stand-in does not apply %s" % type(command).__name__)
+    return getattr(module_harness.build(Workforce, seat=household), handlers[type(command)])(command)
 
 
 def bound(host):

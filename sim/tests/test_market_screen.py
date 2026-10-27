@@ -46,7 +46,7 @@ def _sim_quoting(prices):
     return types.SimpleNamespace(
         material_trade_quote=lambda material: _quote(prices[material]) if material in prices else None,
         material_price_basis=lambda material: "solved", MATERIAL_CHECKS={},
-        employees={"smith": 2.0}, labour=types.SimpleNamespace(
+        view=lambda name: (lambda: {"employees": {"smith": 2.0}}), labour=types.SimpleNamespace(
             market=types.SimpleNamespace(quote_annual=lambda trade: 500.4),
             trade_available=lambda trade: trade == "smith"))
 

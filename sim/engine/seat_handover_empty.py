@@ -12,8 +12,9 @@ from sim.engine.state_holdings import HoldingsState, SeatProgressState
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
 from sim.resources.state import ResourcesSeat
+from sim.workforce.api import WorkforceSeat
 
-STAFF_FIELDS = ("scholars", "artisans", "directors_extra", "slaves", "freedmen", "reserve_craftsmen", "reserve_scholars")
+STAFF_FIELDS = ("scholars", "artisans", "directors_extra", "slaves", "freedmen", "reserve_craftsmen", "reserve_scholars")   # of the workforce slot
 OWED_FIELDS = ("bondage_debt", "interest_arrears")
 
 
@@ -52,7 +53,8 @@ def holds_that_would_be_lost(seat) -> List[str]:
 	found = []
 	if projects.active or len(projects.business.entry_keys()):
 		found.append("works")
-	if any(getattr(household, name, 0) for name in STAFF_FIELDS) or household.employees:
+	staff = seat.modules.get("workforce") or WorkforceSeat()
+	if any(getattr(staff, name, 0) for name in STAFF_FIELDS) or staff.employees:
 		found.append("staff")
 	if any(getattr(household, name, 0) for name in OWED_FIELDS) or household.bondage_years_left:
 		found.append("arrears or bondage")

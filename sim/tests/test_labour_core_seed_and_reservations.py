@@ -142,7 +142,7 @@ class ReservationBoundaryTests(unittest.TestCase):
 class _Book(StaffBookMixin):
     def __init__(self, core, staff):
         self._core = core
-        self._world = SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(employees=dict(staff))),
+        self._world = SimpleNamespace(workforce=SimpleNamespace(employees=dict(staff)),
                                       HOURS_PER_PERSON_YEAR=HOURS)
 
     def base_tile(self):

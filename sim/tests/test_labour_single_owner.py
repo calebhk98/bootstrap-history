@@ -15,7 +15,7 @@ class _Book(StaffBookMixin):
 
     def __init__(self, other_staff, supply):
         self._world = SimpleNamespace(
-            state=SimpleNamespace(household=SimpleNamespace(employees={})),
+            workforce=SimpleNamespace(employees={}),
             actors_staff_nationwide=lambda trade: other_staff.get(trade, 0.0),
             HOURS_PER_PERSON_YEAR=2000.0)
         self._supply = supply
@@ -26,7 +26,7 @@ class _Book(StaffBookMixin):
 
 # ---- the founder's book is the owner's ----
 book = _Book(other_staff={"artisan": 4.0}, supply={"artisan": 10.0, "labourer": 5.0})
-household = book._world.state.household
+household = book._world.workforce
 household.employees["artisan"] = 3.0
 check("the owner reads the founder's head count", book.employed("artisan") == 3.0)
 book.set_employed("artisan", 2.0)
@@ -50,7 +50,7 @@ check("unreserved people are never negative", book.unreserved_people("labourer")
 # ---- a hire is taken out of the core's people at the base tile, and the estimate reads the core ----
 class _CoreBook(StaffBookMixin):
     def __init__(self, core, staff):
-        self._world = SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(employees=dict(staff))))
+        self._world = SimpleNamespace(workforce=SimpleNamespace(employees=dict(staff)))
         self._core = core
 
     def core_people_by_tile_and_trade(self):

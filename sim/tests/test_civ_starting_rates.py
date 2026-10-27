@@ -9,6 +9,7 @@ import os
 import types
 import tempfile
 import unittest
+from sim.tests import workforce_stand_in
 from unittest import mock
 
 from sim.engine import data
@@ -54,7 +55,7 @@ def stub_game(civ_fields, **overrides):
     household = types.SimpleNamespace(capital=0.0)
     game = types.SimpleNamespace(
         reputation=0.0, civ=dict(civ_fields), economy=types.SimpleNamespace(agent_rate=lambda: None), price_index=1.0,
-        state=types.SimpleNamespace(household=household), effect_values=lambda _effect: [],
+        workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household), effect_values=lambda _effect: [],
         revenue=lambda: 1000.0, upkeep=lambda: 0.0, labour=types.SimpleNamespace(wage_bill=lambda: 0.0),
         household_bill_per_person=lambda: 0.0, dependants_cost=lambda: 0.0,
         DEBT_RATE_REPUTATION_DISCOUNT_CAP=CreditMixin.DEBT_RATE_REPUTATION_DISCOUNT_CAP,

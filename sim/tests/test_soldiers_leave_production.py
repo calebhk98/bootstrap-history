@@ -26,7 +26,7 @@ class Allocation(labour_allocation.LabourAllocationMixin):
         self._world = SimpleNamespace(
             wages={SOLDIER: 1.0, "smith": 1.0, FALLBACK: 1.0}, actors_staff_nationwide=lambda trade: staff.get(trade, 0.0),
             population=SimpleNamespace(working_age=working_age),
-            state=SimpleNamespace(economy=SimpleNamespace(society_labour_hours={FARM: 500.0 * HOURS, "smith": 100.0 * HOURS})),
+            society=SimpleNamespace(society_labour_hours={FARM: 500.0 * HOURS, "smith": 100.0 * HOURS}),
             farm_holdings=lambda: {"hours_needed": 400.0 * HOURS})
 
     def _non_farm_need_shares(self):

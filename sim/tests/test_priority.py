@@ -2,6 +2,7 @@
 (master order, active projects, standing allocations) the test builds; the step takes its ranks from that queue (`hour_priority_queue`)."""
 QUICK_TOPIC = True
 
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from .harness import check
@@ -16,8 +17,8 @@ _nodes = {node_id: {"name": node_id.replace("_", " ")} for node_id in _ids + ["o
 
 
 def _three_active(order=None, allocations=None):
-    return SimpleNamespace(order=list(order or _ids), active={node_id: {} for node_id in _ids},
-                           hour_allocations=dict(allocations or {}))
+    return workforce_stand_in.Game(order=list(order or _ids), active={node_id: {} for node_id in _ids},
+                                   hour_allocations=dict(allocations or {}))
 
 
 def _priority(game, **fields):

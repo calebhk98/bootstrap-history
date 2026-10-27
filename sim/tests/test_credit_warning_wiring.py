@@ -3,6 +3,7 @@
 
 QUICK_TOPIC = True
 
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from .harness import check
@@ -27,6 +28,7 @@ class Owing:
             household=SimpleNamespace(capital=-share * LIMIT, log=[], _said_near_limit=False, credit_frozen_until=0, slaves=slaves, freedmen=0, artisans=10.0),
             projects=SimpleNamespace(active={"a_project": {"spent": 40.0}}, bountied=set(), paid_towards={}),
             scenario=SimpleNamespace(year=100))
+        self.view = workforce_stand_in.view_of(self.state.household)
         self.closures, self.mothballed, self.manumitted = list(closures), [], []
         self.labour = SimpleNamespace(manumit=self.manumitted.append)
         self.civ = {"id": "rome_100ad"}

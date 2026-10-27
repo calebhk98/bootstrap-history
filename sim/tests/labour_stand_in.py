@@ -13,11 +13,12 @@ def stand_in_world(civ_id="rome_100ad", total=None):
     population = demography.Population.stationary(float(civ["population"]) / 50.0, seed=1)
     if total is not None:
         shrink(population, total)
+    household = SimpleNamespace(base_tile=None, employees={}, trades_created=set(), trade_schools={})
     return SimpleNamespace(
+        workforce=household, society=SimpleNamespace(society_labour_hours={}, wage_tightness_factors={}),
         civ=civ, urban_fraction=lambda: float(civ.get("urban_fraction", 0.0)), home_tiles_held=lambda: geography.tiles_held(civ), people_by_tile=lambda: None, pop_scale=1.0,
-        population=population, state=SimpleNamespace(household=SimpleNamespace(base_tile=None, employees={}, trades_created=set(),
-                                                                                  trade_schools={}),
-                                                     economy=SimpleNamespace(improvements={}, society_labour_hours={}),
+        population=population, state=SimpleNamespace(household=household,
+                                                     economy=SimpleNamespace(improvements={}),
                                                      projects=SimpleNamespace(done=set())),
         held_and_running=lambda: frozenset(civ.get("starting_techs", ())), trades_absent=set(), wages=data.WAGES, trade_family=data.trade_family,
         literacy=lambda field: 0.05, HOURS_PER_PERSON_YEAR=2000.0, actor_staff_fte=lambda trade: 0.0, economy=SimpleNamespace(agent_people_by_trade=lambda: None),

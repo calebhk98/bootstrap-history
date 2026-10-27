@@ -7,7 +7,8 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.state import EconomyState, HouseholdState, serialize_state
+from sim.engine.state import serialize_state
+from sim.workforce.api import WorkforceSeat, WorkforceSociety
 from sim.labour.labour_wages import WagesMixin
 from sim.labour.wages import WageSchedule
 
@@ -63,18 +64,18 @@ class TightnessFactorsLiveInTheState(unittest.TestCase):
 
         labour = Wages()
         labour._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(economy=types.SimpleNamespace(wage_tightness_factors=factors)),
+            society=types.SimpleNamespace(wage_tightness_factors=factors),
             civ={}, build_wage_schedule=build)
         schedule = labour._opening_wage_schedule()
         self.assertIs(schedule.tightness_factors, factors)
         self.assertEqual(len(built), 1)
 
     def test_the_tightness_factors_are_written_into_the_saved_economy(self):
-        blob = serialize_state(EconomyState(wage_tightness_factors={"smith": 1.2}))
+        blob = serialize_state(WorkforceSociety(wage_tightness_factors={"smith": 1.2}))
         self.assertEqual(blob["wage_tightness_factors"], {"smith": 1.2})
 
     def test_the_labour_pressure_records_are_written_into_the_saved_household(self):
-        blob = serialize_state(HouseholdState(capital=0.0, labour_pressure_records={"artisan": [2000.0, 100]}))
+        blob = serialize_state(WorkforceSeat(labour_pressure_records={"artisan": [2000.0, 100]}))
         self.assertEqual(blob["labour_pressure_records"], {"artisan": [2000.0, 100]})
 
 

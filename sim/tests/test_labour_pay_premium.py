@@ -4,6 +4,7 @@ hires from rivals rather than idle hands. Stub world, no Sim; invented trade ids
 QUICK_TOPIC = True
 UNDER_TEST = {"hire"}
 
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
@@ -38,7 +39,7 @@ class StubLabour:
 def stub_market():
     household = SimpleNamespace(labour_pressure_records={}, employees={})
     world = SimpleNamespace(
-        state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=0)),
+        workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=0)),
         HOURS_PER_PERSON_YEAR=HOURS, wages={FALLBACK: 1, "weaver": 1, SOLDIERLY: 1},
         trade_family=lambda trade: "craft", price_index=1.0, wage_index=1.0,
         actor_staff_fte=lambda trade: 10.0 if trade == SOLDIERLY else 0.0,

@@ -46,7 +46,7 @@ class RebuildMixin:
         none_chance = CORPUS_HEDGE_LOSS_CHANCE_NONE
         chance, _fraction, _hedge = self.corpus_hedge()
         copy = max(0.0, (none_chance - chance) / none_chance) if none_chance > 0 else 0.0
-        employees = self.state.household.employees
+        employees = self.view("staff")()["employees"]
         trades = list(node["lab"])
         practice = (sum(1 for trade in trades if employees.get(trade, 0.0) >= 1.0) / len(trades)
                     if trades else 0.0)

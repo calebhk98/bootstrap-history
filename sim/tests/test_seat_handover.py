@@ -45,7 +45,7 @@ check("the replacement knows the same nodes", heir.projects.done == {"fire", "wh
 check("the replacement holds the same workings, patents and shares",
       heir.holdings is before.holdings and heir.modules["resources"].mines == [{"material": "iron_ore"}]
       and "loom" in heir.modules["seats"].patents and heir.modules["seats"].shares_held == {"guild": 3.0}, heir.holdings)
-check("the household, goal and country pass on", heir.household is before.household and heir.household.scholars == 2.0
+check("the household, goal and country pass on", heir.household is before.household and heir.modules["workforce"].scholars == 2.0
       and heir.goal == "steam_engine" and heir.country == "han", None)
 check("the replacement keeps its own founder", heir.founder is heir_founder, None)
 check("the old seat is gone from the year", list(seats) == ["heir"] and moved["from"] == "leaver" and moved["known_nodes"] == 2, moved)

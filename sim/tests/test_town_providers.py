@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 
 from sim.engine import mod_code
 from sim.engine.data import load_civ
@@ -32,7 +33,7 @@ class Town(SettlementMixin):
         household = types.SimpleNamespace(base_tile=None)
         self._world = types.SimpleNamespace(
             home_tiles_held=lambda: homes, population=types.SimpleNamespace(total=NATION), pop_scale=1.0,
-            people_by_tile=lambda: None, state=types.SimpleNamespace(household=household))
+            people_by_tile=lambda: None, workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household))
 
 
 class TownProviderTests(unittest.TestCase):

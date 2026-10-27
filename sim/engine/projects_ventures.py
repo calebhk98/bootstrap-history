@@ -132,7 +132,7 @@ class VenturesMixin:
 
     def venture_foreman_free(self, trade, excluding=None):
         """Employed specialists still free to supervise another concern."""
-        return max(0.0, self.state.household.employees.get(trade, 0.0)
+        return max(0.0, self.view("staff")()["employees"].get(trade, 0.0)
                    - self.venture_foremen_used(excluding).get(trade, 0.0))
 
     def venture_staff_who_is_watching_what(self):
@@ -179,7 +179,7 @@ class VenturesMixin:
         sch_used, art_used = self.venture_staff_used()
         own = self.FOUNDER_IS_WORTH if self.founder_alive else 0.0
         return (max(0.0, self.labour.effective_scholars() - sch_used),
-                max(0.0, self.state.household.artisans + own - art_used))
+                max(0.0, self.view("staff")()["artisans"] + own - art_used))
 
 
     def opening_fee(self, node_id, units=None):

@@ -4,6 +4,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 
 from sim.labour.labour_settlement import SettlementMixin
 from sim.polity.api import ScaleFamiliarity, ScaleProtection
@@ -19,7 +20,7 @@ class _Mover(SettlementMixin):
         self.paid, self.pressure_cleared, self.pools_resynced, self.sent = [], 0, 0, []
         self.quote = quote
         self._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(household=self.household), EDGE_WORKERS="workers",
+            workforce=self.household, view=workforce_stand_in.view_of(self.household), state=types.SimpleNamespace(household=self.household), EDGE_WORKERS="workers",
             money_text=lambda amount, grouped=False: "%.0f" % amount, plain_number=lambda value: "%.0f" % value,
             pay_edge=lambda edge, amount, reason: self.paid.append((edge, amount, reason)), send=self.sent.append)
         self.labour_market = types.SimpleNamespace(clear_pressure=self._clear)

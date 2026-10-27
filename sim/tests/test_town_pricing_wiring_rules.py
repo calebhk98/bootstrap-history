@@ -27,8 +27,7 @@ class WorkshopGame(ProductionMixin):
     WORKSHOP_WAGE_MARKUP_BASE = 1.5
 
     def __init__(self, annual_quote):
-        self.state = types.SimpleNamespace(household=types.SimpleNamespace(
-            employees={"smith": 2.0}, freedmen=0.0, slaves=0.0))
+        self.view = lambda name: (lambda: {"employees": {"smith": 2.0}, "freedmen": 0.0, "slaves": 0.0})
         self.labour = types.SimpleNamespace(market=types.SimpleNamespace(quote_annual=annual_quote))
 
     def running_with_mechanic(self, mechanic):

@@ -2,6 +2,7 @@
 stand-in world (free hands, room, cash, a recorder for hires and housing, no game); the `reserve` command and its typed
 forms run on a household record. The default is
 test_reserve_staff_default. The housing sum itself is held by test_auto_hire_buys_room."""
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from .harness import check
@@ -29,6 +30,7 @@ class _Labour(StaffControlsMixin):
         household = SimpleNamespace(reserve_craftsmen=reserve_craftsmen, reserve_scholars=reserve_scholars,
                                     log=[])
         self._world = SimpleNamespace(
+            workforce=household,
             state=SimpleNamespace(founder=SimpleNamespace(policy={"reserve_staff": policy_on}), household=household,
                                   scenario=SimpleNamespace(year=100)),
             venture_staff_free=lambda: (free_scholars, free_craftsmen),
@@ -80,8 +82,7 @@ check("with no cash for the housing and the hires, none is built", broke.housing
 
 # --- the `reserve` command and its typed forms
 def _household():
-    return SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(reserve_craftsmen=0, reserve_scholars=0)),
-                           policy={"reserve_staff": False})
+    return workforce_stand_in.Game(reserve_craftsmen=0, reserve_scholars=0, policy={"reserve_staff": False})
 
 
 def _reserve(game, **fields):

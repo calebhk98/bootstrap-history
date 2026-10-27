@@ -18,6 +18,7 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 """
 
 from sim.constants import declare
+from sim.workforce.api import DrawTradeHours
 from .completion_schedule import (calendar_floor_years, earliest_completion_years, expected_years_to_succeed,
                                  payment_schedule_years)
 from .failure_diagnosis import failure_teaches
@@ -255,11 +256,11 @@ class ProgressMixin:
         for trade_id, plan_entry in sorted(plan.items()):
             left, nominal = plan_entry["left"], plan_entry["nominal"]
             have = max(0.0, self.labour.hours_you_can_call_on(trade_id)
-                       - projects.trade_hours_used.get(trade_id, 0.0))
+                       - self.view("hour_commitments")()["trade_hours_used"].get(trade_id, 0.0))
             # Ceiling is crew, not calendar. Take what's useful and available.
             drawn = min(left, plan_entry["ceiling"], have)
             lab_left[trade_id] = max(0.0, left - drawn)
-            projects.trade_hours_used[trade_id] = projects.trade_hours_used.get(trade_id, 0.0) + drawn
+            self.send(DrawTradeHours(trade_id, drawn))
             hired_hours += drawn
             # Warning drawn at old pace. Shortfall triggers give-back.
             target = min(nominal, left)
@@ -271,7 +272,7 @@ class ProgressMixin:
             short_trades = sorted(
                 trade_id for trade_id, left in lab_left.items()
                 if left > 0 and (self.labour.hours_you_can_call_on(trade_id)
-                                  - projects.trade_hours_used.get(trade_id, 0.0))
+                                  - self.view("hour_commitments")()["trade_hours_used"].get(trade_id, 0.0))
                 < min(left, node["lab"][trade_id] / max(1.0, node["yrs"])))[:3]
             project_state["short_of_trade"] = short_trades
             project_state["short_of_trade_staffing"] = [

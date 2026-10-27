@@ -3,6 +3,7 @@ cause (Complaint 95). The rules are tested on a household built here; a write ar
 QUICK_TOPIC = True
 
 import types
+from sim.tests import workforce_stand_in
 
 from .harness import *  # noqa: F401,F403
 
@@ -12,7 +13,7 @@ from sim.engine.state import HouseholdState
 # --- the household's postings keep the book reconciled -----------------------------------------
 def household_game(capital=1000.0, year=100):
     household = HouseholdState(capital=capital)
-    return types.SimpleNamespace(state=types.SimpleNamespace(household=household), year=year)
+    return types.SimpleNamespace(workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household), year=year)
 
 
 def reconciles(game):
@@ -77,7 +78,7 @@ from sim.ui import figures_headline  # noqa: F401  (registers the cash figure)
 
 this_year_household = types.SimpleNamespace(capital=1300.0, cash_periods=[],
                                             cash_flow={"venture revenue": 500.0, "living costs": -200.0})
-this_year_game = types.SimpleNamespace(capital=1300.0, year=101, state=types.SimpleNamespace(household=this_year_household))
+this_year_game = types.SimpleNamespace(capital=1300.0, year=101, workforce=this_year_household, view=workforce_stand_in.view_of(this_year_household), state=types.SimpleNamespace(household=this_year_household))
 last_year = [{"year": 100, "figures": {"cash": {"value": 1000.0, "components": {}, "flows": {}, "drivers": {}}}}]
 explained = figure_registry.explain_figure(this_year_game, "cash", last_year)
 check("the cash figure's change is this year's movement of the purse", explained["change"] == 300.0, explained)
