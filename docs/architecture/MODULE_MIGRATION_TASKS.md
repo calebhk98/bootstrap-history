@@ -46,7 +46,7 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 
 The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equivalence tier identical at the prices, demography, land, markets, production, projects and last-mixins (`161acde1`, which includes the ledger money) merges; stress tier and protocol transcripts identical after each module (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
 
-`stores` (mod stores) is a framework service and moves with phase 7. Next: the projects record's shared sets and the purses; then phases 6 to 9 (phase 6 in progress).
+`stores` (mod stores) is a framework service and moves with phase 7. Phase 6 (a) is done: `sim/ui/` reads views and sends commands (`tools/check_ui_views.py` checks every name it uses exists; a 168-command protocol session gave identical replies to the base). Still to do in phase 6: about 490 forwarders in `sim/engine/forward_*.py` and `core_properties.py` that engine code, mods and tests still call, and the mixin fakes in the tests (137 files, mostly the labour package's own mixins). Next: those forwarders' engine callers, the projects record's shared sets and the purses; phase 7 in progress (extension points); then 8 and 9.
 
 ## Task list
 

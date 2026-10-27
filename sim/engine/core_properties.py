@@ -316,9 +316,8 @@ class ForwardingPropertiesMixin:
 
 	@fuzzy_estimates.setter
 	def fuzzy_estimates(self, value):
-		self.state._fuzzy_estimates = bool(value)
-		if value and not self.state._fuzzy_salt:
-			self.state._fuzzy_salt = self.rng.getrandbits(30) + 1
+		from . import ui_port
+		ui_port.set_fuzzy_estimates(self, value)
 
 	@property
 	def goal(self):
