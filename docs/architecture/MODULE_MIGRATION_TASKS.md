@@ -18,7 +18,7 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 |---|---|---|
 | ledger (commands side) | `sim/ledger/` | state still in the purses and the tonnes ledger (`legacy_*` views) |
 | living stock, defence stores | `sim/living_stock/`, `sim/defence_stores/` | |
-| projects (starting) | `sim/projects/` | progress, completion, staffing still mixins |
+| projects | `sim/projects/` | starting, progress, completion, staffing, exclusions, running gates, closures, reviews; its seat state holds the exclusions and staffing records; still to do: `active`, `bountied`, `failed_attempts`, `paid_towards`, `operating` and the businesses (written by finance, hazards, production and the household facade), `cause_book.py`, and the empty `projects_cost_tail.py` stub |
 | coin | `sim/coin/` | carriage is the ledger's `transfer_surcharge` point |
 | campaigns | `sim/campaigns/` | |
 | reporting | `sim/reporting/` | the seat log and audit trail; world events are hazards' |
@@ -45,7 +45,7 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 
 Full equivalence tier identical at the prices, demography, land, markets and production merges; stress tier and protocol transcripts identical after each module (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
 
-In progress: projects (progress, completion, staffing, reviews). `stores` (mod stores) is a framework service and moves with phase 7. Next: ventures, the household need model, the ledger's state; then phases 6 to 9.
+`stores` (mod stores) is a framework service and moves with phase 7. Next: ventures, the household need model, the ledger's state; then phases 6 to 9.
 
 ## Task list
 
