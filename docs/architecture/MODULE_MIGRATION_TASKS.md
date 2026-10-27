@@ -4,6 +4,24 @@
 `MODULE_REGISTRY_PLAN.md`; this file is the execution order and is ticked as each task merges. The work lands as one
 pull request when every box is ticked. `main` is frozen for the duration (owner decision 2026-10-25).
 
+## Resume here (paused 2026-10-27 for the usage limit)
+
+The integration branch is verified through `aed6e564`: the full equivalence tier is identical at `0c5c18aa`; stress,
+protocol goldens and `--slow` are identical or green at every later merge. Two branches are pushed but **unverified and
+not merged**:
+
+- `mr/forwarders-out` (`0909206c`): engine, bridge, mod and test callers moved off `Sim`'s forwarders, forward file by
+  forward file (mechanics, polity, prices, production, projects, ventures, reporting, resources, seats in progress).
+  Next: run the quick tier, the protocol goldens and micro on it, fix what they find, merge; then the remaining
+  forward files and `core_properties.py`.
+- `mr/kernels` (`b635212b`): Complaint 661, `sim/assembly/kernels.py`, the least-cost route tree and fetch-wage kernels
+  with stored samples, `api.kernel`, four tests. Next: the quick tier, `--slow --only mod_kernels_smoke`, micro, then
+  merge.
+
+Then, in order: rewrite the shipped code mods onto the mod interface and Complaint 840 (phase 7); the purses and the
+projects record's shared sets (phase 3); phase 9 (`--slow`, long tier and fingerprint against `mr-base`, regenerate the
+shipped openings, fix the bugs kept on purpose: Complaints 681, 760 to 765, 790, 800, 810, 840; docs; the real PR).
+
 Operating rules: only the orchestrating session merges; agents work in worktrees on `mr/<task>` branched from the
 integration branch, own named files, never edit `core.py`, `state.py`, `state_seat.py`, `core_seats.py`,
 `year_phases.py` or `saveload.py` (they describe the wiring instead), run only targeted topics and the micro
