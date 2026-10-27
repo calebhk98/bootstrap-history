@@ -7,6 +7,7 @@ import unittest
 
 from sim.economy.types import TileSpec
 from sim.markets.port_cropland import follow_farm_sites
+from sim.tests.ui_stand_in import Game
 
 AREA_KM2 = 100.0
 HECTARES = AREA_KM2 * 100.0
@@ -27,7 +28,7 @@ def setup_of(*tiles):
 
 
 def game_with(sites):
-    return types.SimpleNamespace(farm_sites=lambda: sites)
+    return Game(farm_sites=lambda: sites)
 
 
 class FollowFarmSites(unittest.TestCase):
