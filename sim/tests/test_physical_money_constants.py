@@ -8,6 +8,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.constants import REGISTRY
+import sim.workforce.constants  # noqa: F401  (declares the workforce prices in labour hours)
 from sim.engine.core import Sim
 from sim.resources.labour_profile import mine_labour_hours_per_tonne
 from sim.engine.money_units import PricedInLabourHours
