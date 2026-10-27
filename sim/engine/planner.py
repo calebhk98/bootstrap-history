@@ -235,7 +235,7 @@ def pick_side_branches(nodes, need, sim, limit):
             continue
         if node["cat"] == "unobtainable":
             continue
-        if sim._is_foreign_only(node_id):
+        if sim.view("foreign_only")(node_id):
             continue
         net = node["rev"] - node["up"]
         if net <= 0:
@@ -288,7 +288,7 @@ def pick_staffing(nodes, need, sim):
         # programme can afford it, which the CPM ordering already handles.
         if nodes[key]["cat"] not in ("institution", "social", "information"):
             continue
-        if nodes[key]["cat"] == "unobtainable" or sim._is_foreign_only(key):
+        if nodes[key]["cat"] == "unobtainable" or sim.view("foreign_only")(key):
             continue
         want.append(key)
     want.sort(key=lambda node_id: (nodes[node_id]["_total_cost"], node_id))

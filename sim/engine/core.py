@@ -266,9 +266,9 @@ class Sim(
         # they do not mean every society on Earth already owns it.  In
         # particular, never infer one civilization's materials or institutions for another
         # civilization from those fields.
-        self.country_literacy()
+        self.view("legacy_country_literacy")[None]
         for field in ("literacy_general", "literacy_elite"):
-            self.start_civ[field] = self.literacy(field)
+            self.start_civ[field] = self.view("literacy")(field, None)
         self.civ.pop("literacy_general", None)
         self.civ.pop("literacy_elite", None)
         self._reconnect_state_hooks()

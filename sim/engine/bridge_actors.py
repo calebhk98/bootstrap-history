@@ -93,7 +93,7 @@ def farm_food_demand_kg(sim):
 
 @bridge_view("state_military_diffusion")
 def state_military_diffusion(sim):
-    return sim.state_military_diffusion()
+    return sim.view("diffusion_index")["military"]
 
 
 @bridge_view("nodes_with_mechanic", kind=QUOTE)

@@ -15,8 +15,8 @@ def society_technologies(game: Any) -> Set[str]:
 def snapshot(game: Any) -> Dict[str, Any]:
     from sim.geography.api import tiles_held
     return {"year": game.year, "population": float(game.view("population")().total), "wage_index": float(game.wage_index),
-            "literacy_general": float(game.literacy("literacy_general")),
-            "literacy_elite": float(game.literacy("literacy_elite")),
+            "literacy_general": float(game.view("literacy")("literacy_general", None)),
+            "literacy_elite": float(game.view("literacy")("literacy_elite", None)),
             "territory_tiles": len(tiles_held(game.civ, game.world_map)),
             "technologies": sorted(society_technologies(game))}
 
