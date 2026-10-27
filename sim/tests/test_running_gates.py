@@ -46,6 +46,9 @@ class _Host:
     def running(self, node_id):
         return self.production.running(node_id)
 
+    def view(self, name):    # the projects module's own views, asked of it directly
+        return getattr(self.module, name)
+
     def __getattr__(self, name):
         return getattr(self.module, name)
 

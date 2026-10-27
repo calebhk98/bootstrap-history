@@ -22,6 +22,7 @@ from .constants import (BONDAGE_LABOUR_SHARE, BONDAGE_WAGE_MARKUP, CREDIT_FREEZE
                         INSOLVENCY_YEARS_BEFORE_BLEED, SETTLEMENT_CAPITAL_RETAINED_FRACTION, SETTLEMENT_CREDIT_FREEZE_YEARS,
                         SETTLEMENT_REPUTATION_HIT)
 from .credit_freeze import halt_active_projects, settlement_freeze, settlement_owed
+from sim.projects.api import ReviewVentures
 
 
 class Insolvency:
@@ -71,7 +72,7 @@ class Insolvency:
 			needs.send(MothballMines())
 		if household.capital < -limit:
 			# a creditor takes the business (the plants it runs), never the knowledge of how they work
-			taken = [closure.entry_key for closure in needs.legacy_game().review_ventures((business_review.CREDITOR_SEIZURE,), year)]
+			taken = [closure.entry_key for closure in needs.legacy_game().send(ReviewVentures(tuple((business_review.CREDITOR_SEIZURE,)), year))]
 			# only say it if it happened, and name them
 			if taken:
 				needs.send(RecordEvent.of("creditors_took", "creditors took what they could: %d concerns "

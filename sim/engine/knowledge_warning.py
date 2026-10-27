@@ -22,7 +22,7 @@ def _hedge_options(sim):
                    if node_id not in sim.done]
         options.append({"id": hedge_id, "name": sim.nodes[hedge_id]["name"],
                         "steps_away": len(missing),
-                        "cost": round(sum(sim.project_cost(node_id) for node_id in missing), 1),
+                        "cost": round(sum(sim.view("project_cost")(node_id) for node_id in missing), 1),
                         "fraction_lost_once_built": fraction_lost})
     return options
 

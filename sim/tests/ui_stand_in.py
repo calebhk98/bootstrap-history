@@ -103,6 +103,7 @@ KEYED_OF_VIEW = {
 }
 
 METHOD_OF_COMMAND = {
+    "ReviewVentures": "review_ventures",
     "AdvanceSociety": "advance_society", "AnswerOffer": "seat_answer", "ApplyForPatent": "seat_patent",
     "ApplyTechEffects": "apply_tech_effects", "AutoOpenVentures": "auto_open_ventures", "Bribe": "bribe",
     "BuildHousing": "build_worker_housing", "BuildWay": "build_way", "BuyMaterial": "buy_material_stock",

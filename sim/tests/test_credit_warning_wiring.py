@@ -12,6 +12,7 @@ from .harness import check
 from sim.reporting.api import RecordEvent
 from sim.resources.api import MothballMines
 from sim.tests import finance_host, module_harness
+from sim.tests.ui_stand_in import Game
 
 LIMIT = 1000.0
 
@@ -23,7 +24,7 @@ class Owing:
         self.household = SimpleNamespace(capital=-share * LIMIT, slaves=slaves, freedmen=0, artisans=10.0, scholars=0)
         self.projects = SimpleNamespace(active={"a_project": {"spent": 40.0}}, bountied=set(), paid_towards={})
         self.manumitted = []
-        game = SimpleNamespace(
+        game = Game(
             review_ventures=lambda rules, year: [SimpleNamespace(entry_key=key) for key in closures],
             labour=SimpleNamespace(manumit=self.manumitted.append))
         self.module = finance_host.build(acting_balance=lambda: self.household.capital, legacy_acting_household=self.household,

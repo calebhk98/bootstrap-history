@@ -108,7 +108,7 @@ class Capability:
 		if node_id not in projects.done:
 			return False
 		node = game.nodes[node_id]
-		if (node.get("requires_running") or node.get("requires_ways")) and game.gate_blocked(node_id):
+		if (node.get("requires_running") or node.get("requires_ways")) and game.view("gate_blocked")(node_id):
 			return False
 		if node_id in projects.granted or not self.is_venture(node_id):
 			return True
