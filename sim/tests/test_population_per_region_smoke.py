@@ -6,7 +6,7 @@ import copy
 import dataclasses
 import unittest
 
-from sim.demography.api import StepPopulation
+from sim.demography.api import RecordFoodEaten, StepPopulation, rules
 from sim.tests.harness import unopened_sim as opened_game
 from sim.tests.test_population_per_region_rule import _accounts
 
@@ -24,7 +24,8 @@ class TheGameTracksRegionsTests(unittest.TestCase):
         world = game.state.modules["demography"]
         for field in dataclasses.fields(world):
             setattr(world, field.name, copy.deepcopy(getattr(self.start_world, field.name)))
-        game.record_food_eaten(type("Outcome", (), {"accounts": _accounts(eaten_over_need_by_tile)})())
+        accounts = _accounts(eaten_over_need_by_tile)
+        game.send(RecordFoodEaten(rules.national_eaten_over_need(accounts), rules.eaten_over_need_by_tile(accounts)))
         game.send(StepPopulation(game.state.scenario.year))
         return dict(game.view("regional_flows_last_year")())
 
@@ -32,7 +33,7 @@ class TheGameTracksRegionsTests(unittest.TestCase):
         self._year({tile: 1.0 for tile in self.tiles})
         stored = self.game.view("legacy_regions_of_people")()
         self.assertEqual(sorted(stored), sorted(self.game.labour.settlement_tiles()))
-        self.assertAlmostEqual(sum(sum(bands) for bands in stored.values()), self.game.population.total, delta=1.0)
+        self.assertAlmostEqual(sum(sum(bands) for bands in stored.values()), self.game.view("population")().total, delta=1.0)
 
     def test_removing_a_tiles_food_lowers_its_nutrition_and_raises_its_mortality_and_no_other_tiles(self):
         eaten = {tile: 1.0 for tile in self.tiles}
@@ -52,8 +53,8 @@ class TheGameTracksRegionsTests(unittest.TestCase):
         eaten = {tile: 1.0 for tile in self.tiles}
         eaten[self.tiles[0]] = 0.5
         self._year(eaten)
-        self.assertEqual(self.game.labour.settlement_tiles(), self.game.people_by_tile())
-        self.assertAlmostEqual(sum(self.game.labour.settlement_tiles().values()), self.game.population.total, delta=1.0)
+        self.assertEqual(self.game.labour.settlement_tiles(), self.game.view("people_by_tile")())
+        self.assertAlmostEqual(sum(self.game.labour.settlement_tiles().values()), self.game.view("population")().total, delta=1.0)
 
 
 if __name__ == "__main__":

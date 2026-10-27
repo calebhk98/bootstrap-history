@@ -19,7 +19,7 @@ def institutions_of(mechanics_known):
 
 def held(sim):
     """The institutions the home state's society holds; none without a government."""
-    government = sim.view("cast")().government_of(None)
+    government = sim.actors.government_of(None)
     if government is None:
         return ()
     world = sim.actor_world()

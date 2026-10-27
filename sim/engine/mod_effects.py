@@ -153,7 +153,7 @@ def strata_of(sim: Any, country: str) -> list:
 def people_of(sim: Any, country: str) -> float:
     """How many people the country holds: the home society's population, or a partner's strata."""
     if country == sim.civ["id"]:
-        return float(sim.population.total)
+        return float(sim.view("population")().total)
     return sum(actor.record.members for actor in strata_of(sim, country))
 
 

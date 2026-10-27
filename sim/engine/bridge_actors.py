@@ -7,6 +7,7 @@ import contextlib
 
 from sim.agents.api import cast_from_civilisations
 from sim.assembly.api import KEYED, QUOTE
+from sim.demography.api import rules as demography_rules
 
 from . import bridge_land, view_share
 from .actor_kinds_data import declared_kinds
@@ -86,7 +87,7 @@ def nutrition_ratio_last_year(sim):
 def farm_food_demand_kg(sim):
     """Kilograms of grain the people would harvest by eating what they need, before the first harvest."""
     technique = sim._farm_technique_this_year
-    return (sim._adult_equivalent_population(sim.population)
+    return (demography_rules.adult_equivalents(sim.view("population")())
             * sim._agriculture.annual_food_demand_kg_per_person(technique.crop))
 
 

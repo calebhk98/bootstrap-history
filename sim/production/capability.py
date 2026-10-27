@@ -86,10 +86,10 @@ class Capability:
 			# a work that serves a share of the people is repeated until everyone who can use it is served
 			return max(1.0, game.units_for_coverage(node_id, 1.0))
 		if self.needs.mechanic["capability"].get(node_id).get("scalable") == "literacy":
-			return rules.literacy_ceiling(game.pop_scale, self.needs.literacy("literacy_general"),
+			return rules.literacy_ceiling(game.view("pop_scale")(), self.needs.literacy("literacy_general"),
 			                              game.labour.LITERACY_REFERENCE_GENERAL)
 		# Workshops, collegia and a freedman staff draw on craftsmen rather than the literate few, so population alone bounds them.
-		return rules.population_ceiling(game.pop_scale)
+		return rules.population_ceiling(game.view("pop_scale")())
 
 	def institution_unit_cost(self, node_id, have_units, add_units):
 		"""Money to take this institution from `have_units` to `have_units + add_units`, where one unit costs exactly

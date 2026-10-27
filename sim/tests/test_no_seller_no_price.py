@@ -20,7 +20,6 @@ from sim.foreign_trade.module import ForeignTrade
 from sim.foreign_trade.state import ForeignTradeWorld
 from sim.projects.api import START_CHECKS
 from sim.tests import materials_stand_in, module_harness
-from sim.tests.ui_stand_in import Game
 
 
 def _wage_document():
@@ -78,7 +77,7 @@ class _Route:
 def _fake_sim(home_prices, partner_makes, partner_prices, gated=(), supply=None, lift_in=math.inf):
     supply = supply or {}
     remembered = {}     # what the market keeps for the acting seat
-    return Game(
+    return types.SimpleNamespace(
         civ={"id": "home"}, remembered=remembered.get, remember=remembered.__setitem__, not_traded_materials=frozenset,
         border_terms=lambda destination, source: (0.0, False),
         _price_tables=lambda: ({}, {material: ("gated" if material in gated else "solved")

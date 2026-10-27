@@ -257,7 +257,7 @@ class AgentEconomy(TilePricesMixin):
         return material in self.economy().area_map.goods()
 
     def _actor_tile(self, actor_id):
-        actor = self._sim.view("cast")().actors.get(actor_id)
+        actor = self._sim.actors.actors.get(actor_id)
         place = actor.location() if actor is not None else None
         return place if place in self._economy.setup.tiles else self._economy.setup.capital_tile
 
@@ -265,7 +265,7 @@ class AgentEconomy(TilePricesMixin):
         """Put the year's noted sales and purchases of the actors in the book as orders; (the sales and the purchases
         that entered, as dicts)."""
         economy, sim = self._economy, self._sim
-        known = sim.view("cast")().actors
+        known = sim.actors.actors
         sales = [sale for sale in self.stored.pop("sales", []) if sale["seller"] in known]
         purchases = [purchase for purchase in self.stored.pop("purchases", []) if purchase["buyer"] in known]
         from sim.world.material_units import tonnes_per_unit
@@ -298,11 +298,11 @@ class AgentEconomy(TilePricesMixin):
 
     def _keep_deliveries(self, delivered):
         """Goods a buyer that keeps its purchases bought at the market join its stores, in tonnes."""
-        actors_api.keep_deliveries(self._sim.view("cast")().actors, delivered)
+        actors_api.keep_deliveries(self._sim.actors.actors, delivered)
 
     def _strike_state_coin(self, economy):
         """The cut the home state decided on this year lowers the metal in the coin it issues."""
-        cut = self._sim.view("state_treasury")().record.coin_cut_share
+        cut = self._sim.state_treasury().record.coin_cut_share
         self._floor_costs = {}
         economy.strike_lighter_coin(cut, COIN_RESTRIKE_SHARE_PER_YEAR)
 
@@ -433,7 +433,7 @@ class AgentEconomy(TilePricesMixin):
             metal_price = sim._material_prices().get(standard["material"])   # the metal at its cost: its market price (Complaint 519) would size a partner's spending by the opening's mispriced metals
             if not metal_price:
                 continue
-            held = (sim.view("partner_coin_opening")[partner]
+            held = (sim._partner_coin_opening_units(partner)
                     + sim.foreign_coin_partner_units(partner))
             total += max(0.0, held) * standard["kg_per_unit"] * metal_price
         return total * PARTNER_SPEND_SHARE_PER_YEAR
@@ -488,10 +488,10 @@ class AgentEconomy(TilePricesMixin):
         sim = self._sim
         population = sim.population
         total = float(population.total)
-        weather = sim.view("harvest_weather")(sim.state.scenario.year, None, False)   # harm is applied per producer below
+        weather = sim._pooled_farm_weather_multiplier(sim.state.scenario.year, harmed=False)   # harm is applied per producer below
         economy = self._economy
         harmed = sim.externality_yield_factors(sim.state.scenario.year)
-        yields = port_sites.crop_yields(economy, weather, sim.view("farm_weather")[sim.state.scenario.year])
+        yields = port_sites.crop_yields(economy, weather, sim.farm_weather_by_tile(sim.state.scenario.year))
         yields = port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
         entrant_share, attrition_share = working_age_turnover(population)
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),
@@ -508,7 +508,7 @@ class AgentEconomy(TilePricesMixin):
                           **port_flight.flight_values(sim, economy),
                           institutions=port_institutions.held(sim),
                           durable_users=tuple(port_actors.held_account(buyer)
-                                              for buyer in sorted(sim.view("cast")().actors)),
+                                              for buyer in sorted(sim.actors.actors)),
                           bondage_tiles=port_bondage.bondage_tiles(sim, economy),
                           bonded_for_sale=port_bondage.bonded_for_sale(sim, economy),
                           standing_bids=self._founder_standing_bids(), credit_asks=self._credit_asks(),

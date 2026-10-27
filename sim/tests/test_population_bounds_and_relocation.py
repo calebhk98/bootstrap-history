@@ -14,6 +14,7 @@ from sim.labour.labour import Labour
 from sim.tests.harness import NODES
 from sim.tests.labour_stand_in import shrink, stand_in_world
 from sim.ui.proto.typed import parse_typed
+from sim.tests.ui_stand_in import Game
 
 
 class TownShrinksWithNationTests(unittest.TestCase):
@@ -44,7 +45,7 @@ class InvariantCheckerTests(unittest.TestCase):
     def _game(self, town=100.0, reachable=10.0, exist=50.0, staff=5.0, nation=1000.0, working_age=600.0):
         labour = SimpleNamespace(home_town_population_estimate=lambda: town, available_trades=lambda: ["smith"],
                                  reachable_trade_population=lambda trade: reachable, people_who_exist=lambda trade: exist)
-        return SimpleNamespace(population=SimpleNamespace(total=nation, working_age=working_age), labour=labour,
+        return Game(population=SimpleNamespace(total=nation, working_age=working_age), labour=labour,
                                view=lambda name: (lambda: {"employees": {"smith": staff}}))
 
     def test_a_consistent_labour_market_passes(self):

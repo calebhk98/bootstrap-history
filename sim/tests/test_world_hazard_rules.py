@@ -39,7 +39,7 @@ def game(strata=(), actors=(), home_people=1000.0):
         civ={"id": HOME}, events=True, population=types.SimpleNamespace(total=home_people),
         actors=cast,
         partners_in_agent_economy=lambda: [PARTNER], _farm_year_weather_seed=lambda salt: 7,
-        view=lambda name: (lambda: cast) if name == "cast" else (lambda: [HOME, PARTNER]),
+        view=lambda name: (lambda: cast) if name == "cast" else (lambda: sim.population) if name == "population" else (lambda: [HOME, PARTNER]),
         playing_seats=lambda: ["first"])
     event_stand_in.stood_in(sim)
 

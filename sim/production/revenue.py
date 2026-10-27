@@ -65,7 +65,7 @@ class Revenue:
 		staff = self.needs.staff()
 		key = (
 			scenario.year,
-			game.pop_scale,
+			game.view("pop_scale")(),
 			game.real_output_per_head(),
 			game.household.operating_version,
 			game.household.done_version,
@@ -132,7 +132,7 @@ class Revenue:
 		total_revenue += self.workshop_output()
 		total_revenue += self.founder_wage_income()
 		gross = total_revenue
-		ceiling = self.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * game.pop_scale \
+		ceiling = self.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * game.view("pop_scale")() \
 			* game.real_output_per_head() * game.price_index
 		gross = rules.saturated_revenue(gross, ceiling)
 		return (gross + game.state_funding()) * game.output_factor, book_forecast * game.output_factor

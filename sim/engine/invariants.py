@@ -56,7 +56,7 @@ def check_tile_owner_invariants(sim):
 
 def check_labour_market_invariants(sim):
     """Assert the labour market never holds more people than exist."""
-    nation = sim.population.total
+    nation = sim.view("population")().total
     town = sim.labour.home_town_population_estimate()
     assert town <= nation + 1e-6, \
         "home town of %.1f people exceeds the nation of %.1f" % (town, nation)
@@ -69,7 +69,7 @@ def check_labour_market_invariants(sim):
         assert reachable <= nation + 1e-6, \
             "reachable %s %.2f exceed the nation of %.1f" % (trade, reachable, nation)
     staffed = sum(employees.values())
-    available = sim.population.working_age
+    available = sim.view("population")().working_age
     assert staffed <= available + 1e-6, \
         "%.1f staff on the payroll exceed the %.1f people of working age" % (staffed, available)
     return True

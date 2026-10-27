@@ -62,12 +62,12 @@ def _territory_share(sim: Any, node: Optional[str] = None) -> float:
 
 
 def _output_hours_per_head(sim: Any, node: Optional[str] = None) -> float:
-    people = sim.population.total
+    people = sim.view("population")().total
     return 0.0 if people <= 0.0 else sim.real_output_hours() / people
 
 
 QUANTITIES: Dict[str, Quantity] = {
-    "population": Quantity(lambda sim, node=None: float(sim.population.total), "population",
+    "population": Quantity(lambda sim, node=None: float(sim.view("population")().total), "population",
                            meaning="people in the society"),
     "output_hours_per_head": Quantity(_output_hours_per_head,
                                       meaning="hours of real output a year per person"),

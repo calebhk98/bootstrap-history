@@ -446,7 +446,7 @@ def nutrition_ratios_over_years(test_sim, years):
     ratios = []
     for year in years:
         test_sim._demographic_recovery(year)
-        ratios.append(test_sim._last_demographic_step.nutrition_ratio)
+        ratios.append(test_sim.view("demographic_flows")().nutrition_ratio)
     return ratios
 
 

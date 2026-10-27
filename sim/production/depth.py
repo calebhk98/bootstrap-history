@@ -31,7 +31,7 @@ class Depth:
 
 	def tenure_leavers_share(self):
 		"""Share of working people who leave work in a year, from the demography."""
-		return working_age_turnover(self._game().population)[1]
+		return working_age_turnover(self._game().view("population")())[1]
 
 	def industry_experience(self, node_id):
 		"""Retained worker-years spent running this technique, by anyone."""

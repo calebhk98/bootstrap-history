@@ -55,7 +55,7 @@ def _tile_record(tile):
 def urban_report(sim, days=DEFAULT_FOOD_HAUL_DAYS, limit=ROWS_SHOWN):
     people = sim.labour.settlement_tiles()
     tiles = sorted(people)
-    population = sim.population
+    population = sim.view("population")()
     need_kcal = (demography.SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY * _adult_equivalents_per_head(population))
     surplus = {tile: max(0.0, geography.settlement.capacity_kcal_per_day(tile) - people[tile] * need_kcal)
                for tile in tiles}

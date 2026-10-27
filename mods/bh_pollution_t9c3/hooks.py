@@ -98,7 +98,7 @@ def assess(sim):
     escaping = abatement(sim)
     people_by_tile = _people_by_tile(sim)
     total_people = sum(people_by_tile.values()) or 1.0
-    population = sim.population
+    population = sim.view("population")()
     baseline = {"children": demography.BASELINE_ANNUAL_MORTALITY_RATE_CHILD,
                 "working_age": demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE,
                 "elderly": demography.BASELINE_ANNUAL_MORTALITY_RATE_ELDERLY}

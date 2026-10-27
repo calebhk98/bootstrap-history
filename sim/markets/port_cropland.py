@@ -7,7 +7,7 @@ from sim.economy.api import tile_costs
 def follow_farm_sites(sim, setup) -> None:
     """Set each held tile's cropped share and yield factor, and the yield of every crop recipe on it, from the farm's sites."""
     changed = {}
-    for tile_id, site in sorted(sim.view("farm_sites")().items()):
+    for tile_id, site in sorted(sim.farm_sites().items()):
         tile = setup.tiles.get(tile_id)
         if tile is None:
             continue

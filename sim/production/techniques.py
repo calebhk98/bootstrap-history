@@ -22,7 +22,7 @@ class Techniques:
 	def price_epoch(self):
 		"""Changes whenever the techniques in use might, or the price level does: for caches whose
 		answers read prices."""
-		return self.techniques_epoch() + (self._game().home_price_level(),)
+		return self.techniques_epoch() + (self._game().view("home_price_level")(),)
 
 	def techniques_in_use(self):
 		"""Nodes whose production entries some producer runs now."""

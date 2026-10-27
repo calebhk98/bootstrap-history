@@ -2,7 +2,7 @@
 import copy, os, sys
 
 from sim.constants import declare
-from sim.demography.api import OpenPopulation
+from sim.demography.api import OpenPopulation, rules as demography_rules
 from sim.workforce.api import WatchStaff
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from sim.engine.state import SimulationState, ActiveProjectState
@@ -167,7 +167,7 @@ class Sim(
         self._farm_ladder = territory.ladder
         self._farm_arable_ceiling = territory.cropped_hectares
         self.labour.set_farm_area(self._agriculture.farmland_for_population(
-            self._adult_equivalent_population(self.population), ladder=self._farm_ladder).hectares)
+            demography_rules.adult_equivalents(self.view("population")()), ladder=self._farm_ladder).hectares)
         self._opening_farmed_hectares = self.farm_land.hectares
         # the weather cells and their correlation are fixed for the life of a run: built now, from the territory as it opens
         self.view("farm_weather_cells")()

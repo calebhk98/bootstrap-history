@@ -4,7 +4,7 @@
 def levy_hours_per_worker(sim) -> float:
 	"""Hours of each working-age person's year the home state called up for its works and its army this year
 	(its record of hours taken), spread over the working age; zero before the state has acted."""
-	government = sim.view("cast")().government_of(None)
+	government = sim.actors.government_of(None)
 	working_age = sim.population.working_age
 	if government is None or working_age <= 0.0:
 		return 0.0
