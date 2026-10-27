@@ -4,9 +4,9 @@ Each view carries the name its owner will publish (docs/architecture/catalogue),
 code did, and is never cached."""
 from sim.agents.api import GOVERNMENT_PREFIX, ledger
 from sim.assembly.api import KEYED, QUOTE
+from sim.land.api import action_results
 from sim.ledger.api import PayActor
 
-from . import action_results
 from .bridge import bridge_command, bridge_view
 
 

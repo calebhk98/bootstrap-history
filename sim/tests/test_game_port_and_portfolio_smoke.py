@@ -31,9 +31,10 @@ class PortHandsTheEconomyTheGamesData(unittest.TestCase):
         tiles = sorted(self.setup.tiles)
         pair = next((tile, other) for tile in tiles for other in self.setup.tiles[tile].borders if other in self.setup.tiles)
         edge = geography_api.edge_key(*pair)
-        self.game.state.economy.improvements = {edge: {"road": True}}
+        built = self.game.view("built_ways")()
+        built[edge] = {"road": True}
         self.assertEqual(port_setup.build_setup(self.game.economy.world).improvements, {edge: {"road": True}})
-        self.game.state.economy.improvements = {}
+        built.clear()
 
     def test_each_trade_carries_its_stated_risk_and_each_durable_good_its_stated_service_life(self):
         with open(os.path.join(DATA, "trades.json"), encoding="utf-8") as handle:

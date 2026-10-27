@@ -71,10 +71,6 @@ class MapViews:
     def legacy_geography(self) -> Geography:
         return self.geography
 
-    def built_ways(self) -> Dict[str, Dict[str, bool]]:
-        """The ways built, by way key."""
-        return self.needs.legacy_improvements()
-
     def tile_known(self, tile: str) -> bool:
         return tile in self.world_map.tiles
 
@@ -101,12 +97,12 @@ class MapViews:
 
     def route_between(self, origin: str, target: str, modes: Any) -> Any:
         """The fastest route from one tile to another by these modes over the built ways, or None."""
-        return route([origin], [target], modes, self.needs.legacy_improvements(), held_nodes=self.needs.held_techniques(True),
+        return route([origin], [target], modes, self.world.improvements, held_nodes=self.needs.held_techniques(True),
                      world_map=self.world_map, fastest=True)
 
     def reach_from(self, tile: str, modes: Any, range_days: float) -> Dict[str, float]:
         """{tile: days} reachable from a tile by these modes within `range_days`."""
-        return reach([tile], modes, range_days, self.needs.legacy_improvements(), world_map=self.world_map)
+        return reach([tile], modes, range_days, self.world.improvements, world_map=self.world_map)
 
     def held_tile_geometry(self) -> List[tuple]:
         """[(tile id, lat, lon, land area km2, arable fraction)] for each held tile the land map describes, in held order."""

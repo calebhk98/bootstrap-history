@@ -45,9 +45,6 @@ from .forward_seats import ForwardSeatsMixin
 from .forward_hazards import HazardsForwardsMixin
 from .forward_polity import PolityForwardsMixin
 from .seat_defaults import default_policy
-from .ways import WaysMixin
-from .held_works import HeldWorksMixin
-from .works import WorksMixin
 from .forward_actors import ActorsForwardsMixin
 from .founder_sales import FounderSalesMixin
 from .forward_finance import ForwardFinanceMixin
@@ -84,9 +81,6 @@ class Sim(
         ForwardSeatsMixin,
         HazardsForwardsMixin,
         PolityForwardsMixin,
-        WaysMixin,
-        WorksMixin,
-        HeldWorksMixin,
         ActorsForwardsMixin,
         DiffusionForwardsMixin,
         FounderSalesMixin,

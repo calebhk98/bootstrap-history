@@ -302,9 +302,8 @@ class PopulationMixin:
     def _hiring_cap_inputs(self):
         """What the hiring cap reads beyond the world stamp: the literacy, the people and where they live."""
         world = self._world
-        economy = world.state.economy
         return (world.literacy("literacy_elite"), world.literacy("literacy_general"), world.population.working_age,
-                world.pop_scale, len(economy.improvements), world.home_tiles_held_version(),
+                world.pop_scale, len(world.built_ways()), world.home_tiles_held_version(),
                 self._labour_hours_epoch(world.society.society_labour_hours), len(world.society.society_labour_hours),
                 self.base_tile())
 
