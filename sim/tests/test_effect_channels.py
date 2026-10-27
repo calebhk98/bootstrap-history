@@ -3,11 +3,14 @@ stand-in `self` whose attributes are written out and whose collaborators are pla
 `grouped_values`, `sum_in_order`, `factor_product`, and the module's `effect_holds`; the readers `standing_floor`, `goods_reach_factor`, the diffusion module's `schooling_flow`; and
 `institution_unit_cost`. No game is built. What the benefactions branch declares is test_complaint_190_benefactions."""
 import unittest
+from unittest import mock
 from types import SimpleNamespace
 
 from sim.diffusion.module import Diffusion
 from sim.engine.core import Sim
 from sim.mechanics import rules
+from sim.markets import categories
+from sim.markets.module import Markets
 from sim.mechanics.module import Mechanics
 from sim.tests import module_harness
 
@@ -112,8 +115,9 @@ class GoodsReach(unittest.TestCase):
 
     def reach(self, factor, ceiling=3.0):
         asked = []
-        game = SimpleNamespace(effect_factor=lambda channel, start=1.0: asked.append(channel) or factor, REACH_CEILING=ceiling)
-        return Sim.goods_reach_factor(game), asked
+        game = module_harness.build(Markets, views={"effect_factor": lambda channel, start=1.0: asked.append(channel) or factor})
+        with mock.patch.object(categories, "REACH_CEILING", ceiling):
+            return game.goods_reach_factor(), asked
 
     def test_it_asks_the_reach_channel_and_returns_the_factor(self):
         self.assertEqual(self.reach(1.5), (1.5, ["reach"]))

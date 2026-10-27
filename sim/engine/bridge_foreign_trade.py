@@ -39,21 +39,6 @@ def partner_household_demand(sim, civilization_id):
     return partner_demand.household_tonnes_by_material(civilization_id)
 
 
-# ---- the home market ----
-
-@bridge_view("home_unit_price", kind=KEYED)
-def home_unit_price(sim, material):
-    """Money per unit the home society's sellers ask for a material (or a curated commodity, by the material it is priced as);
-    None when no home seller offers it."""
-    return sim.goods_market.home_unit_price(material)
-
-
-@bridge_view("market_floor_ratio", kind=KEYED)
-def market_floor_ratio(sim, commodity):
-    """The lowest price over the incumbents' cost their producers sell a commodity at."""
-    return sim._floor_ratio(commodity)
-
-
 # ---- the map ----
 
 
@@ -63,10 +48,5 @@ def market_floor_ratio(sim, commodity):
 def partner_reached(sim, civilization_id):
     """Whether trade with a partner can begin: no action returns it, or the acting seat holds the one that does."""
     return sim.partner_gate_refusal(civilization_id) is None
-
-
-@bridge_view("legacy_agent_economy")
-def legacy_agent_economy(sim):
-    return sim.state.economy.agent_economy
 
 

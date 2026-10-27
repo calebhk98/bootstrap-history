@@ -28,7 +28,7 @@ class Agent:
 
 def port_over(agent, priced):
     sim = types.SimpleNamespace(
-        state=types.SimpleNamespace(economy=types.SimpleNamespace(money_from_economy=priced)),
+        view=lambda name: lambda: priced,
         labour=types.SimpleNamespace(money_per_labour_hour=lambda: OPENING_FIGURE))
     port = types.SimpleNamespace(agent=agent, _sim=sim, _opening=False)
     if agent is not None:

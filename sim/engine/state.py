@@ -227,15 +227,7 @@ class EconomyState:
 	works: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# tile -> {construction node id: [year it is finished, capacity]} of works paid for and being built (works.py)
 	works_under_construction: Dict[str, Dict[str, List[float]]] = field(default_factory=dict)
-	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
-	# commodity -> society capacity, stock and last price ratio (market_clearing.py)
-	market_book: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	# the year's purchases and sales by commodity and party, and the founder's draws (goods_market_api.py)
-	market_flows: Optional[Dict[str, Any]] = None
 	capacity_pool: Dict[str, float] = field(default_factory=dict)
-	# whether the money an hour of work is worth is the agent economy's unskilled wage (set when the economy
-	# first opens and the opening's money is repriced to it)
-	money_from_economy: bool = False
 	# the money an hour of work was worth when the tree's money fields were last counted (opening_money.py)
 	nodes_money_per_labour_hour: Optional[float] = None
 

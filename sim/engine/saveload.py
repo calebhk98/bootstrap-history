@@ -35,7 +35,7 @@ def state_text(sim):
 	sim.send(CaptureReadings())      # the demand the last throttle saw is carried in the save
 
 	# the agent economy's record is most of the file and already plain JSON: the encoder takes it as it is
-	with verbatim(sim.state.economy.agent_economy.get("record")):
+	with verbatim(sim.view("legacy_agent_economy")().get("record")):
 		return state_json(serialize_state(sim.state))
 
 
@@ -377,7 +377,7 @@ def _apply_blob(sim, blob):
 		restore_rng(sim.rng, state._rng)
 	if getattr(sim, "_economy_deferred", False):
 		from .opening_money import reprice_tree, saved_tree_pricing
-		figure = saved_tree_pricing(state.economy)
+		figure = saved_tree_pricing(state.modules["markets"].money_from_economy, state.economy.nodes_money_per_labour_hour)
 		if figure is None:
 			raise EconomyNotOpened("a game built to load a save without opening its economy needs the save's tree pricing")
 		sim._economy_deferred = False

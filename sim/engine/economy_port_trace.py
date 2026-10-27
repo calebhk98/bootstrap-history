@@ -21,7 +21,7 @@ def spin_up_trace(game, years):
     mint paid out net of what it melted, `change` the year's change in the money stock, `metal_held` the metal
     the mint holds at the year's end (economy units). `wage` is the unskilled trade's mean wage that year (economy
     units), `hired_hours` and `idle_hours` the hours employers took and the hours offered that nobody took."""
-    setup = build_setup(game, game.state.economy.agent_economy["opening"])
+    setup = build_setup(game, game.view("legacy_agent_economy")()["opening"])
     economy = economy_api.blank_economy(setup)
     economy_api.begin_spin_up(economy)
     inputs = YearInputs(year=0, population_by_tile={}, working_age_share=setup.working_share,

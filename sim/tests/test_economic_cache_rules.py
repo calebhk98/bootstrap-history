@@ -6,9 +6,9 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.economy_goods import GoodsMixin
+from sim.markets.module import Markets
 from sim.engine.economy_production import ProductionMixin
-from sim.tests import materials_stand_in
+from sim.tests import materials_stand_in, module_harness
 
 
 def household(**versions):
@@ -142,72 +142,66 @@ class AnnualMaterialDemandTest(unittest.TestCase):
         self.assertNotIn("fake_kg", sim.annual_material_demand())
 
 
-class GoodsStandIn(GoodsMixin):
-    GOODS_TAU_POP_SCALE_EXPONENT = 0.0
-
-    def real_output_per_head(self):
-        return self.state.economy.output_per_head
+class GoodsStandIn:
+    """The markets module over plain values for the views the category ratios read; `concerns` sellers in the category."""
 
     def __init__(self, concerns):
         self.concerns = concerns
         self.calls = 0
-        self.pop_scale = 1.0
+        self.operating_version = 0
         self.market_version = 0
-        self.household = household()
-        self.state = types.SimpleNamespace(scenario=types.SimpleNamespace(year=100), projects=types.SimpleNamespace(),
-                                           economy=types.SimpleNamespace(output_per_head=1.0))
-        self.farm_hectares = 0.0
+        self.module = module_harness.build(Markets, views={
+            "year": 100, "pop_scale": 1.0, "real_output_per_head": 1.0,
+            "legacy_done_versions": lambda: (0, self.operating_version), "concern_versions": lambda: (self.market_version, 0),
+            "farm_holdings": {"hectares": 0.0}})
+        self.module.goods_category_state = self._state
+        self.module.goods_reach_factor = lambda: 1.0
+        self.module.income_factor = lambda: 1.0
 
-    def view(self, name):
-        return lambda: {"governance": 0.0, "reputation": 0.0, "hectares": self.farm_hectares}
-
-    def actor_market_version(self):
-        return self.market_version
-
-    def _goods_category_state(self, cat):
+    def _state(self, category):
         self.calls += 1
         return (self.concerns, 0.0, {"tau": 10.0, "eta": 1.0, "floor": 0.1}) if self.concerns else None
 
-    def goods_reach_factor(self):
-        return 1.0
+    def ratios(self, category):
+        return self.module.goods_category_ratios(category)
 
-    def income_factor(self):
-        return 1.0
+    def factor(self, category):
+        return self.module.goods_category_factor(category)
 
 
 class GoodsCategoryRatiosTest(unittest.TestCase):
     def test_a_repeated_question_is_answered_from_the_first_computation(self):
         sim = GoodsStandIn(1)
-        first = sim._goods_category_ratios("textiles")
-        self.assertEqual(sim._goods_category_ratios("textiles"), first)
+        first = sim.ratios("textiles")
+        self.assertEqual(sim.ratios("textiles"), first)
         self.assertEqual(sim.calls, 1)
 
     def test_a_change_of_operating_set_or_actor_market_recomputes(self):
         sim = GoodsStandIn(1)
-        sim._goods_category_ratios("textiles")
-        sim.household.operating_version += 1
-        sim._goods_category_ratios("textiles")
+        sim.ratios("textiles")
+        sim.operating_version += 1
+        sim.ratios("textiles")
         sim.market_version += 1
-        sim._goods_category_ratios("textiles")
+        sim.ratios("textiles")
         self.assertEqual(sim.calls, 3)
 
     def test_nothing_operating_in_the_category_gives_no_ratios_and_a_neutral_factor(self):
         sim = GoodsStandIn(0)
-        self.assertIsNone(sim._goods_category_ratios("textiles"))
-        self.assertEqual(sim.goods_category_factor("textiles"), 1.0)
+        self.assertIsNone(sim.ratios("textiles"))
+        self.assertEqual(sim.factor("textiles"), 1.0)
 
     def test_a_second_concern_in_the_category_lowers_each_sellers_factor(self):
-        single = GoodsStandIn(1).goods_category_factor("textiles")
-        double = GoodsStandIn(2).goods_category_factor("textiles")
+        single = GoodsStandIn(1).factor("textiles")
+        double = GoodsStandIn(2).factor("textiles")
         self.assertLess(double, single)
 
     def test_the_factor_is_remembered_until_the_operating_set_changes(self):
         sim = GoodsStandIn(1)
-        first = sim.goods_category_factor("textiles")
+        first = sim.factor("textiles")
         sim.concerns = 2
-        self.assertEqual(sim.goods_category_factor("textiles"), first)
-        sim.household.operating_version += 1
-        self.assertLess(sim.goods_category_factor("textiles"), first)
+        self.assertEqual(sim.factor("textiles"), first)
+        sim.operating_version += 1
+        self.assertLess(sim.factor("textiles"), first)
 
 
 if __name__ == "__main__":

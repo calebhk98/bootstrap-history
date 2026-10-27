@@ -7,6 +7,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
+from sim.markets.api import MarkMoneyPricedAtEconomy
 from sim.engine import data, money_units, opening_money
 from sim.engine.wage_schedule import build_schedule
 from sim.labour.labour import Labour
@@ -44,7 +45,7 @@ class RepriceAtOpening(unittest.TestCase):
         purse = SimpleNamespace(capital=100.0, cash_mark=40.0)
         unmarked = SimpleNamespace(capital=10.0, cash_mark=None)
         households = {"first": purse, "second": unmarked}
-        game = SimpleNamespace(state=SimpleNamespace(economy=SimpleNamespace(money_from_economy=False), seats=households),
+        game = SimpleNamespace(state=SimpleNamespace(seats=households), sent=[],
                                labour=SimpleNamespace(money_per_labour_hour=lambda: after))
 
         @contextlib.contextmanager
@@ -52,13 +53,14 @@ class RepriceAtOpening(unittest.TestCase):
             game.state.household = households[seat_id]
             yield
         game.act_as = act_as
+        game.send = game.sent.append
         return game, purse, unmarked
 
     def test_every_purse_moves_by_the_ratio_of_the_figures_so_it_buys_the_same_hours(self):
         game, purse, unmarked = self._game(before=2.0, after=3.0)
         with mock.patch.object(opening_money, "reprice_tree"):
             opening_money.reprice_opening_money(game, 2.0)
-        self.assertTrue(game.state.economy.money_from_economy)
+        self.assertEqual(game.sent, [MarkMoneyPricedAtEconomy()])
         self.assertAlmostEqual(purse.capital / 3.0, 100.0 / 2.0)
         self.assertAlmostEqual(purse.cash_mark, 60.0)
         self.assertAlmostEqual(unmarked.capital, 15.0)

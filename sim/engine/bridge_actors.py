@@ -8,10 +8,9 @@ import contextlib
 from sim.agents.api import cast_from_civilisations
 from sim.assembly.api import KEYED, QUOTE
 from sim.finance.api import DefaultOnDebt, RefreshLenderOffers
-from sim.markets.api import ForgetActorOrders, NoteActorPurchase, NoteActorSale
 from sim.production.api import AccrueExperience
 
-from . import market_demand, partner_demand, trade_duty
+from . import partner_demand, trade_duty
 from .actor_kinds_data import register_mod_actor_kinds
 from .bridge import bridge_command, bridge_view
 from .data import load_civ
@@ -141,173 +140,10 @@ def accrue_experience(sim, command):
 # ---- markets: goods categories, the agent economy's book and the orders the actors place ----
 
 
-@bridge_view("goods_category_factor", kind=QUOTE)
-def goods_category_factor(sim, category):
-    return sim.goods_category_factor(category)
-
-
-@bridge_view("goods_category_factor_with_entrants", kind=QUOTE)
-def goods_category_factor_with_entrants(sim, category, entrants):
-    return sim.goods_category_factor_with_entrants(category, entrants)
-
-
-@bridge_view("goods_category_price_ratio", kind=KEYED)
-def goods_category_price_ratio(sim, category):
-    return sim.goods_category_price_ratio(category)
-
-
-@bridge_view("goods_category_state", kind=KEYED)
-def goods_category_state(sim, category):
-    return sim._goods_category_state(category)
-
-
-@bridge_view("nodes_in_category", kind=KEYED)
-def nodes_in_category(sim, category):
-    return sim._nodes_in_cat(category)
-
-
-@bridge_view("market_state", kind=KEYED)
-def market_state(sim, commodity):
-    return sim.market_state(commodity)
-
-
-@bridge_view("commodities_sold_by_acting_party")
-def commodities_sold_by_acting_party(sim):
-    return sim.economy.goods.commodities_sold_by(sim.goods_market.acting_party_id)
-
-
-@bridge_view("economy_output_value")
-def economy_output_value(sim):
-    return sim.economy.output_value()
-
-
-@bridge_view("coin_stock_value")
-def coin_stock_value(sim):
-    return sim.economy.coin_stock_value()
-
-
-@bridge_view("main_material_of", kind=KEYED)
-def main_material_of(sim, commodity):
-    return sim.economy.main_material_of(commodity)
-
-
-@bridge_view("material_trade_quote", kind=KEYED)
-def material_trade_quote(sim, material):
-    return sim.economy.trade_quote(material)
-
-
-@bridge_view("material_purchase_cost", kind=QUOTE)
-def material_purchase_cost(sim, material, tonnes):
-    """(money, mean money per tonne) to buy `tonnes`; None when the material has no price."""
-    return sim.economy.purchase_cost(material, tonnes)
-
-
 @bridge_view("materials_serving", kind=KEYED)
 def materials_serving(sim, need_id):
     from . import need_substitutes
     return need_substitutes.serving(need_id)
-
-
-@bridge_view("household_basket")
-def household_basket(sim):
-    return market_demand.household_basket(sim.civ, sim.world_map)
-
-
-@bridge_view("agent_trades_good", kind=KEYED)
-def agent_trades_good(sim, material):
-    return sim.economy.agent_trades_good(material)
-
-
-@bridge_view("agent_price_response", kind=QUOTE)
-def agent_price_response(sim, material, landed_tonnes, taken_tonnes):
-    return sim.economy.agent_price_response(material, landed_tonnes, taken_tonnes)
-
-
-@bridge_view("agent_country", kind=KEYED)
-def agent_country(sim, country):
-    return sim.economy.agent_country(country)
-
-
-@bridge_view("agent_cohort_incomes")
-def agent_cohort_incomes(sim):
-    return sim.economy.agent_cohort_incomes()
-
-
-@bridge_view("agent_cohort_land_rents", kind=QUOTE)
-def agent_cohort_land_rents(sim, tiles):
-    return sim.economy.agent_cohort_land_rents(tiles)
-
-
-@bridge_view("agent_need_floor_costs")
-def agent_need_floor_costs(sim):
-    return sim.economy.agent_need_floor_costs()
-
-
-@bridge_view("agent_land_rent_at", kind=QUOTE)
-def agent_land_rent_at(sim, tile):
-    return sim.economy.agent_land_rent_at(tile)
-
-
-@bridge_view("agent_land_rent_paid_by_tile")
-def agent_land_rent_paid_by_tile(sim):
-    return sim.economy.agent_land_rent_paid_by_tile()
-
-
-@bridge_view("agent_land_rent_per_hectare")
-def agent_land_rent_per_hectare(sim):
-    return sim.economy.agent_land_rent_per_hectare()
-
-
-@bridge_view("agent_output_tonnes_by_tile")
-def agent_output_tonnes_by_tile(sim):
-    return sim.economy.agent_output_tonnes_by_tile()
-
-
-@bridge_view("agent_idle_hours_by_trade")
-def agent_idle_hours_by_trade(sim):
-    return sim.economy.agent_idle_hours_by_trade()
-
-
-@bridge_view("agent_fugitive_share_by_tile")
-def agent_fugitive_share_by_tile(sim):
-    """{tile: share of its people away having fled the state's take}; empty before the agent economy exists."""
-    agent = sim.economy.agent
-    return {} if agent is None else agent.fugitive_share_by_tile()
-
-
-@bridge_view("country_opening_basket", kind=KEYED)
-def country_opening_basket(sim, country):
-    return sim.economy.agent_opening_basket(country)
-
-
-@bridge_view("country_volume_baseline", kind=KEYED)
-def country_volume_baseline(sim, country):
-    return sim.economy.agent_volume_baseline(country)
-
-
-@bridge_view("country_traded_volumes", kind=KEYED)
-def country_traded_volumes(sim, country):
-    return sim.economy.agent_traded_volumes(country)
-
-
-@bridge_view("fleet_goods", kind=QUOTE)
-def fleet_goods(sim, holder_id):
-    return sim.economy.fleet_goods(holder_id)
-
-
-@bridge_command(ForgetActorOrders)
-def forget_actor_orders(sim, command):
-    sim.economy.forget_actor_orders(command.actor_id)
-
-
-@bridge_command(NoteActorSale)
-def note_actor_sale(sim, command):
-    sim.economy.note_actor_sale(command.seller_id, command.material, command.tonnes, command.from_concerns)
-
-
-@bridge_command(NoteActorPurchase)
-def note_actor_purchase(sim, command):
-    sim.economy.note_actor_purchase(command.buyer_id, command.commodity, command.tonnes, command.budget)
 
 
 # ---- finance ----

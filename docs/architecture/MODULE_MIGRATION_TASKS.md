@@ -51,7 +51,9 @@ Full equivalence tier identical at the knowledge merge (`877cff82`). Micro and s
 
 | land | `sim/land/` | the owner map, colonies, the map and geography handles; still to do: `improvements`, `ways_under_construction`, `works`, `works_under_construction` and `ways.py` (with transport and works) |
 
-In progress: markets, workforce state. `stores` (mod stores) is a framework service and moves with phase 7. Next: the walled package markets; then finance, production, ventures, the rest of projects.
+| markets (partly) | `sim/markets/` | the market book, flows, clearing, goods categories, household demand ratios; still to do: the goods market object and the economy port (`Sim.economy`, `Sim.goods_market`, `economy_port*.py`), reached today through `legacy_game` |
+
+In progress: workforce state. `stores` (mod stores) is a framework service and moves with phase 7. Next: the rest of markets (the goods market object and the economy port); then finance, production, ventures, the rest of projects.
 
 ## Task list
 

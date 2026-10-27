@@ -5,17 +5,16 @@ file of their own.
 """
 import math
 from sim.constants import declare
+from sim.markets.api import ResetMarketCaches
 from sim.materials.api import ForgetReadings
 
 from .quote_figures import cost_if_started_now
-from .economy_goods import GoodsMixin
-from .economy_materials import MaterialSupplyMixin
+from .economy_housing import HousingPriceMixin
 from .economy_credit import CreditMixin
 from .economy_debt_service import DebtServiceMixin
 from .economy_household_bill import HouseholdBillMixin
 from .economy_capital_market import CapitalMarketMixin
 from .economy_interest import InterestMixin
-from .economy_absorption import MarketAbsorptionMixin
 from .projects_cost_tail import ProjectCostTailMixin
 from .economy_production import ProductionMixin
 from .view_share import ViewShareMixin
@@ -73,8 +72,8 @@ REPUTATION_EASE_SCALE = declare(
         "shared multiplier standing in for all of them at once.")
 
 
-class EconomyMixin(GoodsMixin, MaterialSupplyMixin,
-                    CreditMixin, HouseholdBillMixin, DebtServiceMixin, CapitalMarketMixin, InterestMixin, MarketAbsorptionMixin, ProjectCostTailMixin, ProductionMixin, ViewShareMixin):
+class EconomyMixin(HousingPriceMixin,
+                    CreditMixin, HouseholdBillMixin, DebtServiceMixin, CapitalMarketMixin, InterestMixin, ProjectCostTailMixin, ProductionMixin, ViewShareMixin):
     """Composition point for the economy sub-mixins, plus what is left over.
 
     EconomyMixin's methods are grouped by subject across sibling modules
@@ -248,10 +247,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin,
         self.household._revenue_cache_val = None
         self.household._rev_up_candidates_cache = None
         self.household._practice_cache = None
-        self.household._goods_cat_state_cache = None
-        self.household._goods_category_ratios_cache = None
-        self.household._income_factor_cache = None
-        self.household._goods_mkt_op_factor_cache = None
+        self.send(ResetMarketCaches())      # the markets module's remembered goods-category figures
         self.send(ForgetReadings())      # the materials module's remembered demand tables
         self._done_changed()
         self._reset_operating()

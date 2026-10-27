@@ -1,7 +1,7 @@
 """The agent economy inside a game: opening it, its year, and what the engine's seams read.
 
 Part of the port (with economy_port.py and economy_port_setup.py, the only engine modules that import
-`sim.economy`). Its whole state lives in `state.economy.agent_economy`, so a saved game resumes the
+`sim.economy`). Its whole state lives in the markets module's `agent_economy` record, so a saved game resumes the
 same economy. The engine's own price, wage and rate code asks `answers()`; while the economy opens (it
 reads the engine's own opening figures to build its setup) those figures answer instead.
 """
@@ -89,7 +89,7 @@ PARTNER_SPEND_SHARE_PER_YEAR = declare(
 
 
 class AgentEconomy(TilePricesMixin):
-    """One game's agent economy. Not saved itself: it rebuilds from `state.economy.agent_economy`."""
+    """One game's agent economy. Not saved itself: it rebuilds from the markets module's `agent_economy` record."""
 
     def __init__(self, sim):
         self._sim = sim
@@ -109,7 +109,7 @@ class AgentEconomy(TilePricesMixin):
 
     @property
     def stored(self):
-        return self._sim.state.economy.agent_economy
+        return self._sim.view("legacy_agent_economy")()
 
     def spin_up_result(self):
         """The saved opening's first-stage result (see `_settle`); empty before the opening is saved."""

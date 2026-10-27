@@ -12,7 +12,8 @@ def without_market(game):
     """`game` with the year's market close left out of its steps: nearly all of a step's cost. Only for checks on
     staff, projects, mines, raids and recovery; the founder's money does follow the market, so games whose checks
     read money keep it."""
-    game._step_market = lambda: None
+    game.assembly.phase_handler("market")   # builds the phase table
+    game.assembly._phase_handlers["market"] = lambda seats=None: None
     return game
 
 

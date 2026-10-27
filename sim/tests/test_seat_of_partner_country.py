@@ -27,14 +27,14 @@ class Stored(dict):
     pass
 
 
-class FakeState:
-    class economy:
-        agent_economy = Stored(on=True)
+STORED = Stored(on=True)
 
 
 class FakeSim:
     civ = {"id": HOME}
-    state = FakeState
+
+    def view(self, name):
+        return lambda: STORED
 
 
 def seat_economy():
@@ -46,7 +46,7 @@ def seat_economy():
     agent._answers = None
     agent._country_answers = {}
     agent._stale = set()
-    agent._built_from = FakeState.economy.agent_economy
+    agent._built_from = STORED
     agent.economy = lambda: agent._economy
     return agent
 

@@ -20,11 +20,6 @@ def civilisation(sim):
     return sim.civ
 
 
-@bridge_view("producer_capacities")
-def producer_capacities(sim):
-    return sim.economy.producer_capacities()
-
-
 # ---- land ----
 
 

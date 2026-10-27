@@ -3,7 +3,7 @@
 A concern makes the materials whose production entries it gates (`requires_node`) or operates (`operated_by`).
 One that declares a physical yearly output (`annual_output_t`) puts that on the market; one that declares none
 puts on what its staff and plant turn out, which the engine derives from the production data and hands in. The
-market reads the total through `Sim.actor_supply(material)`.
+market reads the total through the markets module's actor_supply view.
 """
 from typing import Any, Dict, FrozenSet, List
 

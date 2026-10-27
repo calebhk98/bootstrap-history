@@ -12,6 +12,10 @@ This is test tooling, not a save migration.
 """
 
 RELOCATIONS = [
+    ("/modules/markets/agent_economy", "/economy/agent_economy"),
+    ("/modules/markets/market_book", "/economy/market_book"),
+    ("/modules/markets/market_flows", "/economy/market_flows"),
+    ("/modules/markets/money_from_economy", "/economy/money_from_economy"),
     ("/modules/living_stock/society_herds", "/economy/society_herds"),
     ("/modules/coin/metal_ratios", "/economy/coin_metal_ratios"),
     ("/modules/campaigns/armies", "/economy/campaigns/armies"),

@@ -8,21 +8,27 @@ from types import SimpleNamespace
 from unittest import mock
 
 from .harness import *  # noqa: F401,F403
+from . import module_harness
 
 from sim.engine import goods_market_offers
 from sim.engine.goods_market_api import GoodsMarket
 from sim.engine.goods_market_imports import HOME_SELLER
 from sim.prices import rules as price_rules
-from sim.engine.market_clearing import MarketClearingMixin
 from sim.engine.market_demand import household_demand_by_material
 from sim.engine.material_units import tonnes_per_unit
-from sim.engine.forward_actors import ActorsForwardsMixin as ActorsMixin
+from sim.markets.module import Markets
 from sim.world import market
 
 QUICK_TOPIC = True
 
 MATERIAL = "iron"
 FOUNDER = "seat:founder"
+
+
+def markets_over(game):
+    """The markets module reading `game` as the engine's market objects."""
+    return module_harness.build(Markets, views={"legacy_game": game, "material_commodity": lambda material: material,
+                                                    "concern_offers": lambda commodity: game.founder_concern_offers(commodity)})
 
 
 def stand_in(**changes):
@@ -52,7 +58,7 @@ def stand_in(**changes):
 def figures(game, with_flows):
     game.goods_market = GoodsMarket(game)
     game.founder_concern_offers = lambda commodity: ()
-    return MarketClearingMixin._market_flow_figures(game, MATERIAL, with_flows)
+    return markets_over(game).market_flow_figures(MATERIAL, with_flows)
 
 
 def cleared(committed=0.0, founder_sales=0.0, actor_supply=0.0, actor_demand=0.0):
@@ -90,10 +96,10 @@ GoodsMarket(by_founder_buying).note_purchase(FOUNDER, MATERIAL, TONNES)
 by_state.goods_market = GoodsMarket(by_state)
 by_founder_buying.goods_market = GoodsMarket(by_founder_buying)
 check("the state's purchases reach the book as the actors' demand and raise the price",
-      abs(ActorsMixin.actor_demand(by_state, MATERIAL) - TONNES) < 1e-9
-      and cleared(actor_demand=ActorsMixin.actor_demand(by_state, MATERIAL)).price_ratio > cleared().price_ratio)
+      abs(markets_over(by_state).actor_demand(MATERIAL) - TONNES) < 1e-9
+      and cleared(actor_demand=markets_over(by_state).actor_demand(MATERIAL)).price_ratio > cleared().price_ratio)
 check("...while the founder's purchases are his own, not the actors'",
-      ActorsMixin.actor_demand(by_founder_buying, MATERIAL) == 0.0
+      markets_over(by_founder_buying).actor_demand(MATERIAL) == 0.0
       and figures(by_founder_buying, with_flows=False)[0] == 0.0 and figures(by_founder_buying, with_flows=True)[0] == TONNES,
       (figures(by_founder_buying, False), figures(by_founder_buying, True)))
 

@@ -22,7 +22,7 @@ from sim.land.api import rules as land_rules
 from sim.knowledge.api import LearnTechnique, declared_starting_techs
 from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
-from .market_clearing import MarketClearingMixin
+from .forward_markets import ForwardMarketsMixin
 from .forward_foreign_trade import ForwardForeignTradeMixin
 from .forward_demography import ForwardDemographyMixin
 from .forward_agriculture import ForwardAgricultureMixin
@@ -31,7 +31,6 @@ from .forward_reporting import ReportingForwardsMixin
 from .forward_coin import ForwardCoinMixin
 from .forward_campaigns import ForwardCampaignsMixin
 from .forward_diffusion import DiffusionForwardsMixin
-from .market_demand import MarketDemandMixin
 from .concern_volume import ConcernVolumeMixin
 from .concern_book_sales import ConcernBookSalesMixin
 from .techniques_in_use import TechniquesInUseMixin
@@ -79,9 +78,8 @@ class Sim(
         ForwardKnowledgeMixin,
         ForwardWorkforceMixin,
         EconomyMixin,
-        MarketClearingMixin,
+        ForwardMarketsMixin,
         ForwardForeignTradeMixin,
-        MarketDemandMixin,
         ConcernVolumeMixin,
         ConcernBookSalesMixin,
         TechniquesInUseMixin,
