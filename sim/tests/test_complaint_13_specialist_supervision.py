@@ -2,7 +2,7 @@
 
 A concern whose crew mixes generic artisans with a skilled trade needs a foreman of that trade, one specialist
 oversees a bounded number of concerns, and the open gate refuses without one. The rules are called on a stub game
-(`venture_foreman_free`, `OpenGateMixin.staffing_open_refusal`; who is the foreman is `business_crew_rule.foreman`, tested in
+(`venture_foreman_free`, the projects module's `staffing_open_refusal`; who is the foreman is `business_crew_rule.foreman`, tested in
 test_business_crew_rule) and the screen on a built
 reply; the ventures row's specialist field is test_craftsmen_wording_rules."""
 QUICK_TOPIC = True
@@ -12,7 +12,7 @@ from sim.tests import workforce_stand_in
 
 from .harness import *
 from sim.agents import business_crew_rule
-from sim.engine.projects_open_gate import OpenGateMixin
+from sim.tests import projects_host
 from sim.engine.projects_ventures import VenturesMixin
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.render import render_pretty
@@ -58,7 +58,10 @@ check("one specialist has a bounded span of control: four quarter-FTE concerns, 
 
 # --- the open gate --------------------------------------------------------------------------------------------------------
 def gate(game, node_id="new"):
-    return OpenGateMixin.staffing_open_refusal(game, node_id)
+    module = projects_host.build(
+        venture_staff_free=game.venture_staff_free, venture_hands=game.venture_hands, venture_foreman=game.venture_foreman,
+        venture_foreman_free=game.venture_foreman_free, venture_garrison=game.venture_garrison)
+    return module.staffing_open_refusal(node_id)
 
 
 why = gate(a_game({"new": MIRROR}))

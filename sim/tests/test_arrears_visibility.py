@@ -8,7 +8,7 @@ QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 from sim.refusal import LogLine, cause_of, facts_of
 from sim.projects.api import funding as project_funding
-from sim.engine.arrears_hours_line import arrears_hours_line
+from sim.projects.arrears_hours_line import arrears_hours_line
 from sim.ui.proto import event_kinds, render_portfolio_rows, render_screen_why
 
 _reason = project_funding.WHY_IN_ARREARS
@@ -43,7 +43,7 @@ check("the `stuck` screen carries the cause beside the bare 'waiting on your hou
       "waiting on your hours" in _stuck_text and "arrears" in _stuck_text, _stuck_text)
 
 # --- the log line names the project and the hours it lost, as fields
-_line = arrears_hours_line([("academy_network", 1750.0)])
+_line = arrears_hours_line([("academy_network", 1750.0)], lambda value: format(value, ",.0f"))
 check("the wasted-hours line is of kind arrears_hours_lost and carries the project and the hours as facts",
       cause_of(_line) == "arrears_hours_lost" and facts_of(_line)["projects"] == ["academy_network"]
       and facts_of(_line)["hours"] == 1750.0, facts_of(_line))

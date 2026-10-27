@@ -21,10 +21,8 @@ from sim.engine.forward_mechanics import ForwardMechanicsMixin
 from sim.mechanics.module import Mechanics
 from sim.living_stock.api import ChangeHeld
 from sim.tests import module_harness
-from sim.engine.projects_open_gate import OpenGateMixin
-from sim.engine.projects_staffing_shortfall import StaffingShortfallMixin
 from sim.engine.projects_ventures import VenturesMixin
-from sim.tests import hazards_host
+from sim.tests import hazards_host, projects_host
 from sim.workforce.api import SurviveStaff
 from sim.workforce.module import Workforce
 
@@ -308,7 +306,8 @@ class TheGarrisonMustBePresent(unittest.TestCase):
         self.assertEqual(host.venture_garrison(WORKS), {})
 
 
-class _Staffed(VenturesMixin, OpenGateMixin, StaffingShortfallMixin, _Host):
+class _Staffed(VenturesMixin, _Host):
+    """The host with the ventures' methods and the projects module's staffing rule built over it."""
     CAPABILITY_INSTITUTIONS = frozenset()
     FOUNDER_IS_WORTH = 0.0
     STAFFING_CLOSURE_SLACK = 0.5
@@ -319,12 +318,28 @@ class _Staffed(VenturesMixin, OpenGateMixin, StaffingShortfallMixin, _Host):
         self.state.household.artisans = 100.0
         self.founder_alive = False
         self.state.projects.keep_staffed = set()
+        self.projects_module = projects_host.build(
+            tree=self.nodes, operating=lambda: self.state.projects.operating, legacy_projects=self.state.projects,
+            institution_units=self.institution_units, venture_foreman=self.venture_foreman, venture_garrison=self.venture_garrison,
+            venture_foreman_free=self.venture_foreman_free, venture_hands=lambda node_id: (0.0, 0.0),
+            venture_staff_free=lambda: (10.0, 10.0), effective_scholars=100.0,
+            staff=lambda: {"artisans": 100.0, "scholars": 0.0, "employees": self.state.household.employees},
+            founder={"alive": False, "life_left": 0.0, "dead_reason": None, "policy": {}})
 
     def venture_hands(self, node_id):
         return 0.0, 0.0
 
     def venture_staff_free(self):
         return 10.0, 10.0
+
+    def staffing_open_refusal(self, node_id, unit_count=1.0, with_advice=True):
+        return self.projects_module.staffing_open_refusal(node_id, unit_count, with_advice)
+
+    def _staffing_draw_of(self, node_id, foreman_units=None):
+        return self.projects_module._staffing_draw_of(node_id, foreman_units)
+
+    def concerns_to_close_for_staffing(self):
+        return self.projects_module.concerns_to_close_for_staffing()
 
 
 class AGarrisonIsStaffedLikeAForeman(unittest.TestCase):

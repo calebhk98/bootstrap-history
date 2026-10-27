@@ -15,13 +15,13 @@ from sim.constants import REGISTRY
 from sim.engine import data as engine_data
 from sim.hazards.window import hazards_not_yet_past
 from sim.workforce.payroll_trim import payroll_means, staff_to_let_go
-from sim.engine.projects_review import SeatReview
+from sim.projects.review import SeatReview
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
 from sim.engine.seat_defaults import default_policy
 from sim.tests import polity_host
 from sim.polity.api import ShiftValueWeight
 from sim.reporting.api import RecordEvent
-from sim.tests import hazards_host, module_harness
+from sim.tests import hazards_host, module_harness, projects_host
 from sim.ui.proto.dispatch_ventures import _cmd_policy
 from sim.ui.proto.state_waiting import _staff_fraction_note
 from sim.finance.state import FinanceSeat
@@ -89,9 +89,9 @@ class SeatSparesWhatItMustKeep(unittest.TestCase):
     """The founder's seat spares knowledge (never abandoned) and what the society granted; the rest it may shed."""
 
     def _seat(self, never_abandoned=(), granted=()):
-        sim = SimpleNamespace(state=SimpleNamespace(scenario=SimpleNamespace(year=1), projects=SimpleNamespace(granted=set(granted))),
-                              never_abandon=lambda node_id: node_id in never_abandoned)
-        return SeatReview(SimpleNamespace(_sim=sim))
+        module = projects_host.build(legacy_projects=SimpleNamespace(granted=set(granted)), year=1,
+                                     never_abandon=lambda node_id: node_id in never_abandoned)
+        return SeatReview(module, SimpleNamespace())
 
     def test_knowledge_and_what_is_granted_are_spared(self):
         seat = self._seat(never_abandoned={"theory"}, granted={"road"})
