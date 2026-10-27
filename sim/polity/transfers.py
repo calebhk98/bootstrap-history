@@ -7,7 +7,7 @@ A node declares `mechanics.state_levy = {"share": s}`; while it is open the stat
 
 Needs: state_treasury, transfer_listening, legacy_household_actor, acting_balance, cast, mechanic, tree,
 money_text, money_per_labour_hour, running_mechanics, operating, concern_revenue, output_factor, legacy_said_once."""
-from sim.agents.api import ledger
+from sim.ledger.api import PayActorFromHousehold
 from sim.reporting.api import RecordEvent
 
 from . import rules
@@ -18,7 +18,7 @@ class Transfers:
 	def pay_state(self, amount, purpose):
 		"""The household pays the state: the founder's loss is the treasury's gain."""
 		with self.needs.transfer_listening():
-			ledger.transfer(self.needs.legacy_household_actor(), self.needs.state_treasury(), amount, purpose)
+			self.needs.send(PayActorFromHousehold(self.needs.state_treasury().actor_id, amount, purpose))
 
 	def state_debt(self):
 		"""What the acting seat's state owes: its purse below zero."""

@@ -13,6 +13,7 @@ from unittest import mock
 
 from sim.engine import opening_money
 from sim.finance.rules import calculate_credit_ceiling
+from sim.ledger.api import RescaleHouseholdMoney
 from sim.markets.api import MarkMoneyPricedAtEconomy
 
 
@@ -41,18 +42,19 @@ class OpeningPurseTests(unittest.TestCase):
 
     def test_a_purse_holds_the_same_hours_of_unskilled_work_after_repricing(self):
         wage_before, wage_after, purse = 0.80, 0.08, 6000.0
-        _sim, households = self.reprice(wage_before, wage_after, {"founder": purse})
-        self.assertAlmostEqual(households["founder"].capital / wage_after, purse / wage_before)
+        sim, _households = self.reprice(wage_before, wage_after, {"founder": purse})
+        rescaling, = [command for command in sim.sent if isinstance(command, RescaleHouseholdMoney)]
+        self.assertAlmostEqual(purse * rescaling.ratio / wage_after, purse / wage_before)
 
-    def test_every_seat_and_its_cash_mark_move_by_the_one_ratio(self):
-        _sim, households = self.reprice(1.0, 0.25, {"founder": 400.0, "second": 40.0})
-        self.assertAlmostEqual(households["founder"].capital, 100.0)
-        self.assertAlmostEqual(households["second"].capital, 10.0)
-        self.assertAlmostEqual(households["founder"].cash_mark, 100.0)
+    def test_every_seat_is_sent_the_one_ratio_to_rescale_its_money_and_cash_mark_by(self):
+        sim, _households = self.reprice(1.0, 0.25, {"founder": 400.0, "second": 40.0})
+        self.assertEqual([command for command in sim.sent if isinstance(command, RescaleHouseholdMoney)],
+                         [RescaleHouseholdMoney(0.25), RescaleHouseholdMoney(0.25)])
 
     def test_the_economy_is_marked_as_the_source_of_money_so_a_second_open_does_not_reprice_again(self):
         sim, _households = self.reprice(1.0, 0.5, {"founder": 10.0})
-        self.assertEqual(sim.sent, [MarkMoneyPricedAtEconomy()])
+        self.assertEqual(sim.sent[0], MarkMoneyPricedAtEconomy())
+        self.assertEqual(sim.sent.count(MarkMoneyPricedAtEconomy()), 1)
 
 
 class CreditFloorTests(unittest.TestCase):

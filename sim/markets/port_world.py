@@ -8,7 +8,6 @@ from types import SimpleNamespace
 
 from sim.diffusion.api import NoteFirstRuns
 from sim.freight.api import FREIGHT_DRIVER_WAGE_TRADE, FREIGHT_FEED_PRICE_MATERIAL
-from sim.ledger.api import PayEdge, ReceiveFromEdge
 from sim.prices.api import rules as price_rules
 
 from .port_world_foreign import ForeignReads
@@ -181,12 +180,6 @@ class PortWorld(ForeignReads):
 
 	def edge(self, name):
 		return self._needs.legacy_edge_account[name]
-
-	def pay_edge(self, edge_name, amount, purpose):
-		self._needs.send(PayEdge(edge_name, amount, purpose))
-
-	def receive_from_edge(self, edge_name, amount, purpose):
-		self._needs.send(ReceiveFromEdge(edge_name, amount, purpose))
 
 	# ---- the money and the state ----
 

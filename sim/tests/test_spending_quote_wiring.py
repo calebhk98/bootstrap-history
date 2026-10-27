@@ -85,7 +85,7 @@ class Payer(TrainingMixin):
         household = SimpleNamespace(wages_prepaid=0.0, contract_hours={}, commissioned={})
         self._world = SimpleNamespace(
             wages={"smith": 1.0}, workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household), EDGE_WORKERS="workers", HOURS_PER_PERSON_YEAR=2000.0,
-            pay_edge=lambda edge, money, purpose: self.paid.append((edge, money, purpose)), money_text=lambda money, grouped=False: "%.0f" % money)
+            send=lambda command: self.paid.append((command.edge, command.amount, command.purpose)), money_text=lambda money, grouped=False: "%.0f" % money)
         self.labour_market = SimpleNamespace(hire=lambda *arguments: None)
         self.fee = fee
         self.hire_asked = []

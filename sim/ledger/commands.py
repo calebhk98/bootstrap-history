@@ -50,6 +50,14 @@ class BankStock(Command):
 
 
 @dataclass(frozen=True)
+class DrawDownStock(Command):
+	"""Tonnes of a commodity (by its commodity key) leave the acting seat's stock, never taking it below zero, as thieves take
+	them. The year's opening snapshot is not touched."""
+	commodity: str
+	tonnes: float
+
+
+@dataclass(frozen=True)
 class NoteSpend(Command):
 	"""The acting seat's household counts `amount` in the year's spending, beside the payment that moved it
 	(accounting only; applied by the engine bridge until the cash book moves into the ledger)."""
@@ -102,3 +110,63 @@ class TakeGoods(Command):
 	tonnes: float
 	edge: str
 	actor: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class PayActorFromHousehold(Command):
+	"""The acting seat's household, as a party in the actors' book, pays an actor of the cast (named by its id): one posting
+	in the book, entered in the cash book and in the payee's record. Refused with the cause `no_such_actor` when the cast
+	holds no such actor."""
+	payee: str
+	amount: float
+	purpose: Any
+
+
+@dataclass(frozen=True)
+class TakeFromHouseholdPurse(Command):
+	"""An actor of the cast (named by its id) takes money out of the acting seat's household purse: the purse is debited by
+	the figure and the taker credited, as the household's own state does it (not as one posting in the book). Refused with
+	the cause `no_such_actor` when the cast holds no such actor."""
+	taker: str
+	amount: float
+	purpose: Any
+
+
+@dataclass(frozen=True)
+class SettleWithEdge(Command):
+	"""The acting seat's household is brought to `balance` by moving the difference to or from a named edge."""
+	edge: str
+	balance: float
+	purpose: Any
+
+
+@dataclass(frozen=True)
+class RescaleHouseholdMoney(Command):
+	"""The acting seat's purse, and the cash mark its cash book measures from, are multiplied by `ratio`: the money's unit
+	changed, nothing was paid."""
+	ratio: float
+
+
+@dataclass(frozen=True)
+class WithdrawHouseholdMoney(Command):
+	"""The acting seat's household money falls by `amount` with no posting on the ledger's side: the money entered the
+	agent economy's own book at the same moment (a bank's capital)."""
+	amount: float
+
+
+@dataclass(frozen=True)
+class PayExchange(Command):
+    """An actor of the cast (named by its id) puts coin into the exchange edge, to be turned into the economy's unit for a
+    purchase: one posting in the actors' book, entered in the actor's outlays under `label`."""
+    actor: str
+    coin: float
+    label: str
+
+
+@dataclass(frozen=True)
+class ReceiveFromExchange(Command):
+    """The exchange edge turns the economy's unit back into coin for an actor of the cast (named by its id): one posting in the
+    actors' book, entered in the actor's income under `label`."""
+    actor: str
+    coin: float
+    label: str

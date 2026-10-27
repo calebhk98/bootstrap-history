@@ -7,6 +7,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
+from sim.ledger.api import RescaleHouseholdMoney
 from sim.markets.api import MarkMoneyPricedAtEconomy
 from sim.engine import data, money_units, opening_money
 from sim.engine.wage_schedule import build_schedule
@@ -56,15 +57,11 @@ class RepriceAtOpening(unittest.TestCase):
         game.send = game.sent.append
         return game, purse, unmarked
 
-    def test_every_purse_moves_by_the_ratio_of_the_figures_so_it_buys_the_same_hours(self):
+    def test_every_seat_is_sent_the_ratio_of_the_figures_to_rescale_its_money_by(self):
         game, purse, unmarked = self._game(before=2.0, after=3.0)
         with mock.patch.object(opening_money, "reprice_tree"):
             opening_money.reprice_opening_money(game, 2.0)
-        self.assertEqual(game.sent, [MarkMoneyPricedAtEconomy()])
-        self.assertAlmostEqual(purse.capital / 3.0, 100.0 / 2.0)
-        self.assertAlmostEqual(purse.cash_mark, 60.0)
-        self.assertAlmostEqual(unmarked.capital, 15.0)
-        self.assertIsNone(unmarked.cash_mark)
+        self.assertEqual(game.sent, [MarkMoneyPricedAtEconomy(), RescaleHouseholdMoney(1.5), RescaleHouseholdMoney(1.5)])
 
 
 class TreeInTheCoin(unittest.TestCase):

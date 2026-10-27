@@ -90,7 +90,7 @@ class Seller(WagesMixin):
             founder_alive=True, workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household),
             wages={"scribe": 1}, EDGE_EMPLOYERS="employers", revenue=lambda: 1000.0, active_hours_still_wanted=lambda: 0.0,
             money_text=lambda amount, grouped=False: "%d" % amount,
-            receive_from_edge=lambda edge, pay, text: self.received.append(pay))
+            send=lambda command: self.received.append(command.amount))
         self.pool, self.committed = pool, committed
 
     def trade_available(self, trade):

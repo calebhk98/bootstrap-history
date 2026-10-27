@@ -4,7 +4,7 @@ Every read is a view of an owner that has not moved yet, published by the engine
 other bridge files) under the name the owner will publish, or a view of a module that has moved. Grouped by owner."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.knowledge.api import ForgetTechnique
-from sim.ledger.api import PayEdge
+from sim.ledger.api import PayActorFromHousehold, PayEdge, TakeFromHouseholdPurse
 from sim.reporting.api import RecordEvent
 from sim.seats.api import EndRun
 
@@ -85,6 +85,6 @@ MODULE_SPECS = (ModuleSpec(
 		(commands.ReplaceRuler, "replace_ruler"), (commands.CloseSuccessionDispute, "close_succession_dispute"),
 	),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(PayEdge, RecordEvent, ForgetTechnique, EndRun),
+	sends=(PayEdge, PayActorFromHousehold, TakeFromHouseholdPurse, RecordEvent, ForgetTechnique, EndRun),
 	phases=(PhaseHook("begin_seat_year", "step_begin_seat_year"),),
 ),)

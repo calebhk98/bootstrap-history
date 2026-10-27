@@ -10,6 +10,7 @@ from unittest import mock
 
 from sim.labour import labour_bondage
 from sim.labour.labour_bondage import BondageMixin
+from sim.ledger.api import PayEdge
 
 YEAR = 100
 PRICE = 250.0
@@ -27,8 +28,14 @@ class Bondage(BondageMixin):
         self._world = types.SimpleNamespace(
             workforce=self.household, view=workforce_stand_in.view_of(self.household), year=YEAR, state=types.SimpleNamespace(household=self.household, holdings=self.holdings, scenario=types.SimpleNamespace(year=YEAR)),
             household=self.household, can_pay=lambda price: price <= self.cash, EDGE_SLAVE_TRADERS="slave_traders",
-            pay_edge=lambda edge, price, text: self.paid.append(price), send=self.sent.append,
+            send=self._send,
             refusal_text=lambda what, price: "cannot afford %s" % what)
+
+    def _send(self, command):
+        if isinstance(command, PayEdge):
+            self.paid.append(command.amount)
+        else:
+            self.sent.append(command)
 
     def household_room(self):
         return self.room

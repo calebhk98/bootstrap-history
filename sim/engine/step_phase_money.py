@@ -7,6 +7,7 @@ from sim.coin.api import ChargeHouseholdTheft
 from sim.demography.api import StepPopulation
 from sim.finance.api import ChargeInterest, EnforceCreditLimit, JudgeInsolvency, ShedLossMakers, WarnNearLimit
 from sim.hazards.api import RecoverOutput
+from sim.ledger.api import PayEdge, PayWages, ReceiveFromEdge
 from sim.resources.api import NoteMineCostPaid
 from sim.constants import declare
 from sim.agents.api import edges
@@ -47,11 +48,11 @@ class MoneyPhaseMixin:
         revenue, upkeep = self.revenue(), self.upkeep()
         keeping_owed, keeping = self.view("coin_keeping_due")(revenue, upkeep, living_cost, mine_cost)
         # the concerns the clearing pays are credited when it clears (economy_port_year `_settle_seats`)
-        self.receive_from_edge(edges.EDGE_CUSTOMERS, self.estimated_revenue(), "venture revenue")
-        self.pay_edge(edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns")
-        self.pay_wages(living_cost, "living costs")
-        self.pay_edge(edges.EDGE_SUPPLIERS, mine_cost, "mine running costs")
-        self.pay_edge(edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard")
+        self.send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, self.estimated_revenue(), "venture revenue"))
+        self.send(PayEdge(edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns"))
+        self.send(PayWages(living_cost, "living costs"))
+        self.send(PayEdge(edges.EDGE_SUPPLIERS, mine_cost, "mine running costs"))
+        self.send(PayEdge(edges.EDGE_COIN_GUARDS, keeping, "keeping coin under guard"))
         self.send(ChargeHouseholdTheft(keeping, keeping_owed))
         # A mine you cannot pay for is a mine you stop working. Without this the
         # opex accrued for ever against a bankrupt enterprise: the England run

@@ -119,7 +119,7 @@ mines = ResourcesSeat(
 	deposit_drawn={"d1": 12.0}, forest_ha=120.0)
 materials = MaterialsSeat(shortages=collections.Counter({"charcoal": 3}), binding=None)
 holdings = HoldingsState(
-	_material_stock_ledger={"iron": 4.0})
+	_dashboard_history=[{"year": 100}])
 blob = serialize_state(mines)
 check("serialize_state: mine stock, in the order the mines were opened, with None inside",
       blob["mines"] == [{"id": "m1", "ore": "iron", "capex": 500.0, "open": None}] and blob["mine_pending"] == {"m2": 2.0}
@@ -129,7 +129,7 @@ check("serialize_state: a tranche list that is None means none (never an empty l
 check("serialize_state: found deposits and the tonnes drawn", blob["deposits_found"] == [{"id": "d1", "tile": "t1"}] and blob["deposit_drawn"] == {"d1": 12.0}, None)
 check("serialize_state: shortages", serialize_state(materials)["shortages"] == {"charcoal": 3})
 blob = serialize_state(holdings)
-check("serialize_state: underscore-led fields that are not `_on_change` plumbing are saved", blob["_material_stock_ledger"] == {"iron": 4.0})
+check("serialize_state: underscore-led fields that are not `_on_change` plumbing are saved", blob["_dashboard_history"] == [{"year": 100}])
 
 # ---- the economy's stored record, with its held stock and late recipes
 record = {"book": {"goods": {"iron": {"t1": 4.0}}}, "loans": [{"contract_id": "l1", "principal": 40.0, "kind": "term_loan"}]}

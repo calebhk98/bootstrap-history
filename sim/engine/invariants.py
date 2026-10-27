@@ -16,8 +16,7 @@ def check_simulation_invariants(state):
         assert math.isfinite(value) and value >= 0.0, \
             "invalid demographic %s=%r" % (key, value)
     economy = state.economy
-    holdings = state.holdings
-    for key, value in (holdings._material_stock_ledger or {}).items():
+    for key, value in (state.seats[state.acting_seat].modules["ledger"]._material_stock_ledger or {}).items():
         assert math.isfinite(value) and value >= -1e-9, \
             "negative or non-finite physical stockpile %s=%r" % (key, value)
     granary_kg = state.seats[state.acting_seat].modules["demography"].farm_stock_kg

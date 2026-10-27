@@ -8,6 +8,7 @@ import unittest
 from unittest import mock
 
 from sim.agents.api import edges
+from sim.ledger.api import PayEdge, ReceiveFromEdge
 from sim.markets import port_seats
 from sim.production import concern_sales
 
@@ -26,11 +27,9 @@ class StandInSim:
         self.acting = seat_id
         yield
 
-    def receive_from_edge(self, edge, amount, purpose):
-        self.postings.append((self.acting, edge, amount, purpose))
-
-    def pay_edge(self, edge, amount, purpose):
-        self.postings.append((self.acting, edge, -amount, purpose))
+    def send(self, command):
+        sign = {ReceiveFromEdge: 1.0, PayEdge: -1.0}[type(command)]
+        self.postings.append((self.acting, command.edge, sign * command.amount, command.purpose))
 
 
 def settle(units_offered, units_taken, inputs_cost):

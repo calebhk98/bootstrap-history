@@ -7,8 +7,6 @@ from typing import Any, Dict, List, Optional
 class HoldingsState:
 	"""A seat's material stock."""
 	market_pressure: float = 0.0
-	_material_stock_ledger: Optional[Dict[str, float]] = None
-	_material_stock_opening: Optional[Dict[str, Any]] = None
 	_dashboard_history: Optional[List[Any]] = None
 
 

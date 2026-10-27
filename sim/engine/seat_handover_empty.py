@@ -10,6 +10,7 @@ from typing import List
 
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
 from sim.finance.api import FinanceSeat
+from sim.ledger.api import LedgerSeat
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
 from sim.resources.state import ResourcesSeat
@@ -26,15 +27,15 @@ def holdings_in_use(holdings) -> bool:
 		value, default = getattr(holdings, field.name), getattr(fresh, field.name)
 		if value == default or field.name == "_dashboard_history":
 			continue
-		if field.name == "_material_stock_opening":
-			used = any((value or {}).get("tonnes", {}).values())
-		elif field.name == "_material_stock_ledger":
-			used = any(value.values()) if value else False
-		else:
-			used = bool(value) or bool(default)
-		if used:
+		if bool(value) or bool(default):
 			return True
 	return False
+
+
+def stock_in_use(ledger_seat) -> bool:
+	"""Whether the seat's tonnes ledger holds any tonnes: a lazily made ledger or snapshot with nothing in it does not."""
+	stock, opening = ledger_seat._material_stock_ledger, ledger_seat._material_stock_opening
+	return any((opening or {}).get("tonnes", {}).values()) or (any(stock.values()) if stock else False)
 
 
 def module_state_in_use(state) -> bool:
@@ -60,7 +61,8 @@ def holds_that_would_be_lost(seat) -> List[str]:
 	finance = seat.modules.get("finance") or FinanceSeat()
 	if any(getattr(finance, name, 0) for name in OWED_FIELDS):
 		found.append("arrears or bondage")
-	if (holdings_in_use(seat.holdings) or module_state_in_use(seat.modules.get("resources") or ResourcesSeat())
+	if (holdings_in_use(seat.holdings) or stock_in_use(seat.modules.get("ledger") or LedgerSeat())
+			or module_state_in_use(seat.modules.get("resources") or ResourcesSeat())
 			or module_state_in_use(seat.modules.get("materials") or MaterialsSeat())):
 		found.append("holdings")
 	if (seat.modules.get("polity") or PolitySeat()).gov != 0.0:

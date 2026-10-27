@@ -10,6 +10,7 @@ import sim.geography.api as geography
 from sim.geography.api import settlement
 from sim.polity.api import ScaleFamiliarity, ScaleProtection
 from sim.labour import town_providers
+from sim.ledger.api import NoteSpend, PayEdge
 
 
 class SettlementMixin:
@@ -192,8 +193,8 @@ class SettlementMixin:
                            "wages while your household travels; you have %s."
                            % (tile, math.ceil(days), self._world.money_text(money, grouped=True),
                               self._world.money_text(household.capital, grouped=True)))
-        self._world.pay_edge(self._world.EDGE_WORKERS, money, "relocation")
-        household.total_spend += money
+        self._world.send(PayEdge(self._world.EDGE_WORKERS, money, "relocation"))
+        self._world.send(NoteSpend(money))
         workforce.relocation_hours_this_year = (
             (workforce.relocation_hours_this_year or 0.0) + hours)
         # Local contracts and the local market's memory stay behind.
