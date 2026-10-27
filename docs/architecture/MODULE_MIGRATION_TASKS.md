@@ -43,7 +43,7 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 | finance | `sim/finance/` | credit limit, interest and arrears, insolvency, debt bondage, purchases and affordability, the seat bank; the agent economy's own credit and bank files in `sim/economy/` stay behind its api; Complaint 763 |
 | production | `sim/production/` | revenue, upkeep, concerns and their book sales, volume, industry depth and learning, techniques in use, capability; still to do: `projects.operating` and the revenue caches on the household, `node_rederive.py` (shared tree pricing), and its `legacy_game` reads |
 
-Full equivalence tier identical at the prices, demography, land and markets merges; stress tier and protocol transcripts identical after each module (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
+Full equivalence tier identical at the prices, demography, land, markets and production merges; stress tier and protocol transcripts identical after each module (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
 
 In progress: projects (progress, completion, staffing, reviews). `stores` (mod stores) is a framework service and moves with phase 7. Next: ventures and works, land's remainder (`ways.py`, works and improvements), the household need model, the ledger's state; then phases 6 to 9.
 
