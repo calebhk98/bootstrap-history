@@ -37,7 +37,7 @@ class Completion:
 
 	def goal_closure_ids(self):
 		"""Every node the current goal needs, cached per goal."""
-		goal = self.needs.goal()
+		goal = self.needs.goal()["node"]
 		cache = self._goal_closures
 		if goal not in cache:
 			try:
@@ -54,7 +54,7 @@ class Completion:
 	def goal_snapshot(self):
 		"""The goal's live measure(s) and road progress, or None without a goal."""
 		needs = self.needs
-		goal = needs.goal()
+		goal = needs.goal()["node"]
 		nodes = needs.tree_nodes()
 		if goal not in nodes:
 			return None
@@ -79,7 +79,7 @@ class Completion:
 		after = self.goal_snapshot()
 		moved, _gained = goal_rules.goal_movement(before, after)
 		lines = ["goal effect: %s %s -> %s" % row for row in moved]
-		goal = needs.goal()
+		goal = needs.goal()["node"]
 		if (before and node_id != goal and node_id in self.goal_closure_ids()
 		        and goal not in needs.legacy_projects().done):
 			lines.append(road_line(needs.legacy_fog(), after["road_done"], after["road_total"]))

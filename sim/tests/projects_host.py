@@ -55,7 +55,7 @@ def defaults() -> Dict[str, Any]:
 		"hour_commitments": {"allocations": {}, "trade_hours_used": {}, "unused_reported": {}},
 		"hours_you_can_call_on": lambda trade: 0.0, "industry_depth": lambda node_id: 0.0, "resource_throttle": lambda node_id: (1.0, None),
 		"material_binding": None, "founder": {"alive": True, "life_left": 10.0, "dead_reason": None, "policy": {}},
-		"goal": "goal", "automatic_policy": lambda name: True, "capability_sets": (frozenset(), frozenset(), {}),
+		"goal": {"node": "goal", "year": None, "years": {}}, "automatic_policy": lambda name: True, "capability_sets": (frozenset(), frozenset(), {}),
 		"money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),
 		"plain_number": lambda value, digits=0: format(value, ",.%df" % digits),
 		"win_condition_text": lambda node: "the goal is met", "acting_seat": "founder",

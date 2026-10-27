@@ -126,7 +126,7 @@ after = {"measures": {"literacy general": (0.15, True)}, "road_done": 4, "road_t
 
 
 def goal_game(snapshot, done, closure):
-    game = projects_host.build(tree={"top": {"name": "Top"}}, goal="top", legacy_fog=False, legacy_projects=SimpleNamespace(done=done))
+    game = projects_host.build(tree={"top": {"name": "Top"}}, goal={"node": "top", "year": None, "years": {}}, legacy_fog=False, legacy_projects=SimpleNamespace(done=done))
     game.goal_snapshot = lambda: snapshot
     game.goal_closure_ids = lambda: closure
     return game
