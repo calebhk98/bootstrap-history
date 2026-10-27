@@ -12,15 +12,21 @@ class RunningGates:
 	def _setup_running_gates(self) -> None:
 		self._gate_index_cache = None             # (the tree it was built from, {work: ids that require it running})
 
+	def _unmet_of(self, node):
+		needs = self.needs
+		return running_gate_rules.unmet_running_gates(node.get("requires_running"), needs.legacy_projects().done,
+		                                              lambda work: needs.running[work])
+
+	def _ways_short_of(self, node):
+		return running_gate_rules.ways_short(node.get("requires_ways"), self._built_way_km)
+
 	def unmet_running_gates(self, node_id):
 		"""The works `node_id` requires running that are not, in the order the node lists them."""
-		needs = self.needs
-		return running_gate_rules.unmet_running_gates(
-			needs.tree_nodes()[node_id].get("requires_running"), needs.legacy_projects().done, lambda work: needs.running[work])
+		return self._unmet_of(self.needs.tree_nodes()[node_id])
 
 	def ways_short(self, node_id):
 		"""{way: kilometres still to build} of what `requires_ways` asks beyond what is built."""
-		return running_gate_rules.ways_short(self.needs.tree_nodes()[node_id].get("requires_ways"), self._built_way_km)
+		return self._ways_short_of(self.needs.tree_nodes()[node_id])
 
 	def _built_way_km(self, way):
 		"""Kilometres of `way` the acting seat's record of what is built holds."""
@@ -40,13 +46,17 @@ class RunningGates:
 		unmet, short = self.unmet_running_gates(node_id), self.ways_short(node_id)
 		if not (unmet or short):
 			return None
+		return self._gate_refusal(unmet, short)
+
+	def _gate_refusal(self, unmet, short):
 		return Refusal("running_gate", self.running_gate_text(unmet, short), unmet=list(unmet), ways_short=dict(short))
 
 	def _check_running_gates(self, node_id, node, ignore_trade, memo, why):
 		"""Refuse a node whose required works are not running; the refusal names the remedy."""
-		if not self.gate_blocked(node_id):
+		unmet, short = self._unmet_of(node), self._ways_short_of(node)
+		if not (unmet or short):
 			return None
-		return False, (self.running_gate_refusal(node_id) if why else None)
+		return False, (self._gate_refusal(unmet, short) if why else None)
 
 	def _running_gate_index(self):
 		"""({work id: sorted ids that require it running}, ids that require something), per tree."""

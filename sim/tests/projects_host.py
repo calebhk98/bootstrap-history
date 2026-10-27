@@ -20,7 +20,9 @@ def projects_state(**fields: Any) -> types.SimpleNamespace:
 	"""The raw `state.projects` the module still mutates in place."""
 	values = dict(active={}, done=set(), paid_towards={}, bountied=set(), mothballed=set())
 	values.update(fields)
-	return types.SimpleNamespace(**values)
+	state = types.SimpleNamespace(**values)
+	state.active_keys_sorted = lambda: sorted(state.active)
+	return state
 
 
 def defaults() -> Dict[str, Any]:
@@ -92,12 +94,13 @@ def start_phase_module(funding_capacity: float = 1e9, committed_cost: float = 0.
 	state = projects_state()
 	arguments = dict(
 		legacy_projects=state, tree=lambda node_id: {"name": node_id, "rev": 0.0, "up": 0.0}, legacy_order=["a", "b"],
-		funding_capacity=funding_capacity, committed_cost=committed_cost, project_cost=lambda node_id: project_cost,
+		funding_capacity=funding_capacity, project_cost=lambda node_id: project_cost,
 		automation={"manual": manual, "bounty_set": set()}, revenue_estimate=1e6, acting_balance=1e7, year=0,
 		start_check=lambda *call: (True, None),
 		project_limits={"base": 5.0, "per_director_hours": 2000.0, "per_scholar": 12.0, "per_artisan": 40.0})
 	arguments.update(views)
 	module = build(**arguments)
+	module.committed_cost = lambda: committed_cost
 	module.started = []
 
 	def initialize_project(node_id):
