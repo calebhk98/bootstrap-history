@@ -51,7 +51,7 @@ class ViewShare:
                  sim.household.done_version, sim.household.operating_version,
                  len(projects.done), len(projects.operating),
                  sim.view("forest_hectares")(), sim.view("nitre_beds")()["square_metres"], sim.view("population")().total,
-                 sim.real_output_per_head(), len(sim.view("mine_workings")())))
+                 sim.view("real_output_per_head")(), len(sim.view("mine_workings")())))
 
     def _standalone_stamp(self):
         """The world stamp of an answer shared outside a view: what changes the people, the techniques in
@@ -60,7 +60,7 @@ class ViewShare:
         projects = sim.state.projects
         return ((), (sim.state.scenario.year, sim.household.done_version, sim.household.operating_version,
                      len(projects.done), len(projects.operating), sim.view("forest_hectares")(),
-                     sim.view("nitre_beds")()["square_metres"], sim.view("population")().total, sim.real_output_per_head(),
+                     sim.view("nitre_beds")()["square_metres"], sim.view("population")().total, sim.view("real_output_per_head")(),
                      len(sim.view("mine_workings")())))
 
     def _shared_answer(self, key, inputs, compute, standalone=False):
