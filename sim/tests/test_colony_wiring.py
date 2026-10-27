@@ -19,8 +19,11 @@ colonies = [{"tile": "t1", "founded_year": 100, "by": CHARTER, "children": 3.0, 
 loaded = deserialize_state(serialize_state(LandSeat(colonies=colonies)), LandSeat)
 check("colonies survive a save and a load", loaded.colonies == colonies, loaded.colonies)
 
+from sim.refusal import Refusal
+from sim.tests.ui_stand_in import FactViews
+
 # ---- the commands
-class Commanded:
+class Commanded(FactViews):
     """A stand-in game that holds the charter (or none), with the settlement methods written out."""
     def __init__(self, chosen=(CHARTER, SPEC), by_land=("t1",), by_sea=("t1", "t2"), cost=5000.0):
         self.chosen, self.land, self.sea, self.cost = chosen, list(by_land), list(by_sea), cost
@@ -35,11 +38,11 @@ class Commanded:
     def settlement_outfit_cost(self, spec, tile_id=None):
         return self.cost
 
-    def found_colony(self, tile_id):
-        self.founded.append(tile_id)
-        return (True, "founded") if self.chosen else (False, "you know no way to send settlers")
+    def send(self, command):
+        self.founded.append(command.tile)
+        return {"text": "founded"} if self.chosen else Refusal("no_way", "you know no way to send settlers")
 
-    def colony_rows(self):
+    def colonies(self):
         return [{"tile": "t1"}]
 
 

@@ -13,8 +13,10 @@ QUICK_TOPIC = True
 
 
 def _stub(done=(), granted=(), fog=True, revealed=()):
-    return Game(done=set(done), granted=set(granted), fog=fog, revealed=set(revealed), capital=100.0,
-                           state=Game(interface={}))
+    game = Game(done=set(done), granted=set(granted), fog=fog, revealed=set(revealed), capital=100.0,
+                state=Game(interface={}))
+    game.send = lambda command: game.revealed.update(command.node_ids)
+    return game
 
 
 with tempfile.TemporaryDirectory() as folder:

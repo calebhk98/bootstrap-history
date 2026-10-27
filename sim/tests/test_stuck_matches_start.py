@@ -7,12 +7,13 @@ from .harness import check
 from sim.refusal import cause_of, facts_of
 from sim.tests import projects_host
 from sim.ui.proto import dispatch_inspection_stuck as dispatch_inspection
+from sim.tests.ui_stand_in import FactViews
 
 PRICE = 1000.0
 LINE = 600.0
 
 
-class StartGame:
+class StartGame(FactViews):
     """A game that holds a cash balance, a credit line, work in hand and a bill for each node; the money rule is the
     projects module's own, built with just those figures."""
 

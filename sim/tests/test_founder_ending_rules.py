@@ -72,12 +72,12 @@ class FinishTests(unittest.TestCase):
 
     def test_finishing_a_live_run_ends_it_and_gives_the_score(self):
         game, reply = self.finish(ended=None)
-        self.assertTrue(game.dead_reason)
+        self.assertTrue(game.sent[0].reason)
         self.assertEqual((reply["ok"], reply["score"]["total"]), (True, 0.4))
 
     def test_finishing_an_ended_run_keeps_its_reason(self):
         game, _ = self.finish(ended="the horizon")
-        self.assertIsNone(game.dead_reason)
+        self.assertEqual(game.sent, [])
 
     def test_an_ended_run_refuses_a_step(self):
         self.assertIs(dispatch._cmd_step(Game(), {}, {"years": 1}, "the founder died")["ok"], False)

@@ -13,6 +13,7 @@ from sim.ui.proto.render_screens_status import render_path
 from sim.ui.proto.route_blockers import route_blockers
 from sim.ui.proto.techtree import _SORT_KEYS, _SORT_KEY_NAMES
 from sim.tests.ui_stand_in import Game
+from sim.tests.ui_stand_in import FactViews
 
 QUICK_TOPIC = True
 
@@ -114,7 +115,7 @@ check("path's table header matches available's", path_header.split() == header_l
 
 
 # --- 179: path prints the nearest blocker itself
-class _Route(SimpleNamespace):
+class _Route(FactViews, SimpleNamespace):
     def start_blockers(self, node_id):
         return self.blockers.get(node_id, [])
 

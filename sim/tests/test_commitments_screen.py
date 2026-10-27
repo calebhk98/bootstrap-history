@@ -23,7 +23,7 @@ def stub_game(**overrides):
     household = Game(reserve_craftsmen=3, reserve_scholars=1)
     game = Game(
         fog=False, goal="goal_node", goal_year=None, nodes=NODES_STUB, done={"school", "mill", "senate"}, policy={},
-        workforce=household, view=workforce_stand_in.view_of(household), state=Game(household=household), is_visible=lambda node_id: node_id != "senate",
+        workforce=household, staff={"reserve_craftsmen": 3, "reserve_scholars": 1}, state=Game(household=household), is_visible=lambda node_id: node_id != "senate",
         running=lambda node_id: node_id == "school", institution_units=lambda node_id: 2.0,
         literacy=lambda which: 0.1234567 if which == "literacy_general" else 0.05,
         literacy_ceiling_general=lambda: 0.4, literacy_ceiling_elite=lambda: 0.0)

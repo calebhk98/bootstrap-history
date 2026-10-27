@@ -10,8 +10,8 @@ from sim.tests.ui_stand_in import Game
 
 record = [{"year": 100, "population": 990.0, "births": 40, "deaths": 30, "nutrition_ratio": 1.0},
           {"year": 101, "population": 1000.0, "births": 45, "deaths": 35, "nutrition_ratio": 0.98}]
-loaded = Game(_last_demographic_step=None, view=lambda name: lambda: record)
+loaded = Game(demographic_flows=None, yearly_record=record)
 check("a loaded game shows the newest record's births, deaths, nutrition and year",
       _last_year(loaded) == {"births": 45, "deaths": 35, "nutrition_ratio": 0.98, "year": 101}, _last_year(loaded))
-empty = Game(_last_demographic_step=None, view=lambda name: lambda: [])
+empty = Game(demographic_flows=None, yearly_record=[])
 check("with no record and no step there is no last year", _last_year(empty) is None, _last_year(empty))

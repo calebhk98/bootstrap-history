@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import types
 
+from sim.tests.ui_stand_in import FactViews
 from .harness import check
 
 from sim.engine.seat_move import move_seat_fields
@@ -35,7 +36,7 @@ def country_seat(holder=GOVERNMENT):
     return seat
 
 
-class JoinGame:
+class JoinGame(FactViews):
     """What the join command reads: the seats, the countries with a government, and a join_seat that adds the seat."""
 
     def __init__(self):
@@ -45,21 +46,19 @@ class JoinGame:
         self.nodes = {"fire": {}}
         self.joined = []
 
-    def view(self, name):
-        assert name == "dead_reasons"
-        return lambda: {}
+    dead_reasons = {}
 
-    def society_techs_now(self):
+    def society_techs(self):
         return {"fire"}
 
     def governed_countries(self):
         return [HOME, "han_china_100ad"]
 
-    def join_seat(self, seat_id, template):
-        seat = country_seat() if template.get("kind") == COUNTRY_SEAT else household_seat()
-        self.state.seats[seat_id] = seat
-        self.joined.append((seat_id, template))
-        return seat
+    def send(self, command):
+        seat = country_seat() if command.template.get("kind") == COUNTRY_SEAT else household_seat()
+        self.state.seats[command.seat_id] = seat
+        self.joined.append((command.seat_id, command.template))
+        return None
 
 
 def join(game, **fields):
@@ -105,14 +104,14 @@ check("a command a country seat may run is not refused", country_seat_refusal(st
 check("a household seat is never refused for lacking a household", country_seat_refusal(stand_in, FIRST_SEAT_ID, {"cmd": "state"}) is None, None)
 
 # ---- the year runs for household seats; a country seat steps it through the first of them
-class Runner:
+class Runner(FactViews):
     def __init__(self, playing):
         self.state = Game(seats=seats)
         self.acted = []
         self.playing = playing
 
-    def playing_seats(self):
-        return self.playing
+    def seat_list(self):
+        return {"playing": self.playing}
 
     def act_as(self, seat_id):
         self.acted.append(seat_id)

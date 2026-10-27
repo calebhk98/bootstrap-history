@@ -15,13 +15,14 @@ from sim.refusal import Refusal
 from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.tests.ui_stand_in import Game
+from sim.tests.ui_stand_in import FactViews
 
 HOME = "rome_100ad"
 FORM = {"form": "land_tax", "basis": "harvest", "rate": 0.1}
 handlers = command_registry.handlers()
 
 
-class LeverGame:
+class LeverGame(FactViews):
     """What the lever commands read: the acting seat, the country's government and its people, the goods and techniques."""
 
     def __init__(self, acting_kind=COUNTRY_SEAT, governed=True):

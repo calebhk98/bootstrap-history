@@ -246,6 +246,8 @@ class _Capital:
     def view(self, name):
         if name in ("can_pay", "purchase_budget", "affordable_units"):
             return finance_host.purchase_views(self.spending_power)(name)
+        if name == "acting_balance":
+            return lambda: self.capital
         return (lambda *arguments: self.quote) if name == "stock_purchase_quote" else _Held()
 
     def send(self, command):

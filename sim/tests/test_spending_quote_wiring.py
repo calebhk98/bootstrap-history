@@ -15,7 +15,7 @@ from .harness import check
 from sim.labour.labour_training import TrainingMixin
 from sim.agents.api import edges
 from sim.ledger.api import PayEdge
-from sim.projects.api import PostBounty
+from sim.projects.api import PostBounty, constants as project_constants
 from sim.tests import finance_host, module_harness, projects_host
 from sim.refusal import Refusal
 from sim.ui.proto import quote_spending
@@ -28,7 +28,7 @@ def quote_game(**attributes):
         commission_check=lambda trade, hours: (207.77, None),
         market=Game(quote_annual=lambda trade, count: 400.04))
     defaults = dict(
-        capital=5000.0, labour=labour, BOUNTY_PRICE_MULTIPLIER=3.0, done=set(), operating=set(), active={}, civ={"name": "Testland"},
+        capital=5000.0, labour=labour, done=set(), operating=set(), active={}, civ={"name": "Testland"},
         bounty_price=lambda node_id: 9000.06, bounty_eligible=lambda node_id: True, project_cost_now=lambda node_id: 3000.0,
         opening_fee=lambda node_id, units: (812.34, 1.0), is_venture=lambda node_id: True,
         venture_upkeep_quote=lambda node_id, units: {"now": 61.1, "at_full_staffing": 120.9},
@@ -72,7 +72,7 @@ check("quote open refuses what is not worked out, not a concern, or already runn
 
 bounty = quote_spending._quote_bounty(quote_game(), NODES, {"id": "mill"})
 check("quote bounty shows bounty_price's figure, the multiplier and that it is allowed",
-      bounty["paid_now"] == 9000.1 and bounty["price_multiplier"] == 3.0 and bounty["eligible"] is True, bounty)
+      bounty["paid_now"] == 9000.1 and bounty["price_multiplier"] == project_constants.BOUNTY_PRICE_MULTIPLIER and bounty["eligible"] is True, bounty)
 refused = quote_spending._quote_bounty(quote_game(bounty_eligible=lambda node_id: False), NODES, {"id": "mill"})
 check("quote bounty for what the craft cannot recognise says it is not eligible and carries the refusal",
       refused["eligible"] is False and refused["refusal"].cause == "not_bounty_eligible", refused)

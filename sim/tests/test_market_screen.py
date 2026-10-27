@@ -47,9 +47,8 @@ def _sim_quoting(prices):
     return Game(
         material_trade_quote=lambda material: _quote(prices[material]) if material in prices else None,
         material_price_basis=lambda material: "solved", MATERIAL_CHECKS={},
-        view=lambda name: (lambda: {"employees": {"smith": 2.0}}), labour=Game(
-            market=Game(quote_annual=lambda trade: 500.4),
-            trade_available=lambda trade: trade == "smith"))
+        staff={"employees": {"smith": 2.0}}, labour_market=Game(quote_annual=lambda trade: 500.4),
+        trade_available=lambda trade: trade == "smith")
 
 
 class MarketRowTests(unittest.TestCase):

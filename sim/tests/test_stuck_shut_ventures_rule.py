@@ -27,7 +27,7 @@ def game(concerns=CONCERNS, spending_power=1000.0, done=None, operating=("runnin
     return Game(
         done=set(CONCERNS if done is None else done), operating=set(operating), is_venture=lambda node_id: True,
         venture_real_earnings=lambda node_id: concerns[node_id][0], venture_real_upkeep=lambda node_id: concerns[node_id][1],
-        open_refusal=lambda node_id, with_advice=True: concerns[node_id][2],
+        open_refusal=lambda node_id, unit_count=None, with_advice=True: concerns[node_id][2],
         opening_fee=lambda node_id, units=None: (concerns[node_id][3], 1.0), spending_power=lambda kind: spending_power)
 
 

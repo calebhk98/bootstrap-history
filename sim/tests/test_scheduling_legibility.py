@@ -14,6 +14,7 @@ from sim.ui.proto.economy import _portfolio_constraint as _PCON
 from sim.ui.proto.multi_year_warning import multi_year_hours_warning
 from sim.ui.proto.state_waiting import _waiting_on
 from sim.tests.ui_stand_in import Game
+from sim.tests.ui_stand_in import FactViews
 
 QUICK_TOPIC = True
 
@@ -55,7 +56,7 @@ check("with no other project drawing on the trade the note counts none",
 
 
 # --- 3. five precise reasons, not a blurred "nobody to do the work"
-class _Stub:
+class _Stub(FactViews):
     """A game as `_waiting_on` reads it: a trade's supply, the portfolio's demand, money, the throttle and the queue."""
 
     def __init__(self, supply=None, demand=None, spending=1.0e9, cost=1000.0, throttle=(1.0, None), standing=None,

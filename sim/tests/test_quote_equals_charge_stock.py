@@ -55,7 +55,7 @@ class Screen:
         self.quote, self.capital = quote, 1000.0
 
     def view(self, name):
-        return lambda *arguments: self.quote
+        return (lambda: self.capital) if name == "acting_balance" else (lambda *arguments: self.quote)
 
 
 from sim.engine.ui_port import purchase_rule  # noqa: E402

@@ -13,6 +13,7 @@ from sim.reporting.api import RecordEvent
 from sim.tests import module_harness, polity_host
 from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
+from sim.tests.ui_stand_in import FactViews
 
 
 class Purse:
@@ -94,7 +95,7 @@ check("a work that declares no transfer pays nothing", game.paid == [] and event
 
 
 # ---- the pay command
-class Commander:
+class Commander(FactViews):
     """A game that answers `settle_with_state` with what it asked."""
 
     capital = 1000.0

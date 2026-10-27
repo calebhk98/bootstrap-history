@@ -35,7 +35,7 @@ def a_game(capital=1000.0, startable=STARTABLE, fog=False, hazards=(), done=()):
         capital=capital, year=1000, civ={"hazards": list(hazards)}, fog=fog, goal="goal",
         state=Game(interface={}, scenario=Game(year=1000)), shortage_rows=[],
         hazard_figure=lambda name, hazard: hazard.get(name, 0.0), material_shortfall_t=lambda material: 0.0)
-    game.view = lambda name: (lambda: game.shortage_rows)      # the standing material shortage, as rows
+    game.shortage_conditions = lambda: game.shortage_rows      # the standing material shortage, as rows
     return game
 
 

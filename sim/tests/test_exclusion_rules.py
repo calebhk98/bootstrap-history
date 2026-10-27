@@ -9,6 +9,7 @@ import unittest
 from sim.projects import exclusion_rules
 from sim.projects.api import Exclude, Include
 from sim.tests import projects_host
+from sim.tests.ui_stand_in import FactViews
 from sim.ui.proto.dispatch_exclusions import _cmd_exclude, _cmd_include
 
 NODES = {"plough": {"cat": "agriculture", "traits": ["tool"], "name": "Plough"},
@@ -16,7 +17,7 @@ NODES = {"plough": {"cat": "agriculture", "traits": ["tool"], "name": "Plough"},
          "mill": {"cat": "agriculture", "traits": [], "name": "Mill"}}
 
 
-class _Game:
+class _Game(FactViews):
     def __init__(self, fog=False):
         self.nodes, self.fog = NODES, fog
         self.module = projects_host.build(tree=NODES)
@@ -26,7 +27,7 @@ class _Game:
         return self.module.seat.excluded
 
     def view(self, name):
-        return {"exclusions": self.module.exclusions}[name]
+        return self.module.exclusions if name == "exclusions" else FactViews.view(self, name)
 
     def send(self, command):
         return {Exclude: self.module.apply_exclude, Include: self.module.apply_include}[type(command)](command)

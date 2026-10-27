@@ -29,35 +29,17 @@ class StandInMarket:
         return 80.0
 
 
-class StandInLabour:
-    LITERATE_TRADES = ()
-    market = StandInMarket()
-
-    def base_annual_wage(self, trade):
-        return 70.0
-
-    def wage_per_hour(self, trade):
-        return 0.05
-
-    def market_supply_split(self, trade):
-        return (1000.0, 0.0)
-
-    def hours_reserved(self, trade):
-        return 0.0
-
-    def market_supply(self, trade):
-        return 1000.0
-
-    def hours_you_can_call_on(self, trade):
-        return 1000.0
-
-    def trade_available(self, trade):
-        return True
+def stand_in_labour_views():
+    """The workforce views the `labour <trade>` command reads, answered with fixed figures."""
+    return dict(
+        literate_trades=(), labour_market=StandInMarket(), base_annual_wage=lambda trade: 70.0, wage=lambda trade: 0.05,
+        market_supply_split=lambda trade: (1000.0, 0.0), hours_reserved=lambda trade: 0.0, market_supply=lambda trade: 1000.0,
+        hours_you_can_call_on=lambda trade: 1000.0, trade_available=lambda trade: True)
 
 
 class LabourCommandTests(unittest.TestCase):
     def test_detail_carries_every_wage_component_the_sim_reports(self):
-        sim = Game(labour=StandInLabour(), view=lambda name: (lambda: {"employees": {}, "created": set()}), wage_index=1.5, price_index=2.0)
+        sim = Game(staff={"employees": {}}, trade_spread={"created": set(), "absent": [], "endemic": set(), "introduced_year": {}}, wage_index=1.5, price_index=2.0, **stand_in_labour_views())
         detail = _cmd_labour(sim, {}, {"cmd": "labour", "trade": "smith"}, False)
         foundation = detail["trade"]["wage_foundation"]
         self.assertEqual(foundation["base_for_skill_and_difficulty"], 70.0)

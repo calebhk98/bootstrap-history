@@ -51,7 +51,8 @@ class VenturesSeparatesCapabilities(unittest.TestCase):
 def _mothball_stand_in():
     game = Game(CAPABILITY_INSTITUTIONS=frozenset({CAPABILITY}), year=100, log=[],
                            mothball_work=lambda node_id: (True, "shut " + node_id), upkeep=lambda: 3.0)
-    game.send = lambda command: game.log.append((game.year, LogLine(command.kind, command.text, **command.facts)))
+    game.send = lambda command: ((True, "shut " + command.node_id) if type(command).__name__ == "MothballWork"
+                                 else game.log.append((game.year, LogLine(command.kind, command.text, **command.facts))))
     return game
 
 

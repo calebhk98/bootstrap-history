@@ -18,7 +18,7 @@ def keeping(done=("mill",), venture=True):
     module = projects_host.build()
     projects = Game(done=set(done))
     return Game(
-        state=Game(projects=projects), is_venture=lambda node_id: venture, module=module,
+        done=set(done), state=Game(projects=projects), is_venture=lambda node_id: venture, module=module,
         keep_staffed=module.seat.keep_staffed, view=lambda name: module.keep_staffed,
         send=lambda command: module.apply_keep_staffed(command))
 

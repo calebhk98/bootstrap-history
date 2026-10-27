@@ -72,7 +72,7 @@ class ArrearsTest(unittest.TestCase):
 class ShutConcernAdviceTest(unittest.TestCase):
     def _game(self, refusal, affordable=True):
         return _game(done={"mill"}, is_venture=lambda node_id: True, venture_real_earnings=lambda node_id: 100.0,
-                     venture_real_upkeep=lambda node_id: 20.0, open_refusal=lambda node_id, with_advice=True: refusal,
+                     venture_real_upkeep=lambda node_id: 20.0, open_refusal=lambda node_id, unit_count=None, with_advice=True: refusal,
                      opening_fee=lambda node_id: (30.0 if affordable else 3000.0,), spending_power=lambda purpose: 500.0)
 
     def test_an_openable_concern_is_advised_with_the_open_command(self):

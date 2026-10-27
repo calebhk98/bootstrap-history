@@ -44,16 +44,12 @@ class CallerTests(unittest.TestCase):
         self.assertEqual(len(recorded), 1)
 
     def test_the_sell_command_refuses_an_unpriced_good_with_a_cause(self):
-        sold = []
         sim = Game(
-            goods_market=Game(quote=lambda material: None,
-                                         sale_limits=lambda material: (0.0, 0.0)),
-            sell_material_stock=lambda material, quantity: sold.append((material, quantity)) or quantity,
-            capital=0.0)
+            goods_quote=lambda material: None, sale_limits=lambda material: (0.0, 0.0), capital=0.0)
         reply = dispatch_money._cmd_sell(sim, {}, {"what": "material", "material": "cobalt", "n": 5}, None)
         self.assertFalse(reply["ok"])
         self.assertEqual(reply["error"].cause, "no_price")
-        self.assertEqual(sold, [])
+        self.assertEqual(sim.sent, [])
 
 
 if __name__ == "__main__":

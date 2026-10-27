@@ -243,7 +243,7 @@ class MetricAndEconomyTests(unittest.TestCase):
 
     def test_power_tiers_name_only_the_rungs_the_player_has_heard_of(self):
         nodes = self.power_nodes()
-        game = stand_in(nodes=nodes, has=lambda node_id: node_id == KNOWN, installed_generation_kw_by_tier=lambda: {KNOWN: 5.0})
+        game = stand_in(nodes=nodes, done={KNOWN}, installed_generation_kw_by_tier=lambda: {KNOWN: 5.0})
         tiers, highest = economy._power_tiers(game, nodes)
         self.assertEqual([tier["id"] for tier in tiers], [KNOWN])
         self.assertEqual(highest, "workshop power")
@@ -252,7 +252,7 @@ class MetricAndEconomyTests(unittest.TestCase):
     def test_projects_waiting_on_power_leave_out_hidden_ones(self):
         nodes = dict(self.power_nodes(), **{"seen_user": node("Seen user", pre=[KNOWN]),
                                             "hidden_user": node("Hidden user", pre=[KNOWN])})
-        game = stand_in(nodes=nodes, heard={KNOWN, "seen_user"}, has=lambda node_id: False)
+        game = stand_in(nodes=nodes, heard={KNOWN, "seen_user"})
         reply = economy._power_waiting_on(game, nodes, False)
         self.assertEqual(json.dumps(reply).count("hidden_user"), 0)
         self.assertIn("seen_user", json.dumps(reply))
