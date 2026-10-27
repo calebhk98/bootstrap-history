@@ -29,7 +29,7 @@ def final_report(sim, nodes):
            "you_built": len(earned),
            "this_society_already_had": len(sim.view("techniques_granted")()),
            "money": round(sim.view("acting_balance")(), 1),
-           "people": round(sim.labour.headcount(), 1),
+           "people": round(sim.view("headcount")(), 1),
            "reputation": round(sim.view("standing")()["reputation"], 1),
            "concerns_you_were_running": len(sim.view("operating")()),
            "failed_attempts": sum(sim.view("failed_attempts")().values())}
@@ -172,7 +172,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     # that save's own figure, so the save does not define 100% by
     # construction. 7,000 is ten times 691.7, rounded to a clean figure.
     WORKFORCE_ANCHOR = 7000.0
-    headcount = max(0.0, sim.labour.headcount())
+    headcount = max(0.0, sim.view("headcount")())
     work_norm = min(1.0, math.log1p(headcount) / math.log1p(WORKFORCE_ANCHOR))
     out["workforce"] = {"counts": ("everyone on your books (employees, slaves, freedmen), "
                                    "on a log scale"),
@@ -194,7 +194,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     # calibration save's 4.41 million worker-years, rounded to a clean
     # figure (50 million), not that save's own number.
     ECONOMY_ANCHOR_WORKER_YEARS = 50_000_000.0
-    reference_wage = max(1e-6, sim.labour.market.in_current_money(sim.labour.base_annual_wage("artisan")))
+    reference_wage = max(1e-6, sim.view("labour_market")().in_current_money(sim.view("base_annual_wage")["artisan"]))
     worker_years = max(0.0, sim.view("acting_balance")()) / reference_wage
     econ_norm = min(1.0, math.log1p(worker_years)
                     / math.log1p(ECONOMY_ANCHOR_WORKER_YEARS))

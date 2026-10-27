@@ -429,7 +429,7 @@ def _play_prompt(sim):
     # The same figure state reports: the pool LESS hours already sold for
     # wages. The prompt must not disagree with state about the one number on
     # it, or the accounting reads as wrong even when it is not.
-    free_hours = max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed())
+    free_hours = max(0.0, sim.view("hours_available")["director_pool"] - sim.view("hours_available")["director_committed"])
     # The prompt is built here and never passes through the renderer, so it
     # was the last place still saying "den" in a game counted in pence.
     # THE SAME TWO NUMBERS `why` PRINTS, for the same reason the hours
@@ -442,7 +442,7 @@ def _play_prompt(sim):
     # having lost count of the player's own staff.
     return ("[%d AD | %s | you:%d hr | sch %.0f art %.0f | rep %.0f] > "
               % (sim.view("year")(), money_text(sim.view("acting_balance")(), sim, short=True), free_hours,
-                 sim.labour.effective_scholars(), sim.labour.craft_hands_available(),
+                 sim.view("effective_scholars")(), sim.view("hours_available")["craft_hands"],
                  sim.view("standing")()["reputation"]))
 
 

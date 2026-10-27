@@ -24,15 +24,15 @@ def leverage_points(sim):
                      "general_ceiling": round(sim.view("literacy_ceiling")["literacy_general"], 3),
                      "schooling_flow": round(sim.view("effective_schooling_flow")(), 3)}},
         {"lever": "labour", "why_it_matters": "directed hours and people let several projects run in parallel",
-         "figures": {"directed_hours_this_year": round(sim.labour.director_pool(), 1),
-                     "committed_hours": round(sim.labour.director_hours_committed(), 1),
-                     "people_you_can_oversee": round(sim.labour.supervision_room(), 1)}},
+         "figures": {"directed_hours_this_year": round(sim.view("hours_available")["director_pool"], 1),
+                     "committed_hours": round(sim.view("hours_available")["director_committed"], 1),
+                     "people_you_can_oversee": round(sim.view("supervision_room")(), 1)}},
         {"lever": "finance", "why_it_matters": "money removes the cost bottleneck for everything else",
          "figures": {"recurring_net_per_year": round(sim.view("recurring_net")(), 1),
                      "credit_limit": round(sim.view("credit_limit")(), 1),
                      "you_could_raise_now": round(sim.view("spending_power")("start"), 1)}},
         {"lever": "institutions", "why_it_matters": "schools, guilds and standing concerns spread skill and specialisation",
-         "figures": {"concerns_running": len(sim.view("operating")()), "people_you_can_oversee": round(sim.labour.supervision_room(), 1)}},
+         "figures": {"concerns_running": len(sim.view("operating")()), "people_you_can_oversee": round(sim.view("supervision_room")(), 1)}},
         {"lever": "knowledge", "why_it_matters": "what is known can be lost to sackings; preserving it protects every goal",
          "figures": {"technologies_at_risk": risk.get("technologies_at_risk"),
                      "expected_lost_per_sacking": risk.get("expected_technologies_lost_per_sacking")}},
@@ -76,7 +76,7 @@ def training_suggestions(sim, trade_rows):
         short = row["demand_hours_this_year"] - row["supply_hours_this_year"]
         people = max(1, math.ceil(short / sim.view("hours_per_person_year")()))
         rows.append({"trade": row["trade"], "people_short": people,
-                     "teaching_hours": people * sim.labour.training_hours_per_person(row["trade"]),
+                     "teaching_hours": people * sim.view("training_hours_per_person")(row["trade"]),
                      "command": "train %s %d" % (row["trade"], people)})
     return rows
 

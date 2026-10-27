@@ -59,7 +59,7 @@ def demography_report(sim):
         "recent_shocks": recent_shocks(sim.view("yearly_record")()),
         "recovery": recovery(sim.view("yearly_record")(), total, sim.view("year")()),
         "wage_index": round(sim.view("wage_index")(), 4),
-        "trades": sim.labour.population_report()["trades"],
+        "trades": sim.view("population_report")()["trades"],
         "not_held": ["the model has three age cohorts, not single years of age",
                      "the recovery figure extrapolates recent growth; it does not model "
                      "food, disease or war ahead",

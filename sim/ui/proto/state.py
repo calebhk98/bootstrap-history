@@ -75,7 +75,7 @@ def _agent_state_standing(sim):
             "elite": round(float(sim.view("literacy")("literacy_elite")), 3),
             "elite_ceiling": round(sim.view("literacy_ceiling")["literacy_elite"], 3),
             "schools_actually_teaching": ui_port.schooling_flow(sim) > 0.0,
-            "farm_share_of_working_hours": round(sim.labour.farm_share_of_hours(), 3),
+            "farm_share_of_working_hours": round(sim.view("farm_share_of_hours")(), 3),
         },
         # HOW MUCH OF WHAT YOU RUN HAS LEAKED TO COMPETITORS. See
         # SocietyMixin.diffusion_share/diffusion_index (society.py) for what
@@ -109,15 +109,15 @@ def _agent_state_progress(sim, active):
         # to try a staff-gated project never sees it at all. Tell them
         # unprompted.
         "how_to_grow_staff": {
-            "scholars": sim.labour.staff_advice("scholars"),
-            "artisans": sim.labour.staff_advice("artisans"),
+            "scholars": sim.view("staff_advice")("scholars"),
+            "artisans": sim.view("staff_advice")("artisans"),
         },
         "where_the_money_comes_from": sim.view("revenue_sources")(),
         "employees": {trade: round(value, 2) for trade, value in sorted(sim.view("staff")()["employees"].items()) if value > 0.005},
         "employees_total": round(sum(sim.view("staff")()["employees"].values()), 2),
         "household_places_used_of_all": "%.1f of %.1f"
-            % (sim.labour.headcount(), sim.labour.headcount() + max(0.0, sim.labour.household_room())),
-        "annual_wage_bill": round(sim.labour.wage_bill(), 1),
+            % (sim.view("headcount")(), sim.view("headcount")() + max(0.0, sim.view("household_room")())),
+        "annual_wage_bill": round(sim.view("wage_bill")(), 1),
         # WHAT THE PROMPT'S sch/art MEAN: those two figures count yourself
         # and any hours you have bought, so the prompt can read "sch 1
         # art 1" on a turn where you employ nobody, which looks like a
@@ -128,7 +128,7 @@ def _agent_state_progress(sim, active):
             "%.1f craft hands. That pair is what the prompt shows and what "
             "'why' and 'start' test a project against; the count above is "
             "people on your payroll."
-            % (sim.labour.effective_scholars(), sim.labour.craft_hands_available())),
+            % (sim.view("effective_scholars")(), sim.view("hours_available")["craft_hands"])),
         # FRACTIONS ARE REAL, NOT A DISPLAY GLITCH: staff grow and decay
         # gradually (hiring phases in, training takes years, attrition is
         # a yearly 3.5%), so at any given moment a trade you have IS a
@@ -206,7 +206,7 @@ def _agent_state_risk_and_pressure(sim, full=True):
         "forest_ha": round(sim.view("forest_hectares")(), 1),
         "mine_capacity": {material: round(value, 1) for material, value in sim.view("mine_capacity")().items()},
         "slaves": sim.view("staff")()["slaves"], "freedmen": sim.view("staff")()["freedmen"],
-        "scholars_including_you": round(sim.labour.effective_scholars(), 2),
+        "scholars_including_you": round(sim.view("effective_scholars")(), 2),
     }
 
 

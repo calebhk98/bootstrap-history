@@ -108,8 +108,8 @@ def _agent_state_headline_money(sim, end_year):
         # under one label would read a growing payroll as a spiralling
         # cost of living to anyone watching only `state`, one of the four
         # screens the welcome text calls essential.
-        "living_cost": round(sim.view("living_cost")() - sim.labour.wage_bill(), 1),
-        "wage_bill": round(sim.labour.wage_bill(), 1),
+        "living_cost": round(sim.view("living_cost")() - sim.view("wage_bill")(), 1),
+        "wage_bill": round(sim.view("wage_bill")(), 1),
         "mine_operating_cost": round(sim.view("mine_operating_cost")(), 1),
     }
 
@@ -146,9 +146,9 @@ def _agent_state_operations(sim, nodes):
         # Which people each shut, profitable concern is short of.
         "shut_for_want_of_staff": shut_for_want_of_staff(sim, nodes),
         # Specialists on the payroll that no project or open concern uses.
-        "idle_specialists": sim.labour.idle_specialists() or None,
+        "idle_specialists": sim.view("idle_specialists")() or None,
         # Open concerns that one death would close.
-        "depends_on_one_person": sim.labour.sole_supervisors() or None,
+        "depends_on_one_person": sim.view("sole_supervisors")() or None,
     }
 
 
@@ -226,7 +226,7 @@ def _agent_state_training_and_hours(sim, active, full):
         # FREE is the pool less the hours already spent on wage work, or
         # this would report free hours that `work` then refuses to honour.
         "founder_hours_available": round(
-            max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed()), 1),
+            max(0.0, sim.view("hours_available")["director_pool"] - sim.view("hours_available")["director_committed"]), 1),
         # FREE HOURS, SHOUTED, WHEN THEY ARE GOING TO WASTE, not one quiet
         # number among fifty: running a single calendar-floor project can
         # leave thousands of founder-hours spent on nothing for a whole

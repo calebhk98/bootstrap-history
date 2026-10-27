@@ -161,7 +161,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     # with a real pool still free) - read here, not recomputed, so this
     # warning and that field can never disagree about what "idle" means.
     # Non-blocking: it says so and proceeds, it does not refuse the step.
-    lone_dependencies = sim.labour.sole_supervisors() if years > 1 else []
+    lone_dependencies = sim.view("sole_supervisors")() if years > 1 else []
     multi_year_hours_warning = None
     multi_year_hours_waiting_on = None
     if years > 1 and ui_port.settings.load_config().get("multi_year_step_warning", True):

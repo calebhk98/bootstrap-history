@@ -47,10 +47,10 @@ def _limited_by(sim, general_share):
 
 
 def _pools(sim):
-    return [{"trade": trade, "literacy_factor": round(sim.labour.literacy_factor(trade), 4),
-             "most_you_can_ever_have": round(sim.labour.literate_capacity(trade), 2),
+    return [{"trade": trade, "literacy_factor": round(sim.view("literacy_factor")[trade], 4),
+             "most_you_can_ever_have": round(sim.view("literacy_capacity")[trade], 2),
              "you_employ": round(sim.view("staff")()["employees"].get(trade, 0.0), 2)}
-            for trade in sorted(sim.labour.LITERATE_TRADES) if sim.labour.trade_available(trade)]
+            for trade in sorted(sim.view("literate_trades")()) if sim.view("trade_available")[trade]]
 
 
 def _trainees(sim):
@@ -91,7 +91,7 @@ def education_report(sim):
         "schooling_flow": round(ui_port.schooling_flow(sim), 4),
         "effective_schooling_flow": round(sim.view("effective_schooling_flow")(), 4),
         "printing_adopted": round(sim.view("diffusion_index")["information"], 4),
-        "farm_share_of_hours": round(sim.labour.farm_share_of_hours(), 4),
+        "farm_share_of_hours": round(sim.view("farm_share_of_hours")(), 4),
         "schools": schools,
         "literacy_limited_by": _limited_by(sim, _fraction_of(general, ceiling_general)),
         "literate_trades": _pools(sim),

@@ -131,7 +131,7 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
         need = min(want / max(1.0, node["yrs"]), lab_left.get(trade, want))
         if need <= 0:
             continue
-        supply = sim.labour.hours_you_can_call_on(trade)
+        supply = sim.view("hours_you_can_call_on")[trade]
         total_demand = portfolio_demand.get(trade, {}).get(
             "demand_hours_this_year", need)
         # The society's capacity is the durable fact a player can act on;
@@ -221,7 +221,7 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
                        "this year's %s directed hours; 'portfolio' shows what "
                        "each one is getting and why"
                        % (_rank, _count, plain_number(_total or 0.0)))
-    free_hours = max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed())
+    free_hours = max(0.0, sim.view("hours_available")["director_pool"] - sim.view("hours_available")["director_committed"])
     return Refusal("founder_hours", "your hours: %s of your own hours of work are still to do, and "
                    "you have %s uncommitted this year"
                    % (plain_number(progress["ph_left"]), plain_number(free_hours)))

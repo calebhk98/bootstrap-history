@@ -69,8 +69,8 @@ def _short_of_staff(sim, node):
     marker that contradicts the gate it is describing is worse than no
     marker.
     """
-    return bool(node["art"] > sim.labour.craft_hands_available() + 1e-9
-                or node["sch"] > sim.labour.effective_scholars() + 1e-9)
+    return bool(node["art"] > sim.view("hours_available")["craft_hands"] + 1e-9
+                or node["sch"] > sim.view("effective_scholars")() + 1e-9)
 
 
 def _staff_fields(sim, node):
@@ -1082,8 +1082,8 @@ def _staffing_build_crew(sim, node):
         # first of the three. Printing s.artisans here would show a number
         # that disagrees with the one that actually decides whether a
         # player can begin. Print what decides it.
-        "you_have": {"scholars": round(sim.labour.effective_scholars(), 1),
-                     "artisans": round(sim.labour.craft_hands_available(), 1)},
+        "you_have": {"scholars": round(sim.view("effective_scholars")(), 1),
+                     "artisans": round(sim.view("hours_available")["craft_hands"], 1)},
         "you_have_counts": ("counting yourself, and hours you have bought"
                             if sim.view("founder")()["alive"] else "counting hours you have bought"),
         # SAY WHEN THE STAFF IT WANTS IS MORE THAN THIS SOCIETY HAS: a
@@ -1098,14 +1098,14 @@ def _staffing_build_crew(sim, node):
         "more_scholars_than_this_society_can_supply": (
             "%s wanted; you have %.1f and literacy here will never let you HIRE "
             "more than %.1f. Printing, paper, schools and academies raise both."
-            % (node["sch"], sim.labour.effective_scholars(), sim.labour.literate_capacity("scholar"))
-            if (node["sch"] > sim.labour.literate_capacity("scholar")
-                and node["sch"] > sim.labour.effective_scholars()) else None),
+            % (node["sch"], sim.view("effective_scholars")(), sim.view("literacy_capacity")["scholar"])
+            if (node["sch"] > sim.view("literacy_capacity")["scholar"]
+                and node["sch"] > sim.view("effective_scholars")()) else None),
         "more_craftsmen_than_your_household_can_hold": (
             "%s wanted; you have %.1f and could hold %.1f in all. %s"
             % (node["art"], sim.view("staff")()["artisans"],
-               sim.labour.headcount() + max(0.0, sim.labour.household_room()), sim.labour.room_advice())
-            if (node["art"] > sim.labour.headcount() + max(0.0, sim.labour.household_room())
+               sim.view("headcount")() + max(0.0, sim.view("household_room")()), sim.view("room_advice")())
+            if (node["art"] > sim.view("headcount")() + max(0.0, sim.view("household_room")())
                 and node["art"] > sim.view("staff")()["artisans"]) else None),
     }
 
@@ -1480,7 +1480,7 @@ def _explain_labour_notes(sim, node):
     # each other, so the explanation earns its place; carrying it on
     # every reply whether or not the node hires anyone is 400 bytes of
     # boilerplate per call.
-    absent = sorted(trade for trade in node["lab"] if not sim.labour.trade_available(trade))
+    absent = sorted(trade for trade in node["lab"] if not sim.view("trade_available")[trade])
     if absent:
         out["trades_that_do_not_exist_here"] = absent
         out["hired_labour_means"] = ("hours of a trade bought in for this job only. "
@@ -1494,7 +1494,7 @@ def _explain_labour_notes(sim, node):
     # about it beforehand. A Rome player hit that refusal with no warning on
     # either this screen or train's own success message.
     _taught_but_empty = sorted(trade for trade in node["lab"]
-                               if trade not in absent and sim.labour.market_supply(trade) <= 0.0)
+                               if trade not in absent and sim.view("market_supply")[trade] <= 0.0)
     if _taught_but_empty:
         out["trades_taught_but_nobody_here_to_do_them_yet"] = _taught_but_empty
         out["trades_taught_but_nobody_here_means"] = (
@@ -1505,7 +1505,7 @@ def _explain_labour_notes(sim, node):
             "on this trade until they finish; if nobody is even learning it "
             "yet, starting is refused outright. Check 'labour' for who is "
             "in training, or 'hire' to add people to this trade right now.")
-    if node["art"] > sim.view("staff")()["artisans"] or node["sch"] > sim.labour.effective_scholars():
+    if node["art"] > sim.view("staff")()["artisans"] or node["sch"] > sim.view("effective_scholars")():
         out["staff_needed_means"] = ("people kept on your own staff, who understand "
                                      "your methods and stay when this is finished. "
                                      "Different from hired_labour, which is hours of "

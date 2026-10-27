@@ -3,10 +3,10 @@ reconciles cash. Complaint 640: the figures are read from a stand-in game, the c
 here, and the screens are rendered from hand-written replies; there are no played-game checks."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 
+from sim.tests.ui_stand_in import StandIn
 from sim.ui import figures as figure_registry
 from sim.ui import figures_world  # noqa: F401  (registers the figures)
 from sim.ui.proto import dispatch_cash_ledger
@@ -16,34 +16,17 @@ from sim.ui.proto.render_figures import render_figures
 NEW_FIGURES = ("wages", "state_notice", "epidemic", "project_throughput")
 
 
-class _Game:
+class _Game(StandIn):
     """Only what the four world figures read."""
-    wage_index, pop_scale, price_index = 1.25, 0.9, 1.1
-    throttle = 0.8
-
-    def view(self, name):
-        return {"material_throttle": lambda: self.throttle, "staff": lambda: {"employees": self.employees}}[name]
-
-    def state_reach(self):
-        return 0.4
-    year = 100
-    civ = {"hazards": []}
 
     def __init__(self):
-        self.done, self.granted = {"a", "b", "c"}, {"a"}
-        self.active, self.employees = {"x": {}}, {"smith": 2, "weaver": 1}
-
-    def eminence_report(self):
-        return {"now": 3.0, "settles_at_if_nothing_changes": 5.0, "chance_of_ruin_this_year": 0.01}
-
-    def state_notice(self):
-        return 0.25
-
-    def household_scale(self):
-        return 1.5
-
-    def hazard_figure(self, kind, hazard):
-        return 0.2
+        self.employees = {"smith": 2, "weaver": 1}
+        super().__init__(
+            wage_index=1.25, pop_scale=0.9, price_index=1.1, material_throttle=0.8, year=100,
+            staff=lambda: {"employees": self.employees},
+            eminence_report={"now": 3.0, "settles_at_if_nothing_changes": 5.0, "chance_of_ruin_this_year": 0.01},
+            state_notice=0.25, state_reach=0.4, household_scale=1.5, hazard_figure=lambda kind, hazard: 0.2,
+            techniques_held={"a", "b", "c"}, techniques_granted={"a"}, active_projects={"x": {}}, civilisation={"hazards": []})
 
 
 class FigureTests(unittest.TestCase):

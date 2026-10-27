@@ -43,7 +43,7 @@ def _scholar_family_names():
 
 def _non_craft_labour_names(sim):
     """Trades that are neither craft nor scholar family, as a plural list, from the supervision check's own data."""
-    names = [trade + "s" for trade in sim.labour.craft_trades_report()["not_craft"]
+    names = [trade + "s" for trade in sim.view("craft_trades_report")()["not_craft"]
              if TRADE_FAMILY.get(trade) != "scholar"]
     return ", ".join(names)
 
@@ -91,7 +91,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     _impossible = []
     _impossible_trades = set()
     _n0 = nodes[node_id]
-    for _trade, _need, _ceiling in trades_beyond_ceiling(_n0["lab"], _n0["yrs"], sim.labour.hours_you_can_call_on):
+    for _trade, _need, _ceiling in trades_beyond_ceiling(_n0["lab"], _n0["yrs"], lambda trade: sim.view("hours_you_can_call_on")[trade]):
         _impossible.append("%s (wants %.0f hours a year; this society can "
                            "field %.0f at most)" % (_trade, _need, _ceiling))
         _impossible_trades.add(_trade)
@@ -108,7 +108,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # here, not re-derived, so `start`'s warning and `portfolio`'s own
     # figures can never tell two different stories about the same year.
     _oversub = ui_port.oversubscription_notes(
-        sim.view("trade_demand_vs_supply")(), sim.view("trade_draw_plan")(node_id, None), sim.labour.hours_you_can_call_on,
+        sim.view("trade_demand_vs_supply")(), sim.view("trade_draw_plan")(node_id, None), lambda trade: sim.view("hours_you_can_call_on")[trade],
         _impossible_trades, plain_number)
     started, why = sim.send(ui_port.StartProject(node_id, bool(cmd.get("precaution"))))
     if not started:
@@ -272,7 +272,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # here, not let a project needing a trade nobody can yet do come back
     # ok:true only to be HALTED years later with everything spent on it
     # lost and no earlier warning to act on. Name it here instead.
-    short = sorted(trade for trade in node["lab"] if sim.labour.market_supply(trade) <= 0.0)
+    short = sorted(trade for trade in node["lab"] if sim.view("market_supply")[trade] <= 0.0)
     if short:
         out["warning"] = (
             "no one can do this work YET: %s. (Instructions given earlier; `full` shows them again.)"
@@ -465,9 +465,9 @@ def _cmd_rush(sim, nodes, cmd, ended):
     #
     # Committing a couple of years of everyone's attention is a decision a
     # player might reasonably make. Committing four centuries of it is not.
-    _hours_room = max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed())
+    _hours_room = max(0.0, sim.view("hours_available")["director_pool"] - sim.view("hours_available")["director_committed"])
     _HORIZON_YEARS = 2.0
-    _budget = sim.labour.director_pool() * _HORIZON_YEARS
+    _budget = sim.view("hours_available")["director_pool"] * _HORIZON_YEARS
     # budget fixed up front from the shared purchase rule, so the reserve holds as projects start
     budget = purchase_budget(sim)
 
@@ -486,7 +486,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
                       "annual_draw": round(annual_draw, 1)}
 
     started, not_started, _owed, total_cost, total_draw = rush_loop.begin_in_order(
-        _ok, nodes, limit, _budget, sim.labour.director_pool(), lambda node_id: _rush_cost_left(sim, node_id),
+        _ok, nodes, limit, _budget, sim.view("hours_available")["director_pool"], lambda node_id: _rush_cost_left(sim, node_id),
         lambda cost, draw, cost_so_far, draw_so_far, hours, hours_so_far: _rush_cap_refusal(
             sim, caps, budget, cost, draw, cost_so_far, draw_so_far, hours, hours_so_far),
         begin)
@@ -700,7 +700,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                "Concerns remain open until held staff exceeds effective "
                "capacity by more than the 0.50-FTE anti-churn margin."),
            "you_have_in_all": {
-               "scholars": round(sim.labour.effective_scholars(), 2),
+               "scholars": round(sim.view("effective_scholars")(), 2),
                "craftsmen": round(sim.view("staff")()["artisans"]
                                   + (ui_port.project_constants.FOUNDER_IS_WORTH if sim.view("founder")()["alive"]
                                      else 0.0), 2)},
@@ -720,7 +720,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                "(not the other scholar-family trades) and art counts you "
                "and every craft trade you employ."
                % (_scholar_family_names(), _non_craft_labour_names(sim))),
-           "these_are_not_interchangeable_trades": sim.labour.craft_trades_report(),
+           "these_are_not_interchangeable_trades": sim.view("craft_trades_report")(),
            # "needs", "held_in_all" and "people_free_to_run_something_new"
            # above are venture_hands()/venture_staff_free()'s own numbers
            # - a continuous SHARE of a person's year, never a headcount -

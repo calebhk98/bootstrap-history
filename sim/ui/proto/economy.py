@@ -539,11 +539,11 @@ def _spare_capacity(sim, state_out):
     """
     families = {}
     for trade in WAGES:
-        if not sim.labour.trade_available(trade):
+        if not sim.view("trade_available")[trade]:
             continue
         fam = trade_family(trade)
         pair = families.setdefault(fam, [0.0, 0.0])
-        supply = sim.labour.hours_you_can_call_on(trade)
+        supply = sim.view("hours_you_can_call_on")[trade]
         used = min(supply, sim.view("hour_commitments")()["trade_hours_used"].get(trade, 0.0))
         pair[0] += supply
         pair[1] += used
@@ -570,8 +570,8 @@ def _spare_capacity(sim, state_out):
         # they were missing. supervision_room_from (labour.py) walks the same
         # sources supervision_room sums, so this cannot drift from the figure
         # it explains.
-        "people_you_can_oversee": round(sim.labour.supervision_room(), 1),
-        "and_where_that_comes_from": sim.labour.supervision_room_from(),
+        "people_you_can_oversee": round(sim.view("supervision_room")(), 1),
+        "and_where_that_comes_from": sim.view("supervision_room_from")(),
         "note": "standing net per year is this household's own ordinary-year "
                 "surplus or deficit before this year's project spend - "
                 "roughly how much more annual project spend you could "
@@ -746,11 +746,11 @@ def _agent_economy(sim, cmd=None):
         "ok": True,
         "price_index": round(sim.view("price_index")(), 4),
         "wage_index": round(sim.view("wage_index")(), 4),
-        "cost_of_living_a_year": round(sim.view("living_cost")() - sim.labour.wage_bill(), 1),
+        "cost_of_living_a_year": round(sim.view("living_cost")() - sim.view("wage_bill")(), 1),
         "literacy": {"general": round(float(sim.view("literacy")("literacy_general")), 3),
                      "elite": round(float(sim.view("literacy")("literacy_elite")), 3)},
         "household_places_used_of_all": "%.1f of %.1f" % (
-            sim.labour.headcount(), sim.labour.headcount() + max(0.0, sim.labour.household_room())),
+            sim.view("headcount")(), sim.view("headcount")() + max(0.0, sim.view("household_room")())),
         "where_the_money_comes_from": sim.view("revenue_sources")(),
         "materials_at_a_premium": sim.view("material_market_summary")(),
         "what_moved_most": moved or "not enough history yet - step forward "
@@ -774,13 +774,13 @@ def _agent_economy(sim, cmd=None):
         # THE SAME FORMULA `labour`'s own row() uses for "a_year_of_one", not
         # a second version of a wage this file already prints elsewhere.
         out["wages_by_trade"] = [
-            {"trade": trade, "a_year_of_one": round(sim.labour.market.quote_annual(trade), 0),
+            {"trade": trade, "a_year_of_one": round(sim.view("labour_market")().quote_annual(trade), 0),
              "wage_foundation": {
-                 "base_for_skill_and_difficulty": round(sim.labour.base_annual_wage(trade), 2),
-                 **{factor_key: round(value, 3) for factor_key, value in sim.labour.market.cost_factors(trade).items()},
+                 "base_for_skill_and_difficulty": round(sim.view("base_annual_wage")[trade], 2),
+                 **{factor_key: round(value, 3) for factor_key, value in sim.view("labour_market")().cost_factors(trade).items()},
                  "demographic_scarcity": round(sim.view("wage_index")(), 3),
-                 "local_trade_scarcity": round(sim.labour.market.price_factor(trade), 3)}}
-            for trade in sorted(WAGES) if sim.labour.trade_available(trade)]
+                 "local_trade_scarcity": round(sim.view("labour_market")().price_factor(trade), 3)}}
+            for trade in sorted(WAGES) if sim.view("trade_available")[trade]]
     return out
 
 

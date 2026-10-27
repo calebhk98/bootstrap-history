@@ -23,8 +23,8 @@ def _cmd_leverage(sim, nodes, cmd, ended):
                      "remainder, why running work is waiting, and what could use the hours. "
                      "It never spends them.")
 def _cmd_idle(sim, nodes, cmd, ended):
-    pool = sim.labour.director_pool()
-    committed = sim.labour.director_hours_committed()
+    pool = sim.view("hours_available")["director_pool"]
+    committed = sim.view("hours_available")["director_committed"]
     startable = [node_id for node_id in nodes
                  if node_id not in sim.view("techniques_held")() and node_id not in sim.view("active_projects")()
                  and (not sim.view("legacy_fog")() or sim.view("visibility")(node_id, None)) and sim.view("start_check")(node_id, False, None, False)[0]]

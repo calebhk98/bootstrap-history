@@ -105,12 +105,12 @@ def _buy_housing(sim, cmd, quantity):
 
 def _buy_school(sim, cmd, quantity):
     trade = str(cmd.get("trade") or cmd.get("material") or "").lower()
-    school_founded, why = sim.labour.found_trade_school(trade, quantity)
+    school_founded, why = sim.send(ui_port.FoundTradeSchool(trade, quantity))
     if not school_founded:
         return {"ok": False, "error": why}
     return {"ok": True, "trade": trade, "new_training_seats": quantity,
             "trade_school_seats": sim.view("trade_schools")()[trade],
-            "market_supply_hours_per_year": round(sim.labour.market_supply(trade), 1),
+            "market_supply_hours_per_year": round(sim.view("market_supply")[trade], 1),
             "capital": round(sim.view("acting_balance")(), 1)}
 
 
@@ -181,14 +181,14 @@ def _buy_mine(sim, cmd, quantity):
 
 def _buy_slaves(sim, cmd, quantity):
     ui_port.set_last_buy_refusal(sim, None)
-    got = sim.labour.buy_slaves(int(quantity))
+    got = sim.send(ui_port.BuySlaves(int(quantity)))
     if got <= 0 and ui_port.last_buy_refusal(sim):
         return {"ok": False, "error": ui_port.last_buy_refusal(sim)}
     if got <= 0:
         # Quote the price actually asked, not a flat per-head figure: a
         # large purchase bids the local market up, and saying "300 each"
         # while charging far more is the model lying to the player.
-        quote = sim.labour.slave_quote(int(quantity))
+        quote = sim.view("slave_quote")[int(quantity)]
         return {"ok": False,
                 "error": "cannot afford %d slaves: %s "
                          "(%s each after the market moves against a purchase "
@@ -199,7 +199,7 @@ def _buy_slaves(sim, cmd, quantity):
 
 
 def _buy_manumit(sim, cmd, quantity):
-    got = sim.labour.manumit(int(quantity))
+    got = sim.send(ui_port.Manumit(int(quantity)))
     if got <= 0:
         return {"ok": False, "error": "you have no slaves to free"}
     return {"ok": True, "manumitted": got, "freedmen": sim.view("staff")()["freedmen"], "slaves": sim.view("staff")()["slaves"]}
@@ -323,15 +323,15 @@ def _cmd_money(sim, nodes, cmd, ended):
             "revenue": round(sim.view("revenue_estimate")(), 1),
             "where_the_money_comes_from": _sources,
             **({"where_the_market_squeeze_falls": _squeeze} if _squeeze else {}),
-            **({"wage_work_this_year": sim.labour.wage_work_this_year()}
-               if sim.labour.wage_work_this_year() else {}),
+            **({"wage_work_this_year": sim.view("wage_work_this_year")()}
+               if sim.view("wage_work_this_year")() else {}),
             **({"wage_work_last_year": sim.view("hour_commitments")()["wage_work_last_year"]}
                if sim.view("hour_commitments")()["wage_work_last_year"] else {}),
             **({"still_building_up_custom": _ramp} if _ramp else {}),
             **({"materials_costing_you_a_premium": _mat_mkt} if _mat_mkt else {}),
             "what_it_costs_you": {
                 "upkeep_of_what_you_built": round(sim.view("upkeep")(), 1),
-                "living_and_appearances": round(sim.view("living_cost")() - sim.labour.wage_bill(), 1),
+                "living_and_appearances": round(sim.view("living_cost")() - sim.view("wage_bill")(), 1),
                 # NAME THE PART THAT IS THERE BECAUSE YOU ARE RICH. A break
                 # tester started with a million, built nothing, hired
                 # nobody, and read "living and appearances ~14,990, Net/yr
@@ -340,7 +340,7 @@ def _cmd_money(sim, nodes, cmd, ended):
                 # richer than he lives is suspected in a patronage society.
                 "_of_which_because_you_are_rich":
                     round(max(0.0, sim.view("acting_balance")()) * 0.015, 1) or None,
-                "wages": round(sim.labour.wage_bill(), 1),
+                "wages": round(sim.view("wage_bill")(), 1),
                 "of_which_already_paid_as_hiring_advances":
                     round(_prepaid, 1) or None,
                 "mines_standing": round(sim.view("mine_operating_cost")(), 1),
@@ -446,10 +446,11 @@ def _cmd_quote(sim, nodes, cmd, ended):
         if err_s:
             return {"ok": False, "error": err_s}
         budget = purchase_rule.purchase_budget(sim)
-        per_person_base = sim.labour.SLAVE_BASE_PRICE * sim.view("price_index")()
-        affordable = purchase_rule.affordable_whole_units(budget, per_person_base, sim.labour.slave_quote)
+        per_person_base = sim.view("slave_base_price")() * sim.view("price_index")()
+        affordable = purchase_rule.affordable_whole_units(budget, per_person_base,
+                                                           lambda people: sim.view("slave_quote")[people])
         return {"ok": True, "what": "slaves", "people": n_s,
-                "to_buy_them": round(sim.labour.slave_quote(n_s), 1),
+                "to_buy_them": round(sim.view("slave_quote")[n_s], 1),
                 "per_person_base": round(per_person_base, 2),
                 "you_have": round(sim.view("acting_balance")(), 1),
                 "you_could_raise": round(budget, 1),

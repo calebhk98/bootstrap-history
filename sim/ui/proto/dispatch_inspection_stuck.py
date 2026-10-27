@@ -199,11 +199,11 @@ def _stuck_raw_material(sim):
 
 
 def _stuck_room_for_people(sim):
-    _room = sim.labour.household_room()
+    _room = sim.view("household_room")()
     if _room < 1.0:
         return {"what": "room for people", "kind": "specialists",
                 "why": "you can take %.2f more people. %s"
-                       % (max(0.0, _room), sim.labour.room_advice())}
+                       % (max(0.0, _room), sim.view("room_advice")())}
     return None
 
 

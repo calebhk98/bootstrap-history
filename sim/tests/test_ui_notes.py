@@ -6,6 +6,7 @@ import types
 import unittest
 
 from .harness import NODES
+from sim.tests.ui_stand_in import StandIn
 from sim.ui.proto.dispatch_notes import _cmd_note, _cmd_notes
 from sim.ui.proto.notes_store import MAX_TEXT, note_log_rows, notes_for
 from sim.ui.proto.render_typed import render_pretty
@@ -16,8 +17,10 @@ VISIBLE_NAME = NODES[VISIBLE]["name"]
 
 
 def _game(fog=False, visible=()):
-    game = types.SimpleNamespace(nodes=NODES, year=1301, fog=fog, state=types.SimpleNamespace(interface={}))
-    game.is_visible = lambda node_id, **_options: node_id in visible
+    game = StandIn(tree_nodes=NODES, year=1301, legacy_fog=lambda: game.fog, acting_seat="first",
+                   visibility=lambda node_id, memo=None: node_id in visible)
+    game.year, game.fog = 1301, fog
+    game.state = types.SimpleNamespace(interface={})
     return game
 
 

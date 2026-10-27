@@ -13,6 +13,7 @@ from sim.land.module import Land
 from sim.land.state import LandSeat, LandWorld
 from sim.ledger.api import PayEdge
 from sim.tests import module_harness
+from sim.tests.ui_stand_in import StandIn
 
 GRANTED = {"civ_road_paved", "lnd_iron_edge_rail", "lnd_bridge", "civ_harbour_dock", "civ_canal_pound_lock"}
 
@@ -214,30 +215,26 @@ class BuiltWaysAndCommandTests(unittest.TestCase):
 
     def test_a_preview_quotes_without_building(self):
         from sim.ui.proto.dispatch_ways import _cmd_build_way
-        built = []
         quote = {"km": 12.34, "labour_hours": 1000.4, "materials": {"stone": 55.5}, "money": 999.9, "years": 2.26,
                  "engineered": False}
-        game = types.SimpleNamespace(way_quote=lambda a, b, way: quote, build_way=lambda a, b, way: built.append(way))
+        game = StandIn(way_quote=lambda a, b, way: quote)
         reply = _cmd_build_way(game, {}, self._command(preview=True), None)
         self.assertEqual((reply["ok"], reply["preview"], reply["km"], reply["labour_hours"], reply["materials_tonnes"],
                           reply["money"], reply["years"]), (True, True, 12.3, 1000, {"stone": 56}, 1000, 2.3))
-        self.assertEqual(built, [])
+        self.assertEqual(game.sent, [])
 
     def test_a_preview_of_a_way_that_cannot_be_built_is_refused_with_the_cause(self):
         from sim.ui.proto.dispatch_ways import _cmd_build_way
         from sim.refusal import Refusal
-        game = types.SimpleNamespace(way_quote=lambda a, b, way: None,
-                                     way_refusal=lambda a, b, way: Refusal("no_river", "no river to bridge"))
+        game = StandIn(way_quote=lambda a, b, way: None, way_refusal=lambda a, b, way: Refusal("no_river", "no river to bridge"))
         reply = _cmd_build_way(game, {}, self._command(way="bridge", preview=True), None)
         self.assertEqual((reply["ok"], reply["cause"]), (False, "no_river"))
 
     def test_a_build_command_builds_the_named_way_between_the_named_tiles(self):
         from sim.ui.proto.dispatch_ways import _cmd_build_way
-        calls = []
-        game = types.SimpleNamespace(way_quote=lambda a, b, way: {}, capital=123.45,
-                                     build_way=lambda a, b, way: (calls.append((a, b, way)) or (True, "started")))
+        game = StandIn(answers={BuildWay: (True, "started")}, way_quote=lambda a, b, way: {}, acting_balance=123.45)
         reply = _cmd_build_way(game, {}, self._command(), None)
-        self.assertEqual(calls, [("a", "b", "road")])
+        self.assertEqual(game.sent, [BuildWay("a", "b", "road")])
         self.assertEqual((reply["ok"], reply["built"], reply["capital"]), (True, "started", 123.5))
 
 

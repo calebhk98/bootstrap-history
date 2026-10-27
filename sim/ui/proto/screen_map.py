@@ -41,8 +41,8 @@ def tile_place(tile_id, world_map=None):
 
 
 def map_report(sim, full=False):
-    held = sim.labour.settlement_tiles()
-    base = sim.labour.base_tile()
+    held = sim.view("settlement_tiles")()
+    base = sim.view("base_tile")()
     rows = []
     for tile_id in sorted(held, key=lambda name: (-held[name], name)):
         row = dict(tile_place(tile_id, sim.view("legacy_world_map")()), people=round(held[tile_id]),
@@ -50,7 +50,7 @@ def map_report(sim, full=False):
         if tile_id == base:
             row["is_your_base"] = True
         else:
-            quote = sim.labour.relocation_quote(tile_id)
+            quote = sim.view("relocation_quote")[tile_id]
             if quote is not None:
                 row["days_from_your_base"] = round(quote[0])
         rows.append(row)
@@ -71,7 +71,7 @@ def map_report(sim, full=False):
                     for region_id in regions_of_tiles(tiles_held(sim.view("civilisation")(), sim.view("legacy_world_map")()))],
         "you_are_based_at": dict(
             tile_place(base, sim.view("legacy_world_map")()), people=round(base_people),
-            town_people=round(sim.labour.home_town_population_estimate())),
+            town_people=round(sim.view("home_town_population_estimate")())),
         "tiles": shown,
         "tiles_held": len(rows),
         "next_door": door_rows if full else door_rows[:TILES_SHOWN_BY_DEFAULT],

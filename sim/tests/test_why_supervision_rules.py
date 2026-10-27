@@ -2,12 +2,11 @@
 that answers only what the block asks."""
 QUICK_TOPIC = True
 
-import types
-
 from .harness import *  # noqa: F401,F403
+from sim.tests.ui_stand_in import StandIn
 from sim.ui.proto.techtree import _staffing_standing_crew
 
-stub = types.SimpleNamespace(opening_fee=lambda node_id: (250.0, None), venture_foreman_free=lambda trade: 0.5)
+stub = StandIn(opening_fee=lambda node_id, units=None: (250.0, None), venture_foreman_free=lambda trade, excluding=None: 0.5)
 
 
 def block(is_venture=True, supervision=(1.234, 2.678), free=(9.0, 9.0), foreman=(None, 0.0)):

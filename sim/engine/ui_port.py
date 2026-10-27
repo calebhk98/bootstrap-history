@@ -67,7 +67,8 @@ from sim.projects.api import Bribe, MothballWork, PostBounty, RestoreWork, Start
 from sim.knowledge.api import RevealNodes  # noqa: F401
 from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, MakeOffer, SetGoal, SetPolicy  # noqa: F401
 from sim.ventures.api import OpenVenture, RollOut, SellConcern  # noqa: F401
-from sim.workforce.api import BuildHousing  # noqa: F401
+from sim.workforce.api import (BuildHousing, BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase,  # noqa: F401
+                               TrainStaff, WorkForWages)
 
 
 # A new game's options, set once by the command line or the options screen before the first step.
