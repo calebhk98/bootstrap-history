@@ -96,7 +96,7 @@ def register(api):
         expected theft on it, at the holder's own visibility."""
         from sim.coin.api import COIN_GUARD_HOURS_PER_TONNE_YEAR, theft_exposure
         actor = holder_actor(sim, name)
-        scale = sim.visible_scale(sum(actor.workforce.values()), actor.money, actor.prominence()) if actor else 0.0
+        scale = sim.view("visible_scale")(sum(actor.workforce.values()), actor.money, actor.prominence(), 0.0) if actor else 0.0
         stolen = theft_exposure.expected_theft_loss(
             {"coin": amount}, {"coin": COIN_GUARD_HOURS_PER_TONNE_YEAR}, scale, sim.state_capacity, 0.0)
         return sim.view("coin_keeping_cost")(amount) + stolen
@@ -304,7 +304,7 @@ def register(api):
         row("debasement", None, cash * sim.REAL_EROSION_CASH_LOSS_SHARE, 0.0,
             "REAL_EROSION_CASH_LOSS_SHARE times the hazard's erosion, taken from the purse; coin held by a holder is "
             "still coin and is not spared the fall in the coin's worth")
-        status = sim.confiscation_status()
+        status = sim.view("confiscation_status")()
         visible = max(0.0, household.capital - max(0.0, getattr(household, "concealed", 0.0) or 0.0))
         row("treasury confiscation", status["chance_this_year"], visible * sim.CONFISCATION_CAPITAL_LOSS, 0.0,
             "CONFISCATION_CAPITAL_LOSS of the wealth the state can count (your purse less what you conceal); "

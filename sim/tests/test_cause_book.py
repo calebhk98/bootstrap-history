@@ -29,7 +29,9 @@ class StubGame:
     def state_reach(self):
         return self.reach
 
-    def view(self, name):   # the polity module's standing
+    def view(self, name):   # the polity module's standing, reach and visible scale
+        if name in ("visible_scale", "state_reach"):
+            return getattr(self, name)
         return lambda: self.standing
 
     def visible_scale(self, headcount, wealth, eminence, defiance):

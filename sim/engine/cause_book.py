@@ -45,7 +45,7 @@ def record_wage_shock(sim, cause, index_before):
 def _readings(sim):
     household = sim.state.household
     standing = sim.view("standing")()
-    return {"wage_index": sim.labour.market.wage_index(), "state_reach": sim.state_reach(),
+    return {"wage_index": sim.labour.market.wage_index(), "state_reach": sim.view("state_reach")(),
             "headcount": sim.labour.headcount(), "wealth": demand_answer.visible_wealth(household.capital, standing["concealed"]),
             "eminence": standing["eminence"], "defiance": standing["defiance"]}
 
@@ -56,7 +56,7 @@ def _notice_steps(sim, before, after):
     capacity = before["state_reach"]
 
     def level():
-        return capacity * sim.visible_scale(inputs["headcount"], inputs["wealth"], inputs["eminence"], inputs["defiance"])
+        return capacity * sim.view("visible_scale")(inputs["headcount"], inputs["wealth"], inputs["eminence"], inputs["defiance"])
 
     parts = {}
     last = level()

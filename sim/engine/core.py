@@ -46,6 +46,7 @@ from .invariants import check_simulation_invariants
 from sim.agents.api import Household
 from .agents_port_household import HouseholdPort
 from sim.materials.api import RestoreReadings
+from sim.polity.api import SetValueWeights
 
 
 class Sim(
@@ -138,7 +139,7 @@ class Sim(
         # See the comment on step() 4b and on start_project() for why this
         # exists: without it, "choosing" a node in `play` was cosmetic.
         self.manual = bool(manual)
-        self.open_value_weights()
+        self.send(SetValueWeights(tuple(self.civ["values"].items())))
         # A civilization brings its own date, its own price level and its own
         # capacity to fund things. Norse Scandinavia does not start in 100 AD.
         self.cfg["start_year"] = int(self.civ.get("year", self.cfg["start_year"]))

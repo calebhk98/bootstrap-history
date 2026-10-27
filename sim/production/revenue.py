@@ -83,7 +83,7 @@ class Revenue:
 			game.view("output_factor")(),
 			standing["reputation"],
 			game.founder_alive,
-			game.state_funding(),
+			game.view("state_funding")(),
 			game.view("home_price_level")(),
 		)
 		if getattr(game.household, "_revenue_cache_key", None) != key:
@@ -135,7 +135,7 @@ class Revenue:
 		ceiling = self.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * game.view("pop_scale")() \
 			* game.real_output_per_head() * game.price_index
 		gross = rules.saturated_revenue(gross, ceiling)
-		return (gross + game.state_funding()) * game.view("output_factor")(), book_forecast * game.view("output_factor")()
+		return (gross + game.view("state_funding")()) * game.view("output_factor")(), book_forecast * game.view("output_factor")()
 
 	def workshop_output(self):
 		"""What your standing staff produce and sell, over and above projects."""
@@ -221,7 +221,7 @@ class Revenue:
 		founder is employed in a trade they hold - which is otherwise invisible anywhere else in the interface.
 		"""
 		game = self._game()
-		funding = game.state_funding()
+		funding = game.view("state_funding")()
 		return assemble_ledger(
 			self.ledger_concern_rows(), self.workshop_output() * game.view("output_factor")(),
 			self.founder_wage_income() * game.view("output_factor")(),
