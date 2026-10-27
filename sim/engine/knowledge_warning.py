@@ -13,7 +13,7 @@ WARNING_HORIZON_YEARS = 30
 def _hedge_options(sim):
     """Hedges stronger than the one held, each with its distance and cost."""
     options = []
-    for hedge_id, _chance, fraction_lost in sim.corpus_hedge_tiers():
+    for hedge_id, _chance, fraction_lost in sim.view("corpus_hedge_tiers")():
         if hedge_id in sim.view("techniques_held")():
             break
         if hedge_id not in sim.nodes or (sim.fog and not sim.view("visibility")(hedge_id, None)):

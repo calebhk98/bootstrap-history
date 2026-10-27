@@ -98,7 +98,7 @@ def state_military_diffusion(sim):
 
 @bridge_view("nodes_with_mechanic", kind=QUOTE)
 def nodes_with_mechanic(sim, mechanic):
-    return sim.nodes_with_mechanic(mechanic)
+    return tuple(sim.view("mechanic")[mechanic])
 
 
 # ---- foreign trade ----

@@ -3,12 +3,13 @@ forgotten, so it is never announced twice), and by default not a dispersed corpu
 import unittest
 from types import SimpleNamespace
 
+from sim.tests.ui_stand_in import FactViews
 from sim.engine.forward_mechanics import ForwardMechanicsMixin
 
 QUICK_TOPIC = True
 
 
-class Host(ForwardMechanicsMixin):
+class Host(ForwardMechanicsMixin, FactViews):
     def __init__(self, done, granted=(), dispersed=()):
         self.nodes = {"plain": {}, "inherited": {}, "goal": {"win_condition": True}, "copies": {}, "other": {}}
         self.state = SimpleNamespace(projects=SimpleNamespace(done=set(done), granted=set(granted)))

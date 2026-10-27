@@ -148,7 +148,7 @@ class Revenue:
 			staff["employees"], lambda trade: self.needs.trade_family[trade] == "craft", market.quote_annual,
 			staff["freedmen"] + staff["slaves"] * SLAVE_LABOUR_PRODUCTIVITY_SHARE, market.quote_annual("artisan"))
 		mark = WORKSHOP_WAGE_MARKUP_BASE
-		mark = game.effect_sum("workshop_markup", mark)
+		mark = game.view("effect_sum")("workshop_markup", mark)
 		# Knowing how to do a thing earns nothing on its own; it makes the workshop you staff and pay for more productive,
 		# which is how method has always paid. It needs a workshop and it needs people; with neither it is worth nothing.
 		return workshop_output_value(wage, mark, self.capability_factor())
