@@ -55,6 +55,7 @@ def defaults() -> Dict[str, Any]:
 		"material_binding": None, "founder": {"alive": True, "life_left": 10.0, "dead_reason": None, "policy": {}},
 		"goal": "goal", "automatic_policy": lambda name: True, "capability_sets": (frozenset(), frozenset(), {}),
 		"money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),
+		"plain_number": lambda value, digits=0: format(value, ",.%df" % digits),
 		"win_condition_text": lambda node: "the goal is met", "acting_seat": "founder",
 		"automation": {"manual": False, "bounty_set": set()}, "society_name": "Testland", "year": 100,
 		"horizon_end_year": 1000, "legacy_order": [], "project_limits": {

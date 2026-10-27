@@ -1,13 +1,13 @@
 """Complaint 161: the risk shown is the risk rolled. `risk_rules.attempt_fails` is the roll: a draw just under the risk
-fails and one just over does not. `CompletionMixin._complete` takes the risk from `effective_risk`, the function `why`
+fails and one just over does not. The projects module's `_complete` takes the risk from `effective_risk`, the function `why`
 quotes, on a first attempt and a later one, and makes one draw per attempt."""
 QUICK_TOPIC = True
 
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.projects_completion import CompletionMixin
 from sim.projects.risk_rules import attempt_fails
+from sim.tests import projects_host
 
 NODE_ID = "kiln"
 
@@ -22,22 +22,15 @@ class RecordingRandom:
         return self.draw
 
 
-class RollSim(CompletionMixin):
-    """A project whose roll fails: records the risk `_fail_attempt` is given."""
-
-    def __init__(self, draw, risk_by_attempt):
-        self.nodes = {NODE_ID: {}}
-        self.state = SimpleNamespace(projects=SimpleNamespace(failed_attempts={NODE_ID: 0}), household=None,
-                                     scenario=None)
-        self.rng = RecordingRandom(draw)
-        self.risk_by_attempt = risk_by_attempt
-        self.rolled_against = []
-
-    def effective_risk(self, node_id, precaution=None):
-        return self.risk_by_attempt[self.state.projects.failed_attempts[node_id]]
-
-    def _fail_attempt(self, node_id, risk_this_attempt):
-        self.rolled_against.append(risk_this_attempt)
+def RollSim(draw, risk_by_attempt):
+    """A project whose roll fails: the module records the risk `_fail_attempt` is given."""
+    projects = SimpleNamespace(failed_attempts={NODE_ID: 0})
+    module = projects_host.build(tree={NODE_ID: {}}, legacy_projects=projects, legacy_dice=RecordingRandom(draw))
+    module.dice = module.needs.legacy_dice()
+    module.rolled_against = []
+    module.effective_risk = lambda node_id, precaution=None: risk_by_attempt[projects.failed_attempts[node_id]]
+    module._fail_attempt = lambda node_id, risk_this_attempt: module.rolled_against.append(risk_this_attempt)
+    return module
 
 
 class RollTests(unittest.TestCase):
@@ -57,7 +50,7 @@ class CompleteRollsTheShownRiskTests(unittest.TestCase):
 
     def complete_failing(self, failed_attempts):
         game = RollSim(draw=0.0, risk_by_attempt=self.RISKS)
-        game.state.projects.failed_attempts[NODE_ID] = failed_attempts
+        game.needs.legacy_projects().failed_attempts[NODE_ID] = failed_attempts
         game._complete(NODE_ID)
         return game
 
@@ -67,7 +60,7 @@ class CompleteRollsTheShownRiskTests(unittest.TestCase):
             self.assertEqual(game.rolled_against, [shown])
 
     def test_the_roll_is_a_single_draw_per_attempt(self):
-        self.assertEqual(self.complete_failing(0).rng.draws, 1)
+        self.assertEqual(self.complete_failing(0).dice.draws, 1)
 
 
 if __name__ == "__main__":

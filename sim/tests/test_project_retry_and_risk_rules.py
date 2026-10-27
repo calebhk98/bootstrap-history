@@ -1,7 +1,7 @@
 """Complaint 640 rules: the expected calendar cost of a risky node with retries (`expected_calendar_years`), the hazard timeline's
 escalating urgency (`hazard_timeline`), the one-shot first-timer tip (`_worth_knowing_early`), the free-prerequisite hint
-(`free_prereq_hint`) and a process controller's relief on a node's risk (`effective_risk`). Each is called on a stand-in `self`
-carrying only what it reads. The banked calendar arithmetic is test_retry_calendar; retry learning on the risk is
+(`free_prereq_hint`) and a process controller's relief on a node's risk (`effective_risk`). Each is called on the projects module (or the
+hazards module) over plain values carrying only what it reads. The banked calendar arithmetic is test_retry_calendar; retry learning on the risk is
 test_industry_depth; the save contract of the retry counts is the `--session` round trip."""
 QUICK_TOPIC = True
 
@@ -10,7 +10,7 @@ import unittest
 from unittest import mock
 
 from sim.hazards import advice
-from sim.engine.projects_progress import ProgressMixin
+from sim.projects import constants as projects_constants
 from sim.knowledge.api import free_prereq_hint
 from sim.tests import hazards_host
 from sim.tests.test_industry_depth import world
@@ -26,18 +26,17 @@ def calendar_world(risk=0.3, experience=None):
     """The depth stand-in with the calendar readers `expected_calendar_years` calls, floor FLOOR years."""
     stub = world(experience=experience)
     stub.nodes["loom"]["risk"] = risk
-    stub.RETRY_CALENDAR_CAP, stub.RETRY_CALENDAR_DECAY = ProgressMixin.RETRY_CALENDAR_CAP, ProgressMixin.RETRY_CALENDAR_DECAY
-    stub.calendar_floor = lambda node_id: FLOOR
-    stub.payment_schedule_years = lambda node_id: 0.0
+    module = stub.projects
+    module.calendar_floor = lambda node_id: FLOOR
+    module.payment_schedule_years = lambda node_id: 0.0
     stub.state.projects.active = {}
-    stub.mechanic = lambda node_id, name: None
-    stub._retry_calendar_retain = lambda node_id, attempt_index=None: ProgressMixin._retry_calendar_retain(stub, node_id, attempt_index)
-    stub.effective_risk = lambda node_id, precaution=None: ProgressMixin.effective_risk(stub, node_id, precaution=False)
+    stub._retry_calendar_retain = module._retry_calendar_retain
+    stub.effective_risk = lambda node_id, precaution=None: module.effective_risk(node_id, precaution=False)
     return stub
 
 
 def expected_years(stub):
-    return ProgressMixin.expected_calendar_years(stub, "loom")
+    return stub.projects.expected_calendar_years("loom")
 
 
 class ExpectedCalendarYears(unittest.TestCase):
@@ -83,16 +82,13 @@ class ExpectedCalendarYears(unittest.TestCase):
 
 class ControllerRelief(unittest.TestCase):
     def test_a_completed_controller_cuts_a_process_control_nodes_risk_by_the_relief_factor(self):
-        stub = world()
+        stub = world(mechanic=lambda name: {"controller": {"failure_kind": "process_control"}} if name == "failure_relief" else {})
         stub.nodes["loom"]["failure_kind"] = "process_control"
-        stub.nodes_with_mechanic = lambda name: ["controller"]
-        stub.mechanic = lambda node_id, name: {"failure_kind": "process_control"} if name == "failure_relief" else None
-        stub._control_relief_multiplier = lambda node_id: ProgressMixin._control_relief_multiplier(stub, node_id)
-        bare = ProgressMixin.effective_risk(stub, "loom", precaution=False)
+        bare = stub.projects.effective_risk("loom", precaution=False)
         stub.state.projects.done.add("controller")
-        relieved = ProgressMixin.effective_risk(stub, "loom", precaution=False)
+        relieved = stub.projects.effective_risk("loom", precaution=False)
         self.assertAlmostEqual(bare, 0.3)
-        self.assertAlmostEqual(relieved, 0.3 * ProgressMixin.CONTROL_RELIEF_FACTOR)
+        self.assertAlmostEqual(relieved, 0.3 * projects_constants.CONTROL_RELIEF_FACTOR)
         self.assertGreater(relieved, 0.0)
 
 

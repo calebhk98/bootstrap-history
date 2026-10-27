@@ -11,7 +11,7 @@ import unittest
 from sim.workforce.api import SpendDirectorHours, WorkforceSeat
 from sim.workforce.rules import work_order_shortfall
 from sim.engine.state import deserialize_state, serialize_state
-from sim.engine.step_phase_projects import ProjectProgressPhaseMixin
+from sim.tests import projects_host
 from sim.tests import event_stand_in
 from sim.tests.workforce_host import workforce_over
 
@@ -68,24 +68,22 @@ class StandingWorkDirective(unittest.TestCase):
         self.assertEqual([fact["reason"] for fact in facts], ["no_hours_left"])
 
 
-class Offer(ProjectProgressPhaseMixin):
-    def __init__(self, directive):
-        self.allocations = {"b": directive} if directive else {}
-        self.spent = []
-        self.founder_alive = True
+def Offer(directive):
+    """The projects module over a pool whose standing allocations are these, the materials module letting every project run
+    at full pace; the founder's hours spent are recorded."""
+    allocations = {"b": directive} if directive else {}
+    module = projects_host.build(
+        hour_commitments=lambda: {"allocations": allocations}, material_binding=lambda: None,
+        founder={"alive": True, "life_left": 10.0, "dead_reason": None, "policy": {}})
+    module.spent = []
+    module.project_hour_pace = lambda node_id: 3000.0
 
-    def project_hour_pace(self, node_id):
-        return 3000.0
-
-    def send(self, command):
+    def send(command):
         if isinstance(command, SpendDirectorHours):
-            self.spent.append(command.hours)
+            module.spent.append(command.hours)
         return 1.0          # the materials module: the project runs at full pace
-
-    def view(self, name):
-        if name == "hour_commitments":
-            return lambda: {"allocations": self.allocations}
-        return lambda: None     # no pool binds
+    module.needs.send = send
+    return module
 
 
 class OfferHours(unittest.TestCase):

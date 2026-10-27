@@ -1,29 +1,17 @@
 """The hour pool and priority rank a screen shows come from the live active list, not from the record written
-when hours were last allocated (Complaint 640: rules on a stub game)."""
+when hours were last allocated (Complaint 640: the projects module over plain values)."""
 QUICK_TOPIC = True
 
-from sim.tests import workforce_stand_in
 import types
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.projects_hour_queue import HourQueueMixin
+from sim.tests import projects_host
 from sim.ui.proto import state_projects as proto_state
 
 
-class _Labour:
-    def __init__(self, pool, committed):
-        self.pool, self.committed = pool, committed
-
-    def director_pool(self):
-        return self.pool
-
-    def director_hours_committed(self):
-        return self.committed
-
-
-class _HourGame(HourQueueMixin):
-    """Only what the hour queue and the active-project builder read."""
+class _HourGame:
+    """Only what the hour queue and the active-project builder read: the module answers the standing."""
     goal = None
     bountied = frozenset()
 
@@ -32,9 +20,13 @@ class _HourGame(HourQueueMixin):
         self.state = types.SimpleNamespace(
             projects=types.SimpleNamespace(active={node_id: self._stale_progress() for node_id in node_ids}),
             household=types.SimpleNamespace(hour_allocations=allocations or {}))
-        self.labour = _Labour(pool, committed)
-        self.view = workforce_stand_in.view_of(self.state.household)
+        self.module = projects_host.build(
+            legacy_projects=self.state.projects, legacy_order=self.order, hour_commitments={"allocations": allocations or {}},
+            hours_available={"director_pool": pool, "director_committed": committed})
         self.active = self.state.projects.active
+
+    def hour_standing(self, node_id):
+        return self.module.hour_standing(node_id)
 
     @staticmethod
     def _stale_progress():

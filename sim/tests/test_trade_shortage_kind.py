@@ -1,13 +1,13 @@
 """A project short of a trade is told "booked" only when other work books it;
 a trade the society cannot field at that pace is a staffing shortage. Complaint 640: the draw and the note are called
-on a stand-in game that holds one project and one trade's supply, so no game is built."""
+on the projects module over one project and one trade's supply, so no game is built."""
 QUICK_TOPIC = True
 
 import types
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.projects_progress import ProgressMixin
+from sim.tests import projects_host
 
 NODE = "mill"
 TRADE = "smith"
@@ -16,30 +16,30 @@ YEARS = 2.0
 PACE = HOURS_WANTED / YEARS   # hours a year the project asks of the trade
 
 
-class ProgressGame(ProgressMixin):
+class ProgressGame:
     """One project of one trade, and the hours the society can field of that trade."""
 
     def __init__(self, supply):
-        self.nodes = {NODE: {"lab": {TRADE: HOURS_WANTED}, "yrs": YEARS}}
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace())
         self.used = {}
-        self.labour = types.SimpleNamespace(hours_you_can_call_on=lambda trade: supply)
         self.project_state = {"lab_left": None, "yrs": 0.0}
-
-    def view(self, name):
-        return lambda: {"trade_hours_used": self.used}
+        self.module = projects_host.build(
+            tree={NODE: {"lab": {TRADE: HOURS_WANTED}, "yrs": YEARS}}, hours_you_can_call_on=lambda trade: supply,
+            hour_commitments=lambda: {"trade_hours_used": self.used})
+        self.module.needs.send = self.send
+        self.module._effective_lab_left = lambda node_id, project_state: {TRADE: HOURS_WANTED}
+        self.module.lab_max_span = lambda node_id: 99.0
 
     def send(self, command):
         self.used[command.trade] = self.used.get(command.trade, 0.0) + command.hours
 
-    def _effective_lab_left(self, node_id, project_state):
-        return dict(self.nodes[node_id]["lab"])
-
-    def lab_max_span(self, node_id):
-        return 99.0
-
     def draw(self):
-        return self.lab_year_draw(NODE, self.project_state, 1.0, 1.0e9)
+        return self.module.lab_year_draw(NODE, self.project_state, 1.0, 1.0e9)
+
+    def trade_shortfall_note(self, project_state):
+        return self.module.trade_shortfall_note(project_state)
+
+    def trade_shortage_kind(self, trade, need, total_demand=None):
+        return self.module.trade_shortage_kind(trade, need, total_demand)
 
 
 class TradeShortageKind(unittest.TestCase):

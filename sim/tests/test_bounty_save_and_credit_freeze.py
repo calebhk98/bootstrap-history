@@ -29,7 +29,6 @@ import types
 
 from sim.agents.api import edges
 from sim.ledger.api import PayEdge
-from sim.engine.projects_progress import ProgressMixin
 from sim.projects.api import PostBounty, blocker_rules
 from sim.tests import module_harness, projects_host
 
@@ -88,13 +87,17 @@ check("...it pays the price under its cause and spends no poster hours or hired 
       and poster_module.started[0]["include_labour"] is False and poster_module.started[0]["cost_left"] == 0.0,
       (paid, poster_module.started))
 check("...and marks the project as bountied", poster_state.bountied == {"node"})
+def _wanting():
+    module = projects_host.build(legacy_projects=types.SimpleNamespace(active_keys_sorted=lambda: ["a", "b"]), tree={"a": {}, "b": {}})
+    module.project_hour_pace = lambda node_id: {"a": 40.0, "b": 0.0}[node_id]
+    return module
+
+
 bounty_projects = types.SimpleNamespace(active={"node": {"ph_left": 500.0}}, bountied={"node"})
-bounty_game = types.SimpleNamespace(state=types.SimpleNamespace(projects=bounty_projects), nodes={"node": {"ph": 500.0, "yrs": 2.0}})
-check("a bountied project asks for no hours of the founder", ProgressMixin.project_hour_pace(bounty_game, "node") == 0.0)
+bounty_module = projects_host.build(legacy_projects=bounty_projects, tree={"node": {"ph": 500.0, "yrs": 2.0}})
+check("a bountied project asks for no hours of the founder", bounty_module.project_hour_pace("node") == 0.0)
 check("a project asking for hours is listed with them and one asking for none is not",
-      ProgressMixin.active_hours_still_wanted(types.SimpleNamespace(
-          state=types.SimpleNamespace(projects=types.SimpleNamespace(active_keys_sorted=lambda: ["a", "b"])),
-          nodes={"a": {}, "b": {}}, project_hour_pace=lambda node_id: {"a": 40.0, "b": 0.0}[node_id])) == {"a": 40.0})
+      _wanting().active_hours_still_wanted() == {"a": 40.0})
 broke_module, _broke_state = poster(300.0, 400.0)
 check("a bounty beyond the purse is refused and nothing is paid",
       broke_module.post_bounty(PostBounty("node")) is False and module_harness.sent(broke_module) == [])

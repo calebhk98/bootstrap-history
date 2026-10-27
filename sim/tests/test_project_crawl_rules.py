@@ -1,6 +1,6 @@
 """A project short of a trade, but not of all of it, crawls: each year it draws what the trade can field, works its hours down, and its
 bill is scaled by the worst-supplied trade; the last instalment is never more than is left, so the crawl ends instead of freezing.
-Rules: `ProgressMixin.lab_year_draw`, `ProgressMixin.active_hours_still_wanted`, `project_funding.year_bill`."""
+Rules: the projects module's `lab_year_draw` and `active_hours_still_wanted`, `project_funding.year_bill`."""
 QUICK_TOPIC = True
 
 from types import SimpleNamespace
@@ -9,23 +9,21 @@ from .harness import check
 
 from sim.projects.api import funding
 year_bill = funding.year_bill
-from sim.engine.projects_progress import ProgressMixin
+from sim.projects import constants as projects_constants
+from sim.tests import projects_host
 
 NODE = {"name": "Logarithms", "yrs": 10, "ph": 500, "lab": {"scribe": 1000.0}, "cat": "x"}
 
 
 def a_game(hours_fielded, node=NODE, active=None):
-    """A stub game for `lab_year_draw`: one node, a labour market that can field `hours_fielded` of every trade."""
-    class Game(ProgressMixin):
-        pass
-
-    game = Game()
-    game.nodes = {"p": node}
-    game.state = SimpleNamespace(projects=SimpleNamespace(trade_hours_used={}, active=active or {}, active_keys_sorted=lambda: sorted(active or {})))
-    game.labour = SimpleNamespace(hours_you_can_call_on=lambda trade: hours_fielded)
-    game.seat = SimpleNamespace(trade_hours_used={})
-    game.view = lambda name: (lambda: {"trade_hours_used": game.seat.trade_hours_used})
-    game.send = lambda command: game.seat.trade_hours_used.__setitem__(command.trade, game.seat.trade_hours_used.get(command.trade, 0.0) + command.hours)
+    """The projects module for `lab_year_draw`: one node, a labour market that can field `hours_fielded` of every trade."""
+    used = {}
+    projects = SimpleNamespace(trade_hours_used={}, active=active or {}, active_keys_sorted=lambda: sorted(active or {}), bountied=set())
+    game = projects_host.build(
+        tree={"p": node}, legacy_projects=projects, hours_you_can_call_on=lambda trade: hours_fielded,
+        hour_commitments=lambda: {"trade_hours_used": used})
+    game.seat = SimpleNamespace(trade_hours_used=used)
+    game.needs.send = lambda command: used.__setitem__(command.trade, used.get(command.trade, 0.0) + command.hours)
     game.lab_max_span = lambda node_id: 40.0
     game.trade_shortage_kind = lambda trade, need, demand=None: "staffing"
     return game
@@ -56,7 +54,7 @@ game = a_game(hours_fielded=1.0e9)
 project_state = {"yrs": 0.0, "ph_left": 500.0, "lab_left": {"scribe": 1000.0}}
 hired, worst, frac, abandon = year_of_draw(game, project_state)
 check("a trade that fields the whole want is drawn up to its crew ceiling and leaves the project active",
-      hired == 100.0 * ProgressMixin.LAB_CREW_RATE_MULT and worst == 1.0 and frac == 0.1 and project_state["status"] == "ACTIVE", (hired, worst, frac, project_state))
+      hired == 100.0 * projects_constants.LAB_CREW_RATE_MULT and worst == 1.0 and frac == 0.1 and project_state["status"] == "ACTIVE", (hired, worst, frac, project_state))
 
 # --- the crawl has an end: a project that has run out of calendar with labour still owed is abandoned
 project_state = {"yrs": 40.0, "ph_left": 500.0, "lab_left": {"scribe": 900.0}}
@@ -70,7 +68,7 @@ check("a crawling year pays the share its trade managed", abs(year_bill(900.0, 1
 
 # --- what the sale of hours is warned against: each active project's pace
 game = a_game(hours_fielded=1.0, active={"slow": {"ph_left": 400.0}, "done": {"ph_left": 0.0}})
-game.nodes = {"slow": dict(NODE, ph=500, yrs=2), "done": dict(NODE, ph=0, yrs=1)}
-game.state.projects.bountied = set()
+game = a_game(1.0, active={"slow": {"ph_left": 400.0}, "done": {"ph_left": 0.0}})
+game.needs.tree_nodes = lambda: {"slow": dict(NODE, ph=500, yrs=2), "done": dict(NODE, ph=0, yrs=1)}
 check("only a project that still wants a real amount of the founder's time is listed, at its pace",
       game.active_hours_still_wanted() == {"slow": 400.0}, game.active_hours_still_wanted())
