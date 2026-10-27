@@ -1,5 +1,4 @@
 """The works a node needs running: what is missing, the sentence that says so, and closing what relied on a lapsed work."""
-from sim.geography import api as geography
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
 
@@ -30,7 +29,7 @@ class RunningGates:
 
 	def _built_way_km(self, way):
 		"""Kilometres of `way` the acting seat's record of what is built holds."""
-		return geography.built_km(self.needs.built_ways(), way, self.needs.legacy_world_map())
+		return self.needs.built_way_km(way)
 
 	def gate_blocked(self, node_id):
 		"""Whether a work or a length of way the node requires is missing."""

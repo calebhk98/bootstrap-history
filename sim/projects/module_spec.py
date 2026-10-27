@@ -48,7 +48,7 @@ READS_BY_OWNER = {
 	"reporting": ("money_text",),
 	"seats": ("win_condition_text", "win_condition_value", "acting_seat", "automation", "founder", "goal", "automatic_policy"),
 	"actors": ("actor_world",),
-	"land": ("built_ways", "legacy_world_map"),
+	"land": ("built_way_km",),
 	"core": ("society_name", "year", "horizon_end_year", "legacy_order", "project_limits", "game_config", "legacy_dice", "legacy_fog",
 	         "category_trait", "plain_number"),
 }
