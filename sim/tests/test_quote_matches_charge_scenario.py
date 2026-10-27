@@ -84,11 +84,9 @@ _farm_quote = S._agent_dispatch(_priced, NODES, {"cmd": "quote", "what": "farm",
 _school_quote = S._agent_dispatch(
     _priced, NODES, {"cmd": "quote", "what": "school", "trade": "smith"})
 check("farm price per hectare is one engine function the quote reads",
-      hasattr(_priced, "farm_price_per_hectare")
-      and abs(_farm_quote["per_unit"] - _priced.farm_price_per_hectare()) < 0.006)
+      abs(_farm_quote["per_unit"] - _priced.view("farm_land_price")()) < 0.006)
 check("trade-school price per seat is one engine function the quote reads",
-      hasattr(_priced, "trade_school_price_per_seat")
-      and abs(_school_quote["per_unit"] - _priced.trade_school_price_per_seat()) < 0.006)
+      abs(_school_quote["per_unit"] - _priced.view("trade_school_price_per_seat")()) < 0.006)
 
 
 # ---- the same comparison through the cash ledger: open, research, project bills, the hire wage ------

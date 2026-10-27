@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 from sim.labour.labour_capacity import CapacityMixin
 from sim.labour.labour_job import StandingJobMixin
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -25,7 +26,7 @@ def labour(wages=None, alive=True, wage_hours=0.0, teaching=0.0, relocation=0.0,
                           bondage_years_left=0, directors_extra=0.0)
     world = SimpleNamespace(household=household, director_overhead_hours=lambda: 0.0, cfg={"founder_hours_per_year": POOL_HOURS, "director_hours_per_year": 0.0},
                             founder_alive=alive, workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household),
-                            simulation=lambda: SimpleNamespace(bondage_years_left=0))
+                            simulation=lambda: Game(bondage_years_left=0))
     stub = SimpleNamespace(_world=world, BONDAGE_HOURS_SHARE=0.25)
     stub.director_pool = lambda: CapacityMixin.director_pool(stub)
     stub.director_hours_committed = lambda: CapacityMixin.director_hours_committed(stub)

@@ -13,7 +13,7 @@ RIVAL = "rival_realm"
 def neighbour_pair(game, home):
     """(a home tile, a tile within a short march of it that is not home's)."""
     modes = game.view("home_modes")()
-    for tile in game.tiles_owned_by(home):
+    for tile in game.view("tiles_owned_by")[home]:
         near = sorted(game.view("reach_from")(tile, modes, 40.0).items(), key=lambda item: (item[1], item[0]))
         for other, days in near:
             if other != tile and game.view("tile_owner")[other] is None:

@@ -27,7 +27,6 @@ from .forward_reporting import ReportingForwardsMixin
 from .forward_diffusion import DiffusionForwardsMixin
 from .forward_prices import ForwardPricesMixin
 from .forward_mechanics import ForwardMechanicsMixin
-from .forward_land import ForwardLandMixin
 from .forward_workforce import ForwardWorkforceMixin
 from .projects import ProjectsMixin
 from . import seat_registry, year_steps
@@ -56,7 +55,6 @@ class Sim(
         ForwardMarketsMixin,
         ForwardProductionMixin,
         ForwardPricesMixin,
-        ForwardLandMixin,
         ForwardWorkforceMixin,
         ProjectsMixin,
         ForwardSeatsMixin,
@@ -155,7 +153,7 @@ class Sim(
         # Initial condition: cleared area is what feeds the starting
         # population given the yield of the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
-        held_tiles = tiles_held(self.civ, self.world_map)
+        held_tiles = tiles_held(self.civ, self.view("legacy_world_map")())
         land_rules.require_territory(self.civ, held_tiles)
         territory = land.territory_cropland(self.view("farm_sites")())
         self._farm_ladder = territory.ladder
@@ -239,7 +237,7 @@ class Sim(
         # available.
         self.res = load_resources()
         # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY (computed once; see sim/geography/)
-        self.geography.open(load_geography(self.world_map))
+        self.view("legacy_geography")().open(load_geography(self.view("legacy_world_map")()))
         # Whatever this civilization already has is free and already done, and it
         # is GRANTED, not earned: it must never count in done_earned as though
         # the founder had built it, and it must never be "forgotten" in a

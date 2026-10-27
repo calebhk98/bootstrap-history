@@ -4,6 +4,7 @@ Needs: legacy_game, held_goods_prices_in_hours."""
 import json
 from typing import Any, List
 
+from sim.diffusion.api import NoteFirstRuns
 from sim.prices.api import prices as price_solver
 
 from . import volume_rules
@@ -34,7 +35,8 @@ class Volume:
 		if node.get("_revenue_basis") != "output":
 			return 1.0, 1.0, None
 
-		held = game.techniques_spread()
+		game.send(NoteFirstRuns(game.view("techniques_in_use")()))
+		held = game.view("techniques_spread")()
 
 		def work_out():
 			granted = frozenset(game.state.projects.granted)

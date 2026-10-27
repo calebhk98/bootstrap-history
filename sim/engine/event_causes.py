@@ -37,7 +37,7 @@ def _world(sim: Any) -> Any:
 
 def _held_tiles(sim: Any) -> Tuple[List[str], List[str]]:
     from sim.geography.api import tiles_held
-    return tiles_held(sim.civ, sim.world_map), tiles_held(sim.start_civ, sim.world_map)
+    return tiles_held(sim.civ, sim.view("legacy_world_map")()), tiles_held(sim.start_civ, sim.view("legacy_world_map")())
 
 
 def _funded_share(sim: Any, node: Optional[str] = None) -> float:

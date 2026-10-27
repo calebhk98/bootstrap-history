@@ -77,7 +77,7 @@ def _people_by_tile(sim):
 
 def _airshed_square_metres(sim, tile, people):
     dispersion = table()["dispersion"]
-    tile_area = sim.world_map.tiles[tile]["land_area_km2"] * SQUARE_METRES_PER_SQUARE_KILOMETRE
+    tile_area = sim.view("legacy_world_map")().tiles[tile]["land_area_km2"] * SQUARE_METRES_PER_SQUARE_KILOMETRE
     footprint = people * dispersion["settled_land_square_metres_per_person"]["value"]
     return min(tile_area, max(footprint, 1.0))
 
@@ -121,7 +121,7 @@ def assess(sim):
             deaths_by_band[band] += tile_deaths[band]
         # the crop damage works over the whole tile's farmland, so the box is the tile
         regional = concentration(emitted.get("sulphur_dioxide", 0.0),
-                                 sim.world_map.tiles[tile]["land_area_km2"] * SQUARE_METRES_PER_SQUARE_KILOMETRE)
+                                 sim.view("legacy_world_map")().tiles[tile]["land_area_km2"] * SQUARE_METRES_PER_SQUARE_KILOMETRE)
         exceeded = max(0.0, regional / critical - 1.0)
         yield_factor = max(0.0, 1.0 - loss_per_critical * exceeded)
         if yield_factor < 1.0:
