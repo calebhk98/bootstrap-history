@@ -93,6 +93,8 @@ meant, and name the new parts after their owners.
 
 ## Behaviour must not change
 
+- Run `python3 tools/check_imports.py` and `python3 tools/check_duplicate_keys.py` (a key named twice in a spec's
+  `READS_BY_OWNER` silently drops a read); both print nothing when clean.
 - Run the topics you touched (`python3 -m sim.tests --only a,b --topic-seconds 240`), then the micro equivalence
   check: `python3 -m sim.tests.equiv check docs/architecture/baseline/micro.json --tier micro --base-checkout
   /home/user/base-tool-wt`. On a divergence, find the cause; never accept one.
