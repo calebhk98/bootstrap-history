@@ -48,7 +48,7 @@ class StartPhase:
 		projects = needs.legacy_projects()
 		# Only a normal start and a bounty change the count, so it is tracked as they happen, not rebuilt per node.
 		non_bountied_active = non_bountied_count(projects.active, projects.bountied)
-		room = needs.funding_capacity() - needs.committed_cost()
+		room = needs.funding_capacity() - self.committed_cost()
 		said_blocked = False
 		too_dear: List[Tuple[str, float]] = []
 		for node_id in candidates:
@@ -77,11 +77,11 @@ class StartPhase:
 				needs.send(RecordAutomation("auto_start", "bounty", needs.tree[node_id]["name"],
 				                            "on the bounty list and eligible, so a bounty was posted instead of starting it", before))
 				# a bounty adds to both `active` and `bountied`: the count of non-bountied projects is unchanged
-				room = needs.funding_capacity() - needs.committed_cost()
+				room = needs.funding_capacity() - self.committed_cost()
 				continue
 			self.initialize_project(node_id)
 			non_bountied_active += 1
-			room = needs.funding_capacity() - needs.committed_cost()
+			room = needs.funding_capacity() - self.committed_cost()
 		if too_dear:
 			# one row a year: the highest-priority candidate and how many more were dearer than their room
 			first, first_room = too_dear[0]

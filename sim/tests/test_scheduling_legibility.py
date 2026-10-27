@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.engine.projects_progress import ProgressMixin
-from sim.engine.trade_demand import oversubscription_notes, trade_demand_table
+from sim.projects.trade_demand import oversubscription_notes, trade_demand_table
 from sim.refusal import cause_of
 from sim.ui.proto.economy import _portfolio_constraint as _PCON
 from sim.ui.proto.multi_year_warning import multi_year_hours_warning

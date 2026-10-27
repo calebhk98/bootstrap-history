@@ -2,7 +2,7 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, NoteTradeSpread, NoteWageShock, PressLabour,
+from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread, NoteWageShock, PressLabour,
                        ReleaseStaff, ReportStaffReduction, TakeWageFallback,
                        ScaleDeputies, SetEmployed, SurviveStaff, UpdateWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,

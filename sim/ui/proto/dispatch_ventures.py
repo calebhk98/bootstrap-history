@@ -18,7 +18,7 @@ import os
 import tempfile
 
 from sim.engine.ui_port import TRADE_FAMILY, downstream_count
-from sim.engine.ui_port import purchase_budget, trades_the_project_waits_for
+from sim.engine.ui_port import purchase_budget
 from .available_economics import specialist_foreman
 from .nodes import _did_you_mean
 from .quantity_units import read_quantity
@@ -177,7 +177,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     if _warn_staff:
         out["but"] = _warn_staff
     # trade -> years until its first hands (None when nobody is on the way)
-    _waits = trades_the_project_waits_for(sim, node_id)
+    _waits = sim.trades_the_project_waits_for(node_id)
     if _waits:
         out["waits_for_trades"] = _waits
     # BUILD STAFF AND OPERATING STAFF ARE DIFFERENT NUMBERS, and a player

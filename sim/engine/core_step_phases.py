@@ -21,9 +21,9 @@ from dataclasses import dataclass
 
 from sim.finance.api import ServeBondageYear
 from sim.polity.api import CloseStandingYear, RenewStanding
+from sim.projects.api import AdvanceProjects
 from .invariants import check_labour_market_invariants, check_yearly_invariants
 from .step_phase_money import MoneyPhaseMixin
-from .step_phase_projects import ProjectProgressPhaseMixin
 from sim.workforce.api import CloseHoursYear, TakeWageFallback
 
 
@@ -34,11 +34,10 @@ class StepContext:
     invariant_checker: object
 
 
-class StepPhasesMixin(MoneyPhaseMixin, ProjectProgressPhaseMixin):
-    """Composition point for the named phases Sim.step() calls, in order. The money,
-    materials and project-progress phases live in step_phase_*.py (the start of projects is the projects module's
-    phase) and come in through the
-    bases above; the rest are below. Sim inherits this mixin, so step() calls
+class StepPhasesMixin(MoneyPhaseMixin):
+    """Composition point for the named phases Sim.step() calls, in order. The money
+    phases live in step_phase_money.py and come in through the base above (the start and the progress of projects are the
+    projects module's); the rest are below. Sim inherits this mixin, so step() calls
     self._step_whatever() exactly as if these methods were defined directly on Sim.
     """
 
@@ -60,8 +59,7 @@ class StepPhasesMixin(MoneyPhaseMixin, ProjectProgressPhaseMixin):
         phases `seat_prelude`, `start_projects` and `materials` before it)."""
         pool, hired_left = self.view("start_hours")()   # 4b. measured by the start of projects
         # 5. progress, director hours
-        remaining, remaining_after_projects, hours_effective_total = (
-            self._step_progress(pool, hired_left))
+        remaining, remaining_after_projects, hours_effective_total = self.send(AdvanceProjects(pool, hired_left))
         # 5b. if there is no work and no money, take a job
         remaining = self.send(TakeWageFallback(remaining))
         # 6. reputation, familiarity, protection, scandal

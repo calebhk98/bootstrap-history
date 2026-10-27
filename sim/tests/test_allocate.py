@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from sim.tests import workforce_stand_in
 
 from .harness import *  # noqa: F401,F403
-from sim.engine import hour_offer
+from sim.projects import hour_offer
 from sim.refusal import cause_of
 from sim.ui.proto.dispatch_labour import _cmd_allocate
 

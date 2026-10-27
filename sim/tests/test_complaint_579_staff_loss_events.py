@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.staffing_events import unstaffed_closure_line
+from sim.projects.staffing_events import unstaffed_closure_line
 from sim.labour.staff_events import people_text, staff_lost_line
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.event_kinds import EVENT_KINDS, is_failure, stops_a_step

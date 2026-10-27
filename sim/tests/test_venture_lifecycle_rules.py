@@ -10,10 +10,8 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import projects_staffing
 from sim.production import revenue as production_revenue
-from sim.tests import production_host
-from sim.engine.projects_staffing import StaffingMixin
+from sim.tests import production_host, projects_host
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
 from sim.engine.projects_ventures import VenturesMixin
 from sim.engine.venture_net_loss import flags_net_loss
@@ -125,44 +123,24 @@ class ReopenFee(unittest.TestCase):
         self.assertEqual(game.reopen_fee("shop"), 2000.0)
 
 
-class Mothballing(StaffingMixin):
-    CLOSED_BY_CHOICE = "choice"
-
-    def __init__(self, upkeep=0.0, hands=(0.0, 0.0), running=True, granted=False, done=True):
-        self.closed = []
-        self.hands = hands
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(
-            done={"shop"} if done else set(), granted={"shop"} if granted else set(),
-            operating={"shop"} if running else set()))
-        self.nodes = {"shop": {"up": upkeep, "rev": 0.0, "cat": "craft"}}
-
-    def venture_hands(self, node_id):
-        return self.hands
-
-    def never_abandon(self, node_id):
-        return False
-
-    def venture_real_earnings(self, node_id):
-        return 0.0
-
-    def venture_real_upkeep(self, node_id):
-        return 0.0
-
-    def close_work(self, node_id, reason):
-        self.closed.append((node_id, reason))
-
-    def reopen_fee(self, node_id, units):
-        return 10.0
-
-    def reopen_units(self, node_id):
-        return 1.0
+def Mothballing(upkeep=0.0, hands=(0.0, 0.0), running=True, granted=False, done=True):
+    """The projects module over a one-concern tree, with what closing it asks recorded in `.closed`."""
+    projects = types.SimpleNamespace(done={"shop"} if done else set(), granted={"shop"} if granted else set(),
+                                     operating={"shop"} if running else set())
+    module = projects_host.build(
+        legacy_projects=projects, tree={"shop": {"up": upkeep, "rev": 0.0, "cat": "craft"}}, venture_hands=lambda node_id: hands,
+        never_abandon=lambda node_id: False, venture_real_earnings=lambda node_id: 0.0, venture_real_upkeep=lambda node_id: 0.0,
+        reopen_fee=lambda node_id: 10.0, money_text=lambda amount, grouped=False, short=False: "%g" % amount)
+    module.closed = []
+    module.CLOSED_BY_CHOICE = "choice"
+    module.close_work = lambda node_id, reason: module.closed.append((node_id, reason))
+    return module
 
 
 class Mothball(unittest.TestCase):
     def mothball(self, **kwargs):
         game = Mothballing(**kwargs)
-        with mock.patch.object(projects_staffing, "money_text", lambda money, sim, grouped=False: "%g" % money):
-            ok, note = game.mothball_work("shop")
+        ok, note = game.mothball_work("shop")
         return game, ok, note
 
     def test_a_concern_with_no_money_upkeep_but_staff_tied_up_is_released(self):

@@ -7,7 +7,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.engine.projects_completion import CompletionMixin
-from sim.engine.risk_rules import attempt_fails
+from sim.projects.risk_rules import attempt_fails
 
 NODE_ID = "kiln"
 

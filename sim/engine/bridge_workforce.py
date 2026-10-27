@@ -134,41 +134,6 @@ def shared_answer(sim, key, inputs, compute, standalone=False):
 
 # ---- projects: what a concern needs of the staff -----------------------------------------------------------------------------
 
-@bridge_view("active_hours_still_wanted")
-def active_hours_still_wanted(sim):
-    return sim.active_hours_still_wanted()
-
-
-@bridge_view("staff_closure_age", kind=KEYED)
-def staff_closure_age(sim, node_id):
-    return sim.staff_closure_age(node_id)
-
-
-@bridge_view("staffing_draw", kind=QUOTE)
-def staffing_draw(sim, node_id, foreman_units=None):
-    return sim._staffing_draw_of(node_id, foreman_units)
-
-
-@bridge_view("staffing_held_totals")
-def staffing_held_totals(sim):
-    return sim.staffing_held_totals()
-
-
-@bridge_view("staffing_shortfalls", kind=QUOTE)
-def staffing_shortfalls(sim, totals, strict=False):
-    return sim._staffing_shortfalls(totals, strict)
-
-
-@bridge_view("staffing_closed_hand_shortfall")
-def staffing_closed_hand_shortfall(sim):
-    """(scholars, craftsmen) the concerns shut for want of staff still lack."""
-    return sim.staffing_closed_hand_shortfall()
-
-
-@bridge_view("concerns_to_close_for_staffing")
-def concerns_to_close_for_staffing(sim):
-    return sim.concerns_to_close_for_staffing()
-
 
 @bridge_view("venture_foreman", kind=KEYED)
 def venture_foreman(sim, node_id):
@@ -188,8 +153,3 @@ def venture_staff_free(sim):
 @bridge_view("reopen_units", kind=KEYED)
 def reopen_units(sim, node_id):
     return sim.reopen_units(node_id)
-
-
-@bridge_view("exclusion_reason", kind=KEYED)
-def exclusion_reason(sim, node_id):
-    return sim.exclusion_reason(node_id)

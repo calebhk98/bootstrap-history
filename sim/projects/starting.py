@@ -13,7 +13,7 @@ from sim.ledger.api import PayEdge
 from . import bribe_rules, constants, funding, instantaneous, record_rules, start_rules
 from .commands import Bribe, PostBounty, StartProject, StopProject
 from sim.materials.api import SettleProjectMaterials
-from .needed_commands import (ClearMothball, CompleteProject)
+from .needed_commands import ClearMothball
 from sim.reporting.api import RecordEvent
 from .researcher import SeatResearcher
 
@@ -41,7 +41,7 @@ class Starting:
 			own_output_claim = self.needs.own_output_claim(node_id)
 			bill, _materials_paid_now = self.needs.send(SettleProjectMaterials(node_id))
 			cost_left = bill
-		record = record_rules.new_record(node, self.needs.rebuild_work_factor(node_id), ph_left, spent, cost_left,
+		record = record_rules.new_record(node, self.rebuild_work_factor(node_id), ph_left, spent, cost_left,
 		                                 include_labour, bill, own_output_claim)
 		active[node_id] = record
 		return record
@@ -56,7 +56,7 @@ class Starting:
 		# Materials due now are bought (and banked as stock) first; what is left is the bill paid in instalments.
 		bill, materials_paid_now = needs.send(SettleProjectMaterials(node_id))
 		if precaution:
-			bill += needs.precaution_extra_cost(node_id, bill)
+			bill += self.precaution_extra_cost(node_id, bill)
 		price = bill
 		paid_now = funding.paid_credit(price, (projects.paid_towards or {}).get(node_id, 0.0))
 		price -= paid_now
@@ -75,11 +75,11 @@ class Starting:
 		if precaution:
 			record = projects.active[node_id]
 			record["precaution"] = True
-			record["ph_left"] += needs.precaution_extra_hours(node_id)
+			record["ph_left"] += self.precaution_extra_hours(node_id)
 		# A genuinely instantaneous capability should not need an otherwise empty annual turn merely to trip the
 		# completion check. Anything with money, labour, risk, or a calendar floor stays on the normal path.
-		if instantaneous.is_instantaneous(node["ph"], needs.calendar_floor(node_id), price, node["lab"], needs.effective_risk(node_id)):
-			needs.send(CompleteProject(node_id))
+		if instantaneous.is_instantaneous(node["ph"], self.calendar_floor(node_id), price, node["lab"], self.effective_risk(node_id)):
+			self._complete(node_id)
 			return "done"
 		if paid_now > 0.5:
 			needs.send(RecordEvent("project_restarted", "%s begun again; the %s already "
@@ -98,7 +98,7 @@ class Starting:
 		refusal = self.needs.start_refusal(command.node_id)       # the quote the player was shown, adjusters included
 		if refusal:
 			return False, refusal
-		if command.precaution and self.needs.precaution_spec(command.node_id) is None:
+		if command.precaution and self.precaution_spec(command.node_id) is None:
 			return False, "%s offers no pilot plant or redundant team to pay for." % self.needs.tree[command.node_id]["name"]
 		try:
 			research.begin(SeatResearcher(self, command.precaution), command.node_id, self.needs.actor_world())

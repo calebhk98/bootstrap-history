@@ -3,7 +3,7 @@ rules called on draws and totals built here, no game."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.staffing_choice import closures_for_shortfall, missing_when_opened, shortfalls_beyond, staffing_allowances
+from sim.projects.staffing_choice import closures_for_shortfall, missing_when_opened, shortfalls_beyond, staffing_allowances
 from sim.labour.labour_staff_controls import people_to_hire_for
 
 # --- allowances

@@ -14,10 +14,9 @@ def _words(identifier):
     return identifier.rsplit("_", 1)[0].replace("_", " ") if identifier.count("_") else identifier
 
 
-def failure_cause(sim, node_id):
+def failure_cause(node, state_interest):
     """What failed, drawn from the node's kind, materials, trades and the
-    state's attitude to its traits."""
-    node = sim.nodes[node_id]
+    state's attitude to its traits (`state_interest`, negative when it opposes them)."""
     parts = [_LEAD_BY_KIND.get(node.get("kind"), "the attempt did not come together")]
     if node["mat"]:
         parts.append("materials spoiled (%s)" % ", ".join(_words(name) for name in sorted(node["mat"])[:3]))
@@ -25,6 +24,6 @@ def failure_cause(sim, node_id):
         parts.append("trades whose work was wasted (%s)" % ", ".join(sorted(node["lab"])[:3]))
     if not node["mat"] and not node["lab"]:
         parts.append("nothing physical was lost; this is teaching and adoption, not apparatus")
-    if sim.state_interest(node) < 0:
+    if state_interest < 0:
         parts.append("official opposition made it harder")
     return "; ".join(parts)

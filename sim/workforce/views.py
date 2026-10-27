@@ -24,6 +24,14 @@ class Views:
 		        "director_pool": labour.director_pool, "director_committed": labour.director_hours_committed,
 		        "hired_cap": labour.hired_cap}[pool]()
 
+	def hours_you_can_call_on(self, trade):
+		"""The hours a year of a trade the seat can call on: the market's supply plus the time it has already bought."""
+		return self.labour.hours_you_can_call_on(trade)
+
+	def effective_scholars(self):
+		"""The scholars the seat counts (the founder included, while alive)."""
+		return self.labour.effective_scholars()
+
 	def literacy_references(self):
 		"""The literacy figures hiring and research are measured against."""
 		labour = self.labour
@@ -36,6 +44,16 @@ class Views:
 
 	def farm_share_of_hours(self):
 		return self.labour.farm_share_of_hours()
+
+	def training_advice(self, trade_id):
+		"""The facts of teaching one person `trade_id`, read from the labour market. `hours_each` and `years` are None when
+		no trade here can teach it."""
+		labour = self.labour
+		source = labour._source_trade_for(trade_id)
+		return {"trade": trade_id,
+		        "source_trade": source,
+		        "hours_each": labour.training_hours_per_person(trade_id, source) if source else None,
+		        "years": labour.training_years_from(trade_id, source) if source else None}
 
 	def staff_advice(self, kind, deficit):
 		return self.labour.staff_advice(kind, deficit)

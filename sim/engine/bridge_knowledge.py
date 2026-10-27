@@ -3,7 +3,7 @@
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old code
 did, and is never cached. The `legacy_*` views are state the module shares with the engine; they go when that state moves
 (docs/architecture/catalogue/knowledge.md lists each outside writer)."""
-from sim.assembly.api import KEYED, QUOTE
+from sim.assembly.api import QUOTE
 from sim.knowledge.needed_commands import RefreshDoneCaches
 
 from . import category_traits
@@ -26,12 +26,6 @@ def legacy_fog(sim):
 def category_trait(sim, category, trait):
     """Whether the data gives the node category `category` the flag `trait`."""
     return category_traits.has_trait(category, trait)
-
-
-@bridge_view("relied_on_running", kind=KEYED)
-def relied_on_running(sim, node_id):
-    """Whether some node requires `node_id` running."""
-    return sim.relied_on_running(node_id)
 
 
 @bridge_command(RefreshDoneCaches)

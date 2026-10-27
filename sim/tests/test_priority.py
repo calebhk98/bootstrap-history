@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.hour_offer import priority_queue
+from sim.projects.hour_offer import priority_queue
 from sim.ui.proto import command_registry as _registry
 from sim.ui.proto.dispatch_priority import _cmd_priority
 from sim.ui.proto.typed import parse_typed as _parse_typed

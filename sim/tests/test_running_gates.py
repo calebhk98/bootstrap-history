@@ -10,14 +10,11 @@ import unittest
 from types import SimpleNamespace
 
 from sim.engine.state import ProjectsState
-from unittest import mock
 
 from sim.engine import validate_running_gates
-from sim.tests import production_host
-from sim.engine.projects_running_gates import RunningGatesMixin, check_running_gates
+from sim.reporting.api import RecordEvent
+from sim.tests import module_harness, production_host, projects_host
 from sim.knowledge import rules as knowledge_rules
-from sim.engine.projects_staffing import StaffingMixin
-from sim.tests import event_stand_in
 
 GRID, LAMP, TRAM = "grid", "lamp", "tram"
 
@@ -32,39 +29,27 @@ def _nodes():
     }
 
 
-class _Host(RunningGatesMixin, StaffingMixin):
-    send = event_stand_in.send
-    fog = False
+class _Host:
+    """The projects module over a record of what is built and running, with production answering what runs."""
 
     def __init__(self, done, operating):
         self.nodes = _nodes()
-        self.state = SimpleNamespace(
-            projects=ProjectsState(done=set(done), granted=set()),
-            scenario=SimpleNamespace(year=100), household=SimpleNamespace(log=[]))
+        self.state = SimpleNamespace(projects=ProjectsState(done=set(done), granted=set()), scenario=SimpleNamespace(year=100))
         self.state.projects.operating = set(operating)
+        self.built_km = {"rail": 0.0}
         self.production = production_host.build(self)
+        self.module = projects_host.build(
+            tree=self.nodes, legacy_projects=self.state.projects, techniques_held=self.state.projects.done,
+            operating=lambda: self.state.projects.operating, running=self.production.running, is_venture=self.production.is_venture)
+        self.module._built_way_km = lambda way: self.built_km.get(way, 0.0)
 
     def running(self, node_id):
         return self.production.running(node_id)
 
-    def is_venture(self, node_id):
-        return self.production.is_venture(node_id)
-
-    def is_concern_node(self, node_id):
-        return self.production.is_concern_node(node_id)
+    def __getattr__(self, name):
+        return getattr(self.module, name)
 
     def on_road_to_goal(self, node_id):
-        return True
-
-    built_km = {"rail": 0.0}
-
-    def built_way_km(self, way):
-        return self.built_km.get(way, 0.0)
-
-    def has(self, node_id):
-        return node_id in self.state.projects.done
-
-    def _visible_to_player(self, node_id):
         return True
 
 
@@ -91,10 +76,10 @@ class RunningGateTests(unittest.TestCase):
 
     def test_starting_is_refused_with_the_remedy_while_the_work_is_shut(self):
         host = _host(grid_open=False)
-        verdict = check_running_gates(host, LAMP, host.nodes[LAMP], False, None, True)
+        verdict = host._check_running_gates(LAMP, host.nodes[LAMP], False, None, True)
         self.assertFalse(verdict[0])
         self.assertIn("open %s" % GRID, verdict[1])
-        self.assertIsNone(check_running_gates(_host(), LAMP, _nodes()[LAMP], False, None, True))
+        self.assertIsNone(_host()._check_running_gates(LAMP, _nodes()[LAMP], False, None, True))
 
     def test_opening_a_dependent_is_refused_while_its_work_is_shut(self):
         self.assertIn(GRID, _host(grid_open=False, lamp_open=False).running_gate_refusal(LAMP))
@@ -117,7 +102,7 @@ class WayGateTests(unittest.TestCase):
     def test_the_start_refusal_says_how_much_is_short(self):
         host = _host()
         host.built_km = {"rail": 10.0}
-        verdict = check_running_gates(host, "depot", host.nodes["depot"], False, None, True)
+        verdict = host._check_running_gates("depot", host.nodes["depot"], False, None, True)
         self.assertFalse(verdict[0])
         self.assertIn("rail", verdict[1])
         self.assertIn("40", verdict[1])
@@ -129,11 +114,6 @@ class WayGateTests(unittest.TestCase):
 
 
 class LapseTests(unittest.TestCase):
-
-    def setUp(self):
-        patcher = mock.patch("sim.engine.projects_staffing.cause_book.record_concern")
-        patcher.start()
-        self.addCleanup(patcher.stop)
 
     def test_closing_the_work_closes_what_depends_on_it_down_the_chain(self):
         host = _host()
@@ -158,7 +138,8 @@ class LapseTests(unittest.TestCase):
     def test_the_closure_is_logged_for_the_player(self):
         host = _host()
         host.close_work(GRID, host.CLOSED_BY_CHOICE)
-        self.assertTrue(any(LAMP in line for _year, line in host.state.household.log))
+        events = [command for command in module_harness.sent(host.module) if isinstance(command, RecordEvent)]
+        self.assertTrue(any(event.kind == "work_closed_gate_lapsed" and event.facts["work"] == LAMP for event in events))
 
 
 class ReliedOnWorkTests(unittest.TestCase):

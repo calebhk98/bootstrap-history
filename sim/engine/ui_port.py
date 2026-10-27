@@ -30,11 +30,10 @@ IdentityCache = identity_cache.IdentityCache  # noqa: F401
 from sim.engine.mods import get_ordered_mods  # noqa: F401
 from sim.labour.api import format_occupational_report, hours_by_trade_of_all_employers, occupational_report, people_by_trade_of_all_employers  # noqa: F401
 from sim.engine.knowledge_warning import knowledge_loss_warning, warning_lines  # noqa: F401
-from sim.engine.permanent_benefit import permanent_parts  # noqa: F401
-from sim.engine.projects_completion import FAILED_PREFIX, goal_movement, MINOR_MARK  # noqa: F401
-from sim.engine.projects_exclusions import CATEGORY_PREFIX, TRAIT_PREFIX  # noqa: F401
+from sim.projects.api import FAILED_PREFIX, MINOR_MARK, goal_movement, oversubscription_notes, permanent_parts  # noqa: F401
+from sim.projects.api import exclusion_rules
+CATEGORY_PREFIX, TRAIT_PREFIX = exclusion_rules.CATEGORY_PREFIX, exclusion_rules.TRAIT_PREFIX
 from sim.engine.purchase_rule import purchase_budget  # noqa: F401
-from sim.engine.projects_trade_wait import trades_the_project_waits_for  # noqa: F401
 from sim.engine.run_setup import DetRNG, ensure_fixed_hash_seed, load_strategy, topo_stable  # noqa: F401
 from sim.engine.saveload import (  # noqa: F401
     _SET_FIELDS_OF_NODE_IDS as SET_FIELDS_OF_NODE_IDS,
@@ -47,7 +46,6 @@ paid_credit = project_funding.paid_credit
 from sim.materials.api import rules as materials_rules
 condition_line = materials_rules.condition_line
 material_words = materials_rules.material_words
-from sim.engine.trade_demand import oversubscription_notes  # noqa: F401
 from sim.engine.units_summary import summary_line  # noqa: F401
 from sim.engine.units import tagged  # noqa: F401
 from sim.engine.units_prose import area_text, mass_per_area_text, mass_rate_text, mass_text, money_text, plain_number  # noqa: F401

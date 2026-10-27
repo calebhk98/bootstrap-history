@@ -1,11 +1,12 @@
 """The exclusion list (Complaint 230): an entry is a node id, a category or a trait; `exclusion_reason` says which entry excludes a node,
-and `exclude` and `include` change the saved list and refuse names that exist nowhere. Called on a stand-in game."""
+and `exclude` and `include` change the saved list and refuse names that exist nowhere. The rules are called on plain values; the
+commands on a stand-in game."""
 QUICK_TOPIC = True
 
 import types
 import unittest
 
-from sim.engine.projects_exclusions import ExclusionsMixin
+from sim.projects import exclusion_rules
 from sim.ui.proto.dispatch_exclusions import _cmd_exclude, _cmd_include
 
 NODES = {"plough": {"cat": "agriculture", "traits": ["tool"], "name": "Plough"},
@@ -13,7 +14,7 @@ NODES = {"plough": {"cat": "agriculture", "traits": ["tool"], "name": "Plough"},
          "mill": {"cat": "agriculture", "traits": [], "name": "Mill"}}
 
 
-class _Game(ExclusionsMixin):
+class _Game:
     def __init__(self, fog=False):
         self.nodes, self.fog = NODES, fog
         self.state = types.SimpleNamespace(projects=types.SimpleNamespace(excluded=set()))
@@ -21,28 +22,28 @@ class _Game(ExclusionsMixin):
     def is_visible(self, node_id):
         return node_id != "slave_market"
 
+    def exclusion_entry_known(self, entry):
+        return exclusion_rules.entry_known(entry, self.nodes)
+
 
 class ExclusionReasonTest(unittest.TestCase):
     def test_a_node_is_excluded_by_name_by_category_or_by_trait_and_nothing_else_is(self):
-        game = _Game()
-        game.state.projects.excluded.update({"mill", "category:labour", "trait:tool"})
-        self.assertIsNotNone(game.exclusion_reason("mill"))
-        self.assertIsNotNone(game.exclusion_reason("slave_market"))
-        self.assertIsNotNone(game.exclusion_reason("plough"))
-        game.state.projects.excluded.clear()
-        game.state.projects.excluded.add("trait:buys_people")
-        self.assertIsNotNone(game.exclusion_reason("slave_market"))
-        self.assertIsNone(game.exclusion_reason("plough"))
+        excluded = {"mill", "category:labour", "trait:tool"}
+        self.assertIsNotNone(exclusion_rules.reason(excluded, "mill", NODES))
+        self.assertIsNotNone(exclusion_rules.reason(excluded, "slave_market", NODES))
+        self.assertIsNotNone(exclusion_rules.reason(excluded, "plough", NODES))
+        excluded = {"trait:buys_people"}
+        self.assertIsNotNone(exclusion_rules.reason(excluded, "slave_market", NODES))
+        self.assertIsNone(exclusion_rules.reason(excluded, "plough", NODES))
 
     def test_an_empty_list_excludes_nothing(self):
-        self.assertIsNone(_Game().exclusion_reason("plough"))
+        self.assertIsNone(exclusion_rules.reason(set(), "plough", NODES))
 
     def test_an_entry_is_known_only_if_it_names_a_node_a_category_or_a_trait_that_exists(self):
-        game = _Game()
         for entry in ("plough", "category:agriculture", "trait:buys_people"):
-            self.assertTrue(game.exclusion_entry_known(entry), entry)
+            self.assertTrue(exclusion_rules.entry_known(entry, NODES), entry)
         for entry in ("no_such_node_anywhere", "category:nothing", "trait:nothing"):
-            self.assertFalse(game.exclusion_entry_known(entry), entry)
+            self.assertFalse(exclusion_rules.entry_known(entry, NODES), entry)
 
 
 class ExcludeAndIncludeTest(unittest.TestCase):

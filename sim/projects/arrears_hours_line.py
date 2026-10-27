@@ -1,12 +1,12 @@
 """The log line for founder-hours given back while the household is in arrears."""
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 
 from sim.refusal import LogLine
-from .units_prose import plain_number
 
 
-def arrears_hours_line(lost: List[Tuple[str, float]]) -> LogLine:
-    """One line naming each project and the hours it lost; `lost` pairs a project id with its hours."""
+def arrears_hours_line(lost: List[Tuple[str, float]], plain_number: Callable[[float], str]) -> LogLine:
+    """One line naming each project and the hours it lost; `lost` pairs a project id with its hours, `plain_number`
+    writes a count of hours."""
     total = sum(hours for _, hours in lost)
     names = ", ".join("%s (%s hr)" % (node_id, plain_number(hours)) for node_id, hours in lost)
     return LogLine(

@@ -16,7 +16,7 @@ from sim.engine.allocation_notes import AllocationNotesMixin
 from sim.engine.data import TRADE_FAMILY
 from sim.engine.projects_staffing import StaffingMixin
 from sim.engine.projects_staffing_report import StaffingReportMixin
-from sim.engine.staffing_events import unstaffed_closure_line
+from sim.projects.staffing_events import unstaffed_closure_line
 from sim.labour.hire_outcome import craft_trades_report
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.dispatch_ventures import _non_craft_labour_names, _scholar_family_names

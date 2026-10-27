@@ -36,6 +36,14 @@ class SurviveStaff(Command):
 
 
 @dataclass(frozen=True)
+class GrantStaff(Command):
+	"""An institution hands the acting seat people outright, on completion: recorded as a grant, so the yearly resync of
+	the pools from the payroll keeps them."""
+	scholars: float = 0.0
+	artisans: float = 0.0
+
+
+@dataclass(frozen=True)
 class ScaleDeputies(Command):
 	"""The acting seat's pool of deputy directors is multiplied by `share`."""
 	share: float
