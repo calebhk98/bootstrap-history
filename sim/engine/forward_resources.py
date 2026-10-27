@@ -12,11 +12,6 @@ class ForwardResourcesMixin:
         """Rated capacity of the acting seat's workings, summed by material."""
         return self.view("mine_capacity")()
 
-    @property
-    def MINE_OPEX_MATERIALS(self):
-        """Materials whose mine running cost comes from the deposits' physical works, from the map's catalogue."""
-        return self.view("mine_works_materials")()
-
     @staticmethod
     def base_mine_catalog_hint():
         """The mine catalogue hint on the base map, for help text written before any game exists."""
@@ -42,9 +37,6 @@ class ForwardResourcesMixin:
 
     def draw_deposit(self, deposit_id, tonnes):
         return self.send(DrawDeposit(deposit_id, tonnes))
-
-    def mine_depletion_factor(self, material):
-        return self.view("mine_depletion")[material]
 
     def shortage_remedy(self, binding, shortfall_t=None):
         """One sentence on what would end this shortage, in things you can type."""

@@ -1,9 +1,10 @@
 """What moved in each score component since the player last typed `score`."""
+from sim.engine import ui_port
 
 
 def attach_change_since_last_score(sim, report):
     """Add `since_last_score` to each component that was also read last time, then remember this reading."""
-    seat_progress = sim.state.seat_progress
+    seat_progress = ui_port.seat_progress(sim)
     earlier = seat_progress.score_last_seen or {}
     seen = {}
     for name, component in report["components"].items():
@@ -16,5 +17,5 @@ def attach_change_since_last_score(sim, report):
                 "year": earlier.get("year"),
                 "raw_before": before["raw"],
                 "normalized_change": round(component["normalized"] - before["normalized"], 4)}
-    seat_progress.score_last_seen = {"year": sim.year, "components": seen}
+    seat_progress.score_last_seen = {"year": sim.view("year")(), "components": seen}
     return report

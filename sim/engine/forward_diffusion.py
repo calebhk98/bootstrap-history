@@ -76,15 +76,6 @@ class DiffusionForwardsMixin:
     def civ_diffusion(self, node_id):
         return self.view("civ_diffusion")[node_id]
 
-    def _diffusible_ids(self, category):
-        return self.view("diffusible_ids")[category]
-
-    def medical_diffusion_relief(self):
-        return self.view("diffusion_relief")("medical")
-
-    def _state_military_diffusion_relief(self, per_weapon):
-        return self.view("diffusion_relief")("military", per_weapon)
-
     def world_diffusion_report(self):
         return self.view("diffusion_report")()
 

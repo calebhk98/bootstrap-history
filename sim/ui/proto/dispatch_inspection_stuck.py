@@ -11,15 +11,15 @@ from .stuck_advice import calendar_bound_advice, filler_note, lever_line
 
 
 def _stuck_work_in_hand(sim, nodes):
-    if not sim.active:
+    if not sim.view("active_projects")():
         return None
     _waits = {}
     _kinds = {}
     _why_underfunded = {}
-    for node_id, progress in sorted(sim.active.items()):
+    for node_id, progress in sorted(sim.view("active_projects")().items()):
         bill = progress.get("cost_left")
         if bill is None:
-            bill = max(0.0, sim.project_cost(node_id) - progress["spent"])
+            bill = max(0.0, sim.view("project_cost")(node_id) - progress["spent"])
         _waits[node_id] = _waiting_on(sim, nodes, node_id, progress, bill)
         # SAME GAP AS `why` AND `state`: arrears gives unspendable
         # founder hours back, so this can say "waiting on your hours"
@@ -31,12 +31,12 @@ def _stuck_work_in_hand(sim, nodes):
         if progress.get("why_underfunded"):
             _why_underfunded[node_id] = progress["why_underfunded"]
             _kinds[node_id] = "money"
-        elif progress.get("ph_left", 0.0) <= 0 and progress.get("yrs", 0.0) < sim.calendar_floor(node_id):
+        elif progress.get("ph_left", 0.0) <= 0 and progress.get("yrs", 0.0) < sim.view("calendar_floor")(node_id):
             _kinds[node_id] = "calendar"
         else:
             _kinds[node_id] = "active"
     return {"what": "work in hand", "kind": "active",
-            "how_many": len(sim.active),
+            "how_many": len(sim.view("active_projects")()),
             "each_waiting_on": _waits,
             "each_kind": _kinds,
             **({"each_why_underfunded": _why_underfunded}
@@ -60,11 +60,11 @@ def _stuck_road_to_goal(sim, nodes, _fog):
     # Returns (reason_or_None, goal_routing_off_under_fog) - the caller needs
     # the flag even on the years this has no reason to report, to explain at
     # the end why nothing here spoke about the goal at all.
-    _goal = sim.goal
+    _goal = sim.view("goal")()["node"]
     _goal_routing_off_under_fog = False
     if _goal in nodes and not _fog:
-        _road = closure(nodes, _goal) - sim.done
-        _road_open = [node_id for node_id in _road if sim.start_reason(node_id)[0]]
+        _road = closure(nodes, _goal) - sim.view("techniques_held")()
+        _road_open = [node_id for node_id in _road if sim.view("start_check")(node_id)[0]]
         if _road and not _road_open:
             _near = route_blockers(sim, nodes, _road, 5)
             return ({
@@ -93,9 +93,9 @@ def _stuck_started_nothing(sim, _startable, _afford, saving=False):
     # command - whose whole job is "why you are not getting on" - must not
     # report "you have work in hand, money to pay for it and people to do
     # it" when no project is actually active.
-    if sim.active or sim.view("training_queue")():
+    if sim.view("active_projects")() or sim.view("training_queue")():
         return None
-    _cheap = (min(_afford or _startable, key=lambda k: sim.project_cost(k))
+    _cheap = (min(_afford or _startable, key=lambda k: sim.view("project_cost")(k))
               if (_afford or _startable) and not saving else None)
     if saving:
         return {"what": "you have started nothing", "kind": "idle",
@@ -115,9 +115,9 @@ def _stuck_shut_ventures(sim, nodes):
     # you could begin" is incomplete while a finished, closed concern with
     # revenue above upkeep sits unopened - reopening it needs no new
     # building at all.
-    _shut = sorted(node_id for node_id in sim.done
-                   if sim.is_venture(node_id) and node_id not in sim.operating
-                   and sim.venture_real_earnings(node_id) > sim.venture_real_upkeep(node_id))
+    _shut = sorted(node_id for node_id in sim.view("techniques_held")()
+                   if sim.view("is_venture")[node_id] and node_id not in sim.view("operating")()
+                   and sim.view("venture_real_earnings")(node_id) > sim.view("venture_real_upkeep")(node_id))
     if not _shut:
         return None
     # DO NOT RECOMMEND A COMMAND THAT WILL FAIL: picking the best-margin
@@ -128,13 +128,13 @@ def _stuck_shut_ventures(sim, nodes):
     # The recommendation has to check that it would work, not just that
     # it would pay.
     def _capex_now(_node_id):
-        return sim.opening_fee(_node_id)[0]   # exactly what `open` charges, grace discount included
+        return sim.view("opening_fee")(_node_id)[0]   # exactly what `open` charges, grace discount included
     def _openable(_node_id):
-        return sim.open_refusal(_node_id) is None and _capex_now(_node_id) <= sim.spending_power("open")
+        return sim.view("open_refusal")(_node_id) is None and _capex_now(_node_id) <= sim.view("spending_power")("open")
     _really_openable = [node_id for node_id in _shut if _openable(node_id)]
     if _really_openable:
         _best = max(_really_openable,
-                   key=lambda k: sim.venture_real_earnings(k) - sim.venture_real_upkeep(k))
+                   key=lambda k: sim.view("venture_real_earnings")(k) - sim.view("venture_real_upkeep")(k))
         return {"what": "things you built and never opened", "kind": "closed", "the_best_one": _best,
                 "why": "%d finished concern(s) are shut and "
                        "earning nothing. The best you could "
@@ -142,18 +142,18 @@ def _stuck_shut_ventures(sim, nodes):
                        "would earn %s a year against %s of "
                        "upkeep: 'open %s'"
                        % (len(_shut), _best,
-                          money_text(sim.venture_real_earnings(_best), sim, grouped=True),
-                          money_text(sim.venture_real_upkeep(_best), sim, grouped=True),
+                          money_text(sim.view("venture_real_earnings")(_best), sim, grouped=True),
+                          money_text(sim.view("venture_real_upkeep")(_best), sim, grouped=True),
                           _best)}
-    _best = max(_shut, key=lambda k: sim.venture_real_earnings(k) - sim.venture_real_upkeep(k))
-    _staff_refusal = sim.open_refusal(_best, with_advice=False)   # the refusal `open` gives, and its cause
+    _best = max(_shut, key=lambda k: sim.view("venture_real_earnings")(k) - sim.view("venture_real_upkeep")(k))
+    _staff_refusal = sim.view("open_refusal")(_best, None, False)   # the refusal `open` gives, and its cause
     if _staff_refusal:
         _why = _staff_refusal.rstrip(".")
     else:
         _why = ("opening it costs %s, and between cash "
                 "and what anyone will advance you can raise %s"
                 % (money_text(_capex_now(_best), sim, grouped=True),
-                   money_text(sim.spending_power("open"), sim, grouped=True)))
+                   money_text(sim.view("spending_power")("open"), sim, grouped=True)))
     return {"what": "things you built and cannot open yet", "kind": "closed",
             "the_best_one": _best, "blocked_by": _staff_refusal.cause if _staff_refusal else "cash_short",
             "why": "%d finished concern(s) are shut and "
@@ -164,8 +164,8 @@ def _stuck_shut_ventures(sim, nodes):
                    "close something to free the hands, "
                    "or raise the money, and try again"
                    % (len(_shut), _best,
-                      money_text(sim.venture_real_earnings(_best), sim, grouped=True),
-                      money_text(sim.venture_real_upkeep(_best), sim, grouped=True),
+                      money_text(sim.view("venture_real_earnings")(_best), sim, grouped=True),
+                      money_text(sim.view("venture_real_upkeep")(_best), sim, grouped=True),
                       _why)}
 
 
@@ -181,16 +181,16 @@ def _stuck_nothing_or_money(sim, _startable, _afford):
                        "them costs %s, against the %s you could "
                        "raise"
                        % (len(_startable),
-                          money_text(min(sim.project_cost(node_id)
+                          money_text(min(sim.view("project_cost")(node_id)
                                                for node_id in _startable), sim, grouped=True),
-                          money_text(sim.spending_power("start"), sim, grouped=True))}
+                          money_text(sim.view("spending_power")("start"), sim, grouped=True))}
     return None
 
 
 def _stuck_raw_material(sim):
     if not sim.view("material_binding")():
         return None
-    throttle, binding = sim.peek_resource_throttle()
+    throttle, binding = sim.view("resource_throttle")()
     if binding and throttle < 0.95:
         return {"what": "a raw material", "kind": "supply",
                 "why": "%s: work is running at %d%% of plan. %s"
@@ -199,41 +199,41 @@ def _stuck_raw_material(sim):
 
 
 def _stuck_room_for_people(sim):
-    _room = sim.labour.household_room()
+    _room = sim.view("household_room")()
     if _room < 1.0:
         return {"what": "room for people", "kind": "specialists",
                 "why": "you can take %.2f more people. %s"
-                       % (max(0.0, _room), sim.labour.room_advice())}
+                       % (max(0.0, _room), sim.view("room_advice")())}
     return None
 
 
 def _stuck_arrears(sim):
-    if sim.capital < 0:
+    if sim.view("acting_balance")() < 0:
         return {"what": "arrears", "kind": "money",
                 "why": "you owe %s of the %s anyone will advance "
                        "you, and the interest is %s a year"
-                       % (money_text(-sim.capital, sim, grouped=True),
-                          money_text(sim.credit_limit(), sim, grouped=True),
-                          money_text(-sim.capital
-                                           * sim.debt_interest_rate(), sim, grouped=True))}
+                       % (money_text(-sim.view("acting_balance")(), sim, grouped=True),
+                          money_text(sim.view("credit_limit")(), sim, grouped=True),
+                          money_text(-sim.view("acting_balance")()
+                                           * sim.view("debt_interest_rate")(), sim, grouped=True))}
     return None
 
 
 def _stuck_credit_freeze(sim):
-    if sim.year < sim.credit_frozen_until:
+    if sim.view("year")() < sim.view("debt_status")()["credit_frozen_until"]:
         return {"what": "a credit freeze", "kind": "money",
                 "why": "nobody will fund new work until %d"
-                       % int(sim.credit_frozen_until)}
+                       % int(sim.view("debt_status")()["credit_frozen_until"])}
     return None
 
 
 def _stuck_startable_and_afford(sim, nodes, _fog):
     _startable = [node_id for node_id in nodes
-                  if node_id not in sim.done and node_id not in sim.active
-                  and (not _fog or sim.is_visible(node_id))
-                  and sim.start_reason(node_id)[0]]
+                  if node_id not in sim.view("techniques_held")() and node_id not in sim.view("active_projects")()
+                  and (not _fog or sim.view("visibility")(node_id))
+                  and sim.view("start_check")(node_id)[0]]
     _afford = [node_id for node_id in _startable
-               if sim.start_refusal(node_id) is None]
+               if sim.view("start_refusal")(node_id) is None]
     return _startable, _afford
 
 
@@ -251,7 +251,7 @@ def _cmd_stuck(sim, nodes, cmd, ended):
     # speaks once insolvency has already set in. This command gathers
     # every check into one place instead of making a player find each
     # cause by guessing at `why`.
-    _fog = sim.fog
+    _fog = sim.view("legacy_fog")()
     _startable, _afford = _stuck_startable_and_afford(sim, nodes, _fog)
     _goal_reason, _goal_routing_off_under_fog = _stuck_road_to_goal(sim, nodes, _fog)
     # Every check below is independent, and GATHERS into `reasons`: each one
@@ -279,15 +279,15 @@ def _cmd_stuck(sim, nodes, cmd, ended):
         _stuck_credit_freeze(sim),
     )
     reasons = [reason for reason in _checks if reason]
-    _stall = sim.stall_diagnosis()
+    _stall = sim.view("stall_diagnosis")()
     out = {"ok": True,
            "you_could_begin": len(_startable),
            "and_could_pay_for": len(_afford),
            "what_is_holding_you_up": reasons or (
                "nothing: %d project(s) in hand, money to pay for them and "
-               "people to do them" % len(sim.active)),
+               "people to do them" % len(sim.view("active_projects")())),
            "and_the_cheapest_thing_you_could_start_now": (
-               min(_startable, key=lambda k: sim.project_cost(k))
+               min(_startable, key=lambda k: sim.view("project_cost")(k))
                if _startable and not _saving else None)}
     _calendar = calendar_bound_advice(sim, nodes)
     if _calendar:

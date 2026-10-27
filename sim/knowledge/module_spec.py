@@ -27,6 +27,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("tree", "tree", kind=KEYED, **_LIVE),
         ViewSpec("tree_nodes", "tree_nodes", **_LIVE),
         ViewSpec("techniques_held", "techniques_held", channels=(DONE,), seat_scoped=True, **_LIVE),
+        ViewSpec("techniques_revealed", "techniques_revealed", channels=(REVEALED,), seat_scoped=True, **_LIVE),
         ViewSpec("techniques_granted", "techniques_granted", channels=(DONE,), seat_scoped=True, **_LIVE),
         ViewSpec("techniques_forgotten", "techniques_forgotten", channels=(DONE,), seat_scoped=True, **_LIVE),
         ViewSpec("done_year", "done_year", channels=(DONE,), seat_scoped=True, **_LIVE),

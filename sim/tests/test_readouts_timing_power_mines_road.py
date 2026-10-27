@@ -13,6 +13,7 @@ from sim.seats.module import Seats
 from sim.seats.state import SeatsSeat
 from sim.tests import module_harness
 from sim.ui.proto.economy import _power_tiers
+from sim.tests.ui_stand_in import Game
 
 THRESHOLD, MINIMUM, SCALE = 5, 2.0, 90.0
 
@@ -82,7 +83,7 @@ class PowerCapabilityReadouts(unittest.TestCase):
         self.assertEqual(self._installed({"power_line"}), {})
 
     def _tiers(self, done, installed):
-        host = SimpleNamespace(installed_generation_kw_by_tier=lambda: installed, is_visible=lambda node_id: True,
+        host = Game(installed_generation_kw_by_tier=lambda: installed, is_visible=lambda node_id: True,
                                has=lambda node_id: node_id in done)
         tiers, highest = _power_tiers(host, self.NODES)
         return {tier["id"]: tier for tier in tiers}, highest
@@ -100,7 +101,7 @@ class PowerCapabilityReadouts(unittest.TestCase):
         self.assertFalse(tiers["cap_power_steam"]["no_generation_installed"])
 
     def test_a_tier_not_visible_is_not_named(self):
-        host = SimpleNamespace(installed_generation_kw_by_tier=dict, is_visible=lambda node_id: node_id == "cap_power_water",
+        host = Game(installed_generation_kw_by_tier=dict, is_visible=lambda node_id: node_id == "cap_power_water",
                                has=lambda node_id: False)
         tiers, _highest = _power_tiers(host, self.NODES)
         self.assertEqual([tier["id"] for tier in tiers], ["cap_power_water"])

@@ -8,6 +8,7 @@ import types
 import unittest
 
 from sim.ui.proto.score_institutions import institutions_component
+from sim.tests.ui_stand_in import Game
 
 UNITS = {"workshop": 1.0, "school": 1.0, "academy": 2.0}
 CEILINGS = {"workshop": 3.0, "school": 7.0, "academy": 0.0}
@@ -16,7 +17,7 @@ FINISHED = {"press", "granary", "library"}
 
 
 def game(institutions):
-    return types.SimpleNamespace(
+    return Game(
         CAPABILITY_INSTITUTIONS=institutions, SCALABLE_INSTITUTIONS={"workshop", "school", "academy"},
         institution_units=lambda institution_id: UNITS[institution_id],
         institution_unit_ceiling=lambda institution_id: CEILINGS[institution_id],

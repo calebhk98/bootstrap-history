@@ -55,16 +55,16 @@ game = Game(["leaver", "heir"])
 leaver = game.state.seats["leaver"]
 give(leaver, ["fire"], "han", None)
 add_note(game, "build the bloomery first")
-game.state.acting_seat = "heir"
+game._switch_seat("heir")
 add_note(game, "the heir's own note")
-game.state.acting_seat = "leaver"
+game._switch_seat("leaver")
 relations.set_side(game.stores, "han", "rome", note="never trust their envoys", stance="wary")
 check("a seat reads only its own notes", [row["text"] for row in all_notes(game)] == ["build the bloomery first"], None)
 check("the notes pass to the replacement", hand_over_notes(game, "leaver", "heir") == 1, None)
-game.state.acting_seat = "heir"
+game._switch_seat("heir")
 check("the replacement reads both its own and the inherited notes",
       [row["text"] for row in all_notes(game)] == ["build the bloomery first", "the heir's own note"], all_notes(game))
-game.state.acting_seat = "leaver"
+game._switch_seat("leaver")
 check("the leaver no longer has the notes", all_notes(game) == [], None)
 # not text: a stored relation note round-trips between seats
 check("the country's relation note stays with the country the replacement now plays for",

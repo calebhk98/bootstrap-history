@@ -24,17 +24,17 @@ def _project_blocker(project):
 
 def _goal_blocker(sim, nodes):
     """The road-to-goal node nearest to startable, with its one-line reason."""
-    goal = sim.goal
-    if sim.fog or goal not in nodes:
+    goal = sim.view("goal")()["node"]
+    if sim.view("legacy_fog")() or goal not in nodes:
         return None
-    road = closure(nodes, goal) - sim.done
+    road = closure(nodes, goal) - sim.view("techniques_held")()
     if not road:
         return None
-    startable = sorted(node_id for node_id in road if sim.start_reason(node_id)[0])
+    startable = sorted(node_id for node_id in road if sim.view("start_check")(node_id)[0])
     if startable:
         return {"id": startable[0], "startable": True}
-    nearest = min(sorted(road), key=lambda node_id: len(closure(nodes, node_id) - sim.done))
-    return {"id": nearest, "startable": False, "why": _short(sim.start_reason(nearest)[1])}
+    nearest = min(sorted(road), key=lambda node_id: len(closure(nodes, node_id) - sim.view("techniques_held")()))
+    return {"id": nearest, "startable": False, "why": _short(sim.view("start_check")(nearest)[1])}
 
 
 def compact_state(out, sim=None, nodes=None):

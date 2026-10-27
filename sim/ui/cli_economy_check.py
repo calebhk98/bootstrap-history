@@ -6,6 +6,7 @@ from sim.production.api import node_payback_diagnostic
 from sim.engine.ui_port import (Sim, civilization_ids, default_civilisation_id, format_occupational_report,
                                 hours_by_trade_of_all_employers, load, load_civ, occupational_report,
                                 people_by_trade_of_all_employers)
+from sim.engine import ui_port
 
 FIGURE_LABELS = (
     ("staple_volatility", "std dev of the staple's yearly log price change"),
@@ -40,7 +41,7 @@ def check_one(nodes, civ_id, seed, years, metals, staple=None, occupations=None)
     """Play `years` years of `civ_id` and return the port's health report; `occupations`, a list, receives the
     occupation lines."""
     game = Sim(nodes, [], random.Random(seed), events=False, manual=True, civ=load_civ(civ_id))
-    game.done_year = {}
+    ui_port.reset_done_years(game)
     for _year in range(years):
         game.step()
     if occupations is not None:

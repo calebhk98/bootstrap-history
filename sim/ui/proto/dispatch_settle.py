@@ -1,6 +1,8 @@
 """The settle and colonies commands: found a colony on a tile beyond the country's own, and list those held."""
 
+from sim.refusal import Refusal
 from .command_registry import command
+from sim.engine import ui_port
 
 CANDIDATES_SHOWN = 15
 
@@ -19,19 +21,20 @@ def _cmd_settle(sim, nodes, cmd, ended):
         return {"ok": False, "error": "the run has ended (%s); nothing more can be founded" % ended}
     tile = cmd.get("tile")
     if tile:
-        ok, text = sim.found_colony(str(tile))
-        return {"ok": True, "message": text, "colonies": sim.colony_rows()} if ok else {"ok": False, "error": text}
-    chosen = sim.settlement_spec(by_sea=False) or sim.settlement_spec(by_sea=True)
+        answer = sim.send(ui_port.FoundColony(str(tile)))
+        ok, text = (False, answer) if isinstance(answer, Refusal) else (True, answer["text"])
+        return {"ok": True, "message": text, "colonies": sim.view("colonies")()} if ok else {"ok": False, "error": text}
+    chosen = sim.view("settlement_spec")(by_sea=False) or sim.view("settlement_spec")(by_sea=True)
     if chosen is None:
         return {"ok": False, "error": "you know no way to send settlers yet"}
     spec = chosen[1]
-    by_sea = bool(sim.settlement_spec(by_sea=True))
+    by_sea = bool(sim.view("settlement_spec")(by_sea=True))
     return {"ok": True, "settlers": spec["settlers"],
-            "outfit_cost": round(sim.settlement_outfit_cost(spec), 1),
-            "tiles": sim.settlement_candidates(by_sea)[:CANDIDATES_SHOWN],
-            "outfit_cost_by_tile": {candidate: round(sim.settlement_outfit_cost(spec, candidate), 1)
-                                    for candidate in sim.settlement_candidates(by_sea)[:CANDIDATES_SHOWN]},
-            "colonies": sim.colony_rows()}
+            "outfit_cost": round(sim.view("settlement_outfit_cost")(spec), 1),
+            "tiles": sim.view("settlement_candidates")(by_sea)[:CANDIDATES_SHOWN],
+            "outfit_cost_by_tile": {candidate: round(sim.view("settlement_outfit_cost")(spec, candidate), 1)
+                                    for candidate in sim.view("settlement_candidates")(by_sea)[:CANDIDATES_SHOWN]},
+            "colonies": sim.view("colonies")()}
 
 
 @command("colonies", group="projects",
@@ -39,4 +42,4 @@ def _cmd_settle(sim, nodes, cmd, ended):
          usage=["colonies"], options={},
          description="Each colony's tile, the year it was founded, its people and the most its land could feed.")
 def _cmd_colonies(sim, nodes, cmd, ended):
-    return {"ok": True, "colonies": sim.colony_rows()}
+    return {"ok": True, "colonies": sim.view("colonies")()}

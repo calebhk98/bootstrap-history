@@ -8,6 +8,7 @@ from sim.assembly.api import KEYED, QUOTE
 from sim.refusal import Refusal
 from sim.seats.api import ForgetGoalCaches, MoveSeat, RegisterSeat, RememberGoalClosure
 
+from . import state_paths
 from .bridge import bridge_command, bridge_view
 from .data import kit_capital as kit_capital_of, win_condition_describe
 from .seat_defaults import default_policy
@@ -123,7 +124,7 @@ def legacy_goal_closure(sim):
 @bridge_view("game_attribute", kind=QUOTE)
 def game_attribute(sim, path):
     """What the game holds under a plain attribute name, or None (an attribute-sourced win condition reads it)."""
-    held = getattr(sim, path, None)
+    held = state_paths.plain_attribute(sim, path)
     return sim.view("staff")().get(path) if held is None else held   # the people the workforce module holds (slaves, scholars, ...)
 
 

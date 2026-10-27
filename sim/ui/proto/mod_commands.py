@@ -188,7 +188,7 @@ def run_policies(sim, nodes, hook):
     """Run every switched-on data policy of this hook whose conditions hold; the lines to add to the year's log."""
     lines = []
     for name, spec in POLICIES:
-        if spec["hook"] != hook or not sim.policy.get(name, False):
+        if spec["hook"] != hook or not sim.view("founder")()["policy"].get(name, False):
             continue
         if not all(_holds(sim, condition) for condition in spec.get("when") or ()):
             continue

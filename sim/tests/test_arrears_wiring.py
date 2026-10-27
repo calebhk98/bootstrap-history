@@ -13,6 +13,7 @@ from sim.tests import projects_host
 from sim.ui.proto import dispatch_inspection_stuck
 from sim.ui.proto.dispatch_inspection_stuck import _stuck_work_in_hand
 from sim.ui.proto.economy import _portfolio_rows
+from sim.tests.ui_stand_in import Game
 
 
 def Gate(capital):
@@ -63,7 +64,7 @@ class ReplyRelays(unittest.TestCase):
         self.assertEqual(rows[0]["why_underfunded"], self.CAUSE)
 
     def test_the_stuck_screen_names_the_cause_and_calls_the_project_money_bound(self):
-        sim = types.SimpleNamespace(
+        sim = Game(
             active={"academy": {"cost_left": 100.0, "spent": 0.0, "ph_left": 50.0, "yrs": 0.0,
                                 "why_underfunded": self.CAUSE}},
             project_cost=lambda node_id: 100.0, calendar_floor=lambda node_id: 3.0)

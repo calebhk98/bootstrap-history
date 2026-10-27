@@ -6,11 +6,12 @@ import types
 import unittest
 
 from sim.ui.proto.techtree import _short_of_staff
+from sim.tests.ui_stand_in import Game
 
 
 def _game(craft_hands, scholars):
-    labour = types.SimpleNamespace(craft_hands_available=lambda: craft_hands, effective_scholars=lambda: scholars)
-    return types.SimpleNamespace(labour=labour)
+    labour = Game(craft_hands_available=lambda: craft_hands, effective_scholars=lambda: scholars)
+    return Game(labour=labour)
 
 
 class ShortOfStaffTest(unittest.TestCase):

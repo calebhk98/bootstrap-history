@@ -4,6 +4,7 @@ from .harness import check
 from sim.ui.proto import command_registry as _registry
 from sim.ui.proto.render_typed import render_pretty as _render_pretty
 from sim.ui.proto.typed import parse_typed as _parse_typed
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -43,12 +44,11 @@ def _quote(buy):
 
 
 def _sim_quoting(prices):
-    return types.SimpleNamespace(
+    return Game(
         material_trade_quote=lambda material: _quote(prices[material]) if material in prices else None,
         material_price_basis=lambda material: "solved", MATERIAL_CHECKS={},
-        view=lambda name: (lambda: {"employees": {"smith": 2.0}}), labour=types.SimpleNamespace(
-            market=types.SimpleNamespace(quote_annual=lambda trade: 500.4),
-            trade_available=lambda trade: trade == "smith"))
+        staff={"employees": {"smith": 2.0}}, labour_market=Game(quote_annual=lambda trade: 500.4),
+        trade_available=lambda trade: trade == "smith")
 
 
 class MarketRowTests(unittest.TestCase):

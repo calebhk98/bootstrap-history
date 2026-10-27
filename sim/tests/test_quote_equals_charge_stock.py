@@ -17,6 +17,7 @@ from sim.polity.api import RaiseScandal
 from sim.refusal import Refusal
 from sim.tests import module_harness
 from sim.ui.proto import stock_purchases
+from sim.tests.ui_stand_in import Game
 
 MATERIAL = "ramie_stock_kg"
 COST = 123.456
@@ -54,7 +55,7 @@ class Screen:
         self.quote, self.capital = quote, 1000.0
 
     def view(self, name):
-        return lambda *arguments: self.quote
+        return (lambda: self.capital) if name == "acting_balance" else (lambda *arguments: self.quote)
 
 
 from sim.engine.ui_port import purchase_rule  # noqa: E402
@@ -109,10 +110,10 @@ class Seller:
 
 from sim.markets.goods_market import GoodsMarket  # noqa: E402
 
-market = SimpleNamespace(quote_sell=lambda material, tonnes, seller=None: ("iron_stock", 25.0, 750.0), note_sale=lambda *args: None)
+market = Game(quote_sell=lambda material, tonnes, seller=None: ("iron_stock", 25.0, 750.0), note_sale=lambda *args: None)
 seller = Seller()
 sold = GoodsMarket.sell(market, seller, "iron", 40.0)
 check("a sale hands over what the market took and is paid what the sale quote said",
       sold == 25.0 and seller.handed == [("iron_stock", 25.0)] and seller.received == [(750.0, "materials sold")], (sold, seller.handed, seller.received))
-nothing = SimpleNamespace(quote_sell=lambda material, tonnes, seller=None: (None, 0.0, 0.0))
+nothing = Game(quote_sell=lambda material, tonnes, seller=None: (None, 0.0, 0.0))
 check("a sale the market will not take pays nothing", GoodsMarket.sell(nothing, Seller(), "iron", 40.0) == 0.0)

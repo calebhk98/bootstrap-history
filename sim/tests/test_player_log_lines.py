@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from sim.refusal import LogLine
 from sim.ui.proto.dispatch_labour import _cmd_fire, _cmd_hire
 from sim.ui.proto.state_log import _agent_log
+from sim.tests.ui_stand_in import Game
 
 
 class StandInLabour:
@@ -33,11 +34,15 @@ class StandInLabour:
 
 
 def stand_in_game():
-    game = SimpleNamespace(log=[], year=100, employees={}, capital=0.0, wages_prepaid=0.0, fog=False,
-                           founder_alive=True, forgotten={}, nodes={}, state=SimpleNamespace(interface={}))
+    game = Game(log=[], year=100, employees={}, capital=0.0, wages_prepaid=0.0, fog=False,
+                           founder_alive=True, forgotten={}, nodes={}, acting_seat="founder", state=Game(interface={}))
     game.labour = StandInLabour(game)
-    game.view = lambda name: (lambda: {"employees": game.employees, "prepaid": game.wages_prepaid})
-    game.send = lambda command: game.log.append((game.year, LogLine(command.kind, command.text, **command.facts)))
+    game.staff = {"employees": game.employees}
+    game.pay_book = {"prepaid": game.wages_prepaid}
+    orders = {"HireStaff": "hire", "FireStaff": "fire"}
+    game.send = lambda command: (getattr(game.labour, orders[type(command).__name__])(command.trade, command.count)
+                                 if type(command).__name__ in orders
+                                 else game.log.append((game.year, LogLine(command.kind, command.text, **command.facts))))
     game.living_cost = lambda: 0.0
     game.fog_scrub = lambda text: text
     game.deputies_carry_the_work = lambda: False

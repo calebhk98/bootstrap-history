@@ -39,7 +39,7 @@ def passes_rush_filters(sim, nodes, node_id, filters):
         return False
     if "max_hours" in filters and node["ph"] > filters["max_hours"] + 1e-9:
         return False
-    if "max_cost" in filters and sim.project_cost(node_id) > filters["max_cost"] + 1e-9:
+    if "max_cost" in filters and sim.view("project_cost")(node_id) > filters["max_cost"] + 1e-9:
         return False
     return True
 
@@ -48,7 +48,7 @@ def rush_exposure(sim, nodes, started):
     """Founder-hours and failure exposure of what a rush began, and the trades it oversubscribes."""
     bottlenecks = [{"trade": trade, "demand_hours_this_year": row["demand_hours_this_year"],
                     "supply_hours_this_year": row["supply_hours_this_year"]}
-                   for trade, row in sim.trade_demand_vs_supply().items() if row["oversubscribed"]]
+                   for trade, row in sim.view("trade_demand_vs_supply")().items() if row["oversubscribed"]]
     risks = [nodes[row["id"]].get("risk", 0.0) or 0.0 for row in started]
     return bottlenecks, {"expected_failures": round(sum(risks), 3),
                          "riskiest": max(started, key=lambda row: nodes[row["id"]].get("risk", 0.0) or 0.0)["id"]

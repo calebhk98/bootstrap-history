@@ -9,6 +9,7 @@ from sim.engine.state import deserialize_state, serialize_state
 from sim.hazards.state import HazardsWorld
 from sim.tests import hazards_host
 from sim.ui.proto.dispatch_world_events import _cmd_world_events
+from sim.tests.ui_stand_in import Game
 
 LOG = [
     {"year": 90, "kind": "flood", "actors": ["rome"], "tiles": [], "cause": "river", "facts": {"population_loss": 5.0}},
@@ -20,7 +21,7 @@ LOG = [
 
 def game():
     module = hazards_host.build(world=HazardsWorld(world_events=[dict(row) for row in LOG]))
-    return types.SimpleNamespace(state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=100)),
+    return Game(state=Game(scenario=Game(year=100)),
                                  view=lambda name: module.world_events)
 
 

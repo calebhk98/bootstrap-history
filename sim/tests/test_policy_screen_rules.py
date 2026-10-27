@@ -8,12 +8,13 @@ from sim.tests import workforce_stand_in
 
 from sim.engine.seat_defaults import default_policy
 from sim.ui.proto.dispatch_ventures import _cmd_policy
+from sim.tests.ui_stand_in import Game
 
 
 def _reply(manual):
-    household = types.SimpleNamespace(reserve_craftsmen=0, reserve_scholars=0)
-    game = types.SimpleNamespace(policy=default_policy(manual), capital=1000.0, year=100, credit_frozen_until=0,
-                                 workforce=household, view=workforce_stand_in.view_of(household, exclusions=set, keep_staffed=set), state=types.SimpleNamespace(household=household, projects=types.SimpleNamespace(excluded=set())))
+    household = Game(reserve_craftsmen=0, reserve_scholars=0)
+    game = Game(policy=default_policy(manual), capital=1000.0, year=100, credit_frozen_until=0,
+                                 workforce=household, view=workforce_stand_in.view_of(household, exclusions=set, keep_staffed=set), state=Game(household=household, projects=Game(excluded=set())))
     return _cmd_policy(game, {}, {"cmd": "policy"}, None)
 
 

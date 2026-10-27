@@ -12,6 +12,8 @@ from sim.ui.proto.render_screens_economy import render_ventures
 from sim.ui.proto.render_screens_status import render_path
 from sim.ui.proto.route_blockers import route_blockers
 from sim.ui.proto.techtree import _SORT_KEYS, _SORT_KEY_NAMES
+from sim.tests.ui_stand_in import Game
+from sim.tests.ui_stand_in import FactViews
 
 QUICK_TOPIC = True
 
@@ -49,7 +51,7 @@ check("bare 'ventures' still parses", _PT("ventures")[0] == {"cmd": "ventures"})
 
 # --- 149 and 162: available rows carry foreman, net and payback
 def _venture(earnings, upkeep, foreman=None, stock=None, ramp_years=4):
-    return SimpleNamespace(
+    return Game(
         cfg={"revenue_ramp_years": ramp_years}, venture_real_earnings=lambda node_id: earnings,
         venture_real_upkeep=lambda node_id: upkeep, venture_foreman=lambda node_id: foreman or (None, 0.0),
         project_cost=lambda node_id: 1000.0, stock_needed_by=lambda node_id: stock)
@@ -82,7 +84,7 @@ check("held living stock rides on the row when the node needs some",
 
 # the sort keys
 ids = {"slow": _venture(300.0, 250.0), "quick": _venture(900.0, 100.0), "never": _venture(100.0, 300.0)}
-game = SimpleNamespace(
+game = Game(
     venture_real_earnings=lambda node_id: ids[node_id].venture_real_earnings(node_id),
     venture_real_upkeep=lambda node_id: ids[node_id].venture_real_upkeep(node_id),
     cfg={"revenue_ramp_years": 4}, project_cost=lambda node_id: 1000.0)
@@ -113,7 +115,7 @@ check("path's table header matches available's", path_header.split() == header_l
 
 
 # --- 179: path prints the nearest blocker itself
-class _Route(SimpleNamespace):
+class _Route(FactViews, SimpleNamespace):
     def start_blockers(self, node_id):
         return self.blockers.get(node_id, [])
 

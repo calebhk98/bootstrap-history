@@ -18,17 +18,17 @@ def _notice_causes(sim, year):
 
 @figure("wages", "wage level against the starting one", unit="index", digits=4, since=_wage_causes)
 def _wages(sim):
-    return {"value": sim.wage_index,
-            "drivers": {"population_scale": sim.pop_scale, "price_index": sim.price_index}}
+    return {"value": sim.view("wage_index")(),
+            "drivers": {"population_scale": sim.view("pop_scale")(), "price_index": sim.view("price_index")()}}
 
 
 @figure("state_notice", "how much the state notices you", unit="0 to 1", digits=4,
         since=_notice_causes)
 def _state_notice(sim):
-    report = sim.eminence_report()
-    return {"value": sim.state_notice(),
-            "drivers": {"state_reach": sim.state_reach(),
-                        "household_scale": sim.household_scale(),
+    report = sim.view("eminence_report")()
+    return {"value": sim.view("state_notice")(),
+            "drivers": {"state_reach": sim.view("state_reach")(),
+                        "household_scale": sim.view("household_scale")(),
                         "eminence": report["now"],
                         "eminence_settles_at": report["settles_at_if_nothing_changes"],
                         "chance_of_ruin_this_year": report["chance_of_ruin_this_year"]}}
@@ -51,6 +51,6 @@ def _epidemic(sim):
 @figure("project_throughput", "projects completed by your own work", unit="projects", digits=0)
 def _project_throughput(sim):
     # the change since last year is this year's completions
-    return {"value": len(sim.done - sim.granted),
-            "drivers": {"active_projects": len(sim.active), "throttle": sim.view("material_throttle")(),
+    return {"value": len(sim.view("techniques_held")() - sim.view("techniques_granted")()),
+            "drivers": {"active_projects": len(sim.view("active_projects")()), "throttle": sim.view("material_throttle")(),
                         "employees": sum(sim.view("staff")()["employees"].values())}}

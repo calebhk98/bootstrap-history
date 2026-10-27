@@ -13,6 +13,7 @@ from sim.materials.api import ApplyThrottle
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip
 from sim.tests import module_harness, projects_host, resources_stand_in
 from sim.ui.proto.dispatch_ventures import _cmd_policy
+from sim.tests.ui_stand_in import Game
 
 
 class HireStance(unittest.TestCase):
@@ -29,10 +30,10 @@ class HireStance(unittest.TestCase):
 
 class PolicyCommand(unittest.TestCase):
     def _sim(self):
-        return types.SimpleNamespace(
+        return Game(
             policy={"auto_hire": True, "auto_open": True}, capital=100.0, year=0, credit_frozen_until=0,
             view=lambda name: (lambda: {"reserve_craftsmen": 0, "reserve_scholars": 0}),
-            state=types.SimpleNamespace(projects=types.SimpleNamespace(excluded=set())))
+            state=Game(projects=Game(excluded=set())))
 
     def test_replace_sets_the_replace_only_mode_and_off_turns_it_off(self):
         sim = self._sim()

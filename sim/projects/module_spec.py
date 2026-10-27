@@ -89,6 +89,10 @@ _VIEWS = (
 	("staffing_shut_count", "staffing_shut_count", None, True),
 	("seat_review", "seat_review", QUOTE, True), ("committed_cost", "committed_cost", None, True),
 	("active_projects", "active_projects", None, True), ("exclusions", "exclusions", None, True),
+	("mothballed", "mothballed_works", None, True), ("bountied", "bountied_nodes", None, True),
+	("failed_attempts", "failed_attempt_counts", None, True), ("paid_towards", "paid_towards_projects", None, True),
+	("bounties_paid", "bounties_paid_total", None, True),
+	("shut_for_staff", "shut_for_staff", None, True), ("spend_last_year", "spend_last_year", None, True),
 	("keep_staffed", "keep_staffed", None, True), ("ever_closed_for_staff", "ever_closed_for_staff", None, True),
 )
 

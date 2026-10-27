@@ -18,6 +18,8 @@ from sim.knowledge.api import missing_prereq_message
 from sim.refusal import cause_of
 from sim.ui.proto.quote_spending import bounty_refusal
 from sim.ui.protocol import parse_typed
+from sim.tests.ui_stand_in import Game
+from sim.tests.ui_stand_in import FactViews
 
 NODES = {
 	"target": {"id": "target", "name": "Target", "pre": ["seen_prereq", "hidden_prereq_a", "hidden_prereq_b"],
@@ -33,14 +35,14 @@ NODES = {
 HIDDEN = ("hidden_prereq_a", "hidden_prereq_b")
 
 
-class FoggedStub:
+class FoggedStub(FactViews):
 	"""A fogged founder who has heard of every node but the two hidden prerequisites."""
 
 	civ = {"name": "Stubland"}
 
 	def __init__(self, fog=True):
 		self.nodes = NODES
-		self.state = SimpleNamespace(_fog=fog, projects=SimpleNamespace(done=set(), active={}, revealed=set()))
+		self.state = Game(_fog=fog, projects=Game(done=set(), active={}, revealed=set()))
 		self.done = self.state.projects.done
 		self.active = self.state.projects.active
 

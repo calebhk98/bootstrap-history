@@ -50,17 +50,17 @@ check("backing out of the menu's question answers None", reply is None, reply)
 
 # ---- the options screen
 def turn_on(answer):
-    sim = SimpleNamespace(fuzzy_estimates=False)
+    sim = SimpleNamespace(state=SimpleNamespace(_fuzzy_estimates=False, _fuzzy_salt=0), rng=random.Random(1))
     said = []
     turned = turn_fuzzy_estimates_on(sim, lambda prompt, options, default: answer, said.append, said.append)
     return sim, turned, said
 
 
 sim, turned, said = turn_on("y")
-check("answering y turns the option on", sim.fuzzy_estimates is True and turned is True, None)
+check("answering y turns the option on", sim.state._fuzzy_estimates is True and turned is True, None)
 for answer in ("n", None):
     sim, turned, said = turn_on(answer)
-    check("an answer of %r leaves it off" % (answer,), sim.fuzzy_estimates is False and turned is False, None)
+    check("an answer of %r leaves it off" % (answer,), sim.state._fuzzy_estimates is False and turned is False, None)
 
 # ---- the setter
 class Game(ForwardingPropertiesMixin):

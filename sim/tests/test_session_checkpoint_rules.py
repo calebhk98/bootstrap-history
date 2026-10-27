@@ -13,6 +13,7 @@ from unittest import mock
 
 from sim.engine import settings
 from sim.ui import cli, cli_interactive, cli_interactive_saveload
+from sim.tests.ui_stand_in import Game
 
 
 class CheckpointTests(unittest.TestCase):
@@ -50,7 +51,7 @@ class ResumeTests(unittest.TestCase):
     """`_play_resolve_session` on a save that exists: the engine's load and save are stubs that record the path."""
 
     def resume(self, path):
-        sim = SimpleNamespace(civ={"id": "rome_100ad"}, year=-100, nodes={})
+        sim = Game(civ={"id": "rome_100ad"}, year=-100, nodes={})
         loaded, saved = [], []
         with mock.patch.object(cli_interactive, "load_state", lambda game, session: loaded.append(session)), \
                 mock.patch.object(cli_interactive, "save_session", lambda game, session: saved.append(session)), \
@@ -58,7 +59,7 @@ class ResumeTests(unittest.TestCase):
                 mock.patch.object(cli_interactive, "_carry_known_routes", lambda *arguments: None), \
                 mock.patch.object(cli_interactive, "_is_claimed_slot", lambda session: False), \
                 mock.patch("builtins.print"):
-            result = cli_interactive._play_resolve_session(SimpleNamespace(civ=None), sim, path)
+            result = cli_interactive._play_resolve_session(Game(civ=None), sim, path)
         return result, loaded, saved
 
     def make_save(self, name):

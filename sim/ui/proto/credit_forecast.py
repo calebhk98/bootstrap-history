@@ -56,5 +56,5 @@ def borrowing_forecast(instalments, materials_paid_now, capital, credit_limit_of
 
 def start_credit_forecast(sim, instalments, materials_paid_now):
     """`borrowing_forecast` for a `start` on `sim`: its cash, credit line, going rate and the forecast of servicing a debt."""
-    return borrowing_forecast(instalments, materials_paid_now, sim.capital, sim.credit_limit, sim.debt_interest_rate,
-                              sim.debt_service_forecast)
+    return borrowing_forecast(instalments, materials_paid_now, sim.view("acting_balance")(), sim.view("credit_limit"), sim.view("debt_interest_rate"),
+                              sim.view("debt_service_forecast"))

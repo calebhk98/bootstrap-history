@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 from sim.ui.proto import dispatch_ventures, rush_loop
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -85,7 +86,7 @@ class BeginInOrder(unittest.TestCase):
 class PreviewPutsTheGameBack(unittest.TestCase):
 
     def run_preview(self, rush):
-        game = SimpleNamespace(order=["x", "y"])
+        game = Game(order=["x", "y"])
         loaded = []
         with mock.patch.object(dispatch_ventures, "save_state"), \
                 mock.patch.object(dispatch_ventures, "load_state", lambda sim, path: loaded.append(path)), \

@@ -1,5 +1,6 @@
 """A handover moves the leaver's debts and claims, goods and every store keyed by its id, and refuses a replacement that
 holds works of its own. Read as numbers in the registry, the book and the stores; a handover pays and forgives nothing."""
+from sim.engine import ui_port
 
 QUICK_TOPIC = True
 
@@ -64,7 +65,7 @@ heir_net = purses.net("heir")
 before = totals(game)
 check("the leaver owes on its facility and a term loan", leaver_debt > 100.0 and purses.contracts.facility_of("leaver"), leaver_debt)
 
-moved = game.hand_over_seat("leaver", "heir")
+moved = game.send(ui_port.HandOverSeat("leaver", "heir"))
 after = totals(game)
 check("the handover went through", not isinstance(moved, str) and moved["to"] == "heir", moved)
 check("the replacement owes what the leaver owed, and the leaver owes nothing", abs(purses.debt("heir") - (heir_debt + leaver_debt)) < 1e-9
@@ -97,7 +98,7 @@ game = build()
 game.state.seats["leaver"].modules["seats"].dead_reason = "ran out of money"
 game.state.seats["leaver"].modules["seats"].life_left = 3.0
 game.state.seats["heir"].modules["seats"].life_left = 12.0
-game.hand_over_seat("leaver", "heir")
+game.send(ui_port.HandOverSeat("leaver", "heir"))
 kept = game.state.seats["heir"].modules["seats"]
 check("the replacement keeps its own founder's life, not the leaver's", (kept.founder_alive, kept.life_left, kept.dead_reason) == (True, 12.0, None),
       (kept.founder_alive, kept.life_left, kept.dead_reason))
@@ -109,7 +110,7 @@ purses.book.move(GoodsMove("edge:outside the book", "leaver", "grain", "rome", 4
 purses.book.move(GoodsMove("edge:outside the book", "heir", "grain", "rome", 10.0, "test"))
 purses.book.move(GoodsMove("edge:outside the book", "third", "grain", "rome", 5.0, "test"))
 goods_before = purses.book.goods_totals()
-game.hand_over_seat("leaver", "heir")
+game.send(ui_port.HandOverSeat("leaver", "heir"))
 check("the leaver's goods pass to the replacement and the total across holders is unchanged",
       purses.book.stock("heir", "grain", "rome") == 50.0 and purses.book.stock("leaver", "grain", "rome") == 0.0
       and purses.book.goods_totals() == goods_before, purses.book.goods_totals())
@@ -118,19 +119,19 @@ check("the book no longer knows the leaver", not purses.book.knows("leaver"), pu
 # ---- a replacement that holds works is refused with a cause and nothing changes
 game = build()
 game.state.seats["heir"].modules["resources"] = ResourcesSeat(mines=[{"material": "iron_ore"}])
-refused = game.hand_over_seat("leaver", "heir")
+refused = game.send(ui_port.HandOverSeat("leaver", "heir"))
 check("a replacement with workings of its own is refused", cause_of(refused) == "replacement_not_empty" and refused.facts["holds"] == ["holdings"], refused)
 check("a refused handover changed nothing", "leaver" in game.state.seats and game.state.actors.purses.debt("leaver") > 0.0, None)
 game = build()
 game.state.seats["heir"].modules["workforce"].scholars = 2.0
-check("a replacement with staff is refused", game.hand_over_seat("leaver", "heir").facts["holds"] == ["staff"], None)
+check("a replacement with staff is refused", game.send(ui_port.HandOverSeat("leaver", "heir")).facts["holds"] == ["staff"], None)
 game = build()
 game.state.seats["heir"].modules["finance"].interest_arrears = 3.0
-check("a replacement with arrears is refused", game.hand_over_seat("leaver", "heir").facts["holds"] == ["arrears or bondage"], None)
+check("a replacement with arrears is refused", game.send(ui_port.HandOverSeat("leaver", "heir")).facts["holds"] == ["arrears or bondage"], None)
 game = build()
 game.state.seats["heir"].projects.done |= {"wheel"}
 game.state.seats["leaver"].projects.done |= {"fire"}
-game.hand_over_seat("leaver", "heir")
+game.send(ui_port.HandOverSeat("leaver", "heir"))
 check("a replacement that only knows techniques keeps them and adds the leaver's", game.state.seats["heir"].projects.done == {"wheel", "fire"}, None)
 
 # ---- the renaming itself

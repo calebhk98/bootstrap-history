@@ -5,17 +5,18 @@ import unittest
 from types import SimpleNamespace
 
 from sim.ui.proto.guidance import leverage_points
+from sim.tests.ui_stand_in import Game
 
 
 def stand_in_game():
-    labour = SimpleNamespace(director_pool=lambda: 123.456, director_hours_committed=lambda: 40.04,
+    labour = Game(director_pool=lambda: 123.456, director_hours_committed=lambda: 40.04,
                              supervision_room=lambda: 7.77)
-    return SimpleNamespace(
+    return Game(
         labour=labour, operating={"mill": 1, "forge": 2},
         view=lambda name: {"material_throttle": lambda: 0.4567, "material_binding": lambda: "iron"}[name],
         literacy=lambda kind: 0.25, literacy_ceiling_general=lambda: 0.8, effective_schooling_flow=lambda: 0.0123,
         recurring_net=lambda: -55.55, credit_limit=lambda: 900.0, spending_power=lambda mode: 321.0,
-        knowledge_risk=lambda **options: {"technologies_at_risk": 3, "expected_technologies_lost_per_sacking": 0.5})
+        knowledge_risk=lambda *arguments, **options: {"technologies_at_risk": 3, "expected_technologies_lost_per_sacking": 0.5})
 
 
 class LeveragePoints(unittest.TestCase):

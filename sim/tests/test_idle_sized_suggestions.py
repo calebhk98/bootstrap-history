@@ -6,8 +6,9 @@ import types
 
 from .harness import *  # noqa: F401,F403
 from sim.ui.proto.guidance import development_program, training_suggestions
+from sim.tests.ui_stand_in import Game
 
-_game = types.SimpleNamespace(HOURS_PER_PERSON_YEAR=2000.0, labour=types.SimpleNamespace(training_hours_per_person=lambda trade: 300.0),
+_game = Game(HOURS_PER_PERSON_YEAR=2000.0, labour=Game(training_hours_per_person=lambda trade: 300.0),
                               project_cost=lambda node_id: {"dear": 900.0, "cheap": 40.0, "also_cheap": 40.0}[node_id])
 
 _rows = training_suggestions(_game, [

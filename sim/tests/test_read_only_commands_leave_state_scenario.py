@@ -89,6 +89,6 @@ changed = changers()
 check("no read-only command changes the saved game", not changed, str(changed))
 
 before = dump()
-game.peek_resource_throttle()
-game.peek_project_resource_throttle(node_id)
+game.view("resource_throttle")()
+game.view("resource_throttle")(node_id)
 check("peeking the throttle leaves the saved game as it was", dump() == before)

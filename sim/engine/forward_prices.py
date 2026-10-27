@@ -21,9 +21,6 @@ class ForwardPricesMixin:
     def material_price_basis(self, material):
         return self.view("material_price_basis")[material]
 
-    def _commodity_ledger(self):
-        return shared_ledger()
-
     def _material_commodity_map(self):
         return self.view("material_commodity_map")()
 

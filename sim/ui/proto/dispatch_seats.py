@@ -7,6 +7,15 @@ from sim.refusal import Refusal
 
 from .command_registry import command
 from .notes_store import hand_over_notes
+from sim.engine import ui_port
+
+
+def _join(sim, seat_id, template):
+    """Add the seat and answer it; a ValueError carrying the refusal's words when the seat cannot be added."""
+    answer = sim.send(ui_port.JoinSeat(seat_id, template))
+    if isinstance(answer, Refusal):
+        raise ValueError(str(answer))
+    return sim.view("legacy_seats")()[seat_id]
 
 
 def seat_rows(sim):
@@ -14,12 +23,12 @@ def seat_rows(sim):
     purse and what it has built; another seat's purse and work are not shown (they are its own to tell)."""
     ended = sim.view("dead_reasons")()
     rows = []
-    for seat_id, seat in sim.state.seats.items():
-        row = {"seat": seat_id, "country": seat.country or sim.civ.get("id"), "ended": ended.get(seat_id),
-               "you": seat_id == sim.state.acting_seat}
+    for seat_id, seat in sim.view("legacy_seats")().items():
+        row = {"seat": seat_id, "country": seat.country or sim.view("civilisation")().get("id"), "ended": ended.get(seat_id),
+               "you": seat_id == sim.view("acting_seat")()}
         if not seat.holds_household:
             row.update({"kind": seat.kind, "holder": seat.holder})
-        elif seat_id == sim.state.acting_seat:
+        elif seat_id == sim.view("acting_seat")():
             row.update({"capital": round(seat.household.capital, 1),
                         "built": len(seat.projects.done - seat.projects.granted)})
         rows.append(row)
@@ -33,7 +42,7 @@ def seat_rows(sim):
                      "named in its \"as\" field, else the session's seat (agent --seat), else the first seat. "
                      "The year advances for every seat that is still playing when anyone steps.")
 def _cmd_seats(sim, nodes, cmd, ended):
-    return {"ok": True, "seats": seat_rows(sim), "year": sim.year,
+    return {"ok": True, "seats": seat_rows(sim), "year": sim.view("year")(),
             "note": 'add "as":"<seat>" to a command to act as that seat; "join" adds a player.'}
 
 
@@ -51,7 +60,7 @@ def _cmd_join(sim, nodes, cmd, ended):
     if not isinstance(seat_id, str) or not seat_id.strip():
         return {"ok": False, "error": 'name the new seat, e.g. {"cmd":"join","seat":"second"}'}
     seat_id = seat_id.strip()
-    if seat_id in sim.state.seats:
+    if seat_id in sim.view("legacy_seats")():
         return {"ok": False, "error": "there is already a seat %r. Nothing was changed." % seat_id}
     seat_kind = cmd.get("seat_kind") or HOUSEHOLD_SEAT
     if seat_kind not in (HOUSEHOLD_SEAT, COUNTRY_SEAT):
@@ -59,27 +68,27 @@ def _cmd_join(sim, nodes, cmd, ended):
                 "error": "unknown seat kind %r. Kinds: household, country. Nothing was changed." % (seat_kind,)}
     if seat_kind == COUNTRY_SEAT:
         return _join_country_seat(sim, seat_id, cmd)
-    kit = cmd.get("kit") or sim.cfg["start_kit"]
+    kit = cmd.get("kit") or sim.view("game_config")()["start_kit"]
     if kit not in STARTING_KITS:
         return {"ok": False, "error": "unknown kit %r. Kits: %s. Nothing was changed." % (kit, ", ".join(STARTING_KITS))}
-    template = {"kit": kit, "starting_techs": sorted(sim.society_techs_now() & set(sim.nodes)),
+    template = {"kit": kit, "starting_techs": sorted(set(sim.view("society_techs")()) & set(sim.view("tree_nodes")())),
                 "country": cmd.get("country")}
-    sim.join_seat(seat_id, template)
+    _join(sim, seat_id, template)
     return {"ok": True, "joined": seat_id, "seats": seat_rows(sim),
             "note": 'send its commands with "as":"%s"; it plays from the next step.' % seat_id}
 
 
 def _join_country_seat(sim, seat_id, cmd):
     """Add a seat that holds a country's government; it has no kit, techniques, household or founder."""
-    country = cmd.get("country") or str(sim.civ.get("id"))
-    governed = sim.governed_countries()
+    country = cmd.get("country") or str(sim.view("civilisation")().get("id"))
+    governed = sim.view("governed_countries")()
     if country not in governed:
         return {"ok": False, "cause": "unknown_country", "choices": governed,
                 "error": "no government of %r to hold. Countries: %s. Nothing was changed." % (country, ", ".join(governed))}
     if cmd.get("kit"):
         return {"ok": False, "cause": "country_seat_has_no_kit",
                 "error": "a country seat has no starting kit: its means are its state's. Nothing was changed."}
-    seat = sim.join_seat(seat_id, {"kind": COUNTRY_SEAT, "country": country})
+    seat = _join(sim, seat_id, {"kind": COUNTRY_SEAT, "country": country})
     return {"ok": True, "joined": seat_id, "kind": seat.kind, "holder": seat.holder, "country": country,
             FOUNDER_SECTION: seat.founder, "household": None, "seats": seat_rows(sim),
             "note": 'seat %s holds the government of %s; it has no household. Send its commands with "as":"%s".'
@@ -92,7 +101,7 @@ def hand_over(sim, caller, from_id, to_id):
     if from_id != caller:
         return {"ok": False, "cause": "not_your_seat", "choices": [caller], "seat": from_id,
                 "error": "you can hand over only your own seat (%s), not %r. Nothing was changed." % (caller, from_id)}
-    moved = sim.hand_over_seat(from_id, to_id)
+    moved = sim.send(ui_port.HandOverSeat(from_id, to_id))
     if isinstance(moved, Refusal):
         return {"ok": False, "cause": moved.cause, "choices": moved.choices, "error": str(moved), **moved.facts}
     notes = hand_over_notes(sim, from_id, to_id)
@@ -114,5 +123,5 @@ def _cmd_handover(sim, nodes, cmd, ended):
     if not isinstance(to_id, str) or not to_id.strip():
         return {"ok": False, "cause": "no_replacement",
                 "error": 'name the replacement seat, e.g. {"cmd":"handover","to":"second"}'}
-    caller = sim.state.acting_seat
+    caller = sim.view("acting_seat")()
     return hand_over(sim, caller, cmd.get("from", caller), to_id.strip())

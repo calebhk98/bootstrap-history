@@ -10,6 +10,7 @@ import unittest
 from sim.labour.labour_training import TrainingMixin
 from sim.refusal import Refusal, cause_of
 from sim.ui.proto.state_waiting import _waiting_on
+from sim.tests.ui_stand_in import Game
 
 
 class World:
@@ -21,9 +22,9 @@ class World:
         self.wages = {"smith": 1.0}
         self.trades_absent = {"smith"}
         self.trade_notes = {}
-        self.workforce = types.SimpleNamespace(contract_hours={})
-        self.state = types.SimpleNamespace(household=self.workforce,
-                                           projects=types.SimpleNamespace(done=set(), active={}))
+        self.workforce = Game(contract_hours={})
+        self.state = Game(household=self.workforce,
+                                           projects=Game(done=set(), active={}))
 
     def spending_power(self, kind):
         self.asked.append(kind)
@@ -38,7 +39,7 @@ class Gate(TrainingMixin):
 
     def __init__(self, power, fee):
         self._world = World(power)
-        self.labour_market = types.SimpleNamespace(
+        self.labour_market = Game(
             price_factor=lambda trade: 1.0, whole_recruits=lambda trade, asked, premium: asked,
             hire_cost=lambda trade, count, premium=0.0: fee)
         self.fee = fee
@@ -96,7 +97,7 @@ class AutoCommission(unittest.TestCase):
 
 class WaitingOn(unittest.TestCase):
     def _cause(self, power):
-        world = types.SimpleNamespace(
+        world = Game(
             trade_demand_vs_supply=lambda: {}, project_cost=lambda node_id: 9000.0,
             spending_power=lambda kind: power if kind == "buy" else None, civ={})
         nodes = {"academy": {"yrs": 4.0, "lab": {}}}

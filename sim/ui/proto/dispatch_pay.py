@@ -2,6 +2,7 @@
 
 from .command_registry import command
 from .quantity_units import read_quantity
+from sim.engine import ui_port
 
 TARGETS = ("debt", "claims")
 
@@ -21,15 +22,15 @@ def _cmd_pay(sim, nodes, cmd, ended):
         return {"ok": False, "error": "the run has ended (%s); nothing more can be paid" % ended}
     target = str(cmd.get("what") or "").lower()
     if target in TARGETS:
-        paid, text = sim.settle_with_state(target)
+        paid, text = sim.send(ui_port.SettleWithState(target, None))
     else:
         amount, error = read_quantity(cmd, "amount", None, "money", "civ_coin", sim)
         if error:
             return {"ok": False, "error": error + ". Nothing was changed."}
         if not amount or amount <= 0:
             return {"ok": False, "error": "name `debt`, `claims` or a sum greater than zero. Nothing was changed."}
-        paid, text = sim.settle_with_state(None, amount)
+        paid, text = sim.send(ui_port.SettleWithState(None, amount))
     if paid <= 0.0:
         return {"ok": False, "error": text + ". Nothing was changed."}
-    return {"ok": True, "paid": round(paid, 1), "message": text, "capital": round(sim.capital, 1),
-            "state_debt": round(sim.state_debt(), 1)}
+    return {"ok": True, "paid": round(paid, 1), "message": text, "capital": round(sim.view("acting_balance")(), 1),
+            "state_debt": round(sim.view("state_debt")(), 1)}

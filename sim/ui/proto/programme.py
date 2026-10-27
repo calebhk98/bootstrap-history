@@ -22,7 +22,7 @@ def is_set(sim):
 
 def target_text(sim, target):
     if target["kind"] == "goal":
-        return "goal %s" % sim.nodes.get(target["value"], {}).get("name", target["value"])
+        return "goal %s" % sim.view("tree_nodes")().get(target["value"], {}).get("name", target["value"])
     return "category %s" % target["value"]
 
 
@@ -49,12 +49,12 @@ def pause(sim, programme):
         programme["paused"], programme["paused_by"] = True, text
         programme["paused_kind"], programme["paused_material"] = kind, material
         return kind, material, "paused: %s%s" % (text, suffix)
-    if sim.capital < 0 and "pause_debt" not in pauses:
+    if sim.view("acting_balance")() < 0 and "pause_debt" not in pauses:
         return "in_debt", None, "in debt (capital below zero)"
     floor = programme.get("caps", {}).get("reserve_cash")
-    if floor is not None and sim.capital < floor:
+    if floor is not None and sim.view("acting_balance")() < floor:
         return "below_reserve_floor", None, "cash is below the reserve floor"
-    if floor is not None and sim.capital - standing_draw(sim, programme) < floor:
+    if floor is not None and sim.view("acting_balance")() - standing_draw(sim, programme) < floor:
         return "draw_would_breach_reserve_floor", None, "cash after this year's standing draw would fall below the reserve floor"
     return None
 
@@ -67,7 +67,7 @@ def pause_reason(sim, programme):
 
 def hours_started_this_year(sim, programme):
     year, hours = programme.get("hours_year", [None, 0.0])
-    return hours if year == sim.year else 0.0
+    return hours if year == sim.view("year")() else 0.0
 
 
 def _hours_room(sim, programme):
@@ -108,7 +108,7 @@ def _year_rush(sim, programme):
         caps["max_annual_draw"] = room
     target = programme["target"]
     if target["kind"] == "goal":
-        if target["value"] in sim.done:
+        if target["value"] in sim.view("techniques_held")():
             return None, ("goal_reached", "goal reached")
         ids = route_order(sim, target["value"])
         if not ids:
@@ -122,7 +122,7 @@ def programme_before_year(sim, nodes):
     programme = state(sim)
     if not programme.get("target"):
         return []
-    row = {"year": sim.year, "what": "programme for " + target_text(sim, programme["target"]),
+    row = {"year": sim.view("year")(), "what": "programme for " + target_text(sim, programme["target"]),
            "started": [], "skipped": [], "spent": 0.0}
     held = pause(sim, programme)
     if held:
@@ -148,7 +148,7 @@ def programme_before_year(sim, nodes):
     programme["committed"] = programme.get("committed", 0.0) + result["total_cost"]
     row["hours"] = result["total_founder_hours"]
     programme["hours"] = programme.get("hours", 0.0) + row["hours"]
-    programme["hours_year"] = [sim.year, hours_started_this_year(sim, programme) + row["hours"]]
+    programme["hours_year"] = [sim.view("year")(), hours_started_this_year(sim, programme) + row["hours"]]
     if not row["started"]:
         row["did_nothing_kind"], row["did_nothing_because"] = "nothing_fit", "nothing fit the caps or exclusions"
     return [row]

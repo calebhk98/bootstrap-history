@@ -7,6 +7,7 @@ import weakref
 from types import SimpleNamespace as _Namespace
 
 from sim.engine import ui_port
+from sim.tests.ui_stand_in import StandIn
 from sim.refusal import LogLine, cause_of
 from sim.ui import memory, replay
 from sim.ui.proto import goals_watch, programme, programme_draw, stuck_advice
@@ -20,13 +21,17 @@ from .harness import check
 from sim.refusal import LogLine, cause_of
 
 
-class Stub(_Namespace):
-    """A stand-in game that memory can key on weakly."""
+class Stub(StandIn):
+    """A stand-in game that memory can key on weakly. Its facts are attributes, published as the views the screens read."""
 
     __hash__ = object.__hash__
 
     def __init__(self, **fields):
-        super().__init__(**fields)
+        super().__init__(
+            legacy_fog=lambda: self.fog, goal=lambda: {"node": self.goal, "year": None}, techniques_held=lambda: self.done,
+            acting_balance=lambda: self.capital, active_projects=lambda: self.active, tree_nodes=lambda: self.nodes,
+            year=lambda: self.year, techniques_revealed=lambda: self.revealed, fog_scrub=lambda text: self.fog_scrub(text))
+        self.__dict__.update(fields)
         self.state = _Namespace(interface={})
 
 # 1. filler note only for starts off the remaining route, never under fog

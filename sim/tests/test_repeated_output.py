@@ -10,12 +10,13 @@ from sim.ui.proto.explain_once import already_explained
 from sim.ui.proto.render_screen_available import _available_row
 from sim.ui.proto.render_screen_state import _state_completed_head_lines
 from sim.ui.proto.render_screen_state_blocks import _state_founder
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
 
 def _game(year=100):
-    return SimpleNamespace(year=year, state=SimpleNamespace(seat_progress=SimpleNamespace(_said_explanations=None)))
+    return Game(year=year, state=Game(seat_progress=Game(_said_explanations=None)))
 
 
 # --- (a) a long explanation is shown the first time, then a pointer

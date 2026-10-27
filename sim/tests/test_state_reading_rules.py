@@ -20,6 +20,7 @@ from sim.tests import hazards_host, module_harness
 from sim.ui.proto.scandal_trend import years_until_scandal_crosses_the_line
 from sim.ui.proto.state_succession import succession_block
 from sim.tests import event_stand_in
+from sim.tests.ui_stand_in import Game
 
 
 class ScandalTrend(unittest.TestCase):
@@ -84,9 +85,9 @@ class PatronDies(unittest.TestCase):
 class Succession(unittest.TestCase):
 
     def game(self, carry, deputies):
-        return types.SimpleNamespace(
-            view=lambda name: (lambda: {"directors_extra": deputies}),
-            DEPUTIES_CARRY_THE_WORK_FROM=1.0, deputies_carry_the_work=lambda: carry, deputy_hours=lambda: 400.0,
+        return Game(
+            staff={"directors_extra": deputies}, legacy_constant={"DEPUTIES_CARRY_THE_WORK_FROM": 1.0},
+            patronage={"deputies_carry_the_work": carry}, game_config={"director_hours_per_year": 2000.0},
             STAFF_CAPACITY_SOURCES=[], nodes={}, has=lambda node_id: False)
 
     def test_deputies_short_of_the_threshold_are_reported_as_not_carrying_the_work(self):

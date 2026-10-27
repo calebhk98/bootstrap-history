@@ -41,16 +41,16 @@ def tile_place(tile_id, world_map=None):
 
 
 def map_report(sim, full=False):
-    held = sim.labour.settlement_tiles()
-    base = sim.labour.base_tile()
+    held = sim.view("settlement_tiles")()
+    base = sim.view("base_tile")()
     rows = []
     for tile_id in sorted(held, key=lambda name: (-held[name], name)):
-        row = dict(tile_place(tile_id, sim.world_map), people=round(held[tile_id]),
+        row = dict(tile_place(tile_id, sim.view("legacy_world_map")()), people=round(held[tile_id]),
                    deposits=_deposits_by_tile().get(tile_id, []))
         if tile_id == base:
             row["is_your_base"] = True
         else:
-            quote = sim.labour.relocation_quote(tile_id)
+            quote = sim.view("relocation_quote")[tile_id]
             if quote is not None:
                 row["days_from_your_base"] = round(quote[0])
         rows.append(row)
@@ -59,19 +59,19 @@ def map_report(sim, full=False):
         for other in tile_names.neighbours(tile_id):
             if other not in held:
                 next_door.setdefault(other, tile_names.tile_name(tile_id))
-    door_rows = [dict(tile_place(tile_id, sim.world_map), beside=beside,
+    door_rows = [dict(tile_place(tile_id, sim.view("legacy_world_map")()), beside=beside,
                       deposits=_deposits_by_tile().get(tile_id, []))
                  for tile_id, beside in sorted(next_door.items())]
     shown = rows if full else rows[:TILES_SHOWN_BY_DEFAULT]
     base_people = held.get(base, 0.0)
     return {
-        "civilisation": sim.civ.get("short_name", sim.civ.get("name", "")),
-        "population": round(sim.population.total),
+        "civilisation": sim.view("civilisation")().get("short_name", sim.view("civilisation")().get("name", "")),
+        "population": round(sim.view("population")().total),
         "regions": [tile_names.region_names().get(region_id, region_id)
-                    for region_id in regions_of_tiles(tiles_held(sim.civ, sim.world_map))],
+                    for region_id in regions_of_tiles(tiles_held(sim.view("civilisation")(), sim.view("legacy_world_map")()))],
         "you_are_based_at": dict(
-            tile_place(base, sim.world_map), people=round(base_people),
-            town_people=round(sim.labour.home_town_population_estimate())),
+            tile_place(base, sim.view("legacy_world_map")()), people=round(base_people),
+            town_people=round(sim.view("home_town_population_estimate")())),
         "tiles": shown,
         "tiles_held": len(rows),
         "next_door": door_rows if full else door_rows[:TILES_SHOWN_BY_DEFAULT],

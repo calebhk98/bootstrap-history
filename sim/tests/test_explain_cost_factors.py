@@ -10,11 +10,12 @@ import unittest
 
 from sim.tests import materials_stand_in
 from sim.ui.proto.techtree import _explain_cost
+from sim.tests.ui_stand_in import FactViews
 
 NODE = {"_labour_cost": 60.0, "cap": 10.0, "_material_cost": 30.0, "_total_cost": 100.0}
 
 
-class Game:
+class Game(FactViews):
     """The factors a project's cost is made of."""
 
     def __init__(self, rebuild=1.0):

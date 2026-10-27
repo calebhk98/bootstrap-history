@@ -54,7 +54,7 @@ def group_page(sim, group):
                 "did you mean": [word for word in near if word in groups]}
     names = groups[group]
     return {"group": group,
-            "commands": {name: _command_text(name, sim.fog) for name in names},
+            "commands": {name: _command_text(name, sim.view("legacy_fog")()) for name in names},
             "usage": {name: command_registry.COMMANDS[name]["usage"] for name in names},
             "more": "help <command> for one command's usage and options"}
 
@@ -73,7 +73,7 @@ def full_listing(sim, limit=None, offset=0):
             page["paging"]["next"] = "help commands all limit %d offset %d" % (limit, offset + len(shown))
     page.update({
         "commands": {"json / compact": JSON_MODE_NOTE,
-                     **{name: _command_text(name, sim.fog) for name in shown}},
+                     **{name: _command_text(name, sim.view("legacy_fog")()) for name in shown}},
         "usage": {name: command_registry.COMMANDS[name]["usage"] for name in shown},
         "groups": command_registry.grouped(),
         "aliases": command_registry.alias_map(),

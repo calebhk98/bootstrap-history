@@ -25,6 +25,7 @@ from sim.ui.proto.seat_address import run_as_seat
 
 from .test_no_seller_no_price import _Offers, _fake_sim
 from .world_stand_in import fake_needs
+from sim.tests.ui_stand_in import FactViews
 
 
 def _stores():
@@ -191,7 +192,7 @@ class TradeDutyReads(unittest.TestCase):
         self.assertEqual(trade_duty.terms(sim, "rome", "rome"), (0.0, False))
 
 
-class Game:
+class Game(FactViews):
     """The root state with the real seat rebinding, as in the relations store topic."""
 
     def __init__(self):

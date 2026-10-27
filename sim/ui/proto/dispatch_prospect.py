@@ -29,4 +29,4 @@ def _cmd_prospect(sim, nodes, cmd, ended):
     answer = sim.send(Prospect(tile, sim.view("normalized_material")[material], person_days))
     if isinstance(answer, Refusal):
         return {"ok": False, "error": str(answer)}
-    return {"ok": True, "prospected": answer["message"], "capital": round(sim.capital, 1)}
+    return {"ok": True, "prospected": answer["message"], "capital": round(sim.view("acting_balance")(), 1)}

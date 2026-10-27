@@ -1,6 +1,7 @@
 """Building roads, track, canals and bridges between neighbouring tiles the nation holds, and ports on a tile."""
 
 from .command_registry import command
+from sim.engine import ui_port
 
 
 @command("build_way", group="money",
@@ -25,17 +26,17 @@ def _cmd_build_way(sim, nodes, cmd, ended):
     tile_b = tile_b or tile_a
     if not (way and tile_a):
         return {"ok": False, "error": 'say what and between which tiles: {"cmd":"build_way","way":"road","from":"<tile>","to":"<tile>"}'}
-    quote = sim.way_quote(tile_a, tile_b, way)
+    quote = sim.view("way_quote")(tile_a, tile_b, way)
     if cmd.get("preview"):
         if quote is None:
-            refusal = sim.way_refusal(tile_a, tile_b, way)
+            refusal = sim.view("way_refusal")(tile_a, tile_b, way)
             return {"ok": False, "error": str(refusal), "cause": refusal.cause}
         return {"ok": True, "preview": True, "way": way, "km": round(quote["km"], 1),
                 "labour_hours": round(quote["labour_hours"]), "materials_tonnes": {
                     material: round(tonnes) for material, tonnes in quote["materials"].items()},
                 "money": round(quote["money"]), "years": round(quote["years"], 1),
                 "engineered": quote["engineered"]}
-    built, message = sim.build_way(tile_a, tile_b, way)
+    built, message = sim.send(ui_port.BuildWay(tile_a, tile_b, way))
     if not built:
         return {"ok": False, "error": str(message), "cause": getattr(message, "cause", None)}
-    return {"ok": True, "built": message, "capital": round(sim.capital, 1)}
+    return {"ok": True, "built": message, "capital": round(sim.view("acting_balance")(), 1)}

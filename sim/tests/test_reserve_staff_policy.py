@@ -12,6 +12,7 @@ from sim.labour import trade_data
 from sim.ui.proto.dispatch_staff_controls import _cmd_reserve
 from sim.ui.proto.typed import parse_typed
 from sim.tests import event_stand_in
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -27,17 +28,17 @@ class _Labour(StaffControlsMixin):
         self.hired = []
         self.housing_built = []
         self.room = room
-        household = SimpleNamespace(reserve_craftsmen=reserve_craftsmen, reserve_scholars=reserve_scholars,
+        household = Game(reserve_craftsmen=reserve_craftsmen, reserve_scholars=reserve_scholars,
                                     log=[])
-        self._world = SimpleNamespace(
+        self._world = Game(
             workforce=household, policy={"reserve_staff": policy_on},
-            state=SimpleNamespace(founder=SimpleNamespace(policy={"reserve_staff": policy_on}), household=household,
-                                  scenario=SimpleNamespace(year=100)),
+            state=Game(founder=Game(policy={"reserve_staff": policy_on}), household=household,
+                                  scenario=Game(year=100)),
             venture_staff_free=lambda: (free_scholars, free_craftsmen),
             housing_price_per_place=lambda: price, spending_power=lambda kind: spending,
             build_worker_housing=lambda places: self.housing_built.append(places) or True)
         event_stand_in.stood_in(self._world)
-        self.labour_market = SimpleNamespace(quote_annual=lambda trade: 50.0)
+        self.labour_market = Game(quote_annual=lambda trade: 50.0)
 
     def household_room(self):
         return self.room

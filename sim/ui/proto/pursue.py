@@ -11,9 +11,9 @@ CAP_KEYS = ("max_total_cost", "max_annual_draw", "reserve_cash", "max_total_hour
 
 def resolve_goal(sim, raw):
     """(goal id, error). No word means the current goal; a name resolves when it is unique."""
-    nodes = sim.nodes
+    nodes = sim.view("tree_nodes")()
     if raw in (None, ""):
-        return (sim.goal, None) if sim.goal in nodes else (None, "there is no current goal; name one")
+        return (sim.view("goal")()["node"], None) if sim.view("goal")()["node"] in nodes else (None, "there is no current goal; name one")
     text = str(raw).strip()
     if text in nodes:
         return text, None
@@ -26,7 +26,7 @@ def resolve_goal(sim, raw):
 
 def route_order(sim, goal):
     """Startable, unfinished route members: longest remaining chain first, cheaper first on ties."""
-    nodes = sim.nodes
+    nodes = sim.view("tree_nodes")()
     route = closure(nodes, goal)
     tail = {}
     for node_id in reversed(topo_order(nodes, route)):
@@ -36,9 +36,9 @@ def route_order(sim, goal):
                 tail[before] = max(tail.get(before, 0.0), tail[node_id])
     memo = {}
     startable = [node_id for node_id in route
-                 if node_id not in sim.done and node_id not in sim.active
-                 and sim.can_start(node_id, _memo=memo)]
-    return sorted(startable, key=lambda node_id: (-tail.get(node_id, 0.0), sim.project_cost(node_id), node_id))
+                 if node_id not in sim.view("techniques_held")() and node_id not in sim.view("active_projects")()
+                 and sim.view("start_check")(node_id, False, memo, False)[0]]
+    return sorted(startable, key=lambda node_id: (-tail.get(node_id, 0.0), sim.view("project_cost")(node_id), node_id))
 
 
 def rush_command(ids=None, category=None, caps=None, limit=None, preview=False):

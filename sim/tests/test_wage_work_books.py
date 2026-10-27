@@ -11,6 +11,8 @@ from sim.refusal import cause_of, facts_of
 from sim.labour.labour_wage_ledger import WageLedgerMixin
 from sim.ui.proto.dispatch_labour import _cmd_work
 from sim.tests import event_stand_in
+from sim.tests.ui_stand_in import StandIn
+from sim.workforce.api import WorkForWages
 
 
 def household(**fields):
@@ -79,10 +81,8 @@ class DryRun(unittest.TestCase):
 
 class WorkCommand(unittest.TestCase):
     def game(self):
-        labour = types.SimpleNamespace(
-            work_for_wages=lambda trade, hours: (312.46, None), work_for_wages_dry_run=lambda trade, hours: (312.46, None),
-            director_pool=lambda: 2000.0, director_hours_committed=lambda: 500.0)
-        return types.SimpleNamespace(labour=labour, capital=900.0)
+        return StandIn(answers={WorkForWages: (312.46, None)}, work_for_wages_dry_run=lambda trade, hours: (312.46, None),
+                       hours_available={"director_pool": 2000.0, "director_committed": 500.0}, acting_balance=900.0)
 
     def test_a_preview_states_the_wage_and_says_nothing_changed(self):
         reply = _cmd_work(self.game(), {}, {"cmd": "work", "trade": "scholar", "hours": 1500, "preview": True}, None)
@@ -98,7 +98,7 @@ class WorkCommand(unittest.TestCase):
 
     def test_a_refused_sale_is_not_ok_and_earns_nothing(self):
         game = self.game()
-        game.labour.work_for_wages = lambda trade, hours: (0.0, "hours must be greater than zero")
+        game.answers[WorkForWages] = (0.0, "hours must be greater than zero")
         reply = _cmd_work(game, {}, {"cmd": "work", "trade": "scholar", "hours": 0}, None)
         self.assertIs(reply["ok"], False)
 

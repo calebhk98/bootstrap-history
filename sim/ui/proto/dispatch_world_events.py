@@ -13,6 +13,6 @@ def _cmd_world_events(sim, nodes, cmd, ended):
     argument = str(cmd.get("id") or cmd.get("years") or "").strip()
     years = int(argument) if argument.isdigit() else 10
     kind = argument if argument and not argument.isdigit() else None
-    rows = sim.view("world_events")(kind, sim.state.scenario.year - years)
+    rows = sim.view("world_events")(kind, sim.view("year")() - years)
     return {"ok": True, "years": years, "kind": kind, "events": rows,
             "note": "%d world event%s in the window." % (len(rows), "" if len(rows) == 1 else "s")}

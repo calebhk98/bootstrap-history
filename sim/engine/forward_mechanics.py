@@ -71,10 +71,6 @@ class ForwardMechanicsMixin:
         return self.view("capability_sets")()[1]
 
     @property
-    def NOT_OPERATING_BENEFIT(self):
-        return self.view("capability_sets")()[2]
-
-    @property
     def DISEASE_BURDEN_TECH_IDS(self):
         return tuple(self.view("mechanic")["disease_burden"])
 

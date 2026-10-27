@@ -69,8 +69,8 @@ def _short_of_staff(sim, node):
     marker that contradicts the gate it is describing is worse than no
     marker.
     """
-    return bool(node["art"] > sim.labour.craft_hands_available() + 1e-9
-                or node["sch"] > sim.labour.effective_scholars() + 1e-9)
+    return bool(node["art"] > sim.view("hours_available")["craft_hands"] + 1e-9
+                or node["sch"] > sim.view("effective_scholars")() + 1e-9)
 
 
 def _staff_fields(sim, node):
@@ -116,14 +116,14 @@ def _revenue_known_exactly(sim, node_id):
     completion) defaults to True rather than trapping a player in a fog
     the engine itself cannot explain.
     """
-    if node_id not in sim.done:
+    if node_id not in sim.view("techniques_held")():
         return False
-    if node_id in sim.granted:
+    if node_id in sim.view("techniques_granted")():
         return True
-    started = sim.done_year.get(node_id)
+    started = sim.view("done_year")().get(node_id)
     if started is None:
         return True
-    return (sim.year - started) >= 3
+    return (sim.view("year")() - started) >= 3
 
 
 def _fog_revenue_estimate(sim, node_id):
@@ -159,13 +159,13 @@ def _fog_revenue_estimate(sim, node_id):
     Roman trade is tighter than a guess about a Han institution nobody wrote
     down the takings of, the same as a historian's own uncertainty would be.
     """
-    node = sim.nodes[node_id]
+    node = sim.view("tree_nodes")()[node_id]
     real = node["rev"]
     if real <= 0:
         return None          # nothing to estimate; a non-earner is a non-earner under fog too
-    key = "%s|%s|%s|%s" % (sim.civ.get("id") or sim.civ.get("name") or "civ",
-                             sim.goal or "",
-                             sim.cfg.get("start_capital") or sim.cfg.get("start_kit"), node_id)
+    key = "%s|%s|%s|%s" % (sim.view("civilisation")().get("id") or sim.view("civilisation")().get("name") or "civ",
+                             sim.view("goal")()["node"] or "",
+                             sim.view("game_config")().get("start_capital") or sim.view("game_config")().get("start_kit"), node_id)
     digest = hashlib.sha256(key.encode("utf-8")).digest()
     half = {"A": 0.30, "B": 0.55}.get(node.get("conf"), 0.85)
     lo_frac = 0.35 + (digest[0] / 255.0) * 0.55
@@ -202,14 +202,14 @@ def _brief(sim, nodes, node_id, fog):
         # `why` also answers for things you finished years ago.
         _est = _fog_revenue_estimate(sim, node_id)
         return {"id": node_id, "name": node["name"],
-                "cost": round(sim.project_cost(node_id), 1),
+                "cost": round(sim.view("project_cost")(node_id), 1),
                 "your_hours": node["ph"],
                 "least_years": node["yrs"],
                 # effective_risk, NOT node["risk"]. Once a project has failed
                 # once, retry learning means the tree's bare figure is no
                 # longer what the dice use, and quoting it would understate
                 # what a second attempt is worth.
-                "chance_of_failure": sim.effective_risk(node_id),
+                "chance_of_failure": sim.view("effective_risk")(node_id),
                 # WHAT A FAILURE COSTS, not only how likely one is. A failure
                 # takes a flat 40% of the money and sets 40% of the hours to
                 # do again; the rate was on the screen and the sum never was,
@@ -217,28 +217,28 @@ def _brief(sim, nodes, node_id, fog):
                 # small thing and were not expecting what it took off a large
                 # project. Zero when the work cannot fail, so nothing invents
                 # a danger that is not there.
-                "failure_costs": round(sim.failure_loss(node_id), 1),
+                "failure_costs": round(sim.view("failure_loss")(node_id), 1),
                 "failure_costs_hours": round(node["ph"] * 0.4, 1) if node["risk"] else 0.0,
                 "earns_per_year": (_est if _est is not None
-                                   else round(sim.venture_real_earnings(node_id), 1)),
-                "costs_per_year_after": round(sim.venture_upkeep_quote(node_id)["now"], 1),
+                                   else round(sim.view("venture_real_earnings")(node_id), 1)),
+                "costs_per_year_after": round(sim.view("venture_upkeep_quote")(node_id)["now"], 1),
                 "costs_per_year_at_full_staffing": round(
-                    sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
+                    sim.view("venture_upkeep_quote")(node_id)["at_full_staffing"], 1),
                 "how_much_rests_on_this": rests,
                 **_staff_fields(sim, node)}
     return {"id": node_id, "name": node["name"], "cat": node["cat"],
             **_staff_fields(sim, node),
-            "cost": round(sim.project_cost(node_id), 1), "founder_hours": node["ph"],
-            "calendar_floor_years": round(sim.calendar_floor(node_id), 2),
+            "cost": round(sim.view("project_cost")(node_id), 1), "founder_hours": node["ph"],
+            "calendar_floor_years": round(sim.view("calendar_floor")(node_id), 2),
             "nominal_calendar_floor_before_reputation": node["yrs"],
-            "risk": sim.effective_risk(node_id),
-            "pay_to_lower_the_risk": sim.precaution_quote(node_id),
-            "earns_per_year": round(sim.venture_real_earnings(node_id), 1),
-            "forecast_basis": sim.venture_forecast_basis(node_id),
-            "sale_basis": sim.venture_sale_basis(node_id),
-            "costs_per_year_after": round(sim.venture_upkeep_quote(node_id)["now"], 1),
+            "risk": sim.view("effective_risk")(node_id),
+            "pay_to_lower_the_risk": sim.view("precaution_quote")(node_id),
+            "earns_per_year": round(sim.view("venture_real_earnings")(node_id), 1),
+            "forecast_basis": sim.view("venture_forecast_basis")[node_id],
+            "sale_basis": sim.view("venture_sale_basis")[node_id],
+            "costs_per_year_after": round(sim.view("venture_upkeep_quote")(node_id)["now"], 1),
             "costs_per_year_at_full_staffing": round(
-                sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
+                sim.view("venture_upkeep_quote")(node_id)["at_full_staffing"], 1),
             **available_economics.row_fields(sim, node_id, node),
             # _downstream_of, NOT downstream_count. The cached bitmask index
             # in data.py follows hard prerequisites only, and it must: adding
@@ -256,7 +256,7 @@ def _startable_row(sim, nodes, node_id, fog, brief=True):
     """One row of a startable list, marked when `start` would refuse it. The
     mark asks start_refusal, the function `start` and `stuck` use."""
     entry = (_brief if brief else _full_entry)(sim, nodes, node_id, fog)
-    if sim.start_refusal(node_id) is not None:
+    if sim.view("start_refusal")(node_id) is not None:
         entry["cannot_pay_now"] = True
     return entry
 
@@ -264,10 +264,10 @@ def _startable_row(sim, nodes, node_id, fog, brief=True):
 def _full_entry(sim, nodes, node_id, fog):
     entry = _brief(sim, nodes, node_id, fog)
     node = nodes[node_id]
-    entry["on_road_to_goal"] = sim.on_road_to_goal(node_id)
+    entry["on_road_to_goal"] = sim.view("on_road_to_goal")(node_id)
     entry["is_supply_or_capability"] = node["cat"] in ("material", "capability")
     if fog:
-        entry["summary"] = sim.fog_summary(node_id)
+        entry["summary"] = sim.view("fog_summary")(node_id)
         if node["lab"]:
             entry["trades_needed"] = sorted(node["lab"])
     else:
@@ -288,7 +288,7 @@ def _full_entry(sim, nodes, node_id, fog):
     # is why a 45%-risk, 4-year-floor node is not a 4-year project.
     if node.get("risk"):
         entry["expected_calendar_years_with_retries"] = round(
-            sim.expected_calendar_years(node_id), 2)
+            sim.view("expected_calendar_years")(node_id), 2)
     return entry
 
 
@@ -297,13 +297,13 @@ def _full_entry(sim, nodes, node_id, fog):
 # player only has to learn one vocabulary: {"cmd":"available","sort":"risk"}
 # and the heard-of block below it sort the same way.
 _SORT_KEYS = {
-    "price": lambda s, n, k: s.project_cost(k),
-    "cost": lambda s, n, k: s.project_cost(k),
+    "price": lambda s, n, k: s.view("project_cost")(k),
+    "cost": lambda s, n, k: s.view("project_cost")(k),
     "hours": lambda s, n, k: n[k]["ph"],
     "years": lambda s, n, k: n[k]["yrs"],
-    "earns": lambda s, n, k: s.venture_real_earnings(k),
-    "revenue": lambda s, n, k: s.venture_real_earnings(k),
-    "upkeep": lambda s, n, k: s.venture_real_upkeep(k),
+    "earns": lambda s, n, k: s.view("venture_real_earnings")(k),
+    "revenue": lambda s, n, k: s.view("venture_real_earnings")(k),
+    "upkeep": lambda s, n, k: s.view("venture_real_upkeep")(k),
     "net": lambda s, n, k: available_economics.net_per_year(s, k),
     "payback": available_economics.sort_payback,
     "risk": lambda s, n, k: n[k]["risk"],
@@ -321,9 +321,9 @@ _SORT_KEYS = {
     # "nearest", which could be misread as "nearest to your goal". Those two
     # names still work, for any script already using them, but do not
     # appear in the advertised list below.
-    "fewest_missing": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.done),
-    "near": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.done),
-    "nearest": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.done),
+    "fewest_missing": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.view("techniques_held")()),
+    "near": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.view("techniques_held")()),
+    "nearest": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.view("techniques_held")()),
 }
 
 _SORT_KEY_NAMES = ("price", "hours", "years", "earns", "upkeep", "net", "payback", "risk",
@@ -390,8 +390,8 @@ def _busy_subject_note(sim, nodes, want_subject, fog):
     """
     _busy = sorted(node_id for node_id in nodes
                    if want_subject in _subject_of(nodes[node_id]).lower()
-                   and (node_id in sim.active or node_id in sim.done)
-                   and (not fog or sim.is_visible(node_id)))
+                   and (node_id in sim.view("active_projects")() or node_id in sim.view("techniques_held")())
+                   and (not fog or sim.view("visibility")(node_id)))
     if not _busy:
         return ""
     return (" - nothing left to begin; you already have or "
@@ -414,7 +414,7 @@ def _select_startable(sim, nodes, startable, fog, find, want_subject, afford, ke
     if keep is not None:
         sel = [node_id for node_id in sel if keep(node_id)]
     if afford is not None:
-        sel = [node_id for node_id in sel if sim.project_cost(node_id) <= afford]
+        sel = [node_id for node_id in sel if sim.view("project_cost")(node_id) <= afford]
     return sel, why_these
 
 
@@ -431,7 +431,7 @@ def _sort_startable_list(sim, nodes, sel, _sort_fn, reverse):
     if _sort_fn:
         return sorted(sel, key=lambda k: (_sort_fn(sim, nodes, k), k), reverse=reverse)
     else:
-        return sorted(sel, key=lambda k: (sim.project_cost(k), k))
+        return sorted(sel, key=lambda k: (sim.view("project_cost")(k), k))
 
 
 def _heard_all_sorted(sim, nodes, find, want_subject, _sort_fn, reverse, keep=None):
@@ -445,9 +445,9 @@ def _heard_all_sorted(sim, nodes, find, want_subject, _sort_fn, reverse, keep=No
     # rest were. Fewest missing prerequisites first is the order that
     # answers the question the list is actually asked: what is nearly
     # within reach?
-    _heard_all = [node_id for node_id in getattr(sim, "revealed", set())
-                  if node_id not in sim.done and node_id not in sim.active
-                  and not sim.start_reason(node_id)[0]]
+    _heard_all = [node_id for node_id in sim.view("techniques_revealed")()
+                  if node_id not in sim.view("techniques_held")() and node_id not in sim.view("active_projects")()
+                  and not sim.view("start_check")(node_id)[0]]
     # THE SAME SEARCH, OR NOTHING: filtered by the same `find`/`subject` a
     # player set on the startable list, not the usual nearest-first
     # regardless of what was typed. Ignoring the search here would dump
@@ -470,7 +470,7 @@ def _heard_all_sorted(sim, nodes, find, want_subject, _sort_fn, reverse, keep=No
         _heard_all.sort(key=lambda k: (_sort_fn(sim, nodes, k), k), reverse=reverse)
     else:
         _heard_all.sort(key=lambda k: (sum(1 for prereq_id in nodes[k]["pre"]
-                                           if prereq_id not in sim.done), k))
+                                           if prereq_id not in sim.view("techniques_held")()), k))
     return _heard_all
 
 
@@ -490,8 +490,8 @@ def _heard_of_block(sim, nodes, fog, find, want_subject, _sort_fn, reverse, hear
         heard, heard_more = heard_page(_heard_all, heard_offset)
         heard_from = heard_offset
     heard_block = [{"id": node_id, "name": nodes[node_id]["name"],
-                    "why_not": sim.start_reason(node_id)[1],
-                    "kind": (sim.start_blockers(node_id) or [{"kind": None}])[0]["kind"]} for node_id in heard]
+                    "why_not": sim.view("start_check")(node_id)[1],
+                    "kind": (sim.view("start_blockers")(node_id) or [{"kind": None}])[0]["kind"]} for node_id in heard]
     return heard_more, heard_from, heard_block
 
 
@@ -509,7 +509,7 @@ def _list_page(sim, nodes, sel, startable, why_these, fog, show_all, offset, lim
     out = {"ok": True, "count": len(sel), "of_everything_startable": len(startable),
            # The same figure the digest carries, so a paged list can mark
            # what you could not raise today. See _cost_marker.
-           "you_could_raise_for_a_project": round(sim.spending_power("start"), 1),
+           "you_could_raise_for_a_project": round(sim.view("spending_power")("start"), 1),
            "showing": ("nothing%s" % ((" " + why_these) if why_these else "")
                        if not page else
                        "%d-%d%s" % (offset + 1, offset + len(page),
@@ -602,15 +602,15 @@ def _digest_subject_rows(sim, nodes, startable):
         group.append(node_id)
     # The AFFORD column counts what `start` would accept, so it asks the
     # function `start` and `stuck` ask.
-    purse = sim.spending_power("start")
+    purse = sim.view("spending_power")("start")
     rows = []
     for name, node_ids in sorted(groups.items(), key=lambda kv: -len(kv[1])):
-        costs = sorted(sim.project_cost(node_id) for node_id in node_ids)
+        costs = sorted(sim.view("project_cost")(node_id) for node_id in node_ids)
         rows.append({"subject": name, "things": len(node_ids),
                      "cheapest": round(costs[0], 1),
                      "dearest": round(costs[-1], 1),
                      "you_could_pay_for": sum(1 for node_id in node_ids
-                                              if sim.start_refusal(node_id) is None)})
+                                              if sim.view("start_refusal")(node_id) is None)})
     return rows, purse
 
 
@@ -625,12 +625,12 @@ def _digest_leverage_and_cheap(sim, nodes, startable):
     # an age. Being cheap is the reason they are easy to miss, not a reason
     # to hide them from the column that exists to find them.
     _lev_all = sorted(startable, key=lambda k: (-downstream_count(nodes, k),
-                                         sim.project_cost(k)))
+                                         sim.view("project_cost")(k)))
     # Keep the default reply below its readability budget. Five leverage rows
     # and six cheap rows crept over 6 KB as the explicit opening states grew;
     # four and five still expose both rankings without making the digest a page.
     leverage = _lev_all[:4]
-    cheap = [node_id for node_id in sorted(startable, key=lambda k: sim.project_cost(k))
+    cheap = [node_id for node_id in sorted(startable, key=lambda k: sim.view("project_cost")(k))
              if node_id not in leverage][:5]
     return leverage, cheap
 
@@ -742,7 +742,7 @@ def _agent_available(sim, nodes, cmd=None):
     make sense of, let alone a person. Ask for the part you want.
     """
     cmd = cmd or {}
-    nodes = sim.nodes   # the tree in this civilisation's coin
+    nodes = sim.view("tree_nodes")()   # the tree in this civilisation's coin
     # LIVE, NOT A SNAPSHOT: cli.py's _apply_display_prefs patches
     # ui.protocol.DEFAULT_AVAILABLE_LIMIT directly (a module attribute,
     # not a call) - see that name's own comment in sim/ui/proto/util.py.
@@ -751,7 +751,7 @@ def _agent_available(sim, nodes, cmd=None):
     # makes that patch visible here.
     from sim.ui import protocol as _protocol
     DEFAULT_AVAILABLE_LIMIT = _protocol.DEFAULT_AVAILABLE_LIMIT
-    fog = sim.fog
+    fog = sim.view("legacy_fog")()
     # ONE memo for the whole sweep, not one per node. Under fog, checking
     # whether a deep node can start asks whether each of its missing
     # prerequisites is even visible, which asks the same question about
@@ -761,7 +761,7 @@ def _agent_available(sim, nodes, cmd=None):
     # upward of a minute; sharing the memo across the sweep makes it once
     # per node actually touched. See is_visible()'s docstring.
     _memo = {}
-    startable = [node_id for node_id in sim.order if sim.can_start(node_id, _memo=_memo)]
+    startable = [node_id for node_id in sim.view("legacy_order")() if sim.view("start_check")(node_id, False, _memo, False)[0]]
 
     # Split into one function per concern - parsing the query, selecting and
     # sorting the startable nodes, building the heard-of block, and
@@ -903,7 +903,7 @@ def _explain_identity(sim, nodes, node_id, node):
         # scanner in the test suite exists to catch exactly this
         # class of leak on future commands too. fog_scrub is the one
         # filter every such free-text field goes through.
-        "kb": sim.fog_scrub(node["kb"]),
+        "kb": sim.view("fog_scrub")(node["kb"]),
         "founder_hours": node["ph"],
         # Two different kinds of people: hired_labour is HOURS OF A JOB,
         # bought from whoever does that trade here, for this project only.
@@ -913,7 +913,7 @@ def _explain_identity(sim, nodes, node_id, node):
         # question.
         "hired_labour": node["lab"],
         "materials": node["mat"],
-        "material_rows": [_material_row(row, sim) for row in sim.project_material_bill(node_id)["rows"]],
+        "material_rows": [_material_row(row, sim) for row in sim.view("project_material_bill")[node_id]["rows"]],
     }
 
 
@@ -927,7 +927,7 @@ def _explain_cost(sim, nodes, node_id, node):
     # every civilization) would make `why` compare two civilizations as
     # byte-identical when what they are actually charged differs - a player
     # plans against the quote, so the quote must not lie about it.
-    bill = sim.project_material_bill(node_id)
+    bill = sim.view("project_material_bill")[node_id]
     return {"labour": round(node["_labour_cost"], 1),
                  # WHAT THE MISSING MATERIALS COST AT TODAY'S MARKET PRICE;
                  # what you already hold is not charged. Per-material rows
@@ -936,10 +936,10 @@ def _explain_cost(sim, nodes, node_id, node):
                  "capital": node["cap"],
                  "base_total": round(node["_labour_cost"] + node["cap"]
                                      + bill["cost_of_missing"], 1),
-                 "civ_domain_factor": round(sim.civ_cost_factor(node_id), 3),
-                 "material_distance_factor": round(sim.geography.material_cost_factor(node_id), 3),
-                 "opposition_factor": round(sim.opposition_factor(node_id), 3),
-                 "rebuild_factor": round(sim.rebuild_work_factor(node_id), 3),   # the share left to do of a lost node
+                 "civ_domain_factor": round(sim.view("civ_cost_factor")(node_id), 3),
+                 "material_distance_factor": round(sim.view("legacy_geography")().material_cost_factor(node_id), 3),
+                 "opposition_factor": round(sim.view("opposition_factor")(node_id), 3),
+                 "rebuild_factor": round(sim.view("rebuild_work_factor")(node_id), 3),   # the share left to do of a lost node
                  # THE FACTOR ACTUALLY MULTIPLIED IN, not a decoy:
                  # project_cost multiplies by cost_money_factor()
                  # (price_index), so this field must report THAT, not
@@ -948,18 +948,18 @@ def _explain_cost(sim, nodes, node_id, node):
                  # hide the breakdown's largest term - a breakdown offered
                  # as the explanation of a total has to reconcile with it,
                  # or it is worse than no breakdown.
-                 "price_index": round(sim.cost_money_factor(), 3),
-                 "purchasing_power_of_the_coin": round(sim.money_real, 3),
+                 "price_index": round(sim.view("cost_money_factor")(), 3),
+                 "purchasing_power_of_the_coin": round(sim.view("money_real")(), 3),
                  # The same figure the project will be billed, and must actually
                  # have paid in full before it can complete.
-                 "total": round(sim.project_cost(node_id), 1),
+                 "total": round(sim.view("project_cost")(node_id), 1),
                  # AS OF TODAY: this total moves with prices, the coinage,
                  # what a material costs to get and what you have since
                  # built, so the same node quoted today and started years
                  # later can be billed a different amount - both figures
                  # are correct on their own day. The bill is fixed at the
                  # moment you START, and `start` says what it was fixed at.
-                 "as_of_year": sim.year,
+                 "as_of_year": sim.view("year")(),
                  "note": "today's price. It is fixed when you start, not when "
                          "you read it: quotes move with prices, the coinage "
                          "and what a material costs to get.",
@@ -973,17 +973,17 @@ def _explain_cost(sim, nodes, node_id, node):
                  # is planning against a number the engine would never
                  # actually charge.
                  **({"already_paid_towards_this": round(
-                        ui_port.paid_credit(sim.project_cost(node_id), sim.paid_towards.get(node_id, 0.0)), 1),
+                        ui_port.paid_credit(sim.view("project_cost")(node_id), sim.view("paid_towards")().get(node_id, 0.0)), 1),
                      "what_start_would_actually_charge": round(
-                        max(0.0, sim.project_cost(node_id)
-                            - ui_port.paid_credit(sim.project_cost(node_id), sim.paid_towards.get(node_id, 0.0))), 1),
+                        max(0.0, sim.view("project_cost")(node_id)
+                            - ui_port.paid_credit(sim.view("project_cost")(node_id), sim.view("paid_towards")().get(node_id, 0.0))), 1),
                      "why_less_than_the_total_above":
                         "this much was already paid in before the work "
                         "stopped, halted by a creditor or by your own "
                         "'stop'; it stands to your credit and comes off "
                         "the bill the moment you start this again"}
-                    if node_id not in sim.done and node_id not in sim.active
-                    and max(0.0, (sim.paid_towards or {}).get(node_id, 0.0)) > 0.5
+                    if node_id not in sim.view("techniques_held")() and node_id not in sim.view("active_projects")()
+                    and max(0.0, (sim.view("paid_towards")() or {}).get(node_id, 0.0)) > 0.5
                     else {})}
 
 
@@ -1005,28 +1005,28 @@ def _explain_revenue(sim, nodes, node_id, node):
         # is the whole of the user's original question - "shouldn't the
         # payback be something you don't know until after research?" So
         # revenue alone is fogged; see _fog_revenue_estimate.
-        "upkeep": sim.venture_upkeep_quote(node_id)["now"],
-        "upkeep_at_full_staffing": sim.venture_upkeep_quote(node_id)["at_full_staffing"],
-        "revenue": (round(sim.venture_real_earnings(node_id), 1) if (not sim.fog
+        "upkeep": sim.view("venture_upkeep_quote")(node_id)["now"],
+        "upkeep_at_full_staffing": sim.view("venture_upkeep_quote")(node_id)["at_full_staffing"],
+        "revenue": (round(sim.view("venture_real_earnings")(node_id), 1) if (not sim.view("legacy_fog")()
                                  or _revenue_known_exactly(sim, node_id))
                    else (_fog_revenue_estimate(sim, node_id) or 0.0)),
-        "forecast_basis": sim.venture_forecast_basis(node_id),
-        "sale_basis": sim.venture_sale_basis(node_id),
+        "forecast_basis": sim.view("venture_forecast_basis")[node_id],
+        "sale_basis": sim.view("venture_sale_basis")[node_id],
         "revenue_forecast_scope": (
             "Direct concern revenue only. Institutions may also increase "
             "household capacity, reachable staff, practice output, or other "
             "indirect income; those variable effects are not included here. "
             "Compare 'money' before and after opening."
-            if node_id in sim.CAPABILITY_INSTITUTIONS else None),
+            if node_id in sim.view("capability_sets")()[0] else None),
         # WHAT IT PAYS YOU: for a skill you hold, the founder's one wage (your own hours sold in the
         # trade it gives you, shared by every skill you hold), not a figure of its own.
         "but_it_pays_YOU": (
             # the ledger's own row, which carries the market ceiling's share, so the two screens agree
-            sim.revenue_sources().get("_wages_for_your_own_work", round(sim.founder_wage_income(), 1))
+            sim.view("revenue_sources")().get("_wages_for_your_own_work", round(sim.view("founder_wage_income")(), 1))
             if node_id in ui_port.practice_set(sim) else None),
         "because": ("this is a skill you hold, not a concern: it earns through your own hours, sold as a %s "
                     "at that trade's going wage, once for all the skills you hold, and hours you spend "
-                    "elsewhere are hours not sold" % sim.held_trade()
+                    "elsewhere are hours not sold" % sim.view("held_trade")()
                     if node_id in ui_port.practice_set(sim) else None),
     }
 
@@ -1036,14 +1036,14 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
     counted in, and what a failure actually costs.
     """
     return {
-        "calendar_floor_years": round(sim.calendar_floor(node_id), 2),
+        "calendar_floor_years": round(sim.view("calendar_floor")(node_id), 2),
         "nominal_calendar_floor_before_reputation": node["yrs"],
         # The soonest finish with no failure: the longer of the floor above
         # and the payment schedule, which reputation does not shorten.
-        "earliest_completion_years": round(sim.earliest_completion_years(node_id), 2),
-        "earliest_completion_year": round(sim.state.scenario.year + sim.earliest_completion_years(node_id), 1),
-        "risk": sim.effective_risk(node_id),
-        "pay_to_lower_the_risk": sim.precaution_quote(node_id),
+        "earliest_completion_years": round(sim.view("earliest_completion_years")(node_id), 2),
+        "earliest_completion_year": round(sim.view("year")() + sim.view("earliest_completion_years")(node_id), 1),
+        "risk": sim.view("effective_risk")(node_id),
+        "pay_to_lower_the_risk": sim.view("precaution_quote")(node_id),
         # THE EXPECTED TOTAL, RETRIES INCLUDED - not the floor and the risk
         # left for the player to combine by hand. A 45%-risk, 4-year-floor
         # node is not a 4-year project: the bare geometric series 1/(1-p) is
@@ -1056,16 +1056,16 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
         # it, or the number told to a player before the dice start rolling
         # understates what a run of failures will actually cost.
         "expected_calendar_years_with_retries": round(
-            sim.expected_calendar_years(node_id), 2),
+            sim.view("expected_calendar_years")(node_id), 2),
         # WHAT THE FAILURES SO FAR HAVE BOUGHT, said out loud, because a
         # number that quietly improves is a number a player cannot plan with.
-        "attempts_already_failed": int(sim.failed_attempts.get(node_id, 0)),
+        "attempts_already_failed": int(sim.view("failed_attempts")().get(node_id, 0)),
         "risk_before_any_attempt": node["risk"],
         # THE SUM, NOT ONLY THE RATE. See _node_explain's own note: a failure
         # takes a flat 40% of the money and puts 40% of the hours back on the
         # slate, and a player deciding whether to risk it is holding the size
         # of the project in their head, not the percentage.
-        "failure_costs": round(sim.failure_loss(node_id), 1),
+        "failure_costs": round(sim.view("failure_loss")(node_id), 1),
         "failure_costs_hours": round(node["ph"] * 0.4, 1) if node["risk"] else 0.0,
     }
 
@@ -1082,10 +1082,10 @@ def _staffing_build_crew(sim, node):
         # first of the three. Printing s.artisans here would show a number
         # that disagrees with the one that actually decides whether a
         # player can begin. Print what decides it.
-        "you_have": {"scholars": round(sim.labour.effective_scholars(), 1),
-                     "artisans": round(sim.labour.craft_hands_available(), 1)},
+        "you_have": {"scholars": round(sim.view("effective_scholars")(), 1),
+                     "artisans": round(sim.view("hours_available")["craft_hands"], 1)},
         "you_have_counts": ("counting yourself, and hours you have bought"
-                            if sim.founder_alive else "counting hours you have bought"),
+                            if sim.view("founder")()["alive"] else "counting hours you have bought"),
         # SAY WHEN THE STAFF IT WANTS IS MORE THAN THIS SOCIETY HAS: a
         # society's literacy-driven hiring ceiling can be lower than what
         # the goal itself needs, and finding that out only in a late-game
@@ -1098,14 +1098,14 @@ def _staffing_build_crew(sim, node):
         "more_scholars_than_this_society_can_supply": (
             "%s wanted; you have %.1f and literacy here will never let you HIRE "
             "more than %.1f. Printing, paper, schools and academies raise both."
-            % (node["sch"], sim.labour.effective_scholars(), sim.labour.literate_capacity("scholar"))
-            if (node["sch"] > sim.labour.literate_capacity("scholar")
-                and node["sch"] > sim.labour.effective_scholars()) else None),
+            % (node["sch"], sim.view("effective_scholars")(), sim.view("literacy_capacity")["scholar"])
+            if (node["sch"] > sim.view("literacy_capacity")["scholar"]
+                and node["sch"] > sim.view("effective_scholars")()) else None),
         "more_craftsmen_than_your_household_can_hold": (
             "%s wanted; you have %.1f and could hold %.1f in all. %s"
             % (node["art"], sim.view("staff")()["artisans"],
-               sim.labour.headcount() + max(0.0, sim.labour.household_room()), sim.labour.room_advice())
-            if (node["art"] > sim.labour.headcount() + max(0.0, sim.labour.household_room())
+               sim.view("headcount")() + max(0.0, sim.view("household_room")()), sim.view("room_advice")())
+            if (node["art"] > sim.view("headcount")() + max(0.0, sim.view("household_room")())
                 and node["art"] > sim.view("staff")()["artisans"]) else None),
     }
 
@@ -1137,9 +1137,9 @@ def _staffing_standing_crew(sim, node_id, _is_venture, _sup_sch, _sup_art, _free
             if _is_venture else None),
         "specialist_foreman_to_keep_it_open": (
             {"trade": _foreman_trade, "fte": round(_foreman_fte, 2),
-             "free_now": round(sim.venture_foreman_free(_foreman_trade), 2)}
+             "free_now": round(sim.view("venture_foreman_free")(_foreman_trade), 2)}
             if _foreman_trade else None),
-        "charge_to_open": (round(sim.opening_fee(node_id)[0], 1)
+        "charge_to_open": (round(sim.view("opening_fee")(node_id)[0], 1)
                            if _is_venture else None),
         "staff_to_keep_it_open_means": (
             "a SEPARATE requirement from staff_needed above, and the one "
@@ -1179,10 +1179,10 @@ def _explain_staffing(sim, nodes, node_id, node):
     # (see venture_hands, projects.py) - not a second estimate of it. Only
     # meaningful for something that could ever be a going concern; knowledge
     # alone (is_venture false) has nothing to keep an eye on.
-    _is_venture = sim.is_venture(node_id)
-    _sup_sch, _sup_art = sim.venture_hands(node_id) if _is_venture else (0.0, 0.0)
-    _free_sch, _free_art = sim.venture_staff_free() if _is_venture else (0.0, 0.0)
-    _foreman_trade, _foreman_fte = (sim.venture_foreman(node_id) if _is_venture
+    _is_venture = sim.view("is_venture")[node_id]
+    _sup_sch, _sup_art = sim.view("venture_hands")[node_id] if _is_venture else (0.0, 0.0)
+    _free_sch, _free_art = sim.view("venture_staff_free")() if _is_venture else (0.0, 0.0)
+    _foreman_trade, _foreman_fte = (sim.view("venture_foreman")[node_id] if _is_venture
                                      else (None, 0.0))
     out = {}
     out.update(_staffing_build_crew(sim, node))
@@ -1201,7 +1201,7 @@ def _explain_classification(sim, nodes, node_id, node):
     # _explain_staffing: it is a cheap, side-effect-free lookup (Sim.is_
     # venture reads only the node and s.household.granted), and asking it
     # again keeps this group's fields independent of that one's internals.
-    _is_venture = sim.is_venture(node_id)
+    _is_venture = sim.view("is_venture")[node_id]
     return {
         "suspicion": node.get("sus", 0), "state_interest_trait_score": node.get("gov", 0),
         "bounty_eligible_by_type": bounty_by_type,
@@ -1209,8 +1209,8 @@ def _explain_classification(sim, nodes, node_id, node):
         # RUN, so the figure quoted elsewhere is real but not yours yet
         # until you open it - this says so.
         "revenue_and_upkeep_apply_only_once_opened": (
-            True if (node["rev"] > 0 or node["up"] > 0) and node_id not in sim.granted
-            and node_id not in sim.operating else None),
+            True if (node["rev"] > 0 or node["up"] > 0) and node_id not in sim.view("techniques_granted")()
+            and node_id not in sim.view("operating")() else None),
         # "FINISHED, STAYS FINISHED" MEANS THREE DIFFERENT THINGS, and this
         # engine said it the same way for all three. Most of what you build is
         # a plain prerequisite: done once, it counts for ever, whatever you do
@@ -1231,7 +1231,7 @@ def _explain_classification(sim, nodes, node_id, node):
             "you, or a future start it clears all stop the moment you close "
             "it, the same as its revenue and upkeep. Closing it for the "
             "capital back gives up all of that, not only the money."
-            if node_id in sim.CAPABILITY_INSTITUTIONS else None),
+            if node_id in sim.view("capability_sets")()[0] else None),
         "permanent_on_completion": (
             "Knowledge and completion-based prerequisite credit remain even "
             "while this institution is closed." if _is_venture else
@@ -1239,7 +1239,7 @@ def _explain_classification(sim, nodes, node_id, node):
         "only_while_open": (
             "Revenue, upkeep, supported staff, household places, credit, "
             "standing, capacity, and running-only prerequisites stop when it "
-            "closes." if node_id in sim.CAPABILITY_INSTITUTIONS else
+            "closes." if node_id in sim.view("capability_sets")()[0] else
             ("Revenue and upkeep apply only while open."
              if _is_venture else None)),
     }
@@ -1256,7 +1256,7 @@ def _lineage_setup(sim, nodes, node_id):
     # otherwise the number never counts down no matter how much has
     # already been built.
     _chain_all = closure(nodes, node_id) - {node_id}
-    need = _chain_all - sim.done
+    need = _chain_all - sim.view("techniques_held")()
     # req_any COUNTS AS UNLOCKING: a node can be reached two ways, as a
     # hard prerequisite in `pre`, or as one option inside a req_any
     # substitution group ("any of a steam engine, a water wheel or a
@@ -1265,7 +1265,7 @@ def _lineage_setup(sim, nodes, node_id):
     # chinampa, as dead ends - each civilisation's own signature
     # technology told it leads nowhere, when it genuinely unlocks
     # something through a substitution group.
-    unlocks = [] if sim.fog else _unlocked_by(node_id, nodes)
+    unlocks = [] if sim.view("legacy_fog")() else _unlocked_by(node_id, nodes)
     # Was: {m for m in nodes if k in closure(nodes, m)} - a full ancestor
     # closure of all 2,831 nodes, per call. Same answers, computed once for the
     # whole tree and cached. See data.descendants.
@@ -1283,8 +1283,8 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
     """Which prerequisites this node has, which are still missing, and how
     many more are hidden by fog than the visible lists let on.
     """
-    direct = ([prereq_id for prereq_id in node["pre"] if sim.is_visible(prereq_id)]
-              if sim.fog else node["pre"])
+    direct = ([prereq_id for prereq_id in node["pre"] if sim.view("visibility")(prereq_id)]
+              if sim.view("legacy_fog")() else node["pre"])
     return {
         "prerequisite_names": ui_port.prerequisite_names(nodes, direct),
         # ONLY WHAT YOU HAVE HEARD OF. These are read for a visible node, where
@@ -1293,8 +1293,8 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
         # every turn. Unfiltered, that one exception printed the goal's seven
         # hidden prerequisites by name in the JSON, which is the fog exploit
         # this file has already closed twice.
-        "direct_prerequisites": ([prereq_id for prereq_id in node["pre"] if sim.is_visible(prereq_id)]
-                                 if sim.fog else node["pre"]),
+        "direct_prerequisites": ([prereq_id for prereq_id in node["pre"] if sim.view("visibility")(prereq_id)]
+                                 if sim.view("legacy_fog")() else node["pre"]),
         # A GRANTED NODE IS HELD, WHATEVER ROUTE THE TREE DRAWS TO IT. `why
         # cap_heat_1300` on Han reported done:true, missing_prerequisites:
         # ["cap_heat_1100"] and can_start_now:false in one object - three
@@ -1308,13 +1308,13 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
         # Tenochtitlan sextants, pendulum clocks and cementation steel for
         # nothing. What is actually wrong is the claim that a thing you have
         # is missing something.
-        "missing_prerequisites": ([] if node_id in sim.granted
-                                  else [prereq_id for prereq_id in node["pre"] if prereq_id not in sim.done
-                                        and (not sim.fog
-                                             or sim.is_visible(prereq_id))]),
+        "missing_prerequisites": ([] if node_id in sim.view("techniques_granted")()
+                                  else [prereq_id for prereq_id in node["pre"] if prereq_id not in sim.view("techniques_held")()
+                                        and (not sim.view("legacy_fog")()
+                                             or sim.view("visibility")(prereq_id))]),
         "prerequisites_you_have_not_heard_of": (
-            sum(1 for prereq_id in node["pre"] if not sim.is_visible(prereq_id))
-            if sim.fog else 0) or None,
+            sum(1 for prereq_id in node["pre"] if not sim.view("visibility")(prereq_id))
+            if sim.view("legacy_fog")() else 0) or None,
     }
 
 
@@ -1323,10 +1323,10 @@ def _explain_grant_route(sim, nodes, node_id, node):
     if so, that the prerequisite list above is somebody ELSE's route.
     """
     return {
-        "held_without_building_it": node_id in sim.granted,
+        "held_without_building_it": node_id in sim.view("techniques_granted")(),
         "prerequisites_are_how_another_society_would_get_this": (
             "this society already has it; the list above is the route somebody "
-            "who did not would have to take" if node_id in sim.granted and node["pre"]
+            "who did not would have to take" if node_id in sim.view("techniques_granted")() and node["pre"]
             else None),
     }
 
@@ -1351,11 +1351,11 @@ def _explain_chain(sim, nodes, node_id, need, _chain_all):
         # measurement of a tree you cannot see. You do know how many of its own
         # prerequisites you are still missing, because those have names you have
         # either heard or not.
-        "chain_size": (len(need) if not sim.fog else None),
+        "chain_size": (len(need) if not sim.view("legacy_fog")() else None),
         "chain_size_counting_what_you_have_built": (
-            len(_chain_all) if not sim.fog else None),
+            len(_chain_all) if not sim.view("legacy_fog")() else None),
         "chain_founder_hours": (sum(nodes[node_id]["ph"] for node_id in need)
-                                if not sim.fog else None),
+                                if not sim.view("legacy_fog")() else None),
         # AT THIS SOCIETY'S PRICES, like the COST line four rows above it:
         # summing the tree's BASE cost and applying none of the
         # civilisation-specific multipliers the same page prints would
@@ -1364,10 +1364,10 @@ def _explain_chain(sim, nodes, node_id, need, _chain_all):
         # that varies by civilisation. chain_size and chain_founder_hours
         # are unaffected by price; only chain_cost has to go through
         # sim.project_cost().
-        "chain_cost": (round(sum(sim.project_cost(node_id) for node_id in sorted(need)), 1)
-                       if not sim.fog else None),
+        "chain_cost": (round(sum(sim.view("project_cost")(node_id) for node_id in sorted(need)), 1)
+                       if not sim.view("legacy_fog")() else None),
         "critical_path_years": (critical_path(nodes, node_id)[0]
-                                if not sim.fog else None),
+                                if not sim.view("legacy_fog")() else None),
     }
 
 
@@ -1385,14 +1385,14 @@ def _explain_unlocks(sim, nodes, node_id, unlocks, n_blocks):
         # judge: whether this is a foundation others will build on, or an end in
         # itself. You can tell that much by looking at it.
         "unlocks": unlocks,
-        "downstream_count": (n_blocks if not sim.fog else None),
+        "downstream_count": (n_blocks if not sim.view("legacy_fog")() else None),
         "how_much_rests_on_this": (
-            None if not sim.fog else _rests_band(n_blocks)),
+            None if not sim.view("legacy_fog")() else _rests_band(n_blocks)),
         # Under fog there is no visible goal, so a boolean saying whether
         # this is "on the goal path" would be either meaningless or a
         # leak, and must be None instead of true/false.
-        "on_goal_path": (None if sim.fog
-                         else (node_id == sim.goal or is_downstream(nodes, node_id, sim.goal))),
+        "on_goal_path": (None if sim.view("legacy_fog")()
+                         else (node_id == sim.view("goal")()["node"] or is_downstream(nodes, node_id, sim.view("goal")()["node"]))),
     }
 
 
@@ -1413,25 +1413,25 @@ def _blocker_fields(sim, node_id, started):
     """The kind-classified blockers: the same list the `start` gate reads."""
     if started:
         return {"blocked_kind": None, "blockers": []}
-    blockers = [{"kind": blocker["kind"], "cause": blocker["cause"], "text": sim.fog_scrub(blocker["text"]), "ids": blocker["ids"]}
-                for blocker in sim.start_blockers(node_id)]
+    blockers = [{"kind": blocker["kind"], "cause": blocker["cause"], "text": sim.view("fog_scrub")(blocker["text"]), "ids": blocker["ids"]}
+                for blocker in sim.view("start_blockers")(node_id)]
     return {"blocked_kind": blockers[0]["kind"] if blockers else None, "blockers": blockers}
 
 
 def _explain_status(sim, nodes, node_id, node):
     """Done, active, startable now, and why not."""
-    started = node_id in sim.done or node_id in sim.active
+    started = node_id in sim.view("techniques_held")() or node_id in sim.view("active_projects")()
     return {
-        "done": node_id in sim.done, "active": node_id in sim.active,
-        "can_start_now": (not started) and sim.can_start(node_id),
+        "done": node_id in sim.view("techniques_held")(), "active": node_id in sim.view("active_projects")(),
+        "can_start_now": (not started) and sim.view("start_check")(node_id, False, None, False)[0],
         # FOG-SCRUBBED: naming a locked prerequisite in full here would leak
         # its name and description through an unrelated node's explanation,
         # even while `why` on that prerequisite itself says it has never
         # been heard of. If you cannot see a thing, you cannot see its name
         # in someone else's sentence either.
-        "start_blocked_reason": None if started else sim.fog_scrub(sim.start_reason(node_id)[1]),
+        "start_blocked_reason": None if started else sim.view("fog_scrub")(sim.view("start_check")(node_id)[1]),
         **_blocker_fields(sim, node_id, started),
-        "living_stock": stock_gate_rows.rows_for_player(sim.stock_gates(node_id),
+        "living_stock": stock_gate_rows.rows_for_player(sim.view("stock_status")[node_id]["gates"],
                                                         lambda brought_by: ui_port.visible_to_player(sim, brought_by)),
     }
 
@@ -1450,11 +1450,11 @@ def _explain_active_wait(sim, nodes, node_id):
     # the kind - STATUS: ACTIVE and no more - which is exactly the screen a
     # player checking on one specific stalled project would reach for.
     out = {}
-    if node_id in sim.active:
-        _st = sim.active[node_id]
+    if node_id in sim.view("active_projects")():
+        _st = sim.view("active_projects")()[node_id]
         _bill = _st.get("cost_left")
         if _bill is None:
-            _bill = max(0.0, sim.project_cost(node_id) - _st["spent"])
+            _bill = max(0.0, sim.view("project_cost")(node_id) - _st["spent"])
         out["waiting_on"] = _waiting_on(sim, nodes, node_id, _st, _bill)
         out["waiting_on_kind"] = cause_of(out["waiting_on"])
         # SAME FIELD `state` ALREADY PRINTS PER PROJECT, HERE TOO. Arrears
@@ -1480,7 +1480,7 @@ def _explain_labour_notes(sim, node):
     # each other, so the explanation earns its place; carrying it on
     # every reply whether or not the node hires anyone is 400 bytes of
     # boilerplate per call.
-    absent = sorted(trade for trade in node["lab"] if not sim.labour.trade_available(trade))
+    absent = sorted(trade for trade in node["lab"] if not sim.view("trade_available")[trade])
     if absent:
         out["trades_that_do_not_exist_here"] = absent
         out["hired_labour_means"] = ("hours of a trade bought in for this job only. "
@@ -1494,7 +1494,7 @@ def _explain_labour_notes(sim, node):
     # about it beforehand. A Rome player hit that refusal with no warning on
     # either this screen or train's own success message.
     _taught_but_empty = sorted(trade for trade in node["lab"]
-                               if trade not in absent and sim.labour.market_supply(trade) <= 0.0)
+                               if trade not in absent and sim.view("market_supply")[trade] <= 0.0)
     if _taught_but_empty:
         out["trades_taught_but_nobody_here_to_do_them_yet"] = _taught_but_empty
         out["trades_taught_but_nobody_here_means"] = (
@@ -1505,7 +1505,7 @@ def _explain_labour_notes(sim, node):
             "on this trade until they finish; if nobody is even learning it "
             "yet, starting is refused outright. Check 'labour' for who is "
             "in training, or 'hire' to add people to this trade right now.")
-    if node["art"] > sim.view("staff")()["artisans"] or node["sch"] > sim.labour.effective_scholars():
+    if node["art"] > sim.view("staff")()["artisans"] or node["sch"] > sim.view("effective_scholars")():
         out["staff_needed_means"] = ("people kept on your own staff, who understand "
                                      "your methods and stay when this is finished. "
                                      "Different from hired_labour, which is hours of "
@@ -1523,7 +1523,7 @@ def _node_explain(sim, nodes, node_id):
     apply sometimes) - this function assembles their pieces in that same
     order, and decides nothing itself.
     """
-    nodes = sim.nodes   # the tree in this civilisation's coin
+    nodes = sim.view("tree_nodes")()   # the tree in this civilisation's coin
     node = nodes[node_id]
     out = {}
     out.update(_explain_identity(sim, nodes, node_id, node))
@@ -1539,12 +1539,12 @@ def _node_explain(sim, nodes, node_id):
     benefit = benefit_block(sim, node_id)
     if benefit:
         out["benefit"] = benefit
-    rebuild = sim.rebuild_explanation(node_id)
+    rebuild = sim.view("rebuild_explanation")(node_id)
     if rebuild:
         out["rebuild"] = rebuild
-    out["standing_effect"] = {"scandal": round(sim.alarm_of(node), 2),
-                              "reputation": round(sim.reputation_gain_of(node_id), 2)}
-    hazard_effect = sim.hazard_effect_preview(node_id)
+    out["standing_effect"] = {"scandal": round(sim.view("alarm_of")(node), 2),
+                              "reputation": round(sim.view("reputation_gain_of")(node_id), 2)}
+    hazard_effect = sim.view("hazard_effect_preview")(node_id)
     if hazard_effect:
         out["hazard_effect"] = hazard_effect
     return out
