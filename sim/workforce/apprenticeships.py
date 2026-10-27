@@ -10,10 +10,10 @@ class Apprenticeships:
 		#    year works that year, so a machinist promised "ready in 102" must
 		#    be usable in 102, not only from 103.
 		# People bought this year are not artisans this year.
-		household = self.needs.legacy_acting_household()
-		if household.training:
+		workforce = self.seat
+		if workforce.training:
 			still = []
-			for row in household.training:
+			for row in workforce.training:
 				cap, completion_year = row[0], row[1]
 				trade = row[2] if len(row) > 2 else None
 				count = row[3] if len(row) > 3 else 0.0
@@ -28,7 +28,7 @@ class Apprenticeships:
 					else:
 						# They are trained now, so _resync_pools counts them
 						# from the people you actually hold - see the note
-						# there about why adding to household.artisans directly was
+						# there about why adding to the artisans directly was
 						# thrown away at the next call.
 						self.needs.send(RecordEvent.of("bought_people_trained", "%g of the people you bought finish "
 						                               "learning the work" % round(cap / 0.55, 1)))
@@ -37,5 +37,5 @@ class Apprenticeships:
 			# BEFORE the resync, not after: _resync_pools counts who is still
 			# learning off this very list, so recomputing while the matured row
 			# was still on it cost a whole extra year of everybody's time.
-			household.training = still
+			workforce.training = still
 			self.labour.resync_pools()

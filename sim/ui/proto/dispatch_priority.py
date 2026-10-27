@@ -8,7 +8,7 @@ def _ranked_active(sim):
     standing `allocate` orders first, then the master order."""
     rank = {node_id: place for place, node_id in enumerate(sim.order)}
     return sorted(sim.active, key=lambda node_id: (
-        0 if sim.hour_allocations.get(node_id, 0.0) > 0 else 1,
+        0 if sim.view("hour_commitments")()["allocations"].get(node_id, 0.0) > 0 else 1,
         rank.get(node_id, len(rank)), node_id))
 
 
@@ -63,8 +63,8 @@ def _cmd_priority(sim, nodes, cmd, ended):
     projects = []
     for place, node_id in enumerate(ranking, 1):
         row = {"rank": place, "id": node_id, "name": nodes[node_id]["name"]}
-        if sim.hour_allocations.get(node_id, 0.0) > 0:
-            row["allocate_hours_a_year"] = sim.hour_allocations[node_id]
+        if sim.view("hour_commitments")()["allocations"].get(node_id, 0.0) > 0:
+            row["allocate_hours_a_year"] = sim.view("hour_commitments")()["allocations"][node_id]
         projects.append(row)
     out = {"ok": True, "order": ranking, "projects": projects or "none"}
     if target_id is not None:

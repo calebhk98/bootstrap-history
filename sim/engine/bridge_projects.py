@@ -132,11 +132,6 @@ def training_advice_view(sim, trade_id):
     return training_advice(sim.labour, trade_id)
 
 
-@bridge_view("training_queue", seat_scoped=True)
-def training_queue(sim):
-    return sim.state.household.training
-
-
 @bridge_view("living_cost", kind=QUOTE)
 def living_cost(sim, revenue=None, upkeep=None):
     return sim.living_cost(_rev=revenue, _upkeep=upkeep)

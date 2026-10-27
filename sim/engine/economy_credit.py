@@ -29,6 +29,7 @@ from sim.projects.api import funding as project_funding
 from .affordability import appearances_spending, near_limit, reputation_hit_taken, spending_power_of
 from sim.polity.api import SetReputation
 from sim.reporting.api import RecordEvent
+from sim.workforce.api import DisperseDependants
 
 
 def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0, market_cap=None):
@@ -465,12 +466,11 @@ class CreditMixin:
         # make progress. People are sold or freed and they leave, and the
         # point of modelling it is that shedding them is how you become
         # solvent again.
-        if household.capital < -limit and (household.slaves or household.freedmen):
-            freed = household.slaves + household.freedmen
-            self.labour.manumit(household.slaves)          # you do not sell them on
-            household.freedmen = 0
-            household.artisans = max(self.HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR,
-                                          household.artisans * self.HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION)
+        staff = self.view("staff")()
+        if household.capital < -limit and (staff["slaves"] or staff["freedmen"]):
+            freed = staff["slaves"] + staff["freedmen"]
+            self.labour.manumit(staff["slaves"])          # you do not sell them on
+            self.send(DisperseDependants(self.HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR, self.HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION))
             self.send(RecordEvent.of("household_disperses", "the household disperses: %d people leave, because "
                                  "you can no longer feed them" % freed))
 

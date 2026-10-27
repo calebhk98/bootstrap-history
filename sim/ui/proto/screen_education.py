@@ -49,13 +49,13 @@ def _limited_by(sim, general_share):
 def _pools(sim):
     return [{"trade": trade, "literacy_factor": round(sim.labour.literacy_factor(trade), 4),
              "most_you_can_ever_have": round(sim.labour.literate_capacity(trade), 2),
-             "you_employ": round(sim.state.household.employees.get(trade, 0.0), 2)}
+             "you_employ": round(sim.view("staff")()["employees"].get(trade, 0.0), 2)}
             for trade in sorted(sim.labour.LITERATE_TRADES) if sim.labour.trade_available(trade)]
 
 
 def _trainees(sim):
     return [{"trade": record[2], "count": record[3], "ready_in_year": record[1]}
-            for record in sim.state.household.training if len(record) > 3]
+            for record in sim.view("training_queue")() if len(record) > 3]
 
 
 def _recent_change(sim):
@@ -96,7 +96,7 @@ def education_report(sim):
         "literacy_limited_by": _limited_by(sim, _fraction_of(general, ceiling_general)),
         "literate_trades": _pools(sim),
         "trade_schools": {trade: seats for trade, seats
-                          in (sim.state.household.trade_schools or {}).items()},
+                          in (sim.view("trade_schools")() or {}).items()},
         "trainees": _trainees(sim),
         "not_held": ["the game keeps no record of why literacy moved in a "
                      "given year beyond the census line in `log`",

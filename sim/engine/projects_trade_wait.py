@@ -7,7 +7,7 @@ STALL_YEARS_BEFORE_ABANDONMENT = start_rules.STALL_YEARS_BEFORE_ABANDONMENT
 
 def years_until_trade_has_hands(sim, trade):
     """0 when hands exist now; else years until the soonest trainees join; None when nobody is on the way."""
-    return start_rules.trade_wait_years(sim.labour.market_supply(trade), sim.state.scenario.year, sim.state.household.training, trade)
+    return start_rules.trade_wait_years(sim.labour.market_supply(trade), sim.state.scenario.year, sim.view("training_queue")(), trade)
 
 
 def trades_the_project_waits_for(sim, node_id):

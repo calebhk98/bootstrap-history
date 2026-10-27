@@ -544,7 +544,7 @@ def _spare_capacity(sim, state_out):
         fam = trade_family(trade)
         pair = families.setdefault(fam, [0.0, 0.0])
         supply = sim.labour.hours_you_can_call_on(trade)
-        used = min(supply, sim.trade_hours_used.get(trade, 0.0))
+        used = min(supply, sim.view("hour_commitments")()["trade_hours_used"].get(trade, 0.0))
         pair[0] += supply
         pair[1] += used
     rows = []
@@ -702,9 +702,9 @@ def _dashboard_snapshot(sim):
         "binding": sim.view("material_binding")(),
         "operating_count": len(sim.operating),
         "done_earned": len(sim.done - sim.granted),
-        "employees_total": round(sum(sim.employees.values()), 2),
-        "scholars": round(sim.scholars, 2),
-        "artisans": round(sim.artisans, 2),
+        "employees_total": round(sum(sim.view("staff")()["employees"].values()), 2),
+        "scholars": round(sim.view("staff")()["scholars"], 2),
+        "artisans": round(sim.view("staff")()["artisans"], 2),
         "mine_capacity": {material: round(value, 1) for material, value in sim.view("mine_capacity")().items()},
         "scandal": round(sim.scandal, 2),
         "reputation": round(sim.reputation, 1),

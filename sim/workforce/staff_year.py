@@ -19,6 +19,7 @@ class StaffYear:
 
     def step_staff(self, seat_id=None):
         household = self.needs.legacy_acting_household()
+        workforce = self.seat
         # 1. staff. ATTRITION IS UNCONDITIONAL: people die, are poached and grow
         #    old whatever your policy is. GROWTH IS NOT: growing the staff
         #    automatically, with no command issued, would be the same fault
@@ -118,13 +119,13 @@ class StaffYear:
             # widens this same wall past that well before the goal is in
             # reach).
             target_sc = scholar_target(sc_cap, extra, AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.labour.literate_capacity("scholar"))
-            desired_sc = approach(household.scholars, target_sc, AUTO_HIRE_SCHOLAR_APPROACH_RATE)
+            desired_sc = approach(workforce.scholars, target_sc, AUTO_HIRE_SCHOLAR_APPROACH_RATE)
             target_ar = ar_cap + extra
-            desired_ar = approach(household.artisans, target_ar, AUTO_HIRE_ARTISAN_APPROACH_RATE)
+            desired_ar = approach(workforce.artisans, target_ar, AUTO_HIRE_ARTISAN_APPROACH_RATE)
             # Keep the per-trade books honest about the aggregate: staff taken on
             # for you are generic craftsmen and scribes, and that is all they are.
-            craft = craft_headcount(desired_ar, household.freedmen, household.slaves, AUTO_HIRE_SLAVE_CRAFT_CREDIT)
-            specials = sum(value for trade_id, value in household.employees.items()
+            craft = craft_headcount(desired_ar, workforce.freedmen, workforce.slaves, AUTO_HIRE_SLAVE_CRAFT_CREDIT)
+            specials = sum(value for trade_id, value in workforce.employees.items()
                            if trade_id not in ("artisan", "scholar") and self.needs.trade_family[trade_id] == "craft")
             # SPECIALISTS MUST NOT EAT THE GENERALISTS: the generic bucket is
             # the remainder after every taught trade has taken its share,
@@ -162,10 +163,10 @@ class StaffYear:
             if _closed_unscaled >= 1.0 and _closed_sc + _closed_ar < 1.0:
                 self.needs.send(RecordAutomationSkip("auto_hire", "hire for shut concerns", "concerns shut for want of staff need %.1f more people, but the income that pays staff covers "
                     "%.0f%% of them" % (_closed_unscaled, 100.0 * self.needs.legacy_household_actor()._staff_scale)))
-            _grow_to("artisan", artisan_goal(craft, specials, household.employees.get("artisan", 0.0), _closed_ar),
+            _grow_to("artisan", artisan_goal(craft, specials, workforce.employees.get("artisan", 0.0), _closed_ar),
                      closure_need=_closed_ar)
             if desired_sc > 0 or _closed_sc > 0:
-                _grow_to("scholar", scholar_goal(desired_sc, household.scholars, _closed_sc),
+                _grow_to("scholar", scholar_goal(desired_sc, workforce.scholars, _closed_sc),
                          closure_need=_closed_sc)
             # REPLACE THE PEOPLE YOU LOSE, trade by trade: attrition can erode
             # a taught trade toward zero, and nothing replaces it if the
@@ -183,9 +184,9 @@ class StaffYear:
             # concern. Otherwise the top-up pays idle specialists for decades
             # and rehires ones the player fired (see idle_specialists).
             _drawn_on = self.labour.trades_drawn_on()
-            for trade_id in sorted(set(household.employees) | set(household.trades_created)):
-                have = household.employees.get(trade_id, 0.0)
-                want = replacement_wanted(trade_id, have, trade_id in household.trades_created, _drawn_on,
+            for trade_id in sorted(set(workforce.employees) | set(workforce.trades_created)):
+                have = workforce.employees.get(trade_id, 0.0)
+                want = replacement_wanted(trade_id, have, trade_id in workforce.trades_created, _drawn_on,
                                           TRADE_REPLACEMENT_TARGET_HEADCOUNT)
                 if want is None:
                     continue
@@ -209,17 +210,17 @@ class StaffYear:
             _commissioned = self.labour.auto_commission_for_blocked()
             if _commissioned:
                 self.needs.send(RecordAutomation("auto_commission", "commission", "%.0f hours of %s" % (_commissioned[2], _commissioned[1]), "%s is blocked only on craftsmen's hands" % _commissioned[0], _before))
-        household.directors_extra = directors_next(household.directors_extra, di_cap,
+        workforce.directors_extra = directors_next(workforce.directors_extra, di_cap,
                                                               DIRECTORS_EXTRA_APPROACH_RATE, attrition_rate)
-        household.artisans = max(0.0, household.artisans)
-        household.scholars = max(0.0, household.scholars)
+        workforce.artisans = max(0.0, workforce.artisans)
+        workforce.scholars = max(0.0, workforce.scholars)
         # SAY IT WHEN IT CROSSES A WHOLE PERSON: the year's hour pool can
         # grow well past the founder's own baseline as institutions add
         # deputies, and the single largest change to the resource the
         # whole game is built on must not go unannounced.
-        _whole = int(household.directors_extra)
-        if _whole > household._said_deputies:
-            household._said_deputies = _whole
+        _whole = int(workforce.directors_extra)
+        if _whole > workforce.said_deputies:
+            workforce.said_deputies = _whole
             self.needs.send(RecordEvent.of("deputies_directing", "you now have %d deput%s directing work in "
                                  "your name: your year is %s hours instead of "
                                  "%s. They came with the institutions you built"

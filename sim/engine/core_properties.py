@@ -33,46 +33,6 @@ class ForwardingPropertiesMixin:
 		setattr(self.state.household, "capital", value)
 
 	@property
-	def hour_allocations(self):
-		return getattr(self.state.household, "hour_allocations")
-
-	@hour_allocations.setter
-	def hour_allocations(self, value):
-		setattr(self.state.household, "hour_allocations", value)
-
-	@property
-	def hours_this_year(self):
-		sub = getattr(self.state, "household", None)
-		if sub is None:
-			raise AttributeError("hours_this_year")
-		val = getattr(sub, "hours_this_year", None)
-		if val is None:
-			raise AttributeError("hours_this_year")
-		return val
-
-	@hours_this_year.setter
-	def hours_this_year(self, value):
-		sub = getattr(self.state, "household", None)
-		if sub is not None:
-			setattr(sub, "hours_this_year", value)
-
-	@property
-	def wage_hours_this_year(self):
-		return self.state.household.wage_hours_this_year
-
-	@wage_hours_this_year.setter
-	def wage_hours_this_year(self, value):
-		self.state.household.wage_hours_this_year = value
-
-	@property
-	def teaching_hours_this_year(self):
-		return getattr(self.state.household, "teaching_hours_this_year")
-
-	@teaching_hours_this_year.setter
-	def teaching_hours_this_year(self, value):
-		setattr(self.state.household, "teaching_hours_this_year", value)
-
-	@property
 	def spend_last_year(self):
 		sub = getattr(self.state, "household", None)
 		if sub is None:
@@ -121,78 +81,6 @@ class ForwardingPropertiesMixin:
 		setattr(self.state.household, "bondage_years_left", value)
 
 	@property
-	def artisans(self):
-		return getattr(self.state.household, "artisans")
-
-	@artisans.setter
-	def artisans(self, value):
-		setattr(self.state.household, "artisans", value)
-
-	@property
-	def scholars(self):
-		return getattr(self.state.household, "scholars")
-
-	@scholars.setter
-	def scholars(self, value):
-		setattr(self.state.household, "scholars", value)
-
-	@property
-	def employees(self):
-		return getattr(self.state.household, "employees")
-
-	@employees.setter
-	def employees(self, value):
-		setattr(self.state.household, "employees", value)
-
-	@property
-	def freedmen(self):
-		return getattr(self.state.household, "freedmen")
-
-	@freedmen.setter
-	def freedmen(self, value):
-		setattr(self.state.household, "freedmen", value)
-
-	@property
-	def slaves(self):
-		return getattr(self.state.household, "slaves")
-
-	@slaves.setter
-	def slaves(self, value):
-		setattr(self.state.household, "slaves", value)
-
-	@property
-	def manumitted_total(self):
-		return getattr(self.state.household, "manumitted_total")
-
-	@manumitted_total.setter
-	def manumitted_total(self, value):
-		setattr(self.state.household, "manumitted_total", value)
-
-	@property
-	def wages_earned(self):
-		sub = getattr(self.state, "household", None)
-		if sub is None:
-			raise AttributeError("wages_earned")
-		val = getattr(sub, "wages_earned", None)
-		if val is None:
-			raise AttributeError("wages_earned")
-		return val
-
-	@wages_earned.setter
-	def wages_earned(self, value):
-		sub = getattr(self.state, "household", None)
-		if sub is not None:
-			setattr(sub, "wages_earned", value)
-
-	@property
-	def wages_prepaid(self):
-		return getattr(self.state.household, "wages_prepaid")
-
-	@wages_prepaid.setter
-	def wages_prepaid(self, value):
-		setattr(self.state.household, "wages_prepaid", value)
-
-	@property
 	def interest_paid(self):
 		sub = getattr(self.state, "household", None)
 		if sub is None:
@@ -217,108 +105,12 @@ class ForwardingPropertiesMixin:
 		setattr(self.state.household, "bounties_paid", value)
 
 	@property
-	def directors_extra(self):
-		return getattr(self.state.household, "directors_extra")
-
-	@directors_extra.setter
-	def directors_extra(self, value):
-		setattr(self.state.household, "directors_extra", value)
-
-	@property
-	def contract_hours(self):
-		return getattr(self.state.household, "contract_hours")
-
-	@contract_hours.setter
-	def contract_hours(self, value):
-		setattr(self.state.household, "contract_hours", value)
-
-	@property
-	def worker_housing_places(self):
-		sub = getattr(self.state, "household", None)
-		if sub is None:
-			raise AttributeError("worker_housing_places")
-		val = getattr(sub, "worker_housing_places", None)
-		if val is None:
-			raise AttributeError("worker_housing_places")
-		return val
-
-	@worker_housing_places.setter
-	def worker_housing_places(self, value):
-		sub = getattr(self.state, "household", None)
-		if sub is not None:
-			setattr(sub, "worker_housing_places", value)
-
-	@property
-	def trade_schools(self):
-		sub = getattr(self.state, "household", None)
-		if sub is None:
-			raise AttributeError("trade_schools")
-		val = getattr(sub, "trade_schools", None)
-		if val is None:
-			raise AttributeError("trade_schools")
-		return val
-
-	@trade_schools.setter
-	def trade_schools(self, value):
-		sub = getattr(self.state, "household", None)
-		if sub is not None:
-			setattr(sub, "trade_schools", value)
-
-	@property
-	def trades_created(self):
-		return getattr(self.state.household, "trades_created")
-
-	@trades_created.setter
-	def trades_created(self, value):
-		setattr(self.state.household, "trades_created", value)
-
-	@property
-	def trades_endemic(self):
-		return getattr(self.state.household, "trades_endemic")
-
-	@trades_endemic.setter
-	def trades_endemic(self, value):
-		setattr(self.state.household, "trades_endemic", value)
-
-	@property
-	def trade_introduced_year(self):
-		return getattr(self.state.household, "trade_introduced_year")
-
-	@trade_introduced_year.setter
-	def trade_introduced_year(self, value):
-		setattr(self.state.household, "trade_introduced_year", value)
-
-	@property
-	def training(self):
-		return getattr(self.state.household, "training")
-
-	@training.setter
-	def training(self, value):
-		setattr(self.state.household, "training", value)
-
-	@property
-	def last_taught(self):
-		return getattr(self.state.household, "last_taught")
-
-	@last_taught.setter
-	def last_taught(self, value):
-		setattr(self.state.household, "last_taught", value)
-
-	@property
 	def last_settlement(self):
 		return getattr(self.state.household, "last_settlement")
 
 	@last_settlement.setter
 	def last_settlement(self, value):
 		setattr(self.state.household, "last_settlement", value)
-
-	@property
-	def work_trade(self):
-		return getattr(self.state.household, "work_trade")
-
-	@work_trade.setter
-	def work_trade(self, value):
-		setattr(self.state.household, "work_trade", value)
 
 	@property
 	def _last_buy_refusal(self):
@@ -439,14 +231,6 @@ class ForwardingPropertiesMixin:
 	@paid_towards.setter
 	def paid_towards(self, value):
 		setattr(self.state.projects, "paid_towards", value)
-
-	@property
-	def trade_hours_used(self):
-		return getattr(self.state.projects, "trade_hours_used")
-
-	@trade_hours_used.setter
-	def trade_hours_used(self, value):
-		setattr(self.state.projects, "trade_hours_used", value)
 
 	# =========================================================================
 	# EconomyState Compatibility Properties

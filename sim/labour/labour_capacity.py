@@ -95,7 +95,7 @@ class CapacityMixin:
         # In bondage most of your hours are owed to somebody else, not all: the evenings are where the work gets done.
         return hours_pool(self._world.founder_alive, self._world.cfg["founder_hours_per_year"],
                           self._world.state.household.bondage_years_left > 0, self.BONDAGE_HOURS_SHARE,
-                          self._world.state.household.directors_extra, self._world.cfg["director_hours_per_year"])
+                          self._world.workforce.directors_extra, self._world.cfg["director_hours_per_year"])
 
     # ---- literacy bounds who you can hire ----------------------------------
     # FINDINGS_ROUND2 section Q: every civ file carries literacy_general and
@@ -358,8 +358,8 @@ class CapacityMixin:
         """People already on the books in this trade, plus people already
         being taught into it who are not ready yet - what a fresh hire or a
         fresh training run would be added ON TOP OF."""
-        household = self._world.state.household
-        pending = sum(row[3] for row in household.training
+        workforce = self._world.workforce
+        pending = sum(row[3] for row in workforce.training
                       if len(row) > 2 and row[2] == trade)
         return self.employed(trade) + pending
 
@@ -694,10 +694,10 @@ class CapacityMixin:
         could ever cross. This is that honest headroom. You hire them,
         you pay them every year, and you can only supervise so many.
         """
-        household = self._world.state.household
+        workforce = self._world.workforce
         room = (self.SUPERVISION_ROOM_SELF
-                + self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * household.directors_extra
-                + max(0.0, household.worker_housing_places or 0.0))
+                + self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * workforce.directors_extra
+                + max(0.0, workforce.worker_housing_places or 0.0))
         room = self._world.effect_sum("supervision_room", room)
         # A SECOND TOWN, NOT A SECOND SCHOOLROOM. workshop_first, school_founded
         # and academy_network above are each a single PLACE a founder can stand
@@ -729,12 +729,12 @@ class CapacityMixin:
         """
         rows = [{"source": "yourself", "people": self.SUPERVISION_ROOM_SELF,
                  "what_it_is": "what one person can keep an eye on"}]
-        household = self._world.state.household
-        if household.directors_extra > 0.005:
+        workforce = self._world.workforce
+        if workforce.directors_extra > 0.005:
             rows.append({"source": "your deputies", "people":
-                         round(self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * household.directors_extra, 2),
+                         round(self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * workforce.directors_extra, 2),
                          "what_it_is": "people you have trained to direct work"})
-        housing = max(0.0, household.worker_housing_places or 0.0)
+        housing = max(0.0, workforce.worker_housing_places or 0.0)
         if housing > 0.0:
             rows.append({"source": "worker housing", "people": housing,
                          "what_it_is": "places you have bought to house the people you employ"})
@@ -858,7 +858,7 @@ class CapacityMixin:
         def waiting_on_kind(node_id):
             # Asked DIRECTLY of the node's own requirement, never through start_reason, which calls this function.
             node = self._world.nodes[node_id]
-            return (node["art"] > self._world.state.household.artisans + 1e-9 if kind == "artisans"
+            return (node["art"] > self._world.workforce.artisans + 1e-9 if kind == "artisans"
                     else node["sch"] > self.effective_scholars() + 1e-9)
 
         steps = staff_remedies(kind, self._world.STAFF_SOURCES.get(kind, []), deficit, projects.done,
@@ -871,8 +871,8 @@ class CapacityMixin:
         return Refusal("staff_advice", "To get more %s: %s." % (kind, "; ".join(bits[:3])), remedies=remedies[:3])
 
     def headcount(self):
-        household = self._world.state.household
-        return self.employed_total() + household.slaves + household.freedmen
+        workforce = self._world.workforce
+        return self.employed_total() + workforce.slaves + workforce.freedmen
 
     def director_hours_committed(self):
         """Hours of your own year already spoken for before any project sees them.
@@ -883,11 +883,11 @@ class CapacityMixin:
         a free second year inside every year. There is one year, and one
         pair of hands.
         """
-        household = self._world.household
-        return hours_committed(getattr(household, "teaching_hours_this_year", 0.0),
-                               getattr(household, "relocation_hours_this_year", 0.0),
-                               (getattr(household, "supervision_hours_this_year", 0.0) or 0.0) + self._world.director_overhead_hours(),
-                               household.wage_hours_this_year)
+        workforce = self._world.workforce
+        return hours_committed(workforce.teaching_hours_this_year,
+                               workforce.relocation_hours_this_year,
+                               (workforce.supervision_hours_this_year or 0.0) + self._world.director_overhead_hours(),
+                               workforce.wage_hours_this_year)
 
     def household_room(self):
         """How many more people this household can feed, house and oversee.

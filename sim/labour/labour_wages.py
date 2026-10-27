@@ -112,13 +112,13 @@ class WagesMixin(WageLedgerMixin):
         # It has to be derived from the labour market quote, not a separate hourly
         # column, or the two disagree and the docstring's "no arbitrage in
         # either direction" claim becomes false.
-        household = self._world.state.household
+        workforce = self._world.workforce
         pay = self.wage_for_hours(trade, hours)
         revenue_before = self._world.revenue()
         self._world.receive_from_edge(self._world.EDGE_EMPLOYERS, pay, "wages for your own work")
-        household.wage_hours_this_year = household.wage_hours_this_year + hours
-        household.wages_earned = (household.wages_earned or 0.0) + pay
-        household.wage_income_this_year = household.wage_income_this_year + pay
+        workforce.wage_hours_this_year = workforce.wage_hours_this_year + hours
+        workforce.wages_earned = (workforce.wages_earned or 0.0) + pay
+        workforce.wage_income_this_year = workforce.wage_income_this_year + pay
         # DO NOT BLOCK IT - WARN ABOUT IT: selling hours is a legitimate
         # way to dig out of debt, so this must never refuse the sale, only
         # warn when it would starve an active project of the hours it
@@ -239,7 +239,7 @@ class WagesMixin(WageLedgerMixin):
     def _opening_wage_schedule(self):
         """The wage schedule at the opening's price level; its tightness factors live in the economy
         state, so a save carries them."""
-        factors = self._world.state.economy.wage_tightness_factors
+        factors = self._world.society.wage_tightness_factors
         cached = getattr(self, "_wage_schedule_cache", None)
         if cached is None or cached.tightness_factors is not factors:
             cached = self._wage_schedule_cache = self._world.build_wage_schedule(
@@ -289,7 +289,7 @@ class WagesMixin(WageLedgerMixin):
 
     def update_wages(self):
         """One year of wage adjustment toward the trades that are short."""
-        hours = self._world.state.economy.society_labour_hours
+        hours = self._world.society.society_labour_hours
         if not hours:
             return
         self.wage_schedule().step(self._hours_needed_for_wages(), hours)

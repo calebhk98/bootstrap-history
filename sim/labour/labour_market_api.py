@@ -71,7 +71,7 @@ class LabourMarket:
     # ---- pressure: what recent hiring has done to a trade's local price ----
 
     def _records(self):
-        return self._world.state.household.labour_pressure_records
+        return self._world.workforce.labour_pressure_records
 
     def standing_draw(self, trade):
         """Hours a year of this trade that standing staff already take out of its pool: trades drawn
@@ -168,7 +168,7 @@ class LabourMarket:
         dwellings plus the worker housing built in it."""
         world = self._world
         return (self._labour.home_town_population_estimate() * self.TOWN_SPARE_HOUSING_SHARE
-                + max(0.0, world.state.household.worker_housing_places or 0.0))
+                + max(0.0, world.workforce.worker_housing_places or 0.0))
 
     def town_workers(self):
         """People every employer in the town has on its books: the founder's household and every

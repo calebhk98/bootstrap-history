@@ -73,10 +73,10 @@ class StaffControlsMixin:
         Buys housing first when the household has no room for them."""
         if not self._world.state.founder.policy.get("reserve_staff", False):
             return
-        household = self._world.state.household
+        workforce = self._world.workforce
         scholars_free, craftsmen_free = self._world.venture_staff_free()
-        for trade, target, free in ((trade_data.generic_craft_trade(), household.reserve_craftsmen, craftsmen_free),
-                                    (trade_data.scholar_trade(), household.reserve_scholars, scholars_free)):
+        for trade, target, free in ((trade_data.generic_craft_trade(), workforce.reserve_craftsmen, craftsmen_free),
+                                    (trade_data.scholar_trade(), workforce.reserve_scholars, scholars_free)):
             short = math.ceil(target - free - 0.01)
             if short <= 0:
                 continue

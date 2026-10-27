@@ -186,6 +186,7 @@ class SettlementMixin:
             return False, "no route over the ways your people can travel joins %s to your base." % tile
         days, hours, money = quote
         household = self._world.state.household
+        workforce = self._world.workforce
         if money > household.capital:
             return False, ("moving to %s takes about %d days and would cost %s in "
                            "wages while your household travels; you have %s."
@@ -193,11 +194,11 @@ class SettlementMixin:
                               self._world.money_text(household.capital, grouped=True)))
         self._world.pay_edge(self._world.EDGE_WORKERS, money, "relocation")
         household.total_spend += money
-        household.relocation_hours_this_year = (
-            (household.relocation_hours_this_year or 0.0) + hours)
+        workforce.relocation_hours_this_year = (
+            (workforce.relocation_hours_this_year or 0.0) + hours)
         # Local contracts and the local market's memory stay behind.
-        household.commissioned = {}
-        household.contract_hours = {}
+        workforce.commissioned = {}
+        workforce.contract_hours = {}
         self.labour_market.clear_pressure()
         self._world.send(ScaleFamiliarity(self.RELOCATION_STANDING_RETAINED))
         self._world.send(ScaleProtection(self.RELOCATION_STANDING_RETAINED))

@@ -19,6 +19,7 @@ from .state_waiting import _staff_fraction_note
 from .util import _num, _qty
 from .quote_spending import COMMISSION_NOTE
 from sim.reporting.api import RecordEvent
+from sim.workforce.api import AllocateHours, CancelWork, OrderWork, ReleaseHours
 
 
 @command("work", group="labour",
@@ -80,11 +81,11 @@ def _cmd_allocate(sim, nodes, cmd, ended):
     target_id = cmd.get("id")
     if target_id is None:
         _rows = [{"id": target_id, "hours_a_year": hours}
-                 for target_id, hours in sorted(sim.hour_allocations.items()) if target_id != "work"]
+                 for target_id, hours in sorted(sim.view("hour_commitments")()["allocations"].items()) if target_id != "work"]
         _out = {"ok": True, "allocations": _rows or "none"}
-        if sim.hour_allocations.get("work"):
-            _out["work"] = {"trade": sim.work_trade,
-                            "hours_a_year": sim.hour_allocations["work"]}
+        if sim.view("hour_commitments")()["allocations"].get("work"):
+            _out["work"] = {"trade": sim.view("hour_commitments")()["work_trade"],
+                            "hours_a_year": sim.view("hour_commitments")()["allocations"]["work"]}
         _out["note"] = (
             "hours you have NOT directed keep being shared out by "
             "priority, exactly as before - this only affects what you "
@@ -100,11 +101,10 @@ def _cmd_allocate(sim, nodes, cmd, ended):
                                       "more. 0 clears the standing order."}
     if target_id == "work":
         if hours <= 0:
-            had = sim.hour_allocations.pop("work", None)
-            sim.work_trade = None
+            had = sim.send(CancelWork())
             return {"ok": True, "cleared": "work",
                     "had_been": had} if had else {"ok": True, "cleared": "work"}
-        trade = cmd.get("trade") or sim.work_trade
+        trade = cmd.get("trade") or sim.view("hour_commitments")()["work_trade"]
         if not trade:
             return {"ok": False,
                     "error": "say which trade to sell hours as, e.g. "
@@ -119,8 +119,7 @@ def _cmd_allocate(sim, nodes, cmd, ended):
                     "error": "nobody here will pay you to be a %s yet: "
                              "the trade does not exist in this society. "
                              "Teach it first with train." % trade}
-        sim.hour_allocations["work"] = float(hours)
-        sim.work_trade = trade
+        sim.send(OrderWork(trade, float(hours)))
         return {"ok": True, "set": "work", "trade": trade,
                 "hours_a_year": float(hours),
                 "note": "this much of your own pool is sold for wages as "
@@ -137,12 +136,12 @@ def _cmd_allocate(sim, nodes, cmd, ended):
                                  "directive to apply to yet. 'start' it first, "
                                  "then 'allocate' it hours" % target_id)}
     if hours <= 0:
-        had = sim.hour_allocations.pop(target_id, None)
+        had = sim.send(ReleaseHours(target_id))
         return ({"ok": True, "cleared": target_id, "had_been_a_year": had}
                 if had else {"ok": True, "cleared": target_id})
     hours, capped_from = capped_to_useful(
         hours, sim.project_useful_hours(target_id) if cmd.get("useful") else 0.0, bool(cmd.get("useful")))
-    sim.hour_allocations[target_id] = float(hours)
+    sim.send(AllocateHours(target_id, float(hours)))
     return {"ok": True, "set": target_id, "name": nodes[target_id]["name"],
             "hours_a_year": float(hours),
             **({"capped_to_useful_work_from": capped_from} if capped_from is not None else {}),
@@ -177,7 +176,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
         _lpf = sim.labour.market.price_factor(trade)
         entry = {"trade": trade,
              "a_year_of_one": round(sim.labour.market.quote_annual(trade), 0),
-             "you_employ": round(sim.employees.get(trade, 0.0), 2)}
+             "you_employ": round(sim.view("staff")()["employees"].get(trade, 0.0), 2)}
         if long:
             entry["wage_foundation"] = {
                 "base_for_skill_and_difficulty": round(sim.labour.base_annual_wage(trade), 2),
@@ -253,7 +252,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                       "note": (("you taught this trade into existence here; "
                                 "the only %ss in this society are yours and "
                                 "the ones they have taught since" % trade)
-                               if trade in sim.trades_created
+                               if trade in sim.view("trade_spread")()["created"]
                                else TRADE_NOTES.get(trade, ""))})
             # THE HIRE YOU ARE CONTEMPLATING, NOT THE MARKET AS IT STANDS.
             # a_year_of_one above is true the instant it is quoted and can
@@ -288,7 +287,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                 # thin-market trade and false of a common one like
                 # labourer or smith.
                 if _lpf_after > 1.05:
-                    _have = sim.employees.get(trade, 0.0)
+                    _have = sim.view("staff")()["employees"].get(trade, 0.0)
                     entry["hiring_moves_the_price"] = True
                     # NOT JUST THE NEW HIRE. The whole point is that this
                     # rate applies to everyone you already have too, the
@@ -303,7 +302,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
         entry = row(one, long=True)
         entry["exists_here"] = sim.labour.trade_available(one)
         return {"ok": True, "trade": entry}
-    have = sorted(trade for trade in WAGES if sim.employees.get(trade, 0.0) > 0.005)
+    have = sorted(trade for trade in WAGES if sim.view("staff")()["employees"].get(trade, 0.0) > 0.005)
     # NOT "TRADES YOU DO NOT YET EMPLOY", and not "trades that exist"
     # either: excluding the ones you have would read as "no more smiths
     # available" the moment you hire your first smith, which `hire smith 1`
@@ -321,7 +320,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
             "you_could_hire_here": hirable,
             "only_the_ones_you_taught": taught_only,
             "do_not_exist_here": absent,
-            "you_employ_in_total": round(sum(sim.employees.values()), 2),
+            "you_employ_in_total": round(sum(sim.view("staff")()["employees"].values()), 2),
             # THE CAP, WHERE A PLAYER CAN SEE IT: this number can decide an
             # entire mid-game and must not be discoverable only by trying
             # to hire and being refused, with no earlier screen - state
@@ -353,9 +352,9 @@ def _cmd_labour(sim, nodes, cmd, ended):
                 % ", ".join("%s %.1f" % (trade, sim.labour.literate_capacity(trade))
                             for trade in sorted(sim.labour.LITERATE_TRADES))),
             "workforce": sim.labour.workforce_report(),
-            "slaves": sim.slaves, "freedmen": sim.freedmen,
+            "slaves": sim.view("staff")()["slaves"], "freedmen": sim.view("staff")()["freedmen"],
             "annual_wage_bill": round(sim.labour.wage_bill(), 1),
-            "craftsmen_on_your_staff": round(sim.artisans, 2),
+            "craftsmen_on_your_staff": round(sim.view("staff")()["artisans"], 2),
             "scholars_including_you": round(sim.labour.effective_scholars(), 2),
             # SAME EXPLANATION AS `state`'s - see _staff_fraction_note.
             # A player who asks `labour` without ever asking `state`
@@ -374,7 +373,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                  "people": (training_record[3] if len(training_record) > 3
                             else round(training_record[0] / 0.55, 2)),
                  "ready_year": training_record[1]}
-                for training_record in sim.training],
+                for training_record in sim.view("training_queue")()],
             "one_trade_in_full": '{"cmd":"labour","trade":"smith"}',
             "how_to_grow_staff": {"scholars": sim.labour.staff_advice("scholars"),
                                   "artisans": sim.labour.staff_advice("artisans")},
@@ -408,7 +407,7 @@ def _cmd_hire(sim, nodes, cmd, ended):
         return {"ok": False, "error": err + ". Nothing was changed."}
     wages_before = sim.labour.wage_bill()
     trade_id = str(cmd.get("trade")).lower()
-    headcount_before = sim.employees.get(trade_id, 0.0)
+    headcount_before = sim.view("staff")()["employees"].get(trade_id, 0.0)
     _count, fee_paid, _refusal = sim.labour.hire_check(cmd.get("trade"), quantity)
     hired, err = sim.labour.hire(cmd.get("trade"), quantity)
     if not hired:
@@ -421,8 +420,8 @@ def _cmd_hire(sim, nodes, cmd, ended):
     # using it here rather than rebuilding one from cmd["n"] keeps the log
     # honest about what actually happened, not just what was asked for.
     sim.send(RecordEvent.of("hire_ordered", err or ("hired %s %s" % (cmd.get("n"), cmd.get("trade")))))
-    hired_count = round(sim.employees.get(trade_id, 0.0) - headcount_before)
-    return hire_reply(hired_count, quantity, cmd.get("trade"), sim.employees.get(trade_id, 0.0), sim.labour.wage_bill(),
+    hired_count = round(sim.view("staff")()["employees"].get(trade_id, 0.0) - headcount_before)
+    return hire_reply(hired_count, quantity, cmd.get("trade"), sim.view("staff")()["employees"].get(trade_id, 0.0), sim.labour.wage_bill(),
                       fee_paid, sim.labour.wage_bill() - wages_before, sim.capital, err)
 
 
@@ -439,7 +438,7 @@ def _cmd_fire(sim, nodes, cmd, ended):
     fired, err = sim.labour.fire(cmd.get("trade"), quantity)
     if not fired:
         return {"ok": False, "error": err}
-    advance_credit = min(sim.living_cost(), sim.wages_prepaid)
+    advance_credit = min(sim.living_cost(), sim.view("pay_book")()["prepaid"])
     # Same reasoning as `hire` above: `err` here is fire()'s own success
     # message, which says exactly what happened - staff let go, an
     # apprenticeship cancelled, or both - and cmd["n"] alone would not.

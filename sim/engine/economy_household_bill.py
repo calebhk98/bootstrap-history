@@ -25,5 +25,5 @@ class HouseholdBillMixin:
 
     def household_dependant_people(self):
         """People the household keeps besides the founder: each a person with needs of their own."""
-        household_state = self.state.household
-        return self.HOUSEHOLD_DEPENDANT_PEOPLE + household_state.freedmen + household_state.slaves
+        staff = self.view("staff")()
+        return self.HOUSEHOLD_DEPENDANT_PEOPLE + staff["freedmen"] + staff["slaves"]

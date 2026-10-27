@@ -3,6 +3,7 @@ import copy, os, sys
 
 from sim.constants import declare
 from sim.demography.api import OpenPopulation
+from sim.workforce.api import WatchStaff
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from . import money_units
 from sim.engine.state import SimulationState, ActiveProjectState
@@ -76,6 +77,7 @@ class Sim(
         ModStoresMixin,
         ForwardMechanicsMixin,
         ForwardKnowledgeMixin,
+        ForwardWorkforceMixin,
         EconomyMixin,
         MarketClearingMixin,
         ForwardForeignTradeMixin,
@@ -89,7 +91,6 @@ class Sim(
         FogMixin,
         ForwardLandMixin,
         DiseaseForwardsMixin,
-        ForwardWorkforceMixin,
         ProjectsMixin,
         SeatMixin,
         ForwardSeatsMixin,
@@ -246,10 +247,10 @@ class Sim(
             starting_capital=float(start_money) * self.price_index,
             operating_changed=self._operating_changed,
             active_changed=self._active_changed,
-            workforce_changed=self._workforce_changed,
             state=self.state,
             port=HouseholdPort())
         self._seat_facades = {self.state.acting_seat: self.household}
+        self.send(WatchStaff(self.state.acting_seat))
         # EVERY AUTOMATIC BEHAVIOUR, IN ONE PLACE, SWITCHABLE.
         #
         # Everything automatic must be controllable: a player can enable or
@@ -272,12 +273,10 @@ class Sim(
         # design against, what death, personal hours or a patron mean for a
         # firm or a government; that is a real design question and this
         # extraction does not answer it by default.
-        self.state.founder.director_hours_spent_founder = 0.0
         # founder remaining lifespan, elite male already aged 35
         self.send(SetFounderLife(1e9 if self.cfg["immortal"]
                                  else max(self.FOUNDER_MIN_REMAINING_LIFE_YEARS,
                                           rng.gauss(self.cfg["founder_life_mean"], self.cfg["founder_life_sd"]))))
-        self.state.founder.living_cost_paid = 0.0
         self._spend_this_year = 0.0
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # How much of each material physically exists: a material's
@@ -364,10 +363,7 @@ class Sim(
              for k, v in (self.state.projects.active or {}).items()},
             on_change=self._active_changed
         )
-        self.state.household.employees = _InvalidatingDict(
-            self.state.household.employees or {},
-            on_change=self._workforce_changed
-        )
+        self.send(WatchStaff(self.state.acting_seat))
         self.household.start_version_counters(self.state)
 
     # ---- OUTSIDE-SURFACE PROPERTIES FOR THE EXTRACTED HOUSEHOLD ----------

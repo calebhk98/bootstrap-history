@@ -11,11 +11,6 @@ class Views:
 
 	# ---- people ----
 
-	def staff(self):
-		"""The acting seat's household staff: hired hands by trade, and its scholars and artisans."""
-		household = self.needs.legacy_acting_household()
-		return {"employees": household.employees, "scholars": household.scholars, "artisans": household.artisans}
-
 	def staff_snapshot(self):
 		"""Headcount by trade now, to diff against after something trims it."""
 		return self.labour.staff_snapshot()
@@ -41,13 +36,6 @@ class Views:
 
 	def farm_share_of_hours(self):
 		return self.labour.farm_share_of_hours()
-
-	def trade_spread(self):
-		"""{absent: the trades that do not exist until taught, created: those the seat taught, endemic: those the society
-		has, introduced_year: the year each was first seen taught}; the last three are live."""
-		household = self.needs.legacy_acting_household()
-		return {"absent": sorted(self.needs.trades_absent()), "created": household.trades_created,
-		        "endemic": household.trades_endemic, "introduced_year": household.trade_introduced_year}
 
 	def staff_advice(self, kind, deficit):
 		return self.labour.staff_advice(kind, deficit)
@@ -148,10 +136,6 @@ class Views:
 	def trade_registry(self):
 		"""{trade id: {family, training_years, ...the trade's extra fields}}."""
 		return self.labour._world.trade_registry
-
-	def society_labour_hours(self):
-		"""{trade: labour hours the society's workers of the trade give in a year}."""
-		return self.needs.legacy_state().economy.society_labour_hours
 
 	# ---- the farm ----
 

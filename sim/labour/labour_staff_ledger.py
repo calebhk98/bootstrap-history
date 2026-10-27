@@ -70,7 +70,7 @@ class StaffLedgerMixin:
                 continue
             rows.append({"trade": trade, "count": round(count, 1),
                          "wage_bill_per_year": round(count * self.labour_market.quote_annual(trade), 1),
-                         "taught_by_you": trade in self._world.state.household.trades_created})
+                         "taught_by_you": trade in self._world.workforce.trades_created})
         return rows
 
     def sole_supervisors(self):
@@ -88,14 +88,14 @@ class StaffLedgerMixin:
 
     def workforce_report(self):
         """Where the payroll is fragile: single-person dependencies, expected yearly losses, reserve and training."""
-        household = self._world.state.household
+        workforce = self._world.workforce
         policy = self._world.state.founder.policy
         return {
             "depends_on_one_person": self.sole_supervisors(),
             "expected_losses_per_year": round(self.employed_total() * demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE, 2),
-            "reserve": ({"craftsmen": household.reserve_craftsmen, "scholars": household.reserve_scholars}
+            "reserve": ({"craftsmen": workforce.reserve_craftsmen, "scholars": workforce.reserve_scholars}
                         if policy.get("reserve_staff", False) else None),
-            "in_training": len(household.training),
+            "in_training": len(workforce.training),
         }
 
     def hire_to_cover(self, trade, short, label, partial=False):

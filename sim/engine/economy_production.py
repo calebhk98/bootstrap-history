@@ -23,6 +23,7 @@ from .bondage_workshop_rules import workshop_craft_wages, workshop_output_value
 from .concern_earnings import ledger_row, output_market_factor, takings_at
 from .data import trade_family
 from sim.constants import declare
+from sim.workforce.api import SetWageHoursSold
 from . import category_traits, concern_sales, money_units, node_revenue_market, node_upkeep
 from .readable import readable
 from .revenue_ledger import assemble_ledger
@@ -55,13 +56,12 @@ class ProductionMixin:
         """What you would earn in an ordinary year, with your own hands on your
         own work, none of this year's hours sold on request. Used where a swing in ONE year should not count - a lender
         does not cut your line because you took a job this year."""
-        household = self.state.household
-        _sold = household.wage_hours_this_year
-        household.wage_hours_this_year = 0.0
+        _sold = self.view("hour_commitments")()["wage_hours"]
+        self.send(SetWageHoursSold(0.0))
         try:
             return self.revenue()
         finally:
-            household.wage_hours_this_year = _sold
+            self.send(SetWageHoursSold(_sold))
 
     @readable
     def revenue(self):
@@ -74,12 +74,12 @@ class ProductionMixin:
           - economy.output_per_head: measured when the year's market closes
           - self.household._operating_ver: changes whenever self.household.operating is mutated
           - self.household._done_ver: changes whenever self.household.done or granted is mutated
-          - self.household._workforce_ver: changes whenever self.household.employees is mutated
-          - self.household.freedmen, self.household.slaves: workforce headcount
-          - self.household.wage_hours_this_year: hours sold on request (e.g. temporary 0.0 in revenue_capacity)
+          - the workforce module's staff_version: changes whenever the payroll is mutated
+          - the freedmen and slaves held: workforce headcount
+          - the hours sold on request (e.g. temporary 0.0 in revenue_capacity)
           - director_hours_committed(): teaching, moving and supervising hours the standing job does not sell
           - labour.wage_signature(): recent hiring that moves the market wage the standing job is paid
-          - self.household.directors_extra, bondage_years_left: the own hours the standing job sells
+          - the deputy directors, bondage_years_left: the own hours the standing job sells
           - the acting seat's farm_holdings hectares: household farmland staples affecting food price ratio
           - self.household.gov: governance quality affecting state funding
           - self.household._inst_units_ver: scalable institution units
@@ -87,29 +87,30 @@ class ProductionMixin:
           - self.reputation: standing affecting state funding
           - self.founder_alive: a dead founder sells no hours
         Invalidated by: Any change to any element in the composite version key tuple.
-        Nested mutation concerns: household.employees wrapped in _InvalidatingDict (flat dict); workforce counts tracked in key.
+        Nested mutation concerns: the payroll wrapped in _InvalidatingDict (flat dict); workforce counts tracked in key.
         Serialized: no
         """
         scenario = self.state.scenario
         projects = self.state.projects
         household = self.state.household
         standing = self.view("standing")()
+        staff = self.view("staff")()
         key = (
             scenario.year,
             self.pop_scale,
             self.real_output_per_head(),
             self.household.operating_version,
             self.household.done_version,
-            self.household.workforce_version,
+            self.view("staff_version")(),
             self.household.institution_units_version,
-            household.wage_hours_this_year,
+            self.view("hour_commitments")()["wage_hours"],
             self.labour.director_hours_committed(),
             self.labour.wage_signature(),
-            household.directors_extra,
+            staff["directors_extra"],
             household.bondage_years_left,
             self.view("farm_holdings")()["hectares"] or 0.0,
-            getattr(household, "freedmen", 0.0) or 0.0,
-            getattr(household, "slaves", 0.0) or 0.0,
+            staff["freedmen"] or 0.0,
+            staff["slaves"] or 0.0,
             standing["governance"] or 0.0,
             self.output_factor,
             standing["reputation"],
@@ -222,11 +223,11 @@ class ProductionMixin:
         """What your standing staff produces and sells, over and above projects."""
         if not self.running_with_mechanic("workshop_site"):
             return 0.0
-        household = self.state.household
+        staff = self.view("staff")()
         market = self.labour.market
         wage = workshop_craft_wages(
-            household.employees, lambda trade: trade_family(trade) == "craft", market.quote_annual,
-            household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE, market.quote_annual("artisan"))
+            staff["employees"], lambda trade: trade_family(trade) == "craft", market.quote_annual,
+            staff["freedmen"] + staff["slaves"] * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE, market.quote_annual("artisan"))
         mark = self.WORKSHOP_WAGE_MARKUP_BASE
         mark = self.effect_sum("workshop_markup", mark)
         # AND EVERYTHING YOU KNOW HOW TO DO, which is where the value of a

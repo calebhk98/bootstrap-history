@@ -31,7 +31,7 @@ def occupation_lines(game):
     """Each occupation group's share of working people (the basis of the bands), then of the year's hours, against
     its plausibility band."""
     people = people_by_trade_of_all_employers(game.labour)
-    hours = hours_by_trade_of_all_employers(game.labour, game.state.economy.society_labour_hours)
+    hours = hours_by_trade_of_all_employers(game.labour, game.view("society_labour_hours")())
     return (["by people (main occupation)"] + ([] if people is None else format_occupational_report(occupational_report(people)))
             + ["by hours worked"] + format_occupational_report(occupational_report(hours)))
 
