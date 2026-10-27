@@ -7,7 +7,7 @@ from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
 from sim.agents import exchange, exchange_commands, joint_stock, licence, patent, player  # noqa: F401
-from sim.agents import registry as registry_module
+from sim.agents.shipped import shipped_spawners
 from sim.agents.player_commands import CommandRejected, run_orders
 
 from .agents_fake_world import FakeWorld, make_node, total_money
@@ -133,7 +133,7 @@ check("a firm with nothing pays nothing", joint_stock.pay_dividends(registry, wo
 firm.record.last_margin = -50.0
 firm.money = 500.0
 check("a firm at a loss pays nothing", joint_stock.pay_dividends(registry, world) == 0.0)
-check("the spawner is registered", "dividends" in dict(registry_module.SPAWNERS))
+check("the spawner is shipped", "dividends" in dict(shipped_spawners()))
 
 # ---- the AI values shares by what the firm earns ---------------------------------------------------
 firm.record.last_margin = 100.0

@@ -53,7 +53,11 @@ class Weather:
             agriculture.WEATHER_FLOOR_MULTIPLIER, agriculture.WEATHER_CEILING_MULTIPLIER)
         if not harmed:
             return pooled
-        return pooled * weather_pooling.harm_multiplier(self._tile_share, self.needs.externality_yield_factors(year))
+        return pooled * weather_pooling.harm_multiplier(self._tile_share, self.externality_yield_factors(year))
+
+    def externality_yield_factors(self, year):
+        """{tile: factor} the game's externality providers agree on for the year's harvest, each clamped to 0..1."""
+        return rules.yield_factors(self.needs.externality(self.needs.legacy_game(), year))
 
     def farm_weather(self, year):
         """{tile id: this year's multiplier on that tile's own weather cell}, from the draws the pooled multiplier averages.

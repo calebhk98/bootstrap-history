@@ -8,19 +8,20 @@ import contextlib
 from sim.agents.api import cast_from_civilisations
 from sim.assembly.api import KEYED, QUOTE
 
-from .actor_kinds_data import register_mod_actor_kinds
-from . import view_share
+from . import bridge_land, view_share
+from .actor_kinds_data import declared_kinds
 from .bridge import bridge_command, bridge_view
 from .data import load_civ
 from .foreign_economy_data import not_traded_materials as declared_not_traded_materials
 
-# ---- the cast's own data: the kinds mods bring and the roster a game opens with ----
+# ---- the cast's own data: the kinds mods declare and the roster a game opens with ----
 
 
-@bridge_view("actor_kinds_registered")
-def actor_kinds_registered(sim):
-    """Registers the actor kinds mods bring (once per mods directory) before the registry is built."""
-    register_mod_actor_kinds()
+@bridge_view("declared_actor_kinds")
+def declared_actor_kinds(sim):
+    """{kind id: class} for the actor kinds the installed mods declare in data."""
+    return declared_kinds(bridge_land.MODS_DIR)
+
 
 
 @bridge_view("opening_cast")

@@ -16,3 +16,4 @@ class Actors(Cast, Staff, Contact, Year, Module):
 
 	def setup(self) -> None:
 		self._registry = None   # never saved: rebuilt over the world slot on first use and after a load
+		self._extensions = None   # never saved: asked of the providers on first use

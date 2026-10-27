@@ -7,7 +7,7 @@ would run the concern needs the holder's licence. `world.patent_entry(node_id)` 
 """
 from typing import Any, Dict, Iterable, List, Optional
 
-from .player_commands import CommandRejected, register_command
+from .player_commands import CommandRejected
 from .tuning_patent import PATENT_TERM_YEARS
 
 
@@ -94,6 +94,3 @@ def patent_command(player: Any, order: Dict[str, Any], world: Any) -> str:
 	if not isinstance(node_id, str) or not node_id:
 		raise CommandRejected("no node given")
 	return apply(player, node_id, world)
-
-
-register_command("patent", patent_command)

@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.agents.api import ActorRecord
-from sim.agents import registry as registry_module
+from sim.agents.shipped import shipped_spawners
 from sim.agents.trader import Trader
 from sim.agents.trader_entry import trader_entry
 from sim.agents.tuning import EXIT_LOSS_YEARS
@@ -153,7 +153,7 @@ world.countries = {"town": "far"}
 registry = make_registry()
 trader_id = trader_entry(registry, world)[0]
 check("the trader's country is the source place's country", registry.get(trader_id).record.country == "far")
-check("trader_entry is a registered spawner", "trader_entry" in [name for name, _spawner in registry_module.SPAWNERS])
+check("trader_entry is a shipped spawner", "trader_entry" in [name for name, _spawner in shipped_spawners()])
 
 # ---- review regressions: room is per destination, idle traders leave, exited actors rest -------
 three = make_world()

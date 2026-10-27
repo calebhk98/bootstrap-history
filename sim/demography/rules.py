@@ -81,3 +81,15 @@ def yearly_record_row(year, total_people, flows):
     """One year's entry of the demographic record."""
     return {"year": year, "population": round(total_people, 1), "births": round(flows.births),
             "deaths": round(flows.deaths), "nutrition_ratio": round(flows.nutrition_ratio, 4)}
+
+
+def deaths_with_externalities(deaths_by_band, answers):
+    """`deaths_by_band` plus the deaths each externality answer (`{"deaths_by_band": {band: people}, ...}`, or None) adds,
+    band by band and never negative; the same mapping when nothing answered."""
+    if not answers:
+        return deaths_by_band
+    total = {band: float(count) for band, count in deaths_by_band.items()}
+    for answer in answers:
+        for band, count in ((answer or {}).get("deaths_by_band") or {}).items():
+            total[band] = total.get(band, 0.0) + max(0.0, float(count))
+    return total

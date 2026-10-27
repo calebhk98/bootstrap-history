@@ -2,7 +2,7 @@
 
 Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_polity.py and the
 other bridge files) under the name the owner will publish, or a view of a module that has moved. Grouped by owner."""
-from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
+from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
 from sim.knowledge.api import ForgetTechnique
 from sim.ledger.api import PayActorFromHousehold, PayEdge, TakeFromHouseholdPurse
 from sim.reporting.api import RecordEvent
@@ -84,6 +84,9 @@ MODULE_SPECS = (ModuleSpec(
 		(commands.SetTileReading, "set_tile_reading"), (commands.RecordRising, "record_rising"),
 		(commands.ReplaceRuler, "replace_ruler"), (commands.CloseSuccessionDispute, "close_succession_dispute"),
 	),
+	# () -> (reader, seizer): a claim the acting household holds on other actors, which a confiscation counts and, once the purse is
+	# empty, takes. reader(game) -> money the household is owed; seizer(game, amount, taker) -> money actually handed to `taker`.
+	extension_points=(ExtensionPoint("wealth_claims", LIST),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(PayEdge, PayActorFromHousehold, TakeFromHouseholdPurse, RecordEvent, ForgetTechnique, EndRun),
 	phases=(PhaseHook("begin_seat_year", "step_begin_seat_year"),),

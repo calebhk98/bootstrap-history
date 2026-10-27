@@ -8,7 +8,6 @@ out what crosses to another stratum (people with their savings, a keeper's allow
 from typing import Any, List
 
 from .base import RecordedActor
-from .registry import register_actor_kind
 from . import stratum_year
 
 STRATUM_ID_PREFIX = "stratum:"
@@ -43,6 +42,3 @@ class Stratum(RecordedActor):
 
 	def advance(self, world: Any) -> None:
 		stratum_year.run_year(self, world)
-
-
-register_actor_kind("stratum", Stratum)

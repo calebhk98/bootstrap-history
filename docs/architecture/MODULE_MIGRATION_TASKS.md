@@ -42,11 +42,12 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 | land | `sim/land/` | the owner map, colonies, the map and geography handles, the built ways, the works and improvements, the held techniques; `BuildWay` and `BuildWork` answer `(ok, text)` so the protocol replies keep their wording |
 | markets | `sim/markets/` | the market book, flows, clearing, goods categories, household demand ratios, the goods market object and the port over the agent economy (`port*.py`, `goods_*.py`; the module builds `economy` and `goods_market`, which read the game through `PortWorld`); `Sim.economy` and `Sim.goods_market` are forwarders. The household need model is the module's (`household_needs.py`, `household_views.py`: `household_demand_units`, `household_basket`, `home_household_tonnes`, `partner_household_demand`; it reads the bridged `installed_mod_ids` and `household_need_data`). Still bridged: the repricing of the opening's money (`RepriceOpeningMoney`). The shipped openings must be regenerated (`simulator.py openings`): the spin-up source moved, so the shipped keys no longer match |
 | finance | `sim/finance/` | credit limit, interest and arrears, insolvency, debt bondage, purchases and affordability, the seat bank; the agent economy's own credit and bank files in `sim/economy/` stay behind its api; Complaint 763 |
+| stores | `sim/stores/` | the declared mod stores and their saved values (`StoresWorld.values`); a game's declarations are the answers to its `store_declarations` point (the base game's and the mods' data through the bridge views `base_store_declarations` and `data_store_declarations`, and mod code through `api.store`); `Sim.stores` is a property over the module's `store_book` view |
 | production | `sim/production/` | revenue, upkeep, concerns and their book sales, volume, industry depth and learning, techniques in use, capability; still to do: `projects.operating` and the revenue caches on the household, `node_rederive.py` (shared tree pricing), and its `legacy_game` reads |
 
 The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equivalence tier identical at the prices, demography, land, markets, production and projects merges; stress tier and protocol transcripts identical after each module (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
 
-`stores` (mod stores) is a framework service and moves with phase 7. Next: the projects record's shared sets and the purses; then phases 6 to 9 (phase 6 in progress).
+Phase 7 has begun: the process-global mod registries other than the ui's (commands and figures) are extension points of their owners (`mod_code.py`, `docs/architecture/MODULE_REGISTRY_PLAN.md` section 4.5). Next: the projects record's shared sets and the purses; then phases 6 to 9 (phase 6 in progress).
 
 ## Task list
 
@@ -139,7 +140,8 @@ The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equi
 
 ### Phase 7: mods
 
-- [ ] Replace the 12 process-global registries in `mod_code.py` and the packages with per-assembly registrations under one clash rule.
+- [x] Replace the process-global registries of the actors, workforce, polity, demography, agriculture, year phases and stores with per-assembly registrations (extension points; `ModCodeApi` records into the mod's `Operations`).
+- [ ] The same for the ui's registries (`sim/ui/proto/command_registry.py`, `sim/ui/figures.py`, `sim/ui/figures_data.py`), and `COMMAND_REGISTRATIONS` in `mod_code.py`; then `screen_map` reads `sim.stores.declared()` and `mod_stores.DECLARED` goes.
 - [ ] Rewrite each shipped code mod onto the new interface (one agent per mod).
 - [ ] Add one SMOKE test per mod operation: replace, remove, add, extend, adjust, provide.
 

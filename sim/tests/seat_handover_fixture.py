@@ -1,6 +1,5 @@
 """Two or three seats on the real root state, with the alias rebinding a handover needs (shared by the handover tests)."""
 from sim.engine import game_assembly
-from sim.engine.mod_stores import StoreBook
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, bind_seat, seat_from_template
 from sim.seats.api import HandOverSeat
@@ -42,7 +41,7 @@ class Game:
 
     @property
     def stores(self):
-        return StoreBook(self.state.stores)
+        return self.view("store_book")()
 
     def ended_seats(self):
         return [seat_id for seat_id, held in self.state.seats.items() if held.founder.dead_reason]

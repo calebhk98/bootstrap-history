@@ -30,7 +30,7 @@ Every decision is a `Decision` (kind, options, budget) handed to the actor's
 - `CallbackPolicy(function)`: a human player or a mod names the subjects; names
   not on offer are ignored.
 - `IdlePolicy`: never acts.
-- `register_policy(name, factory)` makes a policy nameable; an actor record
+- A policy is made nameable by providing it to the actors module's `actor_policies` point (`api.policy`); an actor record
   stores only the name, so a saved actor gets its policy back on load.
 
 ## Value of an invention

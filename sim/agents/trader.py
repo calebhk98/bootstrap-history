@@ -119,8 +119,3 @@ class Trader(RecordedActor):
 			self.record.exited_year = world.year
 			if self.money > 0.0:
 				ledger.transfer(self, world.edge(EDGE_POOLED_CAPITAL), self.money, EDGE_POOLED_CAPITAL)  # its owners take back what is left
-
-
-from .registry import register_actor_kind  # noqa: E402
-
-register_actor_kind("trader", Trader)

@@ -4,7 +4,7 @@ Every read is a view of an owner that has not moved yet, published by the engine
 the other bridge files) under the name the owner will publish, or a view of a module that has moved. A view the module publishes
 is uncached while labour writes the seat's people and hours in place (it keeps no count of its writes), so no channel can say
 when they changed; only the payroll reports its changes (the `staff` channel)."""
-from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
+from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
 from sim.demography.api import SetClearedFarmland, SetFarmHoursNeeded
 from sim.ledger.api import PayEdge, ReceiveFromEdge
 from sim.polity.api import AddReputation, ScaleFamiliarity, ScaleProtection
@@ -40,7 +40,7 @@ READS_BY_OWNER = {
     "finance": ("mine_operating_cost", "credit_limit", "living_cost", "held_trade", "spending_power", "can_pay", "purchase_refusal", "price_index", "home_price_level",
                 "concern_rows_stopped"),
     "actors": ("actor_staff", "actor_staff_nationwide", "actor_staff_total", "teaching_knowledge", "harvest_share_taken",
-               "director_overhead_hours", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country",
+               "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country",
                "agent_unskilled_wage"),
 }
 
@@ -115,6 +115,11 @@ MODULE_SPECS = (ModuleSpec(
              (AutoManumit, "auto_manumit"), (FadeMarketPressure, "fade_market_pressure")),
     phases=(PhaseHook("apprenticeships", "step_apprenticeships"), PhaseHook("staff", "step_staff"),
             PhaseHook("seat_prelude", "step_prelude")),
+    extension_points=(
+        ExtensionPoint("town_population", LIST),           # (labour, tile, nominal_people) -> people or None; the last answer that is not None wins
+        ExtensionPoint("town_mortality_premium", LIST),    # (labour, tile, town_people) -> share of the baseline death rate or None; likewise
+        ExtensionPoint("director_overhead", LIST),         # (game) -> hours a year already spoken for; the answers are added, each at least zero
+    ),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(PayEdge, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, DiscardEventsAfter, AddReputation, ScaleFamiliarity, ScaleProtection,
            SetClearedFarmland, SetFarmHoursNeeded),

@@ -1,5 +1,5 @@
 """Apply the mods' operations to the shipped module set, in mod load order, and say who did what."""
-from typing import Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from .errors import AssemblyError
 from .spec import ModuleSpec, Operations, handler_of, point_names, view_names
@@ -32,6 +32,7 @@ class Applied:
 		self.adjusters: Dict[str, List[Tuple[str, Callable, Tuple[str, ...]]]] = {}
 		self.provided: Dict[str, List[Tuple[str, Callable]]] = {}
 		self.withdrawn: Dict[str, str] = {}          # "<module_id>.<name>" -> the mod that withdrew it
+		self.phases: List[Any] = []                  # the mods' year phases, in mod load order
 		for spec in shipped:
 			if spec.module_id in self.specs:
 				raise AssemblyError("two shipped modules are both called %s" % spec.module_id)
@@ -79,6 +80,7 @@ class Applied:
 			self.provided.setdefault(point, []).extend((mod_id, function) for function in functions)
 		for name in operations.withdrawn:
 			self.withdrawn[name] = mod_id
+		self.phases.extend(operations.phases)
 
 
 def apply_all(shipped: Sequence[ModuleSpec], operations: Sequence[Operations],

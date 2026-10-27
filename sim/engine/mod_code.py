@@ -16,7 +16,10 @@ import os
 import random
 import sys
 import types
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+from sim.assembly.api import Operations
+from sim.stores.api import ModStore, StoreSpec, check_spec
 
 from .mods import get_ordered_mods
 from .mods_base import ModError, ModManifest
@@ -28,7 +31,9 @@ CODE_PERMISSION = "code"
 # Commands that mod code registered, waiting for the command registry (sim/ui) to take them: (mod_id, name, fields, handler)
 COMMAND_REGISTRATIONS: List[tuple] = []
 LOADED: Dict[str, str] = {}      # mod id -> "ran" or the reason it did not
-MOD_OPERATIONS: Dict[str, Any] = {}   # mod id -> its sim.assembly Operations (modules added, replaced, removed, extended)
+# (mods directory, mod id) -> what that mod's `register(api)` asked of the assembly (sim.assembly Operations: modules added,
+# replaced, removed or extended, answers provided, year phases). Data only: a game applies the ones of its own mod set.
+MOD_OPERATIONS: Dict[Tuple[str, str], Operations] = {}
 
 
 def code_files(manifest: ModManifest) -> Dict[str, str]:
@@ -91,11 +96,7 @@ class ModCodeApi:
 
     def __init__(self, mod_id: str):
         self.mod_id = mod_id
-
-    @property
-    def operations(self) -> Any:
-        from sim.assembly.api import Operations
-        return MOD_OPERATIONS.setdefault(self.mod_id, Operations(self.mod_id))
+        self.operations = Operations(mod_id)
 
     def add_module(self, spec: Any) -> None:
         """A new module (sim/assembly): its id is `<mod_id>:<name>`, with its own state, views, commands and phases."""
@@ -137,46 +138,56 @@ class ModCodeApi:
         return decorate
 
     def actor_kind(self, kind: str, actor_class: Any) -> None:
-        from sim.agents.api import register_actor_kind
-        register_actor_kind(self.qualified(kind), actor_class)
+        """A new kind of actor: records of the kind build `actor_class` objects (the actors module's `actor_kinds` point)."""
+        answer = {self.qualified(kind): actor_class}
+        self.provide("actor_kinds", lambda: answer)
 
     def policy(self, kind: str, factory: Callable) -> None:
-        from sim.agents.api import register_policy
-        register_policy(self.qualified(kind), factory)
+        """A policy nameable from a save file: `factory()` makes it (the actors module's `actor_policies` point)."""
+        answer = {self.qualified(kind): factory}
+        self.provide("actor_policies", lambda: answer)
 
     def spawner(self, name: str, function: Callable) -> None:
-        from sim.agents.api import register_spawner
-        register_spawner(self.qualified(name), function)
+        """A rule run every year after the actors' turns: `function(registry, world) -> ids of the actors it founded`."""
+        answer = [(self.qualified(name), function)]
+        self.provide("actor_spawners", lambda: answer)
+
+    def player_command(self, name: str, handler: Callable) -> None:
+        """An order a player actor can queue as `{"command": name, ...}`: `handler(player, order, world) -> detail text`,
+        refusing by raising `CommandRejected` (the actors module's `player_commands` point)."""
+        answer = {self.qualified(name): handler}
+        self.provide("player_commands", lambda: answer)
 
     def director_overhead(self, function: Callable) -> Callable:
         """Charge `function(sim) -> hours` against the directed-hours pool (management layers, say). The hours count as
-        committed, so every free-hours check sees them; a negative answer counts as zero (sim/engine/director_overhead.py)."""
-        from . import director_overhead
-        return director_overhead.register(function)
+        committed, so every free-hours check sees them; a negative answer counts as zero (the workforce module's
+        `director_overhead` point)."""
+        self.provide("director_overhead", function)
+        return function
 
     def phase(self, name: str, scope: str, handler: Callable, after: Any = (), before: Any = ()) -> None:
         """A step in the year: `scope` is "seat" (`handler(sim, seat_id)`, once per seat) or "world" (`handler(sim, seats)`,
         once). Placed right after its latest `after` and/or right before its earliest `before`; each names a shipped
         phase (see sim/engine/year_phases.py) or another mod's `<mod_id>:<name>`. At least one is required."""
-        from .year_phases import SEAT, WORLD, Phase, register_mod_phase
+        from .year_phases import SEAT, WORLD, Phase
         after, before = [after] if isinstance(after, str) else list(after), [before] if isinstance(before, str) else list(before)
         if scope not in (SEAT, WORLD) or not (after or before):
             raise ModError("mod %s phase %s needs scope 'seat' or 'world' and an 'after' or 'before'" % (self.mod_id, name))
-        register_mod_phase(Phase(self.qualified(name), scope, handler, self.mod_id, tuple(self.phase_reference(n) for n in after),
-                                 tuple(self.phase_reference(n) for n in before)))
+        phase = Phase(self.qualified(name), scope, handler, self.mod_id, tuple(self.phase_reference(n) for n in after),
+                      tuple(self.phase_reference(n) for n in before))
+        self.operations.phases = self.operations.phases + (phase,)
 
     def phase_reference(self, name: str) -> str:
-        from .year_phases import SHIPPED, MOD_PHASES
-        known = {phase.name for phase in SHIPPED} | {phase.name for phase in MOD_PHASES}
-        return name if name in known or SEPARATOR in name else self.qualified(name)
+        from .year_phases import SHIPPED
+        return name if name in {phase.name for phase in SHIPPED} or SEPARATOR in name else self.qualified(name)
 
     def store(self, name: str, keyed_by: str, default: Any, unit: str = "") -> Any:
         """Declare a saved value per "tile", "actor" or "actor_pair" (an ordered pair); returns a handle with
         `get(sim, key)`, `set(sim, key, value)` and `items(sim)`. Figures and `read` commands reach it as
         `stores.<mod_id>:<name>.<key>`, and `map` shows a tile store as a layer. A name is declared once across mods."""
-        from .mod_stores import ModStore, StoreSpec, declare
         spec = StoreSpec(self.qualified(name), self.mod_id, keyed_by, default, unit)
-        declare(spec, "mod %s" % self.mod_id)
+        check_spec(spec, "mod %s" % self.mod_id)
+        self.provide("store_declarations", lambda: [spec])
         return ModStore(spec.name, self.mod_id)
 
     def write_store(self, sim: Any, name: str, key: Any, value: Any) -> None:
@@ -194,16 +205,15 @@ class ModCodeApi:
         """Say how many people live in a tile's town: `function(labour, tile, nominal_people) -> people or None`. The
         optional `mortality_premium(labour, tile, town_people) -> share of the baseline death rate or None` is the
         town's excess mortality, which reaches `Population.step`. `labour.simulation_for_providers()` is the sim."""
-        from sim.labour.api import register_town_premium, register_town_provider
-        register_town_provider(self.qualified(name), function)
+        self.provide("town_population", function)
         if mortality_premium is not None:
-            register_town_premium(self.qualified(name), mortality_premium)
+            self.provide("town_mortality_premium", mortality_premium)
 
     def externality(self, provider: Callable) -> None:
-        """Feed harm into the year: `(sim, year) -> {"deaths_by_band": {...}, "yield_factor_by_tile": {...}}`
-        (sim/engine/externalities.py)."""
-        from sim.engine import externalities
-        externalities.register(provider)
+        """Feed harm into the year: `(sim, year) -> {"deaths_by_band": {...}, "yield_factor_by_tile": {...}}` (either key
+        optional). The deaths join the year's epidemic deaths; the factors multiply the yield of land-bound producers on a tile
+        (the demography module's `externality` point)."""
+        self.provide("externality", provider)
 
     def state(self, memory: Dict[str, Any]) -> Dict[str, Any]:
         """The mod's own JSON dict inside a saved game: pass `sim.state.interface`."""
@@ -215,13 +225,23 @@ class ModCodeApi:
         return world.rng_for(*parts)
 
 
+def operations_of(mods_dir: str) -> List[Operations]:
+    """What the mods of `mods_dir` that ran asked of the assembly, in mod load order."""
+    directory = os.path.realpath(mods_dir)
+    return [MOD_OPERATIONS[(directory, manifest.id)] for manifest in get_ordered_mods(mods_dir) if (directory, manifest.id) in MOD_OPERATIONS]
+
+
 def run_mod_code(mods_dir: str, make_api: Callable[[str], ModCodeApi] = ModCodeApi) -> Dict[str, str]:
-    """Run each allowed code-shipping mod once per process; skipped mods are named with the reason."""
+    """Run each allowed code-shipping mod once per process, keeping what it asked of the assembly (`operations_of`); skipped
+    mods are named with the reason. Nothing global is changed: a game applies the operations of its own mod set."""
+    directory = os.path.realpath(mods_dir)
     for manifest in get_ordered_mods(mods_dir):
-        if not manifest.code or LOADED.get(manifest.id) == "ran":
+        key = (directory, manifest.id)
+        if not manifest.code or (LOADED.get(manifest.id) == "ran" and key in MOD_OPERATIONS):
             continue
         if not is_allowed(mods_dir, manifest):
             LOADED[manifest.id] = "no consent"
+            MOD_OPERATIONS.pop(key, None)
             continue
         api = make_api(manifest.id)
         for name, path in code_files(manifest).items():
@@ -239,7 +259,8 @@ def run_mod_code(mods_dir: str, make_api: Callable[[str], ModCodeApi] = ModCodeA
             if not callable(register):
                 raise ModError("mod %s: %s defines no register(api) function" % (manifest.id, name))
             register(api)
+        MOD_OPERATIONS[key] = api.operations
         LOADED[manifest.id] = "ran"
     from .year_phases import ordered_phases
-    ordered_phases()   # a bad phase constraint is a load error
+    ordered_phases([phase for operations in operations_of(mods_dir) for phase in operations.phases])   # a bad phase constraint is a load error
     return dict(LOADED)

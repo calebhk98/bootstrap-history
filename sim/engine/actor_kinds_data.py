@@ -1,11 +1,9 @@
-"""Actor kinds mods bring: declared in data/world/actor_kinds.json, or registered by consented mod code."""
-from typing import Any, Dict, Optional
+"""Actor kinds mods declare in data/world/actor_kinds.json (a mod's code adds kinds through `api.actor_kind`)."""
+from typing import Any, Dict
 
-from sim.agents.api import register_declared_kinds
+from sim.agents.api import declared_kind_classes
 
 from .data import MODDIR, ROOT
-from .mod_code import run_mod_code
-from .mod_stores import load_mod_stores
 from .mods import get_ordered_mods
 from .mods_base import ModError
 from .mods_world import merge_mod_map
@@ -13,7 +11,7 @@ from .need_data import load_needs
 
 KINDS_PATH = "world/actor_kinds.json"
 RATES = ("birth_rate", "death_rate", "famine_death_rate")
-_REGISTERED: Dict[str, Any] = {}
+_CLASSES: Dict[str, Dict[str, Any]] = {}   # mods directory -> {kind id: class}: data read once, the classes made once
 
 
 def load_kind_declarations(root: str = ROOT, mods_dir: str = MODDIR) -> Dict[str, Dict[str, Any]]:
@@ -33,12 +31,8 @@ def load_kind_declarations(root: str = ROOT, mods_dir: str = MODDIR) -> Dict[str
     return kinds
 
 
-def register_mod_actor_kinds(mods_dir: Optional[str] = None) -> None:
-    """Register every mod kind once per mods directory: consented code first, then data declarations."""
-    mods_dir = mods_dir or MODDIR
-    if _REGISTERED.get("dir") == mods_dir:
-        return
-    run_mod_code(mods_dir)
-    load_mod_stores(mods_dir)
-    register_declared_kinds(load_kind_declarations(ROOT, mods_dir))
-    _REGISTERED["dir"] = mods_dir
+def declared_kinds(mods_dir: str = MODDIR) -> Dict[str, Any]:
+    """{kind id: the class that builds its actors} for the kinds the mods of `mods_dir` declare, made once per directory."""
+    if mods_dir not in _CLASSES:
+        _CLASSES[mods_dir] = declared_kind_classes(load_kind_declarations(ROOT, mods_dir))
+    return _CLASSES[mods_dir]

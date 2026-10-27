@@ -17,6 +17,8 @@ from sim.labour.api import migrant_pairs, totals_of_pairs
 from sim.world import regional_population
 from sim.world.demography import Population
 
+from . import rules
+
 
 class Regions:
 
@@ -59,6 +61,10 @@ class Regions:
             regions, self.world.regional_eaten_over_need, farm_kcal_per_day, self.needs.relief_kcal_per_day(),
             settlement.population_shares(self.needs.home_tiles_held()))
 
+    def externality_deaths(self, deaths_by_band, year):
+        """`deaths_by_band` plus what the game's externality providers add to the year's deaths."""
+        return rules.deaths_with_externalities(deaths_by_band, self.needs.externality(self.needs.legacy_game(), year))
+
     def _step_regions(self, regions, kcal_by_region, year):
         """Step every region a year and return the nation's flows; the nation's people become their sum."""
         borders = self.needs.borders_among(list(regions))
@@ -66,7 +72,7 @@ class Regions:
         self.needs.send(RecordMigrantContact(tuple(pairs)))
         leaving, arriving = totals_of_pairs(pairs)
         food = sum(kcal_by_region.values())
-        deaths = self.needs.externality_deaths(self.needs.send(RunEpidemicYear(food, year)), year)
+        deaths = self.externality_deaths(self.needs.send(RunEpidemicYear(food, year)), year)
         self.needs.send(HitSeatsWithEpidemic(deaths, year))
         burden, endemic_death_rates = self.needs.disease_burden(), self.needs.endemic_death_rates()
         ratio = self._bands().nutrition_ratio(food)

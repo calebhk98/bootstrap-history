@@ -3,9 +3,7 @@ import copy
 from dataclasses import MISSING, dataclass, field, fields
 from typing import Any, Dict, List
 
-
-class ModError(ValueError):
-    """A mod cannot be loaded without making an ambiguous choice."""
+from sim.mod_errors import ModError  # noqa: F401  (the name mod code imports from here)
 
 
 class MissingVariantBase(ModError):

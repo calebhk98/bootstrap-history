@@ -15,7 +15,6 @@ from .base import RecordedActor
 from .edges import EDGE_ECONOMY
 from .group_tuning import STRATUM_GRIEVANCE_THRESHOLD, STRATUM_WELFARE_MEMORY_RATE
 from .literacy import CountryLiteracy
-from .registry import register_actor_kind
 from .sector import Sector
 
 ENDOWMENT = "endowment"
@@ -87,10 +86,6 @@ class Academy(Foundation):
 	"""An academy: scholars kept by patrons and endowments."""
 	kind = "academy"
 	group_kind = "scholars"
-
-
-register_actor_kind("church", Church)
-register_actor_kind("academy", Academy)
 
 
 def remember_collections(foundations: List[Any]) -> None:

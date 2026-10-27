@@ -5,7 +5,7 @@ an owner that has not moved yet, published by the engine bridge (sim/engine/brid
 name the owner will publish, or a view of a module that has moved. Grouped by owner. The `legacy_*` names are the owners' raw
 objects the actors still hold in place: the seats' registry, the acting seat's projects and household facade, the map and the
 constants `Sim` still declares."""
-from sim.assembly.api import KEYED, ModuleSpec, ViewSpec
+from sim.assembly.api import FIRST, KEYED, LIST, ExtensionPoint, ModuleSpec, Provision, ViewSpec
 from sim.agents.api import ActorsState
 from sim.coin.api import ChargeActorsTheft, ChargeKeeping
 from sim.finance.api import DefaultOnDebt, RefreshLenderOffers
@@ -22,7 +22,7 @@ from . import commands
 from .module import Actors
 
 READS_BY_OWNER = {
-	"core": ("year", "civilisation", "game_setting", "shared_answers", "legacy_constant", "legacy_act_as", "actor_kinds_registered",
+	"core": ("year", "civilisation", "game_setting", "shared_answers", "legacy_constant", "legacy_act_as", "declared_actor_kinds",
 	         "opening_cast", "money_text", "mass_rate_text"),
 	"seats": ("acting_seat", "acting_country", "seat_list", "legacy_seats", "seat_place", "seat_party", "legacy_household_actor",
 	          "disclosure", "disclosures"),
@@ -80,6 +80,21 @@ MODULE_SPECS = (ModuleSpec(
 	applies=((commands.AdvanceActors, "advance_actors"), (commands.RecordConquestContact, "record_conquest_contact"),
 	         (commands.RecordMigrantContact, "record_migrant_contact"), (commands.ScaleStrata, "scale_strata"), (commands.NoteTraderMargin, "note_trader_margin"),
 	         (commands.FollowTileTransfer, "follow_tile_transfer")),
+	extension_points=(
+		ExtensionPoint("actor_kinds", LIST),           # () -> {kind: the class that builds its actors}; a later answer replaces a kind
+		ExtensionPoint("actor_spawners", LIST),        # () -> [(name, function(registry, world) -> ids founded)], run after the actors' turns
+		ExtensionPoint("actor_world_scope", FIRST),    # () -> function(world, profile, registry): the world a foreign country's actors see
+		ExtensionPoint("actor_policies", LIST),        # () -> {policy kind: factory}
+		ExtensionPoint("player_commands", LIST),       # () -> {command name: function(player, order, world) -> detail text}
+	),
+	provides=(
+		Provision("actor_kinds", "shipped_actor_kinds", "kinds"),
+		Provision("actor_kinds", "provide_declared_kinds", "declared_kinds"),
+		Provision("actor_spawners", "shipped_actor_spawners", "spawners"),
+		Provision("actor_world_scope", "shipped_actor_world_scope", "world_scope"),
+		Provision("actor_policies", "shipped_actor_policies", "policies"),
+		Provision("player_commands", "shipped_player_commands", "commands"),
+	),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(ChargeKeeping, ChargeActorsTheft, RefreshLenderOffers, DefaultOnDebt, AccrueExperience, ForgetActorOrders, NoteActorSale,
 	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, PayRouteDues, AddScandal, RecordEvent, PayActor),

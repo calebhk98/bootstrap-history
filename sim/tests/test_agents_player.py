@@ -7,9 +7,9 @@ from .harness import check
 
 from sim.agents.business_plant import Plant
 from sim.agents.api import ActorRecord, Firm, ledger
-from sim.agents import firm_entry, registry as registry_module
+from sim.agents import firm_entry
 from sim.agents.player import Player
-from sim.agents.player_commands import register_command
+from sim.agents.shipped import shipped_commands, shipped_kinds
 from sim.agents.tuning_player import PLAYER_JOURNAL_LIMIT
 
 from .agents_fake_world import FakeWorld, make_node, total_money
@@ -160,12 +160,12 @@ check("the journal keeps only the most recent entries",
 	  len(player.record.journal) == PLAYER_JOURNAL_LIMIT
 	  and player.record.journal[-1]["command"] == "bad%d" % (PLAYER_JOURNAL_LIMIT + 19))
 
-register_command("shout", lambda actor, order, seen: "heard " + order["word"])
 player = make_player()
+player.command_table = {**shipped_commands(), "shout": lambda actor, order, seen: "heard " + order["word"]}
 player.record.orders.append({"command": "shout", "word": "hello"})
 year_on(player, world)
 # not text: echoes what the test's own handler returned
-check("a registered command runs", last_entry(player)["ok"] and last_entry(player)["detail"] == "heard hello", last_entry(player))
+check("a provided command runs", last_entry(player)["ok"] and last_entry(player)["detail"] == "heard hello", last_entry(player))
 
 # ---- who drives the player -----------------------------------------------------------------
 world = make_world()
@@ -224,4 +224,4 @@ def run(seed):
 
 
 check("the same seed gives the same player history", run(3) == run(3))
-check("the player kind is registered", registry_module.ACTOR_CLASSES.get("player") is Player)
+check("the player kind is shipped", shipped_kinds().get("player") is Player)

@@ -14,6 +14,7 @@ from sim.agents.api import ActorRecord
 from sim.agents.budget_line import Line
 from sim.agents.government import Government
 from sim.agents.policy import CallbackPolicy, IdlePolicy, make_policy
+from sim.agents.shipped import shipped_policies
 
 from .agents_fake_world import FakeWorld
 
@@ -93,7 +94,7 @@ def short_state(policy_kind=None, policy=None, borrows=True, coin_form=False):
 	world = ShortWorld()
 	state = (Lender if borrows else Government)("government:home", ActorRecord(kind="government", money=0.0), policy)
 	if policy_kind:
-		state.decision_policy = make_policy(policy_kind)
+		state.decision_policy = make_policy(policy_kind, shipped_policies())
 	state.record.revenue_in_kind = {"grain_levy": 200.0}
 	state.record.revenue_forms = [dict(GRAIN_FORM)] + ([dict(WEALTH_FORM)] if coin_form else [])
 	world.government_record = state.record

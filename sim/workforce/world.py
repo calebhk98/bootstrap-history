@@ -8,6 +8,7 @@ from sim.agents.api import edges
 from sim.demography.api import rules as demography_rules
 from sim.prices.api import solve_prices_core
 from .commands import BuildHousing
+from .provided import last_answer, overhead_hours
 
 
 class WorkforceWorld:
@@ -72,7 +73,7 @@ class WorkforceWorld:
         return self._needs.legacy_dice()
 
     def simulation(self):
-        """The game itself, for the town providers a mod registers to read (labour/town_providers.py)."""
+        """The game itself, for the town providers a mod provides to read."""
         return self._needs.legacy_game()
 
     # ---- the scenario ----
@@ -374,7 +375,19 @@ class WorkforceWorld:
         return self._needs.teaching_knowledge()
 
     def director_overhead_hours(self):
-        return self._needs.director_overhead_hours()
+        """Hours of the directed-hours pool the game's overhead providers charge (none unless a mod provided some)."""
+        return overhead_hours(self._needs.director_overhead(self._needs.legacy_game()))
+
+    def provided_town_population(self, labour, tile, nominal_people):
+        """People the town providers say live at `tile`, or None when none has an opinion (the last answer wins)."""
+        return last_answer(self._needs.town_population(labour, tile, nominal_people))
+
+    def has_town_premiums(self):
+        return self._needs.town_mortality_premium.has_providers
+
+    def provided_mortality_premium(self, labour, tile, town_people):
+        """The premium the premium providers give for the town at `tile` (never negative), or None."""
+        return last_answer(self._needs.town_mortality_premium(labour, tile, town_people))
 
     def active_hours_still_wanted(self):
         return self._needs.active_hours_still_wanted()

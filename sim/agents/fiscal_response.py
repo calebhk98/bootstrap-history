@@ -10,10 +10,10 @@ face the same menu; no policy is the engine's rule. What a policy leaves uncover
 nothing set against them cannot be paid.
 """
 import dataclasses
-from typing import Any, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 from . import arrears, evasion, fiscal_flight, government_levers_tax
-from .policy import CallbackPolicy, Decision, IdlePolicy, Option, Policy, register_policy
+from .policy import CallbackPolicy, Decision, IdlePolicy, Option, Policy
 from .tuning import LEVY_RATE_CEILING
 from .tuning_coinage import COIN_RESTRIKE_SHARE_PER_YEAR, DEBASEMENT_SHARE_CEILING
 from .tuning_fiscal import (FISCAL_BURDEN_WEIGHT, FISCAL_DEBT_CARRY_YEARS, FISCAL_LOYALTY_WEIGHT,
@@ -218,13 +218,19 @@ class OrderedFiscalPolicy(FiscalPolicy):
 # the order of the old engine rule, kept as one policy among others: borrow, debase, levy, defer pay, cut
 CASCADE_ORDER = (BORROW, DEBASE, LEVY, ARREARS, CUT)
 LEVY_FIRST_ORDER = (BORROW, LEVY, KIND, RATE, ARREARS, CUT)
-register_policy("fiscal_consequence", FiscalPolicy)
-register_policy("fiscal_levy_first", lambda: OrderedFiscalPolicy(LEVY_FIRST_ORDER))
-register_policy("fiscal_cascade", lambda: OrderedFiscalPolicy(CASCADE_ORDER))
-register_policy("fiscal_austere", lambda: FiscalPolicy({"interest": 10.0 * FISCAL_DEBT_CARRY_YEARS,
-														"coin_cut": 10.0 * FISCAL_PRICE_RISE_WEIGHT,
-														"income_taken": 10.0 * FISCAL_BURDEN_WEIGHT,
-														"services_lost": 0.01 * FISCAL_SERVICE_LOSS_WEIGHT}))
+
+
+def fiscal_policy_factories() -> Dict[str, Callable[[], Policy]]:
+	"""The policies a save file or a country profile names to make a state answer a shortfall."""
+	return {
+		"fiscal_consequence": FiscalPolicy,
+		"fiscal_levy_first": lambda: OrderedFiscalPolicy(LEVY_FIRST_ORDER),
+		"fiscal_cascade": lambda: OrderedFiscalPolicy(CASCADE_ORDER),
+		"fiscal_austere": lambda: FiscalPolicy({"interest": 10.0 * FISCAL_DEBT_CARRY_YEARS,
+												"coin_cut": 10.0 * FISCAL_PRICE_RISE_WEIGHT,
+												"income_taken": 10.0 * FISCAL_BURDEN_WEIGHT,
+												"services_lost": 0.01 * FISCAL_SERVICE_LOSS_WEIGHT}),
+	}
 
 
 def respond(government: Any, world: Any, lines: Sequence[Any], gap: float) -> Dict[str, float]:

@@ -105,3 +105,13 @@ def sale_refusal(hectares, owned):
     if hectares > owned + 1e-9:
         return "not_owned"
     return None
+
+
+def yield_factors(answers):
+    """{tile: factor} the externality answers (`{"yield_factor_by_tile": {tile: factor}, ...}`, or None) agree on: factors
+    multiply, each clamped to 0..1; empty when nothing answered."""
+    factors = {}
+    for answer in answers:
+        for tile, factor in ((answer or {}).get("yield_factor_by_tile") or {}).items():
+            factors[tile] = factors.get(tile, 1.0) * min(1.0, max(0.0, float(factor)))
+    return factors

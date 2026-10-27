@@ -78,30 +78,23 @@ SHIPPED: List[Phase] = [
 	Phase("advance_year", WORLD, _advance_year),
 ]
 
-MOD_PHASES: List[Phase] = []     # registered by mod code, in mod load order
-
-
-def register_mod_phase(phase: Phase) -> None:
-	MOD_PHASES.append(phase)
-
-
 def _describe(phase: Phase) -> str:
 	return "mod %s phase %s" % (phase.owner, phase.name) if phase.owner else "shipped phase %s" % phase.name
 
 
-def _mod_order(known: Dict[str, Phase]) -> List[Phase]:
+def _mod_order(known: Dict[str, Phase], mod_phases: Sequence[Phase]) -> List[Phase]:
 	"""Mod phases sorted so every mod phase follows the mod phases it depends on; ties keep registration order."""
-	names = {phase.name: phase for phase in MOD_PHASES}
-	for phase in MOD_PHASES:
+	names = {phase.name: phase for phase in mod_phases}
+	for phase in mod_phases:
 		for reference in list(phase.after) + list(phase.before):
 			if reference not in known and reference not in names:
 				raise ModError("%s names the unknown phase %r" % (_describe(phase), reference))
 	depends = {phase.name: [reference for reference in phase.after if reference in names]
-	           + [other.name for other in MOD_PHASES if phase.name in other.before] for phase in MOD_PHASES}
+	           + [other.name for other in mod_phases if phase.name in other.before] for phase in mod_phases}
 	# depends[x] lists the mod phases that must run before x
 	done: List[Phase] = []
 	placed = set()
-	pending = list(MOD_PHASES)
+	pending = list(mod_phases)
 	while pending:
 		ready = next((phase for phase in pending if all(name in placed for name in depends[phase.name])), None)
 		if ready is None:
@@ -114,13 +107,13 @@ def _mod_order(known: Dict[str, Phase]) -> List[Phase]:
 	return done
 
 
-def ordered_phases() -> List[Phase]:
-	"""The shipped phases with the mod phases placed by their constraints; ModError on an unknown name or a conflict."""
+def ordered_phases(mod_phases: Sequence[Phase] = ()) -> List[Phase]:
+	"""The shipped phases with the game's mod phases placed by their constraints; ModError on an unknown name or a conflict."""
 	phases = list(SHIPPED)
-	if not MOD_PHASES:
+	if not mod_phases:
 		return phases
 	known = {phase.name: phase for phase in SHIPPED}
-	for phase in _mod_order(known):
+	for phase in _mod_order(known, mod_phases):
 		names = [other.name for other in phases]
 		afters = [name for name in phase.after if name in names]
 		befores = [name for name in phase.before if name in names]
@@ -141,7 +134,7 @@ def ordered_phases() -> List[Phase]:
 
 def run_phases(sim, phases: Optional[List[Phase]] = None) -> None:
 	"""Run the year's phases in order."""
-	phases = ordered_phases() if phases is None else phases
+	phases = ordered_phases(sim.assembly.applied.phases) if phases is None else phases
 	seats = sim.playing_seats() or [sim.state.acting_seat]
 	index = 0
 	while index < len(phases) and seats:

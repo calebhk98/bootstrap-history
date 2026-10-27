@@ -1,14 +1,12 @@
 """A tile's yield factor from an externality provider takes its share of the pooled national harvest (Complaint 635).
 
-The module's `harvest_weather` is called over a civilisation's real tiles, reading the yield factors a provider registered
-through the mod door answers."""
+The module's `harvest_weather` is called over a civilisation's real tiles, reading the yield factors the externality providers
+answered."""
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim import simulator
-from sim.engine import externalities, mod_code
 from sim.tests import agriculture_stand_in, harness, land_host  # noqa: F401  (harness isolates the home directory)
 from sim.world.weather_pooling import harm_multiplier, tile_shares
 
@@ -19,9 +17,11 @@ def rome_rows():
     return land_host.build(ROME).held_tile_geometry()
 
 
+ANSWERS = []   # what the externality providers answer, read each time the harvest asks
+
+
 def farm_over_rome():
-    return agriculture_stand_in.build(
-        rome_rows(), salt=7, views={"externality_yield_factors": lambda year: externalities.yield_factors(None, year)})
+    return agriculture_stand_in.build(rome_rows(), salt=7, views={"externality": lambda game, year: list(ANSWERS)})
 
 
 class HarmRule(unittest.TestCase):
@@ -45,7 +45,7 @@ class HarmRule(unittest.TestCase):
 class PooledHarvest(unittest.TestCase):
     def setUp(self):
         self.farm = farm_over_rome()
-        self.addCleanup(externalities.clear)
+        self.addCleanup(ANSWERS.clear)
 
     def harvest(self, **options):
         return self.farm.harvest_weather(150, **options)
@@ -57,13 +57,13 @@ class PooledHarvest(unittest.TestCase):
         self.farm.weather_cells()
         tile, share = max(self.farm._tile_share.items(), key=lambda item: item[1])
         weather = self.harvest(harmed=False)
-        mod_code.ModCodeApi("test_smoke_k3f9").externality(lambda sim, year: {"yield_factor_by_tile": {tile: 0.5}})
+        ANSWERS.append({"yield_factor_by_tile": {tile: 0.5}})
         self.assertAlmostEqual(self.harvest(), weather * (1.0 - 0.5 * share))
         self.assertEqual(self.harvest(harmed=False), weather)
 
     def test_a_tile_the_civilisation_does_not_farm_changes_nothing(self):
         weather = self.harvest(harmed=False)
-        mod_code.ModCodeApi("test_smoke_k3f9").externality(lambda sim, year: {"yield_factor_by_tile": {"nowhere_00": 0.0}})
+        ANSWERS.append({"yield_factor_by_tile": {"nowhere_00": 0.0}})
         self.assertEqual(self.harvest(), weather)
 
 

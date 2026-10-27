@@ -9,7 +9,6 @@ from sim.world import capital_market
 
 from . import exchange, firm_entry, household_wealth
 from .equity_need import NEED_KEY
-from .registry import register_spawner
 from .tuning_patent import DIVIDEND_PAYOUT_SHARE
 
 
@@ -47,6 +46,3 @@ def equity_rounds(registry: Any, world: Any) -> List[str]:
 		if firm.record.plan.get(NEED_KEY, 0.0) > 0.0:
 			raise_equity(registry, world, firm)
 	return []
-
-
-register_spawner("equity_rounds", equity_rounds)

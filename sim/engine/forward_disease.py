@@ -4,8 +4,6 @@ The yearly population step, the fog, the colonies and the agents' budget still s
 `sim.regional_disease_loss(tile)`; each line goes when its last caller reads the view or sends the command itself."""
 from sim.disease.api import HitSeatsWithEpidemic, RunEpidemicYear
 
-from . import externalities
-
 
 class DiseaseForwardsMixin:
 
@@ -26,8 +24,8 @@ class DiseaseForwardsMixin:
 
     def epidemic_year(self, food_available_calories_per_day, year):
         """(epidemic deaths by band, disease burden, endemic death rates) for the year's population step: the
-        epidemics run and cut each seat's staff before the burden and the endemic rates are read. What a provider
-        of `externalities` adds is counted in the deaths the seats are cut by."""
-        deaths = externalities.add_deaths(self.send(RunEpidemicYear(food_available_calories_per_day, year)), self, year)
+        epidemics run and cut each seat's staff before the burden and the endemic rates are read. What the
+        externality providers add is counted in the deaths the seats are cut by."""
+        deaths = self.view("externality_deaths")(self.send(RunEpidemicYear(food_available_calories_per_day, year)), year)
         self.send(HitSeatsWithEpidemic(deaths, year))
         return deaths, self.view("disease_burden")(), self.view("endemic_death_rates")()
