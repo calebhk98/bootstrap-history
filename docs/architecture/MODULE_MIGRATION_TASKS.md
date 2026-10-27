@@ -18,7 +18,8 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 |---|---|---|
 | ledger (commands side) | `sim/ledger/` | state still in the purses and the tonnes ledger (`legacy_*` views) |
 | living stock, defence stores | `sim/living_stock/`, `sim/defence_stores/` | |
-| projects | `sim/projects/` | starting, progress, completion, staffing, exclusions, running gates, closures, reviews; its seat state holds the exclusions and staffing records; still to do: `active`, `bountied`, `failed_attempts`, `paid_towards`, `operating` and the businesses (written by finance, hazards, production and the household facade), `cause_book.py`, and the empty `projects_cost_tail.py` stub |
+| projects | `sim/projects/` | starting, progress, completion, staffing, exclusions, running gates, closures, reviews; its seat state holds the exclusions and staffing records; still to do: `active`, `bountied`, `failed_attempts`, `paid_towards`, `operating` and the businesses (written by finance, hazards, production and the household facade), `cause_book.py` |
+| ventures | `sim/ventures/` | what a concern ties up and earns, opening by hand, the founder's sale, coverage roll-out; still to do: the businesses, plants and `mothballed` on the projects record (written by production, finance, hazards and the household facade) |
 | coin | `sim/coin/` | carriage is the ledger's `transfer_surcharge` point |
 | campaigns | `sim/campaigns/` | |
 | reporting | `sim/reporting/` | the seat log and audit trail; world events are hazards' |
@@ -43,9 +44,9 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 | finance | `sim/finance/` | credit limit, interest and arrears, insolvency, debt bondage, purchases and affordability, the seat bank; the agent economy's own credit and bank files in `sim/economy/` stay behind its api; Complaint 763 |
 | production | `sim/production/` | revenue, upkeep, concerns and their book sales, volume, industry depth and learning, techniques in use, capability; still to do: `projects.operating` and the revenue caches on the household, `node_rederive.py` (shared tree pricing), and its `legacy_game` reads |
 
-Full equivalence tier identical at the prices, demography, land, markets and production merges; stress tier and protocol transcripts identical after each module (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
+The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equivalence tier identical at the prices, demography, land, markets and production merges; stress tier and protocol transcripts identical after each module (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
 
-`stores` (mod stores) is a framework service and moves with phase 7. Next: ventures, the household need model, the ledger's state; then phases 6 to 9.
+`stores` (mod stores) is a framework service and moves with phase 7. Next: the remaining engine mixins (measure with `tools/done_check.sh`), the projects record's shared sets, the ledger's state; then phases 6 to 9.
 
 ## Task list
 
