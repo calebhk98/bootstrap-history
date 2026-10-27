@@ -13,7 +13,7 @@ from .harness import check
 from sim.engine.economy import EconomyMixin
 from sim.engine.goods_market_api import GoodsMarket
 from sim.markets.module import Markets
-from sim.tests import module_harness
+from sim.tests import finance_host, module_harness
 from sim.materials.api import SettleProjectMaterials as SettleCommand
 from sim.tests import materials_stand_in
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
@@ -57,7 +57,8 @@ game = SimpleNamespace(
     material_trade_quote=lambda material: {"material": material, "buy_per_tonne": 7.0, "sell_per_tonne": 6.0,
                                            "market_available_tonnes_per_year": 100.0},
     material_purchase_cost=lambda material, tonnes: quoted_orders.append((material, tonnes)) or (170.0, 17.0),
-    capital=1000.0, spending_power=lambda kind: 1500.0)
+    capital=1000.0, spending_power=lambda kind: 1500.0,
+    view=finance_host.purchase_views(lambda kind: 1500.0))
 reply = _quote_material(game, {"material": "coal_kg"}, 10.0)
 check("the material quote's cost for an order is the purchase cost of that order", reply["to_buy_it"] == 170.0
       and quoted_orders == [("coal_kg", 10.0)], reply)

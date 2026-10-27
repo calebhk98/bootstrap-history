@@ -5,7 +5,6 @@ from sim.constants import declare
 from sim.demography.api import OpenPopulation
 from sim.workforce.api import WatchStaff
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
-from . import money_units
 from sim.engine.state import SimulationState, ActiveProjectState
 from sim.engine.state_seat import bind_seat
 from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
@@ -56,7 +55,7 @@ from .held_works import HeldWorksMixin
 from .works import WorksMixin
 from .forward_actors import ActorsForwardsMixin
 from .founder_sales import FounderSalesMixin
-from .seat_bank import SeatBankMixin
+from .forward_finance import ForwardFinanceMixin
 from .benefactions import BenefactionsMixin
 from .forward_freight import ForwardFreightMixin
 from .forward_resources import ForwardResourcesMixin
@@ -100,7 +99,7 @@ class Sim(
         ActorsForwardsMixin,
         DiffusionForwardsMixin,
         FounderSalesMixin,
-        SeatBankMixin,
+        ForwardFinanceMixin,
         BenefactionsMixin,
         ForwardFreightMixin,
         ForwardingPropertiesMixin,
@@ -399,68 +398,6 @@ class Sim(
         why="How large a bite auto-manumission takes when it fires - "
             "roughly a quarter of current slaves, at least one. Tuned, "
             "not measured.")
-    INSOLVENCY_FLOOR_MIN_LABOUR_HOURS = declare(
-        "INSOLVENCY_FLOOR_MIN_LABOUR_HOURS", 80600.0, kind="temporary_heuristic",
-        unit="labour hours", source=None, confidence="D",
-        why="Floor on how deep into arrears a household can sit before insolvency's"
-            ' staff bleed can begin, for a household with very low revenue - so a '
-            'household earning almost nothing is not bled the instant it dips a '
-            'denarius below zero. Round number, not measured. How deep a debt a '
-            'household can carry is the labour it would take to clear, so the floor'
-            ' is hours of work, the same burden whatever the coin is worth.')
-    INSOLVENCY_FLOOR_MIN = money_units.PricedInLabourHours("INSOLVENCY_FLOOR_MIN_LABOUR_HOURS")
-    INSOLVENCY_FLOOR_REVENUE_MULTIPLE = declare(
-        "INSOLVENCY_FLOOR_REVENUE_MULTIPLE", 2.0, kind="temporary_heuristic",
-        unit="years of revenue", source=None, confidence="D",
-        why="How many years of revenue a household may sit in arrears "
-            "before insolvency's staff bleed can begin, for a household "
-            "with meaningful revenue - scales the floor to the "
-            "household's own size rather than a flat number. Tuned, not "
-            "measured.")
-    INSOLVENCY_YEARS_BEFORE_BLEED = declare(
-        "INSOLVENCY_YEARS_BEFORE_BLEED", 3, kind="temporary_heuristic",
-        unit="years", source=None, confidence="D",
-        why="Consecutive years of genuine insolvency (income not "
-            "covering costs, past INSOLVENCY_FLOOR_MIN/"
-            "INSOLVENCY_FLOOR_REVENUE_MULTIPLE) before staff actually "
-            "start leaving - a brief dip is not treated the same as "
-            "sustained failure. Round number, not measured.")
-    INSOLVENCY_BLEED_CAP = declare(
-        "INSOLVENCY_BLEED_CAP", 0.15, kind="temporary_heuristic",
-        unit="dimensionless (maximum fraction of staff lost per year)",
-        source=None, confidence="D",
-        why="Ceiling on how much of the artisan pool insolvency can bleed "
-            "in a single year, however long the household has been "
-            "insolvent - a floor against the doom loop this mechanism "
-            "replaced (see comment above: a Norse run once sat insolvent "
-            "for 495 years, bleeding without limit). Tuned, not measured.")
-    INSOLVENCY_BLEED_RATE = declare(
-        "INSOLVENCY_BLEED_RATE", 0.04, kind="temporary_heuristic",
-        unit="dimensionless (fraction of staff lost per insolvent year)",
-        source=None, confidence="D",
-        why="How fast the insolvency bleed grows with consecutive "
-            "insolvent years, capped at INSOLVENCY_BLEED_CAP. Tuned, not "
-            "measured.")
-    INSOLVENCY_ARTISAN_FLOOR = declare(
-        "INSOLVENCY_ARTISAN_FLOOR", 3.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D",
-        why="Minimum artisans an insolvent household keeps, however long "
-            "it bleeds - a household that has shed everything else can "
-            "still climb back rather than being erased outright. Round "
-            "number, not measured.")
-    INSOLVENCY_SCHOLAR_FLOOR = declare(
-        "INSOLVENCY_SCHOLAR_FLOOR", 1.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D",
-        why="Minimum scholars an insolvent household keeps, for the same "
-            "reason as INSOLVENCY_ARTISAN_FLOOR. Round number, not "
-            "measured.")
-    INSOLVENCY_SCHOLAR_BLEED_DISCOUNT = declare(
-        "INSOLVENCY_SCHOLAR_BLEED_DISCOUNT", 0.6, kind="temporary_heuristic",
-        unit="dimensionless (fraction of the artisan bleed rate applied "
-             "to scholars)", source=None, confidence="D",
-        why="Scholars bleed slower than artisans under insolvency - "
-            "tuned so a household in arrears keeps more of its scarce, "
-            "harder-to-replace literate staff; not measured.")
 
     MARKET_PRESSURE_DECAY = declare(
         "MARKET_PRESSURE_DECAY", 0.55, kind="temporary_heuristic",
@@ -478,21 +415,6 @@ class Sim(
             "forever. Tuned, not measured.")
 
 
-    BONDAGE_LABOUR_SHARE = declare(
-        "BONDAGE_LABOUR_SHARE", 0.75, kind="temporary_heuristic",
-        unit="dimensionless (share of a founder-year's hours)",
-        source=None, confidence="D",
-        why="Share of a founder's yearly hours treated as owed labour "
-            "while serving out a debt-bondage term. Tuned to leave some "
-            "hours for the founder's own affairs even in bondage; not "
-            "measured.")
-    BONDAGE_WAGE_MARKUP = declare(
-        "BONDAGE_WAGE_MARKUP", 1.2, kind="temporary_heuristic",
-        unit="dimensionless multiplier", source=None, confidence="D",
-        why="Markup on the plain labourer wage used to value bonded "
-            "labour toward debt repayment - bonded labour is valued a "
-            "little above the cheapest free-market rate. Tuned, not "
-            "measured.")
     SANITATION_LIFE_EXTENSION_YEARS = declare(
         "SANITATION_LIFE_EXTENSION_YEARS", 0.12, kind="temporary_heuristic",
         unit="years added per year of founder mortality roll",

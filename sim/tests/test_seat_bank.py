@@ -10,7 +10,9 @@ from types import SimpleNamespace
 from sim.economy import api as economy_api
 from sim.economy.accounts import Book
 from sim.economy.types import EDGE_MINT, Transfer
-from sim.engine import economy_port_bank, seat_bank
+from sim.finance import bank_rules as seat_bank
+from sim.finance.commands import FoundBank
+from sim.tests import finance_host
 from sim.ui.proto import command_registry
 from sim.ui.proto import dispatch_bank, typed  # noqa: F401  (registers the command and its parser)
 
@@ -43,7 +45,14 @@ class TheBank(unittest.TestCase):
 
     def test_the_capital_comes_in_from_outside_and_is_the_banks_own_and_the_seat_is_its_founder(self):
         coin = self.economy.setup.coin_per_unit
-        bank = economy_port_bank.found(self.economy, "seat:player", 500.0 * coin, 3)
+        party = SimpleNamespace(knows=lambda node_id, world: True, money=5000.0)
+        module = finance_host.build(year=3, dealing_party=party, nodes_with_mechanic=lambda name: ("a_bank_node",),
+                                    agent_economy_opened=True, agent_economy=self.economy)
+        module.clock.acting_seat = "seat:player"
+        answer = module.found_bank(FoundBank(500.0 * coin))
+        self.assertTrue(answer["ok"])
+        self.assertEqual(party.money, 5000.0 - 500.0 * coin)
+        bank = self.record.banks[answer["bank"]]
         self.assertEqual(bank.founder, "seat:player")
         self.assertAlmostEqual(bank.paid_in, 500.0)
         self.assertAlmostEqual(self.record.book.balance(bank.agent_id, self.money), 500.0)

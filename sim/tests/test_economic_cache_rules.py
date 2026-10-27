@@ -21,6 +21,7 @@ def household(**versions):
 
 class RevenueStandIn(ProductionMixin):
     """What `revenue` reads, with the uncached sum counted."""
+    bondage_years_left = 0.0
 
     def real_output_per_head(self):
         return self.state.economy.output_per_head

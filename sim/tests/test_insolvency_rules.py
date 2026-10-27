@@ -4,8 +4,8 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.credit_freeze import settlement_owed
-from sim.engine.economy_credit import CreditMixin
+from sim.finance.credit_freeze import settlement_owed
+from sim.tests import finance_host
 
 
 class SettlementOwed(unittest.TestCase):
@@ -21,44 +21,35 @@ class SettlementOwed(unittest.TestCase):
             self.assertLessEqual(settlement_owed(1000.0, 800.0, fraction), 800.0)
 
 
-class StubDebtor(CreditMixin):
+def build_debtor(capital, limit, bondage):
     """The real default rule over a purse and a line, with its answers recorded in order."""
+    module = finance_host.build(acting_balance=capital)
+    module.calls = []
+    module.credit_limit = lambda revenue=None, upkeep=None, capital=None: limit
+    module.answer_exhausted_credit = lambda year: module.calls.append("answer")
 
-    def __init__(self, capital, limit, bondage):
-        self.calls = []
-        self._limit = limit
-        self._bondage = bondage
-        self.state = type("State", (), {})()
-        self.state.household = type("Household", (), {"capital": capital})()
-
-    def answer_exhausted_credit(self, year):
-        self.calls.append("answer")
-
-    def credit_limit(self, _rev=None, _upkeep=None, _capital=None):
-        return self._limit
-
-    def enter_debt_bondage(self, year):
-        self.calls.append("bondage")
-        return self._bondage
-
-    def settle_insolvency(self, year, limit):
-        self.calls.append(("settle", limit))
+    def enter_debt_bondage(year):
+        module.calls.append("bondage")
+        return bondage
+    module.enter_debt_bondage = enter_debt_bondage
+    module.settle_insolvency = lambda year, line: module.calls.append(("settle", line))
+    return module
 
 
 class DefaultOnDebt(unittest.TestCase):
 
     def test_a_purse_inside_the_line_only_answers_exhausted_credit(self):
-        debtor = StubDebtor(capital=-400.0, limit=1000.0, bondage=False)
+        debtor = build_debtor(capital=-400.0, limit=1000.0, bondage=False)
         debtor.default_on_debt(100)
         self.assertEqual(debtor.calls, ["answer"])
 
     def test_a_purse_past_the_line_with_no_bondage_settles_at_the_line(self):
-        debtor = StubDebtor(capital=-2000.0, limit=1000.0, bondage=False)
+        debtor = build_debtor(capital=-2000.0, limit=1000.0, bondage=False)
         debtor.default_on_debt(100)
         self.assertEqual(debtor.calls, ["answer", "bondage", ("settle", 1000.0)])
 
     def test_a_default_that_enters_bondage_does_not_also_settle(self):
-        debtor = StubDebtor(capital=-2000.0, limit=1000.0, bondage=True)
+        debtor = build_debtor(capital=-2000.0, limit=1000.0, bondage=True)
         debtor.default_on_debt(100)
         self.assertEqual(debtor.calls, ["answer", "bondage"])
 

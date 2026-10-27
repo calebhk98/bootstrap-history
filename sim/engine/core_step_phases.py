@@ -19,12 +19,11 @@ into a domain file without first working out its self.* footprint.
 import random
 from dataclasses import dataclass
 
-from .bondage_workshop_rules import bondage_repayment, serve_bondage_year
+from sim.finance.api import ServeBondageYear
 from sim.polity.api import CloseStandingYear, RenewStanding
 from .invariants import check_labour_market_invariants, check_yearly_invariants
 from .step_phase_money import MoneyPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
-from sim.reporting.api import RecordEvent
 from sim.workforce.api import CloseHoursYear, TakeWageFallback
 
 
@@ -83,16 +82,6 @@ class StepPhasesMixin(MoneyPhaseMixin, ProjectProgressPhaseMixin):
         self.send(CloseStandingYear())
 
     def _step_bondage(self):
-        # 6b. serving out a debt. The hours you owe go to the creditor and the
-        #     debt falls; when it is done you are free, and you keep everything
-        #     you know.
-        household = self.state.household
-        if household.bondage_years_left > 0:
-            repayment = bondage_repayment(self.cfg["founder_hours_per_year"], self.BONDAGE_LABOUR_SHARE,
-                                          self.BONDAGE_WAGE_MARKUP, self.labour.market.quote("labourer"))
-            household.bondage_years_left, household.bondage_debt, served = serve_bondage_year(
-                household.bondage_years_left, household.bondage_debt, repayment)
-            if served:
-                self.send(RecordEvent.of("bondage_served", "your term is served and the debt is discharged; "
-                                     "you are your own man again"))
+        # 6b. serving out a debt: the finance module's year of service
+        self.send(ServeBondageYear())
 

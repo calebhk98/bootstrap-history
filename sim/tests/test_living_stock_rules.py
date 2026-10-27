@@ -20,7 +20,7 @@ from sim.living_stock.module import LivingStock
 from sim.living_stock.state import LivingStockWorld
 from sim.living_stock import yearly
 from sim.refusal import Refusal, cause_of
-from sim.tests import module_harness
+from sim.tests import finance_host, module_harness
 from sim.ui.proto import stock_purchases
 from sim.world.material_units import tonnes_per_unit
 
@@ -243,6 +243,8 @@ class _Capital:
         return 100.0
 
     def view(self, name):
+        if name in ("can_pay", "purchase_budget", "affordable_units"):
+            return finance_host.purchase_views(self.spending_power)(name)
         return (lambda *arguments: self.quote) if name == "stock_purchase_quote" else _Held()
 
     def send(self, command):

@@ -6,21 +6,18 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.bondage_workshop_rules import bondage_repayment, serve_bondage_year, workshop_craft_wages
-from sim.engine.core_step_phases import StepPhasesMixin
+from sim.engine.bondage_workshop_rules import workshop_craft_wages
 from sim.engine.economy_production import ProductionMixin
+from sim.finance.constants import BONDAGE_LABOUR_SHARE, BONDAGE_WAGE_MARKUP
+from sim.finance.rules import bondage_repayment, serve_bondage_year
+from sim.finance.state import FinanceSeat
+from sim.tests import finance_host
 
 
-class BondageGame(StepPhasesMixin):
-    BONDAGE_LABOUR_SHARE = 0.5
-    BONDAGE_WAGE_MARKUP = 1.2
-
-    def __init__(self, labourer_quote):
-        self.cfg = {"founder_hours_per_year": 2000.0}
-        self.labour = types.SimpleNamespace(market=types.SimpleNamespace(quote=lambda trade: labourer_quote[trade]))
-        self.state = types.SimpleNamespace(
-            household=types.SimpleNamespace(bondage_years_left=5, bondage_debt=1.0e9, log=[]),
-            scenario=types.SimpleNamespace(year=100))
+def bondage_module(labourer_quote):
+    """The finance module of a household owing a debt in bondage, over a labour market quoting the labourer's hour."""
+    return finance_host.build(seat=FinanceSeat(bondage_years_left=5, bondage_debt=1.0e9), game_config={"founder_hours_per_year": 2000.0},
+                              labour_market=types.SimpleNamespace(quote=lambda trade: labourer_quote[trade]))
 
 
 class WorkshopGame(ProductionMixin):
@@ -43,17 +40,16 @@ class WorkshopGame(ProductionMixin):
 class BondageYear(unittest.TestCase):
 
     def test_a_year_of_bondage_repays_the_markets_labourer_hour(self):
-        game = BondageGame({"labourer": 3.0})
-        game._step_bondage()
-        household = game.state.household
-        self.assertAlmostEqual(1.0e9 - household.bondage_debt, 2000.0 * 0.5 * 1.2 * 3.0)
-        self.assertEqual(household.bondage_years_left, 4)
+        module = bondage_module({"labourer": 3.0})
+        module.serve_bondage_year()
+        self.assertAlmostEqual(1.0e9 - module.seat.bondage_debt, 2000.0 * BONDAGE_LABOUR_SHARE * BONDAGE_WAGE_MARKUP * 3.0)
+        self.assertEqual(module.seat.bondage_years_left, 4)
 
     def test_a_dearer_labourer_hour_repays_more(self):
-        cheap, dear = BondageGame({"labourer": 3.0}), BondageGame({"labourer": 4.0})
-        cheap._step_bondage()
-        dear._step_bondage()
-        self.assertGreater(1.0e9 - dear.state.household.bondage_debt, 1.0e9 - cheap.state.household.bondage_debt)
+        cheap, dear = bondage_module({"labourer": 3.0}), bondage_module({"labourer": 4.0})
+        cheap.serve_bondage_year()
+        dear.serve_bondage_year()
+        self.assertGreater(1.0e9 - dear.seat.bondage_debt, 1.0e9 - cheap.seat.bondage_debt)
 
     def test_a_repayment_is_hours_times_share_times_markup_times_the_quote(self):
         self.assertEqual(bondage_repayment(2000.0, 0.5, 1.2, 3.0), 3600.0)

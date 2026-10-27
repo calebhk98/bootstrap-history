@@ -21,7 +21,7 @@ from . import cause_book, category_traits
 from .staffing_events import unstaffed_closure_line
 from .closure_grace import grace_note, within_grace
 from .staffing_warning_rows import staffing_warning_rows
-from .affordability import deep_in_arrears, opens_in_deep_arrears, payback_years
+from sim.finance.api import deep_in_arrears, opens_in_deep_arrears, payback_years
 from .units_prose import money_text, per_year
 from sim.agents.api import business_review, edges
 from sim.knowledge.api import LearnTechnique

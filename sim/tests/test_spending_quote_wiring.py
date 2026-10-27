@@ -16,7 +16,7 @@ from sim.labour.labour_training import TrainingMixin
 from sim.agents.api import edges
 from sim.ledger.api import PayEdge
 from sim.projects.api import PostBounty
-from sim.tests import module_harness, projects_host
+from sim.tests import finance_host, module_harness, projects_host
 from sim.refusal import Refusal
 from sim.ui.proto import quote_spending
 
@@ -34,6 +34,7 @@ def quote_game(**attributes):
         venture_real_earnings=lambda node_id, units, fully_ramped: 300.0, spending_power=lambda kind: 1000.0,
         opening_shortfall=lambda node_id: None)
     defaults.update(attributes)
+    defaults.setdefault("view", finance_host.purchase_views(defaults["spending_power"]))
     return SimpleNamespace(**defaults)
 
 

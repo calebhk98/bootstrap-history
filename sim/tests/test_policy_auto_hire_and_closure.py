@@ -13,7 +13,6 @@ from sim.agents import business_review
 from sim.agents.api import Business
 from sim.constants import REGISTRY
 from sim.engine import data as engine_data
-from sim.engine.economy_credit import CreditMixin
 from sim.hazards.window import hazards_not_yet_past
 from sim.workforce.payroll_trim import payroll_means, staff_to_let_go
 from sim.engine.projects_review import SeatReview
@@ -23,10 +22,10 @@ from sim.tests import polity_host
 from sim.polity.api import ShiftValueWeight
 from sim.reporting.api import RecordEvent
 from sim.tests import hazards_host, module_harness
-from sim.refusal import cause_of, facts_of
 from sim.ui.proto.dispatch_ventures import _cmd_policy
 from sim.ui.proto.state_waiting import _staff_fraction_note
-from sim.tests import event_stand_in
+from sim.finance.state import FinanceSeat
+from sim.tests import finance_host
 
 
 class _Owner(business_review.Reviewable):
@@ -106,53 +105,49 @@ class SeatSparesWhatItMustKeep(unittest.TestCase):
 class LogNamesWhatClosed(unittest.TestCase):
     """The log says which concerns a seat shed, so a player can see what was lost and that the knowledge is kept."""
 
-    def _household(self, capital):
-        return SimpleNamespace(capital=capital, log=[])
+    def _events(self, module):
+        return [command for command in module_harness.sent(module) if isinstance(command, RecordEvent)]
 
     def _shed(self, closed, capital):
-        household = self._household(capital)
-        host = event_stand_in.stood_in(SimpleNamespace(
-            workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)),
+        module = finance_host.build(acting_balance=capital, legacy_game=SimpleNamespace(
             review_ventures=lambda rules, year: [business_review.Closure(key, business_review.LOSS_MAKING) for key in closed]))
-        CreditMixin.shed_loss_makers(host, 100)
-        return household.log
+        module.shed_loss_makers(100)
+        return self._events(module)
+
+    def _owing(self, closures):
+        household = SimpleNamespace(capital=-1000.0, slaves=0, freedmen=0, artisans=0, scholars=0)
+        module = finance_host.build(
+            legacy_acting_household=household, legacy_projects=SimpleNamespace(active={}), legacy_game=SimpleNamespace(
+                review_ventures=lambda rules, year: [business_review.Closure(key, business_review.CREDITOR_SEIZURE) for key in closures]))
+        module.credit_limit = lambda revenue=None, upkeep=None, capital=None: 0.0
+        module.answer_exhausted_credit(100)
+        return self._events(module)
 
     def test_a_shed_concern_is_named_in_the_log_with_a_coded_kind(self):
-        log = self._shed(["md2_sand_filtration"], -5.0)
-        self.assertEqual(len(log), 1)
-        self.assertEqual(cause_of(log[0][1]), "arrears_closed_concerns")
-        self.assertEqual(facts_of(log[0][1])["concerns"], ["md2_sand_filtration"])
+        events = self._shed(["md2_sand_filtration"], -5.0)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0].kind, "arrears_closed_concerns")
+        self.assertEqual(events[0].facts["concerns"], ["md2_sand_filtration"])
 
     def test_nothing_shed_logs_nothing(self):
         self.assertEqual(self._shed([], -5.0), [])
 
     def test_the_log_says_when_it_was_arrears_that_forced_it(self):
-        in_arrears = str(self._shed(["a"], -5.0)[0][1])
-        solvent = str(self._shed(["a"], 5.0)[0][1])
+        in_arrears = self._shed(["a"], -5.0)[0].text
+        solvent = self._shed(["a"], 5.0)[0].text
         # presentation: the line says the closure was forced by arrears only when it was
         self.assertIn("in arrears", in_arrears)
         self.assertNotIn("in arrears", solvent)
 
     def test_creditors_taking_concerns_are_named_in_the_log(self):
-        household = SimpleNamespace(capital=-1000.0, log=[], slaves=0, freedmen=0)
-        host = event_stand_in.stood_in(SimpleNamespace(
-            workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household, projects=SimpleNamespace(active={}), scenario=SimpleNamespace(year=100)),
-            credit_limit=lambda: 0.0, mothball_mines=lambda: None,
-            review_ventures=lambda rules, year: [business_review.Closure("shop", business_review.CREDITOR_SEIZURE)]))
-        CreditMixin.answer_exhausted_credit(host, 100)
-        taken = [line for _year, line in household.log if cause_of(line) == "creditors_took"]
+        taken = [event for event in self._owing(["shop"]) if event.kind == "creditors_took"]
         self.assertEqual(len(taken), 1)
         # presentation: the line names the concern and promises the knowledge is kept
-        self.assertIn("shop", taken[0])
-        self.assertIn("knowledge", taken[0])
+        self.assertIn("shop", taken[0].text)
+        self.assertIn("knowledge", taken[0].text)
 
     def test_creditors_who_took_nothing_say_nothing(self):
-        household = SimpleNamespace(capital=-1000.0, log=[], slaves=0, freedmen=0)
-        host = event_stand_in.stood_in(SimpleNamespace(
-            workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household, projects=SimpleNamespace(active={}), scenario=SimpleNamespace(year=100)),
-            credit_limit=lambda: 0.0, mothball_mines=lambda: None, review_ventures=lambda rules, year: []))
-        CreditMixin.answer_exhausted_credit(host, 100)
-        self.assertEqual(household.log, [])
+        self.assertEqual(self._owing([]), [])
 
 
 class PayrollLetGo(unittest.TestCase):
@@ -230,38 +225,34 @@ class SwitchThatCannotAct(unittest.TestCase):
 class StallDiagnosis(unittest.TestCase):
     """A run that has effectively stopped says so and what would restart it; a solvent one is not told it is stuck."""
 
-    def _household(self, capital=-900.0, insolvent_years=12):
-        return SimpleNamespace(capital=capital, insolvent_years=insolvent_years)
-
     def _host(self, capital=-900.0, insolvent_years=12, revenue=0.0, standing_pay=0.0, would_earn=500.0, hours=2000.0):
-        return SimpleNamespace(
-            state=SimpleNamespace(household=self._household(capital, insolvent_years),
-                                  projects=SimpleNamespace(operating=set())),
-            nodes={}, debt_interest_rate=lambda: 0.05, revenue_capacity=lambda: revenue, upkeep=lambda: 100.0,
-            living_cost=lambda _rev=0, _upkeep=0: 200.0, mine_operating_cost=lambda: 0.0, held_trade=lambda: None,
-            labour=SimpleNamespace(hours_for_sale=lambda: hours, best_wage_trade=lambda: "scribe",
-                                   work_for_wages_dry_run=lambda trade, hours: (would_earn, None),
-                                   standing_job_pay=lambda trade: standing_pay, wage_bill=lambda: 0.0))
+        labour = SimpleNamespace(hours_for_sale=lambda: hours, best_wage_trade=lambda: "scribe",
+                                 work_for_wages_dry_run=lambda trade, hours: (would_earn, None), standing_job_pay=lambda trade: standing_pay)
+        module = finance_host.build(seat=FinanceSeat(insolvent_years=insolvent_years), acting_balance=capital, revenue_capacity=revenue,
+                                    upkeep=100.0, legacy_game=SimpleNamespace(labour=labour))
+        module.debt_interest_rate = lambda: 0.05
+        module.living_cost = lambda revenue=0, upkeep=0, capital=None: 200.0
+        return module
 
     def test_a_long_arrears_run_that_loses_money_says_it_is_stuck_and_what_would_change_it(self):
-        diagnosis = CreditMixin.stall_diagnosis(self._host())
+        diagnosis = self._host().stall_diagnosis()
         self.assertTrue(diagnosis)
         self.assertTrue(any(reason.startswith("work as a ") for reason in diagnosis["what_would_change_it"]))
 
     def test_wage_work_is_advised_only_when_it_pays_more_than_the_standing_job(self):
-        better = CreditMixin.stall_diagnosis(self._host(standing_pay=100.0, would_earn=500.0))
-        worse = CreditMixin.stall_diagnosis(self._host(standing_pay=900.0, would_earn=500.0))
+        better = self._host(standing_pay=100.0, would_earn=500.0).stall_diagnosis()
+        worse = self._host(standing_pay=900.0, would_earn=500.0).stall_diagnosis()
         self.assertTrue(any(reason.startswith("work as a ") for reason in better["what_would_change_it"]))
         self.assertFalse(any(reason.startswith("work as a ") for reason in worse["what_would_change_it"]))
 
     def test_a_solvent_run_is_not_told_it_is_stuck(self):
-        self.assertIsNone(CreditMixin.stall_diagnosis(self._host(capital=500.0)))
+        self.assertIsNone(self._host(capital=500.0).stall_diagnosis())
 
     def test_a_short_spell_in_arrears_is_not_a_stall(self):
-        self.assertIsNone(CreditMixin.stall_diagnosis(self._host(insolvent_years=3)))
+        self.assertIsNone(self._host(insolvent_years=3).stall_diagnosis())
 
     def test_a_run_that_earns_more_than_it_costs_is_not_stuck(self):
-        self.assertIsNone(CreditMixin.stall_diagnosis(self._host(revenue=1.0e6)))
+        self.assertIsNone(self._host(revenue=1.0e6).stall_diagnosis())
 
 
 class StaffFractions(unittest.TestCase):

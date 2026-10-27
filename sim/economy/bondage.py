@@ -1,6 +1,6 @@
 """Debt bondage for a household cohort: a default by a household with no land left puts it into service to its
 creditor, where the society has debt bondage (`EconomySetup.debt_bondage_years`, the same rule and term the
-founder's default follows: sim/engine/economy_credit.py).
+founder's default follows: sim/finance/insolvency.py).
 
 For the term, a share of the hours of the cohort's working people is owed to the creditor. Owed hours the
 creditor's own works can use are worked there, off the market (bondage_hours.py); the rest the cohort still sells

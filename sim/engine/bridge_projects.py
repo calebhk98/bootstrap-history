@@ -7,7 +7,7 @@ from sim.ledger.api import NoteSpend
 from sim.assembly.api import KEYED, QUOTE
 from sim.projects.needed_commands import (ClearMothball, CompleteProject)
 
-from . import purchase_rule, projects_precaution
+from . import projects_precaution
 from .bridge import bridge_command, bridge_view
 from .projects_training_advice import training_advice
 from .units_prose import money_text
@@ -74,7 +74,9 @@ def rebuild_work_factor(sim, node_id):
 
 @bridge_view("committed_cost", seat_scoped=True)
 def committed_cost(sim):
-    return sim.committed_spend()
+    """What is still owed, in total, across every project in hand: they all draw on the same purse and the same credit line."""
+    projects = sim.state.projects
+    return sum(projects.active[node_id].get("cost_left") or 0.0 for node_id in projects.active_keys_sorted())
 
 
 @bridge_view("precaution_spec", kind=QUOTE)
@@ -98,43 +100,12 @@ def start_gate_running(sim, node_id, node, ignore_trade, memo, why):
     return check_running_gates(sim, node_id, node, ignore_trade, memo, why)
 
 
-# ---- materials ------------------------------------------------------------------------------------------------------
-
-# ---- finance --------------------------------------------------------------------------------------------------------
-
-@bridge_view("debt_status", seat_scoped=True)
-def debt_status(sim):
-    household = sim.state.household
-    return {"credit_frozen_until": household.credit_frozen_until, "insolvent_years": household.insolvent_years}
-
-
-@bridge_view("credit_limit", seat_scoped=True)
-def credit_limit(sim):
-    return sim.credit_limit()
-
-
-@bridge_view("funding_capacity", seat_scoped=True)
-def funding_capacity(sim):
-    return sim.funding_capacity()
-
-
-@bridge_view("purchase_remedies_text", kind=QUOTE)
-def purchase_remedies_text(sim):
-    return purchase_rule.remedies_text(sim)
-
-
-# ---- polity -------------------------------------------------------------------------------------------
-
 # ---- workforce ------------------------------------------------------------------------------------------------------
 
 @bridge_view("training_advice", kind=QUOTE)
 def training_advice_view(sim, trade_id):
     return training_advice(sim.labour, trade_id)
 
-
-@bridge_view("living_cost", kind=QUOTE)
-def living_cost(sim, revenue=None, upkeep=None):
-    return sim.living_cost(_rev=revenue, _upkeep=upkeep)
 
 
 # ---- living stock -----------------------------------------------------------------------------------------------------

@@ -7,14 +7,12 @@ import contextlib
 
 from sim.agents.api import cast_from_civilisations
 from sim.assembly.api import KEYED, QUOTE
-from sim.finance.api import DefaultOnDebt, RefreshLenderOffers
 from sim.production.api import AccrueExperience
 
 from . import partner_demand, trade_duty
 from .actor_kinds_data import register_mod_actor_kinds
 from .bridge import bridge_command, bridge_view
 from .data import load_civ
-from .economy_debt_service import DebtServiceMixin
 from .economy_port_setup import unit_mass_kg
 from .foreign_economy_data import not_traded_materials as declared_not_traded_materials
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
@@ -144,39 +142,6 @@ def accrue_experience(sim, command):
 def materials_serving(sim, need_id):
     from . import need_substitutes
     return need_substitutes.serving(need_id)
-
-
-# ---- finance ----
-
-
-@bridge_view("credit_room", kind=QUOTE)
-def credit_room(sim, actor_id):
-    return sim.economy.credit_room(actor_id)
-
-
-@bridge_view("state_lending")
-def state_lending(sim):
-    return sim.state_lending()
-
-
-@bridge_view("debt_interest_rate")
-def debt_interest_rate(sim):
-    return sim.debt_interest_rate()
-
-
-@bridge_view("debt_service_share_of_surplus")
-def debt_service_share_of_surplus(sim):
-    return DebtServiceMixin.DEBT_SERVICE_SHARE_OF_SURPLUS
-
-
-@bridge_command(RefreshLenderOffers)
-def refresh_lender_offers(sim, command):
-    sim.refresh_lender_offers()
-
-
-@bridge_command(DefaultOnDebt)
-def default_on_debt(sim, command):
-    sim.default_on_debt(command.year)
 
 
 # ---- demography, agriculture, diffusion, mechanics ----

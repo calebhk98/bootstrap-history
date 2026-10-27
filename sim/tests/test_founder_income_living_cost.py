@@ -2,7 +2,7 @@
 never the household's own subsistence, and a household in arrears also pays its creditors their share first."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.economy_debt_service import dependants_not_carried
+from sim.finance.rules import dependants_not_carried
 
 QUICK_TOPIC = True
 

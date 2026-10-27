@@ -49,52 +49,6 @@ class ForwardingPropertiesMixin:
 			setattr(sub, "spend_last_year", value)
 
 	@property
-	def insolvent_years(self):
-		return self.state.household.insolvent_years
-
-	@insolvent_years.setter
-	def insolvent_years(self, value):
-		self.state.household.insolvent_years = value
-
-	@property
-	def credit_frozen_until(self):
-		return getattr(self.state.household, "credit_frozen_until")
-
-	@credit_frozen_until.setter
-	def credit_frozen_until(self, value):
-		setattr(self.state.household, "credit_frozen_until", value)
-
-	@property
-	def bondage_debt(self):
-		return getattr(self.state.household, "bondage_debt")
-
-	@bondage_debt.setter
-	def bondage_debt(self, value):
-		setattr(self.state.household, "bondage_debt", value)
-
-	@property
-	def bondage_years_left(self):
-		return getattr(self.state.household, "bondage_years_left")
-
-	@bondage_years_left.setter
-	def bondage_years_left(self, value):
-		setattr(self.state.household, "bondage_years_left", value)
-
-	@property
-	def interest_paid(self):
-		sub = getattr(self.state, "household", None)
-		if sub is None:
-			raise AttributeError("interest_paid")
-		val = getattr(sub, "interest_paid", None)
-		if val is None:
-			raise AttributeError("interest_paid")
-		return val
-
-	@interest_paid.setter
-	def interest_paid(self, value):
-		sub = getattr(self.state, "household", None)
-		if sub is not None:
-			setattr(sub, "interest_paid", value)
 
 	@property
 	def bounties_paid(self):
@@ -105,12 +59,6 @@ class ForwardingPropertiesMixin:
 		setattr(self.state.household, "bounties_paid", value)
 
 	@property
-	def last_settlement(self):
-		return getattr(self.state.household, "last_settlement")
-
-	@last_settlement.setter
-	def last_settlement(self, value):
-		setattr(self.state.household, "last_settlement", value)
 
 	@property
 	def _last_buy_refusal(self):

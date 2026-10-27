@@ -1,4 +1,4 @@
-"""Complaint 640: committed_spend is the sum of what every project in hand still owes; the director's yearly start phase
+"""Complaint 640: the committed cost is the sum of what every project in hand still owes; the director's yearly start phase
 starts a candidate only when its cost fits funding_capacity() less committed_spend(); the leverage list's stacking
 caution is given once. The judging rule is in test_auto_start_rule and the funding parts in test_affordability_warning."""
 QUICK_TOPIC = True
@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.economy_credit import CreditMixin
+from sim.engine.bridge_projects import committed_cost
 from sim.tests import projects_host
 from sim.ui.proto.techtree import _digest_stack_caution
 
@@ -21,18 +21,18 @@ class Projects:
         return sorted(self.active)
 
 
-class Purse(CreditMixin):
-    def __init__(self, active):
-        self.state = types.SimpleNamespace(projects=Projects(active))
+def purse(active):
+    """The game as `committed_cost` reads it: the projects in hand."""
+    return types.SimpleNamespace(state=types.SimpleNamespace(projects=Projects(active)))
 
 
 class CommittedSpend(unittest.TestCase):
     def test_it_sums_what_each_project_in_hand_still_owes_and_counts_a_missing_figure_as_nothing(self):
-        purse = Purse({"b": {"cost_left": 30.0}, "a": {"cost_left": 12.5}, "c": {"cost_left": None}, "d": {}})
-        self.assertEqual(purse.committed_spend(), 42.5)
+        held = purse({"b": {"cost_left": 30.0}, "a": {"cost_left": 12.5}, "c": {"cost_left": None}, "d": {}})
+        self.assertEqual(committed_cost(held), 42.5)
 
     def test_no_work_in_hand_commits_nothing(self):
-        self.assertEqual(Purse({}).committed_spend(), 0.0)
+        self.assertEqual(committed_cost(purse({})), 0.0)
 
 
 def director(funding_capacity, committed_spend, project_cost=9000.0, manual=False):

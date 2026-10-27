@@ -2,8 +2,8 @@
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.bondage_workshop_rules import (bondage_repayment, serve_bondage_year, workshop_craft_wages,
-                                               workshop_output_value)
+from sim.engine.bondage_workshop_rules import workshop_craft_wages, workshop_output_value
+from sim.finance.rules import bondage_repayment, serve_bondage_year
 
 # --- a year of bondage
 repayment = bondage_repayment(2000.0, 0.8, 1.25, 0.5)

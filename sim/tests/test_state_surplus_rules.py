@@ -13,7 +13,8 @@ from sim.agents.edges import EDGE_BUILDERS
 from sim.agents.purses import Purses
 from sim.agents.records import ActorRecord
 from sim.agents.tuning_spending import MASONRY_PERSON_YEARS_PER_M2, RESERVE_CEILING_YEARS_OF_NEED
-from sim.engine.economy_capital_market import LENDABLE_RESERVE_SHARE, lendable_share_of_reserve, state_spare_reserve
+from sim.finance.api import rules
+from sim.finance.constants import LENDABLE_RESERVE_SHARE
 
 from .agents_fake_world import FakeWorld
 
@@ -103,14 +104,14 @@ class MoneyBetweenActors(unittest.TestCase):
 
 class LoanableFunds(unittest.TestCase):
     def test_a_state_with_a_reserve_beyond_its_need_offers_a_share_of_it(self):
-        spare = state_spare_reserve(1000.0, 400.0, False)
+        spare = rules.state_spare_reserve(1000.0, 400.0, False)
         self.assertEqual(spare, 600.0)
-        self.assertAlmostEqual(lendable_share_of_reserve(spare), LENDABLE_RESERVE_SHARE * 600.0)
-        self.assertGreater(lendable_share_of_reserve(spare), 0.0)
+        self.assertAlmostEqual(rules.lendable_share_of_reserve(spare), LENDABLE_RESERVE_SHARE * 600.0)
+        self.assertGreater(rules.lendable_share_of_reserve(spare), 0.0)
 
     def test_a_state_that_cannot_meet_its_need_offers_nothing(self):
-        self.assertEqual(state_spare_reserve(1000.0, 400.0, True), 0.0)
-        self.assertEqual(state_spare_reserve(300.0, 400.0, False), 0.0)
+        self.assertEqual(rules.state_spare_reserve(1000.0, 400.0, True), 0.0)
+        self.assertEqual(rules.state_spare_reserve(300.0, 400.0, False), 0.0)
 
 
 class LendingThroughThePool(unittest.TestCase):

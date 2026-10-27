@@ -30,20 +30,11 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"capital": "household",
 	"total_spend": "household",
 	"bounties_paid": "household",
-	"interest_paid": "household",
 	"cash_flow": "household",
 	"cash_mark": "household",
 	"cash_periods": "household",
-	"bondage_years_left": "household",
-	"bondage_debt": "household",
-	"credit_frozen_until": "household",
-	"insolvent_years": "household",
-	"last_settlement": "household",
-	"interest_arrears": "household",
-	"arrears_years": "household",
 	"spend_last_year": "household",
 	"base_tile": "household",
-	"_said_near_limit": "household",
 	"_said_autoopen": "household",
 
 	# ProjectsState
@@ -87,7 +78,6 @@ _VERSION_MAP: Dict[str, str] = {
 }
 
 _LAZY_FIELDS: Set[str] = {
-	"interest_paid",
 	"spend_last_year",
 	"done_year",
 	"_material_stock_ledger",

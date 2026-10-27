@@ -29,15 +29,6 @@ class HouseholdState:
 	capital: float
 	total_spend: float = 0.0
 	bounties_paid: int = 0
-	interest_paid: Optional[float] = None
-	bondage_years_left: float = 0.0
-	bondage_debt: float = 0.0
-	credit_frozen_until: int = 0
-	insolvent_years: int = 0
-	last_settlement: int = -999
-	# interest the household could not draw on its facility, and the consecutive years it has owed some (sim/agents/borrowing.py)
-	interest_arrears: float = 0.0
-	arrears_years: int = 0
 	spend_last_year: Optional[float] = None
 	# the cash book (sim/engine/cash_book.py): the open period's entries by cause, cash at its start,
 	# and the last few closed years
@@ -53,7 +44,6 @@ class HouseholdState:
 	# a planned project and the cash target put by for it (`saving`)
 	saving_for: Optional[str] = None
 	saving_target: float = 0.0
-	_said_near_limit: Optional[bool] = None
 	_said_autoopen: Optional[Dict[str, int]] = None
 
 	# ---- the purse: an account in the actors' book (sim/agents/purses.py) once the state is attached to it ----

@@ -7,7 +7,6 @@ from sim.agents.api import GOVERNMENT_PREFIX
 from sim.assembly.api import KEYED, QUOTE
 from sim.world import stock_dynamics
 
-from . import purchase_rule
 from .bridge import bridge_view
 from sim.coin.api import visibility_factor
 
@@ -18,17 +17,6 @@ from sim.coin.api import visibility_factor
 @bridge_view("civilisation")
 def civilisation(sim):
     return sim.civ
-
-
-# ---- land ----
-
-
-# ---- labour and money ----
-
-@bridge_view("can_pay", kind=QUOTE)
-def can_pay(sim, cost):
-    """Whether the acting seat's purchase budget covers `cost`."""
-    return purchase_rule.can_pay(sim, cost)
 
 
 # ---- partners ----
@@ -53,5 +41,3 @@ def operating(sim):
 @bridge_view("institution_units", kind=KEYED)
 def institution_units(sim, node_id):
     return sim.institution_units(node_id)
-
-

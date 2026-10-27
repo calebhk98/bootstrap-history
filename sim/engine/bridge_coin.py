@@ -2,18 +2,10 @@
 
 Each view answers through `Sim` as the old mixin methods did; when its owner moves it publishes the same name and the
 entry is deleted."""
-from sim.assembly.api import KEYED
 from sim.demography.api import TakeFromGranary
 from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, TakeGoods
 
 from .bridge import bridge_command, bridge_view
-
-
-# ---- finance, polity, resources ----
-
-@bridge_view("lent_share")
-def lent_share(sim):
-    return sim.lent_share()
 
 
 # ---- the home country (the actors' cast, behind the coin module's reads) ----

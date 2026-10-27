@@ -3,8 +3,8 @@ stalled, on built inputs with no game."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.credit_freeze import (STALL_MINIMUM_INSOLVENT_YEARS, is_stalled, loss_makers, settlement_freeze,
-                                      standing_net)
+from sim.finance.credit_freeze import (STALL_MINIMUM_INSOLVENT_YEARS, is_stalled, loss_makers, settlement_freeze,
+                                       standing_net)
 
 # --- the freeze a settlement leaves
 until, moved = settlement_freeze(0, 105, 12)

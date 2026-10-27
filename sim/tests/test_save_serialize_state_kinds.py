@@ -12,6 +12,7 @@ import json
 from sim.agents.api import ActorRecord, ActorsState
 from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
+from sim.finance.api import FinanceSeat
 from sim.engine.economy import _InvalidatingSet
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
@@ -63,7 +64,7 @@ check("serialize_state: outside `verbatim` a dict is copied", serialize_state({"
 
 # ---- dataclasses: the household (None-means-never fields, nested containers, tuples)
 household = HouseholdState(capital=50.0, cash_flow={"wages": -12.5}, cash_mark=None,
-                           cash_periods=[{"year": 99, "net": 3.0}], cause_mark={"wage": 1.0}, last_settlement=-999)
+                           cash_periods=[{"year": 99, "net": 3.0}], cause_mark={"wage": 1.0})
 workforce = WorkforceSeat(wages_earned=None, trades_created={"mason", "baker"}, trade_introduced_year={"mason": 95}, employees={"mason": 2.0},
                           training=[["mason", 2]], granted_staff=None, unused_hours_reported={"order:1": [40.0, "no_hands"]})
 blob = serialize_state(household)
@@ -71,7 +72,10 @@ staff_blob = serialize_state(workforce)
 check("serialize_state: a dataclass is a dict of its fields in declaration order", list(blob) == saved_field_names(HouseholdState), list(blob)[:5])
 check("serialize_state: None-means-never fields stay None, and a zero stays zero",
       staff_blob["wages_earned"] is None and blob["cash_mark"] is None and staff_blob["granted_staff"] is None
-      and blob["last_settlement"] == -999, None)
+      , None)
+_debt = serialize_state(FinanceSeat(interest_paid=None))
+check("serialize_state: a finance seat keeps its None-means-never field None and its negative default as it is",
+      _debt["interest_paid"] is None and _debt["last_settlement"] == -999 and _debt["insolvent_years"] == 0, None)
 standing = serialize_state(PolitySeat(last_withdrawal=None, scandal_last_year=0.0))
 check("serialize_state: a polity seat keeps its None-means-never fields None and a zero zero",
       standing["last_withdrawal"] is None and standing["scandal_last_year"] == 0.0 and standing["said_scandal"] == 0, None)

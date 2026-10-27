@@ -1,1 +1,1 @@
-"""Finance: the commands other modules send it until its module moves (api.py)."""
+"""Finance: credit, debt, interest, arrears, insolvency, bondage and the capital market (api.py)."""

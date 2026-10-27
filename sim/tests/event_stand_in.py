@@ -30,12 +30,12 @@ def send(host, command):
         row = rules.audit_row(state.scenario.year, command.policy, "skipped", command.what, command.reason,
                               household.capital, household.capital, command.facts)
     else:
-        return _workforce_command(household, command)
+        return workforce_command(household, command)
     household.automation_audit.append(row)
     return row
 
 
-def _workforce_command(household, command):
+def workforce_command(household, command):
     """The workforce module's own handler applies a workforce command to the household object standing in for its seat."""
     from sim.tests import module_harness
     from sim.workforce.module import Workforce

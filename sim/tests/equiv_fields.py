@@ -158,6 +158,15 @@ RELOCATIONS = [
     ("/seats/*/modules/workforce/living_cost_paid", "/seats/*/founder/living_cost_paid"),
     ("/modules/workforce/society_labour_hours", "/economy/society_labour_hours"),
     ("/modules/workforce/wage_tightness_factors", "/economy/wage_tightness_factors"),
+    ("/seats/*/modules/finance/interest_paid", "/seats/*/household/interest_paid"),
+    ("/seats/*/modules/finance/bondage_years_left", "/seats/*/household/bondage_years_left"),
+    ("/seats/*/modules/finance/bondage_debt", "/seats/*/household/bondage_debt"),
+    ("/seats/*/modules/finance/credit_frozen_until", "/seats/*/household/credit_frozen_until"),
+    ("/seats/*/modules/finance/insolvent_years", "/seats/*/household/insolvent_years"),
+    ("/seats/*/modules/finance/last_settlement", "/seats/*/household/last_settlement"),
+    ("/seats/*/modules/finance/interest_arrears", "/seats/*/household/interest_arrears"),
+    ("/seats/*/modules/finance/arrears_years", "/seats/*/household/arrears_years"),
+    ("/seats/*/modules/finance/said_near_limit", "/seats/*/household/_said_near_limit"),
 ]
 
 IGNORED = [

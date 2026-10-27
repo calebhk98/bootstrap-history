@@ -5,8 +5,8 @@ multi-year step (`stops_a_step`). How a household's log and projects show them i
 import types
 import unittest
 
-from sim.engine.affordability import NEAR_LIMIT_FROM, near_limit
-from sim.engine.credit_freeze import halt_active_projects
+from sim.finance.affordability import NEAR_LIMIT_FROM, near_limit
+from sim.finance.credit_freeze import halt_active_projects
 from sim.refusal import LogLine
 from sim.ui.proto.event_kinds import stops_a_step
 

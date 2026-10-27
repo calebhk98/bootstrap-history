@@ -73,7 +73,7 @@ SHIPPED: List[Phase] = [
 	Phase("campaigns", WORLD, module_world_phase("campaigns")),
 	Phase("revolts", WORLD, module_world_phase("revolts")),
 	Phase("famine_watch", WORLD, module_world_phase("famine_watch")),
-	Phase("credit_limit", SEAT, lambda sim, seat_id: sim.enforce_credit_limit(sim.state.scenario.year)),
+	Phase("credit_limit", SEAT, module_seat_phase("credit_limit")),
 	Phase("advance_year", WORLD, _advance_year),
 ]
 
