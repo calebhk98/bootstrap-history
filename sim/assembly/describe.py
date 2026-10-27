@@ -22,6 +22,7 @@ def record(assembly: Assembly) -> Dict[str, Any]:
 		"adjusters": {view: [mod_id for mod_id, _function, _reads in entries] for view, entries in sorted(applied.adjusters.items())},
 		"provided": {point: [mod_id for mod_id, _function in entries] for point, entries in sorted(applied.provided.items())},
 		"withdrawn": dict(sorted(applied.withdrawn.items())),
+		"kernels": {name: mod_id for name, (mod_id, _function) in sorted(applied.kernels.items())},
 	}
 
 
@@ -36,6 +37,9 @@ def dependency_lines(assembly: Assembly) -> List[str]:
 		if spec.optional_reads:
 			lines.append("  reads if present: %s" % ", ".join("%s (%s)" % (name, assembly.provider_of(name) or "absent") for name in spec.optional_reads))
 		lines.append("  sends: %s" % ", ".join("%s (%s)" % (command.__name__, assembly.command_owner[command]) for command in spec.sends))
+		for kernel in spec.kernels:
+			replaced = assembly.applied.kernels.get(kernel.name)
+			lines.append("  kernel: %s%s" % (kernel.name, "" if replaced is None else " (replaced by mod %s)" % replaced[0]))
 		for mod_id, method in assembly.unstable.get(module_id, []):
 			lines.append("  unstable: mod %s overrides %s, which the module does not declare" % (mod_id, method))
 	return lines

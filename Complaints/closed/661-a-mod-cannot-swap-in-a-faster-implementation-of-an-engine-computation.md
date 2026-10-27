@@ -1,6 +1,20 @@
 # A mod cannot swap in a faster implementation of an engine computation
 
-**Status:** open - owner decision 2026-10-21: wanted, lower priority than the opening (473) and year speed (497)
+**Status:** closed - kernels exist: `sim/assembly/kernels.py` (`Kernel`, owned by a module through `ModuleSpec.kernels`), `api.kernel(name, function)` in `sim/engine/mod_code.py`, and two shipped kernels chosen by profile (`markets.fetch_wage`, `markets.least_cost_tree`, declared in `sim/markets/kernels.py`)
+
+## What was done (the five steps)
+
+1. A kernel is a `Kernel(name, reference, inputs, output, samples, tolerance, tolerance_reason, observe)`; the owning module calls it through the function the assembly binds (`Module.kernel(name)`, handed to the economy through `EconomySetup.kernels`), never the reference. Largest by profile of `step 2` on a saved Rome game (cProfile, 65 s): the labour market's import-cost wage `ImportCosts.wage` 17.9 s (28%, now `fetch_wage`), the merchants' route search `_candidate_routes` 8.8 s, of which the carriage table's least-cost search (`_cost_tree`, now `least_cost_tree`) is the pure part; `clear_goods` 3.5 s and the price solves are each under 6% and stay as they are. The rest of 497's profile is flat.
+2. Both kernels are plain functions of plain arguments (numbers, lists, lookups), moved from the old code with the same arithmetic order. Their sample calls are built in code (`fetch_wage_samples.py`, `routes_cost_tree_samples.py`), not captured from a game: a captured call would have to hold the year's hour schedules, which are closures.
+3. `api.kernel` records into the mod's `Operations`; assembly runs the replacement and the reference on every sample and refuses, naming the mod and the kernel, unless every answer is equal (or within the declared tolerance; both shipped kernels are exact). Two mods replacing one kernel, or a replacement of an undeclared kernel, is an error naming the parties.
+4. The active replacements are in `assembly_record` (`kernels`: name -> mod), so a save from a game with one is refused (`save_module_set`) by a game without it.
+5. `test_assembly_kernels` (the framework), `test_kernel_fetch_wage` and `test_kernel_least_cost_tree` (the rule tests on the samples) are quick-tier; `test_mod_kernels_smoke` builds games over consented code mods (equal replacement accepted and called in a stepped year, wrong one refused, two mods refused, save refused).
+
+## Limits
+
+- `markets.least_cost_tree` is handed to the economy's carriage table only. The demography module's urban search calls the same geography function with the reference (`sim/demography/urban.py`, `route_costs`), so a replacement does not reach it; Complaint 850.
+- A replacement is checked on the samples only; one equal there and different on real input is the mod's risk (`mods/README.md` names the fingerprint).
+
 
 A mod's code can add commands, actor kinds, policies, spawners, phases of the year and two providers (town size and
 externalities, which carry deaths and a harvest factor), and changes the world only through `api.effects` (`sim/engine/mod_code.py`, `mods/README.md`

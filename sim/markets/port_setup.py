@@ -257,6 +257,7 @@ def build_setup(sim, opening=None, production=None):
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
         tile_owners=sim.tile_owner_map(),
         world_map=world_map, improvements=dict(opening["ways"]),
+        kernels=dict(sim.bound_kernels()) if hasattr(sim, "bound_kernels") else {},
         site_limits=tuple(SiteLimit(*limit) for limit in opening["site_limits"]),
         opening_store_output={good: tuple(tuple(working) for working in entry["workings"])
                               for good, entry in sorted(opening["stores"].items()) if entry["workings"]},

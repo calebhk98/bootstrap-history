@@ -16,6 +16,7 @@ from sim.resources.api import DrawDeposit, FellTimber, RegrowTimber
 from .commands import (BuyMaterial, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale, NoteDraw,
                        NotePurchase, OpenMarketBook, RenameMarketSeat, RepriceOpeningMoney, ResetDraws, ResetMarketCaches,
                        SellMaterial)
+from .kernels import KERNELS
 from .module import Markets
 from .state import MarketsWorld
 
@@ -96,6 +97,7 @@ MODULE_SPECS = (ModuleSpec(
 	         (MarkMoneyPricedAtEconomy, "mark_money_priced_at_economy"), (BuyMaterial, "buy_material"),
 	         (SellMaterial, "sell_material")),
 	phases=(PhaseHook("market", "step_market"),),
+	kernels=KERNELS,
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(RecordFoodEaten, ClosePartnerBooks, CloseRealOutput, FinishWays, RepriceOpeningMoney, PayEdge, ReceiveFromEdge, ChangeStock, PayExchange, ReceiveFromExchange,
 	       SettleFlow, SettleTraderCargo, FellTimber, RegrowTimber, DrawDeposit, NoteFirstRuns),

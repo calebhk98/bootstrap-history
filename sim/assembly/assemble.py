@@ -3,6 +3,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from .clock import Clock
 from .errors import AssemblyError
+from .kernels import check_replacement
 from .module import Module
 from .needs import Needs, Point
 from .operations import Applied, apply_all
@@ -24,6 +25,8 @@ class Assembly:
 		self.point_owner: Dict[str, str] = {}
 		self.command_owner: Dict[type, str] = {}
 		self.handlers: Dict[type, Callable] = {}
+		self.kernel_owner: Dict[str, str] = {}
+		self.kernels: Dict[str, Callable] = {}                    # kernel name -> the function modules call: a mod's replacement, else the reference
 		self.unstable: Dict[str, List[Tuple[str, str]]] = {}     # module id -> (mod id, method) overrides outside the spec
 		self._phase_handlers: Optional[Dict[str, Callable]] = None
 
@@ -65,6 +68,25 @@ def _bind_names(assembly: Assembly) -> None:
 			if other is not None:
 				raise AssemblyError("modules %s and %s both apply %s" % (other, module_id, command.__name__))
 			assembly.command_owner[command] = module_id
+
+
+def _bind_kernels(assembly: Assembly) -> None:
+	"""One owner a kernel; each replacement named by a mod must be of a kernel some module declares and must answer its samples."""
+	declared = {}
+	for module_id, spec in assembly.applied.specs.items():
+		for kernel in spec.kernels:
+			if not kernel.name.startswith(module_id + "."):
+				raise AssemblyError("module %s declares the kernel %s; a module's kernels are named %s.<name>" % (module_id, kernel.name, module_id))
+			if kernel.name in declared:
+				raise AssemblyError("modules %s and %s both declare the kernel %s" % (assembly.kernel_owner[kernel.name], module_id, kernel.name))
+			declared[kernel.name] = kernel
+			assembly.kernel_owner[kernel.name] = module_id
+			assembly.kernels[kernel.name] = kernel.reference
+	for name, (mod_id, function) in sorted(assembly.applied.kernels.items()):
+		if name not in declared:
+			raise AssemblyError("mod %s replaces the kernel %s, which no module declares" % (mod_id, name))
+		check_replacement(declared[name], mod_id, function)
+		assembly.kernels[name] = function
 
 
 def _removal_note(assembly: Assembly, name: str = "", command: Optional[type] = None) -> str:
@@ -166,6 +188,7 @@ def _instantiate(assembly: Assembly) -> None:
 		instance = _implementation(assembly, module_id, spec)()
 		instance.module_id = module_id
 		instance.clock = assembly.clock
+		instance.kernels = {kernel.name: assembly.kernels[kernel.name] for kernel in spec.kernels}
 		assembly.modules[module_id] = instance
 	for module_id, spec in assembly.applied.specs.items():
 		for view_spec in spec.publishes:
@@ -213,6 +236,7 @@ def assemble(shipped: Sequence[ModuleSpec], operations: Sequence[Operations] = (
 	_bind_names(assembly)
 	_check_reads(assembly)
 	_check_view_cycles(assembly)
+	_bind_kernels(assembly)
 	_instantiate(assembly)
 	_wire(assembly)
 	for module in assembly.modules.values():

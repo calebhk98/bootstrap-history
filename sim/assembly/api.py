@@ -5,6 +5,7 @@ WALL = "two-way"  # nothing here imports sim/engine/ or another package
 from .assemble import Assembly, assemble
 from .clock import Clock
 from .describe import dependency_lines, record
+from .kernels import Kernel, Sample
 from .errors import AssemblyError, StaleView
 from .module import Module
 from .needs import Needs, Point

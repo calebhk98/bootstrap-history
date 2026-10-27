@@ -6,10 +6,8 @@ import heapq
 import math
 from typing import Dict, List, Optional, Sequence, Tuple
 
+from .fetch_wage import fetch_wage
 from .records import MarketState, YearInputs
-
-
-BISECTION_STEPS = 40      # a numerical bound: the search for the wage at which fetched hands fill a shortage
 
 
 class ImportCosts:
@@ -90,25 +88,6 @@ class ImportCosts:
             found = self._spare_sources[key] = (remaining, sum(remaining))
         return found
 
-    def _fills(self, area: str, trade: str, sources: Sequence[str], wanted: float, wage: float) -> bool:
-        """Whether the hours sold here and fetched from `sources` at a wage reach `wanted`. The sources are added in
-        turn and the count stops as soon as the answer cannot change: filled, or short even if every source still to
-        come gave all it could."""
-        own = self.hours_at(area, trade, wage)
-        remaining, to_come = self._spare_of(trade, sources)
-        slack = 1e-9 * (1.0 + abs(wanted))
-        if own + to_come < wanted - slack:
-            return False
-        fetched = 0.0
-        for other, cap in zip(sources, remaining):
-            to_come -= cap
-            fetched += max(0.0, self.hours_at(other, trade, wage) - self.wanted.get((other, trade), 0.0))
-            if own + fetched >= wanted:
-                return True
-            if own + fetched + to_come < wanted - slack:
-                return False
-        return own + fetched >= wanted
-
     def _fetched(self, area: str, trade: str, sources: Sequence[str], wage: float) -> float:
         """The hours the trade's workers in the `sources` areas can spare for `area` at a wage: those they sell
         at it beyond what their own employers bid for."""
@@ -122,43 +101,21 @@ class ImportCosts:
         hours; the more the wage, the more hours they sell. The cap is the lowest wage at which the hours the
         area's own workers sell and the hours fetched fill the hours wanted here. None where the workers on the
         spot sell enough at the going wage already, or the spare hands do not fill the shortage: the bids then
-        set the wage."""
+        set the wage. The search is the kernel `fetch_wage`, called as the year's inputs carry it."""
         inputs = self.inputs
-        wanted = self.wanted.get((area, trade), 0.0)
-        going = self.wages.get(area, {}).get(trade, 0.0)
-        if self.hours_at(area, trade, going) >= wanted:
-            return None
-        offers: List[Tuple[float, str]] = []
-        for moving_cost, other in self.reach(area):
-            wage = self.wages.get(other, {}).get(trade)
-            if wage is None:
-                continue
-            outside = inputs.subsistence_per_worker_year.get(other, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
-            offers.append((max(wage, outside) + moving_cost / self.career_hours, other))
-        sources: List[str] = []
-        lowest = going
-        for cost, other in sorted(offers):
-            # more sources never sell fewer hours, so the sources so far fill it only if they and the next do
-            if self._fills(area, trade, sources + [other], wanted, cost):
-                if self._fills(area, trade, sources, wanted, cost):
-                    return self._lowest_filling(area, trade, sources, wanted, lowest, cost)
-                return cost
-            sources.append(other)
-            lowest = cost
-        # past the dearest way in, a higher wage still draws more of the hours the workers keep back
-        top = self.most.get((area, trade), 0.0)
-        if top > lowest and self._fills(area, trade, sources, wanted, top):
-            return self._lowest_filling(area, trade, sources, wanted, lowest, top)
-        return None
 
-    def _lowest_filling(self, area: str, trade: str, sources: Sequence[str], wanted: float, low: float,
-                        high: float) -> float:
-        """The lowest wage in (low, high] at which the hours sold here and fetched from `sources` fill `wanted`,
-        found by bisection on a total that rises with the wage; `high` fills it."""
-        for _step in range(BISECTION_STEPS):
-            middle = (low + high) / 2.0
-            if self._fills(area, trade, sources, wanted, middle):
-                high = middle
-            else:
-                low = middle
-        return high
+        def offers() -> List[Tuple[float, str]]:
+            found: List[Tuple[float, str]] = []
+            for moving_cost, other in self.reach(area):
+                wage = self.wages.get(other, {}).get(trade)
+                if wage is None:
+                    continue
+                outside = inputs.subsistence_per_worker_year.get(other, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
+                found.append((max(wage, outside) + moving_cost / self.career_hours, other))
+            return found
+        search = inputs.fetch_wage or fetch_wage
+        return search(area, self.wanted.get((area, trade), 0.0), self.wages.get(area, {}).get(trade, 0.0),
+                      self.most.get((area, trade), 0.0), offers,
+                      lambda other, wage: self.hours_at(other, trade, wage),
+                      lambda other: self.wanted.get((other, trade), 0.0),
+                      lambda sources: self._spare_of(trade, sources))

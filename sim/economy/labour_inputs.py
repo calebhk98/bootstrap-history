@@ -49,7 +49,7 @@ def labour_context(setup, record, view, carriage, inputs, own_plot_options=None,
     subsistence = {labour_area(tile): cost for tile, cost in outside.items()}
     taxed = flight_routes.taxed_share_by_area(inputs.taxed_share_by_tile)
     return CoreInputs(
-        trades={}, bids=(),
+        trades={}, bids=(), fetch_wage=setup.kernels.get("markets.fetch_wage"),
         subsistence_per_worker_year=subsistence, taxed_share=taxed,
         ask_floor_per_worker_year={labour_area(tile): value for tile, value in plot.items()},
         hours_per_worker_year=setup.working_hours_per_year,
