@@ -23,6 +23,7 @@ from .staff_moves import (FOUNDER_DEAD, HOURS_NOT_POSITIVE, HOURS_SHORT, NO_SUCH
                           wage_work_blocker)
 from .staff_pay_rules import wage_bill_of, wage_for_hours_of
 from sim.constants import declare
+from sim.ledger.api import ReceiveFromEdge
 
 
 class WagesMixin(WageLedgerMixin):
@@ -115,7 +116,7 @@ class WagesMixin(WageLedgerMixin):
         workforce = self._world.workforce
         pay = self.wage_for_hours(trade, hours)
         revenue_before = self._world.revenue()
-        self._world.receive_from_edge(self._world.EDGE_EMPLOYERS, pay, "wages for your own work")
+        self._world.send(ReceiveFromEdge(self._world.EDGE_EMPLOYERS, pay, "wages for your own work"))
         workforce.wage_hours_this_year = workforce.wage_hours_this_year + hours
         workforce.wages_earned = (workforce.wages_earned or 0.0) + pay
         workforce.wage_income_this_year = workforce.wage_income_this_year + pay

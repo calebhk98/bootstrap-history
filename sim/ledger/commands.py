@@ -144,3 +144,21 @@ class WithdrawHouseholdMoney(Command):
 	"""The acting seat's household money falls by `amount` with no posting on the ledger's side: the money entered the
 	agent economy's own book at the same moment (a bank's capital)."""
 	amount: float
+
+
+@dataclass(frozen=True)
+class PayExchange(Command):
+    """An actor of the cast (named by its id) puts coin into the exchange edge, to be turned into the economy's unit for a
+    purchase: one posting in the actors' book, entered in the actor's outlays under `label`."""
+    actor: str
+    coin: float
+    label: str
+
+
+@dataclass(frozen=True)
+class ReceiveFromExchange(Command):
+    """The exchange edge turns the economy's unit back into coin for an actor of the cast (named by its id): one posting in the
+    actors' book, entered in the actor's income under `label`."""
+    actor: str
+    coin: float
+    label: str

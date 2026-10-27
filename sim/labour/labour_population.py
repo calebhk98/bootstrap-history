@@ -26,6 +26,7 @@ from sim.constants import declare, REGISTRY
 from . import legacy_trade_defaults, trade_data, trade_supply_rules
 from .hands import contracted_hours_of, hands_available
 from .workforce_spinup import FARM_TRADE
+from sim.ledger.api import PayEdge
 
 
 class PopulationMixin:
@@ -93,7 +94,7 @@ class PopulationMixin:
         workforce = self._world.workforce
         if seats <= 0 or cost > household.capital:
             return False, "cannot afford that trade school"
-        self._world.pay_edge(self._world.EDGE_WORKERS, cost, "trade schools")
+        self._world.send(PayEdge(self._world.EDGE_WORKERS, cost, "trade schools"))
         schools = workforce.trade_schools
         if schools is None:
             schools = workforce.trade_schools = {}

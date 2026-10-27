@@ -8,7 +8,7 @@ from unittest import mock
 
 from sim.agents.api import ActorRegistry, ActorsState, DUES_CAUSE
 from sim.engine.state import ActorRecord
-from sim.ledger.api import (PayActor, PayActorFromHousehold, RescaleHouseholdMoney, SettleWithEdge, TakeFromHouseholdPurse,
+from sim.ledger.api import (PayActor, PayActorFromHousehold, PayExchange, ReceiveFromExchange, RescaleHouseholdMoney, SettleWithEdge, TakeFromHouseholdPurse,
                             WithdrawHouseholdMoney)
 from sim.ledger.ledger import Ledger
 from sim.refusal import Refusal
@@ -95,6 +95,20 @@ class PayActorCommand(unittest.TestCase):
         module, opened = self.module()
         self.assertEqual(self.pay(module, "government:carthage"), [("trader", "government:carthage", 4.0, DUES_CAUSE)])
         self.assertEqual(opened, ["carthage"])
+
+
+class ExchangeCommands(unittest.TestCase):
+    def test_coin_put_into_the_exchange_leaves_the_actors_purse_and_is_an_outlay(self):
+        registry, _treasury, firm = society(500.0)
+        ledger_over(cast=registry).pay_exchange(PayExchange(firm.actor_id, 120.0, "market purchases"))
+        self.assertEqual(firm.money, 380.0)
+        self.assertEqual(firm.record.outlays, {"market purchases": 120.0})
+
+    def test_coin_the_exchange_returns_enters_the_purse_and_is_income_under_its_label(self):
+        registry, _treasury, firm = society(500.0)
+        ledger_over(cast=registry).receive_from_exchange(ReceiveFromExchange(firm.actor_id, 75.0, "market sales"))
+        self.assertEqual(firm.money, 575.0)
+        self.assertEqual(firm.record.income, {"market sales": 75.0})
 
 
 class SettleWithEdgeCommand(unittest.TestCase):

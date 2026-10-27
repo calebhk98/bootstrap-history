@@ -60,7 +60,7 @@ class TradeSchoolTests(unittest.TestCase):
             trade_available=lambda trade: True,
             _world=types.SimpleNamespace(wages={"chemist": 1.0}, trade_school_price_per_seat=lambda: 50.0,
                                          workforce=held, view=workforce_stand_in.view_of(held), state=types.SimpleNamespace(household=held), EDGE_WORKERS="workers",
-                                         pay_edge=lambda edge, cost, note: paid.append(cost)))
+                                         send=lambda command: paid.append(command.amount)))
         self.assertEqual(PopulationMixin.found_trade_school(stand_in, "chemist", 2), (True, None))
         self.assertEqual(held.trade_schools, {"chemist": 2.0})
         self.assertEqual(held.trades_created, {"chemist"})

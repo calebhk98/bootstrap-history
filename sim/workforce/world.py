@@ -6,7 +6,6 @@ engine-held facts labour writes (the farm's land, the year's farming technique, 
 `legacy_game` until their owners move."""
 from sim.agents.api import edges
 from sim.demography.api import rules as demography_rules
-from sim.ledger.api import PayEdge, ReceiveFromEdge
 from sim.prices.api import solve_prices_core
 from .commands import BuildHousing
 
@@ -261,14 +260,6 @@ class WorkforceWorld:
 
     def refusal_text(self, what, cost):
         return self._needs.purchase_refusal(what, cost)
-
-    def pay_edge(self, edge_name, amount, purpose):
-        """The acting seat's household pays a named edge."""
-        self._needs.send(PayEdge(edge_name, amount, purpose))
-
-    def receive_from_edge(self, edge_name, amount, purpose):
-        """A named edge pays the acting seat's household."""
-        self._needs.send(ReceiveFromEdge(edge_name, amount, purpose))
 
     def harvest_share_taken(self, material):
         """Share of the harvest of a material the home state's forms take from growers; none without a government."""

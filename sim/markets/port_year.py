@@ -10,7 +10,8 @@ import math
 import os
 
 from sim.actors import api as actors_api
-from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR, EDGE_EXCHANGE as COIN_EXCHANGE, PURSE_CURRENCY
+from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR, PURSE_CURRENCY
+from sim.ledger.api import PayExchange, ReceiveFromExchange
 from sim.constants import declare
 from sim.economy import api as economy_api
 from sim.rekey import rekey
@@ -278,10 +279,8 @@ class AgentEconomy(TilePricesMixin):
         purchase_orders, funding = port_actors.purchase_orders(
             economy, purchases, tonnes_per_unit, self._actor_tile, sim.economy.materials_in, coin)
         economy_api.move_goods(economy, moves)
-        purses = sim.actors.state.purses
         for buyer, coin_spent, _units in funding:
-            purses.transfer(buyer, COIN_EXCHANGE, coin_spent, "exchange")
-            known[buyer].note_outlay("market purchases", coin_spent)
+            sim.send(PayExchange(buyer, coin_spent, "market purchases"))
         port_actors.fund(economy, funding)
         orders.update(sale_orders)
         orders.update(purchase_orders)
@@ -293,11 +292,9 @@ class AgentEconomy(TilePricesMixin):
         proceeds, refunds, _bought, delivered = port_actors.close(self._economy, sales, purchases)
         self._keep_deliveries(delivered)
         coin = self._economy.setup.coin_per_unit
-        purses, known = self._sim.actors.state.purses, self._sim.actors.actors
         for amounts, label in ((proceeds, "market sales"), (refunds, "market purchases returned")):
             for actor_id, units in sorted(amounts.items()):
-                purses.transfer(COIN_EXCHANGE, actor_id, units * coin, "exchange")
-                known[actor_id].note_income(label, units * coin)
+                self._sim.send(ReceiveFromExchange(actor_id, units * coin, label))
 
     def _keep_deliveries(self, delivered):
         """Goods a buyer that keeps its purchases bought at the market join its stores, in tonnes."""

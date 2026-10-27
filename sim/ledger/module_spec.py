@@ -1,8 +1,8 @@
 """The ledger's module spec (sim/assembly)."""
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, ViewSpec
 
-from .commands import (BankStock, ChangeStock, PayActor, PayActorFromEdge, PayActorFromHousehold, PayEdge, PayEdgeFrom, PayWages,
-                       ReceiveFromEdge, RescaleHouseholdMoney, SettleWithEdge, TakeFromHouseholdPurse, WithdrawHouseholdMoney)
+from .commands import (BankStock, ChangeStock, PayActor, PayActorFromEdge, PayActorFromHousehold, PayEdge, PayEdgeFrom, PayExchange, PayWages,
+                       ReceiveFromEdge, ReceiveFromExchange, RescaleHouseholdMoney, SettleWithEdge, TakeFromHouseholdPurse, WithdrawHouseholdMoney)
 from .ledger import MONEY, STOCK, Ledger
 
 LEGACY_READS = ("legacy_acting_household", "legacy_household_actor", "legacy_edge_account", "cast", "legacy_seats", "seat_party",
@@ -22,7 +22,7 @@ MODULE_SPECS = (ModuleSpec(
 	applies=((PayEdge, "pay_edge"), (PayEdgeFrom, "pay_edge_from"), (PayActorFromEdge, "pay_actor_from_edge"), (PayActor, "pay_actor"),
 	         (PayActorFromHousehold, "pay_actor_from_household"), (TakeFromHouseholdPurse, "take_from_household_purse"),
 	         (SettleWithEdge, "settle_with_edge"), (RescaleHouseholdMoney, "rescale_household_money"),
-	         (WithdrawHouseholdMoney, "withdraw_household_money"), (ReceiveFromEdge, "receive_from_edge"), (PayWages, "pay_wages"),
+	         (WithdrawHouseholdMoney, "withdraw_household_money"), (PayExchange, "pay_exchange"), (ReceiveFromExchange, "receive_from_exchange"), (ReceiveFromEdge, "receive_from_edge"), (PayWages, "pay_wages"),
 	         (ChangeStock, "change_stock"), (BankStock, "bank_stock")),
 	reads=LEGACY_READS,
 ),)

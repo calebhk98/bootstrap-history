@@ -4,7 +4,7 @@ Until the founder's purse and tonnes ledger move into the ledger's own state, it
 bridge's `legacy_*` views; those reads go when the state moves (docs/architecture/MODULE_MIGRATION_TASKS.md)."""
 from typing import Any
 
-from sim.agents.api import GOVERNMENT_PREFIX, edges, ledger
+from sim.agents.api import EDGE_EXCHANGE, GOVERNMENT_PREFIX, edges, ledger
 from sim.assembly.api import Module
 from sim.refusal import Refusal
 
@@ -76,6 +76,18 @@ class Ledger(Module):
 		household = self.needs.legacy_household_actor()
 		household.money = household.money - command.amount
 		self.bump_seat(MONEY)
+
+	def pay_exchange(self, command: Any) -> None:
+		cast = self.needs.cast()
+		cast.state.purses.transfer(command.actor, EDGE_EXCHANGE, command.coin, "exchange")
+		cast.actors[command.actor].note_outlay(command.label, command.coin)
+		self.bump(MONEY)
+
+	def receive_from_exchange(self, command: Any) -> None:
+		cast = self.needs.cast()
+		cast.state.purses.transfer(EDGE_EXCHANGE, command.actor, command.coin, "exchange")
+		cast.actors[command.actor].note_income(command.label, command.coin)
+		self.bump(MONEY)
 
 	def receive_from_edge(self, command: Any) -> None:
 		ledger.transfer(self.edge(command.edge), self.needs.legacy_acting_household(), command.amount, command.purpose)
