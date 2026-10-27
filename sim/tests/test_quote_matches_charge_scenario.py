@@ -6,6 +6,9 @@ that spends, and the reply key holding the quoted price; the rows share one game
 through the cash ledger (open, research and project bills, the hire wage). The price
 rules each quote reads are in the tests of the module that prices it (test_purchase_reads_economy_price, test_physical_money_constants).
 """
+from unittest import mock
+
+from sim.finance import credit_line as finance_credit_line
 from .harness import *  # noqa: F401,F403
 
 _CAPITAL = 4000000.0
@@ -94,7 +97,6 @@ def _ledger_outflow(game, *causes):
 def _ledger_game():
     game = unopened_sim(capital=_CAPITAL, surveyed=())
     game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
-    game.LIVING_COST_STATUS_PER_CAPITAL = 0.0   # status spending follows cash, which a charge changes
     game.HOUSEHOLD_DEPENDANT_PEOPLE = 0.0   # a hire's takings carry some dependants, which would offset part of its wage
     return game
 
@@ -137,7 +139,7 @@ def _run_project(node_id):
         game.assembly.phase_handler("seat_prelude")(game.state.acting_seat)
         game.assembly.phase_handler("start_projects")(game.state.acting_seat)
         game.assembly.phase_handler("materials")(game.state.acting_seat)
-        game._step_material_shortage_notes()
+        game.assembly.phase_handler("material_shortage_notes")(game.state.acting_seat)
         game._run_seat_work()
     return game, quoted, reply
 
@@ -171,11 +173,13 @@ for (_label, _test), _node_id in zip(_PROJECT_TESTS, _PROJECT_NODES):
           abs(_paid - _quoted) <= 0.11, (_paid, _quoted))
 
 # The hire's yearly wage: the fee plus what the first year's payroll adds beyond it is the quoted wage.
-_hired, _twin = _ledger_game(), _ledger_game()
-_hire_quote = S._agent_dispatch(_hired, NODES, {"cmd": "quote", "what": "hire", "trade": "smith", "n": 1})
-S._agent_dispatch(_hired, NODES, {"cmd": "hire", "trade": "smith", "n": 1})
-for _game in (_hired, _twin):
-    _game._step_money_seat()   # the year's wages and living costs, which is where the hire's charge lands
+# status spending follows cash, which the fee changes; finance reads the rate from its own constants
+with mock.patch.object(finance_credit_line, "LIVING_COST_STATUS_PER_CAPITAL", 0.0):
+    _hired, _twin = _ledger_game(), _ledger_game()
+    _hire_quote = S._agent_dispatch(_hired, NODES, {"cmd": "quote", "what": "hire", "trade": "smith", "n": 1})
+    S._agent_dispatch(_hired, NODES, {"cmd": "hire", "trade": "smith", "n": 1})
+    for _game in (_hired, _twin):
+        _game._step_money_seat()   # the year's wages and living costs, which is where the hire's charge lands
 _hire_charged = (_ledger_outflow(_hired, "hiring fee and first year's wages")
                  + _ledger_outflow(_hired, "living costs") - _ledger_outflow(_twin, "living costs"))
 check("hire wage: the first year's charge through the ledger is the quoted yearly wage",
