@@ -22,7 +22,7 @@ def run_year_or_undo(sim, held, run_year, years_ran):
     try:
         run_year()
     except Exception as error:  # the year is undone whole; the years before it stand
-        return failed_year(sim, held, error, sim.year, years_ran)
+        return failed_year(sim, held, error, sim.view("year")(), years_ran)
     return None
 
 

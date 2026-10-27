@@ -1,6 +1,7 @@
 """The dealings commands: patents, offers and shares. A seat deals through the same exchange every actor uses."""
 
 from .command_registry import command
+from sim.engine import ui_port
 
 
 def _share(cmd, key="share"):
@@ -28,8 +29,8 @@ def _price(cmd):
 def _cmd_patent(sim, nodes, cmd, ended):
     node_id = cmd.get("id")
     if node_id is None:
-        return dict(sim.dealings_listing(), ok=True)
-    return sim.seat_patent(node_id)
+        return dict(sim.view("dealings_listing")(), ok=True)
+    return sim.send(ui_port.ApplyForPatent(node_id))
 
 
 @command("offer", group="society",
@@ -43,7 +44,7 @@ def _cmd_patent(sim, nodes, cmd, ended):
          description="The offer waits two years in the receiver's offers. An AI actor answers at the next year's turn: "
                      "it takes an offer worth more to it than it costs. Another player answers with accept or decline.")
 def _cmd_offer(sim, nodes, cmd, ended):
-    return sim.seat_offer(cmd.get("to"), cmd.get("give"), cmd.get("take"))
+    return sim.send(ui_port.MakeOffer(cmd.get("to"), cmd.get("give"), cmd.get("take")))
 
 
 @command("offers", shape="bare", group="society",
@@ -51,7 +52,7 @@ def _cmd_offer(sim, nodes, cmd, ended):
          usage=["offers", '{"cmd":"offers"}'], options={},
          description="Lists each offer made to your seat, with who made it and what it gives and asks.")
 def _cmd_offers(sim, nodes, cmd, ended):
-    return {"ok": True, "offers": sim.dealings_listing()["offers"]}
+    return {"ok": True, "offers": sim.view("dealings_listing")()["offers"]}
 
 
 @command("accept", group="society",
@@ -60,7 +61,7 @@ def _cmd_offers(sim, nodes, cmd, ended):
          options={"<offer id>": "an id from offers"},
          description="Both sides are checked again and nothing moves unless everything still holds.")
 def _cmd_accept(sim, nodes, cmd, ended):
-    return sim.seat_answer(cmd.get("offer"), True)
+    return sim.send(ui_port.AnswerOffer(cmd.get("offer"), True))
 
 
 @command("decline", group="society",
@@ -69,7 +70,7 @@ def _cmd_accept(sim, nodes, cmd, ended):
          options={"<offer id>": "an id from offers"},
          description="The offer is dropped and nothing moves.")
 def _cmd_decline(sim, nodes, cmd, ended):
-    return sim.seat_answer(cmd.get("offer"), False)
+    return sim.send(ui_port.AnswerOffer(cmd.get("offer"), False))
 
 
 @command("shares", group="society",
@@ -83,15 +84,15 @@ def _cmd_decline(sim, nodes, cmd, ended):
 def _cmd_shares(sim, nodes, cmd, ended):
     what = cmd.get("do")
     if what is None:
-        return dict(sim.dealings_listing(), ok=True)
+        return dict(sim.view("dealings_listing")(), ok=True)
     share, price = _share(cmd), _price(cmd)
     if share is None or price is None:
         return {"ok": False, "error": "share is a part of the equity above 0 and at most 1, and price is not negative"}
     if what == "issue":
-        return sim.seat_offer(cmd.get("to"), {"shares": {sim.state.acting_seat: share}}, {"money": price})
+        return sim.send(ui_port.MakeOffer(cmd.get("to"), {"shares": {sim.state.acting_seat: share}}, {"money": price}))
     if what == "buy":
         issuer = cmd.get("issuer")
         if not isinstance(issuer, str) or not issuer:
             return {"ok": False, "error": "name the issuer whose shares you want"}
-        return sim.seat_offer(cmd.get("from") or issuer, {"money": price}, {"shares": {issuer: share}})
+        return sim.send(ui_port.MakeOffer(cmd.get("from") or issuer, {"money": price}, {"shares": {issuer: share}}))
     return {"ok": False, "error": "do is issue or buy"}

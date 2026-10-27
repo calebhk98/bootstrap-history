@@ -15,6 +15,7 @@ from sim.engine.ui_port import knowledge_loss_warning
 from .scandal_trend import years_until_scandal_crosses_the_line
 from .step_alerts import demographic_emergency
 from .state_succession import succession_block
+from .util import known
 
 
 def _agent_state_founder(sim):
@@ -24,13 +25,13 @@ def _agent_state_founder(sim):
     return {
         "seat": sim.state.acting_seat,
         "seat_count": len(sim.state.seats),
-        "founder_alive": sim.founder_alive,
-        "founder_age": (sim.founder_age()
-                        if sim.founder_alive and not sim.cfg.get("immortal", True) else None),
+        "founder_alive": sim.view("founder")()["alive"],
+        "founder_age": (sim.view("patronage")()["founder_age"]
+                        if sim.view("founder")()["alive"] and not sim.view("game_config")().get("immortal", True) else None),
         "founder_usual_age_at_death": (
-            [round(sim.cfg["founder_arrival_age"] + sim.cfg["founder_life_mean"] - sim.cfg["founder_life_sd"]),
-             round(sim.cfg["founder_arrival_age"] + sim.cfg["founder_life_mean"] + sim.cfg["founder_life_sd"])]
-            if not sim.cfg.get("immortal", True) else None),
+            [round(sim.view("game_config")()["founder_arrival_age"] + sim.view("game_config")()["founder_life_mean"] - sim.view("game_config")()["founder_life_sd"]),
+             round(sim.view("game_config")()["founder_arrival_age"] + sim.view("game_config")()["founder_life_mean"] + sim.view("game_config")()["founder_life_sd"])]
+            if not sim.view("game_config")().get("immortal", True) else None),
         # THE AGE ITSELF, AS A FIELD, not only inside a log sentence a script
         # would have to parse. See _founder_death_info.
         "founder_died_aged": (_founder_death_info(sim) or {}).get("aged_about"),
@@ -51,7 +52,7 @@ def _agent_state_standing(sim):
     # reply most often bumping the "state full stays readable" byte budget)
     # pays nothing for a mechanism that has not fired yet - same pattern as
     # _worth_knowing_early just below.
-    _wd = sim.world_diffusion_report()
+    _wd = sim.view("diffusion_report")()
     return {
         # NO "suspicion" FIELD: `scandal` is the live mechanic (see core.py:
         # "doing something a society cannot explain is alarming; doing a
@@ -59,9 +60,9 @@ def _agent_state_standing(sim):
         # to 0.0 at startup and never written again - reporting a dead
         # number every turn is worse than not having it: it teaches the
         # player that a live mechanic is broken.
-        "reputation": round(sim.reputation, 1),
-        "scandal": round(sim.scandal, 2), "eminence": round(sim.eminence, 2),
-        "protection": round(sim.protection, 3), "familiarity": round(sim.familiarity, 3),
+        "reputation": round(sim.view("standing")()["reputation"], 1),
+        "scandal": round(sim.view("standing")()["scandal"], 2), "eminence": round(sim.view("eminence")(), 2),
+        "protection": round(sim.view("standing")()["protection"], 3), "familiarity": round(sim.view("standing")()["familiarity"], 3),
         # HOW EDUCATED THIS SOCIETY IS, AND HOW FAR THAT COULD GO: the
         # ceiling has to be shown alongside the current figure, not just
         # the figure alone, or a founder watching literacy_general climb
@@ -69,10 +70,10 @@ def _agent_state_standing(sim):
         # a mechanism that has already maxed out. See
         # SocietyMixin.literacy_ceiling_general/_elite (society.py).
         "literacy": {
-            "general": round(float(sim.literacy("literacy_general")), 3),
-            "general_ceiling_now": round(sim.literacy_ceiling_general(), 3),
-            "elite": round(float(sim.literacy("literacy_elite")), 3),
-            "elite_ceiling": round(sim.literacy_ceiling_elite(), 3),
+            "general": round(float(sim.view("literacy")("literacy_general")), 3),
+            "general_ceiling_now": round(sim.view("literacy_ceiling")["literacy_general"], 3),
+            "elite": round(float(sim.view("literacy")("literacy_elite")), 3),
+            "elite_ceiling": round(sim.view("literacy_ceiling")["literacy_elite"], 3),
             "schools_actually_teaching": ui_port.schooling_flow(sim) > 0.0,
             "farm_share_of_working_hours": round(sim.labour.farm_share_of_hours(), 3),
         },
@@ -81,7 +82,7 @@ def _agent_state_standing(sim):
         # moves this; it is not yet spent anywhere in this engine's own
         # pricing, only reported, because that spending is another agent's
         # seam to wire in (see that function's own docstring).
-        "diffusion_index": round(sim.diffusion_index(), 3),
+        "diffusion_index": round(sim.view("diffusion_index")["venture"], 3),
         # THE COUNTRY, NOT ONLY YOUR OWN MARKET SHARE. Present only once
         # something the founder built has actually begun to spread - see
         # world_diffusion_report's own docstring for the None gate.
@@ -98,9 +99,9 @@ def _agent_state_progress(sim, active):
         # and technologies actually earned must not be conflated - "you
         # have 140 technologies" and "you have built 3 technologies" are
         # very different situations.
-        "done_count": len(sim.done),
-        "done_granted": len(sim.granted & sim.done),
-        "done_earned": len(sim.done - sim.granted),
+        "done_count": len(sim.view("techniques_held")()),
+        "done_granted": len(sim.view("techniques_granted")() & sim.view("techniques_held")()),
+        "done_earned": len(sim.view("techniques_held")() - sim.view("techniques_granted")()),
         "active": active,
         # STAFF IS NOT A TECHNICAL PREREQUISITE, so it appears in no
         # dependency list, and the remedy for a stalled ceiling only ever
@@ -111,7 +112,7 @@ def _agent_state_progress(sim, active):
             "scholars": sim.labour.staff_advice("scholars"),
             "artisans": sim.labour.staff_advice("artisans"),
         },
-        "where_the_money_comes_from": sim.revenue_sources(),
+        "where_the_money_comes_from": sim.view("revenue_sources")(),
         "employees": {trade: round(value, 2) for trade, value in sorted(sim.view("staff")()["employees"].items()) if value > 0.005},
         "employees_total": round(sum(sim.view("staff")()["employees"].values()), 2),
         "household_places_used_of_all": "%.1f of %.1f"
@@ -145,10 +146,10 @@ def _agent_state_progress(sim, active):
         # been established long enough, with schools actually running, it
         # stops being only the founder's secret.
         "trades_society_now_has_on_its_own": sorted(sim.view("trade_spread")()["endemic"]),
-        "mothballed": sorted(getattr(sim, "mothballed", set())),
-        "policy": dict(sim.policy),
-        "in_bondage_for_debt": round(sim.bondage_years_left, 1),
-        "debt_still_to_work_off": round(sim.bondage_debt, 1),
+        "mothballed": sorted(sim.view("mothballed")()),
+        "policy": dict(sim.view("founder")()["policy"]),
+        "in_bondage_for_debt": round(sim.view("debt_status")()["bondage_years_left"], 1),
+        "debt_still_to_work_off": round(sim.view("debt_status")()["bondage_debt"], 1),
     }
 
 
@@ -167,40 +168,40 @@ def _agent_state_risk_and_pressure(sim, full=True):
         # a dispersed academy network cuts it by a third, and getting close
         # to the throne raises it by half. An unseen lever is not a
         # choice.
-        "prominence": sim.eminence_report(),
+        "prominence": sim.view("eminence_report")(),
         # THE OTHER HALF OF BEING LARGE: eminence_report() above is the
         # court's jealousy of a great man; this is the treasury's own
         # interest in a large enterprise - requisition, a pressed office, a
         # demand for military supply, and confiscation as a tail risk at
         # the top of the same scale. See SocietyMixin.state_pressure_report
         # (society.py).
-        "state_attention": sim.state_pressure_report(),
-        "credit_limit": round(sim.credit_limit(), 1),
-        "debt_interest_rate": round(sim.debt_interest_rate(), 4),
-        "interest_paid_total": round(getattr(sim, "interest_paid", 0.0), 1),
+        "state_attention": sim.view("state_pressure_report")(),
+        "credit_limit": round(sim.view("credit_limit")(), 1),
+        "debt_interest_rate": round(sim.view("debt_interest_rate")(), 4),
+        "interest_paid_total": round(known(sim.view("debt_status")()["interest_paid"], 0.0), 1),
         # WITHOUT THE HISTORY ESSAYS: each dated hazard carries a real
         # historical note, several of them a couple of hundred words, and
         # embedding the lot here would balloon a `state full` reply to tens
         # of thousands of bytes. The numbers stay; the prose lives in
         # `risk`, which is the command you type when you want it.
-        "knowledge_risk": _risk_without_the_essays(sim.knowledge_risk(advice=False, chronology=full)),
+        "knowledge_risk": _risk_without_the_essays(sim.view("knowledge_risk")(False, full)),
         # THE OTHER HAZARD THAT ENDS THE RUN, on the same screen as the one that
         # already explains itself. See step() 6.
-        "scandal_danger": sim.cfg["suspicion_danger"],
+        "scandal_danger": sim.view("game_config")()["suspicion_danger"],
         "chance_of_being_denounced_this_year": round(
-            max(0.0, (sim.scandal - sim.cfg["suspicion_danger"]) / sim.SCANDAL_HAZARD_SCALE), 4),
+            max(0.0, (sim.view("standing")()["scandal"] - sim.view("game_config")()["suspicion_danger"]) / ui_port.polity_constants.SCANDAL_HAZARD_SCALE), 4),
         # AND WHICH WAY IT IS GOING: the chance above is computed from where
         # scandal stands now, and the roll happens after a year in which it
         # moves, so the figure alone is honest about today and blind to the
         # step about to happen - a reading of "0%" can still be followed by
         # denunciation inside one step if scandal is rising fast. The trend
         # has to be shown too.
-        "scandal_now": round(sim.scandal, 1),
+        "scandal_now": round(sim.view("standing")()["scandal"], 1),
         "scandal_rose_by_last_year": (
-            round(sim.scandal - sim.scandal_last_year, 1)
-            if getattr(sim, "scandal_last_year", None) is not None else None),
+            round(sim.view("standing")()["scandal"] - sim.view("standing")()["scandal_last_year"], 1)
+            if sim.view("standing")()["scandal_last_year"] is not None else None),
         "years_until_scandal_crosses_the_line": years_until_scandal_crosses_the_line(
-            sim.scandal, getattr(sim, "scandal_last_year", None), sim.cfg["suspicion_danger"]),
+            sim.view("standing")()["scandal"], sim.view("standing")()["scandal_last_year"], sim.view("game_config")()["suspicion_danger"]),
         "resource_throttle": round(sim.view("material_throttle")(), 3), "throttle_binding": sim.view("material_binding")(),
         "forest_ha": round(sim.view("forest_hectares")(), 1),
         "mine_capacity": {material: round(value, 1) for material, value in sim.view("mine_capacity")().items()},
@@ -214,13 +215,13 @@ def _agent_state_goal(sim, nodes, end_reason):
     whether the run itself has ended.
     """
     return {
-        "founder_ages": not sim.cfg.get("immortal", True),
-        "goal": None if sim.fog else sim.goal,
+        "founder_ages": not sim.view("game_config")().get("immortal", True),
+        "goal": None if sim.view("legacy_fog")() else sim.view("goal")()["node"],
         # The NAME, not the id, so it survives fog without handing back the
         # prerequisite crawl the visibility guard exists to stop.
-        "goal_in_words": (sim.nodes[sim.goal]["name"]
-                          if sim.goal in sim.nodes else None),
-        "goal_reached": sim.goal_year is not None, "goal_year": sim.goal_year,
+        "goal_in_words": (sim.view("tree_nodes")()[sim.view("goal")()["node"]]["name"]
+                          if sim.view("goal")()["node"] in sim.view("tree_nodes")() else None),
+        "goal_reached": sim.view("goal")()["year"] is not None, "goal_year": sim.view("goal")()["year"],
         # THE FOG-SAFE VERSION OF final_report's "146 nodes in all; you had
         # 122": the TOTAL is withheld until the run ends on purpose,
         # because it is the size of the tree's own spoiler surface (same
@@ -231,8 +232,8 @@ def _agent_state_goal(sim, nodes, end_reason):
         # all and never which ones remain - you get a sense of progress
         # without being handed a map.
         "on_the_road_to_the_goal_so_far": (
-            _goal_progress_count(sim, nodes) if sim.fog else None),
-        "fog_of_war": sim.fog,
+            _goal_progress_count(sim, nodes) if sim.view("legacy_fog")() else None),
+        "fog_of_war": sim.view("legacy_fog")(),
         "manual": sim.manual, "ended": end_reason is not None, "end_reason": end_reason,
     }
 
@@ -290,7 +291,7 @@ def _agent_state(sim, nodes, cmd=None):
     active = _agent_state_active_projects(sim, nodes)
     end_reason = _agent_end_reason(sim)
     full = bool((cmd or {}).get("full"))
-    end_year = getattr(sim, "end_year", sim.cfg["start_year"] + sim.cfg["horizon_years"])
+    end_year = sim.view("horizon_end_year")()
     out = {}
     out.update(_agent_state_headline_money(sim, end_year))
     out.update(_agent_state_operations(sim, nodes))
@@ -315,7 +316,7 @@ def _agent_state(sim, nodes, cmd=None):
     conditions = shortage_condition_rows(sim)
     if conditions:
         out["conditions"] = conditions
-    living_stock = sim.held_living_stock()
+    living_stock = sim.view("held_living_stock")()
     if living_stock:
         out["living_stock"] = living_stock
     return _agent_state_shorten(out, full)

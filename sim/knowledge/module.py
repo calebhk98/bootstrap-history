@@ -29,6 +29,10 @@ class Knowledge(Module):
         """The nodes the acting seat holds, finished or granted (the live set)."""
         return self.needs.legacy_projects().done
 
+    def techniques_revealed(self):
+        """The nodes the acting seat has heard of under fog (the live set)."""
+        return self.needs.legacy_projects().revealed
+
     def techniques_granted(self):
         """The held nodes its country already had, which are never counted as earned and never lost to a sack."""
         return self.needs.legacy_projects().granted

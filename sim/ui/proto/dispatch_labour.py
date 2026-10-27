@@ -40,7 +40,7 @@ def _cmd_work(sim, nodes, cmd, ended):
     if err and pay <= 0:
         return {"ok": False, "error": err}
     out = {"ok": True, "trade": cmd.get("trade"), "hours": cmd.get("hours"),
-           "earned": round(pay, 1), "capital": round(sim.capital, 1),
+           "earned": round(pay, 1), "capital": round(sim.view("acting_balance")(), 1),
            "your_hours_left_this_year": round(
                max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed()), 1),
            "lands_at_next_step": "Capital above already includes the wage. Hours sold here are hours your "
@@ -130,7 +130,7 @@ def _cmd_allocate(sim, nodes, cmd, ended):
     if target_id not in nodes:
         return {"ok": False, "error": Refusal("unknown_node", "unknown node id %r. 'state' lists "
                                               "what is active" % target_id)}
-    if target_id not in sim.active:
+    if target_id not in sim.view("active_projects")():
         return {"ok": False,
                 "error": Refusal("project_not_active", "%s is not active, so there is nothing for a "
                                  "directive to apply to yet. 'start' it first, "
@@ -140,7 +140,7 @@ def _cmd_allocate(sim, nodes, cmd, ended):
         return ({"ok": True, "cleared": target_id, "had_been_a_year": had}
                 if had else {"ok": True, "cleared": target_id})
     hours, capped_from = capped_to_useful(
-        hours, sim.project_useful_hours(target_id) if cmd.get("useful") else 0.0, bool(cmd.get("useful")))
+        hours, sim.view("project_useful_hours")(target_id) if cmd.get("useful") else 0.0, bool(cmd.get("useful")))
     sim.send(AllocateHours(target_id, float(hours)))
     return {"ok": True, "set": target_id, "name": nodes[target_id]["name"],
             "hours_a_year": float(hours),
@@ -181,9 +181,9 @@ def _cmd_labour(sim, nodes, cmd, ended):
             entry["wage_foundation"] = {
                 "base_for_skill_and_difficulty": round(sim.labour.base_annual_wage(trade), 2),
                 **{factor_key: round(value, 3) for factor_key, value in sim.labour.market.cost_factors(trade).items()},
-                "demographic_scarcity": round(sim.wage_index, 3),
+                "demographic_scarcity": round(sim.view("wage_index")(), 3),
                 "local_trade_scarcity": round(_lpf, 3),
-                "society_price_level": round(sim.price_index, 3),
+                "society_price_level": round(sim.view("price_index")(), 3),
             }
         # SAME EXPLANATION AS THE FULL LIST'S, for whoever asks about
         # one trade without ever asking for all of them - see
@@ -397,7 +397,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
 def _cmd_hire(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    if not sim.founder_alive and not sim.deputies_carry_the_work():
+    if not sim.view("founder")()["alive"] and not sim.view("patronage")()["deputies_carry_the_work"]:
         return {"ok": False,
                 "error": "there is nobody left to take anyone on: the "
                          "founder is dead and no deputy remains to direct "
@@ -422,7 +422,7 @@ def _cmd_hire(sim, nodes, cmd, ended):
     sim.send(RecordEvent.of("hire_ordered", err or ("hired %s %s" % (cmd.get("n"), cmd.get("trade")))))
     hired_count = round(sim.view("staff")()["employees"].get(trade_id, 0.0) - headcount_before)
     return hire_reply(hired_count, quantity, cmd.get("trade"), sim.view("staff")()["employees"].get(trade_id, 0.0), sim.labour.wage_bill(),
-                      fee_paid, sim.labour.wage_bill() - wages_before, sim.capital, err)
+                      fee_paid, sim.labour.wage_bill() - wages_before, sim.view("acting_balance")(), err)
 
 
 
@@ -438,7 +438,7 @@ def _cmd_fire(sim, nodes, cmd, ended):
     fired, err = sim.labour.fire(cmd.get("trade"), quantity)
     if not fired:
         return {"ok": False, "error": err}
-    advance_credit = min(sim.living_cost(), sim.view("pay_book")()["prepaid"])
+    advance_credit = min(sim.view("living_cost")(), sim.view("pay_book")()["prepaid"])
     # Same reasoning as `hire` above: `err` here is fire()'s own success
     # message, which says exactly what happened - staff let go, an
     # apprenticeship cancelled, or both - and cmd["n"] alone would not.
@@ -473,12 +473,12 @@ def _cmd_train(sim, nodes, cmd, ended):
     plan, _refusal = sim.labour.train_check(cmd.get("trade"), quantity, cmd.get("from"))
     wage_bill_added = (sim.labour.trainee_wage_bill(str(cmd.get("trade")).strip().lower(), plan["count"])
                        if plan else 0.0)
-    capital_before = sim.capital
+    capital_before = sim.view("acting_balance")()
     trained, msg = sim.labour.train(cmd.get("trade"), quantity, cmd.get("from"))
     if not trained:
         return {"ok": False, "error": msg}
-    out = {"ok": True, "training": msg, "capital": round(sim.capital, 1),
-           "paid_now": round(capital_before - sim.capital, 1),
+    out = {"ok": True, "training": msg, "capital": round(sim.view("acting_balance")(), 1),
+           "paid_now": round(capital_before - sim.view("acting_balance")(), 1),
            "wage_bill_added_per_year": round(wage_bill_added, 1),
            "your_hours_left_this_year": round(
                max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed()), 1)}
@@ -520,7 +520,7 @@ def _cmd_commission(sim, nodes, cmd, ended):
     commissioned, msg = sim.labour.commission(cmd.get("trade"), hours)
     if not commissioned:
         return {"ok": False, "error": msg}
-    return {"ok": True, "commissioned": msg, "capital": round(sim.capital, 1),
+    return {"ok": True, "commissioned": msg, "capital": round(sim.view("acting_balance")(), 1),
             "paid_now": round(fee_paid, 1), "note": COMMISSION_NOTE}
 
 
@@ -551,7 +551,7 @@ def _cmd_move_base(sim, nodes, cmd, ended):
                    "people": round(people[tile]),
                    "days_on_the_road": round(days), "your_hours_lost": round(hours),
                    "wages_paid_on_the_way": round(money)}
-            named = tile_names.places_on(sim.world_map, tile)
+            named = tile_names.places_on(sim.view("legacy_world_map")(), tile)
             if named:
                 row["places"] = named
             rows.append(row)
@@ -564,4 +564,4 @@ def _cmd_move_base(sim, nodes, cmd, ended):
     if not moved:
         return {"ok": False, "error": message}
     return {"ok": True, "moved": message, "based_at": sim.labour.base_tile(),
-            "capital": round(sim.capital, 1)}
+            "capital": round(sim.view("acting_balance")(), 1)}

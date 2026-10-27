@@ -57,7 +57,7 @@ def _shorten_credit_forecast(sim, cmd, out):
     """
     seat_progress = sim.state.seat_progress
     said = ui_port.said_explanations(seat_progress) or {}
-    if credit_forecast.shorten(out, said, sim.year, cmd.get("full")):
+    if credit_forecast.shorten(out, said, sim.view("year")(), cmd.get("full")):
         ui_port.set_said_explanations(seat_progress, said)
 
 
@@ -108,9 +108,9 @@ def _cmd_start(sim, nodes, cmd, ended):
     # here, not re-derived, so `start`'s warning and `portfolio`'s own
     # figures can never tell two different stories about the same year.
     _oversub = ui_port.oversubscription_notes(
-        sim.trade_demand_vs_supply(), sim.trade_draw_plan(node_id, None), sim.labour.hours_you_can_call_on,
+        sim.view("trade_demand_vs_supply")(), sim.view("trade_draw_plan")(node_id, None), sim.labour.hours_you_can_call_on,
         _impossible_trades, plain_number)
-    started, why = sim.start_project(node_id, precaution=bool(cmd.get("precaution")))
+    started, why = sim.send(ui_port.StartProject(node_id, bool(cmd.get("precaution"))))
     if not started:
         return {"ok": False, "error": why, **refusal_fields(sim, node_id)}
     node = nodes[node_id]
@@ -119,20 +119,20 @@ def _cmd_start(sim, nodes, cmd, ended):
     # a fresh start must be logged here too, or a player reading `log`
     # back sees completions and failures appear out of nowhere with no
     # record of having chosen to begin them.
-    if sim.active.get(node_id, {}).get("spent", 0.0) <= 0.5:
+    if sim.view("active_projects")().get(node_id, {}).get("spent", 0.0) <= 0.5:
         sim.send(RecordEvent.of("project_started", "started: %s" % node["name"]))
     # THE PRICE YOU ACTUALLY COMMITTED TO: project_cost moves with prices,
     # the coinage, material scarcity and what has been built since, so an
     # earlier `why` figure is only a snapshot. The bill IS fixed at the
     # moment you start; this must state plainly what it was fixed AT.
-    record = sim.active.get(node_id, {})
-    bill, materials_paid_now, instalments = bill_parts(record.get("cost_left", sim.project_cost(node_id)),
-                                                       getattr(sim, "materials_paid_at_last_start", 0.0))
+    record = sim.view("active_projects")().get(node_id, {})
+    bill, materials_paid_now, instalments = bill_parts(record.get("cost_left", sim.view("project_cost")(node_id)),
+                                                       sim.view("last_start")())
     _warn_staff = ("started, but this society cannot supply the labour it "
                    "wants and it will crawl until you can: %s"
                    % "; ".join(_impossible)) if _impossible else None
     out = {"ok": True, "started": node_id, "name": node["name"], "founder_hours_needed": node["ph"],
-           "calendar_floor_years": round(sim.calendar_floor(node_id), 2),
+           "calendar_floor_years": round(sim.view("calendar_floor")(node_id), 2),
            "nominal_calendar_floor_before_reputation": node["yrs"],
            # SAID AT THE MOMENT OF COMMITMENT, not only on `why` beforehand
            # or `available` in passing - this is the screen the player is
@@ -142,7 +142,7 @@ def _cmd_start(sim, nodes, cmd, ended):
            # rule _complete applies on every failure, not a plain
            # geometric series on the bare risk field.
            "expected_calendar_years_with_retries": round(
-               sim.expected_calendar_years(node_id), 2),
+               sim.view("expected_calendar_years")(node_id), 2),
            "the_bill_you_have_taken_on": bill,
            "of_which_materials_paid_now": materials_paid_now,
            "of_which_instalments_still_owed": instalments,
@@ -177,7 +177,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     if _warn_staff:
         out["but"] = _warn_staff
     # trade -> years until its first hands (None when nobody is on the way)
-    _waits = sim.trades_the_project_waits_for(node_id)
+    _waits = sim.view("trades_the_project_waits_for")(node_id)
     if _waits:
         out["waits_for_trades"] = _waits
     # BUILD STAFF AND OPERATING STAFF ARE DIFFERENT NUMBERS, and a player
@@ -189,8 +189,8 @@ def _cmd_start(sim, nodes, cmd, ended):
     # so it is said here too, at the one other moment it can still change
     # anything, with today's free staff - not a promise, since attrition
     # and hiring between now and completion can move either number.
-    if sim.is_venture(node_id):
-        shortfall = sim.opening_shortfall(node_id)
+    if sim.view("is_venture")[node_id]:
+        shortfall = sim.view("opening_shortfall")(node_id)
         if shortfall:
             _sup_sch, _sup_art, _free_sch, _free_art = shortfall
             out["today_you_could_not_open_this_when_it_is_done"] = (
@@ -239,7 +239,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # number the un-manual director's own start heuristic already uses
     # to avoid over-committing itself (step(), core.py) - given here as
     # the real ceiling, not a second formula that could drift from it.
-    _stacked = stacked_commitment(sim.committed_spend(), sim.capital, len(sim.active), sim.funding_capacity)
+    _stacked = stacked_commitment(sim.view("committed_cost")(), sim.view("acting_balance")(), len(sim.view("active_projects")()), sim.view("funding_capacity"))
     if _stacked:
         out["total_committed_across_active_work"] = {
             **_stacked,
@@ -261,7 +261,7 @@ def _cmd_start(sim, nodes, cmd, ended):
                 "it is spread across. This is a warning, not a "
                 "refusal - taking on debt on purpose is a real choice "
                 "the game lets you make."
-                % len(sim.active)),
+                % len(sim.view("active_projects")())),
         }
     _shorten_credit_forecast(sim, cmd, out)
     # WARN, DO NOT SILENTLY ACCEPT. start_reason() already refuses a trade
@@ -295,7 +295,7 @@ def _cmd_start(sim, nodes, cmd, ended):
          description="Sunk cost is sunk.")
 def _cmd_stop(sim, nodes, cmd, ended):
     node_id = cmd.get("id")
-    stopped, why = sim.stop_project(node_id)
+    stopped, why = sim.send(ui_port.StopProject(node_id))
     if not stopped:
         return {"ok": False, "error": why}
     # stop_project ITSELF never touches self.log - see its own docstring,
@@ -331,7 +331,7 @@ def _rush_caps(cmd, sim):
 
 def _rush_cost_left(sim, node_id):
     """Money still owed to begin this project, net of what was already sunk."""
-    price = sim.project_cost(node_id)
+    price = sim.view("project_cost")(node_id)
     return price - ui_port.paid_credit(price, (sim.state.projects.paid_towards or {}).get(node_id, 0.0))
 
 
@@ -360,7 +360,7 @@ def _rush_preview(sim, nodes, cmd, ended, confirm=None):
     real start path can say what a rush would start. An unbounded rush is
     previewed as the forced run it would take to begin it.
     """
-    saved_order = list(sim.order)
+    saved_order = list(sim.view("legacy_order")())
     with tempfile.TemporaryDirectory() as folder:
         snapshot = os.path.join(folder, "snapshot.json")
         save_state(sim, snapshot)
@@ -368,7 +368,7 @@ def _rush_preview(sim, nodes, cmd, ended, confirm=None):
             result = _cmd_rush(sim, nodes, dict(cmd, preview=False, force=True), ended)
         finally:
             load_state(sim, snapshot)
-            sim.order[:] = saved_order
+            sim.view("legacy_order")()[:] = saved_order
     if result.get("preview") or not result.get("ok"):
         return result
     return {"ok": True, "preview": True, "nothing_changed": True,
@@ -430,11 +430,11 @@ def _cmd_rush(sim, nodes, cmd, ended):
     if _flag(cmd.get("preview")):
         return _rush_preview(sim, nodes, cmd, ended)
     _memo = {}
-    _ok = [node_id for node_id in sim.order if sim.can_start(node_id, _memo=_memo)]
+    _ok = [node_id for node_id in sim.view("legacy_order")() if sim.view("start_check")(node_id, False, _memo, False)[0]]
     # what the actor excluded stays out of the rush, and the result says why
-    excluded_rows = [{"id": node_id, "name": nodes[node_id]["name"], "why": sim.exclusion_reason(node_id)}
-                     for node_id in _ok if sim.exclusion_reason(node_id)]
-    _ok = [node_id for node_id in _ok if not sim.exclusion_reason(node_id)]
+    excluded_rows = [{"id": node_id, "name": nodes[node_id]["name"], "why": sim.view("exclusion_reason")[node_id]}
+                     for node_id in _ok if sim.view("exclusion_reason")[node_id]]
+    _ok = [node_id for node_id in _ok if not sim.view("exclusion_reason")[node_id]]
     _ok = [node_id for node_id in _ok if passes_rush_filters(sim, nodes, node_id, filters)]
     # HIGHEST-LEVERAGE FIRST, INTERNALLY ONLY. This never shows a player
     # a downstream_count - that is a fog spoiler, see _node_explain's own
@@ -443,7 +443,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
     # `available`'s own "most_rests_on_these" digest already uses to
     # decide what to show you. Ranking by it here leaks nothing, because
     # the ranking itself is never printed, only which ids got started.
-    _ok.sort(key=lambda k: (-downstream_count(nodes, k), sim.project_cost(k)))
+    _ok.sort(key=lambda k: (-downstream_count(nodes, k), sim.view("project_cost")(k)))
     if cmd.get("in_given_order") and "ids" in filters:   # a caller that ranked the ids itself (pursue)
         _ok.sort(key=filters["ids"].index)
     # Discovery must not mutate dozens of portfolio entries. A numeric limit
@@ -472,17 +472,17 @@ def _cmd_rush(sim, nodes, cmd, ended):
     budget = purchase_budget(sim)
 
     def begin(node_id, annual_draw):
-        began, why = sim.start_project(node_id)
+        began, why = sim.send(ui_port.StartProject(node_id, False))
         if not began:
             return False, why
         node = nodes[node_id]
         # SAY SO, for the same reason the single-id `start` does: a
         # player reading `log` back should see every begun-work as a
         # choice they made, not a completion that appeared unasked.
-        if sim.active.get(node_id, {}).get("spent", 0.0) <= 0.5:
+        if sim.view("active_projects")().get(node_id, {}).get("spent", 0.0) <= 0.5:
             sim.send(RecordEvent.of("project_started", "started: %s" % node["name"]))
         return True, {"id": node_id, "name": node["name"],
-                      "cost": round(sim.active.get(node_id, {}).get("cost_left", sim.project_cost(node_id)), 1),
+                      "cost": round(sim.view("active_projects")().get(node_id, {}).get("cost_left", sim.view("project_cost")(node_id)), 1),
                       "annual_draw": round(annual_draw, 1)}
 
     started, not_started, _owed, total_cost, total_draw = rush_loop.begin_in_order(
@@ -528,7 +528,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
          description="Stops its upkeep; restore reopens it.")
 def _cmd_mothball(sim, nodes, cmd, ended):
     _mb_id = cmd.get("id")
-    mothballed, msg = sim.mothball_work(_mb_id)
+    mothballed, msg = sim.send(ui_port.MothballWork(_mb_id))
     if not mothballed:
         return {"ok": False, "error": msg}
     # mothball_work does not log either - a deliberate shutdown reads no
@@ -537,14 +537,14 @@ def _cmd_mothball(sim, nodes, cmd, ended):
     # choice gets a line of its own too.
     sim.send(RecordEvent.of("work_mothballed", "mothballed: %s (%s)"
                  % (nodes[_mb_id]["name"] if _mb_id in nodes else _mb_id, msg)))
-    out = {"ok": True, "mothballed": msg, "upkeep": round(sim.upkeep(), 1)}
+    out = {"ok": True, "mothballed": msg, "upkeep": round(sim.view("upkeep")(), 1)}
     # SAY WHAT ELSE CLOSES WITH IT. A Mexica player shut capability
     # institutions for the capital back and lost two multi-year
     # stretches to it silently - the upkeep saving was the only thing
     # this reply ever mentioned. `mothball` takes effect before this
     # runs, so `s.CAPABILITY_INSTITUTIONS` already tells the truth about
     # what just stopped.
-    if _mb_id in sim.CAPABILITY_INSTITUTIONS:
+    if _mb_id in sim.view("capability_sets")()[0]:
         out["but"] = (
             "this was a capability, not only an expense: scholars it "
             "supported, household places it added, credit or standing "
@@ -561,12 +561,12 @@ def _cmd_mothball(sim, nodes, cmd, ended):
          description="Undoes mothball.")
 def _cmd_restore(sim, nodes, cmd, ended):
     _rs_id = cmd.get("id")
-    restored, msg = sim.restore_work(_rs_id)
+    restored, msg = sim.send(ui_port.RestoreWork(_rs_id))
     if not restored:
         return {"ok": False, "error": msg}
     sim.send(RecordEvent.of("work_restored", "restored: %s (%s)"
                  % (nodes[_rs_id]["name"] if _rs_id in nodes else _rs_id, msg)))
-    return {"ok": True, "restored": msg, "capital": round(sim.capital, 1)}
+    return {"ok": True, "restored": msg, "capital": round(sim.view("acting_balance")(), 1)}
 
 
 
@@ -596,8 +596,8 @@ def _cmd_open(sim, nodes, cmd, ended):
     _units = cmd.get("units")
     if _units is not None and not isinstance(_units, (int, float)):
         return {"ok": False, "error": "units must be a number"}
-    charge, _size = sim.opening_fee(node_id, _units)
-    opened, msg = sim.open_venture(node_id, units=_units)
+    charge, _size = sim.view("opening_fee")(node_id, _units)
+    opened, msg = sim.send(ui_port.OpenVenture(node_id, _units))
     if not opened:
         return {"ok": False, "error": msg}
     # The single rule `help` calls out as the one that catches everybody -
@@ -606,8 +606,8 @@ def _cmd_open(sim, nodes, cmd, ended):
     # command. open_venture itself stays silent; see its docstring.
     sim.send(RecordEvent.of("work_opened", "opened: %s (%s)" % (nodes[node_id]["name"], msg)))
     return {"ok": True, "opened": msg, "opening_charge": round(charge, 1),
-            "paid_now": round(charge, 1), "capital": round(sim.capital, 1),
-            "revenue": round(sim.revenue(), 1), "upkeep": round(sim.upkeep(), 1)}
+            "paid_now": round(charge, 1), "capital": round(sim.view("acting_balance")(), 1),
+            "revenue": round(sim.view("revenue_estimate")(), 1), "upkeep": round(sim.view("upkeep")(), 1)}
 
 
 
@@ -624,10 +624,10 @@ _VENTURES_PAGE = 20
                      "twenty at a time.")
 def _cmd_ventures(sim, nodes, cmd, ended):
     offset, limit = venture_paging.page_request(cmd, _VENTURES_PAGE)
-    sch_free, art_free = sim.venture_staff_free()
-    running = sorted(sim.operating)
-    idle = sorted(node_id for node_id in sim.done
-                  if sim.is_venture(node_id) and node_id not in sim.operating)
+    sch_free, art_free = sim.view("venture_staff_free")()
+    running = sorted(sim.view("operating")())
+    idle = sorted(node_id for node_id in sim.view("techniques_held")()
+                  if sim.view("is_venture")[node_id] and node_id not in sim.view("operating")())
 
     def _vrow(node_id):
         node = nodes[node_id]
@@ -638,14 +638,14 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         # to print the SUPERVISION crew, not the BUILD crew - supervision
         # is a quarter of it, and it is the number the refusal actually
         # quotes.
-        _sup_s, _sup_a = sim.venture_hands(node_id)
+        _sup_s, _sup_a = sim.view("venture_hands")[node_id]
         row = {"id": node_id, "name": node["name"],
-                "earns_a_year": round(sim.venture_real_earnings(node_id), 1),
-                "forecast_basis": sim.venture_forecast_basis(node_id),
-                "sale_basis": sim.venture_sale_basis(node_id),
-                "costs_a_year": round(sim.venture_upkeep_quote(node_id)["now"], 1),
+                "earns_a_year": round(sim.view("venture_real_earnings")(node_id), 1),
+                "forecast_basis": sim.view("venture_forecast_basis")[node_id],
+                "sale_basis": sim.view("venture_sale_basis")[node_id],
+                "costs_a_year": round(sim.view("venture_upkeep_quote")(node_id)["now"], 1),
                 "costs_a_year_at_full_staffing": round(
-                    sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
+                    sim.view("venture_upkeep_quote")(node_id)["at_full_staffing"], 1),
                 "needs": {"scholars": round(_sup_s, 2),
                           "craftsmen": round(_sup_a, 2)},
                 "specialist_foreman": specialist_foreman(sim, node_id)}
@@ -657,7 +657,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         # it, identity_cover and workshop_first (real capabilities) would
         # be indistinguishable from an ordinary shuttered business in
         # this exact table.
-        if node_id in sim.CAPABILITY_INSTITUTIONS:
+        if node_id in sim.view("capability_sets")()[0]:
             row["capability"] = ("yes - more than income; see 'why %s'" % node_id)
         return row
 
@@ -665,17 +665,17 @@ def _cmd_ventures(sim, nodes, cmd, ended):
     # ordinary earn/cost table invited exactly the misreading above; a
     # separate heading says outright that these are not evaluated the
     # same way.
-    _idle_ordinary = [node_id for node_id in idle if node_id not in sim.CAPABILITY_INSTITUTIONS]
-    _idle_capability = [node_id for node_id in idle if node_id in sim.CAPABILITY_INSTITUTIONS]
+    _idle_ordinary = [node_id for node_id in idle if node_id not in sim.view("capability_sets")()[0]]
+    _idle_capability = [node_id for node_id in idle if node_id in sim.view("capability_sets")()[0]]
     only_closed = bool(cmd.get("closed"))
     out = {"ok": True,
            "running": ([_vrow(node_id) for node_id in running] or "nothing")
                       if not only_closed else "not shown: you asked for closed concerns only",
            "you_know_how_but_have_not_opened":
-               [dict(_vrow(node_id), to_open_it=round(sim.venture_capex(node_id), 1))
+               [dict(_vrow(node_id), to_open_it=round(sim.view("venture_capex")[node_id], 1))
                 for node_id in _idle_ordinary[offset:offset + limit]] or "nothing",
            "capabilities_you_know_how_to_run_but_have_not_opened":
-               [dict(_vrow(node_id), to_open_it=round(sim.venture_capex(node_id), 1))
+               [dict(_vrow(node_id), to_open_it=round(sim.view("venture_capex")[node_id], 1))
                 for node_id in _idle_capability] or "nothing",
            "keep_staffed": sorted(sim.view("keep_staffed")()) or "none",
            "people_free_to_run_something_new": {
@@ -687,13 +687,13 @@ def _cmd_ventures(sim, nodes, cmd, ended):
            # One person can keep an eye on one small shop, which is how
            # every one of these fortunes started; it just has to say that
            # the person is you.
-           "one_of_each_of_those_is_you": bool(sim.founder_alive),
+           "one_of_each_of_those_is_you": bool(sim.view("founder")()["alive"]),
            # WHERE THE REST OF THEM ARE. See venture_staff_who_is_watching_what.
            "and_these_concerns_are_holding_the_rest":
-               sim.venture_staff_who_is_watching_what()[:12] or "none",
+               sim.view("venture_staff_who_is_watching_what")()[:12] or "none",
            "held_in_all": {
-               "scholars": round(sim.venture_staff_used()[0], 2),
-               "craftsmen": round(sim.venture_staff_used()[1], 2)},
+               "scholars": round(sim.view("venture_staff_used")()[0], 2),
+               "craftsmen": round(sim.view("venture_staff_used")()[1], 2)},
            "staffing_rule": (
                "Needs and held totals are full-time-equivalents. Free is "
                "clamped at zero, so a small deficit never appears negative. "
@@ -702,7 +702,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
            "you_have_in_all": {
                "scholars": round(sim.labour.effective_scholars(), 2),
                "craftsmen": round(sim.view("staff")()["artisans"]
-                                  + (sim.FOUNDER_IS_WORTH if sim.founder_alive
+                                  + (ui_port.project_constants.FOUNDER_IS_WORTH if sim.view("founder")()["alive"]
                                      else 0.0), 2)},
            # SCHOLARS AND CRAFTSMEN ARE NOT INTERCHANGEABLE, and nothing
            # else says so: engineers, chemists and machinists count as
@@ -760,28 +760,28 @@ def _cmd_policy(sim, nodes, cmd, ended):
                     "error": 'set must be an object, e.g. '
                              '{"cmd":"policy","set":{"auto_hire":true}}'}
         for key, val in want.items():
-            if key not in sim.policy:
+            if key not in sim.view("founder")()["policy"]:
                 return {"ok": False, "error": "no such policy: %s. They are: %s"
-                        % (key, ", ".join(sorted(sim.policy)))}
-            sim.policy[key] = "replace" if key == "auto_hire" and str(val).lower() == "replace" else _flag(val)
-            changed[key] = sim.policy[key]
+                        % (key, ", ".join(sorted(sim.view("founder")()["policy"])))}
+            sim.view("founder")()["policy"][key] = "replace" if key == "auto_hire" and str(val).lower() == "replace" else _flag(val)
+            changed[key] = sim.view("founder")()["policy"][key]
     # WHICH OF THESE CAN ACTUALLY ACT TODAY: negative capital silently
     # disables both hiring and opening even while the switches read ON,
     # with the only clue otherwise being one refusal string somewhere
     # else. A switch that says ON while nothing happens is worse than one
     # that says OFF.
     _stopped = {}
-    if sim.capital <= 0:
-        if sim.policy.get("auto_hire"):
+    if sim.view("acting_balance")() <= 0:
+        if sim.view("founder")()["policy"].get("auto_hire"):
             _stopped["auto_hire"] = ("nothing to hire with: hiring is paid "
                                      "in advance and you are in arrears")
-        if sim.policy.get("auto_open"):
+        if sim.view("founder")()["policy"].get("auto_open"):
             _stopped["auto_open"] = ("nothing to open with: opening a "
                                      "concern costs stock and premises")
-    if sim.year < sim.credit_frozen_until:
+    if sim.view("year")() < sim.view("debt_status")()["credit_frozen_until"]:
         _stopped["credit"] = ("nobody will fund new work until %d"
-                              % int(sim.credit_frozen_until))
-    _pol = {"ok": True, "policy": dict(sim.policy), "changed": changed,
+                              % int(sim.view("debt_status")()["credit_frozen_until"]))
+    _pol = {"ok": True, "policy": dict(sim.view("founder")()["policy"]), "changed": changed,
             "reserve": {"craftsmen": sim.view("staff")()["reserve_craftsmen"],
                         "scholars": sim.view("staff")()["reserve_scholars"]},
             # WHAT THESE ARE FOR, BEFORE WHAT EACH ONE DOES: a player who

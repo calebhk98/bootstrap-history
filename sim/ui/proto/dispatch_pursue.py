@@ -16,12 +16,12 @@ from .pursue import CAP_KEYS, FOG_REFUSAL, ORDER_TEXT, resolve_goal, route_order
          description="A rush limited to the goal's route, longest remaining chain first. Every refusal, "
                      "exclusion and cap of 'rush' applies. Not available under fog of war.")
 def _cmd_pursue(sim, nodes, cmd, ended):
-    if sim.fog:
+    if sim.view("legacy_fog")():
         return {"ok": False, "error": FOG_REFUSAL}
     goal, error = resolve_goal(sim, cmd.get("goal", cmd.get("id")))
     if error:
         return {"ok": False, "error": error}
-    if goal in sim.done:
+    if goal in sim.view("techniques_held")():
         return {"ok": False, "error": "%s is already done" % nodes[goal]["name"]}
     candidates = route_order(sim, goal)
     pursuit = {"goal": goal, "name": nodes[goal]["name"], "order": ORDER_TEXT,

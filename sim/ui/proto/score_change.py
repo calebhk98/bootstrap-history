@@ -16,5 +16,5 @@ def attach_change_since_last_score(sim, report):
                 "year": earlier.get("year"),
                 "raw_before": before["raw"],
                 "normalized_change": round(component["normalized"] - before["normalized"], 4)}
-    seat_progress.score_last_seen = {"year": sim.year, "components": seen}
+    seat_progress.score_last_seen = {"year": sim.view("year")(), "components": seen}
     return report

@@ -21,6 +21,7 @@ from .quote_purchases import FLAT_QUOTERS
 from .stock_purchases import buy_living_stock, buy_smuggled_stock
 from .quote_spending import SPENDING_QUOTERS, bounty_refusal
 from sim.engine.ui_port import cash_book, purchase_rule
+from .util import known
 
 
 @command("bounty", shape="tech", group="projects",
@@ -36,13 +37,13 @@ def _cmd_bounty(sim, nodes, cmd, ended):
     refusal = bounty_refusal(sim, nodes, node_id)
     if refusal:
         return {"ok": False, "error": refusal}
-    price = sim.bounty_price(node_id)
-    if not sim.post_bounty(node_id):
+    price = sim.view("bounty_price")(node_id)
+    if not sim.send(ui_port.PostBounty(node_id)):
         return {"ok": False, "error": "cannot afford the bounty: needs about %s, "
                                       "you have %s. Earn or wait, then try again"
-                                      % (money_text(price, sim), money_text(sim.capital, sim))}
+                                      % (money_text(price, sim), money_text(sim.view("acting_balance")(), sim))}
     return {"ok": True, "posted": node_id, "price": round(price, 1),
-            "paid_now": round(price, 1), "capital": round(sim.capital, 1)}
+            "paid_now": round(price, 1), "capital": round(sim.view("acting_balance")(), 1)}
 
 
 
@@ -55,14 +56,14 @@ def _buy_forest(sim, cmd, quantity):
         return {"ok": False, "error": purchase_rule.refusal_text(
             sim, "%s of coppice woodland" % area_text(quantity, sim), cost)}
     return {"ok": True, "bought_ha": got, "forest_ha": round(sim.view("forest_hectares")(), 1),
-            "capital": round(sim.capital, 1)}
+            "capital": round(sim.view("acting_balance")(), 1)}
 
 
 def _share_of_limit_used(sim):
     """How much of the credit limit the arrears have used, as a percentage text, or none."""
-    limit = sim.credit_limit()
-    if sim.capital < 0 and limit > 0:
-        percent_used = 100.0 * -sim.capital / max(1e-9, limit)
+    limit = sim.view("credit_limit")()
+    if sim.view("acting_balance")() < 0 and limit > 0:
+        percent_used = 100.0 * -sim.view("acting_balance")() / max(1e-9, limit)
         return "%d%%" % percent_used
     return "none"
 
@@ -75,12 +76,12 @@ def _buy_nitre(sim, cmd, quantity):
         return {"ok": False,
                 "error": purchase_rule.refusal_text(
                     sim, "%s of nitre bed" % area_text(quantity, sim, unit="square_metre"),
-                    quantity * sim.view("nitre_price")() * sim.price_index)}
+                    quantity * sim.view("nitre_price")() * sim.view("price_index")())}
     return {"ok": True, "laid_m2": got,
             "nitre_bed_m2": round(nitre["square_metres"], 1),
             "saltpetre_it_yields_per_year_tonnes":
                 round(nitre["square_metres"] * nitre["tonnes_per_square_metre"], 3),
-            "capital": round(sim.capital, 1)}
+            "capital": round(sim.view("acting_balance")(), 1)}
 
 
 def _buy_farm(sim, cmd, quantity):
@@ -89,17 +90,17 @@ def _buy_farm(sim, cmd, quantity):
         return {"ok": False, "error": "cannot afford that farmland"}
     return {"ok": True, "bought_farm_hectares": got,
             "farm_hectares": round(sim.view("farm_holdings")()["hectares"], 1),
-            "food_cost_factor": round(sim.essential_price_ratio(), 3),
-            "capital": round(sim.capital, 1)}
+            "food_cost_factor": round(sim.view("essential_price_ratio")(), 3),
+            "capital": round(sim.view("acting_balance")(), 1)}
 
 
 def _buy_housing(sim, cmd, quantity):
-    got = sim.build_worker_housing(quantity)
+    got = sim.send(ui_port.BuildHousing(quantity))
     if got <= 0:
         return {"ok": False, "error": "cannot afford that worker housing"}
     return {"ok": True, "built_worker_housing_places": got,
             "worker_housing_places": round(sim.view("worker_housing_places")(), 1),
-            "capital": round(sim.capital, 1)}
+            "capital": round(sim.view("acting_balance")(), 1)}
 
 
 def _buy_school(sim, cmd, quantity):
@@ -110,17 +111,17 @@ def _buy_school(sim, cmd, quantity):
     return {"ok": True, "trade": trade, "new_training_seats": quantity,
             "trade_school_seats": sim.view("trade_schools")()[trade],
             "market_supply_hours_per_year": round(sim.labour.market_supply(trade), 1),
-            "capital": round(sim.capital, 1)}
+            "capital": round(sim.view("acting_balance")(), 1)}
 
 
 def _buy_material(sim, cmd, quantity):
     material = cmd.get("material")
-    got = sim.buy_material_stock(material, quantity)
+    got = sim.send(ui_port.BuyMaterial(material, quantity))
     if got <= 0:
         return {"ok": False, "error": "cannot buy that quantity at the current material quote"}
     return {"ok": True, "material": material, "bought_tonnes": got,
-            "stock_on_hand_tonnes": sim.material_stock_t(ui_port.material_tag(sim, material)[0]),
-            "capital": round(sim.capital, 1)}
+            "stock_on_hand_tonnes": sim.view("goods_stock")[ui_port.material_tag(sim, material)[0]],
+            "capital": round(sim.view("acting_balance")(), 1)}
 
 
 def _buy_mine(sim, cmd, quantity):
@@ -168,9 +169,9 @@ def _buy_mine(sim, cmd, quantity):
              "commissions_during_year": ready,
              "ready_year": (None if ready is None else ready + 1),
              "years_until_producing": (None if ready is None
-                                       else round(ready - sim.year, 1)),
+                                       else round(ready - sim.view("year")(), 1)),
              "already_producing_t_per_yr": round(sim.view("mine_capacity")().get(mat, 0.0), 2),
-             "capital": round(sim.capital, 1)}
+             "capital": round(sim.view("acting_balance")(), 1)}
     if got < asked * 0.999:
         reply["note"] = ("less than you asked for: limited by capital, by the "
                          "ceiling your standing supports, or both. Nothing was "
@@ -193,8 +194,8 @@ def _buy_slaves(sim, cmd, quantity):
                          "(%s each after the market moves against a purchase "
                          "this size) and you have %s"
                          % (int(quantity), money_text(quote, sim), money_text(quote / max(1, int(quantity)), sim),
-                            money_text(sim.capital, sim))}
-    return {"ok": True, "bought": got, "slaves": sim.view("staff")()["slaves"], "capital": round(sim.capital, 1)}
+                            money_text(sim.view("acting_balance")(), sim))}
+    return {"ok": True, "bought": got, "slaves": sim.view("staff")()["slaves"], "capital": round(sim.view("acting_balance")(), 1)}
 
 
 def _buy_manumit(sim, cmd, quantity):
@@ -266,7 +267,7 @@ def _cmd_buy(sim, nodes, cmd, ended):
 def _cmd_sell(sim, nodes, cmd, ended):
     what = str(cmd.get("what") or "").lower()
     if what == "concern":
-        return sim.sell_concern(str(cmd.get("id") or ""))
+        return sim.send(ui_port.SellConcern(str(cmd.get("id") or "")))
     if what == "farm":
         quantity, err = read_target_quantity(cmd, "n", 0, "farm", sim)
         if err or quantity <= 0:
@@ -276,16 +277,16 @@ def _cmd_sell(sim, nodes, cmd, ended):
     quantity, err = read_target_quantity(cmd, "n", 0, "material", sim)
     if err or quantity <= 0:
         return {"ok": False, "error": err or "n must be greater than zero"}
-    if sim.goods_market.quote(material) is None:
+    if sim.view("goods_quote")[material] is None:
         return {"ok": False, "error": sale_orders.no_price_refusal(material)}
-    held, market_room = sim.goods_market.sale_limits(material)
+    held, market_room = sim.view("sale_limits")[material]
     if sale_orders.asks_more_than_held(quantity, held):
         return {"ok": False, "error": sale_orders.not_enough_held_refusal(material, held, quantity)}
-    sold = sim.sell_material_stock(material, quantity)
+    sold = sim.send(ui_port.SellMaterial(material, quantity))
     if sold <= 0:
         return {"ok": False, "error": sale_orders.market_full_refusal(material, held, market_room)}
-    held_after, room_after = sim.goods_market.sale_limits(material)
-    return sale_orders.sale_reply(material, sold, quantity, held_after, room_after, sim.capital)
+    held_after, room_after = sim.view("sale_limits")[material]
+    return sale_orders.sale_reply(material, sold, quantity, held_after, room_after, sim.view("acting_balance")())
 
 
 
@@ -302,25 +303,24 @@ def _cmd_money(sim, nodes, cmd, ended):
     # first year, which is what makes it easy to miss.
     # The living cost is the one the household pays once the dependants its income cannot carry are shed, as
     # net_per_year counts it.
-    _living = sim.recurring_living_cost(sim.revenue(), sim.upkeep())
+    _living = sim.view("recurring_living_cost")(sim.view("revenue_estimate")(), sim.view("upkeep")())
     _prepaid = min(_living, sim.view("pay_book")()["prepaid"])
-    fixed = (sim.upkeep() + _living - _prepaid
+    fixed = (sim.view("upkeep")() + _living - _prepaid
              + sim.view("mine_operating_cost")())
-    _ramp = sim.still_ramping()
+    _ramp = sim.view("still_ramping")()
     # A PLAYER MUST SEE IT (data/review/COMMODITY_DYNAMISM.md):
     # material_price_factor() responds for every material a node
     # buys, not just the 9 curated commodities, so what it
     # is doing to costs needs a line here too, not only inside one
     # project's own `why`. See economy.py's material_market_summary().
-    _mat_mkt = sim.material_market_summary()
-    _sources = sim.revenue_sources()
-    _squeeze = sim.market_absorption_by_category(
-        -(_sources.get("_what_the_market_will_not_absorb") or 0.0))
+    _mat_mkt = sim.view("material_market_summary")()
+    _sources = sim.view("revenue_sources")()
+    _squeeze = sim.view("market_absorption_by_category")(-(_sources.get("_what_the_market_will_not_absorb") or 0.0))
     return {"ok": True,
-            "capital": round(sim.capital, 1),
-            "coin_hoard": sim.coin_hoard_report(),
+            "capital": round(sim.view("acting_balance")(), 1),
+            "coin_hoard": sim.view("coin_hoard_report")(),
             "cash_book": cash_book.book(sim),
-            "revenue": round(sim.revenue(), 1),
+            "revenue": round(sim.view("revenue_estimate")(), 1),
             "where_the_money_comes_from": _sources,
             **({"where_the_market_squeeze_falls": _squeeze} if _squeeze else {}),
             **({"wage_work_this_year": sim.labour.wage_work_this_year()}
@@ -330,8 +330,8 @@ def _cmd_money(sim, nodes, cmd, ended):
             **({"still_building_up_custom": _ramp} if _ramp else {}),
             **({"materials_costing_you_a_premium": _mat_mkt} if _mat_mkt else {}),
             "what_it_costs_you": {
-                "upkeep_of_what_you_built": round(sim.upkeep(), 1),
-                "living_and_appearances": round(sim.living_cost() - sim.labour.wage_bill(), 1),
+                "upkeep_of_what_you_built": round(sim.view("upkeep")(), 1),
+                "living_and_appearances": round(sim.view("living_cost")() - sim.labour.wage_bill(), 1),
                 # NAME THE PART THAT IS THERE BECAUSE YOU ARE RICH. A break
                 # tester started with a million, built nothing, hired
                 # nobody, and read "living and appearances ~14,990, Net/yr
@@ -339,7 +339,7 @@ def _cmd_money(sim, nodes, cmd, ended):
                 # fortune bleeds. It is not a fee: it is that a man visibly
                 # richer than he lives is suspected in a patronage society.
                 "_of_which_because_you_are_rich":
-                    round(max(0.0, sim.capital) * 0.015, 1) or None,
+                    round(max(0.0, sim.view("acting_balance")()) * 0.015, 1) or None,
                 "wages": round(sim.labour.wage_bill(), 1),
                 "of_which_already_paid_as_hiring_advances":
                     round(_prepaid, 1) or None,
@@ -348,28 +348,28 @@ def _cmd_money(sim, nodes, cmd, ended):
                 # figures below, not left as a line the net ignores, or a
                 # debt spiral can show a positive net while capital is
                 # actually falling.
-                "interest_on_arrears": round(sim.interest_on_arrears(), 1)},
+                "interest_on_arrears": round(sim.view("interest_on_arrears")(), 1)},
             # revenue_capacity(), not revenue() - this is the STANDING
             # figure (see the comment two lines below, and state's own
             # net_per_year, protocol.py: same fix, same reason). A
             # player who sold founder-hours with `work` watched this
             # swing to -193/yr for exactly one year and back, which is
             # not what "recurring" means.
-            "net_per_year": round(sim.recurring_net(), 1),
-            "spent_on_projects_last_year": round(getattr(sim, "spend_last_year", 0.0), 1),
+            "net_per_year": round(sim.view("recurring_net")(), 1),
+            "spent_on_projects_last_year": round(known(sim.view("spend_last_year")(), 0.0), 1),
             # THE SAME FIGURE `state` PRINTS: net_per_year is the standing
             # flows, before anything goes into the work in hand, and this
             # is the figure after - the two must stay clearly distinct, or
             # two individually correct numbers on different screens read
             # as a contradiction.
             "net_after_project_spend": round(
-                sim.revenue() - fixed
-                - sim.interest_on_arrears()
-                - getattr(sim, "spend_last_year", 0.0), 1),
-            "credit_limit": round(sim.credit_limit(), 1),
-            "interest_rate_on_arrears": round(sim.debt_interest_rate(), 4),
-            "loanable_funds_market": sim.capital_market_report(),
-            "interest_paid_in_total": round(getattr(sim, "interest_paid", 0.0), 1),
+                sim.view("revenue_estimate")() - fixed
+                - sim.view("interest_on_arrears")()
+                - known(sim.view("spend_last_year")(), 0.0), 1),
+            "credit_limit": round(sim.view("credit_limit")(), 1),
+            "interest_rate_on_arrears": round(sim.view("debt_interest_rate")(), 4),
+            "loanable_funds_market": sim.view("capital_market_report")(),
+            "interest_paid_in_total": round(known(sim.view("debt_status")()["interest_paid"], 0.0), 1),
             # HOW CLOSE, not just how far it goes. See warn_near_the_limit.
             "of_that_limit_you_have_used": (
                 _share_of_limit_used(sim)),
@@ -377,18 +377,17 @@ def _cmd_money(sim, nodes, cmd, ended):
             # needs the identical total for its own aggregate warning (see
             # committed_spend()'s docstring, economy.py). One call, read
             # from both places.
-            "still_owed_on_work_in_hand": round(sim.committed_spend(), 1),
+            "still_owed_on_work_in_hand": round(sim.view("committed_cost")(), 1),
             # THE OTHER HALF OF THE SAME QUESTION 'start' WARNS ABOUT:
             # what you have promised (just above) against what you can
             # actually expect to have. See funding_capacity()'s own
             # docstring for why this is the same number the un-manual
             # director's own start heuristic uses to avoid over-committing
             # itself.
-            "you_could_actually_fund_up_to": round(sim.funding_capacity(), 1),
-            "funding": {name: round(amount, 1) for name, amount in sim.funding_breakdown().items()},
-            "sustainable_debt": round(sim.sustainable_debt(), 1),
-            "sustainable_debt_means": sim.debt_service_forecast(
-                max(0.0, -sim.capital))["sustainable_debt_means"]}
+            "you_could_actually_fund_up_to": round(sim.view("funding_capacity")(), 1),
+            "funding": {name: round(amount, 1) for name, amount in sim.view("funding_breakdown")().items()},
+            "sustainable_debt": round(sim.view("sustainable_debt")(), 1),
+            "sustainable_debt_means": sim.view("debt_service_forecast")(max(0.0, -sim.view("acting_balance")()))["sustainable_debt_means"]}
 
 
 
@@ -416,7 +415,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
         return {"ok": True, "what": "forest", "hectares": n_f,
                 "to_buy_it": round(per * n_f, 1),
                 "per_hectare": round(per, 2),
-                "you_have": round(sim.capital, 1),
+                "you_have": round(sim.view("acting_balance")(), 1),
                 "you_could_raise": round(purchase_rule.purchase_budget(sim), 1),
                 "you_can_afford_about": purchase_rule.affordable_units(sim, per),
                 "afford_means": purchase_rule.afford_means(),
@@ -428,11 +427,11 @@ def _cmd_quote(sim, nodes, cmd, ended):
         n_n, err_n = read_target_quantity(cmd, "n", 10000, "nitre", sim)
         if err_n:
             return {"ok": False, "error": err_n}
-        per_n = sim.view("nitre_price")() * sim.price_index
+        per_n = sim.view("nitre_price")() * sim.view("price_index")()
         return {"ok": True, "what": "nitre bed", "square_metres": n_n,
                 "to_lay_it": round(per_n * n_n, 1),
                 "per_square_metre": round(per_n, 2),
-                "you_have": round(sim.capital, 1),
+                "you_have": round(sim.view("acting_balance")(), 1),
                 "you_could_raise": round(purchase_rule.purchase_budget(sim), 1),
                 "you_can_afford_about": purchase_rule.affordable_units(sim, per_n, decimals=0),
                 "afford_means": purchase_rule.afford_means(),
@@ -447,12 +446,12 @@ def _cmd_quote(sim, nodes, cmd, ended):
         if err_s:
             return {"ok": False, "error": err_s}
         budget = purchase_rule.purchase_budget(sim)
-        per_person_base = sim.labour.SLAVE_BASE_PRICE * sim.price_index
+        per_person_base = sim.labour.SLAVE_BASE_PRICE * sim.view("price_index")()
         affordable = purchase_rule.affordable_whole_units(budget, per_person_base, sim.labour.slave_quote)
         return {"ok": True, "what": "slaves", "people": n_s,
                 "to_buy_them": round(sim.labour.slave_quote(n_s), 1),
                 "per_person_base": round(per_person_base, 2),
-                "you_have": round(sim.capital, 1),
+                "you_have": round(sim.view("acting_balance")(), 1),
                 "you_could_raise": round(budget, 1),
                 "you_can_afford_about": affordable,
                 "afford_means": purchase_rule.afford_means(),
@@ -519,13 +518,13 @@ def _cmd_close(sim, nodes, cmd, ended):
 def _cmd_withdraw(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    withdrew, msg = sim.withdraw_from_public_life()
+    withdrew, msg = sim.send(ui_port.WithdrawFromPublicLife())
     if not withdrew:
         return {"ok": False, "error": msg}
     return {"ok": True, "withdrew": msg,
-            "eminence": round(sim.eminence, 2),
-            "reputation": round(sim.reputation, 1),
-            "protection": round(sim.protection, 3)}
+            "eminence": round(sim.view("eminence")(), 2),
+            "reputation": round(sim.view("standing")()["reputation"], 1),
+            "protection": round(sim.view("standing")()["protection"], 3)}
 
 
 
@@ -539,7 +538,7 @@ def _cmd_bribe(sim, nodes, cmd, ended):
     amount, err = read_quantity(cmd, "amount", None, "money", "civ_coin", sim)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
-    bribed, msg = sim.bribe(amount)
+    bribed, msg = sim.send(ui_port.Bribe(amount))
     if not bribed:
         return {"ok": False, "error": msg}
-    return {"ok": True, "bribed": msg, "capital": round(sim.capital, 1)}
+    return {"ok": True, "bribed": msg, "capital": round(sim.view("acting_balance")(), 1)}

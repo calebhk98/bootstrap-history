@@ -9,6 +9,7 @@ from sim.refusal import Refusal
 
 from .command_registry import command
 from .dispatch_levers import seat_government
+from sim.engine import ui_port
 
 
 def _summary(army):
@@ -38,12 +39,12 @@ def army_reply(sim, cmd):
             soldiers = float(soldiers)
         except (TypeError, ValueError):
             pass
-        return _reply(sim.raise_army(owner, soldiers, cmd.get("tile", rest[1] if len(rest) > 1 else None)), owner)
+        return _reply(sim.send(ui_port.RaiseArmy(owner, soldiers, cmd.get("tile", rest[1] if len(rest) > 1 else None))), owner)
     if action in ("march", "recall", "disband"):
         army_id = cmd.get("army", rest[0] if rest else None)
         if action == "march":
-            return _reply(sim.order_army(owner, army_id, cmd.get("tile", rest[1] if len(rest) > 1 else None)), owner)
-        return _reply(sim.recall_army(owner, army_id) if action == "recall" else sim.disband_army(owner, army_id), owner)
+            return _reply(sim.send(ui_port.OrderArmy(owner, army_id, cmd.get("tile", rest[1] if len(rest) > 1 else None))), owner)
+        return _reply(sim.send(ui_port.RecallArmy(owner, army_id)) if action == "recall" else sim.send(ui_port.DisbandArmy(owner, army_id)), owner)
     return {"ok": False, "cause": "unknown_action", "choices": ["raise", "march", "recall", "disband"],
             "error": "the army actions are raise, march, recall and disband. Nothing was changed."}
 
@@ -74,5 +75,5 @@ def _cmd_armies(sim, nodes, cmd, ended):
     government, owner, refusal = seat_government(sim, cmd)
     if refusal:
         return refusal
-    return {"ok": True, "country": owner, "armies": [_summary(army) for army in sim.armies_of(owner)],
-            "free_soldiers": round(sim.free_soldiers(owner))}
+    return {"ok": True, "country": owner, "armies": [_summary(army) for army in sim.view("armies")[owner]["armies"]],
+            "free_soldiers": round(sim.view("armies")[owner]["free_soldiers"])}

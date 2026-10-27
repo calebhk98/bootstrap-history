@@ -23,7 +23,7 @@ def _cmd_saving(sim, nodes, cmd, ended):
             return {"ok": False, "error": "unknown node id %r. 'available' lists what you could begin" % node_id}
         target = cmd.get("target")
         if target is None:
-            target = sim.project_cost(node_id)
+            target = sim.view("project_cost")(node_id)
         elif isinstance(target, bool) or not isinstance(target, (int, float)) or target < 0:
             return {"ok": False, "error": "the target is an amount of money, zero or more"}
         household.saving_for = node_id

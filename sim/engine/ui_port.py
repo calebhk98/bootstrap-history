@@ -53,6 +53,48 @@ from sim.engine.ui_data import load_figure_specs  # noqa: F401
 from sim.engine.readable import is_readable  # noqa: F401
 
 
+from sim.projects.api import constants as project_constants  # noqa: F401
+from sim.polity.api import constants as polity_constants  # noqa: F401
+
+# Commands the UI sends (`sim.send(ui_port.<Command>(...))`); each is its owner's.
+from sim.campaigns.api import DisbandArmy, OrderArmy, RaiseArmy, RecallArmy  # noqa: F401
+from sim.diffusion.api import Disclose  # noqa: F401
+from sim.finance.api import FoundBank  # noqa: F401
+from sim.land.api import BuildWay  # noqa: F401
+from sim.markets.api import BuyMaterial, SellMaterial  # noqa: F401
+from sim.polity.api import SettleWithState, WithdrawFromPublicLife  # noqa: F401
+from sim.projects.api import Bribe, MothballWork, PostBounty, RestoreWork, StartProject, StopProject  # noqa: F401
+from sim.knowledge.api import RevealNodes  # noqa: F401
+from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, MakeOffer, SetGoal, SetPolicy  # noqa: F401
+from sim.ventures.api import OpenVenture, RollOut, SellConcern  # noqa: F401
+from sim.workforce.api import BuildHousing  # noqa: F401
+
+
+# A new game's options, set once by the command line or the options screen before the first step.
+
+def begin_game(sim, goal, end_year, fog, fuzzy_estimates):
+    sim.send(SetGoal(goal))
+    sim.state.projects.done_year = {}
+    sim.end_year = end_year
+    sim.state._fog = bool(fog)
+    set_fuzzy_estimates(sim, fuzzy_estimates)
+
+
+def reset_done_years(sim):
+    sim.state.projects.done_year = {}
+
+
+def set_end_year(sim, year):
+    sim.end_year = year
+
+
+def set_fuzzy_estimates(sim, on):
+    """Show the needs of unfinished work as estimates; the blur's salt is drawn the first time it is turned on."""
+    sim.state._fuzzy_estimates = bool(on)
+    if on and not sim.state._fuzzy_salt:
+        sim.state._fuzzy_salt = sim.rng.getrandbits(30) + 1
+
+
 def interface_memory(sim):
     """The slot of the save the UI owns; the engine never reads it."""
     return sim.state.interface

@@ -15,6 +15,6 @@ def already_explained(sim, topic, cmd):
     said = ui_port.said_explanations(seat_progress) or {}
     seen = topic in said
     if not seen:
-        said[topic] = sim.year
+        said[topic] = sim.view("year")()
         ui_port.set_said_explanations(seat_progress, said)
     return seen and not cmd.get("full")

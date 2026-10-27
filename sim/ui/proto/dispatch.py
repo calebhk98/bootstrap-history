@@ -95,9 +95,9 @@ def _cmd_save(sim, nodes, cmd, ended):
     try:
         if command == "save":
             save_state(sim, path)
-            return {"ok": True, "saved": path, "year": sim.year}
+            return {"ok": True, "saved": path, "year": sim.view("year")()}
         load_state(sim, path)
-        return {"ok": True, "loaded": path, "year": sim.year}
+        return {"ok": True, "loaded": path, "year": sim.view("year")()}
     except Exception as error:
         reply = {"ok": False, "error": "could not %s %r: %s" % (command, path, error)}
         if error.args and cause_of(error.args[0]):
@@ -143,13 +143,13 @@ def _cmd_step(sim, nodes, cmd, ended):
     # Nothing is gained by accepting a number of years larger than the
     # game can contain: a typo that silently ends your run without saying
     # so is the worst kind of accepted input.
-    left = max(0, sim.end_year - sim.year)
+    left = max(0, sim.view("horizon_end_year")() - sim.view("year")())
     if years > left:
         return {"ok": False,
                 "error": "there are only %d years left before the horizon at "
                          "%d. Ask for %d or fewer, or fewer still if you want "
                          "to see what happens on the way."
-                         % (left, sim.end_year, left)}
+                         % (left, sim.view("horizon_end_year")(), left)}
     # WARN BEFORE, NOT AFTER, A MULTI-YEAR STEP WASTES HOURS. "Founder-
     # hours do not bank. A player can have long calendar-floor projects
     # running, use `step 5`, and unintentionally throw away thousands of
@@ -168,8 +168,8 @@ def _cmd_step(sim, nodes, cmd, ended):
         _pre_state = _agent_state_training_and_hours(sim, _agent_state_active_projects(sim, nodes), False)
         multi_year_hours_warning = multi_year_warning.multi_year_hours_warning(
             years, True, _pre_state.get("free_hours_going_unused"),
-            lambda: next((nodes[node_id]["name"] for node_id in nodes if node_id not in sim.done
-                          and node_id not in sim.active and sim.can_start(node_id)), None),
+            lambda: next((nodes[node_id]["name"] for node_id in nodes if node_id not in sim.view("techniques_held")()
+                          and node_id not in sim.view("active_projects")() and sim.view("start_check")(node_id, False, None, False)[0]), None),
             _pre_state.get("founder_hours_available"), lambda: delay_phrase(delay_kinds(sim, nodes)))
         if multi_year_hours_warning:
             multi_year_hours_waiting_on = delay_kinds(sim, nodes)
@@ -196,31 +196,31 @@ def _cmd_step(sim, nodes, cmd, ended):
     disasters = []
     founder_died_this_step = None
     stopped_early = stopped_kind = None
-    end_year = sim.end_year
+    end_year = sim.view("horizon_end_year")()
     ran = 0
-    goal_before = sim.goal_snapshot()
-    goal_year_before = sim.goal_year
+    goal_before = sim.view("goal_snapshot")()
+    goal_year_before = sim.view("goal")()["year"]
     route = route_nodes(sim) if years > 1 else set()
     snapshots = []
     programme_log = []
-    first_year_stepped = sim.year
+    first_year_stepped = sim.view("year")()
     failure = None
     for _ in range(years):
-        if sim.dead_reason or sim.year >= end_year:
+        if sim.view("founder")()["dead_reason"] or sim.view("year")() >= end_year:
             break
         held = step_atomic.snapshot(sim)
-        before_done, before_log = set(sim.done), len(sim.log)
+        before_done, before_log = set(sim.view("techniques_held")()), len(sim.view("event_log")())
         # FOR `changes`: what a bare node-or-concern-set diff cannot tell
         # you on its own - WHEN it changed. revealed/operating only ever
         # grow or lose members silently; snapshotting the sets either
         # side of this one year's step() is the one place that year's
         # own diff can still be taken, cheaply, before it is gone.
-        before_revealed = set(getattr(sim, "revealed", set()))
-        before_operating = set(sim.operating)
+        before_revealed = set(sim.view("techniques_revealed")())
+        before_operating = set(sim.view("operating")())
         _arrival_snapshot = None if ui_port.dashboard_history(sim) else _dashboard_snapshot(sim)
         stalled_before = set(stalled_projects(sim))
-        goal_was_startable = sim.goal in nodes and sim.can_start(sim.goal)
-        population_before = sim.population.total
+        goal_was_startable = sim.view("goal")()["node"] in nodes and sim.view("start_check")(sim.view("goal")()["node"], False, None, False)[0]
+        population_before = sim.view("population")().total
         year_log = []
         def run_year():
             year_log.extend(programme_before_year(sim, nodes))
@@ -233,7 +233,7 @@ def _cmd_step(sim, nodes, cmd, ended):
             break
         programme_log.extend(year_log)
         ran += 1
-        population_change = sim.population.total / population_before - 1.0 if population_before > 0 else 0.0
+        population_change = sim.view("population")().total / population_before - 1.0 if population_before > 0 else 0.0
         sim.send(NotePopulationChange(round(population_change, 4)))
         hist = ui_port.dashboard_history(sim)
         if hist is None:
@@ -245,17 +245,17 @@ def _cmd_step(sim, nodes, cmd, ended):
                          "concerns_closed": [], "completed": []})
         _snap = _dashboard_snapshot(sim)
         _snap["revealed_added"] = sorted(
-            set(getattr(sim, "revealed", set())) - before_revealed)
-        _snap["concerns_opened"] = sorted(sim.operating - before_operating)
-        _snap["concerns_closed"] = sorted(before_operating - sim.operating)
-        _snap["completed"] = sorted(sim.done - before_done)
+            set(sim.view("techniques_revealed")()) - before_revealed)
+        _snap["concerns_opened"] = sorted(sim.view("operating")() - before_operating)
+        _snap["concerns_closed"] = sorted(before_operating - sim.view("operating")())
+        _snap["completed"] = sorted(sim.view("techniques_held")() - before_done)
         hist.append(_snap)
         _trim_dashboard_history(sim, hist)
         if route:
             snapshots.append({**_snap, "route_startable": route_startable(sim, route)})
         else:
             snapshots.append(_snap)
-        step_progress.after_year(sim, {"year": sim.year, "capital": _snap["capital"],
+        step_progress.after_year(sim, {"year": sim.view("year")(), "capital": _snap["capital"],
                                        "completed": len(_snap["completed"]),
                                        "closed": len(_snap["concerns_closed"]), "years_asked": years,
                                        "last_asked_year": ran == years,
@@ -267,24 +267,24 @@ def _cmd_step(sim, nodes, cmd, ended):
         # own output impossible to diff. Caught by fingerprinting the
         # engine before and after being split into modules: every number
         # matched and this list did not.
-        for node_id in sorted(sim.done - before_done):
+        for node_id in sorted(sim.view("techniques_held")() - before_done):
             # YOURS OR THE SOCIETY'S: anything in `granted` is this
             # civilisation's own work, credited free, and has to be
             # marked apart from a project the player paid for and waited
             # years on, or the same "COMPLETED" line reads as the player
             # having built something on turn one they never started.
             completed.append({"id": node_id, "name": nodes[node_id]["name"],
-                              "year": sim.done_year.get(node_id),
-                              "granted": node_id in sim.granted,
-                              "kind": ("granted" if node_id in sim.granted
-                                       else "concern" if sim.is_venture(node_id)
+                              "year": sim.view("done_year")().get(node_id),
+                              "granted": node_id in sim.view("techniques_granted")(),
+                              "kind": ("granted" if node_id in sim.view("techniques_granted")()
+                                       else "concern" if sim.view("is_venture")[node_id]
                                        else "technology")})
-        for node_id in sorted(before_done - sim.done):
-            lost.append({"id": node_id, "name": nodes[node_id]["name"], "year": sim.year,
-                         "can_be_restored": node_id in getattr(sim, "mothballed", set())})
-        _this_year = sim.log[before_log:]
-        if getattr(sim, "disaster_this_year", None):
-            disasters.append(sim.disaster_this_year)
+        for node_id in sorted(before_done - sim.view("techniques_held")()):
+            lost.append({"id": node_id, "name": nodes[node_id]["name"], "year": sim.view("year")(),
+                         "can_be_restored": node_id in sim.view("mothballed")()})
+        _this_year = sim.view("event_log")()[before_log:]
+        if sim.view("disaster_this_year")():
+            disasters.append(sim.view("disaster_this_year")())
         events.extend(event_rows(_this_year))
         for year, message in _this_year:
             if cause_of(message) == "founder_dies":
@@ -298,7 +298,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         # run, so without this a `step 50` that crosses the finish line
         # would run on for the remaining years and mention it only in
         # passing. It is the one moment in a run most worth handing back.
-        if ran < years and sim.goal_year == sim.year:
+        if ran < years and sim.view("goal")()["year"] == sim.view("year")():
             stopped_early = ("stopped after %d of the %d years you asked "
                              "for: you reached it. Step again when you "
                              "have had a look around."
@@ -316,7 +316,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         severe_reason = severe_stop_reason(
             [{"message": message, **event_codes(message)} for _, message in _this_year],
             [nodes[node_id]["name"] for node_id in _snap["concerns_closed"]
-             if sim.staff_closure_age(node_id) is not None],
+             if sim.view("staff_closure_age")[node_id] is not None],
             sorted(set(stalled_projects(sim)) - stalled_before),
             [name for name in [newly_startable_goal(sim, goal_was_startable)] if name])
         if ran < years and severe_reason:
@@ -342,10 +342,10 @@ def _cmd_step(sim, nodes, cmd, ended):
     out["alerts"] = step_alerts(
         events, lost,
         [nodes[node_id]["name"] for snap in snapshots for node_id in snap.get("concerns_closed", ())],
-        founder_died_this_step, sim.goal_year if goal_year_before is None else None,
+        founder_died_this_step, sim.view("goal")()["year"] if goal_year_before is None else None,
         stopped_early, sim.view("population_change_last_year")(),
-        staffing_line=sim.staffing_closure_summary())
-    summary = wave_summary(completed, events, goal_before, sim.goal_snapshot())
+        staffing_line=sim.view("staffing_closure_summary")())
+    summary = wave_summary(completed, events, goal_before, sim.view("goal_snapshot")())
     for disaster in disasters:
         out["events"] = group_disaster_events(out["events"], disaster["name"], disaster["messages"])
     out["events"] = tag_events(out["events"])
@@ -354,7 +354,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     problems = step_problems(ran, snapshots, events, stalled_projects(sim))
     if problems:
         out["problems"] = problems
-    if goal_year_before is None and sim.goal_year is not None:
+    if goal_year_before is None and sim.view("goal")()["year"] is not None:
         out["victory"] = victory_report(sim, nodes)
     if founder_died_this_step:
         out["the_founder_died_this_step"] = founder_died_this_step
@@ -418,20 +418,20 @@ def _agent_dispatch(sim, nodes, cmd):
 
 def _agent_reply(sim, nodes, cmd):
     _out = add_cause(_agent_dispatch_inner(sim, nodes, cmd))
-    if sim.fuzzy_estimates and isinstance(cmd, dict):
+    if sim.view("legacy_fuzzy_estimates")() and isinstance(cmd, dict):
         _entry = command_registry.resolve(cmd.get("cmd") if isinstance(cmd.get("cmd"), str) else "")
         _out = fuzzy_estimates.fuzz_reply(sim, _entry["name"] if _entry else None, cmd, _out)
-    _out = _localise_money(_out, money_word(sim.civ))
-    _out = _localise_words(_out, ((sim.civ.get("local_words") or {}).get("pairs")))
+    _out = _localise_money(_out, money_word(sim.view("civilisation")()))
+    _out = _localise_words(_out, ((sim.view("civilisation")().get("local_words") or {}).get("pairs")))
     _out = units.add_display(_out, sim)
     # Compact runs last so the short summary already carries the local vocabulary.
     if isinstance(cmd, dict) and cmd.get("compact"):
-        _out = _add_compact_fields(cmd.get("cmd"), _out, sim, sim.nodes)
+        _out = _add_compact_fields(cmd.get("cmd"), _out, sim, sim.view("tree_nodes")())
     return _out
 
 
 def _agent_dispatch_inner(sim, nodes, cmd):
-    nodes = sim.nodes   # the tree in this civilisation's coin
+    nodes = sim.view("tree_nodes")()   # the tree in this civilisation's coin
     if not isinstance(cmd, dict) or "cmd" not in cmd:
         return {"ok": False, "error": "each line must be a JSON object with a 'cmd' field, "
                                       "e.g. {\"cmd\":\"state\"}"}
@@ -448,14 +448,14 @@ def _agent_dispatch_inner(sim, nodes, cmd):
             and cmd["cmd"].strip().lower() in name_commands()
             and cmd["id"] not in nodes):
         _name_cands = _resolve_by_name(cmd["id"])
-        if sim.fog:
+        if sim.view("legacy_fog")():
             # ONLY WHAT THE PLAYER HAS ACTUALLY HEARD OF. Two nodes can share
             # a name where one is built and the other is still beyond the
             # fog; handing back the hidden one as a candidate to disambiguate
             # between is exactly the leak the fog guard below exists to close,
             # so the filter runs before a player ever sees the list, not after.
             _name_memo = {}
-            _goal = sim.goal
+            _goal = sim.view("goal")()["node"]
             # THE GOAL'S NAME GETS THE SAME NARROW EXCEPTION ITS ID ALREADY
             # HAS, on `why` alone - see the fog guard's own comment on
             # _goal_why just below. Without this, a player who only ever
@@ -469,7 +469,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
             _exact_here = NODE_NAME_NORM.get(_norm_name(cmd["id"]), ())
             _op_lc = cmd["cmd"].strip().lower()
             _name_cands = candidates_the_player_may_see(
-                _name_cands, lambda node_id: sim.is_visible(node_id, _memo=_name_memo), _goal, _op_lc, _exact_here)
+                _name_cands, lambda node_id: sim.view("visibility")(node_id, _name_memo), _goal, _op_lc, _exact_here)
         if len(_name_cands) == 1:
             cmd = dict(cmd, id=_name_cands[0])
         elif len(_name_cands) > 1:
@@ -493,7 +493,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
     # Patching one command alone would leave the next command that grows
     # an id to make the same mistake, so the check lives here, once,
     # before any handler sees the id.
-    if sim.fog and isinstance(cmd.get("cmd"), str):
+    if sim.view("legacy_fog")() and isinstance(cmd.get("cmd"), str):
         _op = cmd["cmd"].strip().lower()
         _node_id = cmd.get("id")
         # THE SAME ANSWER WHETHER OR NOT IT EXISTS: refusing an unheard-of
@@ -513,13 +513,13 @@ def _agent_dispatch_inner(sim, nodes, cmd):
         # recursively into the hidden dependency graph. `why` under fog
         # already says only "this needs N other things you have not heard
         # of yet", which is the honest answer.
-        _goal_why = (_op == "why" and _node_id == sim.goal)
+        _goal_why = (_op == "why" and _node_id == sim.view("goal")()["node"])
         # a material id is not a tree node: `why` explains it from what the player already sees in `market`
         _material_why = (_op == "why" and isinstance(_node_id, str) and _node_id not in nodes
                          and material_story(sim, _node_id) is not None)
         if _op in id_commands() and isinstance(_node_id, str) and not _goal_why and not _material_why and (
-                _node_id not in nodes or not sim.is_visible(_node_id)):
-            if _node_id == sim.goal:
+                _node_id not in nodes or not sim.view("visibility")(_node_id, None)):
+            if _node_id == sim.view("goal")()["node"]:
                 # You know its name; you were handed it on arrival. Telling you
                 # that you have never heard of the thing you are aiming at, and
                 # then guessing you meant fin_contract_law, is absurd on its

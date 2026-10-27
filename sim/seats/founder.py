@@ -6,7 +6,7 @@ from sim.knowledge.api import ForgetTechnique
 from sim.reporting.api import RecordEvent
 
 from . import founder_rules
-from .commands import EndRun, SetFounderLife
+from .commands import EndRun, SetFounderLife, SetPolicy
 
 
 class Founder:
@@ -25,6 +25,9 @@ class Founder:
     def set_founder_life(self, command: SetFounderLife) -> None:
         self.seat.founder_alive = True
         self.seat.life_left = command.years
+
+    def set_policy(self, command: SetPolicy) -> None:
+        self.needs.legacy_seats()[self.clock.acting_seat].founder.policy[command.name] = command.value
 
     def end_run(self, command: EndRun) -> None:
         self.seat.dead_reason = command.reason

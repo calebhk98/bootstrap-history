@@ -38,16 +38,16 @@ def _read_attribute(sim, condition):
 
 
 def _read_generation_share(sim, condition):
-    breakdown = sim.generation_breakdown_kw()
+    breakdown = sim.view("generation_breakdown")()
     total = breakdown.get("total_kw") or 0.0
     return breakdown.get("sources_kw", {}).get(condition.get("key"), 0.0) / total if total else 0.0
 
 
 SOURCE_READERS["attribute"] = _read_attribute
 SOURCE_READERS["generation_share"] = _read_generation_share
-METRIC_READERS["epidemic_relief"] = lambda sim: 1.0 - sim.hazard_relief("staff_loss")[0]
-METRIC_READERS["literacy_general"] = lambda sim: sim.literacy("literacy_general")
-METRIC_READERS["literacy_elite"] = lambda sim: sim.literacy("literacy_elite")
+METRIC_READERS["epidemic_relief"] = lambda sim: 1.0 - sim.view("hazard_relief")("staff_loss")[0]
+METRIC_READERS["literacy_general"] = lambda sim: sim.view("literacy")("literacy_general")
+METRIC_READERS["literacy_elite"] = lambda sim: sim.view("literacy")("literacy_elite")
 
 
 def current_value(sim, condition):
@@ -58,7 +58,7 @@ def current_value(sim, condition):
             return SOURCE_READERS[condition["source"]](sim, condition)
         if metric in METRIC_READERS:
             return METRIC_READERS[metric](sim)
-        value = sim.civ.get(metric)
+        value = sim.view("civilisation")().get(metric)
         return float(value) if _is_number(value) else None
     except _READ_ERRORS:
         return None
@@ -105,9 +105,9 @@ METRIC_ROWS["literacy_elite"] = _literacy_rows("elite")
 
 def _relief_rows(sim, condition):
     found = []
-    for entry in sim.hazard_relief_entries("staff_loss"):
+    for entry in sim.view("hazard_relief_entries")("staff_loss"):
         node_id = entry.get("node")
-        hidden = bool(sim.fog and node_id and not sim.is_visible(node_id))
+        hidden = bool(sim.view("legacy_fog")() and node_id and not sim.view("visibility")(node_id, None))
         found.append(_row("an unseen measure" if hidden else entry["label"],
                           round(1.0 - entry["factor"], 4), "fraction",
                           "partly lapsed" if entry.get("lapsed_node") else ""))
@@ -129,7 +129,7 @@ def _attribute_rows(sim, condition):
 
 
 def _generation_rows(sim, condition):
-    breakdown = sim.generation_breakdown_kw()
+    breakdown = sim.view("generation_breakdown")()
     return [_row("this source", breakdown.get("sources_kw", {}).get(condition.get("key"), 0.0), "kW"),
             _row("all generation", breakdown.get("total_kw") or 0.0, "kW"),
             _row("share", current_value(sim, condition), "fraction")]
@@ -180,7 +180,7 @@ def anatomy_for(sim, condition, description=None):
 
 def goal_condition(sim):
     """(win_condition, description) of the current goal, or (None, None) for a research goal."""
-    node = sim.nodes.get(sim.goal) or {}
+    node = sim.view("tree_nodes")().get(sim.view("goal")()["node"]) or {}
     condition = node.get("win_condition")
     return (condition, ui_port.win_condition_describe(node)) if condition else (None, None)
 
@@ -188,23 +188,23 @@ def goal_condition(sim):
 def conditions_for_metric(sim, metric):
     """(condition, description) for each visible goal naming this metric, unmet first, by target."""
     found = []
-    for node_id in sorted(sim.nodes):
-        condition = sim.nodes[node_id].get("win_condition")
+    for node_id in sorted(sim.view("tree_nodes")()):
+        condition = sim.view("tree_nodes")()[node_id].get("win_condition")
         if not condition or condition.get("metric") != metric:
             continue
-        if sim.fog and not sim.is_visible(node_id):
+        if sim.view("legacy_fog")() and not sim.view("visibility")(node_id, None):
             continue
-        found.append((node_id in sim.done, condition.get("value") or 0.0, node_id, condition))
+        found.append((node_id in sim.view("techniques_held")(), condition.get("value") or 0.0, node_id, condition))
     found.sort(key=lambda item: item[:3])
-    return [(condition, ui_port.win_condition_describe(sim.nodes[node_id]))
+    return [(condition, ui_port.win_condition_describe(sim.view("tree_nodes")()[node_id]))
             for _, _, node_id, condition in found]
 
 
 def known_metrics(sim):
     """Metric names the player can ask about: those with a rule and those goals measure."""
     names = set(METRIC_ROWS)
-    for node_id, node in sim.nodes.items():
+    for node_id, node in sim.view("tree_nodes")().items():
         condition = node.get("win_condition")
-        if condition and condition.get("metric") and not (sim.fog and not sim.is_visible(node_id)):
+        if condition and condition.get("metric") and not (sim.view("legacy_fog")() and not sim.view("visibility")(node_id, None)):
             names.add(condition["metric"])
     return sorted(names)

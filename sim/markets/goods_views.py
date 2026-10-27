@@ -11,6 +11,10 @@ class GoodsViews:
 		"""The market's buy and sell terms for a tonne of a material, or None when it has no price."""
 		return self.goods_market.quote(material)
 
+	def sale_limits(self, material):
+		"""(tonnes the acting seat holds, tonnes the market takes now) of a material."""
+		return self.goods_market.sale_limits(material)
+
 	def material_trade_quote(self, material):
 		return self.economy.trade_quote(material)
 

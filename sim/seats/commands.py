@@ -100,3 +100,10 @@ class EndRun(Command):
 class SetFounderLife(Command):
     """The acting seat's founder is alive with `years` left."""
     years: float
+
+
+@dataclass(frozen=True)
+class SetPolicy(Command):
+    """The acting seat's standing policy switch `name` is now `value` (a flag, or a mode such as "replace")."""
+    name: str
+    value: Any

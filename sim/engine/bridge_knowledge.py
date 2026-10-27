@@ -21,6 +21,12 @@ def legacy_fog(sim):
     return sim.state._fog
 
 
+@bridge_view("legacy_fuzzy_estimates")
+def legacy_fuzzy_estimates(sim):
+    """Whether estimates are shown blurred (the mode of the game, set at its start or by the options screen)."""
+    return sim.state._fuzzy_estimates
+
+
 @bridge_view("category_trait", kind=QUOTE)
 def category_trait(sim, category, trait):
     """Whether the data gives the node category `category` the flag `trait`."""

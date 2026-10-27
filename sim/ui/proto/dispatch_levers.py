@@ -22,7 +22,7 @@ def _refusal(cause, error, choices=None, **fields):
 
 def own_country(sim):
     """The country the acting seat plays for."""
-    return sim.state.seats[sim.state.acting_seat].country or str(sim.civ["id"])
+    return sim.state.seats[sim.state.acting_seat].country or str(sim.view("civilisation")()["id"])
 
 
 def seat_government(sim, cmd):
@@ -37,7 +37,7 @@ def seat_government(sim, cmd):
     if named is not None and named != country:
         return None, None, _refusal("not_your_country", "you hold the government of %s and can set only its levers, not %s's."
                                     % (country, named), [country], country=named)
-    government = sim.actors.government_of(None if country == str(sim.civ["id"]) else country)
+    government = sim.view("cast")().government_of(None if country == str(sim.view("civilisation")()["id"]) else country)
     if government is None:
         return None, None, _refusal("no_government", "%s has no government to set." % country)
     return government, country, None
@@ -45,12 +45,12 @@ def seat_government(sim, cmd):
 
 def lever_context(sim, country, government):
     """What the country has: the revenue forms its state holds, the goods the economy knows, its people."""
-    if country == str(sim.civ["id"]):
-        people = sim.population.total
+    if country == str(sim.view("civilisation")()["id"]):
+        people = sim.view("population")().total
     else:
-        people = sim.actors.state.countries[country].population
+        people = sim.view("cast")().state.countries[country].population
     return government_levers.LeverContext(list(government.record.revenue_forms), set(material_prices(sim)), people,
-                                          set(sim.nodes))
+                                          set(sim.view("tree_nodes")()))
 
 
 def set_lever_reply(sim, cmd):

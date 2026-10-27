@@ -11,12 +11,12 @@ def shut_for_want_of_staff(sim, nodes):
     """Rows for shut, profitable concerns that are short of scholars, craftsmen
     or a foreman trade, biggest earners first; None when there are none."""
     rows = []
-    held_totals = sim.staffing_held_totals()
-    for node_id in sorted(sim.done):
-        if (not sim.is_venture(node_id) or node_id in sim.operating
+    held_totals = sim.view("staffing_held_totals")()
+    for node_id in sorted(sim.view("techniques_held")()):
+        if (not sim.view("is_venture")[node_id] or node_id in sim.view("operating")()
                 or nodes[node_id]["rev"] <= nodes[node_id]["up"]):
             continue
-        missing = sim.staffing_missing_to_open(node_id, held_totals)
+        missing = sim.view("staffing_missing_to_open")(node_id, held_totals)
         if not missing:
             continue
         fixes = ["hire %s %d" % (_HIRE_AS.get(resource, resource), max(1, math.ceil(amount - 0.005)))

@@ -123,15 +123,15 @@ def known_ids(sim, nodes, startable):
     """Every node the player is entitled to see: all of them, or under fog
     what they have heard of, started, finished or could begin.
     """
-    if not sim.fog:
+    if not sim.view("legacy_fog")():
         return set(nodes)
-    return set(getattr(sim, "revealed", ())) | set(sim.done) | set(sim.active) | set(startable)
+    return set(sim.view("techniques_revealed")()) | set(sim.view("techniques_held")()) | set(sim.view("active_projects")()) | set(startable)
 
 
 def blocked_ids(sim, known, startable):
     startable_set = set(startable)
     return [node_id for node_id in known
-            if node_id not in sim.done and node_id not in sim.active
+            if node_id not in sim.view("techniques_held")() and node_id not in sim.view("active_projects")()
             and node_id not in startable_set]
 
 
@@ -141,22 +141,22 @@ def ids_in_state(sim, state, known, startable):
     if state == "blocked":
         return blocked_ids(sim, known, startable)
     if state == "active":
-        return [node_id for node_id in sim.active if node_id in known]
-    return [node_id for node_id in sim.done if node_id in known]
+        return [node_id for node_id in sim.view("active_projects")() if node_id in known]
+    return [node_id for node_id in sim.view("techniques_held")() if node_id in known]
 
 
 def _row(sim, nodes, node_id, state):
     node = nodes[node_id]
     row = {"id": node_id, "name": node["name"], "cat": node["cat"],
            "tags": tags_of(node), "state": state,
-           "cost": round(sim.project_cost(node_id), 1)}
+           "cost": round(sim.view("project_cost")(node_id), 1)}
     if state == "blocked":
-        missing = [prereq for prereq in node["pre"] if prereq not in sim.done]
-        shown = [prereq for prereq in missing if not sim.fog or sim.is_visible(prereq)]
-        row["why_not"] = sim.start_reason(node_id)[1]
+        missing = [prereq for prereq in node["pre"] if prereq not in sim.view("techniques_held")()]
+        shown = [prereq for prereq in missing if not sim.view("legacy_fog")() or sim.view("visibility")(prereq, None)]
+        row["why_not"] = sim.view("start_check")(node_id)[1]
         row["missing"] = shown
         row["hidden_missing"] = len(missing) - len(shown)
-    stock = sim.stock_needed_by(node_id)
+    stock = sim.view("stock_status")[node_id]["needed_by"]
     if stock:
         row["living_stock"] = stock
     return row
@@ -168,7 +168,7 @@ def _orderer(sim, nodes, state, sort_fn, reverse):
     if state == "blocked":
         # nearest to startable first
         return lambda ids: sorted(ids, key=lambda k: (
-            sum(1 for prereq in nodes[k]["pre"] if prereq not in sim.done), k))
+            sum(1 for prereq in nodes[k]["pre"] if prereq not in sim.view("techniques_held")()), k))
     return lambda ids: sorted(ids)
 
 
@@ -187,7 +187,7 @@ def tag_overview(sim, nodes, known, startable, terms=()):
                         "startable": sum(1 for node_id in members if node_id in startable_set),
                         "blocked": sum(1 for node_id in members
                                        if node_id not in startable_set
-                                       and node_id not in sim.done and node_id not in sim.active),
+                                       and node_id not in sim.view("techniques_held")() and node_id not in sim.view("active_projects")()),
                         "_related": related})
     entries.sort(key=lambda entry: (not entry["_related"], -entry["visible"], entry["tag"]))
     for entry in entries:
@@ -213,9 +213,9 @@ def try_instead(sim, nodes, find, known, startable):
 
 
 def _state_of(sim, node_id, startable_set):
-    if node_id in sim.done:
+    if node_id in sim.view("techniques_held")():
         return "done"
-    if node_id in sim.active:
+    if node_id in sim.view("active_projects")():
         return "active"
     return "startable" if node_id in startable_set else "blocked"
 

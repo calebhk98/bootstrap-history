@@ -61,7 +61,7 @@ def run_as_seat(sim, cmd, reply):
     if refusal:
         return refusal
     if not sim.state.seats[seat_id].holds_household and _command_name(cmd) == "step":
-        playing = sim.playing_seats()
+        playing = sim.view("seat_list")()["playing"]
         if not playing:
             return {"ok": False, "cause": "no_household_seat",
                     "error": "no household seat is playing, so the year has no one to run it. Nothing was changed."}

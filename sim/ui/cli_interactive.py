@@ -253,25 +253,21 @@ def _play_build_sim(args, defer_economy=False):
             manual=True, civ=load_civ(_civ_for_session(args)), cfg=cfg, defer_economy=defer_economy)
     sim.seed = seed
     sim.session_seat = getattr(args, "seat", None)
-    sim.goal = goal
-    sim.done_year = {}
-    sim.end_year = sim.cfg["start_year"] + horizon
-    sim.fog = bool(getattr(args, "fog", False))
     # Flag or menu choice first; only a fresh game (no save on disk yet) falls
     # back to the settings default, so resuming never switches it on unasked.
-    sim.fuzzy_estimates = fuzzy_estimates_wanted(getattr(args, "fuzzy_estimates", None),
-                                                 bool(session and os.path.exists(session)),
-                                                 app_cfg.get("default_fuzzy_estimates", False))
-    sim.revealed = set()
+    ui_port.begin_game(sim, goal, sim.view("game_config")()["start_year"] + horizon, bool(getattr(args, "fog", False)),
+                       fuzzy_estimates_wanted(getattr(args, "fuzzy_estimates", None),
+                                              bool(session and os.path.exists(session)),
+                                              app_cfg.get("default_fuzzy_estimates", False)))
     # known routes are applied in _play_resolve_session, after any save is loaded
     # The reader is a person typing words, so the worked examples inside every
     # reply should be words too. See protocol.to_typed_hints.
     _protocol.TYPED_HINTS = True
     proto_util.HUMAN_AT_KEYBOARD = True
-    _protocol.MONEY_SHORT = money_short(sim.civ)
+    _protocol.MONEY_SHORT = money_short(sim.view("civilisation")())
     _protocol.COMMISSION_DISPLAY = settings.resolve_commission_display(app_cfg)
     cli_units_options.apply_saved_preferences(app_cfg)
-    units.set_civ_defaults(sim.civ)
+    units.set_civ_defaults(sim.view("civilisation")())
     return sim, nodes, session, app_cfg, kit, horizon
 
 
@@ -283,7 +279,7 @@ def _carry_known_routes(sim, args, nodes):
         route_ids += replay.read_known_routes(route_file)
     if not route_ids:
         return
-    if not sim.fog:
+    if not sim.view("legacy_fog")():
         print("   " + replay.fog_off_note())
         return
     applied = replay.apply_known_routes(sim, route_ids, nodes)
@@ -336,11 +332,11 @@ def _play_resolve_session(args, sim, session):
             return 1
         if settings.is_checkpoint(session):
             checkpoint_source = session
-            session = _pick_session_filename(sim.civ.get("id") or "game")
+            session = _pick_session_filename(sim.view("civilisation")().get("id") or "game")
         else:
-            print("Resumed from %s: %d AD." % (session, sim.year))
+            print("Resumed from %s: %d AD." % (session, sim.view("year")()))
     # after the load, so a resumed game keeps its carried routes (the load restores its own)
-    _carry_known_routes(sim, args, sim.nodes)
+    _carry_known_routes(sim, args, sim.view("tree_nodes")())
 
     if (fresh or checkpoint_source) and session:
         # WRITE IT NOW, not after the first command. The menu tells the player
@@ -356,7 +352,7 @@ def _play_resolve_session(args, sim, session):
         print("Resumed the checkpoint at %s: %d AD. A checkpoint stays "
               "exactly as it is - nothing you do now writes back into it. "
               "From here on, this game is autosaving to %s instead."
-              % (checkpoint_source, sim.year, session))
+              % (checkpoint_source, sim.view("year")(), session))
     return session, fresh
 
 
@@ -369,13 +365,13 @@ def _play_print_welcome(sim, kit):
     print(_wrap("You arrive in %d AD with %s and nothing else: no "
                 "employees, no slaves, and nobody who owes you anything. "
                 "What you have is everything you know."
-                % (sim.year, money_text(sim.capital, sim))))
+                % (sim.view("year")(), money_text(sim.view("acting_balance")(), sim))))
     # A kit is a number of labourer-years, so it is stated here in the
     # civilisation's own money at its own opening wage.
     if kit and kit in STARTING_KITS:
         print(_wrap('The "%s" kit is %.1f labourer-years of wages, which here is %s. %s'
-                    % (kit, STARTING_KITS[kit]["labourer_years"], money_text(sim.capital, sim),
-                       money_unit_note(sim.civ))))
+                    % (kit, STARTING_KITS[kit]["labourer_years"], money_text(sim.view("acting_balance")(), sim),
+                       money_unit_note(sim.view("civilisation")()))))
     print()
     # `open` BELONGS IN THE OPENING. Finishing a project earns you
     # nothing until you open its doors, auto_open ships off for a player
@@ -412,7 +408,7 @@ def _play_print_welcome(sim, kit):
     # today. It has no business being harder to find than the five above,
     # once a player has a goal in mind - which, on arrival, they already
     # do.
-    if not sim.fog:
+    if not sim.view("legacy_fog")():
         print()
         print(_wrap("Once you have a goal in mind: 'path <name>' lays "
                     "out everything still standing between here and "
@@ -445,9 +441,9 @@ def _play_prompt(sim):
     # showing "(you have 1, 0)" on the same turn would read as the game
     # having lost count of the player's own staff.
     return ("[%d AD | %s | you:%d hr | sch %.0f art %.0f | rep %.0f] > "
-              % (sim.year, money_text(sim.capital, sim, short=True), free_hours,
+              % (sim.view("year")(), money_text(sim.view("acting_balance")(), sim, short=True), free_hours,
                  sim.labour.effective_scholars(), sim.labour.craft_hands_available(),
-                 sim.reputation))
+                 sim.view("standing")()["reputation"]))
 
 
 def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, args):
@@ -640,7 +636,7 @@ def _play_finish(sim, nodes, args, session):
     if _agent_end_reason(sim) and not getattr(args, "_said_end", False):
         print(render_final(final_report(sim, nodes)))
         print()
-    print("Ended %d AD. %s" % (sim.year, _agent_end_reason(sim) or "stopped"))
+    print("Ended %d AD. %s" % (sim.view("year")(), _agent_end_reason(sim) or "stopped"))
     if _agent_end_reason(sim) and session:
         replay.record_end_of_run(sim, session)
         print("Routes you built: %s" % replay.routes_path(session))
@@ -700,18 +696,17 @@ def _ingame_options(sim, session):
     offered here either - see the menu below, which only ever offers "on".
     """
     while True:
-        mortal_on = not sim.cfg.get("immortal", True)
-        cur_end = getattr(sim, "end_year",
-                          sim.cfg["start_year"] + sim.cfg.get("horizon_years", 500))
+        mortal_on = not sim.view("game_config")().get("immortal", True)
+        cur_end = sim.view("horizon_end_year")()
         print()
         print("-" * 78)
         print("   OPTIONS")
         print("-" * 78)
         print("   civilisation : %s, %d AD                (fixed for this game)"
-              % (sim.civ.get("name", sim.civ.get("id", "?")), sim.cfg["start_year"]))
+              % (sim.view("civilisation")().get("name", sim.view("civilisation")().get("id", "?")), sim.view("game_config")()["start_year"]))
         print("   fog of war   : %-3s                          (fixed for this game)"
-              % ("on" if sim.fog else "off"))
-        print("   fuzzy estimates : %-3s" % ("on" if sim.fuzzy_estimates else "off"))
+              % ("on" if sim.view("legacy_fog")() else "off"))
+        print("   fuzzy estimates : %-3s" % ("on" if sim.view("legacy_fuzzy_estimates")() else "off"))
         print("   mortality    : %s"
               % ("on - the founder ages, and can die of it" if mortal_on
                  else "off - the founder does not age"))
@@ -720,11 +715,11 @@ def _ingame_options(sim, session):
         # ENDLESS_HORIZON_YEARS describes (see its own comment on why); this
         # is the one screen in cli.py that knows that and says the honest
         # thing instead of the literal one.
-        if _is_endless_horizon(cur_end, sim.cfg["start_year"]):
+        if _is_endless_horizon(cur_end, sim.view("game_config")()["start_year"]):
             print("   horizon      : none - Endless. Play until you choose to stop.")
         else:
             print("   horizon      : ends %d AD  (now %d AD, %d years left)"
-                  % (cur_end, sim.year, max(0, cur_end - sim.year)))
+                  % (cur_end, sim.view("year")(), max(0, cur_end - sim.view("year")())))
         print("   this save    : %s"
               % (session or "(not being saved anywhere - restart with --session "
                             "to change that)"))
@@ -735,7 +730,7 @@ def _ingame_options(sim, session):
         if session:
             print("   3) move this save to a different file")
         print("   f) turn fuzzy estimates on from now on%s"
-              % ("  (already on)" if sim.fuzzy_estimates else ""))
+              % ("  (already on)" if sim.view("legacy_fuzzy_estimates")() else ""))
         print("   u) display units (%s)"
               % cli_units_options.summary_line(settings.load_config()))
         print("   b) back to the game")
@@ -754,7 +749,7 @@ def _ingame_options(sim, session):
             try:
                 raw2 = input("   New end year (a whole number of AD, > %d), "
                              "or 'endless' for no deadline at all: "
-                             % sim.year).strip()
+                             % sim.view("year")()).strip()
             except (EOFError, KeyboardInterrupt):
                 print(); continue
             if not raw2:
@@ -762,7 +757,7 @@ def _ingame_options(sim, session):
                 continue
             if raw2.lower() in ("endless", "none", "forever", "no deadline",
                                "no limit", "unlimited"):
-                new_end = sim.year + ENDLESS_HORIZON_YEARS
+                new_end = sim.view("year")() + ENDLESS_HORIZON_YEARS
             else:
                 try:
                     new_end = int(raw2)
@@ -770,20 +765,20 @@ def _ingame_options(sim, session):
                     print("   -- that is not a whole number of years, or "
                           "'endless'.")
                     continue
-                if new_end <= sim.year:
+                if new_end <= sim.view("year")():
                     print("   -- %d AD has already passed (or is now); the "
                           "game would end the moment you left this menu. Pick "
                           "a later year." % new_end)
                     continue
-            new_horizon = new_end - sim.cfg["start_year"]
-            sim.end_year = new_end
-            sim.cfg["horizon_years"] = new_horizon
+            new_horizon = new_end - sim.view("game_config")()["start_year"]
+            ui_port.set_end_year(sim, new_end)
+            sim.view("game_config")()["horizon_years"] = new_horizon
             if session:
                 meta = settings.load_session_meta(session)
                 meta["horizon_years"] = new_horizon
                 settings.save_session_meta(session, meta)
             print("   -- done. This game now has no deadline (Endless)."
-                  if _is_endless_horizon(new_end, sim.cfg["start_year"]) else
+                  if _is_endless_horizon(new_end, sim.view("game_config")()["start_year"]) else
                   "   -- done. This game now ends in %d AD." % new_end)
 
         elif word in ("2", "mortal", "mortality") and not mortal_on:
@@ -802,19 +797,19 @@ def _ingame_options(sim, session):
                 # choosing to become mortal partway through it. See core.py
                 # around "founder remaining lifespan" for the line this
                 # mirrors.
-                mean = sim.cfg.get("founder_life_mean", DEFAULTS["founder_life_mean"])
-                std_dev = sim.cfg.get("founder_life_sd", DEFAULTS["founder_life_sd"])
-                sim.cfg["immortal"] = False
+                mean = sim.view("game_config")().get("founder_life_mean", DEFAULTS["founder_life_mean"])
+                std_dev = sim.view("game_config")().get("founder_life_sd", DEFAULTS["founder_life_sd"])
+                sim.view("game_config")()["immortal"] = False
                 sim.send(SetFounderLife(max(INGAME_MORTALITY_MIN_REMAINING_LIFE_YEARS, sim.rng.gauss(mean, std_dev))))
-                print("   -- done. Mortality is on from %d AD." % sim.year)
+                print("   -- done. Mortality is on from %d AD." % sim.view("year")())
             else:
                 print("   -- unchanged.")
 
         elif word in ("u", "unit", "units"):
             cli_units_options.edit_display_units(
-                settings.load_config(), sim.civ.get("id"), input)
+                settings.load_config(), sim.view("civilisation")().get("id"), input)
 
-        elif word in ("f", "fuzzy") and not sim.fuzzy_estimates:
+        elif word in ("f", "fuzzy") and not sim.view("legacy_fuzzy_estimates")():
             # One-way like mortality, unlike fog: turning it on only hides
             # detail from now on, but turning it off would reveal exact
             # figures the player was told to treat as uncertain.

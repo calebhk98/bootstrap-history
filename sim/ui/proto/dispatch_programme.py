@@ -19,11 +19,11 @@ def _number(raw, key):
 def _target(sim, raw):
     """(target, error): a category of work, or a goal (id, name, or the current goal)."""
     text = "" if raw is None else str(raw).strip()
-    nodes = sim.nodes
+    nodes = sim.view("tree_nodes")()
     categories = {str(node.get("cat", "")).lower() for node in nodes.values()}
     if text and text not in nodes and text.lower() in categories:
         return {"kind": "category", "value": text.lower()}, None
-    if sim.fog:
+    if sim.view("legacy_fog")():
         return None, FOG_REFUSAL + " A programme can follow a category instead: 'programme set <category>'."
     goal, error = resolve_goal(sim, text)
     return ({"kind": "goal", "value": goal}, None) if goal else (None, error)

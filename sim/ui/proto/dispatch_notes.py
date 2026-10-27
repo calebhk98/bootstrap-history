@@ -8,9 +8,9 @@ PAGE = 20
 
 def _project_name(sim, node_id):
     """The project's name, or None when there is none or fog hides it."""
-    if node_id is None or node_id not in sim.nodes or (sim.fog and not sim.is_visible(node_id)):
+    if node_id is None or node_id not in sim.view("tree_nodes")() or (sim.view("legacy_fog")() and not sim.view("visibility")(node_id, None)):
         return None
-    return sim.nodes[node_id].get("name", node_id)
+    return sim.view("tree_nodes")()[node_id].get("name", node_id)
 
 
 def _entry(sim, row):

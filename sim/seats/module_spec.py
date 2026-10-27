@@ -11,7 +11,7 @@ from sim.knowledge.api import ForgetTechnique, LearnTechnique, RevealNodes
 from sim.reporting.api import RecordEvent
 
 from .commands import (AnswerOffer, ApplyForPatent, EndRun, ForgetGoalCaches, HandOverSeat, JoinCastSeats, JoinSeat, MakeOffer,
-                       MoveSeat, RecordGoalReached, RegisterSeat, RememberGoalClosure, SetFounderLife, SetGoal)
+                       MoveSeat, RecordGoalReached, RegisterSeat, RememberGoalClosure, SetFounderLife, SetGoal, SetPolicy)
 from .module import Seats
 from .state import SeatsSeat
 
@@ -57,7 +57,7 @@ MODULE_SPECS = (ModuleSpec(
     applies=((JoinSeat, "join_seat"), (JoinCastSeats, "join_cast_seats"), (HandOverSeat, "hand_over_seat"),
              (SetGoal, "set_goal"), (RecordGoalReached, "record_goal_reached"), (ApplyForPatent, "apply_for_patent"),
              (MakeOffer, "make_offer"), (AnswerOffer, "answer_offer"), (EndRun, "end_run"),
-             (SetFounderLife, "set_founder_life")),
+             (SetFounderLife, "set_founder_life"), (SetPolicy, "set_policy")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(RegisterSeat, MoveSeat, ForgetGoalCaches, RememberGoalClosure, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent),
     phases=(PhaseHook("hear_of_other_seats", "hear_of_other_seats"), PhaseHook("win_conditions", "check_win_conditions"),
