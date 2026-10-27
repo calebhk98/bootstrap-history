@@ -153,7 +153,7 @@ REPUTATION_PROTECTION_SCALE = declare(
     confidence="D",
     why="How fast reputation converts into protection, against "
         "REPUTATION_PROTECTION_CAP above. Reputation's own scale is "
-        "itself invented (see STANDING_* in economy.py), so this "
+        "itself invented (see STANDING_* below), so this "
         "denominator is a heuristic layered on a heuristic.")
 BRIBERY_PROTECTION_CAP = declare(
     "BRIBERY_PROTECTION_CAP", 0.30, kind="temporary_heuristic",
@@ -669,7 +669,7 @@ REPUTATION_CEILING = declare(
     "REPUTATION_CEILING", 100.0, kind="temporary_heuristic",
     unit="reputation points", source=None, confidence="D",
     why="The top of the reputation scale this engine uses throughout "
-        "(REPUTATION_EASE_SCALE in economy.py reads reputation "
+        "(REPUTATION_EASE_SCALE below reads reputation "
         "against this same implicit ceiling). A scale choice, not a "
         "measured social fact.")
 

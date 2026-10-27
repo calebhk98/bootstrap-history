@@ -33,7 +33,7 @@ BRIBE_LABOUR_HOURS_PER_SCANDAL_POINT = declare(
     unit="labour hours per point of household.scandal, at bribability=1", source=None, confidence="D",
     why='What it costs to erase one point of scandal outright. Scandal itself '
         'has no independent source model for who spreads it or how fast (the '
-        'same gap STANDING_SCANDAL_PENALTY_PER_POINT in economy.py notes), so '
+        'same gap STANDING_SCANDAL_PENALTY_PER_POINT in the polity module notes), so '
         'this conversion rate is a placeholder for that whole missing '
         'mechanism, not a measured price of silence. An official accepts a '
         'payment worth the work and risk he gives up, so the sum is the hours '

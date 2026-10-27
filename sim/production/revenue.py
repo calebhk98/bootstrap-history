@@ -7,7 +7,7 @@ of output sells for once made: `revenue_capacity`, `revenue` and `revenue_source
 the held-skill and candidate-set caches that `revenue` and `upkeep` share.
 
 The caches live on the household object because the engine drops them there when what they read changes
-(`_done_changed`, `_operating_changed`, `_reset_economic_caches` in economy.py).
+(`caches.forget_done`, `forget_operating`, `forget_revenue`, which the engine's household hooks call).
 Needs: legacy_game, money_per_labour_hour, category_trait, trade_family, staff, staff_version, hour_commitments, standing."""
 from sim.world import plant_figures
 
