@@ -39,7 +39,6 @@ from .forward_finance import ForwardFinanceMixin
 from .forward_production import ForwardProductionMixin
 from .forward_freight import ForwardFreightMixin
 from .forward_resources import ForwardResourcesMixin
-from .forward_materials import ForwardMaterialsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .year_steps import StepContext
 from .data import trade_family
@@ -66,7 +65,6 @@ class Sim(
         ReportingForwardsMixin,
         ForwardAgricultureMixin,
         ForwardResourcesMixin,
-        ForwardMaterialsMixin,
         ForwardDemographyMixin,
 ):
     FOUNDER_MIN_REMAINING_LIFE_YEARS = declare(

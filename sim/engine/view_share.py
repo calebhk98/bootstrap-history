@@ -96,10 +96,10 @@ class ViewShare:
         if self._view_scope is None:
             return compute()
         keys = self._shared_bill_keys(node_id)
-        return self._shared_answer(("bill", node_id), tuple(self.sim.material_stock_t(key) for key in keys), compute)
+        return self._shared_answer(("bill", node_id), tuple(self.sim.view("goods_stock")[key] for key in keys), compute)
 
     def _shared_bill_keys(self, node_id):
         """The commodities a node's bill draws on; these change only with the done set."""
         sim = self.sim
         return sim._done_memo("bill_keys", node_id, lambda: tuple(sorted({
-            sim._material_tag(material)[0] for material in sim.project_material_needs(node_id)})))
+            sim.view("material_pool")[material][0] for material in sim.view("project_material_needs")[node_id]})))

@@ -2,11 +2,8 @@
 tracked by the material checks (COMMODITIES.md section 0/7.1). The rules are called on a ledger and on a stub game."""
 QUICK_TOPIC = True
 
-import types
-
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.forward_materials import ForwardMaterialsMixin
 from sim.materials import constants as material_constants
 from sim.tests import materials_stand_in
 
@@ -23,28 +20,6 @@ check("...while the SAME call with no override still reads commodities.json's "
       "own (much larger) national figure, exactly as before",
       plenty["met_fraction"] > tiny["met_fraction"],
       (plenty["met_fraction"], tiny["met_fraction"]))
-
-# --- wire_chain_report hands the ledger THIS game's reachable copper (its own mines plus what the market will sell),
-# so the same order is met in one society and not in another, and the shortfall is attributed to copper.
-def wire_report(own_t, market_t, order_t):
-    game = types.SimpleNamespace(_own_material_supply=lambda tag: own_t, _material_market_tonnes=lambda material: market_t)
-    return ForwardMaterialsMixin.wire_chain_report(game, order_t)
-
-
-rep_modest = wire_report(40.0, 160.0, 5.0)
-check("a modest copper wire order is fully met when the copper is reachable",
-      rep_modest["met_fraction"] > 0.999, rep_modest["met_fraction"])
-rep_big = wire_report(40.0, 160.0, 2000.0)
-check("an industrial copper wire order is NOT fully met, and the shortfall is attributed to copper, "
-      "not to wire-drawing capacity",
-      rep_big["met_fraction"] < 0.95 and rep_big["children"]["copper"]["bottleneck"] == "copper"
-      and rep_big["bottleneck"] is None, (rep_big["met_fraction"], rep_big["bottleneck"]))
-rep_poor = wire_report(4.0, 16.0, 2000.0)
-check("a society with less reach to copper gets a worse chain report for the identical request",
-      rep_poor["children"]["copper"]["own_capacity_t"] < rep_big["children"]["copper"]["own_capacity_t"]
-      and rep_poor["met_fraction"] < rep_big["met_fraction"],
-      (rep_poor["children"]["copper"]["own_capacity_t"], rep_big["children"]["copper"]["own_capacity_t"]))
-check("a negative order is read as none", wire_report(40.0, 160.0, -3.0)["met_fraction"] >= 0.999, "negative order refused")
 
 # --- the aggregation: material keys drawing on the SAME supply are summed before being compared to it, not checked one at
 # a time against the whole supply each time (_demand_by_supply_tag).

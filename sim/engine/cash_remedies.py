@@ -13,10 +13,10 @@ def cash_remedies(actor):
     found = []
     # Living stock is the means of breeding more; it is not offered as cash.
     breeding_stock = {actor.view("material_commodity")[material] for material in stock_rates()}
-    for material in sorted(actor._material_stock()):
+    for material in sorted(actor.view("held_goods")()):
         if material in breeding_stock:
             continue
-        stock = actor.material_stock_t(material)
+        stock = actor.view("goods_stock")[material]
         _key, tonnes, money = actor.view("legacy_goods_market")().quote_sell(material, stock)
         if money > 0:
             found.append((money, "sell %s %s (brings %s now)" % (
