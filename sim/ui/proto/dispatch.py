@@ -60,18 +60,18 @@ for _module_info in sorted(pkgutil.iter_modules([os.path.dirname(__file__)]),
                           if name.startswith("_cmd_")})
 
 
-def id_commands():
+def id_commands(table=command_registry.SHIPPED):
     """Commands that name a technology. Under fog, NONE of them may say
     anything about one you have not heard of - including refusing it for a
     reason that describes it."""
-    return command_registry.names_with_shape("tech")
+    return table.names_with_shape("tech")
 
 
-def name_commands():
+def name_commands(table=command_registry.SHIPPED):
     """Commands whose `id` a typed NAME should resolve onto before anything
     else touches it: the id commands, plus those safe without the fog guard
     (you can only open something already done) that still take a name."""
-    return command_registry.names_with_shape("tech", "tech_done")
+    return table.names_with_shape("tech", "tech_done")
 
 
 @command("save", shape="file", group="game",
@@ -387,13 +387,10 @@ command_registry.register_command(
     description="Replaces the current game with a saved one.",
     handler=_cmd_save)
 
-# Mod commands join the registry before the tables below are read from it.
-mod_commands.load_mod_commands()
-
-# Every command word and alias mapped to its handler, from the registry.
+# Every shipped command word and alias mapped to its handler, from the registry (a game's own table: command_registry.table_of).
 _AGENT_DISPATCH_TABLE = command_registry.handlers()
 
-# Every command name, read from the registry.
+# Every shipped command name, read from the registry.
 KNOWN_COMMANDS = tuple(command_registry.COMMANDS)
 
 # 'compact' replaces the reply with a short summary (see compact.py); a
@@ -419,7 +416,7 @@ def _agent_dispatch(sim, nodes, cmd):
 def _agent_reply(sim, nodes, cmd):
     _out = add_cause(_agent_dispatch_inner(sim, nodes, cmd))
     if sim.view("legacy_fuzzy_estimates")() and isinstance(cmd, dict):
-        _entry = command_registry.resolve(cmd.get("cmd") if isinstance(cmd.get("cmd"), str) else "")
+        _entry = command_registry.table_of(sim).resolve(cmd.get("cmd") if isinstance(cmd.get("cmd"), str) else "")
         _out = fuzzy_estimates.fuzz_reply(sim, _entry["name"] if _entry else None, cmd, _out)
     _out = _localise_money(_out, money_word(sim.view("civilisation")()))
     _out = _localise_words(_out, ((sim.view("civilisation")().get("local_words") or {}).get("pairs")))
@@ -432,6 +429,7 @@ def _agent_reply(sim, nodes, cmd):
 
 def _agent_dispatch_inner(sim, nodes, cmd):
     nodes = sim.view("tree_nodes")()   # the tree in this civilisation's coin
+    table = command_registry.table_of(sim)
     if not isinstance(cmd, dict) or "cmd" not in cmd:
         return {"ok": False, "error": "each line must be a JSON object with a 'cmd' field, "
                                       "e.g. {\"cmd\":\"state\"}"}
@@ -445,7 +443,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
     # takes a raw id unchanged - this only fires when what was given is NOT
     # already one, so scripts and the `agent` protocol lose nothing.
     if (isinstance(cmd.get("cmd"), str) and isinstance(cmd.get("id"), str)
-            and cmd["cmd"].strip().lower() in name_commands()
+            and cmd["cmd"].strip().lower() in name_commands(table)
             and cmd["id"] not in nodes):
         _name_cands = _resolve_by_name(cmd["id"])
         if sim.view("legacy_fog")():
@@ -517,7 +515,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
         # a material id is not a tree node: `why` explains it from what the player already sees in `market`
         _material_why = (_op == "why" and isinstance(_node_id, str) and _node_id not in nodes
                          and material_story(sim, _node_id) is not None)
-        if _op in id_commands() and isinstance(_node_id, str) and not _goal_why and not _material_why and (
+        if _op in id_commands(table) and isinstance(_node_id, str) and not _goal_why and not _material_why and (
                 _node_id not in nodes or not sim.view("visibility")(_node_id)):
             if _node_id == sim.view("goal")()["node"]:
                 # You know its name; you were handed it on arrival. Telling you
@@ -546,7 +544,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
     command = cmd.get("cmd")
     ended = _agent_end_reason(sim)
 
-    _stray = unknown_field_refusal(cmd)
+    _stray = unknown_field_refusal(cmd, table)
     if _stray:
         return _stray
 
@@ -570,7 +568,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
                 "error": "%s must be a real number; NaN and Infinity are not "
                          "quantities. Nothing was changed." % ", ".join(bad)}
 
-    _handler = command_registry.handlers().get(command)
+    _handler = table.handlers().get(command)
     if _handler is not None:
         return _handler(sim, nodes, cmd, ended)
 
@@ -579,4 +577,4 @@ def _agent_dispatch_inner(sim, nodes, cmd):
     # was handed a list that silently omitted labour, hire, train, commission,
     # money, risk, policy, quote, close, mothball, restore, work and bribe.
     # A help message that is wrong is worse than none, because it is believed.
-    return {"ok": False, "error": command_registry.unknown_command_error(command)}
+    return {"ok": False, "error": table.unknown_command_error(command)}

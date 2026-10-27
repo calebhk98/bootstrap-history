@@ -68,6 +68,10 @@ from sim.ui.proto.render import (
     _RENDERERS, TYPED_HINTS, MONEY_SHORT, COMMISSION_DISPLAY, _typed_form, _JSON_HINT,
     _JSON_PAIR, _typed_deep, to_typed_hints, _DEN_RE, render_pretty
 )
+from sim.ui.proto.command_registry import shipped_commands
+from sim.ui.proto.mod_commands import data_command_handler
+from sim.ui.figures import DEFAULT_DIGITS, shipped_figures
+from sim.ui.figures_data import figure_computer
 from sim.ui.proto.typed import (
     TYPED_ALIASES, _typed_number, _absorb_key_colons, parse_typed
 )

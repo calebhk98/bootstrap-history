@@ -175,14 +175,32 @@ Data is the default and covers most needs. A mod that needs Python lists files i
 ```
 
 Each file defines `register(api)`. The `api` object registers commands (`@api.command(name, group=..., summary=...,
-usage=[...], description=...)` with a handler `(sim, nodes, cmd, ended) -> dict`), actor kinds (`api.actor_kind`),
+usage=[...], description=...)` with a handler `(sim, nodes, cmd, ended) -> dict`), headline figures (`@api.figure(name, label, unit=...)` on
+`compute(sim) -> {"value", "components", "flows", "drivers"}`), actor kinds (`api.actor_kind`),
 policies (`api.policy`), spawners (`api.spawner`) and a player actor's orders (`api.player_command`); every name is
 forced into `<mod_id>:`. Each of these records an answer to an extension point of the module that owns it; `api.provide(point,
 function)` adds an answer to any point directly (`actor_kinds`, `actor_spawners`, `actor_policies`, `player_commands`,
-`wealth_claims`, `town_population`, `town_mortality_premium`, `director_overhead`, `externality`, `store_declarations`, and
+`wealth_claims`, `interface_commands`, `interface_figures`, `town_population`, `town_mortality_premium`, `director_overhead`, `externality`, `store_declarations`, and
 a module's own). What a mod records is kept per mod, so two games in one process run the mods of their own set. A handler keeps its
 state only in `api.state(sim.state.interface)`, a plain dict that is saved with the game, and draws random numbers
 only from `api.rng(world, ...)`, so saves and the fingerprint stay reproducible.
+
+### Changing the module set
+
+A mod's code can change which modules a game is assembled from; every operation is kept per mod and applied, in mod load order,
+to the game built over that mod set (`python3 -m sim.tests --slow --only mod_operations_smoke` runs each one in a whole game).
+
+* `api.add_module(spec)`: a new module `<mod_id>:<name>` with its own saved state, views, commands and phases.
+* `api.replace_module(module_id, spec)`: stand in for a module; the spec must publish every view, apply every command and declare
+  every extension point of the one it replaces. Two unrelated mods replacing one module is an error naming both.
+* `api.remove_module(module_id)`: refused while a remaining module reads one of its views or sends one of its commands; the
+  error names the remover and every reader.
+* `api.extend_module(module_id, layer)`: a class laid over the implementation, so its methods override and `super()` reaches the
+  layer below. Layers stack in mod load order; a method outside the module's declared ones is labelled unstable.
+* `api.adjust_view(view, function, reads=())`: `function(needs, value, *key_or_arguments) -> value` over a published view;
+  adjusters stack in mod load order.
+* `api.provide(point, function)` and `api.withdraw("<module_id>.<provision>")`: add an answer to an extension point, or take a
+  shipped module's answer out of one.
 
 ### Adding a phase to the year
 

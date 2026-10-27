@@ -14,7 +14,6 @@ from sim.engine.mod_effects import ModEffects
 from sim.stores.api import StoreSpec, declare_all
 from sim.tests.store_stand_in import StoreHost
 from sim.tests.bridge_send import attach_send
-from sim.ui.proto import mod_commands
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 
 ACME = "test_acme_k3f9"
@@ -33,9 +32,7 @@ class StoreTestBase(ModTestBase):
 
     def clean(self):
         mod_code.LOADED.clear()
-        mod_code.COMMAND_REGISTRATIONS.clear()
         mod_code.MOD_OPERATIONS.clear()
-        mod_commands.forget_mod_commands()
 
     def write_data(self, mod_id, relative, document):
         path = self.mods_dir / mod_id / relative

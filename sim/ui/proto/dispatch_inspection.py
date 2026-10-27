@@ -1,7 +1,7 @@
 """Read-only overview commands: state, available, log, score, finish, why."""
 
 from .command_registry import command
-from sim.ui.figures import FIGURES
+from sim.ui.figures import figures_of
 from .dispatch_figures import figure_reply
 from sim.engine.ui_port import active_years_left, remaining_critical_path_years
 from .explain_once import already_explained
@@ -106,7 +106,7 @@ def _cmd_finish(sim, nodes, cmd, ended):
                      "is or is not startable right now.")
 def _cmd_why(sim, nodes, cmd, ended):
     node_id = cmd.get("id")
-    if node_id in FIGURES and node_id not in nodes:
+    if node_id in figures_of(sim) and node_id not in nodes:
         return figure_reply(sim, node_id)
     # The goal is the one thing you were told the name of on arrival; see
     # the _goal_why note on the fog guard above for why it is `why` alone.

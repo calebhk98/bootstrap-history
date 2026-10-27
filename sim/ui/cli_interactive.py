@@ -49,6 +49,7 @@ from sim.ui.fuzzy_choice import fuzzy_estimates_wanted, turn_fuzzy_estimates_on
 from sim.ui.wizard_answers import remember_answers
 from sim.ui.save_policy import SESSION_WORDS, SavePolicy
 from sim.ui.proto import step_progress
+from sim.ui.proto.command_registry import table_of
 from sim.ui.proto import util as proto_util
 from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
                        load_state, parse_typed, render_final, render_pretty,
@@ -157,7 +158,7 @@ def _play_loop(sim, nodes, session, app_cfg, args, collecting, policy):
             if should_exit:
                 return exit_value
             continue
-        cmd, err = parse_typed(line)
+        cmd, err = parse_typed(line, table_of(sim))
         if err:
             print("   " + err)
             continue

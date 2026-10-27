@@ -13,8 +13,8 @@ JSON_MODE_NOTE = (
     "explanation; 'stuck' gives blockers. Other commands ignore 'compact'")
 
 
-def _command_text(name, fog):
-    entry = command_registry.COMMANDS[name]
+def _command_text(table, name, fog):
+    entry = table.commands[name]
     if fog and entry["fog_hidden"]:
         return "not available under fog of war"
     return "%s. %s" % (entry["summary"], entry["description"])
@@ -36,7 +36,7 @@ def _group_line(names):
 
 def index(sim):
     """The short default: the start-here block and one line per group."""
-    groups = command_registry.grouped()
+    groups = command_registry.table_of(sim).grouped()
     return {
         "start here": {**START_HERE,
                        "the rest": "the groups below; help commands <group> lists one"},
@@ -47,21 +47,23 @@ def index(sim):
 
 
 def group_page(sim, group):
-    groups = command_registry.grouped()
+    table = command_registry.table_of(sim)
+    groups = table.grouped()
     if group not in groups:
-        near = command_registry.close_matches(group, list(groups))
+        near = table.close_matches(group, list(groups))
         return {"no such group": group, "groups": list(groups),
                 "did you mean": [word for word in near if word in groups]}
     names = groups[group]
     return {"group": group,
-            "commands": {name: _command_text(name, sim.view("legacy_fog")()) for name in names},
-            "usage": {name: command_registry.COMMANDS[name]["usage"] for name in names},
+            "commands": {name: _command_text(table, name, sim.view("legacy_fog")()) for name in names},
+            "usage": {name: table.commands[name]["usage"] for name in names},
             "more": "help <command> for one command's usage and options"}
 
 
 def full_listing(sim, limit=None, offset=0):
     """Every registered command; limit and offset page the commands, usage and groups."""
-    names = list(command_registry.COMMANDS)
+    table = command_registry.table_of(sim)
+    names = list(table.commands)
     page = {"start here": {**START_HERE,
                            "the rest": "everything below; help <command> shows one command's usage"}}
     shown = names
@@ -73,10 +75,10 @@ def full_listing(sim, limit=None, offset=0):
             page["paging"]["next"] = "help commands all limit %d offset %d" % (limit, offset + len(shown))
     page.update({
         "commands": {"json / compact": JSON_MODE_NOTE,
-                     **{name: _command_text(name, sim.view("legacy_fog")()) for name in shown}},
-        "usage": {name: command_registry.COMMANDS[name]["usage"] for name in shown},
-        "groups": command_registry.grouped(),
-        "aliases": command_registry.alias_map(),
+                     **{name: _command_text(table, name, sim.view("legacy_fog")()) for name in shown}},
+        "usage": {name: table.commands[name]["usage"] for name in shown},
+        "groups": table.grouped(),
+        "aliases": table.alias_map(),
         "more": 'help <command> or help <alias> for one command\'s usage, '
                 'options and description',
     })

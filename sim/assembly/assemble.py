@@ -82,13 +82,15 @@ def _missing(assembly: Assembly, reader: str, name: str) -> AssemblyError:
 
 
 def _check_reads(assembly: Assembly) -> None:
+	"""Every read and every send has a provider; every one that has none is reported together, so a removal names each reader."""
+	problems: List[str] = []
 	for module_id, spec in assembly.applied.specs.items():
 		for name in spec.reads:
 			if assembly.provider_of(name) is None:
-				raise _missing(assembly, "module %s" % module_id, name)
+				problems.append(str(_missing(assembly, "module %s" % module_id, name)))
 		for command in spec.sends:
 			if command not in assembly.command_owner:
-				raise AssemblyError("module %s sends %s, which no module applies%s" % (
+				problems.append("module %s sends %s, which no module applies%s" % (
 					module_id, command.__name__, _removal_note(assembly, command=command)))
 		own = {view.name for view in spec.publishes}
 		for view in spec.publishes:
@@ -96,7 +98,9 @@ def _check_reads(assembly: Assembly) -> None:
 				if name not in own and name not in spec.reads and name not in spec.optional_reads:
 					raise AssemblyError("view %s of module %s depends on %s, which the module does not read" % (view.name, module_id, name))
 				if assembly.view_owner.get(name) is None and name not in spec.optional_reads:
-					raise _missing(assembly, "view %s of module %s" % (view.name, module_id), name)
+					problems.append(str(_missing(assembly, "view %s of module %s" % (view.name, module_id), name)))
+	if problems:
+		raise AssemblyError("; ".join(problems))
 	for view, entries in assembly.applied.adjusters.items():
 		for mod_id, _function, reads in entries:
 			if view not in assembly.view_owner:

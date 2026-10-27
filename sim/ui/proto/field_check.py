@@ -145,9 +145,9 @@ def _unreadable(handler):
     return handler is not None and (handler.__name__ == "<lambda>" or handler.__module__.endswith(".mod_commands"))
 
 
-def unknown_field_refusal(cmd):
+def unknown_field_refusal(cmd, table=command_registry.SHIPPED):
     """A refusal naming the first field the command does not take, or None."""
-    entry = command_registry.resolve(cmd.get("cmd") if isinstance(cmd.get("cmd"), str) else "")
+    entry = table.resolve(cmd.get("cmd") if isinstance(cmd.get("cmd"), str) else "")
     if entry is None or _unreadable(entry["handler"]):
         return None
     common = common_fields()

@@ -173,7 +173,7 @@ def _split_json_flag(rest):
     return kept, want_json, want_compact
 
 
-def parse_typed(line):
+def parse_typed(line, table=command_registry.SHIPPED):
     """One typed line -> (command dict, None), or (None, a refusal to show).
 
     Returns (None, None) for a blank line: nothing to do and nothing to say.
@@ -206,23 +206,23 @@ def parse_typed(line):
     parts = text.split()
     head = parts[0].lower()
     rest = parts[1:]
-    command = command_registry.alias_map().get(head, head)
-    if command not in command_registry.COMMANDS:
-        near = command_registry.close_matches(head)
+    command = table.alias_map().get(head, head)
+    if command not in table.commands:
+        near = table.close_matches(head)
         return None, ("no command called %r. Type 'help' for the list%s."
                       % (head, (", or did you mean: " + ", ".join(near)) if near else ""))
 
     # THE OUTPUT-MODE WORDS, STRIPPED ONCE, FOR EVERY COMMAND - see
     # _split_json_flag's own comment for why this has to happen here, before
     # any command's own parser reads `rest`, rather than inside each one.
-    if command_registry.COMMANDS[command]["shape"] == "text":
+    if table.commands[command]["shape"] == "text":
         want_json = want_compact = False   # free prose: every word is the player's
     else:
         rest, want_json, want_compact = _split_json_flag(rest)
     words = [word for word in rest if _typed_number(word) is None]
     nums = [_typed_number(word) for word in rest if _typed_number(word) is not None]
 
-    out, err = _parse_command_body(command, rest, words, nums, want_json)
+    out, err = _parse_command_body(command, rest, words, nums, want_json, table)
     # ONE PLACE BOTH FLAGS ARE APPLIED, for every command this parser has not
     # already given its own opinion about. `state`, `risk` and `portfolio`
     # set "json" themselves, always, true or false, because a player reading
@@ -957,7 +957,7 @@ _SHAPE_PARSERS = {
 }
 
 
-def _parse_command_body(command, rest, words, nums, want_json):
+def _parse_command_body(command, rest, words, nums, want_json, table=command_registry.SHIPPED):
     """The command-specific parsing `parse_typed` delegates to, once the line
     has been split into a resolved command name, the words, the numbers, and
     whether 'json' was typed (or implied by 'compact') and already stripped
@@ -973,7 +973,7 @@ def _parse_command_body(command, rest, words, nums, want_json):
     """
     handler = _COMMAND_PARSERS.get(command)
     if handler is None:
-        entry = command_registry.resolve(command)
+        entry = table.resolve(command)
         handler = _SHAPE_PARSERS.get(entry["shape"]) if entry else None
     if handler is not None:
         return handler(command, rest, words, nums, want_json)

@@ -11,7 +11,7 @@ _PROTOCOL_NAMES = (
     "_agent_available", "_agent_dispatch", "_agent_end_reason", "_agent_help", "_agent_state",
     "_waiting_on", "_brief", "_clean", "_flag", "_full_entry", "_node_explain", "_num",
     "_subject_of", "load_state", "save_state", "SAVE_FIELDS", "SUBJECTS", "HELP_TOPICS",
-    "KNOWN_COMMANDS")
+    "KNOWN_COMMANDS", "shipped_commands", "data_command_handler", "shipped_figures", "figure_computer", "DEFAULT_DIGITS")
 _CLI_NAMES = (
     "cmd_agent", "cmd_civs", "cmd_compare", "cmd_costs", "cmd_goals", "cmd_path", "cmd_plan",
     "cmd_play", "cmd_run", "cmd_search", "cmd_sensitivity", "cmd_sweep", "cmd_validate",
@@ -23,7 +23,7 @@ if TYPE_CHECKING:  # names for static readers; at run time they load through __g
         _agent_available, _agent_dispatch, _agent_end_reason, _agent_help, _agent_state,
         _waiting_on, _brief, _clean, _flag, _full_entry, _node_explain, _num,
         _subject_of, load_state, save_state, SAVE_FIELDS, SUBJECTS, HELP_TOPICS,
-        KNOWN_COMMANDS)
+        KNOWN_COMMANDS, shipped_commands, data_command_handler, shipped_figures, figure_computer, DEFAULT_DIGITS)
     from sim.ui.cli import (  # noqa: F401
         cmd_agent, cmd_civs, cmd_compare, cmd_costs, cmd_goals, cmd_path, cmd_plan,
         cmd_play, cmd_run, cmd_search, cmd_sensitivity, cmd_sweep, cmd_validate,

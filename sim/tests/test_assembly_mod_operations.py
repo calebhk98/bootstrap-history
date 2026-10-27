@@ -141,6 +141,13 @@ class RemoveTest(unittest.TestCase):
         self.assertIn("strip", str(caught.exception))  # presentation: the error text names the parties
         self.assertIn("top", str(caught.exception))
 
+    def test_removal_names_every_reader_not_only_the_first(self):
+        second = ModuleSpec("second", Empty, reads=("double",))
+        with self.assertRaises(AssemblyError) as caught:
+            build(second, operations=[Operations("strip", removed=("base",))])
+        for party in ("strip", "top", "second"):
+            self.assertIn(party, str(caught.exception))  # presentation: the error text names the remover and each reader
+
     def test_removal_allowed_when_another_module_provides_the_view(self):
         stand_in = ModuleSpec("strip:base", Empty, publishes=(ViewSpec("double", "provided"),))
         stand_in_ops = Operations("strip", removed=("base",), added=(stand_in,))

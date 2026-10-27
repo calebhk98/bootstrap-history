@@ -54,6 +54,8 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 | 27 | [`ventures`](ventures.md) | Concerns the seat opens and closes: crews, foremen, staffing closures, quotes and auto-opening. | 4 | 3 | 59 | 19 |
 | 28 | [`workforce`](workforce.md) | People who work: staff by trade, hours, wages, training, slaves and the labour market. | 11 | 8 | 58 | 11 |
 
+Phase 7 added one module the draft did not count, [`interface`](interface.md): the commands and figures a game offers, shipped and from mods (the last process-global mod registries).
+
 The remaining 31 methods and properties belong to the composition root and are described in [`core.md`](core.md). Existing walled packages and where they land: `sim/labour` becomes `workforce` (its `Labour` is a thirteen-class composite behind `LabourPortMixin`, 106 members used from outside); `sim/geography` becomes `land`, with its food and deposit queries split to `agriculture`, `resources` and `living_stock`; `sim/economy` becomes `markets` (51 members used from outside), with credit to `finance`, coin to `coin`, labour to `workforce`; `sim/agents` becomes `actors` plus the actor-side halves of `polity`, `finance`, `ledger` and `campaigns`; `sim/disease` becomes `disease`; `sim/ui` is a reader of views and a sender of commands, not a module. `sim/book.py` and `sim/contracts.py` (the shared money book and debt registry) become the inside of `ledger` and `finance`.
 
 ## Where each of the 124 mixin classes goes

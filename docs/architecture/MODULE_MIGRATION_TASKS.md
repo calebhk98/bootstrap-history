@@ -141,9 +141,9 @@ Phase 6 (a) is done: `sim/ui/` reads views and sends commands (`tools/check_ui_v
 ### Phase 7: mods
 
 - [x] Replace the process-global registries of the actors, workforce, polity, demography, agriculture, year phases and stores with per-assembly registrations (extension points; `ModCodeApi` records into the mod's `Operations`).
-- [ ] The same for the ui's registries (`sim/ui/proto/command_registry.py`, `sim/ui/figures.py`, `sim/ui/figures_data.py`) and `COMMAND_REGISTRATIONS` in `mod_code.py`: they are still process-global, filled by `mod_commands.load` and `register_data_figures`.
+- [x] The same for the ui's registries: the `interface` module (`sim/interface/`) owns the extension points `interface_commands` and `interface_figures`; the shipped commands and figures (the tables `sim/ui` fills when it loads) and the mods' data are its own provisions, a mod's code provides with `api.command` and `api.figure`, and a word or figure name answered twice is an error naming both owners. A game's table is `command_registry.table_of(sim)` and `figures.figures_of(sim)`; `COMMAND_REGISTRATIONS`, `load_mod_commands` and `register_data_figures` are gone.
 - [ ] Rewrite each shipped code mod onto the new interface (one agent per mod).
-- [ ] Add one SMOKE test per mod operation: replace, remove, add, extend, adjust, provide.
+- [x] Add one SMOKE test per mod operation: replace, remove, add, extend, adjust, provide, withdraw (`sim/tests/test_mod_operations_smoke.py`, three games in one process each).
 
 ### Phase 8: kernels
 

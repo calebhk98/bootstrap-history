@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from sim.engine.readable import readable
 from sim.ui import figures as figure_registry
 from sim.ui.proto import dispatch_figures, dispatch_inspection
+from sim.tests.interface_fixture import shipped_declared
 from sim.tests.ui_stand_in import FactViews
 
 
@@ -19,6 +20,10 @@ class Game(FactViews):
     year = 1300
     capital = 1234.5
     _dashboard_history = []
+
+    @property
+    def interface_declared(self):
+        return shipped_declared()
 
     def __init__(self):
         self.population = SimpleNamespace(total=1000.0, children=300.0, working_age=600.0, elderly=100.0)
@@ -69,9 +74,10 @@ class HeadlineFigureTests(unittest.TestCase):
         self.assertIsNone(reply["previous"])
 
     def test_figures_with_no_name_lists_every_registered_figure(self):
-        listing = dispatch_figures.figure_listing()
+        listing = dispatch_figures.figure_listing(self.game)
         self.assertTrue(listing["ok"])
-        self.assertEqual({row["name"] for row in listing["figures"]}, set(figure_registry.FIGURES))
+        self.assertEqual({row["name"] for row in listing["figures"]}, set(shipped_declared().figures))
+        self.assertTrue(set(figure_registry.FIGURES) < set(shipped_declared().figures))
 
     def test_an_unknown_figure_is_refused_with_its_cause_and_the_choices(self):
         reply = dispatch_figures.figure_reply(self.game, "nonsense")

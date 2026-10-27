@@ -75,6 +75,8 @@ def attach(sim: Any) -> None:
 	switch_seat(sim, state.acting_seat)
 	if "stores" in assembly.modules:
 		assembly.modules["stores"].declared()   # a store declared twice is an error of building the game
+	if "interface" in assembly.modules:
+		assembly.modules["interface"].declared()   # a command word or figure declared twice is an error of building the game
 
 
 def give_seat_slots(assembly: assembly_api.Assembly, seat: Any) -> None:

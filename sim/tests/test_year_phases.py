@@ -135,7 +135,6 @@ class RunTests(PhaseTestBase):
 class LoadTests(ModTestBase):
     def tearDown(self):
         mod_code.LOADED.clear()
-        mod_code.COMMAND_REGISTRATIONS.clear()
         mod_code.MOD_OPERATIONS.clear()
         super().tearDown()
 

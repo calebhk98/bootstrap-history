@@ -24,7 +24,8 @@ from sim.engine.data import (  # noqa: F401
     win_condition_describe)
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: F401
 from sim.knowledge.api import prerequisite_names, strip_self_play_advice  # noqa: F401
-from sim.engine.mod_code import COMMAND_REGISTRATIONS, code_report, run_mod_code  # noqa: F401
+from sim.engine.mod_code import code_report, run_mod_code  # noqa: F401
+from sim.engine.game_assembly import build as build_assembly  # noqa: F401
 from sim.engine.mod_code import allow as allow_mod_code  # noqa: F401
 from sim.engine.mods_constants import constant_overrides  # noqa: F401
 from sim.engine.ui_commands import load_command_specs  # noqa: F401

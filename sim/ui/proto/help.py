@@ -410,14 +410,15 @@ def _agent_help(sim, topic=None):
     if arguments and TOPIC_ALIASES.get(topic, topic) == "commands":
         return commands_page(sim, arguments)
     topic_name = topic if topic in TOPICS else TOPIC_ALIASES.get(topic)
-    entry = command_registry.resolve(topic)
+    table = command_registry.table_of(sim)
+    entry = table.resolve(topic)
     if topic_name is None and entry is None:
-        matches = command_registry.close_matches(topic, list(TOPICS) + list(TOPIC_ALIASES))
+        matches = table.close_matches(topic, list(TOPICS) + list(TOPIC_ALIASES))
         return {"no such topic": topic, "did you mean": matches,
                 "topics": list(TOPICS)}
     page = dict(TOPICS[topic_name](sim)) if topic_name else {}
     if entry is not None:
-        page["command"] = command_registry.page(entry["name"], sim.view("legacy_fog")())
+        page["command"] = table.page(entry["name"], sim.view("legacy_fog")())
     return page
 
 

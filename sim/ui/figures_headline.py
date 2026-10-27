@@ -62,6 +62,3 @@ def _hazard(sim):
     return {"value": None}
 
 from . import figures_world  # noqa: E402,F401  (registers the society figures beside these)
-from .figures_data import register_data_figures  # noqa: E402
-
-register_data_figures()

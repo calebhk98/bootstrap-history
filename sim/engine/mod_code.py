@@ -19,6 +19,7 @@ import types
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from sim.assembly.api import Operations
+from sim.interface.api import CODE, CommandDeclaration, FigureDeclaration
 from sim.stores.api import ModStore, StoreSpec, check_spec
 
 from .mods import get_ordered_mods
@@ -28,8 +29,6 @@ from .mods_ids import SEPARATOR
 CONSENT_FILE = "consent.json"
 CODE_PERMISSION = "code"
 
-# Commands that mod code registered, waiting for the command registry (sim/ui) to take them: (mod_id, name, fields, handler)
-COMMAND_REGISTRATIONS: List[tuple] = []
 LOADED: Dict[str, str] = {}      # mod id -> "ran" or the reason it did not
 # (mods directory, mod id) -> what that mod's `register(api)` asked of the assembly (sim.assembly Operations: modules added,
 # replaced, removed or extended, answers provided, year phases). Data only: a game applies the ones of its own mod set.
@@ -131,10 +130,26 @@ class ModCodeApi:
         return name if name.startswith(self.mod_id + SEPARATOR) else self.mod_id + SEPARATOR + name
 
     def command(self, name: str, **fields: Any) -> Callable:
-        """Decorator for a handler `(sim, nodes, cmd, ended) -> dict`; fields as in sim/ui/proto/command_registry.py."""
+        """Decorator for a handler `(sim, nodes, cmd, ended) -> dict`; fields as in sim/ui/proto/command_registry.py
+        (group, summary, usage and description are required). Offered to the interface module's `interface_commands` point."""
+        missing = [required for required in ("group", "summary", "usage", "description") if required not in fields]
+        if missing:
+            raise ModError("mod %s: command %s needs %s" % (self.mod_id, name, ", ".join(missing)))
+
         def decorate(handler: Callable) -> Callable:
-            COMMAND_REGISTRATIONS.append((self.mod_id, self.qualified(name), fields, handler))
+            declaration = CommandDeclaration(self.mod_id, self.qualified(name), CODE,
+                                             dict(fields, aliases=list(fields.get("aliases", ()))), handler)
+            self.provide("interface_commands", lambda: [declaration])
             return handler
+        return decorate
+
+    def figure(self, name: str, label: str, unit: str = "", digits: int = 1, since: Optional[Callable] = None) -> Callable:
+        """Decorator for `compute(sim) -> {"value", "components", "flows", "drivers"}` (sim/ui/figures.py): a headline figure
+        that explains its own change. Offered to the interface module's `interface_figures` point."""
+        def decorate(compute: Callable) -> Callable:
+            declaration = FigureDeclaration(self.mod_id, self.qualified(name), label, unit, digits, compute, since)
+            self.provide("interface_figures", lambda: [declaration])
+            return compute
         return decorate
 
     def actor_kind(self, kind: str, actor_class: Any) -> None:

@@ -37,14 +37,14 @@ COUNTRY_SEAT_COMMANDS = frozenset({"seats", "join", "handover", "help", "save", 
                                    "world_events", "step"})
 
 
-def _command_name(cmd):
-    entry = command_registry.resolve(cmd.get("cmd") if isinstance(cmd, dict) and isinstance(cmd.get("cmd"), str) else "")
+def _command_name(sim, cmd):
+    entry = command_registry.table_of(sim).resolve(cmd.get("cmd") if isinstance(cmd, dict) and isinstance(cmd.get("cmd"), str) else "")
     return entry["name"] if entry else None
 
 
 def country_seat_refusal(sim, seat_id, cmd):
     """A refusal when `cmd` needs a household and `seat_id` holds a country's government, else None."""
-    name = _command_name(cmd)
+    name = _command_name(sim, cmd)
     if sim.view("legacy_seats")()[seat_id].holds_household or name is None or name in COUNTRY_SEAT_COMMANDS:
         return None
     return {"ok": False, "cause": "country_seat_has_no_household", "choices": sorted(COUNTRY_SEAT_COMMANDS),
@@ -60,7 +60,7 @@ def run_as_seat(sim, cmd, reply):
     refusal = country_seat_refusal(sim, seat_id, cmd)
     if refusal:
         return refusal
-    if not sim.view("legacy_seats")()[seat_id].holds_household and _command_name(cmd) == "step":
+    if not sim.view("legacy_seats")()[seat_id].holds_household and _command_name(sim, cmd) == "step":
         playing = sim.view("seat_list")()["playing"]
         if not playing:
             return {"ok": False, "cause": "no_household_seat",
