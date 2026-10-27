@@ -50,6 +50,14 @@ class BankStock(Command):
 
 
 @dataclass(frozen=True)
+class DrawDownStock(Command):
+	"""Tonnes of a commodity (by its commodity key) leave the acting seat's stock, never taking it below zero, as thieves take
+	them. The year's opening snapshot is not touched."""
+	commodity: str
+	tonnes: float
+
+
+@dataclass(frozen=True)
 class NoteSpend(Command):
 	"""The acting seat's household counts `amount` in the year's spending, beside the payment that moved it
 	(accounting only; applied by the engine bridge until the cash book moves into the ledger)."""

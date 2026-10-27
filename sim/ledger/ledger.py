@@ -1,7 +1,8 @@
 """The ledger module: applies the money and goods commands and publishes what each holder has.
 
-Until the founder's purse and tonnes ledger move into the ledger's own state, it reaches them through the engine
-bridge's `legacy_*` views; those reads go when the state moves (docs/architecture/MODULE_MIGRATION_TASKS.md)."""
+The seat's tonnes ledger and the pool of capacity keys swept out of it are the ledger's own state (sim/ledger/state.py). The
+founder's purse is still the household's, reached through the engine bridge's `legacy_*` views until it moves
+(docs/architecture/MODULE_MIGRATION_TASKS.md)."""
 from typing import Any
 
 from sim.agents.api import EDGE_EXCHANGE, GOVERNMENT_PREFIX, edges, ledger
@@ -98,40 +99,56 @@ class Ledger(Module):
 		rules.pay_wages(registry, payer, command.amount, command.purpose, self.edge(edges.EDGE_WORKERS))
 		self.bump_seat(MONEY)
 
+	def stock_ledger(self) -> Any:
+		"""The seat's tonnes ledger, made on first use, with the capacity keys swept into the world's capacity pool."""
+		self.seat._material_stock_ledger = rules.settled_stock(self.seat._material_stock_ledger, self.world.capacity_pool)
+		return self.seat._material_stock_ledger
+
+	def opening_stock(self) -> Any:
+		"""The tonnes as the year's accounting began; the snapshot is taken here if this year has none."""
+		self.seat._material_stock_opening = rules.year_opening_record(
+			self.seat._material_stock_opening, self.needs.year(), self.stock_ledger())
+		return self.seat._material_stock_opening["tonnes"]
+
 	def change_stock(self, command: Any) -> None:
-		stock = self.needs.legacy_stock_ledger()
+		stock = self.stock_ledger()
 		if command.legacy_snapshot_after_change:
 			stock[command.commodity] += command.tonnes
-			opening = self.needs.legacy_opening_stock()
+			opening = self.opening_stock()
 			opening[command.commodity] = opening.get(command.commodity, 0.0) + command.tonnes
 		else:
-			opening = self.needs.legacy_opening_stock()      # first: the year's snapshot is taken before the change
+			opening = self.opening_stock()      # first: the year's snapshot is taken before the change
 			rules.add_tonnes(stock, opening, command.commodity, command.tonnes)
 		stock.writes += 1
 		self.bump_seat(STOCK)
 
 	def bank_stock(self, command: Any) -> None:
-		self.needs.legacy_opening_stock()      # first: the year's snapshot is taken before the change
-		stock = self.needs.legacy_stock_ledger()
+		self.opening_stock()      # first: the year's snapshot is taken before the change
+		stock = self.stock_ledger()
 		for commodity, tonnes in command.tonnes:
 			stock[commodity] = tonnes
 		stock.writes += 1
 		self.bump_seat(STOCK)
 
+	def draw_down_stock(self, command: Any) -> None:
+		stock = self.stock_ledger()
+		stock[command.commodity] = max(0.0, stock[command.commodity] - command.tonnes)
+		self.bump_seat(STOCK)
+
 	def goods_stock_opening(self) -> Any:
 		"""The acting seat's tonnes by commodity key as they stood when this year's accounting began, as the books stand now:
 		read it, never write it. Nothing is recorded by asking."""
-		return rules.year_opening_record(self.needs.legacy_opening_record(), self.needs.year(), self.held_goods())["tonnes"]
+		return rules.year_opening_record(self.seat._material_stock_opening, self.needs.year(), self.held_goods())["tonnes"]
 
 	def goods_stock(self, commodity: str) -> float:
-		return self.needs.legacy_stock_ledger().get(commodity, 0.0)
+		return self.stock_ledger().get(commodity, 0.0)
 
 	def acting_balance(self) -> float:
 		return self.needs.legacy_acting_household().capital
 
 	def held_goods(self) -> Any:
 		"""The acting seat's tonnes ledger by commodity key: read it, never write it."""
-		return self.needs.legacy_stock_ledger()
+		return self.stock_ledger()
 
 	def transfer_listening(self) -> Any:
 		"""A context in which every transfer between two parties asks the `transfer_surcharge` providers what moving

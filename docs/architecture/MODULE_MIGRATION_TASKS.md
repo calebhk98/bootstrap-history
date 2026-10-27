@@ -16,7 +16,7 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 
 | Module | Package | Notes |
 |---|---|---|
-| ledger (commands side) | `sim/ledger/` | state still in the purses and the tonnes ledger (`legacy_*` views) |
+| ledger | `sim/ledger/` | owns the tonnes ledger and the pool of capacity keys swept out of it; every money path outside the agents' and the economy's own books is a ledger command; still to do: the purses (`HouseholdState.capital` and the actors' `Purses`), reached through `legacy_acting_household` and `legacy_household_actor`; Complaint 790 |
 | living stock, defence stores | `sim/living_stock/`, `sim/defence_stores/` | |
 | projects | `sim/projects/` | starting, progress, completion, staffing, exclusions, running gates, closures, reviews; its seat state holds the exclusions and staffing records; still to do: `active`, `bountied`, `failed_attempts`, `paid_towards`, `operating` and the businesses (written by finance, hazards, production and the household facade), `cause_book.py` |
 | ventures | `sim/ventures/` | what a concern ties up and earns, opening by hand, the founder's sale, coverage roll-out; still to do: the businesses, plants and `mothballed` on the projects record (written by production, finance, hazards and the household facade) |
@@ -46,7 +46,7 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 
 The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equivalence tier identical at the prices, demography, land, markets and production merges; stress tier and protocol transcripts identical after each module (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
 
-`stores` (mod stores) is a framework service and moves with phase 7. Next: the remaining engine mixins (measure with `tools/done_check.sh`), the projects record's shared sets, the ledger's state; then phases 6 to 9.
+`stores` (mod stores) is a framework service and moves with phase 7. Next: the remaining engine mixins (measure with `tools/done_check.sh`), the projects record's shared sets, the ledger's purses; then phases 6 to 9.
 
 ## Task list
 

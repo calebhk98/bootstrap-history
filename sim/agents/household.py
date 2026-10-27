@@ -53,7 +53,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 
 	# EconomyState
 	"market_pressure": "holdings",
-	"_material_stock_ledger": "holdings",
 	"_dashboard_history": "holdings",
 
 	# FounderState
@@ -78,7 +77,6 @@ _VERSION_MAP: Dict[str, str] = {
 _LAZY_FIELDS: Set[str] = {
 	"spend_last_year",
 	"done_year",
-	"_material_stock_ledger",
 	"_dashboard_history",
 }
 
