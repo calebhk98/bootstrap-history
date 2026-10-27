@@ -15,17 +15,11 @@ class ForwardMaterialsMixin:
     def material_shortfall_t(self, material, by_tag=None):
         return self.view("material_shortfall")(material, by_tag)
 
-    def _society_output_tonnes(self, commodity):
-        return self.view("society_output")[commodity]
-
     def _material_market_tonnes(self, commodity):
         return self.view("material_market_tonnes")[commodity]
 
     def _own_material_supply(self, tag):
         return self.view("material_own_supply")[tag]
-
-    def _own_production_tags(self):
-        return self.view("own_production_tags")()
 
     def _demand_by_supply_tag(self, demand):
         return self.view("demand_by_supply_tag")(demand)
@@ -68,9 +62,6 @@ class ForwardMaterialsMixin:
         return self.view("goods_stock")[commodity]
 
     # ---- the throttle and electricity ----
-
-    def peek_resource_throttle(self):
-        return self.view("resource_throttle")()
 
     def peek_project_resource_throttle(self, node_id):
         return self.view("resource_throttle")(node_id)

@@ -1,6 +1,12 @@
 """The UI's one door into the engine: every engine name sim/ui/ uses is re-exported here by
 explicit name, and each private `Sim` member the UI reads or writes has a public function that
-delegates exactly. sim/ui/ imports nothing from sim.engine except this module."""
+delegates exactly. sim/ui/ imports nothing from sim.engine except this module.
+
+The game itself is read as `sim.view(name)` (a published view of its owner module) and changed as
+`sim.send(ui_port.<Command>(...))`; the commands the UI sends are re-exported below, and the views it reads
+are listed by `python3 tools/check_ui_views.py --list`, which also checks each is published. What is left
+as a function here is the new-game setup, the UI's own memory on the `Sim`, and the engine tables that
+no module publishes yet."""
 from sim.engine import (  # noqa: F401
     state_paths, cash_book, category_traits, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
     purchase_rule, settings, settings_table, topic_tags, tree_merge, units,

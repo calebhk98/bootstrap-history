@@ -11,14 +11,8 @@ class ForwardFreightMixin:
     def _foreign_route(self, civilization, imbalance=None, cargo="goods"):
         return self.view("foreign_route")(civilization, imbalance, cargo)
 
-    def _route_freight_per_tonne(self, civilization, imbalance=None):
-        return self.view("route_freight_per_tonne")(civilization, imbalance)
-
     def _freight_mode_costs(self, imbalance=1.0, modes=None, cargo=None):
         return self.view("freight_mode_costs")(imbalance, modes, cargo)
-
-    def _carrier_models(self):
-        return self.view("carrier_models")()
 
     def material_carriage_per_tonne(self, material, price_per_tonne):
         return self.view("material_carriage_per_tonne")(material, price_per_tonne)
@@ -34,9 +28,6 @@ class ForwardFreightMixin:
 
     def _agent_cost_per_tonne(self, civilization_id, route):
         return self.view("trader_agent_cost")(civilization_id, route)
-
-    def _domestic_flow_ledger(self):
-        return self.view("goods_carried_last_year")()
 
     def pay_route_dues(self, payer, route, tonnes, limit=None):
         return self.send(PayRouteDues(payer.actor_id, route, tonnes, limit))

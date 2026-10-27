@@ -24,9 +24,6 @@ class ForwardForeignTradeMixin:
     def _commodity_materials(self, commodity):
         return self.view("commodity_materials")[commodity]
 
-    def _foreign_entry(self, civilization_id, commodity, facts):
-        return self.view("partner_book_entry")(civilization_id, commodity)
-
     def foreign_supply_tonnes(self, civilization_id, material):
         return self.view("foreign_supply_tonnes")(civilization_id, material)
 
@@ -51,17 +48,8 @@ class ForwardForeignTradeMixin:
     def note_actor_trade(self, partner, material, tonnes, to_partner, landed_cost=0.0):
         return self.send(NoteActorTrade(partner, material, tonnes, to_partner, landed_cost))
 
-    def note_actor_home_trade(self, material, tonnes, landing):
-        return self.send(NoteActorHomeTrade(material, tonnes, landing))
-
     def cargo_legs(self):
         return self.view("cargo_legs")()
 
-    def note_cargo_leg(self, trader_id, material, tonnes, source, destination, paid, received, carriage, home, duty=0.0):
-        return self.send(NoteCargoLeg(trader_id, material, tonnes, source, destination, paid, received, carriage, home, duty))
-
     def settle_trader_cargo(self, results):
         return self.send(SettleTraderCargo(results))
-
-    def close_partner_books(self):
-        return self.send(ClosePartnerBooks())

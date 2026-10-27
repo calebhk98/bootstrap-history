@@ -19,8 +19,6 @@ class PolityForwardsMixin:
         """The society starts with its civilisation's value weights."""
         self.send(SetValueWeights(tuple(self.civ["values"].items())))
     STATE_FUNDING_BASE = money_units.PricedInLabourHours("STATE_FUNDING_BASE_LABOUR_HOURS")
-    EMINENCE_WEALTH_VISIBLE_THRESHOLD = money_units.PricedInLabourHours("EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS")
-
     # ---- the seat's figures ----
 
     @property

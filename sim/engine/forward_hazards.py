@@ -76,9 +76,3 @@ class HazardsForwardsMixin:
 
     def apply_staff_survival(self, survival_share):
         return self.send(SurviveStaff(survival_share))
-
-    def _surviving_people(self, headcount, survival_share):
-        return workforce_rules.surviving_people(self.rng, headcount, survival_share)
-
-    def _catastrophe(self, why):
-        return self.send(EndRun(why))

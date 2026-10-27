@@ -30,9 +30,6 @@ class ForwardSeatsMixin:
     def governed_countries(self):
         return self.view("governed_countries")()
 
-    def society_techs_now(self):
-        return set(self.view("society_techs")())
-
     def join_seat(self, seat_id, template):
         _raised_if_refused(self.send(JoinSeat(seat_id, template)))
         return self.state.seats[seat_id]
