@@ -30,11 +30,6 @@ from .forward_reporting import ReportingForwardsMixin
 from .forward_coin import ForwardCoinMixin
 from .forward_campaigns import ForwardCampaignsMixin
 from .forward_diffusion import DiffusionForwardsMixin
-from .concern_volume import ConcernVolumeMixin
-from .concern_book_sales import ConcernBookSalesMixin
-from .techniques_in_use import TechniquesInUseMixin
-from .industry_concern import IndustryConcernMixin
-from .industry_depth import IndustryDepthMixin
 from .forward_prices import ForwardPricesMixin
 from .fog import FogMixin
 from .forward_mechanics import ForwardMechanicsMixin
@@ -56,6 +51,7 @@ from .works import WorksMixin
 from .forward_actors import ActorsForwardsMixin
 from .founder_sales import FounderSalesMixin
 from .forward_finance import ForwardFinanceMixin
+from .forward_production import ForwardProductionMixin
 from .benefactions import BenefactionsMixin
 from .forward_freight import ForwardFreightMixin
 from .forward_resources import ForwardResourcesMixin
@@ -63,7 +59,6 @@ from .forward_materials import ForwardMaterialsMixin
 from .mod_stores import ModStoresMixin
 from .core_properties import ForwardingPropertiesMixin
 from .core_step_phases import StepContext, StepPhasesMixin
-from .economy_port import EconomyPortMixin
 from .data import trade_family
 from .invariants import check_simulation_invariants
 from sim.agents.api import Household
@@ -78,11 +73,7 @@ class Sim(
         EconomyMixin,
         ForwardMarketsMixin,
         ForwardForeignTradeMixin,
-        ConcernVolumeMixin,
-        ConcernBookSalesMixin,
-        TechniquesInUseMixin,
-        IndustryDepthMixin,
-        IndustryConcernMixin,
+        ForwardProductionMixin,
         ForwardPricesMixin,
         FogMixin,
         ForwardLandMixin,
@@ -112,7 +103,6 @@ class Sim(
         ForwardMaterialsMixin,
         ForwardDemographyMixin,
         ForwardCampaignsMixin,
-        EconomyPortMixin,
         NodeRederiveMixin,
 ):
     FOUNDER_MIN_REMAINING_LIFE_YEARS = declare(

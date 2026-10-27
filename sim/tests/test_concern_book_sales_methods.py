@@ -1,4 +1,4 @@
-"""ConcernBookSalesMixin on a stand-in game: which concerns put output in the year's clearing and at what scale, and
+"""The production module's book sales on a stand-in game: which concerns put output in the year's clearing and at what scale, and
 what their inputs cost at the economy's prices (the estimate leaves a concern out exactly when it sells on the book).
 The rules it calls are test_seat_paid_from_sales."""
 QUICK_TOPIC = True
@@ -6,41 +6,25 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.concern_book_sales import ConcernBookSalesMixin
+from sim.tests import production_host
 
 TRADED = {"acid"}
 
 
-class _Game(ConcernBookSalesMixin):
-    SCALABLE_INSTITUTIONS = {"school"}
-
-    def __init__(self, operating=("mill",), granted=(), ventures=("mill", "school"), baskets=None, economy_prices=None):
-        self.state = types.SimpleNamespace(
-            projects=types.SimpleNamespace(operating=set(operating), granted=set(granted)))
-        self.output_factor = 0.5
-        self.ventures = set(ventures)
-        self.baskets = baskets
-        self.economy = types.SimpleNamespace(agent_trades_good=lambda good: good in TRADED, agent_prices_at=lambda: economy_prices)
-        self.price_index = 2.0
-        self.prices = {"salt": 4.0}
-
-    def is_venture(self, node_id):
-        return node_id in self.ventures
-
-    def concern_baskets_now(self, node_id):
-        return self.baskets
-
-    def venture_ramp(self, node_id):
-        return 0.8
-
-    def institution_units(self, node_id):
-        return 3.0
-
-    def _priced_key(self, material, prices):
-        return material if material in prices else None
-
-    def _material_prices(self):
-        return self.prices
+def _Game(operating=("mill",), granted=(), ventures=("mill", "school"), baskets=None, economy_prices=None):
+    """The module over a stand-in game, with the questions it asks of itself answered as the test says."""
+    prices = {"salt": 4.0}
+    game = types.SimpleNamespace(
+        state=types.SimpleNamespace(projects=types.SimpleNamespace(operating=set(operating), granted=set(granted))),
+        output_factor=0.5, price_index=2.0,
+        economy=types.SimpleNamespace(agent_trades_good=lambda good: good in TRADED, agent_prices_at=lambda: economy_prices),
+        _priced_key=lambda material, priced: material if material in priced else None, _material_prices=lambda: prices)
+    module = production_host.build(game, capability_sets=(frozenset(), frozenset({"school"}), {}))
+    module.is_venture = lambda node_id: node_id in set(ventures)
+    module.concern_baskets_now = lambda node_id: baskets
+    module.venture_ramp = lambda node_id: 0.8
+    module.institution_units = lambda node_id: 3.0
+    return module
 
 
 def baskets(outputs=None, purchases=None):

@@ -5,7 +5,7 @@ from types import SimpleNamespace
 from .harness import *  # noqa: F401,F403
 from sim.agents.api import imitation
 from sim.diffusion import technique_spread
-from sim.engine import concern_volume
+from sim.production import volume_rules as concern_volume
 from sim.diffusion.api import NoteFirstRuns
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionWorld

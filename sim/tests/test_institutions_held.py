@@ -22,7 +22,7 @@ class Government:
 def game(government, nodes_by_mechanic):
     return types.SimpleNamespace(actors=types.SimpleNamespace(government_of=lambda actor: government),
                                  nodes_with_mechanic=lambda mechanic: nodes_by_mechanic.get(mechanic, []),
-                                 view=lambda name: lambda: None)
+                                 actor_world=lambda: None)
 
 
 class Held(unittest.TestCase):

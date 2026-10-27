@@ -10,9 +10,9 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import economy_production, projects_staffing
-from sim.engine.economy_production import ProductionMixin
-from sim.engine.projects_capability import CapabilityMixin
+from sim.engine import projects_staffing
+from sim.production import revenue as production_revenue
+from sim.tests import production_host
 from sim.engine.projects_staffing import StaffingMixin
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
 from sim.engine.projects_ventures import VenturesMixin
@@ -47,22 +47,15 @@ class ShutConcernsValue(unittest.TestCase):
         self.assertIsNone(shut_concerns_yearly_value([(100.0, 900.0)]))
 
 
-class Capabilities(CapabilityMixin):
+def Capabilities(known, running):
     """The tree, what is known and what runs."""
-    NOT_OPERATING_BENEFIT = {"patron": "your protection", "university": "your protection", "school": "literacy"}
-
-    def __init__(self, known, running):
-        self.nodes = {name: {} for name in ("patron", "university", "school")}
-        self.known, self.open = set(known), set(running)
-
-    def has(self, node_id):
-        return node_id in self.known
-
-    def running(self, node_id):
-        return node_id in self.open
-
-    def mechanic(self, node_id, kind):
-        return {"redundant_with": ("school",)} if node_id == "university" else {}
+    benefits = {"patron": "your protection", "university": "your protection", "school": "literacy"}
+    module = production_host.build(
+        types.SimpleNamespace(nodes={name: {} for name in benefits}), capability_sets=(set(), set(), benefits),
+        techniques_held=set(known),
+        mechanic=lambda kind: {"patron": {}, "school": {}, "university": {"redundant_with": ("school",)}})
+    module.running = lambda node_id: node_id in set(running)
+    return module
 
 
 class CapabilityGaps(unittest.TestCase):
@@ -202,17 +195,16 @@ class Mothball(unittest.TestCase):
         self.assertFalse(ok)
 
 
-class Ramp(ProductionMixin):
-    def __init__(self, opened=None, done_year=None, year=130):
-        self.opened, self.done_year_value = opened, done_year
-        business = types.SimpleNamespace(opened_year_of=lambda node_id, default: opened if opened is not None else default)
-        self.state = types.SimpleNamespace(
+def Ramp(opened=None, done_year=None, year=130):
+    business = types.SimpleNamespace(opened_year_of=lambda node_id, default: opened if opened is not None else default)
+    game = types.SimpleNamespace(
+        state=types.SimpleNamespace(
             projects=types.SimpleNamespace(business=business, done_year={"shop": done_year} if done_year is not None else {}),
-            scenario=types.SimpleNamespace(year=year))
-        self.cfg = {"revenue_ramp_years": 3}
-
-    def industry_depth(self, node_id):
-        return 0.0
+            scenario=types.SimpleNamespace(year=year)),
+        cfg={"revenue_ramp_years": 3})
+    module = production_host.build(game)
+    module.industry_depth = lambda node_id: 0.0
+    return module
 
 
 class Opening(VenturesMixin):
@@ -260,7 +252,7 @@ class OpenRefusals(unittest.TestCase):
 
 class VentureRamp(unittest.TestCase):
     def age_used(self, **kwargs):
-        with mock.patch.object(economy_production.plant_figures, "ramp", return_value=0.5) as ramp:
+        with mock.patch.object(production_revenue.plant_figures, "ramp", return_value=0.5) as ramp:
             Ramp(**kwargs).venture_ramp("shop")
         return ramp.call_args.args[0]
 
@@ -274,7 +266,7 @@ class VentureRamp(unittest.TestCase):
         self.assertEqual(self.age_used(opened=None, done_year=100, year=104), 4)
 
     def test_the_ramp_is_the_plant_figures_over_the_configured_years(self):
-        with mock.patch.object(economy_production.plant_figures, "ramp", return_value=0.5) as ramp:
+        with mock.patch.object(production_revenue.plant_figures, "ramp", return_value=0.5) as ramp:
             result = Ramp(opened=130, year=131).venture_ramp("shop")
         self.assertEqual(result, 0.5)
         self.assertEqual(ramp.call_args.args[:3], (1, 3, 0.0))

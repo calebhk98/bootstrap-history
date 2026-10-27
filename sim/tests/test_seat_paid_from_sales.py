@@ -8,8 +8,8 @@ import unittest
 from unittest import mock
 
 from sim.agents.api import edges
-from sim.engine import concern_sales
 from sim.markets import port_seats
+from sim.production import concern_sales
 
 PRICE = 3.0
 COIN = 2.0

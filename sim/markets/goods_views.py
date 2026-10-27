@@ -1,4 +1,5 @@
 """The goods market's views: quotes, the year's book and the goods categories."""
+from . import trade_duty
 from .rules import HOME_SELLER
 
 
@@ -65,3 +66,14 @@ class GoodsViews:
 	def actor_demand(self, commodity):
 		"""Tonnes of a commodity that governments bought on the market this year."""
 		return self.goods_market.others_bought_tonnes(commodity)
+
+	# ---- facts the economy and the border settle ----
+
+	def unit_mass_kg(self, material):
+		"""Kilograms in one unit of a material, as the freight model reads it."""
+		from .port_setup import unit_mass_kg
+		return unit_mass_kg(material)
+
+	def border_duty_per_tonne(self, source, destination, price_per_tonne):
+		"""Money the destination country's state charges on a tonne bought at `price_per_tonne` in `source`; infinite on an embargo."""
+		return trade_duty.duty_per_tonne(self.reads, source, destination, price_per_tonne)

@@ -12,7 +12,6 @@ from .quote_figures import cost_if_started_now
 from .economy_housing import HousingPriceMixin
 from .economy_household_bill import HouseholdBillMixin
 from .projects_cost_tail import ProjectCostTailMixin
-from .economy_production import ProductionMixin
 from .view_share import ViewShareMixin
 
 
@@ -69,12 +68,12 @@ REPUTATION_EASE_SCALE = declare(
 
 
 class EconomyMixin(HousingPriceMixin,
-                    HouseholdBillMixin, ProjectCostTailMixin, ProductionMixin, ViewShareMixin):
+                    HouseholdBillMixin, ProjectCostTailMixin, ViewShareMixin):
     """Composition point for the economy sub-mixins, plus what is left over.
 
     EconomyMixin's methods are grouped by subject across sibling modules
     (ore and land in sim/resources/, debt and affordability in
-    sim/finance/, revenue and workshops in economy_production.py,
+    sim/finance/, revenue and workshops in sim/production/,
     goods-producing concerns in economy_goods.py, the commodity catalogue
     and price lookups in economy_materials.py - see each module's own
     docstring for the detailed grouping and evidence) as their own mixin

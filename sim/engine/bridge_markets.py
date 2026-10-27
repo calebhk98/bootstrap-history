@@ -7,7 +7,7 @@ from sim.agents.api import relations
 from sim.assembly.api import KEYED, QUOTE
 from sim.markets.api import RepriceOpeningMoney
 
-from . import concern_sales, market_demand, need_substitutes, opening_money
+from . import market_demand, need_substitutes, opening_money
 from .bridge import bridge_command, bridge_view
 from .data import calculated_goods_table
 
@@ -43,38 +43,6 @@ def calculated_goods_prices(sim, held, farmed_hectares):
         held, civilization_id=sim.civ.get("id"), civilization=sim.civ,
         farmed_hectares=price_solver.band_farmed_hectares(farmed_hectares))
     return in_hours
-
-
-# ---- production ----
-
-@bridge_view("workshop_output")
-def workshop_output(sim):
-    """Money the seat's own workshop takes in a year, before the market ceiling."""
-    return sim.workshop_output()
-
-
-@bridge_view("concern_market")
-def concern_market(sim):
-    """{node id: yearly takings} of every concern the seat's ledger counts."""
-    return sim.ledger_concern_rows()
-
-
-@bridge_view("concern_book_offer", kind=KEYED)
-def concern_book_offer(sim, node_id):
-    """{material: units a year} the concern puts in the year's clearing."""
-    return sim.concern_book_offer(node_id)
-
-
-@bridge_view("concern_book_inputs_cost", kind=KEYED)
-def concern_book_inputs_cost(sim, node_id):
-    """What the concern's year of inputs costs at today's prices."""
-    return sim.concern_book_inputs_cost(node_id)
-
-
-@bridge_view("concern_sale_rules")
-def concern_sale_rules(sim):
-    """The seat-sales rules (concern_sales.py): settle_sales, outlook and the SaleResult they work on."""
-    return concern_sales
 
 
 # ---- workforce: facts of the labour package no workforce view answers yet ----

@@ -6,8 +6,8 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import concern_sales
 from sim.markets import port_seats
+from sim.production import concern_sales
 
 
 def stand_in(unsold, price=50.0):

@@ -10,7 +10,8 @@ from unittest import mock
 
 from sim.prices import solve_cache
 
-from sim.markets import port_year, shipped_openings, shipped_openings_build
+from sim.engine import shipped_openings, shipped_openings_build
+from sim.markets import port_year
 class ShippedEntryTests(unittest.TestCase):
     def setUp(self):
         self._shipped = tempfile.TemporaryDirectory()

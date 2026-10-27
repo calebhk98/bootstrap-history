@@ -36,7 +36,8 @@ from .tree_source import load_base_tree
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
 from sim.prices.api import energy_prices
-from . import copy_visibility_defaults, money_units, node_revenue
+from . import copy_visibility_defaults, money_units
+from sim.production.api import node_revenue
 from sim.labour.api import wage_provider
 from .default_civilisation import default_civilisation_id
 from . import wage_schedule

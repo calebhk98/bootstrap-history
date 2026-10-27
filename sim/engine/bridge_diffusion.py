@@ -49,12 +49,6 @@ def venture_opened_year(sim, node_id, default):
     return sim.state.projects.business.opened_year_of(node_id, default)
 
 
-@bridge_view("techniques_in_use", seat_scoped=True)
-def techniques_in_use(sim):
-    """Nodes whose production entries some producer runs now."""
-    return sim.techniques_in_use()
-
-
 @bridge_view("reputation_gain_of", kind=QUOTE)
 def reputation_gain_of(sim, node_id):
     """The standing finishing `node_id` adds."""

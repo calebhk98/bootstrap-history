@@ -4,7 +4,7 @@ from .harness import *  # noqa: F401,F403
 
 QUICK_TOPIC = True
 
-from sim.engine import node_revenue_market
+from sim.production import node_revenue_market
 
 # --- the function: net sales at the prices shown over net sales at long-run cost.
 sold, bought, cost = {"a": 10.0}, {"b": 5.0}, {"a": 2.0, "b": 2.0}
@@ -17,7 +17,7 @@ check("doubling every price the economy shows doubles the factor",
 check("nothing sold is a factor of one", node_revenue_market.basket_market_factor({}, bought, cost, cost.get) == 1.0)
 
 # --- the concern's factor: the market's factor only while the economy prices what the concern sells.
-from sim.engine import concern_earnings
+from sim.production import concern_earnings
 
 check("a concern whose goods the economy prices takes the market's factor",
       concern_earnings.output_market_factor(True, lambda: 2.5) == 2.5)

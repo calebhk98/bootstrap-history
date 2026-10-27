@@ -55,12 +55,6 @@ def legacy_done_versions(sim):
 
 # ---- production, workforce, materials -------------------------------------------------------------------------------------
 
-@bridge_view("concern_revenue", kind=KEYED, seat_scoped=True)
-def concern_revenue(sim, node_id):
-	"""What a running concern of the acting seat takes in a year."""
-	return sim.concern_revenue(node_id)
-
-
 @bridge_view("material_substitutes", kind=KEYED)
 def material_substitutes(sim, material):
 	"""The materials that serve a need `material` serves."""

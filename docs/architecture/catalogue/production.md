@@ -4,6 +4,8 @@ What runs: operating techniques and capability, revenue and upkeep of concerns, 
 
 **Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
 
+**Moved (task 1.5, `sim/production/`).** The module publishes the views of `READS_BY_OWNER` under the names the bridges used, plus the keyed and quote views the old `Sim` names forward to (`sim/production/module_spec.py` lists them; `sim/engine/forward_production.py` is the forwarders). Its commands are `AccrueExperience` and `LearnFromFailure`. It owns `ProductionSeat` (tenure, tenure_headcount, industry_seeded, industry_opening_rate). Left in the engine: `node_rederive.py` and `economy.nodes_money_per_labour_hour` (they rewrite the shared tree and are priced by engine code), `node_defaults.py` (the tree's field defaults), `concern_scan_run.py` (a diagnostic over the whole game), `held_works.py` (land's `held_and_running`), and `founder_sales.py`, `works.py`, `benefactions.py`, `venture_net_loss.py` (ventures and works move later). `projects.operating` stays where it is: `sim/agents/household.py` writes it and the version counters. The module reaches the projects record, the household, the tree and the economy through `legacy_game`.
+
 ## At a glance
 
 | Measure | Value |

@@ -4,7 +4,7 @@ from typing import Any, Dict, FrozenSet, Iterable, List, Mapping, Optional, Sequ
 # how near a producer is to making a good, least to most
 REACH = {"gated": 1, "solved": 2}
 
-# the seller id the goods market gives the home society (sim/engine/goods_market_imports.py HOME_SELLER)
+# the seller id the goods market gives the home society (sim/markets/goods_imports.py HOME_SELLER)
 HOME_SELLER = "home"
 
 

@@ -2,7 +2,7 @@
 lowers the haul between them, the setup carries the ways, the live economy rebuilds its carriage table when
 a way is finished, and the spin-up cache key sees them.
 
-sim/economy/tile_costs.py, sim/economy/setup.py, sim/economy/economy.py, sim/engine/port_key.py.
+sim/economy/tile_costs.py, sim/economy/setup.py, sim/economy/economy.py, sim/markets/port_key.py.
 """
 QUICK_TOPIC = True
 

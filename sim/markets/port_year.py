@@ -485,8 +485,7 @@ class AgentEconomy(TilePricesMixin):
         price, else what the market's buyers took last year (concern_sales.outlook); None when the economy is not open."""
         if not self.opened():
             return None
-        return port_seats.outlook(self.economy(), self.stored.get("seat_sales", {}), seat_id, material, quantity,
-                                  self._sim.concern_sale_rules())
+        return port_seats.outlook(self.economy(), self.stored.get("seat_sales", {}), seat_id, material, quantity)
 
     def _inputs(self, engine_orders, border_accounts=((), ())) -> YearInputs:
         sim = self._sim

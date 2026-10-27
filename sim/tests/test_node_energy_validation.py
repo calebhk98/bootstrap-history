@@ -4,7 +4,8 @@ import unittest
 
 from sim.prices import energy_prices
 
-from sim.engine import data, node_output
+from sim.engine import data
+from sim.production import node_output
 from sim.labour.labour_market import production_data
 
 

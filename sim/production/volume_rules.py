@@ -16,14 +16,10 @@ Two ratios against the opening, both from baskets worked out in labour hours:
 TEMPORARY HEURISTIC (CLAUDE.md 4.4): energy a line draws or makes is valued at the pool price, and
 every line is run whatever the wage, in both baskets alike (the loaded figure applies a wage test).
 """
-import json
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
 from sim.prices.api import energy_prices
 from . import node_output
-
-# (civilisation as text, {techniques held: labour-hour prices}); a solve reads only these two
-_PRICES_IN_HOURS: List[Any] = [None, {}]
 
 # (production table, {outputs: entries}); the table is kept so a hit is confirmed with `is`
 _ENTRIES_BY_OUTPUTS: List[Any] = [None, None]
@@ -82,50 +78,3 @@ def ratios(node: Dict[str, Any], production: Dict[str, Any], opening: Tuple[Froz
     value_before = _net_value(before, prices)
     value = max(0.0, _net_value(after, now[1])) / value_before if value_before > 0.0 else 1.0
     return volume, value, after
-
-
-class ConcernVolumeMixin:
-    """Per-concern volume and value ratios, remembered while the techniques held are unchanged."""
-
-    def _concern_prices_in_hours(self, held):
-        """Labour-hour prices under the techniques `held`; remembered while the civilisation is unchanged, so
-        every concern asking about the same techniques shares one answer."""
-        civilisation = json.dumps(self.civ, sort_keys=True, default=str)
-        if _PRICES_IN_HOURS[0] != civilisation:
-            _PRICES_IN_HOURS[:] = [civilisation, {}]
-        remembered = _PRICES_IN_HOURS[1]
-        key = frozenset(held)
-        if key not in remembered:
-            from .data import calculated_goods_prices
-            remembered[key] = {material: price for material, price in sorted(calculated_goods_prices(
-                held, civilization_id=self.civ.get("id"), civilization=self.civ,
-                money_per_labour_hour=1.0).items()) if price > 0.0}
-        return remembered[key]
-
-    def _concern_ratios(self, node_id):
-        node = self.nodes[node_id]
-        if node.get("_revenue_basis") != "output":
-            return 1.0, 1.0, None
-
-        held = self.techniques_spread()
-
-        def work_out():
-            from sim.prices.api import prices as price_solver
-            granted = frozenset(self.state.projects.granted)
-            prices = self._done_memo("concern_opening_prices", granted,
-                                     lambda: self._concern_prices_in_hours(granted))
-            return ratios(node, price_solver.default_production_entries(), (granted, prices), (held, prices))
-        return self._done_memo("concern_ratios", (node_id, held), work_out)
-
-    def concern_volume_ratio(self, node_id):
-        """What the concern turns out now over what it turned out at the opening, from the same staff."""
-        return self._concern_ratios(node_id)[0]
-
-    def concern_value_ratio(self, node_id):
-        """The concern's net sales at the solved prices of the techniques held now, over the opening's."""
-        return self._concern_ratios(node_id)[1]
-
-    def concern_baskets_now(self, node_id):
-        """What the concern makes and buys in a year with the techniques held now; None for a node
-        whose revenue is not derived from output."""
-        return self._concern_ratios(node_id)[2]

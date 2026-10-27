@@ -1,6 +1,6 @@
 """An epidemic year cuts each playing seat's staff by the working-age share the disease model killed, a quiet year takes
 nothing (the disease module's `hit_seats`), and a node with neither revenue nor upkeep is knowledge, not a venture
-(`CapabilityMixin.is_venture`). Each rule is called on a stand-in carrying only what it reads."""
+(the production module's `is_venture`). Each rule is called on a stand-in carrying only what it reads."""
 QUICK_TOPIC = True
 
 import contextlib
@@ -9,10 +9,9 @@ import unittest
 
 from sim.disease.api import HitSeatsWithEpidemic
 from sim.disease.module import Disease
-from sim.engine.projects_capability import CapabilityMixin
 from sim.hazards.api import LoseCapital
 from sim.reporting.api import RecordEvent
-from sim.tests import module_harness
+from sim.tests import module_harness, production_host
 from sim.workforce.api import ScaleDeputies, SurviveStaff
 
 
@@ -55,18 +54,17 @@ class KnowledgeIsNotAVentureTest(unittest.TestCase):
         nodes = {"knowledge": {"rev": 0, "up": 0}, "earner": {"rev": 5.0, "up": 0}, "keeper": {"rev": 0, "up": 2.0}}
         game.nodes = nodes
         game.state = types.SimpleNamespace(projects=types.SimpleNamespace(granted=set(granted)))
-        game.is_concern_node = lambda node_id: CapabilityMixin.is_concern_node(game, node_id)
-        return game
+        return production_host.build(game)
 
     def test_only_a_node_that_earns_or_costs_to_keep_is_a_venture(self):
         game = self._game()
-        self.assertFalse(CapabilityMixin.is_venture(game, "knowledge"))
-        self.assertTrue(CapabilityMixin.is_venture(game, "earner"))
-        self.assertTrue(CapabilityMixin.is_venture(game, "keeper"))
+        self.assertFalse(game.is_venture("knowledge"))
+        self.assertTrue(game.is_venture("earner"))
+        self.assertTrue(game.is_venture("keeper"))
 
     def test_a_granted_node_is_never_a_venture(self):
         game = self._game(granted=("earner",))
-        self.assertFalse(CapabilityMixin.is_venture(game, "earner"))
+        self.assertFalse(game.is_venture("earner"))
 
 
 if __name__ == "__main__":

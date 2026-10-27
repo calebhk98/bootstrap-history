@@ -2,7 +2,7 @@
 import math
 import random
 
-from sim.engine import node_payback_diagnostic
+from sim.production.api import node_payback_diagnostic
 from sim.engine.ui_port import (Sim, civilization_ids, default_civilisation_id, format_occupational_report,
                                 hours_by_trade_of_all_employers, load, load_civ, occupational_report,
                                 people_by_trade_of_all_employers)

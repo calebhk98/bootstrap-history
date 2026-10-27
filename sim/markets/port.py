@@ -7,6 +7,8 @@ change without them knowing. The port files (port*.py) are the only code that im
 the agent economy answers, and the engine's own opening figures answer
 while it opens. The port reads the game through `PortWorld` (port_world.py).
 """
+from sim.production.api import node_upkeep
+
 from .commands import RepriceOpeningMoney
 
 
@@ -396,6 +398,17 @@ class EconomyPort:
         """Money's worth of the society's yearly output at today's prices."""
         sim = self._sim
         return sim.real_output_hours() * sim.labour.money_per_labour_hour() * sim.output_factor
+
+    def concern_gross(self, node_id):
+        """Yearly takings of a concern once ramped up, with the market's price for its goods applied."""
+        sim = self._sim
+        return sim.concern_takings(node_id, 1.0) * sim.node_output_market_factor(sim.nodes[node_id])
+
+    def concern_upkeep(self, node_id, capacity=1.0, cost_scale=None):
+        """Yearly upkeep of a concern at a given capacity, without its crew's pay: an actor that runs a concern
+        hires the crew through the labour market and pays wages there."""
+        node = self._sim.nodes[node_id]
+        return node_upkeep.non_labour_upkeep_money(node["up"], node, capacity, self.cost_scale() if cost_scale is None else cost_scale)
 
     def project_cost(self, node_id):
         """What a project costs to carry out now."""

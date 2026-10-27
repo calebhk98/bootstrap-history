@@ -13,7 +13,8 @@ from unittest import mock
 from sim.prices import solve_prices
 from sim.prices import energy_prices, prices
 from . import prices_stand_in
-from sim.engine import data, node_output, node_revenue
+from sim.engine import data
+from sim.production import node_output, node_revenue
 from sim.world import capital_market, plant_figures
 from sim.labour.labour_market import production_data
 

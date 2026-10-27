@@ -4,7 +4,7 @@ Part of the port. Money is counted in coin here, the engine's unit; quantities i
 `sim.economy.api`, and kept until the economy's answers for the year are rebuilt."""
 from sim.economy import api as economy_api
 
-from .material_units import tonnes_per_unit
+from sim.world.material_units import tonnes_per_unit
 
 
 class TilePricesMixin:

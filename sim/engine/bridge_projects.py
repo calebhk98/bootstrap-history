@@ -25,21 +25,6 @@ def reopen_fee(sim, node_id):
     return sim.reopen_fee(node_id, sim.reopen_units(node_id))
 
 
-@bridge_view("running", kind=KEYED)
-def running(sim, node_id):
-    return sim.running(node_id)
-
-
-@bridge_view("revenue_estimate", seat_scoped=True)
-def revenue_estimate(sim):
-    return sim.revenue()
-
-
-@bridge_view("upkeep", seat_scoped=True)
-def upkeep(sim):
-    return sim.upkeep()
-
-
 # ---- projects itself, until progress and completion move ------------------------------------------------------------
 
 @bridge_view("legacy_projects", seat_scoped=True)

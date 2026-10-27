@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import math
 import unittest
 
-from sim.engine import node_output
+from sim.production import node_output
 from sim.labour.labour_market import production_data
 
 CIRCULAR_MIL_SQUARE_METRES = 5.0671e-10

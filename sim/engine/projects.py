@@ -12,10 +12,6 @@ size, and this file's only job is to compose them back into the single
 ProjectsMixin sim/engine/core.py's `class Sim(...)` already expects,
 unchanged, to inherit from:
 
-    projects_capability.py  is_venture/running/institution_units and the
-                             rest of what a capability or scalable
-                             institution IS, built and scaled and still
-                             running (CapabilityMixin)
     projects_ventures.py    the cost and staff of a venture, and the two
                              player-typed verbs that open or close one by
                              hand (VenturesMixin)
@@ -44,7 +40,7 @@ A handful of constants (CAPABILITY_INSTITUTIONS, SCALABLE_INSTITUTIONS,
 FOUNDER_IS_WORTH, STARTER_FOUNDING_MIN_UNITS, STAFF_CLOSURE_DISCOUNT,
 STAFF_CLOSURE_GRACE, RESTORE_COST_SHARE_OF_BUILD) are genuinely read from
 more than one of the six sub-mixins - CAPABILITY_INSTITUTIONS and
-SCALABLE_INSTITUTIONS from projects_capability.py, projects_ventures.py and
+SCALABLE_INSTITUTIONS (the production module), projects_ventures.py and
 projects_staffing.py; the other five across whichever two of projects_
 ventures.py/projects_staffing.py actually share them;
 see each constant's own comment for the specific pair. Moving any one of
@@ -55,7 +51,6 @@ composition point rather than in one of ITS four sub-mixins - so these stay
 here, on the composition point all six inherit from, instead.
 """
 from .forward_projects import ProjectsForwardsMixin
-from .projects_capability import CapabilityMixin
 from .projects_ventures import VenturesMixin
 from .projects_running_gates import RunningGatesMixin
 from .projects_staffing import StaffingMixin
@@ -74,7 +69,6 @@ from sim.constants import declare
 
 class ProjectsMixin(
         ProjectsForwardsMixin,
-        CapabilityMixin,
         VenturesMixin,
         RunningGatesMixin,
         StaffingMixin,

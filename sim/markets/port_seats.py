@@ -2,10 +2,12 @@
 
 Part of the port (it imports `sim.economy.api`). A seat's output is offered in the clearing (port_year);
 after it the seat's account holds the money the units that sold fetched and the units that did not. The per-material
-result is stored with the economy (`stored["seat_sales"]`, in coin) and read back as an outlook. `rules` is the production owner's seat-sales rules (concern_sales.py, the `concern_sale_rules` view).
+result is stored with the economy (`stored["seat_sales"]`, in coin) and read back as an outlook.
 """
 from sim.agents.api import edges
 from sim.economy import api as economy_api
+
+from sim.production.api import concern_sales
 
 
 def unsold_units(economy, seat_id):
@@ -14,7 +16,7 @@ def unsold_units(economy, seat_id):
     return {good: sum(tiles.values()) for good, tiles in held.items() if sum(tiles.values()) > 0.0}
 
 
-def record_year(economy, offered_by_seat, proceeds_units, coin, rules):
+def record_year(economy, offered_by_seat, proceeds_units, coin):
     """{seat: {material: [offered units, sold units, proceeds in coin]}} for the seats that offered output,
     from what they still hold and the units of money `proceeds_units` gives each (read before settling)."""
     view = economy.view()
@@ -22,7 +24,7 @@ def record_year(economy, offered_by_seat, proceeds_units, coin, rules):
     for seat_id, (tile, offered) in sorted(offered_by_seat.items()):
         quoted = {good: view.price(good, economy.area_map.area_of(good, tile)) for good in offered}
         prices = {good: price for good, price in quoted.items() if price is not None}     # a good with no price is weighted by units
-        results = rules.settle_sales(offered, unsold_units(economy, seat_id), proceeds_units.get(seat_id, 0.0), prices)
+        results = concern_sales.settle_sales(offered, unsold_units(economy, seat_id), proceeds_units.get(seat_id, 0.0), prices)
         kept[seat_id] = {material: [result.offered, result.sold, result.proceeds * coin]
                          for material, result in results.items()}
     return kept
@@ -35,7 +37,7 @@ def settle_seats(sim, economy, offered_by_seat, inputs_by_seat, edge_id):
     coin = economy.setup.coin_per_unit
     book, currency = economy_api.economy_book(economy), economy.setup.currency_id
     proceeds = {seat_id: max(0.0, book.balance(seat_id, currency)) for seat_id in sorted(sim.state.seats)}
-    sold = record_year(economy, offered_by_seat, proceeds, coin, sim.concern_sale_rules())
+    sold = record_year(economy, offered_by_seat, proceeds, coin)
     takings = {seat_id: economy_api.settle_agent_takings(economy, seat_id, edge_id) * coin
                for seat_id in sorted(sim.state.seats)}
     for seat_id in sorted(offered_by_seat):
@@ -45,13 +47,13 @@ def settle_seats(sim, economy, offered_by_seat, inputs_by_seat, edge_id):
     return sold, takings
 
 
-def outlook(economy, seat_sales, seat_id, material, quantity, rules):
+def outlook(economy, seat_sales, seat_id, material, quantity):
     """The seat's outlook for `quantity` units of a material (concern_sales.outlook): its own last clearing when it
     offered the material, else the units the market's buyers took and still wanted last year."""
     figures = (seat_sales.get(seat_id) or {}).get(material)
-    result = rules.SaleResult(*figures) if figures else None
+    result = concern_sales.SaleResult(*figures) if figures else None
     buyers = None
     if result is None and material in economy.area_map.goods():
         record = economy_api.market_record(economy, material)
         buyers = record["sold"] + record["unmet"]
-    return rules.outlook(result, buyers, quantity)
+    return concern_sales.outlook(result, buyers, quantity)

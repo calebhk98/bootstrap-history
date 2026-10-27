@@ -8,7 +8,8 @@ import unittest
 from unittest import mock
 
 from sim.engine import projects_staffing
-from sim.engine.economy_production import ProductionMixin
+from sim.tests import production_host
+from sim.workforce.api import SetWageHoursSold
 from sim.engine.projects_staffing import StaffingMixin
 from sim.refusal import cause_of, facts_of
 from sim.tests import event_stand_in
@@ -167,20 +168,23 @@ class RestoreWork(unittest.TestCase):
         self.assertFalse(game.restore_work("press")[0])
 
 
-class StandingRevenue(ProductionMixin):
+class StandingRevenue:
+    """The production module over a household whose hours sold on request are read and set as the workforce module would."""
+
     def __init__(self):
         self.hours = 700.0
         self.seen = []
-
-    def view(self, name):
-        return lambda: {"wage_hours": self.hours}
-
-    def send(self, command):
-        self.hours = command.hours
+        self.module = production_host.build(
+            hour_commitments=lambda: {"wage_hours": self.hours},
+            answers={SetWageHoursSold: lambda command: setattr(self, "hours", command.hours)})
+        self.module.revenue = self.revenue
 
     def revenue(self):
         self.seen.append(self.hours)
         return 1000.0
+
+    def revenue_capacity(self):
+        return self.module.revenue_capacity()
 
 
 class RevenueCapacity(unittest.TestCase):

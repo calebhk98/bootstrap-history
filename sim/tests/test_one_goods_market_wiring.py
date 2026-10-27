@@ -3,6 +3,7 @@ market. Each method is called on a stand-in carrying only what it reads; no game
 test_one_goods_market."""
 import types
 import unittest
+from sim.tests import market_stand_in
 from unittest import mock
 
 from sim.agents.api import Actor
@@ -62,7 +63,7 @@ class FounderSaleTests(unittest.TestCase):
         seen = []
         market = types.SimpleNamespace(acting="the asking seat", sell=lambda seller, material, tonnes: seen.append((seller, material, tonnes)) or 2.5)
         game = types.SimpleNamespace(goods_market=market)
-        self.assertEqual(module_harness.build(Markets, views={"legacy_game": game}).sell_material(SellMaterial(MATERIAL, 3.0)), 2.5)
+        self.assertEqual(market_stand_in.markets_over(goods_market=game.goods_market).sell_material(SellMaterial(MATERIAL, 3.0)), 2.5)
         self.assertEqual(seen, [("the asking seat", MATERIAL, 3.0)])
 
 

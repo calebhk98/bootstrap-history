@@ -23,7 +23,7 @@ import tempfile
 # Games started without --seed draw a fresh one; the suite needs them to replay.
 os.environ.setdefault("ROME_DEFAULT_SEED", "1")
 # Games in the suite open after a few hidden spin-up years rather than the declared bounds, cached apart
-# from full games' (sim/engine/port_year.py); a cold full spin-up costs many minutes per start.
+# from full games' (sim/markets/port_year.py); a cold full spin-up costs many minutes per start.
 os.environ.setdefault("ROME_SPIN_UP_YEARS", "3,2")
 
 # collections, copy, glob, re and tempfile are not used in this file; topic modules use them bare and rely on

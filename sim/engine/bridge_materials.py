@@ -30,12 +30,6 @@ def empire_output(sim):
 
 # ---- the catalogue of commodities, the price epoch and the producers ----
 
-@bridge_view("price_epoch")
-def price_epoch(sim):
-    """Changes whenever the techniques in use might, or the price level does."""
-    return sim.price_epoch()
-
-
 # ---- projects' costs and what the seat can pay ----
 
 @bridge_view("shared_bill", kind=QUOTE)

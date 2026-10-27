@@ -1,4 +1,4 @@
-"""The coin's backing-good margin (sim/engine/port_coin.py) is read from the opened economy of a setup,
+"""The coin's backing-good margin (sim/markets/port_coin.py) is read from the opened economy of a setup,
 which costs a whole opening; it is kept on disk under the setup's digest, so a game built twice on the same
 setup opens the economy once. The kept answer must be the one a fresh opening gives, and a different setup must
 not read it."""

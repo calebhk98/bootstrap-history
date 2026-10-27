@@ -4,11 +4,12 @@ of their factors, and the real-income ratio's reading of the basket."""
 QUICK_TOPIC = True
 
 import unittest
+from sim.tests import market_stand_in
 from types import SimpleNamespace
 
 from sim.agents import supply
-from sim.engine import concern_volume
-from sim.engine.concern_earnings import takings_at
+from sim.production import volume_rules as concern_volume
+from sim.production.concern_earnings import takings_at
 from sim.markets.api import MEAN_INCOME_HOURS_PER_CAPITA
 from sim.markets.module import Markets
 from sim.tests import module_harness
@@ -110,9 +111,8 @@ class RealIncomeTests(unittest.TestCase):
 
     def ratio(self, now_prices, wage_ratio=1.0, per_hour=1.0):
         basket = {"units": {"grain": 10.0, "cloth": 2.0}, "prices": {"grain": 1.0, "cloth": 5.0}}
-        game = module_harness.build(Markets, views={
-            "legacy_game": SimpleNamespace(goods_market=SimpleNamespace(household_cost_prices=lambda: now_prices)),
-            "money_per_labour_hour": per_hour})
+        game = market_stand_in.markets_over(goods_market=SimpleNamespace(household_cost_prices=lambda: now_prices),
+                                            money_per_labour_hour=per_hour)
         game.static_book_basket = lambda: basket
         game.household_income_hours_per_capita = lambda: MEAN_INCOME_HOURS_PER_CAPITA * wage_ratio
         return game.household_real_income_ratio()

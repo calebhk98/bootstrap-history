@@ -10,6 +10,7 @@ from unittest import mock
 from .harness import *  # noqa: F401,F403
 from . import module_harness
 
+from sim.tests import market_stand_in
 from sim.markets import goods_offers
 from sim.markets.goods_market import GoodsMarket
 from sim.markets.goods_imports import HOME_SELLER
@@ -26,9 +27,11 @@ FOUNDER = "seat:founder"
 
 
 def markets_over(game):
-    """The markets module reading `game` as the engine's market objects."""
-    return module_harness.build(Markets, views={"legacy_game": game, "material_commodity": lambda material: material,
-                                                    "concern_offers": lambda commodity: game.founder_concern_offers(commodity)})
+    """The markets module over the goods market `game` holds."""
+    markets = module_harness.build(Markets, views={"material_commodity": lambda material: material,
+                                                       "concern_offers": lambda commodity: game.founder_concern_offers(commodity)})
+    markets.goods_market = game.goods_market
+    return markets
 
 
 def stand_in(**changes):
@@ -40,7 +43,7 @@ def stand_in(**changes):
     values = dict(
         _flows=flows, state=SimpleNamespace(acting_seat=FOUNDER, projects=SimpleNamespace(done=[]),
                                             scenario=SimpleNamespace(year=-100)),
-        household=SimpleNamespace(), economy=SimpleNamespace(agent_prices_at=lambda: None),
+        **market_stand_in.market_memory(), economy=SimpleNamespace(agent_prices_at=lambda: None),
         _material_prices=lambda: {"wheat_kg": 3.0, "iron": 5.0}, _price_tables=lambda: (None, {"wheat_kg": "solved", "iron": "solved"}),
         foreign_economies=lambda: ["han"], _foreign_economy_facts=lambda partner: facts, _foreign_route=lambda civ: route,
         partner_civ=lambda partner: {}, partner_price_level=lambda partner: 1.0, market_rate=lambda: 0.05,

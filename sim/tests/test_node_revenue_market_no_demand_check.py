@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import concern_sales, node_revenue_market
+from sim.production import concern_sales, node_revenue_market
 
 
 COST = 10.0

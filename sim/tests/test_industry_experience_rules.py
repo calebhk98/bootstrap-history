@@ -3,7 +3,7 @@ here, with the labour core's tenure record, no game."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.industry_depth_rules import firm_worker_years, opening_rates, opening_seed, seed_stock, society_worker_years
+from sim.production.industry_depth_rules import firm_worker_years, opening_rates, opening_seed, seed_stock, society_worker_years
 from sim.labour.api import add_tenure, fade_tenure, tenure_held
 
 CONCERNS = {"mill", "forge", "kiln"}

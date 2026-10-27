@@ -33,8 +33,8 @@ STORED = Stored(on=True)
 class FakeSim:
     civ = {"id": HOME}
 
-    def view(self, name):
-        return lambda: STORED
+    def agent_record(self):
+        return STORED
 
 
 def seat_economy():

@@ -279,10 +279,6 @@ class PortWorld(ForeignReads):
 	def concern_book_inputs_cost(self, node_id):
 		return self._needs.concern_book_inputs_cost[node_id]
 
-	def concern_sale_rules(self):
-		"""The seat-sales rules of the production owner: settle_sales, outlook and the SaleResult they work on."""
-		return self._needs.concern_sale_rules()
-
 	def concern_takings(self, node_id, ramp):
 		return self._needs.concern_takings(node_id, ramp)
 

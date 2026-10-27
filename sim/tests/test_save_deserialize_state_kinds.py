@@ -12,6 +12,7 @@ from sim.diffusion.api import DiffusionSeat
 from sim.finance.api import FinanceSeat
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
+from sim.production.api import ProductionSeat
 from sim.workforce.api import WorkforceSeat
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
                               SimulationState, deserialize_state)
@@ -67,7 +68,7 @@ projects = deserialize_state({
 	           "a_forge": {"ph_left": 10, "cost_left": 20, "yrs": 0.5, "spent": 5, "status": "ACTIVE"}},
 	"done": {"__set__": ["fire", "stone_cutting"]}, "done_year": {"fire": "3", "stone_cutting": 10}, "failed_attempts": {"printing": "3", "alloy": 1},
 	"businesses": [{"business_id": "founder", "owner_id": "", "plants": []}],
-	"tenure": {"mason": {"arch": 4.5}}, "excluded": {"__set__": ["category:war"]}}, ProjectsState)
+	"excluded": {"__set__": ["category:war"]}}, ProjectsState)
 check("deserialize_state: the retry counts are a default dict of integers that counts from zero",
       type(projects.failed_attempts) is collections.defaultdict and dict(projects.failed_attempts) == {"printing": 3, "alloy": 1}
       and projects.failed_attempts["never_tried"] == 0, projects.failed_attempts)
@@ -84,7 +85,7 @@ disclosures = deserialize_state({"disclosures": {"fire": {"mode": "license", "pu
 check("deserialize_state: a disclosure record (an untyped dict) is as saved",
       disclosures == {"fire": {"mode": "license", "published_year": None,
                                "licensees": {"firm:2": {"fee": 5.0, "royalty": 0.1, "year": 101}}}}, disclosures)
-check("deserialize_state: nested floats", projects.tenure == {"mason": {"arch": 4.5}})
+check("deserialize_state: nested floats", deserialize_state({"tenure": {"mason": {"arch": 4.5}}}, ProductionSeat).tenure == {"mason": {"arch": 4.5}})
 
 # ---- mine stock and tranches, shortages
 mines = deserialize_state({

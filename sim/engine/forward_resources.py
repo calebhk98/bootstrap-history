@@ -1,8 +1,7 @@
 """One-line forwarders from `Sim` to the resources module, for callers not yet in a module.
 
 Each goes when its last caller reads the view (`sim.view(name)`) or sends the command (`sim.send(command)`) itself.
-`_running_kept_stamp` is engine infrastructure: what is built, granted and operating, which the resources and materials
-modules key their tables on."""
+"""
 from sim.resources.api import DrawDeposit, MothballMines, base_mine_catalog_hint
 
 
@@ -53,10 +52,3 @@ class ForwardResourcesMixin:
 
     def shortage_remedy_plan(self, binding, shortfall_t=None):
         return self.view("shortage_remedy_plan")(binding, shortfall_t)
-
-    def _running_kept_stamp(self):
-        """(the projects record, counts and versions of what is built, granted and operating, the tree)."""
-        projects = self.state.projects
-        return (projects, (self.household.done_version, self.household.operating_version,
-                           len(projects.done), len(projects.granted), len(projects.operating)), self.nodes)
-

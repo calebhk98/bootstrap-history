@@ -11,7 +11,8 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import node_rederive, node_revenue, society_holdings
+from sim.engine import node_rederive, society_holdings
+from sim.production import node_revenue
 
 
 def actor(kind, knowledge, exited=None):

@@ -4,7 +4,8 @@ Each is called on inputs written here or on the shipped data, with the coin heav
 import copy
 from types import SimpleNamespace
 
-from sim.engine import data, money_units, node_revenue
+from sim.engine import data, money_units
+from sim.production import node_revenue
 from sim.engine.wage_schedule import build_schedule
 
 from .harness import *  # noqa: F401,F403

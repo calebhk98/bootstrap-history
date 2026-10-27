@@ -1,7 +1,7 @@
 """Complaints 345 and 341: a concern's running costs and takings are its own (no index of the economy's output scales
 either), the founder and an actor are quoted the same upkeep for the same concern, and a goods category's takings are the
 market's price times volume shared among its sellers. Rules: `node_upkeep.non_labour_upkeep_money`,
-`EconomyPort.concern_upkeep` against `ProductionMixin.institution_upkeep` (the founder's), and
+`EconomyPort.concern_upkeep` against the production module's `institution_upkeep` (the founder's), and
 `rules.seller_revenue_factor`. That pay follows output per head by a share is test_concern_volume; the one
 wage for every employer is test_one_labour_market_wiring."""
 QUICK_TOPIC = True
@@ -9,27 +9,25 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine import node_upkeep
+from sim.production import node_upkeep
 from sim.markets.port import EconomyPort
-from sim.engine.economy_production import ProductionMixin
 from sim.markets.rules import seller_revenue_factor
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
+from sim.tests import production_host
 
 NODE = {"up": 5000.0, "_upkeep_hours_parts": {"staff": 3.0, "plant": 1.0}, "_upkeep_basis": None}   # a quarter of the upkeep is not crew
 
 
-class Founder(ProductionMixin, VentureQuotesMixin):
+class Founder(VentureQuotesMixin):
     """The founder's side of a plain concern: no scalable institution, no capability gate."""
-
-    SCALABLE_INSTITUTIONS = ()
-    CAPABILITY_INSTITUTIONS = ()
 
     def __init__(self, price_index):
         self.nodes = {"shop": NODE}
         self.price_index = price_index
+        self.production = production_host.build(self, capability_sets=((), (), {}))
 
-    def mechanic(self, node_id, name):
-        return None
+    def institution_upkeep(self, node_id, units=None, fully_staffed=False):
+        return self.production.institution_upkeep(node_id, units, fully_staffed)
 
 
 class UpkeepTests(unittest.TestCase):

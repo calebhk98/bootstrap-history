@@ -1,7 +1,7 @@
 """The cached spin-ups (the agent economy's hidden years) are keyed on
 what they start from and on the source that runs them, and on nothing else.
 
-sim/engine/port_key.py.
+sim/markets/port_key.py.
 """
 QUICK_TOPIC = True
 
@@ -14,7 +14,8 @@ from typing import Any, Dict
 
 from sim.prices import solve_cache
 
-from sim.markets import port_key, source_closure
+from sim.engine import source_closure
+from sim.markets import port_key
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
@@ -194,7 +195,7 @@ class RealClosureTests(unittest.TestCase):
     def test_the_spin_up_closure_holds_the_economy_and_not_the_ui(self):
         files = source_closure.source_files(ROOT, port_key.SPIN_UP_SOURCE_MODULES)
         relative = {os.path.relpath(path, ROOT) for path in files}
-        self.assertIn(os.path.join("sim", "engine", "port_year.py"), relative)
+        self.assertIn(os.path.join("sim", "markets", "port_year.py"), relative)
         self.assertIn(os.path.join("sim", "economy", "api.py"), relative)
         self.assertFalse([path for path in relative if path.startswith(os.path.join("sim", "ui") + os.sep)])
 
