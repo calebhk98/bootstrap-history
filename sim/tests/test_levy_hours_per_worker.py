@@ -10,13 +10,14 @@ from .harness import check
 from sim.agents.api import ActorRecord
 from sim.agents.government import Government
 from sim.markets import port_levy
+from sim.tests.ui_stand_in import Game
 
 
 def stub_game(hours_by_destination, working_age, has_government=True):
     """A game whose home state has taken these hours this year, among this many working-age people."""
     government = Government("government:home", ActorRecord(kind="government"))
     government.record.corvee_hours = dict(hours_by_destination)
-    return SimpleNamespace(actors=SimpleNamespace(government_of=lambda country: government if has_government else None),
+    return Game(actors=SimpleNamespace(government_of=lambda country: government if has_government else None),
                            population=SimpleNamespace(working_age=working_age))
 
 

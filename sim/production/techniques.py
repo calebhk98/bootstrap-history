@@ -17,7 +17,7 @@ class Techniques:
 	def techniques_epoch(self):
 		"""Changes whenever the techniques in use might."""
 		game = self._game()
-		return (game.household.done_version, game.household.operating_version, game.actor_market_version())
+		return (game.household.done_version, game.household.operating_version, game.view("concern_versions")()[0])
 
 	def price_epoch(self):
 		"""Changes whenever the techniques in use might, or the price level does: for caches whose
@@ -27,7 +27,7 @@ class Techniques:
 	def techniques_in_use(self):
 		"""Nodes whose production entries some producer runs now."""
 		game = self._game()
-		epoch = (game.household.done_version, game.household.operating_version, game.concern_set_version())
+		epoch = (game.household.done_version, game.household.operating_version, game.view("concern_versions")()[1])
 		cached = getattr(self, "_techniques_in_use_cache", None)
 		projects = game.state.projects
 		if (cached is not None and cached[0] == epoch and cached[2] is projects.done
@@ -35,7 +35,7 @@ class Techniques:
 			return cached[1]
 		in_use = set(projects.granted) | set(projects.operating)
 		if game.state.actors is not None and game.state.actors.records:
-			in_use.update(game.actors.concerns_of_active_firms())
+			in_use.update(game.view("cast")().concerns_of_active_firms())
 		in_use = frozenset(in_use)
 		if cached is not None and cached[1] == in_use:
 			in_use = cached[1]      # the same set stays the same object, so what is keyed on it holds

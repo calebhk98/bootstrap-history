@@ -72,7 +72,7 @@ def urban_report(sim, days=DEFAULT_FOOD_HAUL_DAYS, limit=ROWS_SHOWN):
     working_share = population.working_age / population.total if population.total > 0.0 else 0.0
     employed = sum(count for trade, count in sim.view("staff")()["employees"].items() if trade != "labourer")
     founder_dependants = employed / working_share - employed if working_share > 0.0 else 0.0
-    firm_households = sim.actor_staff_total() / working_share if working_share > 0.0 else 0.0
+    firm_households = sim.view("actor_staff_total")() / working_share if working_share > 0.0 else 0.0
     nonfarm_people = population.total * float(sim.civ.get("urban_fraction", 0.0)) + firm_households
     total_assembled = sum(assembled.values())
     base = sim.labour.base_tile()

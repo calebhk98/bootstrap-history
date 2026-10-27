@@ -78,7 +78,7 @@ def check_labour_market_invariants(sim):
 def check_technique_invariants(sim):
     """Assert no actor runs a plant of a technique it does not hold (its own knowledge, its country's baseline,
     or a licence it pays royalty under)."""
-    registry = sim.actors
+    registry = sim.view("cast")()
     world = sim.view("actor_world")()
     for actor in registry.actors.values():
         business = getattr(actor.record, "business", None)
@@ -96,7 +96,7 @@ def check_capacity_invariants(sim):
     crew found lies in 0..1, no actor's workforce is negative or larger than the people of its country, and each
     commodity's society capacity is finite and not negative."""
     from .mod_effects import people_of
-    registry = sim.actors
+    registry = sim.view("cast")()
     people = {country: people_of(sim, country) for country in sim.view("countries_in_game")()}
     home = sim.civ["id"]
     for actor in registry.actors.values():

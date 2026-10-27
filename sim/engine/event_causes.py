@@ -41,7 +41,7 @@ def _held_tiles(sim: Any) -> Tuple[List[str], List[str]]:
 
 
 def _funded_share(sim: Any, node: Optional[str] = None) -> float:
-    record = sim.state_treasury().record
+    record = sim.view("state_treasury")().record
     need = sum(record.need.values())
     return 1.0 if need <= 0.0 else max(0.0, 1.0 - sum(record.unfunded.values()) / need)
 
@@ -53,7 +53,7 @@ def _army_share_of_wanted(sim: Any, node: Optional[str] = None) -> float:
 
 
 def _state_holds(sim: Any, node: Optional[str] = None) -> float:
-    return 1.0 if sim.state_treasury().knows(node, _world(sim)) else 0.0
+    return 1.0 if sim.view("state_treasury")().knows(node, _world(sim)) else 0.0
 
 
 def _territory_share(sim: Any, node: Optional[str] = None) -> float:

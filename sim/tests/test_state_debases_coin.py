@@ -13,6 +13,7 @@ from sim.economy.accounts import Book
 from sim.economy.economy import Economy
 from sim.economy.types import EDGE_MINT, Transfer
 from sim.markets.port_year import AgentEconomy
+from sim.tests.ui_stand_in import Game
 
 
 spec = currency.currency_from_coin_standard("realm", {"regime": "struck_coin", "material": "silver_kg",
@@ -70,7 +71,7 @@ class Recorder:
         self.calls.append((cut, restrike_share))
 
 
-port = SimpleNamespace(_sim=SimpleNamespace(state_treasury=lambda: SimpleNamespace(record=SimpleNamespace(coin_cut_share=0.15))),
+port = SimpleNamespace(_sim=Game(state_treasury=lambda: SimpleNamespace(record=SimpleNamespace(coin_cut_share=0.15))),
                        _floor_costs={"stale": 1.0})
 recorder = Recorder()
 AgentEconomy._strike_state_coin(port, recorder)

@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Set
 
 def society_technologies(game: Any) -> Set[str]:
     """What the society holds: the state's knowledge, the opening techniques and the starting grant."""
-    return set(game.state_treasury().knowledge) | set(game.view("actor_world")().baseline_knowledge()) | set(game.granted)
+    return set(game.view("state_treasury")().knowledge) | set(game.view("actor_world")().baseline_knowledge()) | set(game.granted)
 
 
 def snapshot(game: Any) -> Dict[str, Any]:

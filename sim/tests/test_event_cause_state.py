@@ -7,6 +7,7 @@ import os
 from types import SimpleNamespace
 
 from .harness import check
+from .ui_stand_in import Game
 
 from sim.engine import event_causes
 from sim.engine.tree_source import load_base_tree
@@ -24,7 +25,7 @@ def stratum(members, welfare, share, propertied=False, bonded=False, measured=Tr
 def fake_sim(strata=(), nutrition=None, coin_metal_kept=1.0):
 	flows = None if nutrition is None else SimpleNamespace(nutrition_ratio=nutrition)
 	record = SimpleNamespace(need={"army": 1.0}, unfunded={}, coin_metal_kept=coin_metal_kept)
-	return SimpleNamespace(
+	return Game(
 		_last_demographic_step=flows, population=SimpleNamespace(total=1000.0),
 		actors=SimpleNamespace(of_kind=lambda kind: list(strata) if kind == "stratum" else []),
 		state_treasury=lambda: SimpleNamespace(record=record),

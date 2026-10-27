@@ -144,7 +144,7 @@ class Depth:
 		years = society_worker_years(projects.granted | projects.operating, self.is_concern_node, projects.granted,
 		                             self.seat.industry_opening_rate, self.founding_worker_years)
 		if game.state.actors is not None and game.state.actors.records:
-			for firm in game.actors.active_firms():
+			for firm in game.view("cast")().active_firms():
 				for node_id in firm.concerns:
 					years[node_id] = years.get(node_id, 0.0) + firm_worker_years(
 						self.founding_worker_years(node_id), firm.capacity_of(node_id), firm.staffed_share(node_id))

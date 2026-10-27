@@ -39,11 +39,13 @@ class FakeWorld:
 
 
 def game(done=("pays", "loses", "knowledge"), seats=(("founder", ["pays"]),), actors=(("firm:1", ["loses"]),)):
+    cast = SimpleNamespace(actors={actor_id: SimpleNamespace(record=SimpleNamespace(business=Business.running(plants))) for actor_id, plants in actors},
+                           state=SimpleNamespace(home_country=None))
     return SimpleNamespace(
-        view=lambda name: FakeWorld, done=set(done), is_concern_node=lambda node_id: node_id != "knowledge",
+        view=lambda name: (lambda: cast) if name == "cast" else FakeWorld, done=set(done),
+        is_concern_node=lambda node_id: node_id != "knowledge",
         state=SimpleNamespace(seats={seat_id: SimpleNamespace(projects=SimpleNamespace(business=Business.running(plants))) for seat_id, plants in seats}),
-        actors=SimpleNamespace(actors={actor_id: SimpleNamespace(record=SimpleNamespace(business=Business.running(plants))) for actor_id, plants in actors},
-                               state=SimpleNamespace(home_country=None)))
+        actors=cast)
 
 
 stand_in = game()

@@ -13,6 +13,7 @@ from sim.engine.mod_effects import ModEffects, people_of
 from sim.agents.api import edges
 from sim.engine.mods import ModError
 from sim.tests.bridge_send import attach_send
+from sim.tests.ui_stand_in import Game
 
 HOME, ABROAD = "home_land", "far_land"
 
@@ -36,7 +37,7 @@ def stratum(country, name, members):
 def stand_in_game():
     farmers, artisans, foreign = stratum(None, "farmers", 1000.0), stratum(None, "artisans", 200.0), stratum(ABROAD, "farmers", 50.0)
     government = SimpleNamespace(actor_id="government:home", record=ActorRecord(kind="government"))
-    game = SimpleNamespace(actors=StandInActors([farmers, artisans, foreign, government]), civ={"id": HOME},
+    game = Game(actors=StandInActors([farmers, artisans, foreign, government]), civ={"id": HOME},
                            state=SimpleNamespace(scenario=SimpleNamespace(year=100)),
                            population=SimpleNamespace(total=1200.0))
     attach_send(game)

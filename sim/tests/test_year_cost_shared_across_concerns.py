@@ -18,6 +18,7 @@ from sim.markets import port_actors
 from sim.tests import prices_stand_in
 from sim.engine.state import ActorRecord, ActorsState
 from sim.engine.view_share import ViewShare
+from sim.tests.ui_stand_in import Game
 from sim.tests import module_harness, production_host
 
 
@@ -122,10 +123,10 @@ class ConcernSetVersion(unittest.TestCase):
     def test_the_techniques_in_use_are_not_worked_out_again_for_a_size_change(self):
         registry = self.registry()
         projects = types.SimpleNamespace(granted=set(), operating={}, done=[])
-        world = types.SimpleNamespace(
+        world = Game(
             household=types.SimpleNamespace(done_version=0, operating_version=0),
             state=types.SimpleNamespace(projects=projects, actors=types.SimpleNamespace(records={"firm:000": 1})),
-            actors=registry, concern_set_version=lambda: registry.concern_set_version[0])
+            actors=registry, view=lambda name: (lambda: (registry.version[0], registry.concern_set_version[0])))
         walks = []
         original = registry.concerns_of_active_firms
         registry.concerns_of_active_firms = lambda: walks.append(1) or original()

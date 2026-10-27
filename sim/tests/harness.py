@@ -257,9 +257,9 @@ def ready_for_entry(game, money=None):
     empty purses, and a firm is founded from a stratum's savings). The opening cast (strata and governments)
     is seeded first when it has not been. `money` is the savings of each free home stratum; by default the
     entrepreneurial share of a year's output between them. Returns the game."""
-    if not game.actors.state.home_country:
+    if not game.view("cast")().state.home_country:
         game.view("seeded_actor_registry")()
-    free = [stratum for stratum in game.actors.of_kind("stratum")
+    free = [stratum for stratum in game.view("cast")().of_kind("stratum")
             if stratum.record.country is None and not stratum.is_bonded()]
     if money is None:
         from sim.agents.tuning import ENTREPRENEURIAL_CAPITAL_SHARE
@@ -279,7 +279,7 @@ def noted_sale_tonnes(game, material, seller=None):
 def state_seeking(game, requisition=0.16, office=0.06):
     """Put the state in need: the rates it takes at full notice from the income it can see, as a
     year's shortfall would leave them. Returns the game."""
-    record = game.state_treasury().record
+    record = game.view("state_treasury")().record
     record.levy_requisition_rate, record.levy_office_rate = requisition, office
     return game
 

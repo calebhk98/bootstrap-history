@@ -25,16 +25,16 @@ def running_businesses(game) -> Iterator[Tuple[str, Business]]:
     """(owner id, business) of every owner in the game: each seat's, then each actor's, in id order."""
     for seat_id in sorted(game.state.seats):
         yield seat_id, game.state.seats[seat_id].projects.business
-    for actor_id in sorted(game.actors.actors):
-        yield actor_id, game.actors.actors[actor_id].record.business
+    for actor_id in sorted(game.view("cast")().actors):
+        yield actor_id, game.view("cast")().actors[actor_id].record.business
 
 
 def scan_game(game) -> Dict[str, Any]:
     """The summary (concern_scan.summary) of the concerns `game`'s society holds, at its current prices, with the summary of
     the plants its owners run now under `running`."""
     world = game.view("actor_world")()
-    result = concern_scan.summary(concern_scan.scan_business(held_business(game), game.actors, world))
-    result["running"] = concern_scan.summary(concern_scan.scan_businesses(running_businesses(game), game.actors, world))
+    result = concern_scan.summary(concern_scan.scan_business(held_business(game), game.view("cast")(), world))
+    result["running"] = concern_scan.summary(concern_scan.scan_businesses(running_businesses(game), game.view("cast")(), world))
     return result
 
 

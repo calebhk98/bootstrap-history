@@ -74,12 +74,12 @@ def register(api):
         return sum(entry["amount"] for entry in memory(sim).get(name, {}).values())
 
     def holder_actor(sim, name):
-        return sim.actors.get(holder_id(name))
+        return sim.view("cast")().get(holder_id(name))
 
     def ensure_holder(sim, name):
         actor = holder_actor(sim, name)
         if actor is None:
-            actor = sim.actors.add(holder_id(name), ActorRecord(
+            actor = sim.view("cast")().add(holder_id(name), ActorRecord(
                 kind=api.qualified(name), name=holders[name]["label"], founded_year=sim.year))
         return actor
 
@@ -179,7 +179,7 @@ def register(api):
         holder = ensure_holder(sim, name)
         seat = sim.state.acting_seat
         settle(sim, name, seat)
-        ledger.transfer(household, sim.edge(edges.EDGE_COIN_GUARDS), carry, CARRY_CAUSE)
+        ledger.transfer(household, sim.view("legacy_edge_account")[edges.EDGE_COIN_GUARDS], carry, CARRY_CAUSE)
         ledger.transfer(household, holder, amount, DEPOSIT_CAUSE)
         entry = memory(sim).setdefault(name, {}).setdefault(seat, {"amount": 0.0, "settled_year": sim.year})
         entry["amount"] += amount
@@ -215,7 +215,7 @@ def register(api):
         household = sim.state.household
         if paid > 0.0:
             ledger.transfer(holder, household, paid, PAYOUT_CAUSE)
-            ledger.transfer(household, sim.edge(edges.EDGE_COIN_GUARDS), carry_cost(sim, name, paid), CARRY_CAUSE)
+            ledger.transfer(household, sim.view("legacy_edge_account")[edges.EDGE_COIN_GUARDS], carry_cost(sim, name, paid), CARRY_CAUSE)
         entry["amount"] -= asked
         return {"ok": True, "holder": name, "asked": round(asked, 1), "paid": round(paid, 1),
                 "written_off": round(asked - paid, 1), "fees_taken_from_claim": round(fees, 1),

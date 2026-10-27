@@ -18,6 +18,7 @@ from sim.refusal import cause_of
 from .bridge_send import attach_send
 from .harness import *  # noqa: F401,F403
 from sim.tests import event_stand_in
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -27,7 +28,7 @@ effects = ModEffects(ACME)
 # --- money: the ledger is sent the payment (an actor to an edge, an edge to an actor, an actor to an actor).
 government = object()
 sent_money = []
-money_game = SimpleNamespace(actors=SimpleNamespace(get=lambda actor_id: government if actor_id in ("government:x", "government:y") else None),
+money_game = Game(actors=SimpleNamespace(get=lambda actor_id: government if actor_id in ("government:x", "government:y") else None),
                              send=sent_money.append)
 effects.pay_edge(money_game, "government:x", edges.EDGE_OFFICIALS, 10.0, "a bribe")
 effects.receive_from_edge(money_game, "government:x", edges.EDGE_OFFICIALS, 4.0, "returned")

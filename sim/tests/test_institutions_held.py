@@ -9,6 +9,7 @@ from unittest import mock
 
 from sim.economy import api as economy_api
 from sim.markets import port_institutions
+from sim.tests.ui_stand_in import Game
 
 
 class Government:
@@ -20,7 +21,7 @@ class Government:
 
 
 def game(government, nodes_by_mechanic):
-    return types.SimpleNamespace(actors=types.SimpleNamespace(government_of=lambda actor: government),
+    return Game(actors=types.SimpleNamespace(government_of=lambda actor: government),
                                  nodes_with_mechanic=lambda mechanic: nodes_by_mechanic.get(mechanic, []),
                                  actor_world=lambda: None)
 

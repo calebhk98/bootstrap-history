@@ -72,7 +72,7 @@ def register_seat(sim, command):
     with sim.act_as(command.seat_id):
         sim._wrap_seat_containers()
         if seat.kind == COUNTRY_SEAT:
-            seat.holder = sim.state_treasury().actor_id
+            seat.holder = sim.view("state_treasury")().actor_id
     return None
 
 
