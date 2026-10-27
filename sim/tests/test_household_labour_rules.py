@@ -17,10 +17,11 @@ from sim.refusal import cause_of
 from sim.ui.proto.dispatch_labour import _cmd_hire
 from sim.tests import event_stand_in, production_host
 from sim.tests.workforce_host import workforce_over
+from sim.tests.ui_stand_in import Game
 
 
 def HeldTrade(held):
-    module = production_host.build(types.SimpleNamespace(nodes={node_id: {"sch": scholars} for node_id, scholars in held.items()}))
+    module = production_host.build(Game(nodes={node_id: {"sch": scholars} for node_id, scholars in held.items()}))
     module._practice_set = lambda: set(held)
     return module
 
@@ -43,7 +44,7 @@ class HeldTradeRule(unittest.TestCase):
 
 class Job(StandingJobMixin):
     def __init__(self, alive=True, pool=2000.0, committed=500.0, rate=2.0):
-        self._world = types.SimpleNamespace(founder_alive=alive)
+        self._world = Game(founder_alive=alive)
         self.pool, self.committed, self.rate = pool, committed, rate
 
     def director_pool(self):
@@ -82,12 +83,12 @@ class Seller(WagesMixin):
     """The part of Labour that sells the founder's own hours."""
 
     def __init__(self, committed=0.0, pool=2000.0):
-        household = types.SimpleNamespace(wage_hours_this_year=0.0, wages_earned=0.0, wage_income_this_year=0.0, reputation=0.0)
+        household = Game(wage_hours_this_year=0.0, wages_earned=0.0, wage_income_this_year=0.0, reputation=0.0)
         self.household = household
         self.received = []
         self.logged = []
-        self._world = types.SimpleNamespace(
-            founder_alive=True, workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household),
+        self._world = Game(
+            founder_alive=True, workforce=household, view=workforce_stand_in.view_of(household), state=Game(household=household),
             wages={"scribe": 1}, EDGE_EMPLOYERS="employers", revenue=lambda: 1000.0, active_hours_still_wanted=lambda: 0.0,
             money_text=lambda amount, grouped=False: "%d" % amount,
             send=lambda command: self.received.append(command.amount))
@@ -133,8 +134,8 @@ class Channels(TrainingMixin):
 
     def __init__(self, supply=1000.0, contracted=0.0, productivity=1.0, employed=0.0):
         self.contract_hours = {"scribe": contracted}
-        self._world = types.SimpleNamespace(
-            workforce=types.SimpleNamespace(contract_hours=self.contract_hours),
+        self._world = Game(
+            workforce=Game(contract_hours=self.contract_hours),
             HOURS_PER_PERSON_YEAR=2000.0, trades_absent=set())
         self.supply, self.productivity, self._employed = supply, productivity, employed
 
@@ -177,9 +178,9 @@ class Apprentices:
 
     def __init__(self, rows):
         self.joined = []
-        self.state = types.SimpleNamespace(
-            household=types.SimpleNamespace(training=rows, log=[]), scenario=types.SimpleNamespace(year=102))
-        self.labour = types.SimpleNamespace(add_employed=lambda trade, count: self.joined.append((trade, count)),
+        self.state = Game(
+            household=Game(training=rows, log=[]), scenario=Game(year=102))
+        self.labour = Game(add_employed=lambda trade, count: self.joined.append((trade, count)),
                                             resync_pools=lambda: None)
         self.module = workforce_over(self)
 
@@ -233,8 +234,8 @@ class HireWithNoFounder(unittest.TestCase):
 
     def test_a_dead_founder_with_no_deputy_cannot_take_anyone_on(self):
         calls = []
-        game = types.SimpleNamespace(founder_alive=False, deputies_carry_the_work=lambda: False,
-                                     labour=types.SimpleNamespace(hire=lambda *args: calls.append(args)))
+        game = Game(founder_alive=False, deputies_carry_the_work=lambda: False,
+                                     labour=Game(hire=lambda *args: calls.append(args)))
         reply = _cmd_hire(game, {}, {"cmd": "hire", "trade": "smith", "n": 1}, None)
         self.assertIs(reply["ok"], False)
         self.assertEqual(calls, [])

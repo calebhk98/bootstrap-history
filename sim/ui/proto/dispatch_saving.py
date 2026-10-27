@@ -2,6 +2,7 @@
 
 from .command_registry import command
 from .saving_plan import saving_plan
+from sim.engine import ui_port
 
 
 @command("saving", group="money", aliases=("save_for", "savings"),
@@ -13,7 +14,7 @@ from .saving_plan import saving_plan
                      "you to start the cheapest thing, and shows the year the target is reached "
                      "at your current net income. Bare saving shows the plan.")
 def _cmd_saving(sim, nodes, cmd, ended):
-    household = sim.state.household
+    household = ui_port.saving_book(sim)
     if cmd.get("off"):
         household.saving_for = None
         household.saving_target = 0.0

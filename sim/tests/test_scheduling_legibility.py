@@ -13,6 +13,7 @@ from sim.refusal import cause_of
 from sim.ui.proto.economy import _portfolio_constraint as _PCON
 from sim.ui.proto.multi_year_warning import multi_year_hours_warning
 from sim.ui.proto.state_waiting import _waiting_on
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -62,7 +63,7 @@ class _Stub:
         self.civ = {"id": "stub"}
         self._demand = demand or {}
         self._spending, self._cost, self._throttle, self._standing = spending, cost, throttle, standing
-        self.labour = SimpleNamespace(hours_you_can_call_on=lambda trade: (supply or {}).get(trade, 0.0),
+        self.labour = Game(hours_you_can_call_on=lambda trade: (supply or {}).get(trade, 0.0),
                                       director_pool=lambda: director_pool, director_hours_committed=lambda: committed)
 
     def trade_demand_vs_supply(self):

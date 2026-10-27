@@ -84,8 +84,20 @@ def _buy_nitre(sim, cmd, quantity):
             "capital": round(sim.view("acting_balance")(), 1)}
 
 
+def _sold_farm(sim, answer):
+    """The `sell farm` reply for the land market's answer."""
+    if isinstance(answer, Refusal):
+        if answer.cause == "not_owned":
+            return {"ok": False, "error": "you own %s of farmland, not %s" % (
+                area_text(answer.facts["owned"], sim, digits=1), area_text(answer.facts["hectares"], sim, digits=1))}
+        return {"ok": False, "error": str(answer)}
+    return {"ok": True, "sold_farm_hectares": answer["hectares"], "price": round(answer["price"], 1),
+            "farm_hectares": round(answer["remaining"], 1), "capital": round(sim.view("acting_balance")(), 1)}
+
+
 def _buy_farm(sim, cmd, quantity):
-    got = sim.invest_farm(quantity)
+    answer = sim.send(ui_port.InvestFarm(quantity))
+    got = 0.0 if isinstance(answer, Refusal) else answer
     if got <= 0:
         return {"ok": False, "error": "cannot afford that farmland"}
     return {"ok": True, "bought_farm_hectares": got,
@@ -272,7 +284,7 @@ def _cmd_sell(sim, nodes, cmd, ended):
         quantity, err = read_target_quantity(cmd, "n", 0, "farm", sim)
         if err or quantity <= 0:
             return {"ok": False, "error": err or "n must be greater than zero"}
-        return sim.sell_farm(quantity)
+        return _sold_farm(sim, sim.send(ui_port.SellFarm(quantity)))
     material = str(cmd.get("material") or cmd.get("what") or "").lower()
     quantity, err = read_target_quantity(cmd, "n", 0, "material", sim)
     if err or quantity <= 0:

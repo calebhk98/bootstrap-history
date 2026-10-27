@@ -13,13 +13,14 @@ from sim.knowledge.api import FOG_KIND_HINTS, hidden_prerequisite_kinds, missing
 from sim.ui.cli_interactive import _play_print_welcome
 from sim.ui.proto.event_groups import group_disaster_events
 from sim.ui.proto.help import _agent_help
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
 
 def _game(year=100, shortfall=0.0):
     """The materials module over a clock the test moves, with the shortfall of any material fixed."""
-    clock = SimpleNamespace(year=year)
+    clock = Game(year=year)
     module = materials_stand_in.build(year=lambda: clock.year)
     module.material_shortfall = lambda material: shortfall
     module.clock_year = clock
@@ -127,7 +128,7 @@ check("a hidden prerequisite with no prerequisites of its own counts as near",
       _hidden_kinds(["leaf_resource"], done_one) == [FOG_KIND_HINTS["RESOURCE"]])
 
 # --- 99 and 102: the first-screen help points at the beginner index and at sittings
-help_reply = _agent_help(SimpleNamespace(fog=False), "commands")
+help_reply = _agent_help(Game(fog=False), "commands")
 first_key = next(iter(help_reply))
 # presentation: the first heading of the commands page
 check("help commands opens with a short beginner index",
@@ -135,7 +136,7 @@ check("help commands opens with a short beginner index",
 
 welcome = io.StringIO()
 with contextlib.redirect_stdout(welcome):
-    _play_print_welcome(SimpleNamespace(year=100, capital=1000.0, civ={"id": "stub"}, fog=False), "poor_scholar")
+    _play_print_welcome(Game(year=100, capital=1000.0, civ={"id": "stub"}, fog=False), "poor_scholar")
 # presentation: the welcome screen names the help topics
 check("the welcome screen points at the sittings topic and the beginner index",
       "help sittings" in welcome.getvalue() and "help commands" in welcome.getvalue(), welcome.getvalue()[-400:])

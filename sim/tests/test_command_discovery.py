@@ -11,6 +11,7 @@ import types
 from .harness import *  # noqa: F401,F403
 from sim.ui.proto import command_registry as _registry
 from sim.ui.proto import typed as _typed
+from sim.tests.ui_stand_in import Game
 
 # --- every typed usage in the registry parses (and its words reach a command)
 _NUMBER_WORDS = re.compile(r"\b(n|years|hours|tonnes|count|amount|units|rate|share|number"
@@ -72,7 +73,7 @@ finally:
 # command index shows each command's registered text (no hand override)
 from sim.ui.proto import help as _help
 # the help pages read only the fog setting, the civilisation's name, the start year and the goal
-_help_sim = types.SimpleNamespace(fog=False, civ={"name": "Rome"}, cfg={"start_year": 100}, goal=GOAL)
+_help_sim = Game(fog=False, civ={"name": "Rome"}, cfg={"start_year": 100}, goal=GOAL)
 _index = _help._topic_commands(_help_sim)
 _hand_overrides = [name for name in _registry.COMMANDS
                    if _index["commands"].get(name) != _help._command_text(name, _help_sim.fog)]

@@ -13,7 +13,7 @@ def _fraction_of(value, ceiling):
 def _schools(sim):
     rows = []
     for node_id, spec in ui_port.effect_terms(sim, "schooling_flow"):
-        if sim.view("legacy_fog")() and not sim.view("visibility")(node_id, None):
+        if sim.view("legacy_fog")() and not sim.view("visibility")(node_id):
             continue
         holds = sim.view("effect_holds")(node_id, spec)
         rows.append({

@@ -1,6 +1,8 @@
 """The settle and colonies commands: found a colony on a tile beyond the country's own, and list those held."""
 
+from sim.refusal import Refusal
 from .command_registry import command
+from sim.engine import ui_port
 
 CANDIDATES_SHOWN = 15
 
@@ -19,7 +21,8 @@ def _cmd_settle(sim, nodes, cmd, ended):
         return {"ok": False, "error": "the run has ended (%s); nothing more can be founded" % ended}
     tile = cmd.get("tile")
     if tile:
-        ok, text = sim.found_colony(str(tile))
+        answer = sim.send(ui_port.FoundColony(str(tile)))
+        ok, text = (False, answer) if isinstance(answer, Refusal) else (True, answer["text"])
         return {"ok": True, "message": text, "colonies": sim.view("colonies")()} if ok else {"ok": False, "error": text}
     chosen = sim.view("settlement_spec")(by_sea=False) or sim.view("settlement_spec")(by_sea=True)
     if chosen is None:

@@ -9,13 +9,14 @@ import unittest
 from sim.ui.proto.economy import _agent_values
 from sim.ui.proto.state import _agent_state_goal
 from sim.ui.proto.techtree import _fog_revenue_estimate, _revenue_known_exactly
+from sim.tests.ui_stand_in import Game
 
 
 def game(nodes, goal="goal", civ_id="rome", done=(), granted=(), done_year=None, year=100, fog=True, closure=None):
-    return types.SimpleNamespace(
+    return Game(
         nodes=nodes, civ={"id": civ_id}, goal=goal, cfg={"start_capital": 5000.0}, done=set(done),
         granted=set(granted), done_year=done_year or {}, year=year, fog=fog, goal_year=None, manual=False,
-        _goal_closure=closure, value_weights={}, state=types.SimpleNamespace())
+        _goal_closure=closure, value_weights={}, state=Game())
 
 
 def many_nodes(count=40, confidence="B"):

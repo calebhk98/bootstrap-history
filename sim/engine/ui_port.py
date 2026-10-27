@@ -2,7 +2,7 @@
 explicit name, and each private `Sim` member the UI reads or writes has a public function that
 delegates exactly. sim/ui/ imports nothing from sim.engine except this module."""
 from sim.engine import (  # noqa: F401
-    cash_book, category_traits, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
+    state_paths, cash_book, category_traits, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
     purchase_rule, settings, settings_table, topic_tags, tree_merge, units,
     validate_material_gating, validate_node_money, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.production.api import node_revenue_census  # noqa: F401
@@ -25,7 +25,7 @@ from sim.engine.mods_constants import constant_overrides  # noqa: F401
 from sim.engine.ui_commands import load_command_specs  # noqa: F401
 from sim.engine.foreign_economy_data import foreign_economy_document  # noqa: F401
 from sim.hazards.api import hazards_not_yet_past  # noqa: F401
-from sim.prices.api import identity_cache
+from sim.prices.api import identity_cache, shared_ledger  # noqa: F401
 IdentityCache = identity_cache.IdentityCache  # noqa: F401
 from sim.engine.mods import get_ordered_mods  # noqa: F401
 from sim.labour.api import format_occupational_report, hours_by_trade_of_all_employers, occupational_report, people_by_trade_of_all_employers  # noqa: F401
@@ -60,12 +60,13 @@ from sim.polity.api import constants as polity_constants  # noqa: F401
 from sim.campaigns.api import DisbandArmy, OrderArmy, RaiseArmy, RecallArmy  # noqa: F401
 from sim.diffusion.api import Disclose  # noqa: F401
 from sim.finance.api import FoundBank  # noqa: F401
-from sim.land.api import BuildWay  # noqa: F401
+from sim.agriculture.api import InvestFarm, SellFarm  # noqa: F401
+from sim.land.api import BuildWay, FoundColony  # noqa: F401
 from sim.markets.api import BuyMaterial, SellMaterial  # noqa: F401
 from sim.polity.api import SettleWithState, WithdrawFromPublicLife  # noqa: F401
 from sim.projects.api import Bribe, MothballWork, PostBounty, RestoreWork, StartProject, StopProject  # noqa: F401
 from sim.knowledge.api import RevealNodes  # noqa: F401
-from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, MakeOffer, SetGoal, SetPolicy  # noqa: F401
+from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, JoinSeat, MakeOffer, SetGoal, SetPolicy  # noqa: F401
 from sim.ventures.api import OpenVenture, RollOut, SellConcern  # noqa: F401
 from sim.workforce.api import (BuildHousing, BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase,  # noqa: F401
                                TrainStaff, WorkForWages)
@@ -96,6 +97,28 @@ def set_fuzzy_estimates(sim, on):
         sim.state._fuzzy_salt = sim.rng.getrandbits(30) + 1
 
 
+def seat_progress(sim):
+    """The acting seat's interface record (dashboard cap, last score, explanations said), saved with the seat."""
+    return sim.state.seat_progress
+
+
+def saving_book(sim):
+    """The acting seat's household record of the project it is saving for (`saving_for`, `saving_target`)."""
+    return sim.state.household
+
+
+def state_path_declared(name):
+    return state_paths.declared(name)
+
+
+def state_path_root(sim, name):
+    return state_paths.root_value(sim, name)
+
+
+def plain_attribute(sim, name):
+    return state_paths.plain_attribute(sim, name)
+
+
 def interface_memory(sim):
     """The slot of the save the UI owns; the engine never reads it."""
     return sim.state.interface
@@ -109,43 +132,43 @@ def set_interface_memory(sim, memory):
 
 def material_prices(sim):
     """Every material someone in reach sells, at the price households are asked."""
-    return sim.goods_market.household_prices()
+    return sim.view("household_prices")()
 
 
 def commodity_ledger(sim):
-    return sim._commodity_ledger()
+    return shared_ledger()
 
 
 def material_stock(sim):
-    return sim._material_stock()
+    return sim.view("held_goods")()
 
 
 def goods_category_ratios(sim, category):
-    return sim._goods_category_ratios(category)
+    return sim.view("goods_category_ratios")(category, 0)
 
 
 def own_production_tags(sim):
-    return sim._own_production_tags()
+    return sim.view("own_production_tags")()
 
 
 def own_material_supply(sim, tag):
-    return sim._own_material_supply(tag)
+    return sim.view("material_own_supply")[tag]
 
 
 def demand_by_supply_tag(sim, demand):
-    return sim._demand_by_supply_tag(demand)
+    return sim.view("demand_by_supply_tag")(demand)
 
 
 def material_market_tonnes(sim, material):
-    return sim._material_market_tonnes(material)
+    return sim.view("material_market_tonnes")[material]
 
 
 def material_tag(sim, material):
-    return sim._material_tag(material)
+    return sim.view("material_pool")[material]
 
 
 def electricity_demand_kw(sim):
-    return sim._electricity_demand_kw()
+    return sim.view("electricity_demand")()
 
 
 def shortage_condition_rows(sim):
@@ -154,32 +177,32 @@ def shortage_condition_rows(sim):
 
 
 def disease_burden(sim):
-    return sim._disease_burden()
+    return sim.view("disease_burden")()
 
 
 def epidemic_forecast(sim):
     """The disease model's forecast of the coming year (see the disease module's `epidemic_forecast`)."""
-    return sim.epidemic_forecast()
+    return sim.view("epidemic_forecast")(None)
 
 
 def last_demographic_step(sim):
-    return sim._last_demographic_step
+    return sim.view("demographic_flows")()
 
 
 def effect_terms(sim, effect):
-    return sim._effect_terms(effect)
+    return sim.view("effect_terms")(effect)
 
 
 def schooling_flow(sim):
-    return sim._schooling_flow()
+    return sim.view("schooling_flow")(None)
 
 
 def practice_set(sim):
-    return sim._practice_set()
+    return sim.view("practice_set")()
 
 
 def visible_to_player(sim, node_id):
-    return sim._visible_to_player(node_id)
+    return sim.view("visible_to_player")(node_id)
 
 
 def tech_effects(sim):
@@ -233,11 +256,11 @@ def goal_years(sim):
 
 
 def set_goal(sim, node_id):
-    sim.set_goal(node_id)
+    sim.send(SetGoal(node_id))
 
 
 def win_condition_anatomy(sim, condition):
-    return sim.win_condition_anatomy(condition)
+    return sim.view("win_condition_anatomy")(condition)
 
 
 def goal_critical_floor(sim):

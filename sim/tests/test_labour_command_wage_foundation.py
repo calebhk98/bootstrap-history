@@ -6,6 +6,7 @@ import types
 import unittest
 
 from sim.ui.proto.dispatch_labour import _cmd_labour
+from sim.tests.ui_stand_in import Game
 
 
 class StandInMarket:
@@ -56,7 +57,7 @@ class StandInLabour:
 
 class LabourCommandTests(unittest.TestCase):
     def test_detail_carries_every_wage_component_the_sim_reports(self):
-        sim = types.SimpleNamespace(labour=StandInLabour(), view=lambda name: (lambda: {"employees": {}, "created": set()}), wage_index=1.5, price_index=2.0)
+        sim = Game(labour=StandInLabour(), view=lambda name: (lambda: {"employees": {}, "created": set()}), wage_index=1.5, price_index=2.0)
         detail = _cmd_labour(sim, {}, {"cmd": "labour", "trade": "smith"}, False)
         foundation = detail["trade"]["wage_foundation"]
         self.assertEqual(foundation["base_for_skill_and_difficulty"], 70.0)

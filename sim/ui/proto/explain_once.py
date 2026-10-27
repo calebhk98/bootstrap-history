@@ -11,7 +11,7 @@ import sim.engine.ui_port as ui_port
 def already_explained(sim, topic, cmd):
     """True when `topic` was shown earlier in this game and the player did
     not ask for `full`. Marks the topic shown either way."""
-    seat_progress = sim.state.seat_progress
+    seat_progress = ui_port.seat_progress(sim)
     said = ui_port.said_explanations(seat_progress) or {}
     seen = topic in said
     if not seen:

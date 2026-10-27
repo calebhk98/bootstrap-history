@@ -11,8 +11,9 @@ from unittest import mock
 from sim.refusal import Refusal
 from sim.ui.proto import dispatch
 from sim.ui.proto.dispatch import _cmd_save
+from sim.tests.ui_stand_in import Game
 
-GAME = types.SimpleNamespace(year=120)
+GAME = Game(year=120)
 
 
 def ask(**fields):

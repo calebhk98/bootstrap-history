@@ -3,11 +3,12 @@ from .harness import *  # noqa: F401,F403
 
 from types import SimpleNamespace
 from sim.ui.proto.help import _agent_help
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
 # the pages read only what a stub game holds; the dispatch wiring of `help` is one line in the dispatcher
-_help_sim = SimpleNamespace(fog=False, civ={"name": "Testland"}, cfg={"start_year": 100, "horizon_years": 50},
+_help_sim = Game(fog=False, civ={"name": "Testland"}, cfg={"start_year": 100, "horizon_years": 50},
                             nodes=NODES, goal=GOAL, end_year=150)
 
 

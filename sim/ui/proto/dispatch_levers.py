@@ -22,16 +22,16 @@ def _refusal(cause, error, choices=None, **fields):
 
 def own_country(sim):
     """The country the acting seat plays for."""
-    return sim.state.seats[sim.state.acting_seat].country or str(sim.view("civilisation")()["id"])
+    return sim.view("legacy_seats")()[sim.view("acting_seat")()].country or str(sim.view("civilisation")()["id"])
 
 
 def seat_government(sim, cmd):
     """(government, country, None) the acting seat holds, or (None, None, refusal reply)."""
-    seat = sim.state.seats[sim.state.acting_seat]
+    seat = sim.view("legacy_seats")()[sim.view("acting_seat")()]
     if seat.kind != COUNTRY_SEAT:
         return None, None, _refusal("household_seat_has_no_government",
                                     "seat %r holds a household, not a government; join with seat_kind country to hold one."
-                                    % sim.state.acting_seat)
+                                    % sim.view("acting_seat")())
     country = own_country(sim)
     named = cmd.get("country")
     if named is not None and named != country:

@@ -12,18 +12,19 @@ from sim.refusal import cause_of
 from sim.engine import event_causes
 from sim.engine.tree_source import load_base_tree
 from sim.ui.proto.screen_divergence import _dated_events
+from sim.tests.ui_stand_in import Game
 
 CIVILISATIONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "civilizations")
 
 
 def fake_sim(population=1000.0, start_population=1000.0, funded=True, held=()):
 	held = set(held)
-	record = SimpleNamespace(need={"army": 100.0}, unfunded={} if funded else {"army": 40.0})
-	return SimpleNamespace(
-		population=SimpleNamespace(total=population),
+	record = Game(need={"army": 100.0}, unfunded={} if funded else {"army": 40.0})
+	return Game(
+		population=Game(total=population),
 		civ={"population": population, "literacy_general": 0.1, "hazards": []},
 		start_civ={"population": start_population, "literacy_general": 0.1},
-		state_treasury=lambda: SimpleNamespace(record=record, knows=lambda node, world: node in held),
+		state_treasury=lambda: Game(record=record, knows=lambda node, world: node in held),
 		cfg={"start_year": 100}, year=120, view=lambda name: lambda: "world")
 
 
@@ -126,8 +127,8 @@ from sim.reporting.api import RecordEvent
 from sim.tests import hazards_host, module_harness
 
 driver = fake_sim(population=100.0)
-driver.state = SimpleNamespace(scenario=SimpleNamespace(_said_condition=set(), year=110),
-                               household=SimpleNamespace(log=[]))
+driver.state = Game(scenario=Game(_said_condition=set(), year=110),
+                               household=Game(log=[]))
 module = hazards_host.build(effective_hazard=lambda event: event_causes.effective_hazard(driver, event),
                             legacy_said_once=driver.state.scenario._said_condition)
 told = lambda: [command for command in module_harness.sent(module) if isinstance(command, RecordEvent)]

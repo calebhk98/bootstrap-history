@@ -24,7 +24,7 @@ def _catalog(sim):
 
 
 def _knowable(sim, node_id):
-    return not sim.view("legacy_fog")() or sim.view("visibility")(node_id, None)
+    return not sim.view("legacy_fog")() or sim.view("visibility")(node_id)
 
 
 def _progress(sim, node_id):

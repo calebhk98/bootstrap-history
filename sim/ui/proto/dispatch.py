@@ -43,7 +43,7 @@ from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
 def _trim_dashboard_history(sim, hist):
 	"""Trim dashboard history to the most recent N years if configured."""
-	years_kept = sim.state.seat_progress.dashboard_history_years
+	years_kept = ui_port.seat_progress(sim).dashboard_history_years
 	if years_kept is not None and len(hist) > years_kept:
 		del hist[:-years_kept]
 
@@ -518,7 +518,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
         _material_why = (_op == "why" and isinstance(_node_id, str) and _node_id not in nodes
                          and material_story(sim, _node_id) is not None)
         if _op in id_commands() and isinstance(_node_id, str) and not _goal_why and not _material_why and (
-                _node_id not in nodes or not sim.view("visibility")(_node_id, None)):
+                _node_id not in nodes or not sim.view("visibility")(_node_id)):
             if _node_id == sim.view("goal")()["node"]:
                 # You know its name; you were handed it on arrival. Telling you
                 # that you have never heard of the thing you are aiming at, and

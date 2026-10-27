@@ -39,7 +39,7 @@ def _institutions(sim):
         node = sim.view("tree_nodes")().get(node_id)
         if not node or node.get("kind") != "INSTITUTION":
             continue
-        if sim.view("legacy_fog")() and not sim.view("visibility")(node_id, None):
+        if sim.view("legacy_fog")() and not sim.view("visibility")(node_id):
             continue
         rows.append({"id": node_id, "name": node["name"],
                      "state": "open" if sim.view("running")[node_id] else "closed",

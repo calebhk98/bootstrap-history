@@ -12,6 +12,7 @@ from sim.ui.proto.portfolio_scale import add_readouts, page_rows
 from sim.ui.proto.render_portfolio_rows import paging_line, project_lines
 from sim.ui.proto.render_screens_economy import render_portfolio
 from sim.ui.proto.render_screens_status import render_stuck
+from sim.tests.ui_stand_in import Game
 
 
 def row(node_id, kind, rank, left=100.0, hours=400.0, effective=100.0, years=1.0):
@@ -40,12 +41,12 @@ check("typed line parses group and offset",
       == {"cmd": "portfolio", "json": False, "group": "calendar", "offset": 4})
 
 nodes = {"p1": {"yrs": 4}}
-readout = add_readouts(SimpleNamespace(year=1000), nodes, [row("p1", "hours", 1, left=800.0, hours=400.0,
+readout = add_readouts(Game(year=1000), nodes, [row("p1", "hours", 1, left=800.0, hours=400.0,
                                                                effective=100.0, years=2.0)])[0]
 check("absorption is money left over the project's years", readout["annual_absorption"] == 200.0, readout)
 check("earliest completion is the slowest of calendar, hours and money",
       readout["earliest_completion_year"] == 1004, readout)
-stalled = add_readouts(SimpleNamespace(year=1000), nodes, [row("p1", "hours", 1, effective=0.0)])[0]
+stalled = add_readouts(Game(year=1000), nodes, [row("p1", "hours", 1, effective=0.0)])[0]
 check("no effective hours means no finish forecast", stalled["earliest_completion_year"] is None, stalled)
 
 # presentation: the project block labels the allocation and the forecast apart, and the paging line points at the next page
@@ -60,10 +61,10 @@ real_kinds, real_levers = stuck_advice.delay_kinds, stuck_advice.lever_line
 stuck_advice.delay_kinds = lambda test_sim, graph: {"calendar": ["secret_a", "secret_b"]}
 stuck_advice.lever_line = lambda test_sim: "literacy: 1"
 try:
-    fogged = stuck_advice.calendar_bound_advice(SimpleNamespace(fog=True), {})
+    fogged = stuck_advice.calendar_bound_advice(Game(fog=True), {})
     check("fog reports counts, names nothing", "all 2 running" in fogged["text"] and "secret" not in str(fogged), fogged)
     graph = {"goal": {"pre": ["secret_a"]}, "secret_a": {"pre": []}, "secret_b": {"pre": []}}
-    clear = SimpleNamespace(fog=False, goal="goal", done=set(), active={"secret_a": {}, "secret_b": {}},
+    clear = Game(fog=False, goal="goal", done=set(), active={"secret_a": {}, "secret_b": {}},
                             start_reason=lambda node_id: (False, ""))
     advice = stuck_advice.calendar_bound_advice(clear, graph)
     check("calendar-bound goal path is said and side work suggested",

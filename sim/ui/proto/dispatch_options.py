@@ -38,6 +38,6 @@ def _fogged(sim, nodes, rows):
     for row in rows:
         for field in ("value", "shown_as"):
             value = row.get(field)
-            if isinstance(value, str) and value in nodes and not sim.view("visibility")(value, None):
+            if isinstance(value, str) and value in nodes and not sim.view("visibility")(value):
                 row[field] = "(a technology you have not heard of)"
     return rows

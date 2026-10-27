@@ -15,6 +15,7 @@ from sim.refusal import cause_of
 from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import country_seat_refusal, run_as_seat
+from sim.tests.ui_stand_in import Game
 
 HOME = "rome_100ad"
 GOVERNMENT = "gov_rome"
@@ -38,7 +39,7 @@ class JoinGame:
     """What the join command reads: the seats, the countries with a government, and a join_seat that adds the seat."""
 
     def __init__(self):
-        self.state = types.SimpleNamespace(seats={FIRST_SEAT_ID: household_seat()}, acting_seat=FIRST_SEAT_ID)
+        self.state = Game(seats={FIRST_SEAT_ID: household_seat()}, acting_seat=FIRST_SEAT_ID)
         self.civ = {"id": HOME}
         self.cfg = {"start_kit": "poor_scholar"}
         self.nodes = {"fire": {}}
@@ -97,7 +98,7 @@ check("a country seat takes no kit", refused["cause"] == "country_seat_has_no_ki
 
 # ---- which commands a country seat may run
 seats = {FIRST_SEAT_ID: household_seat(), "senate": country_seat()}
-stand_in = types.SimpleNamespace(state=types.SimpleNamespace(seats=seats))
+stand_in = Game(state=Game(seats=seats))
 refused = country_seat_refusal(stand_in, "senate", {"cmd": "state"})
 check("a command that needs a household is refused for a country seat", refused["cause"] == "country_seat_has_no_household", refused)
 check("a command a country seat may run is not refused", country_seat_refusal(stand_in, "senate", {"cmd": "levers"}) is None, None)
@@ -106,7 +107,7 @@ check("a household seat is never refused for lacking a household", country_seat_
 # ---- the year runs for household seats; a country seat steps it through the first of them
 class Runner:
     def __init__(self, playing):
-        self.state = types.SimpleNamespace(seats=seats)
+        self.state = Game(seats=seats)
         self.acted = []
         self.playing = playing
 

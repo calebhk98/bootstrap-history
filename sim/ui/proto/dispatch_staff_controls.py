@@ -22,8 +22,7 @@ def _cmd_keep(sim, nodes, cmd, ended):
     node_id = cmd.get("id")
     if node_id is None:
         return {"ok": True, "keep_staffed": _keep_listing(sim)}
-    projects = sim.state.projects
-    if node_id not in projects.done or not sim.view("is_venture")[node_id]:
+    if node_id not in sim.view("techniques_held")() or not sim.view("is_venture")[node_id]:
         return {"ok": False,
                 "error": "you can only keep a concern you know how to run staffed; "
                          "'ventures' lists them"}

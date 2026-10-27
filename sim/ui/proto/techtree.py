@@ -391,7 +391,7 @@ def _busy_subject_note(sim, nodes, want_subject, fog):
     _busy = sorted(node_id for node_id in nodes
                    if want_subject in _subject_of(nodes[node_id]).lower()
                    and (node_id in sim.view("active_projects")() or node_id in sim.view("techniques_held")())
-                   and (not fog or sim.view("visibility")(node_id, None)))
+                   and (not fog or sim.view("visibility")(node_id)))
     if not _busy:
         return ""
     return (" - nothing left to begin; you already have or "
@@ -1041,7 +1041,7 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
         # The soonest finish with no failure: the longer of the floor above
         # and the payment schedule, which reputation does not shorten.
         "earliest_completion_years": round(sim.view("earliest_completion_years")(node_id), 2),
-        "earliest_completion_year": round(sim.state.scenario.year + sim.view("earliest_completion_years")(node_id), 1),
+        "earliest_completion_year": round(sim.view("year")() + sim.view("earliest_completion_years")(node_id), 1),
         "risk": sim.view("effective_risk")(node_id),
         "pay_to_lower_the_risk": sim.view("precaution_quote")(node_id),
         # THE EXPECTED TOTAL, RETRIES INCLUDED - not the floor and the risk
@@ -1283,7 +1283,7 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
     """Which prerequisites this node has, which are still missing, and how
     many more are hidden by fog than the visible lists let on.
     """
-    direct = ([prereq_id for prereq_id in node["pre"] if sim.view("visibility")(prereq_id, None)]
+    direct = ([prereq_id for prereq_id in node["pre"] if sim.view("visibility")(prereq_id)]
               if sim.view("legacy_fog")() else node["pre"])
     return {
         "prerequisite_names": ui_port.prerequisite_names(nodes, direct),
@@ -1293,7 +1293,7 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
         # every turn. Unfiltered, that one exception printed the goal's seven
         # hidden prerequisites by name in the JSON, which is the fog exploit
         # this file has already closed twice.
-        "direct_prerequisites": ([prereq_id for prereq_id in node["pre"] if sim.view("visibility")(prereq_id, None)]
+        "direct_prerequisites": ([prereq_id for prereq_id in node["pre"] if sim.view("visibility")(prereq_id)]
                                  if sim.view("legacy_fog")() else node["pre"]),
         # A GRANTED NODE IS HELD, WHATEVER ROUTE THE TREE DRAWS TO IT. `why
         # cap_heat_1300` on Han reported done:true, missing_prerequisites:
@@ -1311,9 +1311,9 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
         "missing_prerequisites": ([] if node_id in sim.view("techniques_granted")()
                                   else [prereq_id for prereq_id in node["pre"] if prereq_id not in sim.view("techniques_held")()
                                         and (not sim.view("legacy_fog")()
-                                             or sim.view("visibility")(prereq_id, None))]),
+                                             or sim.view("visibility")(prereq_id))]),
         "prerequisites_you_have_not_heard_of": (
-            sum(1 for prereq_id in node["pre"] if not sim.view("visibility")(prereq_id, None))
+            sum(1 for prereq_id in node["pre"] if not sim.view("visibility")(prereq_id))
             if sim.view("legacy_fog")() else 0) or None,
     }
 

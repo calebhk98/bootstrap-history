@@ -55,7 +55,7 @@ def _shorten_credit_forecast(sim, cmd, out):
     `credit_forecast_in_full` says which the reply is, and the text screen
     prints a one-line summary for the short form. `full` asks for it all again.
     """
-    seat_progress = sim.state.seat_progress
+    seat_progress = ui_port.seat_progress(sim)
     said = ui_port.said_explanations(seat_progress) or {}
     if credit_forecast.shorten(out, said, sim.view("year")(), cmd.get("full")):
         ui_port.set_said_explanations(seat_progress, said)
@@ -332,7 +332,7 @@ def _rush_caps(cmd, sim):
 def _rush_cost_left(sim, node_id):
     """Money still owed to begin this project, net of what was already sunk."""
     price = sim.view("project_cost")(node_id)
-    return price - ui_port.paid_credit(price, (sim.state.projects.paid_towards or {}).get(node_id, 0.0))
+    return price - ui_port.paid_credit(price, (sim.view("paid_towards")() or {}).get(node_id, 0.0))
 
 
 def _rush_cap_refusal(sim, caps, budget, cost, draw, cost_so_far, draw_so_far, hours=0.0, hours_so_far=0.0):

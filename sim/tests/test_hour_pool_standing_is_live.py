@@ -8,18 +8,20 @@ import unittest
 from .harness import *  # noqa: F401,F403
 from sim.tests import projects_host
 from sim.ui.proto import state_projects as proto_state
+from sim.tests.ui_stand_in import Game
+from sim.tests.ui_stand_in import FactViews
 
 
-class _HourGame:
+class _HourGame(FactViews):
     """Only what the hour queue and the active-project builder read: the module answers the standing."""
     goal = None
     bountied = frozenset()
 
     def __init__(self, node_ids, pool=120.0, committed=20.0, allocations=None):
         self.order = ["alpha", "beta", "gamma", "delta"]
-        self.state = types.SimpleNamespace(
-            projects=types.SimpleNamespace(active={node_id: self._stale_progress() for node_id in node_ids}),
-            household=types.SimpleNamespace(hour_allocations=allocations or {}))
+        self.state = Game(
+            projects=Game(active={node_id: self._stale_progress() for node_id in node_ids}),
+            household=Game(hour_allocations=allocations or {}))
         self.module = projects_host.build(
             legacy_projects=self.state.projects, legacy_order=self.order, hour_commitments={"allocations": allocations or {}},
             hours_available={"director_pool": pool, "director_committed": committed})

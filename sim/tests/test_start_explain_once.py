@@ -9,10 +9,11 @@ from .harness import check
 
 from sim.engine.state_holdings import SeatProgressState
 from sim.ui.proto.explain_once import already_explained
+from sim.tests.ui_stand_in import Game
 
 
 def stub_game(year=100):
-    return SimpleNamespace(state=SimpleNamespace(seat_progress=SeatProgressState()), year=year)
+    return Game(state=Game(seat_progress=SeatProgressState()), year=year)
 
 
 game = stub_game()

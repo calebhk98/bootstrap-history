@@ -9,12 +9,13 @@ from types import SimpleNamespace
 
 from sim.ui import figures as figure_registry
 from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
+from sim.tests.ui_stand_in import FactViews
 
 HEADLINE = ("cash", "recurring_net", "income", "upkeep", "population",
             "literacy_general", "price_index", "hazard")
 
 
-class Game(SimpleNamespace):
+class Game(FactViews, SimpleNamespace):
     """A game at a year whose figures read from plain attributes."""
 
 

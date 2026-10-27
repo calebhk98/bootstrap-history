@@ -11,6 +11,7 @@ from sim.json_files import read_json
 from .mods import get_ordered_mods
 from .mods_base import ModError
 from .mods_ids import check_new_id
+from . import state_paths
 from .readable import is_readable
 from .tree_source import ROOT
 
@@ -24,6 +25,8 @@ def check_state_path(state_path: str, where: str) -> None:
     steps = state_path.split(".")
     if any(not step or step.startswith("_") for step in steps):
         raise ModError("%s: state path %r has a private or empty step" % (where, state_path))
+    if state_paths.declared(steps[0]):
+        return
     first = Sim.__dict__.get(steps[0]) or getattr(Sim, steps[0], None)
     if callable(first) and not is_readable(first):
         raise ModError("%s: state path %r calls %s, which is not marked readable (only attributes, properties "

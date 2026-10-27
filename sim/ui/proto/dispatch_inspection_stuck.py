@@ -230,7 +230,7 @@ def _stuck_credit_freeze(sim):
 def _stuck_startable_and_afford(sim, nodes, _fog):
     _startable = [node_id for node_id in nodes
                   if node_id not in sim.view("techniques_held")() and node_id not in sim.view("active_projects")()
-                  and (not _fog or sim.view("visibility")(node_id, None))
+                  and (not _fog or sim.view("visibility")(node_id))
                   and sim.view("start_check")(node_id)[0]]
     _afford = [node_id for node_id in _startable
                if sim.view("start_refusal")(node_id) is None]

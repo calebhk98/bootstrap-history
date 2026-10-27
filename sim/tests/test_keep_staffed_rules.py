@@ -11,13 +11,14 @@ from sim.labour.labour_staff_controls import StaffControlsMixin
 from sim.projects.api import KeepStaffed
 from sim.tests import projects_host
 from sim.ui.proto.dispatch_staff_controls import _cmd_keep
+from sim.tests.ui_stand_in import Game
 
 
 def keeping(done=("mill",), venture=True):
     module = projects_host.build()
-    projects = types.SimpleNamespace(done=set(done))
-    return types.SimpleNamespace(
-        state=types.SimpleNamespace(projects=projects), is_venture=lambda node_id: venture, module=module,
+    projects = Game(done=set(done))
+    return Game(
+        state=Game(projects=projects), is_venture=lambda node_id: venture, module=module,
         keep_staffed=module.seat.keep_staffed, view=lambda name: module.keep_staffed,
         send=lambda command: module.apply_keep_staffed(command))
 
@@ -44,10 +45,10 @@ class KeepCommand(unittest.TestCase):
 
 class Household(StaffControlsMixin):
     def __init__(self, flagged, operating, closure_age, shortfalls, draws):
-        projects = types.SimpleNamespace(done={"a", "b", "c"}, operating=set(operating))
+        projects = Game(done={"a", "b", "c"}, operating=set(operating))
         self.hired = []
-        self._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(projects=projects), nodes={"a": 1, "b": 1, "c": 1}, keep_staffed=lambda: set(flagged),
+        self._world = Game(
+            state=Game(projects=projects), nodes={"a": 1, "b": 1, "c": 1}, keep_staffed=lambda: set(flagged),
             staff_closure_age=lambda node_id: closure_age.get(node_id), staffing_held_totals=lambda: {},
             staffing_draw_of=lambda node_id, units: draws[node_id], reopen_units=lambda node_id: 1,
             staffing_shortfalls=lambda totals, strict=False: shortfalls)

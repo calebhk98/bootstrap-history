@@ -9,15 +9,17 @@ from types import SimpleNamespace
 
 from sim.ui.proto import screen_education
 from sim.ui.proto.render_screens_world import render_education
+from sim.tests.ui_stand_in import Game
+from sim.tests.ui_stand_in import FactViews
 
 POPULATION = 1_000_000.0
 
 
-class StubSociety:
+class StubSociety(FactViews):
     """What the enrolment reads of a game: today's literacy, next year's, the population and the schooling flow."""
 
     def __init__(self, today=0.20, next_year=0.21, effective_flow=1.0):
-        self.population = SimpleNamespace(total=POPULATION)
+        self.population = Game(total=POPULATION)
         self._today, self._next_year, self._flow = today, next_year, effective_flow
 
     def literacy(self, name):

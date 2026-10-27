@@ -11,6 +11,7 @@ from .harness import *  # noqa: F401,F403
 from sim.ui.proto import command_registry as _registry
 from sim.ui.proto import screen_commitments
 from sim.ui.proto.render_typed import render_pretty as _render_pretty
+from sim.tests.ui_stand_in import Game
 
 check("commitments is a registered command", _registry.resolve("commitments") is not None)
 
@@ -19,10 +20,10 @@ NODES_STUB = {"school": {"name": "School", "kind": "INSTITUTION"}, "mill": {"nam
 
 
 def stub_game(**overrides):
-    household = types.SimpleNamespace(reserve_craftsmen=3, reserve_scholars=1)
-    game = types.SimpleNamespace(
+    household = Game(reserve_craftsmen=3, reserve_scholars=1)
+    game = Game(
         fog=False, goal="goal_node", goal_year=None, nodes=NODES_STUB, done={"school", "mill", "senate"}, policy={},
-        workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household), is_visible=lambda node_id: node_id != "senate",
+        workforce=household, view=workforce_stand_in.view_of(household), state=Game(household=household), is_visible=lambda node_id: node_id != "senate",
         running=lambda node_id: node_id == "school", institution_units=lambda node_id: 2.0,
         literacy=lambda which: 0.1234567 if which == "literacy_general" else 0.05,
         literacy_ceiling_general=lambda: 0.4, literacy_ceiling_elite=lambda: 0.0)

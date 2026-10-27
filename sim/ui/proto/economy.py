@@ -157,7 +157,7 @@ def _power_tiers(sim, nodes):
     highest = None
     installed_by_tier = sim.view("generation_by_tier")()
     for nid, label in _power_ladder(nodes):
-        if nid not in nodes or not sim.view("visibility")(nid, None):
+        if nid not in nodes or not sim.view("visibility")(nid):
             continue
         built = nid in sim.view("techniques_held")()
         installed_kw = round(installed_by_tier.get(nid, 0.0), 1)
@@ -212,7 +212,7 @@ def _power_waiting_on(sim, nodes, grid_known):
     workshop_scale, grid_scale = [], []
     grid_id, workshop_id = _power_scale_node(nodes, "grid"), _power_scale_node(nodes, "workshop")
     for node_id, node in nodes.items():
-        if node_id in sim.view("techniques_held")() or not sim.view("visibility")(node_id, None):
+        if node_id in sim.view("techniques_held")() or not sim.view("visibility")(node_id):
             continue
         pre = node.get("pre") or []
         if grid_known and not grid_id in sim.view("techniques_held")() and grid_id in pre:
@@ -265,8 +265,8 @@ def _power_status(sim, nodes):
         out["note"] = ("nothing discovered yet: no generation, no demand.")
         return out
     out.update(_power_generation_block(sim))
-    elec_known = sim.view("visibility")(_power_scale_node(nodes, "workshop"), None)
-    grid_known = sim.view("visibility")(_power_scale_node(nodes, "grid"), None)
+    elec_known = sim.view("visibility")(_power_scale_node(nodes, "workshop"))
+    grid_known = sim.view("visibility")(_power_scale_node(nodes, "grid"))
     if elec_known:
         out.update(_power_waiting_on(sim, nodes, grid_known))
     return out

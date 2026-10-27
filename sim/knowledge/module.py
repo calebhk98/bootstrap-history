@@ -56,7 +56,7 @@ class Knowledge(Module):
                                   CORPUS_HEDGE_LOSS_CHANCE_NONE, CORPUS_HEDGE_FRACTION_LOST_NONE)
 
     # ---- what fog lets the acting seat see
-    def visibility(self, node_id, memo):
+    def visibility(self, node_id, memo=None):
         """Whether the acting seat can see `node_id` at all: held, in hand, heard of, or startable now.
 
         `memo` is shared down one recursive descent (the start test asks visibility of each missing prerequisite, which

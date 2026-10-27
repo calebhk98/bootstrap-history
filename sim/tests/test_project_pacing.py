@@ -22,6 +22,7 @@ from sim.refusal import cause_of, facts_of
 from sim.ui.proto.state_waiting import _waiting_on
 from sim.ui.proto.techtree import _explain_cost
 from sim.tests import module_harness
+from sim.tests.ui_stand_in import Game
 
 NODE = {"name": "Slow work", "yrs": 10, "ph": 500, "lab": {}, "cat": "x"}
 
@@ -38,7 +39,7 @@ def a_game(supply=None, demand=None, spending=1.0e9, cost=10000.0, throttle=(1.0
 
     game = Game()
     game.trade_demand_vs_supply = lambda: {trade: {"demand_hours_this_year": hours} for trade, hours in demand.items()}
-    game.labour = SimpleNamespace(hours_you_can_call_on=lambda trade: supply.get(trade, 1.0e9), director_pool=lambda: 2000.0,
+    game.labour = Game(hours_you_can_call_on=lambda trade: supply.get(trade, 1.0e9), director_pool=lambda: 2000.0,
                                   director_hours_committed=lambda: 500.0)
     game.project_cost = lambda node_id: cost
     game.spending_power = lambda purpose: spending
@@ -117,7 +118,7 @@ def gated(blocked_trades=("engineer",), lab_left=None, stalled_years=0):
     progress = {"stalled_years": stalled_years, "hours_offered_this_year": 9.0, "hours_effective_this_year": 9.0}
     if lab_left is not None:
         progress["lab_left"] = lab_left
-    projects = SimpleNamespace(active={"p": progress}, bountied=set())
+    projects = Game(active={"p": progress}, bountied=set())
     host = projects_host.build(market_supply=lambda trade: 0.0 if trade in blocked_trades else 1000.0, legacy_projects=projects, year=100)
     stopped = host._project_progress_trade_gate("p", progress, {"lab": {"engineer": 500.0, "smith": 100.0}})
     log = [(100, command) for command in module_harness.sent(host) if isinstance(command, RecordEvent)]
@@ -163,9 +164,9 @@ check("a nearly paid project is not refused for its gross price",
 
 # --- `why` shows what `start` would charge once money is sunk into the node
 def explained(paid, done=(), active=()):
-    game = SimpleNamespace(
+    game = Game(
         project_material_bill=lambda node_id: {"cost_of_missing": 0.0, "rows": []}, civ_cost_factor=lambda node_id: 1.0,
-        geography=SimpleNamespace(material_cost_factor=lambda node_id: 1.0), opposition_factor=lambda node_id: 1.0,
+        geography=Game(material_cost_factor=lambda node_id: 1.0), opposition_factor=lambda node_id: 1.0,
         rebuild_work_factor=lambda node_id: 1.0,
         cost_money_factor=lambda: 1.0, money_real=1.0, project_cost=lambda node_id: 1000.0, year=100,
         paid_towards={"p": paid} if paid else {}, done=set(done), active=set(active))
@@ -191,7 +192,7 @@ check("a project wanting no more than is left is not starved", starved_projects(
 # --- the hour pace is what a project WANTS, with no material brake folded in
 def pace(ph_left, throttle, bountied=()):
     host = projects_host.build(
-        legacy_projects=SimpleNamespace(active={"p": {"ph_left": ph_left}}, bountied=set(bountied)), tree={"p": dict(NODE, ph=500, yrs=2)},
+        legacy_projects=Game(active={"p": {"ph_left": ph_left}}, bountied=set(bountied)), tree={"p": dict(NODE, ph=500, yrs=2)},
         resource_throttle=lambda node_id: (throttle, None))
     return host.project_hour_pace("p")
 

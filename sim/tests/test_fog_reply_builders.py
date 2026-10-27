@@ -31,6 +31,7 @@ from sim.ui.proto.screen_commitments import _goal, _institutions
 from sim.ui.proto.screen_education import _schools
 from sim.ui.proto.state_log import _log_scrub
 from sim.ui.proto.techtree import _explain_visible_prerequisites
+from sim.tests.ui_stand_in import Game
 
 KNOWN, HIDDEN, HIDDEN_LONGER = "iron_smelting", "zz_hidden_theory", "zz_hidden_theory_applied"
 IDS = {KNOWN: "Iron smelting", HIDDEN: "Hidden theory", HIDDEN_LONGER: "Hidden theory applied"}
@@ -51,7 +52,7 @@ def seen(reply):
 
 def stand_in(fog=True, **fields):
     heard = fields.pop("heard", {KNOWN})
-    game = types.SimpleNamespace(
+    game = Game(
         nodes=NODES, fog=fog, goal=HIDDEN_LONGER, done=set(), granted=set(), active={}, forgotten={},
         is_visible=lambda node_id, _memo=None: (not fog) or node_id in heard)
     game.__dict__.update(fields)
@@ -77,7 +78,7 @@ class SharedFilterTests(unittest.TestCase):
 
     def fog_scrub(self, text, fog=True):
         knowledge = module_harness.build(Knowledge, views={
-            "legacy_fog": fog, "legacy_tree": NODES, "legacy_projects": types.SimpleNamespace(done=set(), active={}, revealed={KNOWN}),
+            "legacy_fog": fog, "legacy_tree": NODES, "legacy_projects": Game(done=set(), active={}, revealed={KNOWN}),
             "start_check": lambda node_id, ignore_trade, memo, why: (False, None)})
         return knowledge.fog_scrub(text)
 

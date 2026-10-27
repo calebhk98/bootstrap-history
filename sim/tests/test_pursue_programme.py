@@ -15,6 +15,7 @@ from sim.ui.proto.parse_pursue import _split
 from sim.ui.proto.programme import programme_before_year
 from sim.ui.proto.pursue import route_order, rush_command
 from sim.ui.proto.render_programme import render_pursue, render_programme, render_programme_rows
+from sim.tests.ui_stand_in import Game
 
 NODES = {
     "goal": {"name": "Goal", "pre": ["mid"], "req_any": [], "yrs": 3, "cat": "tech"},
@@ -28,11 +29,11 @@ STARTABLE = {"root", "long_root", "side"}
 
 
 def a_game(capital=1000.0, startable=STARTABLE, fog=False, hazards=(), done=()):
-    game = SimpleNamespace(
+    game = Game(
         nodes=NODES, done=set(done), active={}, can_start=lambda node_id, _memo=None: node_id in startable,
         project_cost=lambda node_id: {"root": 10.0, "long_root": 30.0, "side": 5.0}.get(node_id, 100.0),
         capital=capital, year=1000, civ={"hazards": list(hazards)}, fog=fog, goal="goal",
-        state=SimpleNamespace(interface={}, scenario=SimpleNamespace(year=1000)), shortage_rows=[],
+        state=Game(interface={}, scenario=Game(year=1000)), shortage_rows=[],
         hazard_figure=lambda name, hazard: hazard.get(name, 0.0), material_shortfall_t=lambda material: 0.0)
     game.view = lambda name: (lambda: game.shortage_rows)      # the standing material shortage, as rows
     return game
@@ -49,7 +50,7 @@ check("the route lists the startable members of the goal's route, longest chain 
 check("a startable node off the route is not in it", "side" not in route_order(game, "goal"))
 check("a node already done or active is not offered",
       route_order(a_game(done={"root"}), "goal") == ["long_root"]
-      and "long_root" not in route_order(SimpleNamespace(**dict(vars(game), active={"long_root": {}})), "goal"))
+      and "long_root" not in route_order(Game(**dict(vars(game), active={"long_root": {}})), "goal"))
 
 # --- pursue: refusals before any rush
 check("pursue refuses under fog", not _cmd_pursue(a_game(fog=True), NODES, {"cmd": "pursue"}, None)["ok"])

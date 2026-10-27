@@ -12,14 +12,15 @@ from sim.seats.api import SeatsSeat
 from sim.seats.module import Seats
 from sim.tests import module_harness
 from sim.ui.proto import dispatch, dispatch_inspection, score, state
+from sim.tests.ui_stand_in import Game
 
 
 class FounderAgeTests(unittest.TestCase):
     def reply(self, immortal, alive):
-        game = SimpleNamespace(
+        game = Game(
             cfg={"immortal": immortal, "founder_arrival_age": 40, "founder_life_mean": 30, "founder_life_sd": 5},
             founder_alive=alive, founder_age=lambda: 47, view=lambda name: (lambda: {"scholars": 0.0, "artisans": 0.0, "directors_extra": 0.0, "slaves": 0, "freedmen": 0, "employees": {}}),
-            state=SimpleNamespace(acting_seat=0, seats=[0]))
+            state=Game(acting_seat=0, seats=[0]))
         with mock.patch.object(state, "succession_block", return_value={}), \
              mock.patch.object(state, "_founder_death_info", return_value=None):
             return state._agent_state_founder(game)
@@ -47,7 +48,7 @@ class DissolutionSurvivorsTests(unittest.TestCase):
 
 class VictoryReportTests(unittest.TestCase):
     def report(self, total):
-        game = SimpleNamespace(goal_year=130, cfg={"start_year": 100})
+        game = Game(goal_year=130, cfg={"start_year": 100})
         report = {"goal_in_words": "Transistor", "points": 42.0, "total": total,
                   "achievements": {"won_one": {"won": True}, "lost_one": {"won": False}}}
         with mock.patch.object(score, "score_report", return_value=report):
@@ -64,7 +65,7 @@ class VictoryReportTests(unittest.TestCase):
 
 class FinishTests(unittest.TestCase):
     def finish(self, ended):
-        game = SimpleNamespace(year=140, dead_reason=None)
+        game = Game(year=140, dead_reason=None)
         with mock.patch.object(dispatch_inspection, "final_report", return_value={"score": {"total": 0.4}}):
             reply = dispatch_inspection._cmd_finish(game, {}, {}, ended)
         return game, reply
@@ -79,7 +80,7 @@ class FinishTests(unittest.TestCase):
         self.assertIsNone(game.dead_reason)
 
     def test_an_ended_run_refuses_a_step(self):
-        self.assertIs(dispatch._cmd_step(SimpleNamespace(), {}, {"years": 1}, "the founder died")["ok"], False)
+        self.assertIs(dispatch._cmd_step(Game(), {}, {"years": 1}, "the founder died")["ok"], False)
 
 
 if __name__ == "__main__":

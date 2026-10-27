@@ -8,8 +8,11 @@ DATA_FIGURE_IDS = set()
 
 def read_path(sim, path):
     """Follow a dotted path from the sim: attributes, then dict keys; anything callable is called."""
+    steps = path.split(".")
     value = sim
-    for step in path.split("."):
+    if ui_port.state_path_declared(steps[0]):
+        value, steps = ui_port.state_path_root(sim, steps[0]), steps[1:]
+    for step in steps:
         value = value[step] if isinstance(value, dict) else getattr(value, step)
         if callable(value):
             if not ui_port.is_readable(value):

@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 from .harness import check
 from sim.ui import cli_interactive, replay
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -31,8 +32,8 @@ def _again(game, session):
 
 
 _built = "built_route"
-_game = SimpleNamespace(done={_built, "granted_route"}, granted={"granted_route"}, dead_reason=None,
-                        fog=False, revealed=set(), capital=100.0, state=SimpleNamespace(interface={}),
+_game = Game(done={_built, "granted_route"}, granted={"granted_route"}, dead_reason=None,
+                        fog=False, revealed=set(), capital=100.0, state=Game(interface={}),
                         cfg={"start_year": 0, "horizon_years": 100}, year=0)
 
 _reply, _routes, _text = _again(_game, None)

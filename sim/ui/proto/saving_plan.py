@@ -5,11 +5,12 @@ One function builds the plan; the `saving` reply and the `stuck` row both read i
 
 import math
 from sim.engine.ui_port import money_text, tagged
+from sim.engine import ui_port
 
 
 def saving_plan(sim):
     """The standing plan as a dict, or None when the household is not saving for anything."""
-    household = sim.state.household
+    household = ui_port.saving_book(sim)
     node_id = household.saving_for
     if not node_id:
         return None

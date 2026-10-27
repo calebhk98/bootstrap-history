@@ -23,8 +23,8 @@ def _agent_state_founder(sim):
     headline counts that sit next to it on the same screen.
     """
     return {
-        "seat": sim.state.acting_seat,
-        "seat_count": len(sim.state.seats),
+        "seat": sim.view("acting_seat")(),
+        "seat_count": len(sim.view("legacy_seats")()),
         "founder_alive": sim.view("founder")()["alive"],
         "founder_age": (sim.view("patronage")()["founder_age"]
                         if sim.view("founder")()["alive"] and not sim.view("game_config")().get("immortal", True) else None),
@@ -234,7 +234,7 @@ def _agent_state_goal(sim, nodes, end_reason):
         "on_the_road_to_the_goal_so_far": (
             _goal_progress_count(sim, nodes) if sim.view("legacy_fog")() else None),
         "fog_of_war": sim.view("legacy_fog")(),
-        "manual": sim.manual, "ended": end_reason is not None, "end_reason": end_reason,
+        "manual": sim.view("automation")()["manual"], "ended": end_reason is not None, "end_reason": end_reason,
     }
 
 

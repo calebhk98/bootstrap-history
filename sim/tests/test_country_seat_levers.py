@@ -14,6 +14,7 @@ from sim.engine.state_seat import COUNTRY_SEAT, FIRST_SEAT_ID, seat_from_templat
 from sim.refusal import Refusal
 from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
+from sim.tests.ui_stand_in import Game
 
 HOME = "rome_100ad"
 FORM = {"form": "land_tax", "basis": "harvest", "rate": 0.1}
@@ -25,14 +26,14 @@ class LeverGame:
 
     def __init__(self, acting_kind=COUNTRY_SEAT, governed=True):
         seat = seat_from_template({"kind": acting_kind, "country": None}, 10.0, {})
-        self.state = types.SimpleNamespace(seats={"senate": seat}, acting_seat="senate")
+        self.state = Game(seats={"senate": seat}, acting_seat="senate")
         self.civ = {"id": HOME}
-        self.population = types.SimpleNamespace(total=1234.0)
+        self.population = Game(total=1234.0)
         self.nodes = {"fire": {}}
         self.record = ActorRecord(kind="government", revenue_forms=[dict(FORM)])
         self.asked = []
-        government = types.SimpleNamespace(record=self.record)
-        self.actors = types.SimpleNamespace(government_of=lambda country: self.asked.append(country) or (government if governed else None))
+        government = Game(record=self.record)
+        self.actors = Game(government_of=lambda country: self.asked.append(country) or (government if governed else None))
 
 
 def send(game, **fields):

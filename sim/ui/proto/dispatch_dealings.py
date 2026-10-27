@@ -89,7 +89,7 @@ def _cmd_shares(sim, nodes, cmd, ended):
     if share is None or price is None:
         return {"ok": False, "error": "share is a part of the equity above 0 and at most 1, and price is not negative"}
     if what == "issue":
-        return sim.send(ui_port.MakeOffer(cmd.get("to"), {"shares": {sim.state.acting_seat: share}}, {"money": price}))
+        return sim.send(ui_port.MakeOffer(cmd.get("to"), {"shares": {sim.view("acting_seat")(): share}}, {"money": price}))
     if what == "buy":
         issuer = cmd.get("issuer")
         if not isinstance(issuer, str) or not issuer:

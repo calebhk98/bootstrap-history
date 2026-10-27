@@ -110,7 +110,7 @@ def _cmd_why(sim, nodes, cmd, ended):
         return figure_reply(sim, node_id)
     # The goal is the one thing you were told the name of on arrival; see
     # the _goal_why note on the fog guard above for why it is `why` alone.
-    if (isinstance(node_id, str) and node_id in nodes and not sim.view("visibility")(node_id, None)
+    if (isinstance(node_id, str) and node_id in nodes and not sim.view("visibility")(node_id)
             and node_id != sim.view("goal")()["node"]):
         return {"ok": False,
                 "error": "you have never heard of that. You know what you have "

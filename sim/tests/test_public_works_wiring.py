@@ -17,6 +17,7 @@ from sim.ui.proto.dispatch_rollout import _cmd_rollout
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from sim.workforce.constants import BASE_WORKING_DAY_HOURS
 from sim.workforce.module import Workforce
+from sim.tests.ui_stand_in import Game
 
 CLINICS, LIGHTS = "ben_district_clinics", "ben_city_electric_lighting"
 
@@ -42,7 +43,7 @@ check("a shut work covers nothing", game.coverage_share(CLINICS) == 0.0, None)
 game, _ = works()
 check("the units that serve half the people are asked of the people and the unit's reach", game.units_for_coverage(CLINICS, 0.5) == 5.0, None)
 check("the most units the nation can fill is the units that serve everyone",
-      production_host.build(SimpleNamespace(coverage_nodes=lambda: [CLINICS], units_for_coverage=lambda node_id, share: 10.0 * share),
+      production_host.build(Game(coverage_nodes=lambda: [CLINICS], units_for_coverage=lambda node_id, share: 10.0 * share),
                              capability_sets=(set(), {CLINICS}, {})).institution_unit_ceiling(CLINICS) == 10.0, None)
 
 # ---- the roll-out
@@ -62,7 +63,7 @@ check("a work not yet known is refused", game.roll_out(CLINICS, 0.5) == (False, 
 
 # ---- the rollout command
 rolled = []
-game = SimpleNamespace(coverage_nodes=lambda: [CLINICS], done={CLINICS}, coverage_row=lambda work: {"id": work},
+game = Game(coverage_nodes=lambda: [CLINICS], done={CLINICS}, coverage_row=lambda work: {"id": work},
                        roll_out=lambda node_id, share: rolled.append((node_id, share)) or (True, "opened"),
                        coverage_share=lambda node_id: 0.5, institution_units=lambda node_id: 5.0)
 check("rollout with no work lists the works known", _cmd_rollout(game, {}, {}, None)["rollouts"] == [{"id": CLINICS}], None)
@@ -89,7 +90,7 @@ check("with no work declaring a working day the year is the convention",
 check("a longer day gives a longer year in the same proportion",
       abs(lit_game([LIGHTS], {LIGHTS: 0.5}).hours_per_person_year()
           - HOURS_PER_PERSON_YEAR * (1.0 + 1.0 / BASE_WORKING_DAY_HOURS)) < 1e-9, None)
-check("the year every wage quote reads is the working year", ForwardWorkforceMixin.HOURS_PER_PERSON_YEAR.fget(SimpleNamespace(view=lambda name: lambda: 1234.0)) == 1234.0, None)
+check("the year every wage quote reads is the working year", ForwardWorkforceMixin.HOURS_PER_PERSON_YEAR.fget(Game(view=lambda name: lambda: 1234.0)) == 1234.0, None)
 
 # ---- the schooling flow
 def schools(values, shut=(), reaches=None):

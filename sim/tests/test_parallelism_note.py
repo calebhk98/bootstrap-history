@@ -5,6 +5,7 @@ numbers the test states; the replies that carry them are called on stand-ins bel
 from .harness import *  # noqa: F401,F403
 
 from sim.ui.proto.parallelism_notes import calendar_floor_note, free_hours_note
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -32,19 +33,19 @@ from types import SimpleNamespace
 
 from sim.ui.proto.parallelism_notes import KEY_CALENDAR_FLOOR, add_calendar_floor_note, free_hours_going_unused
 
-game = SimpleNamespace(_said_parallelism=None)
+game = Game(_said_parallelism=None)
 first, second = {}, {}
 add_calendar_floor_note(first, game, "A long project", 3)
 add_calendar_floor_note(second, game, "Another long project", 3)
 check("starting the first long project carries the note", KEY_CALENDAR_FLOOR in first, first)
 check("...and a second in the same game does not repeat it", second == {} and game._said_parallelism is True, second)
-short_game, short = SimpleNamespace(_said_parallelism=None), {}
+short_game, short = Game(_said_parallelism=None), {}
 add_calendar_floor_note(short, short_game, "A short one", 1)
 check("a short project adds nothing and does not spend the note", short == {} and short_game._said_parallelism is None)
 
 
 def world(pool, committed):
-    return SimpleNamespace(labour=SimpleNamespace(director_pool=lambda: pool, director_hours_committed=lambda: committed))
+    return Game(labour=Game(director_pool=lambda: pool, director_hours_committed=lambda: committed))
 
 
 check("when every active project only waits on the calendar and real founder-hours sit unused, state says so",

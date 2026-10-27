@@ -8,13 +8,14 @@ from unittest import mock
 
 from sim.refusal import Refusal
 from sim.ui.proto import dispatch_inspection_stuck as stuck
+from sim.tests.ui_stand_in import Game
 
 
 def _game(**members):
     training = members.pop("training", [])
     base = dict(active={}, view=lambda name: (lambda: training), capital=1000.0, civ={}, done=set(), operating=set(), project_cost=lambda node_id: 10.0)
     base.update(members)
-    return types.SimpleNamespace(**base)
+    return Game(**base)
 
 
 class StartedNothingTest(unittest.TestCase):

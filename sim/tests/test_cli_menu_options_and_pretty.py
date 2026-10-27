@@ -16,6 +16,7 @@ from sim.engine import settings
 from sim.ui import cli_agent, cli_interactive
 from sim.ui.wizard_answers import REMEMBERED_KEYS, remember_answers
 from sim.engine.ui_port import money_text, STARTING_KITS
+from sim.tests.ui_stand_in import Game
 
 
 def captured(function, *arguments):
@@ -64,7 +65,7 @@ check("...then the home default", _from_default == os.path.join(os.path.expandus
 
 # --- the in-game options menu, on a stand-in game and scripted answers
 def options_game(immortal=True):
-    game = types.SimpleNamespace(
+    game = Game(
         cfg={"start_year": 100, "horizon_years": 500, "immortal": immortal}, civ={"id": "rome_100ad", "name": "Rome"},
         fog=False, fuzzy_estimates=False, year=130, end_year=600, rng=random.Random(1), life_left=None, founder_alive=True)
     game.send = lambda command: setattr(game, "life_left", command.years)   # the seats module's SetFounderLife
@@ -110,7 +111,7 @@ check("...and carries the sidecar horizon with it",
       os.listdir(_options_dir))
 
 # --- the welcome ties the kit's size to the cash it is worth, in the civilisation's own coin
-_arrival = types.SimpleNamespace(capital=3000.0, civ=S.load_civ("han_china_100ad"), year=100, fog=False)
+_arrival = Game(capital=3000.0, civ=S.load_civ("han_china_100ad"), year=100, fog=False)
 _welcome, _ = captured(cli_interactive._play_print_welcome, _arrival, "merchant")
 _cash = money_text(_arrival.capital, _arrival)
 _kit_years = "%.1f labourer-years" % STARTING_KITS["merchant"]["labourer_years"]
