@@ -80,7 +80,7 @@ class Revenue:
 			staff["freedmen"] or 0.0,
 			staff["slaves"] or 0.0,
 			standing["governance"] or 0.0,
-			game.output_factor,
+			game.view("output_factor")(),
 			standing["reputation"],
 			game.founder_alive,
 			game.state_funding(),
@@ -135,7 +135,7 @@ class Revenue:
 		ceiling = self.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * game.view("pop_scale")() \
 			* game.real_output_per_head() * game.price_index
 		gross = rules.saturated_revenue(gross, ceiling)
-		return (gross + game.state_funding()) * game.output_factor, book_forecast * game.output_factor
+		return (gross + game.state_funding()) * game.view("output_factor")(), book_forecast * game.view("output_factor")()
 
 	def workshop_output(self):
 		"""What your standing staff produce and sell, over and above projects."""
@@ -223,9 +223,9 @@ class Revenue:
 		game = self._game()
 		funding = game.state_funding()
 		return assemble_ledger(
-			self.ledger_concern_rows(), self.workshop_output() * game.output_factor,
-			self.founder_wage_income() * game.output_factor,
-			funding * game.output_factor if funding > 0.5 else None, self.revenue())
+			self.ledger_concern_rows(), self.workshop_output() * game.view("output_factor")(),
+			self.founder_wage_income() * game.view("output_factor")(),
+			funding * game.view("output_factor")() if funding > 0.5 else None, self.revenue())
 
 	# A granted node whose category is flagged practisable is a skill the founder holds and works with their own hands; the held
 	# skills choose the trade the founder's hours are sold in (held_trade). A granted fleet of merchant ships is owned by other

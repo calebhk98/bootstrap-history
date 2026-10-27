@@ -7,6 +7,7 @@ import types
 import unittest
 
 from sim.tests import production_host
+from sim.tests.ui_stand_in import Game
 
 TRADED = {"acid"}
 
@@ -14,7 +15,7 @@ TRADED = {"acid"}
 def _Game(operating=("mill",), granted=(), ventures=("mill", "school"), baskets=None, economy_prices=None):
     """The module over a stand-in game, with the questions it asks of itself answered as the test says."""
     prices = {"salt": 4.0}
-    game = types.SimpleNamespace(
+    game = Game(
         state=types.SimpleNamespace(projects=types.SimpleNamespace(operating=set(operating), granted=set(granted))),
         output_factor=0.5, price_index=2.0,
         economy=types.SimpleNamespace(agent_trades_good=lambda good: good in TRADED, agent_prices_at=lambda: economy_prices),

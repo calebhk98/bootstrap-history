@@ -7,6 +7,7 @@ import types
 
 from .harness import *  # noqa: F401,F403
 from sim.engine.knowledge_warning import WARNING_HORIZON_YEARS, knowledge_loss_warning, warning_lines
+from sim.tests.ui_stand_in import Game
 
 WINDOW = (200, 204)
 
@@ -23,7 +24,7 @@ def _game(year, at_risk=10.0, hedges=(("strong_hedge", 0.05, 0.1), ("weak_hedge"
     risk = {"technologies_at_risk": at_risk, "expected_technologies_lost_per_sacking": at_risk * 0.9,
             "known_hazards_ahead": [{"name": "A sack", "years": list(range(WINDOW[0], WINDOW[1] + 1)),
                                      "sacks_a_site": sacks_a_site}]}
-    return types.SimpleNamespace(
+    return Game(
         year=year, nodes=nodes, fog=fog, done=set(done), knowledge_risk=lambda advice=True, chronology=True: risk,
         corpus_hedge_tiers=lambda: list(hedges), has=lambda node_id: node_id in held,
         is_visible=lambda node_id: True, project_cost=lambda node_id: 100.0)

@@ -59,7 +59,7 @@ class ConcernMarket:
 		`with_output_factor` False leaves out the hazard and war factor `revenue` applies to its total;
 		`cost_scale` is the scale on the tree's book coin (the home society's when none is given)."""
 		game = self._game()
-		return takings_at(game.nodes[node_id]["rev"], ramp, game.output_factor if with_output_factor else 1.0,
+		return takings_at(game.nodes[node_id]["rev"], ramp, game.view("output_factor")() if with_output_factor else 1.0,
 		                  game.price_index if cost_scale is None else cost_scale, self.concern_value_ratio(node_id),
 		                  self.concern_learning_ratio(node_id))
 

@@ -30,7 +30,7 @@ def _hedge_options(sim):
 def knowledge_loss_warning(sim):
     """None, or the nearest sacking window within the horizon (or running),
     the expected loss per sack, and the cheapest hedge still to build."""
-    risk = sim.knowledge_risk(advice=False, chronology=False)
+    risk = sim.view("knowledge_risk")(False, False)
     windows = []
     for hazard in risk.get("known_hazards_ahead") or []:
         if not hazard.get("sacks_a_site"):

@@ -8,7 +8,6 @@ import unittest
 from unittest import mock
 
 from sim.engine import invariants, year_run
-from sim.engine.forward_hazards import HazardsForwardsMixin
 from sim.hazards import world_data
 from sim.hazards.commands import RecordWorldEvent
 from sim.tests import hazards_host, module_harness
@@ -87,7 +86,6 @@ class DrawTests(unittest.TestCase):
 
 def _game(partners=(), debug=False):
     game = types.SimpleNamespace(debug=debug, view=lambda name: lambda: ["rome"] + list(partners))
-    game.check_yearly_world = lambda: HazardsForwardsMixin.check_yearly_world(game)
     return game
 
 
