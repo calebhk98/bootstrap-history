@@ -55,7 +55,9 @@ Full equivalence tier identical at the knowledge merge (`877cff82`). Micro and s
 
 | finance | `sim/finance/` | credit limit, interest and arrears, insolvency, debt bondage, purchases and affordability, the seat bank; the agent economy's own credit and bank files in `sim/economy/` stay behind its api; Complaint 763 |
 
-In progress: production. `stores` (mod stores) is a framework service and moves with phase 7. Next: the rest of markets (the goods market object and the economy port); then finance, production, ventures, the rest of projects.
+| production | `sim/production/` | revenue, upkeep, concerns and their book sales, volume, industry depth and learning, techniques in use, capability; still to do: `projects.operating` and the revenue caches on the household, `node_rederive.py` (shared tree pricing), and its `legacy_game` reads |
+
+In progress: markets (the goods market object and the economy port). `stores` (mod stores) is a framework service and moves with phase 7. Next: the rest of markets (the goods market object and the economy port); then finance, production, ventures, the rest of projects.
 
 ## Task list
 
