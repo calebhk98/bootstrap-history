@@ -37,7 +37,7 @@ class GoodsOffers(GoodsImports):
             round(sim.market_rate(), RATE_DECIMALS), sim._trader_cycle_years(route, civilization_id))
 
     def partner_price_level(self, civilization_id):
-        return round(self._sim.partner_price_level(civilization_id), LEVEL_DECIMALS)
+        return round(self._sim.view("partner_price_level")[civilization_id], LEVEL_DECIMALS)
 
     def _route_from(self, civilization_id):
         return self._sim._foreign_route(self._sim.partner_civ(civilization_id))

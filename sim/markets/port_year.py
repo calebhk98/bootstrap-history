@@ -433,7 +433,7 @@ class AgentEconomy(TilePricesMixin):
             metal_price = sim._material_prices().get(standard["material"])   # the metal at its cost: its market price (Complaint 519) would size a partner's spending by the opening's mispriced metals
             if not metal_price:
                 continue
-            held = (sim._partner_coin_opening_units(partner)
+            held = (sim.view("partner_coin_opening")[partner]
                     + sim.foreign_coin_partner_units(partner))
             total += max(0.0, held) * standard["kg_per_unit"] * metal_price
         return total * PARTNER_SPEND_SHARE_PER_YEAR

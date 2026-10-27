@@ -372,7 +372,7 @@ class EconomyPort:
 
     def coin_stock_units(self):
         """Units of money this society holds."""
-        return self._sim.home_coin_stock_units()
+        return self._sim.view("home_coin_stock")()
 
     def coin_stock_value(self):
         """Money's worth of the metal in the coin this society holds, from its coin standard, at the metal's price

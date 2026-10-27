@@ -25,7 +25,6 @@ from .forward_demography import ForwardDemographyMixin
 from .forward_agriculture import ForwardAgricultureMixin
 from .forward_living_stock import ForwardLivingStockMixin
 from .forward_reporting import ReportingForwardsMixin
-from .forward_coin import ForwardCoinMixin
 from .forward_diffusion import DiffusionForwardsMixin
 from .forward_prices import ForwardPricesMixin
 from .forward_mechanics import ForwardMechanicsMixin
@@ -75,7 +74,6 @@ class Sim(
         ForwardingPropertiesMixin,
         ForwardLivingStockMixin,
         ReportingForwardsMixin,
-        ForwardCoinMixin,
         ForwardAgricultureMixin,
         ForwardResourcesMixin,
         ForwardMaterialsMixin,

@@ -84,7 +84,7 @@ class Revenue:
 			standing["reputation"],
 			game.founder_alive,
 			game.state_funding(),
-			game.home_price_level(),
+			game.view("home_price_level")(),
 		)
 		if getattr(game.household, "_revenue_cache_key", None) != key:
 			game.household._revenue_cache_val = self._compute_revenue_uncached()

@@ -254,3 +254,10 @@ class Game(FactViews, SimpleNamespace):
             if given is None:
                 raise
             return given(name)
+
+
+from .ui_stand_in_names import FACT_OF_VIEW_MORE, METHOD_OF_COMMAND_MORE, METHOD_OF_VIEW_MORE  # noqa: E402
+
+for _table, _more in ((METHOD_OF_VIEW, METHOD_OF_VIEW_MORE), (FACT_OF_VIEW, FACT_OF_VIEW_MORE), (METHOD_OF_COMMAND, METHOD_OF_COMMAND_MORE)):
+    for _name, _old in _more.items():
+        _table.setdefault(_name, _old)

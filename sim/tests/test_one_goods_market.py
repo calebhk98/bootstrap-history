@@ -21,6 +21,7 @@ from sim.markets import household_needs
 from sim.engine.material_units import tonnes_per_unit
 from sim.markets.module import Markets
 from sim.world import market
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -55,7 +56,7 @@ def stand_in(**changes):
         _priced_key=lambda material, prices: material if material in prices else None,
         _commodity_materials=lambda commodity: [commodity])
     values.update(changes)
-    game = SimpleNamespace(**values)
+    game = Game(**values)
     game._market_flows = lambda: game._flows
     return game
 
