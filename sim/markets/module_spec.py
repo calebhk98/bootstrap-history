@@ -1,21 +1,27 @@
 """The markets module's spec (sim/assembly).
 
 The module owns the book, the year's flows, the agent economy's record and the money flag (`MarketsWorld`), the clearing, the
-goods categories, household demand and the market ceiling's attribution. The engine's goods market and the port over the agent
-economy have not moved into the package yet, so the module reaches them through `legacy_game` and every view it publishes is
-uncached: they write the flows and the record in place."""
+goods categories, household demand and the market ceiling's attribution. The module builds the goods market and the port over the
+agent economy (they read the game through the views declared here, port_world.py), and every view it publishes is uncached: they
+write the flows and the record in place."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.demography.api import RecordFoodEaten
-from sim.foreign_trade.api import ClosePartnerBooks
+from sim.diffusion.api import NoteFirstRuns
+from sim.foreign_trade.api import ClosePartnerBooks, SettleFlow, SettleTraderCargo
+from sim.land.api import FinishWays
+from sim.ledger.api import ChangeStock, PayEdge, ReceiveFromEdge
 from sim.reporting.api import CloseRealOutput
+from sim.resources.api import DrawDeposit, FellTimber, RegrowTimber
 
 from .commands import (BuyMaterial, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale, NoteDraw,
-                       NotePurchase, OpenMarketBook, RenameMarketSeat, ResetDraws, ResetMarketCaches, SellMaterial)
+                       NotePurchase, OpenMarketBook, RenameMarketSeat, RepriceOpeningMoney, ResetDraws, ResetMarketCaches,
+                       SellMaterial)
 from .module import Markets
 from .state import MarketsWorld
 
 READS_BY_OWNER = {
-	"core": ("legacy_game", "year", "civilisation", "output_factor", "opening_farmed_hectares", "household_demand_units"),
+	"core": ("year", "civilisation", "game_config", "legacy_tree", "legacy_state_parts", "output_factor", "opening_farmed_hectares",
+	         "household_demand_units"),
 	"seats": ("seat_list",),
 	"demography": ("population_total", "pop_scale", "default_population", "farm_holdings"),
 	"actors": ("concern_versions", "concern_counts"),

@@ -9,15 +9,14 @@ import random
 from typing import Dict, List, Tuple
 
 from sim import cache_root
-from sim.engine.economy_port_trace import traded_staple
 import sim.geography.api as geography
 
 from sim.prices.api import solve_cache
-from . import concern_scan_run, economy_port_trace, opening_checks
+from sim.markets import api as markets_api
+from sim.markets.api import (SPIN_UP_MAXIMUM_YEARS, SPIN_UP_SOURCE_MODULES, SPIN_UP_TOLERANCE, SPIN_UP_YEARS_ENV, opening_setup,
+                             spin_up_key, traded_staple)
+from . import concern_scan_run, opening_checks
 from .data import load, load_civ
-from .economy_port_key import SPIN_UP_SOURCE_MODULES, spin_up_key
-from .economy_port_setup import build_setup
-from .economy_port_year import SPIN_UP_MAXIMUM_YEARS, SPIN_UP_TOLERANCE, SPIN_UP_YEARS_ENV
 from .core import Sim
 
 TRACE_CACHE_DIRECTORY = cache_root.cache_directory("opening_traces")
@@ -36,7 +35,7 @@ def open_full_length(civ_id: str):
 
 def trace_key(game) -> str:
     """The cache key of the money trace of `game`'s opening: that of its spin-up, which covers the data and source."""
-    setup = build_setup(game, game.view("legacy_agent_economy")()["opening"])
+    setup = opening_setup(game)
     return solve_cache.solve_key({"opening_trace": spin_up_key(setup), "years": int(SPIN_UP_MAXIMUM_YEARS)},
                                  source_modules=SPIN_UP_SOURCE_MODULES)
 
@@ -44,7 +43,7 @@ def trace_key(game) -> str:
 def opening_trace(game) -> List[dict]:
     """The spin-up's first stage run for its full length on the opening `game` saved, one row per year."""
     years = int(SPIN_UP_MAXIMUM_YEARS)
-    return solve_cache.cached_json(trace_key(game), lambda: economy_port_trace.spin_up_trace(game, years),
+    return solve_cache.cached_json(trace_key(game), lambda: markets_api.spin_up_trace(game, years),
                                    cache_dir=TRACE_CACHE_DIRECTORY)
 
 

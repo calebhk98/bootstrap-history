@@ -8,7 +8,7 @@ from .harness import check
 
 from sim.economy import carried_book, country_figures
 from sim.foreign_trade.api import country_trade_years
-from sim.engine.economy_port_country import CountryAnswers
+from sim.markets.port_country import CountryAnswers
 from sim.tests.country_stand_in import NORTH, two_country_economy
 
 book = {}
@@ -37,7 +37,7 @@ check("the book by good is the merchants' alone (the off-map flows have no good)
 # the port attributes the year's external-edge trade to the country whose tile the port stands on
 from types import SimpleNamespace
 
-from sim.engine.economy_port_year import AgentEconomy
+from sim.markets.port_year import AgentEconomy
 
 kept = {}
 port = SimpleNamespace(stored=kept, _economy=SimpleNamespace(setup=SimpleNamespace(port_tile="north_port", country_of=lambda tile: "north")),

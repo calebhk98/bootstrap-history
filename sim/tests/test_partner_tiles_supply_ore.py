@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import economy_port_sites
+from sim.markets import port_sites
 from sim.engine.data import load_civ
 from sim.geography import api as geography
 from sim.tests.test_mine_names_a_deposit import _Host
@@ -21,7 +21,7 @@ class PartnerOreSiteTests(unittest.TestCase):
         self.ore_of = {ore: resource for resource, by_ore in geography.ore_goods(self.host.world_map).items()
                        for ore in by_ore}
         self.outputs = {ore: {ore: 1000.0} for ore in self.ore_of}
-        self.limits = economy_port_sites.site_limits(self.host, self.outputs, self.partner_tiles)
+        self.limits = port_sites.site_limits(self.host, self.outputs, self.partner_tiles)
 
     def test_every_ore_with_a_sized_deposit_on_a_partner_tile_has_a_supplying_tile_there(self):
         year = self.host.state.scenario.year
@@ -47,7 +47,7 @@ class PartnerOreSiteTests(unittest.TestCase):
 
     def test_what_firms_raise_on_a_partner_tile_is_drawn_from_its_deposit(self):
         row = self.host.partner_deposits("iron", self.partner_tiles)[0]
-        economy_port_sites.deplete(self.host, {("iron_ore_kg", row["tile_id"]): 10.0}, self.outputs)
+        port_sites.deplete(self.host, {("iron_ore_kg", row["tile_id"]): 10.0}, self.outputs)
         self.assertGreater(self.host.holdings.deposit_drawn.get(row["id"], 0.0), 0.0)
 
 

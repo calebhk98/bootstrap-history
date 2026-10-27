@@ -1,8 +1,8 @@
 """`spin-up-trace`: run a civilisation's hidden spin-up for many years and print the price level, the money
-stock and the mint's strikes by year (sim/engine/economy_port_trace.py)."""
+stock and the mint's strikes by year (sim/markets/port_trace.py)."""
 import random
 
-from sim.engine import economy_port_trace
+from sim.markets import api as markets_api
 from sim.engine.ui_port import Sim, default_civilisation_id, load, load_civ
 
 
@@ -21,5 +21,5 @@ def format_trace(rows):
 def cmd_spin_up_trace(args):
     _tree, _prices, nodes, _wages, _goods = load()
     game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(args.civ or default_civilisation_id()))
-    print(format_trace(economy_port_trace.spin_up_trace(game, args.years)))
+    print(format_trace(markets_api.spin_up_trace(game, args.years)))
     return 0

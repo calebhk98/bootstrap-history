@@ -9,8 +9,8 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.engine.data import load_civ
-from sim.engine.economy_port import EconomyPort
-from sim.engine.goods_market_api import GoodsMarket
+from sim.markets.port import EconomyPort
+from sim.markets.goods_market import GoodsMarket
 from sim.engine.material_units import tonnes_per_unit
 from sim.foreign_trade.module import ForeignTrade
 from sim.tests import module_harness

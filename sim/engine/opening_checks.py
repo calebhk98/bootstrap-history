@@ -9,7 +9,7 @@ import math
 from dataclasses import dataclass
 from typing import Dict, Mapping, Optional, Sequence
 
-from sim.engine.economy_port_trace import coin_wear_per_year
+from sim.markets.api import coin_wear_per_year
 
 # A price within an order of magnitude of what making the good costs: above it a worker-hour in making it sells
 # for many wages, below it nobody would make it. An order of magnitude is the widest grade spread among one

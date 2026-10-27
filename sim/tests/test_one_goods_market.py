@@ -10,9 +10,9 @@ from unittest import mock
 from .harness import *  # noqa: F401,F403
 from . import module_harness
 
-from sim.engine import goods_market_offers
-from sim.engine.goods_market_api import GoodsMarket
-from sim.engine.goods_market_imports import HOME_SELLER
+from sim.markets import goods_offers
+from sim.markets.goods_market import GoodsMarket
+from sim.markets.goods_imports import HOME_SELLER
 from sim.prices import rules as price_rules
 from sim.engine.market_demand import household_demand_by_material
 from sim.engine.material_units import tonnes_per_unit
@@ -104,8 +104,8 @@ check("...while the founder's purchases are his own, not the actors'",
       (figures(by_founder_buying, False), figures(by_founder_buying, True)))
 
 # --- a good nobody offers has no household price and draws no spending -----------------------------------------
-no_tariff = mock.patch.object(goods_market_offers.trade_duty, "import_terms", lambda game, partner: (0.0, False))
-signature = mock.patch.object(goods_market_offers.trade_duty, "signature", lambda game, partners: ())
+no_tariff = mock.patch.object(goods_offers.trade_duty, "import_terms", lambda game, partner: (0.0, False))
+signature = mock.patch.object(goods_offers.trade_duty, "signature", lambda game, partners: ())
 with no_tariff, signature:
     home_only = stand_in(foreign_economies=lambda: [])
     market_home = GoodsMarket(home_only)

@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.goods_market_api import GoodsMarket
+from sim.markets.goods_market import GoodsMarket
 from sim.freight.module import Freight
 from sim.tests import module_harness
 

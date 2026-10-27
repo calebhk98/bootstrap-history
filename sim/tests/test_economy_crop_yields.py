@@ -1,6 +1,6 @@
 """Complaint 537 and the externality door: the year's yield of a land-bound producer is the pooled weather times the
 soil, climate and water of its tile for a recipe that crops, the weather alone for pasture and forest, and a harm factor
-on its tile scales it further (`economy_port_sites.crop_yields` and `harmed_yields`). Called on a built economy, with no
+on its tile scales it further (`port_sites.crop_yields` and `harmed_yields`). Called on a built economy, with no
 game. The tile figures a setup carries are `test_economy_tiles_from_map` and `test_economy_port_cropland_yields`."""
 QUICK_TOPIC = True
 
@@ -8,7 +8,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.economy.setup import recipe_tile_key
-from sim.engine import economy_port_sites
+from sim.markets import port_sites
 
 WEATHER = 0.8
 
@@ -30,7 +30,7 @@ def economy():
 
 class CropYieldsTests(unittest.TestCase):
     def setUp(self):
-        self.yields = economy_port_sites.crop_yields(economy(), WEATHER)
+        self.yields = port_sites.crop_yields(economy(), WEATHER)
 
     def test_a_crop_producer_yields_its_tiles_factor_times_the_weather(self):
         self.assertAlmostEqual(self.yields["farm_good"], WEATHER * 1.4)
@@ -49,13 +49,13 @@ class CropYieldsTests(unittest.TestCase):
         self.assertNotIn("pit", self.yields)
 
     def test_no_weather_argument_is_a_normal_year(self):
-        self.assertAlmostEqual(economy_port_sites.crop_yields(economy())["farm_good"], 1.4)
+        self.assertAlmostEqual(port_sites.crop_yields(economy())["farm_good"], 1.4)
 
 
 class TileWeatherTests(unittest.TestCase):
     """Complaint 537: a producer takes the weather of its own tile when the year has one, the pooled weather otherwise."""
     def setUp(self):
-        self.yields = economy_port_sites.crop_yields(economy(), WEATHER, {"good": 1.1, "poor": 0.5})
+        self.yields = port_sites.crop_yields(economy(), WEATHER, {"good": 1.1, "poor": 0.5})
 
     def test_a_crop_producer_takes_its_own_tiles_weather_times_its_tiles_factor(self):
         self.assertAlmostEqual(self.yields["farm_good"], 1.1 * 1.4)
@@ -68,7 +68,7 @@ class TileWeatherTests(unittest.TestCase):
         self.assertAlmostEqual(self.yields["farm_unsited"], WEATHER)
 
     def test_two_tiles_with_one_soil_differ_only_by_their_weather(self):
-        both = economy_port_sites.crop_yields(economy(), WEATHER, {"good": 0.7, "poor": 1.2})
+        both = port_sites.crop_yields(economy(), WEATHER, {"good": 0.7, "poor": 1.2})
         self.assertAlmostEqual(both["farm_good"] / 1.4, 0.7)
         self.assertAlmostEqual(both["farm_poor"] / 0.6, 1.2)
 
@@ -76,10 +76,10 @@ class TileWeatherTests(unittest.TestCase):
 class HarmedYieldsTests(unittest.TestCase):
     def setUp(self):
         self.economy = economy()
-        self.yields = economy_port_sites.crop_yields(self.economy, WEATHER)
+        self.yields = port_sites.crop_yields(self.economy, WEATHER)
 
     def harmed(self, harm_by_tile):
-        return economy_port_sites.harmed_yields(self.yields, harm_by_tile, self.economy.record.producers)
+        return port_sites.harmed_yields(self.yields, harm_by_tile, self.economy.record.producers)
 
     def test_a_harm_factor_scales_the_land_producers_of_that_tile_only(self):
         after = self.harmed({"good": 0.5})

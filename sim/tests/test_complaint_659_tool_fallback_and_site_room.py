@@ -13,7 +13,7 @@ from sim.economy.producers import Producer, produce
 from sim.economy.record import EconomyRecord
 from sim.economy.tool_wear import with_tool_wear
 from sim.economy.types import Recipe, SiteLimit, ToolFallback
-from sim.engine.economy_port_setup import tool_wear_recipes
+from sim.markets.port_setup import tool_wear_recipes
 from sim.resources import rules
 from sim.world import deposits as deposit_model
 

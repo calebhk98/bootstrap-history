@@ -9,11 +9,10 @@ from sim.agents.api import cast_from_civilisations
 from sim.assembly.api import KEYED, QUOTE
 from sim.production.api import AccrueExperience
 
-from . import partner_demand, trade_duty
+from . import node_upkeep, partner_demand
 from .actor_kinds_data import register_mod_actor_kinds
 from .bridge import bridge_command, bridge_view
 from .data import load_civ
-from .economy_port_setup import unit_mass_kg
 from .foreign_economy_data import not_traded_materials as declared_not_traded_materials
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 from .node_revenue_market import basket_market_factor
@@ -81,12 +80,15 @@ def concern_takings(sim, node_id, ramp, **options):
 
 @bridge_view("concern_gross", kind=QUOTE)
 def concern_gross(sim, node_id):
-    return sim.economy.concern_gross(node_id)
+    """Yearly takings of a concern once ramped up, with the market's price for its goods applied."""
+    return sim.concern_takings(node_id, 1.0) * sim.node_output_market_factor(sim.nodes[node_id])
 
 
 @bridge_view("concern_upkeep", kind=QUOTE)
-def concern_upkeep(sim, node_id, capacity=1.0, **options):
-    return sim.economy.concern_upkeep(node_id, capacity, **options)
+def concern_upkeep(sim, node_id, capacity=1.0, cost_scale=None):
+    """Yearly upkeep of a concern at a given capacity, without its crew's pay."""
+    node = sim.nodes[node_id]
+    return node_upkeep.non_labour_upkeep_money(node["up"], node, capacity, sim.price_index if cost_scale is None else cost_scale)
 
 
 @bridge_view("node_output_market_factor", kind=QUOTE)
@@ -117,11 +119,6 @@ def ramp_share_at_full_depth(sim):
 @bridge_view("basket_market_factor", kind=QUOTE)
 def basket_market_factor_view(sim, sold, bought, long_run_prices, price_now):
     return basket_market_factor(sold, bought, long_run_prices, price_now)
-
-
-@bridge_view("unit_mass_kg", kind=QUOTE)
-def unit_mass(sim, material):
-    return unit_mass_kg(material)
 
 
 @bridge_view("seat_review", kind=QUOTE)
@@ -184,9 +181,3 @@ def not_traded_materials(sim):
 def home_household_tonnes(sim, prices_in_hours):
     """{material: tonnes a year} the home households buy at these prices (labour hours a unit), scaled to the opening's people."""
     return partner_demand.budget_scaled_final_tonnes(prices_in_hours, sim._opening_population())
-
-
-@bridge_view("border_duty_per_tonne", kind=QUOTE)
-def border_duty_per_tonne(sim, source, destination, price_per_tonne):
-    """Money the destination country's state charges on a tonne bought at `price_per_tonne` in `source`; infinite on an embargo."""
-    return trade_duty.duty_per_tonne(sim, source, destination, price_per_tonne)

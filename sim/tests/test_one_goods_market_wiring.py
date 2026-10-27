@@ -10,7 +10,7 @@ from sim.actors.world import ActorWorld
 from sim.markets.module import Markets
 from sim.markets.api import SellMaterial
 from sim.tests import module_harness
-from sim.engine.goods_market_api import GoodsMarket
+from sim.markets.goods_market import GoodsMarket
 from sim.tests.world_stand_in import fake_needs
 from sim.markets.api import NoteActorSale
 

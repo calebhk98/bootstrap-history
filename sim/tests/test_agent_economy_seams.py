@@ -9,8 +9,8 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import economy_port_year, shipped_openings
-from sim.engine.economy_port_year import AgentEconomy
+from sim.markets import port_year, shipped_openings
+from sim.markets.port_year import AgentEconomy
 
 CACHE_KEY = "opening-key"
 
@@ -37,14 +37,14 @@ class OpeningRecordTests(unittest.TestCase):
         self.agent._spun_up = lambda setup: self.spun_up.append(setup) or {"spun": True}
         for patcher in (
                 mock.patch.object(shipped_openings, "SHIPPED_OPENINGS_DIRECTORY", self.shipped.name),
-                mock.patch.object(economy_port_year, "SPIN_UP_CACHE_DIRECTORY", os.path.join(self.cache.name, "agent_economy")),
-                mock.patch.object(economy_port_year, "opening_values", lambda game: {"values": 1}),
-                mock.patch.object(economy_port_year, "priced_at_the_margin", lambda game, values: values),
-                mock.patch.object(economy_port_year, "build_setup", lambda game, opening: ("setup", opening)),
-                mock.patch.object(economy_port_year, "_spin_up_cache_key", lambda setup: CACHE_KEY),
-                mock.patch.object(economy_port_year.economy_api, "economy_from_record", lambda setup, record: ("economy", record)),
-                mock.patch.object(economy_port_year.economy_api, "economy_book", lambda economy: "book"),
-                mock.patch.object(economy_port_year.economy_api, "economy_contracts", lambda economy: "contracts")):
+                mock.patch.object(port_year, "SPIN_UP_CACHE_DIRECTORY", os.path.join(self.cache.name, "agent_economy")),
+                mock.patch.object(port_year, "opening_values", lambda game: {"values": 1}),
+                mock.patch.object(port_year, "priced_at_the_margin", lambda game, values: values),
+                mock.patch.object(port_year, "build_setup", lambda game, opening: ("setup", opening)),
+                mock.patch.object(port_year, "_spin_up_cache_key", lambda setup: CACHE_KEY),
+                mock.patch.object(port_year.economy_api, "economy_from_record", lambda setup, record: ("economy", record)),
+                mock.patch.object(port_year.economy_api, "economy_book", lambda economy: "book"),
+                mock.patch.object(port_year.economy_api, "economy_contracts", lambda economy: "contracts")):
             patcher.start()
             self.addCleanup(patcher.stop)
 
@@ -79,7 +79,7 @@ class AnswersTests(unittest.TestCase):
             coin_per_unit=self.COIN, countries=lambda: ["home", "abroad"]))
         self.agent.economy = lambda: self.agent._economy
         self.agent._built_from = self.agent.stored
-        api = economy_port_year.economy_api
+        api = port_year.economy_api
         for patcher in (
                 mock.patch.object(api, "wages_by_trade_weighted", lambda economy, country=None: {"smith": 2.0, "weaver": 0.5}),
                 mock.patch.object(api, "shown_prices_of", lambda economy, country=None: ({"iron": 3.0}, {"salt"})),

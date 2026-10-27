@@ -15,13 +15,13 @@ class StandingBidTests(unittest.TestCase):
         self.assertAlmostEqual(entry_trial.demand_at([bid], 100.0, 100.0), UNITS_WANTED)
 
     def test_the_founders_draws_become_fixed_quantity_bids_at_the_economys_price(self):
-        from sim.engine import economy_port_actors
+        from sim.markets import port_actors
         economy = SimpleNamespace(
             area_map=SimpleNamespace(goods=lambda: [GADGET], area_of=lambda good, tile: "area"),
             view=lambda: SimpleNamespace(price=lambda good, area: 0.5),
             setup=SimpleNamespace(opening_prices={GADGET: 400.0}))
         flows = {"bought": {GADGET: {"seat:one": 2.0, "firm:other": 9.0}}, "drawn": {GADGET: 1.0}}
-        bids = economy_port_actors.standing_bids(economy, flows, {"seat:one"}, "tile", lambda good: 0.5,
+        bids = port_actors.standing_bids(economy, flows, {"seat:one"}, "tile", lambda good: 0.5,
                                                  lambda commodity: [commodity])
         self.assertEqual(len(bids), 1)
         self.assertAlmostEqual(bids[0].floor_quantity, (2.0 + 1.0) / 0.5)

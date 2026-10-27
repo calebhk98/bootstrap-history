@@ -23,7 +23,7 @@ import tempfile
 # Games started without --seed draw a fresh one; the suite needs them to replay.
 os.environ.setdefault("ROME_DEFAULT_SEED", "1")
 # Games in the suite open after a few hidden spin-up years rather than the declared bounds, cached apart
-# from full games' (sim/engine/economy_port_year.py); a cold full spin-up costs many minutes per start.
+# from full games' (sim/engine/port_year.py); a cold full spin-up costs many minutes per start.
 os.environ.setdefault("ROME_SPIN_UP_YEARS", "3,2")
 
 # collections, copy, glob, re and tempfile are not used in this file; topic modules use them bare and rely on
@@ -195,7 +195,7 @@ def build_unopened(factory):
     """`factory()` (a call that builds a `Sim`) with the agent economy left unopened: see `unopened_sim`."""
     from unittest import mock
     from sim.engine import foreign_economy_data
-    from sim.engine.economy_port import EconomyPort
+    from sim.markets.port import EconomyPort
     every_record = foreign_economy_data.foreign_economy_records
 
     def supported_records():

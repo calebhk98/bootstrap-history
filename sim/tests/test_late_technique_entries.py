@@ -6,10 +6,10 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import economy_port_late
-from sim.engine import economy_port_year
-from sim.engine.economy_port_year import AgentEconomy
-from sim.engine.economy_port_setup import allowed_entries
+from sim.markets import port_late
+from sim.markets import port_year
+from sim.markets.port_year import AgentEconomy
+from sim.markets.port_setup import allowed_entries
 
 PRODUCTION = {
     "mortar_kg": {"outputs": {"mortar_kg": 1000.0}, "inputs": {"lime_kg": 500.0},
@@ -40,11 +40,11 @@ class AllowedEntries(unittest.TestCase):
 
 class OpeningWithTechniques(unittest.TestCase):
     def test_nothing_new_allowed_adds_nothing(self):
-        self.assertIsNone(economy_port_late.opening_with_techniques(
+        self.assertIsNone(port_late.opening_with_techniques(
             stand_in_society(), opening(), frozenset(), PRODUCTION))
 
     def test_a_held_node_adds_its_recipe_its_trade_wage_and_the_price_of_the_good_it_makes(self):
-        grown = economy_port_late.opening_with_techniques(
+        grown = port_late.opening_with_techniques(
             stand_in_society(), opening(), frozenset({"kiln_node"}), PRODUCTION)
         self.assertEqual(grown["recipes"], ["cement_kg", "mortar_kg"])
         self.assertEqual(grown["wages"]["kilnman"], 5.0)
@@ -55,22 +55,22 @@ class OpeningWithTechniques(unittest.TestCase):
     def test_a_good_that_already_has_a_price_keeps_it(self):
         base = opening()
         base["prices"]["cement_kg"] = 9.0
-        grown = economy_port_late.opening_with_techniques(
+        grown = port_late.opening_with_techniques(
             stand_in_society(), base, frozenset({"kiln_node"}), PRODUCTION)
         self.assertEqual(grown["prices"]["cement_kg"], 9.0)
 
     def test_the_new_good_costs_its_inputs_and_crew_at_live_input_prices_per_unit(self):
-        cost = economy_port_late.late_goods_costs(
+        cost = port_late.late_goods_costs(
             stand_in_society({"lime_kg": 2.0}), {"lime_kg": 1.0}, ["cement_kg"], frozenset({"kiln_node"}), PRODUCTION)
         self.assertAlmostEqual(cost["cement_kg"], (1000.0 * 2.0 + 20.0 * 5.0) / 1000.0)
 
     def test_without_a_live_price_the_openings_input_price_is_used(self):
-        cost = economy_port_late.late_goods_costs(
+        cost = port_late.late_goods_costs(
             stand_in_society(None), {"lime_kg": 1.0}, ["cement_kg"], frozenset({"kiln_node"}), PRODUCTION)
         self.assertAlmostEqual(cost["cement_kg"], (1000.0 * 1.0 + 20.0 * 5.0) / 1000.0)
 
     def test_a_good_whose_input_has_no_price_gets_none(self):
-        self.assertEqual(economy_port_late.late_goods_costs(
+        self.assertEqual(port_late.late_goods_costs(
             stand_in_society(), {}, ["cement_kg"], frozenset({"kiln_node"}), PRODUCTION), {})
 
 
@@ -86,14 +86,14 @@ class AdmitTechniquesWiring(unittest.TestCase):
 
     def test_held_nodes_unchanged_since_the_last_look_leave_the_opening_alone(self):
         port = self.port(frozenset({"a", "b"}), {"b"})
-        with mock.patch.object(economy_port_year.price_solver, "default_production_entries", lambda: PRODUCTION):
+        with mock.patch.object(port_year.price_solver, "default_production_entries", lambda: PRODUCTION):
             AgentEconomy.admit_techniques(port)
         self.assertEqual(port.stored["opening"], opening())
         self.assertFalse(port._record_stale)
 
     def test_held_nodes_that_allow_no_new_entry_are_remembered_and_change_nothing(self):
         port = self.port(frozenset(), {"b"})
-        with mock.patch.object(economy_port_year.price_solver, "default_production_entries", lambda: PRODUCTION):
+        with mock.patch.object(port_year.price_solver, "default_production_entries", lambda: PRODUCTION):
             AgentEconomy.admit_techniques(port)
         self.assertEqual(port._techniques_admitted, frozenset({"a", "b"}))
         self.assertEqual(port.stored["opening"], opening())

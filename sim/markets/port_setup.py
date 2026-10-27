@@ -17,8 +17,8 @@ from sim.world import demand, need_basket
 from sim.geography.api import carriage_rates, layer_value, sea_freight, settlement, tiles_held
 from sim.labour import api as labour_api
 
-from . import economy_port_closure, economy_port_costs, economy_port_sites
-from .economy_port_stores import opening_store_values
+from . import port_closure, port_costs, port_sites
+from .port_stores import opening_store_values
 from sim.freight.api import SEA_MODE
 
 ARABLE_SOURCE = "arable land"   # the production entries' `extracted_from` for crops (some add a note after it)
@@ -71,7 +71,7 @@ def unskilled_trade(trades_data):
 
 def partner_openings(sim):
     """{partner id: its tiles, people and recipes} for the partners that are part of the agent economy."""
-    from .economy_port_partners import partner_opening
+    from .port_partners import partner_opening
     return {partner: partner_opening(sim, partner) for partner in sim.partners_in_agent_economy()}
 
 
@@ -100,7 +100,7 @@ def opening_values(sim):
     modes = sim._freight_mode_costs(cargo="goods")
     rates = carriage_rates(sorted(modes), sim.world_map)
     prices = dict(partner_prices)
-    prices.update(economy_port_costs.opening_costs(sim))
+    prices.update(port_costs.opening_costs(sim))
     return {
         "partners": partners,
         "population_by_tile": {tile: people * settlement.population_share(tile_ids, tile) for tile in tile_ids},
@@ -124,7 +124,7 @@ def opening_values(sim):
         "held_nodes": sorted(sim.held_and_running(include_starting=False)),
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
         "site_limits": [[limit.recipe_id, limit.tile, limit.capacity_runs_per_year, limit.yield_factor]
-                        for limit in economy_port_sites.site_limits(
+                        for limit in port_sites.site_limits(
                             sim, {entry_id: production[entry_id]["outputs"] for entry_id in allowed},
                             list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]])],
         "stores": opening_store_values(sim.world_map, tile_ids, int(sim.cfg["start_year"])),
@@ -214,7 +214,7 @@ def build_setup(sim, opening=None, production=None):
                      for good, entry in _load("world", "service_lives.json").get("years", {}).items()}
     specs = goods_specs({good: "" for good in goods}, spoilage, service_lives)
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
-    prices = economy_port_closure.makeable_prices(prices, production, recipes)
+    prices = port_closure.makeable_prices(prices, production, recipes)
     recipes = {recipe_id: plant_builds.with_plant_from(recipe, prices) for recipe_id, recipe in recipes.items()}
     trades = {trade: TradeSpec(trade, float(spec.get("training_years", 0.0)),
                                float(spec.get("fatality_risk_per_year", 0.0)), str(spec.get("family", "")))

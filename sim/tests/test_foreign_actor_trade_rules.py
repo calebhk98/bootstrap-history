@@ -9,9 +9,9 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine import economy_port_year
+from sim.markets import port_year
 from sim.actors.world_trade import TradeView
-from sim.engine.economy_port_year import AgentEconomy
+from sim.markets.port_year import AgentEconomy
 from sim.foreign_trade import rules
 from sim.foreign_trade.commands import ClosePartnerBooks, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
 from sim.foreign_trade.constants import BOUGHT, SOLD
@@ -141,11 +141,11 @@ class ExternalOrdersTests(unittest.TestCase):
             recorded.update(landed=landed, exports=exports)
             return "orders"
 
-        with mock.patch.object(economy_port_year.economy_api, "traded_volumes", return_value={"wheat": 5.0, "iron": 5.0}), \
-             mock.patch.object(economy_port_year.economy_api, "opening_quantities", return_value={}), \
-             mock.patch.object(economy_port_year.trade_duty, "export_terms", return_value=(0.0, False)), \
+        with mock.patch.object(port_year.economy_api, "traded_volumes", return_value={"wheat": 5.0, "iron": 5.0}), \
+             mock.patch.object(port_year.economy_api, "opening_quantities", return_value={}), \
+             mock.patch.object(port_year.trade_duty, "export_terms", return_value=(0.0, False)), \
              mock.patch("sim.engine.material_units.tonnes_per_unit", return_value=1.0), \
-             mock.patch.object(economy_port_year, "external_orders", record):
+             mock.patch.object(port_year, "external_orders", record):
             AgentEconomy._external_orders(game)
         return recorded
 

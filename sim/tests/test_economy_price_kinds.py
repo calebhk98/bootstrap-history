@@ -10,7 +10,7 @@ from sim.economy import notional, types as economy_types
 from sim.economy.market_memory import PRICE_TRADED, MarketMemory
 from sim.economy.notional import KIND_MAKING_COST_ESTIMATE, KIND_REMEMBERED, shown_prices_with_kinds
 from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_OPENING_ESTIMATE, Recipe
-from sim.engine.economy_port_actors import standing_price
+from sim.markets.port_actors import standing_price
 from sim.ui.proto.render_screens_market import NO_TRADE_CAUSE, price_note
 
 

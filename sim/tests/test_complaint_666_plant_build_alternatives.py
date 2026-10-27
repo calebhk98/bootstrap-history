@@ -9,7 +9,7 @@ import unittest
 from sim.economy.plant_builds import buildable, with_plant_from
 from sim.economy.recipes import recipe_from_entry
 from sim.prices import solve_prices_core as core
-from sim.engine.economy_port_closure import makeable_prices
+from sim.markets.port_closure import makeable_prices
 from sim.engine.validate_production import check_build_alternatives
 
 

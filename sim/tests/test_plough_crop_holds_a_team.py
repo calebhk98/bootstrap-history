@@ -8,7 +8,7 @@ import unittest
 from sim.economy.households_own import own_production_options
 from sim.economy.recipes import recipes_from_production_data
 from sim.economy.types import Recipe
-from sim.engine.economy_port_setup import allowed_entries
+from sim.markets.port_setup import allowed_entries
 from sim.tests import economy_fixture as fixture
 from sim.world import demand
 

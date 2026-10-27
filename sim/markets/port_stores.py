@@ -1,6 +1,6 @@
 """The opening stocks of durable stores of wealth, from what a civilisation's deposits yielded before the start.
 
-Part of the port with economy_port_setup.py. Which good a resource yields is the catalogue's
+Part of the port with port_setup.py. Which good a resource yields is the catalogue's
 `mine_demand_goods`; a resource that names several goods, or counts in a unit other than kilograms,
 has no single good to hold and is reported as a gap rather than guessed.
 """

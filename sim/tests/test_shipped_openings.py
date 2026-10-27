@@ -10,7 +10,7 @@ from unittest import mock
 
 from sim.prices import solve_cache
 
-from sim.engine import economy_port_year, shipped_openings, shipped_openings_build
+from sim.markets import port_year, shipped_openings, shipped_openings_build
 class ShippedEntryTests(unittest.TestCase):
     def setUp(self):
         self._shipped = tempfile.TemporaryDirectory()
@@ -49,7 +49,7 @@ class ShippedEntryTests(unittest.TestCase):
         self.assertEqual(touched, [(self.cache, "k3"), (self.cache, "k3")])
 
     def test_a_shortened_spin_up_is_never_shipped(self):
-        with mock.patch.dict(os.environ, {economy_port_year.SPIN_UP_YEARS_ENV: "3,2"}):
+        with mock.patch.dict(os.environ, {port_year.SPIN_UP_YEARS_ENV: "3,2"}):
             with self.assertRaises(SystemExit):
                 shipped_openings_build.build("rome_100ad")
 

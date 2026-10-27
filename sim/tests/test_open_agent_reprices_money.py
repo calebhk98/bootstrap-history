@@ -6,7 +6,7 @@ import unittest
 from unittest import mock
 
 from sim.engine import opening_money
-from sim.engine.economy_port import EconomyPort
+from sim.markets.port import EconomyPort
 
 QUICK_TOPIC = True
 UNDER_TEST = {"open_agent"}

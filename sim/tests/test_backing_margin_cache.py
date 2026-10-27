@@ -1,4 +1,4 @@
-"""The coin's backing-good margin (sim/engine/economy_port_coin.py) is read from the opened economy of a setup,
+"""The coin's backing-good margin (sim/engine/port_coin.py) is read from the opened economy of a setup,
 which costs a whole opening; it is kept on disk under the setup's digest, so a game built twice on the same
 setup opens the economy once. The kept answer must be the one a fresh opening gives, and a different setup must
 not read it."""
@@ -10,7 +10,7 @@ import unittest
 from unittest import mock
 
 from sim.economy import api as economy_api
-from sim.engine import economy_port_coin
+from sim.markets import port_coin
 
 
 @dataclasses.dataclass
@@ -22,7 +22,7 @@ class _Setup:
 class BackingMarginCacheTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.mkdtemp(prefix="backing_margin_")
-        patch = mock.patch.object(economy_port_coin, "MARGIN_CACHE_DIRECTORY", self.directory)
+        patch = mock.patch.object(port_coin, "MARGIN_CACHE_DIRECTORY", self.directory)
         patch.start()
         self.addCleanup(patch.stop)
         self.opened = []
@@ -33,7 +33,7 @@ class BackingMarginCacheTests(unittest.TestCase):
             return given
         with mock.patch.object(economy_api, "blank_economy", blank), \
                 mock.patch.object(economy_api, "backing_marginal_cost", lambda economy: found):
-            return economy_port_coin._backing_margin(setup)
+            return port_coin._backing_margin(setup)
 
     def test_the_same_setup_opens_the_economy_once(self):
         setup = _Setup({"silver": 2.0})

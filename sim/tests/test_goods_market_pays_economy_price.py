@@ -9,7 +9,7 @@ import types
 import unittest
 
 from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
-from sim.engine.goods_market_api import GoodsMarket
+from sim.markets.goods_market import GoodsMarket
 
 TILE_PRICE_PER_UNIT = {"wheat_kg": 0.08, "silver_kg": 400.0}
 TABLE_PRICE_PER_UNIT = {"wheat_kg": 0.03, "silver_kg": 20.0, "alum_kg": 0.5}     # the cost of making, in the engine's money

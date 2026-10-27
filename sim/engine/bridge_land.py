@@ -5,8 +5,9 @@ built, which the ways code (ways.py) and the labour code still write and read in
 import os
 
 from sim.assembly.api import QUOTE
+from sim.land.api import FinishWays
 
-from .bridge import bridge_view
+from .bridge import bridge_command, bridge_view
 from .mods import get_ordered_mods
 
 MODS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "mods")
@@ -28,3 +29,9 @@ def legacy_improvements(sim):
 def held_techniques(sim, include_starting):
     """The techniques and results held and running, with the civilisation's starting ones or without."""
     return sim.held_and_running(include_starting)
+
+
+@bridge_command(FinishWays)
+def finish_ways(sim, command):
+    """The ways whose build time has passed open; the ways code is still the engine's (ways.py)."""
+    sim.finish_ways()

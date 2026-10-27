@@ -4,7 +4,7 @@ The founder, a firm, the state and the foreign traders deal with `Sim.goods_mark
 
     quote_buy / quote_sell     what an order would cost or fetch: the economy's price on the acting tile,
                                carriage, and the climb the economy's own book gives the order
-                               (goods_market_pricing.py)
+                               (goods_pricing.py)
     buy / sell                 an order from a party (anything with money and goods; a seat
                                is a `SeatParty`), priced along the curve the order climbs
     note_purchase / note_sale  tonnes a party bought or sold this year, counted in the same book
@@ -14,15 +14,14 @@ A party is identified by a string. A seat is its seat id (`state.acting_seat` fo
 a firm or the state is its actor id. A sale by a seat and by a firm are the same entry in the year's
 flows, so they move the clearing price the same way (`sim/world/market.py`); the posted price leaves
 out the asking seat's own orders only, which keep the marginal curves that move a bill as it is filled. The clearing itself
-is the markets module's clearing (sim/markets/clearing.py); who offers what is in goods_market_offers.py.
+is the markets module's clearing (sim/markets/clearing.py); who offers what is in goods_offers.py.
 """
 from sim.ledger.api import ChangeStock
 from sim.world.producer_market import Offer
 
-from . import purchase_rule
-from .goods_market_offers import GoodsOffers
-from .goods_market_pricing import GoodsPricing
-from .sale_orders import tonnes_sold
+from .goods_offers import GoodsOffers
+from .goods_pricing import GoodsPricing
+from .rules import tonnes_sold
 from sim.agents.api import edges
 
 class SeatParty:
@@ -34,7 +33,7 @@ class SeatParty:
 
     def can_pay(self, money):
         with self._sim.act_as(self.party_id):
-            return purchase_rule.can_pay(self._sim, money)
+            return self._sim.can_pay(money)
 
     def pay(self, money, purpose):
         with self._sim.act_as(self.party_id):

@@ -11,7 +11,7 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.engine.economy import EconomyMixin
-from sim.engine.goods_market_api import GoodsMarket
+from sim.markets.goods_market import GoodsMarket
 from sim.markets.module import Markets
 from sim.tests import finance_host, module_harness
 from sim.materials.api import SettleProjectMaterials as SettleCommand

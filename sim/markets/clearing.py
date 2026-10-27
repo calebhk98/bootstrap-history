@@ -16,6 +16,7 @@ price leaves out the founder's flows and counts everyone else's.
 """
 from sim.demography.api import RecordFoodEaten, rules as demography_rules
 from sim.foreign_trade.api import ClosePartnerBooks
+from sim.land.api import FinishWays
 from sim.reporting.api import CloseRealOutput
 from sim.world import market
 
@@ -53,7 +54,7 @@ class Clearing:
 		entry = book.get(commodity)
 		if entry is None:
 			output = self.needs.society_output[commodity]
-			if not output > 0.0 or self._market().commodity_is_unsourced(commodity):
+			if not output > 0.0 or self.goods_market.commodity_is_unsourced(commodity):
 				return None
 			entry = book[commodity] = {
 				"reference_tonnes": output, "capacity_tonnes": output,
@@ -65,7 +66,7 @@ class Clearing:
 		"""(committed demand, founder sales, supply of sellers who take any price, actors' demand, offers of producers who
 		name their cost) from this year's flows and the concerns running. The founder's own orders count only `with_flows`;
 		every other party's always do."""
-		market_api = self._market()
+		market_api = self.goods_market
 		committed = founder_sales = 0.0
 		asking = market_api.acting_party_id
 		if with_flows:
@@ -130,10 +131,10 @@ class Clearing:
 		conditions, outcome = result
 		entry = self.market_entry(commodity)
 		closing_conditions, closing = self.market_outcome(commodity, with_flows=True)
-		market_api = self._market()
+		market_api = self.goods_market
 		# what the market sold, left unsold and left unmet is the agent economy's record; the static book answers
 		# only while the economy opens
-		record = self._economy().agent_market_record(commodity) or {
+		record = self.economy.agent_market_record(commodity) or {
 			"sold": closing.society_sales_tonnes, "unsold": closing.unsold_tonnes,
 			"unmet": closing.unmet_demand_tonnes}
 		return {
@@ -173,9 +174,9 @@ class Clearing:
 
 	def step_market(self, seats=None):
 		"""Close the year: the agent economy's year runs, then the partners' books close on what crossed."""
-		self.needs.legacy_game().finish_ways()
+		self.needs.send(FinishWays())
 		self.open_market_book()
-		economy = self._economy()
+		economy = self.economy
 		economy.run_agent_year()
 		outcome = economy.agent.outcomes[-1]
 		accounts = getattr(outcome, "accounts", None)

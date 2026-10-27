@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.goods_market_pricing import GoodsPricing
+from sim.markets.goods_pricing import GoodsPricing
 
 TILE = (3, 4)
 GOOD = "iron"

@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.economy_port_setup import allowed_entries
+from sim.markets.port_setup import allowed_entries
 from sim.world import demand
 
 PRODUCTION = demand.production_data()

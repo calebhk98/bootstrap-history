@@ -204,13 +204,13 @@ class ShippedData(unittest.TestCase):
         self.assertGreater(seen, 0)
 
     def test_firms_do_not_run_the_mint_recipe(self):
-        from sim.engine import economy_port_setup
+        from sim.markets import port_setup
         production = self.production()
-        allowed = economy_port_setup.allowed_entries(production, {"fin_coined_money"})
+        allowed = port_setup.allowed_entries(production, {"fin_coined_money"})
         self.assertNotIn("struck_silver_coin_kg", allowed)
         civ = {"coin_standard": {"mint_recipe": "struck_silver_coin_kg"}}
-        self.assertEqual(economy_port_setup.mint_recipe_id(civ, production, {"fin_coined_money"}), "struck_silver_coin_kg")
-        self.assertIsNone(economy_port_setup.mint_recipe_id(civ, production, set()))
+        self.assertEqual(port_setup.mint_recipe_id(civ, production, {"fin_coined_money"}), "struck_silver_coin_kg")
+        self.assertIsNone(port_setup.mint_recipe_id(civ, production, set()))
 
     def test_england_states_its_fineness(self):
         with open(os.path.join(DATA, "civilizations", "england_1300.json")) as handle:

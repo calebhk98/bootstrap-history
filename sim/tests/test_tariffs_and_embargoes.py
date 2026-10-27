@@ -14,7 +14,7 @@ from sim.agents import relations
 from sim.agents.trader import route_terms
 from sim.economy.tariffs import duty_transfers
 from sim.economy.types import EDGE_EXTERNAL
-from sim.engine import trade_duty
+from sim.markets import trade_duty
 from sim.actors.world_trade import TradeView
 from sim.engine.mod_stores import StoreBook
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState

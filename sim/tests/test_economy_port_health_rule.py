@@ -6,8 +6,8 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import economy_port_health
-from sim.engine.economy_port_health import health_report, staple_good
+from sim.markets import port_health
+from sim.markets.port_health import health_report, staple_good
 
 OPENING = {"grain_kg": 5.0, "porridge_kg": 9.0, "metal_kg": 1.0}
 
@@ -27,8 +27,8 @@ def report_of(agent, **options):
         calls.append((list(outcomes), staple, list(metals)))
         return {"hunger_share": 0.25}
 
-    with mock.patch.object(economy_port_health.diagnostics, "summary", summary), \
-            mock.patch.object(economy_port_health, "opening_quantities", lambda economy: OPENING):
+    with mock.patch.object(port_health.diagnostics, "summary", summary), \
+            mock.patch.object(port_health, "opening_quantities", lambda economy: OPENING):
         return health_report(agent, **options), calls
 
 
@@ -39,7 +39,7 @@ class HealthReportTests(unittest.TestCase):
         self.assertEqual(calls, [(["year one", "year two"], "grain_kg", ["gold"])])
 
     def test_the_staple_is_the_hunger_needs_largest_opening_good(self):
-        with mock.patch.object(economy_port_health, "opening_quantities", lambda economy: OPENING):
+        with mock.patch.object(port_health, "opening_quantities", lambda economy: OPENING):
             self.assertEqual(staple_good(agent_with([])), "porridge_kg")
 
     def test_a_report_with_no_years_kept_has_no_figures(self):

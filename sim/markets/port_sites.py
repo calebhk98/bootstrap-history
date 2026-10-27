@@ -7,7 +7,7 @@ are worked out keeps a limit of nothing, so the recipe does not fall back to run
 raise is read back each year and drawn from the tile's deposits, the same ledger the seat's mines draw on
 (`state.holdings.deposit_drawn`, sim/engine/mine_deposits.py).
 
-Recipes that fell standing timber are limited by the tile's stock instead (economy_port_timber.py).
+Recipes that fell standing timber are limited by the tile's stock instead (port_timber.py).
 
 Recipes for resources the catalogue lists no ore for (coal, salt, quarries) declare no limit and keep the
 economy's labelled fallback (`UNSITED_EXTRACTION_ANYWHERE`).
@@ -17,7 +17,7 @@ from sim.economy.api import SiteLimit, recipe_tile_key
 from sim.geography.api import ore_goods, ore_tonnes_per_tonne
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import economy_port_timber
+from . import port_timber
 
 SITE_YIELD_FACTOR = 1.0   # an ore recipe's output per run is ore, whatever its grade
 
@@ -39,7 +39,7 @@ def site_limits(sim, outputs_by_recipe, tile_ids=()):
     """[SiteLimit] for the ore recipes among `outputs_by_recipe` ({recipe id: {good: quantity a run}}), from the
     deposits the seat has found and the catalogue's on the partners' tiles among `tile_ids` (the tiles of the
     economy); and for the timber recipes, over `tile_ids`, from each tile's standing wood."""
-    limits = list(economy_port_timber.limits(sim, outputs_by_recipe, tile_ids))
+    limits = list(port_timber.limits(sim, outputs_by_recipe, tile_ids))
     for recipe_id, (resource_id, ore_kg_per_run) in _ore_recipes(sim, outputs_by_recipe).items():
         by_tile = {}
         for row in _worked_by_firms(sim, resource_id, tile_ids):
@@ -52,8 +52,8 @@ def site_limits(sim, outputs_by_recipe, tile_ids=()):
 def deplete(sim, extraction, outputs_by_recipe):
     """Draw what the firms raised last year ({(recipe id, tile): runs}) from the deposits on those tiles, the
     deposits with most left first."""
-    economy_port_timber.fell(sim, extraction, outputs_by_recipe)
-    economy_port_timber.regrow(sim)
+    port_timber.fell(sim, extraction, outputs_by_recipe)
+    port_timber.regrow(sim)
     recipes = _ore_recipes(sim, outputs_by_recipe)
     worked_tiles = {tile for _recipe_id, tile in extraction}
     for (recipe_id, tile), runs in sorted(extraction.items()):

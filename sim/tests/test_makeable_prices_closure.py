@@ -3,7 +3,7 @@ society can run makes it from goods that are themselves kept, and keeps every go
 import unittest
 
 from sim.economy.types import Recipe
-from sim.engine.economy_port_closure import makeable_prices
+from sim.markets.port_closure import makeable_prices
 
 QUICK_TOPIC = True
 
