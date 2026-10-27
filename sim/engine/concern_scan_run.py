@@ -11,7 +11,7 @@ HELD_BUSINESS_ID = "held concerns"
 
 def held_concerns(game) -> List[str]:
     """Nodes the society holds that describe a going concern (they earn or cost to keep up)."""
-    return sorted(node_id for node_id in game.done if game.is_concern_node(node_id))
+    return sorted(node_id for node_id in game.done if game.view("is_concern_node")[node_id])
 
 
 def held_business(game) -> Business:

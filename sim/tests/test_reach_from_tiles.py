@@ -94,7 +94,7 @@ class ReachFromTilesTests(unittest.TestCase):
         self.assertEqual(sim.view("legacy_geography")().region_reach("italia"), max(int(level) for level in sim.view("legacy_geography")().data["reach_levels"]))
 
     def test_no_region_record_carries_a_distance_or_a_reach(self):
-        for region_id, record in _fresh_sim("rome_100ad").geography.regions.items():
+        for region_id, record in _fresh_sim("rome_100ad").view("legacy_geography")().regions.items():
             self.assertFalse({"reach_from_italia", "route_difficulty", "coastal", "reach"} & set(record), region_id)
 
     def test_a_located_material_costs_nothing_extra_where_the_tile_of_a_place_is_held(self):

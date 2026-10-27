@@ -142,9 +142,9 @@ QUICK_SCENARIOS = [
 def build(scenario):
     sim = S.Sim(NODES, ORDER, random.Random(scenario["seed"]), events=scenario["events"],
               manual=False, civ=S.load_civ(scenario["civ"]))
-    sim.goal, sim.done_year = GOAL, {}
+    sim.state._goal, sim.done_year = GOAL, {}
     if scenario["fog"]:
-        sim.fog = True
+        sim.state._fog = True
     return sim
 
 
@@ -160,7 +160,7 @@ def run(scenario, keep_states=False):
     start_time = time.process_time()
     per_year, states = [], []
     for _ in range(scenario["years"]):
-        if sim.dead_reason:
+        if sim.view("founder")()["dead_reason"]:
             break
         sim.step()
         state = state_of(sim)

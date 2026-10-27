@@ -58,14 +58,14 @@ class PortfolioGroupsEveryActiveProject(unittest.TestCase):
     def test_every_active_project_is_in_exactly_one_bottleneck_group(self):
         game = unopened_sim(capital=5_000_000.0)
         for node_id in list(game.order):
-            if len(game.active) >= 6:
+            if len(game.state.projects.active) >= 6:
                 break
-            if node_id not in game.done and game.view("start_check")(node_id, False, None, False)[0]:
+            if node_id not in game.state.projects.done and game.view("start_check")(node_id, False, None, False)[0]:
                 self.assertTrue(_ask(game, cmd="start", id=node_id).get("ok"), node_id)
-        self.assertGreaterEqual(len(game.active), 3)
+        self.assertGreaterEqual(len(game.state.projects.active), 3)
         groups = _ask(game, cmd="portfolio").get("bottlenecks")
         self.assertTrue(groups)
-        self.assertEqual(sorted(project for group in groups for project in group["projects"]), sorted(game.active))
+        self.assertEqual(sorted(project for group in groups for project in group["projects"]), sorted(game.state.projects.active))
 
 
 if __name__ == "__main__":

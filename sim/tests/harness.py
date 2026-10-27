@@ -178,7 +178,7 @@ def sim(civ="rome_100ad", capital=None, manual=True, events=False, surveyed=None
     config = {"start_capital": capital} if capital is not None else None
     test_sim = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
               civ=S.load_civ(civ), cfg=config)
-    test_sim.goal, test_sim.done_year = GOAL, {}
+    test_sim.state._goal, test_sim.done_year = GOAL, {}
     for material in (("coal",) + tuple(_ore_goods(test_sim.view("legacy_world_map")()))) if surveyed is None else tuple(surveyed):
         found_deposits_of(test_sim, material)
     return test_sim
@@ -229,7 +229,7 @@ def found_deposits_of(game, material):
         found = _geography.prospect(tile, resource_id, 1e12, seed, game.view("legacy_world_map")())
         known = {row["id"] for row in resources.seat.deposits_found}
         resources.seat.deposits_found.extend(dict(row) for row in found if row["id"] not in known)
-    return game.found_deposits(material)
+    return game.view("found_deposits")[material]
 
 
 def concern_needing_craftsmen_to_supervise():
@@ -242,11 +242,11 @@ def concern_needing_craftsmen_to_supervise():
     fits = []
     for candidate_id in sorted(NODES):
         node = NODES[candidate_id]
-        if probe.is_venture(candidate_id) and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
-            scholars, craftsmen = probe.venture_hands(candidate_id)
-            if (scholars <= probe.labour.effective_scholars() and cover < craftsmen <= 5.5
-                    and probe.venture_foreman(candidate_id)[0] is None):
-                fits.append((probe.venture_capex(candidate_id), candidate_id))
+        if probe.view("is_venture")[candidate_id] and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
+            scholars, craftsmen = probe.view("venture_hands")[candidate_id]
+            if (scholars <= probe.view("legacy_labour")().effective_scholars() and cover < craftsmen <= 5.5
+                    and probe.view("venture_foreman")[candidate_id][0] is None):
+                fits.append((probe.view("venture_capex")[candidate_id], candidate_id))
     if not fits:
         raise AssertionError("no concern needs craftsmen to supervise")
     return min(fits)[1]
@@ -293,8 +293,8 @@ def run_it(sim_state, *keys):
     player would.
     """
     for key in keys:
-        sim_state.done.add(key)
-        sim_state.operating.add(key)
+        sim_state.state.projects.done.add(key)
+        sim_state.state.projects.operating.add(key)
     sim_state._done_changed()
     return sim_state
 
@@ -460,7 +460,7 @@ def _mk_loom_sim(n_looms, age_years):
     loom_sim = sim(civ="rome_100ad", capital=5_000_000.0)
     # a node earns only from its output, so the chosen concerns are those that take money from it
     candidates = sorted(node_id for node_id in NODES
-                        if loom_sim.is_venture(node_id) and loom_sim.concern_takings(node_id, 1.0) > 0)
+                        if loom_sim.view("is_venture")[node_id] and loom_sim.view("concern_takings")(node_id, 1.0, with_output_factor=True, cost_scale=None) > 0)
     assert len(candidates) >= n_looms, "not enough output-earning venture nodes in the tree"
     chosen = candidates[:n_looms]
     staff = loom_sim.state.seats[loom_sim.state.acting_seat].modules["workforce"]
@@ -470,18 +470,18 @@ def _mk_loom_sim(n_looms, age_years):
     # obtain both its workers and its specialist foreman.
     for trade in S.WAGES:
         staff.employees[trade] = 100.0 * n_looms
-    loom_sim.year = 100
+    loom_sim.state.scenario.year = 100
     for node_id in chosen:
-        loom_sim.done.add(node_id)
+        loom_sim.state.projects.done.add(node_id)
         loom_sim.done_year[node_id] = 100
     loom_sim._done_changed()
     for node_id in chosen:
         for trade, required in NODES[node_id].get("lab", {}).get("trades", {}).items():
             loom_sim.employees[trade] = max(loom_sim.employees.get(trade, 0.0),
                                      float(required) * n_looms)
-        opened, msg = loom_sim.open_venture(node_id)
+        opened, msg = loom_sim.send(OpenVenture(node_id, None))
         assert opened, (node_id, msg)
-    loom_sim.year = 100 + age_years
+    loom_sim.state.scenario.year = 100 + age_years
     return loom_sim, chosen
 
 
@@ -495,6 +495,7 @@ from sim.ui.protocol import parse_typed as _PT
 from sim.ui.protocol import render_state as _RSTATE, render_why as _RWHY
 from sim.ui import protocol as _PROTO
 from sim.ui.protocol import render_portfolio as _RPORT
+from sim.ventures.api import OpenVenture
 
 # `from .harness import *` must hand every topic module everything the old
 # flat script had at global scope, including the (many) leading-underscore

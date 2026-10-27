@@ -106,7 +106,7 @@ def harvest_share_taken(sim, material):
 @bridge_view("concern_rows_stopped", kind=QUOTE)
 def concern_rows_stopped(sim, node_ids):
     """The yearly value of the concerns among `node_ids` that stand stopped."""
-    rows = sim.ledger_concern_rows()
+    rows = sim.view("concern_market")()
     return sum(rows.get(node_id, 0.0) for node_id in node_ids)
 
 

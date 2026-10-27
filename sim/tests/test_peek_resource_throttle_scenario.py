@@ -8,6 +8,7 @@ from sim.engine.saveload import save_state, read_save_text
 from sim.materials.api import ApplyThrottle
 import json
 import tempfile
+from sim.projects.api import StartProject
 
 
 def dump(game):
@@ -19,13 +20,13 @@ def dump(game):
 def made():
 	game = unopened_sim(events=True, surveyed=())
 	for node_id in ("tx2_bleaching_sun", "tx2_count_standard", "clock_mechanical_escapement"):
-		game.start_project(node_id)
+		game.send(StartProject(node_id, False))
 	return game
 
 
 asked, untouched = made(), made()
-node_id = sorted(asked.active)[0]
-factor, binding = asked.peek_project_resource_throttle(node_id)
+node_id = sorted(asked.state.projects.active)[0]
+factor, binding = asked.view("resource_throttle")(node_id)
 def differences(a, b, path=""):
 	if isinstance(a, dict) and isinstance(b, dict):
 		return [d for key in sorted(set(a) | set(b)) for d in

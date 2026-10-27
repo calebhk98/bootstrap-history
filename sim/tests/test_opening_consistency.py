@@ -24,7 +24,7 @@ class OpeningSeedsAreCostsTests(unittest.TestCase):
         from sim.prices.prices import default_production_entries
         game, prices = self.game, self.opening["prices"]
         production = default_production_entries()
-        techniques = frozenset(game.state.projects.granted) | frozenset(game.techniques_in_use())
+        techniques = frozenset(game.state.projects.granted) | frozenset(game.view("techniques_in_use")())
         wage_of = self.costs.wage_function(game.view("legacy_economy")().world, production)
         rent_of = long_run_costs.opening_rent_of(techniques, wage_of, game.civ, production)
         made = making_cost.cost_of_making(good, techniques, prices.get, wage_of, self.opening["rate"], rent_of,

@@ -35,7 +35,7 @@ def run_years(scenario, on_year, current=True, stop_after=None):
     sim = equiv_stress.build(scenario) if scenario.get("stress") else fingerprint.build(scenario)
     years = scenario["years"] if stop_after is None else stop_after + 1
     for index in range(years):
-        if sim.dead_reason:
+        if sim.view("founder")()["dead_reason"]:
             break
         sim.step()
         leaves, rng = state_leaves(sim, current)

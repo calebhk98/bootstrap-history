@@ -17,7 +17,7 @@ class HanRepliesNameNoRomanMoneyTest(unittest.TestCase):
         texts = [json.dumps(S._agent_dispatch(game, NODES, {"cmd": name}))
                  for name in ("status", "money", "help", "land", "labour", "population", "economy")]
         texts += [json.dumps(S._agent_dispatch(game, NODES, {"cmd": "start", "id": node_id}))
-                  for node_id in [node_id for node_id in NODES if node_id not in game.done][:30]]
+                  for node_id in [node_id for node_id in NODES if node_id not in game.state.projects.done][:30]]
         leaks = [self.FORBIDDEN.findall(text) for text in texts if self.FORBIDDEN.search(text)]
         self.assertEqual(leaks, [])
 

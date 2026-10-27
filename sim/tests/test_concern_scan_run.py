@@ -10,6 +10,7 @@ from .harness import check
 
 from sim.agents.api import Business
 from sim.engine import concern_scan_run
+from sim.tests.ui_stand_in import Game
 
 FIELDS = {"node", "owner", "size", "sells", "takings", "upkeep", "wages", "carried", "costs", "margin", "pays"}
 
@@ -41,8 +42,8 @@ class FakeWorld:
 def game(done=("pays", "loses", "knowledge"), seats=(("founder", ["pays"]),), actors=(("firm:1", ["loses"]),)):
     cast = SimpleNamespace(actors={actor_id: SimpleNamespace(record=SimpleNamespace(business=Business.running(plants))) for actor_id, plants in actors},
                            state=SimpleNamespace(home_country=None))
-    return SimpleNamespace(
-        view=lambda name: (lambda: cast) if name == "cast" else FakeWorld, done=set(done),
+    return Game(
+        view=lambda name: FakeWorld, done=set(done),
         is_concern_node=lambda node_id: node_id != "knowledge",
         state=SimpleNamespace(seats={seat_id: SimpleNamespace(projects=SimpleNamespace(business=Business.running(plants))) for seat_id, plants in seats}),
         actors=cast)
