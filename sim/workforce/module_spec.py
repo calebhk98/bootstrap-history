@@ -1,9 +1,9 @@
 """The workforce module's spec (sim/assembly).
 
 Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_workforce.py and
-the other bridge files) under the name the owner will publish, or a view of a module that has moved. Every view the module
-publishes is uncached: the staff and hour fields are still on the household record, which the engine, the actors and the
-screens write directly, so no channel can say when they changed."""
+the other bridge files) under the name the owner will publish, or a view of a module that has moved. A view the module publishes
+is uncached while labour writes the seat's people and hours in place (it keeps no count of its writes), so no channel can say
+when they changed; only the payroll reports its changes (the `staff` channel)."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.demography.api import SetClearedFarmland, SetFarmHoursNeeded
 from sim.ledger.api import PayEdge, ReceiveFromEdge
@@ -12,13 +12,16 @@ from sim.reporting.api import DiscardEventsAfter, RecordAutomation, RecordAutoma
 
 from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, NoteTradeSpread, PressLabour, ReportStaffReduction,
                        ReleaseStaff, ScaleDeputies, SetEmployed, SurviveStaff, TakeWageFallback, UpdateWages)
+from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
+                             ResetTradeHours, SetReserve, SetWageHoursSold, SettleLivingCost, SpendDirectorHours, WatchStaff)
+from .state import STAFF, WorkforceSeat, WorkforceSociety
 from .module import Workforce
 
 READS_BY_OWNER = {
     "core": ("year", "automation", "civilisation", "game_config", "opening_wage_index", "legacy_state", "legacy_game", "legacy_order", "legacy_tree",
              "legacy_dice", "legacy_act_as", "starting_wages", "trades_absent", "trade_notes", "trade_records", "trade_family",
              "wage_schedule_for", "plain_number", "money_text", "legacy_acting_household", "legacy_household_actor"),
-    "seats": ("founder", "acting_country"),
+    "seats": ("founder", "acting_country", "legacy_seats"),
     "polity": ("standing", "rep_factor"),
     "reporting": ("event_log", "last_market_price_ratio", "real_output_per_head", "agent_prices", "agent_wage"),
     "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction", "farm_holdings"),
@@ -44,9 +47,16 @@ _LIVE = dict(cached=False)
 _SEAT = dict(cached=False, seat_scoped=True)
 
 MODULE_SPECS = (ModuleSpec(
-    "workforce", Workforce,
+    "workforce", Workforce, channels=(STAFF,), world_state=WorkforceSociety, seat_state=WorkforceSeat,
     publishes=(
         ViewSpec("staff", "staff", **_SEAT),
+        ViewSpec("staff_version", "staff_version", **_SEAT),
+        ViewSpec("staff_on_all_books", "staff_on_all_books", kind=KEYED, **_LIVE),
+        ViewSpec("training_queue", "training_queue", **_SEAT),
+        ViewSpec("hour_commitments", "hour_commitments", **_SEAT),
+        ViewSpec("pay_book", "pay_book", **_SEAT),
+        ViewSpec("trade_schools", "trade_schools", **_SEAT),
+        ViewSpec("worker_housing_places", "worker_housing_places", **_SEAT),
         ViewSpec("staff_snapshot", "staff_snapshot", **_SEAT),
         ViewSpec("headcount", "headcount", **_SEAT),
         ViewSpec("hours_available", "hours_available", kind=KEYED, **_SEAT),
@@ -89,10 +99,15 @@ MODULE_SPECS = (ModuleSpec(
              (SurviveStaff, "survive_staff"), (ScaleDeputies, "scale_deputies"), (ReportStaffReduction, "report_staff_reduction"),
              (AllocateFarmWorkforce, "allocate_farm_workforce"), (ApplyLandClearing, "apply_land_clearing"),
              (UpdateWages, "update_wages"), (ReleaseStaff, "release_staff"), (TakeWageFallback, "take_wage_fallback"),
-             (CloseHoursYear, "close_hours_year")),
+             (CloseHoursYear, "close_hours_year"),
+             (AllocateHours, "allocate_hours"), (ReleaseHours, "release_hours"), (OrderWork, "order_work"), (CancelWork, "cancel_work"),
+             (DrawTradeHours, "draw_trade_hours"), (ResetTradeHours, "reset_trade_hours"), (SpendDirectorHours, "spend_director_hours"),
+             (SettleLivingCost, "settle_living_cost"), (SetWageHoursSold, "set_wage_hours_sold"), (SetReserve, "set_reserve"),
+             (BleedStaff, "bleed_staff"), (DisperseDependants, "disperse_dependants"), (LoseCrew, "lose_crew"), (WatchStaff, "watch_staff"),
+             (BuildHousing, "build_housing")),
     phases=(PhaseHook("apprenticeships", "step_apprenticeships"), PhaseHook("staff", "step_staff"),
             PhaseHook("seat_prelude", "step_prelude")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(PayEdge, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, DiscardEventsAfter, AddReputation, ScaleFamiliarity, ScaleProtection,
-           SetClearedFarmland, SetFarmHoursNeeded, BuildHousing),
+           SetClearedFarmland, SetFarmHoursNeeded),
 ),)

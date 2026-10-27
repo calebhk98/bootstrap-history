@@ -4,6 +4,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 
 from sim.refusal import cause_of, facts_of
 from sim.tests.workforce_host import workforce_over
@@ -39,7 +40,7 @@ class _Labour:
 def _game(employees):
     labour = _Labour(employees)
     household = types.SimpleNamespace(employees=employees, log=[])
-    host = types.SimpleNamespace(state=types.SimpleNamespace(household=household, scenario=types.SimpleNamespace(year=120)),
+    host = types.SimpleNamespace(workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household, scenario=types.SimpleNamespace(year=120)),
                                  labour=labour)
     host.module = workforce_over(host)
     return host

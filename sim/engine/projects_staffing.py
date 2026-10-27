@@ -235,12 +235,13 @@ class StaffingMixin:
         if not projects.operating:
             return []
         sch_used, art_used = self.venture_staff_used()
+        staff = self.view("staff")()
         own = self.FOUNDER_IS_WORTH if self.founder_alive else 0.0
         concerns = [{"id": node_id, "name": self.nodes[node_id]["name"], "revenue": self.nodes[node_id]["rev"],
                      "upkeep": self.nodes[node_id]["up"], "hands": self.venture_hands(node_id)}
                     for node_id in sorted(projects.operating)]
         return staffing_warning_rows(
-            concerns, self.labour.effective_scholars(), household.artisans + own, household.scholars, household.artisans,
+            concerns, self.labour.effective_scholars(), staff["artisans"] + own, staff["scholars"], staff["artisans"],
             sch_used, art_used, bool(self.cfg.get("immortal")) or not self.founder_alive,
             self.STAFFING_CLOSURE_SLACK, self.STAFFING_WARNING_BAND, self.STAFFING_NO_SLACK_BAND, limit,
             lambda kind: next(why for node, why in self.STAFF_SOURCES[kind] if node == "HIRE"),

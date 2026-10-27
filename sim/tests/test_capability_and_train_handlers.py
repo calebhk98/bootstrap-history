@@ -21,7 +21,7 @@ def _ventures_stand_in(idle):
     labour = SimpleNamespace(craft_trades_report=lambda: {"craft": ["smith"], "not_craft": ["labourer"]},
                              effective_scholars=lambda: 1.0)
     return SimpleNamespace(
-        CAPABILITY_INSTITUTIONS=frozenset({CAPABILITY}), FOUNDER_IS_WORTH=1.0, founder_alive=True, artisans=2.0,
+        CAPABILITY_INSTITUTIONS=frozenset({CAPABILITY}), FOUNDER_IS_WORTH=1.0, founder_alive=True, view=lambda name: (lambda: {"artisans": 2.0}),
         done=set(idle), operating=set(), labour=labour, policy={}, year=100, capital=1000.0,
         state=SimpleNamespace(projects=SimpleNamespace(keep_staffed=set()), seat_progress=SimpleNamespace(_said_explanations=None)),
         is_venture=lambda node_id: True, venture_capex=lambda node_id: 100.0, venture_staff_free=lambda: (1.0, 1.0),

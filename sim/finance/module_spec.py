@@ -11,6 +11,7 @@ from sim.assembly.api import QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.polity.api import SetReputation
 from sim.reporting.api import RecordEvent
 from sim.resources.api import MothballMines
+from sim.workforce.api import BleedStaff, DisperseDependants
 
 from . import commands
 from .module import Finance
@@ -25,7 +26,7 @@ READS_BY_OWNER = {
 	"mechanics": ("effect_sum", "effect_values", "nodes_with_mechanic"),
 	"polity": ("standing",),
 	"resources": ("forest_hectares", "mine_operating_cost"),
-	"workforce": ("money_per_labour_hour", "labour_market", "wage_bill", "household_bill_per_person", "household_dependant_people",
+	"workforce": ("staff", "money_per_labour_hour", "labour_market", "wage_bill", "household_bill_per_person", "household_dependant_people",
 	              "held_trade"),
 	"production": ("revenue_capacity", "revenue_estimate", "upkeep", "operating", "cash_remedies"),
 	"projects": ("committed_cost", "legacy_projects"),
@@ -79,5 +80,5 @@ MODULE_SPECS = (ModuleSpec(
 	),
 	phases=(PhaseHook("credit_limit", "step_credit_limit"),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(RecordEvent, SetReputation, MothballMines),
+	sends=(RecordEvent, SetReputation, MothballMines, BleedStaff, DisperseDependants),
 ),)

@@ -26,9 +26,13 @@ class Society(RebuildMixin):
                 done.add(dependent)
         self.state = SimpleNamespace(
             projects=SimpleNamespace(done=done, active={}),
-            household=SimpleNamespace(employees={trade: 5.0 for trade in practitioners}))
+            household=SimpleNamespace())
+        self._employees = {trade: 5.0 for trade in practitioners}
         self.hedge_chance = hedge_chance
         self.forgotten = {NODE: 100} if forgotten else {}
+
+    def view(self, name):
+        return lambda: {"employees": self._employees}
 
     def corpus_hedge(self):
         return self.hedge_chance, None, None

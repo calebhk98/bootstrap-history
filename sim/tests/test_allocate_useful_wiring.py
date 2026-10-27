@@ -2,6 +2,7 @@
 (the rule is `capped_to_useful`, in test_workforce_advice_and_allocate_cap), and the cap is stored and reported."""
 QUICK_TOPIC = True
 
+from sim.tests import workforce_stand_in
 import types
 import unittest
 
@@ -11,8 +12,8 @@ NODES = {"project": {"name": "A project"}}
 
 
 def game(useful_hours):
-    return types.SimpleNamespace(active={"project": {}}, hour_allocations={},
-                                 project_useful_hours=lambda node_id: useful_hours)
+    return workforce_stand_in.Game(active={"project": {}}, hour_allocations={},
+                                   project_useful_hours=lambda node_id: useful_hours)
 
 
 class AllocateUsefulWiringTests(unittest.TestCase):

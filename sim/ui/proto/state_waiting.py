@@ -91,9 +91,9 @@ def _staff_fraction_note(sim):
     company's headcount can be "40.5 FTE" without anyone being cut in
     half. Arithmetic is unchanged; this only names what the number means.
     """
-    if (abs(sim.scholars - round(sim.scholars)) < 0.02
-            and abs(sim.artisans - round(sim.artisans)) < 0.02
-            and all(abs(value - round(value)) < 0.02 for value in sim.employees.values())):
+    if (abs(sim.view("staff")()["scholars"] - round(sim.view("staff")()["scholars"])) < 0.02
+            and abs(sim.view("staff")()["artisans"] - round(sim.view("staff")()["artisans"])) < 0.02
+            and all(abs(value - round(value)) < 0.02 for value in sim.view("staff")()["employees"].values())):
         return None
     return ("these are continuous full-time-equivalents, not a count of "
             "whole people: hiring phases in, training takes years, and "

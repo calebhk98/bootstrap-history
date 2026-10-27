@@ -8,6 +8,9 @@ from .harness import check
 from sim.agents.household import Household
 from sim.engine.economy import EconomyMixin
 from sim.engine.state import SimulationState, HouseholdState, ProjectsState, ScenarioState
+from sim.tests import module_harness
+from sim.workforce.api import WatchStaff, WorkforceSeat
+from sim.workforce.module import Workforce
 
 
 class ContainerGame(EconomyMixin):
@@ -17,9 +20,20 @@ class ContainerGame(EconomyMixin):
 		self.state = SimulationState(household=HouseholdState(capital=1000), projects=ProjectsState(),
 									 scenario=ScenarioState())
 		self.household = Household(starting_capital=1000.0, operating_changed=self._operating_changed,
-								   active_changed=self._active_changed, workforce_changed=self._workforce_changed,
+								   active_changed=self._active_changed,
 								   state=self.state)
 
+
+def _staff_module():
+	"""The workforce module over a fresh seat, its payroll watched."""
+	module = module_harness.build(Workforce, seat=WorkforceSeat())
+	module.seat_slot_of = lambda seat_id: module.seat
+	module.clock.act_as("founder")
+	module.watch_staff(WatchStaff("founder"))
+	return module
+
+
+WORKFORCE = _staff_module()
 
 # One household for the container and version-counter tests (each only adds and removes its own entries and compares
 # versions relative to its own start).
@@ -121,9 +135,9 @@ def _test_nested_mutation_invalidation():
 		return False, f"_active_ver did not increment on outer active |=: {ver_after_nested_ior} -> {ver_after_outer_ior}"
 
 	# 6. In-place dictionary update |= on workforce employees dict
-	initial_workforce_ver = getattr(sim_inst.household, "_workforce_ver", 0)
-	sim_inst.household.employees |= {"smith": 5.0}
-	ver_after_workforce_ior = getattr(sim_inst.household, "_workforce_ver", 0)
+	initial_workforce_ver = WORKFORCE.staff_version()
+	WORKFORCE.seat.employees |= {"smith": 5.0}
+	ver_after_workforce_ior = WORKFORCE.staff_version()
 	if ver_after_workforce_ior <= initial_workforce_ver:
 		return False, f"_workforce_ver did not increment on employees |=: {initial_workforce_ver} -> {ver_after_workforce_ior}"
 
@@ -137,43 +151,43 @@ check("nested mutation and alias invalidation", _ok, _detail)
 def _test_workforce_container_api_completeness():
 	"""Edge case: dictionary mutating APIs on household.employees increment _workforce_ver."""
 	sim_inst = CONTAINERS
-	sim_inst.household.employees["smith"] = 5.0
-	ver0 = getattr(sim_inst.household, "_workforce_ver", 0)
+	WORKFORCE.seat.employees["smith"] = 5.0
+	ver0 = WORKFORCE.staff_version()
 
 	# setdefault on existing key should not increment version
-	existing_val = sim_inst.household.employees.setdefault("smith", 10.0)
-	ver_after_existing = getattr(sim_inst.household, "_workforce_ver", 0)
+	existing_val = WORKFORCE.seat.employees.setdefault("smith", 10.0)
+	ver_after_existing = WORKFORCE.staff_version()
 	if ver_after_existing != ver0 or existing_val != 5.0:
 		return False, f"setdefault on existing key fired invalidation: {ver0} != {ver_after_existing}"
 
 	# setdefault on new key should increment version
-	new_val = sim_inst.household.employees.setdefault("carpenter", 8.0)
-	ver_after_new = getattr(sim_inst.household, "_workforce_ver", 0)
+	new_val = WORKFORCE.seat.employees.setdefault("carpenter", 8.0)
+	ver_after_new = WORKFORCE.staff_version()
 	if ver_after_new <= ver_after_existing or new_val != 8.0:
 		return False, f"setdefault on new key did not increment version: {ver_after_existing} -> {ver_after_new}"
 
 	# update with non-empty dict should increment version
-	sim_inst.household.employees.update({"mason": 4.0})
-	ver_after_update = getattr(sim_inst.household, "_workforce_ver", 0)
+	WORKFORCE.seat.employees.update({"mason": 4.0})
+	ver_after_update = WORKFORCE.staff_version()
 	if ver_after_update <= ver_after_new:
 		return False, f"update did not increment version: {ver_after_new} -> {ver_after_update}"
 
 	# pop should increment version
-	popped_val = sim_inst.household.employees.pop("mason")
-	ver_after_pop = getattr(sim_inst.household, "_workforce_ver", 0)
+	popped_val = WORKFORCE.seat.employees.pop("mason")
+	ver_after_pop = WORKFORCE.staff_version()
 	if ver_after_pop <= ver_after_update or popped_val != 4.0:
 		return False, f"pop did not increment version: {ver_after_update} -> {ver_after_pop}"
 
 	# popitem should increment version
-	sim_inst.household.employees.popitem()
-	ver_after_popitem = getattr(sim_inst.household, "_workforce_ver", 0)
+	WORKFORCE.seat.employees.popitem()
+	ver_after_popitem = WORKFORCE.staff_version()
 	if ver_after_popitem <= ver_after_pop:
 		return False, f"popitem did not increment version: {ver_after_pop} -> {ver_after_popitem}"
 
 	# clear should increment version
-	sim_inst.household.employees.clear()
-	ver_after_clear = getattr(sim_inst.household, "_workforce_ver", 0)
-	if ver_after_clear <= ver_after_popitem or len(sim_inst.household.employees) != 0:
+	WORKFORCE.seat.employees.clear()
+	ver_after_clear = WORKFORCE.staff_version()
+	if ver_after_clear <= ver_after_popitem or len(WORKFORCE.seat.employees) != 0:
 		return False, f"clear did not increment version: {ver_after_popitem} -> {ver_after_clear}"
 
 	return True, "workforce container dictionary APIs comprehensively track invalidation"

@@ -12,6 +12,8 @@ from types import SimpleNamespace
 from sim.engine import tree_merge, validate_action_results
 from sim.engine.projects_completion import CompletionMixin
 from sim.engine.forward_hazards import HazardsForwardsMixin
+from sim.tests import module_harness
+from sim.workforce.module import Workforce
 
 
 class _Host(HazardsForwardsMixin):
@@ -21,7 +23,12 @@ class _Host(HazardsForwardsMixin):
         self.nodes = {"voyage": {"id": "voyage", "risks": risks} if risks is not None else {"id": "voyage"}}
         self.state = SimpleNamespace(household=SimpleNamespace(employees=dict(employees or {})))
         self.rng = random.Random(seed)
+        self.view = lambda name: (lambda: {"employees": self.state.household.employees})
         self.stock = dict(stock or {})
+
+    def send(self, command):
+        module = module_harness.build(Workforce, seat=self.state.household, views={"legacy_dice": self.rng})
+        return module.lose_crew(command)
 
     def stock_held(self, material):
         return self.stock.get(material, 0.0)

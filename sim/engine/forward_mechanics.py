@@ -120,11 +120,11 @@ class ForwardMechanicsMixin:
 
     def deputy_hours(self):
         """Hours a year the deputies work, however small a fraction of a deputy."""
-        return self.state.household.directors_extra * self.cfg["director_hours_per_year"]
+        return self.view("staff")()["directors_extra"] * self.cfg["director_hours_per_year"]
 
     def deputies_carry_the_work(self):
         """Whether the deputies are enough to go on without the founder."""
-        return self.state.household.directors_extra >= self.DEPUTIES_CARRY_THE_WORK_FROM
+        return self.view("staff")()["directors_extra"] >= self.DEPUTIES_CARRY_THE_WORK_FROM
 
     def founder_age(self):
         return self.cfg["founder_arrival_age"] + self.state.scenario.year - self.cfg["start_year"]

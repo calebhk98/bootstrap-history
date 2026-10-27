@@ -2,6 +2,7 @@
 people sought; a release row names the people let go; a refusal is a skip only when shut concerns need the hands."""
 QUICK_TOPIC = True
 
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
@@ -25,7 +26,7 @@ def world(held, found, accepts=True):
 
     labour = SimpleNamespace(stochastic_round=lambda target: int(target), hire_buying_room=hire_buying_room, fire=fire,
                              supervision_room=lambda: 3.0)
-    host = SimpleNamespace(state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)), labour=labour)
+    host = SimpleNamespace(workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)), labour=labour)
     host.module = workforce_over(host, legacy_household_actor=SimpleNamespace(_staff_scale=1.0))
     return host
 

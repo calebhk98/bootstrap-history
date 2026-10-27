@@ -16,9 +16,11 @@ YEAR = 100
 def stub_game(supply, training):
     """A game whose labour market has these hands by trade and whose household has these trainees: (label, year they
     join, trade, how many)."""
+    rows = [list(row) for row in training]
     return SimpleNamespace(
         labour=SimpleNamespace(market_supply=lambda trade: supply.get(trade, 0.0)),
-        state=SimpleNamespace(scenario=SimpleNamespace(year=YEAR), household=SimpleNamespace(training=[list(row) for row in training])),
+        view=lambda name: (lambda: rows),
+        state=SimpleNamespace(scenario=SimpleNamespace(year=YEAR)),
         nodes={"project": {"lab": {"machinist": 50.0, "smith": 20.0, "idle_trade": 0.0}}})
 
 

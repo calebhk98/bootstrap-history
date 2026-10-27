@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.workforce.api import ResetTradeHours
 from sim.engine.step_phase_projects import ProjectProgressPhaseMixin
 
 
@@ -17,9 +18,12 @@ class _Phase(ProjectProgressPhaseMixin):
         self.take = take_per_project
         self.turns = []
         self.unused_reported = None
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(
-            trade_hours_used={"stale": 1.0}, active={node_id: {} for node_id in queue}))
+        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(active={node_id: {} for node_id in queue}))
+        self.reset = []
         self.nodes = {node_id: {} for node_id in queue}
+
+    def send(self, command):
+        self.reset.append(command)
 
     def hour_priority_queue(self):
         return list(self.queue)
@@ -62,7 +66,7 @@ class QueueWalkTests(unittest.TestCase):
         self.assertEqual((remaining, remaining_after_projects, effective), (1700.0, 1700.0, 150.0))
 
     def test_the_trade_hours_used_start_afresh_each_year(self):
-        self.assertEqual(self.phase.state.projects.trade_hours_used, {})
+        self.assertEqual(self.phase.reset, [ResetTradeHours()])
 
 
 class _Stage(ProjectProgressPhaseMixin):

@@ -93,7 +93,7 @@ def _stuck_started_nothing(sim, _startable, _afford, saving=False):
     # command - whose whole job is "why you are not getting on" - must not
     # report "you have work in hand, money to pay for it and people to do
     # it" when no project is actually active.
-    if sim.active or sim.training:
+    if sim.active or sim.view("training_queue")():
         return None
     _cheap = (min(_afford or _startable, key=lambda k: sim.project_cost(k))
               if (_afford or _startable) and not saving else None)

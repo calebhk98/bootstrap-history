@@ -30,51 +30,11 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"capital": "household",
 	"total_spend": "household",
 	"bounties_paid": "household",
-	"wages_paid": "household",
-	"wages_prepaid": "household",
-	"wages_earned": "household",
-	"interest_paid": "household",
 	"cash_flow": "household",
 	"cash_mark": "household",
 	"cash_periods": "household",
-	"slaves": "household",
-	"freedmen": "household",
-	"manumitted_total": "household",
-	"bondage_years_left": "household",
-	"bondage_debt": "household",
-	"credit_frozen_until": "household",
-	"insolvent_years": "household",
-	"last_settlement": "household",
-	"interest_arrears": "household",
-	"arrears_years": "household",
 	"spend_last_year": "household",
-	"scholars": "household",
-	"artisans": "household",
-	"directors_extra": "household",
-	"employees": "household",
-	"trades_created": "household",
-	"trades_endemic": "household",
-	"trade_introduced_year": "household",
-	"contract_hours": "household",
-	"commissioned": "household",
-	"teaching_hours_this_year": "household",
-	"relocation_hours_this_year": "household",
-	"supervision_hours_this_year": "household",
 	"base_tile": "household",
-	"hour_allocations": "household",
-	"work_trade": "household",
-	"last_taught": "household",
-	"training": "household",
-	"wage_hours_this_year": "household",
-	"wage_income_this_year": "household",
-	"wage_work_last_year": "household",
-	"granted_staff": "household",
-	"hours_this_year": "household",
-	"trade_schools": "household",
-	"labour_pressure_records": "household",
-	"worker_housing_places": "household",
-	"_said_deputies": "household",
-	"_said_near_limit": "household",
 	"_said_autoopen": "household",
 
 	# ProjectsState
@@ -88,7 +48,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"granted": "projects",
 	"opened_year": "projects",
 	"paid_towards": "projects",
-	"trade_hours_used": "projects",
 	"revealed": "projects",
 	"stalled": "projects",
 	"closures": "projects",
@@ -97,12 +56,9 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	# EconomyState
 	"market_pressure": "holdings",
 	"_material_stock_ledger": "holdings",
-	"society_labour_hours": "economy",
 	"_dashboard_history": "holdings",
 
 	# FounderState
-	"director_hours_spent_founder": "founder",
-	"living_cost_paid": "founder",
 	"policy": "founder",
 	"_founder_death_aged": "founder",
 	"_founder_death_year": "founder",
@@ -118,18 +74,11 @@ _VERSION_MAP: Dict[str, str] = {
 	"_operating_ver": "projects",
 	"_done_ver": "projects",
 	"_active_ver": "projects",
-	"_workforce_ver": "household",
 	"_inst_units_ver": "household",
 }
 
 _LAZY_FIELDS: Set[str] = {
-	"wages_earned",
-	"interest_paid",
 	"spend_last_year",
-	"granted_staff",
-	"hours_this_year",
-	"trade_schools",
-	"worker_housing_places",
 	"done_year",
 	"_material_stock_ledger",
 	"_dashboard_history",
@@ -149,7 +98,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 		starting_capital: float = 0.0,
 		operating_changed: Optional[Callable[[], None]] = None,
 		active_changed: Optional[Callable[[], None]] = None,
-		workforce_changed: Optional[Callable[[], None]] = None,
 		state: Optional[Any] = None,
 		port: Optional[Any] = None,
 	) -> None:
@@ -173,12 +121,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 				 for k, v in (self._state.projects.active or {}).items()},
 				on_change=active_changed
 			)
-		if workforce_changed is not None:
-			self._state.household.employees = _InvalidatingDict(
-				self._state.household.employees or {},
-				on_change=workforce_changed
-			)
-
 		# Version counters attached to owning subsystems
 		self.start_version_counters(self._state)
 
@@ -249,9 +191,14 @@ class Household(FounderReview, FounderBorrowing, Actor):
 	def set_defiance(self, level: float) -> None:
 		self._polity().defiance = level
 
+	def _workforce(self) -> Any:
+		"""The acting seat's workforce slot: its payroll is the household actor's `workforce` (a debt: the household is not yet an
+		actor the workforce module serves through its views)."""
+		return self._state.seats[self._state.acting_seat].modules["workforce"]
+
 	@property
 	def workforce(self) -> Any:
-		return self.employees
+		return self._workforce().employees
 
 	@property
 	def knowledge(self) -> Any:
@@ -301,14 +248,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 		self._state.projects.operating = value
 
 	@property
-	def employees(self) -> Any:
-		return self._state.household.employees
-
-	@employees.setter
-	def employees(self, value: Any) -> None:
-		self._state.household.employees = value
-
-	@property
 	def failed_attempts(self) -> Any:
 		return self._state.projects.failed_attempts
 
@@ -351,14 +290,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 		setattr(self._state.projects, "_active_ver", int(value))
 
 	@property
-	def _workforce_ver(self) -> int:
-		return int(getattr(self._state.household, "_workforce_ver", 0))
-
-	@_workforce_ver.setter
-	def _workforce_ver(self, value: int) -> None:
-		setattr(self._state.household, "_workforce_ver", int(value))
-
-	@property
 	def _inst_units_ver(self) -> int:
 		return int(getattr(self._state.household, "_inst_units_ver", 0))
 
@@ -379,10 +310,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 		return self._active_ver
 
 	@property
-	def workforce_version(self) -> int:
-		return self._workforce_ver
-
-	@property
 	def institution_units_version(self) -> int:
 		return self._inst_units_ver
 
@@ -395,9 +322,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 	def bump_active_version(self) -> None:
 		self._active_ver = self._active_ver + 1
 
-	def bump_workforce_version(self) -> None:
-		self._workforce_ver = self._workforce_ver + 1
-
 	def bump_institution_units_version(self) -> None:
 		self._inst_units_ver = self._inst_units_ver + 1
 
@@ -409,8 +333,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 			state.projects._done_ver = 0  # type: ignore[attr-defined]
 		if getattr(state.projects, "_active_ver", None) is None:
 			state.projects._active_ver = 0  # type: ignore[attr-defined]
-		if getattr(state.household, "_workforce_ver", None) is None:
-			state.household._workforce_ver = 0  # type: ignore[attr-defined]
 		if getattr(state.household, "_inst_units_ver", None) is None:
 			state.household._inst_units_ver = 0  # type: ignore[attr-defined]
 

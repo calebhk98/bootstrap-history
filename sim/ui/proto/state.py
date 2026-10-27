@@ -35,8 +35,8 @@ def _agent_state_founder(sim):
         # would have to parse. See _founder_death_info.
         "founder_died_aged": (_founder_death_info(sim) or {}).get("aged_about"),
         "founder_died_in": (_founder_death_info(sim) or {}).get("year"),
-        "scholars": round(sim.scholars, 2), "artisans": round(sim.artisans, 2),
-        "directors_extra": round(sim.directors_extra, 2),
+        "scholars": round(sim.view("staff")()["scholars"], 2), "artisans": round(sim.view("staff")()["artisans"], 2),
+        "directors_extra": round(sim.view("staff")()["directors_extra"], 2),
         "succession": succession_block(sim),
     }
 
@@ -112,8 +112,8 @@ def _agent_state_progress(sim, active):
             "artisans": sim.labour.staff_advice("artisans"),
         },
         "where_the_money_comes_from": sim.revenue_sources(),
-        "employees": {trade: round(value, 2) for trade, value in sorted(sim.employees.items()) if value > 0.005},
-        "employees_total": round(sum(sim.employees.values()), 2),
+        "employees": {trade: round(value, 2) for trade, value in sorted(sim.view("staff")()["employees"].items()) if value > 0.005},
+        "employees_total": round(sum(sim.view("staff")()["employees"].values()), 2),
         "household_places_used_of_all": "%.1f of %.1f"
             % (sim.labour.headcount(), sim.labour.headcount() + max(0.0, sim.labour.household_room())),
         "annual_wage_bill": round(sim.labour.wage_bill(), 1),
@@ -139,12 +139,12 @@ def _agent_state_progress(sim, active):
         # its own docstring. `labour` shows the identical fractional counts
         # and must say the identical thing about them.
         "staff_are_fractional_because": _staff_fraction_note(sim),
-        "trades_you_created": sorted(sim.trades_created),
+        "trades_you_created": sorted(sim.view("trade_spread")()["created"]),
         # WHICH OF THOSE THE SOCIETY NOW SUPPLIES ON ITS OWN. See
         # SocietyMixin.advance_society (society.py): once a taught trade has
         # been established long enough, with schools actually running, it
         # stops being only the founder's secret.
-        "trades_society_now_has_on_its_own": sorted(sim.trades_endemic),
+        "trades_society_now_has_on_its_own": sorted(sim.view("trade_spread")()["endemic"]),
         "mothballed": sorted(getattr(sim, "mothballed", set())),
         "policy": dict(sim.policy),
         "in_bondage_for_debt": round(sim.bondage_years_left, 1),
@@ -204,7 +204,7 @@ def _agent_state_risk_and_pressure(sim, full=True):
         "resource_throttle": round(sim.view("material_throttle")(), 3), "throttle_binding": sim.view("material_binding")(),
         "forest_ha": round(sim.view("forest_hectares")(), 1),
         "mine_capacity": {material: round(value, 1) for material, value in sim.view("mine_capacity")().items()},
-        "slaves": sim.slaves, "freedmen": sim.freedmen,
+        "slaves": sim.view("staff")()["slaves"], "freedmen": sim.view("staff")()["freedmen"],
         "scholars_including_you": round(sim.labour.effective_scholars(), 2),
     }
 

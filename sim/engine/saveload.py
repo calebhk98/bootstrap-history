@@ -136,6 +136,9 @@ def _get_field(blob, field_name):
         sec = seat.get(section)
         if isinstance(sec, dict) and field_name in sec:
             return sec[field_name]
+    sec = (seat.get("modules") or {}).get("workforce")   # the trade name sets are the workforce module's
+    if isinstance(sec, dict) and field_name in sec:
+        return sec[field_name]
     return None
 
 

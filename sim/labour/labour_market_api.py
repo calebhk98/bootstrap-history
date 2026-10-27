@@ -71,7 +71,7 @@ class LabourMarket:
     # ---- pressure: what recent hiring has done to a trade's local price ----
 
     def _records(self):
-        return self._world.state.household.labour_pressure_records
+        return self._world.workforce.labour_pressure_records
 
     def standing_draw(self, trade):
         """Hours a year of this trade that standing staff already take out of its pool: trades drawn
@@ -88,7 +88,7 @@ class LabourMarket:
         if not record:
             return 0.0
         hours, year = record
-        age = max(0.0, self._world.state.scenario.year - year)
+        age = max(0.0, self._world.year - year)
         return hours * (self.LABOUR_PRESSURE_DECAY_RATE ** age)
 
     def pressure(self, trade):
@@ -107,7 +107,7 @@ class LabourMarket:
     def press(self, trade, hours):
         """Record demand for `hours` a year of a trade that is not a hire (teaching pulls a trade's
         people off their bench, a commission buys their time)."""
-        self._records()[trade] = (self.recent_pressure(trade) + max(0.0, hours), self._world.state.scenario.year)
+        self._records()[trade] = (self.recent_pressure(trade) + max(0.0, hours), self._world.year)
 
     def clear_pressure(self):
         self._records().clear()
@@ -168,7 +168,7 @@ class LabourMarket:
         dwellings plus the worker housing built in it."""
         world = self._world
         return (self._labour.home_town_population_estimate() * self.TOWN_SPARE_HOUSING_SHARE
-                + max(0.0, world.state.household.worker_housing_places or 0.0))
+                + max(0.0, world.workforce.worker_housing_places or 0.0))
 
     def town_workers(self):
         """People every employer in the town has on its books: the founder's household and every
@@ -273,4 +273,4 @@ class LabourMarket:
         if not record:
             return
         remaining = max(0.0, self.recent_pressure(trade) - max(0.0, hours))
-        self._records()[trade] = (remaining, self._world.state.scenario.year)
+        self._records()[trade] = (remaining, self._world.year)

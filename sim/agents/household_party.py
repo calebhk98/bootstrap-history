@@ -88,7 +88,7 @@ class HouseholdParty:
 	@property
 	def workforce(self) -> Any:
 		with self._acting():
-			return self.household.employees
+			return self.household.workforce
 
 	@property
 	def knowledge(self) -> Any:

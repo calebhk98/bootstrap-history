@@ -28,8 +28,8 @@ def _literacy(sim):
 
 
 def _reserve(sim):
-    household = sim.state.household
-    return {"craftsmen": household.reserve_craftsmen, "scholars": household.reserve_scholars,
+    staff = sim.view("staff")()
+    return {"craftsmen": staff["reserve_craftsmen"], "scholars": staff["reserve_scholars"],
             "policy_on": bool(sim.policy.get("reserve_staff", False))}
 
 

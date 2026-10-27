@@ -23,13 +23,16 @@ def a_game(hours_fielded, node=NODE, active=None):
     game.nodes = {"p": node}
     game.state = SimpleNamespace(projects=SimpleNamespace(trade_hours_used={}, active=active or {}, active_keys_sorted=lambda: sorted(active or {})))
     game.labour = SimpleNamespace(hours_you_can_call_on=lambda trade: hours_fielded)
+    game.seat = SimpleNamespace(trade_hours_used={})
+    game.view = lambda name: (lambda: {"trade_hours_used": game.seat.trade_hours_used})
+    game.send = lambda command: game.seat.trade_hours_used.__setitem__(command.trade, game.seat.trade_hours_used.get(command.trade, 0.0) + command.hours)
     game.lab_max_span = lambda node_id: 40.0
     game.trade_shortage_kind = lambda trade, need, demand=None: "staffing"
     return game
 
 
 def year_of_draw(game, project_state):
-    game.state.projects.trade_hours_used = {}
+    game.seat.trade_hours_used.clear()
     return game.lab_year_draw("p", project_state, 0.1, 1.0e9)
 
 

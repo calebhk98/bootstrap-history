@@ -308,7 +308,7 @@ def _score_achievements(sim, nodes):
                 and getattr(sim, "interest_paid", 0.0) <= 0.0),
         "what": "never spent a year insolvent or paid a denarius of interest"}
     out["free_hands_only"] = {
-        "won": (sim.slaves == 0 and sim.manumitted_total == 0),
+        "won": (sim.view("staff")()["slaves"] == 0 and sim.view("staff")()["manumitted_total"] == 0),
         "what": "built it without ever owning a slave"}
     floor = _score_goal_floor_years(sim, nodes)
     out["outpaced_the_fastest_plan"] = {

@@ -9,6 +9,7 @@ from typing import Any, Dict, Mapping, Optional
 from sim.engine import state as state_module
 from sim.engine.state import FounderState, HouseholdState, ProjectsState
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
+from sim.workforce.api import WorkforceSeat
 
 FIRST_SEAT_ID = "founder"   # the one id the party-id constants agree on
 FOUNDER_SECTION = "founder"   # the seat section (and reply key) holding the founder, absent for a country seat
@@ -42,13 +43,13 @@ def seat_from_template(template: Mapping[str, Any], capital: float, policy: Dict
 		# the household here is an empty placeholder the engine's aliases need; the seat acts through its government
 		return SeatState(household=HouseholdState(capital=0.0), projects=ProjectsState(), founder=None,
 		                 country=template.get("country"), kind=COUNTRY_SEAT)
-	household = HouseholdState(capital=float(capital), scholars=float(template.get("scholars", 0.0)),
-	                           artisans=float(template.get("artisans", 0.0)), base_tile=template.get("base_tile"))
+	household = HouseholdState(capital=float(capital), base_tile=template.get("base_tile"))
 	granted = set(template.get("starting_techs") or ())
 	projects = ProjectsState(done=set(granted), granted=set(granted))
 	founder = FounderState(policy=dict(policy))
+	staff = WorkforceSeat(scholars=float(template.get("scholars", 0.0)), artisans=float(template.get("artisans", 0.0)))
 	return SeatState(household=household, projects=projects, founder=founder, goal=template.get("goal"),
-	                 country=template.get("country"))
+	                 country=template.get("country"), modules={"workforce": staff})
 
 
 def bind_seat(state, seat_id: str) -> None:

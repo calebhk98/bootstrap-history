@@ -2,6 +2,7 @@
 when hours were last allocated (Complaint 640: rules on a stub game)."""
 QUICK_TOPIC = True
 
+from sim.tests import workforce_stand_in
 import types
 import unittest
 
@@ -32,6 +33,7 @@ class _HourGame(HourQueueMixin):
             projects=types.SimpleNamespace(active={node_id: self._stale_progress() for node_id in node_ids}),
             household=types.SimpleNamespace(hour_allocations=allocations or {}))
         self.labour = _Labour(pool, committed)
+        self.view = workforce_stand_in.view_of(self.state.household)
         self.active = self.state.projects.active
 
     @staticmethod

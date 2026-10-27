@@ -22,7 +22,7 @@ class _Game:
     throttle = 0.8
 
     def view(self, name):
-        return {"material_throttle": lambda: self.throttle}[name]
+        return {"material_throttle": lambda: self.throttle, "staff": lambda: {"employees": self.employees}}[name]
 
     def state_reach(self):
         return 0.4

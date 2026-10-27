@@ -14,8 +14,15 @@ answers each of the 100-odd things labour reads of the game from a view the spec
 (`sim/engine/labour_port.py`) are gone; `Sim.labour` is a property in `forward_workforce.py` that returns the module's `Labour`,
 so the 365 callers outside labour (screens, mods, the economy port, engine mixins) are unchanged.
 
-- **Views published** (all uncached, because the staff and hour fields are still on the household record that the engine, the actors
-  and the screens write): `staff`, `staff_snapshot`, `headcount`, `hours_available`, `literacy_references`, `literacy_capacity`,
+- **State**: each seat's people, hours and pay books are `WorkforceSeat` (`sim/workforce/state.py`) and the society's labour hours
+  and wage tightness are `WorkforceSociety`; the fields left `HouseholdState`, `ProjectsState`, `FounderState` and `EconomyState` and
+  the household facade's field maps (relocations are in `sim/tests/equiv_fields.py`). Readers outside the module read the views
+  `staff`, `hour_commitments`, `pay_book`, `training_queue`, `trade_schools`, `worker_housing_places`, `trade_spread`,
+  `society_labour_hours`, `staff_version` and `staff_on_all_books`; writers send commands (`AllocateHours`, `ReleaseHours`,
+  `OrderWork`, `CancelWork`, `SetReserve`, `DrawTradeHours`, `ResetTradeHours`, `SpendDirectorHours`, `SettleLivingCost`,
+  `SetWageHoursSold`, `BleedStaff`, `DisperseDependants`, `LoseCrew`, `WatchStaff`). The payroll dict reports its changes on the
+  `staff` channel (`staff_version`), which replaces the household's `_workforce_ver`.
+- **Views published** (uncached, because `Labour` writes the seat's people and hours in place and keeps no count of its writes): `staff`, `staff_snapshot`, `headcount`, `hours_available`, `literacy_references`, `literacy_capacity`,
   `farm_share_of_hours`, `trade_spread`, `staff_advice`, `project_staffing_shortfall`, `seat_base_tile`, `market_supply`,
   `trade_available`, `labour_quote`, `hour_wage`, `wage`, `base_annual_wage`, `trade_population`, `money_per_labour_hour`,
   `opening_money_per_labour_hour`, `labour_state_weights`, `town_mortality_premium_by_tile`, `wage_index`, `wage_index_terms`,
@@ -23,8 +30,8 @@ so the 365 callers outside labour (screens, mods, the economy port, engine mixin
   `farm_land_hectares`, `hours_per_person_year` (the working day: lit hours added by open works, moved from `working_day.py`).
 - **Commands applied**: `SetEmployed`, `NoteTradeSpread`, `PressLabour`, `SurviveStaff`, `ScaleDeputies`, `ReportStaffReduction`,
   `AllocateFarmWorkforce`, `ApplyLandClearing`, `UpdateWages`, `TakeWageFallback`, `CloseHoursYear`. Two commands of the module are
-  still applied by the bridge because the logic they call sits in files other work owns: `BuildHousing` (`economy_goods.py`) and
-  `NoteWageShock` (`cause_book.py`, shared with projects staffing and the screens).
+  still applied by the bridge because the logic they call sits in files other work owns: `NoteWageShock` (`cause_book.py`, shared with
+  projects staffing and the screens). `BuildHousing` is the module's now.
 - **Phases**: `apprenticeships`, `staff` and `seat_prelude` (teaching the lost trades and the standing work order) are the module's
   hooks; the wage fallback and the end of the year's hours run inside `seat_work` as the two commands above.
 - **Rules moved beside it**: the wage index, the lit working day, the reteach, staff-phase, payroll and replacement-mode rules, the
@@ -32,10 +39,14 @@ so the 365 callers outside labour (screens, mods, the economy port, engine mixin
 
 ## Not moved, and why
 
-- **The saved staff and hour fields** (the table in (b)) stay on the household record. The household facade (`sim/agents/household.py`)
-  routes each name to that record and the screens, finance, hazards and polity read and write many of them in place, so moving them
-  is a change in the actors' files and in `state.py`; the module reads them as `legacy_acting_household` and writes them only in its
-  own commands and in `Labour`. Until they move, no view is cached and no channel is bumped.
+- **Cached views.** None is cached: `Labour` mutates the seat's dicts and counts in place (hundreds of sites in `sim/labour/`), so only
+  the payroll dict (`employees`) can report its changes. A view becomes `cached=True` when those writes go through commands that
+  bump a channel.
+- **`revenue_capacity`** (`sim/engine/economy_production.py`) still sets the hours sold to zero with `SetWageHoursSold` and puts them
+  back; it becomes a pure quote when `revenue()` takes the sold hours as an argument.
+- **The household facade** keeps `workforce` (the payroll) for the actors' protocol, reading the seat slot (`Household._workforce`).
+- **`game_attribute`** (`sim/engine/bridge_seats.py`) answers an attribute-sourced win condition (`slaves`) from the `staff` view
+  when `Sim` has no such attribute.
 - **`_step_reputation`'s other two owners** (polity's `RenewStanding` and `CloseStandingYear`, the ledger's `spend_last_year`) stay in
   the engine around the module's `CloseHoursYear`.
 - **`living_cost`, `training_advice` and `training_queue`** stay bridged: their code is the economy's household bill and projects
@@ -47,8 +58,10 @@ so the 365 callers outside labour (screens, mods, the economy port, engine mixin
 
 ## Debts left (`legacy_*` and shared bridge views the module reads)
 
-`legacy_state`, `legacy_game`, `legacy_acting_household`, `legacy_household_actor`, `legacy_dice`, `legacy_tree`, `legacy_order`,
-`legacy_projects`, `legacy_act_as`; the engine's `game_config`, `civilisation`, the trade tables (`trade_records`, `trades_absent`,
+`legacy_state` (labour still reads and writes the seat's household money, bondage and base tile, the holdings' market pressure, the
+projects' sets and the built ways in place: `grep -rn "_world.state" sim/labour` lists the sites; the year and the policy are the views
+`year` and `founder` now), `legacy_game`, `legacy_acting_household` (the purse, for the module's own steps), `legacy_household_actor`,
+`legacy_dice`, `legacy_tree`, `legacy_order`, `legacy_projects`, `legacy_act_as`; the engine's `game_config`, `civilisation`, the trade tables (`trade_records`, `trades_absent`,
 `trade_notes`, `trade_family`, `starting_wages`), the actors' staff (`actor_staff_*`), and the projects staffing reads (`staffing_*`,
 `venture_*`, `staff_closure_age`, `reopen_units`, `exclusion_reason`, `shared_answer`).
 

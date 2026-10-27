@@ -29,12 +29,6 @@ class HouseholdState:
 	capital: float
 	total_spend: float = 0.0
 	bounties_paid: int = 0
-	wages_paid: float = 0.0
-	wages_prepaid: float = 0.0
-	wages_earned: Optional[float] = None
-	slaves: int = 0
-	freedmen: int = 0
-	manumitted_total: int = 0
 	spend_last_year: Optional[float] = None
 	# the cash book (sim/engine/cash_book.py): the open period's entries by cause, cash at its start,
 	# and the last few closed years
@@ -45,43 +39,11 @@ class HouseholdState:
 	cause_rows: List[Dict[str, Any]] = field(default_factory=list)
 	cause_mark: Optional[Dict[str, float]] = None
 
-	# Workforce and human capital
-	scholars: float = 0.0
-	artisans: float = 0.0
-	directors_extra: float = 0.0
-	employees: Dict[str, float] = field(default_factory=dict)
-	trades_created: Set[str] = field(default_factory=set)
-	trades_endemic: Set[str] = field(default_factory=set)
-	trade_introduced_year: Dict[str, int] = field(default_factory=dict)
-	contract_hours: Dict[str, float] = field(default_factory=dict)
-	commissioned: Dict[str, float] = field(default_factory=dict)
-	teaching_hours_this_year: float = 0.0
-	relocation_hours_this_year: float = 0.0
-	supervision_hours_this_year: float = 0.0
+	# Where the seat works from (the people and hours are the workforce module's: sim/workforce/state.py)
 	base_tile: Optional[str] = None
-	hour_allocations: Dict[str, float] = field(default_factory=dict)
-	# standing order id -> [hours ordered, shortfall kind] last reported as unused, so repeats stay quiet
-	unused_hours_reported: Dict[str, List[Any]] = field(default_factory=dict)
-	work_trade: Optional[str] = None
-	last_taught: Dict[str, int] = field(default_factory=dict)
-	training: List[List[Any]] = field(default_factory=list)
-	wage_hours_this_year: float = 0.0
-	wage_income_this_year: float = 0.0
-	wage_work_last_year: Optional[Dict[str, float]] = None
-	granted_staff: Optional[Dict[str, float]] = None
-	hours_this_year: Optional[Dict[str, float]] = None
-	trade_schools: Optional[int] = None
-	labour_pressure_records: Dict[str, Any] = field(default_factory=dict)
-	worker_housing_places: Optional[int] = None
-	# spare generic hands the reserve_staff policy keeps above what concerns hold (`reserve`)
-	reserve_craftsmen: int = 0
-	# yearly pay per person by trade as last settled; follows the market while keep_pay_at_market is on
-	staff_pay_held: Dict[str, float] = field(default_factory=dict)
-	reserve_scholars: int = 0
 	# a planned project and the cash target put by for it (`saving`)
 	saving_for: Optional[str] = None
 	saving_target: float = 0.0
-	_said_deputies: int = 0
 	_said_autoopen: Optional[Dict[str, int]] = None
 
 	# ---- the purse: an account in the actors' book (sim/agents/purses.py) once the state is attached to it ----
@@ -180,7 +142,6 @@ class ProjectsState:
 	bountied: Set[str] = field(default_factory=set)
 	granted: Set[str] = field(default_factory=set)
 	paid_towards: Dict[str, float] = field(default_factory=dict)
-	trade_hours_used: Dict[str, float] = field(default_factory=dict)
 	revealed: Set[str] = field(default_factory=set)
 	# concerns whose staff the yearly step hires for before the closure rule (`keep <id> staffed`)
 	keep_staffed: Set[str] = field(default_factory=set)
@@ -257,8 +218,6 @@ class EconomyState:
 	# tile -> {construction node id: [year it is finished, capacity]} of works paid for and being built (works.py)
 	works_under_construction: Dict[str, Dict[str, List[float]]] = field(default_factory=dict)
 	capacity_pool: Dict[str, float] = field(default_factory=dict)
-	society_labour_hours: Dict[str, float] = field(default_factory=dict)
-	wage_tightness_factors: Dict[str, float] = field(default_factory=dict)
 	# the money an hour of work was worth when the tree's money fields were last counted (opening_money.py)
 	nodes_money_per_labour_hour: Optional[float] = None
 
@@ -266,8 +225,6 @@ class EconomyState:
 @dataclass
 class FounderState:
 	"""The founder's personal capacity and standing policy (whether the founder lives is the seats module's)."""
-	director_hours_spent_founder: float = 0.0
-	living_cost_paid: float = 0.0
 	policy: Dict[str, Any] = field(default_factory=dict)
 	_founder_death_aged: Optional[int] = None
 	_founder_death_year: Optional[int] = None

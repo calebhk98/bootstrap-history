@@ -10,6 +10,7 @@ from sim.agents.api import business_review, edges, ledger
 from sim.polity.api import SetReputation
 from sim.reporting.api import RecordEvent
 from sim.resources.api import MothballMines
+from sim.workforce.api import BleedStaff, DisperseDependants
 
 from . import rules
 from .affordability import reputation_hit_taken
@@ -78,11 +79,11 @@ class Insolvency:
 					"premises again" % (len(taken), ", ".join(taken))))
 		# and the household goes: nobody keeps four hundred dependants they cannot feed. People are sold or freed and they
 		# leave, and shedding them is how the household becomes solvent again.
-		if household.capital < -limit and (household.slaves or household.freedmen):
-			freed = household.slaves + household.freedmen
-			needs.legacy_game().labour.manumit(household.slaves)          # they are not sold on
-			household.freedmen = 0
-			household.artisans = max(HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR, household.artisans * HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION)
+		staff = needs.staff()
+		if household.capital < -limit and (staff["slaves"] or staff["freedmen"]):
+			freed = staff["slaves"] + staff["freedmen"]
+			needs.legacy_game().labour.manumit(staff["slaves"])          # they are not sold on
+			needs.send(DisperseDependants(HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR, HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION))
 			needs.send(RecordEvent.of("household_disperses", "the household disperses: %d people leave, because "
 				"you can no longer feed them" % freed))
 
@@ -161,8 +162,7 @@ class Insolvency:
 			floor = -max(self.priced(INSOLVENCY_FLOOR_MIN_LABOUR_HOURS), needs.revenue_estimate() * INSOLVENCY_FLOOR_REVENUE_MULTIPLE)
 			if household.capital < floor and seat.insolvent_years >= INSOLVENCY_YEARS_BEFORE_BLEED:
 				bleed = min(INSOLVENCY_BLEED_CAP, INSOLVENCY_BLEED_RATE * seat.insolvent_years)
-				household.artisans = max(INSOLVENCY_ARTISAN_FLOOR, household.artisans * (1.0 - bleed))
-				household.scholars = max(INSOLVENCY_SCHOLAR_FLOOR, household.scholars * (1.0 - bleed * INSOLVENCY_SCHOLAR_BLEED_DISCOUNT))
+				needs.send(BleedStaff(bleed, INSOLVENCY_ARTISAN_FLOOR, INSOLVENCY_SCHOLAR_FLOOR, INSOLVENCY_SCHOLAR_BLEED_DISCOUNT))
 				if seat.insolvent_years in (3, 6, 12, 25):
 					needs.send(RecordEvent.of("arrears_staff_leaving", "IN ARREARS for %d years: staff are leaving "
 						"because you cannot pay them" % seat.insolvent_years))

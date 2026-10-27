@@ -13,7 +13,7 @@ from sim.ui.proto import screen_commitments
 def game():
     return types.SimpleNamespace(
         fog=False, goal="formal", goal_year=None, nodes={"formal": {"name": "The formal goal"}}, done=set(),
-        state=types.SimpleNamespace(household=types.SimpleNamespace(reserve_craftsmen=2, reserve_scholars=1)),
+        view=lambda name: (lambda: {"reserve_craftsmen": 2, "reserve_scholars": 1}),
         policy={}, literacy=lambda metric: 0.1, literacy_ceiling_general=lambda: 0.4, literacy_ceiling_elite=lambda: 0.8)
 
 

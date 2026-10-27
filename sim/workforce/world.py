@@ -42,6 +42,25 @@ class WorkforceWorld:
         return len(self._needs.event_log())
 
     @property
+    def workforce(self):
+        """The acting seat's people and hours: the module's own seat state, written only by labour and the module."""
+        return self._owner.seat
+
+    @property
+    def year(self):
+        return self._needs.year()
+
+    @property
+    def policy(self):
+        """The acting seat's standing policy switches (read here, never written)."""
+        return self._needs.founder()["policy"]
+
+    @property
+    def society(self):
+        """The society's labour hours and wage tightness: the module's own world state."""
+        return self._owner.world
+
+    @property
     def household(self):
         return self._needs.legacy_household_actor()
 

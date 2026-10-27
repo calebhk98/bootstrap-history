@@ -111,7 +111,7 @@ def _workers_from(sim, cmd, managers_hired):
         return float(cmd["workers"]), "asked"
     if cmd.get("hours") is not None:
         return float(cmd["hours"]) / sim.HOURS_PER_PERSON_YEAR, "asked (worker-hours / hours per person-year)"
-    staff = sum(sim.employees.values()) - managers_hired
+    staff = sum(sim.view("staff")()["employees"].values()) - managers_hired
     return max(0.0, staff), "your staff, not counting managers this mod hired"
 
 
@@ -189,7 +189,7 @@ def register(api):
         shortfall = needed - have
         if shortfall <= 0:
             return {"ok": True, "hired": 0, "managers_needed": needed, "managers_this_mod_hired": have}
-        before = sim.employees.get(manager_trade, 0.0)
+        before = sim.view("staff")()["employees"].get(manager_trade, 0.0)
         # The market may allow fewer than asked; take the most it will give.
         count = shortfall
         while count > 1 and sim.labour.hire_check(manager_trade, count)[2]:
@@ -197,7 +197,7 @@ def register(api):
         done, message = sim.labour.hire(manager_trade, count)
         if not done:
             return {"ok": False, "error": message, "managers_needed": needed}
-        gained = int(round(sim.employees.get(manager_trade, 0.0) - before))
+        gained = int(round(sim.view("staff")()["employees"].get(manager_trade, 0.0) - before))
         memory["managers_hired"] = have + gained
         return {"ok": True, "hired": gained, "asked": shortfall, "managers_needed": needed,
                 "managers_this_mod_hired": memory["managers_hired"], "what_happened": message,

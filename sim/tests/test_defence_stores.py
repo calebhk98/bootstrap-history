@@ -97,6 +97,8 @@ class _Host(ForwardMechanicsMixin):
 
     def view(self, name):
         """The published view `name`, as the mechanics module answers it."""
+        if name == "staff":
+            return lambda: {"employees": self.state.household.employees, "directors_extra": 0.0, "artisans": 0.0, "scholars": 0.0}
         return _Keyed(self.mechanics.mechanic) if name == "mechanic" else getattr(self.mechanics, name)
 
     def stock_held(self, material):
@@ -231,7 +233,7 @@ class _Survivors:
             scholars=7.0, artisans=9.0, employees={"carpenter": 3.0, "smith": 5.0}))
 
     def apply_staff_survival(self, survival_share):
-        workforce = module_harness.build(Workforce, views={"legacy_acting_household": self.state.household, "legacy_dice": self.rng})
+        workforce = module_harness.build(Workforce, seat=self.state.household, views={"legacy_acting_household": self.state.household, "legacy_dice": self.rng})
         workforce.survive_staff(SurviveStaff(survival_share))
 
 

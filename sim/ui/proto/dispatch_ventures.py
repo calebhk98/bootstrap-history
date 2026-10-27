@@ -701,7 +701,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                "capacity by more than the 0.50-FTE anti-churn margin."),
            "you_have_in_all": {
                "scholars": round(sim.labour.effective_scholars(), 2),
-               "craftsmen": round(sim.artisans
+               "craftsmen": round(sim.view("staff")()["artisans"]
                                   + (sim.FOUNDER_IS_WORTH if sim.founder_alive
                                      else 0.0), 2)},
            # SCHOLARS AND CRAFTSMEN ARE NOT INTERCHANGEABLE, and nothing
@@ -782,8 +782,8 @@ def _cmd_policy(sim, nodes, cmd, ended):
         _stopped["credit"] = ("nobody will fund new work until %d"
                               % int(sim.credit_frozen_until))
     _pol = {"ok": True, "policy": dict(sim.policy), "changed": changed,
-            "reserve": {"craftsmen": sim.state.household.reserve_craftsmen,
-                        "scholars": sim.state.household.reserve_scholars},
+            "reserve": {"craftsmen": sim.view("staff")()["reserve_craftsmen"],
+                        "scholars": sim.view("staff")()["reserve_scholars"]},
             # WHAT THESE ARE FOR, BEFORE WHAT EACH ONE DOES: a player who
             # switches one on believing the engine knows the best line and
             # is offering to walk it for them will read the result as a

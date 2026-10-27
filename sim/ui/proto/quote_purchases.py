@@ -74,7 +74,7 @@ def _quote_material(sim, cmd, quantity):
 
 def _quote_manumit(sim, cmd, quantity):
     return {"ok": True, "what": "manumit", "people": quantity, "to_buy_it": 0.0,
-            "you_hold": sim.slaves,
+            "you_hold": sim.view("staff")()["slaves"],
             "note": "Freeing people costs no money; they then work better."}
 
 

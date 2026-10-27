@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 
 from sim.engine import data
 from sim.engine.economy_production import ProductionMixin
@@ -90,7 +91,7 @@ class Seller(WagesMixin):
         self.received = []
         self.logged = []
         self._world = types.SimpleNamespace(
-            founder_alive=True, state=types.SimpleNamespace(household=household),
+            founder_alive=True, workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household),
             wages={"scribe": 1}, EDGE_EMPLOYERS="employers", revenue=lambda: 1000.0, active_hours_still_wanted=lambda: 0.0,
             money_text=lambda amount, grouped=False: "%d" % amount,
             receive_from_edge=lambda edge, pay, text: self.received.append(pay))
@@ -137,7 +138,7 @@ class Channels(TrainingMixin):
     def __init__(self, supply=1000.0, contracted=0.0, productivity=1.0, employed=0.0):
         self.contract_hours = {"scribe": contracted}
         self._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(household=types.SimpleNamespace(contract_hours=self.contract_hours)),
+            workforce=types.SimpleNamespace(contract_hours=self.contract_hours),
             HOURS_PER_PERSON_YEAR=2000.0, trades_absent=set())
         self.supply, self.productivity, self._employed = supply, productivity, employed
 

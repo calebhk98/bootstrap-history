@@ -12,7 +12,8 @@ from typing import Any, Dict, Optional
 from sim.finance import purchase_rules
 from sim.finance.module import Finance
 from sim.finance.state import FinanceSeat
-from sim.tests import module_harness
+from sim.tests import event_stand_in, module_harness
+from sim.workforce.api import BleedStaff, DisperseDependants
 
 
 def _household(capital: float = 0.0) -> SimpleNamespace:
@@ -44,6 +45,11 @@ def build(answers: Optional[Dict[type, Any]] = None, seat: Optional[FinanceSeat]
 	commands keyed by command class."""
 	every_view = defaults()
 	every_view.update(views)
+	household = every_view["legacy_acting_household"]
+	every_view.setdefault("staff", lambda: {key: getattr(household, key, 0) for key in ("slaves", "freedmen", "artisans", "scholars")})
+	answers = dict(answers or {})
+	for command in (BleedStaff, DisperseDependants):   # the workforce module's own handlers change the household's people
+		answers.setdefault(command, lambda command, household=household: event_stand_in.workforce_command(household, command))
 	module = module_harness.build(Finance, views=every_view, answers=answers, seat=seat or FinanceSeat(), module_id="finance")
 	module.clock.acting_seat = "founder"
 	return module

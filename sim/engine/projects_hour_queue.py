@@ -10,7 +10,7 @@ class HourQueueMixin:
     def hour_priority_queue(self):
         """Active projects in the order they draw on the hour pool: projects
         with a standing `allocate` first, then the rest by tree priority."""
-        return priority_queue(self.state.projects.active, self.order, self.state.household.hour_allocations)
+        return priority_queue(self.state.projects.active, self.order, self.view("hour_commitments")()["allocations"])
 
     def hour_pool_now(self):
         """Founder and deputy hours this year not already committed."""

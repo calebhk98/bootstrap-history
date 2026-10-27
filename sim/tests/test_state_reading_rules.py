@@ -85,7 +85,7 @@ class Succession(unittest.TestCase):
 
     def game(self, carry, deputies):
         return types.SimpleNamespace(
-            state=types.SimpleNamespace(household=types.SimpleNamespace(directors_extra=deputies)),
+            view=lambda name: (lambda: {"directors_extra": deputies}),
             DEPUTIES_CARRY_THE_WORK_FROM=1.0, deputies_carry_the_work=lambda: carry, deputy_hours=lambda: 400.0,
             STAFF_CAPACITY_SOURCES=[], nodes={}, has=lambda node_id: False)
 

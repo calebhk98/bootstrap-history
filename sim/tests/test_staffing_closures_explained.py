@@ -5,6 +5,7 @@ test_staffing_warnings."""
 
 QUICK_TOPIC = True
 
+from sim.tests import workforce_stand_in
 import re
 from types import SimpleNamespace
 
@@ -79,6 +80,7 @@ class Notes(AllocationNotesMixin):
         self.state = SimpleNamespace(
             household=SimpleNamespace(unused_hours_reported={}, hour_allocations=dict(orders), log=self.log),
             scenario=SimpleNamespace(year=100))
+        self.view = workforce_stand_in.view_of(self.state.household)
         self.nodes = {"school": {"name": "School founding"}, "academy": {"name": "Academy"}}
 
     def said_about(self, name):

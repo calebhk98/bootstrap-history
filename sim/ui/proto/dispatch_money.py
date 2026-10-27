@@ -98,7 +98,7 @@ def _buy_housing(sim, cmd, quantity):
     if got <= 0:
         return {"ok": False, "error": "cannot afford that worker housing"}
     return {"ok": True, "built_worker_housing_places": got,
-            "worker_housing_places": round(sim.worker_housing_places, 1),
+            "worker_housing_places": round(sim.view("worker_housing_places")(), 1),
             "capital": round(sim.capital, 1)}
 
 
@@ -108,7 +108,7 @@ def _buy_school(sim, cmd, quantity):
     if not school_founded:
         return {"ok": False, "error": why}
     return {"ok": True, "trade": trade, "new_training_seats": quantity,
-            "trade_school_seats": sim.trade_schools[trade],
+            "trade_school_seats": sim.view("trade_schools")()[trade],
             "market_supply_hours_per_year": round(sim.labour.market_supply(trade), 1),
             "capital": round(sim.capital, 1)}
 
@@ -194,14 +194,14 @@ def _buy_slaves(sim, cmd, quantity):
                          "this size) and you have %s"
                          % (int(quantity), money_text(quote, sim), money_text(quote / max(1, int(quantity)), sim),
                             money_text(sim.capital, sim))}
-    return {"ok": True, "bought": got, "slaves": sim.slaves, "capital": round(sim.capital, 1)}
+    return {"ok": True, "bought": got, "slaves": sim.view("staff")()["slaves"], "capital": round(sim.capital, 1)}
 
 
 def _buy_manumit(sim, cmd, quantity):
     got = sim.labour.manumit(int(quantity))
     if got <= 0:
         return {"ok": False, "error": "you have no slaves to free"}
-    return {"ok": True, "manumitted": got, "freedmen": sim.freedmen, "slaves": sim.slaves}
+    return {"ok": True, "manumitted": got, "freedmen": sim.view("staff")()["freedmen"], "slaves": sim.view("staff")()["slaves"]}
 
 
 # One handler per canonical target in buy_targets.BUY_TARGETS; every
@@ -303,7 +303,7 @@ def _cmd_money(sim, nodes, cmd, ended):
     # The living cost is the one the household pays once the dependants its income cannot carry are shed, as
     # net_per_year counts it.
     _living = sim.recurring_living_cost(sim.revenue(), sim.upkeep())
-    _prepaid = min(_living, sim.wages_prepaid)
+    _prepaid = min(_living, sim.view("pay_book")()["prepaid"])
     fixed = (sim.upkeep() + _living - _prepaid
              + sim.view("mine_operating_cost")())
     _ramp = sim.still_ramping()
@@ -325,8 +325,8 @@ def _cmd_money(sim, nodes, cmd, ended):
             **({"where_the_market_squeeze_falls": _squeeze} if _squeeze else {}),
             **({"wage_work_this_year": sim.labour.wage_work_this_year()}
                if sim.labour.wage_work_this_year() else {}),
-            **({"wage_work_last_year": sim.state.household.wage_work_last_year}
-               if sim.state.household.wage_work_last_year else {}),
+            **({"wage_work_last_year": sim.view("hour_commitments")()["wage_work_last_year"]}
+               if sim.view("hour_commitments")()["wage_work_last_year"] else {}),
             **({"still_building_up_custom": _ramp} if _ramp else {}),
             **({"materials_costing_you_a_premium": _mat_mkt} if _mat_mkt else {}),
             "what_it_costs_you": {

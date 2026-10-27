@@ -14,14 +14,15 @@ class StaffHiring:
 		"""Hire each trade back up to the people it lost to attrition this year, through `hire` so every rule a
 		player meets applies; a refusal is recorded as a skipped action. `lost` is {trade: people}."""
 		household = self.needs.legacy_acting_household()
+		workforce = self.seat
 		for trade, people in sorted(lost.items()):
 			before = household.capital
-			have = household.employees.get(trade, 0.0)
+			have = workforce.employees.get(trade, 0.0)
 			hired, refusal = self.labour.hire_buying_room(trade, int(people))
 			if not hired:
 				self.needs.send(RecordAutomationSkip("auto_hire", "replace %d %s" % (people, trade), "replace-only mode: " + str(refusal)))
 				continue
-			found = round(household.employees.get(trade, 0.0) - have)
+			found = round(workforce.employees.get(trade, 0.0) - have)
 			self.needs.send(RecordAutomation("auto_hire", "replace", "%d %s" % (found, trade),
 			                                 "replace-only mode: %d lost this year, none hired beyond that" % people, before))
 
@@ -30,7 +31,8 @@ class StaffHiring:
 		so every rule a player meets applies. A refusal is not an error: it is recorded as a skip when shut concerns need
 		the hands. A hire's audit row names the people the market found, which can be fewer than sought."""
 		household = self.needs.legacy_acting_household()
-		have = household.employees.get(trade, 0.0)
+		workforce = self.seat
+		have = workforce.employees.get(trade, 0.0)
 		change = hires_needed(have, self.labour.stochastic_round(want))
 		if change > 0:
 			before = household.capital
@@ -39,7 +41,7 @@ class StaffHiring:
 				self.needs.send(RecordAutomationSkip("auto_hire", "hire %d %s" % (change, trade),
 				                                     "concerns shut for want of staff need %.1f more: %s" % (closure_need, why)))
 			if hired:
-				found = round(household.employees.get(trade, 0.0) - have)
+				found = round(workforce.employees.get(trade, 0.0) - have)
 				self.needs.send(RecordAutomation("auto_hire", "hire", "%d %s" % (found, trade),
 				                                 "staff target %.1f against %.1f held, with %.1f supervision room"
 				                                 % (want, have, self.labour.supervision_room()), before))
@@ -52,13 +54,13 @@ class StaffHiring:
 	def shed_unpayable_staff(self, payroll, can_pay):
 		"""Let go the part of `payroll` that `can_pay` does not cover: whole people, dearest trade first. Logs
 		`staff_left_unpaid` with the people gone when any went; returns the people gone."""
-		household = self.needs.legacy_acting_household()
+		workforce = self.seat
 		labour = self.labour
-		if payroll <= can_pay or not household.employees:
+		if payroll <= can_pay or not workforce.employees:
 			return 0.0
 		gone = 0.0
 		staff_before = labour.staff_snapshot()
-		for trade_id, cut in staff_to_let_go(payroll, can_pay, dict(household.employees), labour.market.quote_annual).items():
+		for trade_id, cut in staff_to_let_go(payroll, can_pay, dict(workforce.employees), labour.market.quote_annual).items():
 			labour.add_employed(trade_id, -cut)
 			gone += cut
 			if labour.employed(trade_id) < 0.5:

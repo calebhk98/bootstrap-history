@@ -11,7 +11,8 @@ from sim.ui.proto import dispatch_inspection_stuck as stuck
 
 
 def _game(**members):
-    base = dict(active={}, training=[], capital=1000.0, civ={}, done=set(), operating=set(), project_cost=lambda node_id: 10.0)
+    training = members.pop("training", [])
+    base = dict(active={}, view=lambda name: (lambda: training), capital=1000.0, civ={}, done=set(), operating=set(), project_cost=lambda node_id: 10.0)
     base.update(members)
     return types.SimpleNamespace(**base)
 

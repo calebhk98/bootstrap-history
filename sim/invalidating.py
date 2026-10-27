@@ -121,7 +121,7 @@ class _InvalidatingDict(dict):
     """A dictionary that calls `on_change` after every mutation.
 
     Follows the exact pattern of _InvalidatingSet above. Used for
-    `self.household.active` and `self.household.employees` so that
+    `self.household.active` and the workforce module's employees so that
     derived-state caches keyed on active project membership or workforce
     changes are reliably invalidated whenever keys or values mutate,
     without requiring scattered callers across the engine to remember

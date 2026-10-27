@@ -11,7 +11,7 @@ COSTS = {"cheap": 100.0, "dear": 900.0}
 
 
 def idle_game():
-    return SimpleNamespace(active={}, training=[], project_cost=COSTS.get)
+    return SimpleNamespace(active={}, view=lambda name: (lambda: []), project_cost=COSTS.get)
 
 
 class IdleRow(unittest.TestCase):
@@ -33,7 +33,7 @@ class IdleRow(unittest.TestCase):
         self.assertNotIn("dear", str(row))
 
     def test_work_in_hand_makes_no_row_whatever_the_saving_flag(self):
-        busy = SimpleNamespace(active={"p": {}}, training=[], project_cost=COSTS.get)
+        busy = SimpleNamespace(active={"p": {}}, view=lambda name: (lambda: []), project_cost=COSTS.get)
         self.assertIsNone(_stuck_started_nothing(busy, ["cheap"], ["cheap"]))
         self.assertIsNone(_stuck_started_nothing(busy, ["cheap"], ["cheap"], saving=True))
 

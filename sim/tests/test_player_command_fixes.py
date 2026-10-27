@@ -57,7 +57,7 @@ def founded_by(text):
     school_game = SimpleNamespace(
         labour=SimpleNamespace(found_trade_school=lambda trade, seats: (founded.append((trade, seats)) or True, ""),
                                market_supply=lambda trade: 0.0),
-        trade_schools={"chemist": 1, "smith": 2}, capital=0.0)
+        view=lambda name: (lambda: {"chemist": 1, "smith": 2}), capital=0.0)
     reply = parse_typed(text)[0]
     _BUY_HANDLERS[buy_targets.canonical_target(reply["what"])](school_game, reply, reply["n"])
     return buy_targets.canonical_target(reply["what"]), founded

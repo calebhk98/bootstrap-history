@@ -122,7 +122,7 @@ refused = game.hand_over_seat("leaver", "heir")
 check("a replacement with workings of its own is refused", cause_of(refused) == "replacement_not_empty" and refused.facts["holds"] == ["holdings"], refused)
 check("a refused handover changed nothing", "leaver" in game.state.seats and game.state.actors.purses.debt("leaver") > 0.0, None)
 game = build()
-game.state.seats["heir"].household.scholars = 2.0
+game.state.seats["heir"].modules["workforce"].scholars = 2.0
 check("a replacement with staff is refused", game.hand_over_seat("leaver", "heir").facts["holds"] == ["staff"], None)
 game = build()
 game.state.seats["heir"].modules["finance"].interest_arrears = 3.0

@@ -6,16 +6,8 @@ they go when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
 
 from . import data, director_overhead, units_prose, wage_schedule
-from sim.workforce.api import BuildHousing
 
-from .bridge import bridge_command, bridge_view
-
-
-# ---- the commands of workforce whose logic still sits in the engine --------------------------------------------------------
-
-@bridge_command(BuildHousing)
-def build_housing(sim, command):
-    return sim.build_worker_housing(command.places)
+from .bridge import bridge_view
 
 
 # ---- the game's data -------------------------------------------------------------------------------------------------

@@ -57,7 +57,7 @@ class ChargeInterest(unittest.TestCase):
 
 class JudgeInsolvency(unittest.TestCase):
     def module(self, capital, revenue, years=0, artisans=10.0, scholars=5.0):
-        household = SimpleNamespace(capital=capital, artisans=artisans, scholars=scholars)
+        household = SimpleNamespace(capital=capital, artisans=artisans, scholars=scholars, slaves=0, freedmen=0)
         module = finance_host.build(seat=FinanceSeat(insolvent_years=years), legacy_acting_household=household, revenue_estimate=revenue)
         module.recurring_living_cost = lambda revenue, upkeep: 0.0
         return module, household

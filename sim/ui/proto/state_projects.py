@@ -177,11 +177,11 @@ def _agent_state_spend_and_net(sim):
         # the same, or it double-bills the first year by the whole wage
         # bill, in the one year the player is most likely to look.
         "wages_you_have_already_paid_this_year": round(
-            sim.wages_prepaid, 1) or None,
+            sim.view("pay_book")()["prepaid"], 1) or None,
         "net_after_project_spend": round(sim.revenue() - sim.upkeep()
                                          - sim.recurring_living_cost(sim.revenue(), sim.upkeep())
                                          + min(sim.recurring_living_cost(sim.revenue(), sim.upkeep()),
-                                               sim.wages_prepaid)
+                                               sim.view("pay_book")()["prepaid"])
                                          - sim.view("mine_operating_cost")()
                                          - max(0.0, -sim.capital) * sim.debt_interest_rate()
                                          - getattr(sim, "spend_last_year", 0.0), 1),
@@ -207,7 +207,7 @@ def training_in_hand(sim):
     return [{"artisan_capacity": round(row[0], 2), "ready_year": row[1],
              "trade": (row[2] if len(row) > 2 else None),
              "people": (row[3] if len(row) > 3 else None)}
-            for row in sim.training]
+            for row in sim.view("training_queue")()]
 
 
 def _agent_state_training_and_hours(sim, active, full):
@@ -262,7 +262,7 @@ def _agent_state_training_and_hours(sim, active, full):
         **({"worth_knowing_early": _worth_knowing_early(sim)} if not full else {}),
         "free_hours_going_unused": free_hours_going_unused(sim, active),
         "founder_hours_sold_for_wages_this_year": round(
-            sim.wage_hours_this_year, 1),
+            sim.view("hour_commitments")()["wage_hours"], 1),
         # WHERE THE HOURS COME FROM: the pool can grow well past a single
         # founder's own hours, and that has to be explained here rather
         # than left unexplained. It is not the founder working harder: it
@@ -272,13 +272,13 @@ def _agent_state_training_and_hours(sim, active, full):
             "you": round(sim.cfg["founder_hours_per_year"]
                          * (0.25 if sim.bondage_years_left > 0 else 1.0), 1)
                    if sim.founder_alive else 0.0,
-            "deputies_who_direct_work_for_you": round(sim.directors_extra, 2),
+            "deputies_who_direct_work_for_you": round(sim.view("staff")()["directors_extra"], 2),
             "hours_each_deputy_adds": sim.cfg["director_hours_per_year"],
         },
         "founder_hours_spent_teaching_this_year": round(
-            sim.teaching_hours_this_year, 1),
+            sim.view("hour_commitments")()["teaching_hours"], 1),
         # LAST YEAR'S HOURS, ACCOUNTED FOR. Set in step(); see the comment
         # there. available is this year's fresh figure, not last year's -
         # read it alongside, not in place of, hours_this_year.
-        "hours_this_year": getattr(sim, "hours_this_year", None),
+        "hours_this_year": sim.view("hour_commitments")()["last_year"],
     }

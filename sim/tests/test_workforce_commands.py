@@ -8,9 +8,10 @@ from types import SimpleNamespace
 from sim.tests import module_harness
 from sim.workforce import rules as workforce_rules
 from sim.workforce.api import NoteTradeSpread, PressLabour, ReportStaffReduction, ScaleDeputies, SetEmployed, TakeWageFallback
-from sim.workforce.api import CloseHoursYear
+from sim.workforce.api import CloseHoursYear, SettleLivingCost
 from sim.workforce.constants import WAGE_FALLBACK_LIVING_COST_YEARS, WAGE_FALLBACK_MAX_HOURS, WAGE_FALLBACK_MIN_HOURS
 from sim.workforce.module import Workforce
+from sim.workforce.state import WorkforceSeat
 
 
 class SurvivingPeople(unittest.TestCase):
@@ -31,7 +32,7 @@ class SurvivingPeople(unittest.TestCase):
 class Commands(unittest.TestCase):
     def test_deputies_are_multiplied_by_the_share(self):
         household = SimpleNamespace(directors_extra=4.0)
-        module_harness.build(Workforce, views={"legacy_acting_household": household}).scale_deputies(ScaleDeputies(0.5))
+        module_harness.build(Workforce, seat=household, views={"legacy_acting_household": household}).scale_deputies(ScaleDeputies(0.5))
         self.assertEqual(household.directors_extra, 2.0)
 
     def test_the_log_of_staff_lost_is_asked_with_the_cause_and_the_headcount_before(self):
@@ -43,7 +44,7 @@ class Commands(unittest.TestCase):
 
     def test_a_trade_spread_notes_the_year_first_taught_and_that_it_became_endemic(self):
         household = SimpleNamespace(trade_introduced_year={}, trades_endemic=set())
-        workforce = module_harness.build(Workforce, views={"legacy_acting_household": household})
+        workforce = module_harness.build(Workforce, seat=household, views={"legacy_acting_household": household})
         workforce.note_trade_spread(NoteTradeSpread("smith", introduced_year=120))
         self.assertEqual((household.trade_introduced_year, household.trades_endemic), ({"smith": 120}, set()))
         workforce.note_trade_spread(NoteTradeSpread("smith", endemic=True))
@@ -99,9 +100,9 @@ class WageFallback(unittest.TestCase):
 class HoursYear(unittest.TestCase):
     def test_the_year_ends_with_its_breakdown_kept_the_ledger_closed_and_the_tallies_reset(self):
         closed = []
-        household = SimpleNamespace(wage_hours_this_year=120.04, teaching_hours_this_year=30.0, relocation_hours_this_year=None,
+        household = SimpleNamespace(log=[], wage_hours_this_year=120.04, teaching_hours_this_year=30.0, relocation_hours_this_year=None,
                                     supervision_hours_this_year=7.0, contract_hours={"smith": 40.0}, hours_this_year=None)
-        workforce = module_harness.build(Workforce, views={"legacy_acting_household": household})
+        workforce = module_harness.build(Workforce, seat=household, views={"legacy_acting_household": household})
         workforce.labour = SimpleNamespace(director_pool=lambda: 2000.04, close_wage_year=lambda: closed.append(dict(
             kept=household.hours_this_year, wage=household.wage_hours_this_year)))
         workforce.close_hours_year(CloseHoursYear(pool=1500.0, remaining=-3.0, remaining_after_projects=400.0, hours_effective_total=800.04))
@@ -111,6 +112,13 @@ class HoursYear(unittest.TestCase):
         self.assertEqual([entry["kept"] is household.hours_this_year for entry in closed], [True])   # kept before the ledger closed
         self.assertEqual((household.contract_hours, household.teaching_hours_this_year, household.relocation_hours_this_year,
                           household.supervision_hours_this_year), ({}, 0.0, 0.0, 0.0))
+
+
+class LivingCost(unittest.TestCase):
+    def test_settling_the_living_cost_uses_up_the_advance_and_adds_the_bill_to_what_was_paid(self):
+        seat = WorkforceSeat(wages_prepaid=20.0, living_cost_paid=100.0)
+        module_harness.build(Workforce, seat=seat, views={}).settle_living_cost(SettleLivingCost(50.0))
+        self.assertEqual((seat.wages_prepaid, seat.living_cost_paid), (0.0, 150.0))
 
 
 if __name__ == "__main__":

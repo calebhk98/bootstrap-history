@@ -8,10 +8,9 @@ import json
 import types
 import unittest
 
-from sim.agents.api import Household
+from sim.workforce.api import SpendDirectorHours, WorkforceSeat
 from sim.workforce.rules import work_order_shortfall
-from sim.engine.state import SimulationState, deserialize_state, serialize_state
-from sim.engine.agents_port_household import HouseholdPort
+from sim.engine.state import deserialize_state, serialize_state
 from sim.engine.step_phase_projects import ProjectProgressPhaseMixin
 from sim.tests import event_stand_in
 from sim.tests.workforce_host import workforce_over
@@ -71,18 +70,21 @@ class StandingWorkDirective(unittest.TestCase):
 
 class Offer(ProjectProgressPhaseMixin):
     def __init__(self, directive):
-        self.state = types.SimpleNamespace(
-            household=types.SimpleNamespace(hour_allocations={"b": directive} if directive else {}),
-            founder=types.SimpleNamespace(director_hours_spent_founder=0.0))
+        self.allocations = {"b": directive} if directive else {}
+        self.spent = []
         self.founder_alive = True
 
     def project_hour_pace(self, node_id):
         return 3000.0
 
     def send(self, command):
+        if isinstance(command, SpendDirectorHours):
+            self.spent.append(command.hours)
         return 1.0          # the materials module: the project runs at full pace
 
     def view(self, name):
+        if name == "hour_commitments":
+            return lambda: {"allocations": self.allocations}
         return lambda: None     # no pool binds
 
 
@@ -94,7 +96,7 @@ class OfferHours(unittest.TestCase):
         self.assertEqual(project["hours_offered_this_year"], 500.0)
         self.assertEqual(project["hours_directed_this_year"], 500.0)
         self.assertEqual(project["ph_left"], 1500.0)
-        self.assertEqual(game.state.founder.director_hours_spent_founder, 500.0)
+        self.assertEqual(game.spent, [500.0])
 
     def test_an_undirected_project_has_no_directive_to_read_back(self):
         game = Offer(None)
@@ -112,12 +114,10 @@ class OfferHours(unittest.TestCase):
 
 class StandingOrdersSave(unittest.TestCase):
     def test_standing_directives_and_the_work_trade_survive_a_save(self):
-        state = Household(starting_capital=100.0, port=HouseholdPort())._state
-        state.household.hour_allocations = {"academy_network": 321.0, "work": 77.0}
-        state.household.work_trade = "scribe"
-        loaded = deserialize_state(json.loads(json.dumps(serialize_state(state))), SimulationState)
-        self.assertEqual(loaded.household.hour_allocations, {"academy_network": 321.0, "work": 77.0})
-        self.assertEqual(loaded.household.work_trade, "scribe")
+        seat = WorkforceSeat(hour_allocations={"academy_network": 321.0, "work": 77.0}, work_trade="scribe")
+        loaded = deserialize_state(json.loads(json.dumps(serialize_state(seat))), WorkforceSeat)
+        self.assertEqual(loaded.hour_allocations, {"academy_network": 321.0, "work": 77.0})
+        self.assertEqual(loaded.work_trade, "scribe")
 
 
 if __name__ == "__main__":

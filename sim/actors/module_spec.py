@@ -32,7 +32,7 @@ READS_BY_OWNER = {
 	"ledger": ("transfer_listening",),
 	"workforce": ("trade_available", "trade_population", "reachable_trade_population", "people_who_exist", "taught_trade_people",
 	              "available_trades", "is_craft_trade", "market_supply", "local_market_share", "base_tile", "trades_absent",
-	              "labour_market", "money_per_labour_hour", "hours_per_person_year"),
+	              "labour_market", "money_per_labour_hour", "hours_per_person_year", "staff_on_all_books"),
 	"projects": ("project_cost", "effective_risk", "is_venture", "seat_review", "revenue_estimate", "upkeep", "credit_limit"),
 	"production": ("concern_takings", "concern_gross", "concern_upkeep", "node_output_market_factor", "concern_volume_ratio",
 	               "concern_staff", "concern_baskets_now", "industry_depth", "industry_scale_ceiling", "ramp_share_at_full_depth",

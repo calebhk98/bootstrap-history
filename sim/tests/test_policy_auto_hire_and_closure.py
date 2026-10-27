@@ -6,6 +6,7 @@ and the seizure of a plant are test_business_review; the cap on work in hand is 
 QUICK_TOPIC = True
 
 import unittest
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from sim.agents import business_review
@@ -206,7 +207,7 @@ class SwitchThatCannotAct(unittest.TestCase):
     def _policy_reply(self, capital, frozen_until=0, year=100):
         household = SimpleNamespace(reserve_craftsmen=0, reserve_scholars=0)
         game = SimpleNamespace(policy={"auto_hire": True, "auto_open": True}, capital=capital, year=year,
-                               credit_frozen_until=frozen_until, state=SimpleNamespace(household=household,
+                               credit_frozen_until=frozen_until, workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household,
                                                                                      projects=SimpleNamespace(excluded=set())))
         return _cmd_policy(game, {}, {"cmd": "policy"}, None)
 
@@ -256,7 +257,7 @@ class StallDiagnosis(unittest.TestCase):
 
 class StaffFractions(unittest.TestCase):
     def _staff(self, scholars, artisans, employees=None):
-        return SimpleNamespace(scholars=scholars, artisans=artisans, employees=employees or {})
+        return SimpleNamespace(view=lambda name: (lambda: {"scholars": scholars, "artisans": artisans, "employees": employees or {}}))
 
     def test_a_fractional_staff_count_comes_with_an_explanation(self):
         self.assertTrue(_staff_fraction_note(self._staff(1.32, 3.0)))

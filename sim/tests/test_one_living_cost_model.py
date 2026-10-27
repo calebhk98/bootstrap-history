@@ -17,7 +17,7 @@ BILL = sum(FLOORS.values())
 def bill_stub(freedmen=0, slaves=0):
     """Just what the bill and the number of people read."""
     stub = SimpleNamespace(HOUSEHOLD_DEPENDANT_PEOPLE=HouseholdBillMixin.HOUSEHOLD_DEPENDANT_PEOPLE,
-                           state=SimpleNamespace(household=SimpleNamespace(freedmen=freedmen, slaves=slaves)),
+                           view=lambda name: (lambda: {"freedmen": freedmen, "slaves": slaves}),
                            household_need_floors_per_person=lambda: dict(FLOORS))
     stub.household_bill_per_person = lambda: HouseholdBillMixin.household_bill_per_person(stub)
     return stub

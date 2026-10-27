@@ -34,7 +34,7 @@ def cash_remedies(actor):
         if saving > 0.5:
             found.append((saving, "close %s (stops %s a year of mine costs)" % (
                 material, money_text(saving, actor, grouped=True))))
-    for trade, count in sorted(actor.state.household.employees.items()):
+    for trade, count in sorted(actor.view("staff")()["employees"].items()):
         wage = actor.labour.market.quote_annual(trade)
         if count > 0 and wage > 0.5:
             found.append((wage, "fire %s (stops %s a year per person)" % (

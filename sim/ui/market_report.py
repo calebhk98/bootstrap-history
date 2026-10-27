@@ -51,7 +51,7 @@ def wage_rows(sim):
     """A year of one person of every trade, as `labour <trade>` reports it."""
     return [{"trade": trade, "a_year_of_one": round(sim.labour.market.quote_annual(trade), 0),
              "available_here": bool(sim.labour.trade_available(trade)),
-             "you_employ": round(sim.employees.get(trade, 0.0), 2)}
+             "you_employ": round(sim.view("staff")()["employees"].get(trade, 0.0), 2)}
             for trade in sorted(WAGES)]
 
 

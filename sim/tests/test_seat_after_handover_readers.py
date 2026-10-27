@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from sim.agents.api import ActorsState
 from sim.agents.household_party import HouseholdParty
 from sim.engine.saveload import _get_field, acting_seat_of, goal_of_blob
+from sim.workforce.api import WorkforceSeat
 from sim.seats import api as seat_builds
 from sim.seats.api import (SeatsSeat, owner_of_seat, partner_country_of_seat, patron_grant_share, run_is_over, seat_ended,
                            seats_playing)
@@ -26,14 +27,14 @@ DISCLOSED = {"heir": {"wheel": {"mode": "license", "licensees": {"firm:7": {"fee
 def post_handover_state():
 	"""Seats "third" and "heir", "heir" acting; the heir carries the leaver's household, nodes, holdings, goal and country."""
 	heir = SeatState(
-		household=HouseholdState(capital=40.0, scholars=2.0),
+		household=HouseholdState(capital=40.0),
 		projects=ProjectsState(done={"fire", "wheel"}, granted={"fire"}),
-		founder=FounderState(living_cost_paid=30.0),
+		founder=FounderState(_founder_death_year=30),
 		holdings=HoldingsState(), seat_progress=SeatProgressState(),
 		goal="steam_engine", country="han",
-		modules={"seats": SeatsSeat(patents={"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}, shares_held={"guild": 3.0})})
+		modules={"workforce": WorkforceSeat(scholars=2.0), "seats": SeatsSeat(patents={"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}, shares_held={"guild": 3.0})})
 	third = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(done={"fire"}, granted={"fire"}),
-	                  founder=FounderState(living_cost_paid=50.0), goal="printing_press", modules={"seats": SeatsSeat()})
+	                  founder=FounderState(_founder_death_year=50), goal="printing_press", modules={"seats": SeatsSeat()})
 	return SimulationState(seats={"third": third, "heir": heir}, acting_seat="heir", modules={"actors": ActorsState(home_country="rome")})
 
 
@@ -48,7 +49,7 @@ bind_seat(state, "heir")
 check("bind_seat: the root aliases are the heir's own objects",
       state.acting_seat == "heir" and state.household is heir.household and state.projects is heir.projects
       and state.founder is heir.founder and state.holdings is heir.holdings and state.seat_progress is heir.seat_progress
-      and state.household.scholars == 2.0 and state.founder.living_cost_paid == 30.0, None)
+      and state.seats["heir"].modules["workforce"].scholars == 2.0 and state.founder._founder_death_year == 30, None)
 check("SimulationState._goal: reads the heir's goal", post_handover_state()._goal == "steam_engine")
 state = post_handover_state()
 state._goal = "radio"
@@ -110,9 +111,9 @@ check("serialize_state: the save's acting seat and its seats are the heir and th
       blob["acting_seat"] == "heir" and list(blob["seats"]) == ["third", "heir"], (blob["acting_seat"], list(blob["seats"])))
 check("serialize_state: the save names the leaver nowhere", "leaver" not in json.dumps(blob), None)
 check("serialize_state: the heir's saved seat carries the household, nodes, goal and country passed on",
-      blob["seats"]["heir"]["household"]["scholars"] == 2.0 and blob["seats"]["heir"]["projects"]["done"] == {"__set__": ["fire", "wheel"]}
+      blob["seats"]["heir"]["modules"]["workforce"]["scholars"] == 2.0 and blob["seats"]["heir"]["projects"]["done"] == {"__set__": ["fire", "wheel"]}
       and blob["seats"]["heir"]["goal"] == "steam_engine" and blob["seats"]["heir"]["country"] == "han"
       and blob["seats"]["heir"]["modules"]["seats"]["shares_held"] == {"guild": 3.0}, None)
 check("acting_seat_of: the save's acting seat is the heir's record", acting_seat_of(blob) is blob["seats"]["heir"])
 check("goal_of_blob: the heir's goal", goal_of_blob(blob) == "steam_engine")
-check("_get_field: a field of the acting seat is the heir's", _get_field(blob, "living_cost_paid") == 30.0 and _get_field(blob, "scholars") == 2.0)
+check("_get_field: a field of the acting seat is the heir's", _get_field(blob, "_founder_death_year") == 30 and _get_field(blob, "trades_created") is not None)

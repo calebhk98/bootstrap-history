@@ -33,10 +33,10 @@ class Labour:
 def make_world(taught=12.0, founder_staff=2.0, actor_staff=3.0):
     labour = Labour()
     labour.taught = taught
-    seats = {"founder": types.SimpleNamespace(household=types.SimpleNamespace(employees={TAUGHT: founder_staff, "smith": 5.0}))}
     actors = types.SimpleNamespace(home_staff_fte=lambda trade, excluding=None: actor_staff if trade == TAUGHT else 0.0)
     needs = fake_needs(trade_available=labour.trade_available, people_who_exist=labour.people_who_exist,
-                       taught_trade_people=labour.taught_trade_people, trades_absent=TRADES_ABSENT, legacy_seats=seats)
+                       taught_trade_people=labour.taught_trade_people, trades_absent=TRADES_ABSENT,
+                       staff_on_all_books=lambda trade: {TAUGHT: founder_staff, "smith": 5.0}.get(trade, 0.0))
     world = ActorWorld(types.SimpleNamespace(needs=needs, cast=lambda: actors))
     world.labour = labour
     return world

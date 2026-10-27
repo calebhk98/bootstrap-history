@@ -12,6 +12,7 @@ from unittest import mock
 from sim.engine import economy_production
 from sim.finance.rules import dependants_beyond_means_of
 from sim.engine.economy_production import ProductionMixin
+from sim.workforce.api import SettleLivingCost
 from sim.engine.step_phase_money import MoneyPhaseMixin
 
 NODE = "workshop"
@@ -83,7 +84,7 @@ class MoneySeatChargeTests(unittest.TestCase):
                                      scenario=SimpleNamespace(year=100))
         game.living_cost.return_value = living
         game.dependants_beyond_means.return_value = shed
-        game.view.return_value = lambda *call: (0.0, 0.0)    # the coin module's coin_keeping_due quote
+        game.view.side_effect = lambda name: (lambda *call: {"prepaid": household.wages_prepaid} if name == "pay_book" else (0.0, 0.0))    # the coin module's quote
         game.reopen_restaffed_ventures.return_value = []
         game.revenue.return_value = game.upkeep.return_value = game.mine_operating_cost.return_value = 0.0
         game.manual = True
@@ -93,12 +94,12 @@ class MoneySeatChargeTests(unittest.TestCase):
     def test_the_wages_paid_are_the_living_cost_less_the_dependants_shed_and_the_advance(self):
         game, household, founder = self.run_phase(living=100.0, shed=30.0, prepaid=20.0)
         game.pay_wages.assert_called_once_with(50.0, "living costs")
-        self.assertEqual((founder.living_cost_paid, household.wages_prepaid), (50.0, 0.0))
+        game.send.assert_any_call(SettleLivingCost(50.0))
 
     def test_an_advance_larger_than_the_cost_nets_it_to_nothing_and_is_used_up(self):
         game, household, founder = self.run_phase(living=100.0, shed=0.0, prepaid=500.0)
         game.pay_wages.assert_called_once_with(0.0, "living costs")
-        self.assertEqual(household.wages_prepaid, 0.0)
+        game.send.assert_any_call(SettleLivingCost(0.0))
 
 
 class FoundersJobTests(unittest.TestCase):
@@ -139,7 +140,9 @@ class RevenueCacheTests(unittest.TestCase):
         state = SimpleNamespace(
             scenario=SimpleNamespace(year=100), economy=SimpleNamespace(output_per_head=1.0),
             projects=None, household=household)
-        game = SimpleNamespace(state=state, household=household, founder_alive=True, output_factor=1.0, bondage_years_left=0, view=lambda name: (lambda: {"governance": 0.0, "reputation": 1.0, "hectares": 0.0}), pop_scale=1.0, real_output_per_head=lambda: 1.0, state_funding=lambda: 0.0, home_price_level=lambda: 1.0,
+        views = {"staff_version": lambda: household.workforce_version, "hour_commitments": lambda: {"wage_hours": household.wage_hours_this_year},
+                 "staff": lambda: {"directors_extra": household.directors_extra, "freedmen": household.freedmen, "slaves": household.slaves}}
+        game = SimpleNamespace(state=state, household=household, founder_alive=True, output_factor=1.0, bondage_years_left=0, view=lambda name: views.get(name, lambda: {"governance": 0.0, "reputation": 1.0, "hectares": 0.0}), pop_scale=1.0, real_output_per_head=lambda: 1.0, state_funding=lambda: 0.0, home_price_level=lambda: 1.0,
                                signature=1.0, committed=0.0, computed=[], _compute_revenue_uncached=None)
         game.labour = SimpleNamespace(director_hours_committed=lambda: game.committed, wage_signature=lambda: game.signature)
         game._compute_revenue_uncached = lambda: game.computed.append(1) or (10.0 * len(game.computed), 0.0)

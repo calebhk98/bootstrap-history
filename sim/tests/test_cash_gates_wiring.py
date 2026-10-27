@@ -21,7 +21,8 @@ class World:
         self.wages = {"smith": 1.0}
         self.trades_absent = {"smith"}
         self.trade_notes = {}
-        self.state = types.SimpleNamespace(household=types.SimpleNamespace(contract_hours={}),
+        self.workforce = types.SimpleNamespace(contract_hours={})
+        self.state = types.SimpleNamespace(household=self.workforce,
                                            projects=types.SimpleNamespace(done=set(), active={}))
 
     def spending_power(self, kind):

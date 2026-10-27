@@ -1103,10 +1103,10 @@ def _staffing_build_crew(sim, node):
                 and node["sch"] > sim.labour.effective_scholars()) else None),
         "more_craftsmen_than_your_household_can_hold": (
             "%s wanted; you have %.1f and could hold %.1f in all. %s"
-            % (node["art"], sim.artisans,
+            % (node["art"], sim.view("staff")()["artisans"],
                sim.labour.headcount() + max(0.0, sim.labour.household_room()), sim.labour.room_advice())
             if (node["art"] > sim.labour.headcount() + max(0.0, sim.labour.household_room())
-                and node["art"] > sim.artisans) else None),
+                and node["art"] > sim.view("staff")()["artisans"]) else None),
     }
 
 
@@ -1505,7 +1505,7 @@ def _explain_labour_notes(sim, node):
             "on this trade until they finish; if nobody is even learning it "
             "yet, starting is refused outright. Check 'labour' for who is "
             "in training, or 'hire' to add people to this trade right now.")
-    if node["art"] > sim.artisans or node["sch"] > sim.labour.effective_scholars():
+    if node["art"] > sim.view("staff")()["artisans"] or node["sch"] > sim.labour.effective_scholars():
         out["staff_needed_means"] = ("people kept on your own staff, who understand "
                                      "your methods and stay when this is finished. "
                                      "Different from hired_labour, which is hours of "

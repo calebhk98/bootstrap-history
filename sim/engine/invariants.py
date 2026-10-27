@@ -61,7 +61,7 @@ def check_labour_market_invariants(sim):
     town = sim.labour.home_town_population_estimate()
     assert town <= nation + 1e-6, \
         "home town of %.1f people exceeds the nation of %.1f" % (town, nation)
-    employees = sim.state.household.employees
+    employees = sim.view("staff")()["employees"]
     for trade in sim.labour.available_trades():
         reachable = sim.labour.reachable_trade_population(trade)
         people = sim.labour.people_who_exist(trade)

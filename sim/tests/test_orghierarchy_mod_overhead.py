@@ -40,7 +40,7 @@ class ApexOverhead(unittest.TestCase):
         api = RecordingApi(MOD)
         HIERARCHY.register(api)
         (_name, (function,), _fields), = api.registered("director_overhead")
-        sim = types.SimpleNamespace(employees={"scribe": 5.0}, done=set(), cfg={"director_hours_per_year": MANAGER_HOURS},
+        sim = types.SimpleNamespace(view=lambda name: (lambda: {"employees": {"scribe": 5.0}}), done=set(), cfg={"director_hours_per_year": MANAGER_HOURS},
                                     state=types.SimpleNamespace(interface={}))
         self.assertEqual(function(sim), 5 * COORDINATION)
 

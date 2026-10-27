@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 
 from sim.refusal import cause_of, facts_of
 from sim.labour.labour_wage_ledger import WageLedgerMixin
@@ -24,7 +25,7 @@ class Books(WageLedgerMixin):
     def __init__(self, held=None, year=100):
         self.held = held or household()
         self._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(household=self.held, scenario=types.SimpleNamespace(year=year)),
+            workforce=self.held, view=workforce_stand_in.view_of(self.held), year=year, state=types.SimpleNamespace(household=self.held, scenario=types.SimpleNamespace(year=year)),
             plain_number=lambda number: "%g" % number, money_text=lambda money, grouped=False, short=False: "%g" % money,
             logged_events=lambda: len(self.held.log))
         event_stand_in.stood_in(self._world)

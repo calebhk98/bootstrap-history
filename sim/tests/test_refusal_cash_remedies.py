@@ -23,7 +23,7 @@ def _actor(stock=None, upkeep=None, mines=None, employees=None, wages=None, budg
     projects = SimpleNamespace(operating=set(upkeep), done=set(upkeep), granted=set())
     return SimpleNamespace(
         SPENDING_DRAW_SHARE_ORDINARY=0.5, capital=cash, civ={"id": "stub"},
-        view=lambda name: {"material_commodity": {material: material for material in set(stock) | set(stock_rates())}}[name],
+        view=lambda name: ((lambda: {"employees": employees or {}}) if name == "staff" else {"material_commodity": {material: material for material in set(stock) | set(stock_rates())}}[name]),
         _material_stock=lambda: stock,
         material_stock_t=lambda material: stock[material],
         goods_market=SimpleNamespace(quote_sell=lambda material, tonnes: (material, tonnes, 30.0 * tonnes)),

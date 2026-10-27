@@ -10,6 +10,7 @@ from sim.hazards.api import RecoverOutput
 from sim.resources.api import NoteMineCostPaid
 from sim.constants import declare
 from sim.agents.api import edges
+from sim.workforce.api import SettleLivingCost
 from .living_cost_charge import living_cost_charged
 
 
@@ -39,9 +40,8 @@ class MoneyPhaseMixin:
         # next step.
         living_cost = living_cost_charged(
             living_cost, self.dependants_beyond_means(living_cost, self.revenue(), self.upkeep(), self.mine_operating_cost()),
-            self.state.household.wages_prepaid)
-        self.state.household.wages_prepaid = 0.0
-        self.state.founder.living_cost_paid += living_cost
+            self.view("pay_book")()["prepaid"])
+        self.send(SettleLivingCost(living_cost))
         mine_cost = self.mine_operating_cost()
         self.send(NoteMineCostPaid(mine_cost))
         revenue, upkeep = self.revenue(), self.upkeep()
@@ -97,13 +97,13 @@ class MoneyPhaseMixin:
         # that hides it lies about the cost of everything", and hiding the
         # acquisition from a player is the worst version of that.
         if self.state.founder.policy.get("auto_buy_people", False):
-            if self.state.household.capital > self.AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES * self.labour.SLAVE_BASE_PRICE and self.state.household.artisans < 12 and self.running_with_mechanic("hosts_bought_people"):
+            if self.state.household.capital > self.AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES * self.labour.SLAVE_BASE_PRICE and self.view("staff")()["artisans"] < 12 and self.running_with_mechanic("hosts_bought_people"):
                 got = self.labour.buy_slaves(min(6, int(self.state.household.capital // (self.AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES * self.labour.SLAVE_BASE_PRICE))))
                 if got:
                     self.send(RecordEvent.of("people_bought", "bought %d people for the workshop" % got))
-        if self.state.founder.policy.get("auto_manumit", not self.manual) and self.state.household.slaves:
+        if self.state.founder.policy.get("auto_manumit", not self.manual) and self.view("staff")()["slaves"]:
             if self.rng.random() < self.AUTO_MANUMIT_ANNUAL_CHANCE:
-                freed = self.labour.manumit(max(1, self.state.household.slaves // self.AUTO_MANUMIT_SHARE_DIVISOR))
+                freed = self.labour.manumit(max(1, self.view("staff")()["slaves"] // self.AUTO_MANUMIT_SHARE_DIVISOR))
                 if freed:
                     self.send(RecordEvent.of("people_freed", "freed %d people" % freed))
 

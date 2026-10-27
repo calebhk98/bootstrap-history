@@ -29,11 +29,7 @@ def _test_automatic_field_persistence():
 	)
 
 	proj = ActiveProjectState(ph_left=80.0, cost_left=300.0, yrs=1.0, spent=100.0, lab_left={"mason": 15.0})
-	hh = HouseholdState(
-		capital=1250.0,
-		trades_created={"mason", "carpenter"},
-		employees={"carpenter": 2.0},
-	)
+	hh = HouseholdState(capital=1250.0)
 	projects = ProjectsState(
 		active={"arch": proj},
 		done={"stone_cutting"},
@@ -41,7 +37,7 @@ def _test_automatic_field_persistence():
 	)
 	econ = EconomyState()
 	holdings = HoldingsState(market_pressure=120.0)
-	founder = FounderState(living_cost_paid=28.0)
+	founder = FounderState(_founder_death_year=28)
 	scenario = ScenarioState(year=115)
 
 	state = SimulationState(
@@ -130,11 +126,7 @@ def _test_runtime_type_reconstruction():
 		serialize_state,
 	)
 
-	hh = HouseholdState(
-		capital=500.0,
-		trades_created={"tailor", "weaver"},
-		employees={"weaver": 3.0},
-	)
+	hh = HouseholdState(capital=500.0)
 	projects = ProjectsState(
 		active={"loom": ActiveProjectState(ph_left=20.0)},
 		businesses=[Business.running(["spinning_wheel"], opened_year=90)],
@@ -155,8 +147,10 @@ def _test_runtime_type_reconstruction():
 	blob = serialize_state(state)
 	restored = deserialize_state(blob)
 
-	if not isinstance(restored.household.trades_created, set):
-		return False, f"trades_created is not set: {type(restored.household.trades_created)}"
+	from sim.workforce.api import WorkforceSeat
+	staff = deserialize_state(serialize_state(WorkforceSeat(trades_created={"tailor", "weaver"}, employees={"weaver": 3.0})), WorkforceSeat)
+	if not isinstance(staff.trades_created, set):
+		return False, f"trades_created is not set: {type(staff.trades_created)}"
 	if "spinning_wheel" not in restored.projects.operating or restored.projects.business.opened_year_of("spinning_wheel", 0) != 90:
 		return False, f"the business did not round trip: {restored.projects.business}"
 	if not isinstance(restored.projects.failed_attempts, collections.defaultdict):

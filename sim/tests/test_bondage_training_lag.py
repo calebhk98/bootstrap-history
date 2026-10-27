@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 from unittest import mock
 
 from sim.labour import labour_bondage
@@ -20,11 +21,11 @@ class Bondage(BondageMixin):
     def __init__(self, cash=1000.0, room=100.0, employees=None):
         self.cash, self.room, self.paid, self.sent = cash, room, [], []
         self.staff = employees or {}
-        self.household = types.SimpleNamespace(slaves=0, freedmen=0, manumitted_total=0, artisans=0.0, scholars=0.0, training=[],
+        self.household = types.SimpleNamespace(slaves=0, freedmen=0, manumitted_total=0, artisans=0.0, scholars=0.0, training=[], granted_staff=None,
                                                reputation=0.0)
         self.holdings = types.SimpleNamespace(market_pressure=0.0)
         self._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(household=self.household, holdings=self.holdings, scenario=types.SimpleNamespace(year=YEAR)),
+            workforce=self.household, view=workforce_stand_in.view_of(self.household), year=YEAR, state=types.SimpleNamespace(household=self.household, holdings=self.holdings, scenario=types.SimpleNamespace(year=YEAR)),
             household=self.household, can_pay=lambda price: price <= self.cash, EDGE_SLAVE_TRADERS="slave_traders",
             pay_edge=lambda edge, price, text: self.paid.append(price), send=self.sent.append,
             refusal_text=lambda what, price: "cannot afford %s" % what)

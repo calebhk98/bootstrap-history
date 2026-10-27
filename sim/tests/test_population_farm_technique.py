@@ -40,6 +40,7 @@ def _labour(done=(), year=100, done_year=None):
     world.state.projects.done_year = dict(done_year or {})
     world.state.projects.granted = set()
     world.state.scenario = SimpleNamespace(year=year)
+    world.year = year
     return Labour(world), world
 
 
@@ -63,7 +64,7 @@ class TechniqueTests(unittest.TestCase):
     def test_adoption_grows_with_age(self):
         labour, world = _labour(done=("fud_mechanical_reaper",), year=100, done_year={"fud_mechanical_reaper": 100})
         early = labour._farming_technique().toolkit.reaping_rate_multiplier
-        world.state.scenario.year += 60
+        world.year += 60
         late = labour._farming_technique().toolkit.reaping_rate_multiplier
         self.assertGreater(late, early)
 

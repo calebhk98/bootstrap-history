@@ -15,14 +15,14 @@ class Prelude:
 
 	def hours_report_is_news(self, key, signature):
 		"""True the first time a standing order falls short this way, False while it repeats."""
-		reported = self.needs.legacy_acting_household().unused_hours_reported
+		reported = self.seat.unused_hours_reported
 		if reported.get(key) == signature:
 			return False
 		reported[key] = signature
 		return True
 
 	def clear_hours_report(self, key):
-		self.needs.legacy_acting_household().unused_hours_reported.pop(key, None)
+		self.seat.unused_hours_reported.pop(key, None)
 
 	def step_teach_trades(self):
 		# 4a2. TEACH THE TRADES THIS SOCIETY DOES NOT HAVE. The optimizer has to
@@ -30,6 +30,7 @@ class Prelude:
 		#      it with `train`, or turns this on.
 		if self.needs.founder()["policy"].get("auto_train", not self.needs.automation()["manual"]):
 			household = self.needs.legacy_acting_household()
+			workforce = self.seat
 			projects = self.needs.legacy_projects()
 			nodes = self.needs.legacy_tree()
 			year = self.needs.year()
@@ -86,7 +87,7 @@ class Prelude:
 			# _is_gone(trade) is memoized (_gone_memo) for the same reason
 			# _market_supply/_trade_avail are: it reads only _trade_avail(trade),
 			# _market_supply(trade) and the trade's pending headcount, which
-			# read only household.training and household.employees - neither
+			# read only the training queue and the employees - neither
 			# mutated anywhere in this block; train(), at the very end of it,
 			# is the only thing that changes either. `order` has ~2,800 nodes,
 			# many naming the same handful of distinct trades, so each trade's
@@ -117,7 +118,7 @@ class Prelude:
 			# turn into a teaching treadmill that eats most of a run's
 			# output. A trade is worth restoring; it is not worth half of
 			# every year for ever.
-			_taught = household.last_taught
+			_taught = workforce.last_taught
 			want = past_cooldown(want, _taught, year, RETEACH_EVERY)
 			# AND ONLY IF YOU CAN PAY THEM: train() checks hours, literacy and
 			# household room but nothing here about money, so teaching a
@@ -139,7 +140,7 @@ class Prelude:
 				_budget = teaching_budget(_score, _spare_tr, household.capital)
 				if _wages > _budget:
 					continue
-				_first = trade_id not in household.trades_created
+				_first = trade_id not in workforce.trades_created
 				taught, _msg = self.labour.train(trade_id, 2)
 				# THE COOLDOWN IS ON TEACHING, NOT ON TRYING. Recording the
 				# attempt meant a refusal - no room in the household, no hours
@@ -167,17 +168,17 @@ class Prelude:
 		# earlier this same turn has already sold some of the hours this
 		# directive wants; this only sells the remainder, never the whole
 		# directive again on top of what was already sold.
-		household = self.needs.legacy_acting_household()
-		_wd = household.hour_allocations.get("work")
-		if _wd and _wd > 0 and household.work_trade:
-			_already = household.wage_hours_this_year
+		workforce = self.seat
+		_wd = workforce.hour_allocations.get("work")
+		if _wd and _wd > 0 and workforce.work_trade:
+			_already = workforce.wage_hours_this_year
 			_want = work_order_shortfall(_wd, _already)
 			if _want > 0.5:
 				_room = max(0.0, self.labour.director_pool() - self.labour.director_hours_committed())
 				_take = min(_want, _room)
 				_got = 0.0
 				if _take > 0.5:
-					_pay, _werr = self.labour.work_for_wages(household.work_trade, _take)
+					_pay, _werr = self.labour.work_for_wages(workforce.work_trade, _take)
 					# pay > 0 with an error is a WARNING (a bad trade, or
 					# starving an active project of its last hours), not a
 					# refusal - see work_for_wages's own docstring. The sale
@@ -198,11 +199,11 @@ class Prelude:
 						"order to sell %s hours a year as a "
 						"%s only managed %s this year - %s. "
 						"'allocate' changes or clears it"
-						% (self.needs.plain_number(_wd), household.work_trade,
+						% (self.needs.plain_number(_wd), workforce.work_trade,
 						   self.needs.plain_number(_already + _got),
 						   "no more of your own hours were left "
 						   "to sell once your projects and "
 						   "training had theirs"
 						   if _room < _want else
 						   "nobody here will pay for that trade "
-						   "any longer"), trade=household.work_trade, reason="no_hours_left" if _room < _want else "nobody_pays"))
+						   "any longer"), trade=workforce.work_trade, reason="no_hours_left" if _room < _want else "nobody_pays"))

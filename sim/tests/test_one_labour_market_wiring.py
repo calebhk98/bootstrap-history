@@ -22,8 +22,8 @@ RATES = {"artisan": 0.9, "labourer": 0.4, "scribe": 1.1}
 def real_market(pressure=None, employed=None):
     employed = dict(employed or {})
     world = types.SimpleNamespace(
-        state=types.SimpleNamespace(household=types.SimpleNamespace(labour_pressure_records=dict(pressure or {})),
-                                    scenario=types.SimpleNamespace(year=0)),
+        workforce=types.SimpleNamespace(labour_pressure_records=dict(pressure or {}), worker_housing_places=None),
+        year=0, state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=0)),
         HOURS_PER_PERSON_YEAR=HOURS_PER_YEAR, price_index=1.5, wage_index=1.3,
         economy=types.SimpleNamespace(agent_wage_per_hour=lambda trade: None), real_output_per_head=lambda: 1.1,
         wages={}, actor_staff_fte=lambda name: 0.0)

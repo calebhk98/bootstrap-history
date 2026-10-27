@@ -6,7 +6,7 @@ from sim.engine.ui_port import plain_number
 
 def succession_block(sim):
     """Deputy count, yearly hours, the threshold, and a named objective."""
-    deputies = sim.state.household.directors_extra
+    deputies = sim.view("staff")()["directors_extra"]
     needed = sim.DEPUTIES_CARRY_THE_WORK_FROM
     carry = sim.deputies_carry_the_work()
     block = {

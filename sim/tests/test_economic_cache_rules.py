@@ -13,7 +13,7 @@ from sim.tests import materials_stand_in, module_harness
 
 def household(**versions):
     fields = dict(operating_version=0, done_version=0, active_version=0, workforce_version=0, institution_units_version=0,
-                  wage_hours_this_year=0.0, directors_extra=0.0, bondage_years_left=0.0, freedmen=0.0, slaves=0.0,
+                  wage_hours_this_year=0.0, directors_extra=0.0, bondage_years_left=0.0, freedmen=0.0, slaves=0.0, employees={},
                   reputation=0.0)
     fields.update(versions)
     return types.SimpleNamespace(**fields)
@@ -40,8 +40,17 @@ class RevenueStandIn(ProductionMixin):
         self.founder_alive = True
         self.labour = types.SimpleNamespace(director_hours_committed=lambda: 0.0, wage_signature=lambda: 0)
 
-    def view(self, name):   # the polity module's standing, and the demography module's farm
+    def view(self, name):   # the polity module's standing, the demography module's farm and the workforce module's books
+        if name == "staff_version":
+            return lambda: self.household.workforce_version
+        if name == "hour_commitments":
+            return lambda: {"wage_hours": self.household.wage_hours_this_year}
+        if name == "staff":
+            return lambda: {key: getattr(self.household, key) for key in ("directors_extra", "freedmen", "slaves", "employees")}
         return lambda: {"governance": 0.0, "reputation": 0.0, "hectares": self.farm_hectares}
+
+    def send(self, command):
+        self.household.wage_hours_this_year = command.hours
 
     def state_funding(self):
         return 0.0

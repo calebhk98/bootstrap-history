@@ -31,7 +31,6 @@ class SeatMixin:
 				starting_capital=held.capital,
 				operating_changed=self._operating_changed,
 				active_changed=self._active_changed,
-				workforce_changed=self._workforce_changed,
 				state=self.state,
 				port=HouseholdPort())
 			held.cash_mark = cash_mark

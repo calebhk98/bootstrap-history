@@ -5,6 +5,7 @@ the sentences are `_staffing_warning_sentences`. Both run on stand-ins."""
 
 QUICK_TOPIC = True
 
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 from unittest import mock
 
@@ -30,6 +31,7 @@ class Game(StaffingMixin):
         self.state = SimpleNamespace(
             projects=SimpleNamespace(operating=set(operating)),
             household=SimpleNamespace(artisans=30.0, scholars=4.0))
+        self.view = workforce_stand_in.view_of(self.state.household)
         self.founder_alive = founder_alive
         self.cfg = {"immortal": immortal}
         self.labour = SimpleNamespace(effective_scholars=lambda: 7.5)

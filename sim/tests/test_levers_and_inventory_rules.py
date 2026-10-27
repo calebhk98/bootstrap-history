@@ -6,8 +6,12 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 
-from sim.engine.economy_housing import HousingPriceMixin as GoodsMixin
+from sim.ledger.api import PayEdge
+from sim.tests import module_harness
+from sim.workforce.api import BuildHousing
+from sim.workforce.module import Workforce
 from sim.markets import rules
 from sim.labour.labour_capacity import CapacityMixin
 from sim.labour.labour_population import PopulationMixin
@@ -32,10 +36,9 @@ class HousingTests(unittest.TestCase):
     def test_worker_housing_adds_its_places_and_pays_its_price(self):
         paid = []
         held = household(worker_housing_places=2.0)
-        stand_in = types.SimpleNamespace(
-            housing_price_per_place=lambda: 100.0, state=types.SimpleNamespace(household=held),
-            pay_edge=lambda edge, cost, note: paid.append(cost))
-        self.assertEqual(GoodsMixin.build_worker_housing(stand_in, 5), 5.0)
+        module = module_harness.build(Workforce, seat=held, views={"housing_price_per_place": 100.0, "legacy_acting_household": held},
+                                      answers={PayEdge: lambda command: paid.append(command.amount)})
+        self.assertEqual(module.build_housing(BuildHousing(5)), 5.0)
         self.assertEqual(held.worker_housing_places, 7.0)
         self.assertEqual(paid, [500.0])
 
@@ -43,7 +46,7 @@ class HousingTests(unittest.TestCase):
         def room(places):
             stand_in = types.SimpleNamespace(
                 SUPERVISION_ROOM_SELF=6.0, SUPERVISION_ROOM_PER_DIRECTOR_EXTRA=1.0,
-                _world=types.SimpleNamespace(state=types.SimpleNamespace(household=household(directors_extra=0.0, worker_housing_places=places)),
+                _world=types.SimpleNamespace(workforce=household(directors_extra=0.0, worker_housing_places=places),
                                              effect_sum=lambda effect, base: base))
             return CapacityMixin.supervision_room(stand_in)
         self.assertEqual(room(5.0), room(0.0) + 5.0)
@@ -51,12 +54,12 @@ class HousingTests(unittest.TestCase):
 
 class TradeSchoolTests(unittest.TestCase):
     def test_a_school_for_an_existing_trade_adds_seats_and_marks_the_trade_created(self):
-        held = household()
+        held = household(trade_schools=None)
         paid = []
         stand_in = types.SimpleNamespace(
             trade_available=lambda trade: True,
             _world=types.SimpleNamespace(wages={"chemist": 1.0}, trade_school_price_per_seat=lambda: 50.0,
-                                         state=types.SimpleNamespace(household=held), EDGE_WORKERS="workers",
+                                         workforce=held, view=workforce_stand_in.view_of(held), state=types.SimpleNamespace(household=held), EDGE_WORKERS="workers",
                                          pay_edge=lambda edge, cost, note: paid.append(cost)))
         self.assertEqual(PopulationMixin.found_trade_school(stand_in, "chemist", 2), (True, None))
         self.assertEqual(held.trade_schools, {"chemist": 2.0})
