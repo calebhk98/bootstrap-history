@@ -8,11 +8,12 @@ from types import SimpleNamespace
 
 from sim.diffusion.module import Diffusion
 from sim.engine.core import Sim
+from sim.production import capability
 from sim.mechanics import rules
 from sim.markets import categories
 from sim.markets.module import Markets
 from sim.mechanics.module import Mechanics
-from sim.tests import module_harness
+from sim.tests import module_harness, production_host
 
 QUICK_TOPIC = True
 
@@ -156,8 +157,9 @@ class SchoolingFlow(unittest.TestCase):
 class InstitutionUnitCost(unittest.TestCase):
 
     def cost(self, have_units, add_units, convexity=0.5, capex=1000.0):
-        game = SimpleNamespace(venture_capex=lambda node_id: capex, INSTITUTION_EXPANSION_CONVEXITY=convexity)
-        return Sim.institution_unit_cost(game, "college", have_units, add_units)
+        module = production_host.build(SimpleNamespace(venture_capex=lambda node_id: capex))
+        with mock.patch.object(capability, "INSTITUTION_EXPANSION_CONVEXITY", convexity):
+            return module.institution_unit_cost("college", have_units, add_units)
 
     def test_the_first_unit_costs_exactly_what_founding_costs(self):
         self.assertEqual(self.cost(0.0, 1.0), 1000.0)

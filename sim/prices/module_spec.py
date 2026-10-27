@@ -1,7 +1,7 @@
 """The prices module's spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_prices.py and the
-files it names) under the name the owner will publish. No view of the module is cached: the techniques, the projects and the
+Every read is a view of an owner that has not moved yet, published by the engine bridge (the engine's bridge files and the
+files they name) under the name the owner will publish. No view of the module is cached: the techniques, the projects and the
 economy behind them are written outside any command of the owners."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 
