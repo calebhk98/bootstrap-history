@@ -46,7 +46,7 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 
 The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equivalence tier identical at the prices, demography, land, markets, production and projects merges; stress tier and protocol transcripts identical after each module (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
 
-`stores` (mod stores) is a framework service and moves with phase 7. Next: the remaining engine mixins (measure with `tools/done_check.sh`), the projects record's shared sets, the ledger's purses; then phases 6 to 9.
+`stores` (mod stores) is a framework service and moves with phase 7. Next: the hub (`SeatMixin`, `StepPhasesMixin`), the projects record's shared sets and the purses; then phases 6 to 9.
 
 ## Task list
 
