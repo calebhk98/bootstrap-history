@@ -28,7 +28,7 @@ def declared_actor_kinds(sim):
 @bridge_view("opening_cast")
 def opening_cast(sim):
     """(home country, entries, profiles): the civilisation played, and every economy trading with it."""
-    foreign = [load_civ(civilisation_id) for civilisation_id in sim.partner_countries()]
+    foreign = [load_civ(civilisation_id) for civilisation_id in sim.view("partners")()]
     return cast_from_civilisations(sim.start_civ, foreign)
 
 

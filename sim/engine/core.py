@@ -20,7 +20,6 @@ from sim.geography.api import regions, tiles_held
 from sim.land.api import rules as land_rules
 from sim.knowledge.api import LearnTechnique, declared_starting_techs
 from .forward_markets import ForwardMarketsMixin
-from .forward_foreign_trade import ForwardForeignTradeMixin
 from .forward_demography import ForwardDemographyMixin
 from .forward_agriculture import ForwardAgricultureMixin
 from .forward_living_stock import ForwardLivingStockMixin
@@ -57,7 +56,6 @@ class Sim(
         ForwardMechanicsMixin,
         ForwardKnowledgeMixin,
         ForwardMarketsMixin,
-        ForwardForeignTradeMixin,
         ForwardProductionMixin,
         ForwardPricesMixin,
         ForwardLandMixin,
