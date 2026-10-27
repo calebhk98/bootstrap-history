@@ -24,7 +24,7 @@ class WageLedgerMixin:
         workforce = self._world.workforce
         summary = self.wage_work_this_year()
         if summary:
-            summary["year"] = self._world.state.scenario.year
+            summary["year"] = self._world.year
         workforce.wage_work_last_year = summary or None
         workforce.wage_hours_this_year = 0.0
         workforce.wage_income_this_year = 0.0

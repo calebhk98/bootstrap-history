@@ -14,7 +14,7 @@ from .staff_pay_rules import blended_pay, pay_of, roll_trade, settled_pay
 class StaffPayMixin:
 
     def keeps_pay_at_market(self):
-        return bool(self._world.state.founder.policy.get("keep_pay_at_market", True))
+        return bool(self._world.policy.get("keep_pay_at_market", True))
 
     def staff_pay(self, trade):
         """Money a year one person of `trade` on the payroll is paid: the going wage while pay is kept at

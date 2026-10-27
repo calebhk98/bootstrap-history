@@ -47,6 +47,15 @@ class WorkforceWorld:
         return self._owner.seat
 
     @property
+    def year(self):
+        return self._needs.year()
+
+    @property
+    def policy(self):
+        """The acting seat's standing policy switches (read here, never written)."""
+        return self._needs.founder()["policy"]
+
+    @property
     def society(self):
         """The society's labour hours and wage tightness: the module's own world state."""
         return self._owner.world

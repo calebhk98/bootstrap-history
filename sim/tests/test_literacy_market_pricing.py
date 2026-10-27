@@ -17,7 +17,7 @@ class _Market(LabourMarket):
         self._records_book = {}
         self._supply = supply
         self._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=year)))
+            year=year, state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=year)))
         self._labour = types.SimpleNamespace(market_supply=lambda trade: self._supply)
 
     def _records(self):
@@ -53,7 +53,7 @@ class PricePressure(unittest.TestCase):
         market = _Market(supply=10.0)
         market.press("millwright", 8.0)
         before = market.price_factor("millwright")
-        market._world.state.scenario.year += 5
+        market._world.year += 5
         after = market.price_factor("millwright")
         self.assertLess(after, before)
         self.assertAlmostEqual(market.recent_pressure("millwright"), 8.0 * market.LABOUR_PRESSURE_DECAY_RATE ** 5)

@@ -24,7 +24,7 @@ def market(pressure_records=None):
     employed = {}
     world = SimpleNamespace(
         workforce=SimpleNamespace(labour_pressure_records={} if pressure_records is None else pressure_records, worker_housing_places=None),
-        state=SimpleNamespace(scenario=SimpleNamespace(year=0)),
+        year=0, state=SimpleNamespace(scenario=SimpleNamespace(year=0)),
         HOURS_PER_PERSON_YEAR=HOURS_PER_YEAR, price_index=PRICE_INDEX, wage_index=WAGE_INDEX,
         economy=SimpleNamespace(agent_wage_per_hour=lambda trade: None), real_output_per_head=lambda: PAY_SCALE,
         wages={}, actor_staff_fte=lambda name: 0.0)

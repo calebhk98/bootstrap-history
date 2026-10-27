@@ -482,7 +482,7 @@ class TrainingMixin:
             return False, refusal
         count, frm, hours, fee, years = plan["count"], plan["from"], plan["hours"], plan["fee"], plan["years"]
         workforce = self._world.workforce
-        current_year = self._world.state.scenario.year
+        current_year = self._world.year
         self._world.pay_edge(self._world.EDGE_WORKERS, fee, "training fees")
         workforce.teaching_hours_this_year = (workforce.teaching_hours_this_year or 0.0) + hours
         workforce.trades_created.add(trade)

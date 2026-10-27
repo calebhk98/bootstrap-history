@@ -23,7 +23,7 @@ def real_market(pressure=None, employed=None):
     employed = dict(employed or {})
     world = types.SimpleNamespace(
         workforce=types.SimpleNamespace(labour_pressure_records=dict(pressure or {}), worker_housing_places=None),
-        state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=0)),
+        year=0, state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=0)),
         HOURS_PER_PERSON_YEAR=HOURS_PER_YEAR, price_index=1.5, wage_index=1.3,
         economy=types.SimpleNamespace(agent_wage_per_hour=lambda trade: None), real_output_per_head=lambda: 1.1,
         wages={}, actor_staff_fte=lambda name: 0.0)

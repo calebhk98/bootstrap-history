@@ -30,7 +30,7 @@ class _Labour(StaffControlsMixin):
         household = SimpleNamespace(reserve_craftsmen=reserve_craftsmen, reserve_scholars=reserve_scholars,
                                     log=[])
         self._world = SimpleNamespace(
-            workforce=household,
+            workforce=household, policy={"reserve_staff": policy_on},
             state=SimpleNamespace(founder=SimpleNamespace(policy={"reserve_staff": policy_on}), household=household,
                                   scenario=SimpleNamespace(year=100)),
             venture_staff_free=lambda: (free_scholars, free_craftsmen),

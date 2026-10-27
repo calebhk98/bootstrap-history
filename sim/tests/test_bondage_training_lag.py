@@ -25,7 +25,7 @@ class Bondage(BondageMixin):
                                                reputation=0.0)
         self.holdings = types.SimpleNamespace(market_pressure=0.0)
         self._world = types.SimpleNamespace(
-            workforce=self.household, view=workforce_stand_in.view_of(self.household), state=types.SimpleNamespace(household=self.household, holdings=self.holdings, scenario=types.SimpleNamespace(year=YEAR)),
+            workforce=self.household, view=workforce_stand_in.view_of(self.household), year=YEAR, state=types.SimpleNamespace(household=self.household, holdings=self.holdings, scenario=types.SimpleNamespace(year=YEAR)),
             household=self.household, can_pay=lambda price: price <= self.cash, EDGE_SLAVE_TRADERS="slave_traders",
             pay_edge=lambda edge, price, text: self.paid.append(price), send=self.sent.append,
             refusal_text=lambda what, price: "cannot afford %s" % what)

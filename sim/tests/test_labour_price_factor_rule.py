@@ -20,7 +20,7 @@ def market(people_in_the_market):
     supply = people_in_the_market * HOURS_PER_PERSON      # the market's supply is in hours a year
     world = types.SimpleNamespace(
         workforce=types.SimpleNamespace(labour_pressure_records={}),
-        state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=100)),
+        year=100, state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=100)),
         HOURS_PER_PERSON_YEAR=HOURS_PER_PERSON)
     labour = types.SimpleNamespace(_world=world, market_supply=lambda trade: supply)
     return _Market(labour)
@@ -56,7 +56,7 @@ class PriceFactorTests(unittest.TestCase):
         pressed = market(500)
         pressed.press(TRADE, 10 * HOURS_PER_PERSON)
         now = pressed.price_factor(TRADE)
-        pressed._world.state.scenario.year += 3
+        pressed._world.year += 3
         self.assertLess(pressed.price_factor(TRADE), now)
 
 

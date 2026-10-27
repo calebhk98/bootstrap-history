@@ -224,7 +224,7 @@ class LabourAllocationMixin:
         """This society's farming technique from the technologies it holds,
         each weighted by how far it has spread."""
         projects = self._world.state.projects
-        year = self._world.state.scenario.year
+        year = self._world.year
         starting = set(self._world.civ.get("starting_techs", ()))
         adoption = {}
         declarations = {node_id: self._world.mechanic(node_id, "farming_technique")

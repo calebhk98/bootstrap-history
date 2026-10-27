@@ -89,7 +89,7 @@ class StaffLedgerMixin:
     def workforce_report(self):
         """Where the payroll is fragile: single-person dependencies, expected yearly losses, reserve and training."""
         workforce = self._world.workforce
-        policy = self._world.state.founder.policy
+        policy = self._world.policy
         return {
             "depends_on_one_person": self.sole_supervisors(),
             "expected_losses_per_year": round(self.employed_total() * demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE, 2),

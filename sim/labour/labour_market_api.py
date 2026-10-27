@@ -88,7 +88,7 @@ class LabourMarket:
         if not record:
             return 0.0
         hours, year = record
-        age = max(0.0, self._world.state.scenario.year - year)
+        age = max(0.0, self._world.year - year)
         return hours * (self.LABOUR_PRESSURE_DECAY_RATE ** age)
 
     def pressure(self, trade):
@@ -107,7 +107,7 @@ class LabourMarket:
     def press(self, trade, hours):
         """Record demand for `hours` a year of a trade that is not a hire (teaching pulls a trade's
         people off their bench, a commission buys their time)."""
-        self._records()[trade] = (self.recent_pressure(trade) + max(0.0, hours), self._world.state.scenario.year)
+        self._records()[trade] = (self.recent_pressure(trade) + max(0.0, hours), self._world.year)
 
     def clear_pressure(self):
         self._records().clear()
@@ -273,4 +273,4 @@ class LabourMarket:
         if not record:
             return
         remaining = max(0.0, self.recent_pressure(trade) - max(0.0, hours))
-        self._records()[trade] = (remaining, self._world.state.scenario.year)
+        self._records()[trade] = (remaining, self._world.year)

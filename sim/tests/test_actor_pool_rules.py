@@ -61,7 +61,7 @@ class HiringRaisesThePrice(unittest.TestCase):
     def _market(self):
         household = types.SimpleNamespace(labour_pressure_records={}, employees={})
         world = types.SimpleNamespace(
-            workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household, scenario=types.SimpleNamespace(year=0)),
+            workforce=household, view=workforce_stand_in.view_of(household), year=0, state=types.SimpleNamespace(household=household, scenario=types.SimpleNamespace(year=0)),
             HOURS_PER_PERSON_YEAR=HOURS, wages={"smith": 1}, trade_family=lambda trade: "craft", price_index=1.0,
             wage_index=1.0, actor_staff_fte=lambda trade: 0.0, economy=types.SimpleNamespace(agent_wage_per_hour=lambda trade: 0.05))
         labour = types.SimpleNamespace(_world=world, market_supply=lambda trade: 20.0 * HOURS,
