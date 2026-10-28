@@ -156,6 +156,25 @@ Phase 6 (a) is done: `sim/ui/` reads views and sends commands (`tools/check_ui_v
 - [ ] The protocol golden transcripts from 0.3 must still match.
 - [ ] A final sweep of leftover mixin fakes in the tests.
 
+### Phase 6b: ownership boundaries (added after the review on PR #108)
+
+The migration is done when ownership boundaries hold, not when `Sim` is thin. `tools/measure/coupling.py` counts only the
+classes left in `Sim.__mro__`, so it measures the inheritance left on `Sim`, not the coupling between modules; that is
+`tools/measure/module_graph.py` (both printed by `tools/done_check.sh`). Measured at `58d70078`: 30 modules, 303
+dependency pairs between modules plus 29 modules depending on the engine bridge, a strongly connected group of 27,
+254 reads answered by the bridge, 80 reads of `legacy_*` views; the widest are markets (24 modules depended on),
+actors (21), hazards, workforce (20 each), projects (19).
+
+- [ ] Guarded reads: a reader cannot change another module's view answer (`sim/assembly/read_guard.py`, on with
+  `BH_GUARD_VIEW_READS=1` in debug games). Inventory every write it refuses on the slow tier and the equivalence runs,
+  turn each into the owner's command, then switch the guard on by default in debug games.
+- [ ] No `legacy_game` or `legacy_state` reads (six modules read `legacy_game`: production, workforce, finance, polity,
+  demography, agriculture); then no other `legacy_*` view that hands out a live object.
+- [ ] The engine bridge answers no module read: each bridged view is published by the module that owns the fact.
+- [ ] A width review for each module that depends on more than 15 others, written into its catalogue entry: views that
+  mirror methods merged into views that answer questions, sub-domains split out, pass-through dependencies removed,
+  and why each remaining edge is needed.
+
 ### Phase 7: mods
 
 - [x] Replace the process-global registries of the actors, workforce, polity, demography, agriculture, year phases and stores with per-assembly registrations (extension points; `ModCodeApi` records into the mod's `Operations`).
