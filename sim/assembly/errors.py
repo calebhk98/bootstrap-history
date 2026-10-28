@@ -7,3 +7,7 @@ class AssemblyError(ValueError):
 
 class StaleView(AssertionError):
 	"""A cached view answered differently from a fresh computation: its owner changed state without bumping a channel."""
+
+
+class ViewWrite(TypeError):
+	"""A reader changed what another module's view answered, instead of sending the owner's command."""

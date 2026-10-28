@@ -6,7 +6,7 @@ from .assemble import Assembly, assemble
 from .clock import Clock
 from .describe import dependency_lines, record
 from .kernels import Kernel, Sample
-from .errors import AssemblyError, StaleView
+from .errors import AssemblyError, StaleView, ViewWrite
 from .module import Module
 from .needs import Needs, Point
 from .spec import FIRST, KEYED, LIST, QUOTE, SUM, TABLE, Command, ExtensionPoint, ModuleSpec, Operations, PhaseHook, Provision, ViewSpec

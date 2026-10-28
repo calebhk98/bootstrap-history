@@ -5,6 +5,7 @@ from .clock import Clock
 from .errors import AssemblyError
 from .kernels import check_replacement
 from .module import Module
+from .read_guard import GuardedView
 from .needs import Needs, Point
 from .operations import Applied, apply_all
 from .spec import ModuleSpec, Operations, declared_methods, point_names, view_names
@@ -29,6 +30,7 @@ class Assembly:
 		self.kernels: Dict[str, Callable] = {}                    # kernel name -> the function modules call: a mod's replacement, else the reference
 		self.unstable: Dict[str, List[Tuple[str, str]]] = {}     # module id -> (mod id, method) overrides outside the spec
 		self._phase_handlers: Optional[Dict[str, Callable]] = None
+		self.guard_reads = False                                   # another module's view answers come back unwritable
 
 	def provider_of(self, name: str) -> Optional[str]:
 		return self.view_owner.get(name) or self.point_owner.get(name)
@@ -202,7 +204,10 @@ def _instantiate(assembly: Assembly) -> None:
 def _needs_for(assembly: Assembly, module_id: str, names: Sequence[str], optional: Sequence[str], sends: Sequence[type]) -> Needs:
 	needs = Needs(module_id, assembly.handlers, frozenset(sends))
 	for name in list(names) + list(optional):
-		setattr(needs, name, assembly.views.get(name) or assembly.points.get(name))
+		view = assembly.views.get(name)
+		if view is not None and assembly.guard_reads and view.owner_id != module_id:
+			view = GuardedView(view, module_id)
+		setattr(needs, name, view or assembly.points.get(name))
 	return needs
 
 
@@ -224,7 +229,7 @@ def _wire(assembly: Assembly) -> None:
 
 
 def assemble(shipped: Sequence[ModuleSpec], operations: Sequence[Operations] = (),
-             related: Optional[Callable[[str, str], bool]] = None, shadow_every: int = 0) -> Assembly:
+             related: Optional[Callable[[str, str], bool]] = None, shadow_every: int = 0, guard_reads: bool = False) -> Assembly:
 	"""The game's modules: the shipped set changed by each mod's operations in load order; AssemblyError names the parties."""
 	every_spec = {spec.module_id: spec for spec in shipped}
 	for entry in operations:
@@ -237,6 +242,7 @@ def assemble(shipped: Sequence[ModuleSpec], operations: Sequence[Operations] = (
 	_check_reads(assembly)
 	_check_view_cycles(assembly)
 	_bind_kernels(assembly)
+	assembly.guard_reads = guard_reads
 	_instantiate(assembly)
 	_wire(assembly)
 	for module in assembly.modules.values():

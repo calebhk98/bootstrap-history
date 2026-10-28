@@ -10,7 +10,10 @@ echo "mixin classes in MRO:" \
   "$(python3 -c "import sys; sys.path.insert(0,'.'); from sim.engine.core import Sim; print(sum(k.__name__.endswith('Mixin') for k in Sim.__mro__))")"
 
 coupling_output="$(python3 tools/measure/coupling.py)"
-echo "cross-class references: $(printf '%s\n' "$coupling_output" | head -1)"
+echo "inheritance left on Sim, cross-class references: $(printf '%s\n' "$coupling_output" | head -1)"
+
+echo "module graph (tools/measure/module_graph.py):"
+python3 tools/measure/module_graph.py | sed 's/^/  /'
 
 echo "direct capital/money writes outside owners:" \
   "$(grep -rnE '\.capital *=[^=]|\.money *=[^=]' sim --include=*.py | grep -v sim/tests | wc -l)"
