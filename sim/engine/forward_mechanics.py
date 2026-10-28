@@ -7,84 +7,13 @@ from sim.mechanics.api import rules
 
 class ForwardMechanicsMixin:
 
-    def mechanic(self, node_id, name):
-        """The parameters `node_id` declares for mechanic `name`, or None."""
-        return self.view("mechanic")[name].get(node_id)
-
-    def nodes_with_mechanic(self, name):
-        """Sorted ids of every node declaring mechanic `name`."""
-        return tuple(self.view("mechanic")[name])
-
     def running_with_mechanic(self, name):
         return [node_id for node_id, _parameters in self.view("running_mechanics")(name)]
-
-    def _effect_terms(self, channel):
-        return self.view("effect_terms")(channel)
-
-    def effect_holds(self, node_id, spec):
-        return self.view("effect_holds")(node_id, spec)
-
-    def effect_value(self, node_id, spec):
-        return self.view("effect_value")(node_id, spec)
-
-    def effect_values(self, channel):
-        return self.view("effect_values")(channel)
-
-    def effect_sum(self, channel, start=0.0):
-        return self.view("effect_sum")(channel, start)
-
-    def effect_factor(self, channel, start=1.0, exponent=None):
-        return self.view("effect_factor")(channel, start, exponent)
-
-    def effect_best(self, channel):
-        return self.view("effect_best")(channel)
-
-    def approval_patron(self, gate):
-        return self.view("approval_patron")(gate)
-
-    def school_node(self):
-        return self.view("school_node")()
-
-    def patrons_lost_to_eminence(self):
-        return self.view("patrons_lost_to_eminence")()
-
-    def corpus_hedge_tiers(self):
-        return self.view("corpus_hedge_tiers")()
-
-    def corpus_is_dispersed(self, node_id):
-        return self.view("corpus_dispersed")(node_id)
-
-    def corpus_diffusion_pace(self):
-        return self.view("corpus_diffusion_pace")()
 
     def best_corpus_node(self):
         """The corpus node that hedges best, or None if the tree has none."""
         best_first = self.view("corpus_nodes")()
         return best_first[0] if best_first else None
-
-    @property
-    def CAPABILITY_INSTITUTIONS(self):
-        return self.view("capability_sets")()[0]
-
-    @property
-    def SCALABLE_INSTITUTIONS(self):
-        return self.view("capability_sets")()[1]
-
-    @property
-    def DISEASE_BURDEN_TECH_IDS(self):
-        return tuple(self.view("mechanic")["disease_burden"])
-
-    @property
-    def STAFF_CAPACITY_SOURCES(self):
-        return self.view("staff_capacity_sources")()
-
-    @property
-    def ROOM_SOURCES(self):
-        return self.view("room_sources")()
-
-    @property
-    def LABOUR_PRODUCTIVITY_SOURCES(self):
-        return self.view("labour_productivity_sources")()
 
     @property
     def HAZARD_COUNTERS(self):
@@ -112,7 +41,7 @@ class ForwardMechanicsMixin:
         return sorted(node_id for node_id in projects.done
                       if node_id not in projects.granted
                       and not self.nodes[node_id].get("win_condition")
-                      and not (keep_dispersed and self.corpus_is_dispersed(node_id)))
+                      and not (keep_dispersed and self.view("corpus_dispersed")(node_id)))
 
     def deputy_hours(self):
         """Hours a year the deputies work, however small a fraction of a deputy."""

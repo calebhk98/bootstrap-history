@@ -37,11 +37,11 @@ def _world(sim: Any) -> Any:
 
 def _held_tiles(sim: Any) -> Tuple[List[str], List[str]]:
     from sim.geography.api import tiles_held
-    return tiles_held(sim.civ, sim.world_map), tiles_held(sim.start_civ, sim.world_map)
+    return tiles_held(sim.civ, sim.view("legacy_world_map")()), tiles_held(sim.start_civ, sim.view("legacy_world_map")())
 
 
 def _funded_share(sim: Any, node: Optional[str] = None) -> float:
-    record = sim.state_treasury().record
+    record = sim.view("state_treasury")().record
     need = sum(record.need.values())
     return 1.0 if need <= 0.0 else max(0.0, 1.0 - sum(record.unfunded.values()) / need)
 
@@ -53,7 +53,7 @@ def _army_share_of_wanted(sim: Any, node: Optional[str] = None) -> float:
 
 
 def _state_holds(sim: Any, node: Optional[str] = None) -> float:
-    return 1.0 if sim.state_treasury().knows(node, _world(sim)) else 0.0
+    return 1.0 if sim.view("state_treasury")().knows(node, _world(sim)) else 0.0
 
 
 def _territory_share(sim: Any, node: Optional[str] = None) -> float:
@@ -62,12 +62,12 @@ def _territory_share(sim: Any, node: Optional[str] = None) -> float:
 
 
 def _output_hours_per_head(sim: Any, node: Optional[str] = None) -> float:
-    people = sim.population.total
-    return 0.0 if people <= 0.0 else sim.real_output_hours() / people
+    people = sim.view("population")().total
+    return 0.0 if people <= 0.0 else sim.view("real_output_hours")(None) / people
 
 
 QUANTITIES: Dict[str, Quantity] = {
-    "population": Quantity(lambda sim, node=None: float(sim.population.total), "population",
+    "population": Quantity(lambda sim, node=None: float(sim.view("population")().total), "population",
                            meaning="people in the society"),
     "output_hours_per_head": Quantity(_output_hours_per_head,
                                       meaning="hours of real output a year per person"),
@@ -75,9 +75,9 @@ QUANTITIES: Dict[str, Quantity] = {
                                    meaning="share of what the state needs that its revenue covers"),
     "army_share_of_wanted": Quantity(_army_share_of_wanted,
                                      meaning="soldiers kept over the force the state's threat calls for"),
-    "literacy_general": Quantity(lambda sim, node=None: float(sim.literacy("literacy_general")),
+    "literacy_general": Quantity(lambda sim, node=None: float(sim.view("literacy")("literacy_general", None)),
                                  "literacy_general", meaning="general literacy"),
-    "literacy_elite": Quantity(lambda sim, node=None: float(sim.literacy("literacy_elite")),
+    "literacy_elite": Quantity(lambda sim, node=None: float(sim.view("literacy")("literacy_elite", None)),
                                "literacy_elite", meaning="elite literacy"),
     "state_holds": Quantity(_state_holds, needs_node=True, meaning="1 when the state holds the technology `node`, else 0"),
     "territory_share_of_start": Quantity(_territory_share,

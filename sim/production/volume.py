@@ -4,6 +4,7 @@ Needs: legacy_game, held_goods_prices_in_hours."""
 import json
 from typing import Any, List
 
+from sim.diffusion.api import NoteFirstRuns
 from sim.prices.api import prices as price_solver
 
 from . import volume_rules
@@ -34,14 +35,14 @@ class Volume:
 		if node.get("_revenue_basis") != "output":
 			return 1.0, 1.0, None
 
-		held = game.techniques_spread()
+		game.send(NoteFirstRuns(game.view("techniques_in_use")()))
+		held = game.view("techniques_spread")()
 
 		def work_out():
 			granted = frozenset(game.state.projects.granted)
-			prices = game._done_memo("concern_opening_prices", granted,
-			                         lambda: self._concern_prices_in_hours(granted))
+			prices = game.view("done_memo")("concern_opening_prices", granted, lambda: self._concern_prices_in_hours(granted))
 			return volume_rules.ratios(node, price_solver.default_production_entries(), (granted, prices), (held, prices))
-		return game._done_memo("concern_ratios", (node_id, held), work_out)
+		return game.view("done_memo")("concern_ratios", (node_id, held), work_out)
 
 	def concern_volume_ratio(self, node_id):
 		"""What the concern turns out now over what it turned out at the opening, from the same staff."""

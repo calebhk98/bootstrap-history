@@ -17,6 +17,7 @@ from sim.knowledge.module import Knowledge
 from sim.projects.api import ShutForgotten
 from sim.reporting.api import RecordEvent
 from sim.tests import hazards_host, module_harness
+from sim.tests.ui_stand_in import FactViews
 
 
 class _FrontOfTheListRNG:
@@ -26,7 +27,7 @@ class _FrontOfTheListRNG:
         return list(population)[:count]
 
 
-class _SackGame:
+class _SackGame(FactViews):
     """The tree and the techniques a sack reads, with the hazards module built over them. A ForgetTechniques it sends is
     applied as the engine bridge applies it."""
     losable_node_ids = ForwardMechanicsMixin.losable_node_ids

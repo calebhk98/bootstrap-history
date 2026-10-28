@@ -8,8 +8,9 @@ import unittest
 
 from sim.engine.view_share import ViewShare
 
+from sim.tests.ui_stand_in import FactViews
 
-class World(ViewShare):
+class World(ViewShare, FactViews):
     """A world that has a price table (compared by identity), a year and a stock count (compared by value)."""
 
     def __init__(self):

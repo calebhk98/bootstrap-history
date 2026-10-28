@@ -98,7 +98,7 @@ def teaching_knowledge(sim):
 def harvest_share_taken(sim, material):
     """Share of the harvest of a material the home state's forms take from growers; none without a government."""
     from sim.agents.api import tax_burden
-    if sim.actors.government_of(None) is None:
+    if sim.view("cast")().government_of(None) is None:
         return 0.0
     return tax_burden.harvest_share_taken(sim.view("actor_world")(), material)
 
@@ -106,7 +106,7 @@ def harvest_share_taken(sim, material):
 @bridge_view("concern_rows_stopped", kind=QUOTE)
 def concern_rows_stopped(sim, node_ids):
     """The yearly value of the concerns among `node_ids` that stand stopped."""
-    rows = sim.ledger_concern_rows()
+    rows = sim.view("concern_market")()
     return sum(rows.get(node_id, 0.0) for node_id in node_ids)
 
 
@@ -116,3 +116,9 @@ def shared_answer(sim, key, inputs, compute, standalone=False):
     return view_share.of(sim)._shared_answer(key, inputs, compute, standalone)
 
 
+
+
+@bridge_view("legacy_labour")
+def legacy_labour(sim):
+    """The workforce module's labour implementation, for engine code and mods that still call its members."""
+    return sim.assembly.modules["workforce"].labour

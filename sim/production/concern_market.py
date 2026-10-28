@@ -1,6 +1,8 @@
 """What a concern sells at and takes in: whether the economy prices its goods, the market over long-run price for what it makes
 and buys, what the share counted as sold stands on, and its takings and upkeep at a given ramp and capacity.
 Needs: legacy_game, money_per_labour_hour."""
+from sim.prices.api import rules as price_rules
+
 from . import concern_sales, node_revenue_market
 from .concern_earnings import output_market_factor, takings_at
 
@@ -16,10 +18,10 @@ class ConcernMarket:
 		quote then values sales and purchases alike at long-run cost rather than mixing the two bases."""
 		game = self._game()
 		baskets = self.concern_baskets_now(node_id)
-		paid = game.economy.agent_prices_at()
+		paid = game.view("legacy_economy")().agent_prices_at()
 		if baskets is None or paid is None:
 			return True
-		return all(game._priced_key(material, paid) is not None for material in baskets.outputs)
+		return all(price_rules.priced_key(material, paid, game.view("commodity_record")[material]) is not None for material in baskets.outputs)
 
 	def node_output_market_factor(self, node, selling_seat=None):
 		"""This year's market over long-run prices for what an output-derived node sells and buys; one otherwise.
@@ -28,11 +30,11 @@ class ConcernMarket:
 		game = self._game()
 		baskets = self.concern_baskets_now(node["id"])
 		outlook = None if selling_seat is None else (
-			lambda material, quantity: game.economy.agent_seat_sale_outlook(selling_seat, material, quantity))
+			lambda material, quantity: game.view("legacy_economy")().agent_seat_sale_outlook(selling_seat, material, quantity))
 		return output_market_factor(
 			baskets is not None and self.concern_goods_have_market(node["id"]),
 			lambda: node_revenue_market.basket_market_factor(
-				baskets.outputs, baskets.purchases, game._material_prices(), game.goods_market.home_unit_price, outlook))
+				baskets.outputs, baskets.purchases, game.view("material_prices")(), game.view("legacy_goods_market")().home_unit_price, outlook))
 
 	def basket_market_factor(self, sold, bought, long_run_prices, price_now):
 		return node_revenue_market.basket_market_factor(sold, bought, long_run_prices, price_now)
@@ -47,7 +49,7 @@ class ConcernMarket:
 			return concern_sales.NO_MARKET_YET
 		seat = game.state.acting_seat
 		bases = [taken.basis for material, units in sorted(baskets.outputs.items()) if units > 0.0
-		         for taken in [game.economy.agent_seat_sale_outlook(seat, material, units)] if taken is not None]
+		         for taken in [game.view("legacy_economy")().agent_seat_sale_outlook(seat, material, units)] if taken is not None]
 		if not bases:
 			return concern_sales.NO_MARKET_YET
 		return concern_sales.CLEARED_LAST_YEAR if all(basis == concern_sales.CLEARED_LAST_YEAR for basis in bases) \
@@ -59,15 +61,15 @@ class ConcernMarket:
 		`with_output_factor` False leaves out the hazard and war factor `revenue` applies to its total;
 		`cost_scale` is the scale on the tree's book coin (the home society's when none is given)."""
 		game = self._game()
-		return takings_at(game.nodes[node_id]["rev"], ramp, game.output_factor if with_output_factor else 1.0,
+		return takings_at(game.nodes[node_id]["rev"], ramp, game.view("output_factor")() if with_output_factor else 1.0,
 		                  game.price_index if cost_scale is None else cost_scale, self.concern_value_ratio(node_id),
 		                  self.concern_learning_ratio(node_id))
 
 	def concern_gross(self, node_id):
 		"""Yearly takings of a concern once ramped up, with the market's price for its goods applied."""
-		return self._game().economy.concern_gross(node_id)
+		return self._game().view("legacy_economy")().concern_gross(node_id)
 
 	def concern_upkeep(self, node_id, capacity=1.0, **options):
 		"""Yearly upkeep of a concern at a given capacity, without its crew's pay (an actor that runs a concern hires the crew
 		through the labour market and pays wages there)."""
-		return self._game().economy.concern_upkeep(node_id, capacity, **options)
+		return self._game().view("legacy_economy")().concern_upkeep(node_id, capacity, **options)

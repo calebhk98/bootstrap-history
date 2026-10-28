@@ -5,6 +5,7 @@ closure and ordering; typed-line spellings. The rules are called on the numbers 
 agent loop's save before its reply and the start credit forecast are in test_agent_save_before_reply."""
 import math
 from types import SimpleNamespace
+from sim.tests.ui_stand_in import Game
 
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
@@ -138,7 +139,7 @@ check("a fresh resume still sees only what that save file actually recorded",
 
 # planner.py works backward from the goal by critical-path method (CPM) over its prerequisite closure, instead of
 # walking a hand-written list. These checks pin the structural properties the measured comparison depends on.
-_p_s = SimpleNamespace(done=set(), granted=set(), _is_foreign_only=lambda node_id: False)
+_p_s = Game(done=set(), granted=set(), _is_foreign_only=lambda node_id: False)
 _p_order, _p_c, _p_extras, _p_staff = PLANNER.backward_plan(NODES, GOAL, _p_s, side_branches=0)
 _p_need = S.closure(NODES, GOAL)
 check("the planner's closure matches its own order's count for the goal",

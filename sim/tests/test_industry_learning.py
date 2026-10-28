@@ -11,6 +11,7 @@ from sim.production import industry_learning as learning
 from sim.production import learning as concern_learning
 from sim.production.node_output import Baskets
 from sim.tests import production_host
+from sim.tests.ui_stand_in import Game
 
 FURNACE = {"good": "furnace", "build_labour_hours": {"mason": 300.0, "smith": 100.0}, "service_life_years": 10}
 
@@ -82,7 +83,7 @@ class InputSupply(unittest.TestCase):
 
 def concern_world(producers, days, depths=None):
     """A stand-in Sim for the input supply: `producers` {good: [(tile, recipe)]}, `days` to the base."""
-    stub = types.SimpleNamespace(
+    stub = Game(
         economy=types.SimpleNamespace(agent_producers_by_good=lambda: producers),
         state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=10)))
     stub._done_memo = lambda name, key, compute: compute()
@@ -146,7 +147,7 @@ class PortListing(unittest.TestCase):
 class HaulDays(unittest.TestCase):
 
     def stub(self, base):
-        return production_host.build(types.SimpleNamespace(
+        return production_host.build(Game(
             labour=types.SimpleNamespace(base_tile=lambda: base, held_technologies=lambda: set()),
             view=lambda name: (lambda: {})))
 
@@ -166,7 +167,7 @@ class WholeRatio(unittest.TestCase):
 
     def stub(self, experience, tenure):
         baskets = Baskets({"metal": 10.0}, {"ore": 10.0}, {}, {}, {"smith": 800.0}, [(FURNACE, 1.0)])
-        stub = production_host.build(types.SimpleNamespace(_done_memo=lambda name, key, compute: compute()))
+        stub = production_host.build(Game(_done_memo=lambda name, key, compute: compute()))
         stub.concern_baskets_now = lambda node_id: baskets
         stub.techniques_in_use = lambda: frozenset()
         stub._concern_prices_in_hours = lambda held: {"metal": 20.0, "ore": 5.0}

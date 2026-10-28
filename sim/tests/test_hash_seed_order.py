@@ -62,7 +62,7 @@ from sim.tests.harness import sim
 from sim.markets import port_year
 port_year.SPIN_UP_CACHE_DIRECTORY = tempfile.mkdtemp()
 game = sim()
-record = game.economy.agent.stored["record"]
+record = game.view("legacy_economy")().agent.stored["record"]
 print(hashlib.sha256(json.dumps(record, sort_keys=True, default=str).encode()).hexdigest())
 """ % ROOT
 

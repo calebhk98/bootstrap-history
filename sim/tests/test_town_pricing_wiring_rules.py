@@ -15,6 +15,7 @@ from sim.finance.constants import BONDAGE_LABOUR_SHARE, BONDAGE_WAGE_MARKUP
 from sim.finance.rules import bondage_repayment, serve_bondage_year
 from sim.finance.state import FinanceSeat
 from sim.tests import finance_host
+from sim.tests.ui_stand_in import Game
 
 
 def bondage_module(labourer_quote):
@@ -25,7 +26,7 @@ def bondage_module(labourer_quote):
 
 def WorkshopGame(annual_quote):
     """The production module over a workshop of two smiths and a labour market quoting `annual_quote`."""
-    game = types.SimpleNamespace(
+    game = Game(
         labour=types.SimpleNamespace(market=types.SimpleNamespace(quote_annual=annual_quote)),
         running_with_mechanic=lambda mechanic: True, effect_sum=lambda name, base: base)
     module = production_host.build(game, staff={"employees": {"smith": 2.0}, "freedmen": 0.0, "slaves": 0.0})

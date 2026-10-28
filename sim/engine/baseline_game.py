@@ -9,15 +9,15 @@ from typing import Any, Dict, List, Set
 
 def society_technologies(game: Any) -> Set[str]:
     """What the society holds: the state's knowledge, the opening techniques and the starting grant."""
-    return set(game.state_treasury().knowledge) | set(game.view("actor_world")().baseline_knowledge()) | set(game.granted)
+    return set(game.view("state_treasury")().knowledge) | set(game.view("actor_world")().baseline_knowledge()) | set(game.granted)
 
 
 def snapshot(game: Any) -> Dict[str, Any]:
     from sim.geography.api import tiles_held
-    return {"year": game.year, "population": float(game.population.total), "wage_index": float(game.wage_index),
-            "literacy_general": float(game.literacy("literacy_general")),
-            "literacy_elite": float(game.literacy("literacy_elite")),
-            "territory_tiles": len(tiles_held(game.civ, game.world_map)),
+    return {"year": game.year, "population": float(game.view("population")().total), "wage_index": float(game.wage_index),
+            "literacy_general": float(game.view("literacy")("literacy_general", None)),
+            "literacy_elite": float(game.view("literacy")("literacy_elite", None)),
+            "territory_tiles": len(tiles_held(game.civ, game.view("legacy_world_map")())),
             "technologies": sorted(society_technologies(game))}
 
 

@@ -81,6 +81,9 @@ class FakeSim:
         self.ends_in_shocks = set(ends_in_shocks)
         self.calls = []
 
+    def view(self, name):
+        return lambda: ["rome"]     # one country in the game: no yearly world checks
+
     def playing_seats(self):
         return [seat_id for seat_id in self.seat_ids if seat_id not in self.state.ended]
 

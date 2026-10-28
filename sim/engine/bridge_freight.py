@@ -26,5 +26,5 @@ def holder_treasury(sim, holder):
     country's government."""
     if holder in sim.state.seats:
         return holder
-    government = sim.actors.government_of(holder)
+    government = sim.view("cast")().government_of(holder)
     return government.actor_id if government is not None else GOVERNMENT_PREFIX + str(holder)

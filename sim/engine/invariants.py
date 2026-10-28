@@ -56,7 +56,7 @@ def check_tile_owner_invariants(sim):
 
 def check_labour_market_invariants(sim):
     """Assert the labour market never holds more people than exist."""
-    nation = sim.population.total
+    nation = sim.view("population")().total
     town = sim.labour.home_town_population_estimate()
     assert town <= nation + 1e-6, \
         "home town of %.1f people exceeds the nation of %.1f" % (town, nation)
@@ -69,7 +69,7 @@ def check_labour_market_invariants(sim):
         assert reachable <= nation + 1e-6, \
             "reachable %s %.2f exceed the nation of %.1f" % (trade, reachable, nation)
     staffed = sum(employees.values())
-    available = sim.population.working_age
+    available = sim.view("population")().working_age
     assert staffed <= available + 1e-6, \
         "%.1f staff on the payroll exceed the %.1f people of working age" % (staffed, available)
     return True
@@ -78,7 +78,7 @@ def check_labour_market_invariants(sim):
 def check_technique_invariants(sim):
     """Assert no actor runs a plant of a technique it does not hold (its own knowledge, its country's baseline,
     or a licence it pays royalty under)."""
-    registry = sim.actors
+    registry = sim.view("cast")()
     world = sim.view("actor_world")()
     for actor in registry.actors.values():
         business = getattr(actor.record, "business", None)
@@ -96,7 +96,7 @@ def check_capacity_invariants(sim):
     crew found lies in 0..1, no actor's workforce is negative or larger than the people of its country, and each
     commodity's society capacity is finite and not negative."""
     from .mod_effects import people_of
-    registry = sim.actors
+    registry = sim.view("cast")()
     people = {country: people_of(sim, country) for country in sim.view("countries_in_game")()}
     home = sim.civ["id"]
     for actor in registry.actors.values():

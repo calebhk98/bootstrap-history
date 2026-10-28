@@ -46,12 +46,12 @@ class ViewShare:
         if demand is None:
             return None
         projects = sim.state.projects
-        return ((sim._material_prices(), demand),
-                (sim.goods_market.others_stamp(), sim.state.scenario.year,
+        return ((sim.view("material_prices")(), demand),
+                (sim.view("legacy_goods_market")().others_stamp(), sim.state.scenario.year,
                  sim.household.done_version, sim.household.operating_version,
                  len(projects.done), len(projects.operating),
-                 sim.view("forest_hectares")(), sim.view("nitre_beds")()["square_metres"], sim.population.total,
-                 sim.real_output_per_head(), len(sim.view("mine_workings")())))
+                 sim.view("forest_hectares")(), sim.view("nitre_beds")()["square_metres"], sim.view("population")().total,
+                 sim.view("real_output_per_head")(), len(sim.view("mine_workings")())))
 
     def _standalone_stamp(self):
         """The world stamp of an answer shared outside a view: what changes the people, the techniques in
@@ -60,7 +60,7 @@ class ViewShare:
         projects = sim.state.projects
         return ((), (sim.state.scenario.year, sim.household.done_version, sim.household.operating_version,
                      len(projects.done), len(projects.operating), sim.view("forest_hectares")(),
-                     sim.view("nitre_beds")()["square_metres"], sim.population.total, sim.real_output_per_head(),
+                     sim.view("nitre_beds")()["square_metres"], sim.view("population")().total, sim.view("real_output_per_head")(),
                      len(sim.view("mine_workings")())))
 
     def _shared_answer(self, key, inputs, compute, standalone=False):
@@ -96,10 +96,10 @@ class ViewShare:
         if self._view_scope is None:
             return compute()
         keys = self._shared_bill_keys(node_id)
-        return self._shared_answer(("bill", node_id), tuple(self.sim.material_stock_t(key) for key in keys), compute)
+        return self._shared_answer(("bill", node_id), tuple(self.sim.view("goods_stock")[key] for key in keys), compute)
 
     def _shared_bill_keys(self, node_id):
         """The commodities a node's bill draws on; these change only with the done set."""
         sim = self.sim
-        return sim._done_memo("bill_keys", node_id, lambda: tuple(sorted({
-            sim._material_tag(material)[0] for material in sim.project_material_needs(node_id)})))
+        return sim.view("done_memo")("bill_keys", node_id, lambda: tuple(sorted({
+            sim.view("material_pool")[material][0] for material in sim.view("project_material_needs")[node_id]})))

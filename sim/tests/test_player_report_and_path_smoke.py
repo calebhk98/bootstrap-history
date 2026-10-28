@@ -14,7 +14,7 @@ def _ask(game, **command):
 class EndOfRunTest(unittest.TestCase):
     def test_the_report_gives_the_whole_road_and_the_steps_that_would_have_come_next_and_no_advice_is_given(self):
         game = unopened_sim()
-        game.year = 9999
+        game.state.scenario.year = 9999
         report = final_report(game, NODES)
         self.assertEqual(report["the_whole_road_was"], len(closure(NODES, GOAL)))
         self.assertIsNotNone(report["still_to_build_when_it_ended"])
@@ -29,13 +29,13 @@ class PathAndWhyTest(unittest.TestCase):
 
     def test_the_chain_behind_a_node_is_the_sum_of_what_each_of_them_would_cost(self):
         reply = _ask(self.game, cmd="why", id="telescope")
-        behind = sorted(closure(NODES, "telescope") - {"telescope"} - set(self.game.done))
-        self.assertAlmostEqual(reply["chain_cost"], sum(self.game.project_cost(node_id) for node_id in behind), delta=0.5)
+        behind = sorted(closure(NODES, "telescope") - {"telescope"} - set(self.game.state.projects.done))
+        self.assertAlmostEqual(reply["chain_cost"], sum(self.game.view("project_cost")(node_id) for node_id in behind), delta=0.5)
 
     def test_the_chain_counts_down_as_prerequisites_are_built_and_the_whole_road_stays_the_same(self):
         before = _ask(self.game, cmd="why", id="telescope")
         for node_id in ("patron_local", "workshop_first", "identity_cover"):
-            self.game.done.add(node_id)
+            self.game.state.projects.done.add(node_id)
         self.game._done_changed()
         after = _ask(self.game, cmd="why", id="telescope")
         self.assertLess(after["chain_size"], before["chain_size"])
@@ -45,9 +45,9 @@ class PathAndWhyTest(unittest.TestCase):
 
     def test_path_names_what_on_the_route_is_shut_rather_than_unbuilt_and_how_to_reopen_it(self):
         game = unopened_sim()
-        game.done.add("lead_chamber")
+        game.state.projects.done.add("lead_chamber")
         game._done_changed()
-        game.mothballed.add("lead_chamber")
+        game.state.projects.mothballed.add("lead_chamber")
         reply = _ask(game, cmd="path", id=GOAL)
         self.assertIn("lead_chamber", reply.get("on_this_route_but_shut_down") or [])
         self.assertTrue(reply.get("reopen_them_with"))

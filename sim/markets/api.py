@@ -23,7 +23,7 @@ def build_setup(world, opening=None, production=None):
 
 def opening_setup(game):
 	"""The setup of the opening `game` saved."""
-	return build_setup(game.economy.world, game.economy.world.agent_record()["opening"])
+	return build_setup(game.view("legacy_economy")().world, game.view("legacy_economy")().world.agent_record()["opening"])
 
 
 def unit_mass_kg(material):

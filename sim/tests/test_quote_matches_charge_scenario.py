@@ -29,7 +29,7 @@ _TABLE_GAME = _fresh()
 def _bounty_node():
     probe = _TABLE_GAME
     for node_id in sorted(NODES):
-        if node_id not in probe.done and probe.bounty_eligible(node_id):
+        if node_id not in probe.state.projects.done and probe.view("bounty_eligible")(node_id):
             return node_id
     return None
 
@@ -61,9 +61,9 @@ if _bounty_id:
 for _name, _quote_args, _action, _action_args, _key in _ROWS:
     _game = _TABLE_GAME
     _quote = S._agent_dispatch(_game, NODES, dict(_quote_args, cmd="quote"))
-    _before = _game.capital
+    _before = _game.state.household.capital
     _reply = S._agent_dispatch(_game, NODES, dict(_action_args, cmd=_action))
-    _charged = _before - _game.capital
+    _charged = _before - _game.state.household.capital
     check("%s: the quote answers with a price" % _name,
           _quote.get("ok") and _key in _quote, _quote)
     check("%s: the action succeeds" % _name, _reply.get("ok"), _reply)
@@ -84,11 +84,9 @@ _farm_quote = S._agent_dispatch(_priced, NODES, {"cmd": "quote", "what": "farm",
 _school_quote = S._agent_dispatch(
     _priced, NODES, {"cmd": "quote", "what": "school", "trade": "smith"})
 check("farm price per hectare is one engine function the quote reads",
-      hasattr(_priced, "farm_price_per_hectare")
-      and abs(_farm_quote["per_unit"] - _priced.farm_price_per_hectare()) < 0.006)
+      abs(_farm_quote["per_unit"] - _priced.view("farm_land_price")()) < 0.006)
 check("trade-school price per seat is one engine function the quote reads",
-      hasattr(_priced, "trade_school_price_per_seat")
-      and abs(_school_quote["per_unit"] - _priced.trade_school_price_per_seat()) < 0.006)
+      abs(_school_quote["per_unit"] - _priced.view("trade_school_price_per_seat")()) < 0.006)
 
 
 # ---- the same comparison through the cash ledger: open, research, project bills, the hire wage ------
@@ -111,7 +109,7 @@ _PROBE = _ledger_game()
 def _first_node(test):
     probe = _PROBE
     for node_id in ORDER:
-        if node_id not in probe.done and probe.can_start(node_id) and test(NODES[node_id]):
+        if node_id not in probe.state.projects.done and probe.view("start_check")(node_id, False, None, False)[0] and test(NODES[node_id]):
             return node_id
     return None
 
@@ -120,7 +118,7 @@ def _first_openable():
     """A venture whose opening quote needs no extra staff, found on one probe game."""
     probe = _PROBE
     for node_id in ORDER:
-        if node_id in probe.done or not probe.is_venture(node_id):
+        if node_id in probe.state.projects.done or not probe.view("is_venture")[node_id]:
             continue
         probe.state.projects.done.add(node_id)
         probe._done_changed()
@@ -137,7 +135,7 @@ def _run_project(node_id):
     quoted = S._agent_dispatch(game, NODES, {"cmd": "why", "id": node_id})["cost"]["total"]
     reply = S._agent_dispatch(game, NODES, {"cmd": "start", "id": node_id})
     for _year in range(8):
-        if node_id in game.done:
+        if node_id in game.state.projects.done:
             break
         # the year's project payments and materials (its seat phases, in order); the ledger bill is all this reads
         game.assembly.phase_handler("seat_prelude")(game.state.acting_seat)
@@ -171,7 +169,7 @@ for (_label, _test), _node_id in zip(_PROJECT_TESTS, _PROJECT_NODES):
         continue
     _game, _quoted, _started = _run_project(_node_id)
     check("%s: the project starts and finishes" % _label,
-          _started.get("ok") and _node_id in _game.done, _started)
+          _started.get("ok") and _node_id in _game.state.projects.done, _started)
     _paid = _ledger_outflow(_game, "project payments", "materials bought for projects")
     check("%s: the ledger shows exactly the bill that `why` quoted" % _label,
           abs(_paid - _quoted) <= 0.11, (_paid, _quoted))

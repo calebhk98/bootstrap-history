@@ -90,6 +90,7 @@ METHOD_OF_VIEW = {
 FACT_OF_VIEW = {
     "cast": "actors", "demographic_flows": "_last_demographic_step", "event_log": "log",
     "hours_per_person_year": "HOURS_PER_PERSON_YEAR", "last_start": "materials_paid_at_last_start",
+    "legacy_economy": "economy", "legacy_goods_market": "goods_market", "legacy_labour": "labour",
     "legacy_geography": "geography", "legacy_world_map": "world_map", "material_checks": "MATERIAL_CHECKS",
     "mine_works_materials": "MINE_OPEX_MATERIALS", "staff_capacity_sources": "STAFF_CAPACITY_SOURCES",
     "techniques_forgotten": "forgotten",
@@ -102,6 +103,7 @@ KEYED_OF_VIEW = {
 }
 
 METHOD_OF_COMMAND = {
+    "ReviewVentures": "review_ventures",
     "AdvanceSociety": "advance_society", "AnswerOffer": "seat_answer", "ApplyForPatent": "seat_patent",
     "ApplyTechEffects": "apply_tech_effects", "AutoOpenVentures": "auto_open_ventures", "Bribe": "bribe",
     "BuildHousing": "build_worker_housing", "BuildWay": "build_way", "BuyMaterial": "buy_material_stock",
@@ -254,3 +256,10 @@ class Game(FactViews, SimpleNamespace):
             if given is None:
                 raise
             return given(name)
+
+
+from .ui_stand_in_names import FACT_OF_VIEW_MORE, METHOD_OF_COMMAND_MORE, METHOD_OF_VIEW_MORE  # noqa: E402
+
+for _table, _more in ((METHOD_OF_VIEW, METHOD_OF_VIEW_MORE), (FACT_OF_VIEW, FACT_OF_VIEW_MORE), (METHOD_OF_COMMAND, METHOD_OF_COMMAND_MORE)):
+    for _name, _old in _more.items():
+        _table.setdefault(_name, _old)

@@ -24,7 +24,7 @@ class EconomyNotOpened(ValueError):
 
 def state_text(sim):
 	"""The whole game as JSON text, from the live sim.state."""
-	sim.economy.flush_record()
+	sim.view("legacy_economy")().flush_record()
 	sim.state._civ = sim.civ.get("id")
 	sim.state._goal = sim.goal
 	sim.state._fog = sim.fog

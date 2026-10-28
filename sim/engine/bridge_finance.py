@@ -13,24 +13,24 @@ from .bridge import bridge_view
 @bridge_view("agent_rate")
 def agent_rate(sim):
 	"""The agent economy's loanable-funds rate, or None while it opens."""
-	return sim.economy.agent_rate()
+	return sim.view("legacy_economy")().agent_rate()
 
 
 @bridge_view("agent_credit_room", kind=QUOTE)
 def agent_credit_room(sim, borrower_id):
 	"""(True, room) when the agent economy answers, with room None before lenders have met; (False, None) while it opens."""
-	return sim.economy.agent_credit_room(borrower_id)
+	return sim.view("legacy_economy")().agent_credit_room(borrower_id)
 
 
 @bridge_view("agent_economy_opened")
 def agent_economy_opened(sim):
-	return sim.economy.agent.opened()
+	return sim.view("legacy_economy")().agent.opened()
 
 
 @bridge_view("agent_economy")
 def agent_economy(sim):
 	"""The agent economy itself (its record, its setup): a bank founded from outside goes into it."""
-	return sim.economy.agent.economy()
+	return sim.view("legacy_economy")().agent.economy()
 
 
 # ---- production and workforce ----

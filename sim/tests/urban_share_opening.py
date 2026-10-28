@@ -28,7 +28,7 @@ def opening_report(civilisation_id):
     computed = game.view("urban_fraction")()
     return {"civilisation": civilisation_id, "typed_initial_condition": float(game.civ.get("urban_fraction", 0.0)),
             "computed": computed,
-            "most_the_towns_could_feed": sum(min(ceilings[tile], people[tile]) for tile in people) / game.population.total,
+            "most_the_towns_could_feed": sum(min(ceilings[tile], people[tile]) for tile in people) / game.view("population")().total,
             "band": band, "inside_band": urban_share.within_band(computed, band)}
 
 

@@ -130,7 +130,7 @@ class ModEffects:
         return "%s: %s" % (self.label(), self.need_cause(cause))
 
     def _actor(self, sim: Any, actor_id: str) -> Any:
-        actor = sim.actors.get(actor_id)
+        actor = sim.view("cast")().get(actor_id)
         if actor is None:
             raise ModError("%s: no actor %r" % (self.label(), actor_id))
         return actor
@@ -143,17 +143,17 @@ class ModEffects:
 
     @staticmethod
     def _economy(sim: Any) -> Any:
-        return sim.economy.agent.economy()
+        return sim.view("legacy_economy")().agent.economy()
 
 
 def strata_of(sim: Any, country: str) -> list:
-    return [actor for actor in sim.actors.of_kind("stratum") if (actor.record.country or sim.civ["id"]) == country]
+    return [actor for actor in sim.view("cast")().of_kind("stratum") if (actor.record.country or sim.civ["id"]) == country]
 
 
 def people_of(sim: Any, country: str) -> float:
     """How many people the country holds: the home society's population, or a partner's strata."""
     if country == sim.civ["id"]:
-        return float(sim.population.total)
+        return float(sim.view("population")().total)
     return sum(actor.record.members for actor in strata_of(sim, country))
 
 

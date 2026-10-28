@@ -42,7 +42,7 @@ def build_reporting(civ_id: str, before_writing=None):
             continue    # an entry the disk cache could not keep is computed by the player
         shipped_openings.write(os.path.basename(directory), key, value)
         shipped.append((os.path.basename(directory), key))
-    return shipped, game.economy.spin_up_result()
+    return shipped, game.view("legacy_economy")().spin_up_result()
 
 
 def prune(kept: List[Tuple[str, str]]) -> List[Tuple[str, str]]:

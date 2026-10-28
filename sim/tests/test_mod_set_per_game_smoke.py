@@ -82,7 +82,7 @@ class TwoGamesTwoModSetsTests(unittest.TestCase):
         self.assertEqual(self.modded.labour._world.director_overhead_hours(), 120.0)
         self.assertEqual(len(self.modded.assembly.points["wealth_claims"]()), 1)
         for plain in (self.before, self.after):
-            self.assertEqual(plain.labour._world.director_overhead_hours(), 0.0)
+            self.assertEqual(plain.view("legacy_labour")()._world.director_overhead_hours(), 0.0)
             self.assertEqual(plain.assembly.points["wealth_claims"](), [])
 
 

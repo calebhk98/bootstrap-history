@@ -23,5 +23,5 @@ def society_techs(sim: Any) -> FrozenSet[str]:
     projects = sim.state.projects
     actors = []
     if sim.state.actors is not None and sim.state.actors.records:
-        actors = [actor for kind in SOCIETY_KINDS for actor in sim.actors.of_kind(kind)]
+        actors = [actor for kind in SOCIETY_KINDS for actor in sim.view("cast")().of_kind(kind)]
     return frozenset(held_by_society(projects.granted, actors))

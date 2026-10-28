@@ -20,7 +20,7 @@ class AvailableReplyTest(unittest.TestCase):
         rows = reply.get("available") or []
         self.assertIsNotNone(reply.get("you_could_raise_for_a_project"))
         self.assertTrue(any(row.get("needs_staff") for row in rows))
-        labour = self.game.labour
+        labour = self.game.view("legacy_labour")()
         for row in rows:
             node = NODES[row["id"]]
             short = node["art"] > labour.craft_hands_available() + 1e-9 or node["sch"] > labour.effective_scholars() + 1e-9

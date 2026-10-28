@@ -18,6 +18,7 @@ from sim.refusal import cause_of
 from .bridge_send import attach_send
 from .harness import *  # noqa: F401,F403
 from sim.tests import event_stand_in
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -27,7 +28,7 @@ effects = ModEffects(ACME)
 # --- money: the ledger is sent the payment (an actor to an edge, an edge to an actor, an actor to an actor).
 government = object()
 sent_money = []
-money_game = SimpleNamespace(actors=SimpleNamespace(get=lambda actor_id: government if actor_id in ("government:x", "government:y") else None),
+money_game = Game(actors=SimpleNamespace(get=lambda actor_id: government if actor_id in ("government:x", "government:y") else None),
                              send=sent_money.append)
 effects.pay_edge(money_game, "government:x", edges.EDGE_OFFICIALS, 10.0, "a bribe")
 effects.receive_from_edge(money_game, "government:x", edges.EDGE_OFFICIALS, 4.0, "returned")
@@ -52,7 +53,7 @@ check("the mod's own namespaced edge is accepted", sent_money[-1].edge == "edge:
 
 # --- goods: a move from the named edge into the account (added) or from the account to the edge (removed), at a tile.
 economy = object()
-goods_game = SimpleNamespace(economy=SimpleNamespace(agent=SimpleNamespace(economy=lambda: economy)))
+goods_game = Game(economy=SimpleNamespace(agent=SimpleNamespace(economy=lambda: economy)))
 with mock.patch.object(mod_effects.economy_api, "move_goods") as move_goods:
     effects.add_goods(goods_game, "mod_account", "grain", "tile_a", 5.0, "a gift of grain")
     effects.remove_goods(goods_game, "mod_account", "grain", "tile_a", 2.0, "a fire")

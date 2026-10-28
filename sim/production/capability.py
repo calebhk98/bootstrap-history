@@ -82,20 +82,20 @@ class Capability:
 		game = self._game()
 		if node_id not in self.needs.capability_sets()[1]:
 			return 1.0
-		if node_id in game.coverage_nodes():
+		if node_id in game.view("coverage")():
 			# a work that serves a share of the people is repeated until everyone who can use it is served
-			return max(1.0, game.units_for_coverage(node_id, 1.0))
+			return max(1.0, game.view("units_for_coverage")(node_id, 1.0))
 		if self.needs.mechanic["capability"].get(node_id).get("scalable") == "literacy":
-			return rules.literacy_ceiling(game.pop_scale, self.needs.literacy("literacy_general"),
+			return rules.literacy_ceiling(game.view("pop_scale")(), self.needs.literacy("literacy_general"),
 			                              game.labour.LITERACY_REFERENCE_GENERAL)
 		# Workshops, collegia and a freedman staff draw on craftsmen rather than the literate few, so population alone bounds them.
-		return rules.population_ceiling(game.pop_scale)
+		return rules.population_ceiling(game.view("pop_scale")())
 
 	def institution_unit_cost(self, node_id, have_units, add_units):
 		"""Money to take this institution from `have_units` to `have_units + add_units`, where one unit costs exactly
 		what founding it has always cost (venture_capex): a run that only founds the original single unit pays what it always paid.
 		Each further unit costs more than the last, the way a second school draws on the same small pool of the literate."""
-		return rules.institution_cost_between(self._game().venture_capex(node_id), have_units, add_units, INSTITUTION_EXPANSION_CONVEXITY)
+		return rules.institution_cost_between(self._game().view("venture_capex")[node_id], have_units, add_units, INSTITUTION_EXPANSION_CONVEXITY)
 
 	def running(self, node_id):
 		"""Built, and still being maintained - which is what a capability needs.
@@ -108,7 +108,7 @@ class Capability:
 		if node_id not in projects.done:
 			return False
 		node = game.nodes[node_id]
-		if (node.get("requires_running") or node.get("requires_ways")) and game.gate_blocked(node_id):
+		if (node.get("requires_running") or node.get("requires_ways")) and game.view("gate_blocked")(node_id):
 			return False
 		if node_id in projects.granted or not self.is_venture(node_id):
 			return True

@@ -31,7 +31,7 @@ class Depth:
 
 	def tenure_leavers_share(self):
 		"""Share of working people who leave work in a year, from the demography."""
-		return working_age_turnover(self._game().population)[1]
+		return working_age_turnover(self._game().view("population")())[1]
 
 	def industry_experience(self, node_id):
 		"""Retained worker-years spent running this technique, by anyone."""
@@ -45,8 +45,8 @@ class Depth:
 	def founding_staff_by_trade(self, node_id):
 		"""People of each trade one founding-size concern ties up for a year (founder-staffed)."""
 		game = self._game()
-		scholars, craftsmen = game.venture_hands_founder_staffed(node_id)
-		foreman_trade, foreman_fte = game.venture_foreman(node_id)
+		scholars, craftsmen = game.view("venture_hands_founder_staffed")[node_id]
+		foreman_trade, foreman_fte = game.view("venture_foreman")[node_id]
 		staff = {"scholar": scholars, "artisan": craftsmen}
 		if foreman_trade:
 			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
@@ -101,7 +101,7 @@ class Depth:
 	def opening_worker_years_by_node(self):
 		"""Worker-years a year the agent economy's producers put into each technique's own entries; None
 		while the economy opens."""
-		by_recipe = self._game().economy.agent_worker_years_by_recipe()
+		by_recipe = self._game().view("legacy_economy")().agent_worker_years_by_recipe()
 		if by_recipe is None:
 			return None
 		gate = {key: entry.get("requires_node") for key, entry in price_solver.default_production_entries().items()}
@@ -144,7 +144,7 @@ class Depth:
 		years = society_worker_years(projects.granted | projects.operating, self.is_concern_node, projects.granted,
 		                             self.seat.industry_opening_rate, self.founding_worker_years)
 		if game.state.actors is not None and game.state.actors.records:
-			for firm in game.actors.active_firms():
+			for firm in game.view("cast")().active_firms():
 				for node_id in firm.concerns:
 					years[node_id] = years.get(node_id, 0.0) + firm_worker_years(
 						self.founding_worker_years(node_id), firm.capacity_of(node_id), firm.staffed_share(node_id))

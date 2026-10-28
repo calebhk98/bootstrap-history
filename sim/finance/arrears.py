@@ -10,6 +10,7 @@ from sim.world import capital_market
 
 from .affordability import near_limit
 from .constants import DEBT_RATE_REPUTATION_DISCOUNT_CAP, DEBT_RATE_REPUTATION_SCALE
+from sim.projects.api import ReviewVentures
 
 
 class Arrears:
@@ -69,7 +70,7 @@ class Arrears:
 		returns (the loss rule of `Business.review`, the same for every owner). A ruined run once held works whose upkeep exceeded
 		their revenue, so net income sat near zero for ever: a household lets the loss-makers go the year it notices, and then its
 		income is its practice again, which is enough."""
-		shed = [closure.entry_key for closure in self.needs.legacy_game().review_ventures((business_review.LOSS_MAKING,), year)]
+		shed = [closure.entry_key for closure in self.needs.legacy_game().send(ReviewVentures(tuple((business_review.LOSS_MAKING,)), year))]
 		if shed:
 			in_arrears = self.needs.acting_balance() < 0
 			# name them: a bare count tells a player neither which nor how to get it back

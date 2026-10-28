@@ -53,7 +53,7 @@ def _row(sim, town, record, held):
 
 
 def _towns(sim):
-    return list(sim.world_map.catalogue("towns").values())
+    return list(sim.view("legacy_world_map")().catalogue("towns").values())
 
 
 def register(api):

@@ -13,11 +13,11 @@ def cash_remedies(actor):
     found = []
     # Living stock is the means of breeding more; it is not offered as cash.
     breeding_stock = {actor.view("material_commodity")[material] for material in stock_rates()}
-    for material in sorted(actor._material_stock()):
+    for material in sorted(actor.view("held_goods")()):
         if material in breeding_stock:
             continue
-        stock = actor.material_stock_t(material)
-        _key, tonnes, money = actor.goods_market.quote_sell(material, stock)
+        stock = actor.view("goods_stock")[material]
+        _key, tonnes, money = actor.view("legacy_goods_market")().quote_sell(material, stock)
         if money > 0:
             found.append((money, "sell %s %s (brings %s now)" % (
                 material, "{:,.1f}".format(tonnes), money_text(money, actor, grouped=True))))
@@ -28,7 +28,7 @@ def cash_remedies(actor):
             if saving > 0.5:
                 found.append((saving, "mothball %s (stops %s a year of upkeep)" % (
                     node_id, money_text(saving, actor, grouped=True))))
-    for material in sorted(actor.mine_capacity):
+    for material in sorted(actor.view("mine_capacity")()):
         saving = sum(actor.mine_operating_cost_for(working)
                      for working in actor._workings_of(material))
         if saving > 0.5:

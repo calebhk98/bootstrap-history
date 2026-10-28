@@ -13,7 +13,7 @@ from .bridge import bridge_command, bridge_view
 @bridge_view("home_country")
 def home_country(sim):
     """{id: the home country's id, location: the tile at its centre, None when the cast has no such country}."""
-    state = sim.actors.state
+    state = sim.view("cast")().state
     home = state.countries.get(state.home_country)
     return {"id": state.home_country, "location": None if home is None else home.location}
 
@@ -24,10 +24,10 @@ def home_country(sim):
 def take_goods(sim, command):
     """Thieves take tonnes of a good out of a holder's store, never below zero, into an edge's goods."""
     if command.store == STORE_ACTOR:
-        stores = sim.actors.actors[command.actor].record.stores
+        stores = sim.view("cast")().actors[command.actor].record.stores
         stores[command.good] = max(0.0, stores[command.good] - command.tonnes)
     elif command.store == STORE_STOCK:
         sim.send(DrawDownStock(command.good, command.tonnes))
     elif command.store == STORE_GRANARY:
         sim.send(TakeFromGranary(command.tonnes * 1000.0))
-    sim.edge(command.edge).receive_goods(command.good, command.tonnes)
+    sim.view("legacy_edge_account")[command.edge].receive_goods(command.good, command.tonnes)

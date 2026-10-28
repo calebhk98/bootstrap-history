@@ -16,18 +16,18 @@ from .bridge import bridge_view
 def legacy_country_literacy(sim, country):
     """The reading shares of `country` (the home country when None), owned only by the country's strata."""
     sim.view("seeded_actor_registry")()
-    if not sim.actors.of_kind("stratum"):
-        seed_strata(sim.actors, None)
-    home = sim.actors.state.home_country
+    if not sim.view("cast")().of_kind("stratum"):
+        seed_strata(sim.view("cast")(), None)
+    home = sim.view("cast")().state.home_country
     country = country or home
-    return CountryLiteracy(actor for actor in sim.actors.of_kind("stratum")
+    return CountryLiteracy(actor for actor in sim.view("cast")().of_kind("stratum")
                            if (actor.record.country or home) == country)
 
 
 @bridge_view("state_knowledge")
 def state_knowledge(sim):
     """The nodes the home government holds."""
-    return sim.state_treasury().knowledge
+    return sim.view("state_treasury")().knowledge
 
 
 # ---- knowledge and production ----

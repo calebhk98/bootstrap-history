@@ -65,8 +65,8 @@ class Revenue:
 		staff = self.needs.staff()
 		key = (
 			scenario.year,
-			game.pop_scale,
-			game.real_output_per_head(),
+			game.view("pop_scale")(),
+			game.view("real_output_per_head")(),
 			game.household.operating_version,
 			game.household.done_version,
 			self.needs.staff_version(),
@@ -75,16 +75,16 @@ class Revenue:
 			game.labour.director_hours_committed(),
 			game.labour.wage_signature(),
 			staff["directors_extra"],
-			game.bondage_years_left,
+			game.view("debt_status")()["bondage_years_left"],
 			game.view("farm_holdings")()["hectares"] or 0.0,
 			staff["freedmen"] or 0.0,
 			staff["slaves"] or 0.0,
 			standing["governance"] or 0.0,
-			game.output_factor,
+			game.view("output_factor")(),
 			standing["reputation"],
 			game.founder_alive,
-			game.state_funding(),
-			game.home_price_level(),
+			game.view("state_funding")(),
+			game.view("home_price_level")(),
 		)
 		if getattr(game.household, "_revenue_cache_key", None) != key:
 			game.household._revenue_cache_val = self._compute_revenue_uncached()
@@ -99,7 +99,7 @@ class Revenue:
 
 	def concern_revenue(self, node_id):
 		"""What one open concern earns in a year before the output factor: the figure the screens quote."""
-		return self._game().venture_real_earnings(node_id, with_output_factor=False)
+		return self._game().view("venture_real_earnings")(node_id, None, False, False)
 
 	def _compute_revenue_uncached(self):
 		"""(the estimate, the forecast of the concerns the clearing pays), both after the output factor."""
@@ -132,10 +132,10 @@ class Revenue:
 		total_revenue += self.workshop_output()
 		total_revenue += self.founder_wage_income()
 		gross = total_revenue
-		ceiling = self.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * game.pop_scale \
-			* game.real_output_per_head() * game.price_index
+		ceiling = self.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * game.view("pop_scale")() \
+			* game.view("real_output_per_head")() * game.price_index
 		gross = rules.saturated_revenue(gross, ceiling)
-		return (gross + game.state_funding()) * game.output_factor, book_forecast * game.output_factor
+		return (gross + game.view("state_funding")()) * game.view("output_factor")(), book_forecast * game.view("output_factor")()
 
 	def workshop_output(self):
 		"""What your standing staff produce and sell, over and above projects."""
@@ -148,7 +148,7 @@ class Revenue:
 			staff["employees"], lambda trade: self.needs.trade_family[trade] == "craft", market.quote_annual,
 			staff["freedmen"] + staff["slaves"] * SLAVE_LABOUR_PRODUCTIVITY_SHARE, market.quote_annual("artisan"))
 		mark = WORKSHOP_WAGE_MARKUP_BASE
-		mark = game.effect_sum("workshop_markup", mark)
+		mark = game.view("effect_sum")("workshop_markup", mark)
 		# Knowing how to do a thing earns nothing on its own; it makes the workshop you staff and pay for more productive,
 		# which is how method has always paid. It needs a workshop and it needs people; with neither it is worth nothing.
 		return workshop_output_value(wage, mark, self.capability_factor())
@@ -194,7 +194,7 @@ class Revenue:
 			if not game.nodes[node_id]["rev"]:
 				continue
 			# The figure `ventures` and `why` print, and the factor revenue() applies, so the ledger's parts add up to its total.
-			row = ledger_row(game.venture_real_earnings(node_id))
+			row = ledger_row(game.view("venture_real_earnings")(node_id, None, False, True))
 			if row is not None:
 				rows[node_id] = row
 		return rows
@@ -221,11 +221,11 @@ class Revenue:
 		founder is employed in a trade they hold - which is otherwise invisible anywhere else in the interface.
 		"""
 		game = self._game()
-		funding = game.state_funding()
+		funding = game.view("state_funding")()
 		return assemble_ledger(
-			self.ledger_concern_rows(), self.workshop_output() * game.output_factor,
-			self.founder_wage_income() * game.output_factor,
-			funding * game.output_factor if funding > 0.5 else None, self.revenue())
+			self.ledger_concern_rows(), self.workshop_output() * game.view("output_factor")(),
+			self.founder_wage_income() * game.view("output_factor")(),
+			funding * game.view("output_factor")() if funding > 0.5 else None, self.revenue())
 
 	# A granted node whose category is flagged practisable is a skill the founder holds and works with their own hands; the held
 	# skills choose the trade the founder's hours are sold in (held_trade). A granted fleet of merchant ships is owned by other

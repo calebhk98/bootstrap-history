@@ -18,7 +18,7 @@ class Upkeep:
 		game = self._game()
 		practice_set = self._practice_set()
 		operating = game.state.projects.operating
-		return {node_id: game.venture_real_upkeep(node_id)
+		return {node_id: game.view("venture_real_upkeep")(node_id, None)
 		        for node_id in self._revenue_upkeep_candidates()
 		        if node_id in operating or node_id in practice_set}
 

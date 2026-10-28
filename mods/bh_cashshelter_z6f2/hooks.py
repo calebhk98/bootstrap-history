@@ -74,12 +74,12 @@ def register(api):
         return sum(entry["amount"] for entry in memory(sim).get(name, {}).values())
 
     def holder_actor(sim, name):
-        return sim.actors.get(holder_id(name))
+        return sim.view("cast")().get(holder_id(name))
 
     def ensure_holder(sim, name):
         actor = holder_actor(sim, name)
         if actor is None:
-            actor = sim.actors.add(holder_id(name), ActorRecord(
+            actor = sim.view("cast")().add(holder_id(name), ActorRecord(
                 kind=api.qualified(name), name=holders[name]["label"], founded_year=sim.year))
         return actor
 
@@ -96,7 +96,7 @@ def register(api):
         expected theft on it, at the holder's own visibility."""
         from sim.coin.api import COIN_GUARD_HOURS_PER_TONNE_YEAR, theft_exposure
         actor = holder_actor(sim, name)
-        scale = sim.visible_scale(sum(actor.workforce.values()), actor.money, actor.prominence()) if actor else 0.0
+        scale = sim.view("visible_scale")(sum(actor.workforce.values()), actor.money, actor.prominence(), 0.0) if actor else 0.0
         stolen = theft_exposure.expected_theft_loss(
             {"coin": amount}, {"coin": COIN_GUARD_HOURS_PER_TONNE_YEAR}, scale, sim.state_capacity, 0.0)
         return sim.view("coin_keeping_cost")(amount) + stolen
@@ -179,7 +179,7 @@ def register(api):
         holder = ensure_holder(sim, name)
         seat = sim.state.acting_seat
         settle(sim, name, seat)
-        ledger.transfer(household, sim.edge(edges.EDGE_COIN_GUARDS), carry, CARRY_CAUSE)
+        ledger.transfer(household, sim.view("legacy_edge_account")[edges.EDGE_COIN_GUARDS], carry, CARRY_CAUSE)
         ledger.transfer(household, holder, amount, DEPOSIT_CAUSE)
         entry = memory(sim).setdefault(name, {}).setdefault(seat, {"amount": 0.0, "settled_year": sim.year})
         entry["amount"] += amount
@@ -215,7 +215,7 @@ def register(api):
         household = sim.state.household
         if paid > 0.0:
             ledger.transfer(holder, household, paid, PAYOUT_CAUSE)
-            ledger.transfer(household, sim.edge(edges.EDGE_COIN_GUARDS), carry_cost(sim, name, paid), CARRY_CAUSE)
+            ledger.transfer(household, sim.view("legacy_edge_account")[edges.EDGE_COIN_GUARDS], carry_cost(sim, name, paid), CARRY_CAUSE)
         entry["amount"] -= asked
         return {"ok": True, "holder": name, "asked": round(asked, 1), "paid": round(paid, 1),
                 "written_off": round(asked - paid, 1), "fees_taken_from_claim": round(fees, 1),
@@ -304,7 +304,7 @@ def register(api):
         row("debasement", None, cash * sim.REAL_EROSION_CASH_LOSS_SHARE, 0.0,
             "REAL_EROSION_CASH_LOSS_SHARE times the hazard's erosion, taken from the purse; coin held by a holder is "
             "still coin and is not spared the fall in the coin's worth")
-        status = sim.confiscation_status()
+        status = sim.view("confiscation_status")()
         visible = max(0.0, household.capital - max(0.0, getattr(household, "concealed", 0.0) or 0.0))
         row("treasury confiscation", status["chance_this_year"], visible * sim.CONFISCATION_CAPITAL_LOSS, 0.0,
             "CONFISCATION_CAPITAL_LOSS of the wealth the state can count (your purse less what you conceal); "

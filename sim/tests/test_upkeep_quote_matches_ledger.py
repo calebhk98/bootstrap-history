@@ -6,11 +6,12 @@ import types
 import unittest
 
 from sim.tests import production_host
+from sim.tests.ui_stand_in import Game
 
 
 def _Household(quotes, operating, practice=()):
     """The production module over the concerns that are open, each concern's quote a figure set here."""
-    module = production_host.build(types.SimpleNamespace(state=types.SimpleNamespace(projects=types.SimpleNamespace(operating=set(operating))),
+    module = production_host.build(Game(state=types.SimpleNamespace(projects=types.SimpleNamespace(operating=set(operating))),
                                                          venture_real_upkeep=lambda node_id, units=None: quotes[node_id]))
     module._practice_set = lambda: set(practice)
     module._revenue_upkeep_candidates = lambda: sorted(quotes)

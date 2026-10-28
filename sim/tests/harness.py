@@ -178,8 +178,8 @@ def sim(civ="rome_100ad", capital=None, manual=True, events=False, surveyed=None
     config = {"start_capital": capital} if capital is not None else None
     test_sim = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
               civ=S.load_civ(civ), cfg=config)
-    test_sim.goal, test_sim.done_year = GOAL, {}
-    for material in (("coal",) + tuple(_ore_goods(test_sim.world_map))) if surveyed is None else tuple(surveyed):
+    test_sim.state._goal, test_sim.done_year = GOAL, {}
+    for material in (("coal",) + tuple(_ore_goods(test_sim.view("legacy_world_map")()))) if surveyed is None else tuple(surveyed):
         found_deposits_of(test_sim, material)
     return test_sim
 
@@ -205,7 +205,7 @@ def build_unopened(factory):
     with mock.patch.object(EconomyPort, "open_agent", lambda self: None), \
             mock.patch.object(foreign_economy_data, "foreign_economy_records", supported_records):
         game = factory()
-    game.economy._opening = True
+    game.view("legacy_economy")()._opening = True
     game.assembly.modules["foreign_trade"].needs.foreign_economy_records = supported_records   # the partners of the books only
     return game
 
@@ -224,12 +224,12 @@ def found_deposits_of(game, material):
     if resource_id is None:
         return []
     seed = "tests"
-    held = _geography.tiles_held(game.civ, game.world_map)
-    for tile in sorted(held, key=lambda tile: -_geography.endowment(tile, resource_id, game.world_map)["undiscovered_expected"]):
-        found = _geography.prospect(tile, resource_id, 1e12, seed, game.world_map)
+    held = _geography.tiles_held(game.civ, game.view("legacy_world_map")())
+    for tile in sorted(held, key=lambda tile: -_geography.endowment(tile, resource_id, game.view("legacy_world_map")())["undiscovered_expected"]):
+        found = _geography.prospect(tile, resource_id, 1e12, seed, game.view("legacy_world_map")())
         known = {row["id"] for row in resources.seat.deposits_found}
         resources.seat.deposits_found.extend(dict(row) for row in found if row["id"] not in known)
-    return game.found_deposits(material)
+    return game.view("found_deposits")[material]
 
 
 def concern_needing_craftsmen_to_supervise():
@@ -242,11 +242,11 @@ def concern_needing_craftsmen_to_supervise():
     fits = []
     for candidate_id in sorted(NODES):
         node = NODES[candidate_id]
-        if probe.is_venture(candidate_id) and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
-            scholars, craftsmen = probe.venture_hands(candidate_id)
-            if (scholars <= probe.labour.effective_scholars() and cover < craftsmen <= 5.5
-                    and probe.venture_foreman(candidate_id)[0] is None):
-                fits.append((probe.venture_capex(candidate_id), candidate_id))
+        if probe.view("is_venture")[candidate_id] and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
+            scholars, craftsmen = probe.view("venture_hands")[candidate_id]
+            if (scholars <= probe.view("legacy_labour")().effective_scholars() and cover < craftsmen <= 5.5
+                    and probe.view("venture_foreman")[candidate_id][0] is None):
+                fits.append((probe.view("venture_capex")[candidate_id], candidate_id))
     if not fits:
         raise AssertionError("no concern needs craftsmen to supervise")
     return min(fits)[1]
@@ -257,9 +257,9 @@ def ready_for_entry(game, money=None):
     empty purses, and a firm is founded from a stratum's savings). The opening cast (strata and governments)
     is seeded first when it has not been. `money` is the savings of each free home stratum; by default the
     entrepreneurial share of a year's output between them. Returns the game."""
-    if not game.actors.state.home_country:
+    if not game.view("cast")().state.home_country:
         game.view("seeded_actor_registry")()
-    free = [stratum for stratum in game.actors.of_kind("stratum")
+    free = [stratum for stratum in game.view("cast")().of_kind("stratum")
             if stratum.record.country is None and not stratum.is_bonded()]
     if money is None:
         from sim.agents.tuning import ENTREPRENEURIAL_CAPITAL_SHARE
@@ -272,14 +272,14 @@ def ready_for_entry(game, money=None):
 def noted_sale_tonnes(game, material, seller=None):
     """Tonnes of `material` the actors (or just `seller`) have noted for the year's market: a sale enters the agent
     economy's book as an order when the year clears, so until then this is where it stands."""
-    return sum(sale["tonnes"] for sale in game.economy.agent.stored.get("sales", [])
+    return sum(sale["tonnes"] for sale in game.view("legacy_economy")().agent.stored.get("sales", [])
                if sale["material"] == material and (seller is None or sale["seller"] == seller))
 
 
 def state_seeking(game, requisition=0.16, office=0.06):
     """Put the state in need: the rates it takes at full notice from the income it can see, as a
     year's shortfall would leave them. Returns the game."""
-    record = game.state_treasury().record
+    record = game.view("state_treasury")().record
     record.levy_requisition_rate, record.levy_office_rate = requisition, office
     return game
 
@@ -293,8 +293,8 @@ def run_it(sim_state, *keys):
     player would.
     """
     for key in keys:
-        sim_state.done.add(key)
-        sim_state.operating.add(key)
+        sim_state.state.projects.done.add(key)
+        sim_state.state.projects.operating.add(key)
     sim_state._done_changed()
     return sim_state
 
@@ -446,7 +446,7 @@ def nutrition_ratios_over_years(test_sim, years):
     ratios = []
     for year in years:
         test_sim._demographic_recovery(year)
-        ratios.append(test_sim._last_demographic_step.nutrition_ratio)
+        ratios.append(test_sim.view("demographic_flows")().nutrition_ratio)
     return ratios
 
 
@@ -460,7 +460,7 @@ def _mk_loom_sim(n_looms, age_years):
     loom_sim = sim(civ="rome_100ad", capital=5_000_000.0)
     # a node earns only from its output, so the chosen concerns are those that take money from it
     candidates = sorted(node_id for node_id in NODES
-                        if loom_sim.is_venture(node_id) and loom_sim.concern_takings(node_id, 1.0) > 0)
+                        if loom_sim.view("is_venture")[node_id] and loom_sim.view("concern_takings")(node_id, 1.0, with_output_factor=True, cost_scale=None) > 0)
     assert len(candidates) >= n_looms, "not enough output-earning venture nodes in the tree"
     chosen = candidates[:n_looms]
     staff = loom_sim.state.seats[loom_sim.state.acting_seat].modules["workforce"]
@@ -470,18 +470,18 @@ def _mk_loom_sim(n_looms, age_years):
     # obtain both its workers and its specialist foreman.
     for trade in S.WAGES:
         staff.employees[trade] = 100.0 * n_looms
-    loom_sim.year = 100
+    loom_sim.state.scenario.year = 100
     for node_id in chosen:
-        loom_sim.done.add(node_id)
+        loom_sim.state.projects.done.add(node_id)
         loom_sim.done_year[node_id] = 100
     loom_sim._done_changed()
     for node_id in chosen:
         for trade, required in NODES[node_id].get("lab", {}).get("trades", {}).items():
             loom_sim.employees[trade] = max(loom_sim.employees.get(trade, 0.0),
                                      float(required) * n_looms)
-        opened, msg = loom_sim.open_venture(node_id)
+        opened, msg = loom_sim.send(OpenVenture(node_id, None))
         assert opened, (node_id, msg)
-    loom_sim.year = 100 + age_years
+    loom_sim.state.scenario.year = 100 + age_years
     return loom_sim, chosen
 
 
@@ -495,6 +495,7 @@ from sim.ui.protocol import parse_typed as _PT
 from sim.ui.protocol import render_state as _RSTATE, render_why as _RWHY
 from sim.ui import protocol as _PROTO
 from sim.ui.protocol import render_portfolio as _RPORT
+from sim.ventures.api import OpenVenture
 
 # `from .harness import *` must hand every topic module everything the old
 # flat script had at global scope, including the (many) leading-underscore

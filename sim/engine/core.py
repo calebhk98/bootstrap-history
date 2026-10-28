@@ -2,7 +2,7 @@
 import copy, os, sys
 
 from sim.constants import declare
-from sim.demography.api import OpenPopulation
+from sim.demography.api import OpenPopulation, rules as demography_rules
 from sim.workforce.api import WatchStaff
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from sim.engine.state import SimulationState, ActiveProjectState
@@ -20,19 +20,10 @@ from sim.geography.api import regions, tiles_held
 from sim.land.api import rules as land_rules
 from sim.knowledge.api import LearnTechnique, declared_starting_techs
 from .forward_markets import ForwardMarketsMixin
-from .forward_foreign_trade import ForwardForeignTradeMixin
 from .forward_demography import ForwardDemographyMixin
 from .forward_agriculture import ForwardAgricultureMixin
-from .forward_living_stock import ForwardLivingStockMixin
-from .forward_reporting import ReportingForwardsMixin
-from .forward_coin import ForwardCoinMixin
-from .forward_campaigns import ForwardCampaignsMixin
 from .forward_diffusion import DiffusionForwardsMixin
-from .forward_prices import ForwardPricesMixin
 from .forward_mechanics import ForwardMechanicsMixin
-from .forward_knowledge import ForwardKnowledgeMixin
-from .forward_disease import DiseaseForwardsMixin
-from .forward_land import ForwardLandMixin
 from .forward_workforce import ForwardWorkforceMixin
 from .projects import ProjectsMixin
 from . import seat_registry, year_steps
@@ -42,12 +33,10 @@ from .forward_seats import ForwardSeatsMixin
 from .forward_hazards import HazardsForwardsMixin
 from .forward_polity import PolityForwardsMixin
 from .seat_defaults import default_policy
-from .forward_actors import ActorsForwardsMixin
 from .forward_finance import ForwardFinanceMixin
 from .forward_production import ForwardProductionMixin
 from .forward_freight import ForwardFreightMixin
 from .forward_resources import ForwardResourcesMixin
-from .forward_materials import ForwardMaterialsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .year_steps import StepContext
 from .data import trade_family
@@ -55,35 +44,25 @@ from .invariants import check_simulation_invariants
 from sim.agents.api import Household
 from .agents_port_household import HouseholdPort
 from sim.materials.api import RestoreReadings
+from sim.polity.api import SetValueWeights
 
 
 class Sim(
         ForwardMechanicsMixin,
-        ForwardKnowledgeMixin,
         ForwardMarketsMixin,
-        ForwardForeignTradeMixin,
         ForwardProductionMixin,
-        ForwardPricesMixin,
-        ForwardLandMixin,
-        DiseaseForwardsMixin,
         ForwardWorkforceMixin,
         ProjectsMixin,
         ForwardSeatsMixin,
         HazardsForwardsMixin,
         PolityForwardsMixin,
-        ActorsForwardsMixin,
         DiffusionForwardsMixin,
         ForwardFinanceMixin,
         ForwardFreightMixin,
         ForwardingPropertiesMixin,
-        ForwardLivingStockMixin,
-        ReportingForwardsMixin,
-        ForwardCoinMixin,
         ForwardAgricultureMixin,
         ForwardResourcesMixin,
-        ForwardMaterialsMixin,
         ForwardDemographyMixin,
-        ForwardCampaignsMixin,
 ):
     FOUNDER_MIN_REMAINING_LIFE_YEARS = declare(
         "FOUNDER_MIN_REMAINING_LIFE_YEARS", 5, kind="temporary_heuristic",
@@ -156,7 +135,7 @@ class Sim(
         # See the comment on step() 4b and on start_project() for why this
         # exists: without it, "choosing" a node in `play` was cosmetic.
         self.manual = bool(manual)
-        self.open_value_weights()
+        self.send(SetValueWeights(tuple(self.civ["values"].items())))
         # A civilization brings its own date, its own price level and its own
         # capacity to fund things. Norse Scandinavia does not start in 100 AD.
         self.cfg["start_year"] = int(self.civ.get("year", self.cfg["start_year"]))
@@ -167,13 +146,13 @@ class Sim(
         # Initial condition: cleared area is what feeds the starting
         # population given the yield of the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
-        held_tiles = tiles_held(self.civ, self.world_map)
+        held_tiles = tiles_held(self.civ, self.view("legacy_world_map")())
         land_rules.require_territory(self.civ, held_tiles)
-        territory = land.territory_cropland(self.farm_sites())
+        territory = land.territory_cropland(self.view("farm_sites")())
         self._farm_ladder = territory.ladder
         self._farm_arable_ceiling = territory.cropped_hectares
         self.labour.set_farm_area(self._agriculture.farmland_for_population(
-            self._adult_equivalent_population(self.population), ladder=self._farm_ladder).hectares)
+            demography_rules.adult_equivalents(self.view("population")()), ladder=self._farm_ladder).hectares)
         self._opening_farmed_hectares = self.farm_land.hectares
         # the weather cells and their correlation are fixed for the life of a run: built now, from the territory as it opens
         self.view("farm_weather_cells")()
@@ -251,7 +230,7 @@ class Sim(
         # available.
         self.res = load_resources()
         # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY (computed once; see sim/geography/)
-        self.geography.open(load_geography(self.world_map))
+        self.view("legacy_geography")().open(load_geography(self.view("legacy_world_map")()))
         # Whatever this civilization already has is free and already done, and it
         # is GRANTED, not earned: it must never count in done_earned as though
         # the founder had built it, and it must never be "forgotten" in a
@@ -272,9 +251,9 @@ class Sim(
         # they do not mean every society on Earth already owns it.  In
         # particular, never infer one civilization's materials or institutions for another
         # civilization from those fields.
-        self.country_literacy()
+        self.view("legacy_country_literacy")[None]
         for field in ("literacy_general", "literacy_elite"):
-            self.start_civ[field] = self.literacy(field)
+            self.start_civ[field] = self.view("literacy")(field, None)
         self.civ.pop("literacy_general", None)
         self.civ.pop("literacy_elite", None)
         self._reconnect_state_hooks()
@@ -283,7 +262,7 @@ class Sim(
         # a game about to load a save leaves it: the save holds the seats and the economy's record
         self._economy_deferred = bool(defer_economy)
         if not defer_economy:
-            self.economy.open_agent()
+            self.view("legacy_economy")().open_agent()
             self.send(GrantOpeningHerds())
             self._done_changed()
             self.join_cast_seats()

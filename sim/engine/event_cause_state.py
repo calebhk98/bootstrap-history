@@ -17,7 +17,7 @@ def food_supply_ratio(sim: Any, node: Optional[str] = None) -> Optional[float]:
 
 def _free_home_strata(sim: Any) -> List[Any]:
     """Home bodies of people that are free (not bonded) and have had a yearly welfare measured."""
-    return [stratum for stratum in sim.actors.of_kind("stratum")
+    return [stratum for stratum in sim.view("cast")().of_kind("stratum")
             if stratum.record.country is None and stratum.record.exited_year is None
             and not stratum.record.plan.get("bonded") and stratum.record.members > 0.0
             and stratum.record.welfare_reference > 0.0]
@@ -39,12 +39,12 @@ def stratum_welfare_spread(sim: Any, node: Optional[str] = None) -> Optional[flo
 
 def coin_metal_kept(sim: Any, node: Optional[str] = None) -> float:
     """Share of the opening metal the state's coin still holds after every cut so far."""
-    return float(sim.state_treasury().record.coin_metal_kept)
+    return float(sim.view("state_treasury")().record.coin_metal_kept)
 
 
 def elite_share_vs_opening(sim: Any, node: Optional[str] = None) -> Optional[float]:
     """The propertied strata's share of home people now, over the share the opening split gave them."""
-    strata = [stratum for stratum in sim.actors.of_kind("stratum")
+    strata = [stratum for stratum in sim.view("cast")().of_kind("stratum")
               if stratum.record.country is None and stratum.record.exited_year is None]
     people = sum(stratum.record.members for stratum in strata)
     opening_total = sum(float(stratum.record.plan.get("share", 0.0)) for stratum in strata)

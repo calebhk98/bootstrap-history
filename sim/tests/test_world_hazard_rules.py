@@ -27,6 +27,9 @@ def stratum(country, members, food_shortfall=0.0, name="stratum"):
 
 def game(strata=(), actors=(), home_people=1000.0):
     everyone = list(strata) + list(actors)
+    cast = types.SimpleNamespace(of_kind=lambda kind: [each for each in everyone if each.record.kind == kind],
+                                 actors={each.actor_id: each for each in everyone},
+                                 world_for=lambda actor, world: None)
     sim = types.SimpleNamespace(
         state=types.SimpleNamespace(
             scenario=types.SimpleNamespace(year=100),
@@ -34,11 +37,9 @@ def game(strata=(), actors=(), home_people=1000.0):
             modules={"markets": types.SimpleNamespace(market_book={})},
             seats={"first": types.SimpleNamespace(household=types.SimpleNamespace(log=[]))}),
         civ={"id": HOME}, events=True, population=types.SimpleNamespace(total=home_people),
-        actors=types.SimpleNamespace(of_kind=lambda kind: [each for each in everyone if each.record.kind == kind],
-                                     actors={each.actor_id: each for each in everyone},
-                                     world_for=lambda actor, world: None),
+        actors=cast,
         partners_in_agent_economy=lambda: [PARTNER], _farm_year_weather_seed=lambda salt: 7,
-        view=lambda name: (lambda: [HOME, PARTNER]),
+        view=lambda name: (lambda: cast) if name == "cast" else (lambda: sim.population) if name == "population" else (lambda: [HOME, PARTNER]),
         playing_seats=lambda: ["first"])
     event_stand_in.stood_in(sim)
 

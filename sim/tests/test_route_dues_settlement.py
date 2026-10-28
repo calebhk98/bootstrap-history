@@ -17,6 +17,7 @@ from sim.freight.route import Leg, Route
 from sim.geography.api import dues_hours_per_tonne
 from sim.ledger.api import PayActor
 from sim.tests import module_harness
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -80,7 +81,7 @@ class TreasuryOfAHolder(unittest.TestCase):
             government_of=lambda holder: SimpleNamespace(actor_id="government:" + holder) if holder in governments else None,
             get=lambda actor_id: SimpleNamespace(actor_id=actor_id) if actor_id.split(":")[-1] in governments or actor_id == "trader" else None,
             ensure_government=lambda country: opened.append(country) or SimpleNamespace(actor_id="government:" + country))
-        return SimpleNamespace(state=SimpleNamespace(seats={"seat1": None}), actors=registry,
+        return Game(state=SimpleNamespace(seats={"seat1": None}), actors=registry,
                                seat_party=lambda seat_id: SimpleNamespace(actor_id="party of " + seat_id)), opened
 
     def test_a_seat_holder_is_paid_as_itself_and_a_country_into_its_government(self):

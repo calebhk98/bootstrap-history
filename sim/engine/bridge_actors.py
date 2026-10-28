@@ -7,6 +7,7 @@ import contextlib
 
 from sim.agents.api import cast_from_civilisations
 from sim.assembly.api import KEYED, QUOTE
+from sim.demography.api import rules as demography_rules
 
 from . import bridge_land, view_share
 from .actor_kinds_data import declared_kinds
@@ -27,7 +28,7 @@ def declared_actor_kinds(sim):
 @bridge_view("opening_cast")
 def opening_cast(sim):
     """(home country, entries, profiles): the civilisation played, and every economy trading with it."""
-    foreign = [load_civ(civilisation_id) for civilisation_id in sim.partner_countries()]
+    foreign = [load_civ(civilisation_id) for civilisation_id in sim.view("partners")()]
     return cast_from_civilisations(sim.start_civ, foreign)
 
 
@@ -86,18 +87,18 @@ def nutrition_ratio_last_year(sim):
 def farm_food_demand_kg(sim):
     """Kilograms of grain the people would harvest by eating what they need, before the first harvest."""
     technique = sim._farm_technique_this_year
-    return (sim._adult_equivalent_population(sim.population)
+    return (demography_rules.adult_equivalents(sim.view("population")())
             * sim._agriculture.annual_food_demand_kg_per_person(technique.crop))
 
 
 @bridge_view("state_military_diffusion")
 def state_military_diffusion(sim):
-    return sim.state_military_diffusion()
+    return sim.view("diffusion_index")["military"]
 
 
 @bridge_view("nodes_with_mechanic", kind=QUOTE)
 def nodes_with_mechanic(sim, mechanic):
-    return sim.nodes_with_mechanic(mechanic)
+    return tuple(sim.view("mechanic")[mechanic])
 
 
 # ---- foreign trade ----
