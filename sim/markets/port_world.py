@@ -88,6 +88,10 @@ class PortWorld(ForeignReads):
 	def send(self, command):
 		return self._needs.send(command)
 
+	def bound_kernels(self):
+		"""The module's kernels as the assembly bound them: a mod's replacement, else the reference."""
+		return dict(self._owner.kernels)
+
 	# ---- the module's own objects and records ----
 
 	@property

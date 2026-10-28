@@ -201,6 +201,18 @@ to the game built over that mod set (`python3 -m sim.tests --slow --only mod_ope
   adjusters stack in mod load order.
 * `api.provide(point, function)` and `api.withdraw("<module_id>.<provision>")`: add an answer to an extension point, or take a
   shipped module's answer out of one.
+* `api.kernel(name, function)`: replace one of the engine's swappable computations (a speed-up, say) by `function`. A kernel is a
+  plain function of plain arguments (no `Sim`), declared by a module as `<module_id>.<name>` with its reference
+  implementation, a description of its arguments and answer, stored sample calls and a tolerance (zero: exact) with its
+  reason. The shipped ones are `markets.fetch_wage` (the wage that fetching hands from other areas caps a labour shortage
+  at; `sim/labour/market/fetch_wage.py`) and `markets.least_cost_tree` (the least carriage cost to every state of the
+  route graph; `sim/geography/routes_cost_tree.py`); each file's docstring and `sim/markets/kernels.py` say what `function`
+  receives and must answer. When the game is assembled `function` is run on every sample and compared with the reference;
+  the game is refused, naming the mod and the kernel, when it raises or answers differently (any float outside the
+  declared tolerance). Two mods replacing one kernel is an error naming both; naming a kernel no module declares is an
+  error naming the mod. The active replacements are part of the game's assembly record, so a save written under a
+  replacement is refused by a game without it, as for module sets. A replacement that is equal on the samples but not
+  elsewhere is the mod's own risk: compare real games (`python3 -m sim.tests.fingerprint record before.json`, then `check`).
 
 ### Adding a phase to the year
 

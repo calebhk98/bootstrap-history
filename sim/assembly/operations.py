@@ -33,6 +33,7 @@ class Applied:
 		self.provided: Dict[str, List[Tuple[str, Callable]]] = {}
 		self.withdrawn: Dict[str, str] = {}          # "<module_id>.<name>" -> the mod that withdrew it
 		self.phases: List[Any] = []                  # the mods' year phases, in mod load order
+		self.kernels: Dict[str, Tuple[str, Callable]] = {}   # kernel name -> (the mod replacing it, its function)
 		for spec in shipped:
 			if spec.module_id in self.specs:
 				raise AssemblyError("two shipped modules are both called %s" % spec.module_id)
@@ -81,6 +82,10 @@ class Applied:
 		for name in operations.withdrawn:
 			self.withdrawn[name] = mod_id
 		self.phases.extend(operations.phases)
+		for name, function in operations.kernels.items():
+			if name in self.kernels:
+				raise AssemblyError("mods %s and %s both replace the kernel %s" % (self.kernels[name][0], mod_id, name))
+			self.kernels[name] = (mod_id, function)
 
 
 def apply_all(shipped: Sequence[ModuleSpec], operations: Sequence[Operations],

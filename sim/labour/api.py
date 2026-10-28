@@ -19,6 +19,8 @@ from .market.records import (Bid, Clearing, MarketState, Route, School, TradeSpe
 from .market.trades import fallback_trade, trade_specs
 from .trade_seed import bound_by_hirers, seed_hours
 from .market.year import run_year as run_labour_year
+from .market.fetch_wage import fetch_wage
+from .market.fetch_wage_samples import samples as fetch_wage_samples
 from .labour_market import production_data
 from .food_gathering import cap_share, capped_kcal, hours_cap_kcal
 from .wage_provider import people_fed_per_worker
@@ -29,6 +31,7 @@ from .staff_targets import scholar_target
 from .tenure import add_tenure, fade_tenure, outflow_shares, tenure_by_trade, tenure_held
 
 __all__ = [
+    "fetch_wage", "fetch_wage_samples",
     "occupational_report", "shares_by_group", "hours_by_trade", "hours_by_trade_of_all_employers", "people_by_trade_of_all_employers", "format_occupational_report", "occupation_groups",
     "wage_provider", "wages", "scholar_target", "Labour", "production_data",
     "people_fed_per_worker", "CAREER_YEARS", "tool_draw", "tool_hours_factors", "tool_order",

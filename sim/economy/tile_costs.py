@@ -95,7 +95,8 @@ class CarriageTable:
     def __init__(self, tile_ids: Iterable[TileId], money_per_tonne_km_by_mode: Mapping[str, float],
                  handling_money_per_tonne_by_mode: Optional[Mapping[str, float]] = None,
                  held_nodes: Iterable[str] = (), world_map=None,
-                 improvements: Optional[Mapping[str, Mapping[str, object]]] = None):
+                 improvements: Optional[Mapping[str, Mapping[str, object]]] = None, cost_tree=None):
+        self.cost_tree = cost_tree     # geography's kernel for the search (least_cost_tree); None: the reference
         self.tile_ids = tuple(sorted(tile_ids))
         self._tile_set = frozenset(self.tile_ids)
         self._rates = dict(money_per_tonne_km_by_mode)
@@ -139,7 +140,7 @@ class CarriageTable:
         everywhere = route_costs(
             [source], sorted(self._rates), mode_costs=self._rates, handling_costs=self._handling,
             held_nodes=self._held_nodes, world_map=self._world_map,
-            improvements=self._improvements, within=self._tile_set)
+            improvements=self._improvements, within=self._tile_set, cost_tree=self.cost_tree)
         return {tile_id: cost for tile_id, cost in everywhere.items() if tile_id in self._tile_set}
 
     def cost_per_tonne(self, from_tile: TileId, to_tile: TileId) -> float:
@@ -187,7 +188,7 @@ class CarriageTable:
 def carriage_table(tiles: Mapping[TileId, TileSpec], money_per_tonne_km_by_mode: Mapping[str, float],
                    handling_money_per_tonne_by_mode: Optional[Mapping[str, float]] = None,
                    held_nodes: Iterable[str] = (), world_map=None,
-                   improvements: Optional[Mapping[str, Mapping[str, object]]] = None) -> CarriageTable:
+                   improvements: Optional[Mapping[str, Mapping[str, object]]] = None, cost_tree=None) -> CarriageTable:
     """A table over these tiles at the given rates, with the built ways."""
     return CarriageTable(tiles, money_per_tonne_km_by_mode, handling_money_per_tonne_by_mode, held_nodes, world_map,
-                         improvements)
+                         improvements, cost_tree)

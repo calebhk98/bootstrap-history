@@ -52,8 +52,11 @@ def check_record(assembly: assembly_api.Assembly, saved: Dict[str, Any]) -> Opti
 	differing = sorted(key for key in set(saved) | set(current) if saved.get(key) != current.get(key))
 	modules = sorted(module_id for module_id in set(saved.get("modules", {})) | set(current["modules"])
 	                 if saved.get("modules", {}).get(module_id) != current["modules"].get(module_id))
-	return "the save was written with a different module set (%s differ%s)" % (
-		", ".join(differing), "; modules: " + ", ".join(modules) if modules else "")
+	kernels = sorted(name for name in set(saved.get("kernels", {})) | set(current["kernels"])
+	                 if saved.get("kernels", {}).get(name) != current["kernels"].get(name))
+	return "the save was written with a different module set (%s differ%s%s)" % (
+		", ".join(differing), "; modules: " + ", ".join(modules) if modules else "",
+		"; kernels: " + ", ".join(kernels) if kernels else "")
 
 
 def attach(sim: Any) -> None:

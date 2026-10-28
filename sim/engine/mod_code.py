@@ -126,6 +126,14 @@ class ModCodeApi:
         """Add an answer to a module's extension point."""
         self.operations.provided[point] = self.operations.provided.get(point, ()) + (function,)
 
+    def kernel(self, name: str, function: Callable) -> None:
+        """Replace the engine's computation `<module_id>.<name>` with `function`, which must
+        take the reference's arguments and answer what it answers on the kernel's stored samples, exactly or within the
+        kernel's declared tolerance; the game is refused, naming this mod and the kernel, when it does not."""
+        if name in self.operations.kernels:
+            raise ModError("mod %s replaces the kernel %s twice" % (self.mod_id, name))
+        self.operations.kernels[name] = function
+
     def qualified(self, name: str) -> str:
         return name if name.startswith(self.mod_id + SEPARATOR) else self.mod_id + SEPARATOR + name
 

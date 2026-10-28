@@ -2,6 +2,8 @@
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional, Tuple
 
+from .kernels import Kernel
+
 TABLE = "table"        # one whole value: `needs.name()`
 KEYED = "keyed"        # one value per key, computed on first read of that key: `needs.name[key]`
 QUOTE = "quote"        # a question with arguments, never cached: `needs.name(*arguments)`
@@ -63,6 +65,7 @@ class ModuleSpec:
 	phases: Tuple[PhaseHook, ...] = ()
 	extension_points: Tuple[ExtensionPoint, ...] = ()
 	provides: Tuple[Provision, ...] = ()          # answers to extension points (its own or other modules')
+	kernels: Tuple[Kernel, ...] = ()              # computations a mod may replace (Complaint 661), each named `<module_id>.<name>`
 
 
 @dataclass
@@ -77,6 +80,7 @@ class Operations:
 	provided: Dict[str, Tuple[Callable, ...]] = field(default_factory=dict)        # extension point -> functions
 	withdrawn: Tuple[str, ...] = ()                                                # "<module_id>.<name>" provisions taken out
 	phases: Tuple[Any, ...] = ()                                                   # year phases the engine places (it owns their shape)
+	kernels: Dict[str, Callable] = field(default_factory=dict)                     # kernel name -> the replacement function
 
 
 def view_names(spec: ModuleSpec) -> Tuple[str, ...]:
