@@ -167,3 +167,52 @@ or a copy of the offers). The projects in hand are halted by the projects' `Halt
 stands to credit; the halting rule moved to `sim/projects/halting.py`), the ventures are reviewed by `ReviewVentures`, the people are
 freed by the workforce's `Manumit`, and the stall banner reads the workforce's views `hours_for_sale`, `best_wage_trade`,
 `work_for_wages_dry_run` and `standing_job_pay`.
+
+## Width review
+
+Measure: `python3 tools/measure/module_graph.py --modules` (declaration counts). This review took the seats out of the module's dependencies and one read with it. `READS_BY_OWNER` in `sim/finance/module_spec.py` now groups every read under the module that publishes it (`held_trade` is production's, `year` and `civilisation` are scenario's); the old labels were the owners the views were once expected to have.
+
+### 1. What it depends on, by what it asks
+
+| Asked of | What | Where in the module |
+|---|---|---|
+| scenario, prices | the year, the civilisation's record (starting rates, the money's words), game config; the price index | everywhere; `credit_line.py`, `rules.py` |
+| ledger | the acting seat's balance (the base of every figure), goods held and in stock; sends the cash notes and the withdrawal of household money, the settlement with an edge | `arrears.py`, `bank.py`, `credit_line.py`, `debt_service.py`, `insolvency.py`, `purchases.py`, `cash_remedies.py` |
+| polity | the founder's standing (reputation, the credit discount); sends `SetReputation` | `arrears.py`, `credit_line.py`, `insolvency.py` |
+| actors | the purse book's lender side (offers, cash and deposit, loans out, debt owed), the cast, the state's treasury, the actors' world | `capital_market.py` for the book and the cast; `arrears.py` and `bank.py` for the world; sends `SetLenderOffers`, `SettleLenderInterest` |
+| markets | the agent economy's lending rate, credit room and whether it has opened, the household's bill per person, a sale quote; sends `FoundBankFromOutside` | `capital_market.py`, `credit_line.py`, `bank.py`, `cash_remedies.py` |
+| workforce | the household's wage, hours it could sell, its best trade, a dry run of working for wages, the pay of a standing job, the wage bill, dependants; sends `BleedStaff`, `DisperseDependants`, `Manumit` | `credit_line.py`, `debt_service.py`, `insolvency.py`, `cash_remedies.py` |
+| production, ventures, projects | revenue and upkeep of what the seat runs, what it would earn at capacity, the ventures' real upkeep, money committed to projects; sends `ReviewVentures`, `HaltActiveProjects` | `credit_line.py`, `debt_service.py`, `insolvency.py`, `cash_remedies.py` |
+| resources | what mines cost to run and what is at their workings; sends `MothballMines` | `credit_line.py`, `debt_service.py`, `insolvency.py`, `cash_remedies.py` |
+| knowledge, mechanics, materials | techniques held, the effects a technology gives to credit, which mechanics a node declares, a material's commodity | `credit_line.py`, `arrears.py`, `bank.py`, `cash_remedies.py` |
+| reporting | sends `RecordEvent` | |
+
+### 2. Findings
+
+**(a) Views that mirror one method.** The stall banner (`debt_service.py`) asks the workforce five views to answer one question, what the household could earn by working (`held_trade`, `hours_for_sale`, `best_wage_trade`, `work_for_wages_dry_run`, `standing_job_pay`), and `cash_remedies.py` and `credit_line.py` ask the resources four views for what a mine costs and yields (`mine_operating_cost`, `mine_capacity`, `mine_workings`, `mine_working_cost`). Each set is one question with one reader here, and is the owner's to answer as one view (workforce: `earning_options`; resources: a mine's terms). Both owners are in other reviews, so they are left as findings there. The actors' four lending views are the same shape seen from the other side (actors review, P3).
+
+**(b) Sub-domains reading a separate set of owners.** Two clusters share almost no reads:
+
+| Cluster | Files | Reads |
+|---|---|---|
+| The lender market | `capital_market.py`, `bank.py`, `bank_rules.py`; views `market_rate`, `credit_room`, `state_lending`, `households_loanable_funds`, `lent_share`, `capital_market_report`; commands `RefreshLenderOffers`, `NoteLenderPosting`, `FoundBank` | actors (the book, the cast, the treasury, the world), markets (rate, credit room), ledger, mechanics, knowledge |
+| The household's credit and cash | `credit_line.py`, `debt_service.py`, `insolvency.py`, `arrears.py`, `credit_freeze.py`, `cash_remedies.py`, `affordability.py`, `purchases.py` and their rules | workforce, resources, production, ventures, projects, polity, ledger, mechanics, prices, scenario |
+
+**(c) Pass-throughs.** `arrears.py` reads `cast_state().purses` and `actor_world()` only to build a `SeatBorrower` (`sim/agents/borrowing.py`) and hand it the world, because the agents' one borrowing rule asks a world for the market rate, the credit headroom and the debt-service share. The module computes all three itself. The rule asking a small port for them instead of the actors' world would take the world and the purse-book reads out of the household path. `capital_market.py` reads `cast()` for `active_firms()` and `purse_lenders()` and the money of the firms: lenders are the actors' concern (P3 of the actors review).
+
+### 3. Done, and proposed
+
+Done:
+
+- `arrears.py` reads the acting seat from `self.clock.acting_seat`, as `capital_market.py` and `credit_line.py` already did; the `acting_seat` read and the dependency on the seats are gone. The finance test host (`sim/tests/finance_host.py`) no longer supplies the view; it sets the clock.
+- The spec's reads regrouped by their real owner (no read added or removed by that).
+
+Proposed, not built:
+
+- **Split the lender market out as `capital_market`** (the first cluster above). It would own the lender side of the purse book with it (the actors review's P3), so its edges are the actors' book, markets' rate and credit room, ledger and mechanics; finance would keep the household's credit and cash, reading `market_rate`, `credit_room` and `state_lending` back, and lose the actors, `agent_rate`, `agent_economy_opened` and the `FoundBank` path (the household path still reads `agent_credit_room`). Files that would move are listed in the table. The cycle with the actors stays (a state borrows from it, the actors' firms lend into it); what shrinks is that one module no longer carries both halves.
+- **The borrowing rule's port** (3(c) above): in the agents package, then `arrears.py` stops reading `actor_world` and `cast_state`.
+- **Merged owner views** from 2(a): workforce's single view for the household's earning options and resources' single view for a mine's terms; finance would read two views instead of nine.
+
+### 4. Why the remaining edges are needed
+
+Credit is the household's cash against what it earns and owns, so each of workforce, production, ventures, resources, projects and ledger is a term of the limit (wage, upkeep, revenue, mines, committed spend, the balance); polity's standing and the mechanics' effects set the rate and the discount; markets and the actors are the lenders. Their sends are the remedies when the limit is passed (shed staff, halt projects, mothball mines, settle with the edge, record the event). These are economic dependencies of a module that sits across the whole household.

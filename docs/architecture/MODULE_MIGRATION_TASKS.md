@@ -287,6 +287,7 @@ actors (21), hazards, workforce (20 each), projects (19).
 - [ ] A width review for each module that depends on more than 15 others, written into its catalogue entry: views that
   mirror methods merged into views that answer questions, sub-domains split out, pass-through dependencies removed,
   and why each remaining edge is needed.
+  Written so far (section "Width review" in the catalogue entry): `actors`, `finance`, `seats`. Measure: `python3 tools/measure/module_graph.py --modules`.
 
 ### Phase 7: mods
 

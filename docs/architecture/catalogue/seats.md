@@ -83,3 +83,56 @@ Real module views: `tree`, `tree_nodes`, `techniques_held`, `techniques_granted`
 - A read that writes: `governed_countries` seeds the opening cast the first time it is asked (`seeded_actor_registry`), and `seat_base_tile` switches the acting seat for the read (`act_as`). Both are bridge views for that reason.
 - `join_seat` draws the founder's lifespan from the game's random source even for a country seat (which has no founder), and before the registry is checked for a duplicate id. Both are kept: the draw order is part of the game.
 - The handover refusal reads `holds` from two places: the engine's own state (`seat_holds`: works, staff, arrears, holdings, institutions, the remaining progress record) and the module's (disclosures count as works, dealings as holdings, a goal year as a goal record); the refusal lists them in the old order (`HOLD_ORDER`).
+
+## Width review
+
+Measure: `python3 tools/measure/module_graph.py --modules` (declaration counts). This review dropped three reads and left the number of modules depended on unchanged: each of the three came from an owner the module still needs for something else. `READS_BY_OWNER` in `sim/seats/module_spec.py` now groups every read under the module that publishes it (the old labels listed `core` for what scenario publishes and `workforce (people)` as a second group for a workforce view).
+
+### 1. What it depends on, by what it asks
+
+| Asked of | What | Where in the module |
+|---|---|---|
+| scenario, prices | the year, the civilisation's record and cast, the fog-of-war and automation settings, the game random source, the founder's life terms and kit capital, the price index | `founder.py`, `run.py`, `join_rules.py`, `sight.py`, `dealings.py` |
+| knowledge | the tree and its closure, techniques held, granted, revealed and by seat, the nodes a founder could lose; sends `LearnTechnique`, `ForgetTechnique`, `RevealNodes` | `goals.py`, `sight.py`, `founder.py`, `run.py`, `module.py` |
+| diffusion | each seat's disclosures, copy difficulty, the literacy figure; sends `RekeyDisclosures` | `sight.py`, `builds.py`, `handover.py`, `royalty.py`, `goals.py` |
+| mechanics | the mechanics running, whether the corpus is dispersed | `founder.py` |
+| workforce | staff (directors, the staff-number goals), a seat's base tile; sends `WatchStaff` | `founder.py`, `goals.py`, `sight.py`, `run.py` |
+| ventures, projects, ledger | what each seat operates; sends `WatchBusiness`, `StopOperating`, `WatchActive`, `OpenPurse` on a join | `sight.py`, `builds.py`, `run.py` |
+| materials, hazards, content | the generation breakdown, the relief of an epidemic, the labels of a win condition | `goals.py` |
+| actors | the seeded registry (which countries have a government) and the state's treasury id | `run.py` |
+| assembly | the registry's ids and what a handover would overwrite; sends `AddSeat`, `MoveSeat` | `run.py`, `handover.py`, `sight.py`, `module.py` |
+| reporting | sends `RecordEvent` | `goals.py`, `founder.py` |
+
+### 2. Findings
+
+**(a) Views that mirror one method.** Knowledge's four views of the seats' techniques (`techniques_held`, `techniques_granted`, `techniques_revealed`, `techniques_by_seat`) are four cuts of one table, asked together in `sight.py` and `founder.py`; ventures' `operating_by_seat` answers what `operating` answered for one seat (the `operating` read was declared and never asked; removed). Hazards' `hazard_relief` and `hazard_relief_entries` are the value and its parts for one metric, asked in one function. These are the owners' views (knowledge, hazards); the merge is for their reviews. Seats' own published views were checked for the same: `seat_country`, `seat_kind` and `seat_holder` are keyed reads of the registry entry's fields with different callers; `win_condition_value` and `win_condition_anatomy` differ by what the caller asks (the number, or its parts); none is a mirror of a method with one reader.
+
+**(b) Sub-domains that read a separate set of owners.**
+
+| Sub-domain | Files | Reads that nothing else in the module needs |
+|---|---|---|
+| Goals and win conditions | `goals.py`, `goal_rules.py`; views `goal`, `on_road_to_goal`, `goal_closure`, `goal_critical_floor`, `win_condition_text`, `win_condition_value`, `win_condition_anatomy`; commands `SetGoal`, `RecordGoalReached`, `RememberGoalClosure`, `ForgetGoalClosure`, `RememberGoalFloor`; the `win_conditions` phase and the `win_condition_rows` point | content (labels), hazards (relief), materials (generation breakdown), diffusion (`literacy`), the tree's closure |
+| The founder's life | `founder.py`, `founder_rules.py`; views `founder`, `patronage`, `dissolution_terms`, `automatic_policy`; commands `SetFounderLife`, `SetPolicy`, `EndRun`; the `founder_mortality` phase | mechanics (running, dispersed), the automation and game config, `game_random`, `losable_node_ids` |
+| Seeing and dealing | `sight.py`, `sight_rules.py`, `visibility.py`, `dealings.py`, `dealing_rules.py`, `royalty.py`, `builds.py` | diffusion (disclosures, copy difficulty), ventures (`operating_by_seat`), the place of a seat |
+| Joining and handing over | `run.py`, `handover.py`, `join_rules.py`, `handover_rules.py`, `lists.py` | actors, ledger, projects, ventures (the watches and the purse), the assembly, kit capital |
+
+**(c) Pass-throughs.** Removed: the `actor_world` read, used only to ask the actors' world for one great-circle distance between two seats' places (`distance_between_seats`); the distance is a geography call now (`sim/geography/places.py`, `distance_between_places`), and the actors' world calls the same one. `cast` was declared and never asked. Left: the `state_treasury` read hands the id of the state's account to `SetSeatHolder` and nothing else; and `governed_countries` reads the whole seeded registry (a read that writes: it seeds the opening cast) for two facts, the countries and whether each has a government. The actors already publish `has_state` and `countries`, which answer other questions (`has_state` is whether an owner has soldiers to raise, not whether a government exists); an actors view `governed_countries` would answer the question the seats ask and let the seats drop `seeded_actor_registry` and `state_treasury`'s id (the join could ask `holder_treasury`). Not done: it changes who publishes the view, and the readers outside the module (`grep -rn governed_countries sim`) need to follow; it needs a test on a game with a partner country.
+
+### 3. Done, and proposed
+
+Done, each commit with the quick tier green and values unchanged:
+
+- `distance_between_seats` computes the distance with `sim/geography/places.py`; the read of the actors' world is gone. Test: `sim/tests/test_geography_places.py` (the two places' great circle, and no distance for an id the map does not have).
+- The `cast` and `operating` reads dropped (declared, never asked).
+- The spec's reads regrouped by their real owner.
+
+Proposed, not built:
+
+- **Goals as their own module (`goals`).** Move `goals.py`, `goal_rules.py` and the goal part of `constants.py`, the views and commands in the table above, and the `win_conditions` phase and `win_condition_rows` point. The seats would drop content, hazards, materials and `literacy` (and `tree_closure`, `generation_breakdown`); the new module takes them, plus a read of the seats' `acting_seat` and `seat_list`. The seat registry stays with the seats; the goal id is an alias of the seat entry (`SeatState.goal`), so the module would write it with a command. Edge count of the seats falls by content, hazards and materials; goals starts with about as many as the three it took.
+- **The founder's life** could go with it (one `founder` module), taking mechanics out of the seats; it is the part that reads the game's random source and config. Left together here because `EndRun` is sent by the win-condition check and the handover reads `founder`.
+- **The actors' `governed_countries`** (2(c) above).
+- Knowledge's one view for what a seat holds, granted and revealed, and hazards' one view of an epidemic's relief (2(a)): the seats would read two views fewer each.
+
+### 4. Why the remaining edges are needed
+
+A seat is a player's whole state (techniques, staff, businesses, projects, purse, disclosures), so joining and handing over send to each owner of one of those (watches, purse, rekeying, learning), and what other seats can see of it is read from the same owners. The goals measure what the seat has done, in the owners' terms. Scenario's reads are the game's own settings. These are the unavoidable edges of a module whose subject is the player; the ones in the proposals above are the part a different module could hold.

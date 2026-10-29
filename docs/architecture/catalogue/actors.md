@@ -123,3 +123,59 @@ module's world slot; `SimulationState.actors` is a property over it for the call
 - Added for finance and polity (Phase 6b): views `lender_offers_made` (a copy of the pool's offers), `cash_and_deposit` (keyed), `loans_out`
   (quote), `debt_owed` (keyed), `cast_recorded`, `government_figures` (keyed by country: grant, requisition rate, office rate); commands
   `SetLenderOffers` and `SettleLenderInterest` (`sim/actors/lending.py`). Nothing outside the module writes the purse book any more.
+
+## Width review
+
+Measure: `python3 tools/measure/module_graph.py --modules` (reads, sends and modules depended on; declaration counts, not call counts). This review removed one read-owner edge (the assembly) and two reads; the table below is `READS_BY_OWNER` in `sim/actors/module_spec.py`, which now groups every read under the module that publishes it (the old labels named owners the views once had). Where a view is asked: `grep -n "needs\.<view>" sim/actors`.
+
+### 1. What it depends on, by what it asks
+
+Almost all the width is the world the agents package asks (`ActorWorld`, `sim/actors/world*.py`, the questions of `sim/agents/protocols.py`): an actor decides from prices, people, tax bases, knowledge and credit, and each of those lives in another module. The rest is the seats as parties to the exchange, the actors' own year, and the cast's construction.
+
+| Asked of | What | Where in the module |
+|---|---|---|
+| scenario | the year, the civilisation's record and opening, game settings, the money and mass-rate words | everywhere (`year`, `civilisation`); `cast.py` builds the opening cast |
+| markets | prices of goods and materials, category state and factors, cohort incomes, land rents and idle hours the agent economy computed, the household basket, a country's opening basket and traded volumes | `world_groups.py`, `world_cast.py`, `world_revenue.py`, `world_site.py`, `world_stakes.py`, `world_patronage.py`; sends the notes of an actor's sale and purchase and `ForgetActorOrders` |
+| production | what a concern takes, grosses, costs to keep, staffs and ramps (`concern_*`, `industry_*`, `revenue_estimate`, `upkeep`) | `world.py`, `world_enterprises.py`, `world_capacity.py`, `world_seats.py`; sends `AccrueExperience` |
+| workforce | staff on the books, the trade supply and the labour market, hours, the trades a place is without | `world.py`, `world_budget.py`, `world_groups.py`, `world_research.py`; sends `ReleaseStaff` |
+| polity | a state's funding terms, authority, trait weights, levy shares, patrons and their asks, the founder's standing | `world_budget.py`, `world_patronage.py`, `world.py`; sends `AddScandal` |
+| foreign_trade | partners, their books and prices, the landed cost, the home trade, the border duty | `world_trade.py`; one figure in `world_revenue.py`; sends `NoteActorHomeTrade`, `NoteActorTrade`, `NoteCargoLeg` |
+| demography, land, agriculture, disease | people, working age, the urban share, land held, farms, the frontier loss | `world_budget.py`, `world_revenue.py`, `world_patronage.py`, `world_capital.py` |
+| knowledge, diffusion, mechanics | techniques held, granted and by seat; copy difficulty, disclosure, literacy, research productivity; the mechanics a technology declares | `world.py`, `world_disclosure.py`, `world_budget.py`, `seat_exchange.py`, `literacy_views.py`; sends `ReceiveTechniques` |
+| materials, prices | a material's commodity, substitutes and prices | `world_stakes.py`, `world_trade.py`, `world_enterprises.py`, `world_research.py` |
+| finance | the market rate, credit room, the state's lending, debt interest and its service share, the founder's credit limit | `world_capital.py`; sends `RefreshLenderOffers` (the year) and `DefaultOnDebt` |
+| ledger, coin, freight | the seat's balance and the transfer listening; keeping and theft; route dues | `seat_parties.py` (the seat's purse: `CreditSeat`, `DebitSeat`, `NoteSeatCash`, `RestorePurse`), `world_disclosure.py` (`PayActor`), `year.py`, `world_trade.py` |
+| seats, ventures, projects | who plays, their places, patents and dealings; what a seat operates and its business; the project review | `seat_parties.py`, `seat_exchange.py`, `world_disclosure.py`, `world_seats.py`, `world_stakes.py`, `world_review.py` |
+| sharing, reporting, content | the shared-answers table the world opens; the log; the declared actor kinds and the trades or materials a scenario lacks | `world.py`, `cast.py`, `world_trade.py` |
+
+### 2. Findings
+
+**(a) Views that mirror one method.** The actors' reads are mostly one view per question the agents ask (the protocol is the question list), so there is little to merge on the reading side. The mirroring is on the owners' side: markets publishes a dozen `agent_*` views that each return one column of the agent economy's tile table (rent at a tile, rent paid by tile, rent per hectare, output by tile, fugitive share by tile, idle hours by trade, cohort incomes and land rents, need floor costs), where the actors ask "what the households earn, pay in rent and leave idle" in four files; that is for the markets review. On the actors' publishing side, the four lending views (`lender_offers_made`, `cash_and_deposit`, `loans_out`, `debt_owed`) each mirror one method of the purse book and have one reader (finance's `capital_market.py`); merging them would only rename the seam, because the real answer is P3 below, after which finance reads its own book. The three `literacy_*` views are three questions of one table (the figure, the ceiling, the preview of a schooling) and have one reader, diffusion: they go with P2.
+
+**(b) Sub-domains reading a separate set of owners.** Section 3, P1 to P5.
+
+**(c) Pass-throughs.** Removed: `registered_seats` (the assembly's) was read only in `find_dealer`, to test whether an id is a seat, while the seats' `seat_list` answers the same ids and is read beside it in the same file. `held_techniques` was declared and asked nowhere. Left: `year.py` sends four commands in a fixed order around the actors' turn (`RefreshLenderOffers`, `AccrueExperience`, `ChargeKeeping`, `ChargeActorsTheft`); they hand no data on, they sequence other modules' year steps from inside the actors' one (P6).
+
+### 3. Done, and proposed
+
+Done, each in its own commit, quick tier green, values unchanged:
+
+- The `held_techniques` read dropped.
+- `find_dealer` asks `seat_list()["joined"]` instead of `registered_seats`; the actors no longer depend on the assembly. The fake in `sim/tests/test_seat_dealings.py` no longer supplies `registered_seats`.
+- The place coordinates and great-circle distance moved from `world_cast.py` to `sim/geography/places.py` (`distance_between_places`, in the geography interface), because the seats read the whole actors world for one distance (the seats review); `ActorWorld.distance_km` calls it. Test: `sim/tests/test_geography_places.py`.
+- The spec's reads regrouped by their real owner.
+
+Proposed, not built. Each is a move of files with the views and commands named; the actors' own edges fall by what the moved files alone read, and the new module takes them on.
+
+- **P1. State finances.** `world_budget.py`, `world_revenue.py`, `world_patronage.py` and the views `army_figures`, `state_budget_figures`, `government_figures`, `harvest_share_taken`, `home_strata_rows`. This file group reads polity (funding terms, authority, levy shares, patrons), demography, land, agriculture, disease, diffusion (research productivity, diffusion index) and part of markets and workforce: most of the width the rest of the module does not share. It still needs the cast (the state is an actor), so the actors would read its figures back for the agents' protocol: the cycle stays, but the actors' own file set reads about half as many owners. Needs a decision on who holds the state actor's record.
+- **P2. Reading and teaching, to diffusion.** `literacy_views.py`, `literacy_rules.py`, the literacy part of `country_rules.py`, the commands `TeachLiteracy` and `SchoolLiteracy` and the three `literacy_*` views. Diffusion is the only reader and owns the figure's other inputs; the strata that hold the figure stay in the actors' state and are reached through `country_strata`.
+- **P3. Lending, to finance's capital market.** `lending.py`, the four lending views, `SetLenderOffers` and `SettleLenderInterest`. Finance's `capital_market.py` is the only reader of the views and the only sender of the commands (finance review). Needs the purse book (`purses` in `ActorsState`, the agents package) to move to a finance slot; moving state is a decision.
+- **P4. Disclosure and patents, beside diffusion.** `world_disclosure.py` (what an invention's makers chose, the live patent, royalties) reads diffusion, seats, knowledge, mechanics and sends `PayActor`. It is diffusion's rule applied to firms; the seats' pure rules it imports (`builders_of`, `disclosure_modes`, `seat_royalties_due`) are already plain functions in the seats' api.
+- **P5. The trade view, to foreign_trade.** `world_trade.py` is the only reader of the foreign_trade views and sends three of its commands. A module can already supply a world through the `actor_world_scope` extension point. Needs the trade questions of `sim/agents/protocols.py` split into their own trait.
+- **P6. The year's order.** `RefreshLenderOffers`, `AccrueExperience`, `ChargeKeeping` and `ChargeActorsTheft` become phase hooks of finance, production and coin placed after the actors' year. Changes the order only if a hook is misplaced; needs the fingerprint (`python3 -m sim.tests.fingerprint`), so not done here.
+
+The seats as parties (`seat_parties.py`, `seat_exchange.py`, and the commands `ApplyForPatent`, `MakeOffer`, `AnswerOffer`, `GrantLicence`, `SellSeatConcern` the actors apply for the seats) read ledger, ventures, workforce, knowledge and the seats. They are the seats' commands, but a seat-as-party module would need the actors' cast for `find_dealer` while the seats read the actors for the opening cast: one cycle either way, so the party builder stays beside the exchange it feeds.
+
+### 4. Why the remaining edges are needed
+
+Each edge in the table is a question an actor's decision uses (a price, a head count, a held technique, a tax base) or a command it posts (a sale noted, a scandal, a purse credited). They are economic dependencies, not plumbing: an actor that cannot see the market, the people and the state cannot act. After any of P1 to P6 the module still depends on scenario, markets, production, workforce and the people owners, because the agents package is the module's reason to exist.
