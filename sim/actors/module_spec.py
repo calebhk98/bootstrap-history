@@ -91,6 +91,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("home_country", "home_country", **_LIVE),
 		ViewSpec("state_knowledge", "state_knowledge", **_LIVE),
 		ViewSpec("holder_treasury", "holder_treasury", kind=KEYED, **_LIVE),
+		ViewSpec("teaching_knowledge", "teaching_knowledge", **_LIVE),
 		ViewSpec("legacy_country_literacy", "legacy_country_literacy", kind=KEYED, **_LIVE),
 		ViewSpec("partner_catch_chance", "partner_catch_chance", kind=QUOTE, **_LIVE),
 		ViewSpec("harvest_share_taken", "harvest_share_taken", kind=KEYED, **_LIVE),

@@ -42,6 +42,12 @@ class CountryRulesTests(unittest.TestCase):
         self.assertAlmostEqual(country_rules.country_literacy(registry, None).get("literacy_general"), 0.2)
         self.assertAlmostEqual(country_rules.country_literacy(registry, "gaul").get("literacy_general"), 0.6)
 
+    def test_teachers_are_the_active_actors_and_what_each_holds(self):
+        def actor(identity, knowledge, exited_year=None):
+            return SimpleNamespace(identity=lambda: identity, knowledge=knowledge, record=SimpleNamespace(exited_year=exited_year))
+        actors = {"a": actor("guild", {"smithing"}), "b": actor("gone", {"writing"}, exited_year=120), "c": actor("firm", set())}
+        self.assertEqual(country_rules.knowledge_by_actor(actors), {"guild": {"smithing"}, "firm": set()})
+
 
 if __name__ == "__main__":
     unittest.main()

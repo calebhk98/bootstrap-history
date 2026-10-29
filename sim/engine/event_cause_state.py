@@ -11,8 +11,7 @@ WORST_WELFARE_FLOOR = 0.01
 
 def food_supply_ratio(sim: Any, node: Optional[str] = None) -> Optional[float]:
     """Calories available over calories needed in the last demographic year; 1 is need exactly met."""
-    flows = getattr(sim, "_last_demographic_step", None)
-    return None if flows is None else float(flows.nutrition_ratio)
+    return sim.view("nutrition_ratio_last_year")()
 
 
 def _free_home_strata(sim: Any) -> List[Any]:

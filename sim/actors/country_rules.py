@@ -46,3 +46,8 @@ def partner_catch_chance(registry: Any, world: Any, civilization_id: str, share_
 	what is due over its roads) against how visible the bite is."""
 	reach = float(registry.world_for(registry.get(GOVERNMENT_PREFIX + civilization_id), world).state_reach())
 	return stock_dynamics.catch_chance(reach, visibility_factor(share_of_holding))
+
+
+def knowledge_by_actor(actors: Mapping[str, Any]) -> Dict[str, set]:
+	"""{actor identity: the nodes it holds} for the actors still active: who could teach a trade."""
+	return {actor.identity(): set(actor.knowledge) for actor in actors.values() if actor.record.exited_year is None}

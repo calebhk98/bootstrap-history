@@ -23,10 +23,9 @@ def stratum(members, welfare, share, propertied=False, bonded=False, measured=Tr
 
 
 def fake_sim(strata=(), nutrition=None, coin_metal_kept=1.0):
-	flows = None if nutrition is None else SimpleNamespace(nutrition_ratio=nutrition)
 	record = SimpleNamespace(need={"army": 1.0}, unfunded={}, coin_metal_kept=coin_metal_kept)
 	return Game(
-		_last_demographic_step=flows, population=SimpleNamespace(total=1000.0),
+		nutrition_ratio_last_year=lambda: nutrition, population=SimpleNamespace(total=1000.0),
 		actors=SimpleNamespace(of_kind=lambda kind: list(strata) if kind == "stratum" else []),
 		state_treasury=lambda: SimpleNamespace(record=record),
 		civ={}, start_civ={}, cfg={"start_year": 100}, year=120)

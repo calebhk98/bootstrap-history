@@ -33,15 +33,6 @@ def farm_arable_ceiling(sim):
 
 # ---- the actors and the agent economy ----------------------------------------------------------------------------------------
 
-@bridge_view("teaching_knowledge")
-def teaching_knowledge(sim):
-    """(nodes held by each active actor, what the society already knows, what has been demonstrated)."""
-    registry = getattr(sim, "actors", None)
-    by_actor = {actor.identity(): set(actor.knowledge) for actor in (registry.actors.values() if registry is not None else ())
-                if actor.record.exited_year is None}
-    return by_actor, set(sim.view("techniques_granted")()), sim.view("actor_world")().demonstrated()
-
-
 @bridge_view("shared_answer", kind=QUOTE)
 def shared_answer(sim, key, inputs, compute, standalone=False):
     """`compute()` reused while the engine's world stamp and `inputs` hold."""
