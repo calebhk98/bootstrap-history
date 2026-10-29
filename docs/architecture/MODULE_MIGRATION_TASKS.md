@@ -269,7 +269,21 @@ actors (21), hazards, workforce (20 each), projects (19).
   module forgets its own seat caches through a hook on the module base (in place of `_reset_economic_caches`' list of forget
   commands); the assembly holds the seats in joining order with their slots, gives modules `act_as(seat_id)` and publishes the
   seat ids as a framework view, so the dependency stays visible in the module graph rather than hidden in a callback.
-- [ ] The engine bridge answers no module read: each bridged view is published by the module that owns the fact.
+- [x] The engine bridge answers no module read: each bridged view is published by the module that owns the fact.
+- [x] The engine bridge applies no command (branch `mr/bridge-commands`): `bridge_command` is gone. Coin takes stolen goods through each
+  store's owner (`DrawDownStock`, the actors' new `DrawDownActorStore`, `TakeFromGranary`, `HoldEdgeGoods`; `TakeGoods` is deleted).
+  The cause book is reporting's (`sim/reporting/cause_rules.py`, `causes.py`; rows and the readings they are measured from are
+  `ReportingSeat` fields): `NoteWageShock` and `NoteConcernChange` carry the figures their senders read, `CloseCausePeriod` closes a
+  seat's period, `cause_rows` and `causes_since` are its views, and `sim/engine/cause_book.py` is gone. `RepriceOpeningMoney` is applied
+  by markets (the flag, each seat's `RescaleHouseholdMoney`), which asks the root to count the tree afresh with the assembly's
+  `RepriceTree`. `RegisterSeat` is split: the assembly applies `AddSeat` and `MoveSeat` (`sim/assembly/root_commands.py`, through hooks
+  the game sets on the assembly in `game_assembly.attach`, because the registry holds each seat's record and the root's own state),
+  and the seats module does the rest of a join itself (the purse, the founder's years, the watches, a country seat's holder).
+  `ForgetGoalCaches` is gone: the seats module keeps the goal's critical floor beside its closure (`goal_critical_floor`,
+  `RememberGoalFloor`), per seat, and `ForgetGoalClosure` drops both. `society_techs` is the actors' view. The bridge still publishes
+  `legacy_economy` (read by engine and UI code), `legacy_labour` (read by tests only) and holds `bridge_land.MODS_DIR`. Measure:
+  `python3 tools/measure/module_graph.py` (0 modules depend on the bridge, 6 before) and `grep -n "bridge_command" sim/engine/bridge*.py`
+  (none).
 - [ ] A width review for each module that depends on more than 15 others, written into its catalogue entry: views that
   mirror methods merged into views that answer questions, sub-domains split out, pass-through dependencies removed,
   and why each remaining edge is needed.

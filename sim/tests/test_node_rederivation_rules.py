@@ -79,7 +79,7 @@ with mock.patch.dict(node_revenue._DERIVED_FOR_CIVILISATION, clear=True), \
 def _game(derived_gates, held):
     log = []
     game = SimpleNamespace(
-        _derived_gate_set=derived_gates, _society_held_techs=lambda: held, start_civ={"id": "testland"}, nodes={"old": {}},
+        _derived_gate_set=derived_gates, view=lambda name: (lambda: held), start_civ={"id": "testland"}, nodes={"old": {}},
         state=SimpleNamespace(economy=SimpleNamespace(nodes_money_per_labour_hour=None)),
         _done_changed=lambda: log.append("done"), _operating_changed=lambda: log.append("operating"), log=log)
     return game

@@ -1,22 +1,6 @@
-"""Bridge entries the markets module reads until the owners behind them move into modules.
+"""The markets module's port over the agent economy, for engine and UI code that still reach it through the game."""
+from .bridge import bridge_view
 
-Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine as the old mixin code did,
-and is never cached."""
-from sim.markets.api import RepriceOpeningMoney
-
-from . import opening_money
-from .bridge import bridge_command, bridge_view
-
-
-# ---- commands: the opening's money ----
-
-@bridge_command(RepriceOpeningMoney)
-def reprice_opening_money(sim, command):
-    """Every seat's purse and the tree's money fields move to the money an hour of work is worth at the economy."""
-    opening_money.reprice_opening_money(sim, command.before)
-
-
-# ---- the module's own objects, for engine code that still reaches them through the game ----
 
 @bridge_view("legacy_economy")
 def legacy_economy(sim):

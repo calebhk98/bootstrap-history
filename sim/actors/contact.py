@@ -50,6 +50,11 @@ class Contact:
 		home = self.needs.civilisation()["id"]
 		return [actor for actor in self.cast().of_kind("stratum") if (actor.record.country or home) == country]  # type: ignore[attr-defined]
 
+	def draw_down_actor_store(self, command: Any) -> None:
+		"""The actor's stock of the material falls by the tonnes, never below zero."""
+		stores = self.cast().actors[command.actor].record.stores  # type: ignore[attr-defined]
+		stores[command.good] = max(0.0, stores[command.good] - command.tonnes)
+
 	def hold_edge_goods(self, command: Any) -> None:
 		"""The edge takes the goods into the stock it keeps beside its money."""
 		self.cast_state().edge(command.edge).receive_goods(command.good, command.tonnes)  # type: ignore[attr-defined]

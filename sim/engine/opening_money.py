@@ -2,27 +2,12 @@
 
 A game starts with its money counted at the labour package's opening figure (the coin's labour cost in
 the price solver). The economy then settles its own wage for an hour of work, and that is the one
-money per labour hour: the founder's purse, seats' purses and the tree's money fields, all counted in
-hours at construction, are repriced to it when the economy first opens.
+money per labour hour: the markets module rescales each seat's money when the economy first opens
+(`RepriceOpeningMoney`) and asks the root to count the tree's money fields afresh (`RepriceTree`).
 """
-from sim.ledger.api import RescaleHouseholdMoney
-from sim.markets.api import MarkMoneyPricedAtEconomy
-
 from . import money_units
 from .data import TRADE_REGISTRY
 from sim.workforce.api import build_schedule
-
-
-def reprice_opening_money(sim, before):
-    """From now the money an hour of work is worth is the economy's unskilled wage. `before` is the figure
-    the game's money was counted at; purses and the tree move by the ratio of the two."""
-    sim.send(MarkMoneyPricedAtEconomy())
-    after = sim.labour.money_per_labour_hour()
-    ratio = after / before
-    for seat_id in list(sim.state.seats):
-        with sim.act_as(seat_id):
-            sim.send(RescaleHouseholdMoney(ratio))
-    reprice_tree(sim)
 
 
 def reprice_tree(sim, money_per_labour_hour=None):

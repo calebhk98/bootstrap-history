@@ -140,22 +140,10 @@ class PayActorFromEdge(Command):
 	purpose: Any
 
 
-# where TakeGoods takes from
+# where a theft takes goods from (the coin module sends the owner of each store its command)
 STORE_ACTOR = "actor store"       # a material in an actor's own stores (`actor` names it)
 STORE_STOCK = "stock ledger"      # a commodity in the acting seat's tonnes ledger
 STORE_GRANARY = "granary"         # the acting seat's farm stock, counted in tonnes by the caller
-
-
-@dataclass(frozen=True)
-class TakeGoods(Command):
-	"""Tonnes of a good leave a holder's stock (never below zero) and are added to the goods a named edge holds, as
-	thieves take them. The holder's opening-stock snapshot is not touched. Applied by the engine bridge (the granary
-	and the actors' stores are not the ledger's state yet)."""
-	store: str
-	good: str
-	tonnes: float
-	edge: str
-	actor: Optional[str] = None
 
 
 @dataclass(frozen=True)

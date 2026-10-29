@@ -71,7 +71,7 @@ with verbatim(plain_record):
 check("serialize_state: outside `verbatim` a dict is copied", serialize_state({"record": plain_record})["record"] is not plain_record)
 
 # ---- dataclasses: the household (None-means-never fields, nested containers, tuples)
-household = HouseholdState(cause_mark={"wage": 1.0})
+household = HouseholdState(saving_target=3.0)
 cash_seat = LedgerSeat(cash_flow={"wages": -12.5}, cash_mark=None, cash_periods=[{"year": 99, "net": 3.0}], total_spend=7.0)
 workforce = WorkforceSeat(wages_earned=None, trades_created={"mason", "baker"}, trade_introduced_year={"mason": 95}, employees={"mason": 2.0},
                           training=[["mason", 2]], granted_staff=None, unused_hours_reported={"order:1": [40.0, "no_hands"]})
@@ -92,7 +92,7 @@ check("serialize_state: a dataclass's sets, dicts, lists and tuples inside",
       staff_blob["trades_created"] == {"__set__": ["baker", "mason"]} and staff_blob["trade_introduced_year"] == {"mason": 95}
       and staff_blob["employees"] == {"mason": 2.0} and staff_blob["training"] == [["mason", 2]]
       and cash_blob["cash_flow"] == {"wages": -12.5} and cash_blob["cash_periods"] == [{"year": 99, "net": 3.0}]
-      and blob["cause_mark"] == {"wage": 1.0} and staff_blob["unused_hours_reported"] == {"order:1": [40.0, "no_hands"]}, None)
+      and blob["saving_target"] == 3.0 and staff_blob["unused_hours_reported"] == {"order:1": [40.0, "no_hands"]}, None)
 check("serialize_state: a log is a list of pairs", serialize_state(ReportingSeat(log=[(100, "built a mill")]))["log"] == [[100, "built a mill"]])
 check("serialize_state: the household's section holds no money (the purse is an account in the actors' book, the cash book the ledger's)",
       not {"capital", "cash_flow", "cash_mark", "cash_periods", "total_spend", "_purses", "_account", "_local_capital"} & set(blob), list(blob))

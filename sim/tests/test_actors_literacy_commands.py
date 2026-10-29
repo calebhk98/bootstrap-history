@@ -7,7 +7,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.actors import literacy_rules
-from sim.actors.commands import HoldEdgeGoods, SchoolLiteracy, TeachLiteracy
+from sim.actors.commands import DrawDownActorStore, HoldEdgeGoods, SchoolLiteracy, TeachLiteracy
 from sim.actors.module import Actors
 from sim.agents.api import ActorsState
 from sim.agents.edges import EDGE_THIEVES
@@ -25,6 +25,25 @@ def actors_over(strata):
     registry = SimpleNamespace(state=SimpleNamespace(home_country="rome"), of_kind=lambda kind: strata)
     module.seeded_actor_registry = lambda: registry
     return module
+
+
+class DrawingDownAnActorsStore(unittest.TestCase):
+    @staticmethod
+    def _cast_with(stores):
+        module = module_harness.build(Actors, world=ActorsState(home_country="rome"), module_id="actors")
+        registry = SimpleNamespace(actors={"state": SimpleNamespace(record=SimpleNamespace(stores=stores))})
+        module.cast = lambda: registry
+        return module
+
+    def test_the_tonnes_leave_the_actors_store_of_that_material(self):
+        stores = {"grain": 10.0, "iron": 3.0}
+        self._cast_with(stores).draw_down_actor_store(DrawDownActorStore("state", "grain", 4.0))
+        self.assertEqual(stores, {"grain": 6.0, "iron": 3.0})
+
+    def test_the_store_never_falls_below_zero(self):
+        stores = {"grain": 1.0}
+        self._cast_with(stores).draw_down_actor_store(DrawDownActorStore("state", "grain", 4.0))
+        self.assertEqual(stores, {"grain": 0.0})
 
 
 class CountryLiteracyViews(unittest.TestCase):

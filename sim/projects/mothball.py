@@ -8,7 +8,7 @@ from sim.ventures.api import CloseConcern, RestoreConcern
 
 from .closure_grace import grace_note, within_grace
 from .constants import STAFF_CLOSURE_GRACE
-from .needed_commands import NoteConcernChange
+from sim.reporting.api import NoteConcernChange
 
 
 class Mothball:
@@ -109,7 +109,7 @@ class Mothball:
 		# concern goes back on the books; any other work just stops being shut.
 		if needs.is_venture[node_id]:
 			needs.send(RestoreConcern(node_id))
-			needs.send(NoteConcernChange("opening", node_id, "restored"))
+			needs.send(NoteConcernChange("opening", node_id, "restored", node["rev"], node["up"]))
 		else:
 			needs.send(CloseConcern(node_id))
 		return True, LogLine("restored", "%s back in service for %s%s"

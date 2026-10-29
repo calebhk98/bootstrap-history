@@ -13,7 +13,7 @@ from sim.agents import business_review
 from sim.agents.api import Business
 from sim.agents.business_plant import MOTHBALLED, Plant
 from sim.projects import closure_reasons, constants
-from sim.projects.needed_commands import NoteConcernChange
+from sim.reporting.api import NoteConcernChange
 from sim.tests import module_harness, projects_host, ventures_host
 from sim.ventures import constants as venture_constants
 
@@ -130,7 +130,7 @@ class CloseWorkRecordsTheReason(unittest.TestCase):
 	def game(self, year):
 		business = a_business_running("mill")
 		projects = types.SimpleNamespace(business=business)
-		module = projects_host.build(projects_record=projects, year=year)
+		module = projects_host.build(projects_record=projects, year=year, tree_nodes={"mill": {"rev": 40.0, "up": 15.0}})
 		module.close_lapsed_dependents = lambda year: None
 		return module, business
 
@@ -139,7 +139,7 @@ class CloseWorkRecordsTheReason(unittest.TestCase):
 		module.close_work("mill", STAFF)
 		self.assertEqual(business.closures()["mill"], {"reason": STAFF, "year": 40})
 		self.assertEqual(module.seat.ever_closed_for_staff, {"mill"})
-		self.assertIn(NoteConcernChange("closure", "mill", STAFF), module_harness.sent(module))
+		self.assertIn(NoteConcernChange("closure", "mill", STAFF, 40.0, 15.0), module_harness.sent(module))
 
 	def test_a_manual_closure_is_dated_with_the_year_given(self):
 		module, business = self.game(40)

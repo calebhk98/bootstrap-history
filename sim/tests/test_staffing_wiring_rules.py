@@ -73,7 +73,7 @@ class ReopeningRestaffed(unittest.TestCase):
 def Restoring(closure_age, fee=100.0, cash=1000.0):
     projects = types.SimpleNamespace(mothballed={"press"}, done={"press"})
     module = projects_host.build(
-        projects_record=projects, tree={"press": {"pre": []}}, reopen_fee=lambda node_id: fee, spending_power=lambda kind: cash,
+        projects_record=projects, tree={"press": {"pre": [], "rev": 0.0, "up": 0.0}}, reopen_fee=lambda node_id: fee, spending_power=lambda kind: cash,
         acting_balance=cash, is_venture=lambda node_id: True, year=100)
     module.CLOSED_FOR_STAFF = "staff"
     module.running_gate_refusal = lambda node_id: None

@@ -88,7 +88,7 @@ class SellMaterial(Command):
 class RepriceOpeningMoney(Command):
 	"""The agent economy opened and settled its own wage: the game's money, counted until now at the figure `before` (money
 	per labour hour), becomes the economy's. Every seat's purse and the tree's money fields move by the ratio of the two,
-	and the money is marked as counted at the economy. Applied by the engine until the purses and the tree are modules'."""
+	and the money is marked as counted at the economy. Applied by the markets module, which asks the ledger to rescale each seat's money and the root to count the tree afresh."""
 	before: float
 
 

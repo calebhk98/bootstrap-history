@@ -14,6 +14,13 @@ from .spec import ModuleSpec, Operations, declared_methods, point_names, view_na
 from .views import View
 
 
+def _no_root_operation(name: str) -> Callable:
+	"""The hook of a root operation the game has not set (a host built without a game): asking for it is an error."""
+	def refuse(*arguments: Any) -> Any:
+		raise AssemblyError("no game has set the root operation %s" % name)
+	return refuse
+
+
 class Assembly:
 	def __init__(self, applied: Applied, clock: Clock, removed_views: Dict[str, Tuple[str, ...]],
 	             removed_commands: Dict[type, str]):
@@ -36,6 +43,9 @@ class Assembly:
 		self.seat_records: Callable[[], Mapping[str, Any]] = dict   # the registry: seat id -> the seat's record (`.modules` holds its slots), in joining order
 		self.follow: Optional[Callable[[Optional[str]], None]] = None   # told the acting seat after every bind (the engine's saved copy)
 		self.holds_rule: Callable[[Any], List[str]] = lambda record: []  # what a seat's record holds that a handover would overwrite
+		self.add_seat: Callable[[str, Mapping[str, Any]], Any] = _no_root_operation("add_seat")   # the root's: put a seat built from a template in the registry
+		self.move_seat: Callable[[str, str], Any] = _no_root_operation("move_seat")   # the root's: move a seat to another id in the registry and the stores keyed by it
+		self.reprice_tree: Callable[[], None] = _no_root_operation("reprice_tree")   # the root's: count the tree's money fields at the money an hour of work is worth now
 		self.mod_memory: Callable[[], Dict[str, Any]] = dict       # the saved game's slot the mods keep their own state in (the engine's)
 		self.mod_access: Dict[str, ModAccess] = {}                 # mod id -> what its code is handed in place of the game
 

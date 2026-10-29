@@ -1,6 +1,6 @@
 """Complaint 273: theft, sack and banditry read the same exposure of everything a holder keeps (coin, goods, land,
 loans, shares); stolen goods leave the holder's stock for the thieves' edge and stolen money lands with the thieves,
-never destroyed. The coin module sends the ledger's commands for both (`TakeGoods`, `PayEdge`, `PayEdgeFrom`)."""
+never destroyed. The coin module sends the ledger's commands for both (`DrawDownStock`, `HoldEdgeGoods`, `PayEdge`, `PayEdgeFrom`)."""
 
 QUICK_TOPIC = True
 
@@ -11,9 +11,11 @@ from sim.agents.edges import EDGE_THIEVES
 from sim.coin import exposure as exposures
 from sim.coin import theft_exposure
 from sim.coin.commands import ChargeActorsTheft, PlunderHousehold
+from sim.actors.api import DrawDownActorStore, HoldEdgeGoods
+from sim.demography.api import TakeFromGranary
 from sim.coin.exposure import Exposure, GoodsLot, split_purse
 from sim.coin.module import Coin
-from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, PayEdge, PayEdgeFrom, TakeGoods
+from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, DrawDownStock, PayEdge, PayEdgeFrom
 from sim.tests import module_harness
 
 CALM = dict(guard_hours_per_tonne_year={"coin": 0.0}, visible_scale=0.5, state_reach=0.0, protection=0.0)
@@ -35,7 +37,25 @@ def money_sent(module):
 
 
 def goods_sent(module):
-    return {command.good: command.tonnes for command in module_harness.sent(module) if isinstance(command, TakeGoods)}
+    return {command.good: command.tonnes for command in module_harness.sent(module) if isinstance(command, HoldEdgeGoods)}
+
+
+class EachStoreIsAskedByItsOwner(unittest.TestCase):
+
+    def test_a_lot_in_an_actors_store_is_drawn_down_from_that_actor_then_held_by_the_edge(self):
+        module = thief()
+        module.take_goods(GoodsLot("grain", 50.0, 4.0, STORE_ACTOR, "state"), 7.0)
+        self.assertEqual(module_harness.sent(module), [DrawDownActorStore("state", "grain", 7.0), HoldEdgeGoods(EDGE_THIEVES, "grain", 7.0)])
+
+    def test_a_lot_in_the_stock_is_drawn_down_by_commodity_then_held_by_the_edge(self):
+        module = thief()
+        module.take_goods(GoodsLot("iron", 50.0, 4.0, STORE_STOCK), 7.0)
+        self.assertEqual(module_harness.sent(module), [DrawDownStock("iron", 7.0), HoldEdgeGoods(EDGE_THIEVES, "iron", 7.0)])
+
+    def test_a_lot_in_the_granary_is_taken_in_kilograms_then_held_by_the_edge(self):
+        module = thief()
+        module.take_goods(GoodsLot("wheat", 5.0, 4.0, STORE_GRANARY), 2.0)
+        self.assertEqual(module_harness.sent(module), [TakeFromGranary(2000.0), HoldEdgeGoods(EDGE_THIEVES, "wheat", 2.0)])
 
 
 class StolenGoodsLeaveTheStock(unittest.TestCase):
@@ -43,10 +63,12 @@ class StolenGoodsLeaveTheStock(unittest.TestCase):
     def test_goods_taken_are_asked_of_the_stock_for_the_thieves_edge(self):
         module = thief()
         module.steal_from(None, exposure_of(1000.0, coin=1000.0, goods_tonnes=100.0), EVENT, **CALM)
-        (command,) = [sent for sent in module_harness.sent(module) if isinstance(sent, TakeGoods)]
-        self.assertEqual((command.store, command.good, command.edge, command.actor), (STORE_STOCK, "iron", EDGE_THIEVES, None))
-        self.assertGreater(command.tonnes, 0.0)
-        self.assertLess(command.tonnes, 100.0)
+        (held,) = [sent for sent in module_harness.sent(module) if isinstance(sent, HoldEdgeGoods)]
+        (drawn,) = [sent for sent in module_harness.sent(module) if isinstance(sent, DrawDownStock)]
+        self.assertEqual((held.good, held.edge, drawn.commodity), ("iron", EDGE_THIEVES, "iron"))
+        self.assertEqual(drawn.tonnes, held.tonnes)
+        self.assertGreater(held.tonnes, 0.0)
+        self.assertLess(held.tonnes, 100.0)
 
     def test_land_is_never_lifted_and_the_money_asked_is_the_coins_share(self):
         module = thief()
@@ -151,7 +173,7 @@ class HouseholdHoldings(unittest.TestCase):
         self.assertLess(stolen["iron"], 40.0)
         self.assertLess(stolen["wheat"], 20.0)
         self.assertTrue(all(command.edge == EDGE_THIEVES for command in module_harness.sent(module)
-                            if isinstance(command, TakeGoods)))
+                            if isinstance(command, HoldEdgeGoods)))
 
     def test_an_ordered_state_makes_banditry_cost_less_than_a_sack_of_equal_strength(self):
         kept = household_module(order_reach=0.8).plunder_household(PlunderHousehold(0.3, "banditry", True))

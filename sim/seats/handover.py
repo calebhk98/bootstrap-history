@@ -1,12 +1,13 @@
 """Handing a seat over (the rules are handover_rules.py): the module decides whether it may be done, has the registry move
-the seat and rename it in the stores the engine keeps, and renames it in its own and diffusion's."""
+the seat and rename it in the stores the root keeps, and renames it in its own and diffusion's."""
 from typing import Any
 
+from sim.assembly.api import MoveSeat
 from sim.diffusion.api import RekeyDisclosures
 from sim.rekey import rekey
 
 from . import handover_rules
-from .commands import HandOverSeat, MoveSeat
+from .commands import HandOverSeat
 
 DEALING_FIELDS = ("patents", "shares_held", "shares_issued", "offers", "offer_serial")
 

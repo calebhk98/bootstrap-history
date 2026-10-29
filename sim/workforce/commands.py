@@ -58,14 +58,6 @@ class ReportStaffReduction(Command):
 
 
 @dataclass(frozen=True)
-class NoteWageShock(Command):
-	"""The acting seat's cause book records that a shock named `cause` moved the wage index from `index_before` to what
-	it is now."""
-	cause: str
-	index_before: float
-
-
-@dataclass(frozen=True)
 class ReleaseStaff(Command):
 	"""`people` of a trade leave the payroll of the seat `seat_id` and go back to the pool the labour market draws on."""
 	seat_id: str

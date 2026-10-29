@@ -8,7 +8,7 @@ are listed by `python3 tools/check_ui_views.py --list`, which also checks each i
 as a function here is the new-game setup, the UI's own memory on the `Sim`, and the engine tables that
 no module publishes yet."""
 from sim.engine import (  # noqa: F401
-    state_paths, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
+    state_paths, civ_start_check, fuzzy_estimates, path_search, planner,
     purchase_rule, settings, settings_table, topic_tags, units,
     validate_material_gating, validate_node_money, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.production.api import node_revenue_census  # noqa: F401
@@ -62,6 +62,7 @@ from sim.campaigns.api import DisbandArmy, OrderArmy, RaiseArmy, RecallArmy  # n
 from sim.diffusion.api import Disclose  # noqa: F401
 from sim.finance.api import FoundBank  # noqa: F401
 from sim.ledger.api import CloseCashPeriod  # noqa: F401
+from sim.reporting.api import NOTICE, WAGE, CloseCausePeriod  # noqa: F401
 from sim.agriculture.api import InvestFarm, SellFarm  # noqa: F401
 from sim.land.api import BuildWay, FoundColony  # noqa: F401
 from sim.markets.api import BuyMaterial, SellMaterial  # noqa: F401
@@ -70,7 +71,7 @@ from sim.projects.api import (Bribe, MothballWork, PostBounty, ReorderProjects, 
                               StartProject, StopProject)  # noqa: F401
 from sim.knowledge.api import RevealNodes, StartDoneYearRecord  # noqa: F401
 from sim.scenario.api import SetEndYear, SetFog, SetFuzzyEstimates  # noqa: F401
-from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, JoinSeat, MakeOffer, RememberGoalClosure, SetGoal, SetPolicy  # noqa: F401
+from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, JoinSeat, MakeOffer, RememberGoalClosure, RememberGoalFloor, SetGoal, SetPolicy  # noqa: F401
 from sim.ventures.api import OpenVenture, RollOut, SellConcern  # noqa: F401
 from sim.workforce.api import (BuildHousing, BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase,  # noqa: F401
                                NoteBuyRefusal, TrainStaff, WorkForWages)
@@ -263,11 +264,11 @@ def win_condition_anatomy(sim, condition):
 
 
 def goal_critical_floor(sim):
-    return getattr(sim, "_goal_critical_floor", None)
+    return sim.view("goal_critical_floor")()
 
 
 def set_goal_critical_floor(sim, years):
-    sim._goal_critical_floor = years
+    sim.send(RememberGoalFloor(years))
 
 
 def last_buy_refusal(sim):

@@ -13,7 +13,8 @@ from sim.demography.api import CutPopulation, RefreshDemographicIndexes
 from sim.polity.api import ShiftValueWeight
 from sim.refusal import LogLine, Refusal
 from sim.reporting.api import ErodeMoney, RecordEvent
-from sim.workforce.api import NoteWageShock, ReportStaffReduction, ScaleDeputies, SurviveStaff
+from sim.reporting.api import NoteWageShock
+from sim.workforce.api import ReportStaffReduction, ScaleDeputies, SurviveStaff
 
 from .commands import SayOnce
 from . import constants, rules, staff_loss_words
@@ -116,7 +117,7 @@ class Shocks:
 		self.needs.send(CutPopulation(raw))
 		for seat_id in reports:
 			with self.needs.act_as(seat_id):
-				self.needs.send(NoteWageShock(met[seat_id].get("name", "a plague"), wage_index_before))
+				self.needs.send(NoteWageShock(met[seat_id].get("name", "a plague"), self.needs.wage_index() - wage_index_before))
 		# refresh population and wage screens now, not at year end
 		self.needs.send(RefreshDemographicIndexes(year))
 		for seat_id, report in reports.items():

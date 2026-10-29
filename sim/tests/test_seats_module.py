@@ -2,15 +2,21 @@
 for the views it reads and the seat registry a plain dict; no game."""
 QUICK_TOPIC = True
 
+import contextlib
 import random
 import unittest
 from types import SimpleNamespace
 
+from sim.assembly.api import AddSeat
+from sim.ledger.api import OpenPurse
+from sim.projects.api import WatchActive
 from sim.refusal import Refusal
 from sim.seats import join_rules
-from sim.seats.api import (EndRun, JoinCastSeats, JoinSeat, RecordGoalReached, RegisterSeat, SeatsSeat, SetGoal, ForgetGoalCaches)
+from sim.seats.api import (EndRun, JoinCastSeats, JoinSeat, RecordGoalReached, SeatsSeat, SetGoal)
 from sim.seats.module import Seats
 from sim.tests import module_harness
+from sim.ventures.api import WatchBusiness
+from sim.workforce.api import WatchStaff
 
 TREE = {"a": {"name": "A"}, "b": {"name": "B"}}
 
@@ -20,12 +26,14 @@ def seat(kind="household", country=None, goal=None, dead_reason=None, goal_year=
 
 
 def seats_over(registry, acting="founder", civilisation=None, answers=None, **views):
+    answers = dict({AddSeat: lambda command: registry.setdefault(command.seat_id, SeatsSeat()) and None}, **(answers or {}))   # the registry adds the slot
     module = module_harness.build(
-        Seats, seat=registry[acting] if acting in registry else SeatsSeat(), answers=answers or {},
+        Seats, seat=registry[acting] if acting in registry else SeatsSeat(), answers=answers,
         views=dict({"registered_seats": list(registry), "civilisation": civilisation or {"id": "home"}, "tree_nodes": TREE, "price_index": 2.0,
                     "kit_capital": lambda kit: {"poor": 10.0}[kit],
                     "founder_life_terms": {"immortal": False, "minimum": 5, "mean": 40.0, "spread": 0.0},
-                    "game_random": random.Random(3)}, **views))
+                    "game_random": random.Random(3), "act_as": lambda seat_id: contextlib.nullcontext(),
+                    "state_treasury": SimpleNamespace(actor_id="government:home")}, **views))
     module.seat_slot_of = registry.__getitem__
     module.clock.act_as(acting)
     return module
@@ -58,27 +66,29 @@ class WhoIsPlaying(unittest.TestCase):
 class Joining(unittest.TestCase):
 
     def test_a_seat_is_registered_with_capital_at_the_societys_prices_and_a_drawn_lifespan(self):
-        module = seats_over({"founder": seat()})
+        registry = {"founder": seat()}
+        module = seats_over(registry)
         module.join_seat(JoinSeat("second", {"capital": 100.0, "starting_techs": ["a"]}))
-        (sent,) = module_harness.sent(module)
-        self.assertEqual((sent.seat_id, sent.capital, sent.founder_years), ("second", 200.0, 40.0))
+        self.assertEqual(module_harness.sent(module)[:2], [AddSeat("second", {"capital": 100.0, "starting_techs": ["a"]}), OpenPurse("second", 200.0)])
+        self.assertEqual(registry["second"].life_left, 40.0)
 
     def test_a_kit_is_priced_by_the_kit_view(self):
         module = seats_over({"founder": seat()})
         module.join_seat(JoinSeat("second", {"kit": "poor"}))
-        self.assertEqual(module_harness.sent(module)[0].capital, 20.0)
+        self.assertEqual(module_harness.sent(module)[1], OpenPurse("second", 20.0))
 
     def test_no_capital_and_no_kit_is_an_empty_purse(self):
         module = seats_over({"founder": seat()})
         module.join_seat(JoinSeat("second", {}))
-        self.assertEqual(module_harness.sent(module)[0].capital, 0.0)
+        self.assertEqual(module_harness.sent(module)[1], OpenPurse("second", 0.0))
 
     def test_an_immortal_run_gives_a_founder_no_end_and_draws_nothing(self):
         dice = random.Random(3)
-        module = seats_over({"founder": seat()}, founder_life_terms={"immortal": True, "minimum": 5, "mean": 40.0, "spread": 9.0},
+        registry = {"founder": seat()}
+        module = seats_over(registry, founder_life_terms={"immortal": True, "minimum": 5, "mean": 40.0, "spread": 9.0},
                             game_random=dice)
         module.join_seat(JoinSeat("second", {}))
-        self.assertEqual(module_harness.sent(module)[0].founder_years, 1e9)
+        self.assertEqual(registry["second"].life_left, 1e9)
         self.assertEqual(dice.getstate(), random.Random(3).getstate())
 
     def test_a_template_naming_a_technology_the_tree_lacks_is_refused_and_nothing_is_sent(self):
@@ -114,7 +124,8 @@ class Joining(unittest.TestCase):
         civilisation = {"id": "home", "cast": {"seats": [{"id": "rival", "capital": 10.0}, {"id": "founder"}, {"id": "ally"}]}}
         module = seats_over({"founder": seat()}, civilisation=civilisation)
         self.assertEqual(module.join_cast_seats(JoinCastSeats()), ["rival", "ally"])
-        self.assertEqual([type(command) for command in module_harness.sent(module)], [RegisterSeat, RegisterSeat])
+        self.assertEqual([type(command) for command in module_harness.sent(module)],
+                         [AddSeat, OpenPurse, WatchBusiness, WatchActive, WatchStaff] * 2)
 
     def test_a_refusal_in_the_cast_stops_the_join_and_is_the_answer(self):
         civilisation = {"id": "home", "cast": {"seats": [{"id": "rival", "starting_techs": ["nowhere"]}]}}
@@ -152,7 +163,7 @@ class Goals(unittest.TestCase):
         registry = {"founder": seat(goal=goal)}
         registry["founder"].goal_years = dict(goal_years or {})
         registry["founder"].goal_year = goal_year
-        module = seats_over(registry, answers={ForgetGoalCaches: None})
+        module = seats_over(registry)
         return module, registry["founder"]
 
     def test_the_goal_view_names_the_goal_and_the_years(self):
@@ -169,11 +180,10 @@ class Goals(unittest.TestCase):
         module.record_goal_reached(RecordGoalReached("a", 1000))
         self.assertEqual((module.seat.goal_years, module.seat.goal_year), ({}, None))
 
-    def test_a_new_goal_starts_with_no_year_drops_the_caches_and_each_goal_keeps_its_own(self):
+    def test_a_new_goal_starts_with_no_year_and_each_goal_keeps_its_own(self):
         module, held = self.goals_over(goal_year=1000, goal_years={"c": 1000})
         module.set_goal(SetGoal("d"))
         self.assertEqual((held.goal, module.seat.goal_year), ("d", None))
-        self.assertEqual(module_harness.sent(module), [ForgetGoalCaches()])
         module.record_goal_reached(RecordGoalReached("d", 1007))
         self.assertEqual(module.seat.goal_years, {"c": 1000, "d": 1007})
 

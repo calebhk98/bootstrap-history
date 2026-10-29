@@ -9,6 +9,7 @@ from .data import WAGES
 from . import game_assembly
 from sim.knowledge.api import RevealNodes, fog_mismatch
 from sim.scenario.api import SetFuzzyEstimates, scenario_slot_of
+from sim.seats.api import ForgetGoalClosure
 from sim.materials.api import CaptureReadings
 from .rng_record import restore_rng, rng_record
 from sim.engine.state import (
@@ -370,7 +371,7 @@ def _apply_blob(sim, blob):
 	if state._immortal is not None:
 		sim.cfg["immortal"] = bool(state._immortal)
 	if sim.goal is not None:
-		sim.forget_goal_caches()
+		sim.send(ForgetGoalClosure())   # what the running game worked out of its goal is not the loaded one's
 	if state._seed is not None:
 		sim.seed = state._seed
 	if state._rng is not None:

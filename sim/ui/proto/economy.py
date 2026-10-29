@@ -4,7 +4,7 @@ import sim.engine.ui_port as ui_port
 from sim.refusal import Refusal, cause_of
 from sim.engine.ui_port import WAGES, trade_family
 from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
-from sim.engine.ui_port import CloseCashPeriod, cause_book, plain_number
+from sim.engine.ui_port import CloseCashPeriod, CloseCausePeriod, plain_number
 from sim.ui.figures import figure_snapshot
 
 from .state import _agent_state
@@ -688,7 +688,7 @@ def _dashboard_snapshot(sim):
     per simulated year from the `step` dispatch below. It also closes the cash book's
     period, so the book and the snapshots share their year boundaries."""
     sim.send(CloseCashPeriod())
-    cause_book.close_period(sim)
+    sim.send(CloseCausePeriod())
     return {
         "year": sim.view("year")(),
         "price_index": round(sim.view("price_index")(), 4),

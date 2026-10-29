@@ -4,7 +4,7 @@ The automatic counterparts (closing what staffing can no longer cover, reopening
 projects module's."""
 from sim.agents.api import edges
 from sim.ledger.api import PayEdge
-from sim.projects.api import NoteConcernChange
+from sim.reporting.api import NoteConcernChange
 from sim.refusal import LogLine, Refusal
 
 from .channels import INSTITUTION_UNITS_CHANGES
@@ -69,7 +69,8 @@ class Opening:
 		if scalable:
 			business.set_size(node_id, unit_count)
 			self.bump_seat(INSTITUTION_UNITS_CHANGES)
-		needs.send(NoteConcernChange("opening", node_id, "opened"))
+		node = needs.tree_nodes()[node_id]
+		needs.send(NoteConcernChange("opening", node_id, "opened", node["rev"], node["up"]))
 		earns = self.venture_real_earnings(node_id, unit_count, fully_ramped=True)
 		upkeep = self.venture_upkeep_quote(node_id, unit_count)
 		costs = upkeep["now"]

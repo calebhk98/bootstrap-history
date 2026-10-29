@@ -1,6 +1,6 @@
 """The state reporting owns for each seat."""
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -16,3 +16,6 @@ class ReportingWorld:
 class ReportingSeat:
     log: List[Tuple[Any, str]] = field(default_factory=list)               # (year, LogLine) in the order they happened
     automation_audit: List[Dict[str, Any]] = field(default_factory=list)   # the last few years' rows (rules.py)
+    # the cause book (cause_rules.py): rows for wage, notice and concern changes, and the readings the open period is measured from
+    cause_rows: List[Dict[str, Any]] = field(default_factory=list)
+    cause_mark: Optional[Dict[str, float]] = None

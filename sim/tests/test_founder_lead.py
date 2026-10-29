@@ -11,7 +11,8 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import node_rederive, society_holdings
+from sim.actors import society_rules
+from sim.engine import node_rederive
 from sim.production import node_revenue
 
 
@@ -23,14 +24,14 @@ def actor(kind, knowledge, exited=None):
 class HeldBySociety(unittest.TestCase):
 
     def test_the_society_holds_its_own_techniques_and_what_its_actors_have_learnt(self):
-        held = society_holdings.held_by_society({"fire"}, [actor("firm", {"loom"}), actor("government", {"coin"})])
+        held = society_rules.held_by_society({"fire"}, [actor("firm", {"loom"}), actor("government", {"coin"})])
         self.assertEqual(held, {"fire", "loom", "coin"})
 
     def test_a_node_only_the_founder_holds_is_not_the_societys(self):
-        self.assertEqual(society_holdings.held_by_society({"fire"}, []), {"fire"})
+        self.assertEqual(society_rules.held_by_society({"fire"}, []), {"fire"})
 
     def test_households_bodies_and_exited_firms_do_not_count(self):
-        held = society_holdings.held_by_society(
+        held = society_rules.held_by_society(
             {"fire"}, [actor("household", {"steam"}), actor("interest_group", {"guild"}), actor("firm", {"kiln"}, exited=1700)])
         self.assertEqual(held, {"fire"})
 
@@ -43,7 +44,7 @@ class Rederivation(unittest.TestCase):
         fake = types.SimpleNamespace(
             state=types.SimpleNamespace(projects=projects, economy=types.SimpleNamespace()), nodes={}, start_civ={"id": "x"}, _derived_gate_set=frozenset(),
             labour=types.SimpleNamespace(money_per_labour_hour=lambda: 1.0),
-            _society_held_techs=lambda: frozenset({"fire"}),
+            view=lambda name: (lambda: frozenset({"fire"})),
             _done_changed=lambda: None, _operating_changed=lambda: None)
         schedule = types.SimpleNamespace(wages_per_hour=lambda: {}, money_per_labour_hour=1.0)
         with mock.patch.object(node_revenue, "for_civilisation",

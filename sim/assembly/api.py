@@ -10,6 +10,7 @@ from .framework import FRAMEWORK_ID
 from .errors import AssemblyError, StaleView, ViewWrite
 from .mod_access import ModAccess, NeedsAccess, UndeclaredRead, UndeclaredSend, door_of
 from .module import Module
+from .root_commands import AddSeat, MoveSeat, RepriceTree
 from .needs import Needs, Point
 from .spec import FIRST, KEYED, LIST, QUOTE, SUM, TABLE, Command, ExtensionPoint, ModuleSpec, Operations, PhaseHook, Provision, ViewSpec
 from .views import View

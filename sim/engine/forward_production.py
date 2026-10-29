@@ -7,7 +7,7 @@ from sim.production.api import RefreshDoneCaches, RefreshOperatingCaches, consta
 
 from sim.ventures.api import NoteOperatingChanged
 
-from . import money_units, node_rederive, society_holdings
+from . import money_units, node_rederive
 
 
 class ForwardProductionMixin:
@@ -50,5 +50,3 @@ class ForwardProductionMixin:
 	def _remember_derived_gates(self, held_techs):
 		node_rederive.remember_derived_gates(self, held_techs)
 
-	def _society_held_techs(self):
-		return society_holdings.society_techs(self)

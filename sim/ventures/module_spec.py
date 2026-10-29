@@ -7,7 +7,7 @@ from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.actors.api import SellSeatConcern
 from sim.ledger.api import PayEdge
 from sim.production.api import RefreshOperatingCaches
-from sim.projects.api import NoteConcernChange
+from sim.reporting.api import NoteConcernChange
 
 from .channels import INSTITUTION_UNITS_CHANGES, OPERATING_CHANGES
 from .commands import (ClearMothball, CloseConcern, ForgetClosureReason, MothballConcern, NoteConcernYear, NoteOperatingChanged, OpenVenture,

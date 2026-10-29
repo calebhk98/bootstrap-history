@@ -1,11 +1,10 @@
-"""The engine as a module while the migration runs: views and commands that still answer through `Sim`'s mixins.
+"""The engine as a module while the migration runs: the views engine and UI code still read through the game.
 
-A moved module reads a fact by its view name whether its owner has moved yet or not. Until it has, the bridge
-publishes that view by asking the engine (never cached: legacy code writes the state behind it directly). When the
-owner moves, its module publishes the same name and the bridge entry is deleted; the readers do not change. Each
-`bridge_<topic>.py` declares its entries with `@bridge_view` and `@bridge_command`; this module is emptied by the
-end of the migration (docs/architecture/MODULE_MIGRATION_TASKS.md)."""
-from typing import Any, Callable, List, Tuple
+No module reads a bridge view and the bridge applies no command. A view it publishes is asked of the engine (never cached:
+legacy code writes the state behind it directly) and is deleted when its last reader reads the owner. Each
+`bridge_<topic>.py` declares its entries with `@bridge_view`; this module is emptied by the end of the migration
+(docs/architecture/MODULE_MIGRATION_TASKS.md)."""
+from typing import Any, Callable, List
 
 from sim.assembly.api import TABLE, Module, ModuleSpec, ViewSpec
 
@@ -18,7 +17,6 @@ class EngineBridge(Module):
 
 
 VIEWS: List[ViewSpec] = []
-COMMANDS: List[Tuple[type, str]] = []
 
 
 def bridge_view(name: str, kind: str = TABLE, seat_scoped: bool = False) -> Callable:
@@ -31,16 +29,6 @@ def bridge_view(name: str, kind: str = TABLE, seat_scoped: bool = False) -> Call
 	return register
 
 
-def bridge_command(command: type) -> Callable:
-	"""Apply `command` through `function(sim, command)` until its owner module exists."""
-	def register(function: Callable) -> Callable:
-		method = "apply_" + command.__name__
-		setattr(EngineBridge, method, lambda bridge, sent: function(bridge.sim, sent))
-		COMMANDS.append((command, method))
-		return function
-	return register
-
-
 def bridge_spec() -> ModuleSpec:
 	import importlib
 	import os
@@ -49,4 +37,4 @@ def bridge_spec() -> ModuleSpec:
 	for found in sorted(pkgutil.iter_modules([here]), key=lambda entry: entry.name):
 		if found.name.startswith("bridge_"):
 			importlib.import_module("sim.engine." + found.name)
-	return ModuleSpec(BRIDGE_ID, EngineBridge, publishes=tuple(VIEWS), applies=tuple(COMMANDS))
+	return ModuleSpec(BRIDGE_ID, EngineBridge, publishes=tuple(VIEWS))

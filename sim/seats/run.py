@@ -1,10 +1,15 @@
 """Which seats are playing, who a seat plays for, and joining a seat."""
 from typing import Any, Dict, List, Optional
 
+from sim.assembly.api import AddSeat
+from sim.ledger.api import OpenPurse
+from sim.projects.api import WatchActive
 from sim.refusal import Refusal
+from sim.ventures.api import WatchBusiness
+from sim.workforce.api import WatchStaff
 
 from . import country, join_rules, lists
-from .commands import JoinCastSeats, JoinSeat, RegisterSeat, SetSeatHolder
+from .commands import JoinCastSeats, JoinSeat, SetSeatHolder
 from .state import COUNTRY_SEAT, SeatsSeat
 
 
@@ -84,7 +89,20 @@ class Run:
         life = self.needs.founder_life_terms()
         years = join_rules.founder_years(life["immortal"], life["minimum"], life["mean"], life["spread"],
                                          self.needs.game_random().gauss)
-        return self.needs.send(RegisterSeat(seat_id, template, capital, years))
+        refusal = self.needs.send(AddSeat(seat_id, template))
+        if refusal is not None:
+            return refusal
+        holds_nothing = template.get("kind") == COUNTRY_SEAT   # a country seat acts through its government and holds nothing of its own
+        if not holds_nothing:
+            self.needs.send(OpenPurse(seat_id, float(capital)))   # the capital is already in the society's coin
+        self.seat_of(seat_id).life_left = years
+        with self.needs.act_as(seat_id):
+            self.needs.send(WatchBusiness(seat_id))
+            self.needs.send(WatchActive(seat_id))
+            self.needs.send(WatchStaff(seat_id))
+            if holds_nothing:
+                self.needs.send(SetSeatHolder(self.needs.state_treasury().actor_id))
+        return None
 
     def join_cast_seats(self, command: JoinCastSeats) -> Any:
         """Add the seats the civilisation's cast lists for the start of the game: their ids, or the refusal that stopped it."""
