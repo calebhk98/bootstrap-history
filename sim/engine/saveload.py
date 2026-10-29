@@ -29,7 +29,7 @@ def state_text(sim):
 	sim.view("legacy_economy")().flush_record()
 	sim.state._civ = sim.civ.get("id")
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))
-	sim.state._seed = getattr(sim, "seed", None)
+	sim.state._seed = sim.seed
 	sim.state._game_version = GAME_VERSION
 	sim.state._rng = rng_record(sim.rng)
 	sim.send(CaptureReadings())      # the demand the last throttle saw is carried in the save
@@ -358,7 +358,7 @@ def _apply_blob(sim, blob):
 	if fog_refusal:
 		raise ValueError(fog_refusal)
 
-	old_revealed = set(sim.view("techniques_revealed")()) if getattr(sim, "state", None) else set()
+	old_revealed = set(sim.view("techniques_revealed")()) if sim.state else set()
 	asked_fuzzy, asked_salt = sim.fuzzy_estimates, sim.view("fuzzy_salt")()
 	state = deserialize_state(blob)
 	game_assembly.revive(sim, state, deserialize_state)
@@ -376,7 +376,7 @@ def _apply_blob(sim, blob):
 		sim.seed = state._seed
 	if state._rng is not None:
 		restore_rng(sim.rng, state._rng)
-	if getattr(sim, "_economy_deferred", False):
+	if sim._economy_deferred:
 		from .opening_money import reprice_tree, saved_tree_pricing
 		figure = saved_tree_pricing(state.modules["markets"].money_from_economy, state.economy.nodes_money_per_labour_hour)
 		if figure is None:

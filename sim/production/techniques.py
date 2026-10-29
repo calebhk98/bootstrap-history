@@ -13,6 +13,7 @@ Needs: the views of READS_BY_OWNER in module_spec.py."""
 
 
 class Techniques:
+	_techniques_in_use_cache = None   # (epoch, nodes, held, operating) of the last answer; set by techniques_in_use
 
 	def techniques_epoch(self):
 		"""Changes whenever the techniques in use might."""
@@ -27,7 +28,7 @@ class Techniques:
 		"""Nodes whose production entries some producer runs now."""
 		needs = self.needs
 		epoch = (needs.techniques_version(), needs.operating_version(), needs.concern_versions()[1])
-		cached = getattr(self, "_techniques_in_use_cache", None)
+		cached = self._techniques_in_use_cache
 		done = needs.techniques_held()
 		operating = needs.operating()
 		if cached is not None and cached[0] == epoch and cached[2] is done and cached[3] is operating:

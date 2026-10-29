@@ -146,11 +146,14 @@ def farm_hours_after(current_hours, needed_hours, total_hours):
 class LabourAllocationMixin:
     """Labour method that sizes this year's farm workforce."""
 
+    _need_shares_cache = None          # (techniques reached, shares) of the last answer; set by _non_farm_need_shares
+    _clearing_hours_this_year = 0.0    # hours the farm workforce spends clearing land; set when the year sizes it
+
     def _non_farm_need_shares(self):
         """Each non-farm trade's share of need from household demand through
         the recipe graph; with no recipe available, the current split."""
         reached = frozenset(self._world.civ["starting_techs"]) | frozenset(self._world.projects.done)
-        cached = getattr(self, "_need_shares_cache", None)
+        cached = self._need_shares_cache
         if cached is None or cached[0] != reached:
             shares = workforce_spinup.need_shares_by_trade(
                 labour_market.production_data(), reached, self._world.techniques_available_to,
@@ -215,7 +218,7 @@ class LabourAllocationMixin:
     def _apply_land_clearing(self):
         """Hands beyond what the farm can crop spent the year clearing;
         the ground is ready for next year."""
-        hours = getattr(self, "_clearing_hours_this_year", 0.0)
+        hours = self._clearing_hours_this_year
         cleared = cleared_hectares(hours, self._world.farm_land.hectares, self._world.farm_arable_ceiling)
         if cleared > 0.0:
             self._set_farm_area(self._world.farm_land.hectares + cleared)

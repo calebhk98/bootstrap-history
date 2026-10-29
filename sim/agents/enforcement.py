@@ -15,8 +15,7 @@ def unlicensed(entry: Any, actor_id: str) -> bool:
 
 def expected_damages(world: Any, actor_id: str, node_id: str, margin: float) -> float:
 	"""What an unlicensed `actor_id` (empty for an entrant yet to exist) expects to pay a year to the holder: the state's reach times the margin it makes."""
-	lookup = getattr(world, "patent_entry", None)
-	entry = lookup(node_id) if lookup is not None else None
+	entry = world.patent_entry(node_id)
 	if not unlicensed(entry, actor_id):
 		return 0.0
 	return float(world.state_reach()) * max(0.0, margin)
@@ -24,25 +23,24 @@ def expected_damages(world: Any, actor_id: str, node_id: str, margin: float) -> 
 
 def holder_actor(registry: Any, world: Any, holder_id: str) -> Any:
 	"""The actor holding a patent: one in the registry, else a seat."""
-	return registry.get(holder_id) or getattr(world, "seat_parties", lambda: {})().get(holder_id)
+	return registry.get(holder_id) or world.seat_parties().get(holder_id)
 
 
 def patented_nodes(registry: Any, world: Any) -> set:
 	"""Every node some actor or seat holds a patent on."""
-	holders = list(registry.actors.values()) + list(getattr(world, "seat_parties", lambda: {})().values())
+	holders = list(registry.actors.values()) + list(world.seat_parties().values())
 	return {node_id for holder in holders for node_id in holder.record.patents}
 
 
 def operators_of(registry: Any, world: Any, node_id: str) -> list:
 	"""Who runs a concern: the actors in business, and the seats that run it themselves."""
-	seats = getattr(world, "seat_parties", lambda: {})()
+	seats = world.seat_parties()
 	return registry.operators_of(node_id) + [seats[seat_id] for seat_id in sorted(seats) if node_id in seats[seat_id].concerns]
 
 
 def margin_of(operator: Any, world: Any) -> float:
 	"""What an operator earns from one of its concerns in a year, on average."""
-	seat_margin = getattr(world, "seat_margin", None)
-	total = seat_margin(operator.actor_id) if operator.kind == "household" and seat_margin is not None else operator.record.last_margin
+	total = world.seat_margin(operator.actor_id) if operator.kind == "household" else operator.record.last_margin
 	return max(0.0, total) / max(1, len(operator.concerns))
 
 

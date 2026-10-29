@@ -16,6 +16,7 @@ class CountryGroupsView:
 
 	profile: Any
 	_holder: Any
+	_sectors = None   # the year's hurt sectors; set by sectors
 
 	def government(self) -> Any:
 		raise NotImplementedError
@@ -41,7 +42,7 @@ class CountryGroupsView:
 	def sectors(self) -> Dict[str, Sector]:
 		"""Everyone of the country hurt this year, by key; read once for the year this scope lives. None of the loss is the
 		founder's doing that the country can see, so no blame is laid at his door."""
-		kept = getattr(self, "_sectors", None)
+		kept = self._sectors
 		if kept is not None:
 			return kept
 		strata = [stratum for stratum in self.country_strata()]

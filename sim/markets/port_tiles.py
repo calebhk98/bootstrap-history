@@ -10,6 +10,8 @@ from sim.world.material_units import tonnes_per_unit
 class TilePricesMixin:
     """Mixin of `AgentEconomy`: reads of the economy's prices on a tile."""
 
+    _tile_prices = None   # (answers, {tile: prices}) for the year's answers; set by prices_at
+
     def _tile_in_economy(self, tile):
         """The tile asked about, or the capital when the economy does not hold it."""
         setup = self.economy().setup
@@ -19,7 +21,7 @@ class TilePricesMixin:
         """{good: money per unit} on the tile in coin; the same dict while the year's answers stand."""
         answers = self.answers()
         tile = self._tile_in_economy(tile)
-        held = getattr(self, "_tile_prices", None)
+        held = self._tile_prices
         if held is None or held[0] is not answers:
             held = self._tile_prices = (answers, {})
         if tile not in held[1]:

@@ -56,7 +56,7 @@ def country_seat_refusal(sim, seat_id, cmd):
 
 def run_as_seat(sim, cmd, reply):
     """Answer `cmd` with `reply(command)` while the addressed seat acts; a refusal when no such seat exists."""
-    seat_id, refusal = addressed_seat(sim.view("seat_list")()["joined"], cmd, getattr(sim, "session_seat", None))
+    seat_id, refusal = addressed_seat(sim.view("seat_list")()["joined"], cmd, sim.session_seat)
     if refusal:
         return refusal
     refusal = country_seat_refusal(sim, seat_id, cmd)

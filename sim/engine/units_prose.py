@@ -16,7 +16,8 @@ plain_number = quantity_text.plain_number
 
 
 def _display(sim: Any) -> Display:
-    return Display(getattr(sim, "civ", None), units.registry(), units.chosen_units(), lambda: units.unit_context(sim))
+    civ = getattr(sim, "civ", None)   # sim is None when a tool renders prose without a game
+    return Display(civ, units.registry(), units.chosen_units(), lambda: units.unit_context(sim))
 
 
 def mass_text(amount: float, sim: Any = None, digits: int = 0, grouped: bool = False, short: bool = False,

@@ -65,7 +65,7 @@ def spread(actors: Iterable[Any], world: Any) -> List[str]:
 	"""One year of news: each actor that lacks a shown node and is not aware of it may become aware.
 	Returns "actor:node" for each new awareness, in order. Contact events fade after being counted."""
 	ordered = sorted(actors, key=lambda actor: actor.identity())
-	demonstrated = world.demonstrated() if hasattr(world, "demonstrated") else set()
+	demonstrated = world.demonstrated()
 	held = {node_id for actor in ordered for node_id in actor.knowledge}
 	shown = sorted((demonstrated | held) - world.baseline_knowledge())
 	found = []

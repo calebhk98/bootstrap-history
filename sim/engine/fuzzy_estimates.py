@@ -41,7 +41,7 @@ def salt(sim):
 
 
 def actor_of(sim, actor=None):
-    return actor or getattr(sim, "viewer_actor_id", None) or DEFAULT_ACTOR
+    return actor or DEFAULT_ACTOR   # no viewer is wired to name another actor, so the player is the one asked
 
 
 def _rng(sim, actor, node_id, key):

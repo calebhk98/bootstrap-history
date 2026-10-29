@@ -11,6 +11,10 @@ def game(**founder_fields):
 	return SimpleNamespace(state=SimpleNamespace(acting_record=SimpleNamespace(founder=SimpleNamespace(**founder_fields))))
 
 
+def game_without_founder():
+	return SimpleNamespace(state=SimpleNamespace(acting_record=SimpleNamespace(founder=None)))
+
+
 class FounderDeathRecord(unittest.TestCase):
 
 	def test_the_age_at_death_is_read_from_the_founders_state(self):
@@ -19,9 +23,11 @@ class FounderDeathRecord(unittest.TestCase):
 	def test_the_year_of_death_is_read_from_the_founders_state(self):
 		self.assertEqual(ForwardingPropertiesMixin._founder_death_year.fget(game(_founder_death_year=140)), 140)
 
-	def test_an_unrecorded_death_is_an_attribute_error_so_a_defaulted_read_answers_none(self):
-		with self.assertRaises(AttributeError):
-			ForwardingPropertiesMixin._founder_death_aged.fget(game())
+	def test_an_unrecorded_death_reads_as_none(self):
+		self.assertIsNone(ForwardingPropertiesMixin._founder_death_aged.fget(game(_founder_death_aged=None)))
+
+	def test_a_seat_with_no_founder_record_reads_as_none(self):
+		self.assertIsNone(ForwardingPropertiesMixin._founder_death_year.fget(game_without_founder()))
 
 
 if __name__ == "__main__":

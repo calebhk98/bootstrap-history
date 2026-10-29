@@ -69,6 +69,9 @@ class Registry:
 
 
 class World:
+    def seat_margin(self, seat_id):
+        return 0.0
+
     def seat_parties(self):
         return {FIRST_SEAT_ID: party}
 

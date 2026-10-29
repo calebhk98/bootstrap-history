@@ -86,6 +86,9 @@ from sim.engine.state import ActorRecord as _Record, ActorsState as _ActorsState
 class _TonnesWorld:
     year = 100
 
+    def demonstrated(self):
+        return set()
+
     def __init__(self, makers):
         self.makers, self.asked = frozenset(makers), []
 

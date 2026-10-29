@@ -79,7 +79,7 @@ def finder(registry: Any, world: Any) -> Callable[[str], Any]:
 
 	def find(actor_id: str) -> Any:
 		found = registry.get(actor_id)
-		if found is None and getattr(world, "seat_parties", None) is not None:
+		if found is None:
 			if not seats:
 				seats.update(world.seat_parties())
 			found = seats.get(actor_id)

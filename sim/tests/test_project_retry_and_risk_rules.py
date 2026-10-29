@@ -124,14 +124,14 @@ class HazardTimeline(unittest.TestCase):
 
 class FirstTimerTip(unittest.TestCase):
     def test_a_fresh_early_game_is_told_once_and_the_flag_is_set(self):
-        sim = Game(year=100, cfg={"start_year": 100})
+        sim = Game(year=100, cfg={"start_year": 100}, _said_command_index=None)
         first = state_waiting._worth_knowing_early(sim)
         self.assertTrue(first)
         self.assertTrue(sim._said_command_index)
         self.assertIsNone(state_waiting._worth_knowing_early(sim))
 
     def test_a_game_far_past_its_opening_is_never_told(self):
-        sim = Game(year=150, cfg={"start_year": 100})
+        sim = Game(year=150, cfg={"start_year": 100}, _said_command_index=None)
         self.assertIsNone(state_waiting._worth_knowing_early(sim))
 
     def test_the_one_shot_flag_is_saved_so_a_restart_does_not_say_it_again(self):
