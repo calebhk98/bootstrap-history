@@ -9,14 +9,6 @@ from . import need_substitutes
 from .bridge import bridge_view
 
 
-# ---- core: the game ----------------------------------------------------------------------------------------------
-
-@bridge_view("legacy_game")
-def legacy_game(sim):
-	"""The game itself, for the agriculture and demography modules' weather and externality hooks (a debt)."""
-	return sim
-
-
 @bridge_view("danger_lines")
 def danger_lines(sim):
 	"""The eminence and suspicion figures past which a household is in danger."""

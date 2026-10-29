@@ -168,8 +168,12 @@ actors (21), hazards, workforce (20 each), projects (19).
 - [ ] Guarded reads: a reader cannot change another module's view answer (`sim/assembly/read_guard.py`, on with
   `BH_GUARD_VIEW_READS=1` in debug games). Inventory every write it refuses on the slow tier and the equivalence runs,
   turn each into the owner's command, then switch the guard on by default in debug games.
-- [ ] No `legacy_game` or `legacy_state` reads (six modules read `legacy_game`: production, workforce, finance, polity,
-  demography, agriculture); then no other `legacy_*` view that hands out a live object.
+- [x] No `legacy_game` or `legacy_state` reads: production, workforce, finance, polity, demography and agriculture read
+  named views and send owners' commands; the bridge views are deleted. The one whole-game handout left is `provider_game`,
+  the mod contract (phase 7). Measured after: 45 reads of `legacy_*` views (80 before), 241 reads answered by the bridge
+  (254 before).
+- [ ] No other `legacy_*` view that hands out a live object (`legacy_projects`, `legacy_world_map`, `legacy_seats`,
+  `legacy_dice` -> `game_random`, `legacy_economy`, `legacy_labour` and the rest: `python3 tools/measure/module_graph.py`).
 - [ ] The engine bridge answers no module read: each bridged view is published by the module that owns the fact.
 - [ ] A width review for each module that depends on more than 15 others, written into its catalogue entry: views that
   mirror methods merged into views that answer questions, sub-domains split out, pass-through dependencies removed,
