@@ -1,7 +1,6 @@
 """What the seat can get of a material: its own workings and woodland, the market's standing offer, what a trading partner
 brings, and what that does to the price. All of it in tonnes a year."""
 import collections
-import math
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from . import capacity, rules
@@ -13,7 +12,7 @@ class Supply:
     """Needs: civilisation, tiles_listed_by, forest_increment, commodity_record, commodity_country_output, material_commodity_map,
     material_prices, mine_works_materials, empire_output, pop_scale, mineral_scale, found_deposits, agent_producer_capacity,
     price_epoch, producers_stamp, running_stamp, effect_best, mechanic, running, forest_hectares,
-    nitre_beds, mine_capacity, mine_depletion, partner_import, foreign_supply_tonnes, can_be_bought, goods_stock,
+    nitre_beds, mine_capacity, mine_depletion, partner_import_tonnes, can_be_bought, goods_stock,
     held_goods, goods_quote, tree_nodes, visibility, material_freight_factor."""
 
     # ---- the catalogue of what a material is ----
@@ -118,13 +117,8 @@ class Supply:
 
     def import_tonnes(self, commodity: str) -> float:
         """Tonnes a year a trading partner can still bring of `commodity`; zero when the home society is its seller or no
-        one is. A route with no lift limit brings what the partner makes."""
-        seller, left = self.needs.partner_import[commodity]
-        if seller is None or left is None:
-            return 0.0
-        if not math.isfinite(left):
-            left = self.needs.foreign_supply_tonnes(seller, commodity)
-        return left if math.isfinite(left) else 0.0
+        one is."""
+        return self.needs.partner_import_tonnes[commodity]
 
     def own_material_supply(self, tag: str) -> float:
         """Tonnes a year of a tracked pool the seat supplies itself, not bought from anyone: mines it sank, woodland it

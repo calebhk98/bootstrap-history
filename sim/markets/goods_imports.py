@@ -13,6 +13,14 @@ def import_tonnes_left(partner_supply_tonnes, lift_left_tonnes, bought_tonnes):
     return max(0.0, min(partner_supply_tonnes, lift_left_tonnes) - bought_tonnes)
 
 
+def import_tonnes_to_home(tonnes_available):
+    """Tonnes a year a partner brings to the home society: none when no partner sells it (None) or its route has no figure
+    (infinite)."""
+    if tonnes_available is None or not math.isfinite(tonnes_available):
+        return 0.0
+    return tonnes_available
+
+
 class GoodsImports:
     """Mixin of `GoodsOffers`: reads of what a partner can bring."""
 
