@@ -69,8 +69,7 @@ buy people are kept by the module per seat and never saved (`staff_scale`, the v
 `NoteBuyRefusal`).
 
 Still live objects the module reads: `game_random` (the game's
-`random.Random`, shared with every module that draws: the order of draws is the game), `provider_game` (the game itself, which a
-mod's town and director-overhead providers are handed by the mod interface), and the project sets the views of knowledge and
+`random.Random`, shared with every module that draws: the order of draws is the game), and the project sets the views of knowledge and
 projects return (the live sets). `legacy_labour` (the module's `Labour` for engine code and mods) is read only by
 `sim/tests/agent_command_helpers.py`. Other owners' views: the engine's `game_config`, `civilisation`, the trade tables
 (`trade_records`, `trades_absent`, `trade_notes`, `trade_family`, `starting_wages`), the actors' staff (`actor_staff_*`), and the

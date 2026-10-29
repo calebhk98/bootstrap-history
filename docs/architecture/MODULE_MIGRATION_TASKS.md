@@ -176,8 +176,7 @@ actors (21), hazards, workforce (20 each), projects (19).
   `2294c07f` refused no write (its only failures were Complaint 866 and the goldens' time limit); the guarded micro tier
   is next.
 - [x] No `legacy_game` or `legacy_state` reads: production, workforce, finance, polity, demography and agriculture read
-  named views and send owners' commands; the bridge views are deleted. The one whole-game handout left is `provider_game`,
-  the mod contract (phase 7). Measured after: 45 reads of `legacy_*` views (80 before), 241 reads answered by the bridge
+  named views and send owners' commands; the bridge views are deleted. `provider_game`, the one whole-game handout, went with the mod contract (phase 7). Measured after: 45 reads of `legacy_*` views (80 before), 241 reads answered by the bridge
   (254 before).
 - [x] The household's change counters are their owners' views: knowledge publishes `techniques_version`, ventures
   `operating_version` and `institution_units_version`, projects `active_projects_version` (each seat-scoped, moved by the owner's
@@ -279,8 +278,8 @@ actors (21), hazards, workforce (20 each), projects (19).
 
 - [x] Replace the process-global registries of the actors, workforce, polity, demography, agriculture, year phases and stores with per-assembly registrations (extension points; `ModCodeApi` records into the mod's `Operations`).
 - [x] The same for the ui's registries: the `interface` module (`sim/interface/`) owns the extension points `interface_commands` and `interface_figures`; the shipped commands and figures (the tables `sim/ui` fills when it loads) and the mods' data are its own provisions, a mod's code provides with `api.command` and `api.figure`, and a word or figure name answered twice is an error naming both owners. A game's table is `command_registry.table_of(sim)` and `figures.figures_of(sim)`; `COMMAND_REGISTRATIONS`, `load_mod_commands` and `register_data_figures` are gone.
-- [ ] Rewrite each shipped code mod onto the new interface (one agent per mod).
-- [ ] The mod contract stops handing a provider the whole game: the externality, town-size and director-overhead providers receive `provider_game` (read by agriculture, demography and workforce). They receive a declared set of views instead, so a mod's reads appear in the module graph like a module's. `mods/bh_cashshelter_z6f2/hooks.py` still calls `game.state_capacity`, a forwarder that is gone; code mods do not run in the baseline, so no test reaches it.
+- [x] Rewrite each shipped code mod onto the new interface: bh_towns, bh_urbanisation, bh_religion, bh_cashshelter, bh_pollution and bh_orghierarchy import only `sim/mod_api.py` and read only the views they declare (`api.reads`) and send only the commands they declare (`api.sends`). One SMOKE test each: `test_towns_mod_smoke`, `test_urbanisation_mod_smoke`, `test_religion_mod_smoke`, `test_cashshelter_mod_smoke`, `test_pollution_mod_smoke`, `test_orghierarchy_mod_smoke`. Count: `bash tools/done_check.sh` (mods importing `sim.engine` outside mod_code).
+- [x] The mod contract stops handing a provider the whole game: a mod declares the views it reads and the commands it sends (`ModCodeApi.reads`, `ModCodeApi.sends`, kept in its `Operations`); the assembly builds one `ModAccess` per mod and game (`sim/assembly/mod_access.py`) that answers those views, guarded as another module's reads are, and applies those commands, and refuses anything else with `UndeclaredRead` or `UndeclaredSend` naming the mod and the view or command. The externality, town-size, director-overhead and wealth-claim providers, and a mod's commands, phases and figures, receive that access as their first argument; the `provider_game` view is deleted. `assembly.record` and `dependency_lines` list a mod's reads and sends. Complaint 955 lists the live objects mod code still receives.
 - [x] Add one SMOKE test per mod operation: replace, remove, add, extend, adjust, provide, withdraw (`sim/tests/test_mod_operations_smoke.py`, three games in one process each).
 
 ### Phase 8: kernels

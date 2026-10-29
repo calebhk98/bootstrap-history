@@ -7,7 +7,7 @@ when they changed; only the payroll reports its changes (the `staff` channel).""
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
 from sim.agriculture.api import SetFarmLand, SetFarmTechnique
 from sim.demography.api import SetClearedFarmland, SetFarmHoursNeeded
-from sim.ledger.api import PayEdge, ReceiveFromEdge, RestorePurse
+from sim.ledger.api import NoteSpend, PayEdge, ReceiveFromEdge, RestorePurse
 from sim.polity.api import AddReputation, ScaleFamiliarity, ScaleProtection
 from sim.seats.api import RememberGoalClosure
 from sim.reporting.api import DiscardEventsAfter, RecordAutomation, RecordAutomationSkip, RecordEvent
@@ -170,6 +170,6 @@ MODULE_SPECS = (ModuleSpec(
         ExtensionPoint("director_overhead", LIST),         # () -> hours a year already spoken for; the answers are added, each at least zero
     ),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(PayEdge, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, DiscardEventsAfter, AddReputation, ScaleFamiliarity, ScaleProtection,
+    sends=(PayEdge, NoteSpend, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, DiscardEventsAfter, AddReputation, ScaleFamiliarity, ScaleProtection,
            SetClearedFarmland, SetFarmHoursNeeded, SetFarmLand, SetFarmTechnique, RememberGoalClosure, RestorePurse),
 ),)

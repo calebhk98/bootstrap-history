@@ -109,7 +109,7 @@ The module owns the cleared ground, the ladder, the cropland ceiling, the openin
 - workforce: `farming_technique`, `society_labour_hours`, `trade_registry`, `money_per_labour_hour` (existing, `bridge_projects.py`)
 - other: `civilisation` (existing), `society_herds` (living stock), `acting_balance` (ledger), `price_index`,
   `externality_yield_factors` (the mods' externalities)
-- the game's random source `game_random` (seats; for the salt) and `provider_game` (the game, handed to the mods' externality providers: their contract); debt: `legacy_farm_holdings` (the acting seat's farm section)
+- the game's random source `game_random` (seats; for the salt) (the mods' externality providers are asked with the year and hold their own `ModAccess`); debt: `legacy_farm_holdings` (the acting seat's farm section)
 
 ## Year phases
 

@@ -27,8 +27,8 @@ def register(api):
     api.actor_kind("golem", Golem)
     api.store("mana", keyed_by="tile", default=0.0, unit="mana")
     api.phase("tick", "world", lambda sim, seats: None, after="market")
-    api.director_overhead(lambda sim: 120.0)
-    api.provide("wealth_claims", lambda: (lambda sim: 5.0, lambda sim, amount, taker: 0.0))
+    api.director_overhead(lambda access: 120.0)
+    api.wealth_claims(lambda access: 5.0, lambda access, amount, taker: 0.0)
 '''
 
 

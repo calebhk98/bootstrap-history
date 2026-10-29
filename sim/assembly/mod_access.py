@@ -12,11 +12,19 @@ from .read_guard import GuardedView
 
 
 class UndeclaredRead(AssemblyError):
-	"""A mod asked for a view it did not declare in `api.reads(...)`."""
+	"""A mod asked for a view it did not declare in `api.reads(...)`; `mod_id` and `view` say who and what."""
+
+	def __init__(self, mod_id: str, view: str):
+		super().__init__("mod %s reads the view %s, which it did not declare; add it to api.reads(...)" % (mod_id, view))
+		self.mod_id, self.view = mod_id, view
 
 
 class UndeclaredSend(AssemblyError):
-	"""A mod sent a command it did not declare in `api.sends(...)`."""
+	"""A mod sent a command it did not declare in `api.sends(...)`; `mod_id` and `command` say who and what."""
+
+	def __init__(self, mod_id: str, command: str):
+		super().__init__("mod %s sent %s, which it did not declare; add it to api.sends(...)" % (mod_id, command))
+		self.mod_id, self.command = mod_id, command
 
 
 class FrameworkDoor:
@@ -46,14 +54,14 @@ class ModAccess:
 	def view(self, name: str) -> Any:
 		"""The published view `name`, if the mod declared it: call it, or index a keyed one."""
 		if name not in self.reads:
-			raise UndeclaredRead("mod %s reads the view %s, which it did not declare; add it to api.reads(...)" % (self.mod_id, name))
+			raise UndeclaredRead(self.mod_id, name)
 		return GuardedView(self._assembly.views[name], "mod %s" % self.mod_id)
 
 	def send(self, command: Any) -> Any:
 		"""Apply a command of a kind the mod declared; the answer is the owner's."""
 		kind = type(command)
 		if kind not in self.sends:
-			raise UndeclaredSend("mod %s sent %s, which it did not declare; add it to api.sends(...)" % (self.mod_id, kind.__name__))
+			raise UndeclaredSend(self.mod_id, kind.__name__)
 		return self.framework.send(command)
 
 	def memory(self) -> dict:

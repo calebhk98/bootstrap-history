@@ -140,6 +140,16 @@ def _check_reads(assembly: Assembly) -> None:
 					raise AssemblyError("view %s of module %s depends on %s, which the module does not read" % (view.name, module_id, name))
 				if assembly.view_owner.get(name) is None and name not in spec.optional_reads:
 					problems.append(str(_missing(assembly, "view %s of module %s" % (view.name, module_id), name)))
+	for mod_id, names in assembly.applied.mod_reads.items():
+		for name in names:
+			if name in assembly.point_owner:
+				problems.append("mod %s reads %s, an extension point; mod code reads views only" % (mod_id, name))
+			elif name not in assembly.view_owner:
+				problems.append(str(_missing(assembly, "mod %s" % mod_id, name)))
+	for mod_id, commands in assembly.applied.mod_sends.items():
+		for command in commands:
+			if command not in assembly.command_owner:
+				problems.append("mod %s sends %s, which no module applies%s" % (mod_id, command.__name__, _removal_note(assembly, command=command)))
 	if problems:
 		raise AssemblyError("; ".join(problems))
 	for view, entries in assembly.applied.adjusters.items():
@@ -151,16 +161,6 @@ def _check_reads(assembly: Assembly) -> None:
 					raise AssemblyError("mod %s's adjuster of %s reads %s, an extension point; an adjuster reads views only" % (mod_id, view, name))
 				if name not in assembly.view_owner:
 					raise _missing(assembly, "mod %s's adjuster of %s" % (mod_id, view), name)
-	for mod_id, names in assembly.applied.mod_reads.items():
-		for name in names:
-			if name in assembly.point_owner:
-				raise AssemblyError("mod %s reads %s, an extension point; mod code reads views only" % (mod_id, name))
-			if name not in assembly.view_owner:
-				raise _missing(assembly, "mod %s" % mod_id, name)
-	for mod_id, commands in assembly.applied.mod_sends.items():
-		for command in commands:
-			if command not in assembly.command_owner:
-				raise AssemblyError("mod %s sends %s, which no module applies%s" % (mod_id, command.__name__, _removal_note(assembly, command=command)))
 	shipped_names = set()
 	for module_id, spec in assembly.applied.specs.items():
 		for provision in spec.provides:

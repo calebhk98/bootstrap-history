@@ -128,7 +128,7 @@ Reads, all bridged or published by a module that moved (`sim/engine/bridge_demog
 (`bridge_agriculture.py`), `town_mortality_premium_by_tile`, `wage_index` (`bridge_hazards.py`), `wage_index_terms`; defence stores
 `relief_kcal_per_day`; agriculture `weather_seed`, `harvest_weather`, and the farm workforce's `farm_land` and
 `farm_technique_this_year`; hazards `country_strata`; core `civilisation`, `year`, `cast` (for
-`AddCaptives`) and `provider_game` (the game, handed to the mods' externality providers: their contract).
+`AddCaptives`). The `externality` point is asked with the year only: a mod's provider is handed its own `ModAccess` (`sim/assembly/mod_access.py`).
 
 Sends: workforce `AllocateFarmWorkforce`, `ApplyLandClearing`, `UpdateWages`; land `AdvanceColonies`; disease `RunEpidemicYear`, `HitSeatsWithEpidemic`; actors
 `RecordMigrantContact`, `ScaleStrata`; hazards `RecordWorldEvent`; reporting `RecordEvent`.

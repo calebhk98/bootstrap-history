@@ -41,3 +41,6 @@ echo "test files importing sim.engine:" \
 
 echo "mods importing sim.engine outside mod_code:" \
   "$(grep -rn 'from sim\.engine\|import sim\.engine' mods --include=*.py | grep -v 'mod_code' | wc -l)"
+
+echo "mods importing sim beyond sim.mod_api:" \
+  "$(grep -rn 'from sim\.\|import sim\.' mods --include=*.py | grep -v 'sim\.mod_api' | wc -l)"

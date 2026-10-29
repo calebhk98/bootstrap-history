@@ -88,9 +88,11 @@ def register(api):
                               publishes=(ViewSpec(api.qualified("visits"), "visits", channels=("visits",)),),
                               applies=((Visit, "apply_visit"),)))
 
+    api.sends(Visit)
+
     @api.command("visit", group="game", summary="a visit", usage=["visit"], description="Visit the temple.")
-    def visit(sim, nodes, cmd, ended):
-        return {"ok": True, "visits": sim.send(Visit(cmd.get("text", "pilgrim")))}
+    def visit(access, nodes, cmd, ended):
+        return {"ok": True, "visits": access.send(Visit(cmd.get("text", "pilgrim")))}
 '''
 
 EXTEND = '''
@@ -116,7 +118,7 @@ def register(api):
 PROVIDE = '''
 def register(api):
     api.provide("actor_spawners", lambda: [(MOD + ":founding", lambda registry, world: [])])
-    api.provide("director_overhead", lambda sim: 50.0)
+    api.provide("director_overhead", lambda: 50.0)
 '''
 
 WITHDRAW = '''
