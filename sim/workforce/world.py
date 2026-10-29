@@ -157,9 +157,6 @@ class WorkforceWorld:
     def institution_units(self, node_id):
         return self._needs.institution_units[node_id]
 
-    def reopen_units(self, node_id):
-        return self._needs.reopen_units[node_id]
-
     def exclusion_reason(self, node_id):
         return self._needs.exclusion_reason[node_id]
 
@@ -424,20 +421,8 @@ class WorkforceWorld:
         rows = self._needs.concern_market()
         return sum(rows.get(node_id, 0.0) for node_id in node_ids)
 
-    def staff_closure_age(self, node_id):
-        return self._needs.staff_closure_age[node_id]
-
-    def keep_staffed(self):
-        return self._needs.keep_staffed()
-
-    def staffing_draw_of(self, node_id, foreman_units=None):
-        return self._needs.staffing_draw(node_id, foreman_units)
-
-    def staffing_held_totals(self):
-        return self._needs.staffing_held_totals()
-
-    def staffing_shortfalls(self, totals, strict=False):
-        return self._needs.staffing_shortfalls(totals, strict)
+    def keep_staffed_hires(self):
+        return self._needs.keep_staffed_hires()
 
     def concerns_to_close_for_staffing(self):
         return self._needs.concerns_to_close_for_staffing()
