@@ -20,29 +20,23 @@ def household(**versions):
 
 
 class RevenueStandIn:
-    """The game `revenue` reads, under a production module whose uncached sum is counted."""
-    bondage_years_left = 0.0
-
-    def real_output_per_head(self):
-        return self.state.economy.output_per_head
+    """The views `revenue` reads, under a production module whose uncached sum is counted."""
 
     def __init__(self):
-        self.pop_scale = 1.0
         self.household = household()
         self.computed = 0
         self.year = 100
         self.price_level = 1.0
         self.output_factor = 1.0
-        self.state = types.SimpleNamespace(
-            scenario=types.SimpleNamespace(year=100), economy=types.SimpleNamespace(output_per_head=1.0),
-            projects=types.SimpleNamespace(), household=self.household)
         self.farm_hectares = 0.0
-        self.founder_alive = True
-        self.labour = types.SimpleNamespace(director_hours_committed=lambda: 0.0, wage_signature=lambda: 0)
         self.module = production_host.build(
-            self, staff=lambda: {key: getattr(self.household, key) for key in ("directors_extra", "freedmen", "slaves", "employees")},
+            staff=lambda: {key: getattr(self.household, key) for key in ("directors_extra", "freedmen", "slaves", "employees")},
             staff_version=lambda: self.household.workforce_version,
             hour_commitments=lambda: {"wage_hours": self.household.wage_hours_this_year},
+            year=lambda: self.year, output_factor=lambda: self.output_factor, home_price_level=lambda: self.price_level,
+            farm_holdings=lambda: {"hectares": self.farm_hectares},
+            running_versions=lambda: (self.household.done_version, self.household.operating_version,
+                                      self.household.institution_units_version),
             answers={SetWageHoursSold: lambda command: setattr(self.household, "wage_hours_this_year", command.hours)})
         self.module._compute_revenue_uncached = self._compute_revenue_uncached
 
@@ -51,19 +45,6 @@ class RevenueStandIn:
 
     def revenue_capacity(self):
         return self.module.revenue_capacity()
-
-    def view(self, name):   # the polity module's standing and the demography module's farm
-        if name == "home_price_level":
-            return lambda: self.price_level
-        if name == "output_factor":
-            return lambda: self.output_factor
-        return lambda: {"governance": 0.0, "reputation": 0.0, "hectares": self.farm_hectares, "bondage_years_left": 0.0}
-
-    def state_funding(self):
-        return 0.0
-
-    def home_price_level(self):
-        return self.price_level
 
     def _compute_revenue_uncached(self):
         self.computed += 1
@@ -83,7 +64,7 @@ class RevenueMemoTest(unittest.TestCase):
             "done": lambda sim: setattr(sim.household, "done_version", 1),
             "workforce": lambda sim: setattr(sim.household, "workforce_version", 1),
             "freedmen": lambda sim: setattr(sim.household, "freedmen", 10.0),
-            "year": lambda sim: setattr(sim.state.scenario, "year", 101),
+            "year": lambda sim: setattr(sim, "year", 101),
             "farmland": lambda sim: setattr(sim, "farm_hectares", 5.0),
             "price level": lambda sim: setattr(sim, "price_level", 1.5),
             "output factor": lambda sim: setattr(sim, "output_factor", 0.5),

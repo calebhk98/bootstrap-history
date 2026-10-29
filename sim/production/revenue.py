@@ -6,9 +6,8 @@ of output sells for once made: `revenue_capacity`, `revenue` and `revenue_source
 `venture_ramp` and `still_ramping` (how a concern's takings ramp up after it opens), `held_trade` and `founder_wage_income`, and
 the held-skill and candidate-set caches that `revenue` and `upkeep` share.
 
-The caches live on the household object because the engine drops them there when what they read changes
-(`caches.forget_done`, `forget_operating`, `forget_revenue`, which the engine's household hooks call).
-Needs: legacy_game, money_per_labour_hour, category_trait, trade_family, staff, staff_version, hour_commitments, standing."""
+The caches are the module's own per seat (`memos`); the engine's household hooks drop them by sending the commands in commands.py.
+Needs: the views of READS_BY_OWNER in module_spec.py."""
 from sim.world import plant_figures
 
 from sim.workforce.api import SetWageHoursSold
@@ -30,15 +29,13 @@ class Revenue:
 		still ramp up from its opening, or delaying `open` would be strictly better than opening promptly. Custom takes time to
 		find whoever owns the shop.
 		"""
-		game = self._game()
-		projects = game.state.projects
-		scenario = game.state.scenario
-		started = projects.business.opened_year_of(node_id, None)
+		year = self.needs.year()
+		started = self.needs.venture_opened_year(node_id, None)
 		if started is None:
-			started = projects.done_year.get(node_id, scenario.year)
-		age = scenario.year - started
+			started = self.needs.done_year().get(node_id, year)
+		age = year - started
 		# An established industry (anyone's worker-years running it) finds its custom sooner.
-		return plant_figures.ramp(age, game.cfg["revenue_ramp_years"], self.industry_depth(node_id),
+		return plant_figures.ramp(age, self.needs.game_setting["revenue_ramp_years"], self.industry_depth(node_id),
 		                          RAMP_SHARE_AT_FULL_DEPTH)
 
 	def revenue_capacity(self):
@@ -59,57 +56,58 @@ class Revenue:
 		the own hours the standing job sells, the household's farmland, standing, the hazard factor, whether the founder lives,
 		state funding and the price level. Any change to the key recomputes it; the engine also drops it with the other economic caches.
 		"""
-		game = self._game()
-		scenario = game.state.scenario
-		standing = game.view("standing")()
-		staff = self.needs.staff()
+		needs = self.needs
+		standing = needs.standing()
+		staff = needs.staff()
+		done_version, operating_version, units_version = needs.running_versions()
 		key = (
-			scenario.year,
-			game.view("pop_scale")(),
-			game.view("real_output_per_head")(),
-			game.household.operating_version,
-			game.household.done_version,
-			self.needs.staff_version(),
-			game.household.institution_units_version,
-			self.needs.hour_commitments()["wage_hours"],
-			game.labour.director_hours_committed(),
-			game.labour.wage_signature(),
+			needs.year(),
+			needs.pop_scale(),
+			needs.real_output_per_head(),
+			operating_version,
+			done_version,
+			needs.staff_version(),
+			units_version,
+			needs.hour_commitments()["wage_hours"],
+			needs.hours_available["director_committed"],
+			needs.wage_signature(),
 			staff["directors_extra"],
-			game.view("debt_status")()["bondage_years_left"],
-			game.view("farm_holdings")()["hectares"] or 0.0,
+			needs.debt_status()["bondage_years_left"],
+			needs.farm_holdings()["hectares"] or 0.0,
 			staff["freedmen"] or 0.0,
 			staff["slaves"] or 0.0,
 			standing["governance"] or 0.0,
-			game.view("output_factor")(),
+			needs.output_factor(),
 			standing["reputation"],
-			game.founder_alive,
-			game.view("state_funding")(),
-			game.view("home_price_level")(),
+			needs.founder()["alive"],
+			needs.state_funding(),
+			needs.home_price_level(),
 		)
-		if getattr(game.household, "_revenue_cache_key", None) != key:
-			game.household._revenue_cache_val = self._compute_revenue_uncached()
-			game.household._revenue_cache_key = key
-		return sum(game.household._revenue_cache_val)
+		memos = self.memos()
+		if memos.revenue_key != key:
+			memos.revenue_value = self._compute_revenue_uncached()
+			memos.revenue_key = key
+		return sum(memos.revenue_value)
 
 	def estimated_revenue(self):
 		"""The part of `revenue` the engine credits as an estimate: everything but the concerns the clearing pays
 		(book_sales.py). The year's ledger credits this; those concerns are credited by the clearing."""
 		self.revenue()
-		return self._game().household._revenue_cache_val[0]
+		return self.memos().revenue_value[0]
 
 	def concern_revenue(self, node_id):
 		"""What one open concern earns in a year before the output factor: the figure the screens quote."""
-		return self._game().view("venture_real_earnings")(node_id, None, False, False)
+		return self.needs.venture_real_earnings(node_id, None, False, False)
 
 	def _compute_revenue_uncached(self):
 		"""(the estimate, the forecast of the concerns the clearing pays), both after the output factor."""
-		game = self._game()
+		needs = self.needs
 		total_revenue = 0.0
 		book_forecast = 0.0
 		practice_set = self._practice_set()
-		projects = game.state.projects
-		granted = projects.granted
-		operating = projects.operating
+		nodes = needs.tree_nodes()
+		granted = needs.techniques_granted()
+		operating = needs.projects_operating()
 		# Scan only what could possibly pay: a node that is neither operating nor practised is skipped below, and was already
 		# skipped for the whole rest of `done`, which only grows (see _revenue_upkeep_candidates).
 		for node_id in self._revenue_upkeep_candidates():
@@ -119,7 +117,7 @@ class Revenue:
 			# Knowing how is not running it: a node pays when it is open, and not for having been worked out.
 			if not practice and node_id not in operating:
 				continue
-			node = game.nodes[node_id]
+			node = nodes[node_id]
 			# a held skill earns through the founder's own hours (founder_wage_income), not through the node
 			if node["rev"] and not practice:
 				if self.concern_sells_on_book(node_id):
@@ -132,23 +130,23 @@ class Revenue:
 		total_revenue += self.workshop_output()
 		total_revenue += self.founder_wage_income()
 		gross = total_revenue
-		ceiling = self.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * game.view("pop_scale")() \
-			* game.view("real_output_per_head")() * game.price_index
+		ceiling = self.priced(REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE) * needs.pop_scale() \
+			* needs.real_output_per_head() * needs.price_index()
 		gross = rules.saturated_revenue(gross, ceiling)
-		return (gross + game.view("state_funding")()) * game.view("output_factor")(), book_forecast * game.view("output_factor")()
+		return (gross + needs.state_funding()) * needs.output_factor(), book_forecast * needs.output_factor()
 
 	def workshop_output(self):
 		"""What your standing staff produce and sell, over and above projects."""
-		game = self._game()
-		if not game.running_with_mechanic("workshop_site"):
+		needs = self.needs
+		if not needs.running_mechanics("workshop_site"):
 			return 0.0
-		staff = self.needs.staff()
-		market = game.labour.market
+		staff = needs.staff()
+		annual_wage = needs.market_annual_wage
 		wage = workshop_craft_wages(
-			staff["employees"], lambda trade: self.needs.trade_family[trade] == "craft", market.quote_annual,
-			staff["freedmen"] + staff["slaves"] * SLAVE_LABOUR_PRODUCTIVITY_SHARE, market.quote_annual("artisan"))
+			staff["employees"], lambda trade: needs.trade_family[trade] == "craft", lambda trade: annual_wage[trade],
+			staff["freedmen"] + staff["slaves"] * SLAVE_LABOUR_PRODUCTIVITY_SHARE, annual_wage["artisan"])
 		mark = WORKSHOP_WAGE_MARKUP_BASE
-		mark = game.view("effect_sum")("workshop_markup", mark)
+		mark = needs.effect_sum("workshop_markup", mark)
 		# Knowing how to do a thing earns nothing on its own; it makes the workshop you staff and pay for more productive,
 		# which is how method has always paid. It needs a workshop and it needs people; with neither it is worth nothing.
 		return workshop_output_value(wage, mark, self.capability_factor())
@@ -160,41 +158,45 @@ class Revenue:
 		directly and must not be counted twice. Saturating, because the tenth improvement to a workshop is worth less than
 		the first.
 
-		Cached on the household: the finished result of exactly this walk, recomputed from scratch whenever done or operating
-		change (`_done_changed`, `_operating_changed` clear it), so it is bit-identical to an uncached call. An incremental total
+		Cached in the module's memos: the finished result of exactly this walk, recomputed from scratch whenever done or operating
+		change (`RefreshDoneCaches`, `RefreshOperatingCaches` clear it), so it is bit-identical to an uncached call. An incremental total
 		would drift in its last bits, since float addition is not associative and the order nodes enter or leave is not the
 		order `done_in_order` walks them in.
 		"""
-		game = self._game()
-		cached = getattr(game.household, "_cap_factor", None)
+		memos = self.memos()
+		cached = memos.capability_factor
 		if cached is not None:
 			return cached
 		weight = 0.0
-		projects = game.state.projects
+		nodes = self.needs.tree_nodes()
+		granted = self.needs.techniques_granted()
+		operating = self.needs.projects_operating()
 		for node_id in self.done_in_order():
-			if node_id in projects.granted or node_id in projects.operating:
+			if node_id in granted or node_id in operating:
 				continue
-			node = game.nodes[node_id]
+			node = nodes[node_id]
 			if node["rev"] <= 0:
 				continue
 			weight += node["rev_hours"]     # in hours, so the price level of money does not enter it
 		result = rules.capability_factor(weight)
-		game.household._cap_factor = result
+		memos.capability_factor = result
 		return result
 
 	def ledger_concern_rows(self):
 		"""Yearly takings of every opened concern that earns, by node id, as the ledger credits them. The
 		founder's own practice is one row of `revenue_sources`, not one per skill."""
-		game = self._game()
+		needs = self.needs
 		rows = {}
-		projects = game.state.projects
+		nodes = needs.tree_nodes()
+		granted = needs.techniques_granted()
+		operating = needs.projects_operating()
 		for node_id in self.done_in_order():
-			if node_id in projects.granted or node_id not in projects.operating:
+			if node_id in granted or node_id not in operating:
 				continue
-			if not game.nodes[node_id]["rev"]:
+			if not nodes[node_id]["rev"]:
 				continue
 			# The figure `ventures` and `why` print, and the factor revenue() applies, so the ledger's parts add up to its total.
-			row = ledger_row(game.view("venture_real_earnings")(node_id, None, False, True))
+			row = ledger_row(needs.venture_real_earnings(node_id, None, False, True))
 			if row is not None:
 				rows[node_id] = row
 		return rows
@@ -205,14 +207,14 @@ class Revenue:
 		held = self._practice_set()
 		if not held:
 			return None
-		nodes = self._game().nodes
+		nodes = self.needs.tree_nodes()
 		return "scholar" if any(nodes[node_id]["sch"] > 0 for node_id in held) else "artisan"
 
 	def founder_wage_income(self):
 		"""Yearly pay of the founder's standing job: the hours not spoken for, sold in the held trade at
 		that trade's market wage (labour_job.py). One person's hours sell once however many skills the
 		founder holds, and a dead founder sells none."""
-		return self._game().labour.standing_job_pay(self.held_trade())
+		return self.needs.standing_job_pay[self.held_trade()]
 
 	def revenue_sources(self):
 		"""Where the money actually comes from, itemised.
@@ -220,19 +222,19 @@ class Revenue:
 		A player who never issues a single start can still get richer every year, from the wages of their own work - the
 		founder is employed in a trade they hold - which is otherwise invisible anywhere else in the interface.
 		"""
-		game = self._game()
-		funding = game.view("state_funding")()
+		needs = self.needs
+		funding = needs.state_funding()
 		return assemble_ledger(
-			self.ledger_concern_rows(), self.workshop_output() * game.view("output_factor")(),
-			self.founder_wage_income() * game.view("output_factor")(),
-			funding * game.view("output_factor")() if funding > 0.5 else None, self.revenue())
+			self.ledger_concern_rows(), self.workshop_output() * needs.output_factor(),
+			self.founder_wage_income() * needs.output_factor(),
+			funding * needs.output_factor() if funding > 0.5 else None, self.revenue())
 
 	# A granted node whose category is flagged practisable is a skill the founder holds and works with their own hands; the held
 	# skills choose the trade the founder's hours are sold in (held_trade). A granted fleet of merchant ships is owned by other
 	# people, so shipping is not one.
 	def _practisable(self, node_id):
 		"""Is this granted node a skill the founder holds and works with their own hands?"""
-		return self.needs.category_trait(self._game().nodes[node_id].get("cat"), "practisable")
+		return self.needs.category_trait(self.needs.tree_nodes()[node_id].get("cat"), "practisable")
 
 	def still_ramping(self):
 		"""Earners that are not yet paying their full figure, and how far along.
@@ -241,12 +243,13 @@ class Revenue:
 		for it. Nothing else explains that gap between the quoted figure and the ledger, so this surfaces it directly. Kept OUT
 		of revenue_sources, whose every value is a number that has to sum to the revenue above it.
 		"""
-		game = self._game()
+		needs = self.needs
 		young = []
-		projects = game.state.projects
-		for node_id in sorted(projects.operating):
-			node = game.nodes.get(node_id)
-			if not node or not node["rev"] or node_id in projects.granted:
+		nodes = needs.tree_nodes()
+		granted = needs.techniques_granted()
+		for node_id in sorted(needs.projects_operating()):
+			node = nodes.get(node_id)
+			if not node or not node["rev"] or node_id in granted:
 				continue
 			ramp = self.venture_ramp(node_id)
 			if ramp < 0.999:
@@ -259,18 +262,17 @@ class Revenue:
 		        "what it will be."
 		        % (", ".join(node_id for node_id, _ramp in young[:6]),
 		           " and %d more" % (len(young) - 6) if len(young) > 6 else "",
-		           young[0][1] * 100, game.cfg["revenue_ramp_years"]))
+		           young[0][1] * 100, needs.game_setting["revenue_ramp_years"]))
 
 	def _practice_set(self):
 		"""The granted skills you actually practise, as a set, computed once: the answer never changes unless the granted
 		set does, which happens at setup and never again. (`revenue` once called `_practisable` per done node per call.)"""
-		game = self._game()
-		projects = game.state.projects
-		cache = getattr(game.household, "_practice_cache", None)
-		if cache is None or cache[0] != len(projects.granted):
-			cache = (len(projects.granted),
-			         frozenset(node_id for node_id in projects.granted if self._practisable(node_id)))
-			game.household._practice_cache = cache
+		granted = self.needs.techniques_granted()
+		memos = self.memos()
+		cache = memos.practice
+		if cache is None or cache[0] != len(granted):
+			cache = (len(granted), frozenset(node_id for node_id in granted if self._practisable(node_id)))
+			memos.practice = cache
 		return cache[1]
 
 	def _revenue_upkeep_candidates(self):
@@ -284,16 +286,15 @@ class Revenue:
 		Strong references and `is`, not bare id() integers: a freed object's address is handed straight to the next same-sized
 		allocation, so two different objects compare equal by id() often enough to replay a stale answer.
 		"""
-		game = self._game()
 		seq = self.done_in_order()
 		practice_set = self._practice_set()
-		projects = game.state.projects
-		operating_version = game.household.operating_version
-		cached = getattr(game.household, "_rev_up_candidates_cache", None)
+		operating_version = self.needs.running_versions()[1]
+		memos = self.memos()
+		cached = memos.candidates
 		if (cached is not None and cached[0] is seq
 		        and cached[1] is practice_set and cached[2] == operating_version):
 			return cached[3]
-		operating = projects.operating
+		operating = self.needs.projects_operating()
 		candidates = [node_id for node_id in seq if node_id in operating or node_id in practice_set]
-		game.household._rev_up_candidates_cache = (seq, practice_set, operating_version, candidates)
+		memos.candidates = (seq, practice_set, operating_version, candidates)
 		return candidates

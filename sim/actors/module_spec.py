@@ -72,6 +72,8 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("country_world", "country_world", kind=KEYED, **_LIVE),
 		ViewSpec("concern_counts", "actor_concerns_in", kind=KEYED, **_LIVE),
 		ViewSpec("concern_versions", "concern_versions", **_LIVE),
+		ViewSpec("concerns_of_active_firms", "concerns_of_active_firms", **_LIVE),
+		ViewSpec("firm_concern_holdings", "firm_concern_holdings", **_LIVE),
 		ViewSpec("actor_staff", "actor_staff_fte", kind=KEYED, **_LIVE),
 		ViewSpec("actor_staff_nationwide", "actor_staff_nationwide", kind=KEYED, **_LIVE),
 		ViewSpec("actor_staff_total", "actor_staff_total", **_LIVE),

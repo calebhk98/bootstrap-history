@@ -1,23 +1,41 @@
 """The production module's spec (sim/assembly).
 
 The module owns each seat's industry experience (`ProductionSeat`) and publishes what runs, what concerns earn and cost, how deep an
-industry is and which techniques are in use. The projects record, the household, the tree and the economy's objects have not moved
-into modules yet, so it reaches them through `legacy_game`, and nothing it publishes is cached: legacy code writes that state
-directly (the record of what is done, operating and granted, the caches on the household)."""
+industry is and which techniques are in use. The projects record, the household and the tree have not moved into modules yet, so it
+reads them through the views of their owners (the engine bridge answers `projects_operating` and `running_versions`), and nothing it
+publishes is cached: legacy code writes that state directly (the record of what is done, operating and granted)."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
+from sim.diffusion.api import NoteFirstRuns
 from sim.workforce.api import SetWageHoursSold
 
-from .commands import AccrueExperience, LearnFromFailure, RefreshDoneCaches
+from .commands import (AccrueExperience, BumpHouseholdVersion, ForgetRevenueCaches, LearnFromFailure, RefreshDoneCaches,
+                       RefreshOperatingCaches)
 from .module import Production
 from .state import ProductionSeat
 
 READS_BY_OWNER = {
-	"core": ("legacy_game",),
-	"workforce": ("money_per_labour_hour", "trade_family", "staff", "staff_version", "hour_commitments"),
-	"mechanics": ("capability_sets", "mechanic"),
-	"knowledge": ("techniques_held", "category_trait"),
-	"diffusion": ("literacy",),
-	"prices": ("held_goods_prices_in_hours",),
+	"core": ("year", "game_setting", "civilisation", "category_trait", "trade_family", "projects_operating", "running_versions"),
+	"workforce": ("money_per_labour_hour", "staff", "staff_version", "hour_commitments", "hours_available", "wage_signature",
+	              "market_annual_wage", "standing_job_pay", "headcount", "base_tile", "people_who_exist", "hours_per_person_year",
+	              "literacy_references"),
+	"mechanics": ("capability_sets", "mechanic", "running_mechanics", "effect_sum"),
+	"knowledge": ("techniques_held", "techniques_granted", "done_year", "tree_nodes"),
+	"diffusion": ("literacy", "techniques_spread"),
+	"prices": ("held_goods_prices_in_hours", "price_index", "done_memo", "producers_memo", "material_prices", "commodity_record"),
+	"markets": ("agent_prices_at", "agent_seat_sale_outlook", "agent_trades_good", "agent_producers_by_good",
+	            "agent_worker_years_by_recipe", "home_unit_price"),
+	"ventures": ("venture_opened_year", "venture_size", "venture_capex", "venture_real_earnings", "venture_real_upkeep",
+	             "venture_foreman", "venture_hands_founder_staffed", "coverage", "units_for_coverage"),
+	"actors": ("concern_versions", "concerns_of_active_firms", "firm_concern_holdings"),
+	"projects": ("gate_blocked",),
+	"demography": ("pop_scale", "population", "farm_holdings"),
+	"reporting": ("real_output_per_head",),
+	"finance": ("debt_status",),
+	"polity": ("standing", "state_funding"),
+	"hazards": ("output_factor",),
+	"coin": ("home_price_level",),
+	"seats": ("acting_seat", "founder"),
+	"land": ("built_ways", "held_techniques"),
 }
 
 _LIVE = dict(cached=False)
@@ -66,7 +84,8 @@ MODULE_SPECS = (ModuleSpec(
 	"production", Production, seat_state=ProductionSeat,
 	publishes=tuple(_view(*row) for row in _VIEWS),
 	applies=((AccrueExperience, "apply_accrue_experience"), (LearnFromFailure, "apply_learn_from_failure"),
-	         (RefreshDoneCaches, "apply_refresh_done_caches")),
+	         (RefreshDoneCaches, "apply_refresh_done_caches"), (RefreshOperatingCaches, "apply_refresh_operating_caches"),
+	         (ForgetRevenueCaches, "apply_forget_revenue_caches")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(SetWageHoursSold,),
+	sends=(SetWageHoursSold, NoteFirstRuns, BumpHouseholdVersion),
 ),)

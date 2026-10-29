@@ -1,6 +1,6 @@
 """What it costs to keep a concern or institution open this year: `upkeep` and its parts, an institution's upkeep scaled by how full
 its places are, and the people one unit is built to support.
-Needs: legacy_game, money_per_labour_hour, capability_sets, mechanic."""
+Needs: the views of READS_BY_OWNER in module_spec.py."""
 from . import node_upkeep, rules
 from .constants import INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD
 
@@ -15,10 +15,9 @@ class Upkeep:
 
 	def upkeep_by_concern(self):
 		"""{node id: yearly running cost} for each concern or practice that is paid for; `upkeep` is its sum."""
-		game = self._game()
 		practice_set = self._practice_set()
-		operating = game.state.projects.operating
-		return {node_id: game.view("venture_real_upkeep")(node_id, None)
+		operating = self.needs.projects_operating()
+		return {node_id: self.needs.venture_real_upkeep(node_id, None)
 		        for node_id in self._revenue_upkeep_candidates()
 		        if node_id in operating or node_id in practice_set}
 
@@ -34,10 +33,9 @@ class Upkeep:
 		at three schools' worth of places to fill it against. An institution not yet open is priced as a first founding (one
 		unit), not zero: the affordability gate calls this on things it has not opened yet.
 		"""
-		game = self._game()
 		capability, scalable, _benefit = self.needs.capability_sets()
-		node = game.nodes[node_id]
-		_units = (self.institution_units(node_id) if node_id in game.state.projects.operating else 1.0) \
+		node = self.needs.tree_nodes()[node_id]
+		_units = (self.institution_units(node_id) if node_id in self.needs.projects_operating() else 1.0) \
 			if node_id in scalable else 1.0
 		if units is not None and node_id in scalable:
 			_units = float(units)
@@ -49,11 +47,11 @@ class Upkeep:
 		places = self.institution_places(node_id) * _units
 		if places <= 0:
 			return upkeep_amount
-		return rules.occupancy_scaled_upkeep(upkeep_amount, places, game.labour.headcount())
+		return rules.occupancy_scaled_upkeep(upkeep_amount, places, self.needs.headcount())
 
 	def institution_places(self, node_id):
 		"""Roughly how many people ONE UNIT of this establishment is built to support; callers wanting the total for a scalable
 		institution multiply by `institution_units`. Read off the same table staff_capacity() and supervision_room() use; anything
 		absent is sized by its own upkeep at about a wage a head."""
-		return rules.institution_places(self.needs.mechanic["institution_places"].get(node_id), self._game().nodes[node_id]["up"],
+		return rules.institution_places(self.needs.mechanic["institution_places"].get(node_id), self.needs.tree_nodes()[node_id]["up"],
 		                                self.priced(INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD))

@@ -1,6 +1,6 @@
 """What a concern turns out and earns against its opening, remembered while the techniques held are unchanged (volume_rules.py has the arithmetic).
 
-Needs: legacy_game, held_goods_prices_in_hours."""
+Needs: the views of READS_BY_OWNER in module_spec.py."""
 import json
 from typing import Any, List
 
@@ -18,7 +18,7 @@ class Volume:
 	def _concern_prices_in_hours(self, held):
 		"""Labour-hour prices under the techniques `held`; remembered while the civilisation is unchanged, so
 		every concern asking about the same techniques shares one answer."""
-		civilisation = self._game().civ
+		civilisation = self.needs.civilisation()
 		civilisation_text = json.dumps(civilisation, sort_keys=True, default=str)
 		if _PRICES_IN_HOURS[0] != civilisation_text:
 			_PRICES_IN_HOURS[:] = [civilisation_text, {}]
@@ -30,19 +30,19 @@ class Volume:
 		return remembered[key]
 
 	def _concern_ratios(self, node_id):
-		game = self._game()
-		node = game.nodes[node_id]
+		needs = self.needs
+		node = needs.tree_nodes()[node_id]
 		if node.get("_revenue_basis") != "output":
 			return 1.0, 1.0, None
 
-		game.send(NoteFirstRuns(game.view("techniques_in_use")()))
-		held = game.view("techniques_spread")()
+		needs.send(NoteFirstRuns(needs.techniques_in_use()))
+		held = needs.techniques_spread()
 
 		def work_out():
-			granted = frozenset(game.state.projects.granted)
-			prices = game.view("done_memo")("concern_opening_prices", granted, lambda: self._concern_prices_in_hours(granted))
+			granted = frozenset(needs.techniques_granted())
+			prices = needs.done_memo("concern_opening_prices", granted, lambda: self._concern_prices_in_hours(granted))
 			return volume_rules.ratios(node, price_solver.default_production_entries(), (granted, prices), (held, prices))
-		return game.view("done_memo")("concern_ratios", (node_id, held), work_out)
+		return needs.done_memo("concern_ratios", (node_id, held), work_out)
 
 	def concern_volume_ratio(self, node_id):
 		"""What the concern turns out now over what it turned out at the opening, from the same staff."""
