@@ -79,9 +79,9 @@ class TargetTests(unittest.TestCase):
 
 class AnatomyForTests(unittest.TestCase):
 
-    def test_a_directly_read_attribute_is_a_row_and_the_current_value(self):
-        game = _Game({}, score=0.3)
-        reply = anatomy_module.anatomy_for(game, {"metric": "score", "source": "attribute", "path": "score",
+    def test_a_staff_count_is_a_row_and_the_current_value(self):
+        game = _Game({}, staff={"slaves": 0.3})
+        reply = anatomy_module.anatomy_for(game, {"metric": "score", "source": "staff", "key": "slaves",
                                                    "op": ">=", "value": 0.5})
         self.assertEqual((reply["current"], reply["generic"], reply["target"]["gap"]), (0.3, False, 0.2))
         self.assertEqual([row["value"] for row in reply["rows"]], [0.3])

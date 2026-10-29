@@ -1,14 +1,14 @@
 """ActorWorld.copy_cost prices a project inside the view's table of shared answers, the same table for every ask of
 that view, and leaves the game's own pricing outside any scope afterwards. The table's rules are
-test_complaint_321_shared_project_bills."""
+test_sharing_module."""
 QUICK_TOPIC = True
 
 import types
 import unittest
 
 from sim.actors.world import ActorWorld
-from sim.engine import bridge_actors
-from sim.engine import view_share
+from sim.sharing.module import Sharing
+from sim.tests import module_harness
 from sim.tests.world_stand_in import fake_needs
 
 
@@ -16,11 +16,12 @@ class _Game:
     """The parts of a Sim that pricing a project through a view touches."""
 
     def __init__(self):
+        self.sharing = module_harness.build(Sharing, module_id="sharing")
         self.scopes_seen = []
         self.economy = types.SimpleNamespace(project_cost=self._project_cost)
 
     def _project_cost(self, node_id):
-        self.scopes_seen.append(view_share.of(self)._view_scope)
+        self.scopes_seen.append(self.sharing._scope)
         if node_id == "broken":
             raise ValueError(node_id)
         return 12.5
@@ -28,7 +29,7 @@ class _Game:
 
 def SimWorld(game):
     """The actors' world over the engine's own shared-answers scope (the bridge's view) and the game's project cost."""
-    needs = fake_needs(shared_answers=lambda table: bridge_actors.shared_answers(game, table), project_cost=game.economy.project_cost)
+    needs = fake_needs(shared_answers=lambda table: game.sharing.shared_answers(table), project_cost=game.economy.project_cost)
     return ActorWorld(types.SimpleNamespace(needs=needs))
 
 
@@ -57,13 +58,13 @@ class CopyCostScopeTests(unittest.TestCase):
     def test_no_scope_is_left_open_on_the_game_afterwards(self):
         game = _Game()
         SimWorld(game).copy_cost("iron_works")
-        self.assertIsNone(view_share.of(game)._view_scope)
+        self.assertIsNone(game.sharing._scope)
 
     def test_no_scope_is_left_open_when_the_pricing_fails(self):
         game = _Game()
         with self.assertRaises(ValueError):
             SimWorld(game).copy_cost("broken")
-        self.assertIsNone(view_share.of(game)._view_scope)
+        self.assertIsNone(game.sharing._scope)
 
 
 if __name__ == "__main__":

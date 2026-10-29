@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from sim.assembly import api as assembly_api
 from sim.content.api import OpenContent
+from sim.interface.api import OpenInterface
 
 from sim.content.api import get_ordered_mods
 from sim.content.api import ancestors
@@ -44,6 +45,8 @@ def build(mods_dir: Optional[str], debug: bool) -> assembly_api.Assembly:
 	                                 guard_reads=debug and os.environ.get(GUARD_READS_SWITCH) == "1")
 	from .year_phases import ordered_phases
 	ordered_phases(assembly.applied.phases)   # a mod phase that cannot be placed is an error of this game
+	from .ui_data import check_state_path
+	assembly.handlers[OpenInterface](OpenInterface(check_state_path))   # the interface checks the state paths data files read by this rule
 	if mods_dir:
 		assembly.handlers[OpenContent](OpenContent(mods_dir))   # the content module answers over this game's mods
 	return assembly

@@ -23,7 +23,7 @@ data through its own provisions, so they are answers like any other.
 | Provision | Point | What it answers |
 |---|---|---|
 | `interface.shipped` | `interface_commands`, `interface_figures` | the shipped tables (`sim.ui.api.shipped_commands`, `shipped_figures`) |
-| `interface.data` | `interface_commands`, `interface_figures` | the mods' `data/ui/commands.json` and every `data/ui/figures.json` (bridge views `data_command_specs`, `data_figure_specs`) |
+| `interface.data` | `interface_commands`, `interface_figures` | the mods' `data/ui/commands.json` and every `data/ui/figures.json` (loaded by the module itself from the content module's `mods_directory`; `sim/interface/command_data.py`, `figure_data.py`) |
 
 A mod's code provides with `api.command(...)` and `api.figure(...)`; a data mod needs no code.
 

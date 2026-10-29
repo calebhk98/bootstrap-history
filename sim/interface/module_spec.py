@@ -1,17 +1,19 @@
 """The interface module's spec (sim/assembly).
 
-It reads the declarations the engine loads from data (the mods' data/ui/commands.json, the base game's and the mods'
-data/ui/figures.json) through two bridge views, and answers its own two points with them and with the tables the UI ships; a
-mod's code adds commands and figures by providing to the points."""
+It reads the declarations in data (the mods' data/ui/commands.json, the base game's and the mods' data/ui/figures.json) from the
+mods directory the content module names, checking each state path with the rule `OpenInterface` hands it, and answers its own two
+points with them and with the tables the UI ships; a mod's code adds commands and figures by providing to the points."""
 from sim.assembly.api import LIST, ExtensionPoint, ModuleSpec, Provision, ViewSpec
 
+from .commands import OpenInterface
 from .module import Interface
 
 MODULE_SPECS = (ModuleSpec(
 	"interface", Interface,
 	# constant for the game once made (the mod set is fixed at assembly), so no channel
 	publishes=(ViewSpec("interface_declared", "declared"),),
-	reads=("data_command_specs", "data_figure_specs"),
+	reads=("mods_directory",),
+	applies=((OpenInterface, "open_interface"),),
 	extension_points=(ExtensionPoint("interface_commands", LIST),   # () -> [CommandDeclaration]
 	                  ExtensionPoint("interface_figures", LIST)),   # () -> [FigureDeclaration]
 	provides=(Provision("interface_commands", "provide_shipped_commands", "shipped"),

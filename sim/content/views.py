@@ -30,6 +30,11 @@ def declared_actor_kinds(directory: str) -> Dict[str, Any]:
 	return actor_kinds_data.declared_kinds(directory)
 
 
+def base_store_declarations() -> List[StoreSpec]:
+	"""[StoreSpec] the base game declares (data/world/stores.json)."""
+	return mod_stores.base_declarations()
+
+
 def data_store_declarations(directory: str) -> List[StoreSpec]:
 	"""[StoreSpec] the mods of `directory` declare in their data/stores.json, in mod load order."""
 	return mod_stores.data_declarations(directory)

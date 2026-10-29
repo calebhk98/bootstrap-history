@@ -9,7 +9,8 @@ import unittest
 
 from sim.engine import mod_code
 from sim.content.api import ModError
-from sim.engine.ui_commands import policy_defaults
+from sim.engine.ui_data import check_state_path
+from sim.interface.api import policy_defaults
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 from sim.tests.interface_fixture import declared_for
 from sim.ui.proto import command_registry, mod_commands
@@ -206,14 +207,14 @@ class PolicyTests(CommandTestBase):
     def test_policy_is_a_switch_in_a_new_seats_policy(self):
         self.add_mod(ACME)
         self.write_commands(ACME, {ACME + ":pulse": dict(self.POLICY, default=False)})
-        self.assertIs(policy_defaults(False, mods_dir=str(self.mods_dir))[ACME + ":pulse"], False)
+        self.assertIs(policy_defaults(False, str(self.mods_dir), check_state_path)[ACME + ":pulse"], False)
 
     def test_mod_sets_the_default_of_a_shipped_switch(self):
         self.add_mod(ACME)
         path = self.mods_dir / ACME / "data" / "ui" / "policies.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"defaults": {"auto_mine": False}}))
-        self.assertIs(policy_defaults(False, mods_dir=str(self.mods_dir))["auto_mine"], False)
+        self.assertIs(policy_defaults(False, str(self.mods_dir), check_state_path)["auto_mine"], False)
 
     def test_unrelated_mods_setting_one_switch_name_both(self):
         for mod_id in (ACME, BETA):
@@ -222,7 +223,7 @@ class PolicyTests(CommandTestBase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps({"defaults": {"auto_mine": mod_id == ACME}}))
         with self.assertRaises(ModError) as caught:
-            policy_defaults(False, mods_dir=str(self.mods_dir))
+            policy_defaults(False, str(self.mods_dir), check_state_path)
         self.assertIn(ACME, str(caught.exception))
         self.assertIn(BETA, str(caught.exception))
 

@@ -29,11 +29,8 @@ def _is_number(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
-def _read_attribute(sim, condition):
-    path = condition.get("path")
-    if not isinstance(path, str) or not path or path.startswith("_") or "." in path:
-        return None
-    value = ui_port.plain_attribute(sim, path)
+def _read_staff(sim, condition):
+    value = sim.view("staff")().get(condition.get("key"))
     return float(value) if _is_number(value) else None
 
 
@@ -43,7 +40,7 @@ def _read_generation_share(sim, condition):
     return breakdown.get("sources_kw", {}).get(condition.get("key"), 0.0) / total if total else 0.0
 
 
-SOURCE_READERS["attribute"] = _read_attribute
+SOURCE_READERS["staff"] = _read_staff
 SOURCE_READERS["generation_share"] = _read_generation_share
 METRIC_READERS["epidemic_relief"] = lambda sim: 1.0 - sim.view("hazard_relief")("staff_loss")[0]
 METRIC_READERS["literacy_general"] = lambda sim: sim.view("literacy")("literacy_general")
@@ -123,9 +120,9 @@ METRIC_ROWS["epidemic_relief"] = _relief_rows
 
 # ---- sources ---------------------------------------------------------------
 
-def _attribute_rows(sim, condition):
-    value = _read_attribute(sim, condition)
-    return [_row(condition.get("path"), value, "", "read directly from the game")] if value is not None else []
+def _staff_rows(sim, condition):
+    value = _read_staff(sim, condition)
+    return [_row(condition.get("key"), value, "", "held by the seat's people")] if value is not None else []
 
 
 def _generation_rows(sim, condition):
@@ -135,7 +132,7 @@ def _generation_rows(sim, condition):
             _row("share", current_value(sim, condition), "fraction")]
 
 
-SOURCE_ROWS["attribute"] = _attribute_rows
+SOURCE_ROWS["staff"] = _staff_rows
 SOURCE_ROWS["generation_share"] = _generation_rows
 
 

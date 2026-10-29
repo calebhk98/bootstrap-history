@@ -1,8 +1,7 @@
 """The materials module's spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_materials.py and
-the files it names) under the name the owner will publish, except the `legacy_*` ones: raw state used in place. No view of
-the module is cached: the stock, the projects and the market behind them are written outside any command of the owners."""
+Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_*.py) under the name the owner will publish, except the `legacy_*` ones:
+raw state used in place. No view of the module is cached: the stock, the projects and the market behind them are written outside any command of the owners."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.ledger.api import BankStock, ChangeStock, PayEdge
 from sim.markets.api import NoteDraw, NotePurchase, ResetDraws
@@ -27,7 +26,8 @@ READS_BY_OWNER = {
                   "shortage_remedy_plan"),
     "land": ("legacy_world_map", "mineral_scale", "material_cost_factor"),
     "projects": ("active_projects", "active_project_ids", "active_projects_version", "project_cost", "project_cost_now", "opposition_factor", "cost_money_factor",
-                             "rebuild_work_factor", "failure_reset_share", "shared_bill"),
+                             "rebuild_work_factor", "failure_reset_share"),
+    "sharing": ("shared_bill",),
     "diffusion": ("civ_cost_factor",),
     "finance": ("can_pay", "purchase_refusal"),
 }

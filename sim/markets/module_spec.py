@@ -62,7 +62,7 @@ _LIVE = dict(cached=False)
 _VIEWS = (
 	("goods_quote", KEYED), ("goods_categories", None), ("sale_limits", KEYED), ("material_trade_quote", KEYED), ("material_purchase_cost", QUOTE), ("purchase_quote", QUOTE), ("sale_quote", QUOTE),
 	("can_be_bought", KEYED), ("material_seller", KEYED), ("partner_import", KEYED), ("home_unit_price", KEYED),
-	("household_prices", None), ("commodities_sold_by_acting_party", None), ("main_material_of", KEYED),
+	("household_prices", None), ("commodities_sold_by_acting_party", None), ("others_trade_stamp", None), ("main_material_of", KEYED),
 	("market_state", KEYED), ("market_floor_ratio", KEYED), ("opening_population", None), ("new_goods_units", None),
 	("goods_category_factor", QUOTE), ("goods_category_factor_with_entrants", QUOTE), ("goods_category_price_ratio", KEYED),
 	("goods_category_state", KEYED), ("nodes_in_category", KEYED), ("actor_supply", KEYED), ("actor_demand", KEYED),

@@ -44,6 +44,9 @@ class Content(Module):
 	def declared_actor_kinds(self) -> Dict[str, Any]:
 		return views.declared_actor_kinds(self.mods_directory())
 
+	def base_store_declarations(self) -> List[StoreSpec]:
+		return views.base_store_declarations()
+
 	def data_store_declarations(self) -> List[StoreSpec]:
 		return views.data_store_declarations(self.mods_directory())
 

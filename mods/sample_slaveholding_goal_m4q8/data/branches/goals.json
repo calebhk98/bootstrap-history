@@ -17,8 +17,8 @@
     "conf": "C",
     "kb": "",
     "win_condition": {
-      "source": "attribute",
-      "path": "slaves",
+      "source": "staff",
+      "key": "slaves",
       "op": ">=",
       "value": 1000,
       "description": "your household owns 1,000 enslaved people"

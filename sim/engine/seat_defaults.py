@@ -2,7 +2,10 @@
 from typing import Any, Dict
 
 from sim.content.api import ModError
-from .ui_commands import policy_defaults
+from sim.interface.api import policy_defaults
+
+from .bridge_land import MODS_DIR
+from .ui_data import check_state_path
 
 
 def default_policy(manual: bool) -> Dict[str, Any]:
@@ -52,7 +55,7 @@ def default_policy(manual: bool) -> Dict[str, Any]:
         "reserve_staff": False,
     }
     shipped = set(policy)
-    for name, value in policy_defaults(manual).items():
+    for name, value in policy_defaults(manual, MODS_DIR, check_state_path).items():
         if ":" not in name and name not in shipped:
             raise ModError("a mod sets the default of policy %r, which does not exist" % name)
         policy[name] = value

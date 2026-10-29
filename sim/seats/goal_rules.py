@@ -19,17 +19,12 @@ def win_condition_met(win_condition: Dict[str, Any], value: float) -> bool:
     return False
 
 
-def check_attribute_path(path: Any) -> None:
-    """Raise for an attribute path that could reach into private or nested state."""
-    if not isinstance(path, str) or path.startswith("_") or "." in path:
-        raise ValueError("invalid win_condition attribute path %r" % path)
-
-
-def attribute_number(path: str, attribute: Any) -> float:
-    """The number an attribute-sourced condition reads; `attribute` is what the game holds under `path`."""
-    if not isinstance(attribute, (int, float)):
-        raise ValueError("win_condition attribute %r is not numeric" % path)
-    return float(attribute)
+def staff_number(key: Any, staff: Dict[str, Any]) -> float:
+    """The number a staff-sourced condition reads: the count the seat's people hold under `key` (slaves, scholars, ...)."""
+    held = staff.get(key) if isinstance(key, str) else None
+    if not isinstance(held, (int, float)):
+        raise ValueError("win_condition staff key %r is not a count the seat's people hold" % (key,))
+    return float(held)
 
 
 def generation_share(total_kw: float, source_kw: float) -> float:

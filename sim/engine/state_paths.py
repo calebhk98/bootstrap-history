@@ -1,6 +1,5 @@
-"""The names a data file's state path may start with: figures, `read` commands and policy conditions in data/ui and in mods,
-and attribute-sourced win conditions. Each declared name answers from a view; any other name is read off the `Sim` as an
-attribute, as before. A path reads only: no step starts with `_`."""
+"""The names a data file's state path may start with: figures, `read` commands and policy conditions in data/ui and in mods.
+Each declared name answers from a view; any other name is read off the `Sim` as an attribute, as before. A path reads only: no step starts with `_`."""
 
 # name -> (view, key): `view()` or, with a key, `view()[key]`
 ROOTS = {
@@ -36,7 +35,3 @@ def root_value(sim, name):
     value = sim.view(view)()
     return value if key is None else value[key]
 
-
-def plain_attribute(sim, name):
-    """What the game holds under a plain attribute name, or None."""
-    return root_value(sim, name) if name in ROOTS else getattr(sim, name, None)

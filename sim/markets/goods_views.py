@@ -66,6 +66,11 @@ class GoodsViews:
 		market = self.goods_market
 		return self.economy.goods.commodities_sold_by(market.acting_party_id)
 
+	def others_trade_stamp(self):
+		"""What every party but the acting seat has sold and bought this year, comparable for equality, for caches whose
+		answers read the posted price."""
+		return self.goods_market.others_stamp()
+
 	def main_material_of(self, commodity):
 		return self.economy.main_material_of(commodity)
 

@@ -103,6 +103,10 @@ class ContentModuleTests(unittest.TestCase):
         self.assertEqual(content.map_overlays(), [])
         self.assertEqual(content.data_store_declarations(), [])
 
+    def test_the_base_stores_are_declared_with_no_mods_installed(self):
+        declared = {spec.name: spec for spec in Content().base_store_declarations()}
+        self.assertEqual((declared["control"].owner, declared["control"].keyed_by), ("", "tile"))
+
 
 if __name__ == "__main__":
     unittest.main()

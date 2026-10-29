@@ -45,8 +45,8 @@ so the 365 callers outside labour (screens, mods, the economy port, engine mixin
 - **`revenue_capacity`** (`sim/engine/economy_production.py`) still sets the hours sold to zero with `SetWageHoursSold` and puts them
   back; it becomes a pure quote when `revenue()` takes the sold hours as an argument.
 - **The household facade** keeps `workforce` (the payroll) for the actors' protocol, reading the seat slot (`Household._workforce`).
-- **`game_attribute`** (`sim/engine/bridge_seats.py`) answers an attribute-sourced win condition (`slaves`) from the `staff` view
-  when `Sim` has no such attribute.
+- **`staff`** answers a win condition whose `source` is `staff` (`{"source": "staff", "key": "slaves"}`): the seats module reads the
+  count under `key`. The bridge view `game_attribute` and the `attribute` source (any `Sim` attribute) are gone.
 - **`_step_reputation`'s other two owners** (polity's `RenewStanding` and `CloseStandingYear`, the ledger's `spend_last_year`) stay in
   the engine around the module's `CloseHoursYear`.
 - **`living_cost`, `training_advice` and `training_queue`** stay bridged: their code is the economy's household bill and projects

@@ -3,10 +3,12 @@
 Four providers answer its two extension points: the shipped commands and figures (the tables sim/ui fills when it loads),
 and the data the installed mods declare. A mod's code adds its own by providing to the points. The merged answer is made once
 per game, on first use, since it asks sim/ui for the code behind each declaration."""
-from typing import List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from sim.assembly.api import Module
 
+from . import command_data, figure_data
+from .commands import OpenInterface
 from .declarations import PATCH, POLICY, SHIPPED, CommandDeclaration, Declared, FigureDeclaration
 from .rules import SHIPPED_OWNER, declare, entry_fields
 
@@ -14,6 +16,18 @@ from .rules import SHIPPED_OWNER, declare, entry_fields
 class Interface(Module):
 
 	_declared: Optional[Declared] = None
+	check_state_path: Callable[[str, str], None]   # set by OpenInterface: the rule for the state paths a data file reads
+
+	def open_interface(self, command: OpenInterface) -> None:
+		self.check_state_path = command.check_state_path
+
+	def data_command_specs(self) -> List[command_data.CommandSpec]:
+		"""[CommandSpec] the installed mods declare (data/ui/commands.json), in mod load order."""
+		return command_data.load_command_specs(self.needs.mods_directory(), self.check_state_path)
+
+	def data_figure_specs(self) -> Dict[str, Dict[str, Any]]:
+		"""{figure id: declaration} of the base game and the installed mods (data/ui/figures.json)."""
+		return figure_data.load_figure_specs(self.needs.mods_directory(), self.check_state_path)
 
 	def declared(self) -> Declared:
 		"""The game's commands and figures; a word or figure name declared twice is an error naming both owners."""
@@ -29,7 +43,7 @@ class Interface(Module):
 		"""The commands, patches and policies the installed mods declare in data/ui/commands.json."""
 		from sim.ui.api import data_command_handler
 		found: List[CommandDeclaration] = []
-		for declaration in self.needs.data_command_specs():
+		for declaration in self.data_command_specs():
 			spec, name = declaration.spec, declaration.name
 			if spec.get("override") is True or spec.get("remove") is True:
 				found.append(CommandDeclaration(declaration.mod_id, name, PATCH, spec=spec))
@@ -50,4 +64,4 @@ class Interface(Module):
 		from sim.ui.api import DEFAULT_DIGITS, figure_computer
 		return [FigureDeclaration(figure_id.split(":")[0] if ":" in figure_id else SHIPPED_OWNER, figure_id, spec["label"],
 		                          spec.get("unit", ""), spec.get("digits", DEFAULT_DIGITS), figure_computer(spec))
-		        for figure_id, spec in self.needs.data_figure_specs().items()]
+		        for figure_id, spec in self.data_figure_specs().items()]
