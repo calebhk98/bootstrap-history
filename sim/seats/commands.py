@@ -80,13 +80,18 @@ class MoveSeat(Command):
 
 @dataclass(frozen=True)
 class ForgetGoalCaches(Command):
-    """Drop everything the engine derived from the acting seat's goal (applied by the engine)."""
+    """Drop what the engine derived from the acting seat's goal besides the road to it (applied by the engine)."""
 
 
 @dataclass(frozen=True)
 class RememberGoalClosure(Command):
-    """Keep `nodes`, the set of nodes the acting seat's goal needs, for the engine's other readers of it (applied by the engine)."""
+    """Keep `nodes`, the set of nodes the acting seat's goal needs, for every reader of it (applied by the seats module)."""
     nodes: Any
+
+
+@dataclass(frozen=True)
+class ForgetGoalClosure(Command):
+    """Drop what the acting seat's goal was found to need (applied by the seats module); the next ask works it out again."""
 
 
 @dataclass(frozen=True)

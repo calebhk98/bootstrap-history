@@ -62,3 +62,16 @@ def measurement_rows(source: Optional[str], key: Any, breakdown: Optional[Dict[s
         rows += [(entry["label"], 1.0 - entry["factor"], "fraction") for entry in relief_entries]
     rows.append(("current", current, "fraction"))
     return rows
+
+
+def describe_win_condition(node: Dict[str, Any], labels: Dict[str, str]) -> str:
+    """The player-facing sentence for a node's win_condition: its own description, else the label for its metric (with the target
+    as a percentage), else a plain statement of the comparison, so a metric with no label degrades rather than fails."""
+    win_condition = node.get("win_condition") or {}
+    if win_condition.get("description"):
+        return str(win_condition["description"])
+    metric, comparison_op, target = win_condition.get("metric"), win_condition.get("op"), win_condition.get("value")
+    template = labels.get(metric)
+    if template:
+        return template % ("%d%%" % round((target or 0.0) * 100))
+    return "a measurement (%s %s %s) is met" % (metric, comparison_op, target)

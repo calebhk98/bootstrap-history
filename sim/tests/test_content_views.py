@@ -79,6 +79,18 @@ class ContentViewTests(unittest.TestCase):
         self.assertEqual(list(views.declared_actor_kinds(self.directory)), [FIRST + ":elf"])
 
 
+class WinConditionLabelTests(unittest.TestCase):
+    def test_a_mod_label_is_added_to_the_base_labels(self):
+        directory = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, directory)
+        write_mod(directory, FIRST)
+        write_data(directory, FIRST, os.path.join("data", "ui", "win_condition_labels.json"),
+                   {"labels": {"mana_share": {"text": "mana reaches %s"}}})
+        labels = views.win_condition_labels(directory)
+        self.assertEqual(labels["mana_share"], "mana reaches %s")
+        self.assertGreater(len(labels), 1)
+
+
 class ContentModuleTests(unittest.TestCase):
     def test_the_directory_is_the_one_opened(self):
         content = Content()

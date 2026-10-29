@@ -72,3 +72,26 @@ def dissolution_end(what_survived_words: str) -> str:
 
 def run_ends_line(reason: str) -> str:
     return "RUN ENDS: " + reason
+
+
+def founder_age(arrival_age: float, year: int, start_year: int) -> float:
+    """The founder's age in `year`: the age at arrival plus the years since the start."""
+    return arrival_age + year - start_year
+
+
+def deputy_hours(deputies: float, hours_per_deputy: float) -> float:
+    """Hours a year the deputies work, however small a fraction of a deputy."""
+    return deputies * hours_per_deputy
+
+
+def deputies_carry_the_work(deputies: float, deputies_needed: float) -> bool:
+    """Whether the deputies are enough to go on without the founder."""
+    return deputies >= deputies_needed
+
+
+def automatic_policy(policies, name: str, manual: bool) -> bool:
+    """Whether the automatic policy `name` runs: what the seat set, else on for an automatic game and off for a manual one.
+    `policies` is None for a seat that keeps none."""
+    if policies is None or name not in policies:
+        return not manual
+    return policies[name]

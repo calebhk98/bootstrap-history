@@ -4,6 +4,7 @@ from typing import Any, Dict, FrozenSet, List, Mapping, Optional, Tuple
 from sim.default_civilisation import REPOSITORY_ROOT
 from sim.stores.api import StoreSpec
 
+from . import win_condition_labels as labels_data
 from . import actor_kinds_data, foreign_economies, mod_stores, need_data, tech_effects, trades
 from .catalog import Trade
 from .mods import get_ordered_mods
@@ -52,3 +53,8 @@ def foreign_economy_records(directory: str) -> Tuple[Dict[str, Any], ...]:
 def not_traded_materials(directory: str) -> FrozenSet[str]:
     """Materials that cannot cross a border."""
     return foreign_economies.not_traded_materials(directory)
+
+
+def win_condition_labels(directory: str) -> Dict[str, str]:
+    """Metric to the sentence template that says what a win condition on it asks for."""
+    return labels_data.win_condition_labels(directory)

@@ -2,7 +2,7 @@
 
 Each goes when its last caller reads the view (`sim.view(name)`) or sends the command itself."""
 from sim.refusal import Refusal
-from sim.seats.api import HandOverSeat, JoinCastSeats, JoinSeat
+from sim.seats.api import ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat
 
 
 def _raised_if_refused(answer):
@@ -35,5 +35,5 @@ class ForwardSeatsMixin:
 
     def forget_goal_caches(self):
         """Drop everything derived from the current goal."""
-        for name in ("_goal_closure", "_goal_critical_floor"):
-            self.__dict__.pop(name, None)
+        self.__dict__.pop("_goal_critical_floor", None)
+        self.send(ForgetGoalClosure())

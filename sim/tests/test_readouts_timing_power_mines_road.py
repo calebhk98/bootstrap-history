@@ -163,8 +163,7 @@ class OnTheRoadToTheGoal(unittest.TestCase):
     def _seats(self):
         nodes = {"goal": {"pre": ["middle"], "req_any": []}, "middle": {"pre": ["root"], "req_any": []},
                  "root": {"pre": [], "req_any": []}, "side": {"pre": ["root"], "req_any": []}}
-        module = module_harness.build(Seats, seat=SeatsSeat(), views={"goal_closure": None, "tree_closure": lambda goal: closure(nodes, goal)})
-        module.needs.goal_closure = module_harness._FakeView(None)
+        module = module_harness.build(Seats, seat=SeatsSeat(), views={"tree_closure": lambda goal: closure(nodes, goal)})
         module.goal = lambda: {"node": "goal"}
         return module
 
