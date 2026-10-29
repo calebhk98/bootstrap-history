@@ -5,7 +5,7 @@ from sim.knowledge.api import LearnTechnique
 from sim.reporting.api import RecordEvent
 
 from . import goal_rules
-from .commands import ForgetGoalCaches, RecordGoalReached, RememberGoalClosure, SetGoal
+from .commands import ForgetGoalCaches, ForgetGoalClosure, RecordGoalReached, RememberGoalClosure, SetGoal
 from .goal_rules import AnatomyRow
 
 
@@ -20,19 +20,34 @@ class Goals:
     def on_road_to_goal(self, node_id: str) -> bool:
         """Whether the goal needs this node. A yes or no with no distance, so it names no route the player has not already been
         shown. What the goal needs is worked out once and kept (the engine's other readers of it share the same set)."""
-        needed = self.needs.goal_closure()
+        needed = self.goal_closure()
         if needed is None:
             try:
                 needed = self.needs.tree_closure(self.goal()["node"])
             except Exception:
                 needed = set()
-            self.needs.send(RememberGoalClosure(needed))
+            self.remember_goal_closure(RememberGoalClosure(needed))
         return node_id in needed
+
+    def goal_closure(self) -> Optional[Any]:
+        """What the acting seat's goal needs, once worked out; None until then, and again after the goal changes."""
+        return self._closures.get(self.clock.acting_seat)
+
+    def remember_goal_closure(self, command: RememberGoalClosure) -> None:
+        self._closures[self.clock.acting_seat] = command.nodes
+
+    def forget_goal_closure(self, command: ForgetGoalClosure) -> None:
+        self._closures.pop(self.clock.acting_seat, None)
+
+    def win_condition_text(self, node: Dict[str, Any]) -> str:
+        """The sentence that says what a node's win_condition asks for."""
+        return goal_rules.describe_win_condition(node, self.needs.win_condition_labels())
 
     def set_goal(self, command: SetGoal) -> None:
         """Make a node the formal goal. A goal reached before keeps the year it was reached in."""
         self.needs.legacy_seats()[self.clock.acting_seat].goal = command.node_id
         self.needs.send(ForgetGoalCaches())
+        self.forget_goal_closure(ForgetGoalClosure())
         self.seat.goal_year = self.seat.goal_years.get(command.node_id)
 
     def record_goal_reached(self, command: RecordGoalReached) -> None:

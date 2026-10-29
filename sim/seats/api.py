@@ -2,12 +2,12 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/; the engine bridge hands it the seat registry it still keeps
 
-from .commands import (AnswerOffer, ApplyForPatent, EndRun, ForgetGoalCaches, HandOverSeat, JoinCastSeats, JoinSeat, MakeOffer,
+from .commands import (AnswerOffer, ApplyForPatent, EndRun, ForgetGoalCaches, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat, MakeOffer,
                        MoveSeat, RecordGoalReached, RegisterSeat, RememberGoalClosure, SetFounderLife, SetGoal, SetPolicy)
 from .builds import builders_of, built_by_any, disclosure_modes, holders_of, licensors_of, operating_anywhere
 from .country import owner_of_seat, partner_country_of_seat, patron_grant_share
 from .dealing_rules import SEAT_DEALT_KEYS
-from .goal_rules import win_condition_met
+from .goal_rules import describe_win_condition, win_condition_met
 from .handover_rules import handover_refusal
 from .lists import run_is_over, seat_ended, seat_finished, seats_ended, seats_playing
 from .royalty import seat_royalties_due, seat_royalties_paid

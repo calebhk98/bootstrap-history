@@ -63,6 +63,9 @@ class Content(Module):
 		"""What finishing `node_id` does to the society, or None."""
 		return self._once("tech_effects", views.tech_effect_table).get(node_id)
 
+	def win_condition_labels(self) -> Dict[str, str]:
+		return self._once("win_condition_labels", views.win_condition_labels)
+
 	def foreign_economy_records(self) -> Tuple[Dict[str, Any], ...]:
 		return views.foreign_economy_records(self.directory)
 

@@ -1,7 +1,6 @@
 """One-line forwarders from `Sim` to the mechanics module, for callers not yet in a module.
 
-Each goes when its last caller reads the view (`sim.view(name)`) itself. The last block is not about mechanics: those
-rules read the household, the scenario and the techniques held, and go to their owners (seats, knowledge)."""
+Each goes when its last caller reads the view (`sim.view(name)`) itself."""
 from sim.mechanics.api import rules
 
 
@@ -31,15 +30,3 @@ class ForwardMechanicsMixin:
         counters = rules.hazard_counters(rows, own)
         self.__dict__["_hazard_counters_cache"] = (rows, key, counters)
         return counters
-
-    # ---- not mechanics: awaiting their owners
-    def deputy_hours(self):
-        """Hours a year the deputies work, however small a fraction of a deputy."""
-        return self.view("staff")()["directors_extra"] * self.cfg["director_hours_per_year"]
-
-    def deputies_carry_the_work(self):
-        """Whether the deputies are enough to go on without the founder."""
-        return self.view("staff")()["directors_extra"] >= self.DEPUTIES_CARRY_THE_WORK_FROM
-
-    def founder_age(self):
-        return self.cfg["founder_arrival_age"] + self.year - self.cfg["start_year"]

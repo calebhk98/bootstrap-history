@@ -18,6 +18,20 @@ class Founder:
         return {"alive": self.seat.founder_alive, "life_left": self.seat.life_left, "dead_reason": self.seat.dead_reason,
                 "policy": None if held is None else held.policy}
 
+    def automatic_policy(self, name: str) -> bool:
+        """Whether the automatic policy `name` runs for the acting seat: what it set, else on in an automatic game and off in a
+        manual one."""
+        return founder_rules.automatic_policy(self.founder()["policy"], name, self.needs.automation()["manual"])
+
+    def patronage(self) -> Dict[str, Any]:
+        """The founder's age and the deputies the programme could go on with: {founder_age, deputies, deputy_hours,
+        deputies_needed (the level that lets it go on without its founder), deputies_carry_the_work}."""
+        config, deputies = self.needs.game_config(), self.needs.staff()["directors_extra"]
+        needed = self.needs.dissolution_terms()["deputies_needed"]
+        return {"founder_age": founder_rules.founder_age(config["founder_arrival_age"], self.needs.year(), config["start_year"]),
+                "deputies": deputies, "deputy_hours": founder_rules.deputy_hours(deputies, config["director_hours_per_year"]),
+                "deputies_needed": needed, "deputies_carry_the_work": founder_rules.deputies_carry_the_work(deputies, needed)}
+
     def dead_reasons(self) -> Dict[str, str]:
         """Why each ended seat's run ended, by seat id, in joining order."""
         return {seat_id: self.seat_of(seat_id).dead_reason for seat_id in self.ended_seats()}

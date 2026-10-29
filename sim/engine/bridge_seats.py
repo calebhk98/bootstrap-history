@@ -6,11 +6,10 @@ commands that change it are applied here for good. The `legacy_*` views are stat
 when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
 from sim.refusal import Refusal
-from sim.seats.api import ForgetGoalCaches, MoveSeat, RegisterSeat, RememberGoalClosure
+from sim.seats.api import ForgetGoalCaches, MoveSeat, RegisterSeat
 
 from . import state_paths
 from .bridge import bridge_command, bridge_view
-from .data import win_condition_describe
 from .seat_defaults import default_policy
 from .seat_handover_empty import holds_that_would_be_lost
 from .seat_move import move_seat
@@ -81,45 +80,22 @@ def apply_move_seat(sim, command):
     return move_seat(sim, command.from_id, command.to_id)
 
 
-@bridge_command(RememberGoalClosure)
-def remember_goal_closure(sim, command):
-    sim._goal_closure = command.nodes
-
-
 @bridge_command(ForgetGoalCaches)
 def forget_goal_caches(sim, command):
-    sim.forget_goal_caches()
+    sim.__dict__.pop("_goal_critical_floor", None)
 
 
 # ---- the founder's death ----
-
-@bridge_view("patronage", seat_scoped=True)
-def patronage(sim):
-    """The founder's age and the deputies the programme could go on with: {founder_age, deputies, deputy_hours,
-    deputies_needed (the level that lets it go on without its founder), deputies_carry_the_work}."""
-    return {"founder_age": sim.founder_age(), "deputies": sim.view("staff")()["directors_extra"], "deputy_hours": sim.deputy_hours(),
-            "deputies_needed": sim.DEPUTIES_CARRY_THE_WORK_FROM, "deputies_carry_the_work": sim.deputies_carry_the_work()}
-
 
 @bridge_view("dissolution_terms")
 def dissolution_terms(sim):
     """The heuristics of a programme left without its founder (declared on `Sim`)."""
     return {"life_extension_years": sim.SANITATION_LIFE_EXTENSION_YEARS, "years_before_forgetting": sim.DISSOLUTION_YEARS_BEFORE_FORGETTING,
-            "forget_fraction_divisor": sim.DISSOLUTION_FORGET_FRACTION_DIVISOR, "years_until_end": sim.DISSOLUTION_YEARS_UNTIL_END}
+            "forget_fraction_divisor": sim.DISSOLUTION_FORGET_FRACTION_DIVISOR, "years_until_end": sim.DISSOLUTION_YEARS_UNTIL_END,
+            "deputies_needed": sim.DEPUTIES_CARRY_THE_WORK_FROM}
 
 
 # ---- goals and what they read ----
-
-@bridge_view("win_condition_text", kind=QUOTE)
-def win_condition_text(sim, node):
-    return win_condition_describe(node)
-
-
-@bridge_view("goal_closure")
-def goal_closure(sim):
-    """What the goal needs, as the game keeps it for the labour package and the screens too (None until worked out)."""
-    return getattr(sim, "_goal_closure", None)
-
 
 @bridge_view("game_attribute", kind=QUOTE)
 def game_attribute(sim, path):

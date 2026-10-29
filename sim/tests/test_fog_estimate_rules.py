@@ -16,7 +16,7 @@ def game(nodes, goal="goal", civ_id="rome", done=(), granted=(), done_year=None,
     return Game(
         nodes=nodes, civ={"id": civ_id}, goal=goal, cfg={"start_capital": 5000.0}, done=set(done),
         granted=set(granted), done_year=done_year or {}, year=year, fog=fog, goal_year=None, manual=False,
-        _goal_closure=closure, value_weights={}, state=Game())
+        goal_closure=closure, value_weights={}, state=Game())
 
 
 def many_nodes(count=40, confidence="B"):

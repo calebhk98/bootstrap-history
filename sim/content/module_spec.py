@@ -24,6 +24,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("trades_absent", "trades_absent", **_FILES),
 		ViewSpec("trade_family", "trade_family", kind=KEYED, **_FILES),
 		ViewSpec("tech_effects", "tech_effects", kind=KEYED, **_FILES),
+		ViewSpec("win_condition_labels", "win_condition_labels", **_FILES),
 		ViewSpec("foreign_economy_records", "foreign_economy_records", **_FILES),
 		ViewSpec("not_traded_materials", "not_traded_materials", **_FILES),
 	),

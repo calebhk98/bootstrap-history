@@ -71,7 +71,7 @@ from sim.projects.api import (Bribe, MothballWork, PostBounty, ReorderProjects, 
                               StartProject, StopProject)  # noqa: F401
 from sim.knowledge.api import RevealNodes, StartDoneYearRecord  # noqa: F401
 from sim.scenario.api import SetEndYear, SetFog, SetFuzzyEstimates  # noqa: F401
-from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, JoinSeat, MakeOffer, SetGoal, SetPolicy  # noqa: F401
+from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, JoinSeat, MakeOffer, RememberGoalClosure, SetGoal, SetPolicy  # noqa: F401
 from sim.ventures.api import OpenVenture, RollOut, SellConcern  # noqa: F401
 from sim.workforce.api import (BuildHousing, BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase,  # noqa: F401
                                NoteBuyRefusal, TrainStaff, WorkForWages)
@@ -248,11 +248,11 @@ def set_founder_death_cache(sim, cache):
 
 
 def goal_closure(sim):
-    return getattr(sim, "_goal_closure", None)
+    return sim.view("goal_closure")()
 
 
 def set_goal_closure(sim, closure_set):
-    sim._goal_closure = closure_set
+    sim.send(RememberGoalClosure(closure_set))
 
 
 def goal_years(sim):

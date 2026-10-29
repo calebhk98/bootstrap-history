@@ -30,7 +30,10 @@ IdentityCache = identity_cache.IdentityCache
 from sim.geography.api import haversine_km, load_geography
 from sim.content.api import ModError, get_ordered_mods, load_mod_tree
 from sim.content.api import MissingVariantBase
-from .mod_world_data import load_starting_kits, load_win_condition_labels
+from sim.content.api import load_win_condition_labels
+from sim.seats.api import describe_win_condition
+
+from .mod_world_data import load_starting_kits
 from sim.content.api import merge_mod_map
 from sim.content.api import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
@@ -573,28 +576,8 @@ WIN_CONDITION_LABELS: Dict[str, str] = load_win_condition_labels(ROOT, MODDIR)
 
 
 def win_condition_describe(node_record: JSONDict) -> str:
-    """The player-facing sentence for a node's win_condition, or a plain
-    fallback for a metric this table does not yet name - never a KeyError,
-    the same reasoning validate's own required-field check gives for why a
-    missing piece of display data must degrade, not crash, a player's
-    session."""
-    win_condition: JSONDict = node_record.get("win_condition") or {}
-    if win_condition.get("description"):
-        return str(win_condition["description"])
-    metric, comparison_op, val = win_condition.get("metric"), win_condition.get("op"), win_condition.get("value")
-    pct = "%d%%" % round((val or 0.0) * 100)
-    # metric is read straight from data (win_condition["metric"]), so its
-    # static type is Any, same as every other field read off a node - see
-    # the JSONDict/Node comment at the top of this file for why. `cast` to
-    # `str` here (not `Optional[str]`) is what `dict.get`'s own stub
-    # requires for its key argument even though, at runtime, `dict.get`
-    # accepts any hashable key - including None - and just returns None on
-    # a miss, exactly as this line already did before this pass. Nothing
-    # about the runtime call changes.
-    tmpl = WIN_CONDITION_LABELS.get(cast(str, metric))
-    if tmpl:
-        return tmpl % pct
-    return "a measurement (%s %s %s) is met" % (metric, comparison_op, val)
+    """The player-facing sentence for a node's win_condition (the seats module's rule over the labels loaded at import)."""
+    return describe_win_condition(node_record, WIN_CONDITION_LABELS)
 
 
 # ----------------------------------------------------------------------------

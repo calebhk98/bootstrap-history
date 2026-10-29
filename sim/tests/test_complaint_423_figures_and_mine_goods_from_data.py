@@ -77,7 +77,7 @@ class FigureTests(unittest.TestCase):
                 declared_for(mods_dir)
 
     def test_a_mod_figure_reading_a_path_that_is_not_readable_is_refused_naming_the_path(self):
-        for bad_path in ("deputy_hours", "_workings_of", "population.__class__"):
+        for bad_path in ("forget_goal_caches", "_workings_of", "population.__class__"):
             with tempfile.TemporaryDirectory() as mods_dir:
                 write_mod(mods_dir, {MOD_ID + ":bad": {"label": "x", "value": bad_path}})
                 with self.assertRaises(ModError) as caught:

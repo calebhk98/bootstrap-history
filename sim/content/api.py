@@ -20,6 +20,7 @@ from .catalog import (Trade, load_mod_tree_nodes, load_production_catalog, load_
                       reset_catalog_caches, trade_fields, trade_from, validate_mod_material_paths)
 from .foreign_economies import foreign_economy_document, foreign_economy_records, not_traded_materials
 from .tech_effects import load_tech_effects
+from .win_condition_labels import load_win_condition_labels
 from .trades import trade_family as family_of_trade, trade_notes, trade_registry, trades_absent
 from .tree_merge import build_tree, merge_problems
 from .tree_source import load_base_tree

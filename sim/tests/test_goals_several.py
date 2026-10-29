@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from sim.engine.core_properties import ForwardingPropertiesMixin
 from sim.knowledge.api import closure
 from sim.engine.forward_seats import ForwardSeatsMixin
-from sim.seats.api import RememberGoalClosure
+from sim.seats.api import ForgetGoalClosure
 from sim.seats.module import Seats
 from sim.seats.state import SeatsSeat
 from sim.tests import module_harness
@@ -18,23 +18,24 @@ NODES = {"a": {"pre": []}, "b": {"pre": ["a"]}, "c": {"pre": ["b"]}, "d": {"pre"
 
 
 class StubGame(ForwardSeatsMixin):
-    """The real cache dropping and the real `goal` property over a plain state."""
+    """The real cache dropping and the real `goal` property over a plain state; commands go to the seats module."""
     goal = ForwardingPropertiesMixin.goal
-
-    def on_road_to_goal(self, node_id):
-        """The seats module's answer, over the goal this game holds and the memo it keeps on itself."""
-        module = module_harness.build(
-            Seats, seat=SeatsSeat(), views={"goal_closure": lambda: getattr(self, "_goal_closure", None),
-                                            "tree_closure": lambda goal: closure(NODES, goal)},
-            answers={RememberGoalClosure: lambda command: setattr(self, "_goal_closure", command.nodes)})
-        module.goal = lambda: {"node": self.goal}
-        return module.on_road_to_goal(node_id)
 
     def __init__(self, goal):
         self.nodes = NODES
         self.civ = {}
         self.state = SimpleNamespace(_goal=None)
+        self.module = module_harness.build(Seats, seat=SeatsSeat(), views={"tree_closure": lambda goal: closure(NODES, goal)})
+        self.module.goal = lambda: {"node": self.goal}
+        self.module.clock.act_as("founder")
         self.goal = goal
+
+    def send(self, command):
+        if isinstance(command, ForgetGoalClosure):
+            self.module.forget_goal_closure(command)
+
+    def on_road_to_goal(self, node_id):
+        return self.module.on_road_to_goal(node_id)
 
 
 class GoalCaches(unittest.TestCase):

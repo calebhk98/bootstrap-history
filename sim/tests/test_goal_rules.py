@@ -81,5 +81,21 @@ class GoalYears(unittest.TestCase):
         self.assertEqual(years, {"c": 1000})
 
 
+class DescribeWinCondition(unittest.TestCase):
+    LABELS = {"literacy_general": "literacy reaches %s"}
+
+    def test_the_nodes_own_description_wins(self):
+        node = {"win_condition": {"description": "own words", "metric": "literacy_general", "value": 0.2}}
+        self.assertEqual(goal_rules.describe_win_condition(node, self.LABELS), "own words")
+
+    def test_a_labelled_metric_fills_its_template_with_the_target_percentage(self):
+        node = {"win_condition": {"metric": "literacy_general", "op": ">=", "value": 0.25}}
+        self.assertEqual(goal_rules.describe_win_condition(node, self.LABELS), "literacy reaches 25%")
+
+    def test_a_metric_with_no_label_states_the_comparison(self):
+        node = {"win_condition": {"metric": "mystery", "op": ">=", "value": 2}}
+        self.assertEqual(goal_rules.describe_win_condition(node, self.LABELS), "a measurement (mystery >= 2) is met")
+
+
 if __name__ == "__main__":
     unittest.main()

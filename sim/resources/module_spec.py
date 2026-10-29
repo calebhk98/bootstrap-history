@@ -1,7 +1,6 @@
 """The resources module's spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_resources.py and
-the files it names) under the name the owner will publish, except the `legacy_*` ones: raw state used in place."""
+Every read is a view of an owner that has not moved yet, published by the engine bridge (the files named bridge_*.py there) under the name the owner will publish, except the `legacy_*` ones: raw state used in place."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.ledger.api import PayEdge, ReceiveFromEdge
 from sim.materials.api import ApplyThrottle
