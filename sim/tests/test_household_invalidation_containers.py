@@ -8,6 +8,7 @@ from .harness import check
 from sim.agents.household import Household
 from sim.engine.forward_production import ForwardProductionMixin
 from sim.engine.state import SimulationState, HouseholdState, ProjectsState, ScenarioState
+from sim.production.api import RefreshDoneCaches, RefreshOperatingCaches
 from sim.tests import module_harness
 from sim.workforce.api import WatchStaff, WorkforceSeat
 from sim.workforce.module import Workforce
@@ -22,6 +23,13 @@ class ContainerGame(ForwardProductionMixin):
 		self.household = Household(starting_capital=1000.0, operating_changed=self._operating_changed,
 								   active_changed=self._active_changed,
 								   state=self.state)
+
+	def send(self, command):
+		"""The production module's answer to the hooks: count the change on the household."""
+		if isinstance(command, RefreshDoneCaches):
+			self.household.bump_done_version()
+		elif isinstance(command, RefreshOperatingCaches):
+			self.household.bump_operating_version()
 
 
 def _staff_module():
