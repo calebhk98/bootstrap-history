@@ -41,6 +41,7 @@ _VIEWS = (
 	("venture_staff_free", "venture_staff_free", None, False),
 	("venture_staff_who_is_watching_what", "venture_staff_who_is_watching_what", None, False),
 	("concern_staff", "concern_staff", KEYED, False), ("venture_opened_year", "venture_opened_year", QUOTE, False),
+	("venture_size", "venture_size", KEYED, False),
 	("venture_real_earnings", "venture_real_earnings", QUOTE, False), ("venture_real_upkeep", "venture_real_upkeep", QUOTE, False),
 	("venture_upkeep_quote", "venture_upkeep_quote", QUOTE, False), ("venture_forecast_basis", "venture_forecast_basis", KEYED, False),
 	("venture_sale_basis", "venture_sale_basis", KEYED, False), ("concern_sale_quote", "quote_concern_sale", QUOTE, True),

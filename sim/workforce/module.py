@@ -19,12 +19,13 @@ from .housing_prices import HousingPrices
 from .applying_people import ApplyingPeople
 from .views import Views
 from .views_report import ReportViews
+from .views_standing import StandingViews
 from .views_state import ViewsState
 from .wage_fallback import WageFallback
 from .world import WorkforceWorld
 
 
-class Workforce(StandingBondage, Views, ReportViews, ViewsState, Applying, ApplyingPeople, ApplyingHours, StaffWatch, Apprenticeships, StaffYear, StaffHiring, Prelude, WageFallback, HoursYear, HousingPrices, Module):
+class Workforce(StandingBondage, StandingViews, Views, ReportViews, ViewsState, Applying, ApplyingPeople, ApplyingHours, StaffWatch, Apprenticeships, StaffYear, StaffHiring, Prelude, WageFallback, HoursYear, HousingPrices, Module):
 
 	def setup(self):
 		self.labour = Labour(WorkforceWorld(self.needs, self))

@@ -12,7 +12,7 @@ Depth shortens a concern's ramp (venture_ramp, ActorWorld.ramp), lowers the fail
 firm can grow a concern to (sim/agents/firm_expansion.py) and frees a concern of its founder once its staff
 hold a year's running in it (venture_hands). industry_learning.py turns the same stock into scrap, labour
 per unit, plant repair and input supply. The stock is the acting seat's (`ProductionSeat`).
-Needs: legacy_game."""
+Needs: the views of READS_BY_OWNER in module_spec.py."""
 from contextlib import contextmanager
 
 from sim.labour.api import add_tenure, fade_tenure, outflow_shares, tenure_by_trade, tenure_held
@@ -31,7 +31,7 @@ class Depth:
 
 	def tenure_leavers_share(self):
 		"""Share of working people who leave work in a year, from the demography."""
-		return working_age_turnover(self._game().view("population")())[1]
+		return working_age_turnover(self.needs.population())[1]
 
 	def industry_experience(self, node_id):
 		"""Retained worker-years spent running this technique, by anyone."""
@@ -44,9 +44,8 @@ class Depth:
 
 	def founding_staff_by_trade(self, node_id):
 		"""People of each trade one founding-size concern ties up for a year (founder-staffed)."""
-		game = self._game()
-		scholars, craftsmen = game.view("venture_hands_founder_staffed")[node_id]
-		foreman_trade, foreman_fte = game.view("venture_foreman")[node_id]
+		scholars, craftsmen = self.needs.venture_hands_founder_staffed[node_id]
+		foreman_trade, foreman_fte = self.needs.venture_foreman[node_id]
 		staff = {"scholar": scholars, "artisan": craftsmen}
 		if foreman_trade:
 			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
@@ -54,12 +53,12 @@ class Depth:
 
 	def attempt_worker_years_by_trade(self, node_id):
 		"""Worker-years of each trade one attempt at the node's project takes (its person-hours)."""
-		game = self._game()
-		node = game.nodes[node_id]
+		node = self.needs.tree_nodes()[node_id]
 		hours = {trade: hours for trade, hours in (node.get("lab") or {}).items() if hours > 0.0}
 		if not hours and node.get("ph", 0.0) > 0.0:
 			hours = {"artisan": node["ph"]}
-		return {trade: each / game.HOURS_PER_PERSON_YEAR for trade, each in hours.items()}
+		hours_per_year = self.needs.hours_per_person_year()
+		return {trade: each / hours_per_year for trade, each in hours.items()}
 
 	def founding_worker_years(self, node_id):
 		"""People of every trade one founding-size concern ties up for a year; for a project that no
@@ -87,7 +86,7 @@ class Depth:
 		if it had been running long. A technique no opening producer runs gets one founding-size concern's
 		worker-years."""
 		seat = self.seat
-		granted = self._game().state.projects.granted
+		granted = self.needs.techniques_granted()
 		if seat.industry_seeded or not granted:
 			return
 		seat.industry_seeded = True
@@ -101,7 +100,7 @@ class Depth:
 	def opening_worker_years_by_node(self):
 		"""Worker-years a year the agent economy's producers put into each technique's own entries; None
 		while the economy opens."""
-		by_recipe = self._game().view("legacy_economy")().agent_worker_years_by_recipe()
+		by_recipe = self.needs.agent_worker_years_by_recipe()
 		if by_recipe is None:
 			return None
 		gate = {key: entry.get("requires_node") for key, entry in price_solver.default_production_entries().items()}
@@ -139,15 +138,11 @@ class Depth:
 
 	def concern_worker_years_this_year(self):
 		"""Worker-years each technique's operating concerns employed this year, the founder's and the firms'."""
-		game = self._game()
-		projects = game.state.projects
-		years = society_worker_years(projects.granted | projects.operating, self.is_concern_node, projects.granted,
+		granted = self.needs.techniques_granted()
+		years = society_worker_years(granted | self.needs.projects_operating(), self.is_concern_node, granted,
 		                             self.seat.industry_opening_rate, self.founding_worker_years)
-		if game.state.actors is not None and game.state.actors.records:
-			for firm in game.view("cast")().active_firms():
-				for node_id in firm.concerns:
-					years[node_id] = years.get(node_id, 0.0) + firm_worker_years(
-						self.founding_worker_years(node_id), firm.capacity_of(node_id), firm.staffed_share(node_id))
+		for node_id, capacity, staffed_share in self.needs.firm_concern_holdings():
+			years[node_id] = years.get(node_id, 0.0) + firm_worker_years(self.founding_worker_years(node_id), capacity, staffed_share)
 		return years
 
 	def fade_industry_tenure(self):
@@ -155,7 +150,7 @@ class Depth:
 		seat = self.seat
 		leavers = self.tenure_leavers_share()
 		trades = sorted(self.industry_tenure())
-		counts = {trade: self._game().labour.people_who_exist(trade) for trade in trades}
+		counts = {trade: self.needs.people_who_exist[trade] for trade in trades}
 		outflow = outflow_shares(seat.tenure_headcount, counts, leavers)
 		fade_tenure(self.industry_tenure(), leavers, outflow)
 		seat.tenure_headcount = counts

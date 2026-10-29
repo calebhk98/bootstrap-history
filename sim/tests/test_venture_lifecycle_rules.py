@@ -47,7 +47,7 @@ def Capabilities(known, running):
     """The tree, what is known and what runs."""
     benefits = {"patron": "your protection", "university": "your protection", "school": "literacy"}
     module = production_host.build(
-        types.SimpleNamespace(nodes={name: {} for name in benefits}), capability_sets=(set(), set(), benefits),
+        tree_nodes={name: {} for name in benefits}, capability_sets=(set(), set(), benefits),
         techniques_held=set(known),
         mechanic=lambda kind: {"patron": {}, "school": {}, "university": {"redundant_with": ("school",)}})
     module.running = lambda node_id: node_id in set(running)
@@ -155,13 +155,9 @@ class Mothball(unittest.TestCase):
 
 
 def Ramp(opened=None, done_year=None, year=130):
-    business = types.SimpleNamespace(opened_year_of=lambda node_id, default: opened if opened is not None else default)
-    game = types.SimpleNamespace(
-        state=types.SimpleNamespace(
-            projects=types.SimpleNamespace(business=business, done_year={"shop": done_year} if done_year is not None else {}),
-            scenario=types.SimpleNamespace(year=year)),
-        cfg={"revenue_ramp_years": 3})
-    module = production_host.build(game)
+    module = production_host.build(
+        year=year, game_setting={"revenue_ramp_years": 3}, done_year={"shop": done_year} if done_year is not None else {},
+        venture_opened_year=lambda node_id, default: opened if opened is not None else default)
     module.industry_depth = lambda node_id: 0.0
     return module
 

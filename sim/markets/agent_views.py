@@ -34,6 +34,22 @@ class AgentViews:
 	def agent_land_rent_paid_by_tile(self):
 		return self.economy.agent_land_rent_paid_by_tile()
 
+	def agent_prices_at(self, tile=None):
+		"""{good: the agent economy's price in coin} on a tile (the acting one by default), or None while the economy opens."""
+		return self.economy.agent_prices_at(tile)
+
+	def agent_seat_sale_outlook(self, seat_id, material, quantity):
+		"""What a seat may count as sold of `quantity` units of a material its concerns make; None while the economy opens."""
+		return self.economy.agent_seat_sale_outlook(seat_id, material, quantity)
+
+	def agent_producers_by_good(self):
+		"""{good: [(tile, recipe id)]} of the producers the agent economy runs; None while it opens."""
+		return self.economy.agent_producers_by_good()
+
+	def agent_worker_years_by_recipe(self):
+		"""Worker-years a year the agent economy's producers put into each recipe; None while it opens."""
+		return self.economy.agent_worker_years_by_recipe()
+
 	def agent_trades_good(self, material):
 		return self.economy.agent_trades_good(material)
 

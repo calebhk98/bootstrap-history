@@ -1,5 +1,5 @@
 """What the actors employ and how many concerns they run: the figures the labour and goods markets read."""
-from typing import Any, Tuple
+from typing import Any, List, Set, Tuple
 
 from sim.agents.api import SOLDIER_TRADE
 
@@ -43,6 +43,20 @@ class Staff:
 		if not self.world.records:
 			return 0
 		return self.cast().concerns_in(category, self.needs.tree_nodes())  # type: ignore[attr-defined,no-any-return]
+
+	def concerns_of_active_firms(self) -> Set[str]:
+		"""Every concern some firm that has not exited runs (none while no actor is recorded)."""
+		if not self.world.records:
+			return set()
+		return self.cast().concerns_of_active_firms()  # type: ignore[attr-defined,no-any-return]
+
+	def firm_concern_holdings(self) -> List[Tuple[str, float, float]]:
+		"""(concern, how many founding sizes the firm runs it at, the share of its staff the firm has found) for each concern of
+		each firm in business, firms in the registry's order."""
+		if not self.world.records:
+			return []
+		return [(node_id, firm.capacity_of(node_id), firm.staffed_share(node_id))
+		        for firm in self.cast().active_firms() for node_id in firm.concerns]  # type: ignore[attr-defined]
 
 	def concern_versions(self) -> Tuple[int, int]:
 		"""(changes whenever the set of concerns actors run does or a concern's size does, changes only when the set does),

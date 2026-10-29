@@ -4,7 +4,7 @@ The screens, the project phases, the agent economy's port, the labour core and t
 `sim.industry_depth(node)`; each line goes when its last caller reads the view or sends the command itself."""
 from sim.markets.api import ResetMarketCaches
 from sim.materials.api import ForgetReadings
-from sim.production.api import caches, constants
+from sim.production.api import ForgetRevenueCaches, RefreshDoneCaches, RefreshOperatingCaches, constants
 
 from sim.invalidating import _InvalidatingDict
 
@@ -31,19 +31,19 @@ class ForwardProductionMixin:
 	# ---- the techniques in use ----
 
 	# ---- the memos over what is done and operating ----
-	# Plain calls on the household, not commands: the household's hooks fire while a game is still being built, before any module exists.
+	# The production module keeps the memos and counts the household's versions; the hooks send it the moment each one is stale.
 
 	def _done_changed(self):
 		"""Call after anything adds to or removes from the set of techniques done (or granted)."""
-		caches.forget_done(self.household)
+		self.send(RefreshDoneCaches())
 
 	def _operating_changed(self):
 		"""Call after anything adds to or removes from what is operating."""
-		caches.forget_operating(self.household)
+		self.send(RefreshOperatingCaches())
 
 	def _active_changed(self):
 		"""Call after anything adds to, removes from, or updates the projects in hand."""
-		caches.forget_active(self.household)
+		self.household.bump_active_version()
 
 	def _reset_operating(self):
 		"""Point the seat's business at the invalidation hook and invalidate once."""
@@ -57,7 +57,7 @@ class ForwardProductionMixin:
 
 	def _reset_economic_caches(self):
 		"""Wipe all transient economic derived-state caches and re-wrap containers on save/load and on a seat switch."""
-		caches.forget_revenue(self.household)
+		self.send(ForgetRevenueCaches())
 		self.send(ResetMarketCaches())      # the markets module's remembered goods-category figures
 		self.send(ForgetReadings())      # the materials module's remembered demand tables
 		self._done_changed()

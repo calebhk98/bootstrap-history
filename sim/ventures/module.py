@@ -27,6 +27,10 @@ class Ventures(Crew, Quotes, Opening, Sales, Coverage, Module):
 		"""The year the plant first opened, or `default` where nothing records it."""
 		return self.needs.legacy_projects().business.opened_year_of(node_id, default)
 
+	def venture_size(self, node_id):
+		"""How many founding sizes the seat's plant of this concern is (zero where it records none)."""
+		return self.needs.legacy_projects().business.size_of(node_id)
+
 	# ---- the commands ----
 
 	def apply_open_venture(self, command):

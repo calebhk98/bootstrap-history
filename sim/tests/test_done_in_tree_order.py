@@ -2,7 +2,6 @@
 opening economy (and the shipped openings keyed on it) do not depend on the strategy or goal."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.production.api import caches
@@ -15,12 +14,14 @@ class DoneInTreeOrderTests(unittest.TestCase):
         for done in ({"coin", "fire", "loom"}, {"loom", "coin", "fire"}, {"fire", "loom", "coin"}):
             self.assertEqual(caches.in_tree_order(TREE, done), ["fire", "loom", "coin"])
 
-    def test_the_order_is_kept_on_the_household_until_the_done_set_changes(self):
-        household = types.SimpleNamespace(_done_seq=None, _cap_factor=1.0, bump_done_version=lambda: None)
-        first = caches.done_in_order(household, TREE, {"coin", "fire"})
-        self.assertIs(caches.done_in_order(household, TREE, {"coin", "fire", "loom"}), first)
-        caches.forget_done(household)
-        self.assertEqual(caches.done_in_order(household, TREE, {"coin", "fire", "loom"}), ["fire", "loom", "coin"])
+    def test_the_order_is_kept_until_the_done_set_changes(self):
+        memos = caches.SeatMemos()
+        first = memos.done_in_order(TREE, {"coin", "fire"})
+        self.assertIs(memos.done_in_order(TREE, {"coin", "fire", "loom"}), first)
+        memos.capability_factor = 1.0
+        memos.forget_done()
+        self.assertIsNone(memos.capability_factor)
+        self.assertEqual(memos.done_in_order(TREE, {"coin", "fire", "loom"}), ["fire", "loom", "coin"])
 
 
 if __name__ == "__main__":

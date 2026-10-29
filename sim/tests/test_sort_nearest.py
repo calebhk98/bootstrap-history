@@ -13,7 +13,7 @@ from sim.tests import production_host
 
 def Tree(granted=()):
     """The tree over the real concern rule; nothing is granted unless asked."""
-    return production_host.build(SimpleNamespace(nodes=NODES, state=SimpleNamespace(projects=SimpleNamespace(granted=set(granted)))))
+    return production_host.build(tree_nodes=NODES, techniques_granted=set(granted))
 
 
 # `available sort nearest` measured distance to becoming startable, never distance to a goal;

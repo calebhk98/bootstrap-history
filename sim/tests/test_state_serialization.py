@@ -224,24 +224,19 @@ def _test_cache_reset_after_load():
 
 	from sim.markets.api import ResetMarketCaches
 	from sim.materials.api import ForgetReadings
+	from sim.production.api import ForgetRevenueCaches
 
-	caches = ("_done_seq", "_cap_factor", "_revenue_cache_key", "_revenue_cache_val",
-	          "_rev_up_candidates_cache", "_practice_cache")
-	household = SimpleNamespace(**{name: 1.7 for name in caches})
 	rewrapped = []
 	sent = []
-	game = SimpleNamespace(household=household, send=sent.append, _done_changed=lambda: rewrapped.append("done"),
+	game = SimpleNamespace(send=sent.append, _done_changed=lambda: rewrapped.append("done"),
 	                       _reset_operating=lambda: rewrapped.append("operating"),
 	                       _reset_active=lambda: rewrapped.append("active"),
 	                       _reset_workforce=lambda: rewrapped.append("workforce"))
 	ForwardProductionMixin._reset_economic_caches(game)
-	held = [name for name in caches if getattr(household, name) is not None]
-	if held:
-		return False, f"caches still held after the reset: {held}"
 	if rewrapped != ["done", "operating", "active", "workforce"]:
 		return False, f"containers not re-wrapped: {rewrapped}"
-	if sent != [ResetMarketCaches(), ForgetReadings()]:
-		return False, f"the materials module was not told to forget its demand tables: {sent}"
+	if sent != [ForgetRevenueCaches(), ResetMarketCaches(), ForgetReadings()]:
+		return False, f"the production, markets and materials modules were not told to forget their memos: {sent}"
 	return True, "Cache reset after load verified"
 
 
