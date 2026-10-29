@@ -25,6 +25,7 @@ READS_BY_OWNER = {
 	         "household_need_data",
 	         "price_index", "acting_as"),
 	"seats": ("seat_list",),
+	"stores": ("store_book",),
 	"demography": ("population", "population_total", "pop_scale", "default_population", "farm_holdings"),
 	"actors": ("concern_versions", "concern_counts"),
 	"mechanics": ("effect_factor",),
@@ -50,7 +51,7 @@ READS_BY_OWNER = {
 	                                    "foreign_supply_tonnes", "lift_left_tonnes", "partner_price_per_unit", "actors_carry",
 	                                    "cargo_legs", "foreign_route", "freight_mode_costs", "material_carriage_per_tonne",
 	                                    "trader_margin_share", "cargo_lost_share", "trader_cycle_years", "trader_agent_cost",
-	                                    "partner_price_level", "partner_coin_opening", "foreign_coin_partner_units", "border_terms", "partner_own_economy"),
+	                                    "partner_price_level", "partner_coin_opening", "foreign_coin_partner_units", "partner_own_economy"),
 	"port: land, farm and resources": ("farm_sites", "farm_weather", "harvest_weather", "externality_yield_factors", "tile_owner_map",
 	                                   "tiles_owned_by", "timber_felled", "found_deposits", "partner_deposits"),
 }

@@ -10,6 +10,7 @@ from sim.diffusion.api import NoteFirstRuns
 from sim.freight.api import FREIGHT_DRIVER_WAGE_TRADE, FREIGHT_FEED_PRICE_MATERIAL
 from sim.prices.api import rules as price_rules
 
+from . import trade_duty
 from .port_world_foreign import ForeignReads
 
 
@@ -137,7 +138,7 @@ class PortWorld(ForeignReads):
 
 	def border_terms(self, destination, source):
 		"""(tariff share, embargoed) `destination`'s state holds toward goods crossing from `source`."""
-		return self._needs.border_terms(destination, source)
+		return trade_duty.terms_in_book(self._needs.store_book(), destination, source)
 
 	@property
 	def cfg(self):

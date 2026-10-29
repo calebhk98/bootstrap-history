@@ -187,8 +187,10 @@ actors (21), hazards, workforce (20 each), projects (19).
   builder (`catalog.py`, `tree_source.py`, `tree_merge.py`), `trades.py`, `tech_effects.py` and `foreign_economies.py`. The `content`
   module publishes `trade_records`, `trade_notes`, `trades_absent`, `trade_family`, `tech_effects`, `foreign_economy_records` and
   `not_traded_materials`, read once per game from its directory. The engine keeps import-time copies of the tables for its own readers
-  (Complaint 840 says where they can disagree). Left bridged: `calculated_goods_prices`, `held_goods_prices_in_hours` and
-  `partner_own_economy`, which run the price solver over engine state.
+  (Complaint 840 says where they can disagree). `calculated_goods_prices`, `held_goods_prices_in_hours` and
+  `partner_own_economy` are the prices module's (`sim/prices/calculated.py`), read from the scenario's `civilisation` and
+  `civilisation_record` and workforce's `wage_schedule_for`; `border_terms` is no view: the markets port reads `store_book` and
+  `trade_duty.terms_in_book` applies the relations store's rule. Measured after: 46 reads answered by the bridge (51 before).
 - [x] Readers of the views the bridge only re-wrapped read the owners' views: `legacy_dice` and `legacy_act_as` are
   `game_random` and `acting_as`; `nodes_with_mechanic`, `state_military_diffusion`, `partner_reached` and `concern_rows_stopped`
   are read as `mechanic`, `diffusion_index`, `partner_gate_refusal` and `concern_market`.

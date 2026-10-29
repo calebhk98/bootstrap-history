@@ -1,11 +1,19 @@
 """What a country's relation toward another costs goods crossing the border between them (Complaint 598).
 
 A state's tariff is a share of the goods' value at the source, charged on goods crossing from the other country
-into its markets, and its embargo stops that crossing. Both are read from the relations store (the `border_terms` view)
+into its markets, and its embargo stops that crossing. Both are read from the relations store (the `store_book` view)
 each time a price is worked out, so a change mid-game is seen at once. The home state is the destination of an import; a
 partner is the destination of an export, so any country's side counts. `world` is what the port reads of the game
 (port_world.py): its `civ` and `border_terms`."""
 import math
+
+from sim.agents.api import relations
+
+
+def terms_in_book(book, destination, source):
+    """(tariff share, embargoed) that the state of `destination` holds toward goods crossing from `source`, read from the
+    relations store."""
+    return relations.tariff_on(book, destination, source), relations.embargoes(book, destination, source)
 
 
 def terms(world, destination, source):
