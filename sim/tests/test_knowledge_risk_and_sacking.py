@@ -10,7 +10,7 @@ from .harness import *  # noqa: F401,F403
 from sim.engine import bridge_hazards
 from sim.knowledge.api import closure
 from sim.knowledge import rules as knowledge_rules
-from sim.knowledge.api import (CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE, ForgetTechnique, KnowledgeSeat)
+from sim.knowledge.api import (CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE, ForgetTechnique, KnowledgeSeat, ReplaceTree)
 from sim.production.api import RefreshDoneCaches
 from sim.knowledge.module import Knowledge
 from sim.projects.api import ShutForgotten
@@ -40,8 +40,9 @@ class _SackGame(FactViews):
             projects=types.SimpleNamespace(operating=set(built), mothballed=set()))
         self.done_changed = 0
         self.knowledge = module_harness.build(
-            Knowledge, views={"legacy_tree": self.nodes, "corpus_dispersed": self.corpus_is_dispersed},
+            Knowledge, views={"corpus_dispersed": self.corpus_is_dispersed},
             answers={RefreshDoneCaches: lambda command: self._done_changed()}, seat=KnowledgeSeat(done=set(built), granted=set(granted)))
+        self.knowledge.replace_tree(ReplaceTree(self.nodes))
         self.losable_node_ids = self.knowledge.losable_node_ids
         self.module = hazards_host.build(
             game_random=_FrontOfTheListRNG(),

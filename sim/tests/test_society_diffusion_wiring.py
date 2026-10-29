@@ -12,7 +12,7 @@ from .harness import check
 from sim.diffusion import constants
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionWorld
-from sim.engine import category_traits
+from sim.knowledge import category_traits
 from sim.seats import api as seat_builds
 from sim.knowledge import rules as knowledge_rules
 from sim.tests import module_harness
@@ -28,7 +28,7 @@ class Game:
         self.knowledge = set(knowledge)
         seats = seats if seats is not None else {}
         self.module = module_harness.build(implementation, world=DiffusionWorld(), views={
-            "year": year, "tree": NODES.get, "tree_nodes": NODES, "diffusion_traits": category_traits.diffusion_traits(),
+            "year": year, "tree": NODES.get, "tree_nodes": NODES, "diffusion_traits": category_traits.diffusion_traits(category_traits.load("/nonexistent")),
             "state_knowledge": lambda: self.knowledge,
             "seat_holders": lambda node_id: seat_builds.holders_of(seats, node_id),
             "built_by_any_seat": lambda among: seat_builds.built_by_any(seats, among),

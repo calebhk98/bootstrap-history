@@ -54,7 +54,7 @@ The plain modules moved into `sim/diffusion/`: `adoption_share`, `civ_cost`, `di
 `institution_societies`, `technique_spread`, `trade_absorption`, and `literacy_rules` (which absorbed `literacy_effect`,
 `literacy_census_phrase` and the schooling-flow functions of `public_works_rules`). The rules written for the move are `rules.py`
 (staff advice, categories and their pace, the report, tech-effect texts, disclosure); the declared numbers are `constants.py`.
-`copy_difficulty_of` left `visibility.py`. `category_traits.py` stays in the engine (fog, staffing and production read it too) and
+`copy_difficulty_of` left `visibility.py`. `category_traits.py` is knowledge's (fog, staffing and production read it too) and
 reaches the module as the `diffusion_traits` view. `knowledge_warning.py` is knowledge's, not this module's.
 
 ## State owned
@@ -120,7 +120,7 @@ outside the module still writes. The disclosure views hand out the live record.
 | seats | `seat_list`, `seat_holders`, `built_by_any_seat`, `earliest_done_year` |
 | knowledge and projects | `tree` (shared), `tree_nodes`, `techniques_held` (projects' bridge), `techniques_granted`, `done_year`, `venture_opened_year`, `tech_effects`, `operating` and `civilisation` (living stock's bridge), `running` (projects') |
 | production | `techniques_in_use` |
-| mechanics | `effect_terms`, `effect_values`, `corpus_diffusion_pace`, `school_node` (named and shaped as the mechanics module publishes them; delete these entries when it merges), `diffusion_traits` (the category catalogue, still in the engine) |
+| mechanics | `effect_terms`, `effect_values`, `corpus_diffusion_pace`, `school_node` (named and shaped as the mechanics module publishes them; delete these entries when it merges), `diffusion_traits` (the category catalogue, knowledge's) |
 | workforce | `literacy_references`, `literacy_capacity` (keyed by trade), `farm_share_of_hours`, `trade_spread`, `staff` (shared) |
 | disease and the state | `coverage`, `disease_burden`, `disease_burden_held`, `disease_burden_weights`, `state_reach` |
 | living stock | `stock_holds_met` (published by the module) |

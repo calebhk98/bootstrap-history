@@ -149,7 +149,7 @@ class PortWorld(ForeignReads):
 
 	@property
 	def nodes(self):
-		return self._needs.legacy_tree()
+		return self._needs.tree_nodes()
 
 	@property
 	def price_index(self):

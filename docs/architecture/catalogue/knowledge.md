@@ -93,15 +93,15 @@ Senders outside the module: the projects module (`LearnTechnique`, `RevealFrom`)
 
 ## Reads
 
-Through the bridge (`sim/engine/bridge_knowledge.py`) until their owners move: `legacy_tree`, `legacy_fog` (scenario's
-`fog`), `category_trait`, `relied_on_running` (projects' running gates, keyed) and `on_road_to_goal` (seats). Real module
+Through the bridge until their owners move: `legacy_fog` (scenario's
+`fog`), `relied_on_running` (projects' running gates, keyed) and `on_road_to_goal` (seats). Real module
 views: `active_projects` (projects), `corpus_hedge_tiers` and `corpus_dispersed` (mechanics), `seat_list` (seats), `start_check`
 (projects).
 
 ## Debts
 
-- The tree: `sim.nodes` is replaced by `node_rederive.refresh_derived_nodes` and `opening_money.reprice_tree`, and built in
-  `Sim.__init__`; 263 read sites in `sim/engine` (`grep -rnE '(self|sim)\.nodes\b' sim/engine --include=*.py | wc -l`).
+- The tree: held by the module (`ReplaceTree`, not saved). `Sim.nodes` is a property over it; `node_rederive.refresh_derived_nodes`,
+  `opening_money.reprice_tree` and `Sim.__init__` assign it; 263 read sites in `sim/engine` (`grep -rnE '(self|sim)\.nodes\b' sim/engine --include=*.py | wc -l`).
 - The fog switch: `core_properties.py` (`fog`, `fuzzy_estimates` setters), `saveload.py`.
 - The engine's caches over the held set, which nothing but `RefreshDoneCaches` tells: `household._done_seq`,
   `household._cap_factor`, `done_version` (read by `techniques_in_use.py`, `held_works.py`, `economy_goods.py`,
@@ -129,3 +129,7 @@ None.
   read neither the year record nor the held set's order). Everything else keeps its old order.
 - The goal closure cache (`_goal_closure`) is never invalidated when the goal changes and is shared by three callers;
   `on_road_to_goal` keeps that behaviour.
+
+
+The category traits (`category_traits.py`: the base catalogue and each mod's overlay, read over `mods_directory`) are published as
+`category_trait` and `diffusion_traits`.

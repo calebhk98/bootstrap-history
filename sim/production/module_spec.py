@@ -14,12 +14,12 @@ from .module import Production
 from .state import ProductionSeat
 
 READS_BY_OWNER = {
-	"core": ("year", "game_setting", "civilisation", "category_trait", "trade_family", "running_versions"),
+	"core": ("year", "game_setting", "civilisation", "trade_family", "running_versions"),
 	"workforce": ("money_per_labour_hour", "staff", "staff_version", "hour_commitments", "hours_available", "wage_signature",
 	              "market_annual_wage", "standing_job_pay", "headcount", "base_tile", "people_who_exist", "hours_per_person_year",
 	              "literacy_references"),
 	"mechanics": ("capability_sets", "mechanic", "running_mechanics", "effect_sum"),
-	"knowledge": ("techniques_held", "techniques_granted", "done_year", "tree_nodes"),
+	"knowledge": ("techniques_held", "techniques_granted", "done_year", "tree_nodes", "category_trait"),
 	"diffusion": ("literacy", "techniques_spread"),
 	"prices": ("held_goods_prices_in_hours", "price_index", "done_memo", "producers_memo", "material_prices", "commodity_record"),
 	"markets": ("agent_prices_at", "agent_seat_sale_outlook", "agent_trades_good", "agent_producers_by_good",

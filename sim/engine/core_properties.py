@@ -12,6 +12,7 @@ Properties are categorized strictly by owning subsystem.
 """
 from typing import Any, Iterable, Set
 
+from sim.knowledge.api import ReplaceTree
 from sim.scenario.api import SetEndYear, SetFog, SetYear
 from sim.seats.api import EndRun
 
@@ -20,6 +21,15 @@ class ForwardingPropertiesMixin:
 	"""Composition point: backward-compatibility property facade delegating to
 	authoritative subsystem live state.
 	"""
+
+	@property
+	def nodes(self):
+		"""The tech tree, node data by id: the knowledge module's, replaced as a whole when the nodes' money is re-derived."""
+		return self.assembly.views["tree_nodes"]()
+
+	@nodes.setter
+	def nodes(self, tree):
+		self.send(ReplaceTree(tree))
 
 	@property
 	def stores(self):

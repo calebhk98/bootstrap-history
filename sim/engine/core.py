@@ -72,7 +72,6 @@ class Sim(
 
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
                  bounty_set=None, civ=None, manual=False, debug=None, defer_economy=False):
-        self.nodes = nodes
         self.rng = rng
         self._agriculture = agriculture
         self._demography = demography

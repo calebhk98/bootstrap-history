@@ -21,7 +21,7 @@ from .module import Markets
 from .state import MarketsWorld
 
 READS_BY_OWNER = {
-	"core": ("year", "civilisation", "game_config", "legacy_tree", "output_factor", "opening_farmed_hectares", "installed_mod_ids",
+	"core": ("year", "civilisation", "game_config", "output_factor", "opening_farmed_hectares", "installed_mod_ids",
 	         "household_need_data",
 	         "price_index", "acting_as"),
 	"seats": ("seat_list",),
