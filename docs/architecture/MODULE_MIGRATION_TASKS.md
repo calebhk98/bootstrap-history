@@ -201,8 +201,19 @@ actors (21), hazards, workforce (20 each), projects (19).
   purse"); Complaints 930 (two ways of posting a seat's money) and 931 (the party writes through two records). Measured after
   (`python3 tools/measure/module_graph.py`): 15 modules depend on the bridge (17 before), 20 reads answered by it (31), 15 reads of
   `legacy_*` views (20); direct capital/money writes outside owners 0 (6).
-- [ ] No other `legacy_*` view that hands out a live object (`legacy_world_map`,
-`legacy_economy`, `legacy_labour` and the rest: `python3 tools/measure/module_graph.py`).
+- [x] The game's map is land's, asked as questions: actors, disease, foreign trade, freight, markets, materials, resources and the
+  screens read views instead of the map object. Land publishes places (`tile_description`, `land_area_of`, `tile_climates`,
+  `tile_places`, `regions_of`, `endemic_people_loss`), carriage (`modes_usable`, `modes_carrying`, `carriage_facts`, `mode_carrier`,
+  `mode_crews`, `cheapest_route`, `reach_days`), the forest (`forest_increment`, `felled_after_cuts`, `felled_after_regrowth`,
+  `timber_on_tile`) and the deposits (`deposit_catalogue`, `deposits_listed`, `deposits_worked_before`, `deposit_working_rate`,
+  `prospect_finds`, `tile_endowment`), in `sim/land/map_*.py`. The one handout left is `map_for_agent_economy`, read by the
+  markets port to fill the agent economy's `EconomySetup.world_map` (the economy package takes geography's map as its
+  parameter). `legacy_world_map` is still published because `sim/engine/core.py` (a hub file) reads it twice: replace
+  `tiles_held(self.civ, self.view("legacy_world_map")())` with `self.view("tiles_listed_by")(self.civ)` and
+  `load_geography(self.view("legacy_world_map")())` with `self.view("geography_data")()`, then delete the view and
+  `Land.legacy_world_map`.
+- [ ] No other `legacy_*` view that hands out a live object (`legacy_economy`, `legacy_labour` and the rest:
+  `python3 tools/measure/module_graph.py`).
 - [x] The `scenario` module (`sim/scenario/`) owns the game's setup and clock: the civilisation, the configuration, the modes
   (events, manual, fog, fuzzy estimates), the year (only `AdvanceYear` moves it), the horizon, the danger and project limits,
   and the text helpers that follow the coin and the player's units (`money_text`, `mass_text`, `plain_number`, ...). Its

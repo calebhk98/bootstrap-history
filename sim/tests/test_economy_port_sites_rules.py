@@ -17,7 +17,8 @@ def deposit_row(deposit_id, tile_id, room_tonnes, grade_kg_per_tonne=500.0, rema
 
 class StubSim:
     """Just what the site rule asks of a seat: the catalogue's ore goods, its found and its partner deposits."""
-    world_map = types.SimpleNamespace(catalogue=lambda name: {"iron": {"ore_goods": {"iron_ore_kg": ["smelt"]}}})
+    def deposit_catalogue(self):
+        return {"ore_goods": {"iron": {"iron_ore_kg": ["smelt"]}}}
 
     state = types.SimpleNamespace(economy=None)   # no forest to regrow
 

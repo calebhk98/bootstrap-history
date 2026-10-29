@@ -1,5 +1,5 @@
 """What the disease step reads about the nation's people and the traffic between its tiles, from views."""
-from sim.geography.api import settlement, tile_facts
+from sim.geography.api import settlement
 
 from . import nation, nation_tuning as tuning, metapopulation as spread, rules
 
@@ -20,8 +20,7 @@ class People:
                                     self.people_by_band(), lambda: settlement.population_shares(held))
 
     def area_by_tile(self):
-        world_map = self.needs.legacy_world_map()
-        return {tile: tile_facts(tile, world_map)["land_area_km2"] for tile in self.held_tiles()}
+        return {tile: self.needs.tile_description(tile)["land_area_km2"] for tile in self.held_tiles()}
 
     def crowding_index(self):
         """The person-weighted density of the nation relative to a rural settlement."""
@@ -35,7 +34,7 @@ class People:
         """{(tile, tile): trips in a year} between the tiles: the crews of last year's carried goods, last year's
         migrants and the everyday travel between bordering tiles."""
         held = self.held_tiles()
-        borders = settlement.borders_among(held, self.needs.legacy_world_map())
+        borders = self.needs.borders_among(held)
         local_borders = spread.borders_through_empty(people_by_tile, borders)
         carried = self.needs.goods_carried_last_year()
         flows = self.needs.regional_flows_last_year() or {}

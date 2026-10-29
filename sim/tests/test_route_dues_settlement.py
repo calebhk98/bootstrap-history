@@ -15,7 +15,7 @@ from sim.freight.module import Freight
 from sim.freight.route import Leg, Route
 from sim.geography.api import dues_hours_per_tonne
 from sim.ledger.api import PayActor
-from sim.tests import module_harness
+from sim.tests import land_views, module_harness
 
 QUICK_TOPIC = True
 
@@ -47,7 +47,7 @@ class PayRouteDuesCommand(unittest.TestCase):
 
     def freight(self, owners):
         return module_harness.build(Freight, views={
-            "legacy_world_map": lambda: None, "wage": lambda trade: WAGE, "tile_owner": owners,
+            **land_views.of({}, ("carriage_facts",)), "wage": lambda trade: WAGE, "tile_owner": owners,
             "holder_treasury": lambda holder: "government:" + holder})
 
     def test_the_payer_pays_each_holder_its_dues_into_the_holders_treasury(self):

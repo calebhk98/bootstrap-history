@@ -8,7 +8,7 @@ response and falls as houses are added to the route. A house owns the carriers i
 labour market."""
 import math
 
-from sim.geography.api import cargo_cost, cargo_loss_per_day, sea_freight
+from sim.geography.api import cargo_cost, sea_freight
 from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 from sim.world import merchant_house, merchant_terms, trader_response
 
@@ -19,7 +19,7 @@ from .constants import SEA_MODE
 class Traders:
     """Needs: foreign_economies, hour_wage, hours_per_person_year, trade_population, working_age, households_loanable_funds, market_rate,
     route_lift_years_per_tonne, route_capital_per_lift_tonne, lift_capacity_tonnes, opening_carriers_per_route,
-    legacy_world_map, plus what Models needs."""
+    carriage_facts, plus what Models needs."""
 
     def route_carriers(self, civilization_id, route):
         """Carriers on a route; endless for a route of no legs. With no partner named, the opening fleet."""
@@ -111,7 +111,7 @@ class Traders:
         and the daily loss of a herd over its legs on the road."""
         if route is None:
             return 0.0
-        daily = cargo_loss_per_day(self.needs.legacy_world_map())
+        daily = self.needs.carriage_facts()["loss_per_day"]
         return rules.cargo_loss_share(route, daily, sea_freight.hull_loss_per_thousand_km(self.sea_crew()))
 
     def trader_cost_share(self, route, material=None, civilization_id=None, price_flexibility=None,

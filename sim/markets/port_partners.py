@@ -5,7 +5,7 @@ Part of the port. A partner is derived the way the home country is: its people s
 producers are placed by the economy's own opening from what its people demand and what its techniques
 allow, and its prices and wages are the economy's. Nothing about output or wages is authored here."""
 from sim.constants import declare
-from sim.geography.api import haversine_km, settlement, tile_facts, tiles_held
+from sim.geography.api import haversine_km, settlement
 from sim.world import census as census_module, demand
 
 from .port_setup import allowed_entries
@@ -24,8 +24,8 @@ def partner_opening(sim, partner_id):
     """What the setup takes from one partner at the opening: its tiles (those the home country does not
     hold), the people on each, the recipes its techniques allow and its goods priced where the home has none."""
     civ = sim.civilisation_record(partner_id)
-    home_tiles = set(tiles_held(sim.civ, sim.world_map))
-    tile_ids = [tile for tile in tiles_held(civ, sim.world_map) if tile not in home_tiles]
+    home_tiles = set(sim.tiles_held_by(sim.civ))
+    tile_ids = [tile for tile in sim.tiles_held_by(civ) if tile not in home_tiles]
     people, farthest, source = _people_by_tile(sim, civ, tile_ids)
     production = demand.production_data()
     return {"tiles": tile_ids, "population_by_tile": people, "population_source": source,
@@ -38,7 +38,7 @@ def _people_by_tile(sim, civ, tile_ids):
     census_id = civ.get("population_census")
     if census_id and tile_ids:
         entries = census_module.load_census(census_id)["entries"]
-        located = {tile: (tile_facts(tile, sim.world_map)["lat"], tile_facts(tile, sim.world_map)["lon"]) for tile in tile_ids}
+        located = {tile: (sim.tile_description(tile)["lat"], sim.tile_description(tile)["lon"]) for tile in tile_ids}
         people, farthest = census_module.place_on_nearest_tile(entries, located, haversine_km)
         return {tile: people.get(tile, 0.0) for tile in tile_ids}, farthest, census_id
     total = float(civ.get("population") or 0.0) * SPREAD_BY_FOOD_CAPACITY

@@ -13,6 +13,7 @@ import unittest
 
 from sim.geography.api import load_geography, regions_of_tiles, tiles_held
 
+from sim.tests import land_host
 from sim.world import deposits
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -88,15 +89,16 @@ class ForestAreaReadsTilesTests(unittest.TestCase):
 
     def test_home_land_area_is_the_sum_of_the_tiles(self):
         from sim.engine.data import load_civ
-        from sim.resources.ceilings import held_land_area_km2
         civilisation = load_civ("rome_100ad")
         tiles = _geography()["land_tiles"]["tiles"]
         expected = sum(tiles[tile_id]["land_area_km2"] for tile_id in tiles_held(civilisation))
-        self.assertAlmostEqual(held_land_area_km2(civilisation), expected, places=6)
+        module = land_host.build(civilisation)
+        self.assertAlmostEqual(module.land_area_of(module.tiles_listed_by(civilisation)), expected, places=6)
 
     def test_a_civilisation_holding_no_tile_has_no_land(self):
-        from sim.resources.ceilings import held_land_area_km2
-        self.assertEqual(held_land_area_km2({"home_tiles": []}), 0.0)
+        civilisation = {"home_tiles": []}
+        module = land_host.build(civilisation)
+        self.assertEqual(module.land_area_of(module.tiles_listed_by(civilisation)), 0.0)
 
 
 class NoModuleReadsRegionLabelsForTileDataTests(unittest.TestCase):

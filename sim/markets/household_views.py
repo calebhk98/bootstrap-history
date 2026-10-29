@@ -9,6 +9,13 @@ class HouseholdNeeds:
 	def _household_model(self):
 		return household_needs.household_model(self.needs.installed_mod_ids(), self.needs.household_need_data)
 
+	def _civilisation_basket(self, base):
+		"""The model's basket with the climate floors of the tiles the civilisation holds (kept for the game)."""
+		def records():
+			tile_ids = self.needs.tiles_listed_by(self.needs.civilisation())
+			return household_needs.climate_records(tile_ids, self.needs.tile_climates(tile_ids))
+		return household_needs.civilisation_basket(base, str(self.needs.civilisation()["id"]), self._climate_baskets, records)
+
 	def _needs_served(self):
 		"""material -> the needs it serves, for the installed content (built once per set of installed mods)."""
 		mods = self.needs.installed_mod_ids()
@@ -33,13 +40,13 @@ class HouseholdNeeds:
 		"""{material: units a year} households (and what they buy through recipes) want at these labour-hour prices, with the
 		warmth, clothing and shelter floors the civilisation's tiles' climate sets."""
 		base, _final = self._household_model()
-		basket = household_needs.civilisation_basket(base, self.needs.civilisation(), self.needs.legacy_world_map())
+		basket = self._civilisation_basket(base)
 		return household_needs.demand_by_material(base, prices_in_hours, population, income_per_capita, basket)
 
 	def household_basket(self):
 		"""The household need basket of the civilisation: the installed content's needs with the floors its tiles' climate sets."""
 		base, _final = self._household_model()
-		return household_needs.civilisation_basket(base, self.needs.civilisation(), self.needs.legacy_world_map())
+		return self._civilisation_basket(base)
 
 	def home_household_tonnes(self, prices_in_hours):
 		"""{material: tonnes a year} the home households buy at these prices (labour hours a unit), scaled to the opening's people."""

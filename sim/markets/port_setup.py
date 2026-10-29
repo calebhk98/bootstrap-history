@@ -14,7 +14,7 @@ from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, 
                              recipes_from_production_data, taxes, tile_costs, with_tool_wear)
 from sim.agents import api as agents_api
 from sim.world import demand, need_basket
-from sim.geography.api import carriage_rates, layer_value, sea_freight, settlement, tiles_held
+from sim.geography.api import sea_freight, settlement
 from sim.labour import api as labour_api
 
 from . import port_closure, port_costs, port_sites
@@ -38,11 +38,6 @@ def unit_mass_kg(material: str) -> float:
     if material not in _UNIT_MASS_KG:
         _UNIT_MASS_KG[material] = goods_specs({material: ""}, {})[material].unit_mass_kg
     return _UNIT_MASS_KG[material]
-
-
-def civilisation_tiles(civ, world_map):
-    """The tiles a civilisation holds on the engine's map, and that map."""
-    return tiles_held(civ, world_map), world_map
 
 
 def _runnable(entry, held_nodes):
@@ -82,7 +77,7 @@ def opening_values(sim):
     """What the setup takes from the engine at the opening: kept in the save so a resumed game rebuilds
     the same markets, producers and price base however the engine's own tables have moved since."""
     civ = sim.civ
-    tile_ids, _world_map = civilisation_tiles(civ, sim.world_map)
+    tile_ids = sim.tiles_held_by(civ)
     people = float(sim.population.total)
     production = demand.production_data()
     trades_data = _load("world", "trades.json").get("trades", {})
@@ -98,7 +93,7 @@ def opening_values(sim):
                             for trade in (production[entry_id].get("labour_hours") or {})}
                            | {unskilled})
     modes = sim._freight_mode_costs(cargo="goods")
-    rates = carriage_rates(sorted(modes), sim.world_map)
+    rates = sim.mode_crews(sorted(modes))
     prices = dict(partner_prices)
     prices.update(port_costs.opening_costs(sim))
     return {
@@ -127,7 +122,7 @@ def opening_values(sim):
                         for limit in port_sites.site_limits(
                             sim, {entry_id: production[entry_id]["outputs"] for entry_id in allowed},
                             list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]])],
-        "stores": opening_store_values(sim.world_map, tile_ids, int(sim.cfg["start_year"])),
+        "stores": opening_store_values(sim, tile_ids, int(sim.cfg["start_year"])),
         "literacy": {field: sim.literacy(field) for field in LITERACY_FIELDS},
     }
 
@@ -138,15 +133,12 @@ def society_at_opening(civ, opening):
     return dict(civ, **opening["literacy"])
 
 
-def baskets_by_tile(basket, need_data, world_map, tile_ids):
+def baskets_by_tile(basket, need_data, climates, tile_ids):
     """The household basket on each tile, with the floors its climate sets (sim/world/climate_needs.py)
     for every need whose data names one in `subsistence_from_climate`."""
     if not need_basket.climate_floor_fields(basket):
         return {}
-    return {tile: need_basket.climate_basket(basket, {
-        "lat": layer_value(tile, "lat", world_map),
-        "koppen_class": layer_value(tile, "koppen_class", world_map),
-        "koppen_sample_mix": layer_value(tile, "koppen_sample_mix", world_map)}) for tile in tile_ids}
+    return {tile: need_basket.climate_basket(basket, climate) for tile, climate in zip(tile_ids, climates)}
 
 
 def coin_per_unit(opening):
@@ -182,7 +174,8 @@ def build_setup(sim, opening=None, production=None):
     unit = coin_per_unit(opening)
     opening = in_units(opening)
     civ = sim.civ
-    tile_ids, world_map = civilisation_tiles(civ, sim.world_map)
+    tile_ids = sim.tiles_held_by(civ)
+    world_map = sim.economy_map
     partners = opening.get("partners") or {}
     all_tile_ids = list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]]
     technique = sim.labour.farming_technique()
@@ -251,7 +244,7 @@ def build_setup(sim, opening=None, production=None):
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
         yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles),
-        basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
+        basket_by_tile=baskets_by_tile(basket, need_data, sim.tile_climates(all_tile_ids), all_tile_ids), coin_per_unit=unit,
         household_work=households_work.load_household_work(), ready_to_eat=households_work.ready_to_eat_goods(need_data),
         milled_as=household_grinding.milled_as_map(need_data),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),

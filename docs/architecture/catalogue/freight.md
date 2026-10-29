@@ -46,7 +46,7 @@ proposal. Where the draft differed, "What changed from the draft" says how. Coun
 | Views / commands | 15 / 1 (+ the ledger's new `PayActor`, sent) |
 | Views of other modules it reads | 27, none cached (see the spec's `READS_BY_OWNER`) |
 | Commands of other modules it sends | `PayActor` (the ledger's) |
-| `legacy_*` reads (debts) | `legacy_world_map` (the handle the geography package's searches take) |
+| `legacy_*` reads (debts) | none; the map is asked through land's `modes_usable`, `modes_carrying`, `carriage_facts`, `mode_carrier`, `cheapest_route` and `tiles_listed_by` |
 | State | none; the module remembers a carrier table, the routes of hauled materials and the year's tile-to-tile cost, all rebuilt on demand and never saved |
 | Log lines written | none |
 | Plain modules moved | `haul_route.py` -> `sim/freight/route.py`; `foreign_route_choice.py` -> `route_choice.py`; `freight_markup` -> `rules.freight_markup`; `dues_money_per_tonne`, `handling_money_per_tonne` -> `rules.py` |
@@ -94,7 +94,7 @@ Bridged in `sim/engine/bridge_freight.py` under the name the owner will publish:
 `trade_population`, `market_rate`, `households_loanable_funds`, `material_prices`, `material_price`, `held_techniques`,
 `built_ways`, `material_source_tiles`, `route_km_to`, `goods_carried_last_year`, `working_age`, `partner_market_book`,
 `partner_route`, `route_lift_years_per_tonne`, `route_capital_per_lift_tonne`, `lift_capacity_tonnes`,
-`opening_carriers_per_route`, `holder_treasury`, and the debt `legacy_world_map`. Reused: `civilisation`, `year`,
+`opening_carriers_per_route`, `holder_treasury`, and land's map views. Reused: `civilisation`, `year`,
 `hour_wage`, `hours_per_person_year`, `foreign_economies`, `tile_owner`. The ledger's `PayActor` is applied there too.
 
 `wage` is the wage schedule's money for an hour of a trade (`labour.wage_per_hour`); the labour market's quote is the
