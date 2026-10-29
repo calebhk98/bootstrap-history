@@ -7,10 +7,9 @@ follows its demand when the economy holds a technique for every step of the chai
 its tiles; anything else has no capacity and is only bought.
 
 (needs: partner_household_demand, material_commodity, national_output, tracked_materials, mineral_share_of_tiles,
-legacy_world_map)"""
+tiles_listed_by)"""
 from typing import Any, Dict, Optional, Tuple
 
-from sim.geography.api import tiles_held
 from sim.world import demand as demand_model
 
 from . import rules
@@ -44,7 +43,7 @@ class Capacity:
 
     def _mineral_share(self, civilization_id: str, commodity: str) -> float:
         """Share of a mined commodity on the tiles the partner holds."""
-        tiles = tiles_held(self.partner_civ(civilization_id), self.needs.legacy_world_map())
+        tiles = self.needs.tiles_listed_by(self.partner_civ(civilization_id))
         return self.needs.mineral_share_of_tiles(tiles, commodity)
 
     def _can_make(self, civilization_id: str, material: str, solved: Any, _seen: Optional[frozenset] = None) -> bool:

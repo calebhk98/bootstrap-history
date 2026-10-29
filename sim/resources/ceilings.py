@@ -1,5 +1,4 @@
 """The land ceilings of a working or a woodland: how much of a material, or of coppice, the ground and the state can support."""
-from sim.geography.api import tile_facts, tiles_held
 
 
 def mine_ceiling_tonnes(favour_terms, inspection_share, stranger_base, stranger_state_scale, revenue_multiple,
@@ -17,11 +16,6 @@ def mine_ceiling_tonnes(favour_terms, inspection_share, stranger_base, stranger_
 def room_under_ceiling(ceiling, standing, pending=0.0):
     """What may still be added under a ceiling once what stands and what is on order are counted; never negative."""
     return max(0.0, ceiling - standing - pending)
-
-
-def held_land_area_km2(civilisation, world_map=None):
-    """Total land area of the tiles the civilisation holds; a civilisation holding no tile has none."""
-    return sum(float(tile_facts(tile, world_map)["land_area_km2"]) for tile in tiles_held(civilisation, world_map))
 
 
 def revenue_scale_multiple(revenue, revenue_scale, cap_multiple):

@@ -1,10 +1,10 @@
 """What a state asks the simulated world when it assesses revenue: its declared forms and the bases they read."""
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
-from sim.agents.collection_world import CollectionView
+from sim.agents.collection_world import FAR_DAYS, CollectionView
 from sim.agents import collection
 from sim.agents.api import government_levers, observed_incomes, revenue
-from sim.geography.api import arable_hectares, settlement, tiles_held, usable_modes
+from sim.geography.api import arable_hectares, settlement, tiles_held
 
 
 class RevenueView(CollectionView):
@@ -71,10 +71,11 @@ class RevenueView(CollectionView):
 
 	def collection_modes(self) -> List[str]:
 		"""The route modes the state's held technologies open."""
-		return usable_modes([self.needs.held_techniques(True)], self.needs.legacy_world_map())
+		return self.needs.home_modes()
 
-	def collection_world_map(self) -> Any:
-		return self.needs.legacy_world_map()
+	def collection_reach(self, seat: str, modes: Any) -> Dict[str, float]:
+		"""{tile: fewest days} from the seat's tile by these modes over the game's map."""
+		return self.needs.reach_days([seat], modes, FAR_DAYS)
 
 	def arable_share(self, tiles: FrozenSet[str]) -> float:
 		"""The share of the arable land the state holds that lies on `tiles`."""

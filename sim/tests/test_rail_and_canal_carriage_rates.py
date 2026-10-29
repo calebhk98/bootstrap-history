@@ -5,11 +5,10 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.freight.module import Freight
-from sim.geography import api as geography
-from sim.tests import module_harness
+from sim.tests import land_views, module_harness
 
 PRICES = {"wheat_kg": 1.0, "wood_kg": 0.5, "coal_kg": 0.4, "iron_bar_kg": 8.0, "ox": 4000.0, "mule": 3000.0}
-WORLD_MAP = geography.open_map()
+FREIGHT_LAND_VIEWS = ("carriage_facts", "mode_carrier", "modes_carrying")
 
 
 def _economy(prices=None):
@@ -17,7 +16,7 @@ def _economy(prices=None):
     table = dict(PRICES, **(prices or {}))
     return module_harness.build(Freight, views={
         "material_prices": lambda: table, "material_price": lambda tag: table.get(tag), "wage": lambda trade: 2.0,
-        "market_rate": lambda: 0.05, "legacy_world_map": lambda: WORLD_MAP})
+        "market_rate": lambda: 0.05, **land_views.of({}, FREIGHT_LAND_VIEWS)})
 
 
 class RailCarriageTests(unittest.TestCase):

@@ -1,7 +1,7 @@
 """Complaints 409 and 410, as wiring on stand-in selves: the engine's map is the base map opened with the installed mods
-in load order (`Land.world_map`), and the foreign haul asks geography about that map (the freight module's
-`foreign_route` resolves the partner's tiles on it, `haul_route` searches and reads modes on it). Collaborators are
-recorders; no game."""
+in load order (`Land.world_map`), and the foreign haul asks the land module about it (the freight module's `foreign_route`
+asks which tiles the partner's file lists, `haul_route` asks the usable modes and searches). Collaborators are recorders;
+no game."""
 QUICK_TOPIC = True
 
 import unittest
@@ -57,37 +57,44 @@ class HaulRouteTests(unittest.TestCase):
         found = object()
         asked = {}
 
+        def tiles_listed_by(civilisation):
+            asked["held"] = civilisation
+            return ["home_tile"]
+
+        def modes_usable(parties, cargo="goods"):
+            asked["modes"] = (tuple(parties), cargo)
+            return ["cart"]
+
+        def cheapest_route(*arguments, **keywords):
+            asked["searched"] = (arguments, keywords)
+            return found
+
         def choose(search, cost, mode_costs, share):
             return search(mode_costs)
 
         module = module_harness.build(_Searched, views={
-            "legacy_world_map": lambda: MAP, "civilisation": lambda: {"id": "home"},
-            "held_techniques": lambda include_starting: frozenset({"home_tech"})})
-        with mock.patch.object(routes, "tiles_held", return_value=["home_tile"]) as held, \
-                mock.patch.object(routes, "usable_route_modes", return_value=["cart"]) as modes, \
-                mock.patch.object(routes, "route_over_tiles", return_value=found) as searched, \
-                mock.patch.object(routes, "route_from_geography", side_effect=lambda route: route), \
+            "tiles_listed_by": tiles_listed_by, "modes_usable": modes_usable, "cheapest_route": cheapest_route,
+            "civilisation": lambda: {"id": "home"}, "held_techniques": lambda include_starting: frozenset({"home_tech"})})
+        with mock.patch.object(routes, "route_from_geography", side_effect=lambda route: route), \
                 mock.patch.object(routes, "choose_route", side_effect=choose):
             module.haul_route(["origin_tile"], 0.0, "goods", frozenset({"foreign_tech"}))
-        asked.update(held=held, modes=modes, searched=searched)
         return asked
 
-    def test_this_societys_tiles_are_resolved_on_the_engine_map(self):
-        self.haul()["held"].assert_called_once_with({"id": "home"}, MAP)
+    def test_this_societys_tiles_are_the_ones_the_land_module_lists_for_its_civilisation(self):
+        self.assertEqual(self.haul()["held"], {"id": "home"})
 
-    def test_the_usable_modes_are_read_from_the_engine_map(self):
-        self.assertEqual(self.haul()["modes"].call_args.args[1], MAP)
+    def test_the_usable_modes_are_asked_for_the_techniques_of_both_parties(self):
+        self.assertEqual(self.haul()["modes"], ((frozenset({"home_tech"}), frozenset({"foreign_tech"})), "goods"))
 
-    def test_the_route_is_searched_on_the_engine_map_between_the_given_and_held_tiles(self):
-        call = self.haul()["searched"].call_args
-        self.assertIs(call.kwargs["world_map"], MAP)
-        self.assertEqual(call.args[0], ["origin_tile"])
-        self.assertEqual(call.args[1], ["home_tile"])
+    def test_the_route_is_searched_between_the_given_and_held_tiles_over_the_usable_modes(self):
+        arguments, keywords = self.haul()["searched"]
+        self.assertEqual(arguments[:3], (["origin_tile"], ["home_tile"], ["cart"]))
+        self.assertEqual(keywords["held_nodes"], frozenset({"home_tech", "foreign_tech"}))
 
 
 class ForeignRouteTests(unittest.TestCase):
-    def test_the_partners_tiles_are_resolved_on_the_engine_map_and_hauled(self):
-        hauled = []
+    def test_the_partners_tiles_are_listed_by_the_land_module_and_hauled(self):
+        hauled, listed = [], []
 
         class Hauled(Freight):
             def foreign_flow_imbalance(self, civilization_id):
@@ -97,11 +104,11 @@ class ForeignRouteTests(unittest.TestCase):
                 hauled.append(arguments)
                 return "route"
         module = module_harness.build(Hauled, views={
-            "legacy_world_map": lambda: MAP, "techniques_with_results": lambda techniques: frozenset({"a"})})
+            "tiles_listed_by": lambda civilisation: listed.append(civilisation) or ["partner_tile"],
+            "techniques_with_results": lambda techniques: frozenset({"a"})})
         partner = {"id": "partner", "starting_techs": ["a"]}
-        with mock.patch.object(routes, "tiles_held", return_value=["partner_tile"]) as held:
-            route = module.foreign_route(partner)
-        held.assert_called_once_with(partner, MAP)
+        route = module.foreign_route(partner)
+        self.assertEqual(listed, [partner])
         self.assertEqual(route, "route")
         self.assertEqual(hauled, [(["partner_tile"], 0.25, "goods", frozenset({"a"}))])
 

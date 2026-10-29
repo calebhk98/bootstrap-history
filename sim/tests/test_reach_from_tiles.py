@@ -52,9 +52,8 @@ class _Sim(FactViews):
     def civ(self, value):
         self.world.civ = value
 
-    @property
-    def world_map(self):
-        return self.world.world_map
+    def tile_description(self, tile):
+        return geography.tile_facts(tile, self.world.world_map)
 
 
 def _fresh_sim(civ):
@@ -69,7 +68,7 @@ class ReachFromTilesTests(unittest.TestCase):
 
     def test_a_region_whose_tile_is_held_is_reach_zero_and_others_are_not(self):
         sim = _fresh_sim("rome_100ad")
-        held_regions = {geography.tile_facts(tile, sim.view("legacy_world_map")())["region"] for tile in geography.tiles_held(sim.civ)}
+        held_regions = {sim.view("tile_description")(tile)["region"] for tile in geography.tiles_held(sim.civ)}
         for region_id in sim.view("legacy_geography")().regions:
             if region_id in held_regions:
                 self.assertEqual(sim.view("legacy_geography")().region_reach(region_id), 0, region_id)

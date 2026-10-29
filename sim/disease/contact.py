@@ -1,7 +1,5 @@
 """Where pathogens come from: the outside sources the civilisation names, the routes that reach them and the draw of
 who arrives."""
-from sim.geography.api import reach, usable_modes
-
 from . import nation, nation_tuning as tuning, metapopulation as spread
 from .technology_effects import technology_scales
 
@@ -24,14 +22,13 @@ class Contact:
         technologies open plus those the outsiders bring; empty when no route joins them. Kept until the tiles
         held or the modes change."""
         held = tuple(self.held_tiles())
-        world_map = self.needs.legacy_world_map()
-        modes = tuple(sorted(set(usable_modes([self.needs.held_techniques(True)], world_map)) | set(source["carrier_modes"])))
+        modes = tuple(sorted(set(self.needs.home_modes()) | set(source["carrier_modes"])))
         cache = self._entry_cache
         key = (held, modes, source["tiles"])
         if key not in cache:
             if len(cache) > 32:
                 cache.clear()
-            days = reach(source["tiles"], modes, 1.0e9, world_map=world_map) if held and source["tiles"] else {}
+            days = self.needs.reach_days(source["tiles"], modes, 1.0e9) if held and source["tiles"] else {}
             cache[key] = {tile: days[tile] for tile in held if tile in days}
         return cache[key]
 

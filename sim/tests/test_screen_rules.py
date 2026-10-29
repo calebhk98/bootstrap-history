@@ -19,14 +19,14 @@ QUICK_TOPIC = True
 # --- map: held tiles by people, the base marked, the rest carrying the days to reach them, neighbours not held.
 TILE_NAMES = Game(
     tile_name=lambda tile_id: "name_" + tile_id, region_name=lambda tile_id: "region", terrain=lambda tile_id: "plain",
-    places_on=lambda world_map, tile_id: [], region_names=lambda: {},
+    region_names=lambda: {},
     neighbours=lambda tile_id: {"t1": ["t2", "t9"], "t2": ["t1", "t8"], "t3": ["t9"]}[tile_id])
 held = {"t1": 50.4, "t2": 300.0, "t3": 10.0}
 labour = Game(settlement_tiles=lambda: held, base_tile=lambda: "t1", home_town_population_estimate=lambda: 77.6,
                          relocation_quote=lambda tile_id: (3.4, 1.0) if tile_id != "t3" else None)
-map_game = Game(labour=labour, world_map=None, civ={"short_name": "Testland"}, population=Game(total=1234.6))
-with mock.patch.object(screen_map, "tile_names", TILE_NAMES), mock.patch.object(screen_map, "regions_of_tiles", lambda tiles: ["r"]), \
-        mock.patch.object(screen_map, "tiles_held", lambda civ, world_map: set(held)), \
+map_game = Game(labour=labour, tile_places=lambda tile: [], regions_of=lambda tiles: ["r"],
+                tiles_listed_by=lambda civilisation: set(held), civ={"short_name": "Testland"}, population=Game(total=1234.6))
+with mock.patch.object(screen_map, "tile_names", TILE_NAMES), \
         mock.patch.object(screen_map, "_deposits_by_tile", lambda: {"t2": [{"name": "seam"}]}):
     report = screen_map.map_report(map_game, full=True)
     short = screen_map.map_report(map_game)
@@ -49,9 +49,9 @@ check("a layer that names no tile store is refused with cause unknown_layer", re
 many = {"t%d" % number: float(number) for number in range(30)}
 many_game = Game(labour=Game(settlement_tiles=lambda: many, base_tile=lambda: "t0", home_town_population_estimate=lambda: 1.0,
                                                    relocation_quote=lambda tile_id: (1.0, 1.0)),
-                            world_map=None, civ={}, population=Game(total=1.0))
-with mock.patch.object(screen_map, "tile_names", Game(**{**TILE_NAMES.__dict__, "neighbours": lambda tile_id: []})), \
-        mock.patch.object(screen_map, "regions_of_tiles", lambda tiles: []), mock.patch.object(screen_map, "tiles_held", lambda civ, world_map: set()):
+                            tile_places=lambda tile: [], regions_of=lambda tiles: [], tiles_listed_by=lambda civilisation: set(),
+                            civ={}, population=Game(total=1.0))
+with mock.patch.object(screen_map, "tile_names", Game(**{**TILE_NAMES.__dict__, "neighbours": lambda tile_id: []})):
     default_view = screen_map.map_report(many_game)
     full_view = screen_map.map_report(many_game, full=True)
 check("the map shows the default number of tiles unless full is asked, and counts them all",

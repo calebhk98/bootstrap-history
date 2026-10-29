@@ -88,7 +88,8 @@ deaths enter the step by band and tile, not as a share (a change to that is demo
 
 ## (e) Reads
 
-- core: `year`, `civilisation`, `legacy_world_map`, `acting_as`, `money_text`
+- core: `year`, `civilisation`, `acting_as`, `money_text`
+- land (the map): `home_modes`, `reach_days`, `endemic_people_loss`, `tile_description`, `borders_among`, `tiles_listed_by`
 - agriculture: `weather_seed`
 - demography (bridged in `bridge_disease.py` until it moves, named as its catalogue names them where one exists): `people_by_band`,
   `nutrition_ratio`, `working_age`, `regional_people_by_band`, `urban_fraction`, `regional_flows_last_year`

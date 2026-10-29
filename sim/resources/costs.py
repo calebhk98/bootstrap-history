@@ -5,11 +5,10 @@ Nothing here reads the price of what the mine raises; a material no deposit data
 itself."""
 from typing import Any, Dict, Optional, Tuple
 
-from sim.geography.api import parameter_value
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model, mine_technique
 
-from . import catalogue, ceilings, rules
+from . import ceilings, rules
 from .constants import (GENERIC_MINE_DEPTH_CLASS, GENERIC_MINE_HARDNESS_CLASS, MINE_CEILING_BASE_STRANGER,
                         MINE_CEILING_STATE_SCALE_STRANGER, MINE_LEAD_YEARS, REVENUE_SCALE_CAP_MULTIPLE,
                         REVENUE_SCALE_LABOUR_HOURS)
@@ -19,25 +18,24 @@ _PROFILE_CACHE: Dict[Any, Tuple[float, float]] = {}   # (material, the running w
 
 
 class MineCosts:
-    """Needs: legacy_world_map, wage, material_price, price_index, money_per_labour_hour, revenue_estimate, effect_best,
+    """Needs: deposit_catalogue, wage, material_price, price_index, money_per_labour_hour, revenue_estimate, effect_best,
     effect_terms, running, running_stamp, inspection_reach, mineral_scale, acting_balance, purchase_budget, affordable_units,
     afford_means."""
 
     def works_materials(self):
-        return catalogue.works_priced_materials(self.needs.legacy_world_map())
+        return self.needs.deposit_catalogue()["works_priced_materials"]
 
     def mine_demand_goods(self, material: str) -> Tuple[str, ...]:
         """The goods whose annual demand a mine of `material` supplies: the catalogue row's list, else the key itself."""
-        return catalogue.demand_goods_by_material(self.needs.legacy_world_map()).get(material, (material,))
+        return self.needs.deposit_catalogue()["demand_goods"].get(material, (material,))
 
     def mine_trade(self) -> str:
         """The trade whose wage prices mine labour, from the map's parameters."""
-        return parameter_value("mining_trade", self.needs.legacy_world_map())
+        return self.needs.deposit_catalogue()["mining_trade"]
 
     def reference_deposits(self, material: str):
         """(deposit, weight) pairs describing a typical working of `material`."""
-        world_map = self.needs.legacy_world_map()
-        if material in deposit_model.metals(world_map):
+        if material in self.needs.deposit_catalogue()["metals"]:
             pool = deposit_model.load_deposits(material)
             total = sum(deposit.quantity_tonnes_per_year for deposit in pool)
             return [(deposit, deposit.quantity_tonnes_per_year / total) for deposit in pool]

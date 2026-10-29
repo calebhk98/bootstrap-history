@@ -24,7 +24,7 @@ READS_BY_OWNER = {
     "foreign_trade": ("foreign_supply_tonnes",),
     "resources": ("empire_output", "mine_capacity", "mine_depletion", "forest_hectares", "nitre_beds", "found_deposits", "mine_works_materials",
                   "shortage_remedy_plan"),
-    "land": ("legacy_world_map", "mineral_scale", "material_cost_factor"),
+    "land": ("tiles_listed_by", "forest_increment", "mineral_scale", "material_cost_factor"),
     "projects": ("active_projects", "active_project_ids", "active_projects_version", "project_cost", "project_cost_now", "opposition_factor", "cost_money_factor",
                              "rebuild_work_factor", "failure_reset_share"),
     "sharing": ("shared_bill",),

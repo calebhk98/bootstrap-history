@@ -5,7 +5,7 @@ The return trip follows last year's domestic flow ledger (the goods the economy'
 share of capacity the opposite flow fills is not charged. With no ledger yet, the carrier is taken to return empty."""
 import json
 
-from sim.geography.api import cargo_cost, cargo_loss_per_day, flow_ledger, freight_cost, walking_cargo_modes
+from sim.geography.api import cargo_cost, flow_ledger, freight_cost
 from sim.living_stock.api import stock_rates
 
 from . import rules
@@ -14,7 +14,7 @@ from .route import Leg, Route, cargo_class_of, domestic_cargo_cost_share, domest
 
 
 class Haul:
-    """Needs: legacy_world_map, built_ways, held_techniques, goods_carried_last_year, material_source_tiles,
+    """Needs: carriage_facts, built_ways, held_techniques, goods_carried_last_year, material_source_tiles,
     route_km_to, market_rate, material_price, plus what Models and Routes need."""
 
     def cargo_class(self, material):
@@ -28,7 +28,7 @@ class Haul:
     def domestic_haul_mode(self, cargo):
         """The mode a domestic haul of this class of cargo goes by: the cart for goods, the first mode whose cargo
         walks for living stock."""
-        walking = walking_cargo_modes(self.needs.legacy_world_map()) if cargo == LIVING_STOCK_CARGO else ()
+        walking = self.needs.carriage_facts()["walking_modes"] if cargo == LIVING_STOCK_CARGO else ()
         return domestic_haul_mode(cargo, walking, DOMESTIC_CART_MODE)
 
     def material_haul_route(self, material):
@@ -75,7 +75,7 @@ class Haul:
         while it travels, and what is lost to spoilage in that time (and, for a herd on the road, the daily loss each
         leg's mode states). No merchant margin (domestic carriers' margins are not modelled)."""
         return domestic_cargo_cost_share(
-            cargo_cost.spoilage_rates().get(material, 0.0), cargo_loss_per_day(self.needs.legacy_world_map()), route,
+            cargo_cost.spoilage_rates().get(material, 0.0), self.needs.carriage_facts()["loss_per_day"], route,
             self.needs.market_rate())
 
     def material_freight_factor(self, material):

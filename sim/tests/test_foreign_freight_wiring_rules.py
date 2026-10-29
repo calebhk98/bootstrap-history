@@ -8,7 +8,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.freight import models, rules
+from sim.freight import rules
 from sim.freight.module import Freight
 from sim.geography import freight_cost, transport
 from sim.tests import module_harness
@@ -33,13 +33,12 @@ class _Carriers(Freight):
 def freight_game(rate=0.1, implementation=_Carriers):
     return module_harness.build(implementation, views={
         "wage": lambda trade: SEA_WAGE if trade == "sailor" else LAND_WAGE, "market_rate": lambda: rate,
-        "legacy_world_map": lambda: None, "material_price": lambda material: 0.5})
+        "carriage_facts": lambda: {"walking_modes": ["drove"], "loss_per_day": {}, "dues_hours_per_tonne": {}},
+        "modes_carrying": lambda cargo: ["cart", "sail"], "material_price": lambda material: 0.5})
 
 
 def mode_costs(game, **kwargs):
-    with mock.patch.object(models, "walking_cargo_modes", return_value=["drove"]), \
-         mock.patch.object(models, "modes_carrying", return_value=["cart", "sail"]):
-        return game.freight_mode_costs(**kwargs)
+    return game.freight_mode_costs(**kwargs)
 
 
 class FreightModeCostTests(unittest.TestCase):
@@ -104,8 +103,8 @@ class RouteFreightTests(unittest.TestCase):
 class DuesAndStockRouteTests(unittest.TestCase):
     def test_handling_costs_are_the_geographys_dues_hours_at_the_land_wage(self):
         game = freight_game()
-        with mock.patch.object(models, "dues_hours_per_tonne", return_value={"cart": 3.0}), \
-             mock.patch.object(rules, "handling_money_per_tonne", lambda hours, wage, sea, port: {"cart": hours["cart"] * wage}):
+        game.needs.carriage_facts = lambda: {"walking_modes": [], "loss_per_day": {}, "dues_hours_per_tonne": {"cart": 3.0}}
+        with mock.patch.object(rules, "handling_money_per_tonne", lambda hours, wage, sea, port: {"cart": hours["cart"] * wage}):
             self.assertEqual(game.freight_handling_costs(), {"cart": 3.0 * LAND_WAGE})
 
     def test_stock_takes_its_own_route_and_goods_the_one_already_found(self):

@@ -7,7 +7,6 @@ which lowers the wood a run delivers (the yield factor) and so raises its cost. 
 back each year and drawn from the tile's stock (the resources module's `timber_felled`); the stock then regrows.
 """
 from sim.economy.api import SiteLimit
-from sim.geography.api import modes_carrying, carriage_rates, standing_timber_tonnes, timber_haul_km
 from sim.resources.api import FellTimber, RegrowTimber
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import demand
@@ -26,9 +25,9 @@ def timber_recipes(outputs_by_recipe):
     return found
 
 
-def haul_hours_per_tonne_km(world_map):
+def haul_hours_per_tonne_km(sim):
     """Crew hours to carry a tonne a kilometre over level ground, by the cheapest land mode that carries goods."""
-    rates = carriage_rates(sorted(modes_carrying("goods", world_map)), world_map)
+    rates = sim.mode_crews(sorted(sim.modes_carrying("goods")))
     land = [rate["crew_hours_per_tonne_km"] for rate in rates.values()
             if "land" in rate["edge_classes"] and not rate.get("needs_improvement")]
     return min(land) if land else 0.0
@@ -39,15 +38,15 @@ def limits(sim, outputs_by_recipe, tile_ids):
     recipes = timber_recipes(outputs_by_recipe)
     if not recipes:
         return []
-    world_map = sim.world_map
     felled = sim.timber_felled()
-    hours_per_tonne_km = haul_hours_per_tonne_km(world_map)
+    hours_per_tonne_km = haul_hours_per_tonne_km(sim)
     found = []
     for tile in sorted(tile_ids):
-        standing_kg = standing_timber_tonnes(felled, tile, world_map) * KILOGRAMS_PER_TONNE
+        timber = sim.timber_on_tile(felled, tile)
+        standing_kg = timber["standing_tonnes"] * KILOGRAMS_PER_TONNE
         if standing_kg <= 0.0:
             continue
-        haul_km = timber_haul_km(felled, tile, world_map)
+        haul_km = timber["haul_km"]
         for recipe_id, (kg_per_run, hours_per_run) in recipes.items():
             extra_hours = haul_km * hours_per_tonne_km * kg_per_run / KILOGRAMS_PER_TONNE
             factor = hours_per_run / (hours_per_run + extra_hours) if hours_per_run > 0.0 else 1.0

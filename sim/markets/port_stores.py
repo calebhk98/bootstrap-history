@@ -4,20 +4,20 @@ Part of the port with port_setup.py. Which good a resource yields is the catalog
 `mine_demand_goods`; a resource that names several goods, or counts in a unit other than kilograms,
 has no single good to hold and is reported as a gap rather than guessed.
 """
-from sim.geography.api import mine_demand_goods, mined_before
 from sim.resources.api import historical_rates
 
 
-def opening_store_values(world_map, tile_ids, start_year):
+def opening_store_values(sim, tile_ids, start_year):
     """{good: {"workings": [[kg a year, years worked, years since the last output], ...], "gap": reason or ""}}
     for the good each mined resource yields."""
     stores = {}
-    for resource_id, goods in sorted(mine_demand_goods(world_map).items()):
+    catalogue = sim.deposit_catalogue()
+    for resource_id, goods in sorted(catalogue["demand_goods"].items()):
         if len(goods) != 1:
             for good in goods:
                 stores[good] = {"workings": [], "gap": "%s yields several goods; none is chosen to hold its stock" % resource_id}
             continue
-        mined = mined_before(tile_ids, resource_id, start_year, world_map, historical_rates(world_map, resource_id))
+        mined = sim.deposits_worked_before(tile_ids, resource_id, start_year, historical_rates(catalogue["metals"], resource_id))
         workings = [[each["output_per_year"], each["years_worked"], each["years_since_last_output"]] for each in mined["workings"]]
         if mined["unit"] != "kg":
             workings, gap = [], "%s is counted in %s, not kilograms" % (resource_id, mined["unit"])

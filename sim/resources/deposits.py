@@ -10,7 +10,6 @@ in a year is a share of its size, or the rate the data say it was worked at when
 named on it already rate, so a working's output is bounded by its deposit and a worked-out deposit closes it."""
 from typing import Any, Dict, List, Optional, Tuple
 
-import sim.geography.api as geography
 from sim.agents.api import edges
 from sim.ledger.api import PayEdge
 from sim.refusal import Refusal
@@ -29,34 +28,32 @@ NO_DEPOSIT_TEXT = ("you know of no deposit of %s with room on the tiles you hold
 
 
 class Deposits:
-    """Needs: legacy_world_map, civilisation, year, start_year, labour_quote, weather_seed, purchase_budget, can_pay,
+    """Needs: deposit_catalogue, deposits_listed, deposits_worked_before, deposit_working_rate, prospect_finds, tile_endowment,
+    tiles_listed_by, civilisation, year, start_year, labour_quote, weather_seed, purchase_budget, can_pay,
     afford_means, money_text, mass_text, mine_trade. Sends PayEdge."""
 
     def mine_resource_id(self, material: str) -> Optional[str]:
         """The catalogue resource a mine of `material` raises (the material's short name or its `_kg` key), or None for a
         material no deposit data describes."""
-        world_map = self.needs.legacy_world_map()
-        ids = geography.resource_ids(world_map)
+        mechanisms = self.needs.deposit_catalogue()["mechanisms"]
         for name in (material, str(material)[:-3] if str(material).endswith("_kg") else None):
-            if name in ids and world_map.catalogue("resources")[name].get("mechanism") in DEPOSIT_MECHANISMS:
+            if name in mechanisms and mechanisms[name] in DEPOSIT_MECHANISMS:
                 return name
         return None
 
     def modelled_sizes(self, resource_id: str) -> Dict[str, float]:
         """{deposit id: tonnes} from the older deposit model's yearly output over a working life, for a metal."""
-        world_map = self.needs.legacy_world_map()
         sizes = self._modelled_sizes
         if resource_id not in sizes:
-            sizes[resource_id] = {} if resource_id not in deposit_model.metals(world_map) else {
+            sizes[resource_id] = {} if resource_id not in self.needs.deposit_catalogue()["metals"] else {
                 deposit.name: deposit.quantity_tonnes_per_year * deposit_model.DEPOSIT_ASSUMED_WORKING_LIFE_YEARS
                 for deposit in deposit_model.load_deposits(resource_id)}
         return sizes[resource_id]
 
     def worked_before_start(self, resource_id: str, tiles: Tuple[str, ...]) -> Dict[str, float]:
         """{deposit id: share of its endowment worked out before the game began}."""
-        world_map = self.needs.legacy_world_map()
-        mined = geography.mined_before(tiles, resource_id, int(self.needs.start_year()), world_map,
-                                       historical_rates(world_map, resource_id))
+        mined = self.needs.deposits_worked_before(tiles, resource_id, int(self.needs.start_year()),
+                                                  historical_rates(self.needs.deposit_catalogue()["metals"], resource_id))
         return {working["id"]: working["mined_share"] for working in mined["workings"]}
 
     def deposit_rows(self, resource_id: str, tiles: Tuple[str, ...], found: List[Dict[str, Any]], store_key: Any):
@@ -69,7 +66,7 @@ class Deposits:
             modelled = self.modelled_sizes(resource_id)
             before = self.worked_before_start(resource_id, tiles)
             rows = []
-            for row in geography.worked_deposits(tiles, resource_id, year, found, self.needs.legacy_world_map()):
+            for row in self.needs.deposits_listed(tiles, resource_id, year, found):
                 size = row["size_tonnes"] if row["size_tonnes"] is not None else modelled.get(row["id"])
                 if size is not None:
                     rows.append((row, size, before.get(row["id"], 0.0)))
@@ -78,15 +75,14 @@ class Deposits:
 
     def deposit_base(self, resource_id: str):
         """The deposits this seat can name: its held tiles, and what prospecting found."""
-        tiles = tuple(geography.tiles_held(self.needs.civilisation(), self.needs.legacy_world_map()))
+        tiles = tuple(self.needs.tiles_listed_by(self.needs.civilisation()))
         return self.deposit_rows(resource_id, tiles, self.seat.deposits_found, resource_id)
 
     def priced_rows(self, resource_id: str, base) -> List[Dict[str, Any]]:
-        world_map = self.needs.legacy_world_map()
         drawn = self.seat.deposit_drawn
-        history = historical_rates(world_map, resource_id)
+        history = historical_rates(self.needs.deposit_catalogue()["metals"], resource_id)
         return [rules.priced_row(row, size, before, drawn.get(row["id"], 0.0),
-                                 geography.working_rate_tonnes_per_year(size, world_map), history.get(row["id"], 0.0),
+                                 self.needs.deposit_working_rate(size), history.get(row["id"], 0.0),
                                  rules.capacity_naming(self.seat.mines or (), self.seat.mine_tranches or (), row["id"]))
                 for row, size, before in base]
 
@@ -108,8 +104,7 @@ class Deposits:
         resource_id = self.mine_resource_id(material)
         if resource_id is None:
             return []
-        world_map = self.needs.legacy_world_map()
-        held = set(geography.tiles_held(self.needs.civilisation(), world_map))
+        held = set(self.needs.tiles_listed_by(self.needs.civilisation()))
         tiles = tuple(sorted(set(tile_ids) - held))
         if not tiles:
             return []
@@ -150,8 +145,7 @@ class Deposits:
         if resource_id is None:
             return Refusal("no_deposit_data", "no deposit data describes %s; there is nothing to prospect for." % material,
                            material=material)
-        world_map = self.needs.legacy_world_map()
-        if tile_id not in geography.tiles_held(self.needs.civilisation(), world_map):
+        if tile_id not in self.needs.tiles_listed_by(self.needs.civilisation()):
             return Refusal("not_held", "prospect only on a tile your nation holds.", tile=tile_id)
         if person_days <= 0:
             return Refusal("no_effort", "say how many person-days to spend prospecting.")
@@ -167,7 +161,7 @@ class Deposits:
         key = "%s:%s" % (tile_id, resource_id)
         total = person_days + seat.prospected_person_days.get(key, 0.0)
         seat.prospected_person_days[key] = total
-        new = [dict(found) for found in geography.prospect(tile_id, resource_id, total, seed, world_map)
+        new = [dict(found) for found in self.needs.prospect_finds(tile_id, resource_id, total, seed)
                if found["id"] not in already]
         seat.deposits_found.extend(new)
         if not new:
@@ -187,9 +181,8 @@ class Deposits:
         room = self.mine_room_in_deposits(material)
         if resource_id is None or room is None or room > 0.0:
             return False
-        world_map = self.needs.legacy_world_map()
-        tiles = geography.tiles_held(self.needs.civilisation(), world_map)
+        tiles = self.needs.tiles_listed_by(self.needs.civilisation())
         if not tiles:
             return False
-        best = max(sorted(tiles), key=lambda tile: geography.endowment(tile, resource_id, world_map)["undiscovered_expected"])
+        best = max(sorted(tiles), key=lambda tile: self.needs.tile_endowment(tile, resource_id)["undiscovered_expected"])
         return not isinstance(self.prospect(Prospect(best, material, AUTO_PROSPECT_PERSON_DAYS)), Refusal)

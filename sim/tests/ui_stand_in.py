@@ -93,7 +93,7 @@ FACT_OF_VIEW = {
     "cast": "actors", "demographic_flows": "_last_demographic_step", "event_log": "log",
     "hours_per_person_year": "HOURS_PER_PERSON_YEAR", "last_start": "materials_paid_at_last_start",
     "legacy_economy": "economy", "legacy_labour": "labour",
-    "legacy_geography": "geography", "legacy_world_map": "world_map", "material_checks": "MATERIAL_CHECKS",
+    "legacy_geography": "geography", "material_checks": "MATERIAL_CHECKS",
     "mine_works_materials": "MINE_OPEX_MATERIALS", "staff_capacity_sources": "STAFF_CAPACITY_SOURCES",
     "techniques_forgotten": "forgotten",
 }

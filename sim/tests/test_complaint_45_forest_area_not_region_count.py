@@ -7,10 +7,18 @@ import unittest
 
 from sim.engine.data import load_civ
 from sim.resources import constants as resource_constants
-from sim.resources.ceilings import forest_ceiling_hectares, held_land_area_km2, revenue_scale_multiple
+from sim.resources.ceilings import forest_ceiling_hectares, revenue_scale_multiple
 from sim.geography.api import layer_value, open_map
+from sim.tests import land_host
 
 WORLD_MAP = open_map()
+
+
+def held_land_area_km2(civilisation, world_map):
+    """The land area the land module gives the tiles the civilisation holds on the map."""
+    module = land_host.build(civilisation)
+    module._map_cache = world_map
+    return module.land_area_of(module.tiles_listed_by(civilisation))
 REACH = 0.6
 BASE = resource_constants.FOREST_HA_PER_MILLION_KM2_BASE
 PER_CAPACITY = resource_constants.FOREST_HA_PER_MILLION_KM2_PER_SC

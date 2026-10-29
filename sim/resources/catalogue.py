@@ -1,8 +1,7 @@
-"""What the map's catalogue says about workings: which materials are priced from their deposits' works, and what a mine
-of one supplies. Both are kept per map."""
+"""Which materials the base map's catalogue prices from their deposits' works, kept per map."""
 import functools
 
-from sim.geography.api import mine_demand_goods, works_priced_from_deposits
+from sim.geography.api import works_priced_from_deposits
 
 from . import rules
 
@@ -11,11 +10,6 @@ from . import rules
 def works_priced_materials(world_map):
     """Materials whose mine running cost comes from the deposits' physical works, from the map's catalogue."""
     return works_priced_from_deposits(world_map)
-
-
-@functools.lru_cache(maxsize=None)
-def demand_goods_by_material(world_map):
-    return mine_demand_goods(world_map)
 
 
 def base_mine_catalog_hint():

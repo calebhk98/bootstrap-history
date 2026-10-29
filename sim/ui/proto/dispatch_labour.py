@@ -552,7 +552,7 @@ def _cmd_move_base(sim, nodes, cmd, ended):
                    "people": round(people[tile]),
                    "days_on_the_road": round(days), "your_hours_lost": round(hours),
                    "wages_paid_on_the_way": round(money)}
-            named = tile_names.places_on(sim.view("legacy_world_map")(), tile)
+            named = sim.view("tile_places")(tile)
             if named:
                 row["places"] = named
             rows.append(row)

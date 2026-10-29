@@ -73,7 +73,7 @@ class Accounting(unittest.TestCase):
 class Timber(unittest.TestCase):
     def test_felling_takes_each_cut_off_its_tile_and_regrowth_restores_the_stock(self):
         module = resources_stand_in.build(world=ResourcesWorld())
-        world_map = module.needs.legacy_world_map()
+        world_map = geography.open_map()
         tile = max(geography.tile_ids(world_map), key=lambda each: forest_timber.full_tonnes(world_map, each))
         full = forest_timber.full_tonnes(world_map, tile)
         module.fell_timber(FellTimber(((tile, full / 8.0), (tile, full / 8.0))))

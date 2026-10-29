@@ -5,9 +5,8 @@ Mode costs come from the physical models (`sim/geography/transport.py` for cart,
 with the empty return where flows are one-sided (`sim/geography/freight_cost.py`)."""
 import functools
 
-from sim.geography.api import droving_carrier, dues_hours_per_tonne, freight_cost, modes_carrying, sea_freight, train_carrier
+from sim.geography.api import freight_cost, sea_freight
 from sim.geography.api import transport as freight_physics
-from sim.geography.api import walking_cargo_modes
 
 from . import rules
 from .constants import (CANAL_MODE, CARAVAN_STRING_SIZE, FREIGHT_DRIVER_WAGE_TRADE, FREIGHT_FEED_PRICE_MATERIAL,
@@ -38,11 +37,11 @@ def _land_freight_inputs(team_size):
 
 
 class Models:
-    """Needs: legacy_world_map, wage, material_price, material_prices, market_rate."""
+    """Needs: mode_carrier, carriage_facts, modes_carrying, wage, material_price, material_prices, market_rate."""
 
     def train_carrier(self):
         """Geography's train as a freight carrier ({inputs, fuel_material, stock_material, stock_kg})."""
-        return train_carrier(RAIL_MODE, self.needs.legacy_world_map())
+        return self.needs.mode_carrier(RAIL_MODE)["train"]
 
     def carrier_feed_material(self, mode):
         """The material whose price a mode's feed (or fuel) is counted at: coal for a train, the draught animals'
@@ -58,9 +57,9 @@ class Models:
     def carrier_models(self):
         """{mode: (physical inputs, carrier prices, working days a year, hull loss per 1000 km)}: the carrier unit
         each mode's inputs describe, priced from this society's prices. Kept while the price table, the sea crew's
-        wage, the map and the team size are the same."""
+        wage and the team size are the same."""
         prices = self.needs.material_prices()
-        key = (self.needs.wage[SEA_CREW_WAGE_TRADE], self.needs.legacy_world_map(), LAND_FREIGHT_TEAM_SIZE)
+        key = (self.needs.wage[SEA_CREW_WAGE_TRADE], LAND_FREIGHT_TEAM_SIZE)
         cached = self._models_cache
         if cached is not None and cached[0] is prices and cached[1] == key:
             return cached[2]
@@ -80,11 +79,10 @@ class Models:
         hull_kg = hull_inputs.cargo_tonnes * sea_freight.HULL_TIMBER_KG_PER_CARGO_TONNE
         train = self.train_carrier()
         stock_price = self.needs.material_price[train["stock_material"]] or 0.0
-        world_map = self.needs.legacy_world_map()
         river_boat = (_river_inputs(), freight_cost.CarrierPrices(freight_physics.BARGE.self_mass_kg * vehicle_wood,
                                                                    2.0 * ox_price), land_days, 0.0)
-        walking = {mode: (droving_carrier(mode, world_map)["inputs"], freight_cost.CarrierPrices(0.0), land_days, 0.0)
-                   for mode in walking_cargo_modes(world_map)}
+        walking = {mode: (self.needs.mode_carrier(mode)["droving"]["inputs"], freight_cost.CarrierPrices(0.0), land_days, 0.0)
+                   for mode in self.needs.carriage_facts()["walking_modes"]}
         return {
             **walking,
             "cart": (_land_freight_inputs(int(LAND_FREIGHT_TEAM_SIZE)),
@@ -110,9 +108,8 @@ class Models:
         land_wage = self.needs.wage[FREIGHT_DRIVER_WAGE_TRADE]
         sea_wage = self.needs.wage[SEA_CREW_WAGE_TRADE]
         rate = self.needs.market_rate()
-        world_map = self.needs.legacy_world_map()
-        walking = frozenset(walking_cargo_modes(world_map))
-        carrying = frozenset(modes_carrying(cargo, world_map)) if cargo else frozenset()
+        walking = frozenset(self.needs.carriage_facts()["walking_modes"])
+        carrying = frozenset(self.needs.modes_carrying(cargo)) if cargo else frozenset()
         feed_prices = {}
 
         def feed_price(mode):
@@ -130,5 +127,5 @@ class Models:
         """{mode: home money per tonne} charged once per leg of that mode: port handling at sea, and the tolls or port
         dues the geography states for each mode (paid at the carrier's wage)."""
         wage = self.needs.wage[FREIGHT_DRIVER_WAGE_TRADE]
-        return rules.handling_money_per_tonne(dues_hours_per_tonne(self.needs.legacy_world_map()), wage, SEA_MODE,
+        return rules.handling_money_per_tonne(self.needs.carriage_facts()["dues_hours_per_tonne"], wage, SEA_MODE,
                                               sea_freight.PORT_HANDLING_HOURS_PER_TONNE)
