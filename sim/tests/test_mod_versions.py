@@ -7,7 +7,7 @@ import subprocess
 import sys
 import unittest
 
-from sim.engine.mods import ModError
+from sim.content.api import ModError
 from sim.game_version import GAME_VERSION, parse_version, satisfies
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 

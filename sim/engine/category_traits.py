@@ -9,8 +9,8 @@ import json
 import os
 from typing import Any, Dict, Iterable, List, Mapping, Tuple
 
-from .mods import get_ordered_mods
-from .mods_base import deep_merge
+from sim.content.api import get_ordered_mods
+from sim.content.api import deep_merge
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BASE_FILE = os.path.join(ROOT, "data", "world", "category_traits.json")

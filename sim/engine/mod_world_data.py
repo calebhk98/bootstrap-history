@@ -3,8 +3,8 @@ import json
 import os
 from typing import Any, Dict
 
-from .mods import get_ordered_mods
-from .mods_world import merge_mod_map
+from sim.content.api import get_ordered_mods
+from sim.content.api import merge_mod_map
 
 KITS_PATH = "world/starting_kits.json"
 LABELS_PATH = "ui/win_condition_labels.json"

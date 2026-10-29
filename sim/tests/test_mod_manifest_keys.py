@@ -5,8 +5,8 @@ QUICK_TOPIC = True
 import json
 import unittest
 
-from sim.engine.mods import ModError
-from sim.engine.mods_base import MANIFEST_KEYS
+from sim.content.api import ModError
+from sim.content.api import MANIFEST_KEYS
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 
 

@@ -8,8 +8,9 @@ QUICK_TOPIC = True
 import json
 import unittest
 
-from sim.engine import mod_code, mod_stores
-from sim.engine.mods import ModError
+from sim.content import api as content
+from sim.engine import mod_code
+from sim.content.api import ModError
 from sim.engine.mod_effects import ModEffects
 from sim.stores.api import StoreSpec, declare_all
 from sim.tests.store_stand_in import StoreHost
@@ -88,14 +89,14 @@ class StoreRules(StoreTestBase):
         self.write_data(ACME, "data/stores.json", MANA)
         self.write_data(BETA, "data/stores.json", {"stores": {ACME + ":mana": MANA["stores"][ACME + ":mana"]}})
         with self.assertRaises(ModError):
-            declare_all([mod_stores.data_declarations(str(self.mods_dir))])
+            declare_all([content.data_store_declarations(str(self.mods_dir))])
 
     def test_duplicate_between_code_and_data_is_a_load_error(self):
         self.add_mod(ACME)
         self.write_data(ACME, "data/stores.json", MANA)
         from_code, _handle = declared_by_the_mod_door(ACME, "mana", default=1.0)
         with self.assertRaises(ModError):
-            declare_all([mod_stores.data_declarations(str(self.mods_dir)), from_code])
+            declare_all([content.data_store_declarations(str(self.mods_dir)), from_code])
 
     def test_the_same_declaration_twice_is_one_store(self):
         spec = StoreSpec(ACME + ":mana", ACME, "tile", 0.0, "mana")
@@ -105,7 +106,7 @@ class StoreRules(StoreTestBase):
         self.add_mod(ACME)
         self.write_data(ACME, "data/stores.json", {"stores": {"mana": {"keyed_by": "tile", "default": 0, "unit": ""}}})
         with self.assertRaises(ModError):
-            mod_stores.data_declarations(str(self.mods_dir))
+            content.data_store_declarations(str(self.mods_dir))
 
     def test_a_store_keyed_by_nothing_known_is_refused_where_the_mod_declares_it(self):
         with self.assertRaises(ModError):
@@ -114,11 +115,11 @@ class StoreRules(StoreTestBase):
     def test_the_data_declarations_come_in_mod_load_order_with_their_owner(self):
         self.add_mod(ACME)
         self.write_data(ACME, "data/stores.json", MANA)
-        (spec,) = mod_stores.data_declarations(str(self.mods_dir))
+        (spec,) = content.data_store_declarations(str(self.mods_dir))
         self.assertEqual((spec.name, spec.owner, spec.keyed_by), (ACME + ":mana", ACME, "tile"))
 
     def test_the_base_game_declares_control_as_a_tile_store_with_no_owning_mod(self):
-        declared = {spec.name: spec for spec in mod_stores.base_declarations()}
+        declared = {spec.name: spec for spec in content.base_store_declarations()}
         self.assertEqual((declared["control"].owner, declared["control"].keyed_by), ("", "tile"))
 
 

@@ -11,7 +11,7 @@ import os
 import re
 
 from sim.engine.catalog import load_production_catalog, load_trade_registry, material_namespace
-from sim.engine.node_defaults import NUMERIC_FIELDS, OPTIONAL_DEFAULTS, STATED_NUMERIC_FIELDS
+from sim.content.api import NUMERIC_FIELDS, OPTIONAL_DEFAULTS, STATED_NUMERIC_FIELDS
 from sim.engine.tree_source import (META_FILE, MERGED_DUPLICATE_IDS_FILE, NO_MODS_DIRECTORY,
                                     ROOT)
 

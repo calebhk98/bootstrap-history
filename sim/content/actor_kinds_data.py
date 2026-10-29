@@ -1,13 +1,16 @@
 """Actor kinds mods declare in data/world/actor_kinds.json (a mod's code adds kinds through `api.actor_kind`)."""
+import os
 from typing import Any, Dict
 
 from sim.agents.api import declared_kind_classes
+from sim.default_civilisation import REPOSITORY_ROOT as ROOT
 
-from .data import MODDIR, ROOT
 from .mods import get_ordered_mods
 from .mods_base import ModError
 from .mods_world import merge_mod_map
 from .need_data import load_needs
+
+MODDIR = os.path.join(ROOT, "mods")
 
 KINDS_PATH = "world/actor_kinds.json"
 RATES = ("birth_rate", "death_rate", "famine_death_rate")

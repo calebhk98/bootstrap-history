@@ -5,7 +5,7 @@ import unittest
 
 from sim.engine import validate_ore_reach
 from sim.engine.civ_start_check import load_civilisations
-from sim.engine.need_data import load_needs
+from sim.content.api import load_needs
 from sim.engine.catalog import load_production_catalog
 from sim.engine.data import MODDIR, ROOT
 from sim.geography import api as geography

@@ -7,7 +7,7 @@ import json
 import unittest
 
 from sim.engine import mod_code, year_phases
-from sim.engine.mods import ModError
+from sim.content.api import ModError
 from sim.engine.year_phases import SEAT, SHIPPED, WORLD
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 

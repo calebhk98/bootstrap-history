@@ -1,7 +1,8 @@
 """`mod-allow`, and the mod findings `validate` reports (code mods, command declarations)."""
 from sim import constants
 from sim.engine import ui_port
-from sim.engine.ui_port import MODDIR, code_report, constant_overrides, get_ordered_mods
+from sim.content.api import constant_overrides, get_ordered_mods
+from sim.engine.ui_port import MODDIR, code_report
 
 
 def cmd_mod_allow(args):

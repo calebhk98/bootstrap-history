@@ -8,11 +8,11 @@ import unittest.mock
 
 from sim.engine.data import ROOT, STARTING_KITS, WIN_CONDITION_LABELS
 from sim.engine.mod_world_data import load_starting_kits, load_win_condition_labels
-from sim.engine.mods import ModError
-from sim.engine.mods_civ import apply_mod_civilization
-from sim.engine.mods_strategies import mod_strategy_names, mod_strategy_path
-from sim.engine.mods_constants import apply_override, constant_overrides
-from sim.engine.mods_world import merge_mod_list, merge_mod_map
+from sim.content.api import ModError
+from sim.content.api import apply_mod_civilization
+from sim.content.api import mod_strategy_names, mod_strategy_path
+from sim.content.api import apply_override, constant_overrides
+from sim.content.api import merge_mod_list, merge_mod_map
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 
 ACME = "test_acme_k3f9"

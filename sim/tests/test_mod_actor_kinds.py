@@ -8,9 +8,9 @@ import unittest
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, declared_kind_classes, shipped_extensions
 from sim.agents.declared_kind import DeclaredKind
 from sim.engine import mod_code
-from sim.engine.actor_kinds_data import load_kind_declarations
+from sim.content.api import load_kind_declarations
 from sim.engine.data import ROOT
-from sim.engine.mods import ModError
+from sim.content.api import ModError
 from sim.tests.agents_fake_world import FakeWorld
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 

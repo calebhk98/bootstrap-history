@@ -66,10 +66,10 @@ class OrnamentSaturationTest(unittest.TestCase):
     def test_shipped_households_buy_a_plausible_mass_of_bright_metal(self):
         # Validation only: a few grams a head a year is the order a durable ornament stock wears and
         # is lost at; thousands of tonnes for a first-century empire is not.
-        from sim.engine import need_data
+        from sim.content import api as content
         from sim.engine.data import ROOT, calculated_goods_prices, load_civ, starting_schedule
         from sim.markets import household_needs
-        model, final_goods = household_needs.household_model((), lambda: need_data.load_needs(ROOT))
+        model, final_goods = household_needs.household_model((), lambda: content.load_needs(ROOT))
         for civilization_id in ("rome_100ad", "han_china_100ad"):
             civilization = load_civ(civilization_id)
             per_hour = starting_schedule(civilization_id).money_per_labour_hour

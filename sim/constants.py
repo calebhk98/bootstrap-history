@@ -225,7 +225,7 @@ def declare(name, value, kind, unit, why, source=None, confidence="C", retire=No
 
 def _mod_override(name, declared):
     """The installed mod's override of this number (data/constants.json of a mod), or None."""
-    from sim.engine.mods_constants import apply_override
+    from sim.content.mods_constants import apply_override  # not the api: the api imports packages that declare constants
     return apply_override(name, declared)
 
 

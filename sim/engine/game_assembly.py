@@ -8,9 +8,10 @@ import pkgutil
 from typing import Any, Dict, List, Optional
 
 from sim.assembly import api as assembly_api
+from sim.content.api import OpenContent
 
-from .mods import get_ordered_mods
-from .mods_base import ancestors
+from sim.content.api import get_ordered_mods
+from sim.content.api import ancestors
 
 DISCOVERS = "sim.*.module_spec"   # imported by name below; the spin-up cache's source closure follows it (source_closure.py)
 _SIM_DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -43,6 +44,8 @@ def build(mods_dir: Optional[str], debug: bool) -> assembly_api.Assembly:
 	                                 guard_reads=debug and os.environ.get(GUARD_READS_SWITCH) == "1")
 	from .year_phases import ordered_phases
 	ordered_phases(assembly.applied.phases)   # a mod phase that cannot be placed is an error of this game
+	if mods_dir:
+		assembly.handlers[OpenContent](OpenContent(mods_dir))   # the content module answers over this game's mods
 	return assembly
 
 

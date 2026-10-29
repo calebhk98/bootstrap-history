@@ -16,8 +16,8 @@ from sim.land.api import TransferTile
 from sim.ledger.api import PayActor, PayActorFromEdge, PayEdgeFrom
 from sim.stores.api import WriteStore
 
-from .mods_base import ModError
-from .mods_ids import SEPARATOR
+from sim.content.api import ModError
+from sim.content.api import SEPARATOR
 
 KNOWN_EDGES = frozenset(value for name, value in vars(edge_names).items() if name.startswith("EDGE_") and isinstance(value, str)) \
     | {economy_api.EDGE_PRODUCTION, economy_api.EDGE_CONSUMPTION, economy_api.EDGE_WEAR, economy_api.EDGE_EXTERNAL}

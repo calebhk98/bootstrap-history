@@ -12,10 +12,10 @@ import os
 from typing import Any, Dict, Iterable, Mapping, Optional, Set, Tuple
 
 from .tree_source import load_base_tree
-from .mods import ModError, ModManifest, get_ordered_mods, load_mod_production, load_mod_tree
-from .mods_ids import check_new_id, is_mod_content
-from .mods_base import check_not_removed, claim_fields, claim_removal, deep_merge
-from .mods_remove import RECIPE, TRADE, check_trade_references, scan_removed
+from sim.content.api import ModError, ModManifest, get_ordered_mods, load_mod_production, load_mod_tree
+from sim.content.api import check_new_id, is_mod_content
+from sim.content.api import check_not_removed, claim_fields, claim_removal, deep_merge
+from sim.content.api import RECIPE, TRADE, check_trade_references, scan_removed
 
 
 @dataclass(frozen=True)

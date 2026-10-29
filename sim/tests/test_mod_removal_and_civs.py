@@ -12,7 +12,7 @@ import unittest
 from sim.engine import data
 from sim.engine.catalog import (load_production_catalog, load_trade_registry,
                                 validate_mod_material_paths)
-from sim.engine.mods import ModError, get_ordered_mods, load_mod_production, load_mod_tree
+from sim.content.api import ModError, get_ordered_mods, load_mod_production, load_mod_tree
 
 
 def node(node_id, pre=(), **extra):

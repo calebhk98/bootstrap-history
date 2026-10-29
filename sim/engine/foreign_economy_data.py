@@ -4,8 +4,8 @@ import json
 import os
 
 from .data import MODDIR, ROOT
-from .mods import get_ordered_mods
-from .mods_world import merge_mod_list
+from sim.content.api import get_ordered_mods
+from sim.content.api import merge_mod_list
 
 FOREIGN_ECONOMIES_PATH = os.path.join(ROOT, "data", "world", "foreign_economies.json")
 _RELATIVE = "world/foreign_economies.json"

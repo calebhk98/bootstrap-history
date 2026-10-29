@@ -13,9 +13,9 @@ from typing import Any, Dict, List, NamedTuple, Optional
 
 from sim.json_files import read_json
 
-from .mods import get_ordered_mods
-from .mods_base import ModError, claim_fields
-from .mods_ids import check_new_id
+from sim.content.api import get_ordered_mods
+from sim.content.api import ModError, claim_fields
+from sim.content.api import check_new_id
 from .tree_source import ROOT
 from .ui_data import check_state_path
 

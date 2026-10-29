@@ -386,7 +386,7 @@ def _data_source_errors(nodes):
 def _dead_end_lines(nodes, production):
     """Complaints/533: produced goods nothing consumes (findings, not errors)."""
     from sim.engine import validate_dead_ends
-    from sim.engine.need_data import load_needs
+    from sim.content.api import load_needs
     from sim.engine.catalog import _trade_fields, load_trade_registry
     from sim.json_files import read_json
     lives = read_json(os.path.join(ROOT, "data", "world", "service_lives.json")).get("years", {})
@@ -488,7 +488,7 @@ def _validate_civilisation_starts(nodes, production):
 def _validate_ore_reach(civilisations, production):
     """Complaints/516: metals a civilisation demands that no deposit within its reach supplies."""
     from sim.engine import validate_ore_reach
-    from sim.engine.need_data import load_needs
+    from sim.content.api import load_needs
     errors, warnings = validate_ore_reach.ore_reach_findings(
         civilisations, production, load_needs(ROOT, MODDIR)["goods"])
     for message in warnings:
@@ -500,7 +500,7 @@ def _validate_basket_supply(civ_start_check, civilisations, production):
     """Complaints/391: goods households buy that no technique held at the start or partner supplies."""
     import json
     from sim.engine import civ_basket_check
-    from sim.engine.need_data import load_needs
+    from sim.content.api import load_needs
     from sim.engine.ui_port import foreign_economy_document
     economies = foreign_economy_document()["economies"]
     errors, warnings = civ_basket_check.basket_supply_findings(

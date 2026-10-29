@@ -1,7 +1,7 @@
 """The standing policy a new seat starts with: which automatic behaviours are on."""
 from typing import Any, Dict
 
-from .mods_base import ModError
+from sim.content.api import ModError
 from .ui_commands import policy_defaults
 
 
