@@ -429,7 +429,8 @@ class WorkforceWorld:
         return self._needs.shared_answer(key, inputs, compute, standalone)
 
     def stopped_yearly_value(self, node_ids):
-        return self._needs.concern_rows_stopped(node_ids)
+        rows = self._needs.concern_market()
+        return sum(rows.get(node_id, 0.0) for node_id in node_ids)
 
     def staff_closure_age(self, node_id):
         return self._needs.staff_closure_age[node_id]

@@ -7,12 +7,6 @@ from sim.ventures.needed_commands import BumpInstitutionUnitsVersion
 from .bridge import bridge_command, bridge_view
 
 
-@bridge_view("unskilled_trade")
-def unskilled_trade(sim):
-    """The registry's flagged fallback trade: the one anyone can take up at once."""
-    return sim.labour.unskilled_trade()
-
-
 @bridge_command(BumpInstitutionUnitsVersion)
 def bump_institution_units_version(sim, command):
     sim.household.bump_institution_units_version()

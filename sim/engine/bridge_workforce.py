@@ -47,12 +47,6 @@ def wage_schedule_for(sim, civ, tightness_factors=None):
     return wage_schedule.build_schedule(data.TRADE_REGISTRY, civ, tightness_factors=tightness_factors)
 
 
-@bridge_view("opening_wage_index")
-def opening_wage_index(sim):
-    """The wage index of the civilisation's opening year, which the index is measured against."""
-    return sim._wage_index_base
-
-
 @bridge_view("provider_game")
 def provider_game(sim):
     """The game itself, for the functions a mod provides to the town and director-overhead points of the workforce module and to
@@ -92,13 +86,6 @@ def harvest_share_taken(sim, material):
     if sim.view("cast")().government_of(None) is None:
         return 0.0
     return tax_burden.harvest_share_taken(sim.view("actor_world")(), material)
-
-
-@bridge_view("concern_rows_stopped", kind=QUOTE)
-def concern_rows_stopped(sim, node_ids):
-    """The yearly value of the concerns among `node_ids` that stand stopped."""
-    rows = sim.view("concern_market")()
-    return sum(rows.get(node_id, 0.0) for node_id in node_ids)
 
 
 @bridge_view("shared_answer", kind=QUOTE)
