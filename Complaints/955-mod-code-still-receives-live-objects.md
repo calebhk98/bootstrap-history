@@ -18,8 +18,9 @@ unchecked door:
   functions. They declare their reads at the call, so they are checked, but through a second mechanism.
 - Command handlers are still called `(access, nodes, cmd, ended)`: `nodes` is the tech tree's node table the UI passes.
 
-Found on the way and fixed: the workforce module sent `NoteSpend` (in `Labour.move_base`) without declaring it, so `move_base` and the
-Towns mod's `go` raised `AssemblyError` in any built game; the spec now lists it. No test reached `move_base` in a built game
-before `test_towns_mod_smoke`.
+Found on the way and fixed: the workforce module sent `NoteSpend` (in `Labour.move_base`) and its own `BuildHousing` (in
+`Labour.buy_room_for`) without declaring them, so `move_base`, the Towns mod's `go` and every housing purchase raised
+`AssemblyError` in any built game; the spec now lists both (`test_workforce_own_command_smoke`). A scan of every module's package for
+`send(<Command>` against its spec's `sends` finds no other gap; it is not kept as a check.
 
 Check: `bash tools/done_check.sh` (mods importing `sim.engine` outside mod_code; mods importing `sim` beyond `sim.mod_api`).

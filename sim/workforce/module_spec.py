@@ -170,6 +170,6 @@ MODULE_SPECS = (ModuleSpec(
         ExtensionPoint("director_overhead", LIST),         # () -> hours a year already spoken for; the answers are added, each at least zero
     ),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(PayEdge, NoteSpend, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, DiscardEventsAfter, AddReputation, ScaleFamiliarity, ScaleProtection,
+    sends=(BuildHousing, PayEdge, NoteSpend, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, DiscardEventsAfter, AddReputation, ScaleFamiliarity, ScaleProtection,
            SetClearedFarmland, SetFarmHoursNeeded, SetFarmLand, SetFarmTechnique, RememberGoalClosure, RestorePurse),
 ),)
