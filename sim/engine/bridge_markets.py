@@ -45,20 +45,6 @@ def calculated_goods_prices(sim, held, farmed_hectares):
     return in_hours
 
 
-# ---- workforce: facts of the labour package no workforce view answers yet ----
-
-@bridge_view("settlement_tiles")
-def settlement_tiles(sim):
-    """{tile id: people living there} for the tiles the nation holds."""
-    return sim.labour.settlement_tiles()
-
-
-@bridge_view("labour_need_shares")
-def labour_need_shares(sim):
-    """{trade: share of the hours the society's needs ask of it}."""
-    return sim.labour.need_shares()
-
-
 # ---- the need data and the relations store ----
 
 @bridge_view("material_serves_a_need", kind=KEYED)

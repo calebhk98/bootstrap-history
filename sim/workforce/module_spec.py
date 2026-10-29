@@ -23,7 +23,7 @@ from .state import STAFF, WorkforceSeat, WorkforceSociety
 from .module import Workforce
 
 READS_BY_OWNER = {
-    "core": ("year", "automation", "civilisation", "game_config", "opening_wage_index", "provider_game",
+    "core": ("year", "automation", "civilisation", "game_config", "provider_game",
              "projects_operating", "starting_wages", "trades_absent", "trade_notes", "trade_records", "trade_family",
              "wage_schedule_for", "plain_number", "money_text"),
     "seats": ("founder", "acting_country", "seat_list", "game_random", "acting_as", "goal", "goal_closure"),
@@ -37,13 +37,12 @@ READS_BY_OWNER = {
     "mechanics": ("mechanic", "effect_factor", "effect_holds", "effect_sum", "effect_terms", "effect_value",
                   "labour_productivity_sources", "room_sources", "staff_capacity_sources", "running_mechanics"),
     "diffusion": ("literacy", "research_productivity", "staff_hire_advice", "staff_sources"),
-    "production": ("running", "institution_units", "upkeep", "revenue_estimate", "is_venture"),
+    "production": ("concern_market", "running", "institution_units", "upkeep", "revenue_estimate", "is_venture"),
     "projects": ("active_projects", "project_order", "keep_staffed", "staffing_closed_hand_shortfall", "start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
                  "staffing_draw", "staffing_held_totals", "staffing_shortfalls", "concerns_to_close_for_staffing",
                  "venture_foreman", "venture_foremen_used", "venture_staff_free", "shared_answer"),
     "materials": ("material_price_factor",),
-    "finance": ("debt_status", "mine_operating_cost", "credit_limit", "living_cost", "held_trade", "spending_power", "can_pay", "purchase_refusal", "price_index", "home_price_level",
-                "concern_rows_stopped"),
+    "finance": ("debt_status", "mine_operating_cost", "credit_limit", "living_cost", "held_trade", "spending_power", "can_pay", "purchase_refusal", "price_index", "home_price_level"),
     "actors": ("actor_staff", "actor_staff_nationwide", "actor_staff_total", "teaching_knowledge", "harvest_share_taken",
                "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country",
                "agent_unskilled_wage"),
@@ -57,6 +56,11 @@ MODULE_SPECS = (ModuleSpec(
     publishes=(
         ViewSpec("staff", "staff", **_SEAT),
         ViewSpec("staff_version", "staff_version", **_SEAT),
+        ViewSpec("wage_bill", "wage_bill", **_SEAT),
+        ViewSpec("unskilled_trade", "unskilled_trade", **_LIVE),
+        ViewSpec("settlement_tiles", "settlement_tiles", **_LIVE),
+        ViewSpec("labour_need_shares", "labour_need_shares", **_LIVE),
+        ViewSpec("opening_wage_index", "opening_wage_index", **_LIVE),
         ViewSpec("staff_on_all_books", "staff_on_all_books", kind=KEYED, **_LIVE),
         ViewSpec("training_queue", "training_queue", **_SEAT),
         ViewSpec("hour_commitments", "hour_commitments", **_SEAT),

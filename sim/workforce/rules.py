@@ -67,3 +67,8 @@ def people_to_buy(capital, base_price, artisans, capital_floor_in_prices, capita
 def people_to_free(slaves, share_divisor):
 	"""How many of the slaves held the standing policy frees when it fires: a share of them, at least one."""
 	return max(1, slaves // share_divisor)
+
+
+def opening_wage_index(civilisation):
+	"""The wage index the civilisation opens on (the index is measured against it); one when the file names none."""
+	return float(civilisation.get("wage_index", 1.0))

@@ -35,11 +35,6 @@ def agent_economy(sim):
 
 # ---- production and workforce ----
 
-@bridge_view("wage_bill", seat_scoped=True)
-def wage_bill(sim):
-	return sim.labour.wage_bill()
-
-
 @bridge_view("cash_remedies", seat_scoped=True)
 def remedies(sim):
 	"""Lines naming the commands that raise cash or cut costs, largest amount first."""
