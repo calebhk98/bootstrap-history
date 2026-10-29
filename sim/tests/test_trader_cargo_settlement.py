@@ -44,7 +44,7 @@ class Recording(ForeignTrade):
 def trade_module(trader_in_cast=True):
     answers = {} if trader_in_cast else {NoteTraderMargin: Refusal("no_such_actor", "none")}
     return module_harness.build(Recording, world=ForeignTradeWorld(), answers=answers, views={
-        "legacy_agent_economy": {}, "home_unit_price": lambda material: 2.0,
+        "home_unit_price": lambda material: 2.0,
         "civilisation_record": lambda partner: {"coin_standard": {"material": "silver_kg", "kg_per_unit": 1.0}}})
 
 

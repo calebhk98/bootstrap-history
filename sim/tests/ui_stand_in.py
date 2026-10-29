@@ -124,7 +124,7 @@ METHOD_OF_COMMAND = {
 # views that are one fact of the game held under the name the game once used for it
 ATTRIBUTE_OF_VIEW = {
     "acting_balance": "capital", "techniques_held": "done", "techniques_granted": "granted", "active_projects": "active",
-    "legacy_fog": "fog", "tree_nodes": "nodes", "game_config": "cfg", "civilisation": "civ", "legacy_order": "order",
+    "legacy_fog": "fog", "tree_nodes": "nodes", "game_config": "cfg", "civilisation": "civ",
     "legacy_fuzzy_estimates": "fuzzy_estimates", "techniques_revealed": "revealed", "techniques_forgotten": "forgotten",
     "horizon_end_year": "end_year", "acting_seat": "acting_seat",
 }
@@ -178,6 +178,8 @@ class FactViews:
     """`view` and `send` over an object that holds the facts as attributes."""
 
     def view(self, name):
+        if name == "project_order" and hasattr(self, "order"):
+            return _Answer(lambda: tuple(self.order))
         if name == "year" and not hasattr(self, "year") and hasattr(self, "state"):
             return _Answer(lambda: self.state.scenario.year)
         if name in STATE_OF_VIEW and not hasattr(self, ATTRIBUTE_OF_VIEW.get(name, name)) and hasattr(self, "state"):
@@ -229,6 +231,11 @@ class FactViews:
         raise KeyError("the stand-in game was given no view %r (nor an attribute of that name)" % name)
 
     def send(self, command):
+        if type(command).__name__ in ("ReorderProjects", "RestoreProjectOrder") and hasattr(self, "order"):
+            from sim.projects import order_rules
+            self.order[:] = (order_rules.place_sequence(self.order, self.view("active_projects")(), command.node_ids)
+                             if hasattr(command, "node_ids") else command.order)
+            return None
         labour = self.__dict__.get("labour")
         method = LABOUR_METHOD_OF_COMMAND.get(type(command).__name__)
         if labour is not None and method is not None and hasattr(labour, method):

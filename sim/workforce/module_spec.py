@@ -23,7 +23,7 @@ from .state import STAFF, WorkforceSeat, WorkforceSociety
 from .module import Workforce
 
 READS_BY_OWNER = {
-    "core": ("year", "automation", "civilisation", "game_config", "opening_wage_index", "legacy_order", "provider_game",
+    "core": ("year", "automation", "civilisation", "game_config", "opening_wage_index", "provider_game",
              "projects_operating", "starting_wages", "trades_absent", "trade_notes", "trade_records", "trade_family",
              "wage_schedule_for", "plain_number", "money_text"),
     "seats": ("founder", "acting_country", "seat_list", "game_random", "acting_as", "goal", "goal_closure"),
@@ -38,7 +38,7 @@ READS_BY_OWNER = {
                   "labour_productivity_sources", "room_sources", "staff_capacity_sources", "running_mechanics"),
     "diffusion": ("literacy", "research_productivity", "staff_hire_advice", "staff_sources"),
     "production": ("running", "institution_units", "upkeep", "revenue_estimate", "is_venture"),
-    "projects": ("active_projects", "keep_staffed", "staffing_closed_hand_shortfall", "start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
+    "projects": ("active_projects", "project_order", "keep_staffed", "staffing_closed_hand_shortfall", "start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
                  "staffing_draw", "staffing_held_totals", "staffing_shortfalls", "concerns_to_close_for_staffing",
                  "venture_foreman", "venture_foremen_used", "venture_staff_free", "shared_answer"),
     "materials": ("material_price_factor",),

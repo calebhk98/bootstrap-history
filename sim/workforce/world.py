@@ -2,8 +2,8 @@
 
 `Labour` (sim/labour/) asks this object where it used to ask the engine. Every fact comes from a named view of its owner and
 every change to a fact another module owns is that owner's command (the farm's land and technique, the goal's closure). What
-is still handed out live: the game's random source (`rng`, shared by every module that draws), the project order (`order`, a
-`legacy_order` debt), the project sets the views of knowledge and projects return, and the game a mod's provider is handed."""
+is still handed out live: the game's random source (`rng`, shared by every module that draws), the project order (`order`, the projects module's
+ `project_order` view), the project sets the views of knowledge and projects return, and the game a mod's provider is handed."""
 from sim.agents.api import edges
 from sim.agriculture.api import SetFarmLand, SetFarmTechnique
 from sim.demography.api import rules as demography_rules
@@ -125,7 +125,7 @@ class WorkforceWorld:
 
     @property
     def order(self):
-        return self._needs.legacy_order()
+        return self._needs.project_order()
 
     @property
     def goal(self):

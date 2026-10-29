@@ -4,10 +4,9 @@ A trader decides a cargo at the year's start against quotes and is booked at the
 foreign coin ledger and the route's carriers); the home side is whatever the agent economy's book gave the cargo, or the quote
 where the book took none of it. Settling trues the trader's purse up from the booking to the result and closes the partner's
 tally on what really crossed.
-A leg is a plain dict kept in the agent economy's record under "cargo" (a debt: it is read and written through the
-`legacy_agent_economy` view until the markets module owns that record), so a save carries it.
+A leg is a plain dict kept in the module's world state (`cargo`, leg id -> leg), so a save carries it.
 
-(needs: legacy_agent_economy, home_unit_price; sends PayActorFromEdge, PayEdgeFrom, NoteTraderMargin)"""
+(needs: home_unit_price; sends PayActorFromEdge, PayEdgeFrom, NoteTraderMargin)"""
 from typing import Any, Dict, List
 
 from sim.agents.api import GOVERNMENT_PREFIX, edges
@@ -23,14 +22,14 @@ class Cargo:
 
     def cargo_legs(self) -> List[Dict[str, Any]]:
         """The legs noted since the last settlement, in a stable order."""
-        return [leg for _id, leg in sorted(self.needs.legacy_agent_economy().get("cargo", {}).items())]
+        return [leg for _id, leg in sorted(self.world.cargo.items())]
 
     def apply_note_cargo_leg(self, command: Any) -> None:
         """Note a cargo a trader shipped; the same trader, route and good in one year is one leg. `duty` is the part of
         `carriage` that is the destination state's tariff."""
         kind, partner = rules.cargo_kind(command.destination, command.source, command.home)
         leg_id = rules.cargo_leg_id(command.trader_id, partner, command.source, command.destination, command.material, kind)
-        legs = self.needs.legacy_agent_economy().setdefault("cargo", {})
+        legs = self.world.cargo
         leg = legs.setdefault(leg_id, rules.blank_leg(leg_id, command.trader_id, kind, command.source, command.destination,
                                                       partner, command.material))
         leg["tonnes"] += command.tonnes
@@ -58,7 +57,7 @@ class Cargo:
                 self._pay_partner(partner, tonnes_signed, value)
             self._pay_duty(leg)
             self._true_up_trader(leg["trader"], delta)
-        self.needs.legacy_agent_economy().pop("cargo", None)
+        self.world.cargo = {}
 
     def _pay_duty(self, leg: Dict[str, Any]) -> None:
         """The tariff a cargo paid in its carriage reaches the treasury of the country it entered, if the cast holds one."""

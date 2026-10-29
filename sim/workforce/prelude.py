@@ -100,7 +100,7 @@ class Prelude:
 					value = _gone_memo[trade] = trade_is_gone(
 						_trade_avail(trade), _market_supply(trade), self.labour.trade_headcount_pending(trade))
 				return value
-			for node_id in self.needs.legacy_order():
+			for node_id in self.needs.project_order():
 				if node_id in done_nodes or node_id in active_nodes:
 					continue
 				node = nodes[node_id]

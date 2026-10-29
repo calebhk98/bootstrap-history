@@ -147,3 +147,22 @@ class KeepStaffed(Command):
     """Flag a concern to be hired for each year before the closure rule (`kept`), or take the flag off."""
     node_id: str
     kept: bool = True
+
+
+@dataclass(frozen=True)
+class PutProjectFirst(Command):
+    """A project the household just chose to work on gets first call on its hours: it goes to the front of the project order."""
+    node_id: str
+
+
+@dataclass(frozen=True)
+class ReorderProjects(Command):
+    """The projects in hand take the places in the project order they already hold in the sequence `node_ids` (first served
+    first); a node the order lacks is added at its end. Inactive nodes keep their places."""
+    node_ids: tuple
+
+
+@dataclass(frozen=True)
+class RestoreProjectOrder(Command):
+    """The whole project order is set to `order`, as a game opens it from the tree's order or a trial run puts it back."""
+    order: tuple

@@ -22,6 +22,7 @@ from .halting import halt_active_projects
 from .hour_queue import HourQueue
 from .mothball import Mothball
 from .open_gate import OpenGate
+from .project_order import ORDER, ProjectOrder
 from .precaution import Precaution
 from .progress_hours import ProgressHours
 from .progress_phase import ProgressPhase
@@ -43,7 +44,7 @@ START = "start"          # the seat's start phase measured the year's hours
 
 class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, ProgressHours, Risk, Precaution, Completion,
                Rebuild, RunningGates, Closures, Exclusions, OpenGate, HourQueue, AllocationNotes, CostTail, Costs, Staffing,
-               StaffingShortfall, StaffingReport, AutoOpen, Mothball, TradeWait, Module):
+               StaffingShortfall, StaffingReport, AutoOpen, Mothball, TradeWait, ProjectOrder, Module):
 	def setup(self) -> None:
 		self._setup_start_checks()
 		self._setup_starting()

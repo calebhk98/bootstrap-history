@@ -1,6 +1,6 @@
 """The state the foreign-trade module owns: the partners' books, the lift ledgers and the actors' tallies."""
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Any, Dict
 
 
 @dataclass
@@ -15,3 +15,5 @@ class ForeignTradeWorld:
     ledgers: Dict[str, Dict[str, float]] = field(default_factory=dict)
     # year -> value of goods this society imported ("in") and exported ("out") that year, in its money; the last few years
     trade_by_year: Dict[str, Dict[str, float]] = field(default_factory=dict)
+    # leg id -> the year's cargo leg a trader shipped, noted until the home market has cleared and settled once (empty between years)
+    cargo: Dict[str, Dict[str, Any]] = field(default_factory=dict)

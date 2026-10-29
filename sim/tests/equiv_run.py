@@ -26,6 +26,7 @@ def state_leaves(sim, current=True):
     leaves = equiv_core.flatten(data)
     if current:
         leaves = equiv_core.drop_ignored(equiv_core.relocate(leaves, equiv_fields.RELOCATIONS), equiv_fields.IGNORED)
+        leaves = equiv_core.drop_empty(leaves, equiv_fields.ABSENT_WHEN_EMPTY)
     return leaves, equiv_core.rng_hash(rng_record)
 
 

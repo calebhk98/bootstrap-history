@@ -7,14 +7,14 @@ test gives its own, and its own views wired the way a game wires them.
 A view given as a plain value is that value; as a function, it is called with the view's arguments. A keyed view is
 given as a dict or a function of the key. Defaults are the quiet answers (nothing known, nothing owed, nobody short)."""
 import types
-from typing import Any, Dict
+from typing import Any, Dict, Sequence
 
 from sim.projects.projects import Projects
-from sim.projects.state import ProjectsSeat
+from sim.projects.state import ProjectsSeat, ProjectsWorld
 from sim.projects import module_spec
 from sim.tests import module_harness
 
-OWN_VIEWS = ("start_check", "start_blockers", "start_refusal", "bounty_eligible", "start_hours", "last_start")
+OWN_VIEWS = ("start_check", "start_blockers", "start_refusal", "bounty_eligible", "start_hours", "last_start", "project_order")
 
 
 def projects_state(**fields: Any) -> types.SimpleNamespace:
@@ -61,7 +61,7 @@ def defaults() -> Dict[str, Any]:
 		"plain_number": lambda value, digits=0: format(value, ",.%df" % digits),
 		"win_condition_text": lambda node: "the goal is met", "acting_seat": "founder",
 		"automation": {"manual": False, "bounty_set": set()}, "society_name": "Testland", "year": 100,
-		"horizon_end_year": 1000, "legacy_order": [], "project_limits": {
+		"horizon_end_year": 1000, "project_limits": {
 			"base": 2, "per_director_hours": 2000.0, "per_scholar": 12.0, "per_artisan": 25.0},
 		"actor_world": None, "legacy_acting_household": types.SimpleNamespace(bounties_paid=0, employees={}),
 		"start_gate_unheld_stock": lambda *arguments: None,
@@ -70,14 +70,16 @@ def defaults() -> Dict[str, Any]:
 	}
 
 
-def build(answers: Dict[str, Any] = None, seat: ProjectsSeat = None, **views: Any) -> Projects:
-	"""The module with `views` (and `answers`, the replies of owners to commands, keyed by command class)."""
+def build(answers: Dict[str, Any] = None, seat: ProjectsSeat = None, order: Sequence[str] = (), **views: Any) -> Projects:
+	"""The module with `views` (and `answers`, the replies of owners to commands, keyed by command class), its project order
+	being `order`."""
 	every_view = defaults()
 	every_view.update(views)
 	if isinstance(every_view["tree"], dict):
 		every_view.setdefault("tree_nodes", every_view["tree"])
 	every_view.setdefault("tree_nodes", {})
-	module = module_harness.build(Projects, views=every_view, answers=answers, seat=seat or ProjectsSeat(), module_id="projects")
+	module = module_harness.build(Projects, views=every_view, answers=answers, world=ProjectsWorld(order=list(order)), seat=seat or ProjectsSeat(),
+	                              module_id="projects")
 	for name in OWN_VIEWS:
 		if name not in views:
 			setattr(module.needs, name, module_harness._FakeView(getattr(module, name)))
@@ -94,7 +96,7 @@ def start_phase_module(funding_capacity: float = 1e9, committed_cost: float = 0.
 	`started` lists what `initialize_project` was asked to begin."""
 	state = projects_state()
 	arguments = dict(
-		legacy_projects=state, tree=lambda node_id: {"name": node_id, "rev": 0.0, "up": 0.0}, legacy_order=["a", "b"],
+		legacy_projects=state, tree=lambda node_id: {"name": node_id, "rev": 0.0, "up": 0.0}, order=["a", "b"],
 		funding_capacity=funding_capacity, project_cost=lambda node_id: project_cost,
 		automation={"manual": manual, "bounty_set": set()}, revenue_estimate=1e6, acting_balance=1e7, year=0,
 		start_check=lambda *call: (True, None),

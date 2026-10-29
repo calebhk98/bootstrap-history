@@ -68,7 +68,7 @@ are workforce state (`WorkforceSeat.base_tile`, `market_pressure`); the affordab
 buy people are kept by the module per seat and never saved (`staff_scale`, the view `last_buy_refusal`, the command
 `NoteBuyRefusal`).
 
-Still live objects the module reads: `legacy_order` (the project order; its new owner renames it), `game_random` (the game's
+Still live objects the module reads: `game_random` (the game's
 `random.Random`, shared with every module that draws: the order of draws is the game), `provider_game` (the game itself, which a
 mod's town and director-overhead providers are handed by the mod interface), and the project sets the views of knowledge and
 projects return (the live sets). `legacy_labour` (the module's `Labour` for engine code and mods) is read only by

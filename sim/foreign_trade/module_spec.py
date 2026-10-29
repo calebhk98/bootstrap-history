@@ -2,7 +2,7 @@
 
 Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_foreign_trade.py and
 the other bridge files) under the name the owner will publish, except the `legacy_*` ones: raw state the module still reads or
-writes in place (the cast of actors, the agent economy's record where the traders' cargo legs are kept, the map handle)."""
+writes in place (the cast of actors, the map handle)."""
 from sim.actors.api import NoteTraderMargin
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.ledger.api import PayActorFromEdge, PayEdgeFrom
@@ -24,7 +24,7 @@ READS_BY_OWNER = {
                 "trader_agent_cost", "cargo_lost_share"),
     "coin": ("home_coin_stock", "coin_carriage_units", "partner_coin_opening", "partner_price_level"),
     "finance": ("market_rate",),
-    "actors": ("cast", "legacy_agent_economy"),
+    "actors": ("cast",),
     "mods": ("foreign_economy_records",),
 }
 

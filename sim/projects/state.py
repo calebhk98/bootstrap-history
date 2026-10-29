@@ -3,7 +3,7 @@
 The projects in hand, what is done and what is running stay in the engine's record (`state.projects`), which the
 screens, hazards, the credit freeze and ventures still write; they move with those writers."""
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Set
+from typing import Dict, List, Optional, Set
 
 
 @dataclass
@@ -18,3 +18,10 @@ class ProjectsSeat:
 	staffing_tally: Dict[str, object] = field(default_factory=dict)
 	# concern id -> the year auto-open last said why it stayed shut (so it says it once in a while, not every year)
 	said_autoopen: Optional[Dict[str, int]] = None
+
+
+@dataclass
+class ProjectsWorld:
+	# every node id in the order the household's hours serve projects (a started project goes first); opened from the tree's
+	# order when a game is made, one order for every seat
+	order: List[str] = field(default_factory=list)

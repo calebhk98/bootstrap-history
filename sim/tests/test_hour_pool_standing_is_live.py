@@ -23,7 +23,7 @@ class _HourGame(FactViews):
             projects=Game(active={node_id: self._stale_progress() for node_id in node_ids}),
             household=Game(hour_allocations=allocations or {}))
         self.module = projects_host.build(
-            legacy_projects=self.state.projects, legacy_order=self.order, hour_commitments={"allocations": allocations or {}},
+            legacy_projects=self.state.projects, order=self.order, hour_commitments={"allocations": allocations or {}},
             hours_available={"director_pool": pool, "director_committed": committed})
         self.active = self.state.projects.active
 

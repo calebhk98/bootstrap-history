@@ -70,7 +70,8 @@ from sim.agriculture.api import InvestFarm, SellFarm  # noqa: F401
 from sim.land.api import BuildWay, FoundColony  # noqa: F401
 from sim.markets.api import BuyMaterial, SellMaterial  # noqa: F401
 from sim.polity.api import SettleWithState, WithdrawFromPublicLife  # noqa: F401
-from sim.projects.api import Bribe, MothballWork, PostBounty, RestoreWork, StartProject, StopProject  # noqa: F401
+from sim.projects.api import (Bribe, MothballWork, PostBounty, ReorderProjects, RestoreProjectOrder, RestoreWork,  # noqa: F401
+                              StartProject, StopProject)  # noqa: F401
 from sim.knowledge.api import RevealNodes  # noqa: F401
 from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, JoinSeat, MakeOffer, SetGoal, SetPolicy  # noqa: F401
 from sim.ventures.api import OpenVenture, RollOut, SellConcern  # noqa: F401
