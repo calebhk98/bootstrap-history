@@ -106,6 +106,6 @@ MODULE_SPECS = (ModuleSpec(
 	phases=(PhaseHook("market", "step_market"),),
 	kernels=KERNELS,
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(RecordFoodEaten, ClosePartnerBooks, CloseRealOutput, FinishWays, RepriceTree, RescaleHouseholdMoney, PayEdge, ReceiveFromEdge, ChangeStock, PayExchange, ReceiveFromExchange,
+	sends=(RecordFoodEaten, ClosePartnerBooks, CloseRealOutput, FinishWays, RepriceOpeningMoney, RepriceTree, RescaleHouseholdMoney, PayEdge, ReceiveFromEdge, ChangeStock, PayExchange, ReceiveFromExchange,
 	       SettleFlow, SettleTraderCargo, FellTimber, RegrowTimber, DrawDeposit, NoteFirstRuns),
 ),)
