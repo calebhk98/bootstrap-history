@@ -40,7 +40,6 @@ def defaults() -> Dict[str, Any]:
 		"revenue_capacity": 0.0, "revenue_estimate": 0.0, "upkeep": 0.0, "operating": set(), "cash_remedies": [],
 		"committed_cost": 0.0, "tree_nodes": {},
 		"agent_rate": lambda: None, "agent_credit_room": lambda borrower_id: (False, None), "agent_economy_opened": False,
-		"agent_economy": lambda: None,
 	}
 
 

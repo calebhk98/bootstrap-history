@@ -3,10 +3,10 @@
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine as the old mixin code did,
 and is never cached."""
 from sim.agents.api import relations
-from sim.assembly.api import KEYED, QUOTE
+from sim.assembly.api import QUOTE
 from sim.markets.api import RepriceOpeningMoney
 
-from . import need_data, need_substitutes, opening_money
+from . import need_data, opening_money
 from .bridge import bridge_command, bridge_view
 from .data import MODDIR, ROOT, calculated_goods_table
 from .mods import get_ordered_mods
@@ -46,12 +46,6 @@ def calculated_goods_prices(sim, held, farmed_hectares):
 
 
 # ---- the need data and the relations store ----
-
-@bridge_view("material_serves_a_need", kind=KEYED)
-def material_serves_a_need(sim, material):
-    """Whether the needs data names the material as serving some household need."""
-    return need_substitutes.serves_a_need(material)
-
 
 @bridge_view("border_terms", kind=QUOTE)
 def border_terms(sim, destination, source):

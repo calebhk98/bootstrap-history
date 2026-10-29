@@ -1,9 +1,9 @@
 """A seat founds a bank in the agent economy: its capital, in coin, comes out of its money and into the bank.
 
-Needs: dealing_party, actor_world, mechanic, agent_economy_opened, agent_economy, year."""
+Needs: dealing_party, actor_world, mechanic, agent_economy_opened."""
 from typing import Any, Dict
 
-from sim.economy import api as economy_api
+from sim.markets.api import FoundBankFromOutside
 from sim.ledger.api import WithdrawHouseholdMoney
 from sim.refusal import Refusal
 
@@ -24,12 +24,10 @@ class Bank:
 			refusal = Refusal("economy_not_open", "The economy has not opened yet.")
 		if refusal is not None:
 			return {"ok": False, "error": refusal, "cause": refusal.cause}
-		economy = needs.agent_economy()
-		units = float(capital) / economy.setup.coin_per_unit   # the capital is counted in the economy's unit
-		bank = economy_api.found_bank_from_outside(economy, self.clock.acting_seat, units, needs.year(), economy_api.EDGE_EXCHANGE)
-		if bank is None:
+		bank_id = needs.send(FoundBankFromOutside(float(capital)))
+		if bank_id is None:
 			refusal = Refusal("capital_not_positive", "Nothing went into the bank.")
 			return {"ok": False, "error": refusal, "cause": refusal.cause}
 		needs.send(WithdrawHouseholdMoney(float(capital)))
-		return {"ok": True, "bank": bank.agent_id, "capital": float(capital),
+		return {"ok": True, "bank": bank_id, "capital": float(capital),
 		        "note": "Households with savings now deposit with it; its earnings above its capital are paid to you."}

@@ -13,8 +13,8 @@ from sim.ledger.api import ChangeStock, PayEdge, PayExchange, ReceiveFromEdge, R
 from sim.reporting.api import CloseRealOutput
 from sim.resources.api import DrawDeposit, FellTimber, RegrowTimber
 
-from .commands import (BuyMaterial, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale, NoteDraw,
-                       NotePurchase, OpenMarketBook, RenameMarketSeat, RepriceOpeningMoney, ResetDraws, ResetMarketCaches,
+from .commands import (BuyMaterial, FoundBankFromOutside, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale,
+                       NoteDraw, NotePurchase, OpenMarketBook, RenameMarketSeat, RepriceOpeningMoney, ResetDraws, ResetMarketCaches,
                        SellMaterial)
 from .kernels import KERNELS
 from .module import Markets
@@ -44,7 +44,7 @@ READS_BY_OWNER = {
 	                    "hours_per_person_year"),
 	"port: money and prices": ("market_rate", "credit_room", "credit_line_sought", "debt_bondage_term_years", "home_coin_stock",
 	                           "price_tables", "material_price", "material_commodity_map", "material_market_tonnes", "goods_stock",
-	                           "commodity_materials", "not_traded_materials", "material_serves_a_need", "can_pay", "project_cost",
+	                           "commodity_materials", "not_traded_materials", "can_pay", "project_cost",
 	                           "real_output_hours", "literacy", "held_techniques", "techniques_spread", "mechanic"),
 	"port: foreign trade and freight": ("foreign_economies", "partner", "partner_facts", "partners_in_agent_economy", "civilisation_record",
 	                                    "foreign_supply_tonnes", "lift_left_tonnes", "partner_price_per_unit", "actors_carry",
@@ -80,6 +80,8 @@ _VIEWS = (
 	("market_absorption_by_category", QUOTE), ("legacy_market_flows", None), ("legacy_agent_economy", None),
 	("money_from_economy", None), ("unit_mass_kg", QUOTE), ("border_duty_per_tonne", QUOTE),
 	("household_demand_units", QUOTE), ("household_basket", None), ("home_household_tonnes", QUOTE), ("partner_household_demand", KEYED),
+	("materials_serving", KEYED), ("material_substitutes", KEYED), ("material_serves_a_need", KEYED),
+	("agent_rate", None), ("agent_credit_room", QUOTE), ("agent_economy_opened", None),
 	("household_need_floors_per_person", None), ("household_bill_per_person", None),
 )
 
@@ -96,7 +98,7 @@ MODULE_SPECS = (ModuleSpec(
 	         (NoteActorPurchase, "note_actor_purchase"), (ResetMarketCaches, "reset_market_caches"),
 	         (OpenMarketBook, "open_market_book_command"), (RenameMarketSeat, "rename_market_seat"),
 	         (MarkMoneyPricedAtEconomy, "mark_money_priced_at_economy"), (BuyMaterial, "buy_material"),
-	         (SellMaterial, "sell_material")),
+	         (SellMaterial, "sell_material"), (FoundBankFromOutside, "found_bank_from_outside")),
 	phases=(PhaseHook("market", "step_market"),),
 	kernels=KERNELS,
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),

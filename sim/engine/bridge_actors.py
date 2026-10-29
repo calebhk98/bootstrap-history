@@ -50,12 +50,6 @@ def shared_answers(sim, table):
 # ---- markets: goods categories, the agent economy's book and the orders the actors place ----
 
 
-@bridge_view("materials_serving", kind=KEYED)
-def materials_serving(sim, need_id):
-    from . import need_substitutes
-    return need_substitutes.serving(need_id)
-
-
 # ---- demography, agriculture, diffusion, mechanics ----
 
 
