@@ -5,6 +5,7 @@ raise, naming the view and the reader. Nested values are guarded as they are rea
 The copy keeps the answer's class, so isinstance, its own read methods and json behave as before. A reader that needs a
 copy it can change makes one (`dict(answer)`, `list(answer)`). Other objects pass unguarded: a view that hands out a live
 object is a `legacy_*` debt, counted by tools/measure/module_graph.py."""
+import copy
 from collections import defaultdict
 from typing import Any, Callable, Dict
 
@@ -53,9 +54,36 @@ def _guarded_class(base: type) -> type:
 		container, writes, reads = "set", SET_WRITES, {}
 	members = dict(reads)
 	members.update({name: _refusal(container) for name in writes if hasattr(base, name)})
+	members.update(_copies(base))
 	guarded_class = type("Guarded" + base.__name__, (base,), members)
 	_GUARDED_CLASSES[base] = guarded_class
 	return guarded_class
+
+
+def _unguarded(value: Any, base: type) -> Any:
+	"""A plain `base` holding what the guarded `value` holds: the reader's own copy, free to change."""
+	plain = base.__new__(base)
+	if isinstance(value, dict):
+		dict.update(plain, dict.items(value))
+	elif isinstance(value, list):
+		list.extend(plain, list.__iter__(value))
+	else:
+		set.update(plain, set.__iter__(value))
+	if isinstance(value, defaultdict):
+		plain.default_factory = value.default_factory
+	if hasattr(plain, "__dict__"):   # a subclass (a ledger, a Counter) keeps its own attributes; a plain dict has none
+		plain.__dict__.update({key: item for key, item in value.__dict__.items() if not key.startswith("_guard_")})
+	return plain
+
+
+def _copies(base: type) -> Dict[str, Callable]:
+	"""`copy.copy` and `copy.deepcopy` of a guarded answer give the reader a plain one of the answer's own class."""
+	def __copy__(self):
+		return _unguarded(self, base)
+
+	def __deepcopy__(self, memo):
+		return copy.deepcopy(_unguarded(self, base), memo)
+	return {"__copy__": __copy__, "__deepcopy__": __deepcopy__}
 
 
 def _dict_reads(base: type) -> Dict[str, Callable]:

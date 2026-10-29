@@ -67,6 +67,20 @@ class GuardedAnswers(unittest.TestCase):
         with self.assertRaises(ViewWrite):
             listed["tile"].append(2.0)
 
+    def test_a_copy_of_an_answer_is_the_readers_own_and_can_change(self):
+        import copy
+        from collections import Counter, defaultdict
+        for answer, key in ((guarded({"grain": {"kg": 2.0}}, "civilisation", "actors"), "grain"),
+                            (guarded(Counter({"grain": 2.0}), "held_goods", "materials"), "grain"),
+                            (guarded(defaultdict(list, {"grain": [1.0]}), "people_by_tile", "disease"), "grain")):
+            for mine in (copy.deepcopy(answer), copy.copy(answer)):
+                self.assertEqual(type(mine), type(answer).__mro__[1])
+                mine[key] = 5.0
+                self.assertEqual(mine[key], 5.0)
+        listed = copy.deepcopy(guarded([1.0, [2.0]], "prices", "coin"))
+        listed[1].append(3.0)
+        self.assertEqual(listed, [1.0, [2.0, 3.0]])
+
     def test_numbers_strings_and_tuples_pass_as_they_are(self):
         self.assertEqual([guarded(value, "view", "reader") for value in (2.5, "rome", (1, 2), None)], [2.5, "rome", (1, 2), None])
 
