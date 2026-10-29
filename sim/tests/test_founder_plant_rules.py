@@ -144,10 +144,9 @@ class QuotedFiguresTests(unittest.TestCase):
 class RampTests(unittest.TestCase):
     def ramp(self, opened_year, done_year=None):
         seen = {}
-        projects = SimpleNamespace(business=Business(plants=[Plant(entry_key=NODE, opened_year=opened_year)] if opened_year is not None else []),
-                                   done_year={NODE: done_year} if done_year is not None else {})
-        module = production_host.build(SimpleNamespace(state=SimpleNamespace(projects=projects, scenario=SimpleNamespace(year=100)),
-                                                       cfg={"revenue_ramp_years": 5}))
+        module = production_host.build(
+            year=100, game_setting={"revenue_ramp_years": 5}, done_year={NODE: done_year} if done_year is not None else {},
+            venture_opened_year=lambda node_id, default: default if opened_year is None else opened_year)
         module.industry_depth = lambda node_id: 0.5
         with mock.patch.object(production_revenue.plant_figures, "ramp",
                                lambda age, years, depth, share: seen.update(age=age, years=years, depth=depth) or 0.7):

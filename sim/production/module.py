@@ -2,15 +2,16 @@
 
 It answers which of the acting seat's techniques and capabilities are running, what its concerns take in and cost to keep this year,
 what a concern makes from the techniques its society runs, how deep an industry's experience is, and which techniques some producer
-uses. It owns each seat's stock of industry experience (`ProductionSeat`). The record of what is done, operating and granted, the
-household, the tree and the economy's objects have not moved yet, so the module reaches them through `legacy_game` and every view it
-publishes is uncached: legacy code writes that state directly. The revenue and candidate caches live on the household object because
-the engine drops them through `caches` (its household hooks call the same functions the commands here do)."""
+uses. It owns each seat's stock of industry experience (`ProductionSeat`) and the memos over what is done and operating (`caches`).
+The record of what is done, operating and granted, the tree and the economy's objects have not moved yet, so the module reads them
+through the views of their owners and every view it publishes is uncached: legacy code writes that state directly. The engine's
+household hooks drop the memos by sending the commands here."""
 from sim.assembly.api import Module
 
 from . import caches
 from .book_sales import BookSales
 from .capability import Capability
+from .commands import BumpHouseholdVersion
 from .concern_market import ConcernMarket
 from .constants import RAMP_SHARE_AT_FULL_DEPTH
 from .depth import Depth
@@ -23,30 +24,34 @@ from .volume import Volume
 
 class Production(Revenue, Upkeep, ConcernMarket, BookSales, Volume, Learning, Depth, Techniques, Capability, Module):
 
-	def _game(self):
-		game = self.__dict__.get("_sim")
-		if game is None:
-			game = self._sim = self.needs.legacy_game()
-		return game
+	def setup(self):
+		self._memos = {}   # acting seat -> its SeatMemos; never saved
+
+	def memos(self):
+		"""The acting seat's remembered figures."""
+		seat_id = self.clock.acting_seat
+		memos = self._memos.get(seat_id)
+		if memos is None:
+			memos = self._memos[seat_id] = caches.SeatMemos()
+		return memos
 
 	# ---- what the engine's other objects still hold, as views ----
 
 	def operating(self):
 		"""The acting seat's concerns and capabilities that are open (the live set: the engine adds and discards in place)."""
-		return self._game().state.projects.operating
+		return self.needs.projects_operating()
 
 	def done_in_order(self):
-		"""Everything the acting seat has finished, in the tree's own order (the memo lives on the household)."""
-		game = self._game()
-		return caches.done_in_order(game.household, game.nodes, game.state.projects.done)
+		"""Everything the acting seat has finished, in the tree's own order (the memo lives here)."""
+		return self.memos().done_in_order(self.needs.tree_nodes(), self.needs.techniques_held())
 
 	def running_stamp(self):
-		"""(the projects record, the counts and versions of what is built, granted and operating, the tree): a table derived
-		from what is running stays good while this is unchanged."""
-		game = self._game()
-		projects = game.state.projects
-		return (projects, (game.household.done_version, game.household.operating_version,
-		                   len(projects.done), len(projects.granted), len(projects.operating)), game.nodes)
+		"""(the done set, the counts and versions of what is built, granted and operating, the tree): a table derived from what is
+		running stays good while this is unchanged."""
+		done = self.needs.techniques_held()
+		done_version, operating_version, _units_version = self.needs.running_versions()
+		return (done, (done_version, operating_version, len(done), len(self.needs.techniques_granted()),
+		               len(self.needs.projects_operating())), self.needs.tree_nodes())
 
 	def practice_set(self):
 		return self._practice_set()
@@ -64,7 +69,15 @@ class Production(Revenue, Upkeep, ConcernMarket, BookSales, Volume, Learning, De
 	# ---- the commands ----
 
 	def apply_refresh_done_caches(self, command):
-		caches.forget_done(self._game().household)
+		self.memos().forget_done()
+		self.needs.send(BumpHouseholdVersion("done"))
+
+	def apply_refresh_operating_caches(self, command):
+		self.memos().forget_operating()
+		self.needs.send(BumpHouseholdVersion("operating"))
+
+	def apply_forget_revenue_caches(self, command):
+		self._memos.clear()
 
 	def apply_accrue_experience(self, command):
 		self.accrue_industry_experience()

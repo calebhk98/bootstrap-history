@@ -5,7 +5,6 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
 
 from sim.diffusion import rules
 from sim.diffusion.module import Diffusion
@@ -47,7 +46,7 @@ class ModAddsCategory(unittest.TestCase):
         self.tmp.cleanup()
 
     def production(self, nodes):
-        return production_host.build(SimpleNamespace(nodes=nodes), category_trait=category_traits.has_trait)
+        return production_host.build(tree_nodes=nodes, category_trait=category_traits.has_trait)
 
     def test_new_category_trait_takes_effect_in_engine(self):
         nodes = {"x": {"cat": "test_cat_k3f9:rites", "traits": []}}

@@ -3,7 +3,7 @@
 
 Delivery time comes from geography alone: the days a haul takes from the nearest tile that makes an input to
 the concern's tile. The agent economy carries no lead time per recipe, so nothing is counted twice.
-Needs: legacy_game."""
+Needs: the views of READS_BY_OWNER in module_spec.py."""
 from sim.geography.api import route, usable_modes
 from sim.prices.api import prices as price_solver
 from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
@@ -28,12 +28,11 @@ class Learning:
 	def concern_learning_ratio(self, node_id):
 		"""Share of its stated takings a concern makes, given scrap and unit labour along the experience
 		curve, repairs its tenured trades can do and the inputs its suppliers deliver; one without baskets."""
-		game = self._game()
 		baskets = self.concern_baskets_now(node_id)
 		if baskets is None:
 			return 1.0
 		held = self.techniques_in_use()
-		prices = game.view("done_memo")("concern_prices_held", held, lambda: self._concern_prices_in_hours(held))
+		prices = self.needs.done_memo("concern_prices_held", held, lambda: self._concern_prices_in_hours(held))
 		founding = self.founding_worker_years(node_id)
 		multiplier = learning_multiplier(self.industry_experience(node_id), founding, mastery_worker_years(founding))
 		purchases = {material: quantity * prices.get(material, 0.0) for material, quantity in baskets.purchases.items()}
@@ -49,12 +48,12 @@ class Learning:
 		"""Share of the year the concern has its inputs, from the producers the economy runs for each."""
 		if not purchases_value:
 			return 1.0
-		game = self._game()
-		year = game.state.scenario.year
-		producers = game.view("producers_memo")("producers_by_good", year, game.view("legacy_economy")().agent_producers_by_good)
+		needs = self.needs
+		year = needs.year()
+		producers = needs.producers_memo("producers_by_good", year, needs.agent_producers_by_good)
 		if producers is None:   # nothing runs while the economy opens
 			return 1.0
-		base_tile = game.labour.base_tile()
+		base_tile = needs.base_tile()
 		entries = price_solver.default_production_entries()
 
 		def gate(recipe):
@@ -68,18 +67,17 @@ class Learning:
 			# a technique that needs no technology is established wherever it is run
 			depth[material] = max((self.industry_depth(gate(recipe)) if gate(recipe) else 1.0
 			                       for _tile, recipe in found), default=0.0)
-			days = game.view("producers_memo")("input_days", (year, material, base_tile), lambda: self.days_from_producers(found))
+			days = needs.producers_memo("input_days", (year, material, base_tile), lambda: self.days_from_producers(found))
 			lead[material] = None if days is None else days / CIVIL_DAYS_PER_YEAR
 		return input_availability(purchases_value, depth, lead)
 
 	def days_from_producers(self, found):
 		"""Fewest days a haul takes to the concern's tile from the nearest tile that makes the input; None
 		when no route joins them."""
-		game = self._game()
-		base = game.labour.base_tile()
+		base = self.needs.base_tile()
 		tiles = sorted({tile for tile, _recipe in found})
 		if base in tiles:
 			return 0.0
-		held = game.labour.held_technologies()
-		hauled = route(tiles, [base], usable_modes([held]), game.view("built_ways")(), held_nodes=held, fastest=True)
+		held = frozenset(self.needs.held_techniques(True))
+		hauled = route(tiles, [base], usable_modes([held]), self.needs.built_ways(), held_nodes=held, fastest=True)
 		return None if hauled is None else hauled["days"]

@@ -11,7 +11,6 @@ from sim.production import industry_learning as learning
 from sim.production import learning as concern_learning
 from sim.production.node_output import Baskets
 from sim.tests import production_host
-from sim.tests.ui_stand_in import Game
 
 FURNACE = {"good": "furnace", "build_labour_hours": {"mason": 300.0, "smith": 100.0}, "service_life_years": 10}
 
@@ -83,13 +82,7 @@ class InputSupply(unittest.TestCase):
 
 def concern_world(producers, days, depths=None):
     """A stand-in Sim for the input supply: `producers` {good: [(tile, recipe)]}, `days` to the base."""
-    stub = Game(
-        economy=types.SimpleNamespace(agent_producers_by_good=lambda: producers),
-        state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=10)))
-    stub._done_memo = lambda name, key, compute: compute()
-    stub._producers_memo = stub._done_memo
-    stub.labour = types.SimpleNamespace(base_tile=lambda: "base")
-    module = production_host.build(stub)
+    module = production_host.build(year=10, agent_producers_by_good=lambda: producers, base_tile="base")
     module.industry_depth = lambda node_id: (depths or {}).get(node_id, 0.0)
     module.days_from_producers = lambda found: days
     return module
@@ -118,8 +111,7 @@ class ConcernInputs(unittest.TestCase):
         self.assertEqual(stub.concern_input_availability("smelt", {}), 1.0)
 
     def test_while_the_economy_opens_inputs_are_not_counted(self):
-        stub = concern_world({}, 10.0)
-        stub._game().economy.agent_producers_by_good = lambda: None
+        stub = concern_world(None, 10.0)
         self.assertEqual(stub.concern_input_availability("smelt", {"ore": 10.0}), 1.0)
 
     def test_an_unreachable_producer_is_not_counted(self):
@@ -147,9 +139,7 @@ class PortListing(unittest.TestCase):
 class HaulDays(unittest.TestCase):
 
     def stub(self, base):
-        return production_host.build(Game(
-            labour=types.SimpleNamespace(base_tile=lambda: base, held_technologies=lambda: set()),
-            view=lambda name: (lambda: {})))
+        return production_host.build(base_tile=base, held_techniques=lambda include_starting=True: set(), built_ways={})
 
     def test_the_days_come_from_geography_between_the_nearest_producer_tile_and_the_base(self):
         from sim.geography import api as geography
@@ -167,7 +157,7 @@ class WholeRatio(unittest.TestCase):
 
     def stub(self, experience, tenure):
         baskets = Baskets({"metal": 10.0}, {"ore": 10.0}, {}, {}, {"smith": 800.0}, [(FURNACE, 1.0)])
-        stub = production_host.build(Game(_done_memo=lambda name, key, compute: compute()))
+        stub = production_host.build()
         stub.concern_baskets_now = lambda node_id: baskets
         stub.techniques_in_use = lambda: frozenset()
         stub._concern_prices_in_hours = lambda held: {"metal": 20.0, "ore": 5.0}

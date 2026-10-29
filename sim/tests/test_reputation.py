@@ -37,7 +37,7 @@ check("the gain reads only the node and the state's regard, so a node finished a
 
 def _Concerns(nodes, granted=()):
     """What makes a node a going concern: it earns or costs to keep, and the society did not already have it."""
-    return production_host.build(SimpleNamespace(nodes=nodes, state=SimpleNamespace(projects=SimpleNamespace(granted=set(granted)))))
+    return production_host.build(tree_nodes=nodes, techniques_granted=set(granted))
 
 
 _nodes = {"theory": {"rev": 0.0, "up": 0.0}, "shop": {"rev": 10.0, "up": 0.0}, "plant": {"rev": 0.0, "up": 5.0}}

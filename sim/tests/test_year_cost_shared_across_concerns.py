@@ -25,7 +25,7 @@ from sim.tests import module_harness, production_host
 class ConcernPriceTables(unittest.TestCase):
 
     def asking(self, held_sets, civilisation):
-        module = production_host.build(types.SimpleNamespace(civ=civilisation), held_goods_prices_in_hours=lambda held: solve(held))
+        module = production_host.build(civilisation=civilisation, held_goods_prices_in_hours=lambda held: solve(held))
         solves = []
 
         def solve(held, **_arguments):
@@ -122,15 +122,13 @@ class ConcernSetVersion(unittest.TestCase):
 
     def test_the_techniques_in_use_are_not_worked_out_again_for_a_size_change(self):
         registry = self.registry()
-        projects = types.SimpleNamespace(granted=set(), operating={}, done=[])
-        world = Game(
-            household=types.SimpleNamespace(done_version=0, operating_version=0),
-            state=types.SimpleNamespace(projects=projects, actors=types.SimpleNamespace(records={"firm:000": 1})),
-            actors=registry, view=lambda name: (lambda: (registry.version[0], registry.concern_set_version[0])))
         walks = []
         original = registry.concerns_of_active_firms
         registry.concerns_of_active_firms = lambda: walks.append(1) or original()
-        module = production_host.build(world)
+        module = production_host.build(
+            techniques_granted=set(), projects_operating={}, techniques_held=[], running_versions=(0, 0, 0),
+            concern_versions=lambda: (registry.version[0], registry.concern_set_version[0]),
+            concerns_of_active_firms=lambda: registry.concerns_of_active_firms())
         first = module.techniques_in_use()
         for _firm in range(25):
             registry.note_capacity_change("firm:000")

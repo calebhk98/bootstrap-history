@@ -122,14 +122,8 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 		# Transient caches and runtime-only trackers
 		self.contract_projects: Set[str] = set()
-		self._done_seq: Optional[List[str]] = None
-		self._cap_factor: Optional[float] = None
 		self._staff_scale: float = 1.0
 		self._spend_this_year: float = 0.0
-		self._revenue_cache_key: Any = None
-		self._revenue_cache_val: Any = None
-		self._rev_up_candidates_cache: Any = None
-		self._practice_cache: Any = None
 		self._goods_cat_state_cache: Any = None
 		self._goods_category_ratios_cache: Any = None
 		self._income_factor_cache: Any = None
@@ -361,14 +355,11 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 	def __setattr__(self, name: str, value: Any) -> None:
 		if (name in ("_state", "_port", "contract_projects")
-				or name.startswith("_cap_factor")
 				or name.startswith("_staff_scale")
 				or name.startswith("_spend_this_year")
 				or name.endswith("_cache")
-				or name.startswith("_revenue_cache")
 				or name == "_last_buy_refusal"
-				or name == "_said_stack_caution"
-				or name == "_done_seq"):
+				or name == "_said_stack_caution"):
 			super().__setattr__(name, value)
 			return
 

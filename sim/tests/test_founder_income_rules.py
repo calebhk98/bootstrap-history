@@ -23,10 +23,8 @@ NODE = "workshop"
 
 class InstitutionUpkeepTests(unittest.TestCase):
     def upkeep(self, node, scalable=False, capability=False, headcount=0.0, units=None, fully_staffed=False, places=10.0, full=False):
-        game = SimpleNamespace(
-            nodes={NODE: node}, state=SimpleNamespace(projects=SimpleNamespace(operating={NODE})),
-            labour=SimpleNamespace(headcount=lambda: headcount))
-        module = production_host.build(game, mechanic=lambda name: {NODE: full},
+        module = production_host.build(tree_nodes={NODE: node}, projects_operating={NODE}, headcount=headcount,
+                                       mechanic=lambda name: {NODE: full},
                                        capability_sets=({NODE} if capability else set(), {NODE} if scalable else set(), {}))
         module.institution_units = lambda node_id: 3.0
         module.institution_places = lambda node_id: places
@@ -96,7 +94,7 @@ class ChargeLivingCostTests(unittest.TestCase):
 
 class FoundersJobTests(unittest.TestCase):
     def held(self, nodes, practice):
-        module = production_host.build(SimpleNamespace(nodes=nodes))
+        module = production_host.build(tree_nodes=nodes)
         module._practice_set = lambda: practice
         return module.held_trade()
 
@@ -109,13 +107,13 @@ class FoundersJobTests(unittest.TestCase):
         self.assertEqual(self.held(nodes, {"smithing"}), "artisan")
 
     def test_the_income_is_the_standing_jobs_pay_in_the_held_trade(self):
-        module = production_host.build(SimpleNamespace(labour=SimpleNamespace(standing_job_pay=lambda trade: {"artisan": 42.0}[trade])))
+        module = production_host.build(standing_job_pay=lambda trade: {"artisan": 42.0}[trade])
         module.held_trade = lambda: "artisan"
         self.assertEqual(module.founder_wage_income(), 42.0)
 
     def test_revenue_sources_carry_the_wages_once_after_the_output_factor_and_no_practice_line(self):
         seen = {}
-        module = production_host.build(Game(output_factor=0.5, state_funding=lambda: 0.0))
+        module = production_host.build(output_factor=0.5, state_funding=0.0)
         module.ledger_concern_rows = lambda: {"inn": 10.0}
         module.workshop_output = lambda: 4.0
         module.founder_wage_income = lambda: 20.0
@@ -132,15 +130,12 @@ class RevenueCacheTests(unittest.TestCase):
         household = SimpleNamespace(operating_version=0, done_version=0, workforce_version=0, institution_units_version=0,
                                     wage_hours_this_year=0.0, directors_extra=0.0, reputation=1.0,
                                     freedmen=0, slaves=0)
-        state = SimpleNamespace(
-            scenario=SimpleNamespace(year=100), economy=SimpleNamespace(output_per_head=1.0),
-            projects=None, household=household)
-        views = {"output_factor": lambda: 1.0, "staff_version": lambda: household.workforce_version, "hour_commitments": lambda: {"wage_hours": household.wage_hours_this_year},
-                 "staff": lambda: {"directors_extra": household.directors_extra, "freedmen": household.freedmen, "slaves": household.slaves}}
-        game = SimpleNamespace(state=state, household=household, founder_alive=True, output_factor=1.0, bondage_years_left=0, view=lambda name: views.get(name, lambda: {"governance": 0.0, "reputation": 1.0, "hectares": 0.0, "bondage_years_left": 0}), pop_scale=1.0, real_output_per_head=lambda: 1.0, state_funding=lambda: 0.0, home_price_level=lambda: 1.0,
-                               signature=1.0, committed=0.0, computed=[])
-        game.labour = SimpleNamespace(director_hours_committed=lambda: game.committed, wage_signature=lambda: game.signature)
-        game.module = production_host.build(game, **views)
+        game = SimpleNamespace(signature=1.0, committed=0.0, computed=[])
+        game.module = production_host.build(
+            staff_version=lambda: household.workforce_version, hour_commitments=lambda: {"wage_hours": household.wage_hours_this_year},
+            staff=lambda: {"directors_extra": household.directors_extra, "freedmen": household.freedmen, "slaves": household.slaves},
+            standing={"governance": 0.0, "reputation": 1.0}, hours_available=lambda pool: game.committed,
+            wage_signature=lambda: game.signature)
         game.module._compute_revenue_uncached = lambda: game.computed.append(1) or (10.0 * len(game.computed), 0.0)
         return game
 

@@ -3,7 +3,8 @@ how established an industry is."""
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import AccrueExperience, LearnFromFailure, RefreshDoneCaches
+from .commands import (AccrueExperience, BumpHouseholdVersion, ForgetRevenueCaches, LearnFromFailure, RefreshDoneCaches,
+                       RefreshOperatingCaches)
 from .constants import RAMP_SHARE_AT_FULL_DEPTH, RISK_SHARE_AT_FULL_DEPTH
 from .rules import depth_risk_multiplier, mastery_worker_years
 from .state import ProductionSeat

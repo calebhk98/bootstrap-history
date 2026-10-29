@@ -3,7 +3,7 @@
 A concern whose goods the economy trades is paid what the year's clearing pays for the units buyers took
 (economy_port_year `_settle_seats`), like a firm's plant; the engine's estimate (`revenue`) covers only the rest.
 The offer and the inputs bought are one rule here, read by the clearing, the estimate and the forecast alike.
-Needs: legacy_game, capability_sets."""
+Needs: the views of READS_BY_OWNER in module_spec.py."""
 from sim.prices.api import rules as price_rules
 
 from . import concern_sales
@@ -13,21 +13,19 @@ class BookSales:
 
 	def concern_book_scale(self, node_id):
 		"""The share of the concern's full-staffing year it runs now: its ramp, size and the hazard and war factor."""
-		game = self._game()
 		units = self.institution_units(node_id) if node_id in self.needs.capability_sets()[1] else 1.0
-		return self.venture_ramp(node_id) * units * game.view("output_factor")()
+		return self.venture_ramp(node_id) * units * self.needs.output_factor()
 
 	def concern_book_offer(self, node_id):
 		"""{material: units} the concern puts in this year's clearing; empty for a concern the engine's estimate covers
 		(not running as the acting seat's own, makes nothing from output, or nothing it makes is traded)."""
-		game = self._game()
-		projects = game.state.projects
-		if node_id not in projects.operating or node_id in projects.granted or not self.is_venture(node_id):
+		if node_id not in self.needs.projects_operating() or node_id in self.needs.techniques_granted() or not self.is_venture(node_id):
 			return {}
 		baskets = self.concern_baskets_now(node_id)
 		if baskets is None:
 			return {}
-		return concern_sales.offered_units(baskets.outputs, self.concern_book_scale(node_id), game.view("legacy_economy")().agent_trades_good)
+		trades_good = self.needs.agent_trades_good
+		return concern_sales.offered_units(baskets.outputs, self.concern_book_scale(node_id), lambda material: trades_good[material])
 
 	def concern_sells_on_book(self, node_id):
 		"""Whether the clearing pays this concern, so the estimate leaves it out."""
@@ -37,17 +35,17 @@ class BookSales:
 		"""What the concern's year of inputs costs at the economy's prices, charged to the seat because the clearing
 		pays the gross of its sales (the estimate was net of them); a price the economy lacks falls back to the
 		long-run cost at today's price level."""
-		game = self._game()
+		needs = self.needs
 		baskets = self.concern_baskets_now(node_id)
 		if baskets is None:
 			return 0.0
 
-		economy_prices = game.view("legacy_economy")().agent_prices_at() or {}
+		economy_prices = needs.agent_prices_at() or {}
 
 		def price_of(material):
-			key = price_rules.priced_key(material, economy_prices, game.view("commodity_record")[material])
+			key = price_rules.priced_key(material, economy_prices, needs.commodity_record[material])
 			if key is not None:
 				return economy_prices[key]
-			cost = game.view("material_prices")().get(material)    # read only for a good the economy has no price for
-			return None if cost is None else cost * game.price_index
+			cost = needs.material_prices().get(material)    # read only for a good the economy has no price for
+			return None if cost is None else cost * needs.price_index()
 		return concern_sales.inputs_cost(baskets.purchases, self.concern_book_scale(node_id), price_of)

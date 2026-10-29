@@ -1,4 +1,4 @@
-"""The production module's book sales on a stand-in game: which concerns put output in the year's clearing and at what scale, and
+"""The production module's book sales over plain views: which concerns put output in the year's clearing and at what scale, and
 what their inputs cost at the economy's prices (the estimate leaves a concern out exactly when it sells on the book).
 The rules it calls are test_seat_paid_from_sales."""
 QUICK_TOPIC = True
@@ -7,20 +7,16 @@ import types
 import unittest
 
 from sim.tests import production_host
-from sim.tests.ui_stand_in import Game
 
 TRADED = {"acid"}
 
 
 def _Game(operating=("mill",), granted=(), ventures=("mill", "school"), baskets=None, economy_prices=None):
-    """The module over a stand-in game, with the questions it asks of itself answered as the test says."""
-    prices = {"salt": 4.0}
-    game = Game(
-        state=types.SimpleNamespace(projects=types.SimpleNamespace(operating=set(operating), granted=set(granted))),
-        output_factor=0.5, price_index=2.0,
-        economy=types.SimpleNamespace(agent_trades_good=lambda good: good in TRADED, agent_prices_at=lambda: economy_prices),
-        commodity_record=lambda tag: {}, _material_prices=lambda: prices)
-    module = production_host.build(game, capability_sets=(frozenset(), frozenset({"school"}), {}))
+    """The module over plain views, with the questions it asks of itself answered as the test says."""
+    module = production_host.build(
+        projects_operating=set(operating), techniques_granted=set(granted), output_factor=0.5, price_index=2.0,
+        agent_trades_good=lambda good: good in TRADED, agent_prices_at=lambda: economy_prices, commodity_record=lambda tag: {},
+        material_prices={"salt": 4.0}, capability_sets=(frozenset(), frozenset({"school"}), {}))
     module.is_venture = lambda node_id: node_id in set(ventures)
     module.concern_baskets_now = lambda node_id: baskets
     module.venture_ramp = lambda node_id: 0.8
