@@ -292,7 +292,7 @@ class PortWorld(MapReads, ForeignReads):
 		return tuple(self._needs.mechanic[name])
 
 	def literacy(self, field, country=None):
-		return self._needs.literacy(field, country)
+		return self._needs.country_literacy_figure(country, field)
 
 	# ---- the land and the farm ----
 
