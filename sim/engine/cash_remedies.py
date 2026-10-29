@@ -24,12 +24,12 @@ def cash_remedies(actor):
     projects = actor.state.projects
     for node_id in sorted(projects.operating):
         if node_id in projects.done and node_id not in projects.granted:
-            saving = actor.venture_real_upkeep(node_id)
+            saving = actor.view("venture_real_upkeep")(node_id)
             if saving > 0.5:
                 found.append((saving, "mothball %s (stops %s a year of upkeep)" % (
                     node_id, money_text(saving, actor, grouped=True))))
     for material in sorted(actor.view("mine_capacity")()):
-        saving = sum(actor.mine_operating_cost_for(working)
+        saving = sum(actor.view("mine_working_cost")(working)
                      for working in actor._workings_of(material))
         if saving > 0.5:
             found.append((saving, "close %s (stops %s a year of mine costs)" % (
