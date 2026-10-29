@@ -31,10 +31,10 @@ class PlaceNameTests(unittest.TestCase):
         self.assertEqual(tile_names.places_on(map_with_places(PLACES), "empty_01"), [])
 
     def test_a_tile_row_carries_the_places_the_map_names(self):
-        self.assertEqual(tile_place("here_01", map_with_places(PLACES))["places"], ["Great", "Small"])
+        self.assertEqual(tile_place("here_01", ["Great", "Small"])["places"], ["Great", "Small"])
 
-    def test_a_map_without_places_changes_no_row(self):
-        self.assertNotIn("places", tile_place("here_01", map_with_places([])))
+    def test_a_tile_with_no_place_changes_no_row(self):
+        self.assertNotIn("places", tile_place("here_01", []))
         self.assertNotIn("places", tile_place("here_01"))
 
 

@@ -52,6 +52,9 @@ class _Host:
     def draw_deposit(self, deposit_id, tonnes):
         return self.module.draw_deposit(DrawDeposit(deposit_id, tonnes))
 
+    def deposit_catalogue(self):
+        return self.module.needs.deposit_catalogue()
+
     def send(self, command):   # the timber commands of the port's hooks: no recipe here fells wood
         return None
 

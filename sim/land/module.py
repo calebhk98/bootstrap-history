@@ -6,16 +6,21 @@ from sim.assembly.api import Module
 
 from .colonies import Colonies
 from .held import Held
+from .map_carriage import MapCarriage
+from .map_deposits import MapDeposits
+from .map_places import MapPlaces
+from .map_timber import MapTimber
 from .map_views import MapViews
 from .ownership import Ownership
 from .ways import Ways
 from .works import Works
 
 
-class Land(Ownership, Colonies, MapViews, Ways, Works, Held, Module):
+class Land(Ownership, Colonies, MapViews, MapPlaces, MapCarriage, MapTimber, MapDeposits, Ways, Works, Held, Module):
 
     def setup(self) -> None:
         self._caches = {}       # the transfer count, the owner map last seen and the tiles by owner; never saved
         self._tile_facts = {}   # tile -> what it gives an army; static, never saved
         self._map_cache = None
+        self._deposit_catalogue_cache = None
         self._geography_cache = None

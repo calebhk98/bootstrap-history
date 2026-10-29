@@ -7,11 +7,10 @@ import types
 import unittest
 
 from sim.markets import port_sites
-from sim.geography import api as geography
+from sim.tests import land_views
 
 ORE = "iron_ore_kg"
 OUTPUTS = {ORE: {ORE: 1000.0}, "coal_kg": {"coal_kg": 1000.0}, "bread_kg": {"bread_kg": 5.0}}
-WORLD_MAP = geography.open_map()
 
 
 def deposit(deposit_id, tile, room, remaining, grade=None):
@@ -23,7 +22,7 @@ class Host:
     """Holds the deposits the seat has found for iron, and records what is drawn from them."""
     def __init__(self, rows):
         self.rows, self.drawn = rows, []
-        self.world_map = WORLD_MAP
+        self.deposit_catalogue = land_views.of({}, ("deposit_catalogue",))["deposit_catalogue"]
         self.state = types.SimpleNamespace(economy=types.SimpleNamespace())
 
     def found_deposits(self, resource_id):

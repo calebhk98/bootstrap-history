@@ -12,6 +12,7 @@ from sim.prices.api import rules as price_rules
 
 from . import trade_duty
 from .port_world_foreign import ForeignReads
+from .port_world_map import MapReads
 
 
 class StateReads:
@@ -67,7 +68,7 @@ class LabourReads:
 		return self._needs.settlement_tiles()
 
 
-class PortWorld(ForeignReads):
+class PortWorld(MapReads, ForeignReads):
 
 	FREIGHT_DRIVER_WAGE_TRADE = FREIGHT_DRIVER_WAGE_TRADE
 	FREIGHT_FEED_PRICE_MATERIAL = FREIGHT_FEED_PRICE_MATERIAL
@@ -139,10 +140,6 @@ class PortWorld(ForeignReads):
 	@property
 	def cfg(self):
 		return self._needs.game_config()
-
-	@property
-	def world_map(self):
-		return self._needs.legacy_world_map()
 
 	@property
 	def nodes(self):

@@ -14,7 +14,7 @@ economy's labelled fallback (`UNSITED_EXTRACTION_ANYWHERE`).
 """
 from sim.economy import api as economy_api
 from sim.economy.api import SiteLimit, recipe_tile_key
-from sim.geography.api import ore_goods, ore_tonnes_per_tonne
+from sim.geography.api import ore_tonnes_per_tonne
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import port_timber
@@ -24,7 +24,7 @@ SITE_YIELD_FACTOR = 1.0   # an ore recipe's output per run is ore, whatever its 
 
 def _ore_recipes(sim, outputs_by_recipe):
     """{recipe id: (resource id, ore kg a run)} for the recipes whose output is a catalogue resource's ore."""
-    ore_of = {ore: resource for resource, by_ore in ore_goods(sim.world_map).items() for ore in by_ore}
+    ore_of = {ore: resource for resource, by_ore in sim.deposit_catalogue()["ore_goods"].items() for ore in by_ore}
     return {recipe_id: (ore_of[recipe_id], outputs[recipe_id]) for recipe_id, outputs in sorted(outputs_by_recipe.items())
             if recipe_id in ore_of and outputs.get(recipe_id, 0.0) > 0.0}
 

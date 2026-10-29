@@ -9,12 +9,14 @@ import json
 import os
 from typing import Any, Dict, List, Optional
 
-from sim.geography import api as geography
 from sim.ledger.api import PayEdge
 from sim.materials.api import ApplyThrottle
 from sim.resources.module import Resources
 from sim.resources.state import ResourcesSeat, ResourcesWorld
-from sim.tests import module_harness
+from sim.tests import land_views, module_harness
+
+LAND_VIEWS = ("deposit_catalogue", "deposits_listed", "deposits_worked_before", "deposit_working_rate", "prospect_finds",
+              "tile_endowment", "tiles_listed_by", "land_area_of", "felled_after_cuts", "felled_after_regrowth")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -27,10 +29,9 @@ def rome() -> Dict[str, Any]:
 def build(budget: float = 1e18, year: int = 100, seat: Optional[ResourcesSeat] = None, world: Optional[ResourcesWorld] = None,
           views: Optional[Dict[str, Any]] = None, answers: Optional[Dict[type, Any]] = None) -> Resources:
     """A Resources module whose reads are plain values; `budget` is what the seat can raise for one purchase."""
-    map_ = geography.open_map()
     civ = rome()
     plain: Dict[str, Any] = {
-        "year": year, "start_year": 100, "civilisation": civ, "legacy_world_map": map_, "price_index": 1.0,
+        "year": year, "start_year": 100, "civilisation": civ, "price_index": 1.0,
         "material_price": lambda material: 1.0, "wage": lambda trade: 1.0, "labour_quote": lambda trade, hours: 1.0,
         "money_per_labour_hour": 1.0, "normalized_material": lambda material: material, "material_demand": {},
         "material_checks": {}, "charcoal_per_hectare": 1.0, "material_shortfall": lambda material, by_tag=None: 0.0,
@@ -47,6 +48,7 @@ def build(budget: float = 1e18, year: int = 100, seat: Optional[ResourcesSeat] =
         "mass_text": lambda amount, **keywords: "%g t" % amount, "area_text": lambda amount, **keywords: "%g ha" % amount,
         "mass_rate_text": lambda amount, **keywords: "%g t/year" % amount,
         "mass_per_area_text": lambda amount, **keywords: "%g t per area" % amount}
+    plain.update(land_views.of(civ, LAND_VIEWS))
     plain.update(views or {})
     answers = {ApplyThrottle: 1.0, **(answers or {})}      # the materials module reads full pace unless a test says otherwise
     return module_harness.build(Resources, views=plain, answers=answers, world=world or ResourcesWorld(),

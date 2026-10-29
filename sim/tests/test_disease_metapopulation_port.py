@@ -8,6 +8,7 @@ import unittest
 
 from sim.disease import api as disease
 from sim.disease.module import Disease
+from sim.geography import api as geography
 from sim.tests.disease_stand_in import StandInSim, civilisation
 
 
@@ -121,7 +122,7 @@ class RegionalLossTest(unittest.TestCase):
         sim.module._forecast = {"expected_deaths": 1, "expected_working_age_share": 0.25, "by_pathogen": [],
                                               "expected_deaths_by_tile": {}, "arrival_chances": {}}
         held = set(sim.module.held_tiles())
-        outside = next(tile for tile in sim.module.needs.legacy_world_map().tiles if tile not in held)
+        outside = next(tile for tile in geography.open_map().tiles if tile not in held)
         self.assertGreaterEqual(sim.module.regional_disease_loss(outside), 0.25)
 
     def test_the_frontier_loss_is_the_mean_over_the_tiles_that_border_a_tile_not_held(self):

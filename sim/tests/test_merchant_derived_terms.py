@@ -14,8 +14,7 @@ from sim.freight.constants import SEA_MODE
 from sim.freight.module import Freight
 from sim.freight.route import Leg, Route
 from sim.geography import freight_cost, provisions, sea_freight, transport
-from sim.geography import api as geography
-from sim.tests import module_harness
+from sim.tests import land_views, module_harness
 from sim.world import market, merchant_house, merchant_terms
 
 CART = transport.draught_freight_physical_inputs(transport.OX, 2, transport.CART, transport.DIRT_TRACK)
@@ -51,14 +50,15 @@ class CrewChoiceTests(unittest.TestCase):
         inputs = sea_freight.sailing_freight_physical_inputs(crew=crew + extra)
         self.assertEqual(inputs.carried_kg_per_day, provisions.person_provisions_kg_per_day(crew + extra))
 
+FREIGHT_LAND_VIEWS = ("carriage_facts", "mode_carrier", "modes_carrying")
+
 
 def _economy(grain_price=1.0):
     """The freight module over a price table, a flat wage, the market rate and the real map."""
     prices = {"wheat_kg": grain_price, "wood_kg": 0.5, "coal_kg": 0.4, "iron_bar_kg": 8.0, "ox": 4000.0, "mule": 3000.0}
-    world_map = geography.open_map()
     return module_harness.build(Freight, views={
         "material_prices": lambda: prices, "material_price": lambda tag: prices.get(tag), "wage": lambda trade: 2.0,
-        "market_rate": lambda: 0.05, "legacy_world_map": lambda: world_map})
+        "market_rate": lambda: 0.05, **land_views.of({}, FREIGHT_LAND_VIEWS)})
 
 
 class EngineCrewTests(unittest.TestCase):

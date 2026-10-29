@@ -8,13 +8,14 @@ from sim.disease.api import RunEpidemicYear, nation_tuning
 from sim.disease.module import Disease
 from sim.disease.state import DiseaseWorld
 from sim.geography import api as geography
-from sim.tests import module_harness
+from sim.tests import land_views, module_harness
 from sim.world import demography
 
 BANDS = nation_tuning.BANDS
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SEEDS = (1, 2, 3, 4, 5, 6)
+LAND_VIEWS = ("home_modes", "reach_days", "endemic_people_loss", "tile_description", "borders_among", "tiles_listed_by")
 
 
 @functools.lru_cache(maxsize=1)
@@ -40,7 +41,7 @@ class StandInSim:
                      + self.population.elderly * demography.ELDERLY_CALORIE_EQUIVALENT
                      ) * demography.SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY
         self.module = module_harness.build(Disease, world=DiseaseWorld(), views={
-            "year": lambda: self.year, "civilisation": civ, "legacy_world_map": world_map(),
+            "year": lambda: self.year, "civilisation": civ,
             "weather_seed": lambda year, region=None: self.seed * 7919 + year,
             "people_by_band": lambda: {band: float(getattr(self.population, band)) for band in BANDS},
             "nutrition_ratio": lambda food: self.population.nutrition_ratio(food),
@@ -49,7 +50,8 @@ class StandInSim:
             "urban_fraction": lambda: self.urban_fraction(),
             "home_tiles_held": lambda: geography.tiles_held(civ, world_map()),
             "held_techniques": lambda include_starting: frozenset(civ.get("starting_techs", ())),
-            "effect_terms": lambda channel: [], "civ_diffusion": lambda node_id: 0.0})
+            "effect_terms": lambda channel: [], "civ_diffusion": lambda node_id: 0.0,
+            **land_views.of(civ, LAND_VIEWS, held_techniques=frozenset(civ.get("starting_techs", ())))})
 
     def urban_fraction(self):
         return float(self.civ.get("urban_fraction", 0.0))

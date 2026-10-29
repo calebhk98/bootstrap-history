@@ -181,7 +181,7 @@ def sim(civ="rome_100ad", capital=None, manual=True, events=False, surveyed=None
               civ=S.load_civ(civ), cfg=config)
     test_sim.goal = GOAL
     test_sim.send(StartDoneYearRecord())
-    for material in (("coal",) + tuple(_ore_goods(test_sim.view("legacy_world_map")()))) if surveyed is None else tuple(surveyed):
+    for material in (("coal",) + tuple(test_sim.view("deposit_catalogue")()["ore_goods"])) if surveyed is None else tuple(surveyed):
         found_deposits_of(test_sim, material)
     return test_sim
 
@@ -212,23 +212,17 @@ def build_unopened(factory):
     return game
 
 
-def _ore_goods(world_map):
-    from sim.geography import api as _geography
-    return _geography.ore_goods(world_map)
-
-
 def found_deposits_of(game, material):
     """Give the game the deposits of `material` that thorough prospecting of its held tiles would find, without
     paying for the search, so a test can open a mine (a mine names a deposit it has found)."""
-    from sim.geography import api as _geography
     resources = game.assembly.modules["resources"]
     resource_id = resources.mine_resource_id(material)
     if resource_id is None:
         return []
     seed = "tests"
-    held = _geography.tiles_held(game.civ, game.view("legacy_world_map")())
-    for tile in sorted(held, key=lambda tile: -_geography.endowment(tile, resource_id, game.view("legacy_world_map")())["undiscovered_expected"]):
-        found = _geography.prospect(tile, resource_id, 1e12, seed, game.view("legacy_world_map")())
+    held = game.view("tiles_listed_by")(game.civ)
+    for tile in sorted(held, key=lambda tile: -game.view("tile_endowment")(tile, resource_id)["undiscovered_expected"]):
+        found = game.view("prospect_finds")(tile, resource_id, 1e12, seed)
         known = {row["id"] for row in resources.seat.deposits_found}
         resources.seat.deposits_found.extend(dict(row) for row in found if row["id"] not in known)
     return game.view("found_deposits")[material]

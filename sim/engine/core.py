@@ -7,14 +7,13 @@ from sim.workforce.api import WatchStaff
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from sim.engine.state import SimulationState
 from sim.engine.state_seat import bind_seat
-from .data import (DEFAULTS, kit_capital, load_civ, load_geography, 
+from .data import (DEFAULTS, kit_capital, load_civ,
                    nodes_in_civ_money, TRADE_REGISTRY)
 
 from sim.world import demography
 from sim.world import agriculture
 from sim.agriculture.api import RecordOpeningFarm, SetFarmTerritory
 from sim.world import land
-from sim.geography.api import regions, tiles_held
 
 
 from sim.land.api import rules as land_rules
@@ -136,7 +135,7 @@ class Sim(
         # Initial condition: cleared area is what feeds the starting
         # population given the yield of the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
-        held_tiles = tiles_held(self.civ, self.view("legacy_world_map")())
+        held_tiles = self.view("tiles_listed_by")(self.civ)
         land_rules.require_territory(self.civ, held_tiles)
         territory = land.territory_cropland(self.view("farm_sites")())
         self.send(SetFarmTerritory(territory.ladder, territory.cropped_hectares))
@@ -187,7 +186,7 @@ class Sim(
         # existence somewhere does not mean an unlimited quantity of it is
         # available.
         # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY (computed once; see sim/geography/)
-        self.view("legacy_geography")().open(load_geography(self.view("legacy_world_map")()))
+        self.view("legacy_geography")().open(self.view("geography_data")())
         # Whatever this civilization already has is free and already done, and it
         # is GRANTED, not earned: it must never count in done_earned as though
         # the founder had built it, and it must never be "forgotten" in a

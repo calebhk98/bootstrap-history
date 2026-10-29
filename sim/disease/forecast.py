@@ -1,6 +1,4 @@
 """What the model expects of the coming year, and what the diseases take from a tile in a year."""
-from sim.geography.api import endemic_people_loss, settlement
-
 from . import metapopulation as spread, nation, rules
 from .epidemics import pathogens
 from .technology_effects import working_age_death_share
@@ -49,7 +47,7 @@ class Forecast:
         """The share of a working-age person on `tile` the diseases there take in a year: the endemic death rate
         of the tile's land plus the model's forecast of this year's epidemics on it (the nation's share on a tile it
         does not hold, where no infection is followed). Over a year, so a party's losses on arrival follow from it."""
-        endemic = endemic_people_loss([tile], self.needs.legacy_world_map()).get("working_age", 0.0)
+        endemic = self.needs.endemic_people_loss([tile]).get("working_age", 0.0)
         forecast = self.epidemic_forecast()
         return rules.regional_loss(endemic, forecast["expected_deaths_by_tile"], forecast["expected_working_age_share"],
                                    self.people_by_tile(), tile)
@@ -58,7 +56,7 @@ class Forecast:
         """The mean `regional_disease_loss` over the tiles held that border a tile not held: where a campaign
         in the field meets the country's neighbours."""
         held = self.held_tiles()
-        frontier = rules.frontier_tiles(held, settlement.borders_among(sorted(set(held)), self.needs.legacy_world_map()))
+        frontier = rules.frontier_tiles(held, self.needs.borders_among(sorted(set(held))))
         if not frontier:
             return 0.0
         return sum(self.regional_disease_loss(tile) for tile in frontier) / len(frontier)

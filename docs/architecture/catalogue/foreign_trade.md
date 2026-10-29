@@ -25,7 +25,7 @@ Trade with partner countries: their economies as markets, what they can supply, 
 | Views / commands | 30 / 8 |
 | Views of other modules it reads | 33 (the spec's `READS_BY_OWNER`); none cached |
 | Commands of other modules it sends | `PayActorFromEdge` and `PayEdgeFrom` (the ledger's), `NoteTraderMargin` (the actors') |
-| `legacy_*` reads (debts) | `legacy_actor_registry` (the cast), `legacy_world_map` |
+| `legacy_*` reads (debts) | `legacy_actor_registry` (the cast) |
 | State | `ForeignTradeWorld` (world scope); caches of facts, chains and demand are rebuilt on demand and never saved |
 | Log lines written | none |
 | New commands in other packages | `PayActorFromEdge` (ledger; applied by the ledger module), `NoteTraderMargin` (actors; applied by the bridge) |

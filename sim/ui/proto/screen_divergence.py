@@ -7,7 +7,6 @@ list, each hazard's stated causes judged against the run as it stands. The basel
 player; when it has not been generated the screen says so and how to make it, rather than guessing.
 """
 from sim.engine import baseline_ensemble
-from sim.geography.api import regions_of_tiles, tiles_held
 
 _HAPPENED = "happened"
 _UNDER_WAY = "under way"
@@ -61,7 +60,7 @@ def _dated_events(sim):
 
 
 def tile_count(sim):
-    return len(tiles_held(sim.view("civilisation")(), sim.view("legacy_world_map")()))
+    return len(sim.view("tiles_listed_by")(sim.view("civilisation")()))
 
 
 def _current(sim):
@@ -105,9 +104,8 @@ def divergence_report(sim):
     def started(field):
         return None if start is None else start.get(field)
 
-    now_regions = regions_of_tiles(tiles_held(sim.view("civilisation")(), sim.view("legacy_world_map")()))
-    start_regions = [] if start is None else regions_of_tiles(
-        tiles_held(start, sim.view("legacy_world_map")()))
+    now_regions = sim.view("regions_of")(sim.view("tiles_listed_by")(sim.view("civilisation")()))
+    start_regions = [] if start is None else sim.view("regions_of")(sim.view("tiles_listed_by")(start))
     spread = sim.view("diffusion_report")()
     baseline = baseline_section(sim)
     return {

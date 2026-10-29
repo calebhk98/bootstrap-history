@@ -1,10 +1,6 @@
 """The cheapest route over the map's tiles, each leg by a mode its users can employ, with the dues of every change of
 mode: the one haul pricing foreign trade and domestic hauls share. The legs of the chosen route are kept, with their
 travel days, so a player can see where goods travel."""
-from sim.geography.api import tiles_held
-from sim.geography.api import route as route_over_tiles
-from sim.geography.api import usable_modes as usable_route_modes
-
 from . import rules
 from .constants import GOODS_CARGO, LIVING_STOCK_CARGO
 from .route import route_from_geography
@@ -12,7 +8,7 @@ from .route_choice import choose_route
 
 
 class Routes:
-    """Needs: legacy_world_map, civilisation, held_techniques, techniques_with_results, partner_market_book, plus what
+    """Needs: tiles_listed_by, modes_usable, cheapest_route, civilisation, held_techniques, techniques_with_results, partner_market_book, plus what
     Models needs."""
 
     def foreign_flow_imbalance(self, civilization_id):
@@ -28,7 +24,7 @@ class Routes:
         foreign_techs = self.needs.techniques_with_results(frozenset(civilization.get("starting_techs") or ()))
         if imbalance is None:
             imbalance = self.foreign_flow_imbalance(civilization.get("id"))
-        return self.haul_route(tiles_held(civilization, self.needs.legacy_world_map()), imbalance, cargo, foreign_techs)
+        return self.haul_route(self.needs.tiles_listed_by(civilization), imbalance, cargo, foreign_techs)
 
     def haul_route(self, origin_tiles, imbalance, cargo, partner_techs=None, improvements=None):
         """The cheapest `Route` from `origin_tiles` to this society's tiles, leg by leg, each leg at its mode's money
@@ -37,17 +33,16 @@ class Routes:
         home_techs = self.needs.held_techniques(False)
         techs = home_techs | partner_techs if partner_techs is not None else home_techs
         mode_costs = self.freight_mode_costs(imbalance)
-        world_map = self.needs.legacy_world_map()
-        modes = [mode for mode in usable_route_modes(
-                    (home_techs, partner_techs) if partner_techs is not None else (home_techs,), world_map, cargo)
+        modes = [mode for mode in self.needs.modes_usable(
+                    (home_techs, partner_techs) if partner_techs is not None else (home_techs,), cargo)
                  if mode in mode_costs]
-        destination_tiles = tiles_held(self.needs.civilisation(), world_map)
+        destination_tiles = self.needs.tiles_listed_by(self.needs.civilisation())
         handling = self.freight_handling_costs()
 
         def search(rates):
-            found = route_over_tiles(
+            found = self.needs.cheapest_route(
                 origin_tiles, destination_tiles, modes, improvements, mode_costs=rates, handling_costs=handling,
-                held_nodes=techs, world_map=world_map)
+                held_nodes=techs)
             return None if found is None else self.with_carried_provisions(
                 route_from_geography(found), mode_costs, rates)
         return choose_route(search, lambda route: route.cost_per_tonne, mode_costs, self.share_delivered_on)
@@ -89,11 +84,9 @@ class Routes:
         if key not in cache:
             home_techs = self.needs.held_techniques(False)
             mode_costs = self.freight_mode_costs(0.0)
-            world_map = self.needs.legacy_world_map()
-            modes = [mode for mode in usable_route_modes((home_techs,), world_map) if mode in mode_costs]
-            found = route_over_tiles([origin], [destination], modes, mode_costs=mode_costs,
-                                     handling_costs=self.freight_handling_costs(), held_nodes=home_techs,
-                                     world_map=world_map)
+            modes = [mode for mode in self.needs.modes_usable((home_techs,)) if mode in mode_costs]
+            found = self.needs.cheapest_route([origin], [destination], modes, mode_costs=mode_costs,
+                                              handling_costs=self.freight_handling_costs(), held_nodes=home_techs)
             cache[key] = 0.0 if found is None else self.with_carried_provisions(
                 route_from_geography(found)).cost_per_tonne
         return cache[key]

@@ -10,11 +10,10 @@ import collections
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
-from sim.geography import api as geography
 from sim.ledger.api import rules as ledger_rules
 from sim.materials.module import Materials
 from sim.materials.state import MaterialsSeat
-from sim.tests import module_harness
+from sim.tests import land_views, module_harness
 
 
 def projects(done: Any = (), active: Optional[Dict[str, Any]] = None) -> Any:
@@ -27,7 +26,7 @@ def build(seat: Optional[MaterialsSeat] = None, views: Optional[Dict[str, Any]] 
           **overrides: Any) -> Materials:
     """A Materials module whose reads are plain values; keyword arguments (or `views`) override a view by name."""
     plain: Dict[str, Any] = {
-        "year": 100, "civilisation": {}, "legacy_world_map": geography.open_map(), "tree": lambda node_id: None,
+        "year": 100, "civilisation": {}, "tree": lambda node_id: None,
         "tree_nodes": {}, "techniques_held": set(), "visibility": lambda node_id, memo=None: True,
         "hard_prerequisites": lambda node_id: [], "projects_record": projects(), "active_projects_version": 0, "techniques_version": 0,
         "operating": set(), "default_population": 65e6, "pop_scale": 1.0, "empire_output": {},
@@ -49,6 +48,7 @@ def build(seat: Optional[MaterialsSeat] = None, views: Optional[Dict[str, Any]] 
         "failure_reset_share": 0.4, "shared_bill": lambda node_id, compute: compute(),
         "civ_cost_factor": lambda node_id: 1.0, "can_pay": lambda cost: True,
         "purchase_refusal": lambda what, cost: ("refused", what, cost)}
+    plain.update(land_views.of({}, ("tiles_listed_by", "forest_increment")))
     plain.update(views or {})
     plain.update(overrides)
     record = plain.pop("projects_record")   # a test gives its projects as one record

@@ -16,7 +16,7 @@ def _rates(resource_id: str) -> Dict[str, float]:
     return {deposit.name: deposit.quantity_tonnes_per_year for deposit in deposit_model.load_deposits(resource_id)}
 
 
-def historical_rates(world_map, resource_id: str) -> Dict[str, float]:
+def historical_rates(metals, resource_id: str) -> Dict[str, float]:
     """{deposit id: tonnes of the resource a year} for the deposits the output model rates; empty for a
     resource it does not model."""
-    return _rates(resource_id) if resource_id in deposit_model.metals(world_map) else {}
+    return _rates(resource_id) if resource_id in metals else {}

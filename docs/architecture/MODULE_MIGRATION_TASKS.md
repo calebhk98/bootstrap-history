@@ -62,7 +62,7 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 | stores | `sim/stores/` | the declared mod stores and their saved values (`StoresWorld.values`); a game's declarations are the answers to its `store_declarations` point (the base game's and the mods' data through the bridge views `base_store_declarations` and `data_store_declarations`, and mod code through `api.store`); `Sim.stores` is a property over the module's `store_book` view |
 | production | `sim/production/` | revenue, upkeep, concerns and their book sales, volume, industry depth and learning, techniques in use, capability; still to do: `projects.operating` and the revenue caches on the household, `node_rederive.py` (shared tree pricing), and its `legacy_game` reads |
 
-The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equivalence tier identical at the prices, demography, land, markets, production, projects last-mixins (`161acde1`, which includes the ledger money) and phase 6 (`0c5c18aa`, which includes the year composition) merges; stress tier and protocol transcripts identical after each module. Phase 6b: the full tier at `2294c07f` found Rome seed 1 diverging at year 16 (the army's food check, a read left dead by a move; fixed in `49f8ee4c`, where Rome seed 1 is identical over 40 years); England and Han seed 1 identical at `4bd5f60b`, Rome seed 2 at `2294c07f`; the full tier identical, all four scenarios, at `00c664b8`; micro identical at `282b5913` and `e682ec98`; stress and the protocol transcripts identical at `5a11b0f8` (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
+The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equivalence tier identical at the prices, demography, land, markets, production, projects last-mixins (`161acde1`, which includes the ledger money) and phase 6 (`0c5c18aa`, which includes the year composition) merges; stress tier and protocol transcripts identical after each module. Phase 6b: the full tier at `2294c07f` found Rome seed 1 diverging at year 16 (the army's food check, a read left dead by a move; fixed in `49f8ee4c`, where Rome seed 1 is identical over 40 years); England and Han seed 1 identical at `4bd5f60b`, Rome seed 2 at `2294c07f`; the full tier identical, all four scenarios, at `00c664b8`; micro identical at `282b5913`, `e682ec98`, `d967c61f`, `9c661d02` and `54052b76` (the seat purse; stress identical there too, against the baseline re-recorded for Complaint 921); stress and the protocol transcripts identical at `5a11b0f8` (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
 
 Phase 6 (a) is done: `sim/ui/` reads views and sends commands (`tools/check_ui_views.py` checks every name it uses exists; a 168-command protocol session gave identical replies to the base). Still to do in phase 6: about 490 forwarders in `sim/engine/forward_*.py` and `core_properties.py` that engine code, mods and tests still call, and the mixin fakes in the tests (137 files, mostly the labour package's own mixins). Next: those forwarders' engine callers, the projects record's shared sets and the purses; phase 7 in progress (the mod registries other than the ui's are extension points of their owners: `mod_code.py`, `docs/architecture/MODULE_REGISTRY_PLAN.md` section 4.5); then 8 and 9.
 
@@ -208,6 +208,19 @@ actors (21), hazards, workforce (20 each), projects (19).
   `python3 tools/measure/module_graph.py`.
 - [ ] No other `legacy_*` view that hands out a live object (`legacy_world_map`,
 `legacy_economy`, `legacy_labour` and the rest: `python3 tools/measure/module_graph.py`).
+- [x] The game's map is land's, asked as questions: actors, disease, foreign trade, freight, markets, materials, resources and the
+  screens read views instead of the map object. Land publishes places (`tile_description`, `land_area_of`, `tile_climates`,
+  `tile_places`, `regions_of`, `endemic_people_loss`), carriage (`modes_usable`, `modes_carrying`, `carriage_facts`, `mode_carrier`,
+  `mode_crews`, `cheapest_route`, `reach_days`), the forest (`forest_increment`, `felled_after_cuts`, `felled_after_regrowth`,
+  `timber_on_tile`) and the deposits (`deposit_catalogue`, `deposits_listed`, `deposits_worked_before`, `deposit_working_rate`,
+  `prospect_finds`, `tile_endowment`), in `sim/land/map_*.py`. The one handout left is `map_for_agent_economy`, read by the
+  markets port to fill the agent economy's `EconomySetup.world_map` (the economy package takes geography's map as its
+  parameter). `legacy_world_map` is still published because `sim/engine/core.py` (a hub file) reads it twice: replace
+  `tiles_held(self.civ, self.view("legacy_world_map")())` with `self.view("tiles_listed_by")(self.civ)` and
+  `load_geography(self.view("legacy_world_map")())` with `self.view("geography_data")()`, then delete the view and
+  `Land.legacy_world_map`.
+- [ ] No other `legacy_*` view that hands out a live object (`legacy_economy`, `legacy_labour` and the rest:
+  `python3 tools/measure/module_graph.py`).
 - [x] The `scenario` module (`sim/scenario/`) owns the game's setup and clock: the civilisation, the configuration, the modes
   (events, manual, fog, fuzzy estimates), the year (only `AdvanceYear` moves it), the horizon, the danger and project limits,
   and the text helpers that follow the coin and the player's units (`money_text`, `mass_text`, `plain_number`, ...). Its

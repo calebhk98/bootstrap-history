@@ -1,6 +1,4 @@
 """The disease burden the technologies a nation holds leave, and the endemic death rates of the land it holds."""
-from sim.geography.api import endemic_people_loss, tiles_held
-
 from .burden_rules import burden_from_holdings
 
 
@@ -26,5 +24,4 @@ class Burden:
 
     def endemic_death_rates(self):
         """{band: excess deaths per head per year} from the endemic diseases of the tiles the nation holds."""
-        world_map = self.needs.legacy_world_map()
-        return endemic_people_loss(tiles_held(self.needs.civilisation(), world_map), world_map)
+        return self.needs.endemic_people_loss(self.needs.tiles_listed_by(self.needs.civilisation()))

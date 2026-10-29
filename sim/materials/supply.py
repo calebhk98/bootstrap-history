@@ -4,15 +4,13 @@ import collections
 import math
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from sim.geography.api import tiles_held, timber_mean_increment_tonnes_per_hectare_year
-
 from . import capacity, rules
 from .constants import (FIREWOOD_PER_CHARCOAL_MASS_RATIO, GENERIC_MARKET_SHARE_LEDGER_FALLBACK, MARKET_SHARE,
                         MATERIAL_CHECKS, MATERIAL_PRICE_DEMAND_SHARE_CAP, MATERIAL_PRICE_PRESSURE_SCALE)
 
 
 class Supply:
-    """Needs: civilisation, legacy_world_map, commodity_record, commodity_country_output, material_commodity_map,
+    """Needs: civilisation, tiles_listed_by, forest_increment, commodity_record, commodity_country_output, material_commodity_map,
     material_prices, mine_works_materials, empire_output, pop_scale, mineral_scale, found_deposits, agent_producer_capacity,
     price_epoch, producers_stamp, running_stamp, effect_best, mechanic, running, forest_hectares,
     nitre_beds, mine_capacity, mine_depletion, partner_import, foreign_supply_tonnes, can_be_bought, goods_stock,
@@ -39,11 +37,10 @@ class Supply:
     def charcoal_per_hectare(self) -> float:
         """Tonnes of charcoal a year a hectare of coppice yields: the stem wood the home forest grows a hectare a year, all
         cut and burned at the wood-to-charcoal ratio."""
-        world_map = self.needs.legacy_world_map()
-        tiles = tuple(tiles_held(self.needs.civilisation(), world_map))
+        tiles = tuple(self.needs.tiles_listed_by(self.needs.civilisation()))
         cached = self._coppice
         if cached is None or cached[0] != tiles:
-            cached = self._coppice = (tiles, timber_mean_increment_tonnes_per_hectare_year(tiles, world_map))
+            cached = self._coppice = (tiles, self.needs.forest_increment(tiles))
         return cached[1] / FIREWOOD_PER_CHARCOAL_MASS_RATIO
 
     # ---- memos that hold while what is built and run is unchanged ----

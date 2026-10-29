@@ -24,8 +24,9 @@ class CollectionView:
 	def collection_modes(self) -> Iterable[str]:
 		raise NotImplementedError
 
-	def collection_world_map(self) -> Any:
-		return None
+	def collection_reach(self, seat: str, modes: Iterable[str]) -> Dict[str, float]:
+		"""{tile: fewest days} from the seat's tile by these modes; over the base map unless a world says otherwise."""
+		return reach([seat], modes, FAR_DAYS)
 
 	def staff_employed(self, line_name: str, trade: str, kept: float) -> float:
 		"""Staff of a budget line on the payroll: those the line asks for, less the share it left unpaid."""
@@ -63,7 +64,7 @@ class CollectionView:
 			if seat is not None:
 				days = {seat: 0.0}
 				if modes:
-					days.update(reach([seat], modes, FAR_DAYS, world_map=self.collection_world_map()))
+					days.update(self.collection_reach(seat, modes))
 			memo["people"], memo["days"] = people, days
 		return memo
 

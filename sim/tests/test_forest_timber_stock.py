@@ -10,7 +10,7 @@ from sim.geography import api as geography
 from sim.geography import forest_timber
 from sim.resources.api import FellTimber, RegrowTimber
 from sim.resources.state import ResourcesWorld
-from sim.tests import resources_stand_in
+from sim.tests import land_views, resources_stand_in
 from sim.world import demand
 
 FIREWOOD = "firewood_kg"
@@ -22,8 +22,9 @@ def _host(felled=None):
     """A game for the port's timber hooks: the resources module holds the felled ledger and applies the commands."""
     module = resources_stand_in.build(world=ResourcesWorld(forest_felled=dict(felled or {})))
     handlers = {FellTimber: module.fell_timber, RegrowTimber: module.regrow_timber}
-    return types.SimpleNamespace(world_map=WORLD_MAP, module=module, timber_felled=module.timber_felled,
-                                 send=lambda command: handlers[type(command)](command))
+    return types.SimpleNamespace(module=module, timber_felled=module.timber_felled,
+                                 send=lambda command: handlers[type(command)](command),
+                                 **land_views.of({}, ("mode_crews", "modes_carrying", "timber_on_tile")))
 
 
 def _forest_tile():

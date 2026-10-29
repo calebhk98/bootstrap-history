@@ -41,7 +41,7 @@ proposal. Counts come from the module spec
 | Measure | Value |
 |---|---|
 | Views / commands | 27 / 10 |
-| Views of other modules it reads | 40, none of them `legacy_*` except `legacy_world_map` (the map handle the geography package's searches take) |
+| Views of other modules it reads | 40, none of them `legacy_*` (the map is asked through land's deposit, timber and tile views) |
 | Commands of other modules it sends | the ledger's `PayEdge` and `ReceiveFromEdge`; reporting's `RecordEvent`, `RecordAutomation`, `RecordAutomationSkip` |
 | State | seat: `mines`, `mine_pending`, `mine_ready`, `mine_cost_paid`, `mine_tranches`, `deposits_found`, `deposit_drawn`, `prospected_person_days`, `forest_ha`, `nitre_bed_m2`; world: `forest_felled` |
 | Phases | `materials` (seat) |
@@ -120,7 +120,7 @@ Kind T is table, K keyed, Q quote. Cached views name their channel.
 
 ## Debts
 
-`legacy_world_map` (read in place by the geography searches). Forwarders left on `Sim` (`sim/engine/forward_resources.py`):
+Forwarders left on `Sim` (`sim/engine/forward_resources.py`):
 `mine_capacity`, `MINE_OPEX_MATERIALS`, `base_mine_catalog_hint`, `mine_operating_cost`, `mine_operating_cost_for`,
 `_workings_of`, `mothball_mines`, `found_deposits`, `partner_deposits`, `draw_deposit`, `mine_depletion_factor`,
 `shortage_remedy`, `shortage_remedy_plan`, `_running_kept`, `_running_kept_stamp`.

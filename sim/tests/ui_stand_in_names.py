@@ -328,7 +328,6 @@ FACT_OF_VIEW_MORE = {
     "hours_per_person_year": "HOURS_PER_PERSON_YEAR",
     "labour_productivity_sources": "LABOUR_PRODUCTIVITY_SOURCES",
     "legacy_geography": "geography",
-    "legacy_world_map": "world_map",
     "material_checks": "MATERIAL_CHECKS",
     "mine_capacity": "mine_capacity",
     "money_real": "money_real",

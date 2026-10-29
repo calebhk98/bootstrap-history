@@ -17,7 +17,7 @@ from .constants import (FOREST_HA_PER_MILLION_KM2_BASE, FOREST_HA_PER_MILLION_KM
 
 
 class Woodland:
-    """Needs: legacy_world_map, civilisation, price_index, money_per_labour_hour, revenue_estimate, forest_reach, can_pay,
+    """Needs: land_area_of, tiles_listed_by, civilisation, price_index, money_per_labour_hour, revenue_estimate, forest_reach, can_pay,
     area_text. Sends PayEdge, RecordEvent."""
 
     def forest_hectares(self) -> float:
@@ -47,7 +47,7 @@ class Woodland:
 
     def home_land_area_km2(self) -> float:
         """Total land area of the tiles the civilisation holds, not counted by how many region labels the ground is filed under."""
-        return ceilings.held_land_area_km2(self.needs.civilisation(), self.needs.legacy_world_map())
+        return self.needs.land_area_of(self.needs.tiles_listed_by(self.needs.civilisation()))
 
     def forest_land_ceiling(self) -> float:
         """The largest standing coppice that could ever be held, in hectares."""
