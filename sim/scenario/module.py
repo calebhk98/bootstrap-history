@@ -96,6 +96,10 @@ class Scenario(Module):
 	def civilisation_of_game(self) -> Dict[str, Any]:
 		return self.civilisation
 
+	def opening_civilisation(self) -> Dict[str, Any]:
+		"""The civilisation as the game opened on it, before it drifted."""
+		return self.start_civilisation
+
 	def civilisation_record(self, civilization_id: str) -> Dict[str, Any]:
 		"""The civilisation `civilization_id` as its file gives it (mods applied, checked)."""
 		return self.sources.load_civilisation(civilization_id)

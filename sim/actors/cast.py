@@ -2,7 +2,8 @@
 the opening roster, and the world the actors are handed."""
 from typing import Any, List, Optional, Tuple
 
-from sim.agents.api import ActorExtensions, ActorRegistry, combine_extensions, seed_cast, shipped_extensions
+from sim.agents.api import (ActorExtensions, ActorRegistry, cast_from_civilisations, combine_extensions, seed_cast,
+                            shipped_extensions)
 
 from .world import ActorWorld
 
@@ -87,7 +88,9 @@ class Cast:
 		registry = self.cast()
 		if registry.state.home_country:
 			return []
-		home_country, entries, profiles = self.needs.opening_cast()
+		needs = self.needs
+		foreign = [needs.civilisation_record(civilization_id) for civilization_id in needs.partners()]
+		home_country, entries, profiles = cast_from_civilisations(needs.opening_civilisation(), foreign)
 		return seed_cast(registry, home_country, entries, profiles)
 
 	def seeded_actor_registry(self) -> ActorRegistry:

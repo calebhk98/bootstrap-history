@@ -23,7 +23,7 @@ from .module import Actors
 
 READS_BY_OWNER = {
 	"core": ("year", "civilisation", "game_setting", "shared_answers", "legacy_constant", "acting_as", "declared_actor_kinds",
-	         "opening_cast", "money_text", "mass_rate_text"),
+	         "opening_civilisation", "civilisation_record", "money_text", "mass_rate_text"),
 	"seats": ("acting_seat", "acting_country", "seat_list", "legacy_seats", "seat_place", "seat_party", "legacy_household_actor",
 	          "disclosure", "disclosures"),
 	"knowledge": ("tree_nodes", "techniques_granted", "legacy_projects", "held_techniques", "legacy_world_map"),
@@ -53,7 +53,7 @@ READS_BY_OWNER = {
 	"land": ("home_tiles_held",),
 	"agriculture": ("farm_holdings", "farm_food_demand_kg"),
 	"mechanics": ("mechanic",),
-	"foreign_trade": ("foreign_economies", "partner_facts", "partner_book_entry", "partner_price_per_unit", "partner_price_response",
+	"foreign_trade": ("partners", "foreign_economies", "partner_facts", "partner_book_entry", "partner_price_per_unit", "partner_price_response",
 	                  "partner_household_demand", "actor_home_trade", "landed_cost", "trade_value_in_year", "not_traded_materials",
 	                  "home_household_tonnes", "border_duty_per_tonne"),
 }
