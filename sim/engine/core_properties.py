@@ -169,8 +169,6 @@ class ForwardingPropertiesMixin:
 		if sub is not None:
 			setattr(sub, "_dashboard_history", value)
 
-	@property
-
 	# =========================================================================
 	# FounderState Compatibility Properties
 	# =========================================================================
