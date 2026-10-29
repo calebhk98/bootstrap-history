@@ -47,10 +47,9 @@ class CreditLineSought(unittest.TestCase):
 
 class StallDiagnosis(unittest.TestCase):
     def _stalled(self, hours=500.0, best_pays=900.0, standing_pays=0.0, loss_per_year=400.0, interest_rate=0.0, capital=-4000.0, insolvent_years=None):
-        labour = SimpleNamespace(
-            hours_for_sale=lambda: hours, best_wage_trade=lambda: "smith",
-            work_for_wages_dry_run=lambda trade, quoted_hours: (best_pays, None), standing_job_pay=lambda trade: standing_pays)
-        module = household(capital=capital, revenue_capacity=0.0, upkeep=0.0, held_trade="labourer", legacy_game=SimpleNamespace(labour=labour))
+        module = household(capital=capital, revenue_capacity=0.0, upkeep=0.0, held_trade="labourer", hours_for_sale=hours,
+                           best_wage_trade="smith", work_for_wages_dry_run=lambda trade, quoted_hours: (best_pays, None),
+                           standing_job_pay=lambda trade: standing_pays)
         module.living_cost = lambda revenue=None, upkeep=None, capital=None: loss_per_year
         module.debt_interest_rate = lambda: interest_rate
         if insolvent_years is not None:

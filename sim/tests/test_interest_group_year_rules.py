@@ -153,7 +153,7 @@ class GroupYear(unittest.TestCase):
 def founder_reads(records, unfunded=None):
     """The polity module's reading side over a given list of group records."""
     module = polity_host.build(state_treasury=types.SimpleNamespace(record=types.SimpleNamespace(unfunded=unfunded or {})),
-                               cast_state=types.SimpleNamespace(records=records))
+                               cast_recorded=bool(records))
     module._group_records = lambda: records
     return module
 
@@ -193,7 +193,7 @@ class FounderReadsOfGroups(unittest.TestCase):
 def prohibition(ban=None, protection=0.0, state_interest=0.0):
     """The polity module over a stated ban, a founder's protection and the state's interest in the node."""
     module = polity_host.build(seat=PolitySeat(protection=protection), tree_nodes={"press": {"name": "Press"}},
-                               cast_state=types.SimpleNamespace(records=[1]))
+                               cast_recorded=True)
     module._technique_bans = lambda: {} if ban is None else {"press": ban}
     module.state_interest = lambda node: state_interest
     return module

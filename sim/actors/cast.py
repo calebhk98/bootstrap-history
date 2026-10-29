@@ -1,6 +1,6 @@
 """The cast: the registry of other actors the module keeps over its saved state, the government of the acting seat's country,
 the opening roster, and the world the actors are handed."""
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
 from sim.agents.api import ActorExtensions, ActorRegistry, combine_extensions, seed_cast, shipped_extensions
 
@@ -65,6 +65,18 @@ class Cast:
 	def cast_state(self) -> Any:
 		"""The cast's saved records, for readers that look at them without making the registry."""
 		return self.world
+
+	def cast_recorded(self) -> bool:
+		"""Whether the cast holds any actor's record yet."""
+		return bool(self.world.records)
+
+	def government_figures(self, country: str) -> Optional[Tuple[float, float, float]]:
+		"""(the grant a patron state pays its clients, the share of income it takes as requisition, as office fees) for the
+		government of `country`, or None when it has no record."""
+		record = self.world.records.get("government:" + country)
+		if record is None:
+			return None
+		return record.patron_grant, record.levy_requisition_rate, record.levy_office_rate
 
 	def edge(self, name: str) -> Any:
 		"""The named edge a posting names when its other side is not an actor the simulation models."""

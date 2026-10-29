@@ -38,7 +38,8 @@ class Lenders(unittest.TestCase):
 
     def lenders_market(self, purses, firms, lenders):
         return module_harness.build(Finance, views={
-            "state_treasury": SimpleNamespace(actor_id="state"), "cast_state": SimpleNamespace(purses=purses),
+            "state_treasury": SimpleNamespace(actor_id="state"),
+            "cash_and_deposit": lambda account: purses.purse(account) + purses.deposit(account),
             "cast": SimpleNamespace(active_firms=lambda: firms, purse_lenders=lambda: lenders)})
 
     def test_a_lending_actors_purse_is_offered_as_a_firms_is(self):

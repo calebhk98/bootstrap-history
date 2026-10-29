@@ -111,6 +111,12 @@ class ReviewVentures(Command):
 
 
 @dataclass(frozen=True)
+class HaltActiveProjects(Command):
+    """Every project in hand stops, unfinished: what was paid towards each stands to its credit, and a bounty on it lapses.
+    Answers (the names halted in order, the money that stands to the seat's credit)."""
+
+
+@dataclass(frozen=True)
 class MothballWork(Command):
     """Shut a completed work down to stop paying its upkeep. Answers (did it, the reply)."""
     node_id: str

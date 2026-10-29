@@ -1,7 +1,7 @@
 """Once a year the state notices what a household has become, and acts on it: a requisition and a pressed office, a demand for
 military supply, and the tail risk of outright confiscation. The reports it acts on are in notice.py.
 
-Needs: revenue_estimate, civilisation, events_enabled, legacy_dice, money_text, send (RecordEvent)."""
+Needs: revenue_estimate, civilisation, events_enabled, game_random, money_text, send (RecordEvent)."""
 from sim.reporting.api import RecordEvent
 
 from . import constants
@@ -62,7 +62,7 @@ class Pressure:
 		if needs.events_enabled() and self.military_demand_eligible():
 			last = seat.last_military_demand
 			if (year - last >= constants.MILITARY_DEMAND_COOLDOWN_YEARS
-					and needs.legacy_dice().random() < constants.MILITARY_DEMAND_ANNUAL_CHANCE):
+					and needs.game_random().random() < constants.MILITARY_DEMAND_ANNUAL_CHANCE):
 				take = (self.state_military_ask(revenue, self.household_scale())
 				        * (1.0 - constants.MILITARY_DEMAND_PROTECTION_DISCOUNT * seat.protection))
 				take = max(0.0, take)
@@ -98,7 +98,7 @@ class Pressure:
 				                          "household grows. %s" % (round(probability * 100),
 				                                                   ("Held off by: " + "; ".join(conf_why)) if conf_why else
 				                                                   "Nothing you have built is holding it off yet")))
-			if needs.events_enabled() and needs.legacy_dice().random() < probability:
+			if needs.events_enabled() and needs.game_random().random() < probability:
 				answer, demanded, lost = self.answer_confiscation(constants.CONFISCATION_CAPITAL_LOSS, "confiscation by the state")
 				name = state_pressure_cfg.get("confiscation_name", "confiscation")
 				if lost > 0.5:

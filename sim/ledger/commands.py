@@ -160,6 +160,22 @@ class RestorePurse(Command):
 
 
 @dataclass(frozen=True)
+class SettleHouseholdInterest(Command):
+	"""The year's interest on the acting seat's debt is settled by the one rule every borrower follows: drawn on its facility
+	within its ceiling, the rest carried as arrears. Answers (the interest owed, the part paid)."""
+
+
+@dataclass(frozen=True)
+class NoteHolderBooking(Command):
+	"""A holder's cash moved by a posting it did not make, and its books record it: income when `signed` is positive, an outlay
+	otherwise, under `label`. The holder is a seat (named by its id) or an actor of the cast; an id that is
+	neither is left alone."""
+	holder: str
+	signed: float
+	label: str
+
+
+@dataclass(frozen=True)
 class WithdrawHouseholdMoney(Command):
 	"""The acting seat's household money falls by `amount` with no posting on the ledger's side: the money entered the
 	agent economy's own book at the same moment (a bank's capital)."""

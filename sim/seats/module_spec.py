@@ -37,6 +37,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("acting_seat", "acting_seat", **_LIVE),
         ViewSpec("acting_country", "acting_country", seat_scoped=True, **_LIVE),
         ViewSpec("seat_list", "seat_list", **_LIVE),
+        ViewSpec("seat_country", "seat_country", kind=KEYED, **_LIVE),
         ViewSpec("ended_seats", "ended_seats", **_LIVE),
         ViewSpec("run_over", "run_over", **_LIVE),
         ViewSpec("played_countries", "played_countries", **_LIVE),

@@ -38,6 +38,14 @@ class Events:
 				self.world.output_factor, constants.OUTPUT_RECOVERY_RATE, self.needs.military_leverage())
 			self.bump(OUTPUT)
 
+	def say_once(self, command: Any) -> bool:
+		"""Whether this is the first time `command.key` is sent; it is marked as told."""
+		told = self.needs.legacy_said_once()
+		if command.key in told:
+			return False
+		told.add(command.key)
+		return True
+
 	def live_hazard_kinds(self, year_now: int) -> set:
 		"""The kinds of hazard in progress in `year_now`."""
 		return kinds_in_progress(self.needs.civilisation(), year_now)

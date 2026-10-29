@@ -10,6 +10,8 @@ from types import SimpleNamespace
 from typing import Any, Dict, Optional
 
 from sim.finance import purchase_rules
+from sim.ledger.api import SettleHouseholdInterest
+from sim.projects.api import HaltActiveProjects, ReviewVentures
 from sim.finance.module import Finance
 from sim.finance.state import FinanceSeat
 from sim.tests import event_stand_in, module_harness
@@ -23,31 +25,39 @@ def _household(capital: float = 0.0) -> SimpleNamespace:
 def defaults() -> Dict[str, Any]:
 	return {
 		"year": 100, "civilisation": {"id": "rome", "starting_interest_rate": 0.1, "starting_tax_share": 0.0},
-		"game_config": {"founder_hours_per_year": 3000.0}, "legacy_game": SimpleNamespace(),
+		"game_config": {"founder_hours_per_year": 3000.0},
 		"money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount), "price_index": 1.0,
-		"cast": SimpleNamespace(actors={}, active_firms=lambda: [], purse_lenders=lambda: []), "cast_state": SimpleNamespace(),
-		"state_treasury": SimpleNamespace(actor_id="state"), "actor_world": SimpleNamespace(), "legacy_edge_account": {},
-		"legacy_seats": {}, "seat_party": {}, "dealing_party": SimpleNamespace(money=0.0),
-		"acting_balance": 0.0, "legacy_acting_household": _household(), "legacy_household_actor": SimpleNamespace(),
+		"cast": SimpleNamespace(actors={}, active_firms=lambda: [], purse_lenders=lambda: []),
+		"state_treasury": SimpleNamespace(actor_id="state"), "actor_world": SimpleNamespace(), "lender_offers_made": {},
+		"cash_and_deposit": lambda account: 0.0, "loans_out": lambda lender=None: 0.0, "debt_owed": lambda account: 0.0,
+		"dealing_party": SimpleNamespace(money=0.0), "acting_balance": 0.0,
+		"hours_for_sale": 0.0, "best_wage_trade": None, "work_for_wages_dry_run": lambda trade, hours: (0.0, None),
+		"standing_job_pay": lambda trade: 0.0,
 		"effect_sum": lambda channel, start=0.0: start, "effect_values": lambda channel: [], "nodes_with_mechanic": lambda name: (),
 		"standing": {"reputation": 0.0}, "forest_hectares": 0.0, "mine_operating_cost": 0.0,
 		"money_per_labour_hour": 1.0, "labour_market": SimpleNamespace(quote=lambda trade: 1.0), "wage_bill": 0.0,
 		"household_bill_per_person": 0.0, "household_dependant_people": 0.0, "held_trade": lambda: None,
 		"revenue_capacity": 0.0, "revenue_estimate": 0.0, "upkeep": 0.0, "operating": set(), "cash_remedies": [],
-		"committed_cost": 0.0, "legacy_projects": SimpleNamespace(active={}), "tree_nodes": {},
+		"committed_cost": 0.0, "tree_nodes": {},
 		"agent_rate": lambda: None, "agent_credit_room": lambda borrower_id: (False, None), "agent_economy_opened": False,
 		"agent_economy": lambda: None,
 	}
 
 
-def build(answers: Optional[Dict[type, Any]] = None, seat: Optional[FinanceSeat] = None, **views: Any) -> Finance:
+def build(answers: Optional[Dict[type, Any]] = None, seat: Optional[FinanceSeat] = None, household: Optional[Any] = None,
+          **views: Any) -> Finance:
 	"""The module with `views` over the quiet defaults, a fresh seat unless given, and `answers`, the replies of owners to
-	commands keyed by command class."""
+	commands keyed by command class. `household` is a stand-in whose `capital` is the purse and whose people the staff view
+	counts (the workforce module's handlers of the commands that change them change it too)."""
 	every_view = defaults()
+	household = household if household is not None else _household()
+	every_view["acting_balance"] = lambda: household.capital
 	every_view.update(views)
-	household = every_view["legacy_acting_household"]
 	every_view.setdefault("staff", lambda: {key: getattr(household, key, 0) for key in ("slaves", "freedmen", "artisans", "scholars")})
 	answers = dict(answers or {})
+	answers.setdefault(HaltActiveProjects, ([], 0.0))
+	answers.setdefault(ReviewVentures, [])
+	answers.setdefault(SettleHouseholdInterest, (0.0, 0.0))
 	for command in (BleedStaff, DisperseDependants):   # the workforce module's own handlers change the household's people
 		answers.setdefault(command, lambda command, household=household: event_stand_in.workforce_command(household, command))
 	module = module_harness.build(Finance, views=every_view, answers=answers, seat=seat or FinanceSeat(), module_id="finance")

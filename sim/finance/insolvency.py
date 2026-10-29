@@ -1,8 +1,7 @@
 """What happens as the acting seat crosses its credit limit: the founder's responses to exhausted credit, then entry into service or
 a settlement that writes most of the debt off; the insolvency count, and the year of service a bonded debtor works off.
 
-Needs: acting_balance, legacy_acting_household, legacy_household_actor, legacy_edge_account, legacy_projects, legacy_game (the
-ventures' review and the people freed, until production and workforce move), standing, money_text, civilisation, revenue_estimate,
+Needs: acting_balance, standing, money_text, civilisation, revenue_estimate,
 upkeep, mine_operating_cost, game_config, labour_market, money_per_labour_hour."""
 from typing import Any
 
@@ -11,7 +10,7 @@ from sim.ledger.api import SettleWithEdge
 from sim.polity.api import SetReputation
 from sim.reporting.api import RecordEvent
 from sim.resources.api import MothballMines
-from sim.workforce.api import BleedStaff, DisperseDependants
+from sim.workforce.api import BleedStaff, DisperseDependants, Manumit
 
 from . import rules
 from .affordability import reputation_hit_taken
@@ -21,8 +20,8 @@ from .constants import (BONDAGE_LABOUR_SHARE, BONDAGE_WAGE_MARKUP, CREDIT_FREEZE
                         INSOLVENCY_FLOOR_REVENUE_MULTIPLE, INSOLVENCY_SCHOLAR_BLEED_DISCOUNT, INSOLVENCY_SCHOLAR_FLOOR,
                         INSOLVENCY_YEARS_BEFORE_BLEED, SETTLEMENT_CAPITAL_RETAINED_FRACTION, SETTLEMENT_CREDIT_FREEZE_YEARS,
                         SETTLEMENT_REPUTATION_HIT)
-from .credit_freeze import halt_active_projects, settlement_freeze, settlement_owed
-from sim.projects.api import ReviewVentures
+from .credit_freeze import settlement_freeze, settlement_owed
+from sim.projects.api import HaltActiveProjects, ReviewVentures
 
 
 class Insolvency:
@@ -49,13 +48,11 @@ class Insolvency:
 		that can no longer be fed."""
 		needs = self.needs
 		limit = self.credit_limit()
-		household = needs.legacy_acting_household()
-		projects = needs.legacy_projects()
-		if household.capital >= -limit:
+		if needs.acting_balance() >= -limit:
 			return
 		# stop everything in progress: it cannot be funded
-		if projects.active:
-			dropped, kept = halt_active_projects(projects)
+		dropped, kept = needs.send(HaltActiveProjects())
+		if dropped:
 			household_seat = self.seat
 			household_seat.credit_frozen_until = year + CREDIT_FREEZE_YEARS_AFTER_HALT
 			needs.send(RecordEvent.of("credit_exhausted", "CREDIT EXHAUSTED: %d project%s stopped, "
@@ -68,11 +65,11 @@ class Insolvency:
 				   needs.money_text(kept, grouped=True), year + CREDIT_FREEZE_YEARS_AFTER_HALT),
 				stopped=list(dropped), frozen_until=year + CREDIT_FREEZE_YEARS_AFTER_HALT))
 		# let go of what cannot be maintained
-		if household.capital < -limit:
+		if needs.acting_balance() < -limit:
 			needs.send(MothballMines())
-		if household.capital < -limit:
+		if needs.acting_balance() < -limit:
 			# a creditor takes the business (the plants it runs), never the knowledge of how they work
-			taken = [closure.entry_key for closure in needs.legacy_game().send(ReviewVentures(tuple((business_review.CREDITOR_SEIZURE,)), year))]
+			taken = [closure.entry_key for closure in needs.send(ReviewVentures(tuple((business_review.CREDITOR_SEIZURE,)), year))]
 			# only say it if it happened, and name them
 			if taken:
 				needs.send(RecordEvent.of("creditors_took", "creditors took what they could: %d concerns "
@@ -82,9 +79,9 @@ class Insolvency:
 		# and the household goes: nobody keeps four hundred dependants they cannot feed. People are sold or freed and they
 		# leave, and shedding them is how the household becomes solvent again.
 		staff = needs.staff()
-		if household.capital < -limit and (staff["slaves"] or staff["freedmen"]):
+		if needs.acting_balance() < -limit and (staff["slaves"] or staff["freedmen"]):
 			freed = staff["slaves"] + staff["freedmen"]
-			needs.legacy_game().labour.manumit(staff["slaves"])          # they are not sold on
+			needs.send(Manumit(staff["slaves"]))          # they are not sold on
 			needs.send(DisperseDependants(HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR, HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION))
 			needs.send(RecordEvent.of("household_disperses", "the household disperses: %d people leave, because "
 				"you can no longer feed them" % freed))
@@ -153,8 +150,8 @@ class Insolvency:
 		costs. The staff who leave are bounded by a floor, so insolvency costs the expansion without trapping the household."""
 		needs = self.needs
 		seat = self.seat
-		household = needs.legacy_acting_household()
-		if household.capital < 0:
+		capital = needs.acting_balance()
+		if capital < 0:
 			net = (needs.revenue_estimate() - needs.upkeep() - self.recurring_living_cost(needs.revenue_estimate(), needs.upkeep())
 			       - needs.mine_operating_cost())
 			if net > 0:
@@ -162,7 +159,7 @@ class Insolvency:
 			else:
 				seat.insolvent_years = seat.insolvent_years + 1
 			floor = -max(self.priced(INSOLVENCY_FLOOR_MIN_LABOUR_HOURS), needs.revenue_estimate() * INSOLVENCY_FLOOR_REVENUE_MULTIPLE)
-			if household.capital < floor and seat.insolvent_years >= INSOLVENCY_YEARS_BEFORE_BLEED:
+			if capital < floor and seat.insolvent_years >= INSOLVENCY_YEARS_BEFORE_BLEED:
 				bleed = min(INSOLVENCY_BLEED_CAP, INSOLVENCY_BLEED_RATE * seat.insolvent_years)
 				needs.send(BleedStaff(bleed, INSOLVENCY_ARTISAN_FLOOR, INSOLVENCY_SCHOLAR_FLOOR, INSOLVENCY_SCHOLAR_BLEED_DISCOUNT))
 				if seat.insolvent_years in (3, 6, 12, 25):

@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from types import SimpleNamespace
 from typing import Any, Dict, Optional
 
+from sim.hazards.api import SayOnce
 from sim.ledger.api import TakeFromHouseholdPurse
 from sim.polity.module import Polity
 from sim.polity.state import PolitySeat, PolityWorld
@@ -37,26 +38,36 @@ def defaults(seed: int) -> Dict[str, Any]:
 	return {
 		"year": 100, "civilisation": {"id": "rome", "starting_tax_share": 0.1}, "events_enabled": True,
 		"automation": {"manual": False, "bounty_set": set()}, "acting_seat": "founder",
-		"danger_lines": {"eminence": 100.0, "suspicion": 100.0}, "legacy_dice": random.Random(seed), "legacy_said_once": set(),
-		"legacy_game": SimpleNamespace(), "wealth_claims": lambda: [],
-		"legacy_act_as": _same_seat, "money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),
+		"danger_lines": {"eminence": 100.0, "suspicion": 100.0}, "game_random": random.Random(seed),
+		"provider_game": SimpleNamespace(), "wealth_claims": lambda: [],
+		"acting_as": _same_seat, "money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),
 		"mass_text": lambda amount, digits=0, grouped=False, short=False, unit="tonne": "%.1f %s" % (amount, unit),
 		"state_treasury": _government(), "cast": SimpleNamespace(home_actors=lambda kind: [],
 		                                                                        prohibitions=lambda: {}),
-		"cast_state": None, "actor_world": world, "country_world": lambda owner: world,
-		"acting_balance": 0.0, "legacy_acting_household": SimpleNamespace(capital=0.0),
-		"legacy_household_actor": SimpleNamespace(), "transfer_listening": _same_seat,
+		"cast_recorded": False, "government_figures": lambda country: None, "actor_world": world, "country_world": lambda owner: world,
+		"acting_balance": 0.0, "transfer_listening": _same_seat,
 		"effect_sum": lambda channel, start=0.0: start, "effect_values": lambda channel: [],
 		"effect_factor": lambda channel, start=1.0, exponent=None: start, "effect_best": lambda channel: None,
 		"running_mechanics": lambda name: [], "mechanic": lambda name: {}, "patrons_lost_to_eminence": [],
 		"techniques_held": set(), "techniques_granted": set(), "tree": lambda node_id: None, "tree_nodes": {},
 		"running": lambda node_id: False, "revenue_estimate": 0.0, "concern_revenue": lambda node_id: 0.0, "operating": set(),
-		"standing_floor": 0.0, "rep_factor": 1.0, "legacy_done_versions": (0, 0),
+		"standing_floor": 0.0, "rep_factor": 1.0, "held_and_running_versions": (0, 0),
 		"headcount": 0.0, "base_annual_wage": lambda trade: 1.0, "labour_state_weights": {}, "money_per_labour_hour": 1.0,
-		"seat_list": {"joined": ["founder"], "playing": ["founder"]}, "legacy_seats": {}, "founder": {"alive": True, "policy": {}},
+		"seat_list": {"joined": ["founder"], "playing": ["founder"]}, "seat_country": lambda seat_id: None, "founder": {"alive": True, "policy": {}},
 		"population_total": 1.0e6, "pop_scale": 1.0, "material_pool": lambda material: (material,),
 		"material_substitutes": lambda material: frozenset(), "real_output_per_head": 1.0, "output_factor": 1.0,
 	}
+
+
+def saying_once():
+	"""The hazards module's answer to `SayOnce`: True the first time a key is sent, False after."""
+	told = set()
+
+	def say(command: Any) -> bool:
+		first = command.key not in told
+		told.add(command.key)
+		return first
+	return say
 
 
 def build(seed: int = 1, answers: Optional[Dict[type, Any]] = None, seat: Optional[PolitySeat] = None,
@@ -65,6 +76,8 @@ def build(seed: int = 1, answers: Optional[Dict[type, Any]] = None, seat: Option
 	commands keyed by command class; `value_weights` is the society's, held as given (the defaults when not given)."""
 	every_view = defaults(seed)
 	every_view.update(views)
+	answers = dict(answers or {})
+	answers.setdefault(SayOnce, saying_once())
 	return module_harness.build(Polity, views=every_view, answers=answers, world=PolityWorld(dict(VALUE_WEIGHTS) if value_weights is None else value_weights),
 	                            seat=seat or PolitySeat(), module_id="polity")
 

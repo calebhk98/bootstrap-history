@@ -26,7 +26,7 @@ def reach_stand_in(unfunded, shares, year=100):
     calls = []
     world_shares = {name: (lambda value=value, name=name: calls.append(name) or value) for name, value in shares.items()}
     world = SimpleNamespace(government=lambda: SimpleNamespace(record=SimpleNamespace(unfunded=unfunded)), **world_shares)
-    module = polity_host.build(actor_world=world, year=year, legacy_done_versions=(1, 1), population_total=1000.0)
+    module = polity_host.build(actor_world=world, year=year, held_and_running_versions=(1, 1), population_total=1000.0)
     return module, world, calls
 
 

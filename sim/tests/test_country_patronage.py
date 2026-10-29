@@ -162,10 +162,8 @@ def funding(acting, seats_funded, grant):
 	"""The polity module over the acting seat's country, the governments' records and the seats a state funds."""
 	module = polity_host.build(
 		civilisation={"id": "home"}, acting_seat=acting,
-		legacy_seats={"founder": SimpleNamespace(country=None), "visitor": SimpleNamespace(country="far"),
-		              "friend": SimpleNamespace(country="far")},
-		cast_state=SimpleNamespace(records={"government:home": SimpleNamespace(patron_grant=500.0),
-		                                             "government:far": SimpleNamespace(patron_grant=grant)}))
+		seat_country={"founder": None, "visitor": "far", "friend": "far"}.get,
+		government_figures={"home": (500.0, 0.0, 0.0), "far": (grant, 0.0, 0.0)}.get)
 	module.patron_clients = lambda country: [(seat, 0.0, 1.0) for seat in seats_funded]
 	return module
 

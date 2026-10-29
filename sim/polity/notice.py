@@ -101,11 +101,10 @@ class Notice:
 
 	def state_levy_rates(self):
 		"""(requisition, office) share of income the state takes at full notice; nothing before the state has budgeted a year."""
-		state = self.needs.cast_state()
-		record = None if state is None else state.records.get("government:" + str(self.needs.civilisation().get("id")))
-		if record is None:
+		figures = self.needs.government_figures[str(self.needs.civilisation().get("id"))]
+		if figures is None:
 			return 0.0, 0.0
-		return record.levy_requisition_rate, record.levy_office_rate
+		return figures[1], figures[2]
 
 	def requisition_report(self):
 		"""(share of this year's revenue, [why it is smaller than listed]) the state takes as goods at its own price. Protection

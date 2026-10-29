@@ -8,7 +8,7 @@ from unittest import mock
 
 from sim.agents.api import ActorRegistry, ActorsState, DUES_CAUSE
 from sim.engine.state import ActorRecord
-from sim.ledger.api import (BankStock, ChangeStock, DrawDownStock, LedgerSeat, LedgerWorld, PayActor, PayActorFromHousehold, PayExchange, ReceiveFromExchange, RescaleHouseholdMoney, SettleWithEdge, TakeFromHouseholdPurse,
+from sim.ledger.api import (NoteHolderBooking, SettleHouseholdInterest, BankStock, ChangeStock, DrawDownStock, LedgerSeat, LedgerWorld, PayActor, PayActorFromHousehold, PayExchange, ReceiveFromExchange, RescaleHouseholdMoney, SettleWithEdge, TakeFromHouseholdPurse,
                             WithdrawHouseholdMoney)
 from sim.ledger.ledger import Ledger
 from sim.refusal import Refusal
@@ -166,6 +166,36 @@ class TonnesLedgerState(unittest.TestCase):
         module = self.module({"iron": 1.0, "scholar_hours": 40.0})
         self.assertEqual(dict(module.held_goods()), {"iron": 1.0})
         self.assertEqual(module.world.capacity_pool, {"scholar_hours": 40.0})
+
+
+class SettleHouseholdInterestCommand(unittest.TestCase):
+    def test_the_household_actor_settles_the_year_against_the_actors_world_and_the_answer_is_handed_back(self):
+        world = object()
+        actor = SimpleNamespace(settle_interest=lambda seen: (30.0, 20.0) if seen is world else None)
+        module = ledger_over(legacy_household_actor=actor, actor_world=world)
+        self.assertEqual(module.settle_household_interest(SettleHouseholdInterest()), (30.0, 20.0))
+
+
+class NoteHolderBookingCommand(unittest.TestCase):
+    def booked(self, holder, signed):
+        entries = []
+        household = SimpleNamespace(note_income=lambda label, amount: entries.append(("in", label, amount)),
+                                    note_outlay=lambda label, amount: entries.append(("out", label, amount)))
+        lender = SimpleNamespace(note_income=lambda label, amount: entries.append(("actor in", label, amount)),
+                                 note_outlay=lambda label, amount: entries.append(("actor out", label, amount)))
+        module = ledger_over(legacy_seats={"seat:a": SimpleNamespace(household=household)}, cast=SimpleNamespace(actors={"abbey": lender}))
+        module.note_holder_booking(NoteHolderBooking(holder, signed, "loan"))
+        return entries
+
+    def test_a_seats_posting_is_entered_in_the_seats_own_books_by_its_sign(self):
+        self.assertEqual(self.booked("seat:a", 5.0), [("in", "loan", 5.0)])
+        self.assertEqual(self.booked("seat:a", -2.0), [("out", "loan", 2.0)])
+
+    def test_an_actors_posting_is_entered_in_its_books(self):
+        self.assertEqual(self.booked("abbey", -2.0), [("actor out", "loan", 2.0)])
+
+    def test_an_edge_or_an_unknown_holder_keeps_no_books(self):
+        self.assertEqual(self.booked("edge:savers", 5.0), [])
 
 
 if __name__ == "__main__":

@@ -3,8 +3,8 @@
 A household borrows against its standing earning and its name; past its limit nobody lends, projects halt, and in the end the
 lenders write most of the debt off or put the debtor into service. The module owns each seat's debt state (`FinanceSeat`), answers
 every question about the credit line, the rate, what can be spent and what debt the income can carry, applies the money phase's
-debt steps, and runs the lenders' year. The engine's goods and labour objects the steps still reach (the ventures' review, the
-people freed) come through `legacy_game`, and the agent economy's rate and room through bridge views, until their owners move."""
+debt steps, and runs the lenders' year. What it needs of other owners it reads as views and asks as commands; the agent economy's
+rate and room come through bridge views until their owner moves."""
 from typing import Any, Dict
 
 from sim.assembly.api import Module

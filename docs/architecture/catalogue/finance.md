@@ -157,3 +157,13 @@ sim/ui: `spending_power` 12, `credit_limit` 8, `debt_interest_rate` 7, `recurrin
 Caches and version counters held today (feed for task 1.2):
 
 - None of its own beyond version counters; `credit_limit` is recomputed on demand today.
+
+## As moved: boundaries (Phase 6b)
+
+The module reads no `legacy_*` view and no `cast_state`. The household's interest is the ledger's `SettleHouseholdInterest` (answers
+(owed, paid)); a lender's posting is the ledger's `NoteHolderBooking`; the lenders' year is the actors' `SettleLenderInterest` and
+`SetLenderOffers`, read through the actors' views `lender_offers_made`, `cash_and_deposit`, `loans_out` and `debt_owed` (plain figures
+or a copy of the offers). The projects in hand are halted by the projects' `HaltActiveProjects` (answers the names and the money that
+stands to credit; the halting rule moved to `sim/projects/halting.py`), the ventures are reviewed by `ReviewVentures`, the people are
+freed by the workforce's `Manumit`, and the stall banner reads the workforce's views `hours_for_sale`, `best_wage_trade`,
+`work_for_wages_dry_run` and `standing_job_pay`.

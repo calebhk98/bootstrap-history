@@ -95,6 +95,8 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("wage_signature", "wage_signature", **_LIVE),
         ViewSpec("market_annual_wage", "market_annual_wage", kind=KEYED, **_LIVE),
         ViewSpec("standing_job_pay", "standing_job_pay", kind=KEYED, **_LIVE),
+        ViewSpec("hours_for_sale", "hours_for_sale", **_SEAT),
+        ViewSpec("best_wage_trade", "best_wage_trade", **_SEAT),
         ViewSpec("available_trades", "available_trades", **_LIVE),
         ViewSpec("is_craft_trade", "is_craft_trade", kind=KEYED, **_LIVE),
         ViewSpec("taught_trade_people", "taught_trade_people", kind=KEYED, **_LIVE),

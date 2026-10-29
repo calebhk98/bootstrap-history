@@ -9,10 +9,11 @@ from types import SimpleNamespace
 
 from .harness import check
 
+from sim.projects.api import HaltActiveProjects, ReviewVentures, halt_active_projects
 from sim.reporting.api import RecordEvent
 from sim.resources.api import MothballMines
 from sim.tests import finance_host, module_harness
-from sim.tests.ui_stand_in import Game
+from sim.workforce.api import Manumit
 
 LIMIT = 1000.0
 
@@ -24,11 +25,12 @@ class Owing:
         self.household = SimpleNamespace(capital=-share * LIMIT, slaves=slaves, freedmen=0, artisans=10.0, scholars=0)
         self.projects = SimpleNamespace(active={"a_project": {"spent": 40.0}}, bountied=set(), paid_towards={})
         self.manumitted = []
-        game = Game(
-            review_ventures=lambda rules, year: [SimpleNamespace(entry_key=key) for key in closures],
-            labour=SimpleNamespace(manumit=self.manumitted.append))
-        self.module = finance_host.build(acting_balance=lambda: self.household.capital, legacy_acting_household=self.household,
-                                         legacy_projects=self.projects, legacy_game=game)
+        answers = {
+            ReviewVentures: lambda command: [SimpleNamespace(entry_key=key) for key in closures],
+            Manumit: lambda command: self.manumitted.append(command.people),
+            # the projects module's own rule over the stand-in record
+            HaltActiveProjects: lambda command: halt_active_projects(self.projects) if self.projects.active else ([], 0.0)}
+        self.module = finance_host.build(answers=answers, household=self.household)
         self.module.credit_limit = lambda revenue=None, upkeep=None, capital=None: LIMIT
 
     @property

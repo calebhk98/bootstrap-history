@@ -19,7 +19,7 @@ from sim.ventures.api import ClearMothball, OpenVenture
 from sim.workforce.api import DrawTradeHours, GrantStaff, LoseCrew, ReleaseHours, ResetTradeHours, SpendDirectorHours
 
 from .commands import (AdvanceProjects, AutoOpenVentures, Bribe, CloseLapsedDependents, CloseUnstaffedVentures, CloseWork,
-                       CompleteProject, Exclude, Include, KeepStaffed, MothballWork, NoteVentureYear, PostBounty, PutProjectFirst, ReopenRestaffedVentures, ReorderProjects, ResetProjectProgress,
+                       CompleteProject, Exclude, HaltActiveProjects, Include, KeepStaffed, MothballWork, NoteVentureYear, PostBounty, PutProjectFirst, ReopenRestaffedVentures, ReorderProjects, ResetProjectProgress,
                        RestoreProjectOrder, RestoreWork, ReviewVentures, StartProject, StopProject)
 from .needed_commands import NoteConcernChange, NoteYearSpend
 from .project_order import ORDER
@@ -123,7 +123,7 @@ MODULE_SPECS = (ModuleSpec(
 	         (CloseWork, "apply_close_work"), (CloseLapsedDependents, "apply_close_lapsed_dependents"),
 	         (CloseUnstaffedVentures, "apply_close_unstaffed_ventures"), (ReopenRestaffedVentures, "apply_reopen_restaffed_ventures"),
 	         (AutoOpenVentures, "apply_auto_open_ventures"), (NoteVentureYear, "apply_note_venture_year"),
-	         (ReviewVentures, "apply_review_ventures"), (MothballWork, "apply_mothball_work"), (RestoreWork, "apply_restore_work"),
+	         (ReviewVentures, "apply_review_ventures"), (MothballWork, "apply_mothball_work"), (HaltActiveProjects, "apply_halt_active_projects"), (RestoreWork, "apply_restore_work"),
 	         (PutProjectFirst, "apply_put_project_first"), (ReorderProjects, "apply_reorder_projects"),
 	         (RestoreProjectOrder, "apply_restore_project_order"), (Exclude, "apply_exclude"), (Include, "apply_include"), (KeepStaffed, "apply_keep_staffed")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),

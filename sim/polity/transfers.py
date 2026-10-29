@@ -5,8 +5,9 @@ A work declares `mechanics.transfer` (see data/branches/MECHANICS.md) and pays w
 hand. Both go through `pay_state`, so the state's purse, its debt and the claims it funds from that purse are the ordinary ones.
 A node declares `mechanics.state_levy = {"share": s}`; while it is open the state is paid `s` of its revenue each year.
 
-Needs: state_treasury, transfer_listening, legacy_household_actor, acting_balance, cast, mechanic, tree,
-money_text, money_per_labour_hour, running_mechanics, operating, concern_revenue, output_factor, legacy_said_once."""
+Needs: state_treasury, transfer_listening, acting_balance, cast, mechanic, tree,
+money_text, money_per_labour_hour, running_mechanics, operating, concern_revenue, output_factor, send (SayOnce, RecordEvent)."""
+from sim.hazards.api import SayOnce
 from sim.ledger.api import PayActorFromHousehold
 from sim.reporting.api import RecordEvent
 
@@ -85,10 +86,8 @@ class Transfers:
 	def pay_concern_levies(self, year):
 		"""Pay the state its share of each levied concern's takings; the household's loss is the treasury's gain. The log says so
 		the first year only."""
-		said = self.needs.legacy_said_once()
 		for node_id, owed in sorted(self.concern_levy_due().items()):
 			self.pay_state(owed, "levy on " + node_id)
-			if "levy:" + node_id not in said:
-				said.add("levy:" + node_id)
+			if self.needs.send(SayOnce("levy:" + node_id)):
 				self.needs.send(RecordEvent.of("concern_levy", "the state takes its share of %s: %s this year, and so on each year it is open"
 				                               % (self.needs.tree[node_id]["name"], self.needs.money_text(owed, grouped=True))))

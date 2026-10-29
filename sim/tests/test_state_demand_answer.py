@@ -110,7 +110,7 @@ from sim.tests import polity_host
 def founder_game(capacity=0.9, protection=0.0, seed=1):
 	"""The polity module over a seat that complies, a state of this reach and a dice."""
 	rng = random.Random(seed)
-	module = polity_host.build(seat=PolitySeat(protection=protection), legacy_dice=rng)
+	module = polity_host.build(seat=PolitySeat(protection=protection), game_random=rng)
 	module.state_reach = lambda: capacity
 	module.rng = rng
 	return module

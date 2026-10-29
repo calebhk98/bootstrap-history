@@ -13,7 +13,7 @@ from sim.projects.api import ResetProjectProgress, ShutForgotten
 from sim.reporting.api import ErodeMoney, RecordEvent
 from sim.workforce.api import NoteWageShock, ReportStaffReduction, ScaleDeputies, SurviveStaff
 
-from .commands import LoseCapital, RecordWorldEvent, RecoverOutput
+from .commands import LoseCapital, RecordWorldEvent, RecoverOutput, SayOnce
 from .module import Hazards
 from .state import OUTPUT, WORLD_EVENTS, HazardsSeat, HazardsWorld
 
@@ -63,7 +63,8 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("disaster_this_year", "disaster", cached=False),
 		ViewSpec("countries_in_game", "countries_in_game", cached=False),
 	),
-	applies=((RecordWorldEvent, "record_world_event"), (LoseCapital, "lose_capital_command"), (RecoverOutput, "recover_output")),
+	applies=((RecordWorldEvent, "record_world_event"), (LoseCapital, "lose_capital_command"), (RecoverOutput, "recover_output"),
+	         (SayOnce, "say_once")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(PayEdge, PlunderHousehold, ErodeMoney, RecordEvent, RaiseScandal, ScaleProtection, ShiftValueWeight, SurviveStaff,
 	       ScaleDeputies, ReportStaffReduction, NoteWageShock, CutPopulation, RefreshDemographicIndexes, KillPeople,

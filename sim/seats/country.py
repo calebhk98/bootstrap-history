@@ -13,17 +13,16 @@ def partner_country_of_seat(seats: Mapping[str, Any], seat_id: str, home_country
 	return None if country in (None, home_country) else country
 
 
-def patron_grant_share(records: Mapping[str, Any], seats: Mapping[str, Any], acting_seat: str, home_country: str,
+def patron_grant_share(grant_of: Callable[[str], Optional[float]], acting_country: Optional[str], acting_seat: str, home_country: str,
                        clients_of: Callable[[str], List[Tuple[str, float, float]]]) -> float:
 	"""What the acting seat is paid by its country's state: the home state's whole grant, or a partner state's
 	grant shared among the seats `clients_of(country)` lists; nothing when the acting seat is not among them or the
-	state has no record. A seat missing from `seats` is the home country's."""
-	seat = seats.get(acting_seat)
-	country = (None if seat is None else seat.country) or home_country
-	record = records.get("government:" + country)
-	if record is None:
+	state has no record (`grant_of` answers None). A seat with no country of its own is the home country's."""
+	country = acting_country or home_country
+	grant = grant_of(country)
+	if grant is None:
 		return 0.0
 	if country == home_country:
-		return record.patron_grant
+		return grant
 	clients = clients_of(country)
-	return record.patron_grant / len(clients) if any(seat_id == acting_seat for seat_id, _gov, _rep in clients) else 0.0
+	return grant / len(clients) if any(seat_id == acting_seat for seat_id, _gov, _rep in clients) else 0.0

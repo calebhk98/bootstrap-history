@@ -13,7 +13,7 @@ from .bridge import bridge_view
 
 @bridge_view("legacy_game")
 def legacy_game(sim):
-	"""The game itself: a mod's wealth-claim readers and seizers (provided to the polity module's `wealth_claims` point) take it."""
+	"""The game itself, for the agriculture and demography modules' weather and externality hooks (a debt)."""
 	return sim
 
 
@@ -35,8 +35,8 @@ def legacy_household_actor(sim):
 
 # ---- projects and the household's versions ---------------------------------------------------------------------------------
 
-@bridge_view("legacy_done_versions", seat_scoped=True)
-def legacy_done_versions(sim):
+@bridge_view("held_and_running_versions", seat_scoped=True)
+def held_and_running_versions(sim):
 	"""(the version of the techniques held, the version of those running) of the acting seat: what a memo is keyed by."""
 	return sim.household.done_version, sim.household.operating_version
 

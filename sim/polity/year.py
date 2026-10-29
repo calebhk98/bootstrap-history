@@ -5,7 +5,7 @@ The engine's `_step_reputation` runs `renew_standing` first, then the hours and 
 `close_standing_year`, so the order of the old single step is kept.
 
 Needs: standing_floor, techniques_held, tree_nodes, year, danger_lines, acting_balance,
-founder, automation, events_enabled, legacy_dice, patrons_lost_to_eminence, money_text, send (PayEdge, ForgetTechnique, EndRun,
+founder, automation, events_enabled, game_random, patrons_lost_to_eminence, money_text, send (PayEdge, ForgetTechnique, EndRun,
 RecordEvent)."""
 from sim.agents.api import edges
 from sim.knowledge.api import ForgetTechnique
@@ -90,7 +90,7 @@ class Year:
 			                             PERCENT_SCALE * max(0.0, (seat.scandal - danger) / constants.SCANDAL_HAZARD_SCALE))))
 		if needs.events_enabled() and seat.scandal > needs.danger_lines()["suspicion"]:
 			probability = (seat.scandal - needs.danger_lines()["suspicion"]) / constants.SCANDAL_HAZARD_SCALE
-			if needs.legacy_dice().random() < probability:
+			if needs.game_random().random() < probability:
 				needs.send(EndRun("denounced: %s" % ("as a sorcerer" if weights["w_magic_fear"] > 0.5 else "as a subversive")))
 
 	def roll_eminence(self):
@@ -102,7 +102,7 @@ class Year:
 		if not (needs.events_enabled() and seat.eminence > danger):
 			return
 		probability = (seat.eminence - danger) / constants.EMINENCE_HAZARD_SCALE
-		dice = needs.legacy_dice()
+		dice = needs.game_random()
 		if not dice.random() < probability:
 			return
 		roll = dice.random()

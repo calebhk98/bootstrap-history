@@ -49,3 +49,16 @@ class FollowTileTransfer(Command):
 	tile: str
 	previous: Optional[str]
 	to_actor: Optional[str]
+
+
+@dataclass(frozen=True)
+class SetLenderOffers(Command):
+	"""The funds each lender account offers from now on, as (account, amount) pairs in the order the pool keeps them: a lender's
+	deposit in the pool moves to what it offers, and an offer of nothing is dropped."""
+	offers: Tuple[Tuple[str, float], ...]
+
+
+@dataclass(frozen=True)
+class SettleLenderInterest(Command):
+	"""The pool shares the year's interest among its depositors: the actors and seats among them enter it as income, and the
+	savers' part is shared among the free strata."""

@@ -2,7 +2,7 @@
 
 The formal credit ceiling (`credit_limit`) says how much anyone will lend; this says how much debt the recurring surplus can carry.
 Needs: revenue_capacity, upkeep, mine_operating_cost, acting_balance, held_trade, wage_bill, tree_nodes, operating, money_text,
-legacy_game (the labour market's trades and quotes, until workforce publishes them)."""
+hours_for_sale, best_wage_trade, work_for_wages_dry_run, standing_job_pay."""
 from typing import Any, Dict, Optional
 
 from . import rules
@@ -90,15 +90,14 @@ class DebtService:
 		if not is_stalled(capital, insolvent_years, net):
 			return None
 		ways = []
-		labour = needs.legacy_game().labour
-		hours = labour.hours_for_sale()
+		hours = needs.hours_for_sale()
 		if hours > 100:
 			# only suggest work that pays more than the standing job already sells these hours for: the best-paying open trade,
 			# quoted by running the sale itself
-			best_trade = labour.best_wage_trade()
+			best_trade = needs.best_wage_trade()
 			if best_trade:
-				would_earn, _refusal = labour.work_for_wages_dry_run(best_trade, hours)
-				standing = labour.standing_job_pay(needs.held_trade())
+				would_earn, _refusal = needs.work_for_wages_dry_run(best_trade, hours)
+				standing = needs.standing_job_pay[needs.held_trade()]
 				if would_earn > standing:
 					ways.append("work as a %s: %.0f of your own hours are left "
 					            "this year and would bring in about %s%s. "
