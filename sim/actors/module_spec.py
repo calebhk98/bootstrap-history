@@ -31,7 +31,7 @@ READS_BY_OWNER = {
 	         "opening_civilisation", "civilisation_record", "money_text", "mass_rate_text"),
 	"seats": ("acting_seat", "acting_country", "seat_list", "seat_country", "seats_holding_patent", "seat_place", "seat_dealings",
 	          "dealings_listing", "disclosure", "disclosures"),
-	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted", "techniques_by_seat", "held_techniques"),
+	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted", "techniques_by_seat"),
 	"diffusion": ("copy_difficulty", "knowledge_half_life_years", "literacy", "research_productivity", "diffusible_ids",
 	              "diffusion_index"),
 	"polity": ("state_funding_terms", "state_authority", "state_trait_weights", "visible_scale", "levy_shares", "notice_over", "patron_clients",

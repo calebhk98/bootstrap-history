@@ -4,23 +4,11 @@ A place is a tile or a region id of the geography file; None is where the founde
 A body of people's food costs the staple the dole is paid in, at the market's price, for a person's
 subsistence; housing is the yearly carrying cost (interest and wear) of building one person's floor space.
 """
-import functools
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 from sim.agents.api import DOLE_MATERIAL, FOOD_NEED, observed_incomes
-from sim.geography.api import haversine_km, load_geography, regions
+from sim.geography.places import distance_between_places
 from sim.world import need_basket
-
-
-@functools.lru_cache(maxsize=None)
-def _place_coordinates(place: str) -> Optional[Tuple[float, float]]:
-	land = load_geography()["land_tiles"]
-	tile = land["tiles"].get(place)
-	if tile is not None:
-		return float(tile["lat"]), float(tile["lon"])
-	if place in land["region_to_tiles"]:
-		return regions.region_anchor(load_geography(), place)
-	return None
 
 
 class CastView:
@@ -31,11 +19,8 @@ class CastView:
 
 	def distance_km(self, place_a: Optional[str], place_b: Optional[str]) -> float:
 		"""Great-circle kilometres between two places; 0 when either is not on the map."""
-		first = _place_coordinates(place_a if place_a is not None else self._founder_place())
-		second = _place_coordinates(place_b if place_b is not None else self._founder_place())
-		if first is None or second is None:
-			return 0.0
-		return haversine_km(first[0], first[1], second[0], second[1])
+		return distance_between_places(place_a if place_a is not None else self._founder_place(),
+		                               place_b if place_b is not None else self._founder_place())
 
 	def need_floor_costs_per_person_year(self) -> Dict[str, float]:
 		"""What one person's floor of each need costs a year at the prices households pay: the economy's own

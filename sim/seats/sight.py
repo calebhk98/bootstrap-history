@@ -1,6 +1,7 @@
 """One seat hearing of what another has built (the rule is sight_rules.py)."""
 from typing import Set
 
+from sim.geography.api import distance_between_places
 from sim.knowledge.api import RevealNodes
 
 from .sight_rules import nodes_heard_of
@@ -30,7 +31,7 @@ class Sight:
 
     def distance_between_seats(self, first_id: str, second_id: str) -> float:
         """Great-circle kilometres between two seats' places."""
-        return float(self.needs.actor_world().distance_km(self.seat_place(first_id), self.seat_place(second_id)))
+        return distance_between_places(self.seat_place(first_id), self.seat_place(second_id))
 
     def seat_place(self, seat_id: str) -> str:
         """Where a seat works from: its base tile."""
