@@ -172,9 +172,11 @@ actors (21), hazards, workforce (20 each), projects (19).
 
 - [x] Guarded reads: a reader cannot change another module's view answer (`sim/assembly/read_guard.py`). The inventory
   refused no write: the guarded slow tier at `2294c07f`, and guarded micro and stress at `017bc6e7` (identical to the base;
-  the one refusal found was the guard's own, a `copy.deepcopy` of an answer, fixed there). The guard is on in the test suite
-  (`sim/tests/__main__.py` sets `BH_GUARD_VIEW_READS`); games and equivalence runs leave it off unless asked, since a guarded
-  game runs about twice as long (`BH_GUARD_VIEW_READS=1` with any command turns it on).
+  the one refusal found was the guard's own, a `copy.deepcopy` of an answer, fixed there). The guard is opt-in
+  (`BH_GUARD_VIEW_READS=1` with any command): it copies every answer it hands out, so a guarded game runs about twice as long and a
+  protocol session, which reads the whole tree thousands of times, many times longer (the protocol golden topic ran past its
+  limit). It guards only assembled games, so a default in the quick tier would guard almost nothing. A guarded `--slow`, micro
+  and stress run is a step before the pull request (phase 9). A cheaper guard (no copy per read) would let it stay on: open.
 - [x] No `legacy_game` or `legacy_state` reads: production, workforce, finance, polity, demography and agriculture read
   named views and send owners' commands; the bridge views are deleted. `provider_game`, the one whole-game handout, went with the mod contract (phase 7). Measured after: 45 reads of `legacy_*` views (80 before), 241 reads answered by the bridge
   (254 before).

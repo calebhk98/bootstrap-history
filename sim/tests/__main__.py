@@ -563,8 +563,6 @@ def _parse_only(argv):
 
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
-    from sim.engine.game_assembly import GUARD_READS_SWITCH
-    os.environ.setdefault(GUARD_READS_SWITCH, "1")   # in the suite a module that changes another module's view answer raises
 
     if "--list" in argv:
         for slug in TOPICS:
