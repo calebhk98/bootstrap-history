@@ -1,6 +1,6 @@
 """Commands to knowledge, the owner of what a seat has learned, lost and heard of."""
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from sim.assembly.api import Command
 
@@ -54,3 +54,10 @@ class HandOverTechniques(Command):
     granted set), since the leaver's knowledge record is the one that moves. Answers how many nodes the leaver then holds."""
     from_seat_id: str
     to_seat_id: str
+
+
+@dataclass(frozen=True)
+class ReplaceTree(Command):
+    """The game's tech tree is now `nodes`, node data by id in the tree's own order. Sent when the game is built and each time the
+    engine re-derives the nodes' money; the module keeps the object itself, so the views answer with it."""
+    nodes: Dict[str, Dict[str, Any]]

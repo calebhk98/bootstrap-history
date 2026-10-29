@@ -10,12 +10,13 @@ call), and the bridge views that read mod data read it again each time they are 
 view is first read. The interface and stores modules read theirs while the game is built (`game_assembly.attach`), which is why
 `test_mod_operations_smoke` and `test_mod_set_per_game_smoke` can patch `MODS_DIR` around the build alone. The actors' data kinds and the
 map overlays are read lazily, so a game built over one directory and asked after the global changed mixes the two. The data loaders
-(`data.MODDIR`, `copy_visibility_defaults.MODS_DIRECTORY`, `category_traits.MODS_DIRECTORY`) read the real directory at import, so a data
+(`data.MODDIR`, `copy_visibility_defaults.MODS_DIRECTORY`) read the real directory at import, so a data
 mod is process-wide whatever the game.
 
 Partly fixed: the `content` module (`sim/content/`) is given the directory by `game_assembly.build` (`OpenContent`) and publishes
 `mods_directory`, `installed_mod_ids`, `map_overlays`, `household_need_data`, `declared_actor_kinds` and `data_store_declarations`,
-so those answer from the game's own directory and no longer read `bridge_land.MODS_DIR`. Remaining: `data_command_specs` and
+The category traits (knowledge's `category_trait`, `diffusion_traits`) also answer from the game's `mods_directory` now.
+So those answer from the game's own directory and no longer read `bridge_land.MODS_DIR`. Remaining: `data_command_specs` and
 `data_figure_specs` (`bridge_interface.py`) still read the global, because validating a declared state path needs `Sim` and the
 `@readable` mark (`ui_data.check_state_path`), which the content package may not import; and `Sim.__init__` still reads
 `bridge_land.MODS_DIR` to hand to `build`. A bridge view cannot read the module's directory while an assembly is built without a game

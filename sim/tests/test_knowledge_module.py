@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.knowledge import rules
-from sim.knowledge.api import (ForgetTechnique, HandOverTechniques, KnowledgeSeat, LearnTechnique, ReceiveTechniques, RevealFrom,
+from sim.knowledge.api import (ForgetTechnique, HandOverTechniques, KnowledgeSeat, LearnTechnique, ReceiveTechniques, ReplaceTree, RevealFrom,
                                RevealNodes, StartDoneYearRecord)
 from sim.production.api import RefreshDoneCaches
 from sim.knowledge.module import DONE, REVEALED, Knowledge
@@ -22,10 +22,12 @@ def projects(done=(), granted=(), revealed=(), done_year=None, forgotten=None):
 
 
 def knowledge_over(state, fog=False, start_check=None, active=(), **views):
-    return module_harness.build(
+    module = module_harness.build(
         Knowledge, seat=state, answers={RefreshDoneCaches: None},
-        views=dict({"active_projects": dict.fromkeys(active, {}), "legacy_tree": NODES, "legacy_fog": fog,
+        views=dict({"active_projects": dict.fromkeys(active, {}), "legacy_fog": fog,
                     "start_check": start_check or (lambda node_id, ignore_trade, memo, why: (False, None))}, **views))
+    module.replace_tree(ReplaceTree(NODES))
+    return module
 
 
 class LearnTests(unittest.TestCase):

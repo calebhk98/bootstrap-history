@@ -8,7 +8,7 @@ are listed by `python3 tools/check_ui_views.py --list`, which also checks each i
 as a function here is the new-game setup, the UI's own memory on the `Sim`, and the engine tables that
 no module publishes yet."""
 from sim.engine import (  # noqa: F401
-    state_paths, cash_book, category_traits, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
+    state_paths, cash_book, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
     purchase_rule, settings, settings_table, topic_tags, units,
     validate_material_gating, validate_node_money, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.production.api import node_revenue_census  # noqa: F401
@@ -23,7 +23,7 @@ from sim.engine.data import (  # noqa: F401
     trade_family, TRADE_FAMILY, TRADE_NOTES, TRADES_ABSENT, WAGES,
     win_condition_describe)
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: F401
-from sim.knowledge.api import closure, critical_path, hard_pre, prerequisite_names, strip_self_play_advice, topo_order  # noqa: F401
+from sim.knowledge.api import check_category_traits, closure, critical_path, hard_pre, prerequisite_names, strip_self_play_advice, topo_order  # noqa: F401
 from sim.engine.mod_code import code_report, run_mod_code  # noqa: F401
 from sim.engine.game_assembly import build as build_assembly  # noqa: F401
 from sim.engine.mod_code import allow as allow_mod_code  # noqa: F401

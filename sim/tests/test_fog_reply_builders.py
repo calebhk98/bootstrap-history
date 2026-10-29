@@ -17,7 +17,7 @@ QUICK_TOPIC = True
 import json
 import types
 import unittest
-from sim.knowledge.api import KnowledgeSeat
+from sim.knowledge.api import KnowledgeSeat, ReplaceTree
 from unittest import mock
 
 from sim.knowledge.api import HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
@@ -79,8 +79,9 @@ class SharedFilterTests(unittest.TestCase):
 
     def fog_scrub(self, text, fog=True):
         knowledge = module_harness.build(Knowledge, seat=KnowledgeSeat(revealed={KNOWN}), views={
-            "legacy_fog": fog, "legacy_tree": NODES, "active_projects": {},
+            "legacy_fog": fog, "active_projects": {},
             "start_check": lambda node_id, ignore_trade, memo, why: (False, None)})
+        knowledge.replace_tree(ReplaceTree(NODES))
         return knowledge.fog_scrub(text)
 
     def test_fog_scrub_hides_ids_the_player_has_not_heard_of(self):
