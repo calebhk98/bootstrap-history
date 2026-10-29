@@ -31,7 +31,7 @@ READS_BY_OWNER = {
 	"knowledge": ("tree", "tree_nodes", "category_trait", "tree_closure", "techniques_held", "techniques_granted", "techniques_forgotten", "visibility", "visible_to_player",
 	              "prerequisite_message", "needs_first", "corpus_hedge", "never_abandon"),
 	"diffusion": ("foreign_only", "civ_cost_factor", "literacy_ceiling", "staff_sources", "tech_effects"),
-	"ventures": ("operating", "mothballed", "closure_records", "reopen_fee", "reopen_units", "venture_capex", "venture_hands", "venture_foreman", "venture_foreman_free",
+	"ventures": ("operating", "venture_size", "mothballed", "closure_records", "reopen_fee", "reopen_units", "venture_capex", "venture_hands", "venture_foreman", "venture_foreman_free",
 	             "venture_staff_free", "venture_staff_used", "venture_real_earnings", "venture_real_upkeep", "opening_fee"),
 	"production": ("is_venture", "running", "revenue_estimate", "upkeep", "institution_units", "institution_unit_ceiling",
 	               "institution_places", "institution_upkeep", "industry_depth", "failed_attempts_trial", "concern_market"),

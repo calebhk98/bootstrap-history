@@ -15,6 +15,8 @@ echo "inheritance left on Sim, cross-class references: $(printf '%s\n' "$couplin
 echo "module graph (tools/measure/module_graph.py):"
 python3 tools/measure/module_graph.py | sed 's/^/  /'
 
+echo "module reads not declared in their spec:" "$(python3 tools/check_module_reads.py | wc -l)"
+
 # Owners of money: the ledger (the seats' purses), the actors (sim/agents, each actor's own purse) and markets (sim/economy, the
 # agent economy's book). The household facade in sim/agents/household*.py writes the seat's purse, which is the ledger's, so it counts.
 outside_money_owners() { grep -v '^sim/tests/' | grep -vE '^sim/(ledger|economy)/' | grep -vE '^sim/agents/[^h]|^sim/agents/h[^o]'; }
