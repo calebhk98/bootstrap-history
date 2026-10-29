@@ -216,23 +216,30 @@ def settings_meta_path(path):
 # Memory the UI keeps on the `Sim`: saved or read by the engine, so it stays there.
 
 def dashboard_history(sim):
-    return sim._dashboard_history
+    holdings = sim.state.acting_record.holdings
+    return None if holdings is None else holdings._dashboard_history   # None until recorded
 
 
 def set_dashboard_history(sim, history):
-    sim._dashboard_history = history
+    holdings = sim.state.acting_record.holdings
+    if holdings is not None:
+        holdings._dashboard_history = history
 
 
 def founder_death_aged(sim):
-    return sim._founder_death_aged
+    founder = sim.state.acting_record.founder
+    return None if founder is None else founder._founder_death_aged   # None until recorded
 
 
 def founder_death_year(sim):
-    return sim._founder_death_year
+    founder = sim.state.acting_record.founder
+    return None if founder is None else founder._founder_death_year   # None until recorded
 
 
 def set_founder_death(sim, aged, year):
-    sim._founder_death_aged, sim._founder_death_year = aged, year
+    founder = sim.state.acting_record.founder
+    if founder is not None:
+        founder._founder_death_aged, founder._founder_death_year = aged, year
 
 
 def founder_death_cache(sim):
@@ -280,27 +287,30 @@ def set_last_buy_refusal(sim, refusal):
 
 
 def said_command_index(sim):
-    return bool(sim._said_command_index)
+    progress = sim.state.acting_record.seat_progress
+    return bool(None if progress is None else progress._said_command_index)
 
 
 def set_said_command_index(sim, said):
-    sim._said_command_index = said
+    progress = sim.state.acting_record.seat_progress
+    if progress is not None:
+        progress._said_command_index = said
 
 
 def said_stack_caution(sim):
-    return sim._said_stack_caution
+    return sim._stack_cautions.get(sim.state.acting_seat)
 
 
 def set_said_stack_caution(sim, said):
-    sim._said_stack_caution = said
+    sim._stack_cautions[sim.state.acting_seat] = said
 
 
 def said_parallelism(sim):
-    return sim._said_parallelism
+    return sim.state.acting_record.seat_progress._said_parallelism
 
 
 def set_said_parallelism(sim, said):
-    sim._said_parallelism = said
+    sim.state.acting_record.seat_progress._said_parallelism = said
 
 
 def said_explanations(seat_progress):

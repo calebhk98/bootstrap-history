@@ -5,7 +5,7 @@ a game is in test_economic_caching."""
 QUICK_TOPIC = True
 
 from .harness import check
-from sim.engine.forward_production import ForwardProductionMixin
+from sim.engine import change_hooks
 from sim.engine.state import SimulationState, HouseholdState
 from sim.knowledge.api import NoteTechniquesChanged
 from sim.engine.state_seat import SeatState
@@ -40,7 +40,7 @@ class _SeatHoldings:
 		self._game.projects_module.seat.active = value
 
 
-class ContainerGame(ForwardProductionMixin):
+class ContainerGame:
 	"""A household over a fresh state, with the invalidation hooks a Sim wires to it."""
 
 	def __init__(self):
@@ -105,7 +105,7 @@ def _test_done_and_operating_versions():
 	initial_op_count = sim_inst.operating_changes
 
 	# The held set changed
-	sim_inst._done_changed()
+	change_hooks.done_changed(sim_inst)
 	new_done_count = sim_inst.done_changes
 	if new_done_count <= initial_done_count:
 		return False, f"_done_count did not increment: {initial_done_count} -> {new_done_count}"

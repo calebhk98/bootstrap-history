@@ -177,6 +177,15 @@ LABOUR_METHOD_OF_COMMAND = {"HireStaff": "hire", "FireStaff": "fire", "TrainStaf
                             "FoundTradeSchool": "found_trade_school", "MoveBase": "move_base"}
 
 
+def ui_state(**memory):
+    """The `state` of a stand-in game holding the interface's saved memory (read it back through `ui_port`)."""
+    record = SimpleNamespace(
+        holdings=SimpleNamespace(_dashboard_history=memory.get("dashboard_history")),
+        founder=SimpleNamespace(_founder_death_aged=memory.get("founder_death_aged"), _founder_death_year=memory.get("founder_death_year")),
+        seat_progress=SimpleNamespace(_said_command_index=memory.get("said_command_index"), _said_parallelism=memory.get("said_parallelism")))
+    return SimpleNamespace(acting_record=record, acting_seat="founder")
+
+
 class FactViews:
     """`view` and `send` over an object that holds the facts as attributes."""
 

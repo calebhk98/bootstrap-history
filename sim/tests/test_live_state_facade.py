@@ -1,14 +1,17 @@
-"""The compatibility facade (ForwardingPropertiesMixin) keeps no storage of its own: the purse it names is the ledger's view and
+"""The root's purse property (root_facts.view_fact) keeps no storage of its own: the purse it names is the ledger's view and
 command, so a write through either path is seen through the other."""
 QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.core_properties import ForwardingPropertiesMixin
+from sim.engine.root_facts import view_fact
+from sim.ledger.api import RestorePurse
 from sim.tests.money_host import MoneyHost
 
 
-class _Facade(ForwardingPropertiesMixin):
+class _Facade:
+    capital = view_fact("acting_balance", set_command=RestorePurse)
+
     def __init__(self):
         self.money = MoneyHost(capital=1000.0)
         self.state, self.view, self.send = self.money.state, self.money.view, self.money.send

@@ -13,7 +13,7 @@ def society_technologies(game: Any) -> Set[str]:
 
 
 def snapshot(game: Any) -> Dict[str, Any]:
-    return {"year": game.year, "population": float(game.view("population")().total), "wage_index": float(game.wage_index),
+    return {"year": game.year, "population": float(game.view("population")().total), "wage_index": float(game.view("wage_index")()),
             "literacy_general": float(game.view("literacy")("literacy_general", None)),
             "literacy_elite": float(game.view("literacy")("literacy_elite", None)),
             "territory_tiles": len(game.view("tiles_listed_by")(game.civ)),
@@ -32,6 +32,6 @@ def play_baseline(civilisation_id: str, seed: int, years: int) -> List[Dict[str,
     for _year in range(years):
         game.step()
         rows.append(snapshot(game))
-        if game.dead_reason:
+        if game.view("founder")()["dead_reason"]:
             break
     return rows

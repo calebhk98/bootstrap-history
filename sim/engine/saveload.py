@@ -6,7 +6,7 @@ from sim.game_version import GAME_VERSION
 from sim.refusal import Refusal, cause_of
 
 from .data import WAGES
-from . import game_assembly
+from . import game_assembly, node_rederive
 from sim.knowledge.api import RevealNodes, fog_mismatch
 from sim.scenario.api import SetFuzzyEstimates, scenario_slot_of
 from sim.seats.api import ForgetGoalClosure
@@ -383,4 +383,4 @@ def _apply_blob(sim, blob):
 			raise EconomyNotOpened("a game built to load a save without opening its economy needs the save's tree pricing")
 		sim._economy_deferred = False
 		reprice_tree(sim, figure)
-	sim.refresh_derived_nodes()
+	node_rederive.refresh_derived_nodes(sim)

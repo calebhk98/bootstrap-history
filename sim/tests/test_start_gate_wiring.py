@@ -63,16 +63,18 @@ class StartPhase(unittest.TestCase):
         module.start_projects_phase("founder")
         self.assertEqual(module.started, [])
 
+from sim.tests.ui_stand_in import ui_state
+
 
 class StackCaution(unittest.TestCase):
     def test_it_is_given_the_first_time_a_leverage_list_is_shown_and_never_again(self):
-        game = types.SimpleNamespace(_said_stack_caution=None)
+        game = types.SimpleNamespace(_stack_cautions={}, state=ui_state())
         first = _digest_stack_caution(game, ["some_node"])
         self.assertTrue(first)
         self.assertIsNone(_digest_stack_caution(game, ["some_node"]))
 
     def test_an_empty_leverage_list_gives_none_and_does_not_use_up_the_caution(self):
-        game = types.SimpleNamespace(_said_stack_caution=None)
+        game = types.SimpleNamespace(_stack_cautions={}, state=ui_state())
         self.assertIsNone(_digest_stack_caution(game, []))
         self.assertTrue(_digest_stack_caution(game, ["some_node"]))
 

@@ -55,7 +55,7 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 
 The slow suite (`python3 -m sim.tests --slow`) is green at `b0b3a8d0`. Full equivalence tier identical at the prices, demography, land, markets, production, projects last-mixins (`161acde1`, which includes the ledger money) and phase 6 (`0c5c18aa`, which includes the year composition) merges; stress tier and protocol transcripts identical after each module. Phase 6b: the full tier at `2294c07f` found Rome seed 1 diverging at year 16 (the army's food check, a read left dead by a move; fixed in `49f8ee4c`, where Rome seed 1 is identical over 40 years); England and Han seed 1 identical at `4bd5f60b`, Rome seed 2 at `2294c07f`; the full tier identical, all four scenarios, at `00c664b8` and at `5c152a46` (every phase 6b merge, the width reviews included); micro identical at `282b5913`, `e682ec98`, `d967c61f`, `9c661d02` and `54052b76` (the seat purse; stress identical there too, against the baseline re-recorded for Complaint 921); stress and the protocol transcripts identical at `5a11b0f8` (re-run with `python3 -m sim.tests.equiv check docs/architecture/baseline/<tier>.json --tier <tier>`).
 
-Phase 6 (a) is done: `sim/ui/` reads views and sends commands (`tools/check_ui_views.py` checks every name it uses exists; a 168-command protocol session gave identical replies to the base). Still to do in phase 6: about 490 forwarders in `sim/engine/forward_*.py` and `core_properties.py` that engine code, mods and tests still call, and the mixin fakes in the tests (137 files, mostly the labour package's own mixins). Next: those forwarders' engine callers, the projects record's shared sets and the purses; phase 7 in progress (the mod registries other than the ui's are extension points of their owners: `mod_code.py`, `docs/architecture/MODULE_REGISTRY_PLAN.md` section 4.5); then 8 and 9.
+Phase 6 (a) is done: `sim/ui/` reads views and sends commands (`tools/check_ui_views.py` checks every name it uses exists; a 168-command protocol session gave identical replies to the base). Still to do in phase 6: the forwarders left in `sim/engine/forward_*.py` (the seats, workforce, production and core-property mixins are gone: the change hooks are `change_hooks.py`, the tree rederivation calls are plain functions in `node_rederive.py`, and the facts the root states on itself are class attributes of `Sim` built by `root_facts.py`) that engine code, mods and tests still call, and the mixin fakes in the tests (137 files, mostly the labour package's own mixins). Next: those forwarders' engine callers, the projects record's shared sets and the purses; phase 7 in progress (the mod registries other than the ui's are extension points of their owners: `mod_code.py`, `docs/architecture/MODULE_REGISTRY_PLAN.md` section 4.5); then 8 and 9.
 
 ## Task list
 
@@ -148,7 +148,7 @@ Phase 6 (a) is done: `sim/ui/` reads views and sends commands (`tools/check_ui_v
 
 ### Phase 6: UI and protocol
 
-- [ ] `ui_port` and the forwarders in `core_properties.py` become view lists and commands.
+- [ ] `ui_port` becomes view lists and commands. `core_properties.py` is gone; what `Sim` still states about itself (`year`, `civ`, `cfg`, `nodes`, `done`, `capital`, `goal`, `policy`, `labour`, ...) is listed in `core.py` under "the facts the root states itself"; each goes when its callers (engine modules and the tests' stand-in games) read the view.
 - [ ] The protocol golden transcripts from 0.3 must still match.
 - [ ] A final sweep of leftover mixin fakes in the tests.
 

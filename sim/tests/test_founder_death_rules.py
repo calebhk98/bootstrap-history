@@ -22,7 +22,7 @@ UNTIL_END = 12
 BEFORE_FORGETTING = 3
 
 
-from sim.tests.ui_stand_in import Game as StandInGame
+from sim.tests.ui_stand_in import Game as StandInGame, ui_state
 
 class Game:
     """The seats module over the views the mortality step reads, with its sent commands to read back."""
@@ -82,7 +82,7 @@ check("a dissolution notice does not stop a step", event_kinds.stops_a_step(LogL
 
 
 def reader(alive, saved_age=None, saved_year=None, log=()):
-    return StandInGame(founder_alive=alive, _founder_death_aged=saved_age, _founder_death_year=saved_year, _founder_death_cache=None, log=list(log))
+    return StandInGame(founder_alive=alive, state=ui_state(founder_death_aged=saved_age, founder_death_year=saved_year), _founder_death_cache=None, log=list(log))
 
 
 check("a living founder has no death to report", _founder_death_info(reader(True)) is None)

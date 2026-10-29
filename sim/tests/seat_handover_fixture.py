@@ -20,6 +20,7 @@ class Game:
             self.state.seats[seat_id] = seat_from_template({}, {})
         self._seat_facades = {seat_id: None for seat_id in self.state.seats}
         self.session_seat = None
+        self._stack_cautions = {}
         self.year = 100
         self.civ = {"id": "home"}
         self.assembly = game_assembly.build(None, False)

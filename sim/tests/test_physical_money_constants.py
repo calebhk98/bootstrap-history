@@ -3,26 +3,23 @@
 Nothing here builds a game; the mining opex is these hours times the miner's wage."""
 QUICK_TOPIC = True
 
-import inspect
 import unittest
 from types import SimpleNamespace
 
 from sim.constants import REGISTRY
 import sim.workforce.constants  # noqa: F401  (declares the workforce prices in labour hours)
-from sim.engine.core import Sim
 from sim.resources.labour_profile import mine_labour_hours_per_tonne
 from sim.engine.money_units import PricedInLabourHours
 from sim.labour.labour_bondage import BondageMixin
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits
 
-PHYSICAL_COSTS = {
-    "INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD": "INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD",
-    "CAPABILITY_FACTOR_HALF_SATURATION_REV": "CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS",
-    "REVENUE_CEILING_PER_POP_SCALE": "REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE",
-}
 # priced by the finance and polity modules from their hours constants (`credit_limit`, `state_funding`)
 MODULE_PRICES = (("CREDIT_LINE_PER_FOREST_HA", "CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA"), ("STATE_FUNDING_BASE", "STATE_FUNDING_BASE_LABOUR_HOURS"))
+# the production module's, read through its constants module and its views (`sim.production.constants`)
+PRODUCTION_HOURS = (("INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD", "INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD"),
+                    ("CAPABILITY_FACTOR_HALF_SATURATION_REV", "CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS"),
+                    ("REVENUE_CEILING_PER_POP_SCALE", "REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE"))
 SLAVE_PRICE = ("SLAVE_BASE_PRICE", "SLAVE_BASE_PRICE_LABOUR_HOURS")
 # priced by the workforce module (`housing_price_per_place`, `trade_school_price_per_seat`) as hours times what an hour is worth, at the price level
 WORKFORCE_PRICES = (("HOUSING_COST_PER_PLACE", "HOUSING_LABOUR_HOURS_PER_PLACE"), ("TRADE_SCHOOL_COST_PER_SEAT", "TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT"))
@@ -43,15 +40,9 @@ def _deposit(name, grade, depth="surface"):
 class PhysicalConstantsAreInHours(unittest.TestCase):
 
     def test_each_is_declared_in_labour_hours(self):
-        for money_name, hours_name in list(PHYSICAL_COSTS.items()) + [SLAVE_PRICE, FARM_PRICE, PATRON_GIFT, HANDS_PRICE] + list(RESOURCES_PRICES) + list(WORKFORCE_PRICES) + list(MODULE_PRICES):
+        for money_name, hours_name in [SLAVE_PRICE, FARM_PRICE, PATRON_GIFT, HANDS_PRICE] + list(RESOURCES_PRICES) + list(WORKFORCE_PRICES) + list(MODULE_PRICES) + list(PRODUCTION_HOURS):
             self.assertTrue(hours_name in REGISTRY, hours_name)
             self.assertIn("labour hour", REGISTRY[hours_name]["unit"], hours_name)
-
-    def test_each_money_name_is_priced_from_its_hours_constant(self):
-        for money_name, hours_name in PHYSICAL_COSTS.items():
-            declared = inspect.getattr_static(Sim, money_name, None)
-            self.assertIsInstance(declared, PricedInLabourHours, money_name)
-            self.assertEqual(declared.hours_name, hours_name, money_name)
 
     def test_a_priced_cost_is_hours_times_the_coin_per_hour(self):
         class Holder:

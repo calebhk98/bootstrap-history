@@ -27,11 +27,8 @@ class FakeSim:
         self.log = []
         self.ended = ended
 
-    def playing_seats(self):
-        return ["a", "b"]
-
-    def ended_seats(self):
-        return self.ended
+    def view(self, name):
+        return {"seat_list": lambda: {"playing": ["a", "b"]}, "ended_seats": lambda: self.ended}[name]
 
     @contextlib.contextmanager
     def act_as(self, seat_id):

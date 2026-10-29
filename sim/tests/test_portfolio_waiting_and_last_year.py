@@ -10,7 +10,7 @@ from sim.engine.blockers import BLOCKER_KINDS
 from sim.ui.proto.economy import _add_last_year_hours
 from sim.ui.proto.portfolio_waiting import SHOWN_PER_GROUP, waiting_to_start
 from sim.ui.proto.render_screens_economy import render_portfolio
-from sim.tests.ui_stand_in import Game
+from sim.tests.ui_stand_in import Game, ui_state
 
 nodes = {"root": {"pre": []}, "built": {"pre": []}, "running": {"pre": []}, "needs_root": {"pre": ["missing"]},
          "hidden": {"pre": []}, "unknown": {"pre": []}, "free": {"pre": []},
@@ -57,9 +57,9 @@ check("the printed screen names the waiting work", "WAITING TO START" in text, t
 
 history = [{"project_hours_effective": {"p": 1.0}}, {"project_hours_effective": {"p": 7.0}}, {"project_hours_effective": {"p": 9.0}}]
 rows = [{"id": "p"}, {"id": "q"}]
-_add_last_year_hours(Game(_dashboard_history=history), rows)
+_add_last_year_hours(Game(state=ui_state(dashboard_history=history)), rows)
 check("last year's figure is the earlier snapshot's, not this year's", rows[0]["hours_effective_last_year"] == 7.0, rows)
 check("a project the earlier snapshot lacks has no last-year figure", rows[1]["hours_effective_last_year"] is None, rows)
 young = [{"id": "p"}]
-_add_last_year_hours(Game(_dashboard_history=history[:2]), young)
+_add_last_year_hours(Game(state=ui_state(dashboard_history=history[:2])), young)
 check("with fewer than three snapshots there is no last-year figure", young[0]["hours_effective_last_year"] is None, young)

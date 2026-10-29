@@ -10,7 +10,6 @@ from .harness import check
 
 from sim.diffusion import literacy_rules
 from sim.diffusion.module import Diffusion
-from sim.engine.forward_workforce import ForwardWorkforceMixin
 from sim.refusal import cause_of
 from sim.tests import module_harness, production_host, ventures_host
 from sim.ui.proto.dispatch_rollout import _cmd_rollout
@@ -90,7 +89,6 @@ check("with no work declaring a working day the year is the convention",
 check("a longer day gives a longer year in the same proportion",
       abs(lit_game([LIGHTS], {LIGHTS: 0.5}).hours_per_person_year()
           - HOURS_PER_PERSON_YEAR * (1.0 + 1.0 / BASE_WORKING_DAY_HOURS)) < 1e-9, None)
-check("the year every wage quote reads is the working year", ForwardWorkforceMixin.HOURS_PER_PERSON_YEAR.fget(Game(view=lambda name: lambda: 1234.0)) == 1234.0, None)
 
 # ---- the schooling flow
 def schools(values, shut=(), reaches=None):

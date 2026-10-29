@@ -39,7 +39,7 @@ def module_world_phase(name: str) -> Callable:
 
 
 def _still_playing(sim, seats):
-	return [seat_id for seat_id in seats if seat_id not in sim.ended_seats()]
+	return [seat_id for seat_id in seats if seat_id not in sim.view("ended_seats")()]
 
 
 def _advance_year(sim, seats):
@@ -137,7 +137,7 @@ def ordered_phases(mod_phases: Sequence[Phase] = ()) -> List[Phase]:
 def run_phases(sim, phases: Optional[List[Phase]] = None) -> None:
 	"""Run the year's phases in order."""
 	phases = ordered_phases(sim.assembly.applied.phases) if phases is None else phases
-	seats = sim.playing_seats() or [sim.state.acting_seat]
+	seats = sim.view("seat_list")()["playing"] or [sim.state.acting_seat]
 	index = 0
 	while index < len(phases) and seats:
 		phase = phases[index]

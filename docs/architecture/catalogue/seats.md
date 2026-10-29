@@ -19,7 +19,7 @@ Seats and the acting context: who plays, joining and handing over, goals and win
 
 | Old | Now |
 |---|---|
-| `SeatRunMixin` (`seat_run.py`) | `run.py` (`Run`), `lists.py`; forwarders in `sim/engine/forward_seats.py` |
+| `SeatRunMixin` (`seat_run.py`) | `run.py` (`Run`), `lists.py`; the root calls the commands and views itself |
 | `SeatHandoverMixin`, `seat_handover.py` | `handover.py` (`Handover`), `handover_rules.py`; the registry move is `sim/engine/seat_move.py` (applied for `MoveSeat`); `seat_handover_empty.py` and `seat_handover_rekey.py` stay in the engine (they read engine state dataclasses and the engine's own stores) |
 | `SeatBuildsMixin`, `seat_builds.py` | `builds.py` (the one method, `seats_that_built`, had no caller; `seat_place` is `Sight.seat_place`) |
 | `SeatSightMixin`, `seat_sight.py` | `sight.py`, `sight_rules.py` |
@@ -62,9 +62,9 @@ Real module views: `tree`, `tree_nodes`, `techniques_held`, `techniques_granted`
 
 `RegisterSeat`, `MoveSeat`, `ForgetGoalCaches` (applied by the bridge), `LearnTechnique`, `ForgetTechnique`, `RevealNodes` (knowledge), `RekeyDisclosures` (diffusion), `RecordEvent` (reporting).
 
-## Forwarders left (`sim/engine/forward_seats.py`)
+## Forwarders left (`playing_seats`, `ended_seats`, `run_over`, `join_seat`, `join_cast_seats` and `hand_over_seat` are gone: callers read the views and send the commands)
 
-`playing_seats`, `ended_seats`, `run_over`, `acting_country`, `governed_countries`, `society_techs_now`, `join_seat`, `join_cast_seats`, `hand_over_seat`, `seat_place`, `dealing_party`, `dealings_listing`, `seat_patent`, `seat_offer`, `seat_answer`, `set_goal`, `record_goal_reached`, `win_condition_anatomy`, `_win_condition_value`, `forget_goal_caches`. Callers: the UI (`ui_port`, `dispatch_seats`, `dispatch_dealings`, `goals_watch`, `anatomy`), `year_phases.py`, `agents_port*.py`, `economy_port*.py`, `disease_port.py`, `shock_year.py`, `society_hazards.py`, `world_hazards.py`, `projects_completion.py`, `seat_bank.py`. The properties `goal`, `policy` stay on `ForwardingPropertiesMixin`; `goal_year`, `founder_alive`, `life_left` there are read-only views of the module (`dead_reason`'s setter sends `EndRun`).
+`acting_country`, `governed_countries`, `society_techs_now`, `seat_place`, `dealing_party`, `dealings_listing`, `seat_patent`, `seat_offer`, `seat_answer`, `set_goal`, `record_goal_reached`, `win_condition_anatomy`, `_win_condition_value`, `forget_goal_caches`. Callers: the UI (`ui_port`, `dispatch_seats`, `dispatch_dealings`, `goals_watch`, `anatomy`), `year_phases.py`, `agents_port*.py`, `economy_port*.py`, `disease_port.py`, `shock_year.py`, `society_hazards.py`, `world_hazards.py`, `projects_completion.py`, `seat_bank.py`. The properties `goal`, `goal_year`, `policy` are class attributes of `Sim` (`root_facts.py`); `founder_alive`, `life_left`, `dead_reason` are read through the `founder` view.
 
 ## Year phases
 

@@ -5,7 +5,8 @@ numbers the test states; the replies that carry them are called on stand-ins bel
 from .harness import *  # noqa: F401,F403
 
 from sim.ui.proto.parallelism_notes import calendar_floor_note, free_hours_note
-from sim.tests.ui_stand_in import Game
+from sim.engine import ui_port
+from sim.tests.ui_stand_in import Game, ui_state
 
 QUICK_TOPIC = True
 
@@ -33,15 +34,15 @@ from types import SimpleNamespace
 
 from sim.ui.proto.parallelism_notes import KEY_CALENDAR_FLOOR, add_calendar_floor_note, free_hours_going_unused
 
-game = Game(_said_parallelism=None)
+game = Game(state=ui_state())
 first, second = {}, {}
 add_calendar_floor_note(first, game, "A long project", 3)
 add_calendar_floor_note(second, game, "Another long project", 3)
 check("starting the first long project carries the note", KEY_CALENDAR_FLOOR in first, first)
-check("...and a second in the same game does not repeat it", second == {} and game._said_parallelism is True, second)
-short_game, short = Game(_said_parallelism=None), {}
+check("...and a second in the same game does not repeat it", second == {} and ui_port.said_parallelism(game) is True, second)
+short_game, short = Game(state=ui_state()), {}
 add_calendar_floor_note(short, short_game, "A short one", 1)
-check("a short project adds nothing and does not spend the note", short == {} and short_game._said_parallelism is None)
+check("a short project adds nothing and does not spend the note", short == {} and ui_port.said_parallelism(short_game) is None)
 
 
 def world(pool, committed):
