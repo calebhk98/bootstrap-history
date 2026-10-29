@@ -8,7 +8,9 @@ from .harness import check
 from sim.agents.household import Household
 from sim.engine.forward_production import ForwardProductionMixin
 from sim.engine.state import SimulationState, HouseholdState, ProjectsState
-from sim.production.api import RefreshDoneCaches, RefreshOperatingCaches
+from sim.knowledge.api import NoteTechniquesChanged
+from sim.projects.api import NoteActiveChanged
+from sim.ventures.api import NoteOperatingChanged
 from sim.tests import module_harness
 from sim.workforce.api import WatchStaff, WorkforceSeat
 from sim.workforce.module import Workforce
@@ -23,12 +25,16 @@ class ContainerGame(ForwardProductionMixin):
 								   active_changed=self._active_changed,
 								   state=self.state)
 
+	done_changes = operating_changes = active_changes = 0
+
 	def send(self, command):
-		"""The production module's answer to the hooks: count the change on the household."""
-		if isinstance(command, RefreshDoneCaches):
-			self.household.bump_done_version()
-		elif isinstance(command, RefreshOperatingCaches):
-			self.household.bump_operating_version()
+		"""The owners' answer to the hooks: count the change each one is told of."""
+		if isinstance(command, NoteTechniquesChanged):
+			self.done_changes += 1
+		elif isinstance(command, NoteOperatingChanged):
+			self.operating_changes += 1
+		elif isinstance(command, NoteActiveChanged):
+			self.active_changes += 1
 
 
 def _staff_module():
@@ -48,22 +54,22 @@ CONTAINERS = ContainerGame()
 
 
 def _test_done_and_operating_versions():
-	"""Verify _done_ver and _operating_ver track respective mutations."""
+	"""Verify the held and operating counters track respective mutations."""
 	sim_inst = CONTAINERS
-	initial_done_ver = getattr(sim_inst.household, "_done_ver", 0)
-	initial_op_ver = getattr(sim_inst.household, "_operating_ver", 0)
+	initial_done_count = sim_inst.done_changes
+	initial_op_count = sim_inst.operating_changes
 
 	# The held set changed
 	sim_inst._done_changed()
-	new_done_ver = getattr(sim_inst.household, "_done_ver", 0)
-	if new_done_ver <= initial_done_ver:
-		return False, f"_done_ver did not increment: {initial_done_ver} -> {new_done_ver}"
+	new_done_count = sim_inst.done_changes
+	if new_done_count <= initial_done_count:
+		return False, f"_done_count did not increment: {initial_done_count} -> {new_done_count}"
 
 	# Mutate operating
 	sim_inst.household.operating.add("archaeo_survey")
-	new_op_ver = getattr(sim_inst.household, "_operating_ver", 0)
-	if new_op_ver <= initial_op_ver:
-		return False, f"_operating_ver did not increment: {initial_op_ver} -> {new_op_ver}"
+	new_op_count = sim_inst.operating_changes
+	if new_op_count <= initial_op_count:
+		return False, f"_operating_count did not increment: {initial_op_count} -> {new_op_count}"
 
 	return True, "done and operating versions incremented as expected"
 
@@ -73,21 +79,21 @@ check("done and operating version counters increment", _ok, _detail)
 
 
 def _test_active_project_invalidation_version():
-	"""Verify mutating household.active bumps _active_ver automatically."""
+	"""Verify mutating household.active bumps the active counter automatically."""
 	sim_inst = CONTAINERS
-	initial_active_ver = getattr(sim_inst.household, "_active_ver", 0)
+	initial_active_count = sim_inst.active_changes
 
 	# Add project
 	sim_inst.household.active["test_proj"] = {"ph_left": 10.0, "cost_left": 10.0}
-	ver_after_add = getattr(sim_inst.household, "_active_ver", 0)
-	if ver_after_add <= initial_active_ver:
-		return False, f"_active_ver did not increment on add: {initial_active_ver} -> {ver_after_add}"
+	ver_after_add = sim_inst.active_changes
+	if ver_after_add <= initial_active_count:
+		return False, f"_active_count did not increment on add: {initial_active_count} -> {ver_after_add}"
 
 	# Remove project
 	sim_inst.household.active.pop("test_proj", None)
-	ver_after_pop = getattr(sim_inst.household, "_active_ver", 0)
+	ver_after_pop = sim_inst.active_changes
 	if ver_after_pop <= ver_after_add:
-		return False, f"_active_ver did not increment on pop: {ver_after_add} -> {ver_after_pop}"
+		return False, f"_active_count did not increment on pop: {ver_after_add} -> {ver_after_pop}"
 
 	return True, "active version counter incremented on add and pop"
 
@@ -97,7 +103,7 @@ check("active project version increments on mutation", _ok, _detail)
 
 
 def _test_nested_mutation_invalidation():
-	"""Verify nested mutations and alias modifications inside active projects increment _active_ver."""
+	"""Verify nested mutations and alias modifications inside active projects increment _active_count."""
 	sim_inst = CONTAINERS
 	sim_inst.household.active["test_node"] = {
 		"ph_left": 100.0,
@@ -106,46 +112,46 @@ def _test_nested_mutation_invalidation():
 		"cost_left": 500.0,
 		"lab_left": {"smith": 20.0},
 	}
-	ver_baseline = getattr(sim_inst.household, "_active_ver", 0)
+	ver_baseline = sim_inst.active_changes
 
 	# 1. Direct nested field assignment: active[node][field] += x
 	sim_inst.household.active["test_node"]["ph_left"] -= 10.0
-	ver_after_field = getattr(sim_inst.household, "_active_ver", 0)
+	ver_after_field = sim_inst.active_changes
 	if ver_after_field <= ver_baseline:
-		return False, f"_active_ver did not increment on direct nested field mutation: {ver_baseline} -> {ver_after_field}"
+		return False, f"_active_count did not increment on direct nested field mutation: {ver_baseline} -> {ver_after_field}"
 
 	# 2. Mutation through project alias: project = active[node]; project[field] = x
 	project_alias = sim_inst.household.active["test_node"]
 	project_alias["spent"] += 50.0
-	ver_after_alias = getattr(sim_inst.household, "_active_ver", 0)
+	ver_after_alias = sim_inst.active_changes
 	if ver_after_alias <= ver_after_field:
-		return False, f"_active_ver did not increment on alias mutation: {ver_after_field} -> {ver_after_alias}"
+		return False, f"_active_count did not increment on alias mutation: {ver_after_field} -> {ver_after_alias}"
 
 	# 3. Deeply nested mutation on lab_left dictionary
 	labour_alias = project_alias["lab_left"]
 	labour_alias["smith"] = 15.0
-	ver_after_deep = getattr(sim_inst.household, "_active_ver", 0)
+	ver_after_deep = sim_inst.active_changes
 	if ver_after_deep <= ver_after_alias:
-		return False, f"_active_ver did not increment on deeply nested dict mutation: {ver_after_alias} -> {ver_after_deep}"
+		return False, f"_active_count did not increment on deeply nested dict mutation: {ver_after_alias} -> {ver_after_deep}"
 
 	# 4. In-place dictionary update |= on nested project dict
 	project_alias |= {"yrs": 1.0}
-	ver_after_nested_ior = getattr(sim_inst.household, "_active_ver", 0)
+	ver_after_nested_ior = sim_inst.active_changes
 	if ver_after_nested_ior <= ver_after_deep:
-		return False, f"_active_ver did not increment on nested dict |=: {ver_after_deep} -> {ver_after_nested_ior}"
+		return False, f"_active_count did not increment on nested dict |=: {ver_after_deep} -> {ver_after_nested_ior}"
 
 	# 5. In-place dictionary update |= on outer active dict
 	sim_inst.household.active |= {"second_node": {"ph_left": 50.0}}
-	ver_after_outer_ior = getattr(sim_inst.household, "_active_ver", 0)
+	ver_after_outer_ior = sim_inst.active_changes
 	if ver_after_outer_ior <= ver_after_nested_ior:
-		return False, f"_active_ver did not increment on outer active |=: {ver_after_nested_ior} -> {ver_after_outer_ior}"
+		return False, f"_active_count did not increment on outer active |=: {ver_after_nested_ior} -> {ver_after_outer_ior}"
 
 	# 6. In-place dictionary update |= on workforce employees dict
-	initial_workforce_ver = WORKFORCE.staff_version()
+	initial_workforce_count = WORKFORCE.staff_version()
 	WORKFORCE.seat.employees |= {"smith": 5.0}
 	ver_after_workforce_ior = WORKFORCE.staff_version()
-	if ver_after_workforce_ior <= initial_workforce_ver:
-		return False, f"_workforce_ver did not increment on employees |=: {initial_workforce_ver} -> {ver_after_workforce_ior}"
+	if ver_after_workforce_ior <= initial_workforce_count:
+		return False, f"_workforce_count did not increment on employees |=: {initial_workforce_count} -> {ver_after_workforce_ior}"
 
 	return True, "nested mutations, aliases, and |= operations properly increment version counters"
 
@@ -155,7 +161,7 @@ check("nested mutation and alias invalidation", _ok, _detail)
 
 
 def _test_workforce_container_api_completeness():
-	"""Edge case: dictionary mutating APIs on household.employees increment _workforce_ver."""
+	"""Edge case: dictionary mutating APIs on household.employees increment _workforce_count."""
 	sim_inst = CONTAINERS
 	WORKFORCE.seat.employees["smith"] = 5.0
 	ver0 = WORKFORCE.staff_version()
@@ -204,7 +210,7 @@ check("workforce container dictionary APIs completeness", _ok, _detail)
 
 
 def _test_nested_active_container_api_completeness():
-	"""Edge case: dictionary mutating APIs on nested and deep project sub-dicts increment _active_ver."""
+	"""Edge case: dictionary mutating APIs on nested and deep project sub-dicts increment _active_count."""
 	sim_inst = CONTAINERS
 	test_node = "test_node_nested_api"
 	sim_inst.household.active[test_node] = {
@@ -212,40 +218,40 @@ def _test_nested_active_container_api_completeness():
 		"cost_left": 200.0,
 		"lab_left": {"smith": 10.0},
 	}
-	ver0 = getattr(sim_inst.household, "_active_ver", 0)
+	ver0 = sim_inst.active_changes
 
 	project_alias = sim_inst.household.active[test_node]
 	lab_alias = project_alias["lab_left"]
 
 	# Deep setdefault on new trade requirement
 	lab_alias.setdefault("mason", 5.0)
-	ver1 = getattr(sim_inst.household, "_active_ver", 0)
+	ver1 = sim_inst.active_changes
 	if ver1 <= ver0:
-		return False, f"Deep setdefault did not increment _active_ver: {ver0} -> {ver1}"
+		return False, f"Deep setdefault did not increment _active_count: {ver0} -> {ver1}"
 
 	# Deep update
 	lab_alias.update({"weaver": 3.0})
-	ver2 = getattr(sim_inst.household, "_active_ver", 0)
+	ver2 = sim_inst.active_changes
 	if ver2 <= ver1:
-		return False, f"Deep update did not increment _active_ver: {ver1} -> {ver2}"
+		return False, f"Deep update did not increment _active_count: {ver1} -> {ver2}"
 
 	# Deep pop
 	lab_alias.pop("weaver")
-	ver3 = getattr(sim_inst.household, "_active_ver", 0)
+	ver3 = sim_inst.active_changes
 	if ver3 <= ver2:
-		return False, f"Deep pop did not increment _active_ver: {ver2} -> {ver3}"
+		return False, f"Deep pop did not increment _active_count: {ver2} -> {ver3}"
 
 	# Deep clear
 	lab_alias.clear()
-	ver4 = getattr(sim_inst.household, "_active_ver", 0)
+	ver4 = sim_inst.active_changes
 	if ver4 <= ver3 or len(lab_alias) != 0:
-		return False, f"Deep clear did not increment _active_ver: {ver3} -> {ver4}"
+		return False, f"Deep clear did not increment _active_count: {ver3} -> {ver4}"
 
 	# Project clear
 	project_alias.clear()
-	ver5 = getattr(sim_inst.household, "_active_ver", 0)
+	ver5 = sim_inst.active_changes
 	if ver5 <= ver4 or len(project_alias) != 0:
-		return False, f"Project clear did not increment _active_ver: {ver4} -> {ver5}"
+		return False, f"Project clear did not increment _active_count: {ver4} -> {ver5}"
 
 	return True, "nested and deep project sub-dictionaries track mutations reliably"
 
@@ -291,17 +297,17 @@ def _test_pre_insertion_alias_and_invalidating_dict_identity():
 		return False, "Nested _InvalidatingDict inside pre-wrapped project was unnecessarily copied"
 
 	# Pre-insertion alias mutation on _InvalidatingDict MUST trigger invalidation
-	ver_before_alias = getattr(sim_inst.household, "_active_ver", 0)
+	ver_before_alias = sim_inst.active_changes
 	pre_wrapped["ph_left"] -= 20.0
-	ver_after_alias = getattr(sim_inst.household, "_active_ver", 0)
+	ver_after_alias = sim_inst.active_changes
 	if ver_after_alias <= ver_before_alias:
-		return False, f"Mutating pre-insertion _InvalidatingDict alias did not increment _active_ver: {ver_before_alias} -> {ver_after_alias}"
+		return False, f"Mutating pre-insertion _InvalidatingDict alias did not increment _active_count: {ver_before_alias} -> {ver_after_alias}"
 
 	# Pre-insertion alias nested mutation MUST trigger invalidation
 	pre_wrapped["lab_left"]["mason"] -= 2.0
-	ver_after_nested_alias = getattr(sim_inst.household, "_active_ver", 0)
+	ver_after_nested_alias = sim_inst.active_changes
 	if ver_after_nested_alias <= ver_after_alias:
-		return False, f"Mutating pre-insertion nested dict alias did not increment _active_ver: {ver_after_alias} -> {ver_after_nested_alias}"
+		return False, f"Mutating pre-insertion nested dict alias did not increment _active_count: {ver_after_alias} -> {ver_after_nested_alias}"
 
 	# 3. Resetting active container preserves wrapped child identities
 	sim_inst._reset_active()
@@ -310,9 +316,9 @@ def _test_pre_insertion_alias_and_invalidating_dict_identity():
 
 	# Post-reset mutation through pre_wrapped alias still invalidates
 	pre_wrapped["cost_left"] += 10.0
-	ver_after_reset_mut = getattr(sim_inst.household, "_active_ver", 0)
+	ver_after_reset_mut = sim_inst.active_changes
 	if ver_after_reset_mut <= ver_after_nested_alias:
-		return False, f"Mutation through pre_wrapped alias after _reset_active did not increment _active_ver: {ver_after_nested_alias} -> {ver_after_reset_mut}"
+		return False, f"Mutation through pre_wrapped alias after _reset_active did not increment _active_count: {ver_after_nested_alias} -> {ver_after_reset_mut}"
 
 	# 4. Identity preservation on update() and setdefault()
 	update_wrapped = _InvalidatingDict({"ph_left": 30.0})

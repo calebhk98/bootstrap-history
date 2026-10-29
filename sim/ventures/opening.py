@@ -7,7 +7,7 @@ from sim.ledger.api import PayEdge
 from sim.projects.api import NoteConcernChange
 from sim.refusal import LogLine, Refusal
 
-from .needed_commands import BumpInstitutionUnitsVersion
+from .channels import INSTITUTION_UNITS_CHANGES
 from .net_loss import flags_net_loss
 
 
@@ -68,7 +68,7 @@ class Opening:
 		projects.business.note_opened_year_if_unknown(node_id, year)
 		if scalable:
 			projects.business.set_size(node_id, unit_count)
-			needs.send(BumpInstitutionUnitsVersion())
+			self.bump_seat(INSTITUTION_UNITS_CHANGES)
 		needs.send(NoteConcernChange("opening", node_id, "opened"))
 		earns = self.venture_real_earnings(node_id, unit_count, fully_ramped=True)
 		upkeep = self.venture_upkeep_quote(node_id, unit_count)
@@ -138,7 +138,7 @@ class Opening:
 			needs.send(PayEdge(edges.EDGE_BUILDERS, fee, "expanding a venture"))
 		units_now = have + add_units
 		needs.legacy_projects().business.set_size(node_id, units_now)
-		needs.send(BumpInstitutionUnitsVersion())
+		self.bump_seat(INSTITUTION_UNITS_CHANGES)
 		earns, costs = node["rev"] * units_now, node["up"] * units_now
 		return True, ("%s expanded from %.2f to %.2f units for %s: it "
 		              "now earns about %s a year and costs about %s to run"

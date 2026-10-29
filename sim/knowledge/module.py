@@ -9,13 +9,14 @@ from typing import Any, Dict, FrozenSet, Optional, Tuple
 from sim.assembly.api import Module
 
 from . import category_traits, fog_words, rules, tree_paths
-from .commands import (ForgetTechnique, HandOverTechniques, LearnTechnique, ReceiveTechniques, RevealFrom, RevealNodes,
+from .commands import (ForgetTechnique, HandOverTechniques, LearnTechnique, NoteTechniquesChanged, ReceiveTechniques, RevealFrom, RevealNodes,
                        StartDoneYearRecord, ReplaceTree)
 from .constants import CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE
 from sim.production.api import RefreshDoneCaches
 
 DONE = "done"
 REVEALED = "revealed"
+HELD_CHANGES = "held_changes"   # the seat's held set changed where the caches over it are told (learning, forgetting, a re-derived tree)
 
 
 class Knowledge(Module):
@@ -52,6 +53,11 @@ class Knowledge(Module):
     def techniques_held(self) -> FrozenSet[str]:
         """The nodes the acting seat holds, finished or granted."""
         return frozenset(self.seat.done)
+
+    def techniques_version(self) -> tuple:
+        """The change counter of the acting seat's held set, for memos over what is held: it moves exactly when the caches over
+        the held set are told to drop (`LearnTechnique`, `ForgetTechnique`, `NoteTechniquesChanged`), not when a set is received."""
+        return self.seat_version(HELD_CHANGES)
 
     def techniques_revealed(self) -> FrozenSet[str]:
         """The nodes the acting seat has heard of under fog."""
@@ -154,6 +160,7 @@ class Knowledge(Module):
     def learn_technique(self, command: LearnTechnique) -> None:
         self.seat.done.add(command.node_id)
         self.needs.send(RefreshDoneCaches())
+        self.bump_seat(HELD_CHANGES)
         self.bump_seat(DONE)
         if command.granted:
             self.seat.granted.add(command.node_id)
@@ -186,7 +193,11 @@ class Knowledge(Module):
             if command.year is not None:
                 self.seat.forgotten[node_id] = command.year
         self.needs.send(RefreshDoneCaches())
+        self.bump_seat(HELD_CHANGES)
         self.bump_seat(DONE)
+
+    def note_techniques_changed(self, command: NoteTechniquesChanged) -> None:
+        self.bump_seat(HELD_CHANGES)
 
     def reveal_from(self, command: RevealFrom) -> None:
         if not self.needs.legacy_fog():

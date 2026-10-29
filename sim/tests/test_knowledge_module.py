@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.knowledge import rules
-from sim.knowledge.api import (ForgetTechnique, HandOverTechniques, KnowledgeSeat, LearnTechnique, ReceiveTechniques, ReplaceTree, RevealFrom,
+from sim.knowledge.api import (ForgetTechnique, HandOverTechniques, KnowledgeSeat, LearnTechnique, NoteTechniquesChanged, ReceiveTechniques, ReplaceTree, RevealFrom,
                                RevealNodes, StartDoneYearRecord)
 from sim.production.api import RefreshDoneCaches
 from sim.knowledge.module import DONE, REVEALED, Knowledge
@@ -50,6 +50,47 @@ class LearnTests(unittest.TestCase):
         before = module.clock.counter(module.module_id, DONE, True)
         module.learn_technique(LearnTechnique("fire"))
         self.assertGreater(module.clock.counter(module.module_id, DONE, True), before)
+
+
+class TechniquesVersionTests(unittest.TestCase):
+    def test_learning_moves_the_version(self):
+        module = knowledge_over(projects())
+        before = module.techniques_version()
+        module.learn_technique(LearnTechnique("fire"))
+        self.assertNotEqual(module.techniques_version(), before)
+
+    def test_forgetting_moves_the_version(self):
+        module = knowledge_over(projects(done={"fire"}))
+        before = module.techniques_version()
+        module.forget_technique(ForgetTechnique(("fire",)))
+        self.assertNotEqual(module.techniques_version(), before)
+
+    def test_a_note_from_the_engine_moves_the_version(self):
+        module = knowledge_over(projects())
+        before = module.techniques_version()
+        module.note_techniques_changed(NoteTechniquesChanged())
+        self.assertNotEqual(module.techniques_version(), before)
+
+    def test_receiving_techniques_leaves_the_version_where_it_was(self):
+        module = knowledge_over(projects())
+        before = module.techniques_version()
+        module.receive_techniques(ReceiveTechniques(("fire",)))
+        self.assertEqual(module.techniques_version(), before)
+
+    def test_the_version_is_the_acting_seats(self):
+        module = knowledge_over(projects())
+        module.clock.act_as("founder")
+        module.learn_technique(LearnTechnique("fire"))
+        founder = module.techniques_version()
+        module.clock.act_as("rival")
+        self.assertNotEqual(module.techniques_version(), founder)
+        self.assertEqual(module.techniques_version()[2:], (0, 0))
+
+    def test_a_load_moves_every_seats_version(self):
+        module = knowledge_over(projects())
+        before = module.techniques_version()
+        module.clock.bump_everything()
+        self.assertNotEqual(module.techniques_version(), before)
 
 
 class ForgetTests(unittest.TestCase):

@@ -17,8 +17,9 @@ from .state import LandSeat, LandWorld
 
 READS_BY_OWNER = {
     "core": ("civilisation", "civilisation_record", "year", "map_overlays", "money_text", "plain_number"),
-    "knowledge": ("techniques_held", "techniques_granted", "tree_nodes"),
-    "projects": ("held_and_running_versions", "project_cost_now"),
+    "knowledge": ("techniques_held", "techniques_version", "techniques_granted", "tree_nodes"),
+    "ventures": ("operating_version",),
+    "projects": ("project_cost_now",),
     "markets": ("purchase_quote",),
     "workforce": ("labour_market", "settlement_tiles", "money_per_labour_hour"),
     "finance": ("can_pay", "afford_means", "spending_power"),

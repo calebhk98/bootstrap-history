@@ -7,9 +7,9 @@ from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.ledger.api import PayEdge
 from sim.projects.api import NoteConcernChange
 
-from .commands import ClearMothball, OpenVenture, RollOut, SellConcern
+from .channels import INSTITUTION_UNITS_CHANGES, OPERATING_CHANGES
+from .commands import ClearMothball, NoteOperatingChanged, OpenVenture, RollOut, SellConcern
 from .module import Ventures
-from .needed_commands import BumpInstitutionUnitsVersion
 
 READS_BY_OWNER = {
 	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted", "legacy_projects"),
@@ -48,6 +48,7 @@ _VIEWS = (
 	("coverage", "coverage_nodes", None, False), ("coverage_share", "coverage_share", KEYED, False), ("coverage_row", "coverage_row", KEYED, False),
 	("units_for_coverage", "units_for_coverage", QUOTE, False), ("people_per_unit", "people_per_unit", KEYED, False),
 	("people_who_can_use", "people_who_can_use", KEYED, False),
+	("operating_version", "operating_version", None, True), ("institution_units_version", "institution_units_version", None, True),
 )
 
 
@@ -57,10 +58,10 @@ def _view(name, compute, kind, seat_scoped):
 
 
 MODULE_SPECS = (ModuleSpec(
-	"ventures", Ventures,
+	"ventures", Ventures, channels=(OPERATING_CHANGES, INSTITUTION_UNITS_CHANGES),
 	publishes=tuple(_view(*row) for row in _VIEWS),
 	applies=((OpenVenture, "apply_open_venture"), (ClearMothball, "apply_clear_mothball"), (SellConcern, "apply_sell_concern"),
-	         (RollOut, "apply_roll_out")),
+	         (RollOut, "apply_roll_out"), (NoteOperatingChanged, "apply_note_operating_changed")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(PayEdge, NoteConcernChange, BumpInstitutionUnitsVersion),
+	sends=(PayEdge, NoteConcernChange),
 ),)

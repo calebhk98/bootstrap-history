@@ -127,7 +127,7 @@ Views of finished modules: `effect_sum`, `effect_values`, `effect_factor`, `effe
 
 Published by `bridge_polity.py` under the name the owner will publish: `state_treasury` (actors), `standing_floor`, `rep_factor`
 (projects), `concern_revenue` (production), `base_annual_wage`, `labour_state_weights` (workforce), `material_substitutes` (materials),
-`danger_lines` (the eminence and suspicion figures of the settings). `held_and_running_versions` (what the reach memo is keyed by).
+`danger_lines` (the eminence and suspicion figures of the settings). The reach memo is keyed by `techniques_version` (knowledge) and `operating_version` (ventures).
 The module reads no `legacy_*` view and no raw object of another owner: the purse is `acting_balance`, the dice are `game_random`,
 seats switch with `acting_as`, a seat's country is `seat_country`, a government's grant and levy rates are `government_figures`, and
 the told-once mark of the concern levy is the hazards' command `SayOnce`. `provider_game` is the one live object it hands out, to

@@ -6,9 +6,9 @@ What a seat holds, has heard of and has forgotten is the module's own seat state
 `ReplaceTree` without a channel, so the views over it are uncached."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 
-from .commands import (ForgetTechnique, HandOverTechniques, LearnTechnique, ReceiveTechniques, RevealFrom, RevealNodes,
+from .commands import (ForgetTechnique, HandOverTechniques, LearnTechnique, NoteTechniquesChanged, ReceiveTechniques, RevealFrom, RevealNodes,
                        StartDoneYearRecord, ReplaceTree)
-from .module import DONE, REVEALED, Knowledge
+from .module import DONE, HELD_CHANGES, REVEALED, Knowledge
 from sim.production.api import RefreshDoneCaches
 from .state import KnowledgeSeat
 
@@ -23,7 +23,7 @@ READS_BY_OWNER = {
 _LIVE = dict(cached=False)
 
 MODULE_SPECS = (ModuleSpec(
-    "knowledge", Knowledge, channels=(DONE, REVEALED), seat_state=KnowledgeSeat,
+    "knowledge", Knowledge, channels=(DONE, REVEALED, HELD_CHANGES), seat_state=KnowledgeSeat,
     publishes=(
         ViewSpec("tree", "tree", kind=KEYED, **_LIVE),
         ViewSpec("tree_nodes", "tree_nodes", **_LIVE),
@@ -33,6 +33,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("critical_path", "critical_path", kind=QUOTE),
         ViewSpec("hard_prerequisites", "hard_prerequisites", kind=KEYED, **_LIVE),
         ViewSpec("techniques_held", "techniques_held", channels=(DONE,), seat_scoped=True),
+        ViewSpec("techniques_version", "techniques_version", seat_scoped=True, **_LIVE),
         ViewSpec("techniques_revealed", "techniques_revealed", channels=(REVEALED,), seat_scoped=True),
         ViewSpec("techniques_granted", "techniques_granted", channels=(DONE,), seat_scoped=True),
         ViewSpec("techniques_by_seat", "techniques_by_seat", **_LIVE),
@@ -49,7 +50,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("never_abandon", "never_abandon", kind=KEYED, seat_scoped=True, **_LIVE),
     ),
     applies=((LearnTechnique, "learn_technique"), (ForgetTechnique, "forget_technique"), (RevealFrom, "reveal_from"),
-             (RevealNodes, "reveal_nodes"), (ReceiveTechniques, "receive_techniques"),
+             (RevealNodes, "reveal_nodes"), (NoteTechniquesChanged, "note_techniques_changed"), (ReceiveTechniques, "receive_techniques"),
              (StartDoneYearRecord, "start_done_year_record"), (ReplaceTree, "replace_tree"), (HandOverTechniques, "hand_over_techniques")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(RefreshDoneCaches,),

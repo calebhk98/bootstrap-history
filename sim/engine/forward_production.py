@@ -2,11 +2,14 @@
 
 The screens, the project phases, the agent economy's port, the labour core and the tests still say `sim.running(node)`, `sim.revenue()` or
 `sim.industry_depth(node)`; each line goes when its last caller reads the view or sends the command itself."""
+from sim.knowledge.api import NoteTechniquesChanged
 from sim.markets.api import ResetMarketCaches
 from sim.materials.api import ForgetReadings
+from sim.projects.api import NoteActiveChanged
 from sim.production.api import ForgetRevenueCaches, RefreshDoneCaches, RefreshOperatingCaches, constants
 
 from sim.invalidating import _InvalidatingDict
+from sim.ventures.api import NoteOperatingChanged
 
 from . import money_units, node_rederive, society_holdings
 
@@ -31,19 +34,21 @@ class ForwardProductionMixin:
 	# ---- the techniques in use ----
 
 	# ---- the memos over what is done and operating ----
-	# The production module keeps the memos and counts the household's versions; the hooks send it the moment each one is stale.
+	# The production module keeps the memos; the hooks tell it, and the owners of the facts (knowledge, ventures, projects) count the change, the moment each one is stale.
 
 	def _done_changed(self):
 		"""Call after anything adds to or removes from the set of techniques done (or granted)."""
 		self.send(RefreshDoneCaches())
+		self.send(NoteTechniquesChanged())
 
 	def _operating_changed(self):
 		"""Call after anything adds to or removes from what is operating."""
 		self.send(RefreshOperatingCaches())
+		self.send(NoteOperatingChanged())
 
 	def _active_changed(self):
 		"""Call after anything adds to, removes from, or updates the projects in hand."""
-		self.household.bump_active_version()
+		self.send(NoteActiveChanged())
 
 	def _reset_operating(self):
 		"""Point the seat's business at the invalidation hook and invalidate once."""

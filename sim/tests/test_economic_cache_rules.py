@@ -35,8 +35,8 @@ class RevenueStandIn:
             hour_commitments=lambda: {"wage_hours": self.household.wage_hours_this_year},
             year=lambda: self.year, output_factor=lambda: self.output_factor, home_price_level=lambda: self.price_level,
             farm_holdings=lambda: {"hectares": self.farm_hectares},
-            running_versions=lambda: (self.household.done_version, self.household.operating_version,
-                                      self.household.institution_units_version),
+            techniques_version=lambda: self.household.done_version, operating_version=lambda: self.household.operating_version,
+            institution_units_version=lambda: self.household.institution_units_version,
             answers={SetWageHoursSold: lambda command: setattr(self.household, "wage_hours_this_year", command.hours)})
         self.module._compute_revenue_uncached = self._compute_revenue_uncached
 
@@ -60,6 +60,7 @@ class RevenueMemoTest(unittest.TestCase):
 
     def test_each_input_the_key_names_forces_a_recompute(self):
         changes = {
+            "institution units": lambda sim: setattr(sim.household, "institution_units_version", 1),
             "operating": lambda sim: setattr(sim.household, "operating_version", 1),
             "done": lambda sim: setattr(sim.household, "done_version", 1),
             "workforce": lambda sim: setattr(sim.household, "workforce_version", 1),
@@ -96,7 +97,7 @@ class MaterialDemandStandIn:
         projects = types.SimpleNamespace(done=set(), active={}, active_keys_sorted=lambda: sorted(self.active))
         self.module = materials_stand_in.build(
             tree_nodes=nodes, legacy_projects=projects,
-            project_versions=lambda: (self.household.active_version, self.household.done_version))
+            active_projects_version=lambda: self.household.active_version, techniques_version=lambda: self.household.done_version)
 
     def annual_material_demand(self):
         return self.module.annual_material_demand()
@@ -150,7 +151,7 @@ class GoodsStandIn:
         self.market_version = 0
         self.module = module_harness.build(Markets, views={
             "year": 100, "pop_scale": 1.0, "real_output_per_head": 1.0,
-            "held_and_running_versions": lambda: (0, self.operating_version), "concern_versions": lambda: (self.market_version, 0),
+            "techniques_version": 0, "operating_version": lambda: self.operating_version, "concern_versions": lambda: (self.market_version, 0),
             "farm_holdings": {"hectares": 0.0}})
         self.module.goods_category_state = self._state
         self.module.goods_reach_factor = lambda: 1.0

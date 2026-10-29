@@ -174,6 +174,12 @@ actors (21), hazards, workforce (20 each), projects (19).
   named views and send owners' commands; the bridge views are deleted. The one whole-game handout left is `provider_game`,
   the mod contract (phase 7). Measured after: 45 reads of `legacy_*` views (80 before), 241 reads answered by the bridge
   (254 before).
+- [x] The household's change counters are their owners' views: knowledge publishes `techniques_version`, ventures
+  `operating_version` and `institution_units_version`, projects `active_projects_version` (each seat-scoped, moved by the owner's
+  command: `LearnTechnique`/`ForgetTechnique`/`NoteTechniquesChanged`, `NoteOperatingChanged` and the opening and expansion of
+  an institution, `NoteActiveChanged`). The household's counters, `BumpHouseholdVersion` and the bridge views
+  `held_and_running_versions`, `project_versions` and `running_versions` are gone; measure with `python3 tools/measure/module_graph.py`.
+  Left: `Household.start_version_counters` (an empty method) until `sim/engine/core.py` stops calling it.
 - [ ] No other `legacy_*` view that hands out a live object (`legacy_projects`, `legacy_world_map`, `legacy_seats`,
 `legacy_economy`, `legacy_labour` and the rest: `python3 tools/measure/module_graph.py`).
 - [x] The `scenario` module (`sim/scenario/`) owns the game's setup and clock: the civilisation, the configuration, the modes

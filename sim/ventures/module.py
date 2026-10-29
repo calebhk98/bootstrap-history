@@ -5,6 +5,7 @@ It owns no saved state yet: the businesses and their plants stay in the projects
 finance, hazards and the household facade still write, so every view it publishes is uncached."""
 from sim.assembly.api import Module
 
+from .channels import INSTITUTION_UNITS_CHANGES, OPERATING_CHANGES
 from .coverage import Coverage
 from .crew import Crew
 from .opening import Opening
@@ -24,6 +25,14 @@ class Ventures(Crew, Quotes, Opening, Sales, Coverage, Module):
 		"""The acting seat's concerns and capabilities that are open (the live set: the plants opened and closed change it in place)."""
 		return self.needs.legacy_projects().operating
 
+	def operating_version(self):
+		"""The change counter of what the acting seat has open, for memos over it: moves with every plant opened or closed."""
+		return self.seat_version(OPERATING_CHANGES)
+
+	def institution_units_version(self):
+		"""The change counter of the sizes of the acting seat's scalable institutions, for memos over them."""
+		return self.seat_version(INSTITUTION_UNITS_CHANGES)
+
 	def concern_staff(self, node_id):
 		return self.concern_staff_by_trade(node_id)
 
@@ -36,6 +45,9 @@ class Ventures(Crew, Quotes, Opening, Sales, Coverage, Module):
 		return self.needs.legacy_projects().business.size_of(node_id)
 
 	# ---- the commands ----
+
+	def apply_note_operating_changed(self, command):
+		self.bump_seat(OPERATING_CHANGES)
 
 	def apply_open_venture(self, command):
 		return self.open_venture(command.node_id, units=command.units)

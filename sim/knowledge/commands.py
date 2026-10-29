@@ -24,6 +24,12 @@ class ForgetTechnique(Command):
 
 
 @dataclass(frozen=True)
+class NoteTechniquesChanged(Command):
+    """The acting seat's held set was changed by code outside this module (a re-derived tree, a seat switch, a load), so the
+    `techniques_version` moves and every memo keyed on it is stale."""
+
+
+@dataclass(frozen=True)
 class RevealFrom(Command):
     """Finishing `node_id` teaches the acting seat what it leads towards, vaguely. Only under fog."""
     node_id: str

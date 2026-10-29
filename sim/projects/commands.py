@@ -150,6 +150,12 @@ class KeepStaffed(Command):
 
 
 @dataclass(frozen=True)
+class NoteActiveChanged(Command):
+    """A project in hand of the acting seat was added, removed or changed by code outside this module (the screens, hazards, the
+    credit freeze, a load), so the `active_projects_version` moves and every memo keyed on it is stale."""
+
+
+@dataclass(frozen=True)
 class PutProjectFirst(Command):
     """A project the household just chose to work on gets first call on its hours: it goes to the front of the project order."""
     node_id: str

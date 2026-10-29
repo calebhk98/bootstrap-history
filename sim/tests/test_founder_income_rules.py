@@ -127,7 +127,7 @@ class FoundersJobTests(unittest.TestCase):
 
 class RevenueCacheTests(unittest.TestCase):
     def game(self):
-        household = SimpleNamespace(operating_version=0, done_version=0, workforce_version=0, institution_units_version=0,
+        household = SimpleNamespace(workforce_version=0,
                                     wage_hours_this_year=0.0, directors_extra=0.0, reputation=1.0,
                                     freedmen=0, slaves=0)
         game = SimpleNamespace(signature=1.0, committed=0.0, computed=[])

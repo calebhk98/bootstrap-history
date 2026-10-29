@@ -16,8 +16,7 @@ class Techniques:
 
 	def techniques_epoch(self):
 		"""Changes whenever the techniques in use might."""
-		done_version, operating_version, _units_version = self.needs.running_versions()
-		return (done_version, operating_version, self.needs.concern_versions()[0])
+		return (self.needs.techniques_version(), self.needs.operating_version(), self.needs.concern_versions()[0])
 
 	def price_epoch(self):
 		"""Changes whenever the techniques in use might, or the price level does: for caches whose
@@ -27,8 +26,7 @@ class Techniques:
 	def techniques_in_use(self):
 		"""Nodes whose production entries some producer runs now."""
 		needs = self.needs
-		done_version, operating_version, _units_version = needs.running_versions()
-		epoch = (done_version, operating_version, needs.concern_versions()[1])
+		epoch = (needs.techniques_version(), needs.operating_version(), needs.concern_versions()[1])
 		cached = getattr(self, "_techniques_in_use_cache", None)
 		done = needs.techniques_held()
 		operating = needs.operating()

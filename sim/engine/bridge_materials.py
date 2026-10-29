@@ -8,14 +8,6 @@ from . import view_share
 from .bridge import bridge_view
 
 
-# ---- the tree and the seat's projects ----
-
-@bridge_view("project_versions", seat_scoped=True)
-def project_versions(sim):
-    """(the acting seat's active-projects version, its done-set version): move when a project starts, finishes or is lost."""
-    return (sim.household.active_version, sim.household.done_version)
-
-
 # ---- the catalogue of commodities, the price epoch and the producers ----
 
 # ---- projects' costs and what the seat can pay ----

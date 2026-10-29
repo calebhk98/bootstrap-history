@@ -33,7 +33,7 @@ class _Host:
         self.versions = [1, 1]
         self.module = module_harness.build(
             Land, world=LandWorld(), seat=LandSeat(),
-            views={"held_and_running_versions": lambda: tuple(self.versions), "tree_nodes": NODES,
+            views={"techniques_version": lambda: self.versions[0], "operating_version": lambda: self.versions[1], "tree_nodes": NODES,
                    "techniques_held": lambda: self.done, "techniques_granted": lambda: self.granted,
                    "running": self.running, "civilisation": {"starting_techs": list(starting)}})
 
