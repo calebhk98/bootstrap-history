@@ -4,22 +4,22 @@ seat's work (stand-ins and a household facade, no game)."""
 
 QUICK_TOPIC = True
 
-import contextlib
+from sim.ledger.api import OpenPurse
 from types import SimpleNamespace
 
 from .harness import check
 
 from sim.agents import licence
-from sim.agents.api import Household, HouseholdParty, OBSERVATION_RANGE_KM, PLAYER_VISIBLE_EXPOSURE, SECRET_EXPOSURE, ledger
+from sim.agents.api import OBSERVATION_RANGE_KM, PLAYER_VISIBLE_EXPOSURE, SECRET_EXPOSURE, ledger
 from sim.ledger.api import PayActor
 from sim.seats import api as seat_builds
 from sim.knowledge.api import KnowledgeSeat
 from sim.knowledge.rules import SeatTechniques, earliest_done_year as _earliest
 from sim.actors.world import ActorWorld
-from sim.engine.agents_port_household import HouseholdPort
+from sim.tests.money_host import MoneyHost
 from sim.tests.world_stand_in import fake_needs
 from sim.engine.state import FounderState, HouseholdState
-from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
+from sim.engine.state_seat import FIRST_SEAT_ID, SeatState
 from sim.seats.api import SeatsSeat, base_visibility, most_open_mode, nodes_heard_of, seen_from
 from sim.agents.api import Business
 
@@ -47,13 +47,14 @@ check("one maker publishing opens an invention for everyone", most_open_mode(["s
       and most_open_mode(["secret", "license"]) == "license" and most_open_mode([]) == "default", None)
 
 # ---- two seats with their own knowledge
-state_facade = Household(starting_capital=100.0, port=HouseholdPort(),
-                         techniques_held=lambda: frozenset(state.seats[state.acting_seat].modules["knowledge"].done))
-state = state_facade._state
+host = MoneyHost(capital=100.0)
+state = host.state
+host.needs.techniques_held = lambda: frozenset(state.seats[state.acting_seat].modules["knowledge"].done)
 first, second = state.seats[FIRST_SEAT_ID], SeatState(
-    household=HouseholdState(capital=40.0), founder=FounderState(),
+    household=HouseholdState(), founder=FounderState(),
     modules={"knowledge": KnowledgeSeat(granted={"base"}, done={"base"})})
 state.seats["second"] = second
+host.send(OpenPurse("second", 40.0))
 first.modules["knowledge"] = KnowledgeSeat()
 first_knowledge, second_knowledge = first.modules["knowledge"], second.modules["knowledge"]
 first_knowledge.done.update({"base", "lathe", "loom"})
@@ -143,18 +144,6 @@ check("the best view of an invention is from the nearest maker's place",
 
 
 # ---- a licence between seats moves a fee and the know-how, and the know-how is not the licensee's own work
-def act_as(seat_id):
-    @contextlib.contextmanager
-    def switch():
-        previous = state.acting_seat
-        bind_seat(state, seat_id)
-        try:
-            yield
-        finally:
-            bind_seat(state, previous)
-    return switch()
-
-
 def receive(nodes, granted):
     """What the engine's `ReceiveTechniques` does for the seat that is acting."""
     knowledge = state.seats[state.acting_seat].modules["knowledge"]
@@ -163,8 +152,9 @@ def receive(nodes, granted):
         knowledge.granted.update(nodes)
 
 
-maker = HouseholdParty(state_facade, seat_id=FIRST_SEAT_ID, act_as=act_as, dealings=SeatsSeat(), receive=receive, business=Business())
-buyer = HouseholdParty(state_facade, seat_id="second", act_as=act_as, dealings=SeatsSeat(), receive=receive, business=Business())
+host.on_receive = receive
+maker = host.party(FIRST_SEAT_ID, dealings=SeatsSeat(), business=Business())
+buyer = host.party("second", dealings=SeatsSeat(), business=Business())
 
 
 class LicenceWorld:
@@ -213,9 +203,9 @@ class RoyaltySim:
 
     def __init__(self):
         self.cast = lambda: SimpleNamespace(actors={}, patent_holders=lambda node_id: [], get=lambda actor_id: None)
-        parties = lambda seat_id: maker if seat_id == FIRST_SEAT_ID else buyer
-        self.needs = fake_needs({PayActor: lambda command: ledger.transfer(firm, parties(command.payee), command.amount, command.purpose)},
-                                legacy_seats=state.seats, techniques_by_seat=lambda: techniques_of(state.seats), disclosures=disclosed, seat_party=parties)
+        self.seat_party = lambda seat_id: maker if seat_id == FIRST_SEAT_ID else buyer
+        self.needs = fake_needs({PayActor: lambda command: ledger.transfer(firm, self.seat_party(command.payee), command.amount, command.purpose)},
+                                legacy_seats=state.seats, techniques_by_seat=lambda: techniques_of(state.seats), disclosures=disclosed)
 
 
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "license", "published_year": None,

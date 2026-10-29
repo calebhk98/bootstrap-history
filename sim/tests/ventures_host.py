@@ -37,7 +37,7 @@ def defaults() -> Dict[str, Any]:
 		"staff": {"scholars": 0.0, "artisans": 0.0, "employees": {}}, "effective_scholars": 0.0,
 		"hours_per_person_year": 2000.0, "money_per_labour_hour": 1.0, "unskilled_trade": "labourer",
 		"mechanic": lambda name: {}, "founder": {"alive": False, "life_left": 0.0, "dead_reason": None, "policy": {}},
-		"seat_party_with_margins": lambda seat_id, margins: types.SimpleNamespace(actor_id=seat_id, margins=margins),
+		"concern_sale_terms": lambda node_id: {"ok": False, "error": "no buyer"},
 		"actor_world": types.SimpleNamespace(concern_margin=lambda node_id: 0.0),
 		"cast": types.SimpleNamespace(of_kind=lambda kind: [], get=lambda actor_id: None),
 		"spending_power": lambda kind="buy": 0.0, "acting_balance": 0.0, "price_index": 1.0, "population_total": 1000.0, "year": 100,

@@ -62,3 +62,20 @@ class SetLenderOffers(Command):
 class SettleLenderInterest(Command):
 	"""The pool shares the year's interest among its depositors: the actors and seats among them enter it as income, and the
 	savers' part is shared among the free strata."""
+
+
+@dataclass(frozen=True)
+class GrantLicence(Command):
+    """The acting seat licenses its know-how of `node_id` to `licensee` (a firm, the state or another player) for `fee`, with
+    `royalty` a share of the takings. Answers {"status": ...} (see sim/actors/seat_exchange.py)."""
+    licensee: Optional[str]
+    node_id: str
+    fee: float
+    royalty: float
+
+
+@dataclass(frozen=True)
+class SellSeatConcern(Command):
+    """The acting seat sells a concern it runs to the actor the exchange picks, at the price it sets. Answers {"ok", "buyer",
+    "price"} or {"ok": False, "error"}."""
+    node_id: str

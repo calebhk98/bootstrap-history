@@ -5,7 +5,6 @@ a game is in test_economic_caching."""
 QUICK_TOPIC = True
 
 from .harness import check
-from sim.agents.household import Household
 from sim.engine.forward_production import ForwardProductionMixin
 from sim.engine.state import SimulationState, HouseholdState
 from sim.knowledge.api import NoteTechniquesChanged
@@ -22,6 +21,25 @@ from sim.workforce.api import WatchStaff, WorkforceSeat
 from sim.workforce.module import Workforce
 
 
+class _SeatHoldings:
+	"""The acting seat's plants and projects in hand, as the owners keep them (the containers the counters watch)."""
+
+	def __init__(self, game):
+		self._game = game
+
+	@property
+	def operating(self):
+		return self._game.ventures_module.seat.business.operating()
+
+	@property
+	def active(self):
+		return self._game.projects_module.seat.active
+
+	@active.setter
+	def active(self, value):
+		self._game.projects_module.seat.active = value
+
+
 class ContainerGame(ForwardProductionMixin):
 	"""A household over a fresh state, with the invalidation hooks a Sim wires to it."""
 
@@ -29,14 +47,14 @@ class ContainerGame(ForwardProductionMixin):
 		self.projects_module = module_harness.build(Projects, seat=ProjectsSeat(), module_id="projects")
 		self.projects_module.seat_slot_of = lambda seat_id: self.projects_module.seat
 		self.projects_module.clock.act_as("founder")
-		self.state = SimulationState(household=HouseholdState(capital=1000))
+		self.state = SimulationState(household=HouseholdState())
 		self.ventures_module = module_harness.build(Ventures, seat=VenturesSeat(), module_id="ventures")
 		self.ventures_module.seat_slot_of = lambda seat_id: self.ventures_module.seat
 		self.ventures_module.clock.act_as("founder")
 		self.state.seats = {"founder": SeatState(household=self.state.household,
 		                                         modules={"projects": self.projects_module.seat, "ventures": self.ventures_module.seat})}
 		self.state.acting_seat = "founder"
-		self.household = Household(starting_capital=1000.0, state=self.state)
+		self.household = _SeatHoldings(self)
 		self.send(WatchActive("founder"))
 		self.send(WatchBusiness("founder"))
 

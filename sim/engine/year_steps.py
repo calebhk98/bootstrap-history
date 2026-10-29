@@ -65,7 +65,7 @@ def money_seat(sim):
 	send(AutoMothballMines())
 	# staff hired or taught this year get first claim on reclaiming what attrition shut, before anything is judged still short and closed again
 	year = sim.year
-	before = state.household.capital
+	before = view("acting_balance")()
 	reopened = send(ReopenRestaffedVentures(year))
 	if reopened:
 		send(RecordAutomation("reopen (always on, not a policy)", "reopen", ", ".join(reopened), "a staffing closure, and the people to watch it are free again", before, dict(ids=list(reopened))))
@@ -73,7 +73,7 @@ def money_seat(sim):
 	send(CloseUnstaffedVentures(year))
 	# open what plainly pays for itself before the books are struck: a concern opened this year earns this year
 	if view("founder")()["policy"].get("auto_open", not sim.manual):
-		before = state.household.capital
+		before = view("acting_balance")()
 		opened = send(AutoOpenVentures())
 		if opened:
 			send(RecordAutomation("auto_open", "open", ", ".join(opened), "net-positive concerns already built, within the staff and money available", before, dict(ids=list(opened))))

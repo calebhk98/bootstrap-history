@@ -49,9 +49,9 @@ class QuoteAndSchoolTest(unittest.TestCase):
     def test_quote_answers_for_every_target_and_changes_nothing_and_a_school_is_founded_by_every_spelling(self):
         game = unopened_sim(capital=1_000_000)
         self.assertTrue(_typed(game, "quote manumit 1").get("ok"))
-        capital = game.state.household.capital
+        capital = game.capital
         _typed(game, "quote farm 20")
-        self.assertEqual(game.state.household.capital, capital)
+        self.assertEqual(game.capital, capital)
         game.state.seats[game.state.acting_seat].modules["workforce"].trades_created.add("chemist")
         game.view("legacy_labour")().market.press("chemist", 100)
         for line in ("buy school chemist 1", "buy trade school chemist 1", "buy trade_school chemist 1"):

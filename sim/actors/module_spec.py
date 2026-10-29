@@ -3,19 +3,22 @@
 The records of every actor beside the founder's households are saved in the world slot (`ActorsState`). Every read is a view of
 an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_actors.py and the other bridge files) under the
 name the owner will publish, or a view of a module that has moved. Grouped by owner. The `legacy_*` names are the owners' raw
-objects the actors still hold in place: the seats' registry, the acting seat's projects and household facade, the map and the
-constants `Sim` still declares."""
+objects the actors still hold in place: the seats' registry, the acting seat's projects, the map and the constants `Sim` still declares.
+The module builds the seats as parties to the exchange (seat_parties.py) from the views and commands of the modules that own what a seat
+holds, and applies the commands that address the exchange to a seat (seat_exchange.py)."""
 from sim.assembly.api import FIRST, KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, Provision, ViewSpec
 from sim.agents.api import ActorsState
 from sim.coin.api import ChargeActorsTheft, ChargeKeeping
 from sim.finance.api import DefaultOnDebt, RefreshLenderOffers
 from sim.foreign_trade.api import NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
 from sim.freight.api import PayRouteDues
-from sim.ledger.api import PayActor
+from sim.knowledge.api import ReceiveTechniques
+from sim.ledger.api import CreditSeat, DebitSeat, NoteSeatCash, PayActor, RestorePurse
 from sim.markets.api import ForgetActorOrders, NoteActorPurchase, NoteActorSale
 from sim.polity.api import AddScandal
 from sim.production.api import AccrueExperience
 from sim.reporting.api import RecordEvent
+from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer
 from sim.workforce.api import ReleaseStaff
 
 from . import commands
@@ -24,16 +27,16 @@ from .module import Actors
 READS_BY_OWNER = {
 	"core": ("year", "civilisation", "game_setting", "shared_answers", "acting_as", "declared_actor_kinds",
 	         "opening_civilisation", "civilisation_record", "money_text", "mass_rate_text"),
-	"seats": ("acting_seat", "acting_country", "seat_list", "seat_country", "seats_holding_patent", "seat_place", "seat_party", "legacy_household_actor",
-	          "disclosure", "disclosures"),
-	"knowledge": ("tree_nodes", "techniques_granted", "techniques_by_seat", "held_techniques", "legacy_world_map"),
+	"seats": ("acting_seat", "acting_country", "seat_list", "seat_country", "seats_holding_patent", "seat_place", "seat_dealings", "registered_seats",
+	          "dealings_listing", "disclosure", "disclosures"),
+	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted", "techniques_by_seat", "held_techniques", "legacy_world_map"),
 	"diffusion": ("copy_difficulty", "knowledge_half_life_years", "literacy", "research_productivity", "diffusible_ids",
 	              "diffusion_index"),
 	"polity": ("state_funding_terms", "state_authority", "state_trait_weights", "visible_scale", "levy_shares", "notice_over", "patron_clients",
 	           "patron_funding_ask", "military_equipment_burden", "standing"),
-	"ledger": ("transfer_listening",),
-	"ventures": ("operating", "operating_by_seat", "venture_opened_year"),
-	"workforce": ("trade_available", "trade_population", "reachable_trade_population", "people_who_exist", "taught_trade_people",
+	"ledger": ("transfer_listening", "seat_balance", "acting_balance"),
+	"ventures": ("operating", "operating_by_seat", "venture_opened_year", "seat_business"),
+	"workforce": ("staff", "trade_available", "trade_population", "reachable_trade_population", "people_who_exist", "taught_trade_people",
 	              "available_trades", "is_craft_trade", "market_supply", "local_market_share", "base_tile", "trades_absent",
 	              "labour_market", "money_per_labour_hour", "hours_per_person_year", "staff_on_all_books"),
 	"projects": ("substitute_quality_discount", "project_cost", "effective_risk", "is_venture", "seat_review", "revenue_estimate", "upkeep", "credit_limit"),
@@ -100,11 +103,14 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("home_strata_rows", "home_strata_rows", **_LIVE),
 		ViewSpec("partner_catch_chance", "partner_catch_chance", kind=QUOTE, **_LIVE),
 		ViewSpec("harvest_share_taken", "harvest_share_taken", kind=KEYED, **_LIVE),
+		ViewSpec("concern_sale_terms", "concern_sale_terms", kind=QUOTE, seat_scoped=True, **_LIVE),
 	),
 	applies=((commands.AdvanceActors, "advance_actors"), (commands.RecordConquestContact, "record_conquest_contact"),
 	         (commands.RecordMigrantContact, "record_migrant_contact"), (commands.ScaleStrata, "scale_strata"), (commands.NoteTraderMargin, "note_trader_margin"),
 	         (commands.FollowTileTransfer, "follow_tile_transfer"),
-	         (commands.SetLenderOffers, "set_lender_offers"), (commands.SettleLenderInterest, "settle_lender_interest")),
+	         (commands.SetLenderOffers, "set_lender_offers"), (commands.SettleLenderInterest, "settle_lender_interest"),
+	         (ApplyForPatent, "apply_for_patent"), (MakeOffer, "make_offer"), (AnswerOffer, "answer_offer"),
+	         (commands.GrantLicence, "grant_licence"), (commands.SellSeatConcern, "sell_seat_concern")),
 	extension_points=(
 		ExtensionPoint("actor_kinds", LIST),           # () -> {kind: the class that builds its actors}; a later answer replaces a kind
 		ExtensionPoint("actor_spawners", LIST),        # () -> [(name, function(registry, world) -> ids founded)], run after the actors' turns
@@ -122,5 +128,6 @@ MODULE_SPECS = (ModuleSpec(
 	),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(ChargeKeeping, ChargeActorsTheft, RefreshLenderOffers, DefaultOnDebt, AccrueExperience, ForgetActorOrders, NoteActorSale,
-	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, PayRouteDues, AddScandal, RecordEvent, PayActor),
+	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, PayRouteDues, AddScandal, RecordEvent, PayActor,
+	       CreditSeat, DebitSeat, NoteSeatCash, RestorePurse, ReceiveTechniques),
 ),)

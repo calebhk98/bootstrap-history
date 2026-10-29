@@ -1,4 +1,5 @@
 """Diffusion's module spec (sim/assembly)."""
+from sim.actors.api import GrantLicence
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.polity.api import GainReputation, ShiftValueWeight
 from sim.reporting.api import RecordEvent
@@ -48,7 +49,6 @@ MODULE_SPECS = (ModuleSpec(
            "literacy_capacity", "farm_share_of_hours", "trade_spread", "effect_terms", "effect_values",
            "corpus_diffusion_pace", "school_node", "tech_effects", "coverage", "disease_burden", "disease_burden_held",
            "disease_burden_weights", "diffusion_traits", "seat_holders", "built_by_any_seat", "earliest_done_year",
-           "state_knowledge", "state_reach", "stock_holds_met", "reputation_gain_of", "seat_list", "seat_party",
-           "cast", "actor_world"),
-    sends=(RecordEvent, ShiftValueWeight, GainReputation, NoteTradeSpread, SetEmployed),
+           "state_knowledge", "state_reach", "stock_holds_met", "reputation_gain_of", "seat_list", "cast"),
+    sends=(RecordEvent, ShiftValueWeight, GainReputation, NoteTradeSpread, SetEmployed, GrantLicence),
 ),)

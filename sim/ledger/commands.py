@@ -60,8 +60,54 @@ class DrawDownStock(Command):
 @dataclass(frozen=True)
 class NoteSpend(Command):
 	"""The acting seat's household counts `amount` in the year's spending, beside the payment that moved it
-	(accounting only; applied by the engine bridge until the cash book moves into the ledger)."""
+	(accounting only)."""
 	amount: float
+
+
+@dataclass(frozen=True)
+class CreditSeat(Command):
+	"""Money comes into the seat's purse (not as a posting with a named party: the other side is outside the book), entered in
+	its cash book under `purpose`. `seat` is the seat's id."""
+	seat: str
+	amount: float
+	purpose: Any
+
+
+@dataclass(frozen=True)
+class DebitSeat(Command):
+	"""Money goes out of the seat's purse (the other side is outside the book), entered in its cash book under `purpose`."""
+	seat: str
+	amount: float
+	purpose: Any
+
+
+@dataclass(frozen=True)
+class NoteSeatCash(Command):
+	"""A posting in the book moved the seat's purse; its cash book records it: `direction` is 1.0 for money in and -1.0 for money
+	out, `purpose` a label or {label: share} as the posting carried it."""
+	seat: str
+	direction: float
+	amount: float
+	purpose: Any
+
+
+@dataclass(frozen=True)
+class OpenPurse(Command):
+	"""A seat joins the game holding `balance`: its account opens with it in the actors' book (nothing happens when the book
+	already holds the account, as in a loaded game, or the balance is nil)."""
+	seat: str
+	balance: float
+
+
+@dataclass(frozen=True)
+class OpenCashBook(Command):
+	"""The acting seat's cash book measures from `opening`: the cash it held when the game began."""
+	opening: float
+
+
+@dataclass(frozen=True)
+class CloseCashPeriod(Command):
+	"""The acting seat's cash book closes the open period at today's cash and starts the next (the yearly snapshot sends it)."""
 
 
 @dataclass(frozen=True)
@@ -149,14 +195,10 @@ class RescaleHouseholdMoney(Command):
 
 @dataclass(frozen=True)
 class RestorePurse(Command):
-	"""The acting seat's purse is put back to `balance`, a figure it held a moment ago: a trial sale whose books are undone."""
+	"""A seat's purse (the acting seat's unless `seat` names one) is put to `balance`: a figure it held a moment ago after a trial
+	sale whose books are undone, or the figure a party sets it to."""
 	balance: float
-
-
-@dataclass(frozen=True)
-class SettleHouseholdInterest(Command):
-	"""The year's interest on the acting seat's debt is settled by the one rule every borrower follows: drawn on its facility
-	within its ceiling, the rest carried as arrears. Answers (the interest owed, the part paid)."""
+	seat: Optional[str] = None
 
 
 @dataclass(frozen=True)

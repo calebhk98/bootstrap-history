@@ -32,7 +32,7 @@ HERDS = ModuleSpec("herds", Herds, world_state=HerdWorld, seat_state=HerdSeat)
 
 
 def _game(operations=()):
-	state = SimulationState(household=HouseholdState(capital=1.0), founder=FounderState())
+	state = SimulationState(household=HouseholdState(), founder=FounderState())
 	return types.SimpleNamespace(assembly=assemble([HERDS], operations), state=state)
 
 

@@ -13,7 +13,8 @@ from sim.agents.api import edges
 from sim.finance.commands import NoteLenderPosting
 from sim.finance.constants import (DEBT_BONDAGE_DEFAULT_TERM_YEARS, INSOLVENCY_ARTISAN_FLOOR, INSOLVENCY_YEARS_BEFORE_BLEED)
 from sim.finance.state import FinanceSeat
-from sim.ledger.api import NoteHolderBooking, SettleHouseholdInterest, SettleWithEdge
+from sim.agents.api import Purses
+from sim.ledger.api import NoteHolderBooking, NoteSeatCash, SettleWithEdge
 from sim.reporting.api import RecordEvent
 from sim.tests import finance_host, module_harness
 
@@ -23,17 +24,18 @@ def events(module):
 
 
 class ChargeInterest(unittest.TestCase):
-    def household(self, capital, arrears=0.0, settle=lambda command: (0.0, 0.0)):
-        return finance_host.build(seat=FinanceSeat(interest_arrears=arrears, insolvent_years=1), acting_balance=capital,
-                                  answers={SettleHouseholdInterest: settle})
+    def household(self, capital, arrears=0.0, settle=lambda: (0.0, 0.0)):
+        module = finance_host.build(seat=FinanceSeat(interest_arrears=arrears, insolvent_years=1), acting_balance=capital)
+        module.settle_interest = settle   # what the borrowing rule answers is tested in test_one_default_rule and below
+        return module
 
     def test_a_household_in_credit_with_no_arrears_pays_nothing(self):
-        module = self.household(100.0, settle=lambda command: self.fail("it was asked to settle"))
+        module = self.household(100.0, settle=lambda: self.fail("it was asked to settle"))
         self.assertEqual(module.charge_interest(100), 0.0)
         self.assertIsNone(module.seat.interest_paid)
 
     def test_what_is_paid_is_added_to_the_interest_paid_so_far(self):
-        module = self.household(-500.0, settle=lambda command: (30.0, 20.0))
+        module = self.household(-500.0, settle=lambda: (30.0, 20.0))
         module.debt_interest_rate = lambda: 0.06
         self.assertEqual(module.charge_interest(100), 30.0)
         self.assertEqual(module.seat.interest_paid, 20.0)
@@ -41,7 +43,7 @@ class ChargeInterest(unittest.TestCase):
         self.assertEqual(module.seat.interest_paid, 40.0)
 
     def test_unpaid_interest_is_said_with_its_facts_in_the_first_years(self):
-        module = self.household(-500.0, settle=lambda command: (30.0, 20.0))
+        module = self.household(-500.0, settle=lambda: (30.0, 20.0))
         module.debt_interest_rate = lambda: 0.06
         module.charge_interest(100)
         event, = events(module)
@@ -49,8 +51,45 @@ class ChargeInterest(unittest.TestCase):
         self.assertEqual((event.facts["unpaid"], event.facts["rate"]), (10.0, 0.06))
 
     def test_arrears_alone_keep_the_household_in_the_rule(self):
-        module = self.household(100.0, arrears=5.0, settle=lambda command: (3.0, 3.0))
+        module = self.household(100.0, arrears=5.0, settle=lambda: (3.0, 3.0))
         self.assertEqual(module.charge_interest(100), 3.0)
+
+
+class SettleInterest(unittest.TestCase):
+    """The year's interest on the acting seat's debt, by the one rule every borrower follows, over a real book."""
+
+    def module(self, debt, ceiling=1000.0, rate=0.1):
+        purses = Purses()
+        purses.set_net("founder", -debt, "opening")
+        world = SimpleNamespace(pay_interest=lambda payer, owed, purpose: payer.note_outlay(purpose, sum(payer.purses.pay_interest(payer.account_id, owed).values())))
+        module = finance_host.build(seat=FinanceSeat(), cast_state=SimpleNamespace(purses=purses), actor_world=world,
+                                    acting_balance=lambda: purses.net("founder"))
+        module.credit_limit = lambda *arguments: ceiling
+        module.debt_interest_rate = lambda: rate
+        return module, purses
+
+    def test_interest_within_the_ceiling_is_paid_on_the_facility_and_entered_in_the_cash_book(self):
+        module, purses = self.module(500.0)
+        self.assertEqual(module.settle_interest(), (50.0, 50.0))
+        self.assertEqual(purses.net("founder"), -550.0)
+        self.assertEqual(module_harness.sent(module), [NoteSeatCash("founder", -1.0, 50.0, "interest")])
+
+    def test_interest_that_cannot_be_drawn_is_carried_as_arrears(self):
+        module, purses = self.module(990.0, ceiling=1000.0)
+        owed, paid = module.settle_interest()
+        self.assertEqual((owed, paid), (99.0, 10.0))
+        self.assertAlmostEqual(module.seat.interest_arrears, 89.0)
+        self.assertEqual(module.seat.arrears_years, 1)
+
+    def test_a_default_after_the_run_of_years_clears_the_arrears_and_asks_the_owner(self):
+        module, _purses = self.module(990.0, ceiling=1000.0)
+        defaults = []
+        module.default_on_debt = lambda year: defaults.append(year)
+        for _year in range(40):
+            module.settle_interest()
+            if defaults:
+                break
+        self.assertEqual((len(defaults), module.seat.interest_arrears, module.seat.arrears_years), (1, 0.0, 0))
 
 
 class JudgeInsolvency(unittest.TestCase):

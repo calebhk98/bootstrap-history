@@ -22,7 +22,7 @@ from sim.refusal import cause_of
 
 def valid_save():
     state = SimulationState(
-        household=HouseholdState(capital=1250.0), economy=EconomyState(),
+        household=HouseholdState(), economy=EconomyState(),
         holdings=HoldingsState(), founder=FounderState())
     state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
     state.seats[state.acting_seat].modules["projects"] = ProjectsSeat()

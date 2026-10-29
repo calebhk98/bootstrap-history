@@ -14,7 +14,6 @@ from typing import (
 )
 
 from sim.agents.api import ActorRecord, ActorsState, Business  # noqa: F401
-from sim.engine import cash_book
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
 from sim.invalidating import ActiveProjectState, _InvalidatingDict
 from sim.refusal import Refusal, as_record, from_record, is_record
@@ -25,14 +24,7 @@ if TYPE_CHECKING:
 
 @dataclass
 class HouseholdState:
-	"""The founder's household finances, standing staff, standing, and biographical history."""
-	capital: float
-	total_spend: float = 0.0
-	# the cash book (sim/engine/cash_book.py): the open period's entries by cause, cash at its start,
-	# and the last few closed years
-	cash_flow: Dict[str, float] = field(default_factory=dict)
-	cash_mark: Optional[float] = None
-	cash_periods: List[Dict[str, Any]] = field(default_factory=list)
+	"""The founder's household's standing staff, standing, and biographical history (its money is the ledger's)."""
 	# the cause book (sim/engine/cause_book.py): rows for wage, notice and closure changes, and the readings they are measured from
 	cause_rows: List[Dict[str, Any]] = field(default_factory=list)
 	cause_mark: Optional[Dict[str, float]] = None
@@ -40,83 +32,6 @@ class HouseholdState:
 	# a planned project and the cash target put by for it (`saving`)
 	saving_for: Optional[str] = None
 	saving_target: float = 0.0
-
-	# ---- the purse: an account in the actors' book (sim/agents/purses.py) once the state is attached to it ----
-	def attach(self, purses: Any, account: str) -> None:
-		"""Keep this household's purse as account `account` in `purses`. Cash it held before being attached is
-		placed there once, unless the book already knows the account (a loaded game)."""
-		held = self.__dict__.pop("_local_capital", 0.0)
-		self.__dict__["_purses"], self.__dict__["_account"] = purses, account
-		if held and not purses.has_account(account):
-			purses.set_net(account, held, "opening")
-
-	@property
-	def ledger_purses(self) -> Any:
-		return self.__dict__.get("_purses")
-
-	@property
-	def account(self) -> str:
-		return self.__dict__.get("_account", "")
-
-	def note_income(self, purpose: Any, amount: float) -> None:
-		"""Money that came in by a posting in the book, entered in the cash book under its cause."""
-		cash_book.record(self, 1.0, float(amount), purpose)
-
-	def note_outlay(self, purpose: Any, amount: float) -> None:
-		"""Money that went out by a posting in the book, entered in the cash book under its cause."""
-		cash_book.record(self, -1.0, float(amount), purpose)
-
-	def credit(self, amount: float, purpose: Any) -> None:
-		"""Money in, entered in the cash book under its cause."""
-		self.capital += float(amount)
-		cash_book.record(self, 1.0, float(amount), purpose)
-
-	def debit(self, amount: float, purpose: Any) -> None:
-		"""Money out, entered in the cash book under its cause."""
-		self.capital -= float(amount)
-		cash_book.record(self, -1.0, float(amount), purpose)
-
-	def reset_cash(self, new_capital: float, purpose: Any) -> None:
-		"""Set the purse to an exact figure (a settlement), entering the difference under its cause."""
-		difference = new_capital - self.capital
-		self.capital = new_capital
-		cash_book.record(self, 1.0, difference, purpose)
-
-	def cost_capital(self, amount: float, purpose: Any = "expenditure") -> None:
-		"""Pay out of the purse and track total spend."""
-		self.debit(amount, purpose)
-		self.total_spend += float(amount)
-
-	def costCapital(self, amount: float, purpose: Any = "expenditure") -> None:
-		"""Alias for cost_capital following camelCase convention."""
-		self.cost_capital(amount, purpose)
-
-	def add_capital(self, amount: float, purpose: Any = "receipts") -> None:
-		"""Credit capital into household purse."""
-		self.credit(amount, purpose)
-
-	def record_spend(self, amount: float) -> None:
-		"""Record spend without altering capital balance directly."""
-		self.total_spend += float(amount)
-
-
-def _purse_net(household: HouseholdState) -> float:
-	purses = household.__dict__.get("_purses")
-	if purses is None:
-		return household.__dict__.get("_local_capital", 0.0)
-	return purses.net(household.__dict__["_account"])
-
-
-def _set_purse_net(household: HouseholdState, value: float) -> None:
-	purses = household.__dict__.get("_purses")
-	if purses is None:
-		household.__dict__["_local_capital"] = float(value)
-	else:
-		purses.set_net(household.__dict__["_account"], float(value), "set")
-
-
-# the purse is the household's net position in the actors' book (purse less what it has drawn on its facility)
-HouseholdState.capital = property(_purse_net, _set_purse_net)  # type: ignore[assignment]
 
 
 @dataclass
@@ -162,7 +77,6 @@ class SimulationState:
 				self.household, self.founder,
 				**{name: value for name, value in given.items() if value is not None})
 		bind_seat(self, self.acting_seat)
-		self.attach_purses()
 
 	@property
 	def actors(self) -> Optional[ActorsState]:
@@ -174,13 +88,6 @@ class SimulationState:
 	@actors.setter
 	def actors(self, value: Optional[ActorsState]) -> None:
 		self.modules["actors"] = value
-
-	def attach_purses(self) -> None:
-		"""Every seat's household keeps its purse in the actors' book, under the seat's id."""
-		actors = self.actors
-		if actors is not None:
-			for seat_id, seat in self.seats.items():
-				seat.household.attach(actors.purses, seat_id)
 
 
 ALL_STATE_CLASSES = (

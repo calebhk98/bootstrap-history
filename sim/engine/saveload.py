@@ -195,7 +195,7 @@ def _check_save_scalars(blob, sim):
         probe.setstate((rng_version, tuple(int(state_int) for state_int in rng_keys), rng_gaussian))
     except (TypeError, ValueError):
         return "this save has an invalid random-number state"
-    for field_name in ("year", "capital"):
+    for field_name in ("year",):
         value = _get_field(blob, field_name)
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             return "this save is corrupt: '%s' should be a number, got %r" % (field_name, value)

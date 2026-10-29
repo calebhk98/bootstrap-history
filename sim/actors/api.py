@@ -2,8 +2,9 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/; the module reads the game through the views its spec declares
 
-from .commands import (AdvanceActors, FollowTileTransfer, NoteTraderMargin, RecordConquestContact, RecordMigrantContact, ScaleStrata,
-                       SetLenderOffers, SettleLenderInterest)
+from .commands import (AdvanceActors, FollowTileTransfer, GrantLicence, NoteTraderMargin, RecordConquestContact, RecordMigrantContact,
+                       ScaleStrata, SellSeatConcern, SetLenderOffers, SettleLenderInterest)
+from .seat_exchange import ALREADY_ABLE, GRANTED, NO_LICENSEE, TERMS_REFUSED
 from .delivered_goods import keep_deliveries
 from .flight_values import government_flight_values
 from . import land_decree, rules

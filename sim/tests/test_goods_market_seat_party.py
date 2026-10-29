@@ -1,7 +1,7 @@
 """The goods market names the acting seat as its party: two seats do not collide in the year's flows, the posted price
 leaves out only the asking seat's orders (small fixture, no game)."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.agents_port_household import HouseholdPort
+from sim.tests.money_host import MoneyHost
 from sim.markets.goods_market import GoodsMarket
 from sim.markets.module import Markets
 from sim.markets.state import MarketsWorld
@@ -17,8 +17,8 @@ class FixtureSim:
 
     def __init__(self):
         self.year = 100
-        self.state = HouseholdPort().fresh_state(100.0)
-        self.state.seats["second"] = SeatState(household=HouseholdState(capital=5.0), founder=FounderState())
+        self.state = MoneyHost(capital=100.0).state
+        self.state.seats["second"] = SeatState(household=HouseholdState(), founder=FounderState())
         self.markets = module_harness.build(Markets, world=MarketsWorld(), views={
             "year": lambda: self.year, "seat_list": lambda: {"joined": list(self.state.seats)}})
 

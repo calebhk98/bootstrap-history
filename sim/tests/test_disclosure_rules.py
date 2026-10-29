@@ -5,10 +5,9 @@ QUICK_TOPIC = True
 
 import types
 import unittest
-from unittest import mock
 
+from sim.actors.api import ALREADY_ABLE, GRANTED, NO_LICENSEE, TERMS_REFUSED, GrantLicence
 from sim.agents.licence import terms_problem
-from sim.diffusion import disclosure
 from sim.diffusion.adoption_share import held_share
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionSeat
@@ -82,23 +81,25 @@ class Holdings(unittest.TestCase):
         self.assertEqual(module.state_military_weapons_held(), 2)
 
 
-def licensing():
-    """The diffusion module of seat "me" in year 120, with one firm to license to."""
-    registry = types.SimpleNamespace(get=lambda identity: types.SimpleNamespace(kind="firm"))
+def licensing(answer):
+    """The diffusion module of seat "me" in year 120, with one firm to license to; the actors module answers `answer` to the grant."""
+    registry = types.SimpleNamespace(get=lambda identity: types.SimpleNamespace(kind="firm"), of_kind=lambda kind: [])
     module = module_harness.build(Diffusion, seat=DiffusionSeat(), views={
-        "cast": lambda: registry, "seat_list": lambda: {"joined": ["me"], "playing": ["me"]},
-        "seat_party": lambda seat_id: "party", "year": 120, "actor_world": lambda: None})
+        "cast": lambda: registry, "seat_list": lambda: {"joined": ["me"], "playing": ["me"]}, "year": 120},
+        answers={GrantLicence: answer})
     module.clock.act_as("me")
     return module
 
 
 class ChoosingALicence(unittest.TestCase):
 
-    def license(self, problem="", granted=True):
-        game = licensing()
-        with mock.patch.object(disclosure.licence, "terms_problem", lambda *args: problem), \
-                mock.patch.object(disclosure.licence, "grant", lambda *args: granted):
-            return game, game._license("x", "firm:a", 1000.0, 0.1)
+    def license(self, status=GRANTED, problem=None):
+        game = licensing({"status": status, "problem": problem})
+        return game, game._license("x", "firm:a", 1000.0, 0.1)
+
+    def test_the_grant_is_asked_of_the_actors_with_the_terms(self):
+        game, _reply = self.license()
+        self.assertEqual(module_harness.sent(game), [GrantLicence("firm:a", "x", 1000.0, 0.1)])
 
     def test_an_accepted_licence_is_recorded_with_its_terms_and_moves_the_invention_off_the_default(self):
         game, reply = self.license()
@@ -109,14 +110,20 @@ class ChoosingALicence(unittest.TestCase):
 
     def test_refused_terms_record_nothing_and_carry_the_refusals_cause(self):
         from sim.refusal import Refusal
-        game, reply = self.license(problem=Refusal("fee_above_value", "no"))
+        game, reply = self.license(TERMS_REFUSED, Refusal("fee_above_value", "no"))
         self.assertFalse(reply["ok"])
         self.assertEqual(reply["cause"], "fee_above_value")
         self.assertEqual(game.seat.disclosures, {})
 
     def test_a_licensee_that_can_already_make_it_is_refused_and_nothing_is_recorded(self):
-        game, reply = self.license(granted=False)
+        game, reply = self.license(ALREADY_ABLE)
         self.assertFalse(reply["ok"])
+        self.assertEqual(game.seat.disclosures, {})
+
+    def test_a_licensee_that_is_nobody_is_refused_with_the_names_that_will_do(self):
+        game, reply = self.license(NO_LICENSEE)
+        self.assertFalse(reply["ok"])
+        self.assertIn("name a firm or the state", reply["error"])
         self.assertEqual(game.seat.disclosures, {})
 
 

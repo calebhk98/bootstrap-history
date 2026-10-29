@@ -29,7 +29,7 @@ def _test_automatic_field_persistence():
 	)
 
 	proj = ActiveProjectState(ph_left=80.0, cost_left=300.0, yrs=1.0, spent=100.0, lab_left={"mason": 15.0})
-	hh = HouseholdState(capital=1250.0)
+	hh = HouseholdState(saving_target=1250.0)
 	econ = EconomyState()
 	holdings = HoldingsState(_dashboard_history=[120.0])
 	founder = FounderState(_founder_death_year=28)
@@ -54,8 +54,8 @@ def _test_automatic_field_persistence():
 		return False, "serialized state carries a version stamp"
 
 	restored = deserialize_state(blob)
-	if restored.household.capital != 1250.0:
-		return False, f"Household capital mismatch: {restored.household.capital}"
+	if restored.household.saving_target != 1250.0:
+		return False, f"Household saving target mismatch: {restored.household.saving_target}"
 	if restored.seats[restored.acting_seat].modules["knowledge"]["done"] != {"__set__": ["stone_cutting"]}:   # the module set revives it
 		return False, f"Knowledge done mismatch: {restored.seats[restored.acting_seat].modules['knowledge']}"
 	restored_active = restored.seats[restored.acting_seat].modules["projects"]["active"]
@@ -122,7 +122,7 @@ def _test_runtime_type_reconstruction():
 		serialize_state,
 	)
 
-	hh = HouseholdState(capital=500.0)
+	hh = HouseholdState(saving_target=500.0)
 	econ = EconomyState()
 	holdings = HoldingsState()
 
@@ -168,7 +168,7 @@ def _test_transient_cache_exclusion():
 	"""Verify transient version counters and cache fields are excluded from serialized output."""
 	from sim.engine.state import HouseholdState, SimulationState, serialize_state
 
-	hh = HouseholdState(capital=1000.0)
+	hh = HouseholdState(saving_target=1000.0)
 	state = SimulationState(
 		household=hh,
 		economy=None,
@@ -198,7 +198,7 @@ def _valid_save():
 		SimulationState, serialize_state,
 	)
 	state = SimulationState(
-		household=HouseholdState(capital=1250.0), economy=EconomyState(),
+		household=HouseholdState(saving_target=1250.0), economy=EconomyState(),
 		holdings=HoldingsState(), founder=FounderState())
 	state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
 	from sim.projects.state import ProjectsSeat
@@ -299,7 +299,7 @@ def _test_flat_legacy_v2_save_rejected_by_load_state():
 	import json
 	from types import SimpleNamespace
 	from sim.engine.saveload import load_state
-	state = SimpleNamespace(household=SimpleNamespace(capital=1250.0))
+	state = SimpleNamespace(household=SimpleNamespace(saving_target=1250.0))
 	game = SimpleNamespace(nodes={"printing_press": {}}, civ={"id": "rome_100ad"}, state=state, fog=False)
 	flat_v2_blob = {
 		"_civ": "rome_100ad",
@@ -322,7 +322,7 @@ def _test_flat_legacy_v2_save_rejected_by_load_state():
 			raised_err = str(err)
 		if raised_err is None:
 			return False, "load_state unexpectedly succeeded on flat v2 save file"
-		if game.state is not state or state.household.capital != 1250.0:
+		if game.state is not state or state.household.saving_target != 1250.0:
 			return False, "the game was changed despite the load failing"
 	finally:
 		if os.path.exists(save_path):

@@ -58,7 +58,6 @@ METHOD_OF_VIEW_MORE = {
     "credit_limit": "credit_limit",
     "credit_line_sought": "credit_line_sought",
     "credit_room": "market_credit_room",
-    "dealing_party": "dealing_party",
     "dealings_listing": "dealings_listing",
     "debt_bondage_term_years": "debt_bondage_term_years",
     "debt_interest_rate": "debt_interest_rate",

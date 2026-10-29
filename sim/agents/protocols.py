@@ -1,6 +1,6 @@
 """What an actor may ask of its world: documentation and typing only.
 
-Actors (`Household`, `Firm`, `Government`, `InterestGroup`) never touch the simulation. They are
+Actors (`HouseholdParty`, `Firm`, `Government`, `InterestGroup`) never touch the simulation. They are
 handed an object that answers the questions below; the engine's own adapter,
 `sim/actors/world.py` (`ActorWorld`), is the one the running game supplies, and a test or a
 second scenario may supply another. Nothing here is imported at run time; it names the members the

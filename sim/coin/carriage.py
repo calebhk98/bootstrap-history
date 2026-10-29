@@ -15,13 +15,12 @@ from .constants import CARRIAGE_CAUSE
 
 
 class Carriage:
-    """The surcharge on a transfer (needs: home_country, legacy_acting_household, tile_known, tile_haul_cost,
-    civilisation)."""
+    """The surcharge on a transfer (needs: home_country, tile_known, tile_haul_cost, civilisation)."""
 
     def place_of(self, party) -> Optional[str]:
-        """The tile a party stands on: the acting household at the home country's centre, another actor where its
+        """The tile a party stands on: a seat's purse at the home country's centre, another actor where its
         record places it; None for an edge or a party without a place."""
-        if party is self.needs.legacy_acting_household():
+        if getattr(party, "stands_at_home", False):
             place = self.needs.home_country()["location"]
         else:
             locate = getattr(party, "location", None)

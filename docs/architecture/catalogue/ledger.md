@@ -4,6 +4,38 @@ Money and goods balances: the one writer of what an actor holds.
 
 **Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
 
+## The seat's purse: who owns what (Phase 6b; done, with what stays)
+
+The seat's money is an account in the actors' `Purses` book, named by the seat's id. The migration removed the bridge views
+`legacy_acting_household`, `legacy_household_actor`, `seat_party` and `seat_party_with_margins`, which handed modules the household's state, its
+facade and the seat as an exchange party. Decided per fact, from the code:
+
+| Fact | Owner | Reached through |
+|---|---|---|
+| The book (accounts, debts, the pool, every actor's purse) | actors (`sim/agents/purses.py`, world slot `ActorsState`) | `cast_state` view, for the ledger's postings and the seat's borrower |
+| A seat's account in the book (its balance, its postings) | ledger | views `acting_balance`, `seat_balance[seat]`; commands `PayEdge`, `ReceiveFromEdge`, `PayWages`, `PayActor`, `PayActorFromHousehold`, `TakeFromHouseholdPurse`, `SettleWithEdge`, `RestorePurse` (a seat named or the acting one), `RescaleHouseholdMoney`, `WithdrawHouseholdMoney`, `OpenPurse`, `CreditSeat`, `DebitSeat` |
+| A seat's cash book (cash by cause, its mark, the closed years) and the year's spending | ledger (`LedgerSeat`) | views `cash_book`, `cash_causes_since`, `cash_unaccounted`; commands `NoteSeatCash`, `OpenCashBook`, `CloseCashPeriod`, `NoteSpend` |
+| The founder's interest on its debt, its arrears and its default | finance (`FinanceSeat`, `Arrears.settle_interest`) | `SeatBorrower` (sim/agents) over the ledger's balance and `NoteSeatCash`; the rule is the one every borrower follows |
+| The seat's business reviewed (which plants close, why) | ventures | `FounderReview` (sim/agents), asking the actors' world |
+| The seat as a party to an exchange (patents, shares, offers, licences, a concern sold) | actors | `HouseholdParty` over `SeatPorts` (`sim/actors/seat_parties.py`), built for one dealing and handed to no other module; the seats, diffusion and ventures modules send `ApplyForPatent`, `MakeOffer`, `AnswerOffer`, `GrantLicence`, `SellSeatConcern` and read `concern_sale_terms` |
+| The acting seat's visible scale to the state | actors (`BudgetView.acting_seat_visible_scale`) | the views `staff`, `standing`, `acting_balance`, `visible_scale` |
+
+How a posting is made: the ledger builds, for the length of one command, a `SeatAccount` (the seat's purse and its cash book) or a
+`SeatActor` (the same, as a party in the book, so `ledger.transfer` makes one posting between two accounts). Nothing outside the
+ledger holds either. The two differ as the household's state and its facade always did, and each command keeps the one it had so the
+book's postings stay identical (Complaint 930 asks whether they should agree). A party that moves a seat's money does it with
+`CreditSeat`, `DebitSeat`, `NoteSeatCash` and `RestorePurse`, naming the seat, so it needs no seat switch.
+
+What stays, and why:
+
+- `HouseholdState` holds the cause book rows (`cause_rows`, `cause_mark`) and the saving target; they are not money.
+- The party writes through two records its owners publish, the seats' stored dealings (`seat_dealings`) and the ventures' business
+  (`seat_business`), because the exchange (sim/agents) changes both in place (Complaint 931).
+- A party reads another seat's staff and know-how by running as that seat (`acting_as`), because `staff` and `techniques_held` answer for the acting seat.
+- The ledger's views `acting_balance` and `seat_balance` read the book directly and are uncached: the actors' own code moves the book too.
+- The save listing reads a save's purse from the book the save carries (`settings.purse_in_save`); the household section no longer has a `capital`.
+- The equivalence tool derives the base's `/seats/<id>/household/capital` leaf from the book and relocates the cash book to the ledger's slot (sim/tests/equiv_run.py, equiv_fields.py).
+
 ## At a glance
 
 | Measure | Value |

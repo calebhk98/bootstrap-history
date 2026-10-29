@@ -4,6 +4,7 @@ here, and the screens are rendered from hand-written replies; there are no playe
 QUICK_TOPIC = True
 
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 from sim.tests.ui_stand_in import StandIn
@@ -93,8 +94,7 @@ class CashBookRowTests(unittest.TestCase):
     def test_the_ledger_shows_the_last_closed_years_and_the_open_year_last(self):
         earlier = [{"year": year, "opening": 0.0, "closing": 0.0, "causes": {}} for year in range(5)]
         book = {"earlier_years": earlier, "year": 5, "opening": 0.0, "closing": 40.0, "causes": {"sales": 40.0}}
-        with mock.patch.object(dispatch_cash_ledger.cash_book, "book", lambda sim: book):
-            ledger = dispatch_cash_ledger.cash_ledger(object())
+        ledger = dispatch_cash_ledger.cash_ledger(SimpleNamespace(view=lambda name: (lambda: book)))
         self.assertEqual([row["year"] for row in ledger["years"]], [2, 3, 4, 5])
         self.assertEqual([row["open_year"] for row in ledger["years"]], [False, False, False, True])
 

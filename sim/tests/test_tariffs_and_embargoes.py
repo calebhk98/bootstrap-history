@@ -197,8 +197,8 @@ class Game(FactViews):
     """The root state with the real seat rebinding, as in the relations store topic."""
 
     def __init__(self):
-        self.state = SimulationState(household=HouseholdState(capital=100.0), founder=FounderState())
-        self.state.seats["northern"] = seat_from_template({"country": "han"}, 50.0, {})
+        self.state = SimulationState(household=HouseholdState(), founder=FounderState())
+        self.state.seats["northern"] = seat_from_template({"country": "han"}, {})
         give_seats_slots(self.state)
         self.session_seat = None
         self.year = 100

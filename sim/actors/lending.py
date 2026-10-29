@@ -45,5 +45,5 @@ class Lending:
 	def _lender_party(self, account: str) -> Any:
 		"""The actor behind a lender's account, or None for an edge."""
 		if account in self.needs.seat_list()["joined"]:
-			return self.needs.seat_party[account]
+			return self.seat_party(account)   # type: ignore[attr-defined]
 		return self.cast().actors.get(account)

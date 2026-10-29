@@ -20,7 +20,7 @@ from .buy_targets import canonical_target, target_names, usage_lines
 from .quote_purchases import FLAT_QUOTERS
 from .stock_purchases import buy_living_stock, buy_smuggled_stock
 from .quote_spending import SPENDING_QUOTERS, bounty_refusal
-from sim.engine.ui_port import cash_book, purchase_rule
+from sim.engine.ui_port import purchase_rule
 from .util import known
 
 
@@ -331,7 +331,7 @@ def _cmd_money(sim, nodes, cmd, ended):
     return {"ok": True,
             "capital": round(sim.view("acting_balance")(), 1),
             "coin_hoard": sim.view("coin_hoard_report")(),
-            "cash_book": cash_book.book(sim),
+            "cash_book": sim.view("cash_book")(),
             "revenue": round(sim.view("revenue_estimate")(), 1),
             "where_the_money_comes_from": _sources,
             **({"where_the_market_squeeze_falls": _squeeze} if _squeeze else {}),

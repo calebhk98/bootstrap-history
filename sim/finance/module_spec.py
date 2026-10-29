@@ -9,7 +9,7 @@ Nothing it publishes is cached: the agents' shared arrears rule writes `interest
 through the household's `arrears_book`, and every answer reads the economy, the actors' book and the household directly."""
 from sim.assembly.api import QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.actors.api import SetLenderOffers, SettleLenderInterest
-from sim.ledger.api import NoteHolderBooking, SettleHouseholdInterest, SettleWithEdge, WithdrawHouseholdMoney
+from sim.ledger.api import NoteHolderBooking, NoteSeatCash, SettleWithEdge, WithdrawHouseholdMoney
 from sim.markets.api import FoundBankFromOutside
 from sim.polity.api import SetReputation
 from sim.projects.api import HaltActiveProjects, ReviewVentures
@@ -24,8 +24,8 @@ from .state import FinanceSeat
 READS_BY_OWNER = {
 	"core": ("year", "civilisation", "game_config", "money_text"),
 	"prices": ("price_index",),
-	"actors": ("cast", "state_treasury", "actor_world", "lender_offers_made", "cash_and_deposit", "loans_out", "debt_owed"),
-	"seats": ("dealing_party",),
+	"actors": ("cast", "cast_state", "state_treasury", "actor_world", "lender_offers_made", "cash_and_deposit", "loans_out", "debt_owed"),
+	"seats": ("acting_seat",),
 	"ledger": ("acting_balance", "held_goods", "goods_stock"),
 	"materials": ("material_commodity",),
 	"mechanics": ("effect_sum", "effect_values", "mechanic"),
@@ -87,6 +87,6 @@ MODULE_SPECS = (ModuleSpec(
 	phases=(PhaseHook("credit_limit", "step_credit_limit"),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(RecordEvent, SetReputation, SettleWithEdge, WithdrawHouseholdMoney, MothballMines, BleedStaff, DisperseDependants, Manumit,
-	       HaltActiveProjects, ReviewVentures, SettleHouseholdInterest, NoteHolderBooking, SetLenderOffers, SettleLenderInterest,
+	       HaltActiveProjects, ReviewVentures, NoteSeatCash, NoteHolderBooking, SetLenderOffers, SettleLenderInterest,
 	       FoundBankFromOutside),
 ),)

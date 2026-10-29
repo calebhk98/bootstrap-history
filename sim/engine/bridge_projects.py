@@ -2,18 +2,12 @@
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old
 code did, and is never cached. Each command applies what the old code did inline. """
-from sim.ledger.api import NoteSpend
 from sim.projects.needed_commands import NoteConcernChange
 
 from . import cause_book
 from .bridge import bridge_command
 
 # ---- commands of owners that have not moved -----------------------------------------------------------------------
-
-@bridge_command(NoteSpend)
-def note_spend(sim, command):
-    sim.state.household.total_spend += command.amount
-
 
 @bridge_command(NoteConcernChange)
 def note_concern_change(sim, command):

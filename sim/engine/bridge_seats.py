@@ -5,6 +5,7 @@ and is never cached. The seat registry (`state.seats`, the facades, `act_as`) st
 commands that change it are applied here for good. The `legacy_*` views are state the module shares with the engine; they go
 when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
+from sim.ledger.api import OpenPurse
 from sim.refusal import Refusal
 from sim.seats.api import COUNTRY_SEAT, ForgetGoalCaches, MoveSeat, RegisterSeat, SetSeatHolder
 
@@ -30,18 +31,6 @@ def acting_as(sim, seat_id):
     return sim.act_as(seat_id)
 
 
-@bridge_view("seat_party", kind=KEYED)
-def seat_party(sim, seat_id):
-    """The seat as an actor an exchange can deal with."""
-    return sim.seat_party(seat_id)
-
-
-@bridge_view("seat_party_with_margins", kind=QUOTE)
-def seat_party_with_margins(sim, seat_id, margins):
-    """The seat as a party to an exchange, with what each concern it runs earns a year."""
-    return sim.seat_party(seat_id, margins)
-
-
 @bridge_view("seat_holds", kind=KEYED)
 def seat_holds(sim, seat_id):
     """What the seat holds in the engine's own state that a handover to it would overwrite."""
@@ -58,8 +47,10 @@ def society_techs(sim):
 def register_seat(sim, command):
     if command.seat_id in sim.state.seats:
         return Refusal("seat_exists", "seat %r already exists" % (command.seat_id,), seat=command.seat_id)
-    seat = seat_from_template(command.template, command.capital, default_policy(sim.manual))
+    seat = seat_from_template(command.template, default_policy(sim.manual))
     sim.add_seat(command.seat_id, seat)
+    if seat.modules["seats"].kind != COUNTRY_SEAT:   # a country seat acts through its government and holds nothing of its own
+        sim.send(OpenPurse(command.seat_id, float(command.capital)))   # the capital is already in the society's coin
     seat.modules["seats"].life_left = command.founder_years
     with sim.act_as(command.seat_id):
         sim._wrap_seat_containers()

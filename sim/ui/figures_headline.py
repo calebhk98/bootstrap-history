@@ -4,14 +4,17 @@ Each reads the engine function that produces the number; nothing is
 recomputed here. Registration is the whole of adding a figure; the ones that only read state
 paths are declared in data/ui/figures.json (`figures_data.py`).
 """
-from sim.engine.ui_port import cash_book
 from .figures import figure
 from sim.engine.ui_port import hazards_not_yet_past
 
 HAZARD_KINDS = ("staff_loss", "sack_chance", "output_factor", "real_erosion")
 
 
-@figure("cash", "cash on hand", unit="money", since=cash_book.causes_since)
+def _cash_since(sim, year):
+    return sim.view("cash_causes_since")(year)
+
+
+@figure("cash", "cash on hand", unit="money", since=_cash_since)
 def _cash(sim):
     return {"value": sim.view("acting_balance")()}
 

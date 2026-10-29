@@ -20,7 +20,7 @@ class HomeView(BudgetView):
 		self.acting = None
 		self.needs = fake_needs(
 			seat_country=countries, acting_seat="founder", seat_list={"playing": playing}, acting_as=self._act_as,
-			legacy_household_actor=lambda: None, revenue_estimate=lambda: SEAT_INCOME[self.acting])
+			revenue_estimate=lambda: SEAT_INCOME[self.acting])
 		self.registry = SimpleNamespace(state=SimpleNamespace(home_country=HOME), active_firms=lambda: [], country_of=lambda actor: HOME, country_of_tile=lambda tile: None)
 
 	@contextlib.contextmanager
@@ -29,6 +29,9 @@ class HomeView(BudgetView):
 		yield
 
 	def visible_scale_of(self, actor):
+		return 1.0
+
+	def acting_seat_visible_scale(self):
 		return 1.0
 
 
@@ -62,3 +65,12 @@ check("a foreign state's firms are the ones the same rule selects for that count
 visible = sorted(income for _scale, income in view.visible_taxpayers())
 check("the home state's visible taxpayers are its seats and its own firms only",
 	  visible == sorted([SEAT_INCOME["founder"], SEAT_INCOME["native"], 17.0, 19.0]), visible)
+
+
+# the acting seat's scale is its staff, its purse less what it hides, no prominence of a business's kind and its defiance
+scale_view = BudgetView()
+scale_view.needs = fake_needs(
+	standing=lambda: {"concealed": 30.0, "defiance": 0.25}, staff=lambda: {"employees": {"smith": 2.0, "mason": 3.0}},
+	acting_balance=lambda: 100.0, visible_scale=lambda headcount, wealth, prominence, defiance: (headcount, wealth, prominence, defiance))
+check("the acting seat's visible scale is read from the owners' views: staff, wealth less what is concealed, no prominence, defiance",
+	  scale_view.acting_seat_visible_scale() == (5.0, 70.0, 0.0, 0.25), scale_view.acting_seat_visible_scale())

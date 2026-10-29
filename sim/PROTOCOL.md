@@ -194,10 +194,10 @@ Two fixes, usable separately or together:
                                                     opening, closing, causes}]}: every change to
                                                     the founder's cash since the last yearly
                                                     snapshot, by cause (opening + causes =
-                                                    closing). Written by HouseholdState.credit /
-                                                    debit / reset_cash, the only writers of the
-                                                    purse (sim/engine/cash_book.py); a save keeps
-                                                    the open period and a few closed years.
+                                                    closing). Written by the ledger's seat
+                                                    account (sim/ledger/seat_account.py), the
+                                                    only writer of the purse; a save keeps the
+                                                    open period and a few closed years.
       {"cmd":"leverage"}                           {leverage_points:[{lever, why_it_matters,
                                                     figures}], note}: literacy, labour, finance,
                                                     institutions, knowledge, materials, each

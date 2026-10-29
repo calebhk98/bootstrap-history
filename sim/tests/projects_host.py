@@ -65,7 +65,7 @@ def defaults() -> Dict[str, Any]:
 		"automation": {"manual": False, "bounty_set": set()}, "society_name": "Testland", "year": 100,
 		"horizon_end_year": 1000, "project_limits": {
 			"base": 2, "per_director_hours": 2000.0, "per_scholar": 12.0, "per_artisan": 25.0},
-		"actor_world": None, "legacy_acting_household": types.SimpleNamespace(employees={}),
+		"actor_world": None,
 		"stock_status": lambda node_id: {"missing": []},
 		"start_gate_material_seller": lambda *arguments: None, "start_gate_group_prohibition": lambda *arguments: None,
 		"extra_start_checks": lambda *arguments: None,
@@ -90,7 +90,7 @@ def build(answers: Dict[str, Any] = None, seat: ProjectsSeat = None, order: Sequ
 		for name, value in (("operating", business.operating()), ("mothballed", business.mothballed()), ("closure_records", business.closures())):
 			if name not in views:
 				every_view[name] = value
-		ventures = ventures_host.build(seat=VenturesSeat(businesses=[business]), **{name: views[name] for name in ("legacy_household_actor", "actor_world") if name in views})
+		ventures = ventures_host.build(seat=VenturesSeat(businesses=[business]), **{name: views[name] for name in ("actor_world",) if name in views})
 		answers = dict(answers or {})
 		for command, method in ((MothballConcern, "apply_mothball_concern"), (RestoreConcern, "apply_restore_concern"), (CloseConcern, "apply_close_concern"),
 		                        (ForgetClosureReason, "apply_forget_closure_reason"), (ReviewConcerns, "apply_review_concerns"),

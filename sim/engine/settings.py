@@ -93,6 +93,7 @@ import shutil
 import time
 from typing import Any, cast, Dict, List, NotRequired, Optional, TypedDict
 
+from sim.agents.api import Purses
 from sim.engine.saveload import acting_seat_of, read_save_text
 from sim.scenario.api import scenario_slot_of
 from sim.default_civilisation import PREFERRED_DEFAULT_CIVILISATION
@@ -556,7 +557,7 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
                 "reputation": household.get("reputation"),
                 "scholars": household.get("scholars"),
                 "artisans": household.get("artisans"),
-                "capital": household.get("capital"),
+                "capital": purse_in_save(blob, blob.get("acting_seat")),
                 "done": ((knowledge.get("done") or {}).get("__set__") or []),
             })
         except (OSError, ValueError):
@@ -564,6 +565,12 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
         rows.append(row)
     rows.sort(key=lambda r: -r["mtime"])
     return rows
+
+
+def purse_in_save(blob: Dict[str, Any], seat_id: Any) -> Optional[float]:
+    """What the seat's account holds in the actors' book a save carries (the seat's purse), or None when the save carries no book."""
+    record = ((blob.get("modules") or {}).get("actors") or {}).get("purses")
+    return Purses.from_record(record).net(seat_id) if isinstance(record, dict) else None
 
 
 def humanize_age(mtime: float) -> str:

@@ -32,20 +32,20 @@ check("merging does not change a seat's own hazard", plague["staff_loss"] == 0.4
 
 # ---- a seat from data
 template = {"starting_techs": ["a", "b"], "scholars": 2, "artisans": 3, "base_tile": "t1", "goal": "g", "country": "han"}
-seat = seat_from_template(template, 500.0, {"auto_hire": False})
-check("a template builds a seat with its own purse, knowledge, staff, place and goal",
-      seat.household.capital == 500.0 and seat.modules["knowledge"].done == {"a", "b"} and seat.modules["knowledge"].granted == {"a", "b"}
+seat = seat_from_template(template, {"auto_hire": False})
+check("a template builds a seat with its own knowledge, staff, place and goal",
+      seat.modules["knowledge"].done == {"a", "b"} and seat.modules["knowledge"].granted == {"a", "b"}
       and seat.modules["workforce"].scholars == 2 and seat.modules["workforce"].artisans == 3 and seat.modules["workforce"].base_tile == "t1"
       and seat.modules["seats"].goal == "g" and seat.modules["seats"].country == "han"
       and seat.modules["seats"].policy == {"auto_hire": False}, None)
-other = seat_from_template(template, 500.0, {})
+other = seat_from_template(template, {})
 check("two seats from one template share no container",
       other.modules["knowledge"].done is not seat.modules["knowledge"].done and other.modules["workforce"].employees is not seat.modules["workforce"].employees
       and other.modules["seats"].policy is not seat.modules["seats"].policy, None)
 
 # ---- the end rule: one seat's run ends, the others play on
-state = SimulationState(household=HouseholdState(capital=1.0), founder=FounderState())
-state.seats["second"] = seat_from_template({}, 5.0, {})
+state = SimulationState(household=HouseholdState(), founder=FounderState())
+state.seats["second"] = seat_from_template({}, {})
 state.seats[FIRST_SEAT_ID].modules["seats"] = SeatsSeat()
 held = slots_of(state.seats)
 check("two seats are both playing at the start", seats_playing(held) == [FIRST_SEAT_ID, "second"], None)

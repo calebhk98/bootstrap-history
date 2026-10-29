@@ -79,7 +79,7 @@ def _test_subsystem_state_owners():
 		SimulationState,
 	)
 
-	h = HouseholdState(capital=1000.0)
+	h = HouseholdState(saving_target=1000.0)
 	e = EconomyState()
 	f = FounderState()
 
@@ -90,7 +90,7 @@ def _test_subsystem_state_owners():
 		_civ="rome_100ad",
 	)
 
-	if sim_state.household.capital != 1000.0:
+	if sim_state.household.saving_target != 1000.0:
 		return False, "SimulationState failed to coordinate HouseholdState"
 	if sim_state._civ != "rome_100ad":
 		return False, "SimulationState failed to coordinate _civ"

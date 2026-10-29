@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from unittest import mock
 
+from sim.agents.api import Purses
 from sim.engine import settings
 from sim.engine.data import resolve_goal, selectable_goals
 from sim.engine.saveload import goal_of_blob
@@ -18,8 +19,11 @@ from sim.ui.proto import util as proto_util
 
 
 def save_blob(year=100, capital=250.0, alive=True, goal="goal_node", goal_year=None):
-    seat = {"household": {"capital": capital}, "modules": {"seats": {"founder_alive": alive, "goal": goal, "goal_year": goal_year}}}
-    return {"_civ": "rome_100ad", "acting_seat": "a", "seats": {"a": seat}, "modules": {"scenario": {"year": year}}}
+    seat = {"household": {}, "modules": {"seats": {"founder_alive": alive, "goal": goal, "goal_year": goal_year}}}
+    purses = Purses()
+    purses.set_net("a", capital, "opening")   # the seat's purse is its account in the actors' book
+    return {"_civ": "rome_100ad", "acting_seat": "a", "seats": {"a": seat},
+            "modules": {"scenario": {"year": year}, "actors": {"purses": purses.to_canon_dict()}}}
 
 
 class ListSaves(unittest.TestCase):
@@ -38,6 +42,12 @@ class ListSaves(unittest.TestCase):
         row = self.rows()["g.json"]
         self.assertEqual((row["readable"], row["year"], row["capital"], row["founder_alive"], row["goal"], row["goal_year"]),
                          (True, 137, 88.5, False, "transistor", 131))
+
+    def test_a_save_with_no_book_has_no_capital_to_show(self):
+        blob = save_blob()
+        del blob["modules"]["actors"]
+        self.write("g.json", json.dumps(blob))
+        self.assertIsNone(self.rows()["g.json"]["capital"])
 
     def test_a_row_lists_the_nodes_its_save_holds_from_the_knowledge_modules_slot(self):
         blob = save_blob()
