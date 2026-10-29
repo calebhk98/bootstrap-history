@@ -198,6 +198,14 @@ actors (21), hazards, workforce (20 each), projects (19).
 - [x] Markets publish `material_serves_a_need`, `materials_serving`, `material_substitutes`, `agent_rate`, `agent_credit_room`
   and `agent_economy_opened`; founding a bank is the markets command `FoundBankFromOutside`, so finance no longer holds the
   agent economy.
+- [x] Reads that went silently dead when state moved: a `getattr(sim, name, default)` keeps answering its default after
+  `name` leaves `Sim`. Found by the full equivalence tier (Rome's army at year 16 granted in full: the bridge's nutrition
+  view read `Sim._last_demographic_step`, which demography now holds) and then by checking each defaulted read against a
+  built game: the famine cause's food supply (same attribute), the teaching view (`Sim.actors`, gone; actors publish
+  `teaching_knowledge`), and a stray `@property` that made the age-at-death read raise TypeError. Still open from the same
+  sweep, and the same on the base build: `fuzzy_estimates` reads `viewer_actor_id`, which nothing sets.
+- [ ] Phase 9: replace the remaining defaulted `getattr(sim, ...)` reads with direct reads or views, so a moved field fails
+  loudly (`grep -rn 'getattr(sim, "' sim`).
 - [ ] The engine bridge answers no module read: each bridged view is published by the module that owns the fact.
 - [ ] A width review for each module that depends on more than 15 others, written into its catalogue entry: views that
   mirror methods merged into views that answer questions, sub-domains split out, pass-through dependencies removed,
