@@ -14,7 +14,7 @@ from sim.reporting.api import CloseRealOutput
 from sim.resources.api import DrawDeposit, FellTimber, RegrowTimber
 
 from .commands import (BuyMaterial, FoundBankFromOutside, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale,
-                       NoteDraw, NotePurchase, OpenMarketBook, RenameMarketSeat, RepriceOpeningMoney, ResetDraws,
+                       MoveGoods, NoteDraw, NotePurchase, OpenMarketBook, RenameMarketSeat, RepriceOpeningMoney, ResetDraws,
                        SellMaterial)
 from .kernels import KERNELS
 from .module import Markets
@@ -99,7 +99,7 @@ MODULE_SPECS = (ModuleSpec(
 	publishes=tuple(_view(name, kind) for name, kind in _VIEWS),
 	applies=((ResetDraws, "reset_draws"), (NoteDraw, "note_draw"), (NotePurchase, "note_purchase"),
 	         (ForgetActorOrders, "forget_actor_orders"), (NoteActorSale, "note_actor_sale"),
-	         (NoteActorPurchase, "note_actor_purchase"),
+	         (NoteActorPurchase, "note_actor_purchase"), (MoveGoods, "move_goods"),
 	         (OpenMarketBook, "open_market_book_command"), (RenameMarketSeat, "rename_market_seat"),
 	         (MarkMoneyPricedAtEconomy, "mark_money_priced_at_economy"), (RepriceOpeningMoney, "reprice_opening_money"), (BuyMaterial, "buy_material"),
 	         (SellMaterial, "sell_material"), (FoundBankFromOutside, "found_bank_from_outside")),

@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.assembly.api import AssemblyError, Module, ModuleSpec, Operations, ViewSpec
+from sim.assembly.api import AssemblyError, Module, ModuleSpec, Operations, UndeclaredRead, ViewSpec
 from sim.tests.assembly_fixture import BASE, TOP, Base, SetValue, build, changed
 
 
@@ -254,12 +254,18 @@ class AdjustTest(unittest.TestCase):
                Operations("two", adjusters={"double": ((lambda needs, value: value * 10, ()),)})]
         self.assertEqual(build(operations=ops).views["double"](), 30)
 
-    def test_an_adjuster_receives_its_reads_on_needs(self):
-        ops = [Operations("one", adjusters={"double": ((lambda needs, value: value + needs.side(), ("side",)),)})]
+    def test_an_adjuster_receives_an_access_to_its_reads(self):
+        ops = [Operations("one", adjusters={"double": ((lambda access, value: value + access.view("side")(), ("side",)),)})]
         self.assertEqual(build(operations=ops).views["double"](), 102)
 
+    def test_an_adjuster_reading_a_view_it_did_not_declare_is_refused_naming_the_mod_and_the_view(self):
+        ops = [Operations("one", adjusters={"double": ((lambda access, value: value + access.view("side")(), ()),)})]
+        with self.assertRaises(UndeclaredRead) as caught:
+            build(operations=ops).views["double"]()
+        self.assertEqual((caught.exception.mod_id, caught.exception.view), ("one", "side"))
+
     def test_a_bump_of_an_adjusters_read_refreshes_the_view(self):
-        ops = [Operations("one", adjusters={"double": ((lambda needs, value: value + needs.side(), ("side",)),)})]
+        ops = [Operations("one", adjusters={"double": ((lambda access, value: value + access.view("side")(), ("side",)),)})]
         assembly = build(operations=ops)
         base = assembly.modules["base"]
         assembly.views["double"]()
@@ -268,7 +274,7 @@ class AdjustTest(unittest.TestCase):
         self.assertEqual(assembly.views["double"](), 7)
 
     def test_a_bump_of_an_adjusters_read_refreshes_a_derived_view_above(self):
-        ops = [Operations("one", adjusters={"double": ((lambda needs, value: value + needs.side(), ("side",)),)})]
+        ops = [Operations("one", adjusters={"double": ((lambda access, value: value + access.view("side")(), ("side",)),)})]
         assembly = build(operations=ops)
         base = assembly.modules["base"]
         assembly.views["derived"]()

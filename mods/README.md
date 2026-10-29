@@ -191,9 +191,12 @@ handed an `access` that answers exactly that.
 `register(api)` registers commands (`@api.command(name, group=..., summary=...,
 usage=[...], description=...)` with a handler `(access, nodes, cmd, ended) -> dict`), headline figures (`@api.figure(name, label, unit=...)` on
 `compute(access) -> {"value", "components", "flows", "drivers"}`), actor kinds (`api.actor_kind`),
-policies (`api.policy`), spawners (`api.spawner`) and a player actor's orders (`api.player_command`); every name is
-forced into `<mod_id>:`. Each of these records an answer to an extension point of the module that owns it; `api.provide(point,
-function)` adds an answer to any point directly (`actor_kinds`, `actor_spawners`, `actor_policies`, `player_commands`,
+policies (`api.policy`), spawners (`api.spawner`, `function(access)`; it founds an actor by sending `AddActor`) and a player actor's
+orders (`api.player_command`, `handler(access, actor_id, order)`); every name is forced into `<mod_id>:`. An actor kind's class runs
+inside the agents package: its methods are handed the `world` narrowed to the members actors ask (`sim/agents/protocols.py`), and
+any other member is refused with `UndeclaredWorldMember` naming the mod. Kinds, spawners and player commands are provided only
+through these three calls: `api.provide` refuses their points. Each of these records an answer to an extension point of the module that owns it; `api.provide(point,
+function)` adds an answer to any other point directly (`actor_policies`,
 `wealth_claims`, `interface_commands`, `interface_figures`, `town_population`, `town_mortality_premium`, `director_overhead`, `externality`, `store_declarations`, and
 a module's own). What a mod records is kept per mod, so two games in one process run the mods of their own set. A handler keeps its
 state only in `access.memory()`, a plain dict that is saved with the game, and draws random numbers
@@ -211,7 +214,7 @@ to the game built over that mod set (`python3 -m sim.tests --slow --only mod_ope
   error names the remover and every reader.
 * `api.extend_module(module_id, layer)`: a class laid over the implementation, so its methods override and `super()` reaches the
   layer below. Layers stack in mod load order; a method outside the module's declared ones is labelled unstable.
-* `api.adjust_view(view, function, reads=())`: `function(needs, value, *key_or_arguments) -> value` over a published view;
+* `api.adjust_view(view, function, reads=())`: `function(access, value, *key_or_arguments) -> value` over a published view;
   adjusters stack in mod load order.
 * `api.provide(point, function)` and `api.withdraw("<module_id>.<provision>")`: add an answer to an extension point, or take a
   shipped module's answer out of one.
@@ -269,7 +272,10 @@ A provider's first argument is its mod's `access`; it reads only what the mod de
 
 A handler or phase changes the world only through `api.effects` (sim/engine/mod_effects.py) or the commands it declared with
 `api.sends`; reaching into package internals is unsupported and bypasses the conservation checks. Every effect takes `access`
-first (it needs no declaration), needs a cause in words, and goes through the normal rules:
+first, needs a cause in words, and goes through the normal rules by sending the owner's command, so the mod declares what the
+effect uses: `api.uses_effects("pay", "record_event", ...)` declares the views and commands of the named effects
+(`EFFECT_NEEDS` in sim/engine/mod_effects.py), and an effect used without it is refused with `UndeclaredRead` or `UndeclaredSend`
+naming the mod and the name:
 
 * `pay(access, payer_id, payee_id, amount, purpose)`: coin between two actors through the ledger.
 * `pay_edge` / `receive_from_edge(access, actor_id, edge, amount, purpose)`: coin to or from a named edge (the `EDGE_*`

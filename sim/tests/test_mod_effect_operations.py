@@ -51,24 +51,22 @@ check("a negative amount, an undeclared edge or an unknown actor is refused befo
 effects.pay_edge(money_game, "government:x", "edge:%s:tithe" % ACME, 1.0, "own edge")
 check("the mod's own namespaced edge is accepted", sent_money[-1].edge == "edge:%s:tithe" % ACME)
 
-# --- goods: a move from the named edge into the account (added) or from the account to the edge (removed), at a tile.
-economy = object()
-goods_game = Game(economy=SimpleNamespace(agent=SimpleNamespace(economy=lambda: economy)))
-with mock.patch.object(mod_effects.economy_api, "move_goods") as move_goods:
-    effects.add_goods(goods_game, "mod_account", "grain", "tile_a", 5.0, "a gift of grain")
-    effects.remove_goods(goods_game, "mod_account", "grain", "tile_a", 2.0, "a fire")
-added, removed = move_goods.call_args_list[0].args[1][0], move_goods.call_args_list[1].args[1][0]
-check("add_goods books the economy's book with a move from the production edge into the account at the tile",
-      move_goods.call_args_list[0].args[0] is economy and (added.giver, added.receiver, added.good, added.tile, added.quantity)
+# --- goods: the markets owner is sent a move from the named edge into the account (added) or from the account to the edge (removed), at a tile.
+moved_goods = []
+goods_game = Game(send=moved_goods.append)
+effects.add_goods(goods_game, "mod_account", "grain", "tile_a", 5.0, "a gift of grain")
+effects.remove_goods(goods_game, "mod_account", "grain", "tile_a", 2.0, "a fire")
+added, removed = moved_goods
+check("add_goods sends a move from the production edge into the account at the tile",
+      (added.giver, added.receiver, added.good, added.tile, added.quantity)
       == (mod_effects.economy_api.EDGE_PRODUCTION, "mod_account", "grain", "tile_a", 5.0), added)
-check("remove_goods books a move from the account to the consumption edge",
+check("remove_goods sends a move from the account to the consumption edge",
       (removed.giver, removed.receiver, removed.quantity) == ("mod_account", mod_effects.economy_api.EDGE_CONSUMPTION, 2.0), removed)
-with mock.patch.object(mod_effects.economy_api, "move_goods") as unmoved:
-    try:
-        effects.add_goods(goods_game, "mod_account", "grain", "tile_a", 1.0, "x", edge="somewhere")
-    except ModError:
-        pass
-check("goods from an undeclared edge are refused before the book is touched", not unmoved.called)
+try:
+    effects.add_goods(goods_game, "mod_account", "grain", "tile_a", 1.0, "x", edge="somewhere")
+except ModError:
+    pass
+check("goods from an undeclared edge are refused before the owner is sent anything", len(moved_goods) == 2)
 
 # --- killing people: the demography owner is sent the death share (it cuts the cohorts or the strata, and writes the event).
 def _death_game():

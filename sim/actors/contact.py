@@ -42,6 +42,19 @@ class Contact:
 		for actor in self._strata_of(command.country):
 			actor.record.members *= 1.0 - command.share
 
+	def move_stratum_people(self, command: Any) -> Any:
+		"""People pass from one stratum to another, never more than the source holds."""
+		registry = self.cast()  # type: ignore[attr-defined]
+		source, target = registry.actors.get(command.from_stratum), registry.actors.get(command.to_stratum)
+		for actor_id, actor in ((command.from_stratum, source), (command.to_stratum, target)):
+			if actor is None or actor.record.kind != "stratum":
+				return Refusal("no_such_stratum", "the cast holds no stratum %s" % actor_id)
+		moved = min(command.count, source.record.members)
+		source.record.members -= moved
+		target.record.members += moved
+		home = self.needs.civilisation()["id"]
+		return {"moved": moved, "countries": [source.record.country or home, target.record.country or home]}
+
 	def country_strata(self, country: str) -> List[Any]:
 		"""[{members, shortfall}] of the country's strata: how many they are and the share of each need they leave unmet."""
 		return [{"members": actor.record.members, "shortfall": actor.record.shortfall} for actor in self._strata_of(country)]

@@ -19,26 +19,22 @@ class UndeclaredRead(AssemblyError):
 		self.mod_id, self.view = mod_id, view
 
 
+class UndeclaredWorldMember(UndeclaredRead, AttributeError):
+	"""A mod's actor asked its world for a member actors do not ask (sim/agents/protocols.py); `mod_id` and `view` (the member) say
+	who and what. An AttributeError too, so a shipped actor's `hasattr` probe of the narrowed world answers no."""
+
+	def __init__(self, mod_id: str, member: str):
+		AssemblyError.__init__(self, "mod %s's actor asked its world for %s, which is not among the members actors ask "
+		                       "(sim/agents/protocols.py)" % (mod_id, member))
+		self.mod_id, self.view = mod_id, member
+
+
 class UndeclaredSend(AssemblyError):
 	"""A mod sent a command it did not declare in `api.sends(...)`; `mod_id` and `command` say who and what."""
 
 	def __init__(self, mod_id: str, command: str):
 		super().__init__("mod %s sent %s, which it did not declare; add it to api.sends(...)" % (mod_id, command))
 		self.mod_id, self.command = mod_id, command
-
-
-class FrameworkDoor:
-	"""Unchecked views and commands, for the framework's own helpers (the effects, the stores) acting for a mod after
-	checking the mod's request themselves. Mod code does not use it."""
-
-	def __init__(self, assembly: Any):
-		self._assembly = assembly
-
-	def view(self, name: str) -> Any:
-		return self._assembly.views[name]
-
-	def send(self, command: Any) -> Any:
-		return self._assembly.handlers[type(command)](command)
 
 
 class ModAccess:
@@ -49,7 +45,6 @@ class ModAccess:
 		self.mod_id = mod_id
 		self.reads = reads
 		self.sends = sends
-		self.framework = FrameworkDoor(assembly)
 
 	def view(self, name: str) -> Any:
 		"""The published view `name`, if the mod declared it: call it, or index a keyed one."""
@@ -62,16 +57,11 @@ class ModAccess:
 		kind = type(command)
 		if kind not in self.sends:
 			raise UndeclaredSend(self.mod_id, kind.__name__)
-		return self.framework.send(command)
+		return self._assembly.handlers[kind](command)
 
 	def memory(self) -> dict:
 		"""The mod's own JSON dict inside the saved game."""
 		return self._assembly.mod_memory().setdefault("mod_state", {}).setdefault(self.mod_id, {})
-
-
-def door_of(game: Any) -> Any:
-	"""The object the framework's helpers act through: a mod's access gives its framework door, a game itself."""
-	return game.framework if isinstance(game, ModAccess) else game
 
 
 @dataclass(frozen=True)

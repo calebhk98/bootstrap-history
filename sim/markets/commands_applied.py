@@ -26,6 +26,10 @@ class Applying:
 	def note_actor_purchase(self, command):
 		self.economy.note_actor_purchase(command.buyer_id, command.commodity, command.tonnes, command.budget)
 
+	def move_goods(self, command):
+		move = economy_api.GoodsMove(command.giver, command.receiver, command.good, command.tile, command.quantity, command.purpose)
+		economy_api.move_goods(self.economy.agent.economy(), [move])
+
 	def open_market_book_command(self, command):
 		self.open_market_book()
 

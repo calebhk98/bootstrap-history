@@ -51,6 +51,18 @@ class NoteActorPurchase(Command):
 
 
 @dataclass(frozen=True)
+class MoveGoods(Command):
+	"""`quantity` of `good` at `tile` moves in the economy's book from the account or edge `giver` to `receiver`, for `purpose`.
+	A giver that holds less is refused by the book."""
+	giver: str
+	receiver: str
+	good: str
+	tile: str
+	quantity: float
+	purpose: str
+
+
+@dataclass(frozen=True)
 class OpenMarketBook(Command):
 	"""Every commodity the price table names gets its book entry, at the society's present output."""
 

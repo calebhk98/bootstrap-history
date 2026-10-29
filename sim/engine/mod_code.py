@@ -10,7 +10,9 @@ This is NOT a sandbox. Python in this process has the player's full permissions 
 in-process restriction of CPython holds against a hostile author. The consent file is the protection: allow code only
 from an author you trust. A real boundary needs a subprocess or WASM host with an allowlisted message API.
 """
+import functools
 import hashlib
+import inspect
 import json
 import os
 import random
@@ -18,7 +20,8 @@ import sys
 import types
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from sim.assembly.api import ModAccess, NeedsAccess, Operations
+from sim.agents.api import narrowed
+from sim.assembly.api import ModAccess, NeedsAccess, Operations, UndeclaredWorldMember
 from sim.interface.api import CODE, CommandDeclaration, FigureDeclaration
 from sim.stores.api import ModStore, StoreSpec, WriteStore, check_spec
 
@@ -90,6 +93,33 @@ def code_report(mods_dir: str) -> List[str]:
     return lines
 
 
+def narrow_actor_class(actor_class: type, mod_id: str) -> type:
+    """The mod's actor class, its methods taking a `world` now handed the world narrowed to what actors ask. The mod's own classes
+    in the hierarchy are changed in place (once); the shipped classes it extends are not."""
+    for each in actor_class.__mro__:
+        if not each.__module__.startswith("sim_mod.%s." % mod_id) or "narrowed_by_mod" in vars(each):
+            continue
+        for name, member in list(vars(each).items()):
+            if inspect.isfunction(member) and "world" in inspect.signature(member).parameters:
+                setattr(each, name, narrowing_world(member, mod_id))
+        each.narrowed_by_mod = mod_id
+    return actor_class
+
+
+def narrowing_world(method: Callable, mod_id: str) -> Callable:
+    signature = inspect.signature(method)
+
+    @functools.wraps(method)
+    def narrowed_method(*arguments: Any, **keywords: Any) -> Any:
+        bound = signature.bind(*arguments, **keywords)
+        bound.arguments["world"] = narrowed(bound.arguments["world"], lambda member: UndeclaredWorldMember(mod_id, member))
+        return method(*bound.args, **bound.kwargs)
+    return narrowed_method
+
+
+TYPED_POINTS = {"actor_kinds": "actor_kind", "actor_spawners": "spawner", "player_commands": "player_command"}
+
+
 class ModCodeApi:
     """What a mod's `register(api)` may call. Every name it creates is `<mod_id>:<name>`."""
 
@@ -131,7 +161,8 @@ class ModCodeApi:
         self.operations.layers[module_id] = self.operations.layers.get(module_id, ()) + (layer,)
 
     def adjust_view(self, view: str, function: Callable, reads: Any = ()) -> None:
-        """`function(needs, value, *key_or_arguments) -> value` over a published view; `needs` holds `reads`."""
+        """`function(access, value, *key_or_arguments) -> value` over a published view; `access.view(name)` answers the views in
+        `reads` and refuses any other, naming this mod; an adjuster sends nothing."""
         entry = (function, tuple(reads))
         self.operations.adjusters[view] = self.operations.adjusters.get(view, ()) + (entry,)
 
@@ -140,7 +171,13 @@ class ModCodeApi:
         self.operations.withdrawn = self.operations.withdrawn + (provision,)
 
     def provide(self, point: str, function: Callable) -> None:
-        """Add an answer to a module's extension point."""
+        """Add an answer to a module's extension point. The points whose answers are called with the actors module's own objects
+        (kinds, spawners, player commands) are provided to only through `actor_kind`, `spawner` and `player_command`."""
+        if point in TYPED_POINTS:
+            raise ModError("mod %s provides to %s directly; use api.%s, which hands its code the mod's access" % (self.mod_id, point, TYPED_POINTS[point]))
+        self.record_answer(point, function)
+
+    def record_answer(self, point: str, function: Callable) -> None:
         self.operations.provided[point] = self.operations.provided.get(point, ()) + (function,)
 
     def kernel(self, name: str, function: Callable) -> None:
@@ -164,7 +201,7 @@ class ModCodeApi:
         def decorate(handler: Callable) -> Callable:
             declaration = CommandDeclaration(self.mod_id, self.qualified(name), CODE,
                                              dict(fields, aliases=list(fields.get("aliases", ()))), self.with_access(handler))
-            self.provide("interface_commands", lambda: [declaration])
+            self.record_answer("interface_commands", lambda: [declaration])
             return handler
         return decorate
 
@@ -174,36 +211,38 @@ class ModCodeApi:
         def decorate(compute: Callable) -> Callable:
             declaration = FigureDeclaration(self.mod_id, self.qualified(name), label, unit, digits, self.with_access(compute),
                                             None if since is None else self.with_access(since))
-            self.provide("interface_figures", lambda: [declaration])
+            self.record_answer("interface_figures", lambda: [declaration])
             return compute
         return decorate
 
     def actor_kind(self, kind: str, actor_class: Any) -> None:
-        """A new kind of actor: records of the kind build `actor_class` objects (the actors module's `actor_kinds` point)."""
-        answer = {self.qualified(kind): actor_class}
-        self.provide("actor_kinds", lambda: answer)
+        """A new kind of actor: records of the kind build `actor_class` objects (the actors module's `actor_kinds` point). The class
+        runs inside the agents package, so its methods are handed the `world` narrowed to the members actors ask
+        (sim/agents/protocols.py); any other is refused naming this mod."""
+        answer = {self.qualified(kind): narrow_actor_class(actor_class, self.mod_id)}
+        self.record_answer("actor_kinds", lambda: answer)
 
     def policy(self, kind: str, factory: Callable) -> None:
         """A policy nameable from a save file: `factory()` makes it (the actors module's `actor_policies` point)."""
         answer = {self.qualified(kind): factory}
-        self.provide("actor_policies", lambda: answer)
+        self.record_answer("actor_policies", lambda: answer)
 
     def spawner(self, name: str, function: Callable) -> None:
-        """A rule run every year after the actors' turns: `function(registry, world) -> ids of the actors it founded`."""
-        answer = [(self.qualified(name), function)]
-        self.provide("actor_spawners", lambda: answer)
+        """A rule run every year after the actors' turns: `function(access)`, with the mod's access (it founds an actor by sending
+        `AddActor`, declared with `api.sends`)."""
+        self.record_answer("actor_spawners", NeedsAccess(lambda access: [(self.qualified(name), lambda registry, world: function(access))]))
 
     def player_command(self, name: str, handler: Callable) -> None:
-        """An order a player actor can queue as `{"command": name, ...}`: `handler(player, order, world) -> detail text`,
-        refusing by raising `CommandRejected` (the actors module's `player_commands` point)."""
-        answer = {self.qualified(name): handler}
-        self.provide("player_commands", lambda: answer)
+        """An order a player actor can queue as `{"command": name, ...}`: `handler(access, actor_id, order) -> detail text`, with the
+        mod's access and the id of the player actor, refusing by raising `CommandRejected` (the actors module's `player_commands`
+        point)."""
+        self.record_answer("player_commands", NeedsAccess(lambda access: {self.qualified(name): lambda player, order, world: handler(access, player.actor_id, order)}))
 
     def director_overhead(self, function: Callable) -> Callable:
         """Charge `function(access) -> hours` against the directed-hours pool (management layers, say). The hours count as
         committed, so every free-hours check sees them; a negative answer counts as zero (the workforce module's
         `director_overhead` point)."""
-        self.provide("director_overhead", NeedsAccess(function))
+        self.record_answer("director_overhead", NeedsAccess(function))
         return function
 
     def phase(self, name: str, scope: str, handler: Callable, after: Any = (), before: Any = ()) -> None:
@@ -228,7 +267,7 @@ class ModCodeApi:
         `stores.<mod_id>:<name>.<key>`, and `map` shows a tile store as a layer. A name is declared once across mods."""
         spec = StoreSpec(self.qualified(name), self.mod_id, keyed_by, default, unit)
         check_spec(spec, "mod %s" % self.mod_id)
-        self.provide("store_declarations", lambda: [spec])
+        self.record_answer("store_declarations", lambda: [spec])
         self.reads("store")
         self.sends(WriteStore)
         return ModStore(spec, self.mod_id)
@@ -240,29 +279,41 @@ class ModCodeApi:
     @property
     def effects(self) -> Any:
         """The supported ways to change the world (sim/engine/mod_effects.py): `pay`, `pay_edge`, `receive_from_edge`,
-        `add_goods`, `remove_goods`, `kill_people`, `move_people`, `transfer_tile`, `write_store`, `record_event`."""
+        `add_goods`, `remove_goods`, `kill_people`, `move_people`, `transfer_tile`, `write_store`, `record_event`. Each is called
+        with the mod's access and sends the owner's command, so the mod declares it (`uses_effects`, or `reads` and `sends`)."""
         from .mod_effects import ModEffects
         return ModEffects(self.mod_id)
+
+    def uses_effects(self, *names: str) -> None:
+        """Declare the views and commands the named `effects` operations use (`EFFECT_NEEDS` in sim/engine/mod_effects.py)."""
+        from .mod_effects import EFFECT_NEEDS
+        unknown = [name for name in names if name not in EFFECT_NEEDS]
+        if unknown:
+            raise ModError("mod %s uses effects %s, which are not among %s" % (self.mod_id, ", ".join(unknown), ", ".join(sorted(EFFECT_NEEDS))))
+        for name in names:
+            views, commands = EFFECT_NEEDS[name]
+            self.reads(*views)
+            self.sends(*commands)
 
     def town_provider(self, name: str, function: Callable, mortality_premium: Optional[Callable] = None) -> None:
         """Say how many people live in a tile's town: `function(access, tile, nominal_people) -> people or None`. The
         optional `mortality_premium(access, tile, town_people) -> share of the baseline death rate or None` is the
         town's excess mortality, which reaches `Population.step`."""
-        self.provide("town_population", NeedsAccess(function))
+        self.record_answer("town_population", NeedsAccess(function))
         if mortality_premium is not None:
-            self.provide("town_mortality_premium", NeedsAccess(mortality_premium))
+            self.record_answer("town_mortality_premium", NeedsAccess(mortality_premium))
 
     def externality(self, provider: Callable) -> None:
         """Feed harm into the year: `(access, year) -> {"deaths_by_band": {...}, "yield_factor_by_tile": {...}}` (either key
         optional). The deaths join the year's epidemic deaths; the factors multiply the yield of land-bound producers on a tile
         (the demography module's `externality` point)."""
-        self.provide("externality", NeedsAccess(provider))
+        self.record_answer("externality", NeedsAccess(provider))
 
     def wealth_claims(self, owed: Callable, seize: Callable) -> None:
         """Register claims on other actors that a state's confiscation counts: `owed(access) -> amount` is what the acting
         household could be made to pay from them, `seize(access, amount, taker) -> amount taken` takes it for the `taker`
         (the polity module's `wealth_claims` point)."""
-        self.provide("wealth_claims", NeedsAccess(lambda access: (lambda: owed(access), lambda amount, taker: seize(access, amount, taker))))
+        self.record_answer("wealth_claims", NeedsAccess(lambda access: (lambda: owed(access), lambda amount, taker: seize(access, amount, taker))))
 
     @staticmethod
     def rng(world: Any, *parts: Any) -> random.Random:

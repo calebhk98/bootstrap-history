@@ -653,3 +653,13 @@ class World(Protocol):
 	def country_strata(self) -> List[Any]:
 		"""The home country's bodies of people, in id order."""
 		...
+
+	# ---- Members a few actors reach for beyond the lists above (a foreign country's world answers its own)
+
+	def pay_wages(self, payer: Any, amount: float, purpose: Any) -> None:
+		"""Wages the home country's people are paid: they reach the strata's purses."""
+		...
+
+	def faction_backing(self) -> Dict[str, float]:
+		"""The weight each organised group can put behind a claimant to the throne, by group id."""
+		...
