@@ -25,7 +25,7 @@ def _same_seat(seat_id):
 def defaults(seed: int) -> Dict[str, Any]:
 	return {
 		"year": 100, "civilisation": {"id": "rome", "hazards": []}, "events_enabled": True,
-		"legacy_dice": random.Random(seed), "legacy_act_as": _same_seat, "legacy_said_once": set(),
+		"game_random": random.Random(seed), "acting_as": _same_seat, "legacy_said_once": set(),
 		"money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),
 		"effective_hazard": lambda hazard: (hazard, {"failed": [], "checked": False, "conditions": [], "strength": 1.0}),
 		"seat_list": {"joined": ["founder"], "playing": ["founder"]}, "ended_seats": [],

@@ -28,7 +28,7 @@ class StubGame:
 	def __init__(self, holds_instrument):
 		done = {INSTRUMENT} if holds_instrument else set()
 		self.module = projects_host.build(
-			tree=NODES, legacy_projects=SimpleNamespace(done=done), legacy_dice=random.Random(1),
+			tree=NODES, legacy_projects=SimpleNamespace(done=done), game_random=random.Random(1),
 			mechanic=lambda name: {node_id: node["mechanics"][name] for node_id, node in NODES.items()
 			                       if name in (node.get("mechanics") or {})})
 		self.done = done
@@ -40,7 +40,7 @@ class StubGame:
 		return self.module._note_failure(node_id)
 
 	def with_dice(self, dice):
-		self.module.needs.legacy_dice = lambda: dice
+		self.module.needs.game_random = lambda: dice
 		return self
 
 

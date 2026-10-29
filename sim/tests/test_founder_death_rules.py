@@ -36,7 +36,7 @@ class Game:
                                   "forget_fraction_divisor": 4, "years_until_end": UNTIL_END},
             "running_mechanics": lambda name: ["the_mechanic"] if extended else [], "patronage": patronage,
             "legacy_projects": self.projects, "losable_node_ids": lambda keep_dispersed: list(losable),
-            "legacy_dice": random.Random(1), "techniques_held": set(), "techniques_granted": set(),
+            "game_random": random.Random(1), "techniques_held": set(), "techniques_granted": set(),
             "corpus_dispersed": lambda node_id: False})
         self.state = SimpleNamespace(founder=self.slot, projects=self.projects)
 

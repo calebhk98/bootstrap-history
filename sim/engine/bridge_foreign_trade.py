@@ -2,7 +2,7 @@
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine as the old mixin code did, and
 is never cached."""
-from sim.assembly.api import KEYED, QUOTE
+from sim.assembly.api import KEYED
 
 from . import foreign_economy_data, partner_demand
 from .bridge import bridge_view
@@ -24,16 +24,3 @@ def partner_own_economy(sim, civilization_id):
     return {"solved_materials": partner_demand.foreign_solved_materials(civilization_id),
             "prices_in_own_coin": partner_demand.foreign_prices_in_own_coin(civilization_id),
             "money_per_labour_hour": starting_schedule(civilization_id).money_per_labour_hour}
-
-
-# ---- the map ----
-
-
-# ---- knowledge and the cast ----
-
-@bridge_view("partner_reached", kind=QUOTE)
-def partner_reached(sim, civilization_id):
-    """Whether trade with a partner can begin: no action returns it, or the acting seat holds the one that does."""
-    return sim.view("partner_gate_refusal")(civilization_id) is None
-
-

@@ -26,7 +26,7 @@ READS_BY_OWNER = {
 	"actors": ("cast", "state_treasury", "actor_world", "lender_offers_made", "cash_and_deposit", "loans_out", "debt_owed"),
 	"seats": ("dealing_party",),
 	"ledger": ("acting_balance",),
-	"mechanics": ("effect_sum", "effect_values", "nodes_with_mechanic"),
+	"mechanics": ("effect_sum", "effect_values", "mechanic"),
 	"polity": ("standing",),
 	"resources": ("forest_hectares", "mine_operating_cost"),
 	"workforce": ("staff", "money_per_labour_hour", "labour_market", "wage_bill", "household_dependant_people",

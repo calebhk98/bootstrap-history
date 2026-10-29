@@ -26,7 +26,7 @@ def seats_over(registry, acting="founder", civilisation=None, answers=None, **vi
         views=dict({"legacy_seats": registry, "civilisation": civilisation or {"id": "home"}, "tree_nodes": TREE, "price_index": 2.0,
                     "kit_capital": lambda kit: {"poor": 10.0}[kit],
                     "founder_life_terms": {"immortal": False, "minimum": 5, "mean": 40.0, "spread": 0.0},
-                    "legacy_dice": random.Random(3)}, **views))
+                    "game_random": random.Random(3)}, **views))
     module.clock.act_as(acting)
     return module
 
@@ -76,7 +76,7 @@ class Joining(unittest.TestCase):
     def test_an_immortal_run_gives_a_founder_no_end_and_draws_nothing(self):
         dice = random.Random(3)
         module = seats_over({"founder": seat()}, founder_life_terms={"immortal": True, "minimum": 5, "mean": 40.0, "spread": 9.0},
-                            legacy_dice=dice)
+                            game_random=dice)
         module.join_seat(JoinSeat("second", {}))
         self.assertEqual(module_harness.sent(module)[0].founder_years, 1e9)
         self.assertEqual(dice.getstate(), random.Random(3).getstate())
@@ -104,7 +104,7 @@ class Joining(unittest.TestCase):
     def test_a_country_seat_still_draws_its_founders_lifespan(self):
         registry = SimpleNamespace(state=SimpleNamespace(countries={"home": 1}), government_of=lambda name: "gov")
         dice = random.Random(3)
-        module = seats_over({"founder": seat()}, seeded_actor_registry=registry, legacy_dice=dice)
+        module = seats_over({"founder": seat()}, seeded_actor_registry=registry, game_random=dice)
         module.join_seat(JoinSeat("realm", {"kind": "country"}))
         fresh = random.Random(3)
         fresh.gauss(40.0, 0.0)

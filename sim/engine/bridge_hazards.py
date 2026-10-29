@@ -14,12 +14,6 @@ from .data import closure, critical_path
 
 # ---- core: the engine's own switches and raw state ----------------------------------------------------------------
 
-@bridge_view("legacy_act_as", kind=QUOTE)
-def legacy_act_as(sim, seat_id):
-    """The context in which `seat_id` is the acting seat (the engine's `act_as`); the module has no way to switch seats."""
-    return sim.act_as(seat_id)
-
-
 @bridge_view("effective_hazard", kind=QUOTE)
 def effective_hazard(sim, hazard):
     """(the dated event as its stated causes leave it now, or None; the report of which causes hold)."""

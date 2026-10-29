@@ -53,7 +53,7 @@ class PatronDeath:
 
     def __init__(self):
         self.module = hazards_host.build(
-            legacy_dice=Rolls(), running_mechanics=lambda name: [("a patron", {})],
+            game_random=Rolls(), running_mechanics=lambda name: [("a patron", {})],
             founder={"alive": True, "life_left": 30.0, "dead_reason": None, "policy": {"auto_court_heir": False}},
             standing={"protection": 0.9, "scandal": 10.0, "bribes_year_to_date": 0.0})
         self.module.random_events_for_seat(100)

@@ -14,12 +14,12 @@ from .payments import BOOKS
 from .state import ForeignTradeWorld
 
 READS_BY_OWNER = {
-    "knowledge": ("civilisation", "year", "techniques_held", "partner_reached", "civilisation_record"),
+    "knowledge": ("civilisation", "year", "techniques_held", "civilisation_record"),
     "seats": ("acting_seat",),
     "prices": ("material_prices", "home_unit_price", "household_prices", "partner_own_economy"),
     "materials": ("material_commodity", "commodity_record", "national_output", "partner_household_demand"),
     "markets": ("market_floor_ratio",),
-    "land": ("legacy_world_map", "tracked_materials", "mineral_share_of_tiles"),
+    "land": ("legacy_world_map", "tracked_materials", "mineral_share_of_tiles", "partner_gate_refusal"),
     "freight": ("foreign_route", "route_freight_per_tonne", "carrier_models", "material_route", "trader_cost_share",
                 "trader_agent_cost", "cargo_lost_share"),
     "coin": ("home_coin_stock", "coin_carriage_units", "partner_coin_opening", "partner_price_level"),

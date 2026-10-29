@@ -21,7 +21,8 @@ class Staffing:
 		needs = self.needs
 		planned = self.concerns_to_close_for_staffing()
 		shortfalls = self._staffing_shortfalls(self.staffing_held_totals()) if planned else {}
-		earnings_stopped = round(needs.concern_rows_stopped(planned), 1)
+		concern_rows = needs.concern_market()
+		earnings_stopped = round(sum(concern_rows.get(node_id, 0.0) for node_id in planned), 1)
 		closed = [closure.entry_key for closure in self.review_ventures((business_review.STAFF_SHORT,), year)]
 		if closed:
 			self.record_staffing_closures(len(closed), shortfalls)

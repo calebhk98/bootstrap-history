@@ -119,7 +119,7 @@ class Game:
             seed_cast(self.actors, home, entries, profiles)
         self.trade = module_harness.build(StubbedPartners, views={
             "foreign_economy_records": [{"civilization": PARTNER, "enabled": True, "from_year": -1000, "until_year": 3000}],
-            "year": 100, "civilisation": {"id": HOME}, "civilisation_record": load_civ, "partner_reached": lambda civ: True,
+            "year": 100, "civilisation": {"id": HOME}, "civilisation_record": load_civ, "partner_gate_refusal": lambda civ: None,
             "cast": self.actors,
             "acting_seat": lambda: self.goods_market.acting_party_id,
             "trader_agent_cost": lambda civilization_id, route: 5.0,

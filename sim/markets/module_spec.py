@@ -23,7 +23,7 @@ from .state import MarketsWorld
 READS_BY_OWNER = {
 	"core": ("year", "civilisation", "game_config", "legacy_tree", "output_factor", "opening_farmed_hectares", "installed_mod_ids",
 	         "household_need_data",
-	         "price_index", "legacy_act_as"),
+	         "price_index", "acting_as"),
 	"seats": ("seat_list",),
 	"demography": ("population", "population_total", "pop_scale", "default_population", "farm_holdings"),
 	"actors": ("concern_versions", "concern_counts"),

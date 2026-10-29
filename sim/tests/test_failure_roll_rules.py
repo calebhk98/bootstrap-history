@@ -25,8 +25,8 @@ class RecordingRandom:
 def RollSim(draw, risk_by_attempt):
     """A project whose roll fails: the module records the risk `_fail_attempt` is given."""
     projects = SimpleNamespace(failed_attempts={NODE_ID: 0})
-    module = projects_host.build(tree={NODE_ID: {}}, legacy_projects=projects, legacy_dice=RecordingRandom(draw))
-    module.dice = module.needs.legacy_dice()
+    module = projects_host.build(tree={NODE_ID: {}}, legacy_projects=projects, game_random=RecordingRandom(draw))
+    module.dice = module.needs.game_random()
     module.rolled_against = []
     module.effective_risk = lambda node_id, precaution=None: risk_by_attempt[projects.failed_attempts[node_id]]
     module._fail_attempt = lambda node_id, risk_this_attempt: module.rolled_against.append(risk_this_attempt)

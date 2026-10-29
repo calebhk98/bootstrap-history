@@ -7,7 +7,7 @@ exports lift the price abroad. Prices of both sides are compared in home money: 
 coin's metal at the home price of that metal.
 
 (needs: foreign_economy_records, civilisation, civilisation_record, partner_own_economy, year, acting_seat, techniques_held,
-material_prices, home_unit_price, household_prices, material_commodity, commodity_record, partner_reached,
+material_prices, home_unit_price, household_prices, material_commodity, commodity_record, partner_gate_refusal,
 cast, foreign_route, route_freight_per_tonne)"""
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
@@ -67,7 +67,7 @@ class Economies:
     def partner_gate(self, civilization_id: str) -> Optional[Refusal]:
         """Why trade with a partner some action returns cannot begin yet, else None. A partner no action returns is open from
         the start."""
-        if self.needs.partner_reached(civilization_id):
+        if self.needs.partner_gate_refusal(civilization_id) is None:
             return None
         return Refusal("partner_not_reached", "you have not yet reached %s" % civilization_id)
 

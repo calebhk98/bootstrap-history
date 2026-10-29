@@ -24,7 +24,6 @@ def declared_actor_kinds(sim):
     return declared_kinds(bridge_land.MODS_DIR)
 
 
-
 @bridge_view("opening_cast")
 def opening_cast(sim):
     """(home country, entries, profiles): the civilisation played, and every economy trading with it."""
@@ -57,8 +56,6 @@ def shared_answers(sim, table):
 # ---- production: concerns, their takings and the industry's experience ----
 
 
-
-
 # ---- markets: goods categories, the agent economy's book and the orders the actors place ----
 
 
@@ -84,16 +81,6 @@ def farm_food_demand_kg(sim):
     technique = sim._farm_technique_this_year
     return (demography_rules.adult_equivalents(sim.view("population")())
             * sim._agriculture.annual_food_demand_kg_per_person(technique.crop))
-
-
-@bridge_view("state_military_diffusion")
-def state_military_diffusion(sim):
-    return sim.view("diffusion_index")["military"]
-
-
-@bridge_view("nodes_with_mechanic", kind=QUOTE)
-def nodes_with_mechanic(sim, mechanic):
-    return tuple(sim.view("mechanic")[mechanic])
 
 
 # ---- foreign trade ----

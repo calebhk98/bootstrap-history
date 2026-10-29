@@ -46,7 +46,7 @@ class _SackGame(FactViews):
                                               answers={RefreshDoneCaches: lambda command: self._done_changed()},
                                               seat=KnowledgeSeat())
         self.module = hazards_host.build(
-            legacy_dice=_FrontOfTheListRNG(),
+            game_random=_FrontOfTheListRNG(),
             corpus_hedge=lambda: knowledge_rules.corpus_hedge(tiers, self._held, CORPUS_HEDGE_LOSS_CHANCE_NONE,
                                                               CORPUS_HEDGE_FRACTION_LOST_NONE),
             corpus_nodes=["corpus_dispersed"], mechanic=lambda name: {"corpus_dispersed": {}, "corpus_written": {}},
