@@ -11,7 +11,7 @@ ROOTS = {
     "operating": ("operating", None), "mothballed": ("mothballed", None), "bountied": ("bountied", None),
     "bounties_paid": ("bounties_paid", None), "failed_attempts": ("failed_attempts", None),
     "paid_towards": ("paid_towards", None), "shut_for_staff": ("shut_for_staff", None),
-    "fog": ("legacy_fog", None), "fuzzy_estimates": ("legacy_fuzzy_estimates", None),
+    "fog": ("fog_of_war", None), "fuzzy_estimates": ("legacy_fuzzy_estimates", None),
     "goal": ("goal", "node"), "goal_year": ("goal", "year"), "policy": ("founder", "policy"),
     "dead_reason": ("founder", "dead_reason"), "founder_alive": ("founder", "alive"), "life_left": ("founder", "life_left"),
     "reputation": ("standing", "reputation"), "scandal": ("standing", "scandal"), "protection": ("standing", "protection"),

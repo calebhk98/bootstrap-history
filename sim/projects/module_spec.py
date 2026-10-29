@@ -53,7 +53,7 @@ READS_BY_OWNER = {
 	"actors": ("actor_world",),
 	"land": ("built_way_km", "material_cost_factor"),
 	"prices": ("price_index",),
-	"core": ("society_name", "year", "horizon_end_year", "project_limits", "game_config", "game_random", "legacy_fog",
+	"core": ("society_name", "year", "horizon_end_year", "project_limits", "game_config", "game_random", "fog_of_war",
 	         "plain_number"),
 }
 

@@ -1,5 +1,5 @@
 """Diffusion's module spec (sim/assembly)."""
-from sim.actors.api import GrantLicence
+from sim.actors.api import GrantLicence, SchoolLiteracy, TeachLiteracy
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.polity.api import GainReputation, ShiftValueWeight
 from sim.reporting.api import RecordEvent
@@ -45,10 +45,10 @@ MODULE_SPECS = (ModuleSpec(
     applies=((AdvanceSociety, "advance_society"), (ApplyTechEffects, "apply_tech_effects"), (Disclose, "disclose"),
              (NoteFirstRuns, "note_first_runs"), (RekeyDisclosures, "rekey_disclosures")),
     reads=("year", "tree", "tree_nodes", "civilisation", "techniques_held", "techniques_granted", "done_year", "operating",
-           "running", "staff", "venture_opened_year", "techniques_in_use", "legacy_country_literacy", "literacy_references",
+           "running", "staff", "venture_opened_year", "techniques_in_use", "country_literacy_figure", "country_literacy_ceiling", "literacy_after_schooling", "literacy_references",
            "literacy_capacity", "farm_share_of_hours", "trade_spread", "effect_terms", "effect_values",
            "corpus_diffusion_pace", "school_node", "tech_effects", "coverage", "disease_burden", "disease_burden_held",
            "disease_burden_weights", "diffusion_traits", "seat_holders", "built_by_any_seat", "earliest_done_year",
            "state_knowledge", "state_reach", "stock_holds_met", "reputation_gain_of", "seat_list", "cast"),
-    sends=(RecordEvent, ShiftValueWeight, GainReputation, NoteTradeSpread, SetEmployed, GrantLicence),
+    sends=(RecordEvent, ShiftValueWeight, GainReputation, NoteTradeSpread, SetEmployed, GrantLicence, SchoolLiteracy, TeachLiteracy),
 ),)

@@ -40,7 +40,7 @@ class Events:
 
 	def say_once(self, command: Any) -> bool:
 		"""Whether this is the first time `command.key` is sent; it is marked as told."""
-		told = self.needs.legacy_said_once()
+		told = self.world.said_condition
 		if command.key in told:
 			return False
 		told.add(command.key)

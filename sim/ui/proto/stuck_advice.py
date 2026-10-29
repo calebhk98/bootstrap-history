@@ -32,7 +32,7 @@ def calendar_bound_advice(sim, nodes):
     running = sum(len(ids) for ids in kinds.values())
     if not running:
         return None
-    if sim.view("legacy_fog")():
+    if sim.view("fog_of_war")():
         if len(kinds.get("calendar", ())) != running:
             return None
         return {"every_goal_project_calendar_bound": None,
@@ -60,7 +60,7 @@ def filler_note(sim, cheapest_id, nodes):
 
     Silent under fog (the route is hidden) and for a start that is on the remaining route.
     """
-    if cheapest_id is None or sim.view("legacy_fog")() or sim.view("goal")()["node"] not in nodes:
+    if cheapest_id is None or sim.view("fog_of_war")() or sim.view("goal")()["node"] not in nodes:
         return None
     if cheapest_id in closure(nodes, sim.view("goal")()["node"]) - sim.view("techniques_held")():
         return None

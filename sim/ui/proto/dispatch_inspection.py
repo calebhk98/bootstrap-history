@@ -133,7 +133,7 @@ def _cmd_why(sim, nodes, cmd, ended):
                 % (node_id, ", ".join(_did_you_mean(node_id, nodes, sim=sim))
                    or ("no idea, and under fog of war I can only suggest "
                        "things you have heard of"
-                       if sim.view("legacy_fog")()
+                       if sim.view("fog_of_war")()
                        else "no idea - nothing in the tree is spelled much "
                             "like that"))}
     explained = _node_explain(sim, nodes, node_id)
@@ -148,7 +148,7 @@ def _cmd_why(sim, nodes, cmd, ended):
     # The floor still ahead: finished nodes count nothing, active ones what
     # is left of them. critical_path_years stays the from-scratch floor.
     explained["critical_path_years_remaining"] = (
-        None if sim.view("legacy_fog")() else round(remaining_critical_path_years(
+        None if sim.view("fog_of_war")() else round(remaining_critical_path_years(
             nodes, node_id, sim.view("techniques_held")(), active_years_left(nodes, sim.view("active_projects")())), 1))
     notes = notes_for(sim, node_id)
     if notes:

@@ -90,7 +90,7 @@ class Completion:
 		goal = needs.goal()["node"]
 		if (before and node_id != goal and node_id in self.goal_closure_ids()
 		        and goal not in needs.techniques_held()):
-			lines.append(road_line(needs.legacy_fog(), after["road_done"], after["road_total"]))
+			lines.append(road_line(needs.fog_of_war(), after["road_done"], after["road_total"]))
 		return lines
 
 	def opening_shortfall(self, node_id):

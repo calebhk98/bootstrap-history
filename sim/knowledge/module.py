@@ -2,7 +2,7 @@
 
 What a seat holds (`done`, `granted`, `done_year`), has heard of (`revealed`) and has forgotten is the module's own seat state,
 changed only by its commands and published as plain data. The tree is the module's too (replaced by `ReplaceTree`, never saved: a game is rebuilt over the same data); the
-fog switch is still read through `legacy_fog` (docs/architecture/catalogue/knowledge.md)."""
+fog switch is the scenario's `fog_of_war`."""
 
 from typing import Any, Dict, FrozenSet, Optional, Tuple
 
@@ -115,7 +115,7 @@ class Knowledge(Module):
         `memo` is shared down one recursive descent (the start test asks visibility of each missing prerequisite, which
         asks the start test of its own): without it, one deep node costs a call per path to it. A fresh memo per
         outward-facing call keeps it exact; nothing is cached across commands."""
-        if not self.needs.legacy_fog():
+        if not self.needs.fog_of_war():
             return True
         if node_id in self.seat.done or node_id in self.needs.active_projects():
             return True
@@ -132,17 +132,17 @@ class Knowledge(Module):
 
     def visible_to_player(self, node_id):
         """Whether the player may be told about `node_id`: no fog, or a node of the tree that is visible."""
-        return not self.needs.legacy_fog() or (node_id in self.nodes and self.visibility(node_id, None))
+        return not self.needs.fog_of_war() or (node_id in self.nodes and self.visibility(node_id, None))
 
     def prerequisite_message(self, missing, memo):
         """The one sentence for not-yet-held prerequisites, with the hidden ones unnamed; None when none are missing."""
         return fog_words.missing_prereq_message(
             self.nodes, missing, lambda prereq_id: self.visibility(prereq_id, memo),
-            self.needs.legacy_fog(), self.seat.done)
+            self.needs.fog_of_war(), self.seat.done)
 
     def fog_scrub(self, text):
         """`text` with every node id the acting seat has not heard of replaced; unchanged without fog or text."""
-        if not text or not self.needs.legacy_fog():
+        if not text or not self.needs.fog_of_war():
             return text
         return fog_words.scrub_hidden_ids(text, self.nodes, lambda node_id: self.visibility(node_id, None))
 
@@ -204,7 +204,7 @@ class Knowledge(Module):
         self.bump_seat(HELD_CHANGES)
 
     def reveal_from(self, command: RevealFrom) -> None:
-        if not self.needs.legacy_fog():
+        if not self.needs.fog_of_war():
             return
         self.seat.revealed.update(rules.reveal_targets(self.nodes, command.node_id))
         self.bump_seat(REVEALED)

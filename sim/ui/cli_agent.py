@@ -97,7 +97,7 @@ def cmd_agent(args):
     # after the load, so a resumed game keeps its carried routes
     route_file = getattr(args, "known_routes", None)
     if route_file:
-        if not sim.view("legacy_fog")():
+        if not sim.view("fog_of_war")():
             sys.stderr.write(json.dumps({"known_routes": replay.fog_off_note()}) + "\n")
         else:
             applied = replay.apply_known_routes(sim, replay.read_known_routes(route_file), nodes)

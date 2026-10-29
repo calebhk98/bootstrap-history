@@ -25,7 +25,7 @@ def _same_seat(seat_id):
 def defaults(seed: int) -> Dict[str, Any]:
 	return {
 		"year": 100, "civilisation": {"id": "rome", "hazards": []}, "events_enabled": True,
-		"game_random": random.Random(seed), "act_as": _same_seat, "legacy_said_once": set(),
+		"game_random": random.Random(seed), "act_as": _same_seat,
 		"money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),
 		"seat_list": {"joined": ["founder"], "playing": ["founder"]}, "ended_seats": [],
 		"founder": {"alive": True, "life_left": 30.0, "dead_reason": None, "policy": {}}, "goal": None,
@@ -45,7 +45,7 @@ def defaults(seed: int) -> Dict[str, Any]:
 		"staff": {"scholars": 0.0, "artisans": 0.0, "employees": {}}, "staff_snapshot": {}, "wage_index": 1.0,
 		"money_per_labour_hour": 1.0, "acting_balance": 0.0, "money_real": 1.0, "event_log": [], "price_index": 1.0,
 		"partners_in_agent_economy": [], "weather_seed": lambda year, region=None: "seed", "country_strata": lambda country: [],
-		"visibility": lambda node_id, memo=None: True, "techniques_forgotten": {}, "legacy_fog": False, "capability_gaps": [],
+		"visibility": lambda node_id, memo=None: True, "techniques_forgotten": {}, "fog_of_war": False, "capability_gaps": [],
 		"epidemic_risk": {},
 	}
 

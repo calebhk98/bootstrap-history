@@ -17,10 +17,9 @@ MODULE_SPECS = (ModuleSpec(
 	"scenario", Scenario, channels=(YEAR,), world_state=ScenarioWorld,
 	publishes=(
 		ViewSpec("year", "year", channels=(YEAR,)),
-		ViewSpec("legacy_fog", "fog", **_LIVE),
+		ViewSpec("fog_of_war", "fog_of_war", **_LIVE),
 		ViewSpec("legacy_fuzzy_estimates", "fuzzy_estimates", **_LIVE),
 		ViewSpec("fuzzy_salt", "fuzzy_salt", **_LIVE),
-		ViewSpec("legacy_said_once", "said_once", **_LIVE),
 		ViewSpec("events_enabled", "events_enabled", **_LIVE),
 		ViewSpec("automation", "automation", **_LIVE),
 		ViewSpec("civilisation", "civilisation_of_game", **_LIVE),

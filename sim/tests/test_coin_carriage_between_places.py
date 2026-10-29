@@ -49,7 +49,7 @@ def world(home_place=None):
         "tile_haul_cost": lambda origin, destination: PER_TONNE})
     book = module_harness.build(Ledger, views={
         "transfer_surcharge": lambda *call: [coin.carriage_surcharge(*call)],
-        "legacy_edge_account": lambda name: Edge(name, balances)})
+        "cast_state": types.SimpleNamespace(edge=lambda name: Edge(name, balances))})
     return coin, book, balances
 
 

@@ -19,11 +19,11 @@ from .module import Hazards
 from .state import OUTPUT, WORLD_EVENTS, HazardsSeat, HazardsWorld
 
 READS_BY_OWNER = {
-	"core": ("year", "civilisation", "opening_civilisation", "events_enabled", "game_random", "legacy_said_once",
+	"core": ("year", "civilisation", "opening_civilisation", "events_enabled", "game_random",
 	         "money_text"),
 	"seats": ("seat_list", "ended_seats", "founder", "goal", "automation"),
 	"knowledge": ("techniques_held", "techniques_granted", "tree", "tree_nodes", "visible_to_player", "losable_node_ids",
-	              "tree_closure", "critical_path", "corpus_hedge", "visibility", "techniques_forgotten", "legacy_fog"),
+	              "tree_closure", "critical_path", "corpus_hedge", "visibility", "techniques_forgotten", "fog_of_war"),
 	"mechanics": ("hazard_counter_rows", "corpus_hedge_tiers", "corpus_nodes", "mechanic", "running_mechanics"),
 	"production": ("running", "capability_gaps"),
 	"disease": ("epidemic_risk",),

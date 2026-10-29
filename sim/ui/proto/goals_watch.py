@@ -24,7 +24,7 @@ def _catalog(sim):
 
 
 def _knowable(sim, node_id):
-    return not sim.view("legacy_fog")() or sim.view("visibility")(node_id)
+    return not sim.view("fog_of_war")() or sim.view("visibility")(node_id)
 
 
 def _progress(sim, node_id):
@@ -74,7 +74,7 @@ def goals_report(sim):
         else:
             unknown += 1
     return {"ok": True, "formal": formal, "watched": watched_rows(sim), "choices": choices,
-            "unknown_goals": unknown, "fog": bool(sim.view("legacy_fog")()),
+            "unknown_goals": unknown, "fog": bool(sim.view("fog_of_war")()),
             "note": "The formal goal is the one the score and the end text use. A watched goal is "
                     "tracked here only until the formal goal is reached; 'goals promote' then makes it the formal goal."}
 

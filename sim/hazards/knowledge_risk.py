@@ -1,7 +1,7 @@
 """The report on what the seat's finished work is at risk of losing: the sacks ahead, what each leaves, and what is already gone.
 
 Needs: year, civilisation, techniques_held, techniques_forgotten, corpus_hedge, losable_node_ids, visibility,
-capability_gaps, legacy_fog, epidemic_risk."""
+capability_gaps, fog_of_war, epidemic_risk."""
 from typing import Any, Dict
 
 from sim.workforce.api import wave_exposure
@@ -146,11 +146,11 @@ class KnowledgeRisk:
             # the hedge named here has to pass the same visibility test
             # `why` uses, or the two commands would contradict each other
             # about whether the player has heard of it.
-            "hedged_by": hedge if (not needs.legacy_fog()
+            "hedged_by": hedge if (not needs.fog_of_war()
                                    or needs.visibility(hedge or "", None)) else "nothing yet",
             "better_hedge_available": (
                 None if hedge == self.best_corpus_node() else
-                (self.best_corpus_node() if not needs.legacy_fog()
+                (self.best_corpus_node() if not needs.fog_of_war()
                  else "there is said to be a way to guard against this; "
                       "you have not found it yet")),
             "known_hazards_ahead": upcoming,

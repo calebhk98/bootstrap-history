@@ -32,10 +32,6 @@ class CountryViews:
 		government = self.cast().government_of(holder)  # type: ignore[attr-defined]
 		return country_rules.treasury_account(holder, self.needs.seat_list()["joined"], None if government is None else government.actor_id)
 
-	def legacy_country_literacy(self, country: Optional[str]) -> Any:
-		"""A live object over the country's strata records, written in place by the diffusion module's schools."""
-		return country_rules.country_literacy(self.seeded_actor_registry(), country)  # type: ignore[attr-defined]
-
 	def partner_catch_chance(self, civilization_id: str, share_of_holding: float) -> float:
 		return country_rules.partner_catch_chance(self.seeded_actor_registry(), self.actor_world(), civilization_id, share_of_holding)  # type: ignore[attr-defined]
 

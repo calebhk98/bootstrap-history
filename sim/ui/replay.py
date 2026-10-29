@@ -52,7 +52,7 @@ def record_end_of_run(sim, session):
 
 def apply_known_routes(sim, route_ids, node_ids):
     """Lift fog for the ids this game's tree has. Returns the ids applied (none when fog is off)."""
-    if not sim.view("legacy_fog")():
+    if not sim.view("fog_of_war")():
         return []
     applied = sorted(set(route_ids) & set(node_ids))
     sim.send(ui_port.RevealNodes(tuple(applied)))

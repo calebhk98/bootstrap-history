@@ -446,7 +446,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
             and cmd["cmd"].strip().lower() in name_commands(table)
             and cmd["id"] not in nodes):
         _name_cands = _resolve_by_name(cmd["id"])
-        if sim.view("legacy_fog")():
+        if sim.view("fog_of_war")():
             # ONLY WHAT THE PLAYER HAS ACTUALLY HEARD OF. Two nodes can share
             # a name where one is built and the other is still beyond the
             # fog; handing back the hidden one as a candidate to disambiguate
@@ -491,7 +491,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
     # Patching one command alone would leave the next command that grows
     # an id to make the same mistake, so the check lives here, once,
     # before any handler sees the id.
-    if sim.view("legacy_fog")() and isinstance(cmd.get("cmd"), str):
+    if sim.view("fog_of_war")() and isinstance(cmd.get("cmd"), str):
         _op = cmd["cmd"].strip().lower()
         _node_id = cmd.get("id")
         # THE SAME ANSWER WHETHER OR NOT IT EXISTS: refusing an unheard-of

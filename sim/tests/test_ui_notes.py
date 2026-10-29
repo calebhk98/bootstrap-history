@@ -17,7 +17,7 @@ VISIBLE_NAME = NODES[VISIBLE]["name"]
 
 
 def _game(fog=False, visible=()):
-    game = StandIn(tree_nodes=NODES, year=1301, legacy_fog=lambda: game.fog, acting_seat="first",
+    game = StandIn(tree_nodes=NODES, year=1301, fog_of_war=lambda: game.fog, acting_seat="first",
                    visibility=lambda node_id, memo=None: node_id in visible)
     game.year, game.fog = 1301, fog
     game.state = types.SimpleNamespace(interface={})

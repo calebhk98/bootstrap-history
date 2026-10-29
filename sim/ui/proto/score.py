@@ -343,7 +343,7 @@ def score_report(sim, nodes):
     the ending screen (final_report, below).
     """
     end_reason = _agent_end_reason(sim)
-    reveal_tree_total = (not sim.view("legacy_fog")()) or (end_reason is not None)
+    reveal_tree_total = (not sim.view("fog_of_war")()) or (end_reason is not None)
     components = _score_components(sim, nodes, reveal_tree_total)
     goal = sim.view("goal")()["node"]
     goal_reached = bool(goal and sim.view("goal")()["year"])

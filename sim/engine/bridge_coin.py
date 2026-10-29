@@ -2,6 +2,7 @@
 
 Each view answers through `Sim` as the old mixin methods did; when its owner moves it publishes the same name and the
 entry is deleted."""
+from sim.actors.api import HoldEdgeGoods
 from sim.demography.api import TakeFromGranary
 from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, DrawDownStock, TakeGoods
 
@@ -22,4 +23,4 @@ def take_goods(sim, command):
         sim.send(DrawDownStock(command.good, command.tonnes))
     elif command.store == STORE_GRANARY:
         sim.send(TakeFromGranary(command.tonnes * 1000.0))
-    sim.view("legacy_edge_account")[command.edge].receive_goods(command.good, command.tonnes)
+    sim.send(HoldEdgeGoods(command.edge, command.good, command.tonnes))

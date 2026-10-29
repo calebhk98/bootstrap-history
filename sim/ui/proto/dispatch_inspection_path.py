@@ -49,7 +49,7 @@ def route_money_warnings(startable_count, any_pays_its_way, combined_bill, can_r
          description="Everything still standing between here and there, and which "
                      "of those you could start today. Try it on your goal first.")
 def _cmd_path(sim, nodes, cmd, ended):
-    if sim.view("legacy_fog")():
+    if sim.view("fog_of_war")():
         # THE REASON HAS TO BE THE REAL ONE: the command is switched off
         # wholesale under fog, regardless of whether this particular node
         # is already done, and the error must say that rather than implying

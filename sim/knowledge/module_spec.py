@@ -1,7 +1,7 @@
 """The knowledge module's spec (sim/assembly).
 
 Its reads are views of owners that have not moved yet, published by the engine bridge under the name the owner will
-publish, except `legacy_fog`: the fog switch, state the module still shares with the engine. It goes when that state moves.
+publish.
 What a seat holds, has heard of and has forgotten is the module's own seat state, written only by its commands, so the views over it are cached on the channels those commands bump; the tree is replaced by
 `ReplaceTree` without a channel, so the views over it are uncached."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
@@ -16,7 +16,7 @@ READS_BY_OWNER = {
     "projects": ("start_check", "relied_on_running", "active_projects"),
     "mechanics": ("corpus_hedge_tiers", "corpus_dispersed"),
     "seats": ("on_road_to_goal", "seat_list"),
-    "core": ("legacy_fog",),
+    "core": ("fog_of_war",),
     "content": ("mods_directory",),
 }
 

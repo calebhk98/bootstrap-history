@@ -1,20 +1,20 @@
 """Literacy: how far it can reach, how fast the open schools close the gap, and what research makes of it.
 
-Needs: legacy_country_literacy, literacy_references, farm_share_of_hours, effect_terms, effect_values, running,
+Needs: country_literacy_figure, country_literacy_ceiling, literacy_after_schooling, send (SchoolLiteracy), literacy_references, farm_share_of_hours, effect_terms, effect_values, running,
 information diffusion (its own `diffusion_index`), school_node, done_year, year."""
 from typing import Dict, Optional
 
+from sim.actors.api import SchoolLiteracy
 from sim.reporting.api import RecordEvent
 
 from . import constants, literacy_rules, rules
 
-FIELDS = ("literacy_general", "literacy_elite")
 
 
 class Literacy:
 
     def literacy(self, field: str, country: Optional[str] = None) -> float:
-        return self.needs.legacy_country_literacy[country].get(field)
+        return self.needs.country_literacy_figure(country, field)
 
     def research_productivity(self, country: Optional[str] = None) -> float:
         """Research uses the same lettered population ratio as scholar hiring."""
@@ -31,7 +31,7 @@ class Literacy:
         elite = 1.0 - constants.UNABLE_TO_READ_SHARE
         if field == "literacy_elite":
             return elite
-        return self.needs.legacy_country_literacy[None].ceiling(self.literacy_ceiling("common"), elite)
+        return self.needs.country_literacy_ceiling(None, self.literacy_ceiling("common"), elite)
 
     def schooling_flow(self, field: Optional[str] = None) -> float:
         """0 if no school is open here at all; otherwise a small positive number that grows, with diminishing
@@ -60,15 +60,12 @@ class Literacy:
     def _school_literacy(self, preview: bool = False) -> Dict[str, float]:
         if self.effective_schooling_flow() <= 0.0:
             return {}
-        literacy = self.needs.legacy_country_literacy[None]
-        if preview:
-            literacy = literacy.copy()
-        before = {field: literacy.get(field) for field in FIELDS}
-        for field, ceiling, rate in (("literacy_elite", self.literacy_ceiling("literacy_elite"), constants.LITERACY_GROWTH_RATE_ELITE),
-                                     ("literacy_general", self.literacy_ceiling("common"), constants.LITERACY_GROWTH_RATE_GENERAL)):
-            # each figure moves with the schools that teach it
-            literacy.school(field, rate * self.effective_schooling_flow(field), ceiling)
-        return {field: literacy.get(field) for field, current in before.items() if abs(literacy.get(field) - current) > 1e-6}
+        # each figure moves with the schools that teach it
+        steps = tuple((field, rate * self.effective_schooling_flow(field), ceiling) for field, ceiling, rate in (
+            ("literacy_elite", self.literacy_ceiling("literacy_elite"), constants.LITERACY_GROWTH_RATE_ELITE),
+            ("literacy_general", self.literacy_ceiling("common"), constants.LITERACY_GROWTH_RATE_GENERAL)))
+        before, after = (self.needs.literacy_after_schooling(None, steps) if preview else self.needs.send(SchoolLiteracy(steps)))
+        return {field: after[field] for field, current in before.items() if abs(after[field] - current) > 1e-6}
 
     def advance_literacy(self, year: int) -> None:
         """Once a year: let running schools and academies close part of the gap between this society's literacy and

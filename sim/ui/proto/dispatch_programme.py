@@ -23,7 +23,7 @@ def _target(sim, raw):
     categories = {str(node.get("cat", "")).lower() for node in nodes.values()}
     if text and text not in nodes and text.lower() in categories:
         return {"kind": "category", "value": text.lower()}, None
-    if sim.view("legacy_fog")():
+    if sim.view("fog_of_war")():
         return None, FOG_REFUSAL + " A programme can follow a category instead: 'programme set <category>'."
     goal, error = resolve_goal(sim, text)
     return ({"kind": "goal", "value": goal}, None) if goal else (None, error)

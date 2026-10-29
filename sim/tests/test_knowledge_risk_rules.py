@@ -14,7 +14,7 @@ def risk_module(at_risk=300, fog=False, forgotten=None, done=(), hedge="corpus_w
         civilisation={"hazards": [{"name": "test sack", "years": [200, 210], "sack_chance": 0.3}] if sack_ahead else []},
         losable_node_ids=lambda keep_dispersed=True: ["node%d" % i for i in range(at_risk)],
         corpus_hedge=(0.5, 0.22, hedge), techniques_forgotten=forgotten or {}, techniques_held=set(done),
-        legacy_fog=fog, visibility=lambda node_id, memo=None: False, corpus_nodes=["corpus_dispersed"])
+        fog_of_war=fog, visibility=lambda node_id, memo=None: False, corpus_nodes=["corpus_dispersed"])
     module.hazard_figure = lambda kind, hazard, assume_running=(): hazard[kind]
     return module
 

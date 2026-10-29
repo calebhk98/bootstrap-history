@@ -9,7 +9,7 @@ from sim.scenario.module_spec import MODULE_SPECS
 from sim.scenario.state import ScenarioWorld
 from sim.tests import module_harness
 
-WORLD_FIELDS = ("year", "fog", "fuzzy_estimates", "fuzzy_salt", "said_condition")
+WORLD_FIELDS = ("year", "fog", "fuzzy_estimates", "fuzzy_salt")
 
 
 def module(**world_fields):

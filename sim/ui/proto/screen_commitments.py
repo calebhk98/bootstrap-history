@@ -6,7 +6,7 @@ from .screen_education import _fraction_of
 
 
 def _goal(sim):
-    if sim.view("legacy_fog")():
+    if sim.view("fog_of_war")():
         return {"id": None, "name": None, "reached": sim.view("goal")()["year"] is not None,
                 "year_reached": sim.view("goal")()["year"], "withheld": "the goal's name is fogged until you learn it"}
     if sim.view("goal")()["node"] not in sim.view("tree_nodes")():
@@ -39,7 +39,7 @@ def _institutions(sim):
         node = sim.view("tree_nodes")().get(node_id)
         if not node or node.get("kind") != "INSTITUTION":
             continue
-        if sim.view("legacy_fog")() and not sim.view("visibility")(node_id):
+        if sim.view("fog_of_war")() and not sim.view("visibility")(node_id):
             continue
         rows.append({"id": node_id, "name": node["name"],
                      "state": "open" if sim.view("running")[node_id] else "closed",

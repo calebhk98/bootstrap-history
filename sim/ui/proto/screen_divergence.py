@@ -53,7 +53,7 @@ def _dated_events(sim):
                 for cause in report["failed"]]
         if hazard.get("causes_not_modelled"):
             row["causes_not_modelled"] = list(hazard["causes_not_modelled"])
-        if not (sim.view("legacy_fog")() and status == _UPCOMING):
+        if not (sim.view("fog_of_war")() and status == _UPCOMING):
             row["name"] = hazard.get("name", "hazard")
         rows.append(row)
     return sorted(rows, key=lambda row: row["years"])

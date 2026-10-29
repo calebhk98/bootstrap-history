@@ -22,7 +22,7 @@ def _game(fog=False, visible=("steam", "radio", "formal"), goal="formal", goal_y
              "radio": {"name": "Radio", "pre": ["steam"]},
              "genes": {"name": "Genetics", "pre": ["base"]},
              "formal": {"name": "The formal goal", "pre": ["steam", "radio"]}}
-    game = StandIn(tree_nodes=nodes, goal=lambda: {"node": game.goal, "year": game.goal_year}, legacy_fog=lambda: game.fog,
+    game = StandIn(tree_nodes=nodes, goal=lambda: {"node": game.goal, "year": game.goal_year}, fog_of_war=lambda: game.fog,
                    techniques_held=lambda: game.done, visibility=lambda node_id, memo=None: game.is_visible(node_id))
     game.goal, game.goal_year, game.fog, game.done = goal, goal_year, fog, set(done)
     game.state = types.SimpleNamespace(interface={})

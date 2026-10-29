@@ -111,7 +111,7 @@ world (`world.py`, `world_*.py`, built over the module's reads) and the plain fu
 module's world slot; `SimulationState.actors` is a property over it for the callers that read the state directly.
 
 - Views: `cast` (the registry), `cast_state` (the saved records), `state_treasury` (seat), `seeded_actor_registry`,
-  `legacy_edge_account` (keyed), `actor_world` (a fresh world each read), `country_world` (keyed), `concern_counts` (keyed by
+  `country_literacy_figure`, `country_literacy_ceiling`, `literacy_after_schooling` (quotes), `actor_world` (a fresh world each read), `country_world` (keyed), `concern_counts` (keyed by
   category), `concern_versions`, `actor_staff` and `actor_staff_nationwide` (keyed by trade), `actor_staff_total`, `country_strata`
   (keyed). They replace `legacy_actor_registry`, `legacy_actors_state` and `legacy_agent_world`.
 - Commands applied: `AdvanceActors` (no fields), `RecordConquestContact`, `RecordMigrantContact`, `ScaleStrata`, `NoteTraderMargin`.

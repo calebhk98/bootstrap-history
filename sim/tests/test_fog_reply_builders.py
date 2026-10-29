@@ -79,7 +79,7 @@ class SharedFilterTests(unittest.TestCase):
 
     def fog_scrub(self, text, fog=True):
         knowledge = module_harness.build(Knowledge, seat=KnowledgeSeat(revealed={KNOWN}), views={
-            "legacy_fog": fog, "active_projects": {},
+            "fog_of_war": fog, "active_projects": {},
             "start_check": lambda node_id, ignore_trade, memo, why: (False, None)})
         knowledge.replace_tree(ReplaceTree(NODES))
         return knowledge.fog_scrub(text)

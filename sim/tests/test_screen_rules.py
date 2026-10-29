@@ -7,7 +7,7 @@ from unittest import mock
 
 from sim.diffusion import constants as diffusion_constants
 from sim.diffusion.module import Diffusion
-from sim.tests import module_harness
+from sim.tests import literacy_stand_in, module_harness
 from sim.ui.proto import screen_demography, screen_divergence, screen_education, screen_map
 
 from .harness import *  # noqa: F401,F403
@@ -109,7 +109,8 @@ def _schooling_game(flow=1.0):
 
         def literacy_ceiling(self, field):
             return {"literacy_elite": 0.9, "common": 0.8}[field]
-    module = module_harness.build(Schooled, views={"legacy_country_literacy": lambda country: strata})
+    views, answers = literacy_stand_in.over(strata)
+    module = module_harness.build(Schooled, views=views, answers=answers)
     return module, strata
 
 

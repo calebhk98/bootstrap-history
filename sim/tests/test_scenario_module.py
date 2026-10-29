@@ -82,7 +82,7 @@ class Commands(unittest.TestCase):
         module.set_fog(SetFog(True))
         module.set_fuzzy_estimates(SetFuzzyEstimates(True, 55))
         module.set_fuzzy_estimates(SetFuzzyEstimates(False))
-        self.assertEqual((module.fog(), module.fuzzy_estimates(), module.fuzzy_salt()), (True, False, 55))
+        self.assertEqual((module.fog_of_war(), module.fuzzy_estimates(), module.fuzzy_salt()), (True, False, 55))
 
     def test_opening_the_scenario_takes_the_civilisations_date_and_keeps_its_opening_values(self):
         module = self.opened()

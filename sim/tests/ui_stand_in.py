@@ -126,7 +126,7 @@ METHOD_OF_COMMAND = {
 # views that are one fact of the game held under the name the game once used for it
 ATTRIBUTE_OF_VIEW = {
     "acting_balance": "capital", "techniques_held": "done", "techniques_granted": "granted", "active_projects": "active",
-    "legacy_fog": "fog", "tree_nodes": "nodes", "game_config": "cfg", "civilisation": "civ",
+    "fog_of_war": "fog", "tree_nodes": "nodes", "game_config": "cfg", "civilisation": "civ",
     "legacy_fuzzy_estimates": "fuzzy_estimates", "techniques_revealed": "revealed", "techniques_forgotten": "forgotten",
     "horizon_end_year": "end_year", "acting_seat": "acting_seat",
 }

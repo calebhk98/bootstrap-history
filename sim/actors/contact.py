@@ -50,6 +50,10 @@ class Contact:
 		home = self.needs.civilisation()["id"]
 		return [actor for actor in self.cast().of_kind("stratum") if (actor.record.country or home) == country]  # type: ignore[attr-defined]
 
+	def hold_edge_goods(self, command: Any) -> None:
+		"""The edge takes the goods into the stock it keeps beside its money."""
+		self.cast_state().edge(command.edge).receive_goods(command.good, command.tonnes)  # type: ignore[attr-defined]
+
 	def note_trader_margin(self, command: Any) -> Optional[Refusal]:
 		"""The trader's last margin follows what its cargo made against what it was booked at."""
 		trader = self.cast().actors.get(command.trader)  # type: ignore[attr-defined]

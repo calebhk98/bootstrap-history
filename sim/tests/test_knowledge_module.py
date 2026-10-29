@@ -24,7 +24,7 @@ def projects(done=(), granted=(), revealed=(), done_year=None, forgotten=None):
 def knowledge_over(state, fog=False, start_check=None, active=(), **views):
     module = module_harness.build(
         Knowledge, seat=state, answers={RefreshDoneCaches: None},
-        views=dict({"active_projects": dict.fromkeys(active, {}), "legacy_fog": fog,
+        views=dict({"active_projects": dict.fromkeys(active, {}), "fog_of_war": fog,
                     "start_check": start_check or (lambda node_id, ignore_trade, memo, why: (False, None))}, **views))
     module.replace_tree(ReplaceTree(NODES))
     return module

@@ -9,7 +9,7 @@ from sim.diffusion import constants
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionWorld
 from sim.reporting.api import RecordEvent
-from sim.tests import module_harness
+from sim.tests import literacy_stand_in, module_harness
 from sim.workforce.api import NoteTradeSpread, SetEmployed
 
 TRADE = "electrician"
@@ -43,8 +43,8 @@ def schooling(flow):
 
         def literacy_ceiling(self, field):
             return {"literacy_elite": 0.97, "common": 0.9}[field]
-    return module_harness.build(Schooling, views={"legacy_country_literacy": lambda country: literacy},
-                                world=DiffusionWorld()), literacy
+    views, answers = literacy_stand_in.over(literacy)
+    return module_harness.build(Schooling, views=views, answers=answers, world=DiffusionWorld()), literacy
 
 
 class SchoolLiteracy(unittest.TestCase):

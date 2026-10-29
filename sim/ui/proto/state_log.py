@@ -27,7 +27,7 @@ def _log_scrub(sim, text):
     if isinstance(text, NoteLine):
         return text
     text = sim.view("fog_scrub")(text)
-    if not sim.view("legacy_fog")() or not text:
+    if not sim.view("fog_of_war")() or not text:
         return text
     memo = {}
     for node_id, node in sim.view("tree_nodes")().items():
@@ -113,7 +113,7 @@ def _agent_log_search_rows(sim, rows, find, order):
         # something called X exists, which is the same leak the visibility
         # guard on `why` exists to close, reached from a different command.
         rows = [row for row in rows if find in row[1][1].lower()]
-        if sim.view("legacy_fog")():
+        if sim.view("fog_of_war")():
             # THE RECHECK IS THE EXPENSIVE HALF, one node sweep per candidate
             # line, so a common word over a run's whole history could be
             # thousands of sweeps. Capped to the most recent slice, which is

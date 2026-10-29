@@ -25,7 +25,7 @@ def _project_blocker(project):
 def _goal_blocker(sim, nodes):
     """The road-to-goal node nearest to startable, with its one-line reason."""
     goal = sim.view("goal")()["node"]
-    if sim.view("legacy_fog")() or goal not in nodes:
+    if sim.view("fog_of_war")() or goal not in nodes:
         return None
     road = closure(nodes, goal) - sim.view("techniques_held")()
     if not road:

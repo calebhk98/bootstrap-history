@@ -177,7 +177,7 @@ class PortWorld(MapReads, ForeignReads):
 		return self._needs.seat_list()["playing"]
 
 	def edge(self, name):
-		return self._needs.legacy_edge_account[name]
+		return self._needs.cast_state().edge(name)
 
 	# ---- the money and the state ----
 

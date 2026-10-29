@@ -104,7 +104,7 @@ def _relief_rows(sim, condition):
     found = []
     for entry in sim.view("hazard_relief_entries")("staff_loss"):
         node_id = entry.get("node")
-        hidden = bool(sim.view("legacy_fog")() and node_id and not sim.view("visibility")(node_id))
+        hidden = bool(sim.view("fog_of_war")() and node_id and not sim.view("visibility")(node_id))
         found.append(_row("an unseen measure" if hidden else entry["label"],
                           round(1.0 - entry["factor"], 4), "fraction",
                           "partly lapsed" if entry.get("lapsed_node") else ""))
@@ -189,7 +189,7 @@ def conditions_for_metric(sim, metric):
         condition = sim.view("tree_nodes")()[node_id].get("win_condition")
         if not condition or condition.get("metric") != metric:
             continue
-        if sim.view("legacy_fog")() and not sim.view("visibility")(node_id):
+        if sim.view("fog_of_war")() and not sim.view("visibility")(node_id):
             continue
         found.append((node_id in sim.view("techniques_held")(), condition.get("value") or 0.0, node_id, condition))
     found.sort(key=lambda item: item[:3])
@@ -202,6 +202,6 @@ def known_metrics(sim):
     names = set(METRIC_ROWS)
     for node_id, node in sim.view("tree_nodes")().items():
         condition = node.get("win_condition")
-        if condition and condition.get("metric") and not (sim.view("legacy_fog")() and not sim.view("visibility")(node_id)):
+        if condition and condition.get("metric") and not (sim.view("fog_of_war")() and not sim.view("visibility")(node_id)):
             names.add(condition["metric"])
     return sorted(names)

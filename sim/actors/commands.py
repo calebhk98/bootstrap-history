@@ -29,6 +29,29 @@ class NoteTraderMargin(Command):
 
 
 @dataclass(frozen=True)
+class TeachLiteracy(Command):
+	"""Research teaches the home country's people: the reading share `field` moves toward `value`, bounded by `ceiling`."""
+	field: str
+	value: float
+	ceiling: float
+
+
+@dataclass(frozen=True)
+class SchoolLiteracy(Command):
+	"""The schools of the home country close, in order, the gap of each step (field, fraction of the gap, ceiling). Answers the
+	reading shares before and after, each as {field: share}."""
+	steps: Tuple[Tuple[str, float, float], ...]
+
+
+@dataclass(frozen=True)
+class HoldEdgeGoods(Command):
+	"""The named edge (an account outside the actors) now holds `tonnes` more of `good`: stolen stock goes to the thieves' edge."""
+	edge: str
+	good: str
+	tonnes: float
+
+
+@dataclass(frozen=True)
 class RecordMigrantContact(Command):
 	"""Migrants moved as `pairs` of (origin tile, destination tile, people): the actors where they arrive become aware of what
 	the people of the place they left know."""

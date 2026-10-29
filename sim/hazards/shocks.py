@@ -5,7 +5,7 @@ own log); population, output, the coin and the society's values change once, at 
 (merge.py). One seat runs the same draws in the same order as a game with no other seat. The order of the dice is the
 order of the calls below; save/load and the equivalence check depend on it.
 
-Needs: civilisation, year, seat_list, game_random, act_as, events_enabled, legacy_said_once,
+Needs: civilisation, year, seat_list, game_random, act_as, events_enabled,
 techniques_held, staff, staff_snapshot, wage_index, money_text, money_real, event_log."""
 from typing import Any, Dict, List, Optional
 
@@ -15,6 +15,7 @@ from sim.refusal import LogLine, Refusal
 from sim.reporting.api import ErodeMoney, RecordEvent
 from sim.workforce.api import NoteWageShock, ReportStaffReduction, ScaleDeputies, SurviveStaff
 
+from .commands import SayOnce
 from . import constants, rules, staff_loss_words
 from .condition import hazard_given_condition
 from .merge import mildest_hazard
@@ -76,10 +77,8 @@ class Shocks:
 		held = self.needs.techniques_held()
 		met = all(tech_id in held for tech_id in needed)
 		if year == hazard_start:
-			said = self.needs.legacy_said_once()
 			key = hazard.get("name", "hazard")
-			if key not in said:
-				said.add(key)
+			if self.say_once(SayOnce(key)):
 				text = condition.get("met_message" if met else "unmet_message")
 				if text:
 					self.needs.send(RecordEvent.of("hazard_condition_met" if met else "hazard_condition_unmet", text, hazard=key))
@@ -90,10 +89,8 @@ class Shocks:
 		opens, when the causes fail."""
 		kept, report = self.effective_hazard(hazard)
 		if report["failed"] and year == hazard_start:
-			said = self.needs.legacy_said_once()
 			key = "causes:" + hazard.get("name", "hazard")
-			if key not in said:
-				said.add(key)
+			if self.say_once(SayOnce(key)):
 				self.needs.send(RecordEvent.of("hazard_condition_failed", "%s: %s, so it %s" % (
 					hazard.get("name", "hazard"), rules.failed_causes_words(report),
 					"does not come" if kept is None else "comes weaker")))

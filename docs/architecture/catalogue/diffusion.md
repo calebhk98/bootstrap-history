@@ -21,7 +21,7 @@ spread, which techniques concerns have had time to copy, and what a seat does wi
 - **State: more than the one field.** `projects.disclosures` is `DiffusionSeat.disclosures`. `economy.technique_first_run`,
   `economy.technique_record_started` and `scenario._literacy_said` are `DiffusionWorld`; relocations are in
   `sim/tests/equiv_fields.py`. Literacy itself is not a field of this module: the reading shares live in the strata of the actors'
-  cast (`CountryLiteracy`), which actors still owns, so the module mutates them through the `legacy_country_literacy` bridge view.
+  cast (`CountryLiteracy`), which actors still owns, so the module asks the actors for the figures (`country_literacy_figure`, `country_literacy_ceiling`, `literacy_after_schooling`) and moves them with their commands `TeachLiteracy` and `SchoolLiteracy`.
 - **`techniques_spread` was the read that wrote.** It stamped the year each technique was first seen running on the first read after a
   change. It is now a command (`NoteFirstRuns(in_use)`, which stamps) and a view (`techniques_spread`, which does not). The one
   engine reader (`Sim.techniques_spread`, a forwarder) sends the command and then reads, so the order is the old one; the old method
@@ -47,7 +47,7 @@ spread, which techniques concerns have had time to copy, and what a seat does wi
 | `AdoptionMixin` | `sim/engine/society_adoption.py` | `sim/diffusion/literacy.py` (`Literacy`), `tech_effects.py` (`TechEffects`), `trades.py` (`TradeAbsorption`), `module.py` (staff advice, `advance_society`) |
 | `DiffusionMixin` | `sim/engine/society_diffusion.py` | `sim/diffusion/spread.py` (`Spread`), `relief.py` (`Relief`), `foreign.py` (`Foreign`) |
 | `DisclosureMixin` | `sim/engine/society_disclosure.py` | `sim/diffusion/disclosure.py` (`Disclosure`) |
-| `ActorsMixin` (4 literacy methods) | `sim/engine/society_actors.py` | `Literacy`; the strata lookup is `legacy_country_literacy` in the bridge |
+| `ActorsMixin` (4 literacy methods) | `sim/engine/society_actors.py` | `Literacy`; the strata are the actors' (`sim/actors/literacy_views.py`) |
 | `TechniquesInUseMixin.techniques_spread` | `sim/engine/techniques_in_use.py` | `sim/diffusion/techniques.py` (`Techniques`) |
 
 The plain modules moved into `sim/diffusion/`: `adoption_share`, `civ_cost`, `diffusion_curve`, `diffusion_rules`,
@@ -116,7 +116,7 @@ outside the module still writes. The disclosure views hand out the live record.
 
 | Owner | Views |
 |---|---|
-| actors | `legacy_country_literacy` (raw strata, mutated in place: a debt), `state_knowledge`, `seat_party`; `legacy_actor_registry` (ledger's bridge) and `legacy_agent_world` (coin's) |
+| actors | `country_literacy_figure`, `country_literacy_ceiling`, `literacy_after_schooling` (and the commands `TeachLiteracy`, `SchoolLiteracy`), `state_knowledge`, `seat_party`; `legacy_actor_registry` (ledger's bridge) and `legacy_agent_world` (coin's) |
 | seats | `seat_list`, `seat_holders`, `built_by_any_seat`, `earliest_done_year` |
 | knowledge and projects | `tree` (shared), `tree_nodes`, `techniques_held` (projects' bridge), `techniques_granted`, `done_year`, `venture_opened_year`, `tech_effects`, `operating` and `civilisation` (living stock's bridge), `running` (projects') |
 | production | `techniques_in_use` |

@@ -40,7 +40,7 @@ def _topic_commands(sim):
 
 
 def _front_page(sim, typed_hints):
-    fog = sim.view("legacy_fog")()
+    fog = sim.view("fog_of_war")()
     return {
         "what this is": (
             "You are one person, dropped into a pre-industrial society, "
@@ -301,7 +301,7 @@ def _topic_stuck(sim):
 
 @help_topic('log', aliases=['history', 'diary'])
 def _topic_log(sim):
-    fog = sim.view("legacy_fog")()
+    fog = sim.view("fog_of_war")()
     return {"log": (
         "Your own history, in the order it happened: what you started, "
         "what finished, what failed and why, a concern opening or "
@@ -392,7 +392,7 @@ def _topic_risk(sim):
 
 @help_topic('fog')
 def _topic_fog(sim):
-    fog = sim.view("legacy_fog")()
+    fog = sim.view("fog_of_war")()
     return {"fog of war": (
         "ON. You can see what you have built, what you could begin today as "
         "a one line summary, and things you have heard of but cannot yet "
@@ -418,7 +418,7 @@ def _agent_help(sim, topic=None):
                 "topics": list(TOPICS)}
     page = dict(TOPICS[topic_name](sim)) if topic_name else {}
     if entry is not None:
-        page["command"] = table.page(entry["name"], sim.view("legacy_fog")())
+        page["command"] = table.page(entry["name"], sim.view("fog_of_war")())
     return page
 
 

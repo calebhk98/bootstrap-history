@@ -4,7 +4,6 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.agents.api import edges
 from sim.finance.constants import SETTLEMENT_CAPITAL_RETAINED_FRACTION, SETTLEMENT_CREDIT_FREEZE_YEARS, SETTLEMENT_REPUTATION_HIT
 from sim.ledger.api import SettleWithEdge
 from sim.polity.api import SetReputation
@@ -20,8 +19,7 @@ class Debtor:
         self.standing = 50.0
         self.projects_done = {"identity_cover", "civ_road_paved"}
         self.module = finance_host.build(
-            answers={SetReputation: self.set_standing}, acting_balance=-3000.0, standing=lambda: {"reputation": self.standing},
-            legacy_edge_account={edges.EDGE_CREDITORS: "creditors"})
+            answers={SetReputation: self.set_standing}, acting_balance=-3000.0, standing=lambda: {"reputation": self.standing})
         self.module.credit_limit = lambda revenue=None, upkeep=None, capital=None: 1000.0
 
     def set_standing(self, command):

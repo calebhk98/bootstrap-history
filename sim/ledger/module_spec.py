@@ -6,7 +6,7 @@ from .commands import (BankStock, ChangeStock, CloseCashPeriod, CreditSeat, Debi
 from .ledger import MONEY, STOCK, Ledger
 from .state import LedgerSeat, LedgerWorld
 
-LEGACY_READS = ("legacy_edge_account", "cast", "cast_state", "seat_list", "year")
+LEGACY_READS = ("cast", "cast_state", "seat_list", "year")
 
 MODULE_SPECS = (ModuleSpec(
 	"ledger", Ledger, channels=(MONEY, STOCK), world_state=LedgerWorld, seat_state=LedgerSeat,

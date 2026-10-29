@@ -5,7 +5,7 @@ What each seat knows and can see: techniques held, forgotten, revealed (fog), an
 **Status:** moved (branches `mr/knowledge`, `mr/knowledge-state`). The package is `sim/knowledge/`; this file describes what
 shipped and what is left, not the draft proposal. What a seat holds, was granted, finished when, has heard of and has forgotten
 is the module's own seat state, written only by its commands. The tree itself and the fog switch are still the engine's and are
-read through `legacy_tree` and `legacy_fog` (section "Debts"). Counts come from the module spec
+read through `legacy_tree` (section "Debts"). Counts come from the module spec
 (`python3 -c "import sys; sys.path.insert(0,'.'); from sim.knowledge.module_spec import MODULE_SPECS as s; print(len(s[0].publishes), len(s[0].applies))"`).
 
 ## What changed from the draft
@@ -42,8 +42,8 @@ read through `legacy_tree` and `legacy_fog` (section "Debts"). Counts come from 
   bumps its own `done` channel on every write and tells the engine through `RefreshDoneCaches`; the hand-made counter goes
   only when its readers move, and every view here is uncached until then (the writers listed below bypass the commands).
 - **The three-caller floor** is moot for `tree`: it has the readers of every module (`grep -rn '"tree"' sim --include=module_spec.py`).
-- **Fog is not per seat.** The mode of the game (`state._fog`, `_fuzzy_estimates`, `_fuzzy_salt`) is read by the module through
-  `legacy_fog`; it is set at the game's start and by a load, and has no module owner yet.
+- **Fog is not per seat.** The mode of the game (`state._fog`, `_fuzzy_estimates`, `_fuzzy_salt`) is the scenario's, read by the module through
+  the view `fog_of_war`; it is set at the game's start and by a load.
 
 ## Mixin classes and files absorbed
 
@@ -93,8 +93,7 @@ Senders outside the module: the projects module (`LearnTechnique`, `RevealFrom`)
 
 ## Reads
 
-Through the bridge until their owners move: `legacy_fog` (scenario's
-`fog`), `relied_on_running` (projects' running gates, keyed) and `on_road_to_goal` (seats). Real module
+Through the bridge until their owners move: `relied_on_running` (projects' running gates, keyed) and `on_road_to_goal` (seats). Real module
 views: `active_projects` (projects), `corpus_hedge_tiers` and `corpus_dispersed` (mechanics), `seat_list` (seats), `start_check`
 (projects).
 

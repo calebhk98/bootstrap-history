@@ -16,7 +16,7 @@ from .pursue import CAP_KEYS, FOG_REFUSAL, ORDER_TEXT, resolve_goal, route_order
          description="A rush limited to the goal's route, longest remaining chain first. Every refusal, "
                      "exclusion and cap of 'rush' applies. Not available under fog of war.")
 def _cmd_pursue(sim, nodes, cmd, ended):
-    if sim.view("legacy_fog")():
+    if sim.view("fog_of_war")():
         return {"ok": False, "error": FOG_REFUSAL}
     goal, error = resolve_goal(sim, cmd.get("goal", cmd.get("id")))
     if error:

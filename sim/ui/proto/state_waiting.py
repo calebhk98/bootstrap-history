@@ -26,7 +26,7 @@ def _agent_end_reason(sim):
         # Under fog there IS no stated goal, so saying the player failed to
         # reach one is incoherent: a goal they were never shown and had no
         # way to set.
-        if sim.view("legacy_fog")():
+        if sim.view("fog_of_war")():
             # AND IT MUST CHECK s.goal_year, the same as the non-fog branch
             # two lines below: telling a player at the end that they were
             # never aiming at anything is a lie when `help` already names

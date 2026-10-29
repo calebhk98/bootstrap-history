@@ -8,6 +8,7 @@ import json
 import unittest
 
 from sim.engine.state import deserialize_state, serialize_state
+from sim.hazards.state import HazardsWorld
 from sim.scenario.state import ScenarioWorld
 
 
@@ -26,9 +27,13 @@ class FuzzyEstimatesSavedTests(unittest.TestCase):
         self.assertIs(loaded.fuzzy_estimates, False)
         self.assertEqual(loaded.fuzzy_salt, 0)
 
-    def test_the_year_the_fog_and_the_notices_said_survive_a_save_and_a_load(self):
-        loaded = round_trip(ScenarioWorld(year=115, fog=True, said_condition={"plague"}))
-        self.assertEqual((loaded.year, loaded.fog, loaded.said_condition), (115, True, {"plague"}))
+    def test_the_year_and_the_fog_survive_a_save_and_a_load(self):
+        loaded = round_trip(ScenarioWorld(year=115, fog=True))
+        self.assertEqual((loaded.year, loaded.fog), (115, True))
+
+    def test_the_notices_the_hazards_told_survive_a_save_and_a_load(self):
+        loaded = deserialize_state(json.loads(json.dumps(serialize_state(HazardsWorld(said_condition={"plague"})))), HazardsWorld)
+        self.assertEqual(loaded.said_condition, {"plague"})
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ STOCK = "stock"
 
 class Ledger(Module):
 	def edge(self, name: str) -> Any:
-		return self.needs.legacy_edge_account[name]
+		return self.needs.cast_state().edge(name)
 
 	def account(self, seat_id: Optional[str] = None) -> SeatAccount:
 		"""The seat's purse as this module moves it (the acting seat's unless one is named)."""

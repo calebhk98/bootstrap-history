@@ -280,7 +280,7 @@ def _carry_known_routes(sim, args, nodes):
         route_ids += replay.read_known_routes(route_file)
     if not route_ids:
         return
-    if not sim.view("legacy_fog")():
+    if not sim.view("fog_of_war")():
         print("   " + replay.fog_off_note())
         return
     applied = replay.apply_known_routes(sim, route_ids, nodes)
@@ -409,7 +409,7 @@ def _play_print_welcome(sim, kit):
     # today. It has no business being harder to find than the five above,
     # once a player has a goal in mind - which, on arrival, they already
     # do.
-    if not sim.view("legacy_fog")():
+    if not sim.view("fog_of_war")():
         print()
         print(_wrap("Once you have a goal in mind: 'path <name>' lays "
                     "out everything still standing between here and "
@@ -706,7 +706,7 @@ def _ingame_options(sim, session):
         print("   civilisation : %s, %d AD                (fixed for this game)"
               % (sim.view("civilisation")().get("name", sim.view("civilisation")().get("id", "?")), sim.view("game_config")()["start_year"]))
         print("   fog of war   : %-3s                          (fixed for this game)"
-              % ("on" if sim.view("legacy_fog")() else "off"))
+              % ("on" if sim.view("fog_of_war")() else "off"))
         print("   fuzzy estimates : %-3s" % ("on" if sim.view("legacy_fuzzy_estimates")() else "off"))
         print("   mortality    : %s"
               % ("on - the founder ages, and can die of it" if mortal_on

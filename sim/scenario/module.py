@@ -70,7 +70,7 @@ class Scenario(Module):
 	def year(self) -> int:
 		return self.world.year
 
-	def fog(self) -> bool:
+	def fog_of_war(self) -> bool:
 		"""Whether the game is played under fog of war (the mode of the game, set at its start)."""
 		return self.world.fog
 
@@ -81,10 +81,6 @@ class Scenario(Module):
 	def fuzzy_salt(self) -> int:
 		"""The salt of the blur; zero until the option has been turned on."""
 		return self.world.fuzzy_salt
-
-	def said_once(self) -> Set[str]:
-		"""The set of notices the hazards and the levy have already told once (mutated in place: a debt)."""
-		return self.world.said_condition
 
 	def events_enabled(self) -> bool:
 		"""Whether the game runs with its random events and hazards (a test or a replay may turn them off)."""

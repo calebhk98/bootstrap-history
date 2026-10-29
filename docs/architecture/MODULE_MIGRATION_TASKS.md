@@ -45,7 +45,7 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 | agriculture | `sim/agriculture/` | the farm holding is demography's |
 | foreign trade | `sim/foreign_trade/` | trader cargo legs stay in the agent economy's record until markets moves |
 | diffusion | `sim/diffusion/` | literacy, adoption, disclosure |
-| knowledge | `sim/knowledge/` | the seat state holds what a seat holds, was granted, finished when, has heard of and has forgotten, written only by its commands and published as frozensets (`techniques_held`, `techniques_granted`, `techniques_revealed`, `techniques_by_seat`) and a copied dict (`done_year`); the tree's closure, critical path and hard prerequisites and the losable nodes are its views; the tree itself (set by `ReplaceTree`; `Sim.nodes` reads and writes it) and the category traits (`category_trait`, `diffusion_traits`, over the game's mods directory) are the module's; still to do: the fog switch (`legacy_fog`); Complaint 735 |
+| knowledge | `sim/knowledge/` | the seat state holds what a seat holds, was granted, finished when, has heard of and has forgotten, written only by its commands and published as frozensets (`techniques_held`, `techniques_granted`, `techniques_revealed`, `techniques_by_seat`) and a copied dict (`done_year`); the tree's closure, critical path and hard prerequisites and the losable nodes are its views; the tree itself (set by `ReplaceTree`; `Sim.nodes` reads and writes it) and the category traits (`category_trait`, `diffusion_traits`, over the game's mods directory) are the module's; still to do: the fog switch (`fog_of_war`); Complaint 735 |
 | resources | `sim/resources/` | mines, deposits, forest, nitre beds; Complaint 730 |
 | hazards | `sim/hazards/` | dated shocks, world hazards, relief, the world event log, the output factor; Complaints 740, 741 |
 | materials | `sim/materials/` | supply, demand, the throttle (a pure quote plus `ApplyThrottle`), electricity, project materials |
@@ -220,7 +220,11 @@ actors (21), hazards, workforce (20 each), projects (19).
   `load_geography(self.view("legacy_world_map")())` with `self.view("geography_data")()`, then delete the view and
   `Land.legacy_world_map`.
 - [ ] No other `legacy_*` view that hands out a live object (`legacy_economy`, `legacy_labour` and the rest:
-  `python3 tools/measure/module_graph.py`).
+  `python3 tools/measure/module_graph.py`). Done so far: the fog is the scenario's view `fog_of_war` (a plain flag), the told-once
+  set is hazards' (`said_condition`, `SayOnce`), the edges are built from `cast_state` (`HoldEdgeGoods` writes their goods), the
+  reading shares are the actors' (`country_literacy_figure`, `country_literacy_ceiling`, `literacy_after_schooling`, `TeachLiteracy`,
+  `SchoolLiteracy`). The module graph counts no module read of a `legacy_*` view; the views still named so are listed by
+  `grep -rn "legacy_" sim/*/module_spec.py`.
 - [x] The `scenario` module (`sim/scenario/`) owns the game's setup and clock: the civilisation, the configuration, the modes
   (events, manual, fog, fuzzy estimates), the year (only `AdvanceYear` moves it), the horizon, the danger and project limits,
   and the text helpers that follow the coin and the player's units (`money_text`, `mass_text`, `plain_number`, ...). Its

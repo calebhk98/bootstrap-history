@@ -123,7 +123,7 @@ def known_ids(sim, nodes, startable):
     """Every node the player is entitled to see: all of them, or under fog
     what they have heard of, started, finished or could begin.
     """
-    if not sim.view("legacy_fog")():
+    if not sim.view("fog_of_war")():
         return set(nodes)
     return set(sim.view("techniques_revealed")()) | set(sim.view("techniques_held")()) | set(sim.view("active_projects")()) | set(startable)
 
@@ -152,7 +152,7 @@ def _row(sim, nodes, node_id, state):
            "cost": round(sim.view("project_cost")(node_id), 1)}
     if state == "blocked":
         missing = [prereq for prereq in node["pre"] if prereq not in sim.view("techniques_held")()]
-        shown = [prereq for prereq in missing if not sim.view("legacy_fog")() or sim.view("visibility")(prereq)]
+        shown = [prereq for prereq in missing if not sim.view("fog_of_war")() or sim.view("visibility")(prereq)]
         row["why_not"] = sim.view("start_check")(node_id)[1]
         row["missing"] = shown
         row["hidden_missing"] = len(missing) - len(shown)

@@ -206,7 +206,6 @@ class Sim(
         # they do not mean every society on Earth already owns it.  In
         # particular, never infer one civilization's materials or institutions for another
         # civilization from those fields.
-        self.view("legacy_country_literacy")[None]
         self.send(RecordOpeningLiteracy(self.view("literacy")("literacy_general", None), self.view("literacy")("literacy_elite", None)))
         self._reconnect_state_hooks()
         # opened now, not by the first question a screen or a cost asks: while it opens the engine's

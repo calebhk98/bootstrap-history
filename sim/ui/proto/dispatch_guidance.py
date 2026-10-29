@@ -27,7 +27,7 @@ def _cmd_idle(sim, nodes, cmd, ended):
     committed = sim.view("hours_available")["director_committed"]
     startable = [node_id for node_id in nodes
                  if node_id not in sim.view("techniques_held")() and node_id not in sim.view("active_projects")()
-                 and (not sim.view("legacy_fog")() or sim.view("visibility")(node_id)) and sim.view("start_check")(node_id, False, None, False)[0]]
+                 and (not sim.view("fog_of_war")() or sim.view("visibility")(node_id)) and sim.view("start_check")(node_id, False, None, False)[0]]
     kinds = delay_kinds(sim, nodes)
     sized_training = training_suggestions(sim, _trade_demand_rows(sim))
     return {

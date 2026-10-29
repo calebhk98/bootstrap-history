@@ -251,7 +251,7 @@ def _cmd_stuck(sim, nodes, cmd, ended):
     # speaks once insolvency has already set in. This command gathers
     # every check into one place instead of making a player find each
     # cause by guessing at `why`.
-    _fog = sim.view("legacy_fog")()
+    _fog = sim.view("fog_of_war")()
     _startable, _afford = _stuck_startable_and_afford(sim, nodes, _fog)
     _goal_reason, _goal_routing_off_under_fog = _stuck_road_to_goal(sim, nodes, _fog)
     # Every check below is independent, and GATHERS into `reasons`: each one

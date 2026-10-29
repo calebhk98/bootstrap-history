@@ -28,7 +28,7 @@ class Stub(StandIn):
 
     def __init__(self, **fields):
         super().__init__(
-            legacy_fog=lambda: self.fog, goal=lambda: {"node": self.goal, "year": None}, techniques_held=lambda: self.done,
+            fog_of_war=lambda: self.fog, goal=lambda: {"node": self.goal, "year": None}, techniques_held=lambda: self.done,
             acting_balance=lambda: self.capital, active_projects=lambda: self.active, tree_nodes=lambda: self.nodes,
             year=lambda: self.year, techniques_revealed=lambda: self.revealed, fog_scrub=lambda text: self.fog_scrub(text))
         self.__dict__.update(fields)

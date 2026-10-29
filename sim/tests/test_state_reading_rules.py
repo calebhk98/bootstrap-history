@@ -16,7 +16,7 @@ from sim.polity.api import RaiseScandal, ScaleProtection
 from sim.polity.api import ShiftValueWeight
 from sim.refusal import cause_of
 from sim.reporting.api import RecordEvent
-from sim.tests import hazards_host, module_harness
+from sim.tests import hazards_host, literacy_stand_in, module_harness
 from sim.ui.proto.scandal_trend import years_until_scandal_crosses_the_line
 from sim.ui.proto.state_succession import succession_block
 from sim.tests import event_stand_in
@@ -125,10 +125,11 @@ class Society:
         class Taught(Diffusion):
             def literacy_ceiling(self, field):
                 return ceilings[field]
+        views, answers = literacy_stand_in.over(self.reading)
         self.module = module_harness.build(Taught, views={
-            "tech_effects": {"press": effects}.get, "legacy_country_literacy": lambda country: self.reading,
+            "tech_effects": {"press": effects}.get, **views,
             "tree": {"press": {"name": "Press"}}.get, "coverage": lambda: set()},
-            answers={ShiftValueWeight: polity_host.shifting(self.value_weights)})
+            answers={ShiftValueWeight: polity_host.shifting(self.value_weights), **answers})
 
     def events(self):
         return [command for command in module_harness.sent(self.module) if isinstance(command, RecordEvent)]

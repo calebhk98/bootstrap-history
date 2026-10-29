@@ -1,8 +1,9 @@
 """What a finished technique does to the society as a whole: its values, its reading, its disease burden.
 
-Needs: tech_effects, coverage, disease_burden, disease_burden_held, disease_burden_weights, literacy, ceilings."""
+Needs: tech_effects, coverage, disease_burden, disease_burden_held, disease_burden_weights, literacy, ceilings, send (TeachLiteracy)."""
 from typing import Any, Dict, List, Tuple
 
+from sim.actors.api import TeachLiteracy
 from sim.polity.api import ShiftValueWeight
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
@@ -59,7 +60,7 @@ class TechEffects:
                 before = self.literacy(field)
                 target = literacy_rules.literacy_after_effect(before, delta, ceiling)
                 learners_ceiling = self.literacy_ceiling("common") if field == "literacy_general" else ceiling
-                self.needs.legacy_country_literacy[None].teach(field, target, learners_ceiling)
+                self.needs.send(TeachLiteracy(field, target, learners_ceiling))
         for field, before in literacy_before.items():
             after = self.literacy(field)
             if before != after or field in effects:

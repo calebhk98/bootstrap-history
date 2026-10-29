@@ -36,8 +36,7 @@ sim.hazards import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publishes)
   loop told the caches once; the knowledge module bumps once per command, so one command keeps the saved counter identical.
 - **State: four world fields and one seat field, not two world fields.** `HazardsWorld`: `output_factor`, `world_events`,
   `said_output`, `said_debasement` (the last two were `ScenarioState._said_output` and `_said_debasement`); `HazardsSeat`:
-  `last_patron_death` (was `FounderState.last_patron_death`). `_said_condition` stays in `ScenarioState`: the concern levy writes to
-  it as well (`legacy_said_once`, a debt). Relocations are in `sim/tests/equiv_fields.py`.
+  `last_patron_death` (was `FounderState.last_patron_death`). `said_condition` (was `ScenarioState._said_condition`) is hazards' too: the concern levy marks its notices through the command `SayOnce`. Relocations are in `sim/tests/equiv_fields.py`.
 - **`_catastrophe` is not hazards'.** Nothing in this module calls it; the three callers are in `core_step_phases.py` (denounced, too
   eminent, no successors). It is the seats' command `FounderDies`; `Sim._catastrophe` forwards.
 - **Constants moved with the module** (`sim/hazards/constants.py`): the seventeen declared numbers of the three mixins, the
@@ -127,7 +126,7 @@ Published by `bridge_hazards.py` under the name the owner will publish (each is 
 `population_total`, `nutrition_ratio_last_year`; reporting `real_output_hours`; diffusion `literacy`; scenario `opening_civilisation`.
 
 Debts, raw objects or switches the module cannot do without: `acting_as` (the module has no way to switch seats; the world
-phases act as each seat in turn), `legacy_said_once` (the `_said_condition` set the levy shares), and the reused `game_random`.
+phases act as each seat in turn), and the reused `game_random`.
 
 ## Forwarders left (`sim/engine/forward_hazards.py`)
 

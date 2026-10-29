@@ -216,7 +216,7 @@ def _agent_state_goal(sim, nodes, end_reason):
     """
     return {
         "founder_ages": not sim.view("game_config")().get("immortal", True),
-        "goal": None if sim.view("legacy_fog")() else sim.view("goal")()["node"],
+        "goal": None if sim.view("fog_of_war")() else sim.view("goal")()["node"],
         # The NAME, not the id, so it survives fog without handing back the
         # prerequisite crawl the visibility guard exists to stop.
         "goal_in_words": (sim.view("tree_nodes")()[sim.view("goal")()["node"]]["name"]
@@ -232,8 +232,8 @@ def _agent_state_goal(sim, nodes, end_reason):
         # all and never which ones remain - you get a sense of progress
         # without being handed a map.
         "on_the_road_to_the_goal_so_far": (
-            _goal_progress_count(sim, nodes) if sim.view("legacy_fog")() else None),
-        "fog_of_war": sim.view("legacy_fog")(),
+            _goal_progress_count(sim, nodes) if sim.view("fog_of_war")() else None),
+        "fog_of_war": sim.view("fog_of_war")(),
         "manual": sim.view("automation")()["manual"], "ended": end_reason is not None, "end_reason": end_reason,
     }
 

@@ -751,7 +751,7 @@ def _agent_available(sim, nodes, cmd=None):
     # makes that patch visible here.
     from sim.ui import protocol as _protocol
     DEFAULT_AVAILABLE_LIMIT = _protocol.DEFAULT_AVAILABLE_LIMIT
-    fog = sim.view("legacy_fog")()
+    fog = sim.view("fog_of_war")()
     # ONE memo for the whole sweep, not one per node. Under fog, checking
     # whether a deep node can start asks whether each of its missing
     # prerequisites is even visible, which asks the same question about
@@ -1007,7 +1007,7 @@ def _explain_revenue(sim, nodes, node_id, node):
         # revenue alone is fogged; see _fog_revenue_estimate.
         "upkeep": sim.view("venture_upkeep_quote")(node_id)["now"],
         "upkeep_at_full_staffing": sim.view("venture_upkeep_quote")(node_id)["at_full_staffing"],
-        "revenue": (round(sim.view("venture_real_earnings")(node_id), 1) if (not sim.view("legacy_fog")()
+        "revenue": (round(sim.view("venture_real_earnings")(node_id), 1) if (not sim.view("fog_of_war")()
                                  or _revenue_known_exactly(sim, node_id))
                    else (_fog_revenue_estimate(sim, node_id) or 0.0)),
         "forecast_basis": sim.view("venture_forecast_basis")[node_id],
@@ -1265,7 +1265,7 @@ def _lineage_setup(sim, nodes, node_id):
     # chinampa, as dead ends - each civilisation's own signature
     # technology told it leads nowhere, when it genuinely unlocks
     # something through a substitution group.
-    unlocks = [] if sim.view("legacy_fog")() else _unlocked_by(node_id, nodes)
+    unlocks = [] if sim.view("fog_of_war")() else _unlocked_by(node_id, nodes)
     # Was: {m for m in nodes if k in closure(nodes, m)} - a full ancestor
     # closure of all 2,831 nodes, per call. Same answers, computed once for the
     # whole tree and cached. See data.descendants.
@@ -1284,7 +1284,7 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
     many more are hidden by fog than the visible lists let on.
     """
     direct = ([prereq_id for prereq_id in node["pre"] if sim.view("visibility")(prereq_id)]
-              if sim.view("legacy_fog")() else node["pre"])
+              if sim.view("fog_of_war")() else node["pre"])
     return {
         "prerequisite_names": ui_port.prerequisite_names(nodes, direct),
         # ONLY WHAT YOU HAVE HEARD OF. These are read for a visible node, where
@@ -1294,7 +1294,7 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
         # hidden prerequisites by name in the JSON, which is the fog exploit
         # this file has already closed twice.
         "direct_prerequisites": ([prereq_id for prereq_id in node["pre"] if sim.view("visibility")(prereq_id)]
-                                 if sim.view("legacy_fog")() else node["pre"]),
+                                 if sim.view("fog_of_war")() else node["pre"]),
         # A GRANTED NODE IS HELD, WHATEVER ROUTE THE TREE DRAWS TO IT. `why
         # cap_heat_1300` on Han reported done:true, missing_prerequisites:
         # ["cap_heat_1100"] and can_start_now:false in one object - three
@@ -1310,11 +1310,11 @@ def _explain_visible_prerequisites(sim, nodes, node_id, node):
         # is missing something.
         "missing_prerequisites": ([] if node_id in sim.view("techniques_granted")()
                                   else [prereq_id for prereq_id in node["pre"] if prereq_id not in sim.view("techniques_held")()
-                                        and (not sim.view("legacy_fog")()
+                                        and (not sim.view("fog_of_war")()
                                              or sim.view("visibility")(prereq_id))]),
         "prerequisites_you_have_not_heard_of": (
             sum(1 for prereq_id in node["pre"] if not sim.view("visibility")(prereq_id))
-            if sim.view("legacy_fog")() else 0) or None,
+            if sim.view("fog_of_war")() else 0) or None,
     }
 
 
@@ -1351,11 +1351,11 @@ def _explain_chain(sim, nodes, node_id, need, _chain_all):
         # measurement of a tree you cannot see. You do know how many of its own
         # prerequisites you are still missing, because those have names you have
         # either heard or not.
-        "chain_size": (len(need) if not sim.view("legacy_fog")() else None),
+        "chain_size": (len(need) if not sim.view("fog_of_war")() else None),
         "chain_size_counting_what_you_have_built": (
-            len(_chain_all) if not sim.view("legacy_fog")() else None),
+            len(_chain_all) if not sim.view("fog_of_war")() else None),
         "chain_founder_hours": (sum(nodes[node_id]["ph"] for node_id in need)
-                                if not sim.view("legacy_fog")() else None),
+                                if not sim.view("fog_of_war")() else None),
         # AT THIS SOCIETY'S PRICES, like the COST line four rows above it:
         # summing the tree's BASE cost and applying none of the
         # civilisation-specific multipliers the same page prints would
@@ -1365,9 +1365,9 @@ def _explain_chain(sim, nodes, node_id, need, _chain_all):
         # are unaffected by price; only chain_cost has to go through
         # sim.project_cost().
         "chain_cost": (round(sum(sim.view("project_cost")(node_id) for node_id in sorted(need)), 1)
-                       if not sim.view("legacy_fog")() else None),
+                       if not sim.view("fog_of_war")() else None),
         "critical_path_years": (critical_path(nodes, node_id)[0]
-                                if not sim.view("legacy_fog")() else None),
+                                if not sim.view("fog_of_war")() else None),
     }
 
 
@@ -1385,13 +1385,13 @@ def _explain_unlocks(sim, nodes, node_id, unlocks, n_blocks):
         # judge: whether this is a foundation others will build on, or an end in
         # itself. You can tell that much by looking at it.
         "unlocks": unlocks,
-        "downstream_count": (n_blocks if not sim.view("legacy_fog")() else None),
+        "downstream_count": (n_blocks if not sim.view("fog_of_war")() else None),
         "how_much_rests_on_this": (
-            None if not sim.view("legacy_fog")() else _rests_band(n_blocks)),
+            None if not sim.view("fog_of_war")() else _rests_band(n_blocks)),
         # Under fog there is no visible goal, so a boolean saying whether
         # this is "on the goal path" would be either meaningless or a
         # leak, and must be None instead of true/false.
-        "on_goal_path": (None if sim.view("legacy_fog")()
+        "on_goal_path": (None if sim.view("fog_of_war")()
                          else (node_id == sim.view("goal")()["node"] or is_downstream(nodes, node_id, sim.view("goal")()["node"]))),
     }
 

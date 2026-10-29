@@ -31,14 +31,13 @@ def ledger_over(**views):
     return module_harness.build(Ledger, views=views, module_id="ledger")
 
 
-def seat_ledger(money=0.0, seats=(SEAT,), edge_names=(), **views):
-    """A ledger over a real book with the seats `seats` (each in the book, the first holding `money`), a cast and the named edges:
+def seat_ledger(money=0.0, seats=(SEAT,), **views):
+    """A ledger over a real book with the seats `seats` (each in the book, the first holding `money`) and a cast:
     returns (module, registry, treasury). The module acts for the first seat."""
     registry, treasury, _firm = society(0.0)
-    edge_accounts = {name: registry.add(name, ActorRecord(kind="firm", money=0.0)) for name in edge_names}
     slots = {seat_id: LedgerSeat() for seat_id in seats}
     module = ledger_over(cast=registry, cast_state=registry.state, year=100, seat_list={"joined": list(seats)},
-                         legacy_edge_account=edge_accounts, **views)
+                         **views)
     module.seat_slot_of = lambda seat_id: slots[seat_id]
     module.seat = slots[seats[0]]
     module.clock.act_as(seats[0])
@@ -134,10 +133,10 @@ class ExchangeCommands(unittest.TestCase):
 
 class SettleWithEdgeCommand(unittest.TestCase):
     def test_the_household_is_brought_to_the_balance_by_moving_the_difference_over_the_edge(self):
-        module, _registry, _treasury = seat_ledger(-300.0, edge_names=("edge:creditors",))
-        edge = module.needs.legacy_edge_account["edge:creditors"]
+        module, registry, _treasury = seat_ledger(-300.0)
+        edge = registry.state.edge("edge:creditors")
         module.settle_with_edge(SettleWithEdge("edge:creditors", -50.0, "debts written off in settlement"))
-        self.assertEqual((module.acting_balance(), edge.money), (-50.0, -250.0))
+        self.assertEqual((module.acting_balance(), edge.balance()), (-50.0, -250.0))
 
 
 class RescaleHouseholdMoneyCommand(unittest.TestCase):
@@ -251,7 +250,7 @@ class SeatMoneyCommands(unittest.TestCase):
         self.assertEqual(module.acting_balance(), 40.0)
 
     def test_an_edge_pays_in_and_the_seat_pays_out_as_the_seats_own_state_does_it(self):
-        module, _registry, _treasury = seat_ledger(100.0, edge_names=("edge:customers",))
+        module, _registry, _treasury = seat_ledger(100.0)
         module.receive_from_edge(ReceiveFromEdge("edge:customers", 10.0, "venture revenue"))
         module.pay_edge(PayEdge("edge:customers", 4.0, "running costs"))
         self.assertEqual((module.acting_balance(), module.seat.cash_flow), (106.0, {"venture revenue": 10.0, "running costs": -4.0}))
@@ -330,7 +329,7 @@ class SeatPostingsNetToZero(unittest.TestCase):
         self.assertEqual(registry.state.purses.purse(treasury.account_id), 300.0)
 
     def test_a_payment_to_an_edge_and_back_nets_to_zero(self):
-        module, registry, _treasury = seat_ledger(1000.0, edge_names=("edge:suppliers",))
+        module, registry, _treasury = seat_ledger(1000.0)
         before = self.total(registry)
         module.pay_edge(PayEdge("edge:suppliers", 120.0, "running costs"))
         module.receive_from_edge(ReceiveFromEdge("edge:suppliers", 20.0, "refund"))
