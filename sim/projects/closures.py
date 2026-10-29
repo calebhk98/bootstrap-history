@@ -1,5 +1,7 @@
 """Why a work is shut and since when: the one place a closure is recorded, and what is asked of the record."""
 from . import closure_reasons
+from sim.ventures.api import ForgetClosureReason, MothballConcern
+
 from .needed_commands import NoteConcernChange
 
 
@@ -14,9 +16,8 @@ class Closures:
 		"""Shut a work and record why and since when, in one place. Whatever requires it running shuts with it unless
 		`cascade` is off."""
 		needs = self.needs
-		projects = needs.legacy_projects()
 		closing_year = needs.year() if year is None else year
-		projects.business.mothball(node_id, closing_year, reason)
+		needs.send(MothballConcern(node_id, closing_year, reason))
 		if reason == self.CLOSED_FOR_STAFF:
 			self.seat.ever_closed_for_staff.add(node_id)
 		needs.send(NoteConcernChange("closure", node_id, reason))
@@ -25,14 +26,13 @@ class Closures:
 
 	def closure_of(self, node_id):
 		"""The closure record of a currently shut work, else None."""
-		projects = self.needs.legacy_projects()
-		if node_id not in projects.mothballed:
+		if node_id not in self.needs.mothballed():
 			return None
-		return projects.closures.get(node_id)
+		return self.needs.closure_records().get(node_id)
 
 	def clear_closure(self, node_id, reason=None):
 		"""Drop a closure record. With a reason, only that reason's record goes."""
-		return self.needs.legacy_projects().business.forget_reason(node_id, reason)
+		return self.needs.send(ForgetClosureReason(node_id, reason))
 
 	def staff_closure_age(self, node_id):
 		"""Years since a staffing closure began, or None if not closed for staff."""

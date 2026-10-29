@@ -16,7 +16,7 @@ from sim.tests import module_harness, projects_host
 def _seat(capital, limit, upkeep=100.0, size=2.0):
     module = projects_host.build(
         acting_balance=capital, credit_limit=lambda *arguments: limit, year=1,
-        legacy_projects=SimpleNamespace(business=SimpleNamespace(size_of=lambda entry_key: size)))
+        venture_size=lambda entry_key: size)
     world = SimpleNamespace(upkeep=lambda entry_key, plant_size: upkeep * plant_size)
     received = [command for command in module_harness.sent(module) if isinstance(command, ReceiveFromEdge)]
     return SeatReview(module, world), module
@@ -81,7 +81,7 @@ def _seat_game(auto_shed=True, capability=(), spared=(), never_abandon=(), capit
         founder={"alive": True, "life_left": 10.0, "dead_reason": None, "policy": {"auto_shed": auto_shed}}, year=7,
         capability_sets=(frozenset(capability), frozenset(), {}), never_abandon=lambda entry_key: entry_key in never_abandon,
         acting_balance=capital, revenue_estimate=revenue, upkeep=0.0, living_cost=lambda *arguments: living, mine_operating_cost=0.0,
-        credit_limit=lambda *arguments: limit, legacy_projects=SimpleNamespace(granted=set(spared)))
+        credit_limit=lambda *arguments: limit, projects_record=SimpleNamespace(granted=set(spared)))
     module.close_work = lambda entry_key, reason, year: closed_works.append((entry_key, reason, year))
     return SeatReview(module, SimpleNamespace()), closed_works
 

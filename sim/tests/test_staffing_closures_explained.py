@@ -30,7 +30,7 @@ def Report(shut=(), year=100):
     """The projects module over a record of what is shut."""
     projects = Game(closures={node_id: {"reason": STAFF, "year": year - 1} for node_id in shut},
                                mothballed=set(shut))
-    return projects_host.build(legacy_projects=projects, year=year)
+    return projects_host.build(projects_record=projects, year=year)
 
 
 line = unstaffed_closure_line(["mill"], {"craftsmen": 2.1}, StaffingReport.staffing_shortfall_words({"craftsmen": 2.1}), 1,
@@ -52,8 +52,8 @@ summary = report.staffing_closure_summary()
 check("the closure summary counts closed, reopened and still shut",
       re.search(r"closed 1\b", summary) and re.search(r"reopened 0\b", summary) and re.search(r"still shut 1\b", summary), summary)
 check("...and names the cause and the remedies", "craftsmen (short 2.1 full-time)" in summary and "keep <id> staffed" in summary, summary)
-report.needs.legacy_projects().closures.clear()
-report.needs.legacy_projects().mothballed.clear()
+report.needs.closure_records().clear()
+report.needs.mothballed().clear()
 report.record_staffing_reopenings(1)
 check("the summary reflects the reopening and the shut count falls", re.search(r"reopened 1\b", report.staffing_closure_summary())
       and re.search(r"still shut 0\b", report.staffing_closure_summary()), report.staffing_closure_summary())
@@ -62,8 +62,8 @@ last_year = Report()
 last_year.seat.staffing_tally = {"year": 99, "closed": 3, "reopened": 0, "short": {}}
 check("a new year starts the tally afresh", last_year.staffing_closure_summary() is None, last_year.seat.staffing_tally)
 by_choice = Report()
-by_choice.needs.legacy_projects().closures["m"] = {"reason": closure_reasons.CLOSED_BY_CHOICE, "year": 90}
-by_choice.needs.legacy_projects().mothballed.add("m")
+by_choice.needs.closure_records()["m"] = {"reason": closure_reasons.CLOSED_BY_CHOICE, "year": 90}
+by_choice.needs.mothballed().add("m")
 check("a concern shut by choice is not shut for want of staff", by_choice.staffing_shut_count() == 0 and by_choice.staffing_closure_summary() is None)
 
 

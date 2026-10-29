@@ -22,7 +22,7 @@ def _test_automatic_field_persistence():
 		FounderState,
 		HoldingsState,
 		HouseholdState,
-		ProjectsState,
+		
 		SimulationState,
 		deserialize_state,
 		serialize_state,
@@ -30,23 +30,20 @@ def _test_automatic_field_persistence():
 
 	proj = ActiveProjectState(ph_left=80.0, cost_left=300.0, yrs=1.0, spent=100.0, lab_left={"mason": 15.0})
 	hh = HouseholdState(capital=1250.0)
-	projects = ProjectsState(
-		active={"arch": proj},
-		businesses=[Business.running(["stone_cutting"], opened_year=100)],
-	)
 	econ = EconomyState()
 	holdings = HoldingsState(_dashboard_history=[120.0])
 	founder = FounderState(_founder_death_year=28)
 
 	state = SimulationState(
 		household=hh,
-		projects=projects,
 		economy=econ,
 		holdings=holdings,
 		founder=founder,
 		_civ="rome_100ad",
 	)
 	state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
+	from sim.projects.state import ProjectsSeat
+	state.seats[state.acting_seat].modules["projects"] = ProjectsSeat(active={"arch": proj})
 	state._goal = "aqueduct"
 
 	blob = serialize_state(state)
@@ -60,10 +57,11 @@ def _test_automatic_field_persistence():
 		return False, f"Household capital mismatch: {restored.household.capital}"
 	if restored.seats[restored.acting_seat].modules["knowledge"]["done"] != {"__set__": ["stone_cutting"]}:   # the module set revives it
 		return False, f"Knowledge done mismatch: {restored.seats[restored.acting_seat].modules['knowledge']}"
-	if "arch" not in restored.projects.active:
-		return False, f"Projects active missing 'arch': {restored.projects.active}"
-	if restored.projects.active["arch"].ph_left != 80.0:
-		return False, f"Active project ph_left mismatch: {restored.projects.active['arch'].ph_left}"
+	restored_active = restored.seats[restored.acting_seat].modules["projects"]["active"]
+	if "arch" not in restored_active:
+		return False, f"Projects active missing 'arch': {restored_active}"
+	if restored_active["arch"]["ph_left"] != 80.0:
+		return False, f"Active project ph_left mismatch: {restored_active['arch']['ph_left']}"
 	from sim.materials.state import MaterialsSeat
 	seat = deserialize_state(serialize_state(MaterialsSeat(shortages=collections.Counter({"charcoal": 3}))), MaterialsSeat)
 	if seat.shortages.get("charcoal") != 3:
@@ -117,24 +115,18 @@ def _test_runtime_type_reconstruction():
 		EconomyState,
 		HoldingsState,
 		HouseholdState,
-		ProjectsState,
+		
 		SimulationState,
 		deserialize_state,
 		serialize_state,
 	)
 
 	hh = HouseholdState(capital=500.0)
-	projects = ProjectsState(
-		active={"loom": ActiveProjectState(ph_left=20.0)},
-		businesses=[Business.running(["spinning_wheel"], opened_year=90)],
-		failed_attempts=collections.defaultdict(int, {"steam_engine": 2}),
-	)
 	econ = EconomyState()
 	holdings = HoldingsState()
 
 	state = SimulationState(
 		household=hh,
-		projects=projects,
 		economy=econ,
 		holdings=holdings,
 		founder=None,
@@ -147,16 +139,22 @@ def _test_runtime_type_reconstruction():
 	staff = deserialize_state(serialize_state(WorkforceSeat(trades_created={"tailor", "weaver"}, employees={"weaver": 3.0})), WorkforceSeat)
 	if not isinstance(staff.trades_created, set):
 		return False, f"trades_created is not set: {type(staff.trades_created)}"
-	if "spinning_wheel" not in restored.projects.operating or restored.projects.business.opened_year_of("spinning_wheel", 0) != 90:
-		return False, f"the business did not round trip: {restored.projects.business}"
-	if not isinstance(restored.projects.failed_attempts, collections.defaultdict):
-		return False, f"failed_attempts is not defaultdict: {type(restored.projects.failed_attempts)}"
+	from sim.ventures.state import VenturesSeat
+	ventures = deserialize_state(serialize_state(VenturesSeat(businesses=[Business.running(["spinning_wheel"], opened_year=90)])), VenturesSeat)
+	if "spinning_wheel" not in ventures.business.operating() or ventures.business.opened_year_of("spinning_wheel", 0) != 90:
+		return False, f"the business did not round trip: {ventures.business}"
+	from sim.projects.state import ProjectsSeat
+	counts = deserialize_state(serialize_state(ProjectsSeat(failed_attempts=collections.defaultdict(int, {"steam_engine": 2}))), ProjectsSeat)
+	if not isinstance(counts.failed_attempts, collections.defaultdict) or counts.failed_attempts["steam_engine"] != 2:
+		return False, f"failed_attempts is not defaultdict: {type(counts.failed_attempts)}"
 	from sim.materials.state import MaterialsSeat
 	seat = deserialize_state(serialize_state(MaterialsSeat(shortages=collections.Counter({"iron": 4}))), MaterialsSeat)
 	if not isinstance(seat.shortages, collections.Counter):
 		return False, f"shortages is not Counter: {type(seat.shortages)}"
-	if not isinstance(restored.projects.active["loom"], ActiveProjectState):
-		return False, f"active['loom'] is not ActiveProjectState: {type(restored.projects.active['loom'])}"
+	from sim.projects.state import ProjectsSeat
+	loom = deserialize_state(serialize_state(ProjectsSeat(active={"loom": ActiveProjectState(ph_left=20.0)})), ProjectsSeat).active["loom"]
+	if not isinstance(loom, ActiveProjectState):
+		return False, f"active['loom'] is not ActiveProjectState: {type(loom)}"
 
 	return True, "Runtime type reconstruction verified"
 
@@ -167,20 +165,17 @@ check("Runtime type reconstruction", _ok, _detail)
 
 def _test_transient_cache_exclusion():
 	"""Verify transient version counters and cache fields are excluded from serialized output."""
-	from sim.engine.state import HouseholdState, ProjectsState, SimulationState, serialize_state
+	from sim.engine.state import HouseholdState, SimulationState, serialize_state
 
 	hh = HouseholdState(capital=1000.0)
-	projects = ProjectsState()
 	state = SimulationState(
 		household=hh,
-		projects=projects,
 		economy=None,
 		founder=None,
 	)
 
 	blob = serialize_state(state)
 	hh_blob = blob["seats"]["founder"]["household"]
-	proj_blob = blob["seats"]["founder"]["projects"]
 
 	for transient in ("_done_ver", "_operating_ver", "_active_ver", "_workforce_ver", "_cap_factor"):
 		if transient in hh_blob or transient in blob:
@@ -198,13 +193,15 @@ def _valid_save():
 	"""A save blob a state serializes to, with the metadata the writer adds, and the stand-in game that would load it."""
 	from types import SimpleNamespace
 	from sim.engine.state import (
-		EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
+		EconomyState, FounderState, HoldingsState, HouseholdState,
 		SimulationState, serialize_state,
 	)
 	state = SimulationState(
-		household=HouseholdState(capital=1250.0), projects=ProjectsState(), economy=EconomyState(),
+		household=HouseholdState(capital=1250.0), economy=EconomyState(),
 		holdings=HoldingsState(), founder=FounderState())
 	state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
+	from sim.projects.state import ProjectsSeat
+	state.seats[state.acting_seat].modules["projects"] = ProjectsSeat()
 	state._goal = "aqueduct"
 	blob = serialize_state(state)
 	blob.update({"_civ": "rome_100ad", "_weights": {}, "_immortal": True,
@@ -251,9 +248,9 @@ def _test_v3_save_shape_validation():
 		return False, f"Valid v3 save was rejected: {err}"
 
 	bad_missing_section = dict(valid_blob)
-	bad_missing_section["seats"] = {"founder": {k: v for k, v in valid_blob["seats"]["founder"].items() if k != "projects"}}
+	bad_missing_section["seats"] = {"founder": {k: v for k, v in valid_blob["seats"]["founder"].items() if k != "holdings"}}
 	err = _validate_save(bad_missing_section, game)
-	if not err or "projects" not in err:
+	if not err or "holdings" not in err:
 		return False, f"Missing section was not rejected properly: {err}"
 
 	bad_missing_meta = dict(valid_blob)

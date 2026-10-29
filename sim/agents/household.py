@@ -10,14 +10,13 @@ field-by-field classification this class is built from.
 
 In the live state architecture, `Household` is a façade backed by the
 authoritative `SimulationState` and its subsystem owners (`HouseholdState`,
-`ProjectsState`, `EconomyState`, `FounderState`). There is NO duplicate storage: every
+`EconomyState`, `FounderState`). There is NO duplicate storage: every
 persistent read and write delegates directly to the underlying typed state.
 """
 from collections import defaultdict
 from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
 					 Optional, Set, Tuple)
 
-from sim.invalidating import ActiveProjectState, _InvalidatingSet, _InvalidatingDict
 from .base import Actor
 from .business_founder_review import FounderReview
 from .household_borrowing import FounderBorrowing
@@ -28,22 +27,9 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	# HouseholdState
 	"capital": "household",
 	"total_spend": "household",
-	"bounties_paid": "household",
 	"cash_flow": "household",
 	"cash_mark": "household",
 	"cash_periods": "household",
-	"spend_last_year": "household",
-
-	# ProjectsState
-	"active": "projects",
-	"operating": "projects",
-	"failed_attempts": "projects",
-	"mothballed": "projects",
-	"bountied": "projects",
-	"opened_year": "projects",
-	"paid_towards": "projects",
-	"stalled": "projects",
-	"closures": "projects",
 
 	# EconomyState
 	"_dashboard_history": "holdings",
@@ -60,7 +46,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 }
 
 _LAZY_FIELDS: Set[str] = {
-	"spend_last_year",
 	"_dashboard_history",
 }
 
@@ -76,8 +61,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 	def __init__(
 		self,
 		starting_capital: float = 0.0,
-		operating_changed: Optional[Callable[[], None]] = None,
-		active_changed: Optional[Callable[[], None]] = None,
 		state: Optional[Any] = None,
 		port: Optional[Any] = None,
 		techniques_held: Optional[Callable[[], Any]] = None,
@@ -94,18 +77,8 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 		self._state.household.cash_mark = float(starting_capital)
 
-		# Wrap mutation-aware collections with callbacks if provided
-		if operating_changed is not None:
-			self._state.projects.business.watch = operating_changed
-		if active_changed is not None:
-			self._state.projects.active = _InvalidatingDict(
-				{k: ActiveProjectState.from_dict(v if isinstance(v, dict) else v.to_canon_dict(), _on_change=active_changed)
-				 for k, v in (self._state.projects.active or {}).items()},
-				on_change=active_changed
-			)
 		# Transient caches and runtime-only trackers
 		self.contract_projects: Set[str] = set()
-		self._spend_this_year: float = 0.0
 		self._goods_cat_state_cache: Any = None
 		self._goods_category_ratios_cache: Any = None
 		self._income_factor_cache: Any = None
@@ -197,30 +170,23 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 	@property
 	def active(self) -> Any:
-		return self._state.projects.active
+		"""The projects in hand of the acting seat: the projects module's seat state (a debt, like the staff)."""
+		return self._state.seats[self._state.acting_seat].modules["projects"].active
 
 	@active.setter
 	def active(self, value: Any) -> None:
-		self._state.projects.active = value
+		self._state.seats[self._state.acting_seat].modules["projects"].active = value
+
+	def _business(self) -> Any:
+		"""The acting seat's own business: the ventures module's seat state (a debt, like the staff and the projects in hand)."""
+		return self._state.seats[self._state.acting_seat].modules["ventures"].business
 
 	@property
 	def operating(self) -> Any:
-		return self._state.projects.operating
-
-	@operating.setter
-	def operating(self, value: Any) -> None:
-		self._state.projects.operating = value
-
-	@property
-	def failed_attempts(self) -> Any:
-		return self._state.projects.failed_attempts
-
-	@failed_attempts.setter
-	def failed_attempts(self, value: Any) -> None:
-		self._state.projects.failed_attempts = value
+		return self._business().operating()
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
-		return self._state.projects.business.opened_year_of(node_id, default)
+		return self._business().opened_year_of(node_id, default)
 
 	def __getattr__(self, name: str) -> Any:
 		if name.startswith("_state"):
@@ -241,7 +207,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 	def __setattr__(self, name: str, value: Any) -> None:
 		if (name in ("_state", "_port", "_techniques_held", "contract_projects")
-				or name.startswith("_spend_this_year")
 				or name.endswith("_cache")
 				or name == "_said_stack_caution"):
 			super().__setattr__(name, value)

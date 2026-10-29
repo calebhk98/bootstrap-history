@@ -17,7 +17,7 @@ from sim.economy.types import EDGE_EXTERNAL
 from sim.markets import trade_duty
 from sim.actors.world_trade import TradeView
 from sim.tests.store_stand_in import base_book
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
+from sim.engine.state import FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import bind_seat, seat_from_template
 from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
@@ -196,7 +196,7 @@ class Game(FactViews):
     """The root state with the real seat rebinding, as in the relations store topic."""
 
     def __init__(self):
-        self.state = SimulationState(household=HouseholdState(capital=100.0), projects=ProjectsState(), founder=FounderState())
+        self.state = SimulationState(household=HouseholdState(capital=100.0), founder=FounderState())
         self.state.seats["northern"] = seat_from_template({"country": "han"}, 50.0, {})
         self.session_seat = None
         self.year = 100

@@ -38,7 +38,7 @@ def starved_game(cost_left, supply=0.02, arrears=0.8, capital=20000.0):
     the money to pay for it."""
     game = sim(capital=capital)
     game.send(StartProject("identity_cover", False))
-    game.state.projects.active["identity_cover"]["cost_left"] = cost_left
+    game.active["identity_cover"]["cost_left"] = cost_left
     real_supply = game.view("legacy_labour")().market_supply
     game.view("legacy_labour")().market_supply = lambda trade, _fallback=real_supply: _fallback(trade) * supply
     game.state.household.capital = -game.view("credit_limit")(None, None, None) * arrears      # in arrears, inside the limit

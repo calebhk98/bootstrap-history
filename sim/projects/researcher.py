@@ -14,7 +14,7 @@ class SeatResearcher:
 		self._projects = projects
 		self._needs = projects.needs
 		self.precaution = precaution
-		self.works = self._needs.legacy_projects().active
+		self.works = self._projects.seat.active
 		self.workforce = self._needs.staff()["employees"]
 
 	def identity(self) -> str:
@@ -36,8 +36,7 @@ class SeatResearcher:
 	def research_price(self, costs: Dict[str, Any], node_id: str, world: Any) -> float:
 		"""What the seat still owes on the node: the shared bill less what it already paid towards it."""
 		price = self._needs.project_cost(node_id)
-		paid_towards = self._needs.legacy_projects().paid_towards or {}
-		return max(0.0, price - funding.paid_credit(price, paid_towards.get(node_id, 0.0)))
+		return max(0.0, price - funding.paid_credit(price, self._projects.seat.paid_towards.get(node_id, 0.0)))
 
 	def commit_research(self, node_id: str, costs: Dict[str, Any], world: Any) -> str:
 		return self._projects.begin_project(node_id, self.precaution)

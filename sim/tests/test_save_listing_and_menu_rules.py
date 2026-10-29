@@ -39,6 +39,12 @@ class ListSaves(unittest.TestCase):
         self.assertEqual((row["readable"], row["year"], row["capital"], row["founder_alive"], row["goal"]),
                          (True, 137, 88.5, False, "transistor"))
 
+    def test_a_row_lists_the_nodes_its_save_holds_from_the_knowledge_modules_slot(self):
+        blob = save_blob()
+        blob["seats"]["a"]["modules"]["knowledge"] = {"done": {"__set__": ["fire", "wheel"]}}
+        self.write("g.json", json.dumps(blob))
+        self.assertEqual(self.rows()["g.json"]["done"], ["fire", "wheel"])
+
     def test_an_unparseable_file_is_listed_as_unreadable(self):
         self.write("broken.json", "{not json")
         self.assertIs(self.rows()["broken.json"]["readable"], False)

@@ -4,6 +4,8 @@ from sim.knowledge.api import LearnTechnique
 from sim.ledger.api import PayEdge
 from sim.refusal import LogLine, Refusal
 
+from sim.ventures.api import CloseConcern, RestoreConcern
+
 from .closure_grace import grace_note, within_grace
 from .constants import STAFF_CLOSURE_GRACE
 from .needed_commands import NoteConcernChange
@@ -17,7 +19,6 @@ class Mothball:
 		work still in progress) - without it, the only way to change what a household is paying for is to start MORE
 		things. It is not free: you lose what the work gave you, and restoring it costs a fraction of building it."""
 		needs = self.needs
-		projects = needs.legacy_projects()
 		nodes = needs.tree_nodes()
 		if node_id not in nodes:
 			return False, "no such node"
@@ -31,7 +32,7 @@ class Mothball:
 		# fraction of a scholar or craftsman (a going concern's "your people already spoken for" table), which is exactly
 		# the fraction a player can be short of even when there is "nothing to save" in money terms. Ask what THIS tool
 		# actually releases (money upkeep, and, if it is running, supervision time) rather than asking about money alone.
-		sch_held, art_held = needs.venture_hands[node_id] if node_id in projects.operating else (0.0, 0.0)
+		sch_held, art_held = needs.venture_hands[node_id] if node_id in needs.operating() else (0.0, 0.0)
 		if nodes[node_id]["up"] <= 0 and sch_held <= 0.005 and art_held <= 0.005:
 			return False, Refusal("nothing_to_save", "that has no money upkeep of yours to stop paying, and "
 			                      "nobody of yours is tied up supervising it either; "
@@ -46,7 +47,7 @@ class Mothball:
 			               "You cannot un-know a thing to save its upkeep")
 		# SHUTTING A SHOP DOWN IS NOT FORGETTING HOW IT WORKED: this touches only `operating` (what you run), never `done`
 		# (what you know). Conflating them would cost a closed loss-maker its place in the tree.
-		was_running = node_id in projects.operating
+		was_running = node_id in needs.operating()
 		earned = needs.venture_real_earnings(node_id) if was_running else 0.0
 		self.close_work(node_id, self.CLOSED_BY_CHOICE)
 		if not was_running:
@@ -74,8 +75,7 @@ class Mothball:
 
 		A concern costs what `open` quotes for it; any other work costs a share of building it again."""
 		needs = self.needs
-		projects = needs.legacy_projects()
-		if node_id not in projects.mothballed:
+		if node_id not in needs.mothballed():
 			return False, "you have not shut that down"
 		if node_id not in needs.techniques_held():
 			return False, ('you no longer know how to do that, so there is '
@@ -108,10 +108,10 @@ class Mothball:
 		# Back in service means back in OPERATION: restore is what a player types to reopen something they shut, so a
 		# concern goes back on the books; any other work just stops being shut.
 		if needs.is_venture[node_id]:
-			projects.business.restore(node_id)
+			needs.send(RestoreConcern(node_id))
 			needs.send(NoteConcernChange("opening", node_id, "restored"))
 		else:
-			projects.business.close_plant(node_id)
+			needs.send(CloseConcern(node_id))
 		return True, LogLine("restored", "%s back in service for %s%s"
 		                     % (node_id, needs.money_text(fee, grouped=True),
 		                        (" (%s)" % _grace_note) if _grace_note else ""),

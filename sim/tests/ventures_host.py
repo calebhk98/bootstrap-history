@@ -11,10 +11,11 @@ from typing import Any, Dict
 
 from sim.tests import module_harness
 from sim.ventures.module import Ventures
+from sim.ventures.state import VenturesSeat
 
 
 def projects_record(**fields: Any) -> types.SimpleNamespace:
-	"""The raw `state.projects` the module still mutates in place."""
+	"""What a test gives with its projects: the held and granted sets (knowledge's), and the works open and shut the plants start with."""
 	values = dict(done=set(), granted=set(), operating=set(), mothballed=set())
 	values.update(fields)
 	return types.SimpleNamespace(**values)
@@ -23,7 +24,7 @@ def projects_record(**fields: Any) -> types.SimpleNamespace:
 def defaults() -> Dict[str, Any]:
 	record = projects_record()
 	return {
-		"tree_nodes": {}, "legacy_projects": record, "techniques_held": record.done, "techniques_granted": record.granted,
+		"tree_nodes": {}, "projects_record": record, "techniques_held": record.done, "techniques_granted": record.granted,
 		"capability_sets": (frozenset(), frozenset(), {}), "venture_garrison": lambda node_id, units=1.0: {},
 		"concern_runs_without_founder": lambda node_id: False, "institution_units": lambda node_id: 1.0,
 		"institution_unit_ceiling": lambda node_id: 1.0, "institution_unit_cost": lambda node_id, have, add: 0.0,
@@ -44,17 +45,26 @@ def defaults() -> Dict[str, Any]:
 	}
 
 
-def build(answers: Dict[type, Any] = None, **views: Any) -> Ventures:
-	"""The module with `views` (and `answers`, the replies of owners to commands, keyed by command class)."""
+def build(answers: Dict[type, Any] = None, seat: VenturesSeat = None, **views: Any) -> Ventures:
+	"""The module with `views` (and `answers`, the replies of owners to commands, keyed by command class). Its seat state is `seat`, or
+	one with a plant running (or shut) for each work the test lists as `operating` (or in the projects record's `mothballed`)."""
 	every_view = defaults()
 	every_view.update(views)
-	record = every_view["legacy_projects"]
-	if "operating" in views:
-		record.operating = set(every_view.pop("operating"))   # the module publishes the open works from the projects record
+	record = every_view.pop("projects_record")
+	seat = seat or VenturesSeat()
+	if getattr(record, "business", None) is not None:
+		seat.businesses = [record.business]
+	opened = set(every_view.pop("operating")) if "operating" in views else set(getattr(record, "operating", None) or ())
+	for key in sorted(opened):
+		if seat.business.plant_of(key) is None:
+			seat.business.open_plant(key, None)
+	for key in sorted(getattr(record, "mothballed", None) or ()):
+		if seat.business.plant_of(key) is None:
+			seat.business.mothball(key, None, "")
 	if "techniques_held" not in views and hasattr(record, "done"):
 		every_view["techniques_held"] = record.done
 	if "techniques_granted" not in views and hasattr(record, "granted"):
 		every_view["techniques_granted"] = record.granted
-	module = module_harness.build(Ventures, views=every_view, answers=answers, module_id="ventures")
+	module = module_harness.build(Ventures, views=every_view, answers=answers, seat=seat, module_id="ventures")
 	module.clock.acting_seat = "founder"
 	return module

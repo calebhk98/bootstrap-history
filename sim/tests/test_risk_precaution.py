@@ -18,7 +18,7 @@ BASE_RISK = 0.4
 def _game(mechanics, work_factor=1.0):
     nodes = {"declared": {"ph": HOURS, "mechanics": mechanics}, "plain": {"ph": HOURS, "mechanics": {}}}
     game = projects_host.build(
-        tree=nodes, project_cost=lambda node_id: BILL, legacy_projects=SimpleNamespace(active={}),
+        tree=nodes, project_cost=lambda node_id: BILL, projects_record=SimpleNamespace(active={}),
         mechanic=lambda name: {node_id: node["mechanics"][name] for node_id, node in nodes.items() if name in node["mechanics"]})
     game.rebuild_work_factor = lambda node_id: work_factor
 
@@ -78,7 +78,7 @@ check("the lever never makes the work safe", quote["chance_of_failure_with"] > 0
 check("a project that bought it is reported as having chosen it",
       not PILOT.precaution_chosen("declared")
       and projects_host.build(
-          legacy_projects=SimpleNamespace(active={"declared": {"precaution": True}})).precaution_chosen("declared"))
+          projects_record=SimpleNamespace(active={"declared": {"precaution": True}})).precaution_chosen("declared"))
 
 # --- the data: every declared precaution names a known kind and overrides figures only with a source
 check("every declared precaution names a known kind and overrides figures only with a source",

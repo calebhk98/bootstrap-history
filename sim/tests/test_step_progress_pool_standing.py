@@ -13,7 +13,7 @@ from sim.workforce.api import ResetTradeHours
 def _Phase(queue, take_per_project):
     """The projects module over a queue of projects each of which takes this many hours; one project's turn is a recorder."""
     module = projects_host.build(
-        tree={node_id: {} for node_id in queue}, legacy_projects=types.SimpleNamespace(active={node_id: {} for node_id in queue}),
+        tree={node_id: {} for node_id in queue}, projects_record=types.SimpleNamespace(active={node_id: {} for node_id in queue}),
         revenue_estimate=0.0, upkeep=0.0, mine_operating_cost=0.0)
     module.turns = []
     module.unused_reported = None
@@ -56,7 +56,7 @@ class QueueWalkTests(unittest.TestCase):
 
 def _Stage():
     """One project's first stage, halted at the trade gate."""
-    module = projects_host.build(tree={"doctorate": {}}, legacy_projects=types.SimpleNamespace(active={"doctorate": {}}))
+    module = projects_host.build(tree={"doctorate": {}}, projects_record=types.SimpleNamespace(active={"doctorate": {}}))
     module._project_progress_trade_gate = lambda node_id, project_state, node: True
     return module
 
@@ -65,7 +65,7 @@ class StandingStoredTests(unittest.TestCase):
     def test_the_standing_is_stored_on_the_project_before_anything_else_happens(self):
         stage = _Stage()
         stage._step_progress_project("doctorate", 2, 2000.0, 3, 1850.04, 7, [], [])
-        stored = stage.needs.legacy_projects().active["doctorate"]
+        stored = stage.seat.active["doctorate"]
         self.assertEqual((stored["pool_total_this_year"], stored["pool_active_count_this_year"], stored["pool_rank_this_year"],
                           stored["pool_remaining_before_this_year"]), (2000.0, 3, 2, 1850.0))
 

@@ -46,7 +46,7 @@ class PathAndWhyTest(unittest.TestCase):
     def test_path_names_what_on_the_route_is_shut_rather_than_unbuilt_and_how_to_reopen_it(self):
         game = unopened_sim()
         game.send(LearnTechnique("lead_chamber"))
-        game.state.projects.mothballed.add("lead_chamber")
+        game.mothballed.add("lead_chamber")
         reply = _ask(game, cmd="path", id=GOAL)
         self.assertIn("lead_chamber", reply.get("on_this_route_but_shut_down") or [])
         self.assertTrue(reply.get("reopen_them_with"))

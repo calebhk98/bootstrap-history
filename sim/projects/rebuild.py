@@ -42,7 +42,7 @@ class Rebuild:
 
 	def rebuild_work_factor(self, node_id):
 		"""What is left to do, as a fraction of a first build: frozen at the start of a running project, live before it."""
-		record = self.needs.legacy_projects().active.get(node_id)
+		record = self.seat.active.get(node_id)
 		if record is not None and "rebuild_factor" in record:
 			return record["rebuild_factor"]
 		return 1.0 - self.rebuild_retained_share(node_id)

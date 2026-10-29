@@ -24,7 +24,7 @@ def held_business(game) -> Business:
 def running_businesses(game) -> Iterator[Tuple[str, Business]]:
     """(owner id, business) of every owner in the game: each seat's, then each actor's, in id order."""
     for seat_id in sorted(game.state.seats):
-        yield seat_id, game.state.seats[seat_id].projects.business
+        yield seat_id, game.state.seats[seat_id].modules["ventures"].business
     for actor_id in sorted(game.view("cast")().actors):
         yield actor_id, game.view("cast")().actors[actor_id].record.business
 

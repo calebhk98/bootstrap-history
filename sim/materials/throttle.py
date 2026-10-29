@@ -27,7 +27,7 @@ class Inputs(NamedTuple):
 
 
 class Throttle:
-    """Needs: year, held_goods, goods_stock_opening, mine_capacity, forest_hectares, nitre_beds, legacy_projects,
+    """Needs: year, held_goods, goods_stock_opening, mine_capacity, forest_hectares, nitre_beds, active_project_ids,
     tree_nodes, shortage_remedy_plan. Sends BankStock, ResetDraws, NoteDraw, RecordEvent."""
 
     def throttle_inputs(self, demand: Any) -> Inputs:
@@ -112,7 +112,7 @@ class Throttle:
 
     def slowed_projects(self) -> List[str]:
         """The active projects the standing shortage slows, in id order; none when nothing running draws it."""
-        return [node_id for node_id in sorted(self.needs.legacy_projects().active_keys_sorted())
+        return [node_id for node_id in self.needs.active_project_ids()
                 if self.throttle_quote(node_id)[0] < 1.0]
 
     def note_shortage(self, material: str, throughput: float) -> bool:

@@ -30,7 +30,7 @@ class Quotes:
 		"""How much of a scalable institution a reopening restores (one, for anything else)."""
 		if node_id not in self.needs.capability_sets()[1]:
 			return 1.0
-		return self.needs.legacy_projects().business.size_of(node_id)
+		return self.seat.business.size_of(node_id)
 
 	def reopen_fee(self, node_id, unit_count=1.0):
 		"""What bringing a shut concern back costs, for `open` and `restore` alike.

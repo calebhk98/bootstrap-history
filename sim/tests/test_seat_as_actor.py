@@ -10,6 +10,7 @@ from sim.agents.records import ActorRecord
 from sim.engine.agents_port_household import HouseholdPort
 from sim.engine.state import serialize_state
 from sim.engine.state_seat import FIRST_SEAT_ID
+from sim.agents.api import Business
 
 QUICK_TOPIC = True
 
@@ -31,7 +32,7 @@ class Switch:
 
 seat = state.seats[FIRST_SEAT_ID]
 slot = SeatsSeat()
-party = HouseholdParty(facade, seat_id=FIRST_SEAT_ID, act_as=Switch, dealings=slot)
+party = HouseholdParty(facade, seat_id=FIRST_SEAT_ID, act_as=Switch, dealings=slot, business=Business())
 check("the party is named by the seat id", party.actor_id == FIRST_SEAT_ID, party.actor_id)
 check("its patents and shares are the seat's own dictionaries",
       party.record.patents is slot.patents and party.record.holdings is slot.shares_held, None)

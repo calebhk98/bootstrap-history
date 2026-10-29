@@ -65,7 +65,7 @@ class StartChecks:
 		if node_id in self.needs.techniques_held():
 			# A MOTHBALLED WORK IS NOT FRESH RESEARCH, and it is not "already done" either: you know how, and the plant
 			# is gone. `restore` puts it back at a fraction of the cost, so this is checked BEFORE the flat case.
-			if node_id in self.needs.closures():
+			if node_id in self.needs.mothballed():
 				return False, (('you built this once and let it go; you already know how, so restoring it is cheaper '
 				                'than starting over: {"cmd":"restore","id":"%s"} for about %s'
 				                % (node_id, self.needs.money_text(self.needs.reopen_fee(node_id)))) if why else None)
@@ -73,7 +73,7 @@ class StartChecks:
 		return None
 
 	def _check_already_active(self, node_id, node, ignore_trade, memo, why) -> Verdict:
-		if node_id in self.needs.legacy_projects().active:
+		if node_id in self.seat.active:
 			return False, ("already active" if why else None)
 		return None
 
@@ -263,13 +263,12 @@ class StartChecks:
 		return "get %s first: 'start %s'" % (in_world, node_id)
 
 	def _owed_on_work_in_hand(self) -> float:
-		active = self.needs.legacy_projects().active
+		active = self.seat.active
 		return sum(active[active_id].get("cost_left") or 0.0 for active_id in sorted(active))
 
 	def _cash_covers_start(self, node_id: str) -> bool:
 		"""True when cash in hand pays for this start on top of what work in hand still owes."""
-		paid_towards = self.needs.legacy_projects().paid_towards or {}
-		return funding.cash_covers_start(self.needs.project_cost(node_id), paid_towards.get(node_id, 0.0),
+		return funding.cash_covers_start(self.needs.project_cost(node_id), self.seat.paid_towards.get(node_id, 0.0),
 		                                 self._owed_on_work_in_hand(), self.needs.acting_balance())
 
 	def money_refusal(self, node_id: str, extra_owed: float = 0.0):
@@ -281,7 +280,7 @@ class StartChecks:
 		if refusal:
 			return refusal
 		# money already sunk into this node comes off the bill
-		price -= funding.paid_credit(price, (needs.legacy_projects().paid_towards or {}).get(node_id, 0.0))
+		price -= funding.paid_credit(price, self.seat.paid_towards.get(node_id, 0.0))
 		owed, ceiling, shortfall = start_money.start_shortfall(
 			price, self._owed_on_work_in_hand(), extra_owed, needs.acting_balance(), needs.credit_limit())
 		if shortfall > 0.0:

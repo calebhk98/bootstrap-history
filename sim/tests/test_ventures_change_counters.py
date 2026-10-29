@@ -12,12 +12,9 @@ SCHOOL = {"school": {"id": "school", "up": 2.0, "rev": 1.0}}
 
 
 def school_module(operating=()):
-	record = ventures_host.projects_record(done={"school"}, operating=set(operating),
-	                                       business=types.SimpleNamespace(
-	                                           open_plant=lambda node_id, year: None, set_size=lambda node_id, size: None,
-	                                           note_opened_year_if_unknown=lambda node_id, year: None))
+	record = ventures_host.projects_record(done={"school"}, operating=set(operating))
 	return ventures_host.build(
-		legacy_projects=record, tree_nodes=SCHOOL, is_venture=lambda node_id: True,
+		projects_record=record, tree_nodes=SCHOOL, is_venture=lambda node_id: True,
 		capability_sets=(frozenset(), frozenset({"school"}), {}), institution_unit_ceiling=lambda node_id: 5.0,
 		venture_ramp=lambda node_id: 1.0)
 
@@ -55,7 +52,7 @@ class InstitutionUnitsVersionTests(unittest.TestCase):
 
 	def test_a_refused_expansion_leaves_the_units_version(self):
 		module = ventures_host.build(
-			legacy_projects=ventures_host.projects_record(operating={"school"}), tree_nodes=SCHOOL)
+			projects_record=ventures_host.projects_record(operating={"school"}), tree_nodes=SCHOOL)
 		before = module.institution_units_version()
 		opened, _reply = module._expand_institution("school", 1.0, pay=False)
 		self.assertFalse(opened)

@@ -36,8 +36,8 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 |---|---|---|
 | ledger | `sim/ledger/` | owns the tonnes ledger and the pool of capacity keys swept out of it; every money path outside the agents' and the economy's own books is a ledger command; still to do: the purses (`HouseholdState.capital` and the actors' `Purses`), reached through `legacy_acting_household` and `legacy_household_actor`; Complaint 790 |
 | living stock, defence stores | `sim/living_stock/`, `sim/defence_stores/` | |
-| projects | `sim/projects/` | starting, progress, completion, staffing, exclusions, running gates, closures, reviews; its seat state holds the exclusions and staffing records; still to do: `active`, `bountied`, `failed_attempts`, `paid_towards`, `operating` and the businesses (written by finance, hazards, production and the household facade), `cause_book.py` |
-| ventures | `sim/ventures/` | what a concern ties up and earns, opening by hand, the founder's sale, coverage roll-out; still to do: the businesses, plants and `mothballed` on the projects record (written by production, finance, hazards and the household facade) |
+| projects | `sim/projects/` | starting, progress, completion, staffing, exclusions, running gates, closures, reviews; its seat state holds the projects in hand (`active`, watched by `WatchActive`, published as `active_projects` and `active_project_ids`), the retry counts, the bounties and the credit paid towards stopped projects (`failed_attempts`, `bountied`, `paid_towards`, `bounties_paid`), last year's project spending (`spend_last_year`, closed by `CloseSpendYear`) and the exclusions and staffing records; it shuts, restores and reviews works by the ventures module's commands; still to do: `cause_book.py` |
+| ventures | `sim/ventures/` | what a concern ties up and earns, opening by hand, the founder's sale, coverage roll-out; the seat state holds the seat's businesses and their plants (`VenturesSeat`), published as `operating`, `mothballed`, `closure_records`, `operating_by_seat`, `venture_size` and `venture_opened_year` and changed by `MothballConcern`, `RestoreConcern`, `CloseConcern`, `ForgetClosureReason`, `StopOperating`, `ShutForgotten`, `NoteConcernYear`, `ReviewConcerns`, `ReviewReopening` and `WatchBusiness`; the exchange still opens, closes and hands over plants on the seat's `Business` record directly (`HouseholdParty`), so the views hand out its own sets and are uncached |
 | coin | `sim/coin/` | carriage is the ledger's `transfer_surcharge` point |
 | campaigns | `sim/campaigns/` | |
 | reporting | `sim/reporting/` | the seat log and audit trail; world events are hazards' |
@@ -180,7 +180,7 @@ actors (21), hazards, workforce (20 each), projects (19).
   an institution, `NoteActiveChanged`). The household's counters, `BumpHouseholdVersion` and the bridge views
   `held_and_running_versions`, `project_versions` and `running_versions` are gone; measure with `python3 tools/measure/module_graph.py`.
   Left: `Household.start_version_counters` (an empty method) until `sim/engine/core.py` stops calling it.
-- [ ] No other `legacy_*` view that hands out a live object (`legacy_projects`, `legacy_world_map`, `legacy_seats`,
+- [ ] No other `legacy_*` view that hands out a live object (`legacy_world_map`, `legacy_seats`,
 `legacy_economy`, `legacy_labour` and the rest: `python3 tools/measure/module_graph.py`).
 - [x] The `scenario` module (`sim/scenario/`) owns the game's setup and clock: the civilisation, the configuration, the modes
   (events, manual, fog, fuzzy estimates), the year (only `AdvanceYear` moves it), the horizon, the danger and project limits,

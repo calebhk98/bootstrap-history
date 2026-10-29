@@ -51,9 +51,9 @@ def module_state_in_use(state) -> bool:
 def holds_that_would_be_lost(seat) -> List[str]:
 	"""What `seat` holds in the engine's state beyond cash, debts and known techniques, named for the player; empty for
 	an empty seat."""
-	household, projects = seat.household, seat.projects
+	household = seat.household
 	found = []
-	if projects.active or len(projects.business.entry_keys()):
+	if seat.modules["projects"].active or len(seat.modules["ventures"].business.entry_keys()):
 		found.append("works")
 	staff = seat.modules.get("workforce") or WorkforceSeat()
 	if any(getattr(staff, name, 0) for name in STAFF_FIELDS) or staff.employees:

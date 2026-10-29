@@ -16,7 +16,7 @@ class ProjectOrder:
 		self.bump(ORDER)
 
 	def apply_reorder_projects(self, command: ReorderProjects) -> None:
-		self.world.order = order_rules.place_sequence(self.world.order, self.needs.legacy_projects().active, command.node_ids)
+		self.world.order = order_rules.place_sequence(self.world.order, self.seat.active, command.node_ids)
 		self.bump(ORDER)
 
 	def apply_restore_project_order(self, command: RestoreProjectOrder) -> None:

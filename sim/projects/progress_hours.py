@@ -15,10 +15,9 @@ class ProgressHours:
 		"""How many of YOUR OWN hours active project `node_id` would draw this year if nothing else competed for the
 		pool - the year's own uncapped want, read here rather than re-derived, so anything reporting on it before the
 		allocation runs cannot silently disagree with what the year actually offers."""
-		projects = self.needs.legacy_projects()
-		record, node = projects.active[node_id], self.needs.tree_nodes()[node_id]
+		record, node = self.seat.active[node_id], self.needs.tree_nodes()[node_id]
 		# A bounty is worked by whoever claims the prize, not by the poster.
-		if node_id in projects.bountied:
+		if node_id in self.seat.bountied:
 			return 0.0
 		# Throttle not applied here; caller applies. Returns WANT, not allocation.
 		return progress_rules.hour_pace(record["ph_left"], node["ph"], node["yrs"])
@@ -29,7 +28,7 @@ class ProgressHours:
 		iteration: this feeds a caller that may sum or rank it, and the active record's own order is not fixed."""
 		out = {}
 		nodes = self.needs.tree_nodes()
-		for node_id in self.needs.legacy_projects().active_keys_sorted():
+		for node_id in sorted(self.seat.active):
 			if node_id not in nodes:
 				continue
 			pace = self.project_hour_pace(node_id)
@@ -40,7 +39,7 @@ class ProgressHours:
 	def project_useful_hours(self, node_id):
 		"""The most of your own hours active project `node_id` can use in a year: its pace (project_hour_pace) bounded by
 		the work left, times the same resource throttle the year applies."""
-		record = self.needs.legacy_projects().active[node_id]
+		record = self.seat.active[node_id]
 		return min(record["ph_left"], self.project_hour_pace(node_id)) * self.needs.resource_throttle(node_id)[0]
 
 	def lab_max_span(self, node_id):
@@ -70,11 +69,10 @@ class ProgressHours:
 	def trade_demand_vs_supply(self):
 		"""Aggregate, by hired trade: what this year's ACTIVE portfolio wants from it against what the trade can actually
 		supply - read-only, so calling this to look never changes what lab_year_draw later does."""
-		projects = self.needs.legacy_projects()
 		desired_by_project = {
 			node_id: {trade_id: plan["desired"] for trade_id, plan in self.trade_draw_plan(
-				node_id, self._effective_lab_left(node_id, projects.active[node_id])).items()}
-			for node_id in projects.active_keys_sorted()}
+				node_id, self._effective_lab_left(node_id, self.seat.active[node_id])).items()}
+			for node_id in sorted(self.seat.active)}
 		return trade_demand_table(desired_by_project, lambda trade_id: self.needs.hours_you_can_call_on[trade_id])
 
 	def lab_year_draw(self, node_id, project_state, frac, hired_left):

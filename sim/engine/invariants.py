@@ -26,7 +26,7 @@ def check_simulation_invariants(state):
         assert math.isfinite(value) and value >= 0.0, \
             "negative or non-finite commodity price %s=%r" % (key, value)
     allocated_fte = 0.0
-    for project_id, project in state.projects.active.items():
+    for project_id, project in state.seats[state.acting_seat].modules["projects"].active.items():
         status = project.get("status")
         assert status in VALID_PROJECT_STATUSES, \
             "active project %s has invalid status %r" % (project_id, status)

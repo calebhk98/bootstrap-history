@@ -24,7 +24,7 @@ class Opening:
 		nodes = needs.tree_nodes()
 		if node_id not in nodes:
 			return False, "no such node"
-		projects = needs.legacy_projects()
+		business = self.seat.business
 		if node_id not in needs.techniques_held():
 			return False, ("you have not worked out how to do that yet, so there "
 			               "is nothing to open")
@@ -43,7 +43,7 @@ class Opening:
 			               "nothing to open and nothing it would earn. It has "
 			               "already changed what you can build")
 		scalable_institutions = needs.capability_sets()[1]
-		if node_id in projects.operating:
+		if node_id in business.operating():
 			if node_id in scalable_institutions and units and float(units) > 0:
 				return self._expand_institution(node_id, float(units), pay)
 			return False, "you are already running that"
@@ -64,10 +64,10 @@ class Opening:
 			needs.send(PayEdge(edges.EDGE_BUILDERS, fee, "opening a venture"))
 		# A reopening keeps the plant's first opening year, so the ramp does not restart.
 		year = needs.year()
-		projects.business.open_plant(node_id, year)
-		projects.business.note_opened_year_if_unknown(node_id, year)
+		business.open_plant(node_id, year)
+		business.note_opened_year_if_unknown(node_id, year)
 		if scalable:
-			projects.business.set_size(node_id, unit_count)
+			business.set_size(node_id, unit_count)
 			self.bump_seat(INSTITUTION_UNITS_CHANGES)
 		needs.send(NoteConcernChange("opening", node_id, "opened"))
 		earns = self.venture_real_earnings(node_id, unit_count, fully_ramped=True)
@@ -137,7 +137,7 @@ class Opening:
 				                  money_text(needs.spending_power("buy"), grouped=True)))
 			needs.send(PayEdge(edges.EDGE_BUILDERS, fee, "expanding a venture"))
 		units_now = have + add_units
-		needs.legacy_projects().business.set_size(node_id, units_now)
+		self.seat.business.set_size(node_id, units_now)
 		self.bump_seat(INSTITUTION_UNITS_CHANGES)
 		earns, costs = node["rev"] * units_now, node["up"] * units_now
 		return True, ("%s expanded from %.2f to %.2f units for %s: it "

@@ -28,8 +28,6 @@ class HouseholdState:
 	"""The founder's household finances, standing staff, standing, and biographical history."""
 	capital: float
 	total_spend: float = 0.0
-	bounties_paid: int = 0
-	spend_last_year: Optional[float] = None
 	# the cash book (sim/engine/cash_book.py): the open period's entries by cause, cash at its start,
 	# and the last few closed years
 	cash_flow: Dict[str, float] = field(default_factory=dict)
@@ -122,66 +120,6 @@ HouseholdState.capital = property(_purse_net, _set_purse_net)  # type: ignore[as
 
 
 @dataclass
-class ProjectsState:
-	"""Research projects, active engineering ventures, and technological capability."""
-	active: Dict[str, ActiveProjectState] = field(default_factory=dict)
-	# the founder's businesses and their plants: what is running, switched off, how big and since when
-	businesses: List[Business] = field(default_factory=lambda: [Business(business_id="founder")])
-	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
-	bountied: Set[str] = field(default_factory=set)
-	paid_towards: Dict[str, float] = field(default_factory=dict)
-	stalled: int = 0
-
-	@property
-	def business(self) -> Business:
-		"""The seat's own business, which holds the plants it runs."""
-		return self.businesses[0]
-
-	@property
-	def operating(self):
-		return self.business.operating()
-
-	@operating.setter
-	def operating(self, value) -> None:
-		self._replace_keys(self.business.operating(), value)
-
-	@property
-	def mothballed(self):
-		return self.business.mothballed()
-
-	@mothballed.setter
-	def mothballed(self, value) -> None:
-		self._replace_keys(self.business.mothballed(), value)
-
-	@property
-	def closures(self):
-		"""{work id: {"reason", "year"}} of the shut works that record why (read only)."""
-		return self.business.closures()
-
-	@staticmethod
-	def _replace_keys(view, value) -> None:
-		if value is view:
-			return
-		wanted = set(value or ())
-		for key in [key for key in view if key not in wanted]:
-			view.discard(key)
-		for key in sorted(wanted):
-			view.add(key)
-
-	def active_keys_sorted(self) -> List[str]:
-		"""Return active project ids in the canonical resolution order.
-
-		Callers that aggregate or mutate project state must not inherit dict
-		insertion order from a save file or command history.
-		"""
-		return sorted(self.active)
-
-	def operating_keys_sorted(self) -> List[str]:
-		"""Return operating project ids independently of set/hash order."""
-		return sorted(self.operating)
-
-
-@dataclass
 class EconomyState:
 	"""Physical plants, extractive workings, durable inventory, and material flows."""
 	# the money an hour of work was worth when the tree's money fields were last counted (opening_money.py)
@@ -199,9 +137,8 @@ class FounderState:
 @dataclass
 class SimulationState:
 	"""Root coordinator aggregating authoritative persistent subsystem states."""
-	# household, projects, founder, holdings and seat_progress alias the acting seat's objects and are not saved (seats are)
+	# household, founder, holdings and seat_progress alias the acting seat's objects and are not saved (seats are)
 	household: Optional[HouseholdState] = field(default=None, metadata={"alias": True})
-	projects: Optional[ProjectsState] = field(default=None, metadata={"alias": True})
 	economy: Optional[EconomyState] = None
 	holdings: Optional[HoldingsState] = field(default=None, metadata={"alias": True})
 	seat_progress: Optional[SeatProgressState] = field(default=None, metadata={"alias": True})
@@ -223,7 +160,7 @@ class SimulationState:
 			self.acting_seat = FIRST_SEAT_ID
 			given = {name: getattr(self, name) for name in ("holdings", "seat_progress")}
 			self.seats[FIRST_SEAT_ID] = SeatState(
-				self.household, self.projects, self.founder,
+				self.household, self.founder,
 				**{name: value for name, value in given.items() if value is not None})
 		bind_seat(self, self.acting_seat)
 		self.attach_purses()
@@ -257,7 +194,6 @@ class SimulationState:
 
 ALL_STATE_CLASSES = (
 	HouseholdState,
-	ProjectsState,
 	EconomyState,
 	FounderState,
 	HoldingsState,

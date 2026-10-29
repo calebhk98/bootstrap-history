@@ -19,7 +19,7 @@ def _Market(seller, left, priced=True):
 def _Founder(market, stock=0.0, own=0.0, market_tonnes=0.0, makers=(), done=(), visible=None):
     module = materials_stand_in.build(
         tree_nodes={node_id: {"_output_per_year": {"alum_kg": 1.0}} for node_id in makers},
-        legacy_projects=materials_stand_in.projects(done=done), goods_stock=lambda commodity: stock,
+        projects_record=materials_stand_in.projects(done=done), goods_stock=lambda commodity: stock,
         mine_capacity={"alum_kg": own}, foreign_supply_tonnes=lambda partner, material: 7.0,
         visibility=lambda node_id, memo=None: visible is None or node_id in visible, **market)
     module.market_tonnes = lambda commodity: market_tonnes + module.import_tonnes(commodity)

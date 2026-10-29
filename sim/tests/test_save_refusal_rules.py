@@ -12,16 +12,20 @@ from types import SimpleNamespace
 from .harness import check
 from sim.engine.saveload import _validate_save, load_state
 from sim.engine.state import (EconomyState, FounderState, HoldingsState, HouseholdState,
-                              ProjectsState, SimulationState, serialize_state)
+                              SimulationState, serialize_state)
 from sim.knowledge.api import KnowledgeSeat
+from sim.projects.state import ProjectsSeat
+from sim.ventures.state import VenturesSeat
 from sim.refusal import cause_of
 
 
 def valid_save():
     state = SimulationState(
-        household=HouseholdState(capital=1250.0), projects=ProjectsState(), economy=EconomyState(),
+        household=HouseholdState(capital=1250.0), economy=EconomyState(),
         holdings=HoldingsState(), founder=FounderState())
     state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
+    state.seats[state.acting_seat].modules["projects"] = ProjectsSeat()
+    state.seats[state.acting_seat].modules["ventures"] = VenturesSeat()
     state._goal = "aqueduct"
     blob = serialize_state(state)
     blob.update({"_civ": "rome_100ad", "_civ_live": {}, "_weights": {}, "_immortal": True,
@@ -50,6 +54,23 @@ unknown["seats"][blob["acting_seat"]]["modules"]["knowledge"]["done"]["__set__"]
 refusal = _validate_save(unknown, game)
 check("a save naming a node the tree lacks is refused with the node",
       cause_of(refusal) == "save_unknown_nodes" and refusal.facts["nodes"] == ["this_node_does_not_exist_anymore"], refusal)
+
+
+def naming(label, edit):
+    """The valid save with a node the tree lacks named by `edit` of the acting seat's module slots."""
+    named = json.loads(json.dumps(blob))
+    edit(named["seats"][named["acting_seat"]]["modules"])
+    return label, _validate_save(named, game)
+
+
+GHOST_WORK = {"ph_left": 1.0, "spent": 0.0, "cost_left": 1.0, "lab_left": {}}
+for label, edit, ghost in (
+        ("in a project in hand", lambda modules: modules["projects"]["active"].update({"ghost_project": GHOST_WORK}), "ghost_project"),
+        ("in a bounty", lambda modules: modules["projects"].update({"bountied": {"__set__": ["ghost_bounty"]}}), "ghost_bounty"),
+        ("in a plant it runs", lambda modules: modules["ventures"]["businesses"][0]["plants"].append({"entry_key": "ghost_plant"}), "ghost_plant")):
+    _label, refusal = naming(label, edit)
+    check("a save naming a node the tree lacks %s is refused with the node" % label,
+          cause_of(refusal) == "save_unknown_nodes" and refusal.facts["nodes"] == [ghost], refusal)
 
 # a refused load leaves the game untouched
 state = SimpleNamespace(household=SimpleNamespace(capital=1250.0))

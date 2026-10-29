@@ -1,7 +1,7 @@
 """What the yearly staffing reopening does with the plants the business's review brings back
 (the projects module's `reopen_restaffed_ventures`): the count is recorded as staffing reopenings and the household's log says it,
 naming at most four and counting those still shut. Which plants come back is `business_review.reopen`, in test_arrears_hours. The
-module runs over plain values, with the review and the world adapter replaced by recorders."""
+module runs over plain values, the ventures module's answer to the review replaced by a recorder."""
 
 QUICK_TOPIC = True
 
@@ -10,15 +10,14 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.reporting.api import RecordEvent
+from sim.ventures.api import ReviewReopening
 from sim.tests import module_harness, projects_host
 
 
 def Game(reopened, still_shut=2):
     """The projects module with what a reopening touches."""
     asked = []
-    business = SimpleNamespace(review_reopening=lambda household, world: asked.append((household, world)) or reopened)
-    module = projects_host.build(legacy_projects=SimpleNamespace(business=business), legacy_household_actor=lambda: "household-adapter",
-                                 actor_world=lambda: "world-of-the-game", year=100)
+    module = projects_host.build(answers={ReviewReopening: lambda command: asked.append(command) or reopened}, year=100)
     module.asked, module.recorded = asked, []
     module.record_staffing_reopenings = module.recorded.append
     module.staffing_shut_count = lambda: still_shut
@@ -36,7 +35,7 @@ def log_of(game):
 
 
 game, result = reopen({"b", "a"})
-check("the review is asked with the seat's household and the actors' world", game.asked == [("household-adapter", "world-of-the-game")])
+check("the ventures module is asked to reopen what the staffing closed", game.asked == [ReviewReopening()])
 check("the plants the review reopened are returned and counted", result == {"a", "b"} and game.recorded == [2], (result, game.recorded))
 lines = log_of(game)
 check("the household's log has one concerns_reopened line for the year", [(line.year, line.kind) for line in lines] == [(130, "concerns_reopened")], lines)

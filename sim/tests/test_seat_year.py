@@ -12,7 +12,7 @@ from .harness import check
 from sim.hazards.merge import mildest_hazard
 from sim.scenario.api import AdvanceYear
 from sim.seats.api import SeatsSeat, run_is_over, seat_ended, seats_playing
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
+from sim.engine.state import FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, seat_from_template
 from sim.engine import year_steps
 from sim.engine.year_run import run_year
@@ -42,7 +42,7 @@ check("two seats from one template share no container",
       and other.founder.policy is not seat.founder.policy, None)
 
 # ---- the end rule: one seat's run ends, the others play on
-state = SimulationState(household=HouseholdState(capital=1.0), projects=ProjectsState(), founder=FounderState())
+state = SimulationState(household=HouseholdState(capital=1.0), founder=FounderState())
 state.seats["second"] = seat_from_template({}, 5.0, {})
 for held in state.seats.values():
     held.modules["seats"] = SeatsSeat()

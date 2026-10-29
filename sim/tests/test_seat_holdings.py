@@ -4,7 +4,7 @@ import json
 
 from .harness import *  # noqa: F401,F403
 from sim.engine.agents_port_household import HouseholdPort
-from sim.engine.state import (EconomyState, FounderState, HouseholdState, ProjectsState,
+from sim.engine.state import (EconomyState, FounderState, HouseholdState,
                               SimulationState, deserialize_state, serialize_state)
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
 from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
@@ -23,7 +23,7 @@ state.holdings._dashboard_history = [12.0]
 state.seat_progress.dashboard_history_years = 150
 state.economy.nodes_money_per_labour_hour = 1.0
 
-second = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(), founder=FounderState())
+second = SeatState(household=HouseholdState(capital=5.0), founder=FounderState())
 state.seats["second"] = second
 bind_seat(state, "second")
 check("a second seat starts with empty holdings and progress",

@@ -42,13 +42,6 @@ class ResetProjectProgress(Command):
 
 
 @dataclass(frozen=True)
-class ShutForgotten(Command):
-    """The acting seat's works for `node_ids`, techniques it has just lost, are no longer running or shut for a time.
-    Not applied by the projects module yet: the engine bridge applies it."""
-    node_ids: tuple
-
-
-@dataclass(frozen=True)
 class AdvanceProjects(Command):
     """The year's progress step for the acting seat: every project in hand takes its turn at the director hours left in
     `pool` and the hired hours left in `hired_left`. Answers (hours left in the pool, the same before wage work, the
@@ -150,9 +143,10 @@ class KeepStaffed(Command):
 
 
 @dataclass(frozen=True)
-class NoteActiveChanged(Command):
-    """A project in hand of the acting seat was added, removed or changed by code outside this module (the screens, hazards, the
-    credit freeze, a load), so the `active_projects_version` moves and every memo keyed on it is stale."""
+class WatchActive(Command):
+    """Seat `seat_id`'s projects in hand report their own changes from here on (a new seat, a load or a seat switch needs it again);
+    the `active_projects_version` moves with every change of any project in hand."""
+    seat_id: str
 
 
 @dataclass(frozen=True)
@@ -172,3 +166,14 @@ class ReorderProjects(Command):
 class RestoreProjectOrder(Command):
     """The whole project order is set to `order`, as a game opens it from the tree's order or a trial run puts it back."""
     order: tuple
+
+
+@dataclass(frozen=True)
+class NoteYearSpend(Command):
+    """Count `amount` among what the acting seat has paid on projects this year, beside the payment that moved it."""
+    amount: float
+
+
+@dataclass(frozen=True)
+class CloseSpendYear(Command):
+    """The year's count of what the acting seat paid on projects becomes last year's and starts again from nothing."""

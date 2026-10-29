@@ -22,7 +22,7 @@ def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, grant
     seat = ProductionSeat(tenure=tenure, industry_seeded=seeded)
     projects = types.SimpleNamespace(
         granted=set(granted or ()),
-        business=Business.running(["loom"], opened_year=10), done_year={}, failed_attempts=collections.defaultdict(int), done=set(), operating=set())
+        business=Business.running(["loom"], opened_year=10), done_year={}, done=set(), operating=set())
     stub = types.SimpleNamespace(
         state=types.SimpleNamespace(projects=projects, scenario=types.SimpleNamespace(year=10)),
         cfg={"revenue_ramp_years": 4.0}, nodes={"loom": {"risk": 0.3, "ph": 4000.0}},
@@ -46,7 +46,7 @@ def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, grant
     stub.after_failed_attempts = lambda node_id, count: module.after_failed_attempts(node_id, count)
     views = {} if mechanic is None else {"mechanic": mechanic}
     stub.projects = projects_host.build(
-        tree_nodes=lambda: stub.nodes, legacy_projects=projects, techniques_held=projects.done, industry_depth=lambda node_id: module.industry_depth(node_id),
+        tree_nodes=lambda: stub.nodes, projects_record=projects, techniques_held=projects.done, industry_depth=lambda node_id: module.industry_depth(node_id),
         failed_attempts_trial=lambda node_id, count: module.after_failed_attempts(node_id, count), **views)
     return stub
 

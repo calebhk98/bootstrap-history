@@ -148,7 +148,7 @@ check("a country seat is handed over with its kind and holder", moved["from"] ==
       and "senate" not in seats_two and seats_two["regent"].kind == "country" and seats_two["regent"].holder == GOVERNMENT, moved)
 
 # ---- save and load
-state = SimulationState(household=household_seat().household, projects=household_seat().projects, founder=household_seat().founder)
+state = SimulationState(household=household_seat().household, founder=household_seat().founder)
 state.seats["regent"] = country_seat()
 loaded = deserialize_state(serialize_state(state))
 check("a save keeps the country seat, its kind and holder",

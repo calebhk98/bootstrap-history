@@ -28,14 +28,14 @@ class Game:
     """The seats module over the views the mortality step reads, with its sent commands to read back."""
 
     def __init__(self, alive=True, life_left=5, stalled=0, deputies=False, year=100, extended=False, losable=()):
-        self.projects = SimpleNamespace(stalled=stalled, operating=set(), done=set())
-        self.slot = SeatsSeat(founder_alive=alive, life_left=life_left)
+        self.projects = SimpleNamespace(operating=set())
+        self.slot = SeatsSeat(founder_alive=alive, life_left=life_left, stalled=stalled)
         patronage = {"founder_age": 61, "deputies": 0.0, "deputy_hours": 0.0, "deputies_carry_the_work": deputies}
         self.module = module_harness.build(Seats, seat=self.slot, views={
             "dissolution_terms": {"life_extension_years": 2, "years_before_forgetting": BEFORE_FORGETTING,
                                   "forget_fraction_divisor": 4, "years_until_end": UNTIL_END},
             "running_mechanics": lambda name: ["the_mechanic"] if extended else [], "patronage": patronage,
-            "legacy_projects": self.projects, "losable_node_ids": lambda keep_dispersed: list(losable),
+            "losable_node_ids": lambda keep_dispersed: list(losable),
             "game_random": random.Random(1), "techniques_held": set(), "techniques_granted": set(),
             "corpus_dispersed": lambda node_id: False})
         self.state = SimpleNamespace(founder=self.slot, projects=self.projects)
@@ -62,8 +62,8 @@ extended = after_step(Game(life_left=1, extended=True))
 check("a mechanic that extends the founder's life adds its years and so spares the last year",
       extended.slot.founder_alive and extended.slot.life_left == 2)
 check("a death with deputies carrying the work does not start the dissolution",
-      after_step(Game(life_left=1, deputies=True)).projects.stalled == 0)
-check("a death with no deputies starts the dissolution count at one", after_step(Game(life_left=1)).projects.stalled == 1)
+      after_step(Game(life_left=1, deputies=True)).slot.stalled == 0)
+check("a death with no deputies starts the dissolution count at one", after_step(Game(life_left=1)).slot.stalled == 1)
 
 for stalled_before, expected_shown in ((1, False), (2, True), (5, True), (8, True), (10, True), (3, False), (6, False)):
     dissolving = after_step(Game(alive=False, stalled=stalled_before))
@@ -75,7 +75,7 @@ ended = after_step(Game(alive=False, stalled=UNTIL_END - 1))
 check("the programme is ended when the dissolution has run its years",
       ended.slot.dead_reason is not None and [line.kind for line in logged(ended)].count("run_ends") == 1)
 check("before then it is not ended", after_step(Game(alive=False, stalled=UNTIL_END - 2)).slot.dead_reason is None)
-check("a living founder resets the count", after_step(Game(life_left=5, stalled=4)).projects.stalled == 0)
+check("a living founder resets the count", after_step(Game(life_left=5, stalled=4)).slot.stalled == 0)
 
 check("a founder_dies line stops a multi-year step", event_kinds.stops_a_step(LogLine("founder_dies", "dead", aged=61)) is True)
 check("a dissolution notice does not stop a step", event_kinds.stops_a_step(LogLine("programme_dissolving", "fading")) is False)

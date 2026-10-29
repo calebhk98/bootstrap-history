@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.engine.core_properties import ForwardingPropertiesMixin
-from sim.engine.state import EconomyState, FounderState, HouseholdState, ProjectsState, SimulationState
+from sim.engine.state import EconomyState, FounderState, HouseholdState, SimulationState
 
 # facade name -> (value to write, path of the field that must hold it on the state)
 SCALARS = {
@@ -14,8 +14,6 @@ SCALARS = {
 }
 # facade name -> path of the collection it must be (the same object, not a copy)
 COLLECTIONS = {
-    "active": "projects.active", "operating": "projects.operating",
-    "mothballed": "projects.mothballed", "paid_towards": "projects.paid_towards",
     "policy": "founder.policy",
 }
 
@@ -23,7 +21,7 @@ COLLECTIONS = {
 class _Facade(ForwardingPropertiesMixin):
     def __init__(self):
         self.state = SimulationState(
-            household=HouseholdState(capital=1000.0), projects=ProjectsState(), founder=FounderState(),
+            household=HouseholdState(capital=1000.0), founder=FounderState(),
             economy=EconomyState())
 
     def forget_goal_caches(self):
@@ -58,11 +56,6 @@ class Facade(unittest.TestCase):
         facade = _Facade()
         for name, path in COLLECTIONS.items():
             self.assertIs(getattr(facade, name), _at(facade.state, path), name)
-
-    def test_assigning_a_collection_replaces_the_states_object(self):
-        facade = _Facade()
-        facade.bountied = {"a_node"}
-        self.assertEqual(facade.state.projects.bountied, {"a_node"})
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 import collections
 
-from sim.agents.api import ActorsState, Business
+from sim.agents.api import ActorsState, Business, Plant
 from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
 from sim.finance.api import FinanceSeat
@@ -14,8 +14,10 @@ from sim.knowledge.api import KnowledgeSeat
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
 from sim.production.api import ProductionSeat
+from sim.projects.state import ProjectsSeat
+from sim.ventures.state import VenturesSeat
 from sim.workforce.api import WorkforceSeat
-from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
+from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState,
                               SimulationState, deserialize_state)
 from sim.foreign_trade.api import ForeignTradeWorld
 from sim.refusal import Refusal, cause_of
@@ -64,24 +66,29 @@ check("deserialize_state: a field the save lacks takes its default", workforce.t
 check("deserialize_state: an unknown key and an `_on_change` key are not set", not hasattr(workforce, "not_a_field") and not hasattr(workforce, "_on_change_hook"))
 
 # ---- the retry counts, nested records and sets of the projects
-projects = deserialize_state({
+ventures = deserialize_state({"businesses": [{"business_id": "founder", "owner_id": "", "plants": [{"entry_key": "loom", "size": 2, "state": "mothballed", "reason": "staff", "since_year": 40}]}]}, VenturesSeat)
+projects_seat = deserialize_state({
 	"active": {"z_mill": {"ph_left": 80, "cost_left": 300, "yrs": 1.5, "spent": 100, "status": "ACTIVE", "lab_left": {"mason": 15}},
 	           "a_forge": {"ph_left": 10, "cost_left": 20, "yrs": 0.5, "spent": 5, "status": "ACTIVE"}},
-	"failed_attempts": {"printing": "3", "alloy": 1},
-	"businesses": [{"business_id": "founder", "owner_id": "", "plants": []}],
-	}, ProjectsState)
+	"failed_attempts": {"printing": "3", "alloy": 1}, "bountied": {"__set__": ["alloy"]},
+                                   "paid_towards": {"printing": 250}, "bounties_paid": "2"}, ProjectsSeat)
 check("deserialize_state: the retry counts are a default dict of integers that counts from zero",
-      type(projects.failed_attempts) is collections.defaultdict and dict(projects.failed_attempts) == {"printing": 3, "alloy": 1}
-      and projects.failed_attempts["never_tried"] == 0, projects.failed_attempts)
+      type(projects_seat.failed_attempts) is collections.defaultdict and dict(projects_seat.failed_attempts) == {"printing": 3, "alloy": 1}
+      and projects_seat.failed_attempts["never_tried"] == 0, projects_seat.failed_attempts)
+check("deserialize_state: the bounties are a set, the credits floats and the count an integer",
+      projects_seat.bountied == {"alloy"} and projects_seat.paid_towards == {"printing": 250.0}
+      and type(projects_seat.paid_towards["printing"]) is float and projects_seat.bounties_paid == 2, projects_seat)
 check("deserialize_state: active projects are rebuilt as records, in the saved order",
-      list(projects.active) == ["z_mill", "a_forge"] and all(type(each) is ActiveProjectState for each in projects.active.values())
-      and (projects.active["z_mill"].ph_left, projects.active["z_mill"].cost_left, projects.active["z_mill"].spent,
-           projects.active["z_mill"].lab_left, projects.active["z_mill"].status) == (80.0, 300.0, 100.0, {"mason": 15.0}, "ACTIVE")
-      and projects.active["a_forge"].lab_left is None, None)
+      list(projects_seat.active) == ["z_mill", "a_forge"] and all(type(each) is ActiveProjectState for each in projects_seat.active.values())
+      and (projects_seat.active["z_mill"].ph_left, projects_seat.active["z_mill"].cost_left, projects_seat.active["z_mill"].spent,
+           projects_seat.active["z_mill"].lab_left, projects_seat.active["z_mill"].status) == (80.0, 300.0, 100.0, {"mason": 15.0}, "ACTIVE")
+      and projects_seat.active["a_forge"].lab_left is None, None)
 knowledge = deserialize_state({"done": {"__set__": ["fire", "stone_cutting"]}, "done_year": {"fire": "3", "stone_cutting": 10}}, KnowledgeSeat)
 check("deserialize_state: done is a set, years are integers", knowledge.done == {"fire", "stone_cutting"} and type(knowledge.done) is set
       and knowledge.done_year == {"fire": 3, "stone_cutting": 10}, None)
-check("deserialize_state: the founder's business is a Business", projects.businesses == [Business(business_id="founder")], projects.businesses)
+check("deserialize_state: the seat's businesses are Businesses holding plants, the first the seat's own",
+      ventures.businesses == [Business(business_id="founder", plants=[Plant(entry_key="loom", size=2.0, state="mothballed", reason="staff", since_year=40)])]
+      and ventures.business is ventures.businesses[0] and ventures.business.closures()["loom"] == {"reason": "staff", "year": 40}, ventures.businesses)
 disclosures = deserialize_state({"disclosures": {"fire": {"mode": "license", "published_year": None, "licensees": {
 	"firm:2": {"fee": 5.0, "royalty": 0.1, "year": 101}}}}}, DiffusionSeat).disclosures
 check("deserialize_state: a disclosure record (an untyped dict) is as saved",
@@ -151,8 +158,8 @@ check("deserialize_state: seats come back in the saved order and as seats",
       list(state.seats) == ["zed", "abe"] and state.seats["zed"].goal == "steam_engine" and state.seats["zed"].country == "han"
       and state.seats["zed"].modules["knowledge"]["done"] == {"__set__": ["fire"]} and state.seats["zed"].founder._founder_death_year == 30
       and state.seats["zed"].holdings._dashboard_history == [3.0] and state.seats["abe"].founder is None, None)
-check("deserialize_state: the acting seat's objects are the root's household, projects and holdings",
-      state.acting_seat == "abe" and state.household is state.seats["abe"].household and state.projects is state.seats["abe"].projects
+check("deserialize_state: the acting seat's objects are the root's household and holdings",
+      state.acting_seat == "abe" and state.household is state.seats["abe"].household
       and state.holdings is state.seats["abe"].holdings and state.household.capital == 4.0, None)
 check("deserialize_state: the metadata and the other sections", state._civ == "rome" and state._rng == [3, [0, 1], None] and state._seed == "seed text"
       and state.interface == {"panel": "map"}, None)

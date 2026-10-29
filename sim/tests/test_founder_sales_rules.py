@@ -17,7 +17,7 @@ NODE = "inn"
 class SaleSetupTests(unittest.TestCase):
     def setup(self, operating, granted=()):
         module = ventures_host.build(
-            legacy_projects=ventures_host.projects_record(operating=set(operating), granted=set(granted)),
+            projects_record=ventures_host.projects_record(operating=set(operating), granted=set(granted)),
             seat_party_with_margins=lambda seat, margins: SimpleNamespace(actor_id="seat:0", margins=margins),
             actor_world=SimpleNamespace(concern_margin=lambda node_id: 7.0),
             cast=SimpleNamespace(

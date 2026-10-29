@@ -2,9 +2,9 @@
 
 Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_projects.py and
 the other bridge files) under the name the owner will publish, or a view of a module that has moved, except the `legacy_*`
-ones: raw state the module still mutates in place, which go when that state moves. Grouped by the owner each is
-catalogued under (docs/architecture/catalogue). Every view the module publishes is uncached: the record of what is in hand,
-built and running is written by unmoved code, so no channel can say when it changed."""
+ones: raw state the module still shares with the engine, which go when that state moves. Grouped by the owner each is
+catalogued under (docs/architecture/catalogue). Every view the module publishes is uncached: the projects in hand change
+under their own watch (any field of a record), so no channel can say when the answer moved."""
 from sim.assembly.api import FIRST, KEYED, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
 from sim.diffusion.api import ApplyTechEffects
 from sim.knowledge.api import LearnTechnique, RevealFrom
@@ -15,13 +15,14 @@ from sim.polity.api import AddGovernance, AddScandal, CarryOutTransfers, GainRep
 from sim.production.api import LearnFromFailure
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 from sim.seats.api import RecordGoalReached
-from sim.ventures.api import ClearMothball, OpenVenture
+from sim.ventures.api import (ClearMothball, CloseConcern, ForgetClosureReason, MothballConcern, NoteConcernYear, OpenVenture, RestoreConcern,
+                              ReviewConcerns, ReviewReopening)
 from sim.workforce.api import DrawTradeHours, GrantStaff, LoseCrew, ReleaseHours, ResetTradeHours, SpendDirectorHours
 
-from .commands import (AdvanceProjects, AutoOpenVentures, Bribe, CloseLapsedDependents, CloseUnstaffedVentures, CloseWork,
-                       CompleteProject, Exclude, HaltActiveProjects, Include, KeepStaffed, MothballWork, NoteActiveChanged, NoteVentureYear, PostBounty, PutProjectFirst, ReopenRestaffedVentures, ReorderProjects, ResetProjectProgress,
-                       RestoreProjectOrder, RestoreWork, ReviewVentures, StartProject, StopProject)
-from .needed_commands import NoteConcernChange, NoteYearSpend
+from .commands import (AdvanceProjects, AutoOpenVentures, Bribe, CloseLapsedDependents, CloseSpendYear, CloseUnstaffedVentures, CloseWork,
+                       CompleteProject, Exclude, HaltActiveProjects, Include, KeepStaffed, MothballWork, NoteVentureYear, NoteYearSpend, PostBounty, PutProjectFirst, ReopenRestaffedVentures, ReorderProjects, ResetProjectProgress,
+                       RestoreProjectOrder, RestoreWork, ReviewVentures, StartProject, StopProject, WatchActive)
+from .needed_commands import NoteConcernChange
 from .project_order import ORDER
 from .projects import ACTIVE, ACTIVE_CHANGES, START, Projects
 from .state import ProjectsSeat, ProjectsWorld
@@ -30,11 +31,10 @@ READS_BY_OWNER = {
 	"knowledge": ("tree", "tree_nodes", "category_trait", "tree_closure", "techniques_held", "techniques_granted", "techniques_forgotten", "visibility", "visible_to_player",
 	              "prerequisite_message", "needs_first", "corpus_hedge", "never_abandon"),
 	"diffusion": ("foreign_only", "civ_cost_factor", "literacy_ceiling", "staff_sources", "tech_effects"),
-	"ventures": ("operating", "closures", "reopen_fee", "reopen_units", "venture_capex", "venture_hands", "venture_foreman", "venture_foreman_free",
+	"ventures": ("operating", "mothballed", "closure_records", "reopen_fee", "reopen_units", "venture_capex", "venture_hands", "venture_foreman", "venture_foreman_free",
 	             "venture_staff_free", "venture_staff_used", "venture_real_earnings", "venture_real_upkeep", "opening_fee"),
 	"production": ("is_venture", "running", "revenue_estimate", "upkeep", "institution_units", "institution_unit_ceiling",
 	               "institution_places", "institution_upkeep", "industry_depth", "failed_attempts_trial", "concern_market"),
-	"projects (not moved)": ("legacy_projects",),
 	"materials": ("own_output_claim", "bounty_price", "material_upfront_refusal", "material_pool", "generation", "material_binding",
 	              "resource_throttle", "failure_loss", "start_gate_material_seller", "project_material_parts",
 	              "project_cost_without_materials"),
@@ -47,7 +47,7 @@ READS_BY_OWNER = {
 	              "effective_scholars", "headcount"),
 	"resources": ("mine_operating_cost",),
 	"living_stock": ("stock_status", "stock_held", "venture_garrison"),
-	"ledger": ("acting_balance", "goods_stock", "legacy_acting_household", "legacy_household_actor"),
+	"ledger": ("acting_balance", "goods_stock"),
 	"reporting": ("money_text",),
 	"seats": ("win_condition_text", "win_condition_value", "acting_seat", "automation", "founder", "goal", "automatic_policy"),
 	"actors": ("actor_world",),
@@ -90,8 +90,8 @@ _VIEWS = (
 	("staffing_closure_summary", "staffing_closure_summary", None, True), ("staffing_closure_warnings", "staffing_closure_warnings", QUOTE, True),
 	("staffing_shut_count", "staffing_shut_count", None, True),
 	("seat_review", "seat_review", QUOTE, True), ("committed_cost", "committed_cost", None, True),
-	("active_projects", "active_projects", None, True), ("exclusions", "exclusions", None, True),
-	("mothballed", "mothballed_works", None, True), ("bountied", "bountied_nodes", None, True),
+	("active_projects", "active_projects", None, True), ("active_project_ids", "active_project_ids", None, True), ("exclusions", "exclusions", None, True),
+	("bountied", "bountied_nodes", None, True),
 	("failed_attempts", "failed_attempt_counts", None, True), ("paid_towards", "paid_towards_projects", None, True),
 	("bounties_paid", "bounties_paid_total", None, True),
 	("shut_for_staff", "shut_for_staff", None, True), ("spend_last_year", "spend_last_year", None, True),
@@ -124,14 +124,15 @@ MODULE_SPECS = (ModuleSpec(
 	         (Bribe, "apply_bribe"), (ResetProjectProgress, "apply_reset_project_progress"), (AdvanceProjects, "apply_advance_projects"), (CompleteProject, "apply_complete_project"),
 	         (CloseWork, "apply_close_work"), (CloseLapsedDependents, "apply_close_lapsed_dependents"),
 	         (CloseUnstaffedVentures, "apply_close_unstaffed_ventures"), (ReopenRestaffedVentures, "apply_reopen_restaffed_ventures"),
-	         (AutoOpenVentures, "apply_auto_open_ventures"), (NoteVentureYear, "apply_note_venture_year"),
+	         (AutoOpenVentures, "apply_auto_open_ventures"), (NoteVentureYear, "apply_note_venture_year"), (NoteYearSpend, "apply_note_year_spend"), (CloseSpendYear, "apply_close_spend_year"),
 	         (ReviewVentures, "apply_review_ventures"), (MothballWork, "apply_mothball_work"), (HaltActiveProjects, "apply_halt_active_projects"), (RestoreWork, "apply_restore_work"),
 	         (PutProjectFirst, "apply_put_project_first"), (ReorderProjects, "apply_reorder_projects"),
 	         (RestoreProjectOrder, "apply_restore_project_order"), (Exclude, "apply_exclude"), (Include, "apply_include"), (KeepStaffed, "apply_keep_staffed"),
-	         (NoteActiveChanged, "apply_note_active_changed")),
+	         (WatchActive, "apply_watch_active")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(PayEdge, NoteSpend, ReceiveFromEdge, RecordBribe, RecordEvent, RecordAutomation, RecordAutomationSkip, SettleProjectMaterials,
-	       ClearMothball, NoteConcernChange, NoteYearSpend, OpenVenture, ReleaseHours, LearnTechnique, RevealFrom, ChangeHeld,
+	       ClearMothball, CloseConcern, ForgetClosureReason, MothballConcern, NoteConcernYear, RestoreConcern, ReviewConcerns,
+	       ReviewReopening, NoteConcernChange, OpenVenture, ReleaseHours, LearnTechnique, RevealFrom, ChangeHeld,
 	       CarryOutTransfers, ApplyTechEffects, GainReputation, AddScandal, AddGovernance, GrantStaff, RecordGoalReached, LoseCrew,
 	       LearnFromFailure, ApplyThrottle, DrawTradeHours, ResetTradeHours, SpendDirectorHours),
 	phases=(PhaseHook("start_projects", "start_projects_hook"),),

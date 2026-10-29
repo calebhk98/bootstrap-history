@@ -143,7 +143,7 @@ def build(scenario):
     sim = S.Sim(NODES, ORDER, random.Random(scenario["seed"]), events=scenario["events"],
               manual=False, civ=S.load_civ(scenario["civ"]))
     sim.state._goal = GOAL
-    if hasattr(sim.state.projects, "done_year"):   # a checkout from before the knowledge module owned the record
+    if hasattr(getattr(sim.state, "projects", None), "done_year"):   # a checkout from before the knowledge module owned the record
         sim.done_year = {}
     else:
         from sim.knowledge.api import StartDoneYearRecord

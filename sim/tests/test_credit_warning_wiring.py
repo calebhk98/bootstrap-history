@@ -29,7 +29,7 @@ class Owing:
             ReviewVentures: lambda command: [SimpleNamespace(entry_key=key) for key in closures],
             Manumit: lambda command: self.manumitted.append(command.people),
             # the projects module's own rule over the stand-in record
-            HaltActiveProjects: lambda command: halt_active_projects(self.projects) if self.projects.active else ([], 0.0)}
+            HaltActiveProjects: lambda command: halt_active_projects(self.projects.active, self.projects.paid_towards, self.projects.bountied) if self.projects.active else ([], 0.0)}
         self.module = finance_host.build(answers=answers, household=self.household)
         self.module.credit_limit = lambda revenue=None, upkeep=None, capital=None: LIMIT
 

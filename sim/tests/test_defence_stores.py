@@ -315,7 +315,7 @@ class _Staffed(_Host):
             tree_nodes=self.nodes, operating=self.state.projects.operating, institution_units=self.institution_units,
             venture_garrison=self.venture_garrison, staff=staff, unskilled_trade="labourer")
         self.projects_module = projects_host.build(
-            tree=self.nodes, operating=lambda: self.state.projects.operating, legacy_projects=self.state.projects,
+            tree=self.nodes, operating=lambda: self.state.projects.operating, projects_record=self.state.projects,
             institution_units=self.institution_units, venture_foreman=self.ventures_module.venture_foreman,
             venture_garrison=self.venture_garrison, venture_foreman_free=self.ventures_module.venture_foreman_free,
             venture_hands=lambda node_id: (0.0, 0.0), venture_staff_free=lambda: (10.0, 10.0), effective_scholars=100.0,

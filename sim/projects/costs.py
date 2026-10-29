@@ -1,7 +1,6 @@
 """What starting a project costs now, all factors applied, and the frozen bill of one in hand.
 
-Needs: price_index, state_interest, tree, material_cost_factor, project_material_parts, project_cost_without_materials,
-legacy_projects."""
+Needs: price_index, state_interest, tree, material_cost_factor, project_material_parts, project_cost_without_materials."""
 from . import constants, cost_rules
 
 
@@ -20,7 +19,7 @@ class Costs:
 	def project_cost(self, node_id):
 		"""What this project will actually cost in money, all factors applied: the number `why` quotes and the number the project
 		must have actually PAID before it can complete (money must not be decorative, with only hours real)."""
-		frozen = (self.needs.legacy_projects().active.get(node_id) or {}).get("bill")
+		frozen = (self.seat.active.get(node_id) or {}).get("bill")
 		if frozen is not None:
 			return frozen
 		return self.project_cost_now(node_id)

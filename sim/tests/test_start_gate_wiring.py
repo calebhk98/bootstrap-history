@@ -22,7 +22,7 @@ class Projects:
 
 def purse(active):
     """The projects module as `committed_cost` reads it: the projects in hand."""
-    return projects_host.build(legacy_projects=Projects(active))
+    return projects_host.build(projects_record=Projects(active))
 
 
 def committed_cost(module):

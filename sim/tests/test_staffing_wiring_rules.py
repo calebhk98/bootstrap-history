@@ -7,6 +7,7 @@ import types
 import unittest
 
 from sim.ledger.api import PayEdge
+from sim.ventures.api import ReviewReopening
 from sim.projects import constants
 from sim.reporting.api import RecordEvent
 from sim.tests import module_harness, production_host, projects_host
@@ -48,9 +49,7 @@ class ClosingUnstaffed(unittest.TestCase):
 
 
 def Reopening(reopened):
-    business = types.SimpleNamespace(review_reopening=lambda household, world: reopened)
-    module = projects_host.build(legacy_projects=types.SimpleNamespace(business=business), legacy_household_actor=lambda: "household",
-                                 actor_world=lambda: "world")
+    module = projects_host.build(answers={ReviewReopening: reopened})
     module.recorded = []
     module.record_staffing_reopenings = module.recorded.append
     module.staffing_shut_count = lambda: 0
@@ -72,10 +71,9 @@ class ReopeningRestaffed(unittest.TestCase):
 
 
 def Restoring(closure_age, fee=100.0, cash=1000.0):
-    projects = types.SimpleNamespace(mothballed={"press"}, done={"press"}, business=types.SimpleNamespace(
-        restore=lambda node_id: None, close_plant=lambda node_id: None))
+    projects = types.SimpleNamespace(mothballed={"press"}, done={"press"})
     module = projects_host.build(
-        legacy_projects=projects, tree={"press": {"pre": []}}, reopen_fee=lambda node_id: fee, spending_power=lambda kind: cash,
+        projects_record=projects, tree={"press": {"pre": []}}, reopen_fee=lambda node_id: fee, spending_power=lambda kind: cash,
         acting_balance=cash, is_venture=lambda node_id: True, year=100)
     module.CLOSED_FOR_STAFF = "staff"
     module.running_gate_refusal = lambda node_id: None
@@ -117,7 +115,7 @@ class RestoreWork(unittest.TestCase):
 
     def test_a_work_that_was_not_shut_is_refused(self):
         game = Restoring(closure_age=3)
-        game.needs.legacy_projects().mothballed.clear()
+        game.needs.mothballed().clear()
         self.assertFalse(game.restore_work("press")[0])
 
 

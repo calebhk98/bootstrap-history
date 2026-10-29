@@ -15,6 +15,7 @@ from sim.production.api import LearnFromFailure
 from sim.projects import constants as projects_constants
 from sim.reporting.api import RecordEvent
 from sim.tests import materials_stand_in, projects_host
+from sim.projects.state import ProjectsSeat
 
 NODE_ID = "kiln"
 
@@ -26,7 +27,7 @@ class BillSim:
     def __init__(self, risk, running_cost, cost_now, up_front, running):
         module = materials_stand_in.build(
             tree_nodes={NODE_ID: {"risk": risk}}, failure_reset_share=0.4,
-            legacy_projects=materials_stand_in.projects(active={NODE_ID: {}} if running else {}),
+            projects_record=materials_stand_in.projects(active={NODE_ID: {}} if running else {}),
             project_cost=lambda node_id: running_cost, project_cost_now=lambda node_id: cost_now)
         module.up_front_materials_money = lambda node_id: up_front
         self.failure_loss = module.failure_loss
@@ -80,16 +81,16 @@ class FailingSim:
             projects=SimpleNamespace(
                 done=set(),
                 active={NODE_ID: {"yrs": 4.0, "ph_left": 0.0, "cost_left": 10.0}},
-                failed_attempts=collections.Counter(),
-                bountied={NODE_ID} if claimed else set()),
+                ),
             household=SimpleNamespace(capital=capital, log=[]),
             scenario=SimpleNamespace(year=-100))
         self.loss = loss
         self.paid = []
         self.learned = []
         self.rng = SimpleNamespace(uniform=lambda low, high: low)
+        self.seat = ProjectsSeat(bountied={NODE_ID} if claimed else set())
         module = self.module = projects_host.build(
-            tree=nodes, legacy_projects=self.state.projects, techniques_held=lambda: self.state.projects.done, funding_capacity=1000.0, state_interest=lambda node: 0,
+            seat=self.seat, tree=nodes, projects_record=self.state.projects, techniques_held=lambda: self.state.projects.done, funding_capacity=1000.0, state_interest=lambda node: 0,
             failure_loss=lambda node_id: self.loss, bearable_part_of=self.bearable_part_of,
             mechanic=lambda name: {NODE_ID: self.instrument_spec} if name == "diagnosis_instrument" and self.instrument_spec else {},
             game_random=self.rng, money_text=lambda amount, grouped=False, short=False: "%d" % amount,
@@ -138,7 +139,7 @@ class FailedAttemptChargeTests(unittest.TestCase):
         sim = FailingSim(capital=1000.0, loss=300.0, claimed=False)
         sim._fail_attempt(NODE_ID, 0.2)
         record = sim.state.projects.active[NODE_ID]
-        self.assertEqual(sim.state.projects.failed_attempts[NODE_ID], 1)
+        self.assertEqual(sim.seat.failed_attempts[NODE_ID], 1)
         self.assertAlmostEqual(record["ph_left"], 100.0 * 0.5 * sim.FAILURE_RESET_SHARE)
         self.assertAlmostEqual(record["yrs"], 4.0 * 0.25)
 
@@ -150,8 +151,8 @@ class FailedAttemptChargeTests(unittest.TestCase):
         self.assertEqual(sim.state.household.capital, 1000.0)
         self.assertEqual(record["cost_left"], 10.0)
         self.assertEqual(record["ph_left"], 0.0)
-        self.assertIn(NODE_ID, sim.state.projects.bountied)
-        self.assertEqual(sim.state.projects.failed_attempts[NODE_ID], 1)
+        self.assertIn(NODE_ID, sim.seat.bountied)
+        self.assertEqual(sim.seat.failed_attempts[NODE_ID], 1)
 
     def test_a_failed_bounty_logs_that_the_claimant_failed_and_the_prize_holds(self):
         sim = FailingSim(capital=1000.0, loss=300.0, claimed=True)
@@ -186,7 +187,7 @@ class FailureTeachesTests(unittest.TestCase):
 
     def test_the_failure_is_counted_either_way(self):
         for holds in (False, True):
-            self.assertEqual(self.fail(holds).state.projects.failed_attempts[NODE_ID], 1)
+            self.assertEqual(self.fail(holds).seat.failed_attempts[NODE_ID], 1)
 
 
 if __name__ == "__main__":

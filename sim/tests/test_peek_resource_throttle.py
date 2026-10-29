@@ -25,7 +25,7 @@ def furnace_module():
         stock.writes += 1
 
     module = materials_stand_in.build(
-        tree_nodes={"furnace": FURNACE}, legacy_projects=materials_stand_in.projects(active={"furnace": {}}),
+        tree_nodes={"furnace": FURNACE}, projects_record=materials_stand_in.projects(active={"furnace": {}}),
         active_projects_version=1, techniques_version=1, held_goods=stock, goods_stock_opening={"iron": 5.0},
         answers={BankStock: bank})
     module.market_tonnes = lambda commodity: 2.0

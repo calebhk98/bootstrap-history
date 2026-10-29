@@ -31,7 +31,7 @@ class PlaceSequence(unittest.TestCase):
 
 class Commands(unittest.TestCase):
     def module(self, order):
-        return projects_host.build(order=order, legacy_projects=types.SimpleNamespace(active={"b": {}, "c": {}}))
+        return projects_host.build(order=order, projects_record=types.SimpleNamespace(active={"b": {}, "c": {}}))
 
     def test_put_project_first_changes_the_published_order(self):
         module = self.module(["a", "b", "c"])

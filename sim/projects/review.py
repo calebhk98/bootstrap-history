@@ -16,14 +16,6 @@ class SeatReview:
 		self._world = world
 		self._year = module.needs.year() if year is None else year
 
-	def tally(self, business):
-		"""Tally each running plant's year: its margin once ramped up, and the years running it has lost money."""
-		needs = self._module.needs
-		nodes = needs.tree_nodes()
-		for node_id in sorted(needs.operating()):
-			if node_id in nodes:
-				business.note_year(node_id, self._world.concern_margin(node_id))
-
 	def staff_closures(self):
 		return self._module.concerns_to_close_for_staffing()
 
@@ -67,7 +59,7 @@ class SeatReview:
 		self._module.close_work(entry_key, reason, self._year)
 
 	def proceeds_of_seizure(self, entry_key):
-		size = self._module.needs.legacy_projects().business.size_of(entry_key)
+		size = self._module.needs.venture_size[entry_key]
 		return self._world.upkeep(entry_key, size) * finance_constants.CREDITOR_SEIZURE_VALUE_MULTIPLE
 
 	def receive_seizure(self, entry_key, proceeds):

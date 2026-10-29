@@ -9,6 +9,8 @@ class SeatsSeat:
     founder_alive: bool = True
     life_left: float = 40.0
     dead_reason: Optional[str] = None
+    # the years in a row the seat's programme has had no director to carry it (the dissolution count)
+    stalled: int = 0
     # the year the seat's formal goal was reached, and the year each goal id was reached as the formal goal
     goal_year: Optional[int] = None
     goal_years: Dict[str, int] = field(default_factory=dict)

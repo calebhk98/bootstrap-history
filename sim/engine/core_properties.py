@@ -4,7 +4,6 @@ These properties provide backward-compatibility for external consumers and
 integration test assertions. Internal simulation code accesses live state
 directly through authoritative subsystem owners:
   - self.state.household
-  - self.state.projects
   - self.state.economy
   - self.state.founder
 
@@ -50,27 +49,11 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def spend_last_year(self):
-		sub = getattr(self.state, "household", None)
-		if sub is None:
-			raise AttributeError("spend_last_year")
-		val = getattr(sub, "spend_last_year", None)
-		if val is None:
-			raise AttributeError("spend_last_year")
-		return val
-
-	@spend_last_year.setter
-	def spend_last_year(self, value):
-		sub = getattr(self.state, "household", None)
-		if sub is not None:
-			setattr(sub, "spend_last_year", value)
+		return self.view("spend_last_year")()
 
 	@property
 	def bounties_paid(self):
-		return getattr(self.state.household, "bounties_paid")
-
-	@bounties_paid.setter
-	def bounties_paid(self, value):
-		setattr(self.state.household, "bounties_paid", value)
+		return self.view("bounties_paid")()
 
 	@property
 	def _said_stack_caution(self):
@@ -81,16 +64,12 @@ class ForwardingPropertiesMixin:
 		setattr(self.household, "_said_stack_caution", value)
 
 	# =========================================================================
-	# ProjectsState Compatibility Properties
+	# Projects Compatibility Properties (each answers from the view of the module that owns it)
 	# =========================================================================
 
 	@property
 	def active(self):
-		return getattr(self.state.projects, "active")
-
-	@active.setter
-	def active(self, value):
-		setattr(self.state.projects, "active", value)
+		return self.view("active_projects")()
 
 	@property
 	def done(self):
@@ -106,34 +85,19 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def operating(self):
-		return getattr(self.state.projects, "operating")
-
-	@operating.setter
-	def operating(self, value):
-		setattr(self.state.projects, "operating", value)
+		return self.view("operating")()
 
 	@property
 	def mothballed(self):
-		return getattr(self.state.projects, "mothballed")
-
-	@mothballed.setter
-	def mothballed(self, value):
-		setattr(self.state.projects, "mothballed", value)
+		return self.view("mothballed")()
 
 	@property
 	def shut_for_staff(self):
-		# Read-only {work id: year} view of the staffing closures.
-		return {node_id: record["year"]
-				for node_id, record in self.state.projects.closures.items()
-				if record["reason"] == "staff"}
+		return self.view("shut_for_staff")()
 
 	@property
 	def bountied(self):
-		return getattr(self.state.projects, "bountied")
-
-	@bountied.setter
-	def bountied(self, value):
-		setattr(self.state.projects, "bountied", value)
+		return self.view("bountied")()
 
 	@property
 	def granted(self):
@@ -145,19 +109,11 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def failed_attempts(self):
-		return getattr(self.state.projects, "failed_attempts")
-
-	@failed_attempts.setter
-	def failed_attempts(self, value):
-		setattr(self.state.projects, "failed_attempts", value)
+		return self.view("failed_attempts")()
 
 	@property
 	def paid_towards(self):
-		return getattr(self.state.projects, "paid_towards")
-
-	@paid_towards.setter
-	def paid_towards(self, value):
-		setattr(self.state.projects, "paid_towards", value)
+		return self.view("paid_towards")()
 
 	# =========================================================================
 	# EconomyState Compatibility Properties

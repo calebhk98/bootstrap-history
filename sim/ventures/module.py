@@ -1,9 +1,11 @@
-"""The ventures module: what a seat's concerns tie up and cost, opening one by hand, the founder's sales and the roll-out of
-public works.
+"""The ventures module: the seat's businesses and the plants they run, what a seat's concerns tie up and cost, opening one by
+hand, the founder's sales and the roll-out of public works.
 
-It owns no saved state yet: the businesses and their plants stay in the projects record (`legacy_projects`), which production,
-finance, hazards and the household facade still write, so every view it publishes is uncached."""
+The businesses are its seat state, written only by its commands. The plants are kept in a `Business` record shared with the
+exchange (the seat as a party to a deal), so the views over what is operating and shut hand out the record's own sets and
+are uncached: a deal changes them without a command of this module."""
 from sim.assembly.api import Module
+from sim.production.api import RefreshOperatingCaches
 
 from .channels import INSTITUTION_UNITS_CHANGES, OPERATING_CHANGES
 from .coverage import Coverage
@@ -17,13 +19,21 @@ class Ventures(Crew, Quotes, Opening, Sales, Coverage, Module):
 
 	# ---- views under the names other modules read them by ----
 
-	def closures(self):
-		"""The works the seat has shut and may reopen (the live set)."""
-		return self.needs.legacy_projects().mothballed
+	def mothballed(self):
+		"""The works the acting seat has shut and may reopen (the live set)."""
+		return self.seat.business.mothballed()
+
+	def closure_records(self):
+		"""{work id: {"reason", "year"}} of the shut works that record why (a live mapping, read only)."""
+		return self.seat.business.closures()
 
 	def operating(self):
 		"""The acting seat's concerns and capabilities that are open (the live set: the plants opened and closed change it in place)."""
-		return self.needs.legacy_projects().operating
+		return self.seat.business.operating()
+
+	def operating_by_seat(self):
+		"""What every seat has open, by seat id in joining order (the live sets)."""
+		return {seat_id: self.seat_of(seat_id).business.operating() for seat_id in self.needs.seat_list()["joined"]}
 
 	def operating_version(self):
 		"""The change counter of what the acting seat has open, for memos over it: moves with every plant opened or closed."""
@@ -38,13 +48,21 @@ class Ventures(Crew, Quotes, Opening, Sales, Coverage, Module):
 
 	def venture_opened_year(self, node_id, default):
 		"""The year the plant first opened, or `default` where nothing records it."""
-		return self.needs.legacy_projects().business.opened_year_of(node_id, default)
+		return self.seat.business.opened_year_of(node_id, default)
 
 	def venture_size(self, node_id):
-		"""How many founding sizes the seat's plant of this concern is (zero where it records none)."""
-		return self.needs.legacy_projects().business.size_of(node_id)
+		"""How many founding sizes the seat's plant of this concern is (one where it records none)."""
+		return self.seat.business.size_of(node_id)
 
 	# ---- the commands ----
+
+	def operating_changed(self):
+		"""A plant of a seat's business opened, shut or closed."""
+		self.needs.send(RefreshOperatingCaches())
+		self.bump_seat(OPERATING_CHANGES)
+
+	def apply_watch_business(self, command):
+		self.seat_of(command.seat_id).business.watch = self.operating_changed
 
 	def apply_note_operating_changed(self, command):
 		self.bump_seat(OPERATING_CHANGES)
@@ -53,7 +71,37 @@ class Ventures(Crew, Quotes, Opening, Sales, Coverage, Module):
 		return self.open_venture(command.node_id, units=command.units)
 
 	def apply_clear_mothball(self, command):
-		self.needs.legacy_projects().mothballed.discard(command.node_id)
+		self.seat.business.mothballed().discard(command.node_id)
+
+	def apply_shut_forgotten(self, command):
+		for node_id in command.node_ids:
+			self.seat.business.operating().discard(node_id)
+			self.seat.business.mothballed().discard(node_id)
+
+	def apply_stop_operating(self, command):
+		for node_id in command.node_ids:
+			self.seat.business.operating().discard(node_id)
+
+	def apply_mothball_concern(self, command):
+		self.seat.business.mothball(command.node_id, command.year, command.reason)
+
+	def apply_restore_concern(self, command):
+		self.seat.business.restore(command.node_id)
+
+	def apply_close_concern(self, command):
+		self.seat.business.close_plant(command.node_id)
+
+	def apply_forget_closure_reason(self, command):
+		return self.seat.business.forget_reason(command.node_id, command.reason)
+
+	def apply_review_concerns(self, command):
+		return self.seat.business.review(self.needs.legacy_household_actor(), self.needs.actor_world(), command.rules)
+
+	def apply_review_reopening(self, command):
+		return self.seat.business.review_reopening(self.needs.legacy_household_actor(), self.needs.actor_world())
+
+	def apply_note_concern_year(self, command):
+		self.seat.business.note_year(command.node_id, command.margin)
 
 	def apply_sell_concern(self, command):
 		return self.sell_concern(command.node_id)

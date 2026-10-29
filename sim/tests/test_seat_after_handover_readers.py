@@ -16,10 +16,11 @@ from sim.workforce.api import WorkforceSeat
 from sim.seats import api as seat_builds
 from sim.seats.api import (SeatsSeat, owner_of_seat, partner_country_of_seat, patron_grant_share, run_is_over, seat_ended,
                            seats_playing)
-from sim.engine.state import (FounderState, HoldingsState, HouseholdState, ProjectsState, SeatProgressState,
+from sim.engine.state import (FounderState, HoldingsState, HouseholdState, SeatProgressState,
                               SimulationState, serialize_state)
 from sim.engine.state_seat import SeatState, bind_seat
 from sim.tests.harness import check
+from sim.agents.api import Business
 
 
 # what each seat chose for its inventions (the diffusion module keeps it)
@@ -30,13 +31,11 @@ def post_handover_state():
 	"""Seats "third" and "heir", "heir" acting; the heir carries the leaver's household, nodes, holdings, goal and country."""
 	heir = SeatState(
 		household=HouseholdState(capital=40.0),
-		projects=ProjectsState(),
 		founder=FounderState(_founder_death_year=30),
 		holdings=HoldingsState(), seat_progress=SeatProgressState(),
 		goal="steam_engine", country="han",
 		modules={"knowledge": KnowledgeSeat(done={"fire", "wheel"}, granted={"fire"}), "workforce": WorkforceSeat(scholars=2.0), "seats": SeatsSeat(patents={"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}, shares_held={"guild": 3.0})})
-	third = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(),
-	                  founder=FounderState(_founder_death_year=50), goal="printing_press",
+	third = SeatState(household=HouseholdState(capital=5.0), founder=FounderState(_founder_death_year=50), goal="printing_press",
 	                  modules={"knowledge": KnowledgeSeat(done={"fire"}, granted={"fire"}), "seats": SeatsSeat()})
 	return SimulationState(seats={"third": third, "heir": heir}, acting_seat="heir", modules={"actors": ActorsState(home_country="rome")})
 
@@ -56,7 +55,7 @@ state = post_handover_state()
 heir = state.seats["heir"]
 bind_seat(state, "heir")
 check("bind_seat: the root aliases are the heir's own objects",
-      state.acting_seat == "heir" and state.household is heir.household and state.projects is heir.projects
+      state.acting_seat == "heir" and state.household is heir.household
       and state.founder is heir.founder and state.holdings is heir.holdings and state.seat_progress is heir.seat_progress
       and state.seats["heir"].modules["workforce"].scholars == 2.0 and state.founder._founder_death_year == 30, None)
 check("SimulationState._goal: reads the heir's goal", post_handover_state()._goal == "steam_engine")
@@ -109,7 +108,7 @@ check("disclosure_modes: the heir's choice stands", seat_builds.disclosure_modes
 
 # ---- the seat as an actor
 state = post_handover_state()
-party = HouseholdParty(SimpleNamespace(_state=state), dealings=state.seats["heir"].modules["seats"])
+party = HouseholdParty(SimpleNamespace(_state=state), dealings=state.seats["heir"].modules["seats"], business=Business())
 check("HouseholdParty: the acting seat's actor is the heir, with the heir's patents and shares",
       party.actor_id == "heir" and party.record.patents == {"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}
       and party.record.holdings == {"guild": 3.0}, party.actor_id)

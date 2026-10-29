@@ -1,13 +1,13 @@
 """A seat: everything one player owns, held apart from the world.
 
-The root `SimulationState` fields `household`, `projects`, `founder`, `holdings` and
+The root `SimulationState` fields `household`, `founder`, `holdings` and
 `seat_progress` are aliases of the acting seat's objects, so mechanism code keeps reading them; `bind_seat` points them at another seat.
 """
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional
 
 from sim.engine import state as state_module
-from sim.engine.state import FounderState, HouseholdState, ProjectsState
+from sim.engine.state import FounderState, HouseholdState
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
 from sim.knowledge.api import KnowledgeSeat
 from sim.workforce.api import WorkforceSeat
@@ -20,9 +20,8 @@ COUNTRY_SEAT = "country"
 
 @dataclass
 class SeatState:
-	"""One player's household, projects, founder, holdings, institutions, goal record and chosen win node."""
+	"""One player's household, founder, holdings, goal record and chosen win node, and the state of every module that keeps some per seat."""
 	household: HouseholdState
-	projects: ProjectsState
 	founder: Optional[FounderState] = None
 	holdings: HoldingsState = field(default_factory=HoldingsState)
 	seat_progress: SeatProgressState = field(default_factory=SeatProgressState)
@@ -42,15 +41,14 @@ def seat_from_template(template: Mapping[str, Any], capital: float, policy: Dict
 	`country`. `capital` is already in the society's coin."""
 	if template.get("kind") == COUNTRY_SEAT:
 		# the household here is an empty placeholder the engine's aliases need; the seat acts through its government
-		return SeatState(household=HouseholdState(capital=0.0), projects=ProjectsState(), founder=None,
+		return SeatState(household=HouseholdState(capital=0.0), founder=None,
 		                 country=template.get("country"), kind=COUNTRY_SEAT)
 	household = HouseholdState(capital=float(capital))
 	granted = set(template.get("starting_techs") or ())
-	projects = ProjectsState()
 	founder = FounderState(policy=dict(policy))
 	staff = WorkforceSeat(scholars=float(template.get("scholars", 0.0)), artisans=float(template.get("artisans", 0.0)),
 	                      base_tile=template.get("base_tile"))
-	return SeatState(household=household, projects=projects, founder=founder, goal=template.get("goal"),
+	return SeatState(household=household, founder=founder, goal=template.get("goal"),
 	                 country=template.get("country"), modules={"workforce": staff, "knowledge": KnowledgeSeat(done=set(granted), granted=set(granted))})
 
 
@@ -59,7 +57,6 @@ def bind_seat(state, seat_id: str) -> None:
 	seat = state.seats[seat_id]
 	state.acting_seat = seat_id
 	state.household = seat.household
-	state.projects = seat.projects
 	state.founder = seat.founder
 	state.holdings = seat.holdings
 	state.seat_progress = seat.seat_progress

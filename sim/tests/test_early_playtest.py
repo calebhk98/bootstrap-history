@@ -105,8 +105,8 @@ check("a finished work can be shut down to stop its upkeep",
       _ok_open and ok_mothball and up_before > 0 and rome.view("upkeep")() < up_before,
       "open %s (%s), upkeep %.0f -> %.0f" % (_ok_open, _why_open, up_before, rome.view("upkeep")()))
 check("shutting a concern down does not make you forget how it worked",
-      "fin_restaurant" in rome.done and "fin_restaurant" not in rome.state.projects.operating,
-      "done %s operating %s" % ("fin_restaurant" in rome.done, "fin_restaurant" in rome.state.projects.operating))
+      "fin_restaurant" in rome.done and "fin_restaurant" not in rome.operating,
+      "done %s operating %s" % ("fin_restaurant" in rome.done, "fin_restaurant" in rome.operating))
 
 rome.state.household.capital = 5000.0
 capital_before_commission = rome.state.household.capital

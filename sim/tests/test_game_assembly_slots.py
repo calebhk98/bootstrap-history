@@ -10,7 +10,7 @@ from typing import Dict
 
 from sim.assembly.api import Module, ModuleSpec, Operations, assemble, record
 from sim.engine import game_assembly
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState, deserialize_state, serialize_state
+from sim.engine.state import FounderState, HouseholdState, SimulationState, deserialize_state, serialize_state
 from sim.refusal import cause_of
 
 
@@ -32,7 +32,7 @@ HERDS = ModuleSpec("herds", Herds, world_state=HerdWorld, seat_state=HerdSeat)
 
 
 def _game(operations=()):
-	state = SimulationState(household=HouseholdState(capital=1.0), projects=ProjectsState(), founder=FounderState())
+	state = SimulationState(household=HouseholdState(capital=1.0), founder=FounderState())
 	return types.SimpleNamespace(assembly=assemble([HERDS], operations), state=state)
 
 

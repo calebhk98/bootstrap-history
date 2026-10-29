@@ -12,6 +12,7 @@ from sim.engine.agents_port_household import HouseholdPort
 from sim.engine.state_seat import FIRST_SEAT_ID
 
 from .agents_fake_world import FakeWorld, make_node
+from sim.agents.api import Business
 
 QUICK_TOPIC = True
 
@@ -25,7 +26,7 @@ class DealWorld(FakeWorld):
         return True
 
     def patent_entry(self, node_id):
-        holders = list(self.registry.actors.values()) + [HouseholdParty(self.facade, seat_id=FIRST_SEAT_ID, dealings=self.slot, receive=lambda nodes, granted: None)]
+        holders = list(self.registry.actors.values()) + [HouseholdParty(self.facade, seat_id=FIRST_SEAT_ID, dealings=self.slot, receive=lambda nodes, granted: None, business=Business())]
         return patent.entry_among(holders, node_id, self.year)
 
     def proof_years(self, node_id):
@@ -50,7 +51,7 @@ class Game:
         self.module = None
 
     def seat_party(self, seat_id, margins=None):
-        return HouseholdParty(self.facade, margins, seat_id, dealings=self.slot, receive=self.receive)
+        return HouseholdParty(self.facade, margins, seat_id, dealings=self.slot, receive=self.receive, business=Business())
 
     def receive(self, nodes, granted):
         self.knowledge.done.update(nodes)
@@ -60,7 +61,7 @@ class Game:
     def build(self, world):
         self.module = module_harness.build(
             Seats, seat=self.slot,
-            views={"actor_world": lambda: world, "legacy_projects": self.state.projects, "techniques_granted": lambda: frozenset(self.knowledge.granted), "seat_party_with_margins": self.seat_party,
+            views={"actor_world": lambda: world, "operating": set(), "techniques_granted": lambda: frozenset(self.knowledge.granted), "seat_party_with_margins": self.seat_party,
                    "seat_party": self.seat_party, "legacy_seats": self.state.seats, "cast": self.actors, "year": 100})
 
     def seat_patent(self, node_id):

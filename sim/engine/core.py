@@ -5,7 +5,7 @@ from sim.constants import declare
 from sim.demography.api import OpenPopulation, rules as demography_rules
 from sim.workforce.api import WatchStaff
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
-from sim.engine.state import SimulationState, ActiveProjectState
+from sim.engine.state import SimulationState
 from sim.engine.state_seat import bind_seat
 from .data import (DEFAULTS, kit_capital, load_civ, load_geography, 
                    nodes_in_civ_money, TRADE_REGISTRY)
@@ -45,7 +45,8 @@ from sim.agents.api import Household
 from .agents_port_household import HouseholdPort
 from sim.materials.api import RestoreReadings
 from sim.polity.api import SetValueWeights
-from sim.projects.api import RestoreProjectOrder
+from sim.projects.api import RestoreProjectOrder, WatchActive
+from sim.ventures.api import WatchBusiness
 from sim.scenario.api import OpenScenario, RecordOpeningLiteracy, ScenarioSources, SetYear
 from . import units
 
@@ -94,12 +95,11 @@ class Sim(
         self._remember_derived_gates(self.civ["starting_techs"])
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
-            SimulationState, HouseholdState, ProjectsState,
+            SimulationState, HouseholdState,
             EconomyState, FounderState
         )
         self.state = SimulationState(
             household=HouseholdState(capital=0.0),
-            projects=ProjectsState(),
             economy=EconomyState(),
             founder=FounderState(),
             _civ=self.civ.get("id"),
@@ -180,13 +180,13 @@ class Sim(
             start_money = kit_capital(config["start_kit"], self.civ)
         self.household = Household(
             starting_capital=float(start_money) * self.price_index,
-            operating_changed=self._operating_changed,
-            active_changed=self._active_changed,
             state=self.state,
             port=HouseholdPort(),
             techniques_held=lambda: self.view("techniques_held")())
         self._seat_facades = {self.state.acting_seat: self.household}
         self.send(WatchStaff(self.state.acting_seat))
+        self.send(WatchActive(self.state.acting_seat))
+        self.send(WatchBusiness(self.state.acting_seat))
         # EVERY AUTOMATIC BEHAVIOUR, IN ONE PLACE, SWITCHABLE.
         #
         # Everything automatic must be controllable: a player can enable or
@@ -213,7 +213,6 @@ class Sim(
         life = self.view("founder_life_terms")()
         self.send(SetFounderLife(1e9 if life["immortal"]
                                  else max(life["minimum"], rng.gauss(life["mean"], life["spread"]))))
-        self._spend_this_year = 0.0
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # How much of each material physically exists: a material's
         # existence somewhere does not mean an unlimited quantity of it is
@@ -286,14 +285,8 @@ class Sim(
 
     def _wrap_seat_containers(self):
         """Wrap the bound seat's mutation-aware containers and start its version counters."""
-        from sim.invalidating import _InvalidatingDict, _InvalidatingSet
-        from sim.engine.state import ActiveProjectState
-        self.state.projects.business.watch = self._operating_changed
-        self.state.projects.active = _InvalidatingDict(
-            {k: ActiveProjectState.from_dict(v if isinstance(v, dict) else v.to_canon_dict(), _on_change=self._active_changed)
-             for k, v in (self.state.projects.active or {}).items()},
-            on_change=self._active_changed
-        )
+        self.send(WatchBusiness(self.state.acting_seat))
+        self.send(WatchActive(self.state.acting_seat))
         self.send(WatchStaff(self.state.acting_seat))
 
     # ---- OUTSIDE-SURFACE PROPERTIES FOR THE EXTRACTED HOUSEHOLD ----------

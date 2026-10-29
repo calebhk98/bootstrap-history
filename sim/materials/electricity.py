@@ -5,7 +5,7 @@ from . import rules
 
 
 class Electricity:
-    """Needs: mechanic, tree_nodes, legacy_projects, operating, hard_prerequisites."""
+    """Needs: mechanic, tree_nodes, active_projects, operating, hard_prerequisites."""
 
     def anchor_kw(self, tier: str) -> float:
         return self.needs.mechanic["power_tier"][tier]["anchor_kw"]
@@ -60,13 +60,11 @@ class Electricity:
 
     def node_annual_tonnes(self, node_id: str, material: str) -> float:
         """Tonnes a year ONE node draws of `material`, as the annual demand counts it."""
-        projects = self.needs.legacy_projects()
-        return rules.node_annual_tonnes(self.needs.tree_nodes().get(node_id), material, node_id in projects.active,
+        return rules.node_annual_tonnes(self.needs.tree_nodes().get(node_id), material, node_id in self.needs.active_projects(),
                                         node_id in self.needs.techniques_held())
 
     def electricity_demand_kw(self) -> float:
         """Average continuous kW drawn by work in hand."""
-        projects = self.needs.legacy_projects()
         return rules.electricity_demand_kw(self.electrical_processes(), self.node_annual_tonnes,
-                                           self.electricity_load_node_ids(), self.needs.tree_nodes(), projects.active,
+                                           self.electricity_load_node_ids(), self.needs.tree_nodes(), self.needs.active_projects(),
                                            self.needs.techniques_held(), self.needs.operating())

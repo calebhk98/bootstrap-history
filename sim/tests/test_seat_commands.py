@@ -8,7 +8,7 @@ import contextlib
 
 from .harness import check
 
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
+from sim.engine.state import FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, bind_seat, seat_from_template
 from sim.knowledge.api import KnowledgeSeat
 from sim.knowledge.rules import SeatTechniques
@@ -38,7 +38,7 @@ class Game(FactViews):
     """The root state with the real alias rebinding, which is all a handler reads."""
 
     def __init__(self):
-        self.state = SimulationState(household=HouseholdState(capital=100.0), projects=ProjectsState(), founder=FounderState())
+        self.state = SimulationState(household=HouseholdState(capital=100.0), founder=FounderState())
         self.state.seats["second"] = seat_from_template({}, 50.0, {})
         for held in self.state.seats.values():
             held.modules["seats"] = SeatsSeat()

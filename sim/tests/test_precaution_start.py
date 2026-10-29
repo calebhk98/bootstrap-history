@@ -22,7 +22,7 @@ def game(**views):
     state = projects_host.projects_state()
     order = ["plain", "declared"]
     module = projects_host.build(
-        answers={SettleProjectMaterials: (BILL, 0.0)}, tree={"declared": NODE, "plain": PLAIN}, legacy_projects=state,
+        answers={SettleProjectMaterials: (BILL, 0.0)}, tree={"declared": NODE, "plain": PLAIN}, projects_record=state,
         order=order, project_cost=lambda node_id: BILL, start_refusal=lambda node_id: None)
     module.effective_risk = lambda node_id, precaution=None: 0.4
     module.calendar_floor = lambda node_id: 3.0

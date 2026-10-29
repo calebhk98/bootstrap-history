@@ -7,10 +7,16 @@ QUICK_TOPIC = True
 from .harness import check
 from sim.agents.household import Household
 from sim.engine.forward_production import ForwardProductionMixin
-from sim.engine.state import SimulationState, HouseholdState, ProjectsState
+from sim.engine.state import SimulationState, HouseholdState
 from sim.knowledge.api import NoteTechniquesChanged
-from sim.projects.api import NoteActiveChanged
-from sim.ventures.api import NoteOperatingChanged
+from sim.engine.state_seat import SeatState
+from sim.projects.api import WatchActive
+from sim.projects.projects import ACTIVE_CHANGES, Projects
+from sim.projects.state import ProjectsSeat
+from sim.ventures.api import NoteOperatingChanged, WatchBusiness
+from sim.ventures.channels import OPERATING_CHANGES
+from sim.ventures.module import Ventures
+from sim.ventures.state import VenturesSeat
 from sim.tests import module_harness
 from sim.workforce.api import WatchStaff, WorkforceSeat
 from sim.workforce.module import Workforce
@@ -20,21 +26,42 @@ class ContainerGame(ForwardProductionMixin):
 	"""A household over a fresh state, with the invalidation hooks a Sim wires to it."""
 
 	def __init__(self):
-		self.state = SimulationState(household=HouseholdState(capital=1000), projects=ProjectsState())
-		self.household = Household(starting_capital=1000.0, operating_changed=self._operating_changed,
-								   active_changed=self._active_changed,
-								   state=self.state)
+		self.projects_module = module_harness.build(Projects, seat=ProjectsSeat(), module_id="projects")
+		self.projects_module.seat_slot_of = lambda seat_id: self.projects_module.seat
+		self.projects_module.clock.act_as("founder")
+		self.state = SimulationState(household=HouseholdState(capital=1000))
+		self.ventures_module = module_harness.build(Ventures, seat=VenturesSeat(), module_id="ventures")
+		self.ventures_module.seat_slot_of = lambda seat_id: self.ventures_module.seat
+		self.ventures_module.clock.act_as("founder")
+		self.state.seats = {"founder": SeatState(household=self.state.household,
+		                                         modules={"projects": self.projects_module.seat, "ventures": self.ventures_module.seat})}
+		self.state.acting_seat = "founder"
+		self.household = Household(starting_capital=1000.0, state=self.state)
+		self.send(WatchActive("founder"))
+		self.send(WatchBusiness("founder"))
 
-	done_changes = operating_changes = active_changes = 0
+	done_changes = 0
+
+	@property
+	def operating_changes(self):
+		"""How many changes of what the acting seat has open the ventures module has counted."""
+		return self.ventures_module.clock.counter("ventures", OPERATING_CHANGES, True)[1]
+
+	@property
+	def active_changes(self):
+		"""How many changes of the acting seat's projects in hand the projects module has counted."""
+		return self.projects_module.clock.counter("projects", ACTIVE_CHANGES, True)[1]
 
 	def send(self, command):
 		"""The owners' answer to the hooks: count the change each one is told of."""
 		if isinstance(command, NoteTechniquesChanged):
 			self.done_changes += 1
 		elif isinstance(command, NoteOperatingChanged):
-			self.operating_changes += 1
-		elif isinstance(command, NoteActiveChanged):
-			self.active_changes += 1
+			self.ventures_module.apply_note_operating_changed(command)
+		elif isinstance(command, WatchBusiness):
+			self.ventures_module.apply_watch_business(command)
+		elif isinstance(command, WatchActive):
+			self.projects_module.apply_watch_active(command)
 
 
 def _staff_module():

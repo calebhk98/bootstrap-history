@@ -27,14 +27,14 @@ class RushPreviewAndExclusionsTest(unittest.TestCase):
         self.assertTrue(_typed(game, "exclude %s" % victim)["ok"])
         self.assertIn(victim, game.view("exclusions")())
         preview = _typed(game, "rush preview limit:3")
-        self.assertFalse(game.state.projects.active)
+        self.assertFalse(game.active)
         self.assertNotIn(victim, _ids(preview["would_start"]))
         self.assertIn(victim, _ids(preview["excluded"]))
         self.assertTrue(all(row.get("why") for row in preview["excluded"]))
         real = _typed(game, "rush limit:3")
         self.assertEqual(len(real["started"]), 3)
         self.assertEqual(_ids(preview["would_start"]), _ids(real["started"]))
-        self.assertNotIn(victim, game.state.projects.active)
+        self.assertNotIn(victim, game.active)
 
     def test_auto_open_skips_an_excluded_concern(self):
         game = unopened_sim(capital=2_000_000)
@@ -42,7 +42,7 @@ class RushPreviewAndExclusionsTest(unittest.TestCase):
         game.send(LearnTechnique(venture))
         game.view("exclusions")().add(venture)
         game.send(AutoOpenVentures())
-        self.assertNotIn(venture, game.state.projects.operating)
+        self.assertNotIn(venture, game.operating)
 
 
 class QuoteAndSchoolTest(unittest.TestCase):

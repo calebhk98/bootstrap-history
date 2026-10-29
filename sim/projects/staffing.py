@@ -5,6 +5,7 @@ close_unstaffed_ventures() shuts what nobody is left to supervise, reopen_restaf
 supervised again, staffing_closure_warnings() tells a player what is about to shut before it does."""
 from sim.agents.api import business_review
 from sim.reporting.api import RecordEvent
+from sim.ventures.api import NoteConcernYear, ReviewConcerns, ReviewReopening
 
 from .constants import (FOUNDER_IS_WORTH, STAFFING_CLOSURE_SLACK, STAFFING_NO_SLACK_BAND, STAFFING_WARNING_BAND)
 from .staffing_events import unstaffed_closure_line
@@ -37,11 +38,16 @@ class Staffing:
 		shuts are dated `year` (the scenario's when not given)."""
 		world = self.needs.actor_world()
 		world.review_year = year
-		return self.needs.legacy_projects().business.review(self.needs.legacy_household_actor(), world, rules)
+		return self.needs.send(ReviewConcerns(tuple(rules)))
 
 	def note_venture_year(self):
 		"""Tally each running plant's margin, and the years running it has lost money (the loss rule's input)."""
-		self.needs.actor_world().founder_review().tally(self.needs.legacy_projects().business)
+		needs = self.needs
+		nodes = needs.tree_nodes()
+		world = needs.actor_world()
+		for node_id in sorted(needs.operating()):
+			if node_id in nodes:
+				needs.send(NoteConcernYear(node_id, world.concern_margin(node_id)))
 
 	def staffing_closed_hand_shortfall(self):
 		"""(scholars, craftsmen) the household lacks to reopen every concern shut for want of staff.
@@ -49,10 +55,9 @@ class Staffing:
 		The same need `staffing_open_refusal` reads (a concern's hands against `venture_staff_free`), summed over the
 		staffing closures; hires aimed at it are what `reopen_restaffed_ventures` then uses."""
 		needs = self.needs
-		projects = needs.legacy_projects()
 		nodes = needs.tree_nodes()
 		needed_scholars, needed_craftsmen = 0.0, 0.0
-		for node_id in sorted(projects.closures):
+		for node_id in sorted(needs.closure_records()):
 			if (self.staff_closure_age(node_id) is None or node_id not in needs.techniques_held()
 					or node_id not in nodes):
 				continue
@@ -74,7 +79,7 @@ class Staffing:
 		So this runs unconditionally, like the rule it undoes, and it is careful to undo only THAT rule: only staffing
 		closures are candidates, so a concern a player shut on purpose with `mothball` never reappears on its own."""
 		needs = self.needs
-		reopened = needs.legacy_projects().business.review_reopening(needs.legacy_household_actor(), needs.actor_world())
+		reopened = needs.send(ReviewReopening())
 		if reopened:
 			self.record_staffing_reopenings(len(reopened))
 			still_shut = self.staffing_shut_count()

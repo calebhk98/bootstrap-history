@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.engine import seat_registry
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState, deserialize_state, serialize_state
+from sim.engine.state import FounderState, HouseholdState, SimulationState, deserialize_state, serialize_state
 from sim.engine.state_seat import FIRST_SEAT_ID, SeatState
 
 
@@ -37,19 +37,19 @@ class Seats:
 
 
 household = HouseholdState(capital=1000.0)
-state = SimulationState(household=household, projects=ProjectsState(), founder=FounderState())
+state = SimulationState(household=household, founder=FounderState())
 first = state.seats[FIRST_SEAT_ID]
 
 check("one seat exists and is acting", list(state.seats) == [FIRST_SEAT_ID] and state.acting_seat == FIRST_SEAT_ID, list(state.seats))
-check("the root household, projects and founder are the acting seat's objects",
-      state.household is first.household and state.projects is first.projects and state.founder is first.founder, None)
+check("the root household and founder are the acting seat's objects",
+      state.household is first.household and state.founder is first.founder, None)
 state._goal = "point_contact_transistor"
 check("the root goal is the acting seat's goal", first.goal == "point_contact_transistor", first.goal)
 
 # a second seat: switching rebinds the aliases and the facade, and restores on exit and on error
 game = Seats(state)
 second_household = HouseholdState(capital=50.0)
-game.add_seat("second", SeatState(household=second_household, projects=ProjectsState(), founder=FounderState()))
+game.add_seat("second", SeatState(household=second_household, founder=FounderState()))
 first_facade = game.household
 with game.act_as("second"):
     check("inside act_as the root household is the second seat's",
@@ -72,7 +72,7 @@ except KeyError:
     refused = True
 check("an unknown seat is refused and nothing changes", refused and state.household is first.household, None)
 try:
-    game.add_seat("second", SeatState(household=HouseholdState(capital=1.0), projects=ProjectsState(), founder=FounderState()))
+    game.add_seat("second", SeatState(household=HouseholdState(capital=1.0), founder=FounderState()))
     added_twice = True
 except ValueError:
     added_twice = False
@@ -81,13 +81,13 @@ check("a seat id already taken is refused", not added_twice)
 # save: the aliased root fields are not written; seats are, and a load rebinds the aliases
 blob = serialize_state(state)
 check("the save holds the seats and not the aliased root fields",
-      "seats" in blob and "household" not in blob and "projects" not in blob and "founder" not in blob and "_goal" not in blob,
+      "seats" in blob and "household" not in blob and "founder" not in blob and "_goal" not in blob,
       sorted(blob))
 check("the save names the acting seat", blob.get("acting_seat") == FIRST_SEAT_ID, blob.get("acting_seat"))
 loaded = deserialize_state(blob)
 seat = loaded.seats[FIRST_SEAT_ID]
 check("a load rebinds the aliases to the loaded seat",
-      loaded.household is seat.household and loaded.projects is seat.projects and loaded.founder is seat.founder, None)
+      loaded.household is seat.household and loaded.founder is seat.founder, None)
 check("a load restores the household and the goal",
       loaded.household.capital == 1000.0 and loaded._goal == "point_contact_transistor" and sorted(loaded.seats) == sorted(state.seats),
       (loaded.household.capital, loaded._goal))

@@ -124,7 +124,7 @@ class ActorWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, St
 
 	def is_public(self, node_id: str) -> bool:
 		"""Whether some seat runs it as a concern, where anyone can see it."""
-		return seats_api.operating_anywhere(self.needs.legacy_seats(), node_id)
+		return seats_api.operating_anywhere(self.needs.operating_by_seat(), node_id)
 
 	def exposure(self, node_id: str, location: Optional[str]) -> float:
 		"""How much of an invention an observer at `location` can learn, 0..1: the best view of any seat
@@ -252,13 +252,12 @@ class ActorWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, St
 
 	def _proven_concerns_of_acting_seat(self) -> List[str]:
 		needs = self.needs
-		projects = needs.legacy_projects()
 		granted = needs.techniques_granted()
 		proven = []
-		for node_id in sorted(projects.operating):
+		for node_id in sorted(needs.operating()):
 			if node_id in granted or not needs.is_venture[node_id]:
 				continue
-			opened = projects.business.opened_year_of(node_id, self.year)
+			opened = needs.venture_opened_year(node_id, self.year)
 			if self.year - opened >= self.proof_years(node_id) and self.concern_margin(node_id) > 0:
 				proven.append(node_id)
 		return proven

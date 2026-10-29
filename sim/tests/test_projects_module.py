@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.projects.api import START_CHECKS, NoteActiveChanged, constants as projects_constants
+from sim.projects.api import START_CHECKS, WatchActive, constants as projects_constants
 from sim.tests import projects_host
 
 PLAIN = {"cat": "technique", "pre": [], "lab": {}, "sch": 0, "art": 0, "mat": [], "ph": 10.0}
@@ -21,11 +21,26 @@ class FailureResetShare(unittest.TestCase):
 
 
 class ActiveProjectsVersion(unittest.TestCase):
-    def test_a_note_that_the_projects_in_hand_changed_moves_the_version(self):
+    def test_a_change_of_a_watched_project_in_hand_moves_the_version(self):
         projects = module()
+        projects.seat_slot_of = lambda seat_id: projects.seat
+        projects.apply_watch_active(WatchActive("founder"))
         before = projects.active_projects_version()
-        projects.apply_note_active_changed(NoteActiveChanged())
+        projects.seat.active["a"] = {"ph_left": 5.0}
         self.assertNotEqual(projects.active_projects_version(), before)
+        before = projects.active_projects_version()
+        projects.seat.active["a"]["ph_left"] = 4.0
+        self.assertNotEqual(projects.active_projects_version(), before)
+
+    def test_watching_keeps_the_projects_it_finds_and_their_order(self):
+        projects = module()
+        projects.seat_slot_of = lambda seat_id: projects.seat
+        record = {"ph_left": 5.0}
+        projects.seat.active.update({"b": record, "a": {"ph_left": 1.0}})
+        projects.apply_watch_active(WatchActive("founder"))
+        self.assertEqual(list(projects.seat.active), ["b", "a"])
+        self.assertEqual(projects.active_project_ids(), ["a", "b"])
+        self.assertEqual(projects.active_projects()["b"]["ph_left"], 5.0)
 
     def test_a_load_moves_the_version(self):
         projects = module()
@@ -43,9 +58,9 @@ class StartCheck(unittest.TestCase):
         self.assertEqual(module().start_check("zzz", False, None, False), (False, None))
 
     def test_the_first_check_with_an_opinion_decides(self):
-        both = module(techniques_held={"a"}, legacy_projects=projects_host.projects_state(active={"a": {}}))
+        both = module(techniques_held={"a"}, projects_record=projects_host.projects_state(active={"a": {}}))
         self.assertEqual(both.start_check("a"), (False, "already done"))
-        active = module(legacy_projects=projects_host.projects_state(active={"a": {}}))
+        active = module(projects_record=projects_host.projects_state(active={"a": {}}))
         self.assertEqual(active.start_check("a"), (False, "already active"))
 
     def test_asking_for_no_sentence_gives_the_same_verdict_without_one(self):
@@ -95,7 +110,7 @@ class StartBlockers(unittest.TestCase):
     def test_a_built_work_that_is_shut_is_closed_and_one_mothballed_says_so(self):
         shut = module(techniques_held={"a"}, is_venture=lambda node_id: True, running=lambda node_id: False)
         self.assertEqual(self.causes(shut.start_blockers("a")), [("closed", "built_but_shut")])
-        mothballed = module(techniques_held={"a"}, closures={"a"}, is_venture=lambda node_id: True,
+        mothballed = module(techniques_held={"a"}, mothballed={"a"}, is_venture=lambda node_id: True,
                             running=lambda node_id: False)
         self.assertEqual(self.causes(mothballed.start_blockers("a")), [("closed", "mothballed")])
 

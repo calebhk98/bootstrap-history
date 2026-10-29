@@ -13,7 +13,7 @@ def Opener(capital, credit_limit, nodes, done=()):
     """The projects module over a household with this purse and credit line; what it offers `open` is recorded."""
     module = projects_host.build(
         tree=nodes, acting_balance=capital, credit_limit=lambda *arguments: credit_limit,
-        legacy_projects=types.SimpleNamespace(done=set(done), operating=set()), techniques_held=set(done), operating=lambda: set(),
+        projects_record=types.SimpleNamespace(done=set(done), operating=set()), techniques_held=set(done), operating=lambda: set(),
         venture_capex=lambda node_id: nodes[node_id]["capex"], is_venture=lambda node_id: True,
         capability_sets=(frozenset({"school"}), frozenset(), {}))
     module.exclusion_reason = lambda node_id: None

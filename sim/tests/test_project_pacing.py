@@ -13,6 +13,7 @@ from .harness import check
 
 from sim.projects.api import StopProject, funding
 from sim.tests import projects_host
+from sim.projects.state import ProjectsSeat
 cash_covers_start, paid_credit = funding.cash_covers_start, funding.paid_credit
 from sim.projects import progress_rules
 from sim.projects.start_rules import STALL_YEARS_BEFORE_ABANDONMENT
@@ -118,8 +119,8 @@ def gated(blocked_trades=("engineer",), lab_left=None, stalled_years=0):
     progress = {"stalled_years": stalled_years, "hours_offered_this_year": 9.0, "hours_effective_this_year": 9.0}
     if lab_left is not None:
         progress["lab_left"] = lab_left
-    projects = LabourStub(active={"p": progress}, bountied=set())
-    host = projects_host.build(market_supply=lambda trade: 0.0 if trade in blocked_trades else 1000.0, legacy_projects=projects, year=100)
+    projects = LabourStub(active={"p": progress})
+    host = projects_host.build(market_supply=lambda trade: 0.0 if trade in blocked_trades else 1000.0, projects_record=projects, year=100)
     stopped = host._project_progress_trade_gate("p", progress, {"lab": {"engineer": 500.0, "smith": 100.0}})
     log = [(100, command) for command in module_harness.sent(host) if isinstance(command, RecordEvent)]
     return stopped, progress, log, host
@@ -141,20 +142,20 @@ check("...while one that still owes the trade something is caught the first year
       stopped and any(line.kind == "project_cannot_go_on" and "engineer" in line.facts["trades"] for _year, line in log), log)
 stopped, progress, log, host = gated(stalled_years=STALL_YEARS_BEFORE_ABANDONMENT - 1)
 check("after the countdown the project is abandoned and the log says what was lost",
-      stopped and "p" not in host.needs.legacy_projects().active and log[0][1].kind == "project_halted_no_labour", log)
+      stopped and "p" not in host.seat.active and log[0][1].kind == "project_halted_no_labour", log)
 stopped, progress, log, _host = gated(blocked_trades=(), stalled_years=2)
 check("a project with its trades again has its countdown cleared", not stopped and progress["stalled_years"] == 0)
 
 # --- stopping keeps the money that was paid; beginning again bills only the remainder
 def stopped_game(spent):
-    state = projects_host.projects_state(active={"p": {"spent": spent, "ph_left": 100.0}}, paid_towards=None)
-    module = projects_host.build(legacy_projects=state)
-    return state, module, module.stop_project(StopProject("p"))
-state, _module, (ok, message) = stopped_game(300.0)
-check("stopping a project keeps the money already paid", ok and state.paid_towards == {"p": 300.0}, state.paid_towards)
-state, _module, (ok, message) = stopped_game(0.2)
-check("a project that had paid next to nothing keeps nothing", ok and not state.paid_towards, state.paid_towards)
-state, module, (ok, message) = stopped_game(1.0)
+    state = projects_host.projects_state(active={"p": {"spent": spent, "ph_left": 100.0}})
+    module = projects_host.build(projects_record=state)
+    return module.seat, module, module.stop_project(StopProject("p"))
+seat, _module, (ok, message) = stopped_game(300.0)
+check("stopping a project keeps the money already paid", ok and seat.paid_towards == {"p": 300.0}, seat.paid_towards)
+seat, _module, (ok, message) = stopped_game(0.2)
+check("a project that had paid next to nothing keeps nothing", ok and not seat.paid_towards, seat.paid_towards)
+seat, module, (ok, message) = stopped_game(1.0)
 check("stopping something that is not active is refused", module.stop_project(StopProject("q")) == (False, "not active"))
 check("money already paid comes off the bill, never more than the price",
       paid_credit(1000.0, 300.0) == 300.0 and paid_credit(1000.0, 5000.0) == 1000.0 and paid_credit(1000.0, None) == 0.0
@@ -192,7 +193,7 @@ check("a project wanting no more than is left is not starved", starved_projects(
 # --- the hour pace is what a project WANTS, with no material brake folded in
 def pace(ph_left, throttle, bountied=()):
     host = projects_host.build(
-        legacy_projects=LabourStub(active={"p": {"ph_left": ph_left}}, bountied=set(bountied)), tree={"p": dict(NODE, ph=500, yrs=2)},
+        seat=ProjectsSeat(bountied=set(bountied)), projects_record=LabourStub(active={"p": {"ph_left": ph_left}}), tree={"p": dict(NODE, ph=500, yrs=2)},
         resource_throttle=lambda node_id: (throttle, None))
     return host.project_hour_pace("p")
 

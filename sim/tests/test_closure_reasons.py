@@ -99,7 +99,7 @@ class StaffingClosureDiscount(unittest.TestCase):
 		business = a_business_running("mill")
 		business.mothball("mill", shut_year, reason)
 		projects = types.SimpleNamespace(mothballed=business.mothballed(), closures=business.closures())
-		module = projects_host.build(legacy_projects=projects, year=year)
+		module = projects_host.build(projects_record=projects, year=year)
 		# the build cost that makes opening the concern cost 1000
 		ventures = ventures_host.build(
 			tree_nodes={"mill": {"up": 0.0}}, project_cost=lambda _node: 1000.0 / venture_constants.VENTURE_CAPEX_SHARE_OF_BUILD_COST,
@@ -130,7 +130,7 @@ class CloseWorkRecordsTheReason(unittest.TestCase):
 	def game(self, year):
 		business = a_business_running("mill")
 		projects = types.SimpleNamespace(business=business)
-		module = projects_host.build(legacy_projects=projects, year=year)
+		module = projects_host.build(projects_record=projects, year=year)
 		module.close_lapsed_dependents = lambda year: None
 		return module, business
 

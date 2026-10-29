@@ -107,7 +107,7 @@ class OwnOutput(unittest.TestCase):
     def test_the_unclaimed_supply_is_the_output_less_what_other_running_projects_claimed(self):
         active = {"first": {"own_output_claim": {"forest1": 2.0}}, "second": {"own_output_claim": {"forest1": 0.5}},
                   "third": {}}
-        game = materials_stand_in.build(legacy_projects=materials_stand_in.projects(active=active))
+        game = materials_stand_in.build(projects_record=materials_stand_in.projects(active=active))
         game.own_material_supply = lambda tag: 3.0
         self.assertAlmostEqual(game.unclaimed_own_supply("forest1", "third"), 0.5)
         self.assertAlmostEqual(game.unclaimed_own_supply("forest1", "first"), 2.5)

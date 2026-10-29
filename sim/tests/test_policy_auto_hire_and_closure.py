@@ -90,7 +90,7 @@ class SeatSparesWhatItMustKeep(unittest.TestCase):
     """The founder's seat spares knowledge (never abandoned) and what the society granted; the rest it may shed."""
 
     def _seat(self, never_abandoned=(), granted=()):
-        module = projects_host.build(legacy_projects=Game(granted=set(granted)), year=1,
+        module = projects_host.build(projects_record=Game(granted=set(granted)), year=1,
                                      never_abandon=lambda node_id: node_id in never_abandoned)
         return SeatReview(module, Game())
 

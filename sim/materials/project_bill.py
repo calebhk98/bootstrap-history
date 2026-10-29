@@ -16,7 +16,7 @@ from . import rules
 
 
 class ProjectBill:
-    """Needs: tree_nodes, legacy_projects, goods_stock, purchase_quote, shared_bill, opposition_factor,
+    """Needs: tree_nodes, active_projects, goods_stock, purchase_quote, shared_bill, opposition_factor,
     material_cost_factor, can_pay, purchase_refusal, project_cost, project_cost_now, cost_money_factor, civ_cost_factor,
     rebuild_work_factor, failure_reset_share. Sends PayEdge, NotePurchase, ChangeStock."""
 
@@ -40,7 +40,7 @@ class ProjectBill:
     def unclaimed_own_supply(self, tag: str, node_id: str) -> float:
         """Yearly own output of a supply pool that no other running project has claimed."""
         claimed = sum(record.get("own_output_claim", {}).get(tag, 0.0)
-                      for other, record in self.needs.legacy_projects().active.items() if other != node_id)
+                      for other, record in self.needs.active_projects().items() if other != node_id)
         return rules.unclaimed(self.own_material_supply(tag), claimed)
 
     def project_own_output_claim(self, node_id: str) -> Dict[str, float]:
@@ -102,7 +102,7 @@ class ProjectBill:
     def failure_bill(self, node_id: str) -> float:
         """The money bill the player bears for this project: the frozen bill once it runs, else what a start today would
         leave to pay after the up-front materials (which stay in stock and are not at risk)."""
-        if node_id in self.needs.legacy_projects().active:
+        if node_id in self.needs.active_projects():
             return self.needs.project_cost(node_id)
         return self.needs.project_cost_now(node_id) - self.up_front_materials_money(node_id)
 

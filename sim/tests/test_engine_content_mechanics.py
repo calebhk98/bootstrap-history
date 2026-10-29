@@ -56,8 +56,7 @@ class FounderLifeExtensionTests(unittest.TestCase):
         slot = SeatsSeat(founder_alive=True, life_left=10)
         module = module_harness.build(Seats, seat=slot, views={
             "dissolution_terms": {"life_extension_years": 3, "years_before_forgetting": 3, "forget_fraction_divisor": 4, "years_until_end": 12},
-            "running_mechanics": running_mechanics, "legacy_projects": types.SimpleNamespace(stalled=0),
-            "patronage": {"founder_age": 50, "deputies": 0.0, "deputy_hours": 0.0, "deputies_carry_the_work": True}})
+            "running_mechanics": running_mechanics, "patronage": {"founder_age": 50, "deputies": 0.0, "deputy_hours": 0.0, "deputies_carry_the_work": True}})
         module.founder_mortality()
         return slot.life_left
 

@@ -31,6 +31,7 @@ from sim.agents.api import edges
 from sim.ledger.api import PayEdge
 from sim.projects.api import PostBounty, blocker_rules
 from sim.tests import module_harness, projects_host
+from sim.projects.state import ProjectsSeat
 
 
 def frozen_game(year, frozen_until, covered, end_year=1000):
@@ -54,31 +55,32 @@ check("the freeze check is a money blocker, reported under the cause credit_froz
       and blocker_rules.classify_plain_check(frozen_check.cause, frozen_check.kind, "text", [], None, False)["cause"] == "credit_frozen")
 
 # the cash a start needs: its price less what is paid towards it, on top of what work in hand still owes
-cash_state = projects_host.projects_state(active={"a": {"cost_left": 200.0}, "b": {"cost_left": None}}, paid_towards={"node": 300.0})
-cash_module = projects_host.build(project_cost=lambda node_id: 1000.0, legacy_projects=cash_state, acting_balance=900.0)
+cash_state = projects_host.projects_state(active={"a": {"cost_left": 200.0}, "b": {"cost_left": None}})
+cash_module = projects_host.build(project_cost=lambda node_id: 1000.0, projects_record=cash_state, acting_balance=900.0,
+                                  seat=ProjectsSeat(paid_towards={"node": 300.0}))
 check("the cash that covers a start counts what is owed on active work and what is paid towards it",
       cash_module._cash_covers_start("node") is True)
-cash_module = projects_host.build(project_cost=lambda node_id: 1000.0, legacy_projects=cash_state, acting_balance=899.0)
+cash_module = projects_host.build(project_cost=lambda node_id: 1000.0, projects_record=cash_state, acting_balance=899.0,
+                                  seat=ProjectsSeat(paid_towards={"node": 300.0}))
 check("...and is not covered one unit short", cash_module._cash_covers_start("node") is False)
 
 
 # a bounty pays the price, draws no poster hours, and is not counted as hours the founder still has to give
 def poster(capital, price):
     state = projects_host.projects_state()
-    household = types.SimpleNamespace(bounties_paid=0, employees={})
     module = projects_host.build(
-        tree={"node": {"name": "Node", "ph": 500.0, "yrs": 2.0}}, legacy_projects=state, bounty_price=lambda node_id: price,
-        acting_balance=capital, legacy_acting_household=household)
+        tree={"node": {"name": "Node", "ph": 500.0, "yrs": 2.0}}, projects_record=state, bounty_price=lambda node_id: price,
+        acting_balance=capital)
     module.started = []
 
     def initialize_project(node_id, **keywords):
         module.started.append(keywords)
         state.active[node_id] = {"ph_left": keywords["ph_left"]}
     module.initialize_project = initialize_project
-    return module, state
+    return module, module.seat
 
 
-poster_module, poster_state = poster(1000.0, 400.0)
+poster_module, poster_seat = poster(1000.0, 400.0)
 posted_ok = poster_module.post_bounty(PostBounty("node"))
 check("a bounty the poster can pay is posted", posted_ok is True)
 paid = [command for command in module_harness.sent(poster_module) if isinstance(command, PayEdge)]
@@ -86,15 +88,16 @@ check("...it pays the price under its cause and spends no poster hours or hired 
       paid == [PayEdge(edges.EDGE_WORKERS, 400.0, "bounties posted")] and poster_module.started[0]["ph_left"] == 0.0
       and poster_module.started[0]["include_labour"] is False and poster_module.started[0]["cost_left"] == 0.0,
       (paid, poster_module.started))
-check("...and marks the project as bountied", poster_state.bountied == {"node"})
+check("...and marks the project as bountied", poster_seat.bountied == {"node"})
+check("...and counts the bounty among those the seat has posted", poster_seat.bounties_paid == 1)
 def _wanting():
-    module = projects_host.build(legacy_projects=types.SimpleNamespace(active_keys_sorted=lambda: ["a", "b"]), tree={"a": {}, "b": {}})
+    module = projects_host.build(seat=ProjectsSeat(active={"a": {}, "b": {}}), tree={"a": {}, "b": {}})
     module.project_hour_pace = lambda node_id: {"a": 40.0, "b": 0.0}[node_id]
     return module
 
 
-bounty_projects = types.SimpleNamespace(active={"node": {"ph_left": 500.0}}, bountied={"node"})
-bounty_module = projects_host.build(legacy_projects=bounty_projects, tree={"node": {"ph": 500.0, "yrs": 2.0}})
+bounty_projects = types.SimpleNamespace(active={"node": {"ph_left": 500.0}})
+bounty_module = projects_host.build(projects_record=bounty_projects, tree={"node": {"ph": 500.0, "yrs": 2.0}}, seat=ProjectsSeat(bountied={"node"}))
 check("a bountied project asks for no hours of the founder", bounty_module.project_hour_pace("node") == 0.0)
 check("a project asking for hours is listed with them and one asking for none is not",
       _wanting().active_hours_still_wanted() == {"a": 40.0})

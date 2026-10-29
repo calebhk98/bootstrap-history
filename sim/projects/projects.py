@@ -5,10 +5,11 @@ of a project in hand (founder hours, hired trades, bills, risk and calendar), it
 exclusions and rebuild, the gates a node puts on works that must be running, and the staffing rule of the works built
 (closing what nobody can supervise, reopening it, warning first, auto-opening what pays, mothballing and restoring).
 
-A project in hand (`state.projects`) and the record of what is built and running are still written by the engine's
-unmoved parts (the screens, hazards, the credit freeze, ventures), so the module reaches that state through the engine
-bridge's `legacy_*` views; docs/architecture/MODULE_MIGRATION_TASKS.md lists them as debts."""
+The projects in hand are its seat state, written only by its commands and watched so that any change of one moves the seat's
+`active_projects_version`. What is built and running is the ventures module's: the module reads it through that module's views
+and shuts, restores and reviews works by its commands."""
 from sim.assembly.api import Module
+from sim.invalidating import _InvalidatingDict
 
 from .allocation_notes import AllocationNotes
 from .auto_open import AutoOpen
@@ -47,6 +48,7 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
                Rebuild, RunningGates, Closures, Exclusions, OpenGate, HourQueue, AllocationNotes, CostTail, Costs, Staffing,
                StaffingShortfall, StaffingReport, AutoOpen, Mothball, TradeWait, ProjectOrder, Module):
 	def setup(self) -> None:
+		self.spent_this_year = 0.0   # what the seat now stepping has paid on projects so far this year (not saved: a year's close empties it)
 		self._setup_start_checks()
 		self._setup_starting()
 		self._setup_start_phase()
@@ -61,8 +63,21 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 
 	# ---- the commands ----
 
-	def apply_note_active_changed(self, command):
+	def active_changed(self):
+		"""A project in hand of the acting seat was added, removed or changed."""
 		self.bump_seat(ACTIVE_CHANGES)
+
+	def apply_watch_active(self, command):
+		seat = self.seat_of(command.seat_id)
+		seat.active = _InvalidatingDict(seat.active, on_change=self.active_changed)
+		self.bump_seat(ACTIVE_CHANGES, command.seat_id)
+
+	def apply_note_year_spend(self, command):
+		self.spent_this_year += command.amount
+
+	def apply_close_spend_year(self, command):
+		self.seat.spend_last_year = self.spent_this_year
+		self.spent_this_year = 0.0
 
 	def apply_start_project(self, command):
 		answer = self.start_project(command)
@@ -84,7 +99,7 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 
 	def apply_reset_project_progress(self, command):
 		"""A sack burns the site: every project in hand goes back to the beginning, all its work left and none of its years done."""
-		active = self.needs.legacy_projects().active
+		active = self.seat.active
 		nodes = self.needs.tree_nodes()
 		for node_id in sorted(active):
 			active[node_id]["ph_left"] = nodes[node_id]["ph"]
@@ -117,10 +132,9 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 		return self.review_ventures(command.rules, command.year)
 
 	def apply_halt_active_projects(self, command):
-		projects = self.needs.legacy_projects()
-		if not projects.active:
+		if not self.seat.active:
 			return [], 0.0
-		halted = halt_active_projects(projects)
+		halted = halt_active_projects(self.seat.active, self.seat.paid_towards, self.seat.bountied)
 		self.bump_seat(ACTIVE)
 		return halted
 
@@ -141,42 +155,40 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 
 	def active_projects(self):
 		"""{node id: the project's record} of the acting seat's projects in hand (the object itself)."""
-		return self.needs.legacy_projects().active
+		return self.seat.active
 
-	def mothballed_works(self):
-		"""The works the acting seat has mothballed (the live set)."""
-		return self.needs.legacy_projects().mothballed
+	def active_project_ids(self):
+		"""The ids of the acting seat's projects in hand, in id order (not the order they were started)."""
+		return sorted(self.seat.active)
 
 	def bountied_nodes(self):
 		"""The nodes the acting seat has posted a bounty on (the live set)."""
-		return self.needs.legacy_projects().bountied
+		return self.seat.bountied
 
 	def failed_attempt_counts(self):
 		"""{node id: how many times the acting seat's attempt at it has failed} (the live record)."""
-		return self.needs.legacy_projects().failed_attempts
+		return self.seat.failed_attempts
 
 	def paid_towards_projects(self):
 		"""{node id: the money already paid into the project in hand} for the acting seat (the live record)."""
-		return self.needs.legacy_projects().paid_towards
+		return self.seat.paid_towards
 
 	def bounties_paid_total(self):
 		"""How many bounties the acting seat's household has paid out."""
-		return self.needs.legacy_acting_household().bounties_paid
+		return self.seat.bounties_paid
 
 	def shut_for_staff(self):
 		"""{work id: the year it was shut} of the acting seat's works closed for want of staff."""
-		closures = self.needs.legacy_projects().closures
-		return {node_id: record["year"] for node_id, record in closures.items() if record["reason"] == "staff"}
+		return {node_id: record["year"] for node_id, record in self.needs.closure_records().items() if record["reason"] == "staff"}
 
 	def spend_last_year(self):
-		"""What the acting seat's household spent on projects in the year just closed, or None before the first year ends."""
-		return self.needs.legacy_acting_household().spend_last_year
+		"""What the acting seat spent on projects in the year just closed, or None before the first year ends."""
+		return self.seat.spend_last_year
 
 	def committed_cost(self):
 		"""What is still owed, in total, across every project in hand: they all draw on the same purse and the same credit
 		line."""
-		projects = self.needs.legacy_projects()
-		return sum(projects.active[node_id].get("cost_left") or 0.0 for node_id in projects.active_keys_sorted())
+		return sum(self.seat.active[node_id].get("cost_left") or 0.0 for node_id in sorted(self.seat.active))
 
 	def reputation_gain_of_node(self, node_id):
 		"""The standing finishing `node_id` adds."""

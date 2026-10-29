@@ -70,7 +70,7 @@ class PowerCapabilityReadouts(unittest.TestCase):
     def _installed(self, done):
         mechanic = {name: {node_id: node["mechanics"][name] for node_id, node in self.NODES.items() if name in node["mechanics"]}
                     for name in ("power_tier", "power_generation")}
-        module = materials_stand_in.build(legacy_projects=materials_stand_in.projects(done=done), mechanic=mechanic)
+        module = materials_stand_in.build(projects_record=materials_stand_in.projects(done=done), mechanic=mechanic)
         return module.installed_generation_kw_by_tier()
 
     def test_a_grid_capability_with_no_station_has_no_installed_generation(self):

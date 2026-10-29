@@ -184,7 +184,7 @@ class StandInWorld(ViewShare):
         self.world_map = types.SimpleNamespace(tiles={"t1": 1, "t2": 1})
 
     def view(self, name):
-        held = {"techniques_held": frozenset(), "techniques_version": (0, 0), "operating_version": (0, 0), "forest_hectares": 1.0, "nitre_beds": {"square_metres": 1.0, "tonnes_per_square_metre": 0.001}, "mine_workings": [], "population": self.population,
+        held = {"techniques_held": frozenset(), "techniques_version": (0, 0), "operating_version": (0, 0), "operating": {}, "forest_hectares": 1.0, "nitre_beds": {"square_metres": 1.0, "tonnes_per_square_metre": 0.001}, "mine_workings": [], "population": self.population,
                 "real_output_per_head": self.state.economy.output_per_head}
         return lambda: held[name]
 
