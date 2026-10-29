@@ -371,7 +371,10 @@ def share_working(revenue_per_run: float, variable_cost_per_run: float) -> float
 def _standard_score(revenue_per_run: float, mean_cost_per_run: float) -> float:
     """How many spreads the revenue sits above the median workplace's cost (the mean is the average)."""
     spread = COST_SPREAD_WITHIN_PRODUCER
-    return (math.log(revenue_per_run / mean_cost_per_run) + spread * spread / 2.0) / spread
+    ratio = revenue_per_run / mean_cost_per_run
+    if not ratio > 0.0:     # a revenue too small against the cost to compare (the ratio underflows): below every workplace's cost
+        return -math.inf
+    return (math.log(ratio) + spread * spread / 2.0) / spread
 
 
 def _normal_below(score: float) -> float:
