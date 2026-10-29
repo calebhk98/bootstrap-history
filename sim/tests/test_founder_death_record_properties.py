@@ -8,7 +8,7 @@ QUICK_TOPIC = True
 
 
 def game(**founder_fields):
-	return SimpleNamespace(state=SimpleNamespace(founder=SimpleNamespace(**founder_fields)))
+	return SimpleNamespace(state=SimpleNamespace(acting_record=SimpleNamespace(founder=SimpleNamespace(**founder_fields))))
 
 
 class FounderDeathRecord(unittest.TestCase):

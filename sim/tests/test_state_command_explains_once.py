@@ -20,7 +20,7 @@ def ask(game, reply, **command):
 
 
 def stand_in_game():
-    return Game(year=100, state=Game(seat_progress=Game(_said_explanations=None)))
+    return Game(year=100, state=Game(acting_record=Game(seat_progress=Game(_said_explanations=None))))
 
 
 class StateExplainsShutConcernsOnce(unittest.TestCase):

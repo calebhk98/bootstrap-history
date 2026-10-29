@@ -13,7 +13,7 @@ from sim.tests.ui_stand_in import Game
 
 
 def stub_game(year=100):
-    return Game(state=Game(seat_progress=SeatProgressState()), year=year)
+    return Game(state=Game(acting_record=Game(seat_progress=SeatProgressState())), year=year)
 
 
 game = stub_game()
@@ -25,10 +25,10 @@ check("another topic is explained on its own", already_explained(game, "start_un
 check("`full` on a topic never shown still marks it shown",
       already_explained(game, "third", {"full": True}) is False and already_explained(game, "third", {}) is True)
 check("the record keeps the year each topic was first shown",
-      game.state.seat_progress._said_explanations == {"start_price_fixed": 100, "start_untrained_trade": 100, "third": 100},
-      game.state.seat_progress._said_explanations)
+      game.state.acting_record.seat_progress._said_explanations == {"start_price_fixed": 100, "start_untrained_trade": 100, "third": 100},
+      game.state.acting_record.seat_progress._said_explanations)
 later = stub_game(year=130)
-later.state.seat_progress._said_explanations = {"start_price_fixed": 100}
+later.state.acting_record.seat_progress._said_explanations = {"start_price_fixed": 100}
 already_explained(later, "other", {})
 check("a topic first shown later is dated then, and the old one keeps its year",
-      later.state.seat_progress._said_explanations == {"start_price_fixed": 100, "other": 130}, later.state.seat_progress._said_explanations)
+      later.state.acting_record.seat_progress._said_explanations == {"start_price_fixed": 100, "other": 130}, later.state.acting_record.seat_progress._said_explanations)

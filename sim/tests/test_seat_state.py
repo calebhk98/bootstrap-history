@@ -37,7 +37,7 @@ first = state.seats[FIRST_SEAT_ID]
 
 check("one seat exists and is acting", list(state.seats) == [FIRST_SEAT_ID] and state.acting_seat == FIRST_SEAT_ID, list(state.seats))
 check("the root household and founder are the acting seat's objects",
-      state.household is first.household and state.founder is first.founder, None)
+      state.acting_record.household is first.household and state.acting_record.founder is first.founder, None)
 
 # a second seat: switching rebinds the aliases, and restores on exit and on error
 game = Seats(state)
@@ -45,22 +45,22 @@ second_household = HouseholdState(saving_target=50.0)
 game.add_seat("second", SeatState(household=second_household, founder=FounderState()))
 with game.act_as("second"):
     check("inside act_as the root household is the second seat's",
-          state.household is second_household and state.household.saving_target == 50.0, state.household.saving_target)
+          state.acting_record.household is second_household and state.acting_record.household.saving_target == 50.0, state.acting_record.household.saving_target)
 check("leaving act_as restores the first seat",
-      state.household is first.household and state.acting_seat == FIRST_SEAT_ID, None)
+      state.acting_record.household is first.household and state.acting_seat == FIRST_SEAT_ID, None)
 try:
     with game.act_as("second"):
         raise RuntimeError("boom")
 except RuntimeError:
     pass
-check("act_as restores the seat when the body raises", state.household is first.household, None)
+check("act_as restores the seat when the body raises", state.acting_record.household is first.household, None)
 try:
     with game.act_as("nobody"):
         pass
     refused = False
 except KeyError:
     refused = True
-check("an unknown seat is refused and nothing changes", refused and state.household is first.household, None)
+check("an unknown seat is refused and nothing changes", refused and state.acting_record.household is first.household, None)
 try:
     game.add_seat("second", SeatState(household=HouseholdState(saving_target=1.0), founder=FounderState()))
     added_twice = True
@@ -77,6 +77,6 @@ check("the save names the acting seat", blob.get("acting_seat") == FIRST_SEAT_ID
 loaded = deserialize_state(blob)
 seat = loaded.seats[FIRST_SEAT_ID]
 check("a load rebinds the aliases to the loaded seat",
-      loaded.household is seat.household and loaded.founder is seat.founder, None)
+      loaded.acting_record.household is seat.household and loaded.acting_record.founder is seat.founder, None)
 check("a load restores the household and the seats",
-      loaded.household.saving_target == 1000.0 and sorted(loaded.seats) == sorted(state.seats), loaded.household.saving_target)
+      loaded.acting_record.household.saving_target == 1000.0 and sorted(loaded.seats) == sorted(state.seats), loaded.acting_record.household.saving_target)

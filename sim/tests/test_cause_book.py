@@ -16,7 +16,7 @@ class StubGame:
     def __init__(self):
         self.year = 100
         self.standing = {"concealed": 0.0, "eminence": 0.0, "defiance": 0.0}
-        self.state = types.SimpleNamespace(household=PurseHousehold(capital=1000.0))
+        self.state = types.SimpleNamespace(acting_record=types.SimpleNamespace(household=PurseHousehold(capital=1000.0)))
         self.nodes = {"mill": {"rev": 40.0, "up": 15.0}}
         self.reach = 2.0
         self.wage_index_now = 1.0
@@ -33,14 +33,14 @@ class StubGame:
         if name in ("visible_scale", "state_reach"):
             return getattr(self, name)
         if name == "acting_balance":
-            return lambda: self.state.household.capital
+            return lambda: self.state.acting_record.household.capital
         return lambda: self.standing
 
     def visible_scale(self, headcount, wealth, eminence, defiance):
         return 1.0 + headcount / 1000.0 + wealth / 100000.0 + eminence / 10.0 + defiance
 
     def notice(self):
-        household = self.state.household
+        household = self.state.acting_record.household
         return self.reach * self.visible_scale(self.headcount_now, household.capital, self.standing["eminence"],
                                                         self.standing["defiance"])
 
@@ -63,7 +63,7 @@ check("a wage shock row names its cause with the signed index change",
 
 # --- closing a period adds the unnamed remainder, so the causes sum to the change ----------------
 game.wage_index_now = 0.8   # 0.1 more than the shock named
-game.state.household.capital += 500000.0
+game.state.acting_record.household.capital += 500000.0
 game.standing["eminence"] += 3.0
 game.headcount_now = 80
 game.reach = 2.5
@@ -80,7 +80,7 @@ check("each reading that moved is named: capacity, headcount, wealth and eminenc
       {cause_book.STATE_CAUSE, "headcount", "wealth", "eminence"} <= set(notice) and "defiance" not in notice, notice)
 check("wealth is a positive notice cause when the purse grew", notice["wealth"] > 0.0, notice)
 check("closing a period stamps the open rows with its year", all(row["year"] is not None for row in
-      game.state.household.cause_rows) and cause_book.rows(game, "opening")[0]["year"] == 101, game.state.household.cause_rows)
+      game.state.acting_record.household.cause_rows) and cause_book.rows(game, "opening")[0]["year"] == 101, game.state.acting_record.household.cause_rows)
 
 # --- selecting rows ---------------------------------------------------------------------------
 check("causes since a year leave out the rows stamped up to it",
@@ -97,10 +97,10 @@ for _ in range(cause_book.YEARS_KEPT + 3):
     cause_book.record(game, "closure", "x", "manual", 1.0)
     cause_book.close_period(game)
 check("rows older than the window are dropped",
-      min(row["year"] for row in game.state.household.cause_rows) > game.year - cause_book.YEARS_KEPT,
-      sorted({row["year"] for row in game.state.household.cause_rows}))
+      min(row["year"] for row in game.state.acting_record.household.cause_rows) > game.year - cause_book.YEARS_KEPT,
+      sorted({row["year"] for row in game.state.acting_record.household.cause_rows}))
 
 for _ in range(cause_book.ROWS_KEPT + 50):
     cause_book.record(game, "closure", "y", "manual", 1.0)
 check("a run that never closes a period keeps only a capped number of rows",
-      len(game.state.household.cause_rows) == cause_book.ROWS_KEPT, len(game.state.household.cause_rows))
+      len(game.state.acting_record.household.cause_rows) == cause_book.ROWS_KEPT, len(game.state.acting_record.household.cause_rows))

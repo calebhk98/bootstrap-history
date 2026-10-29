@@ -23,7 +23,7 @@ def state(civ=None, reserve=(0, 0), policy=None, said=None):
     built.seats["founder"].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting", "bronze"})
     built.seats["founder"].modules["seats"] = SeatsSeat(policy=policy or {})
     built.seats["founder"].modules["workforce"] = WorkforceSeat(reserve_craftsmen=reserve[0], reserve_scholars=reserve[1])
-    built.seat_progress._said_explanations = said
+    built.acting_record.seat_progress._said_explanations = said
     return built
 
 

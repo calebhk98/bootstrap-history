@@ -54,8 +54,8 @@ def _test_automatic_field_persistence():
 		return False, "serialized state carries a version stamp"
 
 	restored = deserialize_state(blob)
-	if restored.household.saving_target != 1250.0:
-		return False, f"Household saving target mismatch: {restored.household.saving_target}"
+	if restored.acting_record.household.saving_target != 1250.0:
+		return False, f"Household saving target mismatch: {restored.acting_record.household.saving_target}"
 	if restored.seats[restored.acting_seat].modules["knowledge"]["done"] != {"__set__": ["stone_cutting"]}:   # the module set revives it
 		return False, f"Knowledge done mismatch: {restored.seats[restored.acting_seat].modules['knowledge']}"
 	restored_active = restored.seats[restored.acting_seat].modules["projects"]["active"]
@@ -299,7 +299,7 @@ def _test_flat_legacy_v2_save_rejected_by_load_state():
 	import json
 	from types import SimpleNamespace
 	from sim.engine.saveload import load_state
-	state = SimpleNamespace(household=SimpleNamespace(saving_target=1250.0))
+	state = SimpleNamespace(acting_record=SimpleNamespace(household=SimpleNamespace(saving_target=1250.0)))
 	game = SimpleNamespace(nodes={"printing_press": {}}, civ={"id": "rome_100ad"}, state=state, fog=False)
 	flat_v2_blob = {
 		"_civ": "rome_100ad",
@@ -322,7 +322,7 @@ def _test_flat_legacy_v2_save_rejected_by_load_state():
 			raised_err = str(err)
 		if raised_err is None:
 			return False, "load_state unexpectedly succeeded on flat v2 save file"
-		if game.state is not state or state.household.saving_target != 1250.0:
+		if game.state is not state or state.acting_record.household.saving_target != 1250.0:
 			return False, "the game was changed despite the load failing"
 	finally:
 		if os.path.exists(save_path):
