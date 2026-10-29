@@ -167,20 +167,31 @@ actors (21), hazards, workforce (20 each), projects (19).
 
 - [ ] Guarded reads: a reader cannot change another module's view answer (`sim/assembly/read_guard.py`, on with
   `BH_GUARD_VIEW_READS=1` in debug games). Inventory every write it refuses on the slow tier and the equivalence runs,
-  turn each into the owner's command, then switch the guard on by default in debug games.
+  turn each into the owner's command, then switch the guard on by default in debug games. The guarded slow tier at
+  `2294c07f` refused no write (its only failures were Complaint 866 and the goldens' time limit); the guarded micro tier
+  is next.
 - [x] No `legacy_game` or `legacy_state` reads: production, workforce, finance, polity, demography and agriculture read
   named views and send owners' commands; the bridge views are deleted. The one whole-game handout left is `provider_game`,
   the mod contract (phase 7). Measured after: 45 reads of `legacy_*` views (80 before), 241 reads answered by the bridge
   (254 before).
 - [ ] No other `legacy_*` view that hands out a live object (`legacy_projects`, `legacy_world_map`, `legacy_seats`,
-  `legacy_dice` -> `game_random`, `legacy_economy`, `legacy_labour` and the rest: `python3 tools/measure/module_graph.py`).
+`legacy_economy`, `legacy_labour` and the rest: `python3 tools/measure/module_graph.py`).
 - [x] The `scenario` module (`sim/scenario/`) owns the game's setup and clock: the civilisation, the configuration, the modes
   (events, manual, fog, fuzzy estimates), the year (only `AdvanceYear` moves it), the horizon, the danger and project limits,
   and the text helpers that follow the coin and the player's units (`money_text`, `mass_text`, `plain_number`, ...). Its
   inputs (another civilisation's file, a kit's worth, the unit registry) arrive in `OpenScenario`, so it reads no view. Left
   on the engine: the unit options (`sim/engine/units.py`, process-global UI state) that `Sim` hands over as a callable.
-- [ ] Actors publish `has_state`, `countries`, `organised_factions`, `home_country`, `state_knowledge`, `holder_treasury`, `partner_catch_chance`, `harvest_share_taken` and `legacy_country_literacy` (`sim/actors/country_views.py`, rules in `country_rules.py`). Still bridged: `opening_cast` (needs the opening civilisation, which no view publishes).
+- [x] Actors publish `has_state`, `countries`, `organised_factions`, `home_country`, `state_knowledge`, `holder_treasury`, `partner_catch_chance`, `harvest_share_taken` and `legacy_country_literacy` (`sim/actors/country_views.py`, rules in `country_rules.py`). Actors also build the opening cast from the scenario's `opening_civilisation` and the partners' `civilisation_record`. Still bridged: `declared_actor_kinds` moved to `content` (below).
 - [x] The mod loader is the `content` package (`sim/content/`, door `api.py`) and the `content` module owns the game's mods directory (`OpenContent`, sent by `game_assembly.build`). It publishes `mods_directory`, `installed_mod_ids`, `map_overlays`, `household_need_data`, `declared_actor_kinds` and `data_store_declarations`, computed from that directory by `sim/content/views.py`. Still bridged: `data_command_specs` and `data_figure_specs`, because validating a declared state path needs `Sim` and the `@readable` mark (`ui_data.check_state_path`).
+- [x] Readers of the views the bridge only re-wrapped read the owners' views: `legacy_dice` and `legacy_act_as` are
+  `game_random` and `acting_as`; `nodes_with_mechanic`, `state_military_diffusion`, `partner_reached` and `concern_rows_stopped`
+  are read as `mechanic`, `diffusion_index`, `partner_gate_refusal` and `concern_market`.
+- [x] Workforce publishes `wage_bill`, `unskilled_trade`, `settlement_tiles`, `labour_need_shares` and `opening_wage_index`
+  (`sim/workforce/views_facts.py`). Still bridged: the trade registry views (`starting_wages`, `trades_absent`, `trade_notes`,
+  `trade_records`, `trade_family`, `wage_schedule_for`), which load through `sim/engine/data.py`.
+- [x] Markets publish `material_serves_a_need`, `materials_serving`, `material_substitutes`, `agent_rate`, `agent_credit_room`
+  and `agent_economy_opened`; founding a bank is the markets command `FoundBankFromOutside`, so finance no longer holds the
+  agent economy.
 - [ ] The engine bridge answers no module read: each bridged view is published by the module that owns the fact.
 - [ ] A width review for each module that depends on more than 15 others, written into its catalogue entry: views that
   mirror methods merged into views that answer questions, sub-domains split out, pass-through dependencies removed,
