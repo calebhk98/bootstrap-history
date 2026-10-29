@@ -19,7 +19,7 @@ from sim.labour import api as labour_api
 
 from . import port_closure, port_costs, port_sites
 from .port_stores import opening_store_values
-from sim.freight.api import SEA_MODE
+from sim.freight.api import FREIGHT_DRIVER_WAGE_TRADE, FREIGHT_FEED_PRICE_MATERIAL, SEA_MODE
 
 ARABLE_SOURCE = "arable land"   # the production entries' `extracted_from` for crops (some add a note after it)
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
@@ -109,11 +109,11 @@ def opening_values(sim):
         "rate": float(sim.economy.base_rate()),
         "carriage": dict(modes),
         "carriage_balanced": sim._freight_mode_costs(0.0, cargo="goods"),
-        "carriage_wage": sim.labour.wage_per_hour(sim.FREIGHT_DRIVER_WAGE_TRADE),
+        "carriage_wage": sim.labour.wage_per_hour(FREIGHT_DRIVER_WAGE_TRADE),
         "carriage_crew": {mode: [rate["crew_trade"], rate["crew_hours_per_tonne_km"]]
                           for mode, rate in rates.items()},
         "carriage_handling_trade": {mode: rate["handling_trade"] for mode, rate in rates.items() if rate.get("handling_trade")},
-        "carriage_feed_good": sim.FREIGHT_FEED_PRICE_MATERIAL,
+        "carriage_feed_good": FREIGHT_FEED_PRICE_MATERIAL,
         "carriage_teams": {mode: {key: rate[key] for key in ("carriers", "tonne_km_per_team_day", "team_payload_tonnes", "animal_feed_kg_per_tonne_km")}
                            for mode, rate in rates.items()},
         "held_nodes": sorted(sim.held_and_running(include_starting=False)),

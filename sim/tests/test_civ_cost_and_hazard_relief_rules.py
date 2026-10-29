@@ -10,7 +10,7 @@ from sim.engine.core import Sim
 from sim.hazards import constants
 from sim.tests import hazards_host
 from sim.tests import projects_host
-from sim.polity.value_weight import shifted
+from sim.polity.value_weight import VALUE_WEIGHT_CEILING, VALUE_WEIGHT_FLOOR, shifted
 from sim.labour.labour_population import PopulationMixin
 
 MULTIPLIERS = {"ships": 0.5, "infrastructure": 2.0, "commerce": 1.5, "chemical": 3.0}
@@ -180,7 +180,7 @@ class ValueWeightTests(unittest.TestCase):
         self.assertEqual(shifted(1.4, 0.5, -1.0, 1.5), 1.5)
 
     def test_the_engines_bounds_are_a_floor_below_a_ceiling(self):
-        self.assertLess(Sim.VALUE_WEIGHT_FLOOR, Sim.VALUE_WEIGHT_CEILING)
+        self.assertLess(VALUE_WEIGHT_FLOOR, VALUE_WEIGHT_CEILING)
 
 
 if __name__ == "__main__":

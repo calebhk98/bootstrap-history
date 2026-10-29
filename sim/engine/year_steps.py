@@ -21,6 +21,7 @@ from sim.workforce.api import (AutoBuyPeople, AutoManumit, ChargeLivingCost, Clo
 from sim.diffusion.api import AdvanceSociety
 
 from . import node_rederive
+from .farm_territory_refresh import refresh_farm_territory
 from .invariants import check_labour_market_invariants, check_yearly_invariants
 
 
@@ -41,7 +42,7 @@ def verify_step_invariants(sim):
 def begin_world_year(sim):
 	"""What the society notes before the year starts."""
 	node_rederive.refresh_derived_nodes(sim)
-	sim.refresh_farm_territory()
+	refresh_farm_territory(sim)
 	sim.send(OpenMarketBook())   # every book entry opens at the year's start, so a read before the first step cannot open one at another state
 
 

@@ -60,6 +60,7 @@ from sim import simulator as S
 # use PLANNER, and test_literacy_market_pricing.py and
 # test_commodities_wired_in.py use COMMOD, bare and without their own import.
 from sim.engine import planner as PLANNER
+from sim.projects import constants as _PROJECTS_CONSTANTS
 from sim.prices import commodities as COMMOD
 from sim.knowledge.api import ForgetTechnique, LearnTechnique, ReceiveTechniques, RevealNodes, StartDoneYearRecord
 
@@ -234,7 +235,7 @@ def concern_needing_craftsmen_to_supervise():
     hired craftsman shuts it. Of those, the cheapest to open: a fixture's founder holds little, and what
     the opening prices a heavy build's materials at is not what these tests are about."""
     probe = sim()
-    cover = probe.FOUNDER_IS_WORTH + probe.STAFFING_CLOSURE_SLACK
+    cover = _PROJECTS_CONSTANTS.FOUNDER_IS_WORTH + _PROJECTS_CONSTANTS.STAFFING_CLOSURE_SLACK
     fits = []
     for candidate_id in sorted(NODES):
         node = NODES[candidate_id]

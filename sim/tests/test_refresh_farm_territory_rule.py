@@ -1,6 +1,6 @@
 """Complaint 543: the farm's ladder, arable ceiling and cleared ground follow the held tiles as they now are.
 The agriculture module's `farm_territory` builds the ladder and ceiling from the tiles' crop sites (where the soil nitrogen
-stock and the rotation have moved their yield factor and cropped hectares); the engine's `refresh_farm_territory` forwarder
+stock and the rotation have moved their yield factor and cropped hectares); the engine's `refresh_farm_territory`
 sets them on the farm and re-sizes the cleared area on the new ladder. The labour side is a recorder; the sites are written out."""
 QUICK_TOPIC = True
 
@@ -8,7 +8,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.agriculture.commands import SetFarmTerritory
-from sim.engine.forward_agriculture import ForwardAgricultureMixin
+from sim.engine.farm_territory_refresh import refresh_farm_territory
 from sim.tests import agriculture_stand_in
 from sim.world.farming_technique import DEFAULT_TECHNIQUE
 
@@ -36,7 +36,7 @@ class TerritoryTests(unittest.TestCase):
         self.assertEqual(territory_of({"a": site(0.0, 40.0), "b": site(0.5, 100.0)}).cropped_hectares, 100.0)
 
 
-class Farm(ForwardAgricultureMixin):
+class Farm:
     def __init__(self, territory, cleared_hectares):
         self.territory = territory
         self.cleared_hectares = cleared_hectares
@@ -54,12 +54,12 @@ class Farm(ForwardAgricultureMixin):
 class RefreshTests(unittest.TestCase):
     def test_the_ladder_and_ceiling_are_the_territorys(self):
         farm = Farm(SimpleNamespace(ladder=[(1.1, 100.0)], cropped_hectares=100.0), 50.0)
-        farm.refresh_farm_territory()
+        refresh_farm_territory(farm)
         self.assertEqual(farm.sent, [SetFarmTerritory([(1.1, 100.0)], 100.0)])
 
     def test_the_cleared_area_is_kept_and_sized_again_on_the_new_ladder(self):
         farm = Farm(SimpleNamespace(ladder=[(1.1, 100.0)], cropped_hectares=100.0), 70.0)
-        farm.refresh_farm_territory()
+        refresh_farm_territory(farm)
         self.assertEqual(farm.resized_to, [70.0])
 
 

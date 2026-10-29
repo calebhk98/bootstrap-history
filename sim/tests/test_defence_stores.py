@@ -16,7 +16,6 @@ from types import SimpleNamespace
 
 from sim.defence_stores.module import DefenceStores
 from sim.engine import validate_defence_stores
-from sim.engine.forward_mechanics import ForwardMechanicsMixin
 from sim.mechanics.module import Mechanics
 from sim.living_stock.api import ChangeHeld
 from sim.tests import module_harness
@@ -50,7 +49,7 @@ class _Keyed:
         return self.answer(key)
 
 
-class _Host(ForwardMechanicsMixin):
+class _Host:
     """The fake game the other mixins run on, with the defence-stores module built over it by the harness: its views are
     this host's plain values, and a ChangeHeld it sends changes the host's ledger (kilograms are a thousandth of a tonne)."""
     HOURS_PER_PERSON_YEAR = 2000.0

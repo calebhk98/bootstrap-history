@@ -13,29 +13,20 @@ from .data import (DEFAULTS, kit_capital, load_civ,
 from sim.world import demography
 from sim.world import agriculture
 from sim.agriculture.api import RecordOpeningFarm, SetFarmTerritory
+from sim.finance.api import NoteLenderPosting
+from .farm_territory_refresh import refresh_farm_territory
 from sim.world import land
 
 
 from sim.land.api import rules as land_rules
 from sim.knowledge.api import LearnTechnique, StartDoneYearRecord, declared_starting_techs
-from .forward_markets import ForwardMarketsMixin
-from .forward_demography import ForwardDemographyMixin
-from .forward_agriculture import ForwardAgricultureMixin
-from .forward_diffusion import DiffusionForwardsMixin
-from .forward_mechanics import ForwardMechanicsMixin
 from .forward_workforce import ForwardWorkforceMixin
-from .projects import ProjectsMixin
 from . import seat_registry, year_steps
 from .year_run import run_year
 from sim.seats.api import SetFounderLife, SetPolicy
 from .forward_seats import ForwardSeatsMixin
-from .forward_hazards import HazardsForwardsMixin
-from .forward_polity import PolityForwardsMixin
 from .seat_defaults import default_policy
-from .forward_finance import ForwardFinanceMixin
 from .forward_production import ForwardProductionMixin
-from .forward_freight import ForwardFreightMixin
-from .forward_resources import ForwardResourcesMixin
 from .core_properties import ForwardingPropertiesMixin
 from .year_steps import StepContext
 from .data import trade_family
@@ -50,21 +41,10 @@ from . import units
 
 
 class Sim(
-        ForwardMechanicsMixin,
-        ForwardMarketsMixin,
         ForwardProductionMixin,
         ForwardWorkforceMixin,
-        ProjectsMixin,
         ForwardSeatsMixin,
-        HazardsForwardsMixin,
-        PolityForwardsMixin,
-        DiffusionForwardsMixin,
-        ForwardFinanceMixin,
-        ForwardFreightMixin,
         ForwardingPropertiesMixin,
-        ForwardAgricultureMixin,
-        ForwardResourcesMixin,
-        ForwardDemographyMixin,
 ):
     # DISEASE_BURDEN_TECH_IDS (nodes declaring the `disease_burden` mechanic) is
     # provided by the mechanics module (sim/mechanics); food techs in _TECH_EFFECTS.json do not declare it.
@@ -224,7 +204,7 @@ class Sim(
 
     def _reconnect_state_hooks(self):
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
-        self.state.actors.purses.observer = self.note_lender_posting
+        self.state.actors.purses.observer = lambda account, signed, label: self.send(NoteLenderPosting(account, signed, label))
         for seat_id in self.state.seats:
             self._wrap_seat_containers(seat_id)
         from . import game_assembly
@@ -232,7 +212,7 @@ class Sim(
         cleared = self.view("farm_holdings")()["cleared_hectares"]
         if cleared is not None:
             self.labour.set_farm_area(cleared)
-            self.refresh_farm_territory()
+            refresh_farm_territory(self)
 
         # Sync civ live state and metadata
         if self.state._rng is not None:

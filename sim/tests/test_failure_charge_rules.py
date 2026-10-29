@@ -73,7 +73,6 @@ class FailingSim:
     instrument_spec = None
 
     can_bear = 1e18
-    FAILURE_RESET_SHARE = projects_constants.FAILURE_RESET_SHARE
 
     def __init__(self, capital, loss, claimed):
         nodes = {NODE_ID: {"name": "Kiln", "ph": 100.0, "risk": 0.2, "mat": {}, "lab": {}}, "gauge": {"name": "Gauge"}}
@@ -140,7 +139,7 @@ class FailedAttemptChargeTests(unittest.TestCase):
         sim._fail_attempt(NODE_ID, 0.2)
         record = sim.state.projects.active[NODE_ID]
         self.assertEqual(sim.seat.failed_attempts[NODE_ID], 1)
-        self.assertAlmostEqual(record["ph_left"], 100.0 * 0.5 * sim.FAILURE_RESET_SHARE)
+        self.assertAlmostEqual(record["ph_left"], 100.0 * 0.5 * projects_constants.FAILURE_RESET_SHARE)
         self.assertAlmostEqual(record["yrs"], 4.0 * 0.25)
 
     def test_a_failed_bounty_charges_the_poster_nothing_and_stays_the_claimants_work(self):

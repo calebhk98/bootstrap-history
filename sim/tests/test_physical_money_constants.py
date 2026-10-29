@@ -18,11 +18,11 @@ from sim.world import deposits
 
 PHYSICAL_COSTS = {
     "INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD": "INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD",
-    "CREDIT_LINE_PER_FOREST_HA": "CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA",
     "CAPABILITY_FACTOR_HALF_SATURATION_REV": "CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS",
     "REVENUE_CEILING_PER_POP_SCALE": "REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE",
-    "STATE_FUNDING_BASE": "STATE_FUNDING_BASE_LABOUR_HOURS",
 }
+# priced by the finance and polity modules from their hours constants (`credit_limit`, `state_funding`)
+MODULE_PRICES = (("CREDIT_LINE_PER_FOREST_HA", "CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA"), ("STATE_FUNDING_BASE", "STATE_FUNDING_BASE_LABOUR_HOURS"))
 SLAVE_PRICE = ("SLAVE_BASE_PRICE", "SLAVE_BASE_PRICE_LABOUR_HOURS")
 # priced by the workforce module (`housing_price_per_place`, `trade_school_price_per_seat`) as hours times what an hour is worth, at the price level
 WORKFORCE_PRICES = (("HOUSING_COST_PER_PLACE", "HOUSING_LABOUR_HOURS_PER_PLACE"), ("TRADE_SCHOOL_COST_PER_SEAT", "TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT"))
@@ -43,7 +43,7 @@ def _deposit(name, grade, depth="surface"):
 class PhysicalConstantsAreInHours(unittest.TestCase):
 
     def test_each_is_declared_in_labour_hours(self):
-        for money_name, hours_name in list(PHYSICAL_COSTS.items()) + [SLAVE_PRICE, FARM_PRICE, PATRON_GIFT, HANDS_PRICE] + list(RESOURCES_PRICES) + list(WORKFORCE_PRICES):
+        for money_name, hours_name in list(PHYSICAL_COSTS.items()) + [SLAVE_PRICE, FARM_PRICE, PATRON_GIFT, HANDS_PRICE] + list(RESOURCES_PRICES) + list(WORKFORCE_PRICES) + list(MODULE_PRICES):
             self.assertTrue(hours_name in REGISTRY, hours_name)
             self.assertIn("labour hour", REGISTRY[hours_name]["unit"], hours_name)
 

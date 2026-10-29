@@ -68,8 +68,8 @@ game.held.add(MILITARY[0])
 one_held = relief(game)
 check("one weapon held removes some harm of each kind", all(value < 1.0 for value in one_held.values()), one_held)
 check("the relief per weapon is the declared one for each kind",
-      abs(one_held["output_factor"] - (1.0 - game.STATE_MIL_RELIEF_PER_WEAPON_OUTPUT)) < 1e-12
-      and abs(one_held["sack_chance"] - (1.0 - game.STATE_MIL_RELIEF_PER_WEAPON_SACK)) < 1e-12, one_held)
+      abs(one_held["output_factor"] - (1.0 - constants.STATE_MIL_RELIEF_PER_WEAPON_OUTPUT)) < 1e-12
+      and abs(one_held["sack_chance"] - (1.0 - constants.STATE_MIL_RELIEF_PER_WEAPON_SACK)) < 1e-12, one_held)
 
 game.built.update(MILITARY[1:])
 check("the founder inventing more weapons does not reduce the relief the state has", relief(game) == one_held, (one_held, relief(game)))
