@@ -53,7 +53,7 @@ class ApplyingHours:
     def disperse_dependants(self, command):
         seat = self.seat
         seat.freedmen = 0
-        seat.artisans = max(command.artisan_floor, seat.artisans * command.artisan_retention)
+        seat.artisans = rules.count_after_bleed(seat.artisans, command.artisan_floor, 1.0 - command.artisan_retention)
 
     def lose_crew(self, command):
         employees = self.seat.employees
