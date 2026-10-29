@@ -65,12 +65,11 @@ check("deserialize_state: a field the save lacks takes its default", workforce.t
 check("deserialize_state: an unknown key and an `_on_change` key are not set", not hasattr(workforce, "not_a_field") and not hasattr(workforce, "_on_change_hook"))
 
 # ---- the retry counts, nested records and sets of the projects
-projects = deserialize_state({
+projects = deserialize_state({"businesses": [{"business_id": "founder", "owner_id": "", "plants": []}]}, ProjectsState)
+projects_seat = deserialize_state({
 	"active": {"z_mill": {"ph_left": 80, "cost_left": 300, "yrs": 1.5, "spent": 100, "status": "ACTIVE", "lab_left": {"mason": 15}},
 	           "a_forge": {"ph_left": 10, "cost_left": 20, "yrs": 0.5, "spent": 5, "status": "ACTIVE"}},
-	"businesses": [{"business_id": "founder", "owner_id": "", "plants": []}],
-	}, ProjectsState)
-projects_seat = deserialize_state({"failed_attempts": {"printing": "3", "alloy": 1}, "bountied": {"__set__": ["alloy"]},
+	"failed_attempts": {"printing": "3", "alloy": 1}, "bountied": {"__set__": ["alloy"]},
                                    "paid_towards": {"printing": 250}, "bounties_paid": "2"}, ProjectsSeat)
 check("deserialize_state: the retry counts are a default dict of integers that counts from zero",
       type(projects_seat.failed_attempts) is collections.defaultdict and dict(projects_seat.failed_attempts) == {"printing": 3, "alloy": 1}
@@ -79,10 +78,10 @@ check("deserialize_state: the bounties are a set, the credits floats and the cou
       projects_seat.bountied == {"alloy"} and projects_seat.paid_towards == {"printing": 250.0}
       and type(projects_seat.paid_towards["printing"]) is float and projects_seat.bounties_paid == 2, projects_seat)
 check("deserialize_state: active projects are rebuilt as records, in the saved order",
-      list(projects.active) == ["z_mill", "a_forge"] and all(type(each) is ActiveProjectState for each in projects.active.values())
-      and (projects.active["z_mill"].ph_left, projects.active["z_mill"].cost_left, projects.active["z_mill"].spent,
-           projects.active["z_mill"].lab_left, projects.active["z_mill"].status) == (80.0, 300.0, 100.0, {"mason": 15.0}, "ACTIVE")
-      and projects.active["a_forge"].lab_left is None, None)
+      list(projects_seat.active) == ["z_mill", "a_forge"] and all(type(each) is ActiveProjectState for each in projects_seat.active.values())
+      and (projects_seat.active["z_mill"].ph_left, projects_seat.active["z_mill"].cost_left, projects_seat.active["z_mill"].spent,
+           projects_seat.active["z_mill"].lab_left, projects_seat.active["z_mill"].status) == (80.0, 300.0, 100.0, {"mason": 15.0}, "ACTIVE")
+      and projects_seat.active["a_forge"].lab_left is None, None)
 knowledge = deserialize_state({"done": {"__set__": ["fire", "stone_cutting"]}, "done_year": {"fire": "3", "stone_cutting": 10}}, KnowledgeSeat)
 check("deserialize_state: done is a set, years are integers", knowledge.done == {"fire", "stone_cutting"} and type(knowledge.done) is set
       and knowledge.done_year == {"fire": 3, "stone_cutting": 10}, None)

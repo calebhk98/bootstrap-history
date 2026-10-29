@@ -82,11 +82,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def active(self):
-		return getattr(self.state.projects, "active")
-
-	@active.setter
-	def active(self, value):
-		setattr(self.state.projects, "active", value)
+		return self.view("active_projects")()
 
 	@property
 	def done(self):

@@ -16,8 +16,9 @@ from sim.markets.module import Markets
 from sim.tests import finance_host, module_harness, projects_host
 from sim.materials.api import SettleProjectMaterials as SettleCommand
 from sim.tests import materials_stand_in
-from sim.engine.state import SimulationState, deserialize_state, serialize_state
-from sim.engine.state_seat import seat_from_template
+from sim.engine.state import deserialize_state, serialize_state
+from sim.invalidating import ActiveProjectState
+from sim.projects.state import ProjectsSeat
 from sim.projects.api import SettleProjectMaterials
 from sim.tests import projects_host
 from sim.ui.proto.quote_purchases import _quote_material
@@ -125,13 +126,10 @@ module = projects_host.build(
     legacy_projects=projects_host.projects_state(), own_output_claim=lambda node_id: {"forest": 2.0})
 record = module.initialize_project("node")
 check("a started project's bill is fixed at what was left after paying the materials", record["bill"] == 700.0 and record["cost_left"] == 700.0
-      and module.needs.legacy_projects().active["node"] is record, record)
+      and module.seat.active["node"] is record, record)
 check("a started project records the own output it claims and the labour it needs", record["own_output_claim"] == {"forest": 2.0}
       and record["lab_left"] == {"smith": 4.0} and record["ph_left"] == 10.0, record)
 
 # ---- a save keeps the bill
-seat = seat_from_template({}, 10.0, {})
-state = SimulationState(household=seat.household, projects=seat.projects, founder=seat.founder)
-state.projects.active["node"] = dict(record)
-loaded = deserialize_state(serialize_state(state))
-check("a saved game keeps a running project's frozen bill", loaded.projects.active["node"]["bill"] == 700.0, loaded.projects.active)
+loaded = deserialize_state(serialize_state(ProjectsSeat(active={"node": ActiveProjectState.from_dict(dict(record))})), ProjectsSeat)
+check("a saved game keeps a running project's frozen bill", loaded.active["node"]["bill"] == 700.0, loaded.active)

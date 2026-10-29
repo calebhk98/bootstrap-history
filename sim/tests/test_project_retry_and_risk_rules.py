@@ -30,7 +30,6 @@ def calendar_world(risk=0.3, experience=None):
     module = stub.projects
     module.calendar_floor = lambda node_id: FLOOR
     module.payment_schedule_years = lambda node_id: 0.0
-    stub.state.projects.active = {}
     stub._retry_calendar_retain = module._retry_calendar_retain
     stub.effective_risk = lambda node_id, precaution=None: module.effective_risk(node_id, precaution=False)
     return stub

@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.projects.api import START_CHECKS, NoteActiveChanged, constants as projects_constants
+from sim.projects.api import START_CHECKS, WatchActive, constants as projects_constants
 from sim.tests import projects_host
 
 PLAIN = {"cat": "technique", "pre": [], "lab": {}, "sch": 0, "art": 0, "mat": [], "ph": 10.0}
@@ -21,11 +21,26 @@ class FailureResetShare(unittest.TestCase):
 
 
 class ActiveProjectsVersion(unittest.TestCase):
-    def test_a_note_that_the_projects_in_hand_changed_moves_the_version(self):
+    def test_a_change_of_a_watched_project_in_hand_moves_the_version(self):
         projects = module()
+        projects.seat_slot_of = lambda seat_id: projects.seat
+        projects.apply_watch_active(WatchActive("founder"))
         before = projects.active_projects_version()
-        projects.apply_note_active_changed(NoteActiveChanged())
+        projects.seat.active["a"] = {"ph_left": 5.0}
         self.assertNotEqual(projects.active_projects_version(), before)
+        before = projects.active_projects_version()
+        projects.seat.active["a"]["ph_left"] = 4.0
+        self.assertNotEqual(projects.active_projects_version(), before)
+
+    def test_watching_keeps_the_projects_it_finds_and_their_order(self):
+        projects = module()
+        projects.seat_slot_of = lambda seat_id: projects.seat
+        record = {"ph_left": 5.0}
+        projects.seat.active.update({"b": record, "a": {"ph_left": 1.0}})
+        projects.apply_watch_active(WatchActive("founder"))
+        self.assertEqual(list(projects.seat.active), ["b", "a"])
+        self.assertEqual(projects.active_project_ids(), ["a", "b"])
+        self.assertEqual(projects.active_projects()["b"]["ph_left"], 5.0)
 
     def test_a_load_moves_the_version(self):
         projects = module()

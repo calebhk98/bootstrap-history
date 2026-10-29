@@ -29,7 +29,7 @@ def build(seat: Optional[MaterialsSeat] = None, views: Optional[Dict[str, Any]] 
     plain: Dict[str, Any] = {
         "year": 100, "civilisation": {}, "legacy_world_map": geography.open_map(), "tree": lambda node_id: None,
         "tree_nodes": {}, "techniques_held": set(), "visibility": lambda node_id, memo=None: True,
-        "hard_prerequisites": lambda node_id: [], "legacy_projects": projects(), "active_projects_version": 0, "techniques_version": 0,
+        "hard_prerequisites": lambda node_id: [], "projects_record": projects(), "active_projects_version": 0, "techniques_version": 0,
         "operating": set(), "default_population": 65e6, "pop_scale": 1.0, "empire_output": {},
         "mechanic": collections.defaultdict(dict), "effect_best": lambda channel: None, "running_stamp": (None, (), None),
         "running": lambda node_id: False, "goods_stock": lambda commodity: 0.0,
@@ -51,8 +51,12 @@ def build(seat: Optional[MaterialsSeat] = None, views: Optional[Dict[str, Any]] 
         "purchase_refusal": lambda what, cost: ("refused", what, cost)}
     plain.update(views or {})
     plain.update(overrides)
+    record = plain.pop("legacy_projects", None) or plain.pop("projects_record")   # a test gives its projects as one record
+    plain.pop("projects_record", None)
+    plain.setdefault("active_projects", record.active)
+    plain.setdefault("active_project_ids", record.active_keys_sorted)
     if "techniques_held" not in (views or {}) and "techniques_held" not in overrides:
-        plain["techniques_held"] = plain["legacy_projects"].done   # the held set a test gives with its projects
+        plain["techniques_held"] = record.done   # the held set a test gives with its projects
     return module_harness.build(Materials, views=plain, answers=answers, seat=seat or MaterialsSeat(), module_id="materials")
 
 

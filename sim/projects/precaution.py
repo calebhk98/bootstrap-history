@@ -10,7 +10,7 @@ class Precaution:
 
 	def precaution_chosen(self, node_id):
 		"""True when the running project for this node bought the precaution."""
-		return bool((self.needs.legacy_projects().active.get(node_id) or {}).get("precaution"))
+		return bool((self.seat.active.get(node_id) or {}).get("precaution"))
 
 	def precaution_relief(self, node_id, bought):
 		return precaution_rules.relief_multiplier(self.precaution_spec(node_id), bought)

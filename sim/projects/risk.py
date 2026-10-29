@@ -56,7 +56,7 @@ class Risk:
 	def earliest_completion_years(self, node_id):
 		"""The soonest the project can finish, with no failure: the longer of the calendar floor and the payment
 		schedule, less what a running attempt has already served."""
-		running = self.needs.legacy_projects().active.get(node_id)
+		running = self.seat.active.get(node_id)
 		return earliest_completion_years(self.calendar_floor(node_id), self.payment_schedule_years(node_id),
 		                                 running.get("yrs", 0.0) if running else None)
 
@@ -81,12 +81,11 @@ class Risk:
 		   engine runs retries: a failure never removes a project from `active`, only shrinks its clock and its odds.
 		"""
 		floor = max(self.calendar_floor(node_id), self.payment_schedule_years(node_id))
-		projects = self.needs.legacy_projects()
 		failed_attempts = self.seat.failed_attempts
 		initial_failed_attempts = failed_attempts.get(node_id, 0)
 		teaches = failure_teaches(self.needs.mechanic["diagnosis_instrument"].get(node_id), self.needs.techniques_held())
 		_had_key = node_id in failed_attempts
-		_active = projects.active.get(node_id) if node_id in projects.active else None
+		_active = self.seat.active.get(node_id) if node_id in self.seat.active else None
 
 		def risk_after(attempt_index):
 			# Stand in for i failures, read effective_risk (restored in the finally below).

@@ -76,6 +76,9 @@ def build(answers: Dict[str, Any] = None, seat: ProjectsSeat = None, order: Sequ
 	every_view = defaults()
 	every_view.update(views)
 	record = every_view["legacy_projects"]   # the held and granted sets a test gives with its projects record
+	seat = seat or ProjectsSeat()
+	if isinstance(getattr(record, "active", None), dict) and not seat.active:   # the projects in hand a test gives with the record
+		seat.active = record.active
 	if "techniques_held" not in views and hasattr(record, "done"):
 		every_view["techniques_held"] = record.done
 	if "techniques_granted" not in views and hasattr(record, "granted"):
@@ -83,7 +86,7 @@ def build(answers: Dict[str, Any] = None, seat: ProjectsSeat = None, order: Sequ
 	if isinstance(every_view["tree"], dict):
 		every_view.setdefault("tree_nodes", every_view["tree"])
 	every_view.setdefault("tree_nodes", {})
-	module = module_harness.build(Projects, views=every_view, answers=answers, world=ProjectsWorld(order=list(order)), seat=seat or ProjectsSeat(),
+	module = module_harness.build(Projects, views=every_view, answers=answers, world=ProjectsWorld(order=list(order)), seat=seat,
 	                              module_id="projects")
 	for name in OWN_VIEWS:
 		if name not in views:

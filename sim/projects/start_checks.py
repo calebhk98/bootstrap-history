@@ -73,7 +73,7 @@ class StartChecks:
 		return None
 
 	def _check_already_active(self, node_id, node, ignore_trade, memo, why) -> Verdict:
-		if node_id in self.needs.legacy_projects().active:
+		if node_id in self.seat.active:
 			return False, ("already active" if why else None)
 		return None
 
@@ -263,7 +263,7 @@ class StartChecks:
 		return "get %s first: 'start %s'" % (in_world, node_id)
 
 	def _owed_on_work_in_hand(self) -> float:
-		active = self.needs.legacy_projects().active
+		active = self.seat.active
 		return sum(active[active_id].get("cost_left") or 0.0 for active_id in sorted(active))
 
 	def _cash_covers_start(self, node_id: str) -> bool:

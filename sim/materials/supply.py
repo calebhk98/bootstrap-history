@@ -14,7 +14,7 @@ from .constants import (FIREWOOD_PER_CHARCOAL_MASS_RATIO, GENERIC_MARKET_SHARE_L
 class Supply:
     """Needs: civilisation, legacy_world_map, commodity_record, commodity_country_output, material_commodity_map,
     material_prices, mine_works_materials, empire_output, pop_scale, mineral_scale, found_deposits, agent_producer_capacity,
-    legacy_projects, price_epoch, producers_stamp, running_stamp, effect_best, mechanic, running, forest_hectares,
+    price_epoch, producers_stamp, running_stamp, effect_best, mechanic, running, forest_hectares,
     nitre_beds, mine_capacity, mine_depletion, partner_import, foreign_supply_tonnes, can_be_bought, goods_stock,
     held_goods, goods_quote, tree_nodes, visibility, material_freight_factor."""
 

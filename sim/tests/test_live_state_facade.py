@@ -14,7 +14,7 @@ SCALARS = {
 }
 # facade name -> path of the collection it must be (the same object, not a copy)
 COLLECTIONS = {
-    "active": "projects.active", "operating": "projects.operating",
+    "operating": "projects.operating",
     "mothballed": "projects.mothballed",
     "policy": "founder.policy",
 }
@@ -58,11 +58,6 @@ class Facade(unittest.TestCase):
         facade = _Facade()
         for name, path in COLLECTIONS.items():
             self.assertIs(getattr(facade, name), _at(facade.state, path), name)
-
-    def test_assigning_a_collection_replaces_the_states_object(self):
-        facade = _Facade()
-        facade.active = {"a_node": {}}
-        self.assertEqual(facade.state.projects.active, {"a_node": {}})
 
 
 if __name__ == "__main__":

@@ -150,9 +150,10 @@ class KeepStaffed(Command):
 
 
 @dataclass(frozen=True)
-class NoteActiveChanged(Command):
-    """A project in hand of the acting seat was added, removed or changed by code outside this module (the screens, hazards, the
-    credit freeze, a load), so the `active_projects_version` moves and every memo keyed on it is stale."""
+class WatchActive(Command):
+    """Seat `seat_id`'s projects in hand report their own changes from here on (a new seat, a load or a seat switch needs it again);
+    the `active_projects_version` moves with every change of any project in hand."""
+    seat_id: str
 
 
 @dataclass(frozen=True)

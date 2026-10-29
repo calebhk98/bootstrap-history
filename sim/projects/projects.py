@@ -9,6 +9,7 @@ A project in hand (`state.projects`) and the record of what is built and running
 unmoved parts (the screens, hazards, the credit freeze, ventures), so the module reaches that state through the engine
 bridge's `legacy_*` views; docs/architecture/MODULE_MIGRATION_TASKS.md lists them as debts."""
 from sim.assembly.api import Module
+from sim.invalidating import _InvalidatingDict
 
 from .allocation_notes import AllocationNotes
 from .auto_open import AutoOpen
@@ -61,8 +62,14 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 
 	# ---- the commands ----
 
-	def apply_note_active_changed(self, command):
+	def active_changed(self):
+		"""A project in hand of the acting seat was added, removed or changed."""
 		self.bump_seat(ACTIVE_CHANGES)
+
+	def apply_watch_active(self, command):
+		seat = self.seat_of(command.seat_id)
+		seat.active = _InvalidatingDict(seat.active, on_change=self.active_changed)
+		self.bump_seat(ACTIVE_CHANGES, command.seat_id)
 
 	def apply_start_project(self, command):
 		answer = self.start_project(command)
@@ -84,7 +91,7 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 
 	def apply_reset_project_progress(self, command):
 		"""A sack burns the site: every project in hand goes back to the beginning, all its work left and none of its years done."""
-		active = self.needs.legacy_projects().active
+		active = self.seat.active
 		nodes = self.needs.tree_nodes()
 		for node_id in sorted(active):
 			active[node_id]["ph_left"] = nodes[node_id]["ph"]
@@ -117,10 +124,9 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 		return self.review_ventures(command.rules, command.year)
 
 	def apply_halt_active_projects(self, command):
-		projects = self.needs.legacy_projects()
-		if not projects.active:
+		if not self.seat.active:
 			return [], 0.0
-		halted = halt_active_projects(projects.active, self.seat.paid_towards, self.seat.bountied)
+		halted = halt_active_projects(self.seat.active, self.seat.paid_towards, self.seat.bountied)
 		self.bump_seat(ACTIVE)
 		return halted
 
@@ -141,7 +147,11 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 
 	def active_projects(self):
 		"""{node id: the project's record} of the acting seat's projects in hand (the object itself)."""
-		return self.needs.legacy_projects().active
+		return self.seat.active
+
+	def active_project_ids(self):
+		"""The ids of the acting seat's projects in hand, in id order (not the order they were started)."""
+		return sorted(self.seat.active)
 
 	def mothballed_works(self):
 		"""The works the acting seat has mothballed (the live set)."""
@@ -175,8 +185,7 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 	def committed_cost(self):
 		"""What is still owed, in total, across every project in hand: they all draw on the same purse and the same credit
 		line."""
-		projects = self.needs.legacy_projects()
-		return sum(projects.active[node_id].get("cost_left") or 0.0 for node_id in projects.active_keys_sorted())
+		return sum(self.seat.active[node_id].get("cost_left") or 0.0 for node_id in sorted(self.seat.active))
 
 	def reputation_gain_of_node(self, node_id):
 		"""The standing finishing `node_id` adds."""

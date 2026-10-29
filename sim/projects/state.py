@@ -1,14 +1,18 @@
 """The state the projects module owns: one seat's standing choices about its works and what the staffing rule has done.
 
-The projects in hand, what is done and what is running stay in the engine's record (`state.projects`), which the
-screens, hazards, the credit freeze and ventures still write; they move with those writers."""
+What is built and running stays in the engine's record (`state.projects`) until ventures takes it."""
 import collections
 from dataclasses import dataclass, field
 from typing import DefaultDict, Dict, List, Optional, Set
 
+from sim.invalidating import ActiveProjectState
+
 
 @dataclass
 class ProjectsSeat:
+	# node id -> the record of a project in hand, in the order they were started; the module wraps it so that any change moves
+	# the seat's `active_projects_version`
+	active: Dict[str, ActiveProjectState] = field(default_factory=dict)
 	# node ids, `category:<cat>` and `trait:<trait>` the automatic starters (rush, auto_open, auto_commission) skip
 	excluded: Set[str] = field(default_factory=set)
 	# concerns whose staff the yearly step hires for before the closure rule (`keep <id> staffed`)

@@ -142,7 +142,7 @@ check("...while one that still owes the trade something is caught the first year
       stopped and any(line.kind == "project_cannot_go_on" and "engineer" in line.facts["trades"] for _year, line in log), log)
 stopped, progress, log, host = gated(stalled_years=STALL_YEARS_BEFORE_ABANDONMENT - 1)
 check("after the countdown the project is abandoned and the log says what was lost",
-      stopped and "p" not in host.needs.legacy_projects().active and log[0][1].kind == "project_halted_no_labour", log)
+      stopped and "p" not in host.seat.active and log[0][1].kind == "project_halted_no_labour", log)
 stopped, progress, log, _host = gated(blocked_trades=(), stalled_years=2)
 check("a project with its trades again has its countdown cleared", not stopped and progress["stalled_years"] == 0)
 

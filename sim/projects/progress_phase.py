@@ -30,7 +30,7 @@ class ProgressPhase:
 		# directed_hours_unused are the two logging lists _step_progress() reports from once, after every project has
 		# had its turn.
 		needs = self.needs
-		project_state = needs.legacy_projects().active[node_id]
+		project_state = self.seat.active[node_id]
 		node = needs.tree_nodes()[node_id]
 		project_state["pool_total_this_year"] = pool_total_this_year
 		project_state["pool_active_count_this_year"] = pool_active_count_this_year
@@ -78,14 +78,13 @@ class ProgressPhase:
 		           if want > 0 and _lab_left.get(trade_id, want) > 0
 		           and needs.market_supply[trade_id] <= 0.0]
 		if blocked:
-			projects = needs.legacy_projects()
 			project_state["stalled_years"] = project_state.get("stalled_years", 0) + 1
 			project_state["blocked_on_trades"] = blocked
 			if project_state["stalled_years"] >= start_rules.STALL_YEARS_BEFORE_ABANDONMENT:
 				needs.send(RecordEvent.of("project_halted_no_labour", "HALTED %s: there is nobody here who can "
 				           "do this work (%s). What you spent is lost"
 				           % (node_id, ", ".join(blocked[:2]))))
-				projects.active.pop(node_id, None)
+				self.seat.active.pop(node_id, None)
 				self.seat.bountied.discard(node_id)
 			else:
 				# WARN BEFORE THE MONEY GOES: a countdown to abandonment running silently, with nothing said until
@@ -182,9 +181,8 @@ class ProgressPhase:
 		# (see lab_year_draw); this call site only has to act on what it returns.
 		hired_hours, worst, frac, _abandon = self.lab_year_draw(node_id, project_state, frac, hired_left)
 		if _abandon:
-			projects = needs.legacy_projects()
 			needs.send(RecordEvent.of("project_abandoned", "ABANDONED %s: %s" % (node_id, _abandon)))
-			projects.active.pop(node_id, None)
+			self.seat.active.pop(node_id, None)
 			self.seat.bountied.discard(node_id)
 			return None
 		if worst < 1.0:

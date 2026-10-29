@@ -17,7 +17,6 @@ from collections import defaultdict
 from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
 					 Optional, Set, Tuple)
 
-from sim.invalidating import ActiveProjectState, _InvalidatingSet, _InvalidatingDict
 from .base import Actor
 from .business_founder_review import FounderReview
 from .household_borrowing import FounderBorrowing
@@ -34,7 +33,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"spend_last_year": "household",
 
 	# ProjectsState
-	"active": "projects",
 	"operating": "projects",
 	"mothballed": "projects",
 	"opened_year": "projects",
@@ -72,7 +70,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 		self,
 		starting_capital: float = 0.0,
 		operating_changed: Optional[Callable[[], None]] = None,
-		active_changed: Optional[Callable[[], None]] = None,
 		state: Optional[Any] = None,
 		port: Optional[Any] = None,
 		techniques_held: Optional[Callable[[], Any]] = None,
@@ -92,12 +89,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 		# Wrap mutation-aware collections with callbacks if provided
 		if operating_changed is not None:
 			self._state.projects.business.watch = operating_changed
-		if active_changed is not None:
-			self._state.projects.active = _InvalidatingDict(
-				{k: ActiveProjectState.from_dict(v if isinstance(v, dict) else v.to_canon_dict(), _on_change=active_changed)
-				 for k, v in (self._state.projects.active or {}).items()},
-				on_change=active_changed
-			)
 		# Transient caches and runtime-only trackers
 		self.contract_projects: Set[str] = set()
 		self._spend_this_year: float = 0.0
@@ -192,11 +183,12 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 	@property
 	def active(self) -> Any:
-		return self._state.projects.active
+		"""The projects in hand of the acting seat: the projects module's seat state (a debt, like the staff)."""
+		return self._state.seats[self._state.acting_seat].modules["projects"].active
 
 	@active.setter
 	def active(self, value: Any) -> None:
-		self._state.projects.active = value
+		self._state.seats[self._state.acting_seat].modules["projects"].active = value
 
 	@property
 	def operating(self) -> Any:

@@ -53,7 +53,7 @@ def holds_that_would_be_lost(seat) -> List[str]:
 	an empty seat."""
 	household, projects = seat.household, seat.projects
 	found = []
-	if projects.active or len(projects.business.entry_keys()):
+	if seat.modules["projects"].active or len(projects.business.entry_keys()):
 		found.append("works")
 	staff = seat.modules.get("workforce") or WorkforceSeat()
 	if any(getattr(staff, name, 0) for name in STAFF_FIELDS) or staff.employees:

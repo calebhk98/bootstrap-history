@@ -19,8 +19,8 @@ from sim.ventures.api import ClearMothball, OpenVenture
 from sim.workforce.api import DrawTradeHours, GrantStaff, LoseCrew, ReleaseHours, ResetTradeHours, SpendDirectorHours
 
 from .commands import (AdvanceProjects, AutoOpenVentures, Bribe, CloseLapsedDependents, CloseUnstaffedVentures, CloseWork,
-                       CompleteProject, Exclude, HaltActiveProjects, Include, KeepStaffed, MothballWork, NoteActiveChanged, NoteVentureYear, PostBounty, PutProjectFirst, ReopenRestaffedVentures, ReorderProjects, ResetProjectProgress,
-                       RestoreProjectOrder, RestoreWork, ReviewVentures, StartProject, StopProject)
+                       CompleteProject, Exclude, HaltActiveProjects, Include, KeepStaffed, MothballWork, NoteVentureYear, PostBounty, PutProjectFirst, ReopenRestaffedVentures, ReorderProjects, ResetProjectProgress,
+                       RestoreProjectOrder, RestoreWork, ReviewVentures, StartProject, StopProject, WatchActive)
 from .needed_commands import NoteConcernChange, NoteYearSpend
 from .project_order import ORDER
 from .projects import ACTIVE, ACTIVE_CHANGES, START, Projects
@@ -90,7 +90,7 @@ _VIEWS = (
 	("staffing_closure_summary", "staffing_closure_summary", None, True), ("staffing_closure_warnings", "staffing_closure_warnings", QUOTE, True),
 	("staffing_shut_count", "staffing_shut_count", None, True),
 	("seat_review", "seat_review", QUOTE, True), ("committed_cost", "committed_cost", None, True),
-	("active_projects", "active_projects", None, True), ("exclusions", "exclusions", None, True),
+	("active_projects", "active_projects", None, True), ("active_project_ids", "active_project_ids", None, True), ("exclusions", "exclusions", None, True),
 	("mothballed", "mothballed_works", None, True), ("bountied", "bountied_nodes", None, True),
 	("failed_attempts", "failed_attempt_counts", None, True), ("paid_towards", "paid_towards_projects", None, True),
 	("bounties_paid", "bounties_paid_total", None, True),
@@ -128,7 +128,7 @@ MODULE_SPECS = (ModuleSpec(
 	         (ReviewVentures, "apply_review_ventures"), (MothballWork, "apply_mothball_work"), (HaltActiveProjects, "apply_halt_active_projects"), (RestoreWork, "apply_restore_work"),
 	         (PutProjectFirst, "apply_put_project_first"), (ReorderProjects, "apply_reorder_projects"),
 	         (RestoreProjectOrder, "apply_restore_project_order"), (Exclude, "apply_exclude"), (Include, "apply_include"), (KeepStaffed, "apply_keep_staffed"),
-	         (NoteActiveChanged, "apply_note_active_changed")),
+	         (WatchActive, "apply_watch_active")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(PayEdge, NoteSpend, ReceiveFromEdge, RecordBribe, RecordEvent, RecordAutomation, RecordAutomationSkip, SettleProjectMaterials,
 	       ClearMothball, NoteConcernChange, NoteYearSpend, OpenVenture, ReleaseHours, LearnTechnique, RevealFrom, ChangeHeld,

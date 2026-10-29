@@ -103,13 +103,12 @@ class Completion:
 	def _complete(self, node_id):
 		needs = self.needs
 		node = needs.tree_nodes()[node_id]
-		projects = needs.legacy_projects()
 		_risk_this_attempt = self.effective_risk(node_id)
 		if attempt_fails(needs.game_random().random(), _risk_this_attempt):
 			self._fail_attempt(node_id, _risk_this_attempt)
 			return
 		goal_before = self.goal_snapshot()
-		del projects.active[node_id]
+		del self.seat.active[node_id]
 		self.seat.bountied.discard(node_id)
 		# A FINISHED PROJECT CANNOT BE GIVEN MORE HOURS. Unlike stopping or halting one - both of which carry what was
 		# already paid forward if the player starts the same id again - there is no "again" once it is done, so a
@@ -167,15 +166,14 @@ class Completion:
 		and credit line bear, and log it. A bounty's claimant redoes the work at no cost to the poster."""
 		needs = self.needs
 		node = needs.tree_nodes()[node_id]
-		projects = needs.legacy_projects()
-		_yrs_before = projects.active[node_id]["yrs"]
+		_yrs_before = self.seat.active[node_id]["yrs"]
 		self.seat.failed_attempts[node_id] += 1
 		_diagnosis = self._note_failure(node_id)
 		if failure_teaches(needs.mechanic["diagnosis_instrument"].get(node_id), needs.techniques_held()):
 			needs.send(LearnFromFailure(node_id))
 		claimed = node_id in self.seat.bountied
 		# A bounty's claimant redoes the work: the poster's prize holds and no hours or money fall on the poster.
-		projects.active[node_id]["ph_left"] = (
+		self.seat.active[node_id]["ph_left"] = (
 			0.0 if claimed else
 			node["ph"] * self.rebuild_work_factor(node_id) * FAILURE_RESET_SHARE)
 		# THE CALENDAR CLOCK IS NOT WIPED: a failed attempt must not reset the multi-year diffusion clock to zero,
@@ -186,7 +184,7 @@ class Completion:
 		# the failure count grows, and is capped well short of the whole clock (RETRY_CALENDAR_CAP) so a retried
 		# programme is only ever readier, never instantly ready.
 		_retain = self._retry_calendar_retain(node_id)
-		projects.active[node_id]["yrs"] = _yrs_before * _retain
+		self.seat.active[node_id]["yrs"] = _yrs_before * _retain
 		_lost = 0.0 if claimed else needs.failure_loss(node_id)
 		_severity = self.failure_severity(node_id, max(0.0, _lost), needs.funding_capacity())
 		# What the purse and the credit line left cannot bear is not forgiven: it is added to what the project still
@@ -196,10 +194,10 @@ class Completion:
 		if not claimed:
 			for _loss_line in self.lose_what_was_risked(node_id):
 				needs.send(RecordEvent.of("failure_loss", "%s: %s" % (node["name"], _loss_line)))
-		projects.active[node_id]["cost_left"] = (projects.active[node_id].get("cost_left") or 0.0) + (_lost - _borne)
+		self.seat.active[node_id]["cost_left"] = (self.seat.active[node_id].get("cost_left") or 0.0) + (_lost - _borne)
 		# A failure always announces itself; its size sets how loudly.
 		_next_risk = self.effective_risk(node_id)
-		_banked = projects.active[node_id]["yrs"]
+		_banked = self.seat.active[node_id]["yrs"]
 		attempts = self.seat.failed_attempts[node_id]
 		if claimed:
 			needs.send(RecordEvent.of("project_failed", failure_text.claimed_line(node["name"], attempts, _next_risk),

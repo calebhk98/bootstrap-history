@@ -4,6 +4,7 @@ import contextlib
 
 from sim.agents.api import Household, HouseholdParty
 from sim.knowledge.api import ReceiveTechniques
+from sim.projects.api import WatchActive
 from .agents_port_household import HouseholdPort
 from . import game_assembly
 from .state_seat import SeatState, bind_seat
@@ -18,6 +19,8 @@ def add_seat(sim, seat_id: str, seat: SeatState) -> None:
 		game_assembly.give_seat_slots(sim.assembly, seat)
 	sim.state.attach_purses()
 	sim._seat_facades[seat_id] = sim._new_facade(seat_id)
+	if getattr(sim, "assembly", None) is not None:
+		sim.send(WatchActive(seat_id))
 
 
 def new_facade(sim, seat_id: str) -> Household:
@@ -30,7 +33,6 @@ def new_facade(sim, seat_id: str) -> Household:
 		facade = Household(
 			starting_capital=held.capital,
 			operating_changed=sim._operating_changed,
-			active_changed=sim._active_changed,
 			state=sim.state,
 			port=HouseholdPort(),
 			techniques_held=lambda: sim.view("techniques_held")())

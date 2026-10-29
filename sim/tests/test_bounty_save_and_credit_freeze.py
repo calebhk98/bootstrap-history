@@ -91,7 +91,7 @@ check("...it pays the price under its cause and spends no poster hours or hired 
 check("...and marks the project as bountied", poster_seat.bountied == {"node"})
 check("...and counts the bounty among those the seat has posted", poster_seat.bounties_paid == 1)
 def _wanting():
-    module = projects_host.build(legacy_projects=types.SimpleNamespace(active_keys_sorted=lambda: ["a", "b"]), tree={"a": {}, "b": {}})
+    module = projects_host.build(seat=ProjectsSeat(active={"a": {}, "b": {}}), tree={"a": {}, "b": {}})
     module.project_hour_pace = lambda node_id: {"a": 40.0, "b": 0.0}[node_id]
     return module
 

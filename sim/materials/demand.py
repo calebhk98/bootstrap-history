@@ -8,7 +8,7 @@ from .readings import Readings
 
 
 class Demand:
-    """Needs: legacy_projects, active_projects_version, techniques_version, tree_nodes, techniques_held."""
+    """Needs: active_project_ids, active_projects_version, techniques_version, tree_nodes, techniques_held."""
 
     @property
     def readings(self) -> Readings:
@@ -54,7 +54,7 @@ class Demand:
             return cache[1].copy()
         # progress on a project bumps the active version without changing which projects are active; the demand depends
         # only on which are active
-        active_keys = tuple(self.needs.legacy_projects().active_keys_sorted())
+        active_keys = tuple(self.needs.active_project_ids())
         keyed = self._annual_keys
         if cache is not None and keyed is not None and keyed[0] == active_keys and keyed[1] == versions[1]:
             readings.annual = (versions, cache[1])

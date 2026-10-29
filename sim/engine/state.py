@@ -123,7 +123,6 @@ HouseholdState.capital = property(_purse_net, _set_purse_net)  # type: ignore[as
 @dataclass
 class ProjectsState:
 	"""Research projects, active engineering ventures, and technological capability."""
-	active: Dict[str, ActiveProjectState] = field(default_factory=dict)
 	# the founder's businesses and their plants: what is running, switched off, how big and since when
 	businesses: List[Business] = field(default_factory=lambda: [Business(business_id="founder")])
 
@@ -162,14 +161,6 @@ class ProjectsState:
 			view.discard(key)
 		for key in sorted(wanted):
 			view.add(key)
-
-	def active_keys_sorted(self) -> List[str]:
-		"""Return active project ids in the canonical resolution order.
-
-		Callers that aggregate or mutate project state must not inherit dict
-		insertion order from a save file or command history.
-		"""
-		return sorted(self.active)
 
 	def operating_keys_sorted(self) -> List[str]:
 		"""Return operating project ids independently of set/hash order."""

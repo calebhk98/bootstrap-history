@@ -61,6 +61,7 @@ RELOCATIONS = [
     ("/seats/*/modules/knowledge/granted", "/seats/*/projects/granted"),
     ("/seats/*/modules/knowledge/done_year", "/seats/*/projects/done_year"),
     ("/seats/*/modules/knowledge/revealed", "/seats/*/projects/revealed"),
+    ("/seats/*/modules/projects/active", "/seats/*/projects/active"),
     ("/seats/*/modules/projects/failed_attempts", "/seats/*/projects/failed_attempts"),
     ("/seats/*/modules/projects/bountied", "/seats/*/projects/bountied"),
     ("/seats/*/modules/projects/paid_towards", "/seats/*/projects/paid_towards"),

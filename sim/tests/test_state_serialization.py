@@ -31,7 +31,6 @@ def _test_automatic_field_persistence():
 	proj = ActiveProjectState(ph_left=80.0, cost_left=300.0, yrs=1.0, spent=100.0, lab_left={"mason": 15.0})
 	hh = HouseholdState(capital=1250.0)
 	projects = ProjectsState(
-		active={"arch": proj},
 		businesses=[Business.running(["stone_cutting"], opened_year=100)],
 	)
 	econ = EconomyState()
@@ -47,6 +46,8 @@ def _test_automatic_field_persistence():
 		_civ="rome_100ad",
 	)
 	state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
+	from sim.projects.state import ProjectsSeat
+	state.seats[state.acting_seat].modules["projects"] = ProjectsSeat(active={"arch": proj})
 	state._goal = "aqueduct"
 
 	blob = serialize_state(state)
@@ -60,10 +61,11 @@ def _test_automatic_field_persistence():
 		return False, f"Household capital mismatch: {restored.household.capital}"
 	if restored.seats[restored.acting_seat].modules["knowledge"]["done"] != {"__set__": ["stone_cutting"]}:   # the module set revives it
 		return False, f"Knowledge done mismatch: {restored.seats[restored.acting_seat].modules['knowledge']}"
-	if "arch" not in restored.projects.active:
-		return False, f"Projects active missing 'arch': {restored.projects.active}"
-	if restored.projects.active["arch"].ph_left != 80.0:
-		return False, f"Active project ph_left mismatch: {restored.projects.active['arch'].ph_left}"
+	restored_active = restored.seats[restored.acting_seat].modules["projects"]["active"]
+	if "arch" not in restored_active:
+		return False, f"Projects active missing 'arch': {restored_active}"
+	if restored_active["arch"]["ph_left"] != 80.0:
+		return False, f"Active project ph_left mismatch: {restored_active['arch']['ph_left']}"
 	from sim.materials.state import MaterialsSeat
 	seat = deserialize_state(serialize_state(MaterialsSeat(shortages=collections.Counter({"charcoal": 3}))), MaterialsSeat)
 	if seat.shortages.get("charcoal") != 3:
@@ -125,7 +127,6 @@ def _test_runtime_type_reconstruction():
 
 	hh = HouseholdState(capital=500.0)
 	projects = ProjectsState(
-		active={"loom": ActiveProjectState(ph_left=20.0)},
 		businesses=[Business.running(["spinning_wheel"], opened_year=90)],
 	)
 	econ = EconomyState()
@@ -156,8 +157,10 @@ def _test_runtime_type_reconstruction():
 	seat = deserialize_state(serialize_state(MaterialsSeat(shortages=collections.Counter({"iron": 4}))), MaterialsSeat)
 	if not isinstance(seat.shortages, collections.Counter):
 		return False, f"shortages is not Counter: {type(seat.shortages)}"
-	if not isinstance(restored.projects.active["loom"], ActiveProjectState):
-		return False, f"active['loom'] is not ActiveProjectState: {type(restored.projects.active['loom'])}"
+	from sim.projects.state import ProjectsSeat
+	loom = deserialize_state(serialize_state(ProjectsSeat(active={"loom": ActiveProjectState(ph_left=20.0)})), ProjectsSeat).active["loom"]
+	if not isinstance(loom, ActiveProjectState):
+		return False, f"active['loom'] is not ActiveProjectState: {type(loom)}"
 
 	return True, "Runtime type reconstruction verified"
 
@@ -206,6 +209,8 @@ def _valid_save():
 		household=HouseholdState(capital=1250.0), projects=ProjectsState(), economy=EconomyState(),
 		holdings=HoldingsState(), founder=FounderState())
 	state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
+	from sim.projects.state import ProjectsSeat
+	state.seats[state.acting_seat].modules["projects"] = ProjectsSeat()
 	state._goal = "aqueduct"
 	blob = serialize_state(state)
 	blob.update({"_civ": "rome_100ad", "_weights": {}, "_immortal": True,

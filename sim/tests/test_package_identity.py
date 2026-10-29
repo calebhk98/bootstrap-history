@@ -57,7 +57,7 @@ class PackageIdentityTests(unittest.TestCase):
         self.assertIsInstance(sim.constants.REGISTRY, dict)
         self.assertTrue(sim.constants.REGISTRY)
         self.assertIs(sim.simulator.Sim, sim.engine.core.Sim)
-        for name in ("SimulationState", "ActiveProjectState"):
+        for name in ("SimulationState",):
             self.assertIs(getattr(sim.engine.core, name), getattr(sim.engine.state, name))
 
 

@@ -17,11 +17,11 @@ _preview = _run(game, cmd="pursue", preview=True, limit=50)
 check("pursue preview works", _preview.get("ok") and _preview.get("preview"), _preview)
 _would = [row["id"] for row in _preview.get("would_start", [])]
 check("pursue preview starts only route members", _would and all(node_id in route for node_id in _would), _would)
-check("pursue preview changes nothing", not game.state.projects.active, sorted(game.state.projects.active))
+check("pursue preview changes nothing", not game.active, sorted(game.active))
 
 _capped = _run(game, cmd="pursue", max_total_cost=1500.0, limit=50)
 check("pursue obeys rush caps", sum(row["cost"] for row in _capped["started"]) <= 1500.0 + 1e-6, _capped)
-check("pursue starts only route members", all(node_id in route for node_id in game.state.projects.active), sorted(game.state.projects.active))
+check("pursue starts only route members", all(node_id in route for node_id in game.active), sorted(game.active))
 
 # --- a programme persists across save and load and acts in the next step
 _set = _run(game, cmd="programme", action="set", target=GOAL, max_annual_draw=400.0, limit=50)

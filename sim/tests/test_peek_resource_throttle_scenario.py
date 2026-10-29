@@ -25,7 +25,7 @@ def made():
 
 
 asked, untouched = made(), made()
-node_id = sorted(asked.state.projects.active)[0]
+node_id = sorted(asked.active)[0]
 factor, binding = asked.view("resource_throttle")(node_id)
 def differences(a, b, path=""):
 	if isinstance(a, dict) and isinstance(b, dict):

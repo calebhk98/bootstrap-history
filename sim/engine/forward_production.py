@@ -5,10 +5,9 @@ The screens, the project phases, the agent economy's port, the labour core and t
 from sim.knowledge.api import NoteTechniquesChanged
 from sim.markets.api import ResetMarketCaches
 from sim.materials.api import ForgetReadings
-from sim.projects.api import NoteActiveChanged
+from sim.projects.api import WatchActive
 from sim.production.api import ForgetRevenueCaches, RefreshDoneCaches, RefreshOperatingCaches, constants
 
-from sim.invalidating import _InvalidatingDict
 from sim.ventures.api import NoteOperatingChanged
 
 from . import money_units, node_rederive, society_holdings
@@ -46,19 +45,14 @@ class ForwardProductionMixin:
 		self.send(RefreshOperatingCaches())
 		self.send(NoteOperatingChanged())
 
-	def _active_changed(self):
-		"""Call after anything adds to, removes from, or updates the projects in hand."""
-		self.send(NoteActiveChanged())
-
 	def _reset_operating(self):
 		"""Point the seat's business at the invalidation hook and invalidate once."""
 		self.state.projects.business.watch = self._operating_changed
 		self._operating_changed()
 
 	def _reset_active(self):
-		"""Re-wrap the projects in hand in a fresh invalidating dict and invalidate once."""
-		self.state.projects.active = _InvalidatingDict(self.state.projects.active or {}, on_change=self._active_changed)
-		self._active_changed()
+		"""The acting seat's projects in hand report their changes from here on (a seat switch or a load needs it again)."""
+		self.send(WatchActive(self.state.acting_seat))
 
 	def _reset_economic_caches(self):
 		"""Wipe all transient economic derived-state caches and re-wrap containers on save/load and on a seat switch."""
