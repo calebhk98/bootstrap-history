@@ -48,7 +48,6 @@ first.projects.done.update({"base", "lathe", "loom"})
 first.projects.granted.add("base")
 first.projects.done_year = {"lathe": 120, "loom": 130}
 second.projects.done.add("kiln")
-second.household.base_tile = None
 seats = state.seats
 disclosed = {FIRST_SEAT_ID: {}, "second": {}}   # what each seat chose for its inventions (the diffusion module keeps it)
 

@@ -1,6 +1,7 @@
 """Commands to the owner of the household's people that the year's money phase sends: the living cost, and the standing policies on
 buying and freeing people."""
 from dataclasses import dataclass
+from typing import Optional
 
 from sim.assembly.api import Command
 
@@ -28,3 +29,9 @@ class AutoManumit(Command):
 @dataclass(frozen=True)
 class FadeMarketPressure(Command):
 	"""A year passes on the people market: the pressure the acting seat's buying put on it fades."""
+
+
+@dataclass(frozen=True)
+class NoteBuyRefusal(Command):
+	"""Why the acting seat's last attempt to buy people was refused, for the screen that asked (None clears it). Never saved."""
+	refusal: Optional[str]

@@ -20,7 +20,7 @@ class Applying:
 
 	def survive_staff(self, command):
 		seat = self.seat
-		dice = self.needs.legacy_dice()
+		dice = self.needs.game_random()
 		survive = rules.surviving_people
 		seat.scholars = survive(dice, seat.scholars, command.survival_share)
 		seat.artisans = survive(dice, seat.artisans, command.survival_share)
@@ -32,7 +32,7 @@ class Applying:
 				seat.employees.pop(trade)
 
 	def release_staff(self, command):
-		with self.needs.legacy_act_as(command.seat_id):
+		with self.needs.acting_as(command.seat_id):
 			self.labour.fire(command.trade, command.people)
 
 	def grant_staff(self, command):

@@ -122,7 +122,7 @@ class TrainingMixin:
         why each figure is what it is.
         """
         bonus = 0.0
-        projects = self._world.state.projects
+        projects = self._world.projects
         for node, row_trade, add in self._world.LABOUR_PRODUCTIVITY_SOURCES:
             if row_trade == trade and node in projects.done:
                 bonus += add
@@ -545,17 +545,17 @@ class TrainingMixin:
             except Exception:
                 need = self._world.goal_closure = set()
         seen = 0
-        projects = self._world.state.projects
+        done_nodes, active_nodes = self._world.projects.done, self._world.projects.active
         workforce = self._world.workforce
         for node_id in self._world.order:
             if seen >= look:
                 break
-            if node_id in projects.done or node_id in projects.active or node_id not in need:
+            if node_id in done_nodes or node_id in active_nodes or node_id not in need:
                 continue
             if self._world.exclusion_reason(node_id):
                 continue
             node = self._world.nodes[node_id]
-            if any(prereq_id not in projects.done for prereq_id in node["pre"]):
+            if any(prereq_id not in done_nodes for prereq_id in node["pre"]):
                 continue
             seen += 1
             short = node["art"] - self.craft_hands_available()

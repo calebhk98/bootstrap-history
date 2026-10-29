@@ -18,7 +18,6 @@ from .staff_replacement import GROW_STANCE, REPLACE_STANCE, hire_stance, replace
 class StaffYear:
 
     def step_staff(self, seat_id=None):
-        household = self.needs.legacy_acting_household()
         workforce = self.seat
         # 1. staff. ATTRITION IS UNCONDITIONAL: people die, are poached and grow
         #    old whatever your policy is. GROWTH IS NOT: growing the staff
@@ -36,7 +35,7 @@ class StaffYear:
         # draws are reproducible): they die at the working-age mortality rate, or take a better offer at the
         # rate the market moves workers off a lower payer, which is none when pay is at the going wage.
         self.labour.settle_staff_pay()
-        _died, _left = self.labour.roll_staff_year(self.needs.legacy_dice())
+        _died, _left = self.labour.roll_staff_year(self.needs.game_random())
         _lost = {trade: _died.get(trade, 0) + _left.get(trade, 0) for trade in set(_died) | set(_left)}
         # Rehire a specialist foreman an open concern just lost, before the
         # staffing rule closes the concern.
@@ -77,7 +76,7 @@ class StaffYear:
         payroll = self.labour.wage_bill()
         other = (self.needs.upkeep() + (self.needs.living_cost() - payroll)
                  + self.needs.mine_operating_cost())
-        can_pay = payroll_means(self.needs.revenue_estimate(), other, household.capital, self.needs.credit_limit())
+        can_pay = payroll_means(self.needs.revenue_estimate(), other, self.needs.acting_balance(), self.needs.credit_limit())
         # NOT GATED BY A POLICY, and this is the one automatic thing that is not.
         # A policy switch is for something the game decides FOR you - who to
         # hire, what to mothball - and every one of those is yours to turn off.
@@ -95,7 +94,7 @@ class StaffYear:
         # below - which already subtracts living cost, upkeep and the wages
         # you are carrying - is what decides how many to hire, and correctly
         # says nobody when there is nothing spare.
-        _hire_room = has_room_to_hire(household.capital, self.needs.credit_limit(), AUTO_HIRE_CREDIT_ROOM_SHARE)
+        _hire_room = has_room_to_hire(self.needs.acting_balance(), self.needs.credit_limit(), AUTO_HIRE_CREDIT_ROOM_SHARE)
         _hire_mode = self.needs.founder()["policy"].get("auto_hire", not self.needs.automation()["manual"])
         _hire_stance = hire_stance(_hire_mode, _hire_room)
         if _hire_stance == REPLACE_STANCE:
@@ -106,7 +105,7 @@ class StaffYear:
             # used for sc_cap/ar_cap (see the comment there): supervision-room
             # headroom is not a free six people, it is six people you still
             # have to pay for.
-            extra = self.labour.supervision_room() * self.needs.legacy_household_actor()._staff_scale
+            extra = self.labour.supervision_room() * self.staff_scale()
             # THE SAME WALL hire() AND train() ENFORCE: `target_sc` is capped
             # at `literate_capacity("scholar")`, the wall a player typing
             # `hire scholar N` is refused at, so auto_hire cannot grow the
@@ -158,11 +157,11 @@ class StaffYear:
             # applies the cash, room and literacy rules, and a refusal is recorded as a skip with its reason.
             _closed_sc, _closed_ar = self.needs.staffing_closed_hand_shortfall()
             _closed_unscaled = _closed_sc + _closed_ar
-            _closed_sc *= self.needs.legacy_household_actor()._staff_scale
-            _closed_ar *= self.needs.legacy_household_actor()._staff_scale
+            _closed_sc *= self.staff_scale()
+            _closed_ar *= self.staff_scale()
             if _closed_unscaled >= 1.0 and _closed_sc + _closed_ar < 1.0:
                 self.needs.send(RecordAutomationSkip("auto_hire", "hire for shut concerns", "concerns shut for want of staff need %.1f more people, but the income that pays staff covers "
-                    "%.0f%% of them" % (_closed_unscaled, 100.0 * self.needs.legacy_household_actor()._staff_scale)))
+                    "%.0f%% of them" % (_closed_unscaled, 100.0 * self.staff_scale())))
             _grow_to("artisan", artisan_goal(craft, specials, workforce.employees.get("artisan", 0.0), _closed_ar),
                      closure_need=_closed_ar)
             if desired_sc > 0 or _closed_sc > 0:
@@ -191,9 +190,9 @@ class StaffYear:
                 if want is None:
                     continue
                 short = want - have
-                if short > 0.02 and can_afford_replacement(household.capital, self.labour.market.quote_annual(trade_id),
+                if short > 0.02 and can_afford_replacement(self.needs.acting_balance(), self.labour.market.quote_annual(trade_id),
                                                            TRADE_REPLACEMENT_AFFORDABILITY_YEARS):
-                    _before = household.capital
+                    _before = self.needs.acting_balance()
                     self.labour.set_employed(trade_id, have + short)
                     self.needs.send(PayEdge(edges.EDGE_WORKERS, short * self.labour.market.quote_annual(trade_id), "wages advanced for replacement staff"))
                     self.needs.send(RecordAutomation("auto_hire", "replace", "%.1f %s" % (short, trade_id), "something draws on the trade and %.1f are held against a target of %.1f" % (have, want), _before))
@@ -206,7 +205,7 @@ class StaffYear:
         # wall, has the money, and has no way to spend it on the wall is
         # the same dead end wearing a different hat.
         if self.needs.founder()["policy"].get("auto_commission", not self.needs.automation()["manual"]):
-            _before = household.capital
+            _before = self.needs.acting_balance()
             _commissioned = self.labour.auto_commission_for_blocked()
             if _commissioned:
                 self.needs.send(RecordAutomation("auto_commission", "commission", "%.0f hours of %s" % (_commissioned[2], _commissioned[1]), "%s is blocked only on craftsmen's hands" % _commissioned[0], _before))

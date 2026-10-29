@@ -73,6 +73,10 @@ class Ledger(Module):
 			household.cash_mark = household.cash_mark * command.ratio
 		self.bump_seat(MONEY)
 
+	def restore_purse(self, command: Any) -> None:
+		self.needs.legacy_acting_household().capital = command.balance
+		self.bump_seat(MONEY)
+
 	def withdraw_household_money(self, command: Any) -> None:
 		household = self.needs.legacy_household_actor()
 		household.money = household.money - command.amount

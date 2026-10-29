@@ -75,7 +75,7 @@ from sim.knowledge.api import RevealNodes  # noqa: F401
 from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, JoinSeat, MakeOffer, SetGoal, SetPolicy  # noqa: F401
 from sim.ventures.api import OpenVenture, RollOut, SellConcern  # noqa: F401
 from sim.workforce.api import (BuildHousing, BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase,  # noqa: F401
-                               TrainStaff, WorkForWages)
+                               NoteBuyRefusal, TrainStaff, WorkForWages)
 
 
 # A new game's options, set once by the command line or the options screen before the first step.
@@ -278,11 +278,11 @@ def set_goal_critical_floor(sim, years):
 
 
 def last_buy_refusal(sim):
-    return getattr(sim, "_last_buy_refusal", None)
+    return sim.view("last_buy_refusal")()
 
 
 def set_last_buy_refusal(sim, refusal):
-    sim._last_buy_refusal = refusal
+    sim.send(NoteBuyRefusal(refusal))
 
 
 def said_command_index(sim):

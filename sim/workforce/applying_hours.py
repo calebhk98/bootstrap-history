@@ -57,7 +57,7 @@ class ApplyingHours:
 
     def lose_crew(self, command):
         employees = self.seat.employees
-        dice = self.needs.legacy_dice()
+        dice = self.needs.game_random()
         lost = []
         for trade, share in command.crew:
             have = employees.get(trade, 0.0)
@@ -72,7 +72,7 @@ class ApplyingHours:
     def build_housing(self, command):
         places = float(command.places)
         cost = places * self.needs.housing_price_per_place()
-        if places <= 0 or cost > self.needs.legacy_acting_household().capital:
+        if places <= 0 or cost > self.needs.acting_balance():
             return 0.0
         self.needs.send(PayEdge(edges.EDGE_BUILDERS, cost, "worker housing built"))
         self.seat.worker_housing_places = (self.seat.worker_housing_places or 0.0) + places

@@ -53,7 +53,7 @@ class SettlementMixin:
 
     def base_tile(self):
         """The tile the household operates from."""
-        chosen = getattr(self._world.state.household, "base_tile", None)
+        chosen = self._world.workforce.base_tile
         homes = self.held_tiles()
         if chosen and chosen in settlement.tile_ids(homes):
             return chosen
@@ -147,7 +147,6 @@ class SettlementMixin:
         return self.home_town_population_estimate() / full if full > 0 else 0.0
 
     def _relocation_wage_bill_per_year(self):
-        household = self._world.state.household
         return sum(count * self.labour_market.unscarce_annual(trade)
                    for trade, count in self.employed_by_trade().items())
 
@@ -185,13 +184,13 @@ class SettlementMixin:
         if quote is None:
             return False, "no route over the ways your people can travel joins %s to your base." % tile
         days, hours, money = quote
-        household = self._world.state.household
         workforce = self._world.workforce
-        if money > household.capital:
+        balance = self._world.balance
+        if money > balance:
             return False, ("moving to %s takes about %d days and would cost %s in "
                            "wages while your household travels; you have %s."
                            % (tile, math.ceil(days), self._world.money_text(money, grouped=True),
-                              self._world.money_text(household.capital, grouped=True)))
+                              self._world.money_text(balance, grouped=True)))
         self._world.send(PayEdge(self._world.EDGE_WORKERS, money, "relocation"))
         self._world.send(NoteSpend(money))
         workforce.relocation_hours_this_year = (
@@ -202,7 +201,7 @@ class SettlementMixin:
         self.labour_market.clear_pressure()
         self._world.send(ScaleFamiliarity(self.RELOCATION_STANDING_RETAINED))
         self._world.send(ScaleProtection(self.RELOCATION_STANDING_RETAINED))
-        household.base_tile = tile
+        workforce.base_tile = tile
         self._resync_pools()
         return True, ("moved to %s after about %d days on the road: %s in wages "
                       "paid, %d hours of your year gone, local contracts "

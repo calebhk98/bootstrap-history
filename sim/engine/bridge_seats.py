@@ -25,6 +25,19 @@ def legacy_seats(sim):
     return sim.state.seats
 
 
+@bridge_view("game_random")
+def game_random(sim):
+    """The game's random source, the one `random.Random` every draw of a year comes from (shared and live: a draw by any reader moves
+    every other reader's next draw, so readers draw in the order the old code did)."""
+    return sim.rng
+
+
+@bridge_view("acting_as", kind=QUOTE)
+def acting_as(sim, seat_id):
+    """A context in which `seat_id` is the acting seat; the root aliases return to the previous seat on leaving it."""
+    return sim.act_as(seat_id)
+
+
 @bridge_view("seat_party", kind=KEYED)
 def seat_party(sim, seat_id):
     """The seat as an actor an exchange can deal with."""
@@ -115,9 +128,9 @@ def win_condition_text(sim, node):
     return win_condition_describe(node)
 
 
-@bridge_view("legacy_goal_closure")
-def legacy_goal_closure(sim):
-    """What the goal needs, as the game keeps it for the labour package and the screens too (None until worked out): a debt."""
+@bridge_view("goal_closure")
+def goal_closure(sim):
+    """What the goal needs, as the game keeps it for the labour package and the screens too (None until worked out)."""
     return getattr(sim, "_goal_closure", None)
 
 

@@ -29,7 +29,7 @@ class Ledger(StaffLedgerMixin):
         household = SimpleNamespace(trades_created=set(taught), log=self.log)
         projects = SimpleNamespace(active=active or {}, operating=set(foremen))
         self._world = SimpleNamespace(
-            workforce=household, state=SimpleNamespace(projects=projects, household=household, scenario=SimpleNamespace(year=100)),
+            workforce=household, projects=projects, state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)),
             nodes={node_id: {"name": node_id.title(), "lab": {}} for node_id in set(foremen) | set(active or {})},
             venture_foremen_used=lambda: {trade: 1.0 for trade in foremen.values()},
             venture_foreman=lambda node_id: (foremen[node_id], 1.0),

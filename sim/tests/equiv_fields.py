@@ -135,6 +135,8 @@ RELOCATIONS = [
     ("/modules/land/ways_under_construction", "/economy/ways_under_construction"),
     ("/modules/land/works_under_construction", "/economy/works_under_construction"),
     ("/modules/land/works", "/economy/works"),
+    ("/seats/*/modules/workforce/base_tile", "/seats/*/household/base_tile"),
+    ("/seats/*/modules/workforce/market_pressure", "/seats/*/holdings/market_pressure"),
     ("/seats/*/modules/workforce/scholars", "/seats/*/household/scholars"),
     ("/seats/*/modules/workforce/artisans", "/seats/*/household/artisans"),
     ("/seats/*/modules/workforce/directors_extra", "/seats/*/household/directors_extra"),

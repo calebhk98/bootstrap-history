@@ -36,15 +36,15 @@ class WageLedgerMixin:
 
     def work_for_wages_dry_run(self, trade, hours):
         """(pay, message) for work_for_wages, with every book put back afterwards."""
-        household = self._world.state.household
         workforce = self._world.workforce
-        saved = (household.capital, workforce.wage_hours_this_year,
+        saved = (self._world.balance, workforce.wage_hours_this_year,
                  workforce.wage_income_this_year, workforce.wages_earned,
                  self._world.logged_events())
         try:
             return self.work_for_wages(trade, hours)
         finally:
-            (household.capital, workforce.wage_hours_this_year,
+            (balance, workforce.wage_hours_this_year,
              workforce.wage_income_this_year, workforce.wages_earned,
              logged) = saved
+            self._world.restore_purse(balance)
             self._world.send(DiscardEventsAfter(logged))

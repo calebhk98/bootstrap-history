@@ -13,6 +13,12 @@ from sim.polity.api import ScaleFamiliarity, ScaleProtection
 HOME, TOWN, EMPTY, CUT_OFF = "home_tile", "far_town", "empty_tile", "cut_off_tile"
 
 
+class _World(types.SimpleNamespace):
+    @property
+    def balance(self):
+        return self.workforce.capital
+
+
 class _Mover(SettlementMixin):
     def __init__(self, capital=1000.0, quote=(10.0, 80.0, 50.0)):
         self.household = types.SimpleNamespace(capital=capital, total_spend=0.0, relocation_hours_this_year=0.0,
@@ -20,8 +26,8 @@ class _Mover(SettlementMixin):
                                                base_tile=HOME)
         self.paid, self.pressure_cleared, self.pools_resynced, self.sent = [], 0, 0, []
         self.quote = quote
-        self._world = types.SimpleNamespace(
-            workforce=self.household, view=workforce_stand_in.view_of(self.household), state=types.SimpleNamespace(household=self.household), EDGE_WORKERS="workers",
+        self._world = _World(
+            workforce=self.household, view=workforce_stand_in.view_of(self.household), EDGE_WORKERS="workers",
             money_text=lambda amount, grouped=False: "%.0f" % amount, plain_number=lambda value: "%.0f" % value,
             send=self._send)
         self.labour_market = types.SimpleNamespace(clear_pressure=self._clear)

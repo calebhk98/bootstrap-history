@@ -36,7 +36,7 @@ def _test_automatic_field_persistence():
 		businesses=[Business.running(["stone_cutting"], opened_year=100)],
 	)
 	econ = EconomyState()
-	holdings = HoldingsState(market_pressure=120.0)
+	holdings = HoldingsState(_dashboard_history=[120.0])
 	founder = FounderState(_founder_death_year=28)
 	scenario = ScenarioState(year=115)
 

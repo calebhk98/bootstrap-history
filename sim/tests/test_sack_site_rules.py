@@ -30,7 +30,7 @@ class SackedHousehold:
         self.dice = AlternatingDice()
         self.household = types.SimpleNamespace(artisans=20.0, scholars=10.0, directors_extra=5.0, capital=1000.0,
                                                employees={"smith": 40.0, "scribe": 30.0, "mason": 20.0})
-        workforce = module_harness.build(Workforce, seat=self.household, views={"legacy_acting_household": self.household, "legacy_dice": self.dice})
+        workforce = module_harness.build(Workforce, seat=self.household, views={"acting_balance": lambda: self.household.capital, "game_random": self.dice})
         self.module = hazards_host.build(
             legacy_dice=self.dice, staff=lambda: {"scholars": self.household.scholars, "artisans": self.household.artisans,
                                                   "employees": self.household.employees},

@@ -64,10 +64,11 @@ def game_config(sim):
     return sim.cfg
 
 
-@bridge_view("legacy_state")
-def legacy_state(sim):
-    """The game's saved state, whose seat sections labour still reads and writes in place."""
-    return sim.state
+@bridge_view("provider_game")
+def provider_game(sim):
+    """The game itself, for the functions a mod provides to the town and director-overhead points of the workforce module: their
+    contract hands them the game to read (a mod's stores), and they never write it. A debt of the mod interface."""
+    return sim
 
 
 # ---- the founder, the acting seat's land and the owner map ----------------------------------------------------------------

@@ -31,9 +31,9 @@ class ReachLabour(SettlementMixin, PopulationMixin):
             provided_town_population=lambda labour, tile, nominal_people: None, has_town_premiums=lambda: False,
             people_by_tile=lambda: None, held_and_running=lambda: (), built_ways=lambda: {}, wages=dict.fromkeys(HOURS_BY_TRADE, 1.0),
             trade_family=lambda trade: "farm" if trade == "farmer" else "craft",
-            workforce=types.SimpleNamespace(trade_schools={}, trades_created=set(), employees={}),
+            workforce=types.SimpleNamespace(trade_schools={}, trades_created=set(), employees={}, base_tile=None),
             society=types.SimpleNamespace(society_labour_hours=dict(HOURS_BY_TRADE)),
-            state=types.SimpleNamespace(household=types.SimpleNamespace(base_tile=None), economy=economy))
+            state=types.SimpleNamespace(economy=economy))
 
 
 class TradeReachTransportTests(unittest.TestCase):

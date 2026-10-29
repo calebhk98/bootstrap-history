@@ -94,7 +94,7 @@ class CapacityMixin:
     def director_pool(self):
         # In bondage most of your hours are owed to somebody else, not all: the evenings are where the work gets done.
         return hours_pool(self._world.founder_alive, self._world.cfg["founder_hours_per_year"],
-                          self._world.simulation().view("debt_status")()["bondage_years_left"] > 0, self.BONDAGE_HOURS_SHARE,
+                          self._world.bondage_years_left > 0, self.BONDAGE_HOURS_SHARE,
                           self._world.workforce.directors_extra, self._world.cfg["director_hours_per_year"])
 
     # ---- literacy bounds who you can hire ----------------------------------
@@ -417,7 +417,7 @@ class CapacityMixin:
         # a player who hit the ceiling it had been holding up to build
         # endowment_land or court an imperial patron, instead of simply
         # reopening what they already own.
-        projects = self._world.state.projects
+        projects = self._world.projects
         reopen = sources_to_reopen(self._world.ROOM_SOURCES, projects.done, projects.operating, self._world.nodes,
                                    self._world.is_venture)
         # NEAREST FIRST, and nearest means how much of the tree stands between
@@ -600,7 +600,7 @@ class CapacityMixin:
         # calculation above - "grow the staff toward what you can house and
         # pay" has to be able to mean nobody.
         scale = self._staff_scale_for(afford, scholars + artisans, extra)
-        self._world.household._staff_scale = scale     # step() applies this to `extra` too
+        self._world.staff_scale = scale     # step() applies this to `extra` too
         return (base_sc + scholars * scale * pop, base_ar + artisans * scale * pop,
                 directors * min(1.0, scale * self.DIRECTOR_SCALE_HEADROOM) * pop)
 
@@ -632,7 +632,7 @@ class CapacityMixin:
         """(people the spare income can pay, population scale on institutional ceilings)."""
         spare = max(0.0, (self._world.revenue() - self._world.upkeep() - self._world.living_cost())
                     * self._world.rep_factor()
-                    + max(0.0, self._world.state.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
+                    + max(0.0, self._world.balance) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
         afford = budget / self.staff_wage_reference()
         # A civilization of 1.5 million simply cannot field the trained people a
@@ -853,7 +853,7 @@ class CapacityMixin:
         `deficit` is how many more people the caller is short; the hire
         advice is sized to it.
         """
-        projects = self._world.state.projects
+        projects = self._world.projects
 
         def waiting_on_kind(node_id):
             # Asked DIRECTLY of the node's own requirement, never through start_reason, which calls this function.

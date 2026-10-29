@@ -21,7 +21,7 @@ class StandInLabour(CapacityMixin):
     def __init__(self, afford, artisans=BASE_ARTISANS, room_sources=(("freedman_staff", FLAT_PLACES),)):
         projects = types.SimpleNamespace(done=set(), operating=set())
         self._world = types.SimpleNamespace(
-            household=types.SimpleNamespace(), state=types.SimpleNamespace(projects=projects),
+            household=types.SimpleNamespace(), projects=projects,
             ROOM_SOURCES=list(room_sources), nodes={node_id: {} for node_id, _places in room_sources},
             is_venture=lambda node_id: True, is_visible=lambda node_id: True,
             closure=lambda nodes, node_id: {node_id}, start_reason=lambda node_id, _why=True: (True, ""),

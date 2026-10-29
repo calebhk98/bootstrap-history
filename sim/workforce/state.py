@@ -32,6 +32,10 @@ class WorkforceSeat:
     worker_housing_places: Optional[int] = None
     # yearly pay per person by trade as last settled; follows the market while keep_pay_at_market is on
     staff_pay_held: Dict[str, float] = field(default_factory=dict)
+    # the tile the household chose to operate from (None: the nation's default tile)
+    base_tile: Optional[str] = None
+    # how far the household's buying has bid up the people market; fades each year
+    market_pressure: float = 0.0
     # ---- trades ----
     trades_created: Set[str] = field(default_factory=set)
     trades_endemic: Set[str] = field(default_factory=set)

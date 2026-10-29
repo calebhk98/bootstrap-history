@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class HoldingsState:
 	"""A seat's material stock."""
-	market_pressure: float = 0.0
 	_dashboard_history: Optional[List[Any]] = None
 
 

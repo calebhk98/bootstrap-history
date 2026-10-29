@@ -45,7 +45,7 @@ class StaffLedgerMixin:
     def trades_drawn_on(self):
         """Specialist trades some active project or open concern needs, with why."""
         drawn = {}
-        projects = self._world.state.projects
+        projects = self._world.projects
         for node_id in sorted(projects.active):
             node = self._world.nodes.get(node_id)
             if not node:
@@ -76,7 +76,7 @@ class StaffLedgerMixin:
     def sole_supervisors(self):
         """Open concerns whose specialist foreman trade has exactly one person."""
         rows = []
-        for node_id in sorted(self._world.state.projects.operating):
+        for node_id in sorted(self._world.projects.operating):
             if node_id not in self._world.nodes:
                 continue
             trade, _fte = self._world.venture_foreman(node_id)
@@ -110,7 +110,6 @@ class StaffLedgerMixin:
             short = min(short, max(0, int(self.household_room() + 1e-9)))
             if short <= 0:
                 return 0
-        household = self._world.state.household
         before = self.employed(trade)
         hired, _why = self.hire(trade, short)
         found = int(round(self.employed(trade) - before))
@@ -122,7 +121,6 @@ class StaffLedgerMixin:
 
     def replace_lost_foremen(self):
         """auto_replace_foreman: hire the specialists open concerns need and lack."""
-        household = self._world.state.household
         for trade, used in sorted(self._world.venture_foremen_used().items()):
             short = math.ceil(used - self.employed(trade) - 0.01)
             self.hire_to_cover(trade, short, "auto_replace_foreman")

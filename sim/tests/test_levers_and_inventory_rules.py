@@ -36,7 +36,7 @@ class HousingTests(unittest.TestCase):
     def test_worker_housing_adds_its_places_and_pays_its_price(self):
         paid = []
         held = household(worker_housing_places=2.0)
-        module = module_harness.build(Workforce, seat=held, views={"housing_price_per_place": 100.0, "legacy_acting_household": held},
+        module = module_harness.build(Workforce, seat=held, views={"housing_price_per_place": 100.0, "acting_balance": lambda: held.capital},
                                       answers={PayEdge: lambda command: paid.append(command.amount)})
         self.assertEqual(module.build_housing(BuildHousing(5)), 5.0)
         self.assertEqual(held.worker_housing_places, 7.0)
@@ -58,8 +58,8 @@ class TradeSchoolTests(unittest.TestCase):
         paid = []
         stand_in = types.SimpleNamespace(
             trade_available=lambda trade: True,
-            _world=types.SimpleNamespace(wages={"chemist": 1.0}, trade_school_price_per_seat=lambda: 50.0,
-                                         workforce=held, view=workforce_stand_in.view_of(held), state=types.SimpleNamespace(household=held), EDGE_WORKERS="workers",
+            _world=workforce_stand_in.World(wages={"chemist": 1.0}, trade_school_price_per_seat=lambda: 50.0,
+                                         workforce=held, view=workforce_stand_in.view_of(held), EDGE_WORKERS="workers",
                                          send=lambda command: paid.append(command.amount)))
         self.assertEqual(PopulationMixin.found_trade_school(stand_in, "chemist", 2), (True, None))
         self.assertEqual(held.trade_schools, {"chemist": 2.0})

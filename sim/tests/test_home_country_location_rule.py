@@ -36,7 +36,7 @@ class HomeLocationTests(unittest.TestCase):
 
 class FounderBase(SettlementMixin):
     def __init__(self, chosen):
-        self._world = SimpleNamespace(home_tiles_held=lambda: TILES, state=SimpleNamespace(household=SimpleNamespace(base_tile=chosen)))
+        self._world = SimpleNamespace(home_tiles_held=lambda: TILES, workforce=SimpleNamespace(base_tile=chosen))
 
 
 class FounderBaseTileTests(unittest.TestCase):

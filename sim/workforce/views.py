@@ -63,7 +63,7 @@ class Views:
 
 	def seat_base_tile(self, seat_id):
 		"""Where the seat works from (its household's base tile, else the capital's)."""
-		with self.needs.legacy_act_as(seat_id):
+		with self.needs.acting_as(seat_id):
 			return self.labour.base_tile()
 
 	def available_trades(self):

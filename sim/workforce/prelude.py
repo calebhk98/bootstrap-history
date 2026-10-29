@@ -29,10 +29,9 @@ class Prelude:
 		#      do this for itself or half the tree is unreachable; a player does
 		#      it with `train`, or turns this on.
 		if self.needs.founder()["policy"].get("auto_train", not self.needs.automation()["manual"]):
-			household = self.needs.legacy_acting_household()
 			workforce = self.seat
-			projects = self.needs.legacy_projects()
-			nodes = self.needs.legacy_tree()
+			done_nodes, active_nodes = self.needs.techniques_held(), self.needs.active_projects()
+			nodes = self.needs.tree_nodes()
 			year = self.needs.year()
 			want = {}
 			# LOCAL, PER-YEAR MEMO for market_supply()/trade_available().
@@ -61,7 +60,7 @@ class Prelude:
 				return value
 			# Anything already in hand that has lost its trade comes FIRST: those
 			# projects are burning a slot and will be halted if nobody turns up.
-			for node_id in projects.active_keys_sorted():
+			for node_id in sorted(active_nodes):
 				for trade_id in nodes[node_id]["lab"]:
 					if _market_supply(trade_id) <= 0.0:
 						want[trade_id] = want.get(trade_id, 0) + PROJECT_IN_HAND_SCORE
@@ -102,7 +101,7 @@ class Prelude:
 						_trade_avail(trade), _market_supply(trade), self.labour.trade_headcount_pending(trade))
 				return value
 			for node_id in self.needs.legacy_order():
-				if node_id in projects.done or node_id in projects.active:
+				if node_id in done_nodes or node_id in active_nodes:
 					continue
 				node = nodes[node_id]
 				if not any(_is_gone(trade_id) for trade_id in node["lab"]):
@@ -137,7 +136,7 @@ class Prelude:
 			_spare_tr = _tr_rev - _tr_upkeep - self.needs.living_cost(_tr_rev, _tr_upkeep)
 			for trade_id, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
 				_wages = 2.0 * self.labour.market.quote_annual(trade_id)
-				_budget = teaching_budget(_score, _spare_tr, household.capital)
+				_budget = teaching_budget(_score, _spare_tr, self.needs.acting_balance())
 				if _wages > _budget:
 					continue
 				_first = trade_id not in workforce.trades_created

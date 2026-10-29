@@ -18,7 +18,6 @@ def labour_of(civ_id="rome_100ad"):
     world.home_tiles_held_version = lambda: 0
     world.cfg = {"hired_hours_cap_base": 25000}
     world.effect_factor = lambda channel, value, exponent=None: value
-    world.state.scenario = types.SimpleNamespace(year=100)
     return world, Labour(world)
 
 
@@ -26,14 +25,14 @@ class MarketSupplySplitTest(unittest.TestCase):
     def test_employing_a_smith_leaves_the_towns_share_and_adds_his_hours_to_the_staffs(self):
         world, labour = labour_of()
         town_before, mine_before = labour.market_supply_split("smith")
-        world.state.household.employees["smith"] = 1.0
+        world.workforce.employees["smith"] = 1.0
         town_after, mine_after = labour.market_supply_split("smith")
         self.assertAlmostEqual(town_after, town_before, places=6)
         self.assertAlmostEqual(mine_after - mine_before, HOURS)
 
     def test_the_two_shares_add_up_to_the_total_supply(self):
         world, labour = labour_of()
-        world.state.household.employees["smith"] = 3.0
+        world.workforce.employees["smith"] = 3.0
         town, mine = labour.market_supply_split("smith")
         self.assertAlmostEqual(town + mine, labour.market_supply("smith"), places=6)
 

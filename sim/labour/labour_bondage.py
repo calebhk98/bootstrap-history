@@ -225,7 +225,7 @@ class BondageMixin:
         # one end-price surcharge to the whole block, so grouping does not
         # change the per-head cost: the nth head costs what the nth head
         # costs however you group the purchase into calls.
-        already = getattr(self._world.household, "market_pressure", 0.0)
+        already = self._world.workforce.market_pressure
         people_count = float(n_people)
         exponent = self.SLAVE_PRICE_CONGESTION_EXPONENT
         integral = (((already + people_count) ** exponent) - (already ** exponent)) / (exponent * (depth ** (exponent - 1.0)))
@@ -265,19 +265,17 @@ class BondageMixin:
         room = self.household_room()
         refusal = over_room_refusal(n_people, room, lambda: self._staff_advice("artisans"))
         if refusal:
-            self._world.household._last_buy_refusal = refusal
+            self._world.note_buy_refusal(refusal)
             return 0
         # A town's slave market has a depth. Buying beyond it bids the price up.
         price = self.slave_quote(n_people)
-        household = self._world.state.household
         workforce = self._world.workforce
-        holdings = self._world.state.holdings
         if not self._world.can_pay(price):
-            household._last_buy_refusal = self._world.refusal_text("%d slaves" % n_people, price)
+            self._world.note_buy_refusal(self._world.refusal_text("%d slaves" % n_people, price))
             return 0
         self._world.send(PayEdge(self._world.EDGE_SLAVE_TRADERS, price, "slaves bought"))
         workforce.slaves += n_people
-        holdings.market_pressure = holdings.market_pressure + n_people
+        workforce.market_pressure = workforce.market_pressure + n_people
         # Untrained on arrival. They become productive through the workforce's training queue.
         workforce.training.append([n_people * self.WORKER_EQUIVALENT_UNTRAINED, self._world.year + self.TRAINING_YEARS])
         return n_people

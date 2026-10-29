@@ -14,7 +14,7 @@ class ViewsState:
 
     def staff_on_all_books(self, trade):
         """People of `trade` on the payroll of every seat together."""
-        return sum(self.seat_of(seat_id).employees.get(trade, 0.0) for seat_id in self.needs.legacy_seats())
+        return sum(self.seat_of(seat_id).employees.get(trade, 0.0) for seat_id in self.needs.seat_list()["joined"])
 
     def training_queue(self):
         """The apprentices in training, one row per intake."""

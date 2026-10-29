@@ -43,11 +43,12 @@ def seat_from_template(template: Mapping[str, Any], capital: float, policy: Dict
 		# the household here is an empty placeholder the engine's aliases need; the seat acts through its government
 		return SeatState(household=HouseholdState(capital=0.0), projects=ProjectsState(), founder=None,
 		                 country=template.get("country"), kind=COUNTRY_SEAT)
-	household = HouseholdState(capital=float(capital), base_tile=template.get("base_tile"))
+	household = HouseholdState(capital=float(capital))
 	granted = set(template.get("starting_techs") or ())
 	projects = ProjectsState(done=set(granted), granted=set(granted))
 	founder = FounderState(policy=dict(policy))
-	staff = WorkforceSeat(scholars=float(template.get("scholars", 0.0)), artisans=float(template.get("artisans", 0.0)))
+	staff = WorkforceSeat(scholars=float(template.get("scholars", 0.0)), artisans=float(template.get("artisans", 0.0)),
+	                      base_tile=template.get("base_tile"))
 	return SeatState(household=household, projects=projects, founder=founder, goal=template.get("goal"),
 	                 country=template.get("country"), modules={"workforce": staff})
 

@@ -39,8 +39,6 @@ class HouseholdState:
 	cause_rows: List[Dict[str, Any]] = field(default_factory=list)
 	cause_mark: Optional[Dict[str, float]] = None
 
-	# Where the seat works from (the people and hours are the workforce module's: sim/workforce/state.py)
-	base_tile: Optional[str] = None
 	# a planned project and the cash target put by for it (`saving`)
 	saving_for: Optional[str] = None
 	saving_target: float = 0.0

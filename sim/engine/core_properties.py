@@ -67,14 +67,6 @@ class ForwardingPropertiesMixin:
 	@property
 
 	@property
-	def _last_buy_refusal(self):
-		return getattr(self.household, "_last_buy_refusal", None)
-
-	@_last_buy_refusal.setter
-	def _last_buy_refusal(self, value):
-		setattr(self.household, "_last_buy_refusal", value)
-
-	@property
 	def _said_stack_caution(self):
 		return getattr(self.household, "_said_stack_caution", None)
 

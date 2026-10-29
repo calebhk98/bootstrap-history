@@ -46,8 +46,7 @@ class StaffViews(unittest.TestCase):
 
     def test_the_trade_spread_view_names_the_absent_trades_sorted_and_the_live_records(self):
         household = SimpleNamespace(trades_created={"smith"}, trades_endemic=set(), trade_introduced_year={"smith": 90})
-        workforce = module_harness.build(Workforce, seat=household, views={"legacy_acting_household": household,
-                                                           "trades_absent": frozenset({"b", "a"})})
+        workforce = module_harness.build(Workforce, seat=household, views={"trades_absent": frozenset({"b", "a"})})
         spread = workforce.trade_spread()
         self.assertEqual(spread["absent"], ["a", "b"])
         self.assertIs(spread["created"], household.trades_created)

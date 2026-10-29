@@ -18,7 +18,7 @@ check("the root holdings and seat progress are the acting seat's objects",
       state.holdings is first.holdings
       and state.seat_progress is first.seat_progress, None)
 
-state.holdings.market_pressure = 12.0
+state.holdings._dashboard_history = [12.0]
 state.seat_progress.dashboard_history_years = 150
 state.economy.nodes_money_per_labour_hour = 1.0
 
@@ -26,24 +26,24 @@ second = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState
 state.seats["second"] = second
 bind_seat(state, "second")
 check("a second seat starts with empty holdings and progress",
-      state.holdings.market_pressure == 0.0
+      state.holdings._dashboard_history is None
       and state.seat_progress.dashboard_history_years is None, None)
 check("the world economy is the same object for both seats", state.economy.nodes_money_per_labour_hour is not None, None)
-state.holdings.market_pressure = 3.0
+state.holdings._dashboard_history = [3.0]
 bind_seat(state, FIRST_SEAT_ID)
 check("the first seat's holdings are untouched by the second's",
-      state.holdings.market_pressure == 12.0 and state.seat_progress.dashboard_history_years == 150, None)
+      state.holdings._dashboard_history == [12.0] and state.seat_progress.dashboard_history_years == 150, None)
 
 blob = json.loads(json.dumps(serialize_state(state)))
 check("the save holds holdings and progress inside each seat and not at the root",
       all(name in blob["seats"]["second"] for name in ("holdings", "seat_progress"))
       and not any(name in blob for name in ("holdings", "seat_progress")), sorted(blob))
 check("the world economy section no longer carries holder-owned fields",
-      "market_pressure" not in blob["economy"] and "colonies" not in blob["economy"] and "nodes_money_per_labour_hour" in blob["economy"],
+      "_dashboard_history" not in blob["economy"] and "colonies" not in blob["economy"] and "nodes_money_per_labour_hour" in blob["economy"],
       sorted(blob["economy"]))
 loaded = deserialize_state(blob, SimulationState)
 check("a round trip keeps each seat's own holdings",
-      loaded.seats[FIRST_SEAT_ID].holdings.market_pressure == 12.0 and loaded.seats["second"].holdings.market_pressure == 3.0
+      loaded.seats[FIRST_SEAT_ID].holdings._dashboard_history == [12.0] and loaded.seats["second"].holdings._dashboard_history == [3.0]
       and loaded.seats["second"].seat_progress.dashboard_history_years is None,
       None)
 check("a load binds the root holdings to the acting seat",
