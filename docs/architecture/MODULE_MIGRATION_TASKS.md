@@ -313,7 +313,7 @@ actors (21), hazards, workforce (20 each), projects (19).
 
 ### Phase 9: finish
 
-- [ ] `python3 -m sim.tests --slow` green.
+- [x] `python3 -m sim.tests --slow` green at `50ebaa11` (rerun before the PR after the last changes).
 - [ ] Long equivalence tier and fingerprint against `mr-base`, with every divergence explained by naming its step.
 - [ ] Then, and only then, fix the bugs the migration kept on purpose so every step stayed provable (each is a `legacy_*` flag or a Complaint marked "kept until the final equivalence proof"): Complaint 681. Each fix gets its regression test; re-record the baselines after.
 - [ ] Baseline ensemble checks.
