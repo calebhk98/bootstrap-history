@@ -242,6 +242,12 @@ actors (21), hazards, workforce (20 each), projects (19).
 - [x] Seats publish `automatic_policy` (the seat's policy, else the scenario's `automation` mode), `patronage`, `goal_closure` (kept per seat by the module; the commands `RememberGoalClosure` and `ForgetGoalClosure` are its own, and `ui_port` sends them) and `win_condition_text` (the sentence rule is `goal_rules.describe_win_condition`; the labels are the new `content` view `win_condition_labels`). Still bridged: `game_attribute` (a win condition's path may name any `Sim` attribute; only the mod `sample_slaveholding_goal_m4q8` uses one, `slaves`), `seat_holds` (reads other modules' seat state), `dissolution_terms` (the constants are declared in `engine/core.py`; also answers `deputies_needed` for `patronage`). Measure: `python3 tools/measure/module_graph.py`.
 - [ ] Phase 9: replace the remaining defaulted `getattr(sim, ...)` reads with direct reads or views, so a moved field fails
   loudly (`grep -rn 'getattr(sim, "' sim`).
+- [ ] The seat switch and the seat registry become the assembly's (design; replaces the bridge's `acting_as`,
+  `registered_seats` and `seat_holds`): the root's seat aliases (`state.household`, `holdings`, `seat_progress`, `founder`,
+  rebound by `state_seat.bind_seat`) go, their remaining readers reading the seat's record or a view; on a seat bind each
+  module forgets its own seat caches through a hook on the module base (in place of `_reset_economic_caches`' list of forget
+  commands); the assembly holds the seats in joining order with their slots, gives modules `act_as(seat_id)` and publishes the
+  seat ids as a framework view, so the dependency stays visible in the module graph rather than hidden in a callback.
 - [ ] The engine bridge answers no module read: each bridged view is published by the module that owns the fact.
 - [ ] A width review for each module that depends on more than 15 others, written into its catalogue entry: views that
   mirror methods merged into views that answer questions, sub-domains split out, pass-through dependencies removed,
