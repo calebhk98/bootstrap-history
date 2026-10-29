@@ -73,20 +73,18 @@ def _test_subsystem_state_owners():
 	"""Verify authoritative subsystem state classes exist and have documented ownership."""
 	from sim.engine.state import (
 		HouseholdState,
-		ProjectsState,
+		
 		EconomyState,
 		FounderState,
 		SimulationState,
 	)
 
 	h = HouseholdState(capital=1000.0)
-	p = ProjectsState()
 	e = EconomyState()
 	f = FounderState()
 
 	sim_state = SimulationState(
 		household=h,
-		projects=p,
 		economy=e,
 		founder=f,
 		_civ="rome_100ad",
@@ -106,14 +104,13 @@ check("Subsystem state owners", _ok, _detail)
 
 def _test_transient_cache_exclusion():
 	"""Verify transient caches and counters are not part of persistent state schema."""
-	from sim.engine.state import HouseholdState, ProjectsState
+	from sim.engine.state import HouseholdState
 	import dataclasses
 
 	h_fields = {f.name for f in dataclasses.fields(HouseholdState)}
-	p_fields = {f.name for f in dataclasses.fields(ProjectsState)}
 
 	for transient_name in ("_revenue_cache_key", "_operating_ver", "_done_ver", "_annual_mat_demand_cache"):
-		if transient_name in h_fields or transient_name in p_fields:
+		if transient_name in h_fields:
 			return False, f"Transient cache {transient_name} found in state dataclass fields"
 
 	return True, "Transient caches excluded from state dataclass fields"

@@ -22,7 +22,7 @@ def _test_automatic_field_persistence():
 		FounderState,
 		HoldingsState,
 		HouseholdState,
-		ProjectsState,
+		
 		SimulationState,
 		deserialize_state,
 		serialize_state,
@@ -30,14 +30,12 @@ def _test_automatic_field_persistence():
 
 	proj = ActiveProjectState(ph_left=80.0, cost_left=300.0, yrs=1.0, spent=100.0, lab_left={"mason": 15.0})
 	hh = HouseholdState(capital=1250.0)
-	projects = ProjectsState()
 	econ = EconomyState()
 	holdings = HoldingsState(_dashboard_history=[120.0])
 	founder = FounderState(_founder_death_year=28)
 
 	state = SimulationState(
 		household=hh,
-		projects=projects,
 		economy=econ,
 		holdings=holdings,
 		founder=founder,
@@ -117,20 +115,18 @@ def _test_runtime_type_reconstruction():
 		EconomyState,
 		HoldingsState,
 		HouseholdState,
-		ProjectsState,
+		
 		SimulationState,
 		deserialize_state,
 		serialize_state,
 	)
 
 	hh = HouseholdState(capital=500.0)
-	projects = ProjectsState()
 	econ = EconomyState()
 	holdings = HoldingsState()
 
 	state = SimulationState(
 		household=hh,
-		projects=projects,
 		economy=econ,
 		holdings=holdings,
 		founder=None,
@@ -169,20 +165,17 @@ check("Runtime type reconstruction", _ok, _detail)
 
 def _test_transient_cache_exclusion():
 	"""Verify transient version counters and cache fields are excluded from serialized output."""
-	from sim.engine.state import HouseholdState, ProjectsState, SimulationState, serialize_state
+	from sim.engine.state import HouseholdState, SimulationState, serialize_state
 
 	hh = HouseholdState(capital=1000.0)
-	projects = ProjectsState()
 	state = SimulationState(
 		household=hh,
-		projects=projects,
 		economy=None,
 		founder=None,
 	)
 
 	blob = serialize_state(state)
 	hh_blob = blob["seats"]["founder"]["household"]
-	proj_blob = blob["seats"]["founder"]["projects"]
 
 	for transient in ("_done_ver", "_operating_ver", "_active_ver", "_workforce_ver", "_cap_factor"):
 		if transient in hh_blob or transient in blob:
@@ -200,11 +193,11 @@ def _valid_save():
 	"""A save blob a state serializes to, with the metadata the writer adds, and the stand-in game that would load it."""
 	from types import SimpleNamespace
 	from sim.engine.state import (
-		EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
+		EconomyState, FounderState, HoldingsState, HouseholdState,
 		SimulationState, serialize_state,
 	)
 	state = SimulationState(
-		household=HouseholdState(capital=1250.0), projects=ProjectsState(), economy=EconomyState(),
+		household=HouseholdState(capital=1250.0), economy=EconomyState(),
 		holdings=HoldingsState(), founder=FounderState())
 	state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
 	from sim.projects.state import ProjectsSeat
@@ -255,9 +248,9 @@ def _test_v3_save_shape_validation():
 		return False, f"Valid v3 save was rejected: {err}"
 
 	bad_missing_section = dict(valid_blob)
-	bad_missing_section["seats"] = {"founder": {k: v for k, v in valid_blob["seats"]["founder"].items() if k != "projects"}}
+	bad_missing_section["seats"] = {"founder": {k: v for k, v in valid_blob["seats"]["founder"].items() if k != "holdings"}}
 	err = _validate_save(bad_missing_section, game)
-	if not err or "projects" not in err:
+	if not err or "holdings" not in err:
 		return False, f"Missing section was not rejected properly: {err}"
 
 	bad_missing_meta = dict(valid_blob)

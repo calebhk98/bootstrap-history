@@ -1,7 +1,7 @@
 """Two or three seats on the real root state, with the alias rebinding a handover needs (shared by the handover tests)."""
 import random
 from sim.engine import game_assembly
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
+from sim.engine.state import FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, bind_seat, seat_from_template
 from sim.scenario.api import OpenScenario, ScenarioSources
 from sim.seats.api import HandOverSeat
@@ -12,7 +12,7 @@ class Game:
 
     def __init__(self, seat_ids):
         first = seat_ids[0]
-        self.state = SimulationState(household=HouseholdState(capital=10.0), projects=ProjectsState(), founder=FounderState())
+        self.state = SimulationState(household=HouseholdState(capital=10.0), founder=FounderState())
         self.state.seats[first] = self.state.seats.pop(FIRST_SEAT_ID)
         self.state.acting_seat = first
         for seat_id in seat_ids[1:]:

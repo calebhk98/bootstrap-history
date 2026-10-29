@@ -14,7 +14,6 @@ from sim.workforce.api import ResetTradeHours, SpendDirectorHours
 from . import funding as project_funding, start_rules
 from .arrears_hours_line import arrears_hours_line
 from .hour_offer import hours_offered, unmet_directive_cause
-from .needed_commands import NoteYearSpend
 
 
 class ProgressPhase:
@@ -276,7 +275,7 @@ class ProgressPhase:
 				directed_hours_unused.append((node_id, round(_inner_gap, 0), self.trade_shortfall_note(project_state)))
 		# Count it HERE, after the hired-hours scaling and the affordability clamp, not before them: accumulating the
 		# notional figure instead would make the year's project spend disagree with the actual capital movement.
-		needs.send(NoteYearSpend(money))
+		self.spent_this_year += money
 		# calendar_floor, NOT a second copy of this formula - expected_calendar_years needs the identical figure to
 		# project retries honestly.
 		floor = self.calendar_floor(node_id)

@@ -543,7 +543,7 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
             seat = acting_seat_of(blob)
             household = seat.get("household") or {}
             seats_slot = (seat.get("modules") or {}).get("seats") or {}
-            projects = seat.get("projects") or {}
+            knowledge = (seat.get("modules") or {}).get("knowledge") or {}
             row.update({
                 "readable": True,
                 "civ_id": blob.get("_civ"),
@@ -557,7 +557,7 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
                 "scholars": household.get("scholars"),
                 "artisans": household.get("artisans"),
                 "capital": household.get("capital"),
-                "done": ((projects.get("done") or {}).get("__set__") or []),
+                "done": ((knowledge.get("done") or {}).get("__set__") or []),
             })
         except (OSError, ValueError):
             pass

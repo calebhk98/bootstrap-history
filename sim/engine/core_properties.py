@@ -4,7 +4,6 @@ These properties provide backward-compatibility for external consumers and
 integration test assertions. Internal simulation code accesses live state
 directly through authoritative subsystem owners:
   - self.state.household
-  - self.state.projects
   - self.state.economy
   - self.state.founder
 
@@ -50,19 +49,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def spend_last_year(self):
-		sub = getattr(self.state, "household", None)
-		if sub is None:
-			raise AttributeError("spend_last_year")
-		val = getattr(sub, "spend_last_year", None)
-		if val is None:
-			raise AttributeError("spend_last_year")
-		return val
-
-	@spend_last_year.setter
-	def spend_last_year(self, value):
-		sub = getattr(self.state, "household", None)
-		if sub is not None:
-			setattr(sub, "spend_last_year", value)
+		return self.view("spend_last_year")()
 
 	@property
 	def bounties_paid(self):
@@ -77,7 +64,7 @@ class ForwardingPropertiesMixin:
 		setattr(self.household, "_said_stack_caution", value)
 
 	# =========================================================================
-	# ProjectsState Compatibility Properties
+	# Projects Compatibility Properties (each answers from the view of the module that owns it)
 	# =========================================================================
 
 	@property

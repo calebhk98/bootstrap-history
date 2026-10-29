@@ -166,3 +166,14 @@ class ReorderProjects(Command):
 class RestoreProjectOrder(Command):
     """The whole project order is set to `order`, as a game opens it from the tree's order or a trial run puts it back."""
     order: tuple
+
+
+@dataclass(frozen=True)
+class NoteYearSpend(Command):
+    """Count `amount` among what the acting seat has paid on projects this year, beside the payment that moved it."""
+    amount: float
+
+
+@dataclass(frozen=True)
+class CloseSpendYear(Command):
+    """The year's count of what the acting seat paid on projects becomes last year's and starts again from nothing."""

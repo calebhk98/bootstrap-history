@@ -6,7 +6,7 @@ from sim.markets.goods_market import GoodsMarket
 from sim.markets.module import Markets
 from sim.markets.state import MarketsWorld
 from sim.tests import module_harness
-from sim.engine.state import FounderState, HouseholdState, ProjectsState
+from sim.engine.state import FounderState, HouseholdState
 from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
 
 QUICK_TOPIC = True
@@ -18,8 +18,7 @@ class FixtureSim:
     def __init__(self):
         self.year = 100
         self.state = HouseholdPort().fresh_state(100.0)
-        self.state.seats["second"] = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(),
-                                               founder=FounderState())
+        self.state.seats["second"] = SeatState(household=HouseholdState(capital=5.0), founder=FounderState())
         self.markets = module_harness.build(Markets, world=MarketsWorld(), views={
             "year": lambda: self.year, "seat_list": lambda: {"joined": list(self.state.seats)}})
 

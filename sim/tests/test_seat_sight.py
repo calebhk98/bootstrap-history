@@ -18,7 +18,7 @@ from sim.knowledge.rules import SeatTechniques, earliest_done_year as _earliest
 from sim.actors.world import ActorWorld
 from sim.engine.agents_port_household import HouseholdPort
 from sim.tests.world_stand_in import fake_needs
-from sim.engine.state import FounderState, HouseholdState, ProjectsState
+from sim.engine.state import FounderState, HouseholdState
 from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
 from sim.seats.api import SeatsSeat, base_visibility, most_open_mode, nodes_heard_of, seen_from
 from sim.agents.api import Business
@@ -51,7 +51,7 @@ state_facade = Household(starting_capital=100.0, port=HouseholdPort(),
                          techniques_held=lambda: frozenset(state.seats[state.acting_seat].modules["knowledge"].done))
 state = state_facade._state
 first, second = state.seats[FIRST_SEAT_ID], SeatState(
-    household=HouseholdState(capital=40.0), projects=ProjectsState(), founder=FounderState(),
+    household=HouseholdState(capital=40.0), founder=FounderState(),
     modules={"knowledge": KnowledgeSeat(granted={"base"}, done={"base"})})
 state.seats["second"] = second
 first.modules["knowledge"] = KnowledgeSeat()

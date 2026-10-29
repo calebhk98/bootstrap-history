@@ -1,8 +1,7 @@
 """What the household actor asks of the engine: a state of its own when it is not handed one."""
 from typing import Any
 
-from .state import (EconomyState, FounderState, HouseholdState,
-                    ProjectsState, SimulationState)
+from .state import EconomyState, FounderState, HouseholdState, SimulationState
 
 
 class HouseholdPort:
@@ -11,7 +10,6 @@ class HouseholdPort:
     def fresh_state(self, starting_capital: float) -> Any:
         return SimulationState(
             household=HouseholdState(capital=float(starting_capital)),
-            projects=ProjectsState(),
             economy=EconomyState(),
             founder=FounderState(),
         )

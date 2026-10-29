@@ -5,9 +5,9 @@ of a project in hand (founder hours, hired trades, bills, risk and calendar), it
 exclusions and rebuild, the gates a node puts on works that must be running, and the staffing rule of the works built
 (closing what nobody can supervise, reopening it, warning first, auto-opening what pays, mothballing and restoring).
 
-A project in hand (`state.projects`) and the record of what is built and running are still written by the engine's
-unmoved parts (the screens, hazards, the credit freeze, ventures), so the module reaches that state through the engine
-bridge's `legacy_*` views; docs/architecture/MODULE_MIGRATION_TASKS.md lists them as debts."""
+The projects in hand are its seat state, written only by its commands and watched so that any change of one moves the seat's
+`active_projects_version`. What is built and running is the ventures module's: the module reads it through that module's views
+and shuts, restores and reviews works by its commands."""
 from sim.assembly.api import Module
 from sim.invalidating import _InvalidatingDict
 
@@ -48,6 +48,7 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
                Rebuild, RunningGates, Closures, Exclusions, OpenGate, HourQueue, AllocationNotes, CostTail, Costs, Staffing,
                StaffingShortfall, StaffingReport, AutoOpen, Mothball, TradeWait, ProjectOrder, Module):
 	def setup(self) -> None:
+		self.spent_this_year = 0.0   # what the seat now stepping has paid on projects so far this year (not saved: a year's close empties it)
 		self._setup_start_checks()
 		self._setup_starting()
 		self._setup_start_phase()
@@ -70,6 +71,13 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 		seat = self.seat_of(command.seat_id)
 		seat.active = _InvalidatingDict(seat.active, on_change=self.active_changed)
 		self.bump_seat(ACTIVE_CHANGES, command.seat_id)
+
+	def apply_note_year_spend(self, command):
+		self.spent_this_year += command.amount
+
+	def apply_close_spend_year(self, command):
+		self.seat.spend_last_year = self.spent_this_year
+		self.spent_this_year = 0.0
 
 	def apply_start_project(self, command):
 		answer = self.start_project(command)
@@ -174,8 +182,8 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 		return {node_id: record["year"] for node_id, record in self.needs.closure_records().items() if record["reason"] == "staff"}
 
 	def spend_last_year(self):
-		"""What the acting seat's household spent on projects in the year just closed, or None before the first year ends."""
-		return self.needs.legacy_acting_household().spend_last_year
+		"""What the acting seat spent on projects in the year just closed, or None before the first year ends."""
+		return self.seat.spend_last_year
 
 	def committed_cost(self):
 		"""What is still owed, in total, across every project in hand: they all draw on the same purse and the same credit

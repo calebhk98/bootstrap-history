@@ -1,6 +1,5 @@
-"""The state the projects module owns: one seat's standing choices about its works and what the staffing rule has done.
-
-What is built and running stays in the engine's record (`state.projects`) until ventures takes it."""
+"""The state the projects module owns: one seat's projects in hand and what has come of them (retries, bounties, credit), its standing
+choices about its works and what the staffing rule has done. What is built and running is the ventures module's."""
 import collections
 from dataclasses import dataclass, field
 from typing import DefaultDict, Dict, List, Optional, Set
@@ -29,6 +28,8 @@ class ProjectsSeat:
 	bountied: Set[str] = field(default_factory=set)
 	# node id -> the money already paid into a project that was stopped, which comes off its bill if it begins again
 	paid_towards: Dict[str, float] = field(default_factory=dict)
+	# what the seat spent on projects in the year just closed; None before the first year ends
+	spend_last_year: Optional[float] = None
 	# how many bounties the seat has posted
 	bounties_paid: int = 0
 

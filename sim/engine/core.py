@@ -95,12 +95,11 @@ class Sim(
         self._remember_derived_gates(self.civ["starting_techs"])
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
-            SimulationState, HouseholdState, ProjectsState,
+            SimulationState, HouseholdState,
             EconomyState, FounderState
         )
         self.state = SimulationState(
             household=HouseholdState(capital=0.0),
-            projects=ProjectsState(),
             economy=EconomyState(),
             founder=FounderState(),
             _civ=self.civ.get("id"),
@@ -214,7 +213,6 @@ class Sim(
         life = self.view("founder_life_terms")()
         self.send(SetFounderLife(1e9 if life["immortal"]
                                  else max(life["minimum"], rng.gauss(life["mean"], life["spread"]))))
-        self._spend_this_year = 0.0
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # How much of each material physically exists: a material's
         # existence somewhere does not mean an unlimited quantity of it is

@@ -7,7 +7,7 @@ from sim.knowledge.api import HandOverTechniques
 from . import game_assembly
 from .seat_handover_rekey import rename_seat_references
 
-MOVED_FIELDS = ("household", "projects", "holdings", "seat_progress", "goal", "country", "kind", "holder", "modules")
+MOVED_FIELDS = ("household", "holdings", "seat_progress", "goal", "country", "kind", "holder", "modules")
 
 
 def move_seat_fields(seats: dict, from_id: str, to_id: str) -> dict:

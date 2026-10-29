@@ -2,7 +2,7 @@
 values the test sets, so each scoring rule is called on inputs the test builds (no game is run)."""
 from types import SimpleNamespace
 
-from sim.engine.state import FounderState, ProjectsState
+from sim.engine.state import FounderState
 
 
 from sim.tests.ui_stand_in import FactViews
@@ -42,7 +42,7 @@ class ScoreGame(FactViews):
         self.elite_ceiling = 0.8
         self.headcount = 10.0
         self.wage = 100.0
-        self.state = SimpleNamespace(projects=ProjectsState(), founder=FounderState(),
+        self.state = SimpleNamespace(founder=FounderState(),
                                      interface={}, seat_progress=SimpleNamespace(score_last_seen=None))
         self._goal_critical_floor = 20.0
         self.shut_for_staff = {}

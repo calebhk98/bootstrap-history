@@ -8,7 +8,7 @@ import unittest
 
 from sim.agents.api import ActorRecord, ActorsState
 from sim.engine import year_phases
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState, deserialize_state, serialize_state
+from sim.engine.state import FounderState, HouseholdState, SimulationState, deserialize_state, serialize_state
 
 ACTOR_ID = "state:test"
 STABILITY_FIELDS = {

@@ -23,7 +23,7 @@ from sim.ventures.state import VenturesSeat
 from sim.agents.api import Business
 from sim.agents.api import Plant
 from sim.workforce.api import WorkforceSeat
-from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
+from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState,
                               SimulationState, serialize_state, verbatim)
 from sim.engine.state_seat import SeatState
 from sim.invalidating import _InvalidatingDict
@@ -96,8 +96,6 @@ check("serialize_state: the household's own purse links are not saved", "_purses
 
 # ---- nested records and retry counts
 retries = collections.defaultdict(int, {"printing": 3, "alloy": 1})
-projects = ProjectsState()
-blob = serialize_state(projects)
 projects_blob = serialize_state(ProjectsSeat(
 	active={"z_mill": ActiveProjectState(ph_left=80.0, cost_left=300.0, yrs=1.5, spent=100.0, lab_left={"mason": 15.0}),
 	        "a_forge": ActiveProjectState(ph_left=10.0, cost_left=20.0, yrs=0.5, spent=5.0)}, failed_attempts=retries, bountied={"b", "a"}, paid_towards={"printing": 250.0}, bounties_paid=2))
@@ -183,9 +181,9 @@ check("serialize_state: the state's books: money, revenue by form, arrears, know
       and blob["records"]["government:rome"]["exited_year"] is None and blob["home_country"] == "rome", None)
 
 # ---- the root: seats, aliases and metadata
-first = SeatState(HouseholdState(capital=10.0), ProjectsState(), FounderState(_founder_death_year=30), goal="steam_engine", country="han",
+first = SeatState(HouseholdState(capital=10.0), FounderState(_founder_death_year=30), goal="steam_engine", country="han",
                  modules={"knowledge": KnowledgeSeat(done={"fire"})})
-second = SeatState(HouseholdState(capital=4.0), ProjectsState(), FounderState(), holdings=HoldingsState(_dashboard_history=[1.0]))
+second = SeatState(HouseholdState(capital=4.0), FounderState(), holdings=HoldingsState(_dashboard_history=[1.0]))
 state = SimulationState(seats={"zed": first, "abe": second}, acting_seat="abe", economy=EconomyState(), _civ="rome", _rng=[3, [0, 1], None],
                         _seed="seed text")
 blob = serialize_state(state)

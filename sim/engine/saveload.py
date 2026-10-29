@@ -103,7 +103,7 @@ REQUIRED_V3_SECTIONS = (
 )
 
 # What each seat holds; the acting seat's sections are checked and searched like root ones.
-SEAT_SECTIONS = ("household", "projects", "founder", "holdings", "seat_progress")
+SEAT_SECTIONS = ("household", "founder", "holdings", "seat_progress")
 
 REQUIRED_METADATA_FIELDS = (
     "_civ", "acting_seat", "_immortal", "_rng",
@@ -357,7 +357,7 @@ def _apply_blob(sim, blob):
 	if fog_refusal:
 		raise ValueError(fog_refusal)
 
-	old_revealed = set(sim.view("techniques_revealed")()) if getattr(sim, "state", None) and getattr(sim.state, "projects", None) else set()
+	old_revealed = set(sim.view("techniques_revealed")()) if getattr(sim, "state", None) else set()
 	asked_fuzzy, asked_salt = sim.fuzzy_estimates, sim.view("fuzzy_salt")()
 	state = deserialize_state(blob)
 	game_assembly.revive(sim, state, deserialize_state)

@@ -2,10 +2,9 @@
 QUICK_TOPIC = True
 
 from .harness import check
-from sim.engine.state import SimulationState, HouseholdState, ProjectsState
+from sim.engine.state import SimulationState, HouseholdState
 
-state = SimulationState(household=HouseholdState(capital=1000),
-                        projects=ProjectsState())
+state = SimulationState(household=HouseholdState(capital=1000))
 
 # Test 3: Trimming function works correctly.
 hist = [{"year": i, "capital": i * 100} for i in range(100, 110)]

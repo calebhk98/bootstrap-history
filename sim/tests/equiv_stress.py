@@ -61,12 +61,12 @@ def build(scenario):
     with stressed_civilisations(fingerprint):
         sim = fingerprint.build(scenario)
     if PATRON in sim.nodes:
-        if hasattr(sim.state.projects, "done"):   # a checkout from before the knowledge module owned the held set
+        if hasattr(getattr(sim.state, "projects", None), "done"):   # a checkout from before the knowledge module owned the held set
             sim.state.projects.done.add(PATRON)
         else:
             from sim.knowledge.api import LearnTechnique
             sim.send(LearnTechnique(PATRON))
-        if hasattr(sim.state.projects, "operating"):   # a checkout from before the ventures module owned the works
+        if hasattr(getattr(sim.state, "projects", None), "operating"):   # a checkout from before the ventures module owned the works
             sim.state.projects.operating.add(PATRON)
         else:
             sim.operating.add(PATRON)

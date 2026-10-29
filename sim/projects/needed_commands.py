@@ -14,10 +14,3 @@ class NoteConcernChange(Command):
     kind: str
     node_id: str
     cause: str
-
-
-@dataclass(frozen=True)
-class NoteYearSpend(Command):
-    """The acting seat's count of what it paid on projects this year (the year's close moves it to last year's), beside
-    the payment that moved it; applied by the engine bridge until the cash book moves into the ledger."""
-    amount: float

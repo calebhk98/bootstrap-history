@@ -11,7 +11,7 @@ from sim.knowledge.api import KnowledgeSeat
 from sim.markets.demand_key import demand_key, population_of_key
 from sim.reporting.api import ReportingSeat
 from sim.materials.state import MaterialsSeat
-from sim.engine.state import HouseholdState, ProjectsState, deserialize_state, serialize_state
+from sim.engine.state import HouseholdState, deserialize_state, serialize_state
 from sim.refusal import LogLine, Refusal, cause_of, choices_of, facts_of
 
 

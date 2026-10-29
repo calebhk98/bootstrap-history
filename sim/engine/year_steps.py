@@ -9,7 +9,7 @@ from sim.demography.api import StepPopulation
 from sim.finance.api import (ChargeInterest, EnforceCreditLimit, JudgeInsolvency, ServeBondageYear, ShedLossMakers,
                              WarnNearLimit)
 from sim.hazards.api import RecoverOutput
-from sim.ledger.api import CloseSpendYear, PayEdge, PayWages, ReceiveFromEdge
+from sim.ledger.api import PayEdge, PayWages, ReceiveFromEdge
 from sim.markets.api import OpenMarketBook
 from sim.polity.api import CloseStandingYear, RenewStanding
 from sim.projects.api import (AdvanceProjects, AutoOpenVentures, CloseLapsedDependents, CloseUnstaffedVentures, NoteVentureYear,

@@ -28,7 +28,6 @@ class HouseholdState:
 	"""The founder's household finances, standing staff, standing, and biographical history."""
 	capital: float
 	total_spend: float = 0.0
-	spend_last_year: Optional[float] = None
 	# the cash book (sim/engine/cash_book.py): the open period's entries by cause, cash at its start,
 	# and the last few closed years
 	cash_flow: Dict[str, float] = field(default_factory=dict)
@@ -121,11 +120,6 @@ HouseholdState.capital = property(_purse_net, _set_purse_net)  # type: ignore[as
 
 
 @dataclass
-class ProjectsState:
-	"""Nothing is left of it: each seat's projects and businesses are their modules' seat state."""
-
-
-@dataclass
 class EconomyState:
 	"""Physical plants, extractive workings, durable inventory, and material flows."""
 	# the money an hour of work was worth when the tree's money fields were last counted (opening_money.py)
@@ -143,9 +137,8 @@ class FounderState:
 @dataclass
 class SimulationState:
 	"""Root coordinator aggregating authoritative persistent subsystem states."""
-	# household, projects, founder, holdings and seat_progress alias the acting seat's objects and are not saved (seats are)
+	# household, founder, holdings and seat_progress alias the acting seat's objects and are not saved (seats are)
 	household: Optional[HouseholdState] = field(default=None, metadata={"alias": True})
-	projects: Optional[ProjectsState] = field(default=None, metadata={"alias": True})
 	economy: Optional[EconomyState] = None
 	holdings: Optional[HoldingsState] = field(default=None, metadata={"alias": True})
 	seat_progress: Optional[SeatProgressState] = field(default=None, metadata={"alias": True})
@@ -167,7 +160,7 @@ class SimulationState:
 			self.acting_seat = FIRST_SEAT_ID
 			given = {name: getattr(self, name) for name in ("holdings", "seat_progress")}
 			self.seats[FIRST_SEAT_ID] = SeatState(
-				self.household, self.projects, self.founder,
+				self.household, self.founder,
 				**{name: value for name, value in given.items() if value is not None})
 		bind_seat(self, self.acting_seat)
 		self.attach_purses()
@@ -201,7 +194,6 @@ class SimulationState:
 
 ALL_STATE_CLASSES = (
 	HouseholdState,
-	ProjectsState,
 	EconomyState,
 	FounderState,
 	HoldingsState,

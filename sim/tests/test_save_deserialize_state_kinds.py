@@ -17,7 +17,7 @@ from sim.production.api import ProductionSeat
 from sim.projects.state import ProjectsSeat
 from sim.ventures.state import VenturesSeat
 from sim.workforce.api import WorkforceSeat
-from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
+from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState,
                               SimulationState, deserialize_state)
 from sim.foreign_trade.api import ForeignTradeWorld
 from sim.refusal import Refusal, cause_of
@@ -158,8 +158,8 @@ check("deserialize_state: seats come back in the saved order and as seats",
       list(state.seats) == ["zed", "abe"] and state.seats["zed"].goal == "steam_engine" and state.seats["zed"].country == "han"
       and state.seats["zed"].modules["knowledge"]["done"] == {"__set__": ["fire"]} and state.seats["zed"].founder._founder_death_year == 30
       and state.seats["zed"].holdings._dashboard_history == [3.0] and state.seats["abe"].founder is None, None)
-check("deserialize_state: the acting seat's objects are the root's household, projects and holdings",
-      state.acting_seat == "abe" and state.household is state.seats["abe"].household and state.projects is state.seats["abe"].projects
+check("deserialize_state: the acting seat's objects are the root's household and holdings",
+      state.acting_seat == "abe" and state.household is state.seats["abe"].household
       and state.holdings is state.seats["abe"].holdings and state.household.capital == 4.0, None)
 check("deserialize_state: the metadata and the other sections", state._civ == "rome" and state._rng == [3, [0, 1], None] and state._seed == "seed text"
       and state.interface == {"panel": "map"}, None)
