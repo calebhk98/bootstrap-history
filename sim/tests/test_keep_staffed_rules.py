@@ -1,4 +1,4 @@
-"""keep <id> staffed: the command's flag, which flagged concerns count, and what the yearly pass asks to be hired."""
+"""keep <id> staffed: the command's flag, and the hires the yearly pass makes from what the projects module names."""
 
 QUICK_TOPIC = True
 
@@ -44,14 +44,9 @@ class KeepCommand(unittest.TestCase):
 
 
 class Household(StaffControlsMixin):
-    def __init__(self, flagged, operating, closure_age, shortfalls, draws):
-        projects = Game(done={"a", "b", "c"}, operating=set(operating))
+    def __init__(self, hires):
         self.hired = []
-        self._world = Game(
-            projects=projects, nodes={"a": 1, "b": 1, "c": 1}, keep_staffed=lambda: set(flagged),
-            staff_closure_age=lambda node_id: closure_age.get(node_id), staffing_held_totals=lambda: {},
-            staffing_draw_of=lambda node_id, units: draws[node_id], reopen_units=lambda node_id: 1,
-            staffing_shortfalls=lambda totals, strict=False: shortfalls)
+        self._world = Game(keep_staffed_hires=lambda: hires)
 
     def hire_to_cover(self, trade, count, why, partial=False):
         self.hired.append((trade, count, why))
@@ -59,27 +54,33 @@ class Household(StaffControlsMixin):
 
 class FlaggedConcerns(unittest.TestCase):
 
-    def test_a_flagged_concern_counts_when_running_or_shut_for_want_of_staff_and_not_otherwise(self):
-        game = Household(["a", "b", "c"], operating={"a"}, closure_age={"b": 2}, shortfalls={}, draws={})
-        self.assertEqual(game.keep_staffed_concerns(), ["a", "b"])
-
-    def test_nothing_flagged_hires_nobody(self):
-        game = Household([], set(), {}, {"craftsmen": 3.0}, {})
+    def test_nothing_to_hire_hires_nobody(self):
+        game = Household({})
         game.keep_flagged_concerns_staffed()
         self.assertEqual(game.hired, [])
 
-    def test_the_shortfall_is_hired_for_up_to_what_the_flagged_concerns_hold(self):
-        game = Household(["a"], {"a"}, {}, shortfalls={"craftsmen": 5.0}, draws={"a": {"craftsmen": 2.0}})
+    def test_each_resource_the_projects_module_names_is_hired_as_its_trade(self):
+        game = Household({"craftsmen": 2})
         with mock.patch.object(labour_staff_controls.trade_data, "staff_resource_trade", lambda registry, resource: "artisan"), \
                 mock.patch.object(labour_staff_controls.trade_data, "registry_of", lambda world: {}):
             game.keep_flagged_concerns_staffed()
         self.assertEqual(game.hired, [("artisan", 2, "keep_staffed")])
 
-    def test_no_shortfall_hires_nobody(self):
-        game = Household(["a"], {"a"}, {}, shortfalls={}, draws={"a": {"craftsmen": 2.0}})
-        with mock.patch.object(labour_staff_controls.trade_data, "registry_of", lambda world: {}):
-            game.keep_flagged_concerns_staffed()
-        self.assertEqual(game.hired, [])
+
+class ProjectsView(unittest.TestCase):
+
+    def test_a_flagged_running_concern_asks_for_the_craftsmen_its_hands_exceed_the_household_by(self):
+        module = projects_host.build(
+            tree_nodes={"mill": {"rev": 10.0, "up": 1.0}}, techniques_held=frozenset({"mill"}), operating=frozenset({"mill"}),
+            venture_hands={"mill": (0.0, 6.0)}, institution_units={"mill": 1.0}, venture_foreman={"mill": (None, 0.0)},
+            venture_garrison=lambda node_id, units: {}, effective_scholars=0.0, reopen_units={"mill": 1.0})
+        module.seat.keep_staffed.add("mill")
+        hires = module.keep_staffed_hires()
+        self.assertEqual(list(hires), ["craftsmen"])
+        self.assertGreater(hires["craftsmen"], 0)
+
+    def test_nothing_flagged_asks_for_nobody(self):
+        self.assertEqual(projects_host.build().keep_staffed_hires(), {})
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ GROWS_ON_ARABLE = "arable"
 
 
 class Yearly:
-    """The phase `living_stock` (needs: stock_land, endemic_stock_loss, nursery_room_units, hour_wage, can_pay,
+    """The phase `living_stock` (needs: stock_land, endemic_stock_loss, nursery_room_units, labour_quote, can_pay,
     acting_balance; sends PayEdge, PressLabour)."""
 
     def nursery_room_units(self, material, place):
@@ -32,7 +32,7 @@ class Yearly:
         """Hire the labour of raising `units` more and pay it; the share of the growth the purse could pay for
         (1 when all of it)."""
         hours_by_trade = rules.growth_labour(stock_entry(material), material, units)
-        cost = sum(hours * self.needs.hour_wage[trade] for trade, hours in hours_by_trade.items())
+        cost = sum(hours * self.needs.labour_quote(trade) for trade, hours in hours_by_trade.items())
         if cost <= 0.0:
             return 1.0
         share = 1.0 if self.needs.can_pay(cost) else min(1.0, max(0.0, self.needs.acting_balance()) / cost)

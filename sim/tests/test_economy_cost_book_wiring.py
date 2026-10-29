@@ -15,7 +15,7 @@ CIV = {"id": "somewhere", "starting_interest_rate": 0.05}
 
 def module(prices, wage_of_trade, rent=3.5, rate=0.07):
     return prices_stand_in.build(civilisation=CIV, household_prices=lambda: prices, agent_wage=wage_of_trade,
-                                 agent_land_rent=lambda: rent, hour_wage=lambda trade: 9.0, market_rate=lambda: rate)
+                                 agent_land_rent=lambda: rent, labour_quote=lambda trade, hours=0.0: 9.0, market_rate=lambda: rate)
 
 
 def recorded_arguments(prices_module):

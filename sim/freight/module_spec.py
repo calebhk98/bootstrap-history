@@ -11,7 +11,7 @@ from .module import Freight
 
 READS_BY_OWNER = {
     "knowledge": ("civilisation", "year"),
-    "workforce": ("wage", "hour_wage", "hours_per_person_year", "trade_population"),
+    "workforce": ("wage", "labour_quote", "hours_per_person_year", "trade_population"),
     "finance": ("market_rate", "households_loanable_funds"),
     "prices": ("material_prices", "material_price"),
     "land": ("carriage_facts", "mode_carrier", "modes_carrying", "modes_usable", "cheapest_route", "tiles_listed_by", "held_techniques", "techniques_with_results", "built_ways", "tile_owner", "material_source_tiles", "route_km_to"),

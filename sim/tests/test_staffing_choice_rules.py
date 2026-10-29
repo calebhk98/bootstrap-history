@@ -3,8 +3,8 @@ rules called on draws and totals built here, no game."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.projects.staffing_choice import closures_for_shortfall, missing_when_opened, shortfalls_beyond, staffing_allowances
-from sim.labour.labour_staff_controls import people_to_hire_for
+from sim.projects.staffing_choice import (closures_for_shortfall, flagged_claims, flagged_concerns, missing_when_opened,
+                                          people_to_hire_for, shortfalls_beyond, staffing_allowances)
 
 # --- allowances
 loose = staffing_allowances(["glassblower"], 4.0, 6.0, {"glassblower": 2.0}, 0.5)
@@ -90,3 +90,12 @@ check("less than a hundredth of a person over is not missing",
 held = {"craftsmen": 1.0}
 missing_when_opened(held, {"craftsmen": 9.0}, strict_shortfalls)
 check("the totals the caller passes are not changed", held == {"craftsmen": 1.0})
+
+# --- which flagged concerns count, and what they claim
+check("a flagged concern counts when running or shut for want of staff, and not otherwise",
+      flagged_concerns({"a", "b", "c", "d"}, {"a", "b", "c"}, {"a": 1, "b": 1, "c": 1, "d": 1}, {"a"}, {"b": 2}.get) == ["a", "b"])
+check("a flagged concern unknown to the tree or not held does not count",
+      flagged_concerns({"a", "b"}, {"a"}, {"a": 1}, {"a", "b"}, {}.get) == ["a"])
+claimed, totals = flagged_claims(["a", "b"], {"a"}, lambda node_id, shut: {"craftsmen": 3.0 if shut else 2.0}, {"craftsmen": 10.0})
+check("a shut flagged concern adds its reopening draw to the totals and the claim; a running one only to the claim",
+      dict(claimed) == {"craftsmen": 5.0} and dict(totals) == {"craftsmen": 13.0}, (claimed, totals))

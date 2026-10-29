@@ -95,10 +95,10 @@ Bridged in `sim/engine/bridge_freight.py` under the name the owner will publish:
 `built_ways`, `material_source_tiles`, `route_km_to`, `goods_carried_last_year`, `working_age`, `partner_market_book`,
 `partner_route`, `route_lift_years_per_tonne`, `route_capital_per_lift_tonne`, `lift_capacity_tonnes`,
 `opening_carriers_per_route`, `holder_treasury`, and land's map views. Reused: `civilisation`, `year`,
-`hour_wage`, `hours_per_person_year`, `foreign_economies`, `tile_owner`. The ledger's `PayActor` is applied there too.
+`labour_quote`, `hours_per_person_year`, `foreign_economies`, `tile_owner`. The ledger's `PayActor` is applied there too.
 
 `wage` is the wage schedule's money for an hour of a trade (`labour.wage_per_hour`); the labour market's quote is the
-existing `hour_wage`. They differ, and the freight rates read the first.
+existing `labour_quote`. They differ, and the freight rates read the first.
 
 ## Year phases
 

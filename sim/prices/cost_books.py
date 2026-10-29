@@ -41,7 +41,7 @@ class CostBooks:
         def wage_of(trade: str) -> float:
             if trade not in wages:
                 wage = self.needs.agent_wage[trade]
-                wages[trade] = wage if wage else self.needs.hour_wage[trade]
+                wages[trade] = wage if wage else self.needs.labour_quote(trade)
             return wages[trade]
 
         def rent_of(key: str) -> float:

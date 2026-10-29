@@ -129,7 +129,7 @@ class Game:
             "stock_land": self.land.stock_land, "year": 100, "acting_balance": lambda: self.purse.capital,
             "endemic_stock_loss": self.land.endemic_stock_loss,
             "nursery_room_units": self.land.nursery_room_units,
-            "hour_wage": self.workforce.hour_wage, "can_pay": self.purse.can_pay,
+            "labour_quote": self.workforce.labour_quote, "can_pay": self.purse.can_pay,
             "partners": self.trade.partners, "partner": self.trade.partner,
             "partner_refusal": self.trade.partner_refusal, "partner_gate": self.trade.partner_gate,
             "partner_carry": self.trade.partner_carry,

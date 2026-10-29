@@ -12,7 +12,7 @@ from sim.disease.module import Disease
 from sim.hazards.api import LoseCapital
 from sim.reporting.api import RecordEvent
 from sim.tests import module_harness, production_host
-from sim.workforce.api import ScaleDeputies, SurviveStaff
+from sim.workforce.api import LoseStaff
 
 
 @contextlib.contextmanager
@@ -24,8 +24,8 @@ def _module(working_age):
     """The disease module over one seat of 10000 people, its views answered by plain values; it loses no cash."""
     return module_harness.build(Disease, views={
         "working_age": working_age, "seat_list": {"playing": ["founder"]}, "act_as": _act_as,
-        "staff": {"scholars": 5000.0, "artisans": 5000.0, "employees": {}}, "staff_snapshot": {}},
-        answers={LoseCapital: 0.0})
+        },
+        answers={LoseCapital: 0.0, LoseStaff: lambda command: {"people_before": 10000.0, "people_after": 7500.0}})
 
 
 class EpidemicHitsSeatsTest(unittest.TestCase):
@@ -34,11 +34,10 @@ class EpidemicHitsSeatsTest(unittest.TestCase):
         share = module.hit_seats(HitSeatsWithEpidemic({"working_age": 2500.0}, 100))
         self.assertAlmostEqual(share, 0.25, places=12)
         sent = module_harness.sent(module)
-        survival = [command for command in sent if isinstance(command, SurviveStaff)]
-        self.assertEqual(len(survival), 1)
-        self.assertAlmostEqual(survival[0].survival_share, 0.75, places=12)
-        deputies = [command for command in sent if isinstance(command, ScaleDeputies)]
-        self.assertAlmostEqual(deputies[0].share, 0.75, places=12)
+        losses = [command for command in sent if isinstance(command, LoseStaff)]
+        self.assertEqual(len(losses), 1)
+        self.assertAlmostEqual(losses[0].survival_share, 0.75, places=12)
+        self.assertAlmostEqual(losses[0].deputies_share, 0.75, places=12)
         events = [command for command in sent if isinstance(command, RecordEvent)]
         self.assertEqual((len(events), events[0].kind, events[0].facts["took_nothing"]), (1, "hazard_hit", False))
 

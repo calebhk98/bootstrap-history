@@ -154,3 +154,75 @@ Caches and version counters held today (feed for task 1.2):
 - `_techniques_in_use_cache`, `_techniques_spread_cache` (`techniques_in_use.py:42,59`)
 
 Detected by the cache scan in this module's mixin files: `engine/economy_production.py:526 _practice_cache`, `engine/economy_production.py:601 _rev_up_candidates_cache`, `engine/economy_production.py:188 _revenue_cache_key`, `engine/economy_production.py:187 _revenue_cache_val`, `engine/techniques_in_use.py:42 _techniques_in_use_cache`, `engine/techniques_in_use.py:59 _techniques_spread_cache`.
+
+## Width review
+
+Measure: `python3 tools/measure/module_graph.py --modules` (reads, sends and modules depended on); the reads by publisher are
+`python3 -c "from sim.production.module_spec import READS_BY_OWNER as table; [print(owner, names) for owner, names in table.items()]"`
+(regrouped under the module that publishes each view). The module sends two commands; its width is all reads. Grouping the package's
+files by the views each reads shows two parts: the earnings (`revenue.py`, `book_sales.py`, `concern_market.py`, `upkeep.py`,
+`volume.py`, and the pure rules beside them, `node_revenue*.py`, `node_upkeep.py`, `node_output.py`, `node_capital.py`,
+`revenue_ledger.py`, `concern_sales.py`, `concern_earnings.py`) and the learning (`capability.py`, `depth.py`, `learning.py`,
+`techniques.py`, `caches.py`).
+
+### What it depends on, by what it asks
+
+| Asks of | What for | Reads and sends |
+|---|---|---|
+| scenario, content, seats | The year, the setting, the civilisation, the trade families, who acts | `year`, `game_setting`, `civilisation`; `trade_family`; `acting_seat`, `founder` |
+| workforce | The people a concern runs on and what an hour costs | `staff`, `staff_version`, `headcount`, `hour_commitments`, `hours_available`, `wage_signature`, `market_annual_wage`, `standing_job_pay`, `money_per_labour_hour`, `base_tile`, `people_who_exist`, `hours_per_person_year`, `literacy_references`; send `SetWageHoursSold` (a revenue quote with no hours sold) |
+| ventures | The plants: which run, their size, capital, earnings and upkeep, their foreman | `operating`, `operating_version`, `institution_units_version`, `venture_opened_year`, `venture_size`, `venture_capex`, `venture_real_earnings`, `venture_real_upkeep`, `venture_foreman`, `venture_hands_founder_staffed`, `coverage`, `units_for_coverage` |
+| knowledge, mechanics, land | What the seat holds, the mechanics that gate a run, what is built | `techniques_held`, `techniques_version`, `techniques_granted`, `done_year`, `tree_nodes`, `category_trait`; `capability_sets`, `mechanic`, `running_mechanics`, `effect_sum`; `built_ways`, `held_techniques` |
+| markets, prices | What the agent economy sells and pays, and the price books | markets `agent_prices_at`, `agent_seat_sale_outlook`, `agent_trades_good`, `agent_producers_by_good`, `agent_worker_years_by_recipe`, `home_unit_price`; prices `held_goods_prices_in_hours`, `price_index`, `done_memo`, `producers_memo`, `material_prices`, `commodity_record` |
+| actors, diffusion, demography | The firms' concerns, the spread of techniques, the population | actors `concern_versions`, `concerns_of_active_firms`, `firm_concern_holdings`; diffusion `literacy`, `techniques_spread`, send `NoteFirstRuns`; demography `pop_scale`, `population`, `farm_holdings` |
+| polity, hazards, reporting, finance, coin, projects | The inputs of the year's revenue: state funding, the output factor, output per head, the debt, the price level, which projects gate a run | polity `standing`, `state_funding`; hazards `output_factor`; reporting `real_output_per_head`; finance `debt_status`; coin `home_price_level`; projects `gate_blocked` |
+
+### Findings
+
+**(a) Mirror views.**
+
+- None merged. Three pairs are a value and its change counter, read together to key a memo rather than to answer a question:
+  `techniques_held` with `techniques_version` (knowledge), `operating` with `operating_version` and `institution_units_version`
+  (ventures), `staff` with `staff_version` (workforce). They belong with the cache-key finding below.
+- Open, not built, workforce: `market_annual_wage(trade)`, `standing_job_pay(trade)` and `wage_signature()` are read together in
+  `revenue.py` for one question, what the household's own hours earn at the market wage; a `wage_work_pay` view of workforce would give
+  it (finance reads `standing_job_pay` for the same). Workforce owns it.
+- Open, not built, markets and prices: six reads each, in `book_sales.py`, `concern_market.py`, `learning.py`, `depth.py`. They are
+  distinct questions (who produces a good, what a seat would sell, a recipe's worker-years); the views are owned by the markets and
+  prices modules, whose reviews are separate.
+
+**(b) Sub-domains that read their own set of owners.**
+
+- The earnings part is the only part that reads content, finance, hazards, polity, reporting and seats, and sends `SetWageHoursSold`;
+  the learning part is the only one that reads actors, land and projects. Proposal: a `concern_earnings` module holding the earnings
+  files (`revenue.py`, `book_sales.py`, `concern_market.py`, `concern_sales.py`, `concern_earnings.py`, `upkeep.py`, `volume.py`,
+  `node_revenue.py`, `node_revenue_census.py`, `node_revenue_market.py`, `node_upkeep.py`, `node_output.py`, `node_capital.py`,
+  `node_payback_diagnostic.py`, `revenue_ledger.py`, `bondage_workshop_rules.py`) and the views `revenue_estimate`, `revenue_capacity`,
+  `estimated_revenue`, `revenue_sources`, `founder_wage_income`, `upkeep`, `upkeep_by_concern`, `concern_revenue`, `workshop_output`,
+  `concern_market`, `held_trade`, `concern_*` and `node_output_market_factor`, `basket_market_factor`, `venture_ramp`,
+  `ramp_share_at_full_depth`. `production` would keep what is run and learned (`running`, `capability_*`, `industry_*`,
+  `techniques_*`, `practice_set`, `institution_*`) and drop content, finance, hazards, polity, reporting and seats; the earnings module
+  reads production for `running` and `institution_units`. The views have many readers outside (see section (g)), so the split changes
+  their owner name in those readers' spec lines.
+
+**(c) Pass-through dependencies.**
+
+- The revenue memo key (`revenue()` in `revenue.py`, and `techniques_epoch` plus `home_price_level` in `techniques.py`) reads
+  `debt_status` (finance), `farm_holdings` (demography), `standing` (polity), `founder` (seats), `home_price_level` (coin),
+  `hour_commitments` and `wage_signature` (workforce) only so that a change to any of them drops the cached
+  total (and `concern_versions` of actors, in the techniques epoch). The total itself is computed from `venture_real_earnings` (ventures), which is where those inputs are used; production
+  knows the inputs of another module's computation. Finance, and in this module the only edge to it, exists for this alone. Not built:
+  dropping an input from the key would return a stale total, so the fix is for the owner of the computation to publish one change
+  counter that covers its inputs (`venture_earnings_version`, in ventures), and for production to key on it; the key's other entries
+  (`year`, `pop_scale`, `real_output_per_head`, `output_factor`, `state_funding`) are read by the compute itself and stay.
+- Nothing else is read only to hand it on: `hazards.output_factor`, `polity.state_funding` and the markets and prices reads are multiplied
+  into the figures the module answers.
+
+### What was done, and why each remaining edge is needed
+
+Nothing was changed in code for this module: no read is unused, none is a mirror one owner publishes twice, and the one pass-through
+(the memo key) cannot be trimmed without moving the cache to the owner of the figure it keys, which is a change of ventures' views.
+Each remaining edge is an input of a figure the module answers: what runs and what it is worth (ventures, knowledge, mechanics, land),
+what it earns and costs (workforce, markets, prices, polity, hazards, reporting, coin), what an industry has learned (actors, diffusion,
+demography, workforce) and which projects gate a run (projects). The cycles with workforce, ventures and projects are economic: workforce
+sells hours that revenue counts, ventures price the plants that revenue sums, projects ask whether a run is gated.

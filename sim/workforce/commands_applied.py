@@ -18,14 +18,24 @@ class Applying:
 	def press_labour(self, command):
 		self.labour.market.press(command.trade, command.hours)
 
-	def survive_staff(self, command):
+	def lose_staff(self, command):
+		seat = self.seat
+		before = self.labour.staff_snapshot()
+		people_before = seat.scholars + seat.artisans + sum(seat.employees.values())
+		self.survive_staff(command.survival_share)
+		seat.directors_extra *= command.deputies_share
+		self.labour.log_staff_reduction(command.cause, before)
+		return {"people_before": people_before, "people_after": seat.scholars + seat.artisans + sum(seat.employees.values())}
+
+	def survive_staff(self, survival_share):
+		"""Each scholar, artisan and hired person survives with the share, rolled one by one; a trade left with nobody is dropped."""
 		seat = self.seat
 		dice = self.needs.game_random()
 		survive = rules.surviving_people
-		seat.scholars = survive(dice, seat.scholars, command.survival_share)
-		seat.artisans = survive(dice, seat.artisans, command.survival_share)
+		seat.scholars = survive(dice, seat.scholars, survival_share)
+		seat.artisans = survive(dice, seat.artisans, survival_share)
 		for trade in sorted(seat.employees):
-			survivors = survive(dice, seat.employees[trade], command.survival_share)
+			survivors = survive(dice, seat.employees[trade], survival_share)
 			if survivors > 0:
 				seat.employees[trade] = survivors
 			else:
@@ -37,12 +47,6 @@ class Applying:
 
 	def grant_staff(self, command):
 		self.labour.grant_staff(command.scholars, command.artisans)
-
-	def scale_deputies(self, command):
-		self.seat.directors_extra *= command.share
-
-	def report_staff_reduction(self, command):
-		self.labour.log_staff_reduction(command.cause, command.before)
 
 	def allocate_farm_workforce(self, command):
 		return self.labour.allocate_farm_workforce(command.adult_equivalent_population)

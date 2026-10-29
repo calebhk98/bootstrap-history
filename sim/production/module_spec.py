@@ -14,7 +14,8 @@ from .module import Production
 from .state import ProductionSeat
 
 READS_BY_OWNER = {
-	"core": ("year", "game_setting", "civilisation", "trade_family"),
+	"scenario": ("year", "game_setting", "civilisation"),
+	"content": ("trade_family",),
 	"workforce": ("money_per_labour_hour", "staff", "staff_version", "hour_commitments", "hours_available", "wage_signature",
 	              "market_annual_wage", "standing_job_pay", "headcount", "base_tile", "people_who_exist", "hours_per_person_year",
 	              "literacy_references"),
@@ -22,10 +23,11 @@ READS_BY_OWNER = {
 	"knowledge": ("techniques_held", "techniques_version", "techniques_granted", "done_year", "tree_nodes", "category_trait"),
 	"diffusion": ("literacy", "techniques_spread"),
 	"prices": ("held_goods_prices_in_hours", "price_index", "done_memo", "producers_memo", "material_prices", "commodity_record"),
-	"markets": ("agent_prices_at", "agent_seat_sale_outlook", "agent_trades_good", "agent_producers_by_good",
-	            "agent_worker_years_by_recipe", "home_unit_price"),
-	"ventures": ("operating", "operating_version", "institution_units_version", "venture_opened_year", "venture_size", "venture_capex", "venture_real_earnings", "venture_real_upkeep",
-	             "venture_foreman", "venture_hands_founder_staffed", "coverage", "units_for_coverage"),
+	"markets": ("agent_prices_at", "agent_seat_sale_outlook", "agent_trades_good", "agent_producers_by_good", "agent_worker_years_by_recipe",
+	            "home_unit_price"),
+	"ventures": ("operating", "operating_version", "institution_units_version", "venture_opened_year", "venture_size", "venture_capex",
+	             "venture_real_earnings", "venture_real_upkeep", "venture_foreman", "venture_hands_founder_staffed", "coverage",
+	             "units_for_coverage"),
 	"actors": ("concern_versions", "concerns_of_active_firms", "firm_concern_holdings"),
 	"projects": ("gate_blocked",),
 	"demography": ("pop_scale", "population", "farm_holdings"),

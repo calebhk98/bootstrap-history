@@ -37,7 +37,7 @@ is built and run. The solver (the cost-of-making calculator) lives here whole.
   needs the production catalogue and the civilisation files before any game exists, and those loaders have no owner yet.
 - Reads through the bridge (`sim/engine/bridge_prices.py`): `farm_land_hectares`, `material_seller`, `agent_wage`,
   `agent_land_rent`, `concern_baskets_now`, `venture_ramp`; plus `techniques_in_use`, `price_epoch`, `producers_stamp`,
-  `household_prices`, `market_rate`, `hour_wage`, `money_per_labour_hour`, `is_venture`, `operating`, `legacy_projects`.
+  `household_prices`, `market_rate`, `labour_quote`, `money_per_labour_hour`, `is_venture`, `operating`, `legacy_projects`.
 - `rules.HOME_SELLER` repeats the goods market's id for the home seller until markets publishes a view that says it.
 - Forwarders left on `Sim` (`sim/engine/forward_prices.py`): `_material_prices`, `_price_tables`, `_material_price_per_kg`,
   `_priced_key`, `material_price_basis`, `_commodity_ledger`, `_material_commodity_map`, `_done_memo`, `_producers_memo`,

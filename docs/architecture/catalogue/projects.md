@@ -183,3 +183,83 @@ What the first move of the start of a project changed in this draft, and why. Me
 - **Reads (64, from 15 owners besides the module's own unmoved parts):** more than the draft's 42, because the draft named the owner's whole view and the module needs narrow questions (`visibility(node, memo)`, `hours_available[pool]`, `staff_advice(kind, deficit)`). Where the draft's grain fits it kept the catalogue name (`techniques_held`, `visibility`, `running`, `standing`, `credit_limit`, `project_cost`); where one catalogued view hid several unrelated questions it is several views here (`staffing_quote` became `project_staffing_shortfall`, `hours_available`, `trade_available`, `market_supply`, `staff_advice`, `training_advice`; `project_materials` became `own_output_claim`, `bounty_price`, `material_upfront_refusal`; `project_risk` became `calendar_floor` and `effective_risk`).
 - **The start checks:** the table `START_CHECKS` (`sim/projects/blocker_rules.py`) is the order and the kind of every check; four of the 21 are answered by views of their owners (`start_gate_running`, `start_gate_unheld_stock`, `start_gate_material_seller`, `start_gate_group_prohibition`) until those owners publish their checks. A mod adds a check by providing to the extension point `extra_start_checks` (asked after the shipped ones) and removes or reorders one by a layer over `START_CHECKS`.
 - **Not in the draft, needed:** a view of the year (`year`), of presentation (`money_text`), of the run's settings (`automation`: manual play and the bounty list), and of the acting seat. None has an owner in the catalogue.
+
+## Width review
+
+Measure: `python3 tools/measure/module_graph.py --modules` (reads, sends and modules depended on); the reads by publisher are
+`python3 -c "from sim.projects.module_spec import READS_BY_OWNER as table; [print(owner, names) for owner, names in table.items()]"`
+(regrouped under the module that publishes each view). The module is the widest in sends because a project is where the game's other
+modules meet: starting one asks a dozen owners whether it may begin, and finishing one writes to as many.
+
+### What it depends on, by what it asks
+
+| Asks of | What for | Reads and sends |
+|---|---|---|
+| knowledge, diffusion, content | What the node is, what the seat holds, whether it may be learned and what it does on completion | knowledge `tree`, `tree_nodes`, `category_trait`, `tree_closure`, `techniques_held`, `techniques_granted`, `techniques_forgotten`, `visibility`, `visible_to_player`, `prerequisite_message`, `corpus_hedge`, `never_abandon`, sends `LearnTechnique`, `RevealFrom`; diffusion `needs_first`, `foreign_only`, `civ_cost_factor`, `literacy_ceiling`, `staff_sources`, send `ApplyTechEffects`; content `tech_effects` |
+| ledger, finance, prices, reporting, scenario | Can the seat pay and what the work costs, the log, the clock and the player's settings | ledger `acting_balance`, `goods_stock`, sends `PayEdge`, `NoteSpend`, `ReceiveFromEdge`; finance `debt_status`, `credit_limit`, `funding_capacity`, `purchase_remedies_text`, `living_cost`, `spending_power`, `bearable_part_of`; prices `price_index`; reporting sends `RecordEvent`, `NoteConcernChange`, `RecordAutomation`, `RecordAutomationSkip`; scenario `year`, `horizon_end_year`, `society_name`, `project_limits`, `game_config`, `game_random`, `fog_of_war`, `automation`, `money_text`, `plain_number` |
+| materials, land, living_stock, defence_stores, resources | What the work consumes, where it is built and what it keeps | materials `own_output_claim`, `bounty_price`, `material_upfront_refusal`, `material_pool`, `generation`, `material_binding`, `resource_throttle`, `failure_loss`, `start_gate_material_seller`, `project_material_parts`, `project_cost_without_materials`, sends `SettleProjectMaterials`, `ApplyThrottle`; land `built_way_km`, `material_cost_factor`; living_stock `stock_status`, `stock_held`, send `ChangeHeld`; defence_stores `venture_garrison`; resources `mine_operating_cost` |
+| workforce | The hours and people the work draws on | `hours_available`, `hours_you_can_call_on`, `market_supply`, `trade_available`, `staff_advice`, `training_advice`, `training_queue`, `project_staffing_shortfall`, `money_per_labour_hour`, `staff`, `hour_commitments`, `effective_scholars`, `headcount`; sends `DrawTradeHours`, `ResetTradeHours`, `SpendDirectorHours`, `ReleaseHours`, `GrantStaff`, `LoseCrew` |
+| production, ventures | The concerns a project opens, keeps staffed, shuts and reopens | production `is_venture`, `running`, `revenue_estimate`, `upkeep`, `institution_units`, `institution_unit_ceiling`, `institution_places`, `institution_upkeep`, `industry_depth`, `failed_attempts_trial`, `concern_market`, send `LearnFromFailure`; ventures `operating`, `venture_size`, `mothballed`, `closure_records`, `reopen_fee`, `reopen_units`, `opening_fee`, `venture_capex`, `venture_hands`, `venture_foreman`, `venture_foreman_free`, `venture_staff_free`, `venture_staff_used`, `venture_real_earnings`, `venture_real_upkeep`, sends `OpenVenture`, `CloseConcern`, `MothballConcern`, `RestoreConcern`, `ClearMothball`, `ReviewConcerns`, `ReviewReopening`, `NoteConcernYear`, `ForgetClosureReason` |
+| polity, seats, mechanics, actors | The state's view of the work, the goal, the mechanics that gate and the actors' world | polity `standing`, `state_interest`, `value_weight`, `alarm_of`, `start_gate_group_prohibition`, sends `RecordBribe`, `CarryOutTransfers`, `GainReputation`, `AddScandal`, `AddGovernance`; seats `win_condition_text`, `win_condition_value`, `acting_seat`, `founder`, `goal`, `automatic_policy`, send `RecordGoalReached`; mechanics `approval_patron`, `mechanic`, `capability_sets`; actors `actor_world` |
+
+### Findings
+
+**(a) Mirror views.**
+
+- Done on the workforce side of the staffing rule (see the workforce review): workforce no longer reads six of this module's staffing
+  views, `keep_staffed_hires` answers the one question they served, and `staffing_draw` and `staffing_shortfalls` are no longer
+  published here.
+- Nothing else in the module's reads is a pair that one owner publishes twice for one question. The groups that look like it are
+  different questions asked together:
+  `tree[node]` is `tree_nodes().get(node)` (knowledge; read by many modules, see the hazards review);
+  `venture_hands` and `venture_foreman` are asked together in `open_gate.py` and `staffing_shortfall.py`, with `venture_staff_free` and
+  `venture_foreman_free` for what is spare; `start_checks.py` asks `trade_available` and `market_supply` of the same trades and
+  `progress_hours.py` asks `market_supply` and `hours_you_can_call_on`.
+- Open, not built, ventures: the draw of a concern (`venture_hands`, `venture_foreman`, plus the garrison and the size) is also read by
+  workforce (`venture_foreman`) and production (`venture_foreman`, `venture_hands_founder_staffed`). A ventures view
+  `concern_draw(node, units)` would replace those reads in three modules; it needs `institution_units` (production) and
+  `venture_garrison` (defence_stores) as arguments, so the view would take them as parameters rather than read them.
+- Open, not built, workforce: a `trade_hours(trade)` view returning `trade_available`, `market_supply` and `hours_you_can_call_on` for
+  one trade would replace three reads at the sites named above.
+
+**(b) Sub-domains that read their own set of owners.** Grouping the package's files by the views and commands they use gives three
+parts: starting (`start_*.py`, `starting.py`, `costs.py`, `cost_*.py`, `blocker_*.py`, `risk*.py`, `precaution*.py`, `bribe_rules.py`,
+`exclusion*.py`), completion (`completion*.py`, `permanent_benefit.py`, `instantaneous.py`, `failure_*.py`, `rebuild*.py`) and the
+concerns the projects keep running (`auto_open.py`, `mothball.py`, `review.py`, `closures.py`, `closure_*.py`, `staffing*.py`,
+`staff_gate.py`, `running_gates.py`, `trade_wait.py`, `hour_queue.py`). They share almost every owner: only `prices` (the cost
+figure, in `costs.py`) belongs to starting alone and only `content` (`tech_effects`) to completion alone. A split into starting,
+completion and staffing would not leave any part with fewer owners; the width is the domain, since a project begins and ends across
+the whole game. One part is a different matter:
+
+- The concerns the projects keep running (the files above) send every ventures command (`OpenVenture`, `CloseConcern`,
+  `MothballConcern`, `RestoreConcern`, `ClearMothball`, `ReviewConcerns`, `ReviewReopening`, `NoteConcernYear`,
+  `ForgetClosureReason`) and read most of ventures' views; their questions are about a plant, not a project (is it staffed, should the
+  yearly review shut it, may it reopen). Proposal: move them to the ventures module, which owns the plants and the closure records,
+  with the commands applied here for them (`CloseUnstaffedVentures`, `ReopenRestaffedVentures`, `AutoOpenVentures`, `NoteVentureYear`,
+  `ReviewVentures`, `MothballWork`, `RestoreWork`, `CloseWork`, `CloseLapsedDependents`, `KeepStaffed`) and the views `staffing_*`,
+  `staff_closure_age`, `keep_staffed`, `keep_staffed_hires`, `closure_record`, `closed_by_choice`, `shut_for_staff`,
+  `ever_closed_for_staff`. Projects would still read ventures for what starting and completion need (`mothballed`, `reopen_fee`,
+  `opening_fee`, `venture_hands`, `venture_staff_free`) and send `ClearMothball`. This moves edges to ventures rather than removing
+  them (ventures already reads production, workforce and projects), so it is a cohesion proposal, not a width one.
+
+**(c) Pass-through dependencies.**
+
+- `actor_world` (actors) is read three times and handed on: `review_ventures` sets `world.review_year` on it before sending
+  `ReviewConcerns` (the actors world then calls back `seat_review` here with that year), `note_venture_year` reads
+  `world.concern_margin` from it, and `start_project` passes it to `research.begin`. The first is a number carried by mutating
+  another module's object: `ReviewConcerns` should carry the year, and `concern_margin` should be a view. Not built: the object
+  belongs to the actors module, which another review owns.
+- `start_checks.py` reads views by name from data (`getattr(self.needs, check.source)`): each start check names the view that answers
+  it (`START_CHECKS` in `blocker_rules.py`), which is why `start_gate_material_seller` and `start_gate_group_prohibition` show no direct
+  `needs.` use. They are asked and answered here, not forwarded.
+- The module reads no view only to pass it to a third module.
+
+### What was done, and why each remaining edge is needed
+
+Nothing in this module's own reads was a clear small change: they are the questions a project asks (may it begin, what does it cost,
+who will staff it, what does it leave behind), each answered by one owner. What changed because of this review is the workforce side of
+the staffing rule: the six reads workforce made of the staffing views became one view here (`keep_staffed_hires`), and the two views
+only workforce read (`staffing_draw`, `staffing_shortfalls`) are no longer published. Every remaining edge is a gate or a write:
+starting reads each owner's gate (money, materials, politics, mechanics, workforce, concerns); completion writes what the node does
+(technique, effects, goal, grants, crew, stock); the concerns part is the ventures proposal above. The cycle with workforce and ventures
+is the staffing rule: projects decides which concerns a shortfall shuts, workforce supplies the shortfall and the hands.

@@ -3,7 +3,7 @@
 The dice draws below have an exact place in the sequence `shocks` makes its draws in: the yearly chance of an attack coming
 to nothing, the chance of a sack, and the chance and the sample of the corpus lost.
 
-Needs: corpus_hedge, game_random, acting_balance, staff, staff_snapshot, active_projects, money_text, corpus_nodes, mechanic, goal,
+Needs: corpus_hedge, game_random, acting_balance, active_projects, money_text, corpus_nodes, mechanic, goal,
 tree_nodes, tree_closure, losable_node_ids."""
 from typing import Any, Dict, List
 
@@ -12,7 +12,7 @@ from sim.knowledge.api import ForgetTechnique
 from sim.projects.api import ResetProjectProgress
 from sim.ventures.api import ShutForgotten
 from sim.reporting.api import RecordEvent
-from sim.workforce.api import ReportStaffReduction, ScaleDeputies, SurviveStaff
+from sim.workforce.api import LoseStaff
 
 from . import constants, rules
 from .toll import sack_toll
@@ -33,23 +33,15 @@ class Sack:
 			if dice.random() < probability:
 				self.sack_site(hazard, year)
 
-	def _people_on_books(self) -> float:
-		staff = self.needs.staff()
-		return staff["artisans"] + staff["scholars"] + sum(staff["employees"].values())
-
 	def sack_site(self, hazard: Dict[str, Any], year: int) -> None:
 		"""What a sack itself takes: capital, staff, projects reset; then, maybe, the corpus."""
 		dice = self.needs.game_random()
 		capital_before = max(0.0, self.needs.acting_balance())
-		people_before = self._people_on_books()   # all staff, so the message matches what the state renders
 		projects_before = len(self.needs.active_projects())
 		self.needs.send(PlunderHousehold(constants.SACK_TAKE_STRENGTH, "sack and plunder", False))
-		staff_before = self.needs.staff_snapshot()
-		self.needs.send(SurviveStaff(constants.SACK_STAFF_RETENTION))
-		self.needs.send(ReportStaffReduction("the sack of a site", staff_before))
-		self.needs.send(ScaleDeputies(constants.SACK_DIRECTORS_RETENTION))
+		people = self.needs.send(LoseStaff("the sack of a site", constants.SACK_STAFF_RETENTION, constants.SACK_DIRECTORS_RETENTION))
+		people_before, people_after = people["people_before"], people["people_after"]   # all staff, so the message matches what the state renders
 		self.needs.send(ResetProjectProgress())
-		people_after = self._people_on_books()
 		capital_taken = capital_before - max(0.0, self.needs.acting_balance())
 		hit_capital, hit_people, hit_projects = sack_toll(capital_taken, people_before - people_after, projects_before)
 		took = []

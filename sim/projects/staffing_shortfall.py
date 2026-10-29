@@ -2,8 +2,8 @@
 from collections import defaultdict
 
 from .constants import FOUNDER_IS_WORTH, STAFFING_CLOSURE_SLACK
-from .staffing_choice import (HAND_RESOURCES, closures_for_shortfall, missing_when_opened, shortfalls_beyond,
-                              staffing_allowances)
+from .staffing_choice import (HAND_RESOURCES, closures_for_shortfall, flagged_claims, flagged_concerns, missing_when_opened,
+                              people_to_hire_for, shortfalls_beyond, staffing_allowances)
 
 
 class StaffingShortfall:
@@ -72,3 +72,20 @@ class StaffingShortfall:
 		net_value = {node_id: nodes[node_id]["rev"] - nodes[node_id]["up"] for node_id in draws}
 		# A concern flagged with `keep <id> staffed` is protected: it closes only after every unflagged one.
 		return closures_for_shortfall(draws, net_value, self.seat.keep_staffed, self._staffing_shortfalls)
+
+	def keep_staffed_hires(self):
+		"""Resource -> whole people to hire so the flagged concerns stay staffed (`keep <id> staffed`).
+
+		Counts every running concern's draw plus the flagged shut ones', so the shortfall is the one the closure rule would act
+		on; asks for no more than the flagged concerns themselves hold."""
+		needs = self.needs
+		operating = needs.operating()
+		concerns = flagged_concerns(self.seat.keep_staffed, needs.techniques_held(), needs.tree_nodes(), operating,
+		                            self.staff_closure_age)
+		if not concerns:
+			return {}
+		claimed, totals = flagged_claims(
+			concerns, operating,
+			lambda node_id, shut: self._staffing_draw_of(node_id, needs.reopen_units[node_id] if shut else None),
+			self.staffing_held_totals())
+		return people_to_hire_for(claimed, self._staffing_shortfalls(totals, strict=True))

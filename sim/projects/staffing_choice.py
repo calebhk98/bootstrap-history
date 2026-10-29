@@ -1,4 +1,7 @@
 """Which running concerns a shortfall of people forces shut."""
+import math
+from collections import defaultdict
+
 HAND_RESOURCES = ("scholars", "craftsmen")
 FOREMAN_TRADE_MARGIN = 0.01
 
@@ -69,3 +72,34 @@ def closures_for_shortfall(draws, net_value, protected, shortfalls_of):
         else:
             kept_open.append(node_id)
     return [node_id for node_id in chosen if node_id not in kept_open]
+
+
+def people_to_hire_for(claimed, shortfalls):
+    """Resource -> whole people to hire so flagged concerns stay staffed: the shortfall, no more than the flagged
+    concerns themselves hold, rounded up past a hundredth of a person; resources with nothing to hire are left out."""
+    hires = {}
+    for resource in sorted(claimed):
+        short = math.ceil(min(shortfalls.get(resource, 0.0), claimed[resource]) - 0.01)
+        if short > 0:
+            hires[resource] = short
+    return hires
+
+
+def flagged_concerns(flagged, held, nodes, operating, closure_age_of):
+    """The flagged concerns that count: known, in the tree, and running or shut for want of staff, in id order."""
+    return [node_id for node_id in sorted(flagged)
+            if node_id in held and node_id in nodes and (node_id in operating or closure_age_of(node_id) is not None)]
+
+
+def flagged_claims(concerns, operating, draw_of, held_totals):
+    """(claimed, totals) over the flagged concerns: what they hold together, and what every running concern holds plus the
+    flagged shut ones. `draw_of(node_id, shut)` is one concern's draw, at its reopening size when it is shut."""
+    claimed = defaultdict(float)
+    totals = defaultdict(float, held_totals)
+    for node_id in concerns:
+        shut = node_id not in operating
+        for resource, amount in draw_of(node_id, shut).items():
+            claimed[resource] += amount
+            if shut:
+                totals[resource] += amount
+    return claimed, totals

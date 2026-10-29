@@ -29,13 +29,6 @@ class NoteTradeSpread(Command):
 
 
 @dataclass(frozen=True)
-class SurviveStaff(Command):
-	"""Each person on the acting seat's books survives with probability `survival_share`, rolled one by one so
-	headcounts stay whole; a trade left with nobody is dropped. Draws from the game's dice."""
-	survival_share: float
-
-
-@dataclass(frozen=True)
 class GrantStaff(Command):
 	"""An institution hands the acting seat people outright, on completion: recorded as a grant, so the yearly resync of
 	the pools from the payroll keeps them."""
@@ -44,17 +37,14 @@ class GrantStaff(Command):
 
 
 @dataclass(frozen=True)
-class ScaleDeputies(Command):
-	"""The acting seat's pool of deputy directors is multiplied by `share`."""
-	share: float
-
-
-@dataclass(frozen=True)
-class ReportStaffReduction(Command):
-	"""The acting seat's log says which trades have fewer people than the headcount `before` ({trade: headcount}), and
-	that `cause` is why."""
+class LoseStaff(Command):
+	"""A shock takes people from the acting seat: each person on its books survives with probability `survival_share`, rolled
+	one by one so headcounts stay whole (a trade left with nobody is dropped; draws from the game's dice), its pool of deputy
+	directors is multiplied by `deputies_share`, and its log says which trades fell and that `cause` is why. Answers
+	{"people_before": ..., "people_after": ...}, the scholars, artisans and hired people on the books either side."""
 	cause: str
-	before: Dict[str, float]
+	survival_share: float
+	deputies_share: float
 
 
 @dataclass(frozen=True)

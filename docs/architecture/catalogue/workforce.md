@@ -22,13 +22,13 @@ so the 365 callers outside labour (screens, mods, the economy port, engine mixin
   `OrderWork`, `CancelWork`, `SetReserve`, `DrawTradeHours`, `ResetTradeHours`, `SpendDirectorHours`, `SettleLivingCost`,
   `SetWageHoursSold`, `BleedStaff`, `DisperseDependants`, `LoseCrew`, `WatchStaff`). The payroll dict reports its changes on the
   `staff` channel (`staff_version`), which replaces the household's `_workforce_ver`.
-- **Views published** (uncached, because `Labour` writes the seat's people and hours in place and keeps no count of its writes): `staff`, `staff_snapshot`, `headcount`, `hours_available`, `literacy_references`, `literacy_capacity`,
+- **Views published** (uncached, because `Labour` writes the seat's people and hours in place and keeps no count of its writes): `staff`, `headcount`, `hours_available`, `literacy_references`, `literacy_capacity`,
   `farm_share_of_hours`, `trade_spread`, `staff_advice`, `project_staffing_shortfall`, `seat_base_tile`, `market_supply`,
-  `trade_available`, `labour_quote`, `hour_wage`, `wage`, `base_annual_wage`, `trade_population`, `money_per_labour_hour`,
+  `trade_available`, `labour_quote`, `wage`, `base_annual_wage`, `trade_population`, `money_per_labour_hour`,
   `opening_money_per_labour_hour`, `labour_state_weights`, `town_mortality_premium_by_tile`, `wage_index`, `wage_index_terms`,
   `wage_materials`, `trade_registry` (now with each trade's `training_years`), `society_labour_hours`, `farming_technique`,
   `farm_land_hectares`, `hours_per_person_year` (the working day: lit hours added by open works, moved from `working_day.py`).
-- **Commands applied**: `SetEmployed`, `NoteTradeSpread`, `PressLabour`, `SurviveStaff`, `ScaleDeputies`, `ReportStaffReduction`,
+- **Commands applied**: `SetEmployed`, `NoteTradeSpread`, `PressLabour`, `LoseStaff`,
   `AllocateFarmWorkforce`, `ApplyLandClearing`, `UpdateWages`, `TakeWageFallback`, `CloseHoursYear`. Two commands of the module are
   still applied by the bridge because the logic they call sits in files other work owns: `NoteWageShock` (`cause_book.py`, shared with
   projects staffing and the screens). `BuildHousing` is the module's now.
@@ -300,3 +300,90 @@ Caches and version counters held today (feed for task 1.2):
 - `__dict__['_labour']` (`labour_port.py:387`): the package instance, rebuilt on load
 
 Detected by the cache scan in this module's mixin files: `engine/labour_port.py:387 __dict__[_labour]`.
+
+## Width review
+
+Measure: `python3 tools/measure/module_graph.py --modules` (reads, sends and modules depended on per module); the reads by publisher
+are `python3 -c "from sim.workforce.module_spec import READS_BY_OWNER as table; [print(owner, names) for owner, names in table.items()]"`.
+The module's reads were regrouped under the module that publishes each view, so that table now reads as the list of dependencies.
+Most of the width is `WorkforceWorld` (`sim/workforce/world.py`): one member per thing `Labour` (`sim/labour/`) asked of the game, each
+answered by a named view. Labour is one object (the mixins share `self`), so a read is "needed" by whichever mixin calls the member.
+
+### What it depends on, by what it asks
+
+| Asks of | What for | Reads and sends |
+|---|---|---|
+| ledger, reporting, seats, scenario | The seat's purse and log, who is acting, the goal, the year, the game's dice | `acting_balance`; sends `PayEdge`, `NoteSpend`, `ReceiveFromEdge`, `RestorePurse` (wages, hiring, housing, the trial sale undone); `event_log`, sends `RecordEvent`, `RecordAutomation`, `RecordAutomationSkip`, `DiscardEventsAfter`; `founder`, `acting_country`, `seat_list`, `goal`, `goal_closure`, send `RememberGoalClosure`; `year`, `automation`, `civilisation`, `game_config`, `game_random`, `money_text`, `plain_number` |
+| finance, prices, coin | Can the seat pay for this, and what a person costs to keep | `debt_status`, `credit_limit`, `living_cost`, `spending_power`, `can_pay`, `purchase_refusal`; `price_index`; `home_price_level` |
+| markets, materials, reporting, polity, content | The wage and the market for people: the agent economy's wages, people by trade and tile, the price pressure, the reputation bonus, the trade tables | `agent_prices`, `agent_wage`, `agent_unskilled_wage`, `agent_people_by_trade`, `agent_people_by_tile_and_trade`, `agent_country`; `material_price_factor`; `last_market_price_ratio`, `real_output_per_head`; `standing`, `rep_factor`; `trades_absent`, `trade_notes`, `trade_records`, `trade_family` |
+| knowledge, mechanics, diffusion, land | What the people may learn and what raises their output, room and hours | `techniques_held`, `techniques_granted`, `done_year`, `tree_nodes`, `visibility`, `tree_closure`; `mechanic`, the five `effect_*` views, `labour_productivity_sources`, `room_sources`, `staff_capacity_sources`, `running_mechanics`; `literacy`, `research_productivity`, `staff_hire_advice`, `staff_sources`; `held_techniques`, `built_ways`, `home_tiles_held`, `home_tiles_held_version` |
+| agriculture, demography, actors | The farm: how many hands it needs and who farms | `farm_land`, `farm_technique_this_year`, `farm_ladder`, `farm_arable_ceiling`, sends `SetFarmLand`, `SetFarmTechnique`; `population`, `pop_scale`, `people_by_tile`, `urban_fraction`, `farm_holdings`, sends `SetClearedFarmland`, `SetFarmHoursNeeded`; `harvest_share_taken` |
+| projects, production, ventures, resources, actors | The works that draw on people: which concerns the staffing rule would shut, the hours still wanted, the revenue the living cost is set against, the foreman and spare hands | projects `active_projects`, `project_order`, `active_hours_still_wanted`, `start_check`, `exclusion_reason`, `staffing_closed_hand_shortfall`, `concerns_to_close_for_staffing`, `keep_staffed_hires`; production `running`, `is_venture`, `institution_units`, `revenue_estimate`, `upkeep`, `concern_market`, `held_trade`; ventures `operating`, `venture_foreman`, `venture_foremen_used`, `venture_staff_free`, `coverage`, `coverage_share`; `mine_operating_cost`; actors `actor_staff`, `actor_staff_nationwide`, `actor_staff_total`, `teaching_knowledge` |
+| polity | Standing moved by the module's own acts | sends `AddReputation` (manumission), `ScaleFamiliarity`, `ScaleProtection` (a relocation keeps part of both) |
+| sharing | A memo shared between modules | `shared_answer` |
+
+### Findings
+
+**(a) Mirror views.**
+
+- Done, `keep_staffed_hires` (projects): the yearly keep-flagged-staffed pass read `keep_staffed`, `staff_closure_age`, `reopen_units`,
+  `staffing_held_totals`, `staffing_draw` and `staffing_shortfalls` of the projects and ventures modules to work out one number, how
+  many people of each resource to hire. Projects answers that question (`StaffingShortfall.keep_staffed_hires`); the rule
+  `people_to_hire_for` moved beside the staffing rules it combines with. `staffing_draw` and `staffing_shortfalls` were read only by
+  workforce and are no longer published.
+- Done, `hour_wage` into `labour_quote(trade, hours=0.0)` (workforce's own views): both were the labour market's `quote`. Readers
+  (freight, living_stock, prices) switched.
+- Done, `LoseStaff` (commands): hazards and disease each read `staff` and `staff_snapshot`, then sent three commands whose order did not
+  matter, so the module could take the snapshot itself. One command now does the survival roll, scales the deputies, logs the fall and
+  answers the people on the books either side; `staff_snapshot` is no longer published.
+- Open, not built, mechanics: `labour_productivity_sources`, `room_sources`, `staff_capacity_sources` (and diffusion's `staff_sources`)
+  are each `effect_terms(channel)` in a different shape, and the module also reads `effect_terms` itself. One
+  `effect_sources(channel)` would need one shape; the three readers inside labour want different rows, so a merge changes labour's rules,
+  not only the read. The mechanics module owns the change.
+- Open, not built, actors: `actor_staff(trade)`, `actor_staff_nationwide(trade)` and `actor_staff_total()` answer one question at three
+  scopes (this seat's actors, all actors, summed). A single `actor_staff(trade, scope)` would cut two reads; the actors module owns it.
+- Open, not built, finance: `can_pay` and `purchase_refusal` are asked as a pair when labour buys people (`labour_bondage.py` asks
+  `can_pay`, then `refusal_text` for the reason); one `purchase_check(what, cost)` answering "can the seat pay, or why not" replaces
+  both. Finance owns it.
+- Open, not built, finance and production: the yearly payroll rule (`staff_year.py`, `payroll_means`) reads `revenue_estimate`,
+  `upkeep` (production), `living_cost`, `credit_limit` (finance), `mine_operating_cost` (resources) and `acting_balance` (ledger) to
+  answer one question, what the seat can pay its people this year. A `payroll_means` view of finance would replace those six reads and
+  drop workforce's only read of resources. Finance owns it.
+
+**(b) Sub-domains that read their own set of owners.** Grouping labour's files by the members they call (the files are
+`sim/labour/`, `sim/workforce/`):
+
+- The farm workforce (`labour_allocation.py`, `farm_intake.py`, `food_gathering.py`, the commands `AllocateFarmWorkforce` and
+  `ApplyLandClearing`) is the only part that reads agriculture and demography's farm figures, sends `SetFarmLand`, `SetFarmTechnique`,
+  `SetClearedFarmland` and `SetFarmHoursNeeded`, and reads `harvest_share_taken`. It decides how many hours go to farming and how much land
+  is cleared: an agriculture decision made from workforce's hours. Proposal: move it to the agriculture module, which already reads
+  `society_labour_hours`, `farming_technique` and `trade_registry` of workforce; the edge reverses (agriculture reads workforce's hours,
+  workforce no longer reads or sends to agriculture, and loses `farm_holdings`, `harvest_share_taken`, `SetClearedFarmland`,
+  `SetFarmHoursNeeded`). Files that would move: `sim/labour/labour_allocation.py`, `farm_intake.py`, `food_gathering.py`, and the two
+  commands with their handlers in `sim/workforce/commands_applied.py`.
+- Bondage and slaves (`labour_bondage.py`, `hire_outcome.py`, `buy_cap.py`, `commands_bondage.py`, `standing_bondage.py`) read finance,
+  prices, demography and send only `AddReputation`; it shares the module's state and is not worth a module.
+- Settlement and relocation (`labour_settlement.py`, `room_advice.py`) reads land, demography and sends `ScaleFamiliarity` and
+  `ScaleProtection`; small.
+- Wages and the market (`labour_wages.py`, `labour_market*.py`, `market/`, `staff_pay*`) is the only part that reads coin, materials and
+  most of reporting. It is the module's centre; the other modules read its views.
+- The yearly staff step (`staff_year.py`, `staff_replacement.py`, `payroll_trim.py`) is the only part that reads resources
+  (`mine_operating_cost`, in the payroll rule) and the credit figures of finance; see the `payroll_means` proposal.
+
+**(c) Pass-through dependencies.**
+
+- Fixed: hazards and disease read `staff_snapshot` only to hand it back to workforce's `ReportStaffReduction`; see `LoseStaff`.
+- The module reads no view only to hand it to another module. `shared_answer` is a memo service, and `game_random` is the game's dice,
+  shared live because every draw moves the stream every module draws from.
+- `WorkforceWorld` still hands labour three live objects (`rng`, the project sets of `ProjectReads`, and the game a mod provider is given);
+  they are reads, not forwards.
+
+### What was done, and why each remaining edge is needed
+
+Done (each a commit, quick tier green, values identical): the six keep-staffed reads become `keep_staffed_hires`; `LoseStaff` replaces
+three sends in hazards and disease; `hour_wage` is `labour_quote`; the reads are grouped by publisher. Every other edge is an economic
+dependency of one of the questions above: the module sets wages and sizes staff from prices, finance and the agent economy; hires
+against what knowledge, mechanics and diffusion allow; and answers the works (projects, production, ventures) that draw on its people,
+which read it back (the cycle with projects is the staffing rule: workforce asks projects which concerns a loss would shut, projects asks
+workforce what hands are free). The farm workforce is the one sub-domain whose edges all belong to another module; its move is the
+proposal above.

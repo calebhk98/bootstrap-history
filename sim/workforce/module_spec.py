@@ -12,8 +12,8 @@ from sim.polity.api import AddReputation, ScaleFamiliarity, ScaleProtection
 from sim.seats.api import RememberGoalClosure
 from sim.reporting.api import DiscardEventsAfter, RecordAutomation, RecordAutomationSkip, RecordEvent
 
-from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread, PressLabour, ReportStaffReduction,
-                       ReleaseStaff, ScaleDeputies, SetEmployed, SurviveStaff, TakeWageFallback, UpdateWages)
+from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread, PressLabour,
+                       LoseStaff, ReleaseStaff, SetEmployed, TakeWageFallback, UpdateWages)
 from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase, TrainStaff,
                               WorkForWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
@@ -23,31 +23,31 @@ from .state import STAFF, WorkforceSeat, WorkforceSociety
 from .module import Workforce
 
 READS_BY_OWNER = {
-    "core": ("year", "automation", "civilisation", "game_config",
-             "plain_number", "money_text"),
+    "scenario": ("year", "automation", "civilisation", "game_config", "plain_number", "money_text", "game_random"),
     "content": ("trades_absent", "trade_notes", "trade_records", "trade_family"),
-    "ventures": ("operating",),
-    "seats": ("founder", "acting_country", "seat_list", "game_random", "goal", "goal_closure"),
+    "ventures": ("operating", "venture_foreman", "venture_foremen_used", "venture_staff_free", "coverage", "coverage_share"),
+    "seats": ("founder", "acting_country", "seat_list", "goal", "goal_closure"),
     "ledger": ("acting_balance",),
     "polity": ("standing", "rep_factor"),
-    "reporting": ("event_log", "last_market_price_ratio", "real_output_per_head", "agent_prices", "agent_wage"),
+    "reporting": ("event_log", "last_market_price_ratio", "real_output_per_head"),
+    "markets": ("agent_prices", "agent_wage", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country", "agent_unskilled_wage"),
     "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction", "farm_holdings"),
     "agriculture": ("farm_land", "farm_technique_this_year", "farm_ladder", "farm_arable_ceiling"),
-    "land": ("home_tiles_held", "home_tiles_held_version", "coverage", "coverage_share", "built_ways"),
-    "knowledge": ("techniques_held", "held_techniques", "techniques_granted", "done_year", "tree_nodes", "visibility", "tree_closure"),
-    "mechanics": ("mechanic", "effect_factor", "effect_holds", "effect_sum", "effect_terms", "effect_value",
-                  "labour_productivity_sources", "room_sources", "staff_capacity_sources", "running_mechanics"),
+    "land": ("home_tiles_held", "home_tiles_held_version", "built_ways", "held_techniques"),
+    "knowledge": ("techniques_held", "techniques_granted", "done_year", "tree_nodes", "visibility", "tree_closure"),
+    "mechanics": ("mechanic", "effect_factor", "effect_holds", "effect_sum", "effect_terms", "effect_value", "labour_productivity_sources",
+                  "room_sources", "staff_capacity_sources", "running_mechanics"),
     "diffusion": ("literacy", "research_productivity", "staff_hire_advice", "staff_sources"),
-    "production": ("concern_market", "running", "institution_units", "upkeep", "revenue_estimate", "is_venture"),
-    "projects": ("active_projects", "project_order", "keep_staffed", "staffing_closed_hand_shortfall", "start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
-                 "staffing_draw", "staffing_held_totals", "staffing_shortfalls", "concerns_to_close_for_staffing",
-                 "venture_foreman", "venture_foremen_used", "venture_staff_free"),
+    "production": ("concern_market", "running", "institution_units", "upkeep", "revenue_estimate", "is_venture", "held_trade"),
+    "projects": ("active_projects", "project_order", "staffing_closed_hand_shortfall", "start_check", "exclusion_reason",
+                 "active_hours_still_wanted", "keep_staffed_hires", "concerns_to_close_for_staffing"),
     "sharing": ("shared_answer",),
     "materials": ("material_price_factor",),
-    "finance": ("debt_status", "mine_operating_cost", "credit_limit", "living_cost", "held_trade", "spending_power", "can_pay", "purchase_refusal", "price_index", "home_price_level"),
-    "actors": ("actor_staff", "actor_staff_nationwide", "actor_staff_total", "teaching_knowledge", "harvest_share_taken",
-               "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country",
-               "agent_unskilled_wage"),
+    "finance": ("debt_status", "credit_limit", "living_cost", "spending_power", "can_pay", "purchase_refusal"),
+    "resources": ("mine_operating_cost",),
+    "prices": ("price_index",),
+    "coin": ("home_price_level",),
+    "actors": ("actor_staff", "actor_staff_nationwide", "actor_staff_total", "teaching_knowledge", "harvest_share_taken"),
 }
 
 _LIVE = dict(cached=False)
@@ -71,7 +71,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("pay_book", "pay_book", **_SEAT),
         ViewSpec("trade_schools", "trade_schools", **_SEAT),
         ViewSpec("worker_housing_places", "worker_housing_places", **_SEAT),
-        ViewSpec("staff_snapshot", "staff_snapshot", **_SEAT),
         ViewSpec("headcount", "headcount", **_SEAT),
         ViewSpec("hours_available", "hours_available", kind=KEYED, **_SEAT),
         ViewSpec("hours_you_can_call_on", "hours_you_can_call_on", kind=KEYED, **_SEAT),
@@ -87,7 +86,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("market_supply", "market_supply", kind=KEYED, **_LIVE),
         ViewSpec("trade_available", "trade_available", kind=KEYED, **_LIVE),
         ViewSpec("labour_quote", "labour_quote", kind=QUOTE, **_LIVE),
-        ViewSpec("hour_wage", "hour_wage", kind=KEYED, **_LIVE),
         ViewSpec("wage", "wage", kind=KEYED, **_LIVE),
         ViewSpec("base_annual_wage", "base_annual_wage", kind=KEYED, **_LIVE),
         ViewSpec("trade_population", "trade_population", kind=KEYED, **_LIVE),
@@ -149,7 +147,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("work_for_wages_dry_run", "work_for_wages_dry_run", kind=QUOTE, **_SEAT),
     ),
     applies=((SetEmployed, "set_employed"), (NoteTradeSpread, "note_trade_spread"), (PressLabour, "press_labour"),
-             (SurviveStaff, "survive_staff"), (GrantStaff, "grant_staff"), (ScaleDeputies, "scale_deputies"), (ReportStaffReduction, "report_staff_reduction"),
+             (LoseStaff, "lose_staff"), (GrantStaff, "grant_staff"),
              (AllocateFarmWorkforce, "allocate_farm_workforce"), (ApplyLandClearing, "apply_land_clearing"),
              (UpdateWages, "update_wages"), (ReleaseStaff, "release_staff"), (TakeWageFallback, "take_wage_fallback"),
              (CloseHoursYear, "close_hours_year"),

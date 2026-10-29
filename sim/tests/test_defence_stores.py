@@ -21,7 +21,6 @@ from sim.mechanics.module import Mechanics
 from sim.living_stock.api import ChangeHeld
 from sim.tests import module_harness
 from sim.tests import hazards_host, projects_host, ventures_host
-from sim.workforce.api import SurviveStaff
 from sim.workforce.module import Workforce
 
 POWDER_KG = "gunpowder_kg"
@@ -221,7 +220,7 @@ class HazardLabelsFollowTheMechanics(unittest.TestCase):
 
 
 class _Survivors:
-    """The people of a household and the dice that decide who lives (the workforce module's SurviveStaff)."""
+    """The people of a household and the dice that decide who lives (the workforce module's survive_staff)."""
 
     def __init__(self, seed):
         self.rng = random.Random(seed)
@@ -230,7 +229,7 @@ class _Survivors:
 
     def apply_staff_survival(self, survival_share):
         workforce = module_harness.build(Workforce, seat=self.state.household, views={"acting_balance": lambda: self.state.household.capital, "game_random": self.rng})
-        workforce.survive_staff(SurviveStaff(survival_share))
+        workforce.survive_staff(survival_share)
 
 
 class PeopleStayWhole(unittest.TestCase):

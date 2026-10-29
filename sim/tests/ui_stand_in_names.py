@@ -385,6 +385,5 @@ METHOD_OF_COMMAND_MORE = {
     "SettleWithState": "settle_with_state",
     "StartProject": "start_project",
     "StopProject": "stop_project",
-    "SurviveStaff": "apply_staff_survival",
     "WithdrawFromPublicLife": "withdraw_from_public_life",
 }
