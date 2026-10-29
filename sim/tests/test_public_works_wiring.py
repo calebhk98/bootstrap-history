@@ -43,7 +43,7 @@ check("a shut work covers nothing", game.coverage_share(CLINICS) == 0.0, None)
 game, _ = works()
 check("the units that serve half the people are asked of the people and the unit's reach", game.units_for_coverage(CLINICS, 0.5) == 5.0, None)
 check("the most units the nation can fill is the units that serve everyone",
-      production_host.build(Game(coverage_nodes=lambda: [CLINICS], units_for_coverage=lambda node_id, share: 10.0 * share),
+      production_host.build(coverage=lambda: [CLINICS], units_for_coverage=lambda node_id, share: 10.0 * share,
                              capability_sets=(set(), {CLINICS}, {})).institution_unit_ceiling(CLINICS) == 10.0, None)
 
 # ---- the roll-out

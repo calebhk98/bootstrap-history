@@ -50,11 +50,8 @@ class EpidemicHitsSeatsTest(unittest.TestCase):
 
 class KnowledgeIsNotAVentureTest(unittest.TestCase):
     def _game(self, granted=()):
-        game = types.SimpleNamespace()
         nodes = {"knowledge": {"rev": 0, "up": 0}, "earner": {"rev": 5.0, "up": 0}, "keeper": {"rev": 0, "up": 2.0}}
-        game.nodes = nodes
-        game.state = types.SimpleNamespace(projects=types.SimpleNamespace(granted=set(granted)))
-        return production_host.build(game)
+        return production_host.build(tree_nodes=nodes, techniques_granted=set(granted))
 
     def test_only_a_node_that_earns_or_costs_to_keep_is_a_venture(self):
         game = self._game()

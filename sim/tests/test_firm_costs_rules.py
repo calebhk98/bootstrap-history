@@ -21,10 +21,10 @@ class Founder:
     """The founder's side of a plain concern: no scalable institution, no capability gate."""
 
     def __init__(self, price_index):
-        game = SimpleNamespace(nodes={"shop": NODE}, price_index=price_index)
-        self.production = production_host.build(game, capability_sets=((), (), {}))
+        nodes = {"shop": NODE}
+        self.production = production_host.build(tree_nodes=nodes, price_index=price_index, capability_sets=((), (), {}))
         self.ventures = ventures_host.build(
-            tree_nodes=game.nodes, price_index=price_index, institution_upkeep=self.production.institution_upkeep)
+            tree_nodes=nodes, price_index=price_index, institution_upkeep=self.production.institution_upkeep)
 
     def venture_real_upkeep(self, node_id):
         return self.ventures.venture_real_upkeep(node_id)

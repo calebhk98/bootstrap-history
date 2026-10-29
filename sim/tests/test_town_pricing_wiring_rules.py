@@ -26,10 +26,9 @@ def bondage_module(labourer_quote):
 
 def WorkshopGame(annual_quote):
     """The production module over a workshop of two smiths and a labour market quoting `annual_quote`."""
-    game = Game(
-        labour=types.SimpleNamespace(market=types.SimpleNamespace(quote_annual=annual_quote)),
-        running_with_mechanic=lambda mechanic: True, effect_sum=lambda name, base: base)
-    module = production_host.build(game, staff={"employees": {"smith": 2.0}, "freedmen": 0.0, "slaves": 0.0})
+    module = production_host.build(
+        market_annual_wage=annual_quote, running_mechanics=lambda mechanic: [("workshop_site", {})], effect_sum=lambda name, base: base,
+        staff={"employees": {"smith": 2.0}, "freedmen": 0.0, "slaves": 0.0})
     module.capability_factor = lambda: 1.0
     return module
 

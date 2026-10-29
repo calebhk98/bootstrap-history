@@ -30,6 +30,11 @@ def defaults() -> Dict[str, Any]:
 		"commodity_record": lambda material: {}, "material_prices": {}, "home_unit_price": lambda material: None,
 		"pop_scale": 1.0, "real_output_per_head": 1.0, "state_funding": 0.0, "home_price_level": 1.0, "founder": {"alive": True},
 		"standing": {"governance": 0.0, "reputation": 0.0}, "debt_status": {"bondage_years_left": 0.0}, "farm_holdings": {"hectares": 0.0},
+		"done_memo": lambda name, key, compute: compute(), "producers_memo": lambda name, key, compute: compute(),
+		"base_tile": "base", "held_techniques": lambda include_starting=True: frozenset(), "built_ways": {},
+		"agent_producers_by_good": lambda: None, "agent_worker_years_by_recipe": lambda: None, "techniques_spread": frozenset(),
+		"headcount": 0.0, "hours_per_person_year": 2000.0, "people_who_exist": lambda trade: 0.0,
+		"venture_hands_founder_staffed": lambda node_id: (0.0, 0.0), "venture_foreman": lambda node_id: (None, 0.0),
 		"concern_versions": (0, 0), "concerns_of_active_firms": set(), "firm_concern_holdings": [],
 	}
 
