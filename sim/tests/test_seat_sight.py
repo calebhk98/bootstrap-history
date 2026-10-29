@@ -13,7 +13,8 @@ from sim.agents import licence
 from sim.agents.api import Household, HouseholdParty, OBSERVATION_RANGE_KM, PLAYER_VISIBLE_EXPOSURE, SECRET_EXPOSURE, ledger
 from sim.ledger.api import PayActor
 from sim.seats import api as seat_builds
-from sim.knowledge.rules import earliest_done_year as _earliest
+from sim.knowledge.api import KnowledgeSeat
+from sim.knowledge.rules import SeatTechniques, earliest_done_year as _earliest
 from sim.actors.world import ActorWorld
 from sim.engine.agents_port_household import HouseholdPort
 from sim.tests.world_stand_in import fake_needs
@@ -23,7 +24,13 @@ from sim.seats.api import SeatsSeat, base_visibility, most_open_mode, nodes_hear
 
 
 def earliest_done_year(seats, node_id, default):
-    return _earliest([(seat.projects.done, seat.projects.done_year) for seat in seats.values()], node_id, default)
+    return _earliest([(seat.modules["knowledge"].done, seat.modules["knowledge"].done_year) for seat in seats.values()], node_id, default)
+
+
+def techniques_of(seats):
+    """What the knowledge module's `techniques_by_seat` view answers over these seats."""
+    return {seat_id: SeatTechniques(frozenset(seat.modules["knowledge"].done), frozenset(seat.modules["knowledge"].granted))
+            for seat_id, seat in seats.items()}
 
 
 # ---- pure visibility
@@ -39,45 +46,57 @@ check("one maker publishing opens an invention for everyone", most_open_mode(["s
       and most_open_mode(["secret", "license"]) == "license" and most_open_mode([]) == "default", None)
 
 # ---- two seats with their own knowledge
-state_facade = Household(starting_capital=100.0, port=HouseholdPort())
+state_facade = Household(starting_capital=100.0, port=HouseholdPort(),
+                         techniques_held=lambda: frozenset(state.seats[state.acting_seat].modules["knowledge"].done))
 state = state_facade._state
 first, second = state.seats[FIRST_SEAT_ID], SeatState(
-    household=HouseholdState(capital=40.0), projects=ProjectsState(granted={"base"}, done={"base"}), founder=FounderState())
+    household=HouseholdState(capital=40.0), projects=ProjectsState(), founder=FounderState(),
+    modules={"knowledge": KnowledgeSeat(granted={"base"}, done={"base"})})
 state.seats["second"] = second
-first.projects.done.update({"base", "lathe", "loom"})
-first.projects.granted.add("base")
-first.projects.done_year = {"lathe": 120, "loom": 130}
-second.projects.done.add("kiln")
+first.modules["knowledge"] = KnowledgeSeat()
+first_knowledge, second_knowledge = first.modules["knowledge"], second.modules["knowledge"]
+first_knowledge.done.update({"base", "lathe", "loom"})
+first_knowledge.granted.add("base")
+first_knowledge.done_year = {"lathe": 120, "loom": 130}
+second_knowledge.done.add("kiln")
 seats = state.seats
 disclosed = {FIRST_SEAT_ID: {}, "second": {}}   # what each seat chose for its inventions (the diffusion module keeps it)
 
 check("what a seat built excludes what its country already had",
-      seat_builds.builders_of(seats, "lathe") == [FIRST_SEAT_ID] and seat_builds.builders_of(seats, "base") == []
-      and seat_builds.builders_of(seats, "kiln") == ["second"], None)
+      seat_builds.builders_of(techniques_of(seats), "lathe") == [FIRST_SEAT_ID] and seat_builds.builders_of(techniques_of(seats), "base") == []
+      and seat_builds.builders_of(techniques_of(seats), "kiln") == ["second"], None)
 check("the society counts every seat's work, a node built by the second seat alone included",
-      seat_builds.built_by_any(seats) == {"lathe", "loom", "kiln"}, None)
+      seat_builds.built_by_any(techniques_of(seats)) == {"lathe", "loom", "kiln"}, None)
 check("the society copies from whichever seat finished it first",
       earliest_done_year(seats, "lathe", 200) == 120 and earliest_done_year(seats, "kiln", 200) == 200, None)
-second.projects.done.add("lathe")
-second.projects.done_year = {"lathe": 110}
+second_knowledge.done.add("lathe")
+second_knowledge.done_year = {"lathe": 110}
 check("a node both built is as old as the earlier maker's", earliest_done_year(seats, "lathe", 200) == 110, None)
-second.projects.done.discard("lathe")
-check("what one seat has revealed is not what another has", first.projects.revealed is not second.projects.revealed, None)
+second_knowledge.done.discard("lathe")
+check("what one seat has revealed is not what another has", first_knowledge.revealed is not second_knowledge.revealed, None)
 
 # ---- hearing of another seat's work, as an onlooker does
+def built_by_first():
+    return first_knowledge.done - first_knowledge.granted
+
+
+def known_to_second():
+    return second_knowledge.done | second_knowledge.revealed
+
+
 first.projects.operating.add("loom")
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "secret", "published_year": None, "licensees": {}}
-heard_near = nodes_heard_of(first.projects, disclosed[FIRST_SEAT_ID], second.projects, 0.0, lambda node_id: 1.0)
+heard_near = nodes_heard_of(built_by_first(), first.projects.operating, disclosed[FIRST_SEAT_ID], known_to_second(), 0.0, lambda node_id: 1.0)
 check("a concern run in public is heard of from beside it, a secret is not",
       heard_near == {"loom"}, heard_near)
-heard_far = nodes_heard_of(first.projects, disclosed[FIRST_SEAT_ID], second.projects, 10 * OBSERVATION_RANGE_KM, lambda node_id: 1.0)
+heard_far = nodes_heard_of(built_by_first(), first.projects.operating, disclosed[FIRST_SEAT_ID], known_to_second(), 10 * OBSERVATION_RANGE_KM, lambda node_id: 1.0)
 check("distance hides it", heard_far == set(), heard_far)
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "publish", "published_year": 125, "licensees": {}}
 check("a published invention is heard of from a fair way off",
-      "lathe" in nodes_heard_of(first.projects, disclosed[FIRST_SEAT_ID], second.projects, OBSERVATION_RANGE_KM * 0.5, lambda node_id: 1.0), None)
-second.projects.revealed.add("loom")
+      "lathe" in nodes_heard_of(built_by_first(), first.projects.operating, disclosed[FIRST_SEAT_ID], known_to_second(), OBSERVATION_RANGE_KM * 0.5, lambda node_id: 1.0), None)
+second_knowledge.revealed.add("loom")
 check("what a seat has already heard of is not heard again",
-      "loom" not in nodes_heard_of(first.projects, disclosed[FIRST_SEAT_ID], second.projects, 0.0, lambda node_id: 1.0), None)
+      "loom" not in nodes_heard_of(built_by_first(), first.projects.operating, disclosed[FIRST_SEAT_ID], known_to_second(), 0.0, lambda node_id: 1.0), None)
 check("a secret leaks less than the visibility that makes an invention heard of",
       SECRET_EXPOSURE < PLAYER_VISIBLE_EXPOSURE, (SECRET_EXPOSURE, PLAYER_VISIBLE_EXPOSURE))
 
@@ -94,7 +113,7 @@ class StubModule:
     def __init__(self):
         self.cast = lambda: SimpleNamespace(actors={})
         self.needs = fake_needs(
-            legacy_seats=state.seats, techniques_granted=lambda: state.projects.granted, tree_nodes={}, acting_seat=lambda: state.acting_seat, disclosures=disclosed,
+            legacy_seats=state.seats, techniques_granted=lambda: first_knowledge.granted, techniques_by_seat=lambda: techniques_of(state.seats), tree_nodes={}, acting_seat=lambda: state.acting_seat, disclosures=disclosed,
             copy_difficulty=lambda node_id: 1.0, seat_place=lambda seat_id: Places.first if seat_id == FIRST_SEAT_ID else Places.second,
             disclosure=lambda node_id: {"mode": "default", "licensees": {}})
 
@@ -112,11 +131,11 @@ check("an observer at the maker's door sees a secret less than a published work"
       world.exposure("lathe", Places.first) < world.exposure("loom", Places.first), None)
 check("an observer a range away from the maker sees half what one at the door does",
       abs(world.exposure("loom", Places.second) - world.exposure("loom", Places.first) / 2.0) < 1e-9, None)
-second.projects.done.add("lathe")
+second_knowledge.done.add("lathe")
 disclosed["second"]["lathe"] = {"mode": "publish", "published_year": 130, "licensees": {}}
 check("a second maker publishing the same invention makes it public knowledge",
       world.disclosure_mode("lathe") == "publish", world.disclosure_mode("lathe"))
-second.projects.done.discard("lathe")
+second_knowledge.done.discard("lathe")
 del disclosed["second"]["lathe"]
 check("the best view of an invention is from the nearest maker's place",
       world.exposure("kiln", Places.second) >= world.exposure("kiln", Places.first), None)
@@ -135,8 +154,16 @@ def act_as(seat_id):
     return switch()
 
 
-maker = HouseholdParty(state_facade, seat_id=FIRST_SEAT_ID, act_as=act_as, dealings=SeatsSeat())
-buyer = HouseholdParty(state_facade, seat_id="second", act_as=act_as, dealings=SeatsSeat())
+def receive(nodes, granted):
+    """What the engine's `ReceiveTechniques` does for the seat that is acting."""
+    knowledge = state.seats[state.acting_seat].modules["knowledge"]
+    knowledge.done.update(nodes)
+    if granted:
+        knowledge.granted.update(nodes)
+
+
+maker = HouseholdParty(state_facade, seat_id=FIRST_SEAT_ID, act_as=act_as, dealings=SeatsSeat(), receive=receive)
+buyer = HouseholdParty(state_facade, seat_id="second", act_as=act_as, dealings=SeatsSeat(), receive=receive)
 
 
 class LicenceWorld:
@@ -160,9 +187,9 @@ check("a seat can be licensed for a fee and not for a royalty, which is a share 
 granted = licence.grant(maker, buyer, "lathe", 10.0, LicenceWorld())
 check("the fee moves from the licensee seat to the licensor seat",
       granted and abs(maker.money - maker_before - 10.0) < 1e-9 and abs(buyer.money - buyer_before + 10.0) < 1e-9, (maker.money, buyer.money))
-check("the licensee seat now holds the know-how", "lathe" in second.projects.done, None)
+check("the licensee seat now holds the know-how", "lathe" in second_knowledge.done, None)
 check("a licensed-in node is held as received, not built, so it adds no maker and opens nothing",
-      "lathe" in second.projects.granted and seat_builds.builders_of(seats, "lathe") == [FIRST_SEAT_ID], None)
+      "lathe" in second_knowledge.granted and seat_builds.builders_of(techniques_of(seats), "lathe") == [FIRST_SEAT_ID], None)
 check("it cannot be licensed twice to the same seat", licence.grant(maker, buyer, "lathe", 10.0, LicenceWorld()) is False, None)
 
 
@@ -187,7 +214,7 @@ class RoyaltySim:
         self.cast = lambda: SimpleNamespace(actors={}, patent_holders=lambda node_id: [], get=lambda actor_id: None)
         parties = lambda seat_id: maker if seat_id == FIRST_SEAT_ID else buyer
         self.needs = fake_needs({PayActor: lambda command: ledger.transfer(firm, parties(command.payee), command.amount, command.purpose)},
-                                legacy_seats=state.seats, disclosures=disclosed, seat_party=parties)
+                                legacy_seats=state.seats, techniques_by_seat=lambda: techniques_of(state.seats), disclosures=disclosed, seat_party=parties)
 
 
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "license", "published_year": None,

@@ -29,7 +29,7 @@ _TABLE_GAME = _fresh()
 def _bounty_node():
     probe = _TABLE_GAME
     for node_id in sorted(NODES):
-        if node_id not in probe.state.projects.done and probe.view("bounty_eligible")(node_id):
+        if node_id not in probe.done and probe.view("bounty_eligible")(node_id):
             return node_id
     return None
 
@@ -109,7 +109,7 @@ _PROBE = _ledger_game()
 def _first_node(test):
     probe = _PROBE
     for node_id in ORDER:
-        if node_id not in probe.state.projects.done and probe.view("start_check")(node_id, False, None, False)[0] and test(NODES[node_id]):
+        if node_id not in probe.done and probe.view("start_check")(node_id, False, None, False)[0] and test(NODES[node_id]):
             return node_id
     return None
 
@@ -118,13 +118,11 @@ def _first_openable():
     """A venture whose opening quote needs no extra staff, found on one probe game."""
     probe = _PROBE
     for node_id in ORDER:
-        if node_id in probe.state.projects.done or not probe.view("is_venture")[node_id]:
+        if node_id in probe.done or not probe.view("is_venture")[node_id]:
             continue
-        probe.state.projects.done.add(node_id)
-        probe._done_changed()
+        probe.send(LearnTechnique(node_id))
         reply = S._agent_dispatch(probe, NODES, {"cmd": "quote", "what": "open", "id": node_id})
-        probe.state.projects.done.discard(node_id)
-        probe._done_changed()
+        probe.send(ForgetTechnique((node_id,)))
         if reply.get("ok") and not reply.get("staff_short"):
             return node_id
     return None
@@ -135,7 +133,7 @@ def _run_project(node_id):
     quoted = S._agent_dispatch(game, NODES, {"cmd": "why", "id": node_id})["cost"]["total"]
     reply = S._agent_dispatch(game, NODES, {"cmd": "start", "id": node_id})
     for _year in range(8):
-        if node_id in game.state.projects.done:
+        if node_id in game.done:
             break
         # the year's project payments and materials (its seat phases, in order); the ledger bill is all this reads
         game.assembly.phase_handler("seat_prelude")(game.state.acting_seat)
@@ -154,8 +152,7 @@ _PROJECT_NODES = [_first_node(_test) for _label, _test in _PROJECT_TESTS]
 check("a venture exists to open in the table", _open_id is not None)
 if _open_id:
     _opener = _PROBE
-    _opener.state.projects.done.add(_open_id)
-    _opener._done_changed()
+    _opener.send(LearnTechnique(_open_id))
     _open_quote = S._agent_dispatch(_opener, NODES, {"cmd": "quote", "what": "open", "id": _open_id})
     _open_reply = S._agent_dispatch(_opener, NODES, {"cmd": "open", "id": _open_id})
     check("open: the action succeeds", _open_reply.get("ok"), _open_reply)
@@ -169,7 +166,7 @@ for (_label, _test), _node_id in zip(_PROJECT_TESTS, _PROJECT_NODES):
         continue
     _game, _quoted, _started = _run_project(_node_id)
     check("%s: the project starts and finishes" % _label,
-          _started.get("ok") and _node_id in _game.state.projects.done, _started)
+          _started.get("ok") and _node_id in _game.done, _started)
     _paid = _ledger_outflow(_game, "project payments", "materials bought for projects")
     check("%s: the ledger shows exactly the bill that `why` quoted" % _label,
           abs(_paid - _quoted) <= 0.11, (_paid, _quoted))

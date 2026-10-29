@@ -61,7 +61,11 @@ def build(scenario):
     with stressed_civilisations(fingerprint):
         sim = fingerprint.build(scenario)
     if PATRON in sim.nodes:
-        sim.state.projects.done.add(PATRON)
+        if hasattr(sim.state.projects, "done"):   # a checkout from before the knowledge module owned the held set
+            sim.state.projects.done.add(PATRON)
+        else:
+            from sim.knowledge.api import LearnTechnique
+            sim.send(LearnTechnique(PATRON))
         sim.state.projects.operating.add(PATRON)
     if scenario.get("seats", 1) > 1:
         sim.join_seat(*SECOND_SEAT)

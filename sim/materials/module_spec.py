@@ -15,7 +15,7 @@ from .state import MaterialsSeat
 
 READS_BY_OWNER = {
     "knowledge": ("year", "civilisation", "tree", "tree_nodes", "techniques_held", "visibility", "hard_prerequisites",
-                  "legacy_projects", "project_versions", "operating", "default_population", "pop_scale", "empire_output"),
+                  "legacy_projects", "project_versions", "operating", "default_population", "pop_scale"),
     "mechanics": ("mechanic", "effect_best", "running_stamp", "running"),
     "ledger": ("goods_stock", "held_goods", "goods_stock_opening"),
     "markets": ("goods_quote", "can_be_bought", "purchase_quote", "partner_import", "agent_producer_capacity",
@@ -23,7 +23,7 @@ READS_BY_OWNER = {
     "prices": ("material_prices", "material_commodity_map", "commodity_record", "commodity_country_output", "price_epoch",
                "producers_stamp"),
     "foreign_trade": ("foreign_supply_tonnes",),
-    "resources": ("mine_capacity", "mine_depletion", "forest_hectares", "nitre_beds", "found_deposits", "mine_works_materials",
+    "resources": ("empire_output", "mine_capacity", "mine_depletion", "forest_hectares", "nitre_beds", "found_deposits", "mine_works_materials",
                   "shortage_remedy_plan"),
     "land": ("legacy_world_map", "mineral_scale", "material_cost_factor"),
     "projects (not moved)": ("project_cost", "project_cost_now", "opposition_factor", "cost_money_factor",

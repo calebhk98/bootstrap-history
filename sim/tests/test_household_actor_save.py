@@ -10,13 +10,15 @@ from sim.agents.api import Actor, ActorsState, Household
 from sim.agents.policy import IdlePolicy
 from sim.agents.records import ActorRecord
 from sim.engine.agents_port_household import HouseholdPort
+from sim.knowledge.api import KnowledgeSeat
 from sim.workforce.api import WorkforceSeat
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
 
 
 class HouseholdIsAnActor(unittest.TestCase):
     def setUp(self):
-        self.household = Household(starting_capital=100.0, port=HouseholdPort())
+        self.knowledge = KnowledgeSeat(done={"fire"})
+        self.household = Household(starting_capital=100.0, port=HouseholdPort(), techniques_held=lambda: frozenset(self.knowledge.done))
         self.household._state.seats[self.household._state.acting_seat].modules["workforce"] = WorkforceSeat()
 
     def test_it_is_an_actor_that_never_chooses_through_a_policy(self):
@@ -30,7 +32,7 @@ class HouseholdIsAnActor(unittest.TestCase):
 
     def test_its_staff_knowledge_and_concerns_are_the_existing_state_not_copies(self):
         self.assertIs(self.household.workforce, self.household._workforce().employees)
-        self.assertIs(self.household.knowledge, self.household.done)
+        self.assertEqual(self.household.knowledge, frozenset(self.knowledge.done))
         self.assertIs(self.household.concerns, self.household.operating)
         for name in ("money", "workforce", "knowledge", "concerns", "works", "decision_policy"):
             self.assertTrue(hasattr(self.household, name), name)

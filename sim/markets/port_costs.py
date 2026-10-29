@@ -24,7 +24,7 @@ def opening_costs(sim):
     """{good: money per unit} the cost of making each good the society can make with the techniques it holds,
     at the opening wages, rate and rent."""
     production = price_solver.default_production_entries()
-    techniques = frozenset(sim.state.projects.granted) | frozenset(sim.techniques_in_use())
+    techniques = sim.techniques_granted() | frozenset(sim.techniques_in_use())
     wage_of = wage_function(sim, production)
     rent_of = long_run_costs.opening_rent_of(techniques, wage_of, sim.civ, production)
     costs = long_run_costs.long_run_costs(techniques, wage_of, float(sim.economy.base_rate()), rent_of, sim.civ,

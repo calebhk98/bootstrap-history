@@ -18,7 +18,7 @@ from .state import SeatsSeat
 READS_BY_OWNER = {
     "core": ("legacy_seats", "legacy_fog", "game_random", "civilisation", "year", "price_index", "kit_capital",
              "founder_life_terms", "game_attribute", "goal_closure", "tree_closure"),
-    "knowledge": ("tree", "tree_nodes", "techniques_held", "techniques_granted"),
+    "knowledge": ("tree", "tree_nodes", "techniques_held", "techniques_granted", "techniques_revealed", "techniques_by_seat"),
     "mechanics": ("running_mechanics", "corpus_dispersed", "patronage", "losable_node_ids"),
     "projects": ("legacy_projects",),
     "diffusion": ("disclosures", "copy_difficulty", "literacy"),

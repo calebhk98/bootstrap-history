@@ -11,7 +11,6 @@ from sim.agents.licence import collect_patent_royalty, royalty_due
 from sim.actors.world_disclosure import DisclosureView
 from sim.tests.world_stand_in import fake_needs
 from sim.seats.api import seat_royalties_due, seat_royalties_paid
-from sim.engine.state import ProjectsState
 from sim.tests.harness import check
 
 
@@ -37,11 +36,11 @@ class Party:
 
 
 def seat(done=(), granted=(), licensees=None, node="loom"):
-	"""A seat's projects: it built `node` itself when `node` is in `done` and not in `granted`; `disclosed` is what it chose."""
+	"""A seat as `techniques_by_seat` answers it (`held`, `granted`): it built `node` itself when `node` is held and not granted; `disclosed` is what it chose."""
 	disclosed = {}
 	if licensees is not None:
 		disclosed[node] = {"mode": "license", "licensees": licensees}
-	return SimpleNamespace(projects=ProjectsState(done=set(done), granted=set(granted)), disclosed=disclosed)
+	return SimpleNamespace(held=frozenset(done), granted=frozenset(granted), disclosed=disclosed)
 
 
 def due(seats, node, licensee, takings):
@@ -136,7 +135,7 @@ def view_over(seats, parties, firm, year=100):
 	"""The view over written-out seats; the ledger's answer to `PayActor` is the ledger's own transfer from `firm` to the seat's party."""
 	seat_parties = {seat_id: Party(seat_id, 0.0) for seat_id in seats}
 	needs = fake_needs({PayActor: lambda command: ledger.transfer(firm, seat_parties[command.payee], command.amount, command.purpose)},
-	                   legacy_seats=seats, seat_party=seat_parties.__getitem__,
+	                   legacy_seats=seats, techniques_by_seat=lambda: seats, seat_party=seat_parties.__getitem__,
 	                   disclosures={seat_id: held.disclosed for seat_id, held in seats.items()})
 	return SimpleNamespace(needs=needs, _holder=finder(*parties), year=year), seat_parties
 

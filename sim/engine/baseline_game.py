@@ -24,10 +24,11 @@ def snapshot(game: Any) -> Dict[str, Any]:
 def play_baseline(civilisation_id: str, seed: int, years: int) -> List[Dict[str, Any]]:
     """The opening and each of `years` years of a game nobody plays; it stops early if the run ends."""
     from sim.engine.ui_port import Sim, load, load_civ
+    from sim.knowledge.api import StartDoneYearRecord
     _tree, _prices, nodes, _wages, _goods = load()
     game = Sim(nodes, [], random.Random(seed), events=True, manual=True, civ=load_civ(civilisation_id),
                cfg={"immortal": True, "horizon_years": years})
-    game.done_year = {}
+    game.send(StartDoneYearRecord())
     rows = [snapshot(game)]
     for _year in range(years):
         game.step()

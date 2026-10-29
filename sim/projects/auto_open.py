@@ -48,7 +48,7 @@ class AutoOpen:
 		needs = self.needs
 		nodes = needs.tree_nodes()
 		operating = needs.operating()
-		return sorted((node_id for node_id in sorted(needs.legacy_projects().done)
+		return sorted((node_id for node_id in sorted(needs.techniques_held())
 		               if needs.is_venture[node_id] and node_id not in operating
 		               and not self.exclusion_reason(node_id)
 		               and nodes[node_id]["rev"] > nodes[node_id]["up"]),
@@ -84,7 +84,7 @@ class AutoOpen:
 		capability = needs.capability_sets()[0]
 		operating = needs.operating()
 		return [] if _deep_arrears else sorted(
-			(node_id for node_id in sorted(needs.legacy_projects().done)
+			(node_id for node_id in sorted(needs.techniques_held())
 			 if node_id in capability
 			 and node_id not in operating and needs.is_venture[node_id]
 			 and not self.exclusion_reason(node_id)

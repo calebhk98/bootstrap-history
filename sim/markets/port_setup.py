@@ -86,8 +86,8 @@ def opening_values(sim):
     people = float(sim.population.total)
     production = demand.production_data()
     trades_data = _load("world", "trades.json").get("trades", {})
-    allowed = allowed_entries(production, set(sim.state.projects.granted))
-    mint_recipe = mint_recipe_id(civ, production, set(sim.state.projects.granted))
+    allowed = allowed_entries(production, set(sim.techniques_granted()))
+    mint_recipe = mint_recipe_id(civ, production, set(sim.techniques_granted()))
     unskilled = unskilled_trade(trades_data)
     partners = partner_openings(sim)
     partner_prices = {}

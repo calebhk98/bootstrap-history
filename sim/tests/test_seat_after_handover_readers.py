@@ -10,6 +10,8 @@ from types import SimpleNamespace
 from sim.agents.api import ActorsState
 from sim.agents.household_party import HouseholdParty
 from sim.engine.saveload import _get_field, acting_seat_of, goal_of_blob
+from sim.knowledge.api import KnowledgeSeat
+from sim.knowledge.rules import SeatTechniques
 from sim.workforce.api import WorkforceSeat
 from sim.seats import api as seat_builds
 from sim.seats.api import (SeatsSeat, owner_of_seat, partner_country_of_seat, patron_grant_share, run_is_over, seat_ended,
@@ -28,14 +30,21 @@ def post_handover_state():
 	"""Seats "third" and "heir", "heir" acting; the heir carries the leaver's household, nodes, holdings, goal and country."""
 	heir = SeatState(
 		household=HouseholdState(capital=40.0),
-		projects=ProjectsState(done={"fire", "wheel"}, granted={"fire"}),
+		projects=ProjectsState(),
 		founder=FounderState(_founder_death_year=30),
 		holdings=HoldingsState(), seat_progress=SeatProgressState(),
 		goal="steam_engine", country="han",
-		modules={"workforce": WorkforceSeat(scholars=2.0), "seats": SeatsSeat(patents={"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}, shares_held={"guild": 3.0})})
-	third = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(done={"fire"}, granted={"fire"}),
-	                  founder=FounderState(_founder_death_year=50), goal="printing_press", modules={"seats": SeatsSeat()})
+		modules={"knowledge": KnowledgeSeat(done={"fire", "wheel"}, granted={"fire"}), "workforce": WorkforceSeat(scholars=2.0), "seats": SeatsSeat(patents={"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}, shares_held={"guild": 3.0})})
+	third = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(),
+	                  founder=FounderState(_founder_death_year=50), goal="printing_press",
+	                  modules={"knowledge": KnowledgeSeat(done={"fire"}, granted={"fire"}), "seats": SeatsSeat()})
 	return SimulationState(seats={"third": third, "heir": heir}, acting_seat="heir", modules={"actors": ActorsState(home_country="rome")})
+
+
+def techniques_of(seats):
+	"""What the knowledge module's `techniques_by_seat` view answers over these seats."""
+	return {seat_id: SeatTechniques(frozenset(seat.modules["knowledge"].done), frozenset(seat.modules["knowledge"].granted))
+	        for seat_id, seat in seats.items()}
 
 
 def saved(state):
@@ -93,10 +102,10 @@ check("patron_grant_share: the heir is asked about its own country and not the h
 
 # ---- what the seats have built
 state = post_handover_state()
-check("builders_of: the heir built what the leaver built and was not granted", seat_builds.builders_of(state.seats, "wheel") == ["heir"])
-check("builders_of: a granted node has no builder", seat_builds.builders_of(state.seats, "fire") == [])
-check("licensors_of: the heir licensed its invention to the firm", seat_builds.licensors_of(state.seats, "wheel", "firm:7", DISCLOSED.get) == ["heir"])
-check("disclosure_modes: the heir's choice stands", seat_builds.disclosure_modes(state.seats, "wheel", DISCLOSED.get) == ["license"])
+check("builders_of: the heir built what the leaver built and was not granted", seat_builds.builders_of(techniques_of(state.seats), "wheel") == ["heir"])
+check("builders_of: a granted node has no builder", seat_builds.builders_of(techniques_of(state.seats), "fire") == [])
+check("licensors_of: the heir licensed its invention to the firm", seat_builds.licensors_of(techniques_of(state.seats), "wheel", "firm:7", DISCLOSED.get) == ["heir"])
+check("disclosure_modes: the heir's choice stands", seat_builds.disclosure_modes(techniques_of(state.seats), "wheel", DISCLOSED.get) == ["license"])
 
 # ---- the seat as an actor
 state = post_handover_state()
@@ -111,7 +120,7 @@ check("serialize_state: the save's acting seat and its seats are the heir and th
       blob["acting_seat"] == "heir" and list(blob["seats"]) == ["third", "heir"], (blob["acting_seat"], list(blob["seats"])))
 check("serialize_state: the save names the leaver nowhere", "leaver" not in json.dumps(blob), None)
 check("serialize_state: the heir's saved seat carries the household, nodes, goal and country passed on",
-      blob["seats"]["heir"]["modules"]["workforce"]["scholars"] == 2.0 and blob["seats"]["heir"]["projects"]["done"] == {"__set__": ["fire", "wheel"]}
+      blob["seats"]["heir"]["modules"]["workforce"]["scholars"] == 2.0 and blob["seats"]["heir"]["modules"]["knowledge"]["done"] == {"__set__": ["fire", "wheel"]}
       and blob["seats"]["heir"]["goal"] == "steam_engine" and blob["seats"]["heir"]["country"] == "han"
       and blob["seats"]["heir"]["modules"]["seats"]["shares_held"] == {"guild": 3.0}, None)
 check("acting_seat_of: the save's acting seat is the heir's record", acting_seat_of(blob) is blob["seats"]["heir"])

@@ -1,13 +1,16 @@
 """The knowledge module: the tree, what each seat holds, lost and has heard of, and what fog lets it see.
 
-What is held (`done`, `granted`, `done_year`), what is heard of (`revealed`), the tree and the fog switch are still
-stored where the engine keeps them; the module reads and writes them through the `legacy_*` views (docs/architecture/
-catalogue/knowledge.md lists every outside writer). What a seat has forgotten is the module's own state."""
+What a seat holds (`done`, `granted`, `done_year`), has heard of (`revealed`) and has forgotten is the module's own seat state,
+changed only by its commands and published as plain data. The tree and the fog switch are still read through the `legacy_*`
+views (docs/architecture/catalogue/knowledge.md)."""
+
+from typing import Dict, FrozenSet, Optional, Tuple
 
 from sim.assembly.api import Module
 
-from . import fog_words, rules
-from .commands import ForgetTechnique, LearnTechnique, RevealFrom, RevealNodes
+from . import fog_words, rules, tree_paths
+from .commands import (ForgetTechnique, HandOverTechniques, LearnTechnique, ReceiveTechniques, RevealFrom, RevealNodes,
+                       StartDoneYearRecord)
 from .constants import CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE
 from sim.production.api import RefreshDoneCaches
 
@@ -25,34 +28,57 @@ class Knowledge(Module):
         """The whole tech tree, node data by id (the object itself: a re-derivation replaces it)."""
         return self.needs.legacy_tree()
 
-    def techniques_held(self):
-        """The nodes the acting seat holds, finished or granted (the live set)."""
-        return self.needs.legacy_projects().done
+    def techniques_held(self) -> FrozenSet[str]:
+        """The nodes the acting seat holds, finished or granted."""
+        return frozenset(self.seat.done)
 
-    def techniques_revealed(self):
-        """The nodes the acting seat has heard of under fog (the live set)."""
-        return self.needs.legacy_projects().revealed
+    def techniques_revealed(self) -> FrozenSet[str]:
+        """The nodes the acting seat has heard of under fog."""
+        return frozenset(self.seat.revealed)
 
-    def techniques_granted(self):
+    def techniques_granted(self) -> FrozenSet[str]:
         """The held nodes its country already had, which are never counted as earned and never lost to a sack."""
-        return self.needs.legacy_projects().granted
+        return frozenset(self.seat.granted)
+
+    def techniques_by_seat(self) -> Dict[str, rules.SeatTechniques]:
+        """What every seat holds and what of it was granted, by seat id in joining order."""
+        slots = {seat_id: self.seat_of(seat_id) for seat_id in self.needs.seat_list()["joined"]}
+        return {seat_id: rules.SeatTechniques(frozenset(slot.done), frozenset(slot.granted)) for seat_id, slot in slots.items()}
+
+    def losable_node_ids(self, keep_dispersed=True):
+        """Built nodes a loss event may take: not inherited, not a measured goal, and by default not a dispersed corpus."""
+        return rules.losable_node_ids(self.seat.done, self.seat.granted, self.tree_nodes(), keep_dispersed,
+                                      self.needs.corpus_dispersed)
+
+    def tree_closure(self, goal_id):
+        """Every node the goal needs, following the mandatory prerequisites."""
+        return tree_paths.closure(self.tree_nodes(), goal_id)
+
+    def critical_path(self, goal_id):
+        """(the longest chain's calendar years, the node ids on it) from the roots to `goal_id`."""
+        return tree_paths.critical_path(self.tree_nodes(), goal_id)
+
+    def hard_prerequisites(self, node_id):
+        """Every prerequisite of a node that is mandatory: its `pre`, and the requirement groups that offer one real node."""
+        return tree_paths.hard_pre(self.tree_nodes(), node_id)
 
     def techniques_forgotten(self):
         """{node id: the year a sacking took it} for the acting seat (the live dict)."""
         return self.seat.forgotten
 
-    def done_year(self):
-        """{node id: the year the acting seat finished it}."""
-        return self.needs.legacy_projects().done_year or {}
+    def done_year(self) -> Dict[str, int]:
+        """{node id: the year the acting seat finished it}, as a copy."""
+        return dict(self.seat.done_year or {})
 
     def earliest_done_year(self, node_id, default):
         """The year the first seat to hold `node_id` finished it (`default` for a seat with no record)."""
         return rules.earliest_done_year(
-            [(seat.projects.done, seat.projects.done_year) for seat in self.needs.legacy_seats().values()], node_id, default)
+            [(slot.done, slot.done_year) for slot in (self.seat_of(seat_id) for seat_id in self.needs.seat_list()["joined"])],
+            node_id, default)
 
     def corpus_hedge(self):
         """(loss chance, fraction lost, hedge node or None) a sacking faces right now."""
-        return rules.corpus_hedge(self.needs.corpus_hedge_tiers(), self.techniques_held(),
+        return rules.corpus_hedge(self.needs.corpus_hedge_tiers(), self.seat.done,
                                   CORPUS_HEDGE_LOSS_CHANCE_NONE, CORPUS_HEDGE_FRACTION_LOST_NONE)
 
     # ---- what fog lets the acting seat see
@@ -64,10 +90,9 @@ class Knowledge(Module):
         outward-facing call keeps it exact; nothing is cached across commands."""
         if not self.needs.legacy_fog():
             return True
-        projects = self.needs.legacy_projects()
-        if node_id in projects.done or node_id in projects.active:
+        if node_id in self.seat.done or node_id in self.needs.active_projects():
             return True
-        if node_id in projects.revealed:
+        if node_id in self.seat.revealed:
             return True
         memo = {} if memo is None else memo
         if node_id in memo:
@@ -86,7 +111,7 @@ class Knowledge(Module):
         """The one sentence for not-yet-held prerequisites, with the hidden ones unnamed; None when none are missing."""
         return fog_words.missing_prereq_message(
             self.needs.legacy_tree(), missing, lambda prereq_id: self.visibility(prereq_id, memo),
-            self.needs.legacy_fog(), self.techniques_held())
+            self.needs.legacy_fog(), self.seat.done)
 
     def fog_scrub(self, text):
         """`text` with every node id the acting seat has not heard of replaced; unchanged without fog or text."""
@@ -106,21 +131,37 @@ class Knowledge(Module):
 
     # ---- commands
     def learn_technique(self, command: LearnTechnique) -> None:
-        projects = self.needs.legacy_projects()
-        projects.done.add(command.node_id)
+        self.seat.done.add(command.node_id)
         self.needs.send(RefreshDoneCaches())
         self.bump_seat(DONE)
         if command.granted:
-            projects.granted.add(command.node_id)
+            self.seat.granted.add(command.node_id)
         if command.year is not None:
-            if projects.done_year is None:
-                projects.done_year = {}
-            projects.done_year[command.node_id] = command.year
+            if self.seat.done_year is None:
+                self.seat.done_year = {}
+            self.seat.done_year[command.node_id] = command.year
+
+    def receive_techniques(self, command: ReceiveTechniques) -> None:
+        self.seat.done.update(command.node_ids)
+        if command.granted:
+            self.seat.granted.update(command.node_ids)
+        self.bump_seat(DONE)
+
+    def start_done_year_record(self, command: StartDoneYearRecord) -> None:
+        self.seat.done_year = {}
+        self.bump_seat(DONE)
+
+    def hand_over_techniques(self, command: HandOverTechniques) -> int:
+        leaver, heir = self.seat_of(command.from_seat_id), self.seat_of(command.to_seat_id)
+        leaver.done |= heir.done
+        leaver.granted |= heir.granted
+        self.bump_seat(DONE, command.from_seat_id)
+        self.bump_seat(DONE, command.to_seat_id)
+        return len(leaver.done)
 
     def forget_technique(self, command: ForgetTechnique) -> None:
-        projects = self.needs.legacy_projects()
         for node_id in command.node_ids:
-            projects.done.discard(node_id)
+            self.seat.done.discard(node_id)
             if command.year is not None:
                 self.seat.forgotten[node_id] = command.year
         self.needs.send(RefreshDoneCaches())
@@ -129,9 +170,9 @@ class Knowledge(Module):
     def reveal_from(self, command: RevealFrom) -> None:
         if not self.needs.legacy_fog():
             return
-        self.needs.legacy_projects().revealed.update(rules.reveal_targets(self.needs.legacy_tree(), command.node_id))
+        self.seat.revealed.update(rules.reveal_targets(self.needs.legacy_tree(), command.node_id))
         self.bump_seat(REVEALED)
 
     def reveal_nodes(self, command: RevealNodes) -> None:
-        self.needs.legacy_projects().revealed.update(command.node_ids)
+        self.seat.revealed.update(command.node_ids)
         self.bump_seat(REVEALED)

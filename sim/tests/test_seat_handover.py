@@ -21,8 +21,8 @@ from .seat_handover_fixture import Game
 
 
 def give(seat, techs, country, goal):
-    seat.projects.done |= set(techs)
-    seat.projects.granted |= set(techs)
+    seat.modules["knowledge"].done |= set(techs)
+    seat.modules["knowledge"].granted |= set(techs)
     seat.modules["resources"] = ResourcesSeat(mines=[{"material": "iron_ore"}])
     seat.modules.setdefault("seats", SeatsSeat())
     seat.modules["seats"].patents["loom"] = {"owner": "x"}
@@ -41,14 +41,14 @@ check("a seat handed to itself is refused", cause_of(handover_refusal(seats, "he
 check("a good handover has no refusal", handover_refusal(seats, "leaver", "heir", []) is None, None)
 moved = move_seat_fields(seats, "leaver", "heir")
 heir = seats["heir"]
-check("the replacement knows the same nodes", heir.projects.done == {"fire", "wheel"} and heir.projects.granted == {"fire", "wheel"}, heir.projects)
+check("the replacement knows the same nodes", heir.modules["knowledge"].done == {"fire", "wheel"} and heir.modules["knowledge"].granted == {"fire", "wheel"}, heir.modules)
 check("the replacement holds the same workings, patents and shares",
       heir.holdings is before.holdings and heir.modules["resources"].mines == [{"material": "iron_ore"}]
       and "loom" in heir.modules["seats"].patents and heir.modules["seats"].shares_held == {"guild": 3.0}, heir.holdings)
 check("the household, goal and country pass on", heir.household is before.household and heir.modules["workforce"].scholars == 2.0
       and heir.goal == "steam_engine" and heir.country == "han", None)
 check("the replacement keeps its own founder", heir.founder is heir_founder, None)
-check("the old seat is gone from the year", list(seats) == ["heir"] and moved["from"] == "leaver" and moved["known_nodes"] == 2, moved)
+check("the old seat is gone from the year", list(seats) == ["heir"] and moved["from"] == "leaver", moved)
 
 # ---- notes and country records survive
 game = Game(["leaver", "heir"])
@@ -104,6 +104,6 @@ check("a handover answers with what moved", reply["ok"] is True and reply["from"
       and reply["known_nodes"] == 2 and reply["notes"] == 1 and reply["country"] == "han", reply)
 check("the seats left are the replacement and the other", [row["seat"] for row in reply["seats"]] == ["heir", "third"], reply)
 check("the replacement holds the knowledge and the old seat is gone",
-      game.state.seats["heir"].projects.done == {"fire", "wheel"} and "leaver" not in game.state.seats, None)
+      game.state.seats["heir"].modules["knowledge"].done == {"fire", "wheel"} and "leaver" not in game.state.seats, None)
 check("the session now plays the replacement and the acting seat is a live seat",
       game.session_seat == "heir" and game.state.acting_seat in game.state.seats, game.state.acting_seat)

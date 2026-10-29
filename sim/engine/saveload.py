@@ -7,7 +7,7 @@ from sim.refusal import Refusal, cause_of
 
 from .data import WAGES
 from . import game_assembly
-from sim.knowledge.api import fog_mismatch
+from sim.knowledge.api import RevealNodes, fog_mismatch
 from sim.scenario.api import SetFuzzyEstimates, scenario_slot_of
 from sim.materials.api import CaptureReadings
 from .rng_record import restore_rng, rng_record
@@ -135,7 +135,7 @@ def _get_field(blob, field_name):
         sec = seat.get(section)
         if isinstance(sec, dict) and field_name in sec:
             return sec[field_name]
-    for module_id in ("workforce", "projects"):   # the trade name sets are the workforce module's, the kept-staffed set the projects'
+    for module_id in ("workforce", "projects", "knowledge"):   # the trade name sets are the workforce module's, the kept-staffed set the projects', the held sets knowledge's
         sec = (seat.get("modules") or {}).get(module_id)
         if isinstance(sec, dict) and field_name in sec:
             return sec[field_name]
@@ -357,14 +357,14 @@ def _apply_blob(sim, blob):
 	if fog_refusal:
 		raise ValueError(fog_refusal)
 
-	old_revealed = set(sim.state.projects.revealed) if getattr(sim, "state", None) and getattr(sim.state, "projects", None) and sim.state.projects.revealed else set()
+	old_revealed = set(sim.view("techniques_revealed")()) if getattr(sim, "state", None) and getattr(sim.state, "projects", None) else set()
 	asked_fuzzy, asked_salt = sim.fuzzy_estimates, sim.view("fuzzy_salt")()
 	state = deserialize_state(blob)
-	if old_revealed and getattr(state, "projects", None):
-		state.projects.revealed = set(state.projects.revealed or set()) | old_revealed
 	game_assembly.revive(sim, state, deserialize_state)
 	sim.state = state
 	sim._reconnect_state_hooks()
+	if old_revealed:   # what the running game had heard of stays heard of
+		sim.send(RevealNodes(tuple(sorted(old_revealed))))
 	if asked_fuzzy and not sim.fuzzy_estimates:   # the option given on the command line stays on
 		sim.send(SetFuzzyEstimates(True, sim.view("fuzzy_salt")() or asked_salt))
 	if state._immortal is not None:

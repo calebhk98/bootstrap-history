@@ -90,6 +90,10 @@ class Deposits:
                                  rules.capacity_naming(self.seat.mines or (), self.seat.mine_tranches or (), row["id"]))
                 for row, size, before in base]
 
+    def empire_output(self) -> Dict[str, Any]:
+        """The reference empire's yearly output of the tracked commodities, by commodity: {"t_per_yr": ...}."""
+        return deposit_model.empire_output_100ad()
+
     def found_deposits(self, material: str) -> List[Dict[str, Any]]:
         """The deposits of `material` this seat can name, each {id, name, tile_id, size_tonnes, remaining_tonnes,
         grade_kg_per_tonne, rate_tonnes_per_year, room_tonnes_per_year}; empty for a material with no deposit data."""

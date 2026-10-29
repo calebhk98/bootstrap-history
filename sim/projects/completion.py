@@ -61,7 +61,7 @@ class Completion:
 		road = self.goal_closure_ids()
 		measures = {}
 		condition = nodes[goal].get("win_condition")
-		done = needs.legacy_projects().done
+		done = needs.techniques_held()
 		if condition and goal not in done:
 			try:
 				metric = condition.get("metric") or "goal measure"
@@ -81,7 +81,7 @@ class Completion:
 		lines = ["goal effect: %s %s -> %s" % row for row in moved]
 		goal = needs.goal()["node"]
 		if (before and node_id != goal and node_id in self.goal_closure_ids()
-		        and goal not in needs.legacy_projects().done):
+		        and goal not in needs.techniques_held()):
 			lines.append(road_line(needs.legacy_fog(), after["road_done"], after["road_total"]))
 		return lines
 
@@ -163,7 +163,7 @@ class Completion:
 		_yrs_before = projects.active[node_id]["yrs"]
 		projects.failed_attempts[node_id] += 1
 		_diagnosis = self._note_failure(node_id)
-		if failure_teaches(needs.mechanic["diagnosis_instrument"].get(node_id), projects.done):
+		if failure_teaches(needs.mechanic["diagnosis_instrument"].get(node_id), needs.techniques_held()):
 			needs.send(LearnFromFailure(node_id))
 		claimed = node_id in projects.bountied
 		# A bounty's claimant redoes the work: the poster's prize holds and no hours or money fall on the poster.
@@ -206,7 +206,7 @@ class Completion:
 		needs.send(RecordEvent.of("project_failed", failure_text.major_line(
 			node["name"], failure_cause(node, needs.state_interest(node)), FAILURE_RESET_SHARE,
 			needs.plain_number(node["ph"] * FAILURE_RESET_SHARE), lost_text, attempts,
-			failure_teaches(needs.mechanic["diagnosis_instrument"].get(node_id), projects.done), _next_risk,
+			failure_teaches(needs.mechanic["diagnosis_instrument"].get(node_id), needs.techniques_held()), _next_risk,
 			_risk_this_attempt, _banked, _yrs_before, _diagnosis), project=node_id, severity="major", lost=max(0.0, _lost)))
 
 	def _note_failure(self, node_id):
@@ -217,7 +217,7 @@ class Completion:
 		if spec is None:
 			return ""
 		instrument_name = needs.tree_nodes()[spec["instrument"]]["name"]
-		if failure_teaches(spec, needs.legacy_projects().done):
+		if failure_teaches(spec, needs.techniques_held()):
 			low, high = SHORTFALL_FACTOR_RANGE
 			return measured_report(spec, needs.game_random().uniform(low, high), instrument_name)
 		return unmeasured_report(spec, instrument_name)

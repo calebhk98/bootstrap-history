@@ -5,6 +5,7 @@ from .harness import *  # noqa: F401,F403
 from sim.agents import exchange_commands, joint_stock, patent  # noqa: F401
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, Household, HouseholdParty
 from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer, SeatsSeat
+from sim.knowledge.api import KnowledgeSeat
 from sim.seats.module import Seats
 from . import module_harness
 from sim.engine.agents_port_household import HouseholdPort
@@ -24,7 +25,7 @@ class DealWorld(FakeWorld):
         return True
 
     def patent_entry(self, node_id):
-        holders = list(self.registry.actors.values()) + [HouseholdParty(self.facade, seat_id=FIRST_SEAT_ID, dealings=self.slot)]
+        holders = list(self.registry.actors.values()) + [HouseholdParty(self.facade, seat_id=FIRST_SEAT_ID, dealings=self.slot, receive=lambda nodes, granted: None)]
         return patent.entry_among(holders, node_id, self.year)
 
     def proof_years(self, node_id):
@@ -41,19 +42,25 @@ class Game:
     """The facade, the registry and the seat's stored dealings, and the seats module reading them through plain views."""
 
     def __init__(self):
-        self.facade = Household(starting_capital=1000.0, port=HouseholdPort())
+        self.knowledge = KnowledgeSeat()
+        self.facade = Household(starting_capital=1000.0, port=HouseholdPort(), techniques_held=lambda: frozenset(self.knowledge.done))
         self.state = self.facade._state
         self.actors = ActorRegistry(ActorsState(home_country="home"))
         self.slot = SeatsSeat()
         self.module = None
 
     def seat_party(self, seat_id, margins=None):
-        return HouseholdParty(self.facade, margins, seat_id, dealings=self.slot)
+        return HouseholdParty(self.facade, margins, seat_id, dealings=self.slot, receive=self.receive)
+
+    def receive(self, nodes, granted):
+        self.knowledge.done.update(nodes)
+        if granted:
+            self.knowledge.granted.update(nodes)
 
     def build(self, world):
         self.module = module_harness.build(
             Seats, seat=self.slot,
-            views={"actor_world": lambda: world, "legacy_projects": self.state.projects, "seat_party_with_margins": self.seat_party,
+            views={"actor_world": lambda: world, "legacy_projects": self.state.projects, "techniques_granted": lambda: frozenset(self.knowledge.granted), "seat_party_with_margins": self.seat_party,
                    "seat_party": self.seat_party, "legacy_seats": self.state.seats, "cast": self.actors, "year": 100})
 
     def seat_patent(self, node_id):
@@ -82,7 +89,7 @@ finder = exchange_commands.finder(sim.actors, world)
 firm = sim.actors.add("firm:1", ActorRecord(kind="firm", money=5000.0, last_margin=300.0, founded_year=50))
 firm.knowledge.add("loom")
 firm.record.target = "loom"
-sim.facade.done.add("loom")
+sim.knowledge.done.add("loom")
 
 # ---- the founder applies for a patent --------------------------------------------------------------------
 reply = sim.seat_patent("loom")

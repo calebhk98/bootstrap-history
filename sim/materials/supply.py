@@ -51,7 +51,7 @@ class Supply:
     def done_memo(self, name: str, key: Any, compute: Any) -> Any:
         """`compute()` remembered per (name, key) while the techniques held, the techniques in use, the price level and the
         economy's producers are unchanged."""
-        done = self.needs.legacy_projects().done
+        done = self.needs.techniques_held()
         stamp = (self.needs.price_epoch(), len(done), self.needs.producers_stamp())
         memo = self._done_memo
         if memo is None or memo[0] != stamp or memo[1] is not done:
@@ -246,7 +246,7 @@ class Supply:
         """One sentence on why nothing of `material` reaches the seat, or "" when something does."""
         reach = self.material_supply_route(material)
         makers = [node_id for node_id in reach["makers"] if self.needs.visibility(node_id, None)]   # fog: only known concerns
-        done = self.needs.legacy_projects().done
+        done = self.needs.techniques_held()
         return rules.unsupplied_sentence(material, reach["route"], makers, [node_id for node_id in makers if node_id in done])
 
     def materials_report(self) -> List[Dict[str, Any]]:

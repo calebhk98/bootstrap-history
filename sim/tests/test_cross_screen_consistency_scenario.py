@@ -60,8 +60,7 @@ _vv_staff.artisans = _vv_staff.scholars = 40.0
 _opened = 0
 for _k in sorted(node_id for node_id in NODES if NODES[node_id]["rev"] > 0):
     if _opened < 3 and s_vv.view("is_venture")[_k]:
-        s_vv.state.projects.done.add(_k)
-        s_vv._done_changed()
+        s_vv.send(LearnTechnique(_k))
         if s_vv.send(OpenVenture(_k, None))[0]:
             _opened += 1
 check("three ventures opened for the screens to quote", _opened == 3, _opened)

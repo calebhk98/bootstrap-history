@@ -55,6 +55,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("mine_demand_goods", "mine_demand_goods", kind=KEYED, **_LIVE),
         ViewSpec("mine_yield", "mine_yield", kind=KEYED, seat_scoped=True, **_LIVE),
         ViewSpec("mine_depletion_note", "mine_depletion_note", kind=KEYED, seat_scoped=True, **_LIVE),
+        ViewSpec("empire_output", "empire_output"),
         ViewSpec("found_deposits", "found_deposits", kind=KEYED, seat_scoped=True, **_LIVE),
         ViewSpec("partner_deposits", "partner_deposits", kind=QUOTE, seat_scoped=True, **_LIVE),
         ViewSpec("deposit_remaining", "deposit_remaining_tonnes", kind=QUOTE, seat_scoped=True, **_LIVE),

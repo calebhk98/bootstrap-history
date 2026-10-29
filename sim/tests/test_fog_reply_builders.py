@@ -17,6 +17,7 @@ QUICK_TOPIC = True
 import json
 import types
 import unittest
+from sim.knowledge.api import KnowledgeSeat
 from unittest import mock
 
 from sim.knowledge.api import HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
@@ -77,8 +78,8 @@ class SharedFilterTests(unittest.TestCase):
                          "mod:%s and %s" % (HIDDEN, HIDDEN_ID_PLACEHOLDER))
 
     def fog_scrub(self, text, fog=True):
-        knowledge = module_harness.build(Knowledge, views={
-            "legacy_fog": fog, "legacy_tree": NODES, "legacy_projects": Game(done=set(), active={}, revealed={KNOWN}),
+        knowledge = module_harness.build(Knowledge, seat=KnowledgeSeat(revealed={KNOWN}), views={
+            "legacy_fog": fog, "legacy_tree": NODES, "active_projects": {},
             "start_check": lambda node_id, ignore_trade, memo, why: (False, None)})
         return knowledge.fog_scrub(text)
 

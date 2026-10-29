@@ -7,7 +7,7 @@ from sim.workforce.api import WatchStaff
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from sim.engine.state import SimulationState, ActiveProjectState
 from sim.engine.state_seat import bind_seat
-from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
+from .data import (DEFAULTS, kit_capital, load_civ, load_geography, 
                    nodes_in_civ_money, TECH_EFFECTS, TRADE_REGISTRY)
 
 from sim.world import demography
@@ -18,7 +18,7 @@ from sim.geography.api import regions, tiles_held
 
 
 from sim.land.api import rules as land_rules
-from sim.knowledge.api import LearnTechnique, declared_starting_techs
+from sim.knowledge.api import LearnTechnique, StartDoneYearRecord, declared_starting_techs
 from .forward_markets import ForwardMarketsMixin
 from .forward_demography import ForwardDemographyMixin
 from .forward_agriculture import ForwardAgricultureMixin
@@ -187,7 +187,8 @@ class Sim(
             operating_changed=self._operating_changed,
             active_changed=self._active_changed,
             state=self.state,
-            port=HouseholdPort())
+            port=HouseholdPort(),
+            techniques_held=lambda: self.view("techniques_held")())
         self._seat_facades = {self.state.acting_seat: self.household}
         self.send(WatchStaff(self.state.acting_seat))
         # EVERY AUTOMATIC BEHAVIOUR, IN ONE PLACE, SWITCHABLE.
@@ -221,7 +222,6 @@ class Sim(
         # How much of each material physically exists: a material's
         # existence somewhere does not mean an unlimited quantity of it is
         # available.
-        self.res = load_resources()
         # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY (computed once; see sim/geography/)
         self.view("legacy_geography")().open(load_geography(self.view("legacy_world_map")()))
         # Whatever this civilization already has is free and already done, and it
@@ -230,8 +230,7 @@ class Sim(
         # sacking - Han China does not forget how to cast iron because your
         # workshop burned down.
         #
-        # Populates self.household.done/.granted, not a fresh set here, and
-        # stays on Sim rather than moving into Household.__init__ because it
+        # Sends LearnTechnique(granted=True) for each; stays on Sim because it
         # needs the loaded tree and civ record to validate against (and to
         # raise ValueError on an unknown starting technology) - state this
         # class deliberately does not hold a reference to.
@@ -405,7 +404,7 @@ class Sim(
 
     def run(self, goal, horizon=None):
         self.goal = goal
-        self.state.projects.done_year = {}
+        self.send(StartDoneYearRecord())
         horizon = horizon or self.cfg["horizon_years"]
         end = self.cfg["start_year"] + horizon
         while self.year < end and not self.run_over():

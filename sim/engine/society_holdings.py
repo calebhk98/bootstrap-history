@@ -20,8 +20,7 @@ def held_by_society(granted: Iterable[str], actors: Iterable[Any]) -> Set[str]:
 
 def society_techs(sim: Any) -> FrozenSet[str]:
     """Techniques the society holds now in `sim`, as a frozen set."""
-    projects = sim.state.projects
     actors = []
     if sim.state.actors is not None and sim.state.actors.records:
         actors = [actor for kind in SOCIETY_KINDS for actor in sim.view("cast")().of_kind(kind)]
-    return frozenset(held_by_society(projects.granted, actors))
+    return frozenset(held_by_society(sim.view("techniques_granted")(), actors))

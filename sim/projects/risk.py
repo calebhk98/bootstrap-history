@@ -23,7 +23,7 @@ class Risk:
 
 	def _control_relief_multiplier(self, node_id):
 		relief = self.needs.mechanic["failure_relief"]
-		done = self.needs.legacy_projects().done
+		done = self.needs.techniques_held()
 		in_force = [relief[relief_id]["failure_kind"] for relief_id in tuple(relief) if relief_id in done]
 		return control_relief_multiplier(self.needs.tree_nodes()[node_id].get("failure_kind"), in_force, CONTROL_RELIEF_FACTOR)
 
@@ -83,7 +83,7 @@ class Risk:
 		floor = max(self.calendar_floor(node_id), self.payment_schedule_years(node_id))
 		projects = self.needs.legacy_projects()
 		initial_failed_attempts = projects.failed_attempts.get(node_id, 0)
-		teaches = failure_teaches(self.needs.mechanic["diagnosis_instrument"].get(node_id), projects.done)
+		teaches = failure_teaches(self.needs.mechanic["diagnosis_instrument"].get(node_id), self.needs.techniques_held())
 		_had_key = node_id in projects.failed_attempts
 		_active = projects.active.get(node_id) if node_id in projects.active else None
 

@@ -10,6 +10,7 @@ import tempfile
 import unittest
 
 from sim.agents.api import Business
+from sim.knowledge.api import KnowledgeSeat
 from sim.tests.harness import check
 
 
@@ -31,7 +32,6 @@ def _test_automatic_field_persistence():
 	hh = HouseholdState(capital=1250.0)
 	projects = ProjectsState(
 		active={"arch": proj},
-		done={"stone_cutting"},
 		businesses=[Business.running(["stone_cutting"], opened_year=100)],
 	)
 	econ = EconomyState()
@@ -46,6 +46,7 @@ def _test_automatic_field_persistence():
 		founder=founder,
 		_civ="rome_100ad",
 	)
+	state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
 	state._goal = "aqueduct"
 
 	blob = serialize_state(state)
@@ -57,8 +58,8 @@ def _test_automatic_field_persistence():
 	restored = deserialize_state(blob)
 	if restored.household.capital != 1250.0:
 		return False, f"Household capital mismatch: {restored.household.capital}"
-	if restored.projects.done != {"stone_cutting"}:
-		return False, f"Projects done mismatch: {restored.projects.done}"
+	if restored.seats[restored.acting_seat].modules["knowledge"]["done"] != {"__set__": ["stone_cutting"]}:   # the module set revives it
+		return False, f"Knowledge done mismatch: {restored.seats[restored.acting_seat].modules['knowledge']}"
 	if "arch" not in restored.projects.active:
 		return False, f"Projects active missing 'arch': {restored.projects.active}"
 	if restored.projects.active["arch"].ph_left != 80.0:
@@ -201,8 +202,9 @@ def _valid_save():
 		SimulationState, serialize_state,
 	)
 	state = SimulationState(
-		household=HouseholdState(capital=1250.0), projects=ProjectsState(done={"stone_cutting"}), economy=EconomyState(),
+		household=HouseholdState(capital=1250.0), projects=ProjectsState(), economy=EconomyState(),
 		holdings=HoldingsState(), founder=FounderState())
+	state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
 	state._goal = "aqueduct"
 	blob = serialize_state(state)
 	blob.update({"_civ": "rome_100ad", "_weights": {}, "_immortal": True,

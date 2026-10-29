@@ -15,11 +15,11 @@ class Electricity:
         prime mover of each family (informational) and the sources the built nodes declare. `total_kw` is what the throttle
         checks electrical demand against."""
         mechanic = self.needs.mechanic
-        return rules.generation_breakdown(self.needs.legacy_projects().done, self.needs.tree_nodes(),
+        return rules.generation_breakdown(self.needs.techniques_held(), self.needs.tree_nodes(),
                                           mechanic["power_generation"], mechanic["prime_mover"], self.anchor_kw)
 
     def installed_generation_kw_by_tier(self) -> Dict[str, float]:
-        return rules.installed_by_tier(self.needs.legacy_projects().done, self.needs.mechanic["power_generation"],
+        return rules.installed_by_tier(self.needs.techniques_held(), self.needs.mechanic["power_generation"],
                                        self.anchor_kw)
 
     def generation_capacity_kw(self) -> float:
@@ -62,11 +62,11 @@ class Electricity:
         """Tonnes a year ONE node draws of `material`, as the annual demand counts it."""
         projects = self.needs.legacy_projects()
         return rules.node_annual_tonnes(self.needs.tree_nodes().get(node_id), material, node_id in projects.active,
-                                        node_id in projects.done)
+                                        node_id in self.needs.techniques_held())
 
     def electricity_demand_kw(self) -> float:
         """Average continuous kW drawn by work in hand."""
         projects = self.needs.legacy_projects()
         return rules.electricity_demand_kw(self.electrical_processes(), self.node_annual_tonnes,
                                            self.electricity_load_node_ids(), self.needs.tree_nodes(), projects.active,
-                                           projects.done, self.needs.operating())
+                                           self.needs.techniques_held(), self.needs.operating())

@@ -60,7 +60,7 @@ class PortfolioGroupsEveryActiveProject(unittest.TestCase):
         for node_id in game.view("project_order")():
             if len(game.state.projects.active) >= 6:
                 break
-            if node_id not in game.state.projects.done and game.view("start_check")(node_id, False, None, False)[0]:
+            if node_id not in game.done and game.view("start_check")(node_id, False, None, False)[0]:
                 self.assertTrue(_ask(game, cmd="start", id=node_id).get("ok"), node_id)
         self.assertGreaterEqual(len(game.state.projects.active), 3)
         groups = _ask(game, cmd="portfolio").get("bottlenecks")

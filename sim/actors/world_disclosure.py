@@ -16,10 +16,10 @@ class DisclosureView:
 
 	def disclosure_mode(self, node_id: str) -> str:
 		"""What the makers of an invention chose: the widest choice any seat that built it made."""
-		seats = self.needs.legacy_seats()
-		if not builders_of(seats, node_id):
+		techniques = self.needs.techniques_by_seat()
+		if not builders_of(techniques, node_id):
 			return str(self.needs.disclosure[node_id]["mode"])
-		return most_open_mode(disclosure_modes(seats, node_id, self.needs.disclosures.__getitem__))
+		return most_open_mode(disclosure_modes(techniques, node_id, self.needs.disclosures.__getitem__))
 
 	def secret_exposure(self, node_id: str) -> float:
 		"""Share of full visibility outsiders get of a kept secret: the more trades and materials
@@ -62,7 +62,7 @@ class DisclosureView:
 		purse; the amount paid."""
 		needs = self.needs
 		paid = 0.0
-		owed = seat_royalties_due(needs.legacy_seats(), node_id, firm.actor_id, takings, needs.disclosures.__getitem__)
+		owed = seat_royalties_due(needs.techniques_by_seat(), node_id, firm.actor_id, takings, needs.disclosures.__getitem__)
 		for seat_id, due in seat_royalties_paid(owed, firm.money):
 			needs.send(PayActor(firm.actor_id, seat_id, due, "licence"))
 			paid += due

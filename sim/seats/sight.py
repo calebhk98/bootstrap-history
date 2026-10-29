@@ -14,14 +14,16 @@ class Sight:
         if not self.needs.legacy_fog() or len(seats) < 2:
             return set()
         observer_id = self.clock.acting_seat
-        observer = self.needs.legacy_projects()
+        observer_held, observer_revealed = self.needs.techniques_held(), self.needs.techniques_revealed()
+        techniques = self.needs.techniques_by_seat()
         heard = set()
         for builder_id, builder in seats.items():
-            if builder_id == observer_id or not (builder.projects.done - builder.projects.granted):
+            built = techniques[builder_id].held - techniques[builder_id].granted
+            if builder_id == observer_id or not built:
                 continue
             distance = self.distance_between_seats(builder_id, observer_id)
-            heard |= nodes_heard_of(builder.projects, self.needs.disclosures[builder_id], observer, distance,
-                                    self.needs.copy_difficulty.__getitem__)
+            heard |= nodes_heard_of(built, builder.projects.operating, self.needs.disclosures[builder_id],
+                                    observer_held | observer_revealed, distance, self.needs.copy_difficulty.__getitem__)
         self.needs.send(RevealNodes(tuple(sorted(heard))))
         return heard
 

@@ -22,6 +22,7 @@ def seat_rows(sim):
     """One row per seat: its id, country and whether its run has ended. The addressed seat also shows its own
     purse and what it has built; another seat's purse and work are not shown (they are its own to tell)."""
     ended = sim.view("dead_reasons")()
+    techniques = sim.view("techniques_by_seat")()
     rows = []
     for seat_id, seat in sim.view("legacy_seats")().items():
         row = {"seat": seat_id, "country": seat.country or sim.view("civilisation")().get("id"), "ended": ended.get(seat_id),
@@ -30,7 +31,7 @@ def seat_rows(sim):
             row.update({"kind": seat.kind, "holder": seat.holder})
         elif seat_id == sim.view("acting_seat")():
             row.update({"capital": round(seat.household.capital, 1),
-                        "built": len(seat.projects.done - seat.projects.granted)})
+                        "built": len(techniques[seat_id].held - techniques[seat_id].granted)})
         rows.append(row)
     return rows
 

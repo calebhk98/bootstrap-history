@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 import json
 import unittest
 
+from sim.knowledge.api import KnowledgeSeat
 from sim.markets.demand_key import demand_key, population_of_key
 from sim.reporting.api import ReportingSeat
 from sim.materials.state import MaterialsSeat
@@ -45,8 +46,8 @@ def coded_values(value, found, seen):
 class SavedStateTests(unittest.TestCase):
     def test_a_dict_keeps_its_insertion_order_across_a_save(self):
         order = ["zeta_node", "alpha_node", "mid_node"]
-        projects = ProjectsState(done_year={name: number for number, name in enumerate(order)})
-        self.assertEqual(list(round_trip(projects).done_year), order)
+        knowledge = KnowledgeSeat(done_year={name: number for number, name in enumerate(order)})
+        self.assertEqual(list(round_trip(knowledge).done_year), order)
 
     def test_the_material_demand_the_last_throttle_left_is_in_the_save(self):
         holdings = MaterialsSeat(material_demand_at_last_throttle={"iron_kg": 3.5, "coal_kg": 1.25})

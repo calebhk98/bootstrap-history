@@ -49,7 +49,7 @@ class ViewShare:
         return ((sim.view("material_prices")(), demand),
                 (sim.view("legacy_goods_market")().others_stamp(), sim.year,
                  sim.household.done_version, sim.household.operating_version,
-                 len(projects.done), len(projects.operating),
+                 len(sim.view("techniques_held")()), len(projects.operating),
                  sim.view("forest_hectares")(), sim.view("nitre_beds")()["square_metres"], sim.view("population")().total,
                  sim.view("real_output_per_head")(), len(sim.view("mine_workings")())))
 
@@ -59,7 +59,7 @@ class ViewShare:
         sim = self.sim
         projects = sim.state.projects
         return ((), (sim.year, sim.household.done_version, sim.household.operating_version,
-                     len(projects.done), len(projects.operating), sim.view("forest_hectares")(),
+                     len(sim.view("techniques_held")()), len(projects.operating), sim.view("forest_hectares")(),
                      sim.view("nitre_beds")()["square_metres"], sim.view("population")().total, sim.view("real_output_per_head")(),
                      len(sim.view("mine_workings")())))
 

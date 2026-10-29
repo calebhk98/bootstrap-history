@@ -17,7 +17,7 @@ def actor(identity, knowledge, exited_year=None):
 
 def world_of(actors, granted=("known",)):
     registry = SimpleNamespace(actors={a.identity(): a for a in actors})
-    needs = fake_needs(tree_nodes={"known": {}, "novel": {}, "other": {}}, techniques_granted=set(granted), legacy_seats={})
+    needs = fake_needs(tree_nodes={"known": {}, "novel": {}, "other": {}}, techniques_granted=set(granted), techniques_by_seat=lambda: {})
     return ActorWorld(SimpleNamespace(needs=needs, cast=lambda: registry))
 
 

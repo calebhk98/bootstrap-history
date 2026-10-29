@@ -9,7 +9,6 @@ import types
 from .harness import *  # noqa: F401,F403
 from sim.engine import bridge_hazards
 from sim.engine.data import closure
-from sim.engine.forward_mechanics import ForwardMechanicsMixin
 from sim.knowledge import rules as knowledge_rules
 from sim.knowledge.api import (CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE, ForgetTechnique, KnowledgeSeat)
 from sim.production.api import RefreshDoneCaches
@@ -30,8 +29,6 @@ class _FrontOfTheListRNG:
 class _SackGame(FactViews):
     """The tree and the techniques a sack reads, with the hazards module built over them. A ForgetTechniques it sends is
     applied as the engine bridge applies it."""
-    losable_node_ids = ForwardMechanicsMixin.losable_node_ids
-
     def __init__(self, built=(), granted=(), held=(), goal=None, dispersed=("corpus_dispersed",)):
         tiers = [("corpus_dispersed", 0.2, 0.08), ("corpus_written", 0.5, 0.22)]
         self._held, self._dispersed = set(held), set(dispersed)
@@ -40,18 +37,19 @@ class _SackGame(FactViews):
         self.nodes["j"] = {"win_condition": True, "pre": []}
         self.goal = goal
         self.state = types.SimpleNamespace(
-            projects=types.SimpleNamespace(done=set(built), granted=set(granted), operating=set(built), mothballed=set()))
+            projects=types.SimpleNamespace(operating=set(built), mothballed=set()))
         self.done_changed = 0
-        self.knowledge = module_harness.build(Knowledge, views={"legacy_projects": self.state.projects},
-                                              answers={RefreshDoneCaches: lambda command: self._done_changed()},
-                                              seat=KnowledgeSeat())
+        self.knowledge = module_harness.build(
+            Knowledge, views={"legacy_tree": self.nodes, "corpus_dispersed": self.corpus_is_dispersed},
+            answers={RefreshDoneCaches: lambda command: self._done_changed()}, seat=KnowledgeSeat(done=set(built), granted=set(granted)))
+        self.losable_node_ids = self.knowledge.losable_node_ids
         self.module = hazards_host.build(
             game_random=_FrontOfTheListRNG(),
             corpus_hedge=lambda: knowledge_rules.corpus_hedge(tiers, self._held, CORPUS_HEDGE_LOSS_CHANCE_NONE,
                                                               CORPUS_HEDGE_FRACTION_LOST_NONE),
             corpus_nodes=["corpus_dispersed"], mechanic=lambda name: {"corpus_dispersed": {}, "corpus_written": {}},
             goal=lambda: {"node": self.goal}, tree_nodes=self.nodes, tree_closure=lambda goal_id: closure(self.nodes, goal_id),
-            losable_node_ids=lambda keep_dispersed=True: self.losable_node_ids(keep_dispersed),
+            losable_node_ids=lambda keep_dispersed=True: self.knowledge.losable_node_ids(keep_dispersed),
             answers={ForgetTechnique: lambda command: self.knowledge.forget_technique(command),
                      ShutForgotten: lambda command: bridge_hazards.shut_forgotten(self, command)})
 
@@ -90,10 +88,10 @@ _sacked.sack(0.5, "corpus_dispersed")
 check("the sack takes the stated fraction of what it can take, and no more",
       len(_sacked.knowledge.seat.forgotten) == int(6 * 0.5), _sacked.knowledge.seat.forgotten)
 check("what is forgotten is no longer built, running or mothballed, and is dated",
-      all(node_id not in _sacked.state.projects.done and node_id not in _sacked.state.projects.operating
+      all(node_id not in _sacked.knowledge.seat.done and node_id not in _sacked.state.projects.operating
           and year == 150 for node_id, year in _sacked.knowledge.seat.forgotten.items()), _sacked.knowledge.seat.forgotten)
 check("a dispersed corpus and inherited technologies survive a sack",
-      {"corpus_dispersed", "a", "b"} <= _sacked.state.projects.done, _sacked.state.projects.done)
+      {"corpus_dispersed", "a", "b"} <= _sacked.knowledge.seat.done, _sacked.knowledge.seat.done)
 check("the built set is told to refresh", _sacked.done_changed == 1)
 _tiny = _SackGame(built=("corpus_written",))
 _tiny.sack(0.01, "corpus_dispersed")

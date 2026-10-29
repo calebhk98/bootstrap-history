@@ -3,6 +3,7 @@ of the `Sim`; its methods of the same names call these."""
 import contextlib
 
 from sim.agents.api import Household, HouseholdParty
+from sim.knowledge.api import ReceiveTechniques
 from .agents_port_household import HouseholdPort
 from . import game_assembly
 from .state_seat import SeatState, bind_seat
@@ -31,7 +32,8 @@ def new_facade(sim, seat_id: str) -> Household:
 			operating_changed=sim._operating_changed,
 			active_changed=sim._active_changed,
 			state=sim.state,
-			port=HouseholdPort())
+			port=HouseholdPort(),
+			techniques_held=lambda: sim.view("techniques_held")())
 		held.cash_mark = cash_mark
 	finally:
 		bind_seat(sim.state, acting)
@@ -41,7 +43,8 @@ def new_facade(sim, seat_id: str) -> Household:
 def seat_party(sim, seat_id: str, margins=None) -> HouseholdParty:
 	"""`seat_id` as an actor an exchange can deal with: it holds patents and shares, pays and is paid."""
 	return HouseholdParty(sim._seat_facades[seat_id], margins, seat_id, sim.act_as,
-	                      dealings=sim.state.seats[seat_id].modules["seats"])
+	                      dealings=sim.state.seats[seat_id].modules["seats"],
+	                      receive=lambda nodes, granted: sim.send(ReceiveTechniques(tuple(nodes), granted)))
 
 
 def seat_parties(sim) -> dict:

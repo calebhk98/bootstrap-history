@@ -36,16 +36,12 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 
 	# ProjectsState
 	"active": "projects",
-	"done": "projects",
-	"done_year": "projects",
 	"operating": "projects",
 	"failed_attempts": "projects",
 	"mothballed": "projects",
 	"bountied": "projects",
-	"granted": "projects",
 	"opened_year": "projects",
 	"paid_towards": "projects",
-	"revealed": "projects",
 	"stalled": "projects",
 	"closures": "projects",
 
@@ -72,7 +68,6 @@ _VERSION_MAP: Dict[str, str] = {
 
 _LAZY_FIELDS: Set[str] = {
 	"spend_last_year",
-	"done_year",
 	"_dashboard_history",
 }
 
@@ -92,10 +87,12 @@ class Household(FounderReview, FounderBorrowing, Actor):
 		active_changed: Optional[Callable[[], None]] = None,
 		state: Optional[Any] = None,
 		port: Optional[Any] = None,
+		techniques_held: Optional[Callable[[], Any]] = None,
 	) -> None:
 		# The founder's choices arrive as commands, so the household idles.
 		Actor.__init__(self, IdlePolicy())
 		self._port = port
+		self._techniques_held = techniques_held
 		if state is not None:
 			self._state = state
 			self._state.household.capital = float(starting_capital)
@@ -186,7 +183,8 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 	@property
 	def knowledge(self) -> Any:
-		return self.done
+		"""The nodes the acting seat holds, as the knowledge module answers them (the engine hands this household the question)."""
+		return self._techniques_held()
 
 	@property
 	def concerns(self) -> Any:
@@ -216,14 +214,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 		self._state.projects.active = value
 
 	@property
-	def done(self) -> Any:
-		return self._state.projects.done
-
-	@done.setter
-	def done(self, value: Any) -> None:
-		self._state.projects.done = value
-
-	@property
 	def operating(self) -> Any:
 		return self._state.projects.operating
 
@@ -238,16 +228,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 	@failed_attempts.setter
 	def failed_attempts(self, value: Any) -> None:
 		self._state.projects.failed_attempts = value
-
-	@property
-	def revealed(self) -> Set[str]:
-		return self._state.projects.revealed
-
-	@revealed.setter
-	def revealed(self, value: Iterable[str]) -> None:
-		cur = self._state.projects.revealed
-		self._state.projects.revealed = (set(value) if cur is None
-										 else set(cur) | set(value))
 
 	@property
 	def _operating_ver(self) -> int:
@@ -348,7 +328,7 @@ class Household(FounderReview, FounderBorrowing, Actor):
 		raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
 
 	def __setattr__(self, name: str, value: Any) -> None:
-		if (name in ("_state", "_port", "contract_projects")
+		if (name in ("_state", "_port", "_techniques_held", "contract_projects")
 				or name.startswith("_spend_this_year")
 				or name.endswith("_cache")
 				or name == "_said_stack_caution"):

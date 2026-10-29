@@ -53,8 +53,7 @@ def _test_done_and_operating_versions():
 	initial_done_ver = getattr(sim_inst.household, "_done_ver", 0)
 	initial_op_ver = getattr(sim_inst.household, "_operating_ver", 0)
 
-	# Mutate done
-	sim_inst.household.done.add("archaeo_survey")
+	# The held set changed
 	sim_inst._done_changed()
 	new_done_ver = getattr(sim_inst.household, "_done_ver", 0)
 	if new_done_ver <= initial_done_ver:

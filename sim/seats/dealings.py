@@ -17,7 +17,7 @@ class Dealings:
         """The acting seat as a party to an exchange, with what each concern it runs earns a year (what a taker values)."""
         world = self.needs.actor_world()
         projects = self.needs.legacy_projects()
-        margins = {node_id: world.concern_margin(node_id) for node_id in sorted(projects.operating - projects.granted)}
+        margins = {node_id: world.concern_margin(node_id) for node_id in sorted(projects.operating - self.needs.techniques_granted())}
         return self.needs.seat_party_with_margins(self.clock.acting_seat, margins)
 
     def find_dealer(self, actor_id: Any) -> Any:

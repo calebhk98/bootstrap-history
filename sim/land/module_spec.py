@@ -59,6 +59,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("work_quote", "work_quote", kind=QUOTE),
         ViewSpec("held_techniques", "held_techniques", kind=QUOTE),
         ViewSpec("partner_gate_refusal", "partner_gate_refusal", kind=QUOTE),
+        ViewSpec("techniques_with_results", "techniques_with_results", kind=QUOTE),
         ViewSpec("tile_known", "tile_known", kind=KEYED, **_LIVE),
         ViewSpec("borders_among", "borders_among", kind=QUOTE),
         ViewSpec("tile_facts", "tile_facts", kind=KEYED, **_LIVE),

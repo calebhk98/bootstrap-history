@@ -46,7 +46,7 @@ def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, grant
     stub.after_failed_attempts = lambda node_id, count: module.after_failed_attempts(node_id, count)
     views = {} if mechanic is None else {"mechanic": mechanic}
     stub.projects = projects_host.build(
-        tree_nodes=lambda: stub.nodes, legacy_projects=projects, industry_depth=lambda node_id: module.industry_depth(node_id),
+        tree_nodes=lambda: stub.nodes, legacy_projects=projects, techniques_held=projects.done, industry_depth=lambda node_id: module.industry_depth(node_id),
         failed_attempts_trial=lambda node_id, count: module.after_failed_attempts(node_id, count), **views)
     return stub
 

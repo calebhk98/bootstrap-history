@@ -33,15 +33,14 @@ class Finishing:
     def __init__(self, fails=False, venture=True, auto_open=False, shortfall=None, goal_lines=(), snapshot=None, hire_mode=False):
         household = SimpleNamespace(log=[], hour_allocations={"school": 1.0})
         self.state = SimpleNamespace(
-            projects=SimpleNamespace(active={NODE: {}}, bountied={NODE}, done=set(), done_year=None, failed_attempts=Counter()),
+            projects=SimpleNamespace(active={NODE: {}}, bountied={NODE}, failed_attempts=Counter()),
             household=household, scenario=SimpleNamespace(year=100))
         self.polity = polity_host.build()
-        self.knowledge = module_harness.build(Knowledge, views={"legacy_projects": self.state.projects},
-                                              answers={RefreshDoneCaches: None}, seat=KnowledgeSeat())
+        self.knowledge = module_harness.build(Knowledge, answers={RefreshDoneCaches: None}, seat=KnowledgeSeat())
         self.failed, self.applied, self.granted_staff, self.transfers = [], [], [], []
         policy = {"auto_open": auto_open, "auto_hire": hire_mode}
         module = self.module = projects_host.build(
-            tree={NODE: {"name": "A school"}}, legacy_projects=self.state.projects, game_random=SimpleNamespace(random=lambda: 0.5),
+            tree={NODE: {"name": "A school"}}, legacy_projects=self.state.projects, techniques_held=lambda: frozenset(self.knowledge.seat.done), game_random=SimpleNamespace(random=lambda: 0.5),
             alarm_of=lambda node: 2.0, state_interest=lambda node: 1.0, year=100, is_venture=lambda node_id: venture,
             mechanic=lambda name: {NODE: {"scholars": 1.0}} if name == "staff_grant" else {}, tech_effects=lambda node_id: None,
             automatic_policy=lambda name: policy[name], capability_sets=(frozenset(), frozenset(), {}))
@@ -87,12 +86,12 @@ def complete(game):
 # ---- a failing attempt goes to the failure rule and finishes nothing
 game = complete(Finishing(fails=True))
 check("a failing attempt is handed to the failure rule and the project is not finished",
-      game.failed == [(NODE, 1.0)] and NODE not in game.state.projects.done and NODE in game.state.projects.active and kinds(game) == [], game.failed)
+      game.failed == [(NODE, 1.0)] and NODE not in game.knowledge.seat.done and NODE in game.state.projects.active and kinds(game) == [], game.failed)
 
 # ---- a finished concern that is not opened for the player
 game = complete(Finishing(venture=True, auto_open=False))
-check("a finished project is done, dated and no longer active", NODE in game.state.projects.done and NODE not in game.state.projects.active
-      and game.state.projects.done_year == {NODE: 100} and "school" not in game.state.household.hour_allocations, game.state.projects)
+check("a finished project is done, dated and no longer active", NODE in game.knowledge.seat.done and NODE not in game.state.projects.active
+      and game.knowledge.seat.done_year == {NODE: 100} and "school" not in game.state.household.hour_allocations, game.state.projects)
 check("its effects are applied once and its transfer paid", game.applied == [NODE] and game.transfers == [NODE], None)
 check("a finished concern logs one completion and no shortfall when the free staff cover it", kinds(game) == ["project_completed"], kinds(game))
 game = complete(Finishing(venture=True, shortfall=(5.0, 5.0, 0.0, 0.0)))
@@ -127,7 +126,7 @@ after = {"measures": {"literacy general": (0.15, True)}, "road_done": 4, "road_t
 
 
 def goal_game(snapshot, done, closure):
-    game = projects_host.build(tree={"top": {"name": "Top"}}, goal={"node": "top", "year": None, "years": {}}, legacy_fog=False, legacy_projects=SimpleNamespace(done=done))
+    game = projects_host.build(tree={"top": {"name": "Top"}}, goal={"node": "top", "year": None, "years": {}}, legacy_fog=False, techniques_held=lambda: done)
     game.goal_snapshot = lambda: snapshot
     game.goal_closure_ids = lambda: closure
     return game

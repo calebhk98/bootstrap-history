@@ -4,6 +4,7 @@ every spelling. The exclusion list rules are test_exclusion_rules, the parser an
 test_player_choice_routes. No years run."""
 import unittest
 
+from sim.knowledge.api import LearnTechnique
 from sim.tests.harness import NODES, S, unopened_sim
 from sim.ui.proto.typed import parse_typed
 from sim.projects.api import AutoOpenVentures
@@ -38,8 +39,7 @@ class RushPreviewAndExclusionsTest(unittest.TestCase):
     def test_auto_open_skips_an_excluded_concern(self):
         game = unopened_sim(capital=2_000_000)
         venture = next(node_id for node_id in NODES if game.view("is_venture")[node_id] and NODES[node_id]["rev"] > NODES[node_id]["up"])
-        game.state.projects.done.add(venture)
-        game._done_changed()
+        game.send(LearnTechnique(venture))
         game.view("exclusions")().add(venture)
         game.send(AutoOpenVentures())
         self.assertNotIn(venture, game.state.projects.operating)

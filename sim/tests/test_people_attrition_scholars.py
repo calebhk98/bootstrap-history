@@ -11,6 +11,8 @@ from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
 
 from sim.agents.household import Household
+from sim.knowledge.api import KnowledgeSeat, RevealNodes
+from sim.knowledge.module import Knowledge
 from sim.mechanics.module import Mechanics
 from sim.tests import module_harness
 from sim.tests import materials_stand_in
@@ -125,17 +127,16 @@ check("the advice on how to get scholars never points at a different trade famil
 
 # --- SAVE INTEGRITY, JOB 2a: FOG CAN BE REWOUND. `revealed` is a ratchet: assigning to it may grow what this running
 # session has seen, never shrink it.
-projects = SimpleNamespace(revealed={"identity_cover", "workshop_first"})
-ratchet = SimpleNamespace(_state=SimpleNamespace(projects=projects))
-Household.revealed.fset(ratchet, {"identity_cover"})
-check("fog cannot be rewound: assigning an earlier set keeps everything this session has already seen",
-      projects.revealed == {"identity_cover", "workshop_first"}, sorted(projects.revealed))
-Household.revealed.fset(ratchet, {"identity_cover", "metallurgy"})
-check("...and assigning more grows it", projects.revealed == {"identity_cover", "workshop_first", "metallurgy"})
-fresh = SimpleNamespace(_state=SimpleNamespace(projects=SimpleNamespace(revealed=None)))
-Household.revealed.fset(fresh, {"identity_cover"})
+ratchet = module_harness.build(Knowledge, seat=KnowledgeSeat(revealed={"identity_cover", "workshop_first"}))
+ratchet.reveal_nodes(RevealNodes(("identity_cover",)))
+check("fog cannot be rewound: revealing an earlier set keeps everything this session has already seen",
+      ratchet.seat.revealed == {"identity_cover", "workshop_first"}, sorted(ratchet.seat.revealed))
+ratchet.reveal_nodes(RevealNodes(("identity_cover", "metallurgy")))
+check("...and revealing more grows it", ratchet.seat.revealed == {"identity_cover", "workshop_first", "metallurgy"})
+fresh = module_harness.build(Knowledge, seat=KnowledgeSeat())
+fresh.reveal_nodes(RevealNodes(("identity_cover",)))
 check("a fresh resume still sees only what that save file actually recorded",
-      fresh._state.projects.revealed == {"identity_cover"}, fresh._state.projects.revealed)
+      fresh.seat.revealed == {"identity_cover"}, fresh.seat.revealed)
 
 # planner.py works backward from the goal by critical-path method (CPM) over its prerequisite closure, instead of
 # walking a hand-written list. These checks pin the structural properties the measured comparison depends on.

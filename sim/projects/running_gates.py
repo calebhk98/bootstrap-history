@@ -13,7 +13,7 @@ class RunningGates:
 
 	def _unmet_of(self, node):
 		needs = self.needs
-		return running_gate_rules.unmet_running_gates(node.get("requires_running"), needs.legacy_projects().done,
+		return running_gate_rules.unmet_running_gates(node.get("requires_running"), needs.techniques_held(),
 		                                              lambda work: needs.running[work])
 
 	def _ways_short_of(self, node):

@@ -76,7 +76,7 @@ def teaching_knowledge(sim):
     registry = getattr(sim, "actors", None)
     by_actor = {actor.identity(): set(actor.knowledge) for actor in (registry.actors.values() if registry is not None else ())
                 if actor.record.exited_year is None}
-    return by_actor, set(sim.state.projects.granted), sim.view("actor_world")().demonstrated()
+    return by_actor, set(sim.view("techniques_granted")()), sim.view("actor_world")().demonstrated()
 
 
 @bridge_view("shared_answer", kind=QUOTE)

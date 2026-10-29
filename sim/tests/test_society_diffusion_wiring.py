@@ -33,11 +33,11 @@ class Game:
             "seat_holders": lambda node_id: seat_builds.holders_of(seats, node_id),
             "built_by_any_seat": lambda among: seat_builds.built_by_any(seats, among),
             "earliest_done_year": lambda node_id, default: knowledge_rules.earliest_done_year(
-                [(held.projects.done, held.projects.done_year) for held in seats.values()], node_id, default)})
+                [(held.held, held.done_year) for held in seats.values()], node_id, default)})
 
 
 def seat(done, years=None, granted=()):
-    return SimpleNamespace(projects=SimpleNamespace(done=set(done), granted=set(granted), done_year=dict(years or {})))
+    return SimpleNamespace(held=frozenset(done), granted=frozenset(granted), done_year=dict(years or {}))
 
 
 HALF_LIFE = constants.DIFFUSION_HALF_LIFE_FOOD_YEARS

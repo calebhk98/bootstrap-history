@@ -61,6 +61,7 @@ from sim import simulator as S
 # test_commodities_wired_in.py use COMMOD, bare and without their own import.
 from sim.engine import planner as PLANNER
 from sim.prices import commodities as COMMOD
+from sim.knowledge.api import ForgetTechnique, LearnTechnique, ReceiveTechniques, RevealNodes, StartDoneYearRecord
 
 TREE, PRICES, NODES, WAGES, GOODS = S.load()
 GOAL = TREE["meta"]["goal_node"]
@@ -178,7 +179,8 @@ def sim(civ="rome_100ad", capital=None, manual=True, events=False, surveyed=None
     config = {"start_capital": capital} if capital is not None else None
     test_sim = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
               civ=S.load_civ(civ), cfg=config)
-    test_sim.state._goal, test_sim.done_year = GOAL, {}
+    test_sim.state._goal = GOAL
+    test_sim.send(StartDoneYearRecord())
     for material in (("coal",) + tuple(_ore_goods(test_sim.view("legacy_world_map")()))) if surveyed is None else tuple(surveyed):
         found_deposits_of(test_sim, material)
     return test_sim
@@ -293,7 +295,7 @@ def run_it(sim_state, *keys):
     player would.
     """
     for key in keys:
-        sim_state.state.projects.done.add(key)
+        sim_state.send(LearnTechnique(key))
         sim_state.state.projects.operating.add(key)
     sim_state._done_changed()
     return sim_state
@@ -472,8 +474,7 @@ def _mk_loom_sim(n_looms, age_years):
         staff.employees[trade] = 100.0 * n_looms
     loom_sim.year = 100
     for node_id in chosen:
-        loom_sim.state.projects.done.add(node_id)
-        loom_sim.done_year[node_id] = 100
+        loom_sim.send(LearnTechnique(node_id, year=100))
     loom_sim._done_changed()
     for node_id in chosen:
         for trade, required in NODES[node_id].get("lab", {}).get("trades", {}).items():

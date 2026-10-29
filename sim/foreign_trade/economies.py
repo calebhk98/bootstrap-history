@@ -67,9 +67,7 @@ class Economies:
     def partner_gate(self, civilization_id: str) -> Optional[Refusal]:
         """Why trade with a partner some action returns cannot begin yet, else None. A partner no action returns is open from
         the start."""
-        if self.needs.partner_gate_refusal(civilization_id) is None:
-            return None
-        return Refusal("partner_not_reached", "you have not yet reached %s" % civilization_id)
+        return self.needs.partner_gate_refusal(civilization_id)
 
     def partner_refusal(self, civilization_id: str, material: str) -> Optional[Refusal]:
         """Why the partner will not sell the material, else None. The partner's state decides: it has shut its markets to the

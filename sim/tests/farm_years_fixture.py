@@ -2,13 +2,13 @@
 the demographic and society steps, and build the game."""
 from .harness import sim
 from sim.diffusion.api import AdvanceSociety
+from sim.knowledge.api import LearnTechnique
 
 
 def complete(test_sim, node_ids):
     """Mark technologies as completed by the founder this year."""
     for node_id in node_ids:
-        test_sim.state.projects.done.add(node_id)
-        test_sim.state.projects.done_year[node_id] = test_sim.year
+        test_sim.send(LearnTechnique(node_id, year=test_sim.year))
 
 
 def run_years(test_sim, years):
