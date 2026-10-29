@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Sequence
 
 from .mods_base import ModError
+from sim.scenario.api import AdvanceYear
+
 from . import year_steps
 
 SEAT = "seat"
@@ -41,7 +43,7 @@ def _still_playing(sim, seats):
 
 
 def _advance_year(sim, seats):
-	sim.state.scenario.year += 1
+	sim.send(AdvanceYear())
 
 
 SHIPPED: List[Phase] = [

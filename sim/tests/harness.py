@@ -470,7 +470,7 @@ def _mk_loom_sim(n_looms, age_years):
     # obtain both its workers and its specialist foreman.
     for trade in S.WAGES:
         staff.employees[trade] = 100.0 * n_looms
-    loom_sim.state.scenario.year = 100
+    loom_sim.year = 100
     for node_id in chosen:
         loom_sim.state.projects.done.add(node_id)
         loom_sim.done_year[node_id] = 100
@@ -481,7 +481,7 @@ def _mk_loom_sim(n_looms, age_years):
                                      float(required) * n_looms)
         opened, msg = loom_sim.send(OpenVenture(node_id, None))
         assert opened, (node_id, msg)
-    loom_sim.state.scenario.year = 100 + age_years
+    loom_sim.year = 100 + age_years
     return loom_sim, chosen
 
 

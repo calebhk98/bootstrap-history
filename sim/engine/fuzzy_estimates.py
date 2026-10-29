@@ -17,6 +17,8 @@ the project starts.
 import random
 import re
 
+from sim.scenario.api import SetFuzzyEstimates
+
 from .data import WAGES
 
 DEFAULT_ACTOR = "player"
@@ -28,14 +30,14 @@ ESTIMATE_NOTE = ("Figures marked ~ are estimates, not measurements: you do not "
 
 
 def enabled(sim):
-    return bool(getattr(sim.state, "_fuzzy_estimates", False))
+    return bool(sim.view("legacy_fuzzy_estimates")())
 
 
 def salt(sim):
     """The per-game salt, drawn once from the game's seeded rng."""
-    if not getattr(sim.state, "_fuzzy_salt", 0):
-        sim.state._fuzzy_salt = sim.rng.getrandbits(30) + 1
-    return sim.state._fuzzy_salt
+    if not sim.view("fuzzy_salt")():
+        sim.send(SetFuzzyEstimates(enabled(sim), sim.rng.getrandbits(30) + 1))
+    return sim.view("fuzzy_salt")()
 
 
 def actor_of(sim, actor=None):
@@ -165,7 +167,7 @@ def fuzz_why(sim, node_id, out, actor=None):
             out[key] = _scale(sim, node_id, "floor", out[key], 2, actor)
     if "earliest_completion_years" in out:
         out["earliest_completion_years"] = _scale(sim, node_id, "floor", out["earliest_completion_years"], 2, actor)
-        out["earliest_completion_year"] = round(sim.state.scenario.year + out["earliest_completion_years"], 1)
+        out["earliest_completion_year"] = round(sim.year + out["earliest_completion_years"], 1)
     if "expected_calendar_years_with_retries" in out:
         out["expected_calendar_years_with_retries"] = _scale(
             sim, node_id, "floor", out["expected_calendar_years_with_retries"], 2, actor)

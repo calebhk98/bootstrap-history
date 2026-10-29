@@ -20,8 +20,8 @@ class _Host:
     ceiling), under the names the tests of mines use: `holdings` is the seat's state, `paid` what it paid."""
 
     def __init__(self, budget=1e18):
-        self.state = types.SimpleNamespace(scenario=types.SimpleNamespace(year=100))
-        self.module = resources_stand_in.build(budget=budget, views={"year": lambda: self.state.scenario.year})
+        self.year = 100
+        self.module = resources_stand_in.build(budget=budget, views={"year": lambda: self.year})
         module = self.module
         module.mine_capex = lambda material: 10.0
         module.mine_opex = lambda material: 1.0
@@ -37,7 +37,7 @@ class _Host:
 
     @property
     def household(self):
-        return types.SimpleNamespace(log=[(self.state.scenario.year, command.text) for command in module_harness.sent(self.module)
+        return types.SimpleNamespace(log=[(self.year, command.text) for command in module_harness.sent(self.module)
                                           if isinstance(command, RecordEvent)])
 
     def open_mine(self, material, tonnes, partial=True, order="", deposit=None):
@@ -130,7 +130,7 @@ class DrawDownTests(unittest.TestCase):
         self.row = row
         self.host.holdings.mines = [{"material": "iron", "capacity": row["room_tonnes_per_year"] / 2.0, "opened_year": 100,
                                      "capex_paid": 0.0, "order": "", "intensity_yrs": 0.0, "deposit": row["id"]}]
-        self.host.state.scenario.year = 110
+        self.host.year = 110
 
     def test_each_year_a_working_draws_its_yield_from_its_deposit(self):
         working = self.host.holdings.mines[0]

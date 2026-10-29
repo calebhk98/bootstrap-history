@@ -22,7 +22,6 @@ def _test_automatic_field_persistence():
 		HoldingsState,
 		HouseholdState,
 		ProjectsState,
-		ScenarioState,
 		SimulationState,
 		deserialize_state,
 		serialize_state,
@@ -38,7 +37,6 @@ def _test_automatic_field_persistence():
 	econ = EconomyState()
 	holdings = HoldingsState(_dashboard_history=[120.0])
 	founder = FounderState(_founder_death_year=28)
-	scenario = ScenarioState(year=115)
 
 	state = SimulationState(
 		household=hh,
@@ -46,9 +44,7 @@ def _test_automatic_field_persistence():
 		economy=econ,
 		holdings=holdings,
 		founder=founder,
-		scenario=scenario,
 		_civ="rome_100ad",
-		_fog=False,
 	)
 	state._goal = "aqueduct"
 
@@ -141,7 +137,6 @@ def _test_runtime_type_reconstruction():
 		economy=econ,
 		holdings=holdings,
 		founder=None,
-		scenario=None,
 	)
 
 	blob = serialize_state(state)
@@ -180,7 +175,6 @@ def _test_transient_cache_exclusion():
 		projects=projects,
 		economy=None,
 		founder=None,
-		scenario=None,
 	)
 
 	blob = serialize_state(state)
@@ -204,15 +198,16 @@ def _valid_save():
 	from types import SimpleNamespace
 	from sim.engine.state import (
 		EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
-		ScenarioState, SimulationState, serialize_state,
+		SimulationState, serialize_state,
 	)
 	state = SimulationState(
 		household=HouseholdState(capital=1250.0), projects=ProjectsState(done={"stone_cutting"}), economy=EconomyState(),
-		holdings=HoldingsState(), founder=FounderState(), scenario=ScenarioState(year=115))
+		holdings=HoldingsState(), founder=FounderState())
 	state._goal = "aqueduct"
 	blob = serialize_state(state)
-	blob.update({"_civ": "rome_100ad", "_weights": {}, "_fog": False, "_immortal": True,
+	blob.update({"_civ": "rome_100ad", "_weights": {}, "_immortal": True,
 	             "_rng": [3, list(random.Random(1).getstate()[1]), None]})
+	blob["modules"]["scenario"] = {"year": 115, "fog": False}
 	game = SimpleNamespace(nodes={"aqueduct": {}, "stone_cutting": {}}, civ={"id": "rome_100ad"})
 	return blob, game
 

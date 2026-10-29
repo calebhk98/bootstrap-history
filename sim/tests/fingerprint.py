@@ -93,7 +93,7 @@ def _resolve_field(sim, field):
     if hasattr(sim, "household") and hasattr(sim.household, field):
         return getattr(sim.household, field)
     if hasattr(sim, "state") and sim.state:
-        for sub_name in ("household", "projects", "economy", "holdings", "seat_progress", "founder", "scenario"):
+        for sub_name in ("household", "projects", "economy", "holdings", "seat_progress", "founder"):
             sub = getattr(sim.state, sub_name, None)
             if sub is not None and hasattr(sub, field):
                 return getattr(sub, field)
@@ -144,7 +144,7 @@ def build(scenario):
               manual=False, civ=S.load_civ(scenario["civ"]))
     sim.state._goal, sim.done_year = GOAL, {}
     if scenario["fog"]:
-        sim.state._fog = True
+        sim.fog = True
     return sim
 
 

@@ -7,7 +7,7 @@ import json
 import unittest
 
 from sim.engine.state import (EconomyState, FounderState, HoldingsState, HouseholdState,
-                              ProjectsState, ScenarioState, SimulationState, deserialize_state, serialize_state)
+                              ProjectsState, SimulationState, deserialize_state, serialize_state)
 
 REMEMBERED = {"notes": {"next": 2, "rows": [{"n": 1, "year": 100, "text": "aqueduct for the mill town", "project": None}]},
               "goals": {"watched": ["steam_engine"]}}
@@ -16,8 +16,7 @@ REMEMBERED = {"notes": {"next": 2, "rows": [{"n": 1, "year": 100, "text": "aqued
 def state(interface=None):
     built = SimulationState(
         household=HouseholdState(capital=1250.0), projects=ProjectsState(done={"bronze"}), economy=EconomyState(),
-        holdings=HoldingsState(), founder=FounderState(policy={}),
-        scenario=ScenarioState(year=115))
+        holdings=HoldingsState(), founder=FounderState(policy={}))
     if interface is not None:
         built.interface = interface
     return built

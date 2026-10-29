@@ -9,11 +9,6 @@ from .bridge import bridge_view
 
 # ---- the game's data and the labour market ----
 
-@bridge_view("start_year")
-def start_year(sim):
-	return sim.cfg["start_year"]
-
-
 # ---- materials ----
 
 # ---- finance, polity and the seat's policy ----

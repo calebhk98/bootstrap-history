@@ -175,7 +175,7 @@ def register(api):
                              "exposure implies, and the cleanup technologies held. Drivers name which source made each kilogram.")
     def pollution(sim, nodes, cmd, ended):
         picture = assess(sim)
-        year = sim.state.scenario.year
+        year = sim.year
         memory = api.state(sim.state.interface)
         memory.setdefault("history", {})[str(year)] = {
             "excess_deaths": round(sum(picture["deaths_by_band"].values()), 2),

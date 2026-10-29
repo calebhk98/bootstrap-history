@@ -14,22 +14,10 @@ from .data import closure, critical_path
 
 # ---- core: the engine's own switches and raw state ----------------------------------------------------------------
 
-@bridge_view("events_enabled")
-def events_enabled(sim):
-    """Whether the game runs with its random events and hazards (a test or a replay may turn them off)."""
-    return sim.events
-
-
 @bridge_view("legacy_act_as", kind=QUOTE)
 def legacy_act_as(sim, seat_id):
     """The context in which `seat_id` is the acting seat (the engine's `act_as`); the module has no way to switch seats."""
     return sim.act_as(seat_id)
-
-
-@bridge_view("legacy_said_once")
-def legacy_said_once(sim):
-    """The set of notices the hazards and the levy have already told once (mutated in place: a debt)."""
-    return sim.state.scenario._said_condition
 
 
 @bridge_view("effective_hazard", kind=QUOTE)

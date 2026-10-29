@@ -10,7 +10,7 @@ from sim.seats.api import ForgetGoalCaches, MoveSeat, RegisterSeat, RememberGoal
 
 from . import state_paths
 from .bridge import bridge_command, bridge_view
-from .data import kit_capital as kit_capital_of, win_condition_describe
+from .data import win_condition_describe
 from .seat_defaults import default_policy
 from .seat_handover_empty import holds_that_would_be_lost
 from .seat_move import move_seat
@@ -60,19 +60,6 @@ def seat_holds(sim, seat_id):
 def society_techs(sim):
     """The techniques the society holds now (its own at the start, and what its firms and government have since learnt)."""
     return sim._society_held_techs()
-
-
-@bridge_view("kit_capital", kind=QUOTE)
-def kit_capital(sim, kit_id):
-    """A starting kit's money at the opening wage of this civilisation."""
-    return kit_capital_of(kit_id, sim.civ)
-
-
-@bridge_view("founder_life_terms")
-def founder_life_terms(sim):
-    """What a new founder's lifespan is drawn from."""
-    return {"immortal": sim.cfg["immortal"], "minimum": sim.FOUNDER_MIN_REMAINING_LIFE_YEARS,
-            "mean": sim.cfg["founder_life_mean"], "spread": sim.cfg["founder_life_sd"]}
 
 
 @bridge_command(RegisterSeat)

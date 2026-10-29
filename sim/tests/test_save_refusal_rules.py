@@ -12,18 +12,19 @@ from types import SimpleNamespace
 from .harness import check
 from sim.engine.saveload import _validate_save, load_state
 from sim.engine.state import (EconomyState, FounderState, HoldingsState, HouseholdState,
-                              ProjectsState, ScenarioState, SimulationState, serialize_state)
+                              ProjectsState, SimulationState, serialize_state)
 from sim.refusal import cause_of
 
 
 def valid_save():
     state = SimulationState(
         household=HouseholdState(capital=1250.0), projects=ProjectsState(done={"stone_cutting"}), economy=EconomyState(),
-        holdings=HoldingsState(), founder=FounderState(), scenario=ScenarioState(year=115))
+        holdings=HoldingsState(), founder=FounderState())
     state._goal = "aqueduct"
     blob = serialize_state(state)
-    blob.update({"_civ": "rome_100ad", "_civ_live": {}, "_weights": {}, "_fog": False, "_immortal": True,
+    blob.update({"_civ": "rome_100ad", "_civ_live": {}, "_weights": {}, "_immortal": True,
                  "_rng": [3, list(random.Random(1).getstate()[1]), None]})
+    blob["modules"]["scenario"] = {"year": 115, "fog": False}
     return blob, SimpleNamespace(nodes={"aqueduct": {}, "stone_cutting": {}}, civ={"id": "rome_100ad"})
 
 

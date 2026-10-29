@@ -2,7 +2,7 @@
 from typing import Any
 
 from .state import (EconomyState, FounderState, HouseholdState,
-                    ProjectsState, ScenarioState, SimulationState)
+                    ProjectsState, SimulationState)
 
 
 class HouseholdPort:
@@ -14,5 +14,4 @@ class HouseholdPort:
             projects=ProjectsState(),
             economy=EconomyState(),
             founder=FounderState(),
-            scenario=ScenarioState(),
         )

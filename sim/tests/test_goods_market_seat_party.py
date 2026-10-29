@@ -16,11 +16,12 @@ class FixtureSim:
     """The state and the seat switch; the market code reads nothing else for flows."""
 
     def __init__(self):
+        self.year = 100
         self.state = HouseholdPort().fresh_state(100.0)
         self.state.seats["second"] = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(),
                                                founder=FounderState())
         self.markets = module_harness.build(Markets, world=MarketsWorld(), views={
-            "year": lambda: self.state.scenario.year, "seat_list": lambda: {"joined": list(self.state.seats)}})
+            "year": lambda: self.year, "seat_list": lambda: {"joined": list(self.state.seats)}})
 
     def _market_flows(self):
         return self.markets.legacy_market_flows()
@@ -63,7 +64,7 @@ bind_seat(sim.state, second)
 check("the stamp for caches leaves out the asking seat only", stamp != market.others_stamp(), None)
 bind_seat(sim.state, first)
 
-sim.state.scenario.year += 1
+sim.year += 1
 sim._market_flows()
 check("a new year clears every seat's flows and keeps the firm's standing sale",
       market.sold_tonnes("iron", first) == 0.0 and market.sold_tonnes("iron", second) == 0.0

@@ -52,4 +52,4 @@ class ForwardMechanicsMixin:
         return self.view("staff")()["directors_extra"] >= self.DEPUTIES_CARRY_THE_WORK_FROM
 
     def founder_age(self):
-        return self.cfg["founder_arrival_age"] + self.state.scenario.year - self.cfg["start_year"]
+        return self.cfg["founder_arrival_age"] + self.year - self.cfg["start_year"]

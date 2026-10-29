@@ -1,7 +1,8 @@
 """Two or three seats on the real root state, with the alias rebinding a handover needs (shared by the handover tests)."""
 from sim.engine import game_assembly
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, ScenarioState, SimulationState
+from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, bind_seat, seat_from_template
+from sim.scenario.api import OpenScenario, ScenarioSources
 from sim.seats.api import HandOverSeat
 
 
@@ -13,7 +14,6 @@ class Game:
         self.state = SimulationState(household=HouseholdState(capital=10.0), projects=ProjectsState(), founder=FounderState())
         self.state.seats[first] = self.state.seats.pop(FIRST_SEAT_ID)
         self.state.acting_seat = first
-        self.state.scenario = ScenarioState(year=100)
         for seat_id in seat_ids[1:]:
             self.state.seats[seat_id] = seat_from_template({}, 5.0, {})
         bind_seat(self.state, first)
@@ -22,6 +22,10 @@ class Game:
         self.year = 100
         self.civ = {"id": "home"}
         self.assembly = game_assembly.build(None, False)
+        self.send(OpenScenario(
+            civilisation=self.civ, configuration={"start_year": 100}, manual=False, events=True, bounty_set=set(),
+            sources=ScenarioSources(load_civilisation=lambda civilisation_id: {"id": civilisation_id}, kit_capital=lambda kit, civ: 0.0,
+                                    display_units=lambda: ({"units": {}}, {}, dict))))
         game_assembly.attach(self)
 
     def view(self, name):

@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 from .harness import check
 from sim.agents.household import Household
 from sim.engine.forward_production import ForwardProductionMixin
-from sim.engine.state import SimulationState, HouseholdState, ProjectsState, ScenarioState
+from sim.engine.state import SimulationState, HouseholdState, ProjectsState
 from sim.production.api import RefreshDoneCaches, RefreshOperatingCaches
 from sim.tests import module_harness
 from sim.workforce.api import WatchStaff, WorkforceSeat
@@ -18,8 +18,7 @@ class ContainerGame(ForwardProductionMixin):
 	"""A household over a fresh state, with the invalidation hooks a Sim wires to it."""
 
 	def __init__(self):
-		self.state = SimulationState(household=HouseholdState(capital=1000), projects=ProjectsState(),
-									 scenario=ScenarioState())
+		self.state = SimulationState(household=HouseholdState(capital=1000), projects=ProjectsState())
 		self.household = Household(starting_capital=1000.0, operating_changed=self._operating_changed,
 								   active_changed=self._active_changed,
 								   state=self.state)

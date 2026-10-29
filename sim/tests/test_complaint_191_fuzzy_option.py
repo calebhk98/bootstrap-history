@@ -11,6 +11,7 @@ import random
 from types import SimpleNamespace
 
 from .harness import check
+from sim.tests import scenario_stand_in
 
 from sim.engine.core_properties import ForwardingPropertiesMixin
 from sim.ui import cli_interactive
@@ -50,31 +51,31 @@ check("backing out of the menu's question answers None", reply is None, reply)
 
 # ---- the options screen
 def turn_on(answer):
-    sim = SimpleNamespace(state=SimpleNamespace(_fuzzy_estimates=False, _fuzzy_salt=0), rng=random.Random(1))
+    sim = scenario_stand_in.host()
     said = []
     turned = turn_fuzzy_estimates_on(sim, lambda prompt, options, default: answer, said.append, said.append)
     return sim, turned, said
 
 
 sim, turned, said = turn_on("y")
-check("answering y turns the option on", sim.state._fuzzy_estimates is True and turned is True, None)
+check("answering y turns the option on", sim.view("legacy_fuzzy_estimates")() is True and turned is True, None)
 for answer in ("n", None):
     sim, turned, said = turn_on(answer)
-    check("an answer of %r leaves it off" % (answer,), sim.state._fuzzy_estimates is False and turned is False, None)
+    check("an answer of %r leaves it off" % (answer,), sim.view("legacy_fuzzy_estimates")() is False and turned is False, None)
 
 # ---- the setter
 class Game(ForwardingPropertiesMixin):
     def __init__(self):
-        self.state = SimpleNamespace(_fuzzy_estimates=False, _fuzzy_salt=0)
-        self.rng = random.Random(1)
+        stand_in = scenario_stand_in.host()
+        self._scenario, self.rng, self.view, self.send = stand_in._scenario, stand_in.rng, stand_in.view, stand_in.send
 
 
 game = Game()
 game.fuzzy_estimates = True
-salt = game.state._fuzzy_salt
+salt = game.view("fuzzy_salt")()
 check("turning it on stores it and draws a salt", game.fuzzy_estimates is True and salt > 0, salt)
 game.fuzzy_estimates = True
-check("turning it on again keeps the salt, so the figures drawn stay the same", game.state._fuzzy_salt == salt, None)
+check("turning it on again keeps the salt, so the figures drawn stay the same", game.view("fuzzy_salt")() == salt, None)
 game = Game()
 game.fuzzy_estimates = False
-check("turning it off draws no salt", game.fuzzy_estimates is False and game.state._fuzzy_salt == 0, None)
+check("turning it off draws no salt", game.fuzzy_estimates is False and game.view("fuzzy_salt")() == 0, None)

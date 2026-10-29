@@ -36,7 +36,7 @@ def open_book_concerns(game, count):
         if node_id in game.state.projects.operating:
             for trade, share in sorted(world.concern_staff(node_id).items()):
                 game.view("legacy_labour")().hire(trade, int(share) + 1)    # the crew it runs with
-            game.state.projects.business.set_opened_year(node_id, game.state.scenario.year - RAMPED_YEARS)
+            game.state.projects.business.set_opened_year(node_id, game.year - RAMPED_YEARS)
             opened.append(node_id)
     return opened
 
@@ -69,7 +69,7 @@ def main():
         forecast, upkeep = game.view("revenue_estimate")(), game.view("upkeep")()
         game.step()
         print("year %d forecast revenue %.0f upkeep %.0f credits %s"
-              % (game.state.scenario.year, forecast, upkeep, {purpose: round(coin) for purpose, coin in sorted(credits.items())}))
+              % (game.year, forecast, upkeep, {purpose: round(coin) for purpose, coin in sorted(credits.items())}))
 
 
 if __name__ == "__main__":

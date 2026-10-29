@@ -26,7 +26,7 @@ class TheGameTracksRegionsTests(unittest.TestCase):
             setattr(world, field.name, copy.deepcopy(getattr(self.start_world, field.name)))
         accounts = _accounts(eaten_over_need_by_tile)
         game.send(RecordFoodEaten(rules.national_eaten_over_need(accounts), rules.eaten_over_need_by_tile(accounts)))
-        game.send(StepPopulation(game.state.scenario.year))
+        game.send(StepPopulation(game.year))
         return dict(game.view("regional_flows_last_year")())
 
     def test_the_nation_is_the_sum_of_its_regions_and_each_region_is_stored(self):

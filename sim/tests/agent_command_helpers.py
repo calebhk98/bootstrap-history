@@ -18,7 +18,7 @@ def with_end_year(game):
 
 def fogged_game(civ="rome_100ad", **options):
     game = sim(civ=civ, **options)
-    game.state._fog = True
+    game.fog = True
     game.state.projects.revealed = set()
     return game
 

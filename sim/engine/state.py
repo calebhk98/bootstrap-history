@@ -205,13 +205,6 @@ class FounderState:
 
 
 @dataclass
-class ScenarioState:
-	"""Simulation scenario configuration and timeline."""
-	year: int = 100
-	_said_condition: Set[str] = field(default_factory=set)  # hazard-condition messages already printed once
-
-
-@dataclass
 class SimulationState:
 	"""Root coordinator aggregating authoritative persistent subsystem states."""
 	# household, projects, founder, holdings and seat_progress alias the acting seat's objects and are not saved (seats are)
@@ -223,11 +216,7 @@ class SimulationState:
 	founder: Optional[FounderState] = field(default=None, metadata={"alias": True})
 	seats: Dict[str, "SeatState"] = field(default_factory=dict)
 	acting_seat: str = "founder"
-	scenario: Optional[ScenarioState] = None
 	_civ: Optional[str] = None
-	_fog: bool = False
-	_fuzzy_estimates: bool = False
-	_fuzzy_salt: int = 0
 	_immortal: bool = True
 	_rng: Optional[List[Any]] = None
 	_seed: Optional[Union[int, str]] = None
@@ -281,7 +270,6 @@ ALL_STATE_CLASSES = (
 	FounderState,
 	HoldingsState,
 	SeatProgressState,
-	ScenarioState,
 	ActorsState,
 )
 

@@ -8,6 +8,7 @@ from sim.refusal import Refusal, cause_of
 from .data import WAGES
 from . import game_assembly
 from sim.knowledge.api import fog_mismatch
+from sim.scenario.api import SetFuzzyEstimates, scenario_slot_of
 from sim.materials.api import CaptureReadings
 from .rng_record import restore_rng, rng_record
 from sim.engine.state import (
@@ -27,7 +28,6 @@ def state_text(sim):
 	sim.view("legacy_economy")().flush_record()
 	sim.state._civ = sim.civ.get("id")
 	sim.state._goal = sim.goal
-	sim.state._fog = sim.fog
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))
 	sim.state._seed = getattr(sim, "seed", None)
 	sim.state._game_version = GAME_VERSION
@@ -99,14 +99,14 @@ def _stamp(absolute):
 
 
 REQUIRED_V3_SECTIONS = (
-    "seats", "economy", "scenario", "modules",
+    "seats", "economy", "modules",
 )
 
 # What each seat holds; the acting seat's sections are checked and searched like root ones.
 SEAT_SECTIONS = ("household", "projects", "founder", "holdings", "seat_progress")
 
 REQUIRED_METADATA_FIELDS = (
-    "_civ", "acting_seat", "_fog", "_immortal", "_rng",
+    "_civ", "acting_seat", "_immortal", "_rng",
 )
 
 REQUIRED_SAVE_FIELDS = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
@@ -127,8 +127,7 @@ def _get_field(blob, field_name):
         return None
     if field_name in blob:
         return blob[field_name]
-    for section in ("economy", "scenario"):
-        sec = blob.get(section)
+    for sec in (blob.get("economy"), scenario_slot_of(blob)):   # the clock is the scenario module's
         if isinstance(sec, dict) and field_name in sec:
             return sec[field_name]
     seat = acting_seat_of(blob)
@@ -354,23 +353,20 @@ def _apply_blob(sim, blob):
 	if bad:
 		raise ValueError(bad if cause_of(bad) else Refusal("save_invalid", bad))
 
-	fog_refusal = fog_mismatch(sim.fog, blob.get("_fog"))
+	fog_refusal = fog_mismatch(sim.fog, scenario_slot_of(blob).get("fog"))
 	if fog_refusal:
 		raise ValueError(fog_refusal)
 
 	old_revealed = set(sim.state.projects.revealed) if getattr(sim, "state", None) and getattr(sim.state, "projects", None) and sim.state.projects.revealed else set()
-	asked_fuzzy, asked_salt = sim.fuzzy_estimates, sim.state._fuzzy_salt
+	asked_fuzzy, asked_salt = sim.fuzzy_estimates, sim.view("fuzzy_salt")()
 	state = deserialize_state(blob)
-	if asked_fuzzy and not state._fuzzy_estimates:   # the option given on the command line stays on
-		state._fuzzy_estimates = True
-		state._fuzzy_salt = state._fuzzy_salt or asked_salt
 	if old_revealed and getattr(state, "projects", None):
 		state.projects.revealed = set(state.projects.revealed or set()) | old_revealed
 	game_assembly.revive(sim, state, deserialize_state)
 	sim.state = state
 	sim._reconnect_state_hooks()
-	if state._fog is not None:
-		sim.fog = bool(state._fog)
+	if asked_fuzzy and not sim.fuzzy_estimates:   # the option given on the command line stays on
+		sim.send(SetFuzzyEstimates(True, sim.view("fuzzy_salt")() or asked_salt))
 	if state._immortal is not None:
 		sim.cfg["immortal"] = bool(state._immortal)
 	if state._goal is not None:

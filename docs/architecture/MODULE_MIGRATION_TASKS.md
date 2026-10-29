@@ -174,6 +174,11 @@ actors (21), hazards, workforce (20 each), projects (19).
   (254 before).
 - [ ] No other `legacy_*` view that hands out a live object (`legacy_projects`, `legacy_world_map`, `legacy_seats`,
   `legacy_dice` -> `game_random`, `legacy_economy`, `legacy_labour` and the rest: `python3 tools/measure/module_graph.py`).
+- [x] The `scenario` module (`sim/scenario/`) owns the game's setup and clock: the civilisation, the configuration, the modes
+  (events, manual, fog, fuzzy estimates), the year (only `AdvanceYear` moves it), the horizon, the danger and project limits,
+  and the text helpers that follow the coin and the player's units (`money_text`, `mass_text`, `plain_number`, ...). Its
+  inputs (another civilisation's file, a kit's worth, the unit registry) arrive in `OpenScenario`, so it reads no view. Left
+  on the engine: the unit options (`sim/engine/units.py`, process-global UI state) that `Sim` hands over as a callable.
 - [ ] The engine bridge answers no module read: each bridged view is published by the module that owns the fact.
 - [ ] A width review for each module that depends on more than 15 others, written into its catalogue entry: views that
   mirror methods merged into views that answer questions, sub-domains split out, pass-through dependencies removed,

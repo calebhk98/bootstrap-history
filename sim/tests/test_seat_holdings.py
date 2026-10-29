@@ -4,10 +4,11 @@ import json
 
 from .harness import *  # noqa: F401,F403
 from sim.engine.agents_port_household import HouseholdPort
-from sim.engine.state import (EconomyState, FounderState, HouseholdState, ProjectsState, ScenarioState,
+from sim.engine.state import (EconomyState, FounderState, HouseholdState, ProjectsState,
                               SimulationState, deserialize_state, serialize_state)
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
 from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
+from sim.scenario.state import ScenarioWorld
 
 QUICK_TOPIC = True
 
@@ -51,7 +52,7 @@ check("a load binds the root holdings to the acting seat",
 
 # the world parts declare none of the seat's fields
 world_economy = {f.name for f in dataclasses.fields(EconomyState)}
-world_scenario = {f.name for f in dataclasses.fields(ScenarioState)}
+world_scenario = {f.name for f in dataclasses.fields(ScenarioWorld)}
 seat_economy = {f.name for f in dataclasses.fields(HoldingsState)}
 seat_scenario = {f.name for f in dataclasses.fields(SeatProgressState)}
 check("the world economy declares none of the holder-owned fields",

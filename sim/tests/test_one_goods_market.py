@@ -43,8 +43,7 @@ def stand_in(**changes):
     facts = {"solved_materials": {"cassia_kg", "wheat_kg"}, "prices_in_home_money": {"cassia_kg": 2.0, "wheat_kg": 9.0}}
     route = SimpleNamespace(cost_per_tonne=40.0)
     values = dict(
-        _flows=flows, state=SimpleNamespace(acting_seat=FOUNDER, projects=SimpleNamespace(done=[]),
-                                            scenario=SimpleNamespace(year=-100)),
+        _flows=flows, year=-100, state=SimpleNamespace(acting_seat=FOUNDER, projects=SimpleNamespace(done=[])),
         **market_stand_in.market_memory(), economy=SimpleNamespace(agent_prices_at=lambda: None),
         _material_prices=lambda: {"wheat_kg": 3.0, "iron": 5.0}, _price_tables=lambda: (None, {"wheat_kg": "solved", "iron": "solved"}),
         foreign_economies=lambda: ["han"], _foreign_economy_facts=lambda partner: facts, _foreign_route=lambda civ: route,

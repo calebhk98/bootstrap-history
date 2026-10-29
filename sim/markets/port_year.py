@@ -466,7 +466,7 @@ class AgentEconomy(TilePricesMixin):
         """The year's trade over the external edge goes into the book of the country whose tile the port stands on."""
         setup = self._economy.setup
         country_trade_years.note(self.stored.setdefault("country_trade_by_year", {}), setup.country_of(setup.port_tile),
-                                 self._sim.state.scenario.year, imports, exports)
+                                 self._sim.year, imports, exports)
 
     def _settle_seats(self):
         """What each seat's goods fetched goes to its ledger, less what its concerns' inputs cost; what did not sell goes
@@ -488,13 +488,13 @@ class AgentEconomy(TilePricesMixin):
         sim = self._sim
         population = sim.population
         total = float(population.total)
-        weather = sim._pooled_farm_weather_multiplier(sim.state.scenario.year, harmed=False)   # harm is applied per producer below
+        weather = sim._pooled_farm_weather_multiplier(sim.year, harmed=False)   # harm is applied per producer below
         economy = self._economy
-        harmed = sim.externality_yield_factors(sim.state.scenario.year)
-        yields = port_sites.crop_yields(economy, weather, sim.farm_weather_by_tile(sim.state.scenario.year))
+        harmed = sim.externality_yield_factors(sim.year)
+        yields = port_sites.crop_yields(economy, weather, sim.farm_weather_by_tile(sim.year))
         yields = port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
         entrant_share, attrition_share = working_age_turnover(population)
-        return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),
+        return YearInputs(year=sim.year, population_by_tile=sim.labour.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
                           entrant_share=entrant_share, attrition_share=attrition_share,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
@@ -745,7 +745,7 @@ class AgentEconomy(TilePricesMixin):
         if country == economy.setup.civ_id or country not in economy.setup.countries():
             return None
         from .port_country import CountryAnswers
-        year = self._sim.state.scenario.year
+        year = self._sim.year
         book = self.stored.get("country_trade_by_year", {})
         answers = CountryAnswers(economy, country, lambda direction: country_trade_years.value(book, country, year - 1, direction))
         return answers if answers.has_labour_market() else None

@@ -41,7 +41,7 @@ from sim.markets.port_year import AgentEconomy
 
 kept = {}
 port = SimpleNamespace(stored=kept, _economy=SimpleNamespace(setup=SimpleNamespace(port_tile="north_port", country_of=lambda tile: "north")),
-					   _sim=SimpleNamespace(state=SimpleNamespace(scenario=SimpleNamespace(year=120))))
+					   _sim=SimpleNamespace(year=120))
 AgentEconomy._note_off_map_trade(port, 40.0, 25.0)
 check("the port's off-map trade of a year is booked to the country of its tile, and kept with the economy's record",
 	  kept["country_trade_by_year"] == {"north": {"120": {"in": 40.0, "out": 25.0}}}, kept)

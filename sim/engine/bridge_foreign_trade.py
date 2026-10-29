@@ -6,7 +6,7 @@ from sim.assembly.api import KEYED, QUOTE
 
 from . import foreign_economy_data, partner_demand
 from .bridge import bridge_view
-from .data import load_civ, starting_schedule
+from .data import starting_schedule
 
 
 # ---- the partners' files and opening economies ----
@@ -15,12 +15,6 @@ from .data import load_civ, starting_schedule
 def foreign_economy_records(sim):
     """The economies the data file names, with installed mods applied (the module function is looked up on each call)."""
     return foreign_economy_data.foreign_economy_records()
-
-
-@bridge_view("civilisation_record", kind=KEYED)
-def civilisation_record(sim, civilization_id):
-    """The civilisation `civilization_id` as its file gives it (mods applied, checked)."""
-    return load_civ(civilization_id)
 
 
 @bridge_view("partner_own_economy", kind=KEYED)

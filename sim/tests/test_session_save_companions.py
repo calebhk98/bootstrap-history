@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 from sim.engine import save_companions, saveload
-from sim.engine.state import SimulationState, HouseholdState, ProjectsState, ScenarioState, serialize_state, deserialize_state
+from sim.engine.state import SimulationState, HouseholdState, ProjectsState, serialize_state, deserialize_state
 
 
 def _stub_game(year):
@@ -42,8 +42,7 @@ class SaveCompanionTests(unittest.TestCase):
         self.assertEqual(saveload._encode("{}", "c.json"), b"{}")
 
     def test_the_version_is_in_the_serialised_state_and_not_checked_on_load(self):
-        state = SimulationState(household=HouseholdState(capital=1), projects=ProjectsState(),
-                                scenario=ScenarioState())
+        state = SimulationState(household=HouseholdState(capital=1), projects=ProjectsState())
         state._game_version = "0.0.1-older"
         blob = serialize_state(state)
         self.assertEqual(blob["_game_version"], "0.0.1-older")

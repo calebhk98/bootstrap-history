@@ -64,7 +64,7 @@ def money_seat(sim):
 	send(ChargeHouseholdTheft(keeping, keeping_owed))
 	send(AutoMothballMines())
 	# staff hired or taught this year get first claim on reclaiming what attrition shut, before anything is judged still short and closed again
-	year = state.scenario.year
+	year = sim.year
 	before = state.household.capital
 	reopened = send(ReopenRestaffedVentures(year))
 	if reopened:
@@ -91,9 +91,9 @@ def money_world(sim):
 	"""The society's own year: output recovery, population, literacy and trades, the actors. Once a year."""
 	sim.send(RecoverOutput())
 	# population and the wage premium it drives recover on their own clock, before this year's shocks can add a fresh deficit
-	sim.send(StepPopulation(sim.state.scenario.year))
+	sim.send(StepPopulation(sim.year))
 	# a year's schooling gain is visible to this same year's teaching decisions
-	sim.send(AdvanceSociety(sim.state.scenario.year))
+	sim.send(AdvanceSociety(sim.year))
 	sim.send(AdvanceActors())
 
 

@@ -35,11 +35,6 @@ def opening_cast(sim):
 # ---- core: settings and constants the engine declares ----
 
 
-@bridge_view("game_setting", kind=KEYED)
-def game_setting(sim, name):
-    return sim.cfg[name]
-
-
 @bridge_view("legacy_constant", kind=KEYED)
 def legacy_constant(sim, name):
     """A number `Sim` still declares (the goods categories, the state's funding terms, the population scale), read as the game has it."""

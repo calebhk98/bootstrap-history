@@ -14,7 +14,7 @@ def _ask(game, **command):
 class EndOfRunTest(unittest.TestCase):
     def test_the_report_gives_the_whole_road_and_the_steps_that_would_have_come_next_and_no_advice_is_given(self):
         game = unopened_sim()
-        game.state.scenario.year = 9999
+        game.year = 9999
         report = final_report(game, NODES)
         self.assertEqual(report["the_whole_road_was"], len(closure(NODES, GOAL)))
         self.assertIsNotNone(report["still_to_build_when_it_ended"])

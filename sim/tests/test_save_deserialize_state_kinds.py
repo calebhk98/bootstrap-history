@@ -143,7 +143,7 @@ state = deserialize_state({
 	"seats": {"zed": {"household": {"capital": 10.0}, "projects": {"done": {"__set__": ["fire"]}}, "founder": {"_founder_death_year": 30},
 	                  "holdings": {"_dashboard_history": [3.0]}, "goal": "steam_engine", "country": "han", "kind": "household", "holder": None},
 	          "abe": {"household": {"capital": 4.0}, "projects": {}, "founder": None, "goal": None}},
-	"acting_seat": "abe", "economy": {}, "scenario": {"year": 115}, "_civ": "rome", "_rng": [3, [0, 1], None], "_seed": "seed text",
+	"acting_seat": "abe", "economy": {}, "_civ": "rome", "_rng": [3, [0, 1], None], "_seed": "seed text",
 	"interface": {"panel": "map"}}, SimulationState)
 check("deserialize_state: seats come back in the saved order and as seats",
       list(state.seats) == ["zed", "abe"] and state.seats["zed"].goal == "steam_engine" and state.seats["zed"].country == "han"
@@ -153,4 +153,4 @@ check("deserialize_state: the acting seat's objects are the root's household, pr
       state.acting_seat == "abe" and state.household is state.seats["abe"].household and state.projects is state.seats["abe"].projects
       and state.holdings is state.seats["abe"].holdings and state.household.capital == 4.0, None)
 check("deserialize_state: the metadata and the other sections", state._civ == "rome" and state._rng == [3, [0, 1], None] and state._seed == "seed text"
-      and state.scenario.year == 115 and state.interface == {"panel": "map"}, None)
+      and state.interface == {"panel": "map"}, None)

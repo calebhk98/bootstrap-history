@@ -177,7 +177,6 @@ class StandInWorld(ViewShare):
         super().__init__(self)
         self.year = 143
         self.state = types.SimpleNamespace(
-            scenario=types.SimpleNamespace(year=143),
             projects=types.SimpleNamespace(done=[], operating={}),
             economy=types.SimpleNamespace(output_per_head=1.0))
         self.household = types.SimpleNamespace(done_version=0, operating_version=0)
@@ -207,7 +206,7 @@ class StandaloneAnswers(unittest.TestCase):
         ask = lambda inputs: world._shared_answer(("cap", "smith"), inputs, lambda: worked.append(1) or 5.0, standalone=True)
         ask((1,))
         ask((2,))
-        world.state.scenario.year = 144
+        world.year = 144
         ask((2,))
         self.assertEqual(len(worked), 3)
 

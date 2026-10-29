@@ -33,10 +33,6 @@ class StateReads:
 		return SimpleNamespace(improvements=self._needs.built_ways())
 
 	@property
-	def scenario(self):
-		return SimpleNamespace(year=self._needs.year())
-
-	@property
 	def actors(self):
 		return self._needs.cast_state()
 
@@ -126,6 +122,10 @@ class PortWorld(ForeignReads):
 		self._owner._set_seat_cache(name, value)
 
 	# ---- the scenario ----
+
+	@property
+	def year(self):
+		return self._needs.year()
 
 	@property
 	def civ(self):

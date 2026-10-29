@@ -9,12 +9,6 @@ from . import need_substitutes
 from .bridge import bridge_view
 
 
-@bridge_view("danger_lines")
-def danger_lines(sim):
-	"""The eminence and suspicion figures past which a household is in danger."""
-	return {"eminence": sim.cfg["eminence_danger"], "suspicion": sim.cfg["suspicion_danger"]}
-
-
 # ---- actors ----------------------------------------------------------------------------------------------------------------
 
 # ---- the ledger ------------------------------------------------------------------------------------------------------------

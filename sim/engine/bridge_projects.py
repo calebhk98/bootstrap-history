@@ -9,7 +9,6 @@ from sim.projects.needed_commands import NoteConcernChange, NoteYearSpend
 
 from . import cause_book
 from .bridge import bridge_command, bridge_view
-from .units_prose import money_text
 
 
 # ---- projects itself: the record of what is in hand, until it moves ------------------------------------------------
@@ -28,32 +27,6 @@ def start_gate_unheld_stock(sim, node_id, node, ignore_trade, memo, why):
 
 
 # ---- reporting, seats and the root ---------------------------------------------------------------------------------
-
-@bridge_view("money_text", kind=QUOTE)
-def money_text_view(sim, amount, grouped=False, short=False):
-    return money_text(amount, sim, grouped=grouped, short=short)
-
-
-@bridge_view("automation")
-def automation(sim):
-    return {"manual": sim.manual, "bounty_set": sim.bounty_set}
-
-
-@bridge_view("society_name")
-def society_name(sim):
-    return sim.civ.get("name", "this society")
-
-
-@bridge_view("horizon_end_year")
-def horizon_end_year(sim):
-    return getattr(sim, "end_year", None) or (sim.cfg["start_year"] + sim.cfg["horizon_years"])
-
-
-@bridge_view("project_limits")
-def project_limits(sim):
-    return {"base": sim.MAX_ACTIVE_PROJECTS_BASE, "per_director_hours": sim.MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS,
-            "per_scholar": sim.MAX_ACTIVE_PROJECTS_PER_SCHOLAR, "per_artisan": sim.MAX_ACTIVE_PROJECTS_PER_ARTISAN}
-
 
 # ---- commands of owners that have not moved -----------------------------------------------------------------------
 

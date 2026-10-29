@@ -14,11 +14,6 @@ from sim.coin.api import visibility_factor
 # ---- facts of the world and the game's data ----
 
 
-@bridge_view("civilisation")
-def civilisation(sim):
-    return sim.civ
-
-
 # ---- partners ----
 
 @bridge_view("partner_catch_chance", kind=QUOTE)

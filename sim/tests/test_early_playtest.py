@@ -149,7 +149,7 @@ check("no loss risk is reported where nothing sacks",
 
 # --- (scenario 1 again) fog hides the exact downstream count, and the digest stays a summary as the tree opens up
 fogged = unopened_sim()
-fogged.state._fog = True
+fogged.fog = True
 fogged.state.projects.revealed = set()
 fog_reply = S._agent_dispatch(fogged, NODES, {"cmd": "why", "id": "identity_cover"})
 check("fog hides the exact downstream count",

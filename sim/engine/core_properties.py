@@ -7,12 +7,12 @@ directly through authoritative subsystem owners:
   - self.state.projects
   - self.state.economy
   - self.state.founder
-  - self.state.scenario
 
 Properties are categorized strictly by owning subsystem.
 """
 from typing import Any, Iterable, Set
 
+from sim.scenario.api import SetEndYear, SetFog, SetYear
 from sim.seats.api import EndRun
 
 
@@ -55,16 +55,12 @@ class ForwardingPropertiesMixin:
 			setattr(sub, "spend_last_year", value)
 
 	@property
-
-	@property
 	def bounties_paid(self):
 		return getattr(self.state.household, "bounties_paid")
 
 	@bounties_paid.setter
 	def bounties_paid(self, value):
 		setattr(self.state.household, "bounties_paid", value)
-
-	@property
 
 	@property
 	def _said_stack_caution(self):
@@ -292,30 +288,67 @@ class ForwardingPropertiesMixin:
 	def goal_year(self):
 		return self.view("goal")()["year"]
 
+	# ---- the scenario module's: the clock, the modes and the setup the game was built from ----
+
 	@property
 	def year(self):
-		return getattr(self.state.scenario, "year")
+		return self._scenario.world.year
 
 	@year.setter
 	def year(self, value):
-		setattr(self.state.scenario, "year", value)
+		self.send(SetYear(value))
 
 	@property
 	def fog(self):
-		return self.state._fog
+		return self._scenario.world.fog
 
 	@fog.setter
 	def fog(self, value):
-		self.state._fog = bool(value)
+		self.send(SetFog(bool(value)))
 
 	@property
 	def fuzzy_estimates(self):
-		return self.state._fuzzy_estimates
+		return self._scenario.world.fuzzy_estimates
 
 	@fuzzy_estimates.setter
 	def fuzzy_estimates(self, value):
 		from . import ui_port
 		ui_port.set_fuzzy_estimates(self, value)
+
+	@property
+	def cfg(self):
+		return self._scenario.configuration
+
+	@property
+	def civ(self):
+		return self._scenario.civilisation
+
+	@property
+	def start_civ(self):
+		return self._scenario.start_civilisation
+
+	@property
+	def manual(self):
+		return self._scenario.manual
+
+	@property
+	def events(self):
+		return self._scenario.events
+
+	@property
+	def bounty_set(self):
+		return self._scenario.bounty_set
+
+	@property
+	def end_year(self):
+		"""The year the horizon ends, once a front end has set it (no attribute before)."""
+		if self._scenario.end_year is None:
+			raise AttributeError("end_year")
+		return self._scenario.end_year
+
+	@end_year.setter
+	def end_year(self, value):
+		self.send(SetEndYear(value))
 
 	@property
 	def goal(self):

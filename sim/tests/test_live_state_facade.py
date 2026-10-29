@@ -5,14 +5,11 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.engine.core_properties import ForwardingPropertiesMixin
-from sim.engine.state import (EconomyState, FounderState, HouseholdState, ProjectsState,
-                              ScenarioState, SimulationState)
+from sim.engine.state import EconomyState, FounderState, HouseholdState, ProjectsState, SimulationState
 
 # facade name -> (value to write, path of the field that must hold it on the state)
 SCALARS = {
     "capital": (1250.0, "household.capital"),
-    "year": (150, "scenario.year"),
-    "fog": (True, "_fog"),
     "goal": ("test_goal", "_goal"),
 }
 # facade name -> path of the collection it must be (the same object, not a copy)
@@ -27,7 +24,7 @@ class _Facade(ForwardingPropertiesMixin):
     def __init__(self):
         self.state = SimulationState(
             household=HouseholdState(capital=1000.0), projects=ProjectsState(), founder=FounderState(),
-            economy=EconomyState(), scenario=ScenarioState())
+            economy=EconomyState())
 
     def forget_goal_caches(self):
         pass

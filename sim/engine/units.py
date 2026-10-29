@@ -12,6 +12,8 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from sim.json_files import read_json
 
+from sim.scenario.api import from_base, to_base, unit_factor, unit_label  # the conversions are the scenario module's (it writes the text)
+
 from .mods import get_ordered_mods
 from .mods_base import ModError
 from .mods_ids import check_new_id
@@ -114,30 +116,6 @@ def unit_context(sim: Any) -> Dict[str, float]:
     if sim is None:
         return {}
     return {"hours_per_coin": 1.0 / sim.labour.money_per_labour_hour()}
-
-
-def unit_factor(spec: Mapping[str, Any], context: Mapping[str, float]) -> float:
-    if "factor_from" in spec:
-        return float(context[spec["factor_from"]])
-    return float(spec["factor"])
-
-
-def to_base(reg: Registry, unit_id: str, value: float, context: Mapping[str, float]) -> float:
-    spec = reg["units"][unit_id]
-    return value * unit_factor(spec, context) + float(spec.get("offset", 0.0))
-
-
-def from_base(reg: Registry, unit_id: str, value: float, context: Mapping[str, float]) -> float:
-    spec = reg["units"][unit_id]
-    return (value - float(spec.get("offset", 0.0))) / unit_factor(spec, context)
-
-
-def unit_label(spec: Mapping[str, Any], civ: Optional[Mapping[str, Any]]) -> Tuple[str, str]:
-    """(name, symbol) of a unit; a currency unit reads the civilisation's words."""
-    if spec.get("label_from") == "civ_currency":
-        from .data import money_short, money_word
-        return money_word(civ), money_short(civ)
-    return spec["name"], spec["symbol"]
 
 
 def field_rule(reg: Registry, field: str, parent: Optional[str] = None) -> Optional[Dict[str, Any]]:

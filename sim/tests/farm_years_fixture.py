@@ -8,15 +8,15 @@ def complete(test_sim, node_ids):
     """Mark technologies as completed by the founder this year."""
     for node_id in node_ids:
         test_sim.state.projects.done.add(node_id)
-        test_sim.state.projects.done_year[node_id] = test_sim.state.scenario.year
+        test_sim.state.projects.done_year[node_id] = test_sim.year
 
 
 def run_years(test_sim, years):
     for _ in range(years):
-        year = test_sim.state.scenario.year
+        year = test_sim.year
         test_sim._demographic_recovery(year)
         test_sim.send(AdvanceSociety(year))
-        test_sim.state.scenario.year = year + 1
+        test_sim.year = year + 1
 
 
 def rome():

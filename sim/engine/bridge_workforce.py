@@ -5,7 +5,7 @@ labour adapter did, and is never cached. The `legacy_*` views are raw state the 
 they go when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
 
-from . import data, units_prose, view_share, wage_schedule
+from . import data, view_share, wage_schedule
 
 from .bridge import bridge_view
 
@@ -47,21 +47,10 @@ def wage_schedule_for(sim, civ, tightness_factors=None):
     return wage_schedule.build_schedule(data.TRADE_REGISTRY, civ, tightness_factors=tightness_factors)
 
 
-@bridge_view("plain_number", kind=QUOTE)
-def plain_number(sim, value, digits=0):
-    """A count, a number of people or of hours, written for a sentence."""
-    return units_prose.plain_number(value, digits)
-
-
 @bridge_view("opening_wage_index")
 def opening_wage_index(sim):
     """The wage index of the civilisation's opening year, which the index is measured against."""
     return sim._wage_index_base
-
-
-@bridge_view("game_config")
-def game_config(sim):
-    return sim.cfg
 
 
 @bridge_view("provider_game")

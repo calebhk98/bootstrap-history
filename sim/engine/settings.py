@@ -94,6 +94,7 @@ import time
 from typing import Any, cast, Dict, List, NotRequired, Optional, TypedDict
 
 from sim.engine.saveload import acting_seat_of, read_save_text
+from sim.scenario.api import scenario_slot_of
 from sim.default_civilisation import PREFERRED_DEFAULT_CIVILISATION
 
 
@@ -538,7 +539,7 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
             blob = json.loads(read_save_text(path))
             if not isinstance(blob, dict) or "_civ" not in blob:
                 continue
-            scenario = blob.get("scenario") or {}
+            scenario = scenario_slot_of(blob)
             seat = acting_seat_of(blob)
             household = seat.get("household") or {}
             seats_slot = (seat.get("modules") or {}).get("seats") or {}
@@ -547,7 +548,7 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
                 "readable": True,
                 "civ_id": blob.get("_civ"),
                 "year": scenario.get("year"),
-                "fog": bool(blob.get("_fog", False)),
+                "fog": bool(scenario.get("fog", False)),
                 "founder_alive": seats_slot.get("founder_alive", True),
                 "dead_reason": seats_slot.get("dead_reason"),
                 "goal_year": scenario.get("goal_year"),

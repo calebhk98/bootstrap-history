@@ -13,6 +13,7 @@ from unittest import mock
 from .harness import *  # noqa: F401,F403
 
 from sim.engine import settings
+from sim.scenario.api import SetEndYear
 from sim.ui import cli_agent, cli_interactive
 from sim.ui.wizard_answers import REMEMBERED_KEYS, remember_answers
 from sim.engine.ui_port import money_text, STARTING_KITS
@@ -68,7 +69,8 @@ def options_game(immortal=True):
     game = Game(
         cfg={"start_year": 100, "horizon_years": 500, "immortal": immortal}, civ={"id": "rome_100ad", "name": "Rome"},
         fog=False, fuzzy_estimates=False, year=130, end_year=600, rng=random.Random(1), life_left=None, founder_alive=True)
-    game.send = lambda command: setattr(game, "life_left", command.years)   # the seats module's SetFounderLife
+    game.send = lambda command: (setattr(game, "end_year", command.year) if isinstance(command, SetEndYear)   # the scenario module's
+                                 else setattr(game, "life_left", command.years))   # the seats module's SetFounderLife
     return game
 
 

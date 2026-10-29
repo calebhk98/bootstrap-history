@@ -46,6 +46,8 @@ from .agents_port_household import HouseholdPort
 from sim.materials.api import RestoreReadings
 from sim.polity.api import SetValueWeights
 from sim.projects.api import RestoreProjectOrder
+from sim.scenario.api import OpenScenario, RecordOpeningLiteracy, ScenarioSources, SetYear
+from . import units
 
 
 class Sim(
@@ -65,13 +67,6 @@ class Sim(
         ForwardResourcesMixin,
         ForwardDemographyMixin,
 ):
-    FOUNDER_MIN_REMAINING_LIFE_YEARS = declare(
-        "FOUNDER_MIN_REMAINING_LIFE_YEARS", 5, kind="temporary_heuristic",
-        unit="years", source=None, confidence="D",
-        why="Floor on the founder's gaussian-drawn remaining lifespan, so "
-            "an unlucky draw does not end a run in its first years before "
-            "anything is possible. Round guard value, not a mortality "
-            "estimate.")
     # DISEASE_BURDEN_TECH_IDS (nodes declaring the `disease_burden` mechanic) is
     # provided by the mechanics module (sim/mechanics); food techs in _TECH_EFFECTS.json do not declare it.
 
@@ -86,29 +81,29 @@ class Sim(
             trade_family=trade_family,
             invariant_checker=check_simulation_invariants)
         self.debug = __debug__ if debug is None else bool(debug)
-        self.events = events
-        self.cfg = dict(DEFAULTS, **(cfg or {}))
         self.verbose = verbose
-        self.bounty_set = set(bounty_set or ())
-        self.civ = copy.deepcopy(civ or load_civ())
-        self.start_civ = copy.deepcopy(self.civ)    # the opening values, kept while self.civ drifts
+        from . import game_assembly
+        from .bridge_land import MODS_DIR
+        self.assembly = game_assembly.build(MODS_DIR, self.debug)
+        self._scenario = self.assembly.modules["scenario"]
+        # the setup the game is played in: the civilisation, the configuration, the modes (the scenario module owns them)
+        self.send(OpenScenario(
+            civilisation=copy.deepcopy(civ or load_civ()), configuration=dict(DEFAULTS, **(cfg or {})), manual=bool(manual),
+            events=events, bounty_set=set(bounty_set or ()),
+            sources=ScenarioSources(load_civilisation=load_civ, kit_capital=kit_capital,
+                                    display_units=lambda: (units.registry(), units.chosen_units(), lambda: units.unit_context(self)))))
         self.nodes = nodes_in_civ_money(nodes, self.civ)
         self._remember_derived_gates(self.civ["starting_techs"])
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
             SimulationState, HouseholdState, ProjectsState,
-            EconomyState, FounderState,
-            ScenarioState
+            EconomyState, FounderState
         )
-        from . import game_assembly
-        from .bridge_land import MODS_DIR
-        self.assembly = game_assembly.build(MODS_DIR, self.debug)
         self.state = SimulationState(
             household=HouseholdState(capital=0.0),
             projects=ProjectsState(),
             economy=EconomyState(),
             founder=FounderState(),
-            scenario=ScenarioState(),
             _civ=self.civ.get("id"),
         )
         game_assembly.attach(self)   # the modules answer from here on: the opening below already sends commands
@@ -135,11 +130,9 @@ class Sim(
         # called start_project() on, i.e. a human or an agent choosing them.
         # See the comment on step() 4b and on start_project() for why this
         # exists: without it, "choosing" a node in `play` was cosmetic.
-        self.manual = bool(manual)
         self.send(SetValueWeights(tuple(self.civ["values"].items())))
         # A civilization brings its own date, its own price level and its own
         # capacity to fund things. Norse Scandinavia does not start in 100 AD.
-        self.cfg["start_year"] = int(self.civ.get("year", self.cfg["start_year"]))
         self.price_index = float(self.civ.get("price_index", 1.0))
         self._wage_index_base = float(self.civ.get("wage_index", 1.0))
         # the nation's people: the age structure its civilisation's size settles into (the demography module owns them)
@@ -159,7 +152,7 @@ class Sim(
         self.view("farm_weather_cells")()
         # the granary starts empty (an initial condition) and carries over between years (demography's farm year)
         self._farm_technique_this_year = farming_technique.DEFAULT_TECHNIQUE
-        self.year = self.cfg["start_year"]
+        self.send(SetYear(self.cfg["start_year"]))
         config = self.cfg
         # THE FOUNDER'S HOUSEHOLD: money, staff, knowledge, plant and standing,
         # as its own object rather than eighty-odd attributes of this one. See
@@ -221,9 +214,9 @@ class Sim(
         # firm or a government; that is a real design question and this
         # extraction does not answer it by default.
         # founder remaining lifespan, elite male already aged 35
-        self.send(SetFounderLife(1e9 if self.cfg["immortal"]
-                                 else max(self.FOUNDER_MIN_REMAINING_LIFE_YEARS,
-                                          rng.gauss(self.cfg["founder_life_mean"], self.cfg["founder_life_sd"]))))
+        life = self.view("founder_life_terms")()
+        self.send(SetFounderLife(1e9 if life["immortal"]
+                                 else max(life["minimum"], rng.gauss(life["mean"], life["spread"]))))
         self._spend_this_year = 0.0
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # How much of each material physically exists: a material's
@@ -253,10 +246,7 @@ class Sim(
         # particular, never infer one civilization's materials or institutions for another
         # civilization from those fields.
         self.view("legacy_country_literacy")[None]
-        for field in ("literacy_general", "literacy_elite"):
-            self.start_civ[field] = self.view("literacy")(field, None)
-        self.civ.pop("literacy_general", None)
-        self.civ.pop("literacy_elite", None)
+        self.send(RecordOpeningLiteracy(self.view("literacy")("literacy_general", None), self.view("literacy")("literacy_elite", None)))
         self._reconnect_state_hooks()
         # opened now, not by the first question a screen or a cost asks: while it opens the engine's
         # own figures answer, and nothing computed from them may stay cached afterwards
@@ -378,40 +368,6 @@ class Sim(
             "several log messages as well as enforced here. Round number, "
             "not measured.")
 
-    MAX_ACTIVE_PROJECTS_BASE = declare(
-        "MAX_ACTIVE_PROJECTS_BASE", 2, kind="temporary_heuristic",
-        unit="projects", source=None, confidence="D",
-        why="Minimum number of projects a household can hold active at "
-            "once, before scholars/artisans/director hours add more. "
-            "Round number, not measured.")
-    MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS = declare(
-        "MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS", 2000.0, kind="temporary_heuristic",
-        unit="founder-hours per extra active project", source=None,
-        confidence="D",
-        why="How many director-hours of capacity buy one more active "
-            "project slot - see the comment above: doubling this whole "
-            "formula was measured to make every civilisation worse (Rome "
-            "fell from 33% of runs reaching the transistor to none), "
-            "because more projects in hand divide the same purse into "
-            "smaller annual payments. Kept at the value that measured "
-            "better, not derived from a model of attention or budgeting.")
-    MAX_ACTIVE_PROJECTS_PER_SCHOLAR = declare(
-        "MAX_ACTIVE_PROJECTS_PER_SCHOLAR", 12.0, kind="temporary_heuristic",
-        unit="scholars per extra active project", source=None,
-        confidence="D",
-        why="How many scholars buy one more active project slot. Tuned "
-            "alongside MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS and "
-            "MAX_ACTIVE_PROJECTS_PER_ARTISAN as one measured formula; not "
-            "independently derived.")
-    MAX_ACTIVE_PROJECTS_PER_ARTISAN = declare(
-        "MAX_ACTIVE_PROJECTS_PER_ARTISAN", 25.0, kind="temporary_heuristic",
-        unit="artisans per extra active project", source=None,
-        confidence="D",
-        why="How many artisans buy one more active project slot - see "
-            "MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS's own comment for the "
-            "measurement this whole formula was tuned and then held "
-            "against.")
-
     def view(self, name):
         """The published view `name` (call it, or index a keyed one); engine and UI code not in a module reads this way."""
         return self.assembly.views[name]
@@ -453,7 +409,7 @@ class Sim(
         self.state.projects.done_year = {}
         horizon = horizon or self.cfg["horizon_years"]
         end = self.cfg["start_year"] + horizon
-        while self.state.scenario.year < end and not self.run_over():
+        while self.year < end and not self.run_over():
             self.step()
         return self
 

@@ -24,7 +24,7 @@ class PartnerOreSiteTests(unittest.TestCase):
         self.limits = port_sites.site_limits(self.host, self.outputs, self.partner_tiles)
 
     def test_every_ore_with_a_sized_deposit_on_a_partner_tile_has_a_supplying_tile_there(self):
-        year = self.host.state.scenario.year
+        year = self.host.year
         checked = 0
         for ore, resource in sorted(self.ore_of.items()):
             sized = {row["tile_id"] for row in geography.worked_deposits(self.partner_tiles, resource, year, (),

@@ -26,6 +26,7 @@ import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
 from sim.prices.api import identity_cache
+from sim.scenario.api import money_short, money_word, rules as scenario_rules  # noqa: F401 - the coin's words are the scenario module's
 IdentityCache = identity_cache.IdentityCache
 from sim.geography.api import haversine_km, load_geography
 from .mods import ModError, get_ordered_mods, load_mod_tree
@@ -187,11 +188,6 @@ def money_unit_note(civ: Optional[JSONDict]) -> str:
             "market, so they will not match surviving price records." % money_word(civ))
 
 
-def money_word(civ: Optional[JSONDict]) -> str:
-    civ = civ or {}
-    return (civ.get("currency_words") or {}).get("long") or civ.get("currency") or "denarii"
-
-
 @functools.lru_cache(maxsize=None)
 def starting_schedule(civilization_id: Optional[str] = None) -> wage_provider.wages.WageSchedule:
     """The opening wage schedule of a civilisation (the default one if none)."""
@@ -217,13 +213,7 @@ def kit_capital(kit_id: str, civ: JSONDict) -> float:
     """Opening money of a kit for a civilisation: its labourer-years times the
     civilisation's opening annual labourer wage."""
     schedule = wage_schedule.build_schedule(_TRADE_REGISTRY, civ)
-    return STARTING_KITS[kit_id]["labourer_years"] * schedule.annual_wage("labourer")
-
-
-def money_short(civ: Optional[JSONDict]) -> str:
-    """The abbreviation used in compact lines: "400 den", "net +12 den/yr"."""
-    civ = civ or {}
-    return (civ.get("currency_words") or {}).get("short") or civ.get("currency") or "den"
+    return scenario_rules.kit_capital(STARTING_KITS[kit_id], schedule.annual_wage("labourer"))
 
 
 def _variant_base(base_id: str, chain: tuple) -> JSONDict:

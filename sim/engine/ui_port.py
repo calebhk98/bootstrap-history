@@ -73,6 +73,7 @@ from sim.polity.api import SettleWithState, WithdrawFromPublicLife  # noqa: F401
 from sim.projects.api import (Bribe, MothballWork, PostBounty, ReorderProjects, RestoreProjectOrder, RestoreWork,  # noqa: F401
                               StartProject, StopProject)  # noqa: F401
 from sim.knowledge.api import RevealNodes  # noqa: F401
+from sim.scenario.api import SetEndYear, SetFog, SetFuzzyEstimates  # noqa: F401
 from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, JoinSeat, MakeOffer, SetGoal, SetPolicy  # noqa: F401
 from sim.ventures.api import OpenVenture, RollOut, SellConcern  # noqa: F401
 from sim.workforce.api import (BuildHousing, BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase,  # noqa: F401
@@ -84,8 +85,8 @@ from sim.workforce.api import (BuildHousing, BuySlaves, CommissionHours, FireSta
 def begin_game(sim, goal, end_year, fog, fuzzy_estimates):
     sim.send(SetGoal(goal))
     sim.state.projects.done_year = {}
-    sim.end_year = end_year
-    sim.state._fog = bool(fog)
+    sim.send(SetEndYear(end_year))
+    sim.send(SetFog(bool(fog)))
     set_fuzzy_estimates(sim, fuzzy_estimates)
 
 
@@ -94,14 +95,13 @@ def reset_done_years(sim):
 
 
 def set_end_year(sim, year):
-    sim.end_year = year
+    sim.send(SetEndYear(year))
 
 
 def set_fuzzy_estimates(sim, on):
     """Show the needs of unfinished work as estimates; the blur's salt is drawn the first time it is turned on."""
-    sim.state._fuzzy_estimates = bool(on)
-    if on and not sim.state._fuzzy_salt:
-        sim.state._fuzzy_salt = sim.rng.getrandbits(30) + 1
+    salt = sim.rng.getrandbits(30) + 1 if on and not sim.view("fuzzy_salt")() else None
+    sim.send(SetFuzzyEstimates(bool(on), salt))
 
 
 def seat_progress(sim):

@@ -10,6 +10,7 @@ from unittest import mock
 from .harness import check
 
 from sim.hazards.merge import mildest_hazard
+from sim.scenario.api import AdvanceYear
 from sim.seats.api import SeatsSeat, run_is_over, seat_ended, seats_playing
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, seat_from_template
@@ -58,14 +59,9 @@ check("the run is over when no seat is left", run_is_over(state.seats) and seats
 
 
 # ---- the year's order, on a recording stand-in for the Sim
-class Scenario:
-    year = 100
-
-
 class Alias:
     def __init__(self, ended):
         self.acting_seat = FIRST_SEAT_ID
-        self.scenario = Scenario()
         self.ended = set(ended)
 
 
@@ -74,6 +70,7 @@ class FakeSim:
 
     debug = False
     events = True
+    year = 100
 
     def __init__(self, seat_ids, ends_in_shocks=()):
         self.state = Alias(())
@@ -98,6 +95,11 @@ class FakeSim:
             yield self
         finally:
             self.state.acting_seat = previous
+
+    def send(self, command):
+        """The scenario module's clock is the one command the year loop sends that this stand-in applies."""
+        if isinstance(command, AdvanceYear):
+            self.year += 1
 
     def _record(self, name, *arguments):
         self.calls.append((name, self.state.acting_seat))
@@ -148,7 +150,7 @@ check("each world phase runs once", all(len(names(two, phase)) == 1 for phase in
 check("the market closes after every seat's work and before the credit check",
       [call for call, _ in two.calls].index("step_market") > max(i for i, (call, _) in enumerate(two.calls) if call == "_run_seat_work")
       and [call for call, _ in two.calls].index("step_market") < [call for call, _ in two.calls].index("step_credit_limit"), None)
-check("the year advances once", two.state.scenario.year == 101, two.state.scenario.year)
+check("the year advances once", two.year == 101, two.year)
 
 ended = FakeSim([FIRST_SEAT_ID, "second"], ends_in_shocks=[FIRST_SEAT_ID])
 run_recorded(ended)
@@ -156,12 +158,12 @@ check("a seat ended by the year's shocks takes no further part in it, the other 
       names(ended, "_step_money_seat") == [FIRST_SEAT_ID, "second"] and names(ended, "_run_seat_work") == ["second"]
       and names(ended, "step_living_stock") == ["second"] and names(ended, "step_credit_limit") == ["second"], ended.calls)
 check("world phases after the shocks run as a seat still playing", names(ended, "step_market") == ["second"], ended.calls)
-check("the year still advances", ended.state.scenario.year == 101, None)
+check("the year still advances", ended.year == 101, None)
 
 alone = FakeSim([FIRST_SEAT_ID, "second"], ends_in_shocks=[FIRST_SEAT_ID, "second"])
 run_recorded(alone)
 check("when every seat ends in the shocks the year stops there, as a one-seat game does",
-      names(alone, "_run_seat_work") == [] and names(alone, "step_market") == [] and alone.state.scenario.year == 100, alone.calls)
+      names(alone, "_run_seat_work") == [] and names(alone, "step_market") == [] and alone.year == 100, alone.calls)
 
 dead_before = FakeSim([FIRST_SEAT_ID, "second"])
 dead_before.state.ended.add(FIRST_SEAT_ID)

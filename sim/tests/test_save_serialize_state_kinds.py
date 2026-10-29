@@ -187,6 +187,6 @@ check("serialize_state: a seat's household, projects and founder are sections of
       blob["seats"]["zed"]["household"]["capital"] == 10.0 and blob["seats"]["zed"]["projects"]["done"] == {"__set__": ["fire"]}
       and blob["seats"]["zed"]["founder"]["_founder_death_year"] == 30 and blob["seats"]["abe"]["holdings"]["_dashboard_history"] == [1.0], None)
 check("serialize_state: the metadata the load needs", blob["_civ"] == "rome" and blob["_rng"] == [3, [0, 1], None] and blob["_seed"] == "seed text"
-      and blob["_fog"] is False and blob["_immortal"] is True and blob["_game_version"] is None, None)
+      and blob["_immortal"] is True and blob["_game_version"] is None, None)
 check("serialize_state: the UI's own memory", blob["interface"] == {})
 check("serialize_state: the whole state is JSON text", json.loads(json.dumps(blob)) == blob)

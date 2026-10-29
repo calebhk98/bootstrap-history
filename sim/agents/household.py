@@ -10,8 +10,7 @@ field-by-field classification this class is built from.
 
 In the live state architecture, `Household` is a façade backed by the
 authoritative `SimulationState` and its subsystem owners (`HouseholdState`,
-`ProjectsState`, `EconomyState`, `FounderState`,
-`ScenarioState`). There is NO duplicate storage: every
+`ProjectsState`, `EconomyState`, `FounderState`). There is NO duplicate storage: every
 persistent read and write delegates directly to the underlying typed state.
 """
 from collections import defaultdict
@@ -58,8 +57,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"_founder_death_aged": "founder",
 	"_founder_death_year": "founder",
 
-	# ScenarioState
-	"year": "scenario",
+	# SeatProgressState
 	"_said_parallelism": "seat_progress",
 	"_said_command_index": "seat_progress",
 	"_said_explanations": "seat_progress",
