@@ -1,6 +1,6 @@
 """What one civilisation's economy is built from: the facts that do not change from year to year.
 
-The port (sim/engine/economy_port.py) or a tool fills an `EconomySetup` from data and the engine's
+The markets module's port (sim/markets/port*.py) or a tool fills an `EconomySetup` from data and the engine's
 opening state; nothing in it is a model outcome except the opening prices and wages, which only seed
 the first year's expectations and are forgotten as soon as markets clear.
 """

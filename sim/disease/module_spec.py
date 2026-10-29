@@ -1,7 +1,6 @@
 """The disease module's spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_disease.py and
-bridge_shared.py) under the name the owner will publish, or a view of a module that has moved. The infection records are
+Each read is a view of the module that owns the fact. The infection records are
 saved in the world slot; the deaths by tile and the forecast are kept in the module and are empty after a load."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.hazards.api import LoseCapital

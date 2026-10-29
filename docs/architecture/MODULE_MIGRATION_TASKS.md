@@ -4,22 +4,13 @@
 `MODULE_REGISTRY_PLAN.md`; this file is the execution order and is ticked as each task merges. The work lands as one
 pull request when every box is ticked. `main` is frozen for the duration (owner decision 2026-10-25).
 
-## Resume here (paused 2026-10-27 for the usage limit)
+## Where it stands
 
-The integration branch is verified through `aed6e564`: the full equivalence tier is identical at `0c5c18aa`; stress,
-protocol goldens and `--slow` are identical or green at every later merge. Two branches are pushed but **unverified and
-not merged**:
-
-- `mr/forwarders-out` (`0909206c`): engine, bridge, mod and test callers moved off `Sim`'s forwarders, forward file by
-  forward file (mechanics, polity, prices, production, projects, ventures, reporting, resources, seats in progress).
-  Next: run the quick tier, the protocol goldens and micro on it, fix what they find, merge; then the remaining
-  forward files and `core_properties.py`.
-- `mr/kernels` (`b635212b`): Complaint 661, `sim/assembly/kernels.py`, the least-cost route tree and fetch-wage kernels
-  with stored samples, `api.kernel`, four tests. Next: the quick tier, `--slow --only mod_kernels_smoke`, micro, then
-  merge.
-
-Then, in order: rewrite the shipped code mods onto the mod interface and Complaint 840 (phase 7); the seat's purse (phase 3; the projects record moved in phase 6b); phase 9 (`--slow`, long tier and fingerprint against `mr-base`, regenerate the
-shipped openings, fix the bugs kept on purpose: Complaints 681, 760 to 765, 790, 800, 810, 840; docs; the real PR).
+Phase 6b is done: no module depends on the engine bridge or reads a `legacy_*` view, every module declares its reads and
+sends (`tools/check_module_reads.py`), and the read guard's inventory refused no write. The full equivalence tier is
+identical at `5c152a46` (the verification record is in phase 6b below). What is left is phase 9 (the long tier against
+`mr-base`, regenerated openings, the bugs kept on purpose, the forwarder mixins on `Sim` that keep Complaint 508 open,
+the real PR) and the owner's call on the module splits the width reviews propose (catalogue entries, "Width review").
 
 Operating rules: only the orchestrating session merges; agents work in worktrees on `mr/<task>` branched from the
 integration branch, own named files, never edit `core.py`, `state.py`, `state_seat.py`, `core_seats.py`,
