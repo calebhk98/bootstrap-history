@@ -5,18 +5,10 @@ entry is deleted."""
 from sim.demography.api import TakeFromGranary
 from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, DrawDownStock, TakeGoods
 
-from .bridge import bridge_command, bridge_view
+from .bridge import bridge_command
 
 
 # ---- the home country (the actors' cast, behind the coin module's reads) ----
-
-@bridge_view("home_country")
-def home_country(sim):
-    """{id: the home country's id, location: the tile at its centre, None when the cast has no such country}."""
-    state = sim.view("cast")().state
-    home = state.countries.get(state.home_country)
-    return {"id": state.home_country, "location": None if home is None else home.location}
-
 
 # ---- commands ----
 

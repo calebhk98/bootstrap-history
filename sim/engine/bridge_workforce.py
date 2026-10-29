@@ -79,15 +79,6 @@ def teaching_knowledge(sim):
     return by_actor, set(sim.state.projects.granted), sim.view("actor_world")().demonstrated()
 
 
-@bridge_view("harvest_share_taken", kind=KEYED)
-def harvest_share_taken(sim, material):
-    """Share of the harvest of a material the home state's forms take from growers; none without a government."""
-    from sim.agents.api import tax_burden
-    if sim.view("cast")().government_of(None) is None:
-        return 0.0
-    return tax_burden.harvest_share_taken(sim.view("actor_world")(), material)
-
-
 @bridge_view("shared_answer", kind=QUOTE)
 def shared_answer(sim, key, inputs, compute, standalone=False):
     """`compute()` reused while the engine's world stamp and `inputs` hold."""

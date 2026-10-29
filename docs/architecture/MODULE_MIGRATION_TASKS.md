@@ -179,6 +179,7 @@ actors (21), hazards, workforce (20 each), projects (19).
   and the text helpers that follow the coin and the player's units (`money_text`, `mass_text`, `plain_number`, ...). Its
   inputs (another civilisation's file, a kit's worth, the unit registry) arrive in `OpenScenario`, so it reads no view. Left
   on the engine: the unit options (`sim/engine/units.py`, process-global UI state) that `Sim` hands over as a callable.
+- [ ] Actors publish `has_state`, `countries`, `organised_factions`, `home_country`, `state_knowledge`, `holder_treasury`, `partner_catch_chance`, `harvest_share_taken` and `legacy_country_literacy` (`sim/actors/country_views.py`, rules in `country_rules.py`). Still bridged: `declared_actor_kinds` (the wall forbids the engine's mod loader) and `opening_cast` (needs the opening civilisation, which no view publishes).
 - [ ] The engine bridge answers no module read: each bridged view is published by the module that owns the fact.
 - [ ] A width review for each module that depends on more than 15 others, written into its catalogue entry: views that
   mirror methods merged into views that answer questions, sub-domains split out, pass-through dependencies removed,
