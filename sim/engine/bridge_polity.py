@@ -16,9 +16,3 @@ def legacy_household_actor(sim):
 	return sim.household
 
 
-# ---- projects and the household's versions ---------------------------------------------------------------------------------
-
-@bridge_view("held_and_running_versions", seat_scoped=True)
-def held_and_running_versions(sim):
-	"""(the version of the techniques held, the version of those running) of the acting seat: what a memo is keyed by."""
-	return sim.household.done_version, sim.household.operating_version

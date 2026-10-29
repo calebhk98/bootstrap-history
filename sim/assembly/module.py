@@ -31,3 +31,8 @@ class Module:
 
 	def bump_seat(self, channel: str, seat_id: Optional[str] = None) -> None:
 		self.clock.bump_seat(self.module_id, channel, seat_id)
+
+	def seat_version(self, channel: str) -> tuple:
+		"""What a memo over the acting seat's `channel` is keyed by: it moves with every bump of the channel for this seat and
+		on a load, and differs between seats."""
+		return (self.clock.era, self.clock.acting_seat) + self.clock.counter(self.module_id, channel, True)

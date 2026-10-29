@@ -59,7 +59,7 @@ class Revenue:
 		needs = self.needs
 		standing = needs.standing()
 		staff = needs.staff()
-		done_version, operating_version, units_version = needs.running_versions()
+		done_version, operating_version, units_version = needs.techniques_version(), needs.operating_version(), needs.institution_units_version()
 		key = (
 			needs.year(),
 			needs.pop_scale(),
@@ -288,7 +288,7 @@ class Revenue:
 		"""
 		seq = self.done_in_order()
 		practice_set = self._practice_set()
-		operating_version = self.needs.running_versions()[1]
+		operating_version = self.needs.operating_version()
 		memos = self.memos()
 		cached = memos.candidates
 		if (cached is not None and cached[0] is seq

@@ -19,11 +19,11 @@ from sim.ventures.api import ClearMothball, OpenVenture
 from sim.workforce.api import DrawTradeHours, GrantStaff, LoseCrew, ReleaseHours, ResetTradeHours, SpendDirectorHours
 
 from .commands import (AdvanceProjects, AutoOpenVentures, Bribe, CloseLapsedDependents, CloseUnstaffedVentures, CloseWork,
-                       CompleteProject, Exclude, HaltActiveProjects, Include, KeepStaffed, MothballWork, NoteVentureYear, PostBounty, PutProjectFirst, ReopenRestaffedVentures, ReorderProjects, ResetProjectProgress,
+                       CompleteProject, Exclude, HaltActiveProjects, Include, KeepStaffed, MothballWork, NoteActiveChanged, NoteVentureYear, PostBounty, PutProjectFirst, ReopenRestaffedVentures, ReorderProjects, ResetProjectProgress,
                        RestoreProjectOrder, RestoreWork, ReviewVentures, StartProject, StopProject)
 from .needed_commands import NoteConcernChange, NoteYearSpend
 from .project_order import ORDER
-from .projects import ACTIVE, START, Projects
+from .projects import ACTIVE, ACTIVE_CHANGES, START, Projects
 from .state import ProjectsSeat, ProjectsWorld
 
 READS_BY_OWNER = {
@@ -105,11 +105,12 @@ def _view(name, compute, kind, seat_scoped):
 
 
 MODULE_SPECS = (ModuleSpec(
-	"projects", Projects, channels=(ACTIVE, START, ORDER), seat_state=ProjectsSeat, world_state=ProjectsWorld,
+	"projects", Projects, channels=(ACTIVE, ACTIVE_CHANGES, START, ORDER), seat_state=ProjectsSeat, world_state=ProjectsWorld,
 	publishes=tuple(_view(*row) for row in _VIEWS) + (
 		# the active record is written outside the module's commands (the screens, hazards, the credit freeze): never cached
 		ViewSpec("project_cost", "project_cost", kind=QUOTE, seat_scoped=True, cached=False),
 		ViewSpec("project_cost_now", "project_cost_now", kind=QUOTE, seat_scoped=True, cached=False),
+		ViewSpec("active_projects_version", "active_projects_version", seat_scoped=True, cached=False),
 		ViewSpec("opposition_factor", "opposition_factor", kind=QUOTE, seat_scoped=True, cached=False),
 		ViewSpec("cost_money_factor", "cost_money_factor", seat_scoped=True, cached=False),
 		# written only by the module's own start phase, which bumps START
@@ -126,7 +127,8 @@ MODULE_SPECS = (ModuleSpec(
 	         (AutoOpenVentures, "apply_auto_open_ventures"), (NoteVentureYear, "apply_note_venture_year"),
 	         (ReviewVentures, "apply_review_ventures"), (MothballWork, "apply_mothball_work"), (HaltActiveProjects, "apply_halt_active_projects"), (RestoreWork, "apply_restore_work"),
 	         (PutProjectFirst, "apply_put_project_first"), (ReorderProjects, "apply_reorder_projects"),
-	         (RestoreProjectOrder, "apply_restore_project_order"), (Exclude, "apply_exclude"), (Include, "apply_include"), (KeepStaffed, "apply_keep_staffed")),
+	         (RestoreProjectOrder, "apply_restore_project_order"), (Exclude, "apply_exclude"), (Include, "apply_include"), (KeepStaffed, "apply_keep_staffed"),
+	         (NoteActiveChanged, "apply_note_active_changed")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(PayEdge, NoteSpend, ReceiveFromEdge, RecordBribe, RecordEvent, RecordAutomation, RecordAutomationSkip, SettleProjectMaterials,
 	       ClearMothball, NoteConcernChange, NoteYearSpend, OpenVenture, ReleaseHours, LearnTechnique, RevealFrom, ChangeHeld,

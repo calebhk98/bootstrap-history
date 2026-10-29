@@ -2,6 +2,5 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/; the engine bridge hands it the legacy state it still needs
 
-from .commands import ClearMothball, OpenVenture, RollOut, SellConcern
-from .needed_commands import BumpInstitutionUnitsVersion
+from .commands import ClearMothball, NoteOperatingChanged, OpenVenture, RollOut, SellConcern
 from . import constants, coverage_rules, net_loss, rules

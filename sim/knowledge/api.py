@@ -2,7 +2,7 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/; the engine bridge hands it the legacy state it still needs
 
-from .commands import (ForgetTechnique, HandOverTechniques, LearnTechnique, ReceiveTechniques, RevealFrom, RevealNodes,
+from .commands import (ForgetTechnique, HandOverTechniques, LearnTechnique, NoteTechniquesChanged, ReceiveTechniques, RevealFrom, RevealNodes,
                        StartDoneYearRecord, ReplaceTree)
 from .constants import CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE
 from .fog_words import (FOG_KIND_HINTS, FREE_PREREQ_NAMED_AT_MOST, HIDDEN_ID_PLACEHOLDER, free_prereq_hint,

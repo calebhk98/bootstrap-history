@@ -39,7 +39,7 @@ relocations in `sim/tests/equiv_fields.py`). A handover carries the slot and ref
 ## Debts
 
 Reads through the bridge (`sim/engine/bridge_materials.py`): `legacy_projects`, `legacy_world_map`, `hard_prerequisites`,
-`project_versions`, `shared_bill`, the market views `partner_import`, `can_be_bought`, `purchase_quote`, `agent_producer_capacity`,
+`shared_bill`, the market views `partner_import`, `can_be_bought`, `purchase_quote`, `agent_producer_capacity`,
 and the price and catalogue views. Forwarders left on `Sim` (`sim/engine/forward_materials.py`): `_material_tag`,
 `material_shortfall_t`, `_society_output_tonnes`, `_material_market_tonnes`, `_own_material_supply`, `_own_production_tags`,
 `_demand_by_supply_tag`, `demand_and_own_supply_by_material`, `MATERIAL_CHECKS`, `annual_material_demand`, `material_price_factor`,

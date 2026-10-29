@@ -2,29 +2,29 @@
 
 The module owns each seat's industry experience (`ProductionSeat`) and publishes what runs, what concerns earn and cost, how deep an
 industry is and which techniques are in use. The projects record, the household and the tree have not moved into modules yet, so it
-reads them through the views of their owners (the engine bridge answers `running_versions`; ventures publishes `operating`), and nothing it
+reads them through the views of their owners (knowledge publishes `techniques_version`; ventures publishes `operating`, `operating_version` and `institution_units_version`), and nothing it
 publishes is cached: legacy code writes that state directly (the record of what is done, operating and granted)."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.diffusion.api import NoteFirstRuns
 from sim.workforce.api import SetWageHoursSold
 
-from .commands import (AccrueExperience, BumpHouseholdVersion, ForgetRevenueCaches, LearnFromFailure, RefreshDoneCaches,
+from .commands import (AccrueExperience, ForgetRevenueCaches, LearnFromFailure, RefreshDoneCaches,
                        RefreshOperatingCaches)
 from .module import Production
 from .state import ProductionSeat
 
 READS_BY_OWNER = {
-	"core": ("year", "game_setting", "civilisation", "trade_family", "running_versions"),
+	"core": ("year", "game_setting", "civilisation", "trade_family"),
 	"workforce": ("money_per_labour_hour", "staff", "staff_version", "hour_commitments", "hours_available", "wage_signature",
 	              "market_annual_wage", "standing_job_pay", "headcount", "base_tile", "people_who_exist", "hours_per_person_year",
 	              "literacy_references"),
 	"mechanics": ("capability_sets", "mechanic", "running_mechanics", "effect_sum"),
-	"knowledge": ("techniques_held", "techniques_granted", "done_year", "tree_nodes", "category_trait"),
+	"knowledge": ("techniques_held", "techniques_version", "techniques_granted", "done_year", "tree_nodes", "category_trait"),
 	"diffusion": ("literacy", "techniques_spread"),
 	"prices": ("held_goods_prices_in_hours", "price_index", "done_memo", "producers_memo", "material_prices", "commodity_record"),
 	"markets": ("agent_prices_at", "agent_seat_sale_outlook", "agent_trades_good", "agent_producers_by_good",
 	            "agent_worker_years_by_recipe", "home_unit_price"),
-	"ventures": ("operating", "venture_opened_year", "venture_size", "venture_capex", "venture_real_earnings", "venture_real_upkeep",
+	"ventures": ("operating", "operating_version", "institution_units_version", "venture_opened_year", "venture_size", "venture_capex", "venture_real_earnings", "venture_real_upkeep",
 	             "venture_foreman", "venture_hands_founder_staffed", "coverage", "units_for_coverage"),
 	"actors": ("concern_versions", "concerns_of_active_firms", "firm_concern_holdings"),
 	"projects": ("gate_blocked",),
@@ -88,5 +88,5 @@ MODULE_SPECS = (ModuleSpec(
 	         (RefreshDoneCaches, "apply_refresh_done_caches"), (RefreshOperatingCaches, "apply_refresh_operating_caches"),
 	         (ForgetRevenueCaches, "apply_forget_revenue_caches")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(SetWageHoursSold, NoteFirstRuns, BumpHouseholdVersion),
+	sends=(SetWageHoursSold, NoteFirstRuns),
 ),)

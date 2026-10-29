@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.projects.api import START_CHECKS, constants as projects_constants
+from sim.projects.api import START_CHECKS, NoteActiveChanged, constants as projects_constants
 from sim.tests import projects_host
 
 PLAIN = {"cat": "technique", "pre": [], "lab": {}, "sch": 0, "art": 0, "mat": [], "ph": 10.0}
@@ -18,6 +18,20 @@ def module(node=PLAIN, **views):
 class FailureResetShare(unittest.TestCase):
     def test_the_view_answers_the_declared_share(self):
         self.assertEqual(module().failure_reset_share(), projects_constants.FAILURE_RESET_SHARE)
+
+
+class ActiveProjectsVersion(unittest.TestCase):
+    def test_a_note_that_the_projects_in_hand_changed_moves_the_version(self):
+        projects = module()
+        before = projects.active_projects_version()
+        projects.apply_note_active_changed(NoteActiveChanged())
+        self.assertNotEqual(projects.active_projects_version(), before)
+
+    def test_a_load_moves_the_version(self):
+        projects = module()
+        before = projects.active_projects_version()
+        projects.clock.bump_everything()
+        self.assertNotEqual(projects.active_projects_version(), before)
 
 
 class StartCheck(unittest.TestCase):

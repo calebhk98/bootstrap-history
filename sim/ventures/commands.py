@@ -14,6 +14,12 @@ class OpenVenture(Command):
 
 
 @dataclass(frozen=True)
+class NoteOperatingChanged(Command):
+	"""Something opened or closed a plant of the acting seat's business outside this module, so the `operating_version` moves and
+	every memo keyed on what is operating is stale."""
+
+
+@dataclass(frozen=True)
 class ClearMothball(Command):
 	"""Forget a stale mothball entry for a work that is being built again."""
 	node_id: str

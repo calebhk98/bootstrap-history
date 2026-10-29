@@ -17,7 +17,7 @@ class Categories:
 		if not config:
 			return None
 		year = self.needs.year()
-		key = (year, self.needs.held_and_running_versions()[1], self.needs.concern_versions()[0])
+		key = (year, self.needs.operating_version(), self.needs.concern_versions()[0])
 		cache = self._seat_cache("goods_cat_state")
 		if cache is None or cache[0] != key:
 			cache = (key, {})
@@ -58,8 +58,8 @@ class Categories:
 
 	def _category_key(self):
 		"""What a category's cached figures depend on."""
-		done_version, operating_version = self.needs.held_and_running_versions()
-		return (self.needs.year(), self.needs.pop_scale(), self.needs.real_output_per_head(), operating_version, done_version,
+		return (self.needs.year(), self.needs.pop_scale(), self.needs.real_output_per_head(), self.needs.operating_version(),
+		        self.needs.techniques_version(),
 		        self.needs.concern_versions()[0])
 
 	def goods_category_ratios(self, category, extra=0):

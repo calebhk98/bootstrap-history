@@ -108,8 +108,8 @@ views: `active_projects` (projects), `corpus_hedge_tiers` and `corpus_dispersed`
   `economy_materials.py`, `economy_production.py`, `economy_mining.py`, `legitimacy.py`, `view_share.py`).
 - `_done_changed` is also called for a changed tree (`node_rederive.py`, `opening_money.py`), after the economy opens
   (`core.py`) and on a load (`economy.py`): not knowledge events.
-- `project_versions` (materials' read) answers the projects' active version and the done-set version, both counters the engine
-  keeps on the household; it stays bridged with them.
+- `techniques_version` (seat-scoped) is the held set's change counter: bumped by `LearnTechnique`, `ForgetTechnique` and
+  `NoteTechniquesChanged` (the engine's `_done_changed` sends it), not by `ReceiveTechniques` (Complaint 735).
 - Complaint 735: an exchange or licence to a seat does not tell the engine's caches (`ReceiveTechniques` keeps that).
 
 ## Forwarders left (`sim/engine/forward_knowledge.py`)

@@ -295,7 +295,6 @@ class Sim(
             on_change=self._active_changed
         )
         self.send(WatchStaff(self.state.acting_seat))
-        self.household.start_version_counters(self.state)
 
     # ---- OUTSIDE-SURFACE PROPERTIES FOR THE EXTRACTED HOUSEHOLD ----------
     # Moved to sim/engine/core_properties.py's ForwardingPropertiesMixin:

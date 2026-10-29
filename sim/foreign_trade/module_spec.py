@@ -1,8 +1,7 @@
 """The foreign-trade module's spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_foreign_trade.py and
-the other bridge files) under the name the owner will publish, except the `legacy_*` ones: raw state the module still reads or
-writes in place (the cast of actors, the map handle)."""
+Each read is a view of the module that owns the fact, except the `legacy_*` ones: raw state the module still reads or writes in
+place (the cast of actors, the map handle)."""
 from sim.actors.api import NoteTraderMargin
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.ledger.api import PayActorFromEdge, PayEdgeFrom

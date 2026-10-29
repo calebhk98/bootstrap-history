@@ -59,13 +59,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"_said_explanations": "seat_progress",
 }
 
-_VERSION_MAP: Dict[str, str] = {
-	"_operating_ver": "projects",
-	"_done_ver": "projects",
-	"_active_ver": "projects",
-	"_inst_units_ver": "household",
-}
-
 _LAZY_FIELDS: Set[str] = {
 	"spend_last_year",
 	"_dashboard_history",
@@ -110,9 +103,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 				 for k, v in (self._state.projects.active or {}).items()},
 				on_change=active_changed
 			)
-		# Version counters attached to owning subsystems
-		self.start_version_counters(self._state)
-
 		# Transient caches and runtime-only trackers
 		self.contract_projects: Set[str] = set()
 		self._spend_this_year: float = 0.0
@@ -229,77 +219,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 	def failed_attempts(self, value: Any) -> None:
 		self._state.projects.failed_attempts = value
 
-	@property
-	def _operating_ver(self) -> int:
-		return int(getattr(self._state.projects, "_operating_ver", 0))
-
-	@_operating_ver.setter
-	def _operating_ver(self, value: int) -> None:
-		setattr(self._state.projects, "_operating_ver", int(value))
-
-	@property
-	def _done_ver(self) -> int:
-		return int(getattr(self._state.projects, "_done_ver", 0))
-
-	@_done_ver.setter
-	def _done_ver(self, value: int) -> None:
-		setattr(self._state.projects, "_done_ver", int(value))
-
-	@property
-	def _active_ver(self) -> int:
-		return int(getattr(self._state.projects, "_active_ver", 0))
-
-	@_active_ver.setter
-	def _active_ver(self, value: int) -> None:
-		setattr(self._state.projects, "_active_ver", int(value))
-
-	@property
-	def _inst_units_ver(self) -> int:
-		return int(getattr(self._state.household, "_inst_units_ver", 0))
-
-	@_inst_units_ver.setter
-	def _inst_units_ver(self, value: int) -> None:
-		setattr(self._state.household, "_inst_units_ver", int(value))
-
-	@property
-	def operating_version(self) -> int:
-		return self._operating_ver
-
-	@property
-	def done_version(self) -> int:
-		return self._done_ver
-
-	@property
-	def active_version(self) -> int:
-		return self._active_ver
-
-	@property
-	def institution_units_version(self) -> int:
-		return self._inst_units_ver
-
-	def bump_done_version(self) -> None:
-		self._done_ver = self._done_ver + 1
-
-	def bump_operating_version(self) -> None:
-		self._operating_ver = self._operating_ver + 1
-
-	def bump_active_version(self) -> None:
-		self._active_ver = self._active_ver + 1
-
-	def bump_institution_units_version(self) -> None:
-		self._inst_units_ver = self._inst_units_ver + 1
-
-	def start_version_counters(self, state: Any) -> None:
-		"""Give each version counter on `state`'s owning subsystems a zero where it has none."""
-		if getattr(state.projects, "_operating_ver", None) is None:
-			state.projects._operating_ver = 0  # type: ignore[attr-defined]
-		if getattr(state.projects, "_done_ver", None) is None:
-			state.projects._done_ver = 0  # type: ignore[attr-defined]
-		if getattr(state.projects, "_active_ver", None) is None:
-			state.projects._active_ver = 0  # type: ignore[attr-defined]
-		if getattr(state.household, "_inst_units_ver", None) is None:
-			state.household._inst_units_ver = 0  # type: ignore[attr-defined]
-
 	def opened_year_of(self, node_id: str, default: int) -> int:
 		return self._state.projects.business.opened_year_of(node_id, default)
 
@@ -309,13 +228,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 		state = self.__dict__.get("_state")
 		if state is None:
 			raise AttributeError(name)
-		# Check version counters
-		ver_owner = _VERSION_MAP.get(name)
-		if ver_owner is not None:
-			owner_obj = getattr(state, ver_owner, None)
-			if owner_obj is not None:
-				return getattr(owner_obj, name, 0)
-			return 0
 		# Check subsystem state
 		subsystem_name = _SUBSYSTEM_MAP.get(name)
 		if subsystem_name is not None:
@@ -337,12 +249,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 		state = self.__dict__.get("_state")
 		if state is not None:
-			ver_owner = _VERSION_MAP.get(name)
-			if ver_owner is not None:
-				owner_obj = getattr(state, ver_owner, None)
-				if owner_obj is not None:
-					setattr(owner_obj, name, value)
-					return
 			subsystem_name = _SUBSYSTEM_MAP.get(name)
 			if subsystem_name is not None:
 				subsystem = getattr(state, subsystem_name, None)

@@ -21,8 +21,7 @@ class Held:
         """The ids and result tokens held now: completed and granted nodes that are in service, the civilisation's starting ones
         when `include_starting`, and what the held actions return."""
         needs = self.needs
-        done_version, operating_version = needs.held_and_running_versions()
-        key = (done_version, operating_version, self.built_ways_stamp())
+        key = (needs.techniques_version(), needs.operating_version(), self.built_ways_stamp())
         nodes = needs.tree_nodes()
         cache = self._caches.setdefault("held_and_running", {})
         cached = cache.get(include_starting)

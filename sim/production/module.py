@@ -11,7 +11,6 @@ from sim.assembly.api import Module
 from . import caches
 from .book_sales import BookSales
 from .capability import Capability
-from .commands import BumpHouseholdVersion
 from .concern_market import ConcernMarket
 from .constants import INSTITUTION_EXPANSION_CONVEXITY, RAMP_SHARE_AT_FULL_DEPTH
 from .depth import Depth
@@ -45,8 +44,7 @@ class Production(Revenue, Upkeep, ConcernMarket, BookSales, Volume, Learning, De
 		"""(the done set, the counts and versions of what is built, granted and operating, the tree): a table derived from what is
 		running stays good while this is unchanged."""
 		done = self.needs.techniques_held()
-		done_version, operating_version, _units_version = self.needs.running_versions()
-		return (done, (done_version, operating_version, len(done), len(self.needs.techniques_granted()),
+		return (done, (self.needs.techniques_version(), self.needs.operating_version(), len(done), len(self.needs.techniques_granted()),
 		               len(self.needs.operating())), self.needs.tree_nodes())
 
 	def practice_set(self):
@@ -69,11 +67,9 @@ class Production(Revenue, Upkeep, ConcernMarket, BookSales, Volume, Learning, De
 
 	def apply_refresh_done_caches(self, command):
 		self.memos().forget_done()
-		self.needs.send(BumpHouseholdVersion("done"))
 
 	def apply_refresh_operating_caches(self, command):
 		self.memos().forget_operating()
-		self.needs.send(BumpHouseholdVersion("operating"))
 
 	def apply_forget_revenue_caches(self, command):
 		self._memos.clear()

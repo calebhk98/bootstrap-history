@@ -39,6 +39,7 @@ from .starting import Starting
 from .trade_wait import TradeWait
 
 ACTIVE = "active"        # the seat's projects in hand changed
+ACTIVE_CHANGES = "active_changes"   # a project in hand changed anywhere, including the writers outside the module
 START = "start"          # the seat's start phase measured the year's hours
 
 
@@ -53,7 +54,15 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 		self._setup_running_gates()
 		self._setup_completion()
 
+	def active_projects_version(self):
+		"""The change counter of the acting seat's projects in hand, for memos over them: moves with every change of any project
+		in hand (progress too), so a memo that depends on which projects are active should also key on those."""
+		return self.seat_version(ACTIVE_CHANGES)
+
 	# ---- the commands ----
+
+	def apply_note_active_changed(self, command):
+		self.bump_seat(ACTIVE_CHANGES)
 
 	def apply_start_project(self, command):
 		answer = self.start_project(command)

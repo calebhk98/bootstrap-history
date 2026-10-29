@@ -8,7 +8,7 @@ from .readings import Readings
 
 
 class Demand:
-    """Needs: legacy_projects, project_versions, tree_nodes, techniques_held."""
+    """Needs: legacy_projects, active_projects_version, techniques_version, tree_nodes, techniques_held."""
 
     @property
     def readings(self) -> Readings:
@@ -37,7 +37,7 @@ class Demand:
         """(material, tonnes a year) for every finished installation that keeps drawing material, in done order; depends
         only on what is done."""
         done = self.needs.techniques_held()
-        version = self.needs.project_versions()[1]
+        version = self.needs.techniques_version()
         cached = self._standing
         if cached is not None and cached[0] == version and cached[1] is done:
             return cached[2]
@@ -48,7 +48,7 @@ class Demand:
     def annual_material_demand(self) -> collections.Counter:
         """Tonnes a year of the materials that bind, from the work in hand (a copy)."""
         readings = self.readings
-        versions = self.needs.project_versions()
+        versions = (self.needs.active_projects_version(), self.needs.techniques_version())
         cache = readings.annual
         if cache is not None and cache[0] == versions:
             return cache[1].copy()

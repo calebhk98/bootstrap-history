@@ -51,7 +51,7 @@ def defaults(seed: int) -> Dict[str, Any]:
 		"running_mechanics": lambda name: [], "mechanic": lambda name: {}, "patrons_lost_to_eminence": [],
 		"techniques_held": set(), "techniques_granted": set(), "tree": lambda node_id: None, "tree_nodes": {},
 		"running": lambda node_id: False, "revenue_estimate": 0.0, "concern_revenue": lambda node_id: 0.0, "operating": set(),
-		"standing_floor": 0.0, "rep_factor": 1.0, "held_and_running_versions": (0, 0),
+		"standing_floor": 0.0, "rep_factor": 1.0, "techniques_version": 0, "operating_version": 0,
 		"headcount": 0.0, "base_annual_wage": lambda trade: 1.0, "labour_state_weights": {}, "money_per_labour_hour": 1.0,
 		"seat_list": {"joined": ["founder"], "playing": ["founder"]}, "seat_country": lambda seat_id: None, "founder": {"alive": True, "policy": {}},
 		"population_total": 1.0e6, "pop_scale": 1.0, "material_pool": lambda material: (material,),
