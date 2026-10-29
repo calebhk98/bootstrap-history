@@ -175,7 +175,7 @@ class CountryStateView(CollectionView):
 	def levy_shares(self, scale: float, protection: float = 0.0, state: Any = None) -> Any:
 		"""(requisition, office) shares of income this country's state assesses at a visible scale: its own capacity,
 		tax share and the rates its shortfall set last year."""
-		requisition, office = self.government().levy_rates() if hasattr(self.government(), "levy_rates") else (0.0, 0.0)
+		requisition, office = self.government().levy_rates()
 		return self._shared.levy_shares(scale, protection, (self.state_reach(), self.tax_share(), requisition, office))
 
 	# ---- credit

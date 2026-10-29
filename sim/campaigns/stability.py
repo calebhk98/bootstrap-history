@@ -118,7 +118,7 @@ class Stability:
 	                        faction_members: float, reference: float, year: int) -> None:
 		"""The runner-up faction takes arms at the seat against the garrison there, in proportion to its backing."""
 		challenger = record.succession_challenger
-		backing = world.faction_backing() if hasattr(world, "faction_backing") else {}
+		backing = world.faction_backing()
 		total = sum(backing.values())
 		if seat is None or challenger not in backing or total <= 0.0:
 			self.needs.send(CloseSuccessionDispute(owner))

@@ -56,9 +56,8 @@ def release_leaver(parent: Any, node_id: str, world: Any, index: int) -> None:
 		if draw <= 0.0:
 			trade = candidate
 			break
-	release = getattr(world, "release_seat_staff", None) if parent.kind == "household" else None
-	if release is not None:
-		release(parent.actor_id, trade, 1.0)
+	if parent.kind == "household":
+		world.release_seat_staff(parent.actor_id, trade, 1.0)
 	else:
 		left = parent.workforce[trade] - 1.0
 		if left > 1e-9:
@@ -69,7 +68,7 @@ def release_leaver(parent: Any, node_id: str, world: Any, index: int) -> None:
 
 def parents_of(registry: Any, world: Any) -> List[Any]:
 	"""Businesses whose staff may leave: firms, players and seats (the founder's households), in id order."""
-	seats = getattr(world, "seat_parties", lambda: {})()
+	seats = world.seat_parties()
 	parents = [registry.actors[parent_id] for parent_id in sorted(registry.actors)
 			   if registry.actors[parent_id].kind in ("firm", "player")]
 	return parents + [seats[seat_id] for seat_id in sorted(seats)]

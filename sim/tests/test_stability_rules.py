@@ -85,14 +85,12 @@ class CorruptionTests(unittest.TestCase):
         self.assertEqual(leaked.kept_by_officials, 0.25)
         self.assertIs(revenue.leaked(assessed, 0.0), assessed)
 
-    def test_a_world_that_reads_no_corruption_leaks_nothing(self):
-        self.assertEqual(authority.kept_on(SimpleNamespace(), None), 0.0)
+    def test_the_share_officials_keep_is_the_worlds_reading(self):
         self.assertEqual(authority.kept_on(SimpleNamespace(corruption_share=lambda tiles: 0.3), None), 0.3)
 
     def test_conscription_and_the_levy_follow_authority(self):
         self.assertEqual(authority.conscripts(1000.0, 0.1, 1.0), 100.0)
         self.assertEqual(authority.conscripts(1000.0, 0.1, 0.5), 50.0)
-        self.assertEqual(authority.levy_reach(SimpleNamespace()), 1.0)
         self.assertEqual(authority.levy_reach(SimpleNamespace(collectible_share=lambda tiles=None: 0.4)), 0.4)
 
 

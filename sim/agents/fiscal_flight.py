@@ -50,7 +50,7 @@ def gross_of(assessed: Any) -> float:
 
 def fugitive_share(world: Any) -> float:
 	"""Share of the country's people who are away having fled the take; none for a world that does not say."""
-	return float(getattr(world, "fugitive_share", lambda: 0.0)())
+	return float(getattr(world, "fugitive_share", lambda: 0.0)())   # a foreign country's world does not follow its people's flight
 
 
 def fugitive_base(forms: List[Any], away: float) -> float:

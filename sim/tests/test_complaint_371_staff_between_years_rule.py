@@ -16,6 +16,9 @@ TRADES = ("smith", "scribe")
 class IdleWorld:
     year = 100
 
+    def demonstrated(self):
+        return set()
+
     def sectors(self):
         return {}
 

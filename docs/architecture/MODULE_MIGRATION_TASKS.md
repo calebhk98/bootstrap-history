@@ -255,7 +255,7 @@ actors (21), hazards, workforce (20 each), projects (19).
   view read `Sim._last_demographic_step`, which demography now holds) and then by checking each defaulted read against a
   built game: the famine cause's food supply (same attribute), the teaching view (`Sim.actors`, gone; actors publish
   `teaching_knowledge`), and a stray `@property` that made the age-at-death read raise TypeError. Still open from the same
-  sweep, and the same on the base build: `fuzzy_estimates` reads `viewer_actor_id`, which nothing sets.
+  sweep: `fuzzy_estimates` read `viewer_actor_id`, which nothing sets; the default actor is now the explicit answer.
 - [x] The event-cause evaluator (`event_causes`, `event_cause_state`, `validate_event_causes`) is the hazards module's own and the bridge entry
   `effective_hazard` is deleted. Each cause quantity reads a view of its owner (actors, land, demography, reporting, diffusion), a view answers
   None when the fact is unmeasured, and a relative cause with no start value is not judged instead of reading a start of zero. The divergence
@@ -263,8 +263,13 @@ actors (21), hazards, workforce (20 each), projects (19).
   77 reads answered by the bridge (78 before), 33 reads of `legacy_*` views (unchanged).
 - [x] Agriculture owns the farm's state (`sim/agriculture/farm_state.py`): `farm_land`, `farm_technique_this_year`, `farm_ladder`, `farm_arable_ceiling`, `farm_food_demand_kg` and `opening_farmed_hectares` are its views and the engine bridge entries are gone (measure: `python3 tools/measure/module_graph.py`).
 - [x] Seats publish `automatic_policy` (the seat's policy, else the scenario's `automation` mode), `patronage`, `goal_closure` (kept per seat by the module; the commands `RememberGoalClosure` and `ForgetGoalClosure` are its own, and `ui_port` sends them) and `win_condition_text` (the sentence rule is `goal_rules.describe_win_condition`; the labels are the new `content` view `win_condition_labels`). A win condition's `source: "staff"` with a `key` reads the `staff` view (the old `attribute` source and the bridge view `game_attribute` are gone; the mod `sample_slaveholding_goal_m4q8` uses `staff`/`slaves`). Still bridged: `seat_holds` (reads other modules' seat state), `dissolution_terms` (the constants are declared in `engine/core.py`; also answers `deputies_needed` for `patronage`). Measure: `python3 tools/measure/module_graph.py`.
-- [ ] Phase 9: replace the remaining defaulted `getattr(sim, ...)` reads with direct reads or views, so a moved field fails
-  loudly (`grep -rn 'getattr(sim, "' sim`).
+- [x] Phase 9 (first pass): the defaulted reads on `Sim` and on the lazily cached engine objects are direct: `seed`,
+  `session_seat` and the founder-death cache start as None in `Sim.__init__`; the stored-field properties answer None
+  instead of raising; each cache (`_need_shares_cache`, `_tile_prices`, ...) is an attribute with a stated initial value.
+  The agents' reads of their world (`seat_parties`, `patent_entry`, `faction_backing`, ...) are direct, and the shared
+  `FakeWorld` states them. Kept defaulted, each with a comment: `units` with no game, a foreign country's world
+  (`frontier_disease_loss`, flight), the test-host `assembly` guard. Still defaulted and not yet swept: reads whose receiver
+  is not named `sim`/`self`/`world` (`getattr(self._holder, ...)` in the country views, `record` fields in `economy/titles*.py`).
 - [x] The seat switch and the seat registry become the assembly's (done on `mr/assembly-seats`: `SimulationState.acting_record` replaces the root aliases; `Module.seat_bound()` replaces the forget commands; `Assembly.act_as` / `Module.act_as` is the one switch, and the `assembly` framework module publishes `registered_seats` and `seat_holds`, the latter through a rule the engine hands the assembly because the record it reads holds engine-only objects; design: replaces the bridge's `acting_as`,
   `registered_seats` and `seat_holds`): the root's seat aliases (`state.household`, `holdings`, `seat_progress`, `founder`,
   rebound by `state_seat.bind_seat`) go, their remaining readers reading the seat's record or a view; on a seat bind each

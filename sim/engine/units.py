@@ -177,7 +177,7 @@ def _format(dimension: str, base_value: float, sim: Any, preference: Optional[st
     reg = registry()
     if not chosen or chosen not in reg["units"]:
         return None
-    civ = getattr(sim, "civ", None)
+    civ = getattr(sim, "civ", None)   # sim is None when a tool formats a figure without a game
     name, symbol = unit_label(reg["units"][chosen], civ)
     return from_base(reg, chosen, base_value, unit_context(sim)), name, symbol
 
@@ -207,7 +207,7 @@ def _format_compound(rule: Mapping[str, Any], value: float, sim: Any):
     """(value, name, symbol) of a quantity per another dimension (money per mass), each part in its chosen unit."""
     reg = registry()
     context = unit_context(sim)
-    civ = getattr(sim, "civ", None)
+    civ = getattr(sim, "civ", None)   # sim is None when a tool formats a figure without a game
     parts = []
     for dimension, native in ((rule["dimension"], rule["native"]), (rule["per_dimension"], rule["per_native"])):
         chosen = chosen_units().get(dimension)

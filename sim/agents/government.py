@@ -193,7 +193,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		rng = world.rng_for("accession", self.actor_id, world.year)
 		if not ruler.dies(record.ruler_age, 1.0, rng.random()):
 			return
-		backing = world.faction_backing() if hasattr(world, "faction_backing") else {}
+		backing = world.faction_backing()
 		leader, challenger = ruler.contenders(backing)
 		record.ruler_age = ruler.heir_age(record.ruler_age)
 		record.ruler_backer = leader or ""
