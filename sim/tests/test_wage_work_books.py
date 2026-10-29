@@ -72,12 +72,12 @@ class ClosingTheYear(unittest.TestCase):
 
 
 class DryRun(unittest.TestCase):
-    def test_the_dry_run_returns_the_pay_and_puts_every_book_and_the_log_back(self):
+    def test_the_dry_run_asks_for_a_quote_and_returns_its_pay_and_note(self):
+        asked = []
         books = Books()
-        pay, _note = books.work_for_wages_dry_run("scholar", 1500)
-        self.assertEqual(pay, 30.0)
-        self.assertEqual((books.held.capital, books.held.wage_hours_this_year, books.held.wage_income_this_year,
-                          books.held.wages_earned, books.held.log), (100.0, 0.0, 0.0, 0.0, []))
+        books.work_for_wages = lambda trade, hours, commit=True: asked.append((trade, hours, commit)) or (30.0, "note")
+        self.assertEqual(books.work_for_wages_dry_run("scholar", 1500), (30.0, "note"))
+        self.assertEqual(asked, [("scholar", 1500, False)])
 
 
 class WorkCommand(unittest.TestCase):

@@ -6,6 +6,9 @@ purse to move without building a game:
     host.view("acting_balance")()   # 105.0
     party = host.party("founder", dealings=SeatsSeat(), business=Business())   # the seat as an exchange party, over the real ports
 
+The seats' stored dealings and businesses are plain records a test passes to `party`; the party reads them through the owners' views and
+changes them through the owners' commands (`SetDealing`, `ReleasePlant`, `AdoptPlant`, applied by the modules' own methods).
+
 The host holds a `SimulationState` (`host.state`), the actors' book (`host.purses`) and one ledger seat per seat in
 `host.state.seats`. It is also the `module` the actors' party ports read (`host.needs`, `host.world`): its staff, its know-how and
 the know-how handed to it are plain values a test sets."""
@@ -15,12 +18,17 @@ from typing import Any, Dict, Iterator
 
 from sim.actors.seat_parties import Ports
 from sim.agents.api import ActorsState, HouseholdParty
+from sim.agents.tracked import plain
 from sim.engine.state import EconomyState, FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import SeatState, bind_seat
 from sim.knowledge.api import ReceiveTechniques
 from sim.ledger.api import LedgerSeat, OpenCashBook, OpenPurse, RestorePurse
 from sim.ledger.ledger import Ledger
 from sim.ledger.module_spec import MODULE_SPECS
+from sim.seats.dealings import DEALING_FIELDS, Dealings
+from sim.seats.api import SetDealing
+from sim.ventures.api import AdoptPlant, ReleasePlant
+from sim.ventures.module import Ventures
 from sim.tests import module_harness
 
 
@@ -51,9 +59,15 @@ class MoneyHost:
         self.known: set = set()                       # the nodes the seats hold
         self.received: list = []                      # (nodes, granted) handed to a seat by an exchange
         self.on_receive: Any = None                   # called with (nodes, granted) as the acting seat, when a test keeps the know-how itself
+        self.dealings: Dict[str, Any] = {}             # the seats' stored dealings, by seat id (what `party` was given)
+        self.businesses: Dict[str, Any] = {}          # the seats' businesses, by seat id
         self.needs = SimpleNamespace(
             send=self.send, seat_balance=_Keyed(lambda seat_id: self.ledger.seat_balance(seat_id)), act_as=self.act_as,
-            staff=lambda: {"employees": self.employees}, techniques_held=lambda: self.known)
+            staff=lambda: {"employees": self.employees}, techniques_held=lambda: self.known,
+            seat_dealings=_Keyed(lambda seat_id: {name: plain(getattr(self.dealings[seat_id], name)) for name in DEALING_FIELDS}),
+            operating=lambda: self.businesses[self.state.acting_seat].operating(),
+            venture_opened_year=lambda node_id, default: self.businesses[self.state.acting_seat].opened_year_of(node_id, default),
+            venture_size=_Keyed(lambda node_id: self.businesses[self.state.acting_seat].size_of(node_id)))
         self._act(self.state.acting_seat)
         self.send(RestorePurse(capital))
         self.send(OpenCashBook(capital))
@@ -86,8 +100,9 @@ class MoneyHost:
             self._act(previous)
 
     def party(self, seat_id: str, margins: Any = None, *, dealings: Any, business: Any) -> HouseholdParty:
-        """`seat_id` as a party to an exchange, over the actors' own ports."""
-        return HouseholdParty(seat_id, Ports(self, seat_id), margins, dealings=dealings, business=business)
+        """`seat_id` as a party to an exchange, over the actors' own ports; `dealings` and `business` are the records its owners keep."""
+        self.dealings[seat_id], self.businesses[seat_id] = dealings, business
+        return HouseholdParty(seat_id, Ports(self, seat_id), margins)
 
     def view(self, name: str) -> Any:
         self._follow_acting_seat()
@@ -102,4 +117,9 @@ class MoneyHost:
             else:
                 self.on_receive(command.node_ids, command.granted)
             return None
+        if isinstance(command, SetDealing):
+            return Dealings.set_dealing(SimpleNamespace(_slots=lambda: self.dealings), command)
+        if isinstance(command, (ReleasePlant, AdoptPlant)):
+            owner = SimpleNamespace(seat_of=lambda seat_id: SimpleNamespace(business=self.businesses[seat_id]))
+            return (Ventures.apply_release_plant if isinstance(command, ReleasePlant) else Ventures.apply_adopt_plant)(owner, command)
         return self._handlers[type(command)](command)

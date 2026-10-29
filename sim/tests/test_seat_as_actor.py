@@ -19,8 +19,9 @@ seat = state.seats[FIRST_SEAT_ID]
 slot = SeatsSeat()
 party = host.party(FIRST_SEAT_ID, dealings=slot, business=Business())
 check("the party is named by the seat id", party.actor_id == FIRST_SEAT_ID, party.actor_id)
-check("its patents and shares are the seat's own dictionaries",
-      party.record.patents is slot.patents and party.record.holdings is slot.shares_held, None)
+check("its patents and shares are copies of the seat's stored ones, not the seat's own dictionaries",
+      party.record.patents == slot.patents and party.record.holdings == slot.shares_held
+      and party.record.patents is not slot.patents and party.record.holdings is not slot.shares_held, None)
 
 
 class Target:

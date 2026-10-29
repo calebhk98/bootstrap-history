@@ -20,17 +20,19 @@ facade and the seat as an exchange party. Decided per fact, from the code:
 | The seat as a party to an exchange (patents, shares, offers, licences, a concern sold) | actors | `HouseholdParty` over `SeatPorts` (`sim/actors/seat_parties.py`), built for one dealing and handed to no other module; the seats, diffusion and ventures modules send `ApplyForPatent`, `MakeOffer`, `AnswerOffer`, `GrantLicence`, `SellSeatConcern` and read `concern_sale_terms` |
 | The acting seat's visible scale to the state | actors (`BudgetView.acting_seat_visible_scale`) | the views `staff`, `standing`, `acting_balance`, `visible_scale` |
 
-How a posting is made: the ledger builds, for the length of one command, a `SeatAccount` (the seat's purse and its cash book) or a
-`SeatActor` (the same, as a party in the book, so `ledger.transfer` makes one posting between two accounts). Nothing outside the
-ledger holds either. The two differ as the household's state and its facade always did, and each command keeps the one it had so the
-book's postings stay identical (Complaint 930 asks whether they should agree). A party that moves a seat's money does it with
+How a posting is made: the ledger builds, for the length of one command, a `SeatAccount` (the seat's purse and its cash book, as a party in
+the book), so `ledger.transfer` makes one posting between two accounts whichever command moves the money, and the seat stands at the home
+country's centre when coin is carried. Nothing outside the ledger holds it. A party that moves a seat's money does it with
 `CreditSeat`, `DebitSeat`, `NoteSeatCash` and `RestorePurse`, naming the seat, so it needs no seat switch.
 
 What stays, and why:
 
 - `HouseholdState` holds the cause book rows (`cause_rows`, `cause_mark`) and the saving target; they are not money.
-- The party writes through two records its owners publish, the seats' stored dealings (`seat_dealings`) and the ventures' business
-  (`seat_business`), because the exchange (sim/agents) changes both in place (Complaint 931).
+- The party holds no record of the seat's dealings or plants. It reads a copy of the seats' stored dealings (view `seat_dealings`) and the
+  ventures' plants (views `operating`, `venture_opened_year`, `venture_size`), the exchange (sim/agents) changes the copy in place as it does an
+  actor's record (`sim/agents/tracked.py`), and each change is sent to the owner: `SetDealing` (the whole stored field the deal left) to the
+  seats, `ReleasePlant` and `AdoptPlant` to the ventures. What stays (Complaint 931): the seats' command replaces a field and does not know
+  the rule that made the change, because the exchange's rules run on the party's copy.
 - A party reads another seat's staff and know-how by running as that seat (`acting_as`), because `staff` and `techniques_held` answer for the acting seat.
 - The ledger's views `acting_balance` and `seat_balance` read the book directly and are uncached: the actors' own code moves the book too.
 - The save listing reads a save's purse from the book the save carries (`settings.purse_in_save`); the household section no longer has a `capital`.

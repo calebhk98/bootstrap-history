@@ -2,16 +2,15 @@
 
 An exchange handles an actor with `actor_id`, `money`, `concerns`, `knows`, `learn`, `credit`, `debit`,
 `opened_year_of`, `capacity_of` and a `record` (stores, offers, opened year, margins, patents, shares). The
-seat keeps that state in the modules that own it, so this adapter maps the names onto it: the concerns, opened
-years and plants are the seat's business, patents and shares held its stored dealings, and the purse, the
-staff and the know-how come through `ports`, the views and commands of their owners (see `SeatPorts`). The
-seat's id is the party's `actor_id`.
+seat keeps that state in the modules that own it, so this adapter maps the names onto it through `ports`, the
+views and commands of the owners (see `SeatPorts`): the purse, the staff, the know-how, the plants, and the patents,
+shares and offers. It holds no record of any of them. The seat's id is the party's `actor_id`.
 """
 from typing import Any, ContextManager, Dict, Iterable, Optional, Protocol
 
-from . import business_closing
 from .business_plant import Plant
 from .records import ActorRecord
+from .tracked import plain, tracked
 
 
 class SeatPorts(Protocol):
@@ -27,56 +26,86 @@ class SeatPorts(Protocol):
 	def workforce(self) -> Any: ...                  # the seat's people by trade
 	def knowledge(self) -> Any: ...                  # the nodes the seat holds
 	def receive(self, nodes: Iterable[str], granted: bool) -> None: ...   # know-how handed to the seat complete
+	def dealing(self, field: str) -> Any: ...        # a copy of the seat's stored patents, shares held, shares issued, offers or offer count
+	def store_dealing(self, field: str, value: Any) -> None: ...   # the seat's stored figure becomes the one the deal left
+	def concerns(self) -> Any: ...                   # the plants the seat runs (read only)
+	def opened_year(self, node_id: str, default: int) -> int: ...
+	def plant_size(self, node_id: str) -> float: ...
+	def release_plant(self, node_id: str, year: int) -> Any: ...  # the plant leaves the seat's business to pass to another owner (None: none)
+	def adopt_plant(self, plant: Any) -> None: ...   # the seat's business takes over a plant, with its size and age
 
 
 class SeatRecord(ActorRecord):
-	"""An actor record whose patents, shares and issued equity are the seat's own, so they persist and write through.
-	`seat_dealings` is the seat's stored dealings: `patents`, `shares_held`, `shares_issued`, `offers`, `offer_serial`."""
+	"""An actor record whose patents, shares and issued equity are the seat's own, kept by the seats module. Each read is a fresh copy of the
+	stored figure that reports a change to `ports.store_dealing`, so the exchange changes the record in place, as it does an actor's, and the
+	owner is sent the result. `ports` is None until the party attaches them."""
 
-	seat_dealings: Any = None
+	ports: Any = None
+
+	def _dealing(self, field: str) -> Any:
+		if self.ports is None:
+			return None
+		root: list = []
+		root.append(tracked(self.ports.dealing(field), lambda: self.ports.store_dealing(field, plain(root[0]))))
+		return root[0]
+
+	def _store(self, field: str, value: Any) -> None:
+		if self.ports is not None:
+			self.ports.store_dealing(field, plain(value))
+
+	@property
+	def patents(self) -> Any:
+		return self._dealing("patents") if self.ports is not None else {}
+
+	@patents.setter
+	def patents(self, value: Any) -> None:
+		self._store("patents", value)
+
+	@property
+	def holdings(self) -> Any:
+		return self._dealing("shares_held") if self.ports is not None else {}
+
+	@holdings.setter
+	def holdings(self, value: Any) -> None:
+		self._store("shares_held", value)
 
 	@property
 	def issued(self) -> float:
-		return self.seat_dealings.shares_issued if self.seat_dealings is not None else 0.0
+		return self.ports.dealing("shares_issued") if self.ports is not None else 0.0
 
 	@issued.setter
 	def issued(self, value: float) -> None:
-		if self.seat_dealings is not None:
-			self.seat_dealings.shares_issued = value
+		self._store("shares_issued", value)
 
 	@property
 	def offers(self) -> Any:
-		return self.seat_dealings.offers if self.seat_dealings is not None else []
+		return self._dealing("offers") if self.ports is not None else []
 
 	@offers.setter
 	def offers(self, value: Any) -> None:
-		if self.seat_dealings is not None:
-			self.seat_dealings.offers = value
+		self._store("offers", value)
 
 	@property
 	def offer_serial(self) -> int:
-		return self.seat_dealings.offer_serial if self.seat_dealings is not None else 0
+		return self.ports.dealing("offer_serial") if self.ports is not None else 0
 
 	@offer_serial.setter
 	def offer_serial(self, value: int) -> None:
-		if self.seat_dealings is not None:
-			self.seat_dealings.offer_serial = value
+		self._store("offer_serial", value)
 
 
 class HouseholdParty:
 	"""Gives a seat the surface an exchange needs; holds no state of its own beyond a transient record."""
 
 	kind = "household"
+	stands_at_home = True   # a seat's purse stands at the home country's centre when coin is carried (sim/coin/carriage.py)
 
-	def __init__(self, seat_id: str, ports: SeatPorts, margins: Optional[Dict[str, float]] = None, *, dealings: Any, business: Any) -> None:
-		"""`dealings` is the seat's stored dealings (`patents`, `shares_held`, `shares_issued`, `offers`, `offer_serial`) and
-		`business` the seat's own, the record the ventures module keeps and the exchange opens, closes and hands over plants on."""
+	def __init__(self, seat_id: str, ports: SeatPorts, margins: Optional[Dict[str, float]] = None) -> None:
 		self._ports = ports
 		self.actor_id = seat_id
-		self._business = business
 		self._margins = dict(margins or {})
-		self.record = SeatRecord(kind="household", patents=dealings.patents, holdings=dealings.shares_held)
-		self.record.seat_dealings = dealings
+		self.record = SeatRecord(kind="household")
+		self.record.ports = ports
 
 	@property
 	def money(self) -> float:
@@ -89,7 +118,7 @@ class HouseholdParty:
 	@property
 	def concerns(self) -> Any:
 		with self._ports.acting():
-			return self._business.operating()
+			return self._ports.concerns()
 
 	@property
 	def workforce(self) -> Any:
@@ -140,10 +169,11 @@ class HouseholdParty:
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
 		with self._ports.acting():
-			return self._business.opened_year_of(node_id, default)
+			return self._ports.opened_year(node_id, default)
 
 	def capacity_of(self, node_id: str) -> float:
-		return self._business.size_of(node_id)
+		with self._ports.acting():
+			return self._ports.plant_size(node_id)
 
 	def margin_of(self, node_id: str) -> Any:
 		return self._margins.get(node_id)
@@ -153,8 +183,11 @@ class HouseholdParty:
 
 	def release_plant(self, node_id: str, world: Any) -> Plant:
 		with self._ports.acting():
-			return business_closing.release_plant(self._business, node_id, world)
+			plant = self._ports.release_plant(node_id, world.year)
+		if plant is None:
+			raise KeyError("the business runs no plant of " + node_id)
+		return plant
 
 	def receive_plant(self, plant: Plant, world: Any) -> None:
 		with self._ports.acting():
-			self._business.adopt(plant)
+			self._ports.adopt_plant(plant)

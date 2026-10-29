@@ -4,12 +4,14 @@ commands of the modules that own what a seat holds.
 A seat's money is the ledger's (its view `seat_balance`, its commands that move the purse and enter the cash book), its staff the
 workforce's, its know-how the knowledge module's, its plants the ventures module's and its patents, shares and offers the seats
 module's. The party an exchange or a lender deals with is built from those for the length of one dealing and handed to no other
-module; the seats' stored dealings and the seat's business are the two records it writes through."""
+module. It holds no record of the seat's dealings or business: it reads them from their owners and sends them what a deal changed."""
 from typing import Any, ContextManager, Dict, Iterable, Optional
 
 from sim.agents.api import HouseholdParty
 from sim.knowledge.api import ReceiveTechniques
 from sim.ledger.api import CreditSeat, DebitSeat, NoteSeatCash, RestorePurse
+from sim.seats.api import SetDealing
+from sim.ventures.api import AdoptPlant, ReleasePlant
 
 
 class Ports:
@@ -52,6 +54,27 @@ class Ports:
     def receive(self, nodes: Iterable[str], granted: bool) -> None:
         self._needs.send(ReceiveTechniques(tuple(nodes), granted))
 
+    def dealing(self, field: str) -> Any:
+        return self._needs.seat_dealings[self._seat_id][field]
+
+    def store_dealing(self, field: str, value: Any) -> None:
+        self._needs.send(SetDealing(self._seat_id, field, value))
+
+    def concerns(self) -> Any:
+        return self._needs.operating()
+
+    def opened_year(self, node_id: str, default: int) -> int:
+        return self._needs.venture_opened_year(node_id, default)
+
+    def plant_size(self, node_id: str) -> float:
+        return self._needs.venture_size[node_id]
+
+    def release_plant(self, node_id: str, year: int) -> Any:
+        return self._needs.send(ReleasePlant(self._seat_id, node_id, year))
+
+    def adopt_plant(self, plant: Any) -> None:
+        self._needs.send(AdoptPlant(self._seat_id, plant))
+
 
 class SeatParties:
     """Mixed into `Actors`."""
@@ -61,8 +84,7 @@ class SeatParties:
 
     def seat_party(self, seat_id: str, margins: Optional[Dict[str, float]] = None) -> HouseholdParty:
         """`seat_id` as an actor an exchange can deal with: it holds patents and shares, pays and is paid."""
-        return HouseholdParty(seat_id, Ports(self, seat_id), margins, dealings=self.needs.seat_dealings[seat_id],
-                              business=self.needs.seat_business[seat_id])
+        return HouseholdParty(seat_id, Ports(self, seat_id), margins)
 
     def seat_parties(self) -> Dict[str, HouseholdParty]:
         """Every seat that has joined as an actor, by seat id: the founder and other players hold patents and shares."""

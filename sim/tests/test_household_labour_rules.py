@@ -121,6 +121,23 @@ class SellingHours(unittest.TestCase):
         self.assertEqual(seller.director_hours_committed(), 500.0)
         self.assertEqual(seller.logged, [("scribe", 500.0, 1500.0)])
 
+    def test_a_quote_names_the_pay_and_posts_nothing_logs_nothing_and_commits_no_hours(self):
+        # Complaint 850: a quote must not credit the purse from the employers' edge
+        seller = Seller()
+        pay, _warning = seller.work_for_wages("scribe", 500, commit=False)
+        self.assertEqual(pay, 1500.0)
+        self.assertEqual(seller.received, [])
+        self.assertEqual(seller.logged, [])
+        self.assertEqual((seller.household.wage_hours_this_year, seller.household.wages_earned,
+                          seller.household.wage_income_this_year), (0.0, 0.0, 0.0))
+
+    def test_a_quote_reads_the_revenue_as_the_sale_would_leave_it(self):
+        seller = Seller()
+        seen = []
+        seller._world.revenue = lambda: seen.append(seller.household.wage_hours_this_year) or 1000.0
+        seller.work_for_wages("scribe", 500, commit=False)
+        self.assertEqual(seen, [0.0, 500.0])
+
     def test_more_hours_than_the_year_has_left_are_refused_and_pay_nothing(self):
         seller = Seller(committed=1800.0)
         pay, refusal = seller.work_for_wages("scribe", 500)

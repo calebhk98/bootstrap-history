@@ -2,7 +2,7 @@
 
 Methods of Labour, split from labour_wages.py, which prices the trade.
 """
-from sim.reporting.api import DiscardEventsAfter, RecordEvent
+from sim.reporting.api import RecordEvent
 
 
 class WageLedgerMixin:
@@ -35,16 +35,5 @@ class WageLedgerMixin:
                     % (self._world.plain_number(hours), trade, self._world.money_text(pay, grouped=True, short=True)), trade=trade, hours=hours, pay=pay))
 
     def work_for_wages_dry_run(self, trade, hours):
-        """(pay, message) for work_for_wages, with every book put back afterwards."""
-        workforce = self._world.workforce
-        saved = (self._world.balance, workforce.wage_hours_this_year,
-                 workforce.wage_income_this_year, workforce.wages_earned,
-                 self._world.logged_events())
-        try:
-            return self.work_for_wages(trade, hours)
-        finally:
-            (balance, workforce.wage_hours_this_year,
-             workforce.wage_income_this_year, workforce.wages_earned,
-             logged) = saved
-            self._world.restore_purse(balance)
-            self._world.send(DiscardEventsAfter(logged))
+        """(pay, message) for work_for_wages as a quote: nothing is posted, logged or kept."""
+        return self.work_for_wages(trade, hours, commit=False)

@@ -7,7 +7,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.agents.api import EDGE_OUTSIDE, ActorRegistry, ActorsState, DUES_CAUSE
+from sim.agents.api import EDGE_EXCHANGE, EDGE_OUTSIDE, PURSE_CURRENCY, ActorRegistry, ActorsState, DUES_CAUSE
 from sim.engine.state import ActorRecord, deserialize_state, serialize_state
 from sim.ledger.api import (CloseCashPeriod, CreditSeat, DebitSeat, NoteHolderBooking, NoteSeatCash, NoteSpend, OpenCashBook, OpenPurse,
                             BankStock, ChangeStock, DrawDownStock, LedgerSeat, LedgerWorld, PayActor, PayActorFromHousehold, PayEdge, PayExchange,
@@ -78,10 +78,38 @@ class TakeFromHouseholdPurseCommand(unittest.TestCase):
         self.assertEqual((module.acting_balance(), treasury.money), (380.0, 120.0))
         self.assertEqual(module.seat.cash_flow, {"wealth found hidden": -120.0})
 
+    def test_the_seizure_is_one_posting_between_the_purse_and_the_taker_and_touches_no_other_account(self):
+        # Complaint 790: it was a "set" against the account outside the book, and the taker credited from outside
+        module, registry, treasury = seat_ledger(500.0)
+        purses = registry.state.purses
+        outside_before = purses.book.edge_volume(EDGE_OUTSIDE, PURSE_CURRENCY)
+        module.take_from_household_purse(TakeFromHouseholdPurse(treasury.actor_id, 120.0, "wealth found hidden"))
+        self.assertEqual(purses.book.edge_volume(EDGE_OUTSIDE, PURSE_CURRENCY), outside_before)
+        self.assertEqual(purses.purse(SEAT) + purses.purse(treasury.actor_id), 500.0)
+
     def test_an_actor_the_cast_does_not_hold_is_refused(self):
         module, _registry, _treasury = seat_ledger(500.0)
         answer = module.take_from_household_purse(TakeFromHouseholdPurse("nobody", 1.0, "x"))
         self.assertEqual((answer.cause, module.acting_balance()), ("no_such_actor", 500.0))
+
+
+class PayEdgeCommand(unittest.TestCase):
+    def test_the_payment_is_one_posting_to_the_edge_and_touches_no_other_account(self):
+        # Complaint 930: a seat's payment through its own purse was two postings against the account outside the book
+        module, registry, _treasury = seat_ledger(500.0)
+        purses = registry.state.purses
+        outside_before = purses.book.edge_volume(EDGE_OUTSIDE, PURSE_CURRENCY)
+        module.pay_edge(PayEdge("edge:officials", 120.0, "bribe"))
+        self.assertEqual((purses.purse(SEAT), purses.purse("edge:officials"), purses.book.edge_volume(EDGE_OUTSIDE, PURSE_CURRENCY)), (380.0, 120.0, outside_before))
+        self.assertEqual(module.seat.cash_flow, {"bribe": -120.0})
+
+    def test_money_from_an_edge_is_one_posting_from_it_into_the_purse(self):
+        module, registry, _treasury = seat_ledger(500.0)
+        purses = registry.state.purses
+        outside_before = purses.book.edge_volume(EDGE_OUTSIDE, PURSE_CURRENCY)
+        module.receive_from_edge(ReceiveFromEdge("edge:employers", 70.0, "wages for your own work"))
+        self.assertEqual((purses.purse(SEAT), purses.purse("edge:employers"), purses.book.edge_volume(EDGE_OUTSIDE, PURSE_CURRENCY)), (570.0, -70.0, outside_before))
+        self.assertEqual(module.seat.cash_flow, {"wages for your own work": 70.0})
 
 
 class PayActorCommand(unittest.TestCase):
@@ -157,6 +185,15 @@ class WithdrawHouseholdMoneyCommand(unittest.TestCase):
         module, _registry, _treasury = seat_ledger(5000.0)
         module.withdraw_household_money(WithdrawHouseholdMoney(1000.0))
         self.assertEqual(module.acting_balance(), 4000.0)
+
+    def test_the_coin_goes_to_the_exchange_edge_where_the_banks_capital_comes_from_and_is_an_outlay(self):
+        # Complaint 790: it was a "set" against the account outside the book and the cash book never saw it leave
+        module, registry, _treasury = seat_ledger(5000.0)
+        purses = registry.state.purses
+        outside_before = purses.book.edge_volume(EDGE_OUTSIDE, PURSE_CURRENCY)
+        module.withdraw_household_money(WithdrawHouseholdMoney(1000.0))
+        self.assertEqual((purses.purse(EDGE_EXCHANGE), purses.book.edge_volume(EDGE_OUTSIDE, PURSE_CURRENCY)), (1000.0, outside_before))
+        self.assertEqual(module.seat.cash_flow, {"bank capital": -1000.0})
 
 
 class TonnesLedgerState(unittest.TestCase):

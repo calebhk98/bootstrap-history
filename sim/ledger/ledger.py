@@ -1,7 +1,7 @@
 """The ledger module: applies the money and goods commands and publishes what each holder has.
 
 The seat's tonnes ledger, its cash book and the pool of capacity keys swept out of the ledgers are the ledger's own state
-(sim/ledger/state.py). A seat's purse is its account in the actors' book; the ledger moves it through the accounts it builds for
+(sim/ledger/state.py). A seat's purse is its account in the actors' book; the ledger moves it through the account it builds for
 the length of a command (sim/ledger/seat_account.py)."""
 from typing import Any, Optional
 
@@ -10,8 +10,9 @@ from sim.assembly.api import Module
 from sim.refusal import Refusal
 
 from . import cash_book, rules
-from .seat_account import SeatAccount, SeatActor
+from .seat_account import SeatAccount
 
+BANK_CAPITAL_LABEL = "bank capital"   # the cause of the coin a seat puts into a bank it founds
 OPENING_LABEL = "opening"   # the label of the posting that opens a joining seat's account
 MONEY = "money"
 STOCK = "stock"
@@ -25,11 +26,6 @@ class Ledger(Module):
 		"""The seat's purse as this module moves it (the acting seat's unless one is named)."""
 		seat_id = self.clock.acting_seat if seat_id is None else seat_id
 		return SeatAccount(self.seat_of(seat_id), self.needs.cast_state().purses, seat_id)
-
-	def actor(self, seat_id: Optional[str] = None) -> SeatActor:
-		"""The seat as a party in the actors' book (the acting seat's unless one is named)."""
-		seat_id = self.clock.acting_seat if seat_id is None else seat_id
-		return SeatActor(self.seat_of(seat_id), self.needs.cast_state().purses, seat_id)
 
 	def pay_edge(self, command: Any) -> None:
 		ledger.transfer(self.account(), self.edge(command.edge), command.amount, command.purpose)
@@ -51,7 +47,7 @@ class Ledger(Module):
 	def pay_actor(self, command: Any) -> None:
 		payer = self.needs.cast().get(command.payer)
 		if command.payee in self.needs.seat_list()["joined"]:
-			payee = self.actor(command.payee)
+			payee = self.account(command.payee)
 		else:
 			cast = self.needs.cast()
 			payee = cast.get(command.payee) or cast.ensure_government(command.payee[len(GOVERNMENT_PREFIX):])
@@ -62,7 +58,7 @@ class Ledger(Module):
 		payee = self.needs.cast().get(command.payee)
 		if payee is None:
 			return Refusal("no_such_actor", "the cast holds no actor %s" % command.payee)
-		ledger.transfer(self.actor(), payee, command.amount, command.purpose)
+		ledger.transfer(self.account(), payee, command.amount, command.purpose)
 		self.bump_seat(MONEY)
 		return None
 
@@ -75,7 +71,7 @@ class Ledger(Module):
 		return None
 
 	def settle_with_edge(self, command: Any) -> None:
-		ledger.settle(self.actor(), self.edge(command.edge), command.balance, command.purpose)
+		ledger.settle(self.account(), self.edge(command.edge), command.balance, command.purpose)
 		self.bump_seat(MONEY)
 
 	def rescale_household_money(self, command: Any) -> None:
@@ -130,8 +126,7 @@ class Ledger(Module):
 			(holder.note_income if command.signed > 0.0 else holder.note_outlay)(command.label, abs(command.signed))
 
 	def withdraw_household_money(self, command: Any) -> None:
-		household = self.actor()
-		household.money = household.money - command.amount
+		ledger.transfer(self.account(), self.edge(EDGE_EXCHANGE), command.amount, BANK_CAPITAL_LABEL)
 		self.bump_seat(MONEY)
 
 	def pay_exchange(self, command: Any) -> None:

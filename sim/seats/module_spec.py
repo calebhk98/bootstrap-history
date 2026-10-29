@@ -13,7 +13,7 @@ from sim.ventures.api import StopOperating, WatchBusiness
 from sim.workforce.api import WatchStaff
 
 from .commands import (EndRun, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat, RecordGoalReached,
-                       RememberGoalClosure, RememberGoalFloor, SetFounderLife, SetGoal, SetPolicy, SetSeatHolder)
+                       RememberGoalClosure, RememberGoalFloor, SetDealing, SetFounderLife, SetGoal, SetPolicy, SetSeatHolder)
 from .module import Seats
 from .state import SeatsSeat
 
@@ -72,7 +72,7 @@ MODULE_SPECS = (ModuleSpec(
              (SetGoal, "set_goal"), (RecordGoalReached, "record_goal_reached"), (EndRun, "end_run"),
              (SetFounderLife, "set_founder_life"), (SetPolicy, "set_policy"), (SetSeatHolder, "set_seat_holder"),
              (RememberGoalClosure, "remember_goal_closure"), (ForgetGoalClosure, "forget_goal_closure"),
-             (RememberGoalFloor, "remember_goal_floor")),
+             (RememberGoalFloor, "remember_goal_floor"), (SetDealing, "set_dealing")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(AddSeat, MoveSeat, OpenPurse, WatchActive, WatchBusiness, WatchStaff, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent, StopOperating),
     phases=(PhaseHook("hear_of_other_seats", "hear_of_other_seats"), PhaseHook("win_conditions", "check_win_conditions"),

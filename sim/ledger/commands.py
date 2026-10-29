@@ -158,9 +158,8 @@ class PayActorFromHousehold(Command):
 
 @dataclass(frozen=True)
 class TakeFromHouseholdPurse(Command):
-	"""An actor of the cast (named by its id) takes money out of the acting seat's household purse: the purse is debited by
-	the figure and the taker credited, as the household's own state does it (not as one posting in the book). Refused with
-	the cause `no_such_actor` when the cast holds no such actor."""
+	"""An actor of the cast (named by its id) takes money out of the acting seat's household purse: one posting in the book,
+	entered in the cash book. Refused with the cause `no_such_actor` when the cast holds no such actor."""
 	taker: str
 	amount: float
 	purpose: Any
@@ -201,8 +200,8 @@ class NoteHolderBooking(Command):
 
 @dataclass(frozen=True)
 class WithdrawHouseholdMoney(Command):
-	"""The acting seat's household money falls by `amount` with no posting on the ledger's side: the money entered the
-	agent economy's own book at the same moment (a bank's capital)."""
+	"""The acting seat's household pays `amount` to the exchange edge, entered in the cash book as an outlay: the money
+	entered the agent economy's own book from the same edge at the same moment (a bank's capital)."""
 	amount: float
 
 

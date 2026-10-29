@@ -100,3 +100,12 @@ class SetPolicy(Command):
     """The acting seat's standing policy switch `name` is now `value` (a flag, or a mode such as "replace")."""
     name: str
     value: Any
+
+
+@dataclass(frozen=True)
+class SetDealing(Command):
+    """The seat `seat_id`'s stored `field` of its dealings (patents, shares_held, shares_issued, offers, offer_serial) becomes `value`: the
+    seat's party in an exchange sends the figure the deal left."""
+    seat_id: str
+    field: str
+    value: Any
