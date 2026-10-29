@@ -104,7 +104,7 @@ class AnEqualKernelInAWholeGame(KernelCase):
         self.assertGreater(USED["fetch_wage"], 0)
 
     def test_the_economys_carriage_table_is_handed_the_replacement_of_the_route_search(self):
-        self.assertEqual(self.game.economy.agent._economy.carriage.cost_tree.__name__, "same_answer")
+        self.assertEqual(self.game.view("legacy_economy")().agent._economy.carriage.cost_tree.__name__, "same_answer")
 
     def test_a_game_without_the_mods_runs_the_references_and_records_no_replacement(self):
         game = unopened_sim()
