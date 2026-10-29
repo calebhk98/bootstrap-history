@@ -108,7 +108,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("harvest_share_taken", "harvest_share_taken", kind=KEYED, **_LIVE),
 		ViewSpec("concern_sale_terms", "concern_sale_terms", kind=QUOTE, seat_scoped=True, **_LIVE),
 	),
-	applies=((commands.AdvanceActors, "advance_actors"), (commands.RecordConquestContact, "record_conquest_contact"),
+	applies=((commands.AdvanceActors, "advance_actors"), (commands.AddActor, "add_actor"), (commands.RecordConquestContact, "record_conquest_contact"),
 	         (commands.RecordMigrantContact, "record_migrant_contact"), (commands.ScaleStrata, "scale_strata"), (commands.NoteTraderMargin, "note_trader_margin"), (commands.HoldEdgeGoods, "hold_edge_goods"),
 	         (commands.TeachLiteracy, "teach_literacy"), (commands.SchoolLiteracy, "school_literacy"),
 	         (commands.FollowTileTransfer, "follow_tile_transfer"),

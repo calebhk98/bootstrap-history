@@ -81,6 +81,8 @@ class Operations:
 	withdrawn: Tuple[str, ...] = ()                                                # "<module_id>.<name>" provisions taken out
 	phases: Tuple[Any, ...] = ()                                                   # year phases the engine places (it owns their shape)
 	kernels: Dict[str, Callable] = field(default_factory=dict)                     # kernel name -> the replacement function
+	reads: Tuple[str, ...] = ()                                                    # views the mod's code reads (its `ModAccess` answers these only)
+	sends: Tuple[type, ...] = ()                                                   # command classes the mod's code sends
 
 
 def view_names(spec: ModuleSpec) -> Tuple[str, ...]:

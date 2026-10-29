@@ -29,6 +29,9 @@ class FakeApi:
     def __init__(self):
         self.stores, self.written, self.phase_handler, self.provider, self.premium = {}, [], None, None, None
 
+    def reads(self, *views):
+        pass
+
     def store(self, name, keyed_by, default, unit=""):
         self.stores[name] = Store()
         return self.stores[name]
@@ -82,15 +85,13 @@ class RegisteredHooksTests(unittest.TestCase):
         _hooks, api = registered()
         api.stores["town_people"].values["t1"] = 4000
         api.stores["urban_mortality_premium"].values["t1"] = 0.25
-        labour = types.SimpleNamespace(simulation_for_providers=lambda: object())
-        self.assertEqual(api.provider(labour, "t1", 1000.0), 4000)
-        self.assertEqual(api.premium(labour, "t1", 4000), 0.25)
+        self.assertEqual(api.provider(object(), "t1", 1000.0), 4000)
+        self.assertEqual(api.premium(object(), "t1", 4000), 0.25)
 
     def test_before_the_first_year_the_provider_has_no_opinion(self):
         _hooks, api = registered()
-        labour = types.SimpleNamespace(simulation_for_providers=lambda: object())
-        self.assertIsNone(api.provider(labour, "t1", 1000.0))
-        self.assertIsNone(api.premium(labour, "t1", 1000.0))
+        self.assertIsNone(api.provider(object(), "t1", 1000.0))
+        self.assertIsNone(api.premium(object(), "t1", 1000.0))
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ from .module import Demography
 from .state import DemographySeat, DemographyWorld
 
 READS_BY_OWNER = {
-    "core": ("civilisation", "year", "cast", "provider_game"),
+    "core": ("civilisation", "year", "cast"),
     "land": ("home_tiles_held", "borders_among", "built_ways", "held_techniques"),
     "disease": ("disease_burden", "endemic_death_rates", "epidemic_deaths_by_tile"),
     "workforce": ("farming_technique", "town_mortality_premium_by_tile", "wage_index", "wage_index_terms"),
@@ -62,7 +62,7 @@ MODULE_SPECS = (ModuleSpec(
              (NotePopulationChange, "note_population_change"), (ChangeFarmland, "change_farmland"),
              (SetClearedFarmland, "set_cleared_farmland"), (SetFarmHoursNeeded, "set_farm_hours_needed"),
              (TakeFromGranary, "take_from_granary")),
-    # (game, year) -> {"deaths_by_band": {band: people}, "yield_factor_by_tile": {tile: factor}} (either key optional): harm that
+    # (year) -> {"deaths_by_band": {band: people}, "yield_factor_by_tile": {tile: factor}} (either key optional): harm that
     # activity does to people (added to the year's epidemic deaths) and to land (multiplies the yield of land-bound producers,
     # which the agriculture module reads from this point); the answers add and multiply, so a provider needs no knowledge of another
     extension_points=(ExtensionPoint("externality", LIST),),

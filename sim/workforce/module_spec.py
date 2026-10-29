@@ -7,7 +7,7 @@ when they changed; only the payroll reports its changes (the `staff` channel).""
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
 from sim.agriculture.api import SetFarmLand, SetFarmTechnique
 from sim.demography.api import SetClearedFarmland, SetFarmHoursNeeded
-from sim.ledger.api import PayEdge, ReceiveFromEdge, RestorePurse
+from sim.ledger.api import NoteSpend, PayEdge, ReceiveFromEdge, RestorePurse
 from sim.polity.api import AddReputation, ScaleFamiliarity, ScaleProtection
 from sim.seats.api import RememberGoalClosure
 from sim.reporting.api import DiscardEventsAfter, RecordAutomation, RecordAutomationSkip, RecordEvent
@@ -23,7 +23,7 @@ from .state import STAFF, WorkforceSeat, WorkforceSociety
 from .module import Workforce
 
 READS_BY_OWNER = {
-    "core": ("year", "automation", "civilisation", "game_config", "provider_game",
+    "core": ("year", "automation", "civilisation", "game_config",
              "plain_number", "money_text"),
     "content": ("trades_absent", "trade_notes", "trade_records", "trade_family"),
     "ventures": ("operating",),
@@ -165,11 +165,11 @@ MODULE_SPECS = (ModuleSpec(
     phases=(PhaseHook("apprenticeships", "step_apprenticeships"), PhaseHook("staff", "step_staff"),
             PhaseHook("seat_prelude", "step_prelude")),
     extension_points=(
-        ExtensionPoint("town_population", LIST),           # (labour, tile, nominal_people) -> people or None; the last answer that is not None wins
-        ExtensionPoint("town_mortality_premium", LIST),    # (labour, tile, town_people) -> share of the baseline death rate or None; likewise
-        ExtensionPoint("director_overhead", LIST),         # (game) -> hours a year already spoken for; the answers are added, each at least zero
+        ExtensionPoint("town_population", LIST),           # (tile, nominal_people) -> people or None; the last answer that is not None wins
+        ExtensionPoint("town_mortality_premium", LIST),    # (tile, town_people) -> share of the baseline death rate or None; likewise
+        ExtensionPoint("director_overhead", LIST),         # () -> hours a year already spoken for; the answers are added, each at least zero
     ),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(PayEdge, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, DiscardEventsAfter, AddReputation, ScaleFamiliarity, ScaleProtection,
+    sends=(BuildHousing, PayEdge, NoteSpend, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, DiscardEventsAfter, AddReputation, ScaleFamiliarity, ScaleProtection,
            SetClearedFarmland, SetFarmHoursNeeded, SetFarmLand, SetFarmTechnique, RememberGoalClosure, RestorePurse),
 ),)

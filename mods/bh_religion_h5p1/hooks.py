@@ -7,7 +7,7 @@ a rule for its surplus: a declared share of what is left after a year's stipends
 where the credit market lends it to borrowers, the founder among them, and the interest comes back through the
 purse book. Nothing here names a faith, a place or a civilisation: every figure is data on the cast entry (`plan`).
 """
-from sim.agents.api import edges, foundation, ledger
+from sim.mod_api import edges, foundation, ledger
 
 MILLING = "milling"
 LAND_PURCHASE = "land purchase"

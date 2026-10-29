@@ -13,7 +13,7 @@ from .module import Polity
 from .state import STANDING, VALUES, PolitySeat, PolityWorld
 
 READS_BY_OWNER = {
-	"core": ("year", "civilisation", "events_enabled", "automation", "acting_seat", "danger_lines", "provider_game",
+	"core": ("year", "civilisation", "events_enabled", "automation", "acting_seat", "danger_lines",
 	         "money_text", "mass_text"),
 	"actors": ("state_treasury", "cast", "cast_recorded", "government_figures", "actor_world", "country_world"),
 	"ledger": ("acting_balance", "transfer_listening"),
@@ -86,7 +86,7 @@ MODULE_SPECS = (ModuleSpec(
 		(commands.ReplaceRuler, "replace_ruler"), (commands.CloseSuccessionDispute, "close_succession_dispute"),
 	),
 	# () -> (reader, seizer): a claim the acting household holds on other actors, which a confiscation counts and, once the purse is
-	# empty, takes. reader(game) -> money the household is owed; seizer(game, amount, taker) -> money actually handed to `taker`.
+	# empty, takes. reader() -> money the household is owed; seizer(amount, taker) -> money actually handed to `taker`.
 	extension_points=(ExtensionPoint("wealth_claims", LIST),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(PayEdge, PayActorFromHousehold, TakeFromHouseholdPurse, RecordEvent, ForgetTechnique, EndRun, SayOnce),

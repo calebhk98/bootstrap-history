@@ -75,6 +75,7 @@ def attach(sim: Any) -> None:
 	assembly, state = sim.assembly, sim.state
 	assembly.seat_records = lambda: sim.state.seats
 	assembly.follow = lambda seat_id: setattr(sim.state, "acting_seat", seat_id)
+	assembly.mod_memory = lambda: sim.state.interface
 	from .bridge import BRIDGE_ID
 	if BRIDGE_ID in assembly.modules:
 		assembly.modules[BRIDGE_ID].sim = sim

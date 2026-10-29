@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.agriculture import rules as agriculture_rules
+from sim.assembly.api import NeedsAccess
 from sim.engine import mod_code
 from sim.demography import rules as demography_rules
 
@@ -39,13 +40,13 @@ class ExternalityRuleTests(unittest.TestCase):
 class ExternalityDoorTests(unittest.TestCase):
     def test_a_mod_provides_through_the_code_api_to_the_point(self):
         api = mod_code.ModCodeApi("test_acme_k3f9")
-        provider = lambda sim, year: {}
+        provider = lambda access, year: {}
         api.externality(provider)
-        self.assertEqual(api.operations.provided["externality"], (provider,))
+        self.assertEqual(api.operations.provided["externality"], (NeedsAccess(provider),))
 
     def test_one_mods_providers_are_not_another_games(self):
         first, second = mod_code.ModCodeApi("test_acme_k3f9"), mod_code.ModCodeApi("test_acme_k3f9")
-        first.externality(lambda sim, year: {})
+        first.externality(lambda access, year: {})
         self.assertEqual(second.operations.provided, {})
 
 

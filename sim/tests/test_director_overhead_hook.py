@@ -8,6 +8,7 @@ import types
 import unittest
 from sim.tests import workforce_stand_in
 
+from sim.assembly.api import NeedsAccess
 from sim.engine import mod_code
 from sim.labour.labour_capacity import CapacityMixin
 from sim.tests import harness  # noqa: F401  (isolates the home directory)
@@ -45,8 +46,8 @@ class DirectorOverhead(unittest.TestCase):
 
     def test_the_mod_door_records_the_function_as_an_answer_to_the_point(self):
         api = mod_code.ModCodeApi("test_overhead_k3f9")
-        function = api.director_overhead(lambda sim: 120.0)
-        self.assertEqual(api.operations.provided["director_overhead"], (function,))
+        function = api.director_overhead(lambda access: 120.0)
+        self.assertEqual(api.operations.provided["director_overhead"], (NeedsAccess(function),))
 
 
 if __name__ == "__main__":

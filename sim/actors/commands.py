@@ -1,6 +1,6 @@
 """Commands to the owner of the cast of other actors and what they are aware of."""
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from sim.assembly.api import Command
 
@@ -18,6 +18,14 @@ class RecordConquestContact(Command):
 	conqueror: str
 	previous: Optional[str]
 	tile: str
+
+
+@dataclass(frozen=True)
+class AddActor(Command):
+	"""The cast takes in a new actor, built from `record` (an `ActorRecord` of a kind the cast knows). Refused with the cause
+	`actor_exists` when the cast already holds `actor_id`; answers the actor."""
+	actor_id: str
+	record: Any
 
 
 @dataclass(frozen=True)

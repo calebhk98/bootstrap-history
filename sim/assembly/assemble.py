@@ -5,6 +5,7 @@ from .clock import Clock
 from .errors import AssemblyError
 from .framework import FRAMEWORK_ID, framework_spec
 from .kernels import check_replacement
+from .mod_access import ModAccess, NeedsAccess
 from .module import Module
 from .read_guard import GuardedView
 from .needs import Needs, Point
@@ -35,6 +36,8 @@ class Assembly:
 		self.seat_records: Callable[[], Mapping[str, Any]] = dict   # the registry: seat id -> the seat's record (`.modules` holds its slots), in joining order
 		self.follow: Optional[Callable[[Optional[str]], None]] = None   # told the acting seat after every bind (the engine's saved copy)
 		self.holds_rule: Callable[[Any], List[str]] = lambda record: []  # what a seat's record holds that a handover would overwrite
+		self.mod_memory: Callable[[], Dict[str, Any]] = dict       # the saved game's slot the mods keep their own state in (the engine's)
+		self.mod_access: Dict[str, ModAccess] = {}                 # mod id -> what its code is handed in place of the game
 
 	def act_as(self, seat_id: str):
 		"""A context in which `seat_id` is the acting seat, then the previous one again."""
@@ -137,6 +140,16 @@ def _check_reads(assembly: Assembly) -> None:
 					raise AssemblyError("view %s of module %s depends on %s, which the module does not read" % (view.name, module_id, name))
 				if assembly.view_owner.get(name) is None and name not in spec.optional_reads:
 					problems.append(str(_missing(assembly, "view %s of module %s" % (view.name, module_id), name)))
+	for mod_id, names in assembly.applied.mod_reads.items():
+		for name in names:
+			if name in assembly.point_owner:
+				problems.append("mod %s reads %s, an extension point; mod code reads views only" % (mod_id, name))
+			elif name not in assembly.view_owner:
+				problems.append(str(_missing(assembly, "mod %s" % mod_id, name)))
+	for mod_id, commands in assembly.applied.mod_sends.items():
+		for command in commands:
+			if command not in assembly.command_owner:
+				problems.append("mod %s sends %s, which no module applies%s" % (mod_id, command.__name__, _removal_note(assembly, command=command)))
 	if problems:
 		raise AssemblyError("; ".join(problems))
 	for view, entries in assembly.applied.adjusters.items():
@@ -225,6 +238,14 @@ def _needs_for(assembly: Assembly, module_id: str, names: Sequence[str], optiona
 	return needs
 
 
+def _bound(assembly: Assembly, mod_id: str, function: Any) -> Callable:
+	"""A mod's provision as the point calls it: one that wants the mod's access gets it as its first argument."""
+	if not isinstance(function, NeedsAccess):
+		return function
+	access = assembly.mod_access[mod_id]
+	return lambda *arguments: function.function(access, *arguments)
+
+
 def _wire(assembly: Assembly) -> None:
 	for module_id, spec in assembly.applied.specs.items():
 		own = [view.name for view in spec.publishes] + [point.name for point in spec.extension_points]
@@ -238,8 +259,11 @@ def _wire(assembly: Assembly) -> None:
 		for provision in spec.provides:
 			if "%s.%s" % (module_id, provision.name) not in assembly.applied.withdrawn:
 				assembly.points[provision.point].providers.append(getattr(assembly.modules[module_id], provision.method))
+	for mod_id in assembly.applied.mods:
+		assembly.mod_access[mod_id] = ModAccess(assembly, mod_id, frozenset(assembly.applied.mod_reads.get(mod_id, ())),
+		                                        frozenset(assembly.applied.mod_sends.get(mod_id, ())))
 	for name, entries in assembly.applied.provided.items():
-		assembly.points[name].providers.extend(function for _mod_id, function in entries)
+		assembly.points[name].providers.extend(_bound(assembly, mod_id, function) for mod_id, function in entries)
 
 
 def assemble(shipped: Sequence[ModuleSpec], operations: Sequence[Operations] = (),

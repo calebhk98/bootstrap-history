@@ -18,9 +18,9 @@ import sys
 import types
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from sim.assembly.api import Operations
+from sim.assembly.api import ModAccess, NeedsAccess, Operations
 from sim.interface.api import CODE, CommandDeclaration, FigureDeclaration
-from sim.stores.api import ModStore, StoreSpec, check_spec
+from sim.stores.api import ModStore, StoreSpec, WriteStore, check_spec
 
 from sim.content.api import get_ordered_mods
 from sim.content.api import ModError, ModManifest
@@ -97,6 +97,23 @@ class ModCodeApi:
         self.mod_id = mod_id
         self.operations = Operations(mod_id)
 
+    def reads(self, *views: str) -> None:
+        """Declare the published views the mod's code reads. Its commands, phases, figures and providers are handed a
+        `ModAccess` that answers `access.view(name)` for these only; any other view is refused naming this mod and the view."""
+        self.operations.reads = self.operations.reads + tuple(name for name in views if name not in self.operations.reads)
+
+    def sends(self, *commands: type) -> None:
+        """Declare the command classes the mod's code sends with `access.send(command)`; any other is refused naming this mod."""
+        self.operations.sends = self.operations.sends + tuple(kind for kind in commands if kind not in self.operations.sends)
+
+    def access_of(self, game: Any) -> ModAccess:
+        """What the mod's code is handed in place of `game` (a command, phase or figure is called with the game)."""
+        return game.assembly.mod_access[self.mod_id]
+
+    def with_access(self, handler: Callable) -> Callable:
+        """`handler(access, *arguments)` as the engine calls it: with the game first."""
+        return lambda game, *arguments, **keywords: handler(self.access_of(game), *arguments, **keywords)
+
     def add_module(self, spec: Any) -> None:
         """A new module (sim/assembly): its id is `<mod_id>:<name>`, with its own state, views, commands and phases."""
         self.operations.added = self.operations.added + (spec,)
@@ -138,7 +155,7 @@ class ModCodeApi:
         return name if name.startswith(self.mod_id + SEPARATOR) else self.mod_id + SEPARATOR + name
 
     def command(self, name: str, **fields: Any) -> Callable:
-        """Decorator for a handler `(sim, nodes, cmd, ended) -> dict`; fields as in sim/ui/proto/command_registry.py
+        """Decorator for a handler `(access, nodes, cmd, ended) -> dict`; fields as in sim/ui/proto/command_registry.py
         (group, summary, usage and description are required). Offered to the interface module's `interface_commands` point."""
         missing = [required for required in ("group", "summary", "usage", "description") if required not in fields]
         if missing:
@@ -146,16 +163,17 @@ class ModCodeApi:
 
         def decorate(handler: Callable) -> Callable:
             declaration = CommandDeclaration(self.mod_id, self.qualified(name), CODE,
-                                             dict(fields, aliases=list(fields.get("aliases", ()))), handler)
+                                             dict(fields, aliases=list(fields.get("aliases", ()))), self.with_access(handler))
             self.provide("interface_commands", lambda: [declaration])
             return handler
         return decorate
 
     def figure(self, name: str, label: str, unit: str = "", digits: int = 1, since: Optional[Callable] = None) -> Callable:
-        """Decorator for `compute(sim) -> {"value", "components", "flows", "drivers"}` (sim/ui/figures.py): a headline figure
+        """Decorator for `compute(access) -> {"value", "components", "flows", "drivers"}` (sim/ui/figures.py): a headline figure
         that explains its own change. Offered to the interface module's `interface_figures` point."""
         def decorate(compute: Callable) -> Callable:
-            declaration = FigureDeclaration(self.mod_id, self.qualified(name), label, unit, digits, compute, since)
+            declaration = FigureDeclaration(self.mod_id, self.qualified(name), label, unit, digits, self.with_access(compute),
+                                            None if since is None else self.with_access(since))
             self.provide("interface_figures", lambda: [declaration])
             return compute
         return decorate
@@ -182,21 +200,21 @@ class ModCodeApi:
         self.provide("player_commands", lambda: answer)
 
     def director_overhead(self, function: Callable) -> Callable:
-        """Charge `function(sim) -> hours` against the directed-hours pool (management layers, say). The hours count as
+        """Charge `function(access) -> hours` against the directed-hours pool (management layers, say). The hours count as
         committed, so every free-hours check sees them; a negative answer counts as zero (the workforce module's
         `director_overhead` point)."""
-        self.provide("director_overhead", function)
+        self.provide("director_overhead", NeedsAccess(function))
         return function
 
     def phase(self, name: str, scope: str, handler: Callable, after: Any = (), before: Any = ()) -> None:
-        """A step in the year: `scope` is "seat" (`handler(sim, seat_id)`, once per seat) or "world" (`handler(sim, seats)`,
+        """A step in the year: `scope` is "seat" (`handler(access, seat_id)`, once per seat) or "world" (`handler(access, seats)`,
         once). Placed right after its latest `after` and/or right before its earliest `before`; each names a shipped
         phase (see sim/engine/year_phases.py) or another mod's `<mod_id>:<name>`. At least one is required."""
         from .year_phases import SEAT, WORLD, Phase
         after, before = [after] if isinstance(after, str) else list(after), [before] if isinstance(before, str) else list(before)
         if scope not in (SEAT, WORLD) or not (after or before):
             raise ModError("mod %s phase %s needs scope 'seat' or 'world' and an 'after' or 'before'" % (self.mod_id, name))
-        phase = Phase(self.qualified(name), scope, handler, self.mod_id, tuple(self.phase_reference(n) for n in after),
+        phase = Phase(self.qualified(name), scope, self.with_access(handler), self.mod_id, tuple(self.phase_reference(n) for n in after),
                       tuple(self.phase_reference(n) for n in before))
         self.operations.phases = self.operations.phases + (phase,)
 
@@ -206,16 +224,18 @@ class ModCodeApi:
 
     def store(self, name: str, keyed_by: str, default: Any, unit: str = "") -> Any:
         """Declare a saved value per "tile", "actor" or "actor_pair" (an ordered pair); returns a handle with
-        `get(sim, key)`, `set(sim, key, value)` and `items(sim)`. Figures and `read` commands reach it as
+        `get(access, key)`, `set(access, key, value)` and `items(access)`. Figures and `read` commands reach it as
         `stores.<mod_id>:<name>.<key>`, and `map` shows a tile store as a layer. A name is declared once across mods."""
         spec = StoreSpec(self.qualified(name), self.mod_id, keyed_by, default, unit)
         check_spec(spec, "mod %s" % self.mod_id)
         self.provide("store_declarations", lambda: [spec])
-        return ModStore(spec.name, self.mod_id)
+        self.reads("store")
+        self.sends(WriteStore)
+        return ModStore(spec, self.mod_id)
 
-    def write_store(self, sim: Any, name: str, key: Any, value: Any) -> None:
+    def write_store(self, access: Any, name: str, key: Any, value: Any) -> None:
         """Write a value to one of this mod's declared stores; an undeclared store is an error naming the mod."""
-        self.effects.write_store(sim, self.qualified(name), key, value)
+        self.effects.write_store(access, self.qualified(name), key, value)
 
     @property
     def effects(self) -> Any:
@@ -225,22 +245,24 @@ class ModCodeApi:
         return ModEffects(self.mod_id)
 
     def town_provider(self, name: str, function: Callable, mortality_premium: Optional[Callable] = None) -> None:
-        """Say how many people live in a tile's town: `function(labour, tile, nominal_people) -> people or None`. The
-        optional `mortality_premium(labour, tile, town_people) -> share of the baseline death rate or None` is the
-        town's excess mortality, which reaches `Population.step`. `labour.simulation_for_providers()` is the sim."""
-        self.provide("town_population", function)
+        """Say how many people live in a tile's town: `function(access, tile, nominal_people) -> people or None`. The
+        optional `mortality_premium(access, tile, town_people) -> share of the baseline death rate or None` is the
+        town's excess mortality, which reaches `Population.step`."""
+        self.provide("town_population", NeedsAccess(function))
         if mortality_premium is not None:
-            self.provide("town_mortality_premium", mortality_premium)
+            self.provide("town_mortality_premium", NeedsAccess(mortality_premium))
 
     def externality(self, provider: Callable) -> None:
-        """Feed harm into the year: `(sim, year) -> {"deaths_by_band": {...}, "yield_factor_by_tile": {...}}` (either key
+        """Feed harm into the year: `(access, year) -> {"deaths_by_band": {...}, "yield_factor_by_tile": {...}}` (either key
         optional). The deaths join the year's epidemic deaths; the factors multiply the yield of land-bound producers on a tile
         (the demography module's `externality` point)."""
-        self.provide("externality", provider)
+        self.provide("externality", NeedsAccess(provider))
 
-    def state(self, memory: Dict[str, Any]) -> Dict[str, Any]:
-        """The mod's own JSON dict inside a saved game: pass `sim.state.interface`."""
-        return memory.setdefault("mod_state", {}).setdefault(self.mod_id, {})
+    def wealth_claims(self, owed: Callable, seize: Callable) -> None:
+        """Register claims on other actors that a state's confiscation counts: `owed(access) -> amount` is what the acting
+        household could be made to pay from them, `seize(access, amount, taker) -> amount taken` takes it for the `taker`
+        (the polity module's `wealth_claims` point)."""
+        self.provide("wealth_claims", NeedsAccess(lambda access: (lambda: owed(access), lambda amount, taker: seize(access, amount, taker))))
 
     @staticmethod
     def rng(world: Any, *parts: Any) -> random.Random:

@@ -54,6 +54,13 @@ class Contact:
 		"""The edge takes the goods into the stock it keeps beside its money."""
 		self.cast_state().edge(command.edge).receive_goods(command.good, command.tonnes)  # type: ignore[attr-defined]
 
+	def add_actor(self, command: Any) -> Any:
+		"""A new actor joins the cast."""
+		registry = self.cast()  # type: ignore[attr-defined]
+		if command.actor_id in registry.actors:
+			return Refusal("actor_exists", "the cast already holds %s" % command.actor_id)
+		return registry.add(command.actor_id, command.record)
+
 	def note_trader_margin(self, command: Any) -> Optional[Refusal]:
 		"""The trader's last margin follows what its cargo made against what it was booked at."""
 		trader = self.cast().actors.get(command.trader)  # type: ignore[attr-defined]

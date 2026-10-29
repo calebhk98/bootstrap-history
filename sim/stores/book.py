@@ -5,8 +5,10 @@ same dotted state path as any other state."""
 import json
 from typing import Any, Dict, List, Optional, Tuple
 
+from sim.assembly.api import door_of
 from sim.mod_errors import ModError
 
+from .commands import WriteStore
 from .rules import TILE, StoreSpec, store_key
 
 
@@ -76,16 +78,21 @@ class StoreBook:
 
 
 class ModStore:
-    """What `api.store` returns: the mod's handle to one store, used as `handle.get(sim, key)` and `handle.set(sim, key, value)`."""
+    """What `api.store` returns: the mod's handle to one store, used as `handle.get(access, key)` and `handle.set(access, key, value)`;
+    `access` is what the mod's code is handed in place of the game."""
 
-    def __init__(self, name: str, mod_id: str):
-        self.name, self.mod_id = name, mod_id
+    def __init__(self, spec: StoreSpec, mod_id: str):
+        self.spec, self.mod_id = spec, mod_id
 
-    def get(self, sim: Any, key: Any) -> Any:
-        return sim.stores.view(self.name).get(key)
+    @property
+    def name(self) -> str:
+        return self.spec.name
 
-    def set(self, sim: Any, key: Any, value: Any) -> None:
-        sim.stores.write(self.name, key, value, self.mod_id)
+    def get(self, access: Any, key: Any) -> Any:
+        return door_of(access).view("store")[self.name]["values"].get(store_key(self.spec, key), self.spec.default)
 
-    def items(self, sim: Any) -> List[Tuple[str, Any]]:
-        return sim.stores.view(self.name).items()
+    def set(self, access: Any, key: Any, value: Any) -> None:
+        door_of(access).send(WriteStore(self.name, key, value, self.mod_id))
+
+    def items(self, access: Any) -> List[Tuple[str, Any]]:
+        return sorted(door_of(access).view("store")[self.name]["values"].items())

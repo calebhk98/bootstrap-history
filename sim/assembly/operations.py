@@ -34,6 +34,9 @@ class Applied:
 		self.withdrawn: Dict[str, str] = {}          # "<module_id>.<name>" -> the mod that withdrew it
 		self.phases: List[Any] = []                  # the mods' year phases, in mod load order
 		self.kernels: Dict[str, Tuple[str, Callable]] = {}   # kernel name -> (the mod replacing it, its function)
+		self.mods: List[str] = []                            # every mod with operations, in load order
+		self.mod_reads: Dict[str, Tuple[str, ...]] = {}      # mod id -> the views its code declared it reads
+		self.mod_sends: Dict[str, Tuple[type, ...]] = {}     # mod id -> the command classes its code declared it sends
 		for spec in shipped:
 			if spec.module_id in self.specs:
 				raise AssemblyError("two shipped modules are both called %s" % spec.module_id)
@@ -49,6 +52,7 @@ class Applied:
 
 	def apply(self, operations: Operations, related: Callable[[str, str], bool]) -> None:
 		mod_id = operations.mod_id
+		self.mods.append(mod_id)
 		for spec in operations.added:
 			if not namespaced(mod_id, spec.module_id):
 				raise AssemblyError("mod %s adds module %s; a mod's module is named %s%s<name>" % (mod_id, spec.module_id, mod_id, SEPARATOR))
@@ -82,6 +86,8 @@ class Applied:
 		for name in operations.withdrawn:
 			self.withdrawn[name] = mod_id
 		self.phases.extend(operations.phases)
+		if operations.reads or operations.sends:
+			self.mod_reads[mod_id], self.mod_sends[mod_id] = tuple(operations.reads), tuple(operations.sends)
 		for name, function in operations.kernels.items():
 			if name in self.kernels:
 				raise AssemblyError("mods %s and %s both replace the kernel %s" % (self.kernels[name][0], mod_id, name))

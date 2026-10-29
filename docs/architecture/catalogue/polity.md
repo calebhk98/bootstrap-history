@@ -46,8 +46,8 @@ sim.polity import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publishes),
   `Sim.value_weights` (the civilisation's own `values`, saved as `state._weights`): moving it needs edits to `core.py` and
   `saveload.py`, which this task did not own. It is the debt `legacy_value_weights`.
 - **The household's answers to the state are the module's, `state_demand.py` is not an engine function module any more.** The
-  claims a mod registers for a confiscation (`register_wealth_claims`, `sim.polity.api`) still take the game: the view `provider_game`
-  hands it over (the mod contract, read-only for the provider; a debt until a mod can provide the claims as an extension point).
+  claims a mod registers for a confiscation (`api.wealth_claims`) are an extension point: `wealth_claims()` answers `(owed(), seize(amount, taker))`
+  pairs already bound to their mod's `ModAccess`, so the household never hands out the game.
 - **Constants moved** (`sim/polity/constants.py`, `grep -c "= declare(" sim/polity/constants.py`): those of the pressure, legitimacy
   and patron-funding mixins; the two priced in labour hours (`EMINENCE_WEALTH_VISIBLE_THRESHOLD`, `STATE_FUNDING_BASE`) are hours there and
   money by `Polity.priced`, and descriptors on `Sim` for readers that remain. Those `core.py` still declares and the year's step reads
@@ -121,7 +121,7 @@ is two commands the engine's `_step_reputation` sends around the hours and spend
 Views of finished modules: `effect_sum`, `effect_values`, `effect_factor`, `effect_best`, `running_mechanics`, `mechanic`,
 `patrons_lost_to_eminence`, `techniques_held`, `techniques_granted`, `tree`, `tree_nodes`, `acting_balance`, `transfer_listening`,
 `material_pool`, `real_output_per_head`, `output_factor`, `country_world`, `legacy_agent_world`, `legacy_actor_registry`,
-`game_random`, `acting_as`, `seat_list`, `seat_country`, `founder`, `automation`, `provider_game`, `cast_recorded`, `government_figures`,
+`game_random`, `acting_as`, `seat_list`, `seat_country`, `founder`, `automation`, `cast_recorded`, `government_figures`,
 `acting_seat`, `headcount`, `money_per_labour_hour`, `pop_scale`, `population_total`, `running`, `revenue_estimate`, `operating`,
 `civilisation`, `year`, `events_enabled`, `money_text`, `mass_text`.
 
@@ -130,8 +130,7 @@ Published by `bridge_polity.py` under the name the owner will publish: `state_tr
 `danger_lines` (the eminence and suspicion figures of the settings). The reach memo is keyed by `techniques_version` (knowledge) and `operating_version` (ventures).
 The module reads no `legacy_*` view and no raw object of another owner: the purse is `acting_balance`, the dice are `game_random`,
 seats switch with `acting_as`, a seat's country is `seat_country`, a government's grant and levy rates are `government_figures`, and
-the told-once mark of the concern levy is the hazards' command `SayOnce`. `provider_game` is the one live object it hands out, to
-the mods' wealth-claim readers and seizers.
+the told-once mark of the concern levy is the hazards' command `SayOnce`. It hands out no live object.
 
 ## Forwarders left (`sim/engine/forward_polity.py`)
 

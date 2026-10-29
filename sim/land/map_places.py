@@ -24,6 +24,10 @@ class MapPlaces:
         """[{lat, koppen_class, koppen_sample_mix}] for each of these tiles, in the order given."""
         return [{layer: layer_value(tile, layer, self.world_map) for layer in CLIMATE_LAYERS} for tile in tiles]
 
+    def map_catalogue(self, name: str) -> Dict[str, Any]:
+        """{id: record} of the map's catalogue `name` (a mod's overlay table included), as a copy."""
+        return dict(self.world_map.catalogue(name))
+
     def tile_places(self, tile: str) -> List[str]:
         """Names of the places the map puts on a tile, highest rank first; empty when it names none."""
         return tile_names.places_on(self.world_map, tile)

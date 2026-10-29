@@ -6,14 +6,6 @@ they go when that state moves."""
 from .bridge import bridge_view
 
 
-@bridge_view("provider_game")
-def provider_game(sim):
-    """The game itself, for the functions a mod provides to the town and director-overhead points of the workforce module and to
-    the wealth-claim point of the polity module: their contract hands them the game to read (a mod's stores, a mod's holdings),
-    and they never write it. A debt of the mod interface."""
-    return sim
-
-
 # ---- the founder, the acting seat's land and the owner map ----------------------------------------------------------------
 
 

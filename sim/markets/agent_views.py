@@ -46,6 +46,11 @@ class AgentViews:
 		"""{good: [(tile, recipe id)]} of the producers the agent economy runs; None while it opens."""
 		return self.economy.agent_producers_by_good()
 
+	def agent_producer_runs(self):
+		"""[{tile, runs, inputs, outputs}] of each producer that ran last year (runs of its recipe; the recipe's flows per run);
+		None while the agent economy opens."""
+		return self.economy.agent_producer_runs()
+
 	def agent_worker_years_by_recipe(self):
 		"""Worker-years a year the agent economy's producers put into each recipe; None while it opens."""
 		return self.economy.agent_worker_years_by_recipe()

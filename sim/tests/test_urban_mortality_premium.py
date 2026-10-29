@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.assembly.api import NeedsAccess
 from sim.engine import mod_code
 from sim.tests.test_town_providers import Town
 from sim.workforce.provided import last_answer
@@ -55,17 +56,17 @@ class TownPremium(unittest.TestCase):
         tile = self.labour.base_tile()
         town = self.labour.home_town_population_estimate()
         people = self.labour.settlement_tiles()[tile]
-        self.labour.premiums.append(lambda labour, where, size: 0.5 if where == tile else None)
+        self.labour.premiums.append(lambda where, size: 0.5 if where == tile else None)
         found = self.labour.town_mortality_premium_by_tile()
         self.assertEqual(set(found), {tile})
         self.assertAlmostEqual(found[tile], 0.5 * town / people, places=9)
 
     def test_the_mod_door_records_both_the_size_and_the_premium(self):
         api = mod_code.ModCodeApi("test_acme_k3f9")
-        size, premium = (lambda labour, where, size: 0.5 * size), (lambda labour, where, size: 0.2)
+        size, premium = (lambda where, size: 0.5 * size), (lambda where, size: 0.2)
         api.town_provider("towns", size, mortality_premium=premium)
         self.assertEqual((api.operations.provided["town_population"], api.operations.provided["town_mortality_premium"]),
-                         ((size,), (premium,)))
+                         ((NeedsAccess(size),), (NeedsAccess(premium),)))
 
     def test_a_negative_premium_counts_as_none(self):
         self.assertEqual(last_answer([-1.0]), 0.0)
