@@ -25,9 +25,9 @@ def built_by_any(techniques: Mapping[str, Any], among: Optional[Iterable[str]] =
 	return built
 
 
-def operating_anywhere(seats: Mapping[str, Any], node_id: str) -> bool:
+def operating_anywhere(operating_by_seat: Mapping[str, Any], node_id: str) -> bool:
 	"""Whether some seat runs `node_id` as a concern: it is then in public use."""
-	return any(node_id in seat.projects.operating for seat in seats.values())
+	return any(node_id in operating for operating in operating_by_seat.values())
 
 
 def disclosure_modes(techniques: Mapping[str, Any], node_id: str,

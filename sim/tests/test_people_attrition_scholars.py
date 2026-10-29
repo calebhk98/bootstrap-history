@@ -212,7 +212,7 @@ check("a project you can pay for outright says nothing about credit",
 def failure_stand_in(risk, cost_now, up_front, active=False):
     module = materials_stand_in.build(
         tree_nodes={"work": {"risk": risk}}, failure_reset_share=0.4,
-        legacy_projects=materials_stand_in.projects(active={"work": {}} if active else {}),
+        projects_record=materials_stand_in.projects(active={"work": {}} if active else {}),
         project_cost=lambda node_id: cost_now, project_cost_now=lambda node_id: cost_now)
     module.up_front_materials_money = lambda node_id: up_front
     return module

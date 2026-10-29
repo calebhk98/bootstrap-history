@@ -109,7 +109,7 @@ def Mothballing(upkeep=0.0, hands=(0.0, 0.0), running=True, granted=False, done=
     projects = types.SimpleNamespace(done={"shop"} if done else set(), granted={"shop"} if granted else set(),
                                      operating={"shop"} if running else set())
     module = projects_host.build(
-        legacy_projects=projects, tree={"shop": {"up": upkeep, "rev": 0.0, "cat": "craft"}}, venture_hands=lambda node_id: hands,
+        projects_record=projects, tree={"shop": {"up": upkeep, "rev": 0.0, "cat": "craft"}}, venture_hands=lambda node_id: hands,
         never_abandon=lambda node_id: False, venture_real_earnings=lambda node_id: 0.0, venture_real_upkeep=lambda node_id: 0.0,
         reopen_fee=lambda node_id: 10.0, money_text=lambda amount, grouped=False, short=False: "%g" % amount)
     module.closed = []
@@ -166,7 +166,7 @@ def Opening(done=True, granted=False, practisable=False, venture=True, operating
     """The ventures module over the tree and what is known, granted and running, for the refusals that come before any money moves."""
     return ventures_host.build(
         tree_nodes={"shop": {}}, is_venture=lambda node_id: venture, practisable=lambda node_id: practisable,
-        legacy_projects=ventures_host.projects_record(
+        projects_record=ventures_host.projects_record(
             done={"shop"} if done else set(), granted={"shop"} if granted else set(), operating={"shop"} if operating else set()))
 
 
@@ -218,12 +218,11 @@ class VentureRamp(unittest.TestCase):
 
 
 class OperatingWorks(unittest.TestCase):
-    def test_the_open_works_are_the_projects_records_live_set(self):
-        record = ventures_host.projects_record(operating={"shop"})
-        module = ventures_host.build(legacy_projects=record)
-        self.assertEqual(module.operating(), {"shop"})
-        record.operating.add("mill")
-        self.assertEqual(module.operating(), {"shop", "mill"})
+    def test_the_open_works_are_the_live_set_of_the_seats_plants(self):
+        module = ventures_host.build(operating={"shop"})
+        self.assertEqual(set(module.operating()), {"shop"})
+        module.seat.business.open_plant("mill", 100)
+        self.assertEqual(set(module.operating()), {"shop", "mill"})
 
 
 if __name__ == "__main__":

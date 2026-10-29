@@ -28,7 +28,7 @@ CAPEX = {"big_margin_dear": 3200.0, "small_margin_cheap": 60.0, "running": 10.0,
 
 operating = {"running"}
 game = projects_host.build(
-    tree=NODES, legacy_projects=SimpleNamespace(done=set(NODES) - {"not_built"}, operating=operating), operating=lambda: operating,
+    tree=NODES, projects_record=SimpleNamespace(done=set(NODES) - {"not_built"}, operating=operating), operating=lambda: operating,
     techniques_held=set(NODES) - {"not_built"}, is_venture=lambda node_id: node_id != "not_a_venture",
     venture_capex=lambda node_id: CAPEX.get(node_id, 1.0))
 game.exclusion_reason = lambda node_id: "held back" if node_id == "excluded" else None

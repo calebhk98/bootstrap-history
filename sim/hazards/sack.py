@@ -9,7 +9,8 @@ from typing import Any, Dict, List
 
 from sim.coin.api import PlunderHousehold
 from sim.knowledge.api import ForgetTechnique
-from sim.projects.api import ResetProjectProgress, ShutForgotten
+from sim.projects.api import ResetProjectProgress
+from sim.ventures.api import ShutForgotten
 from sim.reporting.api import RecordEvent
 from sim.workforce.api import ReportStaffReduction, ScaleDeputies, SurviveStaff
 

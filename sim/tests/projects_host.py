@@ -12,7 +12,9 @@ from typing import Any, Dict, Sequence
 from sim.projects.projects import Projects
 from sim.projects.state import ProjectsSeat, ProjectsWorld
 from sim.projects import module_spec
-from sim.tests import module_harness
+from sim.tests import module_harness, ventures_host
+from sim.ventures.api import (CloseConcern, ForgetClosureReason, MothballConcern, NoteConcernYear, RestoreConcern, ReviewConcerns,
+                              ReviewReopening, VenturesSeat)
 
 OWN_VIEWS = ("start_check", "start_blockers", "start_refusal", "bounty_eligible", "start_hours", "last_start", "project_order")
 
@@ -30,7 +32,7 @@ def defaults() -> Dict[str, Any]:
 	state = projects_state()
 	return {
 		"tree": lambda node_id: None,
-		"techniques_held": state.done, "techniques_granted": frozenset(), "closures": state.mothballed, "legacy_projects": state,
+		"techniques_held": state.done, "techniques_granted": frozenset(), "mothballed": state.mothballed, "closure_records": {}, "projects_record": state,
 		"visibility": lambda node_id, memo: True, "visible_to_player": lambda node_id: True,
 		"prerequisite_message": lambda missing, memo: "missing prerequisites: " + ", ".join(missing),
 		"needs_first": lambda node_id, about_stock: (None, None), "foreign_only": lambda node_id: False,
@@ -75,7 +77,7 @@ def build(answers: Dict[str, Any] = None, seat: ProjectsSeat = None, order: Sequ
 	being `order`."""
 	every_view = defaults()
 	every_view.update(views)
-	record = every_view["legacy_projects"]   # the held and granted sets a test gives with its projects record
+	record = every_view.pop("projects_record")   # the held and granted sets a test gives with its projects record
 	seat = seat or ProjectsSeat()
 	if isinstance(getattr(record, "active", None), dict) and not seat.active:   # the projects in hand a test gives with the record
 		seat.active = record.active
@@ -83,6 +85,21 @@ def build(answers: Dict[str, Any] = None, seat: ProjectsSeat = None, order: Sequ
 		every_view["techniques_held"] = record.done
 	if "techniques_granted" not in views and hasattr(record, "granted"):
 		every_view["techniques_granted"] = record.granted
+	business = getattr(record, "business", None)
+	if business is not None:   # a test gives its plants as a business: the ventures module keeps it, and answers the commands over it
+		for name, value in (("operating", business.operating()), ("mothballed", business.mothballed()), ("closure_records", business.closures())):
+			if name not in views:
+				every_view[name] = value
+		ventures = ventures_host.build(seat=VenturesSeat(businesses=[business]), **{name: views[name] for name in ("legacy_household_actor", "actor_world") if name in views})
+		answers = dict(answers or {})
+		for command, method in ((MothballConcern, "apply_mothball_concern"), (RestoreConcern, "apply_restore_concern"), (CloseConcern, "apply_close_concern"),
+		                        (ForgetClosureReason, "apply_forget_closure_reason"), (ReviewConcerns, "apply_review_concerns"),
+		                        (ReviewReopening, "apply_review_reopening"), (NoteConcernYear, "apply_note_concern_year")):
+			answers.setdefault(command, getattr(ventures, method))
+	else:
+		for name, field in (("operating", "operating"), ("mothballed", "mothballed"), ("closure_records", "closures")):
+			if name not in views and hasattr(record, field):
+				every_view[name] = getattr(record, field)
 	if isinstance(every_view["tree"], dict):
 		every_view.setdefault("tree_nodes", every_view["tree"])
 	every_view.setdefault("tree_nodes", {})
@@ -104,7 +121,7 @@ def start_phase_module(funding_capacity: float = 1e9, committed_cost: float = 0.
 	`started` lists what `initialize_project` was asked to begin."""
 	state = projects_state()
 	arguments = dict(
-		legacy_projects=state, tree=lambda node_id: {"name": node_id, "rev": 0.0, "up": 0.0}, order=["a", "b"],
+		projects_record=state, tree=lambda node_id: {"name": node_id, "rev": 0.0, "up": 0.0}, order=["a", "b"],
 		funding_capacity=funding_capacity, project_cost=lambda node_id: project_cost,
 		automation={"manual": manual, "bounty_set": set()}, revenue_estimate=1e6, acting_balance=1e7, year=0,
 		start_check=lambda *call: (True, None),

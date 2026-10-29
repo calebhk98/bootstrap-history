@@ -16,17 +16,17 @@ from sim.tests import module_harness
 
 
 class HaltActiveProjectsCommand(unittest.TestCase):
-    def module(self, projects, seat):
-        return module_harness.build(Projects, views={"legacy_projects": projects}, seat=seat, module_id="projects")
+    def module(self, seat):
+        return module_harness.build(Projects, seat=seat, module_id="projects")
 
     def test_work_in_hand_stops_and_the_names_and_the_money_kept_come_back(self):
         seat = ProjectsSeat(active={"b": {"spent": 40.0}, "a": {"spent": 5.0}}, bountied={"a"})
-        self.assertEqual(self.module(SimpleNamespace(), seat).apply_halt_active_projects(HaltActiveProjects()), (["a", "b"], 45.0))
+        self.assertEqual(self.module(seat).apply_halt_active_projects(HaltActiveProjects()), (["a", "b"], 45.0))
         self.assertEqual((seat.active, seat.paid_towards, seat.bountied), ({}, {"a": 5.0, "b": 40.0}, set()))
 
     def test_with_nothing_in_hand_the_record_of_credits_is_left_as_it_was(self):
         seat = ProjectsSeat(paid_towards={"c": 3.0})
-        self.assertEqual(self.module(SimpleNamespace(), seat).apply_halt_active_projects(HaltActiveProjects()), ([], 0.0))
+        self.assertEqual(self.module(seat).apply_halt_active_projects(HaltActiveProjects()), ([], 0.0))
         self.assertEqual(seat.paid_towards, {"c": 3.0})
 
 

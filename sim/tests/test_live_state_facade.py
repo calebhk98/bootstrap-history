@@ -14,8 +14,6 @@ SCALARS = {
 }
 # facade name -> path of the collection it must be (the same object, not a copy)
 COLLECTIONS = {
-    "operating": "projects.operating",
-    "mothballed": "projects.mothballed",
     "policy": "founder.policy",
 }
 

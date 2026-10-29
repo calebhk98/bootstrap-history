@@ -9,7 +9,8 @@ from sim.demography.api import CutPopulation, KillPeople, RefreshDemographicInde
 from sim.knowledge.api import ForgetTechnique
 from sim.ledger.api import PayEdge
 from sim.polity.api import RaiseScandal, ScaleProtection, ShiftValueWeight
-from sim.projects.api import ResetProjectProgress, ShutForgotten
+from sim.projects.api import ResetProjectProgress
+from sim.ventures.api import ShutForgotten
 from sim.reporting.api import ErodeMoney, RecordEvent
 from sim.workforce.api import NoteWageShock, ReportStaffReduction, ScaleDeputies, SurviveStaff
 

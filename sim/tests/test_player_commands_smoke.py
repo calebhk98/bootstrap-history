@@ -42,7 +42,7 @@ class RushPreviewAndExclusionsTest(unittest.TestCase):
         game.send(LearnTechnique(venture))
         game.view("exclusions")().add(venture)
         game.send(AutoOpenVentures())
-        self.assertNotIn(venture, game.state.projects.operating)
+        self.assertNotIn(venture, game.operating)
 
 
 class QuoteAndSchoolTest(unittest.TestCase):

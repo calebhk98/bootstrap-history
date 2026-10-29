@@ -19,6 +19,9 @@ from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
 from sim.production.api import ProductionSeat
 from sim.projects.state import ProjectsSeat
+from sim.ventures.state import VenturesSeat
+from sim.agents.api import Business
+from sim.agents.api import Plant
 from sim.workforce.api import WorkforceSeat
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
                               SimulationState, serialize_state, verbatim)
@@ -113,9 +116,12 @@ disclosure_blob = serialize_state(DiffusionSeat(disclosures={"fire": {"mode": "l
 check("serialize_state: a disclosure record keeps its None and its nested licensee",
       disclosure_blob["disclosures"] == {"fire": {"mode": "license", "published_year": None,
                                                   "licensees": {"firm:2": {"fee": 5.0, "royalty": 0.1, "year": 101}}}}, disclosure_blob)
-check("serialize_state: the founder's business is a nested record", blob["businesses"] == [{"business_id": "founder", "owner_id": "", "plants": []}], blob["businesses"])
+ventures_blob = serialize_state(VenturesSeat(businesses=[Business(business_id="founder", plants=[Plant(entry_key="loom", size=2.0)])]))
+check("serialize_state: the seat's business is a nested record of plants", ventures_blob["businesses"] == [{"business_id": "founder", "owner_id": "", "plants": [{
+	"entry_key": "loom", "tile": None, "size": 2.0, "opened_year": None, "crew_found": 1.0, "margin": None, "takings": 0.0, "loss_years": 0,
+	"state": "operating", "since_year": None, "reason": ""}]}], ventures_blob["businesses"])
 check("serialize_state: nested dicts of floats and sets of exclusions", serialize_state(ProductionSeat(tenure={"mason": {"arch": 4.5}}))["tenure"] == {"mason": {"arch": 4.5}} and serialize_state(ProjectsSeat(excluded={"category:war"}))["excluded"] == {"__set__": ["category:war"]}, None)
-check("serialize_state: the project fields come in declaration order", list(blob) == saved_field_names(ProjectsState))
+check("serialize_state: the project fields come in declaration order", list(projects_blob) == saved_field_names(ProjectsSeat))
 
 # ---- mine stock and tranches, held goods
 mines = ResourcesSeat(

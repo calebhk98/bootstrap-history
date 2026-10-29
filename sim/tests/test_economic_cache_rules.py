@@ -96,7 +96,7 @@ class MaterialDemandStandIn:
         self.active = list(active)
         projects = types.SimpleNamespace(done=set(), active={}, active_keys_sorted=lambda: sorted(self.active))
         self.module = materials_stand_in.build(
-            tree_nodes=nodes, legacy_projects=projects,
+            tree_nodes=nodes, projects_record=projects,
             active_projects_version=lambda: self.household.active_version, techniques_version=lambda: self.household.done_version)
 
     def annual_material_demand(self):

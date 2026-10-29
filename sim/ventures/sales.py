@@ -6,8 +6,7 @@ class Sales:
 	def _concern_sale_setup(self, node_id):
 		"""((seller party, candidate buyers, find_actor, world), None) for selling a concern, or (None, why not)."""
 		needs = self.needs
-		projects = needs.legacy_projects()
-		if node_id not in projects.operating or node_id in needs.techniques_granted():
+		if node_id not in self.seat.business.operating() or node_id in needs.techniques_granted():
 			return None, "you are not running %s, so there is nothing to sell" % node_id
 		world = needs.actor_world()
 		party = needs.seat_party_with_margins(self.clock.acting_seat, {node_id: world.concern_margin(node_id)})

@@ -33,10 +33,10 @@ def open_book_concerns(game, count):
         for held_id in list(node["pre"]) + [node_id]:
             game.send(LearnTechnique(held_id))
         game.send(OpenVenture(node_id, None))
-        if node_id in game.state.projects.operating:
+        if node_id in game.operating:
             for trade, share in sorted(world.concern_staff(node_id).items()):
                 game.view("legacy_labour")().hire(trade, int(share) + 1)    # the crew it runs with
-            game.state.projects.business.set_opened_year(node_id, game.year - RAMPED_YEARS)
+            game.state.seats[game.state.acting_seat].modules["ventures"].business.set_opened_year(node_id, game.year - RAMPED_YEARS)
             opened.append(node_id)
     return opened
 

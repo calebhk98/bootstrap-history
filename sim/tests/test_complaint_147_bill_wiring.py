@@ -90,7 +90,7 @@ check("why's materials line is the cost of the missing part of the bill and the 
 # ---- what a project costs
 def costing(active, now=None, **views):
     """The projects module over a record of projects in hand; `now` stands in for what starting today would cost."""
-    module = projects_host.build(legacy_projects=projects_host.projects_state(active=active), **views)
+    module = projects_host.build(projects_record=projects_host.projects_state(active=active), **views)
     if now is not None:
         module.project_cost_now = lambda node_id: now
     return module
@@ -123,7 +123,7 @@ check("with no materials to buy up front nothing is bought and the whole cost is
 
 module = projects_host.build(
     answers={SettleProjectMaterials: (700.0, 300.0)}, tree={"node": {"ph": 10.0, "lab": {"smith": 4.0}}},
-    legacy_projects=projects_host.projects_state(), own_output_claim=lambda node_id: {"forest": 2.0})
+    projects_record=projects_host.projects_state(), own_output_claim=lambda node_id: {"forest": 2.0})
 record = module.initialize_project("node")
 check("a started project's bill is fixed at what was left after paying the materials", record["bill"] == 700.0 and record["cost_left"] == 700.0
       and module.seat.active["node"] is record, record)

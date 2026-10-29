@@ -120,7 +120,7 @@ def gated(blocked_trades=("engineer",), lab_left=None, stalled_years=0):
     if lab_left is not None:
         progress["lab_left"] = lab_left
     projects = LabourStub(active={"p": progress})
-    host = projects_host.build(market_supply=lambda trade: 0.0 if trade in blocked_trades else 1000.0, legacy_projects=projects, year=100)
+    host = projects_host.build(market_supply=lambda trade: 0.0 if trade in blocked_trades else 1000.0, projects_record=projects, year=100)
     stopped = host._project_progress_trade_gate("p", progress, {"lab": {"engineer": 500.0, "smith": 100.0}})
     log = [(100, command) for command in module_harness.sent(host) if isinstance(command, RecordEvent)]
     return stopped, progress, log, host
@@ -149,7 +149,7 @@ check("a project with its trades again has its countdown cleared", not stopped a
 # --- stopping keeps the money that was paid; beginning again bills only the remainder
 def stopped_game(spent):
     state = projects_host.projects_state(active={"p": {"spent": spent, "ph_left": 100.0}})
-    module = projects_host.build(legacy_projects=state)
+    module = projects_host.build(projects_record=state)
     return module.seat, module, module.stop_project(StopProject("p"))
 seat, _module, (ok, message) = stopped_game(300.0)
 check("stopping a project keeps the money already paid", ok and seat.paid_towards == {"p": 300.0}, seat.paid_towards)
@@ -193,7 +193,7 @@ check("a project wanting no more than is left is not starved", starved_projects(
 # --- the hour pace is what a project WANTS, with no material brake folded in
 def pace(ph_left, throttle, bountied=()):
     host = projects_host.build(
-        seat=ProjectsSeat(bountied=set(bountied)), legacy_projects=LabourStub(active={"p": {"ph_left": ph_left}}), tree={"p": dict(NODE, ph=500, yrs=2)},
+        seat=ProjectsSeat(bountied=set(bountied)), projects_record=LabourStub(active={"p": {"ph_left": ph_left}}), tree={"p": dict(NODE, ph=500, yrs=2)},
         resource_throttle=lambda node_id: (throttle, None))
     return host.project_hour_pace("p")
 

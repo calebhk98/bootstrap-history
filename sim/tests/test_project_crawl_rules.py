@@ -20,7 +20,7 @@ def a_game(hours_fielded, node=NODE, active=None):
     used = {}
     projects = SimpleNamespace(trade_hours_used={}, active=active or {}, active_keys_sorted=lambda: sorted(active or {}))
     game = projects_host.build(
-        tree={"p": node}, legacy_projects=projects, hours_you_can_call_on=lambda trade: hours_fielded,
+        tree={"p": node}, projects_record=projects, hours_you_can_call_on=lambda trade: hours_fielded,
         hour_commitments=lambda: {"trade_hours_used": used})
     game.seat = SimpleNamespace(trade_hours_used=used, bountied=set(), active=projects.active)
     game.needs.send = lambda command: used.__setitem__(command.trade, used.get(command.trade, 0.0) + command.hours)

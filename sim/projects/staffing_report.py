@@ -27,7 +27,7 @@ class StaffingReport:
 
 	def staffing_shut_count(self):
 		"""Concerns shut for want of staff right now."""
-		return sum(1 for node_id in self.needs.legacy_projects().closures
+		return sum(1 for node_id in self.needs.closure_records()
 		           if self.staff_closure_age(node_id) is not None)
 
 	@staticmethod

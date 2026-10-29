@@ -296,7 +296,7 @@ def run_it(sim_state, *keys):
     """
     for key in keys:
         sim_state.send(LearnTechnique(key))
-        sim_state.state.projects.operating.add(key)
+        sim_state.operating.add(key)
     sim_state._done_changed()
     return sim_state
 

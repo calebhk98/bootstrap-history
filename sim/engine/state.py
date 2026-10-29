@@ -122,49 +122,7 @@ HouseholdState.capital = property(_purse_net, _set_purse_net)  # type: ignore[as
 
 @dataclass
 class ProjectsState:
-	"""Research projects, active engineering ventures, and technological capability."""
-	# the founder's businesses and their plants: what is running, switched off, how big and since when
-	businesses: List[Business] = field(default_factory=lambda: [Business(business_id="founder")])
-
-	@property
-	def business(self) -> Business:
-		"""The seat's own business, which holds the plants it runs."""
-		return self.businesses[0]
-
-	@property
-	def operating(self):
-		return self.business.operating()
-
-	@operating.setter
-	def operating(self, value) -> None:
-		self._replace_keys(self.business.operating(), value)
-
-	@property
-	def mothballed(self):
-		return self.business.mothballed()
-
-	@mothballed.setter
-	def mothballed(self, value) -> None:
-		self._replace_keys(self.business.mothballed(), value)
-
-	@property
-	def closures(self):
-		"""{work id: {"reason", "year"}} of the shut works that record why (read only)."""
-		return self.business.closures()
-
-	@staticmethod
-	def _replace_keys(view, value) -> None:
-		if value is view:
-			return
-		wanted = set(value or ())
-		for key in [key for key in view if key not in wanted]:
-			view.discard(key)
-		for key in sorted(wanted):
-			view.add(key)
-
-	def operating_keys_sorted(self) -> List[str]:
-		"""Return operating project ids independently of set/hash order."""
-		return sorted(self.operating)
+	"""Nothing is left of it: each seat's projects and businesses are their modules' seat state."""
 
 
 @dataclass

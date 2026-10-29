@@ -9,9 +9,8 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.state import ProjectsState
-
 from sim.engine import validate_running_gates
+from sim.agents.api import Business
 from sim.reporting.api import RecordEvent
 from sim.tests import module_harness, production_host, projects_host
 from sim.knowledge import rules as knowledge_rules
@@ -34,17 +33,16 @@ class _Host:
 
     def __init__(self, done, operating):
         self.nodes = _nodes()
-        self.state = SimpleNamespace(projects=ProjectsState(), scenario=SimpleNamespace(year=100))
-        self.state.projects.operating = set(operating)
+        self.business = Business.running(operating, opened_year=1)
+        self.state = SimpleNamespace(projects=SimpleNamespace(business=self.business), scenario=SimpleNamespace(year=100))
         self.done, self.granted = set(done), set()   # what the knowledge module would answer
         self.built_km = {"rail": 0.0}
-        projects = self.state.projects
         self.production = production_host.build(
             tree_nodes=self.nodes, techniques_held=self.done, techniques_granted=self.granted,
-            operating=projects.operating, gate_blocked=lambda node_id: self.module.gate_blocked(node_id))
+            operating=self.business.operating(), gate_blocked=lambda node_id: self.module.gate_blocked(node_id))
         self.module = projects_host.build(
-            tree=self.nodes, legacy_projects=self.state.projects, techniques_held=self.done,
-            operating=lambda: self.state.projects.operating, running=self.production.running, is_venture=self.production.is_venture)
+            tree=self.nodes, projects_record=self.state.projects, techniques_held=self.done,
+            running=self.production.running, is_venture=self.production.is_venture)
         self.module._built_way_km = lambda way: self.built_km.get(way, 0.0)
 
     def running(self, node_id):
@@ -98,7 +96,7 @@ class WayGateTests(unittest.TestCase):
     def test_a_node_waits_for_the_length_of_way_it_names(self):
         host = _host()
         host.done.add("depot")
-        host.state.projects.operating.add("depot")
+        host.business.operating().add("depot")
         host.built_km = {"rail": 10.0}
         self.assertEqual(host.ways_short("depot"), {"rail": 40.0})
         self.assertFalse(host.running("depot"))
@@ -125,7 +123,7 @@ class LapseTests(unittest.TestCase):
     def test_closing_the_work_closes_what_depends_on_it_down_the_chain(self):
         host = _host()
         host.close_work(GRID, host.CLOSED_BY_CHOICE)
-        self.assertEqual(host.state.projects.operating, set())
+        self.assertEqual(host.business.operating(), set())
         self.assertEqual(host.closure_of(LAMP)["reason"], host.CLOSED_GATE_LAPSED)
         self.assertEqual(host.closure_of(TRAM)["reason"], host.CLOSED_GATE_LAPSED)
         self.assertEqual(host.closure_of(GRID)["reason"], host.CLOSED_BY_CHOICE)
@@ -133,12 +131,12 @@ class LapseTests(unittest.TestCase):
     def test_closing_a_dependent_leaves_its_work_running(self):
         host = _host()
         host.close_work(TRAM, host.CLOSED_BY_CHOICE)
-        self.assertEqual(host.state.projects.operating, {GRID, LAMP})
+        self.assertEqual(host.business.operating(), {GRID, LAMP})
 
     def test_the_yearly_check_closes_a_dependent_whose_work_was_forgotten(self):
         host = _host()
         host.done.discard(GRID)
-        host.state.projects.operating.discard(GRID)
+        host.business.operating().discard(GRID)
         self.assertEqual(host.close_lapsed_dependents(101), [LAMP, TRAM])
         self.assertEqual(host.close_lapsed_dependents(101), [])
 

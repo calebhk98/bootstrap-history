@@ -323,12 +323,11 @@ class AgentEconomy(TilePricesMixin):
         sim, economy = self._sim, self._economy
         area_map = economy.area_map
         tile = sim.labour.base_tile() if sim.labour.base_tile() in economy.setup.tiles else economy.setup.capital_tile
-        projects = sim.state.projects
         view = economy.view()
         moves, offers = [], []
         offered = self.__dict__.setdefault("_seat_offered", {}).setdefault(agent_id, (tile, {}))[1]
         inputs = self.__dict__.setdefault("_seat_inputs", {})
-        for node_id in sorted(projects.operating):
+        for node_id in sorted(sim.operating()):
             quantities = sim.concern_book_offer(node_id)
             if not quantities:
                 continue

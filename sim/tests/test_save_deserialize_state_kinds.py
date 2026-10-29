@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 import collections
 
-from sim.agents.api import ActorsState, Business
+from sim.agents.api import ActorsState, Business, Plant
 from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
 from sim.finance.api import FinanceSeat
@@ -15,6 +15,7 @@ from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
 from sim.production.api import ProductionSeat
 from sim.projects.state import ProjectsSeat
+from sim.ventures.state import VenturesSeat
 from sim.workforce.api import WorkforceSeat
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
                               SimulationState, deserialize_state)
@@ -65,7 +66,7 @@ check("deserialize_state: a field the save lacks takes its default", workforce.t
 check("deserialize_state: an unknown key and an `_on_change` key are not set", not hasattr(workforce, "not_a_field") and not hasattr(workforce, "_on_change_hook"))
 
 # ---- the retry counts, nested records and sets of the projects
-projects = deserialize_state({"businesses": [{"business_id": "founder", "owner_id": "", "plants": []}]}, ProjectsState)
+ventures = deserialize_state({"businesses": [{"business_id": "founder", "owner_id": "", "plants": [{"entry_key": "loom", "size": 2, "state": "mothballed", "reason": "staff", "since_year": 40}]}]}, VenturesSeat)
 projects_seat = deserialize_state({
 	"active": {"z_mill": {"ph_left": 80, "cost_left": 300, "yrs": 1.5, "spent": 100, "status": "ACTIVE", "lab_left": {"mason": 15}},
 	           "a_forge": {"ph_left": 10, "cost_left": 20, "yrs": 0.5, "spent": 5, "status": "ACTIVE"}},
@@ -85,7 +86,9 @@ check("deserialize_state: active projects are rebuilt as records, in the saved o
 knowledge = deserialize_state({"done": {"__set__": ["fire", "stone_cutting"]}, "done_year": {"fire": "3", "stone_cutting": 10}}, KnowledgeSeat)
 check("deserialize_state: done is a set, years are integers", knowledge.done == {"fire", "stone_cutting"} and type(knowledge.done) is set
       and knowledge.done_year == {"fire": 3, "stone_cutting": 10}, None)
-check("deserialize_state: the founder's business is a Business", projects.businesses == [Business(business_id="founder")], projects.businesses)
+check("deserialize_state: the seat's businesses are Businesses holding plants, the first the seat's own",
+      ventures.businesses == [Business(business_id="founder", plants=[Plant(entry_key="loom", size=2.0, state="mothballed", reason="staff", since_year=40)])]
+      and ventures.business is ventures.businesses[0] and ventures.business.closures()["loom"] == {"reason": "staff", "year": 40}, ventures.businesses)
 disclosures = deserialize_state({"disclosures": {"fire": {"mode": "license", "published_year": None, "licensees": {
 	"firm:2": {"fee": 5.0, "royalty": 0.1, "year": 101}}}}}, DiffusionSeat).disclosures
 check("deserialize_state: a disclosure record (an untyped dict) is as saved",

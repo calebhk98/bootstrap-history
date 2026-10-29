@@ -153,7 +153,7 @@ class MarketReportTests(unittest.TestCase):
 class ShortageLineTests(unittest.TestCase):
     @staticmethod
     def game(throttles):
-        module = materials_stand_in.build(legacy_projects=materials_stand_in.projects(active=throttles))
+        module = materials_stand_in.build(projects_record=materials_stand_in.projects(active=throttles))
         module.throttle_quote = lambda node_id=None: (throttles[node_id], None)
         return module
 

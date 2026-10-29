@@ -8,7 +8,7 @@ from sim.materials.api import ForgetReadings
 from sim.projects.api import WatchActive
 from sim.production.api import ForgetRevenueCaches, RefreshDoneCaches, RefreshOperatingCaches, constants
 
-from sim.ventures.api import NoteOperatingChanged
+from sim.ventures.api import NoteOperatingChanged, WatchBusiness
 
 from . import money_units, node_rederive, society_holdings
 
@@ -46,8 +46,9 @@ class ForwardProductionMixin:
 		self.send(NoteOperatingChanged())
 
 	def _reset_operating(self):
-		"""Point the seat's business at the invalidation hook and invalidate once."""
-		self.state.projects.business.watch = self._operating_changed
+		"""The acting seat's business reports its plants' opening and closing from here on (a seat switch or a load needs it again),
+		and what is operating is told to have changed once."""
+		self.send(WatchBusiness(self.state.acting_seat))
 		self._operating_changed()
 
 	def _reset_active(self):

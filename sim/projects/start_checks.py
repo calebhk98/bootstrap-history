@@ -65,7 +65,7 @@ class StartChecks:
 		if node_id in self.needs.techniques_held():
 			# A MOTHBALLED WORK IS NOT FRESH RESEARCH, and it is not "already done" either: you know how, and the plant
 			# is gone. `restore` puts it back at a fraction of the cost, so this is checked BEFORE the flat case.
-			if node_id in self.needs.closures():
+			if node_id in self.needs.mothballed():
 				return False, (('you built this once and let it go; you already know how, so restoring it is cheaper '
 				                'than starting over: {"cmd":"restore","id":"%s"} for about %s'
 				                % (node_id, self.needs.money_text(self.needs.reopen_fee(node_id)))) if why else None)

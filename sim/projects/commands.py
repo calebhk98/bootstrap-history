@@ -42,13 +42,6 @@ class ResetProjectProgress(Command):
 
 
 @dataclass(frozen=True)
-class ShutForgotten(Command):
-    """The acting seat's works for `node_ids`, techniques it has just lost, are no longer running or shut for a time.
-    Not applied by the projects module yet: the engine bridge applies it."""
-    node_ids: tuple
-
-
-@dataclass(frozen=True)
 class AdvanceProjects(Command):
     """The year's progress step for the acting seat: every project in hand takes its turn at the director hours left in
     `pool` and the hired hours left in `hired_left`. Answers (hours left in the pool, the same before wage work, the

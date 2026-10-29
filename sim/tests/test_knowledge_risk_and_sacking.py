@@ -7,15 +7,14 @@ QUICK_TOPIC = True
 import types
 
 from .harness import *  # noqa: F401,F403
-from sim.engine import bridge_hazards
 from sim.knowledge.api import closure
 from sim.knowledge import rules as knowledge_rules
 from sim.knowledge.api import (CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE, ForgetTechnique, KnowledgeSeat, ReplaceTree)
 from sim.production.api import RefreshDoneCaches
 from sim.knowledge.module import Knowledge
-from sim.projects.api import ShutForgotten
+from sim.ventures.api import ShutForgotten
 from sim.reporting.api import RecordEvent
-from sim.tests import hazards_host, module_harness
+from sim.tests import hazards_host, module_harness, ventures_host
 from sim.tests.ui_stand_in import FactViews
 
 
@@ -28,7 +27,7 @@ class _FrontOfTheListRNG:
 
 class _SackGame(FactViews):
     """The tree and the techniques a sack reads, with the hazards module built over them. A ForgetTechniques it sends is
-    applied as the engine bridge applies it."""
+    applied by the owners."""
     def __init__(self, built=(), granted=(), held=(), goal=None, dispersed=("corpus_dispersed",)):
         tiers = [("corpus_dispersed", 0.2, 0.08), ("corpus_written", 0.5, 0.22)]
         self._held, self._dispersed = set(held), set(dispersed)
@@ -36,8 +35,7 @@ class _SackGame(FactViews):
                       ("corpus_dispersed", "corpus_written", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j")}
         self.nodes["j"] = {"win_condition": True, "pre": []}
         self.goal = goal
-        self.state = types.SimpleNamespace(
-            projects=types.SimpleNamespace(operating=set(built), mothballed=set()))
+        self.ventures = ventures_host.build(operating=set(built))
         self.done_changed = 0
         self.knowledge = module_harness.build(
             Knowledge, views={"corpus_dispersed": self.corpus_is_dispersed},
@@ -52,7 +50,7 @@ class _SackGame(FactViews):
             goal=lambda: {"node": self.goal}, tree_nodes=self.nodes, tree_closure=lambda goal_id: closure(self.nodes, goal_id),
             losable_node_ids=lambda keep_dispersed=True: self.knowledge.losable_node_ids(keep_dispersed),
             answers={ForgetTechnique: lambda command: self.knowledge.forget_technique(command),
-                     ShutForgotten: lambda command: bridge_hazards.shut_forgotten(self, command)})
+                     ShutForgotten: self.ventures.apply_shut_forgotten})
 
     def corpus_is_dispersed(self, node_id):
         return node_id in self._dispersed
@@ -89,7 +87,7 @@ _sacked.sack(0.5, "corpus_dispersed")
 check("the sack takes the stated fraction of what it can take, and no more",
       len(_sacked.knowledge.seat.forgotten) == int(6 * 0.5), _sacked.knowledge.seat.forgotten)
 check("what is forgotten is no longer built, running or mothballed, and is dated",
-      all(node_id not in _sacked.knowledge.seat.done and node_id not in _sacked.state.projects.operating
+      all(node_id not in _sacked.knowledge.seat.done and node_id not in _sacked.ventures.operating()
           and year == 150 for node_id, year in _sacked.knowledge.seat.forgotten.items()), _sacked.knowledge.seat.forgotten)
 check("a dispersed corpus and inherited technologies survive a sack",
       {"corpus_dispersed", "a", "b"} <= _sacked.knowledge.seat.done, _sacked.knowledge.seat.done)

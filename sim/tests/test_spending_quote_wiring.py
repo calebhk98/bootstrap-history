@@ -134,7 +134,7 @@ def poster(capital, price):
     """The projects module with what a bounty touches: the prize and the purse."""
     state = projects_host.projects_state()
     module = projects_host.build(tree={"mill": {"name": "Mill"}}, bounty_price=lambda node_id: price, acting_balance=capital,
-                                 legacy_projects=state)
+                                 projects_record=state)
     module.initialize_project = lambda node_id, **fields: state.active.update({node_id: {}})
     return module
 

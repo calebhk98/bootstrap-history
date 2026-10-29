@@ -14,7 +14,7 @@ WORK = "md2_sand_filtration"
 
 def _module(done=(), mothballed=(), absent_trades=(), craft_short=False):
     return projects_host.build(
-        techniques_held=set(done), closures=set(mothballed), reopen_fee=lambda node_id: 40.0,
+        techniques_held=set(done), mothballed=set(mothballed), reopen_fee=lambda node_id: 40.0,
         trade_available=lambda trade: trade not in absent_trades,
         hours_available={"scholar_hands": 5.0, "craft_hands": 0.0 if craft_short else 5.0})
 
@@ -22,7 +22,7 @@ def _module(done=(), mothballed=(), absent_trades=(), craft_short=False):
 def _restoring(done=(), mothballed=()):
     """The module `restore_work` is called on: what is built and what is shut."""
     projects = types.SimpleNamespace(done=set(done), mothballed=set(mothballed), closures={})
-    return projects_host.build(legacy_projects=projects, techniques_held=projects.done)
+    return projects_host.build(projects_record=projects, techniques_held=projects.done)
 
 
 class AlreadyDoneCheckTest(unittest.TestCase):

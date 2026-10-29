@@ -20,7 +20,7 @@ class StartGame(FactViews):
     def __init__(self, capital, owed=0.0):
         state = projects_host.projects_state(active={"in_hand": {"cost_left": owed}} if owed else {})
         self.projects = projects_host.build(
-            legacy_projects=state, acting_balance=capital, credit_limit=LINE, project_cost=lambda node_id: PRICE)
+            projects_record=state, acting_balance=capital, credit_limit=LINE, project_cost=lambda node_id: PRICE)
         self.done, self.active = set(), state.active
 
     def start_reason(self, node_id):

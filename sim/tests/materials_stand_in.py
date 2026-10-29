@@ -51,7 +51,7 @@ def build(seat: Optional[MaterialsSeat] = None, views: Optional[Dict[str, Any]] 
         "purchase_refusal": lambda what, cost: ("refused", what, cost)}
     plain.update(views or {})
     plain.update(overrides)
-    record = plain.pop("legacy_projects", None) or plain.pop("projects_record")   # a test gives its projects as one record
+    record = plain.pop("projects_record")   # a test gives its projects as one record
     plain.pop("projects_record", None)
     plain.setdefault("active_projects", record.active)
     plain.setdefault("active_project_ids", record.active_keys_sorted)

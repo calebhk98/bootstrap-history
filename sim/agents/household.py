@@ -33,10 +33,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"spend_last_year": "household",
 
 	# ProjectsState
-	"operating": "projects",
-	"mothballed": "projects",
-	"opened_year": "projects",
-	"closures": "projects",
 
 	# EconomyState
 	"_dashboard_history": "holdings",
@@ -69,7 +65,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 	def __init__(
 		self,
 		starting_capital: float = 0.0,
-		operating_changed: Optional[Callable[[], None]] = None,
 		state: Optional[Any] = None,
 		port: Optional[Any] = None,
 		techniques_held: Optional[Callable[[], Any]] = None,
@@ -86,9 +81,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 		self._state.household.cash_mark = float(starting_capital)
 
-		# Wrap mutation-aware collections with callbacks if provided
-		if operating_changed is not None:
-			self._state.projects.business.watch = operating_changed
 		# Transient caches and runtime-only trackers
 		self.contract_projects: Set[str] = set()
 		self._spend_this_year: float = 0.0
@@ -190,16 +182,16 @@ class Household(FounderReview, FounderBorrowing, Actor):
 	def active(self, value: Any) -> None:
 		self._state.seats[self._state.acting_seat].modules["projects"].active = value
 
+	def _business(self) -> Any:
+		"""The acting seat's own business: the ventures module's seat state (a debt, like the staff and the projects in hand)."""
+		return self._state.seats[self._state.acting_seat].modules["ventures"].business
+
 	@property
 	def operating(self) -> Any:
-		return self._state.projects.operating
-
-	@operating.setter
-	def operating(self, value: Any) -> None:
-		self._state.projects.operating = value
+		return self._business().operating()
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
-		return self._state.projects.business.opened_year_of(node_id, default)
+		return self._business().opened_year_of(node_id, default)
 
 	def __getattr__(self, name: str) -> Any:
 		if name.startswith("_state"):

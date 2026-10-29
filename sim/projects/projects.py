@@ -153,10 +153,6 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 		"""The ids of the acting seat's projects in hand, in id order (not the order they were started)."""
 		return sorted(self.seat.active)
 
-	def mothballed_works(self):
-		"""The works the acting seat has mothballed (the live set)."""
-		return self.needs.legacy_projects().mothballed
-
 	def bountied_nodes(self):
 		"""The nodes the acting seat has posted a bounty on (the live set)."""
 		return self.seat.bountied
@@ -175,8 +171,7 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 
 	def shut_for_staff(self):
 		"""{work id: the year it was shut} of the acting seat's works closed for want of staff."""
-		closures = self.needs.legacy_projects().closures
-		return {node_id: record["year"] for node_id, record in closures.items() if record["reason"] == "staff"}
+		return {node_id: record["year"] for node_id, record in self.needs.closure_records().items() if record["reason"] == "staff"}
 
 	def spend_last_year(self):
 		"""What the acting seat's household spent on projects in the year just closed, or None before the first year ends."""

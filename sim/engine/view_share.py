@@ -45,11 +45,10 @@ class ViewShare:
         demand = sim.view("material_demand_held")()
         if demand is None:
             return None
-        projects = sim.state.projects
         return ((sim.view("material_prices")(), demand),
                 (sim.view("legacy_goods_market")().others_stamp(), sim.year,
                  sim.view("techniques_version")(), sim.view("operating_version")(),
-                 len(sim.view("techniques_held")()), len(projects.operating),
+                 len(sim.view("techniques_held")()), len(sim.view("operating")()),
                  sim.view("forest_hectares")(), sim.view("nitre_beds")()["square_metres"], sim.view("population")().total,
                  sim.view("real_output_per_head")(), len(sim.view("mine_workings")())))
 
@@ -57,9 +56,8 @@ class ViewShare:
         """The world stamp of an answer shared outside a view: what changes the people, the techniques in
         force and the year (it leaves out the prices and the year's trade, which such an answer does not read)."""
         sim = self.sim
-        projects = sim.state.projects
         return ((), (sim.year, sim.view("techniques_version")(), sim.view("operating_version")(),
-                     len(sim.view("techniques_held")()), len(projects.operating), sim.view("forest_hectares")(),
+                     len(sim.view("techniques_held")()), len(sim.view("operating")()), sim.view("forest_hectares")(),
                      sim.view("nitre_beds")()["square_metres"], sim.view("population")().total, sim.view("real_output_per_head")(),
                      len(sim.view("mine_workings")())))
 

@@ -61,7 +61,7 @@ class ReleasePlantTests(unittest.TestCase):
 class ClosingTests(unittest.TestCase):
     def test_close_work_mothballs_the_plant_for_the_reason_and_closes_what_depends_on_it(self):
         business = Business(plants=[Plant(entry_key=NODE)])
-        module = projects_host.build(legacy_projects=SimpleNamespace(business=business), year=100)
+        module = projects_host.build(projects_record=SimpleNamespace(business=business), year=100)
         dependents_closed_in = []
         module.close_lapsed_dependents = dependents_closed_in.append
         module.close_work(NODE, "by_choice")
@@ -71,7 +71,7 @@ class ClosingTests(unittest.TestCase):
     def test_close_work_for_staff_is_remembered_and_cascade_can_be_turned_off(self):
         business = Business(plants=[Plant(entry_key=NODE)])
         projects = SimpleNamespace(business=business)
-        module = projects_host.build(legacy_projects=projects, year=100)
+        module = projects_host.build(projects_record=projects, year=100)
         module.close_lapsed_dependents = lambda year: self.fail("cascade was off")
         module.close_work(NODE, module.CLOSED_FOR_STAFF, cascade=False)
         self.assertEqual(module.seat.ever_closed_for_staff, {NODE})
@@ -82,7 +82,7 @@ class RestoreWorkTests(unittest.TestCase):
         business = Business(plants=[Plant(entry_key=NODE, state=MOTHBALLED, reason="by_choice", size=2.0, opened_year=92)])
         projects = SimpleNamespace(mothballed={NODE}, done={NODE}, business=business, closures=business.closures())
         module = projects_host.build(
-            legacy_projects=projects, tree={NODE: {"pre": []}}, reopen_fee=lambda node_id: 5.0, spending_power=lambda kind: 10.0,
+            projects_record=projects, tree={NODE: {"pre": []}}, reopen_fee=lambda node_id: 5.0, spending_power=lambda kind: 10.0,
             acting_balance=0.0, is_venture=lambda node_id: venture, year=100)
         ok, _reply = module.restore_work(NODE)
         paid = [command.amount for command in module_harness.sent(module) if isinstance(command, PayEdge)]

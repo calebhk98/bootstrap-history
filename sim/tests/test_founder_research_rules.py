@@ -20,7 +20,7 @@ NODE = "smithing"
 def seat_module(capital=100.0, credit=50.0, active=None, paid_towards=None, cost=80.0):
     state = projects_host.projects_state(active=active if active is not None else {})
     return projects_host.build(
-        seat=ProjectsSeat(paid_towards=dict(paid_towards or {})), legacy_projects=state, techniques_held={"known"}, acting_balance=capital, credit_limit=credit,
+        seat=ProjectsSeat(paid_towards=dict(paid_towards or {})), projects_record=state, techniques_held={"known"}, acting_balance=capital, credit_limit=credit,
         project_cost=lambda node_id: cost, hours_available={"scholar_hands": 2.0, "craft_hands": 7.0},
         acting_seat=3)
 

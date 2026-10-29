@@ -27,7 +27,7 @@ class BillSim:
     def __init__(self, risk, running_cost, cost_now, up_front, running):
         module = materials_stand_in.build(
             tree_nodes={NODE_ID: {"risk": risk}}, failure_reset_share=0.4,
-            legacy_projects=materials_stand_in.projects(active={NODE_ID: {}} if running else {}),
+            projects_record=materials_stand_in.projects(active={NODE_ID: {}} if running else {}),
             project_cost=lambda node_id: running_cost, project_cost_now=lambda node_id: cost_now)
         module.up_front_materials_money = lambda node_id: up_front
         self.failure_loss = module.failure_loss
@@ -90,7 +90,7 @@ class FailingSim:
         self.rng = SimpleNamespace(uniform=lambda low, high: low)
         self.seat = ProjectsSeat(bountied={NODE_ID} if claimed else set())
         module = self.module = projects_host.build(
-            seat=self.seat, tree=nodes, legacy_projects=self.state.projects, techniques_held=lambda: self.state.projects.done, funding_capacity=1000.0, state_interest=lambda node: 0,
+            seat=self.seat, tree=nodes, projects_record=self.state.projects, techniques_held=lambda: self.state.projects.done, funding_capacity=1000.0, state_interest=lambda node: 0,
             failure_loss=lambda node_id: self.loss, bearable_part_of=self.bearable_part_of,
             mechanic=lambda name: {NODE_ID: self.instrument_spec} if name == "diagnosis_instrument" and self.instrument_spec else {},
             game_random=self.rng, money_text=lambda amount, grouped=False, short=False: "%d" % amount,

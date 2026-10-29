@@ -1,7 +1,6 @@
 """What starting a project costs now, all factors applied, and the frozen bill of one in hand.
 
-Needs: price_index, state_interest, tree, material_cost_factor, project_material_parts, project_cost_without_materials,
-legacy_projects."""
+Needs: price_index, state_interest, tree, material_cost_factor, project_material_parts, project_cost_without_materials."""
 from . import constants, cost_rules
 
 

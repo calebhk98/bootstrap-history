@@ -46,6 +46,7 @@ from .agents_port_household import HouseholdPort
 from sim.materials.api import RestoreReadings
 from sim.polity.api import SetValueWeights
 from sim.projects.api import RestoreProjectOrder, WatchActive
+from sim.ventures.api import WatchBusiness
 from sim.scenario.api import OpenScenario, RecordOpeningLiteracy, ScenarioSources, SetYear
 from . import units
 
@@ -180,13 +181,13 @@ class Sim(
             start_money = kit_capital(config["start_kit"], self.civ)
         self.household = Household(
             starting_capital=float(start_money) * self.price_index,
-            operating_changed=self._operating_changed,
             state=self.state,
             port=HouseholdPort(),
             techniques_held=lambda: self.view("techniques_held")())
         self._seat_facades = {self.state.acting_seat: self.household}
         self.send(WatchStaff(self.state.acting_seat))
         self.send(WatchActive(self.state.acting_seat))
+        self.send(WatchBusiness(self.state.acting_seat))
         # EVERY AUTOMATIC BEHAVIOUR, IN ONE PLACE, SWITCHABLE.
         #
         # Everything automatic must be controllable: a player can enable or
@@ -286,7 +287,7 @@ class Sim(
 
     def _wrap_seat_containers(self):
         """Wrap the bound seat's mutation-aware containers and start its version counters."""
-        self.state.projects.business.watch = self._operating_changed
+        self.send(WatchBusiness(self.state.acting_seat))
         self.send(WatchActive(self.state.acting_seat))
         self.send(WatchStaff(self.state.acting_seat))
 

@@ -98,26 +98,15 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def operating(self):
-		return getattr(self.state.projects, "operating")
-
-	@operating.setter
-	def operating(self, value):
-		setattr(self.state.projects, "operating", value)
+		return self.view("operating")()
 
 	@property
 	def mothballed(self):
-		return getattr(self.state.projects, "mothballed")
-
-	@mothballed.setter
-	def mothballed(self, value):
-		setattr(self.state.projects, "mothballed", value)
+		return self.view("mothballed")()
 
 	@property
 	def shut_for_staff(self):
-		# Read-only {work id: year} view of the staffing closures.
-		return {node_id: record["year"]
-				for node_id, record in self.state.projects.closures.items()
-				if record["reason"] == "staff"}
+		return self.view("shut_for_staff")()
 
 	@property
 	def bountied(self):

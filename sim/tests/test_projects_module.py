@@ -58,9 +58,9 @@ class StartCheck(unittest.TestCase):
         self.assertEqual(module().start_check("zzz", False, None, False), (False, None))
 
     def test_the_first_check_with_an_opinion_decides(self):
-        both = module(techniques_held={"a"}, legacy_projects=projects_host.projects_state(active={"a": {}}))
+        both = module(techniques_held={"a"}, projects_record=projects_host.projects_state(active={"a": {}}))
         self.assertEqual(both.start_check("a"), (False, "already done"))
-        active = module(legacy_projects=projects_host.projects_state(active={"a": {}}))
+        active = module(projects_record=projects_host.projects_state(active={"a": {}}))
         self.assertEqual(active.start_check("a"), (False, "already active"))
 
     def test_asking_for_no_sentence_gives_the_same_verdict_without_one(self):
@@ -110,7 +110,7 @@ class StartBlockers(unittest.TestCase):
     def test_a_built_work_that_is_shut_is_closed_and_one_mothballed_says_so(self):
         shut = module(techniques_held={"a"}, is_venture=lambda node_id: True, running=lambda node_id: False)
         self.assertEqual(self.causes(shut.start_blockers("a")), [("closed", "built_but_shut")])
-        mothballed = module(techniques_held={"a"}, closures={"a"}, is_venture=lambda node_id: True,
+        mothballed = module(techniques_held={"a"}, mothballed={"a"}, is_venture=lambda node_id: True,
                             running=lambda node_id: False)
         self.assertEqual(self.causes(mothballed.start_blockers("a")), [("closed", "mothballed")])
 

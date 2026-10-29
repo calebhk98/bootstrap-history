@@ -5,6 +5,7 @@ import contextlib
 from sim.agents.api import Household, HouseholdParty
 from sim.knowledge.api import ReceiveTechniques
 from sim.projects.api import WatchActive
+from sim.ventures.api import WatchBusiness
 from .agents_port_household import HouseholdPort
 from . import game_assembly
 from .state_seat import SeatState, bind_seat
@@ -21,6 +22,7 @@ def add_seat(sim, seat_id: str, seat: SeatState) -> None:
 	sim._seat_facades[seat_id] = sim._new_facade(seat_id)
 	if getattr(sim, "assembly", None) is not None:
 		sim.send(WatchActive(seat_id))
+		sim.send(WatchBusiness(seat_id))
 
 
 def new_facade(sim, seat_id: str) -> Household:
@@ -32,7 +34,6 @@ def new_facade(sim, seat_id: str) -> Household:
 		cash_mark = held.cash_mark
 		facade = Household(
 			starting_capital=held.capital,
-			operating_changed=sim._operating_changed,
 			state=sim.state,
 			port=HouseholdPort(),
 			techniques_held=lambda: sim.view("techniques_held")())
@@ -46,7 +47,8 @@ def seat_party(sim, seat_id: str, margins=None) -> HouseholdParty:
 	"""`seat_id` as an actor an exchange can deal with: it holds patents and shares, pays and is paid."""
 	return HouseholdParty(sim._seat_facades[seat_id], margins, seat_id, sim.act_as,
 	                      dealings=sim.state.seats[seat_id].modules["seats"],
-	                      receive=lambda nodes, granted: sim.send(ReceiveTechniques(tuple(nodes), granted)))
+	                      receive=lambda nodes, granted: sim.send(ReceiveTechniques(tuple(nodes), granted)),
+	                      business=sim.state.seats[seat_id].modules["ventures"].business)
 
 
 def seat_parties(sim) -> dict:

@@ -135,7 +135,7 @@ def _get_field(blob, field_name):
         sec = seat.get(section)
         if isinstance(sec, dict) and field_name in sec:
             return sec[field_name]
-    for module_id in ("workforce", "projects", "knowledge"):   # the trade name sets are the workforce module's, the kept-staffed set the projects', the held sets knowledge's
+    for module_id in ("workforce", "projects", "knowledge", "ventures"):   # the trade name sets are the workforce module's, the kept-staffed set the projects', the held sets knowledge's
         sec = (seat.get("modules") or {}).get(module_id)
         if isinstance(sec, dict) and field_name in sec:
             return sec[field_name]

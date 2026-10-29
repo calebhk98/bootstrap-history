@@ -66,7 +66,10 @@ def build(scenario):
         else:
             from sim.knowledge.api import LearnTechnique
             sim.send(LearnTechnique(PATRON))
-        sim.state.projects.operating.add(PATRON)
+        if hasattr(sim.state.projects, "operating"):   # a checkout from before the ventures module owned the works
+            sim.state.projects.operating.add(PATRON)
+        else:
+            sim.operating.add(PATRON)
     if scenario.get("seats", 1) > 1:
         sim.join_seat(*SECOND_SEAT)
     return sim

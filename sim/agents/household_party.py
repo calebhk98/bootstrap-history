@@ -56,8 +56,9 @@ class HouseholdParty:
 
 	def __init__(self, household: Any, margins: Optional[Dict[str, float]] = None, seat_id: Optional[str] = None,
 				act_as: Optional[Callable[[str], Any]] = None, *, dealings: Any,
-				receive: Optional[Callable[[Any, bool], None]] = None) -> None:
-		"""`receive(nodes, granted)` hands the acting seat know-how complete (the engine sends the knowledge module's command)."""
+				receive: Optional[Callable[[Any, bool], None]] = None, business: Any) -> None:
+		"""`receive(nodes, granted)` hands the acting seat know-how complete (the engine sends the knowledge module's command);
+		`business` is the seat's own, the record the ventures module keeps and the exchange opens, closes and hands over plants on."""
 		self.household = household
 		self._receive = receive
 		state = household._state
@@ -65,7 +66,7 @@ class HouseholdParty:
 		self._act_as = act_as
 		seat = state.seats[self.actor_id]
 		# the seat's own business, so opening, closing, patenting and trading shares write through
-		self._business = seat.projects.business
+		self._business = business
 		self._margins = dict(margins or {})
 		self.record = SeatRecord(kind="household", patents=dealings.patents, holdings=dealings.shares_held)
 		self.record.seat_dealings = dealings

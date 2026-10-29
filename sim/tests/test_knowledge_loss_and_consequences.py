@@ -25,7 +25,7 @@ def Society(forgotten=True, hedge_chance=NONE_CHANCE, practitioners=(), dependen
         if index < dependents_done:
             done.add(dependent)
     return projects_host.build(
-        tree=nodes, techniques_held=done, legacy_projects=SimpleNamespace(done=done, active={}),
+        tree=nodes, techniques_held=done, projects_record=SimpleNamespace(done=done, active={}),
         techniques_forgotten={NODE: 100} if forgotten else {}, corpus_hedge=(hedge_chance, None, None),
         staff={"employees": {trade: 5.0 for trade in practitioners}})
 

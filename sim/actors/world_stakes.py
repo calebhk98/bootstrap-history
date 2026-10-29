@@ -19,9 +19,8 @@ class StakeView:
 	def running_techniques(self) -> Dict[str, int]:
 		"""Every technique someone runs now (the founder, the firms and the other actors) and the year it was opened."""
 		running: Dict[str, int] = {}
-		projects = self.needs.legacy_projects()
-		for node_id in projects.operating:
-			running[node_id] = int(projects.business.opened_year_of(node_id, 0))
+		for node_id in self.needs.operating():
+			running[node_id] = int(self.needs.venture_opened_year(node_id, 0))
 		for actor in self.registry.of_kind("firm"):
 			for node_id in actor.concerns:
 				running[node_id] = max(running.get(node_id, 0), int(actor.opened_year_of(node_id, 0)))

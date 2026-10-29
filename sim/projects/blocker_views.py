@@ -50,4 +50,4 @@ class BlockerViews:
 		if self.needs.is_venture[node_id] and not self.needs.running[node_id]:
 			shut_text = "you have built it already but it is shut: 'open %s' to run it" % node_id
 		return [blocker_rules.classify_plain_check(check.cause, check.kind, text, ids, shut_text,
-		                                           node_id in self.needs.closures())]
+		                                           node_id in self.needs.mothballed())]

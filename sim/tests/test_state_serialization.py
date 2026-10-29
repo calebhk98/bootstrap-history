@@ -30,9 +30,7 @@ def _test_automatic_field_persistence():
 
 	proj = ActiveProjectState(ph_left=80.0, cost_left=300.0, yrs=1.0, spent=100.0, lab_left={"mason": 15.0})
 	hh = HouseholdState(capital=1250.0)
-	projects = ProjectsState(
-		businesses=[Business.running(["stone_cutting"], opened_year=100)],
-	)
+	projects = ProjectsState()
 	econ = EconomyState()
 	holdings = HoldingsState(_dashboard_history=[120.0])
 	founder = FounderState(_founder_death_year=28)
@@ -126,9 +124,7 @@ def _test_runtime_type_reconstruction():
 	)
 
 	hh = HouseholdState(capital=500.0)
-	projects = ProjectsState(
-		businesses=[Business.running(["spinning_wheel"], opened_year=90)],
-	)
+	projects = ProjectsState()
 	econ = EconomyState()
 	holdings = HoldingsState()
 
@@ -147,8 +143,10 @@ def _test_runtime_type_reconstruction():
 	staff = deserialize_state(serialize_state(WorkforceSeat(trades_created={"tailor", "weaver"}, employees={"weaver": 3.0})), WorkforceSeat)
 	if not isinstance(staff.trades_created, set):
 		return False, f"trades_created is not set: {type(staff.trades_created)}"
-	if "spinning_wheel" not in restored.projects.operating or restored.projects.business.opened_year_of("spinning_wheel", 0) != 90:
-		return False, f"the business did not round trip: {restored.projects.business}"
+	from sim.ventures.state import VenturesSeat
+	ventures = deserialize_state(serialize_state(VenturesSeat(businesses=[Business.running(["spinning_wheel"], opened_year=90)])), VenturesSeat)
+	if "spinning_wheel" not in ventures.business.operating() or ventures.business.opened_year_of("spinning_wheel", 0) != 90:
+		return False, f"the business did not round trip: {ventures.business}"
 	from sim.projects.state import ProjectsSeat
 	counts = deserialize_state(serialize_state(ProjectsSeat(failed_attempts=collections.defaultdict(int, {"steam_engine": 2}))), ProjectsSeat)
 	if not isinstance(counts.failed_attempts, collections.defaultdict) or counts.failed_attempts["steam_engine"] != 2:

@@ -56,11 +56,11 @@ check("the freeze check is a money blocker, reported under the cause credit_froz
 
 # the cash a start needs: its price less what is paid towards it, on top of what work in hand still owes
 cash_state = projects_host.projects_state(active={"a": {"cost_left": 200.0}, "b": {"cost_left": None}})
-cash_module = projects_host.build(project_cost=lambda node_id: 1000.0, legacy_projects=cash_state, acting_balance=900.0,
+cash_module = projects_host.build(project_cost=lambda node_id: 1000.0, projects_record=cash_state, acting_balance=900.0,
                                   seat=ProjectsSeat(paid_towards={"node": 300.0}))
 check("the cash that covers a start counts what is owed on active work and what is paid towards it",
       cash_module._cash_covers_start("node") is True)
-cash_module = projects_host.build(project_cost=lambda node_id: 1000.0, legacy_projects=cash_state, acting_balance=899.0,
+cash_module = projects_host.build(project_cost=lambda node_id: 1000.0, projects_record=cash_state, acting_balance=899.0,
                                   seat=ProjectsSeat(paid_towards={"node": 300.0}))
 check("...and is not covered one unit short", cash_module._cash_covers_start("node") is False)
 
@@ -69,7 +69,7 @@ check("...and is not covered one unit short", cash_module._cash_covers_start("no
 def poster(capital, price):
     state = projects_host.projects_state()
     module = projects_host.build(
-        tree={"node": {"name": "Node", "ph": 500.0, "yrs": 2.0}}, legacy_projects=state, bounty_price=lambda node_id: price,
+        tree={"node": {"name": "Node", "ph": 500.0, "yrs": 2.0}}, projects_record=state, bounty_price=lambda node_id: price,
         acting_balance=capital)
     module.started = []
 
@@ -97,7 +97,7 @@ def _wanting():
 
 
 bounty_projects = types.SimpleNamespace(active={"node": {"ph_left": 500.0}})
-bounty_module = projects_host.build(legacy_projects=bounty_projects, tree={"node": {"ph": 500.0, "yrs": 2.0}}, seat=ProjectsSeat(bountied={"node"}))
+bounty_module = projects_host.build(projects_record=bounty_projects, tree={"node": {"ph": 500.0, "yrs": 2.0}}, seat=ProjectsSeat(bountied={"node"}))
 check("a bountied project asks for no hours of the founder", bounty_module.project_hour_pace("node") == 0.0)
 check("a project asking for hours is listed with them and one asking for none is not",
       _wanting().active_hours_still_wanted() == {"a": 40.0})

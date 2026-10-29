@@ -9,6 +9,7 @@ from sim.assembly.api import FIRST, KEYED, QUOTE, ExtensionPoint, ModuleSpec, Ph
 from sim.diffusion.api import RekeyDisclosures
 from sim.knowledge.api import ForgetTechnique, LearnTechnique, RevealNodes
 from sim.reporting.api import RecordEvent
+from sim.ventures.api import StopOperating
 
 from .commands import (AnswerOffer, ApplyForPatent, EndRun, ForgetGoalCaches, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat, MakeOffer,
                        MoveSeat, RecordGoalReached, RegisterSeat, RememberGoalClosure, SetFounderLife, SetGoal, SetPolicy)
@@ -22,7 +23,7 @@ READS_BY_OWNER = {
     "mechanics": ("running_mechanics", "corpus_dispersed", "losable_node_ids"),
     "content": ("win_condition_labels",),
     "workforce (people)": ("staff",),
-    "projects": ("legacy_projects",),
+    "ventures": ("operating", "operating_by_seat"),
     "diffusion": ("disclosures", "copy_difficulty", "literacy"),
     "actors": ("seeded_actor_registry", "cast", "actor_world", "seat_party", "seat_party_with_margins"),
     "workforce": ("seat_base_tile",),
@@ -68,7 +69,7 @@ MODULE_SPECS = (ModuleSpec(
              (SetFounderLife, "set_founder_life"), (SetPolicy, "set_policy"),
              (RememberGoalClosure, "remember_goal_closure"), (ForgetGoalClosure, "forget_goal_closure")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(RegisterSeat, MoveSeat, ForgetGoalCaches, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent),
+    sends=(RegisterSeat, MoveSeat, ForgetGoalCaches, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent, StopOperating),
     phases=(PhaseHook("hear_of_other_seats", "hear_of_other_seats"), PhaseHook("win_conditions", "check_win_conditions"),
             PhaseHook("founder_mortality", "founder_mortality")),
     # (condition) -> [(label, value, unit)] rows for a measurement goal's anatomy, or None for the shipped rows

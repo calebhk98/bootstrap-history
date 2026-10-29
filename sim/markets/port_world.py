@@ -26,10 +26,6 @@ class StateReads:
 		return self._needs.legacy_seats()
 
 	@property
-	def projects(self):
-		return self._needs.legacy_projects()
-
-	@property
 	def economy(self):
 		return SimpleNamespace(improvements=self._needs.built_ways())
 
@@ -261,6 +257,9 @@ class PortWorld(ForeignReads):
 
 	def techniques_held(self):
 		return self._needs.techniques_held()
+
+	def operating(self):
+		return self._needs.operating()
 
 	def techniques_granted(self):
 		return self._needs.techniques_granted()

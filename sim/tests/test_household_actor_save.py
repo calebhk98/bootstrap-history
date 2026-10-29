@@ -12,6 +12,7 @@ from sim.agents.records import ActorRecord
 from sim.engine.agents_port_household import HouseholdPort
 from sim.knowledge.api import KnowledgeSeat
 from sim.projects.state import ProjectsSeat
+from sim.ventures.state import VenturesSeat
 from sim.workforce.api import WorkforceSeat
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
 
@@ -22,6 +23,7 @@ class HouseholdIsAnActor(unittest.TestCase):
         self.household = Household(starting_capital=100.0, port=HouseholdPort(), techniques_held=lambda: frozenset(self.knowledge.done))
         self.household._state.seats[self.household._state.acting_seat].modules["workforce"] = WorkforceSeat()
         self.household._state.seats[self.household._state.acting_seat].modules["projects"] = ProjectsSeat()
+        self.household._state.seats[self.household._state.acting_seat].modules["ventures"] = VenturesSeat()
 
     def test_it_is_an_actor_that_never_chooses_through_a_policy(self):
         self.assertIsInstance(self.household, Actor)

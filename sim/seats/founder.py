@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 
 from sim.knowledge.api import ForgetTechnique
 from sim.reporting.api import RecordEvent
+from sim.ventures.api import StopOperating
 
 from . import constants, founder_rules
 from .commands import EndRun, SetFounderLife, SetPolicy
@@ -70,7 +71,6 @@ class Founder:
                     "founder_dies", founder_rules.death_line(patronage["founder_age"], self._consequence(patronage)),
                     aged=patronage["founder_age"], deputies_carry_the_work=bool(patronage["deputies_carry_the_work"])))
         patronage = self.needs.patronage()
-        projects = self.needs.legacy_projects()
         if founder_rules.dissolves(seat.founder_alive, patronage["deputies_carry_the_work"]):
             seat.stalled += 1
             if founder_rules.forgets_this_year(seat.stalled, terms["years_before_forgetting"]):
@@ -80,7 +80,7 @@ class Founder:
                 if losable:
                     for node_id in self.needs.game_random().sample(losable, founder_rules.forgotten_count(
                             len(losable), terms["forget_fraction_divisor"])):
-                        projects.operating.discard(node_id)
+                        self.needs.send(StopOperating((node_id,)))
                         self.needs.send(ForgetTechnique((node_id,)))
             if founder_rules.warns(seat.stalled):
                 self.needs.send(RecordEvent.of(
