@@ -44,7 +44,7 @@ class StartPhase:
 		upkeep = needs.upkeep()
 		revenue = needs.revenue_estimate()
 		fixed = upkeep + needs.living_cost(revenue, upkeep) + needs.mine_operating_cost()
-		candidates = candidates_in_order(needs.legacy_order(), lambda node_id: needs.tree[node_id], needs.project_cost, money_is_thin(revenue, fixed))
+		candidates = candidates_in_order(needs.project_order(), lambda node_id: needs.tree[node_id], needs.project_cost, money_is_thin(revenue, fixed))
 		projects = needs.legacy_projects()
 		# Only a normal start and a bounty change the count, so it is tracked as they happen, not rebuilt per node.
 		non_bountied_active = non_bountied_count(projects.active, projects.bountied)

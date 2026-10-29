@@ -86,6 +86,11 @@ def drop_ignored(leaves, ignored):
     return {path: value for path, value in leaves.items() if not any(under(path, prefix) for prefix in prefixes)}
 
 
+def drop_empty(leaves, prefixes):
+    """Leaves without an empty-container leaf at one of the exact `prefixes`."""
+    return {path: value for path, value in leaves.items() if not (path in prefixes and value in ("{}", "[]"))}
+
+
 def section_of(path):
     return path.split(SEPARATOR, 2)[1] if path.startswith(SEPARATOR) and len(path) > 1 else ""
 

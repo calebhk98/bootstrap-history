@@ -92,7 +92,7 @@ class WorkforceWorld:
 
     @property
     def order(self):
-        return self._needs.legacy_order()
+        return self._needs.project_order()
 
     @property
     def goal(self):

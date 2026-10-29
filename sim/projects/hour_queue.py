@@ -7,7 +7,7 @@ class HourQueue:
 	def hour_priority_queue(self):
 		"""Active projects in the order they draw on the hour pool: projects with a standing `allocate` first, then the
 		rest by tree priority."""
-		return priority_queue(self.needs.legacy_projects().active, self.needs.legacy_order(),
+		return priority_queue(self.needs.legacy_projects().active, self.needs.project_order(),
 		                      self.needs.hour_commitments()["allocations"])
 
 	def hour_pool_now(self):

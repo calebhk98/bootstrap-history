@@ -57,7 +57,7 @@ class PortHandsTheEconomyTheGamesData(unittest.TestCase):
 class PortfolioGroupsEveryActiveProject(unittest.TestCase):
     def test_every_active_project_is_in_exactly_one_bottleneck_group(self):
         game = unopened_sim(capital=5_000_000.0)
-        for node_id in list(game.order):
+        for node_id in game.view("project_order")():
             if len(game.state.projects.active) >= 6:
                 break
             if node_id not in game.state.projects.done and game.view("start_check")(node_id, False, None, False)[0]:

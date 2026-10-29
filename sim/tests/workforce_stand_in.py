@@ -64,6 +64,8 @@ class Game(SimpleNamespace):
 
     def send(self, command):
         from sim.tests import module_harness
+        if type(command).__name__ in ("ReorderProjects", "RestoreProjectOrder"):
+            return FactViews.send(self, command)
         from sim.workforce.module import Workforce
         from sim.workforce.module_spec import MODULE_SPECS
         self._sent.append(command)

@@ -11,7 +11,7 @@ from sim.agents.api import CommandRejected, edges, research
 from sim.ledger.api import PayEdge
 
 from . import bribe_rules, constants, funding, instantaneous, record_rules, start_rules
-from .commands import Bribe, PostBounty, StartProject, StopProject
+from .commands import Bribe, PostBounty, PutProjectFirst, StartProject, StopProject
 from sim.materials.api import SettleProjectMaterials
 from sim.reporting.api import RecordEvent
 from sim.ventures.api import ClearMothball
@@ -86,10 +86,7 @@ class Starting:
 			                       "paid on it before comes off the bill"
 			                       % (node_id, needs.money_text(paid_now, True))))
 		# A thing you just chose to work on should get first call on your own hours.
-		order = needs.legacy_order()
-		if node_id in order:
-			order.remove(node_id)
-		order.insert(0, node_id)
+		self.apply_put_project_first(PutProjectFirst(node_id))
 		return "begun"
 
 	# ---- the commands -------------------------------------------------------------------------------------------

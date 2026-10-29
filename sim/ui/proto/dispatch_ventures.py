@@ -360,7 +360,7 @@ def _rush_preview(sim, nodes, cmd, ended, confirm=None):
     real start path can say what a rush would start. An unbounded rush is
     previewed as the forced run it would take to begin it.
     """
-    saved_order = list(sim.view("legacy_order")())
+    saved_order = sim.view("project_order")()
     with tempfile.TemporaryDirectory() as folder:
         snapshot = os.path.join(folder, "snapshot.json")
         save_state(sim, snapshot)
@@ -368,7 +368,7 @@ def _rush_preview(sim, nodes, cmd, ended, confirm=None):
             result = _cmd_rush(sim, nodes, dict(cmd, preview=False, force=True), ended)
         finally:
             load_state(sim, snapshot)
-            sim.view("legacy_order")()[:] = saved_order
+            sim.send(ui_port.RestoreProjectOrder(saved_order))
     if result.get("preview") or not result.get("ok"):
         return result
     return {"ok": True, "preview": True, "nothing_changed": True,
@@ -430,7 +430,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
     if _flag(cmd.get("preview")):
         return _rush_preview(sim, nodes, cmd, ended)
     _memo = {}
-    _ok = [node_id for node_id in sim.view("legacy_order")() if sim.view("start_check")(node_id, False, _memo, False)[0]]
+    _ok = [node_id for node_id in sim.view("project_order")() if sim.view("start_check")(node_id, False, _memo, False)[0]]
     # what the actor excluded stays out of the rush, and the result says why
     excluded_rows = [{"id": node_id, "name": nodes[node_id]["name"], "why": sim.view("exclusion_reason")[node_id]}
                      for node_id in _ok if sim.view("exclusion_reason")[node_id]]

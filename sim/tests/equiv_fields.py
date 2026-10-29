@@ -32,6 +32,7 @@ RELOCATIONS = [
     ("/modules/foreign_trade/home_actor_trade", "/economy/home_actor_trade"),
     ("/modules/foreign_trade/ledgers", "/economy/foreign_ledger"),
     ("/modules/foreign_trade/trade_by_year", "/economy/foreign_trade_by_year"),
+    ("/modules/foreign_trade/cargo", "/economy/agent_economy/cargo"),
     ("/seats/*/modules/reporting/log", "/seats/*/household/log"),
     ("/seats/*/modules/reporting/automation_audit", "/seats/*/household/automation_audit"),
     ("/modules/agriculture/wild_stock", "/economy/wild_stock"),
@@ -186,7 +187,14 @@ RELOCATIONS = [
     ("/seats/*/modules/finance/said_near_limit", "/seats/*/household/_said_near_limit"),
 ]
 
+# Paths whose empty container is dropped before comparing: the base keeps the key only while it holds something, the
+# module's state always holds the field.
+ABSENT_WHEN_EMPTY = [
+    "/economy/agent_economy/cargo",
+]
+
 IGNORED = [
+    ("/modules/projects/order", "the project order is a new saved field: the base never saved it (Complaint 841)"),
     ("/modules", "module world slots: empty until a module owns state, then each moved field is relocated"),
     ("/seats/*/modules", "module seat slots, likewise"),
     ("/assembly_record", "which modules wrote the game; bookkeeping, not simulation"),

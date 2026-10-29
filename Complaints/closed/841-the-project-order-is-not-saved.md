@@ -1,6 +1,9 @@
 # The project order is not saved, so a load forgets every priority the player set
 
-**Status:** open
+**Status:** closed. The projects module owns the order in its saved world state (`ProjectsWorld.order`), opened from the tree's order
+at game start and changed only by `PutProjectFirst`, `ReorderProjects` and `RestoreProjectOrder`. Regression tests:
+`sim/tests/test_project_order.py` (rules, commands, serialisation) and `sim/tests/test_project_order_save_smoke.py` (a whole
+game keeps a moved project first across save and load).
 
 The order in which the household's hours go to its projects (`Sim.order`, built from the tree's order when the game is
 made) is changed by play: starting a project puts it first (`sim/projects/starting.py`), `priority` moves projects

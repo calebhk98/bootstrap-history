@@ -1,8 +1,7 @@
 """Bridge entries the foreign-trade module reads and sends until the owners behind them move into modules.
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine as the old mixin code did, and
-is never cached. `legacy_agent_economy` is the agent economy's record, where the traders' cargo legs are kept; it goes when the
-markets module owns that record."""
+is never cached."""
 from sim.assembly.api import KEYED, QUOTE
 
 from . import foreign_economy_data, partner_demand

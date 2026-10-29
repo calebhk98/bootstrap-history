@@ -61,7 +61,7 @@ so the 365 callers outside labour (screens, mods, the economy port, engine mixin
 `legacy_state` (labour still reads and writes the seat's household money, bondage and base tile, the holdings' market pressure, the
 projects' sets and the built ways in place: `grep -rn "_world.state" sim/labour` lists the sites; the year and the policy are the views
 `year` and `founder` now), `legacy_game`, `legacy_acting_household` (the purse, for the module's own steps), `legacy_household_actor`,
-`legacy_dice`, `legacy_tree`, `legacy_order`, `legacy_projects`, `legacy_act_as`; the engine's `game_config`, `civilisation`, the trade tables (`trade_records`, `trades_absent`,
+`legacy_dice`, `legacy_tree`, `legacy_projects`, `legacy_act_as`; the engine's `game_config`, `civilisation`, the trade tables (`trade_records`, `trades_absent`,
 `trade_notes`, `trade_family`, `starting_wages`), the actors' staff (`actor_staff_*`), and the projects staffing reads (`staffing_*`,
 `venture_*`, `staff_closure_age`, `reopen_units`, `exclusion_reason`, `shared_answer`).
 

@@ -45,6 +45,7 @@ from sim.agents.api import Household
 from .agents_port_household import HouseholdPort
 from sim.materials.api import RestoreReadings
 from sim.polity.api import SetValueWeights
+from sim.projects.api import RestoreProjectOrder
 
 
 class Sim(
@@ -77,7 +78,6 @@ class Sim(
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
                  bounty_set=None, civ=None, manual=False, debug=None, defer_economy=False):
         self.nodes = nodes
-        self.order = list(order)
         self.rng = rng
         self._agriculture = agriculture
         self._demography = demography
@@ -112,6 +112,7 @@ class Sim(
             _civ=self.civ.get("id"),
         )
         game_assembly.attach(self)   # the modules answer from here on: the opening below already sends commands
+        self.send(RestoreProjectOrder(tuple(order)))   # the order the household's hours serve projects, opened from the tree's
         # SET HERE SO EVERY READER CAN READ THEM DIRECTLY. Both are assigned
         # afterwards by whoever builds the game - cli_interactive, cli_agent,
         # sim/tests/fingerprint.py - and both round-trip through saveload's `_fog`

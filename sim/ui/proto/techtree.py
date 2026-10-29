@@ -761,7 +761,7 @@ def _agent_available(sim, nodes, cmd=None):
     # upward of a minute; sharing the memo across the sweep makes it once
     # per node actually touched. See is_visible()'s docstring.
     _memo = {}
-    startable = [node_id for node_id in sim.view("legacy_order")() if sim.view("start_check")(node_id, False, _memo, False)[0]]
+    startable = [node_id for node_id in sim.view("project_order")() if sim.view("start_check")(node_id, False, _memo, False)[0]]
 
     # Split into one function per concern - parsing the query, selecting and
     # sorting the startable nodes, building the heard-of block, and
