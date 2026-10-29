@@ -20,7 +20,8 @@ def game():
     module = build(Actors, views={"actor_kinds": lambda: [shipped.kinds], "actor_spawners": lambda: [shipped.spawners],
                                   "actor_world_scope": lambda: shipped.world_scope, "actor_policies": lambda: [shipped.policies],
                                   "player_commands": lambda: [shipped.commands], "opening_civilisation": lambda: load_civ("rome_100ad"),
-                                  "partners": lambda: PARTNERS, "civilisation_record": load_civ}, world=ActorsState())
+                                  "partners": lambda: PARTNERS,
+                                  "civilisation_record": {partner: load_civ(partner) for partner in PARTNERS}}, world=ActorsState())
     return types.SimpleNamespace(actors=module.cast(), seed=module.seed_opening_cast)
 
 

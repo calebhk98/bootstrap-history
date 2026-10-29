@@ -89,7 +89,7 @@ class Cast:
 		if registry.state.home_country:
 			return []
 		needs = self.needs
-		foreign = [needs.civilisation_record(civilization_id) for civilization_id in needs.partners()]
+		foreign = [needs.civilisation_record[civilization_id] for civilization_id in needs.partners()]
 		home_country, entries, profiles = cast_from_civilisations(needs.opening_civilisation(), foreign)
 		return seed_cast(registry, home_country, entries, profiles)
 
