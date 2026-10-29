@@ -55,7 +55,7 @@ def build(answers: Optional[Dict[type, Any]] = None, seat: Optional[FinanceSeat]
 	household = household if household is not None else _household()
 	every_view["acting_balance"] = lambda: household.capital
 	every_view.update(views)
-	every_view.setdefault("staff", lambda: {key: getattr(household, key, 0) for key in ("slaves", "freedmen", "artisans", "scholars")})
+	every_view.setdefault("staff", lambda: dict({key: getattr(household, key, 0) for key in ("slaves", "freedmen", "artisans", "scholars")}, employees={}))
 	answers = dict(answers or {})
 	answers.setdefault(HaltActiveProjects, ([], 0.0))
 	answers.setdefault(ReviewVentures, [])

@@ -13,7 +13,7 @@ from .needed_commands import BumpInstitutionUnitsVersion
 
 READS_BY_OWNER = {
 	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted", "legacy_projects"),
-	"production": ("operating", "running", "is_venture", "practisable", "institution_units", "institution_unit_ceiling", "institution_unit_cost",
+	"production": ("running", "is_venture", "practisable", "institution_units", "institution_unit_ceiling", "institution_unit_cost",
 	               "institution_upkeep", "concern_runs_without_founder", "venture_ramp", "node_output_market_factor", "concern_takings",
 	               "concern_goods_have_market", "concern_sale_basis"),
 	"projects": ("project_cost", "open_refusal", "staff_closure_age"),
@@ -33,7 +33,7 @@ _LIVE = dict(cached=False)
 
 # (name, the method that answers it, kind, seat scoped)
 _VIEWS = (
-	("closures", "closures", None, True), ("reopen_fee", "reopen_fee_at_prior_size", QUOTE, False), ("opening_fee", "opening_fee", QUOTE, False),
+	("closures", "closures", None, True), ("operating", "operating", None, True), ("reopen_fee", "reopen_fee_at_prior_size", QUOTE, False), ("opening_fee", "opening_fee", QUOTE, False),
 	("reopen_units", "reopen_units", KEYED, False), ("venture_capex", "venture_capex", KEYED, False),
 	("venture_hands", "venture_hands", KEYED, False), ("venture_hands_founder_staffed", "venture_hands_founder_staffed", KEYED, False),
 	("venture_foreman", "venture_foreman", KEYED, False), ("venture_foremen_used", "venture_foremen_used", QUOTE, False),

@@ -217,5 +217,14 @@ class VentureRamp(unittest.TestCase):
         self.assertEqual(ramp.call_args.args[:3], (1, 3, 0.0))
 
 
+class OperatingWorks(unittest.TestCase):
+    def test_the_open_works_are_the_projects_records_live_set(self):
+        record = ventures_host.projects_record(operating={"shop"})
+        module = ventures_host.build(legacy_projects=record)
+        self.assertEqual(module.operating(), {"shop"})
+        record.operating.add("mill")
+        self.assertEqual(module.operating(), {"shop", "mill"})
+
+
 if __name__ == "__main__":
     unittest.main()

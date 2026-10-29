@@ -16,7 +16,7 @@ class Upkeep:
 	def upkeep_by_concern(self):
 		"""{node id: yearly running cost} for each concern or practice that is paid for; `upkeep` is its sum."""
 		practice_set = self._practice_set()
-		operating = self.needs.projects_operating()
+		operating = self.needs.operating()
 		return {node_id: self.needs.venture_real_upkeep(node_id, None)
 		        for node_id in self._revenue_upkeep_candidates()
 		        if node_id in operating or node_id in practice_set}
@@ -35,7 +35,7 @@ class Upkeep:
 		"""
 		capability, scalable, _benefit = self.needs.capability_sets()
 		node = self.needs.tree_nodes()[node_id]
-		_units = (self.institution_units(node_id) if node_id in self.needs.projects_operating() else 1.0) \
+		_units = (self.institution_units(node_id) if node_id in self.needs.operating() else 1.0) \
 			if node_id in scalable else 1.0
 		if units is not None and node_id in scalable:
 			_units = float(units)

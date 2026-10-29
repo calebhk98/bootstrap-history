@@ -126,7 +126,7 @@ class ConcernSetVersion(unittest.TestCase):
         original = registry.concerns_of_active_firms
         registry.concerns_of_active_firms = lambda: walks.append(1) or original()
         module = production_host.build(
-            techniques_granted=set(), projects_operating={}, techniques_held=[], running_versions=(0, 0, 0),
+            techniques_granted=set(), operating={}, techniques_held=[], running_versions=(0, 0, 0),
             concern_versions=lambda: (registry.version[0], registry.concern_set_version[0]),
             concerns_of_active_firms=lambda: registry.concerns_of_active_firms())
         first = module.techniques_in_use()

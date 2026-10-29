@@ -41,7 +41,7 @@ class _Host:
         projects = self.state.projects
         self.production = production_host.build(
             tree_nodes=self.nodes, techniques_held=self.done, techniques_granted=self.granted,
-            projects_operating=projects.operating, gate_blocked=lambda node_id: self.module.gate_blocked(node_id))
+            operating=projects.operating, gate_blocked=lambda node_id: self.module.gate_blocked(node_id))
         self.module = projects_host.build(
             tree=self.nodes, legacy_projects=self.state.projects, techniques_held=self.done,
             operating=lambda: self.state.projects.operating, running=self.production.running, is_venture=self.production.is_venture)

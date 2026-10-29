@@ -29,7 +29,7 @@ def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, grant
         CONTROL_RELIEF_FACTOR=projects_constants.CONTROL_RELIEF_FACTOR, HOURS_PER_PERSON_YEAR=2000.0,
         labour=types.SimpleNamespace(people_who_exist=lambda trade: (people or {}).get(trade, 100.0)))
     module = stub.module = production_host.build(
-        seat, tree_nodes=stub.nodes, techniques_granted=projects.granted, projects_operating=projects.operating, techniques_held=projects.done,
+        seat, tree_nodes=stub.nodes, techniques_granted=projects.granted, operating=projects.operating, techniques_held=projects.done,
         done_year=projects.done_year, year=10, game_setting={"revenue_ramp_years": 4.0}, hours_per_person_year=2000.0,
         venture_opened_year=lambda node_id, default: projects.business.opened_year_of(node_id, default),
         venture_size=lambda node_id: projects.business.size_of(node_id),

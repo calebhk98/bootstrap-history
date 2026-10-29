@@ -19,7 +19,7 @@ class BookSales:
 	def concern_book_offer(self, node_id):
 		"""{material: units} the concern puts in this year's clearing; empty for a concern the engine's estimate covers
 		(not running as the acting seat's own, makes nothing from output, or nothing it makes is traded)."""
-		if node_id not in self.needs.projects_operating() or node_id in self.needs.techniques_granted() or not self.is_venture(node_id):
+		if node_id not in self.needs.operating() or node_id in self.needs.techniques_granted() or not self.is_venture(node_id):
 			return {}
 		baskets = self.concern_baskets_now(node_id)
 		if baskets is None:

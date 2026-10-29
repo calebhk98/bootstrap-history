@@ -107,7 +107,7 @@ class Revenue:
 		practice_set = self._practice_set()
 		nodes = needs.tree_nodes()
 		granted = needs.techniques_granted()
-		operating = needs.projects_operating()
+		operating = needs.operating()
 		# Scan only what could possibly pay: a node that is neither operating nor practised is skipped below, and was already
 		# skipped for the whole rest of `done`, which only grows (see _revenue_upkeep_candidates).
 		for node_id in self._revenue_upkeep_candidates():
@@ -170,7 +170,7 @@ class Revenue:
 		weight = 0.0
 		nodes = self.needs.tree_nodes()
 		granted = self.needs.techniques_granted()
-		operating = self.needs.projects_operating()
+		operating = self.needs.operating()
 		for node_id in self.done_in_order():
 			if node_id in granted or node_id in operating:
 				continue
@@ -189,7 +189,7 @@ class Revenue:
 		rows = {}
 		nodes = needs.tree_nodes()
 		granted = needs.techniques_granted()
-		operating = needs.projects_operating()
+		operating = needs.operating()
 		for node_id in self.done_in_order():
 			if node_id in granted or node_id not in operating:
 				continue
@@ -247,7 +247,7 @@ class Revenue:
 		young = []
 		nodes = needs.tree_nodes()
 		granted = needs.techniques_granted()
-		for node_id in sorted(needs.projects_operating()):
+		for node_id in sorted(needs.operating()):
 			node = nodes.get(node_id)
 			if not node or not node["rev"] or node_id in granted:
 				continue
@@ -294,7 +294,7 @@ class Revenue:
 		if (cached is not None and cached[0] is seq
 		        and cached[1] is practice_set and cached[2] == operating_version):
 			return cached[3]
-		operating = self.needs.projects_operating()
+		operating = self.needs.operating()
 		candidates = [node_id for node_id in seq if node_id in operating or node_id in practice_set]
 		memos.candidates = (seq, practice_set, operating_version, candidates)
 		return candidates

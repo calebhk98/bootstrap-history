@@ -23,7 +23,7 @@ def projects_record(**fields: Any) -> types.SimpleNamespace:
 def defaults() -> Dict[str, Any]:
 	record = projects_record()
 	return {
-		"tree_nodes": {}, "legacy_projects": record, "techniques_held": record.done, "techniques_granted": record.granted, "operating": record.operating,
+		"tree_nodes": {}, "legacy_projects": record, "techniques_held": record.done, "techniques_granted": record.granted,
 		"capability_sets": (frozenset(), frozenset(), {}), "venture_garrison": lambda node_id, units=1.0: {},
 		"concern_runs_without_founder": lambda node_id: False, "institution_units": lambda node_id: 1.0,
 		"institution_unit_ceiling": lambda node_id: 1.0, "institution_unit_cost": lambda node_id, have, add: 0.0,
@@ -48,7 +48,9 @@ def build(answers: Dict[type, Any] = None, **views: Any) -> Ventures:
 	"""The module with `views` (and `answers`, the replies of owners to commands, keyed by command class)."""
 	every_view = defaults()
 	every_view.update(views)
-	record = every_view["legacy_projects"]   # the held and granted sets a test gives with its projects record
+	record = every_view["legacy_projects"]
+	if "operating" in views:
+		record.operating = set(every_view.pop("operating"))   # the module publishes the open works from the projects record
 	if "techniques_held" not in views and hasattr(record, "done"):
 		every_view["techniques_held"] = record.done
 	if "techniques_granted" not in views and hasattr(record, "granted"):

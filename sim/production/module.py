@@ -37,10 +37,6 @@ class Production(Revenue, Upkeep, ConcernMarket, BookSales, Volume, Learning, De
 
 	# ---- what the engine's other objects still hold, as views ----
 
-	def operating(self):
-		"""The acting seat's concerns and capabilities that are open (the live set: the engine adds and discards in place)."""
-		return self.needs.projects_operating()
-
 	def done_in_order(self):
 		"""Everything the acting seat has finished, in the tree's own order (the memo lives here)."""
 		return self.memos().done_in_order(self.needs.tree_nodes(), self.needs.techniques_held())
@@ -51,7 +47,7 @@ class Production(Revenue, Upkeep, ConcernMarket, BookSales, Volume, Learning, De
 		done = self.needs.techniques_held()
 		done_version, operating_version, _units_version = self.needs.running_versions()
 		return (done, (done_version, operating_version, len(done), len(self.needs.techniques_granted()),
-		               len(self.needs.projects_operating())), self.needs.tree_nodes())
+		               len(self.needs.operating())), self.needs.tree_nodes())
 
 	def practice_set(self):
 		return self._practice_set()

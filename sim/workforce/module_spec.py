@@ -24,8 +24,9 @@ from .module import Workforce
 
 READS_BY_OWNER = {
     "core": ("year", "automation", "civilisation", "game_config", "provider_game",
-             "projects_operating", "starting_wages", "trades_absent", "trade_notes", "trade_records", "trade_family",
+             "starting_wages", "trades_absent", "trade_notes", "trade_records", "trade_family",
              "wage_schedule_for", "plain_number", "money_text"),
+    "ventures": ("operating",),
     "seats": ("founder", "acting_country", "seat_list", "game_random", "acting_as", "goal", "goal_closure"),
     "ledger": ("acting_balance",),
     "polity": ("standing", "rep_factor"),
