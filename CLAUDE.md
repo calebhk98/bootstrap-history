@@ -176,9 +176,11 @@ scenarios work without engine edits.
   detected automatically and only exclusions are listed.
 - **General actors.** Write mechanisms against an actor, not against the
   founder, so a firm, a state or another player can use them.
-- **`Sim` is a god object.** Mixin methods talk through `self`, so coupling
-  is real however the files are split. Decomposition direction is in
-  `sim/ARCHITECTURE.md` and `docs/architecture/`.
+- **Modules talk only through views and commands.** Each fact has one owner
+  module; another module reads it through a view its spec declares and
+  changes it through the owner's command (`python3 tools/check_module_reads.py`
+  finds a read or send that is not declared). `Sim` is the composition root,
+  not a place for rules. The shape is in `sim/ARCHITECTURE.md`.
 - **Comments** describe what the code does now, briefly, preferably inline.
   No history, no "previously", no quotes from people, no multi-paragraph
   headers. A comment longer than about ten lines is probably excessive;
