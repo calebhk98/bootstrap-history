@@ -61,9 +61,9 @@ if _bounty_id:
 for _name, _quote_args, _action, _action_args, _key in _ROWS:
     _game = _TABLE_GAME
     _quote = S._agent_dispatch(_game, NODES, dict(_quote_args, cmd="quote"))
-    _before = _game.state.household.capital
+    _before = _game.capital
     _reply = S._agent_dispatch(_game, NODES, dict(_action_args, cmd=_action))
-    _charged = _before - _game.state.household.capital
+    _charged = _before - _game.capital
     check("%s: the quote answers with a price" % _name,
           _quote.get("ok") and _key in _quote, _quote)
     check("%s: the action succeeds" % _name, _reply.get("ok"), _reply)
@@ -92,8 +92,8 @@ check("trade-school price per seat is one engine function the quote reads",
 # ---- the same comparison through the cash ledger: open, research, project bills, the hire wage ------
 def _ledger_outflow(game, *causes):
     """Money the ledger shows paid out under these causes, the open period and the closed ones."""
-    household = game.state.household
-    totals = [household.cash_flow] + [period["causes"] for period in household.cash_periods]
+    cash = game.assembly.modules["ledger"].seat
+    totals = [cash.cash_flow] + [period["causes"] for period in cash.cash_periods]
     return -sum(totals_by_cause.get(cause, 0.0) for totals_by_cause in totals for cause in causes)
 
 

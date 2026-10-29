@@ -2,6 +2,7 @@
 notice, bounded to a few years. The rules are tested on a stub game built here."""
 QUICK_TOPIC = True
 
+from sim.tests.purse_stand_in import PurseHousehold
 import types
 
 from .harness import *  # noqa: F401,F403
@@ -16,7 +17,7 @@ class StubGame:
     def __init__(self):
         self.year = 100
         self.standing = {"concealed": 0.0, "eminence": 0.0, "defiance": 0.0}
-        self.state = types.SimpleNamespace(household=HouseholdState(capital=1000.0))
+        self.state = types.SimpleNamespace(household=PurseHousehold(capital=1000.0))
         self.nodes = {"mill": {"rev": 40.0, "up": 15.0}}
         self.reach = 2.0
         self.wage_index_now = 1.0
@@ -32,6 +33,8 @@ class StubGame:
     def view(self, name):   # the polity module's standing, reach and visible scale
         if name in ("visible_scale", "state_reach"):
             return getattr(self, name)
+        if name == "acting_balance":
+            return lambda: self.state.household.capital
         return lambda: self.standing
 
     def visible_scale(self, headcount, wealth, eminence, defiance):

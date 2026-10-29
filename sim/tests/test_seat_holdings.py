@@ -3,7 +3,7 @@ import dataclasses
 import json
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.agents_port_household import HouseholdPort
+from sim.tests.money_host import MoneyHost
 from sim.engine.state import (EconomyState, FounderState, HouseholdState,
                               SimulationState, deserialize_state, serialize_state)
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
@@ -12,7 +12,7 @@ from sim.scenario.state import ScenarioWorld
 
 QUICK_TOPIC = True
 
-state = HouseholdPort().fresh_state(100.0)
+state = MoneyHost(capital=100.0).state
 first = state.seats[FIRST_SEAT_ID]
 
 check("the root holdings and seat progress are the acting seat's objects",
@@ -23,7 +23,7 @@ state.holdings._dashboard_history = [12.0]
 state.seat_progress.dashboard_history_years = 150
 state.economy.nodes_money_per_labour_hour = 1.0
 
-second = SeatState(household=HouseholdState(capital=5.0), founder=FounderState())
+second = SeatState(household=HouseholdState(), founder=FounderState())
 state.seats["second"] = second
 bind_seat(state, "second")
 check("a second seat starts with empty holdings and progress",

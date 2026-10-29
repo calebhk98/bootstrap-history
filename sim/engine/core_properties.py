@@ -12,6 +12,7 @@ Properties are categorized strictly by owning subsystem.
 from typing import Any, Iterable, Set
 
 from sim.knowledge.api import ReplaceTree
+from sim.ledger.api import RestorePurse
 from sim.scenario.api import SetEndYear, SetFog, SetYear
 from sim.seats.api import EndRun, SetGoal
 
@@ -41,11 +42,11 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def capital(self):
-		return getattr(self.state.household, "capital")
+		return self.view("acting_balance")()
 
 	@capital.setter
 	def capital(self, value):
-		setattr(self.state.household, "capital", value)
+		self.send(RestorePurse(value))
 
 	@property
 	def spend_last_year(self):

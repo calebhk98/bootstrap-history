@@ -93,7 +93,7 @@ def _test_schema_evolution_unregistered_set():
 	class ExtendedHouseholdState(HouseholdState):
 		temporary_test_set: Set[str] = field(default_factory=lambda: {"alpha", "beta"})
 
-	orig = ExtendedHouseholdState(capital=100.0, temporary_test_set={"alpha", "beta"})
+	orig = ExtendedHouseholdState(temporary_test_set={"alpha", "beta"})
 	blob = serialize_state(orig)
 	restored = deserialize_state(blob, target_type=ExtendedHouseholdState)
 
@@ -196,7 +196,7 @@ def _test_unregistered_defaultdict_and_counter_field():
 		extra_counter: collections.Counter = field(default_factory=lambda: collections.Counter({"copper": 10}))
 		extra_defaults: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int, {"gold": 5}))
 
-	orig = ExtendedProjectsState(capital=50.0)
+	orig = ExtendedProjectsState()
 	blob = serialize_state(orig)
 	restored = deserialize_state(blob, target_type=ExtendedProjectsState)
 

@@ -28,14 +28,14 @@ class SeatState:
 	modules: Dict[str, Any] = field(default_factory=dict)   # module id -> this seat's state (sim/assembly slots)
 
 
-def seat_from_template(template: Mapping[str, Any], capital: float, policy: Dict[str, Any]) -> SeatState:
+def seat_from_template(template: Mapping[str, Any], policy: Dict[str, Any]) -> SeatState:
 	"""A new seat from data: `template` may carry `starting_techs`, `scholars`, `artisans`, `base_tile`, `goal` and
-	`country`. `capital` is already in the society's coin."""
+	`country`. Its money is opened by the ledger once the seat is in the registry."""
 	if template.get("kind") == COUNTRY_SEAT:
 		# the household here is an empty placeholder the engine's aliases need; the seat acts through its government
-		return SeatState(household=HouseholdState(capital=0.0), founder=None,
+		return SeatState(household=HouseholdState(), founder=None,
 		                 modules={"seats": SeatsSeat(country=template.get("country"), kind=COUNTRY_SEAT)})
-	household = HouseholdState(capital=float(capital))
+	household = HouseholdState()
 	granted = set(template.get("starting_techs") or ())
 	founder = FounderState()
 	staff = WorkforceSeat(scholars=float(template.get("scholars", 0.0)), artisans=float(template.get("artisans", 0.0)),

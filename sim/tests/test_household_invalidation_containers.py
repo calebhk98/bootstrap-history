@@ -29,14 +29,14 @@ class ContainerGame(ForwardProductionMixin):
 		self.projects_module = module_harness.build(Projects, seat=ProjectsSeat(), module_id="projects")
 		self.projects_module.seat_slot_of = lambda seat_id: self.projects_module.seat
 		self.projects_module.clock.act_as("founder")
-		self.state = SimulationState(household=HouseholdState(capital=1000))
+		self.state = SimulationState(household=HouseholdState())
 		self.ventures_module = module_harness.build(Ventures, seat=VenturesSeat(), module_id="ventures")
 		self.ventures_module.seat_slot_of = lambda seat_id: self.ventures_module.seat
 		self.ventures_module.clock.act_as("founder")
 		self.state.seats = {"founder": SeatState(household=self.state.household,
 		                                         modules={"projects": self.projects_module.seat, "ventures": self.ventures_module.seat})}
 		self.state.acting_seat = "founder"
-		self.household = Household(starting_capital=1000.0, state=self.state)
+		self.household = Household(state=self.state, port=None, techniques_held=lambda: frozenset())   # no money moves here
 		self.send(WatchActive("founder"))
 		self.send(WatchBusiness("founder"))
 

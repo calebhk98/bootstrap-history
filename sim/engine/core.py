@@ -42,7 +42,8 @@ from .year_steps import StepContext
 from .data import trade_family
 from .invariants import check_simulation_invariants
 from sim.agents.api import Household
-from .agents_port_household import HouseholdPort
+from sim.ledger.api import OpenCashBook, RestorePurse
+from .agents_port_household import SeatMoneyPort
 from sim.materials.api import RestoreReadings
 from sim.polity.api import SetValueWeights
 from sim.projects.api import RestoreProjectOrder, WatchActive
@@ -99,7 +100,7 @@ class Sim(
             EconomyState, FounderState
         )
         self.state = SimulationState(
-            household=HouseholdState(capital=0.0),
+            household=HouseholdState(),
             economy=EconomyState(),
             founder=FounderState(),
             _civ=self.civ.get("id"),
@@ -178,12 +179,11 @@ class Sim(
         start_money = config["start_capital"]
         if start_money is None:
             start_money = kit_capital(config["start_kit"], self.civ)
-        self.household = Household(
-            starting_capital=float(start_money) * self.price_index,
-            state=self.state,
-            port=HouseholdPort(),
-            techniques_held=lambda: self.view("techniques_held")())
+        self.household = Household(state=self.state, port=SeatMoneyPort(self), techniques_held=lambda: self.view("techniques_held")())
         self._seat_facades = {self.state.acting_seat: self.household}
+        opening_cash = float(start_money) * self.price_index
+        self.send(RestorePurse(opening_cash))   # the seat's opening purse, and the cash its book measures from
+        self.send(OpenCashBook(opening_cash))
         self.send(WatchStaff(self.state.acting_seat))
         self.send(WatchActive(self.state.acting_seat))
         self.send(WatchBusiness(self.state.acting_seat))
@@ -257,7 +257,6 @@ class Sim(
         # Household façades first, so version bumps fired while reconnecting land on this state
         if hasattr(self, "household"):
             self.sync_seat_facades()
-        self.state.attach_purses()
         self.state.actors.purses.observer = self.note_lender_posting
         acting = self.state.acting_seat
         try:

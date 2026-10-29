@@ -1,15 +1,29 @@
-"""What the household actor asks of the engine: a state of its own when it is not handed one."""
+"""What the household facade asks of the engine: the seat's money, answered by the ledger's views and commands."""
 from typing import Any
 
-from .state import EconomyState, FounderState, HouseholdState, SimulationState
+from sim.ledger.api import CreditSeat, DebitSeat, NoteSeatCash, RestorePurse
 
 
-class HouseholdPort:
-    """The engine's answers to the questions a household asks."""
+class SeatMoneyPort:
+    """The acting seat's money for the household facade (the facade acts for whichever seat is acting)."""
 
-    def fresh_state(self, starting_capital: float) -> Any:
-        return SimulationState(
-            household=HouseholdState(capital=float(starting_capital)),
-            economy=EconomyState(),
-            founder=FounderState(),
-        )
+    def __init__(self, sim: Any) -> None:
+        self._sim = sim
+
+    def balance(self) -> float:
+        return self._sim.view("acting_balance")()
+
+    def set_balance(self, value: float) -> None:
+        self._sim.send(RestorePurse(float(value)))
+
+    def purses(self) -> Any:
+        return self._sim.view("cast_state")().purses
+
+    def credit(self, amount: float, purpose: Any) -> None:
+        self._sim.send(CreditSeat(self._sim.state.acting_seat, amount, purpose))
+
+    def debit(self, amount: float, purpose: Any) -> None:
+        self._sim.send(DebitSeat(self._sim.state.acting_seat, amount, purpose))
+
+    def note_cash(self, direction: float, amount: float, purpose: Any) -> None:
+        self._sim.send(NoteSeatCash(self._sim.state.acting_seat, direction, amount, purpose))

@@ -17,7 +17,7 @@ READS_BY_OWNER = {
     "foreign_trade": ("foreign_economies", "foreign_coin_home_units", "foreign_coin_partner_units", "partner_coin_standard",
                       "partner_opening_facts", "partner_route_cost"),
     "reporting": ("coin_value_ratio",),
-    "ledger": ("acting_balance", "held_goods", "legacy_acting_household", "cast"),
+    "ledger": ("acting_balance", "held_goods", "cast"),
     "finance": ("credit_limit", "lent_share"),
     "polity": ("standing", "eminence", "visible_scale", "order_reach"),
     "agriculture": ("farm_holdings", "farm_land_price"),

@@ -27,7 +27,9 @@ class Game(FactViews):
 
     def __init__(self):
         self.population = SimpleNamespace(total=1000.0, children=300.0, working_age=600.0, elderly=100.0)
-        self.state = SimpleNamespace(household=SimpleNamespace(cash_periods=[], cash_flow={"wages": -20.0}))
+
+    def cash_causes_since(self, year):
+        return {"wages": -20.0}
 
     @readable
     def revenue(self):
@@ -60,7 +62,7 @@ class HeadlineFigureTests(unittest.TestCase):
         reply = dispatch_figures.figure_reply(self.game, "upkeep")
         self.assertAlmostEqual(reply["current"], self.game.upkeep(), delta=0.05)
 
-    def test_cash_is_the_households_capital(self):
+    def test_cash_is_the_seats_purse(self):
         reply = dispatch_figures.figure_reply(self.game, "cash")
         self.assertAlmostEqual(reply["current"], self.game.capital, delta=0.05)
 

@@ -42,7 +42,7 @@ class SaveCompanionTests(unittest.TestCase):
         self.assertEqual(saveload._encode("{}", "c.json"), b"{}")
 
     def test_the_version_is_in_the_serialised_state_and_not_checked_on_load(self):
-        state = SimulationState(household=HouseholdState(capital=1))
+        state = SimulationState(household=HouseholdState())
         state._game_version = "0.0.1-older"
         blob = serialize_state(state)
         self.assertEqual(blob["_game_version"], "0.0.1-older")

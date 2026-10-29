@@ -31,7 +31,7 @@ def give(seat, techs, country, goal):
 
 
 # ---- the pure move on built seat records
-seats = {"leaver": seat_from_template({"scholars": 2.0}, 40.0, {}), "heir": seat_from_template({}, 7.0, {})}
+seats = {"leaver": seat_from_template({"scholars": 2.0}, {}), "heir": seat_from_template({}, {})}
 give(seats["leaver"], ["fire", "wheel"], "han", "steam_engine")
 before = seats["leaver"]
 heir_founder = seats["heir"].founder

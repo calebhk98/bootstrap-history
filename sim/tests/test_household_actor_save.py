@@ -9,7 +9,7 @@ import unittest
 from sim.agents.api import Actor, ActorsState, Household
 from sim.agents.policy import IdlePolicy
 from sim.agents.records import ActorRecord
-from sim.engine.agents_port_household import HouseholdPort
+from sim.tests.money_host import MoneyHost
 from sim.knowledge.api import KnowledgeSeat
 from sim.projects.state import ProjectsSeat
 from sim.ventures.state import VenturesSeat
@@ -20,7 +20,8 @@ from sim.engine.state import SimulationState, deserialize_state, serialize_state
 class HouseholdIsAnActor(unittest.TestCase):
     def setUp(self):
         self.knowledge = KnowledgeSeat(done={"fire"})
-        self.household = Household(starting_capital=100.0, port=HouseholdPort(), techniques_held=lambda: frozenset(self.knowledge.done))
+        host = MoneyHost(capital=100.0)
+        self.household = Household(state=host.state, port=host.port, techniques_held=lambda: frozenset(self.knowledge.done))
         self.household._state.seats[self.household._state.acting_seat].modules["workforce"] = WorkforceSeat()
         self.household._state.seats[self.household._state.acting_seat].modules["projects"] = ProjectsSeat()
         self.household._state.seats[self.household._state.acting_seat].modules["ventures"] = VenturesSeat()
@@ -29,10 +30,10 @@ class HouseholdIsAnActor(unittest.TestCase):
         self.assertIsInstance(self.household, Actor)
         self.assertIsInstance(self.household.decision_policy, IdlePolicy)
 
-    def test_its_money_is_the_capital_it_started_with_and_writes_through(self):
-        self.assertEqual(self.household.capital, 100.0)
+    def test_its_money_is_the_purse_it_started_with_and_writes_through(self):
+        self.assertEqual(self.household.money, 100.0)
         self.household.money = 1234.0
-        self.assertEqual(self.household.capital, 1234.0)
+        self.assertEqual(self.household.money, 1234.0)
 
     def test_its_staff_knowledge_and_concerns_are_the_existing_state_not_copies(self):
         self.assertIs(self.household.workforce, self.household._workforce().employees)

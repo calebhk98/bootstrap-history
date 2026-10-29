@@ -38,8 +38,9 @@ class Game(FactViews):
     """The root state with the real alias rebinding, which is all a handler reads."""
 
     def __init__(self):
-        self.state = SimulationState(household=HouseholdState(capital=100.0), founder=FounderState())
-        self.state.seats["second"] = seat_from_template({}, 50.0, {})
+        self.state = SimulationState(household=HouseholdState(), founder=FounderState())
+        self.purses = {FIRST_SEAT_ID: 100.0, "second": 50.0}   # what each seat's purse holds
+        self.state.seats["second"] = seat_from_template({}, {})
         for held in self.state.seats.values():
             held.modules.setdefault("seats", SeatsSeat())
             held.modules.setdefault("knowledge", KnowledgeSeat())
@@ -58,7 +59,7 @@ class Game(FactViews):
 
     @property
     def capital(self):
-        return self.state.household.capital
+        return self.purses[self.state.acting_seat]
 
     def recurring_net(self):
         return 0.0
@@ -67,7 +68,7 @@ class Game(FactViews):
         if name == "dead_reasons":
             return lambda: {seat_id: self.state.seats[seat_id].modules["seats"].dead_reason for seat_id in self.view("ended_seats")()}
         if name == "acting_balance":
-            return lambda: self.state.household.capital
+            return lambda: self.purses[self.state.acting_seat]
         if name == "techniques_by_seat":
             return lambda: {seat_id: SeatTechniques(frozenset(held.modules["knowledge"].done), frozenset(held.modules["knowledge"].granted))
                             for seat_id, held in self.state.seats.items()}

@@ -25,11 +25,11 @@ handlers = command_registry.handlers()
 
 
 def household_seat():
-    return seat_from_template({"starting_techs": ["fire"]}, 100.0, {})
+    return seat_from_template({"starting_techs": ["fire"]}, {})
 
 
 def country_seat(holder=GOVERNMENT):
-    seat = seat_from_template({"kind": COUNTRY_SEAT, "country": None}, 0.0, {})
+    seat = seat_from_template({"kind": COUNTRY_SEAT, "country": None}, {})
     seat.modules["seats"].holder = holder
     return seat
 

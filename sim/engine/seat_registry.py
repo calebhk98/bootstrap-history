@@ -6,7 +6,7 @@ from sim.agents.api import Household, HouseholdParty
 from sim.knowledge.api import ReceiveTechniques
 from sim.projects.api import WatchActive
 from sim.ventures.api import WatchBusiness
-from .agents_port_household import HouseholdPort
+from .agents_port_household import SeatMoneyPort
 from . import game_assembly
 from .state_seat import SeatState, bind_seat
 
@@ -18,7 +18,6 @@ def add_seat(sim, seat_id: str, seat: SeatState) -> None:
 	sim.state.seats[seat_id] = seat
 	if getattr(sim, "assembly", None) is not None:   # a test host built without a game has none
 		game_assembly.give_seat_slots(sim.assembly, seat)
-	sim.state.attach_purses()
 	sim._seat_facades[seat_id] = sim._new_facade(seat_id)
 	if getattr(sim, "assembly", None) is not None:
 		sim.send(WatchActive(seat_id))
@@ -26,21 +25,8 @@ def add_seat(sim, seat_id: str, seat: SeatState) -> None:
 
 
 def new_facade(sim, seat_id: str) -> Household:
-	"""A household facade for `seat_id`, hooked to that seat's own containers."""
-	acting = sim.state.acting_seat
-	bind_seat(sim.state, seat_id)
-	try:
-		held = sim.state.household
-		cash_mark = held.cash_mark
-		facade = Household(
-			starting_capital=held.capital,
-			state=sim.state,
-			port=HouseholdPort(),
-			techniques_held=lambda: sim.view("techniques_held")())
-		held.cash_mark = cash_mark
-	finally:
-		bind_seat(sim.state, acting)
-	return facade
+	"""A household facade for `seat_id`: it acts for whichever seat is acting, as the root aliases do."""
+	return Household(state=sim.state, port=SeatMoneyPort(sim), techniques_held=lambda: sim.view("techniques_held")())
 
 
 def seat_party(sim, seat_id: str, margins=None) -> HouseholdParty:

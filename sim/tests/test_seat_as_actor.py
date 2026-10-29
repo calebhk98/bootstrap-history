@@ -7,14 +7,15 @@ from sim.agents import joint_stock, patent
 from sim.agents.api import Household, HouseholdParty
 from sim.seats.api import SeatsSeat
 from sim.agents.records import ActorRecord
-from sim.engine.agents_port_household import HouseholdPort
+from sim.tests.money_host import MoneyHost
 from sim.engine.state import serialize_state
 from sim.engine.state_seat import FIRST_SEAT_ID
 from sim.agents.api import Business
 
 QUICK_TOPIC = True
 
-facade = Household(starting_capital=100.0, port=HouseholdPort())
+host = MoneyHost(capital=100.0)
+facade = Household(state=host.state, port=host.port, techniques_held=lambda: frozenset())
 state = facade._state
 entered = []
 
@@ -115,11 +116,23 @@ class MarginWorld(World):
 
 # a seat that issued equity pays its shareholders a part of its margin
 holder = Shareholder()
-facade.capital = 1000.0
+facade.money = 1000.0
 before = facade.money
 paid = joint_stock.pay_dividends(Registry({"firm:7": holder}), MarginWorld())
 check("a seat that issued equity pays its shareholder by share of its margin", paid > 0.0 and abs(holder.money - paid) < 1e-9
       and abs(before - facade.money - paid) < 1e-6, (paid, holder.money, before, facade.money))
+
+# the party moves the seat's money only through the ledger: purse and cash book
+cash = host.ledger.seat
+before_flow, before_money = dict(cash.cash_flow), party.money
+party.credit(5.0, "a gift")
+party.debit(2.0, "a toll")
+party.note_income("rent", 3.0)
+party.note_outlay("rent", 1.0)
+check("a party's credit and debit move the seat's purse and enter the cash book under their cause",
+      abs(party.money - before_money - 3.0) < 1e-9 and cash.cash_flow.get("a gift") == 5.0 and cash.cash_flow.get("a toll") == -2.0, cash.cash_flow)
+check("a posting made in the book is entered in the cash book without moving the purse again",
+      abs(party.money - before_money - 3.0) < 1e-9 and abs(cash.cash_flow["rent"] - 2.0) < 1e-9, cash.cash_flow)
 
 state.seats[FIRST_SEAT_ID].modules["seats"] = slot
 slot.patents["lathe"] = {"granted": 10, "expires": 30, "licensees": []}

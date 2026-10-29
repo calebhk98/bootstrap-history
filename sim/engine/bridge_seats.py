@@ -5,6 +5,7 @@ and is never cached. The seat registry (`state.seats`, the facades, `act_as`) st
 commands that change it are applied here for good. The `legacy_*` views are state the module shares with the engine; they go
 when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
+from sim.ledger.api import OpenPurse
 from sim.refusal import Refusal
 from sim.seats.api import COUNTRY_SEAT, ForgetGoalCaches, MoveSeat, RegisterSeat, SetSeatHolder
 
@@ -58,8 +59,10 @@ def society_techs(sim):
 def register_seat(sim, command):
     if command.seat_id in sim.state.seats:
         return Refusal("seat_exists", "seat %r already exists" % (command.seat_id,), seat=command.seat_id)
-    seat = seat_from_template(command.template, command.capital, default_policy(sim.manual))
+    seat = seat_from_template(command.template, default_policy(sim.manual))
     sim.add_seat(command.seat_id, seat)
+    if seat.modules["seats"].kind != COUNTRY_SEAT:   # a country seat acts through its government and holds nothing of its own
+        sim.send(OpenPurse(command.seat_id, float(command.capital)))   # the capital is already in the society's coin
     seat.modules["seats"].life_left = command.founder_years
     with sim.act_as(command.seat_id):
         sim._wrap_seat_containers()

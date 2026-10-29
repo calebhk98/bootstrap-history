@@ -4,6 +4,31 @@ Money and goods balances: the one writer of what an actor holds.
 
 **Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
 
+## The seat's purse: who owns what (design for Phase 6b, written before the move)
+
+The seat's money is an account in the actors' `Purses` book, named by the seat's id. The migration removes the bridge views
+`legacy_acting_household`, `legacy_household_actor`, `seat_party` and `seat_party_with_margins`, which hand modules the household's state, its
+facade and the seat as an exchange party. Decided per fact, from the code:
+
+| Fact | Owner | Reached through |
+|---|---|---|
+| The book (accounts, debts, the pool, every actor's purse) | actors (`sim/agents/purses.py`, world slot `ActorsState`) | `cast_state` view, for the ledger's postings |
+| A seat's account in the book (its balance, its postings) | ledger | `acting_balance`, `seat_balance[seat]`; commands `PayEdge`, `ReceiveFromEdge`, `PayWages`, `PayActor`, `PayActorFromHousehold`, `TakeFromHouseholdPurse`, `SettleWithEdge`, `RestorePurse`, `RescaleHouseholdMoney`, `WithdrawHouseholdMoney`, and the new `OpenPurse`, `CreditSeat`, `DebitSeat` |
+| A seat's cash book (cash by cause, its mark, the closed years) and the year's spending | ledger (`LedgerSeat`) | views `cash_book`, `cash_causes_since`, `cash_unaccounted`; commands `NoteSeatCash`, `OpenCashBook`, `CloseCashPeriod`, `NoteSpend` |
+| The seat as an actor in the book (borrowing, arrears, the interest settlement, the review hooks of its business) | actors (`sim/agents`) | built by the actors module for the length of a command or a view; never handed to another module |
+| The seat as a party to an exchange (patents, shares, offers, licences, concern sales) | actors builds it from the views of the seats, ventures and knowledge modules and the ledger's commands | dealt with by the actors' own code; the seats, diffusion and ventures modules send an actors command or read an actors view for the result |
+
+How a posting is made: the ledger builds, for the length of one command, a `SeatAccount` (the seat's purse and its cash book) or a
+`SeatActor` (the same, as a party in the book, so `ledger.transfer` makes one posting between two accounts). Nothing outside the
+ledger holds either. The two differ as the household's state and its facade always did: a payment through the plain account moves the
+account against the account outside the book and the other side separately, a payment through the party is one posting between the two.
+Changing which a command uses changes the book's postings, so each command keeps the one it had (Complaint 930 asks whether they should agree).
+A party that moves a seat's money does it with `CreditSeat`, `DebitSeat` and `NoteSeatCash`, naming the seat, so it needs no seat switch.
+
+Stages, each a commit that passes the quick tier: (1) the ledger owns the account and the cash book, `HouseholdState` holds no money, and
+`legacy_acting_household` is deleted; (2) the actors module builds the seat's actor and its party and the other three views go. Where a
+stage did not finish, the measured note in `MODULE_MIGRATION_TASKS.md` (Phase 6b) says what is left.
+
 ## At a glance
 
 | Measure | Value |

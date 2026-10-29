@@ -24,7 +24,6 @@ def build():
     game = Game(["leaver", "heir", "third"])
     game.state.actors = ActorsState()
     purses = game.state.actors.purses
-    game.state.attach_purses()
     purses.set_net("leaver", 100.0, "opening")
     purses.set_net("heir", 30.0, "opening")
     purses.set_net("third", 500.0, "opening")

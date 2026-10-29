@@ -24,13 +24,6 @@ from .policy import IdlePolicy
 
 
 _SUBSYSTEM_MAP: Dict[str, str] = {
-	# HouseholdState
-	"capital": "household",
-	"total_spend": "household",
-	"cash_flow": "household",
-	"cash_mark": "household",
-	"cash_periods": "household",
-
 	# EconomyState
 	"_dashboard_history": "holdings",
 
@@ -58,24 +51,13 @@ class Household(FounderReview, FounderBorrowing, Actor):
 	only one authoritative copy of persistent state in memory.
 	"""
 
-	def __init__(
-		self,
-		starting_capital: float = 0.0,
-		state: Optional[Any] = None,
-		port: Optional[Any] = None,
-		techniques_held: Optional[Callable[[], Any]] = None,
-	) -> None:
+	def __init__(self, state: Any, port: Any, techniques_held: Callable[[], Any]) -> None:
+		"""`port` answers for the seat's money: the ledger's views and commands (see `SeatMoneyPort`)."""
 		# The founder's choices arrive as commands, so the household idles.
 		Actor.__init__(self, IdlePolicy())
 		self._port = port
 		self._techniques_held = techniques_held
-		if state is not None:
-			self._state = state
-			self._state.household.capital = float(starting_capital)
-		else:
-			self._state = port.fresh_state(starting_capital)
-
-		self._state.household.cash_mark = float(starting_capital)
+		self._state = state
 
 		# Transient caches and runtime-only trackers
 		self.contract_projects: Set[str] = set()
@@ -89,31 +71,31 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 	@property
 	def money(self) -> float:
-		return self.capital
+		return self._port.balance()
 
 	@money.setter
 	def money(self, value: float) -> None:
-		self.capital = value
+		self._port.set_balance(value)
 
 	@property
 	def purses(self) -> Any:  # type: ignore[override]
-		return self._state.household.ledger_purses
+		return self._port.purses()
 
 	@property
 	def account_id(self) -> str:
-		return self._state.household.account
+		return self._state.acting_seat
 
 	def note_income(self, purpose: Any, amount: float) -> None:
-		self._state.household.note_income(purpose, amount)
+		self._port.note_cash(1.0, amount, purpose)
 
 	def note_outlay(self, purpose: Any, amount: float) -> None:
-		self._state.household.note_outlay(purpose, amount)
+		self._port.note_cash(-1.0, amount, purpose)
 
 	def credit(self, amount: float, purpose: Any) -> None:
-		self._state.household.credit(amount, purpose)
+		self._port.credit(amount, purpose)
 
 	def debit(self, amount: float, purpose: Any) -> None:
-		self._state.household.debit(amount, purpose)
+		self._port.debit(amount, purpose)
 
 	def _polity(self) -> Any:
 		"""The acting seat's polity slot: the founder's answers to the state's demands live in it (a debt: the founder's
@@ -159,14 +141,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
 		return 0.0
-
-	@property
-	def capital(self) -> float:
-		return self._state.household.capital
-
-	@capital.setter
-	def capital(self, value: float) -> None:
-		self._state.household.capital = float(value)
 
 	@property
 	def active(self) -> Any:

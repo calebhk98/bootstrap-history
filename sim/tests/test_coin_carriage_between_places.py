@@ -15,6 +15,7 @@ from sim.agents.purses import Purses
 from sim.agents.edges import Edge, EDGE_FREIGHT
 from sim.coin import rules
 from sim.coin.module import Coin
+from sim.ledger.api import LedgerSeat, SeatAccount, SeatActor
 from sim.ledger.ledger import Ledger
 from sim.tests import module_harness
 
@@ -39,12 +40,12 @@ class Party:
         self.money -= amount
 
 
-def world():
+def world(home_place=None):
     """(the coin module, the ledger module listening through it, the book the edges keep)."""
     balances = Purses()
     coin = module_harness.build(Coin, views={
-        "civilisation": HOME_COIN, "home_country": {"id": "home", "location": None},
-        "legacy_acting_household": Party(0.0), "tile_known": lambda tile: tile in ("a", "b"),
+        "civilisation": HOME_COIN, "home_country": {"id": "home", "location": home_place},
+        "tile_known": lambda tile: tile in ("a", "b"),
         "tile_haul_cost": lambda origin, destination: PER_TONNE})
     book = module_harness.build(Ledger, views={
         "transfer_surcharge": lambda *call: [coin.carriage_surcharge(*call)],
@@ -70,6 +71,17 @@ class Carriage(unittest.TestCase):
         carriage = balances.purse(EDGE_FREIGHT)
         self.assertAlmostEqual(carriage, 500.0 * KG_PER_UNIT / 1000.0 * PER_TONNE)
         self.assertAlmostEqual(payer.money + payee.money + carriage, 1000.0)
+
+    def test_a_seats_own_purse_stands_at_the_home_countrys_centre(self):
+        coin, _book, _balances = world(home_place="a")
+        purse = SeatAccount(LedgerSeat(), Purses(), "founder")
+        charge = coin.carriage_surcharge(purse, Party(0.0, "b", "home"), 500.0, "wages")
+        self.assertEqual(charge, (EDGE_FREIGHT, 500.0 * KG_PER_UNIT / 1000.0 * PER_TONNE, "coin carriage"))
+
+    def test_a_seat_as_a_party_in_the_book_has_no_place_of_its_own(self):
+        coin, _book, _balances = world(home_place="a")
+        party = SeatActor(LedgerSeat(), Purses(), "founder")
+        self.assertIsNone(coin.carriage_surcharge(party, Party(0.0, "b", "home"), 500.0, "wages"))
 
     def test_the_surcharge_names_the_freight_edge_the_carriage_and_the_cause(self):
         coin, _book, _balances = world()

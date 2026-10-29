@@ -11,6 +11,7 @@ from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
 from sim.finance.api import FinanceSeat
 from sim.knowledge.api import KnowledgeSeat
+from sim.ledger.api import LedgerSeat
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
 from sim.production.api import ProductionSeat
@@ -39,14 +40,13 @@ check("deserialize_state: a scalar is coerced to the class named", deserialize_s
       and deserialize_state(5, str) == "5" and deserialize_state("true", bool) is True and deserialize_state("0", bool) is False)
 
 # ---- the household: None-means-never, defaults for what the save lacks, unknown and plumbing keys ignored
-household = deserialize_state({"capital": 50.0,
-                               "cash_flow": {"wages": -12.5}, "cash_mark": None, "cash_periods": [{"year": 99, "net": 3.0}],
-                               "_on_change_hook": 1, "not_a_field": 9}, HouseholdState)
+household = deserialize_state({"cash_flow": {"wages": -12.5}, "cash_mark": None, "cash_periods": [{"year": 99, "net": 3.0}], "total_spend": 7,
+                               "_on_change_hook": 1, "not_a_field": 9}, LedgerSeat)
 workforce = deserialize_state({"wages_earned": None, "trades_created": {"__set__": ["baker", "mason"]}, "trade_introduced_year": {"mason": 95},
                                "employees": {"mason": 2}, "training": [["mason", 2]],
                                "unused_hours_reported": {"order:1": [40.0, "no_hands"]}, "_on_change_hook": 1, "not_a_field": 9}, WorkforceSeat)
-check("deserialize_state: a household's purse, None-means-never fields and zeros are as saved",
-      household.capital == 50.0 and workforce.wages_earned is None
+check("deserialize_state: a seat's cash book, None-means-never fields and zeros are as saved",
+      household.total_spend == 7.0 and workforce.wages_earned is None
       and household.cash_mark is None, None)
 _debt = deserialize_state({"interest_paid": None, "last_settlement": -999, "insolvent_years": 0}, FinanceSeat)
 check("deserialize_state: a finance seat's None-means-never fields, negative defaults and zeros are as saved, and what the save lacks is the default",
@@ -149,9 +149,9 @@ check("deserialize_state: a coded refusal is a Refusal with its code, choices an
 
 # ---- the root: seats in saved order, the acting seat's aliases, metadata
 state = deserialize_state({
-	"seats": {"zed": {"household": {"capital": 10.0}, "projects": {}, "modules": {"knowledge": {"done": {"__set__": ["fire"]}}, "seats": {"goal": "steam_engine", "country": "han", "kind": "household", "holder": None}},
+	"seats": {"zed": {"household": {}, "projects": {}, "modules": {"knowledge": {"done": {"__set__": ["fire"]}}, "seats": {"goal": "steam_engine", "country": "han", "kind": "household", "holder": None}},
 	                  "founder": {"_founder_death_year": 30}, "holdings": {"_dashboard_history": [3.0]}},
-	          "abe": {"household": {"capital": 4.0}, "projects": {}, "founder": None}},
+	          "abe": {"household": {"saving_target": 4.0}, "projects": {}, "founder": None}},
 	"acting_seat": "abe", "economy": {}, "_civ": "rome", "_rng": [3, [0, 1], None], "_seed": "seed text",
 	"interface": {"panel": "map"}}, SimulationState)
 check("deserialize_state: seats come back in the saved order and as seats",
@@ -160,6 +160,6 @@ check("deserialize_state: seats come back in the saved order and as seats",
       and state.seats["zed"].holdings._dashboard_history == [3.0] and state.seats["abe"].founder is None, None)
 check("deserialize_state: the acting seat's objects are the root's household and holdings",
       state.acting_seat == "abe" and state.household is state.seats["abe"].household
-      and state.holdings is state.seats["abe"].holdings and state.household.capital == 4.0, None)
+      and state.holdings is state.seats["abe"].holdings and state.household.saving_target == 4.0, None)
 check("deserialize_state: the metadata and the other sections", state._civ == "rome" and state._rng == [3, [0, 1], None] and state._seed == "seed text"
       and state.interface == {"panel": "map"}, None)

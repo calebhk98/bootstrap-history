@@ -1,6 +1,5 @@
 """`cashbook`: opening cash, each cause and closing cash for the last closed years and the open one,
 read from the cash book (the `money` screen shows only the open year's causes)."""
-from sim.engine.ui_port import cash_book
 from .command_registry import command
 
 CLOSED_YEARS_SHOWN = 3
@@ -16,7 +15,7 @@ def _year_row(year, opening, closing, causes, open_year):
 
 
 def cash_ledger(sim):
-    book = cash_book.book(sim)
+    book = sim.view("cash_book")()
     closed = book["earlier_years"][-CLOSED_YEARS_SHOWN:]
     rows = [_year_row(row["year"], row["opening"], row["closing"], row["causes"], False) for row in closed]
     rows.append(_year_row(book["year"], book["opening"], book["closing"], book["causes"], True))

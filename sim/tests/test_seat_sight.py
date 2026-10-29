@@ -4,6 +4,7 @@ seat's work (stand-ins and a household facade, no game)."""
 
 QUICK_TOPIC = True
 
+from sim.ledger.api import OpenPurse
 import contextlib
 from types import SimpleNamespace
 
@@ -16,7 +17,7 @@ from sim.seats import api as seat_builds
 from sim.knowledge.api import KnowledgeSeat
 from sim.knowledge.rules import SeatTechniques, earliest_done_year as _earliest
 from sim.actors.world import ActorWorld
-from sim.engine.agents_port_household import HouseholdPort
+from sim.tests.money_host import MoneyHost
 from sim.tests.world_stand_in import fake_needs
 from sim.engine.state import FounderState, HouseholdState
 from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
@@ -47,13 +48,15 @@ check("one maker publishing opens an invention for everyone", most_open_mode(["s
       and most_open_mode(["secret", "license"]) == "license" and most_open_mode([]) == "default", None)
 
 # ---- two seats with their own knowledge
-state_facade = Household(starting_capital=100.0, port=HouseholdPort(),
+host = MoneyHost(capital=100.0)
+state = host.state
+state_facade = Household(state=state, port=host.port,
                          techniques_held=lambda: frozenset(state.seats[state.acting_seat].modules["knowledge"].done))
-state = state_facade._state
 first, second = state.seats[FIRST_SEAT_ID], SeatState(
-    household=HouseholdState(capital=40.0), founder=FounderState(),
+    household=HouseholdState(), founder=FounderState(),
     modules={"knowledge": KnowledgeSeat(granted={"base"}, done={"base"})})
 state.seats["second"] = second
+host.send(OpenPurse("second", 40.0))
 first.modules["knowledge"] = KnowledgeSeat()
 first_knowledge, second_knowledge = first.modules["knowledge"], second.modules["knowledge"]
 first_knowledge.done.update({"base", "lathe", "loom"})

@@ -17,6 +17,13 @@ def prepare_environment(spin_up=None):
     return os.environ["ROME_SPIN_UP_YEARS"]
 
 
+def derived_leaves(sim):
+    """Leaves the base saved that this build derives: each seat's purse (`/seats/<id>/household/capital`) is the net of its
+    account in the actors' book, which the save holds as book entries, not as a field of the household."""
+    purses = sim.state.actors.purses
+    return {"/seats/%s/household/capital" % seat_id: equiv_core.leaf_text(float(purses.net(seat_id))) for seat_id in sim.state.seats}
+
+
 def state_leaves(sim, current=True):
     """(leaves, hash of the random generator) of the whole saved state. `current` applies this checkout's
     relocations and ignored prefixes; the base side is read raw."""
@@ -27,6 +34,7 @@ def state_leaves(sim, current=True):
     if current:
         leaves = equiv_core.drop_ignored(equiv_core.relocate(leaves, equiv_fields.RELOCATIONS), equiv_fields.IGNORED)
         leaves = equiv_core.drop_empty(leaves, equiv_fields.ABSENT_WHEN_EMPTY)
+        leaves.update(derived_leaves(sim))
     return leaves, equiv_core.rng_hash(rng_record)
 
 

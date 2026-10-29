@@ -12,11 +12,11 @@ class Game:
 
     def __init__(self, seat_ids):
         first = seat_ids[0]
-        self.state = SimulationState(household=HouseholdState(capital=10.0), founder=FounderState())
+        self.state = SimulationState(household=HouseholdState(), founder=FounderState())
         self.state.seats[first] = self.state.seats.pop(FIRST_SEAT_ID)
         self.state.acting_seat = first
         for seat_id in seat_ids[1:]:
-            self.state.seats[seat_id] = seat_from_template({}, 5.0, {})
+            self.state.seats[seat_id] = seat_from_template({}, {})
         bind_seat(self.state, first)
         self._seat_facades = {seat_id: None for seat_id in self.state.seats}
         self.session_seat = None

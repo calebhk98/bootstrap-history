@@ -26,7 +26,7 @@ class LeverGame(FactViews):
     """What the lever commands read: the acting seat, the country's government and its people, the goods and techniques."""
 
     def __init__(self, acting_kind=COUNTRY_SEAT, governed=True):
-        seat = seat_from_template({"kind": acting_kind, "country": None}, 10.0, {})
+        seat = seat_from_template({"kind": acting_kind, "country": None}, {})
         self.state = Game(seats={"senate": seat}, acting_seat="senate")
         self.civ = {"id": HOME}
         self.population = Game(total=1234.0)

@@ -31,14 +31,17 @@ DISCLOSED = {"heir": {"wheel": {"mode": "license", "licensees": {"firm:7": {"fee
 def post_handover_state():
 	"""Seats "third" and "heir", "heir" acting; the heir carries the leaver's household, nodes, holdings, goal and country."""
 	heir = SeatState(
-		household=HouseholdState(capital=40.0),
+		household=HouseholdState(),
 		founder=FounderState(_founder_death_year=30),
 		holdings=HoldingsState(), seat_progress=SeatProgressState(),
 		modules={"knowledge": KnowledgeSeat(done={"fire", "wheel"}, granted={"fire"}), "workforce": WorkforceSeat(scholars=2.0),
 		         "seats": SeatsSeat(goal="steam_engine", country="han", patents={"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}, shares_held={"guild": 3.0})})
-	third = SeatState(household=HouseholdState(capital=5.0), founder=FounderState(_founder_death_year=50),
+	third = SeatState(household=HouseholdState(), founder=FounderState(_founder_death_year=50),
 	                  modules={"knowledge": KnowledgeSeat(done={"fire"}, granted={"fire"}), "seats": SeatsSeat(goal="printing_press")})
-	return SimulationState(seats={"third": third, "heir": heir}, acting_seat="heir", modules={"actors": ActorsState(home_country="rome")})
+	state = SimulationState(seats={"third": third, "heir": heir}, acting_seat="heir", modules={"actors": ActorsState(home_country="rome")})
+	state.actors.purses.set_net("heir", 40.0, "opening")      # the accounts are under the seats' ids: the leaver's money was renamed to the heir's
+	state.actors.purses.set_net("third", 5.0, "opening")
+	return state
 
 
 def techniques_of(seats):
@@ -63,11 +66,9 @@ check("bind_seat: the root aliases are the heir's own objects",
 # ---- the purse
 state = post_handover_state()
 purses = state.actors.purses
-check("attach_purses: each seat's purse is an account under its own id and no account is the leaver's",
-      state.household.account == "heir" and state.seats["third"].household.account == "third"
-      and purses.has_account("heir") and purses.has_account("third") and not purses.has_account("leaver"), None)
-check("attach_purses: the acting household's capital is the heir's account", state.household.capital == 40.0 and purses.net("heir") == 40.0,
-      (state.household.capital, purses.net("heir")))
+check("the purses: each seat's purse is an account under its own id and no account is the leaver's",
+      purses.has_account("heir") and purses.has_account("third") and not purses.has_account("leaver"), None)
+check("the purses: the acting seat's money is the heir's account", purses.net(state.acting_seat) == 40.0, purses.net(state.acting_seat))
 
 # ---- who is still playing
 state = post_handover_state()

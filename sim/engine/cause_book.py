@@ -43,10 +43,9 @@ def record_wage_shock(sim, cause, index_before):
 
 
 def _readings(sim):
-    household = sim.state.household
     standing = sim.view("standing")()
     return {"wage_index": sim.labour.market.wage_index(), "state_reach": sim.view("state_reach")(),
-            "headcount": sim.labour.headcount(), "wealth": demand_answer.visible_wealth(household.capital, standing["concealed"]),
+            "headcount": sim.labour.headcount(), "wealth": demand_answer.visible_wealth(sim.view("acting_balance")(), standing["concealed"]),
             "eminence": standing["eminence"], "defiance": standing["defiance"]}
 
 

@@ -10,6 +10,7 @@ import json
 import os
 
 from sim.agents.api import ActorRecord, RecordedActor, edges, ledger
+from sim.ledger.api import PayActor, PayEdge, TakeFromHouseholdPurse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FAILURE_CAUSE = "holder looted"
@@ -168,23 +169,23 @@ def register(api):
         if len(names) != 1 or names[0] not in holders:
             return refuse("name one holder.", choices=choices())
         name = names[0]
-        household = sim.state.household
+        held = sim.view("acting_balance")()
         carry_rate = carry_cost(sim, name, 1.0)
-        amount, error = amount_of(amounts, max(0.0, household.capital) / (1.0 + carry_rate))
+        amount, error = amount_of(amounts, max(0.0, held) / (1.0 + carry_rate))
         if error:
             return refuse(error + ".")
         carry = carry_cost(sim, name, amount)
-        if amount + carry > household.capital:
-            return refuse("you hold %.0f; lodging %.0f also costs %.0f to carry." % (household.capital, amount, carry))
+        if amount + carry > held:
+            return refuse("you hold %.0f; lodging %.0f also costs %.0f to carry." % (held, amount, carry))
         holder = ensure_holder(sim, name)
         seat = sim.state.acting_seat
         settle(sim, name, seat)
-        ledger.transfer(household, sim.view("legacy_edge_account")[edges.EDGE_COIN_GUARDS], carry, CARRY_CAUSE)
-        ledger.transfer(household, holder, amount, DEPOSIT_CAUSE)
+        sim.send(PayEdge(edges.EDGE_COIN_GUARDS, carry, CARRY_CAUSE))
+        sim.send(TakeFromHouseholdPurse(holder.actor_id, amount, DEPOSIT_CAUSE))
         entry = memory(sim).setdefault(name, {}).setdefault(seat, {"amount": 0.0, "settled_year": sim.year})
         entry["amount"] += amount
         return {"ok": True, "holder": name, "lodged": round(amount, 1), "carriage": round(carry, 1),
-                "claim": round(entry["amount"], 1), "capital": round(household.capital, 1)}
+                "claim": round(entry["amount"], 1), "capital": round(sim.view("acting_balance")(), 1)}
 
     @api.command("withdraw", group="money", summary="draw coin back from a holder",
                  usage=["bh_cashshelter_z6f2:withdraw <holder> <amount|all>"],
@@ -212,15 +213,14 @@ def register(api):
         share = solvency(sim, name)
         holder = holder_actor(sim, name)
         paid = min(asked * share, max(0.0, holder.money))
-        household = sim.state.household
         if paid > 0.0:
-            ledger.transfer(holder, household, paid, PAYOUT_CAUSE)
-            ledger.transfer(household, sim.view("legacy_edge_account")[edges.EDGE_COIN_GUARDS], carry_cost(sim, name, paid), CARRY_CAUSE)
+            sim.send(PayActor(holder.actor_id, seat, paid, PAYOUT_CAUSE))
+            sim.send(PayEdge(edges.EDGE_COIN_GUARDS, carry_cost(sim, name, paid), CARRY_CAUSE))
         entry["amount"] -= asked
         return {"ok": True, "holder": name, "asked": round(asked, 1), "paid": round(paid, 1),
                 "written_off": round(asked - paid, 1), "fees_taken_from_claim": round(fees, 1),
                 "holder_could_pay_share": round(share, 3), "claim_left": round(entry["amount"], 1),
-                "capital": round(household.capital, 1)}
+                "capital": round(sim.view("acting_balance")(), 1)}
 
     @api.command("letter", group="money", summary="move a claim from one holder to another by letter of credit",
                  usage=["bh_cashshelter_z6f2:letter <from> <to> <amount|all>"],
@@ -266,7 +266,6 @@ def register(api):
 
     def theft_rows(sim, strength, order_holds):
         from sim.coin.api import COIN_GUARD_HOURS_PER_TONNE_YEAR, theft_exposure
-        household = sim.state.household
         capacity, protection = (sim.state_capacity, sim.view("standing")()["protection"]) if order_holds else (0.0, 0.0)
         exposure = sim.view("household_exposure")()
         loss = theft_exposure.theft_loss_by_kind(
@@ -283,8 +282,8 @@ def register(api):
                              "each holder, your claim, what it could pay today and the fee a year. Dated hazards are not "
                              "listed here: the risk screen lists those.")
     def exposure(sim, nodes, cmd, ended):
-        household = sim.state.household
-        cash = max(0.0, household.capital)
+        purse = sim.view("acting_balance")()
+        cash = max(0.0, purse)
         rows = []
 
         def row(kind, chance, cash_taken, goods_taken, basis):
@@ -305,7 +304,7 @@ def register(api):
             "REAL_EROSION_CASH_LOSS_SHARE times the hazard's erosion, taken from the purse; coin held by a holder is "
             "still coin and is not spared the fall in the coin's worth")
         status = sim.view("confiscation_status")()
-        visible = max(0.0, household.capital - max(0.0, getattr(household, "concealed", 0.0) or 0.0))
+        visible = max(0.0, purse - max(0.0, sim.view("standing")()["concealed"]))
         row("treasury confiscation", status["chance_this_year"], visible * sim.CONFISCATION_CAPITAL_LOSS, 0.0,
             "CONFISCATION_CAPITAL_LOSS of the wealth the state can count (your purse less what you conceal); "
             "a holder's coin is not in your purse")

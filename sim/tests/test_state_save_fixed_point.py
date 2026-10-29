@@ -16,7 +16,7 @@ from sim.workforce.api import WorkforceSeat
 
 def state(civ=None, reserve=(0, 0), policy=None, said=None):
     built = SimulationState(
-        household=HouseholdState(capital=1250.0),
+        household=HouseholdState(saving_target=1250.0),
         economy=EconomyState(), holdings=HoldingsState(),
         founder=FounderState())
     built._civ = civ
@@ -36,9 +36,9 @@ class SerializeState(unittest.TestCase):
     def test_the_blob_is_plain_json(self):
         self.assertIsInstance(json.dumps(serialize_state(state())), str)
 
-    def test_capital_is_in_the_blob(self):
+    def test_the_households_own_fields_are_in_the_blob(self):
         blob = serialize_state(state())
-        self.assertEqual(founder_seat(blob)["household"]["capital"], 1250.0)
+        self.assertEqual(founder_seat(blob)["household"]["saving_target"], 1250.0)
 
     def test_the_record_of_what_has_been_explained_once_is_in_the_blob(self):
         blob = serialize_state(state(said={"staffing_share": 100}))

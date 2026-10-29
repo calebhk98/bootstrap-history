@@ -89,7 +89,7 @@ ok_hire, hire_error = rome.view("legacy_labour")().hire("engineer", 1)
 check("a trade this society does not have cannot be hired",
       not ok_hire and cause_of(hire_error) == "trade_absent",
       "hire engineer -> %s / %s" % (ok_hire, hire_error))
-rome.state.household.capital = 20000.0
+rome.capital = 20000.0
 ok_train, _ = rome.view("legacy_labour")().train("machinist", 2)
 check("you can teach a trade into existence",
       ok_train and "machinist" in rome.view("trade_spread")()["created"] and not rome.view("legacy_labour")().trade_available("chemist"),
@@ -108,18 +108,18 @@ check("shutting a concern down does not make you forget how it worked",
       "fin_restaurant" in rome.done and "fin_restaurant" not in rome.operating,
       "done %s operating %s" % ("fin_restaurant" in rome.done, "fin_restaurant" in rome.operating))
 
-rome.state.household.capital = 5000.0
-capital_before_commission = rome.state.household.capital
+rome.capital = 5000.0
+capital_before_commission = rome.capital
 employees_before_commission = dict(rome.view("staff")()["employees"])
 ok_job, _ = rome.view("legacy_labour")().commission("smith", 200)
 check("you can buy a job without employing anybody",
-      ok_job and rome.view("staff")()["employees"] == employees_before_commission and rome.state.household.capital < capital_before_commission,
+      ok_job and rome.view("staff")()["employees"] == employees_before_commission and rome.capital < capital_before_commission,
       "ok %s employees %r" % (ok_job, rome.view("staff")()["employees"]))
 
 
 # buying people then freeing them must not mint labour or skip the training lag
 artisans_before = rome.view("staff")()["artisans"]
-rome.state.household.capital = 200000.0
+rome.capital = 200000.0
 rome.view("legacy_labour")().buy_slaves(10)
 rome.view("legacy_labour")().manumit(10)
 check("freeing untrained people does not skip the training lag",
@@ -129,10 +129,10 @@ def spend(slices, per):
     spend_sim = unopened_sim(capital=1e9)
     # Buying respects the feed/house/oversee cap `hire` has, so make room first or this tests the cap.
     run_it(spend_sim, "workshop_first", "freedman_staff")
-    starting_capital = spend_sim.state.household.capital
+    starting_capital = spend_sim.capital
     for _ in range(slices):
         spend_sim.view("legacy_labour")().buy_slaves(per)
-    return starting_capital - spend_sim.state.household.capital
+    return starting_capital - spend_sim.capital
 
 
 all_at_once, one_at_a_time = spend(1, 12), spend(12, 1)

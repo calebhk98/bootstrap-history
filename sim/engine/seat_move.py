@@ -27,7 +27,6 @@ def move_seat(sim, from_id: str, to_id: str) -> dict:
 	moved["known_nodes"] = known_nodes
 	sim._seat_facades.pop(from_id, None)
 	rename_seat_references(sim, from_id, to_id)
-	sim.state.attach_purses()
 	if sim.state.acting_seat == from_id:
 		sim._switch_seat(to_id)
 	else:

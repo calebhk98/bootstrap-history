@@ -16,6 +16,6 @@ check("a seed is one word of letters, digits, dashes and underscores",
       valid_seed_text("rome-42_b") and not valid_seed_text("two words") and not valid_seed_text(""))
 
 for seed in (7, "dragon"):
-    state = SimulationState(household=HouseholdState(capital=1.0), founder=FounderState())
+    state = SimulationState(household=HouseholdState(), founder=FounderState())
     state._seed = seed
     check("a saved and loaded state reports seed %r" % (seed,), deserialize_state(serialize_state(state))._seed == seed)

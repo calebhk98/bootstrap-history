@@ -8,7 +8,7 @@ from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer, SeatsSeat
 from sim.knowledge.api import KnowledgeSeat
 from sim.seats.module import Seats
 from . import module_harness
-from sim.engine.agents_port_household import HouseholdPort
+from sim.tests.money_host import MoneyHost
 from sim.engine.state_seat import FIRST_SEAT_ID
 
 from .agents_fake_world import FakeWorld, make_node
@@ -44,7 +44,8 @@ class Game:
 
     def __init__(self):
         self.knowledge = KnowledgeSeat()
-        self.facade = Household(starting_capital=1000.0, port=HouseholdPort(), techniques_held=lambda: frozenset(self.knowledge.done))
+        host = MoneyHost(capital=1000.0)
+        self.facade = Household(state=host.state, port=host.port, techniques_held=lambda: frozenset(self.knowledge.done))
         self.state = self.facade._state
         self.actors = ActorRegistry(ActorsState(home_country="home"))
         self.slot = SeatsSeat()
