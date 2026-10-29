@@ -55,6 +55,14 @@ class ListSaves(unittest.TestCase):
         self.write("g.json", json.dumps(blob))
         self.assertEqual(self.rows()["g.json"]["done"], ["fire", "wheel"])
 
+    def test_a_row_carries_the_standing_and_the_people_from_the_polity_and_workforce_slots(self):
+        blob = save_blob()
+        blob["seats"]["a"]["modules"]["polity"] = {"reputation": 7.5}
+        blob["seats"]["a"]["modules"]["workforce"] = {"scholars": 3.0, "artisans": 4.0}
+        self.write("g.json", json.dumps(blob))
+        row = self.rows()["g.json"]
+        self.assertEqual((row["reputation"], row["scholars"], row["artisans"]), (7.5, 3.0, 4.0))
+
     def test_an_unparseable_file_is_listed_as_unreadable(self):
         self.write("broken.json", "{not json")
         self.assertIs(self.rows()["broken.json"]["readable"], False)

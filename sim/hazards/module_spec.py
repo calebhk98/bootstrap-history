@@ -18,8 +18,8 @@ from .state import OUTPUT, WORLD_EVENTS, HazardsSeat, HazardsWorld
 
 READS_BY_OWNER = {
 	"scenario": ("year", "civilisation", "opening_civilisation", "events_enabled", "game_random", "money_text", "automation", "fog_of_war"),
-	"seats": ("seat_list", "ended_seats", "founder", "goal"),
-	"knowledge": ("techniques_held", "techniques_granted", "tree", "tree_nodes", "visible_to_player", "losable_node_ids", "tree_closure",
+	"seats": ("seat_list", "ended_seats", "founder", "goal", "on_road_to_goal"),
+	"knowledge": ("techniques_held", "techniques_granted", "tree", "tree_nodes", "visible_to_player", "losable_node_ids",
 	              "critical_path", "corpus_hedge", "visibility", "techniques_forgotten"),
 	"mechanics": ("hazard_counter_rows", "corpus_nodes", "mechanic", "running_mechanics"),
 	"production": ("running", "capability_gaps"),

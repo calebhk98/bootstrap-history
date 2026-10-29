@@ -1,6 +1,6 @@
 # The goal road memo is one per game, not one per seat
 
-**Status:** open - found while moving `on_road_to_goal` to the seats module; behaviour kept
+**Status:** closed - the seats module keeps the goal road and the critical floor per seat (Complaint 921; tests `sim/tests/test_goals_several.py`, the road is the acting seat's own). The last copy, the hazards module's own memo of the goal road in a sack's report, now asks the seats module's `on_road_to_goal` (`sim/tests/test_sack_goal_road.py`).
 
 What the acting seat's goal needs (`Sim._goal_closure`, read by `on_road_to_goal`, the labour package's training advice
 `sim/labour/labour_training.py` and the score screen `sim/ui/proto/score.py`) is one set held on the game. It is dropped

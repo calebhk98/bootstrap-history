@@ -1,6 +1,6 @@
 # The save listing's reputation, scholars and artisans come from sections that no longer hold them
 
-**Status:** open
+**Status:** closed - `list_saves` reads `reputation` from the polity slot and `scholars`/`artisans` from the workforce slot; tests `test_a_row_carries_the_standing_and_the_people_from_the_polity_and_workforce_slots` (`sim/tests/test_save_listing_and_menu_rules.py`) and `sim/tests/test_save_listing_smoke.py` (a real save).
 
 `sim/engine/settings.py` (`list_saves`, the row built from each save) fills `reputation`, `scholars` and `artisans` with
 `household.get(...)`, the acting seat's `household` section. None of the three is a household field any more (standing is

@@ -542,9 +542,9 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
                 continue
             scenario = scenario_slot_of(blob)
             seat = acting_seat_of(blob)
-            household = seat.get("household") or {}
-            seats_slot = (seat.get("modules") or {}).get("seats") or {}
-            knowledge = (seat.get("modules") or {}).get("knowledge") or {}
+            slots = seat.get("modules") or {}
+            seats_slot, knowledge = slots.get("seats") or {}, slots.get("knowledge") or {}
+            polity, workforce = slots.get("polity") or {}, slots.get("workforce") or {}
             row.update({
                 "readable": True,
                 "civ_id": blob.get("_civ"),
@@ -554,9 +554,9 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
                 "dead_reason": seats_slot.get("dead_reason"),
                 "goal_year": seats_slot.get("goal_year"),
                 "goal": seats_slot.get("goal"),
-                "reputation": household.get("reputation"),
-                "scholars": household.get("scholars"),
-                "artisans": household.get("artisans"),
+                "reputation": polity.get("reputation"),
+                "scholars": workforce.get("scholars"),
+                "artisans": workforce.get("artisans"),
                 "capital": purse_in_save(blob, blob.get("acting_seat")),
                 "done": ((knowledge.get("done") or {}).get("__set__") or []),
             })

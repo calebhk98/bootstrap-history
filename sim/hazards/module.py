@@ -22,5 +22,4 @@ class Hazards(Relief, Advice, Causes, KnowledgeRisk, Shocks, RandomEvents, Sack,
 
 	def setup(self) -> None:
 		self._counters_cache = None      # (the mechanics rows it was built from, the counters)
-		self._goal_closure = None        # what the goal needs, kept the first time a sack asks
 		self.disaster_this_year = None

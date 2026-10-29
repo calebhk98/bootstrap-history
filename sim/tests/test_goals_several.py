@@ -60,6 +60,21 @@ class GoalCaches(unittest.TestCase):
         module.clock.act_as("second")
         self.assertIsNone(module.goal_critical_floor())
 
+    def test_the_goal_road_is_the_acting_seats_own(self):
+        module = seats_with_goal("c", acting="founder")
+        self.assertEqual(on_the_road(module), {"a", "b", "c"})
+        module.clock.act_as("second")
+        self.assertIsNone(module.goal_closure())
+
+    def test_the_second_seats_road_is_worked_out_from_its_own_goal(self):
+        module = seats_with_goal("c", acting="founder")
+        on_the_road(module)
+        module.clock.act_as("second")
+        module.set_goal(SetGoal("d"))
+        self.assertEqual(on_the_road(module), {"d", "e"})
+        module.clock.act_as("founder")
+        self.assertEqual(on_the_road(module), {"a", "b", "c"})
+
 
 if __name__ == "__main__":
     unittest.main()

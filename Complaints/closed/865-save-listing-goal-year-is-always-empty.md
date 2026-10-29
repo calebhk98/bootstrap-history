@@ -1,6 +1,6 @@
 # The save listing's goal year is always empty
 
-**Status:** open - kept as it is in the scenario module move (the listing reads the field where it no longer lives)
+**Status:** closed - `list_saves` reads `goal_year` from the seats slot (the seats registry merge); `sim/tests/test_save_listing_and_menu_rules.py` lists a save with a goal year.
 
 `sim/engine/settings.py` (`list_saves`, the row built from each save) fills `goal_year` from the scenario section of the
 save: `scenario.get("goal_year")`. The year the goal was reached is the seats module's field (`goal_year` in the acting seat's

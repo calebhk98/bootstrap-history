@@ -4,7 +4,7 @@ The dice draws below have an exact place in the sequence `shocks` makes its draw
 to nothing, the chance of a sack, and the chance and the sample of the corpus lost.
 
 Needs: corpus_hedge, game_random, acting_balance, active_projects, money_text, corpus_nodes, mechanic, goal,
-tree_nodes, tree_closure, losable_node_ids."""
+tree_nodes, on_road_to_goal, losable_node_ids."""
 from typing import Any, Dict, List
 
 from sim.coin.api import PlunderHousehold
@@ -78,12 +78,7 @@ class Sack:
 		on_road = 0
 		goal = self.needs.goal()["node"]
 		if goal and goal in self.needs.tree_nodes():
-			try:
-				if self._goal_closure is None:
-					self._goal_closure = self.needs.tree_closure(goal)
-				on_road = sum(1 for tech_id in drop if tech_id in self._goal_closure)
-			except Exception:
-				on_road = 0
+			on_road = sum(1 for tech_id in drop if self.needs.on_road_to_goal(tech_id))
 		never_dispersed = hedge_before != self.best_corpus_node()
 		self.needs.send(RecordEvent.of("knowledge_lost", rules.corpus_loss_message(drop, not never_dispersed, corpus, on_road),
 		                               forgotten=sorted(drop), corpus_never_dispersed=never_dispersed, corpus_went=bool(corpus), on_road=on_road))
