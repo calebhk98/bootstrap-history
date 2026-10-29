@@ -67,6 +67,7 @@ class HouseholdParty:
 	"""Gives a seat the surface an exchange needs; holds no state of its own beyond a transient record."""
 
 	kind = "household"
+	stands_at_home = True   # a seat's purse stands at the home country's centre when coin is carried (sim/coin/carriage.py)
 
 	def __init__(self, seat_id: str, ports: SeatPorts, margins: Optional[Dict[str, float]] = None, *, dealings: Any, business: Any) -> None:
 		"""`dealings` is the seat's stored dealings (`patents`, `shares_held`, `shares_issued`, `offers`, `offer_serial`) and

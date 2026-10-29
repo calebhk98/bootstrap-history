@@ -7,7 +7,6 @@ is still handed out live: the game's random source (`rng`, shared by every modul
 from sim.agents.api import edges
 from sim.agriculture.api import SetFarmLand, SetFarmTechnique
 from sim.demography.api import rules as demography_rules
-from sim.ledger.api import RestorePurse
 from sim.prices.api import solve_prices_core
 from sim.seats.api import RememberGoalClosure
 from .commands import BuildHousing
@@ -42,10 +41,6 @@ class WorkforceWorld:
     def founder_alive(self):
         return self._needs.founder()["alive"]
 
-    def logged_events(self):
-        """How many lines the acting seat's log holds now."""
-        return len(self._needs.event_log())
-
     @property
     def workforce(self):
         """The acting seat's people and hours: the module's own seat state, written only by labour and the module."""
@@ -69,10 +64,6 @@ class WorkforceWorld:
     def balance(self):
         """The acting seat's purse, now."""
         return self._needs.acting_balance()
-
-    def restore_purse(self, balance):
-        """Put the acting seat's purse back to a balance it held a moment ago (a trial sale undone)."""
-        self._needs.send(RestorePurse(balance))
 
     @property
     def projects(self):

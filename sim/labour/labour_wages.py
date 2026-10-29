@@ -69,7 +69,7 @@ class WagesMixin(WageLedgerMixin):
         trades = [trade for trade in self._world.wages if self.trade_available(trade)]
         return max(trades, key=lambda trade: self.wage_for_hours(trade, 1.0), default=None)
 
-    def work_for_wages(self, trade, hours):
+    def work_for_wages(self, trade, hours, commit=True):
         """Do a job. For money. Like everybody else.
 
         It is a fair gap otherwise: you could hire a smith, a glassblower
@@ -82,6 +82,9 @@ class WagesMixin(WageLedgerMixin):
         either direction. The cost is your own hours, which are the one resource
         nothing else can buy: hours sold here are hours the standing job
         (labour_job.py) does not sell and your own projects cannot have.
+
+        With `commit` False it is a quote: the pay and the note as the sale would leave them, with no posting, log line
+        or book kept (the hours count against the year only while the note is worked out).
         """
         blocker = wage_work_blocker(
             self._world.founder_alive, trade in self._world.wages,
@@ -118,10 +121,21 @@ class WagesMixin(WageLedgerMixin):
         workforce = self._world.workforce
         pay = self.wage_for_hours(trade, hours)
         revenue_before = self._world.revenue()
-        self._world.send(ReceiveFromEdge(self._world.EDGE_EMPLOYERS, pay, "wages for your own work"))
-        workforce.wage_hours_this_year = workforce.wage_hours_this_year + hours
-        workforce.wages_earned = (workforce.wages_earned or 0.0) + pay
-        workforce.wage_income_this_year = workforce.wage_income_this_year + pay
+        if commit:
+            self._world.send(ReceiveFromEdge(self._world.EDGE_EMPLOYERS, pay, "wages for your own work"))
+            workforce.wage_income_this_year = workforce.wage_income_this_year + pay
+            workforce.wages_earned = (workforce.wages_earned or 0.0) + pay
+        hours_before = workforce.wage_hours_this_year
+        workforce.wage_hours_this_year = hours_before + hours
+        try:
+            message = self._sale_note(pay, revenue_before, commit, trade, hours)
+        finally:
+            if not commit:
+                workforce.wage_hours_this_year = hours_before
+        return pay, message
+
+    def _sale_note(self, pay, revenue_before, commit, trade, hours):
+        """The warning about the sale just made (or quoted): hours that starve a project, or a trade that pays less than the standing job."""
         # DO NOT BLOCK IT - WARN ABOUT IT: selling hours is a legitimate
         # way to dig out of debt, so this must never refuse the sale, only
         # warn when it would starve an active project of the hours it
@@ -133,14 +147,15 @@ class WagesMixin(WageLedgerMixin):
         _starve = None
         if _wanted:
             _starve = starving_warning(_wanted, max(0.0, self.director_pool() - self.director_hours_committed()))
-        self.log_wage_work(trade, hours, pay)
+        if commit:
+            self.log_wage_work(trade, hours, pay)
         # SAY WHEN IT IS A BAD TRADE: hours sold here are hours the standing job does not sell, and when
         # that job pays more than this trade the sale loses money. The sale still happens.
         message = sale_at_a_loss_note(pay, revenue_before - self._world.revenue(),
                                       lambda amount: self._world.money_text(amount, grouped=True))
         if message:
-            return pay, message + (" Also: " + _starve if _starve else "")
-        return pay, _starve
+            return message + (" Also: " + _starve if _starve else "")
+        return _starve
 
     def wage_bill(self):
         """What your standing staff costs you every year, by trade.

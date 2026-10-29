@@ -1,6 +1,6 @@
 # Seizures from the household purse skip the book posting that a payment to the state makes
 
-**Status:** open
+**Status:** closed - the seat has one account object in the ledger (`sim/ledger/seat_account.py`), so `TakeFromHouseholdPurse` (confiscation, hidden-wealth seizure) is one posting between the purse and the taker, and `WithdrawHouseholdMoney` (a seat founding a bank) is one posting to `edge:exchange`, the edge the economy's bank capital comes from, entered in the cash book as an outlay under `bank capital`. Tests: `sim/tests/test_ledger_commands.py` (`TakeFromHouseholdPurseCommand`, `WithdrawHouseholdMoneyCommand`).
 
 The household pays the state two ways. `Transfers.pay_state` (sim/polity/transfers.py) pays from the household as an actor: both
 sides keep accounts in the one book, so it is one posting (`Purses.transfer`) and the cash book is told through `note_outlay`. The
