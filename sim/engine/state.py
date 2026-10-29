@@ -130,7 +130,6 @@ class ProjectsState:
 	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
 	bountied: Set[str] = field(default_factory=set)
 	paid_towards: Dict[str, float] = field(default_factory=dict)
-	stalled: int = 0
 
 	@property
 	def business(self) -> Business:

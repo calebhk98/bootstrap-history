@@ -42,7 +42,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"bountied": "projects",
 	"opened_year": "projects",
 	"paid_towards": "projects",
-	"stalled": "projects",
 	"closures": "projects",
 
 	# EconomyState

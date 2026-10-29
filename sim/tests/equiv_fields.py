@@ -76,6 +76,7 @@ RELOCATIONS = [
     ("/seats/*/modules/seats/founder_alive", "/seats/*/founder/founder_alive"),
     ("/seats/*/modules/seats/life_left", "/seats/*/founder/life_left"),
     ("/seats/*/modules/seats/dead_reason", "/seats/*/founder/dead_reason"),
+    ("/seats/*/modules/seats/stalled", "/seats/*/projects/stalled"),
     ("/modules/resources/forest_felled", "/economy/forest_felled"),
     ("/seats/*/modules/resources/mines", "/seats/*/holdings/mines"),
     ("/seats/*/modules/resources/mine_pending", "/seats/*/holdings/mine_pending"),

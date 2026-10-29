@@ -72,8 +72,8 @@ class Founder:
         patronage = self.needs.patronage()
         projects = self.needs.legacy_projects()
         if founder_rules.dissolves(seat.founder_alive, patronage["deputies_carry_the_work"]):
-            projects.stalled += 1
-            if founder_rules.forgets_this_year(projects.stalled, terms["years_before_forgetting"]):
+            seat.stalled += 1
+            if founder_rules.forgets_this_year(seat.stalled, terms["years_before_forgetting"]):
                 losable = self.needs.losable_node_ids(True)
                 # sorted() in the view matters: the held set iterates in an order that depends on PYTHONHASHSEED, and
                 # a sample of it would give the same seed a different answer on every invocation
@@ -82,14 +82,14 @@ class Founder:
                             len(losable), terms["forget_fraction_divisor"])):
                         projects.operating.discard(node_id)
                         self.needs.send(ForgetTechnique((node_id,)))
-            if founder_rules.warns(projects.stalled):
+            if founder_rules.warns(seat.stalled):
                 self.needs.send(RecordEvent.of(
-                    "programme_dissolving", founder_rules.dissolving_line(projects.stalled, self._hours_sentence(patronage)),
-                    years_since_death=projects.stalled, run_ends_after_years=terms["years_until_end"]))
-            if founder_rules.run_ends(projects.stalled, terms["years_until_end"]):
+                    "programme_dissolving", founder_rules.dissolving_line(seat.stalled, self._hours_sentence(patronage)),
+                    years_since_death=seat.stalled, run_ends_after_years=terms["years_until_end"]))
+            if founder_rules.run_ends(seat.stalled, terms["years_until_end"]):
                 self.end_run(EndRun(founder_rules.dissolution_end(self._survivors())))
         else:
-            projects.stalled = 0
+            seat.stalled = 0
 
     def _hours_sentence(self, patronage: Dict[str, Any]) -> str:
         return founder_rules.deputy_hours_sentence(patronage["deputies"], patronage["deputy_hours"])
