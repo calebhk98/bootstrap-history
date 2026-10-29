@@ -336,6 +336,7 @@ def _import_declaring_modules():
                    "sim.materials.capacity",
                    "sim.ui.cli",
                    "sim.engine.core",
+                   "sim.seats.constants",
                    "sim.polity.constants",
                    "sim.polity.value_weight",
                    "sim.labour.labour",

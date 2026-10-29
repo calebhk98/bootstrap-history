@@ -28,7 +28,7 @@ READS_BY_OWNER = {
     "workforce": ("seat_base_tile",),
     "materials": ("generation_breakdown",),
     "hazards": ("hazard_relief", "hazard_relief_entries"),
-    "engine (registry)": ("seat_holds", "dissolution_terms"),
+    "engine (registry)": ("seat_holds",),
 }
 
 _LIVE = dict(cached=False)
@@ -53,6 +53,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("founder", "founder", seat_scoped=True, **_LIVE),
         ViewSpec("automatic_policy", "automatic_policy", kind=QUOTE, seat_scoped=True, **_LIVE),
         ViewSpec("patronage", "patronage", seat_scoped=True, **_LIVE),
+        ViewSpec("dissolution_terms", "dissolution_terms", **_LIVE),
         ViewSpec("goal_closure", "goal_closure", **_LIVE),
         ViewSpec("win_condition_text", "win_condition_text", kind=QUOTE, **_LIVE),
         ViewSpec("dead_reasons", "dead_reasons", **_LIVE),

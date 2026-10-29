@@ -80,14 +80,6 @@ def forget_goal_caches(sim, command):
 
 # ---- the founder's death ----
 
-@bridge_view("dissolution_terms")
-def dissolution_terms(sim):
-    """The heuristics of a programme left without its founder (declared on `Sim`)."""
-    return {"life_extension_years": sim.SANITATION_LIFE_EXTENSION_YEARS, "years_before_forgetting": sim.DISSOLUTION_YEARS_BEFORE_FORGETTING,
-            "forget_fraction_divisor": sim.DISSOLUTION_FORGET_FRACTION_DIVISOR, "years_until_end": sim.DISSOLUTION_YEARS_UNTIL_END,
-            "deputies_needed": sim.DEPUTIES_CARRY_THE_WORK_FROM}
-
-
 # ---- goals and what they read ----
 
 @bridge_view("game_attribute", kind=QUOTE)

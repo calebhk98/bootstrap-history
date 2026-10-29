@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 from sim.knowledge.api import ForgetTechnique
 from sim.reporting.api import RecordEvent
 
-from . import founder_rules
+from . import constants, founder_rules
 from .commands import EndRun, SetFounderLife, SetPolicy
 
 
@@ -22,6 +22,13 @@ class Founder:
         """Whether the automatic policy `name` runs for the acting seat: what it set, else on in an automatic game and off in a
         manual one."""
         return founder_rules.automatic_policy(self.founder()["policy"], name, self.needs.automation()["manual"])
+
+    def dissolution_terms(self) -> Dict[str, Any]:
+        """The heuristics of a programme left without its founder (sim/seats/constants.py)."""
+        return {"life_extension_years": constants.SANITATION_LIFE_EXTENSION_YEARS,
+                "years_before_forgetting": constants.DISSOLUTION_YEARS_BEFORE_FORGETTING,
+                "forget_fraction_divisor": constants.DISSOLUTION_FORGET_FRACTION_DIVISOR,
+                "years_until_end": constants.DISSOLUTION_YEARS_UNTIL_END, "deputies_needed": constants.DEPUTIES_CARRY_THE_WORK_FROM}
 
     def patronage(self) -> Dict[str, Any]:
         """The founder's age and the deputies the programme could go on with: {founder_age, deputies, deputy_hours,
