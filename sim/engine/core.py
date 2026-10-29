@@ -8,7 +8,7 @@ from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from sim.engine.state import SimulationState
 from sim.assembly.api import notify_seat_bound
 from .data import (DEFAULTS, kit_capital, load_civ,
-                   nodes_in_civ_money, TRADE_REGISTRY)
+                   nodes_in_civ_money)
 
 from sim.world import demography
 from sim.world import agriculture
@@ -55,7 +55,8 @@ class Sim:
         self.verbose = verbose
         from . import game_assembly
         from .bridge_land import MODS_DIR
-        self.assembly = game_assembly.build(MODS_DIR, self.debug)
+        self.mods_dir = MODS_DIR   # this game's mods: its assembly, its policy switches and its seats' defaults read this
+        self.assembly = game_assembly.build(self.mods_dir, self.debug)
         self._scenario = self.assembly.modules["scenario"]
         # the setup the game is played in: the civilisation, the configuration, the modes (the scenario module owns them)
         self.send(OpenScenario(
@@ -147,7 +148,7 @@ class Sim:
         # manages its own household; a player is handed nothing they did not
         # ask for.
         #
-        for name, value in default_policy(manual).items():
+        for name, value in default_policy(manual, self.mods_dir).items():
             self.send(SetPolicy(name, value))
         # World-level "last time I said X" trackers; household ones live on HouseholdState.
         # THE FOLLOWING EIGHT FIELDS ARE BIOGRAPHICAL TO ONE MORTAL PERSON, not

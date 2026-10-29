@@ -28,8 +28,7 @@ def refresh_derived_nodes(sim):
     gates = held_gate_set(held)
     if gates == sim._derived_gate_set:
         return
-    from .data import TRADE_REGISTRY
-    schedule = build_schedule(TRADE_REGISTRY, sim.start_civ)
+    schedule = build_schedule(sim.view("trade_records")(), sim.start_civ)
     derived = node_revenue.for_civilisation(sim.nodes, sim.start_civ, schedule, held_techs=held)
     money_units.price_nodes(derived.values(), schedule.wages_per_hour(), schedule.money_per_labour_hour)
     sim.nodes = opening_money.priced_nodes(sim, derived, schedule)

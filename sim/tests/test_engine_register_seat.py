@@ -7,12 +7,13 @@ import types
 import unittest
 
 from sim.engine import seat_registry
+from sim.engine.bridge_land import MODS_DIR
 from sim.engine.seat_defaults import default_policy
 from sim.seats.state import COUNTRY_SEAT
 
 
 def registry_over(seats, manual=False):
-    return types.SimpleNamespace(state=types.SimpleNamespace(seats=seats), manual=manual, assembly=None)
+    return types.SimpleNamespace(state=types.SimpleNamespace(seats=seats), manual=manual, assembly=None, mods_dir=MODS_DIR)
 
 
 class RegisterSeat(unittest.TestCase):

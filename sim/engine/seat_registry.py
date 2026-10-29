@@ -26,7 +26,7 @@ def register_seat(sim, seat_id: str, template: Mapping[str, Any]) -> Optional[Re
 	"""Register a seat built from `template` with the standing policy a new seat starts with; a Refusal when the id is taken."""
 	if seat_id in sim.state.seats:
 		return Refusal("seat_exists", "seat %r already exists" % (seat_id,), seat=seat_id)
-	add_seat(sim, seat_id, seat_from_template(template, default_policy(sim.manual)))
+	add_seat(sim, seat_id, seat_from_template(template, default_policy(sim.manual, sim.mods_dir)))
 	return None
 
 

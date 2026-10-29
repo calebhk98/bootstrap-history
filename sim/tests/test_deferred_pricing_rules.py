@@ -20,7 +20,7 @@ def game(labour_figure):
     world = types.SimpleNamespace(
         nodes=tree(), start_civ={}, state=types.SimpleNamespace(economy=types.SimpleNamespace(nodes_money_per_labour_hour=None)),
         labour=types.SimpleNamespace(money_per_labour_hour=lambda: labour_figure), changes=changes,
-        _done_changed=lambda: changes.append("done"), _operating_changed=lambda: changes.append("operating"))
+        view=lambda name: (lambda: {}), _done_changed=lambda: changes.append("done"), _operating_changed=lambda: changes.append("operating"))
     return world, schedule
 
 

@@ -1,5 +1,5 @@
 """The standing policy a new seat starts with: which automatic behaviours are on."""
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from sim.content.api import ModError
 from sim.interface.api import policy_defaults
@@ -8,8 +8,9 @@ from .bridge_land import MODS_DIR
 from .ui_data import check_state_path
 
 
-def default_policy(manual: bool) -> Dict[str, Any]:
-    """Every automatic behaviour, on for the optimizer and off for a player who plays by hand."""
+def default_policy(manual: bool, mods_dir: Optional[str] = None) -> Dict[str, Any]:
+    """Every automatic behaviour, on for the optimizer and off for a player who plays by hand, with the switches the mods of
+    `mods_dir` (a game passes its own; the repository's when none is given) add."""
     policy = {
         "auto_hire":     not manual,   # grow the staff toward what you can support
         # ON for the optimizer, OFF for a player: automatically buying
@@ -55,7 +56,7 @@ def default_policy(manual: bool) -> Dict[str, Any]:
         "reserve_staff": False,
     }
     shipped = set(policy)
-    for name, value in policy_defaults(manual, MODS_DIR, check_state_path).items():
+    for name, value in policy_defaults(manual, mods_dir or MODS_DIR, check_state_path).items():
         if ":" not in name and name not in shipped:
             raise ModError("a mod sets the default of policy %r, which does not exist" % name)
         policy[name] = value

@@ -6,14 +6,13 @@ money per labour hour: the markets module rescales each seat's money when the ec
 (`RepriceOpeningMoney`) and asks the root to count the tree's money fields afresh (`RepriceTree`).
 """
 from . import money_units
-from .data import TRADE_REGISTRY
 from sim.workforce.api import build_schedule
 
 
 def reprice_tree(sim, money_per_labour_hour=None):
     """Count the tree's money fields at the money an hour of work is worth now (or at the figure given), and
     keep that figure in the save, so a resumed game can count them the same without opening its economy."""
-    schedule = build_schedule(TRADE_REGISTRY, sim.start_civ)
+    schedule = build_schedule(sim.view("trade_records")(), sim.start_civ)
     sim.nodes = priced_nodes(sim, sim.nodes, schedule, money_per_labour_hour)
     sim.state.economy.nodes_money_per_labour_hour = schedule.money_per_labour_hour
     sim._done_changed()
