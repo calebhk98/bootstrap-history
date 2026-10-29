@@ -284,7 +284,7 @@ actors (21), hazards, workforce (20 each), projects (19).
   `legacy_economy` (read by engine and UI code), `legacy_labour` (read by tests only) and holds `bridge_land.MODS_DIR`. Measure:
   `python3 tools/measure/module_graph.py` (0 modules depend on the bridge, 6 before) and `grep -n "bridge_command" sim/engine/bridge*.py`
   (none).
-- [ ] A width review for each module that depends on more than 15 others, written into its catalogue entry: views that
+- [x] A width review for each module that depends on more than 15 others, written into its catalogue entry: views that
   mirror methods merged into views that answer questions, sub-domains split out, pass-through dependencies removed,
   and why each remaining edge is needed.
   Written so far (section "Width review" in the catalogue entry): `actors`, `finance`, `seats`. Measure: `python3 tools/measure/module_graph.py --modules`.
@@ -293,6 +293,12 @@ actors (21), hazards, workforce (20 each), projects (19).
 
 ### Phase 7: mods
 
+  Written for markets, actors, workforce, hazards, land, projects, production, materials and finance (and seats) in each
+  catalogue entry: what each dependency is asked, the small trims made (pass-throughs and mirror views), and the splits
+  proposed but not built (they are design choices for the owner: the agent-economy port out of markets; the state's finances,
+  literacy, disclosure and the trade view out of actors; the farm workforce to agriculture; world hazards and defences out of
+  hazards; a capability module out of land; the project bill to projects; concern earnings out of production; a goals module
+  out of seats). `python3 tools/measure/module_graph.py --modules` gives the widths.
 - [x] Replace the process-global registries of the actors, workforce, polity, demography, agriculture, year phases and stores with per-assembly registrations (extension points; `ModCodeApi` records into the mod's `Operations`).
 - [x] The same for the ui's registries: the `interface` module (`sim/interface/`) owns the extension points `interface_commands` and `interface_figures`; the shipped commands and figures (the tables `sim/ui` fills when it loads) and the mods' data are its own provisions, a mod's code provides with `api.command` and `api.figure`, and a word or figure name answered twice is an error naming both owners. A game's table is `command_registry.table_of(sim)` and `figures.figures_of(sim)`; `COMMAND_REGISTRATIONS`, `load_mod_commands` and `register_data_figures` are gone.
 - [x] Rewrite each shipped code mod onto the new interface: bh_towns, bh_urbanisation, bh_religion, bh_cashshelter, bh_pollution and bh_orghierarchy import only `sim/mod_api.py` and read only the views they declare (`api.reads`) and send only the commands they declare (`api.sends`). One SMOKE test each: `test_towns_mod_smoke`, `test_urbanisation_mod_smoke`, `test_religion_mod_smoke`, `test_cashshelter_mod_smoke`, `test_pollution_mod_smoke`, `test_orghierarchy_mod_smoke`. Count: `bash tools/done_check.sh` (mods importing `sim.engine` outside mod_code).
