@@ -88,14 +88,15 @@ Check with `ls` before trusting this; directories move.
 
 | Looking for | Look in |
 |---|---|
-| Engine (the `Sim` object and its mixins) | `sim/engine/` |
-| Walled packages, each reached only through its `api.py` (the rule and how to extend a surface: `docs/architecture/PACKAGE_WALLS.md`) | `sim/economy/`, `sim/agents/`, `sim/labour/`, `sim/geography/`, `sim/ui/` |
+| The composition root (`Sim`: state, seats, the year loop) and the engine bridge | `sim/engine/` |
+| The assembly: module specs, views, commands, the clock, slots, `act_as`, mod operations, kernels (`sim/ARCHITECTURE.md`) | `sim/assembly/` |
+| A module (one owner per fact; publishes views, applies commands; `module_spec.py` declares them) | `sim/<module>/`; the list is `sim/ARCHITECTURE.md` section 3 |
+| Libraries behind an `api.py` (rule and how to extend a surface: `docs/architecture/PACKAGE_WALLS.md`) | `sim/economy/`, `sim/agents/`, `sim/labour/`, `sim/geography/`, `sim/ui/` |
 | Standalone domain models (agriculture, demography, land, deposits, demand, ...) | `sim/world/` |
-| Actors (households, firms, states, interest groups) | `sim/agents/` |
-| Labour market: hiring, wages, staff, the trade split | `sim/labour/` |
-| Map, tiles, regions, climate, routes and freight | `sim/geography/` |
-| Price solver | `sim/engine/solve_prices*.py`, `sim/engine/prices.py` |
+| The one door a mod's Python imports | `sim/mod_api.py` |
+| Price solver and calculator | `sim/prices/` |
 | CLI, menus, screens and agent/JSON protocol | `sim/simulator.py`, `sim/ui/`, `sim/PROTOCOL.md` |
+| Structure checks (module graph, undeclared reads, imports, UI views) | `tools/` (`tools/done_check.sh`, `tools/measure/`) |
 | Tests | `sim/tests/`, run with `python3 -m sim.tests` |
 | Engine shape, measured | `sim/ARCHITECTURE.md` |
 | Design direction, plans, current status | `docs/architecture/` - read its `README.md` first; it names the live plan and the status document |
