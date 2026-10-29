@@ -5,6 +5,7 @@ nowhere. Each asserts it reads the heir's books and nothing of the leaver."""
 QUICK_TOPIC = True
 
 import json
+import types
 
 from sim.agents.api import ActorsState
 from sim.agents.household_party import HouseholdParty
@@ -20,7 +21,6 @@ from sim.engine.state import (FounderState, HoldingsState, HouseholdState, SeatP
 from sim.engine.state_seat import SeatState, bind_seat
 from sim.tests.harness import check
 from sim.tests.seat_views_stand_in import slots_of
-from sim.agents.api import Business
 
 
 # what each seat chose for its inventions (the diffusion module keeps it)
@@ -104,7 +104,8 @@ check("disclosure_modes: the heir's choice stands", seat_builds.disclosure_modes
 
 # ---- the seat as an actor
 state = post_handover_state()
-party = HouseholdParty("heir", None, dealings=state.seats["heir"].modules["seats"], business=Business())   # the ports are not asked here
+heirs = state.seats["heir"].modules["seats"]
+party = HouseholdParty("heir", types.SimpleNamespace(dealing=lambda field: getattr(heirs, field), store_dealing=lambda field, value: None))
 check("HouseholdParty: the acting seat's actor is the heir, with the heir's patents and shares",
       party.actor_id == "heir" and party.record.patents == {"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}
       and party.record.holdings == {"guild": 3.0}, party.actor_id)

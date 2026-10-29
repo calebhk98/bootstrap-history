@@ -1,6 +1,6 @@
 """Commands to the owner of a seat's concerns."""
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from sim.assembly.api import Command
 
@@ -101,3 +101,19 @@ class WatchBusiness(Command):
 	"""Seat `seat_id`'s business reports the opening and closing of its plants from here on (a new seat, a load or a seat switch
 	needs it again)."""
 	seat_id: str
+
+
+@dataclass(frozen=True)
+class ReleasePlant(Command):
+    """The seat `seat_id`'s plant of `node_id` leaves its business to pass to another owner, dated `year` when it records no opening year.
+    Answers the plant, or None when the seat runs none."""
+    seat_id: str
+    node_id: str
+    year: int
+
+
+@dataclass(frozen=True)
+class AdoptPlant(Command):
+    """The seat `seat_id`'s business takes over `plant` from another owner, with its size and age."""
+    seat_id: str
+    plant: Any

@@ -8,7 +8,7 @@ from unittest import mock
 
 from sim.actors.api import SetLenderOffers
 from sim.actors.module import Actors
-from sim.agents.api import EDGE_SAVERS, Business
+from sim.agents.api import EDGE_SAVERS
 from sim.ledger.api import NoteSeatCash
 from sim.seats.api import SeatsSeat
 from sim.tests import harness, module_harness  # noqa: F401  (harness isolates the home directory)
@@ -16,7 +16,7 @@ from sim.tests import harness, module_harness  # noqa: F401  (harness isolates t
 
 def actors_over(purses=None, cast=None, seat_ids=(), **world_fields):
     module = module_harness.build(Actors, views={"seat_list": {"joined": list(seat_ids), "playing": list(seat_ids)},
-                                                 "seat_dealings": lambda seat_id: SeatsSeat(), "seat_business": lambda seat_id: Business()},
+                                                 "seat_dealings": lambda seat_id: SeatsSeat()},
                                   world=SimpleNamespace(purses=purses, edge=lambda name: "edge " + name, **world_fields))
     if cast is not None:
         module.cast = lambda: cast

@@ -12,13 +12,14 @@ from sim.actors import seat_exchange
 from sim.actors.api import ALREADY_ABLE, GRANTED, NO_LICENSEE, TERMS_REFUSED, GrantLicence
 from sim.actors.module import Actors
 from sim.actors.seat_parties import Ports
-from sim.agents.api import Business
 from sim.knowledge.api import ReceiveTechniques
 from sim.refusal import Refusal
-from sim.seats.api import SeatsSeat
+from sim.agents.api import Plant
+from sim.seats.api import SeatsSeat, SetDealing
 from sim.seats.module import Seats
 from sim.tests import module_harness
 from sim.tests.money_host import MoneyHost
+from sim.ventures.api import AdoptPlant, ReleasePlant
 from sim.ventures.module import Ventures
 from sim.ventures.state import VenturesSeat
 
@@ -68,8 +69,7 @@ class GrantingALicence(unittest.TestCase):
     def grant(self, licensee, problem="", granted=True, joined=("founder",), acting="founder"):
         host = MoneyHost(capital=100.0)
         module = module_harness.build(Actors, module_id="actors", world=host.world, views={
-            "acting_seat": acting, "seat_list": {"joined": list(joined)}, "seat_dealings": lambda seat_id: SeatsSeat(),
-            "seat_business": lambda seat_id: Business()})
+            "acting_seat": acting, "seat_list": {"joined": list(joined)}, "seat_dealings": lambda seat_id: {}})
         module.cast = lambda: SimpleNamespace(get=lambda identity: licensee if identity == "firm:a" else None)
         module.actor_world = lambda: "world"
         with mock.patch.object(seat_exchange.licence, "terms_problem", lambda *arguments: problem), \
@@ -94,22 +94,54 @@ class GrantingALicence(unittest.TestCase):
         self.assertEqual(self.grant(None, joined=("founder", "seat:b")), {"status": GRANTED})
 
 
-class TheOwnersPublishTheirRecords(unittest.TestCase):
-    def test_the_seats_module_publishes_a_named_seats_stored_dealings(self):
+class TheOwnersKeepTheirRecords(unittest.TestCase):
+    def test_the_seats_module_publishes_a_copy_of_a_named_seats_stored_dealings(self):
         slots = {"founder": SeatsSeat(), "second": SeatsSeat(patents={"loom": {"granted": 1}})}
         module = module_harness.build(Seats, module_id="seats")
         module._slots = lambda: slots
-        self.assertIs(module.seat_dealings("second"), slots["second"])
-        self.assertEqual(module.seat_dealings("second").patents, {"loom": {"granted": 1}})
+        published = module.seat_dealings("second")
+        published["patents"]["loom"]["granted"] = 2
+        self.assertEqual(published["shares_issued"], 0.0)
+        self.assertEqual(slots["second"].patents, {"loom": {"granted": 1}})
 
-    def test_the_ventures_module_publishes_a_named_seats_business(self):
+    def test_set_dealing_replaces_one_stored_field_of_the_named_seat_with_a_copy(self):
+        slots = {"founder": SeatsSeat(), "second": SeatsSeat()}
+        module = module_harness.build(Seats, module_id="seats")
+        module._slots = lambda: slots
+        offers = [{"id": "offer:1"}]
+        module.set_dealing(SetDealing("second", "offers", offers))
+        offers[0]["id"] = "changed"
+        self.assertEqual((slots["second"].offers, slots["founder"].offers), ([{"id": "offer:1"}], []))
+
+    def test_set_dealing_refuses_a_field_that_is_not_a_dealing(self):
+        module = module_harness.build(Seats, module_id="seats")
+        module._slots = lambda: {"founder": SeatsSeat()}
+        with self.assertRaises(KeyError):
+            module.set_dealing(SetDealing("founder", "goal", "x"))
+
+    def ventures(self):
         seats = {"founder": VenturesSeat(), "second": VenturesSeat()}
         module = module_harness.build(Ventures, module_id="ventures", seat=seats["founder"])
         module.seat_slot_of = lambda seat_id: seats[seat_id]
-        seats["second"].business.open_plant("mill", 100)
-        self.assertIs(module.seat_business("second"), seats["second"].business)
-        self.assertEqual(set(module.seat_business("second").operating()), {"mill"})
-        self.assertEqual(set(module.seat_business("founder").operating()), set())
+        return module, seats
+
+    def test_a_released_plant_leaves_the_named_seats_business_dated_when_it_had_no_year(self):
+        module, seats = self.ventures()
+        seats["second"].business.open_plant("mill", None)
+        plant = module.apply_release_plant(ReleasePlant("second", "mill", 140))
+        self.assertEqual((plant.entry_key, plant.opened_year, set(seats["second"].business.operating())), ("mill", 140, set()))
+
+    def test_releasing_a_plant_the_seat_does_not_run_answers_none(self):
+        module, _seats = self.ventures()
+        self.assertIsNone(module.apply_release_plant(ReleasePlant("second", "mill", 140)))
+
+    def test_an_adopted_plant_joins_the_named_seats_business_with_its_size_and_age(self):
+        module, seats = self.ventures()
+        plant = Plant(entry_key="mill", opened_year=90, size=3.0)
+        module.apply_adopt_plant(AdoptPlant("second", plant))
+        self.assertEqual((set(seats["second"].business.operating()), seats["second"].business.size_of("mill"),
+                          seats["second"].business.opened_year_of("mill", 0)), ({"mill"}, 3.0, 90))
+        self.assertEqual(set(seats["founder"].business.operating()), set())
 
 
 if __name__ == "__main__":

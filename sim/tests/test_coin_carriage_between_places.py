@@ -91,7 +91,7 @@ class Carriage(unittest.TestCase):
 
     def test_a_seat_as_an_exchange_party_stands_at_the_home_countrys_centre_too(self):
         coin, _book, _balances = world(home_place="a")
-        party = HouseholdParty("founder", types.SimpleNamespace(), dealings=types.SimpleNamespace(patents={}, shares_held={}), business=None)
+        party = HouseholdParty("founder", types.SimpleNamespace())
         self.assertEqual(coin.carriage_surcharge(party, Party(0.0, "b", "home"), 500.0, "tax"),
                          (EDGE_FREIGHT, 500.0 * KG_PER_UNIT / 1000.0 * PER_TONNE, "coin carriage"))
 

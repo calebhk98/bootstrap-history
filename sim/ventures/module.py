@@ -1,9 +1,8 @@
 """The ventures module: the seat's businesses and the plants they run, what a seat's concerns tie up and cost, opening one by
 hand, the founder's sales and the roll-out of public works.
 
-The businesses are its seat state, written only by its commands. The plants are kept in a `Business` record shared with the
-exchange (the seat as a party to a deal), so the views over what is operating and shut hand out the record's own sets and
-are uncached: a deal changes them without a command of this module."""
+The businesses are its seat state, written only by its commands (a deal's plants pass by `ReleasePlant` and `AdoptPlant`). The views
+over what is operating and shut hand out the record's own sets, read only, and are uncached."""
 from sim.agents.api import FounderReview
 from sim.assembly.api import Module
 from sim.production.api import RefreshOperatingCaches
@@ -31,10 +30,6 @@ class Ventures(Crew, Quotes, Opening, Sales, Coverage, Module):
 	def operating(self):
 		"""The acting seat's concerns and capabilities that are open (the live set: the plants opened and closed change it in place)."""
 		return self.seat.business.operating()
-
-	def seat_business(self, seat_id):
-		"""The seat's own business, the record the seat's party in an exchange opens, closes and hands over plants on (the party is the actors')."""
-		return self.seat_of(seat_id).business
 
 	def operating_by_seat(self):
 		"""What every seat has open, by seat id in joining order (the live sets)."""
@@ -73,6 +68,15 @@ class Ventures(Crew, Quotes, Opening, Sales, Coverage, Module):
 
 	def apply_watch_business(self, command):
 		self.seat_of(command.seat_id).business.watch = self.operating_changed
+
+	def apply_release_plant(self, command):
+		plant = self.seat_of(command.seat_id).business.close_plant(command.node_id)
+		if plant is not None and plant.opened_year is None:
+			plant.opened_year = command.year
+		return plant
+
+	def apply_adopt_plant(self, command):
+		self.seat_of(command.seat_id).business.adopt(command.plant)
 
 	def apply_note_operating_changed(self, command):
 		self.bump_seat(OPERATING_CHANGES)

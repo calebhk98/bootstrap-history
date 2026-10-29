@@ -10,7 +10,7 @@ from unittest import mock
 
 from sim.actors.module import Actors
 from sim.actors import seat_exchange
-from sim.agents.api import Business, CommandRejected
+from sim.agents.api import CommandRejected
 from sim.actors.api import SellSeatConcern
 from sim.seats.api import SeatsSeat
 from sim.tests import module_harness, ventures_host
@@ -21,7 +21,7 @@ NODE = "inn"
 class SaleSetupTests(unittest.TestCase):
     def setup(self):
         module = module_harness.build(Actors, module_id="actors", world=SimpleNamespace(purses=None), views={
-            "acting_seat": "seat:0", "seat_dealings": lambda seat_id: SeatsSeat(), "seat_business": lambda seat_id: Business()})
+            "acting_seat": "seat:0", "seat_dealings": lambda seat_id: SeatsSeat()})
         module.actor_world = lambda: SimpleNamespace(concern_margin=lambda node_id: 7.0)
         module.cast = lambda: SimpleNamespace(
             of_kind=lambda kind: [SimpleNamespace(record=SimpleNamespace(exited_year=None), actor_id=kind + ":live"),

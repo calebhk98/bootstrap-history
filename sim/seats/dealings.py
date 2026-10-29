@@ -4,13 +4,23 @@ and the actors module applies the commands that address it to a seat (sim/actors
 from typing import Any, Dict, List
 
 from sim.agents.api import patent
+from sim.agents.tracked import plain
+
+DEALING_FIELDS = ("patents", "shares_held", "shares_issued", "offers", "offer_serial")
 
 
 class Dealings:
 
-    def seat_dealings(self, seat_id: str) -> Any:
-        """The seat's stored dealings, the record the seat's party in an exchange writes through (the party is the actors')."""
-        return self._slots()[seat_id]
+    def seat_dealings(self, seat_id: str) -> Dict[str, Any]:
+        """A copy of the seat's stored dealings by field (`DEALING_FIELDS`); the seat's party in an exchange changes them by `SetDealing`."""
+        slot = self._slots()[seat_id]
+        return {name: plain(getattr(slot, name)) for name in DEALING_FIELDS}
+
+    def set_dealing(self, command: Any) -> None:
+        """The named seat's patents, shares held, shares issued, offers or offer count become the figure sent."""
+        if command.field not in DEALING_FIELDS:
+            raise KeyError("a seat's dealings have no field " + command.field)
+        setattr(self._slots()[command.seat_id], command.field, plain(command.value))
 
     def seats_holding_patent(self, node_id: str) -> List[str]:
         """Ids of the seats that hold a patent on `node_id`, in joining order."""

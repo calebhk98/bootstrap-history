@@ -18,7 +18,8 @@ from sim.markets.api import ForgetActorOrders, NoteActorPurchase, NoteActorSale
 from sim.polity.api import AddScandal
 from sim.production.api import AccrueExperience
 from sim.reporting.api import RecordEvent
-from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer
+from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer, SetDealing
+from sim.ventures.api import AdoptPlant, ReleasePlant
 from sim.workforce.api import ReleaseStaff
 
 from . import commands
@@ -49,7 +50,7 @@ READS_BY_OWNER = {
 	"demography": ("pop_scale_for", "population_total", "working_age", "urban_fraction", "people_by_tile", "nutrition_ratio_last_year", "farm_holdings"),
 	"scenario": ("year", "civilisation", "game_setting", "opening_civilisation", "civilisation_record", "money_text", "mass_rate_text"),
 	"finance": ("credit_limit", "credit_room", "state_lending", "debt_interest_rate", "debt_service_share_of_surplus", "market_rate"),
-	"ventures": ("operating", "operating_by_seat", "venture_opened_year", "seat_business", "concern_staff"),
+	"ventures": ("operating", "operating_by_seat", "venture_opened_year", "venture_size", "concern_staff"),
 	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted", "techniques_by_seat"),
 	"projects": ("substitute_quality_discount", "project_cost", "effective_risk", "seat_review"),
 	"content": ("declared_actor_kinds", "trades_absent", "not_traded_materials"),
@@ -133,5 +134,5 @@ MODULE_SPECS = (ModuleSpec(
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(ChargeKeeping, ChargeActorsTheft, RefreshLenderOffers, DefaultOnDebt, AccrueExperience, ForgetActorOrders, NoteActorSale,
 	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, PayRouteDues, AddScandal, RecordEvent, PayActor,
-	       CreditSeat, DebitSeat, NoteSeatCash, RestorePurse, ReceiveTechniques),
+	       CreditSeat, DebitSeat, NoteSeatCash, RestorePurse, ReceiveTechniques, SetDealing, ReleasePlant, AdoptPlant),
 ),)

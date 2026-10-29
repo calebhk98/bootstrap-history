@@ -28,8 +28,11 @@ country's centre when coin is carried. Nothing outside the ledger holds it. A pa
 What stays, and why:
 
 - `HouseholdState` holds the cause book rows (`cause_rows`, `cause_mark`) and the saving target; they are not money.
-- The party writes through two records its owners publish, the seats' stored dealings (`seat_dealings`) and the ventures' business
-  (`seat_business`), because the exchange (sim/agents) changes both in place (Complaint 931).
+- The party holds no record of the seat's dealings or plants. It reads a copy of the seats' stored dealings (view `seat_dealings`) and the
+  ventures' plants (views `operating`, `venture_opened_year`, `venture_size`), the exchange (sim/agents) changes the copy in place as it does an
+  actor's record (`sim/agents/tracked.py`), and each change is sent to the owner: `SetDealing` (the whole stored field the deal left) to the
+  seats, `ReleasePlant` and `AdoptPlant` to the ventures. What stays (Complaint 931): the seats' command replaces a field and does not know
+  the rule that made the change, because the exchange's rules run on the party's copy.
 - A party reads another seat's staff and know-how by running as that seat (`acting_as`), because `staff` and `techniques_held` answer for the acting seat.
 - The ledger's views `acting_balance` and `seat_balance` read the book directly and are uncached: the actors' own code moves the book too.
 - The save listing reads a save's purse from the book the save carries (`settings.purse_in_save`); the household section no longer has a `capital`.

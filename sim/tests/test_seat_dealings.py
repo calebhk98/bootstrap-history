@@ -7,7 +7,7 @@ from sim.actors.module import Actors
 from sim.agents.api import ActorRecord, ActorRegistry
 from sim.knowledge.api import ReceiveTechniques
 from sim.ledger.api import CreditSeat, DebitSeat, NoteSeatCash, RestorePurse
-from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer, SeatsSeat
+from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer, SeatsSeat, SetDealing
 from sim.knowledge.api import KnowledgeSeat
 from sim.seats.module import Seats
 from . import module_harness
@@ -68,12 +68,14 @@ class Game:
     def build(self, world):
         host = self.host
         self.seats = module_harness.build(Seats, seat=self.slot, views={"year": 100})
+        self.seats._slots = lambda: {FIRST_SEAT_ID: self.slot}
         answers = {command: host.send for command in (CreditSeat, DebitSeat, NoteSeatCash, RestorePurse)}
         answers[ReceiveTechniques] = lambda command: self.receive(command.node_ids, command.granted)
+        answers[SetDealing] = lambda command: self.seats.set_dealing(command)
         self.module = module_harness.build(Actors, world=host.world, module_id="actors", answers=answers, views={
             "operating": set(), "techniques_granted": lambda: frozenset(self.knowledge.granted),
             "techniques_held": lambda: frozenset(self.knowledge.done), "acting_seat": FIRST_SEAT_ID,
-            "seat_list": {"joined": [FIRST_SEAT_ID]}, "seat_dealings": lambda seat_id: self.slot, "seat_business": lambda seat_id: self.business,
+            "seat_list": {"joined": [FIRST_SEAT_ID]}, "seat_dealings": lambda seat_id: self.seats.seat_dealings(seat_id),
             "seat_balance": lambda seat_id: host.view("seat_balance")(seat_id), "act_as": host.act_as,
             "staff": lambda: {"employees": {}}, "dealings_listing": lambda: self.seats.dealings_listing()})
         self.module.cast = lambda: self.actors
