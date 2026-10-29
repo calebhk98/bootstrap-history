@@ -150,7 +150,7 @@ class GoodsStandIn:
         self.market_version = 0
         self.module = module_harness.build(Markets, views={
             "year": 100, "pop_scale": 1.0, "real_output_per_head": 1.0,
-            "legacy_done_versions": lambda: (0, self.operating_version), "concern_versions": lambda: (self.market_version, 0),
+            "held_and_running_versions": lambda: (0, self.operating_version), "concern_versions": lambda: (self.market_version, 0),
             "farm_holdings": {"hectares": 0.0}})
         self.module.goods_category_state = self._state
         self.module.goods_reach_factor = lambda: 1.0

@@ -120,3 +120,6 @@ module's world slot; `SimulationState.actors` is a property over it for the call
   `sim/engine/bridge_actors.py` until those owners move.
 - Reads that the owners have not published yet are bridged in `sim/engine/bridge_actors.py`, one engine call each, under narrow
   names (the catalogue's names for the markets and workforce views are coarser than the calls).
+- Added for finance and polity (Phase 6b): views `lender_offers_made` (a copy of the pool's offers), `cash_and_deposit` (keyed), `loans_out`
+  (quote), `debt_owed` (keyed), `cast_recorded`, `government_figures` (keyed by country: grant, requisition rate, office rate); commands
+  `SetLenderOffers` and `SettleLenderInterest` (`sim/actors/lending.py`). Nothing outside the module writes the purse book any more.

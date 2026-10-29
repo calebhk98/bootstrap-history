@@ -29,7 +29,7 @@ READS_BY_OWNER = {
 	"actors": ("concern_versions", "concern_counts"),
 	"mechanics": ("effect_factor",),
 	"knowledge": ("tree_nodes", "done_year", "techniques_granted"),
-	"projects": ("legacy_done_versions", "operating", "venture_opened_year"),
+	"projects": ("held_and_running_versions", "operating", "venture_opened_year"),
 	"prices": ("society_output", "concern_offers", "commodity_record", "commodity_floor_ratio", "material_prices", "material_pool",
 	           "calculated_goods_prices"),
 	"materials": ("material_commodity",),

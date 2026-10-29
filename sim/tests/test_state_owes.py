@@ -13,7 +13,7 @@ from sim.tests import module_harness
 def module(debt, arrears):
     treasury = SimpleNamespace(actor_id="state", arrears_owed=lambda: arrears)
     purses = SimpleNamespace(debt=lambda actor_id: debt if actor_id == "state" else 0.0)
-    return module_harness.build(Finance, views={"state_treasury": treasury, "cast_state": SimpleNamespace(purses=purses)})
+    return module_harness.build(Finance, views={"state_treasury": treasury, "debt_owed": purses.debt})
 
 
 class StateOwes(unittest.TestCase):

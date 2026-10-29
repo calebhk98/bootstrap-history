@@ -39,7 +39,7 @@ def fixture(capital, owed, claimed=True):
 		taker.received += seized
 		return seized
 
-	module = polity_host.build(acting_balance=lambda: household.capital, legacy_acting_household=household, state_treasury=treasury,
+	module = polity_host.build(acting_balance=lambda: household.capital, state_treasury=treasury,
 	                           answers=polity_host.takes_from_purse(household, treasury),
 	                           wealth_claims=lambda: [(reader, seizer)] if claimed else [])
 	module.state_reach = lambda: 0.5

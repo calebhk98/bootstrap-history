@@ -6,7 +6,7 @@ state's reach is the share of what is due that the officials it pays collect ove
 (`sim/agents/collection.py`); its authority, what it can collect, enforce and borrow against, is that reach times this share.
 No civilisation file states either.
 
-Needs: effect_sum, actor_world, year, legacy_done_versions, population_total."""
+Needs: effect_sum, actor_world, year, held_and_running_versions, population_total."""
 from . import constants, rules
 
 
@@ -22,7 +22,7 @@ class Reach:
 		return self.state_reach() * self.state_legitimacy()
 
 	def _reach_key(self, unfunded):
-		done_version, operating_version = self.needs.legacy_done_versions()
+		done_version, operating_version = self.needs.held_and_running_versions()
 		return (self.needs.year(), done_version, operating_version, round(self.needs.population_total()), unfunded)
 
 	def state_reach(self):

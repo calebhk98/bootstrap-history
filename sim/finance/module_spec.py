@@ -1,36 +1,38 @@
 """The finance module's spec (sim/assembly).
 
 Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_finance.py and the other
-bridge files) under the name the owner will publish, or a view of a module that has moved. Grouped by owner. The `legacy_*` names
-are the owners' raw objects the module still holds in place: the household's state and actor, the projects record, the seats'
-registry and the game itself (the ventures' review and the labour market's quotes, until production and workforce publish them).
+bridge files) under the name the owner will publish, or a view of a module that has moved. Grouped by owner. It reads no raw
+object of another owner: the purse book, the household's purse and the projects in hand are reached through views that answer
+plain figures and through the owners' commands.
 
 Nothing it publishes is cached: the agents' shared arrears rule writes `interest_arrears` and `arrears_years` behind the module
 through the household's `arrears_book`, and every answer reads the economy, the actors' book and the household directly."""
 from sim.assembly.api import QUOTE, ModuleSpec, PhaseHook, ViewSpec
-from sim.ledger.api import SettleWithEdge, WithdrawHouseholdMoney
+from sim.actors.api import SetLenderOffers, SettleLenderInterest
+from sim.ledger.api import NoteHolderBooking, SettleHouseholdInterest, SettleWithEdge, WithdrawHouseholdMoney
 from sim.polity.api import SetReputation
+from sim.projects.api import HaltActiveProjects, ReviewVentures
 from sim.reporting.api import RecordEvent
 from sim.resources.api import MothballMines
-from sim.workforce.api import BleedStaff, DisperseDependants
+from sim.workforce.api import BleedStaff, DisperseDependants, Manumit
 
 from . import commands
 from .module import Finance
 from .state import FinanceSeat
 
 READS_BY_OWNER = {
-	"core": ("year", "civilisation", "game_config", "legacy_game", "money_text"),
+	"core": ("year", "civilisation", "game_config", "money_text"),
 	"prices": ("price_index",),
-	"actors": ("cast", "cast_state", "state_treasury", "actor_world", "legacy_edge_account"),
-	"seats": ("legacy_seats", "seat_party", "dealing_party"),
-	"ledger": ("acting_balance", "legacy_acting_household", "legacy_household_actor"),
+	"actors": ("cast", "state_treasury", "actor_world", "lender_offers_made", "cash_and_deposit", "loans_out", "debt_owed"),
+	"seats": ("dealing_party",),
+	"ledger": ("acting_balance",),
 	"mechanics": ("effect_sum", "effect_values", "nodes_with_mechanic"),
 	"polity": ("standing",),
 	"resources": ("forest_hectares", "mine_operating_cost"),
 	"workforce": ("staff", "money_per_labour_hour", "labour_market", "wage_bill", "household_dependant_people",
-	              "held_trade"),
+	              "held_trade", "hours_for_sale", "best_wage_trade", "work_for_wages_dry_run", "standing_job_pay"),
 	"production": ("revenue_capacity", "revenue_estimate", "upkeep", "operating", "cash_remedies"),
-	"projects": ("committed_cost", "legacy_projects"),
+	"projects": ("committed_cost",),
 	"knowledge": ("tree_nodes",),
 	"markets": ("agent_rate", "agent_credit_room", "agent_economy_opened", "agent_economy", "household_bill_per_person"),
 }
@@ -81,5 +83,6 @@ MODULE_SPECS = (ModuleSpec(
 	),
 	phases=(PhaseHook("credit_limit", "step_credit_limit"),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(RecordEvent, SetReputation, SettleWithEdge, WithdrawHouseholdMoney, MothballMines, BleedStaff, DisperseDependants),
+	sends=(RecordEvent, SetReputation, SettleWithEdge, WithdrawHouseholdMoney, MothballMines, BleedStaff, DisperseDependants, Manumit,
+	       HaltActiveProjects, ReviewVentures, SettleHouseholdInterest, NoteHolderBooking, SetLenderOffers, SettleLenderInterest),
 ),)

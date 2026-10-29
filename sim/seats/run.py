@@ -32,6 +32,11 @@ class Run:
         return country.partner_country_of_seat(self.needs.legacy_seats(), self.clock.acting_seat,
                                                self.needs.civilisation().get("id"))
 
+    def seat_country(self, seat_id: str) -> Optional[str]:
+        """The country a seat plays for when it names one (None: the game's own, or no such seat)."""
+        seat = self.needs.legacy_seats().get(seat_id)
+        return None if seat is None else seat.country
+
     def played_countries(self) -> List[str]:
         """The countries a country seat plays, sorted."""
         home = self._home()

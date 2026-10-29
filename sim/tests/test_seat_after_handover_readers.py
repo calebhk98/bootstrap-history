@@ -83,13 +83,13 @@ check("partner_country_of_seat: the other seat has none", partner_country_of_sea
 
 # ---- what the state pays the acting seat
 state = post_handover_state()
-records = {"government:rome": SimpleNamespace(patron_grant=500.0), "government:han": SimpleNamespace(patron_grant=90.0)}
+grants = {"rome": 500.0, "han": 90.0}
 check("patron_grant_share: the heir is paid its country's grant shared among that state's clients",
-      patron_grant_share(records, state.seats, state.acting_seat, "rome", lambda country: [("heir", 0.0, 1.0), ("third", 0.0, 1.0)]) == 45.0)
+      patron_grant_share(grants.get, state.seats[state.acting_seat].country, state.acting_seat, "rome", lambda country: [("heir", 0.0, 1.0), ("third", 0.0, 1.0)]) == 45.0)
 check("patron_grant_share: a state that funds no heir pays it nothing",
-      patron_grant_share(records, state.seats, state.acting_seat, "rome", lambda country: [("third", 0.0, 1.0)]) == 0.0)
+      patron_grant_share(grants.get, state.seats[state.acting_seat].country, state.acting_seat, "rome", lambda country: [("third", 0.0, 1.0)]) == 0.0)
 check("patron_grant_share: the heir is asked about its own country and not the home one",
-      patron_grant_share(records, state.seats, "heir", "rome", lambda country: [("heir", 0.0, 1.0)] if country == "han" else []) == 90.0)
+      patron_grant_share(grants.get, state.seats["heir"].country, "heir", "rome", lambda country: [("heir", 0.0, 1.0)] if country == "han" else []) == 90.0)
 
 # ---- what the seats have built
 state = post_handover_state()

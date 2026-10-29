@@ -3,8 +3,8 @@
 This reads the household's stance, the state's reach and its protection and rolls the enforcement. A household that complies
 draws no random number, so complying leaves the game's stream as it was.
 
-Needs: legacy_dice, state_treasury, legacy_game, acting_balance, legacy_acting_household, transfer_listening, send (PayEdge,
-RecordEvent)."""
+Needs: game_random, state_treasury, provider_game (handed to the mods' wealth-claim readers and seizers), acting_balance,
+transfer_listening, send (PayEdge, TakeFromHouseholdPurse, RecordEvent)."""
 from sim.agents.api import demand_answer, edges
 from sim.hazards.api import capital_lost
 from sim.ledger.api import PayEdge, TakeFromHouseholdPurse
@@ -21,7 +21,7 @@ class Demands:
 		the state's eyes and puts blame on it; a service offered in negotiation is paid to the people who render it."""
 		seat = self.seat
 		stance = seat.demand_stance
-		draw = self.needs.legacy_dice().random() if stance not in PAYS_IN_FULL else 1.0
+		draw = self.needs.game_random().random() if stance not in PAYS_IN_FULL else 1.0
 		answer = demand_answer.settle_demand(stance, amount, self.state_reach(), seat.protection, draw, seat.service_offer)
 		if answer["service"] > 0.0:
 			self.needs.send(PayEdge(edges.EDGE_STATE_SPENDING, answer["service"], "service to the state"))
@@ -32,7 +32,7 @@ class Demands:
 
 	def lose_capital_to(self, fraction, cause, taker_id):
 		"""A fraction of what the household holds goes to the actor `taker_id` (the state's treasury is not a named edge); the sum taken."""
-		lost = capital_lost(self.needs.legacy_acting_household().capital, fraction)
+		lost = capital_lost(self.needs.acting_balance(), fraction)
 		if lost <= 0.0:
 			return 0.0
 		self.needs.send(TakeFromHouseholdPurse(taker_id, lost, cause))
@@ -42,7 +42,7 @@ class Demands:
 		"""The state demands `fraction` of the wealth it can see (the purse less what the household has hidden, plus registered
 		claims on other actors). The household answers like any demand; what is paid is taken to the treasury, from the purse
 		first and then from the claims. Returns (the answer, what was demanded, what was taken)."""
-		game = self.needs.legacy_game()
+		game = self.needs.provider_game()
 		capital = self.needs.acting_balance()
 		registered = self.needs.wealth_claims()
 		claims = sum(max(0.0, reader(game)) for reader, _seizer in registered)
@@ -68,7 +68,7 @@ class Demands:
 		seat = self.seat
 		settled = {"concealed": 0.0, "cost": 0.0, "seized": 0.0, "found": 0.0}
 		if seat.demand_stance == demand_answer.CONCEAL or seat.concealed > 0.0:
-			draw = self.needs.legacy_dice().random()
+			draw = self.needs.game_random().random()
 			settled = demand_answer.settle_concealment(seat.demand_stance, max(0.0, self.needs.acting_balance()), self.state_reach(),
 			                                           seat.protection, draw)
 			if settled["cost"] > 0.0:

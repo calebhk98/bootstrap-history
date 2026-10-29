@@ -19,6 +19,7 @@ from sim.projects.review import SeatReview
 from sim.engine.seat_defaults import default_policy
 from sim.tests import polity_host
 from sim.polity.api import ShiftValueWeight
+from sim.projects.api import ReviewVentures
 from sim.reporting.api import RecordEvent
 from sim.tests import hazards_host, module_harness, projects_host, ventures_host
 from sim.ui.proto.dispatch_ventures import _cmd_policy
@@ -109,16 +110,16 @@ class LogNamesWhatClosed(unittest.TestCase):
         return [command for command in module_harness.sent(module) if isinstance(command, RecordEvent)]
 
     def _shed(self, closed, capital):
-        module = finance_host.build(acting_balance=capital, legacy_game=Game(
-            review_ventures=lambda rules, year: [business_review.Closure(key, business_review.LOSS_MAKING) for key in closed]))
+        module = finance_host.build(acting_balance=capital, answers={
+            ReviewVentures: lambda command: [business_review.Closure(key, business_review.LOSS_MAKING) for key in closed]})
         module.shed_loss_makers(100)
         return self._events(module)
 
     def _owing(self, closures):
         household = Game(capital=-1000.0, slaves=0, freedmen=0, artisans=0, scholars=0)
         module = finance_host.build(
-            legacy_acting_household=household, legacy_projects=Game(active={}), legacy_game=Game(
-                review_ventures=lambda rules, year: [business_review.Closure(key, business_review.CREDITOR_SEIZURE) for key in closures]))
+            household=household, answers={
+                ReviewVentures: lambda command: [business_review.Closure(key, business_review.CREDITOR_SEIZURE) for key in closures]})
         module.credit_limit = lambda revenue=None, upkeep=None, capital=None: 0.0
         module.answer_exhausted_credit(100)
         return self._events(module)
@@ -226,10 +227,10 @@ class StallDiagnosis(unittest.TestCase):
     """A run that has effectively stopped says so and what would restart it; a solvent one is not told it is stuck."""
 
     def _host(self, capital=-900.0, insolvent_years=12, revenue=0.0, standing_pay=0.0, would_earn=500.0, hours=2000.0):
-        labour = Game(hours_for_sale=lambda: hours, best_wage_trade=lambda: "scribe",
-                                 work_for_wages_dry_run=lambda trade, hours: (would_earn, None), standing_job_pay=lambda trade: standing_pay)
         module = finance_host.build(seat=FinanceSeat(insolvent_years=insolvent_years), acting_balance=capital, revenue_capacity=revenue,
-                                    upkeep=100.0, legacy_game=Game(labour=labour))
+                                    upkeep=100.0, hours_for_sale=hours, best_wage_trade="scribe",
+                                    work_for_wages_dry_run=lambda trade, hours: (would_earn, None),
+                                    standing_job_pay=lambda trade: standing_pay)
         module.debt_interest_rate = lambda: 0.05
         module.living_cost = lambda revenue=0, upkeep=0, capital=None: 200.0
         return module

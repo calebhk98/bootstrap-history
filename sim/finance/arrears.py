@@ -1,10 +1,11 @@
 """What arrears cost the acting seat a year, how they accrue, and the warning that comes before the limit.
 
-Needs: effect_values, standing, acting_balance, civilisation, legacy_household_actor, actor_world, money_text, review_ventures
-(through legacy_game until production moves)."""
+Needs: effect_values, standing, acting_balance, civilisation, money_text, send (SettleHouseholdInterest, ReviewVentures,
+RecordEvent)."""
 from typing import Any
 
 from sim.agents.api import business_review
+from sim.ledger.api import SettleHouseholdInterest
 from sim.reporting.api import RecordEvent
 from sim.world import capital_market
 
@@ -38,7 +39,7 @@ class Arrears:
 		capital = needs.acting_balance()
 		if capital >= 0 and seat.interest_arrears <= 0.0:
 			return 0.0
-		owed, paid = needs.legacy_household_actor().settle_interest(needs.actor_world())
+		owed, paid = needs.send(SettleHouseholdInterest())
 		seat.interest_paid = (seat.interest_paid or 0.0) + paid
 		if owed > 0 and (seat.insolvent_years in (1, 5, 15)):
 			rate = self.debt_interest_rate()
@@ -70,7 +71,7 @@ class Arrears:
 		returns (the loss rule of `Business.review`, the same for every owner). A ruined run once held works whose upkeep exceeded
 		their revenue, so net income sat near zero for ever: a household lets the loss-makers go the year it notices, and then its
 		income is its practice again, which is enough."""
-		shed = [closure.entry_key for closure in self.needs.legacy_game().send(ReviewVentures(tuple((business_review.LOSS_MAKING,)), year))]
+		shed = [closure.entry_key for closure in self.needs.send(ReviewVentures(tuple((business_review.LOSS_MAKING,)), year))]
 		if shed:
 			in_arrears = self.needs.acting_balance() < 0
 			# name them: a bare count tells a player neither which nor how to get it back

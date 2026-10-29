@@ -5,7 +5,7 @@ an owner that has not moved yet, published by the engine bridge (sim/engine/brid
 name the owner will publish, or a view of a module that has moved. Grouped by owner. The `legacy_*` names are the owners' raw
 objects the actors still hold in place: the seats' registry, the acting seat's projects and household facade, the map and the
 constants `Sim` still declares."""
-from sim.assembly.api import FIRST, KEYED, LIST, ExtensionPoint, ModuleSpec, Provision, ViewSpec
+from sim.assembly.api import FIRST, KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, Provision, ViewSpec
 from sim.agents.api import ActorsState
 from sim.coin.api import ChargeActorsTheft, ChargeKeeping
 from sim.finance.api import DefaultOnDebt, RefreshLenderOffers
@@ -65,6 +65,12 @@ MODULE_SPECS = (ModuleSpec(
 	publishes=(
 		ViewSpec("cast", "cast", **_LIVE),
 		ViewSpec("cast_state", "cast_state", **_LIVE),
+		ViewSpec("cast_recorded", "cast_recorded", **_LIVE),
+		ViewSpec("government_figures", "government_figures", kind=KEYED, **_LIVE),
+		ViewSpec("lender_offers_made", "lender_offers_made", **_LIVE),
+		ViewSpec("cash_and_deposit", "cash_and_deposit", kind=KEYED, **_LIVE),
+		ViewSpec("loans_out", "loans_out", kind=QUOTE, **_LIVE),
+		ViewSpec("debt_owed", "debt_owed", kind=KEYED, **_LIVE),
 		ViewSpec("state_treasury", "state_treasury", seat_scoped=True, **_LIVE),
 		ViewSpec("seeded_actor_registry", "seeded_actor_registry", **_LIVE),
 		ViewSpec("legacy_edge_account", "edge", kind=KEYED, **_LIVE),
@@ -81,7 +87,8 @@ MODULE_SPECS = (ModuleSpec(
 	),
 	applies=((commands.AdvanceActors, "advance_actors"), (commands.RecordConquestContact, "record_conquest_contact"),
 	         (commands.RecordMigrantContact, "record_migrant_contact"), (commands.ScaleStrata, "scale_strata"), (commands.NoteTraderMargin, "note_trader_margin"),
-	         (commands.FollowTileTransfer, "follow_tile_transfer")),
+	         (commands.FollowTileTransfer, "follow_tile_transfer"),
+	         (commands.SetLenderOffers, "set_lender_offers"), (commands.SettleLenderInterest, "settle_lender_interest")),
 	extension_points=(
 		ExtensionPoint("actor_kinds", LIST),           # () -> {kind: the class that builds its actors}; a later answer replaces a kind
 		ExtensionPoint("actor_spawners", LIST),        # () -> [(name, function(registry, world) -> ids founded)], run after the actors' turns

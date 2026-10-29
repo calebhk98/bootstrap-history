@@ -77,6 +77,18 @@ class Ledger(Module):
 		self.needs.legacy_acting_household().capital = command.balance
 		self.bump_seat(MONEY)
 
+	def settle_household_interest(self, command: Any) -> Any:
+		settled = self.needs.legacy_household_actor().settle_interest(self.needs.actor_world())
+		self.bump_seat(MONEY)
+		return settled
+
+	def note_holder_booking(self, command: Any) -> None:
+		"""The lender's books record a posting its loan or repayment made: a seat's household, else an actor of the cast."""
+		seats = self.needs.legacy_seats()
+		holder = seats[command.holder].household if command.holder in seats else self.needs.cast().actors.get(command.holder)
+		if holder is not None:
+			(holder.note_income if command.signed > 0.0 else holder.note_outlay)(command.label, abs(command.signed))
+
 	def withdraw_household_money(self, command: Any) -> None:
 		household = self.needs.legacy_household_actor()
 		household.money = household.money - command.amount

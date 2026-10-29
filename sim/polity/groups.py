@@ -2,7 +2,7 @@
 lost and to what, and what the state is doing about it. The groups themselves are actors (`sim/agents/group.py`); this is the
 reading side, plus the one prohibition check the start gate calls.
 
-Needs: cast, cast_state, state_treasury, money_text, material_pool, material_substitutes, tree,
+Needs: cast, cast_recorded, state_treasury, money_text, material_pool, material_substitutes, tree,
 standing."""
 from sim.agents.api import Sector, supply
 
@@ -12,8 +12,7 @@ from sim.projects.api import constants as projects_constants
 class Groups:
 
 	def _group_records(self):
-		state = self.needs.cast_state()
-		if state is None or not state.records:
+		if not self.needs.cast_recorded():
 			return []
 		return [group.record for group in self.needs.cast().home_actors("interest_group")
 		        if group.record.exited_year is None]
@@ -49,8 +48,7 @@ class Groups:
 
 	def group_levy_reasons(self):
 		"""Why the requisition is larger than the ordinary rate: the groups the state is paying."""
-		state = self.needs.cast_state()
-		if state is None or not state.records:
+		if not self.needs.cast_recorded():
 			return []
 		owed = self.needs.state_treasury().record.unfunded
 		reasons = []
@@ -84,8 +82,7 @@ class Groups:
 		category and the line of techniques it refines; a group of workers out of a job is met by the technique that did their
 		work with fewer hands and by any technique that makes what it makes or a substitute for it. A node the state itself
 		values is not forbidden."""
-		state = self.needs.cast_state()
-		if state is None or not state.records:
+		if not self.needs.cast_recorded():
 			return None
 		registry = self.needs.cast()
 		banned = registry.prohibitions()

@@ -18,6 +18,7 @@ from .completion import Completion
 from .cost_tail import CostTail
 from .costs import Costs
 from .exclusions import Exclusions
+from .halting import halt_active_projects
 from .hour_queue import HourQueue
 from .mothball import Mothball
 from .open_gate import OpenGate
@@ -104,6 +105,14 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 
 	def apply_review_ventures(self, command):
 		return self.review_ventures(command.rules, command.year)
+
+	def apply_halt_active_projects(self, command):
+		projects = self.needs.legacy_projects()
+		if not projects.active:
+			return [], 0.0
+		halted = halt_active_projects(projects)
+		self.bump_seat(ACTIVE)
+		return halted
 
 	def apply_mothball_work(self, command):
 		return self.mothball_work(command.node_id)

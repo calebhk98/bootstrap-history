@@ -3,6 +3,7 @@
 Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_polity.py and the
 other bridge files) under the name the owner will publish, or a view of a module that has moved. Grouped by owner."""
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
+from sim.hazards.api import SayOnce
 from sim.knowledge.api import ForgetTechnique
 from sim.ledger.api import PayActorFromHousehold, PayEdge, TakeFromHouseholdPurse
 from sim.reporting.api import RecordEvent
@@ -13,25 +14,25 @@ from .module import Polity
 from .state import STANDING, VALUES, PolitySeat, PolityWorld
 
 READS_BY_OWNER = {
-	"core": ("year", "civilisation", "events_enabled", "automation", "acting_seat", "danger_lines", "legacy_dice", "legacy_said_once",
-	         "legacy_game", "legacy_constant", "legacy_act_as", "money_text", "mass_text"),
-	"actors": ("state_treasury", "cast", "cast_state", "actor_world", "country_world"),
-	"ledger": ("acting_balance", "legacy_acting_household", "legacy_household_actor", "transfer_listening"),
+	"core": ("year", "civilisation", "events_enabled", "automation", "acting_seat", "danger_lines", "provider_game",
+	         "money_text", "mass_text"),
+	"actors": ("state_treasury", "cast", "cast_recorded", "government_figures", "actor_world", "country_world"),
+	"ledger": ("acting_balance", "transfer_listening"),
 	"mechanics": ("effect_sum", "effect_values", "effect_factor", "effect_best", "running_mechanics", "mechanic",
 	              "patrons_lost_to_eminence"),
 	"knowledge": ("techniques_held", "techniques_granted", "tree", "tree_nodes"),
 	"production": ("running", "revenue_estimate", "concern_revenue", "operating"),
-	"projects": ("legacy_done_versions",),
+	"projects": ("held_and_running_versions",),
 	"workforce": ("headcount", "base_annual_wage", "labour_state_weights", "money_per_labour_hour"),
-	"seats": ("seat_list", "legacy_seats", "founder"),
+	"seats": ("seat_list", "seat_country", "founder", "game_random", "acting_as"),
 	"demography": ("population_total", "pop_scale"),
 	"materials": ("material_pool", "material_substitutes"),
 	"reporting": ("real_output_per_head",),
 	"hazards": ("output_factor",),
 }
 
-# Everything here reads the seat's own state and, through legacy views, state written outside any command of polity (the
-# techniques held, the cast, the purse), so nothing is cached yet.
+# Everything here reads the seat's own state and state written outside any command of polity (the techniques held, the cast,
+# the purse), so nothing is cached yet.
 _LIVE = dict(cached=False)
 _SEAT = dict(seat_scoped=True, cached=False)
 
@@ -88,6 +89,6 @@ MODULE_SPECS = (ModuleSpec(
 	# empty, takes. reader(game) -> money the household is owed; seizer(game, amount, taker) -> money actually handed to `taker`.
 	extension_points=(ExtensionPoint("wealth_claims", LIST),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(PayEdge, PayActorFromHousehold, TakeFromHouseholdPurse, RecordEvent, ForgetTechnique, EndRun),
+	sends=(PayEdge, PayActorFromHousehold, TakeFromHouseholdPurse, RecordEvent, ForgetTechnique, EndRun, SayOnce),
 	phases=(PhaseHook("begin_seat_year", "step_begin_seat_year"),),
 ),)

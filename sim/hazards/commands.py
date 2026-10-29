@@ -26,3 +26,10 @@ class LoseCapital(Command):
 @dataclass(frozen=True)
 class RecoverOutput(Command):
 	"""The year's recovery of the world's output factor toward normal, faster the stronger the state's military."""
+
+
+@dataclass(frozen=True)
+class SayOnce(Command):
+	"""The notice named `key` is marked as told. Answers True the first time it is sent and False after, so the sender tells its
+	players once."""
+	key: str

@@ -16,7 +16,7 @@ def world_with(offers):
 
     def output_must_not_be_read():
         raise AssertionError("household saving read before lenders met")
-    return finance_host.build(cast_state=types.SimpleNamespace(purses=purses),
+    return finance_host.build(lender_offers_made=lambda: dict(purses.offers),
                               actor_world=types.SimpleNamespace(household_saving=output_must_not_be_read))
 
 
