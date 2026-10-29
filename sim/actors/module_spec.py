@@ -57,7 +57,6 @@ READS_BY_OWNER = {
 	"ledger": ("transfer_listening", "seat_balance", "acting_balance"),
 	"materials": ("material_commodity", "materials_without_a_seller"),
 	"agriculture": ("farm_food_demand_kg",),
-	"assembly": ("registered_seats",),
 	"disease": ("frontier_disease_loss",),
 	"mechanics": ("mechanic",),
 	"prices": ("material_prices",),

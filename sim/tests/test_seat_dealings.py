@@ -72,7 +72,7 @@ class Game:
         answers[ReceiveTechniques] = lambda command: self.receive(command.node_ids, command.granted)
         self.module = module_harness.build(Actors, world=host.world, module_id="actors", answers=answers, views={
             "operating": set(), "techniques_granted": lambda: frozenset(self.knowledge.granted),
-            "techniques_held": lambda: frozenset(self.knowledge.done), "acting_seat": FIRST_SEAT_ID, "registered_seats": [FIRST_SEAT_ID],
+            "techniques_held": lambda: frozenset(self.knowledge.done), "acting_seat": FIRST_SEAT_ID,
             "seat_list": {"joined": [FIRST_SEAT_ID]}, "seat_dealings": lambda seat_id: self.slot, "seat_business": lambda seat_id: self.business,
             "seat_balance": lambda seat_id: host.view("seat_balance")(seat_id), "act_as": host.act_as,
             "staff": lambda: {"employees": {}}, "dealings_listing": lambda: self.seats.dealings_listing()})

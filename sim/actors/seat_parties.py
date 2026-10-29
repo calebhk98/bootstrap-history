@@ -70,6 +70,6 @@ class SeatParties:
 
     def find_dealer(self, actor_id: Any) -> Any:
         """The actor with this id: a seat that has joined, else one in the registry."""
-        if isinstance(actor_id, str) and actor_id in self.needs.registered_seats():
+        if isinstance(actor_id, str) and actor_id in self.needs.seat_list()["joined"]:
             return self.seat_party(actor_id)
         return self.cast().get(actor_id) if isinstance(actor_id, str) else None
