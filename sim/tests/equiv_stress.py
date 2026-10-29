@@ -6,6 +6,7 @@ Works on the base checkout as on the current one: the hazards are data, and the 
 holder the checkout keeps them on."""
 import contextlib
 import importlib
+from sim.seats.api import JoinSeat
 
 STRESS_HAZARDS = [
     {"name": "Stress plague", "years": [101, 108], "staff_loss": 0.3, "note": "stress tier"},
@@ -71,5 +72,5 @@ def build(scenario):
         else:
             sim.operating.add(PATRON)
     if scenario.get("seats", 1) > 1:
-        sim.join_seat(*SECOND_SEAT)
+        sim.send(JoinSeat(*SECOND_SEAT))
     return sim

@@ -192,7 +192,7 @@ def build_setup(sim, opening=None, production=None):
     recipes = recipes_from_production_data(production, every_recipe)
     trades_data = _load("world", "trades.json").get("trades", {})
     life_years = {good: float(entry["years"]) for good, entry in _load("world", "service_lives.json").get("years", {}).items()}
-    recipes = tool_wear_recipes(recipes, trades_data, life_years, float(sim.HOURS_PER_PERSON_YEAR))
+    recipes = tool_wear_recipes(recipes, trades_data, life_years, float(sim.view("hours_per_person_year")()))
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
@@ -236,7 +236,7 @@ def build_setup(sim, opening=None, production=None):
         state_capacity=1.0,   # follows the officials: `run_year` sets it from `Sim.state_reach()` before each year
         hiding=agents_api.evasion.hidden_share,   # the one hiding rule the actor layer uses (Complaint 657)
         flight=agents_api.flight,   # the actor layer's flight rules (Complaint 657)
-        working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
+        working_hours_per_year=float(sim.view("hours_per_person_year")()), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
         need_share_by_trade={trade: float(share) for trade, share in (opening.get("need_shares") or {}).items()},
         unskilled_trade=opening["unskilled_trade"], debt_bondage_years=sim.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),

@@ -19,7 +19,7 @@ Seats and the acting context: who plays, joining and handing over, goals and win
 
 | Old | Now |
 |---|---|
-| `SeatRunMixin` (`seat_run.py`) | `run.py` (`Run`), `lists.py`; forwarders in `sim/engine/forward_seats.py` |
+| `SeatRunMixin` (`seat_run.py`) | `run.py` (`Run`), `lists.py`; the root calls the commands and views itself |
 | `SeatHandoverMixin`, `seat_handover.py` | `handover.py` (`Handover`), `handover_rules.py`; the registry move is `sim/engine/seat_move.py` (applied for `MoveSeat`); `seat_handover_empty.py` and `seat_handover_rekey.py` stay in the engine (they read engine state dataclasses and the engine's own stores) |
 | `SeatBuildsMixin`, `seat_builds.py` | `builds.py` (the one method, `seats_that_built`, had no caller; `seat_place` is `Sight.seat_place`) |
 | `SeatSightMixin`, `seat_sight.py` | `sight.py`, `sight_rules.py` |

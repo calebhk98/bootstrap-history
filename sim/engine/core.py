@@ -23,17 +23,15 @@ from .forward_demography import ForwardDemographyMixin
 from .forward_agriculture import ForwardAgricultureMixin
 from .forward_diffusion import DiffusionForwardsMixin
 from .forward_mechanics import ForwardMechanicsMixin
-from .forward_workforce import ForwardWorkforceMixin
 from .projects import ProjectsMixin
-from . import seat_registry, year_steps
+from . import change_hooks, node_rederive, seat_registry, year_steps
 from .year_run import run_year
-from sim.seats.api import SetFounderLife, SetPolicy
-from .forward_seats import ForwardSeatsMixin
+from sim.seats.api import JoinCastSeats, SetFounderLife, SetPolicy
+from sim.refusal import Refusal
 from .forward_hazards import HazardsForwardsMixin
 from .forward_polity import PolityForwardsMixin
 from .seat_defaults import default_policy
 from .forward_finance import ForwardFinanceMixin
-from .forward_production import ForwardProductionMixin
 from .forward_freight import ForwardFreightMixin
 from .forward_resources import ForwardResourcesMixin
 from .core_properties import ForwardingPropertiesMixin
@@ -52,10 +50,7 @@ from . import units
 class Sim(
         ForwardMechanicsMixin,
         ForwardMarketsMixin,
-        ForwardProductionMixin,
-        ForwardWorkforceMixin,
         ProjectsMixin,
-        ForwardSeatsMixin,
         HazardsForwardsMixin,
         PolityForwardsMixin,
         DiffusionForwardsMixin,
@@ -90,7 +85,7 @@ class Sim(
                                     display_units=lambda: (units.registry(), units.chosen_units(), lambda: units.unit_context(self))),
             dice=rng))
         self.nodes = nodes_in_civ_money(nodes, self.civ)
-        self._remember_derived_gates(self.civ["starting_techs"])
+        node_rederive.remember_derived_gates(self, self.civ["starting_techs"])
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
             SimulationState, HouseholdState,
@@ -220,7 +215,9 @@ class Sim(
             self.view("legacy_economy")().open_agent()
             self.send(GrantOpeningHerds())
             self._done_changed()
-            self.join_cast_seats()
+            joined = self.send(JoinCastSeats())
+            if isinstance(joined, Refusal):
+                raise ValueError(str(joined))
 
     def _reconnect_state_hooks(self):
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
@@ -281,6 +278,17 @@ class Sim(
         """Apply `command` through the module that owns it now; engine code not yet in a module sends this way."""
         return self.assembly.handlers[type(command)](command)
 
+    def _done_changed(self):
+        change_hooks.done_changed(self)
+
+    def _operating_changed(self):
+        change_hooks.operating_changed(self)
+
+    @property
+    def labour(self):
+        """The workforce module's labour implementation (tests and mods still call its members)."""
+        return self.assembly.modules["workforce"].labour
+
     def step(self):
         """Advance every seat one year (the order and what runs once or per seat: year_run.py)."""
         run_year(self)
@@ -304,7 +312,7 @@ class Sim(
         self.send(StartDoneYearRecord())
         horizon = horizon or self.cfg["horizon_years"]
         end = self.cfg["start_year"] + horizon
-        while self.year < end and not self.run_over():
+        while self.year < end and not self.view("run_over")():
             self.step()
         return self
 

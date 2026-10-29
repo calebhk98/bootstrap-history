@@ -81,13 +81,11 @@ class FakeSim:
         self.calls = []
 
     def view(self, name):
+        if name == "seat_list":
+            return lambda: {"playing": [seat_id for seat_id in self.seat_ids if seat_id not in self.state.ended]}
+        if name == "ended_seats":
+            return lambda: sorted(self.state.ended)
         return lambda: ["rome"]     # one country in the game: no yearly world checks
-
-    def playing_seats(self):
-        return [seat_id for seat_id in self.seat_ids if seat_id not in self.state.ended]
-
-    def ended_seats(self):
-        return sorted(self.state.ended)
 
     @contextlib.contextmanager
     def act_as(self, seat_id):
