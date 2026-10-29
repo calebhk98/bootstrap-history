@@ -5,7 +5,6 @@ nowhere. Each asserts it reads the heir's books and nothing of the leaver."""
 QUICK_TOPIC = True
 
 import json
-from types import SimpleNamespace
 
 from sim.agents.api import ActorsState
 from sim.agents.household_party import HouseholdParty

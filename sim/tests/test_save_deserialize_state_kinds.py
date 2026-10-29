@@ -18,7 +18,7 @@ from sim.production.api import ProductionSeat
 from sim.projects.state import ProjectsSeat
 from sim.ventures.state import VenturesSeat
 from sim.workforce.api import WorkforceSeat
-from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState,
+from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState,
                               SimulationState, deserialize_state)
 from sim.foreign_trade.api import ForeignTradeWorld
 from sim.refusal import Refusal, cause_of

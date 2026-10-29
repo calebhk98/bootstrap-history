@@ -2,12 +2,13 @@
 refusals. (Complaint 185, 640: the loss of a payer is the payee's gain, booked by purpose.)"""
 QUICK_TOPIC = True
 
+import json
 import unittest
 from types import SimpleNamespace
 from unittest import mock
 
 from sim.agents.api import EDGE_OUTSIDE, ActorRegistry, ActorsState, DUES_CAUSE
-from sim.engine.state import ActorRecord
+from sim.engine.state import ActorRecord, deserialize_state, serialize_state
 from sim.ledger.api import (CloseCashPeriod, CreditSeat, DebitSeat, NoteHolderBooking, NoteSeatCash, NoteSpend, OpenCashBook, OpenPurse,
                             BankStock, ChangeStock, DrawDownStock, LedgerSeat, LedgerWorld, PayActor, PayActorFromHousehold, PayEdge, PayExchange,
                             ReceiveFromEdge, ReceiveFromExchange, RescaleHouseholdMoney, RestorePurse, SettleWithEdge, TakeFromHouseholdPurse,
@@ -300,6 +301,18 @@ class SeatMoneyCommands(unittest.TestCase):
         module.note_spend(NoteSpend(40.0))
         module.note_spend(NoteSpend(2.5))
         self.assertEqual(module.seat.total_spend, 42.5)
+
+
+class SavedWithTheSeat(unittest.TestCase):
+    def test_the_cash_book_and_the_years_spending_round_trip_a_save(self):
+        seat = LedgerSeat(cash_flow={"sales": 5.0}, cash_mark=40.0, total_spend=3.5,
+                          cash_periods=[{"year": 99, "opening": 1.0, "closing": 2.0, "causes": {"a": 1.0}}])
+        loaded = deserialize_state(json.loads(json.dumps(serialize_state(seat))), LedgerSeat)
+        self.assertEqual(loaded, seat)
+
+    def test_a_seat_with_no_cash_mark_keeps_none_across_a_save(self):
+        loaded = deserialize_state(json.loads(json.dumps(serialize_state(LedgerSeat()))), LedgerSeat)
+        self.assertIsNone(loaded.cash_mark)
 
 
 class SeatPostingsNetToZero(unittest.TestCase):

@@ -1,6 +1,6 @@
 """Commands to the owner of the cast of other actors and what they are aware of."""
 from dataclasses import dataclass
-from typing import Any, Optional, Tuple
+from typing import Optional, Tuple
 
 from sim.assembly.api import Command
 

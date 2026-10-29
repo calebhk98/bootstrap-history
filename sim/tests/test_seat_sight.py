@@ -5,7 +5,6 @@ seat's work (stand-ins and a household facade, no game)."""
 QUICK_TOPIC = True
 
 from sim.ledger.api import OpenPurse
-import contextlib
 from types import SimpleNamespace
 
 from .harness import check
@@ -20,7 +19,7 @@ from sim.actors.world import ActorWorld
 from sim.tests.money_host import MoneyHost
 from sim.tests.world_stand_in import fake_needs
 from sim.engine.state import FounderState, HouseholdState
-from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
+from sim.engine.state_seat import FIRST_SEAT_ID, SeatState
 from sim.seats.api import SeatsSeat, base_visibility, most_open_mode, nodes_heard_of, seen_from
 from sim.agents.api import Business
 

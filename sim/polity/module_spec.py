@@ -1,7 +1,6 @@
 """Polity's module spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_polity.py and the
-other bridge files) under the name the owner will publish, or a view of a module that has moved. Grouped by owner."""
+Every read is a view of an owner that has not moved yet, published by the engine bridge (the bridge files of sim/engine) under the name the owner will publish, or a view of a module that has moved. Grouped by owner."""
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
 from sim.hazards.api import SayOnce
 from sim.knowledge.api import ForgetTechnique

@@ -33,7 +33,7 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 
 | Module | Package | Notes |
 |---|---|---|
-| ledger | `sim/ledger/` | owns the tonnes ledger and the pool of capacity keys swept out of it; every money path outside the agents' and the economy's own books is a ledger command; still to do: the purses (`HouseholdState.capital` and the actors' `Purses`), reached through `legacy_acting_household` and `legacy_household_actor`; Complaint 790 |
+| ledger | `sim/ledger/` | owns the tonnes ledger and the pool of capacity keys swept out of it, every seat's account in the actors' book and its cash book (`OpenPurse`, `CreditSeat`, `DebitSeat`, `NoteSeatCash`, `CloseCashPeriod`; views `acting_balance`, `seat_balance`, `cash_book`); every money path outside the agents' and the economy's own books is a ledger command; Complaint 790 |
 | living stock, defence stores | `sim/living_stock/`, `sim/defence_stores/` | |
 | projects | `sim/projects/` | starting, progress, completion, staffing, exclusions, running gates, closures, reviews; its seat state holds the projects in hand (`active`, watched by `WatchActive`, published as `active_projects` and `active_project_ids`), the retry counts, the bounties and the credit paid towards stopped projects (`failed_attempts`, `bountied`, `paid_towards`, `bounties_paid`), last year's project spending (`spend_last_year`, closed by `CloseSpendYear`) and the exclusions and staffing records; it shuts, restores and reviews works by the ventures module's commands; still to do: `cause_book.py` |
 | ventures | `sim/ventures/` | what a concern ties up and earns, opening by hand, the founder's sale, coverage roll-out; the seat state holds the seat's businesses and their plants (`VenturesSeat`), published as `operating`, `mothballed`, `closure_records`, `operating_by_seat`, `venture_size` and `venture_opened_year` and changed by `MothballConcern`, `RestoreConcern`, `CloseConcern`, `ForgetClosureReason`, `StopOperating`, `ShutForgotten`, `NoteConcernYear`, `ReviewConcerns`, `ReviewReopening` and `WatchBusiness`; the exchange still opens, closes and hands over plants on the seat's `Business` record directly (`HouseholdParty`), so the views hand out its own sets and are uncached |
@@ -137,7 +137,9 @@ Phase 6 (a) is done: `sim/ui/` reads views and sends commands (`tools/check_ui_v
   - Measured (`tools/done_check.sh`, which now counts only paths outside the owning packages): no transfer call outside its
     owner. The actors' purses move inside `sim/agents` (the actors module's implementation) and the agent economy's book inside
     `sim/economy` (markets'); both stay there. Left: the seat's purse, written by the household facade
-    (`sim/agents/household*.py`) and the `HouseholdState.capital` property, which move into the ledger's seat state.
+    (`sim/agents/household*.py`) and the `HouseholdState.capital` property, which move into the ledger's seat state. Done (branch
+    `mr/seat-purse`): the seat's account and cash book are the ledger's (`SeatAccount`, `LedgerSeat`); the household facade is deleted; the
+    count of direct capital/money writes outside owners is 0 (6 before).
 - [ ] **3.2 to 3.4** Workforce hours (`CommitHours`), land (`TransferTile`), people (`KillPeople`, `MovePeople`). Two of these may run at once only if their file sets are disjoint. Proof: the full equivalence tier, the conservation tests and a save round trip.
 
 ### Phase 4: walled packages become modules (serial)
@@ -190,6 +192,15 @@ actors (21), hazards, workforce (20 each), projects (19).
   the protocol read the seats' views. `SeatState` stays as the root's registry of each seat's household, holdings, progress record and
   module slots; `FounderState` stays for the interface's founder-death memory only. Measured: 20 reads of `legacy_*` views (24 before),
   31 reads answered by the bridge (33 before).
+- [x] The seat's purse is the ledger's and the seat as an exchange party is the actors': the bridge views `legacy_acting_household`,
+  `legacy_household_actor`, `seat_party` and `seat_party_with_margins` are gone, and so are the `Household` facade, its port and the
+  engine's seat facades. The ledger moves a seat's account in the actors' book and keeps its cash book (`LedgerSeat`); finance runs the
+  founder's borrowing rule (`SeatBorrower`); ventures reviews its business as `FounderReview`; the actors build a seat's party from the
+  owners' views and commands (`SeatPorts`) and apply the commands that address the exchange to a seat (`ApplyForPatent`, `MakeOffer`,
+  `AnswerOffer`, `GrantLicence`, `SellSeatConcern`). Design and what stays: `docs/architecture/catalogue/ledger.md` ("The seat's
+  purse"); Complaints 930 (two ways of posting a seat's money) and 931 (the party writes through two records). Measured after
+  (`python3 tools/measure/module_graph.py`): 15 modules depend on the bridge (17 before), 20 reads answered by it (31), 15 reads of
+  `legacy_*` views (20); direct capital/money writes outside owners 0 (6).
 - [ ] No other `legacy_*` view that hands out a live object (`legacy_world_map`,
 `legacy_economy`, `legacy_labour` and the rest: `python3 tools/measure/module_graph.py`).
 - [x] The `scenario` module (`sim/scenario/`) owns the game's setup and clock: the civilisation, the configuration, the modes

@@ -120,6 +120,12 @@ exchange_commands.answer_offers(firm, finder, world)
 check("the firm took the patent and paid for it", "loom" in firm.record.patents and "loom" not in seat.patents
       and abs(sim.money() - 5000.0) < 1e-6, (sim.money(), firm.record.patents))
 
+book = sim.host.purses.book
+check("the sale moved the same sum between the accounts: the seat's loss is the firm's gain and the book still nets to nothing",
+      abs(sim.money() - 1000.0 - 4000.0) < 1e-6 and abs(firm.money - (5000.0 - 4000.0)) < 1e-6
+      and abs(sum(book.balance(agent, "engine_coin") for agent in book.agents())) < 1e-6, (sim.money(), firm.money))
+check("the seat's cash book names the sale under its cause", sim.host.slots[FIRST_SEAT_ID].cash_flow != {}, sim.host.slots[FIRST_SEAT_ID].cash_flow)
+
 # ---- an offer made to the founder waits in its holdings and is answered by command -------------------------
 reply = sim.seat_offer("firm:1", {"patent": ["loom"]}, {"money": 100.0})
 check("the firm now holds it, so the founder may not offer it", not reply["ok"], reply)

@@ -8,7 +8,6 @@ import types
 from .harness import *  # noqa: F401,F403
 
 from sim.engine import cause_book
-from sim.engine.state import HouseholdState
 
 
 class StubGame:
