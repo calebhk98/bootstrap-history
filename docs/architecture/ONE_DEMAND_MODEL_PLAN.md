@@ -62,7 +62,7 @@ Readers. Find them with `grep -rnE "NeedDemandModel|household_demand_by_material
 - `sim/engine/agents_port_capital.py` (`household_saving`): income bins to a savings flow, which supplies the engine's loanable funds.
 - `sim/economy/households_cohort.py`: only `income_bins`, to cut a tile into income classes.
 - `sim/labour/workforce_spinup.py`: `budget_weights_by_good`, `input_coefficients_per_unit_output`.
-- `sim/engine/agents_port_budget.py` and `sim/engine/wage_schedule.py`: only the food floor constant, to price a subsistence dole and the wage floor.
+- `sim/engine/agents_port_budget.py` and `sim/workforce/wage_schedule.py`: only the food floor constant, to price a subsistence dole and the wage floor.
 
 ### 1.2 The agent economy's household baskets (`sim/economy/households_basket.py` and its orders)
 
