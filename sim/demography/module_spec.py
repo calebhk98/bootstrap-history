@@ -1,6 +1,6 @@
 """Demography's module spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_demography.py and
+Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/the bridge and
 the other bridge files) under the name the owner will publish, or one an owner that moved publishes. No view but the
 reference population is cached: the
 people's are three floats, which cost less to build than a signature to check, and the rest read the held land, the labour
