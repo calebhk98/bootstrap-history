@@ -27,20 +27,6 @@ class UndeclaredSend(AssemblyError):
 		self.mod_id, self.command = mod_id, command
 
 
-class FrameworkDoor:
-	"""Unchecked views and commands, for the framework's own helpers (the effects, the stores) acting for a mod after
-	checking the mod's request themselves. Mod code does not use it."""
-
-	def __init__(self, assembly: Any):
-		self._assembly = assembly
-
-	def view(self, name: str) -> Any:
-		return self._assembly.views[name]
-
-	def send(self, command: Any) -> Any:
-		return self._assembly.handlers[type(command)](command)
-
-
 class ModAccess:
 	"""The game as one mod sees it."""
 
@@ -49,7 +35,6 @@ class ModAccess:
 		self.mod_id = mod_id
 		self.reads = reads
 		self.sends = sends
-		self.framework = FrameworkDoor(assembly)
 
 	def view(self, name: str) -> Any:
 		"""The published view `name`, if the mod declared it: call it, or index a keyed one."""
@@ -62,16 +47,11 @@ class ModAccess:
 		kind = type(command)
 		if kind not in self.sends:
 			raise UndeclaredSend(self.mod_id, kind.__name__)
-		return self.framework.send(command)
+		return self._assembly.handlers[kind](command)
 
 	def memory(self) -> dict:
 		"""The mod's own JSON dict inside the saved game."""
 		return self._assembly.mod_memory().setdefault("mod_state", {}).setdefault(self.mod_id, {})
-
-
-def door_of(game: Any) -> Any:
-	"""The object the framework's helpers act through: a mod's access gives its framework door, a game itself."""
-	return game.framework if isinstance(game, ModAccess) else game
 
 
 @dataclass(frozen=True)

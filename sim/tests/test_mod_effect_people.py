@@ -7,11 +7,14 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
+from sim.actors.api import MoveStratumPeople
+from sim.actors.contact import Contact
 from sim.agents.api import Stratum, stratum_id
 from sim.agents.records import ActorRecord
 from sim.engine.mod_effects import ModEffects, people_of
 from sim.agents.api import edges
 from sim.content.api import ModError
+from sim.refusal import Refusal, cause_of
 from sim.tests.bridge_send import attach_send
 from sim.tests.ui_stand_in import Game
 
@@ -44,41 +47,66 @@ def stand_in_game():
     return game, farmers, artisans, foreign
 
 
-class MovePeopleTests(unittest.TestCase):
+class MovePeopleEffectTests(unittest.TestCase):
     def setUp(self):
         self.effects = ModEffects("test_mod")
-        self.game, self.farmers, self.artisans, self.foreign = stand_in_game()
+        self.game, *_ = stand_in_game()
+        self.sent = []
+        self.answer = {"moved": 300.0, "countries": [HOME, ABROAD]}
+        self.game.send = lambda command: self.sent.append(command) or (
+            self.answer if isinstance(command, MoveStratumPeople) else {"kind": command.kind, "facts": command.facts, "cause": command.cause,
+                                                                         "actors": command.actors})
+
+    def test_the_actors_owner_is_sent_the_move_and_the_event_states_what_moved(self):
+        entry = self.effects.move_people(self.game, "stratum:a", "stratum:b", 300.0, "a reform")
+        self.assertEqual(self.sent[0], MoveStratumPeople("stratum:a", "stratum:b", 300.0))
+        self.assertEqual((entry["kind"], entry["cause"], entry["actors"]), ("test_mod:people_moved", "a reform", (ABROAD, HOME)))
+        self.assertEqual(entry["facts"], {"moved": 300.0, "from_stratum": "stratum:a", "to_stratum": "stratum:b"})
+
+    def test_a_refusal_of_the_owner_is_a_mod_error_and_no_event_is_written(self):
+        self.answer = Refusal("no_such_stratum", "the cast holds no stratum stratum:b")
+        with self.assertRaises(ModError):
+            self.effects.move_people(self.game, "stratum:a", "stratum:b", 1.0, "no such stratum")
+        self.assertEqual(len(self.sent), 1)
+
+    def test_a_missing_cause_or_a_negative_count_is_refused_before_the_owner_is_sent_anything(self):
+        for count, cause in ((1.0, ""), (-1.0, "negative")):
+            with self.assertRaises(ModError, msg=cause):
+                self.effects.move_people(self.game, "stratum:a", "stratum:b", count, cause)
+        self.assertEqual(self.sent, [])
+
+
+class MoveStratumPeopleTests(unittest.TestCase):
+    """The actors module's handler of the command."""
+
+    def setUp(self):
+        self.farmers, self.artisans, self.foreign = stratum(None, "farmers", 1000.0), stratum(None, "artisans", 200.0), stratum(ABROAD, "farmers", 50.0)
+        actors = {actor.actor_id: actor for actor in (self.farmers, self.artisans, self.foreign)}
+        actors["government:home"] = SimpleNamespace(actor_id="government:home", record=ActorRecord(kind="government"))
+        self.module = SimpleNamespace(cast=lambda: SimpleNamespace(actors=actors), needs=SimpleNamespace(civilisation=lambda: {"id": HOME}))
+
+    def move(self, source, target, count):
+        return Contact.move_stratum_people(self.module, MoveStratumPeople(source.actor_id, target.actor_id, count))
 
     def test_the_count_leaves_one_stratum_and_joins_the_other(self):
-        entry = self.effects.move_people(self.game, self.farmers.actor_id, self.artisans.actor_id, 300.0, "a reform")
+        answer = self.move(self.farmers, self.artisans, 300.0)
         self.assertEqual((self.farmers.record.members, self.artisans.record.members), (700.0, 500.0))
-        self.assertEqual(entry["facts"]["moved"], 300.0)
-        self.assertEqual(entry["cause"], "a reform")
+        self.assertEqual(answer, {"moved": 300.0, "countries": [HOME, HOME]})
 
-    def test_the_total_of_the_country_is_unchanged(self):
-        before = sum(actor.record.members for actor in self.game.actors.of_kind("stratum"))
-        self.effects.move_people(self.game, self.farmers.actor_id, self.artisans.actor_id, 123.0, "a reform")
-        self.assertAlmostEqual(sum(actor.record.members for actor in self.game.actors.of_kind("stratum")), before)
+    def test_a_move_abroad_names_both_countries_and_keeps_the_total(self):
+        answer = self.move(self.farmers, self.foreign, 10.0)
+        self.assertEqual((self.farmers.record.members, self.foreign.record.members), (990.0, 60.0))
+        self.assertEqual(answer["countries"], [HOME, ABROAD])
 
-    def test_a_move_abroad_changes_each_countrys_people_by_the_count(self):
-        self.effects.move_people(self.game, self.farmers.actor_id, self.foreign.actor_id, 10.0, "migration")
-        self.assertEqual(people_of(self.game, ABROAD), 60.0)
-        self.assertEqual(self.farmers.record.members, 990.0)
+    def test_no_more_moves_than_the_source_holds(self):
+        answer = self.move(self.artisans, self.farmers, 1.0e6)
+        self.assertEqual((answer["moved"], self.artisans.record.members), (200.0, 0.0))
 
-    def test_no_more_move_than_the_source_holds(self):
-        entry = self.effects.move_people(self.game, self.artisans.actor_id, self.farmers.actor_id, 1.0e6, "exodus")
-        self.assertEqual(entry["facts"]["moved"], 200.0)
-        self.assertEqual(self.artisans.record.members, 0.0)
-
-    def test_only_strata_can_be_named_and_a_cause_is_needed(self):
-        with self.assertRaises(ModError):
-            self.effects.move_people(self.game, self.farmers.actor_id, "government:home", 1.0, "not a stratum")
-        with self.assertRaises(ModError):
-            self.effects.move_people(self.game, self.farmers.actor_id, "nobody", 1.0, "no such actor")
-        with self.assertRaises(ModError):
-            self.effects.move_people(self.game, self.farmers.actor_id, self.artisans.actor_id, 1.0, "")
-        with self.assertRaises(ModError):
-            self.effects.move_people(self.game, self.farmers.actor_id, self.artisans.actor_id, -1.0, "negative")
+    def test_only_strata_can_be_named(self):
+        government = SimpleNamespace(actor_id="government:home")
+        for target in (government, SimpleNamespace(actor_id="nobody")):
+            answer = self.move(self.farmers, target, 1.0)
+            self.assertEqual(cause_of(answer), "no_such_stratum")
         self.assertEqual(self.farmers.record.members, 1000.0)
 
 

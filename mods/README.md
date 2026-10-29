@@ -269,7 +269,10 @@ A provider's first argument is its mod's `access`; it reads only what the mod de
 
 A handler or phase changes the world only through `api.effects` (sim/engine/mod_effects.py) or the commands it declared with
 `api.sends`; reaching into package internals is unsupported and bypasses the conservation checks. Every effect takes `access`
-first (it needs no declaration), needs a cause in words, and goes through the normal rules:
+first, needs a cause in words, and goes through the normal rules by sending the owner's command, so the mod declares what the
+effect uses: `api.uses_effects("pay", "record_event", ...)` declares the views and commands of the named effects
+(`EFFECT_NEEDS` in sim/engine/mod_effects.py), and an effect used without it is refused with `UndeclaredRead` or `UndeclaredSend`
+naming the mod and the name:
 
 * `pay(access, payer_id, payee_id, amount, purpose)`: coin between two actors through the ledger.
 * `pay_edge` / `receive_from_edge(access, actor_id, edge, amount, purpose)`: coin to or from a named edge (the `EDGE_*`

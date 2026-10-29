@@ -110,7 +110,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("concern_sale_terms", "concern_sale_terms", kind=QUOTE, seat_scoped=True, **_LIVE),
 	),
 	applies=((commands.AdvanceActors, "advance_actors"), (commands.AddActor, "add_actor"), (commands.RecordConquestContact, "record_conquest_contact"),
-	         (commands.RecordMigrantContact, "record_migrant_contact"), (commands.ScaleStrata, "scale_strata"), (commands.NoteTraderMargin, "note_trader_margin"), (commands.HoldEdgeGoods, "hold_edge_goods"), (commands.DrawDownActorStore, "draw_down_actor_store"),
+	         (commands.RecordMigrantContact, "record_migrant_contact"), (commands.ScaleStrata, "scale_strata"), (commands.MoveStratumPeople, "move_stratum_people"), (commands.NoteTraderMargin, "note_trader_margin"), (commands.HoldEdgeGoods, "hold_edge_goods"), (commands.DrawDownActorStore, "draw_down_actor_store"),
 	         (commands.TeachLiteracy, "teach_literacy"), (commands.SchoolLiteracy, "school_literacy"),
 	         (commands.FollowTileTransfer, "follow_tile_transfer"),
 	         (commands.SetLenderOffers, "set_lender_offers"), (commands.SettleLenderInterest, "settle_lender_interest"),

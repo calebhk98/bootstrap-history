@@ -241,9 +241,21 @@ class ModCodeApi:
     @property
     def effects(self) -> Any:
         """The supported ways to change the world (sim/engine/mod_effects.py): `pay`, `pay_edge`, `receive_from_edge`,
-        `add_goods`, `remove_goods`, `kill_people`, `move_people`, `transfer_tile`, `write_store`, `record_event`."""
+        `add_goods`, `remove_goods`, `kill_people`, `move_people`, `transfer_tile`, `write_store`, `record_event`. Each is called
+        with the mod's access and sends the owner's command, so the mod declares it (`uses_effects`, or `reads` and `sends`)."""
         from .mod_effects import ModEffects
         return ModEffects(self.mod_id)
+
+    def uses_effects(self, *names: str) -> None:
+        """Declare the views and commands the named `effects` operations use (`EFFECT_NEEDS` in sim/engine/mod_effects.py)."""
+        from .mod_effects import EFFECT_NEEDS
+        unknown = [name for name in names if name not in EFFECT_NEEDS]
+        if unknown:
+            raise ModError("mod %s uses effects %s, which are not among %s" % (self.mod_id, ", ".join(unknown), ", ".join(sorted(EFFECT_NEEDS))))
+        for name in names:
+            views, commands = EFFECT_NEEDS[name]
+            self.reads(*views)
+            self.sends(*commands)
 
     def town_provider(self, name: str, function: Callable, mortality_premium: Optional[Callable] = None) -> None:
         """Say how many people live in a tile's town: `function(access, tile, nominal_people) -> people or None`. The

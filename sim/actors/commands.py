@@ -83,6 +83,15 @@ class ScaleStrata(Command):
 
 
 @dataclass(frozen=True)
+class MoveStratumPeople(Command):
+	"""`count` people (no more than the source holds) leave the stratum `from_stratum` and join `to_stratum`; the total stays the same.
+	Answers {"moved", "countries"} (the countries of the two strata), or is refused with the cause `no_such_stratum`."""
+	from_stratum: str
+	to_stratum: str
+	count: float
+
+
+@dataclass(frozen=True)
 class FollowTileTransfer(Command):
 	"""A tile passed from the country `previous` to the country `to_actor` (either may be None or not a country): the countries'
 	profiles move it between their home tiles, so their people and taxes pass with it."""

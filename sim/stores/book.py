@@ -5,7 +5,6 @@ same dotted state path as any other state."""
 import json
 from typing import Any, Dict, List, Optional, Tuple
 
-from sim.assembly.api import door_of
 from sim.mod_errors import ModError
 
 from .commands import WriteStore
@@ -89,10 +88,10 @@ class ModStore:
         return self.spec.name
 
     def get(self, access: Any, key: Any) -> Any:
-        return door_of(access).view("store")[self.name]["values"].get(store_key(self.spec, key), self.spec.default)
+        return access.view("store")[self.name]["values"].get(store_key(self.spec, key), self.spec.default)
 
     def set(self, access: Any, key: Any, value: Any) -> None:
-        door_of(access).send(WriteStore(self.name, key, value, self.mod_id))
+        access.send(WriteStore(self.name, key, value, self.mod_id))
 
     def items(self, access: Any) -> List[Tuple[str, Any]]:
-        return sorted(door_of(access).view("store")[self.name]["values"].items())
+        return sorted(access.view("store")[self.name]["values"].items())

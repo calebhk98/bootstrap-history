@@ -1,20 +1,24 @@
 """Effect operations: the supported way for mod code, and the base game's own systems, to change the world.
 
-Each operation goes through the normal rules: money moves through the ledger against a named edge, goods through the
-economy's book against a named edge (so the conservation checks see them), people through the population and strata,
-a tile through `transfer_tile`, a store through `sim.stores.write`. Every operation that changes the world needs a
-cause and writes it to the world event log (the hazards module). A mod reaches these as `api.effects`; its
-kinds and edge names are forced into its `<mod_id>:` namespace. The base game uses `BASE_EFFECTS`."""
+Each operation goes through the normal rules: it sends the owner's command (money through the ledger against a named edge,
+goods through the economy's book against a named edge so the conservation checks see them, people through the population and
+strata, a tile through `TransferTile`, a store through `WriteStore`). Every operation that changes the world needs a cause and
+writes it to the world event log (the hazards module). A mod reaches these as `api.effects`, called with the mod's `ModAccess`,
+so the commands and views an effect uses must be declared by the mod (`EFFECT_NEEDS`; `api.uses_effects(...)` declares them);
+its kinds and edge names are forced into its `<mod_id>:` namespace. The base game uses `BASE_EFFECTS` with a game."""
 from typing import Any, Iterable, Optional
 
 from sim.agents.api import edges as edge_names
-from sim.assembly.api import door_of
 from . import economy_port_effects as economy_api
+
+from sim.actors.api import MoveStratumPeople
 
 from sim.demography.api import KillPeople
 from sim.hazards.api import RecordWorldEvent
 from sim.land.api import TransferTile
 from sim.ledger.api import PayActor, PayActorFromEdge, PayEdgeFrom
+from sim.markets.api import MoveGoods
+from sim.refusal import Refusal
 from sim.stores.api import WriteStore
 
 from sim.content.api import ModError
@@ -23,6 +27,19 @@ from sim.content.api import SEPARATOR
 KNOWN_EDGES = frozenset(value for name, value in vars(edge_names).items() if name.startswith("EDGE_") and isinstance(value, str)) \
     | {economy_api.EDGE_PRODUCTION, economy_api.EDGE_CONSUMPTION, economy_api.EDGE_WEAR, economy_api.EDGE_EXTERNAL}
 EDGE_PREFIX = "edge:"
+# effect -> (views it reads, commands it sends): what a mod declares to use it
+EFFECT_NEEDS = {
+    "pay": (("cast",), (PayActor,)),
+    "pay_edge": (("cast",), (PayEdgeFrom,)),
+    "receive_from_edge": (("cast",), (PayActorFromEdge,)),
+    "add_goods": ((), (MoveGoods,)),
+    "remove_goods": ((), (MoveGoods,)),
+    "kill_people": ((), (KillPeople,)),
+    "move_people": ((), (MoveStratumPeople, RecordWorldEvent)),
+    "transfer_tile": ((), (TransferTile,)),
+    "write_store": ((), (WriteStore,)),
+    "record_event": ((), (RecordWorldEvent,)),
+}
 
 
 class ModEffects:
@@ -56,19 +73,16 @@ class ModEffects:
 
     def pay(self, sim: Any, payer_id: str, payee_id: str, amount: float, purpose: str) -> None:
         """Move coin between two actors through the ledger."""
-        sim = door_of(sim)
         self._actor(sim, payer_id), self._actor(sim, payee_id)
         sim.send(PayActor(payer_id, payee_id, self._amount(amount), self.need_cause(purpose)))
 
     def pay_edge(self, sim: Any, actor_id: str, edge: str, amount: float, purpose: str) -> None:
         """An actor pays a named edge: the coin leaves every purse and the edge keeps what crossed it."""
-        sim = door_of(sim)
         self._actor(sim, actor_id)
         sim.send(PayEdgeFrom(actor_id, self.edge_name(edge), self._amount(amount), self.need_cause(purpose)))
 
     def receive_from_edge(self, sim: Any, actor_id: str, edge: str, amount: float, purpose: str) -> None:
         """A named edge pays an actor: coin enters the purses, and the edge's book shows where it came from."""
-        sim = door_of(sim)
         self._actor(sim, actor_id)
         sim.send(PayActorFromEdge(self.edge_name(edge), actor_id, self._amount(amount), self.need_cause(purpose)))
 
@@ -77,16 +91,14 @@ class ModEffects:
     def add_goods(self, sim: Any, account_id: str, good: str, tile: str, quantity: float, cause: str,
                   edge: str = economy_api.EDGE_PRODUCTION) -> None:
         """Goods come into the world at a tile, into an account of the economy's book, from a named edge."""
-        sim = door_of(sim)
-        move = economy_api.GoodsMove(self.edge_name(edge), account_id, good, tile, self._amount(quantity), self._goods_purpose(cause))
-        economy_api.move_goods(self._economy(sim), [move])
+        move = MoveGoods(self.edge_name(edge), account_id, good, tile, self._amount(quantity), self._goods_purpose(cause))
+        sim.send(move)
 
     def remove_goods(self, sim: Any, account_id: str, good: str, tile: str, quantity: float, cause: str,
                      edge: str = economy_api.EDGE_CONSUMPTION) -> None:
         """Goods leave the world from an account at a tile, to a named edge; more than the account holds is refused."""
-        sim = door_of(sim)
-        move = economy_api.GoodsMove(account_id, self.edge_name(edge), good, tile, self._amount(quantity), self._goods_purpose(cause))
-        economy_api.move_goods(self._economy(sim), [move])
+        move = MoveGoods(account_id, self.edge_name(edge), good, tile, self._amount(quantity), self._goods_purpose(cause))
+        sim.send(move)
 
     # ---- people -----------------------------------------------------------------------------------------
 
@@ -94,7 +106,6 @@ class ModEffects:
                     tiles: Iterable[str] = (), **facts: Any) -> dict:
         """Remove `share` of a country's people (the home society by its age cohorts, a partner by its strata); writes
         the event, whose facts carry `died`, and returns it."""
-        sim = door_of(sim)
         cause = self.need_cause(cause)
         if not 0.0 <= share <= 1.0:
             raise ModError("%s: a death share is between 0 and 1, not %r" % (self.label(), share))
@@ -102,32 +113,25 @@ class ModEffects:
 
     def move_people(self, sim: Any, from_stratum_id: str, to_stratum_id: str, count: float, cause: str) -> dict:
         """Move people between two strata (migration, or reassignment to another class); the total stays the same."""
-        sim = door_of(sim)
         cause = self.need_cause(cause)
-        source, target = self._stratum(sim, from_stratum_id), self._stratum(sim, to_stratum_id)
-        moved = min(self._amount(count), source.record.members)
-        source.record.members -= moved
-        target.record.members += moved
-        home = sim.view("civilisation")()["id"]
-        countries = [source.record.country or home, target.record.country or home]
-        return sim.send(RecordWorldEvent(self.kind("people_moved"), actors=tuple(sorted(set(countries))), cause=cause,
-                                         facts=dict(moved=moved, from_stratum=from_stratum_id, to_stratum=to_stratum_id)))
+        answer = sim.send(MoveStratumPeople(from_stratum_id, to_stratum_id, self._amount(count)))
+        if isinstance(answer, Refusal):
+            raise ModError("%s: %s" % (self.label(), answer))
+        return sim.send(RecordWorldEvent(self.kind("people_moved"), actors=tuple(sorted(set(answer["countries"]))), cause=cause,
+                                         facts=dict(moved=answer["moved"], from_stratum=from_stratum_id, to_stratum=to_stratum_id)))
 
     # ---- tiles, stores, events ----------------------------------------------------------------------------
 
     def transfer_tile(self, sim: Any, tile_id: str, to_actor: Optional[str], cause: str, control: Optional[str] = None) -> Optional[str]:
         """Give a tile to a country or seat (None releases it); the world event log records it with the cause."""
-        sim = door_of(sim)
         return sim.send(TransferTile(tile_id, to_actor, self.need_cause(cause), control))
 
     def write_store(self, sim: Any, name: str, key: Any, value: Any) -> None:
         """Write one value of a store this owner declared; another owner's store is an error."""
-        sim = door_of(sim)
         sim.send(WriteStore(name, key, value, self.owner))
 
     def record_event(self, sim: Any, kind: str, cause: str, actors: Iterable[str] = (), tiles: Iterable[str] = (), **facts: Any) -> dict:
         """Write a record to the world event log."""
-        sim = door_of(sim)
         return sim.send(RecordWorldEvent(self.kind(kind), actors=tuple(actors), tiles=tuple(tiles), cause=self.need_cause(cause),
                                          facts=dict(facts)))
 
@@ -147,15 +151,6 @@ class ModEffects:
             raise ModError("%s: no actor %r" % (self.label(), actor_id))
         return actor
 
-    def _stratum(self, sim: Any, stratum_id: str) -> Any:
-        actor = self._actor(sim, stratum_id)
-        if actor.record.kind != "stratum":
-            raise ModError("%s: %r is not a stratum" % (self.label(), stratum_id))
-        return actor
-
-    @staticmethod
-    def _economy(sim: Any) -> Any:
-        return sim.view("legacy_economy")().agent.economy()
 
 
 def strata_of(sim: Any, country: str) -> list:

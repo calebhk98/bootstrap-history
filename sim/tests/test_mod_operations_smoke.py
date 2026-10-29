@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 from unittest import mock
 
-from sim.assembly.api import AssemblyError
+from sim.assembly.api import AssemblyError, UndeclaredRead
 from sim.engine import bridge_land, mod_code
 from sim.engine.saveload import load_state, save_state
 from sim.mod_errors import ModError
@@ -133,6 +133,20 @@ def register(api):
     @api.figure("mana", "Mana", unit="mana")
     def mana(sim):
         return {"value": 7.0, "components": {"temples": 7.0}}
+'''
+
+EFFECTS = '''
+def register(api):
+    api.uses_effects("record_event")
+
+    @api.command("omen", group="game", summary="an omen", usage=["omen"], description="Record an omen.")
+    def omen(access, nodes, cmd, ended):
+        return {"ok": True, "kind": api.effects.record_event(access, "omen", "a comet")["kind"]}
+
+    @api.command("curse", group="game", summary="a curse", usage=["curse"], description="Pay without declaring it.")
+    def curse(access, nodes, cmd, ended):
+        api.effects.pay(access, "government:x", "government:y", 1.0, "a gift")
+        return {"ok": True}
 '''
 
 SAME_WORD = '''
@@ -437,6 +451,20 @@ class FigureAndCommandTests(OperationCase):
             self.game_over({ALPHA: (SAME_WORD, ()), BETA: (SAME_WORD, ())})
         self.assertIn(ALPHA, str(caught.exception))   # presentation: the error text names both mods
         self.assertIn(BETA, str(caught.exception))
+
+
+class EffectsTests(OperationCase):
+    MODS = {ALPHA: (EFFECTS, ())}
+
+    def test_a_declared_effect_reaches_its_owner_through_the_mods_access(self):
+        self.assertEqual(_agent_dispatch_inner(self.modded, {}, {"cmd": ALPHA + ":omen"})["kind"], ALPHA + ":omen")
+        (event,) = self.modded.view("world_events")(ALPHA + ":omen")
+        self.assertEqual(event["cause"], "a comet")
+
+    def test_an_effect_the_mod_did_not_declare_is_refused_naming_the_mod_and_the_view(self):
+        with self.assertRaises(UndeclaredRead) as caught:
+            _agent_dispatch_inner(self.modded, {}, {"cmd": ALPHA + ":curse"})
+        self.assertEqual((caught.exception.mod_id, caught.exception.view), (ALPHA, "cast"))
 
 
 class WithdrawTests(OperationCase):
