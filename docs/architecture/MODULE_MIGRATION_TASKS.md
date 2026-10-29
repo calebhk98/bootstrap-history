@@ -209,6 +209,7 @@ actors (21), hazards, workforce (20 each), projects (19).
   None when the fact is unmeasured, and a relative cause with no start value is not judged instead of reading a start of zero. The divergence
   screen reads the view `event_cause_report`; `validate` calls `sim.hazards.api.cause_check`. Measured with `python3 tools/measure/module_graph.py`:
   77 reads answered by the bridge (78 before), 33 reads of `legacy_*` views (unchanged).
+- [x] Agriculture owns the farm's state (`sim/agriculture/farm_state.py`): `farm_land`, `farm_technique_this_year`, `farm_ladder`, `farm_arable_ceiling`, `farm_food_demand_kg` and `opening_farmed_hectares` are its views and the engine bridge entries are gone (measure: `python3 tools/measure/module_graph.py`).
 - [ ] Phase 9: replace the remaining defaulted `getattr(sim, ...)` reads with direct reads or views, so a moved field fails
   loudly (`grep -rn 'getattr(sim, "' sim`).
 - [ ] The engine bridge answers no module read: each bridged view is published by the module that owns the fact.

@@ -97,7 +97,11 @@ written outside any command.
 
 Both write `farm_hectares` through `legacy_farm_holdings` and move money by the ledger's `PayEdge` and `ReceiveFromEdge`.
 
-## Reads (all bridged, in `sim/engine/bridge_agriculture.py` unless noted)
+## The farm's own state (`farm_state.py`)
+
+The module owns the cleared ground, the ladder, the cropland ceiling, the opening's farmed area and the year's technique, and publishes `farm_land`, `farm_technique_this_year`, `farm_ladder`, `farm_arable_ceiling`, `farm_food_demand_kg` and `opening_farmed_hectares`. The commands are `SetFarmLand`, `SetFarmTechnique`, `SetFarmTerritory` and `RecordOpeningFarm`. The save carries all but the technique, which a load resets to the default as before; a load re-sizes the cleared ground and refreshes the ladder from the held tiles (`Sim._reconnect_state_hooks`).
+
+## Reads (all bridged unless noted)
 
 - land: `held_tile_geometry`, `crop_sites`, `food_kcal_by_source`, `game_food_sources`, `huntable_kcal`, `take_hunt`,
   `regrow_wild_stock`, `tile_soil_nitrogen_factors`, `soil_nitrogen_after_year` (the old in-place step, now a quote that

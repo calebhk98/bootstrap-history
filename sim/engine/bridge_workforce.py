@@ -21,16 +21,6 @@ def provider_game(sim):
 # ---- the founder, the acting seat's land and the owner map ----------------------------------------------------------------
 
 
-@bridge_view("farm_ladder")
-def farm_ladder(sim):
-    return sim._farm_ladder
-
-
-@bridge_view("farm_arable_ceiling")
-def farm_arable_ceiling(sim):
-    return sim._farm_arable_ceiling
-
-
 # ---- the actors and the agent economy ----------------------------------------------------------------------------------------
 
 @bridge_view("shared_answer", kind=QUOTE)

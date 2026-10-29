@@ -13,12 +13,6 @@ from .data import calculated_goods_table
 
 # ---- core: facts of the game the module cannot read from an owner yet ----
 
-@bridge_view("opening_farmed_hectares")
-def opening_farmed_hectares(sim):
-    """The area the opening's farm cleared (an initial condition)."""
-    return sim._opening_farmed_hectares
-
-
 # ---- prices ----
 
 @bridge_view("calculated_goods_prices", kind=QUOTE)
