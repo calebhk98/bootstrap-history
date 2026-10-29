@@ -15,7 +15,6 @@ import unittest
 from types import SimpleNamespace
 
 from sim.defence_stores.module import DefenceStores
-from sim.engine import cash_remedies  # noqa: F401  (settles the import cycle through project_materials)
 from sim.engine import validate_defence_stores
 from sim.engine.forward_mechanics import ForwardMechanicsMixin
 from sim.mechanics.module import Mechanics

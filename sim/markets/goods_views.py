@@ -27,6 +27,11 @@ class GoodsViews:
 		it has no price."""
 		return self.goods_market.quote_buy(material, tonnes, already)
 
+	def sale_quote(self, material, tonnes):
+		"""(stock key, tonnes the market takes now, money for them) if the acting seat sold `tonnes` of a material; the figure
+		a sale pays. (None, 0.0, 0.0) when the market has no price or takes none."""
+		return self.goods_market.quote_sell(material, tonnes)
+
 	def can_be_bought(self, material):
 		"""Whether anyone in reach sells the material at a price."""
 		return self.goods_market.can_be_bought(material)
