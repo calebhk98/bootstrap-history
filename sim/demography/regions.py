@@ -33,9 +33,9 @@ class Regions:
         """{tile: people} once the regions cover the tiles held, else None (the caller spreads the nation by share)."""
         return settlement.people_by_tile(self.world.regions, self._bands().total, self.needs.home_tiles_held())
 
-    def legacy_regions_of_people(self):
-        """{tile: [children, working_age, elderly]} the regions the module tracks (empty until they are first kept)."""
-        return self.world.regions
+    def regional_people_by_band(self):
+        """{tile: (children, working_age, elderly)} the regions the module tracks (empty until they are first kept), as a copy."""
+        return {tile: tuple(bands) for tile, bands in self.world.regions.items()}
 
     def food_eaten(self):
         """{tile: share of the people's food need the tile's people ate}."""
@@ -63,7 +63,7 @@ class Regions:
 
     def externality_deaths(self, deaths_by_band, year):
         """`deaths_by_band` plus what the game's externality providers add to the year's deaths."""
-        return rules.deaths_with_externalities(deaths_by_band, self.needs.externality(self.needs.legacy_game(), year))
+        return rules.deaths_with_externalities(deaths_by_band, self.needs.externality(self.needs.provider_game(), year))
 
     def _step_regions(self, regions, kcal_by_region, year):
         """Step every region a year and return the nation's flows; the nation's people become their sum."""

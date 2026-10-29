@@ -15,7 +15,7 @@ from .state import EPIDEMICS, DiseaseWorld
 READS_BY_OWNER = {
     "core": ("year", "civilisation", "legacy_world_map", "legacy_act_as", "money_text"),
     "agriculture": ("weather_seed",),
-    "demography": ("people_by_band", "nutrition_ratio", "working_age", "legacy_regions_of_people", "urban_fraction",
+    "demography": ("people_by_band", "nutrition_ratio", "working_age", "regional_people_by_band", "urban_fraction",
                    "regional_flows_last_year"),
     "land": ("home_tiles_held",),
     "freight": ("goods_carried_last_year",),

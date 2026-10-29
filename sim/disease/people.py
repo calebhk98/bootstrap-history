@@ -16,7 +16,7 @@ class People:
     def people_by_tile(self):
         """{tile: {band: people}} over the tiles held (see `rules.people_by_tile`)."""
         held = self.held_tiles()
-        return rules.people_by_tile(held, self.needs.legacy_regions_of_people(), settlement.tile_ids(held), tuning.BANDS,
+        return rules.people_by_tile(held, self.needs.regional_people_by_band(), settlement.tile_ids(held), tuning.BANDS,
                                     self.people_by_band(), lambda: settlement.population_shares(held))
 
     def area_by_tile(self):

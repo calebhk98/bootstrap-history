@@ -19,7 +19,7 @@ sim.demography import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publish
   `jitter=True`), so dropping the object and its seed loses nothing.
 - **Views: sixteen, not four.** The draft's `population`, `people_by_tile`, `food_eaten` and `yearly_record` stand, but the callers
   ask narrower questions than the draft's grouping: `population` (the bands), `population_total`, `working_age`, `pop_scale`,
-  `default_population`, `population_change_last_year`, `yearly_record`, `people_by_tile`, `legacy_regions_of_people` (the raw regions by band: a debt, the name the disease module reads), `people_by_band`, `nutrition_ratio` (a quote), `urban_people_by_tile`, `urban_ceilings`, `urban_fraction`, `food_eaten`, `demographic_flows` and
+  `default_population`, `population_change_last_year`, `yearly_record`, `people_by_tile`, `regional_people_by_band` (the regions by band as a copy, for the disease module), `people_by_band`, `nutrition_ratio` (a quote), `urban_people_by_tile`, `urban_ceilings`, `urban_fraction`, `food_eaten`, `demographic_flows` and
   `regional_flows_last_year` (the last yearly step's flows, kept in memory, never saved), `farm_holdings`. Four of the names were already
   published by the bridge for other modules (`food_eaten` by campaigns, `working_age` by freight, `population_total` by reporting, `pop_scale`
   and `default_population` by materials) and the module publishes them under the same names and shapes; the bridge entries are deleted.
@@ -98,7 +98,7 @@ built ways, which are written outside any command of this module.
 | `population_total`, `working_age`, `pop_scale`, `default_population` | the figures others read as numbers | reporting, freight, materials |
 | `population_change_last_year`, `yearly_record` | what the demography screen and the year report print | the screens |
 | `people_by_tile` | people per tile once the regions cover the tiles held, else `None` | labour, the agent ports |
-| `legacy_regions_of_people`, `people_by_band`, `nutrition_ratio` | the regions as `[children, working_age, elderly]`, the nation's bands, the food against need | the disease module |
+| `regional_people_by_band`, `people_by_band`, `nutrition_ratio` | the regions as `[children, working_age, elderly]`, the nation's bands, the food against need | the disease module |
 | `urban_people_by_tile`, `urban_ceilings`, `urban_fraction` | the town share and what each town can feed | labour, the agent ports, the disease step |
 | `food_eaten` | each tile's food eaten over its need, as the economy booked it | campaigns |
 | `demographic_flows`, `regional_flows_last_year` | the last yearly step's flows (births, deaths, nutrition ratio), `None` before the first | the budget view, the event causes, the screens, the disease step |
@@ -127,8 +127,8 @@ Reads, all bridged or published by a module that moved (`sim/engine/bridge_demog
 `borders_among`, `built_ways` (`bridge_freight.py`), `held_techniques` (`bridge_freight.py`); workforce `farming_technique`
 (`bridge_agriculture.py`), `town_mortality_premium_by_tile`, `wage_index` (`bridge_hazards.py`), `wage_index_terms`; defence stores
 `relief_kcal_per_day`; agriculture `weather_seed`, `harvest_weather`, and the farm workforce's `farm_land` and
-`farm_technique_this_year`; hazards `country_strata`; core `civilisation`, `year`, and the debt `legacy_actor_registry` (for
-`AddCaptives`, until the actors move).
+`farm_technique_this_year`; hazards `country_strata`; core `civilisation`, `year`, `cast` (for
+`AddCaptives`) and `provider_game` (the game, handed to the mods' externality providers: their contract).
 
 Sends: workforce `AllocateFarmWorkforce`, `ApplyLandClearing`, `UpdateWages`; land `AdvanceColonies`; disease `RunEpidemicYear`, `HitSeatsWithEpidemic`; actors
 `RecordMigrantContact`, `ScaleStrata`; hazards `RecordWorldEvent`; reporting `RecordEvent`.

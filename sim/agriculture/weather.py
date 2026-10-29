@@ -35,7 +35,7 @@ class Weather:
         """The seed of one year's weather draw, for a region (a cell id) or the whole civilisation. The first call draws
         the game's salt from its dice."""
         if not self.world.weather_salt:
-            self.world.weather_salt = self.needs.legacy_dice().getrandbits(30) + 1
+            self.world.weather_salt = self.needs.game_random().getrandbits(30) + 1
         return rules.weather_seed(self.needs.civilisation().get("id", "civ"), region, year, self.world.weather_salt)
 
     def _independent_draws(self, year, cells):
@@ -57,7 +57,7 @@ class Weather:
 
     def externality_yield_factors(self, year):
         """{tile: factor} the game's externality providers agree on for the year's harvest, each clamped to 0..1."""
-        return rules.yield_factors(self.needs.externality(self.needs.legacy_game(), year))
+        return rules.yield_factors(self.needs.externality(self.needs.provider_game(), year))
 
     def farm_weather(self, year):
         """{tile id: this year's multiplier on that tile's own weather cell}, from the draws the pooled multiplier averages.

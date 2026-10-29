@@ -1,8 +1,8 @@
 """Bridge entries the agriculture module uses until the modules that own these facts move.
 
 Each view answers through `Sim` as the old mixin methods did; when its owner moves it publishes the same name and the entry
-is deleted. The geography ones hand the module the per-tile sums over the held land. `legacy_dice` is the game's random
-source, used in place."""
+is deleted. The geography ones hand the module the per-tile sums over the held land. `legacy_dice` (the game's random
+source) stays for the modules that have not moved to `game_random`."""
 from sim.agriculture.api import SetFarmLand, SetFarmTechnique
 from sim.world import agriculture as farm_rules
 

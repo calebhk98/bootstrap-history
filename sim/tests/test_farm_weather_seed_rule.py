@@ -45,7 +45,7 @@ class SaltFromTheDice(unittest.TestCase):
     def test_a_salted_game_leaves_its_dice_alone(self):
         farm = agriculture_stand_in.build(salt=5, dice_seed=3)
         farm.weather_seed(101)
-        self.assertEqual(farm.needs.legacy_dice().random(), random.Random(3).random())
+        self.assertEqual(farm.needs.game_random().random(), random.Random(3).random())
 
 
 class IndependentDraws(unittest.TestCase):

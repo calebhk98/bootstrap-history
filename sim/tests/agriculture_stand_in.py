@@ -17,8 +17,8 @@ def build(rows=(), civ_id="rome_100ad", salt=12345, dice_seed=1, burnt_draws=0, 
     dice = random.Random(dice_seed)
     for _draw in range(burnt_draws):
         dice.random()
-    plain = {"civilisation": {"id": civ_id}, "held_tile_geometry": list(rows), "legacy_dice": dice,
-             "legacy_game": object(),
+    plain = {"civilisation": {"id": civ_id}, "held_tile_geometry": list(rows), "game_random": dice,
+             "provider_game": object(),
              "externality": lambda game, year: list(externality_answers if externality_answers is not None else
                                                     [{"yield_factor_by_tile": dict(yield_factors)}] if yield_factors else [])}
     plain.update(views or {})

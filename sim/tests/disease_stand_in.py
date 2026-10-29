@@ -45,7 +45,7 @@ class StandInSim:
             "people_by_band": lambda: {band: float(getattr(self.population, band)) for band in BANDS},
             "nutrition_ratio": lambda food: self.population.nutrition_ratio(food),
             "working_age": lambda: self.population.working_age,
-            "legacy_regions_of_people": lambda: None, "regional_flows_last_year": lambda: None, "goods_carried_last_year": {},
+            "regional_people_by_band": lambda: None, "regional_flows_last_year": lambda: None, "goods_carried_last_year": {},
             "urban_fraction": lambda: self.urban_fraction(),
             "home_tiles_held": lambda: geography.tiles_held(civ, world_map()),
             "held_techniques": lambda include_starting: frozenset(civ.get("starting_techs", ())),

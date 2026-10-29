@@ -1,7 +1,7 @@
 """Agriculture's module spec (sim/assembly).
 
 Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_agriculture.py)
-under the name the owner will publish, except the `legacy_*` one: the game's dice, used in place."""
+under the name the owner will publish, except the game's dice (`game_random`, used in place) and the game itself (`provider_game`, handed to the mods' externality providers)."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.demography.api import ChangeFarmland
 from sim.ledger.api import PayEdge, ReceiveFromEdge
@@ -20,8 +20,8 @@ READS_BY_OWNER = {
     "demography (externalities)": ("externality",),
     "prices": ("price_index",),
     "ledger": ("acting_balance",),
-    "seats": ("legacy_dice",),
-    "core": ("legacy_game",),
+    "seats": ("game_random",),
+    "core": ("provider_game",),
     "demography": ("farm_holdings",),
 }
 

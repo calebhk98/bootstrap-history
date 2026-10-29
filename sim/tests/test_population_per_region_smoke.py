@@ -31,7 +31,7 @@ class TheGameTracksRegionsTests(unittest.TestCase):
 
     def test_the_nation_is_the_sum_of_its_regions_and_each_region_is_stored(self):
         self._year({tile: 1.0 for tile in self.tiles})
-        stored = self.game.view("legacy_regions_of_people")()
+        stored = self.game.view("regional_people_by_band")()
         self.assertEqual(sorted(stored), sorted(self.game.view("legacy_labour")().settlement_tiles()))
         self.assertAlmostEqual(sum(sum(bands) for bands in stored.values()), self.game.view("population")().total, delta=1.0)
 

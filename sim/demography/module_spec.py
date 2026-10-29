@@ -20,7 +20,7 @@ from .module import Demography
 from .state import DemographySeat, DemographyWorld
 
 READS_BY_OWNER = {
-    "core": ("civilisation", "year", "cast", "legacy_game"),
+    "core": ("civilisation", "year", "cast", "provider_game"),
     "land": ("home_tiles_held", "borders_among", "built_ways", "held_techniques"),
     "disease": ("disease_burden", "endemic_death_rates", "epidemic_deaths_by_tile"),
     "workforce": ("farming_technique", "town_mortality_premium_by_tile", "wage_index", "wage_index_terms"),
@@ -45,7 +45,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("people_by_band", "people_by_band", **_LIVE),
         ViewSpec("nutrition_ratio", "nutrition_ratio", kind=QUOTE),
         ViewSpec("externality_deaths", "externality_deaths", kind=QUOTE),
-        ViewSpec("legacy_regions_of_people", "legacy_regions_of_people", **_LIVE),
+        ViewSpec("regional_people_by_band", "regional_people_by_band", **_LIVE),
         ViewSpec("urban_people_by_tile", "urban_people_by_tile", **_LIVE),
         ViewSpec("urban_ceilings", "urban_ceilings", **_LIVE),
         ViewSpec("urban_fraction", "urban_fraction", **_LIVE),
