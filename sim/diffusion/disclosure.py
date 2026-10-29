@@ -1,10 +1,10 @@
 """What a seat does with an invention it made: keep it secret, license it, or publish it.
 
-Needs: tree, techniques_held, techniques_granted, operating, year, reputation_gain_of, seat_list, seat_party,
-cast, actor_world, acting_seat."""
+Needs: tree, techniques_held, techniques_granted, operating, year, reputation_gain_of, seat_list, cast, acting_seat; sends GrantLicence,
+GainReputation."""
 from typing import Any, Dict, List, Optional
 
-from sim.agents.api import licence
+from sim.actors.api import ALREADY_ABLE, NO_LICENSEE, TERMS_REFUSED, GrantLicence
 from sim.polity.api import GainReputation
 from sim.rekey import rekey
 
@@ -57,17 +57,14 @@ class Disclosure:
         return {"ok": True, "note": "kept secret: outsiders learn it only as fast as its trades and materials allow"}
 
     def _license(self, node_id: str, licensee_id: Optional[str], fee: float, royalty: float) -> Dict[str, Any]:
-        acting = self.clock.acting_seat
-        licensee = self.needs.cast().get(licensee_id) if licensee_id else None
-        if licensee is None and licensee_id in self.needs.seat_list()["joined"] and licensee_id != acting:
-            licensee = self.needs.seat_party[licensee_id]   # another player
-        if licensee is None or licensee.kind == "interest_group":
+        answer = self.needs.send(GrantLicence(licensee_id, node_id, fee, royalty))
+        status = answer["status"]
+        if status == NO_LICENSEE:
             return {"ok": False, "error": "name a firm or the state to license it to: %s" % (
                 ", ".join(self.licensable_actor_ids()) or "none exist yet")}
-        problem = licence.terms_problem(licensee, fee, royalty, node_id, self.needs.actor_world())
-        if problem:
-            return rules.refusal_reply(problem)
-        if not licence.grant(self.needs.seat_party[acting], licensee, node_id, fee, self.needs.actor_world()):
+        if status == TERMS_REFUSED:
+            return rules.refusal_reply(answer["problem"])
+        if status == ALREADY_ABLE:
             return {"ok": False, "error": "the licensee can already make it"}
         record = self._record(node_id)
         if record["mode"] == "default":

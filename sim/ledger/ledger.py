@@ -86,8 +86,8 @@ class Ledger(Module):
 		self.bump_seat(MONEY)
 
 	def restore_purse(self, command: Any) -> None:
-		self.account().capital = command.balance
-		self.bump_seat(MONEY)
+		self.account(command.seat).capital = command.balance
+		self.bump_seat(MONEY, command.seat)
 
 	def open_purse(self, command: Any) -> None:
 		purses = self.needs.cast_state().purses
@@ -113,14 +113,10 @@ class Ledger(Module):
 	def note_seat_cash(self, command: Any) -> None:
 		account = self.account(command.seat)
 		(account.note_income if command.direction > 0.0 else account.note_outlay)(command.purpose, command.amount)
+		self.bump_seat(MONEY, command.seat)
 
 	def note_spend(self, command: Any) -> None:
 		self.seat.total_spend += command.amount
-
-	def settle_household_interest(self, command: Any) -> Any:
-		settled = self.needs.legacy_household_actor().settle_interest(self.needs.actor_world())
-		self.bump_seat(MONEY)
-		return settled
 
 	def note_holder_booking(self, command: Any) -> None:
 		"""The lender's books record a posting its loan or repayment made: a seat's household, else an actor of the cast."""

@@ -10,7 +10,6 @@ from sim.tests.ui_stand_in import Game
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
 
-from sim.agents.household import Household
 from sim.knowledge.api import KnowledgeSeat, RevealNodes
 from sim.knowledge.module import Knowledge
 from sim.mechanics.module import Mechanics

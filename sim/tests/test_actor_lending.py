@@ -8,12 +8,15 @@ from unittest import mock
 
 from sim.actors.api import SetLenderOffers
 from sim.actors.module import Actors
-from sim.agents.api import EDGE_SAVERS
+from sim.agents.api import EDGE_SAVERS, Business
+from sim.ledger.api import NoteSeatCash
+from sim.seats.api import SeatsSeat
 from sim.tests import harness, module_harness  # noqa: F401  (harness isolates the home directory)
 
 
-def actors_over(purses=None, cast=None, seat_ids=(), seat_party=None, **world_fields):
-    module = module_harness.build(Actors, views={"seat_list": {"joined": list(seat_ids), "playing": list(seat_ids)}, "seat_party": seat_party or {}},
+def actors_over(purses=None, cast=None, seat_ids=(), **world_fields):
+    module = module_harness.build(Actors, views={"seat_list": {"joined": list(seat_ids), "playing": list(seat_ids)},
+                                                 "seat_dealings": lambda seat_id: SeatsSeat(), "seat_business": lambda seat_id: Business()},
                                   world=SimpleNamespace(purses=purses, edge=lambda name: "edge " + name, **world_fields))
     if cast is not None:
         module.cast = lambda: cast
@@ -48,24 +51,23 @@ class PurseBookAnswers(unittest.TestCase):
 
 
 class SettleLenderInterest(unittest.TestCase):
-    def settle(self, received, seat_ids=(), seat_party=None):
+    def settle(self, received, seat_ids=()):
         income, shared = [], []
         abbey = SimpleNamespace(note_income=lambda purpose, amount: income.append(("abbey", purpose, amount)))
         cast = SimpleNamespace(actors={"abbey": abbey})
-        module = actors_over(SimpleNamespace(settle_interest=lambda: received), cast, seat_ids, seat_party)
+        module = actors_over(SimpleNamespace(settle_interest=lambda: received), cast, seat_ids)
         with mock.patch("sim.actors.lending.payroll", SimpleNamespace(pay_savers=lambda registry, edge, amount: shared.append((edge, amount)))):
             module.settle_lender_interest()
+        self.sent = module_harness.sent(module)
         return income, shared
 
     def test_the_interest_the_pool_holds_reaches_each_lender_and_the_savers(self):
         self.assertEqual(self.settle({"abbey": 12.0, EDGE_SAVERS: 7.0}),
                          ([("abbey", "interest_on_lending", 12.0)], [("edge " + EDGE_SAVERS, 7.0)]))
 
-    def test_a_seat_that_lent_is_paid_through_the_seat_as_a_party(self):
-        paid = []
-        party = SimpleNamespace(note_income=lambda purpose, amount: paid.append((purpose, amount)))
-        self.settle({"seat:a": 4.0}, ("seat:a",), {"seat:a": party})
-        self.assertEqual(paid, [("interest_on_lending", 4.0)])
+    def test_a_seat_that_lent_has_the_interest_entered_in_its_cash_book(self):
+        self.settle({"seat:a": 4.0}, ("seat:a",))
+        self.assertEqual(self.sent, [NoteSeatCash("seat:a", 1.0, 4.0, "interest_on_lending")])
 
     def test_no_savers_part_shares_nothing_and_an_unknown_lender_is_skipped(self):
         self.assertEqual(self.settle({"edge:other": 3.0}), ([], []))

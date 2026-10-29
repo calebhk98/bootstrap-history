@@ -1,7 +1,7 @@
 """What a state asks the simulated world when it budgets: its people, its prices, its taxpayers."""
 from typing import Any, List, Optional, Tuple
 
-from sim.agents.api import DOLE_MATERIAL, Hands, army_goal, sack_pressure, taxpayer_income
+from sim.agents.api import DOLE_MATERIAL, Hands, army_goal, demand_answer, sack_pressure, taxpayer_income
 from sim.world import agriculture, demand
 from sim.geography.api import territory
 
@@ -129,8 +129,16 @@ class BudgetView:
 		for seat_id in needs.seat_list()["playing"]:
 			if (needs.seat_country[seat_id] or home) == (country or home):
 				with needs.acting_as(seat_id):
-					payers.append((self.visible_scale_of(needs.legacy_household_actor()), max(0.0, needs.revenue_estimate())))  # type: ignore[attr-defined]
+					payers.append((self.acting_seat_visible_scale(), max(0.0, needs.revenue_estimate())))
 		return payers
+
+	def acting_seat_visible_scale(self) -> float:
+		"""How large and visible the acting seat's household looks to the state: its staff, its wealth and its defiance (a person
+		with no prominence of a business's kind)."""
+		needs = self.needs
+		standing = needs.standing()
+		return needs.visible_scale(sum(needs.staff()["employees"].values()),
+								   demand_answer.visible_wealth(needs.acting_balance(), float(standing["concealed"])), 0.0, float(standing["defiance"]))
 
 	def firm_taxpayers(self, country: Optional[str]) -> List[Tuple[float, float]]:
 		"""(visible scale, taxable income) of the firms with a plant earning in `country`; the income is the part of the firm's
@@ -148,5 +156,5 @@ class BudgetView:
 		payers = self.seat_taxpayers(home)
 		if not needs.seat_list()["playing"]:
 			with needs.acting_as(needs.acting_seat()):
-				payers.append((self.visible_scale_of(needs.legacy_household_actor()), max(0.0, needs.revenue_estimate())))  # type: ignore[attr-defined]
+				payers.append((self.acting_seat_visible_scale(), max(0.0, needs.revenue_estimate())))
 		return payers + self.firm_taxpayers(home)

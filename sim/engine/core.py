@@ -41,9 +41,7 @@ from .core_properties import ForwardingPropertiesMixin
 from .year_steps import StepContext
 from .data import trade_family
 from .invariants import check_simulation_invariants
-from sim.agents.api import Household
 from sim.ledger.api import OpenCashBook, RestorePurse
-from .agents_port_household import SeatMoneyPort
 from sim.materials.api import RestoreReadings
 from sim.polity.api import SetValueWeights
 from sim.projects.api import RestoreProjectOrder, WatchActive
@@ -150,37 +148,11 @@ class Sim(
         # the granary starts empty (an initial condition) and carries over between years (demography's farm year)
         self.send(SetYear(self.cfg["start_year"]))
         config = self.cfg
-        # THE FOUNDER'S HOUSEHOLD: money, staff, knowledge, plant and standing,
-        # as its own object rather than eighty-odd attributes of this one. See
-        # sim/agents/household.py for what it holds and
-        # docs/architecture/HOUSEHOLD_EXTRACTION.md for why: making this an
-        # object of its own, rather than more state on `Sim`, is what would let
-        # a government, a rival household or a firm exist someday, each owning
-        # its own purse and its own knowledge instead of sharing this one.
-        #
-        # AT THIS SOCIETY'S PRICES, like everything else you will spend it on.
-        # The kits are stated in labourer-years; since revenue and
-        # living costs convert through `price_index` (see
-        # economy.living_cost), leaving the purse flat would mean "four
-        # hundred denarii" buys a third more months of bread in Luoyang than
-        # in Scandinavia, silently, for no modelled reason. A kit is "a few
-        # months' subsistence", and a few months'
-        # subsistence costs what it costs where you are. Computed here, where
-        # `price_index` is in scope, and handed in as a plain number: a
-        # Household should not need to know the shape of a run's config dict
-        # to be built.
-        #
-        # `operating_changed=self._operating_changed`: `self` (this Sim) is
-        # fully allocated already, even this early in `__init__` - Python
-        # hands `__init__` a real, if not-yet-populated, instance - so a bound
-        # method of it can be passed down right now. See Household.__init__'s
-        # own docstring for why the callback travels this way instead of the
-        # household reaching back up for it.
+        # The opening purse is at this society's prices: the kits are stated in labourer-years, and revenue and living costs convert
+        # through `price_index`, so a purse left flat would buy a third more months of bread in Luoyang than in Scandinavia.
         start_money = config["start_capital"]
         if start_money is None:
             start_money = kit_capital(config["start_kit"], self.civ)
-        self.household = Household(state=self.state, port=SeatMoneyPort(self), techniques_held=lambda: self.view("techniques_held")())
-        self._seat_facades = {self.state.acting_seat: self.household}
         opening_cash = float(start_money) * self.price_index
         self.send(RestorePurse(opening_cash))   # the seat's opening purse, and the cash its book measures from
         self.send(OpenCashBook(opening_cash))
@@ -196,10 +168,6 @@ class Sim(
         # manages its own household; a player is handed nothing they did not
         # ask for.
         #
-        # STAYS ON `Sim`, NOT ON `Household` - see household.py's module
-        # docstring: one key, auto_court_heir, is written for succession after
-        # a mortal owner's death, and the rest of the dict is not worth
-        # splitting away from it for that.
         for name, value in default_policy(manual).items():
             self.send(SetPolicy(name, value))
         # World-level "last time I said X" trackers; household ones live on HouseholdState.
@@ -254,9 +222,6 @@ class Sim(
 
     def _reconnect_state_hooks(self):
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
-        # Household façades first, so version bumps fired while reconnecting land on this state
-        if hasattr(self, "household"):
-            self.sync_seat_facades()
         self.state.actors.purses.observer = self.note_lender_posting
         acting = self.state.acting_seat
         try:
@@ -327,24 +292,12 @@ class Sim(
     def add_seat(self, seat_id, seat):
         seat_registry.add_seat(self, seat_id, seat)
 
-    def _new_facade(self, seat_id):
-        return seat_registry.new_facade(self, seat_id)
-
-    def seat_party(self, seat_id, margins=None):
-        return seat_registry.seat_party(self, seat_id, margins)
-
-    def seat_parties(self):
-        return seat_registry.seat_parties(self)
-
     def _switch_seat(self, seat_id):
         seat_registry.switch_seat(self, seat_id)
 
     def act_as(self, seat_id):
         """Run the body as `seat_id`, then restore the seat that was acting."""
         return seat_registry.act_as(self, seat_id)
-
-    def sync_seat_facades(self):
-        seat_registry.sync_seat_facades(self)
 
     @property
     def rng(self):

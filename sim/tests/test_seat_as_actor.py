@@ -4,7 +4,6 @@ import json
 
 from .harness import *  # noqa: F401,F403
 from sim.agents import joint_stock, patent
-from sim.agents.api import Household, HouseholdParty
 from sim.seats.api import SeatsSeat
 from sim.agents.records import ActorRecord
 from sim.tests.money_host import MoneyHost
@@ -15,25 +14,10 @@ from sim.agents.api import Business
 QUICK_TOPIC = True
 
 host = MoneyHost(capital=100.0)
-facade = Household(state=host.state, port=host.port, techniques_held=lambda: frozenset())
-state = facade._state
-entered = []
-
-
-class Switch:
-    def __init__(self, seat_id):
-        self.seat_id = seat_id
-
-    def __enter__(self):
-        entered.append(self.seat_id)
-
-    def __exit__(self, *exc):
-        return False
-
-
+state = host.state
 seat = state.seats[FIRST_SEAT_ID]
 slot = SeatsSeat()
-party = HouseholdParty(facade, seat_id=FIRST_SEAT_ID, act_as=Switch, dealings=slot, business=Business())
+party = host.party(FIRST_SEAT_ID, dealings=slot, business=Business())
 check("the party is named by the seat id", party.actor_id == FIRST_SEAT_ID, party.actor_id)
 check("its patents and shares are the seat's own dictionaries",
       party.record.patents is slot.patents and party.record.holdings is slot.shares_held, None)
@@ -90,10 +74,10 @@ class World:
 
 
 issuer = Issuer()
-before = facade.money
+before = party.money
 paid = joint_stock.pay_dividends(Registry({"firm:2": issuer}), World())
-check("a firm pays its dividend to the seat that holds its shares", paid > 0.0 and abs(facade.money - before - paid) < 1e-6
-      and entered, (paid, before, facade.money))
+check("a firm pays its dividend to the seat that holds its shares", paid > 0.0 and abs(party.money - before - paid) < 1e-6,
+      (paid, before, party.money))
 
 class Shareholder:
     actor_id = "firm:7"
@@ -116,11 +100,11 @@ class MarginWorld(World):
 
 # a seat that issued equity pays its shareholders a part of its margin
 holder = Shareholder()
-facade.money = 1000.0
-before = facade.money
+party.money = 1000.0
+before = party.money
 paid = joint_stock.pay_dividends(Registry({"firm:7": holder}), MarginWorld())
 check("a seat that issued equity pays its shareholder by share of its margin", paid > 0.0 and abs(holder.money - paid) < 1e-9
-      and abs(before - facade.money - paid) < 1e-6, (paid, holder.money, before, facade.money))
+      and abs(before - party.money - paid) < 1e-6, (paid, holder.money, before, party.money))
 
 # the party moves the seat's money only through the ledger: purse and cash book
 cash = host.ledger.seat

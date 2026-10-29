@@ -105,7 +105,7 @@ check("disclosure_modes: the heir's choice stands", seat_builds.disclosure_modes
 
 # ---- the seat as an actor
 state = post_handover_state()
-party = HouseholdParty(SimpleNamespace(_state=state), dealings=state.seats["heir"].modules["seats"], business=Business())
+party = HouseholdParty("heir", None, dealings=state.seats["heir"].modules["seats"], business=Business())   # the ports are not asked here
 check("HouseholdParty: the acting seat's actor is the heir, with the heir's patents and shares",
       party.actor_id == "heir" and party.record.patents == {"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}
       and party.record.holdings == {"guild": 3.0}, party.actor_id)

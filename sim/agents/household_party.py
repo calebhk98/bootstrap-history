@@ -1,18 +1,32 @@
-"""A seat's household as a party to an exchange.
+"""A seat as a party to an exchange.
 
 An exchange handles an actor with `actor_id`, `money`, `concerns`, `knows`, `learn`, `credit`, `debit`,
 `opened_year_of`, `capacity_of` and a `record` (stores, offers, opened year, margins, patents, shares). The
-household keeps that state in the simulation state, so this adapter maps the names onto it: concerns are the
-household's operating set, opened years, patents and shares held its seat's own dictionaries, and the purse
-its capital. The seat's id is the party's `actor_id`; `act_as` (the engine's seat switch) makes every access
-read the seat's own state when another seat is acting.
+seat keeps that state in the modules that own it, so this adapter maps the names onto it: the concerns, opened
+years and plants are the seat's business, patents and shares held its stored dealings, and the purse, the
+staff and the know-how come through `ports`, the views and commands of their owners (see `SeatPorts`). The
+seat's id is the party's `actor_id`.
 """
-import contextlib
-from typing import Any, Callable, Dict, Optional
+from typing import Any, ContextManager, Dict, Iterable, Optional, Protocol
 
 from . import business_closing
 from .business_plant import Plant
 from .records import ActorRecord
+
+
+class SeatPorts(Protocol):
+	"""What a seat's party asks of the rest of the game, for one seat."""
+
+	def acting(self) -> ContextManager[Any]: ...      # the body runs as that seat
+	def balance(self) -> float: ...                  # the seat's purse
+	def set_balance(self, value: float) -> None: ...
+	def credit(self, amount: float, purpose: Any) -> None: ...    # money in or out, entered in the seat's cash book
+	def debit(self, amount: float, purpose: Any) -> None: ...
+	def note_cash(self, direction: float, amount: float, purpose: Any) -> None: ...   # a posting in the book, entered in the cash book
+	def purses(self) -> Any: ...                     # the actors' book the purse is an account in
+	def workforce(self) -> Any: ...                  # the seat's people by trade
+	def knowledge(self) -> Any: ...                  # the nodes the seat holds
+	def receive(self, nodes: Iterable[str], granted: bool) -> None: ...   # know-how handed to the seat complete
 
 
 class SeatRecord(ActorRecord):
@@ -50,100 +64,83 @@ class SeatRecord(ActorRecord):
 
 
 class HouseholdParty:
-	"""Gives a `Household` the surface an exchange needs; holds no state of its own beyond a transient record."""
+	"""Gives a seat the surface an exchange needs; holds no state of its own beyond a transient record."""
 
 	kind = "household"
 
-	def __init__(self, household: Any, margins: Optional[Dict[str, float]] = None, seat_id: Optional[str] = None,
-				act_as: Optional[Callable[[str], Any]] = None, *, dealings: Any,
-				receive: Optional[Callable[[Any, bool], None]] = None, business: Any) -> None:
-		"""`receive(nodes, granted)` hands the acting seat know-how complete (the engine sends the knowledge module's command);
-		`business` is the seat's own, the record the ventures module keeps and the exchange opens, closes and hands over plants on."""
-		self.household = household
-		self._receive = receive
-		state = household._state
-		self.actor_id = seat_id if seat_id is not None else state.acting_seat
-		self._act_as = act_as
-		seat = state.seats[self.actor_id]
-		# the seat's own business, so opening, closing, patenting and trading shares write through
+	def __init__(self, seat_id: str, ports: SeatPorts, margins: Optional[Dict[str, float]] = None, *, dealings: Any, business: Any) -> None:
+		"""`dealings` is the seat's stored dealings (`patents`, `shares_held`, `shares_issued`, `offers`, `offer_serial`) and
+		`business` the seat's own, the record the ventures module keeps and the exchange opens, closes and hands over plants on."""
+		self._ports = ports
+		self.actor_id = seat_id
 		self._business = business
 		self._margins = dict(margins or {})
 		self.record = SeatRecord(kind="household", patents=dealings.patents, holdings=dealings.shares_held)
 		self.record.seat_dealings = dealings
 
-	def _acting(self) -> Any:
-		return self._act_as(self.actor_id) if self._act_as is not None else contextlib.nullcontext()
-
 	@property
 	def money(self) -> float:
-		with self._acting():
-			return self.household.money
+		return self._ports.balance()
 
 	@money.setter
 	def money(self, value: float) -> None:
-		with self._acting():
-			self.household.money = value
+		self._ports.set_balance(value)
 
 	@property
 	def concerns(self) -> Any:
-		with self._acting():
-			return self.household.operating
+		with self._ports.acting():
+			return self._business.operating()
 
 	@property
 	def workforce(self) -> Any:
-		with self._acting():
-			return self.household.workforce
+		with self._ports.acting():
+			return self._ports.workforce()
 
 	@property
 	def knowledge(self) -> Any:
-		with self._acting():
-			return self.household.knowledge
+		with self._ports.acting():
+			return self._ports.knowledge()
 
 	def identity(self) -> str:
 		return self.actor_id
 
 	def knows(self, node_id: str, world: Any) -> bool:
-		with self._acting():
-			return self.household.knows(node_id, world)
+		with self._ports.acting():
+			return node_id in self._ports.knowledge() or node_id in world.baseline_knowledge()
 
 	def learn(self, chain: Any, world: Any) -> None:
-		with self._acting():
-			self._receive(chain, False)
+		with self._ports.acting():
+			self._ports.receive(chain, False)
 
 	def accept_licence(self, node_id: str, chain: Any, world: Any) -> None:
 		"""Licensed know-how arrives complete. It was received, not built, so it is held as the society's
 		(never counted as the seat's own invention, never lost to a sack)."""
-		with self._acting():
-			self._receive(chain, True)
+		with self._ports.acting():
+			self._ports.receive(chain, True)
 
 	@property
 	def purses(self) -> Any:
-		with self._acting():
-			return self.household.purses
+		return self._ports.purses()
 
 	@property
 	def account_id(self) -> str:
 		return self.actor_id
 
 	def note_income(self, purpose: Any, amount: float) -> None:
-		with self._acting():
-			self.household.note_income(purpose, amount)
+		self._ports.note_cash(1.0, amount, purpose)
 
 	def note_outlay(self, purpose: Any, amount: float) -> None:
-		with self._acting():
-			self.household.note_outlay(purpose, amount)
+		self._ports.note_cash(-1.0, amount, purpose)
 
 	def credit(self, amount: float, purpose: Any) -> None:
-		with self._acting():
-			self.household.credit(amount, purpose)
+		self._ports.credit(amount, purpose)
 
 	def debit(self, amount: float, purpose: Any) -> None:
-		with self._acting():
-			self.household.debit(amount, purpose)
+		self._ports.debit(amount, purpose)
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
-		with self._acting():
-			return self.household.opened_year_of(node_id, default)
+		with self._ports.acting():
+			return self._business.opened_year_of(node_id, default)
 
 	def capacity_of(self, node_id: str) -> float:
 		return self._business.size_of(node_id)
@@ -155,9 +152,9 @@ class HouseholdParty:
 		return 0  # a seat's record keeps no concerns of its own: the household's operating set is the founder's
 
 	def release_plant(self, node_id: str, world: Any) -> Plant:
-		with self._acting():
+		with self._ports.acting():
 			return business_closing.release_plant(self._business, node_id, world)
 
 	def receive_plant(self, plant: Plant, world: Any) -> None:
-		with self._acting():
+		with self._ports.acting():
 			self._business.adopt(plant)

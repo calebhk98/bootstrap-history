@@ -1,6 +1,6 @@
 """A seat founds a bank in the agent economy: its capital, in coin, comes out of its money and into the bank.
 
-Needs: dealing_party, actor_world, mechanic, agent_economy_opened."""
+Needs: techniques_held, acting_balance, actor_world, mechanic, agent_economy_opened."""
 from typing import Any, Dict
 
 from sim.markets.api import FoundBankFromOutside
@@ -16,10 +16,10 @@ class Bank:
 		"""The acting seat puts `command.capital` of its money into a new bank."""
 		needs = self.needs
 		capital = command.capital
-		party = needs.dealing_party()
 		world = needs.actor_world()
-		knows = any(party.knows(node_id, world) for node_id in needs.mechanic[bank_rules.BANKING_MECHANIC])
-		refusal = bank_rules.refusal_for(knows, capital, party.money)
+		held = needs.techniques_held()
+		knows = any(node_id in held or node_id in world.baseline_knowledge() for node_id in needs.mechanic[bank_rules.BANKING_MECHANIC])
+		refusal = bank_rules.refusal_for(knows, capital, needs.acting_balance())
 		if refusal is None and not needs.agent_economy_opened():
 			refusal = Refusal("economy_not_open", "The economy has not opened yet.")
 		if refusal is not None:

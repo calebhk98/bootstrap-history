@@ -5,7 +5,7 @@ from .business_review import Reviewable
 
 
 class FounderReview(Reviewable):
-	"""Mixed into `Household`."""
+	"""The founder's seat as the owner of a business under review."""
 
 	def staff_closures(self, world: Any) -> List[str]:
 		return world.founder_review().staff_closures()

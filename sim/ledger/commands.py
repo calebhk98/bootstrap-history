@@ -195,14 +195,10 @@ class RescaleHouseholdMoney(Command):
 
 @dataclass(frozen=True)
 class RestorePurse(Command):
-	"""The acting seat's purse is put back to `balance`, a figure it held a moment ago: a trial sale whose books are undone."""
+	"""A seat's purse (the acting seat's unless `seat` names one) is put to `balance`: a figure it held a moment ago after a trial
+	sale whose books are undone, or the figure a party sets it to."""
 	balance: float
-
-
-@dataclass(frozen=True)
-class SettleHouseholdInterest(Command):
-	"""The year's interest on the acting seat's debt is settled by the one rule every borrower follows: drawn on its facility
-	within its ceiling, the rest carried as arrears. Answers (the interest owed, the part paid)."""
+	seat: Optional[str] = None
 
 
 @dataclass(frozen=True)

@@ -1,9 +1,12 @@
 """Complaint 103: the founder deals as an actor. A seat applies for a patent, makes and answers offers (patents,
 licences with a royalty, shares) and issues shares, through the same exchange every actor uses (small fixture:
-a real household facade and seat state, no game)."""
+a real ledger and book and seat state, no game)."""
 from .harness import *  # noqa: F401,F403
 from sim.agents import exchange_commands, joint_stock, patent  # noqa: F401
-from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, Household, HouseholdParty
+from sim.actors.module import Actors
+from sim.agents.api import ActorRecord, ActorRegistry
+from sim.knowledge.api import ReceiveTechniques
+from sim.ledger.api import CreditSeat, DebitSeat, NoteSeatCash, RestorePurse
 from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer, SeatsSeat
 from sim.knowledge.api import KnowledgeSeat
 from sim.seats.module import Seats
@@ -19,14 +22,13 @@ QUICK_TOPIC = True
 
 class DealWorld(FakeWorld):
     registry = None
-    facade = None
-    slot = None
+    game = None
 
     def state_grants_patents(self, actor):
         return True
 
     def patent_entry(self, node_id):
-        holders = list(self.registry.actors.values()) + [HouseholdParty(self.facade, seat_id=FIRST_SEAT_ID, dealings=self.slot, receive=lambda nodes, granted: None, business=Business())]
+        holders = list(self.registry.actors.values()) + [self.game.seat_party(FIRST_SEAT_ID)]
         return patent.entry_among(holders, node_id, self.year)
 
     def proof_years(self, node_id):
@@ -40,19 +42,23 @@ class DealWorld(FakeWorld):
 
 
 class Game:
-    """The facade, the registry and the seat's stored dealings, and the seats module reading them through plain views."""
+    """A real ledger over a real book, the seat's stored dealings and business, the registry, and the actors module applying the
+    seat's commands over plain views of the other owners."""
 
     def __init__(self):
+        self.host = MoneyHost(capital=1000.0)
         self.knowledge = KnowledgeSeat()
-        host = MoneyHost(capital=1000.0)
-        self.facade = Household(state=host.state, port=host.port, techniques_held=lambda: frozenset(self.knowledge.done))
-        self.state = self.facade._state
-        self.actors = ActorRegistry(ActorsState(home_country="home"))
+        self.actors = ActorRegistry(self.host.world)
         self.slot = SeatsSeat()
+        self.business = Business()
         self.module = None
+        self.seats = None
+
+    def money(self):
+        return self.host.view("acting_balance")()
 
     def seat_party(self, seat_id, margins=None):
-        return HouseholdParty(self.facade, margins, seat_id, dealings=self.slot, receive=self.receive, business=Business())
+        return self.module.seat_party(seat_id, margins)
 
     def receive(self, nodes, granted):
         self.knowledge.done.update(nodes)
@@ -60,10 +66,18 @@ class Game:
             self.knowledge.granted.update(nodes)
 
     def build(self, world):
-        self.module = module_harness.build(
-            Seats, seat=self.slot,
-            views={"actor_world": lambda: world, "operating": set(), "techniques_granted": lambda: frozenset(self.knowledge.granted), "seat_party_with_margins": self.seat_party,
-                   "seat_party": self.seat_party, "registered_seats": [FIRST_SEAT_ID], "cast": self.actors, "year": 100})
+        host = self.host
+        self.seats = module_harness.build(Seats, seat=self.slot, views={"year": 100})
+        answers = {command: host.send for command in (CreditSeat, DebitSeat, NoteSeatCash, RestorePurse)}
+        answers[ReceiveTechniques] = lambda command: self.receive(command.node_ids, command.granted)
+        self.module = module_harness.build(Actors, world=host.world, module_id="actors", answers=answers, views={
+            "operating": set(), "techniques_granted": lambda: frozenset(self.knowledge.granted),
+            "techniques_held": lambda: frozenset(self.knowledge.done), "acting_seat": FIRST_SEAT_ID, "registered_seats": [FIRST_SEAT_ID],
+            "seat_list": {"joined": [FIRST_SEAT_ID]}, "seat_dealings": lambda seat_id: self.slot, "seat_business": lambda seat_id: self.business,
+            "seat_balance": lambda seat_id: host.view("seat_balance")(seat_id), "acting_as": host.act_as,
+            "staff": lambda: {"employees": {}}, "dealings_listing": lambda: self.seats.dealings_listing()})
+        self.module.cast = lambda: self.actors
+        self.module.actor_world = lambda: world
 
     def seat_patent(self, node_id):
         return self.module.apply_for_patent(ApplyForPatent(node_id))
@@ -75,12 +89,12 @@ class Game:
         return self.module.answer_offer(AnswerOffer(offer_id, accept))
 
     def dealings_listing(self):
-        return self.module.dealings_listing()
+        return self.seats.dealings_listing()
 
 
 sim = Game()
 world = DealWorld(year=100)
-world.registry, world.facade, world.slot = sim.actors, sim.facade, sim.slot
+world.registry, world.game = sim.actors, sim
 world.nodes["loom"] = make_node("loom")
 world.baseline = set()
 sim.build(world)
@@ -104,7 +118,7 @@ reply = sim.seat_offer("firm:1", {"patent": ["loom"]}, {"money": 4000.0})
 check("an offer to a firm is made", reply["ok"] and len(firm.record.offers) == 1, reply)
 exchange_commands.answer_offers(firm, finder, world)
 check("the firm took the patent and paid for it", "loom" in firm.record.patents and "loom" not in seat.patents
-      and abs(sim.facade.money - 5000.0) < 1e-6, (sim.facade.money, firm.record.patents))
+      and abs(sim.money() - 5000.0) < 1e-6, (sim.money(), firm.record.patents))
 
 # ---- an offer made to the founder waits in its holdings and is answered by command -------------------------
 reply = sim.seat_offer("firm:1", {"patent": ["loom"]}, {"money": 100.0})
@@ -114,7 +128,7 @@ check("an offer to the founder is kept on the seat", [offer["id"] for offer in s
 check("it is listed", sim.dealings_listing()["offers"][0]["id"] == made["id"])
 reply = sim.seat_answer(made["id"], True)
 check("accepting moves the patent to the founder and the money to the firm", reply["ok"] and "loom" in seat.patents
-      and abs(sim.facade.money - 4800.0) < 1e-6 and not seat.offers, (reply, sim.facade.money))
+      and abs(sim.money() - 4800.0) < 1e-6 and not seat.offers, (reply, sim.money()))
 made = exchange_commands.exchange.make_offer(firm, sim.seat_party(FIRST_SEAT_ID), {"money": 1.0}, {"money": 0.0}, world)
 check("declining drops the offer", sim.seat_answer(made["id"], False)["ok"] and not seat.offers)
 check("an unknown offer is refused", not sim.seat_answer("nope", True)["ok"])

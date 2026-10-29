@@ -6,7 +6,7 @@ from .commands import (AnswerOffer, ApplyForPatent, EndRun, ForgetGoalCaches, Fo
                        MoveSeat, RecordGoalReached, RegisterSeat, RememberGoalClosure, SetFounderLife, SetGoal, SetPolicy, SetSeatHolder)
 from .builds import builders_of, built_by_any, disclosure_modes, holders_of, licensors_of, operating_anywhere
 from .country import owner_of_seat, partner_country_of_seat, patron_grant_share
-from .dealing_rules import SEAT_DEALT_KEYS
+from .dealing_rules import SEAT_DEALT_KEYS, unsupported_reason
 from .goal_rules import describe_win_condition, win_condition_met
 from .handover_rules import handover_refusal
 from .lists import run_is_over, seat_ended, seat_finished, seats_ended, seats_playing

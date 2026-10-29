@@ -58,11 +58,11 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def _said_stack_caution(self):
-		return getattr(self.household, "_said_stack_caution", None)
+		return self.__dict__.get("_stack_cautions", {}).get(self.state.acting_seat)
 
 	@_said_stack_caution.setter
 	def _said_stack_caution(self, value):
-		setattr(self.household, "_said_stack_caution", value)
+		self.__dict__.setdefault("_stack_cautions", {})[self.state.acting_seat] = value
 
 	# =========================================================================
 	# Projects Compatibility Properties (each answers from the view of the module that owns it)

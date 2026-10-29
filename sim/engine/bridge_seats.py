@@ -31,18 +31,6 @@ def acting_as(sim, seat_id):
     return sim.act_as(seat_id)
 
 
-@bridge_view("seat_party", kind=KEYED)
-def seat_party(sim, seat_id):
-    """The seat as an actor an exchange can deal with."""
-    return sim.seat_party(seat_id)
-
-
-@bridge_view("seat_party_with_margins", kind=QUOTE)
-def seat_party_with_margins(sim, seat_id, margins):
-    """The seat as a party to an exchange, with what each concern it runs earns a year."""
-    return sim.seat_party(seat_id, margins)
-
-
 @bridge_view("seat_holds", kind=KEYED)
 def seat_holds(sim, seat_id):
     """What the seat holds in the engine's own state that a handover to it would overwrite."""

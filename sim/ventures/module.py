@@ -4,6 +4,7 @@ hand, the founder's sales and the roll-out of public works.
 The businesses are its seat state, written only by its commands. The plants are kept in a `Business` record shared with the
 exchange (the seat as a party to a deal), so the views over what is operating and shut hand out the record's own sets and
 are uncached: a deal changes them without a command of this module."""
+from sim.agents.api import FounderReview
 from sim.assembly.api import Module
 from sim.production.api import RefreshOperatingCaches
 
@@ -30,6 +31,10 @@ class Ventures(Crew, Quotes, Opening, Sales, Coverage, Module):
 	def operating(self):
 		"""The acting seat's concerns and capabilities that are open (the live set: the plants opened and closed change it in place)."""
 		return self.seat.business.operating()
+
+	def seat_business(self, seat_id):
+		"""The seat's own business, the record the seat's party in an exchange opens, closes and hands over plants on (the party is the actors')."""
+		return self.seat_of(seat_id).business
 
 	def operating_by_seat(self):
 		"""What every seat has open, by seat id in joining order (the live sets)."""
@@ -95,10 +100,10 @@ class Ventures(Crew, Quotes, Opening, Sales, Coverage, Module):
 		return self.seat.business.forget_reason(command.node_id, command.reason)
 
 	def apply_review_concerns(self, command):
-		return self.seat.business.review(self.needs.legacy_household_actor(), self.needs.actor_world(), command.rules)
+		return self.seat.business.review(FounderReview(), self.needs.actor_world(), command.rules)
 
 	def apply_review_reopening(self, command):
-		return self.seat.business.review_reopening(self.needs.legacy_household_actor(), self.needs.actor_world())
+		return self.seat.business.review_reopening(FounderReview(), self.needs.actor_world())
 
 	def apply_note_concern_year(self, command):
 		self.seat.business.note_year(command.node_id, command.margin)

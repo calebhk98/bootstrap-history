@@ -12,8 +12,7 @@ from sim.agents import borrowing_arrears
 from sim.agents.api import ActorRecord, Business, ActorRegistry, ActorsState
 from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
 
-from sim.agents.borrowing import Borrower
-from sim.agents.household_borrowing import FounderBorrowing
+from sim.agents.api import SeatBorrower
 
 from .agents_fake_world import FakeWorld
 
@@ -53,16 +52,11 @@ class NoPurses:
 	bonds = NoBonds()
 
 
-class FounderStandIn(FounderBorrowing, Borrower):
-	"""The founder's household reduced to what the shared rule reads: a purse, an arrears book, and a world that
-	answers the founder's ceiling, rate and way of defaulting. No engine."""
-
-	purses = NoPurses()
-	account_id = "founder"
-
-	def __init__(self, money):
-		self.money = money
-		self._state = type("StandInState", (), {"seats": {"founder": type("Seat", (), {"modules": {"finance": FounderBook()}})()}, "acting_seat": "founder"})()
+def founder_borrower(money, world):
+	"""The founder's household reduced to what the shared rule reads: a purse, an arrears book, and a world that answers the
+	founder's ceiling, rate and way of defaulting. No engine."""
+	return SeatBorrower("founder", NoPurses(), FounderBook(), balance=lambda: money, note_outlay=lambda purpose, amount: None,
+	                    ceiling=world.founder_credit_limit, rate=world.founder_debt_rate, defaults=world.founder_defaults)
 
 
 class FounderWorld(FakeWorld):
@@ -85,7 +79,7 @@ class FounderWorld(FakeWorld):
 
 def years_until_founder_defaults():
 	world = FounderWorld()
-	founder = FounderStandIn(money=-5000.0)
+	founder = founder_borrower(-5000.0, world)
 	book = founder.arrears_book
 	arrears_by_year = []
 	for years in range(1, MAX_YEARS + 1):
@@ -119,7 +113,7 @@ class NilRateWorld(FounderWorld):
 
 def run_nil_rate(money):
 	world = NilRateWorld()
-	borrower = FounderStandIn(money=money)
+	borrower = founder_borrower(money, world)
 	years_in_arrears = []
 	for years in range(1, MAX_YEARS + 1):
 		borrower.settle_interest(world)

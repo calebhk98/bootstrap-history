@@ -1,11 +1,11 @@
 """What arrears cost the acting seat a year, how they accrue, and the warning that comes before the limit.
 
-Needs: effect_values, standing, acting_balance, civilisation, money_text, send (SettleHouseholdInterest, ReviewVentures,
-RecordEvent)."""
+Needs: effect_values, standing, acting_balance, acting_seat, cast_state, actor_world, civilisation, money_text, send (NoteSeatCash,
+ReviewVentures, RecordEvent)."""
 from typing import Any
 
-from sim.agents.api import business_review
-from sim.ledger.api import SettleHouseholdInterest
+from sim.agents.api import SeatBorrower, business_review
+from sim.ledger.api import NoteSeatCash
 from sim.reporting.api import RecordEvent
 from sim.world import capital_market
 
@@ -30,6 +30,16 @@ class Arrears:
 			used = -capital / limit if limit > 0 else 1.0
 		return capital_market.borrower_rate(self.market_rate(), discount, used)
 
+	def settle_interest(self) -> Any:
+		"""The year's interest on the acting seat's debt by the one rule every borrower follows: (the interest owed, the part paid)."""
+		needs = self.needs
+		seat_id = needs.acting_seat()
+		borrower = SeatBorrower(
+			seat_id, needs.cast_state().purses, self.seat, balance=needs.acting_balance,
+			note_outlay=lambda purpose, amount: needs.send(NoteSeatCash(seat_id, -1.0, amount, purpose)),
+			ceiling=self.credit_limit, rate=self.debt_interest_rate, defaults=lambda: self.default_on_debt(needs.year()))
+		return borrower.settle_interest(needs.actor_world())
+
 	def charge_interest(self, year: int) -> float:
 		"""Arrears accrue: the household pays its interest by the one rule every borrower follows (`sim/agents/borrowing.py`):
 		drawn on its facility within its ceiling, the rest carried as arrears, and a default after too many years of them.
@@ -39,7 +49,7 @@ class Arrears:
 		capital = needs.acting_balance()
 		if capital >= 0 and seat.interest_arrears <= 0.0:
 			return 0.0
-		owed, paid = needs.send(SettleHouseholdInterest())
+		owed, paid = self.settle_interest()
 		seat.interest_paid = (seat.interest_paid or 0.0) + paid
 		if owed > 0 and (seat.insolvent_years in (1, 5, 15)):
 			rate = self.debt_interest_rate()

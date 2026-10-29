@@ -11,7 +11,7 @@ from sim.knowledge.api import ForgetTechnique, LearnTechnique, RevealNodes
 from sim.reporting.api import RecordEvent
 from sim.ventures.api import StopOperating
 
-from .commands import (AnswerOffer, ApplyForPatent, EndRun, ForgetGoalCaches, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat, MakeOffer,
+from .commands import (EndRun, ForgetGoalCaches, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat,
                        MoveSeat, RecordGoalReached, RegisterSeat, RememberGoalClosure, SetFounderLife, SetGoal, SetPolicy, SetSeatHolder)
 from .module import Seats
 from .state import SeatsSeat
@@ -25,7 +25,7 @@ READS_BY_OWNER = {
     "workforce (people)": ("staff",),
     "ventures": ("operating", "operating_by_seat"),
     "diffusion": ("disclosures", "copy_difficulty", "literacy"),
-    "actors": ("seeded_actor_registry", "cast", "actor_world", "seat_party", "seat_party_with_margins"),
+    "actors": ("seeded_actor_registry", "cast", "actor_world"),
     "workforce": ("seat_base_tile",),
     "materials": ("generation_breakdown",),
     "hazards": ("hazard_relief", "hazard_relief_entries"),
@@ -63,12 +63,11 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("dead_reasons", "dead_reasons", **_LIVE),
         ViewSpec("win_condition_value", "win_condition_value", kind=QUOTE, seat_scoped=True, **_LIVE),
         ViewSpec("win_condition_anatomy", "win_condition_anatomy", kind=QUOTE, seat_scoped=True, **_LIVE),
-        ViewSpec("dealing_party", "dealing_party", seat_scoped=True, **_LIVE),
+        ViewSpec("seat_dealings", "seat_dealings", kind=KEYED, **_LIVE),
         ViewSpec("dealings_listing", "dealings_listing", seat_scoped=True, **_LIVE),
     ),
     applies=((JoinSeat, "join_seat"), (JoinCastSeats, "join_cast_seats"), (HandOverSeat, "hand_over_seat"),
-             (SetGoal, "set_goal"), (RecordGoalReached, "record_goal_reached"), (ApplyForPatent, "apply_for_patent"),
-             (MakeOffer, "make_offer"), (AnswerOffer, "answer_offer"), (EndRun, "end_run"),
+             (SetGoal, "set_goal"), (RecordGoalReached, "record_goal_reached"), (EndRun, "end_run"),
              (SetFounderLife, "set_founder_life"), (SetPolicy, "set_policy"), (SetSeatHolder, "set_seat_holder"),
              (RememberGoalClosure, "remember_goal_closure"), (ForgetGoalClosure, "forget_goal_closure")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),

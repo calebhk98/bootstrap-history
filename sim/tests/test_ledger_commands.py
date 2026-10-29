@@ -8,7 +8,7 @@ from unittest import mock
 
 from sim.agents.api import EDGE_OUTSIDE, ActorRegistry, ActorsState, DUES_CAUSE
 from sim.engine.state import ActorRecord
-from sim.ledger.api import (CloseCashPeriod, CreditSeat, DebitSeat, NoteHolderBooking, NoteSeatCash, NoteSpend, OpenCashBook, OpenPurse, SettleHouseholdInterest,
+from sim.ledger.api import (CloseCashPeriod, CreditSeat, DebitSeat, NoteHolderBooking, NoteSeatCash, NoteSpend, OpenCashBook, OpenPurse,
                             BankStock, ChangeStock, DrawDownStock, LedgerSeat, LedgerWorld, PayActor, PayActorFromHousehold, PayEdge, PayExchange,
                             ReceiveFromEdge, ReceiveFromExchange, RescaleHouseholdMoney, RestorePurse, SettleWithEdge, TakeFromHouseholdPurse,
                             WithdrawHouseholdMoney)
@@ -186,14 +186,6 @@ class TonnesLedgerState(unittest.TestCase):
         module = self.module({"iron": 1.0, "scholar_hours": 40.0})
         self.assertEqual(dict(module.held_goods()), {"iron": 1.0})
         self.assertEqual(module.world.capacity_pool, {"scholar_hours": 40.0})
-
-
-class SettleHouseholdInterestCommand(unittest.TestCase):
-    def test_the_household_actor_settles_the_year_against_the_actors_world_and_the_answer_is_handed_back(self):
-        world = object()
-        actor = SimpleNamespace(settle_interest=lambda seen: (30.0, 20.0) if seen is world else None)
-        module = ledger_over(legacy_household_actor=actor, actor_world=world)
-        self.assertEqual(module.settle_household_interest(SettleHouseholdInterest()), (30.0, 20.0))
 
 
 class NoteHolderBookingCommand(unittest.TestCase):
