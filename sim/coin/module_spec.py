@@ -1,9 +1,10 @@
 """The coin module's spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_coin.py)
-under the name the owner will publish, except the `legacy_*` ones: raw state the module still reads in place."""
+"""
 from sim.assembly.api import KEYED, QUOTE, TABLE, ModuleSpec, PhaseHook, Provision, ViewSpec
-from sim.ledger.api import PayEdge, PayEdgeFrom, TakeGoods
+from sim.actors.api import DrawDownActorStore, HoldEdgeGoods
+from sim.demography.api import TakeFromGranary
+from sim.ledger.api import DrawDownStock, PayEdge, PayEdgeFrom
 
 from .commands import ChargeActorsTheft, ChargeHouseholdTheft, ChargeKeeping, PlunderHousehold
 from .module import Coin
@@ -49,7 +50,7 @@ MODULE_SPECS = (ModuleSpec(
     applies=((ChargeKeeping, "charge_keeping"), (ChargeActorsTheft, "charge_actors_theft"),
              (ChargeHouseholdTheft, "charge_household_theft"), (PlunderHousehold, "plunder_household")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(PayEdge, PayEdgeFrom, TakeGoods),
+    sends=(PayEdge, PayEdgeFrom, DrawDownStock, DrawDownActorStore, TakeFromGranary, HoldEdgeGoods),
     phases=(PhaseHook("coin_revaluation", "revalue_coin_metals"),),
     provides=(Provision("transfer_surcharge", "carriage_surcharge", "carriage"),),
 ),)

@@ -52,6 +52,15 @@ class SchoolLiteracy(Command):
 
 
 @dataclass(frozen=True)
+class DrawDownActorStore(Command):
+	"""Tonnes of a material leave the stores of the actor `actor` of the cast, never taking them below zero, as thieves take
+	them."""
+	actor: str
+	good: str
+	tonnes: float
+
+
+@dataclass(frozen=True)
 class HoldEdgeGoods(Command):
 	"""The named edge (an account outside the actors) now holds `tonnes` more of `good`: stolen stock goes to the thieves' edge."""
 	edge: str

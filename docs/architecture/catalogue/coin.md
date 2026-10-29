@@ -84,7 +84,7 @@ None is cached: each reads the foreign ledgers, the purse or the stock, all stil
 
 ## Reads it needs, by the owner that will publish them
 
-Bridged in `sim/engine/bridge_coin.py` under the name the owner will publish, except the ledger's `held_goods`
+Published by their owners, except the ledger's `held_goods`
 (published by the ledger module): `opening_money_per_labour_hour`, `headcount`, `opening_population`, `goods_quote`,
 `foreign_economies`, `foreign_coin_home_units`, `foreign_coin_partner_units`, `partner_coin_standard`,
 `partner_opening_facts`, `partner_route_cost`, `coin_value_ratio`, `lent_share`, `visible_scale`, `order_reach`,

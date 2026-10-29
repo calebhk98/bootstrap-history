@@ -8,7 +8,9 @@ from typing import Optional
 
 from sim.agents.api import edges, joint_stock
 from sim.labour.api import wage_provider
-from sim.ledger.api import PayEdge, PayEdgeFrom, TakeGoods
+from sim.actors.api import DrawDownActorStore, HoldEdgeGoods
+from sim.demography.api import TakeFromGranary
+from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, DrawDownStock, PayEdge, PayEdgeFrom
 
 from . import exposure as exposures
 from . import theft_exposure
@@ -18,7 +20,7 @@ from .constants import COIN_GUARD_HOURS_PER_TONNE_YEAR, GUARDED_KINDS, THEFT_CAU
 class Theft:
     """The exposure views and the theft commands (needs: civilisation, acting_balance, lent_share, held_goods, goods_quote,
     farm_holdings, farm_land_price, forest_holding, headcount, eminence, standing, visible_scale, order_reach,
-    cast, actor_world; sends PayEdge, PayEdgeFrom, TakeGoods)."""
+    cast, actor_world; sends PayEdge, PayEdgeFrom, DrawDownStock, DrawDownActorStore, TakeFromGranary, HoldEdgeGoods)."""
 
     def household_exposure(self):
         """What the acting household keeps: purse, material stock and granary, farm and forest land."""
@@ -47,7 +49,7 @@ class Theft:
         for lot in exposure.lots:
             tonnes = min(lot.tonnes, lot.tonnes * shares.get("goods", 0.0))
             if tonnes > 0.0:
-                self.needs.send(TakeGoods(lot.store, lot.name, tonnes, edges.EDGE_THIEVES, lot.actor))
+                self.take_goods(lot, tonnes)
         wanted = sum(max(0.0, value) * shares[kind] for kind, value in exposure.values.items()
                      if kind not in ("goods", "land"))
         taken = min(wanted, exposure.purse)
@@ -57,6 +59,16 @@ class Theft:
             else:
                 self.needs.send(PayEdgeFrom(holder, edges.EDGE_THIEVES, taken, cause))
         return taken
+
+    def take_goods(self, lot, tonnes):
+        """Thieves take tonnes of a good out of the holder's store it sits in, never below zero, into the thieves' edge's goods."""
+        if lot.store == STORE_ACTOR:
+            self.needs.send(DrawDownActorStore(lot.actor, lot.name, tonnes))
+        elif lot.store == STORE_STOCK:
+            self.needs.send(DrawDownStock(lot.name, tonnes))
+        elif lot.store == STORE_GRANARY:
+            self.needs.send(TakeFromGranary(tonnes * 1000.0))   # the granary counts kilograms
+        self.needs.send(HoldEdgeGoods(edges.EDGE_THIEVES, lot.name, tonnes))
 
     def charge_actors_theft(self, command):
         """Every home-country actor in business (a state, a firm) loses its expected theft of what it keeps. Guarding is
