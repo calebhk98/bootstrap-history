@@ -67,6 +67,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("land_area_of", "land_area_of", kind=QUOTE),
         ViewSpec("tile_climates", "tile_climates", kind=QUOTE),
         ViewSpec("tile_places", "tile_places", kind=QUOTE),
+        ViewSpec("map_catalogue", "map_catalogue", kind=QUOTE),
         ViewSpec("regions_of", "regions_of", kind=QUOTE),
         ViewSpec("endemic_people_loss", "endemic_people_loss", kind=QUOTE),
         ViewSpec("modes_usable", "modes_usable", kind=QUOTE),

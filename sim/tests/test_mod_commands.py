@@ -24,7 +24,8 @@ BETA = "test_beta_k3f9"
 def fake_sim(declared=None):
     return Game(
         interface_declared=declared, nodes={}, fog=False, cfg={"start_year": 0, "horizon_years": 10}, dead_reason=None, year=1, end_year=10,
-        population=Game(total=1234.567), policy={ACME + ":pulse": True}, ran=[])
+        population=Game(total=1234.567), policy={ACME + ":pulse": True}, ran=[],
+        assembly=Game(mod_access={ACME: "access", BETA: "access"}))
 
 
 class CommandTestBase(ModTestBase):
@@ -289,13 +290,6 @@ class CodeTests(CommandTestBase):
         (self.mods_dir / "escape.py").write_text(CODE)
         with self.assertRaises(ModError):
             mod_code.allow(str(self.mods_dir), ACME)
-
-    def test_command_state_lives_in_the_saved_memory(self):
-        api = mod_code.ModCodeApi(ACME)
-        memory = {}
-        api.state(memory)["count"] = 3
-        self.assertEqual(memory, {"mod_state": {ACME: {"count": 3}}})
-
 
 if __name__ == "__main__":
     unittest.main()

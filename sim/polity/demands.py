@@ -3,7 +3,7 @@
 This reads the household's stance, the state's reach and its protection and rolls the enforcement. A household that complies
 draws no random number, so complying leaves the game's stream as it was.
 
-Needs: game_random, state_treasury, provider_game (handed to the mods' wealth-claim readers and seizers), acting_balance,
+Needs: game_random, state_treasury, acting_balance,
 transfer_listening, send (PayEdge, TakeFromHouseholdPurse, RecordEvent)."""
 from sim.agents.api import demand_answer, edges
 from sim.hazards.api import capital_lost
@@ -42,10 +42,9 @@ class Demands:
 		"""The state demands `fraction` of the wealth it can see (the purse less what the household has hidden, plus registered
 		claims on other actors). The household answers like any demand; what is paid is taken to the treasury, from the purse
 		first and then from the claims. Returns (the answer, what was demanded, what was taken)."""
-		game = self.needs.provider_game()
 		capital = self.needs.acting_balance()
 		registered = self.needs.wealth_claims()
-		claims = sum(max(0.0, reader(game)) for reader, _seizer in registered)
+		claims = sum(max(0.0, reader()) for reader, _seizer in registered)
 		demanded = demand_answer.visible_wealth(capital + claims, self.seat.concealed) * max(0.0, min(1.0, fraction))
 		answer = self.answer_state_demand(demanded)
 		taken = 0.0
@@ -56,7 +55,7 @@ class Demands:
 			paid -= purse_part
 		if paid > 0.0:
 			for _reader, seizer in registered:
-				seized = max(0.0, seizer(game, paid, self.needs.state_treasury()))
+				seized = max(0.0, seizer(paid, self.needs.state_treasury()))
 				taken += seized
 				paid -= seized
 				if paid <= 0.0:

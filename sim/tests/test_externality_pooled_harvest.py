@@ -21,7 +21,7 @@ ANSWERS = []   # what the externality providers answer, read each time the harve
 
 
 def farm_over_rome():
-    return agriculture_stand_in.build(rome_rows(), salt=7, views={"externality": lambda game, year: list(ANSWERS)})
+    return agriculture_stand_in.build(rome_rows(), salt=7, views={"externality": lambda year: list(ANSWERS)})
 
 
 class HarmRule(unittest.TestCase):

@@ -17,7 +17,7 @@ def stand_in_world(civ_id="rome_100ad", total=None):
     return SimpleNamespace(
         workforce=household, society=SimpleNamespace(society_labour_hours={}, wage_tightness_factors={}),
         civ=civ, urban_fraction=lambda: float(civ.get("urban_fraction", 0.0)), home_tiles_held=lambda: geography.tiles_held(civ), people_by_tile=lambda: None, pop_scale=1.0,
-        provided_town_population=lambda labour, tile, nominal_people: None, has_town_premiums=lambda: False,
+        provided_town_population=lambda tile, nominal_people: None, has_town_premiums=lambda: False,
         population=population, projects=SimpleNamespace(done=set(), done_year={}, granted=set(), operating=set(), active={}), balance=0.0,
         bondage_years_left=0, set_farm_land=lambda hectares, quality: None,
         held_and_running=lambda: frozenset(civ.get("starting_techs", ())), built_ways=lambda: {}, trades_absent=set(), wages=data.WAGES, trade_family=data.trade_family,

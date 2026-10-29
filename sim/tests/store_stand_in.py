@@ -22,11 +22,26 @@ def stores_module(specs: Any = (), saved: Optional[Dict[str, Dict[str, Any]]] = 
                                 world=StoresWorld(values={} if saved is None else saved), module_id="stores")
 
 
+class _Keyed:
+    """A keyed view: `view[key]` is `function(key)`."""
+
+    def __init__(self, function: Any):
+        self._function = function
+
+    def __getitem__(self, key: Any) -> Any:
+        return self._function(key)
+
+
 class StoreHost:
     """A game with nothing but its stores: `stores` is the book, and `stores_module` applies a sent `WriteStore`."""
 
     def __init__(self, *specs: StoreSpec):
         self.stores_module = stores_module(specs)
+
+    def view(self, name: str) -> Any:
+        """The `store` view, indexed by store name, as the assembly would answer it."""
+        assert name == "store", name
+        return _Keyed(self.stores_module.store)
 
     @property
     def stores(self) -> StoreBook:

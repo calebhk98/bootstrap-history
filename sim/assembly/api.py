@@ -8,6 +8,7 @@ from .describe import dependency_lines, record
 from .kernels import Kernel, Sample
 from .framework import FRAMEWORK_ID
 from .errors import AssemblyError, StaleView, ViewWrite
+from .mod_access import ModAccess, NeedsAccess, UndeclaredRead, UndeclaredSend, door_of
 from .module import Module
 from .needs import Needs, Point
 from .spec import FIRST, KEYED, LIST, QUOTE, SUM, TABLE, Command, ExtensionPoint, ModuleSpec, Operations, PhaseHook, Provision, ViewSpec

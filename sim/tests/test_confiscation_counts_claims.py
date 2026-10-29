@@ -30,10 +30,10 @@ def fixture(capital, owed, claimed=True):
 	treasury = Treasury()
 	owed_box = [owed]
 
-	def reader(sim):
+	def reader():
 		return owed_box[0]
 
-	def seizer(sim, amount, taker):
+	def seizer(amount, taker):
 		seized = min(amount, owed_box[0])
 		owed_box[0] -= seized
 		taker.received += seized

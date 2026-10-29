@@ -80,7 +80,7 @@ class SettlementMixin:
         nominal = (self.TOWN_POPULATION_REFERENCE * place
                    * (self.POP_SCALE_FLOOR_SHARE
                       + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
-        provided = self._world.provided_town_population(self, tile, nominal)
+        provided = self._world.provided_town_population(tile, nominal)
         if provided is not None:
             return min(provided, tile_people)
         return min(nominal, tile_people * self.TOWN_MAX_SHARE_OF_TILE)
@@ -94,14 +94,10 @@ class SettlementMixin:
         found = {}
         for tile, people in sorted(self.settlement_tiles().items()):
             town = self._town_population_at(tile)
-            premium = self._world.provided_mortality_premium(self, tile, town)
+            premium = self._world.provided_mortality_premium(tile, town)
             if premium and town > 0.0 and people > 0.0:
                 found[tile] = premium * min(1.0, town / people)
         return found
-
-    def simulation_for_providers(self):
-        """The simulation a town provider reads (a mod's stores, for instance); providers read it and never write it."""
-        return self._world.simulation()
 
     def home_town_population_estimate(self):
         """People in the base's town."""

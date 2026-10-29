@@ -57,7 +57,7 @@ class Weather:
 
     def externality_yield_factors(self, year):
         """{tile: factor} the game's externality providers agree on for the year's harvest, each clamped to 0..1."""
-        return rules.yield_factors(self.needs.externality(self.needs.provider_game(), year))
+        return rules.yield_factors(self.needs.externality(year))
 
     def farm_weather(self, year):
         """{tile id: this year's multiplier on that tile's own weather cell}, from the draws the pooled multiplier averages.

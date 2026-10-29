@@ -101,10 +101,6 @@ class WorkforceWorld:
         """Keep why the acting seat's purchase of people was refused, for the screen that asked."""
         self._owner.note_buy_refusal(NoteBuyRefusal(refusal))
 
-    def simulation(self):
-        """The game itself, for the town providers a mod provides to read (the mod interface hands it to them)."""
-        return self._needs.provider_game()
-
     # ---- the scenario ----
 
     @property
@@ -405,18 +401,18 @@ class WorkforceWorld:
 
     def director_overhead_hours(self):
         """Hours of the directed-hours pool the game's overhead providers charge (none unless a mod provided some)."""
-        return overhead_hours(self._needs.director_overhead(self._needs.provider_game()))
+        return overhead_hours(self._needs.director_overhead())
 
-    def provided_town_population(self, labour, tile, nominal_people):
+    def provided_town_population(self, tile, nominal_people):
         """People the town providers say live at `tile`, or None when none has an opinion (the last answer wins)."""
-        return last_answer(self._needs.town_population(labour, tile, nominal_people))
+        return last_answer(self._needs.town_population(tile, nominal_people))
 
     def has_town_premiums(self):
         return self._needs.town_mortality_premium.has_providers
 
-    def provided_mortality_premium(self, labour, tile, town_people):
+    def provided_mortality_premium(self, tile, town_people):
         """The premium the premium providers give for the town at `tile` (never negative), or None."""
-        return last_answer(self._needs.town_mortality_premium(labour, tile, town_people))
+        return last_answer(self._needs.town_mortality_premium(tile, town_people))
 
     def active_hours_still_wanted(self):
         return self._needs.active_hours_still_wanted()

@@ -8,6 +8,8 @@ names a civilisation, a technology that is not in the data file, or a flat indus
 import json
 import os
 
+from sim.mod_api import demography, tonnes_per_unit
+
 DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "pollution", "emissions.json")
 SECONDS_PER_YEAR = 365.25 * 24 * 3600
 MICROGRAMS_PER_KILOGRAM = 1e9
@@ -26,58 +28,56 @@ def table():
 
 
 def _kilograms_per_unit(material):
-    from sim.engine.material_units import tonnes_per_unit
     return tonnes_per_unit(material) * 1000.0
 
 
-def emissions_by_tile(sim):
+def emissions_by_tile(access):
     """({tile: {species: kg}}, {tile: {source id: {species: kg}}}) from the producers' last full year, empty before
     the economy has run."""
-    if not sim.view("legacy_economy")().agent.opened():
+    producers = access.view("agent_producer_runs")()
+    if not producers:
         return {}, {}
-    from sim.economy import api as economy_api
-    economy = sim.view("legacy_economy")().agent.economy()
-    recipes = economy.setup.recipes
     sources = table()["sources"]
     by_tile, drivers = {}, {}
-    for producer in economy_api.all_producers(economy):
-        runs = max(producer.last_runs, 0.0)
-        recipe = recipes.get(producer.recipe_id)
-        if runs <= 0.0 or recipe is None:
-            continue
+    for producer in producers:
+        runs = producer["runs"]
         for source_id, source in sources.items():
-            flows = recipe.inputs if source["basis"] == "input" else recipe.outputs
+            flows = producer["inputs"] if source["basis"] == "input" else producer["outputs"]
             quantity = flows.get(source["material"], 0.0)
             if quantity <= 0.0:
                 continue
             kilograms = runs * quantity * _kilograms_per_unit(source["material"])
             for species, spec in source["species"].items():
                 released = kilograms * spec["kg_per_kg"]
-                tile_species = by_tile.setdefault(producer.tile, {})
+                tile_species = by_tile.setdefault(producer["tile"], {})
                 tile_species[species] = tile_species.get(species, 0.0) + released
-                tile_drivers = drivers.setdefault(producer.tile, {}).setdefault(source_id, {})
+                tile_drivers = drivers.setdefault(producer["tile"], {}).setdefault(source_id, {})
                 tile_drivers[species] = tile_drivers.get(species, 0.0) + released
     return by_tile, drivers
 
 
-def abatement(sim):
+def abatement(access):
     """{species: share of the emission that escapes}, from the cleanup technologies the nation holds."""
     escaping = {}
     for entry in table()["abatement"]:
-        if not (entry["node"] in sim.view("techniques_held")()):
+        if not (entry["node"] in access.view("techniques_held")()):
             continue
         for species in entry["species"]:
             escaping[species] = escaping.get(species, 1.0) * (1.0 - entry["efficiency"])
     return escaping
 
 
-def _people_by_tile(sim):
-    return dict(sim.labour.settlement_tiles())
+def _people_by_tile(access):
+    return dict(access.view("settlement_tiles")())
 
 
-def _airshed_square_metres(sim, tile, people):
+def _tile_square_metres(access, tile):
+    return access.view("land_area_of")([tile]) * SQUARE_METRES_PER_SQUARE_KILOMETRE
+
+
+def _airshed_square_metres(access, tile, people):
     dispersion = table()["dispersion"]
-    tile_area = sim.view("legacy_world_map")().tiles[tile]["land_area_km2"] * SQUARE_METRES_PER_SQUARE_KILOMETRE
+    tile_area = _tile_square_metres(access, tile)
     footprint = people * dispersion["settled_land_square_metres_per_person"]["value"]
     return min(tile_area, max(footprint, 1.0))
 
@@ -91,14 +91,13 @@ def concentration(kilograms_a_year, airshed_square_metres):
     return rate / volume_flow * MICROGRAMS_PER_KILOGRAM
 
 
-def assess(sim):
+def assess(access):
     """The year's pollution picture: per tile emissions after cleanup, concentration, excess deaths by band, yield factor."""
-    from sim.world import demography
-    raw, drivers = emissions_by_tile(sim)
-    escaping = abatement(sim)
-    people_by_tile = _people_by_tile(sim)
+    raw, drivers = emissions_by_tile(access)
+    escaping = abatement(access)
+    people_by_tile = _people_by_tile(access)
     total_people = sum(people_by_tile.values()) or 1.0
-    population = sim.view("population")()
+    population = access.view("population")()
     baseline = {"children": demography.BASELINE_ANNUAL_MORTALITY_RATE_CHILD,
                 "working_age": demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE,
                 "elderly": demography.BASELINE_ANNUAL_MORTALITY_RATE_ELDERLY}
@@ -110,7 +109,7 @@ def assess(sim):
     for tile in sorted(raw):
         emitted = {species: kilograms * escaping.get(species, 1.0) for species, kilograms in raw[tile].items()}
         people = people_by_tile.get(tile, 0.0)
-        airshed = _airshed_square_metres(sim, tile, people)
+        airshed = _airshed_square_metres(access, tile, people)
         micrograms = {species: concentration(kilograms, airshed) for species, kilograms in emitted.items()}
         slope = response["particulate"]["mortality_relative_risk_per_microgram_per_cubic_metre"]
         excess_share = slope * micrograms.get("particulate", 0.0)
@@ -120,8 +119,7 @@ def assess(sim):
             tile_deaths[band] = min(band_people, band_people * baseline[band] * excess_share)
             deaths_by_band[band] += tile_deaths[band]
         # the crop damage works over the whole tile's farmland, so the box is the tile
-        regional = concentration(emitted.get("sulphur_dioxide", 0.0),
-                                 sim.view("legacy_world_map")().tiles[tile]["land_area_km2"] * SQUARE_METRES_PER_SQUARE_KILOMETRE)
+        regional = concentration(emitted.get("sulphur_dioxide", 0.0), _tile_square_metres(access, tile))
         exceeded = max(0.0, regional / critical - 1.0)
         yield_factor = max(0.0, 1.0 - loss_per_critical * exceeded)
         if yield_factor < 1.0:
@@ -136,34 +134,33 @@ def assess(sim):
                       "drivers": {source: {species: round(kilograms, 1) for species, kilograms in sorted(species_kg.items())}
                                   for source, species_kg in sorted(drivers[tile].items())}})
     return {"tiles": tiles, "deaths_by_band": deaths_by_band, "yield_factor_by_tile": yield_factor_by_tile,
-            "cleanup_held": sorted(entry["node"] for entry in table()["abatement"] if (entry["node"] in sim.view("techniques_held")()))}
+            "cleanup_held": sorted(entry["node"] for entry in table()["abatement"] if (entry["node"] in access.view("techniques_held")()))}
 
 
-def externalities(sim, year):
+def externalities(access, year):
     """The engine hook's answer (any mod can feed it): deaths by band and a yield factor per tile."""
-    picture = assess(sim)
+    picture = assess(access)
     return {"deaths_by_band": picture["deaths_by_band"], "yield_factor_by_tile": picture["yield_factor_by_tile"]}
 
 
-def record_pollution(sim, write):
+def record_pollution(access, write):
     """Hand `write(store, tile, value)` the year's particulate concentration and yield factor of every settled or emitting tile."""
-    picture = assess(sim)
+    picture = assess(access)
     rows = {row["tile"]: row for row in picture["tiles"]}
-    for tile in sorted(set(rows) | set(_people_by_tile(sim))):
+    for tile in sorted(set(rows) | set(_people_by_tile(access))):
         row = rows.get(tile)
         write("particulate_micrograms_per_cubic_metre", tile, row["micrograms_per_cubic_metre"].get("particulate", 0.0) if row else 0.0)
         write("pollution_yield_factor", tile, row["yield_factor"] if row else 1.0)
 
 
 def register(api):
-    register_externality = getattr(api, "externality", None)
-    if register_externality is not None:
-        register_externality(externalities)
+    api.reads("agent_producer_runs", "techniques_held", "settlement_tiles", "land_area_of", "population", "year")
+    api.externality(externalities)
     # Each year's picture is kept in tile stores, so `map layer <store>` shows where the air is foul and the harvest harmed.
     api.store("particulate_micrograms_per_cubic_metre", keyed_by="tile", default=None, unit="micrograms per cubic metre")
     api.store("pollution_yield_factor", keyed_by="tile", default=None, unit="share of the harvest left")
     api.phase("record_pollution", "world",
-              lambda sim, seats: record_pollution(sim, lambda store, tile, value: api.write_store(sim, store, tile, value)),
+              lambda access, seats: record_pollution(access, lambda store, tile, value: api.write_store(access, store, tile, value)),
               after="market")
 
     @api.command("pollution", group="mods",
@@ -173,10 +170,10 @@ def register(api):
                              "turns them into emissions per tile with the factors in the mod's data, disperses them over the "
                              "tile's settled airshed, and shows the concentration, the excess deaths and lost harvest that "
                              "exposure implies, and the cleanup technologies held. Drivers name which source made each kilogram.")
-    def pollution(sim, nodes, cmd, ended):
-        picture = assess(sim)
-        year = sim.year
-        memory = api.state(sim.state.interface)
+    def pollution(access, nodes, cmd, ended):
+        picture = assess(access)
+        year = access.view("year")()
+        memory = access.memory()
         memory.setdefault("history", {})[str(year)] = {
             "excess_deaths": round(sum(picture["deaths_by_band"].values()), 2),
             "tiles_emitting": len(picture["tiles"])}
@@ -190,6 +187,4 @@ def register(api):
                 "excess_deaths_by_band": {band: round(value, 2) for band, value in picture["deaths_by_band"].items()},
                 "cleanup_held": picture["cleanup_held"],
                 "tiles_emitting": len(picture["tiles"]), "tiles": ranked[:TOP_TILES_SHOWN],
-                "applied_to_the_game": getattr(api, "externality", None) is not None,
-                "note": "Read-only on engines without the externality hook: the deaths and yield factors are what the hook "
-                        "would apply, not what happened."}
+                "applied_to_the_game": True}

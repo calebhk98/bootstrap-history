@@ -25,6 +25,8 @@ def record(assembly: Assembly) -> Dict[str, Any]:
 		"adjusters": {view: [mod_id for mod_id, _function, _reads in entries] for view, entries in sorted(applied.adjusters.items())},
 		"provided": {point: [mod_id for mod_id, _function in entries] for point, entries in sorted(applied.provided.items())},
 		"withdrawn": dict(sorted(applied.withdrawn.items())),
+		"mod_reads": {mod_id: sorted(names) for mod_id, names in sorted(applied.mod_reads.items())},
+		"mod_sends": {mod_id: sorted(command.__name__ for command in commands) for mod_id, commands in sorted(applied.mod_sends.items())},
 		"kernels": {name: mod_id for name, (mod_id, _function) in sorted(applied.kernels.items())},
 	}
 
@@ -45,4 +47,9 @@ def dependency_lines(assembly: Assembly) -> List[str]:
 			lines.append("  kernel: %s%s" % (kernel.name, "" if replaced is None else " (replaced by mod %s)" % replaced[0]))
 		for mod_id, method in assembly.unstable.get(module_id, []):
 			lines.append("  unstable: mod %s overrides %s, which the module does not declare" % (mod_id, method))
+	for mod_id, names in sorted(assembly.applied.mod_reads.items()):
+		lines.append("mod %s" % mod_id)
+		lines.append("  reads: %s" % ", ".join("%s (%s)" % (name, assembly.provider_of(name)) for name in names))
+		lines.append("  sends: %s" % ", ".join("%s (%s)" % (command.__name__, assembly.command_owner[command])
+		                                       for command in assembly.applied.mod_sends.get(mod_id, ())))
 	return lines

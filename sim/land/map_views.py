@@ -109,9 +109,9 @@ class MapViews:
         return route([origin], [target], modes, self.world.improvements, held_nodes=self.needs.held_techniques(True),
                      world_map=self.world_map, fastest=True)
 
-    def reach_from(self, tile: str, modes: Any, range_days: float) -> Dict[str, float]:
-        """{tile: days} reachable from a tile by these modes within `range_days`."""
-        return reach([tile], modes, range_days, self.world.improvements, world_map=self.world_map)
+    def reach_from(self, tile: str, modes: Any, range_days: float, held_nodes: Any = None) -> Dict[str, float]:
+        """{tile: days} reachable from a tile by these modes within `range_days`; the technologies in `held_nodes` cheapen the modes."""
+        return reach([tile], modes, range_days, self.world.improvements, held_nodes=held_nodes, world_map=self.world_map)
 
     def held_tile_geometry(self) -> List[tuple]:
         """[(tile id, lat, lon, land area km2, arable fraction)] for each held tile the land map describes, in held order."""

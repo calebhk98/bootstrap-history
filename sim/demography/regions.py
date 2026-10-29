@@ -67,7 +67,7 @@ class Regions:
 
     def externality_deaths(self, deaths_by_band, year):
         """`deaths_by_band` plus what the game's externality providers add to the year's deaths."""
-        return rules.deaths_with_externalities(deaths_by_band, self.needs.externality(self.needs.provider_game(), year))
+        return rules.deaths_with_externalities(deaths_by_band, self.needs.externality(year))
 
     def _step_regions(self, regions, kcal_by_region, year):
         """Step every region a year and return the nation's flows; the nation's people become their sum."""

@@ -7,6 +7,7 @@ change without them knowing. The port files (port*.py) are the only code that im
 the agent economy answers, and the engine's own opening figures answer
 while it opens. The port reads the game through `PortWorld` (port_world.py).
 """
+from sim.economy import api as economy_api
 from sim.production.api import node_upkeep
 
 from .commands import RepriceOpeningMoney
@@ -190,6 +191,20 @@ class EconomyPort:
         """{good: [(tile, recipe id)]} of the producers the agent economy runs; None while it opens."""
         agent = self._answering_agent()
         return None if agent is None else agent.producers_by_good()
+
+    def agent_producer_runs(self):
+        """[{tile, runs, inputs, outputs}] of each producer that ran last year; None while the agent economy opens."""
+        agent = self._answering_agent()
+        if agent is None:
+            return None
+        economy = agent.economy()
+        recipes = economy.setup.recipes
+        rows = []
+        for producer in economy_api.all_producers(economy):
+            recipe = recipes.get(producer.recipe_id)
+            if producer.last_runs > 0.0 and recipe is not None:
+                rows.append({"tile": producer.tile, "runs": producer.last_runs, "inputs": dict(recipe.inputs), "outputs": dict(recipe.outputs)})
+        return rows
 
     def agent_worker_years_by_recipe(self):
         """Worker-years a year the agent economy's producers put into each recipe; None while it opens."""
