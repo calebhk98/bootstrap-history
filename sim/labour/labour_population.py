@@ -90,9 +90,8 @@ class PopulationMixin:
                            "it; teach or discover %s first" % trade)
         seats = float(seats)
         cost = seats * self._world.trade_school_price_per_seat()
-        household = self._world.state.household
         workforce = self._world.workforce
-        if seats <= 0 or cost > household.capital:
+        if seats <= 0 or cost > self._world.balance:
             return False, "cannot afford that trade school"
         self._world.send(PayEdge(self._world.EDGE_WORKERS, cost, "trade schools"))
         schools = workforce.trade_schools

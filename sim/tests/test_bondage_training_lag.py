@@ -23,11 +23,11 @@ class Bondage(BondageMixin):
         self.cash, self.room, self.paid, self.sent = cash, room, [], []
         self.staff = employees or {}
         self.household = types.SimpleNamespace(slaves=0, freedmen=0, manumitted_total=0, artisans=0.0, scholars=0.0, training=[], granted_staff=None,
-                                               reputation=0.0)
-        self.holdings = types.SimpleNamespace(market_pressure=0.0)
+                                               reputation=0.0, market_pressure=0.0)
+        self.refusals = []
         self._world = types.SimpleNamespace(
-            workforce=self.household, view=workforce_stand_in.view_of(self.household), year=YEAR, state=types.SimpleNamespace(household=self.household, holdings=self.holdings, scenario=types.SimpleNamespace(year=YEAR)),
-            household=self.household, can_pay=lambda price: price <= self.cash, EDGE_SLAVE_TRADERS="slave_traders",
+            workforce=self.household, view=workforce_stand_in.view_of(self.household), year=YEAR,
+            note_buy_refusal=self.refusals.append, can_pay=lambda price: price <= self.cash, EDGE_SLAVE_TRADERS="slave_traders",
             send=self._send,
             refusal_text=lambda what, price: "cannot afford %s" % what)
 
@@ -70,7 +70,7 @@ class BuySlaves(unittest.TestCase):
     def test_the_price_is_paid_and_the_slaves_and_the_markets_pressure_are_counted(self):
         game = Bondage()
         game.buy_slaves(12)
-        self.assertEqual((game.paid, game.household.slaves, game.holdings.market_pressure), ([PRICE], 12, 12))
+        self.assertEqual((game.paid, game.household.slaves, game.household.market_pressure), ([PRICE], 12, 12))
 
     def test_a_purchase_the_purse_cannot_cover_buys_nobody_and_queues_nobody(self):
         game = Bondage(cash=PRICE - 1.0)

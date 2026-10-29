@@ -24,7 +24,7 @@ class StubGame(ForwardSeatsMixin):
     def on_road_to_goal(self, node_id):
         """The seats module's answer, over the goal this game holds and the memo it keeps on itself."""
         module = module_harness.build(
-            Seats, seat=SeatsSeat(), views={"legacy_goal_closure": lambda: getattr(self, "_goal_closure", None),
+            Seats, seat=SeatsSeat(), views={"goal_closure": lambda: getattr(self, "_goal_closure", None),
                                             "tree_closure": lambda goal: closure(NODES, goal)},
             answers={RememberGoalClosure: lambda command: setattr(self, "_goal_closure", command.nodes)})
         module.goal = lambda: {"node": self.goal}

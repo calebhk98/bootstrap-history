@@ -36,7 +36,7 @@ class Town(SettlementMixin):
             has_town_premiums=lambda: bool(self.premiums),
             provided_mortality_premium=lambda labour, tile, town: last_answer([function(labour, tile, town) for function in self.premiums]),
             home_tiles_held=lambda: homes, population=types.SimpleNamespace(total=NATION), pop_scale=1.0,
-            people_by_tile=lambda: None, workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household))
+            people_by_tile=lambda: None, workforce=household, view=workforce_stand_in.view_of(household))
 
 
 class TownProviderTests(unittest.TestCase):

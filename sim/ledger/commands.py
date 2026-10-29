@@ -154,6 +154,12 @@ class RescaleHouseholdMoney(Command):
 
 
 @dataclass(frozen=True)
+class RestorePurse(Command):
+	"""The acting seat's purse is put back to `balance`, a figure it held a moment ago: a trial sale whose books are undone."""
+	balance: float
+
+
+@dataclass(frozen=True)
 class WithdrawHouseholdMoney(Command):
 	"""The acting seat's household money falls by `amount` with no posting on the ledger's side: the money entered the
 	agent economy's own book at the same moment (a bank's capital)."""

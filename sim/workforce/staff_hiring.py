@@ -13,10 +13,9 @@ class StaffHiring:
 	def replace_lost_staff(self, lost):
 		"""Hire each trade back up to the people it lost to attrition this year, through `hire` so every rule a
 		player meets applies; a refusal is recorded as a skipped action. `lost` is {trade: people}."""
-		household = self.needs.legacy_acting_household()
 		workforce = self.seat
 		for trade, people in sorted(lost.items()):
-			before = household.capital
+			before = self.needs.acting_balance()
 			have = workforce.employees.get(trade, 0.0)
 			hired, refusal = self.labour.hire_buying_room(trade, int(people))
 			if not hired:
@@ -30,12 +29,11 @@ class StaffHiring:
 		"""Hire a trade up to (or release it down to) the whole-person target drawn from `want`, through `hire_buying_room`
 		so every rule a player meets applies. A refusal is not an error: it is recorded as a skip when shut concerns need
 		the hands. A hire's audit row names the people the market found, which can be fewer than sought."""
-		household = self.needs.legacy_acting_household()
 		workforce = self.seat
 		have = workforce.employees.get(trade, 0.0)
 		change = hires_needed(have, self.labour.stochastic_round(want))
 		if change > 0:
-			before = household.capital
+			before = self.needs.acting_balance()
 			hired, why = self.labour.hire_buying_room(trade, change)
 			if not hired and closure_need >= 1.0:
 				self.needs.send(RecordAutomationSkip("auto_hire", "hire %d %s" % (change, trade),
@@ -46,7 +44,7 @@ class StaffHiring:
 				                                 "staff target %.1f against %.1f held, with %.1f supervision room"
 				                                 % (want, have, self.labour.supervision_room()), before))
 		elif change < 0:
-			before = household.capital
+			before = self.needs.acting_balance()
 			self.labour.fire(trade, -change)
 			self.needs.send(RecordAutomation("auto_hire", "release", "%d %s" % (-change, trade),
 			                                 "staff target %.1f is below the %.1f held" % (want, have), before))

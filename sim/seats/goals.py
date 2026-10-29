@@ -20,7 +20,7 @@ class Goals:
     def on_road_to_goal(self, node_id: str) -> bool:
         """Whether the goal needs this node. A yes or no with no distance, so it names no route the player has not already been
         shown. What the goal needs is worked out once and kept (the engine's other readers of it share the same set)."""
-        needed = self.needs.legacy_goal_closure()
+        needed = self.needs.goal_closure()
         if needed is None:
             try:
                 needed = self.needs.tree_closure(self.goal()["node"])

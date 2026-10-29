@@ -149,7 +149,7 @@ class LabourAllocationMixin:
     def _non_farm_need_shares(self):
         """Each non-farm trade's share of need from household demand through
         the recipe graph; with no recipe available, the current split."""
-        reached = frozenset(self._world.civ["starting_techs"]) | frozenset(self._world.state.projects.done)
+        reached = frozenset(self._world.civ["starting_techs"]) | frozenset(self._world.projects.done)
         cached = getattr(self, "_need_shares_cache", None)
         if cached is None or cached[0] != reached:
             shares = workforce_spinup.need_shares_by_trade(
@@ -209,7 +209,7 @@ class LabourAllocationMixin:
 
     def _set_farm_area(self, hectares):
         """Cleared area and the quality of the best-first ground it covers."""
-        self._world.farm_land = agriculture.Land(hectares, quality_of_area(self._world.farm_ladder, hectares))
+        self._world.set_farm_land(hectares, quality_of_area(self._world.farm_ladder, hectares))
         self._world.send(SetClearedFarmland(hectares))
 
     def _apply_land_clearing(self):
@@ -223,7 +223,7 @@ class LabourAllocationMixin:
     def _farming_technique(self):
         """This society's farming technique from the technologies it holds,
         each weighted by how far it has spread."""
-        projects = self._world.state.projects
+        projects = self._world.projects
         year = self._world.year
         starting = set(self._world.civ.get("starting_techs", ()))
         adoption = {}

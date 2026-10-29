@@ -34,7 +34,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"cash_mark": "household",
 	"cash_periods": "household",
 	"spend_last_year": "household",
-	"base_tile": "household",
 
 	# ProjectsState
 	"active": "projects",
@@ -52,7 +51,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"closures": "projects",
 
 	# EconomyState
-	"market_pressure": "holdings",
 	"_dashboard_history": "holdings",
 
 	# FounderState
@@ -122,13 +120,11 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 		# Transient caches and runtime-only trackers
 		self.contract_projects: Set[str] = set()
-		self._staff_scale: float = 1.0
 		self._spend_this_year: float = 0.0
 		self._goods_cat_state_cache: Any = None
 		self._goods_category_ratios_cache: Any = None
 		self._income_factor_cache: Any = None
 		self._goods_mkt_op_factor_cache: Any = None
-		self._last_buy_refusal: Any = None
 		self._said_stack_caution: Any = None
 
 	kind = "household"
@@ -355,10 +351,8 @@ class Household(FounderReview, FounderBorrowing, Actor):
 
 	def __setattr__(self, name: str, value: Any) -> None:
 		if (name in ("_state", "_port", "contract_projects")
-				or name.startswith("_staff_scale")
 				or name.startswith("_spend_this_year")
 				or name.endswith("_cache")
-				or name == "_last_buy_refusal"
 				or name == "_said_stack_caution"):
 			super().__setattr__(name, value)
 			return

@@ -20,7 +20,7 @@ class _StubLabour(CapacityMixin):
         projects = types.SimpleNamespace(done=set(done), operating=set(operating))
         self._world = types.SimpleNamespace(
             cfg={"hired_hours_cap_base": 1000000.0}, pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
-            trades_absent=set(absent), state=types.SimpleNamespace(projects=projects),
+            trades_absent=set(absent), projects=projects,
             ROOM_SOURCES=list(room_sources), nodes={node_id: {} for node_id, _ in room_sources},
             is_venture=lambda node_id: True, is_visible=lambda node_id: True,
             closure=lambda nodes, node_id: {node_id}, start_reason=lambda node_id, _why=True: (True, ""),

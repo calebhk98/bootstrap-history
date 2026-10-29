@@ -30,7 +30,7 @@ class _Host:
         if isinstance(command, ChangeHeld):
             self.stock[command.material] = self.stock.get(command.material, 0.0) + command.units
             return None
-        module = module_harness.build(Workforce, seat=self.state.household, views={"legacy_dice": self.rng})
+        module = module_harness.build(Workforce, seat=self.state.household, views={"game_random": self.rng})
         return module.lose_crew(command)
 
     def lose_what_was_risked(self, node_id):

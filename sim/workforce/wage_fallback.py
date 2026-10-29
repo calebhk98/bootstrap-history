@@ -13,10 +13,9 @@ class WageFallback:
 		#     equivalent, so a single bad year in the opening decade could end a
 		#     run: one Rome seed earned four technologies in five hundred years
 		#     because a fire in 103 took a fifth of everything it had.
-		household = self.needs.legacy_acting_household()
 		if (not self.needs.automation()["manual"] and remaining > WAGE_FALLBACK_MIN_HOURS
-				and (household.capital < self.needs.living_cost() * WAGE_FALLBACK_LIVING_COST_YEARS
-				     or not self.needs.legacy_projects().active)):
+				and (self.needs.acting_balance() < self.needs.living_cost() * WAGE_FALLBACK_LIVING_COST_YEARS
+				     or not self.needs.active_projects())):
 			trade = ("scholar" if self.labour.effective_scholars() >= 1 else "scribe")
 			hours = min(remaining, WAGE_FALLBACK_MAX_HOURS)
 			# ONLY IF IT PAYS BETTER THAN THE STANDING JOB IT TAKES THE HOURS FROM: a founder who already

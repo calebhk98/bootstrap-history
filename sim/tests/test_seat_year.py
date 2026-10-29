@@ -33,7 +33,7 @@ template = {"starting_techs": ["a", "b"], "scholars": 2, "artisans": 3, "base_ti
 seat = seat_from_template(template, 500.0, {"auto_hire": False})
 check("a template builds a seat with its own purse, knowledge, staff, place and goal",
       seat.household.capital == 500.0 and seat.projects.done == {"a", "b"} and seat.projects.granted == {"a", "b"}
-      and seat.modules["workforce"].scholars == 2 and seat.modules["workforce"].artisans == 3 and seat.household.base_tile == "t1"
+      and seat.modules["workforce"].scholars == 2 and seat.modules["workforce"].artisans == 3 and seat.modules["workforce"].base_tile == "t1"
       and seat.goal == "g" and seat.country == "han", None)
 other = seat_from_template(template, 500.0, {})
 check("two seats from one template share no container",

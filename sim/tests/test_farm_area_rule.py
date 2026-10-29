@@ -20,6 +20,7 @@ class Farm(LabourAllocationMixin):
         self.sent = []
         self._world = SimpleNamespace(farm_ladder=ladder, farm_arable_ceiling=ceiling,
                                       farm_land=agriculture.Land(hectares, 1.0), send=self.sent.append)
+        self._world.set_farm_land = lambda hectares, quality: setattr(self._world, "farm_land", agriculture.Land(hectares, quality))
 
     def sized(self):
         self._set_farm_area(self._world.farm_land.hectares)

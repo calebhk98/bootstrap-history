@@ -18,7 +18,7 @@ def keeping(done=("mill",), venture=True):
     module = projects_host.build()
     projects = Game(done=set(done))
     return Game(
-        done=set(done), state=Game(projects=projects), is_venture=lambda node_id: venture, module=module,
+        done=set(done), projects=projects, is_venture=lambda node_id: venture, module=module,
         keep_staffed=module.seat.keep_staffed, view=lambda name: module.keep_staffed,
         send=lambda command: module.apply_keep_staffed(command))
 
@@ -48,7 +48,7 @@ class Household(StaffControlsMixin):
         projects = Game(done={"a", "b", "c"}, operating=set(operating))
         self.hired = []
         self._world = Game(
-            state=Game(projects=projects), nodes={"a": 1, "b": 1, "c": 1}, keep_staffed=lambda: set(flagged),
+            projects=projects, nodes={"a": 1, "b": 1, "c": 1}, keep_staffed=lambda: set(flagged),
             staff_closure_age=lambda node_id: closure_age.get(node_id), staffing_held_totals=lambda: {},
             staffing_draw_of=lambda node_id, units: draws[node_id], reopen_units=lambda node_id: 1,
             staffing_shortfalls=lambda totals, strict=False: shortfalls)

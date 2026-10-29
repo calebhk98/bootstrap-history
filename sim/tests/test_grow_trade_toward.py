@@ -27,7 +27,7 @@ def world(held, found, accepts=True):
     labour = SimpleNamespace(stochastic_round=lambda target: int(target), hire_buying_room=hire_buying_room, fire=fire,
                              supervision_room=lambda: 3.0)
     host = SimpleNamespace(workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)), labour=labour)
-    host.module = workforce_over(host, legacy_household_actor=SimpleNamespace(_staff_scale=1.0))
+    host.module = workforce_over(host)
     return host
 
 

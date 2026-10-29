@@ -1,13 +1,17 @@
 """What the labour package reads of the game: one member per view the workforce module declares, answered through its needs.
 
-`Labour` (sim/labour/) asks this object where it used to ask the engine. The members that return raw state
-(`state`, `household`, `rng`, `nodes`, `order`) are `legacy_*` views, debts that go when that state moves. The three
-engine-held facts labour writes (the farm's land, the year's farming technique, the goal's closure) are written through
-`legacy_game` until their owners move."""
+`Labour` (sim/labour/) asks this object where it used to ask the engine. Every fact comes from a named view of its owner and
+every change to a fact another module owns is that owner's command (the farm's land and technique, the goal's closure). What
+is still handed out live: the game's random source (`rng`, shared by every module that draws), the project order (`order`, the projects module's
+ `project_order` view), the project sets the views of knowledge and projects return, and the game a mod's provider is handed."""
 from sim.agents.api import edges
+from sim.agriculture.api import SetFarmLand, SetFarmTechnique
 from sim.demography.api import rules as demography_rules
+from sim.ledger.api import RestorePurse
 from sim.prices.api import solve_prices_core
+from sim.seats.api import RememberGoalClosure
 from .commands import BuildHousing
+from .commands_bondage import NoteBuyRefusal
 from .provided import last_answer, overhead_hours
 
 
@@ -23,6 +27,7 @@ class WorkforceWorld:
         self._owner = owner          # the workforce module: its own views are asked of it directly
         self._trade_registry = None
         self._economy = AgentEconomyReads(needs)
+        self._projects = ProjectReads(needs)
 
     def send(self, command):
         """Apply a command through the module that owns it."""
@@ -61,20 +66,48 @@ class WorkforceWorld:
         return self._owner.world
 
     @property
-    def household(self):
-        return self._needs.legacy_household_actor()
+    def balance(self):
+        """The acting seat's purse, now."""
+        return self._needs.acting_balance()
+
+    def restore_purse(self, balance):
+        """Put the acting seat's purse back to a balance it held a moment ago (a trial sale undone)."""
+        self._needs.send(RestorePurse(balance))
 
     @property
-    def state(self):
-        return self._needs.legacy_state()
+    def projects(self):
+        """The acting seat's project sets (done, operating, in hand, granted), each asked of its owner when read."""
+        return self._projects
+
+    @property
+    def bondage_years_left(self):
+        return self._needs.debt_status()["bondage_years_left"]
 
     @property
     def rng(self):
-        return self._needs.legacy_dice()
+        """The game's random source (shared and live: every draw moves the stream every other module draws from)."""
+        return self._needs.game_random()
+
+    def acting_as(self, seat_id):
+        """A context in which `seat_id` is the acting seat."""
+        return self._needs.acting_as(seat_id)
+
+    @property
+    def staff_scale(self):
+        """The share of the institutional staff ceiling the acting seat's income can pay, as `staff_capacity` last worked it out."""
+        return self._owner.staff_scale()
+
+    @staff_scale.setter
+    def staff_scale(self, scale):
+        self._owner.set_staff_scale(scale)
+
+    def note_buy_refusal(self, refusal):
+        """Keep why the acting seat's purchase of people was refused, for the screen that asked."""
+        self._owner.note_buy_refusal(NoteBuyRefusal(refusal))
 
     def simulation(self):
-        """The game itself, for the town providers a mod provides to read."""
-        return self._needs.legacy_game()
+        """The game itself, for the town providers a mod provides to read (the mod interface hands it to them)."""
+        return self._needs.provider_game()
 
     # ---- the scenario ----
 
@@ -88,7 +121,7 @@ class WorkforceWorld:
 
     @property
     def nodes(self):
-        return self._needs.legacy_tree()
+        return self._needs.tree_nodes()
 
     @property
     def order(self):
@@ -96,15 +129,16 @@ class WorkforceWorld:
 
     @property
     def goal(self):
-        return self._needs.legacy_state()._goal
+        return self._needs.goal()["node"]
 
     @property
     def goal_closure(self):
-        return getattr(self._needs.legacy_game(), "_goal_closure", None)
+        """What the goal needs, once worked out (None before)."""
+        return self._needs.goal_closure()
 
     @goal_closure.setter
     def goal_closure(self, value):
-        self._needs.legacy_game()._goal_closure = value
+        self._needs.send(RememberGoalClosure(value))
 
     def closure(self, nodes, goal):
         return self._needs.tree_closure(goal)
@@ -339,9 +373,8 @@ class WorkforceWorld:
     def farm_land(self):
         return self._needs.farm_land()
 
-    @farm_land.setter
-    def farm_land(self, value):
-        self._needs.legacy_game().farm_land = value
+    def set_farm_land(self, hectares, quality):
+        self._needs.send(SetFarmLand(hectares, quality))
 
     @property
     def farm_arable_ceiling(self):
@@ -357,7 +390,7 @@ class WorkforceWorld:
 
     @farm_technique_this_year.setter
     def farm_technique_this_year(self, value):
-        self._needs.legacy_game()._farm_technique_this_year = value
+        self._needs.send(SetFarmTechnique(value))
 
     # ---- the actors and the hours still wanted ----
 
@@ -376,7 +409,7 @@ class WorkforceWorld:
 
     def director_overhead_hours(self):
         """Hours of the directed-hours pool the game's overhead providers charge (none unless a mod provided some)."""
-        return overhead_hours(self._needs.director_overhead(self._needs.legacy_game()))
+        return overhead_hours(self._needs.director_overhead(self._needs.provider_game()))
 
     def provided_town_population(self, labour, tile, nominal_people):
         """People the town providers say live at `tile`, or None when none has an opinion (the last answer wins)."""
@@ -424,6 +457,33 @@ class WorkforceWorld:
 
     def venture_staff_free(self):
         return self._needs.venture_staff_free()
+
+
+class ProjectReads:
+    """The acting seat's project sets, each asked of the view that owns it every time it is read (the sets are the live ones)."""
+
+    def __init__(self, needs):
+        self._needs = needs
+
+    @property
+    def done(self):
+        return self._needs.techniques_held()
+
+    @property
+    def operating(self):
+        return self._needs.projects_operating()
+
+    @property
+    def active(self):
+        return self._needs.active_projects()
+
+    @property
+    def granted(self):
+        return self._needs.techniques_granted()
+
+    @property
+    def done_year(self):
+        return self._needs.done_year()
 
 
 class AgentEconomyReads:

@@ -14,7 +14,7 @@ def workforce_over(host, **views):
     answers = {kind: (lambda command, host=host: event_stand_in.send(host, command))
                for kind in (RecordEvent, RecordAutomation, RecordAutomationSkip, DiscardEventsAfter)}
     answers[PayEdge] = lambda command: None
-    given = {"legacy_acting_household": host.state.household, "year": host.state.scenario.year,
+    given = {"acting_balance": lambda: host.state.household.capital, "year": host.state.scenario.year,
              "plain_number": plain_number}
     given.update(views)
     module = module_harness.build(Workforce, views=given, answers=answers, seat=getattr(host, "seat", host.state.household),

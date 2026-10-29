@@ -52,18 +52,30 @@ so the 365 callers outside labour (screens, mods, the economy port, engine mixin
 - **`living_cost`, `training_advice` and `training_queue`** stay bridged: their code is the economy's household bill and projects
   staffing (`projects_training_advice.py`), which move with those owners.
 - **The farm facts** (`farm_land`, the year's technique, the ladder and the arable ceiling) are plain attributes of `Sim` that
-  agriculture's forwarders and the opening write; the module reads them as views and writes the land and the technique through
-  `legacy_game` (the farm workforce is the only writer).
+  agriculture's forwarders and the opening write; the module reads them as views and writes the land and the technique by
+  agriculture's commands `SetFarmLand` and `SetFarmTechnique` (applied by the engine bridge until agriculture holds them).
 - **`wage_schedule.py`** stays in the engine (`data.py` imports it at load); the module asks for a schedule as the view `wage_schedule_for`.
 
 ## Debts left (`legacy_*` and shared bridge views the module reads)
 
-`legacy_state` (labour still reads and writes the seat's household money, bondage and base tile, the holdings' market pressure, the
-projects' sets and the built ways in place: `grep -rn "_world.state" sim/labour` lists the sites; the year and the policy are the views
-`year` and `founder` now), `legacy_game`, `legacy_acting_household` (the purse, for the module's own steps), `legacy_household_actor`,
-`legacy_dice`, `legacy_tree`, `legacy_projects`, `legacy_act_as`; the engine's `game_config`, `civilisation`, the trade tables (`trade_records`, `trades_absent`,
-`trade_notes`, `trade_family`, `starting_wages`), the actors' staff (`actor_staff_*`), and the projects staffing reads (`staffing_*`,
-`venture_*`, `staff_closure_age`, `reopen_units`, `exclusion_reason`, `shared_answer`).
+The module reads no `legacy_game`, `legacy_state`, `legacy_acting_household`, `legacy_household_actor`, `legacy_projects`,
+`legacy_tree`, `legacy_dice`, `legacy_act_as` or `legacy_seats`. What replaced them: the purse is the ledger's `acting_balance`
+(a trial sale puts it back with the ledger's `RestorePurse`); bondage is finance's `debt_status`; the project sets are knowledge's
+`techniques_held`, `techniques_granted`, `done_year`, projects' `active_projects` and the bridge's `projects_operating`; the tree is
+knowledge's `tree_nodes`; the goal and what it needs are seats' `goal` and `goal_closure` (written by seats' `RememberGoalClosure`);
+the seats are `seat_list`; running as another seat is seats' `acting_as`; the base tile and the market pressure on the people market
+are workforce state (`WorkforceSeat.base_tile`, `market_pressure`); the affordability scale of the staff step and the last refusal to
+buy people are kept by the module per seat and never saved (`staff_scale`, the view `last_buy_refusal`, the command
+`NoteBuyRefusal`).
+
+Still live objects the module reads: `game_random` (the game's
+`random.Random`, shared with every module that draws: the order of draws is the game), `provider_game` (the game itself, which a
+mod's town and director-overhead providers are handed by the mod interface), and the project sets the views of knowledge and
+projects return (the live sets). `legacy_labour` (the module's `Labour` for engine code and mods) is read only by
+`sim/tests/agent_command_helpers.py`. Other owners' views: the engine's `game_config`, `civilisation`, the trade tables
+(`trade_records`, `trades_absent`, `trade_notes`, `trade_family`, `starting_wages`), the actors' staff (`actor_staff_*`), and the
+projects staffing reads (`staffing_*`, `venture_*`, `staff_closure_age`, `reopen_units`, `exclusion_reason`, `shared_answer`).
+Measure the module's line with `python3 tools/measure/module_graph.py --modules`.
 
 ## At a glance
 

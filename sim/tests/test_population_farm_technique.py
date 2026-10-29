@@ -36,10 +36,9 @@ def _labour(done=(), year=100, done_year=None):
     world = stand_in_world()
     world.nodes_with_mechanic = lambda mechanic: list(DECLARATIONS) if mechanic == "farming_technique" else []
     world.mechanic = lambda node_id, mechanic: DECLARATIONS[node_id]
-    world.state.projects.done = set(done)
-    world.state.projects.done_year = dict(done_year or {})
-    world.state.projects.granted = set()
-    world.state.scenario = SimpleNamespace(year=year)
+    world.projects.done = set(done)
+    world.projects.done_year = dict(done_year or {})
+    world.projects.granted = set()
     world.year = year
     return Labour(world), world
 

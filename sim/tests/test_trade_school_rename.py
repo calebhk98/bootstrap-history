@@ -56,7 +56,7 @@ def labour_world(capital, trade_known=True, schools=None):
     household = Game(capital=capital, trade_schools=schools, trades_created=set())
     paid = []
     world = Game(
-        wages={"chemist": 1.0} if trade_known else {}, trades_absent=set(), workforce=household, view=workforce_stand_in.view_of(household), state=Game(household=household),
+        wages={"chemist": 1.0} if trade_known else {}, trades_absent=set(), workforce=household, view=workforce_stand_in.view_of(household), balance=capital,
         trade_school_price_per_seat=lambda: SEAT_PRICE, EDGE_WORKERS="edge:workers",
         send=lambda command: paid.append((command.edge, command.amount, command.purpose)))
     return Game(_world=world, trade_available=lambda trade: PopulationMixin.trade_available(

@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from sim.tests import module_harness
 from sim.workforce import rules as workforce_rules
 from sim.workforce.api import NoteTradeSpread, PressLabour, ReportStaffReduction, ScaleDeputies, SetEmployed, TakeWageFallback
-from sim.workforce.api import AutoBuyPeople, AutoManumit, CloseHoursYear, FadeMarketPressure, SettleLivingCost
+from sim.workforce.api import AutoBuyPeople, AutoManumit, CloseHoursYear, FadeMarketPressure, NoteBuyRefusal, SettleLivingCost
 from sim.reporting.api import RecordEvent
 from sim.workforce.constants import AUTO_MANUMIT_ANNUAL_CHANCE, MARKET_PRESSURE_ANNUAL_FADE, MARKET_PRESSURE_DECAY, WAGE_FALLBACK_LIVING_COST_YEARS, WAGE_FALLBACK_MAX_HOURS, WAGE_FALLBACK_MIN_HOURS
 from sim.workforce.module import Workforce
@@ -33,7 +33,7 @@ class SurvivingPeople(unittest.TestCase):
 class Commands(unittest.TestCase):
     def test_deputies_are_multiplied_by_the_share(self):
         household = SimpleNamespace(directors_extra=4.0)
-        module_harness.build(Workforce, seat=household, views={"legacy_acting_household": household}).scale_deputies(ScaleDeputies(0.5))
+        module_harness.build(Workforce, seat=household, views={"acting_balance": lambda: household.capital}).scale_deputies(ScaleDeputies(0.5))
         self.assertEqual(household.directors_extra, 2.0)
 
     def test_the_log_of_staff_lost_is_asked_with_the_cause_and_the_headcount_before(self):
@@ -45,7 +45,7 @@ class Commands(unittest.TestCase):
 
     def test_a_trade_spread_notes_the_year_first_taught_and_that_it_became_endemic(self):
         household = SimpleNamespace(trade_introduced_year={}, trades_endemic=set())
-        workforce = module_harness.build(Workforce, seat=household, views={"legacy_acting_household": household})
+        workforce = module_harness.build(Workforce, seat=household, views={"acting_balance": lambda: household.capital})
         workforce.note_trade_spread(NoteTradeSpread("smith", introduced_year=120))
         self.assertEqual((household.trade_introduced_year, household.trades_endemic), ({"smith": 120}, set()))
         workforce.note_trade_spread(NoteTradeSpread("smith", endemic=True))
@@ -74,8 +74,8 @@ class WageFallback(unittest.TestCase):
         sold = []
         household = SimpleNamespace(capital=capital)
         workforce = module_harness.build(Workforce, views={
-            "legacy_acting_household": household, "automation": {"manual": manual}, "living_cost": lambda *args: 100.0,
-            "legacy_projects": SimpleNamespace(active=dict.fromkeys(active)), "held_trade": lambda: held})
+            "acting_balance": lambda: household.capital, "automation": {"manual": manual}, "living_cost": lambda *args: 100.0,
+            "active_projects": dict.fromkeys(active), "held_trade": lambda: held})
         workforce.labour = SimpleNamespace(
             effective_scholars=lambda: 2.0, work_for_wages=lambda trade, hours: sold.append((trade, hours)) or (1.0, None),
             wage_for_hours=lambda trade, hours: pays[0] if trade == "scholar" else pays[1])
@@ -103,7 +103,7 @@ class HoursYear(unittest.TestCase):
         closed = []
         household = SimpleNamespace(log=[], wage_hours_this_year=120.04, teaching_hours_this_year=30.0, relocation_hours_this_year=None,
                                     supervision_hours_this_year=7.0, contract_hours={"smith": 40.0}, hours_this_year=None)
-        workforce = module_harness.build(Workforce, seat=household, views={"legacy_acting_household": household})
+        workforce = module_harness.build(Workforce, seat=household, views={"acting_balance": lambda: household.capital})
         workforce.labour = SimpleNamespace(director_pool=lambda: 2000.04, close_wage_year=lambda: closed.append(dict(
             kept=household.hours_this_year, wage=household.wage_hours_this_year)))
         workforce.close_hours_year(CloseHoursYear(pool=1500.0, remaining=-3.0, remaining_after_projects=400.0, hours_effective_total=800.04))
@@ -144,8 +144,8 @@ class StandingPolicies(unittest.TestCase):
         calls = []
         household = SimpleNamespace(capital=capital)
         workforce = module_harness.build(Workforce, seat=WorkforceSeat(), views={
-            "founder": lambda: {"policy": policy}, "automation": lambda: {"manual": manual}, "legacy_acting_household": household,
-            "legacy_dice": lambda: dice, "running_mechanics": lambda name: list(mechanics)})
+            "founder": lambda: {"policy": policy}, "automation": lambda: {"manual": manual}, "acting_balance": lambda: household.capital,
+            "game_random": lambda: dice, "running_mechanics": lambda name: list(mechanics)})
         workforce.staff = lambda: {"artisans": 3.0, "slaves": slaves}
         workforce.labour = SimpleNamespace(SLAVE_BASE_PRICE=10.0, buy_slaves=lambda count: calls.append(("buy", count)) or count,
                                            manumit=lambda count: calls.append(("free", count)) or count)
@@ -178,11 +178,22 @@ class StandingPolicies(unittest.TestCase):
             workforce.auto_manumit(AutoManumit())
             self.assertEqual((calls, dice.random()), ([], random.Random(5).random()))
 
-    def test_the_market_pressure_fades_on_the_acting_seats_holdings(self):
-        holdings = SimpleNamespace(market_pressure=100.0)
-        workforce = module_harness.build(Workforce, seat=WorkforceSeat(), views={"legacy_state": SimpleNamespace(holdings=holdings)})
+    def test_the_market_pressure_fades_on_the_acting_seat(self):
+        seat = WorkforceSeat(market_pressure=100.0)
+        workforce = module_harness.build(Workforce, seat=seat)
         workforce.fade_market_pressure(FadeMarketPressure())
-        self.assertAlmostEqual(holdings.market_pressure, 100.0 * MARKET_PRESSURE_DECAY - MARKET_PRESSURE_ANNUAL_FADE)
+        self.assertAlmostEqual(seat.market_pressure, 100.0 * MARKET_PRESSURE_DECAY - MARKET_PRESSURE_ANNUAL_FADE)
+
+    def test_a_refusal_to_buy_people_is_kept_for_the_acting_seat_until_it_is_cleared(self):
+        workforce = module_harness.build(Workforce, seat=WorkforceSeat())
+        workforce.clock.acting_seat = "founder"
+        workforce.note_buy_refusal(NoteBuyRefusal("cannot afford 3 slaves"))
+        self.assertEqual(workforce.last_buy_refusal(), "cannot afford 3 slaves")
+        workforce.clock.acting_seat = "second"
+        self.assertIsNone(workforce.last_buy_refusal())
+        workforce.clock.acting_seat = "founder"
+        workforce.note_buy_refusal(NoteBuyRefusal(None))
+        self.assertIsNone(workforce.last_buy_refusal())
 
 
 if __name__ == "__main__":

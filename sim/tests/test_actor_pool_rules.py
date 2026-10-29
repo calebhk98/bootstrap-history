@@ -26,7 +26,6 @@ def labour_of(actor_staff=0.0):
     world.home_tiles_held_version = lambda: 0
     world.cfg = {"hired_hours_cap_base": 25000}
     world.effect_factor = lambda channel, value, exponent=None: value
-    world.state.scenario = types.SimpleNamespace(year=100)
     world.actor_staff_fte = lambda trade: actor_staff
     return Labour(world)
 

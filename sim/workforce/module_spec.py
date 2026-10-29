@@ -5,9 +5,11 @@ the other bridge files) under the name the owner will publish, or a view of a mo
 is uncached while labour writes the seat's people and hours in place (it keeps no count of its writes), so no channel can say
 when they changed; only the payroll reports its changes (the `staff` channel)."""
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
+from sim.agriculture.api import SetFarmLand, SetFarmTechnique
 from sim.demography.api import SetClearedFarmland, SetFarmHoursNeeded
-from sim.ledger.api import PayEdge, ReceiveFromEdge
+from sim.ledger.api import PayEdge, ReceiveFromEdge, RestorePurse
 from sim.polity.api import AddReputation, ScaleFamiliarity, ScaleProtection
+from sim.seats.api import RememberGoalClosure
 from sim.reporting.api import DiscardEventsAfter, RecordAutomation, RecordAutomationSkip, RecordEvent
 
 from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread, PressLabour, ReportStaffReduction,
@@ -16,30 +18,31 @@ from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeS
                               WorkForWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
                              ResetTradeHours, SetReserve, SetWageHoursSold, SettleLivingCost, SpendDirectorHours, WatchStaff)
-from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, FadeMarketPressure
+from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, FadeMarketPressure, NoteBuyRefusal
 from .state import STAFF, WorkforceSeat, WorkforceSociety
 from .module import Workforce
 
 READS_BY_OWNER = {
-    "core": ("year", "automation", "civilisation", "game_config", "opening_wage_index", "legacy_state", "legacy_game", "legacy_tree",
-             "legacy_dice", "legacy_act_as", "starting_wages", "trades_absent", "trade_notes", "trade_records", "trade_family",
-             "wage_schedule_for", "plain_number", "money_text", "legacy_acting_household", "legacy_household_actor"),
-    "seats": ("founder", "acting_country", "legacy_seats"),
+    "core": ("year", "automation", "civilisation", "game_config", "opening_wage_index", "provider_game",
+             "projects_operating", "starting_wages", "trades_absent", "trade_notes", "trade_records", "trade_family",
+             "wage_schedule_for", "plain_number", "money_text"),
+    "seats": ("founder", "acting_country", "seat_list", "game_random", "acting_as", "goal", "goal_closure"),
+    "ledger": ("acting_balance",),
     "polity": ("standing", "rep_factor"),
     "reporting": ("event_log", "last_market_price_ratio", "real_output_per_head", "agent_prices", "agent_wage"),
     "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction", "farm_holdings"),
     "agriculture": ("farm_land", "farm_technique_this_year", "farm_ladder", "farm_arable_ceiling"),
     "land": ("home_tiles_held", "home_tiles_held_version", "coverage", "coverage_share", "built_ways"),
-    "knowledge": ("techniques_held", "held_techniques", "visibility", "tree_closure"),
+    "knowledge": ("techniques_held", "held_techniques", "techniques_granted", "done_year", "tree_nodes", "visibility", "tree_closure"),
     "mechanics": ("mechanic", "effect_factor", "effect_holds", "effect_sum", "effect_terms", "effect_value",
                   "labour_productivity_sources", "room_sources", "staff_capacity_sources", "running_mechanics"),
     "diffusion": ("literacy", "research_productivity", "staff_hire_advice", "staff_sources"),
     "production": ("running", "institution_units", "upkeep", "revenue_estimate", "is_venture"),
-    "projects": ("legacy_projects", "project_order", "keep_staffed", "staffing_closed_hand_shortfall", "start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
+    "projects": ("active_projects", "project_order", "keep_staffed", "staffing_closed_hand_shortfall", "start_check", "reopen_units", "exclusion_reason", "active_hours_still_wanted", "staff_closure_age",
                  "staffing_draw", "staffing_held_totals", "staffing_shortfalls", "concerns_to_close_for_staffing",
                  "venture_foreman", "venture_foremen_used", "venture_staff_free", "shared_answer"),
     "materials": ("material_price_factor",),
-    "finance": ("mine_operating_cost", "credit_limit", "living_cost", "held_trade", "spending_power", "can_pay", "purchase_refusal", "price_index", "home_price_level",
+    "finance": ("debt_status", "mine_operating_cost", "credit_limit", "living_cost", "held_trade", "spending_power", "can_pay", "purchase_refusal", "price_index", "home_price_level",
                 "concern_rows_stopped"),
     "actors": ("actor_staff", "actor_staff_nationwide", "actor_staff_total", "teaching_knowledge", "harvest_share_taken",
                "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country",
@@ -99,6 +102,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("reachable_trade_population", "reachable_trade_population", kind=KEYED, **_LIVE),
         ViewSpec("local_market_share", "local_market_share", **_LIVE),
         ViewSpec("base_tile", "base_tile", **_SEAT),
+        ViewSpec("last_buy_refusal", "last_buy_refusal", **_SEAT),
         ViewSpec("society_labour_hours", "society_labour_hours", **_LIVE),
         ViewSpec("farming_technique", "farming_technique", **_LIVE),
         ViewSpec("farm_land_hectares", "farm_land_hectares", **_LIVE),
@@ -144,7 +148,7 @@ MODULE_SPECS = (ModuleSpec(
              (SettleLivingCost, "settle_living_cost"), (SetWageHoursSold, "set_wage_hours_sold"), (SetReserve, "set_reserve"),
              (BleedStaff, "bleed_staff"), (DisperseDependants, "disperse_dependants"), (LoseCrew, "lose_crew"), (WatchStaff, "watch_staff"),
              (BuildHousing, "build_housing"), (ChargeLivingCost, "charge_living_cost"), (AutoBuyPeople, "auto_buy_people"),
-             (AutoManumit, "auto_manumit"), (FadeMarketPressure, "fade_market_pressure"),
+             (AutoManumit, "auto_manumit"), (FadeMarketPressure, "fade_market_pressure"), (NoteBuyRefusal, "note_buy_refusal"),
              (HireStaff, "hire_staff"), (FireStaff, "fire_staff"), (TrainStaff, "train_staff"), (CommissionHours, "commission_hours"),
              (WorkForWages, "work_for_wages"), (BuySlaves, "buy_slaves"), (Manumit, "manumit"), (FoundTradeSchool, "found_trade_school"),
              (MoveBase, "move_base")),
@@ -157,5 +161,5 @@ MODULE_SPECS = (ModuleSpec(
     ),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(PayEdge, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, DiscardEventsAfter, AddReputation, ScaleFamiliarity, ScaleProtection,
-           SetClearedFarmland, SetFarmHoursNeeded),
+           SetClearedFarmland, SetFarmHoursNeeded, SetFarmLand, SetFarmTechnique, RememberGoalClosure, RestorePurse),
 ),)
