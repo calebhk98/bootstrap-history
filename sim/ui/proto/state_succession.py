@@ -7,8 +7,9 @@ from sim.engine.ui_port import plain_number
 def succession_block(sim):
     """Deputy count, yearly hours, the threshold, and a named objective."""
     deputies = sim.view("staff")()["directors_extra"]
-    needed = sim.view("legacy_constant")["DEPUTIES_CARRY_THE_WORK_FROM"]
-    carry = sim.view("patronage")()["deputies_carry_the_work"]
+    patronage = sim.view("patronage")()
+    needed = patronage["deputies_needed"]
+    carry = patronage["deputies_carry_the_work"]
     block = {
         "deputies": round(deputies, 2),
         "deputy_hours_a_year": round(sim.view("staff")()["directors_extra"] * sim.view("game_config")()["director_hours_per_year"], 1),

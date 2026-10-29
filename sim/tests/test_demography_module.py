@@ -132,6 +132,14 @@ class TheFarmHolding(unittest.TestCase):
         self.assertEqual(module.farm_holdings()["stock_kg"], 0.0)
 
 
+class PopulationScaleFor(unittest.TestCase):
+    def test_a_country_of_the_reference_size_scales_one(self):
+        self.assertEqual(built().pop_scale_for(DEFAULT_POPULATION_100AD), 1.0)
+
+    def test_a_tiny_country_is_scaled_to_the_floor(self):
+        self.assertEqual(built().pop_scale_for(1.0), POP_SCALE_FLOOR)
+
+
 class TheLastYearsNutrition(unittest.TestCase):
     def test_no_year_stepped_has_no_ratio(self):
         self.assertIsNone(rules.nutrition_ratio_of(None))

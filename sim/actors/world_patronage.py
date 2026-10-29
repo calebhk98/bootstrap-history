@@ -17,10 +17,9 @@ class PatronageView:
 	def state_funding_terms(self, people: float) -> Dict[str, float]:
 		"""The terms a state funds a client on, for a country of `people`: the labour hours of the base sum, the exponent of
 		the country's size, its size against the reference one, and the scale of the client's governance."""
-		constant = self.needs.legacy_constant
-		return {"base_hours": constant["STATE_FUNDING_BASE_LABOUR_HOURS"], "exponent": constant["STATE_FUNDING_POP_SCALE_EXPONENT"],
-				"governance_scale": constant["STATE_FUNDING_GOV_QUALITY_SCALE"],
-				"population_scale": max(constant["POP_SCALE_FLOOR"], people / constant["DEFAULT_POPULATION_100AD"])}
+		terms = self.needs.state_funding_terms()
+		return {"base_hours": terms["base_hours"], "exponent": terms["exponent"], "governance_scale": terms["governance_scale"],
+				"population_scale": self.needs.pop_scale_for(people)}
 
 	def country_output_per_head(self, country: str, opening_people: float, people: float) -> Optional[float]:
 		"""A country's real output per person over its opening's (one at the baseline), as the economy's markets over its tiles

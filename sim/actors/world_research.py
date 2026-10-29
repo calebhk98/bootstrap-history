@@ -47,7 +47,7 @@ class ResearchView:
 		return neighbour + tonnes / TRADE_TONNES_FOR_UNIT_CONTACT
 
 	def purchasable_substitute_discount(self) -> float:
-		return self.needs.legacy_constant["PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT"]
+		return self.needs.substitute_quality_discount()
 
 	def research_cost(self, node_id: str, max_age_years: int) -> float:
 		"""What the node costs to pioneer, worked out afresh only when the last figure is `max_age_years` old

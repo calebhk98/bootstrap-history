@@ -17,8 +17,8 @@ from sim.workforce.api import GrantStaff, LoseCrew, ReleaseHours
 
 from . import failure_text, goal_rules
 from .completion_rules import road_line, severity_of_loss, staff_shortfall
-from .constants import (FAILURE_RESET_SHARE, GOAL_PATH_FAILURE_WEIGHT, MINOR_FAILURE_SHARE, REPUTATION_GAIN_BASE,
-                        REPUTATION_GAIN_REVENUE_BONUS, REPUTATION_GAIN_STATE_INTEREST_COEFFICIENT)
+from .constants import (FAILURE_RESET_SHARE, GOAL_PATH_FAILURE_WEIGHT, MINOR_FAILURE_SHARE, PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT,
+                        REPUTATION_GAIN_BASE, REPUTATION_GAIN_REVENUE_BONUS, REPUTATION_GAIN_STATE_INTEREST_COEFFICIENT)
 from .failure_cause import failure_cause
 from .failure_diagnosis import SHORTFALL_FACTOR_RANGE, failure_teaches, measured_report, unmeasured_report
 from .permanent_benefit import permanent_parts
@@ -34,6 +34,10 @@ class Completion:
 		return (REPUTATION_GAIN_BASE
 		        + REPUTATION_GAIN_STATE_INTEREST_COEFFICIENT * max(0.0, self.needs.state_interest(node))
 		        + (REPUTATION_GAIN_REVENUE_BONUS if node["rev"] > 0 else 0.0))
+
+	def substitute_quality_discount(self):
+		"""What a purchasable substitute scores against the stated quality of the option."""
+		return PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT
 
 	def failure_reset_share(self):
 		"""The share of a failed project's bill that is lost."""

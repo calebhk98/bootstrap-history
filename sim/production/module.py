@@ -13,7 +13,7 @@ from .book_sales import BookSales
 from .capability import Capability
 from .commands import BumpHouseholdVersion
 from .concern_market import ConcernMarket
-from .constants import RAMP_SHARE_AT_FULL_DEPTH
+from .constants import INSTITUTION_EXPANSION_CONVEXITY, RAMP_SHARE_AT_FULL_DEPTH
 from .depth import Depth
 from .learning import Learning
 from .revenue import Revenue
@@ -54,6 +54,9 @@ class Production(Revenue, Upkeep, ConcernMarket, BookSales, Volume, Learning, De
 
 	def practisable(self, node_id):
 		return self._practisable(node_id)
+
+	def institution_expansion_convexity(self):
+		return INSTITUTION_EXPANSION_CONVEXITY
 
 	def ramp_share_at_full_depth(self):
 		return RAMP_SHARE_AT_FULL_DEPTH

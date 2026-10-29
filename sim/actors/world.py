@@ -48,7 +48,7 @@ class ActorWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, St
 	@property
 	def goods_category_names(self) -> Any:
 		"""The goods categories: concerns in them share one market."""
-		return self.needs.legacy_constant["GOODS_CATEGORIES"]
+		return self.needs.goods_categories()
 
 	@property
 	def registry(self) -> Any:

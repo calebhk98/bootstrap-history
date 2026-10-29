@@ -72,6 +72,7 @@ _VIEWS = (
 	("failed_attempts_trial", "failed_attempts_trial", QUOTE, False), ("techniques_in_use", "techniques_in_use", None, True),
 	("techniques_epoch", "techniques_epoch", None, False), ("price_epoch", "price_epoch", None, False),
 	("ramp_share_at_full_depth", "ramp_share_at_full_depth", None, False),
+	("institution_expansion_convexity", "institution_expansion_convexity", None, False),
 )
 
 

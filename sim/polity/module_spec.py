@@ -68,6 +68,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("state_debt", "state_debt", **_SEAT),
 		ViewSpec("patron_funding_ask", "patron_funding_ask", **_SEAT),
 		ViewSpec("patron_clients", "patron_clients", kind=KEYED, **_LIVE),
+		ViewSpec("state_funding_terms", "state_funding_terms"),
 		ViewSpec("state_funding", "state_funding", **_SEAT),
 		ViewSpec("start_gate_group_prohibition", "start_gate_group_prohibition", kind=QUOTE, seat_scoped=True),
 		ViewSpec("value_weight", "value_weight", kind=KEYED, **_LIVE),

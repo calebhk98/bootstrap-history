@@ -38,6 +38,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("population_total", "population_total", **_LIVE),
         ViewSpec("working_age", "working_age", **_LIVE),
         ViewSpec("pop_scale", "pop_scale", **_LIVE),
+        ViewSpec("pop_scale_for", "pop_scale_for", kind=QUOTE),
         ViewSpec("default_population", "default_population"),
         ViewSpec("population_change_last_year", "population_change_last_year", **_LIVE),
         ViewSpec("yearly_record", "yearly_record", **_LIVE),

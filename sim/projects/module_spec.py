@@ -81,6 +81,7 @@ _VIEWS = (
 	("hour_priority_queue", "hour_priority_queue", None, True), ("hour_standing", "hour_standing", QUOTE, True),
 	("goal_snapshot", "goal_snapshot", None, True), ("opening_shortfall", "opening_shortfall", QUOTE, True),
 	("reputation_gain_of", "reputation_gain_of_node", QUOTE, True), ("failure_reset_share", "failure_reset_share", None, False),
+	("substitute_quality_discount", "substitute_quality_discount", None, False),
 	("open_refusal", "open_refusal", QUOTE, True), ("staffing_open_refusal", "staffing_open_refusal", QUOTE, True),
 	("staffing_draw", "_staffing_draw_of", QUOTE, True), ("staffing_held_totals", "staffing_held_totals", None, True),
 	("staffing_shortfalls", "_staffing_shortfalls", QUOTE, True), ("staffing_missing_to_open", "staffing_missing_to_open", QUOTE, True),

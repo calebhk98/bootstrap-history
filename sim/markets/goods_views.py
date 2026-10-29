@@ -1,5 +1,5 @@
 """The goods market's views: quotes, the year's book and the goods categories."""
-from . import trade_duty
+from . import categories, trade_duty
 from .rules import HOME_SELLER
 
 
@@ -10,6 +10,10 @@ class GoodsViews:
 	def goods_quote(self, material):
 		"""The market's buy and sell terms for a tonne of a material, or None when it has no price."""
 		return self.goods_market.quote(material)
+
+	def goods_categories(self):
+		"""The goods categories: concerns in one share a market."""
+		return categories.GOODS_CATEGORIES
 
 	def sale_limits(self, material):
 		"""(tonnes the acting seat holds, tonnes the market takes now) of a material."""
