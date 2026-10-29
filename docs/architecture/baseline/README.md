@@ -18,3 +18,12 @@ them. Each entry names the fix and the commit recorded from:
 - `stress.json`, `rome_100ad/seed1/12y/events+stress+2seats`: Complaint 921 (every seat shared the first asker's goal
   closure), recorded at `9c661d02`. Its first year is identical to the base; from the second year the second seat's
   loss-making concern is seized by its creditors. The one-seat scenario recorded at the same commit is identical to the base's.
+
+## The long tier
+
+`long.json` (4 scenarios, 100 years) was recorded later than the others, on the base commit with one patch applied: the
+fix for Complaint 922 (`sim/economy/producers.py` `_standard_score`), without which the base itself stops with a math domain
+error inside a 100-year run. The patch changes nothing a game reaches before that error, so the recording is the base's
+trajectory, carried past the point where the base crashed. Check it with
+
+    python3 -m sim.tests.equiv check docs/architecture/baseline/long.json --tier long --base-checkout <base worktree with the patch>
