@@ -148,7 +148,7 @@ ui: `log` 13 reads, `money_real`, `_said_*` (underscore fields read by the proto
 ## (h) Hard spots and caches
 
 - `household.log` is appended to from 104 sites in about twelve modules; a `RecordEvent` command is the single largest mechanical change in the migration, and the cheapest to do first because it changes no value.
-- `ViewShareMixin` is a hand-made version-stamp cache (`view_share.py`); it is deleted when the framework's view versions exist.
+- `ViewShareMixin` was a hand-made version-stamp cache (`view_share.py`); it is now the `sharing` module (`sim/sharing/`).
 - `_said_*` and `_dashboard_history` are underscore fields read by `ui_port`.
 
 Caches and version counters held today (feed for task 1.2):

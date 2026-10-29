@@ -131,7 +131,7 @@ Per `MODULE_REGISTRY_PLAN.md` 4.7: the state, the random source, the seats and `
 | `year` | `core` | 9 |
 
 2. **The port mixins** (`LabourPortMixin.labour`, `GeographyPortMixin.geography/world_map`, `EconomyPortMixin.economy`, `DiseasePortMixin`): lazy properties that hand a package the whole `Sim` through an adapter. They become declared view lists; see `caches_and_ports.md`.
-3. **`ViewShareMixin`** (`sim/engine/view_share.py`): a hand-made version-stamp cache; the view versions replace it.
+3. **`ViewShareMixin`** (was `sim/engine/view_share.py`): a hand-made version-stamp cache, now the `sharing` module (`sim/sharing/`), whose stamp reads only views.
 4. **`EconomyMixin`'s cache methods** (`economy.py:221-274`): the `_done_seq` memo, the four `*_changed` hooks, `_reset_economic_caches`.
 5. **Empty shells**: `SocietyMixin`, `BenefactionsMixin` and `ProjectsMixin` define no methods of their own (see the placement table in the README, methods 0); they simply leave the base list.
 
