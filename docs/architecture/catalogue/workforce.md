@@ -319,7 +319,7 @@ answered by a named view. Labour is one object (the mixins share `self`), so a r
 | knowledge, mechanics, diffusion, land | What the people may learn and what raises their output, room and hours | `techniques_held`, `techniques_granted`, `done_year`, `tree_nodes`, `visibility`, `tree_closure`; `mechanic`, the five `effect_*` views, `labour_productivity_sources`, `room_sources`, `staff_capacity_sources`, `running_mechanics`; `literacy`, `research_productivity`, `staff_hire_advice`, `staff_sources`; `held_techniques`, `built_ways`, `home_tiles_held`, `home_tiles_held_version` |
 | agriculture, demography, actors | The farm: how many hands it needs and who farms | `farm_land`, `farm_technique_this_year`, `farm_ladder`, `farm_arable_ceiling`, sends `SetFarmLand`, `SetFarmTechnique`; `population`, `pop_scale`, `people_by_tile`, `urban_fraction`, `farm_holdings`, sends `SetClearedFarmland`, `SetFarmHoursNeeded`; `harvest_share_taken` |
 | projects, production, ventures, resources, actors | The works that draw on people: which concerns the staffing rule would shut, the hours still wanted, the revenue the living cost is set against, the foreman and spare hands | projects `active_projects`, `project_order`, `active_hours_still_wanted`, `start_check`, `exclusion_reason`, `staffing_closed_hand_shortfall`, `concerns_to_close_for_staffing`, `keep_staffed_hires`; production `running`, `is_venture`, `institution_units`, `revenue_estimate`, `upkeep`, `concern_market`, `held_trade`; ventures `operating`, `venture_foreman`, `venture_foremen_used`, `venture_staff_free`, `coverage`, `coverage_share`; `mine_operating_cost`; actors `actor_staff`, `actor_staff_nationwide`, `actor_staff_total`, `teaching_knowledge` |
-| polity | Standing moved by the module's own acts | sends `AddReputation` (manumission), `ScaleFamiliarity`, `ScaleProtection` (a relocation keeps part of both) |
+| polity | Standing moved by the module's own acts | sends `GainReputation` (manumission, up to the ceiling), `ScaleFamiliarity`, `ScaleProtection` (a relocation keeps part of both) |
 | sharing | A memo shared between modules | `shared_answer` |
 
 ### Findings
@@ -362,7 +362,7 @@ answered by a named view. Labour is one object (the mixins share `self`), so a r
   `SetFarmHoursNeeded`). Files that would move: `sim/labour/labour_allocation.py`, `farm_intake.py`, `food_gathering.py`, and the two
   commands with their handlers in `sim/workforce/commands_applied.py`.
 - Bondage and slaves (`labour_bondage.py`, `hire_outcome.py`, `buy_cap.py`, `commands_bondage.py`, `standing_bondage.py`) read finance,
-  prices, demography and send only `AddReputation`; it shares the module's state and is not worth a module.
+  prices, demography and send only `GainReputation`; it shares the module's state and is not worth a module.
 - Settlement and relocation (`labour_settlement.py`, `room_advice.py`) reads land, demography and sends `ScaleFamiliarity` and
   `ScaleProtection`; small.
 - Wages and the market (`labour_wages.py`, `labour_market*.py`, `market/`, `staff_pay*`) is the only part that reads coin, materials and

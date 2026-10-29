@@ -25,7 +25,7 @@ sim.polity import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publishes),
 - **Commands applied: twenty-five.** The fourteen the stability, hazards, projects, diffusion and living-stock modules already sent
   (`RaiseScandal`, `RecordBribe`, `ScaleProtection`, `GainReputation`, `ShiftValueWeight`, `StrikeFromForce` and the eight records of
   a country's state, applied by four bridge files until now), and eleven new ones for what other code wrote straight into the seat's
-  fields: `AddScandal` (a finished work's alarm; a group's blame), `AddReputation` (a manumission's standing), `SetReputation` (the
+  fields: `AddScandal` (a finished work's alarm; a group's blame), `SetReputation` (the
   trial figure the settlement sets and puts back; a finance debt), `ScaleFamiliarity` (a move leaves part of the city behind),
   `AddGovernance` (a work the state values), `AnswerStateDemands`, `WithdrawFromPublicLife`, `SettleWithState` (the screens),
   `CarryOutTransfers` (a finished work that declares a transfer), and the two halves of the year (`RenewStanding`,
@@ -100,7 +100,7 @@ held, the cast, the purse and the labour market, which other code writes directl
 
 ## Commands applied
 
-`RaiseScandal`, `AddScandal`, `RecordBribe`, `ScaleProtection`, `ScaleFamiliarity`, `GainReputation`, `AddReputation`,
+`RaiseScandal`, `AddScandal`, `RecordBribe`, `ScaleProtection`, `ScaleFamiliarity`, `GainReputation`,
 `SetReputation`, `AddGovernance`, `AnswerStateDemands` (answers what the stance risks), `WithdrawFromPublicLife` (answers (done, text)),
 `SettleWithState` (answers (paid, text)), `CarryOutTransfers`, `RenewStanding`, `CloseStandingYear`, `ShiftValueWeight` (answers (before,
 after) or a refusal `not_a_value_weight`), and the state's records: `StrikeFromForce`, `SetLandTakenMemory`, `RegisterPeople`,
