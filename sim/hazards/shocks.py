@@ -6,7 +6,7 @@ own log); population, output, the coin and the society's values change once, at 
 order of the calls below; save/load and the equivalence check depend on it.
 
 Needs: civilisation, year, seat_list, game_random, act_as, events_enabled,
-techniques_held, staff, staff_snapshot, wage_index, money_text, money_real, event_log."""
+techniques_held, wage_index, money_text, money_real, event_log."""
 from typing import Any, Dict, List, Optional
 
 from sim.demography.api import CutPopulation, RefreshDemographicIndexes
@@ -14,7 +14,7 @@ from sim.polity.api import ShiftValueWeight
 from sim.refusal import LogLine, Refusal
 from sim.reporting.api import ErodeMoney, RecordEvent
 from sim.reporting.api import NoteWageShock
-from sim.workforce.api import ReportStaffReduction, ScaleDeputies, SurviveStaff
+from sim.workforce.api import LoseStaff
 
 from .commands import SayOnce
 from . import constants, rules, staff_loss_words
@@ -130,12 +130,7 @@ class Shocks:
 		# nation has not adopted them
 		exposure = self.staff_loss_exposure(historical)
 		loss = exposure["loss"]
-		staff = self.needs.staff()
-		people_before = staff["scholars"] + staff["artisans"] + sum(staff["employees"].values())
-		staff_before = self.needs.staff_snapshot()
-		self.needs.send(SurviveStaff(1 - loss))
-		self.needs.send(ScaleDeputies(1 - loss))
-		self.needs.send(ReportStaffReduction(hazard.get("name", "a plague"), staff_before))
+		people_before = self.needs.send(LoseStaff(hazard.get("name", "a plague"), 1 - loss, 1 - loss))["people_before"]
 		cash = self.lose_capital(loss * constants.PLAGUE_CASH_LOSS_SHARE, "plague losses")   # the trade that stopped takes cash with it
 		return {"historical": historical, "raw": exposure["before_defences"], "med_relief": exposure["national_relief"],
 		        "relief": exposure["relief"], "why": exposure["why"], "lapsed_hedges": exposure["lapsed_hedges"], "loss": loss,

@@ -13,7 +13,6 @@ from sim.diffusion.literacy_rules import common_ceiling
 from sim.demography.api import rules as demography_rules
 from sim.projects.goal_rules import goal_movement
 from sim.tests import module_harness
-from sim.workforce.api import SurviveStaff
 from sim.workforce.module import Workforce
 
 CHILD, WORKING_AGE, ELDERLY = 1.6, 1.0, 1.4   # the vulnerability ratios (sim/world/demography.py)
@@ -64,7 +63,7 @@ class EventLossInvariants(unittest.TestCase):
             household = SimpleNamespace(scholars=40.0, artisans=60.0, employees={"smith": 25.0, "miller": 3.0})
             workforce = module_harness.build(Workforce, seat=household, views={"acting_balance": lambda: household.capital, "game_random": random.Random(1)})
             before = household.scholars + household.artisans + sum(household.employees.values())
-            workforce.survive_staff(SurviveStaff(share))
+            workforce.survive_staff(share)
             after = household.scholars + household.artisans + sum(household.employees.values())
             self.assertLessEqual(after, before + 1e-9, share)
             self.assertTrue(all(count > 0 for count in household.employees.values()))
@@ -73,7 +72,7 @@ class EventLossInvariants(unittest.TestCase):
         for share, kept in ((1.0, 128.0), (0.0, 0.0)):
             household = SimpleNamespace(scholars=40.0, artisans=60.0, employees={"smith": 25.0, "miller": 3.0})
             workforce = module_harness.build(Workforce, seat=household, views={"acting_balance": lambda: household.capital, "game_random": random.Random(1)})
-            workforce.survive_staff(SurviveStaff(share))
+            workforce.survive_staff(share)
             self.assertEqual(household.scholars + household.artisans + sum(household.employees.values()), kept)
 
 

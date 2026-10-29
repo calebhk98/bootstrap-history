@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 from sim.tests import module_harness
 from sim.workforce import rules as workforce_rules
-from sim.workforce.api import NoteTradeSpread, PressLabour, ReportStaffReduction, ScaleDeputies, SetEmployed, TakeWageFallback
+from sim.workforce.api import LoseStaff, NoteTradeSpread, PressLabour, SetEmployed, TakeWageFallback
 from sim.workforce.api import AutoBuyPeople, AutoManumit, CloseHoursYear, FadeMarketPressure, NoteBuyRefusal, SettleLivingCost
 from sim.reporting.api import RecordEvent
 from sim.workforce.constants import AUTO_MANUMIT_ANNUAL_CHANCE, MARKET_PRESSURE_ANNUAL_FADE, MARKET_PRESSURE_DECAY, WAGE_FALLBACK_LIVING_COST_YEARS, WAGE_FALLBACK_MAX_HOURS, WAGE_FALLBACK_MIN_HOURS
@@ -31,16 +31,19 @@ class SurvivingPeople(unittest.TestCase):
 
 
 class Commands(unittest.TestCase):
-    def test_deputies_are_multiplied_by_the_share(self):
-        household = SimpleNamespace(directors_extra=4.0)
-        module_harness.build(Workforce, seat=household, views={"acting_balance": lambda: household.capital}).scale_deputies(ScaleDeputies(0.5))
-        self.assertEqual(household.directors_extra, 2.0)
+    def test_a_loss_multiplies_the_deputies_by_their_share_and_answers_the_people_on_the_books_either_side(self):
+        household = SimpleNamespace(directors_extra=4.0, scholars=2.0, artisans=3.0, employees={"smith": 5.0})
+        workforce = module_harness.build(Workforce, seat=household, views={"game_random": random.Random(3)})
+        workforce.labour = SimpleNamespace(staff_snapshot=lambda: {}, log_staff_reduction=lambda cause, before: None)
+        answer = workforce.lose_staff(LoseStaff("a sack", 1.0, 0.5))
+        self.assertEqual((household.directors_extra, answer), (2.0, {"people_before": 10.0, "people_after": 10.0}))
 
-    def test_the_log_of_staff_lost_is_asked_with_the_cause_and_the_headcount_before(self):
+    def test_a_loss_logs_the_cause_and_the_headcount_before_it(self):
         asked = []
-        workforce = module_harness.build(Workforce)
-        workforce.labour = SimpleNamespace(log_staff_reduction=lambda cause, before: asked.append((cause, before)))
-        workforce.report_staff_reduction(ReportStaffReduction("a sack", {"smith": 3.0}))
+        household = SimpleNamespace(directors_extra=0.0, scholars=0.0, artisans=0.0, employees={"smith": 3.0})
+        workforce = module_harness.build(Workforce, seat=household, views={"game_random": random.Random(3)})
+        workforce.labour = SimpleNamespace(staff_snapshot=lambda: {"smith": 3.0}, log_staff_reduction=lambda cause, before: asked.append((cause, before)))
+        workforce.lose_staff(LoseStaff("a sack", 1.0, 1.0))
         self.assertEqual(asked, [("a sack", {"smith": 3.0})])
 
     def test_a_trade_spread_notes_the_year_first_taught_and_that_it_became_endemic(self):

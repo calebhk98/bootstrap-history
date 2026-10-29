@@ -10,7 +10,7 @@ from sim.polity.api import RaiseScandal, ScaleProtection, ShiftValueWeight
 from sim.projects.api import ResetProjectProgress
 from sim.ventures.api import ShutForgotten
 from sim.reporting.api import ErodeMoney, NoteWageShock, RecordEvent
-from sim.workforce.api import ReportStaffReduction, ScaleDeputies, SurviveStaff
+from sim.workforce.api import LoseStaff
 
 from .commands import LoseCapital, RecordWorldEvent, RecoverOutput, SayOnce
 from .module import Hazards
@@ -22,7 +22,7 @@ READS_BY_OWNER = {
 	"seats": ("seat_list", "ended_seats", "founder", "goal", "automation"),
 	"knowledge": ("techniques_held", "techniques_granted", "tree", "tree_nodes", "visible_to_player", "losable_node_ids",
 	              "tree_closure", "critical_path", "corpus_hedge", "visibility", "techniques_forgotten", "fog_of_war"),
-	"mechanics": ("hazard_counter_rows", "corpus_hedge_tiers", "corpus_nodes", "mechanic", "running_mechanics"),
+	"mechanics": ("hazard_counter_rows", "corpus_nodes", "mechanic", "running_mechanics"),
 	"production": ("running", "capability_gaps"),
 	"disease": ("epidemic_risk",),
 	"demography": ("population_total", "nutrition_ratio_last_year"),
@@ -32,7 +32,7 @@ READS_BY_OWNER = {
 	"defence_stores": ("counter_supply_gap",),
 	"resources": ("mine_capacity",),
 	"polity": ("military_leverage", "standing"),
-	"workforce": ("staff", "staff_snapshot", "wage_index", "money_per_labour_hour"),
+	"workforce": ("wage_index", "money_per_labour_hour"),
 	"ledger": ("acting_balance",),
 	"reporting": ("money_real", "event_log", "real_output_hours"),
 	"markets": ("price_index",),
@@ -69,8 +69,8 @@ MODULE_SPECS = (ModuleSpec(
 	applies=((RecordWorldEvent, "record_world_event"), (LoseCapital, "lose_capital_command"), (RecoverOutput, "recover_output"),
 	         (SayOnce, "say_once")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(PayEdge, PlunderHousehold, ErodeMoney, RecordEvent, RaiseScandal, ScaleProtection, ShiftValueWeight, SurviveStaff,
-	       ScaleDeputies, ReportStaffReduction, NoteWageShock, CutPopulation, RefreshDemographicIndexes, KillPeople,
+	sends=(PayEdge, PlunderHousehold, ErodeMoney, RecordEvent, RaiseScandal, ScaleProtection, ShiftValueWeight, LoseStaff,
+	       NoteWageShock, CutPopulation, RefreshDemographicIndexes, KillPeople,
 	       ForgetTechnique, ResetProjectProgress, ShutForgotten),
 	phases=(PhaseHook("dated_shocks", "step_dated_shocks"), PhaseHook("random_events", "step_random_events"),
 	        PhaseHook("world_hazards", "step_world_hazards"), PhaseHook("famine_watch", "step_famine_watch")),

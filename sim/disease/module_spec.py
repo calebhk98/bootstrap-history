@@ -6,7 +6,7 @@ saved in the world slot; the deaths by tile and the forecast are kept in the mod
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.hazards.api import LoseCapital
 from sim.reporting.api import RecordEvent
-from sim.workforce.api import ReportStaffReduction, ScaleDeputies, SurviveStaff
+from sim.workforce.api import LoseStaff
 
 from .commands import HitSeatsWithEpidemic, RunEpidemicYear
 from .module import Disease
@@ -24,7 +24,6 @@ READS_BY_OWNER = {
     "diffusion": ("civ_diffusion", "tech_effects"),
     "coverage": ("coverage", "coverage_share"),
     "seats": ("seat_list",),
-    "workforce": ("staff", "staff_snapshot"),
 }
 
 # The burden reads what is held and what coverage serves, written outside any command of theirs: never cached. The deaths
@@ -44,5 +43,5 @@ MODULE_SPECS = (ModuleSpec(
     ),
     applies=((RunEpidemicYear, "run_epidemic_year"), (HitSeatsWithEpidemic, "hit_seats")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(SurviveStaff, ScaleDeputies, ReportStaffReduction, LoseCapital, RecordEvent),
+    sends=(LoseStaff, LoseCapital, RecordEvent),
 ),)

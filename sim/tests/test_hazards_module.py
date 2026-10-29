@@ -12,6 +12,7 @@ from sim.hazards.commands import LoseCapital, RecordWorldEvent, RecoverOutput
 from sim.hazards.state import HazardsSeat, HazardsWorld
 from sim.reporting.api import ErodeMoney, RecordEvent
 from sim.tests import hazards_host, module_harness
+from sim.workforce.api import LoseStaff
 
 
 class Script:
@@ -63,14 +64,14 @@ class DatedShocks(unittest.TestCase):
         wage_index_readings = iter([1.5, 1.2])   # before the wave, then once the seat is told
         module = hazards_host.build(
             year=155, civilisation=civilisation(plague()), game_random=dice, acting_balance=1000.0,
-            staff={"scholars": 2.0, "artisans": 3.0, "employees": {"smith": 5.0}}, staff_snapshot={"smith": 5.0}, wage_index=lambda: next(wage_index_readings))
+            answers={LoseStaff: lambda command: {"people_before": 10.0, "people_after": 7.0}}, wage_index=lambda: next(wage_index_readings))
         module.step_dated_shocks(["founder"])
-        self.assertEqual(names(module), ["SurviveStaff", "ScaleDeputies", "ReportStaffReduction", "PayEdge", "CutPopulation",
+        self.assertEqual(names(module), ["LoseStaff", "PayEdge", "CutPopulation",
                                          "NoteWageShock", "RefreshDemographicIndexes", "RecordEvent"])
-        survive, deputies, report, pay, cut, wage, refresh, line = module_harness.sent(module)
-        self.assertAlmostEqual(survive.survival_share, 0.7)
-        self.assertEqual(deputies.share, survive.survival_share)
-        self.assertEqual((report.cause, report.before), ("Plague", {"smith": 5.0}))
+        lost, pay, cut, wage, refresh, line = module_harness.sent(module)
+        self.assertAlmostEqual(lost.survival_share, 0.7)
+        self.assertEqual(lost.deputies_share, lost.survival_share)
+        self.assertEqual(lost.cause, "Plague")
         self.assertEqual((pay.edge, pay.purpose), (edges.EDGE_DESTROYED, "plague losses"))
         self.assertAlmostEqual(pay.amount, 1000.0 * 0.3 * constants.PLAGUE_CASH_LOSS_SHARE)
         self.assertAlmostEqual(cut.share, 0.3)

@@ -3,8 +3,8 @@
 WALL = "two-way"  # nothing here imports sim/engine/
 
 from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread, PressLabour,
-                       ReleaseStaff, ReportStaffReduction, TakeWageFallback,
-                       ScaleDeputies, SetEmployed, SurviveStaff, UpdateWages)
+                       LoseStaff, ReleaseStaff, TakeWageFallback,
+                       SetEmployed, UpdateWages)
 from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase, TrainStaff,
                               WorkForWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,

@@ -11,10 +11,6 @@ class Views:
 
 	# ---- people ----
 
-	def staff_snapshot(self):
-		"""Headcount by trade now, to diff against after something trims it."""
-		return self.labour.staff_snapshot()
-
 	def headcount(self):
 		return self.labour.headcount()
 

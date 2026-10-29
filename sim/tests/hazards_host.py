@@ -15,6 +15,7 @@ from sim.hazards import module_spec
 from sim.hazards.module import Hazards
 from sim.hazards.state import HazardsSeat, HazardsWorld
 from sim.tests import module_harness
+from sim.workforce.api import LoseStaff
 
 
 @contextmanager
@@ -42,7 +43,7 @@ def defaults(seed: int) -> Dict[str, Any]:
 		"diffusion_relief": lambda kind, per_weapon=0.0: 0.0 if kind == "medical" else (1.0, None),
 		"counter_supply_gap": lambda node_id, kind, label: (1.0, None), "mine_capacity": {},
 		"military_leverage": 0.0, "standing": {"protection": 0.0, "scandal": 0.0, "bribes_year_to_date": 0.0},
-		"staff": {"scholars": 0.0, "artisans": 0.0, "employees": {}}, "staff_snapshot": {}, "wage_index": 1.0,
+		"wage_index": 1.0,
 		"money_per_labour_hour": 1.0, "acting_balance": 0.0, "money_real": 1.0, "event_log": [], "price_index": 1.0,
 		"partners_in_agent_economy": [], "weather_seed": lambda year, region=None: "seed", "country_strata": lambda country: [],
 		"visibility": lambda node_id, memo=None: True, "techniques_forgotten": {}, "fog_of_war": False, "capability_gaps": [],
@@ -53,9 +54,10 @@ def defaults(seed: int) -> Dict[str, Any]:
 def build(seed: int = 1, answers: Optional[Dict[type, Any]] = None, world: Optional[HazardsWorld] = None,
           seat: Optional[HazardsSeat] = None, **views: Any) -> Hazards:
 	"""The module with `views` over the quiet defaults, a fresh world and seat state unless given, and `answers`, the
-	replies of owners to commands keyed by command class."""
+	replies of owners to commands keyed by command class (a shock that takes people finds none lost unless given)."""
 	every_view = defaults(seed)
 	every_view.update(views)
+	answers = {LoseStaff: lambda command: {"people_before": 0.0, "people_after": 0.0}, **(answers or {})}
 	return module_harness.build(Hazards, views=every_view, answers=answers, world=world or HazardsWorld(),
 	                            seat=seat or HazardsSeat(), module_id="hazards")
 

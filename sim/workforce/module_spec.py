@@ -12,8 +12,8 @@ from sim.polity.api import AddReputation, ScaleFamiliarity, ScaleProtection
 from sim.seats.api import RememberGoalClosure
 from sim.reporting.api import DiscardEventsAfter, RecordAutomation, RecordAutomationSkip, RecordEvent
 
-from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread, PressLabour, ReportStaffReduction,
-                       ReleaseStaff, ScaleDeputies, SetEmployed, SurviveStaff, TakeWageFallback, UpdateWages)
+from .commands import (AllocateFarmWorkforce, ApplyLandClearing, BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread, PressLabour,
+                       LoseStaff, ReleaseStaff, SetEmployed, TakeWageFallback, UpdateWages)
 from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase, TrainStaff,
                               WorkForWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
@@ -70,7 +70,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("pay_book", "pay_book", **_SEAT),
         ViewSpec("trade_schools", "trade_schools", **_SEAT),
         ViewSpec("worker_housing_places", "worker_housing_places", **_SEAT),
-        ViewSpec("staff_snapshot", "staff_snapshot", **_SEAT),
         ViewSpec("headcount", "headcount", **_SEAT),
         ViewSpec("hours_available", "hours_available", kind=KEYED, **_SEAT),
         ViewSpec("hours_you_can_call_on", "hours_you_can_call_on", kind=KEYED, **_SEAT),
@@ -148,7 +147,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("work_for_wages_dry_run", "work_for_wages_dry_run", kind=QUOTE, **_SEAT),
     ),
     applies=((SetEmployed, "set_employed"), (NoteTradeSpread, "note_trade_spread"), (PressLabour, "press_labour"),
-             (SurviveStaff, "survive_staff"), (GrantStaff, "grant_staff"), (ScaleDeputies, "scale_deputies"), (ReportStaffReduction, "report_staff_reduction"),
+             (LoseStaff, "lose_staff"), (GrantStaff, "grant_staff"),
              (AllocateFarmWorkforce, "allocate_farm_workforce"), (ApplyLandClearing, "apply_land_clearing"),
              (UpdateWages, "update_wages"), (ReleaseStaff, "release_staff"), (TakeWageFallback, "take_wage_fallback"),
              (CloseHoursYear, "close_hours_year"),

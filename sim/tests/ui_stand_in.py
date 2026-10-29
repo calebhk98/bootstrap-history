@@ -120,7 +120,7 @@ METHOD_OF_COMMAND = {
     "RestoreWork": "restore_work", "RollOut": "roll_out", "SellConcern": "sell_concern",
     "SellMaterial": "sell_material_stock", "SettleTraderCargo": "settle_trader_cargo",
     "SettleWithState": "settle_with_state", "StartProject": "start_project", "StopProject": "stop_project",
-    "SurviveStaff": "apply_staff_survival", "WithdrawFromPublicLife": "withdraw_from_public_life",
+    "WithdrawFromPublicLife": "withdraw_from_public_life",
 }
 
 # views that are one fact of the game held under the name the game once used for it
