@@ -30,7 +30,7 @@ def defaults() -> Dict[str, Any]:
 		"cast": SimpleNamespace(actors={}, active_firms=lambda: [], purse_lenders=lambda: []),
 		"state_treasury": SimpleNamespace(actor_id="state"), "actor_world": SimpleNamespace(), "lender_offers_made": {},
 		"cash_and_deposit": lambda account: 0.0, "loans_out": lambda lender=None: 0.0, "debt_owed": lambda account: 0.0,
-		"acting_seat": "founder", "cast_state": SimpleNamespace(purses=Purses()), "acting_balance": 0.0,
+		"cast_state": SimpleNamespace(purses=Purses()), "acting_balance": 0.0,
 		"hours_for_sale": 0.0, "best_wage_trade": None, "work_for_wages_dry_run": lambda trade, hours: (0.0, None),
 		"standing_job_pay": lambda trade: 0.0,
 		"effect_sum": lambda channel, start=0.0: start, "effect_values": lambda channel: [], "mechanic": {},

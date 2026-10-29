@@ -37,7 +37,6 @@ READS_BY_OWNER = {
 	"polity": ("standing",),
 	"prices": ("price_index",),
 	"projects": ("committed_cost",),
-	"seats": ("acting_seat",),
 }
 
 _LIVE = dict(cached=False)

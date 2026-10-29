@@ -1,6 +1,6 @@
 """What arrears cost the acting seat a year, how they accrue, and the warning that comes before the limit.
 
-Needs: effect_values, standing, acting_balance, acting_seat, cast_state, actor_world, civilisation, money_text, send (NoteSeatCash,
+Needs: effect_values, standing, acting_balance, cast_state, actor_world, civilisation, money_text, send (NoteSeatCash,
 ReviewVentures, RecordEvent)."""
 from typing import Any
 
@@ -33,7 +33,7 @@ class Arrears:
 	def settle_interest(self) -> Any:
 		"""The year's interest on the acting seat's debt by the one rule every borrower follows: (the interest owed, the part paid)."""
 		needs = self.needs
-		seat_id = needs.acting_seat()
+		seat_id = self.clock.acting_seat
 		borrower = SeatBorrower(
 			seat_id, needs.cast_state().purses, self.seat, balance=needs.acting_balance,
 			note_outlay=lambda purpose, amount: needs.send(NoteSeatCash(seat_id, -1.0, amount, purpose)),
