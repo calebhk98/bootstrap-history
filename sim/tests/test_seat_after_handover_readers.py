@@ -58,9 +58,9 @@ state = post_handover_state()
 heir = state.seats["heir"]
 bind_seat(state, "heir")
 check("bind_seat: the root aliases are the heir's own objects",
-      state.acting_seat == "heir" and state.household is heir.household
-      and state.founder is heir.founder and state.holdings is heir.holdings and state.seat_progress is heir.seat_progress
-      and state.seats["heir"].modules["workforce"].scholars == 2.0 and state.founder._founder_death_year == 30, None)
+      state.acting_seat == "heir" and state.acting_record.household is heir.household
+      and state.acting_record.founder is heir.founder and state.acting_record.holdings is heir.holdings and state.acting_record.seat_progress is heir.seat_progress
+      and state.seats["heir"].modules["workforce"].scholars == 2.0 and state.acting_record.founder._founder_death_year == 30, None)
 
 # ---- the purse
 state = post_handover_state()

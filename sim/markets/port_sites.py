@@ -5,7 +5,7 @@ catalogue lists), a tile that holds a deposit of that resource gets a limit: the
 room allows (their working rate, less what the seat's own mines name on them), in ore. A tile whose deposits
 are worked out keeps a limit of nothing, so the recipe does not fall back to running anywhere. What the firms
 raise is read back each year and drawn from the tile's deposits, the same ledger the seat's mines draw on
-(`state.holdings.deposit_drawn`, sim/engine/mine_deposits.py).
+(`the seat record's `holdings.deposit_drawn``, sim/engine/mine_deposits.py).
 
 Recipes that fell standing timber are limited by the tile's stock instead (port_timber.py).
 

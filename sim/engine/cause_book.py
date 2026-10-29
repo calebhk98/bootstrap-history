@@ -21,7 +21,7 @@ UNSHOCKED_WAGE_CAUSE = "births and deaths outside dated shocks"
 def record(sim, kind, subject, cause, amount, **extra):
     """Append one row to the open period; its year is stamped when the period closes."""
     row = {"year": None, "kind": kind, "subject": subject, "cause": cause, "amount": amount, **extra}
-    kept = sim.state.household.cause_rows
+    kept = sim.state.acting_record.household.cause_rows
     kept.append(row)
     del kept[:-ROWS_KEPT]
     return row
@@ -71,7 +71,7 @@ def _notice_steps(sim, before, after):
 
 def close_period(sim):
     """End the open period: stamp its rows, add the year's derived rows, drop rows past the window."""
-    household = sim.state.household
+    household = sim.state.acting_record.household
     now = _readings(sim)
     before = household.cause_mark
     if before is not None:
@@ -94,7 +94,7 @@ def rows(sim, kind=None, years=None):
     """Rows of one kind (all kinds when None) from the latest `years` years, oldest first; the open period counts as this year."""
     first_year = None if years is None else sim.year - max(1, int(years))
     found = []
-    for row in sim.state.household.cause_rows:
+    for row in sim.state.acting_record.household.cause_rows:
         year = sim.year if row["year"] is None else row["year"]
         if (kind is None or row["kind"] == kind) and (first_year is None or year >= first_year):
             found.append({**row, "year": year})
@@ -104,7 +104,7 @@ def rows(sim, kind=None, years=None):
 def causes_since(sim, kind, year):
     """Signed amount per cause for `kind` since the snapshot of `year` (all kept rows when `year` is None)."""
     totals = {}
-    for row in sim.state.household.cause_rows:
+    for row in sim.state.acting_record.household.cause_rows:
         if row["kind"] == kind and (year is None or row["year"] is None or row["year"] > year):
             totals[row["cause"]] = totals.get(row["cause"], 0.0) + row["amount"]
     return totals

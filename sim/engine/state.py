@@ -7,7 +7,7 @@ values, and invalidation plumbing remain non-persistent implementation details.
 import collections
 import contextlib
 import dataclasses
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from typing import (
 	TYPE_CHECKING, Any, Callable, DefaultDict, Dict, List,
 	Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
@@ -51,12 +51,12 @@ class FounderState:
 @dataclass
 class SimulationState:
 	"""Root coordinator aggregating authoritative persistent subsystem states."""
-	# household, founder, holdings and seat_progress alias the acting seat's objects and are not saved (seats are)
-	household: Optional[HouseholdState] = field(default=None, metadata={"alias": True})
+	# household, holdings, seat_progress and founder only build the first seat when `seats` is empty; they are not kept
+	household: InitVar[Optional[HouseholdState]] = None
 	economy: Optional[EconomyState] = None
-	holdings: Optional[HoldingsState] = field(default=None, metadata={"alias": True})
-	seat_progress: Optional[SeatProgressState] = field(default=None, metadata={"alias": True})
-	founder: Optional[FounderState] = field(default=None, metadata={"alias": True})
+	holdings: InitVar[Optional[HoldingsState]] = None
+	seat_progress: InitVar[Optional[SeatProgressState]] = None
+	founder: InitVar[Optional[FounderState]] = None
 	seats: Dict[str, "SeatState"] = field(default_factory=dict)
 	acting_seat: str = "founder"
 	_civ: Optional[str] = None
@@ -68,15 +68,18 @@ class SimulationState:
 	assembly_record: Dict[str, Any] = field(default_factory=dict)  # which modules, layers and mods wrote this game
 	interface: Dict[str, Any] = field(default_factory=dict)  # the UI's own memory; the engine never reads it
 
-	def __post_init__(self) -> None:
-		from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
-		if not self.seats:   # built from the three objects directly: they become the first seat
+	def __post_init__(self, household, holdings, seat_progress, founder) -> None:
+		from sim.engine.state_seat import FIRST_SEAT_ID, SeatState
+		if not self.seats:   # built from the objects directly: they become the first seat
 			self.acting_seat = FIRST_SEAT_ID
-			given = {name: getattr(self, name) for name in ("holdings", "seat_progress")}
+			given = {"holdings": holdings, "seat_progress": seat_progress}
 			self.seats[FIRST_SEAT_ID] = SeatState(
-				self.household, self.founder,
-				**{name: value for name, value in given.items() if value is not None})
-		bind_seat(self, self.acting_seat)
+				household, founder, **{name: value for name, value in given.items() if value is not None})
+
+	@property
+	def acting_record(self) -> "SeatState":
+		"""The acting seat's record: its household, founder, holdings and progress."""
+		return self.seats[self.acting_seat]
 
 	@property
 	def actors(self) -> Optional[ActorsState]:
@@ -88,6 +91,10 @@ class SimulationState:
 	@actors.setter
 	def actors(self, value: Optional[ActorsState]) -> None:
 		self.modules["actors"] = value
+
+
+for _build_only in ("household", "holdings", "seat_progress", "founder"):
+	delattr(SimulationState, _build_only)   # a build argument leaves no attribute to read: a stale reader raises
 
 
 ALL_STATE_CLASSES = (

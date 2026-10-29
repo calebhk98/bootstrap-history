@@ -1,7 +1,6 @@
 """A seat: everything one player owns, held apart from the world.
 
-The root `SimulationState` fields `household`, `founder`, `holdings` and
-`seat_progress` are aliases of the acting seat's objects, so mechanism code keeps reading them; `bind_seat` points them at another seat.
+The acting seat's record is `SimulationState.acting_record`; `bind_seat` names another seat the acting one.
 What the seats module knows of the seat (goal, country, kind, holder, policy, the founder's life) is its slot in `modules`.
 """
 from dataclasses import dataclass, field
@@ -32,7 +31,7 @@ def seat_from_template(template: Mapping[str, Any], policy: Dict[str, Any]) -> S
 	"""A new seat from data: `template` may carry `starting_techs`, `scholars`, `artisans`, `base_tile`, `goal` and
 	`country`. Its money is opened by the ledger once the seat is in the registry."""
 	if template.get("kind") == COUNTRY_SEAT:
-		# the household here is an empty placeholder the engine's aliases need; the seat acts through its government
+		# the household here is an empty placeholder; the seat acts through its government
 		return SeatState(household=HouseholdState(), founder=None,
 		                 modules={"seats": SeatsSeat(country=template.get("country"), kind=COUNTRY_SEAT)})
 	household = HouseholdState()
@@ -46,13 +45,10 @@ def seat_from_template(template: Mapping[str, Any], policy: Dict[str, Any]) -> S
 
 
 def bind_seat(state, seat_id: str) -> None:
-	"""Point the root aliases at `seat_id`'s objects."""
-	seat = state.seats[seat_id]
+	"""Name `seat_id` the acting seat."""
+	if seat_id not in state.seats:
+		raise KeyError(seat_id)
 	state.acting_seat = seat_id
-	state.household = seat.household
-	state.founder = seat.founder
-	state.holdings = seat.holdings
-	state.seat_progress = seat.seat_progress
 
 
 state_module.SeatState = SeatState   # the forward reference in SimulationState.seats

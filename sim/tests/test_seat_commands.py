@@ -91,7 +91,7 @@ check("without `as` the first seat's household changes", first.household.saving_
 send({"cmd": "saving", "id": "plan_a", "target": 22.0, "as": "second"})
 check("with `as` the named seat's household changes and the first is as it was",
       second.household.saving_target == 22.0 and first.household.saving_target == 11.0, None)
-check("the acting seat is restored after a command for another seat", game.state.acting_seat == FIRST_SEAT_ID and game.state.household is first.household, None)
+check("the acting seat is restored after a command for another seat", game.state.acting_seat == FIRST_SEAT_ID and game.state.acting_record.household is first.household, None)
 refused = send({"cmd": "saving", "id": "plan_a", "target": 99.0, "as": "ghost"})
 check("a command for an unknown seat changes no household",
       refused["ok"] is False and first.household.saving_target == 11.0 and second.household.saving_target == 22.0, refused)

@@ -3,9 +3,8 @@
 These properties provide backward-compatibility for external consumers and
 integration test assertions. Internal simulation code accesses live state
 directly through authoritative subsystem owners:
-  - self.state.household
+  - self.state.acting_record (the acting seat's household, founder, holdings and progress)
   - self.state.economy
-  - self.state.founder
 
 Properties are categorized strictly by owning subsystem.
 """
@@ -122,7 +121,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def _dashboard_history(self):
-		sub = getattr(self.state, "holdings", None)
+		sub = self.state.acting_record.holdings
 		if sub is None:
 			raise AttributeError("_dashboard_history")
 		val = getattr(sub, "_dashboard_history", None)
@@ -132,7 +131,7 @@ class ForwardingPropertiesMixin:
 
 	@_dashboard_history.setter
 	def _dashboard_history(self, value):
-		sub = getattr(self.state, "holdings", None)
+		sub = self.state.acting_record.holdings
 		if sub is not None:
 			setattr(sub, "_dashboard_history", value)
 
@@ -142,7 +141,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def _founder_death_aged(self):
-		sub = getattr(self.state, "founder", None)
+		sub = self.state.acting_record.founder
 		if sub is None:
 			raise AttributeError("_founder_death_aged")
 		val = getattr(sub, "_founder_death_aged", None)
@@ -152,13 +151,13 @@ class ForwardingPropertiesMixin:
 
 	@_founder_death_aged.setter
 	def _founder_death_aged(self, value):
-		sub = getattr(self.state, "founder", None)
+		sub = self.state.acting_record.founder
 		if sub is not None:
 			setattr(sub, "_founder_death_aged", value)
 
 	@property
 	def _founder_death_year(self):
-		sub = getattr(self.state, "founder", None)
+		sub = self.state.acting_record.founder
 		if sub is None:
 			raise AttributeError("_founder_death_year")
 		val = getattr(sub, "_founder_death_year", None)
@@ -168,7 +167,7 @@ class ForwardingPropertiesMixin:
 
 	@_founder_death_year.setter
 	def _founder_death_year(self, value):
-		sub = getattr(self.state, "founder", None)
+		sub = self.state.acting_record.founder
 		if sub is not None:
 			setattr(sub, "_founder_death_year", value)
 
@@ -198,7 +197,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def _said_command_index(self):
-		sub = getattr(self.state, "seat_progress", None)
+		sub = self.state.acting_record.seat_progress
 		if sub is None:
 			raise AttributeError("_said_command_index")
 		val = getattr(sub, "_said_command_index", None)
@@ -208,17 +207,17 @@ class ForwardingPropertiesMixin:
 
 	@_said_command_index.setter
 	def _said_command_index(self, value):
-		sub = getattr(self.state, "seat_progress", None)
+		sub = self.state.acting_record.seat_progress
 		if sub is not None:
 			setattr(sub, "_said_command_index", value)
 
 	@property
 	def _said_parallelism(self):
-		return self.state.seat_progress._said_parallelism
+		return self.state.acting_record.seat_progress._said_parallelism
 
 	@_said_parallelism.setter
 	def _said_parallelism(self, value):
-		self.state.seat_progress._said_parallelism = value
+		self.state.acting_record.seat_progress._said_parallelism = value
 
 	@property
 	def goal_year(self):

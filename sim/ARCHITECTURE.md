@@ -14,7 +14,7 @@ removed merge conflicts, not coupling: any method can read or write any field.
 State lives in `SimulationState` (`sim/engine/state.py`) and, for one player's
 own holdings, in a seat (`state_seat.py`). `ForwardingPropertiesMixin`
 (`core_properties.py`) keeps the older flat names (`sim.capital`) working by
-forwarding to the owning subobject (`sim.state.household`); both spellings
+forwarding to the owning subobject (`sim.state.acting_record.household`); both spellings
 reach the same value.
 
 Measure its shape (base count, MRO size, method count): command 1 in section 6.

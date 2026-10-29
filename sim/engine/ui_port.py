@@ -102,12 +102,12 @@ def set_fuzzy_estimates(sim, on):
 
 def seat_progress(sim):
     """The acting seat's interface record (dashboard cap, last score, explanations said), saved with the seat."""
-    return sim.state.seat_progress
+    return sim.state.acting_record.seat_progress
 
 
 def saving_book(sim):
     """The acting seat's household record of the project it is saving for (`saving_for`, `saving_target`)."""
-    return sim.state.household
+    return sim.state.acting_record.household
 
 
 def state_path_declared(name):

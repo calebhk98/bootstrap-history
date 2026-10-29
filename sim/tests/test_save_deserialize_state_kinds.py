@@ -159,7 +159,7 @@ check("deserialize_state: seats come back in the saved order and as seats",
       and state.seats["zed"].modules["knowledge"]["done"] == {"__set__": ["fire"]} and state.seats["zed"].founder._founder_death_year == 30
       and state.seats["zed"].holdings._dashboard_history == [3.0] and state.seats["abe"].founder is None, None)
 check("deserialize_state: the acting seat's objects are the root's household and holdings",
-      state.acting_seat == "abe" and state.household is state.seats["abe"].household
-      and state.holdings is state.seats["abe"].holdings and state.household.saving_target == 4.0, None)
+      state.acting_seat == "abe" and state.acting_record.household is state.seats["abe"].household
+      and state.acting_record.holdings is state.seats["abe"].holdings and state.acting_record.household.saving_target == 4.0, None)
 check("deserialize_state: the metadata and the other sections", state._civ == "rome" and state._rng == [3, [0, 1], None] and state._seed == "seed text"
       and state.interface == {"panel": "map"}, None)
