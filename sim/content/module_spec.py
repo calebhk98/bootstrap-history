@@ -18,6 +18,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("map_overlays", "map_overlays", **_FILES),
 		ViewSpec("household_need_data", "household_need_data", **_FILES),
 		ViewSpec("declared_actor_kinds", "declared_actor_kinds", **_FILES),
+		ViewSpec("base_store_declarations", "base_store_declarations", **_FILES),
 		ViewSpec("data_store_declarations", "data_store_declarations", **_FILES),
 		ViewSpec("trade_records", "trade_records", **_FILES),
 		ViewSpec("trade_notes", "trade_notes", **_FILES),

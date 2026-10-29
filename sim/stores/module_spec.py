@@ -1,7 +1,7 @@
 """The stores module's spec (sim/assembly).
 
-It reads the declarations the engine holds as data (the base game's `data/world/stores.json`, the mods' `data/stores.json`) through
-two bridge views, and answers its own `store_declarations` point with them; a mod's code adds its stores by providing to the point."""
+It reads the declarations held as data (the base game's `data/world/stores.json`, the mods' `data/stores.json`) through
+two views of the content module, and answers its own `store_declarations` point with them; a mod's code adds its stores by providing to the point."""
 from sim.assembly.api import KEYED, LIST, ExtensionPoint, ModuleSpec, Provision, ViewSpec
 
 from .commands import WriteStore

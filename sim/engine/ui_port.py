@@ -27,7 +27,6 @@ from sim.knowledge.api import check_category_traits, closure, critical_path, har
 from sim.engine.mod_code import code_report, run_mod_code  # noqa: F401
 from sim.engine.game_assembly import build as build_assembly  # noqa: F401
 from sim.engine.mod_code import allow as allow_mod_code  # noqa: F401
-from sim.engine.ui_commands import load_command_specs  # noqa: F401
 from sim.hazards.api import hazards_not_yet_past  # noqa: F401
 from sim.prices.api import identity_cache, shared_ledger  # noqa: F401
 IdentityCache = identity_cache.IdentityCache  # noqa: F401
@@ -52,7 +51,6 @@ material_words = materials_rules.material_words
 from sim.engine.units_summary import summary_line  # noqa: F401
 from sim.engine.units import tagged  # noqa: F401
 from sim.engine.units_prose import area_text, mass_per_area_text, mass_rate_text, mass_text, money_text, plain_number  # noqa: F401
-from sim.engine.ui_data import load_figure_specs  # noqa: F401
 from sim.engine.readable import is_readable  # noqa: F401
 
 
