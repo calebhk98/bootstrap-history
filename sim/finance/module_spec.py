@@ -22,22 +22,22 @@ from .module import Finance
 from .state import FinanceSeat
 
 READS_BY_OWNER = {
-	"core": ("year", "civilisation", "game_config", "money_text"),
-	"prices": ("price_index",),
+	"workforce": ("staff", "money_per_labour_hour", "labour_market", "wage_bill", "household_dependant_people", "hours_for_sale",
+	              "best_wage_trade", "work_for_wages_dry_run", "standing_job_pay"),
 	"actors": ("cast", "cast_state", "state_treasury", "actor_world", "lender_offers_made", "cash_and_deposit", "loans_out", "debt_owed"),
-	"seats": ("acting_seat",),
-	"ledger": ("acting_balance", "held_goods", "goods_stock"),
-	"materials": ("material_commodity",),
-	"mechanics": ("effect_sum", "effect_values", "mechanic"),
-	"polity": ("standing",),
-	"resources": ("forest_hectares", "mine_operating_cost", "mine_capacity", "mine_workings", "mine_working_cost"),
-	"workforce": ("staff", "money_per_labour_hour", "labour_market", "wage_bill", "household_dependant_people",
-	              "held_trade", "hours_for_sale", "best_wage_trade", "work_for_wages_dry_run", "standing_job_pay"),
-	"production": ("revenue_capacity", "revenue_estimate", "upkeep"),
-	"ventures": ("venture_real_upkeep", "operating"),
-	"projects": ("committed_cost",),
-	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted"),
 	"markets": ("sale_quote", "agent_rate", "agent_credit_room", "agent_economy_opened", "household_bill_per_person"),
+	"resources": ("forest_hectares", "mine_operating_cost", "mine_capacity", "mine_workings", "mine_working_cost"),
+	"production": ("held_trade", "revenue_capacity", "revenue_estimate", "upkeep"),
+	"scenario": ("year", "civilisation", "game_config", "money_text"),
+	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted"),
+	"ledger": ("acting_balance", "held_goods", "goods_stock"),
+	"mechanics": ("effect_sum", "effect_values", "mechanic"),
+	"ventures": ("venture_real_upkeep", "operating"),
+	"materials": ("material_commodity",),
+	"polity": ("standing",),
+	"prices": ("price_index",),
+	"projects": ("committed_cost",),
+	"seats": ("acting_seat",),
 }
 
 _LIVE = dict(cached=False)

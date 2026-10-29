@@ -18,19 +18,19 @@ from .module import Seats
 from .state import SeatsSeat
 
 READS_BY_OWNER = {
-    "core": ("fog_of_war", "game_random", "civilisation", "year", "price_index", "kit_capital",
-             "founder_life_terms", "tree_closure", "automation", "game_config"),
-    "knowledge": ("tree", "tree_nodes", "techniques_held", "techniques_granted", "techniques_revealed", "techniques_by_seat"),
-    "mechanics": ("running_mechanics", "corpus_dispersed", "losable_node_ids"),
-    "content": ("win_condition_labels",),
-    "workforce (people)": ("staff",),
-    "ventures": ("operating_by_seat",),
+    "knowledge": ("tree_closure", "tree", "tree_nodes", "techniques_held", "techniques_granted", "techniques_revealed",
+                  "techniques_by_seat", "losable_node_ids"),
+    "scenario": ("fog_of_war", "game_random", "civilisation", "year", "kit_capital", "founder_life_terms", "automation", "game_config"),
     "diffusion": ("disclosures", "copy_difficulty", "literacy"),
     "actors": ("seeded_actor_registry", "state_treasury"),
-    "workforce": ("seat_base_tile",),
-    "materials": ("generation_breakdown",),
-    "hazards": ("hazard_relief", "hazard_relief_entries"),
     "assembly": ("registered_seats", "seat_holds"),
+    "hazards": ("hazard_relief", "hazard_relief_entries"),
+    "mechanics": ("running_mechanics", "corpus_dispersed"),
+    "workforce": ("staff", "seat_base_tile"),
+    "content": ("win_condition_labels",),
+    "materials": ("generation_breakdown",),
+    "prices": ("price_index",),
+    "ventures": ("operating_by_seat",),
 }
 
 _LIVE = dict(cached=False)
