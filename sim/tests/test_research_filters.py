@@ -11,7 +11,7 @@ import re
 import tempfile
 
 from sim.engine import topic_tags as _topic_tags
-from sim.engine.mods import ModError as _ModError
+from sim.content.api import ModError as _ModError
 from sim.ui.proto import tree_filters
 from sim.ui.proto.tree_filters import tags_of
 from sim.ui.proto.typed import parse_typed as _parse_typed_line

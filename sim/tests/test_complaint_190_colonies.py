@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.need_data import load_needs
+from sim.content.api import load_needs
 from sim.labour.api import production_data
 from sim.world import need_basket
 

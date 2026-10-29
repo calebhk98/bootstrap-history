@@ -10,7 +10,7 @@ from sim.demography.api import KillPeople
 from sim.engine import mod_effects
 from sim.tests import hazards_host, module_harness
 from sim.engine.mod_effects import ModEffects
-from sim.engine.mods import ModError
+from sim.content.api import ModError
 from sim.land.api import TransferTile
 from sim.ledger.api import PayActor, PayActorFromEdge, PayEdgeFrom
 from sim.refusal import cause_of

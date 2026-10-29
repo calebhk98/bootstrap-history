@@ -1,5 +1,6 @@
 """The map's own data checks, for `simulator.py validate`."""
-from sim.engine.ui_port import MODDIR, get_ordered_mods
+from sim.content.api import get_ordered_mods
+from sim.engine.ui_port import MODDIR
 from sim.geography.api import open_map, problems
 
 

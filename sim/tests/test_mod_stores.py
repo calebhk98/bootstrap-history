@@ -9,7 +9,7 @@ import json
 import unittest
 
 from sim.engine import mod_code, mod_stores
-from sim.engine.mods import ModError
+from sim.content.api import ModError
 from sim.engine.mod_effects import ModEffects
 from sim.stores.api import StoreSpec, declare_all
 from sim.tests.store_stand_in import StoreHost

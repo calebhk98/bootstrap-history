@@ -29,12 +29,12 @@ from sim.prices.api import identity_cache
 from sim.scenario.api import money_short, money_word, rules as scenario_rules  # noqa: F401 - the coin's words are the scenario module's
 IdentityCache = identity_cache.IdentityCache
 from sim.geography.api import haversine_km, load_geography
-from .mods import ModError, get_ordered_mods, load_mod_tree
-from .mods_base import MissingVariantBase
+from sim.content.api import ModError, get_ordered_mods, load_mod_tree
+from sim.content.api import MissingVariantBase
 from .mod_world_data import load_starting_kits, load_win_condition_labels
-from .mods_world import merge_mod_map
+from sim.content.api import merge_mod_map
 from .tree_source import load_base_tree
-from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
+from sim.content.api import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
 from sim.prices.api import energy_prices
 from . import copy_visibility_defaults, money_units

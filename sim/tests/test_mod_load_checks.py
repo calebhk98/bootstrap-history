@@ -11,7 +11,7 @@ import unittest
 from sim.prices import prices
 
 from sim.engine import data
-from sim.engine.mods import ModError
+from sim.content.api import ModError
 from sim.engine.tree_source import load_base_tree
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 

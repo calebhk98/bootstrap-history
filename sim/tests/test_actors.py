@@ -17,7 +17,7 @@ from sim.agents.api import (Actor, ActorRegistry, ActorsState, CallbackPolicy, F
 from sim.agents import imitation
 from sim.agents.policy import IdlePolicy
 from sim.engine.state import ActorRecord
-from sim.engine.mods import get_ordered_mods, load_mod_tree
+from sim.content.api import get_ordered_mods, load_mod_tree
 
 from .agents_fake_world import FakeWorld
 

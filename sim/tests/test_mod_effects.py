@@ -10,7 +10,7 @@ from types import SimpleNamespace
 
 from sim.agents.api import edges
 from sim.engine.mod_effects import ModEffects
-from sim.engine.mods import ModError
+from sim.content.api import ModError
 from sim.stores.api import StoreSpec
 from sim.tests.bridge_send import attach_send
 from sim.tests.store_stand_in import StoreHost

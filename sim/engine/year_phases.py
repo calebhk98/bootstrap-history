@@ -9,7 +9,7 @@ earliest `before`; the order is a pure function of the registrations, so it is t
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Sequence
 
-from .mods_base import ModError
+from sim.content.api import ModError
 from sim.scenario.api import AdvanceYear
 
 from . import year_steps

@@ -3,14 +3,14 @@ import warnings
 from typing import Any, Dict, Mapping, Optional
 
 from sim.default_civilisation import REPOSITORY_ROOT
-from sim.engine import need_data
+from sim.content import api as content
 from sim.labour.api import wage_provider, wages
 from sim.world import demand
 
 
 def _food_per_kg(staple: str) -> float:
     """Food value of a kilogram of the staple in the subsistence quantity's unit (kg wheat equivalent)."""
-    goods = need_data.load_needs(REPOSITORY_ROOT)["goods"]
+    goods = content.load_needs(REPOSITORY_ROOT)["goods"]
     return float(((goods.get(staple) or {}).get("satisfies") or {}).get("food", 1.0))
 
 

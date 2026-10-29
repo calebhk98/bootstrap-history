@@ -22,9 +22,9 @@ from sim.assembly.api import Operations
 from sim.interface.api import CODE, CommandDeclaration, FigureDeclaration
 from sim.stores.api import ModStore, StoreSpec, check_spec
 
-from .mods import get_ordered_mods
-from .mods_base import ModError, ModManifest
-from .mods_ids import SEPARATOR
+from sim.content.api import get_ordered_mods
+from sim.content.api import ModError, ModManifest
+from sim.content.api import SEPARATOR
 
 CONSENT_FILE = "consent.json"
 CODE_PERMISSION = "code"

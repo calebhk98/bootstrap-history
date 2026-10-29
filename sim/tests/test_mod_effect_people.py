@@ -11,7 +11,7 @@ from sim.agents.api import Stratum, stratum_id
 from sim.agents.records import ActorRecord
 from sim.engine.mod_effects import ModEffects, people_of
 from sim.agents.api import edges
-from sim.engine.mods import ModError
+from sim.content.api import ModError
 from sim.tests.bridge_send import attach_send
 from sim.tests.ui_stand_in import Game
 

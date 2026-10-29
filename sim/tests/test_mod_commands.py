@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import unittest
 
 from sim.engine import mod_code
-from sim.engine.mods import ModError
+from sim.content.api import ModError
 from sim.engine.ui_commands import policy_defaults
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 from sim.tests.interface_fixture import declared_for

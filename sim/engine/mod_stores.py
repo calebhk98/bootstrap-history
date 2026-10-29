@@ -8,9 +8,9 @@ from typing import Any, List
 from sim.json_files import read_json
 from sim.stores.api import StoreSpec
 
-from .mods import get_ordered_mods
-from .mods_base import ModError
-from .mods_ids import check_new_id
+from sim.content.api import get_ordered_mods
+from sim.content.api import ModError
+from sim.content.api import check_new_id
 from .tree_source import ROOT
 
 STORES_FILE = os.path.join("data", "stores.json")

@@ -10,7 +10,7 @@ import unittest
 from sim.engine import civ_basket_check as check
 from sim.engine import civ_start_check as start_check
 from sim.engine.catalog import load_production_catalog
-from sim.engine.need_data import load_needs
+from sim.content.api import load_needs
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

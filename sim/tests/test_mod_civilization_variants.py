@@ -6,8 +6,8 @@ from unittest import mock
 import unittest
 
 from sim.engine import data
-from sim.engine.mods import ModError
-from sim.engine.mods_civ import check_all_civilizations
+from sim.content.api import ModError
+from sim.content.api import check_all_civilizations
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 
 ACME = "test_acme_k3f9"

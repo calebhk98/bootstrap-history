@@ -4,7 +4,7 @@ Each view asks the engine exactly as the old geography adapter did, and is never
 import os
 
 from .bridge import bridge_view
-from .mods import get_ordered_mods
+from sim.content.api import get_ordered_mods
 
 MODS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "mods")
 

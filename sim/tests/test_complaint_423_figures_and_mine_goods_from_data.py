@@ -10,7 +10,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.tests import resources_stand_in
-from sim.engine.mods_base import ModError
+from sim.content.api import ModError
 from sim.geography.api import open_map
 from sim.ui import figures as figure_registry
 from sim.ui import figures_data

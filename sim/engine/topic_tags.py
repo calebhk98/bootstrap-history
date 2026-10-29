@@ -8,8 +8,8 @@ import json
 import os
 from typing import Dict, Optional
 
-from .mods import ModError, get_ordered_mods
-from .mods_ids import check_new_id
+from sim.content.api import ModError, get_ordered_mods
+from sim.content.api import check_new_id
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _mods_dir = os.path.join(_ROOT, "mods")

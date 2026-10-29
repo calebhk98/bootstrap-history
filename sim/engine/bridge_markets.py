@@ -6,10 +6,11 @@ from sim.agents.api import relations
 from sim.assembly.api import QUOTE
 from sim.markets.api import RepriceOpeningMoney
 
-from . import need_data, opening_money
+from . import opening_money
+from sim.content import api as content
 from .bridge import bridge_command, bridge_view
 from .data import MODDIR, ROOT, calculated_goods_table
-from .mods import get_ordered_mods
+from sim.content.api import get_ordered_mods
 
 
 # ---- core: facts of the game the module cannot read from an owner yet ----
@@ -29,7 +30,7 @@ def installed_mod_ids(sim):
 @bridge_view("household_need_data")
 def household_need_data(sim):
     """{"needs", "goods"}: the needs households spend on and the goods that serve them, from the base file and each mod's."""
-    return need_data.load_needs(ROOT)
+    return content.load_needs(ROOT)
 
 
 # ---- prices ----

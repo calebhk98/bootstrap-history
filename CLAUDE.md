@@ -101,7 +101,7 @@ Check with `ls` before trusting this; directories move.
 | Design direction, plans, current status | `docs/architecture/` - read its `README.md` first; it names the live plan and the status document |
 | Open problems, bug reports (each has a `**Status:**` line) | `Complaints/` (open), `Complaints/closed/` (done); `Complaints/README.md` says how a new issue is numbered |
 | Playtest and audit reports; standing design decisions | `Complaints/reports/`; `docs/architecture/DESIGN_PRINCIPLES.md` |
-| Mods: loader, contract, backlog | `sim/engine/mods.py`, `mods/README.md`, `mods/TASKS.md` |
+| Mods: loader, contract, backlog | `sim/content/mods.py`, `mods/README.md`, `mods/TASKS.md` |
 | Playtest setup for agent players | `playtest/` |
 | Schema for production data | `data/production/_SCHEMA.md` |
 

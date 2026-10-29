@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 from sim.knowledge.api import HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
-from sim.engine.mods import ModError, get_ordered_mods, load_mod_production, load_mod_tree
+from sim.content.api import ModError, get_ordered_mods, load_mod_production, load_mod_tree
 from sim.ui.proto.typed import parse_typed
 
 QUICK_TOPIC = True
@@ -105,7 +105,7 @@ class NamespaceTests(NamespaceTestBase):
         self.assertIn(STEAM + ":steel", load_mod_production({}, self.manifests()))
 
     def test_civilisation_ids_are_namespaced(self):
-        from sim.engine.mods_civ import apply_mod_civilization
+        from sim.content.api import apply_mod_civilization
         civ = {"id": STEAM + ":land", "starting_techs": []}
         self.add_mod(STEAM, civs={STEAM + "+land": civ})
         found = apply_mod_civilization(STEAM + ":land", None, self.manifests())
@@ -197,7 +197,7 @@ class PlayerFacingTests(unittest.TestCase):
 
 class BundledModsTests(unittest.TestCase):
     def test_sample_mods_follow_the_format(self):
-        from sim.engine.mods_ids import MOD_ID_PATTERN
+        from sim.content.api import MOD_ID_PATTERN
         repo = Path(__file__).resolve().parents[2]
         manifests = get_ordered_mods(str(repo / "mods"))
         self.assertTrue(manifests)

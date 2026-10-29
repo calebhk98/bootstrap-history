@@ -8,8 +8,8 @@ import os
 import tempfile
 import unittest
 
-from sim.engine import need_data
-from sim.engine.mods import ModError
+from sim.content import api as content
+from sim.content.api import ModError
 from sim.world import demand, need_demand
 
 MOD_ID = "test_fantasy_k3f9"
@@ -228,7 +228,7 @@ class NeedDataFileTests(unittest.TestCase):
                 "needs": {MOD_ID + ":devotion": {"surplus_budget_share": 0.1}},
                 "goods": {MOD_ID + ":relic_kg": {"satisfies": {MOD_ID + ":devotion": 4.0}},
                           "iron_kg": {"satisfies": {MOD_ID + ":devotion": 0.5}}}})
-            merged = need_data.load_needs(root)
+            merged = content.load_needs(root)
         self.assertIn(MOD_ID + ":devotion", merged["needs"])
         self.assertIn("protection", merged["needs"])
         self.assertEqual(merged["goods"]["iron_kg"]["satisfies"],
@@ -239,7 +239,7 @@ class NeedDataFileTests(unittest.TestCase):
             self._base_root(root)
             self._write_mod(root, {"needs": {"devotion": {"surplus_budget_share": 0.1}}})
             with self.assertRaises(ModError):
-                need_data.load_needs(root)
+                content.load_needs(root)
 
     def test_a_good_naming_an_unknown_need_is_rejected(self):
         with tempfile.TemporaryDirectory() as root:
@@ -247,11 +247,11 @@ class NeedDataFileTests(unittest.TestCase):
             self._write_mod(root, {"goods": {MOD_ID + ":relic_kg": {
                 "satisfies": {"no_such_need": 1.0}}}})
             with self.assertRaises(ModError):
-                need_data.load_needs(root)
+                content.load_needs(root)
 
     def test_the_base_file_names_only_real_materials_and_needs(self):
         root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        loaded = need_data.load_needs(root)
+        loaded = content.load_needs(root)
         production = demand.production_data()
         made = set(production) | {good for entry in production.values() for good in entry["outputs"]}
         for material, attributes in loaded["goods"].items():
