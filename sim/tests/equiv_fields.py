@@ -107,6 +107,8 @@ RELOCATIONS = [
     ("/seats/*/modules/ledger/cash_mark", "/seats/*/household/cash_mark"),
     ("/seats/*/modules/ledger/cash_periods", "/seats/*/household/cash_periods"),
     ("/seats/*/modules/ledger/total_spend", "/seats/*/household/total_spend"),
+    ("/seats/*/modules/reporting/cause_rows", "/seats/*/household/cause_rows"),
+    ("/seats/*/modules/reporting/cause_mark", "/seats/*/household/cause_mark"),
     ("/seats/*/modules/materials/shortages", "/seats/*/holdings/shortages"),
     ("/seats/*/modules/materials/throttle", "/seats/*/holdings/throttle"),
     ("/seats/*/modules/materials/binding", "/seats/*/holdings/binding"),
