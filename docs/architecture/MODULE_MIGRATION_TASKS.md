@@ -170,11 +170,11 @@ dependency pairs between modules plus 29 modules depending on the engine bridge,
 254 reads answered by the bridge, 80 reads of `legacy_*` views; the widest are markets (24 modules depended on),
 actors (21), hazards, workforce (20 each), projects (19).
 
-- [ ] Guarded reads: a reader cannot change another module's view answer (`sim/assembly/read_guard.py`, on with
-  `BH_GUARD_VIEW_READS=1` in debug games). Inventory every write it refuses on the slow tier and the equivalence runs,
-  turn each into the owner's command, then switch the guard on by default in debug games. The guarded slow tier at
-  `2294c07f` refused no write (its only failures were Complaint 866 and the goldens' time limit); the guarded micro tier
-  is next.
+- [x] Guarded reads: a reader cannot change another module's view answer (`sim/assembly/read_guard.py`). The inventory
+  refused no write: the guarded slow tier at `2294c07f`, and guarded micro and stress at `017bc6e7` (identical to the base;
+  the one refusal found was the guard's own, a `copy.deepcopy` of an answer, fixed there). The guard is on in the test suite
+  (`sim/tests/__main__.py` sets `BH_GUARD_VIEW_READS`); games and equivalence runs leave it off unless asked, since a guarded
+  game runs about twice as long (`BH_GUARD_VIEW_READS=1` with any command turns it on).
 - [x] No `legacy_game` or `legacy_state` reads: production, workforce, finance, polity, demography and agriculture read
   named views and send owners' commands; the bridge views are deleted. `provider_game`, the one whole-game handout, went with the mod contract (phase 7). Measured after: 45 reads of `legacy_*` views (80 before), 241 reads answered by the bridge
   (254 before).
