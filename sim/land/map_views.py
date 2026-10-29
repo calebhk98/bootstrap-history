@@ -72,6 +72,14 @@ class MapViews:
     def legacy_world_map(self) -> Any:
         return self.world_map
 
+    def map_for_agent_economy(self) -> Any:
+        """The map the agent economy's setup holds for its tile builds and route searches (its `EconomySetup.world_map`)."""
+        return self.world_map
+
+    def geography_data(self) -> Any:
+        """The geography data the map describes, for the `Geography` handle to open on."""
+        return load_geography(self.world_map)
+
     def legacy_geography(self) -> Geography:
         return self.geography
 
