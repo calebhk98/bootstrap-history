@@ -2,6 +2,8 @@
 
 Each goes when its last caller reads the view (`sim.view(name)`) or sends the command (`sim.send(command)`) itself."""
 
+from sim.agriculture.api import SetFarmTerritory
+
 
 class ForwardAgricultureMixin:
 
@@ -10,6 +12,5 @@ class ForwardAgricultureMixin:
         stock and the society's rotation both move a tile's yield factor and cropped hectares. The ladder, the ceiling and
         the farm area are the farm workforce's, so they are set here until it moves."""
         territory = self.view("farm_territory")()
-        self._farm_ladder = territory.ladder
-        self._farm_arable_ceiling = territory.cropped_hectares
-        self.labour.set_farm_area(self.farm_land.hectares)
+        self.send(SetFarmTerritory(territory.ladder, territory.cropped_hectares))
+        self.labour.set_farm_area(self.view("farm_land")().hectares)

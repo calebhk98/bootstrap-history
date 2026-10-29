@@ -29,3 +29,15 @@ class SetFarmLand(Command):
 class SetFarmTechnique(Command):
     """The farming technique chosen for the year: `technique`, an immutable value the farm year reads."""
     technique: object
+
+
+@dataclass(frozen=True)
+class SetFarmTerritory(Command):
+    """The held tiles' `ladder` (`[(yield factor, cropped hectares)]`, best ground first) and their cropland `ceiling`."""
+    ladder: object
+    ceiling: float
+
+
+@dataclass(frozen=True)
+class RecordOpeningFarm(Command):
+    """The ground cleared now is the opening's farmed area, an initial condition the price tables read."""

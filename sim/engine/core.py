@@ -12,7 +12,7 @@ from .data import (DEFAULTS, kit_capital, load_civ, load_geography,
 
 from sim.world import demography
 from sim.world import agriculture
-from sim.world import farming_technique
+from sim.agriculture.api import RecordOpeningFarm, SetFarmTerritory
 from sim.world import land
 from sim.geography.api import regions, tiles_held
 
@@ -141,15 +141,13 @@ class Sim(
         held_tiles = tiles_held(self.civ, self.view("legacy_world_map")())
         land_rules.require_territory(self.civ, held_tiles)
         territory = land.territory_cropland(self.view("farm_sites")())
-        self._farm_ladder = territory.ladder
-        self._farm_arable_ceiling = territory.cropped_hectares
+        self.send(SetFarmTerritory(territory.ladder, territory.cropped_hectares))
         self.labour.set_farm_area(self._agriculture.farmland_for_population(
-            demography_rules.adult_equivalents(self.view("population")()), ladder=self._farm_ladder).hectares)
-        self._opening_farmed_hectares = self.farm_land.hectares
+            demography_rules.adult_equivalents(self.view("population")()), ladder=self.view("farm_ladder")()).hectares)
+        self.send(RecordOpeningFarm())
         # the weather cells and their correlation are fixed for the life of a run: built now, from the territory as it opens
         self.view("farm_weather_cells")()
         # the granary starts empty (an initial condition) and carries over between years (demography's farm year)
-        self._farm_technique_this_year = farming_technique.DEFAULT_TECHNIQUE
         self.send(SetYear(self.cfg["start_year"]))
         config = self.cfg
         # THE FOUNDER'S HOUSEHOLD: money, staff, knowledge, plant and standing,

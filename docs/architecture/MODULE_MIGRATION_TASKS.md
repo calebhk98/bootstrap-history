@@ -204,6 +204,7 @@ actors (21), hazards, workforce (20 each), projects (19).
   built game: the famine cause's food supply (same attribute), the teaching view (`Sim.actors`, gone; actors publish
   `teaching_knowledge`), and a stray `@property` that made the age-at-death read raise TypeError. Still open from the same
   sweep, and the same on the base build: `fuzzy_estimates` reads `viewer_actor_id`, which nothing sets.
+- [x] Agriculture owns the farm's state (`sim/agriculture/farm_state.py`): `farm_land`, `farm_technique_this_year`, `farm_ladder`, `farm_arable_ceiling`, `farm_food_demand_kg` and `opening_farmed_hectares` are its views and the engine bridge entries are gone (measure: `python3 tools/measure/module_graph.py`).
 - [ ] Phase 9: replace the remaining defaulted `getattr(sim, ...)` reads with direct reads or views, so a moved field fails
   loudly (`grep -rn 'getattr(sim, "' sim`).
 - [ ] The engine bridge answers no module read: each bridged view is published by the module that owns the fact.

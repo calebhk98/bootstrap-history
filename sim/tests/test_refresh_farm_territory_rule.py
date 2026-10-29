@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
+from sim.agriculture.commands import SetFarmTerritory
 from sim.engine.forward_agriculture import ForwardAgricultureMixin
 from sim.tests import agriculture_stand_in
 from sim.world.farming_technique import DEFAULT_TECHNIQUE
@@ -38,19 +39,23 @@ class TerritoryTests(unittest.TestCase):
 class Farm(ForwardAgricultureMixin):
     def __init__(self, territory, cleared_hectares):
         self.territory = territory
-        self.farm_land = SimpleNamespace(hectares=cleared_hectares)
+        self.cleared_hectares = cleared_hectares
         self.resized_to = []
+        self.sent = []
         self.labour = SimpleNamespace(set_farm_area=self.resized_to.append)
 
     def view(self, name):
-        return lambda: self.territory
+        return lambda: self.territory if name == "farm_territory" else SimpleNamespace(hectares=self.cleared_hectares)
+
+    def send(self, command):
+        self.sent.append(command)
 
 
 class RefreshTests(unittest.TestCase):
     def test_the_ladder_and_ceiling_are_the_territorys(self):
         farm = Farm(SimpleNamespace(ladder=[(1.1, 100.0)], cropped_hectares=100.0), 50.0)
         farm.refresh_farm_territory()
-        self.assertEqual((farm._farm_ladder, farm._farm_arable_ceiling), ([(1.1, 100.0)], 100.0))
+        self.assertEqual(farm.sent, [SetFarmTerritory([(1.1, 100.0)], 100.0)])
 
     def test_the_cleared_area_is_kept_and_sized_again_on_the_new_ladder(self):
         farm = Farm(SimpleNamespace(ladder=[(1.1, 100.0)], cropped_hectares=100.0), 70.0)
