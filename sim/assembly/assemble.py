@@ -262,9 +262,9 @@ def _wire(assembly: Assembly) -> None:
 		assembly.modules[module_id].needs = _needs_for(assembly, module_id, list(spec.reads) + own, spec.optional_reads, spec.sends)
 	for name, view in assembly.views.items():
 		view.inputs = [assembly.views[input_name] for input_name in view.spec.inputs if input_name in assembly.views]
-		for _mod_id, function, reads in assembly.applied.adjusters.get(name, []):
-			needs = _needs_for(assembly, "an adjuster of %s" % name, reads, (), ())
-			view.adjusters.append((function, needs, [assembly.views[read] for read in reads]))
+		for mod_id, function, reads in assembly.applied.adjusters.get(name, []):
+			access = ModAccess(assembly, mod_id, frozenset(reads), frozenset())   # an adjuster reads what it declared, sends nothing
+			view.adjusters.append((function, access, [assembly.views[read] for read in reads]))
 	for module_id, spec in assembly.applied.specs.items():
 		for provision in spec.provides:
 			if "%s.%s" % (module_id, provision.name) not in assembly.applied.withdrawn:

@@ -15,7 +15,7 @@ class View:
 		self.compute = compute
 		self.clock = clock
 		self.inputs: List["View"] = []
-		self.adjusters: List[Tuple[Callable, Any, List["View"]]] = []   # (function, its needs, the views it reads)
+		self.adjusters: List[Tuple[Callable, Any, List["View"]]] = []   # (function, its mod's access to the views it declared, the views it reads)
 		self.entries: Dict[Optional[str], Tuple[tuple, Any]] = {}      # acting seat -> (signature, value or keyed dict)
 		self.memo_epoch = -1
 		self.memo_signature: tuple = ()
@@ -29,7 +29,7 @@ class View:
 		parts: List[Any] = [clock.era, clock.acting_seat if seat_scoped else None]
 		parts.extend(clock.counter(self.owner_id, channel, seat_scoped) for channel in self.spec.channels)
 		parts.extend(view.signature() for view in self.inputs)
-		for _function, _needs, reads in self.adjusters:
+		for _function, _access, reads in self.adjusters:
 			parts.extend(view.signature() for view in reads)
 		self.memo_signature = tuple(parts)
 		self.memo_epoch = clock.epoch
@@ -37,8 +37,8 @@ class View:
 
 	def fresh(self, *arguments: Any, **keywords: Any) -> Any:
 		value = self.compute(*arguments, **keywords)
-		for function, needs, _reads in self.adjusters:
-			value = function(needs, value, *arguments, **keywords)
+		for function, access, _reads in self.adjusters:
+			value = function(access, value, *arguments, **keywords)
 		return value
 
 	def __call__(self, *arguments: Any, **keywords: Any) -> Any:

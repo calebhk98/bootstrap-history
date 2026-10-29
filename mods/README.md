@@ -211,7 +211,7 @@ to the game built over that mod set (`python3 -m sim.tests --slow --only mod_ope
   error names the remover and every reader.
 * `api.extend_module(module_id, layer)`: a class laid over the implementation, so its methods override and `super()` reaches the
   layer below. Layers stack in mod load order; a method outside the module's declared ones is labelled unstable.
-* `api.adjust_view(view, function, reads=())`: `function(needs, value, *key_or_arguments) -> value` over a published view;
+* `api.adjust_view(view, function, reads=())`: `function(access, value, *key_or_arguments) -> value` over a published view;
   adjusters stack in mod load order.
 * `api.provide(point, function)` and `api.withdraw("<module_id>.<provision>")`: add an answer to an extension point, or take a
   shipped module's answer out of one.

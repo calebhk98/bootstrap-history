@@ -131,7 +131,8 @@ class ModCodeApi:
         self.operations.layers[module_id] = self.operations.layers.get(module_id, ()) + (layer,)
 
     def adjust_view(self, view: str, function: Callable, reads: Any = ()) -> None:
-        """`function(needs, value, *key_or_arguments) -> value` over a published view; `needs` holds `reads`."""
+        """`function(access, value, *key_or_arguments) -> value` over a published view; `access.view(name)` answers the views in
+        `reads` and refuses any other, naming this mod; an adjuster sends nothing."""
         entry = (function, tuple(reads))
         self.operations.adjusters[view] = self.operations.adjusters.get(view, ()) + (entry,)
 

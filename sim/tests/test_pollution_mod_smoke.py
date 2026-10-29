@@ -15,8 +15,8 @@ FEEDER = "test_feeder_s7q2"
 RUNS = 1.0e11
 FEEDER_SOURCE = '''
 def register(api):
-    def burn(needs, value, *arguments):
-        tile = needs.base_tile()
+    def burn(access, value, *arguments):
+        tile = access.view("base_tile")()
         return list(value or []) + [{"tile": tile, "runs": %r, "inputs": {"coal_kg": 1.0}, "outputs": {}}]
     api.adjust_view("agent_producer_runs", burn, reads=("base_tile",))
 ''' % RUNS

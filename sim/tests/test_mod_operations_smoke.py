@@ -111,7 +111,7 @@ def register(api):
 
 ADJUST = '''
 def register(api):
-    api.adjust_view("store", lambda needs, value, key: dict(value, adjusted_by=list(value.get("adjusted_by", [])) + [MOD, key]),
+    api.adjust_view("store", lambda access, value, key: dict(value, adjusted_by=list(value.get("adjusted_by", [])) + [MOD, key]),
                     reads=("acting_seat",))
 '''
 
