@@ -9,11 +9,11 @@ as a function here is the new-game setup, the UI's own memory on the `Sim`, and 
 no module publishes yet."""
 from sim.engine import (  # noqa: F401
     state_paths, cash_book, category_traits, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
-    purchase_rule, settings, settings_table, topic_tags, tree_merge, units,
+    purchase_rule, settings, settings_table, topic_tags, units,
     validate_material_gating, validate_node_money, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.production.api import node_revenue_census  # noqa: F401
 from sim.engine.blockers import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND  # noqa: F401
-from sim.engine.catalog import load_production_catalog  # noqa: F401
+from sim.content.api import build_tree, load_production_catalog, merge_problems  # noqa: F401
 from sim.engine.core import Sim  # noqa: F401
 from sim.engine.critical_path_remaining import active_years_left, remaining_critical_path_years  # noqa: F401
 from sim.engine.data import (  # noqa: F401

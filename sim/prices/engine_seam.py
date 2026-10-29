@@ -16,12 +16,12 @@ def materials_the_tree_consumes(nodes: Dict[str, Any]) -> Any:
 
 
 def load_mod_tree_nodes(root: str) -> Any:
-    from sim.engine.catalog import load_mod_tree_nodes as loaded
+    from sim.content.api import load_mod_tree_nodes as loaded
     return loaded(root)
 
 
 def load_trade_registry(root: str, production_entries: Any, nodes: Any = ()) -> Any:
-    from sim.engine.catalog import load_trade_registry as loaded
+    from sim.content.api import load_trade_registry as loaded
     return loaded(root, production_entries, nodes=nodes)
 
 

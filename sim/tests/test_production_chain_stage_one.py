@@ -8,7 +8,7 @@ import unittest
 
 from sim.engine import validate_dead_ends
 from sim.json_files import read_json
-from sim.engine.catalog import load_production_catalog
+from sim.content.catalog import load_production_catalog
 from sim.content.api import load_needs
 from sim.labour import trade_data
 from sim.world import need_basket

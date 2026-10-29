@@ -10,7 +10,7 @@ from sim.diffusion import rules
 from sim.diffusion.module import Diffusion
 from sim.engine import category_traits
 from sim.knowledge.module import Knowledge
-from sim.engine.tree_source import load_base_tree
+from sim.content.tree_source import load_base_tree
 from sim.tests import module_harness, production_host
 
 

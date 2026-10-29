@@ -112,7 +112,7 @@ class HydraulicConcreteWorksTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from sim.engine import tree_merge
+        from sim.content import tree_merge
         cls.nodes = {node["id"]: node for node in tree_merge.build_tree().tree["nodes"]}
         cls.production = load_production()[0]
 

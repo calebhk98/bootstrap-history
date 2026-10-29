@@ -29,7 +29,7 @@ from collections import defaultdict
 
 from sim.engine.ui_port import load_production_catalog
 from sim.engine.ui_port import (
-    category_traits, tree_merge, validate_material_gating, validate_node_money, node_revenue_census, validate_copy_visibility, validate_production,
+    category_traits, build_tree, merge_problems, validate_material_gating, validate_node_money, node_revenue_census, validate_copy_visibility, validate_production,
     validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.engine.ui_port import default_civilisation_id
 from sim.engine.ui_port import (
@@ -380,19 +380,19 @@ def _print_validate_ok(errs):
 def _data_source_errors(nodes):
     """Malformed production entries, and branch-merge collisions or data-loss events."""
     return (["data/production: " + problem for problem in validate_production.production_problems(nodes)]
-            + ["data/branches: " + problem for problem in tree_merge.merge_problems(tree_merge.build_tree())])
+            + ["data/branches: " + problem for problem in merge_problems(build_tree())])
 
 
 def _dead_end_lines(nodes, production):
     """Complaints/533: produced goods nothing consumes (findings, not errors)."""
     from sim.engine import validate_dead_ends
     from sim.content.api import load_needs
-    from sim.engine.catalog import _trade_fields, load_trade_registry
+    from sim.content.api import load_trade_registry, trade_fields
     from sim.json_files import read_json
     lives = read_json(os.path.join(ROOT, "data", "world", "service_lives.json")).get("years", {})
     tree_materials = {material for node in nodes.values() for material in (node.get("mat") or {})}
     return validate_dead_ends.report_lines(production, load_needs(ROOT, MODDIR)["goods"], lives,
-                                           {trade: _trade_fields(record) for trade, record in load_trade_registry(ROOT, production).items()},
+                                           {trade: trade_fields(record) for trade, record in load_trade_registry(ROOT, production).items()},
                                            validate_dead_ends.state_goods(), tree_materials)
 
 

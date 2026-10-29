@@ -6,7 +6,7 @@ import copy
 import json
 import unittest
 
-from sim.engine.catalog import load_production_catalog, load_trade_registry
+from sim.content.catalog import load_production_catalog, load_trade_registry
 from sim.content.api import ModError, load_mod_tree
 from sim.tests.test_mod_removal_and_civs import BASE_TREE, ModTestBase
 

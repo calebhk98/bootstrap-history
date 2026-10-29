@@ -6,7 +6,7 @@ import os
 import unittest
 
 from sim.prices import solve_prices
-from sim.engine.catalog import load_production_catalog
+from sim.content.catalog import load_production_catalog
 from sim.world import capital_market
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

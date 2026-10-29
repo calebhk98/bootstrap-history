@@ -117,7 +117,7 @@ class HeldAndRunningTests(unittest.TestCase):
 class AuthoredDataTests(unittest.TestCase):
 
     def test_every_route_a_lane_asks_for_is_returned_by_an_authored_expedition(self):
-        from sim.engine import tree_merge
+        from sim.content import tree_merge
         from sim.geography.api import open_map
         nodes = {node["id"]: node for node in tree_merge.build_tree().tree["nodes"]}
         world_map = open_map()

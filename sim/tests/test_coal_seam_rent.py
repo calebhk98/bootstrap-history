@@ -10,7 +10,7 @@ QUICK_TOPIC = True
 import os
 import unittest
 
-from sim.engine.catalog import load_production_catalog
+from sim.content.catalog import load_production_catalog
 from sim.prices.solve_prices_core import recipe_cost_and_allocation
 from sim.geography.api import mine_demand_goods
 from sim.world import deposits

@@ -10,7 +10,7 @@ from .harness import check
 from sim.refusal import cause_of
 
 from sim.engine import event_causes
-from sim.engine.tree_source import load_base_tree
+from sim.content.tree_source import load_base_tree
 from sim.ui.proto.screen_divergence import _dated_events
 from sim.tests.ui_stand_in import Game
 

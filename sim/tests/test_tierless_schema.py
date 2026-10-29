@@ -13,9 +13,9 @@ import tempfile
 import unittest
 from unittest import mock
 
-from sim.engine import tree_merge
+from sim.content import tree_merge
 from sim.engine import data
-from sim.engine.tree_source import load_base_tree
+from sim.content.tree_source import load_base_tree
 
 
 def branch_files():

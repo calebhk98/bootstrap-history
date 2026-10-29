@@ -5,7 +5,7 @@ import json
 import os
 import unittest
 
-from sim.engine.catalog import load_production_catalog
+from sim.content.catalog import load_production_catalog
 from sim.content.api import load_needs
 from sim.world import need_basket
 

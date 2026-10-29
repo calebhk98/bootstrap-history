@@ -62,7 +62,7 @@ ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 def load_production():
     """Load the one canonical base-and-enabled-mod production graph."""
-    from sim.engine.catalog import load_production_catalog
+    from sim.content.api import load_production_catalog
     return load_production_catalog(ROOT), []
 
 
@@ -536,7 +536,7 @@ def check(entries, known_materials, known_trades, known_nodes=None):
 
 def production_problems(nodes):
     """Every malformed entry in the production catalogue, checked against `nodes` ({id: node})."""
-    from sim.engine.catalog import load_trade_registry, material_namespace
+    from sim.content.api import load_trade_registry, material_namespace
     entries, duplicates = load_production()
     known_trades = set(load_trade_registry(ROOT, entries))
     known_materials = material_namespace(entries, nodes.values())

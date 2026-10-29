@@ -56,7 +56,7 @@ def report_lines(nodes: Mapping[str, Mapping[str, Any]], production: Mapping[str
 def main() -> None:
     root = os.getcwd()
     sys.path.insert(0, root)
-    from sim.engine.catalog import load_production_catalog
+    from sim.content.api import load_production_catalog
     from sim.engine import data
     production = load_production_catalog(root, os.path.join(root, "mods"))
     nodes = {node["id"]: node for node in data.load()[0]["nodes"]}

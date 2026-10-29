@@ -8,7 +8,7 @@ import unittest
 
 from sim.labour import legacy_trade_defaults, workforce_spinup
 from sim.labour.market import trades as market_trades
-from sim.engine.catalog import load_production_catalog
+from sim.content.catalog import load_production_catalog
 from sim.prices.solve_prices_core import techniques_available_to
 from sim.labour import workforce_carriage
 

@@ -1,6 +1,6 @@
 """Merge the branch files in data/branches/ into one technology tree, in memory.
 
-`build_tree` is what sim/engine/tree_source.py builds the base tree from.
+`build_tree` is what sim/content/tree_source.py builds the base tree from.
 `merge_problems` lists what `python3 sim/simulator.py validate` reports as
 errors: an id defined twice, and every merge event that drops something a
 branch author wrote.
@@ -10,10 +10,9 @@ import json
 import os
 import re
 
-from sim.engine.catalog import load_production_catalog, load_trade_registry, material_namespace
-from sim.content.api import NUMERIC_FIELDS, OPTIONAL_DEFAULTS, STATED_NUMERIC_FIELDS
-from sim.engine.tree_source import (META_FILE, MERGED_DUPLICATE_IDS_FILE, NO_MODS_DIRECTORY,
-                                    ROOT)
+from .catalog import load_production_catalog, load_trade_registry, material_namespace
+from .node_defaults import NUMERIC_FIELDS, OPTIONAL_DEFAULTS, STATED_NUMERIC_FIELDS
+from .tree_source import META_FILE, MERGED_DUPLICATE_IDS_FILE, NO_MODS_DIRECTORY, ROOT
 
 DATA = os.path.join(ROOT, "data")
 BR = os.path.join(DATA, "branches")

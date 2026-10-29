@@ -32,7 +32,6 @@ from sim.content.api import ModError, get_ordered_mods, load_mod_tree
 from sim.content.api import MissingVariantBase
 from .mod_world_data import load_starting_kits, load_win_condition_labels
 from sim.content.api import merge_mod_map
-from .tree_source import load_base_tree
 from sim.content.api import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
 from sim.prices.api import energy_prices
@@ -41,8 +40,8 @@ from sim.production.api import node_revenue
 from sim.labour.api import wage_provider
 from .default_civilisation import default_civilisation_id
 from . import wage_schedule
-from .catalog import (load_mod_tree_nodes, load_production_catalog,
-                      load_trade_registry, validate_mod_material_paths)
+from sim.content.api import (load_base_tree, load_mod_tree_nodes, load_production_catalog, load_trade_registry,
+                             validate_mod_material_paths)
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
 # dictionary read straight from a JSON file (branches,

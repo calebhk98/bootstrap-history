@@ -10,7 +10,7 @@ import collections
 import re
 import unittest
 
-from sim.engine import tree_merge
+from sim.content import tree_merge
 
 ZERO_CATEGORIES = ("unknown_trade", "unresolvable_prerequisite", "material_is_technology", "dependency_cycle")
 

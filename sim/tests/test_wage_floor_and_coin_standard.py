@@ -9,7 +9,8 @@ import unittest
 
 from sim.prices import prices as engine_prices
 
-from sim.engine import catalog, data, wage_schedule
+from sim.content import catalog
+from sim.engine import data, wage_schedule
 from sim.labour import wage_provider
 from sim.engine.validate_production import load_production
 

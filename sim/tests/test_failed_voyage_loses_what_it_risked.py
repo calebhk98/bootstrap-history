@@ -9,7 +9,8 @@ import random
 import unittest
 from types import SimpleNamespace
 
-from sim.engine import tree_merge, validate_action_results
+from sim.content import tree_merge
+from sim.engine import validate_action_results
 from sim.living_stock.api import ChangeHeld
 from sim.tests import module_harness, projects_host
 from sim.workforce.module import Workforce

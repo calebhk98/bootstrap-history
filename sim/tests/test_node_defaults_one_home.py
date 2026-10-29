@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.content import mods
-from sim.engine import tree_merge
+from sim.content import tree_merge
 from sim.content.api import OPTIONAL_DEFAULTS, STRUCTURAL_DEFAULTS
 
 

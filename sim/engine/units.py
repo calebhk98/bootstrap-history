@@ -17,7 +17,7 @@ from sim.scenario.api import from_base, to_base, unit_factor, unit_label  # the 
 from sim.content.api import get_ordered_mods
 from sim.content.api import ModError
 from sim.content.api import check_new_id
-from .tree_source import ROOT
+from sim.default_civilisation import REPOSITORY_ROOT as ROOT
 
 Registry = Dict[str, Any]
 

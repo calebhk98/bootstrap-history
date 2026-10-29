@@ -9,16 +9,16 @@ import os
 from .harness import *  # noqa: F401,F403
 
 from sim.economy import labour
-from sim.engine.catalog import Trade, _trade_fields, _trade_from
+from sim.content.catalog import Trade, trade_fields, trade_from
 from sim.labour import trade_data
 
 DATA = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "world")
 trades_file = json.load(open(os.path.join(DATA, "trades.json")))["trades"]
 
 # 429: the registry keeps every field, and labour reads them.
-trade = _trade_from("wright", {"family": "craft", "literate": True, "tool_basket": ["timber"]}, "test")
+trade = trade_from("wright", {"family": "craft", "literate": True, "tool_basket": ["timber"]}, "test")
 check("the trade record keeps a field it does not name", trade.extra == {"literate": True, "tool_basket": ["timber"]}, trade.extra)
-check("an override sees the extra fields flat", _trade_fields(trade)["literate"] is True and "extra" not in _trade_fields(trade))
+check("an override sees the extra fields flat", trade_fields(trade)["literate"] is True and "extra" not in trade_fields(trade))
 registry = {"wright": {"literate": True, "taught_from": "weaver", "tool_basket": ["timber", "iron"], "staff_resource": "crew"},
             "plain": {}}
 check("a mod's trade can say it is literate", trade_data.literate_trades(registry, ["wright", "plain", "absent"]) == {"wright"})

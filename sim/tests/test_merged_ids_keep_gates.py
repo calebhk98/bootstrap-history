@@ -9,7 +9,7 @@ import json
 import os
 import unittest
 
-from sim.engine import tree_merge
+from sim.content import tree_merge
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _GATE_FIELDS = ("requires_running", "requires_ways")

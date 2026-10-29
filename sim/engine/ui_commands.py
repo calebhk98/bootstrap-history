@@ -16,7 +16,7 @@ from sim.json_files import read_json
 from sim.content.api import get_ordered_mods
 from sim.content.api import ModError, claim_fields
 from sim.content.api import check_new_id
-from .tree_source import ROOT
+from sim.default_civilisation import REPOSITORY_ROOT as ROOT
 from .ui_data import check_state_path
 
 COMMANDS_FILE = os.path.join("data", "ui", "commands.json")

@@ -13,7 +13,7 @@ from sim.content.api import ModError
 from sim.content.api import check_new_id
 from . import state_paths
 from .readable import is_readable
-from .tree_source import ROOT
+from sim.default_civilisation import REPOSITORY_ROOT as ROOT
 
 FIGURES_FILE = os.path.join("data", "ui", "figures.json")
 READ_PARTS = ("components", "flows", "drivers")

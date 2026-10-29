@@ -7,11 +7,11 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from sim.engine.catalog import (load_production_catalog, load_trade_registry,
+from sim.content.catalog import (load_production_catalog, load_trade_registry,
                                 material_namespace,
                                 validate_mod_material_paths)
 from sim.content.api import get_ordered_mods, load_mod_tree
-from sim.engine.tree_source import load_base_tree
+from sim.content.tree_source import load_base_tree
 from sim.prices import prices
 from sim.engine import data, wage_schedule
 from sim.labour import wage_provider

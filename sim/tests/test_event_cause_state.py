@@ -10,7 +10,7 @@ from .harness import check
 from .ui_stand_in import Game
 
 from sim.engine import event_causes
-from sim.engine.tree_source import load_base_tree
+from sim.content.tree_source import load_base_tree
 
 CIVILISATIONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "civilizations")
 

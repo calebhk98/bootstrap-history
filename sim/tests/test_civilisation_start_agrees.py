@@ -11,7 +11,7 @@ import os
 import unittest
 
 from sim.engine import civ_start_check as start_check
-from sim.engine.tree_source import load_base_tree
+from sim.content.tree_source import load_base_tree
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))

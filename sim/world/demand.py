@@ -159,7 +159,7 @@ PRODUCTION_DIR = os.path.join(_ROOT, "data", "production")
 
 def _load_production_data() -> Dict[str, Any]:
     """Return the canonical base-and-enabled-mod production graph."""
-    from sim.engine.catalog import load_production_catalog
+    from sim.content.api import load_production_catalog
     return load_production_catalog(_ROOT)
 
 

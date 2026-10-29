@@ -4,7 +4,7 @@ import json
 import os
 import unittest
 
-from sim.engine.catalog import load_production_catalog
+from sim.content.catalog import load_production_catalog
 from sim.prices.solve_prices_core import techniques_available_to
 from sim.geography import api as geography
 from sim.labour import workforce_carriage, workforce_spinup
