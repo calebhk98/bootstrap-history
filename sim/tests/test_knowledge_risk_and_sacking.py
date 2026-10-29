@@ -8,7 +8,7 @@ import types
 
 from .harness import *  # noqa: F401,F403
 from sim.engine import bridge_hazards
-from sim.engine.data import closure
+from sim.knowledge.api import closure
 from sim.knowledge import rules as knowledge_rules
 from sim.knowledge.api import (CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE, ForgetTechnique, KnowledgeSeat)
 from sim.production.api import RefreshDoneCaches

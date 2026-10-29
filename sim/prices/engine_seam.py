@@ -26,7 +26,7 @@ def load_trade_registry(root: str, production_entries: Any, nodes: Any = ()) -> 
 
 
 def closure(nodes: Dict[str, Any], node_id: str) -> Any:
-    from sim.engine.data import closure as reached
+    from sim.knowledge.api import closure as reached
     return reached(nodes, node_id)
 
 

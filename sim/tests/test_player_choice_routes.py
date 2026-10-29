@@ -8,7 +8,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.data import closure
+from sim.knowledge.api import closure
 from sim.tests.harness import NODES
 
 

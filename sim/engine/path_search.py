@@ -127,7 +127,8 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__f
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-from sim.engine.data import TRADES_ABSENT, closure, load, load_civ, resolve_goal
+from sim.engine.data import TRADES_ABSENT, load, load_civ, resolve_goal
+from sim.knowledge.api import closure
 from sim.engine.core import Sim
 
 from sim.engine.default_civilisation import default_civilisation_id

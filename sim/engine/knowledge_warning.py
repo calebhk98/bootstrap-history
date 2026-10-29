@@ -4,7 +4,7 @@ Reads `knowledge_risk` (the numbers `risk` prints) and the hedge table
 `corpus_hedge` uses, so this screen and `risk` cannot disagree.
 """
 
-from .data import closure
+from sim.knowledge.api import closure
 
 # Years before a window opens at which the warning starts to be shown.
 WARNING_HORIZON_YEARS = 30

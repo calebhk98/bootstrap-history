@@ -81,7 +81,7 @@ SCORE_WEIGHTS = {
 def _score_goal_floor_years(sim, nodes):
     """The goal's own critical-path floor, in years - the fastest any run of
     any civilisation could reach it with unlimited money and one director
-    (data.critical_path, civ-independent by construction: see its own
+    (the knowledge rule critical_path, civ-independent by construction: see its own
     docstring). Cached on the Sim the same way `final_report`'s
     `_goal_closure` already caches the goal's prerequisite set, because this
     walks the whole closure and `score` is meant to be called often.

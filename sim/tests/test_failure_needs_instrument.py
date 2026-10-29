@@ -12,7 +12,7 @@ import random
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.data import closure
+from sim.knowledge.api import closure
 from sim.projects.failure_diagnosis import SHORTFALL_FACTOR_RANGE, failure_teaches
 from sim.tests import projects_host
 from sim.tests.harness import NODES

@@ -5,7 +5,8 @@ QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
 from sim.diffusion.civ_cost import civ_cost_factor
-from sim.engine.data import TECH_EFFECTS, hard_pre
+from sim.engine.data import TECH_EFFECTS
+from sim.knowledge.api import hard_pre
 from sim.engine.seat_defaults import default_policy
 
 ROME = S.load_civ("rome_100ad")

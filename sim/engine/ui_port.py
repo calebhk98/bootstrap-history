@@ -17,13 +17,13 @@ from sim.engine.catalog import load_production_catalog  # noqa: F401
 from sim.engine.core import Sim  # noqa: F401
 from sim.engine.critical_path_remaining import active_years_left, remaining_critical_path_years  # noqa: F401
 from sim.engine.data import (  # noqa: F401
-    CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, downstream_count, goal_catalog,
-    hard_pre, is_downstream, KNOWLEDGE_DIR, load, load_civ, node_names, load_geography, MODDIR, money_short,
+    CIVDIR, civilization_ids, DEFAULTS, downstream_count, goal_catalog,
+    is_downstream, KNOWLEDGE_DIR, load, load_civ, node_names, load_geography, MODDIR, money_short,
     money_unit_note, money_word, resolve_goal, ROOT, selectable_goals, STARTING_KITS, STRATS,
-    topo_order, trade_family, TRADE_FAMILY, TRADE_NOTES, TRADES_ABSENT, WAGES,
+    trade_family, TRADE_FAMILY, TRADE_NOTES, TRADES_ABSENT, WAGES,
     win_condition_describe)
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: F401
-from sim.knowledge.api import prerequisite_names, strip_self_play_advice  # noqa: F401
+from sim.knowledge.api import closure, critical_path, hard_pre, prerequisite_names, strip_self_play_advice, topo_order  # noqa: F401
 from sim.engine.mod_code import code_report, run_mod_code  # noqa: F401
 from sim.engine.game_assembly import build as build_assembly  # noqa: F401
 from sim.engine.mod_code import allow as allow_mod_code  # noqa: F401

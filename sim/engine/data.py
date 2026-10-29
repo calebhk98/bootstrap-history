@@ -30,7 +30,6 @@ IdentityCache = identity_cache.IdentityCache
 from sim.geography.api import haversine_km, load_geography
 from sim.content.api import ModError, get_ordered_mods, load_mod_tree
 from sim.content.api import MissingVariantBase
-from sim.knowledge.api import closure, critical_path, hard_pre, topo_order  # noqa: F401 - the tree's rules live in knowledge
 from .mod_world_data import load_starting_kits, load_win_condition_labels
 from sim.content.api import merge_mod_map
 from .tree_source import load_base_tree

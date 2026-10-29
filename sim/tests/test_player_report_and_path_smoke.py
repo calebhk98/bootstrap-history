@@ -2,7 +2,7 @@
 rules under the replies are the tree and protocol topics. No years run."""
 import unittest
 
-from sim.engine.data import closure
+from sim.knowledge.api import closure
 from sim.knowledge.api import LearnTechnique
 from sim.tests.harness import GOAL, NODES, S, unopened_sim
 from sim.ui.proto.score import final_report

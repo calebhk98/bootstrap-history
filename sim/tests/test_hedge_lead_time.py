@@ -3,7 +3,7 @@ module's calendar_floor_remaining (over the real tree) is what a hedge's chain s
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.data import critical_path
+from sim.knowledge.api import critical_path
 from sim.hazards.hedge_timing import lead_time_range
 from sim.tests import hazards_host
 

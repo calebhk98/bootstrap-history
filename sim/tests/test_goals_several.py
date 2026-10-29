@@ -6,7 +6,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.engine.core_properties import ForwardingPropertiesMixin
-from sim.engine.data import closure
+from sim.knowledge.api import closure
 from sim.engine.forward_seats import ForwardSeatsMixin
 from sim.seats.api import RememberGoalClosure
 from sim.seats.module import Seats

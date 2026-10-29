@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from sim.tests import projects_host
 from sim.projects.completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
 from sim.tests import materials_stand_in, resources_stand_in
-from sim.engine.data import closure
+from sim.knowledge.api import closure
 from sim.seats.module import Seats
 from sim.seats.state import SeatsSeat
 from sim.tests import module_harness
