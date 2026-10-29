@@ -18,8 +18,7 @@ not merged**:
   with stored samples, `api.kernel`, four tests. Next: the quick tier, `--slow --only mod_kernels_smoke`, micro, then
   merge.
 
-Then, in order: rewrite the shipped code mods onto the mod interface and Complaint 840 (phase 7); the purses and the
-projects record's shared sets (phase 3); phase 9 (`--slow`, long tier and fingerprint against `mr-base`, regenerate the
+Then, in order: rewrite the shipped code mods onto the mod interface and Complaint 840 (phase 7); the seat's purse (phase 3; the projects record moved in phase 6b); phase 9 (`--slow`, long tier and fingerprint against `mr-base`, regenerate the
 shipped openings, fix the bugs kept on purpose: Complaints 681, 760 to 765, 790, 800, 810, 840; docs; the real PR).
 
 Operating rules: only the orchestrating session merges; agents work in worktrees on `mr/<task>` branched from the
@@ -135,6 +134,10 @@ Phase 6 (a) is done: `sim/ui/` reads views and sends commands (`tools/check_ui_v
   - Route every `ledger.transfer` site, every `pay_edge` site and the other paths that move money.
   - Remove the direct `.capital =` and `.money =` writes and the `record.book.transfer` calls outside the ledger module.
   - Goods move through `MoveGoods`.
+  - Measured (`tools/done_check.sh`, which now counts only paths outside the owning packages): no transfer call outside its
+    owner. The actors' purses move inside `sim/agents` (the actors module's implementation) and the agent economy's book inside
+    `sim/economy` (markets'); both stay there. Left: the seat's purse, written by the household facade
+    (`sim/agents/household*.py`) and the `HouseholdState.capital` property, which move into the ledger's seat state.
 - [ ] **3.2 to 3.4** Workforce hours (`CommitHours`), land (`TransferTile`), people (`KillPeople`, `MovePeople`). Two of these may run at once only if their file sets are disjoint. Proof: the full equivalence tier, the conservation tests and a save round trip.
 
 ### Phase 4: walled packages become modules (serial)
