@@ -82,7 +82,7 @@ from sim.disease import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publi
 | `RunEpidemicYear` | food_kcal_per_day, year | {band: deaths} | `forward_disease.epidemic_year` |
 | `HitSeatsWithEpidemic` | deaths_by_band, year | the working-age share killed (zero below the share a seat notices) | `forward_disease.epidemic_year` |
 
-Sent to others: workforce `SurviveStaff`, `ScaleDeputies`, `ReportStaffReduction`; hazards `LoseCapital`; reporting `RecordEvent`.
+Sent to others: workforce `LoseStaff`; hazards `LoseCapital`; reporting `RecordEvent`.
 Deaths go to demography as the answer of `RunEpidemicYear`, which the population step takes; no `KillPeople` is sent, because the
 deaths enter the step by band and tile, not as a share (a change to that is demography's).
 
@@ -99,7 +99,7 @@ deaths enter the step by band and tile, not as a share (a change to that is demo
 - mechanics: `effect_terms`, `mechanic`
 - diffusion: `civ_diffusion`, `tech_effects`
 - coverage (bridged): `coverage`, `coverage_share`
-- seats: `seat_list`; workforce: `staff`, `staff_snapshot`
+- seats: `seat_list`
 
 ## (f) Year phases
 

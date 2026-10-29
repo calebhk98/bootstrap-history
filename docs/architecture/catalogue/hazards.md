@@ -106,7 +106,7 @@ facts}`, the last `event_log_years_kept` years), `said_output`, `said_debasement
 ## Commands sent to other owners
 
 `PayEdge` (ledger), `PlunderHousehold` (coin), `ErodeMoney`, `RecordEvent` (reporting), `RaiseScandal`, `ScaleProtection`,
-`ShiftValueWeight` (polity), `SurviveStaff`, `ScaleDeputies`, `ReportStaffReduction`, `NoteWageShock` (workforce), `CutPopulation`,
+`ShiftValueWeight` (polity), `LoseStaff` (workforce), `NoteWageShock` (reporting), `CutPopulation`,
 `RefreshDemographicIndexes`, `KillPeople` (demography), `ForgetTechnique` (knowledge), `ResetProjectProgress`, `ShutForgotten` (projects).
 
 ## Reads
@@ -119,7 +119,7 @@ Views of finished modules: `year`, `civilisation`, `seat_list`, `techniques_held
 
 Published by `bridge_hazards.py` under the name the owner will publish (each is deleted when its owner moves): `events_enabled`,
 `ended_seats`, `founder`, `goal` (seats); `losable_node_ids`, `critical_path`, `tree_closure` (knowledge and the tree); `active_projects`,
-`closure_record`, `closed_by_choice` (projects and ventures); `military_leverage` (polity); `staff_snapshot`, `wage_index`
+`closure_record`, `closed_by_choice` (projects and ventures); `military_leverage` (polity); `wage_index`
 (workforce); `country_strata` (actors). The event-cause evaluator (`effective_hazard`, `event_cause_report`) is the module's own
 (`causes.py`, `cause_quantities.py`, `cause_rules.py`, `cause_report.py`); each quantity reads a view of its owner: actors
 `state_budget_figures`, `army_figures`, `state_knows`, `home_strata_rows`; land `tiles_listed_by`; demography
@@ -151,3 +151,74 @@ constants other code and mods still read off the game. Callers: the screens (`si
 - **Reads that write.** `hazard_effect_preview` and the figures only read. The remaining writers are the phases and the three
   commands.
 - **The `risk` screen** (`fog.knowledge_risk`) still calls the quotes through the forwarders; moving it is the knowledge module's.
+
+## Width review
+
+Measure: `python3 tools/measure/module_graph.py --modules` (reads, sends and modules depended on); the reads by publisher are
+`python3 -c "from sim.hazards.module_spec import READS_BY_OWNER as table; [print(owner, names) for owner, names in table.items()]"`
+(regrouped under the module that publishes each view). Grouping the package's files by the views they read shows four parts that
+share little: the shocks, sack and random events (`shocks.py`, `sack.py`, `random_events.py`, `capital_loss.py`, `patron_death.py`),
+the figures that say what counters a hazard (`relief.py`, `advice.py`, `cause_*.py`, `causes.py`, `window.py`, `condition.py`), the
+knowledge-loss rules (`knowledge_risk.py`, the corpus half of `sack.py`, `hedge_*.py`) and the world hazards (`world.py`,
+`world_data.py`, `events.py`).
+
+### What it depends on, by what it asks
+
+| Asks of | What for | Reads and sends |
+|---|---|---|
+| scenario, seats, ledger, reporting | The year, the civilisation's dated hazards, the game's dice, who plays, the purse and the log | `year`, `civilisation`, `opening_civilisation`, `events_enabled`, `game_random`, `automation`, `fog_of_war`, `money_text`; `seat_list`, `ended_seats`, `founder`, `goal`; `acting_balance`, sends `PayEdge`; `event_log`, `money_real`, `real_output_hours`, sends `RecordEvent`, `ErodeMoney`, `NoteWageShock` |
+| knowledge, mechanics | What the seat holds and may lose, and the counters data names | `techniques_held`, `techniques_granted`, `techniques_forgotten`, `tree`, `tree_nodes`, `visible_to_player`, `visibility`, `losable_node_ids`, `tree_closure`, `critical_path`, `corpus_hedge`, send `ForgetTechnique`; `hazard_counter_rows`, `corpus_nodes`, `mechanic`, `running_mechanics` |
+| production, projects, ventures, defence_stores, resources, diffusion, land | What defences stand: what runs, what is built or closed, what is stocked, what the nation has adopted | production `running`, `capability_gaps`; projects `start_check`, `project_cost`, `active_projects`, `closure_record`, `closed_by_choice`, send `ResetProjectProgress`; ventures send `ShutForgotten`; defence_stores `counter_supply_gap`; resources `mine_capacity`; diffusion `civ_diffusion`, `diffusible_ids`, `diffusion_relief`, `literacy`; land `tiles_listed_by` |
+| workforce, demography, polity, coin | What a shock does to people, population, standing and cash | workforce `wage_index`, `money_per_labour_hour`, send `LoseStaff`; demography `population_total`, `nutrition_ratio_last_year`, sends `CutPopulation`, `RefreshDemographicIndexes`, `KillPeople`; polity `military_leverage`, `standing`, sends `RaiseScandal`, `ScaleProtection`, `ShiftValueWeight`; coin send `PlunderHousehold` |
+| actors, agriculture, foreign_trade, disease, prices | The countries and the dice and figures the world hazards and the cause figures need | actors `country_strata`, `state_budget_figures`, `army_figures`, `state_knows`, `home_strata_rows`; agriculture `weather_seed`; foreign_trade `partners_in_agent_economy`; disease `epidemic_risk`; prices `price_index` |
+
+### Findings
+
+**(a) Mirror views.**
+
+- Done, `LoseStaff` (workforce): the plague wave and the sack each read `staff` and `staff_snapshot`, sent `SurviveStaff`,
+  `ScaleDeputies` and `ReportStaffReduction`, and counted the people either side from `staff`. One command now takes the snapshot,
+  rolls the survival, scales the deputies, logs the fall and answers the people on the books before and after. The module reads
+  neither view and sends one command for three; disease, which did the same, changed with it.
+- Done, dead read: `corpus_hedge_tiers` was declared and never read.
+- Kept, knowledge's `visible_to_player(node)` and `visibility(node, memo)`: `visible_to_player` adds a tree-membership test, and
+  `knowledge_risk.py` asks about a hedge id that may not be a tree node, so the two answer differently there.
+- Open, not built, knowledge's `tree(node)` and `tree_nodes()`: `tree[node]` is `tree_nodes().get(node)`. The module reads both; every
+  reader of `tree` in other modules (including seats and materials, which other reviews own) would switch to `tree_nodes`.
+- Open, not built: `money_per_labour_hour` (workforce) times `price_index` (prices) is read for one figure, the patron's courting gift
+  (`random_events.py`); a `labour_hours_value(hours)` view would give it as one question; agriculture (`farm.py`) multiplies the same two.
+
+**(b) Sub-domains that read their own set of owners** (measured by grouping the files above by the views each reads):
+
+- The world hazards (`world.py`, `world_data.py`, with `data/world/world_hazards.json`; the phases `world_hazards` and `famine_watch`)
+  read scenario, seats, actors `country_strata`, agriculture `weather_seed` and foreign_trade `partners_in_agent_economy`, and send
+  `KillPeople`, `RecordEvent` and this module's `RecordWorldEvent`. Agriculture and foreign_trade are read nowhere else in the module.
+  Proposal: a `world_hazards` module holding those files; it sends `RecordWorldEvent` to hazards for the log, as other modules do, and
+  hazards stops depending on agriculture and foreign_trade. Moving the world event log (`events.py`, the `WORLD_EVENTS` channel) with it
+  is the alternative, but the log is also written by the shocks, so it stays.
+- The hazard figures (`relief.py`, `advice.py`, `cause_quantities.py`, `cause_report.py`, `cause_rules.py`, `causes.py`, `window.py`,
+  `condition.py`) are the only part that reads defence_stores, diffusion, land and resources, and the bulk of the knowledge, projects,
+  actors and polity reads. The shocks call them back as the module's own views (`hazard_relief_detail`, `effective_hazard`). Proposal:
+  a `defences` module publishing the figure views (`hazard_figure`, `hazard_relief`, `hazard_relief_entries`, `hazard_relief_detail`,
+  `hazard_effect_preview`, `hazard_advice`, `hazard_timeline`, `effective_hazard`, `event_cause_report`, `national_public_health_sources`,
+  `staff_loss_exposure`); hazards would read those and drop defence_stores, diffusion, land and resources. The callers of those views
+  (the seats module, the screens) change their owner name only.
+- The knowledge-loss rules (`knowledge_risk.py`, the corpus half of `sack.py` and `hedge_*.py`) are the only part that reads disease
+  `epidemic_risk` and sends `ShutForgotten` and `ForgetTechnique`, and they read knowledge's own views. They are knowledge's questions
+  (what can be lost, what hedges it) asked in this module. Proposal: move them to the knowledge module (they were `fog.py`'s before the
+  hazards move); hazards would send it the sack's roll and drop disease and ventures.
+
+**(c) Pass-through dependencies.**
+
+- Fixed: `staff_snapshot` was read only to hand it to workforce's `ReportStaffReduction`.
+- `quantity.read(self.needs, ...)` (`causes.py`) hands the module's own needs to the table of reader functions in `cause_quantities.py`,
+  one per fact a dated event's cause may name; they are the module's reads, not a hand-off to another module.
+- Nothing else is read only to be forwarded.
+
+### What was done, and why each remaining edge is needed
+
+Done (each a commit, quick tier green, values identical): `LoseStaff` and the dead read; the reads grouped by publisher. Every other
+edge is something a shock or a defence is made of: a hazard hits people, cash, population, standing, projects and the written corpus
+(each owned by another module, so each a command), and what counters it is read from what runs, what is built, what is stocked and what
+the nation has adopted (each a view). The three proposals above separate the parts whose owners are disjoint; the first two would
+take the module from the widest set of owners to a set each part reads in full.
