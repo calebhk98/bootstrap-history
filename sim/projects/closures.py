@@ -2,7 +2,7 @@
 from . import closure_reasons
 from sim.ventures.api import ForgetClosureReason, MothballConcern
 
-from .needed_commands import NoteConcernChange
+from sim.reporting.api import NoteConcernChange
 
 
 class Closures:
@@ -20,7 +20,8 @@ class Closures:
 		needs.send(MothballConcern(node_id, closing_year, reason))
 		if reason == self.CLOSED_FOR_STAFF:
 			self.seat.ever_closed_for_staff.add(node_id)
-		needs.send(NoteConcernChange("closure", node_id, reason))
+		node = needs.tree_nodes()[node_id]
+		needs.send(NoteConcernChange("closure", node_id, reason, node["rev"], node["up"]))
 		if cascade:
 			self.close_lapsed_dependents(closing_year)
 

@@ -11,8 +11,8 @@ from sim.ledger.api import PayEdge
 from sim.polity.api import RaiseScandal, ScaleProtection, ShiftValueWeight
 from sim.projects.api import ResetProjectProgress
 from sim.ventures.api import ShutForgotten
-from sim.reporting.api import ErodeMoney, RecordEvent
-from sim.workforce.api import NoteWageShock, ReportStaffReduction, ScaleDeputies, SurviveStaff
+from sim.reporting.api import ErodeMoney, NoteWageShock, RecordEvent
+from sim.workforce.api import ReportStaffReduction, ScaleDeputies, SurviveStaff
 
 from .commands import LoseCapital, RecordWorldEvent, RecoverOutput, SayOnce
 from .module import Hazards

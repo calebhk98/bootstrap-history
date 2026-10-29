@@ -8,7 +8,7 @@ are listed by `python3 tools/check_ui_views.py --list`, which also checks each i
 as a function here is the new-game setup, the UI's own memory on the `Sim`, and the engine tables that
 no module publishes yet."""
 from sim.engine import (  # noqa: F401
-    state_paths, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
+    state_paths, civ_start_check, fuzzy_estimates, path_search, planner,
     purchase_rule, settings, settings_table, topic_tags, units,
     validate_material_gating, validate_node_money, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.production.api import node_revenue_census  # noqa: F401
@@ -62,6 +62,7 @@ from sim.campaigns.api import DisbandArmy, OrderArmy, RaiseArmy, RecallArmy  # n
 from sim.diffusion.api import Disclose  # noqa: F401
 from sim.finance.api import FoundBank  # noqa: F401
 from sim.ledger.api import CloseCashPeriod  # noqa: F401
+from sim.reporting.api import NOTICE, WAGE, CloseCausePeriod  # noqa: F401
 from sim.agriculture.api import InvestFarm, SellFarm  # noqa: F401
 from sim.land.api import BuildWay, FoundColony  # noqa: F401
 from sim.markets.api import BuyMaterial, SellMaterial  # noqa: F401

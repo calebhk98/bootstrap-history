@@ -25,10 +25,6 @@ if TYPE_CHECKING:
 @dataclass
 class HouseholdState:
 	"""The founder's household's standing staff, standing, and biographical history (its money is the ledger's)."""
-	# the cause book (sim/engine/cause_book.py): rows for wage, notice and closure changes, and the readings they are measured from
-	cause_rows: List[Dict[str, Any]] = field(default_factory=list)
-	cause_mark: Optional[Dict[str, float]] = None
-
 	# a planned project and the cash target put by for it (`saving`)
 	saving_for: Optional[str] = None
 	saving_target: float = 0.0

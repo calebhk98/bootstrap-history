@@ -5,15 +5,15 @@ live drivers, and whatever the change leaves unexplained shows as its own line.
 """
 import sim.engine.ui_port as ui_port
 from .figures import figure
-from sim.engine.ui_port import cause_book
+from sim.engine.ui_port import NOTICE, WAGE
 
 
 def _wage_causes(sim, year):
-    return cause_book.causes_since(sim, cause_book.WAGE, year)
+    return sim.view("causes_since")(WAGE, year)
 
 
 def _notice_causes(sim, year):
-    return cause_book.causes_since(sim, cause_book.NOTICE, year)
+    return sim.view("causes_since")(NOTICE, year)
 
 
 @figure("wages", "wage level against the starting one", unit="index", digits=4, since=_wage_causes)

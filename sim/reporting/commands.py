@@ -67,3 +67,26 @@ class CloseRealOutput(Command):
 class ErodeMoney(Command):
     """The coin buys `share` less than it did (debasement): the purchasing-power indicator falls by that share."""
     share: float
+
+
+@dataclass(frozen=True)
+class NoteWageShock(Command):
+    """The acting seat's cause book records that a shock named `cause` moved the wage index by `change`."""
+    cause: str
+    change: float
+
+
+@dataclass(frozen=True)
+class NoteConcernChange(Command):
+    """The acting seat's cause book records that a concern opened or closed: `kind` is "opening" or "closure", `cause` the
+    reason, and the row carries what the node earns (`revenue`) and costs (`upkeep`) a year."""
+    kind: str
+    node_id: str
+    cause: str
+    revenue: float
+    upkeep: float
+
+
+@dataclass(frozen=True)
+class CloseCausePeriod(Command):
+    """End the acting seat's open cause period: stamp its rows with the year and add what the year's change leaves unnamed."""

@@ -7,7 +7,6 @@ from .commands import (AdvanceProjects, AutoOpenVentures, Bribe, CloseLapsedDepe
                        CompleteProject, Exclude, HaltActiveProjects, Include, KeepStaffed, MothballWork, NoteVentureYear, NoteYearSpend, PostBounty, WatchActive, PutProjectFirst, ReopenRestaffedVentures, ReorderProjects, ResetProjectProgress,
                        RestoreProjectOrder, RestoreWork, ReviewVentures, StartProject, StopProject)
 from sim.materials.api import SettleProjectMaterials
-from .needed_commands import NoteConcernChange
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 from .blocker_rules import BLOCKER_KINDS, BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND, START_CHECKS
 from .state import ProjectsSeat
