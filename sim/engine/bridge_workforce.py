@@ -3,48 +3,11 @@
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old
 labour adapter did, and is never cached. The `legacy_*` views are raw state the module still reads or writes in place;
 they go when that state moves."""
-from sim.assembly.api import KEYED, QUOTE
+from sim.assembly.api import QUOTE
 
-from . import data, view_share, wage_schedule
+from . import view_share
 
 from .bridge import bridge_view
-
-
-# ---- the game's data -------------------------------------------------------------------------------------------------
-
-@bridge_view("starting_wages")
-def starting_wages(sim):
-    """{trade: money an hour pays} on the reference civilisation's opening schedule."""
-    return data.WAGES
-
-
-@bridge_view("trades_absent")
-def trades_absent(sim):
-    """The trades that do not exist until someone teaches them."""
-    return data.TRADES_ABSENT
-
-
-@bridge_view("trade_notes")
-def trade_notes(sim):
-    """{trade: the explanatory note of the trade}."""
-    return data.TRADE_NOTES
-
-
-@bridge_view("trade_records")
-def trade_records(sim):
-    """{trade: the trade registry's record (family, training years, the rest of its file)}."""
-    return data.TRADE_REGISTRY
-
-
-@bridge_view("trade_family", kind=KEYED)
-def trade_family(sim, trade):
-    return data.trade_family(trade)
-
-
-@bridge_view("wage_schedule_for", kind=QUOTE)
-def wage_schedule_for(sim, civ, tightness_factors=None):
-    """The wage schedule a civilisation opens on, built from the trade registry and the price solver."""
-    return wage_schedule.build_schedule(data.TRADE_REGISTRY, civ, tightness_factors=tightness_factors)
 
 
 @bridge_view("provider_game")

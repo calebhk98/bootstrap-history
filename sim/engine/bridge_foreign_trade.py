@@ -4,18 +4,12 @@ Each view carries the name its owner will publish (docs/architecture/catalogue),
 is never cached."""
 from sim.assembly.api import KEYED
 
-from . import foreign_economy_data, partner_demand
+from . import partner_demand
 from .bridge import bridge_view
 from .data import starting_schedule
 
 
 # ---- the partners' files and opening economies ----
-
-@bridge_view("foreign_economy_records")
-def foreign_economy_records(sim):
-    """The economies the data file names, with installed mods applied (the module function is looked up on each call)."""
-    return foreign_economy_data.foreign_economy_records()
-
 
 @bridge_view("partner_own_economy", kind=KEYED)
 def partner_own_economy(sim, civilization_id):

@@ -1,8 +1,8 @@
 """The inputs to a wage schedule that need no engine: the reference civilisation, its coin standard,
 the population's age structure and each trade's training years.
 
-The schedule itself lives in sim.labour.wages and is actor-agnostic; the engine builds it from
-these and the price solver (sim/engine/wage_schedule.py).
+The schedule itself lives in sim.labour.wages and is actor-agnostic; the workforce module builds it from
+these and the price solver (sim/workforce/wage_schedule.py).
 """
 import functools
 import json

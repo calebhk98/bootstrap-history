@@ -10,7 +10,6 @@ from sim.demography.api import rules as demography_rules
 
 from . import view_share
 from .bridge import bridge_command, bridge_view
-from .foreign_economy_data import not_traded_materials as declared_not_traded_materials
 
 # ---- core: settings and constants the engine declares ----
 
@@ -57,10 +56,3 @@ def farm_food_demand_kg(sim):
     return (demography_rules.adult_equivalents(sim.view("population")())
             * sim._agriculture.annual_food_demand_kg_per_person(technique.crop))
 
-
-# ---- foreign trade ----
-
-
-@bridge_view("not_traded_materials")
-def not_traded_materials(sim):
-    return declared_not_traded_materials()

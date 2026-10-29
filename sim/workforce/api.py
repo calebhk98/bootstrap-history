@@ -12,4 +12,5 @@ from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDepe
 from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, FadeMarketPressure, NoteBuyRefusal
 from .state import WorkforceSeat, WorkforceSociety
 from . import rules
+from .wage_schedule import build_schedule
 from .staff_loss_waves import wave_exposure

@@ -10,7 +10,7 @@ from unittest import mock
 from sim.ledger.api import RescaleHouseholdMoney
 from sim.markets.api import MarkMoneyPricedAtEconomy
 from sim.engine import data, money_units, opening_money
-from sim.engine.wage_schedule import build_schedule
+from sim.workforce.wage_schedule import build_schedule
 from sim.labour.labour import Labour
 from sim.tests.labour_stand_in import stand_in_world
 

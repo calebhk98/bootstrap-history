@@ -183,12 +183,18 @@ actors (21), hazards, workforce (20 each), projects (19).
   on the engine: the unit options (`sim/engine/units.py`, process-global UI state) that `Sim` hands over as a callable.
 - [x] Actors publish `has_state`, `countries`, `organised_factions`, `home_country`, `state_knowledge`, `holder_treasury`, `partner_catch_chance`, `harvest_share_taken` and `legacy_country_literacy` (`sim/actors/country_views.py`, rules in `country_rules.py`). Actors also build the opening cast from the scenario's `opening_civilisation` and the partners' `civilisation_record`. `declared_actor_kinds` is published by `content` (below).
 - [x] The mod loader is the `content` package (`sim/content/`, door `api.py`) and the `content` module owns the game's mods directory (`OpenContent`, sent by `game_assembly.build`). It publishes `mods_directory`, `installed_mod_ids`, `map_overlays`, `household_need_data`, `declared_actor_kinds` and `data_store_declarations`, computed from that directory by `sim/content/views.py`. Still bridged: `data_command_specs` and `data_figure_specs`, because validating a declared state path needs `Sim` and the `@readable` mark (`ui_data.check_state_path`).
+- [x] The static tables moved out of `sim/engine/data.py` into `sim/content/`: the production catalogue, trade registry and tree
+  builder (`catalog.py`, `tree_source.py`, `tree_merge.py`), `trades.py`, `tech_effects.py` and `foreign_economies.py`. The `content`
+  module publishes `trade_records`, `trade_notes`, `trades_absent`, `trade_family`, `tech_effects`, `foreign_economy_records` and
+  `not_traded_materials`, read once per game from its directory. The engine keeps import-time copies of the tables for its own readers
+  (Complaint 840 says where they can disagree). Left bridged: `calculated_goods_prices`, `held_goods_prices_in_hours` and
+  `partner_own_economy`, which run the price solver over engine state.
 - [x] Readers of the views the bridge only re-wrapped read the owners' views: `legacy_dice` and `legacy_act_as` are
   `game_random` and `acting_as`; `nodes_with_mechanic`, `state_military_diffusion`, `partner_reached` and `concern_rows_stopped`
   are read as `mechanic`, `diffusion_index`, `partner_gate_refusal` and `concern_market`.
 - [x] Workforce publishes `wage_bill`, `unskilled_trade`, `settlement_tiles`, `labour_need_shares` and `opening_wage_index`
-  (`sim/workforce/views_facts.py`). Still bridged: the trade registry views (`starting_wages`, `trades_absent`, `trade_notes`,
-  `trade_records`, `trade_family`, `wage_schedule_for`), which load through `sim/engine/data.py`.
+  (`sim/workforce/views_facts.py`). Workforce also publishes `starting_wages` and `wage_schedule_for` (the
+  schedule builder is `sim/workforce/wage_schedule.py`).
 - [x] Markets publish `material_serves_a_need`, `materials_serving`, `material_substitutes`, `agent_rate`, `agent_credit_room`
   and `agent_economy_opened`; founding a bank is the markets command `FoundBankFromOutside`, so finance no longer holds the
   agent economy.

@@ -8,7 +8,7 @@ from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from sim.engine.state import SimulationState, ActiveProjectState
 from sim.engine.state_seat import bind_seat
 from .data import (DEFAULTS, kit_capital, load_civ, load_geography, 
-                   nodes_in_civ_money, TECH_EFFECTS, TRADE_REGISTRY)
+                   nodes_in_civ_money, TRADE_REGISTRY)
 
 from sim.world import demography
 from sim.world import agriculture
@@ -76,7 +76,6 @@ class Sim(
         self.rng = rng
         self._agriculture = agriculture
         self._demography = demography
-        self._tech_effects = TECH_EFFECTS
         self.step_context = StepContext(
             trade_family=trade_family,
             invariant_checker=check_simulation_invariants)

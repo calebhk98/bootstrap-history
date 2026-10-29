@@ -13,7 +13,7 @@ from sim.engine import (  # noqa: F401
     validate_material_gating, validate_node_money, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.production.api import node_revenue_census  # noqa: F401
 from sim.engine.blockers import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND  # noqa: F401
-from sim.content.api import build_tree, load_production_catalog, merge_problems  # noqa: F401
+from sim.content.api import build_tree, foreign_economy_document, load_production_catalog, merge_problems  # noqa: F401
 from sim.engine.core import Sim  # noqa: F401
 from sim.engine.critical_path_remaining import active_years_left, remaining_critical_path_years  # noqa: F401
 from sim.engine.data import (  # noqa: F401
@@ -28,7 +28,6 @@ from sim.engine.mod_code import code_report, run_mod_code  # noqa: F401
 from sim.engine.game_assembly import build as build_assembly  # noqa: F401
 from sim.engine.mod_code import allow as allow_mod_code  # noqa: F401
 from sim.engine.ui_commands import load_command_specs  # noqa: F401
-from sim.engine.foreign_economy_data import foreign_economy_document  # noqa: F401
 from sim.hazards.api import hazards_not_yet_past  # noqa: F401
 from sim.prices.api import identity_cache, shared_ledger  # noqa: F401
 IdentityCache = identity_cache.IdentityCache  # noqa: F401
@@ -210,8 +209,8 @@ def visible_to_player(sim, node_id):
     return sim.view("visible_to_player")(node_id)
 
 
-def tech_effects(sim):
-    return sim._tech_effects
+def tech_effects(sim, node_id):
+    return sim.view("tech_effects")[node_id]
 
 
 def settings_meta_path(path):

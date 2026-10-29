@@ -73,7 +73,7 @@ mechanism the founder uses must be usable by any actor.
 Three artefacts share one dataset:
 
 - **Data** (`data/`): the tech tree (authored per domain in `data/branches/`,
-  built at load by `sim/engine/tree_source.py`), production recipes
+  built at load by `sim/content/tree_source.py`), production recipes
   (`data/production/`),
   civilisations, world geography, trades.
 - **Knowledge** (under `docs/`): how to physically do each thing the tree
@@ -265,7 +265,7 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   regression test. When several subagents start from one commit, record the
   baseline once before spawning them and give them its path.
 - **The tree is built, not committed.** `data/tech_tree.json` is generated from
-  `data/branches/` at load (`sim/engine/tree_merge.py`) and is not in git.
+  `data/branches/` at load (`sim/content/tree_merge.py`) and is not in git.
   `simulator.py validate` reports a merge that would lose branch data.
 
 ---

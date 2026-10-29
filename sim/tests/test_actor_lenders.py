@@ -9,7 +9,8 @@ from types import SimpleNamespace
 
 from sim.agents.registry import ActorRegistry
 from sim.agents.api import EDGE_SAVERS
-from sim.engine.foreign_economy_data import foreign_economy_records
+from sim.content.api import foreign_economy_records as foreign_records
+from sim.engine.data import MODDIR
 from sim.finance.module import Finance
 from sim.foreign_trade.module import ForeignTrade
 from sim.tests import harness, module_harness  # noqa: F401  (harness isolates the home directory)
@@ -58,10 +59,10 @@ class Lenders(unittest.TestCase):
 class VariantPartners(unittest.TestCase):
     def partners(self, civ):
         return module_harness.build(ForeignTrade, views={
-            "foreign_economy_records": foreign_economy_records(), "year": 100, "civilisation": civ}).partners()
+            "foreign_economy_records": foreign_records(MODDIR), "year": 100, "civilisation": civ}).partners()
 
     def test_a_variant_is_played_without_its_base_as_a_partner(self):
-        partner = next(record["civilization"] for record in foreign_economy_records()
+        partner = next(record["civilization"] for record in foreign_records(MODDIR)
                        if record.get("enabled", False) and record["from_year"] <= 100 <= record["until_year"])
         self.assertIn(partner, self.partners({"id": "rome_100ad"}))
         self.assertNotIn(partner, self.partners({"id": "mod:variant", "variant_of": partner}))

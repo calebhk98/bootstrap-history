@@ -11,7 +11,7 @@ def benefit_block(sim, node_id):
     node = sim.view("tree_nodes")()[node_id]
     capability = (node.get("mechanics") or {}).get("capability") or {}
     lost_benefit = capability.get("lost_benefit")
-    permanent = permanent_parts(node, ui_port.tech_effects(sim).get(node_id) or {})
+    permanent = permanent_parts(node, ui_port.tech_effects(sim, node_id) or {})
     is_venture = sim.view("is_venture")[node_id]
     if not permanent and not lost_benefit:
         return None

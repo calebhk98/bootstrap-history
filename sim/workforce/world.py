@@ -324,7 +324,7 @@ class WorkforceWorld:
 
     @property
     def wages(self):
-        return self._needs.starting_wages()
+        return self._owner.starting_wages()
 
     @property
     def trades_absent(self):
@@ -346,7 +346,7 @@ class WorkforceWorld:
         return self._needs.trade_family[trade]
 
     def build_wage_schedule(self, civ, tightness_factors=None):
-        return self._needs.wage_schedule_for(civ, tightness_factors)
+        return self._owner.wage_schedule_for(civ, tightness_factors)
 
     def techniques_available_to(self, production, reached_nodes):
         return solve_prices_core.techniques_available_to(production, reached_nodes)

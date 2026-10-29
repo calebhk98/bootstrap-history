@@ -10,7 +10,7 @@ and shares `opening_money.priced_nodes` and the wage schedule with the opening's
 from sim.prices.api import prices as price_solver
 from . import money_units, opening_money
 from sim.production.api import node_revenue
-from .wage_schedule import build_schedule
+from sim.workforce.api import build_schedule
 
 
 def held_gate_set(held_techs):

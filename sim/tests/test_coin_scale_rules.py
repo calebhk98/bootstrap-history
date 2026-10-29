@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 from sim.engine import data, money_units
 from sim.production import node_revenue
-from sim.engine.wage_schedule import build_schedule
+from sim.workforce.wage_schedule import build_schedule
 
 from .harness import *  # noqa: F401,F403
 

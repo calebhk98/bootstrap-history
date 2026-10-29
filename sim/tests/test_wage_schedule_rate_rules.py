@@ -6,7 +6,8 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy.recipes import recipes_from_production_data
-from sim.engine import data, wage_schedule
+from sim.engine import data
+from sim.workforce import wage_schedule
 from sim.labour import wages
 from sim.world import demand
 

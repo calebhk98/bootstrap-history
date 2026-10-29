@@ -6,7 +6,8 @@ QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.core import TECH_EFFECTS, demography
+from sim.engine.core import demography
+from sim.engine.data import TECH_EFFECTS
 
 CLINICS = "ben_district_clinics"
 

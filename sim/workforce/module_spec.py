@@ -24,8 +24,8 @@ from .module import Workforce
 
 READS_BY_OWNER = {
     "core": ("year", "automation", "civilisation", "game_config", "provider_game",
-             "projects_operating", "starting_wages", "trades_absent", "trade_notes", "trade_records", "trade_family",
-             "wage_schedule_for", "plain_number", "money_text"),
+             "projects_operating", "plain_number", "money_text"),
+    "content": ("trades_absent", "trade_notes", "trade_records", "trade_family"),
     "seats": ("founder", "acting_country", "seat_list", "game_random", "acting_as", "goal", "goal_closure"),
     "ledger": ("acting_balance",),
     "polity": ("standing", "rep_factor"),
@@ -58,6 +58,8 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("staff_version", "staff_version", **_SEAT),
         ViewSpec("wage_bill", "wage_bill", **_SEAT),
         ViewSpec("unskilled_trade", "unskilled_trade", **_LIVE),
+        ViewSpec("starting_wages", "starting_wages", **_LIVE),
+        ViewSpec("wage_schedule_for", "wage_schedule_for", kind=QUOTE, **_LIVE),
         ViewSpec("settlement_tiles", "settlement_tiles", **_LIVE),
         ViewSpec("labour_need_shares", "labour_need_shares", **_LIVE),
         ViewSpec("opening_wage_index", "opening_wage_index", **_LIVE),

@@ -10,7 +10,7 @@ from sim.markets.api import MarkMoneyPricedAtEconomy
 
 from . import money_units
 from .data import TRADE_REGISTRY
-from .wage_schedule import build_schedule
+from sim.workforce.api import build_schedule
 
 
 def reprice_opening_money(sim, before):

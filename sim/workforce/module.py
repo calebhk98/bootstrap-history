@@ -30,6 +30,7 @@ class Workforce(StandingBondage, StandingViews, Views, FactViews, ReportViews, V
 
 	def setup(self):
 		self.labour = Labour(WorkforceWorld(self.needs, self))
+		self._starting_wages = None  # the reference civilisation's opening wages, worked out when first asked; never saved
 		self._staff_scales = {}      # seat id -> the share of the institutional staff ceiling its income can pay; worked out each staff step, never saved
 		self._buy_refusals = {}      # seat id -> why its last purchase of people was refused, for the screen that asked; never saved
 

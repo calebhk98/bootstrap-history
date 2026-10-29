@@ -39,8 +39,9 @@ from . import copy_visibility_defaults, money_units
 from sim.production.api import node_revenue
 from sim.labour.api import wage_provider
 from .default_civilisation import default_civilisation_id
-from . import wage_schedule
-from sim.content.api import (load_base_tree, load_mod_tree_nodes, load_production_catalog, load_trade_registry,
+from sim.workforce.api import build_schedule
+from sim.content.api import (family_of_trade, load_base_tree, load_mod_tree_nodes, load_production_catalog,
+                             load_tech_effects, load_trade_registry, trade_notes, trade_registry, trades_absent,
                              validate_mod_material_paths)
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
@@ -127,42 +128,17 @@ RESFILE = os.path.join(ROOT, "data", "world", "resources.json")
 def load_resources() -> JSONDict:
     return json.load(open(RESFILE))
 
-def _load_tech_effects() -> JSONDict:
-    path = os.path.join(CIVDIR, "_TECH_EFFECTS.json")
-    try:
-        with open(path) as source:
-            effects = json.load(source)
-        base = {key: value for key, value in effects.items() if not key.startswith("_")}
-    except OSError:
-        base = {}
-    return merge_mod_map(base, get_ordered_mods(MODDIR), "civilizations/_TECH_EFFECTS.json", None, "tech effect")
+TECH_EFFECTS: JSONDict = load_tech_effects(MODDIR)
 
-
-TECH_EFFECTS: JSONDict = _load_tech_effects()
-
-
-_TRADE_REGISTRY = load_trade_registry(ROOT, load_production_catalog(ROOT, MODDIR), MODDIR,
-                                      nodes=load_mod_tree_nodes(ROOT, MODDIR))
-TRADE_REGISTRY = _TRADE_REGISTRY
-
-# Trade identity, availability, and explanatory text belong to the trade
-# registry.
-def _load_trade_notes() -> Dict[str, str]:
-    """Compatibility loader backed by the canonical trade registry."""
-    return {trade_id: trade.note for trade_id, trade in _TRADE_REGISTRY.items()}
-
-
-TRADE_NOTES: Dict[str, str] = _load_trade_notes()
-TRADES_ABSENT: FrozenSet[str] = frozenset(
-    trade_id for trade_id, trade in _TRADE_REGISTRY.items()
-    if trade.initially_absent)
-
-TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family
-                                for trade_id, trade in _TRADE_REGISTRY.items()}
+TRADE_REGISTRY = trade_registry(MODDIR)
+_TRADE_REGISTRY = TRADE_REGISTRY
+TRADE_NOTES: Dict[str, str] = trade_notes(TRADE_REGISTRY)
+TRADES_ABSENT: FrozenSet[str] = trades_absent(TRADE_REGISTRY)
+TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family for trade_id, trade in TRADE_REGISTRY.items()}
 
 # Starting wages: the labour-market schedule before any year has passed.
 # Sim carries the live schedule; these serve tools and validation.
-_STARTING_SCHEDULE = wage_schedule.build_schedule(
+_STARTING_SCHEDULE = build_schedule(
     _TRADE_REGISTRY, wage_provider.reference_civilisation())
 WAGES: Dict[str, float] = _STARTING_SCHEDULE.wages_per_hour()
 ANNUAL_WAGE: Dict[str, float] = {
@@ -171,7 +147,7 @@ MONEY_PER_LABOUR_HOUR: float = _STARTING_SCHEDULE.money_per_labour_hour
 
 
 def trade_family(trade: str) -> str:
-    return TRADE_FAMILY.get(trade, "craft")
+    return family_of_trade(TRADE_REGISTRY, trade)
 
 
 # What money is called where you are comes from the civilisation file's
@@ -191,7 +167,7 @@ def starting_schedule(civilization_id: Optional[str] = None) -> wage_provider.wa
     """The opening wage schedule of a civilisation (the default one if none)."""
     if civilization_id is None:
         return _STARTING_SCHEDULE
-    return wage_schedule.build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
+    return build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
 
 
 _HELD_CIVILISATION_SCHEDULES: Dict[str, wage_provider.wages.WageSchedule] = {}
@@ -203,14 +179,14 @@ def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
     key = json.dumps(civ, sort_keys=True, default=str)
     schedule = _HELD_CIVILISATION_SCHEDULES.get(key)
     if schedule is None:
-        schedule = _HELD_CIVILISATION_SCHEDULES[key] = wage_schedule.build_schedule(_TRADE_REGISTRY, civ)
+        schedule = _HELD_CIVILISATION_SCHEDULES[key] = build_schedule(_TRADE_REGISTRY, civ)
     return schedule
 
 
 def kit_capital(kit_id: str, civ: JSONDict) -> float:
     """Opening money of a kit for a civilisation: its labourer-years times the
     civilisation's opening annual labourer wage."""
-    schedule = wage_schedule.build_schedule(_TRADE_REGISTRY, civ)
+    schedule = build_schedule(_TRADE_REGISTRY, civ)
     return scenario_rules.kit_capital(STARTING_KITS[kit_id], schedule.annual_wage("labourer"))
 
 
@@ -415,7 +391,7 @@ def calculated_goods_table(held_technology_ids: Iterable[str] = (),
 
 def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, JSONDict]:
     """The tree with every money field in the civilisation's coin."""
-    schedule = wage_schedule.build_schedule(_TRADE_REGISTRY, civ)
+    schedule = build_schedule(_TRADE_REGISTRY, civ)
     first = next(iter(nodes.values()), None)
     if first is not None and civ.get("id") and first.get("_derived_for") != civ["id"]:
         nodes = node_revenue.for_civilisation(nodes, civ, schedule)

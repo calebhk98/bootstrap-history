@@ -502,7 +502,7 @@ def _validate_basket_supply(civ_start_check, civilisations, production):
     from sim.engine import civ_basket_check
     from sim.content.api import load_needs
     from sim.engine.ui_port import foreign_economy_document
-    economies = foreign_economy_document()["economies"]
+    economies = foreign_economy_document(MODDIR)["economies"]
     errors, warnings = civ_basket_check.basket_supply_findings(
         civilisations, production, load_needs(ROOT, MODDIR)["goods"], economies)
     for message in warnings:
