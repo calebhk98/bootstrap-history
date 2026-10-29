@@ -25,13 +25,6 @@ def legacy_seats(sim):
     return sim.state.seats
 
 
-@bridge_view("game_random")
-def game_random(sim):
-    """The game's random source, the one `random.Random` every draw of a year comes from (shared and live: a draw by any reader moves
-    every other reader's next draw, so readers draw in the order the old code did)."""
-    return sim.rng
-
-
 @bridge_view("acting_as", kind=QUOTE)
 def acting_as(sim, seat_id):
     """A context in which `seat_id` is the acting seat; the root aliases return to the previous seat on leaving it."""

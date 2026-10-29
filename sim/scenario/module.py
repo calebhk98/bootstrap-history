@@ -23,6 +23,7 @@ class Scenario(Module):
 	events: bool = True
 	bounty_set: Set[str]
 	sources: ScenarioSources
+	dice: Any
 	end_year: Optional[int] = None
 
 	# ---- commands ----
@@ -35,6 +36,7 @@ class Scenario(Module):
 		self.events = command.events
 		self.bounty_set = command.bounty_set
 		self.sources = command.sources
+		self.dice = command.dice
 		self.configuration["start_year"] = rules.opening_start_year(self.civilisation, self.configuration)
 
 	def record_opening_literacy(self, command: RecordOpeningLiteracy) -> None:
@@ -92,6 +94,11 @@ class Scenario(Module):
 		return {"manual": self.manual, "bounty_set": self.bounty_set}
 
 	# ---- the setup facts ----
+
+	def game_random(self) -> Any:
+		"""The game's random source, shared and live: a draw by any reader moves every other reader's next draw, so readers draw
+		in the order the old code did."""
+		return self.dice
 
 	def civilisation_of_game(self) -> Dict[str, Any]:
 		return self.civilisation

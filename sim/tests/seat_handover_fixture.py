@@ -1,4 +1,5 @@
 """Two or three seats on the real root state, with the alias rebinding a handover needs (shared by the handover tests)."""
+import random
 from sim.engine import game_assembly
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, bind_seat, seat_from_template
@@ -25,7 +26,7 @@ class Game:
         self.send(OpenScenario(
             civilisation=self.civ, configuration={"start_year": 100}, manual=False, events=True, bounty_set=set(),
             sources=ScenarioSources(load_civilisation=lambda civilisation_id: {"id": civilisation_id}, kit_capital=lambda kit, civ: 0.0,
-                                    display_units=lambda: ({"units": {}}, {}, dict))))
+                                    display_units=lambda: ({"units": {}}, {}, dict)), dice=random.Random(0)))
         game_assembly.attach(self)
 
     def view(self, name):

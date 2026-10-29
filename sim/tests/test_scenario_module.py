@@ -2,6 +2,7 @@
 Each test calls one function or one command handler on values written out here; no game is built."""
 QUICK_TOPIC = True
 
+import random
 import unittest
 
 from sim.scenario import quantity_text, rules
@@ -52,14 +53,19 @@ class Commands(unittest.TestCase):
     def build(self, **world):
         return module_harness.build(Scenario, world=ScenarioWorld(**world), module_id="scenario")
 
+    dice = random.Random(7)
+
     def opened(self):
         module = self.build()
         module.open_scenario(OpenScenario(
             civilisation=dict(ROME, year=900, literacy_general=0.3, literacy_elite=0.9), configuration=dict(CONFIGURATION),
             manual=True, events=False, bounty_set={"a"}, sources=ScenarioSources(
                 load_civilisation=lambda civilisation_id: {"id": civilisation_id}, kit_capital=lambda kit, civ: 7.0 * len(kit),
-                display_units=lambda: (REGISTRY, {}, lambda: {}))))
+                display_units=lambda: (REGISTRY, {}, lambda: {})), dice=self.dice))
         return module
+
+    def test_the_game_draws_from_the_one_random_source_it_was_opened_with(self):
+        self.assertIs(self.opened().game_random(), self.dice)
 
     def test_advancing_the_year_moves_the_clock_by_one_and_answers_the_new_year(self):
         module = self.build(year=100)

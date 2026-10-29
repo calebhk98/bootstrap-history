@@ -18,14 +18,16 @@ class ScenarioSources:
 @dataclass(frozen=True)
 class OpenScenario(Command):
 	"""Set the game up: the civilisation it is played in (the module keeps this object and a copy of its opening values), the
-	configuration, whether the player chooses everything, whether random events run, and the nodes the bounty policy posts for.
-	The civilisation's own date becomes the configuration's start year."""
+	configuration, whether the player chooses everything, whether random events run, the nodes the bounty policy posts for, and the
+	game's one random source (every draw of a year comes from it; the save records its state). The civilisation's own date becomes
+	the configuration's start year."""
 	civilisation: Dict[str, Any]
 	configuration: Dict[str, Any]
 	manual: bool
 	events: bool
 	bounty_set: Set[str]
 	sources: ScenarioSources
+	dice: Any
 
 
 @dataclass(frozen=True)

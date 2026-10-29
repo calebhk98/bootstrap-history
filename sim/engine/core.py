@@ -73,7 +73,6 @@ class Sim(
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
                  bounty_set=None, civ=None, manual=False, debug=None, defer_economy=False):
         self.nodes = nodes
-        self.rng = rng
         self._agriculture = agriculture
         self._demography = demography
         self.step_context = StepContext(
@@ -90,7 +89,8 @@ class Sim(
             civilisation=copy.deepcopy(civ or load_civ()), configuration=dict(DEFAULTS, **(cfg or {})), manual=bool(manual),
             events=events, bounty_set=set(bounty_set or ()),
             sources=ScenarioSources(load_civilisation=load_civ, kit_capital=kit_capital,
-                                    display_units=lambda: (units.registry(), units.chosen_units(), lambda: units.unit_context(self)))))
+                                    display_units=lambda: (units.registry(), units.chosen_units(), lambda: units.unit_context(self))),
+            dice=rng))
         self.nodes = nodes_in_civ_money(nodes, self.civ)
         self._remember_derived_gates(self.civ["starting_techs"])
         # Authoritative live SimulationState hierarchy
@@ -398,6 +398,11 @@ class Sim(
 
     def sync_seat_facades(self):
         seat_registry.sync_seat_facades(self)
+
+    @property
+    def rng(self):
+        """The game's random source: the scenario module's (`game_random`)."""
+        return self._scenario.dice
 
     def run(self, goal, horizon=None):
         self.goal = goal
