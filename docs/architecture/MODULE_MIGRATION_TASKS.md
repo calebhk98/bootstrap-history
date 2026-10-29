@@ -179,7 +179,8 @@ actors (21), hazards, workforce (20 each), projects (19).
 
 - [x] Replace the process-global registries of the actors, workforce, polity, demography, agriculture, year phases and stores with per-assembly registrations (extension points; `ModCodeApi` records into the mod's `Operations`).
 - [x] The same for the ui's registries: the `interface` module (`sim/interface/`) owns the extension points `interface_commands` and `interface_figures`; the shipped commands and figures (the tables `sim/ui` fills when it loads) and the mods' data are its own provisions, a mod's code provides with `api.command` and `api.figure`, and a word or figure name answered twice is an error naming both owners. A game's table is `command_registry.table_of(sim)` and `figures.figures_of(sim)`; `COMMAND_REGISTRATIONS`, `load_mod_commands` and `register_data_figures` are gone.
-- [ ] Rewrite each shipped code mod onto the new interface (one agent per mod). `mods/bh_cashshelter_z6f2/hooks.py` still calls `game.state_capacity`, a forwarder that is gone; code mods do not run in the baseline, so no test reaches it.
+- [ ] Rewrite each shipped code mod onto the new interface (one agent per mod).
+- [ ] The mod contract stops handing a provider the whole game: the externality, town-size and director-overhead providers receive `provider_game` (read by agriculture, demography and workforce). They receive a declared set of views instead, so a mod's reads appear in the module graph like a module's. `mods/bh_cashshelter_z6f2/hooks.py` still calls `game.state_capacity`, a forwarder that is gone; code mods do not run in the baseline, so no test reaches it.
 - [x] Add one SMOKE test per mod operation: replace, remove, add, extend, adjust, provide, withdraw (`sim/tests/test_mod_operations_smoke.py`, three games in one process each).
 
 ### Phase 8: kernels
