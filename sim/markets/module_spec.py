@@ -40,7 +40,7 @@ READS_BY_OWNER = {
 	"production": ("workshop_output", "concern_market", "concern_book_offer", "concern_book_inputs_cost", "concern_takings",
 	               "node_output_market_factor", "techniques_in_use"),
 	# what the port and the goods market read of the game (port_world.py)
-	"port: seats and actors": ("seat_list", "built_ways",
+	"port: seats and actors": ("built_ways",
 	                           "cast", "cast_state", "actor_world", "state_treasury", "state_reach", "acting_country"),
 	"port: the map": ("map_for_agent_economy", "tiles_listed_by", "tile_description", "tile_climates", "mode_crews", "modes_carrying",
 	                  "timber_on_tile", "deposit_catalogue", "deposits_worked_before"),
