@@ -13,7 +13,7 @@ from .module import Materials
 from .state import MaterialsSeat
 
 READS_BY_OWNER = {
-    "knowledge": ("year", "civilisation", "tree", "tree_nodes", "techniques_held", "visibility", "hard_prerequisites",
+    "knowledge": ("year", "civilisation", "tree_nodes", "techniques_held", "visibility", "hard_prerequisites",
                   "techniques_version", "operating", "default_population", "pop_scale"),
     "mechanics": ("mechanic", "effect_best", "running_stamp", "running"),
     "ledger": ("goods_stock", "held_goods", "goods_stock_opening"),
