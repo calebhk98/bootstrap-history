@@ -191,9 +191,12 @@ handed an `access` that answers exactly that.
 `register(api)` registers commands (`@api.command(name, group=..., summary=...,
 usage=[...], description=...)` with a handler `(access, nodes, cmd, ended) -> dict`), headline figures (`@api.figure(name, label, unit=...)` on
 `compute(access) -> {"value", "components", "flows", "drivers"}`), actor kinds (`api.actor_kind`),
-policies (`api.policy`), spawners (`api.spawner`) and a player actor's orders (`api.player_command`); every name is
-forced into `<mod_id>:`. Each of these records an answer to an extension point of the module that owns it; `api.provide(point,
-function)` adds an answer to any point directly (`actor_kinds`, `actor_spawners`, `actor_policies`, `player_commands`,
+policies (`api.policy`), spawners (`api.spawner`, `function(access)`; it founds an actor by sending `AddActor`) and a player actor's
+orders (`api.player_command`, `handler(access, actor_id, order)`); every name is forced into `<mod_id>:`. An actor kind's class runs
+inside the agents package: its methods are handed the `world` narrowed to the members actors ask (`sim/agents/protocols.py`), and
+any other member is refused with `UndeclaredWorldMember` naming the mod. Kinds, spawners and player commands are provided only
+through these three calls: `api.provide` refuses their points. Each of these records an answer to an extension point of the module that owns it; `api.provide(point,
+function)` adds an answer to any other point directly (`actor_policies`,
 `wealth_claims`, `interface_commands`, `interface_figures`, `town_population`, `town_mortality_premium`, `director_overhead`, `externality`, `store_declarations`, and
 a module's own). What a mod records is kept per mod, so two games in one process run the mods of their own set. A handler keeps its
 state only in `access.memory()`, a plain dict that is saved with the game, and draws random numbers

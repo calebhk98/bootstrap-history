@@ -19,6 +19,16 @@ class UndeclaredRead(AssemblyError):
 		self.mod_id, self.view = mod_id, view
 
 
+class UndeclaredWorldMember(UndeclaredRead, AttributeError):
+	"""A mod's actor asked its world for a member actors do not ask (sim/agents/protocols.py); `mod_id` and `view` (the member) say
+	who and what. An AttributeError too, so a shipped actor's `hasattr` probe of the narrowed world answers no."""
+
+	def __init__(self, mod_id: str, member: str):
+		AssemblyError.__init__(self, "mod %s's actor asked its world for %s, which is not among the members actors ask "
+		                       "(sim/agents/protocols.py)" % (mod_id, member))
+		self.mod_id, self.view = mod_id, member
+
+
 class UndeclaredSend(AssemblyError):
 	"""A mod sent a command it did not declare in `api.sends(...)`; `mod_id` and `command` say who and what."""
 

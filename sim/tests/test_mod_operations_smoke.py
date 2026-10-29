@@ -117,14 +117,14 @@ def register(api):
 
 PROVIDE = '''
 def register(api):
-    api.provide("actor_spawners", lambda: [(MOD + ":founding", lambda registry, world: [])])
+    api.spawner("founding", lambda access: None)
     api.provide("director_overhead", lambda: 50.0)
 '''
 
 WITHDRAW = '''
 def register(api):
     api.withdraw("actors.spawners")
-    api.spawner("only", lambda registry, world: [])
+    api.spawner("only", lambda access: None)
 '''
 
 

@@ -8,7 +8,7 @@ from .describe import dependency_lines, record
 from .kernels import Kernel, Sample
 from .framework import FRAMEWORK_ID
 from .errors import AssemblyError, StaleView, ViewWrite
-from .mod_access import ModAccess, NeedsAccess, UndeclaredRead, UndeclaredSend
+from .mod_access import ModAccess, NeedsAccess, UndeclaredRead, UndeclaredSend, UndeclaredWorldMember
 from .module import Module
 from .root_commands import AddSeat, MoveSeat, RepriceTree
 from .needs import Needs, Point

@@ -31,6 +31,10 @@ class ReligionModTests(unittest.TestCase):
         self.assertIn(KIND, kinds)
         self.assertEqual(self.house.record.kind, KIND)
 
+    def test_the_houses_class_is_handed_the_narrowed_world_and_the_years_ran_on_it(self):
+        self.assertEqual(type(self.house).narrowed_by_mod, MOD)
+        self.assertGreater(self.house.record.endowment_hectares, self.start_hectares)
+
     def test_the_house_starts_with_no_money_and_the_endowment_the_entry_sets(self):
         self.assertEqual((self.start_money, self.start_hectares), (0.0, 40000.0))
 

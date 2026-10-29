@@ -3,7 +3,7 @@
 A mod imports nothing else of `sim`. The game reaches its code only as the `access` it is handed (sim/assembly/mod_access.py):
 the views and commands the mod declared with `api.reads(...)` and `api.sends(...)`. This file lists the rest a mod may name:
 the command classes it may declare, the base classes of the actors it adds, and pure rules and constants (which read no game)."""
-from sim.agents.api import ActorRecord, RecordedActor, edges, foundation, ledger
+from sim.agents.api import ActorRecord, CommandRejected, RecordedActor, edges, foundation, ledger
 from sim.cache_root import CHECKOUT_ROOT as DATA_ROOT
 from sim.coin.api import COIN_GUARD_HOURS_PER_TONNE_YEAR, theft_exposure
 from sim.geography import api as geography

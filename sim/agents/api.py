@@ -42,6 +42,7 @@ from .strata_observed import observed_incomes
 from .bonded_sale import add_captives, bondage_tiles, captives_from_conquest, captives_from_losses, bonded_for_sale, buy_bonded
 from .strata_seed import seed_strata, strata_definitions, strata_spawner
 from .player_commands import CommandRejected
+from .narrowed_world import narrowed
 from . import equity_round, exchange, exchange_commands, exchange_sale  # noqa: F401
 from . import foundation, group_servants  # noqa: F401
 from . import demand_answer, demand_commands, demand_year  # noqa: F401
@@ -58,5 +59,5 @@ __all__ = ["Hands", "PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAV
            "MANAGEMENT_SPAN_EXPONENT", "TRADE_TONNES_FOR_UNIT_CONTACT", "CONQUEST_CONTACT_VOLUME", "MIGRANT_CONTACT_VOLUME_PER_PERSON", "adoption", "awareness", "stock_keeping", "OBSERVATION_RANGE_KM", "PLAYER_VISIBLE_EXPOSURE", "PROOF_YEARS", "SECRET_EXPOSURE",
            "THREAT_ARMY_RESPONSE", "army_goal", "sack_pressure", "SOLDIER_TRADE", "EQUIPMENT_MATERIAL", "DOLE_MATERIAL", "FOOD_NEED", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
            "CountryWorld", "CountryLiteracy", "Player", "Stratum", "stratum_id", "seed_strata", "true_up_keep", "bondage_tiles", "bonded_for_sale", "buy_bonded", "add_captives", "captives_from_losses", "captives_from_conquest",
-           "strata_definitions", "strata_spawner", "CommandRejected", "exchange", "Trader",
+           "strata_definitions", "strata_spawner", "CommandRejected", "narrowed", "exchange", "Trader",
            "trader_entry", "DUES_CAUSE", "DeclaredKind", "declared_kind_classes"]
