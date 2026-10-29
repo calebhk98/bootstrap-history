@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import json
 
 from sim.engine.state import ProjectsState, deserialize_state, serialize_state
+from sim.knowledge.api import KnowledgeSeat
 from sim.resources.api import ResourcesSeat
 from sim.tests.harness import check
 
@@ -16,11 +17,11 @@ def through_json(value):
 	return json.loads(json.dumps(serialize_state(value)))
 
 
-two_orders = [ProjectsState(done=set(IDS)), ProjectsState(done=set(reversed(IDS)))]
+two_orders = [KnowledgeSeat(done=set(IDS)), KnowledgeSeat(done=set(reversed(IDS)))]
 texts = [json.dumps(serialize_state(each), sort_keys=False) for each in two_orders]
 check("sets: two sets built in different orders are saved as the same text, sorted", texts[0] == texts[1]
       and through_json(two_orders[0])["done"] == {"__set__": sorted(IDS)}, None)
-check("sets: the loaded set is equal to the saved one", deserialize_state(through_json(two_orders[1]), ProjectsState).done == set(IDS))
+check("sets: the loaded set is equal to the saved one", deserialize_state(through_json(two_orders[1]), KnowledgeSeat).done == set(IDS))
 
 held = ResourcesSeat(mine_ready={"zinc": 3, "iron": 1, "tin": 2}, mine_tranches=[["tin", 1, 0.5], ["iron", 3, 2.5]])
 loaded = deserialize_state(through_json(held), ResourcesSeat)

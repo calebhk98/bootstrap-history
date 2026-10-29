@@ -5,6 +5,7 @@ founder received by purpose, the forecast `revenue()` read before the year and `
 import argparse
 
 
+from sim.knowledge.api import LearnTechnique
 from sim.ledger.api import PayEdge, ReceiveFromEdge
 
 from .harness import sim
@@ -29,9 +30,8 @@ def open_book_concerns(game, count):
             continue
         if game.view("venture_hands")[node_id][0] > 0 or game.view("venture_real_earnings")(node_id, None, True, True) <= 0.0:
             continue
-        game.state.projects.done.update(node["pre"])
-        game.state.projects.done.add(node_id)
-        game._done_changed()
+        for held_id in list(node["pre"]) + [node_id]:
+            game.send(LearnTechnique(held_id))
         game.send(OpenVenture(node_id, None))
         if node_id in game.state.projects.operating:
             for trade, share in sorted(world.concern_staff(node_id).items()):

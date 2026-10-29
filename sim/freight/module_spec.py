@@ -10,11 +10,11 @@ from .commands import PayRouteDues
 from .module import Freight
 
 READS_BY_OWNER = {
-    "knowledge": ("civilisation", "year", "techniques_with_results"),
+    "knowledge": ("civilisation", "year"),
     "workforce": ("wage", "hour_wage", "hours_per_person_year", "trade_population"),
     "finance": ("market_rate", "households_loanable_funds"),
     "prices": ("material_prices", "material_price"),
-    "land": ("legacy_world_map", "held_techniques", "built_ways", "tile_owner", "material_source_tiles", "route_km_to"),
+    "land": ("legacy_world_map", "held_techniques", "techniques_with_results", "built_ways", "tile_owner", "material_source_tiles", "route_km_to"),
     "markets": ("goods_carried_last_year",),
     "demography": ("working_age",),
     "foreign_trade": ("foreign_economies", "partner_market_book", "partner_route", "route_lift_years_per_tonne",

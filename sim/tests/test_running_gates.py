@@ -34,15 +34,16 @@ class _Host:
 
     def __init__(self, done, operating):
         self.nodes = _nodes()
-        self.state = SimpleNamespace(projects=ProjectsState(done=set(done), granted=set()), scenario=SimpleNamespace(year=100))
+        self.state = SimpleNamespace(projects=ProjectsState(), scenario=SimpleNamespace(year=100))
         self.state.projects.operating = set(operating)
+        self.done, self.granted = set(done), set()   # what the knowledge module would answer
         self.built_km = {"rail": 0.0}
         projects = self.state.projects
         self.production = production_host.build(
-            tree_nodes=self.nodes, techniques_held=projects.done, techniques_granted=projects.granted,
+            tree_nodes=self.nodes, techniques_held=self.done, techniques_granted=self.granted,
             projects_operating=projects.operating, gate_blocked=lambda node_id: self.module.gate_blocked(node_id))
         self.module = projects_host.build(
-            tree=self.nodes, legacy_projects=self.state.projects, techniques_held=self.state.projects.done,
+            tree=self.nodes, legacy_projects=self.state.projects, techniques_held=self.done,
             operating=lambda: self.state.projects.operating, running=self.production.running, is_venture=self.production.is_venture)
         self.module._built_way_km = lambda way: self.built_km.get(way, 0.0)
 
@@ -72,7 +73,7 @@ class RunningGateTests(unittest.TestCase):
 
     def test_an_unbuilt_work_leaves_the_gate_unmet(self):
         host = _host()
-        host.state.projects.done.discard(GRID)
+        host.done.discard(GRID)
         self.assertEqual(host.unmet_running_gates(LAMP), [GRID])
 
     def test_a_node_without_the_field_is_unaffected(self):
@@ -96,7 +97,7 @@ class WayGateTests(unittest.TestCase):
 
     def test_a_node_waits_for_the_length_of_way_it_names(self):
         host = _host()
-        host.state.projects.done.add("depot")
+        host.done.add("depot")
         host.state.projects.operating.add("depot")
         host.built_km = {"rail": 10.0}
         self.assertEqual(host.ways_short("depot"), {"rail": 40.0})
@@ -136,7 +137,7 @@ class LapseTests(unittest.TestCase):
 
     def test_the_yearly_check_closes_a_dependent_whose_work_was_forgotten(self):
         host = _host()
-        host.state.projects.done.discard(GRID)
+        host.done.discard(GRID)
         host.state.projects.operating.discard(GRID)
         self.assertEqual(host.close_lapsed_dependents(101), [LAMP, TRAM])
         self.assertEqual(host.close_lapsed_dependents(101), [])

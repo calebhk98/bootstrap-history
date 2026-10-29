@@ -410,7 +410,7 @@ class CapacityMixin:
         # A CLOSED ROOM SOURCE IS NOT A MISSING ONE: staff_capacity() already
         # drops a source's places the moment its venture is not running (see
         # STAFF_CAPACITY_SOURCES's must_be_running), so the advice below must
-        # distinguish never-built (`k not in self.household.done`) from
+        # distinguish never-built (`k not in projects.done`) from
         # built-but-not-running - a school built, then shut for want of a
         # supervisor, must still be named as the cheapest way back, not
         # just dropped from the count. Filtering only on `done` would tell

@@ -30,7 +30,7 @@ class SeatReview:
 	def reopening_order(self, entry_keys):
 		"""Staff closures still worth reopening (known, in the tree), best earning for the hands they tie up first."""
 		needs, world = self._module.needs, self._world
-		done, nodes = needs.legacy_projects().done, needs.tree_nodes()
+		done, nodes = needs.techniques_held(), needs.tree_nodes()
 		reopenable = [node_id for node_id in entry_keys if node_id in done and node_id in nodes]
 		return sorted(reopenable, key=lambda node_id: -(world.concern_margin(node_id)
 		                                                / max(0.01, sum(world.concern_staff(node_id).values()))))
@@ -51,7 +51,7 @@ class SeatReview:
 
 	def spares_plant(self, entry_key):
 		needs = self._module.needs
-		return entry_key in needs.legacy_projects().granted or needs.never_abandon[entry_key]
+		return entry_key in needs.techniques_granted() or needs.never_abandon[entry_key]
 
 	def serves_beyond_takings(self, entry_key):
 		return entry_key in self._module.needs.capability_sets()[0]

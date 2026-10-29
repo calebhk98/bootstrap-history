@@ -55,8 +55,11 @@ class HouseholdParty:
 	kind = "household"
 
 	def __init__(self, household: Any, margins: Optional[Dict[str, float]] = None, seat_id: Optional[str] = None,
-				act_as: Optional[Callable[[str], Any]] = None, *, dealings: Any) -> None:
+				act_as: Optional[Callable[[str], Any]] = None, *, dealings: Any,
+				receive: Optional[Callable[[Any, bool], None]] = None) -> None:
+		"""`receive(nodes, granted)` hands the acting seat know-how complete (the engine sends the knowledge module's command)."""
 		self.household = household
+		self._receive = receive
 		state = household._state
 		self.actor_id = seat_id if seat_id is not None else state.acting_seat
 		self._act_as = act_as
@@ -93,7 +96,7 @@ class HouseholdParty:
 	@property
 	def knowledge(self) -> Any:
 		with self._acting():
-			return self.household.done
+			return self.household.knowledge
 
 	def identity(self) -> str:
 		return self.actor_id
@@ -104,14 +107,13 @@ class HouseholdParty:
 
 	def learn(self, chain: Any, world: Any) -> None:
 		with self._acting():
-			self.household.done.update(chain)
+			self._receive(chain, False)
 
 	def accept_licence(self, node_id: str, chain: Any, world: Any) -> None:
 		"""Licensed know-how arrives complete. It was received, not built, so it is held as the society's
 		(never counted as the seat's own invention, never lost to a sack)."""
 		with self._acting():
-			self.household.done.update(chain)
-			self.household.granted.update(chain)
+			self._receive(chain, True)
 
 	@property
 	def purses(self) -> Any:

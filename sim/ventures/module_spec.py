@@ -12,7 +12,7 @@ from .module import Ventures
 from .needed_commands import BumpInstitutionUnitsVersion
 
 READS_BY_OWNER = {
-	"knowledge": ("tree_nodes", "techniques_held", "legacy_projects"),
+	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted", "legacy_projects"),
 	"production": ("operating", "running", "is_venture", "practisable", "institution_units", "institution_unit_ceiling", "institution_unit_cost",
 	               "institution_upkeep", "concern_runs_without_founder", "venture_ramp", "node_output_market_factor", "concern_takings",
 	               "concern_goods_have_market", "concern_sale_basis"),

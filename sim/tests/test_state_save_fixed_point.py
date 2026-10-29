@@ -9,15 +9,17 @@ from sim.engine.state import (EconomyState, FounderState, HoldingsState, Househo
 
 QUICK_TOPIC = True
 
+from sim.knowledge.api import KnowledgeSeat
 from sim.workforce.api import WorkforceSeat
 
 
 def state(civ=None, reserve=(0, 0), policy=None, said=None):
     built = SimulationState(
         household=HouseholdState(capital=1250.0),
-        projects=ProjectsState(done={"stone_cutting", "bronze"}), economy=EconomyState(), holdings=HoldingsState(),
+        projects=ProjectsState(), economy=EconomyState(), holdings=HoldingsState(),
         founder=FounderState(policy=policy or {}))
     built._civ = civ
+    built.seats["founder"].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting", "bronze"})
     built.seats["founder"].modules["workforce"] = WorkforceSeat(reserve_craftsmen=reserve[0], reserve_scholars=reserve[1])
     built.seat_progress._said_explanations = said
     return built

@@ -1,5 +1,11 @@
 """The knowledge module's rules as plain functions of plain values."""
-from typing import AbstractSet, Any, Iterable, List, Mapping, Optional, Tuple
+from typing import AbstractSet, Any, Callable, FrozenSet, Iterable, List, Mapping, NamedTuple, Optional, Tuple
+
+
+class SeatTechniques(NamedTuple):
+    """What one seat holds, and the part of it that its country already had."""
+    held: FrozenSet[str]
+    granted: FrozenSet[str]
 
 
 def in_tree_order(nodes: Iterable[str], done: AbstractSet[str]) -> List[str]:
@@ -48,3 +54,13 @@ def never_abandon(category_never_abandoned: bool, relied_on_running: bool, on_ro
     if relied_on_running:
         return False
     return on_road_to_goal
+
+
+def losable_node_ids(held: Iterable[str], granted: AbstractSet[str], nodes: Mapping[str, Mapping[str, Any]], keep_dispersed: bool,
+                     is_dispersed: Callable[[str], bool]) -> List[str]:
+    """Held nodes a loss event may take: not inherited, not a measured goal (a measurement cannot be forgotten), and with
+    `keep_dispersed` not a dispersed corpus."""
+    return sorted(node_id for node_id in held
+                  if node_id not in granted
+                  and not nodes[node_id].get("win_condition")
+                  and not (keep_dispersed and is_dispersed(node_id)))

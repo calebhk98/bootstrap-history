@@ -22,8 +22,9 @@ def cash_remedies(actor):
             found.append((money, "sell %s %s (brings %s now)" % (
                 material, "{:,.1f}".format(tonnes), money_text(money, actor, grouped=True))))
     projects = actor.state.projects
+    held, granted = actor.view("techniques_held")(), actor.view("techniques_granted")()
     for node_id in sorted(projects.operating):
-        if node_id in projects.done and node_id not in projects.granted:
+        if node_id in held and node_id not in granted:
             saving = actor.view("venture_real_upkeep")(node_id)
             if saving > 0.5:
                 found.append((saving, "mothball %s (stops %s a year of upkeep)" % (

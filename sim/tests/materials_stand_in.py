@@ -51,6 +51,8 @@ def build(seat: Optional[MaterialsSeat] = None, views: Optional[Dict[str, Any]] 
         "purchase_refusal": lambda what, cost: ("refused", what, cost)}
     plain.update(views or {})
     plain.update(overrides)
+    if "techniques_held" not in (views or {}) and "techniques_held" not in overrides:
+        plain["techniques_held"] = plain["legacy_projects"].done   # the held set a test gives with its projects
     return module_harness.build(Materials, views=plain, answers=answers, seat=seat or MaterialsSeat(), module_id="materials")
 
 

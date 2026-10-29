@@ -258,6 +258,12 @@ class PortWorld(ForeignReads):
 
 	# ---- production and projects ----
 
+	def techniques_held(self):
+		return self._needs.techniques_held()
+
+	def techniques_granted(self):
+		return self._needs.techniques_granted()
+
 	def techniques_in_use(self):
 		return self._needs.techniques_in_use()
 

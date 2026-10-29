@@ -91,7 +91,7 @@ class ActorWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, St
 
 	def founder_inventions(self) -> List[str]:
 		"""Everything any seat has completed that the society did not have."""
-		return self._once("inventions", lambda: sorted(seats_api.built_by_any(self.needs.legacy_seats())))
+		return self._once("inventions", lambda: sorted(seats_api.built_by_any(self.needs.techniques_by_seat())))
 
 	def _registry_actors(self) -> List[Any]:
 		return list(self.registry.actors.values())
@@ -130,7 +130,7 @@ class ActorWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, St
 		"""How much of an invention an observer at `location` can learn, 0..1: the best view of any seat
 		that built it, from that seat's own place (the acting seat's when no seat built it)."""
 		needs = self.needs
-		builders = seats_api.builders_of(needs.legacy_seats(), node_id)
+		builders = seats_api.builders_of(needs.techniques_by_seat(), node_id)
 		holders = self.actor_held().get(node_id, [])
 		if not builders and not holders:
 			builders = [needs.acting_seat()]
@@ -253,9 +253,10 @@ class ActorWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, St
 	def _proven_concerns_of_acting_seat(self) -> List[str]:
 		needs = self.needs
 		projects = needs.legacy_projects()
+		granted = needs.techniques_granted()
 		proven = []
 		for node_id in sorted(projects.operating):
-			if node_id in projects.granted or not needs.is_venture[node_id]:
+			if node_id in granted or not needs.is_venture[node_id]:
 				continue
 			opened = projects.business.opened_year_of(node_id, self.year)
 			if self.year - opened >= self.proof_years(node_id) and self.concern_margin(node_id) > 0:

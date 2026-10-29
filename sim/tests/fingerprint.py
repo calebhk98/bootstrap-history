@@ -77,7 +77,7 @@ def _canon(value):
         # repr() rather than round(): a change that alters the last bit of a
         # float IS a change, and this harness exists to catch exactly that.
         return repr(value)
-    if isinstance(value, set):
+    if isinstance(value, (set, frozenset)):
         return ["__set__"] + sorted(_canon(item) for item in value)
     if isinstance(value, dict):
         return {str(key): _canon(value[key]) for key in sorted(value, key=str)}
@@ -142,7 +142,12 @@ QUICK_SCENARIOS = [
 def build(scenario):
     sim = S.Sim(NODES, ORDER, random.Random(scenario["seed"]), events=scenario["events"],
               manual=False, civ=S.load_civ(scenario["civ"]))
-    sim.state._goal, sim.done_year = GOAL, {}
+    sim.state._goal = GOAL
+    if hasattr(sim.state.projects, "done_year"):   # a checkout from before the knowledge module owned the record
+        sim.done_year = {}
+    else:
+        from sim.knowledge.api import StartDoneYearRecord
+        sim.send(StartDoneYearRecord())
     if scenario["fog"]:
         sim.fog = True
     return sim

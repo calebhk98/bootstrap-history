@@ -79,7 +79,7 @@ class AdmitTechniquesWiring(unittest.TestCase):
 
     def port(self, admitted, in_use):
         society = stand_in_society()
-        society.state = types.SimpleNamespace(projects=types.SimpleNamespace(granted={"a"}))
+        society.techniques_granted = lambda: frozenset({"a"})
         society.techniques_in_use = lambda: in_use
         return types.SimpleNamespace(_sim=society, _techniques_admitted=admitted, stored={"opening": opening()},
                                      _record_stale=False)

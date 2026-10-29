@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import types
 
+from sim.knowledge.rules import SeatTechniques
 from sim.tests.ui_stand_in import FactViews
 from .harness import check
 
@@ -47,6 +48,9 @@ class JoinGame(FactViews):
         self.joined = []
 
     dead_reasons = {}
+
+    def techniques_by_seat(self):
+        return {seat_id: SeatTechniques(frozenset(), frozenset()) for seat_id in self.state.seats}
 
     def society_techs(self):
         return {"fire"}

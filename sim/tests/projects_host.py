@@ -30,7 +30,7 @@ def defaults() -> Dict[str, Any]:
 	state = projects_state()
 	return {
 		"tree": lambda node_id: None,
-		"techniques_held": state.done, "closures": state.mothballed, "legacy_projects": state,
+		"techniques_held": state.done, "techniques_granted": frozenset(), "closures": state.mothballed, "legacy_projects": state,
 		"visibility": lambda node_id, memo: True, "visible_to_player": lambda node_id: True,
 		"prerequisite_message": lambda missing, memo: "missing prerequisites: " + ", ".join(missing),
 		"needs_first": lambda node_id, about_stock: (None, None), "foreign_only": lambda node_id: False,
@@ -75,6 +75,11 @@ def build(answers: Dict[str, Any] = None, seat: ProjectsSeat = None, order: Sequ
 	being `order`."""
 	every_view = defaults()
 	every_view.update(views)
+	record = every_view["legacy_projects"]   # the held and granted sets a test gives with its projects record
+	if "techniques_held" not in views and hasattr(record, "done"):
+		every_view["techniques_held"] = record.done
+	if "techniques_granted" not in views and hasattr(record, "granted"):
+		every_view["techniques_granted"] = record.granted
 	if isinstance(every_view["tree"], dict):
 		every_view.setdefault("tree_nodes", every_view["tree"])
 	every_view.setdefault("tree_nodes", {})

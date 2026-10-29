@@ -129,10 +129,10 @@ game = build()
 game.state.seats["heir"].modules["finance"].interest_arrears = 3.0
 check("a replacement with arrears is refused", game.send(ui_port.HandOverSeat("leaver", "heir")).facts["holds"] == ["arrears or bondage"], None)
 game = build()
-game.state.seats["heir"].projects.done |= {"wheel"}
-game.state.seats["leaver"].projects.done |= {"fire"}
+game.state.seats["heir"].modules["knowledge"].done |= {"wheel"}
+game.state.seats["leaver"].modules["knowledge"].done |= {"fire"}
 game.send(ui_port.HandOverSeat("leaver", "heir"))
-check("a replacement that only knows techniques keeps them and adds the leaver's", game.state.seats["heir"].projects.done == {"wheel", "fire"}, None)
+check("a replacement that only knows techniques keeps them and adds the leaver's", game.state.seats["heir"].modules["knowledge"].done == {"wheel", "fire"}, None)
 
 # ---- the renaming itself
 check("an id is renamed whole and in composite ids, not inside other words",

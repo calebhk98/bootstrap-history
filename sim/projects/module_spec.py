@@ -27,7 +27,7 @@ from .projects import ACTIVE, START, Projects
 from .state import ProjectsSeat, ProjectsWorld
 
 READS_BY_OWNER = {
-	"knowledge": ("tree", "tree_nodes", "tree_closure", "techniques_held", "techniques_forgotten", "visibility", "visible_to_player",
+	"knowledge": ("tree", "tree_nodes", "tree_closure", "techniques_held", "techniques_granted", "techniques_forgotten", "visibility", "visible_to_player",
 	              "prerequisite_message", "needs_first", "corpus_hedge", "never_abandon"),
 	"diffusion": ("foreign_only", "civ_cost_factor", "literacy_ceiling", "staff_sources", "tech_effects"),
 	"ventures": ("closures", "reopen_fee", "reopen_units", "venture_capex", "venture_hands", "venture_foreman", "venture_foreman_free",

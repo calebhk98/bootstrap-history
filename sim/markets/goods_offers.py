@@ -97,7 +97,7 @@ class GoodsOffers(GoodsImports):
         sim = self._sim
         prices = self._home_prices(at_cost)
         partners = tuple(sim.foreign_economies())
-        key = (partners, len(sim.state.projects.done), sim.year,
+        key = (partners, len(sim.techniques_held()), sim.year,
                round(sim.market_rate(), RATE_DECIMALS),
                tuple(self.partner_price_level(partner) for partner in partners),
                trade_duty.signature(sim, partners))

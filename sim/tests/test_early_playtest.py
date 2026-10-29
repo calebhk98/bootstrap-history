@@ -96,8 +96,7 @@ check("you can teach a trade into existence",
       "trained %s created %r" % (ok_train, sorted(rome.view("trade_spread")()["created"])))
 # a finished work can be shut to stop its upkeep without forgetting how it worked
 rome.view("legacy_labour")().hire("artisan", 2)
-rome.state.projects.done.add("fin_restaurant")
-rome._done_changed()
+rome.send(LearnTechnique("fin_restaurant"))
 # Upkeep follows what you RUN, not what you know, so open the doors first.
 _ok_open, _why_open = rome.send(OpenVenture("fin_restaurant", None))
 up_before = rome.view("upkeep")()
@@ -106,8 +105,8 @@ check("a finished work can be shut down to stop its upkeep",
       _ok_open and ok_mothball and up_before > 0 and rome.view("upkeep")() < up_before,
       "open %s (%s), upkeep %.0f -> %.0f" % (_ok_open, _why_open, up_before, rome.view("upkeep")()))
 check("shutting a concern down does not make you forget how it worked",
-      "fin_restaurant" in rome.state.projects.done and "fin_restaurant" not in rome.state.projects.operating,
-      "done %s operating %s" % ("fin_restaurant" in rome.state.projects.done, "fin_restaurant" in rome.state.projects.operating))
+      "fin_restaurant" in rome.done and "fin_restaurant" not in rome.state.projects.operating,
+      "done %s operating %s" % ("fin_restaurant" in rome.done, "fin_restaurant" in rome.state.projects.operating))
 
 rome.state.household.capital = 5000.0
 capital_before_commission = rome.state.household.capital
@@ -150,7 +149,6 @@ check("no loss risk is reported where nothing sacks",
 # --- (scenario 1 again) fog hides the exact downstream count, and the digest stays a summary as the tree opens up
 fogged = unopened_sim()
 fogged.fog = True
-fogged.state.projects.revealed = set()
 fog_reply = S._agent_dispatch(fogged, NODES, {"cmd": "why", "id": "identity_cover"})
 check("fog hides the exact downstream count",
       fog_reply.get("downstream_count") is None and fog_reply.get("how_much_rests_on_this"),

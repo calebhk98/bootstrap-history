@@ -28,7 +28,7 @@ READS_BY_OWNER = {
 	"demography": ("population", "population_total", "pop_scale", "default_population", "farm_holdings"),
 	"actors": ("concern_versions", "concern_counts"),
 	"mechanics": ("effect_factor",),
-	"knowledge": ("tree_nodes", "done_year", "techniques_granted"),
+	"knowledge": ("tree_nodes", "done_year", "techniques_held", "techniques_granted"),
 	"projects": ("held_and_running_versions", "operating", "venture_opened_year"),
 	"prices": ("society_output", "concern_offers", "commodity_record", "commodity_floor_ratio", "material_prices", "material_pool",
 	           "calculated_goods_prices"),

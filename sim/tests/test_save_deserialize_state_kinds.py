@@ -10,6 +10,7 @@ from sim.agents.api import ActorsState, Business
 from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
 from sim.finance.api import FinanceSeat
+from sim.knowledge.api import KnowledgeSeat
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
 from sim.production.api import ProductionSeat
@@ -66,7 +67,7 @@ check("deserialize_state: an unknown key and an `_on_change` key are not set", n
 projects = deserialize_state({
 	"active": {"z_mill": {"ph_left": 80, "cost_left": 300, "yrs": 1.5, "spent": 100, "status": "ACTIVE", "lab_left": {"mason": 15}},
 	           "a_forge": {"ph_left": 10, "cost_left": 20, "yrs": 0.5, "spent": 5, "status": "ACTIVE"}},
-	"done": {"__set__": ["fire", "stone_cutting"]}, "done_year": {"fire": "3", "stone_cutting": 10}, "failed_attempts": {"printing": "3", "alloy": 1},
+	"failed_attempts": {"printing": "3", "alloy": 1},
 	"businesses": [{"business_id": "founder", "owner_id": "", "plants": []}],
 	}, ProjectsState)
 check("deserialize_state: the retry counts are a default dict of integers that counts from zero",
@@ -77,8 +78,9 @@ check("deserialize_state: active projects are rebuilt as records, in the saved o
       and (projects.active["z_mill"].ph_left, projects.active["z_mill"].cost_left, projects.active["z_mill"].spent,
            projects.active["z_mill"].lab_left, projects.active["z_mill"].status) == (80.0, 300.0, 100.0, {"mason": 15.0}, "ACTIVE")
       and projects.active["a_forge"].lab_left is None, None)
-check("deserialize_state: done is a set, years are integers", projects.done == {"fire", "stone_cutting"} and type(projects.done) is set
-      and projects.done_year == {"fire": 3, "stone_cutting": 10}, None)
+knowledge = deserialize_state({"done": {"__set__": ["fire", "stone_cutting"]}, "done_year": {"fire": "3", "stone_cutting": 10}}, KnowledgeSeat)
+check("deserialize_state: done is a set, years are integers", knowledge.done == {"fire", "stone_cutting"} and type(knowledge.done) is set
+      and knowledge.done_year == {"fire": 3, "stone_cutting": 10}, None)
 check("deserialize_state: the founder's business is a Business", projects.businesses == [Business(business_id="founder")], projects.businesses)
 disclosures = deserialize_state({"disclosures": {"fire": {"mode": "license", "published_year": None, "licensees": {
 	"firm:2": {"fee": 5.0, "royalty": 0.1, "year": 101}}}}}, DiffusionSeat).disclosures
@@ -140,14 +142,14 @@ check("deserialize_state: a coded refusal is a Refusal with its code, choices an
 
 # ---- the root: seats in saved order, the acting seat's aliases, metadata
 state = deserialize_state({
-	"seats": {"zed": {"household": {"capital": 10.0}, "projects": {"done": {"__set__": ["fire"]}}, "founder": {"_founder_death_year": 30},
+	"seats": {"zed": {"household": {"capital": 10.0}, "projects": {}, "modules": {"knowledge": {"done": {"__set__": ["fire"]}}}, "founder": {"_founder_death_year": 30},
 	                  "holdings": {"_dashboard_history": [3.0]}, "goal": "steam_engine", "country": "han", "kind": "household", "holder": None},
 	          "abe": {"household": {"capital": 4.0}, "projects": {}, "founder": None, "goal": None}},
 	"acting_seat": "abe", "economy": {}, "_civ": "rome", "_rng": [3, [0, 1], None], "_seed": "seed text",
 	"interface": {"panel": "map"}}, SimulationState)
 check("deserialize_state: seats come back in the saved order and as seats",
       list(state.seats) == ["zed", "abe"] and state.seats["zed"].goal == "steam_engine" and state.seats["zed"].country == "han"
-      and state.seats["zed"].projects.done == {"fire"} and state.seats["zed"].founder._founder_death_year == 30
+      and state.seats["zed"].modules["knowledge"]["done"] == {"__set__": ["fire"]} and state.seats["zed"].founder._founder_death_year == 30
       and state.seats["zed"].holdings._dashboard_history == [3.0] and state.seats["abe"].founder is None, None)
 check("deserialize_state: the acting seat's objects are the root's household, projects and holdings",
       state.acting_seat == "abe" and state.household is state.seats["abe"].household and state.projects is state.seats["abe"].projects

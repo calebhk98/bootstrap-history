@@ -29,12 +29,12 @@ class Memos:
 
     def commodity_country_output(self, commodity: str) -> float:
         """Tonnes a year the society brings to market of a catalogued commodity, which knows what built works raise it."""
-        return shared_ledger().country_output(commodity, built=self.needs.legacy_projects().done)
+        return shared_ledger().country_output(commodity, built=self.needs.techniques_held())
 
     def done_memo(self, name: str, key: Hashable, compute: Callable[[], Any]) -> Any:
         """`compute()` remembered per (name, key) while the done set, the techniques in use and the economy's producers (they
         change as its year closes) are unchanged; for answers that depend only on what is built and run."""
-        done = self.needs.legacy_projects().done
+        done = self.needs.techniques_held()
         stamp = (self.needs.price_epoch(), len(done), self.needs.producers_stamp())
         memo = self._done_store
         if memo is None or memo[0] != stamp or memo[1] is not done:

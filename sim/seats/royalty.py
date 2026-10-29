@@ -6,13 +6,13 @@ from sim.agents.api import licence
 from . import builds
 
 
-def seat_royalties_due(seats: Mapping[str, Any], node_id: str, licensee_id: str, takings: float,
+def seat_royalties_due(techniques: Mapping[str, Any], node_id: str, licensee_id: str, takings: float,
                        disclosures_of: Callable[[str], Mapping[str, Any]]) -> List[Tuple[str, float]]:
-	"""(seat id, amount) for each seat that built `node_id` and licensed it to `licensee_id` with a royalty on its
+	"""(seat id, amount) for each seat (of `techniques`, what each holds and was granted) that built `node_id` and licensed it to `licensee_id` with a royalty on its
 	takings, in the order the seats joined; a seat whose licence carries no royalty, or takings that are not
 	positive, owe nothing and are left out. `disclosures_of` gives a seat's disclosures by node id."""
 	owed = []
-	for seat_id in builds.licensors_of(seats, node_id, licensee_id, disclosures_of):
+	for seat_id in builds.licensors_of(techniques, node_id, licensee_id, disclosures_of):
 		record = disclosures_of(seat_id)[node_id]["licensees"][licensee_id]
 		due = licence.royalty_due(takings, record)
 		if due > 0.0:

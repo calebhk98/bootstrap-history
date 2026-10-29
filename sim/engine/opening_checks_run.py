@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple
 from sim import cache_root
 import sim.geography.api as geography
 
+from sim.knowledge.api import StartDoneYearRecord
 from sim.prices.api import solve_cache
 from sim.markets import api as markets_api
 from sim.markets.api import (SPIN_UP_MAXIMUM_YEARS, SPIN_UP_SOURCE_MODULES, SPIN_UP_TOLERANCE, SPIN_UP_YEARS_ENV, opening_setup,
@@ -73,7 +74,7 @@ def check_game(game, trace=None) -> List[opening_checks.CheckResult]:
     price and wage figures are the first year's), so the caller passes a game it will not keep playing."""
     result = dict(game.view("legacy_economy")().spin_up_result())
     rows = opening_trace(game) if trace is None else trace
-    game.done_year = {}
+    game.send(StartDoneYearRecord())
     game.step()
     outcome = game.view("legacy_economy")().agent.outcomes[-1]
     setup = game.view("legacy_economy")().agent.economy().setup

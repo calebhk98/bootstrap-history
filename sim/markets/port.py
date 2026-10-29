@@ -235,7 +235,7 @@ class EconomyPort:
         from sim.prices.api import prices as price_solver
         production = price_solver.default_production_entries()
         lives = _load("world", "service_lives.json").get("years", {})
-        allowed = allowed_entries(production, set(self._sim.state.projects.granted))
+        allowed = allowed_entries(production, set(self._sim.techniques_granted()))
         return [{"material": good, "life": float(lives.get(good, {}).get("years", 0.0)),
                  "held": 0.0, "crew": production[good]["naval_crew"]}
                 for good in allowed if production[good].get("naval_crew")]

@@ -9,7 +9,6 @@ from sim.workforce.api import NoteWageShock
 
 from . import cause_book, event_causes
 from .bridge import bridge_command, bridge_view
-from .data import closure, critical_path
 
 
 # ---- core: the engine's own switches and raw state ----------------------------------------------------------------
@@ -24,26 +23,6 @@ def legacy_act_as(sim, seat_id):
 def effective_hazard(sim, hazard):
     """(the dated event as its stated causes leave it now, or None; the report of which causes hold)."""
     return event_causes.effective_hazard(sim, hazard)
-
-
-# ---- knowledge and the tree -----------------------------------------------------------------------------------------
-
-@bridge_view("losable_node_ids", kind=QUOTE, seat_scoped=True)
-def losable_node_ids(sim, keep_dispersed=True):
-    """Built nodes a loss event may take: not inherited, not a measured goal, and by default not a dispersed corpus."""
-    return sim.losable_node_ids(keep_dispersed)
-
-
-@bridge_view("critical_path", kind=QUOTE)
-def critical_path_view(sim, goal_id):
-    """(the longest chain's calendar years, the node ids on it) from the roots to `goal_id`."""
-    return critical_path(sim.nodes, goal_id)
-
-
-@bridge_view("tree_closure", kind=QUOTE)
-def tree_closure(sim, goal_id):
-    """Every node the goal needs, following the mandatory prerequisites."""
-    return closure(sim.nodes, goal_id)
 
 
 # ---- projects and ventures ------------------------------------------------------------------------------------------

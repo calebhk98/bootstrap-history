@@ -26,7 +26,7 @@ READS_BY_OWNER = {
 	         "opening_cast", "money_text", "mass_rate_text"),
 	"seats": ("acting_seat", "acting_country", "seat_list", "legacy_seats", "seat_place", "seat_party", "legacy_household_actor",
 	          "disclosure", "disclosures"),
-	"knowledge": ("tree_nodes", "techniques_granted", "legacy_projects", "held_techniques", "legacy_world_map"),
+	"knowledge": ("tree_nodes", "techniques_granted", "techniques_by_seat", "legacy_projects", "held_techniques", "legacy_world_map"),
 	"diffusion": ("copy_difficulty", "knowledge_half_life_years", "literacy", "research_productivity", "diffusible_ids"),
 	"polity": ("state_authority", "state_trait_weights", "visible_scale", "levy_shares", "notice_over", "patron_clients",
 	           "patron_funding_ask", "military_equipment_burden", "standing"),

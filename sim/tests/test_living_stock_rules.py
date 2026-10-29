@@ -123,7 +123,7 @@ class PartnerRefusal(unittest.TestCase):
         """The foreign-trade module over a partner whose file, state and gate the test writes out."""
         registry = Game(get=lambda actor_id: government)
         return module_harness.build(ForeignTrade, views={
-            "partner_reached": lambda partner: gate is None,
+            "partner_gate_refusal": lambda partner: gate,
             "civilisation_record": lambda partner: {"name": "Han", "state_monopolies": monopolies},
             "cast": registry, "acting_seat": "home", "year": 100})
 

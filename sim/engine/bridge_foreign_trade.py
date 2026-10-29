@@ -29,11 +29,3 @@ def partner_own_economy(sim, civilization_id):
 # ---- the map ----
 
 
-# ---- knowledge and the cast ----
-
-@bridge_view("partner_reached", kind=QUOTE)
-def partner_reached(sim, civilization_id):
-    """Whether trade with a partner can begin: no action returns it, or the acting seat holds the one that does."""
-    return sim.view("partner_gate_refusal")(civilization_id) is None
-
-

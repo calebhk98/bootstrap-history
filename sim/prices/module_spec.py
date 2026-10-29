@@ -8,7 +8,7 @@ from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from .module import Prices
 
 READS_BY_OWNER = {
-    "knowledge": ("civilisation", "year", "techniques_granted", "legacy_projects", "operating"),
+    "knowledge": ("civilisation", "year", "techniques_granted", "techniques_held", "operating"),
     "production": ("techniques_in_use", "price_epoch", "is_venture", "concern_baskets_now", "venture_ramp"),
     "finance": ("market_rate",),
     "workforce": ("money_per_labour_hour", "hour_wage", "farm_land_hectares"),

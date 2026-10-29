@@ -25,10 +25,10 @@ class Opening:
 		if node_id not in nodes:
 			return False, "no such node"
 		projects = needs.legacy_projects()
-		if node_id not in projects.done:
+		if node_id not in needs.techniques_held():
 			return False, ("you have not worked out how to do that yet, so there "
 			               "is nothing to open")
-		if node_id in projects.granted:
+		if node_id in needs.techniques_granted():
 			if needs.practisable[node_id]:
 				# Society skill already in your practice: it's where your income comes from. Cannot open it again.
 				return False, Refusal("already_your_practice", "you are already doing that - it is your practice, "

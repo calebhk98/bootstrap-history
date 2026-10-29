@@ -125,15 +125,11 @@ HouseholdState.capital = property(_purse_net, _set_purse_net)  # type: ignore[as
 class ProjectsState:
 	"""Research projects, active engineering ventures, and technological capability."""
 	active: Dict[str, ActiveProjectState] = field(default_factory=dict)
-	done: Set[str] = field(default_factory=set)
-	done_year: Optional[Dict[str, int]] = None
 	# the founder's businesses and their plants: what is running, switched off, how big and since when
 	businesses: List[Business] = field(default_factory=lambda: [Business(business_id="founder")])
 	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
 	bountied: Set[str] = field(default_factory=set)
-	granted: Set[str] = field(default_factory=set)
 	paid_towards: Dict[str, float] = field(default_factory=dict)
-	revealed: Set[str] = field(default_factory=set)
 	stalled: int = 0
 
 	@property
@@ -183,10 +179,6 @@ class ProjectsState:
 	def operating_keys_sorted(self) -> List[str]:
 		"""Return operating project ids independently of set/hash order."""
 		return sorted(self.operating)
-
-	def done_keys_sorted(self) -> List[str]:
-		"""Return completed project ids independently of set/hash order."""
-		return sorted(self.done)
 
 
 @dataclass

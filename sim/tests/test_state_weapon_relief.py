@@ -35,7 +35,7 @@ class Game:
         self.state = SimpleNamespace(seats={"founder": SimpleNamespace(projects=SimpleNamespace(done=self.built, granted=set()))})
         self.diffusion = module_harness.build(Armed, views={
             "state_knowledge": lambda: self.held,
-            "built_by_any_seat": lambda among: seat_builds.built_by_any(self.state.seats, among)})
+            "built_by_any_seat": lambda among: seat_builds.built_by_any({"founder": SimpleNamespace(held=self.built, granted=frozenset())}, among)})
         self.hazards = hazards_host.build(diffusion_relief=lambda kind, per_weapon=0.0: self.diffusion.diffusion_relief(kind, per_weapon))
 
     def hazard_relief_entries(self, kind):

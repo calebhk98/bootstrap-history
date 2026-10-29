@@ -52,7 +52,7 @@ class Staffing:
 		nodes = needs.tree_nodes()
 		needed_scholars, needed_craftsmen = 0.0, 0.0
 		for node_id in sorted(projects.closures):
-			if (self.staff_closure_age(node_id) is None or node_id not in projects.done
+			if (self.staff_closure_age(node_id) is None or node_id not in needs.techniques_held()
 					or node_id not in nodes):
 				continue
 			held = self._staffing_draw_of(node_id, needs.reopen_units[node_id])

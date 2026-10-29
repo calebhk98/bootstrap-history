@@ -33,16 +33,6 @@ class ForwardMechanicsMixin:
         return counters
 
     # ---- not mechanics: awaiting their owners
-    def losable_node_ids(self, keep_dispersed=True):
-        """Built nodes a loss event may take: not inherited, not a measured
-        goal (a measurement cannot be forgotten), and by default not a
-        dispersed corpus."""
-        projects = self.state.projects
-        return sorted(node_id for node_id in projects.done
-                      if node_id not in projects.granted
-                      and not self.nodes[node_id].get("win_condition")
-                      and not (keep_dispersed and self.view("corpus_dispersed")(node_id)))
-
     def deputy_hours(self):
         """Hours a year the deputies work, however small a fraction of a deputy."""
         return self.view("staff")()["directors_extra"] * self.cfg["director_hours_per_year"]

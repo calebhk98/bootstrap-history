@@ -13,6 +13,7 @@ from sim.agents.api import ActorRecord, ActorsState
 from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
 from sim.finance.api import FinanceSeat
+from sim.knowledge.api import KnowledgeSeat
 from sim.invalidating import _InvalidatingSet
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
@@ -95,14 +96,15 @@ retries = collections.defaultdict(int, {"printing": 3, "alloy": 1})
 projects = ProjectsState(
 	active={"z_mill": ActiveProjectState(ph_left=80.0, cost_left=300.0, yrs=1.5, spent=100.0, lab_left={"mason": 15.0}),
 	        "a_forge": ActiveProjectState(ph_left=10.0, cost_left=20.0, yrs=0.5, spent=5.0)},
-	done={"stone_cutting", "fire"}, done_year={"fire": 3, "stone_cutting": 10}, failed_attempts=retries)
+	failed_attempts=retries)
 blob = serialize_state(projects)
 check("serialize_state: the retry counts are a dict of integers", blob["failed_attempts"] == {"printing": 3, "alloy": 1})
 check("serialize_state: active projects are records, written in the order they were started",
       list(blob["active"]) == ["z_mill", "a_forge"] and blob["active"]["z_mill"] == {
 		"ph_left": 80.0, "yrs": 1.5, "spent": 100.0, "cost_left": 300.0, "status": "ACTIVE", "lab_left": {"mason": 15.0}}, blob["active"])
+knowledge_blob = serialize_state(KnowledgeSeat(done={"stone_cutting", "fire"}, done_year={"fire": 3, "stone_cutting": 10}))
 check("serialize_state: done nodes are a sorted set and their years a dict",
-      blob["done"] == {"__set__": ["fire", "stone_cutting"]} and blob["done_year"] == {"fire": 3, "stone_cutting": 10}, None)
+      knowledge_blob["done"] == {"__set__": ["fire", "stone_cutting"]} and knowledge_blob["done_year"] == {"fire": 3, "stone_cutting": 10}, None)
 disclosure_blob = serialize_state(DiffusionSeat(disclosures={"fire": {"mode": "license", "published_year": None, "licensees": {
 	"firm:2": {"fee": 5.0, "royalty": 0.1, "year": 101}}}}))
 check("serialize_state: a disclosure record keeps its None and its nested licensee",
@@ -172,7 +174,8 @@ check("serialize_state: the state's books: money, revenue by form, arrears, know
       and blob["records"]["government:rome"]["exited_year"] is None and blob["home_country"] == "rome", None)
 
 # ---- the root: seats, aliases and metadata
-first = SeatState(HouseholdState(capital=10.0), ProjectsState(done={"fire"}), FounderState(_founder_death_year=30), goal="steam_engine", country="han")
+first = SeatState(HouseholdState(capital=10.0), ProjectsState(), FounderState(_founder_death_year=30), goal="steam_engine", country="han",
+                 modules={"knowledge": KnowledgeSeat(done={"fire"})})
 second = SeatState(HouseholdState(capital=4.0), ProjectsState(), FounderState(), holdings=HoldingsState(_dashboard_history=[1.0]))
 state = SimulationState(seats={"zed": first, "abe": second}, acting_seat="abe", economy=EconomyState(), _civ="rome", _rng=[3, [0, 1], None],
                         _seed="seed text")
@@ -184,7 +187,7 @@ check("serialize_state: a seat's own fields: goal, country, kind and holder",
       blob["seats"]["zed"]["goal"] == "steam_engine" and blob["seats"]["zed"]["country"] == "han"
       and blob["seats"]["zed"]["kind"] == "household" and blob["seats"]["zed"]["holder"] is None and blob["seats"]["abe"]["goal"] is None, None)
 check("serialize_state: a seat's household, projects and founder are sections of it",
-      blob["seats"]["zed"]["household"]["capital"] == 10.0 and blob["seats"]["zed"]["projects"]["done"] == {"__set__": ["fire"]}
+      blob["seats"]["zed"]["household"]["capital"] == 10.0 and blob["seats"]["zed"]["modules"]["knowledge"]["done"] == {"__set__": ["fire"]}
       and blob["seats"]["zed"]["founder"]["_founder_death_year"] == 30 and blob["seats"]["abe"]["holdings"]["_dashboard_history"] == [1.0], None)
 check("serialize_state: the metadata the load needs", blob["_civ"] == "rome" and blob["_rng"] == [3, [0, 1], None] and blob["_seed"] == "seed text"
       and blob["_immortal"] is True and blob["_game_version"] is None, None)

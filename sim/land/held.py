@@ -4,7 +4,7 @@ A node done is held; a venture that is shut is not (`running`); an action's decl
 action is held. Every reader of "which technologies do these people hold" asks `held_techniques` rather than building a set from
 `done`.
 """
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 
 from sim.refusal import Refusal
 
@@ -36,6 +36,10 @@ class Held:
         held = action_results.expand(nodes, held)
         cache[include_starting] = (key, held, nodes)
         return held
+
+    def techniques_with_results(self, techniques: Iterable[str]) -> frozenset:
+        """`techniques` with the routes, partners and knowledge their nodes return."""
+        return action_results.expand(self.needs.tree_nodes(), techniques)
 
     def built_ways_stamp(self) -> int:
         """A stamp of the ways built, since a node may require length of road or track to be running."""

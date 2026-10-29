@@ -36,7 +36,7 @@ class Demand:
     def standing_terms(self) -> List[Tuple[str, float]]:
         """(material, tonnes a year) for every finished installation that keeps drawing material, in done order; depends
         only on what is done."""
-        done = self.needs.legacy_projects().done
+        done = self.needs.techniques_held()
         version = self.needs.project_versions()[1]
         cached = self._standing
         if cached is not None and cached[0] == version and cached[1] is done:

@@ -72,7 +72,7 @@ from sim.markets.api import BuyMaterial, SellMaterial  # noqa: F401
 from sim.polity.api import SettleWithState, WithdrawFromPublicLife  # noqa: F401
 from sim.projects.api import (Bribe, MothballWork, PostBounty, ReorderProjects, RestoreProjectOrder, RestoreWork,  # noqa: F401
                               StartProject, StopProject)  # noqa: F401
-from sim.knowledge.api import RevealNodes  # noqa: F401
+from sim.knowledge.api import RevealNodes, StartDoneYearRecord  # noqa: F401
 from sim.scenario.api import SetEndYear, SetFog, SetFuzzyEstimates  # noqa: F401
 from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, JoinSeat, MakeOffer, SetGoal, SetPolicy  # noqa: F401
 from sim.ventures.api import OpenVenture, RollOut, SellConcern  # noqa: F401
@@ -84,14 +84,14 @@ from sim.workforce.api import (BuildHousing, BuySlaves, CommissionHours, FireSta
 
 def begin_game(sim, goal, end_year, fog, fuzzy_estimates):
     sim.send(SetGoal(goal))
-    sim.state.projects.done_year = {}
+    sim.send(StartDoneYearRecord())
     sim.send(SetEndYear(end_year))
     sim.send(SetFog(bool(fog)))
     set_fuzzy_estimates(sim, fuzzy_estimates)
 
 
 def reset_done_years(sim):
-    sim.state.projects.done_year = {}
+    sim.send(StartDoneYearRecord())
 
 
 def set_end_year(sim, year):

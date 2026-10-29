@@ -9,6 +9,7 @@ from typing import Any, Dict, Mapping, Optional
 from sim.engine import state as state_module
 from sim.engine.state import FounderState, HouseholdState, ProjectsState
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
+from sim.knowledge.api import KnowledgeSeat
 from sim.workforce.api import WorkforceSeat
 
 FIRST_SEAT_ID = "founder"   # the one id the party-id constants agree on
@@ -45,12 +46,12 @@ def seat_from_template(template: Mapping[str, Any], capital: float, policy: Dict
 		                 country=template.get("country"), kind=COUNTRY_SEAT)
 	household = HouseholdState(capital=float(capital))
 	granted = set(template.get("starting_techs") or ())
-	projects = ProjectsState(done=set(granted), granted=set(granted))
+	projects = ProjectsState()
 	founder = FounderState(policy=dict(policy))
 	staff = WorkforceSeat(scholars=float(template.get("scholars", 0.0)), artisans=float(template.get("artisans", 0.0)),
 	                      base_tile=template.get("base_tile"))
 	return SeatState(household=household, projects=projects, founder=founder, goal=template.get("goal"),
-	                 country=template.get("country"), modules={"workforce": staff})
+	                 country=template.get("country"), modules={"workforce": staff, "knowledge": KnowledgeSeat(done=set(granted), granted=set(granted))})
 
 
 def bind_seat(state, seat_id: str) -> None:

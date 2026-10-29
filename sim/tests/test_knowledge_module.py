@@ -3,10 +3,10 @@ module is built with plain values for the state it shares with the engine; no ga
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.knowledge import rules
-from sim.knowledge.api import (ForgetTechnique, KnowledgeSeat, LearnTechnique, RevealFrom, RevealNodes)
+from sim.knowledge.api import (ForgetTechnique, HandOverTechniques, KnowledgeSeat, LearnTechnique, ReceiveTechniques, RevealFrom,
+                               RevealNodes, StartDoneYearRecord)
 from sim.production.api import RefreshDoneCaches
 from sim.knowledge.module import DONE, REVEALED, Knowledge
 from sim.tests import module_harness
@@ -17,15 +17,14 @@ NODES = {
 }
 
 
-def projects(done=(), granted=(), active=(), revealed=(), done_year=None):
-    return SimpleNamespace(done=set(done), granted=set(granted), active=dict.fromkeys(active, {}), revealed=set(revealed),
-                           done_year=done_year)
+def projects(done=(), granted=(), revealed=(), done_year=None, forgotten=None):
+    return KnowledgeSeat(done=set(done), granted=set(granted), revealed=set(revealed), done_year=done_year, forgotten=dict(forgotten or {}))
 
 
-def knowledge_over(state, fog=False, start_check=None, **views):
+def knowledge_over(state, fog=False, start_check=None, active=(), **views):
     return module_harness.build(
-        Knowledge, seat=KnowledgeSeat(), answers={RefreshDoneCaches: None},
-        views=dict({"legacy_projects": state, "legacy_tree": NODES, "legacy_fog": fog,
+        Knowledge, seat=state, answers={RefreshDoneCaches: None},
+        views=dict({"active_projects": dict.fromkeys(active, {}), "legacy_tree": NODES, "legacy_fog": fog,
                     "start_check": start_check or (lambda node_id, ignore_trade, memo, why: (False, None))}, **views))
 
 
@@ -95,7 +94,7 @@ class VisibilityTests(unittest.TestCase):
 
     def test_held_in_hand_and_heard_of_nodes_are_visible_under_fog_without_asking_the_start_test(self):
         asked = []
-        module = knowledge_over(projects(done={"fire"}, active={"bronze"}, revealed={"iron"}), fog=True,
+        module = knowledge_over(projects(done={"fire"}, revealed={"iron"}), fog=True, active=("bronze",),
                                 start_check=lambda *arguments: asked.append(arguments))
         self.assertTrue(all(module.visibility(node_id, None) for node_id in ("fire", "bronze", "iron")))
         self.assertEqual(asked, [])
@@ -142,10 +141,10 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(knowledge_over(projects(done_year=None)).done_year(), {})
 
     def test_the_earliest_year_over_the_seats_that_hold_the_node(self):
-        seats = {"a": SimpleNamespace(projects=projects(done={"fire"}, done_year={"fire": 130})),
-                 "b": SimpleNamespace(projects=projects(done={"fire"}, done_year={"fire": 110})),
-                 "c": SimpleNamespace(projects=projects(done=set(), done_year={"fire": 50}))}
-        module = knowledge_over(projects(), legacy_seats=seats)
+        slots = {"a": projects(done={"fire"}, done_year={"fire": 130}), "b": projects(done={"fire"}, done_year={"fire": 110}),
+                 "c": projects(done=set(), done_year={"fire": 50})}
+        module = knowledge_over(projects(), seat_list={"joined": list(slots)})
+        module.seat_slot_of = slots.__getitem__
         self.assertEqual(module.earliest_done_year("fire", 200), 110)
         self.assertEqual(module.earliest_done_year("iron", 200), 200)
 
@@ -157,6 +156,39 @@ class ViewTests(unittest.TestCase):
         self.assertIsNone(hedge)
         self.assertGreater(chance, 0.5)
         self.assertGreater(fraction, 0.22)
+
+
+class OtherCommandTests(unittest.TestCase):
+    def test_nodes_received_by_exchange_are_held_without_telling_the_engine_caches(self):
+        state = projects()
+        module = knowledge_over(state)
+        module.receive_techniques(ReceiveTechniques(("fire", "bronze"), granted=True))
+        self.assertEqual((state.done, state.granted), ({"fire", "bronze"}, {"fire", "bronze"}))
+        self.assertEqual(module_harness.sent(module), [])
+
+    def test_starting_the_record_empties_the_years(self):
+        state = projects(done_year={"fire": 100})
+        knowledge_over(state).start_done_year_record(StartDoneYearRecord())
+        self.assertEqual(state.done_year, {})
+
+    def test_a_handover_joins_the_replacements_nodes_to_the_leavers_and_answers_how_many(self):
+        slots = {"leaver": projects(done={"fire"}, granted={"fire"}), "heir": projects(done={"bronze"})}
+        module = knowledge_over(slots["leaver"])
+        module.seat_slot_of = slots.__getitem__
+        self.assertEqual(module.hand_over_techniques(HandOverTechniques("leaver", "heir")), 2)
+        self.assertEqual((slots["leaver"].done, slots["leaver"].granted), ({"fire", "bronze"}, {"fire"}))
+
+    def test_the_held_views_answer_frozen_copies(self):
+        module = knowledge_over(projects(done={"fire"}, granted={"fire"}, revealed={"iron"}, done_year={"fire": 100}))
+        self.assertEqual((module.techniques_held(), module.techniques_granted(), module.techniques_revealed()),
+                         (frozenset({"fire"}), frozenset({"fire"}), frozenset({"iron"})))
+        module.done_year()["bronze"] = 1
+        self.assertEqual(module.done_year(), {"fire": 100})
+
+    def test_the_tree_views_follow_the_mandatory_prerequisites(self):
+        module = knowledge_over(projects())
+        self.assertEqual(module.tree_closure("iron"), {"iron", "bronze", "fire"})
+        self.assertEqual(module.hard_prerequisites("iron"), ["bronze"])
 
 
 class RuleTests(unittest.TestCase):

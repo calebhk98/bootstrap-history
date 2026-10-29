@@ -33,12 +33,12 @@ check("merging does not change a seat's own hazard", plague["staff_loss"] == 0.4
 template = {"starting_techs": ["a", "b"], "scholars": 2, "artisans": 3, "base_tile": "t1", "goal": "g", "country": "han"}
 seat = seat_from_template(template, 500.0, {"auto_hire": False})
 check("a template builds a seat with its own purse, knowledge, staff, place and goal",
-      seat.household.capital == 500.0 and seat.projects.done == {"a", "b"} and seat.projects.granted == {"a", "b"}
+      seat.household.capital == 500.0 and seat.modules["knowledge"].done == {"a", "b"} and seat.modules["knowledge"].granted == {"a", "b"}
       and seat.modules["workforce"].scholars == 2 and seat.modules["workforce"].artisans == 3 and seat.modules["workforce"].base_tile == "t1"
       and seat.goal == "g" and seat.country == "han", None)
 other = seat_from_template(template, 500.0, {})
 check("two seats from one template share no container",
-      other.projects.done is not seat.projects.done and other.modules["workforce"].employees is not seat.modules["workforce"].employees
+      other.modules["knowledge"].done is not seat.modules["knowledge"].done and other.modules["workforce"].employees is not seat.modules["workforce"].employees
       and other.founder.policy is not seat.founder.policy, None)
 
 # ---- the end rule: one seat's run ends, the others play on

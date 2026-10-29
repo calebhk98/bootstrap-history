@@ -21,9 +21,9 @@ class Mothball:
 		nodes = needs.tree_nodes()
 		if node_id not in nodes:
 			return False, "no such node"
-		if node_id not in projects.done:
+		if node_id not in needs.techniques_held():
 			return False, "you have not built that"
-		if node_id in projects.granted:
+		if node_id in needs.techniques_granted():
 			return False, ("that is something the society has, not something you "
 			               "maintain; there is no upkeep of yours to stop")
 		# MONEY IS NOT THE ONLY THING THIS TOOL CAN FREE: refusing whenever upkeep is zero, on the theory that nothing would
@@ -77,7 +77,7 @@ class Mothball:
 		projects = needs.legacy_projects()
 		if node_id not in projects.mothballed:
 			return False, "you have not shut that down"
-		if node_id not in projects.done:
+		if node_id not in needs.techniques_held():
 			return False, ('you no longer know how to do that, so there is '
 			               'nothing to reopen: build it again with '
 			               '{"cmd":"start","id":"%s"}' % node_id)
@@ -100,9 +100,9 @@ class Mothball:
 			                  ("; " + _grace_note) if _grace_note else "",
 			                  needs.money_text(needs.acting_balance(), grouped=True),
 			                  needs.money_text(needs.spending_power("buy"), grouped=True)))
-		if any(prereq_id not in projects.done for prereq_id in node["pre"]):
+		if any(prereq_id not in needs.techniques_held() for prereq_id in node["pre"]):
 			return False, ("you no longer have what it stands on: "
-			               + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in projects.done))
+			               + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in needs.techniques_held()))
 		needs.send(PayEdge(edges.EDGE_WORKERS, fee, "known technique restored"))
 		needs.send(LearnTechnique(node_id))
 		# Back in service means back in OPERATION: restore is what a player types to reopen something they shut, so a

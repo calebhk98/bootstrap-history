@@ -13,13 +13,15 @@ from .harness import check
 from sim.engine.saveload import _validate_save, load_state
 from sim.engine.state import (EconomyState, FounderState, HoldingsState, HouseholdState,
                               ProjectsState, SimulationState, serialize_state)
+from sim.knowledge.api import KnowledgeSeat
 from sim.refusal import cause_of
 
 
 def valid_save():
     state = SimulationState(
-        household=HouseholdState(capital=1250.0), projects=ProjectsState(done={"stone_cutting"}), economy=EconomyState(),
+        household=HouseholdState(capital=1250.0), projects=ProjectsState(), economy=EconomyState(),
         holdings=HoldingsState(), founder=FounderState())
+    state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
     state._goal = "aqueduct"
     blob = serialize_state(state)
     blob.update({"_civ": "rome_100ad", "_civ_live": {}, "_weights": {}, "_immortal": True,
@@ -44,7 +46,7 @@ check("a save of another civilisation is refused with its cause",
       cause_of(_validate_save(dict(blob, _civ="norse_900ad"), game)) == "save_wrong_civilisation")
 unknown = dict(blob)
 unknown["seats"] = json.loads(json.dumps(blob["seats"]))
-unknown["seats"][blob["acting_seat"]]["projects"]["done"]["__set__"].append("this_node_does_not_exist_anymore")
+unknown["seats"][blob["acting_seat"]]["modules"]["knowledge"]["done"]["__set__"].append("this_node_does_not_exist_anymore")
 refusal = _validate_save(unknown, game)
 check("a save naming a node the tree lacks is refused with the node",
       cause_of(refusal) == "save_unknown_nodes" and refusal.facts["nodes"] == ["this_node_does_not_exist_anymore"], refusal)

@@ -2,10 +2,10 @@
 
 What each seat knows and can see: techniques held, forgotten, revealed (fog), and the tree itself.
 
-**Status:** moved in part (branch `mr/knowledge`). The package is `sim/knowledge/`; this file describes what shipped and
-what is left, not the draft proposal. The held, granted, done-year and heard-of records and the tree itself are still
-stored where the engine keeps them and are read and written through `legacy_*` views (section "Debts"); what a seat has
-forgotten is the module's own state. Counts come from the module spec
+**Status:** moved (branches `mr/knowledge`, `mr/knowledge-state`). The package is `sim/knowledge/`; this file describes what
+shipped and what is left, not the draft proposal. What a seat holds, was granted, finished when, has heard of and has forgotten
+is the module's own seat state, written only by its commands. The tree itself and the fog switch are still the engine's and are
+read through `legacy_tree` and `legacy_fog` (section "Debts"). Counts come from the module spec
 (`python3 -c "import sys; sys.path.insert(0,'.'); from sim.knowledge.module_spec import MODULE_SPECS as s; print(len(s[0].publishes), len(s[0].applies))"`).
 
 ## What changed from the draft
@@ -56,43 +56,50 @@ forgotten is the module's own state. Counts come from the module spec
 
 ## State owned
 
-`KnowledgeSeat.forgotten` (node id to the year a sacking took it). Relocated in `sim/tests/equiv_fields.py`:
-`/seats/*/modules/knowledge/forgotten` was `/seats/*/projects/forgotten`.
+`KnowledgeSeat`: `done` (what the seat holds), `granted` (the part its country already had), `done_year` (node id to the year
+the seat finished it; `None` until a run starts recording), `revealed` (heard of under fog) and `forgotten` (node id to the year
+a sacking took it). Relocated in `sim/tests/equiv_fields.py`: `/seats/*/modules/knowledge/<field>` was `/seats/*/projects/<field>`.
+A new seat from a template starts with its country's techniques held and granted (`state_seat.seat_from_template`).
 
 ## Views published
 
 | View | Kind | Seat | Answers |
 |---|---|---|---|
 | `tree`, `tree_nodes` | keyed / table | no | the tech tree, by id and whole |
-| `techniques_held`, `techniques_granted`, `techniques_forgotten`, `done_year` | table | yes | the live sets and records of the acting seat |
+| `tree_closure`, `critical_path`, `hard_prerequisites` | quote / quote / keyed | no | what a goal needs, its longest chain, the mandatory prerequisites of a node (functions of the tree: `tree_paths.py`) |
+| `techniques_held`, `techniques_granted`, `techniques_revealed` | table (cached) | yes | frozensets of the acting seat |
+| `techniques_by_seat` | table | no | `SeatTechniques(held, granted)` of every seat, in joining order |
+| `done_year` | table (cached) | yes | a copy of the acting seat's {node id: year finished} |
+| `techniques_forgotten` | table | yes | the live dict of what a sacking took (not yet a copy) |
+| `losable_node_ids` | quote | yes | built nodes a loss event may take |
 | `earliest_done_year` | quote | no | the year the first seat to hold a node finished it |
 | `corpus_hedge` | table | yes | (loss chance, fraction lost, hedge node) a sacking faces |
 | `visibility`, `visible_to_player`, `prerequisite_message`, `fog_scrub`, `fog_summary` | quote | yes / no | what fog lets the acting seat see, in words |
 | `never_abandon` | keyed | yes | whether letting a node go costs what cannot be rebuilt |
 
-None is cached: see "Debts".
+The held, granted, revealed and done-year views are cached on the `done` and `revealed` channels: every write is a command of
+this module, which bumps the acting seat's channel (a handover bumps both seats').
+
+## Commands applied
+
+`LearnTechnique(node_id, year, granted)` (sends `RefreshDoneCaches`), `ForgetTechnique(node_ids, year)` (likewise),
+`RevealFrom(node_id)`, `RevealNodes(node_ids)`, `ReceiveTechniques(node_ids, granted)` (an exchange or a licence: it does
+not tell the engine's caches, Complaint 735), `StartDoneYearRecord()` (a run begins recording from an empty record) and
+`HandOverTechniques(from_seat_id, to_seat_id)` (the seat registry's handover: answers how many nodes the leaver then holds).
+Senders outside the module: the projects module (`LearnTechnique`, `RevealFrom`), seats (`LearnTechnique`, `ForgetTechnique`,
+`RevealNodes`, the handover through `sim/engine/seat_move.py`), hazards and polity (`ForgetTechnique`), the engine (the opening,
+`StartDoneYearRecord`, `ReceiveTechniques` for an exchange to a seat through `HouseholdParty`) and the UI (`RevealNodes`,
+`StartDoneYearRecord`).
 
 ## Reads
 
-All through the bridge (`sim/engine/bridge_knowledge.py`) until their owners move: `legacy_tree`, `legacy_fog`,
-`legacy_seats`, `category_trait`, `relied_on_running` (projects' running gates, keyed), `on_road_to_goal` (seats), plus
-`legacy_projects` (existing, projects') and `start_check` (projects, published). Mechanics' `corpus_hedge_tiers` is a real
-module view. `relied_on_running` is named for what it answers; the catalogue called the projects topic `running_gates`.
+Through the bridge (`sim/engine/bridge_knowledge.py`) until their owners move: `legacy_tree`, `legacy_fog` (scenario's
+`fog`), `category_trait`, `relied_on_running` (projects' running gates, keyed) and `on_road_to_goal` (seats). Real module
+views: `active_projects` (projects), `corpus_hedge_tiers` and `corpus_dispersed` (mechanics), `seat_list` (seats), `start_check`
+(projects).
 
-## Debts: state still shared with the engine, and every outside writer
+## Debts
 
-Each goes when the field moves. A write that is not through a command is a reason a view cannot be cached.
-
-- `projects.done`: `sim/agents/household_party.py:106,112` (`learn`, `accept_licence` of a seat as an actor: also does not
-  tell the caches, Complaint 735), `sim/agents/household.py:347` (facade setter), `sim/engine/seat_handover.py:48` (merge),
-  the `done` setter of `core_properties.py`.
-- `projects.granted`: `sim/agents/household_party.py:113`, `sim/engine/seat_handover.py:49`.
-- `projects.done_year`: `sim/engine/core.py` (`run` starts it empty), `sim/engine/baseline_game.py:31`,
-  `sim/engine/opening_checks_run.py:76`, `sim/ui/cli_interactive.py:256`, `cli_agent.py:66`, `cli_economy_check.py:43`,
-  `cli_economy_accounts.py:56` (each starts it empty).
-- `projects.revealed`: `sim/ui/replay.py:57`, `cli_interactive.py:264`, `cli_agent.py:70` (through the `revealed` setter,
-  which only grows), `sim/agents/household.py:402`, `sim/engine/core_properties.py:438`, `sim/engine/saveload.py:372`
-  (a load keeps what the running game had heard). Readers: `sim.revealed` in `sim/ui/proto`, `seat_sight.py`.
 - The tree: `sim.nodes` is replaced by `node_rederive.refresh_derived_nodes` and `opening_money.reprice_tree`, and built in
   `Sim.__init__`; 263 read sites in `sim/engine` (`grep -rnE '(self|sim)\.nodes\b' sim/engine --include=*.py | wc -l`).
 - The fog switch: `core_properties.py` (`fog`, `fuzzy_estimates` setters), `saveload.py`.
@@ -101,12 +108,15 @@ Each goes when the field moves. A write that is not through a command is a reaso
   `economy_materials.py`, `economy_production.py`, `economy_mining.py`, `legitimacy.py`, `view_share.py`).
 - `_done_changed` is also called for a changed tree (`node_rederive.py`, `opening_money.py`), after the economy opens
   (`core.py`) and on a load (`economy.py`): not knowledge events.
+- `project_versions` (materials' read) answers the projects' active version and the done-set version, both counters the engine
+  keeps on the household; it stays bridged with them.
+- Complaint 735: an exchange or licence to a seat does not tell the engine's caches (`ReceiveTechniques` keeps that).
 
 ## Forwarders left (`sim/engine/forward_knowledge.py`)
 
 `has`, `corpus_hedge`, `is_visible`, `missing_prereq_message`, `fog_scrub`, `fog_summary`, `never_abandon`, `reveal_from`.
-The properties `done`, `granted`, `done_year`, `revealed`, `fog`, `fuzzy_estimates` of `core_properties.py` stay as aliases
-of the legacy state; `forgotten` reads the view.
+The properties `done`, `granted`, `done_year`, `revealed` and `forgotten` of `core_properties.py` read the views (read only: a
+write is a command); `fog` and `fuzzy_estimates` stay aliases of the scenario's state.
 
 ## Year phases
 

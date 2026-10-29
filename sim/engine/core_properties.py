@@ -84,36 +84,15 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def done(self):
-		return getattr(self.state.projects, "done")
-
-	@done.setter
-	def done(self, value):
-		setattr(self.state.projects, "done", value)
+		return self.view("techniques_held")()
 
 	@property
 	def done_year(self):
-		sub = getattr(self.state, "projects", None)
-		if sub is None:
-			raise AttributeError("done_year")
-		val = getattr(sub, "done_year", None)
-		if val is None:
-			raise AttributeError("done_year")
-		return val
-
-	@done_year.setter
-	def done_year(self, value):
-		sub = getattr(self.state, "projects", None)
-		if sub is not None:
-			setattr(sub, "done_year", value)
+		return self.view("done_year")()
 
 	@property
-	def revealed(self) -> Set[str]:
-		return self.state.projects.revealed
-
-	@revealed.setter
-	def revealed(self, value: Iterable[str]) -> None:
-		cur = self.state.projects.revealed
-		self.state.projects.revealed = (set(value) if cur is None else set(cur) | set(value))
+	def revealed(self):
+		return self.view("techniques_revealed")()
 
 	@property
 	def operating(self):
@@ -148,11 +127,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def granted(self):
-		return getattr(self.state.projects, "granted")
-
-	@granted.setter
-	def granted(self, value):
-		setattr(self.state.projects, "granted", value)
+		return self.view("techniques_granted")()
 
 	@property
 	def forgotten(self):

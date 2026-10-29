@@ -15,7 +15,7 @@ def build(views: Optional[Dict[str, Any]] = None, **overrides: Any) -> Prices:
     """A Prices module whose reads are plain values; keyword arguments (or `views`) override a view by name."""
     plain: Dict[str, Any] = {
         "civilisation": {"id": "stand_in", "starting_interest_rate": 0.05}, "year": 100, "techniques_granted": set(),
-        "techniques_in_use": frozenset(), "legacy_projects": type("Projects", (), {"done": set()})(),
+        "techniques_in_use": frozenset(), "techniques_held": set(),
         "operating": set(), "price_epoch": (), "producers_stamp": (), "market_rate": 0.05,
         "money_per_labour_hour": 1.0, "hour_wage": lambda trade: 1.0, "farm_land_hectares": 0.0,
         "household_prices": {}, "material_seller": lambda material: None, "agent_wage": lambda trade: None,

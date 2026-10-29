@@ -25,8 +25,7 @@ def storage_economy(capital_asset):
 
 class ShipPurchases(unittest.TestCase):
     def test_fleet_planning_does_not_open_an_unopened_economy(self):
-        world = SimpleNamespace(state=SimpleNamespace(
-            projects=SimpleNamespace(granted={"sea_mortise_tenon"})))
+        world = SimpleNamespace(techniques_granted=lambda: frozenset({"sea_mortise_tenon"}))
         port = EconomyPort(world)
         port._opening = True
         goods = port.fleet_goods("state:a")

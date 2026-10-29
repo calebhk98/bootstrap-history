@@ -28,7 +28,7 @@ class StubGame:
 	def __init__(self, holds_instrument):
 		done = {INSTRUMENT} if holds_instrument else set()
 		self.module = projects_host.build(
-			tree=NODES, legacy_projects=SimpleNamespace(done=done), legacy_dice=random.Random(1),
+			tree=NODES, techniques_held=lambda: done, legacy_dice=random.Random(1),
 			mechanic=lambda name: {node_id: node["mechanics"][name] for node_id, node in NODES.items()
 			                       if name in (node.get("mechanics") or {})})
 		self.done = done
