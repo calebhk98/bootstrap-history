@@ -1,8 +1,9 @@
 """Build one game's modules: bind every view, point and command to one owner, check every read, hand out needs."""
-from typing import Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .clock import Clock
 from .errors import AssemblyError
+from .framework import FRAMEWORK_ID, framework_spec
 from .kernels import check_replacement
 from .module import Module
 from .read_guard import GuardedView
@@ -31,6 +32,19 @@ class Assembly:
 		self.unstable: Dict[str, List[Tuple[str, str]]] = {}     # module id -> (mod id, method) overrides outside the spec
 		self._phase_handlers: Optional[Dict[str, Callable]] = None
 		self.guard_reads = False                                   # another module's view answers come back unwritable
+		self.seat_records: Callable[[], Mapping[str, Any]] = dict   # the registry: seat id -> the seat's record (`.modules` holds its slots), in joining order
+		self.follow: Optional[Callable[[Optional[str]], None]] = None   # told the acting seat after every bind (the engine's saved copy)
+		self.holds_rule: Callable[[Any], List[str]] = lambda record: []  # what a seat's record holds that a handover would overwrite
+
+	def act_as(self, seat_id: str):
+		"""A context in which `seat_id` is the acting seat, then the previous one again."""
+		from .slots import act_as
+		return act_as(self, seat_id)
+
+	def rebind(self, seat_id: str, notify: bool = True) -> None:
+		"""Bind the registered seat `seat_id` as the acting one."""
+		from .slots import rebind
+		rebind(self, seat_id, notify)
 
 	def provider_of(self, name: str) -> Optional[str]:
 		return self.view_owner.get(name) or self.point_owner.get(name)
@@ -202,7 +216,7 @@ def _instantiate(assembly: Assembly) -> None:
 
 
 def _needs_for(assembly: Assembly, module_id: str, names: Sequence[str], optional: Sequence[str], sends: Sequence[type]) -> Needs:
-	needs = Needs(module_id, assembly.handlers, frozenset(sends))
+	needs = Needs(module_id, assembly.handlers, frozenset(sends), assembly.act_as)
 	for name in list(names) + list(optional):
 		view = assembly.views.get(name)
 		if view is not None and assembly.guard_reads and view.owner_id != module_id:
@@ -234,7 +248,7 @@ def assemble(shipped: Sequence[ModuleSpec], operations: Sequence[Operations] = (
 	every_spec = {spec.module_id: spec for spec in shipped}
 	for entry in operations:
 		every_spec.update({spec.module_id: spec for spec in entry.added})
-	applied = apply_all(shipped, operations, related)
+	applied = apply_all([framework_spec()] + list(shipped), operations, related)
 	removed = {module_id: every_spec[module_id] for module_id in applied.removed_by if module_id in every_spec}
 	assembly = Assembly(applied, Clock(shadow_every), {module_id: view_names(spec) + point_names(spec) for module_id, spec in removed.items()},
 	                    {command: module_id for module_id, spec in removed.items() for command, _handler in spec.applies})
@@ -244,6 +258,7 @@ def assemble(shipped: Sequence[ModuleSpec], operations: Sequence[Operations] = (
 	_bind_kernels(assembly)
 	assembly.guard_reads = guard_reads
 	_instantiate(assembly)
+	assembly.modules[FRAMEWORK_ID].assembly = assembly
 	_wire(assembly)
 	for module in assembly.modules.values():
 		module.setup()

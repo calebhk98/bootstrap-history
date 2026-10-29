@@ -14,7 +14,7 @@ from sim.reporting.api import CloseRealOutput
 from sim.resources.api import DrawDeposit, FellTimber, RegrowTimber
 
 from .commands import (BuyMaterial, FoundBankFromOutside, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale,
-                       NoteDraw, NotePurchase, OpenMarketBook, RenameMarketSeat, RepriceOpeningMoney, ResetDraws, ResetMarketCaches,
+                       NoteDraw, NotePurchase, OpenMarketBook, RenameMarketSeat, RepriceOpeningMoney, ResetDraws,
                        SellMaterial)
 from .kernels import KERNELS
 from .module import Markets
@@ -23,7 +23,7 @@ from .state import MarketsWorld
 READS_BY_OWNER = {
 	"core": ("year", "civilisation", "game_config", "output_factor", "opening_farmed_hectares", "installed_mod_ids",
 	         "household_need_data",
-	         "price_index", "acting_as"),
+	         "price_index"),
 	"seats": ("seat_list",),
 	"stores": ("store_book",),
 	"demography": ("population", "population_total", "pop_scale", "default_population", "farm_holdings"),
@@ -98,7 +98,7 @@ MODULE_SPECS = (ModuleSpec(
 	publishes=tuple(_view(name, kind) for name, kind in _VIEWS),
 	applies=((ResetDraws, "reset_draws"), (NoteDraw, "note_draw"), (NotePurchase, "note_purchase"),
 	         (ForgetActorOrders, "forget_actor_orders"), (NoteActorSale, "note_actor_sale"),
-	         (NoteActorPurchase, "note_actor_purchase"), (ResetMarketCaches, "reset_market_caches"),
+	         (NoteActorPurchase, "note_actor_purchase"),
 	         (OpenMarketBook, "open_market_book_command"), (RenameMarketSeat, "rename_market_seat"),
 	         (MarkMoneyPricedAtEconomy, "mark_money_priced_at_economy"), (BuyMaterial, "buy_material"),
 	         (SellMaterial, "sell_material"), (FoundBankFromOutside, "found_bank_from_outside")),

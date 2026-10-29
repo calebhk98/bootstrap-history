@@ -2,6 +2,7 @@
 from typing import Any, Dict, List
 
 from .assemble import Assembly
+from .framework import FRAMEWORK_ID
 
 
 def record(assembly: Assembly) -> Dict[str, Any]:
@@ -9,6 +10,8 @@ def record(assembly: Assembly) -> Dict[str, Any]:
 	applied = assembly.applied
 	modules = {}
 	for module_id, spec in sorted(applied.specs.items()):
+		if module_id == FRAMEWORK_ID:
+			continue
 		implementation = spec.implementation
 		modules[module_id] = {
 			"implementation": "%s.%s" % (implementation.__module__, implementation.__qualname__),

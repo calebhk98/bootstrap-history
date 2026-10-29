@@ -3,12 +3,9 @@
 The screens, the project phases, the agent economy's port, the labour core and the tests still say `sim.running(node)`, `sim.revenue()` or
 `sim.industry_depth(node)`; each line goes when its last caller reads the view or sends the command itself."""
 from sim.knowledge.api import NoteTechniquesChanged
-from sim.markets.api import ResetMarketCaches
-from sim.materials.api import ForgetReadings
-from sim.projects.api import WatchActive
-from sim.production.api import ForgetRevenueCaches, RefreshDoneCaches, RefreshOperatingCaches, constants
+from sim.production.api import RefreshDoneCaches, RefreshOperatingCaches, constants
 
-from sim.ventures.api import NoteOperatingChanged, WatchBusiness
+from sim.ventures.api import NoteOperatingChanged
 
 from . import money_units, node_rederive, society_holdings
 
@@ -44,26 +41,6 @@ class ForwardProductionMixin:
 		"""Call after anything adds to or removes from what is operating."""
 		self.send(RefreshOperatingCaches())
 		self.send(NoteOperatingChanged())
-
-	def _reset_operating(self):
-		"""The acting seat's business reports its plants' opening and closing from here on (a seat switch or a load needs it again),
-		and what is operating is told to have changed once."""
-		self.send(WatchBusiness(self.state.acting_seat))
-		self._operating_changed()
-
-	def _reset_active(self):
-		"""The acting seat's projects in hand report their changes from here on (a seat switch or a load needs it again)."""
-		self.send(WatchActive(self.state.acting_seat))
-
-	def _reset_economic_caches(self):
-		"""Wipe all transient economic derived-state caches and re-wrap containers on save/load and on a seat switch."""
-		self.send(ForgetRevenueCaches())
-		self.send(ResetMarketCaches())      # the markets module's remembered goods-category figures
-		self.send(ForgetReadings())      # the materials module's remembered demand tables
-		self._done_changed()
-		self._reset_operating()
-		self._reset_active()
-		self._reset_workforce()
 
 	# ---- the tree's derived figures (composition: node_rederive.py) ----
 

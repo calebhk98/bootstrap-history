@@ -10,6 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from sim.assembly.api import FRAMEWORK_ID  # noqa: E402
 from sim.engine import game_assembly  # noqa: E402
 from sim.engine.bridge import BRIDGE_ID  # noqa: E402
 
@@ -27,11 +28,11 @@ def owners(specs):
 
 
 def module_rows(specs):
-    """[(module id, external reads, external sends, {modules depended on})], the bridge left out as a reader."""
+    """[(module id, external reads, external sends, {modules depended on})], the bridge and the assembly left out as readers."""
     name_owner, command_owner = owners(specs)
     rows = []
     for module_id, spec in specs.items():
-        if module_id == BRIDGE_ID:
+        if module_id in (BRIDGE_ID, FRAMEWORK_ID):
             continue
         reads = [name for name in tuple(spec.reads) + tuple(spec.optional_reads) if name_owner.get(name) not in (None, module_id)]
         sends = [command for command in spec.sends if command_owner.get(command) not in (None, module_id)]
@@ -75,16 +76,18 @@ def largest_group(edges):
 def summary(specs):
     rows = module_rows(specs)
     name_owner, _command_owner = owners(specs)
-    edges = {module_id: depended_on - {BRIDGE_ID} for module_id, _reads, _sends, depended_on in rows}
+    edges = {module_id: depended_on - {BRIDGE_ID, FRAMEWORK_ID} for module_id, _reads, _sends, depended_on in rows}
     bridge_reads = sum(1 for module_id, reads, _sends, _deps in rows for name in reads if name_owner.get(name) == BRIDGE_ID)
+    assembly_reads = sum(1 for module_id, reads, _sends, _deps in rows for name in reads if name_owner.get(name) == FRAMEWORK_ID)
     legacy_reads = sum(1 for module_id, reads, _sends, _deps in rows for name in reads if name.startswith("legacy_"))
     return {
         "modules": len(rows),
-        "views published": sum(len(spec.publishes) for module_id, spec in specs.items() if module_id != BRIDGE_ID),
-        "dependency pairs between modules (the bridge left out)": sum(len(targets) for targets in edges.values()),
+        "views published": sum(len(spec.publishes) for module_id, spec in specs.items() if module_id not in (BRIDGE_ID, FRAMEWORK_ID)),
+        "dependency pairs between modules (the bridge and the assembly left out)": sum(len(targets) for targets in edges.values()),
         "modules that still depend on the engine bridge": sum(1 for _id, _reads, _sends, deps in rows if BRIDGE_ID in deps),
         "largest strongly connected group": largest_group(edges),
         "reads answered by the engine bridge": bridge_reads,
+        "reads answered by the assembly (the seat registry)": assembly_reads,
         "reads of legacy_* views": legacy_reads,
     }
 

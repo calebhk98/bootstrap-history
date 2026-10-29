@@ -27,7 +27,7 @@ READS_BY_OWNER = {
              "plain_number", "money_text"),
     "content": ("trades_absent", "trade_notes", "trade_records", "trade_family"),
     "ventures": ("operating",),
-    "seats": ("founder", "acting_country", "seat_list", "game_random", "acting_as", "goal", "goal_closure"),
+    "seats": ("founder", "acting_country", "seat_list", "game_random", "goal", "goal_closure"),
     "ledger": ("acting_balance",),
     "polity": ("standing", "rep_factor"),
     "reporting": ("event_log", "last_market_price_ratio", "real_output_per_head", "agent_prices", "agent_wage"),

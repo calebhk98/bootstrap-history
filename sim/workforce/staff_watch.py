@@ -11,9 +11,16 @@ class StaffWatch:
         self.bump_seat(STAFF)
 
     def watch_staff(self, command):
-        seat = self.seat_of(command.seat_id)
+        self._watch_payroll(command.seat_id)
+
+    def _watch_payroll(self, seat_id):
+        seat = self.seat_of(seat_id)
         seat.employees = _InvalidatingDict(seat.employees or {}, on_change=self.staff_changed)
-        self.bump_seat(STAFF, command.seat_id)
+        self.bump_seat(STAFF, seat_id)
+
+    def seat_bound(self):
+        """The acting seat's payroll reports its changes from here on."""
+        self._watch_payroll(self.clock.acting_seat)
 
     def staff_version(self):
         """A count that moves whenever the acting seat's payroll does, for a figure cached on the staff."""

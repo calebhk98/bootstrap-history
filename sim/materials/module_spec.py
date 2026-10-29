@@ -8,7 +8,7 @@ from sim.markets.api import NoteDraw, NotePurchase, ResetDraws
 from sim.reporting.api import RecordEvent
 
 from .channels import READING
-from .commands import ApplyThrottle, CaptureReadings, ForgetReadings, RestoreReadings, SettleProjectMaterials
+from .commands import ApplyThrottle, CaptureReadings, RestoreReadings, SettleProjectMaterials
 from .module import Materials
 from .state import MaterialsSeat
 
@@ -80,7 +80,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("start_gate_material_seller", "start_gate_material_seller", kind=QUOTE, seat_scoped=True, **_LIVE),
     ),
     applies=((ApplyThrottle, "apply_throttle"), (SettleProjectMaterials, "settle_project_materials"),
-             (ForgetReadings, "forget_readings"), (RestoreReadings, "restore_readings"),
+             (RestoreReadings, "restore_readings"),
              (CaptureReadings, "capture_readings")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(BankStock, ChangeStock, PayEdge, ResetDraws, NoteDraw, NotePurchase, RecordEvent),

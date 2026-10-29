@@ -66,6 +66,11 @@ class Ventures(Crew, Quotes, Opening, Sales, Coverage, Module):
 		self.needs.send(RefreshOperatingCaches())
 		self.bump_seat(OPERATING_CHANGES)
 
+	def seat_bound(self):
+		"""The acting seat's business reports its plants' opening and closing from here on; what is operating is told to have changed."""
+		self.seat.business.watch = self.operating_changed
+		self.operating_changed()
+
 	def apply_watch_business(self, command):
 		self.seat_of(command.seat_id).business.watch = self.operating_changed
 

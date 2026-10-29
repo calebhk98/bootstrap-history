@@ -29,7 +29,7 @@ READS_BY_OWNER = {
     "workforce": ("seat_base_tile",),
     "materials": ("generation_breakdown",),
     "hazards": ("hazard_relief", "hazard_relief_entries"),
-    "engine (registry)": ("registered_seats", "seat_holds"),
+    "assembly": ("registered_seats", "seat_holds"),
 }
 
 _LIVE = dict(cached=False)

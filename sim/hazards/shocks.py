@@ -5,7 +5,7 @@ own log); population, output, the coin and the society's values change once, at 
 (merge.py). One seat runs the same draws in the same order as a game with no other seat. The order of the dice is the
 order of the calls below; save/load and the equivalence check depend on it.
 
-Needs: civilisation, year, seat_list, game_random, acting_as, events_enabled, legacy_said_once,
+Needs: civilisation, year, seat_list, game_random, act_as, events_enabled, legacy_said_once,
 techniques_held, staff, staff_snapshot, wage_index, money_text, money_real, event_log."""
 from typing import Any, Dict, List, Optional
 
@@ -49,7 +49,7 @@ class Shocks:
 				continue
 			met = {}
 			for seat_id in seats:
-				with self.needs.acting_as(seat_id):
+				with self.needs.act_as(seat_id):
 					kept = self.apply_event_causes(hazard, year, hazard_start)
 					if kept is not None:
 						kept = self.resolve_hazard_condition(kept, year, hazard_start)
@@ -59,7 +59,7 @@ class Shocks:
 				continue
 			self.staff_loss_seats(met, year)
 			for seat_id in met:
-				with self.needs.acting_as(seat_id):
+				with self.needs.act_as(seat_id):
 					self.sack_chance(met[seat_id], year)
 			self.output_factor_seats(met, year)
 			self.real_erosion_seats(met, year)
@@ -109,7 +109,7 @@ class Shocks:
 		reports = {}
 		for seat_id, hazard in met.items():
 			if "staff_loss" in hazard:
-				with self.needs.acting_as(seat_id):
+				with self.needs.act_as(seat_id):
 					reports[seat_id] = self.staff_loss_of_seat(hazard)
 		world_hazard = mildest_hazard(met.values())
 		raw = min(report["raw"] for report in reports.values())
@@ -118,7 +118,7 @@ class Shocks:
 		wage_index_before = self.needs.wage_index()
 		self.needs.send(CutPopulation(raw))
 		for seat_id in reports:
-			with self.needs.acting_as(seat_id):
+			with self.needs.act_as(seat_id):
 				self.needs.send(NoteWageShock(met[seat_id].get("name", "a plague"), wage_index_before))
 		# refresh population and wage screens now, not at year end
 		self.needs.send(RefreshDemographicIndexes(year))
@@ -172,7 +172,7 @@ class Shocks:
 		floors, reasons = {}, {}
 		for seat_id, hazard in met.items():
 			if "output_factor" in hazard:
-				with self.needs.acting_as(seat_id):
+				with self.needs.act_as(seat_id):
 					relief, why, lapsed = self.hazard_relief_detail("output_factor")
 				floors[seat_id] = rules.output_floor(hazard["output_factor"], relief)
 				reasons[seat_id] = (why, lapsed)
@@ -205,7 +205,7 @@ class Shocks:
 			self.needs.send(ErodeMoney(world_hazard["real_erosion"]))
 		lines = {}
 		for seat_id, hazard in holders.items():
-			with self.needs.acting_as(seat_id):
+			with self.needs.act_as(seat_id):
 				relief, why, lapsed = self.hazard_relief_detail("real_erosion")
 				bite = hazard["real_erosion"] * constants.REAL_EROSION_CASH_LOSS_SHARE * relief
 				had = max(0.0, self.needs.acting_balance())

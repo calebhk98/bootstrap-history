@@ -355,15 +355,15 @@ def _test_pre_insertion_alias_and_invalidating_dict_identity():
 		return False, f"Mutating pre-insertion nested dict alias did not increment _active_count: {ver_after_alias} -> {ver_after_nested_alias}"
 
 	# 3. Resetting active container preserves wrapped child identities
-	sim_inst._reset_active()
+	sim_inst.projects_module.seat_bound()
 	if sim_inst.household.active["wrapped_node"] is not pre_wrapped:
-		return False, "_reset_active() reallocated or copied existing _InvalidatingDict child"
+		return False, "seat_bound() reallocated or copied existing _InvalidatingDict child"
 
 	# Post-reset mutation through pre_wrapped alias still invalidates
 	pre_wrapped["cost_left"] += 10.0
 	ver_after_reset_mut = sim_inst.active_changes
 	if ver_after_reset_mut <= ver_after_nested_alias:
-		return False, f"Mutation through pre_wrapped alias after _reset_active did not increment _active_count: {ver_after_nested_alias} -> {ver_after_reset_mut}"
+		return False, f"Mutation through pre_wrapped alias after seat_bound did not increment _active_count: {ver_after_nested_alias} -> {ver_after_reset_mut}"
 
 	# 4. Identity preservation on update() and setdefault()
 	update_wrapped = _InvalidatingDict({"ph_left": 30.0})

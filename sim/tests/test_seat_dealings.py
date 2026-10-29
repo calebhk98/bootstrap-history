@@ -74,7 +74,7 @@ class Game:
             "operating": set(), "techniques_granted": lambda: frozenset(self.knowledge.granted),
             "techniques_held": lambda: frozenset(self.knowledge.done), "acting_seat": FIRST_SEAT_ID, "registered_seats": [FIRST_SEAT_ID],
             "seat_list": {"joined": [FIRST_SEAT_ID]}, "seat_dealings": lambda seat_id: self.slot, "seat_business": lambda seat_id: self.business,
-            "seat_balance": lambda seat_id: host.view("seat_balance")(seat_id), "acting_as": host.act_as,
+            "seat_balance": lambda seat_id: host.view("seat_balance")(seat_id), "act_as": host.act_as,
             "staff": lambda: {"employees": {}}, "dealings_listing": lambda: self.seats.dealings_listing()})
         self.module.cast = lambda: self.actors
         self.module.actor_world = lambda: world

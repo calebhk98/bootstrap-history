@@ -128,7 +128,7 @@ class BudgetView:
 		payers = []
 		for seat_id in needs.seat_list()["playing"]:
 			if (needs.seat_country[seat_id] or home) == (country or home):
-				with needs.acting_as(seat_id):
+				with needs.act_as(seat_id):
 					payers.append((self.acting_seat_visible_scale(), max(0.0, needs.revenue_estimate())))
 		return payers
 
@@ -155,6 +155,6 @@ class BudgetView:
 		home = self.registry.state.home_country
 		payers = self.seat_taxpayers(home)
 		if not needs.seat_list()["playing"]:
-			with needs.acting_as(needs.acting_seat()):
+			with needs.act_as(needs.acting_seat()):
 				payers.append((self.acting_seat_visible_scale(), max(0.0, needs.revenue_estimate())))
 		return payers + self.firm_taxpayers(home)

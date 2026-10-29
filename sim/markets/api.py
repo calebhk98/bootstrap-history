@@ -3,7 +3,7 @@
 WALL = "two-way"  # nothing here imports sim/engine/
 
 from .commands import (BuyMaterial, FoundBankFromOutside, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale,
-                       NoteDraw, NotePurchase, OpenMarketBook, RenameMarketSeat, RepriceOpeningMoney, ResetDraws, ResetMarketCaches,
+                       NoteDraw, NotePurchase, OpenMarketBook, RenameMarketSeat, RepriceOpeningMoney, ResetDraws,
                        SellMaterial)
 from .constants import MEAN_INCOME_HOURS_PER_CAPITA
 from .rules import HOME_SELLER

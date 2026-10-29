@@ -26,6 +26,14 @@ class Module:
 	def setup(self) -> None:
 		"""Called once after assembly; override to build what the module keeps between calls (never saved)."""
 
+	def seat_bound(self) -> None:
+		"""Called after the modules are pointed at another acting seat (and after a load): override to forget what the module
+		remembers about the acting seat (a cache, a wrapped container). The default remembers nothing."""
+
+	def act_as(self, seat_id: str):
+		"""A context in which `seat_id` is the acting seat; the seat that was acting returns on leaving it (the assembly answers)."""
+		return self.needs.act_as(seat_id)
+
 	def bump(self, channel: str) -> None:
 		self.clock.bump(self.module_id, channel)
 

@@ -23,7 +23,7 @@ def _act_as(seat_id):
 def _module(working_age):
     """The disease module over one seat of 10000 people, its views answered by plain values; it loses no cash."""
     return module_harness.build(Disease, views={
-        "working_age": working_age, "seat_list": {"playing": ["founder"]}, "acting_as": _act_as,
+        "working_age": working_age, "seat_list": {"playing": ["founder"]}, "act_as": _act_as,
         "staff": {"scholars": 5000.0, "artisans": 5000.0, "employees": {}}, "staff_snapshot": {}},
         answers={LoseCapital: 0.0})
 

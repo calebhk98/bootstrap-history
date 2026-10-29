@@ -8,7 +8,7 @@ from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.diffusion.api import NoteFirstRuns
 from sim.workforce.api import SetWageHoursSold
 
-from .commands import (AccrueExperience, ForgetRevenueCaches, LearnFromFailure, RefreshDoneCaches,
+from .commands import (AccrueExperience, LearnFromFailure, RefreshDoneCaches,
                        RefreshOperatingCaches)
 from .module import Production
 from .state import ProductionSeat
@@ -85,8 +85,7 @@ MODULE_SPECS = (ModuleSpec(
 	"production", Production, seat_state=ProductionSeat,
 	publishes=tuple(_view(*row) for row in _VIEWS),
 	applies=((AccrueExperience, "apply_accrue_experience"), (LearnFromFailure, "apply_learn_from_failure"),
-	         (RefreshDoneCaches, "apply_refresh_done_caches"), (RefreshOperatingCaches, "apply_refresh_operating_caches"),
-	         (ForgetRevenueCaches, "apply_forget_revenue_caches")),
+	         (RefreshDoneCaches, "apply_refresh_done_caches"), (RefreshOperatingCaches, "apply_refresh_operating_caches")),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(SetWageHoursSold, NoteFirstRuns),
 ),)

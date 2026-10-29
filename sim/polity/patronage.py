@@ -1,7 +1,7 @@
 """What a patron state funds: the founder's ask, the clients a state is asked to fund, and what the treasury has paid.
 
 Needs: running_mechanics, real_output_per_head, state_reach, pop_scale, rep_factor, money_per_labour_hour, civilisation,
-seat_list, seat_country, acting_as, government_figures, acting_seat."""
+seat_list, seat_country, act_as, government_figures, acting_seat."""
 from sim.agents.api import patronage
 from sim.seats.api import patron_grant_share
 
@@ -34,7 +34,7 @@ class Patronage:
 		for seat_id in needs.seat_list()["playing"]:
 			if (needs.seat_country[seat_id] or home) != country:
 				continue
-			with needs.acting_as(seat_id):
+			with needs.act_as(seat_id):
 				if needs.running_mechanics("state_funding"):
 					clients.append((seat_id, max(0.0, self.seat.gov), needs.rep_factor()))
 		return clients

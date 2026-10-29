@@ -52,7 +52,7 @@ class MoneyHost:
         self.received: list = []                      # (nodes, granted) handed to a seat by an exchange
         self.on_receive: Any = None                   # called with (nodes, granted) as the acting seat, when a test keeps the know-how itself
         self.needs = SimpleNamespace(
-            send=self.send, seat_balance=_Keyed(lambda seat_id: self.ledger.seat_balance(seat_id)), acting_as=self.act_as,
+            send=self.send, seat_balance=_Keyed(lambda seat_id: self.ledger.seat_balance(seat_id)), act_as=self.act_as,
             staff=lambda: {"employees": self.employees}, techniques_held=lambda: self.known)
         self._act(self.state.acting_seat)
         self.send(RestorePurse(capital))

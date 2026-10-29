@@ -23,7 +23,7 @@ READS_BY_OWNER = {
 	"production": ("running", "revenue_estimate", "concern_revenue"),
 	"ventures": ("operating", "operating_version"),
 	"workforce": ("headcount", "base_annual_wage", "labour_state_weights", "money_per_labour_hour"),
-	"seats": ("seat_list", "seat_country", "founder", "game_random", "acting_as"),
+	"seats": ("seat_list", "seat_country", "founder", "game_random"),
 	"demography": ("population_total", "pop_scale"),
 	"materials": ("material_pool", "material_substitutes"),
 	"reporting": ("real_output_per_head",),

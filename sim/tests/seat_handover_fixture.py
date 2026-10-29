@@ -2,7 +2,8 @@
 import random
 from sim.engine import game_assembly
 from sim.engine.state import FounderState, HouseholdState, SimulationState
-from sim.engine.state_seat import FIRST_SEAT_ID, bind_seat, seat_from_template
+from sim.engine import seat_registry
+from sim.engine.state_seat import FIRST_SEAT_ID, seat_from_template
 from sim.scenario.api import OpenScenario, ScenarioSources
 from sim.seats.api import HandOverSeat
 
@@ -17,7 +18,6 @@ class Game:
         self.state.acting_seat = first
         for seat_id in seat_ids[1:]:
             self.state.seats[seat_id] = seat_from_template({}, {})
-        bind_seat(self.state, first)
         self._seat_facades = {seat_id: None for seat_id in self.state.seats}
         self.session_seat = None
         self.year = 100
@@ -38,13 +38,6 @@ class Game:
     def hand_over_seat(self, from_id, to_id):
         return self.send(HandOverSeat(from_id, to_id))
 
-    def _switch_seat(self, seat_id):
-        bind_seat(self.state, seat_id)
-        game_assembly.switch_seat(self, seat_id)
-
-    def _reset_economic_caches(self):
-        pass
-
     @property
     def stores(self):
         return self.view("store_book")()
@@ -53,15 +46,4 @@ class Game:
         return [seat_id for seat_id, held in self.state.seats.items() if held.founder.dead_reason]
 
     def act_as(self, seat_id):
-        import contextlib
-
-        @contextlib.contextmanager
-        def acting():
-            previous = self.state.acting_seat
-            bind_seat(self.state, seat_id)
-            try:
-                yield self
-            finally:
-                if previous in self.state.seats:
-                    bind_seat(self.state, previous)
-        return acting()
+        return seat_registry.act_as(self, seat_id)

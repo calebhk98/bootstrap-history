@@ -1,39 +1,18 @@
 """Bridge entries the seats module reads and sends until the owners behind them move into modules.
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old code did,
-and is never cached. The seat registry (`state.seats`, the facades, `act_as`) stays on `Sim`, so the registry views and the
-commands that change it are applied here for good. The `legacy_*` views are state the module shares with the engine; they go
+and is never cached. The seat registry (`state.seats`) stays on `Sim`; the commands that change it are applied here for good. The `legacy_*` views are state the module shares with the engine; they go
 when that state moves."""
-from sim.assembly.api import KEYED, QUOTE
 from sim.ledger.api import OpenPurse
 from sim.refusal import Refusal
 from sim.seats.api import COUNTRY_SEAT, ForgetGoalCaches, MoveSeat, RegisterSeat, SetSeatHolder
 
 from .bridge import bridge_command, bridge_view
 from .seat_defaults import default_policy
-from .seat_handover_empty import holds_that_would_be_lost
 from .seat_move import move_seat
 from .state_seat import seat_from_template
 
 # ---- the seat registry ----
-
-
-@bridge_view("registered_seats")
-def registered_seats(sim):
-    """The ids of the seats in the registry, in the order they joined."""
-    return list(sim.state.seats)
-
-
-@bridge_view("acting_as", kind=QUOTE)
-def acting_as(sim, seat_id):
-    """A context in which `seat_id` is the acting seat; the root aliases return to the previous seat on leaving it."""
-    return sim.act_as(seat_id)
-
-
-@bridge_view("seat_holds", kind=KEYED)
-def seat_holds(sim, seat_id):
-    """What the seat holds in the engine's own state that a handover to it would overwrite."""
-    return holds_that_would_be_lost(sim.state.seats[seat_id])
 
 
 @bridge_view("society_techs", seat_scoped=True)

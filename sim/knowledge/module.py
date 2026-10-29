@@ -196,6 +196,10 @@ class Knowledge(Module):
         self.bump_seat(HELD_CHANGES)
         self.bump_seat(DONE)
 
+    def seat_bound(self) -> None:
+        """What the acting seat holds is told to have changed, so the memos over it rebuild."""
+        self.bump_seat(HELD_CHANGES)
+
     def note_techniques_changed(self, command: NoteTechniquesChanged) -> None:
         self.bump_seat(HELD_CHANGES)
 

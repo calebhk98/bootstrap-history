@@ -46,6 +46,8 @@ def build(mods_dir: Optional[str], debug: bool) -> assembly_api.Assembly:
 	from .year_phases import ordered_phases
 	ordered_phases(assembly.applied.phases)   # a mod phase that cannot be placed is an error of this game
 	from .ui_data import check_state_path
+	from .seat_handover_empty import holds_that_would_be_lost
+	assembly.holds_rule = holds_that_would_be_lost
 	assembly.handlers[OpenInterface](OpenInterface(check_state_path))   # the interface checks the state paths data files read by this rule
 	if mods_dir:
 		assembly.handlers[OpenContent](OpenContent(mods_dir))   # the content module answers over this game's mods
@@ -71,6 +73,8 @@ def attach(sim: Any) -> None:
 	"""Point every module at this game's state: the world slots, and the acting seat's. A slot a new game or a new seat
 	does not have yet is built fresh; a loaded save already carries all of them (revive checked it)."""
 	assembly, state = sim.assembly, sim.state
+	assembly.seat_records = lambda: sim.state.seats
+	assembly.follow = lambda seat_id: setattr(sim.state, "acting_seat", seat_id)
 	from .bridge import BRIDGE_ID
 	if BRIDGE_ID in assembly.modules:
 		assembly.modules[BRIDGE_ID].sim = sim
@@ -82,7 +86,7 @@ def attach(sim: Any) -> None:
 		module.seat_slot_of = lambda seat_id, module_id=module_id: sim.state.seats[seat_id].modules[module_id]
 	state.assembly_record = assembly_api.record(assembly)
 	assembly_api.bind_world(assembly, state.modules)
-	switch_seat(sim, state.acting_seat)
+	assembly.rebind(state.acting_seat, notify=False)
 	if "stores" in assembly.modules:
 		assembly.modules["stores"].declared()   # a store declared twice is an error of building the game
 	if "interface" in assembly.modules:
@@ -93,12 +97,6 @@ def give_seat_slots(assembly: assembly_api.Assembly, seat: Any) -> None:
 	"""Build the seat's state for every module that keeps some per seat, for a seat the slots do not cover yet."""
 	for module_id, slot in assembly_api.new_slots(assembly, assembly_api.SEAT).items():
 		seat.modules.setdefault(module_id, slot)
-
-
-def switch_seat(sim: Any, seat_id: str) -> None:
-	assembly = getattr(sim, "assembly", None)   # a test host built from seat mixins alone has none
-	if assembly is not None:
-		assembly_api.bind_seat(assembly, seat_id, sim.state.seats[seat_id].modules)
 
 
 def revive(sim: Any, state: Any, deserialize: Any) -> None:

@@ -34,10 +34,11 @@ class Point:
 class Needs:
 	"""Attributes are set by the assembly; reading one that was not declared is an AttributeError."""
 
-	def __init__(self, module_id: str, handlers: Dict[type, Callable], allowed: FrozenSet[type]):
+	def __init__(self, module_id: str, handlers: Dict[type, Callable], allowed: FrozenSet[type], act_as: Callable):
 		self._module_id = module_id
 		self._handlers = handlers
 		self._allowed = allowed
+		self.act_as = act_as   # the assembly's: a context in which a seat is the acting one
 
 	def send(self, command: Command) -> Any:
 		"""Apply `command` through its owner now; the answer is the owner's result or a refusal with a cause."""

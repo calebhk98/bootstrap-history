@@ -16,7 +16,7 @@ class SeatView:
 	def seat_margin(self, seat_id: str) -> float:
 		"""What a seat's concerns earned over their upkeep in a year at its present state (not below nothing)."""
 		needs = self.needs
-		with needs.acting_as(seat_id):
+		with needs.act_as(seat_id):
 			return max(0.0, float(needs.revenue_estimate()) - float(needs.upkeep()))
 
 	def seat_margins(self) -> Dict[str, float]:

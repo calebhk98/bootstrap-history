@@ -1,6 +1,6 @@
 """The yearly chances that need no date: a patron's death, a fire, banditry; and what a catastrophe takes from capital.
 
-Needs: year, events_enabled, ended_seats, acting_as, game_random, civilisation, running_mechanics, founder, automation,
+Needs: year, events_enabled, ended_seats, act_as, game_random, civilisation, running_mechanics, founder, automation,
 standing, price_index, money_per_labour_hour, acting_balance, money_text."""
 from typing import List
 
@@ -24,7 +24,7 @@ class RandomEvents:
 		year = self.needs.year()
 		ended = self.needs.ended_seats()
 		for seat_id in [seat_id for seat_id in seats if seat_id not in ended]:
-			with self.needs.acting_as(seat_id):
+			with self.needs.act_as(seat_id):
 				self.random_events_for_seat(year)
 
 	def random_events_for_seat(self, year: int) -> None:

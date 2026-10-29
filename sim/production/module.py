@@ -71,7 +71,8 @@ class Production(Revenue, Upkeep, ConcernMarket, BookSales, Volume, Learning, De
 	def apply_refresh_operating_caches(self, command):
 		self.memos().forget_operating()
 
-	def apply_forget_revenue_caches(self, command):
+	def seat_bound(self):
+		"""Every seat's memos over what is done and operating are dropped, to be rebuilt."""
 		self._memos.clear()
 
 	def apply_accrue_experience(self, command):

@@ -23,7 +23,7 @@ class Ports:
         return self._module.needs
 
     def acting(self) -> ContextManager[Any]:
-        return self._needs.acting_as(self._seat_id)
+        return self._needs.act_as(self._seat_id)
 
     def balance(self) -> float:
         return self._needs.seat_balance[self._seat_id]

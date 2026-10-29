@@ -1,7 +1,7 @@
 """The seats module: who plays, joining and handing over, goals and win conditions, dealings between seats, and sight.
 
-The seat registry (`state.seats`), the acting seat's switch and the facades stay on `Sim`; the module reads the registry
-through `registered_seats` (the ids) and changes it by the commands `RegisterSeat` and `MoveSeat`, which the engine applies."""
+The seat registry (`state.seats`) stays on `Sim`; the module reads the ids through the assembly's `registered_seats`, switches seats
+with `act_as`, and changes the registry by the commands `RegisterSeat` and `MoveSeat`, which the engine applies."""
 from typing import Any, Dict, List, Optional
 
 from sim.assembly.api import Module

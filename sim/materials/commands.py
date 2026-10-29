@@ -23,11 +23,6 @@ class SettleProjectMaterials(Command):
 
 
 @dataclass(frozen=True)
-class ForgetReadings(Command):
-    """The acting seat's remembered demand tables go: the engine says so when it switches seats or reloads a game."""
-
-
-@dataclass(frozen=True)
 class RestoreReadings(Command):
     """The demand the last throttle saw, as the save kept it, becomes the acting seat's remembered demand (after a load)."""
 

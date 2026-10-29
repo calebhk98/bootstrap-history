@@ -51,11 +51,6 @@ class NoteActorPurchase(Command):
 
 
 @dataclass(frozen=True)
-class ResetMarketCaches(Command):
-	"""The acting seat's remembered goods-category figures are dropped (a seat switch, a load, a handover)."""
-
-
-@dataclass(frozen=True)
 class OpenMarketBook(Command):
 	"""Every commodity the price table names gets its book entry, at the society's present output."""
 

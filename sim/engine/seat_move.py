@@ -4,7 +4,6 @@ Everything a seat owns moves as the same objects, every module's seat state with
 country and kind among them). The replacement keeps its own founder record (the leaver's run is over). What the replacement had of its own was checked empty or mergeable by the seats
 module before this runs (sim/seats/handover_rules.py)."""
 from sim.knowledge.api import HandOverTechniques
-from . import game_assembly
 from .seat_handover_rekey import rename_seat_references
 
 MOVED_FIELDS = ("household", "holdings", "seat_progress", "modules")
@@ -27,11 +26,7 @@ def move_seat(sim, from_id: str, to_id: str) -> dict:
 	moved["known_nodes"] = known_nodes
 	sim.__dict__.get("_stack_cautions", {}).pop(from_id, None)   # the leaver's memory of what it was told goes with it
 	rename_seat_references(sim, from_id, to_id)
-	if sim.state.acting_seat == from_id:
-		sim._switch_seat(to_id)
-	else:
-		game_assembly.switch_seat(sim, sim.state.acting_seat)   # the modules' seat state moved with the seat
+	sim.assembly.rebind(to_id if sim.state.acting_seat == from_id else sim.state.acting_seat)   # the modules' seat state moved with the seat
 	if getattr(sim, "session_seat", None) == from_id:
 		sim.session_seat = to_id
-	sim._reset_economic_caches()
 	return moved

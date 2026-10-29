@@ -88,10 +88,6 @@ class WorkforceWorld:
         """The game's random source (shared and live: every draw moves the stream every other module draws from)."""
         return self._needs.game_random()
 
-    def acting_as(self, seat_id):
-        """A context in which `seat_id` is the acting seat."""
-        return self._needs.acting_as(seat_id)
-
     @property
     def staff_scale(self):
         """The share of the institutional staff ceiling the acting seat's income can pay, as `staff_capacity` last worked it out."""

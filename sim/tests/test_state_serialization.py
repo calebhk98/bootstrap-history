@@ -213,33 +213,6 @@ def _valid_save():
 	return blob, game
 
 
-def _test_cache_reset_after_load():
-	"""Verify the caches a game derives from its state are wiped, and its containers re-wrapped, on save and load."""
-	from types import SimpleNamespace
-	from sim.engine.forward_production import ForwardProductionMixin
-
-	from sim.markets.api import ResetMarketCaches
-	from sim.materials.api import ForgetReadings
-	from sim.production.api import ForgetRevenueCaches
-
-	rewrapped = []
-	sent = []
-	game = SimpleNamespace(send=sent.append, _done_changed=lambda: rewrapped.append("done"),
-	                       _reset_operating=lambda: rewrapped.append("operating"),
-	                       _reset_active=lambda: rewrapped.append("active"),
-	                       _reset_workforce=lambda: rewrapped.append("workforce"))
-	ForwardProductionMixin._reset_economic_caches(game)
-	if rewrapped != ["done", "operating", "active", "workforce"]:
-		return False, f"containers not re-wrapped: {rewrapped}"
-	if sent != [ForgetRevenueCaches(), ResetMarketCaches(), ForgetReadings()]:
-		return False, f"the production, markets and materials modules were not told to forget their memos: {sent}"
-	return True, "Cache reset after load verified"
-
-
-_ok, _detail = _test_cache_reset_after_load()
-check("Cache reset after load", _ok, _detail)
-
-
 def _test_v3_save_shape_validation():
 	"""Verify _validate_save accepts valid v3 saves and rejects structurally incomplete ones for exact reasons."""
 	from sim.engine.saveload import _validate_save

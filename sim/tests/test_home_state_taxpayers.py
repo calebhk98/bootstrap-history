@@ -19,7 +19,7 @@ class HomeView(BudgetView):
 	def __init__(self, countries, playing):
 		self.acting = None
 		self.needs = fake_needs(
-			seat_country=countries, acting_seat="founder", seat_list={"playing": playing}, acting_as=self._act_as,
+			seat_country=countries, acting_seat="founder", seat_list={"playing": playing}, act_as=self._act_as,
 			revenue_estimate=lambda: SEAT_INCOME[self.acting])
 		self.registry = SimpleNamespace(state=SimpleNamespace(home_country=HOME), active_firms=lambda: [], country_of=lambda actor: HOME, country_of_tile=lambda tile: None)
 

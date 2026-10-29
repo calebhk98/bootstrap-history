@@ -68,9 +68,16 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 		self.bump_seat(ACTIVE_CHANGES)
 
 	def apply_watch_active(self, command):
-		seat = self.seat_of(command.seat_id)
+		self._watch_active(command.seat_id)
+
+	def _watch_active(self, seat_id):
+		seat = self.seat_of(seat_id)
 		seat.active = _InvalidatingDict(seat.active, on_change=self.active_changed)
-		self.bump_seat(ACTIVE_CHANGES, command.seat_id)
+		self.bump_seat(ACTIVE_CHANGES, seat_id)
+
+	def seat_bound(self):
+		"""The acting seat's projects in hand report their changes from here on."""
+		self._watch_active(self.clock.acting_seat)
 
 	def apply_note_year_spend(self, command):
 		self.spent_this_year += command.amount

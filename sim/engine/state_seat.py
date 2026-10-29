@@ -1,6 +1,6 @@
 """A seat: everything one player owns, held apart from the world.
 
-The acting seat's record is `SimulationState.acting_record`; `bind_seat` names another seat the acting one.
+The acting seat's record is `SimulationState.acting_record`; the assembly names which seat acts.
 What the seats module knows of the seat (goal, country, kind, holder, policy, the founder's life) is its slot in `modules`.
 """
 from dataclasses import dataclass, field
@@ -45,7 +45,7 @@ def seat_from_template(template: Mapping[str, Any], policy: Dict[str, Any]) -> S
 
 
 def bind_seat(state, seat_id: str) -> None:
-	"""Name `seat_id` the acting seat."""
+	"""Name `seat_id` the acting seat of a state no assembly drives (a test host's); a game's assembly does it for the game."""
 	if seat_id not in state.seats:
 		raise KeyError(seat_id)
 	state.acting_seat = seat_id

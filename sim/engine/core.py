@@ -6,7 +6,7 @@ from sim.demography.api import OpenPopulation, rules as demography_rules
 from sim.workforce.api import WatchStaff
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from sim.engine.state import SimulationState
-from sim.engine.state_seat import bind_seat
+from sim.assembly.api import notify_seat_bound
 from .data import (DEFAULTS, kit_capital, load_civ,
                    nodes_in_civ_money, TRADE_REGISTRY)
 
@@ -222,13 +222,8 @@ class Sim(
     def _reconnect_state_hooks(self):
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
         self.state.actors.purses.observer = self.note_lender_posting
-        acting = self.state.acting_seat
-        try:
-            for seat_id in self.state.seats:
-                bind_seat(self.state, seat_id)
-                self._wrap_seat_containers()
-        finally:
-            bind_seat(self.state, acting)
+        for seat_id in self.state.seats:
+            self._wrap_seat_containers(seat_id)
         from . import game_assembly
         game_assembly.attach(self)   # the modules read the state as loaded from here on
         cleared = self.view("farm_holdings")()["cleared_hectares"]
@@ -242,16 +237,17 @@ class Sim(
             self.rng.setstate((rng_version, tuple(int(x) for x in _keys), rng_gaussian))
 
         # Reset transient caches
-        self._reset_economic_caches()
         game_assembly.attach(self)
+        notify_seat_bound(self.assembly)
         # the demand the last throttle saw is read before the next one, so it is carried
         self.send(RestoreReadings())
 
-    def _wrap_seat_containers(self):
-        """Wrap the bound seat's mutation-aware containers and start its version counters."""
-        self.send(WatchBusiness(self.state.acting_seat))
-        self.send(WatchActive(self.state.acting_seat))
-        self.send(WatchStaff(self.state.acting_seat))
+    def _wrap_seat_containers(self, seat_id=None):
+        """Wrap a seat's mutation-aware containers (the acting seat's unless one is named) and start its version counters."""
+        seat_id = self.state.acting_seat if seat_id is None else seat_id
+        self.send(WatchBusiness(seat_id))
+        self.send(WatchActive(seat_id))
+        self.send(WatchStaff(seat_id))
 
     # ---- OUTSIDE-SURFACE PROPERTIES FOR THE EXTRACTED HOUSEHOLD ----------
     # Moved to sim/engine/core_properties.py's ForwardingPropertiesMixin:
@@ -290,9 +286,6 @@ class Sim(
 
     def add_seat(self, seat_id, seat):
         seat_registry.add_seat(self, seat_id, seat)
-
-    def _switch_seat(self, seat_id):
-        seat_registry.switch_seat(self, seat_id)
 
     def act_as(self, seat_id):
         """Run the body as `seat_id`, then restore the seat that was acting."""

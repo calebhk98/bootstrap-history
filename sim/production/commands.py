@@ -26,8 +26,3 @@ class RefreshOperatingCaches(Command):
 	"""What the acting seat has open has changed, so the capability factor and every figure keyed on what is operating is stale."""
 
 
-@dataclass(frozen=True)
-class ForgetRevenueCaches(Command):
-	"""Drop every seat's memos over what is done and operating (a load and a seat switch need them rebuilt)."""
-
-

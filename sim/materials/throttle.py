@@ -144,7 +144,8 @@ class Throttle:
 
     # ---- what the engine says about the remembered readings ----
 
-    def forget_readings(self, command: Any) -> None:
+    def seat_bound(self) -> None:
+        """The acting seat's remembered demand tables go."""
         readings = self.readings
         readings.annual = readings.held = readings.by_tag = None
 

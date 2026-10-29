@@ -50,7 +50,8 @@ class Markets(Clearing, Categories, Demand, HouseholdNeeds, Absorption, GoodsVie
 			remembered = self._caches[key] = {}
 		return remembered
 
-	def reset_market_caches(self, command):
+	def seat_bound(self):
+		"""The acting seat's remembered goods-category figures are dropped."""
 		for name in _DROPPED_ON_RESET:
 			self._caches.pop((self.clock.acting_seat, name), None)
 

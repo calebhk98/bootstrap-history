@@ -32,7 +32,7 @@ class Applying:
 				seat.employees.pop(trade)
 
 	def release_staff(self, command):
-		with self.needs.acting_as(command.seat_id):
+		with self.needs.act_as(command.seat_id):
 			self.labour.fire(command.trade, command.people)
 
 	def grant_staff(self, command):
