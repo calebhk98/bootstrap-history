@@ -183,7 +183,14 @@ actors (21), hazards, workforce (20 each), projects (19).
   an institution, `NoteActiveChanged`). The household's counters, `BumpHouseholdVersion` and the bridge views
   `held_and_running_versions`, `project_versions` and `running_versions` are gone; measure with `python3 tools/measure/module_graph.py`.
   Left: `Household.start_version_counters` (an empty method) until `sim/engine/core.py` stops calling it.
-- [ ] No other `legacy_*` view that hands out a live object (`legacy_world_map`, `legacy_seats`,
+- [x] The seat's own facts are the seats module's seat state: `goal`, `country`, `kind`, `holder` and `policy` (the founder's standing
+  switches) are `SeatsSeat` fields, written by `SetGoal`, `SetPolicy` and `SetSeatHolder` and read through the views `goal`,
+  `founder`, `seat_country`, `seat_kind`, `seat_holder`, `seat_list` (now with `households`) and `seats_holding_patent`. The
+  `legacy_seats` bridge view is gone: the module reads the registry's ids through `registered_seats`, and actors, markets, ledger and
+  the protocol read the seats' views. `SeatState` stays as the root's registry of each seat's household, holdings, progress record and
+  module slots; `FounderState` stays for the interface's founder-death memory only. Measured: 20 reads of `legacy_*` views (24 before),
+  31 reads answered by the bridge (33 before).
+- [ ] No other `legacy_*` view that hands out a live object (`legacy_world_map`,
 `legacy_economy`, `legacy_labour` and the rest: `python3 tools/measure/module_graph.py`).
 - [x] The `scenario` module (`sim/scenario/`) owns the game's setup and clock: the civilisation, the configuration, the modes
   (events, manual, fog, fuzzy estimates), the year (only `AdvanceYear` moves it), the horizon, the danger and project limits,
