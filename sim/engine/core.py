@@ -26,7 +26,8 @@ from .forward_mechanics import ForwardMechanicsMixin
 from .projects import ProjectsMixin
 from . import change_hooks, node_rederive, seat_registry, year_steps
 from .year_run import run_year
-from sim.seats.api import JoinCastSeats, SetFounderLife, SetPolicy
+from sim.knowledge.api import ReplaceTree
+from sim.seats.api import JoinCastSeats, SetFounderLife, SetGoal, SetPolicy
 from sim.refusal import Refusal
 from .forward_hazards import HazardsForwardsMixin
 from .forward_polity import PolityForwardsMixin
@@ -34,7 +35,7 @@ from .seat_defaults import default_policy
 from .forward_finance import ForwardFinanceMixin
 from .forward_freight import ForwardFreightMixin
 from .forward_resources import ForwardResourcesMixin
-from .core_properties import ForwardingPropertiesMixin
+from .root_facts import horizon_end_year, scenario_fact, view_fact
 from .year_steps import StepContext
 from .data import trade_family
 from .invariants import check_simulation_invariants
@@ -43,7 +44,8 @@ from sim.materials.api import RestoreReadings
 from sim.polity.api import SetValueWeights
 from sim.projects.api import RestoreProjectOrder, WatchActive
 from sim.ventures.api import WatchBusiness
-from sim.scenario.api import OpenScenario, RecordOpeningLiteracy, ScenarioSources, SetYear
+from sim.scenario.api import (OpenScenario, RecordOpeningLiteracy, ScenarioSources, SetEndYear, SetFog,
+                              SetYear)
 from . import units
 
 
@@ -56,7 +58,6 @@ class Sim(
         DiffusionForwardsMixin,
         ForwardFinanceMixin,
         ForwardFreightMixin,
-        ForwardingPropertiesMixin,
         ForwardAgricultureMixin,
         ForwardResourcesMixin,
         ForwardDemographyMixin,
@@ -119,6 +120,7 @@ class Sim(
         # set after the build by whoever front-ends the game (and `seed` again by a load); None while a game has none
         self.seed = None
         self.session_seat = None
+        self._stack_cautions = {}   # per seat: whether it was told of the stack caution
         self._founder_death_cache = None   # the founder's death read off the log by the UI, once it is found
         # MANUAL MODE: the optimizer in step() 4b never starts anything on its
         # own. The only projects that ever become active are ones something
@@ -249,13 +251,37 @@ class Sim(
         self.send(WatchActive(seat_id))
         self.send(WatchStaff(seat_id))
 
-    # ---- OUTSIDE-SURFACE PROPERTIES FOR THE EXTRACTED HOUSEHOLD ----------
-    # Moved to sim/engine/core_properties.py's ForwardingPropertiesMixin:
-    # 107 one-line @property forwards onto self.household/self.population
-    # (capital, done, operating, log, and so on), plus the comment block
-    # explaining why each is a property and never __getattr__. Sim still
-    # inherits ForwardingPropertiesMixin below, so every name in that file
-    # keeps resolving on a live Sim instance exactly as it did here.
+    # ---- the facts the root states itself (sim/engine/root_facts.py) ----
+    # the scenario module's: the clock, the modes and the setup the game was built from
+    year = scenario_fact("world.year", SetYear)
+    fog = scenario_fact("world.fog", lambda value: SetFog(bool(value)))
+    fuzzy_estimates = scenario_fact("world.fuzzy_estimates")
+    cfg = scenario_fact("configuration")
+    civ = scenario_fact("civilisation")
+    start_civ = scenario_fact("start_civilisation")
+    manual = scenario_fact("manual")
+    events = scenario_fact("events")
+    bounty_set = scenario_fact("bounty_set")
+    end_year = property(horizon_end_year, lambda self, value: self.send(SetEndYear(value)))
+    # the tree, the stores, the purse and the founder's goal and policy
+    nodes = view_fact("tree_nodes", set_command=ReplaceTree)
+    stores = view_fact("store_book")
+    capital = view_fact("acting_balance", set_command=RestorePurse)
+    goal = view_fact("goal", "node", SetGoal)
+    goal_year = view_fact("goal", "year")
+    policy = view_fact("founder", "policy")
+    # the techniques and the projects of the acting seat
+    active = view_fact("active_projects")
+    done = view_fact("techniques_held")
+    done_year = view_fact("done_year")
+    revealed = view_fact("techniques_revealed")
+    operating = view_fact("operating")
+    mothballed = view_fact("mothballed")
+    bountied = view_fact("bountied")
+    granted = view_fact("techniques_granted")
+    forgotten = view_fact("techniques_forgotten")
+    failed_attempts = view_fact("failed_attempts")
+    paid_towards = view_fact("paid_towards")
 
 
     # -- helpers ------------------------------------------------------------

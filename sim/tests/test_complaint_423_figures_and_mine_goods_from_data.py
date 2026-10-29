@@ -16,7 +16,7 @@ from sim.ui import figures as figure_registry
 from sim.ui import figures_data
 from sim.ui.proto import dispatch_figures
 from sim.tests.interface_fixture import declared_for, shipped_declared
-from sim.tests.ui_stand_in import Game
+from sim.tests.ui_stand_in import Game, ui_state
 
 MOD_ID = "tester_figs_k3f9"
 OLD_DEMAND_KEYS = {"coal": ("coal_kg",), "iron": ("iron_bar_kg", "iron_ore_kg"),
@@ -36,8 +36,8 @@ def write_mod(mods_dir, figures):
 def game(declared=None):
     """What the declared figures read: the population, the price level and the household's cash."""
     return Game(interface_declared=declared, population=Game(total=1000.4, children=300.0, working_age=600.0, elderly=100.4),
-                           price_index=1.25, year=100, _dashboard_history=None, wage_index=1.5,
-                           state=Game(household=Game(capital=4321.5)))
+                           price_index=1.25, year=100, wage_index=1.5,
+                           state=Game(household=Game(capital=4321.5), **vars(ui_state())))
 
 
 class FigureTests(unittest.TestCase):

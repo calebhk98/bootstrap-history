@@ -17,7 +17,7 @@ engine bridge (`sim/engine/bridge*.py`) is the thin remainder of reads that stil
 in section 7 report how many are left.
 
 Code that is not yet in a module still calls `Sim` methods that forward to views and commands
-(`sim/engine/forward_*.py`, `core_properties.py`). Those forwarders are the leftover of the old mixin design and
+(`sim/engine/forward_*.py`, and the properties `core.py` states through `root_facts.py`). Those forwarders are the leftover of the old mixin design and
 are being removed; the measure is command 1.
 
 ## 2. The assembly (`sim/assembly/`)

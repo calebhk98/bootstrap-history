@@ -706,7 +706,8 @@ def _summarise_goal_closure(results, quantile_of):
 def _summarise_failure_modes(results):
     causes = defaultdict(int)
     for run in results:
-        if run.dead_reason: causes[run.dead_reason.split(":")[0]] += 1
+        dead_reason = run.view("founder")()["dead_reason"]
+        if dead_reason: causes[dead_reason.split(":")[0]] += 1
         elif not run.goal_year: causes["ran out of horizon"] += 1
     if causes:
         print("failure modes       :")
@@ -1208,7 +1209,7 @@ def _sweep_point_failure_causes(res):
     failure_causes = defaultdict(int)
     for run in res:
         if not run.goal_year:
-            failure_causes[(run.dead_reason or "ran out of horizon").split(":")[0]] += 1
+            failure_causes[(run.view("founder")()["dead_reason"] or "ran out of horizon").split(":")[0]] += 1
     return failure_causes
 
 

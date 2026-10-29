@@ -7,7 +7,7 @@ import types
 import unittest
 
 from sim.ui.proto import economy
-from sim.tests.ui_stand_in import Game
+from sim.tests.ui_stand_in import Game, ui_state
 
 POWER_NODES = {
     "cap_power_muscle": {"mechanics": {"power_tier": {"rank": 0, "label": "muscle", "scale": "muscle"}}},
@@ -89,7 +89,7 @@ class EconomyReply(unittest.TestCase):
 
     def test_economy_without_full_has_no_detail_tables(self):
         game = Game(
-            year=100, price_index=1.0, wage_index=1.0, living_cost=lambda: 10.0, state=Game(), _dashboard_history=None,
+            year=100, price_index=1.0, wage_index=1.0, living_cost=lambda: 10.0, state=Game(**vars(ui_state())),
             labour=Game(wage_bill=lambda: 4.0, headcount=lambda: 3.0, household_room=lambda: 2.0),
             literacy=lambda key: 0.1, revenue_sources=lambda: [], material_market_summary=lambda: None)
         game.state.dashboard_history = None

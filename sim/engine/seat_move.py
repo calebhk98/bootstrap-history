@@ -24,7 +24,7 @@ def move_seat(sim, from_id: str, to_id: str) -> dict:
 	known_nodes = sim.send(HandOverTechniques(from_id, to_id))   # the leaver's knowledge record is the one that moves
 	moved = move_seat_fields(sim.state.seats, from_id, to_id)
 	moved["known_nodes"] = known_nodes
-	sim.__dict__.get("_stack_cautions", {}).pop(from_id, None)   # the leaver's memory of what it was told goes with it
+	sim._stack_cautions.pop(from_id, None)   # the leaver's memory of what it was told goes with it
 	rename_seat_references(sim, from_id, to_id)
 	sim.assembly.rebind(to_id if sim.state.acting_seat == from_id else sim.state.acting_seat)   # the modules' seat state moved with the seat
 	if sim.session_seat == from_id:

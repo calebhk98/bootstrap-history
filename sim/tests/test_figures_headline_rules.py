@@ -11,7 +11,7 @@ from sim.engine.readable import readable
 from sim.ui import figures as figure_registry
 from sim.ui.proto import dispatch_figures, dispatch_inspection
 from sim.tests.interface_fixture import shipped_declared
-from sim.tests.ui_stand_in import FactViews
+from sim.tests.ui_stand_in import FactViews, ui_state
 
 
 class Game(FactViews):
@@ -19,7 +19,7 @@ class Game(FactViews):
 
     year = 1300
     capital = 1234.5
-    _dashboard_history = []
+    state = ui_state(dashboard_history=[])
 
     @property
     def interface_declared(self):
