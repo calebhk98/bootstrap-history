@@ -65,6 +65,10 @@ class MapViews:
             self._geography_cache = Geography(GeographyInputs(self))
         return self._geography_cache
 
+    def tiles_listed_by(self, civilisation: Any) -> List[str]:
+        """The tiles a civilisation's file lists as its own (its `home_tiles`, else those its `home_regions` name), on this map."""
+        return tiles_held(civilisation, self.world_map)
+
     def legacy_world_map(self) -> Any:
         return self.world_map
 

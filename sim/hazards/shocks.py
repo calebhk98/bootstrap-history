@@ -5,7 +5,7 @@ own log); population, output, the coin and the society's values change once, at 
 (merge.py). One seat runs the same draws in the same order as a game with no other seat. The order of the dice is the
 order of the calls below; save/load and the equivalence check depend on it.
 
-Needs: civilisation, year, seat_list, game_random, acting_as, events_enabled, effective_hazard, legacy_said_once,
+Needs: civilisation, year, seat_list, game_random, acting_as, events_enabled, legacy_said_once,
 techniques_held, staff, staff_snapshot, wage_index, money_text, money_real, event_log."""
 from typing import Any, Dict, List, Optional
 
@@ -88,7 +88,7 @@ class Shocks:
 	def apply_event_causes(self, hazard: Dict[str, Any], year: int, hazard_start: int) -> Optional[Dict[str, Any]]:
 		"""The event as its stated causes leave it this year, or None when they do not hold. Told once, the year the window
 		opens, when the causes fail."""
-		kept, report = self.needs.effective_hazard(hazard)
+		kept, report = self.effective_hazard(hazard)
 		if report["failed"] and year == hazard_start:
 			said = self.needs.legacy_said_once()
 			key = "causes:" + hazard.get("name", "hazard")

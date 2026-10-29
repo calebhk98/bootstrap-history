@@ -6,7 +6,7 @@ list, each hazard's stated causes judged against the run as it stands. The basel
 (`simulator.py baseline-ensemble`, kept in a cache file) says what the society tends to reach with no
 player; when it has not been generated the screen says so and how to make it, rather than guessing.
 """
-from sim.engine import baseline_ensemble, event_causes
+from sim.engine import baseline_ensemble
 from sim.geography.api import regions_of_tiles, tiles_held
 
 _HAPPENED = "happened"
@@ -44,7 +44,7 @@ def _dated_events(sim):
             status = _UNDER_WAY
         else:
             status = _UPCOMING
-        report = event_causes.evaluate_causes(sim, hazard)
+        report = sim.view("event_cause_report")(hazard)
         row = {"status": status, "years": [year_start, year_end],
                "causes_checked": report["checked"]}
         if report["checked"]:

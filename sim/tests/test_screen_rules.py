@@ -153,17 +153,17 @@ check("the technologies you built exclude what was granted and run in the order 
 hazards = [{"name": "old", "years": [10, 20]}, {"name": "past", "years": [50, 60]}, {"name": "now", "years": [95, 110]},
            {"name": "later", "years": [200, 210]}, {"name": "unscheduled"}]
 event_game = Game(cfg={"start_year": 30}, year=100, civ={"hazards": hazards}, fog=False)
-with mock.patch.object(screen_divergence.event_causes, "evaluate_causes", return_value={"checked": False, "failed": []}):
-    events = screen_divergence._dated_events(event_game)
-    fogged_events = screen_divergence._dated_events(Game(**{**event_game.__dict__, "fog": True}))
+event_game.event_cause_report = lambda hazard: {"checked": False, "failed": []}
+events = screen_divergence._dated_events(event_game)
+fogged_events = screen_divergence._dated_events(Game(**{**event_game.__dict__, "fog": True}))
 check("a dated event is before the run, happened, under way or upcoming by where the year stands against its years",
       [(row["years"][0], row["status"]) for row in events] == [(10, "before the run began"), (50, "happened"), (95, "under way"), (200, "upcoming")], events)
 check("an event with no years is not listed", len(events) == 4)
 check("under fog an upcoming event's name is withheld and the others keep theirs",
       [row.get("name") for row in fogged_events] == ["old", "past", "now", None], fogged_events)
 failing = {"checked": True, "failed": [{"quantity": "q", "node": "n", "op": ">", "threshold": 1, "value": 0, "why": "w"}]}
-with mock.patch.object(screen_divergence.event_causes, "evaluate_causes", return_value=failing):
-    judged = screen_divergence._dated_events(event_game)[0]
+event_game.event_cause_report = lambda hazard: failing
+judged = screen_divergence._dated_events(event_game)[0]
 check("an event whose causes fail says so and lists the failed causes", judged["causes_hold_now"] is False and judged["failed_causes"][0]["quantity"] == "q", judged)
 with mock.patch.object(screen_divergence.baseline_ensemble, "read_cache", return_value=None):
     section = screen_divergence.baseline_section(Game(civ={"id": "rome"}, cfg={"start_year": 1}, year=1))

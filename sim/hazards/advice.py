@@ -1,8 +1,7 @@
 """What the player is told about the hazards ahead: what kind of thing helps, which first steps are in sight, how long a hedge
 takes, and one line per hazard on whether what stands between now and then is enough.
 
-Needs: tree_nodes, techniques_held, critical_path, visible_to_player, start_check, project_cost, civilisation, year,
-effective_hazard."""
+Needs: tree_nodes, techniques_held, critical_path, visible_to_player, start_check, project_cost, civilisation, year."""
 from typing import Any, Dict, List, Optional
 
 from . import constants, rules
@@ -90,7 +89,7 @@ class Advice:
 		rows = []
 		year = self.needs.year()
 		for hazard, year_start, _year_end, in_progress in hazards_not_yet_past(self.needs.civilisation(), year):
-			if self.needs.effective_hazard(hazard)[0] is None:
+			if self.effective_hazard(hazard)[0] is None:
 				continue                  # its stated causes do not hold as things stand
 			years_until = 0 if in_progress else (year_start - year)
 			name = hazard.get("name", "hazard")

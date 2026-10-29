@@ -96,7 +96,7 @@ class ControllerRelief(unittest.TestCase):
 def timeline_for(hazards, year, relief=1.0, hedge_years=None):
     """`hazard_timeline` over hazards written out as (name, start year, in progress), unhedged unless `relief` is low."""
     rows = [({"name": name, "staff_loss": 0.4}, start, start + 5, in_progress) for name, start, in_progress in hazards]
-    module = hazards_host.build(year=year, effective_hazard=lambda hazard: ("holds", ""))
+    module = hazards_host.build(year=year)
     module.hazard_relief = lambda kind: (relief, "why")
     module.hazard_advice = lambda kind: {"even_started_today_the_real_hedges_here_take_years": hedge_years or {"quickest": 3, "slowest": 10}}
     with mock.patch.object(advice, "hazards_not_yet_past", return_value=rows):

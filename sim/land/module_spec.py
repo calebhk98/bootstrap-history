@@ -42,6 +42,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("tiles_owned_by", "tiles_owned_by", kind=KEYED, **_LIVE),
         ViewSpec("tile_owner_map", "tile_owner_map", **_LIVE),
         ViewSpec("home_tiles_held", "home_tiles_held", **_LIVE),
+        ViewSpec("tiles_listed_by", "tiles_listed_by", kind=QUOTE),
         ViewSpec("home_tiles_held_version", "home_tiles_held_version", **_LIVE),
         ViewSpec("tile_ownership_problems", "tile_ownership_problems", **_LIVE),
         ViewSpec("settlement_spec", "settlement_spec", kind=QUOTE),

@@ -18,26 +18,28 @@ from .module import Hazards
 from .state import OUTPUT, WORLD_EVENTS, HazardsSeat, HazardsWorld
 
 READS_BY_OWNER = {
-	"core": ("year", "civilisation", "events_enabled", "game_random", "acting_as", "legacy_said_once", "money_text",
-	         "effective_hazard"),
+	"core": ("year", "civilisation", "opening_civilisation", "events_enabled", "game_random", "acting_as", "legacy_said_once",
+	         "money_text"),
 	"seats": ("seat_list", "ended_seats", "founder", "goal", "automation"),
 	"knowledge": ("techniques_held", "techniques_granted", "tree", "tree_nodes", "visible_to_player", "losable_node_ids",
 	              "tree_closure", "critical_path", "corpus_hedge", "visibility", "techniques_forgotten", "legacy_fog"),
 	"mechanics": ("hazard_counter_rows", "corpus_hedge_tiers", "corpus_nodes", "mechanic", "running_mechanics"),
 	"production": ("running", "capability_gaps"),
 	"disease": ("epidemic_risk",),
+	"demography": ("population_total", "nutrition_ratio_last_year"),
+	"land": ("tiles_listed_by",),
 	"projects": ("start_check", "project_cost", "active_projects", "closure_record", "closed_by_choice"),
-	"diffusion": ("civ_diffusion", "diffusible_ids", "diffusion_relief"),
+	"diffusion": ("civ_diffusion", "diffusible_ids", "diffusion_relief", "literacy"),
 	"defence_stores": ("counter_supply_gap",),
 	"resources": ("mine_capacity",),
 	"polity": ("military_leverage", "standing"),
 	"workforce": ("staff", "staff_snapshot", "wage_index", "money_per_labour_hour"),
 	"ledger": ("acting_balance",),
-	"reporting": ("money_real", "event_log"),
+	"reporting": ("money_real", "event_log", "real_output_hours"),
 	"markets": ("price_index",),
 	"foreign_trade": ("partners_in_agent_economy",),
 	"agriculture": ("weather_seed",),
-	"actors": ("country_strata",),
+	"actors": ("country_strata", "state_budget_figures", "army_figures", "state_knows", "home_strata_rows"),
 }
 
 # The figures read the seat's techniques, the mines, the diffusion and the held stores, all written outside any command of
@@ -49,6 +51,8 @@ MODULE_SPECS = (ModuleSpec(
 	publishes=(
 		ViewSpec("output_factor", "output_factor", channels=(OUTPUT,)),
 		ViewSpec("world_events", "world_events", kind=QUOTE, channels=(WORLD_EVENTS,)),
+		ViewSpec("effective_hazard", "effective_hazard", **_QUOTE),
+		ViewSpec("event_cause_report", "event_cause_report", **_QUOTE),
 		ViewSpec("hazard_figure", "hazard_figure", **_QUOTE),
 		ViewSpec("hazard_relief_entries", "hazard_relief_entries", **_QUOTE),
 		ViewSpec("hazard_relief", "hazard_relief", **_QUOTE),

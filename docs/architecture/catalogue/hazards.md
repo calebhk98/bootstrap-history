@@ -121,8 +121,10 @@ Views of finished modules: `year`, `civilisation`, `seat_list`, `techniques_held
 Published by `bridge_hazards.py` under the name the owner will publish (each is deleted when its owner moves): `events_enabled`,
 `ended_seats`, `founder`, `goal` (seats); `losable_node_ids`, `critical_path`, `tree_closure` (knowledge and the tree); `active_projects`,
 `closure_record`, `closed_by_choice` (projects and ventures); `military_leverage` (polity); `staff_snapshot`, `wage_index`
-(workforce); `country_strata` (actors); `effective_hazard` (the event-cause evaluator, which reads a
-dozen owners and stays in the engine).
+(workforce); `country_strata` (actors). The event-cause evaluator (`effective_hazard`, `event_cause_report`) is the module's own
+(`causes.py`, `cause_quantities.py`, `cause_rules.py`, `cause_report.py`); each quantity reads a view of its owner: actors
+`state_budget_figures`, `army_figures`, `state_knows`, `home_strata_rows`; land `tiles_listed_by`; demography
+`population_total`, `nutrition_ratio_last_year`; reporting `real_output_hours`; diffusion `literacy`; scenario `opening_civilisation`.
 
 Debts, raw objects or switches the module cannot do without: `acting_as` (the module has no way to switch seats; the world
 phases act as each seat in turn), `legacy_said_once` (the `_said_condition` set the levy shares), and the reused `game_random`.

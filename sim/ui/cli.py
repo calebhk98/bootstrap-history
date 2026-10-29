@@ -427,8 +427,8 @@ def cmd_validate(args):
     errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
     errs += [problem for civ_id, civ in civ_start_check.load_civilisations(ROOT).items()
              for problem in units.check_civ_units(units.registry(), civ_id, civ)]
-    from sim.engine import validate_event_causes
-    errs += validate_event_causes.check_event_causes(civ_start_check.load_civilisations(ROOT), set(nodes))
+    from sim.hazards.api import cause_check
+    errs += cause_check(civ_start_check.load_civilisations(ROOT), set(nodes))
     errs += validate_running_gates.check_running_gates(nodes)
     from sim.engine import validate_note_quality
     print("\n".join(validate_note_quality.report_lines(nodes)))

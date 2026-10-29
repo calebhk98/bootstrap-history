@@ -8,6 +8,7 @@ the world event log and the world's output factor, and tells other owners what a
 from sim.assembly.api import Module
 
 from .advice import Advice
+from .causes import Causes
 from .events import Events
 from .knowledge_risk import KnowledgeRisk
 from .random_events import RandomEvents
@@ -17,7 +18,7 @@ from .shocks import Shocks
 from .world import WorldHazards
 
 
-class Hazards(Relief, Advice, KnowledgeRisk, Shocks, RandomEvents, Sack, WorldHazards, Events, Module):
+class Hazards(Relief, Advice, Causes, KnowledgeRisk, Shocks, RandomEvents, Sack, WorldHazards, Events, Module):
 
 	def setup(self) -> None:
 		self._counters_cache = None      # (the mechanics rows it was built from, the counters)

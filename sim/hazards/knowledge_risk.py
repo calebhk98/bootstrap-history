@@ -1,6 +1,6 @@
 """The report on what the seat's finished work is at risk of losing: the sacks ahead, what each leaves, and what is already gone.
 
-Needs: year, civilisation, techniques_held, techniques_forgotten, corpus_hedge, losable_node_ids, effective_hazard, visibility,
+Needs: year, civilisation, techniques_held, techniques_forgotten, corpus_hedge, losable_node_ids, visibility,
 capability_gaps, legacy_fog, epidemic_risk."""
 from typing import Any, Dict
 
@@ -47,7 +47,7 @@ class KnowledgeRisk:
         for hazard, year_start, year_end, in_progress in hazards_not_yet_past(
                 needs.civilisation(), year):
             # the chances shown are the ones the event's stated causes leave, as things stand today
-            effective, causes = needs.effective_hazard(hazard)
+            effective, causes = self.effective_hazard(hazard)
             hazard = effective if effective is not None else weakened(hazard, 0.0)
             row = {"name": hazard.get("name", "hazard"),
                    "years": [year_start, year_end],

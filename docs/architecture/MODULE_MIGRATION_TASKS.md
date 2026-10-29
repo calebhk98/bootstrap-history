@@ -204,6 +204,11 @@ actors (21), hazards, workforce (20 each), projects (19).
   built game: the famine cause's food supply (same attribute), the teaching view (`Sim.actors`, gone; actors publish
   `teaching_knowledge`), and a stray `@property` that made the age-at-death read raise TypeError. Still open from the same
   sweep, and the same on the base build: `fuzzy_estimates` reads `viewer_actor_id`, which nothing sets.
+- [x] The event-cause evaluator (`event_causes`, `event_cause_state`, `validate_event_causes`) is the hazards module's own and the bridge entry
+  `effective_hazard` is deleted. Each cause quantity reads a view of its owner (actors, land, demography, reporting, diffusion), a view answers
+  None when the fact is unmeasured, and a relative cause with no start value is not judged instead of reading a start of zero. The divergence
+  screen reads the view `event_cause_report`; `validate` calls `sim.hazards.api.cause_check`. Measured with `python3 tools/measure/module_graph.py`:
+  77 reads answered by the bridge (78 before), 33 reads of `legacy_*` views (unchanged).
 - [ ] Phase 9: replace the remaining defaulted `getattr(sim, ...)` reads with direct reads or views, so a moved field fails
   loudly (`grep -rn 'getattr(sim, "' sim`).
 - [ ] The engine bridge answers no module read: each bridged view is published by the module that owns the fact.
