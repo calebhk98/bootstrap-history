@@ -8,7 +8,7 @@ from sim.markets import categories
 
 class ForwardMarketsMixin:
 
-    # numbers the actors module reads off the game through `legacy_constant`
+    # numbers other code still reads off the game
     GOODS_CATEGORIES = categories.GOODS_CATEGORIES
     ESSENTIAL_CATEGORIES = categories.ESSENTIAL_CATEGORIES
 

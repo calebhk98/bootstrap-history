@@ -39,7 +39,7 @@ class Crew:
 		needs = self.needs
 		nodes = needs.tree_nodes()
 		used = collections.defaultdict(float)
-		for node_id in sorted(needs.operating()):
+		for node_id in sorted(self.operating()):
 			if node_id == excluding or node_id not in nodes:
 				continue
 			trade, fte = self.venture_foreman(node_id)
@@ -61,7 +61,7 @@ class Crew:
 		close."""
 		nodes = self.needs.tree_nodes()
 		rows = []
-		for node_id in sorted(self.needs.operating()):
+		for node_id in sorted(self.operating()):
 			if node_id not in nodes:
 				continue
 			scholars, craftsmen = self.venture_hands(node_id)
@@ -75,7 +75,7 @@ class Crew:
 		# SORTED: this sums floats over a set and the total gates `open` with a hard comparison, so the order must be fixed
 		nodes = self.needs.tree_nodes()
 		scholars_used = craftsmen_used = 0.0
-		for node_id in sorted(self.needs.operating()):
+		for node_id in sorted(self.operating()):
 			if node_id not in nodes:
 				continue
 			scholars, craftsmen = self.venture_hands(node_id)

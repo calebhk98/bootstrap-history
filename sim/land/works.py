@@ -36,7 +36,7 @@ class Works:
         have = self.world.works.get(tile, {}).get(node_id, 0.0)
         node = self.needs.tree_nodes()[node_id]
         money = works_rules.work_money(self.needs.project_cost_now(node_id), have, capacity,
-                                       self.needs.legacy_constant["INSTITUTION_EXPANSION_CONVEXITY"])
+                                       self.needs.institution_expansion_convexity())
         return {"money": money, "capacity": capacity, "years": float(node.get("build_yrs") or node.get("yrs") or 0.0)}
 
     def build_work(self, command: BuildWork) -> Tuple[bool, str]:

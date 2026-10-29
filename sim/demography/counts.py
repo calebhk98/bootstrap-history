@@ -40,6 +40,10 @@ class Counts:
         """How far the food (kcal per day) meets what the nation's people need: 1.0 is exactly enough."""
         return self._bands().nutrition_ratio(food_kcal_per_day)
 
+    def pop_scale_for(self, people):
+        """`people` against the reference population, never below the floor."""
+        return rules.pop_scale(people, DEFAULT_POPULATION_100AD, POP_SCALE_FLOOR)
+
     def population_total(self):
         return self._bands().total
 

@@ -114,13 +114,13 @@ check("a state that left need unpaid funds nobody", unpaid[1].actors["government
 
 
 # ---- the module's side ---------------------------------------------------------------------------------------
-CONSTANTS = {"STATE_FUNDING_BASE_LABOUR_HOURS": 100.0, "STATE_FUNDING_POP_SCALE_EXPONENT": 0.4, "STATE_FUNDING_GOV_QUALITY_SCALE": 25.0,
-			 "POP_SCALE_FLOOR": 0.05, "DEFAULT_POPULATION_100AD": 1000.0}
+TERMS = {"base_hours": 100.0, "exponent": 0.4, "governance_scale": 25.0}
 
 view = PatronageView()
-view.needs = fake_needs(legacy_constant=CONSTANTS, patron_clients=lambda country: [("a", 3.0, 1.1), ("b", 0.0, 1.0)])
-check("the funding terms carry the size of the country against the reference one, floored",
-	  view.state_funding_terms(500.0)["population_scale"] == 0.5 and view.state_funding_terms(1.0)["population_scale"] == CONSTANTS["POP_SCALE_FLOOR"])
+view.needs = fake_needs(state_funding_terms=lambda: TERMS, pop_scale_for=lambda people: max(0.05, people / 1000.0),
+						patron_clients=lambda country: [("a", 3.0, 1.1), ("b", 0.0, 1.0)])
+check("the funding terms are the polity's figures and the size of the country as the demography module scales it",
+	  view.state_funding_terms(500.0) == dict(TERMS, population_scale=0.5))
 check("the clients a country's state is asked about are the seats' governance and reputation", view.patron_clients("far") == [(3.0, 1.1), (0.0, 1.0)])
 
 

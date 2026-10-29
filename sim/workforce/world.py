@@ -472,7 +472,7 @@ class ProjectReads:
 
     @property
     def operating(self):
-        return self._needs.projects_operating()
+        return self._needs.operating()
 
     @property
     def active(self):

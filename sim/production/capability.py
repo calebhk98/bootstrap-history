@@ -64,7 +64,7 @@ class Capability:
 		"""
 		if node_id not in self.needs.capability_sets()[1]:
 			return 1.0 if self.running(node_id) else 0.0
-		if node_id not in self.needs.projects_operating():
+		if node_id not in self.needs.operating():
 			return 0.0
 		return max(0.0, self.needs.venture_size[node_id])
 
@@ -112,4 +112,4 @@ class Capability:
 			return True
 		# Scalable institutions have a smaller size to start at (institution_units can sit below 1.0), so a founder who cannot
 		# afford the whole of one founds as much as the surplus will carry; a concern counts as running only while it is open.
-		return node_id in needs.projects_operating()
+		return node_id in needs.operating()

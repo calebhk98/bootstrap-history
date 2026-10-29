@@ -64,7 +64,7 @@ def defaults() -> Dict[str, Any]:
 		"horizon_end_year": 1000, "project_limits": {
 			"base": 2, "per_director_hours": 2000.0, "per_scholar": 12.0, "per_artisan": 25.0},
 		"actor_world": None, "legacy_acting_household": types.SimpleNamespace(bounties_paid=0, employees={}),
-		"start_gate_unheld_stock": lambda *arguments: None,
+		"stock_status": lambda node_id: {"missing": []},
 		"start_gate_material_seller": lambda *arguments: None, "start_gate_group_prohibition": lambda *arguments: None,
 		"extra_start_checks": lambda *arguments: None,
 	}

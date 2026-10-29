@@ -23,7 +23,7 @@ NODE = "workshop"
 
 class InstitutionUpkeepTests(unittest.TestCase):
     def upkeep(self, node, scalable=False, capability=False, headcount=0.0, units=None, fully_staffed=False, places=10.0, full=False):
-        module = production_host.build(tree_nodes={NODE: node}, projects_operating={NODE}, headcount=headcount,
+        module = production_host.build(tree_nodes={NODE: node}, operating={NODE}, headcount=headcount,
                                        mechanic=lambda name: {NODE: full},
                                        capability_sets=({NODE} if capability else set(), {NODE} if scalable else set(), {}))
         module.institution_units = lambda node_id: 3.0

@@ -25,7 +25,7 @@ class StandInSim:
         self.supply_falls_per_entrant = supply_falls_per_entrant
         self.asked_entrants = []
         self.needs = fake_needs(
-            legacy_constant={"GOODS_CATEGORIES": (GOODS,)}, tree_nodes={"weaver": {"cat": GOODS}, "school": {"cat": SERVICE}},
+            goods_categories=lambda: (GOODS,), tree_nodes={"weaver": {"cat": GOODS}, "school": {"cat": SERVICE}},
             concern_takings=self.concern_takings, node_output_market_factor=lambda node: MARKET_FACTOR,
             goods_category_factor_with_entrants=self.goods_category_factor_with_entrants, market_rate=market_rate)
 

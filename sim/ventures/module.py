@@ -20,6 +20,10 @@ class Ventures(Crew, Quotes, Opening, Sales, Coverage, Module):
 		"""The works the seat has shut and may reopen (the live set)."""
 		return self.needs.legacy_projects().mothballed
 
+	def operating(self):
+		"""The acting seat's concerns and capabilities that are open (the live set: the plants opened and closed change it in place)."""
+		return self.needs.legacy_projects().operating
+
 	def concern_staff(self, node_id):
 		return self.concern_staff_by_trade(node_id)
 

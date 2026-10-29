@@ -139,7 +139,7 @@ class Depth:
 	def concern_worker_years_this_year(self):
 		"""Worker-years each technique's operating concerns employed this year, the founder's and the firms'."""
 		granted = self.needs.techniques_granted()
-		years = society_worker_years(granted | self.needs.projects_operating(), self.is_concern_node, granted,
+		years = society_worker_years(granted | self.needs.operating(), self.is_concern_node, granted,
 		                             self.seat.industry_opening_rate, self.founding_worker_years)
 		for node_id, capacity, staffed_share in self.needs.firm_concern_holdings():
 			years[node_id] = years.get(node_id, 0.0) + firm_worker_years(self.founding_worker_years(node_id), capacity, staffed_share)

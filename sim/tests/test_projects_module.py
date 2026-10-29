@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.projects.api import START_CHECKS
+from sim.projects.api import START_CHECKS, constants as projects_constants
 from sim.tests import projects_host
 
 PLAIN = {"cat": "technique", "pre": [], "lab": {}, "sch": 0, "art": 0, "mat": [], "ph": 10.0}
@@ -13,6 +13,11 @@ PLAIN = {"cat": "technique", "pre": [], "lab": {}, "sch": 0, "art": 0, "mat": []
 
 def module(node=PLAIN, **views):
     return projects_host.build(tree=lambda node_id: node if node_id == "a" else None, **views)
+
+
+class FailureResetShare(unittest.TestCase):
+    def test_the_view_answers_the_declared_share(self):
+        self.assertEqual(module().failure_reset_share(), projects_constants.FAILURE_RESET_SHARE)
 
 
 class StartCheck(unittest.TestCase):
@@ -38,11 +43,16 @@ class StartCheck(unittest.TestCase):
 
         def gate(node_id, node, ignore_trade, memo, why):
             asked.append(node_id)
-            return False, "no stock"
-        self.assertEqual(module(start_gate_unheld_stock=gate).start_check("a"), (False, "no stock"))
+            return False, "no seller"
+        self.assertEqual(module(start_gate_material_seller=gate).start_check("a"), (False, "no seller"))
         self.assertEqual(asked, ["a"])
-        self.assertEqual(module(techniques_held={"a"}, start_gate_unheld_stock=gate).start_check("a"), (False, "already done"))
+        self.assertEqual(module(techniques_held={"a"}, start_gate_material_seller=gate).start_check("a"), (False, "already done"))
         self.assertEqual(asked, ["a"])
+
+    def test_a_node_short_of_living_stock_is_refused_naming_it(self):
+        refused, text = module(stock_status=lambda node_id: {"missing": [("silkworm eggs", 0.02)]}).start_check("a")
+        self.assertFalse(refused)
+        self.assertIn("silkworm eggs", text)
 
     def test_a_mods_check_is_asked_after_the_shipped_ones(self):
         mod = lambda node_id, node, ignore_trade, memo, why: (False, "the mod forbids it")

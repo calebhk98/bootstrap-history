@@ -13,7 +13,7 @@ from .book_sales import BookSales
 from .capability import Capability
 from .commands import BumpHouseholdVersion
 from .concern_market import ConcernMarket
-from .constants import RAMP_SHARE_AT_FULL_DEPTH
+from .constants import INSTITUTION_EXPANSION_CONVEXITY, RAMP_SHARE_AT_FULL_DEPTH
 from .depth import Depth
 from .learning import Learning
 from .revenue import Revenue
@@ -37,10 +37,6 @@ class Production(Revenue, Upkeep, ConcernMarket, BookSales, Volume, Learning, De
 
 	# ---- what the engine's other objects still hold, as views ----
 
-	def operating(self):
-		"""The acting seat's concerns and capabilities that are open (the live set: the engine adds and discards in place)."""
-		return self.needs.projects_operating()
-
 	def done_in_order(self):
 		"""Everything the acting seat has finished, in the tree's own order (the memo lives here)."""
 		return self.memos().done_in_order(self.needs.tree_nodes(), self.needs.techniques_held())
@@ -51,13 +47,16 @@ class Production(Revenue, Upkeep, ConcernMarket, BookSales, Volume, Learning, De
 		done = self.needs.techniques_held()
 		done_version, operating_version, _units_version = self.needs.running_versions()
 		return (done, (done_version, operating_version, len(done), len(self.needs.techniques_granted()),
-		               len(self.needs.projects_operating())), self.needs.tree_nodes())
+		               len(self.needs.operating())), self.needs.tree_nodes())
 
 	def practice_set(self):
 		return self._practice_set()
 
 	def practisable(self, node_id):
 		return self._practisable(node_id)
+
+	def institution_expansion_convexity(self):
+		return INSTITUTION_EXPANSION_CONVEXITY
 
 	def ramp_share_at_full_depth(self):
 		return RAMP_SHARE_AT_FULL_DEPTH

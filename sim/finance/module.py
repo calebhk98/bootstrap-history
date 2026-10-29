@@ -12,13 +12,14 @@ from sim.assembly.api import Module
 from .arrears import Arrears
 from .bank import Bank
 from .capital_market import CapitalMarket
+from .cash_remedies import CashRemedies
 from .credit_line import CreditLine
 from .debt_service import DebtService
 from .insolvency import Insolvency
 from .purchases import Purchases
 
 
-class Finance(CapitalMarket, CreditLine, Arrears, Insolvency, DebtService, Purchases, Bank, Module):
+class Finance(CapitalMarket, CreditLine, Arrears, Insolvency, DebtService, Purchases, CashRemedies, Bank, Module):
 
 	# ---- the seat's debt state ----
 

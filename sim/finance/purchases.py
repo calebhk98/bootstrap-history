@@ -1,6 +1,6 @@
 """The purchase budget and its refusal, as the views every buyer reads.
 
-Needs: money_text, acting_balance, cash_remedies."""
+Needs: money_text, acting_balance (and what `cash_remedies` reads)."""
 from typing import Any
 
 from . import purchase_rules
@@ -26,7 +26,7 @@ class Purchases:
 
 	def purchase_remedies_text(self) -> str:
 		"""The commands that raise cash or cut costs, or an empty string."""
-		return purchase_rules.remedies_sentence(self.needs.cash_remedies())
+		return purchase_rules.remedies_sentence(self.cash_remedies())
 
 	def purchase_refusal(self, what: str, cost: float) -> Any:
 		"""The refusal that states the purchase rule, the budget and the amount short."""

@@ -2,7 +2,7 @@
 
 The module owns each seat's industry experience (`ProductionSeat`) and publishes what runs, what concerns earn and cost, how deep an
 industry is and which techniques are in use. The projects record, the household and the tree have not moved into modules yet, so it
-reads them through the views of their owners (the engine bridge answers `projects_operating` and `running_versions`), and nothing it
+reads them through the views of their owners (the engine bridge answers `running_versions`; ventures publishes `operating`), and nothing it
 publishes is cached: legacy code writes that state directly (the record of what is done, operating and granted)."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.diffusion.api import NoteFirstRuns
@@ -14,7 +14,7 @@ from .module import Production
 from .state import ProductionSeat
 
 READS_BY_OWNER = {
-	"core": ("year", "game_setting", "civilisation", "category_trait", "trade_family", "projects_operating", "running_versions"),
+	"core": ("year", "game_setting", "civilisation", "category_trait", "trade_family", "running_versions"),
 	"workforce": ("money_per_labour_hour", "staff", "staff_version", "hour_commitments", "hours_available", "wage_signature",
 	              "market_annual_wage", "standing_job_pay", "headcount", "base_tile", "people_who_exist", "hours_per_person_year",
 	              "literacy_references"),
@@ -24,7 +24,7 @@ READS_BY_OWNER = {
 	"prices": ("held_goods_prices_in_hours", "price_index", "done_memo", "producers_memo", "material_prices", "commodity_record"),
 	"markets": ("agent_prices_at", "agent_seat_sale_outlook", "agent_trades_good", "agent_producers_by_good",
 	            "agent_worker_years_by_recipe", "home_unit_price"),
-	"ventures": ("venture_opened_year", "venture_size", "venture_capex", "venture_real_earnings", "venture_real_upkeep",
+	"ventures": ("operating", "venture_opened_year", "venture_size", "venture_capex", "venture_real_earnings", "venture_real_upkeep",
 	             "venture_foreman", "venture_hands_founder_staffed", "coverage", "units_for_coverage"),
 	"actors": ("concern_versions", "concerns_of_active_firms", "firm_concern_holdings"),
 	"projects": ("gate_blocked",),
@@ -43,7 +43,7 @@ _LIVE = dict(cached=False)
 # (name, compute method, kind, seat scoped)
 _VIEWS = (
 	("running", "running", KEYED, False), ("is_venture", "is_venture", KEYED, False),
-	("is_concern_node", "is_concern_node", KEYED, False), ("operating", "operating", None, False),
+	("is_concern_node", "is_concern_node", KEYED, False), 
 	("done_in_order", "done_in_order", None, True), ("running_stamp", "running_stamp", None, False), ("practice_set", "practice_set", None, False),
 	("practisable", "practisable", KEYED, False), ("capability_gaps", "capability_gaps", None, False),
 	("institution_units", "institution_units", KEYED, False), ("institution_places", "institution_places", KEYED, False),
@@ -72,6 +72,7 @@ _VIEWS = (
 	("failed_attempts_trial", "failed_attempts_trial", QUOTE, False), ("techniques_in_use", "techniques_in_use", None, True),
 	("techniques_epoch", "techniques_epoch", None, False), ("price_epoch", "price_epoch", None, False),
 	("ramp_share_at_full_depth", "ramp_share_at_full_depth", None, False),
+	("institution_expansion_convexity", "institution_expansion_convexity", None, False),
 )
 
 

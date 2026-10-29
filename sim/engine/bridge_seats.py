@@ -96,9 +96,9 @@ def forget_goal_caches(sim, command):
 @bridge_view("patronage", seat_scoped=True)
 def patronage(sim):
     """The founder's age and the deputies the programme could go on with: {founder_age, deputies, deputy_hours,
-    deputies_carry_the_work}."""
+    deputies_needed (the level that lets it go on without its founder), deputies_carry_the_work}."""
     return {"founder_age": sim.founder_age(), "deputies": sim.view("staff")()["directors_extra"], "deputy_hours": sim.deputy_hours(),
-            "deputies_carry_the_work": sim.deputies_carry_the_work()}
+            "deputies_needed": sim.DEPUTIES_CARRY_THE_WORK_FROM, "deputies_carry_the_work": sim.deputies_carry_the_work()}
 
 
 @bridge_view("dissolution_terms")

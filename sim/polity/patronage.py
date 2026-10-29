@@ -19,6 +19,12 @@ class Patronage:
 		                     self.state_reach(), needs.pop_scale(), constants.STATE_FUNDING_POP_SCALE_EXPONENT, self.seat.gov,
 		                     constants.STATE_FUNDING_GOV_QUALITY_SCALE, needs.rep_factor())
 
+	def state_funding_terms(self):
+		"""The figures a state funds a client on: the labour hours of its base sum, the exponent of the country's size and the
+		scale of the client's governance."""
+		return {"base_hours": constants.STATE_FUNDING_BASE_LABOUR_HOURS, "exponent": constants.STATE_FUNDING_POP_SCALE_EXPONENT,
+		        "governance_scale": constants.STATE_FUNDING_GOV_QUALITY_SCALE}
+
 	def patron_clients(self, country):
 		"""(seat id, governance, reputation factor) of the playing seats of `country` whose techniques run the `state_funding`
 		mechanic: the clients its state is asked to fund (a seat with no country is the home country's)."""

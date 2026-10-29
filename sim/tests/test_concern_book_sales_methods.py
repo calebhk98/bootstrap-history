@@ -14,7 +14,7 @@ TRADED = {"acid"}
 def _Game(operating=("mill",), granted=(), ventures=("mill", "school"), baskets=None, economy_prices=None):
     """The module over plain views, with the questions it asks of itself answered as the test says."""
     module = production_host.build(
-        projects_operating=set(operating), techniques_granted=set(granted), output_factor=0.5, price_index=2.0,
+        operating=set(operating), techniques_granted=set(granted), output_factor=0.5, price_index=2.0,
         agent_trades_good=lambda good: good in TRADED, agent_prices_at=lambda: economy_prices, commodity_record=lambda tag: {},
         material_prices={"salt": 4.0}, capability_sets=(frozenset(), frozenset({"school"}), {}))
     module.is_venture = lambda node_id: node_id in set(ventures)

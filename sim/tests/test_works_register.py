@@ -30,7 +30,7 @@ class _Host:
             Land, world=LandWorld(), seat=LandSeat(),
             views={"tree_nodes": NODES, "project_cost_now": lambda node_id: 1000.0,
                    "is_venture": lambda node_id: NODES[node_id]["up"] > 0, "year": lambda: self.year,
-                   "legacy_constant": {"INSTITUTION_EXPANSION_CONVEXITY": 0.5},
+                   "institution_expansion_convexity": lambda: 0.5,
                    "settlement_tiles": {TOWN: 1.0, PORT: 1.0}, "techniques_held": set(known) | {"lore"},
                    "techniques_granted": set(), "can_pay": lambda cost: purchase_rules.can_pay(cost, self.cash),
                    "afford_means": "cash", "money_text": lambda amount, grouped=False: "%d coin" % amount},

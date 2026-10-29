@@ -104,7 +104,7 @@ class VisibleScale(unittest.TestCase):
 class ConcernTakings(unittest.TestCase):
     def _world(self, category, factor=0.5):
         module = types.SimpleNamespace(needs=fake_needs(
-            tree_nodes={"loom": {"cat": category}}, legacy_constant={"GOODS_CATEGORIES": ("textiles",)},
+            tree_nodes={"loom": {"cat": category}}, goods_categories=lambda: ("textiles",),
             game_setting={"revenue_ramp_years": 5}, year=10, ramp_share_at_full_depth=0.5,
             industry_depth=lambda node_id: 0.0, concern_takings=lambda node_id, ramp: 1000.0,
             node_output_market_factor=lambda node: 1.0, goods_category_factor=lambda cat: factor))

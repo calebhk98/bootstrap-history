@@ -59,7 +59,7 @@ class Quotes:
 		otherwise. `fully_ramped` leaves the ramp out (what it reaches). `with_output_factor` False leaves out the hazard and
 		war factor, which `revenue` applies to its total."""
 		needs = self.needs
-		running = node_id in needs.operating()
+		running = node_id in self.operating()
 		ramp = concern_earnings.quoted_ramp(running, fully_ramped, lambda: needs.venture_ramp[node_id])
 		units = concern_earnings.quoted_units(running, node_id in needs.capability_sets()[1], lambda: needs.institution_units[node_id], units)
 		market = needs.node_output_market_factor(needs.tree_nodes()[node_id], self.clock.acting_seat)

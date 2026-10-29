@@ -93,3 +93,14 @@ def trade_wait_years(supply_now: float, year: int, training_rows: Sequence[Seque
 def trade_wait_outlasts(wait: Optional[float], stall_years_before_abandonment: int) -> bool:
     """True when no hands exist and none arrive before the stall gate would abandon the project."""
     return wait is None or wait >= stall_years_before_abandonment - 1
+
+
+def unheld_stock_verdict(short: Sequence[Tuple[str, float]], why: bool) -> Optional[Tuple[bool, Optional[str]]]:
+    """The refusal of a node whose living stock is not held, naming (stock, amount short) pairs; None when none is short."""
+    if not short:
+        return None
+    if not why:
+        return False, None
+    return False, ("it needs living stock you do not hold: %s. Get it by trade, gift or "
+                   "expedition; it is not something you can research"
+                   % ", ".join("%s (%.3g more)" % pair for pair in short))

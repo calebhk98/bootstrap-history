@@ -8,7 +8,6 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import blocker_unheld_stock
 from sim.foreign_trade.module import ForeignTrade
 from sim.tests.diffusion_host import gated
 from sim.agents.api import edges
@@ -88,18 +87,6 @@ class NeededRows(unittest.TestCase):
         gates = [{"material": EGGS, "needed": 0.02, "held": 0.5, "brought_by": None},
                  {"material": HERD, "needed": 5.0, "held": 0.0, "brought_by": "import"}]
         self.assertEqual(rules.needed_by(gates), [{"material": EGGS, "needed": 0.02, "held": 0.5}])
-
-
-class UnheldStockBlocker(unittest.TestCase):
-    def test_a_node_with_stock_short_is_refused_naming_the_stock(self):
-        stand_in = Game(stock_status=lambda node_id: {"missing": [(EGGS, 0.02)]})
-        refused, why = blocker_unheld_stock.check_unheld_stock(stand_in, "silk", {}, False, {}, True)
-        self.assertFalse(refused)
-        self.assertIn(EGGS, why)
-
-    def test_a_node_with_nothing_short_is_not_blocked(self):
-        stand_in = Game(stock_status=lambda node_id: {"missing": []})
-        self.assertIsNone(blocker_unheld_stock.check_unheld_stock(stand_in, "silk", {}, False, {}, True))
 
 
 class NeedsFirst(unittest.TestCase):

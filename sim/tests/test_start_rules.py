@@ -183,5 +183,18 @@ class CreditKept(unittest.TestCase):
         self.assertEqual(record_rules.credit_kept(-5.0, 0.0), (0.0, None))
 
 
+class UnheldStockVerdict(unittest.TestCase):
+    def test_nothing_short_gives_no_verdict(self):
+        self.assertIsNone(start_rules.unheld_stock_verdict([], True))
+
+    def test_a_stock_short_refuses_and_names_it(self):
+        refused, text = start_rules.unheld_stock_verdict([("silkworm eggs", 0.02)], True)
+        self.assertFalse(refused)
+        self.assertIn("silkworm eggs", text)
+
+    def test_asked_for_no_sentence_the_refusal_has_none(self):
+        self.assertEqual(start_rules.unheld_stock_verdict([("silkworm eggs", 0.02)], False), (False, None))
+
+
 if __name__ == "__main__":
     unittest.main()

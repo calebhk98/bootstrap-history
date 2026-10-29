@@ -1,7 +1,7 @@
 """The finance module's spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_finance.py and the other
-bridge files) under the name the owner will publish, or a view of a module that has moved. Grouped by owner. It reads no raw
+Every read is a view of an owner that has not moved yet, published by the engine bridge (the bridge files of sim/engine)
+under the name the owner will publish, or a view of a module that has moved. Grouped by owner. It reads no raw
 object of another owner: the purse book, the household's purse and the projects in hand are reached through views that answer
 plain figures and through the owners' commands.
 
@@ -26,16 +26,18 @@ READS_BY_OWNER = {
 	"prices": ("price_index",),
 	"actors": ("cast", "state_treasury", "actor_world", "lender_offers_made", "cash_and_deposit", "loans_out", "debt_owed"),
 	"seats": ("dealing_party",),
-	"ledger": ("acting_balance",),
+	"ledger": ("acting_balance", "held_goods", "goods_stock"),
+	"materials": ("material_commodity",),
 	"mechanics": ("effect_sum", "effect_values", "mechanic"),
 	"polity": ("standing",),
-	"resources": ("forest_hectares", "mine_operating_cost"),
+	"resources": ("forest_hectares", "mine_operating_cost", "mine_capacity", "mine_workings", "mine_working_cost"),
 	"workforce": ("staff", "money_per_labour_hour", "labour_market", "wage_bill", "household_dependant_people",
 	              "held_trade", "hours_for_sale", "best_wage_trade", "work_for_wages_dry_run", "standing_job_pay"),
-	"production": ("revenue_capacity", "revenue_estimate", "upkeep", "operating", "cash_remedies"),
+	"production": ("revenue_capacity", "revenue_estimate", "upkeep"),
+	"ventures": ("venture_real_upkeep", "operating"),
 	"projects": ("committed_cost",),
-	"knowledge": ("tree_nodes",),
-	"markets": ("agent_rate", "agent_credit_room", "agent_economy_opened", "household_bill_per_person"),
+	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted"),
+	"markets": ("sale_quote", "agent_rate", "agent_credit_room", "agent_economy_opened", "household_bill_per_person"),
 }
 
 _LIVE = dict(cached=False)

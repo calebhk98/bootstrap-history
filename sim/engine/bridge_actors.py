@@ -5,19 +5,13 @@ name (the owners' catalogue entries in docs/architecture/catalogue say which) an
 coarse, so the entries here are one engine call each. Each command is applied the way the old call did it."""
 import contextlib
 
-from sim.assembly.api import KEYED, QUOTE
+from sim.assembly.api import QUOTE
 from sim.demography.api import rules as demography_rules
 
 from . import view_share
 from .bridge import bridge_command, bridge_view
 
 # ---- core: settings and constants the engine declares ----
-
-
-@bridge_view("legacy_constant", kind=KEYED)
-def legacy_constant(sim, name):
-    """A number `Sim` still declares (the goods categories, the state's funding terms, the population scale), read as the game has it."""
-    return getattr(sim, name)
 
 
 @bridge_view("shared_answers", kind=QUOTE)
@@ -40,13 +34,6 @@ def shared_answers(sim, table):
 
 
 # ---- demography, agriculture, diffusion, mechanics ----
-
-
-@bridge_view("nutrition_ratio_last_year")
-def nutrition_ratio_last_year(sim):
-    """The share of the people's food need the last year's supply met, or None before a year has been stepped."""
-    flows = getattr(sim, "_last_demographic_step", None)
-    return None if flows is None else float(flows.nutrition_ratio)
 
 
 @bridge_view("farm_food_demand_kg")

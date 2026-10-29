@@ -2,7 +2,7 @@
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old code did, and
 is never cached. The `legacy_*` views are raw state or the engine's own objects the module still needs; they go when that state
-moves: the household's purse and facade, and the constants `Sim` still declares (`legacy_constant`)."""
+moves: the household's purse and facade."""
 from .bridge import bridge_view
 
 

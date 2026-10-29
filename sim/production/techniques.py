@@ -31,7 +31,7 @@ class Techniques:
 		epoch = (done_version, operating_version, needs.concern_versions()[1])
 		cached = getattr(self, "_techniques_in_use_cache", None)
 		done = needs.techniques_held()
-		operating = needs.projects_operating()
+		operating = needs.operating()
 		if cached is not None and cached[0] == epoch and cached[2] is done and cached[3] is operating:
 			return cached[1]
 		in_use = set(needs.techniques_granted()) | set(operating)

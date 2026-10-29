@@ -65,7 +65,7 @@ START_CHECKS = (
     StartCheck("foreign_only", "unavailable"),
     StartCheck("missing_prereqs", "knowledge"),
     StartCheck("running_gates", "closed"),
-    StartCheck("unheld_stock", "supply", "start_gate_unheld_stock"),
+    StartCheck("unheld_stock", "supply"),
     StartCheck("substitution", "supply"),
     StartCheck("materials_have_a_seller", "supply", "start_gate_material_seller"),
     StartCheck("credit_frozen", "money"),

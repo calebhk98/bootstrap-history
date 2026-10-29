@@ -17,7 +17,7 @@ from sim.tests import module_harness
 def defaults() -> Dict[str, Any]:
 	return {
 		"year": 100, "game_setting": {"revenue_ramp_years": 3}, "civilisation": {}, "tree_nodes": {}, "techniques_held": frozenset(),
-		"techniques_granted": frozenset(), "projects_operating": set(), "done_year": {}, "running_versions": (0, 0, 0),
+		"techniques_granted": frozenset(), "operating": set(), "done_year": {}, "running_versions": (0, 0, 0),
 		"price_index": 1.0, "output_factor": 1.0, "venture_opened_year": lambda node_id, default: default,
 		"venture_size": lambda node_id: 1.0, "running_mechanics": lambda name: [], "effect_sum": lambda channel, base: base,
 		"money_per_labour_hour": 1.0, "trade_family": lambda trade: "craft",
