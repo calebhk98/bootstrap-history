@@ -3,7 +3,6 @@ grows with its own activity, not with the number of concerns held (Complaint 581
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 
@@ -17,7 +16,6 @@ from sim.prices import prices
 from sim.markets import port_actors
 from sim.tests import prices_stand_in
 from sim.engine.state import ActorRecord, ActorsState
-from sim.engine.view_share import ViewShare
 from sim.tests.ui_stand_in import Game
 from sim.tests import module_harness, production_host
 
@@ -165,63 +163,6 @@ class SpreadAndLending(unittest.TestCase):
         self.assertEqual(spreads, [143, 144])
         self.assertEqual(answers[0], frozenset(["node_a", "node_g"]))
         self.assertEqual(world.technique_first_run, {"node_a": 143 - 10000})
-
-
-class StandInWorld(ViewShare):
-    """The few attributes the shared-answer service reads of the game, which is also the service."""
-
-    def real_output_per_head(self):
-        return self.state.economy.output_per_head
-
-    def __init__(self):
-        super().__init__(self)
-        self.year = 143
-        self.state = types.SimpleNamespace(
-            projects=types.SimpleNamespace(done=[], operating={}),
-            economy=types.SimpleNamespace(output_per_head=1.0))
-        self.population = types.SimpleNamespace(total=100.0)
-        self.civ = {"id": "rome"}
-        self.world_map = types.SimpleNamespace(tiles={"t1": 1, "t2": 1})
-
-    def view(self, name):
-        held = {"techniques_held": frozenset(), "techniques_version": (0, 0), "operating_version": (0, 0), "operating": {}, "forest_hectares": 1.0, "nitre_beds": {"square_metres": 1.0, "tonnes_per_square_metre": 0.001}, "mine_workings": [], "population": self.population,
-                "real_output_per_head": self.state.economy.output_per_head}
-        return lambda: held[name]
-
-    def send(self, command):
-        return None   # the world event log is the hazards module's
-
-
-class StandaloneAnswers(unittest.TestCase):
-
-    def test_a_standalone_answer_is_worked_out_once_outside_a_view(self):
-        world, worked = StandInWorld(), []
-        for _firm in range(40):
-            world._shared_answer(("cap", "smith"), (1,), lambda: worked.append(1) or 5.0, standalone=True)
-        self.assertEqual(len(worked), 1)
-
-    def test_a_changed_input_or_a_new_year_works_it_out_again(self):
-        world, worked = StandInWorld(), []
-        ask = lambda inputs: world._shared_answer(("cap", "smith"), inputs, lambda: worked.append(1) or 5.0, standalone=True)
-        ask((1,))
-        ask((2,))
-        world.year = 144
-        ask((2,))
-        self.assertEqual(len(worked), 3)
-
-    def test_an_answer_that_is_not_standalone_is_not_shared_outside_a_view(self):
-        world, worked = StandInWorld(), []
-        for _firm in range(3):
-            world._shared_answer(("bill", "x"), (), lambda: worked.append(1) or 1.0)
-        self.assertEqual(len(worked), 3)
-
-    def test_a_registry_size_change_leaves_a_view_s_answers_alone(self):
-        world, worked = StandInWorld(), []
-        world._view_world_stamp = lambda: ((), (1,))
-        world._view_scope = {}
-        for _firm in range(5):
-            world._shared_answer(("bill", "x"), (), lambda: worked.append(1) or 1.0)
-        self.assertEqual(len(worked), 1)
 
 
 class PatentHolders(unittest.TestCase):

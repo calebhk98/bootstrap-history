@@ -1,7 +1,7 @@
 """The actors module's spec (sim/assembly).
 
 The records of every actor beside the founder's households are saved in the world slot (`ActorsState`). Every read is a view of
-an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_actors.py and the other bridge files) under the
+an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_*.py) under the
 name the owner will publish, or a view of a module that has moved. Grouped by owner. The `legacy_*` names are the owners' raw
 objects the actors still hold in place: the seats' registry, the acting seat's projects, the map and the constants `Sim` still declares.
 The module builds the seats as parties to the exchange (seat_parties.py) from the views and commands of the modules that own what a seat
@@ -25,7 +25,8 @@ from . import commands
 from .module import Actors
 
 READS_BY_OWNER = {
-	"core": ("year", "civilisation", "game_setting", "shared_answers", "acting_as", "declared_actor_kinds",
+	"sharing": ("shared_answers",),
+	"core": ("year", "civilisation", "game_setting", "acting_as", "declared_actor_kinds",
 	         "opening_civilisation", "civilisation_record", "money_text", "mass_rate_text"),
 	"seats": ("acting_seat", "acting_country", "seat_list", "seat_country", "seats_holding_patent", "seat_place", "seat_dealings", "registered_seats",
 	          "dealings_listing", "disclosure", "disclosures"),

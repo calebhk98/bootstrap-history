@@ -22,9 +22,3 @@ def reprice_opening_money(sim, command):
 def legacy_economy(sim):
     """The port over the agent economy (the markets module's `economy`)."""
     return sim.assembly.modules["markets"].economy
-
-
-@bridge_view("legacy_goods_market")
-def legacy_goods_market(sim):
-    """The one goods market every buyer and seller asks (the markets module's `goods_market`)."""
-    return sim.assembly.modules["markets"].goods_market

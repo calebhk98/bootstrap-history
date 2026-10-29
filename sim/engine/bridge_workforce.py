@@ -3,10 +3,6 @@
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old
 labour adapter did, and is never cached. The `legacy_*` views are raw state the module still reads or writes in place;
 they go when that state moves."""
-from sim.assembly.api import QUOTE
-
-from . import view_share
-
 from .bridge import bridge_view
 
 
@@ -23,10 +19,6 @@ def provider_game(sim):
 
 # ---- the actors and the agent economy ----------------------------------------------------------------------------------------
 
-@bridge_view("shared_answer", kind=QUOTE)
-def shared_answer(sim, key, inputs, compute, standalone=False):
-    """`compute()` reused while the engine's world stamp and `inputs` hold."""
-    return view_share.of(sim)._shared_answer(key, inputs, compute, standalone)
 
 
 
