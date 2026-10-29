@@ -17,11 +17,10 @@ from .module import Hazards
 from .state import OUTPUT, WORLD_EVENTS, HazardsSeat, HazardsWorld
 
 READS_BY_OWNER = {
-	"core": ("year", "civilisation", "opening_civilisation", "events_enabled", "game_random",
-	         "money_text"),
-	"seats": ("seat_list", "ended_seats", "founder", "goal", "automation"),
-	"knowledge": ("techniques_held", "techniques_granted", "tree", "tree_nodes", "visible_to_player", "losable_node_ids",
-	              "tree_closure", "critical_path", "corpus_hedge", "visibility", "techniques_forgotten", "fog_of_war"),
+	"scenario": ("year", "civilisation", "opening_civilisation", "events_enabled", "game_random", "money_text", "automation", "fog_of_war"),
+	"seats": ("seat_list", "ended_seats", "founder", "goal"),
+	"knowledge": ("techniques_held", "techniques_granted", "tree", "tree_nodes", "visible_to_player", "losable_node_ids", "tree_closure",
+	              "critical_path", "corpus_hedge", "visibility", "techniques_forgotten"),
 	"mechanics": ("hazard_counter_rows", "corpus_nodes", "mechanic", "running_mechanics"),
 	"production": ("running", "capability_gaps"),
 	"disease": ("epidemic_risk",),
@@ -35,7 +34,7 @@ READS_BY_OWNER = {
 	"workforce": ("wage_index", "money_per_labour_hour"),
 	"ledger": ("acting_balance",),
 	"reporting": ("money_real", "event_log", "real_output_hours"),
-	"markets": ("price_index",),
+	"prices": ("price_index",),
 	"foreign_trade": ("partners_in_agent_economy",),
 	"agriculture": ("weather_seed",),
 	"actors": ("country_strata", "state_budget_figures", "army_figures", "state_knows", "home_strata_rows"),
