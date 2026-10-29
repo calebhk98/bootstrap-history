@@ -28,20 +28,13 @@ class WinConditionMet(unittest.TestCase):
 
 class AttributeSource(unittest.TestCase):
 
-    def test_a_private_or_nested_path_is_refused(self):
-        for path in ("_secret", "household.slaves", None, 3):
+    def test_a_count_the_people_hold_is_read_as_a_float(self):
+        self.assertEqual(goal_rules.staff_number("slaves", {"slaves": 4, "employees": {}}), 4.0)
+
+    def test_a_key_that_is_not_a_count_is_refused(self):
+        for key in ("employees", "unheld", None, 3):
             with self.assertRaises(ValueError):
-                goal_rules.check_attribute_path(path)
-
-    def test_a_plain_path_passes(self):
-        goal_rules.check_attribute_path("slaves")
-
-    def test_a_number_is_read_as_a_float_and_anything_else_is_refused(self):
-        self.assertEqual(goal_rules.attribute_number("slaves", 4), 4.0)
-        with self.assertRaises(ValueError):
-            goal_rules.attribute_number("slaves", None)
-        with self.assertRaises(ValueError):
-            goal_rules.attribute_number("slaves", "many")
+                goal_rules.staff_number(key, {"slaves": 4, "employees": {"smith": 1.0}})
 
 
 class Measurements(unittest.TestCase):

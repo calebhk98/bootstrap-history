@@ -237,8 +237,7 @@ Channels that today are version counters: `done`, `operating`, `active`, `workfo
 | `engine/tile_ownership.py:85` | `__dict__[_tile_transfers]` | `land` |
 | `engine/ui_port.py:169` | `_founder_death_cache` | function module |
 | `engine/urban_share.py:33` | `__dict__[_urban_ceilings_cache]` | `demography` |
-| `engine/view_share.py:58` | `__dict__[_standalone_scope]` | `reporting` |
-| `engine/view_share.py:19` | `_view_scope` | `reporting` |
+| `sharing/module.py` | `_standalone_scope`, `_scope` | `sharing` |
 | `geography/endemic.py:34` | `__dict__[_endemic_cache]` | function module |
 | `geography/food_productivity.py:18` | `__dict__[_food_cache]` | function module |
 | `geography/reach_bands.py:59` | `__dict__[_reach_ladder]` | function module |

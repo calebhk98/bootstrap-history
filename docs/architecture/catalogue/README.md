@@ -85,7 +85,7 @@ A class split across modules is listed with the number of its methods each modul
 | `ProjectCostTailMixin` | `sim/engine/projects_cost_tail.py` | `projects` (1) |
 | `ProductionMixin` | `sim/engine/economy_production.py` | `production` (23), `polity` (3), `workforce` (1) |
 | `ProjectMaterialsMixin` | `sim/engine/project_materials.py` | `materials` (15) |
-| `ViewShareMixin` | `sim/engine/view_share.py` | `core` (7) |
+| `ViewShareMixin` (moved, `sim/engine/view_share.py` is gone) | `sim/sharing/` | `sharing` (3 views) |
 | `MarketClearingMixin` | `sim/engine/market_clearing.py` | `markets` (10) |
 | `ForeignEconomiesMixin` | `sim/engine/foreign_economies.py` | `foreign_trade` (9) |
 | `ForeignRoutesMixin` | `sim/engine/foreign_routes.py` | `freight` (17) |

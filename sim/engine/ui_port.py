@@ -118,10 +118,6 @@ def state_path_root(sim, name):
     return state_paths.root_value(sim, name)
 
 
-def plain_attribute(sim, name):
-    return state_paths.plain_attribute(sim, name)
-
-
 def interface_memory(sim):
     """The slot of the save the UI owns; the engine never reads it."""
     return sim.state.interface

@@ -57,10 +57,8 @@ class Goals:
         """The live number a win_condition's `metric` names, 0..1. Raises for a metric this engine does not know how to
         read - at load time, via `validate`, not mid-game - rather than silently reading 0 forever for a typo."""
         metric = condition.get("metric")
-        if condition.get("source") == "attribute":
-            path = condition.get("path")
-            goal_rules.check_attribute_path(path)
-            return goal_rules.attribute_number(path, self.needs.game_attribute(path))
+        if condition.get("source") == "staff":
+            return goal_rules.staff_number(condition.get("key"), self.needs.staff())
         if condition.get("source") == "generation_share":
             breakdown = self.needs.generation_breakdown()
             return goal_rules.generation_share(breakdown["total_kw"], breakdown["sources_kw"].get(condition.get("key"), 0.0))

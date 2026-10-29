@@ -9,7 +9,6 @@ from sim.ledger.api import OpenPurse
 from sim.refusal import Refusal
 from sim.seats.api import COUNTRY_SEAT, ForgetGoalCaches, MoveSeat, RegisterSeat, SetSeatHolder
 
-from . import state_paths
 from .bridge import bridge_command, bridge_view
 from .seat_defaults import default_policy
 from .seat_handover_empty import holds_that_would_be_lost
@@ -70,13 +69,3 @@ def forget_goal_caches(sim, command):
 
 
 # ---- the founder's death ----
-
-# ---- goals and what they read ----
-
-@bridge_view("game_attribute", kind=QUOTE)
-def game_attribute(sim, path):
-    """What the game holds under a plain attribute name, or None (an attribute-sourced win condition reads it)."""
-    held = state_paths.plain_attribute(sim, path)
-    return sim.view("staff")().get(path) if held is None else held   # the people the workforce module holds (slaves, scholars, ...)
-
-

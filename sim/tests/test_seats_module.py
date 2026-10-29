@@ -182,12 +182,17 @@ class Goals(unittest.TestCase):
         module.set_goal(SetGoal("c"))
         self.assertEqual(module.seat.goal_year, 1000)
 
-    def test_an_attribute_goal_reads_the_games_number_and_refuses_a_private_path(self):
+    def test_a_staff_goal_reads_the_count_the_seats_people_hold(self):
         module, _ = self.goals_over()
-        module.needs.game_attribute = lambda path: 7
-        self.assertEqual(module.win_condition_value({"source": "attribute", "path": "slaves"}), 7.0)
-        with self.assertRaises(ValueError):
-            module.win_condition_value({"source": "attribute", "path": "_x"})
+        module.needs.staff = lambda: {"slaves": 7, "employees": {"smith": 2.0}}
+        self.assertEqual(module.win_condition_value({"source": "staff", "key": "slaves"}), 7.0)
+
+    def test_a_staff_goal_refuses_a_key_that_is_not_a_count(self):
+        module, _ = self.goals_over()
+        module.needs.staff = lambda: {"slaves": 7, "employees": {"smith": 2.0}}
+        for key in ("employees", "no_such_people", None, "_x"):
+            with self.assertRaises(ValueError):
+                module.win_condition_value({"source": "staff", "key": key})
 
     def test_a_generation_goal_is_one_sources_share(self):
         module, _ = self.goals_over()
