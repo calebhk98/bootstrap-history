@@ -18,14 +18,6 @@ def legacy_projects(sim):
     return sim.state.projects
 
 
-# ---- living stock -----------------------------------------------------------------------------------------------------
-
-@bridge_view("start_gate_unheld_stock", kind=QUOTE)
-def start_gate_unheld_stock(sim, node_id, node, ignore_trade, memo, why):
-    from .blocker_unheld_stock import check_unheld_stock
-    return check_unheld_stock(sim, node_id, node, ignore_trade, memo, why)
-
-
 # ---- reporting, seats and the root ---------------------------------------------------------------------------------
 
 # ---- commands of owners that have not moved -----------------------------------------------------------------------

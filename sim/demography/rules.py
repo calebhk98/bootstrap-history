@@ -93,3 +93,8 @@ def deaths_with_externalities(deaths_by_band, answers):
         for band, count in ((answer or {}).get("deaths_by_band") or {}).items():
             total[band] = total.get(band, 0.0) + max(0.0, float(count))
     return total
+
+
+def nutrition_ratio_of(flows):
+    """The share of the people's food need a yearly step's flows say was met, or None before a year has been stepped."""
+    return None if flows is None else float(flows.nutrition_ratio)

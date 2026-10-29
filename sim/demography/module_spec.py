@@ -51,6 +51,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("urban_fraction", "urban_fraction", **_LIVE),
         ViewSpec("food_eaten", "food_eaten", **_LIVE),
         ViewSpec("demographic_flows", "demographic_flows", **_LIVE),
+        ViewSpec("nutrition_ratio_last_year", "nutrition_ratio_last_year", **_LIVE),
         ViewSpec("regional_flows_last_year", "regional_flows_last_year", **_LIVE),
         ViewSpec("farm_holdings", "farm_holdings", seat_scoped=True, **_LIVE),
     ),

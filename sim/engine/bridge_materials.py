@@ -24,9 +24,3 @@ def project_versions(sim):
 def shared_bill(sim, node_id, compute):
     """A project's material bill, reused inside a view's scope while the world and the node's stock hold."""
     return view_share.of(sim)._shared_bill(node_id, compute)
-
-
-@bridge_view("failure_reset_share")
-def failure_reset_share(sim):
-    """The share of a failed project's bill that is lost."""
-    return sim.FAILURE_RESET_SHARE

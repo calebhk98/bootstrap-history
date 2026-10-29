@@ -43,13 +43,6 @@ def shared_answers(sim, table):
 # ---- demography, agriculture, diffusion, mechanics ----
 
 
-@bridge_view("nutrition_ratio_last_year")
-def nutrition_ratio_last_year(sim):
-    """The share of the people's food need the last year's supply met, or None before a year has been stepped."""
-    flows = getattr(sim, "_last_demographic_step", None)
-    return None if flows is None else float(flows.nutrition_ratio)
-
-
 @bridge_view("farm_food_demand_kg")
 def farm_food_demand_kg(sim):
     """Kilograms of grain the people would harvest by eating what they need, before the first harvest."""

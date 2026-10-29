@@ -45,6 +45,10 @@ class Regions:
         """The nation's flows of the last yearly step (births, deaths, nutrition ratio), None before the first."""
         return self._last_demographic_step
 
+    def nutrition_ratio_last_year(self):
+        """The share of the people's food need the last year's supply met, or None before a year has been stepped."""
+        return rules.nutrition_ratio_of(self._last_demographic_step)
+
     def regional_flows_last_year(self):
         """{tile: flows} of the last yearly step by region, None before the first."""
         return self._last_regional_step

@@ -113,6 +113,9 @@ class StartChecks:
 			return False, (self.needs.prerequisite_message(missing, memo) if why else None)
 		return None
 
+	def _check_unheld_stock(self, node_id, node, ignore_trade, memo, why) -> Verdict:
+		return start_rules.unheld_stock_verdict(self.needs.stock_status[node_id]["missing"], why)
+
 	def _check_substitution(self, node_id, node, ignore_trade, memo, why) -> Verdict:
 		if not self._substitution_quality(node_id)[1]:
 			if not why:

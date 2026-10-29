@@ -26,7 +26,7 @@ READS_BY_OWNER = {
     "resources": ("empire_output", "mine_capacity", "mine_depletion", "forest_hectares", "nitre_beds", "found_deposits", "mine_works_materials",
                   "shortage_remedy_plan"),
     "land": ("legacy_world_map", "mineral_scale", "material_cost_factor"),
-    "projects (not moved)": ("project_cost", "project_cost_now", "opposition_factor", "cost_money_factor",
+    "projects": ("project_cost", "project_cost_now", "opposition_factor", "cost_money_factor",
                              "rebuild_work_factor", "failure_reset_share", "shared_bill"),
     "diffusion": ("civ_cost_factor",),
     "finance": ("can_pay", "purchase_refusal"),

@@ -35,6 +35,10 @@ class Completion:
 		        + REPUTATION_GAIN_STATE_INTEREST_COEFFICIENT * max(0.0, self.needs.state_interest(node))
 		        + (REPUTATION_GAIN_REVENUE_BONUS if node["rev"] > 0 else 0.0))
 
+	def failure_reset_share(self):
+		"""The share of a failed project's bill that is lost."""
+		return FAILURE_RESET_SHARE
+
 	def goal_closure_ids(self):
 		"""Every node the current goal needs, cached per goal."""
 		goal = self.needs.goal()["node"]

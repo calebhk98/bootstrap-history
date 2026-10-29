@@ -3,6 +3,7 @@ what the event says, the opening, the settlers, the figures other modules read, 
 QUICK_TOPIC = True
 
 import unittest
+from types import SimpleNamespace
 
 from sim.actors.api import ScaleStrata
 from sim.demography import rules
@@ -129,6 +130,18 @@ class TheFarmHolding(unittest.TestCase):
         self.assertEqual(module.farm_holdings()["stock_kg"], 600.0)
         module.take_from_granary(TakeFromGranary(5000.0))
         self.assertEqual(module.farm_holdings()["stock_kg"], 0.0)
+
+
+class TheLastYearsNutrition(unittest.TestCase):
+    def test_no_year_stepped_has_no_ratio(self):
+        self.assertIsNone(rules.nutrition_ratio_of(None))
+
+    def test_the_ratio_is_the_flows_nutrition_ratio_as_a_float(self):
+        self.assertEqual(rules.nutrition_ratio_of(SimpleNamespace(nutrition_ratio=1)), 1.0)
+        self.assertEqual(rules.nutrition_ratio_of(SimpleNamespace(nutrition_ratio=0.75)), 0.75)
+
+    def test_the_view_answers_none_before_the_first_step(self):
+        self.assertIsNone(built().nutrition_ratio_last_year())
 
 
 if __name__ == "__main__":
