@@ -18,7 +18,7 @@ class ProgressHours:
 		projects = self.needs.legacy_projects()
 		record, node = projects.active[node_id], self.needs.tree_nodes()[node_id]
 		# A bounty is worked by whoever claims the prize, not by the poster.
-		if node_id in projects.bountied:
+		if node_id in self.seat.bountied:
 			return 0.0
 		# Throttle not applied here; caller applies. Returns WANT, not allocation.
 		return progress_rules.hour_pace(record["ph_left"], node["ph"], node["yrs"])

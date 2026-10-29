@@ -110,7 +110,7 @@ class Completion:
 			return
 		goal_before = self.goal_snapshot()
 		del projects.active[node_id]
-		projects.bountied.discard(node_id)
+		self.seat.bountied.discard(node_id)
 		# A FINISHED PROJECT CANNOT BE GIVEN MORE HOURS. Unlike stopping or halting one - both of which carry what was
 		# already paid forward if the player starts the same id again - there is no "again" once it is done, so a
 		# standing order aimed at this id would otherwise sit in `allocate`'s list for ever, pointed at nothing.
@@ -169,11 +169,11 @@ class Completion:
 		node = needs.tree_nodes()[node_id]
 		projects = needs.legacy_projects()
 		_yrs_before = projects.active[node_id]["yrs"]
-		projects.failed_attempts[node_id] += 1
+		self.seat.failed_attempts[node_id] += 1
 		_diagnosis = self._note_failure(node_id)
 		if failure_teaches(needs.mechanic["diagnosis_instrument"].get(node_id), needs.techniques_held()):
 			needs.send(LearnFromFailure(node_id))
-		claimed = node_id in projects.bountied
+		claimed = node_id in self.seat.bountied
 		# A bounty's claimant redoes the work: the poster's prize holds and no hours or money fall on the poster.
 		projects.active[node_id]["ph_left"] = (
 			0.0 if claimed else
@@ -200,7 +200,7 @@ class Completion:
 		# A failure always announces itself; its size sets how loudly.
 		_next_risk = self.effective_risk(node_id)
 		_banked = projects.active[node_id]["yrs"]
-		attempts = projects.failed_attempts[node_id]
+		attempts = self.seat.failed_attempts[node_id]
 		if claimed:
 			needs.send(RecordEvent.of("project_failed", failure_text.claimed_line(node["name"], attempts, _next_risk),
 			                          project=node_id, severity="claimed", lost=0.0))

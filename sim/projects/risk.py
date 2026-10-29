@@ -18,7 +18,7 @@ class Risk:
 		# The real failure count still drives every actual retry; `attempt_index` only lets a projection ask about a
 		# hypothetical one.
 		if attempt_index is None:
-			attempt_index = self.needs.legacy_projects().failed_attempts.get(node_id, 0)
+			attempt_index = self.seat.failed_attempts.get(node_id, 0)
 		return retry_calendar_retain(RETRY_CALENDAR_CAP, RETRY_CALENDAR_DECAY, attempt_index)
 
 	def _control_relief_multiplier(self, node_id):
@@ -82,14 +82,15 @@ class Risk:
 		"""
 		floor = max(self.calendar_floor(node_id), self.payment_schedule_years(node_id))
 		projects = self.needs.legacy_projects()
-		initial_failed_attempts = projects.failed_attempts.get(node_id, 0)
+		failed_attempts = self.seat.failed_attempts
+		initial_failed_attempts = failed_attempts.get(node_id, 0)
 		teaches = failure_teaches(self.needs.mechanic["diagnosis_instrument"].get(node_id), self.needs.techniques_held())
-		_had_key = node_id in projects.failed_attempts
+		_had_key = node_id in failed_attempts
 		_active = projects.active.get(node_id) if node_id in projects.active else None
 
 		def risk_after(attempt_index):
 			# Stand in for i failures, read effective_risk (restored in the finally below).
-			projects.failed_attempts[node_id] = attempt_index
+			failed_attempts[node_id] = attempt_index
 			# Failures nobody can diagnose add nothing to the learning.
 			with self.needs.failed_attempts_trial(node_id, attempt_index - initial_failed_attempts if teaches else 0):
 				return self.effective_risk(node_id)
@@ -101,6 +102,6 @@ class Risk:
 				_max_extra_attempts)
 		finally:
 			if _had_key:
-				projects.failed_attempts[node_id] = initial_failed_attempts
+				failed_attempts[node_id] = initial_failed_attempts
 			else:
-				projects.failed_attempts.pop(node_id, None)
+				failed_attempts.pop(node_id, None)

@@ -66,11 +66,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def bounties_paid(self):
-		return getattr(self.state.household, "bounties_paid")
-
-	@bounties_paid.setter
-	def bounties_paid(self, value):
-		setattr(self.state.household, "bounties_paid", value)
+		return self.view("bounties_paid")()
 
 	@property
 	def _said_stack_caution(self):
@@ -129,11 +125,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def bountied(self):
-		return getattr(self.state.projects, "bountied")
-
-	@bountied.setter
-	def bountied(self, value):
-		setattr(self.state.projects, "bountied", value)
+		return self.view("bountied")()
 
 	@property
 	def granted(self):
@@ -145,19 +137,11 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def failed_attempts(self):
-		return getattr(self.state.projects, "failed_attempts")
-
-	@failed_attempts.setter
-	def failed_attempts(self, value):
-		setattr(self.state.projects, "failed_attempts", value)
+		return self.view("failed_attempts")()
 
 	@property
 	def paid_towards(self):
-		return getattr(self.state.projects, "paid_towards")
-
-	@paid_towards.setter
-	def paid_towards(self, value):
-		setattr(self.state.projects, "paid_towards", value)
+		return self.view("paid_towards")()
 
 	# =========================================================================
 	# EconomyState Compatibility Properties

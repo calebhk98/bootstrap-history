@@ -28,7 +28,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	# HouseholdState
 	"capital": "household",
 	"total_spend": "household",
-	"bounties_paid": "household",
 	"cash_flow": "household",
 	"cash_mark": "household",
 	"cash_periods": "household",
@@ -37,11 +36,8 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	# ProjectsState
 	"active": "projects",
 	"operating": "projects",
-	"failed_attempts": "projects",
 	"mothballed": "projects",
-	"bountied": "projects",
 	"opened_year": "projects",
-	"paid_towards": "projects",
 	"closures": "projects",
 
 	# EconomyState
@@ -209,14 +205,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 	@operating.setter
 	def operating(self, value: Any) -> None:
 		self._state.projects.operating = value
-
-	@property
-	def failed_attempts(self) -> Any:
-		return self._state.projects.failed_attempts
-
-	@failed_attempts.setter
-	def failed_attempts(self, value: Any) -> None:
-		self._state.projects.failed_attempts = value
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
 		return self._state.projects.business.opened_year_of(node_id, default)

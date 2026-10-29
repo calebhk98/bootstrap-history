@@ -47,18 +47,18 @@ class NearTheLimit(unittest.TestCase):
 
 class HaltedProjects(unittest.TestCase):
     def test_work_in_hand_stops_and_what_was_paid_stands_to_its_credit(self):
-        projects = types.SimpleNamespace(active={"b": {"spent": 40.0}, "a": {"spent": 5.0}}, bountied={"a", "z"})
-        halted, kept = halt_active_projects(projects)
+        active, paid_towards, bountied = {"b": {"spent": 40.0}, "a": {"spent": 5.0}}, {}, {"a", "z"}
+        halted, kept = halt_active_projects(active, paid_towards, bountied)
         self.assertEqual(halted, ["a", "b"])
         self.assertEqual(kept, 45.0)
-        self.assertEqual(projects.active, {})
-        self.assertEqual(projects.paid_towards, {"a": 5.0, "b": 40.0})
-        self.assertEqual(projects.bountied, {"z"})
+        self.assertEqual(active, {})
+        self.assertEqual(paid_towards, {"a": 5.0, "b": 40.0})
+        self.assertEqual(bountied, {"z"})
 
     def test_payment_adds_to_what_was_already_credited(self):
-        projects = types.SimpleNamespace(active={"a": {"spent": 5.0}}, bountied=set(), paid_towards={"a": 10.0})
-        halt_active_projects(projects)
-        self.assertEqual(projects.paid_towards["a"], 15.0)
+        paid_towards = {"a": 10.0}
+        halt_active_projects({"a": {"spent": 5.0}}, paid_towards, set())
+        self.assertEqual(paid_towards["a"], 15.0)
 
 
 if __name__ == "__main__":

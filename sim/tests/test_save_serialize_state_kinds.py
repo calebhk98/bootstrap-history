@@ -95,10 +95,13 @@ check("serialize_state: the household's own purse links are not saved", "_purses
 retries = collections.defaultdict(int, {"printing": 3, "alloy": 1})
 projects = ProjectsState(
 	active={"z_mill": ActiveProjectState(ph_left=80.0, cost_left=300.0, yrs=1.5, spent=100.0, lab_left={"mason": 15.0}),
-	        "a_forge": ActiveProjectState(ph_left=10.0, cost_left=20.0, yrs=0.5, spent=5.0)},
-	failed_attempts=retries)
+	        "a_forge": ActiveProjectState(ph_left=10.0, cost_left=20.0, yrs=0.5, spent=5.0)})
 blob = serialize_state(projects)
-check("serialize_state: the retry counts are a dict of integers", blob["failed_attempts"] == {"printing": 3, "alloy": 1})
+projects_blob = serialize_state(ProjectsSeat(failed_attempts=retries, bountied={"b", "a"}, paid_towards={"printing": 250.0}, bounties_paid=2))
+check("serialize_state: the retry counts are a dict of integers", projects_blob["failed_attempts"] == {"printing": 3, "alloy": 1})
+check("serialize_state: the bounties are a sorted set, the credits a dict and the count a number",
+      projects_blob["bountied"] == {"__set__": ["a", "b"]} and projects_blob["paid_towards"] == {"printing": 250.0}
+      and projects_blob["bounties_paid"] == 2, projects_blob)
 check("serialize_state: active projects are records, written in the order they were started",
       list(blob["active"]) == ["z_mill", "a_forge"] and blob["active"]["z_mill"] == {
 		"ph_left": 80.0, "yrs": 1.5, "spent": 100.0, "cost_left": 300.0, "status": "ACTIVE", "lab_left": {"mason": 15.0}}, blob["active"])

@@ -127,7 +127,6 @@ def _test_runtime_type_reconstruction():
 	projects = ProjectsState(
 		active={"loom": ActiveProjectState(ph_left=20.0)},
 		businesses=[Business.running(["spinning_wheel"], opened_year=90)],
-		failed_attempts=collections.defaultdict(int, {"steam_engine": 2}),
 	)
 	econ = EconomyState()
 	holdings = HoldingsState()
@@ -149,8 +148,10 @@ def _test_runtime_type_reconstruction():
 		return False, f"trades_created is not set: {type(staff.trades_created)}"
 	if "spinning_wheel" not in restored.projects.operating or restored.projects.business.opened_year_of("spinning_wheel", 0) != 90:
 		return False, f"the business did not round trip: {restored.projects.business}"
-	if not isinstance(restored.projects.failed_attempts, collections.defaultdict):
-		return False, f"failed_attempts is not defaultdict: {type(restored.projects.failed_attempts)}"
+	from sim.projects.state import ProjectsSeat
+	counts = deserialize_state(serialize_state(ProjectsSeat(failed_attempts=collections.defaultdict(int, {"steam_engine": 2}))), ProjectsSeat)
+	if not isinstance(counts.failed_attempts, collections.defaultdict) or counts.failed_attempts["steam_engine"] != 2:
+		return False, f"failed_attempts is not defaultdict: {type(counts.failed_attempts)}"
 	from sim.materials.state import MaterialsSeat
 	seat = deserialize_state(serialize_state(MaterialsSeat(shortages=collections.Counter({"iron": 4}))), MaterialsSeat)
 	if not isinstance(seat.shortages, collections.Counter):

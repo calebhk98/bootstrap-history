@@ -120,7 +120,7 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 		projects = self.needs.legacy_projects()
 		if not projects.active:
 			return [], 0.0
-		halted = halt_active_projects(projects)
+		halted = halt_active_projects(projects.active, self.seat.paid_towards, self.seat.bountied)
 		self.bump_seat(ACTIVE)
 		return halted
 
@@ -149,19 +149,19 @@ class Projects(StartChecks, BlockerViews, Starting, StartPhase, ProgressPhase, P
 
 	def bountied_nodes(self):
 		"""The nodes the acting seat has posted a bounty on (the live set)."""
-		return self.needs.legacy_projects().bountied
+		return self.seat.bountied
 
 	def failed_attempt_counts(self):
 		"""{node id: how many times the acting seat's attempt at it has failed} (the live record)."""
-		return self.needs.legacy_projects().failed_attempts
+		return self.seat.failed_attempts
 
 	def paid_towards_projects(self):
 		"""{node id: the money already paid into the project in hand} for the acting seat (the live record)."""
-		return self.needs.legacy_projects().paid_towards
+		return self.seat.paid_towards
 
 	def bounties_paid_total(self):
 		"""How many bounties the acting seat's household has paid out."""
-		return self.needs.legacy_acting_household().bounties_paid
+		return self.seat.bounties_paid
 
 	def shut_for_staff(self):
 		"""{work id: the year it was shut} of the acting seat's works closed for want of staff."""

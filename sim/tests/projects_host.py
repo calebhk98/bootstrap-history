@@ -19,7 +19,7 @@ OWN_VIEWS = ("start_check", "start_blockers", "start_refusal", "bounty_eligible"
 
 def projects_state(**fields: Any) -> types.SimpleNamespace:
 	"""The raw `state.projects` the module still mutates in place."""
-	values = dict(active={}, done=set(), paid_towards={}, bountied=set(), mothballed=set())
+	values = dict(active={}, done=set(), mothballed=set())
 	values.update(fields)
 	state = types.SimpleNamespace(**values)
 	state.active_keys_sorted = lambda: sorted(state.active)
@@ -63,7 +63,7 @@ def defaults() -> Dict[str, Any]:
 		"automation": {"manual": False, "bounty_set": set()}, "society_name": "Testland", "year": 100,
 		"horizon_end_year": 1000, "project_limits": {
 			"base": 2, "per_director_hours": 2000.0, "per_scholar": 12.0, "per_artisan": 25.0},
-		"actor_world": None, "legacy_acting_household": types.SimpleNamespace(bounties_paid=0, employees={}),
+		"actor_world": None, "legacy_acting_household": types.SimpleNamespace(employees={}),
 		"stock_status": lambda node_id: {"missing": []},
 		"start_gate_material_seller": lambda *arguments: None, "start_gate_group_prohibition": lambda *arguments: None,
 		"extra_start_checks": lambda *arguments: None,

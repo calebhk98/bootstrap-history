@@ -28,7 +28,6 @@ class HouseholdState:
 	"""The founder's household finances, standing staff, standing, and biographical history."""
 	capital: float
 	total_spend: float = 0.0
-	bounties_paid: int = 0
 	spend_last_year: Optional[float] = None
 	# the cash book (sim/engine/cash_book.py): the open period's entries by cause, cash at its start,
 	# and the last few closed years
@@ -127,9 +126,6 @@ class ProjectsState:
 	active: Dict[str, ActiveProjectState] = field(default_factory=dict)
 	# the founder's businesses and their plants: what is running, switched off, how big and since when
 	businesses: List[Business] = field(default_factory=lambda: [Business(business_id="founder")])
-	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
-	bountied: Set[str] = field(default_factory=set)
-	paid_towards: Dict[str, float] = field(default_factory=dict)
 
 	@property
 	def business(self) -> Business:

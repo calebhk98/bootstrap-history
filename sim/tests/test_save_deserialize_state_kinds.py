@@ -14,6 +14,7 @@ from sim.knowledge.api import KnowledgeSeat
 from sim.materials.state import MaterialsSeat
 from sim.polity.state import PolitySeat
 from sim.production.api import ProductionSeat
+from sim.projects.state import ProjectsSeat
 from sim.workforce.api import WorkforceSeat
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
                               SimulationState, deserialize_state)
@@ -67,12 +68,16 @@ check("deserialize_state: an unknown key and an `_on_change` key are not set", n
 projects = deserialize_state({
 	"active": {"z_mill": {"ph_left": 80, "cost_left": 300, "yrs": 1.5, "spent": 100, "status": "ACTIVE", "lab_left": {"mason": 15}},
 	           "a_forge": {"ph_left": 10, "cost_left": 20, "yrs": 0.5, "spent": 5, "status": "ACTIVE"}},
-	"failed_attempts": {"printing": "3", "alloy": 1},
 	"businesses": [{"business_id": "founder", "owner_id": "", "plants": []}],
 	}, ProjectsState)
+projects_seat = deserialize_state({"failed_attempts": {"printing": "3", "alloy": 1}, "bountied": {"__set__": ["alloy"]},
+                                   "paid_towards": {"printing": 250}, "bounties_paid": "2"}, ProjectsSeat)
 check("deserialize_state: the retry counts are a default dict of integers that counts from zero",
-      type(projects.failed_attempts) is collections.defaultdict and dict(projects.failed_attempts) == {"printing": 3, "alloy": 1}
-      and projects.failed_attempts["never_tried"] == 0, projects.failed_attempts)
+      type(projects_seat.failed_attempts) is collections.defaultdict and dict(projects_seat.failed_attempts) == {"printing": 3, "alloy": 1}
+      and projects_seat.failed_attempts["never_tried"] == 0, projects_seat.failed_attempts)
+check("deserialize_state: the bounties are a set, the credits floats and the count an integer",
+      projects_seat.bountied == {"alloy"} and projects_seat.paid_towards == {"printing": 250.0}
+      and type(projects_seat.paid_towards["printing"]) is float and projects_seat.bounties_paid == 2, projects_seat)
 check("deserialize_state: active projects are rebuilt as records, in the saved order",
       list(projects.active) == ["z_mill", "a_forge"] and all(type(each) is ActiveProjectState for each in projects.active.values())
       and (projects.active["z_mill"].ph_left, projects.active["z_mill"].cost_left, projects.active["z_mill"].spent,

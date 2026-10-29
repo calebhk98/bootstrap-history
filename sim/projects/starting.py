@@ -58,12 +58,12 @@ class Starting:
 		if precaution:
 			bill += self.precaution_extra_cost(node_id, bill)
 		price = bill
-		paid_now = funding.paid_credit(price, (projects.paid_towards or {}).get(node_id, 0.0))
+		paid_towards = self.seat.paid_towards
+		paid_now = funding.paid_credit(price, paid_towards.get(node_id, 0.0))
 		price -= paid_now
 		# CREDIT FOR WHAT YOU ALREADY PAID: when the creditors stop a project the money already sunk into it is kept
 		# against the node, and this is where it comes back off the bill.
-		if projects.paid_towards:
-			projects.paid_towards.pop(node_id, None)          # spent once; the figure is `paid_now` above
+		paid_towards.pop(node_id, None)          # spent once; the figure is `paid_now` above
 		# A THING YOU ARE REBUILDING IS NOT A THING SITTING IDLE: a stale mothball entry would hide the node from
 		# `available` and make `restore` claim it can reopen it.
 		needs.send(ClearMothball(node_id))
@@ -113,12 +113,10 @@ class Starting:
 		if command.node_id not in projects.active:
 			return False, "not active"
 		project_state = projects.active.pop(command.node_id)
-		projects.bountied.discard(command.node_id)
-		if projects.paid_towards is None:
-			projects.paid_towards = {}
-		kept, credit = record_rules.credit_kept(project_state.get("spent", 0.0), projects.paid_towards.get(command.node_id, 0.0))
+		self.seat.bountied.discard(command.node_id)
+		kept, credit = record_rules.credit_kept(project_state.get("spent", 0.0), self.seat.paid_towards.get(command.node_id, 0.0))
 		if credit is not None:
-			projects.paid_towards[command.node_id] = credit
+			self.seat.paid_towards[command.node_id] = credit
 		money = self.needs.money_text(kept, True)
 		return True, ("stopped. The %s already paid stands to your "
 		              "credit and comes off the bill if you begin again; the "
@@ -146,12 +144,12 @@ class Starting:
 			return False
 		needs.send(PayEdge(edges.EDGE_WORKERS, price, "bounties posted"))
 		needs.send(NoteSpend(price))
-		needs.legacy_acting_household().bounties_paid += 1
+		self.seat.bounties_paid += 1
 		# The prize pays for all the work: no poster hours, no hired trades.
 		self.initialize_project(command.node_id, ph_left=0.0, spent=price, cost_left=0.0, include_labour=False)
 		projects = needs.legacy_projects()
 		projects.active[command.node_id]["lab_left"] = {}
-		projects.bountied.add(command.node_id)
+		self.seat.bountied.add(command.node_id)
 		# A public prize makes you conspicuous: that is what `scandal` and `eminence` measure.
 		needs.send(RecordEvent("bounty_posted", "posted a public bounty for %s (%s)"
 		                       % (node["name"], needs.money_text(price, True, True))))

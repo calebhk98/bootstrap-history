@@ -10,23 +10,24 @@ from sim.hazards.api import SayOnce
 from sim.hazards.module import Hazards
 from sim.projects.api import HaltActiveProjects
 from sim.projects.projects import Projects
+from sim.projects.state import ProjectsSeat
 from sim.seats.module import Seats
 from sim.tests import module_harness
 
 
 class HaltActiveProjectsCommand(unittest.TestCase):
-    def module(self, projects):
-        return module_harness.build(Projects, views={"legacy_projects": projects}, module_id="projects")
+    def module(self, projects, seat):
+        return module_harness.build(Projects, views={"legacy_projects": projects}, seat=seat, module_id="projects")
 
     def test_work_in_hand_stops_and_the_names_and_the_money_kept_come_back(self):
-        projects = SimpleNamespace(active={"b": {"spent": 40.0}, "a": {"spent": 5.0}}, bountied={"a"}, paid_towards=None)
-        self.assertEqual(self.module(projects).apply_halt_active_projects(HaltActiveProjects()), (["a", "b"], 45.0))
-        self.assertEqual((projects.active, projects.paid_towards, projects.bountied), ({}, {"a": 5.0, "b": 40.0}, set()))
+        projects, seat = SimpleNamespace(active={"b": {"spent": 40.0}, "a": {"spent": 5.0}}), ProjectsSeat(bountied={"a"})
+        self.assertEqual(self.module(projects, seat).apply_halt_active_projects(HaltActiveProjects()), (["a", "b"], 45.0))
+        self.assertEqual((projects.active, seat.paid_towards, seat.bountied), ({}, {"a": 5.0, "b": 40.0}, set()))
 
     def test_with_nothing_in_hand_the_record_of_credits_is_left_as_it_was(self):
-        projects = SimpleNamespace(active={}, bountied=set(), paid_towards=None)
-        self.assertEqual(self.module(projects).apply_halt_active_projects(HaltActiveProjects()), ([], 0.0))
-        self.assertIsNone(projects.paid_towards)
+        seat = ProjectsSeat(paid_towards={"c": 3.0})
+        self.assertEqual(self.module(SimpleNamespace(active={}), seat).apply_halt_active_projects(HaltActiveProjects()), ([], 0.0))
+        self.assertEqual(seat.paid_towards, {"c": 3.0})
 
 
 class SayOnceCommand(unittest.TestCase):

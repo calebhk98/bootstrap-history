@@ -2,8 +2,9 @@
 
 The projects in hand, what is done and what is running stay in the engine's record (`state.projects`), which the
 screens, hazards, the credit freeze and ventures still write; they move with those writers."""
+import collections
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set
+from typing import DefaultDict, Dict, List, Optional, Set
 
 
 @dataclass
@@ -18,6 +19,14 @@ class ProjectsSeat:
 	staffing_tally: Dict[str, object] = field(default_factory=dict)
 	# concern id -> the year auto-open last said why it stayed shut (so it says it once in a while, not every year)
 	said_autoopen: Optional[Dict[str, int]] = None
+	# node id -> how many times the seat's attempt at it has failed (a read of an unseen node adds a zero)
+	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
+	# the projects in hand that a posted bounty pays someone else to do
+	bountied: Set[str] = field(default_factory=set)
+	# node id -> the money already paid into a project that was stopped, which comes off its bill if it begins again
+	paid_towards: Dict[str, float] = field(default_factory=dict)
+	# how many bounties the seat has posted
+	bounties_paid: int = 0
 
 
 @dataclass

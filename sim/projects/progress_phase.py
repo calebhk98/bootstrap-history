@@ -86,7 +86,7 @@ class ProgressPhase:
 				           "do this work (%s). What you spent is lost"
 				           % (node_id, ", ".join(blocked[:2]))))
 				projects.active.pop(node_id, None)
-				projects.bountied.discard(node_id)
+				self.seat.bountied.discard(node_id)
 			else:
 				# WARN BEFORE THE MONEY GOES: a countdown to abandonment running silently, with nothing said until
 				# everything spent is taken at once, gives no chance to act. Say it each year, with the number of years
@@ -185,7 +185,7 @@ class ProgressPhase:
 			projects = needs.legacy_projects()
 			needs.send(RecordEvent.of("project_abandoned", "ABANDONED %s: %s" % (node_id, _abandon)))
 			projects.active.pop(node_id, None)
-			projects.bountied.discard(node_id)
+			self.seat.bountied.discard(node_id)
 			return None
 		if worst < 1.0:
 			# NEVER ALL OF IT: the refund says "hours offered but not usable, because the trade was booked", and with no

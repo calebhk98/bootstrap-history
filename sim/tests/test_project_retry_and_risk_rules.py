@@ -56,26 +56,26 @@ class ExpectedCalendarYears(unittest.TestCase):
         while survive > 1e-15:
             years = FLOOR if attempt == 0 else FLOOR * (1.0 - stub._retry_calendar_retain("loom", attempt))
             manual_total += survive * years
-            stub.state.projects.failed_attempts["loom"] = attempt
+            stub.projects.seat.failed_attempts["loom"] = attempt
             with stub.after_failed_attempts("loom", attempt):
                 survive *= stub.effective_risk("loom")
             attempt += 1
-        stub.state.projects.failed_attempts.clear()
+        stub.projects.seat.failed_attempts.clear()
         self.assertAlmostEqual(expected_years(stub), manual_total, places=6)
 
     def test_the_projection_leaves_the_real_failure_count_as_it_found_it(self):
         stub = calendar_world()
-        stub.state.projects.failed_attempts["loom"] = 2
+        stub.projects.seat.failed_attempts["loom"] = 2
         expected_years(stub)
-        self.assertEqual(stub.state.projects.failed_attempts["loom"], 2)
+        self.assertEqual(stub.projects.seat.failed_attempts["loom"], 2)
         fresh = calendar_world()
         expected_years(fresh)
-        self.assertNotIn("loom", fresh.state.projects.failed_attempts)
+        self.assertNotIn("loom", fresh.projects.seat.failed_attempts)
 
     def test_three_prior_failures_leave_less_expected_time_than_attempt_one_faced(self):
         stub = calendar_world()
         before = expected_years(stub)
-        stub.state.projects.failed_attempts["loom"] = 3
+        stub.projects.seat.failed_attempts["loom"] = 3
         for _ in range(3):
             stub.learn_from_failed_attempt("loom")
         self.assertLess(expected_years(stub), before)

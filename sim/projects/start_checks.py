@@ -268,8 +268,7 @@ class StartChecks:
 
 	def _cash_covers_start(self, node_id: str) -> bool:
 		"""True when cash in hand pays for this start on top of what work in hand still owes."""
-		paid_towards = self.needs.legacy_projects().paid_towards or {}
-		return funding.cash_covers_start(self.needs.project_cost(node_id), paid_towards.get(node_id, 0.0),
+		return funding.cash_covers_start(self.needs.project_cost(node_id), self.seat.paid_towards.get(node_id, 0.0),
 		                                 self._owed_on_work_in_hand(), self.needs.acting_balance())
 
 	def money_refusal(self, node_id: str, extra_owed: float = 0.0):
@@ -281,7 +280,7 @@ class StartChecks:
 		if refusal:
 			return refusal
 		# money already sunk into this node comes off the bill
-		price -= funding.paid_credit(price, (needs.legacy_projects().paid_towards or {}).get(node_id, 0.0))
+		price -= funding.paid_credit(price, self.seat.paid_towards.get(node_id, 0.0))
 		owed, ceiling, shortfall = start_money.start_shortfall(
 			price, self._owed_on_work_in_hand(), extra_owed, needs.acting_balance(), needs.credit_limit())
 		if shortfall > 0.0:
