@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 from sim.polity import constants as polity_constants
 from sim.polity import constants, rules
-from sim.polity.api import (AddGovernance, AddReputation, AddScandal, GainReputation, RaiseScandal, RecordBribe, RecordRising,
+from sim.polity.api import (AddGovernance, AddScandal, GainReputation, RaiseScandal, RecordBribe, RecordRising,
                             RegisterPeople, ReplaceRuler, ResetStateUnrest, ScaleFamiliarity, ScaleProtection, SetReputation,
                             SetTileReading, ShiftValueWeight, StrikeFromForce)
 from sim.polity.state import PolitySeat
@@ -33,14 +33,12 @@ class SeatCommands(unittest.TestCase):
         module.scale_familiarity(ScaleFamiliarity(0.5))
         self.assertEqual((seat.protection, seat.familiarity), (0.4, 0.25))
 
-    def test_reputation_gain_stops_at_the_ceiling_and_a_plain_addition_does_not(self):
+    def test_reputation_gain_stops_at_the_ceiling(self):
         ceiling = polity_constants.REPUTATION_CEILING
         seat = PolitySeat(reputation=ceiling - 0.5)
         module = polity_host.build(seat=seat)
         module.gain_reputation(GainReputation(2.0))
         self.assertEqual(seat.reputation, ceiling)
-        module.add_reputation(AddReputation(2.0))
-        self.assertEqual(seat.reputation, ceiling + 2.0)
         module.set_reputation(SetReputation(1.0))
         self.assertEqual(seat.reputation, 1.0)
 

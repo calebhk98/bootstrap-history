@@ -73,7 +73,7 @@ class Held(unittest.TestCase):
         module = _module()
         module.change_held(ChangeHeld(EGGS, 1.5))
         self.assertEqual(module_harness.sent(module),
-                         [ChangeStock(EGGS, 1.5 * tonnes_per_unit(EGGS), legacy_snapshot_after_change=True)])
+                         [ChangeStock(EGGS, 1.5 * tonnes_per_unit(EGGS))])
 
     def test_the_opening_holding_is_what_the_civilisation_held_at_its_date_notes_aside(self):
         module = _module(civ={"opening_stock": {"_note": "x", EGGS: 2.0, HERD: 7.0}})

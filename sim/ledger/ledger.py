@@ -163,13 +163,8 @@ class Ledger(Module):
 
 	def change_stock(self, command: Any) -> None:
 		stock = self.stock_ledger()
-		if command.legacy_snapshot_after_change:
-			stock[command.commodity] += command.tonnes
-			opening = self.opening_stock()
-			opening[command.commodity] = opening.get(command.commodity, 0.0) + command.tonnes
-		else:
-			opening = self.opening_stock()      # first: the year's snapshot is taken before the change
-			rules.add_tonnes(stock, opening, command.commodity, command.tonnes)
+		opening = self.opening_stock()      # first: the year's snapshot is taken before the change
+		rules.add_tonnes(stock, opening, command.commodity, command.tonnes)
 		stock.writes += 1
 		self.bump_seat(STOCK)
 

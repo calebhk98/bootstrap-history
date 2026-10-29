@@ -8,7 +8,7 @@ from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, Pha
 from sim.agriculture.api import SetFarmLand, SetFarmTechnique
 from sim.demography.api import SetClearedFarmland, SetFarmHoursNeeded
 from sim.ledger.api import NoteSpend, PayEdge, ReceiveFromEdge
-from sim.polity.api import AddReputation, ScaleFamiliarity, ScaleProtection
+from sim.polity.api import GainReputation, ScaleFamiliarity, ScaleProtection
 from sim.seats.api import RememberGoalClosure
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 
@@ -168,6 +168,6 @@ MODULE_SPECS = (ModuleSpec(
         ExtensionPoint("director_overhead", LIST),         # () -> hours a year already spoken for; the answers are added, each at least zero
     ),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(BuildHousing, PayEdge, NoteSpend, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, AddReputation, ScaleFamiliarity, ScaleProtection,
+    sends=(BuildHousing, PayEdge, NoteSpend, ReceiveFromEdge, RecordEvent, RecordAutomation, RecordAutomationSkip, GainReputation, ScaleFamiliarity, ScaleProtection,
            SetClearedFarmland, SetFarmHoursNeeded, SetFarmLand, SetFarmTechnique, RememberGoalClosure),
 ),)

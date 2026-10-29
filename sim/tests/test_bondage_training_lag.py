@@ -11,6 +11,7 @@ from unittest import mock
 from sim.labour import labour_bondage
 from sim.labour.labour_bondage import BondageMixin
 from sim.ledger.api import PayEdge
+from sim.polity.api import GainReputation
 
 YEAR = 100
 PRICE = 250.0
@@ -77,6 +78,11 @@ class BuySlaves(unittest.TestCase):
         self.assertEqual(game.buy_slaves(12), 0)
         self.assertEqual((game.household.slaves, game.household.training, game.paid), (0, [], []))
 
+    def test_a_purchase_the_purse_cannot_cover_notes_the_refusal_with_the_figures(self):
+        game = Bondage(cash=PRICE - 1.0)
+        game.buy_slaves(12)
+        self.assertEqual(game.refusals, ["cannot afford 12 slaves"])
+
     def test_a_purchase_beyond_the_households_room_buys_nobody(self):
         game = Bondage(room=5.0)
         self.assertEqual(game.buy_slaves(12), 0)
@@ -105,6 +111,10 @@ class Manumit(unittest.TestCase):
         self.assertEqual(game.household.artisans, 0.0)
         worth = game.WORKER_EQUIVALENT_UNTRAINED + game.MANUMISSION_ARTISAN_UPLIFT
         self.assertAlmostEqual(game.household.training[0][0], 4 * worth)
+
+    def test_freeing_people_gains_reputation_that_stops_at_the_ceiling(self):
+        game, _freed = self.freed()
+        self.assertEqual([type(command) for command in game.sent], [GainReputation])
 
     def test_nobody_to_free_changes_nothing(self):
         game = Bondage()

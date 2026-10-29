@@ -208,6 +208,12 @@ class TonnesLedgerState(unittest.TestCase):
         self.assertEqual(module.seat._material_stock_ledger["iron"], 5.0)
         self.assertEqual(module.seat._material_stock_opening, {"year": 100, "tonnes": {"iron": 5.0}})
 
+    def test_the_first_change_of_a_new_year_counts_once_in_the_opening_stock(self):
+        module = self.module({"iron": 2.0})
+        module.seat._material_stock_opening = {"year": 99, "tonnes": {"iron": 1.0}}
+        module.change_stock(ChangeStock("iron", 3.0))
+        self.assertEqual(module.seat._material_stock_opening, {"year": 100, "tonnes": {"iron": 5.0}})
+
     def test_the_first_change_of_the_year_snapshots_the_stock_before_it(self):
         module = self.module({"iron": 2.0})
         module.bank_stock(BankStock((("iron", 4.0),)))

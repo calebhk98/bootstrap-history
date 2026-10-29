@@ -1,4 +1,7 @@
 """Workforce rules: plain functions of plain values."""
+import math
+
+HANDS_TOLERANCE = 1e-9      # a shortfall of hands below this is arithmetic noise, not a person missing
 
 
 def surviving_people(dice, headcount: float, survival_share: float) -> float:
@@ -12,6 +15,23 @@ def wage_index_of(base_index, scarcity_elasticity, population_scale, unshocked_s
 	"""The base index raised in proportion to the shortfall of the population scale below its unshocked trend."""
 	shortfall = max(0.0, 1.0 - population_scale / unshocked_scale)
 	return base_index * (1.0 + scarcity_elasticity * shortfall)
+
+
+def wage_materials_of(staple, trade_registry):
+	"""The materials a wage is set against, in order: the staple, then each trade's tool materials (trades in id order),
+	each material once."""
+	materials = [staple]
+	for trade_id in sorted(trade_registry):
+		for material in trade_registry[trade_id].get("tool_basket", ()):
+			if material not in materials:
+				materials.append(material)
+	return materials
+
+
+def count_after_bleed(count, floor, bleed):
+	"""A staff count after it loses the share `bleed`: it stops falling at `floor`, and a count already below the floor
+	stays as it is (a bleed never hires)."""
+	return min(count, max(floor, count * (1.0 - bleed)))
 
 
 def extra_lit_hours(works):
@@ -56,11 +76,11 @@ def market_pressure_after_a_year(pressure, kept_share, flat_fade):
 	return max(0.0, pressure * kept_share - flat_fade)
 
 
-def people_to_buy(capital, base_price, artisans, capital_floor_in_prices, capital_per_person_in_prices, artisan_ceiling, most_per_year):
-	"""How many people the standing policy buys this year: none unless the purse holds the floor (in base prices of one person) and
-	the artisans are under the ceiling; then as many as the purse holds at the per-person reserve, at most `most_per_year`."""
-	if capital > capital_floor_in_prices * base_price and artisans < artisan_ceiling:
-		return min(most_per_year, int(capital // (capital_per_person_in_prices * base_price)))
+def people_to_buy(capital, base_price, hands_lacking, capital_floor_in_prices, capital_per_person_in_prices):
+	"""How many people the standing policy buys this year: none unless the purse holds the floor (in base prices of one person);
+	then the whole people the household's shut concerns lack hands for, as many as the purse holds at the per-person reserve."""
+	if capital > capital_floor_in_prices * base_price:
+		return max(0, min(math.ceil(hands_lacking - HANDS_TOLERANCE), int(capital // (capital_per_person_in_prices * base_price))))
 	return 0
 
 

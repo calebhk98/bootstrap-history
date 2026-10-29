@@ -1,6 +1,6 @@
 # Insolvency's bleed floors raise a staff count that was below them
 
-**Status:** open
+**Status:** closed - fixed: `rules.count_after_bleed` (`sim/workforce/rules.py`, used by `bleed_staff`) is `min(count, max(floor, count * (1 - bleed)))`, so a bleed never raises a count. Test: `sim/tests/test_workforce_views.py` `CountAfterBleed`. Numbers change only for a household insolvent and below the floors. `disperse_dependants` has the same `max(floor, ...)` shape and is not touched here.
 
 When a household has been insolvent long enough and sits deeper in arrears than its floor, the money phase thins its staff:
 `artisans = max(INSOLVENCY_ARTISAN_FLOOR, artisans * (1 - bleed))` and

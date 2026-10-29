@@ -20,10 +20,10 @@ class DiseaseReadsTests(unittest.TestCase):
     def test_the_endemic_death_rates_are_those_of_the_tiles_the_nation_holds(self):
         asked = []
         module = module_harness.build(Disease, world=DiseaseWorld(), views={
-            "civilisation": {"id": "home"}, "tiles_listed_by": lambda civilisation: ["t1", "t2"],
+            "home_tiles_held": lambda: ["t1", "t2", "conquered"],
             "endemic_people_loss": lambda tiles: asked.append(list(tiles)) or {"working_age": 0.5}})
         self.assertEqual(module.endemic_death_rates(), {"working_age": 0.5})
-        self.assertEqual(asked, [["t1", "t2"]])
+        self.assertEqual(asked, [["t1", "t2", "conquered"]])
 
     def test_a_tiles_area_is_the_one_the_land_module_describes(self):
         module = module_harness.build(Disease, world=DiseaseWorld(), views={

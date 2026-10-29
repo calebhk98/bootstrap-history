@@ -1,6 +1,6 @@
 # Endemic death rates read the civilisation's starting tiles, the epidemic step reads the tiles held now
 
-**Status:** open
+**Status:** closed - fixed: `Burden.endemic_death_rates` reads `home_tiles_held`, like the epidemic step. Test: `sim/tests/test_map_reads_by_views.py` `test_the_endemic_death_rates_are_those_of_the_tiles_the_nation_holds` (a held tile the civilisation file does not list is counted). Numbers change only once land has changed hands.
 
 Two parts of the disease module disagree about which tiles a society lives on. The endemic death rates
 (`sim/disease/burden.py`, `endemic_death_rates`) take `tiles_held(civilisation, world_map)`, the tiles the

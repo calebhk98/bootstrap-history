@@ -140,9 +140,8 @@ class Views:
 		return rules.wage_index_of(terms["base"], terms["elasticity"], self.needs.pop_scale(), unshocked_trend)
 
 	def wage_materials(self):
-		"""The materials a wage is set against, in order: the staple (Complaint 762: the trades' tool materials were meant to
-		follow and never do)."""
-		return [wage_provider.staple_material(self.needs.civilisation())]
+		"""The materials a wage is set against, in order: the staple, then every trade's tool materials."""
+		return rules.wage_materials_of(wage_provider.staple_material(self.needs.civilisation()), self.trade_registry())
 
 	def trade_registry(self):
 		"""{trade id: {family, training_years, ...the trade's extra fields}}."""

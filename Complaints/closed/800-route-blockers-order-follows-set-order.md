@@ -1,6 +1,6 @@
 # The nearest-blockers lists of `stuck` and `path` change with the hash seed
 
-**Status:** open
+**Status:** closed - fixed: `route_blockers` sorts by missing-count then node id. Test: `sim/tests/test_route_blockers_order.py`. Which nodes a player sees in a tie changes (now the first by id); nothing else.
 
 `sim/ui/proto/route_blockers.py` sorts `road`, a set of node ids, by how many nodes are still missing from each one's
 closure. Nodes that tie keep the set's iteration order, which for strings depends on `PYTHONHASHSEED`, so the same

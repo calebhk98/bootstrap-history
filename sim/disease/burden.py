@@ -24,4 +24,4 @@ class Burden:
 
     def endemic_death_rates(self):
         """{band: excess deaths per head per year} from the endemic diseases of the tiles the nation holds."""
-        return self.needs.endemic_people_loss(self.needs.tiles_listed_by(self.needs.civilisation()))
+        return self.needs.endemic_people_loss(self.needs.home_tiles_held())

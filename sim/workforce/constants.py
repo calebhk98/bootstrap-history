@@ -186,12 +186,3 @@ MARKET_PRESSURE_ANNUAL_FADE = declare(
         "MARKET_PRESSURE_DECAY's proportional fade, so a small "
         "residual pressure reaches exactly zero rather than decaying "
         "forever. Tuned, not measured.")
-ARTISAN_CEILING_FOR_AUTO_BUY = declare(
-    "ARTISAN_CEILING_FOR_AUTO_BUY", 12, kind="temporary_heuristic",
-    unit="artisans", source=None, confidence="D", retire="Complaint 810",
-    why="The optimizer's standing policy stops buying people once the workshop holds this many artisans. A round "
-        "number, not derived from the hands the household's concerns lack.")
-MOST_PEOPLE_AUTO_BOUGHT_PER_YEAR = declare(
-    "MOST_PEOPLE_AUTO_BOUGHT_PER_YEAR", 6, kind="temporary_heuristic",
-    unit="people a year", source=None, confidence="D", retire="Complaint 810",
-    why="The most people the standing policy buys in one year. A round number, the same for any size of workshop.")

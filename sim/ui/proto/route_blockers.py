@@ -7,7 +7,8 @@ def route_blockers(sim, nodes, road, count):
     """The nodes of an unstartable route nearest to being startable, each
     with the reason start_reason gives; shared by `stuck` and `path`.
     """
-    near = sorted(road, key=lambda node_id: len(closure(nodes, node_id) - sim.view("techniques_held")()))
+    held = sim.view("techniques_held")()
+    near = sorted(road, key=lambda node_id: (len(closure(nodes, node_id) - held), node_id))
     rows = []
     for node_id in near[:count]:
         blockers = sim.view("start_blockers")(node_id)

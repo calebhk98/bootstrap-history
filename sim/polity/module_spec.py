@@ -74,7 +74,7 @@ MODULE_SPECS = (ModuleSpec(
 	applies=(
 		(commands.RaiseScandal, "raise_scandal"), (commands.AddScandal, "add_scandal"), (commands.RecordBribe, "record_bribe"),
 		(commands.ScaleProtection, "scale_protection"), (commands.ScaleFamiliarity, "scale_familiarity"),
-		(commands.GainReputation, "gain_reputation"), (commands.AddReputation, "add_reputation"),
+		(commands.GainReputation, "gain_reputation"),
 		(commands.SetReputation, "set_reputation"), (commands.AddGovernance, "add_governance"),
 		(commands.AnswerStateDemands, "answer_state_demands"), (commands.WithdrawFromPublicLife, "withdraw_command"),
 		(commands.SettleWithState, "settle_command"), (commands.CarryOutTransfers, "transfers_command"),

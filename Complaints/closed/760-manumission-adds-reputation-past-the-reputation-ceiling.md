@@ -1,6 +1,6 @@
 # Manumission adds reputation past the reputation ceiling
 
-**Status:** open
+**Status:** closed - fixed: `manumit` sends `GainReputation` (capped at `REPUTATION_CEILING`) and `AddReputation` is deleted. Test: `sim/tests/test_bondage_training_lag.py` `test_freeing_people_gains_reputation_that_stops_at_the_ceiling`; the ceiling itself is `test_polity_module.py` `test_reputation_gain_stops_at_the_ceiling`. Numbers change only for a household that frees people near the ceiling.
 
 Every other gain of reputation stops at the top of the scale: a finished work (`GainReputation`, `sim/polity/appliers.py`,
 `min(REPUTATION_CEILING, reputation + amount)`) and publishing an invention (`sim/diffusion/disclosure.py`, the same command).

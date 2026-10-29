@@ -41,10 +41,6 @@ class Appliers:
 		self.seat.reputation = min(constants.REPUTATION_CEILING, self.seat.reputation + command.amount)
 		self.bump(STANDING)
 
-	def add_reputation(self, command):
-		self.seat.reputation += command.amount
-		self.bump(STANDING)
-
 	def set_reputation(self, command):
 		self.seat.reputation = command.value
 		self.bump(STANDING)

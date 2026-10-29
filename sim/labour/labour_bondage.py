@@ -17,7 +17,7 @@ rebuilds self.household.scholars/artisans from the trades actually on the
 books - does not overwrite the grant out of existence.
 """
 from sim.constants import declare
-from sim.polity.api import AddReputation
+from sim.polity.api import GainReputation
 from . import trade_data
 from .buy_cap import over_room_refusal
 from sim.ledger.api import PayEdge
@@ -357,5 +357,5 @@ class BondageMixin:
         # manumissions cannot out-earn taking a patron.
         gain = (self.MANUMISSION_REPUTATION_GAIN_PER_PERSON * n_people
                 / (1.0 + workforce.manumitted_total / self.MANUMISSION_REPUTATION_SATURATION_SCALE))
-        self._world.send(AddReputation(min(gain, self.MANUMISSION_REPUTATION_GAIN_CAP)))
+        self._world.send(GainReputation(min(gain, self.MANUMISSION_REPUTATION_GAIN_CAP)))
         return n_people

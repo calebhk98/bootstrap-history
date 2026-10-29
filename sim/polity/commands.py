@@ -120,12 +120,6 @@ class AddScandal(Command):
 
 
 @dataclass(frozen=True)
-class AddReputation(Command):
-	"""The acting seat's reputation rises by `amount`, with no ceiling."""
-	amount: float
-
-
-@dataclass(frozen=True)
 class SetReputation(Command):
 	"""The acting seat's reputation is set to `value` (a trial figure the caller sets and puts back)."""
 	value: float

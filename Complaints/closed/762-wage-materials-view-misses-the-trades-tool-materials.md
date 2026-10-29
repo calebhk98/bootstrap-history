@@ -1,6 +1,6 @@
 # The `wage_materials` view lists only the staple, never the trades' tool materials
 
-**Status:** open
+**Status:** closed - fixed: `wage_materials` is `rules.wage_materials_of(staple, trade_registry)` (`sim/workforce/rules.py`), the staple then every trade's `tool_basket` materials in trade-id order. Test: `sim/tests/test_workforce_views.py` `WageMaterials`. Baseline numbers change: the tools factor of each trade's wage now follows the recorded price ratio of its tool materials instead of reading one.
 
 `wage_materials` is meant to answer "the materials a wage is set against, in order: the staple, and every trade's tool
 materials" (its docstring, `sim/workforce/views.py`; the same text was on the engine bridge entry it replaced). It was

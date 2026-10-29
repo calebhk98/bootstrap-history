@@ -16,7 +16,7 @@ READS_BY_OWNER = {
     "agriculture": ("weather_seed",),
     "demography": ("people_by_band", "nutrition_ratio", "working_age", "regional_people_by_band", "urban_fraction",
                    "regional_flows_last_year"),
-    "land": ("home_tiles_held", "home_modes", "reach_days", "endemic_people_loss", "tile_description", "borders_among", "tiles_listed_by"),
+    "land": ("home_tiles_held", "home_modes", "reach_days", "endemic_people_loss", "tile_description", "borders_among"),
     "freight": ("goods_carried_last_year",),
     "knowledge": ("techniques_held", "held_techniques"),
     "mechanics": ("effect_terms", "mechanic"),

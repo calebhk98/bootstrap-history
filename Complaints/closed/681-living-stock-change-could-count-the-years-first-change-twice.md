@@ -1,6 +1,6 @@
 # A held-stock change could count the year's first change twice in the opening stock
 
-**Status:** open - fires in every game: the opening herd grant is the year's first stock change, and the base counts it twice in the opening stock (rome_100ad seed 1, year 0: 368421 against 198405 tonnes of cattle, `python3 -m sim.tests.equiv check` on the ledger commit). Kept on purpose behind `ChangeStock.legacy_snapshot_after_change` until the migration's final equivalence proof, then fixed (`MODULE_MIGRATION_TASKS.md` phase 9)
+**Status:** closed - fixed: `ChangeStock.legacy_snapshot_after_change` and its branch are deleted, so living stock takes the ledger's one path (`Ledger.change_stock`: snapshot first, then `rules.add_tonnes`). Test: `sim/tests/test_ledger_commands.py` `test_the_first_change_of_a_new_year_counts_once_in_the_opening_stock`. A baseline game's numbers change: the opening herds no longer count twice in year 0's opening stock.
 
 `LivingStockYearlyMixin.change_stock` added the tonnes to the stock and only then read `_material_opening_stock()`,
 which builds the year's opening snapshot from the current stock when the saved record is from an earlier year

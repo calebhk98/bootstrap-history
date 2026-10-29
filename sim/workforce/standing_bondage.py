@@ -17,10 +17,10 @@ class StandingBondage:
 		# only when the optimizer is playing: buying people in manual mode with no command and no log line would hide the acquisition
 		if not self.needs.founder()["policy"].get("auto_buy_people", False):
 			return
+		_scholars_lacking, craftsmen_lacking = self.needs.staffing_closed_hand_shortfall()      # people are bought as craftsmen
 		count = rules.people_to_buy(
-			self.needs.acting_balance(), self.labour.SLAVE_BASE_PRICE, self.staff()["artisans"],
-			constants.AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES, constants.AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES,
-			constants.ARTISAN_CEILING_FOR_AUTO_BUY, constants.MOST_PEOPLE_AUTO_BOUGHT_PER_YEAR)
+			self.needs.acting_balance(), self.labour.SLAVE_BASE_PRICE, craftsmen_lacking,
+			constants.AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES, constants.AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES)
 		if count and self.needs.running_mechanics("hosts_bought_people"):
 			got = self.labour.buy_slaves(count)
 			if got:

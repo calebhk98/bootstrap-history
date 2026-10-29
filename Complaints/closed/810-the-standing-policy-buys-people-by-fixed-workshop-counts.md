@@ -1,6 +1,6 @@
 # The standing policy buys people by fixed workshop counts
 
-**Status:** open
+**Status:** closed - fixed: the standing policy buys the whole people the shut concerns lack hands for (`staffing_closed_hand_shortfall`, craftsmen), as many as the purse carries after the declared reserve (`rules.people_to_buy`); `ARTISAN_CEILING_FOR_AUTO_BUY` and `MOST_PEOPLE_AUTO_BOUGHT_PER_YEAR` are deleted. Tests: `sim/tests/test_workforce_commands.py` `StandingPolicyRules`, `StandingPolicies`. Optimizer games that buy people change (no purchase without a shortfall, no yearly cap); manual play does not.
 
 The optimizer's standing policy on buying people (`auto_buy_people`, `sim/workforce/standing_bondage.py`) stops once the
 workshop holds a fixed number of artisans and buys at most a fixed number of people a year

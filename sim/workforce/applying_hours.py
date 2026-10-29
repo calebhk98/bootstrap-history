@@ -47,8 +47,8 @@ class ApplyingHours:
 
     def bleed_staff(self, command):
         seat = self.seat
-        seat.artisans = max(command.artisan_floor, seat.artisans * (1.0 - command.bleed))
-        seat.scholars = max(command.scholar_floor, seat.scholars * (1.0 - command.bleed * command.scholar_discount))
+        seat.artisans = rules.count_after_bleed(seat.artisans, command.artisan_floor, command.bleed)
+        seat.scholars = rules.count_after_bleed(seat.scholars, command.scholar_floor, command.bleed * command.scholar_discount)
 
     def disperse_dependants(self, command):
         seat = self.seat

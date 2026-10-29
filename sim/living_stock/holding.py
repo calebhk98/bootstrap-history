@@ -51,10 +51,7 @@ class Holding:
         self.change(command.material, command.units)
 
     def change(self, material, units):
-        # Complaint 681, kept until the migration's last equivalence proof: the old living-stock path took the
-        # opening snapshot after the change
-        self.needs.send(ChangeStock(self.commodity_of(material), float(units) * tonnes_per_unit(material),
-                                    legacy_snapshot_after_change=True))
+        self.needs.send(ChangeStock(self.commodity_of(material), float(units) * tonnes_per_unit(material)))
 
     def grant_opening_stock(self, command=None):
         """Credit what the civilisation held at its date."""

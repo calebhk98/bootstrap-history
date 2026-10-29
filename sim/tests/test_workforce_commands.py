@@ -126,14 +126,17 @@ class LivingCost(unittest.TestCase):
 
 
 class StandingPolicyRules(unittest.TestCase):
-    def buy(self, capital=1000.0, artisans=3.0):
-        return workforce_rules.people_to_buy(capital, 10.0, artisans, 20.0, 5.0, 12, 6)
+    def buy(self, capital=1000.0, lacking=3.0):
+        return workforce_rules.people_to_buy(capital, 10.0, lacking, 20.0, 5.0)
 
-    def test_nobody_is_bought_under_the_capital_floor_or_with_the_artisans_at_the_ceiling(self):
-        self.assertEqual((self.buy(capital=200.0), self.buy(artisans=12.0)), (0, 0))
+    def test_nobody_is_bought_under_the_capital_floor_or_when_no_hands_are_lacking(self):
+        self.assertEqual((self.buy(capital=200.0), self.buy(lacking=0.0), self.buy(lacking=1e-12)), (0, 0, 0))
 
-    def test_as_many_are_bought_as_the_reserve_per_person_allows_up_to_the_yearly_most(self):
-        self.assertEqual((self.buy(capital=1000.0), self.buy(capital=210.0), self.buy(capital=100000.0)), (6, 4, 6))
+    def test_the_whole_people_the_concerns_lack_are_bought_however_many_that_is(self):
+        self.assertEqual((self.buy(lacking=0.2), self.buy(lacking=2.5), self.buy(capital=100000.0, lacking=300.0)), (1, 3, 300))
+
+    def test_no_more_are_bought_than_the_reserve_per_person_allows(self):
+        self.assertEqual((self.buy(capital=210.0, lacking=30.0), self.buy(capital=1000.0, lacking=30.0)), (4, 20))
 
     def test_a_share_of_the_slaves_is_freed_and_never_fewer_than_one(self):
         self.assertEqual((workforce_rules.people_to_free(40, 4), workforce_rules.people_to_free(2, 4)), (10, 1))
@@ -143,12 +146,13 @@ class StandingPolicyRules(unittest.TestCase):
 
 
 class StandingPolicies(unittest.TestCase):
-    def build(self, policy, slaves=8.0, capital=1000.0, dice=None, mechanics=("hosts",), manual=False):
+    def build(self, policy, slaves=8.0, capital=1000.0, dice=None, mechanics=("hosts",), manual=False, lacking=6.0):
         calls = []
         household = SimpleNamespace(capital=capital)
         workforce = module_harness.build(Workforce, seat=WorkforceSeat(), views={
             "founder": lambda: {"policy": policy}, "automation": lambda: {"manual": manual}, "acting_balance": lambda: household.capital,
-            "game_random": lambda: dice, "running_mechanics": lambda name: list(mechanics)})
+            "game_random": lambda: dice, "running_mechanics": lambda name: list(mechanics),
+            "staffing_closed_hand_shortfall": lambda: (0.0, lacking)})
         workforce.staff = lambda: {"artisans": 3.0, "slaves": slaves}
         workforce.labour = SimpleNamespace(SLAVE_BASE_PRICE=10.0, buy_slaves=lambda count: calls.append(("buy", count)) or count,
                                            manumit=lambda count: calls.append(("free", count)) or count)
