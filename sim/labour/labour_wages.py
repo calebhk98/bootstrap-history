@@ -32,6 +32,8 @@ class WagesMixin(WageLedgerMixin):
     pricing is kept apart from who can be hired at all.
     """
 
+    _wage_schedule_cache = None   # the opening's wage schedule, rebuilt when the tightness factors change; set by _opening_wage_schedule
+
 
     WAGE_REPUTATION_BONUS_CAP = declare(
         "WAGE_REPUTATION_BONUS_CAP", 0.5, kind="temporary_heuristic",
@@ -241,7 +243,7 @@ class WagesMixin(WageLedgerMixin):
         """The wage schedule at the opening's price level; its tightness factors live in the economy
         state, so a save carries them."""
         factors = self._world.society.wage_tightness_factors
-        cached = getattr(self, "_wage_schedule_cache", None)
+        cached = self._wage_schedule_cache
         if cached is None or cached.tightness_factors is not factors:
             cached = self._wage_schedule_cache = self._world.build_wage_schedule(
                 self._world.civ, tightness_factors=factors)

@@ -216,7 +216,7 @@ def settings_meta_path(path):
 # Memory the UI keeps on the `Sim`: saved or read by the engine, so it stays there.
 
 def dashboard_history(sim):
-    return getattr(sim, "_dashboard_history", None)
+    return sim._dashboard_history
 
 
 def set_dashboard_history(sim, history):
@@ -224,11 +224,11 @@ def set_dashboard_history(sim, history):
 
 
 def founder_death_aged(sim):
-    return getattr(sim, "_founder_death_aged", None)
+    return sim._founder_death_aged
 
 
 def founder_death_year(sim):
-    return getattr(sim, "_founder_death_year", None)
+    return sim._founder_death_year
 
 
 def set_founder_death(sim, aged, year):
@@ -236,7 +236,7 @@ def set_founder_death(sim, aged, year):
 
 
 def founder_death_cache(sim):
-    return getattr(sim, "_founder_death_cache", None)
+    return sim._founder_death_cache
 
 
 def set_founder_death_cache(sim, cache):
@@ -280,7 +280,7 @@ def set_last_buy_refusal(sim, refusal):
 
 
 def said_command_index(sim):
-    return getattr(sim, "_said_command_index", False)
+    return bool(sim._said_command_index)
 
 
 def set_said_command_index(sim, said):
@@ -288,7 +288,7 @@ def set_said_command_index(sim, said):
 
 
 def said_stack_caution(sim):
-    return getattr(sim, "_said_stack_caution", False)
+    return sim._said_stack_caution
 
 
 def set_said_stack_caution(sim, said):

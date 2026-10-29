@@ -82,7 +82,7 @@ check("a dissolution notice does not stop a step", event_kinds.stops_a_step(LogL
 
 
 def reader(alive, saved_age=None, saved_year=None, log=()):
-    return StandInGame(founder_alive=alive, _founder_death_aged=saved_age, _founder_death_year=saved_year, log=list(log))
+    return StandInGame(founder_alive=alive, _founder_death_aged=saved_age, _founder_death_year=saved_year, _founder_death_cache=None, log=list(log))
 
 
 check("a living founder has no death to report", _founder_death_info(reader(True)) is None)

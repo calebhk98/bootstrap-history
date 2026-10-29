@@ -122,12 +122,7 @@ class ForwardingPropertiesMixin:
 	@property
 	def _dashboard_history(self):
 		sub = self.state.acting_record.holdings
-		if sub is None:
-			raise AttributeError("_dashboard_history")
-		val = getattr(sub, "_dashboard_history", None)
-		if val is None:
-			raise AttributeError("_dashboard_history")
-		return val
+		return None if sub is None else sub._dashboard_history   # None until recorded
 
 	@_dashboard_history.setter
 	def _dashboard_history(self, value):
@@ -142,12 +137,7 @@ class ForwardingPropertiesMixin:
 	@property
 	def _founder_death_aged(self):
 		sub = self.state.acting_record.founder
-		if sub is None:
-			raise AttributeError("_founder_death_aged")
-		val = getattr(sub, "_founder_death_aged", None)
-		if val is None:
-			raise AttributeError("_founder_death_aged")
-		return val
+		return None if sub is None else sub._founder_death_aged   # None until recorded
 
 	@_founder_death_aged.setter
 	def _founder_death_aged(self, value):
@@ -158,12 +148,7 @@ class ForwardingPropertiesMixin:
 	@property
 	def _founder_death_year(self):
 		sub = self.state.acting_record.founder
-		if sub is None:
-			raise AttributeError("_founder_death_year")
-		val = getattr(sub, "_founder_death_year", None)
-		if val is None:
-			raise AttributeError("_founder_death_year")
-		return val
+		return None if sub is None else sub._founder_death_year   # None until recorded
 
 	@_founder_death_year.setter
 	def _founder_death_year(self, value):
@@ -198,12 +183,7 @@ class ForwardingPropertiesMixin:
 	@property
 	def _said_command_index(self):
 		sub = self.state.acting_record.seat_progress
-		if sub is None:
-			raise AttributeError("_said_command_index")
-		val = getattr(sub, "_said_command_index", None)
-		if val is None:
-			raise AttributeError("_said_command_index")
-		return val
+		return None if sub is None else sub._said_command_index   # None until recorded
 
 	@_said_command_index.setter
 	def _said_command_index(self, value):

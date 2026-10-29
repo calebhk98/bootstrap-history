@@ -27,6 +27,6 @@ def move_seat(sim, from_id: str, to_id: str) -> dict:
 	sim.__dict__.get("_stack_cautions", {}).pop(from_id, None)   # the leaver's memory of what it was told goes with it
 	rename_seat_references(sim, from_id, to_id)
 	sim.assembly.rebind(to_id if sim.state.acting_seat == from_id else sim.state.acting_seat)   # the modules' seat state moved with the seat
-	if getattr(sim, "session_seat", None) == from_id:
+	if sim.session_seat == from_id:
 		sim.session_seat = to_id
 	return moved

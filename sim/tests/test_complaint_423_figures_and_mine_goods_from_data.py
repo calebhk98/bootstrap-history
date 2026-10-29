@@ -36,7 +36,7 @@ def write_mod(mods_dir, figures):
 def game(declared=None):
     """What the declared figures read: the population, the price level and the household's cash."""
     return Game(interface_declared=declared, population=Game(total=1000.4, children=300.0, working_age=600.0, elderly=100.4),
-                           price_index=1.25, year=100, wage_index=1.5,
+                           price_index=1.25, year=100, _dashboard_history=None, wage_index=1.5,
                            state=Game(household=Game(capital=4321.5)))
 
 

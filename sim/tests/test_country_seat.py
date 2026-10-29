@@ -116,6 +116,7 @@ check("a household seat is never refused for lacking a household", country_seat_
 class Runner(FactViews):
     def __init__(self, playing):
         self.state = Game(seats=seats)
+        self.session_seat = None
         self.acted = []
         self.playing = playing
 

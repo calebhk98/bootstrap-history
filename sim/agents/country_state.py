@@ -29,6 +29,7 @@ class CountryStateView(CollectionView):
 	profile: Any
 	_shared: Any
 	_holder: Any
+	_assessed = None   # this year's assessments; set by revenue_assessments
 
 	# ---- revenue
 	def revenue_forms(self) -> List[Dict[str, Any]]:
@@ -37,7 +38,7 @@ class CountryStateView(CollectionView):
 
 	def revenue_assessments(self) -> List[revenue.Assessment]:
 		"""Every declared form assessed on this year's base; kept for the year this scope lives."""
-		if getattr(self, "_assessed", None) is None:
+		if self._assessed is None:
 			self._assessed = revenue.assess(self)
 		return self._assessed
 

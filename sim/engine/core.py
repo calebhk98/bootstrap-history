@@ -121,6 +121,10 @@ class Sim(
         # suite green.
         self.fog = False
         self.goal = None
+        # set after the build by whoever front-ends the game (and `seed` again by a load); None while a game has none
+        self.seed = None
+        self.session_seat = None
+        self._founder_death_cache = None   # the founder's death read off the log by the UI, once it is found
         # MANUAL MODE: the optimizer in step() 4b never starts anything on its
         # own. The only projects that ever become active are ones something
         # called start_project() on, i.e. a human or an agent choosing them.
