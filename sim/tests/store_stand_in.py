@@ -5,7 +5,7 @@ base game's declared stores, for a test host that has no assembly. Both read and
     host = StoreHost(StoreSpec("acme:mana", "acme", "tile", 0.0, "mana"))   # `host.stores`, and `host.send(WriteStore(...))`"""
 from typing import Any, Dict, Optional
 
-from sim.engine import mod_stores
+from sim.content import api as content
 from sim.stores.api import StoreBook, StoreSpec
 from sim.stores.module import Stores
 from sim.stores.state import StoresWorld
@@ -13,7 +13,7 @@ from sim.tests import module_harness
 
 
 def base_book(saved: Optional[Dict[str, Dict[str, Any]]] = None) -> StoreBook:
-    return StoreBook({spec.name: spec for spec in mod_stores.base_declarations()}, {} if saved is None else saved)
+    return StoreBook({spec.name: spec for spec in content.base_store_declarations()}, {} if saved is None else saved)
 
 
 def stores_module(specs: Any = (), saved: Optional[Dict[str, Dict[str, Any]]] = None) -> Stores:

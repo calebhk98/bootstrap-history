@@ -16,7 +16,7 @@ from .mods_ids import check_new_id
 
 def load_needs(root: str, mods_dir: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
     """{"needs": {...}, "goods": {...}}: base file, then each mod's, in dependency order."""
-    mods_dir = mods_dir or os.path.join(root, "mods")
+    mods_dir = os.path.join(root, "mods") if mods_dir is None else mods_dir
     needs: Dict[str, Any] = {}
     goods: Dict[str, Any] = {}
 

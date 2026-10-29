@@ -32,7 +32,7 @@ engine stay off `sim.economy` too (only `sim/engine/economy_port*.py` may import
 | `sim/agents/` | `sim/agents/api.py` | none; the engine adapters (`society_actors.py`, `society_disclosure.py`, `interest_groups.py`) consume the api, and `sim/engine/agents_port*.py` (`SimWorld`) is what actors ask of the world (`sim/agents/protocols.py`) |
 | `sim/disease/` | `sim/disease/api.py` | the `disease` module (`sim/disease/module.py`: the yearly step and the contact heuristic; the game reaches it through views and commands, `sim/engine/forward_disease.py` is what is left of the old mixin), `sim/agents/country_disease.py` (foreign countries, through `disease.nation`), `sim/engine/validate_disease_data.py` (for `validate`) |
 | `sim/ui/` | `sim/ui/api.py` | none; the UI is a consumer and reaches the engine only through `sim/engine/ui_port.py`. `sim/simulator.py` is the entry point |
-| `sim/content/` | `sim/content/api.py` | none yet; the mod loader (manifests, ids, removals, civilisations, world data, constants), the tree's field defaults and the household need data. The engine, the ui and the tests import it; it imports nothing from the engine |
+| `sim/content/` | `sim/content/api.py` | the `content` module (`sim/content/module.py`, given the mods directory by `game_assembly.build`); the mod loader (manifests, ids, removals, civilisations, world data, constants), the tree's field defaults and the household need data. The engine, the ui and the tests import it; it imports nothing from the engine |
 
 Each adapter is a plain class (or, for the UI, a module) with one explicit member per thing the
 package uses, delegating to the engine. There is no `__getattr__` forwarding (too slow here; see

@@ -8,19 +8,9 @@ import contextlib
 from sim.assembly.api import KEYED, QUOTE
 from sim.demography.api import rules as demography_rules
 
-from . import bridge_land, view_share
-from .actor_kinds_data import declared_kinds
+from . import view_share
 from .bridge import bridge_command, bridge_view
 from .foreign_economy_data import not_traded_materials as declared_not_traded_materials
-
-# ---- the cast's own data: the kinds mods declare and the roster a game opens with ----
-
-
-@bridge_view("declared_actor_kinds")
-def declared_actor_kinds(sim):
-    """{kind id: class} for the actor kinds the installed mods declare in data."""
-    return declared_kinds(bridge_land.MODS_DIR)
-
 
 # ---- core: settings and constants the engine declares ----
 

@@ -7,10 +7,8 @@ from sim.assembly.api import QUOTE
 from sim.markets.api import RepriceOpeningMoney
 
 from . import opening_money
-from sim.content import api as content
 from .bridge import bridge_command, bridge_view
-from .data import MODDIR, ROOT, calculated_goods_table
-from sim.content.api import get_ordered_mods
+from .data import calculated_goods_table
 
 
 # ---- core: facts of the game the module cannot read from an owner yet ----
@@ -19,18 +17,6 @@ from sim.content.api import get_ordered_mods
 def opening_farmed_hectares(sim):
     """The area the opening's farm cleared (an initial condition)."""
     return sim._opening_farmed_hectares
-
-
-@bridge_view("installed_mod_ids")
-def installed_mod_ids(sim):
-    """The ids of the installed mods in load order: what the content the household need model is built from depends on."""
-    return tuple(manifest.id for manifest in get_ordered_mods(MODDIR))
-
-
-@bridge_view("household_need_data")
-def household_need_data(sim):
-    """{"needs", "goods"}: the needs households spend on and the goods that serve them, from the base file and each mod's."""
-    return content.load_needs(ROOT)
 
 
 # ---- prices ----

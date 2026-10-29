@@ -1,4 +1,4 @@
-"""Declared stores, engine side: the declarations the data files make, handed to the stores module (sim/stores/).
+"""Declared stores: the declarations the data files make, handed to the stores module (sim/stores/).
 
 A store is declared in data (`data/world/stores.json` for the base game, `data/stores.json` in a mod) or by a mod's code through
 `api.store`. The stores module keeps the declarations of one game and their saved values; this file only reads the data files."""
@@ -8,10 +8,11 @@ from typing import Any, List
 from sim.json_files import read_json
 from sim.stores.api import StoreSpec
 
-from sim.content.api import get_ordered_mods
-from sim.content.api import ModError
-from sim.content.api import check_new_id
-from .tree_source import ROOT
+from sim.default_civilisation import REPOSITORY_ROOT as ROOT
+
+from .mods import get_ordered_mods
+from .mods_base import ModError
+from .mods_ids import check_new_id
 
 STORES_FILE = os.path.join("data", "stores.json")
 BASE_STORES_FILE = os.path.join("data", "world", "stores.json")

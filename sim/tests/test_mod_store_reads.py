@@ -4,7 +4,7 @@ Store values live in the stores module's saved state, which the save walks like 
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine import mod_stores
+from sim.content import api as content
 from sim.stores.api import StoreSpec
 from sim.ui.proto import mod_commands, screen_map
 
@@ -36,4 +36,4 @@ check("a layer states the store, its unit, its default and the tiles that differ
 check("a store that is not tile-keyed is not offered as a layer", game.stores.tile_layer("no_such_store") is None)
 
 # --- tile control is the base game's control store (test_land_module reads it through the land module).
-check("the base game declares control as a tile store with no owning mod", any(spec.name == "control" and spec.owner == "" and spec.keyed_by == "tile" for spec in mod_stores.base_declarations()))
+check("the base game declares control as a tile store with no owning mod", any(spec.name == "control" and spec.owner == "" and spec.keyed_by == "tile" for spec in content.base_store_declarations()))
