@@ -96,16 +96,13 @@ class Views:
 	def trade_available(self, trade):
 		return self.labour.trade_available(trade)
 
-	def labour_quote(self, trade, hours):
-		"""Money one hour of a trade costs when `hours` of it are bought at once (the price rises with the hours)."""
-		return self.labour.labour_market.quote(trade, hours)
-
-	def hour_wage(self, trade):
-		"""Money one hour of a trade costs now."""
-		return self.labour.market.quote(trade)
+	def labour_quote(self, trade, hours=0.0):
+		"""Money one hour of a trade costs when `hours` a year more of it are bought at once (the price rises with the hours);
+		with none, what an hour costs now."""
+		return self.labour.market.quote(trade, hours)
 
 	def wage(self, trade):
-		"""Money one hour of a trade is worth on the wage schedule (the labour market's quote is `hour_wage`)."""
+		"""Money one hour of a trade is worth on the wage schedule (the labour market's quote is `labour_quote`)."""
 		return self.labour.wage_per_hour(trade)
 
 	def base_annual_wage(self, trade):

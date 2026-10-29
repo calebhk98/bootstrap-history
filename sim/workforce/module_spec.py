@@ -86,7 +86,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("market_supply", "market_supply", kind=KEYED, **_LIVE),
         ViewSpec("trade_available", "trade_available", kind=KEYED, **_LIVE),
         ViewSpec("labour_quote", "labour_quote", kind=QUOTE, **_LIVE),
-        ViewSpec("hour_wage", "hour_wage", kind=KEYED, **_LIVE),
         ViewSpec("wage", "wage", kind=KEYED, **_LIVE),
         ViewSpec("base_annual_wage", "base_annual_wage", kind=KEYED, **_LIVE),
         ViewSpec("trade_population", "trade_population", kind=KEYED, **_LIVE),

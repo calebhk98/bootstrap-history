@@ -32,7 +32,7 @@ def build(budget: float = 1e18, year: int = 100, seat: Optional[ResourcesSeat] =
     civ = rome()
     plain: Dict[str, Any] = {
         "year": year, "start_year": 100, "civilisation": civ, "price_index": 1.0,
-        "material_price": lambda material: 1.0, "wage": lambda trade: 1.0, "labour_quote": lambda trade, hours: 1.0,
+        "material_price": lambda material: 1.0, "wage": lambda trade: 1.0, "labour_quote": lambda trade, hours=0.0: 1.0,
         "money_per_labour_hour": 1.0, "normalized_material": lambda material: material, "material_demand": {},
         "material_checks": {}, "charcoal_per_hectare": 1.0, "material_shortfall": lambda material, by_tag=None: 0.0,
         "material_market_tonnes": lambda material: 0.0, "material_unsupplied_sentence": lambda material: None,

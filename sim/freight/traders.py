@@ -17,7 +17,7 @@ from .constants import SEA_MODE
 
 
 class Traders:
-    """Needs: foreign_economies, hour_wage, hours_per_person_year, trade_population, working_age, households_loanable_funds, market_rate,
+    """Needs: foreign_economies, labour_quote, hours_per_person_year, trade_population, working_age, households_loanable_funds, market_rate,
     route_lift_years_per_tonne, route_capital_per_lift_tonne, lift_capacity_tonnes, opening_carriers_per_route,
     carriage_facts, plus what Models needs."""
 
@@ -64,7 +64,7 @@ class Traders:
         against the working population's."""
         return merchant_house.class_own_capital(
             self.needs.households_loanable_funds(), self.needs.trade_population["merchant"],
-            self.needs.hour_wage["merchant"], self.needs.working_age(), self.needs.hour_wage["labourer"])
+            self.needs.labour_quote("merchant"), self.needs.working_age(), self.needs.labour_quote("labourer"))
 
     def capital_per_merchant(self):
         merchants = self.needs.trade_population["merchant"]
@@ -93,7 +93,7 @@ class Traders:
         """Money for the agents kept at the two ends per tonne a carrier lifts, at the labour market's wage for a
         merchant, a house's agents shared among its carriers."""
         return merchant_terms.agent_cost_per_tonne(
-            self.needs.route_lift_years_per_tonne(route), self.needs.hours_per_person_year(), self.needs.hour_wage["merchant"],
+            self.needs.route_lift_years_per_tonne(route), self.needs.hours_per_person_year(), self.needs.labour_quote("merchant"),
             merchant_house.agents_per_carrier(self.carriers_per_house(civilization_id, route)))
 
     def cargo_lost_share(self, route, material=None, civilization_id=None, destination_demand_tonnes=None):

@@ -17,7 +17,7 @@ def build(views: Optional[Dict[str, Any]] = None, **overrides: Any) -> Prices:
         "civilisation": {"id": "stand_in", "starting_interest_rate": 0.05}, "year": 100, "techniques_granted": set(),
         "techniques_in_use": frozenset(), "techniques_held": set(),
         "operating": set(), "price_epoch": (), "producers_stamp": (), "market_rate": 0.05,
-        "money_per_labour_hour": 1.0, "hour_wage": lambda trade: 1.0, "farm_land_hectares": 0.0,
+        "money_per_labour_hour": 1.0, "labour_quote": lambda trade, hours=0.0: 1.0, "farm_land_hectares": 0.0,
         "household_prices": {}, "material_seller": lambda material: None, "agent_wage": lambda trade: None,
         "agent_land_rent": None, "is_venture": lambda node_id: False, "concern_baskets_now": lambda node_id: None,
         "venture_ramp": lambda node_id: 1.0, "material_pool": lambda material: (material, material)}
