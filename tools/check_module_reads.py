@@ -1,7 +1,8 @@
-"""Every view a module reads through `needs.<name>` is declared in its spec, so the assembled module can answer it. A test host
-hands a module any view it is given, so an undeclared read passes the unit tests and fails only in a built game. Prints each
-undeclared read as module, view and the first place it is read, and exits non-zero when there are any. Run from the repository
-root after a module move."""
+"""Every view a module reads through `needs.<name>` and every command it sends is declared in its spec, so the assembled module
+can answer and apply them. A test host hands a module any view it is given and records any command, so an undeclared read or send
+passes the unit tests and fails only in a built game. Prints each one as module, name and the first place it is used, and exits
+non-zero when there are any. The engine (the composition root, which sends through `Sim.send`) is not checked. Run from the
+repository root after a module move."""
 import glob
 import os
 import re
@@ -11,6 +12,8 @@ sys.path.insert(0, ".")
 from sim.engine import game_assembly  # noqa: E402
 
 READ = re.compile(r"\bneeds\.([a-z_][a-z0-9_]*)")
+SEND = re.compile(r"\bsend\(\s*([A-Z][A-Za-z0-9_]*)\(")
+ROOT = "engine"
 
 
 def undeclared_reads(specs):
@@ -34,8 +37,30 @@ def undeclared_reads(specs):
     return found
 
 
+def undeclared_sends(specs):
+    """[(module id, command class name, first place)] of the applied commands a module's package sends without declaring them."""
+    applied = {command.__name__ for spec in specs.values() for command, _handler in spec.applies}
+    found = []
+    for module_id, spec in sorted(specs.items()):
+        package = os.path.join("sim", module_id)
+        if module_id == ROOT or not os.path.isdir(package):
+            continue
+        declared = {command.__name__ for command in spec.sends} | {command.__name__ for command, _handler in spec.applies}
+        first_place = {}
+        for path in sorted(glob.glob(package + "/**/*.py", recursive=True)):
+            for number, line in enumerate(open(path, encoding="utf-8"), 1):
+                for name in SEND.findall(line):
+                    if name in applied and name not in declared:
+                        first_place.setdefault(name, "%s:%d" % (path, number))
+        found.extend((module_id, name, place) for name, place in sorted(first_place.items()))
+    return found
+
+
 if __name__ == "__main__":
-    missing = undeclared_reads(game_assembly.build(None, False).applied.specs)
-    for module_id, name, place in missing:
+    specs = game_assembly.build(None, False).applied.specs
+    reads, sends = undeclared_reads(specs), undeclared_sends(specs)
+    for module_id, name, place in reads:
         print("%s reads %s undeclared (%s)" % (module_id, name, place))
-    sys.exit(1 if missing else 0)
+    for module_id, name, place in sends:
+        print("%s sends %s undeclared (%s)" % (module_id, name, place))
+    sys.exit(1 if reads or sends else 0)
