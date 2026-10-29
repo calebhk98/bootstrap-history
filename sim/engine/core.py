@@ -28,7 +28,7 @@ from .forward_workforce import ForwardWorkforceMixin
 from .projects import ProjectsMixin
 from . import seat_registry, year_steps
 from .year_run import run_year
-from sim.seats.api import SetFounderLife
+from sim.seats.api import SetFounderLife, SetPolicy
 from .forward_seats import ForwardSeatsMixin
 from .forward_hazards import HazardsForwardsMixin
 from .forward_polity import PolityForwardsMixin
@@ -200,7 +200,8 @@ class Sim(
         # docstring: one key, auto_court_heir, is written for succession after
         # a mortal owner's death, and the rest of the dict is not worth
         # splitting away from it for that.
-        self.policy = default_policy(manual)
+        for name, value in default_policy(manual).items():
+            self.send(SetPolicy(name, value))
         # World-level "last time I said X" trackers; household ones live on HouseholdState.
         # THE FOLLOWING EIGHT FIELDS ARE BIOGRAPHICAL TO ONE MORTAL PERSON, not
         # to a household in general, and stay on `Sim` for exactly that reason

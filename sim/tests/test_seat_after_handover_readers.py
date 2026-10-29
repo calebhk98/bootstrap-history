@@ -20,6 +20,7 @@ from sim.engine.state import (FounderState, HoldingsState, HouseholdState, SeatP
                               SimulationState, serialize_state)
 from sim.engine.state_seat import SeatState, bind_seat
 from sim.tests.harness import check
+from sim.tests.seat_views_stand_in import slots_of
 from sim.agents.api import Business
 
 
@@ -33,10 +34,10 @@ def post_handover_state():
 		household=HouseholdState(capital=40.0),
 		founder=FounderState(_founder_death_year=30),
 		holdings=HoldingsState(), seat_progress=SeatProgressState(),
-		goal="steam_engine", country="han",
-		modules={"knowledge": KnowledgeSeat(done={"fire", "wheel"}, granted={"fire"}), "workforce": WorkforceSeat(scholars=2.0), "seats": SeatsSeat(patents={"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}, shares_held={"guild": 3.0})})
-	third = SeatState(household=HouseholdState(capital=5.0), founder=FounderState(_founder_death_year=50), goal="printing_press",
-	                  modules={"knowledge": KnowledgeSeat(done={"fire"}, granted={"fire"}), "seats": SeatsSeat()})
+		modules={"knowledge": KnowledgeSeat(done={"fire", "wheel"}, granted={"fire"}), "workforce": WorkforceSeat(scholars=2.0),
+		         "seats": SeatsSeat(goal="steam_engine", country="han", patents={"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}, shares_held={"guild": 3.0})})
+	third = SeatState(household=HouseholdState(capital=5.0), founder=FounderState(_founder_death_year=50),
+	                  modules={"knowledge": KnowledgeSeat(done={"fire"}, granted={"fire"}), "seats": SeatsSeat(goal="printing_press")})
 	return SimulationState(seats={"third": third, "heir": heir}, acting_seat="heir", modules={"actors": ActorsState(home_country="rome")})
 
 
@@ -58,11 +59,6 @@ check("bind_seat: the root aliases are the heir's own objects",
       state.acting_seat == "heir" and state.household is heir.household
       and state.founder is heir.founder and state.holdings is heir.holdings and state.seat_progress is heir.seat_progress
       and state.seats["heir"].modules["workforce"].scholars == 2.0 and state.founder._founder_death_year == 30, None)
-check("SimulationState._goal: reads the heir's goal", post_handover_state()._goal == "steam_engine")
-state = post_handover_state()
-state._goal = "radio"
-check("SimulationState._goal: writes the heir's goal and not the other seat's",
-      state.seats["heir"].goal == "radio" and state.seats["third"].goal == "printing_press", None)
 
 # ---- the purse
 state = post_handover_state()
@@ -75,29 +71,29 @@ check("attach_purses: the acting household's capital is the heir's account", sta
 
 # ---- who is still playing
 state = post_handover_state()
-check("seats_playing: the heir and the other player, in the order they joined", seats_playing(state.seats) == ["third", "heir"])
-check("seat_ended: the heir's run has not ended", seat_ended(state.seats["heir"]) is False)
-check("run_is_over: not while a seat has no goal reached", run_is_over(state.seats) is False)
+check("seats_playing: the heir and the other player, in the order they joined", seats_playing(slots_of(state.seats)) == ["third", "heir"])
+check("seat_ended: the heir's run has not ended", seat_ended(slots_of(state.seats)["heir"]) is False)
+check("run_is_over: not while a seat has no goal reached", run_is_over(slots_of(state.seats)) is False)
 state.seats["heir"].modules["seats"].goal_year = 120
 state.seats["third"].modules["seats"].goal_year = 121
-check("run_is_over: over when the heir and the other player have both reached their goals", run_is_over(state.seats) is True)
+check("run_is_over: over when the heir and the other player have both reached their goals", run_is_over(slots_of(state.seats)) is True)
 
 # ---- the country the acting seat plays for
 state = post_handover_state()
-check("owner_of_seat: the acting seat raises armies for the country it was handed", owner_of_seat(state.seats, state.acting_seat, "rome") == "han")
-check("owner_of_seat: the other seat plays for the game's own country", owner_of_seat(state.seats, "third", "rome") == "rome")
-check("partner_country_of_seat: the acting seat's market is its country's", partner_country_of_seat(state.seats, state.acting_seat, "rome") == "han")
-check("partner_country_of_seat: the other seat has none", partner_country_of_seat(state.seats, "third", "rome") is None)
+check("owner_of_seat: the acting seat raises armies for the country it was handed", owner_of_seat(slots_of(state.seats), state.acting_seat, "rome") == "han")
+check("owner_of_seat: the other seat plays for the game's own country", owner_of_seat(slots_of(state.seats), "third", "rome") == "rome")
+check("partner_country_of_seat: the acting seat's market is its country's", partner_country_of_seat(slots_of(state.seats), state.acting_seat, "rome") == "han")
+check("partner_country_of_seat: the other seat has none", partner_country_of_seat(slots_of(state.seats), "third", "rome") is None)
 
 # ---- what the state pays the acting seat
 state = post_handover_state()
 grants = {"rome": 500.0, "han": 90.0}
 check("patron_grant_share: the heir is paid its country's grant shared among that state's clients",
-      patron_grant_share(grants.get, state.seats[state.acting_seat].country, state.acting_seat, "rome", lambda country: [("heir", 0.0, 1.0), ("third", 0.0, 1.0)]) == 45.0)
+      patron_grant_share(grants.get, state.seats[state.acting_seat].modules["seats"].country, state.acting_seat, "rome", lambda country: [("heir", 0.0, 1.0), ("third", 0.0, 1.0)]) == 45.0)
 check("patron_grant_share: a state that funds no heir pays it nothing",
-      patron_grant_share(grants.get, state.seats[state.acting_seat].country, state.acting_seat, "rome", lambda country: [("third", 0.0, 1.0)]) == 0.0)
+      patron_grant_share(grants.get, state.seats[state.acting_seat].modules["seats"].country, state.acting_seat, "rome", lambda country: [("third", 0.0, 1.0)]) == 0.0)
 check("patron_grant_share: the heir is asked about its own country and not the home one",
-      patron_grant_share(grants.get, state.seats["heir"].country, "heir", "rome", lambda country: [("heir", 0.0, 1.0)] if country == "han" else []) == 90.0)
+      patron_grant_share(grants.get, state.seats["heir"].modules["seats"].country, "heir", "rome", lambda country: [("heir", 0.0, 1.0)] if country == "han" else []) == 90.0)
 
 # ---- what the seats have built
 state = post_handover_state()
@@ -120,7 +116,7 @@ check("serialize_state: the save's acting seat and its seats are the heir and th
 check("serialize_state: the save names the leaver nowhere", "leaver" not in json.dumps(blob), None)
 check("serialize_state: the heir's saved seat carries the household, nodes, goal and country passed on",
       blob["seats"]["heir"]["modules"]["workforce"]["scholars"] == 2.0 and blob["seats"]["heir"]["modules"]["knowledge"]["done"] == {"__set__": ["fire", "wheel"]}
-      and blob["seats"]["heir"]["goal"] == "steam_engine" and blob["seats"]["heir"]["country"] == "han"
+      and blob["seats"]["heir"]["modules"]["seats"]["goal"] == "steam_engine" and blob["seats"]["heir"]["modules"]["seats"]["country"] == "han"
       and blob["seats"]["heir"]["modules"]["seats"]["shares_held"] == {"guild": 3.0}, None)
 check("acting_seat_of: the save's acting seat is the heir's record", acting_seat_of(blob) is blob["seats"]["heir"])
 check("goal_of_blob: the heir's goal", goal_of_blob(blob) == "steam_engine")

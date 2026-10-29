@@ -149,13 +149,13 @@ check("deserialize_state: a coded refusal is a Refusal with its code, choices an
 
 # ---- the root: seats in saved order, the acting seat's aliases, metadata
 state = deserialize_state({
-	"seats": {"zed": {"household": {"capital": 10.0}, "projects": {}, "modules": {"knowledge": {"done": {"__set__": ["fire"]}}}, "founder": {"_founder_death_year": 30},
-	                  "holdings": {"_dashboard_history": [3.0]}, "goal": "steam_engine", "country": "han", "kind": "household", "holder": None},
-	          "abe": {"household": {"capital": 4.0}, "projects": {}, "founder": None, "goal": None}},
+	"seats": {"zed": {"household": {"capital": 10.0}, "projects": {}, "modules": {"knowledge": {"done": {"__set__": ["fire"]}}, "seats": {"goal": "steam_engine", "country": "han", "kind": "household", "holder": None}},
+	                  "founder": {"_founder_death_year": 30}, "holdings": {"_dashboard_history": [3.0]}},
+	          "abe": {"household": {"capital": 4.0}, "projects": {}, "founder": None}},
 	"acting_seat": "abe", "economy": {}, "_civ": "rome", "_rng": [3, [0, 1], None], "_seed": "seed text",
 	"interface": {"panel": "map"}}, SimulationState)
 check("deserialize_state: seats come back in the saved order and as seats",
-      list(state.seats) == ["zed", "abe"] and state.seats["zed"].goal == "steam_engine" and state.seats["zed"].country == "han"
+      list(state.seats) == ["zed", "abe"] and state.seats["zed"].modules["seats"]["goal"] == "steam_engine" and state.seats["zed"].modules["seats"]["country"] == "han"
       and state.seats["zed"].modules["knowledge"]["done"] == {"__set__": ["fire"]} and state.seats["zed"].founder._founder_death_year == 30
       and state.seats["zed"].holdings._dashboard_history == [3.0] and state.seats["abe"].founder is None, None)
 check("deserialize_state: the acting seat's objects are the root's household and holdings",

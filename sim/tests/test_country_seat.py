@@ -25,16 +25,18 @@ handlers = command_registry.handlers()
 
 
 def household_seat():
-    seat = seat_from_template({"starting_techs": ["fire"]}, 100.0, {})
-    seat.modules["seats"] = SeatsSeat()
-    return seat
+    return seat_from_template({"starting_techs": ["fire"]}, 100.0, {})
 
 
 def country_seat(holder=GOVERNMENT):
     seat = seat_from_template({"kind": COUNTRY_SEAT, "country": None}, 0.0, {})
-    seat.modules["seats"] = SeatsSeat()
-    seat.holder = holder
+    seat.modules["seats"].holder = holder
     return seat
+
+
+def slots(seats):
+    """The seats module's state for each seat."""
+    return {seat_id: seat.modules["seats"] for seat_id, seat in seats.items()}
 
 
 class JoinGame(FactViews):
@@ -48,6 +50,9 @@ class JoinGame(FactViews):
         self.joined = []
 
     dead_reasons = {}
+
+    def acting_balance(self):
+        return 0.0
 
     def techniques_by_seat(self):
         return {seat_id: SeatTechniques(frozenset(), frozenset()) for seat_id in self.state.seats}
@@ -84,7 +89,7 @@ check("a country seat joins, holding the government the engine gave it",
       reply["ok"] and reply["joined"] == "senate" and reply["kind"] == "country" and reply["holder"] == GOVERNMENT
       and reply["country"] == HOME, reply)
 check("a country seat's reply has no founder and no household", reply["founder"] is None and reply["household"] is None
-      and game.state.seats["senate"].founder is None and not game.state.seats["senate"].holds_household, reply)
+      and game.state.seats["senate"].founder is None and game.state.seats["senate"].modules["seats"].kind == COUNTRY_SEAT, reply)
 check("a country seat's row names the kind and holder and shows no purse", row["kind"] == "country" and row["holder"] == GOVERNMENT
       and "capital" not in row, row)
 check("the join asks the engine for a country template", game.joined == [("senate", {"kind": "country", "country": HOME})], game.joined)
@@ -115,7 +120,7 @@ class Runner(FactViews):
         self.playing = playing
 
     def seat_list(self):
-        return {"playing": self.playing}
+        return {"joined": list(seats), "playing": self.playing}
 
     def act_as(self, seat_id):
         self.acted.append(seat_id)
@@ -131,26 +136,26 @@ reply = run_as_seat(Runner([]), {"cmd": "step", "as": "senate"}, lambda command:
 check("with no household seat playing a step is refused with its cause", reply["ok"] is False and reply["cause"] == "no_household_seat", reply)
 
 # ---- the seat-run rules
-check("a country seat is not among the playing seats", seats_playing(seats) == [FIRST_SEAT_ID], seats_playing(seats))
-check("a country seat alone does not end the run", run_is_over({"senate": country_seat()}) is False, None)
+check("a country seat is not among the playing seats", seats_playing(slots(seats)) == [FIRST_SEAT_ID], seats_playing(slots(seats)))
+check("a country seat alone does not end the run", run_is_over(slots({"senate": country_seat()})) is False, None)
 ended = household_seat()
-ended.modules["seats"] = SeatsSeat(dead_reason="denounced")
+ended.modules["seats"].dead_reason = "denounced"
 check("a run is over when every household seat ended, whatever a country seat does",
-      run_is_over({FIRST_SEAT_ID: ended, "senate": country_seat()}) is True, None)
+      run_is_over(slots({FIRST_SEAT_ID: ended, "senate": country_seat()})) is True, None)
 
 # ---- handover
 check("a country seat cannot be handed to a household seat",
-      cause_of(handover_refusal(seats, "senate", FIRST_SEAT_ID, [])) == "replacement_wrong_kind", None)
+      cause_of(handover_refusal(slots(seats), "senate", FIRST_SEAT_ID, [])) == "replacement_wrong_kind", None)
 seats_two = {"senate": country_seat(), "regent": country_seat(holder=None)}
-check("a country seat can be handed to an empty country seat", handover_refusal(seats_two, "senate", "regent", []) is None, None)
+check("a country seat can be handed to an empty country seat", handover_refusal(slots(seats_two), "senate", "regent", []) is None, None)
 moved = move_seat_fields(seats_two, "senate", "regent")
 check("a country seat is handed over with its kind and holder", moved["from"] == "senate" and moved["to"] == "regent"
-      and "senate" not in seats_two and seats_two["regent"].kind == "country" and seats_two["regent"].holder == GOVERNMENT, moved)
+      and "senate" not in seats_two and slots(seats_two)["regent"].kind == "country" and slots(seats_two)["regent"].holder == GOVERNMENT, moved)
 
 # ---- save and load
 state = SimulationState(household=household_seat().household, founder=household_seat().founder)
 state.seats["regent"] = country_seat()
 loaded = deserialize_state(serialize_state(state))
 check("a save keeps the country seat, its kind and holder",
-      loaded.seats["regent"].kind == "country" and loaded.seats["regent"].holder == GOVERNMENT
+      loaded.seats["regent"].modules["seats"]["kind"] == "country" and loaded.seats["regent"].modules["seats"]["holder"] == GOVERNMENT
       and loaded.seats["regent"].founder is None, list(loaded.seats))

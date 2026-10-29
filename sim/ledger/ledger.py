@@ -38,7 +38,7 @@ class Ledger(Module):
 
 	def pay_actor(self, command: Any) -> None:
 		payer = self.needs.cast().get(command.payer)
-		if command.payee in self.needs.legacy_seats():
+		if command.payee in self.needs.seat_list()["joined"]:
 			payee = self.needs.seat_party[command.payee]
 		else:
 			cast = self.needs.cast()
@@ -84,8 +84,13 @@ class Ledger(Module):
 
 	def note_holder_booking(self, command: Any) -> None:
 		"""The lender's books record a posting its loan or repayment made: a seat's household, else an actor of the cast."""
-		seats = self.needs.legacy_seats()
-		holder = seats[command.holder].household if command.holder in seats else self.needs.cast().actors.get(command.holder)
+		if command.holder in self.needs.seat_list()["joined"]:
+			with self.needs.acting_as(command.holder):
+				self._note_booking(self.needs.legacy_acting_household(), command)
+		else:
+			self._note_booking(self.needs.cast().actors.get(command.holder), command)
+
+	def _note_booking(self, holder: Any, command: Any) -> None:
 		if holder is not None:
 			(holder.note_income if command.signed > 0.0 else holder.note_outlay)(command.label, abs(command.signed))
 

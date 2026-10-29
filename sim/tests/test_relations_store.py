@@ -17,6 +17,7 @@ from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import run_as_seat
 from sim.agents.api import relations
+from sim.tests.seat_views_stand_in import give_seats_slots
 from sim.tests.ui_stand_in import FactViews
 
 
@@ -26,6 +27,7 @@ class Game(FactViews):
     def __init__(self):
         self.state = SimulationState(household=HouseholdState(capital=100.0), founder=FounderState())
         self.state.seats["northern"] = seat_from_template({"country": "han"}, 50.0, {})
+        give_seats_slots(self.state)
         self.session_seat = None
         self.year = 100
         self.civ = {"id": "rome"}

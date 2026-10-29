@@ -6,7 +6,7 @@ from .commands import (BankStock, ChangeStock, DrawDownStock, PayActor, PayActor
 from .ledger import MONEY, STOCK, Ledger
 from .state import LedgerSeat, LedgerWorld
 
-LEGACY_READS = ("legacy_acting_household", "legacy_household_actor", "legacy_edge_account", "cast", "legacy_seats", "seat_party",
+LEGACY_READS = ("legacy_acting_household", "legacy_household_actor", "legacy_edge_account", "cast", "seat_list", "acting_as", "seat_party",
                 "year", "actor_world")
 
 MODULE_SPECS = (ModuleSpec(

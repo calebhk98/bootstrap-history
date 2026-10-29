@@ -26,6 +26,7 @@ from sim.workforce.api import WorkforceSeat
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState,
                               SimulationState, serialize_state, verbatim)
 from sim.engine.state_seat import SeatState
+from sim.seats.state import SeatsSeat
 from sim.invalidating import _InvalidatingDict
 from sim.refusal import Refusal
 from sim.reporting.api import ReportingSeat
@@ -181,18 +182,21 @@ check("serialize_state: the state's books: money, revenue by form, arrears, know
       and blob["records"]["government:rome"]["exited_year"] is None and blob["home_country"] == "rome", None)
 
 # ---- the root: seats, aliases and metadata
-first = SeatState(HouseholdState(capital=10.0), FounderState(_founder_death_year=30), goal="steam_engine", country="han",
-                 modules={"knowledge": KnowledgeSeat(done={"fire"})})
-second = SeatState(HouseholdState(capital=4.0), FounderState(), holdings=HoldingsState(_dashboard_history=[1.0]))
+first = SeatState(HouseholdState(capital=10.0), FounderState(_founder_death_year=30),
+                 modules={"knowledge": KnowledgeSeat(done={"fire"}), "seats": SeatsSeat(goal="steam_engine", country="han", policy={"auto_hire": False})})
+second = SeatState(HouseholdState(capital=4.0), FounderState(), holdings=HoldingsState(_dashboard_history=[1.0]), modules={"seats": SeatsSeat()})
 state = SimulationState(seats={"zed": first, "abe": second}, acting_seat="abe", economy=EconomyState(), _civ="rome", _rng=[3, [0, 1], None],
                         _seed="seed text")
 blob = serialize_state(state)
 check("serialize_state: the root's aliases of the acting seat are not saved, the seats are", all(
 	name not in blob for name in ("household", "projects", "founder", "holdings", "seat_progress")) and "seats" in blob, list(blob))
 check("serialize_state: seats are saved in the order they joined, with the acting seat's id", list(blob["seats"]) == ["zed", "abe"] and blob["acting_seat"] == "abe")
-check("serialize_state: a seat's own fields: goal, country, kind and holder",
-      blob["seats"]["zed"]["goal"] == "steam_engine" and blob["seats"]["zed"]["country"] == "han"
-      and blob["seats"]["zed"]["kind"] == "household" and blob["seats"]["zed"]["holder"] is None and blob["seats"]["abe"]["goal"] is None, None)
+seats_slot = blob["seats"]["zed"]["modules"]["seats"]
+check("serialize_state: the seats module's slot holds the seat's goal, country, kind, holder and policy",
+      seats_slot["goal"] == "steam_engine" and seats_slot["country"] == "han" and seats_slot["kind"] == "household"
+      and seats_slot["holder"] is None and seats_slot["policy"] == {"auto_hire": False}
+      and blob["seats"]["abe"]["modules"]["seats"]["goal"] is None, None)
+check("serialize_state: the seat itself no longer carries them", not {"goal", "country", "kind", "holder"} & set(blob["seats"]["zed"]), None)
 check("serialize_state: a seat's household, projects and founder are sections of it",
       blob["seats"]["zed"]["household"]["capital"] == 10.0 and blob["seats"]["zed"]["modules"]["knowledge"]["done"] == {"__set__": ["fire"]}
       and blob["seats"]["zed"]["founder"]["_founder_death_year"] == 30 and blob["seats"]["abe"]["holdings"]["_dashboard_history"] == [1.0], None)

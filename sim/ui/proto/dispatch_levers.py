@@ -4,7 +4,7 @@ monopolies, subsidies and mandates (Complaint 595).
 The rules are plain functions in `sim/agents/government_levers.py`; this module finds the seat's own government, hands
 the request over and shapes the reply. A seat sets only its own country's levers."""
 from sim.agents.api import government_levers
-from sim.engine.state_seat import COUNTRY_SEAT
+from sim.seats.api import COUNTRY_SEAT
 from sim.engine.ui_port import material_prices
 from sim.refusal import Refusal
 
@@ -22,13 +22,12 @@ def _refusal(cause, error, choices=None, **fields):
 
 def own_country(sim):
     """The country the acting seat plays for."""
-    return sim.view("legacy_seats")()[sim.view("acting_seat")()].country or str(sim.view("civilisation")()["id"])
+    return sim.view("seat_country")[sim.view("acting_seat")()] or str(sim.view("civilisation")()["id"])
 
 
 def seat_government(sim, cmd):
     """(government, country, None) the acting seat holds, or (None, None, refusal reply)."""
-    seat = sim.view("legacy_seats")()[sim.view("acting_seat")()]
-    if seat.kind != COUNTRY_SEAT:
+    if sim.view("seat_kind")[sim.view("acting_seat")()] != COUNTRY_SEAT:
         return None, None, _refusal("household_seat_has_no_government",
                                     "seat %r holds a household, not a government; join with seat_kind country to hold one."
                                     % sim.view("acting_seat")())

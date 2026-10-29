@@ -9,7 +9,7 @@ from sim.agents.api import relations
 from sim.engine.seat_move import move_seat_fields
 from sim.engine.state_seat import seat_from_template
 from sim.refusal import cause_of
-from sim.seats.api import SeatsSeat, handover_refusal
+from sim.seats.api import handover_refusal
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto import command_registry
 from sim.ui.proto.notes_store import add_note, all_notes, hand_over_notes
@@ -18,16 +18,16 @@ from sim.ui.proto.seat_address import run_as_seat
 from sim.resources.state import ResourcesSeat
 
 from .seat_handover_fixture import Game
+from .seat_views_stand_in import slots_of
 
 
 def give(seat, techs, country, goal):
     seat.modules["knowledge"].done |= set(techs)
     seat.modules["knowledge"].granted |= set(techs)
     seat.modules["resources"] = ResourcesSeat(mines=[{"material": "iron_ore"}])
-    seat.modules.setdefault("seats", SeatsSeat())
     seat.modules["seats"].patents["loom"] = {"owner": "x"}
     seat.modules["seats"].shares_held["guild"] = 3.0
-    seat.country, seat.goal = country, goal
+    seat.modules["seats"].country, seat.modules["seats"].goal = country, goal
 
 
 # ---- the pure move on built seat records
@@ -35,10 +35,10 @@ seats = {"leaver": seat_from_template({"scholars": 2.0}, 40.0, {}), "heir": seat
 give(seats["leaver"], ["fire", "wheel"], "han", "steam_engine")
 before = seats["leaver"]
 heir_founder = seats["heir"].founder
-check("an unknown seat is refused with its cause and the choices", cause_of(handover_refusal(seats, "leaver", "ghost", [])) == "unknown_seat"
-      and handover_refusal(seats, "leaver", "ghost", []).choices == ["leaver", "heir"], None)
-check("a seat handed to itself is refused", cause_of(handover_refusal(seats, "heir", "heir", [])) == "same_seat", None)
-check("a good handover has no refusal", handover_refusal(seats, "leaver", "heir", []) is None, None)
+check("an unknown seat is refused with its cause and the choices", cause_of(handover_refusal(slots_of(seats), "leaver", "ghost", [])) == "unknown_seat"
+      and handover_refusal(slots_of(seats), "leaver", "ghost", []).choices == ["leaver", "heir"], None)
+check("a seat handed to itself is refused", cause_of(handover_refusal(slots_of(seats), "heir", "heir", [])) == "same_seat", None)
+check("a good handover has no refusal", handover_refusal(slots_of(seats), "leaver", "heir", []) is None, None)
 moved = move_seat_fields(seats, "leaver", "heir")
 heir = seats["heir"]
 check("the replacement knows the same nodes", heir.modules["knowledge"].done == {"fire", "wheel"} and heir.modules["knowledge"].granted == {"fire", "wheel"}, heir.modules)
@@ -46,7 +46,7 @@ check("the replacement holds the same workings, patents and shares",
       heir.holdings is before.holdings and heir.modules["resources"].mines == [{"material": "iron_ore"}]
       and "loom" in heir.modules["seats"].patents and heir.modules["seats"].shares_held == {"guild": 3.0}, heir.holdings)
 check("the household, goal and country pass on", heir.household is before.household and heir.modules["workforce"].scholars == 2.0
-      and heir.goal == "steam_engine" and heir.country == "han", None)
+      and heir.modules["seats"].goal == "steam_engine" and heir.modules["seats"].country == "han", None)
 check("the replacement keeps its own founder", heir.founder is heir_founder, None)
 check("the old seat is gone from the year", list(seats) == ["heir"] and moved["from"] == "leaver", moved)
 

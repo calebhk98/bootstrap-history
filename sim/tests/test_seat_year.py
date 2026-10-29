@@ -8,6 +8,7 @@ import types
 from unittest import mock
 
 from .harness import check
+from .seat_views_stand_in import slots_of
 
 from sim.hazards.merge import mildest_hazard
 from sim.scenario.api import AdvanceYear
@@ -35,27 +36,28 @@ seat = seat_from_template(template, 500.0, {"auto_hire": False})
 check("a template builds a seat with its own purse, knowledge, staff, place and goal",
       seat.household.capital == 500.0 and seat.modules["knowledge"].done == {"a", "b"} and seat.modules["knowledge"].granted == {"a", "b"}
       and seat.modules["workforce"].scholars == 2 and seat.modules["workforce"].artisans == 3 and seat.modules["workforce"].base_tile == "t1"
-      and seat.goal == "g" and seat.country == "han", None)
+      and seat.modules["seats"].goal == "g" and seat.modules["seats"].country == "han"
+      and seat.modules["seats"].policy == {"auto_hire": False}, None)
 other = seat_from_template(template, 500.0, {})
 check("two seats from one template share no container",
       other.modules["knowledge"].done is not seat.modules["knowledge"].done and other.modules["workforce"].employees is not seat.modules["workforce"].employees
-      and other.founder.policy is not seat.founder.policy, None)
+      and other.modules["seats"].policy is not seat.modules["seats"].policy, None)
 
 # ---- the end rule: one seat's run ends, the others play on
 state = SimulationState(household=HouseholdState(capital=1.0), founder=FounderState())
 state.seats["second"] = seat_from_template({}, 5.0, {})
-for held in state.seats.values():
-    held.modules["seats"] = SeatsSeat()
-check("two seats are both playing at the start", seats_playing(state.seats) == [FIRST_SEAT_ID, "second"], None)
+state.seats[FIRST_SEAT_ID].modules["seats"] = SeatsSeat()
+held = slots_of(state.seats)
+check("two seats are both playing at the start", seats_playing(held) == [FIRST_SEAT_ID, "second"], None)
 state.seats[FIRST_SEAT_ID].modules["seats"].dead_reason = "denounced: as a sorcerer"
-check("a seat whose founder fell has ended", seat_ended(state.seats[FIRST_SEAT_ID]) and not seat_ended(state.seats["second"]), None)
+check("a seat whose founder fell has ended", seat_ended(held[FIRST_SEAT_ID]) and not seat_ended(held["second"]), None)
 check("the other seat keeps playing and the run goes on",
-      seats_playing(state.seats) == ["second"] and not run_is_over(state.seats), seats_playing(state.seats))
+      seats_playing(held) == ["second"] and not run_is_over(held), seats_playing(held))
 state.seats["second"].modules["seats"].goal_year = 150
-check("the run is over when every seat has ended or reached its goal", run_is_over(state.seats), None)
+check("the run is over when every seat has ended or reached its goal", run_is_over(held), None)
 state.seats["second"].modules["seats"].goal_year = None
 state.seats["second"].modules["seats"].dead_reason = "ran out of money"
-check("the run is over when no seat is left", run_is_over(state.seats) and seats_playing(state.seats) == [], None)
+check("the run is over when no seat is left", run_is_over(held) and seats_playing(held) == [], None)
 
 
 # ---- the year's order, on a recording stand-in for the Sim

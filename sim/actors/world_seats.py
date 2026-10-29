@@ -21,4 +21,4 @@ class SeatView:
 
 	def seat_margins(self) -> Dict[str, float]:
 		"""Every seat's yearly margin, by seat id."""
-		return {seat_id: self.seat_margin(seat_id) for seat_id in self.needs.legacy_seats()}
+		return {seat_id: self.seat_margin(seat_id) for seat_id in self.needs.seat_list()["joined"]}

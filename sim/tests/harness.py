@@ -179,7 +179,7 @@ def sim(civ="rome_100ad", capital=None, manual=True, events=False, surveyed=None
     config = {"start_capital": capital} if capital is not None else None
     test_sim = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
               civ=S.load_civ(civ), cfg=config)
-    test_sim.state._goal = GOAL
+    test_sim.goal = GOAL
     test_sim.send(StartDoneYearRecord())
     for material in (("coal",) + tuple(_ore_goods(test_sim.view("legacy_world_map")()))) if surveyed is None else tuple(surveyed):
         found_deposits_of(test_sim, material)

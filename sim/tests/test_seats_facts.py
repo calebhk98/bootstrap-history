@@ -12,8 +12,8 @@ from sim.seats.state import SeatsSeat
 from sim.tests import module_harness
 
 
-def seats_over(views, acting="founder"):
-    module = module_harness.build(Seats, seat=SeatsSeat(), views=views)
+def seats_over(views, acting="founder", seat=None):
+    module = module_harness.build(Seats, seat=seat or SeatsSeat(), views=views)
     module.clock.act_as(acting)
     return module
 
@@ -35,8 +35,7 @@ class AutomaticPolicyRule(unittest.TestCase):
 class AutomaticPolicyView(unittest.TestCase):
 
     def test_the_seats_own_setting_comes_through(self):
-        registry = {"founder": SimpleNamespace(founder=SimpleNamespace(policy={"auto_mine": False}))}
-        module = seats_over({"legacy_seats": registry, "automation": {"manual": False, "bounty_set": False}})
+        module = seats_over({"automation": {"manual": False, "bounty_set": False}}, seat=SeatsSeat(policy={"auto_mine": False}))
         self.assertFalse(module.automatic_policy("auto_mine"))
         self.assertTrue(module.automatic_policy("auto_hire"))
 

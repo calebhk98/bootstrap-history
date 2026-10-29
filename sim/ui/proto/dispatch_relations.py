@@ -22,12 +22,12 @@ def _stances():
 
 def own_country(sim):
     """The country the acting seat plays for."""
-    return sim.view("legacy_seats")()[sim.view("acting_seat")()].country or sim.view("civilisation")()["id"]
+    return sim.view("seat_country")[sim.view("acting_seat")()] or sim.view("civilisation")()["id"]
 
 
 def countries(sim):
     """Every country a relation can name: the home one, the seats' and the partners'."""
-    seat_countries = {seat.country for seat in sim.view("legacy_seats")().values() if seat.country}
+    seat_countries = {country for country in (sim.view("seat_country")[seat_id] for seat_id in sim.view("seat_list")()["joined"]) if country}
     return sorted({sim.view("civilisation")()["id"]} | seat_countries | set(sim.view("partners")()))
 
 

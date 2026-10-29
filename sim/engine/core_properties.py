@@ -13,7 +13,7 @@ from typing import Any, Iterable, Set
 
 from sim.knowledge.api import ReplaceTree
 from sim.scenario.api import SetEndYear, SetFog, SetYear
-from sim.seats.api import EndRun
+from sim.seats.api import EndRun, SetGoal
 
 
 class ForwardingPropertiesMixin:
@@ -189,11 +189,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def policy(self):
-		return getattr(self.state.founder, "policy")
-
-	@policy.setter
-	def policy(self, value):
-		setattr(self.state.founder, "policy", value)
+		return self.view("founder")()["policy"]
 
 	# =========================================================================
 	# ScenarioState Compatibility Properties
@@ -291,9 +287,8 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def goal(self):
-		return self.state._goal
+		return self.view("goal")()["node"]
 
 	@goal.setter
 	def goal(self, value):
-		self.state._goal = value
-		self.forget_goal_caches()
+		self.send(SetGoal(value))

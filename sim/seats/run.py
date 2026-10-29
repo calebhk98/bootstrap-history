@@ -4,23 +4,29 @@ from typing import Any, Dict, List, Optional
 from sim.refusal import Refusal
 
 from . import country, join_rules, lists
-from .commands import JoinCastSeats, JoinSeat, RegisterSeat
+from .commands import JoinCastSeats, JoinSeat, RegisterSeat, SetSeatHolder
+from .state import COUNTRY_SEAT, SeatsSeat
 
 
 class Run:
 
+    def _slots(self) -> Dict[str, SeatsSeat]:
+        """This module's state for every seat, in joining order."""
+        return {seat_id: self.seat_of(seat_id) for seat_id in self.needs.registered_seats()}
+
     def seat_list(self) -> Dict[str, List[str]]:
-        """{joined: every seat's id, playing: the household seats whose run has not ended}, in joining order."""
-        seats = self.needs.legacy_seats()
-        return {"joined": list(seats), "playing": lists.seats_playing(seats)}
+        """{joined: every seat's id, households: the seats that play through a household, playing: those whose run has not
+        ended}, in joining order."""
+        slots = self._slots()
+        return {"joined": list(slots), "households": lists.household_seats(slots), "playing": lists.seats_playing(slots)}
 
     def ended_seats(self) -> List[str]:
         """Ids of the seats whose run has ended."""
-        return lists.seats_ended(self.needs.legacy_seats())
+        return lists.seats_ended(self._slots())
 
     def run_over(self) -> bool:
         """Whether no seat has anything more to play."""
-        return lists.run_is_over(self.needs.legacy_seats())
+        return lists.run_is_over(self._slots())
 
     def acting_seat(self) -> Optional[str]:
         """The id of the seat acting now."""
@@ -29,19 +35,28 @@ class Run:
     def acting_country(self) -> Optional[str]:
         """The partner country the acting seat belongs to, or None for the game's own country: the markets, wages and
         prices the seat deals in are that country's own."""
-        return country.partner_country_of_seat(self.needs.legacy_seats(), self.clock.acting_seat,
+        return country.partner_country_of_seat(self._slots(), self.clock.acting_seat,
                                                self.needs.civilisation().get("id"))
 
     def seat_country(self, seat_id: str) -> Optional[str]:
         """The country a seat plays for when it names one (None: the game's own, or no such seat)."""
-        seat = self.needs.legacy_seats().get(seat_id)
-        return None if seat is None else seat.country
+        return self.seat_of(seat_id).country if seat_id in self.needs.registered_seats() else None
+
+    def seat_kind(self, seat_id: str) -> str:
+        """Whether the seat plays through a household or holds a country's government."""
+        return self.seat_of(seat_id).kind
+
+    def seat_holder(self, seat_id: str) -> Optional[str]:
+        """The actor id of the government a country seat holds (None for a household seat)."""
+        return self.seat_of(seat_id).holder
+
+    def set_seat_holder(self, command: SetSeatHolder) -> None:
+        self.seat.holder = command.holder
 
     def played_countries(self) -> List[str]:
         """The countries a country seat plays, sorted."""
         home = self._home()
-        return sorted({seat.country or home for seat in self.needs.legacy_seats().values()
-                       if getattr(seat, "kind", None) == join_rules.COUNTRY_SEAT})
+        return sorted({seat.country or home for seat in self._slots().values() if seat.kind == COUNTRY_SEAT})
 
     def governed_countries(self) -> List[str]:
         """The countries that have a government a country seat can hold, the game's own first."""
@@ -61,7 +76,7 @@ class Run:
         if missing:
             return join_rules.unknown_techs_refusal(seat_id, missing)
         capital = join_rules.capital_of(template, self.needs.price_index(), self.needs.kit_capital)
-        if template.get("kind") == join_rules.COUNTRY_SEAT:
+        if template.get("kind") == COUNTRY_SEAT:
             held = join_rules.country_of(template, self._home())
             if held not in self.governed_countries():
                 return join_rules.no_government_refusal(seat_id, held)
@@ -76,7 +91,7 @@ class Run:
         joined = []
         for template in join_rules.cast_templates(self.needs.civilisation().get("cast")):
             seat_id = template["id"]
-            if seat_id not in self.needs.legacy_seats():
+            if seat_id not in self.needs.registered_seats():
                 answer = self.join_seat(JoinSeat(seat_id, template))
                 if isinstance(answer, Refusal):
                     return answer

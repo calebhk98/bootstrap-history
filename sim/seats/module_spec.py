@@ -12,12 +12,12 @@ from sim.reporting.api import RecordEvent
 from sim.ventures.api import StopOperating
 
 from .commands import (AnswerOffer, ApplyForPatent, EndRun, ForgetGoalCaches, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat, MakeOffer,
-                       MoveSeat, RecordGoalReached, RegisterSeat, RememberGoalClosure, SetFounderLife, SetGoal, SetPolicy)
+                       MoveSeat, RecordGoalReached, RegisterSeat, RememberGoalClosure, SetFounderLife, SetGoal, SetPolicy, SetSeatHolder)
 from .module import Seats
 from .state import SeatsSeat
 
 READS_BY_OWNER = {
-    "core": ("legacy_seats", "legacy_fog", "game_random", "civilisation", "year", "price_index", "kit_capital",
+    "core": ("legacy_fog", "game_random", "civilisation", "year", "price_index", "kit_capital",
              "founder_life_terms", "game_attribute", "tree_closure", "automation", "game_config"),
     "knowledge": ("tree", "tree_nodes", "techniques_held", "techniques_granted", "techniques_revealed", "techniques_by_seat"),
     "mechanics": ("running_mechanics", "corpus_dispersed", "losable_node_ids"),
@@ -29,7 +29,7 @@ READS_BY_OWNER = {
     "workforce": ("seat_base_tile",),
     "materials": ("generation_breakdown",),
     "hazards": ("hazard_relief", "hazard_relief_entries"),
-    "engine (registry)": ("seat_holds",),
+    "engine (registry)": ("registered_seats", "seat_holds"),
 }
 
 _LIVE = dict(cached=False)
@@ -41,6 +41,8 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("acting_country", "acting_country", seat_scoped=True, **_LIVE),
         ViewSpec("seat_list", "seat_list", **_LIVE),
         ViewSpec("seat_country", "seat_country", kind=KEYED, **_LIVE),
+        ViewSpec("seat_kind", "seat_kind", kind=KEYED, **_LIVE),
+        ViewSpec("seat_holder", "seat_holder", kind=KEYED, **_LIVE),
         ViewSpec("ended_seats", "ended_seats", **_LIVE),
         ViewSpec("run_over", "run_over", **_LIVE),
         ViewSpec("played_countries", "played_countries", **_LIVE),
@@ -48,6 +50,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("seat_holders", "seat_holders", kind=QUOTE, **_LIVE),
         ViewSpec("built_by_any_seat", "built_by_any_seat", kind=QUOTE, **_LIVE),
         ViewSpec("seat_place", "seat_place", kind=KEYED, **_LIVE),
+        ViewSpec("seats_holding_patent", "seats_holding_patent", kind=QUOTE, **_LIVE),
         ViewSpec("distance_between_seats", "distance_between_seats", kind=QUOTE, **_LIVE),
         ViewSpec("goal", "goal", seat_scoped=True, **_LIVE),
         ViewSpec("on_road_to_goal", "on_road_to_goal", kind=QUOTE, seat_scoped=True, **_LIVE),
@@ -66,7 +69,7 @@ MODULE_SPECS = (ModuleSpec(
     applies=((JoinSeat, "join_seat"), (JoinCastSeats, "join_cast_seats"), (HandOverSeat, "hand_over_seat"),
              (SetGoal, "set_goal"), (RecordGoalReached, "record_goal_reached"), (ApplyForPatent, "apply_for_patent"),
              (MakeOffer, "make_offer"), (AnswerOffer, "answer_offer"), (EndRun, "end_run"),
-             (SetFounderLife, "set_founder_life"), (SetPolicy, "set_policy"),
+             (SetFounderLife, "set_founder_life"), (SetPolicy, "set_policy"), (SetSeatHolder, "set_seat_holder"),
              (RememberGoalClosure, "remember_goal_closure"), (ForgetGoalClosure, "forget_goal_closure")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(RegisterSeat, MoveSeat, ForgetGoalCaches, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent, StopOperating),

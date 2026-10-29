@@ -16,10 +16,10 @@ SEAT_INCOME = {"founder": 5.0, "native": 7.0, "stranger": 11.0, "ruler": 13.0}
 
 
 class HomeView(BudgetView):
-	def __init__(self, seats, playing):
+	def __init__(self, countries, playing):
 		self.acting = None
 		self.needs = fake_needs(
-			legacy_seats=seats, acting_seat="founder", seat_list={"playing": playing}, acting_as=self._act_as,
+			seat_country=countries, acting_seat="founder", seat_list={"playing": playing}, acting_as=self._act_as,
 			legacy_household_actor=lambda: None, revenue_estimate=lambda: SEAT_INCOME[self.acting])
 		self.registry = SimpleNamespace(state=SimpleNamespace(home_country=HOME), active_firms=lambda: [], country_of=lambda actor: HOME, country_of_tile=lambda tile: None)
 
@@ -32,12 +32,9 @@ class HomeView(BudgetView):
 		return 1.0
 
 
-def seat(country, kind="household"):
-	return SimpleNamespace(country=country, holds_household=kind != "country")
-
-
-seats = {"founder": seat(None), "native": seat(HOME), "stranger": seat("far"), "ruler": seat("far", "country")}
-view = HomeView(seats, list(seats))
+# the country each seat plays for; the country seat "ruler" is not among the playing household seats
+countries = {"founder": None, "native": HOME, "stranger": "far", "ruler": "far"}
+view = HomeView(countries, ["founder", "native", "stranger"])
 incomes = sorted(income for _scale, income in view.visible_taxpayers())
 check("the home state sees the seat with no country and the seat of its own country, not a stranger's or a country seat",
 	  incomes == [SEAT_INCOME["founder"], SEAT_INCOME["native"]], incomes)

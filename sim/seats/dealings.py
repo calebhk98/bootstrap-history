@@ -3,7 +3,7 @@ and buys shares. The exchange does the moving; this only addresses it to a seat.
 
 Offers to or from a seat are limited to what moves cleanly between a seat and an actor: money, patents, licences
 (with a royalty) and shares. A concern is sold with `sell concern`, and know-how is licensed with `disclose`."""
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from sim.agents.api import CommandRejected, exchange, patent
 
@@ -19,9 +19,13 @@ class Dealings:
         margins = {node_id: world.concern_margin(node_id) for node_id in sorted(self.needs.operating() - self.needs.techniques_granted())}
         return self.needs.seat_party_with_margins(self.clock.acting_seat, margins)
 
+    def seats_holding_patent(self, node_id: str) -> List[str]:
+        """Ids of the seats that hold a patent on `node_id`, in joining order."""
+        return [seat_id for seat_id, slot in self._slots().items() if node_id in slot.patents]
+
     def find_dealer(self, actor_id: Any) -> Any:
         """The actor with this id: a seat that is playing, else one in the registry."""
-        if isinstance(actor_id, str) and actor_id in self.needs.legacy_seats():
+        if isinstance(actor_id, str) and actor_id in self.needs.registered_seats():
             return self.needs.seat_party[actor_id]
         return self.needs.cast().get(actor_id) if isinstance(actor_id, str) else None
 

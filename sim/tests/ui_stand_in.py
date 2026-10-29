@@ -10,6 +10,8 @@ command sent is kept in `sent` and answered with `answers.get(type(command))`.
 the views the screens now read answer from them, so a rule is tested on plain values."""
 from types import SimpleNamespace
 
+from .seat_views_stand_in import seat_views
+
 
 class _Answer:
     def __init__(self, value):
@@ -128,8 +130,9 @@ ATTRIBUTE_OF_VIEW = {
     "legacy_fuzzy_estimates": "fuzzy_estimates", "techniques_revealed": "revealed", "techniques_forgotten": "forgotten",
     "horizon_end_year": "end_year", "acting_seat": "acting_seat",
 }
+SEAT_VIEWS = frozenset({"registered_seats", "seat_list", "seat_country", "seat_kind", "seat_holder", "ended_seats"})
 # views that are one field of the game's state record
-STATE_OF_VIEW = {"legacy_seats": "seats", "acting_seat": "acting_seat"}
+STATE_OF_VIEW = {"acting_seat": "acting_seat"}
 # keyed views whose value for a key is a record of several methods' answers for it
 KEYED_METHOD_RECORDS = {"stock_status": {"gates": "stock_gates", "needed_by": "stock_needed_by"}}
 # views that are a record of the answers of several methods
@@ -182,6 +185,8 @@ class FactViews:
             return _Answer(lambda: tuple(self.order))
         if name == "year" and not hasattr(self, "year") and hasattr(self, "state"):
             return _Answer(lambda: self.state.scenario.year)
+        if name in SEAT_VIEWS and not hasattr(self, name) and hasattr(getattr(self, "state", None), "seats"):
+            return _Answer(seat_views(self.state)[name])
         if name in STATE_OF_VIEW and not hasattr(self, ATTRIBUTE_OF_VIEW.get(name, name)) and hasattr(self, "state"):
             return _Answer(lambda: getattr(self.state, STATE_OF_VIEW[name]))
         if name == "hours_available" and hasattr(self, "director_pool"):

@@ -2,9 +2,19 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+HOUSEHOLD_SEAT = "household"
+COUNTRY_SEAT = "country"   # a seat holding a country's government, with no household or founder of its own
+
 
 @dataclass
 class SeatsSeat:
+    # the node the seat plays toward, the civilisation it plays for (None: the game's own), its kind, a country seat's
+    # government actor id, and the standing policy switches the automatic mechanisms read (a flag, or a mode such as "replace")
+    goal: Optional[str] = None
+    country: Optional[str] = None
+    kind: str = HOUSEHOLD_SEAT
+    holder: Optional[str] = None
+    policy: Dict[str, Any] = field(default_factory=dict)
     # whether the seat's founder lives, the years the founder has left, and why the seat's run ended (None while it plays)
     founder_alive: bool = True
     life_left: float = 40.0

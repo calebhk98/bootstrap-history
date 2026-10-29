@@ -26,6 +26,7 @@ from sim.ui.proto.seat_address import run_as_seat
 from .test_no_seller_no_price import _Offers, _fake_sim
 from .world_stand_in import fake_needs
 from sim.tests.ui_stand_in import FactViews
+from .seat_views_stand_in import give_seats_slots
 
 
 def _stores():
@@ -198,6 +199,7 @@ class Game(FactViews):
     def __init__(self):
         self.state = SimulationState(household=HouseholdState(capital=100.0), founder=FounderState())
         self.state.seats["northern"] = seat_from_template({"country": "han"}, 50.0, {})
+        give_seats_slots(self.state)
         self.session_seat = None
         self.year = 100
         self.civ = {"id": "rome"}

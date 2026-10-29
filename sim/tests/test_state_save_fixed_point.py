@@ -10,6 +10,7 @@ from sim.engine.state import (EconomyState, FounderState, HoldingsState, Househo
 QUICK_TOPIC = True
 
 from sim.knowledge.api import KnowledgeSeat
+from sim.seats.state import SeatsSeat
 from sim.workforce.api import WorkforceSeat
 
 
@@ -17,9 +18,10 @@ def state(civ=None, reserve=(0, 0), policy=None, said=None):
     built = SimulationState(
         household=HouseholdState(capital=1250.0),
         economy=EconomyState(), holdings=HoldingsState(),
-        founder=FounderState(policy=policy or {}))
+        founder=FounderState())
     built._civ = civ
     built.seats["founder"].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting", "bronze"})
+    built.seats["founder"].modules["seats"] = SeatsSeat(policy=policy or {})
     built.seats["founder"].modules["workforce"] = WorkforceSeat(reserve_craftsmen=reserve[0], reserve_scholars=reserve[1])
     built.seat_progress._said_explanations = said
     return built
@@ -48,7 +50,7 @@ class SerializeState(unittest.TestCase):
     def test_the_reserve_sizes_and_the_policy_switch_are_in_the_blob(self):
         blob = serialize_state(state(reserve=(5, 1), policy={"reserve_staff": True}))
         self.assertEqual((founder_seat(blob)["modules"]["workforce"]["reserve_craftsmen"], founder_seat(blob)["modules"]["workforce"]["reserve_scholars"]), (5, 1))
-        self.assertIs(founder_seat(blob)["founder"]["policy"]["reserve_staff"], True)
+        self.assertIs(founder_seat(blob)["modules"]["seats"]["policy"]["reserve_staff"], True)
 
 
 class DeserializeState(unittest.TestCase):

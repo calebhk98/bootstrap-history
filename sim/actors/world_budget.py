@@ -127,8 +127,7 @@ class BudgetView:
 		home = self.registry.state.home_country
 		payers = []
 		for seat_id in needs.seat_list()["playing"]:
-			seat = needs.legacy_seats()[seat_id]
-			if (seat.country or home) == (country or home) and seat.holds_household:
+			if (needs.seat_country[seat_id] or home) == (country or home):
 				with needs.acting_as(seat_id):
 					payers.append((self.visible_scale_of(needs.legacy_household_actor()), max(0.0, needs.revenue_estimate())))  # type: ignore[attr-defined]
 		return payers

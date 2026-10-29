@@ -23,7 +23,7 @@ class StateReads:
 
 	@property
 	def seats(self):
-		return self._needs.legacy_seats()
+		return self._needs.seat_list()["joined"]
 
 	@property
 	def economy(self):

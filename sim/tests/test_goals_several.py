@@ -3,12 +3,11 @@
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.engine.core_properties import ForwardingPropertiesMixin
 from sim.knowledge.api import closure
-from sim.engine.forward_seats import ForwardSeatsMixin
-from sim.seats.api import ForgetGoalClosure
+from sim.engine.bridge_seats import forget_goal_caches
+from sim.seats.api import ForgetGoalCaches
 from sim.seats.module import Seats
 from sim.seats.state import SeatsSeat
 from sim.tests import module_harness
@@ -17,22 +16,24 @@ from sim.tests import module_harness
 NODES = {"a": {"pre": []}, "b": {"pre": ["a"]}, "c": {"pre": ["b"]}, "d": {"pre": ["e"]}, "e": {"pre": []}}
 
 
-class StubGame(ForwardSeatsMixin):
-    """The real cache dropping and the real `goal` property over a plain state; commands go to the seats module."""
+class StubGame:
+    """The real `goal` property over the seats module; SetGoal goes to the module and the cache drop it sends to the engine's handler."""
     goal = ForwardingPropertiesMixin.goal
 
     def __init__(self, goal):
-        self.nodes = NODES
-        self.civ = {}
-        self.state = SimpleNamespace(_goal=None)
         self.module = module_harness.build(Seats, seat=SeatsSeat(), views={"tree_closure": lambda goal: closure(NODES, goal)})
-        self.module.goal = lambda: {"node": self.goal}
         self.module.clock.act_as("founder")
         self.goal = goal
 
+    def view(self, name):
+        return getattr(self.module, name)
+
     def send(self, command):
-        if isinstance(command, ForgetGoalClosure):
-            self.module.forget_goal_closure(command)
+        self.module.set_goal(command)
+        for sent in self.module.needs.sent:
+            if isinstance(sent, ForgetGoalCaches):
+                forget_goal_caches(self, sent)
+        self.module.needs.sent.clear()
 
     def on_road_to_goal(self, node_id):
         return self.module.on_road_to_goal(node_id)

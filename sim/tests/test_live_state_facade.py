@@ -10,11 +10,6 @@ from sim.engine.state import EconomyState, FounderState, HouseholdState, Simulat
 # facade name -> (value to write, path of the field that must hold it on the state)
 SCALARS = {
     "capital": (1250.0, "household.capital"),
-    "goal": ("test_goal", "_goal"),
-}
-# facade name -> path of the collection it must be (the same object, not a copy)
-COLLECTIONS = {
-    "policy": "founder.policy",
 }
 
 
@@ -23,9 +18,6 @@ class _Facade(ForwardingPropertiesMixin):
         self.state = SimulationState(
             household=HouseholdState(capital=1000.0), founder=FounderState(),
             economy=EconomyState())
-
-    def forget_goal_caches(self):
-        pass
 
 
 def _at(state, path):
@@ -51,11 +43,6 @@ class Facade(unittest.TestCase):
             facade = _Facade()
             _set(facade.state, path, value)
             self.assertEqual(getattr(facade, name), value, name)
-
-    def test_a_collection_is_the_states_own_object(self):
-        facade = _Facade()
-        for name, path in COLLECTIONS.items():
-            self.assertIs(getattr(facade, name), _at(facade.state, path), name)
 
 
 if __name__ == "__main__":

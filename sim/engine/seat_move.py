@@ -1,13 +1,13 @@
 """Moving a seat to another id in the seat registry: the leaver's seat fields pass to the replacement and the leaver leaves.
 
-Everything a seat owns moves as the same objects, every module's seat state with it (`modules`). The replacement keeps its
-own founder (the leaver's run is over). What the replacement had of its own was checked empty or mergeable by the seats
+Everything a seat owns moves as the same objects, every module's seat state with it (`modules`, the seats module's goal,
+country and kind among them). The replacement keeps its own founder record (the leaver's run is over). What the replacement had of its own was checked empty or mergeable by the seats
 module before this runs (sim/seats/handover_rules.py)."""
 from sim.knowledge.api import HandOverTechniques
 from . import game_assembly
 from .seat_handover_rekey import rename_seat_references
 
-MOVED_FIELDS = ("household", "holdings", "seat_progress", "goal", "country", "kind", "holder", "modules")
+MOVED_FIELDS = ("household", "holdings", "seat_progress", "modules")
 
 
 def move_seat_fields(seats: dict, from_id: str, to_id: str) -> dict:
@@ -16,7 +16,7 @@ def move_seat_fields(seats: dict, from_id: str, to_id: str) -> dict:
 	for name in MOVED_FIELDS:
 		setattr(target, name, getattr(source, name))
 	del seats[from_id]
-	return {"from": from_id, "to": to_id, "country": target.country}
+	return {"from": from_id, "to": to_id, "country": target.modules["seats"].country}
 
 
 def move_seat(sim, from_id: str, to_id: str) -> dict:

@@ -17,7 +17,7 @@ class Handover:
         """Pass `from_id`'s seat to `to_id`: the seat's fields, its account with the debts and claims, and whatever else is
         keyed by its id; it leaves the year. Answers a Refusal that changed nothing, or what moved (the registry's account)."""
         from_id, to_id = command.from_id, command.to_id
-        seats = self.needs.legacy_seats()
+        seats = self._slots()
         holds = []
         if to_id in seats:
             slot = self.seat_of(to_id)
@@ -28,11 +28,11 @@ class Handover:
         if refusal:
             return refusal
         heir = self.seat_of(to_id)
-        founder_life = (heir.founder_alive, heir.life_left, heir.dead_reason)   # the replacement keeps its own founder
+        founder = (heir.founder_alive, heir.life_left, heir.dead_reason, heir.policy)   # the replacement keeps its own founder
         moved = self.needs.send(MoveSeat(from_id, to_id))
         kept = self.seat_of(to_id)
-        kept.founder_alive, kept.life_left, kept.dead_reason = founder_life
-        for seat_id in seats:
+        kept.founder_alive, kept.life_left, kept.dead_reason, kept.policy = founder
+        for seat_id in self.needs.registered_seats():
             slot = self.seat_of(seat_id)
             for name in DEALING_FIELDS:
                 renamed = rekey(getattr(slot, name), from_id, to_id)

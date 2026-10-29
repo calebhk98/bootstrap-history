@@ -12,6 +12,7 @@ from sim.projects.api import HaltActiveProjects
 from sim.projects.projects import Projects
 from sim.projects.state import ProjectsSeat
 from sim.seats.module import Seats
+from sim.seats.state import SeatsSeat
 from sim.tests import module_harness
 
 
@@ -41,8 +42,9 @@ class SayOnceCommand(unittest.TestCase):
 
 class SeatCountry(unittest.TestCase):
     def test_a_seat_answers_the_country_it_names_and_none_when_it_names_none_or_is_unknown(self):
-        seats = {"a": SimpleNamespace(country="han"), "b": SimpleNamespace(country=None)}
-        module = module_harness.build(Seats, views={"legacy_seats": lambda: seats}, module_id="seats")
+        seats = {"a": SeatsSeat(country="han"), "b": SeatsSeat(country=None)}
+        module = module_harness.build(Seats, views={"registered_seats": list(seats)}, module_id="seats")
+        module.seat_slot_of = seats.__getitem__
         self.assertEqual([module.seat_country("a"), module.seat_country("b"), module.seat_country("c")], ["han", None, None])
 
 

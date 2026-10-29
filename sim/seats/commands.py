@@ -95,6 +95,12 @@ class ForgetGoalClosure(Command):
 
 
 @dataclass(frozen=True)
+class SetSeatHolder(Command):
+    """The acting country seat holds the government whose actor id is `holder` (applied by the seats module)."""
+    holder: str
+
+
+@dataclass(frozen=True)
 class EndRun(Command):
     """The acting seat's run ends for `reason` (None clears it). Announced in the seat's log unless `announce` is False."""
     reason: Optional[str]

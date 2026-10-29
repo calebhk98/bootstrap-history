@@ -128,8 +128,7 @@ class EconomyState:
 
 @dataclass
 class FounderState:
-	"""The founder's personal capacity and standing policy (whether the founder lives is the seats module's)."""
-	policy: Dict[str, Any] = field(default_factory=dict)
+	"""What the interface remembers of the founder's death (the founder's life and policy are the seats module's)."""
 	_founder_death_aged: Optional[int] = None
 	_founder_death_year: Optional[int] = None
 
@@ -182,14 +181,6 @@ class SimulationState:
 		if actors is not None:
 			for seat_id, seat in self.seats.items():
 				seat.household.attach(actors.purses, seat_id)
-
-	@property
-	def _goal(self) -> Optional[str]:
-		return self.seats[self.acting_seat].goal
-
-	@_goal.setter
-	def _goal(self, value: Optional[str]) -> None:
-		self.seats[self.acting_seat].goal = value
 
 
 ALL_STATE_CLASSES = (

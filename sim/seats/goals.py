@@ -14,8 +14,7 @@ class Goals:
     def goal(self) -> Dict[str, Any]:
         """The acting seat's formal goal: {node: its id or None, year: the year it was reached or None, years: the year each
         goal id was reached as the formal goal (the live record)}."""
-        seat = self.needs.legacy_seats()[self.clock.acting_seat]
-        return {"node": seat.goal, "year": self.seat.goal_year, "years": self.seat.goal_years}
+        return {"node": self.seat.goal, "year": self.seat.goal_year, "years": self.seat.goal_years}
 
     def on_road_to_goal(self, node_id: str) -> bool:
         """Whether the goal needs this node. A yes or no with no distance, so it names no route the player has not already been
@@ -45,15 +44,14 @@ class Goals:
 
     def set_goal(self, command: SetGoal) -> None:
         """Make a node the formal goal. A goal reached before keeps the year it was reached in."""
-        self.needs.legacy_seats()[self.clock.acting_seat].goal = command.node_id
+        self.seat.goal = command.node_id
         self.needs.send(ForgetGoalCaches())
         self.forget_goal_closure(ForgetGoalClosure())
         self.seat.goal_year = self.seat.goal_years.get(command.node_id)
 
     def record_goal_reached(self, command: RecordGoalReached) -> None:
         """Note the year a node was reached; the formal goal's own year follows."""
-        goal = self.needs.legacy_seats()[self.clock.acting_seat].goal
-        self.seat.goal_year = goal_rules.record_year(self.seat.goal_years, self.seat.goal_year, goal, command.node_id, command.year)
+        self.seat.goal_year = goal_rules.record_year(self.seat.goal_years, self.seat.goal_year, self.seat.goal, command.node_id, command.year)
 
     def win_condition_value(self, condition: Dict[str, Any]) -> float:
         """The live number a win_condition's `metric` names, 0..1. Raises for a metric this engine does not know how to

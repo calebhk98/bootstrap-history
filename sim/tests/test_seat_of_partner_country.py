@@ -13,6 +13,7 @@ from sim.actors.module import Actors
 from sim.markets import port_year
 from sim.markets.port_year import AgentEconomy
 from sim.seats.module import Seats
+from sim.seats.state import SeatsSeat
 from . import module_harness
 
 COIN_PER_UNIT = 2.0
@@ -90,14 +91,10 @@ check("the home answer is the same whether or not the country is named",
       answers_over_readers(lambda agent: agent.answers(HOME) is agent.answers()), None)
 
 
-class Seat:
-    def __init__(self, country):
-        self.country = country
-
-
 def seats_module(country):
     """The seats module over a one-seat registry whose seat plays for `country` (None is the game's own)."""
-    module = module_harness.build(Seats, views={"legacy_seats": {"second": Seat(country)}, "civilisation": {"id": "home"}})
+    module = module_harness.build(Seats, seat=SeatsSeat(country=country), views={"registered_seats": ["second"], "civilisation": {"id": "home"}})
+    module.seat_slot_of = lambda seat_id: module.seat
     module.clock.act_as("second")
     return module
 

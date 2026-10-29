@@ -24,7 +24,7 @@ def _agent_state_founder(sim):
     """
     return {
         "seat": sim.view("acting_seat")(),
-        "seat_count": len(sim.view("legacy_seats")()),
+        "seat_count": len(sim.view("seat_list")()["joined"]),
         "founder_alive": sim.view("founder")()["alive"],
         "founder_age": (sim.view("patronage")()["founder_age"]
                         if sim.view("founder")()["alive"] and not sim.view("game_config")().get("immortal", True) else None),

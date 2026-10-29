@@ -17,8 +17,8 @@ from sim.ui.proto import economy as economy_commands
 from sim.ui.proto import util as proto_util
 
 
-def save_blob(year=100, capital=250.0, alive=True, goal="goal_node"):
-    seat = {"goal": goal, "household": {"capital": capital}, "modules": {"seats": {"founder_alive": alive}}}
+def save_blob(year=100, capital=250.0, alive=True, goal="goal_node", goal_year=None):
+    seat = {"household": {"capital": capital}, "modules": {"seats": {"founder_alive": alive, "goal": goal, "goal_year": goal_year}}}
     return {"_civ": "rome_100ad", "acting_seat": "a", "seats": {"a": seat}, "modules": {"scenario": {"year": year}}}
 
 
@@ -34,10 +34,10 @@ class ListSaves(unittest.TestCase):
         return {row["filename"]: row for row in settings.list_saves(self.directory)}
 
     def test_a_row_carries_the_year_capital_founder_status_and_goal_of_its_save(self):
-        self.write("g.json", json.dumps(save_blob(year=137, capital=88.5, alive=False, goal="transistor")))
+        self.write("g.json", json.dumps(save_blob(year=137, capital=88.5, alive=False, goal="transistor", goal_year=131)))
         row = self.rows()["g.json"]
-        self.assertEqual((row["readable"], row["year"], row["capital"], row["founder_alive"], row["goal"]),
-                         (True, 137, 88.5, False, "transistor"))
+        self.assertEqual((row["readable"], row["year"], row["capital"], row["founder_alive"], row["goal"], row["goal_year"]),
+                         (True, 137, 88.5, False, "transistor", 131))
 
     def test_a_row_lists_the_nodes_its_save_holds_from_the_knowledge_modules_slot(self):
         blob = save_blob()

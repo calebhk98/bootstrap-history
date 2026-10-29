@@ -24,7 +24,7 @@ from .module import Actors
 READS_BY_OWNER = {
 	"core": ("year", "civilisation", "game_setting", "shared_answers", "acting_as", "declared_actor_kinds",
 	         "opening_civilisation", "civilisation_record", "money_text", "mass_rate_text"),
-	"seats": ("acting_seat", "acting_country", "seat_list", "legacy_seats", "seat_place", "seat_party", "legacy_household_actor",
+	"seats": ("acting_seat", "acting_country", "seat_list", "seat_country", "seats_holding_patent", "seat_place", "seat_party", "legacy_household_actor",
 	          "disclosure", "disclosures"),
 	"knowledge": ("tree_nodes", "techniques_granted", "techniques_by_seat", "held_techniques", "legacy_world_map"),
 	"diffusion": ("copy_difficulty", "knowledge_half_life_years", "literacy", "research_productivity", "diffusible_ids",

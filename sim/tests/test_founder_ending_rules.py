@@ -20,7 +20,7 @@ class FounderAgeTests(unittest.TestCase):
         game = Game(
             cfg={"immortal": immortal, "founder_arrival_age": 40, "founder_life_mean": 30, "founder_life_sd": 5},
             founder_alive=alive, founder_age=lambda: 47, view=lambda name: (lambda: {"scholars": 0.0, "artisans": 0.0, "directors_extra": 0.0, "slaves": 0, "freedmen": 0, "employees": {}}),
-            state=Game(acting_seat=0, seats=[0]))
+            state=Game(acting_seat=0), seat_list=lambda: {"joined": [0]})
         with mock.patch.object(state, "succession_block", return_value={}), \
              mock.patch.object(state, "_founder_death_info", return_value=None):
             return state._agent_state_founder(game)

@@ -6,22 +6,22 @@ commands that change it are applied here for good. The `legacy_*` views are stat
 when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
 from sim.refusal import Refusal
-from sim.seats.api import ForgetGoalCaches, MoveSeat, RegisterSeat
+from sim.seats.api import COUNTRY_SEAT, ForgetGoalCaches, MoveSeat, RegisterSeat, SetSeatHolder
 
 from . import state_paths
 from .bridge import bridge_command, bridge_view
 from .seat_defaults import default_policy
 from .seat_handover_empty import holds_that_would_be_lost
 from .seat_move import move_seat
-from .state_seat import COUNTRY_SEAT, seat_from_template
+from .state_seat import seat_from_template
 
 # ---- the seat registry ----
 
 
-@bridge_view("legacy_seats")
-def legacy_seats(sim):
-    """Every seat's saved state, by seat id (the live registry)."""
-    return sim.state.seats
+@bridge_view("registered_seats")
+def registered_seats(sim):
+    """The ids of the seats in the registry, in the order they joined."""
+    return list(sim.state.seats)
 
 
 @bridge_view("acting_as", kind=QUOTE)
@@ -63,8 +63,8 @@ def register_seat(sim, command):
     seat.modules["seats"].life_left = command.founder_years
     with sim.act_as(command.seat_id):
         sim._wrap_seat_containers()
-        if seat.kind == COUNTRY_SEAT:
-            seat.holder = sim.view("state_treasury")().actor_id
+        if seat.modules["seats"].kind == COUNTRY_SEAT:
+            sim.send(SetSeatHolder(sim.view("state_treasury")().actor_id))
     return None
 
 

@@ -27,7 +27,6 @@ def state_text(sim):
 	"""The whole game as JSON text, from the live sim.state."""
 	sim.view("legacy_economy")().flush_record()
 	sim.state._civ = sim.civ.get("id")
-	sim.state._goal = sim.goal
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))
 	sim.state._seed = getattr(sim, "seed", None)
 	sim.state._game_version = GAME_VERSION
@@ -151,7 +150,8 @@ def acting_seat_of(blob):
 
 def goal_of_blob(blob):
     """The win node the acting seat was playing toward."""
-    return acting_seat_of(blob).get("goal")
+    slot = (acting_seat_of(blob).get("modules") or {}).get("seats")
+    return slot.get("goal") if isinstance(slot, dict) else None
 
 
 
@@ -369,8 +369,8 @@ def _apply_blob(sim, blob):
 		sim.send(SetFuzzyEstimates(True, sim.view("fuzzy_salt")() or asked_salt))
 	if state._immortal is not None:
 		sim.cfg["immortal"] = bool(state._immortal)
-	if state._goal is not None:
-		sim.goal = state._goal
+	if sim.goal is not None:
+		sim.forget_goal_caches()
 	if state._seed is not None:
 		sim.seed = state._seed
 	if state._rng is not None:

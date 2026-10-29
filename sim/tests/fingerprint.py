@@ -142,7 +142,7 @@ QUICK_SCENARIOS = [
 def build(scenario):
     sim = S.Sim(NODES, ORDER, random.Random(scenario["seed"]), events=scenario["events"],
               manual=False, civ=S.load_civ(scenario["civ"]))
-    sim.state._goal = GOAL
+    sim.goal = GOAL
     if hasattr(getattr(sim.state, "projects", None), "done_year"):   # a checkout from before the knowledge module owned the record
         sim.done_year = {}
     else:

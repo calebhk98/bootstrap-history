@@ -15,6 +15,7 @@ from sim.engine.state import (EconomyState, FounderState, HoldingsState, Househo
                               SimulationState, serialize_state)
 from sim.knowledge.api import KnowledgeSeat
 from sim.projects.state import ProjectsSeat
+from sim.seats.state import SeatsSeat
 from sim.ventures.state import VenturesSeat
 from sim.refusal import cause_of
 
@@ -26,7 +27,7 @@ def valid_save():
     state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
     state.seats[state.acting_seat].modules["projects"] = ProjectsSeat()
     state.seats[state.acting_seat].modules["ventures"] = VenturesSeat()
-    state._goal = "aqueduct"
+    state.seats[state.acting_seat].modules["seats"] = SeatsSeat(goal="aqueduct")
     blob = serialize_state(state)
     blob.update({"_civ": "rome_100ad", "_civ_live": {}, "_weights": {}, "_immortal": True,
                  "_rng": [3, list(random.Random(1).getstate()[1]), None]})

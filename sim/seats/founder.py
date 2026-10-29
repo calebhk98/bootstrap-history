@@ -8,16 +8,17 @@ from sim.ventures.api import StopOperating
 
 from . import constants, founder_rules
 from .commands import EndRun, SetFounderLife, SetPolicy
+from .state import COUNTRY_SEAT
 
 
 class Founder:
 
     def founder(self) -> Dict[str, Any]:
         """The acting seat's founder: {alive, life_left, dead_reason (None while the seat plays), policy (the standing
-        policy object, still kept on the seat's founder record; None for a country seat)}."""
-        held = self.needs.legacy_seats()[self.clock.acting_seat].founder
-        return {"alive": self.seat.founder_alive, "life_left": self.seat.life_left, "dead_reason": self.seat.dead_reason,
-                "policy": None if held is None else held.policy}
+        policy object, the live record; None for a country seat)}."""
+        seat = self.seat
+        return {"alive": seat.founder_alive, "life_left": seat.life_left, "dead_reason": seat.dead_reason,
+                "policy": None if seat.kind == COUNTRY_SEAT else seat.policy}
 
     def automatic_policy(self, name: str) -> bool:
         """Whether the automatic policy `name` runs for the acting seat: what it set, else on in an automatic game and off in a
@@ -49,7 +50,7 @@ class Founder:
         self.seat.life_left = command.years
 
     def set_policy(self, command: SetPolicy) -> None:
-        self.needs.legacy_seats()[self.clock.acting_seat].founder.policy[command.name] = command.value
+        self.seat.policy[command.name] = command.value
 
     def end_run(self, command: EndRun) -> None:
         self.seat.dead_reason = command.reason

@@ -10,7 +10,7 @@ class Sight:
 
     def hear_of_other_seats(self, seat_id: str = None) -> Set[str]:
         """The acting seat reveals what other seats have built that it can see enough of; returns what it heard of."""
-        seats = self.needs.legacy_seats()
+        seats = self.needs.registered_seats()
         if not self.needs.legacy_fog() or len(seats) < 2:
             return set()
         observer_id = self.clock.acting_seat
@@ -18,7 +18,7 @@ class Sight:
         techniques = self.needs.techniques_by_seat()
         operating = self.needs.operating_by_seat()
         heard = set()
-        for builder_id, builder in seats.items():
+        for builder_id in seats:
             built = techniques[builder_id].held - techniques[builder_id].granted
             if builder_id == observer_id or not built:
                 continue

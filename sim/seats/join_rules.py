@@ -3,7 +3,8 @@ from typing import Any, Callable, Iterable, List, Mapping, Optional
 
 from sim.refusal import Refusal
 
-COUNTRY_SEAT = "country"   # a seat holding a country's government, with no household or founder of its own
+from .state import COUNTRY_SEAT
+
 
 
 def unknown_starting_techs(template: Mapping[str, Any], tree: Iterable[str]) -> List[str]:

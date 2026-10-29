@@ -12,7 +12,7 @@ from sim.engine.state import FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, bind_seat, seat_from_template
 from sim.knowledge.api import KnowledgeSeat
 from sim.knowledge.rules import SeatTechniques
-from sim.seats.api import SeatsSeat, seats_ended
+from sim.seats.api import SeatsSeat
 from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.dispatch_seats import seat_rows
@@ -41,7 +41,7 @@ class Game(FactViews):
         self.state = SimulationState(household=HouseholdState(capital=100.0), founder=FounderState())
         self.state.seats["second"] = seat_from_template({}, 50.0, {})
         for held in self.state.seats.values():
-            held.modules["seats"] = SeatsSeat()
+            held.modules.setdefault("seats", SeatsSeat())
             held.modules.setdefault("knowledge", KnowledgeSeat())
         self.session_seat = None
         self.year = 100
@@ -63,12 +63,11 @@ class Game(FactViews):
     def recurring_net(self):
         return 0.0
 
-    def ended_seats(self):
-        return seats_ended(self.state.seats)
-
     def view(self, name):
         if name == "dead_reasons":
-            return lambda: {seat_id: self.state.seats[seat_id].modules["seats"].dead_reason for seat_id in self.ended_seats()}
+            return lambda: {seat_id: self.state.seats[seat_id].modules["seats"].dead_reason for seat_id in self.view("ended_seats")()}
+        if name == "acting_balance":
+            return lambda: self.state.household.capital
         if name == "techniques_by_seat":
             return lambda: {seat_id: SeatTechniques(frozenset(held.modules["knowledge"].done), frozenset(held.modules["knowledge"].granted))
                             for seat_id, held in self.state.seats.items()}

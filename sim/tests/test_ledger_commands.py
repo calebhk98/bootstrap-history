@@ -2,6 +2,7 @@
 refusals. (Complaint 185, 640: the loss of a payer is the payee's gain, booked by purpose.)"""
 QUICK_TOPIC = True
 
+import contextlib
 import unittest
 from types import SimpleNamespace
 from unittest import mock
@@ -73,7 +74,7 @@ class PayActorCommand(unittest.TestCase):
         registry = SimpleNamespace(
             get=lambda actor_id: SimpleNamespace(actor_id=actor_id) if actor_id.split(":")[-1] in governments or actor_id == "trader" else None,
             ensure_government=lambda country: opened.append(country) or SimpleNamespace(actor_id="government:" + country))
-        module = ledger_over(cast=registry, legacy_seats={"seat1": None}, seat_party=lambda seat_id: SimpleNamespace(actor_id="party of " + seat_id))
+        module = ledger_over(cast=registry, seat_list={"joined": ["seat1"]}, seat_party=lambda seat_id: SimpleNamespace(actor_id="party of " + seat_id))
         return module, opened
 
     def pay(self, module, payee):
@@ -183,12 +184,21 @@ class NoteHolderBookingCommand(unittest.TestCase):
                                     note_outlay=lambda label, amount: entries.append(("out", label, amount)))
         lender = SimpleNamespace(note_income=lambda label, amount: entries.append(("actor in", label, amount)),
                                  note_outlay=lambda label, amount: entries.append(("actor out", label, amount)))
-        module = ledger_over(legacy_seats={"seat:a": SimpleNamespace(household=household)}, cast=SimpleNamespace(actors={"abbey": lender}))
+        self.acting = []
+
+        @contextlib.contextmanager
+        def acting_as(seat_id):
+            self.acting.append(seat_id)
+            yield
+
+        module = ledger_over(seat_list={"joined": ["seat:a"]}, acting_as=acting_as, legacy_acting_household=household,
+                             cast=SimpleNamespace(actors={"abbey": lender}))
         module.note_holder_booking(NoteHolderBooking(holder, signed, "loan"))
         return entries
 
     def test_a_seats_posting_is_entered_in_the_seats_own_books_by_its_sign(self):
         self.assertEqual(self.booked("seat:a", 5.0), [("in", "loan", 5.0)])
+        self.assertEqual(self.acting, ["seat:a"])
         self.assertEqual(self.booked("seat:a", -2.0), [("out", "loan", 2.0)])
 
     def test_an_actors_posting_is_entered_in_its_books(self):

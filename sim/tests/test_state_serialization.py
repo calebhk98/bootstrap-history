@@ -44,7 +44,8 @@ def _test_automatic_field_persistence():
 	state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
 	from sim.projects.state import ProjectsSeat
 	state.seats[state.acting_seat].modules["projects"] = ProjectsSeat(active={"arch": proj})
-	state._goal = "aqueduct"
+	from sim.seats.state import SeatsSeat
+	state.seats[state.acting_seat].modules["seats"] = SeatsSeat(goal="aqueduct")
 
 	blob = serialize_state(state)
 	if not isinstance(blob, dict):
@@ -202,7 +203,8 @@ def _valid_save():
 	state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
 	from sim.projects.state import ProjectsSeat
 	state.seats[state.acting_seat].modules["projects"] = ProjectsSeat()
-	state._goal = "aqueduct"
+	from sim.seats.state import SeatsSeat
+	state.seats[state.acting_seat].modules["seats"] = SeatsSeat(goal="aqueduct")
 	blob = serialize_state(state)
 	blob.update({"_civ": "rome_100ad", "_weights": {}, "_immortal": True,
 	             "_rng": [3, list(random.Random(1).getstate()[1]), None]})

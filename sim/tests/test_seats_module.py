@@ -16,17 +16,17 @@ TREE = {"a": {"name": "A"}, "b": {"name": "B"}}
 
 
 def seat(kind="household", country=None, goal=None, dead_reason=None, goal_year=None):
-    return SimpleNamespace(kind=kind, country=country, goal=goal, holds_household=kind != "country",
-                           modules={"seats": SeatsSeat(goal_year=goal_year, dead_reason=dead_reason)})
+    return SeatsSeat(kind=kind, country=country, goal=goal, goal_year=goal_year, dead_reason=dead_reason)
 
 
 def seats_over(registry, acting="founder", civilisation=None, answers=None, **views):
     module = module_harness.build(
-        Seats, seat=registry[acting].modules["seats"] if acting in registry else SeatsSeat(), answers=answers or {},
-        views=dict({"legacy_seats": registry, "civilisation": civilisation or {"id": "home"}, "tree_nodes": TREE, "price_index": 2.0,
+        Seats, seat=registry[acting] if acting in registry else SeatsSeat(), answers=answers or {},
+        views=dict({"registered_seats": list(registry), "civilisation": civilisation or {"id": "home"}, "tree_nodes": TREE, "price_index": 2.0,
                     "kit_capital": lambda kit: {"poor": 10.0}[kit],
                     "founder_life_terms": {"immortal": False, "minimum": 5, "mean": 40.0, "spread": 0.0},
                     "game_random": random.Random(3)}, **views))
+    module.seat_slot_of = registry.__getitem__
     module.clock.act_as(acting)
     return module
 
@@ -35,7 +35,7 @@ class WhoIsPlaying(unittest.TestCase):
 
     def test_a_country_seat_and_an_ended_seat_are_not_playing(self):
         module = seats_over({"founder": seat(), "gone": seat(dead_reason="denounced"), "realm": seat("country")})
-        self.assertEqual(module.seat_list(), {"joined": ["founder", "gone", "realm"], "playing": ["founder"]})
+        self.assertEqual(module.seat_list(), {"joined": ["founder", "gone", "realm"], "households": ["founder", "gone"], "playing": ["founder"]})
         self.assertEqual(module.ended_seats(), ["gone"])
 
     def test_the_run_is_over_when_every_household_seat_ended_or_reached_its_goal(self):
@@ -150,8 +150,8 @@ class Goals(unittest.TestCase):
 
     def goals_over(self, goal="c", goal_year=None, goal_years=None):
         registry = {"founder": seat(goal=goal)}
-        registry["founder"].modules["seats"].goal_years = dict(goal_years or {})
-        registry["founder"].modules["seats"].goal_year = goal_year
+        registry["founder"].goal_years = dict(goal_years or {})
+        registry["founder"].goal_year = goal_year
         module = seats_over(registry, answers={ForgetGoalCaches: None})
         return module, registry["founder"]
 

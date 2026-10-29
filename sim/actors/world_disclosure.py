@@ -37,7 +37,7 @@ class DisclosureView:
 
 	def seat_parties(self) -> Any:
 		"""Every seat as an actor, by seat id: the founder and other players hold patents and shares."""
-		return {seat_id: self.needs.seat_party[seat_id] for seat_id in self.needs.legacy_seats()}
+		return {seat_id: self.needs.seat_party[seat_id] for seat_id in self.needs.seat_list()["joined"]}
 
 	def state_grants_patents(self, actor: Any) -> bool:
 		"""Whether the state holds a technology that declares the `patent_grant` mechanic, in its own
@@ -48,14 +48,13 @@ class DisclosureView:
 	def patent_entry(self, node_id: str) -> Any:
 		"""The live patent on an invention as {"holder", "expires", "licensees"}, or None."""
 		needs = self.needs
-		holders = self.registry.patent_holders(node_id) + [needs.seat_party[seat_id] for seat_id, seat in needs.legacy_seats().items()
-														 if node_id in seat.modules["seats"].patents]
+		holders = self.registry.patent_holders(node_id) + [needs.seat_party[seat_id] for seat_id in needs.seats_holding_patent(node_id)]
 		return licence.live_patent(holders, node_id, self.year)
 
 	def _holder(self, holder_id: str) -> Any:
 		"""The actor with this id: one in the registry, else a seat."""
 		needs = self.needs
-		return self.registry.get(holder_id) or (needs.seat_party[holder_id] if holder_id in needs.legacy_seats() else None)
+		return self.registry.get(holder_id) or (needs.seat_party[holder_id] if holder_id in needs.seat_list()["joined"] else None)
 
 	def collect_royalty(self, firm: Any, node_id: str, takings: float) -> float:
 		"""The royalty a licensed firm's takings owe each seat that licensed it the invention, never more than its

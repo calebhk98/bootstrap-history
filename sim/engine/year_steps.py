@@ -72,7 +72,7 @@ def money_seat(sim):
 	send(CloseLapsedDependents(year))
 	send(CloseUnstaffedVentures(year))
 	# open what plainly pays for itself before the books are struck: a concern opened this year earns this year
-	if state.founder.policy.get("auto_open", not sim.manual):
+	if view("founder")()["policy"].get("auto_open", not sim.manual):
 		before = state.household.capital
 		opened = send(AutoOpenVentures())
 		if opened:
