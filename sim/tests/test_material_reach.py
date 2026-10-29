@@ -11,8 +11,8 @@ HOME = "home"
 
 
 def _Market(seller, left, priced=True):
-    """What the module reads of the market: who sells (None for the home society or no one) and how many tonnes more."""
-    return {"partner_import": lambda material: (None, None) if seller in (None, HOME) else (seller, left),
+    """What the module reads of the market: the tonnes a partner brings (none when the home society or no one sells)."""
+    return {"partner_import_tonnes": lambda material: 0.0 if seller in (None, HOME) else left,
             "can_be_bought": lambda material: priced}
 
 
@@ -20,7 +20,7 @@ def _Founder(market, stock=0.0, own=0.0, market_tonnes=0.0, makers=(), done=(), 
     module = materials_stand_in.build(
         tree_nodes={node_id: {"_output_per_year": {"alum_kg": 1.0}} for node_id in makers},
         projects_record=materials_stand_in.projects(done=done), goods_stock=lambda commodity: stock,
-        mine_capacity={"alum_kg": own}, foreign_supply_tonnes=lambda partner, material: 7.0,
+        mine_capacity={"alum_kg": own},
         visibility=lambda node_id, memo=None: visible is None or node_id in visible, **market)
     module.market_tonnes = lambda commodity: market_tonnes + module.import_tonnes(commodity)
     return module
@@ -38,9 +38,6 @@ class ImportTests(unittest.TestCase):
 
     def test_no_seller_brings_no_import(self):
         self.assertEqual(_Founder(_Market(None, None)).import_tonnes("alum_kg"), 0.0)
-
-    def test_a_route_with_no_lift_limit_brings_what_the_partner_makes(self):
-        self.assertEqual(_Founder(_Market("partner", float("inf"))).import_tonnes("alum_kg"), 7.0)
 
 
 class RouteTests(unittest.TestCase):

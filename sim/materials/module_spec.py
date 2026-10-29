@@ -13,15 +13,14 @@ from .module import Materials
 from .state import MaterialsSeat
 
 READS_BY_OWNER = {
-    "knowledge": ("year", "civilisation", "tree", "tree_nodes", "techniques_held", "visibility", "hard_prerequisites",
+    "knowledge": ("year", "civilisation", "tree_nodes", "techniques_held", "visibility", "hard_prerequisites",
                   "techniques_version", "operating", "default_population", "pop_scale"),
     "mechanics": ("mechanic", "effect_best", "running_stamp", "running"),
     "ledger": ("goods_stock", "held_goods", "goods_stock_opening"),
-    "markets": ("goods_quote", "can_be_bought", "purchase_quote", "partner_import", "agent_producer_capacity",
+    "markets": ("goods_quote", "can_be_bought", "purchase_quote", "partner_import_tonnes", "agent_producer_capacity",
                 "material_freight_factor"),
     "prices": ("material_prices", "material_commodity_map", "commodity_record", "commodity_country_output", "price_epoch",
                "producers_stamp"),
-    "foreign_trade": ("foreign_supply_tonnes",),
     "resources": ("empire_output", "mine_capacity", "mine_depletion", "forest_hectares", "nitre_beds", "found_deposits", "mine_works_materials",
                   "shortage_remedy_plan"),
     "land": ("tiles_listed_by", "forest_increment", "mineral_scale", "material_cost_factor"),

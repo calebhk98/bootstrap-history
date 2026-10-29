@@ -135,7 +135,7 @@ class Throttle:
         slowed = self.slowed_projects() if seat.throttle < 0.6 and seat.binding else []
         if slowed:
             if self.note_shortage(seat.binding, seat.throttle):
-                names = ", ".join(self.needs.tree[node_id]["name"] for node_id in slowed[:3])
+                names = ", ".join(self.needs.tree_nodes()[node_id]["name"] for node_id in slowed[:3])
                 remedy = self.needs.shortage_remedy_plan(seat.binding, None)["text"]
                 self.needs.send(RecordEvent.of("material_shortage", "SHORT OF %s: %s running at %d%% of plan. %s" % (
                     rules.material_words(seat.binding).upper(), names, seat.throttle * 100, remedy)))

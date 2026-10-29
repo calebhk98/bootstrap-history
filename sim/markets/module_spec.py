@@ -28,7 +28,7 @@ READS_BY_OWNER = {
 	"assembly": ("registered_seats",),
 	"stores": ("store_book",),
 	"demography": ("population", "population_total", "pop_scale", "default_population", "farm_holdings"),
-	"actors": ("concern_versions", "concern_counts"),
+	"actors": ("concern_versions", "concern_counts", "country_literacy_figure"),
 	"mechanics": ("effect_factor",),
 	"knowledge": ("tree_nodes", "done_year", "techniques_held", "techniques_version", "techniques_granted"),
 	"ventures": ("operating", "operating_version", "venture_opened_year"),
@@ -40,7 +40,7 @@ READS_BY_OWNER = {
 	"production": ("workshop_output", "concern_market", "concern_book_offer", "concern_book_inputs_cost", "concern_takings",
 	               "node_output_market_factor", "techniques_in_use"),
 	# what the port and the goods market read of the game (port_world.py)
-	"port: seats and actors": ("seat_list", "built_ways",
+	"port: seats and actors": ("built_ways",
 	                           "cast", "cast_state", "actor_world", "state_treasury", "state_reach", "acting_country"),
 	"port: the map": ("map_for_agent_economy", "tiles_listed_by", "tile_description", "tile_climates", "mode_crews", "modes_carrying",
 	                  "timber_on_tile", "deposit_catalogue", "deposits_worked_before"),
@@ -49,7 +49,7 @@ READS_BY_OWNER = {
 	"port: money and prices": ("market_rate", "credit_room", "credit_line_sought", "debt_bondage_term_years", "home_coin_stock",
 	                           "price_tables", "material_price", "material_commodity_map", "material_market_tonnes", "goods_stock",
 	                           "commodity_materials", "not_traded_materials", "can_pay", "project_cost",
-	                           "real_output_hours", "literacy", "held_techniques", "techniques_spread", "mechanic"),
+	                           "real_output_hours", "held_techniques", "techniques_spread", "mechanic"),
 	"port: foreign trade and freight": ("foreign_economies", "partner", "partner_facts", "partners_in_agent_economy", "civilisation_record",
 	                                    "foreign_supply_tonnes", "lift_left_tonnes", "partner_price_per_unit", "actors_carry",
 	                                    "cargo_legs", "foreign_route", "freight_mode_costs", "material_carriage_per_tonne",
@@ -64,7 +64,7 @@ _LIVE = dict(cached=False)
 # (name, kind) of every view; the module method that computes it has the view's name
 _VIEWS = (
 	("goods_quote", KEYED), ("goods_categories", None), ("sale_limits", KEYED), ("material_trade_quote", KEYED), ("material_purchase_cost", QUOTE), ("purchase_quote", QUOTE), ("sale_quote", QUOTE),
-	("can_be_bought", KEYED), ("material_seller", KEYED), ("partner_import", KEYED), ("home_unit_price", KEYED),
+	("can_be_bought", KEYED), ("material_seller", KEYED), ("partner_import_tonnes", KEYED), ("home_unit_price", KEYED),
 	("household_prices", None), ("commodities_sold_by_acting_party", None), ("others_trade_stamp", None), ("main_material_of", KEYED),
 	("market_state", KEYED), ("market_floor_ratio", KEYED), ("opening_population", None), ("new_goods_units", None),
 	("goods_category_factor", QUOTE), ("goods_category_factor_with_entrants", QUOTE), ("goods_category_price_ratio", KEYED),
