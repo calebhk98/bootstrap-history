@@ -1391,7 +1391,7 @@
      }
     ],
     "concerns_you_run": 0,
-    "credit_limit": 432539.4,
+    "credit_limit": 432546.7,
     "critical_capabilities_not_operating": null,
     "debt_interest_rate": 0.5345,
     "debt_still_to_work_off": 0.0,
@@ -1468,14 +1468,14 @@
      "general_ceiling_now": 0.778,
      "schools_actually_teaching": false
     },
-    "living_cost": 576719.2,
+    "living_cost": 576728.9,
     "living_stock": {
      "cattle_kg": 163733860.931,
      "pig_kg": 3603030230.816,
      "ramie_stock_kg": 2879.005,
      "sheep_kg": 26870578.215,
      "silkworm_eggs_kg": 0.125,
-     "sugar_cane_sett_kg": 1197597.36,
+     "sugar_cane_sett_kg": 1197597.333,
      "tea_plant_stock_kg": 854.705
     },
     "lost": [],
@@ -1483,8 +1483,8 @@
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 6543364.7,
-    "net_per_year": 6543364.7,
+    "net_after_project_spend": 6543474.2,
+    "net_per_year": 6543474.2,
     "ok": true,
     "on_the_road_to_the_goal_so_far": 14,
     "project_spend_this_year": 0.0,
@@ -1508,7 +1508,7 @@
     "protection": 0.021,
     "reputation": 5.3,
     "resource_throttle": 0.05,
-    "revenue": 7120083.9,
+    "revenue": 7120203.2,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -1540,7 +1540,7 @@
      "minor_failures": 0
     },
     "supervision_close_to_the_edge": null,
-    "sustainable_debt": 6121000.8,
+    "sustainable_debt": 6121103.2,
     "throttle_binding": "sand_quartz_kg",
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [],
@@ -1583,7 +1583,7 @@
     "goal_reached": false,
     "money": 8822201.1,
     "nearest_goal_blocker": null,
-    "net_per_year": 6407814.7,
+    "net_per_year": 6407923.7,
     "ok": true,
     "projects": [],
     "standing": {
@@ -1678,7 +1678,7 @@
      "in_full": "~prose~",
      "technologies_you_could_lose": 1
     },
-    "capital": -89479.1,
+    "capital": -89481.5,
     "chance_of_being_denounced_this_year": 0.0,
     "coin_hoard": {
      "basis": "~prose~",
@@ -1688,7 +1688,7 @@
     },
     "completed": [],
     "concerns_you_run": 0,
-    "credit_limit": 9318648.8,
+    "credit_limit": 9312926.0,
     "critical_capabilities_not_operating": null,
     "debt_interest_rate": 0.5198,
     "debt_still_to_work_off": 0.0,
@@ -1710,12 +1710,12 @@
        "parts": [
         "~prose~",
         {
-         "money": 2654982573959.64
+         "money": 2654526745890.257
         },
         "~prose~",
         "~prose~",
         {
-         "money": 2649580348712.0386
+         "money": 2649126540559.0615
         },
         "~prose~",
         "~prose~",
@@ -1760,24 +1760,24 @@
     "household_places_used_of_all": "~prose~",
     "idle_specialists": null,
     "in_bondage_for_debt": 0.0,
-    "interest_on_arrears_this_year": 46507.1,
+    "interest_on_arrears_this_year": 46508.4,
     "interest_paid_total": 0.0,
     "literacy": {
      "elite": 0.93,
      "elite_ceiling": 0.99,
      "farm_share_of_working_hours": 0.256,
-     "general": 0.086,
+     "general": 0.085,
      "general_ceiling_now": 0.789,
      "schools_actually_teaching": false
     },
-    "living_cost": 525977.3,
+    "living_cost": 525659.0,
     "living_stock": {
-     "cattle_kg": 191044406.943,
-     "pig_kg": 7078731336.255,
+     "cattle_kg": 191044406.901,
+     "pig_kg": 7078731334.674,
      "ramie_stock_kg": 3454.209,
-     "sheep_kg": 35221242.494,
+     "sheep_kg": 35221242.486,
      "silkworm_eggs_kg": 0.062,
-     "sugar_cane_sett_kg": 2699709.558,
+     "sugar_cane_sett_kg": 2699691.744,
      "tea_plant_stock_kg": 1623.658
     },
     "lost": [],
@@ -1785,8 +1785,8 @@
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 5875971.8,
-    "net_per_year": 5875971.8,
+    "net_after_project_spend": 5872317.1,
+    "net_per_year": 5872317.1,
     "ok": true,
     "on_the_road_to_the_goal_so_far": 14,
     "project_spend_this_year": 0.0,
@@ -1810,7 +1810,7 @@
     "protection": 0.02,
     "reputation": 5.2,
     "resource_throttle": 0.05,
-    "revenue": 6448456.2,
+    "revenue": 6444484.5,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -1842,7 +1842,7 @@
      "objective": "~prose~"
     },
     "supervision_close_to_the_edge": null,
-    "sustainable_debt": 5697391.0,
+    "sustainable_debt": 5693869.1,
     "throttle_binding": "sand_quartz_kg",
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [],
@@ -1872,8 +1872,8 @@
     "components": {
      "economy": {
       "counts": "~prose~",
-      "normalized": 0.07138285576742373,
-      "raw": 11831883.6,
+      "normalized": 0.07139770239520489,
+      "raw": 11831936.0,
       "raw_detail": {
        "worker_years_equivalent": 2.5
       },
@@ -1894,7 +1894,7 @@
      },
      "literacy": {
       "counts": "~prose~",
-      "normalized": 0.5236323644065917,
+      "normalized": 0.5236190113284221,
       "raw": 0.0855,
       "raw_detail": {
        "elite": 0.9295,
@@ -2693,10 +2693,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 6.390181663095603,
+       "garrison_lost": 6.38979950417994,
        "outcome": "put_down",
-       "rising_lost": 41.43227541722557,
-       "rising_win_probability": 0.547333934082863
+       "rising_lost": 41.429797598239865,
+       "rising_win_probability": 0.5472717136777686
       },
       "kind": "revolt",
       "tiles": [
@@ -2710,10 +2710,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 31.005316809899156,
+       "garrison_lost": 31.003575417965898,
        "outcome": "tile_lost",
-       "rising_lost": 32.13739104764479,
-       "rising_win_probability": 0.5695465134394558
+       "rising_lost": 32.135586073553746,
+       "rising_win_probability": 0.569487294596959
       },
       "kind": "revolt",
       "tiles": [
@@ -2743,10 +2743,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 50.69495210862987,
+       "garrison_lost": 50.69167422336527,
        "outcome": "tile_lost",
-       "rising_lost": 53.8415353429586,
-       "rising_win_probability": 0.5184838636494861
+       "rising_lost": 53.83805400274657,
+       "rising_win_probability": 0.5184180655471468
       },
       "kind": "revolt",
       "tiles": [
@@ -2776,10 +2776,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 0.27500432420898413,
+       "garrison_lost": 0.27498802378888015,
        "outcome": "tile_lost",
-       "rising_lost": 0.2798524247573492,
-       "rising_win_probability": 0.5552169628441725
+       "rising_lost": 0.27983583697421605,
+       "rising_win_probability": 0.5551549504623936
       },
       "kind": "revolt",
       "tiles": [
@@ -2809,10 +2809,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 33.89745607527203,
+       "garrison_lost": 33.895171118688495,
        "outcome": "tile_lost",
-       "rising_lost": 33.51551290822671,
-       "rising_win_probability": 0.5260122696800007
+       "rising_lost": 33.51325369763284,
+       "rising_win_probability": 0.5259432194570927
       },
       "kind": "revolt",
       "tiles": [
@@ -2842,10 +2842,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1.9247852105106036,
+       "garrison_lost": 1.9246759068638053,
        "outcome": "tile_lost",
-       "rising_lost": 1.9182605148817535,
-       "rising_win_probability": 0.577498651715161
+       "rising_lost": 1.9181515817557921,
+       "rising_win_probability": 0.5774385001260837
       },
       "kind": "revolt",
       "tiles": [
@@ -2875,10 +2875,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1.4443119466768441,
+       "garrison_lost": 1.4442300055369863,
        "outcome": "tile_lost",
-       "rising_lost": 1.3612485128336271,
-       "rising_win_probability": 0.5947190715809979
+       "rising_lost": 1.3611712841885075,
+       "rising_win_probability": 0.5946585503438689
       },
       "kind": "revolt",
       "tiles": [
@@ -2908,10 +2908,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 77.24661475538838,
+       "garrison_lost": 77.24241608633791,
        "outcome": "tile_lost",
-       "rising_lost": 68.42998542728647,
-       "rising_win_probability": 0.525712416960587
+       "rising_lost": 68.42626597805429,
+       "rising_win_probability": 0.5256567343112453
       },
       "kind": "revolt",
       "tiles": [
@@ -2941,10 +2941,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 75.8711384044091,
+       "garrison_lost": 75.8668798268565,
        "outcome": "tile_lost",
-       "rising_lost": 71.3385768893405,
-       "rising_win_probability": 0.5977032000505508
+       "rising_lost": 71.33457272031701,
+       "rising_win_probability": 0.5976432396451937
       },
       "kind": "revolt",
       "tiles": [
@@ -2974,10 +2974,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 31.476556776851684,
+       "garrison_lost": 31.474878667653254,
        "outcome": "tile_lost",
-       "rising_lost": 28.735536043173695,
-       "rising_win_probability": 0.6233793486109757
+       "rising_lost": 28.734004065972446,
+       "rising_win_probability": 0.6233220195336329
       },
       "kind": "revolt",
       "tiles": [
@@ -3007,10 +3007,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 19.9744919517761,
+       "garrison_lost": 19.973267796272903,
        "outcome": "put_down",
-       "rising_lost": 109.31985460093672,
-       "rising_win_probability": 0.5940127544856075
+       "rising_lost": 109.31315483095307,
+       "rising_win_probability": 0.5939473420698922
       },
       "kind": "revolt",
       "tiles": [
@@ -3024,10 +3024,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 48.30274936225945,
+       "garrison_lost": 48.29525464620102,
        "outcome": "tile_lost",
-       "rising_lost": 42.297542684789335,
-       "rising_win_probability": 0.5572131807332495
+       "rising_lost": 42.29097974424089,
+       "rising_win_probability": 0.5570507212824777
       },
       "kind": "revolt",
       "tiles": [
@@ -3100,7 +3100,7 @@
         "op": "~prose~",
         "quantity": "lowest_stratum_welfare",
         "threshold": 1.0,
-        "value": 2.0008,
+        "value": 1.9929,
         "why": "~prose~"
        }
       ],
@@ -3361,7 +3361,7 @@
     },
     "ok": true,
     "population": {
-     "now": 56522871,
+     "now": 56506129,
      "start": 58000000
     },
     "price_index": {
@@ -3387,7 +3387,7 @@
      ]
     },
     "wage_index": {
-     "now": 0.716,
+     "now": 0.7162,
      "start": 0.7
     },
     "year": 103,
@@ -3401,25 +3401,25 @@
    "reply": {
     "civilisation": "~prose~",
     "ok": true,
-    "population": 56522871,
-    "population_change_from_reference": -0.0255,
+    "population": 56506129,
+    "population_change_from_reference": -0.0258,
     "reference_population_before_simulated_changes": 58000000,
     "the_town_you_actually_operate_in": {
-     "estimated_population": 45109,
+     "estimated_population": 45100,
      "note": "~prose~"
     },
     "trades": [
      {
-      "estimated_in_the_country": 10409.7,
+      "estimated_in_the_country": 10407.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "artisan",
-      "within_your_reach": 83.08,
+      "within_your_reach": 83.07,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 4692.3,
+      "estimated_in_the_country": 4690.4,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -3428,7 +3428,7 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 240.9,
+      "estimated_in_the_country": 240.8,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -3437,21 +3437,21 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 671.4,
+      "estimated_in_the_country": 671.2,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "carter",
-      "within_your_reach": 671.45,
+      "within_your_reach": 671.25,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 1451.5,
+      "estimated_in_the_country": 1451.1,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "charcoal_burner",
-      "within_your_reach": 1065.39,
+      "within_your_reach": 1065.34,
       "you_employ": 0.0
      },
      {
@@ -3464,21 +3464,21 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 364304.7,
+      "estimated_in_the_country": 363568.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "dockworker",
-      "within_your_reach": 1065.39,
+      "within_your_reach": 1065.34,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 503322.2,
+      "estimated_in_the_country": 502395.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "domestic_servant",
-      "within_your_reach": 1065.39,
+      "within_your_reach": 1065.34,
       "you_employ": 0.0
      },
      {
@@ -3509,25 +3509,25 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 21587561.8,
+      "estimated_in_the_country": 21581883.8,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "farmer",
-      "within_your_reach": 1065.39,
+      "within_your_reach": 1065.34,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 15088.6,
+      "estimated_in_the_country": 15084.5,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "fisher",
-      "within_your_reach": 1065.39,
+      "within_your_reach": 1065.34,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 282.6,
+      "estimated_in_the_country": 282.5,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -3554,12 +3554,12 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 196.0,
+      "estimated_in_the_country": 195.9,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "herder",
-      "within_your_reach": 195.99,
+      "within_your_reach": 195.93,
       "you_employ": 0.0
      },
      {
@@ -3568,7 +3568,7 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "hunter",
-      "within_your_reach": 133.5,
+      "within_your_reach": 133.48,
       "you_employ": 0.0
      },
      {
@@ -3581,16 +3581,16 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 5519214.7,
+      "estimated_in_the_country": 5514895.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "labourer",
-      "within_your_reach": 1064.15,
+      "within_your_reach": 1064.1,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 1248.7,
+      "estimated_in_the_country": 1248.4,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -3617,7 +3617,7 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 3343.7,
+      "estimated_in_the_country": 3342.7,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -3635,7 +3635,7 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 22609.1,
+      "estimated_in_the_country": 22602.5,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -3662,12 +3662,12 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 59359.1,
+      "estimated_in_the_country": 59341.3,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "miner",
-      "within_your_reach": 1065.39,
+      "within_your_reach": 1065.34,
       "you_employ": 0.0
      },
      {
@@ -3694,11 +3694,11 @@
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "porter",
-      "within_your_reach": 133.5,
+      "within_your_reach": 133.48,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 22898.4,
+      "estimated_in_the_country": 22891.7,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -3707,25 +3707,25 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 74.5,
+      "estimated_in_the_country": 74.4,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "sailor",
-      "within_your_reach": 74.46,
+      "within_your_reach": 74.44,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 774.2,
+      "estimated_in_the_country": 774.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "salt_worker",
-      "within_your_reach": 774.21,
+      "within_your_reach": 773.97,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 105078.4,
+      "estimated_in_the_country": 105047.3,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -3734,7 +3734,7 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 241652.1,
+      "estimated_in_the_country": 241523.4,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -3752,7 +3752,7 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 460.3,
+      "estimated_in_the_country": 460.2,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": null,
@@ -3761,25 +3761,25 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 26699008.7,
+      "estimated_in_the_country": 26695581.1,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "soldier",
-      "within_your_reach": 1057.42,
+      "within_your_reach": 1057.37,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 27725.6,
+      "estimated_in_the_country": 27717.5,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "spinner",
-      "within_your_reach": 21.31,
+      "within_your_reach": 21.3,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 6311.4,
+      "estimated_in_the_country": 6309.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -3788,16 +3788,16 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 858.2,
+      "estimated_in_the_country": 858.0,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "vine_and_olive_tender",
-      "within_your_reach": 858.2,
+      "within_your_reach": 857.97,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 15065.7,
+      "estimated_in_the_country": 15061.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -3807,7 +3807,7 @@
      }
     ],
     "urban_fraction": 0.1,
-    "urban_population_estimate": 5652287,
+    "urban_population_estimate": 5650613,
     "what_this_means": "~prose~"
    }
   },
@@ -3918,7 +3918,7 @@
     ],
     "next_door_total": 31,
     "ok": true,
-    "population": 56522871,
+    "population": 56506129,
     "regions": [
      "~prose~"
     ],
@@ -3927,7 +3927,7 @@
       "deposits": [],
       "is_your_base": true,
       "name": "~prose~",
-      "people": 3661496,
+      "people": 3660411,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_21"
@@ -3936,7 +3936,7 @@
       "days_from_your_base": 30,
       "deposits": [],
       "name": "~prose~",
-      "people": 3039808,
+      "people": 3038908,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_19"
@@ -3945,7 +3945,7 @@
       "days_from_your_base": 14,
       "deposits": [],
       "name": "~prose~",
-      "people": 3005963,
+      "people": 3005073,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_32"
@@ -3954,7 +3954,7 @@
       "days_from_your_base": 64,
       "deposits": [],
       "name": "~prose~",
-      "people": 2774361,
+      "people": 2773540,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_02"
@@ -3963,7 +3963,7 @@
       "days_from_your_base": 16,
       "deposits": [],
       "name": "~prose~",
-      "people": 2751082,
+      "people": 2750268,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_22"
@@ -3972,7 +3972,7 @@
       "days_from_your_base": 16,
       "deposits": [],
       "name": "~prose~",
-      "people": 2724149,
+      "people": 2723342,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_11"
@@ -3981,7 +3981,7 @@
       "days_from_your_base": 25,
       "deposits": [],
       "name": "~prose~",
-      "people": 2639298,
+      "people": 2638517,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_33"
@@ -3990,7 +3990,7 @@
       "days_from_your_base": 16,
       "deposits": [],
       "name": "~prose~",
-      "people": 2561903,
+      "people": 2561144,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_20"
@@ -3999,7 +3999,7 @@
       "days_from_your_base": 30,
       "deposits": [],
       "name": "~prose~",
-      "people": 2488447,
+      "people": 2487710,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_31"
@@ -4008,7 +4008,7 @@
       "days_from_your_base": 47,
       "deposits": [],
       "name": "~prose~",
-      "people": 2480363,
+      "people": 2479628,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_03"
@@ -4017,7 +4017,7 @@
       "days_from_your_base": 74,
       "deposits": [],
       "name": "~prose~",
-      "people": 2465915,
+      "people": 2465185,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_07"
@@ -4026,7 +4026,7 @@
       "days_from_your_base": 46,
       "deposits": [],
       "name": "~prose~",
-      "people": 2444209,
+      "people": 2443485,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_09"
@@ -4036,11 +4036,11 @@
     "towns_note": "~prose~",
     "you_are_based_at": {
      "name": "~prose~",
-     "people": 3661496,
+     "people": 3660411,
      "region": "~prose~",
      "terrain": "~prose~",
      "tile": "china_21",
-     "town_people": 45109
+     "town_people": 45100
     }
    }
   },
@@ -4053,7 +4053,7 @@
     "concerns_you_were_running": 0,
     "ended_in": 103,
     "failed_attempts": 0,
-    "money": -89479.1,
+    "money": -89481.5,
     "ok": true,
     "people": 0,
     "reached_it": false,
@@ -4064,7 +4064,7 @@
       "economy": {
        "counts": "~prose~",
        "normalized": 0.0,
-       "raw": -89479.1,
+       "raw": -89481.5,
        "raw_detail": {
         "worker_years_equivalent": 0.0
        },
@@ -4085,7 +4085,7 @@
       },
       "literacy": {
        "counts": "~prose~",
-       "normalized": 0.5236323644065917,
+       "normalized": 0.5236190113284221,
        "raw": 0.0855,
        "raw_detail": {
         "elite": 0.9295,
@@ -4098,7 +4098,7 @@
       },
       "resilience": {
        "counts": "~prose~",
-       "normalized": 0.9999999906391519,
+       "normalized": 0.9999999906367172,
        "of_total": 5,
        "raw": 5,
        "raw_detail": {
@@ -4113,7 +4113,7 @@
       },
       "standing": {
        "counts": "~prose~",
-       "normalized": 0.052026621304982326,
+       "normalized": 0.0520266213049316,
        "raw": 5.2,
        "weight": 0.05,
        "weighted": 0.0026

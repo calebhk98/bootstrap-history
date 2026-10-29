@@ -8499,7 +8499,7 @@
         "~prose~",
         "~prose~",
         {
-         "money": 16023472.304488294
+         "money": 16023472.366104234
         },
         "~prose~",
         "~prose~"
@@ -8520,7 +8520,7 @@
         "~prose~",
         "~prose~",
         {
-         "money": 137351886.15920588
+         "money": 137351882.6636924
         },
         "~prose~",
         "~prose~"
@@ -8541,7 +8541,7 @@
         "~prose~",
         "~prose~",
         {
-         "money": 2342953.9466407215
+         "money": 2342953.9859592267
         },
         "~prose~",
         "~prose~"
@@ -8562,7 +8562,7 @@
         "~prose~",
         "~prose~",
         {
-         "money": 25019977.077370793
+         "money": 25019977.107688405
         },
         "~prose~",
         "~prose~"
@@ -8578,12 +8578,12 @@
        "parts": [
         "~prose~",
         {
-         "money": 50175365.72764109
+         "money": 50175366.42674378
         },
         "~prose~",
         "~prose~",
         {
-         "money": 50030664.84574184
+         "money": 50030665.54651137
         },
         "~prose~",
         "~prose~"
@@ -8599,12 +8599,12 @@
        "parts": [
         "~prose~",
         {
-         "money": 211383424.06750816
+         "money": 211383406.75793037
         },
         "~prose~",
         "~prose~",
         {
-         "money": 53505273.0388725
+         "money": 53505385.42817433
         },
         "~prose~",
         "~prose~",
@@ -8621,12 +8621,12 @@
        "parts": [
         "~prose~",
         {
-         "money": 151261.18536681938
+         "money": 151261.36333274771
         },
         "~prose~",
         "~prose~",
         {
-         "money": 4241.029634361271
+         "money": 4241.0305699719165
         },
         "~prose~",
         "~prose~"
@@ -8642,12 +8642,12 @@
        "parts": [
         "~prose~",
         {
-         "money": 65850.12348400618
+         "money": 65850.36590197458
         },
         "~prose~",
         "~prose~",
         {
-         "money": 819.8267879687658
+         "money": 819.8310295665302
         },
         "~prose~",
         "~prose~"
@@ -8704,17 +8704,17 @@
     },
     "living_cost": 388.5,
     "living_stock": {
-     "cattle_kg": 269855015.144,
-     "pig_kg": 7893133572.631,
-     "sheep_kg": 92455406.762
+     "cattle_kg": 269855015.135,
+     "pig_kg": 7893133572.667,
+     "sheep_kg": 92455406.758
     },
     "lost": [],
     "manual": true,
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 96.6,
-    "net_per_year": 96.6,
+    "net_after_project_spend": 96.7,
+    "net_per_year": 96.7,
     "ok": true,
     "on_the_road_to_the_goal_so_far": null,
     "problems": [
@@ -8741,7 +8741,7 @@
     "protection": 0.033,
     "reputation": 6.0,
     "resource_throttle": 0.05,
-    "revenue": 797.6,
+    "revenue": 797.9,
     "scandal": 0.03,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -8780,7 +8780,7 @@
      "objective": "~prose~"
     },
     "supervision_close_to_the_edge": null,
-    "sustainable_debt": 296.6,
+    "sustainable_debt": 296.7,
     "throttle_binding": "alum_kg",
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [
@@ -8815,32 +8815,12 @@
        "parts": [
         "~prose~",
         {
-         "money": 65850.12348400618
+         "money": 65850.36590197458
         },
         "~prose~",
         "~prose~",
         {
-         "money": 819.8267879687658
-        },
-        "~prose~",
-        "~prose~"
-       ]
-      },
-      "what": "~prose~",
-      "year": 102
-     },
-     {
-      "event_kind": "group_petition",
-      "facts": {
-       "parts": [
-        "~prose~",
-        {
-         "money": 151261.18536681938
-        },
-        "~prose~",
-        "~prose~",
-        {
-         "money": 4241.029634361271
+         "money": 819.8310295665302
         },
         "~prose~",
         "~prose~"
@@ -8855,12 +8835,32 @@
        "parts": [
         "~prose~",
         {
-         "money": 211383424.06750816
+         "money": 151261.36333274771
         },
         "~prose~",
         "~prose~",
         {
-         "money": 53505273.0388725
+         "money": 4241.0305699719165
+        },
+        "~prose~",
+        "~prose~"
+       ]
+      },
+      "what": "~prose~",
+      "year": 102
+     },
+     {
+      "event_kind": "group_petition",
+      "facts": {
+       "parts": [
+        "~prose~",
+        {
+         "money": 211383406.75793037
+        },
+        "~prose~",
+        "~prose~",
+        {
+         "money": 53505385.42817433
         },
         "~prose~",
         "~prose~",
@@ -8876,12 +8876,12 @@
        "parts": [
         "~prose~",
         {
-         "money": 50175365.72764109
+         "money": 50175366.42674378
         },
         "~prose~",
         "~prose~",
         {
-         "money": 50030664.84574184
+         "money": 50030665.54651137
         },
         "~prose~",
         "~prose~"
@@ -8901,7 +8901,7 @@
         "~prose~",
         "~prose~",
         {
-         "money": 25019977.077370793
+         "money": 25019977.107688405
         },
         "~prose~",
         "~prose~"
@@ -8921,7 +8921,7 @@
         "~prose~",
         "~prose~",
         {
-         "money": 2342953.9466407215
+         "money": 2342953.9859592267
         },
         "~prose~",
         "~prose~"
@@ -8941,7 +8941,7 @@
         "~prose~",
         "~prose~",
         {
-         "money": 137351886.15920588
+         "money": 137351882.6636924
         },
         "~prose~",
         "~prose~"
@@ -8961,7 +8961,7 @@
         "~prose~",
         "~prose~",
         {
-         "money": 16023472.304488294
+         "money": 16023472.366104234
         },
         "~prose~",
         "~prose~"
@@ -9296,7 +9296,7 @@
         "~prose~",
         "~prose~",
         {
-         "money": 16023472.304488294
+         "money": 16023472.366104234
         },
         "~prose~",
         "~prose~"
@@ -9317,7 +9317,7 @@
         "~prose~",
         "~prose~",
         {
-         "money": 137351886.15920588
+         "money": 137351882.6636924
         },
         "~prose~",
         "~prose~"
@@ -9338,7 +9338,7 @@
         "~prose~",
         "~prose~",
         {
-         "money": 2342953.9466407215
+         "money": 2342953.9859592267
         },
         "~prose~",
         "~prose~"
@@ -9359,7 +9359,7 @@
         "~prose~",
         "~prose~",
         {
-         "money": 25019977.077370793
+         "money": 25019977.107688405
         },
         "~prose~",
         "~prose~"
@@ -9375,12 +9375,12 @@
        "parts": [
         "~prose~",
         {
-         "money": 50175365.72764109
+         "money": 50175366.42674378
         },
         "~prose~",
         "~prose~",
         {
-         "money": 50030664.84574184
+         "money": 50030665.54651137
         },
         "~prose~",
         "~prose~"
@@ -9396,12 +9396,12 @@
        "parts": [
         "~prose~",
         {
-         "money": 211383424.06750816
+         "money": 211383406.75793037
         },
         "~prose~",
         "~prose~",
         {
-         "money": 53505273.0388725
+         "money": 53505385.42817433
         },
         "~prose~",
         "~prose~",
@@ -9418,12 +9418,12 @@
        "parts": [
         "~prose~",
         {
-         "money": 151261.18536681938
+         "money": 151261.36333274771
         },
         "~prose~",
         "~prose~",
         {
-         "money": 4241.029634361271
+         "money": 4241.0305699719165
         },
         "~prose~",
         "~prose~"
@@ -9439,12 +9439,12 @@
        "parts": [
         "~prose~",
         {
-         "money": 65850.12348400618
+         "money": 65850.36590197458
         },
         "~prose~",
         "~prose~",
         {
-         "money": 819.8267879687658
+         "money": 819.8310295665302
         },
         "~prose~",
         "~prose~"
@@ -9501,17 +9501,17 @@
     },
     "living_cost": 388.5,
     "living_stock": {
-     "cattle_kg": 269855015.144,
-     "pig_kg": 7893133572.631,
-     "sheep_kg": 92455406.762
+     "cattle_kg": 269855015.135,
+     "pig_kg": 7893133572.667,
+     "sheep_kg": 92455406.758
     },
     "lost": [],
     "manual": true,
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 96.6,
-    "net_per_year": 96.6,
+    "net_after_project_spend": 96.7,
+    "net_per_year": 96.7,
     "ok": true,
     "on_the_road_to_the_goal_so_far": null,
     "problems": [
@@ -9538,7 +9538,7 @@
     "protection": 0.033,
     "reputation": 6.0,
     "resource_throttle": 0.05,
-    "revenue": 797.6,
+    "revenue": 797.9,
     "scandal": 0.03,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -9577,7 +9577,7 @@
      "objective": "~prose~"
     },
     "supervision_close_to_the_edge": null,
-    "sustainable_debt": 296.6,
+    "sustainable_debt": 296.7,
     "throttle_binding": "alum_kg",
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [
@@ -9642,7 +9642,7 @@
      },
      "literacy": {
       "counts": "~prose~",
-      "normalized": 0.5224366056682628,
+      "normalized": 0.5224366046976033,
       "raw": 0.113,
       "raw_detail": {
        "elite": 0.8756,
@@ -9660,7 +9660,7 @@
      },
      "resilience": {
       "counts": "~prose~",
-      "normalized": 0.9997326857801244,
+      "normalized": 0.9997326853789854,
       "of_total": 5,
       "raw": 4,
       "raw_detail": {
@@ -9680,7 +9680,7 @@
      },
      "standing": {
       "counts": "~prose~",
-      "normalized": 0.05952131674556597,
+      "normalized": 0.05952131673721018,
       "raw": 6.0,
       "since_last_score": {
        "normalized_change": 0.0095,

@@ -41,3 +41,7 @@ sent `"as"` such a seat answer `internal error handling that command: AttributeE
 no attribute 'dead_reason'` on the code these were recorded from (`seats` and `join` work). That is a bug, not
 a behaviour to keep, so no fixture records it. Once it is fixed, add a country seat to
 `han_two_seats_fog`.
+
+Re-recorded after a fixed bug changed a figure (each names the fix): `rome_founder` and `han_two_seats_fog` after
+Complaint 761 (endemic death rates read the tiles the nation holds; within two years Rome holds fewer than its file lists),
+found by undoing each fix of that merge in turn; `norse_session_round_trips` was unchanged.
