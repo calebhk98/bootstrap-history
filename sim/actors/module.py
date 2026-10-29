@@ -8,12 +8,13 @@ from sim.assembly.api import Module
 
 from .cast import Cast
 from .contact import Contact
+from .country_views import CountryViews
 from .lending import Lending
 from .staff import Staff
 from .year import Year
 
 
-class Actors(Cast, Lending, Staff, Contact, Year, Module):
+class Actors(Cast, CountryViews, Lending, Staff, Contact, Year, Module):
 
 	def setup(self) -> None:
 		self._registry = None   # never saved: rebuilt over the world slot on first use and after a load

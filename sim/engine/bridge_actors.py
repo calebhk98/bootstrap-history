@@ -5,14 +5,12 @@ name (the owners' catalogue entries in docs/architecture/catalogue say which) an
 coarse, so the entries here are one engine call each. Each command is applied the way the old call did it."""
 import contextlib
 
-from sim.agents.api import cast_from_civilisations
 from sim.assembly.api import KEYED, QUOTE
 from sim.demography.api import rules as demography_rules
 
 from . import bridge_land, view_share
 from .actor_kinds_data import declared_kinds
 from .bridge import bridge_command, bridge_view
-from .data import load_civ
 from .foreign_economy_data import not_traded_materials as declared_not_traded_materials
 
 # ---- the cast's own data: the kinds mods declare and the roster a game opens with ----
@@ -22,14 +20,6 @@ from .foreign_economy_data import not_traded_materials as declared_not_traded_ma
 def declared_actor_kinds(sim):
     """{kind id: class} for the actor kinds the installed mods declare in data."""
     return declared_kinds(bridge_land.MODS_DIR)
-
-
-
-@bridge_view("opening_cast")
-def opening_cast(sim):
-    """(home country, entries, profiles): the civilisation played, and every economy trading with it."""
-    foreign = [load_civ(civilisation_id) for civilisation_id in sim.view("partners")()]
-    return cast_from_civilisations(sim.start_civ, foreign)
 
 
 # ---- core: settings and constants the engine declares ----
@@ -57,15 +47,7 @@ def shared_answers(sim, table):
 # ---- production: concerns, their takings and the industry's experience ----
 
 
-
-
 # ---- markets: goods categories, the agent economy's book and the orders the actors place ----
-
-
-@bridge_view("materials_serving", kind=KEYED)
-def materials_serving(sim, need_id):
-    from . import need_substitutes
-    return need_substitutes.serving(need_id)
 
 
 # ---- demography, agriculture, diffusion, mechanics ----
@@ -84,16 +66,6 @@ def farm_food_demand_kg(sim):
     technique = sim._farm_technique_this_year
     return (demography_rules.adult_equivalents(sim.view("population")())
             * sim._agriculture.annual_food_demand_kg_per_person(technique.crop))
-
-
-@bridge_view("state_military_diffusion")
-def state_military_diffusion(sim):
-    return sim.view("diffusion_index")["military"]
-
-
-@bridge_view("nodes_with_mechanic", kind=QUOTE)
-def nodes_with_mechanic(sim, mechanic):
-    return tuple(sim.view("mechanic")[mechanic])
 
 
 # ---- foreign trade ----

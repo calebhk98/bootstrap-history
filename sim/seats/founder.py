@@ -57,7 +57,7 @@ class Founder:
                 # sorted() in the view matters: the held set iterates in an order that depends on PYTHONHASHSEED, and
                 # a sample of it would give the same seed a different answer on every invocation
                 if losable:
-                    for node_id in self.needs.legacy_dice().sample(losable, founder_rules.forgotten_count(
+                    for node_id in self.needs.game_random().sample(losable, founder_rules.forgotten_count(
                             len(losable), terms["forget_fraction_divisor"])):
                         projects.operating.discard(node_id)
                         self.needs.send(ForgetTechnique((node_id,)))

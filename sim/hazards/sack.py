@@ -3,7 +3,7 @@
 The dice draws below have an exact place in the sequence `shocks` makes its draws in: the yearly chance of an attack coming
 to nothing, the chance of a sack, and the chance and the sample of the corpus lost.
 
-Needs: corpus_hedge, legacy_dice, acting_balance, staff, staff_snapshot, active_projects, money_text, corpus_nodes, mechanic, goal,
+Needs: corpus_hedge, game_random, acting_balance, staff, staff_snapshot, active_projects, money_text, corpus_nodes, mechanic, goal,
 tree_nodes, tree_closure, losable_node_ids."""
 from typing import Any, Dict, List
 
@@ -21,7 +21,7 @@ class Sack:
 
 	def sack_chance(self, hazard: Dict[str, Any], year: int) -> None:
 		"""The sack_chance branch of the year's shocks: an attack may come to nothing, or a site be sacked."""
-		dice = self.needs.legacy_dice()
+		dice = self.needs.game_random()
 		if "sack_chance" in hazard:
 			relief, why, lapsed = self.hazard_relief_detail("sack_chance")
 			probability = hazard["sack_chance"] * relief
@@ -38,7 +38,7 @@ class Sack:
 
 	def sack_site(self, hazard: Dict[str, Any], year: int) -> None:
 		"""What a sack itself takes: capital, staff, projects reset; then, maybe, the corpus."""
-		dice = self.needs.legacy_dice()
+		dice = self.needs.game_random()
 		capital_before = max(0.0, self.needs.acting_balance())
 		people_before = self._people_on_books()   # all staff, so the message matches what the state renders
 		projects_before = len(self.needs.active_projects())
@@ -70,7 +70,7 @@ class Sack:
 		after the loss roll and nowhere else. Not losable: society's inheritance, and dispersed copies (beyond reach)."""
 		losable = self.needs.losable_node_ids()
 		if losable:
-			drop = self.needs.legacy_dice().sample(losable, rules.losable_after_roll(losable, fraction))
+			drop = self.needs.game_random().sample(losable, rules.losable_after_roll(losable, fraction))
 			self.needs.send(ShutForgotten(tuple(drop)))
 			self.needs.send(ForgetTechnique(tuple(drop), year=year))   # dated, for rebuilding
 			self.log_corpus_loss(drop, hedge_before)

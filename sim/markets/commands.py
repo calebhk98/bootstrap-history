@@ -95,3 +95,10 @@ class RepriceOpeningMoney(Command):
 	per labour hour), becomes the economy's. Every seat's purse and the tree's money fields move by the ratio of the two,
 	and the money is marked as counted at the economy. Applied by the engine until the purses and the tree are modules'."""
 	before: float
+
+
+@dataclass(frozen=True)
+class FoundBankFromOutside(Command):
+	"""The acting seat founds a bank in the agent economy with `capital` in coin, brought in from outside the economy's book.
+	Answers the new bank's agent id, or None when the capital buys no units or the economy has not opened."""
+	capital: float

@@ -1,6 +1,6 @@
 """The yearly chances that need no date: a patron's death, a fire, banditry; and what a catastrophe takes from capital.
 
-Needs: year, events_enabled, ended_seats, legacy_act_as, legacy_dice, civilisation, running_mechanics, founder, automation,
+Needs: year, events_enabled, ended_seats, acting_as, game_random, civilisation, running_mechanics, founder, automation,
 standing, price_index, money_per_labour_hour, acting_balance, money_text."""
 from typing import List
 
@@ -24,11 +24,11 @@ class RandomEvents:
 		year = self.needs.year()
 		ended = self.needs.ended_seats()
 		for seat_id in [seat_id for seat_id in seats if seat_id not in ended]:
-			with self.needs.legacy_act_as(seat_id):
+			with self.needs.acting_as(seat_id):
 				self.random_events_for_seat(year)
 
 	def random_events_for_seat(self, year: int) -> None:
-		dice = self.needs.legacy_dice()
+		dice = self.needs.game_random()
 		# a patron's death rolls once per cooldown, not every year
 		last_patron_death = self.seat.last_patron_death
 		if patron_dies(dice.random(), constants.PATRON_DEATH_ANNUAL_CHANCE,

@@ -45,7 +45,7 @@ check("the concerns flagged to stay staffed and the game's own shortfall reading
 
 def Closer(planned, closures):
     """The projects module with what the yearly closure touches."""
-    module = projects_host.build(concern_rows_stopped=lambda node_ids: 123.46 * len(node_ids))
+    module = projects_host.build(concern_market=lambda: {node_id: 123.46 for node_id in [*planned, "running_on"]})
     module.STAFFING_REMEDIES = "remedies"
     module.recorded, module.review_asked = [], []
     module.concerns_to_close_for_staffing = lambda: planned

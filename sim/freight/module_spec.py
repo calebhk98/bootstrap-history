@@ -1,6 +1,6 @@
 """The freight module's spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_freight.py
+Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_*.py
 and bridge_shared.py) under the name the owner will publish, except the `legacy_*` one: the map handle the geography
 package's searches take."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec

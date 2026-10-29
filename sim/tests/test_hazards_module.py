@@ -48,20 +48,20 @@ class DatedShocks(unittest.TestCase):
 
     def test_a_hazard_outside_its_window_sends_nothing_and_draws_nothing(self):
         dice = Script()
-        module = hazards_host.build(year=100, civilisation=civilisation(plague()), legacy_dice=dice)
+        module = hazards_host.build(year=100, civilisation=civilisation(plague()), game_random=dice)
         module.step_dated_shocks(["founder"])
         self.assertEqual((module_harness.sent(module), dice.asked), ([], 0))
 
     def test_a_wave_that_the_yearly_chance_spares_costs_one_draw_and_nothing_else(self):
         dice = Script(constants.STAFF_LOSS_HAZARD_ANNUAL_CHANCE + 0.01)
-        module = hazards_host.build(year=155, civilisation=civilisation(plague()), legacy_dice=dice)
+        module = hazards_host.build(year=155, civilisation=civilisation(plague()), game_random=dice)
         module.step_dated_shocks(["founder"])
         self.assertEqual((module_harness.sent(module), dice.asked), ([], 1))
 
     def test_a_wave_costs_the_seat_its_people_and_cash_then_cuts_the_population_once_and_tells_the_seat(self):
         dice = Script(0.0)
         module = hazards_host.build(
-            year=155, civilisation=civilisation(plague()), legacy_dice=dice, acting_balance=1000.0,
+            year=155, civilisation=civilisation(plague()), game_random=dice, acting_balance=1000.0,
             staff={"scholars": 2.0, "artisans": 3.0, "employees": {"smith": 5.0}}, staff_snapshot={"smith": 5.0}, wage_index=1.5)
         module.step_dated_shocks(["founder"])
         self.assertEqual(names(module), ["SurviveStaff", "ScaleDeputies", "ReportStaffReduction", "PayEdge", "CutPopulation",
@@ -78,7 +78,7 @@ class DatedShocks(unittest.TestCase):
         self.assertEqual(dice.asked, 1)
 
     def test_the_year_remembers_what_struck_and_what_the_seat_was_told(self):
-        module = hazards_host.build(year=155, civilisation=civilisation(plague()), legacy_dice=Script(0.0))
+        module = hazards_host.build(year=155, civilisation=civilisation(plague()), game_random=Script(0.0))
         module.step_dated_shocks(["founder"])
         self.assertEqual(module.disaster()["name"], "Plague")
 
@@ -148,48 +148,48 @@ class YearlyChances(unittest.TestCase):
 
     def test_a_year_of_no_luck_draws_three_dice_and_sends_nothing(self):
         dice = Script(0.99, 0.99, 0.99)
-        module = hazards_host.build(legacy_dice=dice)
+        module = hazards_host.build(game_random=dice)
         module.random_events_for_seat(100)
         self.assertEqual((module_harness.sent(module), dice.asked), ([], 3))
 
     def test_a_fire_destroys_a_share_of_the_purse_and_says_what_it_cost(self):
-        module = hazards_host.build(legacy_dice=Script(0.99, 0.0, 0.99), acting_balance=1000.0)
+        module = hazards_host.build(game_random=Script(0.99, 0.0, 0.99), acting_balance=1000.0)
         module.random_events_for_seat(100)
         pay, line = module_harness.sent(module)
         self.assertEqual((pay.edge, line.kind), (edges.EDGE_DESTROYED, "fire"))
         self.assertAlmostEqual(pay.amount, 1000.0 * constants.FIRE_CAPITAL_LOSS)
 
     def test_banditry_plunders_the_household_by_its_exposure(self):
-        module = hazards_host.build(legacy_dice=Script(0.99, 0.99, 0.0))
+        module = hazards_host.build(game_random=Script(0.99, 0.99, 0.0))
         module.random_events_for_seat(100)
         plunder, line = module_harness.sent(module)
         self.assertEqual((plunder, line.kind), (PlunderHousehold(constants.BANDITRY_TAKE_STRENGTH, "banditry", True), "banditry"))
 
     def test_a_patron_dies_once_a_cooling_off_and_the_seat_remembers_the_year(self):
         seat = HazardsSeat()
-        module = hazards_host.build(legacy_dice=Script(0.0, 0.99, 0.99), seat=seat, running_mechanics=lambda name: [("patron", {})],
+        module = hazards_host.build(game_random=Script(0.0, 0.99, 0.99), seat=seat, running_mechanics=lambda name: [("patron", {})],
                                     standing={"protection": 0.9, "scandal": 0.0, "bribes_year_to_date": 0.0})
         module.random_events_for_seat(100)
         self.assertEqual(seat.last_patron_death, 100)
         self.assertEqual(names(module), ["RaiseScandal", "ScaleProtection", "PayEdge", "RecordEvent"])
-        again = hazards_host.build(legacy_dice=Script(0.0, 0.99, 0.99), seat=seat, running_mechanics=lambda name: [("patron", {})])
+        again = hazards_host.build(game_random=Script(0.0, 0.99, 0.99), seat=seat, running_mechanics=lambda name: [("patron", {})])
         again.random_events_for_seat(100 + constants.PATRON_DEATH_COOLDOWN_YEARS)
         self.assertEqual(module_harness.sent(again), [])
 
     def test_a_patron_who_is_not_mortal_does_not_die(self):
-        module = hazards_host.build(legacy_dice=Script(0.0, 0.99, 0.99))
+        module = hazards_host.build(game_random=Script(0.0, 0.99, 0.99))
         module.random_events_for_seat(100)
         self.assertEqual(module_harness.sent(module), [])
 
     def test_with_auto_court_heir_off_no_money_is_spent(self):
-        module = hazards_host.build(legacy_dice=Script(0.0, 0.99, 0.99), running_mechanics=lambda name: [("patron", {})],
+        module = hazards_host.build(game_random=Script(0.0, 0.99, 0.99), running_mechanics=lambda name: [("patron", {})],
                                     founder={"alive": True, "life_left": 1.0, "dead_reason": None, "policy": {"auto_court_heir": False}})
         module.random_events_for_seat(100)
         self.assertNotIn("PayEdge", names(module))
 
     def test_seats_that_ended_are_left_out_of_the_year(self):
         dice = Script(0.99, 0.99, 0.99)
-        module = hazards_host.build(legacy_dice=dice, ended_seats=["second"])
+        module = hazards_host.build(game_random=dice, ended_seats=["second"])
         module.step_random_events(["founder", "second"])
         self.assertEqual(dice.asked, 3)
 

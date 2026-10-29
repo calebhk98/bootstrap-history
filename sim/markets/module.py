@@ -27,6 +27,7 @@ class Markets(Clearing, Categories, Demand, HouseholdNeeds, Absorption, GoodsVie
 
 	def setup(self):
 		self._caches = {}                  # (seat id, name) -> a remembered figure; never saved
+		self._needs_served_by_mods = {}    # installed mod ids -> material -> the needs it serves; data, frozen for the game
 		self._partner_demand = {}          # civilisation id -> tonnes a year its households buy; data, frozen for the game
 		self._nodes_by_category = None     # category -> node ids, in the tree's order; the tree does not change after load
 		self.reads = PortWorld(self.needs, self)

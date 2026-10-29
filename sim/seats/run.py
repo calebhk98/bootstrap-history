@@ -68,7 +68,7 @@ class Run:
             template = join_rules.country_seat_template(template, held, self._home())
         life = self.needs.founder_life_terms()
         years = join_rules.founder_years(life["immortal"], life["minimum"], life["mean"], life["spread"],
-                                         self.needs.legacy_dice().gauss)
+                                         self.needs.game_random().gauss)
         return self.needs.send(RegisterSeat(seat_id, template, capital, years))
 
     def join_cast_seats(self, command: JoinCastSeats) -> Any:

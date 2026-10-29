@@ -33,14 +33,13 @@ def defaults() -> Dict[str, Any]:
 		"dealing_party": SimpleNamespace(money=0.0), "acting_balance": 0.0,
 		"hours_for_sale": 0.0, "best_wage_trade": None, "work_for_wages_dry_run": lambda trade, hours: (0.0, None),
 		"standing_job_pay": lambda trade: 0.0,
-		"effect_sum": lambda channel, start=0.0: start, "effect_values": lambda channel: [], "nodes_with_mechanic": lambda name: (),
+		"effect_sum": lambda channel, start=0.0: start, "effect_values": lambda channel: [], "mechanic": {},
 		"standing": {"reputation": 0.0}, "forest_hectares": 0.0, "mine_operating_cost": 0.0,
 		"money_per_labour_hour": 1.0, "labour_market": SimpleNamespace(quote=lambda trade: 1.0), "wage_bill": 0.0,
 		"household_bill_per_person": 0.0, "household_dependant_people": 0.0, "held_trade": lambda: None,
 		"revenue_capacity": 0.0, "revenue_estimate": 0.0, "upkeep": 0.0, "operating": set(), "cash_remedies": [],
 		"committed_cost": 0.0, "tree_nodes": {},
 		"agent_rate": lambda: None, "agent_credit_room": lambda borrower_id: (False, None), "agent_economy_opened": False,
-		"agent_economy": lambda: None,
 	}
 
 

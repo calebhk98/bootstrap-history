@@ -92,7 +92,7 @@ class FailingSim:
             tree=nodes, legacy_projects=self.state.projects, techniques_held=lambda: self.state.projects.done, funding_capacity=1000.0, state_interest=lambda node: 0,
             failure_loss=lambda node_id: self.loss, bearable_part_of=self.bearable_part_of,
             mechanic=lambda name: {NODE_ID: self.instrument_spec} if name == "diagnosis_instrument" and self.instrument_spec else {},
-            legacy_dice=self.rng, money_text=lambda amount, grouped=False, short=False: "%d" % amount,
+            game_random=self.rng, money_text=lambda amount, grouped=False, short=False: "%d" % amount,
             plain_number=lambda value, digits=0: "%d" % value)
         module.needs.send = self.send
         module.failure_severity = lambda node_id, lost, means: "major"

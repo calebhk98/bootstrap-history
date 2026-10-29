@@ -30,7 +30,7 @@ class CapitalView:
 
 	def nodes_with_mechanic(self, mechanic: str) -> Any:
 		"""The tree nodes that declare a mechanic."""
-		return self.needs.nodes_with_mechanic(mechanic)
+		return tuple(self.needs.mechanic[mechanic])
 
 	def state_lending(self) -> Tuple[float, float]:
 		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""

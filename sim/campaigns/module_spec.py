@@ -1,7 +1,6 @@
 """Campaigns' module spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_campaigns.py and
-bridge_shared.py) under the name the owner will publish. Grouped by the owner each is catalogued under
+Every read is a view of an owner that has not moved yet, published by the engine bridge (bridge_shared.py) under the name the owner will publish. Grouped by the owner each is catalogued under
 (docs/architecture/catalogue)."""
 from sim.actors.api import RecordConquestContact
 from sim.assembly.api import KEYED, ModuleSpec, PhaseHook, ViewSpec

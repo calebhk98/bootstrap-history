@@ -10,6 +10,7 @@ through the household's `arrears_book`, and every answer reads the economy, the 
 from sim.assembly.api import QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.actors.api import SetLenderOffers, SettleLenderInterest
 from sim.ledger.api import NoteHolderBooking, SettleHouseholdInterest, SettleWithEdge, WithdrawHouseholdMoney
+from sim.markets.api import FoundBankFromOutside
 from sim.polity.api import SetReputation
 from sim.projects.api import HaltActiveProjects, ReviewVentures
 from sim.reporting.api import RecordEvent
@@ -26,7 +27,7 @@ READS_BY_OWNER = {
 	"actors": ("cast", "state_treasury", "actor_world", "lender_offers_made", "cash_and_deposit", "loans_out", "debt_owed"),
 	"seats": ("dealing_party",),
 	"ledger": ("acting_balance",),
-	"mechanics": ("effect_sum", "effect_values", "nodes_with_mechanic"),
+	"mechanics": ("effect_sum", "effect_values", "mechanic"),
 	"polity": ("standing",),
 	"resources": ("forest_hectares", "mine_operating_cost"),
 	"workforce": ("staff", "money_per_labour_hour", "labour_market", "wage_bill", "household_dependant_people",
@@ -34,7 +35,7 @@ READS_BY_OWNER = {
 	"production": ("revenue_capacity", "revenue_estimate", "upkeep", "operating", "cash_remedies"),
 	"projects": ("committed_cost",),
 	"knowledge": ("tree_nodes",),
-	"markets": ("agent_rate", "agent_credit_room", "agent_economy_opened", "agent_economy", "household_bill_per_person"),
+	"markets": ("agent_rate", "agent_credit_room", "agent_economy_opened", "household_bill_per_person"),
 }
 
 _LIVE = dict(cached=False)
@@ -84,5 +85,6 @@ MODULE_SPECS = (ModuleSpec(
 	phases=(PhaseHook("credit_limit", "step_credit_limit"),),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(RecordEvent, SetReputation, SettleWithEdge, WithdrawHouseholdMoney, MothballMines, BleedStaff, DisperseDependants, Manumit,
-	       HaltActiveProjects, ReviewVentures, SettleHouseholdInterest, NoteHolderBooking, SetLenderOffers, SettleLenderInterest),
+	       HaltActiveProjects, ReviewVentures, SettleHouseholdInterest, NoteHolderBooking, SetLenderOffers, SettleLenderInterest,
+	       FoundBankFromOutside),
 ),)

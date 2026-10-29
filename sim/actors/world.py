@@ -246,7 +246,7 @@ class ActorWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, St
 		needs = self.needs
 		proven: Set[str] = set()
 		for seat_id in needs.seat_list()["playing"] or [needs.acting_seat()]:
-			with needs.legacy_act_as(seat_id):
+			with needs.acting_as(seat_id):
 				proven.update(self._proven_concerns_of_acting_seat())
 		return sorted(proven)
 

@@ -1,6 +1,6 @@
 """The household need model as the module's views: the units households want, the basket the actors' budgets read, and the
 tonnes a year the home and the partner economies' households buy (rules in household_needs.py)."""
-from . import household_needs
+from . import household_needs, need_substitutes
 from .constants import MEAN_INCOME_HOURS_PER_CAPITA
 
 
@@ -8,6 +8,26 @@ class HouseholdNeeds:
 
 	def _household_model(self):
 		return household_needs.household_model(self.needs.installed_mod_ids(), self.needs.household_need_data)
+
+	def _needs_served(self):
+		"""material -> the needs it serves, for the installed content (built once per set of installed mods)."""
+		mods = self.needs.installed_mod_ids()
+		served = self._needs_served_by_mods.get(mods)
+		if served is None:
+			served = self._needs_served_by_mods[mods] = need_substitutes.needs_served(self.needs.household_need_data()["goods"])
+		return served
+
+	def materials_serving(self, need_id):
+		"""The materials that serve one household need."""
+		return need_substitutes.serving(self._needs_served(), need_id)
+
+	def material_substitutes(self, material):
+		"""The materials that serve a need `material` serves."""
+		return need_substitutes.substitutes_of(self._needs_served(), material)
+
+	def material_serves_a_need(self, material):
+		"""Whether the needs data names the material as serving some household need."""
+		return need_substitutes.serves_a_need(self._needs_served(), material)
 
 	def household_demand_units(self, prices_in_hours, population, income_per_capita):
 		"""{material: units a year} households (and what they buy through recipes) want at these labour-hour prices, with the

@@ -10,7 +10,7 @@ from .harness import check
 
 from sim.agents.country_view import CountryWorld
 from sim.diffusion.module import Diffusion
-from sim.engine import bridge_diffusion
+from sim.actors import country_rules
 from sim.tests import module_harness
 from sim.labour.labour_training import TrainingMixin
 
@@ -32,8 +32,7 @@ class Society:
 
 
 def literacy_of(country=None, field="literacy_general"):
-    game = Society()
-    return bridge_diffusion.legacy_country_literacy(game, country).get(field)
+    return country_rules.country_literacy(Society().actors, country).get(field)
 
 
 check("the home country's literacy is read from the home strata, whether named or not", abs(literacy_of() - 0.18) < 1e-12

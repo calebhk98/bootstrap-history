@@ -49,7 +49,7 @@ sim.hazards import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publishes)
   `hedge_steps`, `patron_death`, `capital_loss`, `staff_loss_words`, `world_hazard_data` (now `window.py`, `condition.py`, ...).
   `war_relief` moved from `military_rules.py` to `rules.py`; `leverage_of` stays there (polity's).
 - **The 25 reads from 14 modules are 50 views from 20 owners**, because the old code reached further than the catalogue's scan: the
-  seat switch (`legacy_act_as`), the dice (`legacy_dice`), the event-cause evaluator (`effective_hazard`), the tree's critical path
+  seat switch (`acting_as`), the dice (`game_random`), the event-cause evaluator (`effective_hazard`), the tree's critical path
   and closure, the founder's policy, the goal, the wage index, the mines, the strata. Which are bridged is in "Reads" below.
 - **The draft's "needs a second consumer" for `hazard_relief`** no longer applies: it is a quote.
 
@@ -116,7 +116,7 @@ Views of finished modules: `year`, `civilisation`, `seat_list`, `techniques_held
 `start_check`, `project_cost`, `visible_to_player`, `hazard_counter_rows`, `corpus_hedge_tiers`, `corpus_nodes`, `mechanic`,
 `running_mechanics`, `civ_diffusion`, `diffusible_ids`, `diffusion_relief`, `counter_supply_gap`, `standing`, `automation`,
 `money_per_labour_hour`, `price_index`, `money_text`, `money_real`, `event_log`, `acting_balance`, `staff`, `partners_in_agent_economy`,
-`weather_seed`, `legacy_dice`.
+`weather_seed`, `game_random`.
 
 Published by `bridge_hazards.py` under the name the owner will publish (each is deleted when its owner moves): `events_enabled`,
 `ended_seats`, `founder`, `goal` (seats); `losable_node_ids`, `critical_path`, `tree_closure` (knowledge and the tree); `active_projects`,
@@ -124,8 +124,8 @@ Published by `bridge_hazards.py` under the name the owner will publish (each is 
 (workforce); `country_strata` (actors); `effective_hazard` (the event-cause evaluator, which reads a
 dozen owners and stays in the engine).
 
-Debts, raw objects or switches the module cannot do without: `legacy_act_as` (the module has no way to switch seats; the world
-phases act as each seat in turn), `legacy_said_once` (the `_said_condition` set the levy shares), and the reused `legacy_dice`.
+Debts, raw objects or switches the module cannot do without: `acting_as` (the module has no way to switch seats; the world
+phases act as each seat in turn), `legacy_said_once` (the `_said_condition` set the levy shares), and the reused `game_random`.
 
 ## Forwarders left (`sim/engine/forward_hazards.py`)
 

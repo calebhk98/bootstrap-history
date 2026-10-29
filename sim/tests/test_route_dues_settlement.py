@@ -7,7 +7,6 @@ from types import SimpleNamespace
 
 from sim.agents.api import DUES_CAUSE
 
-from sim.engine import bridge_freight
 from sim.actors.world_trade import TradeView
 from sim.tests.world_stand_in import fake_needs
 from sim.freight import rules
@@ -17,7 +16,6 @@ from sim.freight.route import Leg, Route
 from sim.geography.api import dues_hours_per_tonne
 from sim.ledger.api import PayActor
 from sim.tests import module_harness
-from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -70,25 +68,6 @@ class PayRouteDuesCommand(unittest.TestCase):
         module = self.freight(lambda tile: None)
         self.assertEqual(module.pay_route_dues(PayRouteDues("trader", ROUTE, 10.0)), 0.0)
         self.assertEqual(module_harness.sent(module), [])
-
-
-class TreasuryOfAHolder(unittest.TestCase):
-    """The bridge's `holder_treasury` view on a stand-in sim (the ledger's `PayActor` is test_ledger_commands)."""
-
-    def sim(self, governments=()):
-        opened = []
-        registry = SimpleNamespace(
-            government_of=lambda holder: SimpleNamespace(actor_id="government:" + holder) if holder in governments else None,
-            get=lambda actor_id: SimpleNamespace(actor_id=actor_id) if actor_id.split(":")[-1] in governments or actor_id == "trader" else None,
-            ensure_government=lambda country: opened.append(country) or SimpleNamespace(actor_id="government:" + country))
-        return Game(state=SimpleNamespace(seats={"seat1": None}), actors=registry,
-                               seat_party=lambda seat_id: SimpleNamespace(actor_id="party of " + seat_id)), opened
-
-    def test_a_seat_holder_is_paid_as_itself_and_a_country_into_its_government(self):
-        sim, _opened = self.sim(governments=("rome",))
-        self.assertEqual(bridge_freight.holder_treasury(sim, "seat1"), "seat1")
-        self.assertEqual(bridge_freight.holder_treasury(sim, "rome"), "government:rome")
-        self.assertEqual(bridge_freight.holder_treasury(sim, "carthage"), "government:carthage")
 
 
 class Cargo(TradeView):

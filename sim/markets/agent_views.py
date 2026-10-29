@@ -123,3 +123,14 @@ class AgentViews:
 
 	def coin_stock_value(self):
 		return self.economy.coin_stock_value()
+
+	def agent_rate(self):
+		"""The agent economy's loanable-funds rate, or None while it opens."""
+		return self.economy.agent_rate()
+
+	def agent_credit_room(self, borrower_id):
+		"""(True, room) when the agent economy answers, with room None before lenders have met; (False, None) while it opens."""
+		return self.economy.agent_credit_room(borrower_id)
+
+	def agent_economy_opened(self):
+		return self.economy.agent.opened()

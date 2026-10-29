@@ -25,6 +25,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("automation", "automation", **_LIVE),
 		ViewSpec("civilisation", "civilisation_of_game", **_LIVE),
 		ViewSpec("civilisation_record", "civilisation_record", kind=KEYED, **_LIVE),
+		ViewSpec("opening_civilisation", "opening_civilisation", **_LIVE),
 		ViewSpec("game_config", "game_config", **_LIVE),
 		ViewSpec("game_setting", "game_setting", kind=KEYED, **_LIVE),
 		ViewSpec("start_year", "start_year", **_LIVE),

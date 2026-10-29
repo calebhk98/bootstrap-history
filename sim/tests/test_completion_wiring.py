@@ -40,7 +40,7 @@ class Finishing:
         self.failed, self.applied, self.granted_staff, self.transfers = [], [], [], []
         policy = {"auto_open": auto_open, "auto_hire": hire_mode}
         module = self.module = projects_host.build(
-            tree={NODE: {"name": "A school"}}, legacy_projects=self.state.projects, techniques_held=lambda: frozenset(self.knowledge.seat.done), legacy_dice=SimpleNamespace(random=lambda: 0.5),
+            tree={NODE: {"name": "A school"}}, legacy_projects=self.state.projects, techniques_held=lambda: frozenset(self.knowledge.seat.done), game_random=SimpleNamespace(random=lambda: 0.5),
             alarm_of=lambda node: 2.0, state_interest=lambda node: 1.0, year=100, is_venture=lambda node_id: venture,
             mechanic=lambda name: {NODE: {"scholars": 1.0}} if name == "staff_grant" else {}, tech_effects=lambda node_id: None,
             automatic_policy=lambda name: policy[name], capability_sets=(frozenset(), frozenset(), {}))

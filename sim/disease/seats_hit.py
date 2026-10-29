@@ -17,7 +17,7 @@ class SeatsHit:
             return 0.0
         name = " and ".join(self._names or ["an epidemic"])
         for seat_id in self.needs.seat_list()["playing"]:
-            with self.needs.legacy_act_as(seat_id):
+            with self.needs.acting_as(seat_id):
                 staff = self.needs.staff()
                 people_before = staff["scholars"] + staff["artisans"] + sum(staff["employees"].values())
                 staff_before = self.needs.staff_snapshot()

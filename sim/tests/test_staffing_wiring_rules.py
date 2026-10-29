@@ -19,7 +19,7 @@ def _events(module):
 
 
 def Closing(closed_keys):
-    module = projects_host.build(concern_rows_stopped=lambda planned: 123.45)
+    module = projects_host.build(concern_market=lambda: {"a": 123.45})
     module.recorded = []
     module.STAFFING_REMEDIES = ()
     module.concerns_to_close_for_staffing = lambda: ["a"] if closed_keys else []

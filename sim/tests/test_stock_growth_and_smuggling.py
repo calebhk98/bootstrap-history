@@ -18,7 +18,7 @@ from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from sim.actors.world import ActorWorld
 from sim.agents.api import ActorRegistry, ActorsState, cast_from_civilisations, seed_cast
 from sim.tests.world_stand_in import fake_needs
-from sim.engine import bridge_living_stock as bridge
+from sim.actors import country_rules
 from sim.polity.state import PolitySeat
 from sim.tests import land_host, polity_host
 from sim.engine.data import load_civ
@@ -133,7 +133,7 @@ class Game:
             "partners": self.trade.partners, "partner": self.trade.partner,
             "partner_refusal": self.trade.partner_refusal, "partner_gate": self.trade.partner_gate,
             "partner_carry": self.trade.partner_carry,
-            "partner_catch_chance": lambda civ, share: bridge.partner_catch_chance(self, civ, share)}
+            "partner_catch_chance": lambda civ, share: country_rules.partner_catch_chance(self.actors, self.view("actor_world")(), civ, share)}
         answers = {
             ChangeStock: lambda command: apply_to_own_stock(self, command),
             PayEdge: lambda command: self.purse.pay(command.amount, command.purpose),
@@ -286,7 +286,7 @@ tonnes = 0.1 * tonnes_per_unit(EGGS)
 check("the carrying is agents and freight over the tonnes, and not the price",
       abs(terms["cost"] - 15.0 * tonnes) < 1e-12, terms["cost"])
 check("what the route loses is lost from what arrives", abs(terms["arrives_units"] - 0.09) < 1e-12, terms)
-capacity = bridge.partner_catch_chance(buyer, PARTNER, 1.0)
+capacity = country_rules.partner_catch_chance(buyer.actors, buyer.view("actor_world")(), PARTNER, 1.0)
 check("the chance of being caught is the state's reach times how much of its holding goes",
       0.0 < terms["chance_caught"] <= capacity, terms["chance_caught"])
 bigger = buyer.module.stock_smuggle_quote(EGGS, 0.4, PARTNER)

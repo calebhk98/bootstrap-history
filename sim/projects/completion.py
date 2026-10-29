@@ -97,7 +97,7 @@ class Completion:
 		node = needs.tree_nodes()[node_id]
 		projects = needs.legacy_projects()
 		_risk_this_attempt = self.effective_risk(node_id)
-		if attempt_fails(needs.legacy_dice().random(), _risk_this_attempt):
+		if attempt_fails(needs.game_random().random(), _risk_this_attempt):
 			self._fail_attempt(node_id, _risk_this_attempt)
 			return
 		goal_before = self.goal_snapshot()
@@ -219,7 +219,7 @@ class Completion:
 		instrument_name = needs.tree_nodes()[spec["instrument"]]["name"]
 		if failure_teaches(spec, needs.techniques_held()):
 			low, high = SHORTFALL_FACTOR_RANGE
-			return measured_report(spec, needs.legacy_dice().uniform(low, high), instrument_name)
+			return measured_report(spec, needs.game_random().uniform(low, high), instrument_name)
 		return unmeasured_report(spec, instrument_name)
 
 	def lose_what_was_risked(self, node_id):

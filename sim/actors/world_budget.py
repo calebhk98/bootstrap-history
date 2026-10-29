@@ -84,7 +84,7 @@ class BudgetView:
 	def equipment_kg_per_soldier(self) -> float:
 		"""Iron and ammunition one equipped soldier uses a year, at the equipment the state's
 		armies have taken up from the founder's work."""
-		return self.needs.military_equipment_burden(self.needs.state_military_diffusion())
+		return self.needs.military_equipment_burden(self.needs.diffusion_index["military"])
 
 	def military_work_ids(self) -> Tuple[str, ...]:
 		return tuple(self.needs.diffusible_ids["military"])
@@ -129,7 +129,7 @@ class BudgetView:
 		for seat_id in needs.seat_list()["playing"]:
 			seat = needs.legacy_seats()[seat_id]
 			if (seat.country or home) == (country or home) and seat.holds_household:
-				with needs.legacy_act_as(seat_id):
+				with needs.acting_as(seat_id):
 					payers.append((self.visible_scale_of(needs.legacy_household_actor()), max(0.0, needs.revenue_estimate())))  # type: ignore[attr-defined]
 		return payers
 
@@ -148,6 +148,6 @@ class BudgetView:
 		home = self.registry.state.home_country
 		payers = self.seat_taxpayers(home)
 		if not needs.seat_list()["playing"]:
-			with needs.legacy_act_as(needs.acting_seat()):
+			with needs.acting_as(needs.acting_seat()):
 				payers.append((self.visible_scale_of(needs.legacy_household_actor()), max(0.0, needs.revenue_estimate())))  # type: ignore[attr-defined]
 		return payers + self.firm_taxpayers(home)

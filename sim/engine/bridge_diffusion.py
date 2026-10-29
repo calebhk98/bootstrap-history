@@ -3,32 +3,13 @@
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old
 code did, and is never cached. Each command applies what the old code did inline. `legacy_country_literacy` is raw
 state the module still mutates in place (the strata of the actors' cast); it goes when actors move."""
-from sim.agents.api import CountryLiteracy, seed_strata
-from sim.assembly.api import KEYED, QUOTE
+from sim.assembly.api import KEYED
 
 from . import category_traits
 from .bridge import bridge_view
 
 
 # ---- actors: the strata that hold the reading shares ----
-
-@bridge_view("legacy_country_literacy", kind=KEYED)
-def legacy_country_literacy(sim, country):
-    """The reading shares of `country` (the home country when None), owned only by the country's strata."""
-    sim.view("seeded_actor_registry")()
-    if not sim.view("cast")().of_kind("stratum"):
-        seed_strata(sim.view("cast")(), None)
-    home = sim.view("cast")().state.home_country
-    country = country or home
-    return CountryLiteracy(actor for actor in sim.view("cast")().of_kind("stratum")
-                           if (actor.record.country or home) == country)
-
-
-@bridge_view("state_knowledge")
-def state_knowledge(sim):
-    """The nodes the home government holds."""
-    return sim.view("state_treasury")().knowledge
-
 
 # ---- knowledge and production ----
 

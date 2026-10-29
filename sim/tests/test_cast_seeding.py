@@ -7,7 +7,7 @@ import types
 import unittest
 
 from sim.actors.module import Actors
-from sim.agents.api import ActorsState, cast_from_civilisations, shipped_extensions
+from sim.agents.api import ActorsState, shipped_extensions
 from sim.engine.data import load_civ
 
 from .module_harness import build
@@ -16,11 +16,11 @@ PARTNERS = ["han_china_100ad", "norse_900ad"]
 
 
 def game():
-    opening = cast_from_civilisations(load_civ("rome_100ad"), [load_civ(partner) for partner in PARTNERS])
     shipped = shipped_extensions()   # what the providers of the five actor points answer in a game with no mods
     module = build(Actors, views={"actor_kinds": lambda: [shipped.kinds], "actor_spawners": lambda: [shipped.spawners],
                                   "actor_world_scope": lambda: shipped.world_scope, "actor_policies": lambda: [shipped.policies],
-                                  "player_commands": lambda: [shipped.commands], "opening_cast": lambda: opening}, world=ActorsState())
+                                  "player_commands": lambda: [shipped.commands], "opening_civilisation": lambda: load_civ("rome_100ad"),
+                                  "partners": lambda: PARTNERS, "civilisation_record": load_civ}, world=ActorsState())
     return types.SimpleNamespace(actors=module.cast(), seed=module.seed_opening_cast)
 
 

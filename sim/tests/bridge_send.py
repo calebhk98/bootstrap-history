@@ -4,7 +4,7 @@ moved (`ModEffects` sends `RecordWorldEvent`; a `WriteStore` goes to the game's 
 `game.world_event_log` (the hazards module over a fresh world)."""
 from typing import Any
 
-from sim.engine import bridge, bridge_campaigns  # noqa: F401  (importing the bridge file registers its commands)
+from sim.engine import bridge  # noqa: F401
 from sim.hazards.api import RecordWorldEvent
 from sim.stores.api import WriteStore
 from sim.tests import event_stand_in, hazards_host

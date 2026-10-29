@@ -1,4 +1,5 @@
 """The commands the markets module applies."""
+from sim.economy import api as economy_api
 from sim.rekey import rekey
 
 
@@ -42,3 +43,12 @@ class Applying:
 	def sell_material(self, command):
 		market = self.goods_market
 		return market.sell(market.acting, command.material, command.tonnes)
+
+	def found_bank_from_outside(self, command):
+		agent = self.economy.agent
+		if not agent.opened():
+			return None
+		economy = agent.economy()
+		units = float(command.capital) / economy.setup.coin_per_unit
+		bank = economy_api.found_bank_from_outside(economy, self.clock.acting_seat, units, self.needs.year(), economy_api.EDGE_EXCHANGE)
+		return None if bank is None else bank.agent_id

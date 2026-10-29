@@ -43,7 +43,7 @@ class DisclosureView:
 		"""Whether the state holds a technology that declares the `patent_grant` mechanic, in its own
 		knowledge or in what its society already knows."""
 		state = self.government()
-		return any(state.knows(node_id, self) for node_id in self.needs.nodes_with_mechanic("patent_grant"))
+		return any(state.knows(node_id, self) for node_id in self.needs.mechanic["patent_grant"])
 
 	def patent_entry(self, node_id: str) -> Any:
 		"""The live patent on an invention as {"holder", "expires", "licensees"}, or None."""

@@ -18,7 +18,7 @@ from .module import Hazards
 from .state import OUTPUT, WORLD_EVENTS, HazardsSeat, HazardsWorld
 
 READS_BY_OWNER = {
-	"core": ("year", "civilisation", "events_enabled", "legacy_dice", "legacy_act_as", "legacy_said_once", "money_text",
+	"core": ("year", "civilisation", "events_enabled", "game_random", "acting_as", "legacy_said_once", "money_text",
 	         "effective_hazard"),
 	"seats": ("seat_list", "ended_seats", "founder", "goal", "automation"),
 	"knowledge": ("techniques_held", "techniques_granted", "tree", "tree_nodes", "visible_to_player", "losable_node_ids",

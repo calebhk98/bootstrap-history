@@ -174,7 +174,7 @@ class PortWorld(ForeignReads):
 	# ---- the seats ----
 
 	def act_as(self, seat_id):
-		return self._needs.legacy_act_as(seat_id)
+		return self._needs.acting_as(seat_id)
 
 	def acting_country(self):
 		return self._needs.acting_country()

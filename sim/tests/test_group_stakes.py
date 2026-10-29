@@ -347,13 +347,6 @@ check("the idle hours of a trade are summed over its markets, with the hours off
 from sim.economy.record import EconomyRecord
 check("the record keeps the idle hours through a save", "hours_idle" in EconomyRecord.__dataclass_fields__)
 
-# ---- goods that serve the same need substitute for one another -----------------------------------------------------------------------
-from sim.engine import need_substitutes
-check("goods that serve the same need are substitutes", "maize_kg" in need_substitutes.substitutes_of("wheat_kg"))
-check("a good is not its own substitute", "wheat_kg" not in need_substitutes.substitutes_of("wheat_kg"))
-check("the goods that serve one need are listed", "wheat_kg" in need_substitutes.serving("food"))
-check("a good no need names has no substitutes", need_substitutes.substitutes_of("nothing_at_all") == frozenset())
-
 # ---- a civilisation's data founds its church and academy ---------------------------------------------------------------------------------
 import glob
 import json
