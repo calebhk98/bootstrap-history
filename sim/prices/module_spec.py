@@ -8,10 +8,10 @@ from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from .module import Prices
 
 READS_BY_OWNER = {
-    "knowledge": ("civilisation", "year", "techniques_granted", "techniques_held", "operating"),
+    "knowledge": ("civilisation", "civilisation_record", "year", "techniques_granted", "techniques_held", "operating"),
     "production": ("techniques_in_use", "price_epoch", "is_venture", "concern_baskets_now", "venture_ramp"),
     "finance": ("market_rate",),
-    "workforce": ("money_per_labour_hour", "hour_wage", "farm_land_hectares"),
+    "workforce": ("money_per_labour_hour", "hour_wage", "farm_land_hectares", "wage_schedule_for"),
     "markets": ("household_prices", "material_seller", "agent_wage", "agent_land_rent", "producers_stamp"),
     "materials": ("material_pool",),
 }
@@ -22,6 +22,9 @@ _LIVE = dict(cached=False)
 MODULE_SPECS = (ModuleSpec(
     "prices", Prices,
     publishes=(
+        ViewSpec("calculated_goods_prices", "calculated_goods_prices", kind=QUOTE, **_LIVE),
+        ViewSpec("held_goods_prices_in_hours", "held_goods_prices_in_hours", kind=QUOTE, **_LIVE),
+        ViewSpec("partner_own_economy", "partner_own_economy", kind=KEYED, **_LIVE),
         ViewSpec("material_prices", "material_prices", **_LIVE),
         ViewSpec("material_price", "material_price", kind=KEYED, **_LIVE),
         ViewSpec("price_tables", "price_tables", **_LIVE),
