@@ -76,6 +76,10 @@ def attach(sim: Any) -> None:
 	assembly.seat_records = lambda: sim.state.seats
 	assembly.follow = lambda seat_id: setattr(sim.state, "acting_seat", seat_id)
 	assembly.mod_memory = lambda: sim.state.interface
+	from . import opening_money, seat_move, seat_registry
+	assembly.add_seat = lambda seat_id, template: seat_registry.register_seat(sim, seat_id, template)
+	assembly.move_seat = lambda from_id, to_id: seat_move.move_seat(sim, from_id, to_id)
+	assembly.reprice_tree = lambda: opening_money.reprice_tree(sim)
 	from .bridge import BRIDGE_ID
 	if BRIDGE_ID in assembly.modules:
 		assembly.modules[BRIDGE_ID].sim = sim

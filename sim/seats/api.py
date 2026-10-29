@@ -1,9 +1,9 @@
 """The seats package's only door."""
 
-WALL = "two-way"  # nothing here imports sim/engine/; the engine bridge hands it the seat registry it still keeps
+WALL = "two-way"  # nothing here imports sim/engine/; the seat registry is the assembly's
 
-from .commands import (AnswerOffer, ApplyForPatent, EndRun, ForgetGoalCaches, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat, MakeOffer,
-                       MoveSeat, RecordGoalReached, RegisterSeat, RememberGoalClosure, SetFounderLife, SetGoal, SetPolicy, SetSeatHolder)
+from .commands import (AnswerOffer, ApplyForPatent, EndRun, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat, MakeOffer,
+                       RecordGoalReached, RememberGoalClosure, RememberGoalFloor, SetFounderLife, SetGoal, SetPolicy, SetSeatHolder)
 from .builds import builders_of, built_by_any, disclosure_modes, holders_of, licensors_of, operating_anywhere
 from .country import owner_of_seat, partner_country_of_seat, patron_grant_share
 from .dealing_rules import SEAT_DEALT_KEYS, unsupported_reason

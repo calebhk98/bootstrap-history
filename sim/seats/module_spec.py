@@ -1,18 +1,19 @@
 """The seats module's spec (sim/assembly).
 
-Its reads are views of owners that have not moved yet, published by the engine bridge (sim/engine/bridge_seats.py and the
-other bridge files) under the name the owner will publish, except the `legacy_*` ones: the seat registry, the acting seat's
-projects and fog switch, the actor registry, the agent economy's world and the game's random source, all state the module
-still shares with the engine. They go when that state moves. Every view is uncached: the registry, a founder's death and
-the held sets are written outside the module's commands (docs/architecture/catalogue/seats.md lists each writer)."""
-from sim.assembly.api import FIRST, KEYED, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
+Every view is uncached: the registry, a founder's death and the held sets are written outside the module's commands
+(docs/architecture/catalogue/seats.md lists each writer). The registry is the assembly's: the module adds and moves seats by the
+assembly's commands `AddSeat` and `MoveSeat`."""
+from sim.assembly.api import FIRST, KEYED, QUOTE, AddSeat, ExtensionPoint, ModuleSpec, MoveSeat, PhaseHook, ViewSpec
 from sim.diffusion.api import RekeyDisclosures
 from sim.knowledge.api import ForgetTechnique, LearnTechnique, RevealNodes
+from sim.ledger.api import OpenPurse
+from sim.projects.api import WatchActive
 from sim.reporting.api import RecordEvent
-from sim.ventures.api import StopOperating
+from sim.ventures.api import StopOperating, WatchBusiness
+from sim.workforce.api import WatchStaff
 
-from .commands import (EndRun, ForgetGoalCaches, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat,
-                       MoveSeat, RecordGoalReached, RegisterSeat, RememberGoalClosure, SetFounderLife, SetGoal, SetPolicy, SetSeatHolder)
+from .commands import (EndRun, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat, RecordGoalReached,
+                       RememberGoalClosure, RememberGoalFloor, SetFounderLife, SetGoal, SetPolicy, SetSeatHolder)
 from .module import Seats
 from .state import SeatsSeat
 
@@ -25,7 +26,7 @@ READS_BY_OWNER = {
     "workforce (people)": ("staff",),
     "ventures": ("operating", "operating_by_seat"),
     "diffusion": ("disclosures", "copy_difficulty", "literacy"),
-    "actors": ("seeded_actor_registry", "cast", "actor_world"),
+    "actors": ("seeded_actor_registry", "cast", "actor_world", "state_treasury"),
     "workforce": ("seat_base_tile",),
     "materials": ("generation_breakdown",),
     "hazards": ("hazard_relief", "hazard_relief_entries"),
@@ -59,6 +60,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("patronage", "patronage", seat_scoped=True, **_LIVE),
         ViewSpec("dissolution_terms", "dissolution_terms", **_LIVE),
         ViewSpec("goal_closure", "goal_closure", **_LIVE),
+        ViewSpec("goal_critical_floor", "goal_critical_floor", seat_scoped=True, **_LIVE),
         ViewSpec("win_condition_text", "win_condition_text", kind=QUOTE, **_LIVE),
         ViewSpec("dead_reasons", "dead_reasons", **_LIVE),
         ViewSpec("win_condition_value", "win_condition_value", kind=QUOTE, seat_scoped=True, **_LIVE),
@@ -69,9 +71,10 @@ MODULE_SPECS = (ModuleSpec(
     applies=((JoinSeat, "join_seat"), (JoinCastSeats, "join_cast_seats"), (HandOverSeat, "hand_over_seat"),
              (SetGoal, "set_goal"), (RecordGoalReached, "record_goal_reached"), (EndRun, "end_run"),
              (SetFounderLife, "set_founder_life"), (SetPolicy, "set_policy"), (SetSeatHolder, "set_seat_holder"),
-             (RememberGoalClosure, "remember_goal_closure"), (ForgetGoalClosure, "forget_goal_closure")),
+             (RememberGoalClosure, "remember_goal_closure"), (ForgetGoalClosure, "forget_goal_closure"),
+             (RememberGoalFloor, "remember_goal_floor")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(RegisterSeat, MoveSeat, ForgetGoalCaches, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent, StopOperating),
+    sends=(AddSeat, MoveSeat, OpenPurse, WatchActive, WatchBusiness, WatchStaff, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent, StopOperating),
     phases=(PhaseHook("hear_of_other_seats", "hear_of_other_seats"), PhaseHook("win_conditions", "check_win_conditions"),
             PhaseHook("founder_mortality", "founder_mortality")),
     # (condition) -> [(label, value, unit)] rows for a measurement goal's anatomy, or None for the shipped rows

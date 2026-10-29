@@ -71,7 +71,7 @@ from sim.projects.api import (Bribe, MothballWork, PostBounty, ReorderProjects, 
                               StartProject, StopProject)  # noqa: F401
 from sim.knowledge.api import RevealNodes, StartDoneYearRecord  # noqa: F401
 from sim.scenario.api import SetEndYear, SetFog, SetFuzzyEstimates  # noqa: F401
-from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, JoinSeat, MakeOffer, RememberGoalClosure, SetGoal, SetPolicy  # noqa: F401
+from sim.seats.api import AnswerOffer, ApplyForPatent, EndRun, HandOverSeat, JoinSeat, MakeOffer, RememberGoalClosure, RememberGoalFloor, SetGoal, SetPolicy  # noqa: F401
 from sim.ventures.api import OpenVenture, RollOut, SellConcern  # noqa: F401
 from sim.workforce.api import (BuildHousing, BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase,  # noqa: F401
                                NoteBuyRefusal, TrainStaff, WorkForWages)
@@ -264,11 +264,11 @@ def win_condition_anatomy(sim, condition):
 
 
 def goal_critical_floor(sim):
-    return getattr(sim, "_goal_critical_floor", None)
+    return sim.view("goal_critical_floor")()
 
 
 def set_goal_critical_floor(sim, years):
-    sim._goal_critical_floor = years
+    sim.send(RememberGoalFloor(years))
 
 
 def last_buy_refusal(sim):

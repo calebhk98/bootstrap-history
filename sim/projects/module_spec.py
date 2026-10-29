@@ -1,9 +1,6 @@
 """The projects module's spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_projects.py and
-the other bridge files) under the name the owner will publish, or a view of a module that has moved, except the `legacy_*`
-ones: raw state the module still shares with the engine, which go when that state moves. Grouped by the owner each is
-catalogued under (docs/architecture/catalogue). Every view the module publishes is uncached: the projects in hand change
+Every read is a view of the module that owns it, grouped by the owner each is catalogued under (docs/architecture/catalogue). Every view the module publishes is uncached: the projects in hand change
 under their own watch (any field of a record), so no channel can say when the answer moved."""
 from sim.assembly.api import FIRST, KEYED, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
 from sim.diffusion.api import ApplyTechEffects

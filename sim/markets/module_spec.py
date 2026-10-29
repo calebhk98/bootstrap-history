@@ -4,12 +4,12 @@ The module owns the book, the year's flows, the agent economy's record and the m
 goods categories, household demand and the market ceiling's attribution. The module builds the goods market and the port over the
 agent economy (they read the game through the views declared here, port_world.py), and every view it publishes is uncached: they
 write the flows and the record in place."""
-from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
+from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, RepriceTree, ViewSpec
 from sim.demography.api import RecordFoodEaten
 from sim.diffusion.api import NoteFirstRuns
 from sim.foreign_trade.api import ClosePartnerBooks, SettleFlow, SettleTraderCargo
 from sim.land.api import FinishWays
-from sim.ledger.api import ChangeStock, PayEdge, PayExchange, ReceiveFromEdge, ReceiveFromExchange
+from sim.ledger.api import ChangeStock, PayEdge, RescaleHouseholdMoney, PayExchange, ReceiveFromEdge, ReceiveFromExchange
 from sim.reporting.api import CloseRealOutput
 from sim.resources.api import DrawDeposit, FellTimber, RegrowTimber
 
@@ -25,6 +25,7 @@ READS_BY_OWNER = {
 	         "household_need_data",
 	         "price_index"),
 	"seats": ("seat_list",),
+	"assembly": ("registered_seats",),
 	"stores": ("store_book",),
 	"demography": ("population", "population_total", "pop_scale", "default_population", "farm_holdings"),
 	"actors": ("concern_versions", "concern_counts"),
@@ -100,11 +101,11 @@ MODULE_SPECS = (ModuleSpec(
 	         (ForgetActorOrders, "forget_actor_orders"), (NoteActorSale, "note_actor_sale"),
 	         (NoteActorPurchase, "note_actor_purchase"),
 	         (OpenMarketBook, "open_market_book_command"), (RenameMarketSeat, "rename_market_seat"),
-	         (MarkMoneyPricedAtEconomy, "mark_money_priced_at_economy"), (BuyMaterial, "buy_material"),
+	         (MarkMoneyPricedAtEconomy, "mark_money_priced_at_economy"), (RepriceOpeningMoney, "reprice_opening_money"), (BuyMaterial, "buy_material"),
 	         (SellMaterial, "sell_material"), (FoundBankFromOutside, "found_bank_from_outside")),
 	phases=(PhaseHook("market", "step_market"),),
 	kernels=KERNELS,
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(RecordFoodEaten, ClosePartnerBooks, CloseRealOutput, FinishWays, RepriceOpeningMoney, PayEdge, ReceiveFromEdge, ChangeStock, PayExchange, ReceiveFromExchange,
+	sends=(RecordFoodEaten, ClosePartnerBooks, CloseRealOutput, FinishWays, RepriceTree, RescaleHouseholdMoney, PayEdge, ReceiveFromEdge, ChangeStock, PayExchange, ReceiveFromExchange,
 	       SettleFlow, SettleTraderCargo, FellTimber, RegrowTimber, DrawDeposit, NoteFirstRuns),
 ),)

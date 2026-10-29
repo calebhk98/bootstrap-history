@@ -5,7 +5,7 @@ from sim.knowledge.api import LearnTechnique
 from sim.reporting.api import RecordEvent
 
 from . import goal_rules
-from .commands import ForgetGoalCaches, ForgetGoalClosure, RecordGoalReached, RememberGoalClosure, SetGoal
+from .commands import ForgetGoalClosure, RecordGoalReached, RememberGoalClosure, RememberGoalFloor, SetGoal
 from .goal_rules import AnatomyRow
 
 
@@ -32,11 +32,19 @@ class Goals:
         """What the acting seat's goal needs, once worked out; None until then, and again after the goal changes."""
         return self._closures.get(self.clock.acting_seat)
 
+    def goal_critical_floor(self) -> Optional[float]:
+        """The shortest road in years to the acting seat's goal, once worked out; None until then, and again after the goal changes."""
+        return self._critical_floors.get(self.clock.acting_seat)
+
+    def remember_goal_floor(self, command: RememberGoalFloor) -> None:
+        self._critical_floors[self.clock.acting_seat] = command.years
+
     def remember_goal_closure(self, command: RememberGoalClosure) -> None:
         self._closures[self.clock.acting_seat] = command.nodes
 
     def forget_goal_closure(self, command: ForgetGoalClosure) -> None:
         self._closures.pop(self.clock.acting_seat, None)
+        self._critical_floors.pop(self.clock.acting_seat, None)
 
     def win_condition_text(self, node: Dict[str, Any]) -> str:
         """The sentence that says what a node's win_condition asks for."""
@@ -45,7 +53,6 @@ class Goals:
     def set_goal(self, command: SetGoal) -> None:
         """Make a node the formal goal. A goal reached before keeps the year it was reached in."""
         self.seat.goal = command.node_id
-        self.needs.send(ForgetGoalCaches())
         self.forget_goal_closure(ForgetGoalClosure())
         self.seat.goal_year = self.seat.goal_years.get(command.node_id)
 

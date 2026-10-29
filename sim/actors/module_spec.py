@@ -73,6 +73,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("cast", "cast", **_LIVE),
 		ViewSpec("cast_state", "cast_state", **_LIVE),
 		ViewSpec("cast_recorded", "cast_recorded", **_LIVE),
+		ViewSpec("society_techs", "society_techs", seat_scoped=True, **_LIVE),
 		ViewSpec("government_figures", "government_figures", kind=KEYED, **_LIVE),
 		ViewSpec("lender_offers_made", "lender_offers_made", **_LIVE),
 		ViewSpec("cash_and_deposit", "cash_and_deposit", kind=KEYED, **_LIVE),

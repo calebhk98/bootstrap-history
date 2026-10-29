@@ -7,7 +7,8 @@ import unittest
 
 from sim.engine.saveload import goal_of_blob
 from sim.engine.state import deserialize_state, serialize_state
-from sim.seats.api import COUNTRY_SEAT, ForgetGoalCaches, HandOverSeat, MoveSeat, SetGoal, SetPolicy, SetSeatHolder
+from sim.assembly.api import MoveSeat
+from sim.seats.api import COUNTRY_SEAT, HandOverSeat, SetGoal, SetPolicy, SetSeatHolder
 from sim.seats.module import Seats
 from sim.seats.state import SeatsSeat
 from sim.tests import module_harness
@@ -27,7 +28,6 @@ class Commands(unittest.TestCase):
         module = seats_over(slots)
         module.set_goal(SetGoal("steel"))
         self.assertEqual((slots["a"].goal, slots["b"].goal), ("steel", "kept"))
-        self.assertIsInstance(module_harness.sent(module)[0], ForgetGoalCaches)
 
     def test_set_policy_writes_the_acting_seats_switch(self):
         slots = {"a": SeatsSeat(), "b": SeatsSeat()}

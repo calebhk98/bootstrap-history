@@ -13,11 +13,9 @@ from sim.actors.api import ALREADY_ABLE, GRANTED, NO_LICENSEE, TERMS_REFUSED, Gr
 from sim.actors.module import Actors
 from sim.actors.seat_parties import Ports
 from sim.agents.api import Business
-from sim.engine import bridge_seats
 from sim.knowledge.api import ReceiveTechniques
-from sim.ledger.api import OpenPurse
 from sim.refusal import Refusal
-from sim.seats.api import COUNTRY_SEAT, RegisterSeat, SeatsSeat
+from sim.seats.api import SeatsSeat
 from sim.seats.module import Seats
 from sim.tests import module_harness
 from sim.tests.money_host import MoneyHost
@@ -112,45 +110,6 @@ class TheOwnersPublishTheirRecords(unittest.TestCase):
         self.assertIs(module.seat_business("second"), seats["second"].business)
         self.assertEqual(set(module.seat_business("second").operating()), {"mill"})
         self.assertEqual(set(module.seat_business("founder").operating()), set())
-
-
-class RegisteringASeatOpensItsPurse(unittest.TestCase):
-    def register(self, template, capital):
-        sent = []
-        slots = {}
-
-        class Sim:
-            manual = False
-            state = SimpleNamespace(seats=slots)
-
-            def add_seat(self, seat_id, seat):
-                slots[seat_id] = seat
-
-            def send(self, command):
-                sent.append(command)
-
-            def view(self, name):
-                return lambda: SimpleNamespace(actor_id="government:han")
-
-            def act_as(self, seat_id):
-                import contextlib
-                return contextlib.nullcontext()
-
-            def _wrap_seat_containers(self):
-                pass
-
-        answer = bridge_seats.register_seat(Sim(), RegisterSeat("second", template, capital, 40.0))
-        return answer, sent
-
-    def test_a_household_seat_opens_its_account_with_the_capital_it_joined_with(self):
-        answer, sent = self.register({}, 250.0)
-        self.assertIsNone(answer)
-        self.assertEqual(sent, [OpenPurse("second", 250.0)])
-
-    def test_a_country_seat_holds_nothing_of_its_own(self):
-        answer, sent = self.register({"kind": COUNTRY_SEAT, "country": "han"}, 250.0)
-        self.assertIsNone(answer)
-        self.assertFalse(any(isinstance(command, OpenPurse) for command in sent))
 
 
 if __name__ == "__main__":

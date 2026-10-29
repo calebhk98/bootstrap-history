@@ -31,8 +31,9 @@ applies throughout (names spelled out, short comments, a test calls one function
 
 ## Changing what others own
 
-- Send the owner's command (`self.needs.send(Command(...))`). If the owner has not moved yet, apply the command
-  in your bridge file with `@bridge_command`, calling the engine exactly as the old code did.
+- Send the owner's command (`self.needs.send(Command(...))`). If what it changes is composition and no module's (the seat
+  registry, the tree object), the assembly's own module applies it (`sim/assembly/root_commands.py`), through a hook the game
+  sets on the assembly; the engine bridge applies no commands.
 - A command class lives with its owner: `sim/<owner>/commands.py`, exported by `sim/<owner>/api.py`, even while
   the owner has not moved (the package then holds only those two files, and the bridge applies the command).
 - A command's handler returns its outcome: a value, or a `Refusal` with a cause. A refusal is a string and so is

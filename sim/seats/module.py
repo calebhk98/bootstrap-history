@@ -1,7 +1,7 @@
 """The seats module: who plays, joining and handing over, goals and win conditions, dealings between seats, and sight.
 
-The seat registry (`state.seats`) stays on `Sim`; the module reads the ids through the assembly's `registered_seats`, switches seats
-with `act_as`, and changes the registry by the commands `RegisterSeat` and `MoveSeat`, which the engine applies."""
+The seat registry is the assembly's: the module reads the ids through `registered_seats`, switches seats with `act_as`, and
+changes the registry by the assembly's commands `AddSeat` and `MoveSeat`."""
 from typing import Any, Dict, List, Optional
 
 from sim.assembly.api import Module
@@ -20,6 +20,7 @@ class Seats(Run, Handover, Sight, Dealings, Goals, Founder, Module):
     def setup(self) -> None:
         self._conditioned: Optional[List[str]] = None   # node ids that carry a win_condition, built on first ask
         self._closures: Dict[str, Any] = {}   # seat id -> the nodes its goal needs, once worked out
+        self._critical_floors: Dict[str, float] = {}   # seat id -> the shortest road in years to its goal, once worked out
 
     def seat_holders(self, node_id: str) -> List[str]:
         """Ids of the seats that hold `node_id` at all, built or granted."""

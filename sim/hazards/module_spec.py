@@ -1,8 +1,6 @@
 """Hazards' module spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_hazards.py and
-bridge_shared.py) under the name the owner will publish, or a view of a module that has moved. Grouped by the owner each is
-catalogued under (docs/architecture/catalogue)."""
+Every read is a view of the module that owns it. Grouped by the owner each is catalogued under (docs/architecture/catalogue)."""
 from sim.assembly.api import QUOTE, ModuleSpec, PhaseHook, ViewSpec
 from sim.coin.api import PlunderHousehold
 from sim.demography.api import CutPopulation, KillPeople, RefreshDemographicIndexes

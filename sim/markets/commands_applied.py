@@ -1,5 +1,7 @@
 """The commands the markets module applies."""
+from sim.assembly.api import RepriceTree
 from sim.economy import api as economy_api
+from sim.ledger.api import RescaleHouseholdMoney
 from sim.rekey import rekey
 
 
@@ -35,6 +37,16 @@ class Applying:
 
 	def mark_money_priced_at_economy(self, command):
 		self.world.money_from_economy = True
+
+	def reprice_opening_money(self, command):
+		"""From now the money an hour of work is worth is the economy's unskilled wage. `command.before` is the figure the
+		game's money was counted at; every seat's purse and the tree's money fields move by the ratio of the two."""
+		self.mark_money_priced_at_economy(command)
+		ratio = self.needs.money_per_labour_hour() / command.before
+		for seat_id in self.needs.registered_seats():
+			with self.act_as(seat_id):
+				self.needs.send(RescaleHouseholdMoney(ratio))
+		self.needs.send(RepriceTree())
 
 	def buy_material(self, command):
 		market = self.goods_market

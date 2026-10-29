@@ -44,7 +44,7 @@ class ScoreGame(FactViews):
         self.wage = 100.0
         self.state = SimpleNamespace(acting_record=SimpleNamespace(founder=FounderState(),
                                      interface={}, seat_progress=SimpleNamespace(score_last_seen=None)))
-        self._goal_critical_floor = 20.0
+        self.goal_critical_floor = 20.0
         self.shut_for_staff = {}
         self.labour = SimpleNamespace(
             headcount=lambda: self.headcount,

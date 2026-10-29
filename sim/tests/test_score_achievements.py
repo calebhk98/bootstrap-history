@@ -14,7 +14,8 @@ def stand_in(ever_closed_for_staff=(), shut_for_staff=None, forgotten=None, inso
         goal="goal", goal_year=150, cfg={"start_year": 100}, forgotten=forgotten, shut_for_staff=shut_for_staff,
         state=Game(projects=Game()),
         insolvent_years=insolvent_years, interest_paid=0.0,
-        view=lambda name: (lambda: set(ever_closed_for_staff)) if name == "ever_closed_for_staff" else (lambda: {"slaves": slaves, "manumitted_total": 0}))
+        view=lambda name: {"ever_closed_for_staff": lambda: set(ever_closed_for_staff), "goal_critical_floor": lambda: None}.get(
+            name, lambda: {"slaves": slaves, "manumitted_total": 0}))
 
 
 def won(sim, name):

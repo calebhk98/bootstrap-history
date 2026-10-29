@@ -1,5 +1,4 @@
-"""The commands the seats module owns. Seat registry commands (`RegisterSeat`, `MoveSeat`) are applied by the engine
-bridge while the registry stays on `Sim`."""
+"""The commands the seats module owns. The registry's own (`AddSeat`, `MoveSeat`) are the assembly's: it keeps each seat's record."""
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
@@ -61,26 +60,9 @@ class AnswerOffer(Command):
 
 
 @dataclass(frozen=True)
-class RegisterSeat(Command):
-    """Put a new seat in the seat registry (applied by the engine, which keeps the registry): built from `template`
-    with `capital` in the society's coin and `founder_years` of life."""
-    seat_id: str
-    template: Dict[str, Any]
-    capital: float
-    founder_years: float
-
-
-@dataclass(frozen=True)
-class MoveSeat(Command):
-    """Move `from_id`'s seat to `to_id` in the registry and rename it in every store keyed by seat id (applied by the
-    engine). The module's own stores are renamed by the module."""
-    from_id: str
-    to_id: str
-
-
-@dataclass(frozen=True)
-class ForgetGoalCaches(Command):
-    """Drop what the engine derived from the acting seat's goal besides the road to it (applied by the engine)."""
+class RememberGoalFloor(Command):
+    """Keep `years`, the shortest road in years to the acting seat's goal, for every reader of it (applied by the seats module)."""
+    years: float
 
 
 @dataclass(frozen=True)
@@ -91,7 +73,7 @@ class RememberGoalClosure(Command):
 
 @dataclass(frozen=True)
 class ForgetGoalClosure(Command):
-    """Drop what the acting seat's goal was found to need (applied by the seats module); the next ask works it out again."""
+    """Drop what the acting seat's goal was found to need, and the road in years to it (applied by the seats module); the next ask works them out again."""
 
 
 @dataclass(frozen=True)

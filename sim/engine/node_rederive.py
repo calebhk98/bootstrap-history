@@ -24,7 +24,7 @@ def remember_derived_gates(sim, held_techs):
 def refresh_derived_nodes(sim):
     """Re-derive node revenue and upkeep when the gate technologies the society holds (not the founder's
     own completions, which spread by imitation and disclosure) differ from the last derivation."""
-    held = sim._society_held_techs()
+    held = sim.view("society_techs")()
     gates = held_gate_set(held)
     if gates == sim._derived_gate_set:
         return

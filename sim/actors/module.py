@@ -14,11 +14,12 @@ from .lending import Lending
 from .literacy_views import LiteracyViews
 from .seat_exchange import SeatExchange
 from .seat_parties import SeatParties
+from .society import Society
 from .staff import Staff
 from .year import Year
 
 
-class Actors(Cast, CountryViews, LiteracyViews, CauseViews, Lending, SeatParties, SeatExchange, Staff, Contact, Year, Module):
+class Actors(Cast, Society, CountryViews, LiteracyViews, CauseViews, Lending, SeatParties, SeatExchange, Staff, Contact, Year, Module):
 
 	def setup(self) -> None:
 		self._registry = None   # never saved: rebuilt over the world slot on first use and after a load
