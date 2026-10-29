@@ -134,7 +134,6 @@ class Sim(
         # A civilization brings its own date, its own price level and its own
         # capacity to fund things. Norse Scandinavia does not start in 100 AD.
         self.price_index = float(self.civ.get("price_index", 1.0))
-        self._wage_index_base = float(self.civ.get("wage_index", 1.0))
         # the nation's people: the age structure its civilisation's size settles into (the demography module owns them)
         self.send(OpenPopulation())
         # Initial condition: cleared area is what feeds the starting
