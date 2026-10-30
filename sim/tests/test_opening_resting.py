@@ -3,11 +3,9 @@ rules from the start). Each rule below is one plain function over written-out in
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.economy import households_buffer_stock, inventory, opening_resting
-from sim.economy.producers import OUTPUT_CHANGE_SHARE_PER_YEAR
 
 
 class RestingPurseTests(unittest.TestCase):
@@ -37,21 +35,6 @@ class RestingStockTests(unittest.TestCase):
 
     def test_no_expected_sales_hold_no_stock(self):
         self.assertEqual(opening_resting.resting_output_stock(0.0, {"grain": 2.0}), {})
-
-
-class SpareCapacityTests(unittest.TestCase):
-    def test_plant_that_wears_a_twentieth_a_year_is_sized_to_cover_sales_and_the_growth_band_after_wear(self):
-        recipe = types.SimpleNamespace(plant_life_years=20.0)
-        capacity = 1.0 + opening_resting.spare_capacity_share(recipe)
-        self.assertAlmostEqual(capacity * (1.0 - 1.0 / 20.0) - OUTPUT_CHANGE_SHARE_PER_YEAR * capacity, 1.0)
-
-    def test_a_recipe_with_no_plant_keeps_the_stated_spare_share(self):
-        recipe = types.SimpleNamespace(plant_life_years=0.0)
-        self.assertEqual(opening_resting.spare_capacity_share(recipe), opening_resting.OPENING_SPARE_CAPACITY_SHARE)
-
-    def test_plant_that_wears_out_faster_than_the_band_allows_keeps_the_stated_share(self):
-        recipe = types.SimpleNamespace(plant_life_years=1.2)
-        self.assertEqual(opening_resting.spare_capacity_share(recipe), opening_resting.OPENING_SPARE_CAPACITY_SHARE)
 
 
 if __name__ == "__main__":

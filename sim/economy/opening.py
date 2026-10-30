@@ -13,12 +13,11 @@ from typing import Dict, List, Mapping, Tuple
 from sim.constants import declare
 from sim.refusal import Refusal
 
-from . import carriage_fleet_book, durable_stock, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_plans, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_plans, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
 from .merchants import Merchant
-from .opening_resting import OPENING_SPARE_CAPACITY_SHARE     # noqa: F401  (declared there; kept importable from here)
 from .producers import Producer
 from .producers_close import working_capital_target
 from .replaced import replaced
@@ -107,7 +106,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
-    _strike_opening_cash(setup, record)
+    _strike_opening_cash(setup, record, view)
     record.workforce = labour_state.opening_workforce(setup, record)   # the mint's capacity follows the money struck
     mint.seed_opening_metal(setup, record)
     opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
@@ -336,13 +335,13 @@ def _place_producers(setup, record, area_map, carriage, final_by_tile, incumbent
                                        setup.recipe_allowed)
             capacity_by_tile = location_inputs.place_oriented(
                 setup, record, area_map, carriage, recipe, fixed,
-                [(area, area_runs * (1.0 + opening_resting.spare_capacity_share(recipe))) for area, area_runs in shares], tiles)
+                [(area, area_runs) for area, area_runs in shares], tiles)
             _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_limits)
             continue
         if recipe_id in yields:
             shares = _where_it_crops(setup, recipe, shares)
         for area, area_runs in shares:
-            capacity_by_tile = location.opening_split(setup, recipe, area, area_runs * (1.0 + opening_resting.spare_capacity_share(recipe)))
+            capacity_by_tile = location.opening_split(setup, recipe, area, area_runs)
             capacity_by_tile = _at_area_yield(setup, recipe, capacity_by_tile, yields)
             _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_limits)
 
@@ -374,7 +373,6 @@ def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_lim
     the demand later suppliers are placed to meet. `capacity_by_tile` is the runs a year to work; the plant is
     as much larger as the share of it that works at the opening prices is smaller (opening_income.working_share)."""
     working_share = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages)
-    spare = opening_resting.spare_capacity_share(recipe)
     for tile, capacity in capacity_by_tile.items():
         producer_id = "producer:" + recipe_tile_key(recipe.recipe_id, tile)
         if capacity <= 0.0 or not _has_people(record, tile):
@@ -383,12 +381,12 @@ def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_lim
         if held is not None:      # a second share of the runs on the same tile (a pooled area's) adds to the producer
             record.producers[producer_id] = replaced(
                 held, capacity_runs=held.capacity_runs + capacity / working_share,
-                expected_sales=held.expected_sales + capacity / (1.0 + spare))
+                expected_sales=held.expected_sales + capacity)
         else:
             record.producers[producer_id] = Producer(
                 agent_id=producer_id, owner=households.cohort_id(tile, _richest_class(record, tile)),
                 recipe_id=recipe.recipe_id, tile=tile, capacity_runs=capacity / working_share,
-                expected_sales=capacity / (1.0 + spare),
+                expected_sales=capacity,
                 yield_factor=sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
                     recipe_tile_key(recipe.recipe_id, tile), 1.0)))     # a crop recipe is sized at its tile's yield; the engine adds the weather each year
         wanted = input_demand.setdefault(tile, {})
@@ -440,20 +438,24 @@ def _open_merchants(setup, record, prices, final_by_tile) -> None:
                                                  capital_base=capital)
 
 
-def _strike_opening_cash(setup, record) -> None:
-    """Each agent's opening purse is struck at the mint: a household's is the cash its consumption rule spends its
-    income from (opening_resting), a producer's the year's variable cost of its expected sales (the cash
-    `producers_close.working_capital_target` keeps), a merchant's its capital."""
+def _strike_opening_cash(setup, record, view) -> None:
+    """Each agent's opening purse is struck at the mint. A producer's is the year's variable cost of its expected sales
+    (the cash `producers_close.working_capital_target` keeps), a merchant's its capital. A household's follows from
+    what it owns of those producers (`equity.holdings`, what the spending rule reads as share wealth): the cash that
+    brings cash plus share wealth to the wealth target, at which the rule spends exactly its income
+    (opening_resting.resting_household_purse; Eurace manual 10.1.3)."""
     money = setup.currency_id
     transfers: List[Transfer] = []
-    for cohort in record.cohorts.values():
-        # the cash at which the consumption rule spends the income (no shares are held at the opening)
-        purse = opening_resting.resting_household_purse(cohort.last_year_income, share_wealth=0.0)
-        transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, purse, "opening coin"))
     for producer in record.producers.values():
         recipe = setup.recipes[producer.recipe_id]
         target = working_capital_target(recipe, producer.expected_sales, setup.opening_prices, setup.opening_wages)
         transfers.append(Transfer(EDGE_MINT, producer.agent_id, money, target, "opening coin"))
     for merchant in record.merchants.values():
         transfers.append(Transfer(EDGE_MINT, merchant.agent_id, money, merchant.capital_base, "opening coin"))
+    record.book.transfer_many([transfer for transfer in transfers if transfer.amount > 0.0])
+    owned = equity.holdings(setup, record, view)
+    transfers = []
+    for cohort in record.cohorts.values():
+        purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0))
+        transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, purse, "opening coin"))
     record.book.transfer_many([transfer for transfer in transfers if transfer.amount > 0.0])

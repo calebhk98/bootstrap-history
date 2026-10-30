@@ -164,7 +164,7 @@ class SecondShareOnATileTests(unittest.TestCase):
             opening._add_producers(setup, record, recipe, {"tile": 70.0}, wanted, {})
         [producer] = record.producers.values()
         self.assertAlmostEqual(producer.capacity_runs, 100.0)
-        self.assertAlmostEqual(producer.expected_sales, 100.0 / (1.0 + opening.OPENING_SPARE_CAPACITY_SHARE))
+        self.assertAlmostEqual(producer.expected_sales, 100.0)
 
 
 class SiteRoomTests(unittest.TestCase):
