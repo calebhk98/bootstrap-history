@@ -1,6 +1,6 @@
 # A handover keeps the replacement's held nodes but drops their finish years and what it had heard of
 
-**Status:** open - found while moving the held sets into the knowledge module
+**Status:** closed - the handover merges the replacement's finish years (earliest wins) and heard-of nodes through the same add path as every other learning.
 
 `HandOverTechniques` (`sim/knowledge/module.py` `hand_over_techniques`, sent by `sim/engine/seat_move.py` `move_seat`) merges the
 replacement's `done` and `granted` into the leaver's knowledge record, and the leaver's record then becomes the replacement's

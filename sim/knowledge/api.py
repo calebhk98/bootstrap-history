@@ -9,6 +9,7 @@ from .fog_words import (FOG_KIND_HINTS, FREE_PREREQ_NAMED_AT_MOST, HIDDEN_ID_PLA
                         hidden_prerequisite_kinds, missing_prereq_message, prerequisite_label, prerequisite_names,
                         scrub_hidden_ids, strip_self_play_advice, summary_sentence)
 from .category_traits import check_category_traits
+from .held import HeldWriteError
 from .save_fog import fog_mismatch
 from .starting_techs import declared_starting_techs
 from .state import KnowledgeSeat

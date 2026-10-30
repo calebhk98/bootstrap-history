@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 from sim.ledger.api import OpenPurse
 from types import SimpleNamespace
 
+from . import held_fixture
 from .harness import check
 
 from sim.agents import licence
@@ -57,10 +58,10 @@ state.seats["second"] = second
 host.send(OpenPurse("second", 40.0))
 first.modules["knowledge"] = KnowledgeSeat()
 first_knowledge, second_knowledge = first.modules["knowledge"], second.modules["knowledge"]
-first_knowledge.done.update({"base", "lathe", "loom"})
-first_knowledge.granted.add("base")
-first_knowledge.done_year = {"lathe": 120, "loom": 130}
-second_knowledge.done.add("kiln")
+held_fixture.hold(first_knowledge, {"base"}, granted=True)
+held_fixture.finish(first_knowledge, "lathe", 120)
+held_fixture.finish(first_knowledge, "loom", 130)
+held_fixture.hold(second_knowledge, {"kiln"})
 seats = state.seats
 disclosed = {FIRST_SEAT_ID: {}, "second": {}}   # what each seat chose for its inventions (the diffusion module keeps it)
 
@@ -71,10 +72,9 @@ check("the society counts every seat's work, a node built by the second seat alo
       seat_builds.built_by_any(techniques_of(seats)) == {"lathe", "loom", "kiln"}, None)
 check("the society copies from whichever seat finished it first",
       earliest_done_year(seats, "lathe", 200) == 120 and earliest_done_year(seats, "kiln", 200) == 200, None)
-second_knowledge.done.add("lathe")
-second_knowledge.done_year = {"lathe": 110}
+held_fixture.finish(second_knowledge, "lathe", 110)
 check("a node both built is as old as the earlier maker's", earliest_done_year(seats, "lathe", 200) == 110, None)
-second_knowledge.done.discard("lathe")
+held_fixture.drop(second_knowledge, {"lathe"})
 check("what one seat has revealed is not what another has", first_knowledge.revealed is not second_knowledge.revealed, None)
 
 # ---- hearing of another seat's work, as an onlooker does
@@ -96,7 +96,7 @@ check("distance hides it", heard_far == set(), heard_far)
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "publish", "published_year": 125, "licensees": {}}
 check("a published invention is heard of from a fair way off",
       "lathe" in nodes_heard_of(built_by_first(), first_operating, disclosed[FIRST_SEAT_ID], known_to_second(), OBSERVATION_RANGE_KM * 0.5, lambda node_id: 1.0), None)
-second_knowledge.revealed.add("loom")
+held_fixture.hear(second_knowledge, {"loom"})
 check("what a seat has already heard of is not heard again",
       "loom" not in nodes_heard_of(built_by_first(), first_operating, disclosed[FIRST_SEAT_ID], known_to_second(), 0.0, lambda node_id: 1.0), None)
 check("a secret leaks less than the visibility that makes an invention heard of",
@@ -133,11 +133,11 @@ check("an observer at the maker's door sees a secret less than a published work"
       world.exposure("lathe", Places.first) < world.exposure("loom", Places.first), None)
 check("an observer a range away from the maker sees half what one at the door does",
       abs(world.exposure("loom", Places.second) - world.exposure("loom", Places.first) / 2.0) < 1e-9, None)
-second_knowledge.done.add("lathe")
+held_fixture.hold(second_knowledge, {"lathe"})
 disclosed["second"]["lathe"] = {"mode": "publish", "published_year": 130, "licensees": {}}
 check("a second maker publishing the same invention makes it public knowledge",
       world.disclosure_mode("lathe") == "publish", world.disclosure_mode("lathe"))
-second_knowledge.done.discard("lathe")
+held_fixture.drop(second_knowledge, {"lathe"})
 del disclosed["second"]["lathe"]
 check("the best view of an invention is from the nearest maker's place",
       world.exposure("kiln", Places.second) >= world.exposure("kiln", Places.first), None)
@@ -147,9 +147,7 @@ check("the best view of an invention is from the nearest maker's place",
 def receive(nodes, granted):
     """What the engine's `ReceiveTechniques` does for the seat that is acting."""
     knowledge = state.seats[state.acting_seat].modules["knowledge"]
-    knowledge.done.update(nodes)
-    if granted:
-        knowledge.granted.update(nodes)
+    held_fixture.hold(knowledge, nodes, granted)
 
 
 host.on_receive = receive

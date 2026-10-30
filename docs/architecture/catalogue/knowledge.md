@@ -83,9 +83,13 @@ this module, which bumps the acting seat's channel (a handover bumps both seats'
 ## Commands applied
 
 `LearnTechnique(node_id, year, granted)` (sends `RefreshDoneCaches`), `ForgetTechnique(node_ids, year)` (likewise),
-`RevealFrom(node_id)`, `RevealNodes(node_ids)`, `ReceiveTechniques(node_ids, granted)` (an exchange or a licence: it does
-not tell the engine's caches, Complaint 735), `StartDoneYearRecord()` (a run begins recording from an empty record) and
-`HandOverTechniques(from_seat_id, to_seat_id)` (the seat registry's handover: answers how many nodes the leaver then holds).
+`RevealFrom(node_id)`, `RevealNodes(node_ids)`, `ReceiveTechniques(node_ids, granted)` (an exchange or a licence: held
+exactly as `LearnTechnique` holds a node; both call the module's one add path, `Knowledge._acquire`), `StartDoneYearRecord()` (a run begins recording from an empty record) and
+`HandOverTechniques(from_seat_id, to_seat_id)` (the seat registry's handover: the replacement's nodes, granted set, finish years and heard-of nodes join the leaver's, the
+earlier finish year winning; answers how many nodes the leaver then holds).
+
+A seat's held containers (`sim/knowledge/held.py`) refuse any write made outside the module's handlers (`HeldWriteError`);
+tests set a seat up with `sim/tests/held_fixture.py`, which uses the commands.
 Senders outside the module: the projects module (`LearnTechnique`, `RevealFrom`), seats (`LearnTechnique`, `ForgetTechnique`,
 `RevealNodes`, the handover through `sim/engine/seat_move.py`), hazards and polity (`ForgetTechnique`), the engine (the opening,
 `StartDoneYearRecord`, `ReceiveTechniques` for an exchange to a seat through `HouseholdParty`) and the UI (`RevealNodes`,
@@ -107,9 +111,8 @@ views: `active_projects` (projects), `corpus_hedge_tiers` and `corpus_dispersed`
   `economy_materials.py`, `economy_production.py`, `economy_mining.py`, `legitimacy.py`, `view_share.py`).
 - `_done_changed` is also called for a changed tree (`node_rederive.py`, `opening_money.py`), after the economy opens
   (`core.py`) and on a load (`economy.py`): not knowledge events.
-- `techniques_version` (seat-scoped) is the held set's change counter: bumped by `LearnTechnique`, `ForgetTechnique` and
-  `NoteTechniquesChanged` (the engine's `_done_changed` sends it), not by `ReceiveTechniques` (Complaint 735).
-- Complaint 735: an exchange or licence to a seat does not tell the engine's caches (`ReceiveTechniques` keeps that).
+- `techniques_version` (seat-scoped) is the held set's change counter: bumped by `LearnTechnique`, `ForgetTechnique`,
+  `ReceiveTechniques`, `HandOverTechniques` and `NoteTechniquesChanged` (the engine's `_done_changed` sends it).
 
 ## Forwarders left (`sim/engine/forward_knowledge.py`)
 

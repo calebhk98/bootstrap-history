@@ -84,7 +84,7 @@ check("deserialize_state: active projects are rebuilt as records, in the saved o
            projects_seat.active["z_mill"].lab_left, projects_seat.active["z_mill"].status) == (80.0, 300.0, 100.0, {"mason": 15.0}, "ACTIVE")
       and projects_seat.active["a_forge"].lab_left is None, None)
 knowledge = deserialize_state({"done": {"__set__": ["fire", "stone_cutting"]}, "done_year": {"fire": "3", "stone_cutting": 10}}, KnowledgeSeat)
-check("deserialize_state: done is a set, years are integers", knowledge.done == {"fire", "stone_cutting"} and type(knowledge.done) is set
+check("deserialize_state: done is a set, years are integers", knowledge.done == {"fire", "stone_cutting"} and isinstance(knowledge.done, set)
       and knowledge.done_year == {"fire": 3, "stone_cutting": 10}, None)
 check("deserialize_state: the seat's businesses are Businesses holding plants, the first the seat's own",
       ventures.businesses == [Business(business_id="founder", plants=[Plant(entry_key="loom", size=2.0, state="mothballed", reason="staff", since_year=40)])]

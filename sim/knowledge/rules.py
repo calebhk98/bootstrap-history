@@ -1,5 +1,5 @@
 """The knowledge module's rules as plain functions of plain values."""
-from typing import AbstractSet, Any, Callable, FrozenSet, Iterable, List, Mapping, NamedTuple, Optional, Tuple
+from typing import AbstractSet, Any, Callable, Dict, FrozenSet, Iterable, List, Mapping, NamedTuple, Optional, Tuple
 
 
 class SeatTechniques(NamedTuple):
@@ -33,6 +33,13 @@ def earliest_done_year(seats: Iterable[Tuple[AbstractSet[str], Optional[Mapping[
     holds it). Each seat is (the nodes it holds, the year it finished each)."""
     years = [(done_year or {}).get(node_id, default) for done, done_year in seats if node_id in done]
     return min(years) if years else default
+
+
+def years_to_add(own: Optional[Mapping[str, int]], other: Optional[Mapping[str, int]]) -> Dict[str, int]:
+    """The finish years `other` adds to a record `own`: a node only `other` dates, or both date and `other` dates it earlier
+    (the earliest year wins, as `earliest_done_year` reads them). Empty when `other` records nothing."""
+    own = own or {}
+    return {node_id: year for node_id, year in (other or {}).items() if node_id not in own or year < own[node_id]}
 
 
 def corpus_hedge(tiers: Iterable[Tuple[str, float, float]], held: AbstractSet[str], none_chance: float,

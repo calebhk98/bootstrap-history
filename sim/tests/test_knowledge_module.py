@@ -2,9 +2,11 @@
 module is built with plain values for the state it shares with the engine; no game."""
 QUICK_TOPIC = True
 
+import copy
 import unittest
 
 from sim.knowledge import rules
+from sim.knowledge.held import HeldWriteError
 from sim.knowledge.api import (ForgetTechnique, HandOverTechniques, KnowledgeSeat, LearnTechnique, NoteTechniquesChanged, ReceiveTechniques, ReplaceTree, RevealFrom,
                                RevealNodes, StartDoneYearRecord)
 from sim.production.api import RefreshDoneCaches
@@ -71,11 +73,11 @@ class TechniquesVersionTests(unittest.TestCase):
         module.note_techniques_changed(NoteTechniquesChanged())
         self.assertNotEqual(module.techniques_version(), before)
 
-    def test_receiving_techniques_leaves_the_version_where_it_was(self):
+    def test_receiving_techniques_moves_the_version(self):
         module = knowledge_over(projects())
         before = module.techniques_version()
         module.receive_techniques(ReceiveTechniques(("fire",)))
-        self.assertEqual(module.techniques_version(), before)
+        self.assertNotEqual(module.techniques_version(), before)
 
     def test_the_version_is_the_acting_seats(self):
         module = knowledge_over(projects())
@@ -201,18 +203,90 @@ class ViewTests(unittest.TestCase):
         self.assertGreater(fraction, 0.22)
 
 
+class HeldSetGuardTests(unittest.TestCase):
+    def test_the_held_sets_refuse_a_write_from_outside_the_module(self):
+        seat = projects(done={"fire"}, granted={"fire"}, revealed={"iron"}, done_year={"fire": 100}, forgotten={"wheel": 90})
+        for write in (lambda: seat.done.add("bronze"), lambda: seat.done.update({"bronze"}), lambda: seat.done.discard("fire"),
+                      lambda: seat.granted.add("bronze"), lambda: seat.revealed.add("alloy"), lambda: seat.revealed.clear(),
+                      lambda: seat.done_year.__setitem__("bronze", 1), lambda: seat.forgotten.pop("wheel"),
+                      lambda: setattr(seat, "done", {"bronze"}), lambda: setattr(seat, "done_year", {})):
+            with self.assertRaises(HeldWriteError):
+                write()
+        self.assertEqual((seat.done, seat.granted, seat.revealed, seat.done_year, seat.forgotten),
+                         ({"fire"}, {"fire"}, {"iron"}, {"fire": 100}, {"wheel": 90}))
+
+    def test_the_held_sets_refuse_an_in_place_operator(self):
+        seat = projects(done={"fire"})
+        with self.assertRaises(HeldWriteError):
+            seat.done |= {"bronze"}
+
+    def test_the_module_commands_still_write(self):
+        seat = projects()
+        module = knowledge_over(seat)
+        module.learn_technique(LearnTechnique("fire", year=100, granted=True))
+        module.reveal_nodes(RevealNodes(("iron",)))
+        module.forget_technique(ForgetTechnique(("fire",), year=120))
+        self.assertEqual((seat.done, seat.revealed, seat.forgotten, seat.granted), (set(), {"iron"}, {"fire": 120}, {"fire"}))
+
+    def test_a_copy_of_the_seat_is_as_guarded_as_the_original(self):
+        seat = copy.deepcopy(projects(done={"fire"}))
+        with self.assertRaises(HeldWriteError):
+            seat.done.add("bronze")
+
+
 class OtherCommandTests(unittest.TestCase):
-    def test_nodes_received_by_exchange_are_held_without_telling_the_engine_caches(self):
+    def test_nodes_received_by_exchange_are_held_and_the_caches_are_told_as_for_any_other_learning(self):
         state = projects()
         module = knowledge_over(state)
         module.receive_techniques(ReceiveTechniques(("fire", "bronze"), granted=True))
         self.assertEqual((state.done, state.granted), ({"fire", "bronze"}, {"fire", "bronze"}))
-        self.assertEqual(module_harness.sent(module), [])
+        self.assertEqual([type(command) for command in module_harness.sent(module)], [RefreshDoneCaches])
+
+    def test_nodes_received_not_as_granted_are_held_and_not_granted(self):
+        state = projects()
+        knowledge_over(state).receive_techniques(ReceiveTechniques(("fire",)))
+        self.assertEqual((state.done, state.granted), ({"fire"}, set()))
+
+    def test_the_done_channel_moves_when_something_is_received(self):
+        module = knowledge_over(projects())
+        before = module.clock.counter(module.module_id, DONE, True)
+        module.receive_techniques(ReceiveTechniques(("fire",)))
+        self.assertGreater(module.clock.counter(module.module_id, DONE, True), before)
 
     def test_starting_the_record_empties_the_years(self):
         state = projects(done_year={"fire": 100})
         knowledge_over(state).start_done_year_record(StartDoneYearRecord())
         self.assertEqual(state.done_year, {})
+
+    def test_a_handover_keeps_the_replacements_finish_years_and_heard_of_nodes(self):
+        slots = {"leaver": projects(done={"fire"}, done_year={"fire": 100}, revealed={"iron"}),
+                 "heir": projects(done={"bronze"}, done_year={"bronze": 120}, revealed={"alloy"})}
+        module = knowledge_over(slots["leaver"])
+        module.seat_slot_of = slots.__getitem__
+        module.hand_over_techniques(HandOverTechniques("leaver", "heir"))
+        self.assertEqual(slots["leaver"].done_year, {"fire": 100, "bronze": 120})
+        self.assertEqual(slots["leaver"].revealed, {"iron", "alloy"})
+
+    def test_a_node_both_hold_keeps_the_earliest_finish_year(self):
+        slots = {"leaver": projects(done={"fire"}, done_year={"fire": 130}), "heir": projects(done={"fire"}, done_year={"fire": 110})}
+        module = knowledge_over(slots["leaver"])
+        module.seat_slot_of = slots.__getitem__
+        module.hand_over_techniques(HandOverTechniques("leaver", "heir"))
+        self.assertEqual(slots["leaver"].done_year, {"fire": 110})
+
+    def test_a_leaver_with_no_year_record_takes_the_replacements(self):
+        slots = {"leaver": projects(done={"fire"}), "heir": projects(done={"bronze"}, done_year={"bronze": 120})}
+        module = knowledge_over(slots["leaver"])
+        module.seat_slot_of = slots.__getitem__
+        module.hand_over_techniques(HandOverTechniques("leaver", "heir"))
+        self.assertEqual(slots["leaver"].done_year, {"bronze": 120})
+
+    def test_a_handover_tells_the_caches(self):
+        slots = {"leaver": projects(done={"fire"}), "heir": projects(done={"bronze"})}
+        module = knowledge_over(slots["leaver"])
+        module.seat_slot_of = slots.__getitem__
+        module.hand_over_techniques(HandOverTechniques("leaver", "heir"))
+        self.assertEqual([type(command) for command in module_harness.sent(module)], [RefreshDoneCaches])
 
     def test_a_handover_joins_the_replacements_nodes_to_the_leavers_and_answers_how_many(self):
         slots = {"leaver": projects(done={"fire"}, granted={"fire"}), "heir": projects(done={"bronze"})}
