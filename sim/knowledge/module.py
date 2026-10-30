@@ -182,7 +182,8 @@ class Knowledge(Module):
         self._acquire(None, (command.node_id,), command.granted, None if command.year is None else {command.node_id: command.year})
 
     def receive_techniques(self, command: ReceiveTechniques) -> None:
-        self._acquire(None, command.node_ids, command.granted)
+        received = None if command.year is None else {node_id: command.year for node_id in command.node_ids}
+        self._acquire(None, command.node_ids, command.granted, rules.years_to_add(self.seat.done_year, received))
 
     def start_done_year_record(self, command: StartDoneYearRecord) -> None:
         with held.writing():

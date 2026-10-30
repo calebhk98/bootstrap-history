@@ -47,6 +47,7 @@ class ReceiveTechniques(Command):
     exactly as `LearnTechnique` holds a node: how a technique was acquired does not change what the seat holds or what is told."""
     node_ids: Tuple[str, ...]
     granted: bool = False
+    year: Optional[int] = None       # the year received, kept as each node's finish year unless an earlier one is held
 
 
 @dataclass(frozen=True)

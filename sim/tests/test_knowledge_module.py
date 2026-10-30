@@ -247,6 +247,11 @@ class OtherCommandTests(unittest.TestCase):
         knowledge_over(state).receive_techniques(ReceiveTechniques(("fire",)))
         self.assertEqual((state.done, state.granted), ({"fire"}, set()))
 
+    def test_nodes_received_carry_the_year_received_and_an_earlier_finish_year_is_kept(self):
+        state = projects(done={"fire"}, done_year={"fire": 90})
+        knowledge_over(state).receive_techniques(ReceiveTechniques(("fire", "bronze"), year=120))
+        self.assertEqual(state.done_year, {"fire": 90, "bronze": 120})
+
     def test_the_done_channel_moves_when_something_is_received(self):
         module = knowledge_over(projects())
         before = module.clock.counter(module.module_id, DONE, True)
