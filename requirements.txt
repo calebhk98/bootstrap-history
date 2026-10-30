@@ -1,0 +1,2 @@
+# The only third-party package the simulator imports (the goods market's clearing and the map build use it).
+numpy
