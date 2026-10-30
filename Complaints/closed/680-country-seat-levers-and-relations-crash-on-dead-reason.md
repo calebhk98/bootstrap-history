@@ -1,6 +1,6 @@
 # Levers and relations sent as a country seat crash on the missing founder
 
-**Status:** open
+**Status:** closed - the dead_reason read no longer exists on main; the country-seat join itself failed (SetSeatHolder undeclared in the seats module sends), now declared and tested
 
 Found while recording the protocol golden transcripts (`sim/tests/protocol_golden/README.md`). After `join` with
 `seat_kind: country`, sending `levers`, `lever` or `relations` with `"as"` that seat answers

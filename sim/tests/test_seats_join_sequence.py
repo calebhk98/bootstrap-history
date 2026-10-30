@@ -53,6 +53,15 @@ class JoinSeatSequence(unittest.TestCase):
         self.assertFalse(any(isinstance(command, OpenPurse) for command in sent))
         self.assertEqual(sent[-1], SetSeatHolder("government:han"))
 
+    def test_every_command_a_join_sends_is_one_the_seats_module_declares(self):
+        from sim.seats import module_spec
+        declared = set(module_spec.MODULE_SPECS[0].sends)
+        for template in ({"capital": 250.0}, {"kind": COUNTRY_SEAT, "country": "han"}):
+            module = seats_joining({"han": SeatsSeat(kind=template.get("kind", "household"))})
+            module.join_seat(JoinSeat("han", template))
+            undeclared = sorted({type(command).__name__ for command in module_harness.sent(module)} - {c.__name__ for c in declared})
+            self.assertEqual(undeclared, [], template)
+
     def test_a_seat_the_registry_refuses_is_refused_with_nothing_set_up(self):
         refusal = Refusal("seat_exists", "seat 'second' already exists", seat="second")
         module = seats_joining({"second": SeatsSeat()}, answers={AddSeat: refusal})

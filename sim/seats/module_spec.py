@@ -74,7 +74,7 @@ MODULE_SPECS = (ModuleSpec(
              (RememberGoalClosure, "remember_goal_closure"), (ForgetGoalClosure, "forget_goal_closure"),
              (RememberGoalFloor, "remember_goal_floor"), (SetDealing, "set_dealing")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(AddSeat, MoveSeat, OpenPurse, WatchActive, WatchBusiness, WatchStaff, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent, StopOperating),
+    sends=(AddSeat, MoveSeat, SetSeatHolder, OpenPurse, WatchActive, WatchBusiness, WatchStaff, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent, StopOperating),
     phases=(PhaseHook("hear_of_other_seats", "hear_of_other_seats"), PhaseHook("win_conditions", "check_win_conditions"),
             PhaseHook("founder_mortality", "founder_mortality")),
     # (condition) -> [(label, value, unit)] rows for a measurement goal's anatomy, or None for the shipped rows
