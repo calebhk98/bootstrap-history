@@ -10,7 +10,7 @@ from sim.ledger.api import CreditSeat, DebitSeat, NoteSeatCash, RestorePurse
 from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer, SeatsSeat, SetDealing
 from sim.knowledge.api import KnowledgeSeat
 from sim.seats.module import Seats
-from . import module_harness
+from . import held_fixture, module_harness
 from sim.tests.money_host import MoneyHost
 from sim.engine.state_seat import FIRST_SEAT_ID
 
@@ -61,9 +61,7 @@ class Game:
         return self.module.seat_party(seat_id, margins)
 
     def receive(self, nodes, granted):
-        self.knowledge.done.update(nodes)
-        if granted:
-            self.knowledge.granted.update(nodes)
+        held_fixture.hold(self.knowledge, nodes, granted)
 
     def build(self, world):
         host = self.host
@@ -107,7 +105,7 @@ finder = exchange_commands.finder(sim.actors, world)
 firm = sim.actors.add("firm:1", ActorRecord(kind="firm", money=5000.0, last_margin=300.0, founded_year=50))
 firm.knowledge.add("loom")
 firm.record.target = "loom"
-sim.knowledge.done.add("loom")
+held_fixture.hold(sim.knowledge, {"loom"})
 
 # ---- the founder applies for a patent --------------------------------------------------------------------
 reply = sim.seat_patent("loom")

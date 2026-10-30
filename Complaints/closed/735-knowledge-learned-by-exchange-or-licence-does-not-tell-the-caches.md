@@ -1,6 +1,6 @@
 # Knowledge a seat receives by exchange or licence does not tell the held-set caches
 
-**Status:** open - found while moving the knowledge module; reproduced on a Han China opening
+**Status:** closed - exchange and licence now go through the knowledge module's one add path (ReceiveTechniques), which tells the caches and bumps the version; the held containers refuse any other write.
 
 `HouseholdParty.learn` and `HouseholdParty.accept_licence` (`sim/agents/household_party.py:104-113`) put the received
 chain into the seat's `done` (and `granted`) with `done.update(chain)`. Every other write to the held set calls

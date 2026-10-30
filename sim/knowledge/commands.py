@@ -43,8 +43,8 @@ class RevealNodes(Command):
 
 @dataclass(frozen=True)
 class ReceiveTechniques(Command):
-    """The acting seat is handed `node_ids` complete, by an exchange or a licence (`granted`: held as its society's own).
-    Unlike `LearnTechnique` it does not tell the engine's caches over the held set (Complaint 735)."""
+    """The acting seat is handed `node_ids` complete, by an exchange or a licence (`granted`: held as its society's own). Held
+    exactly as `LearnTechnique` holds a node: how a technique was acquired does not change what the seat holds or what is told."""
     node_ids: Tuple[str, ...]
     granted: bool = False
 
@@ -56,8 +56,8 @@ class StartDoneYearRecord(Command):
 
 @dataclass(frozen=True)
 class HandOverTechniques(Command):
-    """Seat `to_seat_id` takes over seat `from_seat_id`'s state: what `to_seat_id` held joins what `from_seat_id` holds (and its
-    granted set), since the leaver's knowledge record is the one that moves. Answers how many nodes the leaver then holds."""
+    """Seat `to_seat_id` takes over seat `from_seat_id`'s state: what `to_seat_id` held (nodes, granted set, heard-of nodes, finish years; the earlier
+    year wins for a node both date) joins what `from_seat_id` holds, since the leaver's knowledge record is the one that moves. Answers how many nodes the leaver then holds."""
     from_seat_id: str
     to_seat_id: str
 

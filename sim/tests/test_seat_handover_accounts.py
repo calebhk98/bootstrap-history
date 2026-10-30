@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 
 import json
 
+from . import held_fixture
 from .harness import check
 
 from sim.book import GoodsMove
@@ -128,10 +129,19 @@ game = build()
 game.state.seats["heir"].modules["finance"].interest_arrears = 3.0
 check("a replacement with arrears is refused", game.send(ui_port.HandOverSeat("leaver", "heir")).facts["holds"] == ["arrears or bondage"], None)
 game = build()
-game.state.seats["heir"].modules["knowledge"].done |= {"wheel"}
-game.state.seats["leaver"].modules["knowledge"].done |= {"fire"}
+held_fixture.hold(game.state.seats["heir"].modules["knowledge"], {"wheel"})
+held_fixture.hold(game.state.seats["leaver"].modules["knowledge"], {"fire"})
 game.send(ui_port.HandOverSeat("leaver", "heir"))
 check("a replacement that only knows techniques keeps them and adds the leaver's", game.state.seats["heir"].modules["knowledge"].done == {"wheel", "fire"}, None)
+game = build()
+heir_knowledge = game.state.seats["heir"].modules["knowledge"]
+held_fixture.hold(heir_knowledge, {"wheel"})
+held_fixture.finish(heir_knowledge, "wheel", 90)
+held_fixture.hear(heir_knowledge, {"cart"})
+game.send(ui_port.HandOverSeat("leaver", "heir"))
+kept_knowledge = game.state.seats["heir"].modules["knowledge"]
+check("a replacement's finish years and heard-of nodes survive the handover", kept_knowledge.done_year == {"wheel": 90} and kept_knowledge.revealed == {"cart"},
+      (kept_knowledge.done_year, kept_knowledge.revealed))
 
 # ---- the renaming itself
 check("an id is renamed whole and in composite ids, not inside other words",
