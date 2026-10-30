@@ -1,4 +1,4 @@
-# Equivalence baselines at `mr-base`
+# Equivalence baselines
 
 Hashes of the whole saved state per simulated year, recorded on the base commit of the module migration (`0be2f72`)
 with `sim/tests/equiv.py` copied in. Check the current checkout against them:
@@ -27,3 +27,10 @@ error inside a 100-year run. The patch changes nothing a game reaches before tha
 trajectory, carried past the point where the base crashed. Check it with
 
     python3 -m sim.tests.equiv check docs/architecture/baseline/long.json --tier long --base-checkout <base worktree with the patch>
+
+## Which build each file describes
+
+`micro.json` and `stress.json` are recorded from the build with the migration's kept bugs fixed (`e60de01b`): checked against
+them, a later change that moves the simulation shows where. Each fix changed the simulation on purpose and has its own
+regression test (Complaints 681, 760 to 765, 790, 800, 810, 850, 920, 930, 956). `full.json` and `long.json` are the base's:
+they proved the module migration itself, up to `a38d1f2a`, the commit before those fixes.
