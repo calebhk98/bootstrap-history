@@ -39,8 +39,10 @@ class WageMovement(unittest.TestCase):
         state = make_state(wage=1.0)
         target = clearing.clearing_target(1.0, 1000.0, [bid("a", 2000.0)])
         wages = [run(state, [bid("a", 2000.0)]).wage for _ in range(4)]
-        self.assertTrue(wages[0] < wages[1] < wages[2] < wages[3] <= target)
+        # unfilled vacancies raise the offer each round (labour_eurace_offers), so it reaches the target and stops there
+        self.assertTrue(wages[0] < wages[1] <= wages[2] <= wages[3] <= target + 1e-9)
         self.assertGreater(wages[0], 1.0)
+        self.assertAlmostEqual(wages[3], target)
 
     def test_glut_holds_wage_near_reservation(self):
         state = make_state(people=100.0, wage=1.0)

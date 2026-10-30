@@ -17,6 +17,20 @@ WAGE_SHARE_CLOSED_PER_YEAR = declare(
     why="How much of the gap between last year's market wage and the clearing point closes in a year. Wages "
         "were sticky (custom, contracts); the speed is not fitted.")
 
+WAGE_UPDATE_PER_ROUND = declare(
+    "WAGE_UPDATE_PER_ROUND", 0.02, kind="temporary_heuristic", unit="share of the wage added per round of unfilled vacancies",
+    source=None, confidence="D",
+    retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
+    why="Eurace's WAGE_UPDATE (default 0.02 in Labour/model.xml): an employer with vacancies left raises its offer by "
+        "this share each round (Firm_update_wage_offer, Labour/Firm_Employer_Functions.c). Not fitted.")
+
+VACANCY_SHARE_THRESHOLD = declare(
+    "VACANCY_SHARE_THRESHOLD", 0.05, kind="temporary_heuristic", unit="share of the hours wanted left unfilled",
+    source=None, confidence="D",
+    retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
+    why="Eurace raises the offer only when vacancies exceed MIN_VACANCY (default 2 posts; a count, not a share). "
+        "A market has no post count, so the threshold is the share of wanted hours the supply cannot fill. Not fitted.")
+
 MATCHING_EFFICIENCY_PER_YEAR = declare(
     "MATCHING_EFFICIENCY_PER_YEAR", 2.0, kind="temporary_heuristic", unit="per year",
     source=None, confidence="D",
@@ -125,6 +139,17 @@ def pressure(last: float, reservation: float, offered: float, bids: Sequence[Bid
     return min(1.0, abs(wanted - offered) / offered)
 
 
+def vacancy_raise(wage: float, target: float, wanted: float, offered: float) -> float:
+    """The wage after the rounds of a year in which employers' vacancies stayed open: raised by WAGE_UPDATE_PER_ROUND each
+    round, as Firm_update_wage_offer (Eurace, Labour/Firm_Employer_Functions.c) raises WAGE_OFFER while VACANCIES exceed
+    MIN_VACANCY, but not past the clearing `target` (Eurace's firms stop by budget; here the clearing point is the bound,
+    so the offer cannot overshoot) and never below `wage`. `wanted` and `offered` are hours at last year's wage."""
+    if wanted <= 0.0 or (wanted - offered) / wanted <= VACANCY_SHARE_THRESHOLD:
+        return wage
+    raised = wage * (1.0 + WAGE_UPDATE_PER_ROUND) ** asks.SEARCH_ROUNDS_PER_YEAR
+    return max(wage, min(raised, target))
+
+
 def market_wage(last: Optional[float], reservation: float, offered: float, bids: Sequence[Bid]) -> float:
     if offered <= 0.0:
         return last if last is not None else max((bid.maximum_wage for bid in bids), default=reservation)
@@ -132,6 +157,9 @@ def market_wage(last: Optional[float], reservation: float, offered: float, bids:
         return reservation if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (reservation - last)
     target = clearing_target(reservation, offered, bids)
     wage = target if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * pressure(last, reservation, offered, bids) * (target - last)
+    if last is not None:     # the sticky move above, then the offer's raise while vacancies stay open
+        wanted = sum(bid.hours for bid in bids if bid.maximum_wage >= max(last, reservation))
+        wage = vacancy_raise(wage, target, wanted, offered)
     if any(bid.maximum_wage >= reservation for bid in bids):
         wage = max(wage, reservation)
     # no employer can pay above its maximum: a wage that lags above every maximum falls to the best of them
@@ -237,6 +265,9 @@ def _wage_with_supply(last, reservation, ceiling, supply, bids):
         return wage_now + gap * (min(goal, ceiling) - wage_now)
 
     wage = goal if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (moved(last) - last)
+    if last is not None:     # then the offer's raise while vacancies stay open (`vacancy_raise`)
+        at = max(last, reservation)
+        wage = vacancy_raise(wage, min(goal, ceiling), sum(bid.hours for bid in bids if bid.maximum_wage >= at), supply(at))
     if any(bid.maximum_wage >= reservation for bid in bids):
         wage = max(wage, reservation)
     wage = min(wage, max(max(bid.maximum_wage for bid in bids), reservation), ceiling)
