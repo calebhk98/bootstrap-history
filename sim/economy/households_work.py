@@ -10,7 +10,10 @@ import json
 import os
 from typing import Any, Dict, Mapping
 
+from sim.constants import declare
+
 from .households_basket import Basket
+from .price_setting import LOGIT_INTENSITY, choice_shares
 
 _DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "world", "household_work.json")
 
@@ -86,6 +89,34 @@ def net_hour_value(own_hour_value: float, supervision: float) -> float:
     return own_hour_value * max(0.0, 1.0 - supervision)
 
 
+WORK_CHOICE_INTENSITY = declare(
+    "WORK_CHOICE_INTENSITY", LOGIT_INTENSITY, kind="temporary_heuristic",
+    unit="exponent of a cost in a cohort's choice between hiring and doing household work",
+    source=None, confidence="D", retire="Complaints/645-household-work-is-not-a-need-so-there-are-no-servants-cooks-or-taverns.md",
+    why="A cohort is many households facing different wages and tasks, so the share that hires falls smoothly as the "
+        "worth of an own hour rises against the service price; the goods market's logit family and intensity stand in "
+        "until the spread of households within a cohort is modelled.")
+
+SOLD_SHARE_SMOOTHING = declare(
+    "SOLD_SHARE_SMOOTHING", 0.5, kind="temporary_heuristic",
+    unit="share of the gap between the expected and the last year's sold share of hours closed each year",
+    source=None, confidence="D", retire="Complaints/645-household-work-is-not-a-need-so-there-are-no-servants-cooks-or-taverns.md",
+    why="Households judge what an hour sells for over several years, not from the last one; one bad year moves the "
+        "expectation half-way, until households carry their own labour-market memory.")
+
+
+def smoothed_sold_share(expected: float, realised: float, smoothing: float = SOLD_SHARE_SMOOTHING) -> float:
+    """The share of hours households expect to sell after a year in which `realised` sold: the expectation moved
+    `smoothing` of the way to the year's figure."""
+    return expected + smoothing * (realised - expected)
+
+
+def expected_sold_share(hours_producers_hire: float, hours_offered: float) -> float:
+    """Share of the hours offered in a market its employers' planned runs hire (at most all; all when none are
+    offered): what households expect to sell before any year has shown them."""
+    return min(1.0, max(0.0, hours_producers_hire) / hours_offered) if hours_offered > 0.0 else 1.0
+
+
 def sold_share(hours_hired: float, hours_idle: float) -> float:
     """Share of the hours offered in a labour market that found a buyer last year; all of them when none were offered
     (no history is no evidence that hours go unsold)."""
@@ -94,12 +125,13 @@ def sold_share(hours_hired: float, hours_idle: float) -> float:
 
 
 def hired_hours(needed_hours: float, own_hour_value: float, service_price_per_hour: float) -> float:
-    """Hours of the work a household hires: all of it when an hour of its own labour is worth more at the market
-    than the servant's price (it would rather sell the hour and pay), none otherwise. Never more than the work
-    there is. Cohorts differ in what their hours earn, so the aggregate hired rises step by step with the wage."""
-    if needed_hours <= 0.0 or service_price_per_hour <= 0.0:
+    """Hours of the work a cohort hires: the share of households that find the servant's price below the worth of an
+    hour of their own, a logit on the two costs (price_setting.choice_shares), so the share hired falls smoothly as the
+    own hour grows dearer against the price. Half when they are equal; none where an hour is worth nothing or the
+    service has no price. Never more than the work there is."""
+    if needed_hours <= 0.0 or service_price_per_hour <= 0.0 or own_hour_value <= 0.0:
         return 0.0
-    return needed_hours if own_hour_value > service_price_per_hour else 0.0
+    return needed_hours * choice_shares([service_price_per_hour, own_hour_value], WORK_CHOICE_INTENSITY)[0]
 
 
 def service_price_that_fits(households, room_hours: float) -> float:

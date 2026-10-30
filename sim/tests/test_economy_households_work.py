@@ -40,16 +40,39 @@ class HoursTests(unittest.TestCase):
 class HiringTests(unittest.TestCase):
     def test_a_cohort_whose_hour_is_worth_more_than_the_servants_price_hires(self):
         needed = households_work.hours_needed(100.0, DATA)
-        self.assertAlmostEqual(households_work.hired_hours(needed, 3.0, 2.0), needed)
+        self.assertGreater(households_work.hired_hours(needed, 3.0, 2.0), 0.99 * needed)
 
     def test_a_cohort_whose_hour_is_worth_less_does_not_hire(self):
         needed = households_work.hours_needed(100.0, DATA)
-        self.assertEqual(households_work.hired_hours(needed, 1.0, 2.0), 0.0)
-        self.assertEqual(households_work.hired_hours(needed, 2.0, 2.0), 0.0)
+        self.assertLess(households_work.hired_hours(needed, 1.0, 2.0), 0.01 * needed)
 
     def test_nobody_hires_more_than_the_work_there_is(self):
         self.assertAlmostEqual(households_work.hired_hours(40.0, 1e9, 2.0), 40.0)
         self.assertEqual(households_work.hired_hours(0.0, 1e9, 2.0), 0.0)
+
+    def test_no_cliff_an_hour_worth_1_09_against_1_0_hires_most_and_0_15_against_0_82_hires_almost_none(self):
+        self.assertGreater(households_work.hired_hours(100.0, 1.09, 1.0), 50.0)
+        self.assertLess(households_work.hired_hours(100.0, 1.09, 1.0), 100.0)
+        self.assertLess(households_work.hired_hours(100.0, 0.15, 0.82), 1.0)
+
+    def test_an_even_choice_hires_half(self):
+        self.assertAlmostEqual(households_work.hired_hours(100.0, 2.0, 2.0), 50.0)
+
+    def test_hiring_rises_with_the_worth_of_the_hour(self):
+        shares = [households_work.hired_hours(100.0, value, 1.0) for value in (0.5, 0.9, 1.0, 1.1, 2.0)]
+        self.assertEqual(shares, sorted(shares))
+        self.assertGreater(shares[-1], shares[0])
+
+    def test_an_hour_worth_nothing_hires_nothing(self):
+        self.assertEqual(households_work.hired_hours(100.0, 0.0, 1.0), 0.0)
+
+    def test_smoothed_share_moves_part_way_to_the_year_just_sold(self):
+        self.assertAlmostEqual(households_work.smoothed_sold_share(1.0, 0.0, 0.25), 0.75)
+
+    def test_expected_share_is_the_hours_producers_hire_over_the_hours_offered_at_most_all(self):
+        self.assertAlmostEqual(households_work.expected_sold_share(300.0, 1200.0), 0.25)
+        self.assertEqual(households_work.expected_sold_share(5000.0, 1200.0), 1.0)
+        self.assertEqual(households_work.expected_sold_share(300.0, 0.0), 1.0)
 
     def test_the_hour_is_worth_the_wage_averaged_over_the_hours_it_would_sell(self):
         self.assertAlmostEqual(households_work.hour_value([(100.0, 1.0), (300.0, 2.0)]), 1.75)

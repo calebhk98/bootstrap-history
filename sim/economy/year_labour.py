@@ -10,7 +10,7 @@ from typing import Dict, List, Mapping, Sequence, Tuple
 
 from sim.labour.api import CAREER_YEARS, people_in, run_labour_year
 
-from . import hours_hired_by_others, households, labour, settlement
+from . import hours_hired_by_others, households, households_work, labour, settlement
 from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .labour_ask_floor import mean_floor_per_hour
@@ -141,5 +141,9 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
         record.hours_hired_by_others[market_key(clearing.trade, clearing.area)] = hours_hired_by_others.beyond_producers(
             clearing.hired_by_employer, record.producers)
         record.hours_idle[market_key(clearing.trade, clearing.area)] = clearing.idle_hours
+        if clearing.hours_hired + clearing.idle_hours > 0.0:
+            key = market_key(clearing.trade, clearing.area)
+            record.sold_share_expected[key] = households_work.smoothed_sold_share(
+                record.sold_share_expected.get(key, 1.0), households_work.sold_share(clearing.hours_hired, clearing.idle_hours))
     mirror_wages(record.memory.wages, record.workforce)
     return report
