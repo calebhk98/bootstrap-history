@@ -1,6 +1,6 @@
 # A plague line names the national health sources of the acting seat, not the seat it is told to
 
-**Status:** open
+**Status:** closed - each seat's sources are read under its own `act_as` in `staff_loss_of_seat` and carried in the report (`sim/tests/test_staff_loss_per_seat_sources.py`)
 
 `Shocks.staff_loss_seats` (`sim/hazards/shocks.py`, `ShockYearMixin._shock_staff_loss_seats` before the move) builds each seat's
 message after the `act_as` blocks have closed, so `national_sources_words()` reads the medical work built by whichever seat is acting

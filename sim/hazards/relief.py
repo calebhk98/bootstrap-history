@@ -140,9 +140,6 @@ class Relief:
 		                key=lambda pair: (-pair[0], pair[1]))
 		return [self.needs.tree[node_id]["name"] for share, node_id in spread if share > 0.0][:limit]
 
-	def national_sources_words(self) -> str:
-		return ", ".join(self.national_public_health_sources()) or "none named"
-
 	def staff_loss_exposure(self, historical: float, assume_running: Sequence[str] = ()) -> Dict[str, Any]:
 		"""The staff a household loses to one wave, from the historical rate. The country's own public health lowers the
 		rate first; the household's own defences then count only where the nation has not adopted them."""
