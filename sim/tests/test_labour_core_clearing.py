@@ -38,7 +38,7 @@ class WageMovement(unittest.TestCase):
     def test_excess_demand_raises_wage_toward_target(self):
         state = make_state(wage=1.0)
         target = clearing.clearing_target(1.0, 1000.0, [bid("a", 2000.0)])
-        wages = [run(state, [bid("a", 2000.0)]).wage for _ in range(4)]
+        wages = [run(state, [bid("a", 2000.0)]).new_hire_wage for _ in range(4)]     # hours already held keep their contract
         # unfilled vacancies raise the offer each round (labour_eurace_offers), so it reaches the target and stops there
         self.assertTrue(wages[0] < wages[1] <= wages[2] <= wages[3] <= target + 1e-9)
         self.assertGreater(wages[0], 1.0)

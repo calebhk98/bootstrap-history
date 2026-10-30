@@ -14,8 +14,10 @@ from .scarcity import short_run_ceiling
 WAGE_SHARE_CLOSED_PER_YEAR = declare(
     "WAGE_SHARE_CLOSED_PER_YEAR", 0.3, kind="temporary_heuristic", unit="share of the gap per year",
     source=None, confidence="D",
-    why="How much of the gap between last year's market wage and the clearing point closes in a year. Wages "
-        "were sticky (custom, contracts); the speed is not fitted.")
+    why="How much of the gap between last year's new-hire wage and a higher clearing point closes in a year (an offer "
+        "only rises, as Eurace's WAGE_OFFER does, Firm_update_wage_offer in Labour/Firm_Employer_Functions.c). A lower "
+        "clearing point is reached at once for new hires: held hours keep their contract (contracted_wage) and the ask "
+        "falls by asks.py, so the downward stickiness lives there. The speed is not fitted.")
 
 WAGE_UPDATE_PER_ROUND = declare(
     "WAGE_UPDATE_PER_ROUND", 0.02, kind="temporary_heuristic", unit="share of the wage added per round of unfilled vacancies",
@@ -150,13 +152,21 @@ def vacancy_raise(wage: float, target: float, wanted: float, offered: float) -> 
     return max(wage, min(raised, target))
 
 
+def share_closed(last: float, goal: float) -> float:
+    """The share of the gap to `goal` that closes in a year for the wage new hires clear at: a rise is gradual
+    (`WAGE_SHARE_CLOSED_PER_YEAR`, an offer only rises step by step); a fall is the whole gap, since the workers' own ask
+    (asks.py) already falls gradually and held hours do not follow it down (contracted_wage)."""
+    return WAGE_SHARE_CLOSED_PER_YEAR if goal > last else 1.0
+
+
 def market_wage(last: Optional[float], reservation: float, offered: float, bids: Sequence[Bid]) -> float:
+    """The wage new hires clear at (not the wage of hours already held)."""
     if offered <= 0.0:
         return last if last is not None else max((bid.maximum_wage for bid in bids), default=reservation)
-    if not bids:    # hours on offer and nobody wanting them: the quote drifts down to the ask
-        return reservation if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (reservation - last)
+    if not bids:    # hours on offer and nobody wanting them: new hires would clear at the ask
+        return reservation
     target = clearing_target(reservation, offered, bids)
-    wage = target if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * pressure(last, reservation, offered, bids) * (target - last)
+    wage = target if last is None else last + share_closed(last, target) * pressure(last, reservation, offered, bids) * (target - last)
     if last is not None:     # the sticky move above, then the offer's raise while vacancies stay open
         wanted = sum(bid.hours for bid in bids if bid.maximum_wage >= max(last, reservation))
         wage = vacancy_raise(wage, target, wanted, offered)
@@ -185,19 +195,53 @@ def standing(maximum_wage: float, pay_premium: float) -> float:
     return maximum_wage * (1.0 + pay_premium)
 
 
-def eligible_bids(bids: Sequence[Bid], wage: float) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float]]:
-    """Hours wanted, the wage paid and the standing, per employer, among bids that can afford the market wage."""
+def eligible_bids(bids: Sequence[Bid], wage: float, contracts: Optional[Dict[str, float]] = None
+                  ) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float], Dict[str, float]]:
+    """Per employer: hours wanted at the market wage (for new hires), the wage paid them, the standing, and the hours
+    wanted for hours already held. A held hour keeps its contract (`contracts`, the wage last year's hours were hired at),
+    so a bid is still wanted for them while its maximum covers the lower of the contract and the market wage: a raised
+    market wage lays off no one whose contract the employer can still pay (Eurace lays off by need alone,
+    Firm_set_labour_market_actions in Labour/Firm_Employer_Functions.c, never by the offer rising)."""
+    contracts = contracts or {}
     wanted: Dict[str, float] = {}
     paid: Dict[str, float] = {}
     ranks: Dict[str, float] = {}
+    wanted_to_keep: Dict[str, float] = {}
     for bid in sorted(bids, key=lambda each: (each.employer, each.maximum_wage, each.hours)):
+        if bid.maximum_wage >= min(wage, contracts.get(bid.employer, wage)):
+            wanted_to_keep[bid.employer] = wanted_to_keep.get(bid.employer, 0.0) + bid.hours
+            ranks[bid.employer] = max(ranks.get(bid.employer, 0.0), standing(bid.maximum_wage, bid.pay_premium))
         if bid.maximum_wage < wage:
             continue
         wanted[bid.employer] = wanted.get(bid.employer, 0.0) + bid.hours
         paid[bid.employer] = max(paid.get(bid.employer, 0.0),
                                  min(bid.maximum_wage, wage * (1.0 + bid.pay_premium)))
-        ranks[bid.employer] = max(ranks.get(bid.employer, 0.0), standing(bid.maximum_wage, bid.pay_premium))
-    return wanted, paid, ranks
+    return wanted, paid, ranks, wanted_to_keep
+
+
+def contracted_wage(contract: Optional[float], market: float, best_maximum: float) -> float:
+    """The wage an employer pays an hour it already held: the wage the hour was hired at, however the market wage has
+    moved since (Eurace fixes a worker's wage at the offer when hired, Firm_hire_workers / Household_receive_wage in
+    Labour/), so long as the employer can still pay it: no more than its best maximum. With no contract, the market wage."""
+    return min(market if contract is None else contract, best_maximum)
+
+
+def pay_by_employer(kept: Dict[str, float], hired: Dict[str, float], contracts: Dict[str, float],
+                    new_paid: Dict[str, float], market: float, best_maximum: Dict[str, float]
+                    ) -> Tuple[Dict[str, float], float]:
+    """(the wage an hour paid, per employer; the hours-weighted mean over everyone hired). An employer's kept hours are
+    paid their contract, the rest of its hours the wage the new hires cleared at (`new_paid`). The mean is the trade's
+    reported market wage; with no one hired it is the wage new hires would clear at (`market`)."""
+    paid: Dict[str, float] = {}
+    bill = 0.0
+    for employer, hours in sorted(hired.items()):
+        held = min(kept.get(employer, 0.0), hours)
+        held_pay = contracted_wage(contracts.get(employer), market, best_maximum.get(employer, math.inf))
+        wage_paid = (held * held_pay + (hours - held) * new_paid.get(employer, market)) / hours if hours > 0.0 else market
+        paid[employer] = wage_paid
+        bill += hours * wage_paid
+    total = sum(hired.values())
+    return paid, (bill / total if total > 0.0 else market)
 
 
 def retain(wanted: Dict[str, float], previous: Dict[str, float], offered: float) -> Dict[str, float]:
@@ -221,9 +265,9 @@ def hire_new(hired: Dict[str, float], wanted: Dict[str, float], paid: Dict[str, 
              wage: float) -> None:
     """Employers in descending standing (`paid` here is the standing) take new hours from the unretained pool, limited by matching friction."""
     pool = max(0.0, offered - sum(hired.values()))
-    unserved = sum(wanted[employer] - hired[employer] for employer in wanted)
+    unserved = sum(max(0.0, wanted[employer] - hired[employer]) for employer in wanted)
     for group in pay_groups(paid, list(wanted)):
-        needs = {employer: wanted[employer] - hired[employer] for employer in group}
+        needs = {employer: max(0.0, wanted[employer] - hired[employer]) for employer in group}
         vacancies = sum(needs.values()) if unserved <= 0.0 else unserved
         searchers_per_vacancy = max(0.0, pool) / vacancies if vacancies > 0.0 else 0.0
         rate = MATCHING_EFFICIENCY_PER_YEAR * searchers_per_vacancy ** MATCHING_SEARCHER_ELASTICITY
@@ -257,8 +301,7 @@ def _wage_with_supply(last, reservation, ceiling, supply, bids):
     """(wage, heading wage) of a market whose hours sold rise with the wage: the wage moves toward where the supply
     meets the demand, by the imbalance at last year's wage, as `market_wage` does for hours all offered at the ask."""
     if not bids:
-        wage = reservation if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (reservation - last)
-        return min(wage, ceiling), None
+        return min(reservation, ceiling), None
     goal = supply_target(reservation, supply, bids)
 
     def moved(wage_now):
@@ -266,14 +309,14 @@ def _wage_with_supply(last, reservation, ceiling, supply, bids):
         gap = 1.0 if offered <= 0.0 else min(1.0, abs(sum(bid.hours for bid in bids if bid.maximum_wage >= max(wage_now, reservation)) - offered) / offered)
         return wage_now + gap * (min(goal, ceiling) - wage_now)
 
-    wage = goal if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (moved(last) - last)
+    wage = goal if last is None else last + share_closed(last, moved(last)) * (moved(last) - last)
     if last is not None:     # then the offer's raise while vacancies stay open (`vacancy_raise`)
         at = max(last, reservation)
         wage = vacancy_raise(wage, min(goal, ceiling), sum(bid.hours for bid in bids if bid.maximum_wage >= at), supply(at))
     if any(bid.maximum_wage >= reservation for bid in bids):
         wage = max(wage, reservation)
     wage = min(wage, max(max(bid.maximum_wage for bid in bids), reservation), ceiling)
-    return wage, moved(wage)
+    return wage, (wage if last is not None and wage < last else moved(wage))     # a wage that fell has taken the whole move
 
 
 def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[Bid],
@@ -285,7 +328,9 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     base_reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
     lowest = inputs.ask_floor_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
     reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, unskilled_option(state, inputs, area, trade))
-    last = state.wages.get(area, {}).get(trade)
+    last = state.entry_wages.get(area, {}).get(trade)
+    if last is None:
+        last = state.wages.get(area, {}).get(trade)
     long_run = max(trained_substitute_wage(state, inputs, area, trade), reservation)
     imported = (import_costs or ImportCosts(state, inputs)).wage(area, trade) if bids else None
     # this year's wage may pass the long-run cost (trainees take years to arrive); what entrants expect stays at it
@@ -295,28 +340,42 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
         wage = min(market_wage(last, reservation, offered, bids), ceiling)
         # heading: the wage moves toward the clearing target by the same imbalance scaling `market_wage` applies, so
         # the expectation it feeds is continuous across balance (Complaint 664)
+        # (a wage that fell has taken the whole move already, so it is its own heading)
+        fell = last is not None and wage < last
         target = (wage + pressure(wage, reservation, offered, bids) * (min(clearing_target(reservation, offered, bids), ceiling) - wage)
-                  if offered > 0.0 and bids else wage)
+                  if offered > 0.0 and bids and not fell else wage)
     else:
         wage, target = _wage_with_supply(last, reservation, ceiling, lambda wage_now: full * share_at(wage_now), bids)
         offered = full * share_at(wage)
     target = min(target, long_run) if target is not None else None
-    wanted, paid, ranks = eligible_bids(bids, wage)
+    contracts = state.contract_wages.get(area, {}).get(trade, {})
+    wanted, paid, ranks, wanted_to_keep = eligible_bids(bids, wage, contracts)
     previous = state.hired_hours.get(area, {}).get(trade, {})
-    hired = retain(wanted, previous, offered) if offered > 0.0 else {employer: 0.0 for employer in wanted}
+    kept = retain(wanted_to_keep, previous, offered) if offered > 0.0 else {}
+    hired = {employer: kept.get(employer, 0.0) for employer in ranks} if offered > 0.0 else {employer: 0.0 for employer in wanted}
+    wanted = {employer: wanted.get(employer, 0.0) for employer in hired}
     if offered > 0.0:
+        before = dict(hired)
         hire_new(hired, wanted, ranks, offered, wage)
         poach(hired, wanted, ranks)
+        # hours an employer lost to a better payer leave the kept and the new alike
+        kept = {employer: hours * min(1.0, hired[employer] / before[employer]) if before.get(employer, 0.0) > 0.0 else 0.0
+                for employer, hours in kept.items()}
     hired = {employer: hours for employer, hours in hired.items() if hours > 0.0}
-    state.wages.setdefault(area, {})[trade] = wage
+    best_maximum: Dict[str, float] = {}
+    for bid in bids:
+        best_maximum[bid.employer] = max(best_maximum.get(bid.employer, 0.0), bid.maximum_wage)
+    paid_each, reported = pay_by_employer(kept, hired, contracts, paid, wage, best_maximum)
+    state.entry_wages.setdefault(area, {})[trade] = wage
+    state.wages.setdefault(area, {})[trade] = reported
+    state.contract_wages.setdefault(area, {})[trade] = dict(paid_each)
     asks.record(state, area, trade, offered, sum(wanted.values()), wage, base_reservation, lowest)
     state.hired_hours.setdefault(area, {})[trade] = dict(hired)
     total = sum(hired.values())
-    average = sum(hours * paid[employer] for employer, hours in hired.items()) / total if total > 0.0 else wage
-    return Clearing(trade=trade, area=area, wage=wage, hours_offered=offered, hours_wanted=sum(wanted.values()),
-                    hours_hired=total, hired_by_employer=hired,
-                    paid_by_employer={employer: paid[employer] for employer in hired}, average_wage=average,
-                    target_wage=target)
+    average = sum(hours * paid_each[employer] for employer, hours in hired.items()) / total if total > 0.0 else wage
+    return Clearing(trade=trade, area=area, wage=reported, hours_offered=offered, hours_wanted=sum(wanted.values()),
+                    hours_hired=total, hired_by_employer=hired, paid_by_employer=dict(paid_each), average_wage=average,
+                    target_wage=target, new_hire_wage=wage)
 
 
 def clear_all(state: MarketState, inputs: YearInputs) -> List[Clearing]:
