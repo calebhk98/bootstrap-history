@@ -36,17 +36,19 @@ def _unsold(sold: dict, offers: Sequence[Offer], indices: Sequence[int]) -> List
 
 
 def _floors(setup, record, view, offers: Sequence[Offer], original: Sequence[Offer], costs: dict) -> dict:
-    """Searchable offers (index -> floor): a producer's unchanged ask above what a unit is worth to it unsold.
+    """Searchable offers (index -> floor): a producer's unchanged ask above what a unit is worth to it unsold, or an ask
+    opened from a reservation of nothing (seller_offers.opened_ask), whose unit is worth nothing unsold.
     `costs` holds the unit costs the market's sellers already worked out ((seller, tile) -> cost or None)."""
     floors = {}
     for index, offer in enumerate(offers):
-        if offer.quantity <= 0.0 or offer.reservation_price != original[index].reservation_price:
+        opened = original[index].reservation_price <= 0.0 < offer.reservation_price
+        if offer.quantity <= 0.0 or (offer.reservation_price != original[index].reservation_price and not opened):
             continue
         key = (offer.seller, offer.tile)
         cost = costs[key] if key in costs else seller_offers.unit_cost(setup, record, view, offer)
         if cost is None:
             continue
-        floor = max(seller_offers.unit_value(offer, cost), _held_value(setup, record, view, offer))
+        floor = max(seller_offers.unit_value(original[index], cost), _held_value(setup, record, view, original[index]))
         if offer.reservation_price > floor:
             floors[index] = floor
     return floors
@@ -66,6 +68,32 @@ def _held_value(setup, record, view, offer: Offer) -> float:
     return inventory.queued_holding_value(offer.reservation_price, offer.quantity,
                                           producer.expected_sales * recipe.outputs.get(offer.good, 0.0), rate,
                                           spec.spoilage_per_year if spec is not None else 0.0)
+
+
+def flood_price(wanted, held: float, lowest: float, highest: float, points: int = 200) -> float:
+    """The price in [lowest, highest] at which a seller holding `held` units that are worth nothing unsold earns most from
+    the buyers (`wanted(price)` is the quantity they want there): price times the smaller of the stock and the want, the
+    highest such price when several earn alike. Asking less than this sells no more and takes less."""
+    if not 0.0 < lowest < highest:
+        return highest
+    ratio = (highest / lowest) ** (1.0 / (points - 1))
+    prices = [lowest * ratio ** step for step in range(points - 1)] + [highest]
+    earnings = [price * min(held, wanted(price)) for price in prices]
+    best = max(earnings)
+    return max(price for price, earned in zip(prices, earnings) if earned >= best * (1.0 - 1e-9))
+
+
+def _salvage_floors(floors: dict, offers: Sequence[Offer], buyers: goods_market.Buyers) -> dict:
+    """`floors` with each floor of nothing (a unit worth nothing unsold) raised to the flood price of the stock so held:
+    a perishable that cannot all sell asks what earns most, not the market's token price. An offer whose ask is not
+    above its new floor is left out of the search."""
+    held = math.fsum(offers[index].quantity for index, floor in floors.items() if floor <= 0.0)
+    if held <= 0.0:
+        return floors
+    highest = max(offers[index].reservation_price for index, floor in floors.items() if floor <= 0.0)
+    level = flood_price(buyers.schedule.total_at, held, buyers.minimum_price, highest)
+    raised = {index: (level if floor <= 0.0 else floor) for index, floor in floors.items()}
+    return {index: floor for index, floor in raised.items() if offers[index].reservation_price > floor}
 
 
 def _with_level(offers: Sequence[Offer], floors: dict, level: float) -> List[Offer]:
@@ -98,6 +126,9 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     result = goods_market.clear(bids, offers, good, area, currency, last_price, buyers)
     floors = _floors(setup, record, view, offers, original, costs if costs is not None else {})
     if not floors or not _unsold(_sold_by_offer(result, offers), offers, list(floors)):
+        return offers, result
+    floors = _salvage_floors(floors, offers, buyers)
+    if not floors:
         return offers, result
     return search_asks(bids, offers, floors, buyers, good, area, currency, last_price)
 

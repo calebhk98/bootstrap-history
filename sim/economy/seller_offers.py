@@ -6,8 +6,9 @@ the price on a grid around its own that earns most over the year, sales capped b
 worth to the seller unsold is the cheaper of replacing it (its variable cost per unit) and holding it (its
 price-taking reservation), so a seller never prices below what a unit costs it to make or keep. A producer that
 stands for several workshops (Producer.workshops above one) is not a seller but a crowd of price takers: it keeps the
-price-taking reservation and neither searches nor raises, and as a rival it counts once per workshop. A seller that
-sells at any price (a reservation of nothing) or whose market has no sales on record keeps its reservation. The chosen
+price-taking reservation and neither searches nor raises, and as a rival it counts once per workshop. A seller whose
+market has no sales on record keeps its reservation; one whose reservation is nothing but whose good has a making cost
+opens at the price it expects (opened_ask), never at nothing. The chosen
 ask is held inside a band above the seller's unit cost (ask_band_multiple), and a seller whose ask goes unsold is
 brought down to what sells by unsold_search.py. The reservation itself moves between years with the seller's stock
 against its target (ask_adjust.py), which is the grid's centre.
@@ -46,6 +47,18 @@ def input_share_of_cost(setup, record, view, offer: Offer) -> float:
     inputs = live_input_prices(producer, recipe, view)
     variable = run_cost.variable_cost_per_run(recipe, inputs, live_wages(producer, recipe, view), producer.land_rent_per_run)
     return run_cost.input_cost_per_run(recipe, inputs) / variable if math.isfinite(variable) and variable > 0.0 else 0.0
+
+
+def opened_ask(reservation: float, cost: Optional[float], expected_price: Optional[float], limit: float) -> Optional[float]:
+    """The ask a seller whose reservation is nothing opens at: a good that costs something to make is not given away, so
+    the seller asks the price it expects (held to the top of the band) and the unsold search brings it down to what
+    sells. None when the reservation is positive (it is the ask), the good has no cost that can be priced (a waste
+    product, which the market places at its lowest price), or the seller has no price it expects."""
+    if reservation > 0.0 or cost is None or not math.isfinite(cost) or cost <= 0.0:
+        return None
+    if expected_price is None or not math.isfinite(expected_price) or expected_price <= 0.0:
+        return None
+    return min(expected_price, limit)
 
 
 def unit_value(offer: Offer, cost: float) -> float:
@@ -92,6 +105,16 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
             costs[(offer.seller, offer.tile)] = cost
         if cost is None:
             continue
+        if offer.reservation_price <= 0.0:       # a perishable or a distressed holder: it asks a price, never nothing
+            producer = record.producers[offer.seller]
+            recipe = setup.recipes[producer.recipe_id]
+            limit = (band_edge(cost, input_share_of_cost(setup, record, view, offer), ask_band_multiple(setup, offer))
+                     if math.isfinite(cost) else math.inf)
+            opened = opened_ask(offer.reservation_price, cost,
+                                expected_output_prices(producer, recipe, view).get(offer.good), limit)
+            if opened is not None:
+                offers[index] = dataclasses.replace(offer, reservation_price=opened)
+                continue
         if stands_for_many(record, offer):
             continue     # a crowd of price takers keeps its reservation; unsold_search.py lowers it to what sells
         value = unit_value(offer, cost)
