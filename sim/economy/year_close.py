@@ -6,6 +6,7 @@ from typing import Dict, Tuple
 from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
+from .expected_sales import demand_seen
 from . import (carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes)
 from .household_work_year import basket_key, cohort_basket
@@ -226,7 +227,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         if closed.loan_request is not None:
             record.loan_requests.append(closed.loan_request)
             record.expansion_runs[producer_id] = closed.expansion_runs
-        record.producers[producer_id] = _with_sales(closed.producer, recipe, ledger)
+        record.producers[producer_id] = _with_sales(closed.producer, recipe, ledger, record.book, area_map.area_of, traded)
     prices, volumes = learned_prices(ledger.clearings, record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     ordered = (sorted(prices.items()), sorted(volumes.items()))
@@ -291,11 +292,14 @@ def held_only(moves, book):
             for move in moves]
 
 
-def _with_sales(producer, recipe, ledger: YearLedger):
-    """Expected sales move toward what it sold this year, in runs of its main output."""
+def _with_sales(producer, recipe, ledger: YearLedger, book, area_of, traded):
+    """Expected sales move toward what it sold this year, in runs of its main output; a producer that sold out also
+    sees its share of the unmet demand in its market (`traded`: quantity sold by (good, area))."""
     good = producers.main_output(recipe)
     per_run = recipe.outputs[good]
-    sold = ledger.sold.get((producer.agent_id, good), 0.0) / per_run
+    market = (good, area_of(good, producer.tile))
+    sold = demand_seen(ledger.sold.get((producer.agent_id, good), 0.0), book.stock(producer.agent_id, good, producer.tile),
+                       traded.get(market, 0.0), ledger.unmet_demand.get(market, 0.0)) / per_run
     worked = ledger.output.get((producer.agent_id, good), 0.0) / (per_run * producer.yield_factor or per_run)
     if producer.expected_sales <= 0.0:
         return replaced(producer, expected_sales=sold, last_runs=worked)
