@@ -11,7 +11,7 @@ Capacity needs no function here: the investment rule (`producers_close._investme
 Firm_calc_input_demands) builds beyond wear only when the planned runs exceed the capacity, so capacity equal to the
 planned runs (expected sales) needs no growth, which agrees with a post-warm-up Eurace state's median utilisation of 1.0.
 """
-from typing import Dict, Mapping
+from typing import Dict, Mapping, Tuple
 
 from . import households_buffer_stock, inventory
 
@@ -41,3 +41,25 @@ def resting_output_stock(expected_yearly_sales: float, outputs_per_run: Mapping[
         return {}
     target = inventory.target_stock(expected_yearly_sales)
     return {good: target * made for good, made in sorted(outputs_per_run.items()) if made > 0.0}
+
+
+def resting_labour_contracts(hours_needed: Mapping[str, Mapping[str, Mapping[str, float]]], wages: Mapping[str, float]
+                             ) -> Tuple[Dict[str, Dict[str, Dict[str, float]]], Dict[str, Dict[str, Dict[str, float]]]]:
+    """(hours held, wage each hour is paid), area -> trade -> employer, of an opening whose employers already employ
+    the hours they need at the trade's opening wage. Follows the manual's household and firm initialisation
+    (chapter 10; section 10.1.2 step 1 sizes output so labour demand is the employment the households already
+    have), and the contract rule (`labour.market.clearing.contracted_wage`, after Eurace Household_receive_wage and
+    Firm_update_wage_offer): an hour held is paid its contract and only new hires clear at the market, so the hours
+    nobody hires (visible idle hours) do not pull the wage of those employed down in the first year. A trade with
+    no opening wage, and an employer needing no hours, hold nothing."""
+    held: Dict[str, Dict[str, Dict[str, float]]] = {}
+    paid: Dict[str, Dict[str, Dict[str, float]]] = {}
+    for area, by_trade in sorted(hours_needed.items()):
+        for trade, by_employer in sorted(by_trade.items()):
+            if wages.get(trade) is None:
+                continue
+            for employer, hours in sorted(by_employer.items()):
+                if hours > 0.0:
+                    held.setdefault(area, {}).setdefault(trade, {})[employer] = hours
+                    paid.setdefault(area, {}).setdefault(trade, {})[employer] = wages[trade]
+    return held, paid

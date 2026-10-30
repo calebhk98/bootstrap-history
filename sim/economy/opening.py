@@ -108,6 +108,8 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record, view)
     record.workforce = labour_state.opening_workforce(setup, record)   # the mint's capacity follows the money struck
+    record.workforce.hired_hours, record.workforce.contract_wages = opening_resting.resting_labour_contracts(
+        labour_state.producers_hours_by_employer(setup, record), setup.opening_wages)
     mint.seed_opening_metal(setup, record)
     opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
     record.opening_demand = opening_runs.national_totals(final_by_tile)

@@ -1,0 +1,11 @@
+# The leisure preference and the hours elasticity are declared, not sourced
+
+**Status:** closed - households no longer choose hours: they offer every hour their plot and household work do not take (Eurace@Unibi, Labour/Household_Employee_Functions.c: an employed household supplies its whole labour, an unemployed one searches). `LEISURE_ELASTICITY`, `leisure_hours_kept`, `leisure_anchor_wage`, the opening's anchor solve (`opening_leisure.py`), `record.leisure_anchor_wage` and the perceived price level that only scaled the anchor (`PERCEIVED_PRICE_LEVEL_SHARE`) are deleted; `python3 sim/constants.py --burndown` lists neither.
+
+Part of 473 (the opening is a point on a cycle), 608.
+
+**What was wrong.** Hours the plot and household work did not take were split between leisure and the market by a declared elasticity (confidence D, no source) and an anchor wage solved at the opening so that offered equalled hired. What was left over was called leisure although it was unmodelled time as much as choice.
+
+**What replaced it.** The offer is fixed (`labour_supply.HourSupply`). The opening no longer hides the hours its producers do not hire: each producer opens holding the hours its expected runs need at the trade's opening wage (`opening_resting.resting_labour_contracts`, from `labour_state.producers_hours_by_employer`), under the downward-rigid contract rule, and the rest of the working hours are visible as idle hours (`YearOutcome.idle_hours`), spent on the household's own plot (`Economy._grow_own`). Eurace sizes firm output so labour demand is full employment (manual 10.1.2); here final demand is bounded by needs and income, so output is not raised to employ every hour, and the opening is unemployed in the labour market sense by a large share where a trade offers far more hours than the recipes hire (`sim.tests.economy_fixture.run(small_setup(), years=5)` prints `idle_hours` and `hired_hours` per year: on the stated fixture the first year hires about a twelfth of the hours offered).
+
+**Still open (not this complaint).** The wage new hires clear at falls toward the ask floor when most hours are idle, so the mean wage drifts down over the first years on the stated fixture; whether that is the right dynamic is 473/608's.

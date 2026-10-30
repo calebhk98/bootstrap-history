@@ -38,3 +38,10 @@ a few per cent. On the stated fixture the opening splits time (`opening_leisure.
 wage, and year one's wage stays at the opening wage (was 0.075). Still open: the wage and price level drift down over years
 on the fixtures through the demand side (473 Update 8: households add to their cash, producers' cash and runs fall), and Rome
 is not re-measured (orchestrator commands in 473 Update 8's branch report).
+
+## Update: the opening splits no time (675 closed)
+
+The leisure split is gone: households offer every hour their plot and household work leave. Year one's wage stays at the
+opening wage because each producer opens holding the hours it hires at that wage (`opening_resting.resting_labour_contracts`),
+not because hours offered equal hours hired; the unhired hours are visible idle hours. Later years still drift down on the
+stated fixture as new hires clear against the ask floor (see 675).

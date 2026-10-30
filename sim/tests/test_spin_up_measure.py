@@ -146,7 +146,7 @@ class RebaseTests(unittest.TestCase):
         money = "coin"
         memory = types.SimpleNamespace(
             prices={"wheat_kg|area": 1.5}, volume_weights={}, quote_kinds={}, basket_price_levels={money: 1.8},
-            price_levels={money: 1.7}, perceived_price_levels={money: 1.6}, expected_inflation={money: 0.07})
+            price_levels={money: 1.7}, expected_inflation={money: 0.07})
         cohorts = {"household:a": Cohort("household:a", "farms", 0, 10.0, 5.0, 0.2, expected_inflation=0.07,
                                          last_basket_price_level=1.8)}
         record = types.SimpleNamespace(memory=memory, volumes={"wheat_kg|area": 10.0}, cohorts=cohorts, index_base_prices={})

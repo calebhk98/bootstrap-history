@@ -53,7 +53,7 @@ class ImportCosts:
         return self._reach[area]
 
     def hours_at(self, area: str, trade: str, wage: float) -> float:
-        """The hours the trade's workers in an area sell at a wage: the hours they keep for plots and leisure are not
+        """The hours the trade's workers in an area sell at a wage: the hours they keep for plots and household work are not
         for hire, so where the area has a schedule (`hours_share_at`) only its share of their hours counts."""
         key = (area, trade, wage)
         sold = self._sold.get(key)

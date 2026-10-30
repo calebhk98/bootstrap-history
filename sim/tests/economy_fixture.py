@@ -88,8 +88,7 @@ def stationary_setup(slack_share: float = 0.0, **changes) -> EconomySetup:
     is many times what the fixture's recipes hire: at those hours the labour market clears at the workers' survival
     wage a dozen times below the stated one, and no year repeats itself. Households work a plot (`land_per_run` on the
     farm recipe), so an hour not sold has a use at home. The runs are those of the stated fixture's opening demand.
-    The opening splits each worker's time so the hours sold equal the hours hired whatever the hours he has
-    (opening_leisure.py), so `slack_share` here shows in the hours offered only if the setup is changed after the opening."""
+    Every hour the plot and household work leave is offered (no leisure), so hours beyond the hours hired show as idle hours."""
     stated = small_setup(land_per_run={FARM: PLOT_LAND_PER_RUN})
     economy = Economy(stated)
     flows = opening_stationary.solve({TOWN: economy.record.opening_demand}, stated.recipes, stated.opening_prices,

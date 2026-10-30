@@ -37,5 +37,17 @@ class RestingStockTests(unittest.TestCase):
         self.assertEqual(opening_resting.resting_output_stock(0.0, {"grain": 2.0}), {})
 
 
+class RestingContractsTests(unittest.TestCase):
+    def test_each_employer_opens_holding_the_hours_it_hires_at_the_trades_opening_wage(self):
+        needed = {"vale": {"reaper": {"farm_a": 300.0, "farm_b": 0.0}, "smith": {"farm_a": 50.0}}}
+        held, wages = opening_resting.resting_labour_contracts(needed, {"reaper": 1.0, "smith": 1.5})
+        self.assertEqual(held, {"vale": {"reaper": {"farm_a": 300.0}, "smith": {"farm_a": 50.0}}})
+        self.assertEqual(wages, {"vale": {"reaper": {"farm_a": 1.0}, "smith": {"farm_a": 1.5}}})
+
+    def test_a_trade_with_no_opening_wage_holds_no_contract(self):
+        held, wages = opening_resting.resting_labour_contracts({"vale": {"reaper": {"farm_a": 300.0}}}, {})
+        self.assertEqual((held, wages), ({}, {}))
+
+
 if __name__ == "__main__":
     unittest.main()

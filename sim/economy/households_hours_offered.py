@@ -1,27 +1,17 @@
 """How many of its working hours a household offers to the market (Complaint 473, 608).
 
-An hour a household does not sell is not idle: it goes to its own plot, its household work and leisure. So the hours
-offered are a choice against what an hour yields at home. On the plot, output rises with hours on fixed land to the
+An hour a household does not sell is not idle: it goes to its own plot and its household work (no leisure: Eurace@Unibi
+households have no hours decision, Labour/Household_Employee_Functions.c). So the hours offered are a choice against
+what an hour yields at home. On the plot, output rises with hours on fixed land to the
 labour elasticity (world/land.py), so the next hour adds less the more hours are already there; the household keeps
 hours on the plot until the next one adds no more than the wage. A household with no plot (no land held, or nothing
 its land grows serves a need) has nothing to keep them for and offers all. The wage that holds the hours back is the
-household's own outside option, not a typed survival figure. Hours left after the plot and household work are shared
-between leisure and the market by a smooth preference (`leisure_hours_kept`), so the hours offered rise with the wage
-without a step. Plain functions of built inputs.
+household's own outside option, not a typed survival figure. Every hour left after the plot and household work is
+offered. Plain functions of built inputs.
 """
-from typing import Optional, Tuple
+from typing import Tuple
 
-from sim.constants import declare
 from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
-
-LEISURE_ELASTICITY = declare(
-    "LEISURE_ELASTICITY", 2.0, kind="temporary_heuristic",
-    unit="elasticity of the ratio of hours sold to leisure hours, with respect to the wage", source=None, confidence="D",
-    retire="Complaints/675",
-    why="A household splits the hours its plot and household work leave between leisure and sale; the more the wage "
-        "pays against what its hours are worth at rest the more it sells. The figure only sets how smoothly the hours "
-        "move with the wage, so that a small excess of hours moves the wage a little; no labour-supply study has been "
-        "opened for it (675).")
 
 
 def plot_hours_kept(hours_available: float, wage_per_hour: float, plot_return_per_hour: float,
@@ -62,32 +52,3 @@ def unsold_hours_to_home(hours_offered_to_market: float, hours_sold: float) -> T
     not lost."""
     sold = min(max(0.0, hours_sold), max(0.0, hours_offered_to_market))
     return sold, max(0.0, hours_offered_to_market) - sold
-
-
-def leisure_share(wage_per_hour: float, anchor_wage_per_hour: Optional[float], elasticity: float = LEISURE_ELASTICITY) -> float:
-    """Share of free hours kept as leisure: one half at the anchor wage (the wage at which an hour at rest is worth
-    as much as an hour sold), falling smoothly toward none as the wage rises and toward all as it falls. No anchor,
-    or none above zero, means no leisure is valued."""
-    if anchor_wage_per_hour is None or anchor_wage_per_hour <= 0.0:
-        return 0.0
-    if wage_per_hour <= 0.0:
-        return 1.0
-    return 1.0 / (1.0 + (wage_per_hour / anchor_wage_per_hour) ** elasticity)
-
-
-def leisure_hours_kept(eligible_hours: float, wage_per_hour: float, anchor_wage_per_hour: Optional[float],
-                       elasticity: float = LEISURE_ELASTICITY) -> float:
-    """Hours of the `eligible_hours` a household keeps as leisure at this wage: the hours left after the plot and
-    household work, less those its plot could still use (an hour it needs to grow its floors is not leisure)."""
-    return max(0.0, eligible_hours) * leisure_share(wage_per_hour, anchor_wage_per_hour, elasticity)
-
-
-def leisure_anchor_wage(eligible_hours: float, leisure_wanted: float, wage_per_hour: float,
-                        elasticity: float = LEISURE_ELASTICITY) -> Optional[float]:
-    """The anchor wage at which households keep exactly `leisure_wanted` of their `eligible_hours` as leisure at
-    `wage_per_hour` (the inverse of `leisure_hours_kept`); None where none does: nothing wanted, or more wanted than
-    there are hours to keep, which no leisure preference can bring about."""
-    if eligible_hours <= 0.0 or leisure_wanted <= 0.0 or leisure_wanted >= eligible_hours or wage_per_hour <= 0.0:
-        return None
-    share = leisure_wanted / eligible_hours
-    return wage_per_hour * (share / (1.0 - share)) ** (1.0 / elasticity)
