@@ -20,7 +20,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 from sim.constants import declare
 from sim.world import capital_market
 
-from . import bank_spread, credit_claims
+from . import bank_credit_risk, bank_spread, credit_claims
 from .types import AgentId, FundsOffer, Loan, Transfer
 
 DEPOSIT_BANKING = "deposit_banking"        # the institution a society must hold for its households to found banks
@@ -80,6 +80,15 @@ def capital_of(record, bank_id: AgentId, money: str) -> float:
 
 def loans_out(record, bank_id: AgentId) -> float:
     return sum(loan.principal for loan in record.loans if loan.lender == bank_id and not is_deposit(record, loan))
+
+
+def risk_headroom(record, bank_id: AgentId, money: str) -> float:
+    """The value at risk the bank may still take on (bank_credit_risk.var_headroom): its equity, what it holds and is
+    owed less what it owes depositors, times ALFA, less the value at risk of the loans it has out."""
+    own_loans = [loan for loan in record.loans if loan.lender == bank_id and not is_deposit(record, loan)]
+    at_risk = bank_credit_risk.value_at_risk(
+        bank_credit_risk.exposures(own_loans, credit_claims.principal_by_borrower(record.loans)))
+    return bank_credit_risk.var_headroom(capital_of(record, bank_id, money), at_risk)
 
 
 def found(record, founder: AgentId, capital: float, year: int, money: str,
@@ -180,7 +189,8 @@ def intermediate(setup, record, offers: Sequence[FundsOffer], year: int, institu
         funds = free_cash(record, bank, money) + (1.0 - bank.reserve_share) * sum(
             offer.amount for offer in placed.get(bank.agent_id, ()))
         if funds > 0.0:
-            kept.append(FundsOffer(bank.agent_id, money, funds, ask_of(record, bank, money, placed.get(bank.agent_id, ()))))
+            kept.append(FundsOffer(bank.agent_id, money, funds, ask_of(record, bank, money, placed.get(bank.agent_id, ())),
+                                   risk_capacity=risk_headroom(record, bank.agent_id, money)))
     return kept, placed
 
 

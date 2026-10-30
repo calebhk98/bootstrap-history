@@ -296,6 +296,7 @@ class FundsOffer:
     currency: CurrencyId
     amount: float
     minimum_rate: float
+    risk_capacity: Optional[float] = None      # value at risk the lender may still take on (a bank's headroom); None: no limit
 
 
 Loan = Contract                   # a term loan is a contract of that kind in the shared registry

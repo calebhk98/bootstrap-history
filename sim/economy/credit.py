@@ -13,6 +13,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
+from . import bank_credit_risk
 from .labour import Entry, allocate_in_order, clearing_point, sticky_move
 from .types import AgentId, CurrencyId, FundsOffer, Loan, LoanRequest, Transfer
 from .replaced import replaced
@@ -22,11 +23,6 @@ RATE_ADJUSTMENT_SHARE_PER_YEAR = declare(
     unit="share of the gap to the clearing rate closed in a year", source=None, confidence="D",
     why="Lenders reprice slowly: standing loans and custom keep the base rate from jumping to the "
         "clearing level. Stands in for contract terms and lenders' search, which are not modelled.")
-LEVERAGE_PREMIUM = declare(
-    "LEVERAGE_PREMIUM", 0.2, kind="temporary_heuristic",
-    unit="rate added at all debt and no collateral", source=None, confidence="D",
-    why="Shape of the risk premium: grows with debt's share of debt plus collateral. Stands in for "
-        "lenders' own estimate of loss given default, which needs a model of recovery that is absent.")
 ARREARS_PREMIUM = declare(
     "ARREARS_PREMIUM", 0.3, kind="temporary_heuristic",
     unit="rate added when arrears equal the whole debt", source=None, confidence="D",
@@ -50,12 +46,13 @@ class Default:
 
 
 def risk_premium(debt_after: float, collateral_value: float, arrears_history: float) -> float:
-    """Rate added to the base rate: rises with debt against collateral and with unpaid arrears."""
+    """Rate added to the base rate: a markup on the borrower's default probability (its debt against its collateral,
+    taken as its equity; bank_credit_risk, after Eurace Bank_decide_credit_conditions) and a term in unpaid arrears."""
     if debt_after <= 0:
         return 0.0
-    leverage = debt_after / (debt_after + max(0.0, collateral_value))
+    probability = bank_credit_risk.default_probability(debt_after, 0.0, collateral_value)
     arrears_share = min(1.0, max(0.0, arrears_history) / debt_after)
-    return LEVERAGE_PREMIUM * leverage + ARREARS_PREMIUM * arrears_share
+    return bank_credit_risk.markup(probability) + ARREARS_PREMIUM * arrears_share
 
 
 def earnable_rate(gain: float, outlay: float = 1.0) -> float:
@@ -140,6 +137,9 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
     premiums = [risk_premium(existing_debt_by_borrower.get(request.borrower, 0.0) + request.amount,
                              request.collateral_value, arrears_by_borrower.get(request.borrower, 0.0))
                 for request in requests]
+    default_probabilities = [bank_credit_risk.default_probability(existing_debt_by_borrower.get(request.borrower, 0.0),
+                                                                 request.amount, request.collateral_value)
+                             for request in requests]
     ceilings = [request.maximum_rate - premium for request, premium in zip(requests, premiums)]
     # a request whose ceiling is below zero or below every lender's ask cannot borrow at any rate the
     # market could clear at: it is rationed demand, left out of the clearing and returned as unmet
@@ -184,29 +184,38 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
         borrower_entries = [(ceilings[index], requests[index].borrower, requests[index].amount) for index in asking]
     lender_amounts = allocate_in_order(lender_entries, lent, descending=False)
     borrower_amounts = allocate_in_order(borrower_entries, lent, descending=not rationed_by_risk)
-    # lenders in cheapest-first order, then the same order of borrowers, paired by running through both
-    lender_queue = sorted(((offer.minimum_rate, offer.lender, amount)
-                           for offer, amount in zip(lending, lender_amounts) if amount > 0))
+    # lenders in cheapest-first order, then the same order of borrowers; a lender with a risk capacity (a bank's
+    # headroom, Eurace Bank_decide_credit_conditions EXCESS_VAR) refuses whole any piece whose value at risk exceeds
+    # what it has left, and keeps the rest for smaller pieces
+    lender_queue = [[offer.lender, amount, offer.risk_capacity] for offer, amount in
+                    sorted(((offer, amount) for offer, amount in zip(lending, lender_amounts) if amount > 0),
+                           key=lambda pair: (pair[0].minimum_rate, pair[0].lender, pair[1]))]
     granted = dict(zip(asking, borrower_amounts))
     loans: List[Loan] = []
-    position = 0
-    lender_left = lender_queue[0][2] if lender_queue else 0.0
     for index in sorted(granted, key=lambda i: (-ceilings[i], requests[i].borrower, i)):
         request, owed = requests[index], granted[index]
-        while owed > 1e-12 and position < len(lender_queue):
-            piece = min(owed, lender_left)
+        granted[index] = 0.0
+        for entry in lender_queue:
+            if owed <= 1e-12:
+                break
+            piece = min(owed, entry[1])
+            if piece <= 1e-12:
+                continue
+            if entry[2] is not None:
+                piece_at_risk = default_probabilities[index] * piece
+                if piece_at_risk > entry[2] + 1e-12:
+                    continue
+                entry[2] -= piece_at_risk
             loans.append(Loan(
-                contract_id="loan:%s:%d:%d" % (currency, year, len(loans)), lender=lender_queue[position][1],
+                contract_id="loan:%s:%d:%d" % (currency, year, len(loans)), lender=entry[0],
                 borrower=request.borrower, currency=currency, principal=piece,
                 rate=base_rate + premiums[index], years_left=request.years,
                 collateral_value=request.collateral_value * piece / request.amount, issued_year=year,
                 collateral_tile=request.collateral_tile,
                 collateral_share=request.collateral_share * piece / request.amount))
             owed -= piece
-            lender_left -= piece
-            if lender_left <= 1e-12:
-                position += 1
-                lender_left = lender_queue[position][2] if position < len(lender_queue) else 0.0
+            entry[1] -= piece
+            granted[index] += piece
     unmet = []
     for index, request in enumerate(requests):
         left = request.amount - granted.get(index, 0.0)
