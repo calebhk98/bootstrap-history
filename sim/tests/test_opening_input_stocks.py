@@ -39,7 +39,7 @@ class OpeningInputStockTests(unittest.TestCase):
     def test_an_input_nothing_opened_makes_is_held_for_the_year(self):
         setup, record = opened(fixture.recipes(), {fixture.SMELT: 10.0})
         opening._stock_producers_with_inputs(setup, record)
-        wanted = 10.0 * (1.0 + opening.OPENING_SPARE_CAPACITY_SHARE) * 1000.0
+        wanted = 10.0 * 1000.0      # the planned runs (expected sales), not the spare capacity
         self.assertAlmostEqual(record.book.stock("producer:" + fixture.SMELT, fixture.ORE, TILE), wanted)
 
     def test_members_of_a_cycle_open_holding_each_others_goods(self):
