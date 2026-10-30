@@ -83,5 +83,26 @@ class ClassifyPlainCheck(unittest.TestCase):
         self.assertEqual((entry["kind"], entry["cause"]), ("closed", "mothballed"))
 
 
+class SupplyBlockerIds(unittest.TestCase):
+    """Complaint 682: only the substitution check names the options of the node's own failed group."""
+    gap = ("a vessel", ["bronze_boiler", "hidden_boiler"])
+
+    def ids(self, cause, gap):
+        return blocker_rules.supply_blocker_ids(cause, gap, lambda option: option != "hidden_boiler")
+
+    def test_substitution_names_its_visible_options(self):
+        self.assertEqual(self.ids("substitution", self.gap), ["bronze_boiler"])
+
+    def test_substitution_with_no_gap_names_none(self):
+        self.assertEqual(self.ids("substitution", None), [])
+
+    def test_held_herd_names_no_substitution_option(self):
+        self.assertEqual(self.ids("needs_held_herd", self.gap), [])
+
+    def test_own_material_causes_name_no_substitution_option(self):
+        self.assertEqual(self.ids("unheld_stock", self.gap), [])
+        self.assertEqual(self.ids("materials_have_a_seller", self.gap), [])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -75,11 +75,10 @@ check("a node with no req_any gate clears it trivially, at full quality",
       _gate(_groups, {})._substitution_quality("plain") == (1.0, True))
 passing = _gate(_groups, {"fuel": 0.5, "vessel": 0.8})
 check("each group's best option multiplies into the quality",
-      passing._substitution_quality("engine") == (0.4, True) and passing.last_substitution_gap() is None)
+      passing._substitution_result("engine") == (0.4, True, None))
 dead = _gate(_groups, {"fuel": 0.5, "vessel": 0.0})
-check("a group with no option at all fails the gate and records which group was short",
-      dead._substitution_quality("engine") == (0.0, False) and dead.last_substitution_gap() == ("a vessel", []),
-      dead.last_substitution_gap())
+check("a group with no option at all fails the gate and returns which group was short",
+      dead._substitution_result("engine") == (0.0, False, ("a vessel", [])), dead._substitution_result("engine"))
 
 # --- what the society must have first: the Mexica's draught animals gate the animal-drawn vehicles, and no others
 MEXICA = S.load_civ("mexica_1500")
