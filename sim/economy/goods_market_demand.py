@@ -5,6 +5,8 @@ from bisect import bisect_right
 from operator import attrgetter, itemgetter
 from typing import List, Optional, Sequence
 
+import numpy
+
 from .types import Bid
 
 _SCHEDULE_FIELDS = attrgetter("floor_quantity", "flexible_quantity", "reference_price", "elasticity", "budget",
@@ -47,6 +49,7 @@ class DemandSchedule:
         self._uncapped_terms: Optional[List[tuple]] = None
         self._ceilings: Optional[List[float]] = None
         self.solutions: dict = {}            # solve_price's memo: books against this demand share it
+        self._arrays: Optional[tuple] = None
 
     def distinct_schedules(self) -> int:
         return len(self.group_terms)
@@ -141,3 +144,31 @@ class DemandSchedule:
             return [0.0 if price > maximum else min(floor + flexible * factors[group], budget / price)
                     for (floor, flexible, budget, group), maximum in zip(self.rows, self.maximums)]
         return [min(floor + flexible * factors[group], budget / price) for floor, flexible, budget, group in self.rows]
+
+    def maximum_array(self) -> "numpy.ndarray":
+        """Each bid's maximum price, in the order of the bids."""
+        return self._columns()[5]
+
+    def _columns(self) -> tuple:
+        arrays = self._arrays
+        if arrays is None:
+            floors = numpy.array([row[0] for row in self.rows], dtype=float)
+            flexibles = numpy.array([row[1] for row in self.rows], dtype=float)
+            budgets = numpy.array([row[2] for row in self.rows], dtype=float)
+            groups = numpy.array([row[3] for row in self.rows], dtype=numpy.intp)
+            maximums = numpy.array(self.maximums, dtype=float)
+            arrays = self._arrays = (floors, flexibles, budgets, groups, numpy.array(self._negated_terms, dtype=float).reshape(-1, 2),
+                                     maximums)
+        return arrays
+
+    def matrix_at(self, prices: "numpy.ndarray") -> "numpy.ndarray":
+        """`each_at` for many positive prices at once: row per price, column per bid, the same values to rounding."""
+        floors, flexibles, budgets, groups, terms, maximums = self._columns()
+        column = prices[:, None]
+        with numpy.errstate(all="ignore"):
+            factors = (column / terms[:, 0][None, :]) ** terms[:, 1][None, :]
+            wanted = floors[None, :] + numpy.where(flexibles > 0.0, flexibles[None, :] * factors[:, groups], 0.0)
+            wanted = numpy.minimum(wanted, budgets[None, :] / column)
+        if self.price_capped:
+            wanted[column > maximums[None, :]] = 0.0
+        return wanted
