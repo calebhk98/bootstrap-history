@@ -93,7 +93,6 @@ class EconomyRecord:
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
     carried: Dict[str, Dict[str, float]] = field(default_factory=dict)   # tonnes the merchants carried last year: origin tile -> destination tile (sim.geography.flow_ledger)
     carried_goods: Dict[str, Dict[str, Dict[str, List[float]]]] = field(default_factory=dict)   # the same flows by good: good -> origin -> destination -> [tonnes, value at origin's price, value at destination's price] (carried_book.py)
-    leisure_anchor_wage: Dict[TradeId, float] = field(default_factory=dict)   # trade -> the wage at which its workers keep half their free hours as leisure, at the opening's price level (opening_leisure.py)
     fugitives: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # labour area people fled from -> people still away, arrears owed per head, the area they went to (flight_year.py)
     output_by_tile: Dict[TileId, Dict[str, float]] = field(default_factory=dict)   # tile -> good -> units the home producers made last year
 
@@ -173,7 +172,6 @@ class EconomyRecord:
             "curves": self.curves,
             "ways": {key: dict(built) for key, built in sorted(self.ways.items())},
             "area_imbalance": self.area_imbalance,
-            "leisure_anchor_wage": dict(sorted(self.leisure_anchor_wage.items())),
             "carried": {key: dict(row) for key, row in sorted(self.carried.items())},
             "carried_goods": self.carried_goods,
             "spin_up_result": dict(self.spin_up_result),
@@ -228,7 +226,6 @@ class EconomyRecord:
             curves=dict(record["curves"]),
             ways={key: dict(built) for key, built in record["ways"].items()},
             area_imbalance=record["area_imbalance"],
-            leisure_anchor_wage=dict(record["leisure_anchor_wage"]),
             carried={key: dict(row) for key, row in record["carried"].items()},
             carried_goods=record["carried_goods"],
             spin_up_result=dict(record["spin_up_result"]),

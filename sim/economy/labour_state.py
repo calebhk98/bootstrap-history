@@ -53,6 +53,15 @@ def producers_hours_needed(setup, record) -> Dict[str, Dict[str, float]]:
     return hours_needed
 
 
+def producers_hours_by_employer(setup, record) -> Dict[str, Dict[str, Dict[str, float]]]:
+    """Yearly hours each producer needs of each trade for the runs it expects to sell: area -> trade -> producer."""
+    hours: Dict[str, Dict[str, Dict[str, float]]] = {}
+    for producer in sorted(record.producers.values(), key=lambda each: each.agent_id):
+        for trade, per_run in setup.recipes[producer.recipe_id].labour_hours.items():
+            hours.setdefault(labour_area(producer.tile), {}).setdefault(trade, {})[producer.agent_id] = producer.expected_sales * per_run
+    return hours
+
+
 def seeded_hours(setup, hours_needed: Mapping[str, Mapping[str, float]]) -> Dict[str, Dict[str, float]]:
     """Hours each area's work needs of the trades no producer's runs staff, from the society's need shares
     (carriage and the recipes no producer runs yet): the trades the labour core would otherwise hold nobody in."""
