@@ -163,14 +163,12 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     supply = math.fsum(offer.quantity for offer in ordered)
     if not _trades(buyers, ordered, asks):
         return _empty(good, area, currency, _held_price(buyers, asks), bids, supply, offers)
-    allocation = allocate(bids, ordered, asks, buyers.schedule.each_at, buyers.schedule.maximums)
+    allocation = allocate(bids, ordered, asks, buyers.schedule)
     fills: List[Fill] = []
     unmet = 0.0
-    for bid, pairs in zip(bids, allocation.bought):
-        quantity = math.fsum([amount for _index, amount in pairs])
+    for bid, quantity, cost in zip(bids, allocation.quantity, allocation.cost):
         unmet += max(0.0, bid.floor_quantity - quantity)
         if quantity > 0.0:
-            cost = math.fsum([amount * asks[index] for index, amount in pairs])
             fills.extend(buyer_fills([bid], [quantity], good, area, cost / quantity))
     fills.extend(make_fill(offer.seller, good, area, offer.tile, amount, ask, "sell")
                  for offer, amount, ask in zip(ordered, allocation.sold, asks) if amount > 0.0)
@@ -215,7 +213,7 @@ def sold_by_seller(buyers: Buyers, offers: Sequence[Offer]) -> dict:
     sold: dict = {}
     if not _trades(buyers, ordered, asks):
         return sold
-    allocation = allocate(buyers.bids, ordered, asks, buyers.schedule.each_at, buyers.schedule.maximums)
+    allocation = allocate(buyers.bids, ordered, asks, buyers.schedule)
     for offer, quantity in zip(ordered, allocation.sold):
         if quantity > 0.0:
             key = (offer.seller, offer.tile)
