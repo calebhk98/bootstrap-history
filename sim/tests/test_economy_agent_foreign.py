@@ -40,10 +40,12 @@ class ExportTests(unittest.TestCase):
         result = clear([household(), partner_buys(1000.0, 0.0001)], [farm()])
         self.assertEqual([fill.quantity for fill in result.fills if fill.agent == EDGE_EXTERNAL], [])
 
-    def test_a_partner_paying_well_for_our_grain_pays_sellers_more_than_the_home_price(self):
-        home = clear([household()], [farm()])
-        abroad = clear([household(), partner_buys(1000.0, 3.0)], [farm()])
-        self.assertGreater(abroad.price, home.price)
+    def test_a_partner_paying_well_for_our_grain_takes_some_of_it_at_the_sellers_ask(self):
+        # buyers pay a seller's ask, so a partner's high bid wins it a share of the stock, not a higher price for sellers
+        abroad = clear([household(), partner_buys(1000.0, 3.0)], [farm(quantity=1000.0)])
+        exported = [fill for fill in abroad.fills if fill.agent == EDGE_EXTERNAL]
+        self.assertGreater(sum(fill.quantity for fill in exported), 0.0)
+        self.assertAlmostEqual(abroad.price, 0.3)
 
     def test_a_partner_buying_exports_does_not_lower_the_domestic_price_of_the_good(self):
         home = clear([household()], [farm()])

@@ -3,7 +3,7 @@
 The book of a market that cleared is summarised as the buyers' schedules (merged where they share a
 reference price, elasticity and ceiling) and the sellers' reservation prices (merged by price), leaving
 out the external edge's own orders. A quote clears that summary again with one more offer (cargo landed in
-the area) or one more floor bid (cargo taken out), through the same `goods_market.clear` the year uses, and
+the area) or one more floor bid (cargo taken out), through `goods_market.clear_at_one_price` (the price that takes exactly that supply; the year itself clears by the logit), and
 returns the price over what the summary alone clears at (unbounded when more is taken than the sellers hold). Merging buyers adds their budgets, so a market in
 which a few buyers are held back by their budgets quotes a little off the book it summarises.
 """
@@ -92,7 +92,7 @@ def _base_clearing(curve, good: str, last_price: Optional[float]):
     found = _BASE_CLEARINGS.get(key)
     if found is None:
         bids, offers = _bids(curve, good), _offers(curve, good)
-        base = goods_market.clear(bids, offers, good, CURVE_AREA, "", last_price)
+        base = goods_market.clear_at_one_price(bids, offers, good, CURVE_AREA, "", last_price)
         found = (base.price, base.quantity, tuple(bids), tuple(offers))
         if len(_BASE_CLEARINGS) >= BASE_CLEARINGS_KEPT:
             _BASE_CLEARINGS.clear()
@@ -116,7 +116,7 @@ def price_response(curve: Dict[str, List[List[float]]], good: str, last_price: O
     if taken >= math.fsum(offer.quantity for offer in offers):
         return math.inf    # more is wanted at any price than the sellers hold: nothing caps the price
     try:
-        moved = goods_market.clear(bids, offers, good, CURVE_AREA, "", base_price)
+        moved = goods_market.clear_at_one_price(bids, offers, good, CURVE_AREA, "", base_price)
     except OverflowError:
         return math.inf
     if not moved.quantity > 0.0:

@@ -1,6 +1,6 @@
-"""More money in circulation raises prices through two rules, each called on inputs built here: a household
+"""More money in circulation reaches the market through two rules, each called on inputs built here: a household
 holding more cash than usual offers to spend more of it (`goods_orders`), and a market whose buyers have more
-to spend on the same supply clears dearer (`goods_market.clear`). The whole-game version, mined metal against the
+to spend on the same supply buys more of it at the sellers' ask (`goods_market.clear`). The whole-game version, mined metal against the
 mean price level of a played civilisation, rode on how a cycling food price happened to fall (Complaint 473) and is
 a named scenario for the money stock only (money_regimes_play)."""
 
@@ -31,14 +31,17 @@ class CashReachesSpendingTests(unittest.TestCase):
 
 
 class BudgetReachesPriceTests(unittest.TestCase):
-    def cleared_price(self, budget_each):
-        offers = [Offer("farmer", "grain", "area", "t1", 100.0, 1.0)]
+    def cleared(self, budget_each):
+        offers = [Offer("farmer", "grain", "area", "t1", 1000.0, 1.0)]
         bids = [Bid("buyer:%d" % index, "grain", "area", "t1", 40.0, 40.0, 1.0, 0.5, budget_each)
                 for index in range(2)]
-        return goods_market.clear(bids, offers, "grain", "area", "coin", None).price
+        return goods_market.clear(bids, offers, "grain", "area", "coin", None)
 
-    def test_buyers_with_more_to_spend_on_the_same_supply_clear_at_a_higher_price(self):
-        self.assertGreater(self.cleared_price(200.0), self.cleared_price(80.0))
+    def test_buyers_with_more_to_spend_on_the_same_supply_buy_more_of_it_at_the_sellers_ask(self):
+        # buyers pay a seller's ask: more money shows as more sold now, and in the ask the seller sets next year
+        poor, rich = self.cleared(40.0), self.cleared(200.0)
+        self.assertGreater(rich.quantity, poor.quantity)
+        self.assertAlmostEqual(rich.price, 1.0)
 
 
 if __name__ == "__main__":

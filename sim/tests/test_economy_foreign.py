@@ -61,10 +61,12 @@ class ClearingTests(unittest.TestCase):
         self.assertAlmostEqual(result.price, 3.0, places=6)
         self.assertAlmostEqual(result.quantity, 40.0)
 
-    def test_scarce_imports_clear_above_the_landed_price(self):
+    def test_scarce_imports_sell_out_at_the_landed_price_and_the_rest_of_the_demand_goes_unmet(self):
+        # buyers pay a seller's ask, so scarcity shows as unmet demand now and as a higher ask in the next year
         result = goods_market.clear([households("wine", 100.0, 3.0)], orders().offers, "wine", "port@wine", "coin", None)
-        self.assertGreater(result.price, 3.0)
+        self.assertAlmostEqual(result.price, 3.0, places=6)
         self.assertAlmostEqual(result.quantity, 40.0)
+        self.assertGreater(result.demand_at_price, result.quantity)
 
     def test_imports_do_not_clear_below_the_landed_price(self):
         offers = orders().offers

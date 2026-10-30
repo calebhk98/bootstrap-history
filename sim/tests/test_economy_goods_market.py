@@ -6,7 +6,7 @@ import math
 import random
 import unittest
 
-from sim.economy.goods_market import _ration_buyers, clear, quantity_at
+from sim.economy.goods_market import _ration_buyers, clear_at_one_price as clear, quantity_at
 from sim.economy.types import Bid, Offer
 from sim.tests import economy_reference_clearing as reference
 
