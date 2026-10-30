@@ -1,18 +1,21 @@
-"""One market's clearing within a year: buyers' schedules against sellers' reservation prices.
+"""One market's clearing within a year: buyers' schedules against sellers' asks.
 
-Supply is a step function: a seller offers its whole quantity at any price at or above its
-reservation. Demand is the sum of the buyers' `quantity_at` schedules, falling in price. The price is
-where they meet. At the crossing the lowest-reservation sellers sell first and the marginal group is
-filled pro rata. Buyers pay the clearing price; when supply falls short at that price they are served
-by priority tier (lower first), pro rata within a tier.
+Each buyer splits its demand over the sellers by the logit on their asks, every seller sells at its own ask, and what a
+sold-out seller could not serve is sent again to the sellers still holding stock (goods_market_logit.py, after
+Eurace@Unibi's households and malls). A seller's ask is the `reservation_price` of its offer. The market has no single
+price: `ClearingResult.price` is the quantity-weighted mean of what traded, for the callers that need one figure (the
+price index, merchants, the market's memory). Buyers are served by priority tier (lower first) when a seller runs short.
+
+`clear_at_one_price` is the other rule, a uniform-price call market (supply a step function at reservations, demand the
+sum of the buyers' schedules, lowest reservations sell first): it answers "at what price would these buyers take
+exactly this supply", which the callers probing hypothetical supply (market_curves.py, expansion_price.py) ask.
 
 Choices:
-  * Prices are positive. A reservation at or below zero (a waste product) is treated as the lowest
-    price the market considers, so such a seller sells whatever demand takes at that token price and
-    the rest stays unsold; the price never clears below zero.
+  * Prices are positive. An ask at or below zero (a waste product) is treated as the lowest price the market
+    considers, so such a seller sells at that token price and the price never clears below zero.
   * With no offers there is no trade, every floor unmet. With no demand nothing sells. A result with no
     trade has no price (`traded_price` is None) and a `quote` instead (market_quote.py); its `price`
-    field is the crossing the solver worked from, not a price anyone traded at.
+    field is a held or lowest-ask figure the caller may read, not a price anyone traded at.
 """
 import bisect
 import math
@@ -25,10 +28,12 @@ from sim.constants import declare
 
 from .accounts import ROUNDING_SHARE
 from .goods_market_demand import DemandSchedule
-from .goods_market_fills import buyer_fills, seller_fills, without_edge_self_trades
+from .goods_market_fills import buyer_fills, make_fill, seller_fills, without_edge_self_trades
+from .goods_market_logit import allocate
+from .goods_market_ration import ration
 from .goods_market_solve import solve_price
 from . import market_quote
-from .types import AreaId, Bid, ClearingResult, CurrencyId, GoodId, Offer
+from .types import AreaId, Bid, ClearingResult, CurrencyId, Fill, GoodId, Offer
 
 MINIMUM_PRICE_SHARE_OF_REFERENCE = declare(
     "MINIMUM_PRICE_SHARE_OF_REFERENCE", 1e-3, kind="temporary_heuristic",
@@ -39,7 +44,6 @@ MINIMUM_PRICE_SHARE_OF_REFERENCE = declare(
         "price scale buyers quote; waste disposal charged to the seller is not yet modelled.")
 _BID_ORDER = attrgetter("priority", "buyer", "tile")
 _OFFER_ORDER = attrgetter("reservation_price", "seller", "tile")
-_PRIORITY = attrgetter("priority")
 _FIRST = itemgetter(0)
 CHEAP_PASSES_PER_BID = 10
 
@@ -104,7 +108,7 @@ class Buyers:
         key = (price, available)
         traded = self._traded.get(key)
         if traded is None:
-            traded = self._traded[key] = math.fsum(_ration(self.bids, wants[0], available))
+            traded = self._traded[key] = math.fsum(ration(self.bids, wants[0], available))
         return traded
 
 
@@ -122,10 +126,11 @@ def with_offer(ordered: List[Offer], offer: Offer) -> List[Offer]:
     return result
 
 
-def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: AreaId,
-          currency: CurrencyId, last_price: Optional[float], buyers: Optional[Buyers] = None) -> ClearingResult:
-    """Clear one market for one year. Deterministic whatever the order of `bids` and `offers`. `buyers` is
-    `Buyers(bids, last_price)` when the caller clears the same bids against several books."""
+def clear_at_one_price(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: AreaId,
+                       currency: CurrencyId, last_price: Optional[float], buyers: Optional[Buyers] = None) -> ClearingResult:
+    """Clear one market for one year at one price: where the buyers' schedules meet the sellers' reservations, the
+    lowest reservations selling first and the marginal group pro rata. Deterministic whatever the order of `bids` and
+    `offers`. `buyers` is `Buyers(bids, last_price)` when the caller clears the same bids against several books."""
     if buyers is None:
         buyers = Buyers(bids, last_price)
     bids = buyers.bids
@@ -133,7 +138,7 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     if eligible is None:
         return _empty(good, area, currency, price, bids, supply, offers)
     wanted = math.fsum(wants)
-    served = _ration(bids, wants, min(wanted, supply))
+    served = ration(bids, wants, min(wanted, supply))
     traded = math.fsum(served)
     seller_quantities = _fill_sellers(eligible, traded)
 
@@ -145,14 +150,73 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     return ClearingResult(good, area, currency, price, traded, wanted, supply, unmet, tuple(fills))
 
 
+def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: AreaId,
+          currency: CurrencyId, last_price: Optional[float], buyers: Optional[Buyers] = None) -> ClearingResult:
+    """Clear one market for one year: buyers choose among the sellers by the logit on their asks, each seller sells at
+    its own ask, the result's price is the mean of what traded. Deterministic whatever the order of `bids` and `offers`.
+    `buyers` is `Buyers(bids, last_price)` when the caller clears the same bids against several books."""
+    if buyers is None:
+        buyers = Buyers(bids, last_price)
+    bids = buyers.bids
+    ordered = in_clearing_order(offers)
+    asks = _asks(buyers, ordered)
+    supply = math.fsum(offer.quantity for offer in ordered)
+    if not _trades(buyers, ordered, asks):
+        return _empty(good, area, currency, _held_price(buyers, asks), bids, supply, offers)
+    allocation = allocate(bids, ordered, asks, buyers.schedule.each_at, buyers.schedule.maximums)
+    fills: List[Fill] = []
+    unmet = 0.0
+    for bid, pairs in zip(bids, allocation.bought):
+        quantity = math.fsum([amount for _index, amount in pairs])
+        unmet += max(0.0, bid.floor_quantity - quantity)
+        if quantity > 0.0:
+            cost = math.fsum([amount * asks[index] for index, amount in pairs])
+            fills.extend(buyer_fills([bid], [quantity], good, area, cost / quantity))
+    fills.extend(make_fill(offer.seller, good, area, offer.tile, amount, ask, "sell")
+                 for offer, amount, ask in zip(ordered, allocation.sold, asks) if amount > 0.0)
+    fills, wash = without_edge_self_trades(fills)
+    sales = [fill for fill in fills if fill.side == "sell"]
+    traded = math.fsum(fill.quantity for fill in sales)
+    if not traded > 0.0:
+        return _empty(good, area, currency, _held_price(buyers, asks), bids, supply, offers)
+    mean = math.fsum(fill.quantity * fill.price for fill in sales) / traded
+    return ClearingResult(good, area, currency, mean, traded, allocation.requested, supply, unmet, tuple(fills))
+
+
+def _asks(buyers: Buyers, ordered: Sequence[Offer]) -> List[float]:
+    """The prices the offers are sold at: each ask, none below the token price that keeps prices positive."""
+    return [max(offer.reservation_price, buyers.minimum_price) for offer in ordered]
+
+
+def _trades(buyers: Buyers, ordered: Sequence[Offer], asks: Sequence[float]) -> bool:
+    """False when nothing can sell: no offers, only float residue on offer (clearing it would print a price set by nothing
+    a seller meant to sell), or no buyer wants anything even at the lowest ask (the buyers want less the dearer the ask)."""
+    if not ordered:
+        return False
+    wanted = buyers.schedule.total_at(asks[0])
+    return wanted > 0.0 and math.fsum(offer.quantity for offer in ordered) > ROUNDING_SHARE * wanted
+
+
+def _held_price(buyers: Buyers, asks: Sequence[float]) -> float:
+    """The figure a market that did not trade carries as its price: the last price held, or the lowest ask when that is
+    above it (and zero with neither; the result has a quote, not a price)."""
+    last_price = buyers.last_price
+    held = last_price if last_price is not None else 0.0
+    if not asks or (last_price is not None and asks[0] <= last_price):
+        return held
+    return asks[0]
+
+
 def sold_by_seller(buyers: Buyers, offers: Sequence[Offer]) -> dict:
     """(seller, tile) -> what that seller's offers sell there, as the sell fills of `clear` add up (a non-edge
     seller's fills are untouched by self-trade washing), without building fills."""
-    price, eligible, supply, _wants = _crossing(buyers, in_clearing_order(offers), with_wants=False)
+    ordered = in_clearing_order(offers)
+    asks = _asks(buyers, ordered)
     sold: dict = {}
-    if eligible is None:
+    if not _trades(buyers, ordered, asks):
         return sold
-    for offer, quantity in _fill_sellers(eligible, buyers.traded_at(price, supply)):
+    allocation = allocate(buyers.bids, ordered, asks, buyers.schedule.each_at, buyers.schedule.maximums)
+    for offer, quantity in zip(ordered, allocation.sold):
         if quantity > 0.0:
             key = (offer.seller, offer.tile)
             sold[key] = sold.get(key, 0.0) + quantity
@@ -249,30 +313,8 @@ def _supply_at(levels, price: float) -> float:
 
 def _ration_buyers(bids: Sequence[Bid], price: float, available: float) -> List[Tuple[Bid, float]]:
     """Each buyer's served quantity at a price with `available` to share, in the order of `bids`."""
-    served = _ration(bids, [quantity_at(bid, price) for bid in bids], available)
+    served = ration(bids, [quantity_at(bid, price) for bid in bids], available)
     return list(zip(bids, served))
-
-
-def _ration(bids: Sequence[Bid], wants: List[float], available: float) -> List[float]:
-    """Serve each priority tier in turn; a tier that cannot be served in full shares what is left pro rata."""
-    result: List[float] = []
-    remaining = available
-    start = 0
-    for _tier, tier_group in groupby(bids, key=_PRIORITY):
-        end = start + sum(1 for _ in tier_group)
-        tier_wants = wants[start:end]
-        start = end
-        total = math.fsum(tier_wants)
-        if total <= 0.0:
-            result.extend([0.0] * len(tier_wants))
-        elif remaining >= total:
-            result.extend(tier_wants)
-            remaining -= total
-        else:
-            share = remaining / total
-            result.extend([want * share for want in tier_wants])
-            remaining = 0.0
-    return result
 
 
 def _fill_sellers(eligible: List[Tuple[float, Offer]], traded: float) -> List[Tuple[Offer, float]]:

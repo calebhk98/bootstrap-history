@@ -60,12 +60,31 @@ def grid_prices(current: float) -> List[float]:
     return [current * (GRID_START + step * GRID_STEP) for step in range(count)]
 
 
+def choice_weight(ask: float, reference: float, intensity: float = LOGIT_INTENSITY) -> float:
+    """A seller's weight in a buyer's choice, relative to `reference`: the ask to the power of minus `intensity`
+    (Eurace@Unibi, Household_rank_and_buy_goods_1: exp(gamma_const * (gamma_quality * log quality - log price)), quality
+    not modelled). Taken relative to a reference ask so a large intensity does not overflow."""
+    return math.exp(-intensity * math.log(ask / reference))
+
+
+def choice_shares(asks: Sequence[float], intensity: float = LOGIT_INTENSITY) -> List[float]:
+    """The share of a buyer's demand each of the sellers asking `asks` gets: its weight over the sum of weights
+    (Eurace@Unibi, Household_rank_and_buy_goods_1: logit = weight / sum_weighted_qual_pric_ratios). The goods market
+    allocates by this, so what a seller expects here (logit_share) is what it is sent there."""
+    if not asks:
+        return []
+    cheapest = min(asks)
+    weights = [choice_weight(ask, cheapest, intensity) for ask in asks]
+    total = math.fsum(weights)
+    return [weight / total for weight in weights]
+
+
 def logit_share(price: float, rivals: Sequence[Tuple[float, float]], intensity: float = LOGIT_INTENSITY) -> float:
     """The share a seller asking `price` expects against `rivals` ((ask, count of sellers asking it) pairs): its weight
-    over the sum of weights, a weight being the ask to the power of minus `intensity` (Eurace@Unibi, Household_respond_questionnaire,
-    logit_denominator). Weights are taken relative to the seller's own price so a large intensity does not overflow."""
+    over the sum of weights (Eurace@Unibi, Household_respond_questionnaire, logit_denominator), weights as `choice_weight`
+    gives them, relative to the seller's own price."""
     own = 1.0
-    others = math.fsum(count * math.exp(-intensity * math.log(ask / price)) for ask, count in rivals if ask > 0.0 and count > 0.0)
+    others = math.fsum(count * choice_weight(ask, price, intensity) for ask, count in rivals if ask > 0.0 and count > 0.0)
     return own / (own + others)
 
 

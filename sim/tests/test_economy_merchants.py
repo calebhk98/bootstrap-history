@@ -232,7 +232,7 @@ def run_loop(count, years, capital=500.0):
             bids = [household_bid] + [bid for orders in all_orders for bid in orders.bids if bid.area == area]
             offers = [producer_offer] if producer_offer else []
             offers += [offer for orders in all_orders for offer in orders.offers if offer.area == area]
-            result = goods_market.clear(bids, offers, "salt", area, "coin", last.get(("salt", area)))
+            result = goods_market.clear_at_one_price(bids, offers, "salt", area, "coin", last.get(("salt", area)))
             settlement.settle_goods(book, result)
             prices[("salt", area)] = result.price
             volumes[("salt", area)] = result.quantity

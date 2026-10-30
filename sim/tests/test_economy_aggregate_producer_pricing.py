@@ -65,7 +65,7 @@ def cleared(producers, quantities, bids=None, ask=ASK):
     setup, record = game(producers)
     offers = [Offer(each.agent_id, GOOD, AREA, TILE, quantity, ask) for each, quantity in zip(producers, quantities)]
     chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, 1.0)
-    result = goods_market.clear(bids, chosen, GOOD, AREA, "", 1.0)
+    result = goods_market.clear_at_one_price(bids, chosen, GOOD, AREA, "", 1.0)
     sold = sum(fill.quantity for fill in result.fills if fill.side == "sell")
     return result.price, sold
 

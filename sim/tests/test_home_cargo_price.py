@@ -16,12 +16,12 @@ sellers = [Offer("s%d" % number, "grain", "area", "tile", 60.0, 4.0 + number) fo
 curve = market_curves.summarize(buyers, sellers)
 check("a book is summarised into a few rows, not one per order", len(curve["bids"]) <= 2 and len(curve["offers"]) <= 8,
       (len(curve["bids"]), len(curve["offers"])))
-base = goods_market.clear(buyers, sellers, "grain", "area", "", None)
+base = goods_market.clear_at_one_price(buyers, sellers, "grain", "area", "", None)
 for landed, taken in ((30.0, 0.0), (120.0, 0.0), (0.0, 30.0), (0.0, 90.0)):
     quoted = market_curves.price_response(curve, "grain", None, landed, taken)
     extra_offers = sellers + ([Offer("x", "grain", "area", "tile", landed, 0.0)] if landed else [])
     extra_bids = buyers + ([Bid("y", "grain", "area", "tile", taken, 0.0, 0.0, 0.0, math.inf)] if taken else [])
-    cleared = goods_market.clear(extra_bids, extra_offers, "grain", "area", "", base.price).price / base.price
+    cleared = goods_market.clear_at_one_price(extra_bids, extra_offers, "grain", "area", "", base.price).price / base.price
     check("the quote for %g landed and %g taken matches the book clearing with it" % (landed, taken),
           quoted is not None and abs(quoted / cleared - 1.0) < 0.05, (quoted, cleared))
 more_supply = market_curves.price_response(curve, "grain", None, 120.0, 0.0)

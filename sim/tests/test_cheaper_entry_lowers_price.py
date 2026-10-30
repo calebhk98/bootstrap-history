@@ -2,7 +2,7 @@
 more where demand slopes down. Two rules, each called on built inputs:
 
 1. `entry_trial.full_cost_per_unit`: halving a recipe's labour hours takes off half the labour's share of its cost.
-2. `goods_market.clear`: an entrant offering at its lower cost moves the cleared price down and the cleared quantity
+2. `goods_market.clear_at_one_price`: an entrant offering at its lower cost moves the cleared price down and the cleared quantity
    up once its stock reaches past the marginal incumbent; a stock short of that leaves the price alone (the entrant
    is under the margin), and where demand does not slope the price falls but the quantity does not.
 
@@ -13,7 +13,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy.entry_trial import full_cost_per_unit
-from sim.economy.goods_market import clear
+from sim.economy.goods_market import clear_at_one_price as clear
 from sim.economy.types import Bid, Offer, Recipe
 
 GOOD, AREA, TILE = "stone_blocks", "area", "tile"

@@ -35,7 +35,7 @@ def random_market(seed):
 
 def by_full_clear(bids, rivals, offer, reservation, last_price):
     offers = list(rivals) + ([] if reservation is None else [replace(offer, reservation_price=reservation)])
-    result = goods_market.clear(bids, offers, GOOD, AREA, "", last_price)
+    result = goods_market.clear_at_one_price(bids, offers, GOOD, AREA, "", last_price)
     sold = math.fsum(fill.quantity for fill in result.fills if fill.agent == offer.seller and fill.side == "sell")
     return result.price, sold
 
