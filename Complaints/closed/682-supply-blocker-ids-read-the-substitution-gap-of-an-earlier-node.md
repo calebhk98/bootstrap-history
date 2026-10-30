@@ -1,6 +1,6 @@
 # A living-stock supply blocker names options from the substitution gap of whichever node was checked before
 
-**Status:** open
+**Status:** closed - only the substitution check names ids, computed from the checked node; the stored per-seat gap is gone
 
 `start_blockers` classifies a refused `supply` check by the ids it names. For every supply check except
 `unheld_stock` and `materials_have_a_seller` those ids are the options of the last `req_any` group that had no option

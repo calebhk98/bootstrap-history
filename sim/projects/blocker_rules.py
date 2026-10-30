@@ -35,8 +35,14 @@ BLOCKER_MEANING = {
 
 TERMINAL_BLOCKER_KINDS = ("goal", "done", "active", "unavailable", "closed")
 
-# the causes whose "supply" refusals name their own materials, not the substitution group that last failed
-OWN_SUPPLY_IDS = ("unheld_stock", "materials_have_a_seller")
+
+
+def supply_blocker_ids(cause, substitution_gap, is_visible):
+    """The ids a "supply" refusal names: the visible options of the checked node's failed `req_any` group, and only for
+    the substitution check, the one refusal that is about that group."""
+    if cause != "substitution" or not substitution_gap:
+        return []
+    return [option for option in substitution_gap[1] if is_visible(option)]
 
 
 @dataclass(frozen=True)
