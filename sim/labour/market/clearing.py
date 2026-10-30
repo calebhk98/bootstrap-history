@@ -4,7 +4,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 from sim.constants import declare
 
-from . import asks
+from . import asks, layoffs
 from .import_cost import ImportCosts
 from .premium import training_premium
 from .trades import fallback_trade
@@ -201,7 +201,9 @@ def eligible_bids(bids: Sequence[Bid], wage: float) -> Tuple[Dict[str, float], D
 
 
 def retain(wanted: Dict[str, float], previous: Dict[str, float], offered: float) -> Dict[str, float]:
-    kept = {employer: min(hours, previous.get(employer, 0.0)) for employer, hours in wanted.items()}
+    # an employer lays off the hours it holds beyond those it wants (layoffs.hours_to_lay_off, after Eurace Firm_send_redundancies)
+    kept = {employer: hours if layoffs.hours_to_lay_off(previous.get(employer, 0.0), hours) > 0.0
+            else previous.get(employer, 0.0) for employer, hours in wanted.items()}
     total = sum(kept.values())
     scale = offered / total if total > offered else 1.0
     return {employer: hours * scale for employer, hours in kept.items()}
