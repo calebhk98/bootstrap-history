@@ -16,7 +16,7 @@ from unittest import mock
 from . import economy as economy_module, producers, producers_close
 
 SPEED_GROUPS = {
-    "producer_plans": ("EXPANSION_SHARE_PER_YEAR", "OUTPUT_CHANGE_SHARE_PER_YEAR", "EXPECTATION_ADJUSTMENT_SHARE"),
+    "producer_plans": ("OUTPUT_CHANGE_SHARE_PER_YEAR", "EXPECTATION_ADJUSTMENT_SHARE"),
     "ask_prices": ("GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR", "USUAL_PRICE_SPEED"),
     "wages": ("TIGHTNESS_ADJUSTMENT_RATE_PER_YEAR", "TIGHTNESS_REVERSION_RATE_PER_YEAR"),
     "interest_rate": ("RATE_ADJUSTMENT_SHARE_PER_YEAR",),

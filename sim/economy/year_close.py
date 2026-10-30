@@ -220,8 +220,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         worn = producer.capacity_runs - closed.producer.capacity_runs
         if worn > 0.0:
             ledger.plant_worn[producer_id] = worn
-        if worn > 0.0 and recipe.plant_life_years > 0.0 and revenue > costs:
-            record.worn_runs[producer_id] = worn    # a producer covering its costs rebuilds what wore out
+        if closed.replacement_runs > 0.0 and revenue > costs:
+            record.worn_runs[producer_id] = closed.replacement_runs     # covering its costs, it rebuilds the wear its plan needs
         for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
         if closed.loan_request is not None:
