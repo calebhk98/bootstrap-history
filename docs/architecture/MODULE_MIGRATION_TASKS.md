@@ -321,7 +321,7 @@ actors (21), hazards, workforce (20 each), projects (19).
 - [x] The shipped openings are regenerated (`--allow-failing` for Complaint 473: no civilisation's spin-up settles, on the
   base alike; the opening-checks tables of the two builds are identical).
 - [x] `sim/ARCHITECTURE.md`, `PACKAGE_WALLS.md`, CLAUDE.md sections 3 and 5; Complaint 508 closed, 661 closed, 507 partly.
-- [ ] Open the single PR, then subscribe to it.
+- [x] The single PR is #108, subscribed.
 
 
 ## Done criteria
