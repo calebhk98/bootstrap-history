@@ -9,26 +9,6 @@ from sim.economy.types import GoodSpec
 from sim.tests.test_economy_households import BASKET, SPECS, View, budget_total, cohort
 
 
-class SavingsTargetTests(unittest.TestCase):
-    def target(self, inflation, rate=0.12, surplus=1000.0):
-        return households_orders.savings_target(surplus, rate, inflation)
-
-    def test_target_is_not_lost_when_expected_inflation_equals_the_rate(self):
-        self.assertGreater(self.target(0.12), 0.0)
-        self.assertGreater(self.target(0.20), 0.0)
-
-    def test_target_never_rises_with_expected_inflation(self):
-        targets = [self.target(inflation / 100.0) for inflation in range(0, 30)]
-        self.assertEqual(targets, sorted(targets, reverse=True))
-
-    def test_target_stays_continuous_across_inflation_equal_to_the_rate(self):
-        below, above = self.target(0.11), self.target(0.13)
-        self.assertLess(abs(below - above), 0.5 * self.target(0.0))
-
-    def test_no_surplus_income_saves_nothing(self):
-        self.assertEqual(self.target(0.12, surplus=0.0), 0.0)
-
-
 class SpendingTests(unittest.TestCase):
     def spending(self, inflation, rate=0.12):
         view = View()

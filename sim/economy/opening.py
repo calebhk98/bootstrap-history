@@ -185,14 +185,17 @@ def _settle_income(setup, record, view, priced_goods, replacement) -> None:
     ranked = opening_runs.ranked_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate, None, yields)
     share = {"labour": 0.0}
     memory = opening_bid_memory.BidMemory()
+    hands_hours = math.fsum(cohort.working_people for cohort in record.cohorts.values()) * setup.working_hours_per_year
 
     def demand_at(per_head):
         record.cohorts.update(opening_income.with_income(record.cohorts, per_head, share["labour"]))
         final = _final_demand(setup, record, view, replacement, memory)
-        value = opening_income.value_of(final, priced_goods)
         runs = opening_runs.required_runs(final, ranked, recipes, ceilings, yields)
+        # only what the working hands can make is income that producers pay out (Complaint 607)
+        value = opening_income.value_of(final, priced_goods)
+        producible = value * opening_income.producible_share(runs, recipes, hands_hours)
         share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value)
-        return value, share["labour"]
+        return producible, share["labour"]
 
     settled = opening_income.settled_income_per_head(_full_employment_income_per_head(setup), people, demand_at)
     if isinstance(settled, Refusal):
