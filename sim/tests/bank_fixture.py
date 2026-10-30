@@ -3,7 +3,7 @@ import unittest
 
 from sim.economy import banks
 from sim.economy.economy import Economy
-from sim.economy.types import FundsOffer, Loan, Transfer
+from sim.economy.types import EDGE_MINT, FundsOffer, Loan, Transfer
 from sim.tests import economy_fixture as fixture
 
 INSTITUTIONS = (banks.DEPOSIT_BANKING,)
@@ -20,6 +20,9 @@ class BankFixture(unittest.TestCase):
         self.depositors = sorted(self.record.cohorts)[1:3]
         self.founder = sorted(self.record.cohorts)[0]
         self.borrower = sorted(self.record.producers)[0]
+        # households open with no cash beyond their income (opening_resting), so the founder and the depositors are given the coin they stand with
+        for agent, amount in [(self.founder, CAPITAL)] + [(depositor, PLEDGED) for depositor in self.depositors]:
+            self.record.book.transfer(Transfer(EDGE_MINT, agent, self.money, amount, "test coin"))
 
     def balance(self, agent):
         return self.record.book.balance(agent, self.money)

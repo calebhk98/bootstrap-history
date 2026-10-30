@@ -121,8 +121,7 @@ class OpeningStaffingTests(unittest.TestCase):
             share = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages)
             self.assertGreater(share, 0.0)
             self.assertLessEqual(share, 1.0)
-            self.assertAlmostEqual(producer.capacity_runs * share / producer.expected_sales,
-                                   1.0 + opening.OPENING_SPARE_CAPACITY_SHARE, places=6)
+            self.assertAlmostEqual(producer.capacity_runs * share / producer.expected_sales, 1.0, places=6)
 
 
 class OpeningMetalTests(unittest.TestCase):
