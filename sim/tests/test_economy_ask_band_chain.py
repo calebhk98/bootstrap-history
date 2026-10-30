@@ -6,9 +6,9 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy import ask_raise
+from sim.economy import ask_adjust
 
-MULTIPLE = ask_raise.ASK_BAND_CEILING
+MULTIPLE = ask_adjust.ASK_BAND_CEILING
 VALUE_ADDED = 1.0       # what each stage adds in labour and plant, per unit of its output
 
 
@@ -18,7 +18,7 @@ def chain_ceilings(stages, input_share_applies):
     for _stage in range(stages):
         cost = input_price + VALUE_ADDED
         share = input_price / cost if input_share_applies else 0.0
-        ceilings.append(ask_raise.band_edge(cost, share, MULTIPLE))
+        ceilings.append(ask_adjust.band_edge(cost, share, MULTIPLE))
         input_price = ceilings[-1]
     return ceilings
 
@@ -37,17 +37,17 @@ class BandOnChainTests(unittest.TestCase):
         self.assertLess(ceilings[2], chain_ceilings(3, input_share_applies=False)[2])
 
     def test_a_maker_with_no_bought_inputs_keeps_the_whole_band(self):
-        self.assertAlmostEqual(ask_raise.band_edge(4.0, 0.0), 4.0 * MULTIPLE)
+        self.assertAlmostEqual(ask_adjust.band_edge(4.0, 0.0), 4.0 * MULTIPLE)
 
     def test_a_maker_that_only_resells_inputs_is_not_marked_up_at_all(self):
-        self.assertAlmostEqual(ask_raise.band_edge(4.0, 1.0), 4.0)
+        self.assertAlmostEqual(ask_adjust.band_edge(4.0, 1.0), 4.0)
 
     def test_a_sold_out_seller_stops_at_the_edge_of_the_band_on_what_it_adds(self):
         cost, share = 4.0, 0.75
         ask = cost
         for _year in range(500):
-            ask = ask_raise.raised_within_band(ask, cost, MULTIPLE, share)
-        self.assertAlmostEqual(ask, ask_raise.band_edge(cost, share, MULTIPLE))
+            ask = ask_adjust.adjusted_within_band(ask, cost, 0.0, 1.0, MULTIPLE, share)
+        self.assertAlmostEqual(ask, ask_adjust.band_edge(cost, share, MULTIPLE))
         self.assertLess(ask, MULTIPLE * cost)
 
 

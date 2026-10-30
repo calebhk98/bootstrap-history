@@ -9,8 +9,8 @@ A producer that stands for several workshops (Producer.workshops above one) is n
 price takers: it keeps the price-taking reservation and neither searches nor raises. A seller that moves
 the price may also raise its ask above the price-taking one, which holds units back (restraint) when the
 dearer, smaller sale earns more. Only an owner of one workshop searches the book; the searched ask is held
-inside a band above the seller's unit cost (ask_band_multiple). A raise is bounded by the share a sold-out seller
-raises its ask in a year (ask_raise.SOLD_OUT_ASK_RAISE_SHARE) and stops at the band's edge; a cut is not bounded below the unit value, and a seller whose ask goes
+inside a band above the seller's unit cost (ask_band_multiple). A raise is bounded by the share a seller
+moves its ask in a year (ask_adjust.GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR) and stops at the band's edge; a cut is not bounded below the unit value, and a seller whose ask goes
 unsold under the price-taking rule is brought down to what sells by unsold_search.py.
 """
 import dataclasses
@@ -19,7 +19,7 @@ from typing import List, Optional, Sequence
 
 from . import entry_trial, goods_market, market_curves, seller_pricing
 from . import unit_cost as run_cost
-from .ask_raise import ASK_BAND_CEILING, SOLD_OUT_ASK_RAISE_SHARE, band_edge
+from .ask_adjust import GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR, ASK_BAND_CEILING, band_edge
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import EDGE_EXTERNAL, Bid, Offer
 
@@ -45,7 +45,7 @@ def unit_cost(setup, record, view, offer: Offer) -> Optional[float]:
 
 def input_share_of_cost(setup, record, view, offer: Offer) -> float:
     """The share of a run's variable cost the producer pays for bought inputs (none for a seller that is not a
-    producer or whose cost cannot be priced): the band above cost marks up only the rest (ask_raise.band_edge)."""
+    producer or whose cost cannot be priced): the band above cost marks up only the rest (ask_adjust.band_edge)."""
     producer = record.producers.get(offer.seller)
     if producer is None:
         return 0.0
@@ -110,7 +110,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
             buyers = goods_market.Buyers(book, last_price)
         limit = (band_edge(cost, input_share_of_cost(setup, record, view, offer), ask_band_multiple(setup, offer))
                  if math.isfinite(cost) else math.inf)
-        step = SOLD_OUT_ASK_RAISE_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
+        step = GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
         choice = seller_pricing.best_reservation(
             book, rivals, offer, value, last_price, ceiling=min(ask + step, max(limit, value)), floor=value,
             current=ask, buyers=buyers)
