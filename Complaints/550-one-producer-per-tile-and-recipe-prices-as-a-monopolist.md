@@ -39,3 +39,11 @@ price as takers.
 ## Research needed
 
 - How many independent workshops one recipe at one tile stood for in the periods the civilisations cover, per recipe class (a grain farm, a smithy, a mill, a mine, a furnace): crew size and plant scale as physical data, from archaeology and economic history (for example excavated workshop counts, Roman Egypt and Pompeii workshop surveys, Han iron foundry sizes, Domesday mills per settlement). The opening's producers cannot be split into a crowd until this datum exists per recipe. Nothing has been opened for this yet.
+
+## Progress: the dominant-firm search is gone (eurace-price-setting)
+
+A seller no longer searches the whole book for its best reservation. It chooses its ask as Eurace@Unibi's firm does
+(`sim/economy/price_setting.py`): the best price on a grid around its own, from the market's size times its logit share
+against the other sellers' asks. A rival that stands for several workshops counts once per workshop, so a tile's crowd
+dilutes a lone owner's share instead of being priced against as one monopolist. The crowd itself still takes the price.
+Measure the effect on a tile's price with a spin-up trace; none has been run for this change.

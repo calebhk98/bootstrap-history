@@ -43,7 +43,7 @@ def game(*sellers, workshops=1):
     producers = {name: Producer(name, "lord", "melt", TILE, 10.0, workshops=workshops) for name in sellers}
     basket = types.SimpleNamespace(substitution=1.0)
     setup = types.SimpleNamespace(specs={}, recipes={"melt": recipe}, basket_for=lambda tile: basket)
-    return setup, types.SimpleNamespace(producers=producers)
+    return setup, types.SimpleNamespace(producers=producers, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), unmet={})
 
 
 def buyer(quantity, maximum_price):
