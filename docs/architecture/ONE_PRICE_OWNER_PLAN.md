@@ -476,7 +476,7 @@ unreasonable price for years).
   clears). Capping all of them together is what the convergence rule comes to: a seller that undercuts leaves its
   rivals unsold in turn, so revisiting one at a time would race down in tiny steps. A market with no unsold
   searchable stock clears once. A seller that moved the price (`best_reservation`) holds units back on purpose and
-  is not searched; its raise is bounded by `ASK_ADJUSTMENT_SHARE_PER_YEAR`, its cut by its unit value.
+  is not searched; its raise is bounded by `GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR`, its cut by its unit value.
 - Deleted: `UNSOLD_ASK_MARKDOWN_SHARE`, `UNSOLD_PROBE_SHARE_OF_CAPACITY`, `IDLE_SALE_SHARE`, the yearly markdown in
   `producers.next_expectations` (and `unsold_outputs`), and the crowd's share-of-unsold markdown. Not done:
   `notional.thin_market_prices` and `THIN_MARKET_SHARE_OF_OPENING_DEMAND` stay (remove them once the spin-up shows the thin goods settle without them).

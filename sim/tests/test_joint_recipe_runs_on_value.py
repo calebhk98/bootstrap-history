@@ -3,7 +3,6 @@ the run's cost; an unsold main output does not stop a run whose other output pay
 
 QUICK_TOPIC = True
 
-import math
 import unittest
 
 from sim.economy import producers
@@ -57,7 +56,7 @@ class JointRecipeStockTests(unittest.TestCase):
         view = View({"slag": 500.0 * 1000.0})
         self.assertEqual(producers.runs_for_stock(producer(), JOINT, view), 0.0)       # judged on stock alone it stops
         runs = producers.runs_for_stock(producer(), JOINT, view, RUN_COST, {"slag": 0.001, "gem": 100.0})
-        self.assertTrue(math.isinf(runs))
+        self.assertGreaterEqual(runs, 5.0)       # planned from the gem's empty stock: what it expects to sell plus a refill
 
     def test_runs_stop_when_what_still_sells_does_not_cover_the_run(self):
         view = View({"slag": 500.0 * 1000.0})

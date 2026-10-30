@@ -51,8 +51,15 @@ def farmer(**changes):
 
 
 class StockDrawdownTests(unittest.TestCase):
-    def test_stock_below_target_does_not_limit_runs(self):
-        self.assertTrue(math.isinf(producers.runs_for_stock(farmer(), FARM, View(0.5 * TARGET_RUNS))))
+    def test_stock_below_target_plans_expected_sales_plus_the_shortfall_over_the_clearing_years(self):
+        runs = producers.runs_for_stock(farmer(), FARM, View(0.5 * TARGET_RUNS))
+        self.assertAlmostEqual(runs, EXPECTED_SALES + 0.5 * TARGET_RUNS / producers.STOCK_CLEARING_YEARS)
+
+    def test_stock_at_target_plans_expected_sales(self):
+        self.assertAlmostEqual(producers.runs_for_stock(farmer(), FARM, View(TARGET_RUNS)), EXPECTED_SALES)
+
+    def test_no_record_of_sales_does_not_limit_runs(self):
+        self.assertTrue(math.isinf(producers.runs_for_stock(farmer(expected_sales=0.0), FARM, View(0.0))))
 
     def test_excess_is_drawn_down_over_the_clearing_years(self):
         excess = 2.0

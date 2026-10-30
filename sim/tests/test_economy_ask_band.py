@@ -54,7 +54,7 @@ def floor_buyer(quantity=100.0):
 class SoldOutRaiseTests(unittest.TestCase):
     def test_a_sold_out_ask_rises_one_step_inside_the_band(self):
         raised = ask_adjust.adjusted_within_band(1.5 * COST, COST, 0.0, 1.0)
-        self.assertAlmostEqual(raised, 1.5 * COST * (1.0 + ask_adjust.ASK_ADJUSTMENT_SHARE_PER_YEAR))
+        self.assertAlmostEqual(raised, 1.5 * COST * (1.0 + ask_adjust.GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR))
 
     def test_a_sold_out_ask_stops_at_the_band_edge_however_many_years_it_sells_out(self):
         ask = COST

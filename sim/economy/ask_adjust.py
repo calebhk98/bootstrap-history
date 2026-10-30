@@ -14,8 +14,8 @@ from sim.constants import declare
 
 from . import inventory
 
-ASK_ADJUSTMENT_SHARE_PER_YEAR = declare(
-    "ASK_ADJUSTMENT_SHARE_PER_YEAR", 0.05, kind="temporary_heuristic",
+GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR = declare(
+    "GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR", 0.05, kind="temporary_heuristic",
     unit="share of the expected price a seller moves it in a year when its stock is a whole target away from the target",
     source=None, confidence="D", retire="Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md",
     why="Eurace@Unibi firms move price in small steps toward the best of a grid of nearby prices (Firm_set_price), and "
@@ -59,7 +59,7 @@ def adjusted_within_band(expected_price: float, break_even_price: Optional[float
     is moving away from is left where it is, not pulled in here; one with no cost to anchor on does not move."""
     if break_even_price is None or not math.isfinite(break_even_price) or break_even_price <= 0.0:
         return expected_price
-    moved = expected_price * (1.0 + ASK_ADJUSTMENT_SHARE_PER_YEAR * stock_gap(stock, target_stock))
+    moved = expected_price * (1.0 + GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR * stock_gap(stock, target_stock))
     if moved >= expected_price:
         return max(expected_price, min(moved, band_edge(break_even_price, input_share, ceiling_multiple)))
     return min(expected_price, max(moved, break_even_price))

@@ -14,7 +14,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 from sim.economy import goods_market, seller_offers, seller_pricing
-from sim.economy.ask_adjust import ASK_ADJUSTMENT_SHARE_PER_YEAR
+from sim.economy.ask_adjust import GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR
 from sim.economy.types import Bid, Offer
 
 GOOD, AREA = "grain", "area"
@@ -42,7 +42,7 @@ def strategic_offers_always_preparing(setup, record, view, bids, offers, last_pr
         if seller_offers.stands_for_many(record, offer):
             continue
         limit = cost * seller_offers.ask_band_multiple(setup, offer) if math.isfinite(cost) else math.inf
-        step = ASK_ADJUSTMENT_SHARE_PER_YEAR * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
+        step = GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
         choice = seller_pricing.best_reservation(
             book, rivals, offer, value, last_price, ceiling=min(ask + step, max(limit, value)), floor=value,
             current=ask, buyers=buyers)
