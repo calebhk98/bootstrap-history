@@ -153,7 +153,7 @@ class Shocks:
 		message = "%s: %s" % (hazard.get("name", "hazard"), ", ".join(hit))
 		# a separate sentence, so a spared household does not read the national toll as its own
 		message += staff_loss_words.national_toll_sentence(
-			raw, historical, med_relief, ", ".join(report["sources"]) or "none named" if med_relief > 0.02 else "")
+			raw, historical, med_relief, (", ".join(report["sources"]) or "none named") if med_relief > 0.02 else "")
 		return LogLine("hazard_hit", message, hazard=hazard.get("name", "hazard"), took_nothing=took_nothing,
 		               lapsed_hedges=report["lapsed_hedges"],
 		               defence=staff_loss_words.defence_kind(relief, why) if report["people_before"] > 0.05 else "no_staff",
