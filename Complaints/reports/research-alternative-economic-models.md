@@ -217,8 +217,8 @@ claims Eurace@Unibi hardcodes modern sectors.
    recipe system by an input-output solve and ranking with ceilings, but trade between tiles is not solved jointly as a
    network problem: no transport-aware linear programme returns a marginal value of each good at each tile (the route
    prices are applied afterwards by carriers and merchants). I measured this by reading the module docstrings, not by
-   running anything; confirm with `grep -rn "linprog\|scipy" sim --include=*.py`, which finds no linear-programme
-   solver (the only listed dependency is numpy).
+   running anything; `grep -rn "linprog\|scipy" sim --include=*.py` finds scipy only in the map layer build
+   (`sim/geography/layer_build/sea_links.py`: ndimage and graph routines) and no linear-programme call; `requirements.txt` lists numpy only.
 2. **A dependency for linear programmes.** None. Adding one is an owner decision.
 3. **Spatial Cantillon spreading as an explicit check.** There is a price-level test, but no test that a gold
    injection at one tile raises prices there before it raises them elsewhere.
