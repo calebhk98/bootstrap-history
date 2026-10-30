@@ -7,7 +7,7 @@ from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from .expected_sales import demand_seen
-from . import (carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
+from . import (firm_year, carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes)
 from .household_work_year import basket_key, cohort_basket
 from .households_cohort import renewed
@@ -197,8 +197,15 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
     prepared_buyers: Dict = {}
     service_lives = {good: spec.service_life_years for good, spec in setup.specs.items()}
     cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
+    loans_of: Dict[str, list] = {}
+    for loan in record.loans:
+        loans_of.setdefault(loan.borrower, []).append(loan)
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes[producer.recipe_id]
+        if producer.idle_years > 0:      # bankrupt: idle, no dividend (Eurace@Unibi, Firm_bankruptcy_idle_counter)
+            record.producers[producer_id] = replaced(producer, idle_years=producer.idle_years - 1)
+            shares.note_dividend(record, producer_id, ())
+            continue
         revenue = ledger.sales_in.get(producer_id, 0.0)
         costs = ledger.running_costs(producer_id)
         per_run = recipe.outputs[producers.main_output(recipe)]
@@ -209,7 +216,13 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share,
                                             [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable],
                                             service_lives)
+        year = None
+        if not closed.exited:       # the dividend, the financing check and bankruptcy follow Eurace@Unibi (firm_year.py)
+            closed, _paid, year = firm_year.settle_year(setup, record, view, producer, closed, recipe, revenue, costs,
+                                                        loans_of.get(producer_id, []))
         shares.note_dividend(record, producer_id, closed.transfers)
+        if year is not None and year.write_off_ratio > 0.0:
+            firm_year.write_off(record, producer_id, year.write_off_ratio)
         if closed.exited:
             paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))
             for transfer in paid:
