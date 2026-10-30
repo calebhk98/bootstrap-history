@@ -1,6 +1,6 @@
 # The mine labour-hours profile cache is shared by every game and ignores the map
 
-**Status:** open
+**Status:** closed - the cache is removed (an uncached call is about a millisecond); the unkeyed historical-rates cache is removed too
 
 `_PROFILE_CACHE` in `sim/resources/costs.py` (the class attribute `_MINE_PROFILE_CACHE` of `MiningMixin` before the move) is keyed
 by (material, the running works' effects) only. It is one table for the process, so two games in one process, or a mod that
