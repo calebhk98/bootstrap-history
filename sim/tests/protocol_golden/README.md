@@ -36,11 +36,9 @@ state demand); `build_way`, `prospect`, `settle` (need the matching knowledge, w
 reaches); `close` (needs a mine); `open`, `mothball`, `restore` (need a finished concern that has been
 opened); `work`; `options` (its reply carries the machine's save directory); `quit`; `levers`.
 
-Country seats (`join` with `seat_kind` `country`) are not exercised either: `levers`, `lever` and `relations`
-sent `"as"` such a seat answer `internal error handling that command: AttributeError: 'NoneType' object has
-no attribute 'dead_reason'` on the code these were recorded from (`seats` and `join` work). That is a bug, not
-a behaviour to keep, so no fixture records it. Once it is fixed, add a country seat to
-`han_two_seats_fog`.
+Country seats (`join` with `seat_kind` `country`) are not exercised either. `levers`, `lever` and `relations` sent
+`"as"` such a seat answer since joining was fixed (Complaint 680, closed); add a country seat to `han_two_seats_fog`
+when it is next re-recorded.
 
 Re-recorded after a fixed bug changed a figure (each names the fix): `rome_founder` and `han_two_seats_fog` after
 Complaint 761 (endemic death rates read the tiles the nation holds; within two years Rome holds fewer than its file lists),
