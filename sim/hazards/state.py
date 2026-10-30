@@ -11,7 +11,6 @@ WORLD_EVENTS = "world_events"
 class HazardsWorld:
 	output_factor: float = 1.0                                  # real output, crushed by war and plague, not by debasement
 	world_events: List[Dict[str, Any]] = field(default_factory=list)   # dated records, shared by every seat
-	said_condition: Set[str] = field(default_factory=set)       # notices already told once (hazard conditions, the levy)
 	said_output: Optional[Dict[str, int]] = None                # hazard name -> the year its output fall was last told
 	said_debasement: Optional[int] = None                       # the year a debasement was last told
 
@@ -19,3 +18,4 @@ class HazardsWorld:
 @dataclass
 class HazardsSeat:
 	last_patron_death: Optional[int] = None
+	said_condition: Set[str] = field(default_factory=set)       # notices already told to this seat once (hazard conditions, the levy)

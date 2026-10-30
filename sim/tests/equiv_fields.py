@@ -13,7 +13,7 @@ This is test tooling, not a save migration.
 
 RELOCATIONS = [
     ("/modules/scenario/year", "/scenario/year"),
-    ("/modules/hazards/said_condition", "/scenario/_said_condition"),
+    ("/seats/*/modules/hazards/said_condition", "/seats/*/scenario/_said_condition"),
     ("/modules/scenario/fog", "/_fog"),
     ("/modules/scenario/fuzzy_estimates", "/_fuzzy_estimates"),
     ("/modules/scenario/fuzzy_salt", "/_fuzzy_salt"),

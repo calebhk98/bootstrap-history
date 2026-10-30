@@ -32,14 +32,21 @@ class Shocks:
 		if not self.needs.events_enabled():
 			return
 		year = self.needs.year()
-		logged_before = len(self.needs.event_log())
-		self.shocks(year, seats)
+		seat_ids = list(self.needs.seat_list()["playing"] if seats is None else seats)
+		logged_before = {}
+		for seat_id in seat_ids:
+			with self.needs.act_as(seat_id):
+				logged_before[seat_id] = len(self.needs.event_log())
+		self.shocks(year, seat_ids)
 		hazards = self.needs.civilisation().get("hazards", [])
 		names = [hazard.get("name", "a hazard") for hazard in hazards
 		         if hazard.get("years", [0, 0])[0] <= year <= hazard.get("years", [0, 0])[-1]]
 		if names:
-			self.disaster_this_year = {"name": ", ".join(names),
-			                           "messages": [message for _, message in self.needs.event_log()[logged_before:]]}
+			self.disaster_this_year = {}
+			for seat_id in seat_ids:
+				with self.needs.act_as(seat_id):
+					lines = [message for _, message in self.needs.event_log()[logged_before[seat_id]:]]
+				self.disaster_this_year[seat_id] = {"name": ", ".join(names), "messages": lines}
 
 	def shocks(self, year: int, seats: Optional[List[str]] = None) -> None:
 		"""Dated catastrophes, read from the civilisation file, for `seats` (the seats still playing). One step per hazard

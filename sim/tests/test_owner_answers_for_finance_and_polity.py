@@ -6,7 +6,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.actors.module import Actors
-from sim.hazards.state import HazardsWorld
+from sim.hazards.state import HazardsSeat
 from sim.hazards.api import SayOnce
 from sim.hazards.module import Hazards
 from sim.projects.api import HaltActiveProjects
@@ -34,14 +34,14 @@ class HaltActiveProjectsCommand(unittest.TestCase):
 
 class SayOnceCommand(unittest.TestCase):
     def test_a_notice_is_new_the_first_time_and_old_after(self):
-        world = HazardsWorld()
-        module = module_harness.build(Hazards, world=world, module_id="hazards")
+        seat = HazardsSeat()
+        module = module_harness.build(Hazards, seat=seat, module_id="hazards")
         self.assertEqual([module.say_once(SayOnce("levy:x")), module.say_once(SayOnce("levy:x")), module.say_once(SayOnce("levy:y"))],
                          [True, False, True])
-        self.assertEqual(world.said_condition, {"levy:x", "levy:y"})
+        self.assertEqual(seat.said_condition, {"levy:x", "levy:y"})
 
     def test_a_notice_already_in_the_saved_world_is_old(self):
-        module = module_harness.build(Hazards, world=HazardsWorld(said_condition={"levy:x"}), module_id="hazards")
+        module = module_harness.build(Hazards, seat=HazardsSeat(said_condition={"levy:x"}), module_id="hazards")
         self.assertFalse(module.say_once(SayOnce("levy:x")))
 
 
