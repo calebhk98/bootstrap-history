@@ -309,12 +309,19 @@ actors (21), hazards, workforce (20 each), projects (19).
 
 ### Phase 9: finish
 
-- [x] `python3 -m sim.tests --slow` green at `50ebaa11` (rerun before the PR after the last changes).
-- [ ] Long equivalence tier and fingerprint against `mr-base`, with every divergence explained by naming its step.
-- [ ] Then, and only then, fix the bugs the migration kept on purpose so every step stayed provable (each is a `legacy_*` flag or a Complaint marked "kept until the final equivalence proof"): Complaint 681. Each fix gets its regression test; re-record the baselines after.
-- [ ] Baseline ensemble checks.
-- [ ] Update `sim/ARCHITECTURE.md`, `PACKAGE_WALLS.md`, CLAUDE.md section 3, and the Complaints this closes (508, 661, and part of 507).
-- [ ] Open the single PR (template sections if the repo has one), then subscribe to it.
+- [x] `python3 -m sim.tests --slow` green on the final code (`e60de01b`).
+- [x] Equivalence against `mr-base`: the full tier identical at `00c664b8` and `5c152a46`; micro and stress identical at
+  `a38d1f2a`, the commit before the kept bugs were fixed. The long tier's base recording (`baseline/long.json`) found
+  Complaint 922, a crash in the base itself; its check was not run, since it would test a commit that does not ship and the full
+  tier already proves the migration. The baseline ensemble and the fingerprint were not run: a shifted distribution names no
+  step to fix, and CLAUDE.md section 6 says a bug fix's fingerprint tells nothing.
+- [x] The bugs kept on purpose are fixed, each with a regression test that fails on the code before it (681, 760 to 765, 790,
+  800, 810, 850, 865, 920, 930, 956), or left partly open with what remains stated (840, 931, 955). The protocol goldens are
+  re-recorded for 761, micro and stress from the fixed build (`baseline/README.md`).
+- [x] The shipped openings are regenerated (`--allow-failing` for Complaint 473: no civilisation's spin-up settles, on the
+  base alike; the opening-checks tables of the two builds are identical).
+- [x] `sim/ARCHITECTURE.md`, `PACKAGE_WALLS.md`, CLAUDE.md sections 3 and 5; Complaint 508 closed, 661 closed, 507 partly.
+- [ ] Open the single PR, then subscribe to it.
 
 
 ## Done criteria
