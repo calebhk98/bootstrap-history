@@ -86,9 +86,9 @@ raises the money stock and, with a lag while it sits with savers, prices.
 debasing (struck coin) (`state_finance.py`, `state_policy.py`). Printing to cover a deficit that grows
 with prices runs away.
 
-**Households save and lend.** Beyond their cash buffer they keep savings worth years of their income
-above subsistence, more when the real rate is high, but never below a floor, so expected inflation reaching the rate does not
-make them spend their savings (`households_orders.savings_target`). Wealth above target is spent down at a limited pace
+**Households save and lend.** Spending is mean net income plus the yearly share of the account held (cash and money lent)
+plus, for shares owned, the same share of share wealth over a target (`households_buffer_stock`, after Eurace's
+`Household_determine_consumption_budget`): a household at a steady income does not save out of it. The excess is spent down at a limited pace
 (`WEALTH_DRAWDOWN_LIMIT`, set by the larger of this and last year's income), and a year's spending falls by at most
 a limited share of expected spending (`SPENDING_CUT_LIMIT`), so a swing in the target does not swing demand for
 durables; what they hold

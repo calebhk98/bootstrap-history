@@ -9,7 +9,8 @@ households receive is the income that pays for the demand producers are sized to
 
 The rule: the opening's income per head is the largest income, up to the full-employment ceiling, at which
 households save nothing net. Households spend all of a low income (less the margin their bids leave unspent),
-and above some income they begin to keep a surplus (a savings target on income above their floors). Nothing
+and above some income they begin to keep a surplus (spending is mean income plus a share of the account held, see
+households_buffer_stock). Nothing
 in the final demand spends that saving (no plant, working capital or lending demand is counted), so demand falls
 short of income from there up; income then has no fixed point above that kink and every income below it is one
 (demand equals income). A stationary economy saves nothing net: its saving is matched by demand that does not
@@ -99,6 +100,14 @@ def settled_income_per_head(ceiling: float, people: float, demand_at: Callable[[
                 return high, seen[high]
     return Refusal("income_root_not_found", "The income at which households stop saving was not found within the passes allowed.",
                    ceiling=ceiling, low=low, high=high, passes=OPENING_INCOME_PASSES)
+
+
+def producible_share(runs: Mapping[str, float], recipes: Mapping[str, object], hands_hours: float) -> float:
+    """The share of the demand the producers of `runs` could make with the hours the working people have
+    (`hands_hours`, a year): one when the runs' labour hours fit, else hands over hours needed. An income that
+    asks for more than the hands can make is not an income the producers can pay out."""
+    needed = math.fsum(count * math.fsum(recipes[recipe_id].labour_hours.values()) for recipe_id, count in runs.items())
+    return 1.0 if needed <= hands_hours or needed <= 0.0 else max(0.0, hands_hours) / needed
 
 
 def labour_share_of(runs: Mapping[str, float], recipes: Mapping[str, object], wages: Mapping[str, float],

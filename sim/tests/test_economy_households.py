@@ -206,8 +206,8 @@ class SavingTests(unittest.TestCase):
     def funds(self, orders):
         return sum(offer.amount for offer in orders.funds_offers)
 
-    def test_a_household_with_income_above_subsistence_saves_part_of_it(self):
-        self.assertLess(budget_total(self.orders(cash=100000.0, income=100000.0)), 100000.0 * 0.99)
+    def test_a_household_whose_cash_is_its_income_spends_all_of_it(self):
+        self.assertGreater(budget_total(self.orders(cash=100000.0, income=100000.0)), 100000.0 * 0.99)
 
     def test_what_it_holds_beyond_its_cash_buffer_and_spending_it_lends(self):
         self.assertGreater(self.funds(self.orders(cash=300000.0, income=100000.0)), 0.0)
@@ -215,10 +215,6 @@ class SavingTests(unittest.TestCase):
     def test_a_household_at_subsistence_saves_nothing(self):
         orders = self.orders(cash=20000.0, income=20000.0)
         self.assertGreater(budget_total(orders), 20000.0 * 0.95)
-
-    def test_a_higher_real_rate_draws_more_saving(self):
-        self.assertLess(budget_total(self.orders(100000.0, 100000.0, rate=0.10)),
-                        budget_total(self.orders(100000.0, 100000.0, rate=0.05)))
 
 
 class SubstituteCeilingTests(unittest.TestCase):
