@@ -79,6 +79,7 @@ class EconomyRecord:
     hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
     hours_hired_by_others: Dict[str, float] = field(default_factory=dict)   # labour market_key -> hours hired last year by employers that are not producers (hours_hired_by_others.py)
     hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
+    sold_share_expected: Dict[str, float] = field(default_factory=dict)  # labour market_key -> share of offered hours households expect to sell, smoothed over the years (household_work_year.py)
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
     credit_granted: Dict[AgentId, float] = field(default_factory=dict)   # what the last clearing granted each credit line asked for (credit_lines.py)
@@ -162,6 +163,7 @@ class EconomyRecord:
             "hours_hired": self.hours_hired,
             "hours_hired_by_others": self.hours_hired_by_others,
             "hours_idle": self.hours_idle,
+            "sold_share_expected": self.sold_share_expected,
             "funds_offered": self.funds_offered,
             "lent_by_borrower": self.lent_by_borrower,
             "credit_granted": self.credit_granted,
@@ -216,6 +218,7 @@ class EconomyRecord:
             hours_hired=dict(record["hours_hired"]),
             hours_hired_by_others=dict(record["hours_hired_by_others"]),
             hours_idle=dict(record["hours_idle"]),
+            sold_share_expected=dict(record["sold_share_expected"]),
             funds_offered=record["funds_offered"],
             lent_by_borrower=dict(record["lent_by_borrower"]),
             credit_granted=dict(record["credit_granted"]),
