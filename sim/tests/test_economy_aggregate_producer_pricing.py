@@ -53,7 +53,7 @@ def game(producers):
     recipe = Recipe("farm", {GOOD: 1.0}, {"seed": 1.0}, {"labour": 1.0})
     basket = types.SimpleNamespace(substitution=1.0)
     setup = types.SimpleNamespace(specs={}, recipes={"farm": recipe}, basket_for=lambda tile: basket)
-    return setup, types.SimpleNamespace(producers={each.agent_id: each for each in producers})
+    return setup, types.SimpleNamespace(producers={each.agent_id: each for each in producers}, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), unmet={})
 
 
 def producer(name, workshops):

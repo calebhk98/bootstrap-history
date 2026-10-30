@@ -54,3 +54,10 @@ with `goods_market.home_unit_price('charcoal_kg')` against the long-run price on
 opening basket's value while it is a small share of what trades. A raw glass ask that high against its making cost is the ask
 band failing to bound it, or the opening solve pricing it from a thin quote. Measure with `economy_api.agent_prices` against
 `_material_prices` on an opened England game.
+
+## Progress: the whole-book search is replaced, the band stays (eurace-price-setting)
+
+`seller_pricing.best_reservation` is deleted. The ask now comes from `price_setting.best_price`, which has no demand
+response to its own price except through the share against other sellers, so a lone seller would climb the grid every
+year; the band above cost (`ask_adjust.band_edge`, `seller_offers.ask_band_multiple`) is what bounds it and stays until a
+derived width exists.

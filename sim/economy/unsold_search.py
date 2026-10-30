@@ -2,8 +2,8 @@
 reaches the seller's floor, what a unit is worth to it unsold: the cheaper of making it again and holding it
 for a year, but never below what the last unit fetches kept for the buyers it expects in later years.
 
-Only producers whose ask is the one `producers.offers` gave them are searched: a seller that moves the price
-chose its ask against the whole book (seller_offers.py) and holds units back on purpose. When any of them
+Only producers whose ask is the one `producers.offers` gave them are searched: a seller that re-priced
+(price_setting.py, via seller_offers.py) chose its ask against the other sellers' on purpose. When any of them
 is unsold, all of them are brought down to a common ask level, each to no lower than its own floor, because
 a seller that undercuts leaves its rivals unsold in turn; the level is the highest at which all of them sell
 out or sit at their floors, found by bisection on whole-market clears. A market with no unsold searchable
