@@ -14,11 +14,15 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
 1. **Clearing** (`clearing.py`), per (trade, area).
    - Every worker offers `hours_per_worker_year` at the area's reservation wage:
      `reservation_wage = subsistence_per_worker_year / hours_per_worker_year * (1 + fatality_risk_per_year * value_of_life_years_of_income)`.
-   - Employers bid hours up to a `maximum_wage`. The market wage moves a share of the way toward the
-     clearing point each year (sticky).
-   - An employer pays `market_wage * (1 + pay_premium)`, capped at its maximum. Hours go to the highest
+   - Employers bid hours up to a `maximum_wage`. The wage new hires clear at rises a share of the way toward the
+     clearing point each year and falls to it at once (Eurace: an offer only rises, nothing lowers a hired worker's
+     wage; the workers' ask falls by `asks.py`, which is the only downward channel).
+   - An employer pays new hires `market_wage * (1 + pay_premium)`, capped at its maximum. Hours go to the highest
      payers first.
-   - Workers who stay with an employer keep their hours. New hires are limited by a matching function
+   - Workers who stay with an employer keep their hours and their contracted wage (`contracted_wage`, kept per employer
+     in `MarketState.contract_wages`): a surplus of workers does not reprice them, and a raised market wage does not lay
+     them off while the employer's maximum still covers the contract. The trade's reported wage (`Clearing.wage`,
+     `MarketState.wages`) is the hours-weighted mean of contracts and new hires; `Clearing.new_hire_wage` is the new hires' own. New hires are limited by a matching function
      of searchers per vacancy, which is recruitment friction: a large new hire fills over several years.
      A premium raises the employer's matching rate and lets it draw workers from lower payers.
 2. **Attrition.** A share of workers and trainees leave work each year (deaths, retirement; demography's number).

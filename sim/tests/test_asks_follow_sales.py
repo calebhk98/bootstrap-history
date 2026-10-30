@@ -85,7 +85,7 @@ class WorkersAskFollowSales(unittest.TestCase):
         wages = []
         for _ in range(60):
             result = clearing.clear_all(state, inputs([Bid("farm", "digger", "vale", 200.0, 5.0)], ask_floor=30.0))[0]
-            wages.append(result.wage)
+            wages.append(result.new_hire_wage)     # the wage a new hire would clear at; hours already held keep their contract
         self.assertTrue(all(later <= earlier + 1e-9 for earlier, later in zip(wages, wages[1:])), wages)
         self.assertGreaterEqual(min(wages), 0.3 - 1e-9)
         self.assertAlmostEqual(wages[-1], 0.3, places=2)

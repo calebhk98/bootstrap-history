@@ -126,7 +126,7 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
     give_back(record.workforce, held)
     by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
     if supply is not None:
-        offers = supply.settle({(clearing.trade, clearing.area): clearing.wage for clearing in report.clearings})
+        offers = supply.settle({(clearing.trade, clearing.area): clearing.entry_wage for clearing in report.clearings})
     for offer in offers:
         by_market.setdefault((offer.trade, offer.area), []).append(offer)
     record.hours_hired = {}

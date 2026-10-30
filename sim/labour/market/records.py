@@ -89,12 +89,14 @@ class MarketState:
     """What the core carries from one year to the next.
 
     `workers[area][trade]` is people per ability band. `trainees[area][trade]` is a list of
-    [years_left, people per band] for those still learning. `wages[area][trade]` is the market wage an
-    hour last settled at (before any employer's premium)."""
+    [years_left, people per band] for those still learning. `wages[area][trade]` is the market wage: the
+    hours-weighted mean of what hours already held (at their contracts) and hours newly hired were paid."""
     workers: Dict[AreaId, Dict[TradeId, BandCounts]] = dataclasses.field(default_factory=dict)
     trainees: Dict[AreaId, Dict[TradeId, List[list]]] = dataclasses.field(default_factory=dict)
     wages: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)
     hired_hours: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)
+    entry_wages: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # the wage new hires cleared at last year: what the next year's offer moves from (`wages` is the mean over all hours held)
+    contract_wages: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)   # per employer, the mean wage an hour it holds is paid (clearing.contracted_wage)
     asks: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # ask over the reservation wage (asks.py)
 
 
@@ -111,7 +113,12 @@ class Clearing:
     hired_by_employer: Dict[str, float]
     paid_by_employer: Dict[str, float]
     average_wage: float
+    new_hire_wage: Optional[float] = None   # the wage hours hired new this year cleared at, before any premium (`wage` is the mean over all hours held, contracts included); none: the wage
     target_wage: Optional[float] = None   # where the wage is heading: toward the price where offered meets wanted hours, scaled by the imbalance; none: the wage
+
+    @property
+    def entry_wage(self) -> float:
+        return self.wage if self.new_hire_wage is None else self.new_hire_wage
 
     @property
     def heading_wage(self) -> float:
