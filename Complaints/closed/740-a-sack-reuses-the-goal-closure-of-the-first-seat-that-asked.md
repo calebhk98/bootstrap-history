@@ -1,6 +1,6 @@
 # A sack reuses the goal closure of the first seat that asked
 
-**Status:** open
+**Status:** closed - already fixed under Complaint 765 (the sack asks the seats module's `on_road_to_goal`, which keeps one closure per seat and drops it on `set_goal`; `sim/tests/test_sack_goal_road.py`); no `_goal_closure` cache is left in `sim/hazards/`
 
 When a sack takes technologies, `Hazards.log_corpus_loss` (`sim/hazards/sack.py`) counts how many stood on the road to the goal. It
 keeps what the goal needs in `self._goal_closure` the first time it asks and never again: the old `Sim` kept it in

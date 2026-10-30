@@ -134,7 +134,8 @@ class Shocks:
 		cash = self.lose_capital(loss * constants.PLAGUE_CASH_LOSS_SHARE, "plague losses")   # the trade that stopped takes cash with it
 		return {"historical": historical, "raw": exposure["before_defences"], "med_relief": exposure["national_relief"],
 		        "relief": exposure["relief"], "why": exposure["why"], "lapsed_hedges": exposure["lapsed_hedges"], "loss": loss,
-		        "cash": cash, "people_before": people_before}
+		        "cash": cash, "people_before": people_before,
+		        "sources": self.national_public_health_sources()}   # read under this seat, so its line names its own works
 
 	def staff_loss_message(self, hazard: Dict[str, Any], report: Dict[str, Any], raw: float) -> LogLine:
 		"""The log line for one seat; `raw` is the national toll the world took."""
@@ -152,11 +153,11 @@ class Shocks:
 		message = "%s: %s" % (hazard.get("name", "hazard"), ", ".join(hit))
 		# a separate sentence, so a spared household does not read the national toll as its own
 		message += staff_loss_words.national_toll_sentence(
-			raw, historical, med_relief, self.national_sources_words() if med_relief > 0.02 else "")
+			raw, historical, med_relief, ", ".join(report["sources"]) or "none named" if med_relief > 0.02 else "")
 		return LogLine("hazard_hit", message, hazard=hazard.get("name", "hazard"), took_nothing=took_nothing,
 		               lapsed_hedges=report["lapsed_hedges"],
 		               defence=staff_loss_words.defence_kind(relief, why) if report["people_before"] > 0.05 else "no_staff",
-		               national_toll_percent=round(raw * 100))
+		               national_toll_percent=round(raw * 100), national_sources=list(report["sources"]))
 
 	# ---- output_factor: war and its aftermath, the world's output floor ----
 
