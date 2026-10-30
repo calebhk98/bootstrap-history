@@ -8,7 +8,7 @@ import math
 import types
 import unittest
 
-from sim.economy import ask_raise, seller_offers
+from sim.economy import ask_adjust, seller_offers
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
 
@@ -53,21 +53,21 @@ def floor_buyer(quantity=100.0):
 
 class SoldOutRaiseTests(unittest.TestCase):
     def test_a_sold_out_ask_rises_one_step_inside_the_band(self):
-        raised = ask_raise.raised_within_band(1.5 * COST, COST)
-        self.assertAlmostEqual(raised, 1.5 * COST * (1.0 + ask_raise.SOLD_OUT_ASK_RAISE_SHARE))
+        raised = ask_adjust.adjusted_within_band(1.5 * COST, COST, 0.0, 1.0)
+        self.assertAlmostEqual(raised, 1.5 * COST * (1.0 + ask_adjust.ASK_ADJUSTMENT_SHARE_PER_YEAR))
 
     def test_a_sold_out_ask_stops_at_the_band_edge_however_many_years_it_sells_out(self):
         ask = COST
         for _year in range(500):
-            ask = ask_raise.raised_within_band(ask, COST)
-        self.assertAlmostEqual(ask, COST * ask_raise.ASK_BAND_CEILING)
+            ask = ask_adjust.adjusted_within_band(ask, COST, 0.0, 1.0)
+        self.assertAlmostEqual(ask, COST * ask_adjust.ASK_BAND_CEILING)
 
     def test_an_ask_already_above_the_edge_is_not_cut_by_the_raise(self):
-        self.assertEqual(ask_raise.raised_within_band(10.0 * COST, COST), 10.0 * COST)
+        self.assertEqual(ask_adjust.adjusted_within_band(10.0 * COST, COST, 0.0, 1.0), 10.0 * COST)
 
     def test_no_cost_to_anchor_on_means_no_raise(self):
-        self.assertEqual(ask_raise.raised_within_band(5.0, None), 5.0)
-        self.assertEqual(ask_raise.raised_within_band(5.0, math.inf), 5.0)
+        self.assertEqual(ask_adjust.adjusted_within_band(5.0, None, 0.0, 1.0), 5.0)
+        self.assertEqual(ask_adjust.adjusted_within_band(5.0, math.inf, 0.0, 1.0), 5.0)
 
 
 class InelasticBookTests(unittest.TestCase):
@@ -79,7 +79,7 @@ class InelasticBookTests(unittest.TestCase):
         price = chosen[0].reservation_price
         self.assertTrue(math.isfinite(price))
         self.assertGreater(price, ask)       # a sole owner still prices strategically
-        self.assertLessEqual(price, COST * ask_raise.ASK_BAND_CEILING * (1.0 + 1e-9))
+        self.assertLessEqual(price, COST * ask_adjust.ASK_BAND_CEILING * (1.0 + 1e-9))
 
     def test_the_band_is_finite_for_every_elasticity_of_substitution(self):
         for substitution in (0.5, 1.0, 1.05, 3.0):

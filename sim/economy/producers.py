@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from . import ask_raise, inventory, tool_fallback, unit_cost
+from . import ask_adjust, inventory, tool_fallback, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .planning_price import held_to_band, is_bare_quote
 from .protocols import MarketView
@@ -248,9 +248,11 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
             updated[good] += REGRESSIVE_EXPECTATION_WEIGHT * (updated[good] * break_even - updated[good])
     for good in sorted(bare_quotes & set(cost_covering)):
         updated[good] = held_to_band(updated[good], producer.expected_prices.get(good), cost_covering[good], input_share)
-    for good in ask_raise.sold_out_outputs(producer, recipe, view):
+    for good in ask_adjust.worked_outputs(producer, recipe):
         if good in latest_prices:
-            updated[good] = ask_raise.raised_within_band(updated[good], cost_covering.get(good), input_share=input_share)
+            updated[good] = ask_adjust.adjusted_within_band(
+                updated[good], cost_covering.get(good), ask_adjust.unsold_stock(producer, recipe, view, good),
+                ask_adjust.target_of(producer, recipe, good), input_share=input_share)
     return updated
 
 

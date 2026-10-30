@@ -7,7 +7,7 @@ chose its ask against the whole book (seller_offers.py) and holds units back on 
 is unsold, all of them are brought down to a common ask level, each to no lower than its own floor, because
 a seller that undercuts leaves its rivals unsold in turn; the level is the highest at which all of them sell
 out or sit at their floors, found by bisection on whole-market clears. A market with no unsold searchable
-stock clears once, and a sold-out seller's ask is raised between years by ask_raise.py.
+stock clears once, and a seller's ask is moved between years by its stock against the target (ask_adjust.py).
 """
 import math
 from typing import List, Optional, Sequence, Tuple
