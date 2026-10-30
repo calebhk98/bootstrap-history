@@ -14,13 +14,23 @@ from .households_cohort import distribute_property_income
 from .types import AgentId
 
 
+def plant_value(producer, recipe, view) -> float:
+    """The producer's plant at what it would cost to build now."""
+    if recipe.plant_life_years <= 0.0:
+        return 0.0
+    return producer.capacity_runs * unit_cost.plant_value_per_run(
+        recipe, producers.live_input_prices(producer, recipe, view), producers.live_wages(producer, recipe, view))
+
+
+def firm_equity(producer, recipe, cash: float, debt: float, view) -> float:
+    """Cash plus plant at replacement cost less debt; negative when the firm owes more than it holds (Eurace@Unibi,
+    Financial_Management, Firm_compute_balance_sheet: equity is assets less debt)."""
+    return cash + plant_value(producer, recipe, view) - debt
+
+
 def firm_net_worth(producer, recipe, cash: float, debt: float, view) -> float:
-    """Cash plus plant at replacement cost less debt; a firm's owners cannot lose more than they put in."""
-    plant = 0.0
-    if recipe.plant_life_years > 0.0:
-        plant = producer.capacity_runs * unit_cost.plant_value_per_run(
-            recipe, producers.live_input_prices(producer, recipe, view), producers.live_wages(producer, recipe, view))
-    return max(0.0, cash + plant - debt)
+    """The equity floored at zero: a firm's owners cannot lose more than they put in."""
+    return max(0.0, firm_equity(producer, recipe, cash, debt, view))
 
 
 def holdings(setup, record, view) -> Dict[AgentId, float]:
