@@ -35,7 +35,7 @@ class StatisticsTests(unittest.TestCase):
 
 class VariantTests(unittest.TestCase):
     def test_scaled_speeds_change_the_constant_in_the_block_and_restore_it_after(self):
-        name = "EXPANSION_SHARE_PER_YEAR"
+        name = "OUTPUT_CHANGE_SHARE_PER_YEAR"
         holders = sensitivity._holders(name)
         self.assertTrue(holders)
         with sensitivity.scaled_speeds((name,), 0.5):
@@ -45,7 +45,7 @@ class VariantTests(unittest.TestCase):
             self.assertEqual(getattr(module, name), value)
 
     def test_a_scaled_speed_never_exceeds_the_whole_gap_closed_in_a_year(self):
-        name = "EXPANSION_SHARE_PER_YEAR"
+        name = "OUTPUT_CHANGE_SHARE_PER_YEAR"
         with sensitivity.scaled_speeds((name,), 1000.0):
             for module, _value in sensitivity._holders(name):
                 self.assertEqual(getattr(module, name), sensitivity.SPEED_CEILING)

@@ -49,8 +49,8 @@ class ExpansionTests(unittest.TestCase):
         return View({"metal": 20.0, "silver": 5.0, "ore": 1.0, "stone": 1.0}, {"smith": 1.0})
 
     def close(self, price_share=None):
-        return producers_close.close_year(farmer(recipe_id="smelt"), SMELT, 500.0, 50.0, self.view(), None,
-                                          price_share)
+        return producers_close.close_year(farmer(recipe_id="smelt", expected_sales=10.0, last_runs=10.0), SMELT, 500.0, 50.0,
+                                          self.view(), None, price_share)
 
     def test_without_a_book_it_expands_at_the_price_it_sees(self):
         self.assertIsNotNone(self.close().loan_request)
