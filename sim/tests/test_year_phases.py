@@ -1,4 +1,4 @@
-"""The year's phases are a registry: the shipped order is fixed, a mod places its own phase by constraints."""
+"""The year's phases: the shipped order is fixed, the phases a game's mods give are placed among them by constraints."""
 
 QUICK_TOPIC = True
 
@@ -7,14 +7,15 @@ import json
 import unittest
 
 from sim.engine import mod_code, year_phases
-from sim.engine.mods import ModError
+from sim.content.api import ModError
 from sim.engine.year_phases import SEAT, SHIPPED, WORLD
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 
 ALPHA, BETA = "test_alpha_p1xz", "test_beta_p1xz"
 SHIPPED_ORDER = [
-    "begin_seat_year", "begin_world_year", "apprenticeships", "staff", "money_seat", "money_world",
-    "win_conditions", "dated_shocks", "drop_ended_seats", "seat_work", "market", "wild_stock", "soil_nitrogen", "living_stock",
+    "begin_seat_year", "trim_audit", "hear_of_other_seats", "begin_world_year", "apprenticeships", "staff", "money_seat", "money_world",
+    "win_conditions", "dated_shocks", "drop_ended_seats", "seat_prelude", "start_projects", "materials", "material_shortage_notes", "seat_work", "founder_mortality", "market",
+    "coin_revaluation", "wage_market_ratios", "wild_stock", "soil_nitrogen", "living_stock",
     "defence_stores", "random_events", "world_hazards", "campaigns", "revolts", "famine_watch", "credit_limit", "advance_year"]
 
 
@@ -26,11 +27,8 @@ class FakeSim:
         self.log = []
         self.ended = ended
 
-    def playing_seats(self):
-        return ["a", "b"]
-
-    def ended_seats(self):
-        return self.ended
+    def view(self, name):
+        return {"seat_list": lambda: {"playing": ["a", "b"]}, "ended_seats": lambda: self.ended}[name]
 
     @contextlib.contextmanager
     def act_as(self, seat_id):
@@ -49,13 +47,10 @@ def mod_phase(owner, name, scope=SEAT, after=(), before=()):
 
 class PhaseTestBase(unittest.TestCase):
     def setUp(self):
-        year_phases.MOD_PHASES.clear()
-
-    def tearDown(self):
-        year_phases.MOD_PHASES.clear()
+        self.mod_phases = []   # the phases the game's mods gave, in mod load order
 
     def names(self):
-        return [phase.name for phase in year_phases.ordered_phases()]
+        return [phase.name for phase in year_phases.ordered_phases(self.mod_phases)]
 
 
 class OrderTests(PhaseTestBase):
@@ -64,81 +59,80 @@ class OrderTests(PhaseTestBase):
         self.assertEqual([phase.name for phase in SHIPPED], SHIPPED_ORDER)
 
     def test_after_runs_between_the_phase_and_its_successor(self):
-        year_phases.register_mod_phase(mod_phase(ALPHA, "conflict", after=["market"]))
+        self.mod_phases.append(mod_phase(ALPHA, "conflict", after=["market"]))
         names = self.names()
         self.assertEqual(names[names.index("market") + 1], ALPHA + ":conflict")
-        self.assertEqual(names[names.index("market") + 2], "wild_stock")
+        self.assertEqual(names[names.index("market") + 2], "coin_revaluation")
 
     def test_before_runs_right_before_the_phase(self):
-        year_phases.register_mod_phase(mod_phase(ALPHA, "magic", before=["seat_work"]))
+        self.mod_phases.append(mod_phase(ALPHA, "magic", before=["seat_work"]))
         names = self.names()
         self.assertEqual(names[names.index("seat_work") - 1], ALPHA + ":magic")
 
     def test_two_mods_after_one_phase_keep_load_order(self):
-        year_phases.register_mod_phase(mod_phase(ALPHA, "one", after=["market"]))
-        year_phases.register_mod_phase(mod_phase(BETA, "two", after=["market"]))
+        self.mod_phases.append(mod_phase(ALPHA, "one", after=["market"]))
+        self.mod_phases.append(mod_phase(BETA, "two", after=["market"]))
         names = self.names()
         start = names.index("market")
         self.assertEqual(names[start + 1:start + 3], [ALPHA + ":one", BETA + ":two"])
 
     def test_a_mod_phase_can_follow_another_mods(self):
-        year_phases.register_mod_phase(mod_phase(BETA, "late", after=[ALPHA + ":early"]))
-        year_phases.register_mod_phase(mod_phase(ALPHA, "early", after=["market"]))
+        self.mod_phases.append(mod_phase(BETA, "late", after=[ALPHA + ":early"]))
+        self.mod_phases.append(mod_phase(ALPHA, "early", after=["market"]))
         names = self.names()
         start = names.index("market")
         self.assertEqual(names[start + 1:start + 3], [ALPHA + ":early", BETA + ":late"])
 
     def test_a_cycle_names_both_mods(self):
-        year_phases.register_mod_phase(mod_phase(ALPHA, "x", after=[BETA + ":y"]))
-        year_phases.register_mod_phase(mod_phase(BETA, "y", after=[ALPHA + ":x"]))
+        self.mod_phases.append(mod_phase(ALPHA, "x", after=[BETA + ":y"]))
+        self.mod_phases.append(mod_phase(BETA, "y", after=[ALPHA + ":x"]))
         with self.assertRaises(ModError) as caught:
-            year_phases.ordered_phases()
+            year_phases.ordered_phases(self.mod_phases)
         self.assertIn(ALPHA, str(caught.exception))
         self.assertIn(BETA, str(caught.exception))
 
     def test_an_unknown_phase_is_an_error(self):
-        year_phases.register_mod_phase(mod_phase(ALPHA, "x", after=["no_such_phase"]))
+        self.mod_phases.append(mod_phase(ALPHA, "x", after=["no_such_phase"]))
         with self.assertRaises(ModError) as caught:
-            year_phases.ordered_phases()
+            year_phases.ordered_phases(self.mod_phases)
         self.assertIn("no_such_phase", str(caught.exception))
         self.assertIn(ALPHA, str(caught.exception))
 
     def test_constraints_that_cannot_both_hold_name_the_mod_and_the_shipped_phases(self):
-        year_phases.register_mod_phase(mod_phase(ALPHA, "x", after=["market"], before=["staff"]))
+        self.mod_phases.append(mod_phase(ALPHA, "x", after=["market"], before=["staff"]))
         with self.assertRaises(ModError) as caught:
-            year_phases.ordered_phases()
+            year_phases.ordered_phases(self.mod_phases)
         for part in (ALPHA, "market", "staff"):
             self.assertIn(part, str(caught.exception))
 
 
 class RunTests(PhaseTestBase):
     def test_a_mod_phase_runs_once_for_the_world_or_once_per_seat(self):
-        year_phases.register_mod_phase(mod_phase(ALPHA, "seatly", after=["market"]))
-        year_phases.register_mod_phase(mod_phase(BETA, "worldly", WORLD, after=["advance_year"]))
+        self.mod_phases.append(mod_phase(ALPHA, "seatly", after=["market"]))
+        self.mod_phases.append(mod_phase(BETA, "worldly", WORLD, after=["advance_year"]))
         sim = FakeSim()
-        year_phases.run_phases(sim, [phase for phase in year_phases.ordered_phases() if phase.owner])
+        year_phases.run_phases(sim, [phase for phase in year_phases.ordered_phases(self.mod_phases) if phase.owner])
         self.assertEqual(sim.log, [("seatly", "a"), ("seatly", "b"), ("worldly", "world")])
 
     def test_when_every_seat_has_ended_the_rest_of_the_year_does_not_run(self):
-        year_phases.register_mod_phase(mod_phase(ALPHA, "last", after=["advance_year"]))
+        self.mod_phases.append(mod_phase(ALPHA, "last", after=["advance_year"]))
         sim = FakeSim(ended=("a", "b"))
-        phases = [phase for phase in year_phases.ordered_phases() if phase.name in ("drop_ended_seats", ALPHA + ":last")]
+        phases = [phase for phase in year_phases.ordered_phases(self.mod_phases) if phase.name in ("drop_ended_seats", ALPHA + ":last")]
         year_phases.run_phases(sim, phases)
         self.assertEqual(sim.log, [])
 
     def test_ended_seats_leave_the_seat_phases(self):
-        year_phases.register_mod_phase(mod_phase(ALPHA, "seatly", after=["drop_ended_seats"]))
+        self.mod_phases.append(mod_phase(ALPHA, "seatly", after=["drop_ended_seats"]))
         sim = FakeSim(ended=("a",))
-        phases = [phase for phase in year_phases.ordered_phases() if phase.name in ("drop_ended_seats", ALPHA + ":seatly")]
+        phases = [phase for phase in year_phases.ordered_phases(self.mod_phases) if phase.name in ("drop_ended_seats", ALPHA + ":seatly")]
         year_phases.run_phases(sim, phases)
         self.assertEqual(sim.log, [("seatly", "b")])
 
 
 class LoadTests(ModTestBase):
     def tearDown(self):
-        year_phases.MOD_PHASES.clear()
         mod_code.LOADED.clear()
-        mod_code.COMMAND_REGISTRATIONS.clear()
+        mod_code.MOD_OPERATIONS.clear()
         super().tearDown()
 
     def add_code_mod(self, mod_id, source):
@@ -154,10 +148,15 @@ class LoadTests(ModTestBase):
         self.add_code_mod(ALPHA, 'def register(api):\n    api.phase("conflict", "world", lambda sim, seats: None%s)\n' % arguments)
         mod_code.run_mod_code(str(self.mods_dir))
 
-    def test_a_mod_registers_a_phase_through_the_api(self):
+    def test_a_mod_records_a_phase_through_the_api_in_its_operations(self):
         self.register_phase(', after="market"')
-        names = [phase.name for phase in year_phases.ordered_phases()]
+        (operations,) = mod_code.operations_of(str(self.mods_dir))
+        names = [phase.name for phase in year_phases.ordered_phases(operations.phases)]
         self.assertEqual(names[names.index("market") + 1], ALPHA + ":conflict")
+
+    def test_a_mods_phases_are_not_another_mod_sets(self):
+        self.register_phase(', after="market"')
+        self.assertEqual([phase.name for phase in year_phases.ordered_phases()], SHIPPED_ORDER)
 
     def test_a_bad_constraint_is_a_load_error(self):
         with self.assertRaises(ModError):

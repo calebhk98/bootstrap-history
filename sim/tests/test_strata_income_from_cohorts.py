@@ -12,9 +12,10 @@ from sim.agents import stratum_year
 from sim.agents.api import Stratum, observed_incomes, stratum_id
 from sim.agents.records import ActorRecord
 from sim.agents.strata_observed import slice_income
-from sim.engine.agents_port_cast import CastView
+from sim.actors.world_cast import CastView
 
 from .agents_fake_world import FakeWorld
+from .world_stand_in import fake_needs
 
 PAY = {"labourer": 100.0, "artisan": 400.0}
 WORK_SHARE = 0.5
@@ -60,13 +61,14 @@ class OpeningSim:
     """A game whose economy answers no cohort curve."""
 
     def __init__(self, strata):
-        self.economy = SimpleNamespace(agent_cohort_incomes=lambda: None)
-        self.actors = SimpleNamespace(of_kind=lambda kind: strata)
+        self.needs = fake_needs(agent_cohort_incomes=lambda: None)
+        self.registry = SimpleNamespace(of_kind=lambda kind: strata)
 
 
 class View(CastView):
     def __init__(self, sim):
-        self._sim = sim
+        self.needs = sim.needs
+        self.registry = sim.registry
 
     def pay_per_person_year(self, trade):
         return PAY[trade]
@@ -97,8 +99,8 @@ check("the strata's incomes add up to the cohorts' (scaled to the strata's peopl
 check("the stratum that would earn less per head takes the poorer slice", incomes["toilers"] / 8000.0 < incomes["artisans"] / 2000.0, incomes)
 check("no curve gives no incomes", observed_incomes(strata, bridge, []) == {})
 
-open_sim = SimpleNamespace(economy=SimpleNamespace(agent_cohort_incomes=lambda: curve),
-                           actors=SimpleNamespace(of_kind=lambda kind: strata))
+open_sim = SimpleNamespace(needs=fake_needs(agent_cohort_incomes=lambda: curve),
+                           registry=SimpleNamespace(of_kind=lambda kind: strata))
 view = View(open_sim)
 check("the world answers a stratum's income from the mapping, once the economy runs",
       all(abs(view.observed_stratum(None, name)["income"] - income) <= 1e-6 * max(1.0, income) for name, income in incomes.items()))
@@ -106,7 +108,7 @@ check("another country's strata are not the home cohorts", view.observed_stratum
 check("a stratum that is not in the roster has no slice", view.observed_stratum(None, "nobody") is None)
 exited = stratum("gone", 500.0, "labourer")
 exited.record.exited_year = 5
-roster = SimpleNamespace(economy=open_sim.economy, actors=SimpleNamespace(of_kind=lambda kind: strata + [exited]))
+roster = SimpleNamespace(needs=open_sim.needs, registry=SimpleNamespace(of_kind=lambda kind: strata + [exited]))
 check("a stratum that exited takes no slice", View(roster).observed_stratum(None, "gone") is None)
 
 # ---- the economy offers its cohorts poorest per head first, the home country's only ------------------------

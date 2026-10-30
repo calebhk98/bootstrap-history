@@ -5,6 +5,7 @@ test_labour_market_town_pricing_scenario."""
 QUICK_TOPIC = True
 
 import types
+from sim.tests import workforce_stand_in
 
 from .harness import *  # noqa: F401,F403
 
@@ -27,7 +28,7 @@ def _market(founder_staff=0.0, firm_staff=0.0, housing_built=0.0, supply=500.0, 
     """A market over a stub labour and world: a town of TOWN_PEOPLE, the founder's staff and firms' staff on its books."""
     household = types.SimpleNamespace(worker_housing_places=housing_built, labour_pressure_records={})
     world = types.SimpleNamespace(
-        state=types.SimpleNamespace(household=household, scenario=types.SimpleNamespace(year=100)),
+        workforce=household, view=workforce_stand_in.view_of(household), year=100, state=types.SimpleNamespace(household=household, scenario=types.SimpleNamespace(year=100)),
         HOURS_PER_PERSON_YEAR=HOURS, actor_staff_total=lambda: firm_staff,
         economy=types.SimpleNamespace(agent_wage_per_hour=lambda trade: wage_per_hour))
     labour = types.SimpleNamespace(

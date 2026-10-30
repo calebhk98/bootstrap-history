@@ -9,8 +9,9 @@ import tempfile
 import unittest
 from unittest import mock
 
-from sim.engine import tree_merge, validate_production
-from sim.engine.tree_source import load_base_tree
+from sim.content import tree_merge
+from sim.engine import validate_production
+from sim.content.tree_source import load_base_tree
 from sim.ui import cli
 
 

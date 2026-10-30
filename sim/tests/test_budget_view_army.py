@@ -8,13 +8,15 @@ from types import SimpleNamespace
 import unittest
 
 from sim.agents.budget import army_goal
-from sim.engine.agents_port_budget import BudgetView
+from sim.actors.world_budget import BudgetView
+
+from .world_stand_in import fake_needs
 
 HAZARDS = [{"years": [100, 150], "sack_chance": 0.1}, {"years": [200, 250], "sack_chance": 0.0}]
 
 
 def view(year, opening=1000.0, hazards=HAZARDS, kept=0.0):
-    stand_in = SimpleNamespace(year=year, _sim=SimpleNamespace(civ={"standing_army": opening, "hazards": hazards}),
+    stand_in = SimpleNamespace(year=year, needs=fake_needs(civilisation={"standing_army": opening, "hazards": hazards}),
                                government=lambda: SimpleNamespace(record=SimpleNamespace(army=kept)))
     stand_in.threat_pressure = lambda: BudgetView.threat_pressure(stand_in)
     stand_in.army_wanted = lambda: BudgetView.army_wanted(stand_in)

@@ -13,8 +13,8 @@ from sim.economy.producers import Producer, produce
 from sim.economy.record import EconomyRecord
 from sim.economy.tool_wear import with_tool_wear
 from sim.economy.types import Recipe, SiteLimit, ToolFallback
-from sim.engine.economy_port_setup import tool_wear_recipes
-from sim.engine.mine_deposits import MineDepositsMixin
+from sim.markets.port_setup import tool_wear_recipes
+from sim.resources import rules
 from sim.world import deposits as deposit_model
 
 HOURS_PER_YEAR = 2000.0
@@ -171,14 +171,8 @@ class SiteRoomTests(unittest.TestCase):
     """A deposit's yearly room is the larger of its working share and the rate the data say it was worked at."""
 
     def room_of(self, size, history_rate, share=0.004):
-        fake = types.SimpleNamespace(
-            state=types.SimpleNamespace(holdings=types.SimpleNamespace(deposit_drawn={})), world_map=object(),
-            _capacity_naming=lambda deposit_id: 0.0)
         row = {"id": "mine", "tile_id": "tile"}
-        with mock.patch("sim.engine.mine_deposits.historical_rates", lambda world_map, resource: {"mine": history_rate}), \
-                mock.patch("sim.engine.mine_deposits.geography.working_rate_tonnes_per_year", lambda tonnes, world_map: tonnes * share):
-            [priced] = MineDepositsMixin._priced_rows(fake, "iron", [(row, size, 0.0)])
-        return priced["room_tonnes_per_year"]
+        return rules.priced_row(row, size, 0.0, 0.0, size * share, history_rate, 0.0)["room_tonnes_per_year"]
 
     def test_the_data_rate_is_the_room_when_it_is_above_the_working_share(self):
         self.assertAlmostEqual(self.room_of(1_000_000.0, 8250.0), 8250.0)

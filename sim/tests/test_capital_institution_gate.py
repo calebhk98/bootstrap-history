@@ -3,8 +3,8 @@ hands the economy the institutions the home society holds. Read from the data, w
 QUICK_TOPIC = True
 from .harness import NODES, check
 
-from sim.engine import economy_port_institutions
-from sim.engine.mechanics import nodes_declaring
+from sim.markets import port_institutions
+from sim.mechanics.api import nodes_declaring
 from sim.economy import api as economy_api
 
 MECHANICS = {"share_trading": economy_api.SHARE_TRADING, "bond_market": economy_api.BOND_MARKET,
@@ -16,6 +16,6 @@ for mechanic, institution in MECHANICS.items():
     check("a finance node declares %s, with a source" % mechanic,
           bool(declaring) and declaring[0][0].startswith("fin_") and declaring[0][1].get("source"), declaring[:1])
     check("a society holding %s is told of the %s institution" % (mechanic, institution),
-          economy_port_institutions.institutions_of({mechanic}) == (institution,))
-check("a society holding none of them is told of none", economy_port_institutions.institutions_of({"other"}) == ())
+          port_institutions.institutions_of({mechanic}) == (institution,))
+check("a society holding none of them is told of none", port_institutions.institutions_of({"other"}) == ())
 check("every institution name is distinct", len(set(MECHANICS.values())) == len(MECHANICS))

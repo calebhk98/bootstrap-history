@@ -6,9 +6,17 @@ that spends, and the reply key holding the quoted price; the rows share one game
 through the cash ledger (open, research and project bills, the hire wage). The price
 rules each quote reads are in the tests of the module that prices it (test_purchase_reads_economy_price, test_physical_money_constants).
 """
+from unittest import mock
+
+from sim.engine import year_steps
+from sim.finance import credit_line as finance_credit_line
+from sim.workforce import constants as workforce_constants
 from .harness import *  # noqa: F401,F403
 
 _CAPITAL = 4000000.0
+# a hire's takings carry some dependants, which would offset part of its wage; stopped at the end of the file
+_NO_DEPENDANTS = mock.patch.object(workforce_constants, "HOUSEHOLD_DEPENDANT_PEOPLE", 0.0)
+_NO_DEPENDANTS.start()
 
 
 def _fresh():
@@ -21,7 +29,7 @@ _TABLE_GAME = _fresh()
 def _bounty_node():
     probe = _TABLE_GAME
     for node_id in sorted(NODES):
-        if node_id not in probe.done and probe.bounty_eligible(node_id):
+        if node_id not in probe.done and probe.view("bounty_eligible")(node_id):
             return node_id
     return None
 
@@ -76,26 +84,22 @@ _farm_quote = S._agent_dispatch(_priced, NODES, {"cmd": "quote", "what": "farm",
 _school_quote = S._agent_dispatch(
     _priced, NODES, {"cmd": "quote", "what": "school", "trade": "smith"})
 check("farm price per hectare is one engine function the quote reads",
-      hasattr(_priced, "farm_price_per_hectare")
-      and abs(_farm_quote["per_unit"] - _priced.farm_price_per_hectare()) < 0.006)
+      abs(_farm_quote["per_unit"] - _priced.view("farm_land_price")()) < 0.006)
 check("trade-school price per seat is one engine function the quote reads",
-      hasattr(_priced, "trade_school_price_per_seat")
-      and abs(_school_quote["per_unit"] - _priced.trade_school_price_per_seat()) < 0.006)
+      abs(_school_quote["per_unit"] - _priced.view("trade_school_price_per_seat")()) < 0.006)
 
 
 # ---- the same comparison through the cash ledger: open, research, project bills, the hire wage ------
 def _ledger_outflow(game, *causes):
     """Money the ledger shows paid out under these causes, the open period and the closed ones."""
-    household = game.state.household
-    totals = [household.cash_flow] + [period["causes"] for period in household.cash_periods]
+    cash = game.assembly.modules["ledger"].seat
+    totals = [cash.cash_flow] + [period["causes"] for period in cash.cash_periods]
     return -sum(totals_by_cause.get(cause, 0.0) for totals_by_cause in totals for cause in causes)
 
 
 def _ledger_game():
     game = unopened_sim(capital=_CAPITAL, surveyed=())
     game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
-    game.LIVING_COST_STATUS_PER_CAPITAL = 0.0   # status spending follows cash, which a charge changes
-    game.HOUSEHOLD_DEPENDANT_PEOPLE = 0.0   # a hire's takings carry some dependants, which would offset part of its wage
     return game
 
 
@@ -105,7 +109,7 @@ _PROBE = _ledger_game()
 def _first_node(test):
     probe = _PROBE
     for node_id in ORDER:
-        if node_id not in probe.done and probe.can_start(node_id) and test(NODES[node_id]):
+        if node_id not in probe.done and probe.view("start_check")(node_id, False, None, False)[0] and test(NODES[node_id]):
             return node_id
     return None
 
@@ -114,13 +118,11 @@ def _first_openable():
     """A venture whose opening quote needs no extra staff, found on one probe game."""
     probe = _PROBE
     for node_id in ORDER:
-        if node_id in probe.done or not probe.is_venture(node_id):
+        if node_id in probe.done or not probe.view("is_venture")[node_id]:
             continue
-        probe.state.projects.done.add(node_id)
-        probe._done_changed()
+        probe.send(LearnTechnique(node_id))
         reply = S._agent_dispatch(probe, NODES, {"cmd": "quote", "what": "open", "id": node_id})
-        probe.state.projects.done.discard(node_id)
-        probe._done_changed()
+        probe.send(ForgetTechnique((node_id,)))
         if reply.get("ok") and not reply.get("staff_short"):
             return node_id
     return None
@@ -133,7 +135,12 @@ def _run_project(node_id):
     for _year in range(8):
         if node_id in game.done:
             break
-        game._run_seat_work()   # the year's project payments and materials; the ledger bill is all this reads
+        # the year's project payments and materials (its seat phases, in order); the ledger bill is all this reads
+        game.assembly.phase_handler("seat_prelude")(game.state.acting_seat)
+        game.assembly.phase_handler("start_projects")(game.state.acting_seat)
+        game.assembly.phase_handler("materials")(game.state.acting_seat)
+        game.assembly.phase_handler("material_shortage_notes")(game.state.acting_seat)
+        year_steps.seat_work(game)
     return game, quoted, reply
 
 
@@ -145,8 +152,7 @@ _PROJECT_NODES = [_first_node(_test) for _label, _test in _PROJECT_TESTS]
 check("a venture exists to open in the table", _open_id is not None)
 if _open_id:
     _opener = _PROBE
-    _opener.state.projects.done.add(_open_id)
-    _opener._done_changed()
+    _opener.send(LearnTechnique(_open_id))
     _open_quote = S._agent_dispatch(_opener, NODES, {"cmd": "quote", "what": "open", "id": _open_id})
     _open_reply = S._agent_dispatch(_opener, NODES, {"cmd": "open", "id": _open_id})
     check("open: the action succeeds", _open_reply.get("ok"), _open_reply)
@@ -166,13 +172,16 @@ for (_label, _test), _node_id in zip(_PROJECT_TESTS, _PROJECT_NODES):
           abs(_paid - _quoted) <= 0.11, (_paid, _quoted))
 
 # The hire's yearly wage: the fee plus what the first year's payroll adds beyond it is the quoted wage.
-_hired, _twin = _ledger_game(), _ledger_game()
-_hire_quote = S._agent_dispatch(_hired, NODES, {"cmd": "quote", "what": "hire", "trade": "smith", "n": 1})
-S._agent_dispatch(_hired, NODES, {"cmd": "hire", "trade": "smith", "n": 1})
-for _game in (_hired, _twin):
-    _game._step_money_seat()   # the year's wages and living costs, which is where the hire's charge lands
+# status spending follows cash, which the fee changes; finance reads the rate from its own constants
+with mock.patch.object(finance_credit_line, "LIVING_COST_STATUS_PER_CAPITAL", 0.0):
+    _hired, _twin = _ledger_game(), _ledger_game()
+    _hire_quote = S._agent_dispatch(_hired, NODES, {"cmd": "quote", "what": "hire", "trade": "smith", "n": 1})
+    S._agent_dispatch(_hired, NODES, {"cmd": "hire", "trade": "smith", "n": 1})
+    for _game in (_hired, _twin):
+        year_steps.money_seat(_game)   # the year's wages and living costs, which is where the hire's charge lands
 _hire_charged = (_ledger_outflow(_hired, "hiring fee and first year's wages")
                  + _ledger_outflow(_hired, "living costs") - _ledger_outflow(_twin, "living costs"))
 check("hire wage: the first year's charge through the ledger is the quoted yearly wage",
       abs(_hire_charged - _hire_quote["from_next_year_per_year"]) <= 0.11,
       (_hire_charged, _hire_quote["from_next_year_per_year"]))
+_NO_DEPENDANTS.stop()

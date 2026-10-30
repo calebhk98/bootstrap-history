@@ -8,9 +8,11 @@ import os
 from unittest import mock
 import unittest
 
-from sim.engine import data, prices
-from sim.engine.mods import ModError
-from sim.engine.tree_source import load_base_tree
+from sim.prices import prices
+
+from sim.engine import data
+from sim.content.api import ModError
+from sim.content.tree_source import load_base_tree
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 
 
@@ -51,7 +53,7 @@ class RealLoadPathTests(ModTestBase):
     def test_price_solver_registry_sees_technologies(self):
         trade = _labour_only_trade()
         self.add_mod("test_acme_k3f9", trades={trade: {"remove": True}})
-        with mock.patch("sim.engine.catalog.get_ordered_mods", return_value=self.manifests()):
+        with mock.patch("sim.content.catalog.get_ordered_mods", return_value=self.manifests()):
             with self.assertRaises(ModError):
                 prices.solver_trade_registry({})
 

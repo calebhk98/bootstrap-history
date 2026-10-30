@@ -1,46 +1,35 @@
 """Refusal wording and screens: the patronage refusal never leaks an id nor recommends a refusal, the policy screen
-groups what is running from what is not, and "nothing else rests on this" means zero. The start rule is the real mixin
-over a stand-in game (stage of the patron, interest and fog set by the test); the screens are rendered from built
+groups what is running from what is not, and "nothing else rests on this" means zero. The start rule is the real module
+over built views (stage of the patron, interest and fog set by the test); the screens are rendered from built
 replies (no game). The concerns auto_open considers are test_auto_open_candidates."""
 import collections
 from types import SimpleNamespace
 
 from .harness import check, NODES
 
-from sim.engine.projects_starting import StartingMixin
+from sim.tests import projects_host
 from sim.engine.ui_port import downstream_count
 from sim.ui import protocol as _PROTO
 from sim.ui.proto.techtree import _explain_unlocks, _rests_band
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
 
-class _World(StartingMixin):
-    """The social approval rule and the patron advice, over a patron, a state interest and a fog switch."""
-
-    def __init__(self, interest=-0.8, fog=False, visible=("patron_local",), done=(), running=(),
-                 protection=0.0, prereqs=(), opposed_patron=None):
-        self.fog_on = fog
-        self.interest = interest
-        self.visible = set(visible)
-        self.running_ids = set(running)
-        self.nodes = {"patron_local": {"pre": list(prereqs)}, "patron_senatorial": {"pre": []},
-                      "plain": {"cat": "technique"}}
-        self.state = SimpleNamespace(projects=SimpleNamespace(done=set(done)),
-                                     household=SimpleNamespace(protection=protection))
-        self.opposed_patron = opposed_patron
-
-    def state_interest(self, node):
-        return self.interest
-
-    def approval_patron(self, gate):
-        return "patron_local" if gate == "wary" else self.opposed_patron
-
-    def running(self, node_id):
-        return node_id in self.running_ids
-
-    def is_visible(self, node_id):
-        return not self.fog_on or node_id in self.visible
+def _World(interest=-0.8, fog=False, visible=("patron_local",), done=(), running=(),
+           protection=0.0, prereqs=(), opposed_patron=None):
+    """The projects module over a patron, a state interest and a fog switch: the social approval rule and the patron
+    advice. `standing_figures` is the household's standing it reads, for a test to change."""
+    visible, running_ids = set(visible), set(running)
+    standing = {"protection": protection, "scandal": 0.0, "bribes_year_to_date": 0.0}
+    world = projects_host.build(
+        tree={"patron_local": {"pre": list(prereqs)}, "patron_senatorial": {"pre": []}, "plain": {"cat": "technique"}},
+        techniques_held=set(done), state_interest=lambda node: interest,
+        approval_patron=lambda gate: "patron_local" if gate == "wary" else opposed_patron,
+        running=lambda node_id: node_id in running_ids, visibility=lambda node_id, memo: not fog or node_id in visible,
+        standing=standing)
+    world.standing_figures = standing
+    return world
 
 
 def _refusal(world, category="technique"):
@@ -85,7 +74,7 @@ opposed = _World(interest=-2.0, opposed_patron="patron_senatorial", fog=True, vi
 _allowed, text = _refusal(opposed)
 check("a state that actively opposes the work refuses it, and does not leak the senatorial patron's id under fog",
       _allowed is False and "patron_senatorial" not in text and "protection" in text, text)
-opposed.state.household.protection = 100.0
+opposed.standing_figures["protection"] = 100.0
 check("enough protection overrides an opposing state", _refusal(opposed) is None)
 
 # --- the policy screen groups by what is actually running
@@ -115,7 +104,7 @@ check("...and every band has a short form for the column that renders it",
       all(_rests_band(count) in _PROTO._RESTS_SHORT for count in (0, 1, 4, 41, 301, 1201)), sorted(_PROTO._RESTS_SHORT))
 
 # the two pairs a player reported, through the part of `why` that states it (under fog, where it is banded)
-fog_game = SimpleNamespace(fog=True, goal="nowhere")
+fog_game = Game(fog=True, goal="nowhere")
 for prerequisite, dependent in (("met_ore_crushing_sorting", "met_jigging_gravity"),
                                 ("in2_tape_measure_steel", "in2_baseline_measurement_apparatus")):
     dependents = downstream_count(NODES, prerequisite)
@@ -124,8 +113,8 @@ for prerequisite, dependent in (("met_ore_crushing_sorting", "met_jigging_gravit
           prerequisite in NODES[dependent]["pre"] and dependents >= 1 and not rests.startswith("nothing else"),
           (rests, NODES[dependent]["pre"]))
 check("off fog `why` gives the exact count and no band",
-      _explain_unlocks(SimpleNamespace(fog=False, goal="nowhere"), NODES, "met_ore_crushing_sorting", [], 7)["downstream_count"] == 7
-      and _explain_unlocks(SimpleNamespace(fog=False, goal="nowhere"), NODES, "met_ore_crushing_sorting", [], 7)["how_much_rests_on_this"] is None)
+      _explain_unlocks(Game(fog=False, goal="nowhere"), NODES, "met_ore_crushing_sorting", [], 7)["downstream_count"] == 7
+      and _explain_unlocks(Game(fog=False, goal="nowhere"), NODES, "met_ore_crushing_sorting", [], 7)["how_much_rests_on_this"] is None)
 
 # and the class: no node with a dependent may say nothing rests on it
 dependents_of = collections.Counter()

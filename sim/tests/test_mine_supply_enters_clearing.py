@@ -2,7 +2,7 @@
 test_economy_sites; whether a mine's ore moves the price over years is measured by `python3 sim/simulator.py economy-check`.
 Engine path: the society's baseline capacity is the deposits' output (their quantities are shares of
 the empire output table, scaled by the reach to the tiles held, geography.mineral_scale), and any mine a
-concern runs is an offer at its own cost (producer_costs.founder_concern_offers, goods_market.others_offers)."""
+concern runs is an offer at its own cost (the prices module's concern_offers, goods_market.others_offers)."""
 
 QUICK_TOPIC = True
 

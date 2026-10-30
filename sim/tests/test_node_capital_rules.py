@@ -5,7 +5,9 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import data, node_capital, node_revenue, node_revenue_census, node_upkeep, tree_merge, validate_node_money
+from sim.content import tree_merge
+from sim.engine import data, validate_node_money
+from sim.production import node_capital, node_revenue, node_revenue_census, node_upkeep
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
 class CapitalFromStatedStaffAndPlant(unittest.TestCase):

@@ -174,16 +174,67 @@ Data is the default and covers most needs. A mod that needs Python lists files i
 { "code": ["hooks.py"], "permissions": ["code"] }
 ```
 
-Each file defines `register(api)`. The `api` object registers commands (`@api.command(name, group=..., summary=...,
-usage=[...], description=...)` with a handler `(sim, nodes, cmd, ended) -> dict`), actor kinds (`api.actor_kind`),
-policies (`api.policy`) and spawners (`api.spawner`); every name is forced into `<mod_id>:`. A handler keeps its
-state only in `api.state(sim.state.interface)`, a plain dict that is saved with the game, and draws random numbers
+Each file defines `register(api)`. A mod imports nothing of `sim` but `sim.mod_api` (command classes it may send, the base classes
+of the actors it adds, pure rules and constants). It never holds the game: it declares what it reads and sends, and its code is
+handed an `access` that answers exactly that.
+
+* `api.reads("year", "population", ...)`: the published views the mod's code reads (`assembly.dependency_lines` lists a mod's
+  reads beside the modules'). `access.view(name)` answers a declared view as the game does (call it, or index a keyed one) with
+  the answer guarded like another module's read (a dict, list or set cannot be written through); any other view raises
+  `UndeclaredRead` naming the mod and the view. A view no module publishes is refused when the game is assembled, naming the mod
+  and the view, as is removing a module a mod reads.
+* `api.sends(PayActor, ...)`: the command classes the mod's code sends. `access.send(command)` applies a declared one through its
+  owner; any other raises `UndeclaredSend` naming the mod and the command. `api.store(...)` declares the `store` view and
+  `WriteStore` for you.
+* `access.memory()`: the mod's own JSON dict inside the saved game.
+
+`register(api)` registers commands (`@api.command(name, group=..., summary=...,
+usage=[...], description=...)` with a handler `(access, nodes, cmd, ended) -> dict`), headline figures (`@api.figure(name, label, unit=...)` on
+`compute(access) -> {"value", "components", "flows", "drivers"}`), actor kinds (`api.actor_kind`),
+policies (`api.policy`), spawners (`api.spawner`, `function(access)`; it founds an actor by sending `AddActor`) and a player actor's
+orders (`api.player_command`, `handler(access, actor_id, order)`); every name is forced into `<mod_id>:`. An actor kind's class runs
+inside the agents package: its methods are handed the `world` narrowed to the members actors ask (`sim/agents/protocols.py`), and
+any other member is refused with `UndeclaredWorldMember` naming the mod. Kinds, spawners and player commands are provided only
+through these three calls: `api.provide` refuses their points. Each of these records an answer to an extension point of the module that owns it; `api.provide(point,
+function)` adds an answer to any other point directly (`actor_policies`,
+`wealth_claims`, `interface_commands`, `interface_figures`, `town_population`, `town_mortality_premium`, `director_overhead`, `externality`, `store_declarations`, and
+a module's own). What a mod records is kept per mod, so two games in one process run the mods of their own set. A handler keeps its
+state only in `access.memory()`, a plain dict that is saved with the game, and draws random numbers
 only from `api.rng(world, ...)`, so saves and the fingerprint stay reproducible.
+
+### Changing the module set
+
+A mod's code can change which modules a game is assembled from; every operation is kept per mod and applied, in mod load order,
+to the game built over that mod set (`python3 -m sim.tests --slow --only mod_operations_smoke` runs each one in a whole game).
+
+* `api.add_module(spec)`: a new module `<mod_id>:<name>` with its own saved state, views, commands and phases.
+* `api.replace_module(module_id, spec)`: stand in for a module; the spec must publish every view, apply every command and declare
+  every extension point of the one it replaces. Two unrelated mods replacing one module is an error naming both.
+* `api.remove_module(module_id)`: refused while a remaining module reads one of its views or sends one of its commands; the
+  error names the remover and every reader.
+* `api.extend_module(module_id, layer)`: a class laid over the implementation, so its methods override and `super()` reaches the
+  layer below. Layers stack in mod load order; a method outside the module's declared ones is labelled unstable.
+* `api.adjust_view(view, function, reads=())`: `function(access, value, *key_or_arguments) -> value` over a published view;
+  adjusters stack in mod load order.
+* `api.provide(point, function)` and `api.withdraw("<module_id>.<provision>")`: add an answer to an extension point, or take a
+  shipped module's answer out of one.
+* `api.kernel(name, function)`: replace one of the engine's swappable computations (a speed-up, say) by `function`. A kernel is a
+  plain function of plain arguments (no `Sim`), declared by a module as `<module_id>.<name>` with its reference
+  implementation, a description of its arguments and answer, stored sample calls and a tolerance (zero: exact) with its
+  reason. The shipped ones are `markets.fetch_wage` (the wage that fetching hands from other areas caps a labour shortage
+  at; `sim/labour/market/fetch_wage.py`) and `markets.least_cost_tree` (the least carriage cost to every state of the
+  route graph; `sim/geography/routes_cost_tree.py`); each file's docstring and `sim/markets/kernels.py` say what `function`
+  receives and must answer. When the game is assembled `function` is run on every sample and compared with the reference;
+  the game is refused, naming the mod and the kernel, when it raises or answers differently (any float outside the
+  declared tolerance). Two mods replacing one kernel is an error naming both; naming a kernel no module declares is an
+  error naming the mod. The active replacements are part of the game's assembly record, so a save written under a
+  replacement is refused by a game without it, as for module sets. A replacement that is equal on the samples but not
+  elsewhere is the mod's own risk: compare real games (`python3 -m sim.tests.fingerprint record before.json`, then `check`).
 
 ### Adding a phase to the year
 
-`api.phase(name, scope, handler, after=..., before=...)` adds a step to the year. `scope` is `"seat"` (`handler(sim,
-seat_id)`, run once for each seat still in play, inside that seat's `act_as`) or `"world"` (`handler(sim, seats)`,
+`api.phase(name, scope, handler, after=..., before=...)` adds a step to the year. `scope` is `"seat"` (`handler(access,
+seat_id)`, run once for each seat still in play, inside that seat's `act_as`) or `"world"` (`handler(access, seats)`,
 run once; it may return a shorter list of seats, and an empty list ends the year). `after` and `before` take a
 phase name or a list: a shipped phase (the registry in `sim/engine/year_phases.py`, whose `SHIPPED` list is the
 order) or another mod's `<mod_id>:<name>`. At least one is required. The phase is placed right after its latest
@@ -193,20 +244,24 @@ together is a load error naming the mod and the phase.
 
 ### Feeding the town, the deaths and the harvest
 
-Four more doors take a provider; none changes the game unless a mod registers one.
+Four more doors take a provider; none changes the game unless a mod provides one.
 
-* `api.director_overhead(function)`: `function(sim) -> hours` a year charged against the directed-hours pool
-  (`sim/engine/director_overhead.py`). The hours count as committed, so every free-hours check sees them; a negative
-  answer counts as zero.
-* `api.town_provider(name, function, mortality_premium=None)`: `function(labour, tile, nominal_people) -> people or None`
-  says how many people live in a tile's town (`sim/labour/town_providers.py`). `None` declines; the answer is bounded
-  by the tile's own people. The labour market, `map` and every hire reach read it. The optional
-  `mortality_premium(labour, tile, town_people) -> share or None` is the town's excess over the baseline death rate; it
-  is averaged over the tile's people and reaches `Population.step` (`urban_mortality_premium`). A provider reads the
-  game through `labour.simulation_for_providers()` and should read a store a phase wrote, so a loaded game answers
-  as the live one did.
-* `api.externality(provider)`: `provider(sim, year) -> {"deaths_by_band": {band: people}, "yield_factor_by_tile":
-  {tile: factor}}` (either key optional; `sim/engine/externalities.py`). Deaths join the year's epidemic deaths before
+A provider's first argument is its mod's `access`; it reads only what the mod declared.
+
+* `api.director_overhead(function)`: `function(access) -> hours` a year charged against the directed-hours pool
+  (the workforce module's `director_overhead` point). The hours count as committed, so every free-hours check sees them;
+  a negative answer counts as zero; the answers are added.
+* `api.town_provider(name, function, mortality_premium=None)`: `function(access, tile, nominal_people) -> people or None`
+  says how many people live in a tile's town (the workforce module's `town_population` point). `None` declines; the last
+  provider in mod load order that answers wins, and the answer is bounded by the tile's own people. The labour market, `map` and every hire reach read it. The optional
+  `mortality_premium(access, tile, town_people) -> share or None` is the town's excess over the baseline death rate; it
+  is averaged over the tile's people and reaches `Population.step` (`urban_mortality_premium`). A provider should read a
+  store a phase wrote (`handle.get(access, tile)`), so a loaded game answers as the live one did.
+* `api.wealth_claims(owed, seize)`: `owed(access) -> money` the acting household is owed by other actors and
+  `seize(access, amount, taker) -> money taken` for the `taker`; a confiscation counts the first and, once the purse is empty,
+  takes the second (the polity module's `wealth_claims` point).
+* `api.externality(provider)`: `provider(access, year) -> {"deaths_by_band": {band: people}, "yield_factor_by_tile":
+  {tile: factor}}` (either key optional; the demography module's `externality` point, which agriculture reads too). Deaths join the year's epidemic deaths before
   the demographic step; a factor from 0 to 1 scales the yield of land-bound producers on that tile. Factors from
   several providers multiply. The pooled national harvest the people eat is scaled too, by the tile's share of the
   arable land times its loss (`weather_pooling.harm_multiplier`).
@@ -215,22 +270,25 @@ Four more doors take a provider; none changes the game unless a mod registers on
 
 ### Changing the world
 
-A handler or phase changes the world only through `api.effects` (sim/engine/mod_effects.py); reaching into `Sim`
-attributes or package internals is unsupported and bypasses the conservation checks. Every operation takes `sim`
-first, needs a cause in words, and goes through the normal rules:
+A handler or phase changes the world only through `api.effects` (sim/engine/mod_effects.py) or the commands it declared with
+`api.sends`; reaching into package internals is unsupported and bypasses the conservation checks. Every effect takes `access`
+first, needs a cause in words, and goes through the normal rules by sending the owner's command, so the mod declares what the
+effect uses: `api.uses_effects("pay", "record_event", ...)` declares the views and commands of the named effects
+(`EFFECT_NEEDS` in sim/engine/mod_effects.py), and an effect used without it is refused with `UndeclaredRead` or `UndeclaredSend`
+naming the mod and the name:
 
-* `pay(sim, payer_id, payee_id, amount, purpose)`: coin between two actors through the ledger.
-* `pay_edge` / `receive_from_edge(sim, actor_id, edge, amount, purpose)`: coin to or from a named edge (the `EDGE_*`
+* `pay(access, payer_id, payee_id, amount, purpose)`: coin between two actors through the ledger.
+* `pay_edge` / `receive_from_edge(access, actor_id, edge, amount, purpose)`: coin to or from a named edge (the `EDGE_*`
   names in `sim/agents/edges.py` and the economy's goods edges, or your own `edge:<mod_id>:<name>`). An unnamed or
   unknown edge is an error, so money is never made or lost without a counterparty the books show.
-* `add_goods` / `remove_goods(sim, account_id, good, tile, quantity, cause)`: goods enter or leave the economy's book
+* `add_goods` / `remove_goods(access, account_id, good, tile, quantity, cause)`: goods enter or leave the economy's book
   at a tile against a named edge (production and consumption by default); removing more than the account holds is
   refused.
-* `kill_people(sim, country, share, cause)`: the same death path hazards use; returns the event, whose `died` fact
-  says how many. `move_people(sim, from_stratum, to_stratum, count, cause)` shifts people between strata.
-* `transfer_tile(sim, tile, to_actor, cause)`: ownership change; the event log records it.
-* `write_store(sim, name, key, value)`: a store this mod declared (another owner's is an error).
-* `record_event(sim, kind, cause, actors=..., tiles=..., **facts)`: a world event; the kind is forced into `<mod_id>:`.
+* `kill_people(access, country, share, cause)`: the same death path hazards use; returns the event, whose `died` fact
+  says how many. `move_people(access, from_stratum, to_stratum, count, cause)` shifts people between strata.
+* `transfer_tile(access, tile, to_actor, cause)`: ownership change; the event log records it.
+* `write_store(access, name, key, value)`: a store this mod declared (another owner's is an error).
+* `record_event(access, kind, cause, actors=..., tiles=..., **facts)`: a world event; the kind is forced into `<mod_id>:`.
 
 The base game's own world hazards call the same `kill_people` and `record_event`, so a data hazard and a mod act alike.
 
@@ -251,9 +309,9 @@ and readable by anything that reads state. Declare it in `data/stores.json` of t
 
 or from code, `handle = api.store("mana", keyed_by="tile", default=0.0, unit="mana")`; `keyed_by` is `tile`,
 `actor` or `actor_pair`. Names are `<mod_id>:<name>` and declared once across the base game and every mod (a
-duplicate is a load error naming both). Code reads and writes through the handle (`handle.get(sim, key)`,
-`handle.set(sim, key, value)`, `handle.items(sim)`; a pair key is the tuple `(first, second)`, and order matters)
-or `api.write_store(sim, name, key, value)`; writing an undeclared store, or another mod's, is an error naming the
+duplicate is a load error naming both). Code reads and writes through the handle (`handle.get(access, key)`,
+`handle.set(access, key, value)`, `handle.items(access)`; a pair key is the tuple `(first, second)`, and order matters)
+or `api.write_store(access, name, key, value)`; writing an undeclared store, or another mod's, is an error naming the
 mod. Only values that differ from the default are saved (`state.stores`). A figure or a `read` command reaches a
 value with the state path `stores.<mod_id>:<name>.<key>` (a pair key is `first|second`), and `map layer
 <store name>` adds the value to each tile row of the map screen. The base game's own stores are in

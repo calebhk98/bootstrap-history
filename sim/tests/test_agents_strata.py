@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CountryProfile
-from sim.agents import registry as registry_module
+from sim.agents.shipped import shipped_spawners
 from sim.agents.strata_seed import seed_strata, strata_definitions, strata_spawner
 from sim.agents.stratum import Stratum
 
@@ -70,7 +70,7 @@ check("the home country's strata carry country None", toilers.record.country is 
 check("a stratum starts with no research tree", not toilers.knowledge and not toilers.works)
 again = seed_strata(registry, StrataWorld())
 check("seeding twice founds nothing more", again == [] and len(registry.of_kind("stratum")) == 2, again)
-check("the strata spawner is registered", "strata" in [name for name, _spawner in registry_module.SPAWNERS])
+check("the strata spawner is shipped", "strata" in [name for name, _spawner in shipped_spawners()])
 
 state = ActorsState(home_country="home")
 state.countries["home"] = CountryProfile(country="home", population=1000.0, strata=DEFINITIONS)

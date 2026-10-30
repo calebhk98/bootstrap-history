@@ -9,6 +9,7 @@ from unittest import mock
 
 from sim.ui import cli_agent
 from sim.ui.proto import credit_forecast
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -25,7 +26,7 @@ class Policy:
 
 def run_loop(lines, emit):
     events = []
-    args = types.SimpleNamespace(script=None)
+    args = Game(script=None)
     dispatch = lambda sim, nodes, command: events.append(("ran", command["cmd"])) or {"ok": True}
     with mock.patch.object(cli_agent, "_agent_dispatch", dispatch), \
             mock.patch.object(cli_agent, "_agent_end_reason", lambda sim: None), \
@@ -51,7 +52,7 @@ class SaveBeforeReplyTests(unittest.TestCase):
 
 class StartCreditForecastTests(unittest.TestCase):
     def sim(self, capital):
-        return types.SimpleNamespace(capital=capital, credit_limit=lambda: 5000.0, debt_interest_rate=lambda: 0.08,
+        return Game(capital=capital, credit_limit=lambda: 5000.0, debt_interest_rate=lambda: 0.08,
                                      debt_service_forecast=lambda owed: {"interest_per_year_at_that_draw": owed * 0.08})
 
     def test_a_start_short_of_cash_reports_the_gap_from_the_games_cash_limit_and_rate(self):

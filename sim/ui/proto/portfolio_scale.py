@@ -33,7 +33,7 @@ def add_readouts(sim, nodes, rows):
         row["remaining_investment"] = round(left, 1)
         row["annual_absorption"] = round(draw, 1)
         row["years_to_finish_at_last_allocation"] = None if math.isinf(slowest) else round(slowest, 1)
-        row["earliest_completion_year"] = None if math.isinf(slowest) else int(sim.year + math.ceil(slowest))
+        row["earliest_completion_year"] = None if math.isinf(slowest) else int(sim.view("year")() + math.ceil(slowest))
     return rows
 
 

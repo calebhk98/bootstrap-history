@@ -6,9 +6,10 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.assembly.api import NeedsAccess
 from sim.engine import mod_code
-from sim.labour import town_providers
 from sim.tests.test_town_providers import Town
+from sim.workforce.provided import last_answer
 from sim.world.demography import Population
 
 PEOPLE = (30000.0, 60000.0, 10000.0)
@@ -47,8 +48,6 @@ class PopulationStep(unittest.TestCase):
 class TownPremium(unittest.TestCase):
     def setUp(self):
         self.labour = Town()
-        self.addCleanup(town_providers.PROVIDERS.clear)
-        self.addCleanup(town_providers.PREMIUMS.clear)
 
     def test_no_provider_gives_no_premium_anywhere(self):
         self.assertEqual(self.labour.town_mortality_premium_by_tile(), {})
@@ -57,20 +56,20 @@ class TownPremium(unittest.TestCase):
         tile = self.labour.base_tile()
         town = self.labour.home_town_population_estimate()
         people = self.labour.settlement_tiles()[tile]
-        town_providers.register_town_premium("test_acme_k3f9:premium", lambda labour, where, size: 0.5 if where == tile else None)
+        self.labour.premiums.append(lambda where, size: 0.5 if where == tile else None)
         found = self.labour.town_mortality_premium_by_tile()
         self.assertEqual(set(found), {tile})
         self.assertAlmostEqual(found[tile], 0.5 * town / people, places=9)
 
-    def test_the_mod_door_registers_both_the_size_and_the_premium(self):
-        mod_code.ModCodeApi("test_acme_k3f9").town_provider("towns", lambda labour, where, size: 0.5 * size,
-                                                            mortality_premium=lambda labour, where, size: 0.2)
-        self.assertIn("test_acme_k3f9:towns", town_providers.PROVIDERS)
-        self.assertEqual(town_providers.provided_mortality_premium(self.labour, "x", 10.0), 0.2)
+    def test_the_mod_door_records_both_the_size_and_the_premium(self):
+        api = mod_code.ModCodeApi("test_acme_k3f9")
+        size, premium = (lambda where, size: 0.5 * size), (lambda where, size: 0.2)
+        api.town_provider("towns", size, mortality_premium=premium)
+        self.assertEqual((api.operations.provided["town_population"], api.operations.provided["town_mortality_premium"]),
+                         ((NeedsAccess(size),), (NeedsAccess(premium),)))
 
     def test_a_negative_premium_counts_as_none(self):
-        town_providers.register_town_premium("test_acme_k3f9:premium", lambda labour, where, size: -1.0)
-        self.assertEqual(town_providers.provided_mortality_premium(self.labour, "x", 10.0), 0.0)
+        self.assertEqual(last_answer([-1.0]), 0.0)
 
 
 if __name__ == "__main__":

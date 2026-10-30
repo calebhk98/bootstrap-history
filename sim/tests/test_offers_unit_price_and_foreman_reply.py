@@ -7,33 +7,34 @@ import types
 import unittest
 
 from sim.engine.critical_path_remaining import active_years_left
-from sim.engine.goods_market_offers import GoodsOffers
+from sim.markets.goods_offers import GoodsOffers
 from sim.ui.proto.techtree import _staffing_standing_crew
+from sim.tests.ui_stand_in import Game
 
 
 class UnitPriceTests(unittest.TestCase):
     def test_a_material_no_home_technique_and_no_partner_makes_has_no_unit_price(self):
-        market = types.SimpleNamespace(offered_by=lambda material: None, home_unit_price=lambda material: None,
+        market = Game(offered_by=lambda material: None, home_unit_price=lambda material: None,
                                        household_prices=lambda: {})
         self.assertIsNone(GoodsOffers.unit_price(market, "cobalt_kg"))
 
     def test_a_material_with_no_unit_price_cannot_be_bought(self):
-        market = types.SimpleNamespace(unit_price=lambda material: None)
+        market = Game(unit_price=lambda material: None)
         self.assertFalse(GoodsOffers.can_be_bought(market, "cobalt_kg"))
 
     def test_a_material_with_a_unit_price_can_be_bought(self):
-        market = types.SimpleNamespace(unit_price=lambda material: 2.5)
+        market = Game(unit_price=lambda material: 2.5)
         self.assertTrue(GoodsOffers.can_be_bought(market, "cobalt_kg"))
 
 
 class ForemanReplyTests(unittest.TestCase):
     def test_the_standing_crew_reply_carries_the_foreman_trade_fte_and_who_is_free(self):
-        sim = types.SimpleNamespace(venture_foreman_free=lambda trade: 3.14159, opening_fee=lambda node_id: (10.0,))
+        sim = Game(venture_foreman_free=lambda trade: 3.14159, opening_fee=lambda node_id: (10.0,))
         reply = _staffing_standing_crew(sim, "node", True, 1.0, 2.0, 5.0, 5.0, "smith", 0.5)
         self.assertEqual(reply["specialist_foreman_to_keep_it_open"], {"trade": "smith", "fte": 0.5, "free_now": 3.14})
 
     def test_the_standing_crew_reply_has_no_foreman_when_the_concern_needs_none(self):
-        sim = types.SimpleNamespace(venture_foreman_free=lambda trade: 0.0, opening_fee=lambda node_id: (10.0,))
+        sim = Game(venture_foreman_free=lambda trade: 0.0, opening_fee=lambda node_id: (10.0,))
         reply = _staffing_standing_crew(sim, "node", True, 1.0, 2.0, 5.0, 5.0, None, 0.0)
         self.assertIsNone(reply["specialist_foreman_to_keep_it_open"])
 

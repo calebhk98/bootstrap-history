@@ -1,6 +1,7 @@
 """The rollout command: repeat a school, library or clinic across the land until a share of the people is served."""
 
 from .command_registry import command
+from sim.engine import ui_port
 
 
 @command("rollout", group="projects",
@@ -17,7 +18,7 @@ def _cmd_rollout(sim, nodes, cmd, ended):
         return {"ok": False, "error": "the run has ended (%s); nothing more can be built" % ended}
     node_id = cmd.get("id")
     if not node_id:
-        rows = [sim.coverage_row(work) for work in sim.coverage_nodes() if work in sim.done]
+        rows = [sim.view("coverage_row")[work] for work in sim.view("coverage")() if work in sim.view("techniques_held")()]
         return {"ok": True, "rollouts": rows,
                 "note": "" if rows else "you know no work that can be rolled out yet"}
     share = cmd.get("share")
@@ -27,8 +28,8 @@ def _cmd_rollout(sim, nodes, cmd, ended):
     share = share / 100.0 if share > 1.0 else share
     if not 0.0 < share <= 1.0:
         return {"ok": False, "error": "the share must be between 0 and 1 (or 1 and 100 percent)"}
-    ok, text = sim.roll_out(node_id, share)
+    ok, text = sim.send(ui_port.RollOut(node_id, share))
     if not ok:
         return {"ok": False, "error": text}
-    return {"ok": True, "message": text, "covered": round(sim.coverage_share(node_id), 4),
-            "units": round(sim.institution_units(node_id), 3)}
+    return {"ok": True, "message": text, "covered": round(sim.view("coverage_share")[node_id], 4),
+            "units": round(sim.view("institution_units")[node_id], 3)}

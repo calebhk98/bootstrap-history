@@ -7,18 +7,19 @@ from types import SimpleNamespace
 
 from sim.agents import business_review
 from sim.agents.api import Business
-from sim.engine.projects_review import SeatReview
+from sim.finance.api import constants as finance_constants
+from sim.ledger.api import ReceiveFromEdge
+from sim.projects.review import SeatReview
+from sim.tests import module_harness, projects_host
 
 
-def _seat(capital, limit, upkeep=100.0, multiple=3.0, size=2.0):
-    received = []
-    game = SimpleNamespace(
-        state=SimpleNamespace(household=SimpleNamespace(capital=capital), scenario=SimpleNamespace(year=1),
-                              projects=SimpleNamespace(business=SimpleNamespace(size_of=lambda entry_key: size))),
-        credit_limit=lambda: limit, CREDITOR_SEIZURE_VALUE_MULTIPLE=multiple,
-        receive_from_edge=lambda edge, proceeds, note: received.append(proceeds))
-    world = SimpleNamespace(_sim=game, upkeep=lambda entry_key, plant_size: upkeep * plant_size)
-    return SeatReview(world), received
+def _seat(capital, limit, upkeep=100.0, size=2.0):
+    module = projects_host.build(
+        acting_balance=capital, credit_limit=lambda *arguments: limit, year=1,
+        venture_size=lambda entry_key: size)
+    world = SimpleNamespace(upkeep=lambda entry_key, plant_size: upkeep * plant_size)
+    received = [command for command in module_harness.sent(module) if isinstance(command, ReceiveFromEdge)]
+    return SeatReview(module, world), module
 
 
 class CreditorsPress(unittest.TestCase):
@@ -29,11 +30,11 @@ class CreditorsPress(unittest.TestCase):
         self.assertFalse(_seat(500.0, 1000.0)[0].creditors_press())
 
     def test_the_proceeds_are_the_upkeep_of_the_plant_at_its_size_times_the_multiple(self):
-        seat, received = _seat(-5000.0, 1000.0, upkeep=100.0, multiple=3.0, size=2.0)
+        seat, module = _seat(-5000.0, 1000.0, upkeep=100.0, size=2.0)
         proceeds = seat.proceeds_of_seizure("shop")
-        self.assertEqual(proceeds, 600.0)
+        self.assertEqual(proceeds, 200.0 * finance_constants.CREDITOR_SEIZURE_VALUE_MULTIPLE)
         seat.receive_seizure("shop", proceeds)
-        self.assertEqual(received, [600.0])
+        self.assertEqual([command.amount for command in module_harness.sent(module) if isinstance(command, ReceiveFromEdge)], [proceeds])
 
 
 class _Seat(business_review.Reviewable):
@@ -74,16 +75,15 @@ class SeizureTakesWhatLosesMoney(unittest.TestCase):
 
 
 def _seat_game(auto_shed=True, capability=(), spared=(), never_abandon=(), capital=0.0, revenue=0.0, living=0.0, limit=0.0):
-    """A stand-in game carrying what SeatReview reads, with `close_work` recording."""
+    """The projects module over what SeatReview reads, with `close_work` recording."""
     closed_works = []
-    game = SimpleNamespace(
-        state=SimpleNamespace(founder=SimpleNamespace(policy={"auto_shed": auto_shed}), scenario=SimpleNamespace(year=7),
-                              household=SimpleNamespace(capital=capital), projects=SimpleNamespace(granted=set(spared))),
-        CAPABILITY_INSTITUTIONS=set(capability), never_abandon=lambda entry_key: entry_key in never_abandon,
-        close_work=lambda entry_key, reason, year: closed_works.append((entry_key, reason, year)),
-        revenue=lambda: revenue, upkeep=lambda: 0.0, living_cost=lambda: living, mine_operating_cost=lambda: 0.0,
-        credit_limit=lambda: limit)
-    return SeatReview(SimpleNamespace(_sim=game)), closed_works
+    module = projects_host.build(
+        founder={"alive": True, "life_left": 10.0, "dead_reason": None, "policy": {"auto_shed": auto_shed}}, year=7,
+        capability_sets=(frozenset(capability), frozenset(), {}), never_abandon=lambda entry_key: entry_key in never_abandon,
+        acting_balance=capital, revenue_estimate=revenue, upkeep=0.0, living_cost=lambda *arguments: living, mine_operating_cost=0.0,
+        credit_limit=lambda *arguments: limit, projects_record=SimpleNamespace(granted=set(spared)))
+    module.close_work = lambda entry_key, reason, year: closed_works.append((entry_key, reason, year))
+    return SeatReview(module, SimpleNamespace()), closed_works
 
 
 class SeatHooksOfTheLossRule(unittest.TestCase):

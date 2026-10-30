@@ -10,6 +10,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.engine import fuzzy_estimates as fuzzy
+from sim.tests import scenario_stand_in
 from sim.ui.proto.render_screen_why import _est, _est_tag
 
 NODE_ID = "probe_work"
@@ -19,10 +20,8 @@ REAL_LAB = dict(NODE["lab"])
 
 def game(salt=12345, enabled=True, done=(), active=None):
     """What the estimate functions read of a game."""
-    return SimpleNamespace(state=SimpleNamespace(_fuzzy_estimates=enabled, _fuzzy_salt=salt,
-                                                 scenario=SimpleNamespace(year=100)),
-                           rng=random.Random(1), done=set(done), active=dict(active or {}),
-                           nodes={NODE_ID: NODE, "other_work": dict(NODE, id="other_work")})
+    return scenario_stand_in.host(fuzzy_estimates=enabled, fuzzy_salt=salt, year=100, done=set(done), active=dict(active or {}),
+                                  nodes={NODE_ID: NODE, "other_work": dict(NODE, id="other_work")})
 
 
 def why_reply():

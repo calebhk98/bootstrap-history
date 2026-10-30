@@ -17,27 +17,27 @@ LEVERAGE_NOTE = ("A broad approach can make a hard goal cheaper, faster and more
 
 def leverage_points(sim):
     """The system levers behind every goal, each with the engine's own figures."""
-    risk = sim.knowledge_risk(advice=False, chronology=False)
+    risk = sim.view("knowledge_risk")(False, False)
     return [
         {"lever": "literacy", "why_it_matters": "more people who can read and be taught makes research and trades faster",
-         "figures": {"literacy_general": round(float(sim.literacy("literacy_general")), 3),
-                     "general_ceiling": round(sim.literacy_ceiling_general(), 3),
-                     "schooling_flow": round(sim.effective_schooling_flow(), 3)}},
+         "figures": {"literacy_general": round(float(sim.view("literacy")("literacy_general")), 3),
+                     "general_ceiling": round(sim.view("literacy_ceiling")["literacy_general"], 3),
+                     "schooling_flow": round(sim.view("effective_schooling_flow")(), 3)}},
         {"lever": "labour", "why_it_matters": "directed hours and people let several projects run in parallel",
-         "figures": {"directed_hours_this_year": round(sim.labour.director_pool(), 1),
-                     "committed_hours": round(sim.labour.director_hours_committed(), 1),
-                     "people_you_can_oversee": round(sim.labour.supervision_room(), 1)}},
+         "figures": {"directed_hours_this_year": round(sim.view("hours_available")["director_pool"], 1),
+                     "committed_hours": round(sim.view("hours_available")["director_committed"], 1),
+                     "people_you_can_oversee": round(sim.view("supervision_room")(), 1)}},
         {"lever": "finance", "why_it_matters": "money removes the cost bottleneck for everything else",
-         "figures": {"recurring_net_per_year": round(sim.recurring_net(), 1),
-                     "credit_limit": round(sim.credit_limit(), 1),
-                     "you_could_raise_now": round(sim.spending_power("start"), 1)}},
+         "figures": {"recurring_net_per_year": round(sim.view("recurring_net")(), 1),
+                     "credit_limit": round(sim.view("credit_limit")(), 1),
+                     "you_could_raise_now": round(sim.view("spending_power")("start"), 1)}},
         {"lever": "institutions", "why_it_matters": "schools, guilds and standing concerns spread skill and specialisation",
-         "figures": {"concerns_running": len(sim.operating), "people_you_can_oversee": round(sim.labour.supervision_room(), 1)}},
+         "figures": {"concerns_running": len(sim.view("operating")()), "people_you_can_oversee": round(sim.view("supervision_room")(), 1)}},
         {"lever": "knowledge", "why_it_matters": "what is known can be lost to sackings; preserving it protects every goal",
          "figures": {"technologies_at_risk": risk.get("technologies_at_risk"),
                      "expected_lost_per_sacking": risk.get("expected_technologies_lost_per_sacking")}},
         {"lever": "materials", "why_it_matters": "supply chains cap how fast anything physical can be built",
-         "figures": {"work_runs_at_share_of_plan": round(sim.throttle, 3), "binding_material": sim.binding}},
+         "figures": {"work_runs_at_share_of_plan": round(sim.view("material_throttle")(), 3), "binding_material": sim.view("material_binding")()}},
     ]
 
 
@@ -74,9 +74,9 @@ def training_suggestions(sim, trade_rows):
         if not row["oversubscribed"]:
             continue
         short = row["demand_hours_this_year"] - row["supply_hours_this_year"]
-        people = max(1, math.ceil(short / sim.HOURS_PER_PERSON_YEAR))
+        people = max(1, math.ceil(short / sim.view("hours_per_person_year")()))
         rows.append({"trade": row["trade"], "people_short": people,
-                     "teaching_hours": people * sim.labour.training_hours_per_person(row["trade"]),
+                     "teaching_hours": people * sim.view("training_hours_per_person")(row["trade"]),
                      "command": "train %s %d" % (row["trade"], people)})
     return rows
 
@@ -86,10 +86,10 @@ def development_program(sim, nodes, startable):
     spread over its years. None when nothing can start."""
     if not startable:
         return None
-    node_id = min(startable, key=lambda candidate: (sim.project_cost(candidate), candidate))
+    node_id = min(startable, key=lambda candidate: (sim.view("project_cost")(candidate), candidate))
     node = nodes[node_id]
     years = max(float(node.get("yrs") or 1.0), 1.0)
-    return {"id": node_id, "name": node["name"], "cash_cost": round(sim.project_cost(node_id), 1),
+    return {"id": node_id, "name": node["name"], "cash_cost": round(sim.view("project_cost")(node_id), 1),
             "years": years,
             "directed_hours_per_year": round(sum((node.get("lab") or {}).values()) / years, 1),
             "command": "start %s" % node_id}

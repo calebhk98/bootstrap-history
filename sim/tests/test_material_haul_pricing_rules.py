@@ -1,4 +1,4 @@
-"""Complaint 563, 568: a material's carriage, freight cost, freight markup and distance read the haul route the one
+"""Complaint 563, 568: a material's carriage, freight markup and distance read the haul route the one
 haul function priced; an unlocated material or one made on held ground costs nothing to carry. Each test calls one
 method on a stand-in whose route is written out. The leg pricing itself is test_material_haul_legs and
 test_freight_domestic_haul; the markup arithmetic is test_material_freight."""
@@ -7,82 +7,68 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.domestic_haul import DomesticHaulMixin
-from sim.engine.economy_freight import FreightMixin
-from sim.engine.goods_market_api import GoodsMarket
+from sim.markets.goods_market import GoodsMarket
+from sim.freight.module import Freight
+from sim.tests import module_harness
 
 CART_ROUTE = types.SimpleNamespace(legs=("leg",), cost_per_tonne=200.0)
 HELD_ROUTE = types.SimpleNamespace(legs=(), cost_per_tonne=0.0)
 
 
-class _Freight(FreightMixin):
-    def __init__(self, route, tiles=("mine_01",), distance=120.0, book_price=0.5, cargo_share=0.1):
-        self.route, self.tiles, self.distance, self.book_price, self.cargo_share = route, tiles, distance, book_price, cargo_share
-        self.geography = types.SimpleNamespace(route_km_to=lambda tiles: self.distance)
-
-    def _material_source_tiles(self, material):
-        return self.tiles
+class _Hauled(Freight):
+    """The freight module with the route search and the cargo's own cost written out."""
+    route, cargo_share = CART_ROUTE, 0.1
 
     def material_haul_route(self, material):
         return self.route
-
-    def _material_price_per_kg(self, material):
-        return self.book_price
 
     def domestic_cargo_cost_share(self, material, route):
         return self.cargo_share
 
 
+def freight(route, tiles=("mine_01",), distance=120.0, book_price=0.5):
+    module = module_harness.build(_Hauled, views={
+        "material_source_tiles": lambda material: tiles, "route_km_to": lambda sources: distance,
+        "material_price": lambda material: book_price})
+    module.route = route
+    return module
+
+
 class Distance(unittest.TestCase):
     def test_the_distance_is_the_geographys_route_to_the_nearest_source_tile(self):
-        self.assertEqual(_Freight(CART_ROUTE).material_freight_distance_km("coal"), 120.0)
+        self.assertEqual(freight(CART_ROUTE).material_distance_km("coal"), 120.0)
 
     def test_a_material_geography_places_nowhere_has_no_distance(self):
-        self.assertIsNone(_Freight(CART_ROUTE, tiles=()).material_freight_distance_km("gold"))
-
-
-class CostPerKilogram(unittest.TestCase):
-    def test_it_is_the_routes_cost_per_tonne_over_a_thousand(self):
-        self.assertAlmostEqual(_Freight(CART_ROUTE).material_freight_cost_per_kg("coal"), 0.2)
-
-    def test_no_route_or_a_route_of_no_legs_costs_nothing(self):
-        self.assertEqual(_Freight(None).material_freight_cost_per_kg("gold"), 0.0)
-        self.assertEqual(_Freight(HELD_ROUTE).material_freight_cost_per_kg("coal"), 0.0)
+        self.assertIsNone(freight(CART_ROUTE, tiles=()).material_distance_km("gold"))
 
 
 class Factor(unittest.TestCase):
     def test_a_haul_with_a_cost_marks_the_price_up_by_the_freight_over_the_price_plus_the_cargo_share(self):
-        self.assertAlmostEqual(_Freight(CART_ROUTE).material_freight_factor("coal"), 1.0 + 0.2 / 0.5 + 0.1)
+        self.assertAlmostEqual(freight(CART_ROUTE).material_freight_factor("coal"), 1.0 + 0.2 / 0.5 + 0.1)
 
     def test_a_dearer_haul_marks_up_more(self):
         far = types.SimpleNamespace(legs=("leg",), cost_per_tonne=400.0)
-        self.assertGreater(_Freight(far).material_freight_factor("coal"), _Freight(CART_ROUTE).material_freight_factor("coal"))
+        self.assertGreater(freight(far).material_freight_factor("coal"), freight(CART_ROUTE).material_freight_factor("coal"))
 
     def test_no_route_no_legs_or_no_price_leaves_the_price_alone(self):
-        self.assertEqual(_Freight(None).material_freight_factor("gold"), 1.0)
-        self.assertEqual(_Freight(HELD_ROUTE).material_freight_factor("coal"), 1.0)
-        self.assertEqual(_Freight(CART_ROUTE, book_price=None).material_freight_factor("coal"), 1.0)
+        self.assertEqual(freight(None).material_freight_factor("gold"), 1.0)
+        self.assertEqual(freight(HELD_ROUTE).material_freight_factor("coal"), 1.0)
+        self.assertEqual(freight(CART_ROUTE, book_price=None).material_freight_factor("coal"), 1.0)
 
 
 class Carriage(unittest.TestCase):
     def test_carriage_is_the_routes_cost_plus_the_cargo_share_of_the_price(self):
-        self.assertAlmostEqual(_Freight(CART_ROUTE).material_carriage_per_tonne("coal", 1000.0), 200.0 + 0.1 * 1000.0)
+        self.assertAlmostEqual(freight(CART_ROUTE).material_carriage_per_tonne("coal", 1000.0), 200.0 + 0.1 * 1000.0)
 
     def test_a_material_on_held_ground_or_unplaced_costs_nothing_to_carry(self):
-        self.assertEqual(_Freight(HELD_ROUTE).material_carriage_per_tonne("coal", 100.0), 0.0)
-        self.assertEqual(_Freight(None).material_carriage_per_tonne("gold", 100.0), 0.0)
+        self.assertEqual(freight(HELD_ROUTE).material_carriage_per_tonne("coal", 100.0), 0.0)
+        self.assertEqual(freight(None).material_carriage_per_tonne("gold", 100.0), 0.0)
 
 
-class DomesticHaulMoney(unittest.TestCase):
-    def test_the_money_is_the_routes_cost_and_none_when_no_way_joins_it(self):
-        stand_in = types.SimpleNamespace(material_haul_route=lambda material: CART_ROUTE)
-        self.assertEqual(DomesticHaulMixin.domestic_haul_money_per_tonne(stand_in, "coal"), 200.0)
-        stand_in.material_haul_route = lambda material: None
-        self.assertIsNone(DomesticHaulMixin.domestic_haul_money_per_tonne(stand_in, "coal"))
-
+class HaulRoute(unittest.TestCase):
     def test_no_source_tile_means_no_route(self):
-        stand_in = types.SimpleNamespace(_material_source_tiles=lambda material: ())
-        self.assertIsNone(DomesticHaulMixin.material_haul_route(stand_in, "gold"))
+        module = module_harness.build(Freight, views={"material_source_tiles": lambda material: ()})
+        self.assertIsNone(module.material_haul_route("gold"))
 
 
 class QuoteVolume(unittest.TestCase):

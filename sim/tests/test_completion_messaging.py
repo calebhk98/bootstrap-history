@@ -4,8 +4,8 @@ test_completion_wiring."""
 QUICK_TOPIC = True
 
 from .harness import check
-from sim.engine.completion_rules import road_line, severity_of_loss, staff_shortfall
-from sim.engine.projects_completion import goal_movement
+from sim.projects.completion_rules import road_line, severity_of_loss, staff_shortfall
+from sim.projects.goal_rules import goal_movement
 from sim.ui.proto import render_screen_step as _render_big
 from sim.ui.proto.wave_summary import wave_summary
 

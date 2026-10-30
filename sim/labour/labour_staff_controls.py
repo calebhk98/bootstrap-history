@@ -7,10 +7,8 @@ Both run in the yearly staff step, ahead of the closure rule, and hire through
 """
 import math
 
-from sim.refusal import LogLine
-from collections import defaultdict
-
 from . import trade_data
+from sim.reporting.api import RecordEvent
 
 
 def housing_places_to_buy(count, room, cost_per_place, hiring_outlay, spending_power):
@@ -22,47 +20,13 @@ def housing_places_to_buy(count, room, cost_per_place, hiring_outlay, spending_p
     return places
 
 
-def people_to_hire_for(claimed, shortfalls):
-    """Resource -> whole people to hire so flagged concerns stay staffed: the shortfall, no more than the flagged
-    concerns themselves hold, rounded up past a hundredth of a person; resources with nothing to hire are left out."""
-    hires = {}
-    for resource in sorted(claimed):
-        short = math.ceil(min(shortfalls.get(resource, 0.0), claimed[resource]) - 0.01)
-        if short > 0:
-            hires[resource] = short
-    return hires
-
-
 class StaffControlsMixin:
 
-    def keep_staffed_concerns(self):
-        """Flagged concerns that are running, or shut for want of staff."""
-        projects = self._world.state.projects
-        return [node_id for node_id in sorted(projects.keep_staffed)
-                if node_id in projects.done and node_id in self._world.nodes
-                and (node_id in projects.operating or self._world.staff_closure_age(node_id) is not None)]
-
     def keep_flagged_concerns_staffed(self):
-        """Hire what the flagged concerns need and the household lacks.
+        """Hire what the flagged concerns need and the household lacks (the projects module works out how many).
 
-        Counts every running concern's draw plus the flagged shut ones', so
-        the shortfall is the one the closure rule would act on; hires only up
-        to what the flagged concerns themselves hold."""
-        flagged = self.keep_staffed_concerns()
-        if not flagged:
-            return
-        operating = self._world.state.projects.operating
-        claimed = defaultdict(float)
-        totals = defaultdict(float, self._world.staffing_held_totals())
-        for node_id in flagged:
-            shut = node_id not in operating
-            for resource, amount in self._world.staffing_draw_of(
-                    node_id, self._world.reopen_units(node_id) if shut else None).items():
-                claimed[resource] += amount
-                if shut:
-                    totals[resource] += amount
-        shortfalls = self._world.staffing_shortfalls(totals, strict=True)
-        for resource, short in people_to_hire_for(claimed, shortfalls).items():
+        Hires through `hire` so its cash, room and literacy limits apply unchanged."""
+        for resource, short in self._world.keep_staffed_hires().items():
             self.hire_to_cover(trade_data.staff_resource_trade(trade_data.registry_of(self._world), resource), short,
                                "keep_staffed", partial=True)
 
@@ -71,12 +35,12 @@ class StaffControlsMixin:
 
         Spare means free after every open concern's claim (`venture_staff_free`).
         Buys housing first when the household has no room for them."""
-        if not self._world.state.founder.policy.get("reserve_staff", False):
+        if not self._world.policy.get("reserve_staff", False):
             return
-        household = self._world.state.household
+        workforce = self._world.workforce
         scholars_free, craftsmen_free = self._world.venture_staff_free()
-        for trade, target, free in ((trade_data.generic_craft_trade(), household.reserve_craftsmen, craftsmen_free),
-                                    (trade_data.scholar_trade(), household.reserve_scholars, scholars_free)):
+        for trade, target, free in ((trade_data.generic_craft_trade(), workforce.reserve_craftsmen, craftsmen_free),
+                                    (trade_data.scholar_trade(), workforce.reserve_scholars, scholars_free)):
             short = math.ceil(target - free - 0.01)
             if short <= 0:
                 continue
@@ -96,9 +60,7 @@ class StaffControlsMixin:
             return False
         if not self._world.build_worker_housing(places):
             return False
-        self._world.state.household.log.append((self._world.state.scenario.year, LogLine(
-            "policy_housing", "%s: you build housing for %d more people" % (label, places),
-            policy=label, places=places)))
+        self._world.send(RecordEvent.of("policy_housing", "%s: you build housing for %d more people" % (label, places), policy=label, places=places))
         return True
 
     def hire_buying_room(self, trade, count, label="auto_hire"):

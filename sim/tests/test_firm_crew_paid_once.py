@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import node_upkeep
+from sim.production import node_upkeep
 
 COST_SCALE = 1.5
 

@@ -6,9 +6,10 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import entry_cost, solve_prices
-from sim.engine.market_clearing import MarketClearingMixin
-from sim.engine.producer_costs import ProducerCostsMixin
+from sim.prices import entry_cost, solve_prices
+from sim.markets import rules as market_rules
+from sim.world import market as static_market
+from sim.tests import prices_stand_in
 from sim.tests.test_capital_charge import WAGES, works_entry
 
 RATE = 0.12
@@ -56,20 +57,19 @@ class CostBookTests(unittest.TestCase):
         self.assertTrue(0.0 < share < 1.0)
 
 
-class StubGame(ProducerCostsMixin, MarketClearingMixin):
+class StubGame:
     """Just enough of the engine for the cost ratios and the floor: one good made by one entry."""
     def __init__(self, entry):
-        self.cost_book = book({"widget_kg": entry})
-        self.memo = {}
+        self.prices = prices_stand_in.build_over_book(book({"widget_kg": entry}), "widget_kg", {"widget_kg": "widget"})
 
-    def _cost_book(self):
-        return None, self.cost_book, self.memo
+    def entry_cost_ratio(self, entry_key, material, running=False):
+        return self.prices.entry_cost_ratio(entry_key, material, running)
 
-    def _reference_entry(self, material):
-        return "widget_kg"
+    def commodity_floor_ratio(self, commodity):
+        return self.prices.commodity_floor_ratio(commodity)
 
-    def _material_commodity_map(self):
-        return {"widget_kg": "widget"}
+    def _floor_ratio(self, commodity):
+        return market_rules.floor_ratio(self.commodity_floor_ratio(commodity), static_market.UNSPLIT_FLOOR_RATIO)
 
 
 class OffersAndFloorTests(unittest.TestCase):

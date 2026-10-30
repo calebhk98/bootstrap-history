@@ -8,7 +8,9 @@ import unittest
 from unittest import mock
 
 from sim.agents.api import edges
-from sim.engine import concern_sales, economy_port_seats
+from sim.ledger.api import PayEdge, ReceiveFromEdge
+from sim.markets import port_seats
+from sim.production import concern_sales
 
 PRICE = 3.0
 COIN = 2.0
@@ -25,11 +27,9 @@ class StandInSim:
         self.acting = seat_id
         yield
 
-    def receive_from_edge(self, edge, amount, purpose):
-        self.postings.append((self.acting, edge, amount, purpose))
-
-    def pay_edge(self, edge, amount, purpose):
-        self.postings.append((self.acting, edge, -amount, purpose))
+    def send(self, command):
+        sign = {ReceiveFromEdge: 1.0, PayEdge: -1.0}[type(command)]
+        self.postings.append((self.acting, command.edge, sign * command.amount, command.purpose))
 
 
 def settle(units_offered, units_taken, inputs_cost):
@@ -41,11 +41,11 @@ def settle(units_offered, units_taken, inputs_cost):
         view=lambda: types.SimpleNamespace(price=lambda good, area: PRICE))
     holdings = {"goods": {"acid": {"tile": units_offered - units_taken}}}
     sim = StandInSim({"seat", "idle"})
-    api = economy_port_seats.economy_api
+    api = port_seats.economy_api
     with mock.patch.object(api, "economy_book", lambda eco: book), \
             mock.patch.object(api, "account_holdings", lambda eco, seat: holdings), \
             mock.patch.object(api, "settle_agent_takings", lambda eco, seat, edge: book.balance(seat, "money")):
-        sold, takings = economy_port_seats.settle_seats(
+        sold, takings = port_seats.settle_seats(
             sim, economy, {"seat": ("tile", {"acid": units_offered})}, {"seat": inputs_cost}, "legacy")
     return sim.postings, sold, takings
 

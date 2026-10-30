@@ -1,0 +1,219 @@
+"""The seats module: joining a seat, the lists of who plays, goals and win conditions. The module is built with plain values
+for the views it reads and the seat registry a plain dict; no game."""
+QUICK_TOPIC = True
+
+import contextlib
+import random
+import unittest
+from types import SimpleNamespace
+
+from sim.assembly.api import AddSeat
+from sim.ledger.api import OpenPurse
+from sim.projects.api import WatchActive
+from sim.refusal import Refusal
+from sim.seats import join_rules
+from sim.seats.api import (EndRun, JoinCastSeats, JoinSeat, RecordGoalReached, SeatsSeat, SetGoal)
+from sim.seats.module import Seats
+from sim.tests import module_harness
+from sim.ventures.api import WatchBusiness
+from sim.workforce.api import WatchStaff
+
+TREE = {"a": {"name": "A"}, "b": {"name": "B"}}
+
+
+def seat(kind="household", country=None, goal=None, dead_reason=None, goal_year=None):
+    return SeatsSeat(kind=kind, country=country, goal=goal, goal_year=goal_year, dead_reason=dead_reason)
+
+
+def seats_over(registry, acting="founder", civilisation=None, answers=None, **views):
+    answers = dict({AddSeat: lambda command: registry.setdefault(command.seat_id, SeatsSeat()) and None}, **(answers or {}))   # the registry adds the slot
+    module = module_harness.build(
+        Seats, seat=registry[acting] if acting in registry else SeatsSeat(), answers=answers,
+        views=dict({"registered_seats": list(registry), "civilisation": civilisation or {"id": "home"}, "tree_nodes": TREE, "price_index": 2.0,
+                    "kit_capital": lambda kit: {"poor": 10.0}[kit],
+                    "founder_life_terms": {"immortal": False, "minimum": 5, "mean": 40.0, "spread": 0.0},
+                    "game_random": random.Random(3), "act_as": lambda seat_id: contextlib.nullcontext(),
+                    "state_treasury": SimpleNamespace(actor_id="government:home")}, **views))
+    module.seat_slot_of = registry.__getitem__
+    module.clock.act_as(acting)
+    return module
+
+
+class WhoIsPlaying(unittest.TestCase):
+
+    def test_a_country_seat_and_an_ended_seat_are_not_playing(self):
+        module = seats_over({"founder": seat(), "gone": seat(dead_reason="denounced"), "realm": seat("country")})
+        self.assertEqual(module.seat_list(), {"joined": ["founder", "gone", "realm"], "households": ["founder", "gone"], "playing": ["founder"]})
+        self.assertEqual(module.ended_seats(), ["gone"])
+
+    def test_the_run_is_over_when_every_household_seat_ended_or_reached_its_goal(self):
+        module = seats_over({"founder": seat(goal_year=150), "gone": seat(dead_reason="ran out of money")})
+        self.assertTrue(module.run_over())
+
+    def test_a_seat_with_no_goal_reached_keeps_the_run_going(self):
+        self.assertFalse(seats_over({"founder": seat()}).run_over())
+
+    def test_the_countries_a_country_seat_plays_are_listed_once_with_the_games_own_for_none(self):
+        module = seats_over({"founder": seat(), "a": seat("country", "north"), "b": seat("country", "north"), "c": seat("country")})
+        self.assertEqual(module.played_countries(), ["home", "north"])
+
+    def test_the_acting_country_is_none_for_the_games_own_and_the_partner_otherwise(self):
+        registry = {"founder": seat(), "envoy": seat(country="north")}
+        self.assertIsNone(seats_over(registry).acting_country())
+        self.assertEqual(seats_over(registry, acting="envoy").acting_country(), "north")
+
+
+class Joining(unittest.TestCase):
+
+    def test_a_seat_is_registered_with_capital_at_the_societys_prices_and_a_drawn_lifespan(self):
+        registry = {"founder": seat()}
+        module = seats_over(registry)
+        module.join_seat(JoinSeat("second", {"capital": 100.0, "starting_techs": ["a"]}))
+        self.assertEqual(module_harness.sent(module)[:2], [AddSeat("second", {"capital": 100.0, "starting_techs": ["a"]}), OpenPurse("second", 200.0)])
+        self.assertEqual(registry["second"].life_left, 40.0)
+
+    def test_a_kit_is_priced_by_the_kit_view(self):
+        module = seats_over({"founder": seat()})
+        module.join_seat(JoinSeat("second", {"kit": "poor"}))
+        self.assertEqual(module_harness.sent(module)[1], OpenPurse("second", 20.0))
+
+    def test_no_capital_and_no_kit_is_an_empty_purse(self):
+        module = seats_over({"founder": seat()})
+        module.join_seat(JoinSeat("second", {}))
+        self.assertEqual(module_harness.sent(module)[1], OpenPurse("second", 0.0))
+
+    def test_an_immortal_run_gives_a_founder_no_end_and_draws_nothing(self):
+        dice = random.Random(3)
+        registry = {"founder": seat()}
+        module = seats_over(registry, founder_life_terms={"immortal": True, "minimum": 5, "mean": 40.0, "spread": 9.0},
+                            game_random=dice)
+        module.join_seat(JoinSeat("second", {}))
+        self.assertEqual(registry["second"].life_left, 1e9)
+        self.assertEqual(dice.getstate(), random.Random(3).getstate())
+
+    def test_a_template_naming_a_technology_the_tree_lacks_is_refused_and_nothing_is_sent(self):
+        module = seats_over({"founder": seat()})
+        answer = module.join_seat(JoinSeat("third", {"starting_techs": ["nowhere"]}))
+        self.assertIsInstance(answer, Refusal)
+        self.assertEqual(answer.cause, "unknown_starting_techs")
+        self.assertEqual(module_harness.sent(module), [])
+
+    def test_a_country_seat_needs_a_government_to_hold(self):
+        registry = SimpleNamespace(state=SimpleNamespace(countries={"north": 1}), government_of=lambda name: "gov" if name == "home" else None)
+        module = seats_over({"founder": seat()}, seeded_actor_registry=registry)
+        answer = module.join_seat(JoinSeat("realm", {"kind": "country", "country": "north"}))
+        self.assertIsInstance(answer, Refusal)
+        self.assertEqual(answer.cause, "no_government")
+
+    def test_a_country_seat_of_the_games_own_country_is_registered_with_no_country(self):
+        registry = SimpleNamespace(state=SimpleNamespace(countries={"home": 1}), government_of=lambda name: "gov")
+        module = seats_over({"founder": seat()}, seeded_actor_registry=registry)
+        module.join_seat(JoinSeat("realm", {"kind": "country"}))
+        self.assertIsNone(module_harness.sent(module)[0].template["country"])
+
+    def test_a_country_seat_still_draws_its_founders_lifespan(self):
+        registry = SimpleNamespace(state=SimpleNamespace(countries={"home": 1}), government_of=lambda name: "gov")
+        dice = random.Random(3)
+        module = seats_over({"founder": seat()}, seeded_actor_registry=registry, game_random=dice)
+        module.join_seat(JoinSeat("realm", {"kind": "country"}))
+        fresh = random.Random(3)
+        fresh.gauss(40.0, 0.0)
+        self.assertEqual(dice.getstate(), fresh.getstate())
+
+    def test_the_cast_seats_join_in_order_and_a_seat_already_there_is_left(self):
+        civilisation = {"id": "home", "cast": {"seats": [{"id": "rival", "capital": 10.0}, {"id": "founder"}, {"id": "ally"}]}}
+        module = seats_over({"founder": seat()}, civilisation=civilisation)
+        self.assertEqual(module.join_cast_seats(JoinCastSeats()), ["rival", "ally"])
+        self.assertEqual([type(command) for command in module_harness.sent(module)],
+                         [AddSeat, OpenPurse, WatchBusiness, WatchActive, WatchStaff] * 2)
+
+    def test_a_refusal_in_the_cast_stops_the_join_and_is_the_answer(self):
+        civilisation = {"id": "home", "cast": {"seats": [{"id": "rival", "starting_techs": ["nowhere"]}]}}
+        answer = seats_over({"founder": seat()}, civilisation=civilisation).join_cast_seats(JoinCastSeats())
+        self.assertIsInstance(answer, Refusal)
+
+
+class JoinRules(unittest.TestCase):
+
+    def test_a_stated_capital_wins_over_a_kit(self):
+        self.assertEqual(join_rules.capital_of({"capital": 5.0, "kit": "poor"}, 3.0, lambda kit: 99.0), 15.0)
+
+    def test_a_mortal_founders_years_never_fall_below_the_minimum(self):
+        self.assertEqual(join_rules.founder_years(False, 5, 2.0, 0.0, lambda mean, spread: mean), 5)
+
+
+class EndingARun(unittest.TestCase):
+
+    def test_a_run_ends_with_its_reason_and_says_so_in_the_log(self):
+        module = seats_over({"founder": seat()})
+        module.end_run(EndRun("denounced"))
+        self.assertEqual(module.seat.dead_reason, "denounced")
+        (event,) = module_harness.sent(module)
+        self.assertEqual((event.kind, event.text), ("run_ends", "RUN ENDS: denounced"))
+
+    def test_an_end_that_is_not_announced_logs_nothing(self):
+        module = seats_over({"founder": seat()})
+        module.end_run(EndRun("asked for the score", announce=False))
+        self.assertEqual((module.seat.dead_reason, module_harness.sent(module)), ("asked for the score", []))
+
+
+class Goals(unittest.TestCase):
+
+    def goals_over(self, goal="c", goal_year=None, goal_years=None):
+        registry = {"founder": seat(goal=goal)}
+        registry["founder"].goal_years = dict(goal_years or {})
+        registry["founder"].goal_year = goal_year
+        module = seats_over(registry)
+        return module, registry["founder"]
+
+    def test_the_goal_view_names_the_goal_and_the_years(self):
+        module, _ = self.goals_over(goal_year=1000, goal_years={"c": 1000})
+        self.assertEqual(module.goal(), {"node": "c", "year": 1000, "years": {"c": 1000}})
+
+    def test_the_formal_goal_records_its_year_when_reached(self):
+        module, _ = self.goals_over()
+        module.record_goal_reached(RecordGoalReached("c", 1000))
+        self.assertEqual((module.seat.goal_years, module.seat.goal_year), ({"c": 1000}, 1000))
+
+    def test_a_node_that_is_not_the_goal_records_nothing(self):
+        module, _ = self.goals_over()
+        module.record_goal_reached(RecordGoalReached("a", 1000))
+        self.assertEqual((module.seat.goal_years, module.seat.goal_year), ({}, None))
+
+    def test_a_new_goal_starts_with_no_year_and_each_goal_keeps_its_own(self):
+        module, held = self.goals_over(goal_year=1000, goal_years={"c": 1000})
+        module.set_goal(SetGoal("d"))
+        self.assertEqual((held.goal, module.seat.goal_year), ("d", None))
+        module.record_goal_reached(RecordGoalReached("d", 1007))
+        self.assertEqual(module.seat.goal_years, {"c": 1000, "d": 1007})
+
+    def test_returning_to_a_reached_goal_restores_its_year(self):
+        module, _ = self.goals_over(goal_year=None, goal_years={"c": 1000})
+        module.set_goal(SetGoal("c"))
+        self.assertEqual(module.seat.goal_year, 1000)
+
+    def test_a_staff_goal_reads_the_count_the_seats_people_hold(self):
+        module, _ = self.goals_over()
+        module.needs.staff = lambda: {"slaves": 7, "employees": {"smith": 2.0}}
+        self.assertEqual(module.win_condition_value({"source": "staff", "key": "slaves"}), 7.0)
+
+    def test_a_staff_goal_refuses_a_key_that_is_not_a_count(self):
+        module, _ = self.goals_over()
+        module.needs.staff = lambda: {"slaves": 7, "employees": {"smith": 2.0}}
+        for key in ("employees", "no_such_people", None, "_x"):
+            with self.assertRaises(ValueError):
+                module.win_condition_value({"source": "staff", "key": key})
+
+    def test_a_generation_goal_is_one_sources_share(self):
+        module, _ = self.goals_over()
+        module.needs.generation_breakdown = lambda: {"total_kw": 8.0, "sources_kw": {"coal": 2.0}}
+        self.assertEqual(module.win_condition_value({"source": "generation_share", "key": "coal"}), 0.25)
+
+    def test_a_metric_the_engine_does_not_know_raises(self):
+        module, _ = self.goals_over()
+        with self.assertRaises(ValueError):
+            module.win_condition_value({"metric": "nonsense"})
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -125,6 +125,6 @@ _playtest_tmp/
 _loadtest_tmp*/
 _playtest_tmp*/
 
-# Built from data/branches/ at load time (sim/engine/tree_source.py); never committed
+# Built from data/branches/ at load time (sim/content/tree_source.py); never committed
 data/tech_tree.json
 mods/consent.json

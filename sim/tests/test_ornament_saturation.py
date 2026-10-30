@@ -66,12 +66,20 @@ class OrnamentSaturationTest(unittest.TestCase):
     def test_shipped_households_buy_a_plausible_mass_of_bright_metal(self):
         # Validation only: a few grams a head a year is the order a durable ornament stock wears and
         # is lost at; thousands of tonnes for a first-century empire is not.
-        from sim.engine import foreign_capacity
-        from sim.engine.data import load_civ
+        from sim.content import api as content
+        from sim.engine.data import ROOT, calculated_goods_prices, load_civ, starting_schedule
+        from sim.markets import household_needs
+        model, final_goods = household_needs.household_model((), lambda: content.load_needs(ROOT))
         for civilization_id in ("rome_100ad", "han_china_100ad"):
-            tonnes = foreign_capacity.household_tonnes_by_material(civilization_id)
-            grams_per_head = (tonnes.get("silver_kg", 0.0) + tonnes.get("gold_kg", 0.0)) * 1e6 \
-                / float(load_civ(civilization_id)["population"])
+            civilization = load_civ(civilization_id)
+            per_hour = starting_schedule(civilization_id).money_per_labour_hour
+            prices_in_coin = calculated_goods_prices(frozenset(civilization["starting_techs"]), civilization_id=civilization_id,
+                                                     money_per_labour_hour=per_hour)
+            prices_in_hours = {material: price / per_hour for material, price in prices_in_coin.items() if price > 0.0}
+            population = float(civilization["population"])
+            units = household_needs.demand_by_material(model, prices_in_hours, population, household_needs.MEAN_INCOME_HOURS_PER_CAPITA)
+            tonnes = household_needs.budget_scaled_final_tonnes(units, prices_in_hours, population, final_goods)
+            grams_per_head = (tonnes.get("silver_kg", 0.0) + tonnes.get("gold_kg", 0.0)) * 1e6 / population
             self.assertLessEqual(grams_per_head, 2.0, civilization_id)
 
 

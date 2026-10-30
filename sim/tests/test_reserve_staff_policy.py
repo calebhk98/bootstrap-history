@@ -2,6 +2,7 @@
 stand-in world (free hands, room, cash, a recorder for hires and housing, no game); the `reserve` command and its typed
 forms run on a household record. The default is
 test_reserve_staff_default. The housing sum itself is held by test_auto_hire_buys_room."""
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from .harness import check
@@ -10,6 +11,8 @@ from sim.labour.labour_staff_controls import StaffControlsMixin
 from sim.labour import trade_data
 from sim.ui.proto.dispatch_staff_controls import _cmd_reserve
 from sim.ui.proto.typed import parse_typed
+from sim.tests import event_stand_in
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -25,15 +28,17 @@ class _Labour(StaffControlsMixin):
         self.hired = []
         self.housing_built = []
         self.room = room
-        household = SimpleNamespace(reserve_craftsmen=reserve_craftsmen, reserve_scholars=reserve_scholars,
+        household = Game(reserve_craftsmen=reserve_craftsmen, reserve_scholars=reserve_scholars,
                                     log=[])
-        self._world = SimpleNamespace(
-            state=SimpleNamespace(founder=SimpleNamespace(policy={"reserve_staff": policy_on}), household=household,
-                                  scenario=SimpleNamespace(year=100)),
+        self._world = Game(
+            workforce=household, policy={"reserve_staff": policy_on},
+            state=Game(founder=Game(policy={"reserve_staff": policy_on}), household=household,
+                                  scenario=Game(year=100)),
             venture_staff_free=lambda: (free_scholars, free_craftsmen),
             housing_price_per_place=lambda: price, spending_power=lambda kind: spending,
             build_worker_housing=lambda places: self.housing_built.append(places) or True)
-        self.labour_market = SimpleNamespace(quote_annual=lambda trade: 50.0)
+        event_stand_in.stood_in(self._world)
+        self.labour_market = Game(quote_annual=lambda trade: 50.0)
 
     def household_room(self):
         return self.room
@@ -78,8 +83,7 @@ check("with no cash for the housing and the hires, none is built", broke.housing
 
 # --- the `reserve` command and its typed forms
 def _household():
-    return SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(reserve_craftsmen=0, reserve_scholars=0)),
-                           policy={"reserve_staff": False})
+    return workforce_stand_in.Game(reserve_craftsmen=0, reserve_scholars=0, policy={"reserve_staff": False})
 
 
 def _reserve(game, **fields):

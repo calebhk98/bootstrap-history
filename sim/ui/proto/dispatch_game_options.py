@@ -1,6 +1,7 @@
 """Game-level per-save settings: dashboard_history_years and future per-game options."""
 
 from .command_registry import command
+from sim.engine import ui_port
 
 
 def _parse_history_cap(value):
@@ -40,14 +41,14 @@ def _cmd_game_options(sim, nodes, cmd, ended):
                 parsed, error = _parse_history_cap(value)
                 if error:
                     return {"ok": False, "error": "dashboard_history_years: %s" % error}
-                sim.state.seat_progress.dashboard_history_years = parsed
+                ui_port.seat_progress(sim).dashboard_history_years = parsed
                 changed[key] = parsed
             else:
                 return {"ok": False, "error": "no such game option: %s. Available: "
                         "dashboard_history_years" % key}
     return {"ok": True,
             "game_options": {
-                "dashboard_history_years": sim.state.seat_progress.dashboard_history_years
+                "dashboard_history_years": ui_port.seat_progress(sim).dashboard_history_years
             },
             "changed": changed,
             "note": "These options are saved with the game and affect how a save is written."}

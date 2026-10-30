@@ -12,6 +12,7 @@ from sim.ui.proto.dispatch_money import _BUY_HANDLERS
 from sim.ui.proto.render_typed import render_pretty
 from sim.ui.proto.techtree import _SORT_KEYS, _SORT_KEY_NAMES, _agent_available, _available_params, _sort_startable_list
 from sim.ui.proto.typed import parse_typed
+from sim.tests.ui_stand_in import Game
 
 # --- 146: `available sort earns` sorts, and an unknown sort key is refused
 spaced = parse_typed("available sort earns limit 200")
@@ -21,7 +22,7 @@ reversed_form = parse_typed("available sort earns reverse limit 5")[0]
 check("reverse parses as a flag next to the sort key", reversed_form.get("sort") == "earns" and reversed_form.get("reverse"), reversed_form)
 
 earnings = {"low": 1.0, "mid": 5.0, "high": 9.0}
-sorting_game = SimpleNamespace(venture_real_earnings=lambda node_id: earnings[node_id], project_cost=lambda node_id: 1.0)
+sorting_game = Game(venture_real_earnings=lambda node_id: earnings[node_id], project_cost=lambda node_id: 1.0)
 earns_fn = _available_params({"sort": "earns"})[7]
 check("sort earns orders the smallest earner first",
       _sort_startable_list(sorting_game, {}, ["mid", "high", "low"], earns_fn, False) == ["low", "mid", "high"])
@@ -29,7 +30,7 @@ check("sort earns reverse puts the biggest earner first",
       _sort_startable_list(sorting_game, {}, ["mid", "high", "low"], earns_fn, True) == ["high", "mid", "low"])
 check("every advertised sort key is a sort", all(name in _SORT_KEYS for name in _SORT_KEY_NAMES))
 
-empty_game = SimpleNamespace(nodes={}, fog=False, order=[], can_start=lambda node_id, _memo=None: False)
+empty_game = Game(nodes={}, fog=False, order=[], can_start=lambda node_id, _memo=None: False)
 refused = _agent_available(empty_game, {}, {"sort": "bogus", "limit": 5})
 check("an unknown sort key is refused, naming the valid ones",
       not refused["ok"] and refused["error"].cause == "unknown_sort_key" and "earns" in refused["error"].choices, refused)
@@ -54,10 +55,10 @@ check("a rush that started things renders as a rush",
 def founded_by(text):
     """(target the words name, trade the school is founded for) when the typed line is run through the school handler."""
     founded = []
-    school_game = SimpleNamespace(
-        labour=SimpleNamespace(found_trade_school=lambda trade, seats: (founded.append((trade, seats)) or True, ""),
+    school_game = Game(
+        labour=Game(found_trade_school=lambda trade, seats: (founded.append((trade, seats)) or True, ""),
                                market_supply=lambda trade: 0.0),
-        trade_schools={"chemist": 1, "smith": 2}, capital=0.0)
+        view=lambda name: (lambda: {"chemist": 1, "smith": 2}), capital=0.0)
     reply = parse_typed(text)[0]
     _BUY_HANDLERS[buy_targets.canonical_target(reply["what"])](school_game, reply, reply["n"])
     return buy_targets.canonical_target(reply["what"]), founded

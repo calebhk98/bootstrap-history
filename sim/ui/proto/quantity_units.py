@@ -26,7 +26,7 @@ def read_quantity(cmd, key, default, dimension, native_unit, sim):
     if error or unit_text in (None, ""):
         return quantity, error
     registry = units.registry()
-    civ_id = getattr(sim, "civ_id", None) or (getattr(sim, "civ", None) or {}).get("id")
+    civ_id = sim.view("civilisation")().get("id")
     if str(unit_text).strip().lower() in SHOWN_WORDS:
         unit_id = units.chosen_units().get(dimension) or native_unit
     else:

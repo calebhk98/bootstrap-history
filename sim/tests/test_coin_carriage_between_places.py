@@ -1,6 +1,8 @@
 """Complaint 273: coin moved between actors of the home country in different places pays carriage by its mass and
 the distance, to the carriers; one place, credit and a party with no place cost nothing; a foreign country's actors
-pay the keeping cost at their own country's pay to their own guards."""
+pay the keeping cost at their own country's pay to their own guards (that half is test_coin_carriage_and_treasury_keeping).
+
+The coin module answers the ledger's `transfer_surcharge` point; the ledger module posts the answer while it listens."""
 
 QUICK_TOPIC = True
 
@@ -9,14 +11,18 @@ import unittest
 
 import sim.engine.core  # noqa: F401  (loads the engine in its import order)
 from sim.agents import ledger
+from sim.agents.api import HouseholdParty
 from sim.agents.purses import Purses
-from sim.agents.edges import Edge, EDGE_COIN_GUARDS, EDGE_FREIGHT
-from sim.engine import coin_carriage
-from sim.engine.coin_carriage import CoinCarriageMixin
-from sim.engine.coin_hoard import CoinHoardMixin
+from sim.agents.edges import Edge, EDGE_FREIGHT
+from sim.coin import rules
+from sim.coin.module import Coin
+from sim.ledger.api import LedgerSeat, SeatAccount
+from sim.ledger.ledger import Ledger
+from sim.tests import module_harness
 
 KG_PER_UNIT = 2.0
 PER_TONNE = 100.0
+HOME_COIN = {"id": "home", "coin_standard": {"material": "silver_kg", "kg_per_unit": KG_PER_UNIT, "source": "test"}}
 
 
 class Party:
@@ -35,70 +41,83 @@ class Party:
         self.money -= amount
 
 
-def world():
+def world(home_place=None):
+    """(the coin module, the ledger module listening through it, the book the edges keep)."""
     balances = Purses()
-    sim = types.SimpleNamespace(
-        state=types.SimpleNamespace(household=Party(0.0)), world_map=types.SimpleNamespace(tiles={"a": 1, "b": 2}),
-        actors=types.SimpleNamespace(state=types.SimpleNamespace(home_country="home", countries={})),
-        coin_kg_per_unit=lambda: KG_PER_UNIT, home_carriage_per_tonne=lambda origin, destination: PER_TONNE,
-        edge=lambda name: Edge(name, balances), balances=balances)
-    sim.place_of = lambda actor: CoinCarriageMixin.place_of(sim, actor)
-    sim.charge = lambda *args: CoinCarriageMixin.charge_coin_carriage(sim, *args)
-    return sim
+    coin = module_harness.build(Coin, views={
+        "civilisation": HOME_COIN, "home_country": {"id": "home", "location": home_place},
+        "tile_known": lambda tile: tile in ("a", "b"),
+        "tile_haul_cost": lambda origin, destination: PER_TONNE})
+    book = module_harness.build(Ledger, views={
+        "transfer_surcharge": lambda *call: [coin.carriage_surcharge(*call)],
+        "cast_state": types.SimpleNamespace(edge=lambda name: Edge(name, balances))})
+    return coin, book, balances
 
 
 class Carriage(unittest.TestCase):
 
-    def pay(self, sim, payer, payee, amount, purpose="wages"):
-        with ledger.listening(sim.charge):
+    def pay(self, book, payer, payee, amount, purpose="wages"):
+        with ledger.listening(book.after_transfer):
             ledger.transfer(payer, payee, amount, purpose)
 
     def test_the_mass_of_the_coin_and_the_haul_set_the_price(self):
-        self.assertAlmostEqual(coin_carriage.carriage_money(1000.0, KG_PER_UNIT, PER_TONNE),
+        self.assertAlmostEqual(rules.carriage_money(1000.0, KG_PER_UNIT, PER_TONNE),
                                1000.0 * KG_PER_UNIT / 1000.0 * PER_TONNE)
-        self.assertEqual(coin_carriage.carriage_money(1.0, 1e6, PER_TONNE), 1.0)
+        self.assertEqual(rules.carriage_money(1.0, 1e6, PER_TONNE), 1.0)
 
     def test_payment_between_places_pays_the_carriers_and_conserves_money(self):
-        sim = world()
+        _coin, book, balances = world()
         payer, payee = Party(1000.0, "a", "home"), Party(0.0, "b", "home")
-        self.pay(sim, payer, payee, 500.0)
-        carriage = sim.balances.purse(EDGE_FREIGHT)
+        self.pay(book, payer, payee, 500.0)
+        carriage = balances.purse(EDGE_FREIGHT)
         self.assertAlmostEqual(carriage, 500.0 * KG_PER_UNIT / 1000.0 * PER_TONNE)
         self.assertAlmostEqual(payer.money + payee.money + carriage, 1000.0)
 
+    def test_a_seats_own_purse_stands_at_the_home_countrys_centre(self):
+        coin, _book, _balances = world(home_place="a")
+        purse = SeatAccount(LedgerSeat(), Purses(), "founder")
+        charge = coin.carriage_surcharge(purse, Party(0.0, "b", "home"), 500.0, "wages")
+        self.assertEqual(charge, (EDGE_FREIGHT, 500.0 * KG_PER_UNIT / 1000.0 * PER_TONNE, "coin carriage"))
+
+    def test_a_seat_pays_the_same_carriage_whichever_command_moves_its_purse(self):
+        # Complaint 930: a payment through the seat as a party in the book paid none, and its wages paid
+        coin, book, balances = world(home_place="a")
+        purses = Purses()
+        purse = SeatAccount(LedgerSeat(), purses, "founder")
+        purse.capital = 1000.0
+        self.pay(book, purse, Party(0.0, "b", "home"), 500.0)
+        carriage = 500.0 * KG_PER_UNIT / 1000.0 * PER_TONNE
+        self.assertEqual(coin.carriage_surcharge(purse, Party(0.0, "b", "home"), 500.0, "tax"), (EDGE_FREIGHT, carriage, "coin carriage"))
+
+    def test_a_seat_as_an_exchange_party_stands_at_the_home_countrys_centre_too(self):
+        coin, _book, _balances = world(home_place="a")
+        party = HouseholdParty("founder", types.SimpleNamespace())
+        self.assertEqual(coin.carriage_surcharge(party, Party(0.0, "b", "home"), 500.0, "tax"),
+                         (EDGE_FREIGHT, 500.0 * KG_PER_UNIT / 1000.0 * PER_TONNE, "coin carriage"))
+
+    def test_the_surcharge_names_the_freight_edge_the_carriage_and_the_cause(self):
+        coin, _book, _balances = world()
+        charge = coin.carriage_surcharge(Party(1000.0, "a", "home"), Party(0.0, "b", "home"), 500.0, "wages")
+        self.assertEqual(charge, (EDGE_FREIGHT, 500.0 * KG_PER_UNIT / 1000.0 * PER_TONNE, "coin carriage"))
+
     def test_one_place_credit_and_a_party_with_no_place_cost_nothing(self):
-        sim = world()
-        self.pay(sim, Party(1000.0, "a"), Party(0.0, "a"), 500.0)
-        self.pay(sim, Party(1000.0, "a"), Party(0.0, "b"), 500.0, "interest")
-        self.pay(sim, Party(1000.0, "a"), Party(0.0, None), 500.0)
-        self.assertEqual(sim.balances.purse(EDGE_FREIGHT), 0.0)
+        coin, _book, _balances = world()
+        self.assertIsNone(coin.carriage_surcharge(Party(1000.0, "a"), Party(0.0, "a"), 500.0, "wages"))
+        self.assertIsNone(coin.carriage_surcharge(Party(1000.0, "a"), Party(0.0, "b"), 500.0, "interest"))
+        self.assertIsNone(coin.carriage_surcharge(Party(1000.0, "a"), Party(0.0, None), 500.0, "wages"))
+
+    def test_a_place_the_map_does_not_know_is_no_place(self):
+        coin, _book, _balances = world()
+        self.assertIsNone(coin.carriage_surcharge(Party(1000.0, "a"), Party(0.0, "nowhere"), 500.0, "wages"))
 
     def test_a_foreign_party_is_settled_by_the_foreign_route_instead(self):
-        sim = world()
-        self.pay(sim, Party(1000.0, "a", "home"), Party(0.0, "b", "abroad"), 500.0)
-        self.assertEqual(sim.balances.purse(EDGE_FREIGHT), 0.0)
+        coin, _book, _balances = world()
+        self.assertIsNone(coin.carriage_surcharge(Party(1000.0, "a", "home"), Party(0.0, "b", "abroad"), 500.0, "wages"))
 
-
-class ForeignKeeping(unittest.TestCase):
-
-    def test_a_foreign_actor_pays_its_own_countrys_guards_at_its_pay(self):
-        balances = Purses()
-        home, abroad = Party(1000.0, country="home"), Party(1000.0, country="abroad")
-        scoped = types.SimpleNamespace(pay_per_person_year=lambda trade: 50.0)
-        sim = types.SimpleNamespace(
-            actors=types.SimpleNamespace(actors={"h": home, "f": abroad},
-                                         state=types.SimpleNamespace(home_country="home"),
-                                         world_for=lambda actor, shared: scoped if actor is abroad else shared),
-            coin_keeping_cost_per_year=lambda money: 10.0, edge=lambda name: Edge(name, balances))
-        import sim.engine.agents_port as port
-        original = port.SimWorld
-        port.SimWorld = lambda _sim: types.SimpleNamespace(pay_per_person_year=lambda trade: 100.0)
-        try:
-            CoinHoardMixin.charge_actors_for_keeping_coin(sim)
-        finally:
-            port.SimWorld = original
-        self.assertAlmostEqual(balances.purse(EDGE_COIN_GUARDS), 10.0)
-        self.assertAlmostEqual(balances.purse(EDGE_COIN_GUARDS + ":abroad"), 5.0)
+    def test_the_carriage_is_not_itself_charged_carriage(self):
+        _coin, book, balances = world()
+        self.pay(book, Party(1000.0, "a", "home"), Party(0.0, "b", "home"), 500.0)
+        self.assertAlmostEqual(balances.purse(EDGE_FREIGHT), 500.0 * KG_PER_UNIT / 1000.0 * PER_TONNE)
 
 
 if __name__ == "__main__":

@@ -71,4 +71,4 @@ def _cmd_changes(sim, nodes, cmd, ended):
                      "how many exist, how many are within reach and how many you "
                      "employ. Country-wide and reach figures are estimates.")
 def _cmd_population(sim, nodes, cmd, ended):
-    return {"ok": True, **sim.labour.population_report()}
+    return {"ok": True, **sim.view("population_report")()}

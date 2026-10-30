@@ -6,25 +6,24 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 
 from sim.engine import data
-from sim.engine.core_step_phases import StepPhasesMixin
-from sim.engine.economy_production import ProductionMixin
-from sim.engine.reteach_rules import PROJECT_IN_HAND_SCORE, past_cooldown, teaching_budget, trade_is_gone
+from sim.workforce.reteach_rules import PROJECT_IN_HAND_SCORE, past_cooldown, teaching_budget, trade_is_gone
 from sim.labour.labour_job import StandingJobMixin
 from sim.labour.labour_training import TrainingMixin
 from sim.labour.labour_wages import WagesMixin
 from sim.refusal import cause_of
 from sim.ui.proto.dispatch_labour import _cmd_hire
+from sim.tests import event_stand_in, production_host
+from sim.tests.workforce_host import workforce_over
+from sim.tests.ui_stand_in import Game
 
 
-class HeldTrade(ProductionMixin):
-    def __init__(self, held):
-        self.nodes = {node_id: {"sch": scholars} for node_id, scholars in held.items()}
-        self._held = set(held)
-
-    def _practice_set(self):
-        return self._held
+def HeldTrade(held):
+    module = production_host.build(tree_nodes={node_id: {"sch": scholars} for node_id, scholars in held.items()})
+    module._practice_set = lambda: set(held)
+    return module
 
 
 class HeldTradeRule(unittest.TestCase):
@@ -45,7 +44,7 @@ class HeldTradeRule(unittest.TestCase):
 
 class Job(StandingJobMixin):
     def __init__(self, alive=True, pool=2000.0, committed=500.0, rate=2.0):
-        self._world = types.SimpleNamespace(state=types.SimpleNamespace(founder=types.SimpleNamespace(founder_alive=alive)))
+        self._world = Game(founder_alive=alive)
         self.pool, self.committed, self.rate = pool, committed, rate
 
     def director_pool(self):
@@ -84,15 +83,15 @@ class Seller(WagesMixin):
     """The part of Labour that sells the founder's own hours."""
 
     def __init__(self, committed=0.0, pool=2000.0):
-        household = types.SimpleNamespace(wage_hours_this_year=0.0, wages_earned=0.0, wage_income_this_year=0.0, reputation=0.0)
+        household = Game(wage_hours_this_year=0.0, wages_earned=0.0, wage_income_this_year=0.0, reputation=0.0)
         self.household = household
         self.received = []
         self.logged = []
-        self._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(founder=types.SimpleNamespace(founder_alive=True), household=household),
+        self._world = Game(
+            founder_alive=True, workforce=household, view=workforce_stand_in.view_of(household), state=Game(household=household),
             wages={"scribe": 1}, EDGE_EMPLOYERS="employers", revenue=lambda: 1000.0, active_hours_still_wanted=lambda: 0.0,
             money_text=lambda amount, grouped=False: "%d" % amount,
-            receive_from_edge=lambda edge, pay, text: self.received.append(pay))
+            send=lambda command: self.received.append(command.amount))
         self.pool, self.committed = pool, committed
 
     def trade_available(self, trade):
@@ -122,6 +121,23 @@ class SellingHours(unittest.TestCase):
         self.assertEqual(seller.director_hours_committed(), 500.0)
         self.assertEqual(seller.logged, [("scribe", 500.0, 1500.0)])
 
+    def test_a_quote_names_the_pay_and_posts_nothing_logs_nothing_and_commits_no_hours(self):
+        # Complaint 850: a quote must not credit the purse from the employers' edge
+        seller = Seller()
+        pay, _warning = seller.work_for_wages("scribe", 500, commit=False)
+        self.assertEqual(pay, 1500.0)
+        self.assertEqual(seller.received, [])
+        self.assertEqual(seller.logged, [])
+        self.assertEqual((seller.household.wage_hours_this_year, seller.household.wages_earned,
+                          seller.household.wage_income_this_year), (0.0, 0.0, 0.0))
+
+    def test_a_quote_reads_the_revenue_as_the_sale_would_leave_it(self):
+        seller = Seller()
+        seen = []
+        seller._world.revenue = lambda: seen.append(seller.household.wage_hours_this_year) or 1000.0
+        seller.work_for_wages("scribe", 500, commit=False)
+        self.assertEqual(seen, [0.0, 500.0])
+
     def test_more_hours_than_the_year_has_left_are_refused_and_pay_nothing(self):
         seller = Seller(committed=1800.0)
         pay, refusal = seller.work_for_wages("scribe", 500)
@@ -135,8 +151,8 @@ class Channels(TrainingMixin):
 
     def __init__(self, supply=1000.0, contracted=0.0, productivity=1.0, employed=0.0):
         self.contract_hours = {"scribe": contracted}
-        self._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(household=types.SimpleNamespace(contract_hours=self.contract_hours)),
+        self._world = Game(
+            workforce=Game(contract_hours=self.contract_hours),
             HOURS_PER_PERSON_YEAR=2000.0, trades_absent=set())
         self.supply, self.productivity, self._employed = supply, productivity, employed
 
@@ -175,32 +191,34 @@ class SupplyChannels(unittest.TestCase):
         self.assertEqual(Channels(contracted=400.0).hours_reserved("scribe"), 400.0)
 
 
-class Apprentices(StepPhasesMixin):
+class Apprentices:
+
     def __init__(self, rows):
         self.joined = []
-        self.state = types.SimpleNamespace(
-            household=types.SimpleNamespace(training=rows, log=[]), scenario=types.SimpleNamespace(year=102))
-        self.labour = types.SimpleNamespace(add_employed=lambda trade, count: self.joined.append((trade, count)),
+        self.state = Game(
+            household=Game(training=rows, log=[]), scenario=Game(year=102))
+        self.labour = Game(add_employed=lambda trade, count: self.joined.append((trade, count)),
                                             resync_pools=lambda: None)
+        self.module = workforce_over(self)
 
 
 class ApprenticesJoin(unittest.TestCase):
 
     def test_a_cohort_promised_for_a_year_is_on_the_books_in_that_year(self):
         game = Apprentices([[0.0, 102, "machinist", 2.0], [0.0, 103, "machinist", 1.0]])
-        game._step_apprenticeships()
+        game.module.step_apprenticeships()
         self.assertEqual(game.joined, [("machinist", 2.0)])
         self.assertEqual(game.state.household.training, [[0.0, 103, "machinist", 1.0]])
 
     def test_a_joining_is_logged_with_its_kind(self):
         game = Apprentices([[0.0, 101, "machinist", 2.0]])
-        game._step_apprenticeships()
+        game.module.step_apprenticeships()
         (_year, line), = game.state.household.log
         self.assertEqual(cause_of(line), "training_finished")
 
     def test_nobody_joins_before_their_year(self):
         game = Apprentices([[0.0, 105, "machinist", 2.0]])
-        game._step_apprenticeships()
+        game.module.step_apprenticeships()
         self.assertEqual(game.joined, [])
 
 
@@ -233,8 +251,8 @@ class HireWithNoFounder(unittest.TestCase):
 
     def test_a_dead_founder_with_no_deputy_cannot_take_anyone_on(self):
         calls = []
-        game = types.SimpleNamespace(founder_alive=False, deputies_carry_the_work=lambda: False,
-                                     labour=types.SimpleNamespace(hire=lambda *args: calls.append(args)))
+        game = Game(founder_alive=False, deputies_carry_the_work=lambda: False,
+                                     labour=Game(hire=lambda *args: calls.append(args)))
         reply = _cmd_hire(game, {}, {"cmd": "hire", "trade": "smith", "n": 1}, None)
         self.assertIs(reply["ok"], False)
         self.assertEqual(calls, [])

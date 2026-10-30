@@ -2,7 +2,7 @@
 
 from .command_registry import command
 from .economy import (_agent_values)
-from sim.engine.state_demand import set_household_stance
+from sim.polity.api import AnswerStateDemands
 
 
 @command("risk", group="society", aliases=("hazards", "risks"),
@@ -10,10 +10,10 @@ from sim.engine.state_demand import set_household_stance
          usage=["risk", "risk json"], options={"json": "the raw reply"},
          description="The hazards in play and what blunts them.")
 def _cmd_risk(sim, nodes, cmd, ended):
-    knowledge_risk = sim.knowledge_risk()
-    return {"ok": True, "knowledge_risk": knowledge_risk, "year": sim.year,
-            "confiscation": sim.confiscation_status(),
-            "interest_groups": sim.interest_groups(),
+    knowledge_risk = sim.view("knowledge_risk")()
+    return {"ok": True, "knowledge_risk": knowledge_risk, "year": sim.view("year")(),
+            "confiscation": sim.view("confiscation_status")(),
+            "interest_groups": sim.view("interest_groups")(),
             "note": "What history is about to do to you, and what you have "
                     "built that blunts it. Every hazard here is fightable."}
 
@@ -28,7 +28,7 @@ def _cmd_risk(sim, nodes, cmd, ended):
                      "from its purse, raises the rest from taxpayers it sees, or forbids the "
                      "technique.")
 def _cmd_groups(sim, nodes, cmd, ended):
-    report = sim.interest_groups_report()
+    report = sim.view("interest_groups_report")()
     report["ok"] = True
     return report
 
@@ -50,12 +50,12 @@ def _cmd_groups(sim, nodes, cmd, ended):
 def _cmd_answer(sim, nodes, cmd, ended):
     what = cmd.get("what") or cmd.get("id")
     if what is None:
-        return {"ok": True, "stance": sim.state.household.demand_stance}
+        return {"ok": True, "stance": sim.view("standing")()["demand_stance"]}
     try:
-        note = set_household_stance(sim, str(what).strip().lower(), float(cmd.get("service") or 0.0))
+        note = sim.send(AnswerStateDemands(str(what).strip().lower(), float(cmd.get("service") or 0.0)))
     except (TypeError, ValueError) as reason:
         return {"ok": False, "error": str(reason)}
-    return {"ok": True, "stance": sim.state.household.demand_stance, "note": note}
+    return {"ok": True, "stance": sim.view("standing")()["demand_stance"], "note": note}
 
 
 @command("values", shape="bare", group="society", aliases=("beliefs", "traits", "society"),

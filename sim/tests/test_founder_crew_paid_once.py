@@ -3,7 +3,7 @@ the payroll, so the share of a node's upkeep that is charged as upkeep is its pl
 The charge the founder is made is in test_founder_income_rules.py."""
 import unittest
 
-from sim.engine import node_upkeep
+from sim.production import node_upkeep
 
 QUICK_TOPIC = True
 

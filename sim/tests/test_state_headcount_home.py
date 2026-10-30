@@ -8,7 +8,9 @@ from .harness import check
 
 from sim.agents import headcount
 from sim.agents.records import ActorRecord
-from sim.engine.agents_port_budget import BudgetView
+from sim.actors.world_budget import BudgetView
+
+from .world_stand_in import fake_needs
 
 WORKING_AGE = 1.0e6
 
@@ -20,10 +22,9 @@ class HomeView(BudgetView):
         record = ActorRecord(kind="government")
         record.stores["wheat_kg"] = granary
         flows = None if nutrition is None else SimpleNamespace(nutrition_ratio=nutrition)
-        self._sim = SimpleNamespace(
-            population=SimpleNamespace(working_age=WORKING_AGE, total=4.0 * WORKING_AGE),
-            state=SimpleNamespace(holdings=SimpleNamespace(farm_hours_needed=farm_hours)),
-            _last_demographic_step=flows, civ={})
+        self.needs = fake_needs(
+            working_age=WORKING_AGE, population_total=4.0 * WORKING_AGE, farm_holdings={"hours_needed": farm_hours},
+            nutrition_ratio_last_year=lambda: None if flows is None else flows.nutrition_ratio)
         self._record = record
 
     def government(self):

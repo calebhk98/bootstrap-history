@@ -57,4 +57,4 @@ def free_hours_going_unused(sim, active):
     """The `state` field naming founder-hours going unused: the hours each active project still wants of the founder, against the
     director pool left uncommitted."""
     return free_hours_note([value["founder_hours_left"] for value in active.values()],
-                           max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed()))
+                           max(0.0, sim.view("hours_available")["director_pool"] - sim.view("hours_available")["director_committed"]))

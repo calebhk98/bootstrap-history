@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.economy_goods import GoodsMixin
+from sim.workforce.rules import price_of_labour_hours
 from sim.labour.room_advice import hire_room_refusal, room_advice, sources_to_build, sources_to_reopen
 from sim.refusal import cause_of, facts_of
 
@@ -59,9 +59,9 @@ class AdviceOrderTests(unittest.TestCase):
 class HousingPriceTests(unittest.TestCase):
     """`buy housing`, `quote housing` and the advice all read this one function."""
 
-    def test_a_place_costs_the_base_cost_times_the_price_level(self):
-        world = SimpleNamespace(HOUSING_COST_PER_PLACE=40.0, price_index=1.5)
-        self.assertAlmostEqual(GoodsMixin.housing_price_per_place(world), 60.0)
+    def test_a_place_costs_its_hours_in_the_coin_times_the_price_level(self):
+        self.assertAlmostEqual(price_of_labour_hours(40.0, 1.0, 1.5), 60.0)
+        self.assertAlmostEqual(price_of_labour_hours(40.0, 0.5, 1.5), 30.0)
 
 
 class SelectionTests(unittest.TestCase):

@@ -8,6 +8,8 @@ import json
 import math
 import os
 
+from sim.mod_api import FireStaff, HireStaff
+
 DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "span_data.json")
 
 
@@ -101,31 +103,33 @@ def technology_contributions(workers, manager_hours, parameters, known_nodes, in
     return rows
 
 
-def _manager_hours(sim):
-    return float(sim.cfg["director_hours_per_year"])
+def _manager_hours(access):
+    return float(access.view("game_config")()["director_hours_per_year"])
 
 
-def _workers_from(sim, cmd, managers_hired):
+def _workers_from(access, cmd, managers_hired):
     """Headcount to organise: an explicit `workers` or `hours` (a firm or state may ask about any size), else the staff."""
     if cmd.get("workers") is not None:
         return float(cmd["workers"]), "asked"
     if cmd.get("hours") is not None:
-        return float(cmd["hours"]) / sim.HOURS_PER_PERSON_YEAR, "asked (worker-hours / hours per person-year)"
-    staff = sum(sim.employees.values()) - managers_hired
+        return float(cmd["hours"]) / access.view("hours_per_person_year")(), "asked (worker-hours / hours per person-year)"
+    staff = sum(access.view("staff")()["employees"].values()) - managers_hired
     return max(0.0, staff), "your staff, not counting managers this mod hired"
 
 
 def register(api):
     parameters = load_parameters()
+    api.reads("game_config", "hours_per_person_year", "techniques_held", "staff", "hours_available", "hire_check", "wage_bill")
+    api.sends(FireStaff, HireStaff)
     manager_trade = parameters["manager_trade"]["value"]
 
-    def hired(sim):
-        return int(api.state(sim.state.interface).get("managers_hired", 0))
+    def hired(access):
+        return int(access.memory().get("managers_hired", 0))
 
     @api.director_overhead
-    def overhead(sim):
-        workers, _source = _workers_from(sim, {}, hired(sim))
-        return apex_overhead_hours(workers, _manager_hours(sim), parameters, set(sim.done), hired(sim))
+    def overhead(access):
+        workers, _source = _workers_from(access, {}, hired(access))
+        return apex_overhead_hours(workers, _manager_hours(access), parameters, set(access.view("techniques_held")()), hired(access))
 
     @api.command("hierarchy", group="labour", aliases=("span", "orgchart"),
                  summary="the layers of managers a workforce needs, and what each technology contributes",
@@ -137,12 +141,12 @@ def register(api):
                              "the coordination hours one report costs; known technologies cut those hours. Managers "
                              "needed are workers / span, layer by layer, and each layer loses part of an order. "
                              "Spans and losses are labelled heuristics (span_data.json). Spends nothing.")
-    def hierarchy(sim, nodes, cmd, ended):
-        workers, source = _workers_from(sim, cmd, hired(sim))
-        known = set(sim.done)
-        manager_hours = _manager_hours(sim)
+    def hierarchy(access, nodes, cmd, ended):
+        workers, source = _workers_from(access, cmd, hired(access))
+        known = set(access.view("techniques_held")())
+        manager_hours = _manager_hours(access)
         result = plan(workers, manager_hours, parameters, known)
-        pool = sim.labour.director_pool()
+        pool = access.view("hours_available")["director_pool"]
         overhead_hours = result["managers_total"] * manager_hours
         return {
             "ok": True, "workers": workers, "workers_source": source,
@@ -157,7 +161,7 @@ def register(api):
             "known_channels": {channel: {"best_known": node, "coordination_factor": factor}
                                for channel, (factor, node) in result["factors"].items()},
             "technologies": technology_contributions(workers, manager_hours, parameters, known, nodes),
-            "managers_this_mod_hired": hired(sim), "manager_trade": manager_trade,
+            "managers_this_mod_hired": hired(access), "manager_trade": manager_trade,
             "note": "Heuristic spans (see span_data.json); nothing here changes the game unless you run staff_managers.",
         }
 
@@ -170,18 +174,18 @@ def register(api):
                              "for your staff, through the ordinary hire path (fee, first year's wage, the labour "
                              "market's own supply limits). With release it lets go the surplus. It does not run by "
                              "itself; managers hired shrink the hours your own direct reports take from the pool.")
-    def staff_managers(sim, nodes, cmd, ended):
+    def staff_managers(access, nodes, cmd, ended):
         if ended:
             return {"ok": False, "error": "the run has ended (%s)" % ended}
-        workers, _source = _workers_from(sim, {}, hired(sim))
-        needed = plan(workers, _manager_hours(sim), parameters, set(sim.done))["managers_total"]
-        memory = api.state(sim.state.interface)
+        workers, _source = _workers_from(access, {}, hired(access))
+        needed = plan(workers, _manager_hours(access), parameters, set(access.view("techniques_held")()))["managers_total"]
+        memory = access.memory()
         have = int(memory.get("managers_hired", 0))
         if cmd.get("release"):
             surplus = have - needed
             if surplus <= 0:
                 return {"ok": True, "released": 0, "managers_needed": needed, "managers_this_mod_hired": have}
-            done, message = sim.labour.fire(manager_trade, surplus)
+            done, message = access.send(FireStaff(manager_trade, surplus))
             if done:
                 memory["managers_hired"] = have - surplus
             return {"ok": bool(done), "released": surplus if done else 0, "what_happened": message,
@@ -189,16 +193,16 @@ def register(api):
         shortfall = needed - have
         if shortfall <= 0:
             return {"ok": True, "hired": 0, "managers_needed": needed, "managers_this_mod_hired": have}
-        before = sim.employees.get(manager_trade, 0.0)
+        before = access.view("staff")()["employees"].get(manager_trade, 0.0)
         # The market may allow fewer than asked; take the most it will give.
         count = shortfall
-        while count > 1 and sim.labour.hire_check(manager_trade, count)[2]:
+        while count > 1 and access.view("hire_check")(manager_trade, count)[2]:
             count -= 1
-        done, message = sim.labour.hire(manager_trade, count)
+        done, message = access.send(HireStaff(manager_trade, count))
         if not done:
             return {"ok": False, "error": message, "managers_needed": needed}
-        gained = int(round(sim.employees.get(manager_trade, 0.0) - before))
+        gained = int(round(access.view("staff")()["employees"].get(manager_trade, 0.0) - before))
         memory["managers_hired"] = have + gained
         return {"ok": True, "hired": gained, "asked": shortfall, "managers_needed": needed,
                 "managers_this_mod_hired": memory["managers_hired"], "what_happened": message,
-                "annual_wage_bill": round(sim.labour.wage_bill(), 1)}
+                "annual_wage_bill": round(access.view("wage_bill")(), 1)}

@@ -4,24 +4,39 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 
 from sim.labour.labour_settlement import SettlementMixin
+from sim.ledger.api import NoteSpend, PayEdge
+from sim.polity.api import ScaleFamiliarity, ScaleProtection
 
 HOME, TOWN, EMPTY, CUT_OFF = "home_tile", "far_town", "empty_tile", "cut_off_tile"
+
+
+class _World(types.SimpleNamespace):
+    @property
+    def balance(self):
+        return self.workforce.capital
 
 
 class _Mover(SettlementMixin):
     def __init__(self, capital=1000.0, quote=(10.0, 80.0, 50.0)):
         self.household = types.SimpleNamespace(capital=capital, total_spend=0.0, relocation_hours_this_year=0.0,
                                                commissioned={"smith": 400.0}, contract_hours={"smith": 400.0},
-                                               familiarity=0.5, protection=0.4, base_tile=HOME)
-        self.paid, self.pressure_cleared, self.pools_resynced = [], 0, 0
+                                               base_tile=HOME)
+        self.paid, self.pressure_cleared, self.pools_resynced, self.sent = [], 0, 0, []
         self.quote = quote
-        self._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(household=self.household), EDGE_WORKERS="workers",
+        self._world = _World(
+            workforce=self.household, view=workforce_stand_in.view_of(self.household), EDGE_WORKERS="workers",
             money_text=lambda amount, grouped=False: "%.0f" % amount, plain_number=lambda value: "%.0f" % value,
-            pay_edge=lambda edge, amount, reason: self.paid.append((edge, amount, reason)))
+            send=self._send)
         self.labour_market = types.SimpleNamespace(clear_pressure=self._clear)
+
+    def _send(self, command):
+        if isinstance(command, PayEdge):
+            self.paid.append((command.edge, command.amount, command.purpose))
+        else:
+            self.sent.append(command)
 
     def _clear(self):
         self.pressure_cleared += 1
@@ -67,12 +82,11 @@ class MoveBaseEffectsTest(unittest.TestCase):
         self.assertTrue(ok)
         household = mover.household
         self.assertEqual(mover.paid, [("workers", 50.0, "relocation")])
-        self.assertEqual(household.total_spend, 50.0)
         self.assertEqual(household.relocation_hours_this_year, 80.0)
         self.assertEqual((household.commissioned, household.contract_hours), ({}, {}))
         self.assertEqual(mover.pressure_cleared, 1)
-        self.assertAlmostEqual(household.familiarity, 0.5 * SettlementMixin.RELOCATION_STANDING_RETAINED)
-        self.assertAlmostEqual(household.protection, 0.4 * SettlementMixin.RELOCATION_STANDING_RETAINED)
+        self.assertEqual(mover.sent, [NoteSpend(50.0), ScaleFamiliarity(SettlementMixin.RELOCATION_STANDING_RETAINED),
+                                      ScaleProtection(SettlementMixin.RELOCATION_STANDING_RETAINED)])
         self.assertEqual(household.base_tile, TOWN)
         self.assertEqual(mover.pools_resynced, 1)
 

@@ -4,12 +4,14 @@ checked to exist on `Sim`."""
 QUICK_TOPIC = True
 
 import types
+from sim.tests import workforce_stand_in
 from unittest import mock
 
 from .harness import *  # noqa: F401,F403
 from sim.ui.proto import command_registry as _registry
 from sim.ui.proto import screen_commitments
 from sim.ui.proto.render_typed import render_pretty as _render_pretty
+from sim.tests.ui_stand_in import Game
 
 check("commitments is a registered command", _registry.resolve("commitments") is not None)
 
@@ -18,10 +20,10 @@ NODES_STUB = {"school": {"name": "School", "kind": "INSTITUTION"}, "mill": {"nam
 
 
 def stub_game(**overrides):
-    household = types.SimpleNamespace(reserve_craftsmen=3, reserve_scholars=1)
-    game = types.SimpleNamespace(
+    household = Game(reserve_craftsmen=3, reserve_scholars=1)
+    game = Game(
         fog=False, goal="goal_node", goal_year=None, nodes=NODES_STUB, done={"school", "mill", "senate"}, policy={},
-        state=types.SimpleNamespace(household=household), is_visible=lambda node_id: node_id != "senate",
+        workforce=household, staff={"reserve_craftsmen": 3, "reserve_scholars": 1}, state=Game(household=household), is_visible=lambda node_id: node_id != "senate",
         running=lambda node_id: node_id == "school", institution_units=lambda node_id: 2.0,
         literacy=lambda which: 0.1234567 if which == "literacy_general" else 0.05,
         literacy_ceiling_general=lambda: 0.4, literacy_ceiling_elite=lambda: 0.0)
@@ -59,9 +61,3 @@ check("under fog an institution the player has not heard of is left out",
       {row["id"] for row in report(stub_game(fog=True))["institutions"]} == {"school"}, report(stub_game(fog=True))["institutions"])
 check("the text screen has the sections",  # presentation: the screen's headings
       all(word in _render_pretty("commitments", reply) for word in ("GOAL", "RESERVE", "INSTITUTIONS")))
-
-check("every game method the screen reads exists on Sim",
-      all(callable(getattr(S.Sim, name, None)) for name in
-          ("is_visible", "running", "institution_units", "literacy", "literacy_ceiling_general", "literacy_ceiling_elite")),
-      [name for name in ("is_visible", "running", "institution_units", "literacy", "literacy_ceiling_general",
-                         "literacy_ceiling_elite") if not callable(getattr(S.Sim, name, None))])

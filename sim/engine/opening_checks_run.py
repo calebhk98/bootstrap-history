@@ -9,14 +9,15 @@ import random
 from typing import Dict, List, Tuple
 
 from sim import cache_root
-from sim.engine.economy_port_trace import traded_staple
 import sim.geography.api as geography
 
-from . import concern_scan_run, economy_port_trace, opening_checks, solve_cache
+from sim.knowledge.api import StartDoneYearRecord
+from sim.prices.api import solve_cache
+from sim.markets import api as markets_api
+from sim.markets.api import (SPIN_UP_MAXIMUM_YEARS, SPIN_UP_SOURCE_MODULES, SPIN_UP_TOLERANCE, SPIN_UP_YEARS_ENV, opening_setup,
+                             spin_up_key, traded_staple)
+from . import concern_scan_run, opening_checks
 from .data import load, load_civ
-from .economy_port_key import SPIN_UP_SOURCE_MODULES, spin_up_key
-from .economy_port_setup import build_setup
-from .economy_port_year import SPIN_UP_MAXIMUM_YEARS, SPIN_UP_TOLERANCE, SPIN_UP_YEARS_ENV
 from .core import Sim
 
 TRACE_CACHE_DIRECTORY = cache_root.cache_directory("opening_traces")
@@ -35,7 +36,7 @@ def open_full_length(civ_id: str):
 
 def trace_key(game) -> str:
     """The cache key of the money trace of `game`'s opening: that of its spin-up, which covers the data and source."""
-    setup = build_setup(game, game.state.economy.agent_economy["opening"])
+    setup = opening_setup(game)
     return solve_cache.solve_key({"opening_trace": spin_up_key(setup), "years": int(SPIN_UP_MAXIMUM_YEARS)},
                                  source_modules=SPIN_UP_SOURCE_MODULES)
 
@@ -43,23 +44,23 @@ def trace_key(game) -> str:
 def opening_trace(game) -> List[dict]:
     """The spin-up's first stage run for its full length on the opening `game` saved, one row per year."""
     years = int(SPIN_UP_MAXIMUM_YEARS)
-    return solve_cache.cached_json(trace_key(game), lambda: economy_port_trace.spin_up_trace(game, years),
+    return solve_cache.cached_json(trace_key(game), lambda: markets_api.spin_up_trace(game, years),
                                    cache_dir=TRACE_CACHE_DIRECTORY)
 
 
 def sited_ore_ratios(game, prices, costs, stale) -> Dict[str, float]:
     """{ore: price over making cost} of the ores of resources the seat has found a deposit of whose markets cleared lately."""
     return {ore: prices[ore] / costs[ore]
-            for resource, ores in geography.ore_goods().items() if game.found_deposits(resource)
+            for resource, ores in geography.ore_goods().items() if game.view("found_deposits")[resource]
             for ore in ores if prices.get(ore) and costs.get(ore) and ore not in stale}
 
 
 def price_ratios(game) -> Dict[str, Dict[str, float]]:
     """{group: {good: price over making cost}} for the sited ores, the staple and the coin metal, after one step;
     only goods whose markets cleared lately (a stale good's shown price is its cost, not a trade)."""
-    agent = game.economy.agent
+    agent = game.view("legacy_economy")().agent
     setup = agent.economy().setup
-    prices, costs, stale = game.economy.agent_prices(), game._material_prices(), agent.stale_goods()
+    prices, costs, stale = game.view("legacy_economy")().agent_prices(), game.view("material_prices")(), agent.stale_goods()
     named = {"staple": traded_staple(agent, stale), "coin_metal": setup.currency.backing_good}
     ratios = {"sited_ores": sited_ore_ratios(game, prices, costs, stale)}
     for group, good in named.items():
@@ -71,12 +72,12 @@ def price_ratios(game) -> Dict[str, Dict[str, float]]:
 def check_game(game, trace=None) -> List[opening_checks.CheckResult]:
     """Every check on an opened, unplayed game of a full-length opening. It steps the game one year (the
     price and wage figures are the first year's), so the caller passes a game it will not keep playing."""
-    result = dict(game.economy.spin_up_result())
+    result = dict(game.view("legacy_economy")().spin_up_result())
     rows = opening_trace(game) if trace is None else trace
-    game.done_year = {}
+    game.send(StartDoneYearRecord())
     game.step()
-    outcome = game.economy.agent.outcomes[-1]
-    setup = game.economy.agent.economy().setup
+    outcome = game.view("legacy_economy")().agent.outcomes[-1]
+    setup = game.view("legacy_economy")().agent.economy().setup
     ratios = price_ratios(game)
     return [opening_checks.price_over_cost("price_over_cost_" + group, ratios[group])
             for group in ("sited_ores", "staple", "coin_metal")] + [

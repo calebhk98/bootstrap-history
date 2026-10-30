@@ -49,7 +49,7 @@ def route_money_warnings(startable_count, any_pays_its_way, combined_bill, can_r
          description="Everything still standing between here and there, and which "
                      "of those you could start today. Try it on your goal first.")
 def _cmd_path(sim, nodes, cmd, ended):
-    if sim.fog:
+    if sim.view("fog_of_war")():
         # THE REASON HAS TO BE THE REAL ONE: the command is switched off
         # wholesale under fog, regardless of whether this particular node
         # is already done, and the error must say that rather than implying
@@ -60,16 +60,16 @@ def _cmd_path(sim, nodes, cmd, ended):
                          "not been, whether or not you have built this "
                          "particular thing already. Use 'available' to see "
                          "what you could begin now."}
-    node_id = cmd.get("id") or sim.goal    # a bare `path` is the route to the goal
+    node_id = cmd.get("id") or sim.view("goal")()["node"]    # a bare `path` is the route to the goal
     if node_id not in nodes:
         return {"ok": False, "error": "unknown node id %r" % node_id}
     need = closure(nodes, node_id)
     order = topo_order(nodes, need)
-    remaining = [node_id for node_id in order if node_id not in sim.done]
-    out = {"ok": True, "id": node_id, "name": nodes[node_id]["name"], "done": node_id in sim.done,
+    remaining = [node_id for node_id in order if node_id not in sim.view("techniques_held")()]
+    out = {"ok": True, "id": node_id, "name": nodes[node_id]["name"], "done": node_id in sim.view("techniques_held")(),
            "remaining_count": len(remaining), "remaining": remaining,
            "years_following_the_chain_alone": round(remaining_critical_path_years(
-               nodes, node_id, sim.done, active_years_left(nodes, sim.active)), 1),
+               nodes, node_id, sim.view("techniques_held")(), active_years_left(nodes, sim.view("active_projects")())), 1),
            "years_following_the_chain_alone_means": "the calendar floor of the longest chain, not counting money or hours",
            "leverage_points": leverage_points(sim), "leverage_note": LEVERAGE_NOTE}
     warning = knowledge_loss_warning(sim)
@@ -80,8 +80,8 @@ def _cmd_path(sim, nodes, cmd, ended):
     # midgame nearly everything on `available`'s several-hundred row list
     # is irrelevant to any one goal. Do the intersection here, once,
     # cheapest first, so it never has to be done by eye or by script.
-    _startable = sorted((node_id for node_id in remaining if sim.can_start(node_id)),
-                        key=lambda x: sim.project_cost(x))
+    _startable = sorted((node_id for node_id in remaining if sim.view("start_check")(node_id, False, None, False)[0]),
+                        key=lambda x: sim.view("project_cost")(x))
     out["startable_today_count"] = len(_startable)
     out["startable_today_toward_this"] = (
         [_brief(sim, nodes, node_id, False) for node_id in _startable[:30]] or "nothing yet")
@@ -95,9 +95,9 @@ def _cmd_path(sim, nodes, cmd, ended):
     # (see route_money_warnings).
     out.update(route_money_warnings(
         len(_startable),
-        any(sim.venture_real_earnings(node_id) > sim.venture_upkeep_quote(node_id)["now"] for node_id in _startable),
-        sum(sim.project_cost(node_id) for node_id in _startable),
-        sim.spending_power("start"),
+        any(sim.view("venture_real_earnings")(node_id) > sim.view("venture_upkeep_quote")(node_id)["now"] for node_id in _startable),
+        sum(sim.view("project_cost")(node_id) for node_id in _startable),
+        sim.view("spending_power")("start"),
         lambda amount: money_text(amount, sim, grouped=True)))
     # A ROUTE THAT DOES NOT SAY "RESTORE" IS A ROUTE YOU CANNOT FOLLOW: a
     # node you know but have SHUT does not appear above (it is done, so it
@@ -107,7 +107,7 @@ def _cmd_path(sim, nodes, cmd, ended):
     # it. Only `restore` reopens it, so `path` has to say so explicitly or
     # nothing on this screen points at the right verb.
     _shut = sorted(node_id for node_id in need
-                   if node_id in getattr(sim, "mothballed", set()) and node_id in sim.done)
+                   if node_id in sim.view("mothballed")() and node_id in sim.view("techniques_held")())
     if _shut:
         out["on_this_route_but_shut_down"] = _shut[:10]
         out["reopen_them_with"] = ("'restore <id>' - you still know how, so "
@@ -124,6 +124,6 @@ def _cmd_path(sim, nodes, cmd, ended):
          description="Stocks on hand, annual production and demand, and current "
                      "buy and sell values for every tracked material.")
 def _cmd_materials(sim, nodes, cmd, ended):
-    return {"ok": True, "materials": sim.materials_report(),
+    return {"ok": True, "materials": sim.view("materials_report")(),
             "units": "stocks are tonnes; production and demand are tonnes/year",
             "how_to_trade": "buy material <name> <tonnes>; sell <name> <tonnes>"}

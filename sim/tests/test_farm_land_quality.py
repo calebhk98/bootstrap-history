@@ -16,7 +16,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.territory_required import require_territory
+from sim.land.rules import require_territory
 from sim.geography.api import crop_site, tiles_held, tiles_of_regions
 from sim.labour import labour_allocation
 from sim.tests.harness import S

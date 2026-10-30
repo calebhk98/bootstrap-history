@@ -6,40 +6,29 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.step_phase_projects import ProjectProgressPhaseMixin
+from sim.tests import module_harness, projects_host
+from sim.workforce.api import ResetTradeHours
 
 
-class _Phase(ProjectProgressPhaseMixin):
-    """The parts of a Sim that the project loop and one project's first stage touch."""
+def _Phase(queue, take_per_project):
+    """The projects module over a queue of projects each of which takes this many hours; one project's turn is a recorder."""
+    module = projects_host.build(
+        tree={node_id: {} for node_id in queue}, projects_record=types.SimpleNamespace(active={node_id: {} for node_id in queue}),
+        revenue_estimate=0.0, upkeep=0.0, mine_operating_cost=0.0)
+    module.turns = []
+    module.unused_reported = None
+    module.hour_priority_queue = lambda: list(queue)
 
-    def __init__(self, queue, take_per_project):
-        self.queue = queue
-        self.take = take_per_project
-        self.turns = []
-        self.unused_reported = None
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(
-            trade_hours_used={"stale": 1.0}, active={node_id: {} for node_id in queue}))
-        self.nodes = {node_id: {} for node_id in queue}
+    def report_unused_directed_hours(unused):
+        module.unused_reported = unused
 
-    def hour_priority_queue(self):
-        return list(self.queue)
-
-    def revenue(self):
-        return 0.0
-
-    def upkeep(self):
-        return 0.0
-
-    def mine_operating_cost(self):
-        return 0.0
-
-    def report_unused_directed_hours(self, unused):
-        self.unused_reported = unused
-
-    def _step_progress_project(self, node_id, pool_rank, pool_total, active_count, remaining, hired_left,
-                               arrears_hours_lost, directed_hours_unused, _afford_context=None):
-        self.turns.append((node_id, pool_rank, pool_total, active_count, remaining))
-        return remaining - self.take[node_id], hired_left, self.take[node_id] / 2.0
+    def step_project(node_id, pool_rank, pool_total, active_count, remaining, hired_left, arrears_hours_lost, directed_hours_unused,
+                     _afford_context=None):
+        module.turns.append((node_id, pool_rank, pool_total, active_count, remaining))
+        return remaining - take_per_project[node_id], hired_left, take_per_project[node_id] / 2.0
+    module.report_unused_directed_hours = report_unused_directed_hours
+    module._step_progress_project = step_project
+    return module
 
 
 class QueueWalkTests(unittest.TestCase):
@@ -62,25 +51,21 @@ class QueueWalkTests(unittest.TestCase):
         self.assertEqual((remaining, remaining_after_projects, effective), (1700.0, 1700.0, 150.0))
 
     def test_the_trade_hours_used_start_afresh_each_year(self):
-        self.assertEqual(self.phase.state.projects.trade_hours_used, {})
+        self.assertEqual([command for command in module_harness.sent(self.phase) if isinstance(command, ResetTradeHours)], [ResetTradeHours()])
 
 
-class _Stage(ProjectProgressPhaseMixin):
+def _Stage():
     """One project's first stage, halted at the trade gate."""
-
-    def __init__(self):
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(active={"doctorate": {}}))
-        self.nodes = {"doctorate": {}}
-
-    def _project_progress_trade_gate(self, node_id, project_state, node):
-        return True
+    module = projects_host.build(tree={"doctorate": {}}, projects_record=types.SimpleNamespace(active={"doctorate": {}}))
+    module._project_progress_trade_gate = lambda node_id, project_state, node: True
+    return module
 
 
 class StandingStoredTests(unittest.TestCase):
     def test_the_standing_is_stored_on_the_project_before_anything_else_happens(self):
         stage = _Stage()
         stage._step_progress_project("doctorate", 2, 2000.0, 3, 1850.04, 7, [], [])
-        stored = stage.state.projects.active["doctorate"]
+        stored = stage.seat.active["doctorate"]
         self.assertEqual((stored["pool_total_this_year"], stored["pool_active_count_this_year"], stored["pool_rank_this_year"],
                           stored["pool_remaining_before_this_year"]), (2000.0, 3, 2, 1850.0))
 

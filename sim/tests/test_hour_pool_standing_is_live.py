@@ -1,38 +1,34 @@
 """The hour pool and priority rank a screen shows come from the live active list, not from the record written
-when hours were last allocated (Complaint 640: rules on a stub game)."""
+when hours were last allocated (Complaint 640: the projects module over plain values)."""
 QUICK_TOPIC = True
 
 import types
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.projects_hour_queue import HourQueueMixin
+from sim.tests import projects_host
 from sim.ui.proto import state_projects as proto_state
+from sim.tests.ui_stand_in import Game
+from sim.tests.ui_stand_in import FactViews
 
 
-class _Labour:
-    def __init__(self, pool, committed):
-        self.pool, self.committed = pool, committed
-
-    def director_pool(self):
-        return self.pool
-
-    def director_hours_committed(self):
-        return self.committed
-
-
-class _HourGame(HourQueueMixin):
-    """Only what the hour queue and the active-project builder read."""
+class _HourGame(FactViews):
+    """Only what the hour queue and the active-project builder read: the module answers the standing."""
     goal = None
     bountied = frozenset()
 
     def __init__(self, node_ids, pool=120.0, committed=20.0, allocations=None):
         self.order = ["alpha", "beta", "gamma", "delta"]
-        self.state = types.SimpleNamespace(
-            projects=types.SimpleNamespace(active={node_id: self._stale_progress() for node_id in node_ids}),
-            household=types.SimpleNamespace(hour_allocations=allocations or {}))
-        self.labour = _Labour(pool, committed)
+        self.state = Game(
+            projects=Game(active={node_id: self._stale_progress() for node_id in node_ids}),
+            household=Game(hour_allocations=allocations or {}))
+        self.module = projects_host.build(
+            projects_record=self.state.projects, order=self.order, hour_commitments={"allocations": allocations or {}},
+            hours_available={"director_pool": pool, "director_committed": committed})
         self.active = self.state.projects.active
+
+    def hour_standing(self, node_id):
+        return self.module.hour_standing(node_id)
 
     @staticmethod
     def _stale_progress():
@@ -53,23 +49,23 @@ class HourStandingIsLive(unittest.TestCase):
 
     def test_rank_and_count_follow_the_live_active_list(self):
         game = _HourGame(["gamma", "alpha", "beta"])
-        self.assertEqual([game.hour_standing(name)[:2] for name in ("alpha", "beta", "gamma")], [(1, 3), (2, 3), (3, 3)])
+        self.assertEqual([game.view("hour_standing")(name)[:2] for name in ("alpha", "beta", "gamma")], [(1, 3), (2, 3), (3, 3)])
 
     def test_a_standing_allocation_moves_a_project_to_the_front(self):
         game = _HourGame(["alpha", "beta", "gamma"], allocations={"gamma": 40.0})
-        self.assertEqual(game.hour_standing("gamma")[0], 1)
-        self.assertEqual(game.hour_standing("alpha")[0], 2)
+        self.assertEqual(game.view("hour_standing")("gamma")[0], 1)
+        self.assertEqual(game.view("hour_standing")("alpha")[0], 2)
 
     def test_a_project_not_in_hand_has_no_standing(self):
         self.assertIsNone(_HourGame(["alpha"]).hour_standing("delta"))
 
     def test_pool_is_the_hours_not_yet_committed(self):
         game = _HourGame(["alpha", "beta"], pool=120.0, committed=20.0)
-        self.assertAlmostEqual(game.hour_standing("alpha")[2], 100.0)
+        self.assertAlmostEqual(game.view("hour_standing")("alpha")[2], 100.0)
 
     def test_pool_never_goes_below_zero(self):
         game = _HourGame(["alpha"], pool=10.0, committed=50.0)
-        self.assertEqual(game.hour_standing("alpha")[2], 0.0)
+        self.assertEqual(game.view("hour_standing")("alpha")[2], 0.0)
 
     def test_the_builder_reads_standing_not_the_stale_record(self):
         game = _HourGame(["beta", "alpha"], pool=120.0, committed=20.0)

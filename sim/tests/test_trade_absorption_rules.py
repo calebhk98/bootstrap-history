@@ -3,7 +3,7 @@ trade toward its literacy ceiling, called on built inputs with no game."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.trade_absorption import (BECOME_ENDEMIC, GROW, RECORD_INTRODUCTION, WAIT, absorption_step,
+from sim.diffusion.trade_absorption import (BECOME_ENDEMIC, GROW, RECORD_INTRODUCTION, WAIT, absorption_step,
                                          absorption_years, headcount_toward_ceiling)
 
 MINIMUM, BASE = 35.0, 110.0

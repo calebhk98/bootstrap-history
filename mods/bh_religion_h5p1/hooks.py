@@ -7,7 +7,7 @@ a rule for its surplus: a declared share of what is left after a year's stipends
 where the credit market lends it to borrowers, the founder among them, and the interest comes back through the
 purse book. Nothing here names a faith, a place or a civilisation: every figure is data on the cast entry (`plan`).
 """
-from sim.agents.api import edges, foundation, ledger
+from sim.mod_api import edges, foundation, ledger
 
 MILLING = "milling"
 LAND_PURCHASE = "land purchase"
@@ -17,7 +17,7 @@ def register(api):
 	class ReligiousHouse(foundation.Church):
 		"""A church with mill tolls, a lending purse, and land bought from surplus."""
 		kind = "religious_house"
-		# the credit market offers this actor's purse to borrowers (`lender_offers`, sim/engine/economy_capital_market.py)
+		# the credit market offers this actor's purse to borrowers (`lender_offers`, sim/finance/capital_market.py)
 		lends_from_purse = True
 
 		def terms(self):

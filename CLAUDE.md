@@ -73,7 +73,7 @@ mechanism the founder uses must be usable by any actor.
 Three artefacts share one dataset:
 
 - **Data** (`data/`): the tech tree (authored per domain in `data/branches/`,
-  built at load by `sim/engine/tree_source.py`), production recipes
+  built at load by `sim/content/tree_source.py`), production recipes
   (`data/production/`),
   civilisations, world geography, trades.
 - **Knowledge** (under `docs/`): how to physically do each thing the tree
@@ -88,20 +88,21 @@ Check with `ls` before trusting this; directories move.
 
 | Looking for | Look in |
 |---|---|
-| Engine (the `Sim` object and its mixins) | `sim/engine/` |
-| Walled packages, each reached only through its `api.py` (the rule and how to extend a surface: `docs/architecture/PACKAGE_WALLS.md`) | `sim/economy/`, `sim/agents/`, `sim/labour/`, `sim/geography/`, `sim/ui/` |
+| The composition root (`Sim`: state, seats, the year loop) and the engine bridge | `sim/engine/` |
+| The assembly: module specs, views, commands, the clock, slots, `act_as`, mod operations, kernels (`sim/ARCHITECTURE.md`) | `sim/assembly/` |
+| A module (one owner per fact; publishes views, applies commands; `module_spec.py` declares them) | `sim/<module>/`; the list is `sim/ARCHITECTURE.md` section 3 |
+| Libraries behind an `api.py` (rule and how to extend a surface: `docs/architecture/PACKAGE_WALLS.md`) | `sim/economy/`, `sim/agents/`, `sim/labour/`, `sim/geography/`, `sim/ui/` |
 | Standalone domain models (agriculture, demography, land, deposits, demand, ...) | `sim/world/` |
-| Actors (households, firms, states, interest groups) | `sim/agents/` |
-| Labour market: hiring, wages, staff, the trade split | `sim/labour/` |
-| Map, tiles, regions, climate, routes and freight | `sim/geography/` |
-| Price solver | `sim/engine/solve_prices*.py`, `sim/engine/prices.py` |
+| The one door a mod's Python imports | `sim/mod_api.py` |
+| Price solver and calculator | `sim/prices/` |
 | CLI, menus, screens and agent/JSON protocol | `sim/simulator.py`, `sim/ui/`, `sim/PROTOCOL.md` |
+| Structure checks (module graph, undeclared reads, imports, UI views) | `tools/` (`tools/done_check.sh`, `tools/measure/`) |
 | Tests | `sim/tests/`, run with `python3 -m sim.tests` |
 | Engine shape, measured | `sim/ARCHITECTURE.md` |
 | Design direction, plans, current status | `docs/architecture/` - read its `README.md` first; it names the live plan and the status document |
 | Open problems, bug reports (each has a `**Status:**` line) | `Complaints/` (open), `Complaints/closed/` (done); `Complaints/README.md` says how a new issue is numbered |
 | Playtest and audit reports; standing design decisions | `Complaints/reports/`; `docs/architecture/DESIGN_PRINCIPLES.md` |
-| Mods: loader, contract, backlog | `sim/engine/mods.py`, `mods/README.md`, `mods/TASKS.md` |
+| Mods: loader, contract, backlog | `sim/content/mods.py`, `mods/README.md`, `mods/TASKS.md` |
 | Playtest setup for agent players | `playtest/` |
 | Schema for production data | `data/production/_SCHEMA.md` |
 
@@ -175,9 +176,11 @@ scenarios work without engine edits.
   detected automatically and only exclusions are listed.
 - **General actors.** Write mechanisms against an actor, not against the
   founder, so a firm, a state or another player can use them.
-- **`Sim` is a god object.** Mixin methods talk through `self`, so coupling
-  is real however the files are split. Decomposition direction is in
-  `sim/ARCHITECTURE.md` and `docs/architecture/`.
+- **Modules talk only through views and commands.** Each fact has one owner
+  module; another module reads it through a view its spec declares and
+  changes it through the owner's command (`python3 tools/check_module_reads.py`
+  finds a read or send that is not declared). `Sim` is the composition root,
+  not a place for rules. The shape is in `sim/ARCHITECTURE.md`.
 - **Comments** describe what the code does now, briefly, preferably inline.
   No history, no "previously", no quotes from people, no multi-paragraph
   headers. A comment longer than about ten lines is probably excessive;
@@ -265,7 +268,7 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   regression test. When several subagents start from one commit, record the
   baseline once before spawning them and give them its path.
 - **The tree is built, not committed.** `data/tech_tree.json` is generated from
-  `data/branches/` at load (`sim/engine/tree_merge.py`) and is not in git.
+  `data/branches/` at load (`sim/content/tree_merge.py`) and is not in git.
   `simulator.py validate` reports a merge that would lose branch data.
 
 ---

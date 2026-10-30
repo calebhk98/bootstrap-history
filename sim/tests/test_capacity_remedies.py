@@ -8,16 +8,15 @@ from .harness import *  # noqa: F401,F403
 
 import types
 
-from sim.engine.shortage_sizing import mine_shortfall_after_sinking, mine_size_tonnes, nitre_bed_square_metres
+from sim.resources.sizing import mine_shortfall_after_sinking, mine_size_tonnes, nitre_bed_square_metres
 from sim.ui.proto.capacity_remedies import capacity_remedies, render_remedies
+from sim.tests.ui_stand_in import StandIn
 
 
 def stub_game(trade_available=True, household_room=100.0):
-    labour = types.SimpleNamespace(trade_available=lambda trade: trade_available, household_room=lambda: household_room)
     plans = {"coal": {"text": "dig it", "commands": ["quote mine coal 7", "buy mine coal 7"]}}
-    return types.SimpleNamespace(
-        HOURS_PER_PERSON_YEAR=2000.0, labour=labour,
-        shortage_remedy_plan=lambda material, shortfall: plans.get(material, {"text": "wait", "commands": []}))
+    return StandIn(hours_per_person_year=2000.0, trade_available=lambda trade: trade_available, household_room=household_room,
+                   shortage_remedy_plan=lambda material, shortfall: plans.get(material, {"text": "wait", "commands": []}))
 
 
 def trade_row(demand, supply, oversubscribed=True):

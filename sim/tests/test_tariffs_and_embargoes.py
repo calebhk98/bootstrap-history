@@ -14,25 +14,35 @@ from sim.agents import relations
 from sim.agents.trader import route_terms
 from sim.economy.tariffs import duty_transfers
 from sim.economy.types import EDGE_EXTERNAL
-from sim.engine import trade_duty
-from sim.engine.agents_port_trade import TradeView
-from sim.engine.mod_stores import StoreBook
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
+from sim.markets import trade_duty
+from sim.actors.world_trade import TradeView
+from sim.tests.store_stand_in import base_book
+from sim.engine.state import FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import bind_seat, seat_from_template
 from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import run_as_seat
 
 from .test_no_seller_no_price import _Offers, _fake_sim
+from .world_stand_in import fake_needs
+from sim.tests.ui_stand_in import FactViews
+from .seat_views_stand_in import give_seats_slots
 
 
 def _stores():
-    return StoreBook({})
+    return base_book()
+
+
+def _border_terms(sim):
+    """What the `border_terms` view answers: the relations store's tariff and embargo of one country toward another."""
+    return lambda destination, source: (relations.tariff_on(sim.stores, destination, source),
+                                        relations.embargoes(sim.stores, destination, source))
 
 
 def _priced_game():
     sim = _fake_sim(home_prices={}, partner_makes={"cassia_kg"}, partner_prices={"cassia_kg": 50.0})
     sim.stores, sim.civ = _stores(), {"id": "rome"}
+    sim.border_terms = _border_terms(sim)
     return sim
 
 
@@ -109,6 +119,9 @@ class _Sim:
         self.stores, self.civ = _stores(), {"id": "rome"}
         self.prices = prices
 
+    def border_terms(self, destination, source):
+        return _border_terms(self)(destination, source)
+
     def foreign_economies(self):
         return [place for place in self.prices if place != "rome"]
 
@@ -119,6 +132,9 @@ class _Sim:
 class _View(TradeView):
     def __init__(self, sim):
         self._sim = sim
+        self.needs = fake_needs(
+            civilisation=sim.civ, foreign_economies=sim.foreign_economies, partner_facts=sim._foreign_economy_facts,
+            border_duty_per_tonne=lambda source, destination, price: trade_duty.duty_per_tonne(sim, source, destination, price))
 
     def price_at(self, material, place):
         return self._sim.prices[place]
@@ -168,8 +184,8 @@ class MerchantsSeeTheCharge(unittest.TestCase):
 
 class TradeDutyReads(unittest.TestCase):
 
-    def test_a_game_without_stores_charges_nothing(self):
-        self.assertEqual(trade_duty.terms(types.SimpleNamespace(), "rome", "han"), (0.0, False))
+    def test_a_pair_the_store_has_no_record_of_charges_nothing(self):
+        self.assertEqual(trade_duty.terms(_Sim({}), "rome", "han"), (0.0, False))
 
     def test_a_country_charges_nothing_on_itself(self):
         sim = _Sim({})
@@ -177,19 +193,21 @@ class TradeDutyReads(unittest.TestCase):
         self.assertEqual(trade_duty.terms(sim, "rome", "rome"), (0.0, False))
 
 
-class Game:
+class Game(FactViews):
     """The root state with the real seat rebinding, as in the relations store topic."""
 
     def __init__(self):
-        self.state = SimulationState(household=HouseholdState(capital=100.0), projects=ProjectsState(), founder=FounderState())
-        self.state.seats["northern"] = seat_from_template({"country": "han"}, 50.0, 1e9, {})
+        self.state = SimulationState(household=HouseholdState(), founder=FounderState())
+        self.state.seats["northern"] = seat_from_template({"country": "han"}, {})
+        give_seats_slots(self.state)
         self.session_seat = None
         self.year = 100
         self.civ = {"id": "rome"}
+        self.saved_stores = {}
 
     @property
     def stores(self):
-        return StoreBook(self.state.stores)
+        return base_book(self.saved_stores)
 
     def partner_countries(self):
         return ["han", "parthia"]

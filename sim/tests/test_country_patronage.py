@@ -11,10 +11,11 @@ from .harness import check
 from sim.agents import patronage
 from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
 from sim.agents.no_country_economy import NoCountryEconomy
-from sim.engine.agents_port_patronage import PatronageView
-from sim.engine.economy_production import ProductionMixin
+from sim.actors.world_patronage import PatronageView
+from sim.tests import polity_host
 
 from .country_state_world import StateWorld
+from .world_stand_in import fake_needs
 
 TERMS = {"base_hours": 100.0, "population_scale": 4.0, "exponent": 0.5, "governance_scale": 25.0}
 BASE_PAY = 10.0       # money for a person-year of unskilled work in the country
@@ -112,22 +113,14 @@ unpaid[1].actors["government:far"].pay_patron(0.5, unpaid[0])
 check("a state that left need unpaid funds nobody", unpaid[1].actors["government:far"].record.patron_grant == 0.0)
 
 
-# ---- the engine's side ---------------------------------------------------------------------------------------
-class Engine:
-	STATE_FUNDING_BASE_LABOUR_HOURS = 100.0
-	STATE_FUNDING_POP_SCALE_EXPONENT = 0.4
-	STATE_FUNDING_GOV_QUALITY_SCALE = 25.0
-	POP_SCALE_FLOOR = 0.05
-	DEFAULT_POPULATION_100AD = 1000.0
-
-	def patron_clients(self, country):
-		return [("a", 3.0, 1.1), ("b", 0.0, 1.0)]
-
+# ---- the module's side ---------------------------------------------------------------------------------------
+TERMS = {"base_hours": 100.0, "exponent": 0.4, "governance_scale": 25.0}
 
 view = PatronageView()
-view._sim = Engine()
-check("the funding terms carry the size of the country against the reference one, floored",
-	  view.state_funding_terms(500.0)["population_scale"] == 0.5 and view.state_funding_terms(1.0)["population_scale"] == Engine.POP_SCALE_FLOOR)
+view.needs = fake_needs(state_funding_terms=lambda: TERMS, pop_scale_for=lambda people: max(0.05, people / 1000.0),
+						patron_clients=lambda country: [("a", 3.0, 1.1), ("b", 0.0, 1.0)])
+check("the funding terms are the polity's figures and the size of the country as the demography module scales it",
+	  view.state_funding_terms(500.0) == dict(TERMS, population_scale=0.5))
 check("the clients a country's state is asked about are the seats' governance and reputation", view.patron_clients("far") == [(3.0, 1.1), (0.0, 1.0)])
 
 
@@ -147,7 +140,9 @@ class FakeEconomy:
 
 
 def output_per_head(economy, opening_people, people):
-	view._sim = SimpleNamespace(economy=economy)
+	view.needs = fake_needs(country_opening_basket=lambda country: economy.agent_opening_basket(country),
+							country_volume_baseline=lambda country: economy.agent_volume_baseline(country),
+							country_traded_volumes=lambda country: economy.agent_traded_volumes(country))
 	return view.country_output_per_head("far", opening_people, people)
 
 
@@ -163,24 +158,17 @@ check("...nor one with no people", output_per_head(FakeEconomy(*basket, {}, {}),
 
 
 # ---- the seat of another country is paid by that country's state ---------------------------------------------
-class Funding:
-	"""What `state_funding` reads: the acting seat's country, the governments' records and the seats a state funds."""
-	state_funding = ProductionMixin.state_funding
-
-	def __init__(self, acting, seats_funded, grant):
-		self.civ = {"id": "home"}
-		self.state = SimpleNamespace(
-			acting_seat=acting, seats={"founder": SimpleNamespace(country=None), "visitor": SimpleNamespace(country="far"),
-									   "friend": SimpleNamespace(country="far")},
-			actors=SimpleNamespace(records={"government:home": SimpleNamespace(patron_grant=500.0),
-											"government:far": SimpleNamespace(patron_grant=grant)}))
-		self._funded = seats_funded
-
-	def patron_clients(self, country):
-		return [(seat, 0.0, 1.0) for seat in self._funded]
+def funding(acting, seats_funded, grant):
+	"""The polity module over the acting seat's country, the governments' records and the seats a state funds."""
+	module = polity_host.build(
+		civilisation={"id": "home"}, acting_seat=acting,
+		seat_country={"founder": None, "visitor": "far", "friend": "far"}.get,
+		government_figures={"home": (500.0, 0.0, 0.0), "far": (grant, 0.0, 0.0)}.get)
+	module.patron_clients = lambda country: [(seat, 0.0, 1.0) for seat in seats_funded]
+	return module
 
 
-check("the home seat is paid the home state's grant", Funding("founder", [], 90.0).state_funding() == 500.0)
+check("the home seat is paid the home state's grant", funding("founder", [], 90.0).state_funding() == 500.0)
 check("a seat of another country is paid that country's grant, shared among the seats its state funds",
-	  Funding("visitor", ["visitor", "friend"], 90.0).state_funding() == 45.0)
-check("a seat of another country its state does not fund is paid nothing", Funding("visitor", ["friend"], 90.0).state_funding() == 0.0)
+	  funding("visitor", ["visitor", "friend"], 90.0).state_funding() == 45.0)
+check("a seat of another country its state does not fund is paid nothing", funding("visitor", ["friend"], 90.0).state_funding() == 0.0)

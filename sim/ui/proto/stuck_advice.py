@@ -32,7 +32,7 @@ def calendar_bound_advice(sim, nodes):
     running = sum(len(ids) for ids in kinds.values())
     if not running:
         return None
-    if sim.fog:
+    if sim.view("fog_of_war")():
         if len(kinds.get("calendar", ())) != running:
             return None
         return {"every_goal_project_calendar_bound": None,
@@ -40,13 +40,13 @@ def calendar_bound_advice(sim, nodes):
                          "counts all of them: all %d running are only waiting on their calendar floor, "
                          "which nothing you pay can shorten." % running),
                 "side_work": list(SIDE_WORK), "lever_figures": lever_line(sim)}
-    if sim.goal not in nodes:
+    if sim.view("goal")()["node"] not in nodes:
         return None
-    road = closure(nodes, sim.goal) - sim.done
+    road = closure(nodes, sim.view("goal")()["node"]) - sim.view("techniques_held")()
     on_road = {node_id for ids in kinds.values() for node_id in ids} & road
     if not on_road or any(node_id not in kinds.get("calendar", ()) for node_id in on_road):
         return None
-    if any(node_id not in sim.active and sim.start_reason(node_id)[0] for node_id in road):
+    if any(node_id not in sim.view("active_projects")() and sim.view("start_check")(node_id)[0] for node_id in road):
         return None
     return {"every_goal_project_calendar_bound": True,
             "text": ("every project on the road to your goal (%d running) is only waiting on its calendar "
@@ -60,9 +60,9 @@ def filler_note(sim, cheapest_id, nodes):
 
     Silent under fog (the route is hidden) and for a start that is on the remaining route.
     """
-    if cheapest_id is None or sim.fog or sim.goal not in nodes:
+    if cheapest_id is None or sim.view("fog_of_war")() or sim.view("goal")()["node"] not in nodes:
         return None
-    if cheapest_id in closure(nodes, sim.goal) - sim.done:
+    if cheapest_id in closure(nodes, sim.view("goal")()["node"]) - sim.view("techniques_held")():
         return None
     note = ("%s is only the cheapest startable thing, not a step toward your goal: filler unless you "
             "want it for its own sake." % cheapest_id)

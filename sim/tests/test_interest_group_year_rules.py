@@ -11,8 +11,10 @@ import unittest
 from sim.agents.api import ActorRecord, Sector
 from sim.agents.group import InterestGroup
 from sim.agents.group_tuning import GRIEVANCE_RETENTION, GROUP_PULL_SCALE
-from sim.engine.agents_port_groups import GroupView
-from sim.engine.interest_groups import InterestGroupsMixin, check_group_prohibition
+from sim.actors.world_groups import GroupView
+from sim.polity.state import PolitySeat
+from sim.tests import polity_host
+from sim.tests.world_stand_in import fake_needs
 from sim.refusal import cause_of
 
 REVENUE = 1.0e6
@@ -148,20 +150,12 @@ class GroupYear(unittest.TestCase):
         self.assertEqual(demands[True], [])
 
 
-class FounderReads(InterestGroupsMixin):
-    """The reading side over a given list of group records."""
-
-    def __init__(self, records, unfunded=None):
-        self.records = records
-        self.unfunded = unfunded or {}
-        self.civ = {}
-        self.state = types.SimpleNamespace(actors=types.SimpleNamespace(records=records))
-
-    def _group_records(self):
-        return self.records
-
-    def state_treasury(self):
-        return types.SimpleNamespace(record=types.SimpleNamespace(unfunded=self.unfunded))
+def founder_reads(records, unfunded=None):
+    """The polity module's reading side over a given list of group records."""
+    module = polity_host.build(state_treasury=types.SimpleNamespace(record=types.SimpleNamespace(unfunded=unfunded or {})),
+                               cast_recorded=bool(records))
+    module._group_records = lambda: records
+    return module
 
 
 class FounderReadsOfGroups(unittest.TestCase):
@@ -174,88 +168,78 @@ class FounderReadsOfGroups(unittest.TestCase):
         return ActorRecord(**base)
 
     def test_a_founder_who_hurt_nobody_has_no_groups_and_the_report_says_so_in_a_note(self):
-        reads = FounderReads([])
+        reads = founder_reads([])
         self.assertEqual(reads.interest_groups(), [])
         self.assertEqual(reads.interest_groups_report()["groups"], [])
 
     def test_a_row_carries_the_records_figures(self):
-        row = FounderReads([self.record()]).interest_groups()[0]
+        row = founder_reads([self.record()]).interest_groups()[0]
         self.assertEqual((row["kind"], row["people"], row["income_lost_per_year"], row["state_undertakes_to_make_good"]),
                          ("displaced_producers", 400, 1000, 300))
 
     def test_the_report_totals_what_the_state_leaves_unpaid_on_group_lines(self):
-        reads = FounderReads([self.record()], {"concession: group:displaced_producers:iron": 40.0, "road": 9.0})
+        reads = founder_reads([self.record()], {"concession: group:displaced_producers:iron": 40.0, "road": 9.0})
         report = reads.interest_groups_report()
         self.assertEqual(report["state_leaves_unpaid_to_raise_from_taxpayers"], 40)
         self.assertTrue(report["state_in_deficit"])
 
     def test_a_paid_group_is_no_reason_for_a_levy_and_an_unpaid_one_is(self):
-        paid = FounderReads([self.record()], {"concession: group:displaced_producers:iron": 0.0})
-        unpaid = FounderReads([self.record()], {"concession: group:displaced_producers:iron": 40.0})
+        paid = founder_reads([self.record()], {"concession: group:displaced_producers:iron": 0.0})
+        unpaid = founder_reads([self.record()], {"concession: group:displaced_producers:iron": 40.0})
         self.assertEqual(paid.group_levy_reasons(), [])
         self.assertEqual(len(unpaid.group_levy_reasons()), 1)
 
 
-class Prohibition(InterestGroupsMixin):
-    """check_group_prohibition and group_prohibition_of over a stated ban."""
-    STATE_OPPOSITION_PROTECTION_OVERRIDE = 0.5
-
-    def __init__(self, ban=None, protection=0.0, state_interest=0.0):
-        self.ban = ban
-        self.nodes = {"press": {"name": "Press"}}
-        self.state = types.SimpleNamespace(
-            actors=types.SimpleNamespace(records=[1]), household=types.SimpleNamespace(protection=protection))
-        self.actors = types.SimpleNamespace(prohibitions=lambda: {}, home_actors=lambda kind: [])
-        self._interest = state_interest
-
-    def _technique_bans(self):
-        return {} if self.ban is None else {"press": self.ban}
-
-    def state_interest(self, node):
-        return self._interest
+def prohibition(ban=None, protection=0.0, state_interest=0.0):
+    """The polity module over a stated ban, a founder's protection and the state's interest in the node."""
+    module = polity_host.build(seat=PolitySeat(protection=protection), tree_nodes={"press": {"name": "Press"}},
+                               cast_recorded=True)
+    module._technique_bans = lambda: {} if ban is None else {"press": ban}
+    module.state_interest = lambda node: state_interest
+    return module
 
 
 class StartGate(unittest.TestCase):
 
     def test_without_a_group_nothing_is_forbidden(self):
-        self.assertIsNone(Prohibition().group_prohibition_of("press"))
-        self.assertIsNone(check_group_prohibition(Prohibition(), "press", {}, False, None, True))
+        self.assertIsNone(prohibition().group_prohibition_of("press"))
+        self.assertIsNone(prohibition().start_gate_group_prohibition("press", {}, False, None, True))
 
     def test_a_technique_a_group_wants_banned_is_refused_to_a_founder_without_cover(self):
-        game = Prohibition(ban=("producers of iron", 0.6))
-        verdict = check_group_prohibition(game, "press", game.nodes["press"], False, None, True)
+        module = prohibition(ban=("producers of iron", 0.6))
+        verdict = module.start_gate_group_prohibition("press", {"name": "Press"}, False, None, True)
         self.assertIs(verdict[0], False)
 
     def test_protection_above_what_the_groups_pull_needs_lets_the_founder_build(self):
-        needed = 0.5 + (1.0 - 0.5) * 0.6
-        below = Prohibition(ban=("producers of iron", 0.6), protection=needed - 0.01)
-        above = Prohibition(ban=("producers of iron", 0.6), protection=needed + 0.01)
-        self.assertIsNotNone(check_group_prohibition(below, "press", {}, False, None, True))
-        self.assertIsNone(check_group_prohibition(above, "press", {}, False, None, True))
+        from sim.projects.api import constants as projects_constants
+        override = projects_constants.STATE_OPPOSITION_PROTECTION_OVERRIDE
+        needed = override + (1.0 - override) * 0.6
+        below = prohibition(ban=("producers of iron", 0.6), protection=needed - 0.01)
+        above = prohibition(ban=("producers of iron", 0.6), protection=needed + 0.01)
+        self.assertIsNotNone(below.start_gate_group_prohibition("press", {}, False, None, True))
+        self.assertIsNone(above.start_gate_group_prohibition("press", {}, False, None, True))
 
     def test_a_node_the_state_itself_values_is_not_forbidden(self):
-        game = Prohibition(ban=("producers of iron", 0.6), state_interest=1.0)
-        self.assertIsNone(game.group_prohibition_of("press"))
+        module = prohibition(ban=("producers of iron", 0.6), state_interest=1.0)
+        self.assertIsNone(module.group_prohibition_of("press"))
 
-    def test_the_prohibition_is_one_of_the_start_gates_checks(self):
-        from sim.engine.core import Sim
-        self.assertIn(check_group_prohibition, Sim._START_REASON_CHECKS)
+    def test_the_prohibition_is_one_of_the_start_gates_checks_and_names_the_politics_blocker(self):
+        from sim.projects.api import START_CHECKS
+        gate = next(check for check in START_CHECKS if check.cause == "group_prohibition")
+        self.assertEqual((gate.source, gate.kind), ("start_gate_group_prohibition", "politics"))
 
 
 class HurtSectors(unittest.TestCase):
 
     def view(self, state, quote, pressured=None, factor=1.0):
-        economy = types.SimpleNamespace(
-            goods=types.SimpleNamespace(commodities_sold_by=lambda party: ["iron"]), main_material_of=lambda commodity: commodity,
-            trade_quote=lambda material: quote,
-            labour=types.SimpleNamespace(pressured_trades=lambda: pressured or [], price_factor=lambda trade: factor,
-                                         unscarce_annual=lambda trade: 100.0))
-        sim = types.SimpleNamespace(
-            economy=economy, goods_market=types.SimpleNamespace(acting_party_id="founder"), market_state=lambda commodity: state,
-            HOURS_PER_PERSON_YEAR=2000.0, labour=types.SimpleNamespace(market_supply=lambda trade: 2.0e6, local_market_share=lambda: 0.8),
-            civ={})
         view = GroupView()
-        view._sim = sim
+        view.needs = fake_needs(
+            commodities_sold_by_acting_party=["iron"], main_material_of=lambda commodity: commodity,
+            material_trade_quote=lambda material: quote, market_state=lambda commodity: state,
+            market_supply=lambda trade: 2.0e6, local_market_share=0.8, mass_rate_text=lambda amount, **options: "%s a year" % amount)
+        view.labour_market = types.SimpleNamespace(pressured_trades=lambda: pressured or [], price_factor=lambda trade: factor,
+                                                   unscarce_annual=lambda trade: 100.0)
+        view.hours_per_person_year = 2000.0
         view.pay_per_person_year = lambda trade: 100.0
         return view
 

@@ -11,19 +11,16 @@ QUICK_TOPIC = True
 import collections
 import random
 import unittest
+
 from types import SimpleNamespace
 
-from sim.engine import cash_remedies  # noqa: F401  (settles the import cycle through project_materials)
-from sim.engine.defence_stores import DefenceStoresMixin
+from sim.defence_stores.module import DefenceStores
 from sim.engine import validate_defence_stores
-from sim.engine.hazard_relief import HazardReliefMixin
-from sim.engine.living_stock import LivingStockMixin
-from sim.engine.living_stock_yearly import LivingStockYearlyMixin
-from sim.engine.mechanics import MechanicsMixin
-from sim.engine.projects_open_gate import OpenGateMixin
-from sim.engine.projects_staffing_shortfall import StaffingShortfallMixin
-from sim.engine.projects_ventures import VenturesMixin
-from sim.engine.society_hazards import HazardsMixin
+from sim.mechanics.module import Mechanics
+from sim.living_stock.api import ChangeHeld
+from sim.tests import module_harness
+from sim.tests import hazards_host, projects_host, ventures_host
+from sim.workforce.module import Workforce
 
 POWDER_KG = "gunpowder_kg"
 WORKS, GUNS, WALL = "powder_works", "gun", "wall"
@@ -44,12 +41,18 @@ def _nodes():
     }
 
 
-class _Host(DefenceStoresMixin, HazardReliefMixin, HazardsMixin, LivingStockMixin, LivingStockYearlyMixin,
-            MechanicsMixin):
+class _Keyed:
+    def __init__(self, answer):
+        self.answer = answer
+
+    def __getitem__(self, key):
+        return self.answer(key)
+
+
+class _Host:
+    """The fake game the other mixins run on, with the defence-stores module built over it by the harness: its views are
+    this host's plain values, and a ChangeHeld it sends changes the host's ledger (kilograms are a thousandth of a tonne)."""
     HOURS_PER_PERSON_YEAR = 2000.0
-    STATE_MIL_RELIEF_PER_WEAPON_SACK = 0.0
-    HAZARD_EROSION_OWN_GOLD = HAZARD_EROSION_OWN_SILVER = 0.0
-    mine_capacity = {}
     civ_diffusion_share = 0.0
 
     def civ_diffusion(self, node_id):
@@ -66,18 +69,49 @@ class _Host(DefenceStoresMixin, HazardReliefMixin, HazardsMixin, LivingStockMixi
             projects=SimpleNamespace(done=done, granted=set(), operating=operating, closures={}),
             household=SimpleNamespace(employees={"soldier": soldiers}, log=[], _stock_throttle_sig=None),
             scenario=SimpleNamespace(year=year))
+        self.mechanics = module_harness.build(Mechanics, views={
+            "tree_nodes": self.nodes, "running": self.running,
+            "techniques_held": lambda: self.state.projects.done, "institution_units": self.institution_units,
+            "money_per_labour_hour": 1.0})
+        self.hazards = hazards_host.build(
+            civilisation=self.civ, year=lambda: self.state.scenario.year, hazard_counter_rows=self.mechanics.hazard_counter_rows,
+            techniques_held=lambda: self.state.projects.done, running=self.running, tree=self.nodes.get,
+            counter_supply_gap=lambda node_id, kind, label: self.counter_supply_gap(node_id, kind, label),
+            civ_diffusion=self.civ_diffusion)
+        self.defence = module_harness.build(DefenceStores, views={
+            "tree": self.nodes.get, "techniques_held": lambda: self.state.projects.done,
+            "operating": lambda: self.state.projects.operating, "is_venture": self.is_venture,
+            "staff": lambda: {"employees": self.state.household.employees},
+            "stock_held": self.stock_held, "year": lambda: self.state.scenario.year,
+            "live_hazard_kinds": self.hazards.live_hazard_kinds,
+            "running_mechanics": self.mechanics.running_mechanics,
+            "hours_per_person_year": lambda: self.HOURS_PER_PERSON_YEAR, "institution_units": self.institution_units,
+            "effects_in_force": self.mechanics.effects_in_force},
+            answers={ChangeHeld: self.change_held})
 
-    def _material_stock(self):
-        return self.ledger
+    def view(self, name):
+        """The published view `name`, as the mechanics module answers it."""
+        if name == "staff":
+            return lambda: {"employees": self.state.household.employees, "directors_extra": 0.0, "artisans": 0.0, "scholars": 0.0}
+        return _Keyed(self.mechanics.mechanic) if name == "mechanic" else getattr(self.mechanics, name)
 
-    def _material_opening_stock(self):
-        return {}
+    def stock_held(self, material):
+        return self.ledger.get(material, 0.0) * 1000.0
 
-    def _material_tag(self, material):
-        return (material, "mine:" + material)
+    def change_held(self, command):
+        self.ledger[command.material] = self.ledger.get(command.material, 0.0) + command.units / 1000.0
 
-    def material_stock_t(self, emp_key):
-        return self.ledger.get(emp_key, 0.0)
+    def venture_garrison(self, node_id, units=1.0):
+        return self.defence.venture_garrison(node_id, units)
+
+    def garrison_claims(self):
+        return self.defence.garrison_claims()
+
+    def counter_supply_gap(self, node_id, kind, label):
+        return self.defence.counter_supply_gap(node_id, kind, label)
+
+    def step_defence_stores(self):
+        self.defence.step_defence_stores("seat")
 
     def has(self, node_id):
         return node_id in self.state.projects.done
@@ -91,8 +125,14 @@ class _Host(DefenceStoresMixin, HazardReliefMixin, HazardsMixin, LivingStockMixi
     def institution_units(self, node_id):
         return 1.0 if self.running(node_id) else 0.0
 
-    def _state_military_diffusion_relief(self, _weight):
-        return 1.0, None
+    def hazard_relief_entries(self, kind, beyond_national=False):
+        return self.hazards.hazard_relief_entries(kind, beyond_national)
+
+    def hazard_relief(self, kind, beyond_national=False):
+        return self.hazards.hazard_relief(kind, beyond_national)
+
+    def _entry_words(self, entry):
+        return self.hazards._entry_words(entry)
 
 
 def _factor(host, label):
@@ -178,13 +218,17 @@ class HazardLabelsFollowTheMechanics(unittest.TestCase):
         self.assertLess(entry["factor"], 1.0)
 
 
-class _Survivors(HazardsMixin):
-    """The people of a household and the dice that decide who lives (`apply_staff_survival`)."""
+class _Survivors:
+    """The people of a household and the dice that decide who lives (the workforce module's survive_staff)."""
 
     def __init__(self, seed):
         self.rng = random.Random(seed)
         self.state = SimpleNamespace(household=SimpleNamespace(
             scholars=7.0, artisans=9.0, employees={"carpenter": 3.0, "smith": 5.0}))
+
+    def apply_staff_survival(self, survival_share):
+        workforce = module_harness.build(Workforce, seat=self.state.household, views={"acting_balance": lambda: self.state.household.capital, "game_random": self.rng})
+        workforce.survive_staff(survival_share)
 
 
 class PeopleStayWhole(unittest.TestCase):
@@ -258,23 +302,34 @@ class TheGarrisonMustBePresent(unittest.TestCase):
         self.assertEqual(host.venture_garrison(WORKS), {})
 
 
-class _Staffed(VenturesMixin, OpenGateMixin, StaffingShortfallMixin, _Host):
-    CAPABILITY_INSTITUTIONS = frozenset()
-    FOUNDER_IS_WORTH = 0.0
-    STAFFING_CLOSURE_SLACK = 0.5
-    labour = SimpleNamespace(effective_scholars=lambda: 100.0)
+class _Staffed(_Host):
+    """The host with the ventures module and the projects module's staffing rule built over it."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.state.household.artisans = 100.0
-        self.state.founder = SimpleNamespace(founder_alive=False)
-        self.state.projects.keep_staffed = set()
+        staff = lambda: {"artisans": 100.0, "scholars": 0.0, "employees": self.state.household.employees}
+        self.ventures_module = ventures_host.build(
+            tree_nodes=self.nodes, operating=self.state.projects.operating, institution_units=self.institution_units,
+            venture_garrison=self.venture_garrison, staff=staff, unskilled_trade="labourer")
+        self.projects_module = projects_host.build(
+            tree=self.nodes, operating=lambda: self.state.projects.operating, projects_record=self.state.projects,
+            institution_units=self.institution_units, venture_foreman=self.ventures_module.venture_foreman,
+            venture_garrison=self.venture_garrison, venture_foreman_free=self.ventures_module.venture_foreman_free,
+            venture_hands=lambda node_id: (0.0, 0.0), venture_staff_free=lambda: (10.0, 10.0), effective_scholars=100.0,
+            staff=staff, founder={"alive": False, "life_left": 0.0, "dead_reason": None, "policy": {}})
 
-    def venture_hands(self, node_id):
-        return 0.0, 0.0
+    def venture_foremen_used(self, excluding=None):
+        return self.ventures_module.venture_foremen_used(excluding)
 
-    def venture_staff_free(self):
-        return 10.0, 10.0
+    def staffing_open_refusal(self, node_id, unit_count=1.0, with_advice=True):
+        return self.projects_module.staffing_open_refusal(node_id, unit_count, with_advice)
+
+    def _staffing_draw_of(self, node_id, foreman_units=None):
+        return self.projects_module._staffing_draw_of(node_id, foreman_units)
+
+    def concerns_to_close_for_staffing(self):
+        return self.projects_module.concerns_to_close_for_staffing()
 
 
 class AGarrisonIsStaffedLikeAForeman(unittest.TestCase):

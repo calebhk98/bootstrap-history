@@ -9,7 +9,7 @@ import math
 from dataclasses import dataclass
 from typing import Dict, Mapping, Optional, Sequence
 
-from sim.engine.economy_port_trace import coin_wear_per_year
+from sim.markets.api import coin_wear_per_year
 
 # A price within an order of magnitude of what making the good costs: above it a worker-hour in making it sells
 # for many wages, below it nobody would make it. An order of magnitude is the widest grade spread among one
@@ -52,7 +52,7 @@ def price_over_cost(name: str, ratios: Mapping[str, float], bound: float = PRICE
 
 def money_against_wear(rows: Sequence[Mapping[str, float]], wear_share: float = coin_wear_per_year(),
                        decade: int = DECADE_YEARS) -> CheckResult:
-    """`rows` are the spin-up trace's years (economy_port_trace.spin_up_trace). The value is the money stock of the
+    """`rows` are the spin-up trace's years (port_trace.spin_up_trace). The value is the money stock of the
     last decade over that of the first decade. Unreplaced wear leaves (1 - wear) to the decade's power after one
     decade, and that is the lowest a mint that is replacing the wear may leave it (a lag of one decade is
     allowed, no more). Fewer than two decades of trace: no value, and fail."""

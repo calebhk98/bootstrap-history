@@ -1,308 +1,85 @@
 """The simulation itself: what one year does, and the loop over years."""
-import collections, copy, os, random, sys
+import copy, os, sys
 
 from sim.constants import declare
-from sim.refusal import LogLine
-from . import money_units
-from . import externalities
-from . import automation_audit
-from .mortality_shock import cut_cohorts
-from .disease_burden import burden_from_holdings
-from .wage_scarcity import wage_index_of
-from sim.engine.state import SimulationState, ActiveProjectState
-from sim.engine.state_seat import bind_seat
-from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
-                   nodes_in_civ_money, TECH_EFFECTS, TRADE_REGISTRY)
+from sim.demography.api import OpenPopulation, rules as demography_rules
+from sim.workforce.api import WatchStaff
+from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
+from sim.engine.state import SimulationState
+from sim.assembly.api import notify_seat_bound
+from .data import (DEFAULTS, kit_capital, load_civ,
+                   nodes_in_civ_money)
 
 from sim.world import demography
 from sim.world import agriculture
-from sim.world import farming_technique
+from sim.agriculture.api import RecordOpeningFarm, SetFarmTerritory
+from sim.finance.api import NoteLenderPosting
+from .farm_territory_refresh import refresh_farm_territory
 from sim.world import land
-from sim.world import weather_pooling
-from sim.geography.api import regions, tiles_held
-# Weather is drawn per the geography data land_tiles cell (see
-# `_compute_farm_weather_cells`).
-# Imported FULLY QUALIFIED (`sim.world.shared_constants`), not the bare
-# `from world import X` style `agriculture`/`demography` above use, and
-# deliberately so: `agriculture` and `land` (sim/world/) both already do
-# `from sim.world.shared_constants import (...)` at their own top (see that
-# file's own "HOW A CONSUMER USES ONE OF THESE" section), so by the time
-# this line runs, `sim.world.shared_constants` already exists in
-# sys.modules as ONE object. A bare `from world import shared_constants`
-# here would load `world/shared_constants.py` a SECOND time under a
-# DIFFERENT sys.modules key (`world.shared_constants`, not
-# `sim.world.shared_constants`) - the exact "same file, two module
-# objects" trap sim/ARCHITECTURE.md's "Two package roots, and what breaks
-# when you forget" section describes, avoided here on purpose rather than
-# repeated.
-from sim.world.shared_constants import (
-    GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM)
-# Same fully-qualified convention as shared_constants.py just above, for the
-# same reason - see sim/unit_conversions.py's own "HOW A CONSUMER USES ONE
-# OF THESE" section.
-from sim.unit_conversions import PERCENT_SCALE
 
 
-from .territory_required import require_territory
-from .win_condition_rule import win_condition_met
-from .starting_techs import declared_starting_techs, grant_starting_techs
-from .economy import EconomyMixin
-from .node_rederive import NodeRederiveMixin
-from .market_clearing import MarketClearingMixin
-from .foreign_economies import ForeignEconomiesMixin
-from .food_eaten import FoodEatenMixin
-from .demographic_recovery import DemographicRecoveryMixin
-from .regional_people import RegionalPeopleMixin
-from .urban_share import UrbanShareMixin
-from .food_supply import FoodSupplyMixin
-from .soil_nitrogen_year import SoilNitrogenMixin
-from .living_stock import LivingStockMixin
-from .living_stock_opening import LivingStockOpeningMixin
-from .coin_hoard import CoinHoardMixin
-from .theft_charge import TheftChargeMixin
-from .coin_carriage import CoinCarriageMixin
-from .living_stock_smuggling import LivingStockSmugglingMixin
-from .living_stock_trade import LivingStockTradeMixin
-from .living_stock_yearly import LivingStockYearlyMixin
-from .defence_stores import DefenceStoresMixin
-from .campaign_actors import CampaignActorsMixin
-from .campaign_year import CampaignYearMixin
-from .revolt_year import RevoltYearMixin
-from .captives import CaptivesMixin
-from .market_demand import MarketDemandMixin
-from .real_output import RealOutputMixin
-from .concern_volume import ConcernVolumeMixin
-from .concern_book_sales import ConcernBookSalesMixin
-from .techniques_in_use import TechniquesInUseMixin
-from .industry_concern import IndustryConcernMixin
-from .industry_depth import IndustryDepthMixin
-from .coin_revaluation import CoinRevaluationMixin
-from .real_price_ratios import RealPriceRatiosMixin
-from .incumbent_prices import IncumbentPricesMixin
-from .producer_costs import ProducerCostsMixin
-from .fog import FogMixin
-from .mechanics import MechanicsMixin
-from .disease_port import DiseasePortMixin
-from .geography_port import GeographyPortMixin
-from .labour_port import LabourPortMixin
-from .projects import ProjectsMixin
-from .core_seats import SeatMixin
+from sim.land.api import rules as land_rules
+from sim.knowledge.api import LearnTechnique, StartDoneYearRecord, declared_starting_techs
+from . import change_hooks, node_rederive, seat_registry, year_steps
 from .year_run import run_year
-from .seat_run import SeatRunMixin
-from .seat_builds import SeatBuildsMixin
-from .seat_sight import SeatSightMixin
-from .shock_year import ShockYearMixin
+from sim.knowledge.api import ReplaceTree
+from sim.seats.api import JoinCastSeats, SetFounderLife, SetGoal, SetPolicy
+from sim.refusal import Refusal
 from .seat_defaults import default_policy
-from .ways import WaysMixin
-from .held_works import HeldWorksMixin
-from .works import WorksMixin
-from .society import SocietyMixin
-from .society_actors import ActorsMixin
-from .society_disclosure import DisclosureMixin
-from .founder_sales import FounderSalesMixin
-from .seat_dealings import SeatDealingsMixin
-from .seat_bank import SeatBankMixin
-from .interest_groups import InterestGroupsMixin
-from .benefactions import BenefactionsMixin
-from .route_dues import RouteDuesMixin
-from .mod_stores import ModStoresMixin
-from .core_properties import ForwardingPropertiesMixin
-from .goals import GoalsMixin
-from .core_step_phases import StepContext, StepPhasesMixin
-from .economy_port import EconomyPortMixin
+from .root_facts import horizon_end_year, scenario_fact, view_fact
+from .year_steps import StepContext
 from .data import trade_family
 from .invariants import check_simulation_invariants
-from sim.agents.api import Household
-from .agents_port_household import HouseholdPort
+from sim.ledger.api import OpenCashBook, RestorePurse
+from sim.materials.api import RestoreReadings
+from sim.polity.api import SetValueWeights
+from sim.projects.api import RestoreProjectOrder, WatchActive
+from sim.ventures.api import WatchBusiness
+from sim.scenario.api import (OpenScenario, RecordOpeningLiteracy, ScenarioSources, SetEndYear, SetFog,
+                              SetYear)
+from . import units
 
 
-def _cell_morton_code(lat_degrees, lon_degrees, bits=16):
-    """A Z-order (Morton) code for a lat/lon point. Used only by
-    `Sim._cap_pooled_farm_weather_cells` to get a deterministic ordering
-    that keeps geographically close cells close together in a 1-D
-    sequence, so a contiguous run of that sequence is a genuine spatial
-    neighbourhood rather than an arbitrary batch.
-
-    Quantises latitude and longitude to `bits`-bit unsigned integers
-    (65,536 steps each by default - about 0.0027 degrees, tens of metres,
-    far finer than `land_tiles`' own 150,000 km2 cells, so this
-    quantisation is not the limiting factor on locality) and interleaves
-    their bits, the standard Z-order construction: reading the interleaved
-    bits back out recovers alternating lat/lon bits from most to least
-    significant, so two points near each other in BOTH lat and lon share
-    long common high-bit prefixes and land near each other in the sorted
-    1-D ordering.
-
-    NOT a distance metric, and not used as one anywhere else in this file.
-    `_compute_farm_weather_correlation_cholesky` still uses the real
-    chordal distance (`weather_pooling.chordal_position_km`) for every correlation
-    value; this code only decides which raw cells get MERGED together
-    before that calculation ever runs, when there are more of them than
-    `FARM_WEATHER_POOLED_CELL_CAP` allows.
-    """
-    lat_fraction = (lat_degrees + 90.0) / 180.0
-    lon_fraction = (lon_degrees + 180.0) / 360.0
-    scale = 1 << bits
-    lat_int = min(scale - 1, max(0, int(lat_fraction * scale)))
-    lon_int = min(scale - 1, max(0, int(lon_fraction * scale)))
-    code = 0
-    for bit_index in range(bits):
-        code |= ((lat_int >> bit_index) & 1) << (2 * bit_index)
-        code |= ((lon_int >> bit_index) & 1) << (2 * bit_index + 1)
-    return code
-
-
-# STAKEHOLDER ITEM 7 ("the weather is currently O(n^3) initialization and
-# O(n^2) per year to run... we currently are not able to go up to a 10k
-# tile system, because of the weather"). Full measurement and the option
-# comparison this constant implements are in docs/architecture/
-# MAP_AND_WEATHER.md section 4.2 - "cap the number of pooled weather cells
-# independently of how fine the map is", the document's own recommended
-# option (4.6's comparison table: removes the O(n^3) exponent entirely,
-# changes the answer only marginally and defensibly, violates no §3.1
-# rule, needs no new dependency).
-#
-# WHY THIS IS SAFE ON THE MODEL'S OWN TERMS, NOT JUST A PERFORMANCE DODGE.
-# `land_tiles` cells are already, at today's 150,000 km2 target size,
-# well inside one GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM (600 km)
-# of most of their neighbours - MAP_AND_WEATHER.md section 3.4 measures a
-# 115 km side length for a hypothetical 10,000-tile grid over the same
-# land area, and exp(-115/600) = 0.83, i.e. two such cells would draw
-# ALMOST the same weather anyway. A finer grid than the cap resolves
-# detail the correlation kernel has no physical basis to treat as
-# independent; capping cell count removes compute cost the model was
-# never using for anything the kernel could tell apart.
-#
-# WHY 100, NOT A DERIVED FIGURE. A fully derived cap would come from a
-# civilisation's own geographic extent divided by the decorrelation
-# length (how many roughly-600-km-separated patches does this territory
-# actually span), which needs a per-civilisation footprint measure this
-# file does not compute today. That mechanism does not exist yet, so per
-# CLAUDE.md section 3.4 this is labelled as what it is: a round number
-# chosen to sit just above the largest cell count this project ships
-# today - the largest resolves to 88 land_tiles cells across its 7 home
-# regions (sim/tests/test_growing_season_weather_correlation.py's own
-# test_romes_seven_regions_resolve_to_88_land_tiles_cells), the largest
-# of the shipped civilisations (the others are smaller; measure them
-# with the test named above) - so every civilisation this project
-# ships today keeps its EXACT current cell count and weather draw
-# unchanged (100 >= 88), while a future finer `land_tiles` grid, or a
-# civilisation with a larger territory than Rome's, is bounded rather
-# than left to grow cubically. Not tuned to reproduce any price or
-# population figure; tuned only to today's largest MEASURED cell count.
-FARM_WEATHER_POOLED_CELL_CAP = declare(
-    "FARM_WEATHER_POOLED_CELL_CAP", 100,
-    kind="temporary_heuristic",
-    unit="count (pooled growing-season weather cells per civilisation, an "
-         "upper bound independent of land_tiles resolution)",
-    source="Not a measured or published figure. Anchored to the largest shipped "
-           "civilisation's measured cell count today (88 - see the comment above this "
-           "declaration for the exact figures and the test that pins "
-           "them) plus headroom, not derived from a formula relating cell "
-           "count to GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM.",
-    confidence="D",
-    why="Bounds the O(cell_count**3) one-time Cholesky factorisation in "
-        "_compute_farm_weather_correlation_cholesky and the "
-        "O(cell_count**2) per-simulated-year matrix-vector product in "
-        "_pooled_farm_weather_multiplier to a constant cost regardless of "
-        "how many land_tiles cells a civilisation's home_regions map to - "
-        "the fix for stakeholder item 7 (a 10,000-tile map was otherwise "
-        "unaffordable: measured directly, Rome's own cell count would "
-        "grow from 88 to about 773 at that resolution, costing about "
-        "3.5-4 seconds of factorisation per Sim() construction, and a "
-        "default --mc 200 Monte Carlo run builds 200 of them, so roughly "
-        "twelve minutes of pure matrix setup for one ordinary `run` "
-        "invocation). At or under the cap nothing changes; above it, "
-        "cells are MERGED (not dropped) into cap-many spatially-coherent "
-        "pooled cells, each weighted by the summed arable land area of "
-        "its members - see _cap_pooled_farm_weather_cells.")
-
-
-
-class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, ConcernBookSalesMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
-          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, SeatBankMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
-          StepPhasesMixin, LivingStockMixin, LivingStockOpeningMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
-          LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, UrbanShareMixin, DefenceStoresMixin, CampaignActorsMixin, CampaignYearMixin, RevoltYearMixin, CaptivesMixin, EconomyPortMixin, NodeRederiveMixin):
-    DEFAULT_POPULATION_100AD = declare(
-        "DEFAULT_POPULATION_100AD", 65e6, kind="initial_condition",
-        unit="people", source="Widely cited estimate of the Roman Empire's "
-             "population around 100 AD.",
-        confidence="C",
-        why="Fallback starting population, and the reference population "
-            "pop_scale=1.0 is defined against, for a civilisation file "
-            "that does not set its own `population` field. Every shipped "
-            "civ file does set one; this is the scenario's own initial "
-            "condition, not a tuned game-balance number.")
-    FOUNDER_MIN_REMAINING_LIFE_YEARS = declare(
-        "FOUNDER_MIN_REMAINING_LIFE_YEARS", 5, kind="temporary_heuristic",
-        unit="years", source=None, confidence="D",
-        why="Floor on the founder's gaussian-drawn remaining lifespan, so "
-            "an unlucky draw does not end a run in its first years before "
-            "anything is possible. Round guard value, not a mortality "
-            "estimate.")
-    POP_SCALE_FLOOR = declare(
-        "POP_SCALE_FLOOR", 0.05, kind="temporary_heuristic",
-        unit="dimensionless (minimum pop_scale)", source=None,
-        confidence="D",
-        why="Floor under pop_scale so a tiny starting civilisation "
-            "population never divides a formula by something vanishingly "
-            "small. Guard value, not a demographic claim.")
-
+class Sim:
     # DISEASE_BURDEN_TECH_IDS (nodes declaring the `disease_burden` mechanic) is
-    # provided by MechanicsMixin; food techs in _TECH_EFFECTS.json do not declare it.
+    # provided by the mechanics module (sim/mechanics); food techs in _TECH_EFFECTS.json do not declare it.
 
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
                  bounty_set=None, civ=None, manual=False, debug=None, defer_economy=False):
-        self.nodes = nodes
-        # PRECOMPUTED ONCE: which node ids carry a `win_condition` at all,
-        # sorted for the same reproducibility reason _check_win_conditions
-        # (below) needs a fixed order. self.nodes is the loaded tech tree -
-        # assigned exactly once, right here, and never reassigned or mutated
-        # (checked: `grep -rn "self\.nodes\[.*\]\[.*\] *="` across every file
-        # in this package turns up nothing, and every other write of
-        # `self.nodes` anywhere is a *different* class's unrelated attribute
-        # of the same name in commodities.py's CommodityLedger). So a node's
-        # win_condition membership can never change after this point, so this
-        # list is built once here: `_check_win_conditions` only needs the
-        # handful of node ids that carry a win_condition, and sorting all
-        # ~2,849 node ids from `self.nodes` for that every single year would
-        # be pure waste.
-        self._win_condition_keys = sorted(
-            node_id for node_id, node in nodes.items() if node.get("win_condition"))
-        self.order = list(order)
-        self.rng = rng
         self._agriculture = agriculture
         self._demography = demography
-        self._tech_effects = TECH_EFFECTS
         self.step_context = StepContext(
             trade_family=trade_family,
             invariant_checker=check_simulation_invariants)
         self.debug = __debug__ if debug is None else bool(debug)
-        self.events = events
-        self.cfg = dict(DEFAULTS, **(cfg or {}))
         self.verbose = verbose
-        self.bounty_set = set(bounty_set or ())
-        self.civ = copy.deepcopy(civ or load_civ())
-        self.start_civ = copy.deepcopy(self.civ)    # the opening values, kept while self.civ drifts
+        from . import game_assembly
+        from .bridge_land import MODS_DIR
+        self.mods_dir = MODS_DIR   # this game's mods: its assembly, its policy switches and its seats' defaults read this
+        self.assembly = game_assembly.build(self.mods_dir, self.debug)
+        self._scenario = self.assembly.modules["scenario"]
+        # the setup the game is played in: the civilisation, the configuration, the modes (the scenario module owns them)
+        self.send(OpenScenario(
+            civilisation=copy.deepcopy(civ or load_civ()), configuration=dict(DEFAULTS, **(cfg or {})), manual=bool(manual),
+            events=events, bounty_set=set(bounty_set or ()),
+            sources=ScenarioSources(load_civilisation=load_civ, kit_capital=kit_capital,
+                                    display_units=lambda: (units.registry(), units.chosen_units(), lambda: units.unit_context(self))),
+            dice=rng))
         self.nodes = nodes_in_civ_money(nodes, self.civ)
-        self._remember_derived_gates(self.civ["starting_techs"])
+        node_rederive.remember_derived_gates(self, self.civ["starting_techs"])
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
-            SimulationState, HouseholdState, ProjectsState, ActorsState,
-            EconomyState, GovernanceState, FounderState,
-            ScenarioState, PopulationState
+            SimulationState, HouseholdState,
+            EconomyState, FounderState
         )
         self.state = SimulationState(
-            household=HouseholdState(capital=0.0),
-            projects=ProjectsState(),
+            household=HouseholdState(),
             economy=EconomyState(),
-            governance=GovernanceState(),
             founder=FounderState(),
-            scenario=ScenarioState(),
-            population=PopulationState(),
-            actors=ActorsState(),
             _civ=self.civ.get("id"),
         )
+        game_assembly.attach(self)   # the modules answer from here on: the opening below already sends commands
+        self.send(RestoreProjectOrder(tuple(order)))   # the order the household's hours serve projects, opened from the tree's
         # SET HERE SO EVERY READER CAN READ THEM DIRECTLY. Both are assigned
         # afterwards by whoever builds the game - cli_interactive, cli_agent,
         # sim/tests/fingerprint.py - and both round-trip through saveload's `_fog`
@@ -320,149 +97,48 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         # suite green.
         self.fog = False
         self.goal = None
+        # set after the build by whoever front-ends the game (and `seed` again by a load); None while a game has none
+        self.seed = None
+        self.session_seat = None
+        self._stack_cautions = {}   # per seat: whether it was told of the stack caution
+        self._founder_death_cache = None   # the founder's death read off the log by the UI, once it is found
         # MANUAL MODE: the optimizer in step() 4b never starts anything on its
         # own. The only projects that ever become active are ones something
         # called start_project() on, i.e. a human or an agent choosing them.
         # See the comment on step() 4b and on start_project() for why this
         # exists: without it, "choosing" a node in `play` was cosmetic.
-        self.manual = bool(manual)
-        self.value_weights = self.civ["values"]
+        self.send(SetValueWeights(tuple(self.civ["values"].items())))
         # A civilization brings its own date, its own price level and its own
         # capacity to fund things. Norse Scandinavia does not start in 100 AD.
-        self.cfg["start_year"] = int(self.civ.get("year", self.cfg["start_year"]))
         self.price_index = float(self.civ.get("price_index", 1.0))
-        self._wage_index_base = float(self.civ.get("wage_index", 1.0))
-        # A PLAGUE IS A HIT TO THE WHOLE LABOUR MARKET, NOT ONLY TO YOU. A
-        # mortality event large enough to take a third of one household's
-        # own staff must not leave everybody ELSE's wages untouched, as if
-        # the rest of the world's labour market saw nothing happen.
-        # pop_scale is a computed property over the age-cohort population;
-        # a mortality shock cuts the cohorts directly.
-        # An age-cohort population (docs/architecture/WIRING_MILESTONE_4.md
-        # SS6), built and proven standalone in sim/world/demography.py, and
-        # read and mutated by pop_scale/wage_index (below) and by _shocks()
-        # (society.py). `Population.stationary()` finds the model's OWN
-        # stable age structure for a population of this civilisation's
-        # configured size, rather than an independently invented split - see
-        # that method's own docstring for why.
-        #
-        # SEEDED, DELIBERATELY NOT FROM self.rng: Population owns its own
-        # generator (for the `jitter=True` path only - see self._demography.py's
-        # NUTRITION_YEAR_TO_YEAR_NOISE_STD), and nothing in this engine ever
-        # passes jitter=True (see _advance_population below), so this seed
-        # never actually gets drawn from. It is derived from the
-        # civilisation's own id, not Python's randomised string hash() (which
-        # would depend on PYTHONHASHSEED and break determinism across
-        # processes), purely so two civilisations do not happen to share one.
-        _population_seed = sum((index + 1) * ord(character) for index, character
-                               in enumerate(str(self.civ.get("id", "civ")))) % (2 ** 32)
-        self.population = self._demography.Population.stationary(
-            float(self.civ.get("population", self.DEFAULT_POPULATION_100AD)),
-            seed=_population_seed)
+        # the nation's people: the age structure its civilisation's size settles into (the demography module owns them)
+        self.send(OpenPopulation())
         # Initial condition: cleared area is what feeds the starting
         # population given the yield of the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
-        held_tiles = tiles_held(self.civ, self.world_map)
-        require_territory(self.civ, held_tiles)
-        territory = land.territory_cropland(self.farm_sites())
-        self._farm_ladder = territory.ladder
-        self._farm_arable_ceiling = territory.cropped_hectares
+        held_tiles = self.view("tiles_listed_by")(self.civ)
+        land_rules.require_territory(self.civ, held_tiles)
+        territory = land.territory_cropland(self.view("farm_sites")())
+        self.send(SetFarmTerritory(territory.ladder, territory.cropped_hectares))
         self.labour.set_farm_area(self._agriculture.farmland_for_population(
-            self._adult_equivalent_population(self.population), ladder=self._farm_ladder).hectares)
-        self._opening_farmed_hectares = self.farm_land.hectares
-        # WIRING THREE (Complaints/49-one-label-draws-one-coin.md), REPLACING
-        # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
-        # weights` (Complaints/46): this civilisation's territory is broken
-        # into the geography data `land_tiles` cells (see `_compute_farm_
-        # weather_cells`'s own docstring for why tiles rather than region
-        # records), each cell's SHARE of the civilisation's cultivable land,
-        # and the CORRELATION between every pair of cells given how far
-        # apart they sit - both precomputed ONCE here, not every year, for
-        # the same reason `farm_land` just above is: `home_regions`, the
-        # tile geometry and each tile's own arable-land figure are all fixed
-        # for the life of a run, so recomputing either every
-        # `_demographic_recovery` call would rebuild the identical result
-        # 100 times over a century for nothing. The correlation step is the
-        # expensive one of the two (a Cholesky factorisation, O(cells^3)),
-        # which is exactly why it belongs here and not inside the per-year
-        # draw. Needs no SAVE_FIELDS entry for the same reason `farm_land`
-        # needs none: `Sim.__init__` reconstructs both identically, from
-        # `self.civ`'s own unchanging `home_regions` and the geography data
-        # file (neither of which a save mutates), on every construction,
-        # before `load_state` runs.
-        self._farm_weather_cells = self._compute_farm_weather_cells()
-        self._farm_weather_correlation_cholesky = (
-            self._compute_farm_weather_correlation_cholesky(self._farm_weather_cells))
-        self._farm_tile_arable_share = self._compute_farm_tile_arable_share()
-        # THE GRANARY (Complaints/44-no-granary-so-the-baseline-collapses.md).
-        # Started at zero, not at some invented reserve: this is an INITIAL
-        # CONDITION (CLAUDE.md SS3.1's own allowed category, same as
-        # `farm_land` just above), and the honest initial condition for "how
-        # much surplus this civilisation has banked at the moment the
-        # simulation begins observing it" is "none recorded" rather than a
-        # figure picked to soften the first few years - see
-        # GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration (self._agriculture.py)
-        # for where a sourced, physically-grounded number DOES enter this
-        # mechanism (the CEILING on how large a buffer can grow, not the
-        # starting point). What actually answers Complaints/44 is that
-        # `_demographic_recovery` below carries whatever THIS ATTRIBUTE holds
-        # forward from year to year: it must not rebuild an
-        # `self._agriculture.Storage` at stock_kg=0.0 every single year regardless
-        # of what the previous year harvested, or the starting value would
-        # not matter.
-        # SAVE_FIELDS ("farm_stock_kg", sim/engine/saveload.py) is
-        # what makes that survive a --session save/load, exactly the same
-        # concern `pop_children`/`pop_working_age`/`pop_elderly` were added
-        # for a milestone earlier - state a hazard or a harvest can move
-        # away from its constructor default has to round-trip, or a player
-        # who saves and resumes plays a quietly different, easier game than
-        # one who does not.
-        self.farm_stock_kg = 0.0
-        # Diagnostic only - see `_demographic_recovery`'s own comment on
-        # `_last_farm_year` for why this is not a SAVE_FIELDS member.
-        self._last_farm_year = None
-        self._last_demographic_step = None
-        self._last_farm_workers_fte = None
-        self._farm_technique_this_year = farming_technique.DEFAULT_TECHNIQUE
-        self.year = self.cfg["start_year"]
+            demography_rules.adult_equivalents(self.view("population")()), ladder=self.view("farm_ladder")()).hectares)
+        self.send(RecordOpeningFarm())
+        # the weather cells and their correlation are fixed for the life of a run: built now, from the territory as it opens
+        self.view("farm_weather_cells")()
+        # the granary starts empty (an initial condition) and carries over between years (demography's farm year)
+        self.send(SetYear(self.cfg["start_year"]))
         config = self.cfg
-        # THE FOUNDER'S HOUSEHOLD: money, staff, knowledge, plant and standing,
-        # as its own object rather than eighty-odd attributes of this one. See
-        # sim/agents/household.py for what it holds and
-        # docs/architecture/HOUSEHOLD_EXTRACTION.md for why: making this an
-        # object of its own, rather than more state on `Sim`, is what would let
-        # a government, a rival household or a firm exist someday, each owning
-        # its own purse and its own knowledge instead of sharing this one.
-        #
-        # AT THIS SOCIETY'S PRICES, like everything else you will spend it on.
-        # The kits are stated in labourer-years; since revenue and
-        # living costs convert through `price_index` (see
-        # economy.living_cost), leaving the purse flat would mean "four
-        # hundred denarii" buys a third more months of bread in Luoyang than
-        # in Scandinavia, silently, for no modelled reason. A kit is "a few
-        # months' subsistence", and a few months'
-        # subsistence costs what it costs where you are. Computed here, where
-        # `price_index` is in scope, and handed in as a plain number: a
-        # Household should not need to know the shape of a run's config dict
-        # to be built.
-        #
-        # `operating_changed=self._operating_changed`: `self` (this Sim) is
-        # fully allocated already, even this early in `__init__` - Python
-        # hands `__init__` a real, if not-yet-populated, instance - so a bound
-        # method of it can be passed down right now. See Household.__init__'s
-        # own docstring for why the callback travels this way instead of the
-        # household reaching back up for it.
+        # The opening purse is at this society's prices: the kits are stated in labourer-years, and revenue and living costs convert
+        # through `price_index`, so a purse left flat would buy a third more months of bread in Luoyang than in Scandinavia.
         start_money = config["start_capital"]
         if start_money is None:
             start_money = kit_capital(config["start_kit"], self.civ)
-        self.household = Household(
-            starting_capital=float(start_money) * self.price_index,
-            operating_changed=self._operating_changed,
-            active_changed=self._active_changed,
-            workforce_changed=self._workforce_changed,
-            state=self.state,
-            port=HouseholdPort())
-        self._seat_facades = {self.state.acting_seat: self.household}
+        opening_cash = float(start_money) * self.price_index
+        self.send(RestorePurse(opening_cash))   # the seat's opening purse, and the cash its book measures from
+        self.send(OpenCashBook(opening_cash))
+        self.send(WatchStaff(self.state.acting_seat))
+        self.send(WatchActive(self.state.acting_seat))
+        self.send(WatchBusiness(self.state.acting_seat))
         # EVERY AUTOMATIC BEHAVIOUR, IN ONE PLACE, SWITCHABLE.
         #
         # Everything automatic must be controllable: a player can enable or
@@ -472,11 +148,8 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         # manages its own household; a player is handed nothing they did not
         # ask for.
         #
-        # STAYS ON `Sim`, NOT ON `Household` - see household.py's module
-        # docstring: one key, auto_court_heir, is written for succession after
-        # a mortal owner's death, and the rest of the dict is not worth
-        # splitting away from it for that.
-        self.policy = default_policy(manual)
+        for name, value in default_policy(manual, self.mods_dir).items():
+            self.send(SetPolicy(name, value))
         # World-level "last time I said X" trackers; household ones live on HouseholdState.
         # THE FOLLOWING EIGHT FIELDS ARE BIOGRAPHICAL TO ONE MORTAL PERSON, not
         # to a household in general, and stay on `Sim` for exactly that reason
@@ -485,814 +158,113 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         # design against, what death, personal hours or a patron mean for a
         # firm or a government; that is a real design question and this
         # extraction does not answer it by default.
-        self.state.founder.founder_alive = True
-        self.state.founder.dead_reason = None
-        self.state.founder.director_hours_spent_founder = 0.0
         # founder remaining lifespan, elite male already aged 35
-        self.state.founder.life_left = (1e9 if self.cfg["immortal"]
-                          else max(self.FOUNDER_MIN_REMAINING_LIFE_YEARS,
-                                    rng.gauss(self.cfg["founder_life_mean"],
-                                              self.cfg["founder_life_sd"])))
-        self.state.founder.living_cost_paid = 0.0
-        self._spend_this_year = 0.0
-        # WORLD state: monetary and real facts about the whole civilisation,
-        # not about this household. money_real is currency debasement;
-        # output_factor is the health of the whole imperial
-        # economy relative to 100 AD, crushed by war and plague, not by any
-        # one household's fortunes.
-        self.money_real = 1.0     # purchasing power of one coin, 1.0 at the start date
-        self.output_factor = 1.0  # real output, crushed by war and plague, not by debasement
+        life = self.view("founder_life_terms")()
+        self.send(SetFounderLife(1e9 if life["immortal"]
+                                 else max(life["minimum"], rng.gauss(life["mean"], life["spread"]))))
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # How much of each material physically exists: a material's
         # existence somewhere does not mean an unlimited quantity of it is
         # available.
-        self.res = load_resources()
         # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY (computed once; see sim/geography/)
-        self.geography.open(load_geography(self.world_map))
+        self.view("legacy_geography")().open(self.view("geography_data")())
         # Whatever this civilization already has is free and already done, and it
         # is GRANTED, not earned: it must never count in done_earned as though
         # the founder had built it, and it must never be "forgotten" in a
         # sacking - Han China does not forget how to cast iron because your
         # workshop burned down.
         #
-        # Populates self.household.done/.granted, not a fresh set here, and
-        # stays on Sim rather than moving into Household.__init__ because it
+        # Sends LearnTechnique(granted=True) for each; stays on Sim because it
         # needs the loaded tree and civ record to validate against (and to
         # raise ValueError on an unknown starting technology) - state this
         # class deliberately does not hold a reference to.
         starting_techs = declared_starting_techs(self.civ, self.nodes)
-        grant_starting_techs(self.state.projects, starting_techs, self._done_changed)
-        self.grant_opening_stock()
+        for tech_id in starting_techs:
+            self.send(LearnTechnique(tech_id, granted=True))
+        self.send(GrantOpeningStock())
         # Starting ownership is deliberately exhausted by starting_techs.
         # Tier and zero cost describe a node's position in the universal graph;
         # they do not mean every society on Earth already owns it.  In
         # particular, never infer one civilization's materials or institutions for another
         # civilization from those fields.
-        self.country_literacy()
-        for field in ("literacy_general", "literacy_elite"):
-            self.start_civ[field] = self.literacy(field)
-        self.civ.pop("literacy_general", None)
-        self.civ.pop("literacy_elite", None)
+        self.send(RecordOpeningLiteracy(self.view("literacy")("literacy_general", None), self.view("literacy")("literacy_elite", None)))
         self._reconnect_state_hooks()
         # opened now, not by the first question a screen or a cost asks: while it opens the engine's
         # own figures answer, and nothing computed from them may stay cached afterwards
         # a game about to load a save leaves it: the save holds the seats and the economy's record
         self._economy_deferred = bool(defer_economy)
         if not defer_economy:
-            self.economy.open_agent()
-            self.grant_opening_herds()
+            self.view("legacy_economy")().open_agent()
+            self.send(GrantOpeningHerds())
             self._done_changed()
-            self.join_cast_seats()
+            joined = self.send(JoinCastSeats())
+            if isinstance(joined, Refusal):
+                raise ValueError(str(joined))
 
     def _reconnect_state_hooks(self):
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
-        # Household façades first, so version bumps fired while reconnecting land on this state
-        if hasattr(self, "household"):
-            self.sync_seat_facades()
-        self.state.attach_purses()
-        self.state.actors.purses.observer = self.note_lender_posting
-        acting = self.state.acting_seat
-        try:
-            for seat_id in self.state.seats:
-                bind_seat(self.state, seat_id)
-                self._wrap_seat_containers()
-        finally:
-            bind_seat(self.state, acting)
-        cleared = getattr(self.state.holdings, "farm_cleared_hectares", None)
+        self.state.actors.purses.observer = lambda account, signed, label: self.send(NoteLenderPosting(account, signed, label))
+        for seat_id in self.state.seats:
+            self._wrap_seat_containers(seat_id)
+        from . import game_assembly
+        game_assembly.attach(self)   # the modules read the state as loaded from here on
+        cleared = self.view("farm_holdings")()["cleared_hectares"]
         if cleared is not None:
             self.labour.set_farm_area(cleared)
-            self.refresh_farm_territory()
-        # Synchronize demographic cohort floats
-        if self.state.population is not None and hasattr(self, "population"):
-            if self.state.population.pop_children or self.state.population.pop_working_age or self.state.population.pop_elderly:
-                self.population.children = float(self.state.population.pop_children)
-                self.population.working_age = float(self.state.population.pop_working_age)
-                self.population.elderly = float(self.state.population.pop_elderly)
-            else:
-                self.state.population.pop_children = float(self.population.children)
-                self.state.population.pop_working_age = float(self.population.working_age)
-                self.state.population.pop_elderly = float(self.population.elderly)
+            refresh_farm_territory(self)
 
         # Sync civ live state and metadata
-        if self.state._weights:
-            self.value_weights.update(self.state._weights)
         if self.state._rng is not None:
             rng_version, _keys, rng_gaussian = self.state._rng
             self.rng.setstate((rng_version, tuple(int(x) for x in _keys), rng_gaussian))
 
         # Reset transient caches
-        self._reset_economic_caches()
+        game_assembly.attach(self)
+        notify_seat_bound(self.assembly)
         # the demand the last throttle saw is read before the next one, so it is carried
-        held_demand = self.state.holdings.material_demand_at_last_throttle
-        self.household._material_demand_cache = None if held_demand is None else collections.Counter(held_demand)
+        self.send(RestoreReadings())
 
-    def _wrap_seat_containers(self):
-        """Wrap the bound seat's mutation-aware containers and start its version counters."""
-        from sim.engine.economy import _InvalidatingDict, _InvalidatingSet
-        from sim.engine.state import ActiveProjectState
-        self.state.projects.business.watch = self._operating_changed
-        self.state.projects.active = _InvalidatingDict(
-            {k: ActiveProjectState.from_dict(v if isinstance(v, dict) else v.to_canon_dict(), _on_change=self._active_changed)
-             for k, v in (self.state.projects.active or {}).items()},
-            on_change=self._active_changed
-        )
-        self.state.household.employees = _InvalidatingDict(
-            self.state.household.employees or {},
-            on_change=self._workforce_changed
-        )
-        self.household.start_version_counters(self.state)
+    def _wrap_seat_containers(self, seat_id=None):
+        """Wrap a seat's mutation-aware containers (the acting seat's unless one is named) and start its version counters."""
+        seat_id = self.state.acting_seat if seat_id is None else seat_id
+        self.send(WatchBusiness(seat_id))
+        self.send(WatchActive(seat_id))
+        self.send(WatchStaff(seat_id))
 
-    # ---- OUTSIDE-SURFACE PROPERTIES FOR THE EXTRACTED HOUSEHOLD ----------
-    # Moved to sim/engine/core_properties.py's ForwardingPropertiesMixin:
-    # 107 one-line @property forwards onto self.household/self.population
-    # (capital, done, operating, log, and so on), plus the comment block
-    # explaining why each is a property and never __getattr__. Sim still
-    # inherits ForwardingPropertiesMixin below, so every name in that file
-    # keeps resolving on a live Sim instance exactly as it did here.
+    # ---- the facts the root states itself (sim/engine/root_facts.py) ----
+    # the scenario module's: the clock, the modes and the setup the game was built from
+    year = scenario_fact("world.year", SetYear)
+    fog = scenario_fact("world.fog", lambda value: SetFog(bool(value)))
+    fuzzy_estimates = scenario_fact("world.fuzzy_estimates")
+    cfg = scenario_fact("configuration")
+    civ = scenario_fact("civilisation")
+    start_civ = scenario_fact("start_civilisation")
+    manual = scenario_fact("manual")
+    events = scenario_fact("events")
+    bounty_set = scenario_fact("bounty_set")
+    end_year = property(horizon_end_year, lambda self, value: self.send(SetEndYear(value)))
+    # the tree, the stores, the purse and the founder's goal and policy
+    nodes = view_fact("tree_nodes", set_command=ReplaceTree)
+    stores = view_fact("store_book")
+    capital = view_fact("acting_balance", set_command=RestorePurse)
+    goal = view_fact("goal", "node", SetGoal)
+    goal_year = view_fact("goal", "year")
+    policy = view_fact("founder", "policy")
+    # the techniques and the projects of the acting seat
+    active = view_fact("active_projects")
+    done = view_fact("techniques_held")
+    done_year = view_fact("done_year")
+    revealed = view_fact("techniques_revealed")
+    operating = view_fact("operating")
+    mothballed = view_fact("mothballed")
+    bountied = view_fact("bountied")
+    granted = view_fact("techniques_granted")
+    forgotten = view_fact("techniques_forgotten")
+    failed_attempts = view_fact("failed_attempts")
+    paid_towards = view_fact("paid_towards")
 
-
-    WAGE_SCARCITY_ELASTICITY = declare(
-        "WAGE_SCARCITY_ELASTICITY", 0.9, kind="hardcoded_outcome",
-        unit="dimensionless (wage premium per unit of population shortfall)",
-        source="Phelps Brown and Hopkins' English real-wage index shows "
-             "roughly a doubling across the century after 1348.",
-        confidence="C",
-        why="How much scarcer labour raises its own price - see pop_scale/"
-            "wage_index below: at this elasticity, a Black-Death-sized "
-            "shortfall reproduces roughly the cited real-wage doubling over "
-            "the timescale sim/world/demography.py's own vital rates take "
-            "to close it. FLAGGED AS A CLAUDE.md SS3.1/3.2 RISK: chosen "
-            "specifically to land in the range that reproduces a known "
-            "historical wage-index outcome (Phelps Brown and Hopkins), "
-            "rather than derived from labour supply and demand "
-            "fundamentals - the same shape as economy.py's DEBT_BASE_RATE, "
-            "a real attested figure standing in for a market mechanism "
-            "this project has not built. It is not fitted to the series "
-            "numerically, but it was picked because it lands near the "
-            "answer, which is the thing SS3.2 asks a baseline to reach "
-            "independently rather than by construction.")
-
-    # `pop_scale` and `wage_index` are COMPUTED PROPERTIES, not stored
-    # attributes advanced by a hand-written recovery clock (docs/
-    # architecture/WIRING_MILESTONE_4.md SS6-SS7), the same "attribute plus
-    # forwarding property" shape the household extraction uses. That lets
-    # every call site across economy/labour/geography/projects that reads
-    # `self.pop_scale`/`self.wage_index` keep doing so unchanged, while what
-    # backs them can change underneath.
-    #
-    # `pop_scale` must be derived from `self.population`'s age-cohort model,
-    # not from a hand-set scalar decaying on a fixed clock: sim/world/
-    # self._demography.py's own test suite shows two populations that lose an
-    # identical 30% in one year, one sparing working-age adults and one not,
-    # diverge sharply afterwards - a result a scalar deficit decaying on a
-    # clock that knows nothing about WHO was lost can never produce.
-    #
-    # `pop_scale` uses `DEFAULT_POPULATION_100AD` (the default scenario's
-    # configured population) as its reference, so `pop_scale == 1.0` means
-    # "a default-scenario-sized labour market" - every downstream formula is calibrated
-    # against that. The numerator is `self.population.total`, the age-cohort
-    # model's own running headcount.
-    @property
-    def pop_scale(self):
-        return max(self.POP_SCALE_FLOOR, self.population.total / self.DEFAULT_POPULATION_100AD)
-
-    # `wage_index`: LABOUR SCARCER, SO DEARER. The scarcity signal is how
-    # far the age-cohort model's actual `pop_scale` sits below this
-    # civilisation's UNSHOCKED starting trend. A hazard only needs to cut
-    # `self.population`'s cohorts (see `_apply_population_mortality_shock`
-    # below); that lowers `pop_scale` directly, and this property reads the
-    # gap that opens - a hazard never touches `wage_index` itself.
-    #
-    # Recovery is emergent: the cohort model's own births and deaths move
-    # pop_scale back toward the trend, or not, with no clock.
-    @property
-    def wage_index(self):
-        unshocked_trend = max(
-            self.POP_SCALE_FLOOR,
-            float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
-            / self.DEFAULT_POPULATION_100AD)
-        return wage_index_of(self._wage_index_base, self.WAGE_SCARCITY_ELASTICITY, self.pop_scale, unshocked_trend)
-
-    def _apply_population_mortality_shock(self, raw):
-        """Cut `self.population`'s cohorts by `raw` (a fraction of the whole,
-        e.g. 0.45 for the Black Death), unevenly by age - called from
-        _shocks() (society.py).
-
-        AGE-DIFFERENTIATED BY THE SAME STARVATION_VULNERABILITY_* RATIOS
-        sim/world/demography.py already declares for its own nutrition-
-        driven excess mortality (children hit 1.6x as hard as working-age
-        adults, the elderly 1.4x - see that module for the sourcing), scaled
-        so the POPULATION-WEIGHTED AVERAGE loss equals `raw` exactly. This
-        is what makes two equal-headcount losses diverge afterward depending
-        on who survived - the property sim/tests/test_self._demography.py's own
-        falsification test demands, and a scalar deficit decaying on a fixed
-        clock could never produce (see the comment above pop_scale).
-
-        TEMPORARY_HEURISTIC (CLAUDE.md SS3.4), and flagged as such rather
-        than presented as settled: STARVATION_VULNERABILITY_* was sourced
-        for CALORIC shortfall (Watkins & Menken 1985), not epidemic disease
-        or war mortality, which is what most staff_loss hazards actually
-        are. The direction (children and the elderly are more vulnerable
-        than working-age adults to most mass-mortality events, disease
-        included) is well supported in the historical demography literature
-        generally; reusing this SPECIFIC magnitude for a non-caloric shock
-        is the invented part. docs/architecture/WIRING_MILESTONE_4.md SS1.3
-        names the more principled alternative - routing a food-availability
-        hazard through `Population.step`'s own nutrition_ratio and letting
-        excess mortality fall out of THAT, instead of cutting cohorts
-        directly - as future work, once a hazard can be expressed in
-        calories rather than in a bare staff_loss fraction.
-        """
-        cut_cohorts(self.population, raw, self._demography.STARVATION_VULNERABILITY_CHILD,
-                    self._demography.STARVATION_VULNERABILITY_WORKING_AGE,
-                    self._demography.STARVATION_VULNERABILITY_ELDERLY)
-
-    def _adult_equivalent_population(self, population):
-        """`population`'s food need in ADULT-EQUIVALENT units - the same
-        weighting self._demography.py's own `Population.nutrition_ratio` (and,
-        via `_subsistence_food`, `Population.stationary`) already use
-        internally: a child counts as `CHILD_CALORIE_EQUIVALENT` of an
-        adult, an elderly person as `ELDERLY_CALORIE_EQUIVALENT`, exactly
-        so this file never has its own, second opinion on what a "person"
-        is worth in calories.
-
-        WIRING_MILESTONE_4.md SS4.3's UNIT MISMATCH, AND HOW THIS RESOLVES
-        IT. `self._agriculture.Storage.step` takes a plain `population` argument
-        and uses it exactly once: `food_demand_kg = population *
-        annual_food_demand_kg_per_person(crop)`. Nothing in self._agriculture.py
-        assumes that number is a flat headcount beyond that one line - it
-        is "however many ration-equivalents need feeding" - so the fix
-        needs no change to self._agriculture.py's signature at all: this engine
-        computes the SAME adult-equivalent number self._demography.py already
-        relies on and hands THAT to `Storage.step`'s `population` argument
-        instead of `self.population.total`. Checked against SS4.3's own
-        worked example: if the harvest fed in is exactly enough to meet
-        `food_demand_kg` computed this way, then (since
-        `HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY` and
-        `SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY` are the same 2,200
-        kcal/day figure, declared independently in each module for exactly
-        this reason - see either module's own comment) `food_available_
-        kcal_per_day` comes back at precisely `adult_equivalent_population
-        * 2,200`, which is exactly the denominator `nutrition_ratio`
-        divides by - so an exactly-met harvest reads back as
-        `nutrition_ratio == 1.0`, not persistently 10-15% "too generous",
-        by construction rather than by a tuned fudge factor. The SAME
-        method also sizes `farm_land` at `__init__` and the farm workforce
-        every year in `_demographic_recovery`, so all three uses of
-        "how big is this population" at the agriculture boundary agree.
-        """
-        return (population.children * self._demography.CHILD_CALORIE_EQUIVALENT
-                + population.working_age
-                + population.elderly * self._demography.ELDERLY_CALORIE_EQUIVALENT)
-
-    def _farm_year_weather_seed(self, year, region=None):
-        """A deterministic seed for one year's harvest weather draw, a pure
-        function of this civilisation's id, an optional region, the
-        calendar year and the game's weather salt (drawn once from the
-        game's dice and kept in the save, so each seed has its own weather
-        history: Complaint 384) - NOT one long-lived `random.Random` advanced
-        sequentially year over year.
-
-        WHY THIS STAYS A PURE FUNCTION OF (CIVILISATION ID, REGION, YEAR)
-        RATHER THAN A STORED GENERATOR, EVEN THOUGH THE GRANARY ITSELF DOES
-        PERSIST (see `_demographic_recovery` and `farm_stock_kg` below -
-        the stock needs to persist per Complaints/44; the weather draw does
-        not). A seed computed fresh from `(civilisation id, region, year)`
-        has no sequential state to lose in the first place: year N's harvest
-        draws the same weather whether it is reached by one unbroken run or
-        by N separate `--session` commands, which is what actually matters,
-        and it costs nothing to guarantee - so the weather generator needs
-        no `SAVE_FIELDS` slot of its own, independent of whatever else about
-        a year's harvest does or does not round-trip. `self.farm_stock_kg`
-        is the thing that actually needs one (see
-        `sim/engine/saveload.py`'s `SAVE_FIELDS` tuple).
-
-        Multiplier/offset are arbitrary mixing constants (not physical
-        facts), chosen only so two different years, two regions, or two
-        civilisations whose ids happen to share a common prefix, do not
-        collide - the same non-`declare()`d role `_population_seed`'s own
-        formula plays just above in `__init__`.
-
-        WIRING TWO (Complaints/closed/46-one-weather-draw-for-a-continent.md):
-        `region` defaults to `None`: no caller in this engine currently
-        omits it, but a test or a future caller that wants "the" seed for a
-        civilisation without naming a region still gets a well-defined
-        (civilisation id, year) answer, with no region ingredient mixed in.
-        Passing a region name mixes it in as a THIRD independent
-        ingredient, not a substitute for the civilisation id - two
-        civilisations that happen to share a home region (a later
-        conquest/contested-territory mechanism) still draw DIFFERENT
-        weather for it, because the civilisation id is still in the mix.
-        """
-        civ_component = sum((index + 1) * ord(character) for index, character
-                            in enumerate(str(self.civ.get("id", "civ"))))
-        region_component = 0 if region is None else sum(
-            (index + 1) * ord(character) for index, character
-            in enumerate(str(region)))
-        scenario = self.state.scenario
-        if not scenario.weather_salt:
-            scenario.weather_salt = self.rng.getrandbits(30) + 1   # the game's dice, so each seed has its own weather
-        return (civ_component * 1000003 + region_component * 7919
-                + int(year) * 97 + scenario.weather_salt * 104729) % (2 ** 32)
-
-    _WeatherCell = collections.namedtuple(
-        "_WeatherCell", ("cell_id", "lat", "lon", "weight"))
-    # A cell's identity is its own `cell_id` string (a land_tiles tile id,
-    # e.g. "italy_02" - already globally unique across every region, per
-    # the geography data's own `land_tiles.tiles` keys), not a (region, index)
-    # pair. That is what lets `_farm_year_weather_seed(year, region=cell_id)`
-    # below reuse that method completely unchanged (Complaints/46's WIRING
-    # TWO): the parameter is documented there as "an optional region", but
-    # nothing about the seed formula actually requires the string passed to
-    # BE a region key - it only needs to uniquely name what is being drawn
-    # weather for, which a tile id does exactly as well as a region key did.
-
-    def _raw_farm_weather_cells(self):
-        """One `_WeatherCell` per held land tile with its raw arable km2 as the weight (before any merging or normalising)."""
-        held_tiles = tiles_held(self.civ, self.world_map)
-        if not held_tiles:
-            return []
-        # Loaded directly here, NOT via `self.geo` (set later in
-        # `__init__`, after this method's own call site - see that call
-        # site's comment): a second, independent `load_geography()` call is
-        # a second cheap JSON parse, not a second SOURCE OF TRUTH, and
-        # costs far less than reordering `__init__` while other agents are
-        # concurrently editing this same method (this task's own file-
-        # ownership note).
-        geography = load_geography(self.world_map)
-        land_tiles = geography.get("land_tiles") or {}
-        tiles_by_id = land_tiles.get("tiles") or {}
-        raw_cells = []
-        for tile_id in held_tiles:
-            tile = tiles_by_id.get(tile_id)
-            if not tile:
-                continue
-            arable_km2 = (tile.get("land_area_km2", 0.0)
-                          * tile.get("arable_fraction", 0.0))
-            raw_cells.append(Sim._WeatherCell(
-                cell_id=tile_id, lat=tile["lat"], lon=tile["lon"],
-                weight=arable_km2))
-        return raw_cells
-
-    def _compute_farm_tile_arable_share(self):
-        """{tile id: share of the civilisation's arable land}, summing to 1.0; the weights the tile-level harm to the
-        pooled harvest (`_pooled_farm_weather_multiplier`) is averaged with."""
-        raw_cells = self._raw_farm_weather_cells()
-        return weather_pooling.tile_shares(raw_cells)
-
-    def _compute_farm_weather_cells(self):
-        """[Sim._WeatherCell(cell_id, lat, lon, weight), ...] over this
-        civilisation's own `home_regions`, broken into the geography data's
-        150,000 km2 `land_tiles` cells rather than left as whole region
-        records - Complaints/49-one-label-draws-one-coin.md, replacing
-        Complaints/46's own `_compute_farm_region_weights`.
-
-        WHY TILES, NOT "subdivide each region by area around its centroid"
-        (this task's brief offered both). `land_tiles` already exists,
-        already carries an independently-generated `arable_fraction` and
-        `fertility_quality_multiplier` per cell (see tools/generate_
-        geography_tiles.py's own generation_rule_summary, stored on the
-        data file itself), and already covers every one of the 21 shipped
-        regions via `land_tiles.region_to_tiles` - building a fresh
-        centroid-radius subdivision here would either re-derive the same
-        equal-area grid the geography data's own tiles already are (pure
-        duplication) or invent a DIFFERENT one with no basis for choosing
-        its cell size over 150,000 km2, which is itself an arbitrary but at
-        least ALREADY-CHOSEN-BY-SOMEONE-ELSE constant this task does not
-        need to relitigate. Weight is each cell's OWN arable land area
-        (land_area_km2 * arable_fraction, i.e. the same physical quantity
-        `_compute_farm_region_weights` weighted by, at tile grain instead
-        of region grain) as a share of this civilisation's TOTAL cell
-        arable land - so a tiny cell does not count as much as a large
-        fertile one, with "large" measured in actual square kilometres, not
-        in how many rows a region occupies in the geography data (weighting by
-        row count would let region count, not land area, predict the
-        outcome - Complaints/49's own finding).
-
-        DOES NOT READ sim/world/land.py (see the import comment at this
-        file's own top). `land.py`'s `arable_hectares` and the geography data's own
-        `land`/`land_tiles` blocks are two independently-sourced estimates
-        of the same physical quantity (arable land area) that happen to
-        agree to within a fixed unit conversion for the 21 shipped regions
-        (both ultimately cite the same `land_area_km2`/`arable_fraction`
-        pair per region - see land.py's RegionLand and the geography data's own
-        `land` block), so reading the geography data's tile-level breakdown
-        directly, instead of land.py's region-level aggregate of the same
-        numbers, does not introduce a second, independent estimate to drift
-        out of step - it is the same source at finer grain.
-
-        NOTE (per this task's own coordination thread, Complaints/50-every-
-        civilisation-farms-italian-soil.md): these weights are PROPORTIONS
-        that sum to 1.0 over one civilisation's own cells, so a
-        civilisation's ABSOLUTE arable endowment cancels out of them
-        entirely - two civilisations with wildly different total farmland
-        can have identically-SHAPED weight lists. That is Complaints/50's
-        own finding (farm_land's total SIZE not reflecting soil quality or
-        real arable area), not a defect in this pooling mechanism, which
-        only ever needed relative shares; left alone here, deliberately.
-
-        A home region with no tiles contributes no cell (a region is a label
-        over tiles; with no tiles it has no land). If no cell ends up with a
-        positive arable-land figure, falls back to an
-        EQUAL split across whatever cells were found. A civilisation with
-        no `home_regions` at all gets an empty list, which
-        `_pooled_farm_weather_multiplier` below reads as "fall back to one
-        civilisation-wide draw" (see that method's own docstring).
-        """
-        raw_cells = self._raw_farm_weather_cells()
-        if not raw_cells:
-            return []
-        # STAKEHOLDER ITEM 7: cap cell count independently of how finely
-        # land_tiles divides this civilisation's home_regions, BEFORE the
-        # weight normalisation below - see FARM_WEATHER_POOLED_CELL_CAP's
-        # own declaration (top of this file) for why, and
-        # _cap_pooled_farm_weather_cells for how. A no-op whenever
-        # len(raw_cells) is already at or under the cap, which is true for
-        # every civilisation this project ships today.
-        raw_cells = self._cap_pooled_farm_weather_cells(raw_cells)
-        total_weight = sum(cell.weight for cell in raw_cells)
-        if total_weight > 0.0:
-            return [cell._replace(weight=cell.weight / total_weight)
-                    for cell in raw_cells]
-        equal_weight = 1.0 / len(raw_cells)
-        return [cell._replace(weight=equal_weight) for cell in raw_cells]
-
-    def _cap_pooled_farm_weather_cells(self, cells):
-        """`cells`, unchanged if there are `FARM_WEATHER_POOLED_CELL_CAP`
-        or fewer of them; otherwise merged down to exactly that many, so
-        the cubic/quadratic cost below stops being a function of how
-        finely `land_tiles` divides a civilisation's territory. See
-        `FARM_WEATHER_POOLED_CELL_CAP`'s own declaration for the
-        stakeholder item this exists for and why that number.
-
-        WHY MERGE, NOT DROP. Each cell's `weight` here is still its own
-        raw arable land area in km2 (this runs BEFORE the sum-to-1.0
-        normalisation in `_compute_farm_weather_cells`). Simply keeping
-        the `FARM_WEATHER_POOLED_CELL_CAP` largest-weight cells and
-        discarding the rest would throw away real arable-weighted mass
-        this civilisation actually has, and would also concentrate the
-        survivors wherever the single largest cells happen to sit (see
-        `_compute_farm_weather_cells`'s own docstring: `north_africa`
-        alone supplies 47 of Rome's 88 raw cells by area) rather than
-        representing the civilisation's full territory. Merging instead
-        preserves every unit of arable land at coarser spatial grain, only
-        where finer grain would exceed the cap - the same weighting
-        principle `_compute_farm_weather_cells` already uses (arable km2),
-        just applied to decide what gets pooled together rather than how
-        much each pooled cell counts for.
-
-        HOW "NEARBY" IS DECIDED, DETERMINISTICALLY. Cells are ordered
-        along a Z-order (Morton) space-filling curve over their lat/lon
-        (`_cell_morton_code`, module level) and split into
-        `FARM_WEATHER_POOLED_CELL_CAP`-many contiguous runs of that
-        ordering - a standard technique for linearising 2-D points while
-        keeping the result in the same neighbourhood, so a contiguous run
-        is a genuine spatial cluster rather than an arbitrary batch. Fully
-        deterministic: same `cells` in (itself deterministic - see
-        `_compute_farm_weather_cells`), same groups out, nothing here
-        reads `self.rng` or constructs a `random.Random` - required by
-        CLAUDE.md section 6's rule that order must not
-        depend on history (`sim/tests/test_hash_seed_order.py`).
-
-        Each merged cell's `lat`/`lon` is the arable-weight-weighted
-        centroid of its group (so `_compute_farm_weather_correlation_
-        cholesky`'s kernel sees a position representative of where that
-        group's arable land actually sits, not an unweighted midpoint);
-        its `weight` is the group's summed arable km2 (so the total
-        arable-weighted mass across all pooled cells is exactly what it
-        was pre-merge - this changes spatial RESOLUTION, never the
-        physical quantity being pooled); its `cell_id` is
-        `"pooled_<group index>"`, deterministic given the deterministic
-        ordering above, which is all `_farm_year_weather_seed` needs from
-        it (see `_WeatherCell`'s own comment on why any unique string
-        works there).
-        """
-        cap = int(FARM_WEATHER_POOLED_CELL_CAP)
-        if len(cells) <= cap:
-            return cells
-        ordered = sorted(cells, key=lambda cell: _cell_morton_code(cell.lat, cell.lon))
-        cell_count = len(ordered)
-        merged = []
-        start = 0
-        for group_index in range(cap):
-            # The remainder (cell_count % cap) is distributed as one extra
-            # member each to the FIRST that-many groups, deterministically,
-            # rather than left to pile onto whichever group floor-division
-            # happens to process last.
-            group_size = cell_count // cap + (1 if group_index < cell_count % cap else 0)
-            group = ordered[start:start + group_size]
-            start += group_size
-            total_weight = sum(cell.weight for cell in group)
-            if total_weight > 0.0:
-                lat = sum(cell.lat * cell.weight for cell in group) / total_weight
-                lon = sum(cell.lon * cell.weight for cell in group) / total_weight
-            else:
-                # Every member of this group happened to carry zero arable
-                # weight - fall back to an unweighted centroid so the group
-                # still gets a real position instead of pulling toward
-                # (0.0, 0.0) for no physical reason.
-                lat = sum(cell.lat for cell in group) / len(group)
-                lon = sum(cell.lon for cell in group) / len(group)
-            merged.append(Sim._WeatherCell(
-                cell_id="pooled_%04d" % group_index, lat=lat, lon=lon,
-                weight=total_weight))
-        return merged
-
-    def _compute_farm_weather_correlation_cholesky(self, cells):
-        """The lower-triangular Cholesky factor `matrix_low` of this
-        civilisation's cell-to-cell growing-season weather CORRELATION
-        matrix, such that `matrix_low @ matrix_low_transpose` reproduces
-        that correlation matrix exactly - the one-time linear-algebra setup
-        `_pooled_farm_weather_multiplier` spends every year turning a
-        vector of INDEPENDENT standard-normal draws into a vector of
-        CORRELATED ones (see that method's own docstring for why that is
-        the actual mechanism this task exists to build).
-
-        THE KERNEL: correlation(cell_a, cell_b) = exp(-distance_km(cell_a,
-        cell_b) / GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM), i.e. an
-        exponential (Matern, smoothness 1/2) spatial correlation kernel -
-        the standard geostatistics choice for a field with no reason to
-        expect it to be any smoother than that, and the same shape
-        `sim/world/shared_constants.py`'s own declaration of that constant
-        cites the empirical precipitation-correlation literature for.
-        `distance_km` is the CHORDAL (straight-line, through-the-earth)
-        distance between the two cells' lat/lon centroids projected onto a
-        sphere of Earth's radius, DELIBERATELY NOT `haversine_km`'s
-        great-circle distance despite that function already existing in
-        the codebase (`engine/data.py`, called by the geography and economy
-        mixins, never by this class):
-        an isotropic exponential-family kernel of CHORDAL distance is
-        guaranteed positive semi-definite for any configuration of points
-        (it is an ordinary Euclidean-space Matern kernel, valid in any
-        dimension including the 3-D space the sphere sits in), which the
-        SAME kernel evaluated on great-circle distance is NOT guaranteed to
-        be for an arbitrary set of points on a sphere (a known result in
-        the spatial-statistics literature on covariance functions on the
-        sphere) - a real risk here given some civilisations' cells are
-        spread across a large fraction of a hemisphere. Chordal and
-        great-circle distance agree closely at the scales any one
-        civilisation's cells actually span (a few percent apart even at
-        several thousand km), so this loses essentially nothing in
-        practice while removing a genuine correctness risk in principle.
-
-        NUMERICAL SAFETY NET, NOT A PHYSICAL MECHANISM: each diagonal pivot
-        is floored at a tiny positive epsilon before the square root, so a
-        configuration that is only PSD up to floating-point error (rather
-        than not PSD at all) still factorises instead of crashing on a
-        negative-square-root. This is standard "nugget" practice in
-        geostatistics for exactly this situation, not a tuned fudge on the
-        actual correlation values.
-
-        `cells` is `self._farm_weather_cells`'s own return value, passed in
-        (rather than read off `self` directly) so this method has no
-        hidden dependency on init order - it only needs the list itself.
-        An empty or single-cell list gets a trivial 0x0/1x1 factor; the
-        caller (`_pooled_farm_weather_multiplier`) never asks for one
-        unless `cells` is non-empty in the first place.
-
-        COST: O(len(cells) ** 3) FLOPs, paid ONCE per `Sim.__init__` (see
-        that method's own comment on why), not per year. `cells` here is
-        `self._farm_weather_cells`, which `_compute_farm_weather_cells`
-        already ran through `_cap_pooled_farm_weather_cells`, so
-        `len(cells)` never exceeds `FARM_WEATHER_POOLED_CELL_CAP`
-        regardless of how many `land_tiles` cells this civilisation's
-        home_regions actually map to (stakeholder item 7 - see that
-        constant's own declaration). The largest civ this project ships
-        (7 home regions) resolves to 88 cells, under the
-        cap - under 700,000 elementary operations, not a measurable cost
-        against everything else `Sim.__init__` already does.
-        """
-        return weather_pooling.correlation_cholesky(cells, GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM)
-
-    def _pooled_farm_weather_multiplier(self, year, weather_stdev_fraction=None, harmed=True):
-        """This year's harvest weather multiplier, pooled across this
-        civilisation's own growing-season weather cells instead of one
-        draw for the whole territory (Complaints/46-one-weather-draw-for-
-        a-continent.md) and instead of one INDEPENDENT draw per home
-        region record (Complaints/49-one-label-draws-one-coin.md, the
-        replacement this method now is).
-
-        THE MECHANISM, IN ONE SENTENCE: draw one independent standard-
-        normal number per cell, CORRELATE them by distance using
-        `self._farm_weather_correlation_cholesky`, turn each correlated
-        number into a clipped yield multiplier the same way `self._agriculture.
-        draw_weather_multiplier` would, and take the arable-land-share-
-        weighted average - answering Complaints/49's own question ("over
-        what distance does growing-season weather stop agreeing with
-        itself?") with an actual number, rather than assuming one of two
-        hardcoded extremes ("one region = perfectly correlated with
-        itself, zero correlation with every other region").
-
-        STEP BY STEP.
-        1. `independent_draws[i] = Random(_farm_year_weather_seed(year,
-           region=cells[i].cell_id)).gauss(0.0, 1.0)` - one standard normal
-           per cell, EACH ONE a pure function of (civilisation id, cell id,
-           year), reusing `_farm_year_weather_seed` completely unchanged
-           (see `_WeatherCell`'s own comment on why a tile id is a valid
-           thing to pass as that method's `region` argument). This is
-           still, exactly as before Complaints/49, "no long-lived
-           generator, no `id()` as identity" (CLAUDE.md SS6): nothing here
-           is constructed once and advanced across years or across cells:
-           every single number is its own fresh `random.Random(seed)`.
-        2. `correlated = cholesky_lower @ independent_draws` - a lower-
-           triangular matrix-vector product (see `_compute_farm_weather_
-           correlation_cholesky`'s own docstring for why this specific
-           matrix reproduces the intended correlation structure exactly).
-           `correlated[i]` is no longer standard normal in isolation - it
-           is one COORDINATE of a draw from the multivariate normal whose
-           correlation matches how far apart the cells actually are.
-        3. Each cell's own multiplier is `clip(1.0 + stdev *
-           correlated[i], WEATHER_FLOOR_MULTIPLIER, WEATHER_CEILING_
-           MULTIPLIER)` - the same shape `self._agriculture.draw_weather_
-           multiplier` uses (mean-1.0 Gaussian, same two clip constants,
-           read directly off that module rather than re-declared here),
-           just fed a correlated `z` instead of calling `rng.gauss` itself
-           (drawing the pooled result FROM a raw `z` vector, rather than
-           calling `draw_weather_multiplier` once per cell and then trying
-           to correlate the results, is what lets the clip apply to each
-           cell's OWN realistic multiplier before the weighted average, not
-           to the average itself).
-        4. The civilisation's pooled multiplier is the ARABLE-LAND-SHARE-
-           WEIGHTED AVERAGE of those per-cell multipliers (self._farm_
-           weather_cells), following the same weighting principle
-           Complaints/46 established.
-
-        WHAT THIS ACHIEVES, PRECISELY. A region record is not one weather
-        system regardless of its real size (Complaints/49: North Africa at
-        5,750,000 km2 is not one growing season, and neither is China at
-        9,597,000 km2 held as a single region), and two region records are
-        not fully INDEPENDENT regardless of how close they sit (Gaul and
-        Hispania share weather; Britannia and Mesopotamia do not). Breaking
-        territory into fixed-area cells makes a civilisation's effective
-        cell count track its actual farmed area, not how many rows a data
-        file happens to give it, and distance-based correlation makes two
-        adjacent cells (or two cells in neighbouring regions) draw NEARLY
-        the same weather, while two cells continents apart draw NEARLY
-        independent weather - closer to one draw for Gaul/Hispania, closer
-        to independent for Britannia/Mesopotamia.
-
-        WHAT THIS DOES NOT CLAIM. `GROWING_SEASON_WEATHER_DECORRELATION_
-        LENGTH_KM` (sim/world/shared_constants.py) is not a precisely
-        measured figure for this exact quantity - see its own declaration
-        for the chain of reasoning behind its value and this task's own
-        report for a sensitivity sweep across its plausible range. This
-        mechanism is only as good as that one number; it is a large
-        improvement in KIND over "one region = one system, all regions
-        independent" regardless of the exact figure, because unlike that
-        assumption it can be checked and revised as a single number rather
-        than by re-deriving the whole mechanism.
-
-        A civilisation with no usable cells at all (empty `home_regions`,
-        or `_compute_farm_weather_cells` otherwise came back empty) falls
-        back to one draw, seeded from `_farm_year_weather_seed(year)` with no
-        region, applied to the whole territory - a civilisation file this
-        mechanism is not meant to touch runs with a single civilisation-wide
-        weather draw.
-        """
-        soil = self._agriculture.DEFAULT_SOIL
-        stdev = (soil.weather_stdev_fraction if weather_stdev_fraction is None
-                 else weather_stdev_fraction)
-        cells = self._farm_weather_cells
-        if not cells:
-            # No usable cells - fall back to a single civilisation-wide draw.
-            return self._agriculture.draw_weather_multiplier(
-                random.Random(self._farm_year_weather_seed(year)), stdev)
-        independent_draws = [
-            random.Random(self._farm_year_weather_seed(year, region=cell.cell_id))
-            .gauss(0.0, 1.0)
-            for cell in cells]
-        cholesky_lower = self._farm_weather_correlation_cholesky
-        pooled = weather_pooling.pooled_multiplier(
-            cells, cholesky_lower, independent_draws, stdev,
-            self._agriculture.WEATHER_FLOOR_MULTIPLIER, self._agriculture.WEATHER_CEILING_MULTIPLIER)
-        if not harmed:
-            return pooled
-        # Harm to a tile's land that externality providers report (sim/engine/externalities.py) takes its share of the
-        # pooled harvest, weighted by the tile's share of the arable land.
-        return pooled * weather_pooling.harm_multiplier(self._farm_tile_arable_share, externalities.yield_factors(self, year))
-
-    def farm_weather_by_tile(self, year):
-        """{tile id: this year's harvest multiplier on that tile's own weather cell}, from the same correlated draws the
-        pooled multiplier averages (`_pooled_farm_weather_multiplier`, unharmed). A tile merged into a pooled cell, or with no
-        cell, is absent; callers give it the pooled multiplier."""
-        cells = self._farm_weather_cells
-        if not cells:
-            return {}
-        independent_draws = [random.Random(self._farm_year_weather_seed(year, region=cell.cell_id)).gauss(0.0, 1.0)
-                             for cell in cells]
-        multipliers = weather_pooling.cell_multipliers(
-            cells, self._farm_weather_correlation_cholesky, independent_draws,
-            self._agriculture.DEFAULT_SOIL.weather_stdev_fraction,
-            self._agriculture.WEATHER_FLOOR_MULTIPLIER, self._agriculture.WEATHER_CEILING_MULTIPLIER)
-        return {cell.cell_id: multiplier for cell, multiplier in zip(cells, multipliers)}
-
-    def _disease_burden(self):
-        """WIRING ONE (Complaints/closed/47-technology-cannot-stop-people-dying-
-        young.md): this civilisation's CURRENT disease burden, 1.0 being
-        the full pre-industrial infectious environment sim/world/
-        self._demography.py already assumes by default, 0.0 being clean water,
-        sanitation, germ-theory hygiene and vaccination all present -
-        `self._demography.py`'s own module docstring names the derivation this
-        reuses rather than inventing: sum the `population` weights of
-        whichever of `DISEASE_BURDEN_TECH_IDS` (above) this civilisation
-        currently holds (`self.has`, which `starting_techs` and completed
-        nodes both feed - see Household.__init__'s own comment), and
-        express that as a fraction of ALL EIGHT unlocked (rather than
-        hardcoding the 0.15 those eight happen to sum to today, so this
-        stays correct if `_TECH_EFFECTS.json` ever reweights them):
-
-            disease_burden = 1.0 - unlocked_weight / total_weight
-
-        Read fresh every call from `self.has(...)`: a standing fact about
-        this civilisation ("it now boils its water"). Food technologies act
-        through the farming technique instead (see `_farming_technique`).
-
-        Clamped to [0, 1] defensively (a total of exactly 0.15 measured
-        directly against `_TECH_EFFECTS.json` today makes this unreachable
-        in practice, but a future edit to that file changing the eight
-        weights' sum should not be able to hand `self._demography.Population.
-        step` a burden outside the range it declares valid).
-        """
-        tech_ids = self.DISEASE_BURDEN_TECH_IDS
-        return burden_from_holdings(
-            {tech_id: self._tech_effects[tech_id].get("population", 0.0) for tech_id in tech_ids},
-            {tech_id: self.disease_burden_held(tech_id) for tech_id in tech_ids})
-
-    def _refresh_demographic_indexes(self, year):
-        """Say why the wage bill moved, if it moved enough to be worth
-        saying - the only job left here once pop_scale/wage_index became
-        computed properties (see above). Kept as its own method, called
-        both after a year's ordinary advance and immediately after a
-        hazard fires, for the same reason it always was: a shock's
-        announced effects should be visible immediately, not lag a step.
-        """
-        premium = (self.wage_index / self._wage_index_base - 1.0) * PERCENT_SCALE
-        # Recover the shortfall from `premium` so the message and
-        # wage_index cannot drift apart.
-        shortfall = (premium / PERCENT_SCALE) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
-        if premium > 0.5 and year - self.state.scenario._said_wage_cascade >= 15:
-            self.state.scenario._said_wage_cascade = year
-            self.state.household.log.append((year, LogLine(
-                "wage_cascade", "population still %d%% below trend: wages "
-                "(and anything billed in them) are running "
-                "%d%% above normal for here, and will ease "
-                "as the population does"
-                % (round(shortfall * PERCENT_SCALE), round(premium)),
-                population_below_trend_percent=round(shortfall * PERCENT_SCALE), wage_premium_percent=round(premium))))
 
     # -- helpers ------------------------------------------------------------
-
-    # Years between one automatic teaching of a trade and the next. Long
-    # enough that restoring a lost trade is an event rather than a habit.
-    RETEACH_EVERY = declare(
-        "RETEACH_EVERY", 25, kind="temporary_heuristic", unit="years",
-        source=None, confidence="D",
-        why="Minimum gap between one automatic re-teaching of a lost "
-            "trade and the next, so restoring it is an event rather than "
-            "a habit the optimizer leans on every year. Round number, not "
-            "measured.")
-
-    def has(self, node_id):
-        return node_id in self.state.projects.done
-
-    # THE ONE PLACE that answers "what is my corpus worth against a
-    # sacking" - called from both SocietyMixin._shocks (the sack itself)
-    # and FogMixin.knowledge_risk (the player-facing `risk` reply), never
-    # re-derived in either place. A corpus that is written and dispersed
-    # does not stop existing because the scriptorium that produced it
-    # closed - copies already in other people's hands are still in other
-    # people's hands - so this table's hedge-state logic (`has()` vs
-    # `running()`, and which of the loss-chance/fraction-lost pairs below
-    # applies) is genuinely easy to get subtly different between two
-    # independent copies. Calling this from both places is the only way to
-    # make the two screens unable to disagree with each other.
-    CORPUS_HEDGE_LOSS_CHANCE_NONE = declare(
-        "CORPUS_HEDGE_LOSS_CHANCE_NONE", 0.80, kind="temporary_heuristic",
-        unit="dimensionless (probability a sack takes any corpus at all)",
-        source=None, confidence="D",
-        why="Chance a sack takes any of the corpus with no written hedge "
-            "at all - the founder's own head and workshop are the only "
-            "copy. Tuned to make an unhedged corpus genuinely dangerous "
-            "to hold; not measured.")
-    CORPUS_HEDGE_FRACTION_LOST_NONE = declare(
-        "CORPUS_HEDGE_FRACTION_LOST_NONE", 0.40, kind="temporary_heuristic",
-        unit="dimensionless (fraction of losable technologies taken)",
-        source=None, confidence="D",
-        why="If a sack does take from an unhedged corpus, how much of "
-            "what is still losable it takes - largest of the three "
-            "states. Tuned, not measured.")
-
-    def corpus_hedge(self):
-        """(loss_chance, fraction_lost, hedge_name) a sacking faces right now.
-
-        `has`, not `running`: see the comment above `has` itself and
-        FogMixin.knowledge_risk for the fuller argument. `hedge_name` is
-        None if neither corpus exists yet.
-        """
-        for node_id, loss_chance, fraction_lost in self.corpus_hedge_tiers():
-            if self.has(node_id):
-                return loss_chance, fraction_lost, node_id
-        return self.CORPUS_HEDGE_LOSS_CHANCE_NONE, self.CORPUS_HEDGE_FRACTION_LOST_NONE, None
 
     # ---- GEOGRAPHY: reach and material cost, FOR THE CIVILIZATION IN PLAY --
     # Reach must be computed from the ACTUAL civilization's own home
@@ -1304,532 +276,49 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
     # civilization has never seen, would be reach 0. Everything below
     # computes reach from the ACTUAL civilization's own home ground.
 
-    DIRECTORS_EXTRA_APPROACH_RATE = declare(
-        "DIRECTORS_EXTRA_APPROACH_RATE", 0.12, kind="temporary_heuristic",
-        unit="dimensionless (fraction of the gap to capacity closed per "
-             "year)", source=None, confidence="D",
-        why="How fast the household's deputy-director pool approaches "
-            "what its institutions can support, net of the same "
-            "working-age mortality that thins ordinary staff. Tuned so "
-            "deputies build up over several years rather than "
-            "instantaneously; not measured.")
+    def view(self, name):
+        """The published view `name` (call it, or index a keyed one); engine and UI code not in a module reads this way."""
+        return self.assembly.views[name]
 
-    AUTO_HIRE_CREDIT_ROOM_SHARE = declare(
-        "AUTO_HIRE_CREDIT_ROOM_SHARE", 0.75, kind="temporary_heuristic",
-        unit="dimensionless (share of credit_limit treated as still "
-             "usable for growth)", source=None, confidence="D",
-        why="How deep into arrears the automation will still hire, "
-            "relative to the credit line - deep arrears means building, "
-            "not growing, is the household's actual state (see comment "
-            "above). Tuned, not measured.")
-    AUTO_HIRE_SCHOLAR_EXTRA_SHARE = declare(
-        "AUTO_HIRE_SCHOLAR_EXTRA_SHARE", 0.35, kind="temporary_heuristic",
-        unit="dimensionless (share of supervision-room headroom spent on "
-             "scholars)", source=None, confidence="D",
-        why="How much of the household's extra supervision headroom is "
-            "aimed at scholars versus artisans when auto_hire grows the "
-            "staff. Tuned split, not measured.")
-    AUTO_HIRE_SCHOLAR_APPROACH_RATE = declare(
-        "AUTO_HIRE_SCHOLAR_APPROACH_RATE", 0.18, kind="temporary_heuristic",
-        unit="dimensionless (fraction of the gap to target closed per "
-             "year)", source=None, confidence="D",
-        why="How fast the scholar pool approaches its target headcount "
-            "under auto_hire - smoothed rather than instant so growth "
-            "reads as hiring over years, not a single jump. Tuned, not "
-            "measured.")
-    AUTO_HIRE_ARTISAN_APPROACH_RATE = declare(
-        "AUTO_HIRE_ARTISAN_APPROACH_RATE", 0.22, kind="temporary_heuristic",
-        unit="dimensionless (fraction of the gap to target closed per "
-             "year)", source=None, confidence="D",
-        why="As AUTO_HIRE_SCHOLAR_APPROACH_RATE, for artisans - slightly "
-            "faster, tuned rather than measured.")
-    AUTO_HIRE_SLAVE_CRAFT_CREDIT = declare(
-        "AUTO_HIRE_SLAVE_CRAFT_CREDIT", 0.7, kind="temporary_heuristic",
-        unit="dimensionless (fraction of a slave counted as a craft "
-             "worker already)", source=None, confidence="D",
-        why="How much of the desired artisan headcount an existing slave "
-            "is treated as already covering, before auto_hire tops up the "
-            "generic craft bucket - slaves are not all doing craft work, "
-            "so this is a partial credit rather than one-for-one. Tuned, "
-            "not measured.")
+    def send(self, command):
+        """Apply `command` through the module that owns it now; engine code not yet in a module sends this way."""
+        return self.assembly.handlers[type(command)](command)
 
-    TRADE_REPLACEMENT_TARGET_HEADCOUNT = declare(
-        "TRADE_REPLACEMENT_TARGET_HEADCOUNT", 2.0, kind="temporary_heuristic",
-        unit="people", source=None, confidence="D",
-        why="Minimum headcount auto_hire tries to keep in any trade the "
-            "founder has ever taught, once attrition has thinned it - "
-            "enough that a taught trade cannot silently vanish from a "
-            "single death. Round number, not measured.")
-    TRADE_REPLACEMENT_AFFORDABILITY_YEARS = declare(
-        "TRADE_REPLACEMENT_AFFORDABILITY_YEARS", 6, kind="temporary_heuristic",
-        unit="years of that trade's annual wage", source=None,
-        confidence="D",
-        why="How much spare capital (in years of the trade's own wage) "
-            "the household must hold before auto_hire replaces a lost "
-            "taught worker - a buffer so this does not spend the "
-            "household into arrears over one specialist. Tuned, not "
-            "measured.")
+    def _done_changed(self):
+        change_hooks.done_changed(self)
 
-    AUTO_MANUMIT_ANNUAL_CHANCE = declare(
-        "AUTO_MANUMIT_ANNUAL_CHANCE", 0.25, kind="temporary_heuristic",
-        unit="dimensionless (yearly probability, optimizer only)",
-        source=None, confidence="D",
-        why="Yearly chance the optimizer's standing policy manumits some "
-            "slaves, when it holds any. Invented frequency, not fitted to "
-            "any attested manumission rate.")
-    AUTO_MANUMIT_SHARE_DIVISOR = declare(
-        "AUTO_MANUMIT_SHARE_DIVISOR", 4, kind="temporary_heuristic",
-        unit="dimensionless (divisor; frees roughly a quarter)",
-        source=None, confidence="D",
-        why="How large a bite auto-manumission takes when it fires - "
-            "roughly a quarter of current slaves, at least one. Tuned, "
-            "not measured.")
-    OUTPUT_RECOVERY_RATE = declare(
-        "OUTPUT_RECOVERY_RATE", 0.006, kind="temporary_heuristic",
-        unit="dimensionless per year (base recovery toward output_factor "
-             "1.0)", source=None, confidence="D",
-        why="Base yearly recovery rate of output_factor after a war or "
-            "other output shock, doubled at full military leverage (see "
-            "comment above) - an armed empire recovers roughly twice as "
-            "fast as an unarmed one, not instantly. Tuned to make a war's "
-            "damage linger for decades, not measured against any attested "
-            "postwar recovery rate.")
+    def _operating_changed(self):
+        change_hooks.operating_changed(self)
 
-    INSOLVENCY_FLOOR_MIN_LABOUR_HOURS = declare(
-        "INSOLVENCY_FLOOR_MIN_LABOUR_HOURS", 80600.0, kind="temporary_heuristic",
-        unit="labour hours", source=None, confidence="D",
-        why="Floor on how deep into arrears a household can sit before insolvency's"
-            ' staff bleed can begin, for a household with very low revenue - so a '
-            'household earning almost nothing is not bled the instant it dips a '
-            'denarius below zero. Round number, not measured. How deep a debt a '
-            'household can carry is the labour it would take to clear, so the floor'
-            ' is hours of work, the same burden whatever the coin is worth.')
-    INSOLVENCY_FLOOR_MIN = money_units.PricedInLabourHours("INSOLVENCY_FLOOR_MIN_LABOUR_HOURS")
-    INSOLVENCY_FLOOR_REVENUE_MULTIPLE = declare(
-        "INSOLVENCY_FLOOR_REVENUE_MULTIPLE", 2.0, kind="temporary_heuristic",
-        unit="years of revenue", source=None, confidence="D",
-        why="How many years of revenue a household may sit in arrears "
-            "before insolvency's staff bleed can begin, for a household "
-            "with meaningful revenue - scales the floor to the "
-            "household's own size rather than a flat number. Tuned, not "
-            "measured.")
-    INSOLVENCY_YEARS_BEFORE_BLEED = declare(
-        "INSOLVENCY_YEARS_BEFORE_BLEED", 3, kind="temporary_heuristic",
-        unit="years", source=None, confidence="D",
-        why="Consecutive years of genuine insolvency (income not "
-            "covering costs, past INSOLVENCY_FLOOR_MIN/"
-            "INSOLVENCY_FLOOR_REVENUE_MULTIPLE) before staff actually "
-            "start leaving - a brief dip is not treated the same as "
-            "sustained failure. Round number, not measured.")
-    INSOLVENCY_BLEED_CAP = declare(
-        "INSOLVENCY_BLEED_CAP", 0.15, kind="temporary_heuristic",
-        unit="dimensionless (maximum fraction of staff lost per year)",
-        source=None, confidence="D",
-        why="Ceiling on how much of the artisan pool insolvency can bleed "
-            "in a single year, however long the household has been "
-            "insolvent - a floor against the doom loop this mechanism "
-            "replaced (see comment above: a Norse run once sat insolvent "
-            "for 495 years, bleeding without limit). Tuned, not measured.")
-    INSOLVENCY_BLEED_RATE = declare(
-        "INSOLVENCY_BLEED_RATE", 0.04, kind="temporary_heuristic",
-        unit="dimensionless (fraction of staff lost per insolvent year)",
-        source=None, confidence="D",
-        why="How fast the insolvency bleed grows with consecutive "
-            "insolvent years, capped at INSOLVENCY_BLEED_CAP. Tuned, not "
-            "measured.")
-    INSOLVENCY_ARTISAN_FLOOR = declare(
-        "INSOLVENCY_ARTISAN_FLOOR", 3.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D",
-        why="Minimum artisans an insolvent household keeps, however long "
-            "it bleeds - a household that has shed everything else can "
-            "still climb back rather than being erased outright. Round "
-            "number, not measured.")
-    INSOLVENCY_SCHOLAR_FLOOR = declare(
-        "INSOLVENCY_SCHOLAR_FLOOR", 1.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D",
-        why="Minimum scholars an insolvent household keeps, for the same "
-            "reason as INSOLVENCY_ARTISAN_FLOOR. Round number, not "
-            "measured.")
-    INSOLVENCY_SCHOLAR_BLEED_DISCOUNT = declare(
-        "INSOLVENCY_SCHOLAR_BLEED_DISCOUNT", 0.6, kind="temporary_heuristic",
-        unit="dimensionless (fraction of the artisan bleed rate applied "
-             "to scholars)", source=None, confidence="D",
-        why="Scholars bleed slower than artisans under insolvency - "
-            "tuned so a household in arrears keeps more of its scarce, "
-            "harder-to-replace literate staff; not measured.")
-
-    REPUTATION_DECAY_TOWARD_FLOOR = declare(
-        "REPUTATION_DECAY_TOWARD_FLOOR", 0.97, kind="temporary_heuristic",
-        unit="dimensionless (fraction of the gap above the standing floor "
-             "kept per year)", source=None, confidence="D",
-        why="How much of reputation's gap above the standing floor "
-            "survives each year - reputation decays toward what a "
-            "founder is actually known for (the floor), not toward zero "
-            "(see comment above). A slow decay, tuned so novelty fades "
-            "over decades rather than years; not measured against any "
-            "attested reputation-decay rate.")
-    FAMILIARITY_CEILING = declare(
-        "FAMILIARITY_CEILING", 0.9, kind="temporary_heuristic",
-        unit="dimensionless (0..1)", source=None, confidence="D",
-        why="Ceiling on familiarity, however long or publicly the founder "
-            "has worked - a society never becomes fully unable to be "
-            "surprised. Round figure, not measured.")
-    FAMILIARITY_PUBLICATION_WEIGHT = declare(
-        "FAMILIARITY_PUBLICATION_WEIGHT", 0.5, kind="temporary_heuristic",
-        unit="dimensionless (weight per spectacle/inexplicable node done)",
-        source=None, confidence="D",
-        why="How much each publicly astonishing thing the founder has "
-            "done adds to familiarity's growth, relative to the passage "
-            "of time (FAMILIARITY_TENURE_WEIGHT). Tuned, not measured.")
-    FAMILIARITY_TENURE_WEIGHT = declare(
-        "FAMILIARITY_TENURE_WEIGHT", 0.25, kind="temporary_heuristic",
-        unit="dimensionless (weight per year since year 100)", source=None,
-        confidence="D",
-        why="How much the mere passage of time (being a known fixture) "
-            "adds to familiarity's growth, relative to specific "
-            "publications (FAMILIARITY_PUBLICATION_WEIGHT). Tuned, not "
-            "measured.")
-    MARKET_PRESSURE_DECAY = declare(
-        "MARKET_PRESSURE_DECAY", 0.55, kind="temporary_heuristic",
-        unit="dimensionless (fraction kept per year)", source=None,
-        confidence="D",
-        why="How much of last year's market pressure (the price bump a "
-            "household's own buying caused) survives into this year - "
-            "sellers restock, so the pressure fades. Tuned, not measured.")
-    MARKET_PRESSURE_ANNUAL_FADE = declare(
-        "MARKET_PRESSURE_ANNUAL_FADE", 2.0, kind="temporary_heuristic",
-        unit="market-pressure points", source=None, confidence="D",
-        why="Flat yearly reduction in market pressure on top of "
-            "MARKET_PRESSURE_DECAY's proportional fade, so a small "
-            "residual pressure reaches exactly zero rather than decaying "
-            "forever. Tuned, not measured.")
-    SCANDAL_DECAY_RATE = declare(
-        "SCANDAL_DECAY_RATE", 0.90, kind="temporary_heuristic",
-        unit="dimensionless (fraction kept per year)", source=None,
-        confidence="D",
-        why="How much of last year's scandal survives, absent any fresh "
-            "cause or bribery - scandal fades on its own, slower than "
-            "market pressure but faster than reputation moves toward its "
-            "floor. Tuned, not measured.")
-    EMINENCE_DECAY_RATE = declare(
-        "EMINENCE_DECAY_RATE", 0.93, kind="temporary_heuristic",
-        unit="dimensionless (fraction kept per year, before this year's "
-             "hazard is added)", source=None, confidence="D",
-        why="How much of last year's eminence survives before adding this "
-            "year's prominence_hazard() - see society.py's eminence_report "
-            "and prominence_hazard, which both reference this same rate "
-            "(as self.EMINENCE_DECAY_RATE) so the reported settling value "
-            "can never disagree with what actually accumulates here. "
-            "Tuned so eminence settles at a level roughly proportionate to "
-            "sustained hazard, not measured.")
-    AUTO_BRIBE_SCANDAL_THRESHOLD = declare(
-        "AUTO_BRIBE_SCANDAL_THRESHOLD", 8, kind="temporary_heuristic",
-        unit="scandal points", source=None, confidence="D",
-        why="Scandal level above which the optimizer's standing bribery "
-            "policy actually starts spending - below it, scandal is not "
-            "yet worth buying down. Tuned, not measured.")
-    AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS = declare(
-        "AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS", 40300.0, kind="temporary_heuristic",
-        unit="labour hours", source=None, confidence="D",
-        why="Minimum capital before the optimizer's bribery policy will spend at "
-            'all, so a poor household is not bled dry bribing away scandal it might'
-            ' survive anyway. Round number, not measured. Capital is a stock of '
-            'labour-valued goods and coin, so the threshold is the hours of work it'
-            ' represents.')
-    AUTO_BRIBE_CAPITAL_THRESHOLD = money_units.PricedInLabourHours("AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS")
-    AUTO_BRIBE_CAPITAL_SHARE = declare(
-        "AUTO_BRIBE_CAPITAL_SHARE", 0.12, kind="temporary_heuristic",
-        unit="dimensionless (share of capital)", source=None,
-        confidence="D",
-        why="Ceiling on how much of current capital one year's bribery "
-            "spend can be, so buying down scandal cannot alone bankrupt "
-            "the household. Tuned, not measured.")
-    AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT = declare(
-        "AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT", 5240.0, kind="temporary_heuristic",
-        unit="labour hours per scandal point", source=None, confidence="D",
-        why='What buying down one point of scandal costs, capping total spend '
-            'alongside AUTO_BRIBE_CAPITAL_SHARE. Invented figure, not sourced to '
-            'any attested bribe schedule. An official accepts a payment worth the '
-            'work and risk he gives up, so the sum is the hours of unskilled labour'
-            ' it buys.')
-    AUTO_BRIBE_COST_PER_SCANDAL_POINT = money_units.PricedInLabourHours("AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT")
-    BRIBES_YTD_DECAY = declare(
-        "BRIBES_YTD_DECAY", 0.7, kind="temporary_heuristic",
-        unit="dimensionless (fraction kept per year)", source=None,
-        confidence="D",
-        why="How much of the running bribes_ytd total (itself the "
-            "denominator update_protection() reads for the bribery "
-            "protection term) survives into next year - a bribe's "
-            "protective effect fades rather than accumulating forever. "
-            "Tuned, not measured.")
-    BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT = declare(
-        "BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT", 6050.0, kind="temporary_heuristic",
-        unit="labour hours per scandal point removed (before bribability)", source=None, confidence="D",
-        why='How much bribery spend it takes to remove one point of scandal, scaled'
-            " further by this society's own bribability weight. Invented figure, "
-            'not sourced to any attested bribe schedule. An official accepts a '
-            'payment worth the work and risk he gives up, so the sum is the hours '
-            'of unskilled labour it buys.')
-    BRIBE_SCANDAL_REDUCTION_SCALE = money_units.PricedInLabourHours("BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT")
-
-    SCANDAL_HAZARD_SCALE = declare(
-        "SCANDAL_HAZARD_SCALE", 60.0, kind="temporary_heuristic",
-        unit="scandal points per unit of yearly denunciation probability",
-        source=None, confidence="D",
-        why="How much scandal above the danger line it takes to add a "
-            "full 100% to this year's denunciation chance - shared with "
-            "the 'YOU ARE BEING TALKED ABOUT' warning text so the number "
-            "quoted there can never disagree with the one that fires. "
-            "Tuned, not measured against any attested denunciation rate.")
-    EMINENCE_CONFISCATION_CAPITAL_LOSS = declare(
-        "EMINENCE_CONFISCATION_CAPITAL_LOSS", 0.55, kind="temporary_heuristic",
-        unit="dimensionless (fraction of capital)", source=None,
-        confidence="D",
-        why="Fraction of capital the eminence-driven confiscation outcome "
-            "takes - distinct from society.py's state-notice-driven "
-            "CONFISCATION_CAPITAL_LOSS, this is the court's jealousy of a "
-            "great man, unbribable by design (see prominence_hazard's own "
-            "docstring). Tuned, not measured.")
-    EMINENCE_CONFISCATION_REPUTATION_LOSS = declare(
-        "EMINENCE_CONFISCATION_REPUTATION_LOSS", 18, kind="temporary_heuristic",
-        unit="reputation points", source=None, confidence="D",
-        why="Reputation lost to an eminence-driven confiscation and forced "
-            "retirement - the largest single reputation hit in this file, "
-            "reflecting public disgrace on top of the property loss. "
-            "Tuned, not measured.")
-    EMINENCE_CONFISCATION_RETENTION = declare(
-        "EMINENCE_CONFISCATION_RETENTION", 0.45, kind="temporary_heuristic",
-        unit="dimensionless (fraction of eminence kept)", source=None,
-        confidence="D",
-        why="Fraction of eminence kept after a confiscation and forced "
-            "withdrawal - the outcome itself lowers prominence sharply. "
-            "Tuned, not measured.")
-    EMINENCE_PATRON_LOSS_RETENTION = declare(
-        "EMINENCE_PATRON_LOSS_RETENTION", 0.5, kind="temporary_heuristic",
-        unit="dimensionless (fraction of eminence kept)", source=None,
-        confidence="D",
-        why="Fraction of eminence kept after a patron is destroyed in "
-            "someone else's quarrel - a smaller drop than "
-            "EMINENCE_CONFISCATION_RETENTION since the founder's own "
-            "position is not directly struck. Tuned, not measured.")
-    EMINENCE_PATRON_LOSS_REPUTATION_LOSS = declare(
-        "EMINENCE_PATRON_LOSS_REPUTATION_LOSS", 10, kind="temporary_heuristic",
-        unit="reputation points", source=None, confidence="D",
-        why="Reputation lost when a patron is destroyed - smaller than "
-            "EMINENCE_CONFISCATION_REPUTATION_LOSS since the disgrace is "
-            "the patron's, not directly the founder's. Tuned, not "
-            "measured.")
-
-    BONDAGE_LABOUR_SHARE = declare(
-        "BONDAGE_LABOUR_SHARE", 0.75, kind="temporary_heuristic",
-        unit="dimensionless (share of a founder-year's hours)",
-        source=None, confidence="D",
-        why="Share of a founder's yearly hours treated as owed labour "
-            "while serving out a debt-bondage term. Tuned to leave some "
-            "hours for the founder's own affairs even in bondage; not "
-            "measured.")
-    BONDAGE_WAGE_MARKUP = declare(
-        "BONDAGE_WAGE_MARKUP", 1.2, kind="temporary_heuristic",
-        unit="dimensionless multiplier", source=None, confidence="D",
-        why="Markup on the plain labourer wage used to value bonded "
-            "labour toward debt repayment - bonded labour is valued a "
-            "little above the cheapest free-market rate. Tuned, not "
-            "measured.")
-    SANITATION_LIFE_EXTENSION_YEARS = declare(
-        "SANITATION_LIFE_EXTENSION_YEARS", 0.12, kind="temporary_heuristic",
-        unit="years added per year of founder mortality roll",
-        source=None, confidence="D",
-        why="Extra expected lifespan per year once sanitation and "
-            "antisepsis are known - 'you at least do not die of a septic "
-            "cut'. A real effect in kind (antisepsis measurably cut "
-            "mortality), invented in this specific magnitude; a real "
-            "figure needs an actual survival-curve shift rather than a "
-            "flat annual bonus.")
-    DISSOLUTION_YEARS_BEFORE_FORGETTING = declare(
-        "DISSOLUTION_YEARS_BEFORE_FORGETTING", 3, kind="temporary_heuristic",
-        unit="years", source=None, confidence="D",
-        why="Years a founderless programme sits stalled before it starts "
-            "actively forgetting technologies - a brief gap is not yet "
-            "dissolution. Round number, not measured.")
-    DISSOLUTION_FORGET_FRACTION_DIVISOR = declare(
-        "DISSOLUTION_FORGET_FRACTION_DIVISOR", 6, kind="temporary_heuristic",
-        unit="dimensionless (divisor; forgets roughly a sixth)",
-        source=None, confidence="D",
-        why="How large a bite a dissolving programme's forgetting takes "
-            "each qualifying year - roughly a sixth of what remains "
-            "losable. Tuned so full dissolution over "
-            "DISSOLUTION_YEARS_UNTIL_END years is gradual, not "
-            "instantaneous; not measured.")
-    DEPUTIES_CARRY_THE_WORK_FROM = declare(
-        "DEPUTIES_CARRY_THE_WORK_FROM", 0.5, kind="temporary_heuristic",
-        unit="deputies (continuous level of directors_extra)", source=None,
-        confidence="D",
-        why="How many deputies it takes before a programme can go on "
-            "without its founder; below it the deputies still do real "
-            "work but the dissolution clock keeps running. One rule, "
-            "read by the death notice, the clock, hiring and `state`. "
-            "Round number, not measured.")
-    DISSOLUTION_YEARS_UNTIL_END = declare(
-        "DISSOLUTION_YEARS_UNTIL_END", 12, kind="temporary_heuristic",
-        unit="years", source=None, confidence="D",
-        why="Years a founderless, deputy-less programme can dissolve "
-            "before the run ends outright - stated directly to the player "
-            "('the programme goes on without you... over twelve years' / "
-            "'the run ends at twelve'), so this number is quoted in "
-            "several log messages as well as enforced here. Round number, "
-            "not measured.")
-
-    MAX_ACTIVE_PROJECTS_BASE = declare(
-        "MAX_ACTIVE_PROJECTS_BASE", 2, kind="temporary_heuristic",
-        unit="projects", source=None, confidence="D",
-        why="Minimum number of projects a household can hold active at "
-            "once, before scholars/artisans/director hours add more. "
-            "Round number, not measured.")
-    MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS = declare(
-        "MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS", 2000.0, kind="temporary_heuristic",
-        unit="founder-hours per extra active project", source=None,
-        confidence="D",
-        why="How many director-hours of capacity buy one more active "
-            "project slot - see the comment above: doubling this whole "
-            "formula was measured to make every civilisation worse (Rome "
-            "fell from 33% of runs reaching the transistor to none), "
-            "because more projects in hand divide the same purse into "
-            "smaller annual payments. Kept at the value that measured "
-            "better, not derived from a model of attention or budgeting.")
-    MAX_ACTIVE_PROJECTS_PER_SCHOLAR = declare(
-        "MAX_ACTIVE_PROJECTS_PER_SCHOLAR", 12.0, kind="temporary_heuristic",
-        unit="scholars per extra active project", source=None,
-        confidence="D",
-        why="How many scholars buy one more active project slot. Tuned "
-            "alongside MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS and "
-            "MAX_ACTIVE_PROJECTS_PER_ARTISAN as one measured formula; not "
-            "independently derived.")
-    MAX_ACTIVE_PROJECTS_PER_ARTISAN = declare(
-        "MAX_ACTIVE_PROJECTS_PER_ARTISAN", 25.0, kind="temporary_heuristic",
-        unit="artisans per extra active project", source=None,
-        confidence="D",
-        why="How many artisans buy one more active project slot - see "
-            "MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS's own comment for the "
-            "measurement this whole formula was tuned and then held "
-            "against.")
-
-    WAGE_FALLBACK_MIN_HOURS = declare(
-        "WAGE_FALLBACK_MIN_HOURS", 100.0, kind="temporary_heuristic",
-        unit="founder-hours", source=None, confidence="D",
-        why="Minimum unused hours before the optimizer's wage-work "
-            "fallback bothers activating - not worth the overhead of "
-            "selling a token amount. Round number, not measured.")
-    WAGE_FALLBACK_LIVING_COST_YEARS = declare(
-        "WAGE_FALLBACK_LIVING_COST_YEARS", 2, kind="temporary_heuristic",
-        unit="years of living cost", source=None, confidence="D",
-        why="How thin a cash buffer (in years of living cost) triggers "
-            "the optimizer selling idle hours for wages rather than "
-            "riding out a bad year - see comment above: without this, a "
-            "single early fire could end a run in a handful of years. "
-            "Tuned, not measured.")
-    WAGE_FALLBACK_MAX_HOURS = declare(
-        "WAGE_FALLBACK_MAX_HOURS", 1200.0, kind="temporary_heuristic",
-        unit="founder-hours/year", source=None, confidence="D",
-        why="Ceiling on how many hours a year the wage-work fallback will "
-            "sell, so it cannot consume the entire year even when nothing "
-            "else has any claim on the founder's time. Tuned, not "
-            "measured.")
+    @property
+    def labour(self):
+        """The workforce module's labour implementation (tests and mods still call its members)."""
+        return self.assembly.modules["workforce"].labour
 
     def step(self):
         """Advance every seat one year (the order and what runs once or per seat: year_run.py)."""
         run_year(self)
 
-    # ---- THE YEAR'S PHASES ------------------------------------------------
-    # _step_apprenticeships through _step_founder_mortality - the fourteen
-    # named phases step() calls above, in the same order - moved to
-    # sim/engine/core_step_phases.py's StepPhasesMixin. Sim still inherits
-    # StepPhasesMixin below, so step() calls self._step_whatever() exactly
-    # as it did when these were defined here.
+    # ---- the seat registry (sim/engine/seat_registry.py) ----
 
+    def add_seat(self, seat_id, seat):
+        seat_registry.add_seat(self, seat_id, seat)
 
+    def act_as(self, seat_id):
+        """Run the body as `seat_id`, then restore the seat that was acting."""
+        return seat_registry.act_as(self, seat_id)
 
-    # ---- THRESHOLD GOALS: completed by measurement, not by labour ---------
-    # A goal need not be a thing you build. "Raise literacy past a fifth" or
-    # "cut most of what epidemics take" are states of the whole
-    # society, not a project with hours and materials - see data/branches/
-    # meta.goals and its own note on why a threshold is still modelled as a
-    # node (so closure()/critical_path()/Sim.run() never need a second idea
-    # of what a goal is) rather than as a second mechanism bolted on beside
-    # the ordinary one.
-    WIN_CONDITION_METRICS = frozenset(
-        ("literacy_general", "literacy_elite", "epidemic_relief"))
-
-    def _win_condition_value(self, condition):
-        """The live number a win_condition's `metric` names, 0..1. Raises for
-        a metric this engine does not know how to read - at load time, via
-        `validate`, not mid-game - rather than silently reading 0 forever for
-        a typo no playtest would otherwise catch."""
-        metric = condition.get("metric")
-        if condition.get("source") == "attribute":
-            path = condition.get("path")
-            if not isinstance(path, str) or path.startswith("_") or "." in path:
-                raise ValueError("invalid win_condition attribute path %r" % path)
-            value = getattr(self, path, None)
-            if not isinstance(value, (int, float)):
-                raise ValueError("win_condition attribute %r is not numeric" % path)
-            return float(value)
-        if condition.get("source") == "generation_share":
-            breakdown = self.generation_breakdown_kw()
-            total = breakdown["total_kw"]
-            return (breakdown["sources_kw"].get(condition.get("key"), 0.0) / total
-                    if total else 0.0)
-        if metric in ("literacy_general", "literacy_elite"):
-            return self.literacy(metric)
-        if metric == "epidemic_relief":
-            # hazard_relief returns the SURVIVING fraction of the harm
-            # (1.0 = no protection at all); relief is what is cut, the rest
-            # of it - see society.py's own docstring on the diminishing,
-            # never-quite-zero shape of that number.
-            return 1.0 - self.hazard_relief("staff_loss")[0]
-        raise ValueError("unknown win_condition metric %r" % metric)
-
-    def _check_win_conditions(self, year):
-        """Once a year: every node carrying a `win_condition` that is not
-        already done gets checked against the live measurement it names,
-        and completes itself - exactly like a normal completion (done,
-        done_year, the log, goal_year if it is the running goal) but with
-        no cost charged and no `apply_tech_effects`/reputation/scandal call,
-        because nobody did any work; a measurement crossed a line. Sorted
-        so the order is reproducible under a fixed PYTHONHASHSEED, the same
-        reasoning `topo_order` and the attrition loop above already give
-        for walking `self.nodes`/`self.household.done` in id order rather than a bare
-        set's own iteration order.
-
-        Walks `self._win_condition_keys` (built once, in __init__, from the
-        static node data - see the comment there), not `sorted(self.nodes)`:
-        that avoids re-sorting every one of the ~2,849 node ids in the whole
-        tree, every single year, to reach the handful that actually carry a
-        win_condition at all - pure self time (`sorted` and dict-get, both
-        C-level, nothing further to profile under it).
-        """
-        for node_id in self._win_condition_keys:
-            if node_id in self.state.projects.done:
-                continue
-            win_condition = self.nodes[node_id]["win_condition"]
-            if not win_condition:
-                continue
-            val = self._win_condition_value(win_condition)
-            if not win_condition_met(win_condition, val):
-                continue
-            self.state.projects.done.add(node_id)
-            self._done_changed()
-            if self.state.projects.done_year is None:
-                self.state.projects.done_year = {}
-            self.state.projects.done_year[node_id] = year
-            self.state.household.log.append((year, LogLine("goal_achieved", "achieved: " + self.nodes[node_id]["name"])))
-            self.record_goal_reached(node_id, year)
+    @property
+    def rng(self):
+        """The game's random source: the scenario module's (`game_random`)."""
+        return self._scenario.dice
 
     def run(self, goal, horizon=None):
         self.goal = goal
-        self.state.projects.done_year = {}
+        self.send(StartDoneYearRecord())
         horizon = horizon or self.cfg["horizon_years"]
         end = self.cfg["start_year"] + horizon
-        while self.state.scenario.year < end and not self.run_over():
+        while self.year < end and not self.view("run_over")():
             self.step()
         return self
 

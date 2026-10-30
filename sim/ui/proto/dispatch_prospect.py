@@ -1,5 +1,8 @@
 """Prospecting a held tile for a material's hidden deposits."""
 
+from sim.refusal import Refusal
+from sim.resources.api import Prospect
+
 from .command_registry import command
 
 
@@ -23,7 +26,7 @@ def _cmd_prospect(sim, nodes, cmd, ended):
         person_days = 0.0
     if not (tile and material):
         return {"ok": False, "error": 'say where and for what: {"cmd":"prospect","tile":"<tile>","material":"coal","person_days":2000}'}
-    ok, message = sim.prospect_deposits(tile, sim._normalize_material_name(material), person_days)
-    if not ok:
-        return {"ok": False, "error": message}
-    return {"ok": True, "prospected": message, "capital": round(sim.capital, 1)}
+    answer = sim.send(Prospect(tile, sim.view("normalized_material")[material], person_days))
+    if isinstance(answer, Refusal):
+        return {"ok": False, "error": str(answer)}
+    return {"ok": True, "prospected": answer["message"], "capital": round(sim.view("acting_balance")(), 1)}

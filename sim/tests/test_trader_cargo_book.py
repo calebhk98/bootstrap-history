@@ -13,7 +13,7 @@ from types import SimpleNamespace
 
 from sim.book import Book, GoodsMove, Transfer
 from sim.economy.types import EDGE_CARGO, external_edge
-from sim.engine import economy_port_cargo as cargo
+from sim.markets import port_cargo as cargo
 
 PARTNER = "partner"
 GRAIN = "grain"

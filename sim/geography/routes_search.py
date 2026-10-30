@@ -7,10 +7,11 @@ so many destinations from one origin cost one search. Plain data out.
 Standalone: the route graph, compile and rates modules of this package.
 """
 import heapq
-from typing import Any, Dict, Iterable, Mapping, Optional
+from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
 from sim.geography import routes_compile, routes_modes, routes_rates, routes_graph
 from sim.geography.map_source import WorldMap
+from sim.geography.routes_cost_tree import least_cost_tree
 
 INFINITY = float("inf")
 
@@ -82,41 +83,25 @@ def _cost_adjacency(compiled: routes_compile.Compiled):
     return adjacency
 
 
-def _cost_tree(compiled: routes_compile.Compiled, origins: frozenset, within: Optional[frozenset] = None) -> list:
+def _cost_tree(compiled: routes_compile.Compiled, origins: frozenset, within: Optional[frozenset] = None,
+               kernel: Optional[Callable] = None) -> list:
     """The least cost to every state: the same values `_tree` finds by cost (a path's cost is summed in
     order from the origin whatever the search order), without the days and routes. With `within` (tile ids)
-    the search stops once those tiles are settled: their costs are final, other states' are not."""
+    the search stops once those tiles are settled: their costs are final, other states' are not. The search is
+    the kernel `least_cost_tree` (routes_cost_tree.py), the caller's bound one when it has one."""
     key = (origins, "cost", within)
     cached = compiled.trees.get(key)
     if cached is not None:
         return cached
     adjacency = _cost_adjacency(compiled)
     count = len(compiled.mode_ids)
-    cost = [INFINITY] * len(adjacency)
-    queue = []
+    starts = []
     for tile_id in sorted(origins):
         tile = compiled.tile_index[tile_id]
         for position in compiled.modes_at[tile]:
-            state = tile * count + position
-            cost[state] = compiled.handling[position][0]
-            queue.append((cost[state], state))
-    heapq.heapify(queue)
-    pop, push = heapq.heappop, heapq.heappush
-    unsettled = None if within is None else {compiled.tile_index[tile_id] for tile_id in within
-                                             if tile_id in compiled.tile_index}
-    while queue:
-        here_cost, state = pop(queue)
-        if here_cost > cost[state]:
-            continue
-        if unsettled:
-            unsettled.discard(state // count)
-            if not unsettled:
-                break
-        for to_state, step_cost in adjacency[state]:
-            new_cost = here_cost + step_cost
-            if new_cost < cost[to_state]:
-                cost[to_state] = new_cost
-                push(queue, (new_cost, to_state))
+            starts.append((compiled.handling[position][0], tile * count + position))
+    settle = None if within is None else {compiled.tile_index[tile_id] for tile_id in within if tile_id in compiled.tile_index}
+    cost = (kernel or least_cost_tree)(adjacency, starts, count, settle)
     compiled.trees[key] = cost
     return cost
 
@@ -215,15 +200,16 @@ def costs_from(world_map: WorldMap, origin_tiles: Iterable[str], modes: Iterable
                mode_costs: Optional[Mapping[str, float]] = None,
                handling_costs: Optional[Mapping[str, float]] = None,
                held_nodes: Optional[Iterable[str]] = None,
-               within: Optional[Iterable[str]] = None) -> Dict[str, float]:
+               within: Optional[Iterable[str]] = None, cost_tree: Optional[Callable] = None) -> Dict[str, float]:
     """{tile: least cost per tonne from any origin tile} for every tile a haul reaches (origins cost 0).
     One search serves every destination; the tree is kept like `route`'s. With `within` only those tiles
-    are answered, and the search stops when they are settled."""
+    are answered, and the search stops when they are settled. `cost_tree` is the caller's kernel for the search
+    (`routes_cost_tree.least_cost_tree` when None)."""
     origins = _origin_indexes(world_map, origin_tiles)
     compiled = routes_compile.compiled_for(world_map, routes_modes.checked_mode_ids(world_map, modes),
                                            improvements, mode_costs, handling_costs, held_nodes)
     only = None if within is None else frozenset(within)
-    cost = _cost_tree(compiled, origins, only)
+    cost = _cost_tree(compiled, origins, only, cost_tree)
     count = len(compiled.mode_ids)
     result: Dict[str, float] = {}
     for tile_id, tile in compiled.tile_index.items():

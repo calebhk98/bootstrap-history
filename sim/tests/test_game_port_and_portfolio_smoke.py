@@ -4,7 +4,7 @@ import json
 import os
 import unittest
 
-from sim.engine import economy_port_setup
+from sim.markets import port_setup
 from sim.geography import api as geography_api
 from sim.tests.harness import NODES, S, unopened_sim
 
@@ -19,11 +19,11 @@ class PortHandsTheEconomyTheGamesData(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.game = unopened_sim()
-        cls.setup = economy_port_setup.build_setup(cls.game)
+        cls.setup = port_setup.build_setup(cls.game.view("legacy_economy")().world)
 
     def test_a_game_with_nothing_built_hands_the_economy_no_ways_and_a_road_is_priced_below_a_track(self):
         self.assertEqual(self.setup.improvements, {})
-        carriage = economy_port_setup.opening_values(self.game)["carriage"]
+        carriage = port_setup.opening_values(self.game.view("legacy_economy")().world)["carriage"]
         self.assertGreater(carriage["road"], 0.0)
         self.assertLess(carriage["road"], carriage["cart"])
 
@@ -31,9 +31,10 @@ class PortHandsTheEconomyTheGamesData(unittest.TestCase):
         tiles = sorted(self.setup.tiles)
         pair = next((tile, other) for tile in tiles for other in self.setup.tiles[tile].borders if other in self.setup.tiles)
         edge = geography_api.edge_key(*pair)
-        self.game.state.economy.improvements = {edge: {"road": True}}
-        self.assertEqual(economy_port_setup.build_setup(self.game).improvements, {edge: {"road": True}})
-        self.game.state.economy.improvements = {}
+        built = self.game.view("built_ways")()
+        built[edge] = {"road": True}
+        self.assertEqual(port_setup.build_setup(self.game.view("legacy_economy")().world).improvements, {edge: {"road": True}})
+        built.clear()
 
     def test_each_trade_carries_its_stated_risk_and_each_durable_good_its_stated_service_life(self):
         with open(os.path.join(DATA, "trades.json"), encoding="utf-8") as handle:
@@ -49,17 +50,17 @@ class PortHandsTheEconomyTheGamesData(unittest.TestCase):
         self.assertEqual(self.setup.specs["wheat_kg"].service_life_years, 0.0)
 
     def test_the_setup_carries_the_unskilled_trade_the_registry_names(self):
-        self.assertEqual(self.setup.unskilled_trade, economy_port_setup.opening_values(self.game)["unskilled_trade"])
+        self.assertEqual(self.setup.unskilled_trade, port_setup.opening_values(self.game.view("legacy_economy")().world)["unskilled_trade"])
         self.assertIn(self.setup.unskilled_trade, self.setup.opening_wages)
 
 
 class PortfolioGroupsEveryActiveProject(unittest.TestCase):
     def test_every_active_project_is_in_exactly_one_bottleneck_group(self):
         game = unopened_sim(capital=5_000_000.0)
-        for node_id in list(game.order):
+        for node_id in game.view("project_order")():
             if len(game.active) >= 6:
                 break
-            if node_id not in game.done and game.can_start(node_id):
+            if node_id not in game.done and game.view("start_check")(node_id, False, None, False)[0]:
                 self.assertTrue(_ask(game, cmd="start", id=node_id).get("ok"), node_id)
         self.assertGreaterEqual(len(game.active), 3)
         groups = _ask(game, cmd="portfolio").get("bottlenecks")

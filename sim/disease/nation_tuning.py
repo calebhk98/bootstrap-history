@@ -1,5 +1,5 @@
 """The disease model's nation-level numbers, shared by every country that runs it (the home nation through
-`sim/engine/disease_port.py`, each foreign country through `sim/agents/country_disease.py`)."""
+the disease module (`sim/disease/module.py`), each foreign country through `sim/agents/country_disease.py`)."""
 from sim.constants import declare
 from sim.world import demography
 

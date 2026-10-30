@@ -1,27 +1,61 @@
-"""Complaint 47: the disease burden reaches the population step. `Sim._disease_burden` hands the technologies' weights and the
-holdings to `burden_from_holdings` (stand-in `self`), and `step_regions` hands the burden it is given to every region's step."""
+"""Complaint 47: the disease burden reaches the population step. The disease module's `disease_burden` hands the technologies' weights
+and the holdings to `burden_from_holdings` (views answered by plain values), and `step_regions` hands the burden it is given to every region's step."""
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine import core
-from sim.engine.core import Sim
+from sim.disease import burden
+from sim.disease.module import Disease
+from sim.tests import module_harness
 from sim.world import regional_population
 from sim.world.demography import Population
+
+CLINICS = "clinics"
+
+
+def burden_module(held, weights, coverage=(), coverage_share=lambda node_id: 0.0, mechanic_ids=None):
+    """A disease module over technologies with these effect weights, holding `held`."""
+    return module_harness.build(Disease, views={
+        "mechanic": {"disease_burden": tuple(mechanic_ids or weights)}, "tech_effects": {tech: {"population": weight} if weight is not None else {}
+                                                                                          for tech, weight in weights.items()},
+        "techniques_held": set(held), "coverage": list(coverage), "coverage_share": coverage_share})
 
 
 class DiseaseBurdenReadsTheHoldings(unittest.TestCase):
     def test_the_weights_are_the_effects_population_figures_and_the_holdings_are_the_games(self):
         recorded = []
-        game = SimpleNamespace(DISEASE_BURDEN_TECH_IDS=("water", "vaccine"),
-                               _tech_effects={"water": {"population": 0.05}, "vaccine": {}},
-                               disease_burden_held=lambda tech_id: 1.0 if tech_id == "water" else 0.0)
-        with mock.patch.object(core, "burden_from_holdings", lambda weights, held: recorded.append((weights, held)) or 0.4):
-            burden = Sim._disease_burden(game)
-        self.assertEqual(burden, 0.4)
+        module = burden_module({"water"}, {"water": 0.05, "vaccine": None})
+        with mock.patch.object(burden, "burden_from_holdings", lambda weights, held: recorded.append((weights, held)) or 0.4):
+            result = module.disease_burden()
+        self.assertEqual(result, 0.4)
         self.assertEqual(recorded, [({"water": 0.05, "vaccine": 0.0}, {"water": 1.0, "vaccine": 0.0})])
+
+    def test_clinics_reaching_half_the_people_take_half_their_weight_off_the_burden(self):
+        module = burden_module({CLINICS}, {"germ_theory": 1.0, CLINICS: 3.0}, coverage=[CLINICS], coverage_share=lambda node_id: 0.5)
+        self.assertAlmostEqual(module.disease_burden(), 1.0 - 1.5 / 4.0, places=12)
+
+    def test_clinics_built_but_shut_take_nothing_off(self):
+        module = burden_module({CLINICS}, {"germ_theory": 1.0, CLINICS: 3.0}, coverage=[CLINICS], coverage_share=lambda node_id: 0.0)
+        self.assertEqual(module.disease_burden(), 1.0)
+
+    def test_every_technology_held_leaves_no_burden(self):
+        module = burden_module({"germ_theory", CLINICS}, {"germ_theory": 1.0, CLINICS: 3.0})
+        self.assertEqual(module.disease_burden(), 0.0)
+
+
+class DiseaseBurdenHeldTests(unittest.TestCase):
+    def test_a_work_that_declares_coverage_counts_as_the_share_it_serves(self):
+        module = burden_module({CLINICS}, {CLINICS: 1.0}, coverage=[CLINICS], coverage_share=lambda node_id: 0.4)
+        self.assertEqual(module.disease_burden_held(CLINICS), 0.4)
+
+    def test_a_technology_that_declares_no_coverage_counts_whole_once_held(self):
+        module = burden_module({CLINICS}, {CLINICS: 1.0})
+        self.assertEqual(module.disease_burden_held(CLINICS), 1.0)
+
+    def test_a_technology_not_held_counts_nothing(self):
+        module = burden_module(set(), {"germ_theory": 1.0})
+        self.assertEqual(module.disease_burden_held("germ_theory"), 0.0)
 
 
 class StepRegionsPassesTheBurden(unittest.TestCase):

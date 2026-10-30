@@ -10,8 +10,9 @@ from unittest import mock
 
 from .harness import check
 
-from sim.engine import prices, shipped_rate_bands
+from sim.prices import prices
 
+from sim.engine import shipped_rate_bands
 STARTING_RATE = 0.12
 HELD = frozenset({"node_a"})
 RATIOS = {"labourer": 1.0}

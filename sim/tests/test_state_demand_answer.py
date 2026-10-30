@@ -102,36 +102,40 @@ check("a stance not built yet is refused and the old one stands",
 
 # ---- the founder's household answers the same way ---------------------------------------------
 import random
-from types import SimpleNamespace
 
-from sim.engine.state_demand import answer_state_demand, set_household_stance
+from sim.polity.state import PolitySeat
+from sim.tests import polity_host
 
 
 def founder_game(capacity=0.9, protection=0.0, seed=1):
-	return SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(demand_stance="comply", protection=protection, service_offer=0.0, concealed=0.0, defiance=0.0, scandal=0.0)),
-	                       state_reach=lambda: capacity, rng=random.Random(seed))
+	"""The polity module over a seat that complies, a state of this reach and a dice."""
+	rng = random.Random(seed)
+	module = polity_host.build(seat=PolitySeat(protection=protection), game_random=rng)
+	module.state_reach = lambda: capacity
+	module.rng = rng
+	return module
 
 
 game = founder_game()
 before = game.rng.getstate()
 check("a founder who complies pays the demand without touching the random stream",
-      answer_state_demand(game, 100.0)["paid"] == 100.0 and game.rng.getstate() == before)
-note = set_household_stance(game, "refuse")
+      game.answer_state_demand(100.0)["paid"] == 100.0 and game.rng.getstate() == before)
+note = game.set_household_stance("refuse")
 check("the founder's stance is set and the reply names the odds",
-      game.state.household.demand_stance == "refuse" and "chance" in note, note)
-outcomes = [answer_state_demand(game, 100.0) for _roll in range(200)]
+      game.seat.demand_stance == "refuse" and "chance" in note, note)
+outcomes = [game.answer_state_demand(100.0) for _roll in range(200)]
 caught = [each for each in outcomes if each["enforced"]]
 check("across many demands a refusing founder is sometimes enforced and sometimes not",
       0 < len(caught) < len(outcomes), len(caught))
 check("the share enforced follows the state's capacity",
       abs(len(caught) / len(outcomes) - demand_answer.enforcement_chance(0.9, 0.0)) < 0.12, len(caught))
 protected = founder_game(protection=1.0)
-protected.state.household.demand_stance = "refuse"
-caught_protected = sum(answer_state_demand(protected, 100.0)["enforced"] for _roll in range(200))
+protected.seat.demand_stance = "refuse"
+caught_protected = sum(protected.answer_state_demand(100.0)["enforced"] for _roll in range(200))
 check("a protected founder is enforced against less often", caught_protected < len(caught), (caught_protected, len(caught)))
 try:
-	set_household_stance(game, "hide")
+	game.set_household_stance("hide")
 	rejected = False
 except ValueError:
 	rejected = True
-check("a stance not built yet is rejected for the founder too", rejected and game.state.household.demand_stance == "refuse")
+check("a stance not built yet is rejected for the founder too", rejected and game.seat.demand_stance == "refuse")

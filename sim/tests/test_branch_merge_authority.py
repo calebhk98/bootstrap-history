@@ -19,7 +19,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from sim.engine import tree_merge
+from sim.content import tree_merge
 
 
 def _node(node_id, **overrides):

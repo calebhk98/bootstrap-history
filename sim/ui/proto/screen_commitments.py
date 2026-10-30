@@ -6,21 +6,21 @@ from .screen_education import _fraction_of
 
 
 def _goal(sim):
-    if sim.fog:
-        return {"id": None, "name": None, "reached": sim.goal_year is not None,
-                "year_reached": sim.goal_year, "withheld": "the goal's name is fogged until you learn it"}
-    if sim.goal not in sim.nodes:
-        return {"id": sim.goal, "name": None, "reached": sim.goal_year is not None,
-                "year_reached": sim.goal_year, "withheld": "no goal is set"}
-    return {"id": sim.goal, "name": sim.nodes[sim.goal]["name"],
-            "reached": sim.goal_year is not None, "year_reached": sim.goal_year}
+    if sim.view("fog_of_war")():
+        return {"id": None, "name": None, "reached": sim.view("goal")()["year"] is not None,
+                "year_reached": sim.view("goal")()["year"], "withheld": "the goal's name is fogged until you learn it"}
+    if sim.view("goal")()["node"] not in sim.view("tree_nodes")():
+        return {"id": sim.view("goal")()["node"], "name": None, "reached": sim.view("goal")()["year"] is not None,
+                "year_reached": sim.view("goal")()["year"], "withheld": "no goal is set"}
+    return {"id": sim.view("goal")()["node"], "name": sim.view("tree_nodes")()[sim.view("goal")()["node"]]["name"],
+            "reached": sim.view("goal")()["year"] is not None, "year_reached": sim.view("goal")()["year"]}
 
 
 def _literacy(sim):
-    general = float(sim.literacy("literacy_general"))
-    elite = float(sim.literacy("literacy_elite"))
-    ceiling_general = sim.literacy_ceiling_general()
-    ceiling_elite = sim.literacy_ceiling_elite()
+    general = float(sim.view("literacy")("literacy_general"))
+    elite = float(sim.view("literacy")("literacy_elite"))
+    ceiling_general = sim.view("literacy_ceiling")["literacy_general"]
+    ceiling_elite = sim.view("literacy_ceiling")["literacy_elite"]
     return {"general": round(general, 4), "general_ceiling": round(ceiling_general, 4),
             "share_of_ceiling_general": _fraction_of(general, ceiling_general),
             "elite": round(elite, 4), "elite_ceiling": round(ceiling_elite, 4),
@@ -28,22 +28,22 @@ def _literacy(sim):
 
 
 def _reserve(sim):
-    household = sim.state.household
-    return {"craftsmen": household.reserve_craftsmen, "scholars": household.reserve_scholars,
-            "policy_on": bool(sim.policy.get("reserve_staff", False))}
+    staff = sim.view("staff")()
+    return {"craftsmen": staff["reserve_craftsmen"], "scholars": staff["reserve_scholars"],
+            "policy_on": bool(sim.view("founder")()["policy"].get("reserve_staff", False))}
 
 
 def _institutions(sim):
     rows = []
-    for node_id in sorted(sim.done):
-        node = sim.nodes.get(node_id)
+    for node_id in sorted(sim.view("techniques_held")()):
+        node = sim.view("tree_nodes")().get(node_id)
         if not node or node.get("kind") != "INSTITUTION":
             continue
-        if sim.fog and not sim.is_visible(node_id):
+        if sim.view("fog_of_war")() and not sim.view("visibility")(node_id):
             continue
         rows.append({"id": node_id, "name": node["name"],
-                     "state": "open" if sim.running(node_id) else "closed",
-                     "units": round(sim.institution_units(node_id), 2)})
+                     "state": "open" if sim.view("running")[node_id] else "closed",
+                     "units": round(sim.view("institution_units")[node_id], 2)})
     return rows
 
 

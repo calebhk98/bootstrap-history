@@ -11,7 +11,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from sim.engine.mods import ModError, get_ordered_mods, load_mod_production, load_mod_tree
+from sim.content.api import ModError, get_ordered_mods, load_mod_production, load_mod_tree
 
 
 BASE_NODE = {"id": "mat_copper", "name": "Copper", "cat": "material", "note": "", "cap_hours": 100,

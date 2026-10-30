@@ -6,7 +6,11 @@ from sim.game_version import GAME_VERSION
 from sim.refusal import Refusal, cause_of
 
 from .data import WAGES
-from .save_fog import fog_mismatch
+from . import game_assembly, node_rederive
+from sim.knowledge.api import RevealNodes, fog_mismatch
+from sim.scenario.api import SetFuzzyEstimates, scenario_slot_of
+from sim.seats.api import ForgetGoalClosure
+from sim.materials.api import CaptureReadings
 from .rng_record import restore_rng, rng_record
 from sim.engine.state import (
     SAVE_FIELDS,  # noqa: F401 - compatibility export used by protocol.py
@@ -22,25 +26,16 @@ class EconomyNotOpened(ValueError):
 
 def state_text(sim):
 	"""The whole game as JSON text, from the live sim.state."""
-	sim.economy.flush_record()
+	sim.view("legacy_economy")().flush_record()
 	sim.state._civ = sim.civ.get("id")
-	sim.state._goal = sim.goal
-	sim.state._weights = dict(sim.value_weights)
-	sim.state._fog = sim.fog
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))
-	sim.state._seed = getattr(sim, "seed", None)
+	sim.state._seed = sim.seed
 	sim.state._game_version = GAME_VERSION
 	sim.state._rng = rng_record(sim.rng)
-	if hasattr(sim, "population") and getattr(sim, "state", None) is not None and sim.state.population is not None:
-		sim.state.population.pop_children = float(sim.population.children)
-		sim.state.population.pop_working_age = float(sim.population.working_age)
-		sim.state.population.pop_elderly = float(sim.population.elderly)
-
-	held_demand = sim.household._material_demand_cache
-	sim.state.holdings.material_demand_at_last_throttle = None if held_demand is None else dict(held_demand)
+	sim.send(CaptureReadings())      # the demand the last throttle saw is carried in the save
 
 	# the agent economy's record is most of the file and already plain JSON: the encoder takes it as it is
-	with verbatim(sim.state.economy.agent_economy.get("record")):
+	with verbatim(sim.view("legacy_agent_economy")().get("record")):
 		return state_json(serialize_state(sim.state))
 
 
@@ -104,14 +99,14 @@ def _stamp(absolute):
 
 
 REQUIRED_V3_SECTIONS = (
-    "seats", "economy", "scenario", "population",
+    "seats", "economy", "modules",
 )
 
 # What each seat holds; the acting seat's sections are checked and searched like root ones.
-SEAT_SECTIONS = ("household", "projects", "founder", "holdings", "governance", "seat_progress")
+SEAT_SECTIONS = ("household", "founder", "holdings", "seat_progress")
 
 REQUIRED_METADATA_FIELDS = (
-    "_civ", "acting_seat", "_weights", "_fog", "_immortal", "_rng",
+    "_civ", "acting_seat", "_immortal", "_rng",
 )
 
 REQUIRED_SAVE_FIELDS = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
@@ -132,13 +127,16 @@ def _get_field(blob, field_name):
         return None
     if field_name in blob:
         return blob[field_name]
-    for section in ("economy", "scenario", "population"):
-        sec = blob.get(section)
+    for sec in (blob.get("economy"), scenario_slot_of(blob)):   # the clock is the scenario module's
         if isinstance(sec, dict) and field_name in sec:
             return sec[field_name]
     seat = acting_seat_of(blob)
     for section in SEAT_SECTIONS:
         sec = seat.get(section)
+        if isinstance(sec, dict) and field_name in sec:
+            return sec[field_name]
+    for module_id in ("workforce", "projects", "knowledge", "ventures"):   # the trade name sets are the workforce module's, the kept-staffed set the projects', the held sets knowledge's
+        sec = (seat.get("modules") or {}).get(module_id)
         if isinstance(sec, dict) and field_name in sec:
             return sec[field_name]
     return None
@@ -153,7 +151,8 @@ def acting_seat_of(blob):
 
 def goal_of_blob(blob):
     """The win node the acting seat was playing toward."""
-    return acting_seat_of(blob).get("goal")
+    slot = (acting_seat_of(blob).get("modules") or {}).get("seats")
+    return slot.get("goal") if isinstance(slot, dict) else None
 
 
 
@@ -191,15 +190,13 @@ def _check_save_scalars(blob, sim):
     """None if the save's simple top-level fields are valid; otherwise the refusal message."""
     if goal_of_blob(blob) not in sim.nodes:
         return "this save's goal is not in the current technology tree"
-    if not isinstance(blob.get("_weights"), dict):
-        return "this save is corrupt: civilization state should be objects"
     try:
         rng_version, rng_keys, rng_gaussian = blob["_rng"]
         probe = random.Random()
         probe.setstate((rng_version, tuple(int(state_int) for state_int in rng_keys), rng_gaussian))
     except (TypeError, ValueError):
         return "this save has an invalid random-number state"
-    for field_name in ("year", "capital"):
+    for field_name in ("year",):
         value = _get_field(blob, field_name)
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             return "this save is corrupt: '%s' should be a number, got %r" % (field_name, value)
@@ -357,37 +354,33 @@ def _apply_blob(sim, blob):
 	if bad:
 		raise ValueError(bad if cause_of(bad) else Refusal("save_invalid", bad))
 
-	fog_refusal = fog_mismatch(sim.fog, blob.get("_fog"))
+	fog_refusal = fog_mismatch(sim.fog, scenario_slot_of(blob).get("fog"))
 	if fog_refusal:
 		raise ValueError(fog_refusal)
 
-	old_revealed = set(sim.state.projects.revealed) if getattr(sim, "state", None) and getattr(sim.state, "projects", None) and sim.state.projects.revealed else set()
-	asked_fuzzy, asked_salt = sim.fuzzy_estimates, sim.state._fuzzy_salt
+	old_revealed = set(sim.view("techniques_revealed")()) if sim.state else set()
+	asked_fuzzy, asked_salt = sim.fuzzy_estimates, sim.view("fuzzy_salt")()
 	state = deserialize_state(blob)
-	if asked_fuzzy and not state._fuzzy_estimates:   # the option given on the command line stays on
-		state._fuzzy_estimates = True
-		state._fuzzy_salt = state._fuzzy_salt or asked_salt
-	if old_revealed and getattr(state, "projects", None):
-		state.projects.revealed = set(state.projects.revealed or set()) | old_revealed
+	game_assembly.revive(sim, state, deserialize_state)
 	sim.state = state
 	sim._reconnect_state_hooks()
-	if state._fog is not None:
-		sim.fog = bool(state._fog)
+	if old_revealed:   # what the running game had heard of stays heard of
+		sim.send(RevealNodes(tuple(sorted(old_revealed))))
+	if asked_fuzzy and not sim.fuzzy_estimates:   # the option given on the command line stays on
+		sim.send(SetFuzzyEstimates(True, sim.view("fuzzy_salt")() or asked_salt))
 	if state._immortal is not None:
 		sim.cfg["immortal"] = bool(state._immortal)
-	if state._goal is not None:
-		sim.goal = state._goal
+	if sim.goal is not None:
+		sim.send(ForgetGoalClosure())   # what the running game worked out of its goal is not the loaded one's
 	if state._seed is not None:
 		sim.seed = state._seed
 	if state._rng is not None:
 		restore_rng(sim.rng, state._rng)
-	if state._weights:
-		sim.value_weights.update(state._weights)
-	if getattr(sim, "_economy_deferred", False):
+	if sim._economy_deferred:
 		from .opening_money import reprice_tree, saved_tree_pricing
-		figure = saved_tree_pricing(state.economy)
+		figure = saved_tree_pricing(state.modules["markets"].money_from_economy, state.economy.nodes_money_per_labour_hour)
 		if figure is None:
 			raise EconomyNotOpened("a game built to load a save without opening its economy needs the save's tree pricing")
 		sim._economy_deferred = False
 		reprice_tree(sim, figure)
-	sim.refresh_derived_nodes()
+	node_rederive.refresh_derived_nodes(sim)

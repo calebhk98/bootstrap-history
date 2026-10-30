@@ -7,8 +7,11 @@ QUICK_TOPIC = True
 import json
 import unittest
 
-from sim.engine.household_demand_key import demand_key, population_of_key
-from sim.engine.state import HoldingsState, HouseholdState, ProjectsState, deserialize_state, serialize_state
+from sim.knowledge.api import KnowledgeSeat
+from sim.markets.demand_key import demand_key, population_of_key
+from sim.reporting.api import ReportingSeat
+from sim.materials.state import MaterialsSeat
+from sim.engine.state import HouseholdState, deserialize_state, serialize_state
 from sim.refusal import LogLine, Refusal, cause_of, choices_of, facts_of
 
 
@@ -43,22 +46,22 @@ def coded_values(value, found, seen):
 class SavedStateTests(unittest.TestCase):
     def test_a_dict_keeps_its_insertion_order_across_a_save(self):
         order = ["zeta_node", "alpha_node", "mid_node"]
-        projects = ProjectsState(done_year={name: number for number, name in enumerate(order)})
-        self.assertEqual(list(round_trip(projects).done_year), order)
+        knowledge = KnowledgeSeat(done_year={name: number for number, name in enumerate(order)})
+        self.assertEqual(list(round_trip(knowledge).done_year), order)
 
     def test_the_material_demand_the_last_throttle_left_is_in_the_save(self):
-        holdings = HoldingsState(material_demand_at_last_throttle={"iron_kg": 3.5, "coal_kg": 1.25})
+        holdings = MaterialsSeat(material_demand_at_last_throttle={"iron_kg": 3.5, "coal_kg": 1.25})
         self.assertEqual(round_trip(holdings).material_demand_at_last_throttle, {"iron_kg": 3.5, "coal_kg": 1.25})
         self.assertEqual(list(round_trip(holdings).material_demand_at_last_throttle), ["iron_kg", "coal_kg"])
 
     def test_no_held_demand_stays_none(self):
-        self.assertIsNone(round_trip(HoldingsState()).material_demand_at_last_throttle)
+        self.assertIsNone(round_trip(MaterialsSeat()).material_demand_at_last_throttle)
 
 
 class LogRoundTripTests(unittest.TestCase):
     @staticmethod
     def household():
-        return HouseholdState(capital=0.0, log=[
+        return ReportingSeat(log=[
             (100, LogLine("probe_kind", "a probe line", amount=3, names=["a", "b"])),
             (100, "a plain line"),
             (101, Refusal("probe_cause", "a probe refusal", choices=["x", "y"], figure=2.5))])

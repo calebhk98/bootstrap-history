@@ -5,7 +5,7 @@ import json
 import os
 import unittest
 
-from sim.engine.catalog import load_production_catalog
+from sim.content.catalog import load_production_catalog
 from sim.world import demand, need_basket
 from sim.world.shared_constants import WHEAT_ENERGY_KCAL_PER_KG
 

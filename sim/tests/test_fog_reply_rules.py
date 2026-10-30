@@ -17,12 +17,13 @@ from sim.ui.proto.nodes import _did_you_mean
 from sim.ui.proto.state import _agent_state_goal
 
 from .harness import GOAL, NODES
+from sim.tests.ui_stand_in import Game
 
 PREREQUISITES_OF_GOAL = list(NODES[GOAL]["pre"])
 
 
 def fogged_stand_in(heard=()):
-    return SimpleNamespace(nodes=NODES, fog=True, goal=GOAL, done=set(), active={}, revealed=set(heard),
+    return Game(nodes=NODES, fog=True, goal=GOAL, done=set(), active={}, revealed=set(heard),
                            is_visible=lambda node_id, _memo=None: node_id in heard)
 
 
@@ -34,7 +35,7 @@ def dispatch(game, command, node_id):
 class PathUnderFogTests(unittest.TestCase):
     def test_path_is_refused_wholesale_whether_or_not_the_node_is_done(self):
         for done in (set(), {"identity_cover"}):
-            game = SimpleNamespace(fog=True, goal=GOAL, done=done)
+            game = Game(fog=True, goal=GOAL, done=done)
             reply = _cmd_path(game, NODES, {"id": "identity_cover"}, None)
             self.assertIs(reply["ok"], False)
             self.assertNotIn("remaining", reply)
@@ -49,7 +50,7 @@ class UnknownCommandTests(unittest.TestCase):
 
 class GoalUnderFogTests(unittest.TestCase):
     def test_goal_id_is_withheld_and_its_name_is_given(self):
-        game = SimpleNamespace(cfg={"immortal": True}, fog=True, goal=GOAL, nodes=NODES, goal_year=None,
+        game = Game(cfg={"immortal": True}, fog=True, goal=GOAL, nodes=NODES, goal_year=None,
                                manual=True, done=set())
         with mock.patch("sim.ui.proto.state._goal_progress_count", return_value=0):
             reply = _agent_state_goal(game, NODES, None)
@@ -79,14 +80,14 @@ class RefusalsAreAlikeTests(unittest.TestCase):
 
     def test_a_typo_in_a_heard_of_name_gets_the_real_suggestion(self):
         tree = {"ag2_marling": {}, "ag2_reaper": {}}
-        self.assertEqual(_did_you_mean("ag2_marlingg", tree, sim=SimpleNamespace(fog=False)), ["ag2_marling"])
+        self.assertEqual(_did_you_mean("ag2_marlingg", tree, sim=Game(fog=False)), ["ag2_marling"])
 
 
 class HeldNodeTests(unittest.TestCase):
     NODE = {"pre": ["cap_heat_1100"]}
 
     def game(self, granted):
-        return SimpleNamespace(fog=False, granted=set(granted), done={"cap_heat_1300"})
+        return Game(fog=False, granted=set(granted), done={"cap_heat_1300"})
 
     def test_a_granted_node_is_held_and_missing_nothing(self):
         game = self.game({"cap_heat_1300"})
@@ -108,7 +109,7 @@ class AvailableDigestTests(unittest.TestCase):
     RESTS = {"cheap_spine": 50, "dear_spine": 40, "cheap_leaf": 0, "dear_leaf": 0}
 
     def game(self):
-        return SimpleNamespace(project_cost=self.COST.get, effective_risk=lambda node_id: 0.1,
+        return Game(project_cost=self.COST.get, effective_risk=lambda node_id: 0.1,
                                failure_loss=lambda node_id: 1.0, venture_real_earnings=lambda node_id: 7.0,
                                venture_upkeep_quote=lambda node_id: {"now": 3.0, "at_full_staffing": 4.0})
 

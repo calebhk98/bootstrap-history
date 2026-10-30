@@ -2,7 +2,7 @@
 
 Written as unittest.TestCase classes, like sim/tests/test_agriculture.py
 and sim/tests/test_deposits.py: this module has no dependency on
-sim/engine/, sim/engine/solve_prices.py, or any other sim/world/ module (see
+sim/engine/, sim/prices/solve_prices.py, or any other sim/world/ module (see
 demand.py's own STANDALONE section), so importing sim/tests/harness.py
 would pull in the whole engine for no reason. sim/tests/__main__.py's
 _run_topic already runs both styles identically.

@@ -89,6 +89,30 @@ class FakeWorld:
 		"""Every officer reaches every tile unless a test sets `collectible`."""
 		return getattr(self, "collectible", 1.0)
 
+	def corruption_share(self, tiles=None) -> float:
+		return 0.0
+
+	def patent_entry(self, node_id: str) -> Any:
+		return None
+
+	def disclosure_mode(self, node_id: str) -> str:
+		return ""
+
+	def seat_parties(self) -> Dict[str, Any]:
+		return {}
+
+	def seat_margin(self, seat_id: str) -> float:
+		return 0.0
+
+	def release_seat_staff(self, seat_id: str, trade: str, people: float) -> None:
+		pass
+
+	def country_of_place(self, place: str) -> Optional[str]:
+		return None
+
+	def faction_backing(self) -> Dict[str, float]:
+		return {}
+
 	def edge(self, name: str) -> Any:
 		return self.edge_book.edge(name)
 

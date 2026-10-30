@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.goods_market_api import GoodsMarket
+from sim.markets.goods_market import GoodsMarket
 
 
 class SaleRoomTests(unittest.TestCase):

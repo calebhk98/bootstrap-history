@@ -65,10 +65,9 @@ class SoldierMarket(LabourMarket):
 
     def __init__(self, soldiers=0.0, supply=WORKING_AGE * HOURS, soldier_hours_hired=0.0):
         records = {"soldier": (soldier_hours_hired, 100)} if soldier_hours_hired else {}   # what hiring them recorded this year
-        state = types.SimpleNamespace(household=types.SimpleNamespace(labour_pressure_records=records),
-                                      scenario=types.SimpleNamespace(year=100))
+        state = types.SimpleNamespace(scenario=types.SimpleNamespace(year=100))
         world = types.SimpleNamespace(
-            state=state, HOURS_PER_PERSON_YEAR=HOURS, wages={"labourer": 1.0, "soldier": 1.0, "smith": 1.0},
+            workforce=types.SimpleNamespace(labour_pressure_records=records), year=100, state=state, HOURS_PER_PERSON_YEAR=HOURS, wages={"labourer": 1.0, "soldier": 1.0, "smith": 1.0},
             trade_registry={"labourer": {"fallback": True}, "soldier": {}, "smith": {}},
             actor_staff_fte=lambda trade: soldiers if trade == "soldier" else 0.0)
         labour = types.SimpleNamespace(_world=world, market_supply=lambda trade: supply,

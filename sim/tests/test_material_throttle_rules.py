@@ -5,7 +5,10 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.material_throttle import draw_one_material, year_opening_record
+from sim.ledger.api import rules as ledger_rules
+from sim.materials.rules import draw_one_material
+
+year_opening_record = ledger_rules.year_opening_record
 
 FLOOR = 0.05
 

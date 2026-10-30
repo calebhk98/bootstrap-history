@@ -5,14 +5,14 @@ QUICK_TOPIC = True
 
 import types
 import unittest
-from unittest import mock
 
+from sim.actors.api import ALREADY_ABLE, GRANTED, NO_LICENSEE, TERMS_REFUSED, GrantLicence
 from sim.agents.licence import terms_problem
-from sim.engine import society_disclosure, society_diffusion
-from sim.engine.adoption_share import held_share
-from sim.engine.society_diffusion import DiffusionMixin
-from sim.engine.society_disclosure import DisclosureMixin
-from sim.engine.visibility import base_visibility
+from sim.diffusion.adoption_share import held_share
+from sim.diffusion.module import Diffusion
+from sim.diffusion.state import DiffusionSeat
+from sim.seats.api import base_visibility
+from sim.tests import module_harness
 
 SECRET_EXPOSURE = 0.2
 
@@ -73,51 +73,58 @@ class Holdings(unittest.TestCase):
         self.assertEqual(held_share([], {"a"}), 0.0)
 
     def test_the_weapons_the_state_holds_are_the_founders_military_inventions_in_its_knowledge(self):
-        game = types.SimpleNamespace(
-            state=types.SimpleNamespace(seats={}), state_treasury=lambda: types.SimpleNamespace(knowledge={"a", "c"}),
-            _diffusible_ids=lambda trait: ["a", "b", "c"])
-        with mock.patch.object(society_diffusion.seat_builds, "built_by_any", lambda seats, ids: ids):
-            self.assertEqual(DiffusionMixin.state_military_weapons_held(game), 2)
+        class Armed(Diffusion):
+            def diffusible_ids(self, category):
+                return ["a", "b", "c"]
+        module = module_harness.build(Armed, views={"state_knowledge": lambda: {"a", "c"},
+                                                    "built_by_any_seat": lambda among: among})
+        self.assertEqual(module.state_military_weapons_held(), 2)
 
 
-class Licensing(DisclosureMixin):
-    def __init__(self):
-        self.actors = types.SimpleNamespace(get=lambda identity: types.SimpleNamespace(kind="firm"))
-        self.state = types.SimpleNamespace(
-            seats={}, acting_seat="me", scenario=types.SimpleNamespace(year=120),
-            projects=types.SimpleNamespace(disclosures={}))
-
-    def seat_party(self, seat_id):
-        return "party"
+def licensing(answer):
+    """The diffusion module of seat "me" in year 120, with one firm to license to; the actors module answers `answer` to the grant."""
+    registry = types.SimpleNamespace(get=lambda identity: types.SimpleNamespace(kind="firm"), of_kind=lambda kind: [])
+    module = module_harness.build(Diffusion, seat=DiffusionSeat(), views={
+        "cast": lambda: registry, "seat_list": lambda: {"joined": ["me"], "playing": ["me"]}, "year": 120},
+        answers={GrantLicence: answer})
+    module.clock.act_as("me")
+    return module
 
 
 class ChoosingALicence(unittest.TestCase):
 
-    def license(self, problem="", granted=True):
-        game = Licensing()
-        with mock.patch.object(society_disclosure, "SimWorld", lambda sim: None), \
-                mock.patch.object(society_disclosure.licence, "terms_problem", lambda *args: problem), \
-                mock.patch.object(society_disclosure.licence, "grant", lambda *args: granted):
-            return game, game._license("x", "firm:a", 1000.0, 0.1)
+    def license(self, status=GRANTED, problem=None):
+        game = licensing({"status": status, "problem": problem})
+        return game, game._license("x", "firm:a", 1000.0, 0.1)
+
+    def test_the_grant_is_asked_of_the_actors_with_the_terms(self):
+        game, _reply = self.license()
+        self.assertEqual(module_harness.sent(game), [GrantLicence("firm:a", "x", 1000.0, 0.1)])
 
     def test_an_accepted_licence_is_recorded_with_its_terms_and_moves_the_invention_off_the_default(self):
         game, reply = self.license()
         self.assertTrue(reply["ok"])
-        record = game.state.projects.disclosures["x"]
+        record = game.seat.disclosures["x"]
         self.assertEqual(record["mode"], "license")
         self.assertEqual(record["licensees"]["firm:a"], {"fee": 1000.0, "royalty": 0.1, "year": 120})
 
     def test_refused_terms_record_nothing_and_carry_the_refusals_cause(self):
         from sim.refusal import Refusal
-        game, reply = self.license(problem=Refusal("fee_above_value", "no"))
+        game, reply = self.license(TERMS_REFUSED, Refusal("fee_above_value", "no"))
         self.assertFalse(reply["ok"])
         self.assertEqual(reply["cause"], "fee_above_value")
-        self.assertEqual(game.state.projects.disclosures, {})
+        self.assertEqual(game.seat.disclosures, {})
 
     def test_a_licensee_that_can_already_make_it_is_refused_and_nothing_is_recorded(self):
-        game, reply = self.license(granted=False)
+        game, reply = self.license(ALREADY_ABLE)
         self.assertFalse(reply["ok"])
-        self.assertEqual(game.state.projects.disclosures, {})
+        self.assertEqual(game.seat.disclosures, {})
+
+    def test_a_licensee_that_is_nobody_is_refused_with_the_names_that_will_do(self):
+        game, reply = self.license(NO_LICENSEE)
+        self.assertFalse(reply["ok"])
+        self.assertIn("name a firm or the state", reply["error"])
+        self.assertEqual(game.seat.disclosures, {})
 
 
 if __name__ == "__main__":

@@ -6,12 +6,13 @@ QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.core import TECH_EFFECTS, demography
+from sim.engine.core import demography
+from sim.engine.data import TECH_EFFECTS
 
 CLINICS = "ben_district_clinics"
 
 # a benefit that holds only while the doors are open and for the share reached is not promised as permanent
-from sim.engine.permanent_benefit import permanent_parts
+from sim.projects.permanent_benefit import permanent_parts
 
 check("a knowledge node's disease benefit is permanent", any("disease" in part for part in permanent_parts(
       NODES["germ_theory"], TECH_EFFECTS["germ_theory"])), permanent_parts(NODES["germ_theory"], TECH_EFFECTS["germ_theory"]))

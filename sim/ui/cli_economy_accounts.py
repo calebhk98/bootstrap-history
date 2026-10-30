@@ -5,6 +5,7 @@ import random
 
 from sim.engine import saveload
 from sim.engine.ui_port import Sim, load, load_civ
+from sim.engine import ui_port
 
 GOOD_COLUMNS = (("production", "made"), ("production_grown", "grown"), ("intermediate_use", "inputs"),
                 ("final_consumption_bought", "eaten bought"), ("final_consumption_grown", "eaten grown"),
@@ -53,11 +54,11 @@ def play_for_accounts(args):
         from sim.engine.ui_port import default_civilisation_id
         game = Sim(nodes, [], random.Random(1), events=False, manual=True,
                    civ=load_civ((getattr(args, "civs", "") or default_civilisation_id()).split(",")[0]))
-        game.done_year = {}
+        ui_port.reset_done_years(game)
     outcomes = []
     for _year in range(args.years):
         game.step()
-        outcomes.append(game.economy.agent.outcomes[-1])
+        outcomes.append(game.view("legacy_economy")().agent.outcomes[-1])
     return [outcome.accounts for outcome in outcomes]
 
 

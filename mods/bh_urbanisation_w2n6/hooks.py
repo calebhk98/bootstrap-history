@@ -12,10 +12,7 @@ town provider the mod registers hands them to the labour market and to the popul
 import json
 import os
 
-from sim.engine import ui_port
-from sim.engine.data import ROOT
-from sim.geography import api as geography
-from sim.world import climate_needs, demography
+from sim.mod_api import DATA_ROOT, climate_needs, demography, geography
 
 # temporary heuristics, each named with what should replace it (see the mod README)
 DEFAULT_FOOD_HAUL_DAYS = 3.0           # replace: the haul at which freight cost of grain eats the surplus's value
@@ -25,7 +22,7 @@ ROWS_SHOWN = 12
 
 
 def _water_litres_per_person_day():
-    with open(os.path.join(ROOT, "data", "world", "needs.json"), encoding="utf-8") as source:
+    with open(os.path.join(DATA_ROOT, "data", "world", "needs.json"), encoding="utf-8") as source:
         return json.load(source)["needs"]["water"]["subsistence_per_capita_per_year"] / 365.0
 
 
@@ -37,29 +34,28 @@ def _adult_equivalents_per_head(population):
             + population.elderly * demography.ELDERLY_CALORIE_EQUIVALENT) / total
 
 
-def _food_reach(sim, tiles, days):
+def _food_reach(access, tiles, days):
     """{tile: {tile within haul: days}} over the routes the nation's technologies open."""
-    held = sim.labour.held_technologies()
-    modes = geography.usable_modes([held])
-    built = sim.state.economy.improvements
-    return {tile: {other: spent for other, spent in geography.reach([tile], modes, days, built, held_nodes=held).items()
-                   if other in tiles}
+    held = access.view("held_techniques")(True)
+    modes = access.view("modes_usable")([held])
+    reach_from = access.view("reach_from")
+    return {tile: {other: spent for other, spent in reach_from(tile, modes, days, held).items() if other in tiles}
             for tile in tiles}
 
 
-def _tile_record(tile):
-    facts = geography.queries.tile_facts(tile)
-    return {"lat": facts["lat"], "koppen_class": facts["climate_class"]}
+def _tile_record(access, tile):
+    climate = access.view("tile_climates")([tile])[0]
+    return {"lat": climate["lat"], "koppen_class": climate["koppen_class"]}
 
 
-def urban_report(sim, days=DEFAULT_FOOD_HAUL_DAYS, limit=ROWS_SHOWN):
-    people = sim.labour.settlement_tiles()
+def urban_report(access, days=DEFAULT_FOOD_HAUL_DAYS, limit=ROWS_SHOWN):
+    people = access.view("settlement_tiles")()
     tiles = sorted(people)
-    population = sim.population
+    population = access.view("population")()
     need_kcal = (demography.SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY * _adult_equivalents_per_head(population))
     surplus = {tile: max(0.0, geography.settlement.capacity_kcal_per_day(tile) - people[tile] * need_kcal)
                for tile in tiles}
-    reach = _food_reach(sim, set(tiles), days)
+    reach = _food_reach(access, set(tiles), days)
     reached_by = {tile: 0 for tile in tiles}
     for tile in tiles:
         for other in reach[tile]:
@@ -70,14 +66,14 @@ def urban_report(sim, days=DEFAULT_FOOD_HAUL_DAYS, limit=ROWS_SHOWN):
     # People in non-farm households: the start-date urban share (an initial condition of the civilisation) kept
     # in step with the population, plus the households of everyone the founder and the firms now employ.
     working_share = population.working_age / population.total if population.total > 0.0 else 0.0
-    employed = sum(count for trade, count in sim.state.household.employees.items() if trade != "labourer")
+    employed = sum(count for trade, count in access.view("staff")()["employees"].items() if trade != "labourer")
     founder_dependants = employed / working_share - employed if working_share > 0.0 else 0.0
-    firm_households = sim.actor_staff_total() / working_share if working_share > 0.0 else 0.0
-    nonfarm_people = population.total * float(sim.civ.get("urban_fraction", 0.0)) + firm_households
+    firm_households = access.view("actor_staff_total")() / working_share if working_share > 0.0 else 0.0
+    nonfarm_people = population.total * float(access.view("civilisation")().get("urban_fraction", 0.0)) + firm_households
     total_assembled = sum(assembled.values())
-    base = sim.labour.base_tile()
+    base = access.view("base_tile")()
 
-    disease_burden = ui_port.disease_burden(sim)
+    disease_burden = access.view("disease_burden")()
     water_litres = _water_litres_per_person_day()
     baseline_death_rate = demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
     rows = []
@@ -95,7 +91,7 @@ def urban_report(sim, days=DEFAULT_FOOD_HAUL_DAYS, limit=ROWS_SHOWN):
                   "urban_mortality_premium": round(premium, 4),
                   "excess_deaths_per_year": round(town * baseline_death_rate * premium, 1)}
         if town > 0.0:
-            floors = climate_needs.floors_for_tile(_tile_record(tile))
+            floors = climate_needs.floors_for_tile(_tile_record(access, tile))
             record["housing_wall_and_roof_cubic_metres_per_year"] = round(town * floors["shelter_m3"])
         rows.append(record)
     rows.sort(key=lambda row: (-row["town_people"], row["tile"]))
@@ -107,23 +103,26 @@ def urban_report(sim, days=DEFAULT_FOOD_HAUL_DAYS, limit=ROWS_SHOWN):
             "note": "a derived view: nothing here changes who lives where or who dies; the drivers are the columns"}
 
 
-def record_towns(sim, write, days=DEFAULT_FOOD_HAUL_DAYS):
+def record_towns(access, write, days=DEFAULT_FOOD_HAUL_DAYS):
     """Hand `write(store, tile, value)` the derived town and its mortality premium of every tile the nation holds."""
-    for row in urban_report(sim, days, limit=None)["towns"]:
+    for row in urban_report(access, days, limit=None)["towns"]:
         write("town_people", row["tile"], row["town_people"])
         write("urban_mortality_premium", row["tile"], row["urban_mortality_premium"])
 
 
 def register(api):
+    api.reads("held_techniques", "modes_usable", "reach_from", "tile_climates", "settlement_tiles", "population", "staff",
+              "actor_staff_total", "civilisation", "base_tile", "disease_burden")
     towns_store = api.store("town_people", keyed_by="tile", default=None, unit="people")
     premium_store = api.store("urban_mortality_premium", keyed_by="tile", default=None, unit="share of the baseline death rate")
 
     # The year's derivation is kept in the stores (saved with the game), so the labour market and the population step read
     # one number per tile and a loaded game answers the same as the live one.
-    api.phase("derive_towns", "world", lambda sim, seats: record_towns(sim, lambda store, tile, value: api.write_store(sim, store, tile, value)),
+    api.phase("derive_towns", "world",
+              lambda access, seats: record_towns(access, lambda store, tile, value: api.write_store(access, store, tile, value)),
               after="money_world")
-    api.town_provider("towns", lambda labour, tile, nominal: towns_store.get(labour.simulation_for_providers(), tile),
-                      mortality_premium=lambda labour, tile, town: premium_store.get(labour.simulation_for_providers(), tile))
+    api.town_provider("towns", lambda access, tile, nominal: towns_store.get(access, tile),
+                      mortality_premium=lambda access, tile, town: premium_store.get(access, tile))
 
     @api.command("towns", group="society", summary="Towns derived from jobs, food reach and disease, per tile",
                  usage=["bh_urbanisation_w2n6:towns", '{"cmd":"bh_urbanisation_w2n6:towns","days":5}'],
@@ -131,13 +130,13 @@ def register(api):
                              "reachable within a haul allow, the water and housing it needs and the mortality "
                              "premium crowding adds while water and sanitation technologies are missing.",
                  options={"days": "days of haul that count as food reach (default %s)" % DEFAULT_FOOD_HAUL_DAYS})
-    def towns(sim, nodes, cmd, ended):
+    def towns(access, nodes, cmd, ended):
         days = DEFAULT_FOOD_HAUL_DAYS
         if isinstance(cmd, dict) and cmd.get("days") is not None:
             try:
                 days = max(0.0, float(cmd["days"]))
             except (TypeError, ValueError):
                 return {"ok": False, "error": "days must be a number"}
-        report = urban_report(sim, days)
-        api.state(sim.state.interface)["last_people_in_towns"] = report["people_in_towns"]
+        report = urban_report(access, days)
+        access.memory()["last_people_in_towns"] = report["people_in_towns"]
         return report

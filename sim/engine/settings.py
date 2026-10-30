@@ -93,7 +93,9 @@ import shutil
 import time
 from typing import Any, cast, Dict, List, NotRequired, Optional, TypedDict
 
+from sim.agents.api import Purses
 from sim.engine.saveload import acting_seat_of, read_save_text
+from sim.scenario.api import scenario_slot_of
 from sim.default_civilisation import PREFERRED_DEFAULT_CIVILISATION
 
 
@@ -538,31 +540,37 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
             blob = json.loads(read_save_text(path))
             if not isinstance(blob, dict) or "_civ" not in blob:
                 continue
-            scenario = blob.get("scenario") or {}
+            scenario = scenario_slot_of(blob)
             seat = acting_seat_of(blob)
-            household = seat.get("household") or {}
-            founder = seat.get("founder") or {}
-            projects = seat.get("projects") or {}
+            slots = seat.get("modules") or {}
+            seats_slot, knowledge = slots.get("seats") or {}, slots.get("knowledge") or {}
+            polity, workforce = slots.get("polity") or {}, slots.get("workforce") or {}
             row.update({
                 "readable": True,
                 "civ_id": blob.get("_civ"),
                 "year": scenario.get("year"),
-                "fog": bool(blob.get("_fog", False)),
-                "founder_alive": founder.get("founder_alive", True),
-                "dead_reason": founder.get("dead_reason"),
-                "goal_year": scenario.get("goal_year"),
-                "goal": seat.get("goal"),
-                "reputation": household.get("reputation"),
-                "scholars": household.get("scholars"),
-                "artisans": household.get("artisans"),
-                "capital": household.get("capital"),
-                "done": ((projects.get("done") or {}).get("__set__") or []),
+                "fog": bool(scenario.get("fog", False)),
+                "founder_alive": seats_slot.get("founder_alive", True),
+                "dead_reason": seats_slot.get("dead_reason"),
+                "goal_year": seats_slot.get("goal_year"),
+                "goal": seats_slot.get("goal"),
+                "reputation": polity.get("reputation"),
+                "scholars": workforce.get("scholars"),
+                "artisans": workforce.get("artisans"),
+                "capital": purse_in_save(blob, blob.get("acting_seat")),
+                "done": ((knowledge.get("done") or {}).get("__set__") or []),
             })
         except (OSError, ValueError):
             pass
         rows.append(row)
     rows.sort(key=lambda r: -r["mtime"])
     return rows
+
+
+def purse_in_save(blob: Dict[str, Any], seat_id: Any) -> Optional[float]:
+    """What the seat's account holds in the actors' book a save carries (the seat's purse), or None when the save carries no book."""
+    record = ((blob.get("modules") or {}).get("actors") or {}).get("purses")
+    return Purses.from_record(record).net(seat_id) if isinstance(record, dict) else None
 
 
 def humanize_age(mtime: float) -> str:

@@ -2,7 +2,7 @@
 `node_revenue._apply_output`). Each rule is called on a hand-made node and entry; no tree is loaded and no game is built."""
 import unittest
 
-from sim.engine import node_revenue, node_upkeep
+from sim.production import node_revenue, node_upkeep
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 from sim.tests.test_plant_figures import GOODS, WAGES, baskets, entry
 

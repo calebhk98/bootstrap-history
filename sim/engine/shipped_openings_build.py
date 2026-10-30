@@ -4,10 +4,11 @@ import os
 import random
 from typing import List, Tuple
 
-from . import shipped_openings, shipped_rate_bands, solve_cache
+from sim.prices.api import solve_cache
+from . import shipped_openings, shipped_rate_bands
 from .core import Sim
 from .data import load, load_civ
-from .economy_port_year import SPIN_UP_YEARS_ENV
+from sim.markets.api import SPIN_UP_YEARS_ENV
 
 
 def build(civ_id: str) -> List[Tuple[str, str]]:
@@ -41,7 +42,7 @@ def build_reporting(civ_id: str, before_writing=None):
             continue    # an entry the disk cache could not keep is computed by the player
         shipped_openings.write(os.path.basename(directory), key, value)
         shipped.append((os.path.basename(directory), key))
-    return shipped, game.economy.spin_up_result()
+    return shipped, game.view("legacy_economy")().spin_up_result()
 
 
 def prune(kept: List[Tuple[str, str]]) -> List[Tuple[str, str]]:

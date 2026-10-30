@@ -6,7 +6,7 @@ describes each answer's shape. Every call takes an optional `world_map` from `op
 one it uses the base map.
 """
 import math
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from sim.geography.food_crops import CropSite, CropTechnique
 from sim.geography.json_copy import copied
@@ -222,11 +222,12 @@ def route_costs(origin_tiles: Iterable[str], modes: Iterable[str],
                 improvements: Optional[Mapping[str, Mapping[str, Any]]] = None,
                 mode_costs: Optional[Mapping[str, float]] = None, handling_costs: Optional[Mapping[str, float]] = None,
                 held_nodes: Optional[Iterable[str]] = None, world_map: Optional[WorldMap] = None,
-                within: Optional[Iterable[str]] = None) -> Dict[str, float]:
+                within: Optional[Iterable[str]] = None, cost_tree: Optional[Callable] = None) -> Dict[str, float]:
     """{tile: least cost per tonne} from any origin tile to every tile a haul reaches, as `route` prices it.
-    With `within` only those tiles are answered, which lets the search stop early."""
+    With `within` only those tiles are answered, which lets the search stop early. `cost_tree` is the caller's
+    bound kernel `least_cost_tree` (routes_cost_tree.py); None: the reference."""
     return routes_search.costs_from(_map(world_map), origin_tiles, modes, improvements,
-                                    mode_costs, handling_costs, held_nodes, within)
+                                    mode_costs, handling_costs, held_nodes, within, cost_tree)
 
 
 def map_of_tiles(tile_records: Mapping[str, Mapping[str, Any]], world_map: Optional[WorldMap] = None) -> WorldMap:

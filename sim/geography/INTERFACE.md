@@ -135,3 +135,5 @@ A mod adds `ana_scifi_k3f9:unobtainium` by writing a row with `mechanism: minera
 deposit types and any known deposits in `mods/ana_scifi_k3f9/data/world/geography/resources/`;
 endowment and prospecting then include it. `sim/tests/geography_fixtures/` holds working examples
 (a modded mineral, a modded animal, a modded route mode).
+
+`distance_between_places(place_a, place_b)` gives the great-circle kilometres between two places, each a tile or a region id (a region is its anchor); 0 when either is on neither list. `place_coordinates(place)` is the (latitude, longitude) of one, or None.

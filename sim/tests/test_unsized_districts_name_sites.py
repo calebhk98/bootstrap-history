@@ -5,29 +5,28 @@ QUICK_TOPIC = True
 
 import json
 import os
-import types
 import unittest
 
-from sim.engine.mine_deposits import MineDepositsMixin
-from sim.engine.state_holdings import HoldingsState
 from sim.geography import api as geography
+from sim.tests import resources_stand_in
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CIVILISATIONS = ("rome_100ad", "han_china_100ad", "norse_900ad", "england_1300", "mexica_1500")
 
 
-class _Host(MineDepositsMixin):
+class _Host:
+    """The resources module for a civilisation at its start year."""
+
     def __init__(self, name):
         self.world_map = geography.open_map()
         with open(os.path.join(ROOT, "data", "civilizations", name + ".json"), encoding="utf-8") as handle:
             self.civ = json.load(handle)
-        self.holdings = HoldingsState()
         year = int(self.civ["year"])
-        self.state = types.SimpleNamespace(holdings=self.holdings, scenario=types.SimpleNamespace(year=year))
         self.cfg = {"start_year": year}
+        self.module = resources_stand_in.build(year=year, views={"civilisation": self.civ, "start_year": year})
 
-    def _capacity_naming(self, deposit_id):
-        return 0.0
+    def found_deposits(self, material):
+        return self.module.found_deposits(material)
 
 
 class UnsizedDistrictTests(unittest.TestCase):

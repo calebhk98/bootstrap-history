@@ -7,12 +7,15 @@ input answered by the dispatcher, and the Rome turn-one labour, mothball and com
 """
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
+from sim.projects.api import MothballWork
+from sim.ventures.api import OpenVenture
 
 def without_market(game):
     """`game` with the year's market close left out of its steps: nearly all of a step's cost. Only for checks on
     staff, projects, mines, raids and recovery; the founder's money does follow the market, so games whose checks
     read money keep it."""
-    game._step_market = lambda: None
+    game.assembly.phase_handler("market")   # builds the phase table
+    game.assembly._phase_handlers["market"] = lambda seats=None: None
     return game
 
 
@@ -51,7 +54,7 @@ check("state/help work before the first step",
       str(reply["state_first"])[:90])
 early_physics = ["sc2_physics_nuclear_fission", "sc2_physics_wave_mechanics",
                  "el2_sonar_acoustic_detection_ranging", "el2_photomultiplier_single_photon"]
-offered = [node_id for node_id in early_physics if _game.can_start(node_id)]
+offered = [node_id for node_id in early_physics if _game.view("start_check")(node_id, False, None, False)[0]]
 check("no advanced physics is startable in year one", not offered, str(offered))
 check("a quantity that is not a number is refused, not defaulted",
       not reply["hire_banana"].get("ok") and not reply["bribe_lots"].get("ok")
@@ -70,57 +73,57 @@ check("a mine can be priced before it is bought",
 
 # --- SCENARIO 2: Rome, one game: turn-one state, and what a player can and cannot do
 rome = unopened_sim(capital=200000.0)
+_rome_staff = rome.view("staff")()
 check("you arrive with no employees and no slaves",
-      not rome.employees and rome.slaves == 0 and rome.freedmen == 0 and rome.artisans == 0.0,
-      "employees %r artisans %.1f" % (rome.employees, rome.artisans))
+      not _rome_staff["employees"] and _rome_staff["slaves"] == 0 and _rome_staff["freedmen"] == 0 and _rome_staff["artisans"] == 0.0,
+      "employees %r artisans %.1f" % (_rome_staff["employees"], _rome_staff["artisans"]))
 
 # the two doctrines whose prerequisites Rome holds, and which a trade Rome lacks holds back (the rest wait on a prerequisite:
 # test_early_playtest_data)
 _ANACHRONISMS = ["mil_general_staff", "hot_air_balloon"]
-startable_turn_one = [node_id for node_id in _ANACHRONISMS if rome.can_start(node_id)]
+startable_turn_one = [node_id for node_id in _ANACHRONISMS if rome.view("start_check")(node_id, False, None, False)[0]]
 check("no anachronistic doctrine is startable turn one, even with its prerequisites held",
       not startable_turn_one, str(startable_turn_one))
 
-ok_hire, hire_error = rome.labour.hire("engineer", 1)
+ok_hire, hire_error = rome.view("legacy_labour")().hire("engineer", 1)
 check("a trade this society does not have cannot be hired",
       not ok_hire and cause_of(hire_error) == "trade_absent",
       "hire engineer -> %s / %s" % (ok_hire, hire_error))
 rome.capital = 20000.0
-ok_train, _ = rome.labour.train("machinist", 2)
+ok_train, _ = rome.view("legacy_labour")().train("machinist", 2)
 check("you can teach a trade into existence",
-      ok_train and "machinist" in rome.trades_created and not rome.labour.trade_available("chemist"),
-      "trained %s created %r" % (ok_train, sorted(rome.trades_created)))
+      ok_train and "machinist" in rome.view("trade_spread")()["created"] and not rome.view("legacy_labour")().trade_available("chemist"),
+      "trained %s created %r" % (ok_train, sorted(rome.view("trade_spread")()["created"])))
 # a finished work can be shut to stop its upkeep without forgetting how it worked
-rome.labour.hire("artisan", 2)
-rome.done.add("fin_restaurant")
-rome._done_changed()
+rome.view("legacy_labour")().hire("artisan", 2)
+rome.send(LearnTechnique("fin_restaurant"))
 # Upkeep follows what you RUN, not what you know, so open the doors first.
-_ok_open, _why_open = rome.open_venture("fin_restaurant")
-up_before = rome.upkeep()
-ok_mothball, _ = rome.mothball_work("fin_restaurant")
+_ok_open, _why_open = rome.send(OpenVenture("fin_restaurant", None))
+up_before = rome.view("upkeep")()
+ok_mothball, _ = rome.send(MothballWork("fin_restaurant"))
 check("a finished work can be shut down to stop its upkeep",
-      _ok_open and ok_mothball and up_before > 0 and rome.upkeep() < up_before,
-      "open %s (%s), upkeep %.0f -> %.0f" % (_ok_open, _why_open, up_before, rome.upkeep()))
+      _ok_open and ok_mothball and up_before > 0 and rome.view("upkeep")() < up_before,
+      "open %s (%s), upkeep %.0f -> %.0f" % (_ok_open, _why_open, up_before, rome.view("upkeep")()))
 check("shutting a concern down does not make you forget how it worked",
       "fin_restaurant" in rome.done and "fin_restaurant" not in rome.operating,
       "done %s operating %s" % ("fin_restaurant" in rome.done, "fin_restaurant" in rome.operating))
 
 rome.capital = 5000.0
 capital_before_commission = rome.capital
-employees_before_commission = dict(rome.employees)
-ok_job, _ = rome.labour.commission("smith", 200)
+employees_before_commission = dict(rome.view("staff")()["employees"])
+ok_job, _ = rome.view("legacy_labour")().commission("smith", 200)
 check("you can buy a job without employing anybody",
-      ok_job and rome.employees == employees_before_commission and rome.capital < capital_before_commission,
-      "ok %s employees %r" % (ok_job, rome.employees))
+      ok_job and rome.view("staff")()["employees"] == employees_before_commission and rome.capital < capital_before_commission,
+      "ok %s employees %r" % (ok_job, rome.view("staff")()["employees"]))
 
 
 # buying people then freeing them must not mint labour or skip the training lag
-artisans_before = rome.artisans
+artisans_before = rome.view("staff")()["artisans"]
 rome.capital = 200000.0
-rome.labour.buy_slaves(10)
-rome.labour.manumit(10)
+rome.view("legacy_labour")().buy_slaves(10)
+rome.view("legacy_labour")().manumit(10)
 check("freeing untrained people does not skip the training lag",
-      rome.artisans - artisans_before < 0.01, "instant gain %.2f" % (rome.artisans - artisans_before))
+      rome.view("staff")()["artisans"] - artisans_before < 0.01, "instant gain %.2f" % (rome.view("staff")()["artisans"] - artisans_before))
 
 def spend(slices, per):
     spend_sim = unopened_sim(capital=1e9)
@@ -128,7 +131,7 @@ def spend(slices, per):
     run_it(spend_sim, "workshop_first", "freedman_staff")
     starting_capital = spend_sim.capital
     for _ in range(slices):
-        spend_sim.labour.buy_slaves(per)
+        spend_sim.view("legacy_labour")().buy_slaves(per)
     return starting_capital - spend_sim.capital
 
 
@@ -146,7 +149,6 @@ check("no loss risk is reported where nothing sacks",
 # --- (scenario 1 again) fog hides the exact downstream count, and the digest stays a summary as the tree opens up
 fogged = unopened_sim()
 fogged.fog = True
-fogged.revealed = set()
 fog_reply = S._agent_dispatch(fogged, NODES, {"cmd": "why", "id": "identity_cover"})
 check("fog hides the exact downstream count",
       fog_reply.get("downstream_count") is None and fog_reply.get("how_much_rests_on_this"),

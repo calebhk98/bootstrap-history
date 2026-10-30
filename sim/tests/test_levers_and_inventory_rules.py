@@ -6,11 +6,17 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 
-from sim.engine.economy_goods import GoodsMixin
-from sim.engine.economy_materials import MaterialSupplyMixin
+from sim.ledger.api import PayEdge
+from sim.tests import module_harness
+from sim.workforce.api import BuildHousing
+from sim.workforce.module import Workforce
+from sim.markets import rules
 from sim.labour.labour_capacity import CapacityMixin
 from sim.labour.labour_population import PopulationMixin
+from sim.ledger.api import rules as ledger_rules
+from sim.tests import materials_stand_in
 from sim.ui.proto.render import render_pretty
 
 
@@ -21,12 +27,7 @@ def household(**fields):
 class FarmlandTests(unittest.TestCase):
     def test_farmland_lowers_the_essential_price_ratio_below_neutral(self):
         def ratio(farm_hectares):
-            stand_in = types.SimpleNamespace(
-                ESSENTIAL_CATEGORIES=frozenset(), goods_category_price_ratio=lambda category: None,
-                household=types.SimpleNamespace(farm_hectares=farm_hectares),
-                HOUSEHOLD_FARM_PRICE_RATIO_FLOOR=GoodsMixin.HOUSEHOLD_FARM_PRICE_RATIO_FLOOR,
-                HOUSEHOLD_FARM_HECTARES_HALF_EFFECT=GoodsMixin.HOUSEHOLD_FARM_HECTARES_HALF_EFFECT)
-            return GoodsMixin.essential_price_ratio(stand_in)
+            return rules.essential_price_ratio([None], farm_hectares)
         self.assertEqual(ratio(0.0), 1.0)
         self.assertLess(ratio(120.0), 1.0)
 
@@ -35,10 +36,9 @@ class HousingTests(unittest.TestCase):
     def test_worker_housing_adds_its_places_and_pays_its_price(self):
         paid = []
         held = household(worker_housing_places=2.0)
-        stand_in = types.SimpleNamespace(
-            housing_price_per_place=lambda: 100.0, state=types.SimpleNamespace(household=held),
-            pay_edge=lambda edge, cost, note: paid.append(cost))
-        self.assertEqual(GoodsMixin.build_worker_housing(stand_in, 5), 5.0)
+        module = module_harness.build(Workforce, seat=held, views={"housing_price_per_place": 100.0, "acting_balance": lambda: held.capital},
+                                      answers={PayEdge: lambda command: paid.append(command.amount)})
+        self.assertEqual(module.build_housing(BuildHousing(5)), 5.0)
         self.assertEqual(held.worker_housing_places, 7.0)
         self.assertEqual(paid, [500.0])
 
@@ -46,7 +46,7 @@ class HousingTests(unittest.TestCase):
         def room(places):
             stand_in = types.SimpleNamespace(
                 SUPERVISION_ROOM_SELF=6.0, SUPERVISION_ROOM_PER_DIRECTOR_EXTRA=1.0,
-                _world=types.SimpleNamespace(state=types.SimpleNamespace(household=household(directors_extra=0.0, worker_housing_places=places)),
+                _world=types.SimpleNamespace(workforce=household(directors_extra=0.0, worker_housing_places=places),
                                              effect_sum=lambda effect, base: base))
             return CapacityMixin.supervision_room(stand_in)
         self.assertEqual(room(5.0), room(0.0) + 5.0)
@@ -54,13 +54,13 @@ class HousingTests(unittest.TestCase):
 
 class TradeSchoolTests(unittest.TestCase):
     def test_a_school_for_an_existing_trade_adds_seats_and_marks_the_trade_created(self):
-        held = household()
+        held = household(trade_schools=None)
         paid = []
         stand_in = types.SimpleNamespace(
             trade_available=lambda trade: True,
-            _world=types.SimpleNamespace(wages={"chemist": 1.0}, trade_school_price_per_seat=lambda: 50.0,
-                                         state=types.SimpleNamespace(household=held), EDGE_WORKERS="workers",
-                                         pay_edge=lambda edge, cost, note: paid.append(cost)))
+            _world=workforce_stand_in.World(wages={"chemist": 1.0}, trade_school_price_per_seat=lambda: 50.0,
+                                         workforce=held, view=workforce_stand_in.view_of(held), EDGE_WORKERS="workers",
+                                         send=lambda command: paid.append(command.amount)))
         self.assertEqual(PopulationMixin.found_trade_school(stand_in, "chemist", 2), (True, None))
         self.assertEqual(held.trade_schools, {"chemist": 2.0})
         self.assertEqual(held.trades_created, {"chemist"})
@@ -84,22 +84,23 @@ class PopulationReportTests(unittest.TestCase):
 
 class MaterialsReportTests(unittest.TestCase):
     def stand_in(self):
-        stock = {"iron": 50.0}
-        return types.SimpleNamespace(
-            _demand_by_emp_key=lambda: {"iron": [("tag", 10.0)]}, _material_stock=lambda: stock,
-            MATERIAL_CHECKS={}, mine_capacity={}, _own_production_tags=lambda: [("iron", "mine:iron")],
-            _own_material_supply=lambda tag: 3.0, material_stock_t=lambda material: stock.get(material, 0.0),
-            material_trade_quote=lambda material: {"material": material, "buy_per_tonne": 9.0, "sell_per_tonne": 7.0})
+        module = materials_stand_in.build(
+            held_goods=ledger_rules.StockLedger({"iron": 50.0}), goods_stock=lambda material: {"iron": 50.0}.get(material, 0.0),
+            goods_quote=lambda material: {"material": material, "buy_per_tonne": 9.0, "sell_per_tonne": 7.0} if material == "iron" else None)
+        module.demand_by_commodity = lambda: {"iron": [("tag", 10.0)]}
+        module.own_production_tags = lambda: [("iron", "mine:iron")]
+        module.own_material_supply = lambda tag: 3.0
+        return module
 
     def test_a_row_reports_stock_flow_demand_and_cover(self):
-        rows = MaterialSupplyMixin.materials_report(self.stand_in())
+        rows = self.stand_in().materials_report()
         self.assertEqual(rows, [{"material": "iron", "buy_per_tonne": 9.0, "sell_per_tonne": 7.0, "stock_on_hand_tonnes": 50.0,
                                  "own_production_tonnes_per_year": 3.0, "current_demand_tonnes_per_year": 10.0,
                                  "stock_covers_years_at_current_demand": 5.0}])
 
     def test_the_readable_screen_carries_its_heading(self):
         # presentation: the materials screen's heading
-        self.assertIn("MATERIAL STOCKS", render_pretty("materials", {"ok": True, "materials": MaterialSupplyMixin.materials_report(self.stand_in())}))
+        self.assertIn("MATERIAL STOCKS", render_pretty("materials", {"ok": True, "materials": self.stand_in().materials_report()}))
 
 
 if __name__ == "__main__":

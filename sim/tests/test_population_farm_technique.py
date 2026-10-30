@@ -12,7 +12,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.constants import REGISTRY
-from sim.engine.literacy_rules import common_ceiling
+from sim.diffusion.literacy_rules import common_ceiling
 from sim.labour import labour_allocation
 from sim.labour.labour import Labour
 from sim.tests.harness import NODES
@@ -36,10 +36,10 @@ def _labour(done=(), year=100, done_year=None):
     world = stand_in_world()
     world.nodes_with_mechanic = lambda mechanic: list(DECLARATIONS) if mechanic == "farming_technique" else []
     world.mechanic = lambda node_id, mechanic: DECLARATIONS[node_id]
-    world.state.projects.done = set(done)
-    world.state.projects.done_year = dict(done_year or {})
-    world.state.projects.granted = set()
-    world.state.scenario = SimpleNamespace(year=year)
+    world.projects.done = set(done)
+    world.projects.done_year = dict(done_year or {})
+    world.projects.granted = set()
+    world.year = year
     return Labour(world), world
 
 
@@ -63,7 +63,7 @@ class TechniqueTests(unittest.TestCase):
     def test_adoption_grows_with_age(self):
         labour, world = _labour(done=("fud_mechanical_reaper",), year=100, done_year={"fud_mechanical_reaper": 100})
         early = labour._farming_technique().toolkit.reaping_rate_multiplier
-        world.state.scenario.year += 60
+        world.year += 60
         late = labour._farming_technique().toolkit.reaping_rate_multiplier
         self.assertGreater(late, early)
 

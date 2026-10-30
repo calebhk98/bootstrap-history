@@ -9,7 +9,7 @@ from .harness import check
 
 from sim.agents import business_review
 from sim.agents.api import Business
-from sim.engine import project_funding
+from sim.projects.api import funding as project_funding
 
 # --- the purse a project may draw on
 check("the purse is capital and part of the credit line, less the shortfall of fixed costs over revenue",

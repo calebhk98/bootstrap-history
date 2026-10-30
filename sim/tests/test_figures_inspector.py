@@ -9,12 +9,14 @@ from types import SimpleNamespace
 
 from sim.ui import figures as figure_registry
 from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
+from sim.tests.interface_fixture import shipped_declared
+from sim.tests.ui_stand_in import FactViews
 
 HEADLINE = ("cash", "recurring_net", "income", "upkeep", "population",
             "literacy_general", "price_index", "hazard")
 
 
-class Game(SimpleNamespace):
+class Game(FactViews, SimpleNamespace):
     """A game at a year whose figures read from plain attributes."""
 
 
@@ -35,7 +37,7 @@ class FigureInspectorTests(unittest.TestCase):
         self.registered.append(name)
 
     def test_every_headline_figure_is_registered(self):
-        self.assertTrue(set(HEADLINE) <= set(figure_registry.FIGURES))
+        self.assertTrue(set(HEADLINE) <= set(shipped_declared().figures))
 
     def test_a_newly_registered_figure_is_explained_with_no_list_edited(self):
         self.register("test_probe", lambda game: {"value": 7.0, "components": {"alpha": 3.0, "beta": 4.0}})

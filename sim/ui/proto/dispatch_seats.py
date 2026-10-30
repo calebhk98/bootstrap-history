@@ -1,27 +1,37 @@
 """The seats commands: who is playing, and adding a player to a game under way."""
 
-from sim.engine.state_seat import COUNTRY_SEAT, FOUNDER_SECTION, HOUSEHOLD_SEAT
+from sim.engine.state_seat import FOUNDER_SECTION
 from sim.engine.ui_port import STARTING_KITS
 
 from sim.refusal import Refusal
+from sim.seats.api import COUNTRY_SEAT, HOUSEHOLD_SEAT
 
 from .command_registry import command
 from .notes_store import hand_over_notes
+from sim.engine import ui_port
+
+
+def _join(sim, seat_id, template):
+    """Add the seat; a ValueError carrying the refusal's words when the seat cannot be added."""
+    answer = sim.send(ui_port.JoinSeat(seat_id, template))
+    if isinstance(answer, Refusal):
+        raise ValueError(str(answer))
 
 
 def seat_rows(sim):
     """One row per seat: its id, country and whether its run has ended. The addressed seat also shows its own
     purse and what it has built; another seat's purse and work are not shown (they are its own to tell)."""
-    ended = set(sim.ended_seats())
+    ended = sim.view("dead_reasons")()
+    techniques = sim.view("techniques_by_seat")()
     rows = []
-    for seat_id, seat in sim.state.seats.items():
-        row = {"seat": seat_id, "country": seat.country or sim.civ.get("id"), "ended": seat.founder.dead_reason
-               if seat_id in ended else None, "you": seat_id == sim.state.acting_seat}
-        if not seat.holds_household:
-            row.update({"kind": seat.kind, "holder": seat.holder})
-        elif seat_id == sim.state.acting_seat:
-            row.update({"capital": round(seat.household.capital, 1),
-                        "built": len(seat.projects.done - seat.projects.granted)})
+    for seat_id in sim.view("seat_list")()["joined"]:
+        row = {"seat": seat_id, "country": sim.view("seat_country")[seat_id] or sim.view("civilisation")().get("id"),
+               "ended": ended.get(seat_id), "you": seat_id == sim.view("acting_seat")()}
+        if sim.view("seat_kind")[seat_id] == COUNTRY_SEAT:
+            row.update({"kind": COUNTRY_SEAT, "holder": sim.view("seat_holder")[seat_id]})
+        elif seat_id == sim.view("acting_seat")():
+            row.update({"capital": round(sim.view("acting_balance")(), 1),
+                        "built": len(techniques[seat_id].held - techniques[seat_id].granted)})
         rows.append(row)
     return rows
 
@@ -33,7 +43,7 @@ def seat_rows(sim):
                      "named in its \"as\" field, else the session's seat (agent --seat), else the first seat. "
                      "The year advances for every seat that is still playing when anyone steps.")
 def _cmd_seats(sim, nodes, cmd, ended):
-    return {"ok": True, "seats": seat_rows(sim), "year": sim.year,
+    return {"ok": True, "seats": seat_rows(sim), "year": sim.view("year")(),
             "note": 'add "as":"<seat>" to a command to act as that seat; "join" adds a player.'}
 
 
@@ -51,7 +61,7 @@ def _cmd_join(sim, nodes, cmd, ended):
     if not isinstance(seat_id, str) or not seat_id.strip():
         return {"ok": False, "error": 'name the new seat, e.g. {"cmd":"join","seat":"second"}'}
     seat_id = seat_id.strip()
-    if seat_id in sim.state.seats:
+    if seat_id in sim.view("seat_list")()["joined"]:
         return {"ok": False, "error": "there is already a seat %r. Nothing was changed." % seat_id}
     seat_kind = cmd.get("seat_kind") or HOUSEHOLD_SEAT
     if seat_kind not in (HOUSEHOLD_SEAT, COUNTRY_SEAT):
@@ -59,29 +69,29 @@ def _cmd_join(sim, nodes, cmd, ended):
                 "error": "unknown seat kind %r. Kinds: household, country. Nothing was changed." % (seat_kind,)}
     if seat_kind == COUNTRY_SEAT:
         return _join_country_seat(sim, seat_id, cmd)
-    kit = cmd.get("kit") or sim.cfg["start_kit"]
+    kit = cmd.get("kit") or sim.view("game_config")()["start_kit"]
     if kit not in STARTING_KITS:
         return {"ok": False, "error": "unknown kit %r. Kits: %s. Nothing was changed." % (kit, ", ".join(STARTING_KITS))}
-    template = {"kit": kit, "starting_techs": sorted(sim.society_techs_now() & set(sim.nodes)),
+    template = {"kit": kit, "starting_techs": sorted(set(sim.view("society_techs")()) & set(sim.view("tree_nodes")())),
                 "country": cmd.get("country")}
-    sim.join_seat(seat_id, template)
+    _join(sim, seat_id, template)
     return {"ok": True, "joined": seat_id, "seats": seat_rows(sim),
             "note": 'send its commands with "as":"%s"; it plays from the next step.' % seat_id}
 
 
 def _join_country_seat(sim, seat_id, cmd):
     """Add a seat that holds a country's government; it has no kit, techniques, household or founder."""
-    country = cmd.get("country") or str(sim.civ.get("id"))
-    governed = sim.governed_countries()
+    country = cmd.get("country") or str(sim.view("civilisation")().get("id"))
+    governed = sim.view("governed_countries")()
     if country not in governed:
         return {"ok": False, "cause": "unknown_country", "choices": governed,
                 "error": "no government of %r to hold. Countries: %s. Nothing was changed." % (country, ", ".join(governed))}
     if cmd.get("kit"):
         return {"ok": False, "cause": "country_seat_has_no_kit",
                 "error": "a country seat has no starting kit: its means are its state's. Nothing was changed."}
-    seat = sim.join_seat(seat_id, {"kind": COUNTRY_SEAT, "country": country})
-    return {"ok": True, "joined": seat_id, "kind": seat.kind, "holder": seat.holder, "country": country,
-            FOUNDER_SECTION: seat.founder, "household": None, "seats": seat_rows(sim),
+    _join(sim, seat_id, {"kind": COUNTRY_SEAT, "country": country})
+    return {"ok": True, "joined": seat_id, "kind": sim.view("seat_kind")[seat_id], "holder": sim.view("seat_holder")[seat_id],
+            "country": country, FOUNDER_SECTION: None, "household": None, "seats": seat_rows(sim),
             "note": 'seat %s holds the government of %s; it has no household. Send its commands with "as":"%s".'
                     % (seat_id, country, seat_id)}
 
@@ -92,7 +102,7 @@ def hand_over(sim, caller, from_id, to_id):
     if from_id != caller:
         return {"ok": False, "cause": "not_your_seat", "choices": [caller], "seat": from_id,
                 "error": "you can hand over only your own seat (%s), not %r. Nothing was changed." % (caller, from_id)}
-    moved = sim.hand_over_seat(from_id, to_id)
+    moved = sim.send(ui_port.HandOverSeat(from_id, to_id))
     if isinstance(moved, Refusal):
         return {"ok": False, "cause": moved.cause, "choices": moved.choices, "error": str(moved), **moved.facts}
     notes = hand_over_notes(sim, from_id, to_id)
@@ -114,5 +124,5 @@ def _cmd_handover(sim, nodes, cmd, ended):
     if not isinstance(to_id, str) or not to_id.strip():
         return {"ok": False, "cause": "no_replacement",
                 "error": 'name the replacement seat, e.g. {"cmd":"handover","to":"second"}'}
-    caller = sim.state.acting_seat
+    caller = sim.view("acting_seat")()
     return hand_over(sim, caller, cmd.get("from", caller), to_id.strip())

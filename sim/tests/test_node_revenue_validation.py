@@ -3,7 +3,10 @@ are test_node_revenue_rules."""
 import copy
 import unittest
 
-from sim.engine import data, energy_prices, node_revenue
+from sim.prices import energy_prices
+
+from sim.engine import data
+from sim.production import node_revenue
 from sim.labour.labour_market import production_data
 
 

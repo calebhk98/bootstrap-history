@@ -24,7 +24,7 @@ WHAT IT CHECKS, and why each one is here rather than left to review:
     is an authoring slip rather than an economy.
   * `thermal_mj`, `mechanical_mj`, `electrical_mj` and `energy_mj`, if
     present, are non-negative numbers. See data/production/70_energy.json
-    and ENERGY in sim/engine/solve_prices.py's module docstring for what the first
+    and ENERGY in sim/prices/solve_prices.py's module docstring for what the first
     three are priced against, and why the fourth stays deliberately
     uncosted.
   * `capital`, if present, is held to the same standard as everything else:
@@ -52,17 +52,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 PRODUCTION_DIR = os.path.join(ROOT, "data", "production")
 
-# The three energy carriers (see ENERGY in sim/engine/solve_prices.py's module
+# The three energy carriers (see ENERGY in sim/prices/solve_prices.py's module
 # docstring). Kept as a separate copy of the same tuple that file declares
 # as ENERGY_CARRIER_FIELDS, rather than imported from it, because
-# sim/engine/solve_prices.py imports FROM this module - importing the other way
+# sim/prices/solve_prices.py imports FROM this module - importing the other way
 # too would be circular.
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 
 def load_production():
     """Load the one canonical base-and-enabled-mod production graph."""
-    from sim.engine.catalog import load_production_catalog
+    from sim.content.api import load_production_catalog
     return load_production_catalog(ROOT), []
 
 
@@ -183,7 +183,7 @@ def check_energy_carrier_fields(where, entry):
     problems = []
 
     # ENERGY. thermal_mj, mechanical_mj and electrical_mj are all priced,
-    # through sim/engine/solve_prices.py's three-way energy market
+    # through sim/prices/solve_prices.py's three-way energy market
     # (data/production/70_energy.json) - a typo turning one into a
     # string or a negative number would silently vanish into `or 0.0`
     # there exactly like a bad `inputs` quantity would. energy_mj is the
@@ -216,7 +216,7 @@ def check_requires_node(where, entry, known_nodes):
     #                 growing wheat. A deliberate statement, not a gap.
     #   "node_id"   - available once that node is reached.
     #
-    # This exists because sim/engine/solve_prices.py had no notion of WHEN: a
+    # This exists because sim/prices/solve_prices.py had no notion of WHEN: a
     # 100 AD scenario priced its electricity off a photovoltaic panel,
     # which is the defect Complaints/38 records. A typo here reads as
     # "this technique is never available", which is why the id is
@@ -536,7 +536,7 @@ def check(entries, known_materials, known_trades, known_nodes=None):
 
 def production_problems(nodes):
     """Every malformed entry in the production catalogue, checked against `nodes` ({id: node})."""
-    from sim.engine.catalog import load_trade_registry, material_namespace
+    from sim.content.api import load_trade_registry, material_namespace
     entries, duplicates = load_production()
     known_trades = set(load_trade_registry(ROOT, entries))
     known_materials = material_namespace(entries, nodes.values())

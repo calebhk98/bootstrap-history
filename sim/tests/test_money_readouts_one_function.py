@@ -4,20 +4,22 @@ method `money` reads, and the market squeeze rows sum to the deduction. Each is 
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine.economy_absorption import MarketAbsorptionMixin
+from sim.markets.module import Markets
+from sim.tests import module_harness
 from sim.ui.proto import techtree
 from sim.ui.proto.dispatch_labour import _cmd_train
 from sim.ui.proto.quote_spending import _quote_train
 from sim.ui.proto.state_projects import _agent_state_spend_and_net
 
 from .harness import *  # noqa: F401,F403
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
 # --- the AFFORD column counts the starts `start` accepts, per subject; rows `start` refuses are marked.
 tree = {"a": {"cat": "material"}, "b": {"cat": "material"}, "c": {"cat": "material"}}
 refusals = {"a": None, "b": "no cash", "c": None}
-payer = SimpleNamespace(spending_power=lambda kind: 100.0, project_cost=lambda node_id: {"a": 5.0, "b": 9.0, "c": 7.0}[node_id],
+payer = Game(spending_power=lambda kind: 100.0, project_cost=lambda node_id: {"a": 5.0, "b": 9.0, "c": 7.0}[node_id],
                         start_refusal=refusals.get)
 with mock.patch.object(techtree, "_subject_of", return_value="metals"):
     rows, purse = techtree._digest_subject_rows(payer, tree, ["a", "b", "c"])
@@ -48,7 +50,7 @@ class _Labour:
         return 100.0
 
 
-trainer = SimpleNamespace(labour=_Labour(), capital=1000.0)
+trainer = Game(labour=_Labour(), capital=1000.0)
 quote = _quote_train(trainer, {}, {"trade": "machinist", "n": 2})
 reply = _cmd_train(trainer, {}, {"trade": "machinist", "n": 2}, None)
 check("quote train states the plan's fee as paid_now and its wage bill", quote["paid_now"] == round(plan["fee"], 1)
@@ -57,24 +59,18 @@ check("train charges what the quote states and repeats the same wage bill",
       reply["paid_now"] == quote["paid_now"] and reply["wage_bill_added_per_year"] == quote["wage_bill_added_per_year"], (quote, reply))
 
 # --- the state's sustainable debt is the method's figure, rounded as `money` rounds it.
-debtor = SimpleNamespace(
+debtor = Game(
     spend_last_year=0.0, capital=-50000.0, wages_prepaid=0.0, debt_interest_rate=lambda: 0.05, revenue=lambda: 100.0, upkeep=lambda: 10.0,
     recurring_living_cost=lambda revenue, upkeep: 20.0, mine_operating_cost=lambda: 0.0, recurring_net=lambda: 70.0,
-    sustainable_debt=lambda: 1234.567)
+    sustainable_debt=lambda: 1234.567, view=lambda name: (lambda: {"prepaid": 0.0} if name == "pay_book" else 0.0))
 check("state reads sustainable_debt from the sim method, rounded to one place",
       _agent_state_spend_and_net(debtor)["sustainable_debt"] == 1234.6)
 
 # --- the squeeze rows add up to the deduction and each names its concerns.
-class _Absorbing(MarketAbsorptionMixin):
-    def __init__(self):
-        self.nodes = {"mill": {"cat": "textiles"}, "loom": {"cat": "textiles"}, "forge": {"cat": "metals"}}
-        self.state = SimpleNamespace(economy=SimpleNamespace(output_factor=1.0))
-
-    def ledger_concern_rows(self):
-        return {"mill": 300.0, "loom": 100.0, "forge": 600.0}
-
-    def workshop_output(self):
-        return 0.0
+def _Absorbing():
+    return module_harness.build(Markets, views={
+        "tree_nodes": lambda: {"mill": {"cat": "textiles"}, "loom": {"cat": "textiles"}, "forge": {"cat": "metals"}},
+        "output_factor": 1.0, "concern_market": {"mill": 300.0, "loom": 100.0, "forge": 600.0}, "workshop_output": 0.0})
 
 
 squeeze = _Absorbing().market_absorption_by_category(250.0)

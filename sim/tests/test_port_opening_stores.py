@@ -6,8 +6,8 @@ import json
 import os
 import unittest
 
-from sim.engine.economy_port_stores import opening_store_values
-from sim.geography.api import open_map, tiles_held
+from sim.markets.port_stores import opening_store_values
+from sim.tests import land_host
 
 DATA = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "civilizations")
 
@@ -15,8 +15,8 @@ DATA = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.absp
 def stores_of(civ_file):
     with open(os.path.join(DATA, civ_file), encoding="utf-8") as handle:
         civ = json.load(handle)
-    world_map = open_map()
-    return opening_store_values(world_map, tiles_held(civ, world_map), int(civ["year"]))
+    land = land_host.build(civ)   # the port asks the land module's views under the names the land module gives them
+    return opening_store_values(land, land.tiles_listed_by(civ), int(civ["year"]))
 
 
 class OpeningStoreValueTests(unittest.TestCase):

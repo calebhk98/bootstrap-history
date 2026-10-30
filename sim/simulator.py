@@ -38,16 +38,10 @@ from sim.engine.data import *            # noqa: F401,F403
 from sim.engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS,
                          RESFILE, STARTING_KITS, STRATS, TECH_EFFECTS,
                          TRADES_ABSENT, TRADE_FAMILY, TRADE_NOTES, WAGES,
-                         closure, critical_path, haversine_km, load, load_civ,
-                         load_geography, load_resources, topo_order,
-                         trade_family, goal_catalog, goal_lookup, resolve_goal,
-                         # The private loaders too. They are private, but
-                         # `import simulator` still has to give them to any
-                         # caller relying on that surface - a split is not
-                         # the moment to decide somebody's tool should stop
-                         # working.
-                         _load_tech_effects,
-                         _load_trade_notes)      # noqa: F401
+                         haversine_km, load, load_civ,
+                         load_geography, load_resources,
+                         trade_family, goal_catalog, goal_lookup, resolve_goal)      # noqa: F401
+from sim.knowledge.api import closure, critical_path, hard_pre, topo_order  # noqa: F401
 from sim.engine.core import Sim                                  # noqa: F401
 from sim.ui.api import (_agent_available, _agent_dispatch,  # noqa: F401
                         _agent_end_reason, _agent_help, _agent_state,

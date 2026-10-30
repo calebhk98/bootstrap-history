@@ -94,6 +94,8 @@ class Economy:
         self.watched_tiles: Tuple[str, ...] = ()   # tiles whose market books are kept beside the port's and the capital's; not saved
         self._own_options = None
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
+        self._work_hours: Dict[str, float] = {}     # household work each cohort keeps back this year; set when the year plans it
+        self._leisure_hours: Dict[str, float] = {}  # leisure each cohort takes this year; set when the year clears labour
         if opening:
             opening_leisure.seed(self)
 
@@ -349,8 +351,8 @@ class Economy:
             offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours
         for cohort_id, cohort in sorted(record.cohorts.items()):
             idle = (offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
-                    - min(kept.get(cohort_id, 0.0), getattr(self, "_work_hours", {}).get(cohort_id, 0.0)
-                          + getattr(self, "_leisure_hours", {}).get(cohort_id, 0.0)))   # household work and leisure are not spare hours
+                    - min(kept.get(cohort_id, 0.0), self._work_hours.get(cohort_id, 0.0)
+                          + self._leisure_hours.get(cohort_id, 0.0)))   # household work and leisure are not spare hours
             tile = setup.tiles.get(cohort.tile)
             hours_used: Dict[str, float] = {}
             moves, grown, units = own_production(cohort, idle, self._own_options, setup.recipes,

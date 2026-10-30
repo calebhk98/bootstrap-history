@@ -8,21 +8,32 @@ from types import SimpleNamespace
 from unittest import mock
 
 from .harness import *  # noqa: F401,F403
+from . import module_harness
 
-from sim.engine import goods_market_offers
-from sim.engine.goods_market_api import GoodsMarket
-from sim.engine.goods_market_imports import HOME_SELLER
-from sim.engine.incumbent_prices import IncumbentPricesMixin
-from sim.engine.market_clearing import MarketClearingMixin
-from sim.engine.market_demand import household_demand_by_material
+from sim.tests import market_stand_in
+from sim.markets import goods_offers
+from sim.markets.goods_market import GoodsMarket
+from sim.markets.goods_imports import HOME_SELLER
+from sim.prices import rules as price_rules
+from sim.content import api as content
+from sim.engine.data import ROOT
+from sim.markets import household_needs
 from sim.engine.material_units import tonnes_per_unit
-from sim.engine.society_actors import ActorsMixin
+from sim.markets.module import Markets
 from sim.world import market
 
 QUICK_TOPIC = True
 
 MATERIAL = "iron"
 FOUNDER = "seat:founder"
+
+
+def markets_over(game):
+    """The markets module over the goods market `game` holds."""
+    markets = module_harness.build(Markets, views={"material_commodity": lambda material: material,
+                                                       "concern_offers": lambda commodity: game.founder_concern_offers(commodity)})
+    markets.goods_market = game.goods_market
+    return markets
 
 
 def stand_in(**changes):
@@ -32,9 +43,8 @@ def stand_in(**changes):
     facts = {"solved_materials": {"cassia_kg", "wheat_kg"}, "prices_in_home_money": {"cassia_kg": 2.0, "wheat_kg": 9.0}}
     route = SimpleNamespace(cost_per_tonne=40.0)
     values = dict(
-        _flows=flows, state=SimpleNamespace(acting_seat=FOUNDER, projects=SimpleNamespace(done=[]),
-                                            scenario=SimpleNamespace(year=-100)),
-        household=SimpleNamespace(), economy=SimpleNamespace(agent_prices_at=lambda: None),
+        _flows=flows, year=-100, state=SimpleNamespace(acting_seat=FOUNDER, projects=SimpleNamespace()), techniques_held=frozenset,
+        **market_stand_in.market_memory(), economy=SimpleNamespace(agent_prices_at=lambda: None),
         _material_prices=lambda: {"wheat_kg": 3.0, "iron": 5.0}, _price_tables=lambda: (None, {"wheat_kg": "solved", "iron": "solved"}),
         foreign_economies=lambda: ["han"], _foreign_economy_facts=lambda partner: facts, _foreign_route=lambda civ: route,
         partner_civ=lambda partner: {}, partner_price_level=lambda partner: 1.0, market_rate=lambda: 0.05,
@@ -52,7 +62,7 @@ def stand_in(**changes):
 def figures(game, with_flows):
     game.goods_market = GoodsMarket(game)
     game.founder_concern_offers = lambda commodity: ()
-    return MarketClearingMixin._market_flow_figures(game, MATERIAL, with_flows)
+    return markets_over(game).market_flow_figures(MATERIAL, with_flows)
 
 
 def cleared(committed=0.0, founder_sales=0.0, actor_supply=0.0, actor_demand=0.0):
@@ -90,21 +100,21 @@ GoodsMarket(by_founder_buying).note_purchase(FOUNDER, MATERIAL, TONNES)
 by_state.goods_market = GoodsMarket(by_state)
 by_founder_buying.goods_market = GoodsMarket(by_founder_buying)
 check("the state's purchases reach the book as the actors' demand and raise the price",
-      abs(ActorsMixin.actor_demand(by_state, MATERIAL) - TONNES) < 1e-9
-      and cleared(actor_demand=ActorsMixin.actor_demand(by_state, MATERIAL)).price_ratio > cleared().price_ratio)
+      abs(markets_over(by_state).actor_demand(MATERIAL) - TONNES) < 1e-9
+      and cleared(actor_demand=markets_over(by_state).actor_demand(MATERIAL)).price_ratio > cleared().price_ratio)
 check("...while the founder's purchases are his own, not the actors'",
-      ActorsMixin.actor_demand(by_founder_buying, MATERIAL) == 0.0
+      markets_over(by_founder_buying).actor_demand(MATERIAL) == 0.0
       and figures(by_founder_buying, with_flows=False)[0] == 0.0 and figures(by_founder_buying, with_flows=True)[0] == TONNES,
       (figures(by_founder_buying, False), figures(by_founder_buying, True)))
 
 # --- a good nobody offers has no household price and draws no spending -----------------------------------------
-no_tariff = mock.patch.object(goods_market_offers.trade_duty, "import_terms", lambda game, partner: (0.0, False))
-signature = mock.patch.object(goods_market_offers.trade_duty, "signature", lambda game, partners: ())
+no_tariff = mock.patch.object(goods_offers.trade_duty, "import_terms", lambda game, partner: (0.0, False))
+signature = mock.patch.object(goods_offers.trade_duty, "signature", lambda game, partners: ())
 with no_tariff, signature:
     home_only = stand_in(foreign_economies=lambda: [])
     market_home = GoodsMarket(home_only)
     home_only.goods_market = market_home
-    check("pepper has no price: nothing in reach makes it", IncumbentPricesMixin.material_price_basis(home_only, "pepper_kg") is None)
+    check("pepper has no price: nothing in reach makes it", price_rules.basis_with_imports(home_only._price_tables()[1].get("pepper_kg"), market_home.offered_by("pepper_kg")) is None)
     check("...so it cannot be quoted or bought", not market_home.can_be_bought("pepper_kg"))
     check("no home technique in reach and no partner offers pepper", market_home.offered_by("pepper_kg") is None)
     prices = market_home.household_prices()
@@ -119,7 +129,7 @@ with no_tariff, signature:
     partnered_prices = partnered.goods_market.household_prices()
     check("a partner offers cassia, so it is an import and can be bought",
           partnered.goods_market.offered_by("cassia_kg") == "han"
-          and IncumbentPricesMixin.material_price_basis(partnered, "cassia_kg") == "imported"
+          and price_rules.basis_with_imports(partnered._price_tables()[1].get("cassia_kg"), partnered.goods_market.offered_by("cassia_kg")) == "imported"
           and partnered.goods_market.can_be_bought("cassia_kg"), partnered.goods_market.offered_by("cassia_kg"))
     cost = 2.0 * 1.0
     share = partnered.goods_market.merchants_cost_share(partnered._foreign_route(None), None, "han")
@@ -129,5 +139,6 @@ with no_tariff, signature:
     check("a good the home makes is still sold by the home when a partner makes it too, unless the partner is cheaper",
           partnered.goods_market.offered_by("wheat_kg") == HOME_SELLER, partnered.goods_market.offered_by("wheat_kg"))
 
-wanted = household_demand_by_material({"wheat_kg": 1.0}, 1_000_000.0, 550.0)
+model, _final_goods = household_needs.household_model((), lambda: content.load_needs(ROOT))
+wanted = household_needs.demand_by_material(model, {"wheat_kg": 1.0}, 1_000_000.0, 550.0)
 check("a need served by a good nobody prices draws no spending on it", wanted.get("pepper_kg", 0.0) == 0.0, wanted.get("pepper_kg"))

@@ -7,8 +7,8 @@ from types import SimpleNamespace
 from sim.agents import budget_lines
 from sim.book import Book, GoodsMove
 from sim.economy.types import GoodSpec
-from sim.engine import economy_port_actors as actors_port
-from sim.engine.economy_port import EconomyPort
+from sim.markets import port_actors as actors_port
+from sim.markets.port import EconomyPort
 from sim.world import demand
 
 
@@ -25,8 +25,7 @@ def storage_economy(capital_asset):
 
 class ShipPurchases(unittest.TestCase):
     def test_fleet_planning_does_not_open_an_unopened_economy(self):
-        world = SimpleNamespace(state=SimpleNamespace(
-            projects=SimpleNamespace(granted={"sea_mortise_tenon"})))
+        world = SimpleNamespace(techniques_granted=lambda: frozenset({"sea_mortise_tenon"}))
         port = EconomyPort(world)
         port._opening = True
         goods = port.fleet_goods("state:a")

@@ -12,8 +12,8 @@ import os
 import unittest
 
 from sim.engine import civ_start_check as start_check
-from sim.engine.catalog import load_production_catalog
-from sim.engine.tree_source import load_base_tree
+from sim.content.catalog import load_production_catalog
+from sim.content.tree_source import load_base_tree
 from sim.world import demand
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

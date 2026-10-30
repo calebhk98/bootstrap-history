@@ -6,7 +6,7 @@ effectiveness per unit cost. Everything a wanted good consumes is demanded in
 turn through the recipes that make it.
 
 Needs and goods come from data/world/needs.json and mods (see
-sim/engine/need_data.py); recipes from data/production/. This module takes
+sim/content/need_data.py); recipes from data/production/. This module takes
 them as arguments.
 """
 import collections
@@ -17,9 +17,9 @@ from sim.world import demand, need_basket, need_final_demand
 from sim.world.need_basket import NEED_SUBSTITUTION_ELASTICITY, goods_attributes
 
 def load_needs(root: str) -> Dict[str, Any]:
-    """The base-and-enabled-mod needs and goods under `root` (sim/engine/need_data.py)."""
-    from sim.engine import need_data
-    return need_data.load_needs(root)
+    """The base-and-enabled-mod needs and goods under `root` (sim/content/need_data.py)."""
+    from sim.content.api import load_needs
+    return load_needs(root)
 
 
 DERIVED_DEMAND_MAX_SWEEPS = declare(

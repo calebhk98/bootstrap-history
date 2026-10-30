@@ -1,12 +1,17 @@
 """Complaints 65 and 67: the automatic mining order counts shafts still being sunk, and a material fed by two supply
-tags shows both demands in one capacity row. The rules are called on given numbers and a stub over the real mixin."""
+tags shows both demands in one capacity row. The rules are called on given numbers."""
 
 QUICK_TOPIC = True
 
 import unittest
+from types import SimpleNamespace
 
-from sim.engine.economy_materials import MaterialSupplyMixin
-from sim.engine.shortage_sizing import auto_mine_affordable_tonnes, auto_mine_order_tonnes
+from sim.materials import rules
+from sim.materials.constants import FIREWOOD_PER_CHARCOAL_MASS_RATIO
+from sim.resources.api import AutoMothballMines
+from sim.resources.module import Resources
+from sim.tests import module_harness
+from sim.resources.sizing import auto_mine_affordable_tonnes, auto_mine_order_tonnes
 
 RICH = 1e12
 CAPEX = 100.0
@@ -38,18 +43,18 @@ class AutoMineOrder(unittest.TestCase):
         self.assertGreater(auto_mine_affordable_tonnes(10_000.0, 0.0), 0.0)
 
 
-class StubSupply(MaterialSupplyMixin):
+class StubSupply:
     """The real shared-land arithmetic over given own supply by tag."""
 
     def __init__(self, own_by_tag):
         self.own_by_tag = own_by_tag
 
-    def _own_material_supply(self, tag):
-        return self.own_by_tag.get(tag, 0.0)
+    def demand_and_own_supply_by_material(self, by_tag):
+        return rules.demand_and_own_supply(by_tag, lambda tag: self.own_by_tag.get(tag, 0.0))
 
 
 class SharedForestRow(unittest.TestCase):
-    RATIO = MaterialSupplyMixin.FIREWOOD_PER_CHARCOAL_MASS_RATIO
+    RATIO = FIREWOOD_PER_CHARCOAL_MASS_RATIO
 
     def test_charcoal_and_firewood_demands_add_in_one_row(self):
         supply = StubSupply({"forest": 100.0, "forest4": 100.0 / self.RATIO})
@@ -75,6 +80,23 @@ class SharedForestRow(unittest.TestCase):
         demand, own = supply.demand_and_own_supply_by_material(
             {("charcoal", "forest"): 10.0, ("charcoal", "forest4"): 5000.0})["charcoal"]
         self.assertGreater(demand, own)
+
+
+class AutoMothball(unittest.TestCase):
+    def run_policy(self, balance=-5.0, capacity=None, policy=None):
+        mothballed = []
+        resources = module_harness.build(Resources, views={"acting_balance": lambda: balance, "founder": lambda: {"policy": {} if policy is None else policy}})
+        resources.mine_capacity = lambda: {"iron": 3.0} if capacity is None else capacity
+        resources.mothball_mines = lambda: mothballed.append(True)
+        resources.auto_mothball_mines(AutoMothballMines())
+        return mothballed
+
+    def test_a_negative_balance_with_workings_mothballs_them_unless_the_seat_set_it_off(self):
+        self.assertEqual(self.run_policy(), [True])
+        self.assertEqual(self.run_policy(policy={"auto_mothball": False}), [])
+
+    def test_nothing_is_mothballed_with_a_balance_at_zero_or_no_workings(self):
+        self.assertEqual((self.run_policy(balance=0.0), self.run_policy(capacity={})), ([], []))
 
 
 if __name__ == "__main__":

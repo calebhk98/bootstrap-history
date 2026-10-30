@@ -8,7 +8,7 @@ import unittest
 
 from sim.economy import goods_market, market_quote
 from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, Bid
-from sim.engine.goods_market_imports import import_tonnes_left
+from sim.markets.goods_imports import import_tonnes_left
 
 GOOD, AREA, TILE = "cobalt_kg", "area", "tile"
 LAST_PRICE = 7.0

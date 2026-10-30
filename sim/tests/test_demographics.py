@@ -18,7 +18,6 @@ def labour_of(civ_id="rome_100ad"):
     world.home_tiles_held_version = lambda: 0
     world.cfg = {"hired_hours_cap_base": 25000}
     world.effect_factor = lambda channel, value, exponent=None: value
-    world.state.scenario = types.SimpleNamespace(year=100)
     return world, Labour(world)
 
 

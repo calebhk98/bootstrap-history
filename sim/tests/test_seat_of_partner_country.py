@@ -9,10 +9,12 @@ from unittest import mock
 
 from .harness import check
 
-from sim.engine import economy_port_year, society_actors
-from sim.engine.economy_port_year import AgentEconomy
-from sim.engine.seat_run import SeatRunMixin
-from sim.engine.society_actors import ActorsMixin
+from sim.actors.module import Actors
+from sim.markets import port_year
+from sim.markets.port_year import AgentEconomy
+from sim.seats.module import Seats
+from sim.seats.state import SeatsSeat
+from . import module_harness
 
 COIN_PER_UNIT = 2.0
 HOME, NORTH = "home", "north"
@@ -26,14 +28,14 @@ class Stored(dict):
     pass
 
 
-class FakeState:
-    class economy:
-        agent_economy = Stored(on=True)
+STORED = Stored(on=True)
 
 
 class FakeSim:
     civ = {"id": HOME}
-    state = FakeState
+
+    def agent_record(self):
+        return STORED
 
 
 def seat_economy():
@@ -45,7 +47,7 @@ def seat_economy():
     agent._answers = None
     agent._country_answers = {}
     agent._stale = set()
-    agent._built_from = FakeState.economy.agent_economy
+    agent._built_from = STORED
     agent.economy = lambda: agent._economy
     return agent
 
@@ -55,7 +57,7 @@ def answers_over_readers(call):
     readers = {"wages_by_trade_weighted": lambda economy, country=None: WAGES[country],
                "shown_prices_of": lambda economy, country=None: (PRICES[country], set()),
                "interest_rate": lambda economy: 0.05}
-    with mock.patch.multiple(economy_port_year.economy_api, **readers):
+    with mock.patch.multiple(port_year.economy_api, **readers):
         return call(seat_economy())
 
 
@@ -89,24 +91,17 @@ check("the home answer is the same whether or not the country is named",
       answers_over_readers(lambda agent: agent.answers(HOME) is agent.answers()), None)
 
 
-class Seat:
-    def __init__(self, country):
-        self.country = country
+def seats_module(country):
+    """The seats module over a one-seat registry whose seat plays for `country` (None is the game's own)."""
+    module = module_harness.build(Seats, seat=SeatsSeat(country=country), views={"registered_seats": ["second"], "civilisation": {"id": "home"}})
+    module.seat_slot_of = lambda seat_id: module.seat
+    module.clock.act_as("second")
+    return module
 
 
-class Seats(SeatRunMixin):
-    civ = {"id": "home"}
-
-    def __init__(self, country):
-        class State:
-            acting_seat = "second"
-            seats = {"second": Seat(country)}
-        self.state = State
-
-
-check("a seat of the game's own country has no partner country", Seats(None).acting_country() is None
-      and Seats("home").acting_country() is None, None)
-check("a seat of another country names it", Seats("han").acting_country() == "han", None)
+check("a seat of the game's own country has no partner country", seats_module(None).acting_country() is None
+      and seats_module("home").acting_country() is None, None)
+check("a seat of another country names it", seats_module("han").acting_country() == "han", None)
 
 
 class Registry:
@@ -121,22 +116,13 @@ class Registry:
         return "the home government"
 
 
-class Treasury(ActorsMixin):
-    civ = {"id": "home", "name": "Home"}
-
-    def __init__(self, country):
-        self._registry = Registry()
-        self._country = country
-
-    @property
-    def actors(self):
-        return self._registry
-
-    def acting_country(self):
-        return self._country
-
-
-society_actors.seed_opening_cast = lambda sim: []
+def Treasury(country):
+    """The actors module over a stand-in cast, acting for a seat of `country`."""
+    module = module_harness.build(Actors, views={"acting_country": lambda: country, "civilisation": {"id": "home", "name": "Home"}})
+    registry = Registry()
+    module.cast = lambda: registry
+    module.seed_opening_cast = lambda: []
+    return module
 # not text: a stub treasury's descriptor
 check("a partner country's seat pays the state of its own country", Treasury("han").state_treasury() == "the partner's government", None)
 # not text: a stub treasury's descriptor

@@ -14,7 +14,7 @@ def candidates(sim, text):
         if node_id not in found:
             found.append(node_id)
     return [node_id for node_id in found
-            if node_id in sim.nodes and (not sim.fog or sim.is_visible(node_id))]
+            if node_id in sim.view("tree_nodes")() and (not sim.view("fog_of_war")() or sim.view("visibility")(node_id))]
 
 
 def resolve_project(sim, text):
@@ -24,8 +24,8 @@ def resolve_project(sim, text):
         return found[0], None
     if found:
         return None, "%r names several projects (%s); use the id" % (text, ", ".join(sorted(found)))
-    near = [node_id for node_id in _did_you_mean(text, sim.nodes, sim=sim)
-            if not sim.fog or sim.is_visible(node_id)]
+    near = [node_id for node_id in _did_you_mean(text, sim.view("tree_nodes")(), sim=sim)
+            if not sim.view("fog_of_war")() or sim.view("visibility")(node_id)]
     return None, "no project called %r that you know of%s" % (
         text, ". did you mean: " + ", ".join(near) if near else "")
 

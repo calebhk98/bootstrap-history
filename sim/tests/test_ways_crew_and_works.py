@@ -6,8 +6,14 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine import ways
+from sim.finance import purchase_rules
 from sim.geography import api as geography, routes_graph, tile_layers
+from sim.land.commands import BuildWay, FinishWays
+from sim.land.module import Land
+from sim.land.state import LandSeat, LandWorld
+from sim.ledger.api import PayEdge
+from sim.tests import module_harness
+from sim.tests.ui_stand_in import StandIn
 
 GRANTED = {"civ_road_paved", "lnd_iron_edge_rail", "lnd_bridge", "civ_harbour_dock", "civ_canal_pound_lock"}
 
@@ -37,29 +43,34 @@ class _LabourMarket:
         self.released.append((trade, hours))
 
 
-class _Builder(ways.WaysMixin):
-    """The parts of a Sim that building a way touches."""
+class _Builder:
+    """The land module over plain values for the views it reads, as the tests of building a way call it."""
 
     def __init__(self, held, supply=100000):
-        self.world_map = geography.open_map()
-        self.state = types.SimpleNamespace(
-            economy=types.SimpleNamespace(improvements={}, ways_under_construction={}),
-            scenario=types.SimpleNamespace(year=100),
-            projects=types.SimpleNamespace(done=set(), granted=set(GRANTED)),
-            household=object())
+        self.year = 100
+        self.cash = 1e18
+        self.granted = set(GRANTED)
         self.market = _LabourMarket(supply)
-        self.labour = types.SimpleNamespace(labour_market=self.market, settlement_tiles=lambda: sorted(held))
-        self.goods_market = types.SimpleNamespace(purchase_cost=lambda material, tonnes: (10.0 * tonnes, 10.0))
         self.paid = []
+        self.module = module_harness.build(
+            Land, world=LandWorld(), seat=LandSeat(),
+            views={"labour_market": lambda: self.market, "settlement_tiles": lambda: dict.fromkeys(sorted(held), 1.0),
+                   "purchase_quote": lambda material, tonnes: (10.0 * tonnes, 10.0),
+                   "can_pay": lambda cost: purchase_rules.can_pay(cost, self.cash), "afford_means": "cash",
+                   "money_text": lambda amount, grouped=False: "%d coin" % amount, "year": lambda: self.year,
+                   "techniques_held": set(), "techniques_granted": lambda: self.granted},
+            answers={PayEdge: lambda command: self.paid.append(command.amount)})
+        self.module._map_cache = geography.open_map()
+        self.world = self.module.world
 
-    def spending_power(self, kind):
-        return 1e18
+    def way_quote(self, tile_a, tile_b, way):
+        return self.module.way_quote(tile_a, tile_b, way)
 
-    def pay_edge(self, edge, money, text):
-        self.paid.append(money)
+    def build_way(self, tile_a, tile_b, way):
+        return self.module.build_way(BuildWay(tile_a, tile_b, way))
 
-    def finish_works(self):
-        pass
+    def finish_ways(self):
+        self.module.finish_ways(FinishWays())
 
 
 def _land_edges(world_map):
@@ -75,7 +86,7 @@ def _flat(world_map):
 
 
 def _open(builder, years_on=0.0):
-    builder.state.scenario.year += years_on
+    builder.year += years_on
     builder.finish_ways()
 
 
@@ -99,9 +110,9 @@ class CrewFromTheLabourMarketTests(unittest.TestCase):
         self.assertEqual([trade for trade, _hours in builder.market.pressed], ["labourer"])
         crew_hours = builder.market.pressed[0][1]
         self.assertGreater(crew_hours, 0.0)
-        due = next(iter(next(iter(builder.state.economy.ways_under_construction.values())).values()))["due"]
+        due = next(iter(next(iter(builder.world.ways_under_construction.values())).values()))["due"]
         self.assertEqual(builder.market.released, [])
-        _open(builder, due - builder.state.scenario.year)
+        _open(builder, due - builder.year)
         self.assertEqual(builder.market.released, [("labourer", crew_hours)])
 
     def test_each_year_of_the_build_presses_the_market_again(self):
@@ -121,7 +132,7 @@ class EngineeredAndWorksTests(unittest.TestCase):
         self.world_map = geography.open_map()
 
     def _finish(self, builder):
-        builder.state.scenario.year = 10 ** 6
+        builder.year = 10 ** 6
         builder.finish_ways()
 
     def test_a_railway_over_steep_ground_is_built_engineered_and_recorded_so(self):
@@ -130,7 +141,7 @@ class EngineeredAndWorksTests(unittest.TestCase):
         self.assertTrue(builder.way_quote(edge.tile_a, edge.tile_b, "rail")["engineered"])
         self.assertTrue(builder.build_way(edge.tile_a, edge.tile_b, "rail")[0])
         self._finish(builder)
-        built = builder.state.economy.improvements[geography.edge_key(edge.tile_a, edge.tile_b)]
+        built = builder.world.improvements[geography.edge_key(edge.tile_a, edge.tile_b)]
         self.assertTrue(built["rail"] and built["engineered"])
 
     def test_a_level_road_is_not_engineered(self):
@@ -138,14 +149,14 @@ class EngineeredAndWorksTests(unittest.TestCase):
         builder = _builder_for(edge)
         builder.build_way(edge.tile_a, edge.tile_b, "road")
         self._finish(builder)
-        self.assertNotIn("engineered", builder.state.economy.improvements[geography.edge_key(edge.tile_a, edge.tile_b)])
+        self.assertNotIn("engineered", builder.world.improvements[geography.edge_key(edge.tile_a, edge.tile_b)])
 
     def test_a_bridge_is_recorded_on_the_crossing_edge(self):
         edge = next(edge for edge in _land_edges(self.world_map) if edge.crosses_river)
         builder = _builder_for(edge)
         self.assertTrue(builder.build_way(edge.tile_a, edge.tile_b, "bridge")[0])
         self._finish(builder)
-        self.assertTrue(builder.state.economy.improvements[geography.edge_key(edge.tile_a, edge.tile_b)]["bridge"])
+        self.assertTrue(builder.world.improvements[geography.edge_key(edge.tile_a, edge.tile_b)]["bridge"])
 
     def test_a_bridge_is_refused_where_no_river_is_crossed(self):
         edge = _flat(self.world_map)
@@ -157,7 +168,7 @@ class EngineeredAndWorksTests(unittest.TestCase):
         builder = _Builder({tile})
         self.assertTrue(builder.build_way(tile, tile, "port")[0])
         self._finish(builder)
-        self.assertTrue(builder.state.economy.improvements[tile]["port"])
+        self.assertTrue(builder.world.improvements[tile]["port"])
         self.assertFalse(_Builder(set()).build_way(tile, tile, "port")[0])
 
     def test_a_canal_is_built_like_any_other_way(self):
@@ -165,7 +176,7 @@ class EngineeredAndWorksTests(unittest.TestCase):
         builder = _builder_for(edge)
         self.assertTrue(builder.build_way(edge.tile_a, edge.tile_b, "canal")[0])
         self._finish(builder)
-        self.assertTrue(builder.state.economy.improvements[geography.edge_key(edge.tile_a, edge.tile_b)]["canal"])
+        self.assertTrue(builder.world.improvements[geography.edge_key(edge.tile_a, edge.tile_b)]["canal"])
 
 
 class CommandAndSaveTests(unittest.TestCase):
@@ -179,54 +190,51 @@ class CommandAndSaveTests(unittest.TestCase):
         self.assertEqual((command["from"], command["to"]), ("tile_a", "tile_b"))
 
     def test_a_way_under_construction_survives_save_and_load(self):
-        from sim.engine.state import EconomyState, deserialize_state, serialize_state
-        economy = EconomyState()
-        economy.ways_under_construction = {"a|b": {"rail": {"due": 12.5, "trade": "labourer", "crew_hours": 3.0e5,
-                                                           "engineered": True, "pressed": 3}}}
-        economy.improvements = {"a|b": {"road": True, "engineered": True}, "tile": {"port": True}}
-        copy = deserialize_state(serialize_state(economy), EconomyState)
-        self.assertEqual(copy.ways_under_construction, economy.ways_under_construction)
-        self.assertEqual(copy.improvements, economy.improvements)
+        from sim.engine.state import deserialize_state, serialize_state
+        world = LandWorld()
+        world.ways_under_construction = {"a|b": {"rail": {"due": 12.5, "trade": "labourer", "crew_hours": 3.0e5,
+                                                         "engineered": True, "pressed": 3}}}
+        world.improvements = {"a|b": {"road": True, "engineered": True}, "tile": {"port": True}}
+        copy = deserialize_state(serialize_state(world), LandWorld)
+        self.assertEqual(copy.ways_under_construction, world.ways_under_construction)
+        self.assertEqual(copy.improvements, world.improvements)
 
 
 class BuiltWaysAndCommandTests(unittest.TestCase):
-    """What the engine keeps of built ways is what geography's routes take, and the build_way command calls the
-    engine's quote and build."""
+    """What the land module keeps of built ways is what geography's routes take, and the build_way command calls the
+    quote and build."""
 
-    def test_ways_built_is_the_improvements_record_geographys_routes_take(self):
-        record = {"a|b": {"road": True}}
-        game = types.SimpleNamespace(state=types.SimpleNamespace(economy=types.SimpleNamespace(improvements=record)))
-        self.assertIs(ways.WaysMixin.ways_built(game), record)
+    def test_the_built_ways_are_the_improvements_record_geographys_routes_take(self):
+        builder = _Builder(set())
+        builder.world.improvements["a|b"] = {"road": True}
+        self.assertIs(builder.module.built_ways(), builder.world.improvements)
+        self.assertEqual(builder.module.built_way_km("road"), geography.built_km(builder.world.improvements, "road", builder.module.world_map))
 
     def _command(self, **keywords):
         return dict({"cmd": "build_way", "way": "road", "from": "a", "to": "b"}, **keywords)
 
     def test_a_preview_quotes_without_building(self):
         from sim.ui.proto.dispatch_ways import _cmd_build_way
-        built = []
         quote = {"km": 12.34, "labour_hours": 1000.4, "materials": {"stone": 55.5}, "money": 999.9, "years": 2.26,
                  "engineered": False}
-        game = types.SimpleNamespace(way_quote=lambda a, b, way: quote, build_way=lambda a, b, way: built.append(way))
+        game = StandIn(way_quote=lambda a, b, way: quote)
         reply = _cmd_build_way(game, {}, self._command(preview=True), None)
         self.assertEqual((reply["ok"], reply["preview"], reply["km"], reply["labour_hours"], reply["materials_tonnes"],
                           reply["money"], reply["years"]), (True, True, 12.3, 1000, {"stone": 56}, 1000, 2.3))
-        self.assertEqual(built, [])
+        self.assertEqual(game.sent, [])
 
     def test_a_preview_of_a_way_that_cannot_be_built_is_refused_with_the_cause(self):
         from sim.ui.proto.dispatch_ways import _cmd_build_way
         from sim.refusal import Refusal
-        game = types.SimpleNamespace(way_quote=lambda a, b, way: None,
-                                     way_refusal=lambda a, b, way: Refusal("no_river", "no river to bridge"))
+        game = StandIn(way_quote=lambda a, b, way: None, way_refusal=lambda a, b, way: Refusal("no_river", "no river to bridge"))
         reply = _cmd_build_way(game, {}, self._command(way="bridge", preview=True), None)
         self.assertEqual((reply["ok"], reply["cause"]), (False, "no_river"))
 
     def test_a_build_command_builds_the_named_way_between_the_named_tiles(self):
         from sim.ui.proto.dispatch_ways import _cmd_build_way
-        calls = []
-        game = types.SimpleNamespace(way_quote=lambda a, b, way: {}, capital=123.45,
-                                     build_way=lambda a, b, way: (calls.append((a, b, way)) or (True, "started")))
+        game = StandIn(answers={BuildWay: (True, "started")}, way_quote=lambda a, b, way: {}, acting_balance=123.45)
         reply = _cmd_build_way(game, {}, self._command(), None)
-        self.assertEqual(calls, [("a", "b", "road")])
+        self.assertEqual(game.sent, [BuildWay("a", "b", "road")])
         self.assertEqual((reply["ok"], reply["built"], reply["capital"]), (True, "started", 123.5))
 
 

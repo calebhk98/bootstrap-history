@@ -3,6 +3,11 @@
 import os, re
 from sim.ui import units_text
 
+def known(value, default):
+    """`value`, or `default` when the figure is not known yet (None); a known zero stays zero."""
+    return default if value is None else value
+
+
 # ----------------------------------------------------------------------------
 # A rendering for a person, alongside the JSON one, not instead of it: the
 # JSON is precise and correct and a wall to read. Everything below turns an

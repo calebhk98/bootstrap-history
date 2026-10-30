@@ -1,4 +1,4 @@
-"""Complaint 491: `SimWorld.demonstrated()` reads every active actor's known nodes as well as the seats' builds, so imitation can
+"""Complaint 491: `ActorWorld.demonstrated()` reads every active actor's known nodes as well as the seats' builds, so imitation can
 copy a node from any actor that holds it. Runs on a stand-in sim holding only what the answer reads."""
 QUICK_TOPIC = True
 
@@ -6,7 +6,9 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.agents_port import SimWorld
+from sim.actors.world import ActorWorld
+
+from .world_stand_in import fake_needs
 
 
 def actor(identity, knowledge, exited_year=None):
@@ -15,9 +17,8 @@ def actor(identity, knowledge, exited_year=None):
 
 def world_of(actors, granted=("known",)):
     registry = SimpleNamespace(actors={a.identity(): a for a in actors})
-    game = SimpleNamespace(nodes={"known": {}, "novel": {}, "other": {}}, actors=registry, seats={},
-                           state=SimpleNamespace(projects=SimpleNamespace(granted=set(granted)), seats={}))
-    return SimWorld(game)
+    needs = fake_needs(tree_nodes={"known": {}, "novel": {}, "other": {}}, techniques_granted=set(granted), techniques_by_seat=lambda: {})
+    return ActorWorld(SimpleNamespace(needs=needs, cast=lambda: registry))
 
 
 check("a node nobody holds is not demonstrated", "novel" not in world_of([actor("state:1", [])]).demonstrated())

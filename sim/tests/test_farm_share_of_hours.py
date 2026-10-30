@@ -10,8 +10,8 @@ QUICK_TOPIC = True
 
 
 def labour_with(hours):
-    return types.SimpleNamespace(_world=types.SimpleNamespace(state=types.SimpleNamespace(
-        economy=types.SimpleNamespace(society_labour_hours=hours))))
+    return types.SimpleNamespace(_world=types.SimpleNamespace(
+        society=types.SimpleNamespace(society_labour_hours=hours)))
 
 
 class FarmShareOfHoursTests(unittest.TestCase):

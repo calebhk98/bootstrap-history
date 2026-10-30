@@ -5,9 +5,12 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine import economy_port_timber
+from sim.markets import port_timber
 from sim.geography import api as geography
 from sim.geography import forest_timber
+from sim.resources.api import FellTimber, RegrowTimber
+from sim.resources.state import ResourcesWorld
+from sim.tests import land_views, resources_stand_in
 from sim.world import demand
 
 FIREWOOD = "firewood_kg"
@@ -16,8 +19,12 @@ WORLD_MAP = geography.open_map()
 
 
 def _host(felled=None):
-    economy = types.SimpleNamespace(forest_felled=dict(felled or {}))
-    return types.SimpleNamespace(world_map=WORLD_MAP, state=types.SimpleNamespace(economy=economy))
+    """A game for the port's timber hooks: the resources module holds the felled ledger and applies the commands."""
+    module = resources_stand_in.build(world=ResourcesWorld(forest_felled=dict(felled or {})))
+    handlers = {FellTimber: module.fell_timber, RegrowTimber: module.regrow_timber}
+    return types.SimpleNamespace(module=module, timber_felled=module.timber_felled,
+                                 send=lambda command: handlers[type(command)](command),
+                                 **land_views.of({}, ("mode_crews", "modes_carrying", "timber_on_tile")))
 
 
 def _forest_tile():
@@ -29,14 +36,14 @@ def _bare_tile():
 
 
 def _limit(host, tile):
-    found = [limit for limit in economy_port_timber.limits(host, OUTPUTS, [tile]) if limit.tile == tile]
+    found = [limit for limit in port_timber.limits(host, OUTPUTS, [tile]) if limit.tile == tile]
     return found[0] if found else None
 
 
 class StockTests(unittest.TestCase):
 
     def test_firewood_is_a_timber_recipe_and_other_goods_are_not(self):
-        self.assertEqual(set(economy_port_timber.timber_recipes(OUTPUTS)), {FIREWOOD})
+        self.assertEqual(set(port_timber.timber_recipes(OUTPUTS)), {FIREWOOD})
 
     def test_felling_lowers_the_standing_stock_and_never_below_nothing(self):
         tile = _forest_tile()
@@ -86,10 +93,10 @@ class StockTests(unittest.TestCase):
         host = _host()
         full = forest_timber.full_tonnes(WORLD_MAP, tile)
         runs = full / 4.0
-        economy_port_timber.fell(host, {(FIREWOOD, tile): runs}, OUTPUTS)
-        self.assertAlmostEqual(host.state.economy.forest_felled[tile], runs)
-        economy_port_timber.regrow(host)
-        self.assertLess(host.state.economy.forest_felled[tile], runs)
+        port_timber.fell(host, {(FIREWOOD, tile): runs}, OUTPUTS)
+        self.assertAlmostEqual(host.module.world.forest_felled[tile], runs)
+        port_timber.regrow(host)
+        self.assertLess(host.module.world.forest_felled[tile], runs)
 
     def test_the_haul_to_standing_wood_lengthens_as_more_is_cut(self):
         tile = _forest_tile()

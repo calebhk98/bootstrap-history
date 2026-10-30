@@ -1,17 +1,23 @@
-"""What a replacement seat already holds that a handover would overwrite.
+"""What a replacement seat already holds in the engine's state that a handover would overwrite.
 
 A handover gives the replacement the leaver's household, works, holdings and institutions as they stand. Cash,
-debts and known techniques of the replacement merge with the leaver's (see seat_handover.py); anything else it holds
-would be lost, so a replacement that holds some is refused.
+debts and known techniques of the replacement merge with the leaver's (sim/seats/handover_rules.py); anything else it holds
+would be lost, so a replacement that holds some is refused. What the seats module keeps (disclosures, dealings, the
+goal record) it adds itself.
 """
 import dataclasses
 from typing import List
 
-from sim.engine.state import GovernanceState
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
+from sim.finance.api import FinanceSeat
+from sim.ledger.api import LedgerSeat
+from sim.materials.state import MaterialsSeat
+from sim.polity.state import PolitySeat
+from sim.resources.state import ResourcesSeat
+from sim.workforce.api import WorkforceSeat
 
-STAFF_FIELDS = ("scholars", "artisans", "directors_extra", "slaves", "freedmen", "reserve_craftsmen", "reserve_scholars")
-OWED_FIELDS = ("bondage_debt", "interest_arrears")
+STAFF_FIELDS = ("scholars", "artisans", "directors_extra", "slaves", "freedmen", "reserve_craftsmen", "reserve_scholars")   # of the workforce slot
+OWED_FIELDS = ("bondage_debt", "interest_arrears", "bondage_years_left")  # fields of the finance seat state
 
 
 def holdings_in_use(holdings) -> bool:
@@ -21,30 +27,45 @@ def holdings_in_use(holdings) -> bool:
 		value, default = getattr(holdings, field.name), getattr(fresh, field.name)
 		if value == default or field.name == "_dashboard_history":
 			continue
-		if field.name == "_material_stock_opening":
-			used = any((value or {}).get("tonnes", {}).values())
-		elif field.name == "_material_stock_ledger":
-			used = any(value.values()) if value else False
-		else:
-			used = bool(value) or bool(default)
-		if used:
+		if bool(value) or bool(default):
+			return True
+	return False
+
+
+def stock_in_use(ledger_seat) -> bool:
+	"""Whether the seat's tonnes ledger holds any tonnes: a lazily made ledger or snapshot with nothing in it does not."""
+	stock, opening = ledger_seat._material_stock_ledger, ledger_seat._material_stock_opening
+	return any((opening or {}).get("tonnes", {}).values()) or (any(stock.values()) if stock else False)
+
+
+def module_state_in_use(state) -> bool:
+	"""Whether a module's seat state holds anything: a field at its default, or an empty container where none was made, does not."""
+	fresh = type(state)()
+	for field in dataclasses.fields(state):
+		value, default = getattr(state, field.name), getattr(fresh, field.name)
+		if value != default and (bool(value) or bool(default)):
 			return True
 	return False
 
 
 def holds_that_would_be_lost(seat) -> List[str]:
-	"""What `seat` holds beyond cash, debts and known techniques, named for the player; empty for an empty seat."""
-	household, projects = seat.household, seat.projects
+	"""What `seat` holds in the engine's state beyond cash, debts and known techniques, named for the player; empty for
+	an empty seat."""
+	household = seat.household
 	found = []
-	if projects.active or len(projects.business.entry_keys()) or projects.disclosures:
+	if seat.modules["projects"].active or len(seat.modules["ventures"].business.entry_keys()):
 		found.append("works")
-	if any(getattr(household, name, 0) for name in STAFF_FIELDS) or household.employees:
+	staff = seat.modules.get("workforce") or WorkforceSeat()
+	if any(getattr(staff, name, 0) for name in STAFF_FIELDS) or staff.employees:
 		found.append("staff")
-	if any(getattr(household, name, 0) for name in OWED_FIELDS) or household.bondage_years_left:
+	finance = seat.modules.get("finance") or FinanceSeat()
+	if any(getattr(finance, name, 0) for name in OWED_FIELDS):
 		found.append("arrears or bondage")
-	if holdings_in_use(seat.holdings):
+	if (holdings_in_use(seat.holdings) or stock_in_use(seat.modules.get("ledger") or LedgerSeat())
+			or module_state_in_use(seat.modules.get("resources") or ResourcesSeat())
+			or module_state_in_use(seat.modules.get("materials") or MaterialsSeat())):
 		found.append("holdings")
-	if seat.governance != GovernanceState():
+	if (seat.modules.get("polity") or PolitySeat()).gov != 0.0:
 		found.append("institutions")
 	if seat.seat_progress != SeatProgressState():
 		found.append("goal record")

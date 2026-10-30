@@ -3,6 +3,7 @@ One unopened game per section, no year stepped. The ledger's rows adding up to t
 revenue is test_training_ledger_and_hazard_reports; the town and own-staff split of a trade's hours is test_market_supply_split_rule.
 """
 from .harness import *  # noqa: F401,F403
+from sim.ventures.api import OpenVenture
 
 
 def _ask(game, **command):
@@ -54,23 +55,23 @@ check("the free-hands count says that one of them is you",
 # engine charges supervision - a quarter of it, and never the number the
 # refusal quotes.
 s_vv = unopened_sim(capital=5000000.0)
-s_vv.artisans = s_vv.scholars = 40.0
+_vv_staff = s_vv.state.seats[s_vv.state.acting_seat].modules["workforce"]
+_vv_staff.artisans = _vv_staff.scholars = 40.0
 _opened = 0
 for _k in sorted(node_id for node_id in NODES if NODES[node_id]["rev"] > 0):
-    if _opened < 3 and s_vv.is_venture(_k):
-        s_vv.done.add(_k)
-        s_vv._done_changed()
-        if s_vv.open_venture(_k)[0]:
+    if _opened < 3 and s_vv.view("is_venture")[_k]:
+        s_vv.send(LearnTechnique(_k))
+        if s_vv.send(OpenVenture(_k, None))[0]:
             _opened += 1
 check("three ventures opened for the screens to quote", _opened == 3, _opened)
 _vr = S._agent_dispatch(s_vv, NODES, {"cmd": "ventures"})
-_led = s_vv.revenue_sources()
+_led = s_vv.view("revenue_sources")()
 check("ventures quotes the same earnings the ledger credits",
       bool(_vr["running"]) and all(abs(venture_row["earns_a_year"] - _led.get(venture_row["id"], venture_row["earns_a_year"])) < 0.11
           for venture_row in _vr["running"]),
       [(venture_row["id"], venture_row["earns_a_year"], _led.get(venture_row["id"])) for venture_row in _vr["running"]][:2])
 check("...and its NEEDS column is the supervision the engine charges",
-      all(abs(venture_row["needs"]["craftsmen"] - s_vv.venture_hands(venture_row["id"])[1]) < 0.011
+      all(abs(venture_row["needs"]["craftsmen"] - s_vv.view("venture_hands")[venture_row["id"]][1]) < 0.011
           for venture_row in _vr["running"]),
       [(venture_row["id"], venture_row["needs"]) for venture_row in _vr["running"]][:2])
 
@@ -82,13 +83,13 @@ check("...and its NEEDS column is the supervision the engine charges",
 # reported the game as having lost count of their household.
 s_cn = unopened_sim(capital=20000.0)
 _kn = next(node_id for node_id in sorted(NODES) if NODES[node_id]["art"] >= 2 and NODES[node_id]["sch"] == 0)
-s_cn.labour.commission("mason", 4000.0)
+s_cn.view("legacy_labour")().commission("mason", 4000.0)
 _why_cn = S._node_explain(s_cn, NODES, _kn)
 check("`why` counts the same artisans `start` does: yourself and hours bought",
-      abs(_why_cn["you_have"]["artisans"] - round(s_cn.labour.craft_hands_available(), 1)) < 0.05,
-      (_why_cn["you_have"], s_cn.labour.craft_hands_available(), s_cn.artisans))
+      abs(_why_cn["you_have"]["artisans"] - round(s_cn.view("legacy_labour")().craft_hands_available(), 1)) < 0.05,
+      (_why_cn["you_have"], s_cn.view("legacy_labour")().craft_hands_available(), s_cn.view("staff")()["artisans"]))
 check("...and says which people it is counting",
       "yourself" in str(_why_cn.get("you_have_counts")), _why_cn.get("you_have_counts"))
 check("...and it is more than the bare payroll, having bought a mason's year",
-      _why_cn["you_have"]["artisans"] > s_cn.artisans + 0.5,
-      (_why_cn["you_have"]["artisans"], s_cn.artisans))
+      _why_cn["you_have"]["artisans"] > s_cn.view("staff")()["artisans"] + 0.5,
+      (_why_cn["you_have"]["artisans"], s_cn.view("staff")()["artisans"]))

@@ -10,7 +10,7 @@ QUICK_TOPIC = True
 import os
 import unittest
 
-from sim.engine.catalog import load_production_catalog
+from sim.content.catalog import load_production_catalog
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))

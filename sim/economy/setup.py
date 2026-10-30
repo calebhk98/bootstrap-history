@@ -1,6 +1,6 @@
 """What one civilisation's economy is built from: the facts that do not change from year to year.
 
-The port (sim/engine/economy_port.py) or a tool fills an `EconomySetup` from data and the engine's
+The markets module's port (sim/markets/port*.py) or a tool fills an `EconomySetup` from data and the engine's
 opening state; nothing in it is a model outcome except the opening prices and wages, which only seed
 the first year's expectations and are forgotten as soon as markets clear.
 """
@@ -93,6 +93,7 @@ class EconomySetup:
     opening_store_gaps: Dict[GoodId, str] = field(default_factory=dict)   # why a good has no workings, for audit
     # country -> the recipes its producers can run (what its society's techniques allow); empty: every recipe anywhere
     recipes_by_country: Dict[str, Tuple[str, ...]] = field(default_factory=dict)
+    kernels: Dict[str, Any] = field(default_factory=dict)   # the markets module's bound kernels by name (markets/kernels.py); absent: the references
     # tile -> {owner, control} (geography's tile_owners), shared with the game's state; empty: the tiles' own countries
     tile_owners: Dict[TileId, Dict[str, str]] = field(default_factory=dict)
 
@@ -112,7 +113,7 @@ class EconomySetup:
         built ways (this setup's own when none are given) and the return trips `imbalance` leaves empty."""
         ways = self.improvements if improvements is None else improvements
         return carriage_table(self.tiles, self.carriage_rates_at(imbalance), self.handling_rates, self.held_nodes,
-                              self.world_map, ways)
+                              self.world_map, ways, self.kernels.get("markets.least_cost_tree"))
 
     def area_map(self, carriage: Optional[CarriageTable] = None) -> AreaMap:
         """Market areas over this setup's tiles at its opening prices and people, partitioned by `carriage`

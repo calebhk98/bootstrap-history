@@ -8,13 +8,12 @@ import json
 import types
 import unittest
 
-from sim.agents.api import Household
-from sim.engine.allocation_notes import AllocationNotesMixin
-from sim.engine.core_step_phases import StepPhasesMixin
-from sim.engine.hour_offer import work_order_shortfall
-from sim.engine.state import SimulationState, deserialize_state, serialize_state
-from sim.engine.agents_port_household import HouseholdPort
-from sim.engine.step_phase_projects import ProjectProgressPhaseMixin
+from sim.workforce.api import SpendDirectorHours, WorkforceSeat
+from sim.workforce.rules import work_order_shortfall
+from sim.engine.state import deserialize_state, serialize_state
+from sim.tests import projects_host
+from sim.tests import event_stand_in
+from sim.tests.workforce_host import workforce_over
 
 
 class WorkOrderShortfall(unittest.TestCase):
@@ -25,7 +24,8 @@ class WorkOrderShortfall(unittest.TestCase):
         self.assertEqual(work_order_shortfall(100.0, 0.0), 100.0)
 
 
-class Directive(AllocationNotesMixin, StepPhasesMixin):
+class Directive:
+
     def __init__(self, directive, sold, room, trade="labourer"):
         household = types.SimpleNamespace(hour_allocations={"work": directive}, work_trade=trade,
                                           wage_hours_this_year=sold, log=[], unused_hours_reported={})
@@ -34,6 +34,7 @@ class Directive(AllocationNotesMixin, StepPhasesMixin):
         self.sold = []
         self.labour = types.SimpleNamespace(director_pool=lambda: room, director_hours_committed=lambda: 0.0,
                                             work_for_wages=self._work)
+        self.module = workforce_over(self)
 
     def _work(self, trade, hours):
         self.sold.append((trade, hours))
@@ -44,41 +45,45 @@ class Directive(AllocationNotesMixin, StepPhasesMixin):
 class StandingWorkDirective(unittest.TestCase):
     def test_it_sells_only_what_the_hand_sold_hours_leave_of_the_directive(self):
         game = Directive(directive=100.0, sold=40.0, room=1000.0)
-        game._step_standing_work_directive()
+        game.module.step_standing_work_directive()
         self.assertEqual(game.sold, [("labourer", 60.0)])
         self.assertEqual(game.state.household.wage_hours_this_year, 100.0)
         self.assertEqual(game.state.household.log, [])
 
     def test_a_directive_the_hand_has_met_sells_nothing(self):
         game = Directive(directive=100.0, sold=100.0, room=1000.0)
-        game._step_standing_work_directive()
+        game.module.step_standing_work_directive()
         self.assertEqual(game.sold, [])
 
     def test_no_trade_named_sells_nothing(self):
         game = Directive(directive=100.0, sold=0.0, room=1000.0, trade=None)
-        game._step_standing_work_directive()
+        game.module.step_standing_work_directive()
         self.assertEqual(game.sold, [])
 
     def test_with_less_room_than_the_directive_it_sells_the_room_and_says_the_hours_ran_out(self):
         game = Directive(directive=100.0, sold=0.0, room=30.0)
-        game._step_standing_work_directive()
+        game.module.step_standing_work_directive()
         self.assertEqual(game.sold, [("labourer", 30.0)])
         facts = [line[1].facts for line in game.state.household.log]
         self.assertEqual([fact["reason"] for fact in facts], ["no_hours_left"])
 
 
-class Offer(ProjectProgressPhaseMixin):
-    def __init__(self, directive):
-        self.state = types.SimpleNamespace(
-            household=types.SimpleNamespace(hour_allocations={"b": directive} if directive else {}),
-            founder=types.SimpleNamespace(director_hours_spent_founder=0.0, founder_alive=True),
-            holdings=types.SimpleNamespace(binding=None))
+def Offer(directive):
+    """The projects module over a pool whose standing allocations are these, the materials module letting every project run
+    at full pace; the founder's hours spent are recorded."""
+    allocations = {"b": directive} if directive else {}
+    module = projects_host.build(
+        hour_commitments=lambda: {"allocations": allocations}, material_binding=lambda: None,
+        founder={"alive": True, "life_left": 10.0, "dead_reason": None, "policy": {}})
+    module.spent = []
+    module.project_hour_pace = lambda node_id: 3000.0
 
-    def project_hour_pace(self, node_id):
-        return 3000.0
-
-    def project_resource_throttle(self, node_id):
-        return 1.0
+    def send(command):
+        if isinstance(command, SpendDirectorHours):
+            module.spent.append(command.hours)
+        return 1.0          # the materials module: the project runs at full pace
+    module.needs.send = send
+    return module
 
 
 class OfferHours(unittest.TestCase):
@@ -89,7 +94,7 @@ class OfferHours(unittest.TestCase):
         self.assertEqual(project["hours_offered_this_year"], 500.0)
         self.assertEqual(project["hours_directed_this_year"], 500.0)
         self.assertEqual(project["ph_left"], 1500.0)
-        self.assertEqual(game.state.founder.director_hours_spent_founder, 500.0)
+        self.assertEqual(game.spent, [500.0])
 
     def test_an_undirected_project_has_no_directive_to_read_back(self):
         game = Offer(None)
@@ -107,12 +112,10 @@ class OfferHours(unittest.TestCase):
 
 class StandingOrdersSave(unittest.TestCase):
     def test_standing_directives_and_the_work_trade_survive_a_save(self):
-        state = Household(starting_capital=100.0, port=HouseholdPort())._state
-        state.household.hour_allocations = {"academy_network": 321.0, "work": 77.0}
-        state.household.work_trade = "scribe"
-        loaded = deserialize_state(json.loads(json.dumps(serialize_state(state))), SimulationState)
-        self.assertEqual(loaded.household.hour_allocations, {"academy_network": 321.0, "work": 77.0})
-        self.assertEqual(loaded.household.work_trade, "scribe")
+        seat = WorkforceSeat(hour_allocations={"academy_network": 321.0, "work": 77.0}, work_trade="scribe")
+        loaded = deserialize_state(json.loads(json.dumps(serialize_state(seat))), WorkforceSeat)
+        self.assertEqual(loaded.hour_allocations, {"academy_network": 321.0, "work": 77.0})
+        self.assertEqual(loaded.work_trade, "scribe")
 
 
 if __name__ == "__main__":

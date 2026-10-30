@@ -15,8 +15,8 @@ import tempfile
 import unittest
 from unittest import mock
 
-from sim.engine import tree_merge
-from sim.engine import tree_source
+from sim.content import tree_merge
+from sim.content import tree_source
 from sim.ui import cli
 
 HERE = os.path.dirname(os.path.abspath(__file__))

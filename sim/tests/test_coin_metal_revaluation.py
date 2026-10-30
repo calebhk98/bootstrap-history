@@ -7,11 +7,13 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.coin_revaluation import CoinRevaluationMixin
-from sim.engine.foreign_actor_trade import ForeignActorTradeMixin
-from sim.engine.foreign_payments import ForeignPaymentsMixin
-from sim.engine.real_price_ratios import RealPriceRatiosMixin
+from sim.coin.module import Coin
+from sim.coin.state import CoinWorld
+from sim.foreign_trade.module import ForeignTrade
 from sim.labour.labour_wages import WagesMixin
+from sim.reporting.api import ReportingWorld
+from sim.reporting.module import Reporting
+from sim.tests import module_harness
 from sim.tests.test_capital_charge import works_entry
 from sim.tests.test_running_cost_floor import StubGame
 from sim.world import market
@@ -21,64 +23,45 @@ CONDITIONS = dict(
     actor_supply_tonnes=0.0, founder_sales_tonnes=0.0, stock_tonnes=0.0, floor_ratio=0.6, ceiling_ratio=6.0)
 
 
-class Coinage(CoinRevaluationMixin, ForeignPaymentsMixin):
-    """The price level, with the coin stock stubbed."""
-    def __init__(self):
-        self.state = types.SimpleNamespace(economy=types.SimpleNamespace(coin_metal_ratios={}, foreign_ledger={}))
-        self.civ = {"coin_standard": {"material": "silver_kg"}}
-        self.stock_level = 1.0
-
-    def _home_opening_coin_units(self):
-        return 100.0
-
-    def home_coin_stock_units(self):
-        return 100.0 * self.stock_level
-
-    def _foreign_ledger(self, civilization_id, create=False):
-        return {"partner_coin_units": 0.0, "home_coin_units": 0.0}
-
-    def _partner_coin_opening_units(self, civilization_id):
-        return 100.0
-
-    def partner_coin_metal(self, civilization_id):
-        return "gold_kg"
-
-    def real_price_ratio(self, material):
-        return self.market_price_ratio(material)
-
-    coin_value_ratio = real_price_ratio
+def coinage(measured=None):
+    """The coin module over a home silver standard and one partner on gold; `measured` is the market's ratio by metal."""
+    measured = measured or {}
+    return module_harness.build(Coin, world=CoinWorld(), views={
+        "civilisation": {"coin_standard": {"material": "silver_kg"}}, "opening_population": 1000.0,
+        "opening_money_per_labour_hour": 0.5, "foreign_coin_home_units": 0.0, "foreign_economies": ["x"],
+        "foreign_coin_partner_units": {"x": 0.0}, "partner_coin_standard": {"x": {"material": "gold_kg"}},
+        "partner_opening_facts": {"x": {"population": 1000.0, "money_per_labour_hour": 0.5}},
+        "coin_value_ratio": lambda metal: measured.get(metal, 1.0)})
 
 
 class RevaluationTests(unittest.TestCase):
     def test_a_glut_of_the_coin_metal_raises_the_price_level(self):
-        game = Coinage()
+        game = coinage()
         before = game.home_price_level()
-        game.state.economy.coin_metal_ratios["silver_kg"] = 0.5
+        game.world.metal_ratios["silver_kg"] = 0.5
         self.assertAlmostEqual(game.home_price_level(), before * 2.0)
 
     def test_a_shortage_lowers_it(self):
-        game = Coinage()
-        game.state.economy.coin_metal_ratios["silver_kg"] = 2.0
+        game = coinage()
+        game.world.metal_ratios["silver_kg"] = 2.0
         self.assertAlmostEqual(game.home_price_level(), 0.5)
 
     def test_another_metal_leaves_the_level_alone(self):
-        game = Coinage()
-        game.state.economy.coin_metal_ratios["gold_kg"] = 0.5
+        game = coinage()
+        game.world.metal_ratios["gold_kg"] = 0.5
         self.assertAlmostEqual(game.home_price_level(), 1.0)
 
     def test_a_partners_price_level_follows_its_coin_metal(self):
-        game = Coinage()
+        game = coinage()
         flat = game.partner_price_level("x")
-        game.state.economy.coin_metal_ratios["gold_kg"] = 0.25
+        game.world.metal_ratios["gold_kg"] = 0.25
         self.assertAlmostEqual(game.partner_price_level("x"), flat * 4.0)
 
     def test_revaluing_stores_the_market_ratio_of_each_coin_metal(self):
-        game = Coinage()
-        game.foreign_economies = lambda: ["x"]
-        game.market_price_ratio = {"silver_kg": 0.8, "gold_kg": 1.5}.get
+        game = coinage({"silver_kg": 0.8, "gold_kg": 1.5})
         for _year in range(60):
-            game.revalue_coin_metals()    # damped: it closes on the measured value over the years
-        ratios = game.state.economy.coin_metal_ratios
+            game.revalue_coin_metals(["seat"])    # damped: it closes on the measured value over the years
+        ratios = game.world.metal_ratios
         self.assertAlmostEqual(ratios["silver_kg"], 0.8, places=4)
         self.assertAlmostEqual(ratios["gold_kg"], 1.5, places=4)
 
@@ -99,16 +82,14 @@ class StockBoundTests(unittest.TestCase):
         self.assertAlmostEqual(market.clear_market(conditions).price_ratio, 0.2, places=3)
 
 
-class PartnerBookStub(ForeignActorTradeMixin, StubGame):
-    def _commodity_ledger(self):
-        return types.SimpleNamespace(commodities={"widget": {"price_floor_factor": 0.99, "price_ceiling_factor": 3.0}})
-
-
 class PartnerFloorTests(unittest.TestCase):
     def test_a_partners_book_uses_the_running_share_floor(self):
-        game = PartnerBookStub(works_entry())
+        game = StubGame(works_entry())
+        partner_books = module_harness.build(ForeignTrade, views={
+            "market_floor_ratio": game._floor_ratio,
+            "commodity_record": {"widget": {"price_floor_factor": 0.99, "price_ceiling_factor": 3.0}}})
         entry = {"reference_tonnes": 10.0, "capacity_tonnes": 100.0, "stock_tonnes": 0.0}
-        outcome = game._partner_outcome(entry, "widget", 0.0, 0.0)
+        outcome = partner_books._partner_outcome(entry, "widget", 0.0, 0.0)
         self.assertAlmostEqual(outcome.price_ratio, game.commodity_floor_ratio("widget"), places=3)
         self.assertLess(outcome.price_ratio, 0.99)
 
@@ -136,20 +117,22 @@ class WageClearingTests(unittest.TestCase):
         self.assertAlmostEqual(dear["tools"], 3.0)
 
 
-class RecordingStub(RealPriceRatiosMixin):
+class RecordingStub:
     """The market computes a landed price, which asks for a wage: the wage must not ask the market back."""
     def __init__(self):
-        self.state = types.SimpleNamespace(economy=types.SimpleNamespace(wage_market_ratios={}))
         self.civ = {"staple": "wheat_kg"}
         self.trade_registry = {"smith": {"tool_basket": ["iron_kg"]}}
         self.live_calls = 0
+        self.reporting = module_harness.build(Reporting, world=ReportingWorld(),
+                                              views={"wage_materials": ["iron_kg", "wheat_kg"]})
+        self.reporting.real_price_ratio = self.market_price_ratio
         self.wages = WageStub({})
         self.wages._world = types.SimpleNamespace(
-            civ=self.civ, trade_registry=self.trade_registry, last_market_price_ratio=self.last_market_price_ratio,
-            material_price_factor=lambda material: 1.0)
+            civ=self.civ, trade_registry=self.trade_registry,
+            last_market_price_ratio=self.reporting.last_market_price_ratio, material_price_factor=lambda material: 1.0)
 
-    def real_price_ratio(self, material):
-        return self.market_price_ratio(material)
+    def record_wage_market_ratios(self):
+        self.reporting.record_wage_market_ratios()
 
     def market_price_ratio(self, material):
         self.live_calls += 1

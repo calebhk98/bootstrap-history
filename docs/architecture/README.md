@@ -1,7 +1,12 @@
 # Architecture documents
 
 Direction for where the simulator is going, and an honest account of where it
-is now. None of this is an approved plan yet.
+is now. Two documents are live: `MODULE_REGISTRY_PLAN.md` is the design of the
+engine's structure (modules, views, commands, assembly) and
+`MODULE_MIGRATION_TASKS.md` is its status and task list; `sim/ARCHITECTURE.md`
+describes the engine as it is. The economy's plan is
+`ENDOGENOUS_COSTS_AND_DOMAINS.md`, with `STATE_OF_THE_PROJECT.md` as its status.
+Other documents are inputs or background and may lag the code.
 
 | File | What it is | Whose words |
 |---|---|---|
@@ -17,6 +22,7 @@ is now. None of this is an approved plan yet.
 | `NAMING_PLAN.md` | The short identifiers, what they mean, and how to rename them safely. Tiered by risk. | Ours |
 | `STATE_OF_THE_PROJECT.md` | The milestones in `ENDOGENOUS_COSTS_AND_DOMAINS.md` and what to do next, each with the command that measures it. The issue table is not kept here: list `Complaints/` and read each `**Status:**` line. | Ours |
 | `SIM_DECOMPOSITION_REVISITED.md` | Reopens, on the stakeholder's request, the "no full decomposition" decision in `sim/ARCHITECTURE.md`; checks which of that decision's reasons still hold and recommends a staged, partial alternative. | Ours |
+| `MODULE_REGISTRY_PLAN.md` | How `Sim` stops being a god object, the coupling drops to data coupling, and every feature becomes swappable by a mod: one owner per fact, modules that read each other only through named views and change each other only through commands, assembled per game from one registry (add, replace, remove, extend, adjust a view, extension points, kernels). Measures the current coupling, weighs the earlier suggestions, and phases the work for one branch. Supersedes the recommendation of `SIM_DECOMPOSITION_REVISITED.md`. | Ours |
 | `WIRING_MILESTONE_4.md` | What wiring demography and agriculture into the engine actually broke and fixed, commit by commit. Feeds Milestone 4 in `STATE_OF_THE_PROJECT.md`. | Ours |
 | `DEMAND_AT_SCALE.md` | Whether `sim/world/demand.py`'s household-demand model holds outside Roman Egypt, against the stakeholder's own critique. | Ours |
 | `MAP_AND_WEATHER.md` | Why the map and the weather model are two disconnected systems, and what it would take to join them. | Ours |
@@ -25,13 +31,16 @@ is now. None of this is an approved plan yet.
 | `STATIONARY_OPENING.md` | The implemented durable-stock boundary and the remaining coupled opening equations. Explicitly separates a stationary subsystem from the unsolved whole economy. | Ours |
 | `sim/agents/MULTIPLAYER.md` | Players, countries, traders and strata as actors: how a game's roster is seeded from the civilisation, the foreign economies and the `cast` key. | Ours |
 | `CODE_ANALYSIS_TOOLING.md` | What checks the code's maintainability (pylint and the naming plan), which parts are hand-written and which library sits under each. | Ours |
-| `PACKAGE_WALLS.md` | The walled packages (economy, agents, labour, geography, ui): the rule, each package's surface and port, and how to extend one. | Ours |
+| `PACKAGE_WALLS.md` | The walled packages and modules: the rule (modules reach each other only through declared views and commands), each package's door and who hands it the game, and how to extend one. | Ours |
+| `MODULE_MIGRATION_TASKS.md` | The status and ordered task list of the module move that `MODULE_REGISTRY_PLAN.md` designs: which modules moved, what is left. | Ours |
+| `MODULE_MIGRATION_GUIDE.md` | The rules every move of a topic out of `Sim` into a module follows. | Ours |
+| `catalogue/` | One file per module: its views, commands, state and callers, written during the move; it lags the code. | Ours |
 | `ONE_PRICE_OWNER_PLAN.md` | Staged plan for Complaint 507: the agent economy owns prices and traded volumes; the solver becomes a cost-of-making calculator. Every reader of the solver, the calculator's signature, eight stages with proofs and files, risks. | Ours |
 | `STATE_OWNERSHIP_MAP.md` | Complaint 508's ownership table filled in: for each fact (money, goods, debt, people, land, plants, market outcomes, knowledge, indicators) today's owner, the grep commands that list its writers and readers, units, timing in the year, and where two places hold it. Records the market-report slice done and what is left of 507 stage 6. | Ours |
 | `FIRMS_OWN_PLANTS_PLAN.md` | Staged plan for Complaints 510 and 514: a tech node is knowledge only; a business is a firm, owned by any actor, that runs plants with their own crew and upkeep, through one object in `sim/agents/`. Every reader of node upkeep, revenue and staff, every business rule with its founder and agents implementations, the target object, staged work with proofs and files, order against 507. | Ours |
 | `Complaints/reports/research-reference-economy-models.md` | Capitalism Lab, Eurace@Unibi, HARK and Caiani et al. 2016 read against the opening, thin-market prices, the interest rate, unhired labour and year cost, with licences and a ranked recommendation for issue #61. Read it before redesigning the economy. | Ours, from external sources |
 
-Read them in that order. `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan and
+Read them in that order. For the economy, `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan and
 `Complaints/119-delete-prices-json.md` is its concrete exit checklist for the
 legacy file (it is an issue, so it is tracked with the others);
 `PM_ASSESSMENT.md` is the reasoning that led to it; `STATE_OF_THE_PROJECT.md`

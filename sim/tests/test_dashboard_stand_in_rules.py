@@ -7,6 +7,7 @@ import types
 import unittest
 
 from sim.ui.proto import economy
+from sim.tests.ui_stand_in import Game, ui_state
 
 POWER_NODES = {
     "cap_power_muscle": {"mechanics": {"power_tier": {"rank": 0, "label": "muscle", "scale": "muscle"}}},
@@ -16,17 +17,18 @@ POWER_NODES = {
 
 
 def material_game():
-    return types.SimpleNamespace(
+    return Game(
         annual_material_demand=lambda: {}, _demand_by_supply_tag=lambda demand: {},
         demand_and_own_supply_by_material=lambda by_tag: {"iron": (300.0, 500.0), "copper": (900.0, 100.0)},
         _material_market_tonnes=lambda material: 50.0, material_shortfall_t=lambda material, by_tag: 0.0,
-        _own_material_supply=lambda tag: 70.0, mine_capacity={"coal": 1.0}, mine_depletion_note=lambda material: None)
+        _own_material_supply=lambda tag: 70.0,
+        view=lambda name: {"mine_capacity": lambda: {"coal": 1.0}, "mine_depletion_note": {"coal": None}}[name])
 
 
 def power_game(visible, built=(), total_kw=0.0, demand_kw=0.0):
-    return types.SimpleNamespace(
+    return Game(
         installed_generation_kw_by_tier=lambda: {}, is_visible=lambda node_id: node_id in visible,
-        has=lambda node_id: node_id in built, binding=None, throttle=1.0,
+        has=lambda node_id: node_id in built, view=lambda name: (lambda: {"material_binding": None, "material_throttle": 1.0}[name]),
         generation_breakdown_kw=lambda: {"total_kw": total_kw, "local_kw": total_kw, "grid_kw": 0.0,
                                          "transmission_kw": 0.0, "mechanical_kw": {}},
         _electricity_demand_kw=lambda: demand_kw)
@@ -86,9 +88,9 @@ class PowerFigures(unittest.TestCase):
 class EconomyReply(unittest.TestCase):
 
     def test_economy_without_full_has_no_detail_tables(self):
-        game = types.SimpleNamespace(
-            year=100, price_index=1.0, wage_index=1.0, living_cost=lambda: 10.0, state=types.SimpleNamespace(),
-            labour=types.SimpleNamespace(wage_bill=lambda: 4.0, headcount=lambda: 3.0, household_room=lambda: 2.0),
+        game = Game(
+            year=100, price_index=1.0, wage_index=1.0, living_cost=lambda: 10.0, state=Game(**vars(ui_state())),
+            labour=Game(wage_bill=lambda: 4.0, headcount=lambda: 3.0, household_room=lambda: 2.0),
             literacy=lambda key: 0.1, revenue_sources=lambda: [], material_market_summary=lambda: None)
         game.state.dashboard_history = None
         out = economy._agent_economy(game)

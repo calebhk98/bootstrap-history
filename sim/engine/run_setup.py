@@ -2,9 +2,10 @@
 hash seed it needs, and strategy loading with its dependency-order repair."""
 import json, os, random, sys
 
-from sim.engine.data import MODDIR, STRATS, closure, hard_pre, topo_order
-from sim.engine.mods import get_ordered_mods
-from sim.engine.mods_strategies import mod_strategy_path
+from sim.engine.data import MODDIR, STRATS
+from sim.knowledge.api import closure, hard_pre, topo_order
+from sim.content.api import get_ordered_mods
+from sim.content.api import mod_strategy_path
 
 
 # ----------------------------------------------------------------------------

@@ -93,9 +93,9 @@ class CapacityMixin:
 
     def director_pool(self):
         # In bondage most of your hours are owed to somebody else, not all: the evenings are where the work gets done.
-        return hours_pool(self._world.state.founder.founder_alive, self._world.cfg["founder_hours_per_year"],
-                          self._world.state.household.bondage_years_left > 0, self.BONDAGE_HOURS_SHARE,
-                          self._world.state.household.directors_extra, self._world.cfg["director_hours_per_year"])
+        return hours_pool(self._world.founder_alive, self._world.cfg["founder_hours_per_year"],
+                          self._world.bondage_years_left > 0, self.BONDAGE_HOURS_SHARE,
+                          self._world.workforce.directors_extra, self._world.cfg["director_hours_per_year"])
 
     # ---- literacy bounds who you can hire ----------------------------------
     # FINDINGS_ROUND2 section Q: every civ file carries literacy_general and
@@ -358,8 +358,8 @@ class CapacityMixin:
         """People already on the books in this trade, plus people already
         being taught into it who are not ready yet - what a fresh hire or a
         fresh training run would be added ON TOP OF."""
-        household = self._world.state.household
-        pending = sum(row[3] for row in household.training
+        workforce = self._world.workforce
+        pending = sum(row[3] for row in workforce.training
                       if len(row) > 2 and row[2] == trade)
         return self.employed(trade) + pending
 
@@ -410,14 +410,14 @@ class CapacityMixin:
         # A CLOSED ROOM SOURCE IS NOT A MISSING ONE: staff_capacity() already
         # drops a source's places the moment its venture is not running (see
         # STAFF_CAPACITY_SOURCES's must_be_running), so the advice below must
-        # distinguish never-built (`k not in self.household.done`) from
+        # distinguish never-built (`k not in projects.done`) from
         # built-but-not-running - a school built, then shut for want of a
         # supervisor, must still be named as the cheapest way back, not
         # just dropped from the count. Filtering only on `done` would tell
         # a player who hit the ceiling it had been holding up to build
         # endowment_land or court an imperial patron, instead of simply
         # reopening what they already own.
-        projects = self._world.state.projects
+        projects = self._world.projects
         reopen = sources_to_reopen(self._world.ROOM_SOURCES, projects.done, projects.operating, self._world.nodes,
                                    self._world.is_venture)
         # NEAREST FIRST, and nearest means how much of the tree stands between
@@ -600,7 +600,7 @@ class CapacityMixin:
         # calculation above - "grow the staff toward what you can house and
         # pay" has to be able to mean nobody.
         scale = self._staff_scale_for(afford, scholars + artisans, extra)
-        self._world.household._staff_scale = scale     # step() applies this to `extra` too
+        self._world.staff_scale = scale     # step() applies this to `extra` too
         return (base_sc + scholars * scale * pop, base_ar + artisans * scale * pop,
                 directors * min(1.0, scale * self.DIRECTOR_SCALE_HEADROOM) * pop)
 
@@ -632,7 +632,7 @@ class CapacityMixin:
         """(people the spare income can pay, population scale on institutional ceilings)."""
         spare = max(0.0, (self._world.revenue() - self._world.upkeep() - self._world.living_cost())
                     * self._world.rep_factor()
-                    + max(0.0, self._world.state.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
+                    + max(0.0, self._world.balance) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
         afford = budget / self.staff_wage_reference()
         # A civilization of 1.5 million simply cannot field the trained people a
@@ -694,10 +694,10 @@ class CapacityMixin:
         could ever cross. This is that honest headroom. You hire them,
         you pay them every year, and you can only supervise so many.
         """
-        household = self._world.state.household
+        workforce = self._world.workforce
         room = (self.SUPERVISION_ROOM_SELF
-                + self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * household.directors_extra
-                + max(0.0, household.worker_housing_places or 0.0))
+                + self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * workforce.directors_extra
+                + max(0.0, workforce.worker_housing_places or 0.0))
         room = self._world.effect_sum("supervision_room", room)
         # A SECOND TOWN, NOT A SECOND SCHOOLROOM. workshop_first, school_founded
         # and academy_network above are each a single PLACE a founder can stand
@@ -729,12 +729,12 @@ class CapacityMixin:
         """
         rows = [{"source": "yourself", "people": self.SUPERVISION_ROOM_SELF,
                  "what_it_is": "what one person can keep an eye on"}]
-        household = self._world.state.household
-        if household.directors_extra > 0.005:
+        workforce = self._world.workforce
+        if workforce.directors_extra > 0.005:
             rows.append({"source": "your deputies", "people":
-                         round(self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * household.directors_extra, 2),
+                         round(self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * workforce.directors_extra, 2),
                          "what_it_is": "people you have trained to direct work"})
-        housing = max(0.0, household.worker_housing_places or 0.0)
+        housing = max(0.0, workforce.worker_housing_places or 0.0)
         if housing > 0.0:
             rows.append({"source": "worker housing", "people": housing,
                          "what_it_is": "places you have bought to house the people you employ"})
@@ -853,12 +853,12 @@ class CapacityMixin:
         `deficit` is how many more people the caller is short; the hire
         advice is sized to it.
         """
-        projects = self._world.state.projects
+        projects = self._world.projects
 
         def waiting_on_kind(node_id):
             # Asked DIRECTLY of the node's own requirement, never through start_reason, which calls this function.
             node = self._world.nodes[node_id]
-            return (node["art"] > self._world.state.household.artisans + 1e-9 if kind == "artisans"
+            return (node["art"] > self._world.workforce.artisans + 1e-9 if kind == "artisans"
                     else node["sch"] > self.effective_scholars() + 1e-9)
 
         steps = staff_remedies(kind, self._world.STAFF_SOURCES.get(kind, []), deficit, projects.done,
@@ -871,8 +871,8 @@ class CapacityMixin:
         return Refusal("staff_advice", "To get more %s: %s." % (kind, "; ".join(bits[:3])), remedies=remedies[:3])
 
     def headcount(self):
-        household = self._world.state.household
-        return self.employed_total() + household.slaves + household.freedmen
+        workforce = self._world.workforce
+        return self.employed_total() + workforce.slaves + workforce.freedmen
 
     def director_hours_committed(self):
         """Hours of your own year already spoken for before any project sees them.
@@ -883,11 +883,11 @@ class CapacityMixin:
         a free second year inside every year. There is one year, and one
         pair of hands.
         """
-        household = self._world.household
-        return hours_committed(getattr(household, "teaching_hours_this_year", 0.0),
-                               getattr(household, "relocation_hours_this_year", 0.0),
-                               (getattr(household, "supervision_hours_this_year", 0.0) or 0.0) + self._world.director_overhead_hours(),
-                               household.wage_hours_this_year)
+        workforce = self._world.workforce
+        return hours_committed(workforce.teaching_hours_this_year,
+                               workforce.relocation_hours_this_year,
+                               (workforce.supervision_hours_this_year or 0.0) + self._world.director_overhead_hours(),
+                               workforce.wage_hours_this_year)
 
     def household_room(self):
         """How many more people this household can feed, house and oversee.

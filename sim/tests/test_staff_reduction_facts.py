@@ -11,6 +11,7 @@ from .harness import check
 
 from sim.labour.labour_staff_ledger import StaffLedgerMixin
 from sim.refusal import cause_of, facts_of
+from sim.tests import event_stand_in
 
 
 class Ledger(StaffLedgerMixin):
@@ -22,6 +23,7 @@ class Ledger(StaffLedgerMixin):
         self._world = SimpleNamespace(
             state=SimpleNamespace(household=SimpleNamespace(log=self.log), scenario=SimpleNamespace(year=100)),
             concerns_to_close_for_staffing=lambda: list(stops), stopped_yearly_value=lambda node_ids: 10.0 * len(node_ids))
+        event_stand_in.stood_in(self._world)
 
     def employed_by_trade(self):
         return dict(self.employees)

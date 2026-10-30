@@ -1,14 +1,16 @@
 """The priority command: which active projects get an actor's hours first."""
 
+import sim.engine.ui_port as ui_port
+
 from .command_registry import command
 
 
 def _ranked_active(sim):
     """Active projects in the order the hours allocator serves them:
     standing `allocate` orders first, then the master order."""
-    rank = {node_id: place for place, node_id in enumerate(sim.order)}
-    return sorted(sim.active, key=lambda node_id: (
-        0 if sim.hour_allocations.get(node_id, 0.0) > 0 else 1,
+    rank = {node_id: place for place, node_id in enumerate(sim.view("project_order")())}
+    return sorted(sim.view("active_projects")(), key=lambda node_id: (
+        0 if sim.view("hour_commitments")()["allocations"].get(node_id, 0.0) > 0 else 1,
         rank.get(node_id, len(rank)), node_id))
 
 
@@ -18,17 +20,12 @@ def move_in_priority(sim, node_id, position):
     Only the master-order slots active projects already hold are reshuffled,
     so inactive nodes keep their place. Returns the new ranking.
     """
-    rank = {other: place for place, other in enumerate(sim.order)}
-    others = sorted((other for other in sim.active if other != node_id),
+    rank = {other: place for place, other in enumerate(sim.view("project_order")())}
+    others = sorted((other for other in sim.view("active_projects")() if other != node_id),
                     key=lambda other: (rank.get(other, len(rank)), other))
     index = max(0, min(len(others), position - 1))
     sequence = others[:index] + [node_id] + others[index:]
-    slots = [place for place, other in enumerate(sim.order) if other in sim.active]
-    missing = [other for other in sequence if other not in sim.order]
-    sim.order.extend(missing)
-    slots += list(range(len(sim.order) - len(missing), len(sim.order)))
-    for slot, other in zip(sorted(slots), sequence):
-        sim.order[slot] = other
+    sim.send(ui_port.ReorderProjects(tuple(sequence)))
     return _ranked_active(sim)
 
 
@@ -47,11 +44,11 @@ def _cmd_priority(sim, nodes, cmd, ended):
     if target_id is not None:
         if target_id not in nodes:
             return {"ok": False, "error": "unknown node id %r. 'portfolio' lists what is active" % target_id}
-        if target_id not in sim.active:
+        if target_id not in sim.view("active_projects")():
             return {"ok": False, "error": "%s is not active, so it has no place in the queue. "
                                           "'start' it first" % target_id}
         position = cmd.get("position", "first")
-        count = len(sim.active)
+        count = len(sim.view("active_projects")())
         if position == "first":
             position = 1
         elif position == "last":
@@ -63,8 +60,8 @@ def _cmd_priority(sim, nodes, cmd, ended):
     projects = []
     for place, node_id in enumerate(ranking, 1):
         row = {"rank": place, "id": node_id, "name": nodes[node_id]["name"]}
-        if sim.hour_allocations.get(node_id, 0.0) > 0:
-            row["allocate_hours_a_year"] = sim.hour_allocations[node_id]
+        if sim.view("hour_commitments")()["allocations"].get(node_id, 0.0) > 0:
+            row["allocate_hours_a_year"] = sim.view("hour_commitments")()["allocations"][node_id]
         projects.append(row)
     out = {"ok": True, "order": ranking, "projects": projects or "none"}
     if target_id is not None:

@@ -7,7 +7,7 @@ A good that only tech-tree nodes consume is listed apart, since a node's materia
 and not a flow of demand.
 """
 from typing import Any, Iterable, List, Mapping, Set, Tuple
-from sim.engine import capital_builds
+from sim.world import capital_builds
 
 
 def produced_goods(production: Mapping[str, Mapping[str, Any]]) -> Set[str]:

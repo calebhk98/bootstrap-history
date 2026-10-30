@@ -4,7 +4,7 @@ Reads `knowledge_risk` (the numbers `risk` prints) and the hedge table
 `corpus_hedge` uses, so this screen and `risk` cannot disagree.
 """
 
-from .data import closure
+from sim.knowledge.api import closure
 
 # Years before a window opens at which the warning starts to be shown.
 WARNING_HORIZON_YEARS = 30
@@ -13,16 +13,16 @@ WARNING_HORIZON_YEARS = 30
 def _hedge_options(sim):
     """Hedges stronger than the one held, each with its distance and cost."""
     options = []
-    for hedge_id, _chance, fraction_lost in sim.corpus_hedge_tiers():
-        if sim.has(hedge_id):
+    for hedge_id, _chance, fraction_lost in sim.view("corpus_hedge_tiers")():
+        if hedge_id in sim.view("techniques_held")():
             break
-        if hedge_id not in sim.nodes or (sim.fog and not sim.is_visible(hedge_id)):
+        if hedge_id not in sim.nodes or (sim.fog and not sim.view("visibility")(hedge_id, None)):
             continue
         missing = [node_id for node_id in closure(sim.nodes, hedge_id)
                    if node_id not in sim.done]
         options.append({"id": hedge_id, "name": sim.nodes[hedge_id]["name"],
                         "steps_away": len(missing),
-                        "cost": round(sum(sim.project_cost(node_id) for node_id in missing), 1),
+                        "cost": round(sum(sim.view("project_cost")(node_id) for node_id in missing), 1),
                         "fraction_lost_once_built": fraction_lost})
     return options
 
@@ -30,7 +30,7 @@ def _hedge_options(sim):
 def knowledge_loss_warning(sim):
     """None, or the nearest sacking window within the horizon (or running),
     the expected loss per sack, and the cheapest hedge still to build."""
-    risk = sim.knowledge_risk(advice=False, chronology=False)
+    risk = sim.view("knowledge_risk")(False, False)
     windows = []
     for hazard in risk.get("known_hazards_ahead") or []:
         if not hazard.get("sacks_a_site"):

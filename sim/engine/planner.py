@@ -75,12 +75,12 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__f
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-from sim.engine.data import (STRATS, closure, downstream_count, hard_pre, load, load_civ,
-                             topo_order, resolve_goal)
+from sim.engine.data import STRATS, downstream_count, load, load_civ, resolve_goal
+from sim.knowledge.api import closure, hard_pre, topo_order
 from sim.engine.core import Sim
 from sim.engine.units_prose import money_text
 from sim.engine.default_civilisation import default_civilisation_id
-from sim.engine.mechanics import staff_capacity_sources
+from sim.mechanics.api import staff_capacity_sources
 from sim.engine.run_setup import load_strategy, strategy_file
 
 
@@ -235,7 +235,7 @@ def pick_side_branches(nodes, need, sim, limit):
             continue
         if node["cat"] == "unobtainable":
             continue
-        if sim._is_foreign_only(node_id):
+        if sim.view("foreign_only")(node_id):
             continue
         net = node["rev"] - node["up"]
         if net <= 0:
@@ -288,7 +288,7 @@ def pick_staffing(nodes, need, sim):
         # programme can afford it, which the CPM ordering already handles.
         if nodes[key]["cat"] not in ("institution", "social", "information"):
             continue
-        if nodes[key]["cat"] == "unobtainable" or sim._is_foreign_only(key):
+        if nodes[key]["cat"] == "unobtainable" or sim.view("foreign_only")(key):
             continue
         want.append(key)
     want.sort(key=lambda node_id: (nodes[node_id]["_total_cost"], node_id))

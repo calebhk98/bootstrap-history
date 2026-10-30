@@ -7,7 +7,9 @@ QUICK_TOPIC = True
 import os
 import unittest
 
-from sim.engine import catalog, data, wage_schedule
+from sim.content import catalog
+from sim.engine import data
+from sim.workforce import wage_schedule
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CIVILISATIONS = ["rome_100ad", "han_china_100ad", "england_1300", "norse_900ad", "mexica_1500", "sample_egypt_100bc_e7k2:egypt"]

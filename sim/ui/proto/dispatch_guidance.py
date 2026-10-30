@@ -23,11 +23,11 @@ def _cmd_leverage(sim, nodes, cmd, ended):
                      "remainder, why running work is waiting, and what could use the hours. "
                      "It never spends them.")
 def _cmd_idle(sim, nodes, cmd, ended):
-    pool = sim.labour.director_pool()
-    committed = sim.labour.director_hours_committed()
+    pool = sim.view("hours_available")["director_pool"]
+    committed = sim.view("hours_available")["director_committed"]
     startable = [node_id for node_id in nodes
-                 if node_id not in sim.done and node_id not in sim.active
-                 and (not sim.fog or sim.is_visible(node_id)) and sim.can_start(node_id)]
+                 if node_id not in sim.view("techniques_held")() and node_id not in sim.view("active_projects")()
+                 and (not sim.view("fog_of_war")() or sim.view("visibility")(node_id)) and sim.view("start_check")(node_id, False, None, False)[0]]
     kinds = delay_kinds(sim, nodes)
     sized_training = training_suggestions(sim, _trade_demand_rows(sim))
     return {
@@ -39,7 +39,7 @@ def _cmd_idle(sim, nodes, cmd, ended):
         "what_the_wait_is": wait_explanation(kinds),
         "potential_uses": {
             "startable_today": len(startable),
-            "startable_at_no_cash_cost": sum(1 for node_id in startable if sim.project_cost(node_id) <= 0),
+            "startable_at_no_cash_cost": sum(1 for node_id in startable if sim.view("project_cost")(node_id) <= 0),
             "train_oversubscribed_trades": sized_training or "none",
             "development_program": development_program(sim, nodes, startable),
             "wage_work": "'work <trade> <hours>' sells idle hours for wages; 'allocate' points hours at a project",

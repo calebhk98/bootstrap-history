@@ -10,7 +10,7 @@ import time
 import unittest
 from unittest import mock
 
-from sim.engine import mods
+from sim.content import mods
 
 
 def write_mod(directory, mod_id):

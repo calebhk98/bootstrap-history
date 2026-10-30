@@ -9,7 +9,7 @@ import os
 import unittest
 
 from sim.constants import REGISTRY
-from sim.engine import economy_mining
+from sim.resources.module import Resources
 from sim.world import deposits, mine_technique, mine_works
 
 BRANCH_DIRECTORY = os.path.join(os.path.dirname(__file__), "..", "..", "data", "branches")
@@ -53,10 +53,10 @@ class GenericMultiplierIsGone(unittest.TestCase):
         self.assertEqual(offenders, [])
 
     def test_the_method_and_its_bounds_are_deleted(self):
-        self.assertFalse(hasattr(economy_mining.MiningMixin, "mining_tech"))
+        self.assertFalse(hasattr(Resources, "mining_tech"))
         for name in ("MINING_TECH_YIELD_CEILING", "MINING_TECH_COST_FLOOR"):
             self.assertNotIn(name, REGISTRY)
-            self.assertFalse(hasattr(economy_mining.MiningMixin, name))
+            self.assertFalse(hasattr(Resources, name))
 
     def test_each_converted_node_states_its_physics_with_a_source(self):
         nodes = _nodes()

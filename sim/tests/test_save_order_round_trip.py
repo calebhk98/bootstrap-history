@@ -5,7 +5,10 @@ QUICK_TOPIC = True
 
 import json
 
-from sim.engine.state import HoldingsState, ProjectsState, deserialize_state, serialize_state
+from sim.engine.state import deserialize_state, serialize_state
+from sim.projects.state import ProjectsSeat
+from sim.knowledge.api import KnowledgeSeat
+from sim.resources.api import ResourcesSeat
 from sim.tests.harness import check
 
 IDS = ["mill", "forge", "loom", "kiln"]
@@ -15,20 +18,20 @@ def through_json(value):
 	return json.loads(json.dumps(serialize_state(value)))
 
 
-two_orders = [ProjectsState(done=set(IDS)), ProjectsState(done=set(reversed(IDS)))]
+two_orders = [KnowledgeSeat(done=set(IDS)), KnowledgeSeat(done=set(reversed(IDS)))]
 texts = [json.dumps(serialize_state(each), sort_keys=False) for each in two_orders]
 check("sets: two sets built in different orders are saved as the same text, sorted", texts[0] == texts[1]
       and through_json(two_orders[0])["done"] == {"__set__": sorted(IDS)}, None)
-check("sets: the loaded set is equal to the saved one", deserialize_state(through_json(two_orders[1]), ProjectsState).done == set(IDS))
+check("sets: the loaded set is equal to the saved one", deserialize_state(through_json(two_orders[1]), KnowledgeSeat).done == set(IDS))
 
-held = HoldingsState(mine_ready={"zinc": 3, "iron": 1, "tin": 2}, mine_tranches=[["tin", 1, 0.5], ["iron", 3, 2.5]])
-loaded = deserialize_state(through_json(held), HoldingsState)
+held = ResourcesSeat(mine_ready={"zinc": 3, "iron": 1, "tin": 2}, mine_tranches=[["tin", 1, 0.5], ["iron", 3, 2.5]])
+loaded = deserialize_state(through_json(held), ResourcesSeat)
 check("dicts and lists: a loaded dict iterates in the order it was saved and a list keeps its order",
       list(loaded.mine_ready) == ["zinc", "iron", "tin"] and loaded.mine_tranches == [["tin", 1, 0.5], ["iron", 3, 2.5]], list(loaded.mine_ready))
 
-active = ProjectsState(active={})
+active = ProjectsSeat()
 active.failed_attempts.update({"printing": 3, "alloy": 1})
-loaded = deserialize_state(through_json(active), ProjectsState)
+loaded = deserialize_state(through_json(active), ProjectsSeat)
 check("retry counts: the counts and their order survive, and a project never tried still counts from zero",
       list(loaded.failed_attempts) == ["printing", "alloy"] and dict(loaded.failed_attempts) == {"printing": 3, "alloy": 1}
       and loaded.failed_attempts["never_tried"] == 0, loaded.failed_attempts)

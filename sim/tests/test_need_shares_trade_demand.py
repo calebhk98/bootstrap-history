@@ -8,8 +8,8 @@ from unittest import mock
 
 from sim.engine import validate_production
 from sim.world import need_basket
-from sim.engine.catalog import load_production_catalog
-from sim.engine.solve_prices_core import techniques_available_to
+from sim.content.catalog import load_production_catalog
+from sim.prices.solve_prices_core import techniques_available_to
 from sim.labour import workforce_carriage, workforce_spinup
 from sim.world import need_demand
 

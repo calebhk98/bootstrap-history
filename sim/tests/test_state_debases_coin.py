@@ -12,7 +12,7 @@ from sim.economy import currency
 from sim.economy.accounts import Book
 from sim.economy.economy import Economy
 from sim.economy.types import EDGE_MINT, Transfer
-from sim.engine.economy_port_year import AgentEconomy
+from sim.markets.port_year import AgentEconomy
 
 
 spec = currency.currency_from_coin_standard("realm", {"regime": "struck_coin", "material": "silver_kg",

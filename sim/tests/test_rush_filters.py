@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 from sim.refusal import Refusal
 from sim.ui.proto.rush_filters import parse_rush_filters, passes_rush_filters, rush_exposure
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -15,7 +16,7 @@ NODES = {
     "metal": {"cat": "metallurgy", "ph": 10, "risk": 0.05},
 }
 COSTS = {"cheap_textile": 100.0, "dear_textile": 900.0, "metal": 400.0}
-GAME = SimpleNamespace(project_cost=COSTS.get)
+GAME = Game(project_cost=COSTS.get)
 
 
 def passing(filters):
@@ -68,7 +69,7 @@ class PassTests(unittest.TestCase):
 
 class ExposureTests(unittest.TestCase):
     def game(self, demand):
-        return SimpleNamespace(trade_demand_vs_supply=lambda: demand)
+        return Game(trade_demand_vs_supply=lambda: demand)
 
     def test_expected_failures_are_the_sum_of_the_started_projects_own_risk(self):
         _bottlenecks, exposure = rush_exposure(self.game({}), NODES, [{"id": "cheap_textile"}, {"id": "dear_textile"}])

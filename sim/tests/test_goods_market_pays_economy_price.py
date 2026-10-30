@@ -9,7 +9,8 @@ import types
 import unittest
 
 from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
-from sim.engine.goods_market_api import GoodsMarket
+from sim.tests import market_stand_in
+from sim.markets.goods_market import GoodsMarket
 
 TILE_PRICE_PER_UNIT = {"wheat_kg": 0.08, "silver_kg": 400.0}
 TABLE_PRICE_PER_UNIT = {"wheat_kg": 0.03, "silver_kg": 20.0, "alum_kg": 0.5}     # the cost of making, in the engine's money
@@ -61,10 +62,9 @@ def stub_game(partner_makes=(), partner_prices=None):
         material_carriage_per_tonne=lambda key, price_per_tonne: CARRIAGE_PER_TONNE.get(key, 0.0),
         _market_flows=lambda: flows,
         foreign_economies=lambda: [],
-        state=types.SimpleNamespace(projects=types.SimpleNamespace(done=()), scenario=types.SimpleNamespace(year=100),
-                                    acting_seat="founder"),
+        year=100, state=types.SimpleNamespace(projects=types.SimpleNamespace(), acting_seat="founder"), techniques_held=frozenset,
         market_rate=lambda: 0.05, partner_price_level=lambda partner: 1.0,
-        household=types.SimpleNamespace(),
+        **market_stand_in.market_memory(),
         _foreign_economy_facts=lambda partner: {"solved_materials": frozenset(partner_makes),
                                                 "prices_in_home_money": partner_prices or {}})
     return game, GoodsMarket(game)

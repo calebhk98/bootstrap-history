@@ -20,22 +20,22 @@ def _watched_ids(sim):
 def _catalog(sim):
     if sim not in _TREES:
         _TREES[sim] = ui_port.load()[0]
-    return [goal for goal in ui_port.selectable_goals(_TREES[sim], sim.nodes) if goal["node"] in sim.nodes]
+    return [goal for goal in ui_port.selectable_goals(_TREES[sim], sim.view("tree_nodes")()) if goal["node"] in sim.view("tree_nodes")()]
 
 
 def _knowable(sim, node_id):
-    return not sim.fog or sim.is_visible(node_id)
+    return not sim.view("fog_of_war")() or sim.view("visibility")(node_id)
 
 
 def _progress(sim, node_id):
-    needed = ui_port.closure(sim.nodes, node_id)
-    return {"done": len(needed & sim.done), "total": len(needed), "reached": node_id in sim.done}
+    needed = ui_port.closure(sim.view("tree_nodes")(), node_id)
+    return {"done": len(needed & sim.view("techniques_held")()), "total": len(needed), "reached": node_id in sim.view("techniques_held")()}
 
 
 def _row(sim, node_id):
     row = {"id": None, "name": None, **_progress(sim, node_id)}
     if _knowable(sim, node_id):
-        row["id"], row["name"] = node_id, sim.nodes[node_id].get("name", node_id)
+        row["id"], row["name"] = node_id, sim.view("tree_nodes")()[node_id].get("name", node_id)
     return row
 
 
@@ -57,24 +57,24 @@ def resolve_goal_reference(sim, text, among=None):
 
 
 def watched_rows(sim):
-    return [_row(sim, node_id) for node_id in _watched_ids(sim) if node_id in sim.nodes]
+    return [_row(sim, node_id) for node_id in _watched_ids(sim) if node_id in sim.view("tree_nodes")()]
 
 
 def goals_report(sim):
-    formal = _row(sim, sim.goal) if sim.goal in sim.nodes else {"id": None, "name": None, "done": 0, "total": 0, "reached": False}
-    formal["year_reached"] = sim.goal_year
+    formal = _row(sim, sim.view("goal")()["node"]) if sim.view("goal")()["node"] in sim.view("tree_nodes")() else {"id": None, "name": None, "done": 0, "total": 0, "reached": False}
+    formal["year_reached"] = sim.view("goal")()["year"]
     watched = set(_watched_ids(sim))
     unknown = 0
     choices = []
     for goal in _catalog(sim):
-        if goal["node"] == sim.goal or goal["node"] in watched:
+        if goal["node"] == sim.view("goal")()["node"] or goal["node"] in watched:
             continue
         if _knowable(sim, goal["node"]):
             choices.append(_row(sim, goal["node"]))
         else:
             unknown += 1
     return {"ok": True, "formal": formal, "watched": watched_rows(sim), "choices": choices,
-            "unknown_goals": unknown, "fog": bool(sim.fog),
+            "unknown_goals": unknown, "fog": bool(sim.view("fog_of_war")()),
             "note": "The formal goal is the one the score and the end text use. A watched goal is "
                     "tracked here only until the formal goal is reached; 'goals promote' then makes it the formal goal."}
 
@@ -83,19 +83,19 @@ def watch(sim, text):
     node_id, error = resolve_goal_reference(sim, text)
     if error:
         return {"ok": False, "error": error}
-    if node_id == sim.goal:
+    if node_id == sim.view("goal")()["node"]:
         return {"ok": False, "error": "that is already the formal goal"}
     ids = _watched_ids(sim)
     if node_id not in ids:
         if len(ids) >= MAX_WATCHED:
             return {"ok": False, "error": "watching too many goals; 'goals unwatch <goal>' first"}
         ids.append(node_id)
-    return {**goals_report(sim), "changed": "watching %s" % sim.nodes[node_id].get("name", node_id)}
+    return {**goals_report(sim), "changed": "watching %s" % sim.view("tree_nodes")()[node_id].get("name", node_id)}
 
 
 def promote(sim, text=""):
     """After the formal goal is reached, make a watched goal (the first unreached one if unnamed) the formal goal."""
-    if sim.goal_year is None:
+    if sim.view("goal")()["year"] is None:
         return {"ok": False, "error": "the formal goal is not reached yet; only then can a watched goal take its place"}
     ids = _watched_ids(sim)
     if text:
@@ -103,12 +103,12 @@ def promote(sim, text=""):
         if error:
             return {"ok": False, "error": "you are not watching a goal called %r" % text}
     else:
-        node_id = next((candidate for candidate in ids if candidate in sim.nodes and candidate not in sim.done), None)
+        node_id = next((candidate for candidate in ids if candidate in sim.view("tree_nodes")() and candidate not in sim.view("techniques_held")()), None)
         if node_id is None:
             return {"ok": False, "error": "no watched goal is left to promote; 'goals watch <goal>' one first"}
     ids.remove(node_id)
     ui_port.set_goal(sim, node_id)
-    return {**goals_report(sim), "changed": "the formal goal is now %s" % sim.nodes[node_id].get("name", node_id)}
+    return {**goals_report(sim), "changed": "the formal goal is now %s" % sim.view("tree_nodes")()[node_id].get("name", node_id)}
 
 
 def unwatch(sim, text):
@@ -117,4 +117,4 @@ def unwatch(sim, text):
     if error:
         return {"ok": False, "error": "you are not watching a goal called %r" % text}
     ids.remove(node_id)
-    return {**goals_report(sim), "changed": "no longer watching %s" % sim.nodes[node_id].get("name", node_id)}
+    return {**goals_report(sim), "changed": "no longer watching %s" % sim.view("tree_nodes")()[node_id].get("name", node_id)}

@@ -1,0 +1,299 @@
+"""Build one game's modules: bind every view, point and command to one owner, check every read, hand out needs."""
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
+
+from .clock import Clock
+from .errors import AssemblyError
+from .framework import FRAMEWORK_ID, framework_spec
+from .kernels import check_replacement
+from .mod_access import ModAccess, NeedsAccess
+from .module import Module
+from .read_guard import GuardedView
+from .needs import Needs, Point
+from .operations import Applied, apply_all
+from .spec import ModuleSpec, Operations, declared_methods, point_names, view_names
+from .views import View
+
+
+def _no_root_operation(name: str) -> Callable:
+	"""The hook of a root operation the game has not set (a host built without a game): asking for it is an error."""
+	def refuse(*arguments: Any) -> Any:
+		raise AssemblyError("no game has set the root operation %s" % name)
+	return refuse
+
+
+class Assembly:
+	def __init__(self, applied: Applied, clock: Clock, removed_views: Dict[str, Tuple[str, ...]],
+	             removed_commands: Dict[type, str]):
+		self.applied = applied
+		self.clock = clock
+		self.removed_views = removed_views                        # removed module id -> the views and points it published
+		self.removed_commands = removed_commands                  # command class -> the removed module that applied it
+		self.modules: Dict[str, Module] = {}
+		self.views: Dict[str, View] = {}
+		self.points: Dict[str, Point] = {}
+		self.view_owner: Dict[str, str] = {}
+		self.point_owner: Dict[str, str] = {}
+		self.command_owner: Dict[type, str] = {}
+		self.handlers: Dict[type, Callable] = {}
+		self.kernel_owner: Dict[str, str] = {}
+		self.kernels: Dict[str, Callable] = {}                    # kernel name -> the function modules call: a mod's replacement, else the reference
+		self.unstable: Dict[str, List[Tuple[str, str]]] = {}     # module id -> (mod id, method) overrides outside the spec
+		self._phase_handlers: Optional[Dict[str, Callable]] = None
+		self.guard_reads = False                                   # another module's view answers come back unwritable
+		self.seat_records: Callable[[], Mapping[str, Any]] = dict   # the registry: seat id -> the seat's record (`.modules` holds its slots), in joining order
+		self.follow: Optional[Callable[[Optional[str]], None]] = None   # told the acting seat after every bind (the engine's saved copy)
+		self.holds_rule: Callable[[Any], List[str]] = lambda record: []  # what a seat's record holds that a handover would overwrite
+		self.add_seat: Callable[[str, Mapping[str, Any]], Any] = _no_root_operation("add_seat")   # the root's: put a seat built from a template in the registry
+		self.move_seat: Callable[[str, str], Any] = _no_root_operation("move_seat")   # the root's: move a seat to another id in the registry and the stores keyed by it
+		self.reprice_tree: Callable[[], None] = _no_root_operation("reprice_tree")   # the root's: count the tree's money fields at the money an hour of work is worth now
+		self.mod_memory: Callable[[], Dict[str, Any]] = dict       # the saved game's slot the mods keep their own state in (the engine's)
+		self.mod_access: Dict[str, ModAccess] = {}                 # mod id -> what its code is handed in place of the game
+
+	def act_as(self, seat_id: str):
+		"""A context in which `seat_id` is the acting seat, then the previous one again."""
+		from .slots import act_as
+		return act_as(self, seat_id)
+
+	def rebind(self, seat_id: str, notify: bool = True) -> None:
+		"""Bind the registered seat `seat_id` as the acting one."""
+		from .slots import rebind
+		rebind(self, seat_id, notify)
+
+	def provider_of(self, name: str) -> Optional[str]:
+		return self.view_owner.get(name) or self.point_owner.get(name)
+
+	def phase_handler(self, name: str) -> Callable:
+		"""The bound method that runs the year's phase `name`; KeyError when no module runs it."""
+		if self._phase_handlers is None:
+			self._phase_handlers = self.phase_handlers()
+		return self._phase_handlers[name]
+
+	def phase_handlers(self) -> Dict[str, Callable]:
+		handlers: Dict[str, Callable] = {}
+		owners: Dict[str, str] = {}
+		for module_id, spec in self.applied.specs.items():
+			for hook in spec.phases:
+				if hook.name in handlers:
+					raise AssemblyError("modules %s and %s both run the phase %s" % (owners[hook.name], module_id, hook.name))
+				handlers[hook.name] = getattr(self.modules[module_id], hook.method)
+				owners[hook.name] = module_id
+		return handlers
+
+
+def _bind_names(assembly: Assembly) -> None:
+	for module_id, spec in assembly.applied.specs.items():
+		for view in spec.publishes:
+			other = assembly.provider_of(view.name)
+			if other is not None:
+				raise AssemblyError("modules %s and %s both publish %s" % (other, module_id, view.name))
+			assembly.view_owner[view.name] = module_id
+		for point in spec.extension_points:
+			other = assembly.provider_of(point.name)
+			if other is not None:
+				raise AssemblyError("modules %s and %s both declare %s" % (other, module_id, point.name))
+			assembly.point_owner[point.name] = module_id
+		for command, _handler in spec.applies:
+			other = assembly.command_owner.get(command)
+			if other is not None:
+				raise AssemblyError("modules %s and %s both apply %s" % (other, module_id, command.__name__))
+			assembly.command_owner[command] = module_id
+
+
+def _bind_kernels(assembly: Assembly) -> None:
+	"""One owner a kernel; each replacement named by a mod must be of a kernel some module declares and must answer its samples."""
+	declared = {}
+	for module_id, spec in assembly.applied.specs.items():
+		for kernel in spec.kernels:
+			if not kernel.name.startswith(module_id + "."):
+				raise AssemblyError("module %s declares the kernel %s; a module's kernels are named %s.<name>" % (module_id, kernel.name, module_id))
+			if kernel.name in declared:
+				raise AssemblyError("modules %s and %s both declare the kernel %s" % (assembly.kernel_owner[kernel.name], module_id, kernel.name))
+			declared[kernel.name] = kernel
+			assembly.kernel_owner[kernel.name] = module_id
+			assembly.kernels[kernel.name] = kernel.reference
+	for name, (mod_id, function) in sorted(assembly.applied.kernels.items()):
+		if name not in declared:
+			raise AssemblyError("mod %s replaces the kernel %s, which no module declares" % (mod_id, name))
+		check_replacement(declared[name], mod_id, function)
+		assembly.kernels[name] = function
+
+
+def _removal_note(assembly: Assembly, name: str = "", command: Optional[type] = None) -> str:
+	if command is not None:
+		removed = [assembly.removed_commands[command]] if command in assembly.removed_commands else []
+	else:
+		removed = [module_id for module_id, names in assembly.removed_views.items() if name in names]
+	if not removed:
+		return ""
+	return " (module %s provided it; mod %s removed it)" % (removed[0], assembly.applied.removed_by[removed[0]])
+
+
+def _missing(assembly: Assembly, reader: str, name: str) -> AssemblyError:
+	return AssemblyError("%s reads %s, which no module provides%s" % (reader, name, _removal_note(assembly, name)))
+
+
+def _check_reads(assembly: Assembly) -> None:
+	"""Every read and every send has a provider; every one that has none is reported together, so a removal names each reader."""
+	problems: List[str] = []
+	for module_id, spec in assembly.applied.specs.items():
+		for name in spec.reads:
+			if assembly.provider_of(name) is None:
+				problems.append(str(_missing(assembly, "module %s" % module_id, name)))
+		for command in spec.sends:
+			if command not in assembly.command_owner:
+				problems.append("module %s sends %s, which no module applies%s" % (
+					module_id, command.__name__, _removal_note(assembly, command=command)))
+		own = {view.name for view in spec.publishes}
+		for view in spec.publishes:
+			for name in view.inputs:
+				if name not in own and name not in spec.reads and name not in spec.optional_reads:
+					raise AssemblyError("view %s of module %s depends on %s, which the module does not read" % (view.name, module_id, name))
+				if assembly.view_owner.get(name) is None and name not in spec.optional_reads:
+					problems.append(str(_missing(assembly, "view %s of module %s" % (view.name, module_id), name)))
+	for mod_id, names in assembly.applied.mod_reads.items():
+		for name in names:
+			if name in assembly.point_owner:
+				problems.append("mod %s reads %s, an extension point; mod code reads views only" % (mod_id, name))
+			elif name not in assembly.view_owner:
+				problems.append(str(_missing(assembly, "mod %s" % mod_id, name)))
+	for mod_id, commands in assembly.applied.mod_sends.items():
+		for command in commands:
+			if command not in assembly.command_owner:
+				problems.append("mod %s sends %s, which no module applies%s" % (mod_id, command.__name__, _removal_note(assembly, command=command)))
+	if problems:
+		raise AssemblyError("; ".join(problems))
+	for view, entries in assembly.applied.adjusters.items():
+		for mod_id, _function, reads in entries:
+			if view not in assembly.view_owner:
+				raise AssemblyError("mod %s adjusts the view %s, which no module publishes%s" % (mod_id, view, _removal_note(assembly, view)))
+			for name in reads:
+				if name in assembly.point_owner:
+					raise AssemblyError("mod %s's adjuster of %s reads %s, an extension point; an adjuster reads views only" % (mod_id, view, name))
+				if name not in assembly.view_owner:
+					raise _missing(assembly, "mod %s's adjuster of %s" % (mod_id, view), name)
+	shipped_names = set()
+	for module_id, spec in assembly.applied.specs.items():
+		for provision in spec.provides:
+			shipped_names.add("%s.%s" % (module_id, provision.name))
+			if provision.point not in assembly.point_owner:
+				raise AssemblyError("module %s provides to %s, which no module declares%s" % (
+					module_id, provision.point, _removal_note(assembly, provision.point)))
+	for name, mod_id in assembly.applied.withdrawn.items():
+		if name not in shipped_names:
+			raise AssemblyError("mod %s withdraws the provision %s, which no module makes" % (mod_id, name))
+	for point, entries in assembly.applied.provided.items():
+		if point not in assembly.point_owner:
+			raise AssemblyError("mod %s provides to %s, which no module declares%s" % (entries[0][0], point, _removal_note(assembly, point)))
+
+
+def _check_view_cycles(assembly: Assembly) -> None:
+	"""Declared view inputs must not form a cycle: a view's freshness is the freshness of its inputs."""
+	inputs = {view.name: [name for name in view.inputs if name in assembly.view_owner]
+	          for spec in assembly.applied.specs.values() for view in spec.publishes}
+	state: Dict[str, int] = {}                      # 1 while on the walk, 2 when finished
+
+	def walk(name: str, trail: List[str]) -> None:
+		if state.get(name) == 2:
+			return
+		if state.get(name) == 1:
+			cycle = trail[trail.index(name):] + [name]
+			raise AssemblyError("view inputs form a cycle: %s" % " -> ".join(cycle))
+		state[name] = 1
+		for following in inputs.get(name, []):
+			walk(following, trail + [name])
+		state[name] = 2
+	for name in sorted(inputs):
+		walk(name, [])
+
+
+def _implementation(assembly: Assembly, module_id: str, spec: ModuleSpec) -> type:
+	if not (isinstance(spec.implementation, type) and issubclass(spec.implementation, Module)):
+		raise AssemblyError("module %s: its implementation must derive from sim.assembly.api.Module" % module_id)
+	built = spec.implementation
+	declared = set(declared_methods(spec))
+	for mod_id, layer in assembly.applied.layers.get(module_id, []):
+		for name, value in vars(layer).items():
+			if callable(value) and not name.startswith("__") and name not in declared:
+				assembly.unstable.setdefault(module_id, []).append((mod_id, name))
+		built = type("%s+%s" % (built.__name__, layer.__name__), (layer, built), {})
+	missing = [name for name in declared if not callable(getattr(built, name, None))]
+	if missing:
+		raise AssemblyError("module %s declares %s but its implementation has no such method" % (module_id, ", ".join(sorted(missing))))
+	return built
+
+
+def _instantiate(assembly: Assembly) -> None:
+	for module_id, spec in assembly.applied.specs.items():
+		instance = _implementation(assembly, module_id, spec)()
+		instance.module_id = module_id
+		instance.clock = assembly.clock
+		instance.kernels = {kernel.name: assembly.kernels[kernel.name] for kernel in spec.kernels}
+		assembly.modules[module_id] = instance
+	for module_id, spec in assembly.applied.specs.items():
+		for view_spec in spec.publishes:
+			assembly.views[view_spec.name] = View(view_spec, module_id, getattr(assembly.modules[module_id], view_spec.compute), assembly.clock)
+		for point_spec in spec.extension_points:
+			assembly.points[point_spec.name] = Point(point_spec.name, point_spec.combine)
+		for command, handler in spec.applies:
+			assembly.handlers[command] = getattr(assembly.modules[module_id], handler)
+
+
+def _needs_for(assembly: Assembly, module_id: str, names: Sequence[str], optional: Sequence[str], sends: Sequence[type]) -> Needs:
+	needs = Needs(module_id, assembly.handlers, frozenset(sends), assembly.act_as)
+	for name in list(names) + list(optional):
+		view = assembly.views.get(name)
+		if view is not None and assembly.guard_reads and view.owner_id != module_id:
+			view = GuardedView(view, module_id)
+		setattr(needs, name, view or assembly.points.get(name))
+	return needs
+
+
+def _bound(assembly: Assembly, mod_id: str, function: Any) -> Callable:
+	"""A mod's provision as the point calls it: one that wants the mod's access gets it as its first argument."""
+	if not isinstance(function, NeedsAccess):
+		return function
+	access = assembly.mod_access[mod_id]
+	return lambda *arguments: function.function(access, *arguments)
+
+
+def _wire(assembly: Assembly) -> None:
+	for module_id, spec in assembly.applied.specs.items():
+		own = [view.name for view in spec.publishes] + [point.name for point in spec.extension_points]
+		assembly.modules[module_id].needs = _needs_for(assembly, module_id, list(spec.reads) + own, spec.optional_reads, spec.sends)
+	for name, view in assembly.views.items():
+		view.inputs = [assembly.views[input_name] for input_name in view.spec.inputs if input_name in assembly.views]
+		for mod_id, function, reads in assembly.applied.adjusters.get(name, []):
+			access = ModAccess(assembly, mod_id, frozenset(reads), frozenset())   # an adjuster reads what it declared, sends nothing
+			view.adjusters.append((function, access, [assembly.views[read] for read in reads]))
+	for module_id, spec in assembly.applied.specs.items():
+		for provision in spec.provides:
+			if "%s.%s" % (module_id, provision.name) not in assembly.applied.withdrawn:
+				assembly.points[provision.point].providers.append(getattr(assembly.modules[module_id], provision.method))
+	for mod_id in assembly.applied.mods:
+		assembly.mod_access[mod_id] = ModAccess(assembly, mod_id, frozenset(assembly.applied.mod_reads.get(mod_id, ())),
+		                                        frozenset(assembly.applied.mod_sends.get(mod_id, ())))
+	for name, entries in assembly.applied.provided.items():
+		assembly.points[name].providers.extend(_bound(assembly, mod_id, function) for mod_id, function in entries)
+
+
+def assemble(shipped: Sequence[ModuleSpec], operations: Sequence[Operations] = (),
+             related: Optional[Callable[[str, str], bool]] = None, shadow_every: int = 0, guard_reads: bool = False) -> Assembly:
+	"""The game's modules: the shipped set changed by each mod's operations in load order; AssemblyError names the parties."""
+	every_spec = {spec.module_id: spec for spec in shipped}
+	for entry in operations:
+		every_spec.update({spec.module_id: spec for spec in entry.added})
+	applied = apply_all([framework_spec()] + list(shipped), operations, related)
+	removed = {module_id: every_spec[module_id] for module_id in applied.removed_by if module_id in every_spec}
+	assembly = Assembly(applied, Clock(shadow_every), {module_id: view_names(spec) + point_names(spec) for module_id, spec in removed.items()},
+	                    {command: module_id for module_id, spec in removed.items() for command, _handler in spec.applies})
+	_bind_names(assembly)
+	_check_reads(assembly)
+	_check_view_cycles(assembly)
+	_bind_kernels(assembly)
+	assembly.guard_reads = guard_reads
+	_instantiate(assembly)
+	assembly.modules[FRAMEWORK_ID].assembly = assembly
+	_wire(assembly)
+	for module in assembly.modules.values():
+		module.setup()
+	return assembly

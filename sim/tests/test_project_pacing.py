@@ -1,7 +1,7 @@
 """Active projects (the `active` dict, not a running concern): pacing, stalls, abandonment, stopping and restarting, the warning when
 selling hours would starve a project, and the hour pace the material brake is applied to.
 
-Regrouped from test_round8_fixes.py, test_round9.py, test_round10.py and test_round12_naive15.py. Each rule runs on a stub game
+Regrouped from test_round8_fixes.py, test_round9.py, test_round10.py and test_round12_naive15.py. Each rule runs on the projects module, a stub game
 or inputs the test builds: what a project is waiting on (`_waiting_on`), why a trade is short (`trade_shortage_kind`), the stall
 gate's countdown and its abandonment, `stop_project`'s kept money and the credit on a restart, `why`'s cost block, the sale-of-hours
 warning, and `project_hour_pace`. The crawl of a project short of a trade is test_project_crawl_rules; a start refused for the gross price of a nearly paid project is `cash_covers_start` below."""
@@ -11,15 +11,19 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.project_funding import cash_covers_start, paid_credit
-from sim.engine.projects_progress import ProgressMixin
-from sim.engine.projects_starting import StartingMixin
-from sim.engine.projects_trade_wait import STALL_YEARS_BEFORE_ABANDONMENT
-from sim.engine.step_phase_projects import ProjectProgressPhaseMixin
+from sim.projects.api import StopProject, funding
+from sim.tests import projects_host
+from sim.projects.state import ProjectsSeat
+cash_covers_start, paid_credit = funding.cash_covers_start, funding.paid_credit
+from sim.projects import progress_rules
+from sim.projects.start_rules import STALL_YEARS_BEFORE_ABANDONMENT
+from sim.reporting.api import RecordEvent
 from sim.labour.hours_sale_warning import starved_projects, starving_warning
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.state_waiting import _waiting_on
 from sim.ui.proto.techtree import _explain_cost
+from sim.tests import module_harness
+from sim.tests.ui_stand_in import FactViews, Game as LabourStub
 
 NODE = {"name": "Slow work", "yrs": 10, "ph": 500, "lab": {}, "cat": "x"}
 
@@ -28,12 +32,15 @@ def a_game(supply=None, demand=None, spending=1.0e9, cost=10000.0, throttle=(1.0
     """A stub game for `_waiting_on`: hours each trade can field, the portfolio's demand on them, what the household can raise."""
     supply, demand = dict(supply or {}), dict(demand or {})
 
-    class Game(ProgressMixin):
+    class Game(FactViews):
         civ = {}
+
+        def trade_shortage_kind(self, trade_id, need, total_demand=None):
+            return progress_rules.shortage_kind(self.labour.hours_you_can_call_on(trade_id), need, total_demand)
 
     game = Game()
     game.trade_demand_vs_supply = lambda: {trade: {"demand_hours_this_year": hours} for trade, hours in demand.items()}
-    game.labour = SimpleNamespace(hours_you_can_call_on=lambda trade: supply.get(trade, 1.0e9), director_pool=lambda: 2000.0,
+    game.labour = LabourStub(hours_you_can_call_on=lambda trade: supply.get(trade, 1.0e9), director_pool=lambda: 2000.0,
                                   director_hours_committed=lambda: 500.0)
     game.project_cost = lambda node_id: cost
     game.spending_power = lambda purpose: spending
@@ -97,10 +104,10 @@ check("...while a project that still owes a trade something is told so",
       cause_of(still_owed) == "staffing" and "engineer" in still_owed, still_owed)
 
 # --- why a trade is short
-shortage = ProgressMixin.trade_shortage_kind
 def kind_of(supply, need, demand):
-    host = SimpleNamespace(labour=SimpleNamespace(hours_you_can_call_on=lambda trade: supply))
-    return shortage(host, "smith", need, demand)
+    return progress_rules.shortage_kind(supply, need, demand)
+
+
 check("a trade the society cannot field in the hours wanted is a staffing shortage", kind_of(100.0, 500.0, 10.0) == "staffing")
 check("a trade it can field, with the portfolio asking for more, is booked", kind_of(1000.0, 500.0, 5000.0) == "booked")
 check("a trade with hours to spare against the whole portfolio is no shortage", kind_of(1000.0, 500.0, 800.0) is None)
@@ -109,23 +116,22 @@ check("a caller that already knows the project fell short gets booked when the s
 
 # --- the stall gate: a countdown, said every year, before the money goes
 def gated(blocked_trades=("engineer",), lab_left=None, stalled_years=0):
-    log = []
-    host = SimpleNamespace(
-        labour=SimpleNamespace(market_supply=lambda trade: 0.0 if trade in blocked_trades else 1000.0),
-        state=SimpleNamespace(household=SimpleNamespace(log=log), scenario=SimpleNamespace(year=100),
-                              projects=SimpleNamespace(active={"p": {}}, bountied=set())))
     progress = {"stalled_years": stalled_years, "hours_offered_this_year": 9.0, "hours_effective_this_year": 9.0}
     if lab_left is not None:
         progress["lab_left"] = lab_left
-    host.state.projects.active["p"] = progress
-    stopped = ProjectProgressPhaseMixin._project_progress_trade_gate(host, "p", progress, {"lab": {"engineer": 500.0, "smith": 100.0}})
+    projects = LabourStub(active={"p": progress})
+    host = projects_host.build(market_supply=lambda trade: 0.0 if trade in blocked_trades else 1000.0, projects_record=projects, year=100)
+    stopped = host._project_progress_trade_gate("p", progress, {"lab": {"engineer": 500.0, "smith": 100.0}})
+    log = [(100, command) for command in module_harness.sent(host) if isinstance(command, RecordEvent)]
     return stopped, progress, log, host
+
+
 stopped, progress, log, _host = gated()
 check("a project needing more of a trade than exists stalls, and says so the first year, not the fourth",
-      stopped and progress["stalled_years"] == 1 and len(log) == 1 and cause_of(log[0][1]) == "project_cannot_go_on"
-      and facts_of(log[0][1])["project"] == "p" and facts_of(log[0][1])["trades"] == ["engineer"], log)
+      stopped and progress["stalled_years"] == 1 and len(log) == 1 and log[0][1].kind == "project_cannot_go_on"
+      and log[0][1].facts["project"] == "p" and log[0][1].facts["trades"] == ["engineer"], log)
 check("...and the entry carries the countdown and the trade that would save it",
-      progress["blocked_on_trades"] == ["engineer"] and facts_of(log[0][1])["years_left"] == STALL_YEARS_BEFORE_ABANDONMENT - 1, progress)
+      progress["blocked_on_trades"] == ["engineer"] and log[0][1].facts["years_left"] == STALL_YEARS_BEFORE_ABANDONMENT - 1, progress)
 check("...and the year's hours it was offered are zeroed, not left looking as if they applied",
       progress["hours_offered_this_year"] == 0.0 and progress["hours_effective_this_year"] == 0.0, progress)
 stopped, progress, log, _host = gated(lab_left={"engineer": 0.0, "smith": 50.0})
@@ -133,24 +139,24 @@ check("a project that has already drawn everything it needed from a trade is not
       not stopped and progress["stalled_years"] == 0 and not log, (progress, log))
 stopped, progress, log, _host = gated(lab_left={"engineer": 200.0, "smith": 50.0})
 check("...while one that still owes the trade something is caught the first year it has nobody to do that work",
-      stopped and any(cause_of(line) == "project_cannot_go_on" and "engineer" in facts_of(line)["trades"] for _year, line in log), log)
+      stopped and any(line.kind == "project_cannot_go_on" and "engineer" in line.facts["trades"] for _year, line in log), log)
 stopped, progress, log, host = gated(stalled_years=STALL_YEARS_BEFORE_ABANDONMENT - 1)
 check("after the countdown the project is abandoned and the log says what was lost",
-      stopped and "p" not in host.state.projects.active and cause_of(log[0][1]) == "project_halted_no_labour", log)
+      stopped and "p" not in host.seat.active and log[0][1].kind == "project_halted_no_labour", log)
 stopped, progress, log, _host = gated(blocked_trades=(), stalled_years=2)
 check("a project with its trades again has its countdown cleared", not stopped and progress["stalled_years"] == 0)
 
 # --- stopping keeps the money that was paid; beginning again bills only the remainder
 def stopped_game(spent):
-    host = SimpleNamespace(state=SimpleNamespace(projects=SimpleNamespace(active={"p": {"spent": spent, "ph_left": 100.0}},
-                                                                           bountied=set(), paid_towards=None)), civ={})
-    return host, StartingMixin.stop_project(host, "p")
-host, (ok, message) = stopped_game(300.0)
-check("stopping a project keeps the money already paid", ok and host.state.projects.paid_towards == {"p": 300.0}, host.state.projects.paid_towards)
-host, (ok, message) = stopped_game(0.2)
-check("a project that had paid next to nothing keeps nothing", ok and not host.state.projects.paid_towards, host.state.projects.paid_towards)
-host, (ok, message) = stopped_game(1.0)
-check("stopping something that is not active is refused", StartingMixin.stop_project(host, "q") == (False, "not active"))
+    state = projects_host.projects_state(active={"p": {"spent": spent, "ph_left": 100.0}})
+    module = projects_host.build(projects_record=state)
+    return module.seat, module, module.stop_project(StopProject("p"))
+seat, _module, (ok, message) = stopped_game(300.0)
+check("stopping a project keeps the money already paid", ok and seat.paid_towards == {"p": 300.0}, seat.paid_towards)
+seat, _module, (ok, message) = stopped_game(0.2)
+check("a project that had paid next to nothing keeps nothing", ok and not seat.paid_towards, seat.paid_towards)
+seat, module, (ok, message) = stopped_game(1.0)
+check("stopping something that is not active is refused", module.stop_project(StopProject("q")) == (False, "not active"))
 check("money already paid comes off the bill, never more than the price",
       paid_credit(1000.0, 300.0) == 300.0 and paid_credit(1000.0, 5000.0) == 1000.0 and paid_credit(1000.0, None) == 0.0
       and paid_credit(1000.0, -5.0) == 0.0)
@@ -159,9 +165,9 @@ check("a nearly paid project is not refused for its gross price",
 
 # --- `why` shows what `start` would charge once money is sunk into the node
 def explained(paid, done=(), active=()):
-    game = SimpleNamespace(
+    game = LabourStub(
         project_material_bill=lambda node_id: {"cost_of_missing": 0.0, "rows": []}, civ_cost_factor=lambda node_id: 1.0,
-        geography=SimpleNamespace(material_cost_factor=lambda node_id: 1.0), opposition_factor=lambda node_id: 1.0,
+        geography=LabourStub(material_cost_factor=lambda node_id: 1.0), opposition_factor=lambda node_id: 1.0,
         rebuild_work_factor=lambda node_id: 1.0,
         cost_money_factor=lambda: 1.0, money_real=1.0, project_cost=lambda node_id: 1000.0, year=100,
         paid_towards={"p": paid} if paid else {}, done=set(done), active=set(active))
@@ -186,9 +192,12 @@ check("a project wanting no more than is left is not starved", starved_projects(
 
 # --- the hour pace is what a project WANTS, with no material brake folded in
 def pace(ph_left, throttle, bountied=()):
-    host = SimpleNamespace(state=SimpleNamespace(projects=SimpleNamespace(active={"p": {"ph_left": ph_left}}, bountied=set(bountied))),
-                           nodes={"p": dict(NODE, ph=500, yrs=2)}, throttle=throttle)
-    return ProgressMixin.project_hour_pace(host, "p")
+    host = projects_host.build(
+        seat=ProjectsSeat(bountied=set(bountied)), projects_record=LabourStub(active={"p": {"ph_left": ph_left}}), tree={"p": dict(NODE, ph=500, yrs=2)},
+        resource_throttle=lambda node_id: (throttle, None))
+    return host.project_hour_pace("p")
+
+
 check("project_hour_pace reports what a project WANTS, with no material brake folded in, because its callers apply the brake themselves "
       "and min(remaining, want) * throttle is not min(remaining, want * throttle)",
       abs(pace(300.0, 0.5) - pace(300.0, 1.0)) < 1e-9 and pace(300.0, 1.0) > 0, (pace(300.0, 0.5), pace(300.0, 1.0)))

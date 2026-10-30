@@ -40,7 +40,7 @@ class OreTablesFromDataTests(unittest.TestCase):
         self.assertEqual(geography_api.parameter_value("mining_trade"), "miner")
 
     def test_the_engine_no_longer_carries_the_tables(self):
-        from sim.engine import solve_prices, solve_prices_core
+        from sim.prices import solve_prices, solve_prices_core
         self.assertFalse(hasattr(solve_prices_core, "RENT_BEARING_ORE_MATERIALS"))
         self.assertFalse(hasattr(solve_prices, "RENT_BEARING_ORE_MATERIALS"))
 

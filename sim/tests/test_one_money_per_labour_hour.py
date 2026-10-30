@@ -1,21 +1,18 @@
-"""One money per labour hour: the figure an hour of work is counted at, and what the economy's opening reprices."""
+"""One money per labour hour: the figure an hour of work is counted at, and how the tree is counted in it."""
 
 QUICK_TOPIC = True
 
-import contextlib
 import unittest
-from types import SimpleNamespace
-from unittest import mock
 
-from sim.engine import data, money_units, opening_money
-from sim.engine.wage_schedule import build_schedule
+from sim.engine import data, money_units
+from sim.workforce.wage_schedule import build_schedule
 from sim.labour.labour import Labour
 from sim.tests.labour_stand_in import stand_in_world
 
 
 def _labour(paid, price_level=1.0):
     world = stand_in_world()
-    world.state.economy.wage_tightness_factors = {}
+    world.society.wage_tightness_factors = {}
     world.build_wage_schedule = lambda civ, tightness_factors=None: build_schedule(
         data.TRADE_REGISTRY, civ, tightness_factors=tightness_factors)
     world.economy_unskilled_wage = lambda: paid
@@ -35,34 +32,6 @@ class FigureInUse(unittest.TestCase):
 
     def test_the_economy_wage_replaces_the_opening_figure_whatever_the_price_level(self):
         self.assertEqual(_labour(paid=7.25, price_level=3.0).money_per_labour_hour(), 7.25)
-
-
-class RepriceAtOpening(unittest.TestCase):
-
-    @staticmethod
-    def _game(before, after):
-        purse = SimpleNamespace(capital=100.0, cash_mark=40.0)
-        unmarked = SimpleNamespace(capital=10.0, cash_mark=None)
-        households = {"first": purse, "second": unmarked}
-        game = SimpleNamespace(state=SimpleNamespace(economy=SimpleNamespace(money_from_economy=False), seats=households),
-                               labour=SimpleNamespace(money_per_labour_hour=lambda: after))
-
-        @contextlib.contextmanager
-        def act_as(seat_id):
-            game.state.household = households[seat_id]
-            yield
-        game.act_as = act_as
-        return game, purse, unmarked
-
-    def test_every_purse_moves_by_the_ratio_of_the_figures_so_it_buys_the_same_hours(self):
-        game, purse, unmarked = self._game(before=2.0, after=3.0)
-        with mock.patch.object(opening_money, "reprice_tree"):
-            opening_money.reprice_opening_money(game, 2.0)
-        self.assertTrue(game.state.economy.money_from_economy)
-        self.assertAlmostEqual(purse.capital / 3.0, 100.0 / 2.0)
-        self.assertAlmostEqual(purse.cash_mark, 60.0)
-        self.assertAlmostEqual(unmarked.capital, 15.0)
-        self.assertIsNone(unmarked.cash_mark)
 
 
 class TreeInTheCoin(unittest.TestCase):

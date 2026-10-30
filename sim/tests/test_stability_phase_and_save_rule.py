@@ -8,7 +8,7 @@ import unittest
 
 from sim.agents.api import ActorRecord, ActorsState
 from sim.engine import year_phases
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState, deserialize_state, serialize_state
+from sim.engine.state import FounderState, HouseholdState, SimulationState, deserialize_state, serialize_state
 
 ACTOR_ID = "state:test"
 STABILITY_FIELDS = {
@@ -28,11 +28,10 @@ class StabilityPhaseOrderTests(unittest.TestCase):
 
 class StabilityFieldsSavedTests(unittest.TestCase):
     def test_a_states_unrest_hold_risings_land_taken_and_registered_people_survive_a_save(self):
-        state = SimulationState(household=HouseholdState(capital=1.0), projects=ProjectsState(), founder=FounderState())
-        state.actors = ActorsState()
-        state.actors.records[ACTOR_ID] = ActorRecord(kind="state", **STABILITY_FIELDS)
-        loaded = deserialize_state(serialize_state(state))
-        record = loaded.actors.records[ACTOR_ID]
+        state = ActorsState()   # the actors module's world slot
+        state.records[ACTOR_ID] = ActorRecord(kind="state", **STABILITY_FIELDS)
+        loaded = deserialize_state(serialize_state(state), ActorsState)
+        record = loaded.records[ACTOR_ID]
         for field_name, value in STABILITY_FIELDS.items():
             self.assertEqual(getattr(record, field_name), value, field_name)
 

@@ -1,6 +1,7 @@
 """Shared fixtures for the topics that drive agent commands against small games: ask a game
 a command, build a fogged game, share one pristine game per civilisation for read-only questions."""
 from .harness import S, NODES, sim
+from sim.projects.api import StartProject
 
 
 def ask_agent(game, **command):
@@ -18,7 +19,6 @@ def with_end_year(game):
 def fogged_game(civ="rome_100ad", **options):
     game = sim(civ=civ, **options)
     game.fog = True
-    game.revealed = set()
     return game
 
 
@@ -37,9 +37,9 @@ def starved_game(cost_left, supply=0.02, arrears=0.8, capital=20000.0):
     """One project that cannot finish, in a year that is short of both the trade it needs and
     the money to pay for it."""
     game = sim(capital=capital)
-    game.start_project("identity_cover")
+    game.send(StartProject("identity_cover", False))
     game.active["identity_cover"]["cost_left"] = cost_left
-    real_supply = game.labour.market_supply
-    game.labour.market_supply = lambda trade, _fallback=real_supply: _fallback(trade) * supply
-    game.capital = -game.credit_limit() * arrears      # in arrears, inside the limit
+    real_supply = game.view("legacy_labour")().market_supply
+    game.view("legacy_labour")().market_supply = lambda trade, _fallback=real_supply: _fallback(trade) * supply
+    game.state.household.capital = -game.view("credit_limit")(None, None, None) * arrears      # in arrears, inside the limit
     return game

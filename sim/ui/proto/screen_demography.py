@@ -24,7 +24,7 @@ def _last_year(sim):
 
 
 def _last_year_from_record(sim):
-    record = sim.state.population.yearly_record
+    record = sim.view("yearly_record")()
     if not record:
         return None
     last = record[-1]
@@ -39,9 +39,9 @@ def _epidemics_under_way(sim):
 
 
 def demography_report(sim):
-    population = sim.population
+    population = sim.view("population")()
     total = population.total
-    change = sim.state.population.population_change_last_year
+    change = sim.view("population_change_last_year")()
     return {
         "ok": True,
         "population": round(total),
@@ -49,17 +49,17 @@ def demography_report(sim):
                     "working_age": round(population.working_age),
                     "elderly": round(population.elderly)},
         "working_age_share": round(population.working_age / total, 4) if total else None,
-        "reference_population_at_start": round(float(sim.civ.get("population", 0.0))),
+        "reference_population_at_start": round(float(sim.view("civilisation")().get("population", 0.0))),
         "change_in_the_last_step": change,
         "last_year": _last_year(sim),
         "disease_burden": round(ui_port.disease_burden(sim), 4),
         "epidemics_under_way": _epidemics_under_way(sim),
         "epidemic_forecast": {key: value for key, value in ui_port.epidemic_forecast(sim).items()
                               if key != "expected_deaths_by_tile"},
-        "recent_shocks": recent_shocks(sim.state.population.yearly_record),
-        "recovery": recovery(sim.state.population.yearly_record, total, sim.year),
-        "wage_index": round(sim.wage_index, 4),
-        "trades": sim.labour.population_report()["trades"],
+        "recent_shocks": recent_shocks(sim.view("yearly_record")()),
+        "recovery": recovery(sim.view("yearly_record")(), total, sim.view("year")()),
+        "wage_index": round(sim.view("wage_index")(), 4),
+        "trades": sim.view("population_report")()["trades"],
         "not_held": ["the model has three age cohorts, not single years of age",
                      "the recovery figure extrapolates recent growth; it does not model "
                      "food, disease or war ahead",

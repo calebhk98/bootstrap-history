@@ -60,7 +60,7 @@ checks it, so the two cannot drift apart unnoticed.
 The physically right form of that entry lists seed among wheat's own inputs
 and outputs the gross yield, which would make seed corn a visible first
 claim on the harvest (and a famine eating next year's seed a representable
-event). It is written net instead because `sim/engine/solve_prices.py`'s
+event). It is written net instead because `sim/prices/solve_prices.py`'s
 resolvability pass refuses any material that appears among its own inputs -
 see Complaints/31.
 
@@ -595,8 +595,8 @@ GRANARY_CAPACITY_YEARS_OF_DEMAND = declare(
         "much can be stored in the first place. Expressed as a multiple of "
         "annual demand (rather than a fixed tonnage) so it scales with "
         "population automatically, the same way farmland_for_population "
-        "does. Applied at the engine boundary (Sim._demographic_recovery in "
-        "sim/engine/core.py), not inside Storage.step itself: whether a "
+        "does. Applied at the engine boundary (the demography module's yearly step in "
+        "sim/demography/recovery.py), not inside Storage.step itself: whether a "
         "surplus fits in existing storage infrastructure is a fact about "
         "the CIVILISATION's built capacity, not about the abstract "
         "sow-grow-harvest-eat-spoil cycle this class models, and keeping it "

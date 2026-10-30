@@ -3,8 +3,9 @@
 QUICK_TOPIC = True
 import unittest
 
-from sim.engine import mods, tree_merge
-from sim.engine.node_defaults import OPTIONAL_DEFAULTS, STRUCTURAL_DEFAULTS
+from sim.content import mods
+from sim.content import tree_merge
+from sim.content.api import OPTIONAL_DEFAULTS, STRUCTURAL_DEFAULTS
 
 
 def _bare():

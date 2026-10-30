@@ -3,14 +3,19 @@
 QUICK_TOPIC = True
 
 import contextlib
-import random
+import types
+
+from unittest import mock
 
 from .harness import check
+from .seat_views_stand_in import slots_of
 
-from sim.engine.hazard_merge import mildest_hazard
-from sim.engine.seat_run import run_is_over, seat_ended, seats_playing
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
+from sim.hazards.merge import mildest_hazard
+from sim.scenario.api import AdvanceYear
+from sim.seats.api import SeatsSeat, run_is_over, seat_ended, seats_playing
+from sim.engine.state import FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, seat_from_template
+from sim.engine import year_steps
 from sim.engine.year_run import run_year
 
 # ---- the hazard the world meets is the mildest any seat's works leave
@@ -27,41 +32,38 @@ check("merging does not change a seat's own hazard", plague["staff_loss"] == 0.4
 
 # ---- a seat from data
 template = {"starting_techs": ["a", "b"], "scholars": 2, "artisans": 3, "base_tile": "t1", "goal": "g", "country": "han"}
-seat = seat_from_template(template, 500.0, 1e9, {"auto_hire": False})
-check("a template builds a seat with its own purse, knowledge, staff, place and goal",
-      seat.household.capital == 500.0 and seat.projects.done == {"a", "b"} and seat.projects.granted == {"a", "b"}
-      and seat.household.scholars == 2 and seat.household.artisans == 3 and seat.household.base_tile == "t1"
-      and seat.goal == "g" and seat.country == "han", None)
-other = seat_from_template(template, 500.0, 1e9, {})
+seat = seat_from_template(template, {"auto_hire": False})
+check("a template builds a seat with its own knowledge, staff, place and goal",
+      seat.modules["knowledge"].done == {"a", "b"} and seat.modules["knowledge"].granted == {"a", "b"}
+      and seat.modules["workforce"].scholars == 2 and seat.modules["workforce"].artisans == 3 and seat.modules["workforce"].base_tile == "t1"
+      and seat.modules["seats"].goal == "g" and seat.modules["seats"].country == "han"
+      and seat.modules["seats"].policy == {"auto_hire": False}, None)
+other = seat_from_template(template, {})
 check("two seats from one template share no container",
-      other.projects.done is not seat.projects.done and other.household.log is not seat.household.log
-      and other.founder.policy is not seat.founder.policy, None)
-check("a founder in an immortal run does not die of age", seat.founder.life_left > 1e6 and seat.founder.founder_alive, None)
+      other.modules["knowledge"].done is not seat.modules["knowledge"].done and other.modules["workforce"].employees is not seat.modules["workforce"].employees
+      and other.modules["seats"].policy is not seat.modules["seats"].policy, None)
 
 # ---- the end rule: one seat's run ends, the others play on
-state = SimulationState(household=HouseholdState(capital=1.0), projects=ProjectsState(), founder=FounderState())
-state.seats["second"] = seat_from_template({}, 5.0, 40.0, {})
-check("two seats are both playing at the start", seats_playing(state.seats) == [FIRST_SEAT_ID, "second"], None)
-state.seats[FIRST_SEAT_ID].founder.dead_reason = "denounced: as a sorcerer"
-check("a seat whose founder fell has ended", seat_ended(state.seats[FIRST_SEAT_ID]) and not seat_ended(state.seats["second"]), None)
+state = SimulationState(household=HouseholdState(), founder=FounderState())
+state.seats["second"] = seat_from_template({}, {})
+state.seats[FIRST_SEAT_ID].modules["seats"] = SeatsSeat()
+held = slots_of(state.seats)
+check("two seats are both playing at the start", seats_playing(held) == [FIRST_SEAT_ID, "second"], None)
+state.seats[FIRST_SEAT_ID].modules["seats"].dead_reason = "denounced: as a sorcerer"
+check("a seat whose founder fell has ended", seat_ended(held[FIRST_SEAT_ID]) and not seat_ended(held["second"]), None)
 check("the other seat keeps playing and the run goes on",
-      seats_playing(state.seats) == ["second"] and not run_is_over(state.seats), seats_playing(state.seats))
-state.seats["second"].seat_progress.goal_year = 150
-check("the run is over when every seat has ended or reached its goal", run_is_over(state.seats), None)
-state.seats["second"].seat_progress.goal_year = None
-state.seats["second"].founder.dead_reason = "ran out of money"
-check("the run is over when no seat is left", run_is_over(state.seats) and seats_playing(state.seats) == [], None)
+      seats_playing(held) == ["second"] and not run_is_over(held), seats_playing(held))
+state.seats["second"].modules["seats"].goal_year = 150
+check("the run is over when every seat has ended or reached its goal", run_is_over(held), None)
+state.seats["second"].modules["seats"].goal_year = None
+state.seats["second"].modules["seats"].dead_reason = "ran out of money"
+check("the run is over when no seat is left", run_is_over(held) and seats_playing(held) == [], None)
 
 
 # ---- the year's order, on a recording stand-in for the Sim
-class Scenario:
-    year = 100
-
-
 class Alias:
     def __init__(self, ended):
         self.acting_seat = FIRST_SEAT_ID
-        self.scenario = Scenario()
         self.ended = set(ended)
 
 
@@ -70,6 +72,7 @@ class FakeSim:
 
     debug = False
     events = True
+    year = 100
 
     def __init__(self, seat_ids, ends_in_shocks=()):
         self.state = Alias(())
@@ -77,11 +80,12 @@ class FakeSim:
         self.ends_in_shocks = set(ends_in_shocks)
         self.calls = []
 
-    def playing_seats(self):
-        return [seat_id for seat_id in self.seat_ids if seat_id not in self.state.ended]
-
-    def ended_seats(self):
-        return sorted(self.state.ended)
+    def view(self, name):
+        if name == "seat_list":
+            return lambda: {"playing": [seat_id for seat_id in self.seat_ids if seat_id not in self.state.ended]}
+        if name == "ended_seats":
+            return lambda: sorted(self.state.ended)
+        return lambda: ["rome"]     # one country in the game: no yearly world checks
 
     @contextlib.contextmanager
     def act_as(self, seat_id):
@@ -92,15 +96,44 @@ class FakeSim:
         finally:
             self.state.acting_seat = previous
 
+    def send(self, command):
+        """The scenario module's clock is the one command the year loop sends that this stand-in applies."""
+        if isinstance(command, AdvanceYear):
+            self.year += 1
+
     def _record(self, name, *arguments):
         self.calls.append((name, self.state.acting_seat))
 
-    def _step_dated_shocks(self, seats):
-        self._record("shocks")
-        self.state.ended |= self.ends_in_shocks
+    @property
+    def assembly(self):
+        """The assembly's phase lookup: a module's phase `name` records as `step_<name>`; the year's dated shocks may end seats."""
+        def phase(name):
+            def run(*arguments):
+                self._record("step_" + name)
+                if name == "dated_shocks":
+                    self.state.ended |= self.ends_in_shocks
+            return run
+        return types.SimpleNamespace(phase_handler=phase, applied=types.SimpleNamespace(phases=[]))
 
     def __getattr__(self, name):
         return lambda *arguments: self._record(name, *arguments)
+
+
+_ROOT_STEPS = {"begin_world_year": "begin_world_year", "money_seat": "_step_money_seat", "money_world": "_step_money_world",
+               "seat_work": "_run_seat_work"}
+
+
+def run_recorded(sim):
+    """run_year with the root's own steps (year_steps) recording as calls of the stand-in, under the names the checks use."""
+    patches = [mock.patch.object(year_steps, function, lambda target, recorded=recorded: target._record(recorded))
+               for function, recorded in _ROOT_STEPS.items()]
+    for patch in patches:
+        patch.start()
+    try:
+        run_year(sim)
+    finally:
+        for patch in patches:
+            patch.stop()
 
 
 def names(sim, phase):
@@ -108,90 +141,43 @@ def names(sim, phase):
 
 
 two = FakeSim([FIRST_SEAT_ID, "second"])
-run_year(two)
+run_recorded(two)
 check("each seat phase runs once for each seat, in joining order",
       names(two, "_step_money_seat") == [FIRST_SEAT_ID, "second"] and names(two, "_run_seat_work") == [FIRST_SEAT_ID, "second"]
-      and names(two, "enforce_credit_limit") == [FIRST_SEAT_ID, "second"], two.calls)
+      and names(two, "step_credit_limit") == [FIRST_SEAT_ID, "second"], two.calls)
 check("each world phase runs once", all(len(names(two, phase)) == 1 for phase in
-      ("_step_money_world", "shocks", "_step_market", "step_wild_stock", "begin_world_year")), two.calls)
+      ("_step_money_world", "step_dated_shocks", "step_market", "step_wild_stock", "begin_world_year")), two.calls)
 check("the market closes after every seat's work and before the credit check",
-      [call for call, _ in two.calls].index("_step_market") > max(i for i, (call, _) in enumerate(two.calls) if call == "_run_seat_work")
-      and [call for call, _ in two.calls].index("_step_market") < [call for call, _ in two.calls].index("enforce_credit_limit"), None)
-check("the year advances once", two.state.scenario.year == 101, two.state.scenario.year)
+      [call for call, _ in two.calls].index("step_market") > max(i for i, (call, _) in enumerate(two.calls) if call == "_run_seat_work")
+      and [call for call, _ in two.calls].index("step_market") < [call for call, _ in two.calls].index("step_credit_limit"), None)
+check("the year advances once", two.year == 101, two.year)
 
 ended = FakeSim([FIRST_SEAT_ID, "second"], ends_in_shocks=[FIRST_SEAT_ID])
-run_year(ended)
+run_recorded(ended)
 check("a seat ended by the year's shocks takes no further part in it, the other carries on",
       names(ended, "_step_money_seat") == [FIRST_SEAT_ID, "second"] and names(ended, "_run_seat_work") == ["second"]
-      and names(ended, "step_living_stock") == ["second"] and names(ended, "enforce_credit_limit") == ["second"], ended.calls)
-check("world phases after the shocks run as a seat still playing", names(ended, "_step_market") == ["second"], ended.calls)
-check("the year still advances", ended.state.scenario.year == 101, None)
+      and names(ended, "step_living_stock") == ["second"] and names(ended, "step_credit_limit") == ["second"], ended.calls)
+check("world phases after the shocks run as a seat still playing", names(ended, "step_market") == ["second"], ended.calls)
+check("the year still advances", ended.year == 101, None)
 
 alone = FakeSim([FIRST_SEAT_ID, "second"], ends_in_shocks=[FIRST_SEAT_ID, "second"])
-run_year(alone)
+run_recorded(alone)
 check("when every seat ends in the shocks the year stops there, as a one-seat game does",
-      names(alone, "_run_seat_work") == [] and names(alone, "_step_market") == [] and alone.state.scenario.year == 100, alone.calls)
+      names(alone, "_run_seat_work") == [] and names(alone, "step_market") == [] and alone.year == 100, alone.calls)
 
 dead_before = FakeSim([FIRST_SEAT_ID, "second"])
 dead_before.state.ended.add(FIRST_SEAT_ID)
-run_year(dead_before)
+run_recorded(dead_before)
 check("a seat that ended earlier is not stepped again",
-      names(dead_before, "_step_money_seat") == ["second"] and names(dead_before, "_step_apprenticeships") == ["second"], dead_before.calls)
+      names(dead_before, "_step_money_seat") == ["second"] and names(dead_before, "step_apprenticeships") == ["second"], dead_before.calls)
 
 single = FakeSim([FIRST_SEAT_ID])
-run_year(single)
+run_recorded(single)
 check("one seat runs the phases in the order a one-seat year always had",
       [call for call, _ in single.calls if call in (
-          "_step_apprenticeships", "_step_staff", "_step_money_seat", "_step_money_world", "_step_win_conditions",
-          "shocks", "_run_seat_work", "_step_market", "step_living_stock", "step_defence_stores", "_random_events",
-          "enforce_credit_limit")] == [
-          "_step_apprenticeships", "_step_staff", "_step_money_seat", "_step_money_world", "_step_win_conditions",
-          "shocks", "_run_seat_work", "_step_market", "step_living_stock", "step_defence_stores", "_random_events",
-          "enforce_credit_limit"], single.calls)
-
-
-# ---- joining a seat from data, on a stand-in with the pieces a join uses
-from sim.engine.seat_run import SeatRunMixin  # noqa: E402
-
-
-class JoinSim(SeatRunMixin):
-    FOUNDER_MIN_REMAINING_LIFE_YEARS = 5
-    manual = True
-
-    def __init__(self, immortal, cast_seats=()):
-        self.state = SimulationState(household=HouseholdState(capital=1.0), projects=ProjectsState(), founder=FounderState())
-        self.nodes = {"a": {}, "b": {}}
-        self.price_index = 2.0
-        self.civ = {"cast": {"seats": list(cast_seats)}}
-        self.cfg = {"immortal": immortal, "founder_life_mean": 50.0, "founder_life_sd": 0.0}
-        self.rng = random.Random(3)
-        self.wrapped = []
-
-    def add_seat(self, seat_id, seat):
-        self.state.seats[seat_id] = seat
-
-    @contextlib.contextmanager
-    def act_as(self, seat_id):
-        yield self
-
-    def _wrap_seat_containers(self):
-        self.wrapped.append(True)
-
-
-mortal = JoinSim(False)
-joined = mortal.join_seat("second", {"capital": 100.0, "starting_techs": ["a"]})
-check("a joined seat's purse is stated at the society's prices", joined.household.capital == 200.0, joined.household.capital)
-check("a joined seat in a mortal run has a lifespan, and in an immortal run none",
-      joined.founder.life_left == 50.0 and JoinSim(True).join_seat("x", {}).founder.life_left > 1e6, joined.founder.life_left)
-check("a joined seat's containers are wrapped for change tracking", mortal.wrapped == [True], None)
-check("a joined seat's policy is the default for the game", joined.founder.policy.get("auto_hire") is False, joined.founder.policy)
-try:
-    mortal.join_seat("third", {"starting_techs": ["nowhere"]})
-    refused = False
-except ValueError:
-    refused = True
-check("a seat naming a technology the tree lacks is refused and not added", refused and "third" not in mortal.state.seats, None)
-with_cast = JoinSim(True, [{"id": "rival", "capital": 10.0}, {"id": "ally"}])
-check("the seats a civilisation's cast lists join at the start, by data",
-      with_cast.join_cast_seats() == ["rival", "ally"] and sorted(with_cast.state.seats) == ["ally", FIRST_SEAT_ID, "rival"], None)
-check("joining the cast twice adds nobody", with_cast.join_cast_seats() == [], None)
+          "step_apprenticeships", "step_staff", "_step_money_seat", "_step_money_world", "step_win_conditions",
+          "step_dated_shocks", "_run_seat_work", "step_market", "step_living_stock", "step_defence_stores", "step_random_events",
+          "step_credit_limit")] == [
+          "step_apprenticeships", "step_staff", "_step_money_seat", "_step_money_world", "step_win_conditions",
+          "step_dated_shocks", "_run_seat_work", "step_market", "step_living_stock", "step_defence_stores", "step_random_events",
+          "step_credit_limit"], single.calls)

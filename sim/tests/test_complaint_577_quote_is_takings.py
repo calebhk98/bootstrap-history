@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.agents.api import business_books
-from sim.engine import concern_earnings as earnings
+from sim.production import concern_earnings as earnings
 
 takings_of_size = business_books.takings_of_size
 

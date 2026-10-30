@@ -8,7 +8,7 @@ from sim.refusal import Refusal
 
 
 def _goal_form(sim):
-    if sim.fog and sim.goal in sim.nodes and not sim.is_visible(sim.goal):
+    if sim.view("fog_of_war")() and sim.view("goal")()["node"] in sim.view("tree_nodes")() and not sim.view("visibility")(sim.view("goal")()["node"]):
         return {"ok": False, "error": Refusal(
             "goal_out_of_view", "your goal is not yet in view, so its anatomy is not shown. "
             "Name a metric instead, e.g. 'anatomy <metric>'; 'anatomy list' names them.")}

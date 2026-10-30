@@ -6,7 +6,9 @@ import copy
 import unittest
 
 from sim.default_civilisation import REPOSITORY_ROOT
-from sim.engine import catalog, data, wage_schedule
+from sim.content import catalog
+from sim.engine import data
+from sim.workforce import wage_schedule
 from sim.engine.validate_production import load_production
 from sim.labour import wage_provider
 

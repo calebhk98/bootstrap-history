@@ -6,36 +6,24 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.projects_staffing import StaffingMixin
+from sim.tests import projects_host
 
 
-class Opener(StaffingMixin):
-    LIMIT_YEARS = 3.0
+def Opener(capital, credit_limit, nodes, done=()):
+    """The projects module over a household with this purse and credit line; what it offers `open` is recorded."""
+    module = projects_host.build(
+        tree=nodes, acting_balance=capital, credit_limit=lambda *arguments: credit_limit,
+        projects_record=types.SimpleNamespace(done=set(done), operating=set()), techniques_held=set(done), operating=lambda: set(),
+        venture_capex=lambda node_id: nodes[node_id]["capex"], is_venture=lambda node_id: True,
+        capability_sets=(frozenset({"school"}), frozenset(), {}))
+    module.exclusion_reason = lambda node_id: None
+    module.offered = []
 
-    def __init__(self, capital, credit_limit, nodes, done=()):
-        self.AUTO_OPEN_PAYBACK_LIMIT_YEARS = self.LIMIT_YEARS
-        self.nodes = nodes
-        self._limit = credit_limit
-        self.state = types.SimpleNamespace(
-            household=types.SimpleNamespace(capital=capital),
-            projects=types.SimpleNamespace(done=set(done), operating=set()))
-        self.offered = []
-
-    def credit_limit(self):
-        return self._limit
-
-    def venture_capex(self, node_id):
-        return self.nodes[node_id]["capex"]
-
-    def is_venture(self, node_id):
-        return True
-
-    def exclusion_reason(self, node_id):
-        return None
-
-    def open_venture(self, node_id, units=None):
-        self.offered.append(node_id)
+    def open_venture(node_id, units=None):
+        module.offered.append(node_id)
         return True, ""
+    module._open_venture = open_venture
+    return module
 
 
 NODES = {"quick": {"rev": 500.0, "up": 100.0, "capex": 400.0},        # pays back in a year
@@ -64,7 +52,7 @@ class OrdinaryConcerns(unittest.TestCase):
 
     def test_a_refusal_by_open_venture_is_the_one_reported(self):
         opener = Opener(0.0, 1000.0, NODES)
-        opener.open_venture = lambda node_id, units=None: (False, "no room")
+        opener._open_venture = lambda node_id, units=None: (False, "no room")
         opened, blocked = opener._auto_open_ordinary_ventures(["quick", "slow"], False)
         self.assertEqual((opened, blocked), ([], ("quick", "no room")))
 
@@ -72,7 +60,6 @@ class OrdinaryConcerns(unittest.TestCase):
 class Institutions(unittest.TestCase):
     def _candidates(self, deep):
         opener = Opener(0.0, 1000.0, NODES, done=["school", "quick"])
-        opener.CAPABILITY_INSTITUTIONS = {"school"}
         return opener._auto_open_institution_candidates(deep)
 
     def test_an_institution_that_costs_more_than_it_brings_is_a_candidate_out_of_deep_arrears(self):

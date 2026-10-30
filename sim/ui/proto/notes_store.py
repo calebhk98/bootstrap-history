@@ -23,7 +23,7 @@ def _owner(row):
 
 
 def _acting(sim):
-    return getattr(sim.state, "acting_seat", FIRST_SEAT_ID)
+    return sim.view("acting_seat")()
 
 
 def _rows(sim):
@@ -43,7 +43,7 @@ def add_note(sim, text, node_id=None):
     store = _store(sim)
     if not text or len(store["rows"]) >= MAX_NOTES:
         return None
-    row = {"n": store["next"], "year": sim.year, "text": text, "project": node_id, "seat": _acting(sim)}
+    row = {"n": store["next"], "year": sim.view("year")(), "text": text, "project": node_id, "seat": _acting(sim)}
     store["next"] += 1
     store["rows"].append(row)
     return dict(row)

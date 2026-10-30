@@ -2,7 +2,7 @@
 from typing import Any, Dict
 
 from . import demand_answer
-from .player_commands import CommandRejected, register_command
+from .player_commands import CommandRejected
 
 
 def answer_demand(player: Any, order: Dict[str, Any], world: Any) -> str:
@@ -29,6 +29,3 @@ def answer_demand(player: Any, order: Dict[str, Any], world: Any) -> str:
 	return ("answering the state's demands by: %s. Refusing, the state enforces with a chance of %.0f%% "
 			"and then takes the demand and %.0f%% more; otherwise nothing is taken, but the state marks you as defiant"
 			% (stance, 100.0 * odds["chance_enforced"], 100.0 * (odds["pay_if_enforced"] - 1.0)))
-
-
-register_command("answer_demand", answer_demand)

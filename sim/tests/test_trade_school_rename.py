@@ -4,12 +4,14 @@ stand-in labour world; no game is built."""
 QUICK_TOPIC = True
 
 import types
+from sim.tests import workforce_stand_in
 
 from .harness import *  # noqa: F401,F403
 from sim.labour.labour_population import PopulationMixin
 from sim.ui.proto.buy_targets import canonical_target
 from sim.ui.proto.dispatch_money import _BUY_HANDLERS, _buy_school, _cmd_buy
 from sim.ui.proto.typed import parse_typed
+from sim.tests.ui_stand_in import Game
 
 check("buy trade_school parses correctly",
       parse_typed("buy trade_school smith 2")[0]
@@ -38,7 +40,7 @@ class SchoolLabour:
         return 1234.5
 
 
-school_game = types.SimpleNamespace(labour=SchoolLabour(), trade_schools={"chemist": 1.0}, capital=500.0, civ={})
+school_game = Game(labour=SchoolLabour(), view=lambda name: (lambda: {"chemist": 1.0}), capital=500.0, civ={})
 for word in ("trade_school", "school"):
     school_game.labour.founded.clear()
     reply = _cmd_buy(school_game, {}, {"cmd": "buy", "what": word, "trade": "chemist", "n": 1}, None)
@@ -51,14 +53,14 @@ SEAT_PRICE = 40.0
 
 
 def labour_world(capital, trade_known=True, schools=None):
-    household = types.SimpleNamespace(capital=capital, trade_schools=schools, trades_created=set())
+    household = Game(capital=capital, trade_schools=schools, trades_created=set())
     paid = []
-    world = types.SimpleNamespace(
-        wages={"chemist": 1.0} if trade_known else {}, trades_absent=set(), state=types.SimpleNamespace(household=household),
+    world = Game(
+        wages={"chemist": 1.0} if trade_known else {}, trades_absent=set(), workforce=household, view=workforce_stand_in.view_of(household), balance=capital,
         trade_school_price_per_seat=lambda: SEAT_PRICE, EDGE_WORKERS="edge:workers",
-        pay_edge=lambda edge, cost, purpose: paid.append((edge, cost, purpose)))
-    return types.SimpleNamespace(_world=world, trade_available=lambda trade: PopulationMixin.trade_available(
-        types.SimpleNamespace(_world=world), trade)), household, paid
+        send=lambda command: paid.append((command.edge, command.amount, command.purpose)))
+    return Game(_world=world, trade_available=lambda trade: PopulationMixin.trade_available(
+        Game(_world=world), trade)), household, paid
 
 
 labour, household, paid = labour_world(1000.0)

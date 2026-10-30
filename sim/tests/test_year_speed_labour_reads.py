@@ -79,24 +79,11 @@ class TheGroupedSharesAreTheMarketsShares(unittest.TestCase):
 class ImportCostsKeepTheirValues(unittest.TestCase):
 
     class Plain(ImportCosts):
-        """`_fills` as it was: the spare hours of the sources worked out at every call."""
+        """`_spare_of` as it was: the spare hours of the sources worked out at every call."""
 
-        def _fills(self, area, trade, sources, wanted, wage):
-            own = self.hours_at(area, trade, wage)
+        def _spare_of(self, trade, sources):
             remaining = [max(0.0, self.everyone(other, trade) - self.wanted.get((other, trade), 0.0)) for other in sources]
-            slack = 1e-9 * (1.0 + abs(wanted))
-            to_come = sum(remaining)
-            if own + to_come < wanted - slack:
-                return False
-            fetched = 0.0
-            for other, cap in zip(sources, remaining):
-                to_come -= cap
-                fetched += max(0.0, self.hours_at(other, trade, wage) - self.wanted.get((other, trade), 0.0))
-                if own + fetched >= wanted:
-                    return True
-                if own + fetched + to_come < wanted - slack:
-                    return False
-            return own + fetched >= wanted
+            return remaining, sum(remaining)
 
     def test_the_wage_of_fetched_hands_is_the_plain_search(self):
         rng = random.Random(11)

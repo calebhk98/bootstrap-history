@@ -1,10 +1,10 @@
 """The only door into sim/economy/: what code outside the package may import.
 
 Outside code imports from here and reaches the simulation's economy through an `Economy` (built by
-sim/engine/economy_port*.py), never through a submodule or a private name. The accessors below read the
+the markets module's port, sim/markets/port*.py), never through a submodule or a private name. The accessors below read the
 record's internals so that callers do not hold `economy.record.<field>` in their own code.
 """
-WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what it needs (sim/engine/economy_port.py)
+WALL = "two-way"  # nothing here reaches sim/engine/; the markets module's port hands it what it needs (sim/markets/port*.py)
 
 import math
 

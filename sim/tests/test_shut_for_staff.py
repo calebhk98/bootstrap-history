@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.ui.proto.state_shut_staffing import render_shut_for_want_of_staff, shut_for_want_of_staff
+from sim.tests.ui_stand_in import Game
 
 NODES = {
     "glass": {"name": "Mirror works", "rev": 900.0, "up": 400.0},
@@ -21,7 +22,7 @@ NODES = {
 
 
 def stub_game(missing_by_node, operating=("forge",)):
-    return SimpleNamespace(
+    return Game(
         done=set(NODES), operating=set(operating), staffing_held_totals=lambda: {},
         is_venture=lambda node_id: node_id != "school",
         staffing_missing_to_open=lambda node_id, held: missing_by_node.get(node_id, {}))

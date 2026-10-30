@@ -1,8 +1,8 @@
 """What an actor may ask of its world: documentation and typing only.
 
-Actors (`Household`, `Firm`, `Government`, `InterestGroup`) never touch the simulation. They are
+Actors (`HouseholdParty`, `Firm`, `Government`, `InterestGroup`) never touch the simulation. They are
 handed an object that answers the questions below; the engine's own adapter,
-`sim/engine/agents_port.py` (`SimWorld`), is the one the running game supplies, and a test or a
+`sim/actors/world.py` (`ActorWorld`), is the one the running game supplies, and a test or a
 second scenario may supply another. Nothing here is imported at run time; it names the members the
 actors call, so a change to what an actor asks shows up as a change to this file.
 """
@@ -541,7 +541,7 @@ class World(Protocol):
 		"""A random stream keyed by its inputs, so actors never disturb the world's own."""
 		...
 
-	# ---- What a trader asks (sim/engine/agents_port_trade.py)
+	# ---- What a trader asks (sim/actors/world_trade.py)
 
 	def trade_places(self, location: Optional[str]) -> List[str]:
 		"""Places with a market a trader at `location` can reach; None for every place."""
@@ -590,7 +590,7 @@ class World(Protocol):
 		"""The country a place belongs to; None for the home country."""
 		...
 
-	# ---- What a country, a body of people and the cast ask (sim/engine/agents_port_cast.py)
+	# ---- What a country, a body of people and the cast ask (sim/actors/world_cast.py)
 
 	def distance_km(self, place_a: Optional[str], place_b: Optional[str]) -> float:
 		"""Kilometres between two places (tile or region ids); None is where the founder operates from."""
@@ -614,13 +614,13 @@ class World(Protocol):
 		"""Headcount and income ("members", "income") another model already keeps for a body of people."""
 		...
 
-	# ---- What a state asks about its coin (sim/engine/agents_port_coinage.py)
+	# ---- What a state asks about its coin (sim/actors/world_coinage.py)
 
 	def coin_regime(self) -> str:
 		"""The civilisation's coin standard regime: "struck_coin", "weighed_metal", "commodity" or "fiat"."""
 		...
 
-	# ---- What patents ask (sim/engine/agents_port_disclosure.py)
+	# ---- What patents ask (sim/actors/world_disclosure.py)
 
 	def state_grants_patents(self, actor: Any) -> bool:
 		"""Whether the state over an actor knows a technique declaring the patent mechanic."""
@@ -642,7 +642,7 @@ class World(Protocol):
 		"""People of a trade leave a seat's payroll (to found a rival, say)."""
 		...
 
-	# ---- What the home state asks of its people (sim/engine/agents_port_budget.py)
+	# ---- What the home state asks of its people (sim/actors/world_budget.py)
 
 	def literacy(self, field: str) -> float:
 		...
@@ -652,4 +652,14 @@ class World(Protocol):
 
 	def country_strata(self) -> List[Any]:
 		"""The home country's bodies of people, in id order."""
+		...
+
+	# ---- Members a few actors reach for beyond the lists above (a foreign country's world answers its own)
+
+	def pay_wages(self, payer: Any, amount: float, purpose: Any) -> None:
+		"""Wages the home country's people are paid: they reach the strata's purses."""
+		...
+
+	def faction_backing(self) -> Dict[str, float]:
+		"""The weight each organised group can put behind a claimant to the throne, by group id."""
 		...

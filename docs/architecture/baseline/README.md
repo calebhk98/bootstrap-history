@@ -1,0 +1,36 @@
+# Equivalence baselines
+
+Hashes of the whole saved state per simulated year, recorded on the base commit of the module migration (`0be2f72`)
+with `sim/tests/equiv.py` copied in. Check the current checkout against them:
+
+    python3 -m sim.tests.equiv check docs/architecture/baseline/micro.json --tier micro --base-checkout <base worktree>
+    python3 -m sim.tests.equiv check docs/architecture/baseline/full.json --tier full --base-checkout <base worktree>
+    python3 -m sim.tests.equiv check docs/architecture/baseline/stress.json --tier stress --base-checkout <base worktree>
+
+`--base-checkout` (a worktree of `0be2f72` with the tool's `equiv*.py` copied into `sim/tests/`) is needed only to
+list the differing leaves after a divergence. Moved fields are mapped in `sim/tests/equiv_fields.py`.
+
+## Scenarios re-recorded after a fixed bug
+
+A scenario whose base behaviour was a bug is re-recorded from the build that fixed it; the others stay as the base recorded
+them. Each entry names the fix and the commit recorded from:
+
+- `stress.json`, `rome_100ad/seed1/12y/events+stress+2seats`: Complaint 921 (every seat shared the first asker's goal
+  closure), recorded at `9c661d02`. Its first year is identical to the base; from the second year the second seat's
+  loss-making concern is seized by its creditors. The one-seat scenario recorded at the same commit is identical to the base's.
+
+## The long tier
+
+`long.json` (4 scenarios, 100 years) was recorded later than the others, on the base commit with one patch applied: the
+fix for Complaint 922 (`sim/economy/producers.py` `_standard_score`), without which the base itself stops with a math domain
+error inside a 100-year run. The patch changes nothing a game reaches before that error, so the recording is the base's
+trajectory, carried past the point where the base crashed. Check it with
+
+    python3 -m sim.tests.equiv check docs/architecture/baseline/long.json --tier long --base-checkout <base worktree with the patch>
+
+## Which build each file describes
+
+`micro.json` and `stress.json` are recorded from the build with the migration's kept bugs fixed (`e60de01b`): checked against
+them, a later change that moves the simulation shows where. Each fix changed the simulation on purpose and has its own
+regression test (Complaints 681, 760 to 765, 790, 800, 810, 850, 920, 930, 956). `full.json` and `long.json` are the base's:
+they proved the module migration itself, up to `a38d1f2a`, the commit before those fixes.

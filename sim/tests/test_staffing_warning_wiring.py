@@ -1,48 +1,33 @@
-"""What the game feeds the staffing warning (`StaffingMixin.staffing_closure_warnings` gathers the household's numbers for
+"""What the game feeds the staffing warning (the projects module's `staffing_closure_warnings` gathers the household's numbers for
 `staffing_warning_rows`, replaced here by a recorder) and that the state screen shows a warning row (a dict) as its sentence
 and not as the dict (a TypeError once swallowed the whole annual report). The rows' arithmetic is in test_staffing_warnings;
-the sentences are `_staffing_warning_sentences`. Both run on stand-ins."""
+the sentences are `_staffing_warning_sentences`. The module runs over plain values."""
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 from unittest import mock
 
 from .harness import check
 
-from sim.engine import projects_staffing
-from sim.engine.projects_staffing import StaffingMixin
+from sim.projects import staffing
+from sim.tests import projects_host
 from sim.ui.proto.render_screen_state_blocks import _state_founder
 
 NODES = {"b_mill": {"name": "Mill", "rev": 900.0, "up": 300.0}, "a_forge": {"name": "Forge", "rev": 500.0, "up": 100.0}}
 
 
-class Game(StaffingMixin):
-    """The parts of a Sim the warning reads."""
-    FOUNDER_IS_WORTH = 1.0
-    STAFFING_CLOSURE_SLACK = 0.5
-    STAFFING_WARNING_BAND = 5.0
-    STAFFING_NO_SLACK_BAND = 1.0
-    STAFF_SOURCES = {"artisan": [("other", "no"), ("HIRE", "hire an artisan")]}
-    nodes = NODES
-
-    def __init__(self, operating=("b_mill", "a_forge"), founder_alive=True, immortal=False):
-        self.state = SimpleNamespace(
-            projects=SimpleNamespace(operating=set(operating)),
-            household=SimpleNamespace(artisans=30.0, scholars=4.0),
-            founder=SimpleNamespace(founder_alive=founder_alive))
-        self.cfg = {"immortal": immortal}
-        self.labour = SimpleNamespace(effective_scholars=lambda: 7.5)
-
-    def venture_staff_used(self):
-        return 2.0, 25.0
-
-    def venture_hands(self, node_id):
-        return {"b_mill": (1.0, 3.0), "a_forge": (0.0, 2.0)}[node_id]
+def Game(operating=("b_mill", "a_forge"), founder_alive=True, immortal=False):
+    """The projects module with what the warning reads."""
+    return projects_host.build(
+        tree=NODES, operating=lambda: set(operating), staff={"artisans": 30.0, "scholars": 4.0, "employees": {}},
+        founder={"alive": founder_alive, "life_left": 10.0, "dead_reason": None, "policy": {}}, game_config={"immortal": immortal},
+        effective_scholars=7.5, venture_staff_used=lambda: (2.0, 25.0),
+        venture_hands=lambda node_id: {"b_mill": (1.0, 3.0), "a_forge": (0.0, 2.0)}[node_id],
+        staff_sources=lambda: {"artisan": [("other", "no"), ("HIRE", "hire an artisan")]})
 
 
 def warnings(game, **keywords):
-    with mock.patch.object(projects_staffing, "staffing_warning_rows", return_value=["rows"]) as rows:
+    with mock.patch.object(staffing, "staffing_warning_rows", return_value=["rows"]) as rows:
         result = game.staffing_closure_warnings(**keywords)
     return result, rows
 

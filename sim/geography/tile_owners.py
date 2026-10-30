@@ -1,7 +1,7 @@
 """Who owns each tile and how firmly: the owner map every actor's territory is read from.
 
 The map is {tile id: {"owner": actor id}}; an actor is any country or seat. A tile has at most one entry, so it
-has at most one owner. How firmly it is held is the tile store `control` (sim/engine/mod_stores.py), passed in as
+has at most one owner. How firmly it is held is the tile store `control` (sim/content/mod_stores.py), passed in as
 `controls`; the levels are data (data/world/control_levels.json).
 """
 import functools

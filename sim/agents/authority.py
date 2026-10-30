@@ -72,13 +72,10 @@ def after_leakage(amount: float, kept: float) -> float:
 
 
 def levy_reach(world: Any) -> float:
-	"""The share of a levy the state can compel across what it holds: its collection reach, held by its garrisons; a world
-	that reads none compels all."""
-	reading = getattr(world, "collectible_share", None)
-	return 1.0 if reading is None else float(reading(None))
+	"""The share of a levy the state can compel across what it holds: its collection reach, held by its garrisons."""
+	return float(world.collectible_share(None))
 
 
 def kept_on(world: Any, tiles: Optional[Iterable[str]]) -> float:
-	"""The share officials keep over `tiles`, as the world reads it; none for a world that keeps no such reading."""
-	reading = getattr(world, "corruption_share", None)
-	return 0.0 if reading is None else float(reading(tiles))
+	"""The share officials keep over `tiles`, as the world reads it."""
+	return float(world.corruption_share(tiles))

@@ -2,12 +2,11 @@
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
-
 from .harness import check
 
-from sim.engine.economy_credit import CreditMixin
-from sim.engine.mechanics import MechanicsMixin
+from sim.finance.constants import CREDIT_LINE_EARNING_MULTIPLE, CREDIT_SURPLUS_YEARS_MULTIPLE
+from sim.mechanics import rules
+from sim.tests import finance_host
 
 MONEY_PER_LABOUR_HOUR = 2.0
 FLOOR = 100.0
@@ -15,51 +14,32 @@ EARNING = 1000.0
 STARTING_RATE = 0.1
 
 
-class FakeSim(CreditMixin, MechanicsMixin):
-    """Just what credit_limit reads: one seat's reputation and forest, an earning, and the effect terms."""
-
-    def __init__(self, specs, reputation=0.0, acting_seat="founder", room=None):
-        self.specs = specs
-        self.price_index = 1.0
-        self.civ = {"starting_interest_rate": STARTING_RATE}
-        self.labour = SimpleNamespace(money_per_labour_hour=lambda: MONEY_PER_LABOUR_HOUR)
-        self.state = SimpleNamespace(acting_seat=acting_seat, household=SimpleNamespace(reputation=reputation),
-                                     holdings=SimpleNamespace(forest_ha=0.0))
-        self.room = room
-
-    def _effect_terms(self, channel):
-        return sorted(self.specs.items()) if channel == "credit_line" else []
-
-    def effect_holds(self, node_id, spec):
-        return True
-
-    def revenue_capacity(self):
-        return EARNING
-
-    def upkeep(self):
-        return 0.0
-
-    def living_cost(self, _rev=None, _upkeep=None):
-        return FLOOR
-
-    def market_rate(self):
-        return STARTING_RATE
-
-    def market_credit_room(self, actor_id):
-        return self.room
+def limit_of(specs, acting_seat="founder"):
+    """Just what credit_limit reads: no standing and no woodland, an earning, the floor and the effect terms."""
+    def effect_sum(channel, start=0.0):
+        terms = sorted(specs.items()) if channel == "credit_line" else []
+        values = rules.grouped_values(terms, lambda node_id, spec: True,
+                                      lambda node_id, spec: rules.effect_size(spec, lambda: 1.0, lambda: MONEY_PER_LABOUR_HOUR))
+        return rules.sum_in_order(values, start)
+    module = finance_host.build(
+        civilisation={"starting_interest_rate": STARTING_RATE}, money_per_labour_hour=MONEY_PER_LABOUR_HOUR, effect_sum=effect_sum,
+        revenue_capacity=EARNING, upkeep=0.0, agent_rate=STARTING_RATE)
+    module.clock.acting_seat = acting_seat
+    module.living_cost = lambda revenue=None, upkeep=None, capital=None: FLOOR
+    return module.credit_limit()
 
 
-raw_from_earning = EARNING * FakeSim.CREDIT_LINE_EARNING_MULTIPLE
-nothing = FakeSim({}).credit_limit()
+raw_from_earning = EARNING * CREDIT_LINE_EARNING_MULTIPLE
+nothing = limit_of({})
 check("with no effect and no standing the limit is the line earning alone gives", nothing == raw_from_earning, nothing)
-flat = FakeSim({"mod_x:bank": {"flat": 150.0}}).credit_limit()
+flat = limit_of({"mod_x:bank": {"flat": 150.0}})
 check("a flat credit_line effect widens the limit by its amount while the raw line binds",
       abs(flat - (raw_from_earning + 150.0)) < 1e-9 and flat > nothing, (flat, nothing))
-hours = FakeSim({"mod_x:bank": {"flat": 100.0, "labour_hours": True}}).credit_limit()
+hours = limit_of({"mod_x:bank": {"flat": 100.0, "labour_hours": True}})
 check("a labour-hour credit_line effect is priced at the coin's money per labour hour",
       abs(hours - (raw_from_earning + 100.0 * MONEY_PER_LABOUR_HOUR)) < 1e-9, hours)
-seat = FakeSim({"mod_x:bank": {"flat": 150.0}}, acting_seat="second_seat").credit_limit()
+seat = limit_of({"mod_x:bank": {"flat": 150.0}}, acting_seat="second_seat")
 check("the effect widens the limit for any seat, not the founder's alone", seat == flat, (seat, flat))
-capped = FakeSim({"mod_x:bank": {"flat": 1.0e9}}).credit_limit()
+capped = limit_of({"mod_x:bank": {"flat": 1.0e9}})
 check("a wide effect stays bounded by what income can service",
-      abs(capped - (FLOOR + (EARNING - FLOOR * STARTING_RATE) * FakeSim.CREDIT_SURPLUS_YEARS_MULTIPLE)) < 1e-9, capped)
+      abs(capped - (FLOOR + (EARNING - FLOOR * STARTING_RATE) * CREDIT_SURPLUS_YEARS_MULTIPLE)) < 1e-9, capped)

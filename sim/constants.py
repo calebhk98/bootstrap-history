@@ -49,7 +49,7 @@ THE KINDS, and the two that matter for different reasons
                              measurement, but not a distinct kind of their
                              own: see sim/unit_conversions.py's own module
                              docstring for why. HOURS_PER_YEAR (sim/
-                             engine/economy_electricity.py) and DAYS_PER_YEAR
+                             materials/constants.py) and DAYS_PER_YEAR
                              (sim/world/demand.py) are declared the same way,
                              at confidence "A".
     biological_parameter     facts about living things. Calories, gestation,
@@ -225,7 +225,7 @@ def declare(name, value, kind, unit, why, source=None, confidence="C", retire=No
 
 def _mod_override(name, declared):
     """The installed mod's override of this number (data/constants.json of a mod), or None."""
-    from sim.engine.mods_constants import apply_override
+    from sim.content.mods_constants import apply_override  # not the api: the api imports packages that declare constants
     return apply_override(name, declared)
 
 
@@ -332,16 +332,19 @@ def _import_declaring_modules():
     # (see either module's own NOT PART OF THE REGISTRY / kind section for
     # why).
     for module in ("sim.engine.data",
-                   "sim.engine.economy",
+                   "sim.materials.constants",
+                   "sim.materials.capacity",
                    "sim.ui.cli",
                    "sim.engine.core",
-                   "sim.engine.society",
+                   "sim.seats.constants",
+                   "sim.polity.constants",
+                   "sim.polity.value_weight",
                    "sim.labour.labour",
+                   "sim.workforce.constants",
                    "sim.labour.learning_curve",
                    "sim.disease.numerics",
                    "sim.disease.nation_tuning",
-                   "sim.engine.disease_port",
-                   "sim.engine.projects",
+                   "sim.disease.module",
                    "sim.unit_conversions",
                    "sim.world.agriculture",
                    "sim.world.demography",
@@ -377,7 +380,7 @@ def _import_declaring_modules():
                    "sim.economy.producers_close",
                    "sim.economy.tile_costs",
                    "sim.economy.year_labour",
-                   "sim.engine.economy_port_year"):
+                   "sim.markets.port_year"):
         try:
             __import__(module)
         except Exception as exc:                      # noqa: BLE001

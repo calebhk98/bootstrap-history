@@ -1,47 +1,48 @@
 """Complaint 273: coin moved across a route pays carriage by its mass, and a state's or firm's coin pays the
-yearly keeping cost the household's does. Both rules are called on a stub game (`ForeignPaymentsMixin._settle_flow`,
-`CoinHoardMixin.charge_actors_for_keeping_coin`); the household's own charge in a step is test_coin_keeping_charged."""
+yearly keeping cost the household's does. The foreign settlement is the foreign-trade
+module's `settle_flow` over plain views, its carriage the coin module's `coin_carriage_units` quote; the actors' keeping is
+the coin module's `charge_keeping` command handler over plain actors; the household's own charge in a step is
+test_coin_keeping_charged."""
 QUICK_TOPIC = True
 
 import types
 import unittest
 
 import sim.engine.core  # noqa: F401  (loads the engine in its import order)
-from sim.agents import ledger
-from sim.agents.edges import EDGE_COIN_GUARDS, Edge
-from sim.agents.purses import Purses
-from sim.engine.coin_hoard import KEEPING_CAUSE, CoinHoardMixin
-from sim.engine.foreign_payments import ForeignPaymentsMixin
+from sim.agents.edges import EDGE_COIN_GUARDS
+from sim.coin.commands import ChargeKeeping
+from sim.coin.constants import COIN_GUARD_HOURS_PER_TONNE_YEAR, KEEPING_CAUSE
+from sim.coin.module import Coin
+from sim.foreign_trade.module import ForeignTrade
+from sim.foreign_trade.state import ForeignTradeWorld
+from sim.ledger.api import PayEdgeFrom
+from sim.tests import module_harness
 from sim.world import coin_metal
 
 KG_PER_UNIT = 4.0
 PER_COIN = 2.0          # home money per partner coin unit
 HOME_STOCK_UNITS = 1.0e6
-GUARD_HOURS = 60.0
 MONEY_PER_HOUR = 2.0
+HOME_COIN = {"id": "home", "coin_standard": {"material": "silver_kg", "kg_per_unit": KG_PER_UNIT, "source": "test"}}
 
 
-def settlement_game(carriage_share):
-    """A stub game for `_settle_flow` with a partner whose coin weighs KG_PER_UNIT, carried by a route that takes
+def settlement_module(carriage_share):
+    """The foreign-trade module settling with a partner whose coin weighs KG_PER_UNIT, carried by a route that takes
     `carriage_share` of the coin's own value per tonne-equivalent."""
-    ledger_book = {"goods_in_value": 0.0, "goods_out_value": 0.0, "home_coin_units": 0.0, "partner_coin_units": 0.0,
-                   "coin_carriage_units": 0.0}
     per_tonne = carriage_share * PER_COIN * 1000.0 / KG_PER_UNIT
-    game = types.SimpleNamespace(
-        _foreign_ledger=lambda _civ, create=False: ledger_book, _note_trade_value=lambda *_args: None,
-        home_coin_stock_units=lambda: HOME_STOCK_UNITS, _partner_coin_opening_units=lambda _civ: 1.0e9,
-        _coin_carriage_money_per_tonne=lambda _civ: per_tonne, partner_civ=lambda _civ: {"coin_standard": {"kg_per_unit": KG_PER_UNIT}})
-    game.coin_carriage_units = lambda civ, units, rate: CoinHoardMixin.coin_carriage_units(game, civ, units, rate)
-    game.ledger = ledger_book
-    return game
+    coin = module_harness.build(Coin, views={"partner_coin_standard": {"partner": {"kg_per_unit": KG_PER_UNIT}},
+                                             "partner_route_cost": {"partner": per_tonne}})
+    return module_harness.build(ForeignTrade, world=ForeignTradeWorld(), views={
+        "year": 100, "home_coin_stock": HOME_STOCK_UNITS, "partner_coin_opening": lambda _civ: 1.0e9,
+        "coin_carriage_units": coin.coin_carriage_units})
 
 
 def settled(carriage_share, flow_tonnes):
     """(the ledger after one settlement of 5% of the home coin stock, the units owed)."""
-    game = settlement_game(carriage_share)
+    module = settlement_module(carriage_share)
     value = 0.05 * HOME_STOCK_UNITS * PER_COIN
-    ForeignPaymentsMixin._settle_flow(game, "partner", flow_tonnes, value, PER_COIN)
-    return game.ledger, value / PER_COIN
+    module.settle_flow("partner", flow_tonnes, value, PER_COIN)
+    return module.world.ledgers["partner"], value / PER_COIN
 
 
 class Carriage(unittest.TestCase):
@@ -73,11 +74,16 @@ class Carriage(unittest.TestCase):
     def test_carriage_never_takes_more_coin_than_is_moved(self):
         self.assertEqual(coin_metal.carriage_units(10.0, KG_PER_UNIT, 1.0e12, PER_COIN), 10.0)
 
+    def test_a_partner_with_no_known_route_is_carried_for_nothing(self):
+        coin = module_harness.build(Coin, views={"partner_coin_standard": {"partner": {"kg_per_unit": KG_PER_UNIT}},
+                                                 "partner_route_cost": {"partner": None}})
+        self.assertEqual(coin.coin_carriage_units("partner", 10.0, PER_COIN), 0.0)
+
     def test_carriers_are_paid_so_an_import_or_an_export_leaves_the_total_coin_unchanged(self):
         for flow in (5.0, -5.0):
-            game = settlement_game(0.2)
-            ForeignPaymentsMixin._settle_flow(game, "partner", flow, 0.05 * HOME_STOCK_UNITS * PER_COIN, PER_COIN)
-            book = game.ledger
+            module = settlement_module(0.2)
+            module.settle_flow("partner", flow, 0.05 * HOME_STOCK_UNITS * PER_COIN, PER_COIN)
+            book = module.world.ledgers["partner"]
             total = book["home_coin_units"] + book["partner_coin_units"] * PER_COIN
             self.assertGreater(book["coin_carriage_units"], 0.0, flow)
             self.assertAlmostEqual(total, 0.0, delta=1e-9 * book["coin_carriage_units"] * KG_PER_UNIT * 1e6, msg=flow)
@@ -88,44 +94,34 @@ class KeepingByAnyActor(unittest.TestCase):
     @staticmethod
     def actor(money, stratum=None, exited=None):
         record = types.SimpleNamespace(country=None, exited_year=exited, money=money, stratum=stratum)
-        return types.SimpleNamespace(money=money, record=record, credit=lambda *_args: None, debit=lambda *_args: None)
+        return types.SimpleNamespace(money=money, record=record)
 
     def charged(self, **actors):
-        """What each named actor pays the guards in one year of `charge_actors_for_keeping_coin`."""
-        balances = Purses()
-        paid = {}
-        for name, actor in actors.items():
-            actor.debit = lambda amount, _purpose, name=name: paid.__setitem__(name, paid.get(name, 0.0) + amount)
-            actor.credit = lambda *_args: None
-        game = types.SimpleNamespace(
-            actors=types.SimpleNamespace(actors=actors, state=types.SimpleNamespace(home_country="home")),
-            coin_keeping_cost_per_year=lambda money: coin_metal.keeping_cost_per_year(money, KG_PER_UNIT, GUARD_HOURS, MONEY_PER_HOUR),
-            edge=lambda name: Edge(name, balances))
-        import sim.engine.agents_port as port
-        original = port.SimWorld
-        port.SimWorld = lambda _sim: types.SimpleNamespace(pay_per_person_year=lambda trade: 100.0)
-        try:
-            with ledger.listening(lambda *_args: None):
-                CoinHoardMixin.charge_actors_for_keeping_coin(game)
-        finally:
-            port.SimWorld = original
-        return paid, balances
+        """What each named actor is charged by one `ChargeKeeping`: {actor id: (edge, money, cause)}."""
+        registry = types.SimpleNamespace(actors=actors, state=types.SimpleNamespace(home_country="home"))
+        world = types.SimpleNamespace(pay_per_person_year=lambda trade: 100.0)
+        module = module_harness.build(Coin, views={"civilisation": HOME_COIN, "money_per_labour_hour": MONEY_PER_HOUR,
+                                                   "cast": registry, "actor_world": world})
+        module.charge_keeping(ChargeKeeping())
+        commands = module_harness.sent(module)
+        self.assertTrue(all(isinstance(command, PayEdgeFrom) for command in commands))
+        return {command.actor: (command.edge, command.amount, command.purpose) for command in commands}
 
-    def test_a_state_and_a_firm_holding_coin_are_charged(self):
-        paid, balances = self.charged(state=self.actor(1.0e8), firm=self.actor(1.0e8))
-        self.assertGreater(paid["state"], 0.0)
-        self.assertAlmostEqual(paid["firm"], paid["state"])
-        self.assertAlmostEqual(balances.purse(EDGE_COIN_GUARDS), paid["state"] + paid["firm"])
+    def test_a_state_and_a_firm_holding_coin_are_charged_to_the_guards(self):
+        paid = self.charged(state=self.actor(1.0e8), firm=self.actor(1.0e8))
+        expected = coin_metal.keeping_cost_per_year(1.0e8, KG_PER_UNIT, COIN_GUARD_HOURS_PER_TONNE_YEAR, MONEY_PER_HOUR)
+        self.assertEqual(paid["state"], (EDGE_COIN_GUARDS, expected, KEEPING_CAUSE))
+        self.assertEqual(paid["firm"], paid["state"])
         self.assertEqual(KEEPING_CAUSE, EDGE_COIN_GUARDS)
 
     def test_a_larger_treasury_is_charged_more(self):
-        paid, _balances = self.charged(poor=self.actor(1.0e3), rich=self.actor(1.0e8))
-        self.assertGreater(paid["rich"], paid["poor"])
-        self.assertGreater(paid["poor"], 0.0)
+        paid = self.charged(poor=self.actor(1.0e3), rich=self.actor(1.0e8))
+        self.assertGreater(paid["rich"][1], paid["poor"][1])
+        self.assertGreater(paid["poor"][1], 0.0)
 
     def test_an_actor_with_no_money_or_that_has_left_or_is_a_stratum_pays_nothing(self):
-        paid, _balances = self.charged(broke=self.actor(0.0), gone=self.actor(1.0e8, exited=90),
-                                       people=self.actor(1.0e8, stratum="peasants"))
+        paid = self.charged(broke=self.actor(0.0), gone=self.actor(1.0e8, exited=90),
+                            people=self.actor(1.0e8, stratum="peasants"))
         self.assertEqual(paid, {})
 
 

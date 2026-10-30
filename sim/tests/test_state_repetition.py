@@ -9,10 +9,11 @@ from .harness import check
 
 from sim.ui.proto.explain_once import already_explained
 from sim.ui.proto.render_screen_state_blocks import _state_concerns, _state_running
+from sim.tests.ui_stand_in import Game
 
 
 def stand_in_game():
-    return SimpleNamespace(year=100, state=SimpleNamespace(seat_progress=SimpleNamespace(_said_explanations=None)))
+    return Game(year=100, state=Game(acting_record=Game(seat_progress=Game(_said_explanations=None))))
 
 
 game = stand_in_game()
@@ -21,8 +22,8 @@ check("the second time it is already explained", already_explained(game, "topic"
 check("`full` explains it again", already_explained(game, "topic", {"full": True}) is False)
 check("and it stays explained for the next plain ask", already_explained(game, "topic", {}) is True)
 check("another topic is separate", already_explained(game, "other", {}) is False)
-check("the year the topic was first shown is kept", game.state.seat_progress._said_explanations["topic"] == 100,
-      game.state.seat_progress._said_explanations)
+check("the year the topic was first shown is kept", game.state.acting_record.seat_progress._said_explanations["topic"] == 100,
+      game.state.acting_record.seat_progress._said_explanations)
 
 first = {"concerns_you_run": 3, "you_know_how_to_run_but_have_not_opened": 5}
 second = dict(first, shut_concerns_pointer_seen=True)

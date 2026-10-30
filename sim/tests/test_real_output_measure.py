@@ -1,11 +1,11 @@
 """Complaint 640 (from 558): real output is the quantity the economy clears valued at fixed opening prices. The
-arithmetic (sim/engine/real_output_measure.py) is called on built baskets and volumes, so a failure names the line
+arithmetic (sim/reporting/output_rules.py) is called on built baskets and volumes, so a failure names the line
 of arithmetic and not a game."""
 QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import real_output_measure as measure
+from sim.reporting.api import output_rules as measure
 
 BASKET = {"prices": {"grain": 2.0, "cloth": 5.0, "salt": 10.0}, "units": {"grain": 100.0, "cloth": 20.0, "salt": 5.0}}
 BASELINE = {"grain": 50.0, "cloth": 10.0, "salt": 2.0}

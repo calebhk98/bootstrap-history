@@ -7,12 +7,11 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.agriculture.state import AgricultureWorld
 from sim.engine import data
-from sim.engine.food_supply import FoodSupplyMixin
-from sim.engine.soil_nitrogen_year import SoilNitrogenMixin
-from sim.engine.state import EconomyState
 from sim.geography.api import Geography
 from sim.labour import api as labour_api
+from sim.tests import agriculture_stand_in
 from sim.tests.test_geography_food_gaps import STEPPE, mini_map
 from sim.world.farming_technique import DEFAULT_TECHNIQUE
 
@@ -49,47 +48,50 @@ class LabourCapTests(unittest.TestCase):
 
 
 def society(hours, stock=None):
+    """The agriculture module over a one-tile steppe map; `hours` is the society's labour hours, which a test may replace."""
     world_map = mini_map({"a": (STEPPE, {}, [])})
-    economy = EconomyState(society_labour_hours=dict(hours), wild_stock=dict(stock or {}))
     civ = {"home_tiles": ["a"]}
     geography = Geography(types.SimpleNamespace(civ=civ, world_map=world_map))
-    return types.SimpleNamespace(state=types.SimpleNamespace(economy=economy), civ=civ, world_map=world_map, geography=geography,
-                                 labour=types.SimpleNamespace(farming_technique=lambda: DEFAULT_TECHNIQUE))
-
-
-class Society(FoodSupplyMixin, SoilNitrogenMixin):
-    def __init__(self, hours, stock=None):
-        self.__dict__.update(vars(society(hours, stock)))
+    labour = {"hours": dict(hours)}
+    farm = agriculture_stand_in.build(world=AgricultureWorld(wild_stock=dict(stock or {})), views={
+        "society_labour_hours": lambda: labour["hours"], "trade_registry": {trade_id: {"family": trade.family, **trade.extra} for trade_id, trade in data.TRADE_REGISTRY.items()},
+        "farming_technique": DEFAULT_TECHNIQUE, "society_herds": {},
+        "crop_sites": geography.crop_sites, "food_kcal_by_source": geography.food_kcal_by_source,
+        "game_food_sources": geography.game_food_sources, "huntable_kcal": geography.huntable_kcal,
+        "take_hunt": geography.take_hunt, "regrow_wild_stock": geography.regrow_wild_stock,
+        "tile_soil_nitrogen_factors": geography.soil_nitrogen_factors})
+    farm.labour_hours = labour
+    return farm
 
 
 class SocietyFoodTests(unittest.TestCase):
     def test_a_society_with_no_hunters_takes_no_game_and_loses_none(self):
-        game = Society({"labourer": 1.0e6})
+        game = society({"labourer": 1.0e6})
         game.step_wild_stock()
-        self.assertEqual(game.state.economy.wild_stock, {})
-        self.assertEqual(game.society_food_potential().get("hunting", -1.0), 0.0)
+        self.assertEqual(game.world.wild_stock, {})
+        self.assertEqual(game.food_potential().get("hunting", -1.0), 0.0)
 
     def test_a_few_hunters_bring_in_only_what_their_hours_allow(self):
-        game = Society({"hunter": 1000.0})
-        self.assertAlmostEqual(game.society_food_potential()["hunting"], 1000.0 * 1115.0)
-        self.assertIn("crops", game.society_food_potential())   # the steppe tile crops almost nothing, but the source is not capped away
+        game = society({"hunter": 1000.0})
+        self.assertAlmostEqual(game.food_potential()["hunting"], 1000.0 * 1115.0)
+        self.assertIn("crops", game.food_potential())   # the steppe tile crops almost nothing, but the source is not capped away
 
     def test_hunters_thin_the_game_and_the_game_recovers_when_they_stop(self):
-        game = Society({"hunter": 1.0e9})
+        game = society({"hunter": 1.0e9})
         for _year in range(5):
             game.step_wild_stock()
-        thinned = dict(game.state.economy.wild_stock["a"])
+        thinned = dict(game.world.wild_stock["a"])
         self.assertTrue(all(fraction < 1.0 for fraction in thinned.values()))
-        game.state.economy.society_labour_hours = {}
+        game.labour_hours["hours"] = {}
         for _year in range(300):
             game.step_wild_stock()
-        self.assertEqual(game.state.economy.wild_stock, {})
+        self.assertEqual(game.world.wild_stock, {})
 
     def test_hunting_less_than_the_surplus_does_not_deplete_the_game(self):
-        game = Society({"hunter": 10.0})
+        game = society({"hunter": 10.0})
         for _year in range(100):
             game.step_wild_stock()
-        self.assertTrue(all(fraction > 0.99 for fraction in game.state.economy.wild_stock.get("a", {}).values()))
+        self.assertTrue(all(fraction > 0.99 for fraction in game.world.wild_stock.get("a", {}).values()))
 
 
 if __name__ == "__main__":

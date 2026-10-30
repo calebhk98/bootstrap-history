@@ -8,7 +8,8 @@ import math
 from sim.constants import declare
 import sim.geography.api as geography
 from sim.geography.api import settlement
-from sim.labour import town_providers
+from sim.polity.api import ScaleFamiliarity, ScaleProtection
+from sim.ledger.api import NoteSpend, PayEdge
 
 
 class SettlementMixin:
@@ -52,7 +53,7 @@ class SettlementMixin:
 
     def base_tile(self):
         """The tile the household operates from."""
-        chosen = getattr(self._world.state.household, "base_tile", None)
+        chosen = self._world.workforce.base_tile
         homes = self.held_tiles()
         if chosen and chosen in settlement.tile_ids(homes):
             return chosen
@@ -79,7 +80,7 @@ class SettlementMixin:
         nominal = (self.TOWN_POPULATION_REFERENCE * place
                    * (self.POP_SCALE_FLOOR_SHARE
                       + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
-        provided = town_providers.provided_town_population(self, tile, nominal)
+        provided = self._world.provided_town_population(tile, nominal)
         if provided is not None:
             return min(provided, tile_people)
         return min(nominal, tile_people * self.TOWN_MAX_SHARE_OF_TILE)
@@ -88,19 +89,15 @@ class SettlementMixin:
         """{tile: premium} for the tiles whose town carries a mortality premium from a registered provider: the premium
         of the town's people averaged over all the tile's people (a share of the baseline death rate). Empty with
         no provider."""
-        if not town_providers.PREMIUMS:
+        if not self._world.has_town_premiums():
             return {}
         found = {}
         for tile, people in sorted(self.settlement_tiles().items()):
             town = self._town_population_at(tile)
-            premium = town_providers.provided_mortality_premium(self, tile, town)
+            premium = self._world.provided_mortality_premium(tile, town)
             if premium and town > 0.0 and people > 0.0:
                 found[tile] = premium * min(1.0, town / people)
         return found
-
-    def simulation_for_providers(self):
-        """The simulation a town provider reads (a mod's stores, for instance); providers read it and never write it."""
-        return self._world.simulation()
 
     def home_town_population_estimate(self):
         """People in the base's town."""
@@ -118,7 +115,7 @@ class SettlementMixin:
         base = self.base_tile()
         if base is None:
             return {}
-        built = self._world.state.economy.improvements
+        built = self._world.built_ways()
         key = (base, held, days_budget, repr(sorted((edge, sorted(ways)) for edge, ways in built.items())))
         cache = self.__dict__.setdefault("_reachable_tiles_cache", {})
         if key not in cache:
@@ -146,7 +143,6 @@ class SettlementMixin:
         return self.home_town_population_estimate() / full if full > 0 else 0.0
 
     def _relocation_wage_bill_per_year(self):
-        household = self._world.state.household
         return sum(count * self.labour_market.unscarce_annual(trade)
                    for trade, count in self.employed_by_trade().items())
 
@@ -155,7 +151,7 @@ class SettlementMixin:
         (geography's route over the ways built, weighted by time); None when no route joins the tiles."""
         held = self.held_technologies()
         found = geography.route([self.base_tile()], [tile], geography.usable_modes([held]),
-                                self._world.state.economy.improvements, held_nodes=held, fastest=True)
+                                self._world.built_ways(), held_nodes=held, fastest=True)
         return None if found is None else found["days"]
 
     def relocation_quote(self, tile):
@@ -184,23 +180,24 @@ class SettlementMixin:
         if quote is None:
             return False, "no route over the ways your people can travel joins %s to your base." % tile
         days, hours, money = quote
-        household = self._world.state.household
-        if money > household.capital:
+        workforce = self._world.workforce
+        balance = self._world.balance
+        if money > balance:
             return False, ("moving to %s takes about %d days and would cost %s in "
                            "wages while your household travels; you have %s."
                            % (tile, math.ceil(days), self._world.money_text(money, grouped=True),
-                              self._world.money_text(household.capital, grouped=True)))
-        self._world.pay_edge(self._world.EDGE_WORKERS, money, "relocation")
-        household.total_spend += money
-        household.relocation_hours_this_year = (
-            (household.relocation_hours_this_year or 0.0) + hours)
+                              self._world.money_text(balance, grouped=True)))
+        self._world.send(PayEdge(self._world.EDGE_WORKERS, money, "relocation"))
+        self._world.send(NoteSpend(money))
+        workforce.relocation_hours_this_year = (
+            (workforce.relocation_hours_this_year or 0.0) + hours)
         # Local contracts and the local market's memory stay behind.
-        household.commissioned = {}
-        household.contract_hours = {}
+        workforce.commissioned = {}
+        workforce.contract_hours = {}
         self.labour_market.clear_pressure()
-        household.familiarity *= self.RELOCATION_STANDING_RETAINED
-        household.protection *= self.RELOCATION_STANDING_RETAINED
-        household.base_tile = tile
+        self._world.send(ScaleFamiliarity(self.RELOCATION_STANDING_RETAINED))
+        self._world.send(ScaleProtection(self.RELOCATION_STANDING_RETAINED))
+        workforce.base_tile = tile
         self._resync_pools()
         return True, ("moved to %s after about %d days on the road: %s in wages "
                       "paid, %d hours of your year gone, local contracts "

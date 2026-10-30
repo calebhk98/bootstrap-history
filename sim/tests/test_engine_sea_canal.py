@@ -18,10 +18,10 @@ class BuildASeaCanalTests(unittest.TestCase):
         self.assertGreater(quote["years"], 1.0)
         ok, message = builder.build_way(*SUEZ, "sea_canal")
         self.assertTrue(ok, message)
-        self.assertEqual(builder.state.economy.improvements, {})
-        builder.state.scenario.year += quote["years"] + 1
+        self.assertEqual(builder.world.improvements, {})
+        builder.year += quote["years"] + 1
         builder.finish_ways()
-        self.assertTrue(builder.state.economy.improvements[geography.edge_key(*SUEZ)]["sea_canal"])
+        self.assertTrue(builder.world.improvements[geography.edge_key(*SUEZ)]["sea_canal"])
 
     def test_a_pair_with_no_isthmus_is_refused_with_its_cause(self):
         builder = _Builder({"greece_01", "greece_02"})

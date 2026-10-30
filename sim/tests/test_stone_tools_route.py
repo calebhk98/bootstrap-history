@@ -5,8 +5,8 @@ import json
 import os
 import unittest
 
-from sim.engine.catalog import load_production_catalog
-from sim.engine.need_data import load_needs
+from sim.content.catalog import load_production_catalog
+from sim.content.api import load_needs
 from sim.world import need_basket
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

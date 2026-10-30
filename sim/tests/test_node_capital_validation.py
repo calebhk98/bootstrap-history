@@ -4,7 +4,8 @@ import json
 import os
 import unittest
 
-from sim.engine import data, node_capital, node_revenue, validate_node_money
+from sim.engine import data, validate_node_money
+from sim.production import node_capital, node_revenue
 from sim.labour.labour_market import production_data
 
 BRANCH_DIRECTORY = os.path.join(data.ROOT, "data", "branches")

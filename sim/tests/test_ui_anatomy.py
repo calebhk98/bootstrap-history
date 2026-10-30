@@ -12,6 +12,7 @@ from sim.ui.proto import command_registry
 from sim.ui.proto.dispatch_anatomy import _cmd_anatomy
 from sim.ui.proto.render_typed import render_pretty
 from sim.ui.proto.typed import parse_typed
+from sim.tests.ui_stand_in import FactViews
 
 _EDUCATION = {
     "literacy": {"general": 0.05, "general_ceiling": 0.4, "general_next_year": 0.06,
@@ -21,7 +22,7 @@ _EDUCATION = {
     "literacy_limited_by": "schools", "recent_change": {"note": "no census yet"}}
 
 
-class _Game:
+class _Game(FactViews):
     """Only what the anatomy command reads."""
 
     def __init__(self, nodes, goal=None, fog=False, visible=(), done=(), civ=None, **attributes):
@@ -78,9 +79,9 @@ class TargetTests(unittest.TestCase):
 
 class AnatomyForTests(unittest.TestCase):
 
-    def test_a_directly_read_attribute_is_a_row_and_the_current_value(self):
-        game = _Game({}, score=0.3)
-        reply = anatomy_module.anatomy_for(game, {"metric": "score", "source": "attribute", "path": "score",
+    def test_a_staff_count_is_a_row_and_the_current_value(self):
+        game = _Game({}, staff={"slaves": 0.3})
+        reply = anatomy_module.anatomy_for(game, {"metric": "score", "source": "staff", "key": "slaves",
                                                    "op": ">=", "value": 0.5})
         self.assertEqual((reply["current"], reply["generic"], reply["target"]["gap"]), (0.3, False, 0.2))
         self.assertEqual([row["value"] for row in reply["rows"]], [0.3])

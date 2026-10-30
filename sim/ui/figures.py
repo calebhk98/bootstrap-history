@@ -6,7 +6,8 @@ but value optional:
   components  named parts of the value; the change in each is its cause
   flows       named amounts that fed the change directly (for a stock)
   drivers     named inputs that are not additive, shown beside the causes
-A figure that only reads state paths is declared in data/ui/figures.json instead (`figures_data.py`).
+A figure that only reads state paths is declared in data/ui/figures.json instead (`figures_data.py`). A mod's code adds figures
+through its API; a game's figures are the shipped ones plus its mods' (`figures_of`, the interface module's view).
 A figure that keeps a book of its own movements passes `since(sim, year)`, which
 returns the movements by cause since the snapshot of `year`; they replace `flows`.
 `figure_snapshot` records every figure once a year; `explain_figure` sets the
@@ -14,7 +15,7 @@ live value against the latest earlier record. Whatever the named parts leave
 out is reported as its own cause, so the causes always add up to the change.
 """
 
-FIGURES = {}   # name -> {"name", "label", "unit", "digits", "compute"}
+FIGURES = {}   # the shipped figures: name -> {"name", "label", "unit", "digits", "compute", "since"}
 
 UNEXPLAINED_CAUSE = "not itemised (commands, hazards and one-off payments)"
 DEFAULT_DIGITS = 1
@@ -23,6 +24,19 @@ DEFAULT_DIGITS = 1
 def register_figure(name, label, unit, digits, compute, since=None):
     FIGURES[name] = {"name": name, "label": label, "unit": unit,
                      "digits": digits, "compute": compute, "since": since}
+
+
+def shipped_figures():
+    return list(FIGURES.values())
+
+
+def figures_of(sim):
+    """The figures of the game `sim`: the shipped ones and its mods'. A host with no interface module has the shipped ones."""
+    try:
+        declared = sim.view("interface_declared")
+    except (AttributeError, KeyError):
+        return FIGURES
+    return declared().figures
 
 
 def figure(name, label, unit="", digits=DEFAULT_DIGITS, since=None):
@@ -39,7 +53,7 @@ def _round(value, digits):
 
 def read_figure(sim, name):
     """The figure's value, components, flows and drivers now, rounded."""
-    entry = FIGURES[name]
+    entry = figures_of(sim)[name]
     digits = entry["digits"]
     raw = entry["compute"](sim) or {}
     return {
@@ -55,7 +69,7 @@ def read_figure(sim, name):
 
 def figure_snapshot(sim):
     """Every registered figure read now, for the yearly history."""
-    return {name: read_figure(sim, name) for name in FIGURES}
+    return {name: read_figure(sim, name) for name in figures_of(sim)}
 
 
 def _cause_name(cause):
@@ -81,11 +95,11 @@ def explain_figure(sim, name, history):
     `history` is the yearly records (each with a "figures" map); the latest one
     from an earlier year is "last year".
     """
-    entry = FIGURES[name]
+    entry = figures_of(sim)[name]
     digits = entry["digits"]
     now = read_figure(sim, name)
     earlier = [record for record in (history or [])
-               if record.get("year", sim.year) < sim.year and name in (record.get("figures") or {})]
+               if record.get("year", sim.view("year")()) < sim.view("year")() and name in (record.get("figures") or {})]
     before = earlier[-1]["figures"][name] if earlier else None
     out = {"ok": True, "name": name, "label": entry["label"], "unit": entry["unit"],
            "current": now["value"], "previous": None if before is None else before["value"],

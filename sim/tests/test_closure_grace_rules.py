@@ -3,7 +3,7 @@ inputs with no game."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.closure_grace import fee_after_grace, grace_note, within_grace
+from sim.projects.closure_grace import fee_after_grace, grace_note, within_grace
 
 GRACE, DISCOUNT = 6, 0.1
 

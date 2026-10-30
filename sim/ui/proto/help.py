@@ -9,7 +9,7 @@ command_registry.py); topics register with @help_topic below.
 import json
 
 from sim.engine.ui_port import money_unit_note
-from sim.engine.ui_port import Sim
+from sim.resources.api import base_mine_catalog_hint
 from . import command_registry
 from .nodes import NODE_IDS
 from .help_commands import JSON_MODE_NOTE, _command_text, commands_page, full_listing
@@ -40,7 +40,7 @@ def _topic_commands(sim):
 
 
 def _front_page(sim, typed_hints):
-    fog = sim.fog
+    fog = sim.view("fog_of_war")()
     return {
         "what this is": (
             "You are one person, dropped into a pre-industrial society, "
@@ -49,7 +49,7 @@ def _front_page(sim, typed_hints):
             "%d. Knowing how a thing works is free. Building it is not: it "
             "takes your own hours, other people's hours, money, materials, "
             "and years."
-            % (sim.civ.get("name", "a society"), sim.cfg["start_year"])),
+            % (sim.view("civilisation")().get("name", "a society"), sim.view("game_config")()["start_year"])),
         "how a turn works": (
             "You begin projects, then advance time. Nothing happens unless "
             "you make it. You are charged for food, rent and appearances "
@@ -58,11 +58,11 @@ def _front_page(sim, typed_hints):
             "Build %s, before the horizon at %d. You know what it is and "
             "what it is for; what you cannot see is the road there, only "
             "the next step of it."
-            % (sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes else "it",
-               sim.end_year)
+            % (sim.view("tree_nodes")()[sim.view("goal")()["node"]]["name"].lower() if sim.view("goal")()["node"] in sim.view("tree_nodes")() else "it",
+               sim.view("horizon_end_year")())
             if fog else
             "Reach %s, and see the rest of what you can build on the way."
-            % sim.goal),
+            % sim.view("goal")()["node"]),
         "you arrive alone": (
             "No employees, no slaves, nobody who owes you anything. Anyone "
             'who works for you is hired, taught, commissioned or bought. See '
@@ -190,7 +190,7 @@ def _topic_money(sim):
             "about fifteen thousand a year doing nothing, which is why "
             "money sitting still is money going backwards."),
         "what you can buy": '{"cmd":"help","topic":"economy"}',
-        "the money unit": money_unit_note(sim.civ),
+        "the money unit": money_unit_note(sim.view("civilisation")()),
         "debt": "You may spend past what you have, as far as somebody will "
                 "lend you and no further. Arrears cost interest."}
 
@@ -219,7 +219,7 @@ def _topic_economy(sim):
                         '{"cmd":"quote","what":"mine","material":"coal",'
                         '"n":500}, and close it with '
                         '{"cmd":"close","material":"coal"}. Materials: '
-                        + Sim.base_mine_catalog_hint(),
+                        + base_mine_catalog_hint(),
             "buy slaves": '{"cmd":"buy","what":"slaves","n":5}. This is '
                           "available because it was the ordinary condition of "
                           "production in most of these societies, and a model "
@@ -301,7 +301,7 @@ def _topic_stuck(sim):
 
 @help_topic('log', aliases=['history', 'diary'])
 def _topic_log(sim):
-    fog = sim.fog
+    fog = sim.view("fog_of_war")()
     return {"log": (
         "Your own history, in the order it happened: what you started, "
         "what finished, what failed and why, a concern opening or "
@@ -392,7 +392,7 @@ def _topic_risk(sim):
 
 @help_topic('fog')
 def _topic_fog(sim):
-    fog = sim.fog
+    fog = sim.view("fog_of_war")()
     return {"fog of war": (
         "ON. You can see what you have built, what you could begin today as "
         "a one line summary, and things you have heard of but cannot yet "
@@ -410,14 +410,15 @@ def _agent_help(sim, topic=None):
     if arguments and TOPIC_ALIASES.get(topic, topic) == "commands":
         return commands_page(sim, arguments)
     topic_name = topic if topic in TOPICS else TOPIC_ALIASES.get(topic)
-    entry = command_registry.resolve(topic)
+    table = command_registry.table_of(sim)
+    entry = table.resolve(topic)
     if topic_name is None and entry is None:
-        matches = command_registry.close_matches(topic, list(TOPICS) + list(TOPIC_ALIASES))
+        matches = table.close_matches(topic, list(TOPICS) + list(TOPIC_ALIASES))
         return {"no such topic": topic, "did you mean": matches,
                 "topics": list(TOPICS)}
     page = dict(TOPICS[topic_name](sim)) if topic_name else {}
     if entry is not None:
-        page["command"] = command_registry.page(entry["name"], sim.fog)
+        page["command"] = table.page(entry["name"], sim.view("fog_of_war")())
     return page
 
 

@@ -7,7 +7,7 @@ would run the concern needs the holder's licence. `world.patent_entry(node_id)` 
 """
 from typing import Any, Dict, Iterable, List, Optional
 
-from .player_commands import CommandRejected, register_command
+from .player_commands import CommandRejected
 from .tuning_patent import PATENT_TERM_YEARS
 
 
@@ -32,8 +32,7 @@ def holder_of(world: Any, node_id: str) -> Optional[str]:
 
 def blocked_reason(world: Any, actor: Any, node_id: str) -> str:
 	"""Why `actor` may not practise `node_id` for want of a licence, or an empty string."""
-	lookup = getattr(world, "patent_entry", None)
-	entry = lookup(node_id) if lookup is not None else None
+	entry = world.patent_entry(node_id)
 	if entry is None or entry["holder"] == actor.actor_id or actor.actor_id in entry["licensees"]:
 		return ""
 	return "%s holds the patent on %s and has not licensed it" % (entry["holder"], node_id)
@@ -47,7 +46,7 @@ def apply(actor: Any, node_id: str, world: Any) -> str:
 		raise CommandRejected("no state here knows how to grant a patent")
 	if node_id in world.baseline_knowledge() or not actor.knows(node_id, world):
 		raise CommandRejected("you can patent only an invention you hold")
-	if getattr(world, "disclosure_mode", lambda _node: "")(node_id) == "publish":
+	if world.disclosure_mode(node_id) == "publish":
 		raise CommandRejected("it is already published")
 	holder = holder_of(world, node_id)
 	if holder is not None:
@@ -94,6 +93,3 @@ def patent_command(player: Any, order: Dict[str, Any], world: Any) -> str:
 	if not isinstance(node_id, str) or not node_id:
 		raise CommandRejected("no node given")
 	return apply(player, node_id, world)
-
-
-register_command("patent", patent_command)

@@ -5,8 +5,11 @@ test_round8g_display."""
 import unittest
 from types import SimpleNamespace
 
+from sim.refusal import LogLine
+
 from sim.ui.proto.dispatch_labour import _cmd_train
 from sim.ui.proto.dispatch_ventures import _cmd_mothball, _cmd_ventures
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -16,12 +19,12 @@ NODES = {CAPABILITY: {"name": "Identity cover"}, ORDINARY: {"name": "Horizontal 
 
 
 def _ventures_stand_in(idle):
-    labour = SimpleNamespace(craft_trades_report=lambda: {"craft": ["smith"], "not_craft": ["labourer"]},
+    labour = Game(craft_trades_report=lambda: {"craft": ["smith"], "not_craft": ["labourer"]},
                              effective_scholars=lambda: 1.0)
-    return SimpleNamespace(
-        CAPABILITY_INSTITUTIONS=frozenset({CAPABILITY}), FOUNDER_IS_WORTH=1.0, founder_alive=True, artisans=2.0,
+    return Game(
+        CAPABILITY_INSTITUTIONS=frozenset({CAPABILITY}), FOUNDER_IS_WORTH=1.0, founder_alive=True, view=lambda name: (lambda: {"artisans": 2.0}),
         done=set(idle), operating=set(), labour=labour, policy={}, year=100, capital=1000.0,
-        state=SimpleNamespace(projects=SimpleNamespace(keep_staffed=set()), seat_progress=SimpleNamespace(_said_explanations=None)),
+        state=Game(projects=Game(keep_staffed=set()), acting_record=Game(seat_progress=Game(_said_explanations=None))),
         is_venture=lambda node_id: True, venture_capex=lambda node_id: 100.0, venture_staff_free=lambda: (1.0, 1.0),
         venture_staff_used=lambda: (0.0, 0.0), venture_staff_who_is_watching_what=lambda: [],
         venture_forecast_basis=lambda node_id: "forecast", venture_sale_basis=lambda node_id: "sale",
@@ -46,8 +49,11 @@ class VenturesSeparatesCapabilities(unittest.TestCase):
 
 
 def _mothball_stand_in():
-    return SimpleNamespace(CAPABILITY_INSTITUTIONS=frozenset({CAPABILITY}), year=100, log=[],
+    game = Game(CAPABILITY_INSTITUTIONS=frozenset({CAPABILITY}), year=100, log=[],
                            mothball_work=lambda node_id: (True, "shut " + node_id), upkeep=lambda: 3.0)
+    game.send = lambda command: ((True, "shut " + command.node_id) if type(command).__name__ == "MothballWork"
+                                 else game.log.append((game.year, LogLine(command.kind, command.text, **command.facts))))
+    return game
 
 
 class MothballWarnsOfALostCapability(unittest.TestCase):
@@ -64,12 +70,12 @@ class MothballWarnsOfALostCapability(unittest.TestCase):
 
 
 def _train_stand_in():
-    labour = SimpleNamespace(
+    labour = Game(
         train_check=lambda trade, quantity, source: ({"count": quantity}, None),
         trainee_wage_bill=lambda trade, count: 10.0 * count,
         train=lambda trade, quantity, source: (True, "teaching %d %s" % (quantity, trade)),
         director_pool=lambda: 100.0, director_hours_committed=lambda: 10.0)
-    return SimpleNamespace(labour=labour, capital=500.0)
+    return Game(labour=labour, capital=500.0)
 
 
 class TrainSaysHiringIsASecondStep(unittest.TestCase):

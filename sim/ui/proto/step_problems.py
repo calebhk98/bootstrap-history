@@ -19,23 +19,23 @@ _PROBLEM_OF_KIND = {
 
 def route_nodes(sim):
     """The goal's prerequisite closure, or an empty set when there is no goal."""
-    goal = sim.goal
-    if not goal or goal not in sim.nodes:
+    goal = sim.view("goal")()["node"]
+    if not goal or goal not in sim.view("tree_nodes")():
         return set()
-    return closure(sim.nodes, goal)
+    return closure(sim.view("tree_nodes")(), goal)
 
 
 def route_startable(sim, route):
     """True/False whether any unfinished node on the goal route can be begun now; None with no route."""
-    pending = [node_id for node_id in route if node_id not in sim.done and node_id not in sim.active]
+    pending = [node_id for node_id in route if node_id not in sim.view("techniques_held")() and node_id not in sim.view("active_projects")()]
     if not pending:
         return None
-    return any(sim.can_start(node_id) for node_id in pending)
+    return any(sim.view("start_check")(node_id, False, None, False)[0] for node_id in pending)
 
 
 def stalled_projects(sim):
     """Names of active projects that have been waiting on a trade nobody has."""
-    return [sim.nodes[node_id]["name"] for node_id, progress in sorted(sim.active.items())
+    return [sim.view("tree_nodes")()[node_id]["name"] for node_id, progress in sorted(sim.view("active_projects")().items())
             if progress.get("stalled_years", 0) > 0]
 
 

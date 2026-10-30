@@ -7,11 +7,13 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.instantaneous_project import is_instantaneous
-from sim.engine.project_throttle import input_pools, shared_throttle
-from sim.engine.shortage_sizing import nitre_bed_square_metres, nitre_deficit_tonnes
+from sim.projects.api import instantaneous
+is_instantaneous = instantaneous.is_instantaneous
+from sim.materials.rules import input_pools, shared_throttle
+from sim.resources.sizing import nitre_bed_square_metres, nitre_deficit_tonnes
 from sim.ui.proto import credit_forecast
 from sim.ui.proto.help import _agent_help
+from sim.tests.ui_stand_in import Game
 
 LAB = "_g"
 
@@ -90,7 +92,7 @@ class CreditForecastLabels(unittest.TestCase):
 
 class CapacityHelp(unittest.TestCase):
     def test_capacity_is_in_the_command_index_and_distinguishes_flow_from_stock(self):
-        commands = _agent_help(types.SimpleNamespace(fog=None), "commands")["commands"]
+        commands = _agent_help(Game(fog=None), "commands")["commands"]
         self.assertIn("capacity", commands)
         # presentation: the help text tells the player flow from durable stock
         for word in ("throughput", "stock", "materials"):

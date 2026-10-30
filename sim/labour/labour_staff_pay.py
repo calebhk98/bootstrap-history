@@ -14,24 +14,24 @@ from .staff_pay_rules import blended_pay, pay_of, roll_trade, settled_pay
 class StaffPayMixin:
 
     def keeps_pay_at_market(self):
-        return bool(self._world.state.founder.policy.get("keep_pay_at_market", True))
+        return bool(self._world.policy.get("keep_pay_at_market", True))
 
     def staff_pay(self, trade):
         """Money a year one person of `trade` on the payroll is paid: the going wage while pay is kept at
         the market, else the figure last settled (the going wage when none was)."""
         return pay_of(self.labour_market.quote_annual(trade), self.keeps_pay_at_market(),
-                      self._world.state.household.staff_pay_held.get(trade))
+                      self._world.workforce.staff_pay_held.get(trade))
 
     def note_hire_pay(self, trade, count, pay_premium=0.0):
         """Fold `count` new people hired at the going wage (plus `pay_premium`) into the trade's settled pay."""
-        household = self._world.state.household
+        workforce = self._world.workforce
         offered = self.labour_market.quote_annual(trade) * (1.0 + pay_premium)
-        household.staff_pay_held[trade] = blended_pay(
-            self.employed(trade), household.staff_pay_held.get(trade, offered), count, offered)
+        workforce.staff_pay_held[trade] = blended_pay(
+            self.employed(trade), workforce.staff_pay_held.get(trade, offered), count, offered)
 
     def settle_staff_pay(self):
         """Yearly: with pay kept at the market the settled figure follows it; trades no longer held are dropped."""
-        held_pay = self._world.state.household.staff_pay_held
+        held_pay = self._world.workforce.staff_pay_held
         settled = settled_pay(held_pay, sorted(self.employed_by_trade()), self.labour_market.quote_annual,
                               self.keeps_pay_at_market())
         held_pay.clear()

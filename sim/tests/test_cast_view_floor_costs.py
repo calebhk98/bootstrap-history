@@ -9,21 +9,20 @@ import unittest
 from unittest import mock
 
 from sim.agents.api import DOLE_MATERIAL, FOOD_NEED
-from sim.engine import agents_port_cast
-from sim.engine.agents_port_cast import CastView
+from sim.actors import world_cast
+from sim.actors.world_cast import CastView
+
+from .world_stand_in import fake_needs
 
 
 def stand_in(tile_costs, dole_cost=None):
-    sim = types.SimpleNamespace(
-        economy=types.SimpleNamespace(agent_need_floor_costs=lambda: tile_costs),
-        civ={}, world_map=None,
-        goods_market=types.SimpleNamespace(household_prices=lambda: {}))
+    needs = fake_needs(agent_need_floor_costs=lambda: tile_costs, household_basket=[], household_prices={})
     asked = []
 
     def material_cost(material, tonnes):
         asked.append((material, tonnes))
         return dole_cost
-    return types.SimpleNamespace(_sim=sim, subsistence_kg_per_person_year=lambda: 250.0, material_cost=material_cost,
+    return types.SimpleNamespace(needs=needs, subsistence_kg_per_person_year=lambda: 250.0, material_cost=material_cost,
                                  asked=asked)
 
 
@@ -34,16 +33,14 @@ class NeedFloorCosts(unittest.TestCase):
 
     def test_with_no_tile_costs_and_no_priced_need_the_food_floor_is_the_dole(self):
         view = stand_in({}, dole_cost=9.0)
-        with mock.patch.object(agents_port_cast.market_demand, "household_basket", return_value=[]), \
-                mock.patch.object(agents_port_cast.need_basket, "need_prices", return_value=[]):
+        with mock.patch.object(world_cast.need_basket, "need_prices", return_value=[]):
             costs = CastView.need_floor_costs_per_person_year(view)
         self.assertEqual(costs, {FOOD_NEED: 9.0})
         self.assertEqual(view.asked, [(DOLE_MATERIAL, 0.25)])
 
     def test_an_unpriced_dole_leaves_the_floor_empty(self):
         view = stand_in({}, dole_cost=None)
-        with mock.patch.object(agents_port_cast.market_demand, "household_basket", return_value=[]), \
-                mock.patch.object(agents_port_cast.need_basket, "need_prices", return_value=[]):
+        with mock.patch.object(world_cast.need_basket, "need_prices", return_value=[]):
             self.assertEqual(CastView.need_floor_costs_per_person_year(view), {})
 
 

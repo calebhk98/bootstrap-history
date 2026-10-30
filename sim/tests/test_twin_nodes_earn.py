@@ -7,7 +7,8 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import data, node_output, validate_unlinked_producers
+from sim.engine import data, validate_unlinked_producers
+from sim.production import node_output
 from sim.labour.labour_market import production_data
 
 LINKED = {"lead_metallurgy": "lead_kg", "mt2_zinc_by_retort": "zinc_kg", "pwr_coking": "carbon_kg"}

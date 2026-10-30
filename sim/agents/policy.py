@@ -5,7 +5,7 @@ policy returns the ones to act on. A human player, an AI or a mod can drive
 any actor by supplying a different policy.
 """
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterable, List
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 
 @dataclass(frozen=True)
@@ -99,17 +99,13 @@ def exports_allowed(actor: Any, materials: Iterable[str]) -> List[str]:
 	return sorted(option.subject for option in policy.choose(actor, decision))
 
 
-POLICY_FACTORIES: Dict[str, Callable[[], Policy]] = {
+BASE_POLICIES: Dict[str, Callable[[], Policy]] = {
 	"value": ValuePolicy,
 	"idle": IdlePolicy,
 	"export": ExportPolicy,
 }
 
 
-def register_policy(kind: str, factory: Callable[[], Policy]) -> None:
-	"""Make a policy nameable from a save file or a mod."""
-	POLICY_FACTORIES[kind] = factory
-
-
-def make_policy(kind: str) -> Policy:
-	return POLICY_FACTORIES.get(kind, ValuePolicy)()
+def make_policy(kind: str, factories: Optional[Dict[str, Callable[[], Policy]]] = None) -> Policy:
+	"""The policy a save file or a mod names, from the game's `factories` (the shipped base ones when none are given)."""
+	return (BASE_POLICIES if factories is None else factories).get(kind, ValuePolicy)()

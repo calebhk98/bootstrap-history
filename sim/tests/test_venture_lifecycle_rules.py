@@ -10,13 +10,9 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import economy_production, projects_staffing
-from sim.engine.economy_production import ProductionMixin
-from sim.engine.projects_capability import CapabilityMixin
-from sim.engine.projects_staffing import StaffingMixin
-from sim.engine.projects_venture_quotes import VentureQuotesMixin
-from sim.engine.projects_ventures import VenturesMixin
-from sim.engine.venture_net_loss import flags_net_loss
+from sim.production import revenue as production_revenue
+from sim.tests import production_host, projects_host, ventures_host
+from sim.ventures.net_loss import flags_net_loss
 from sim.refusal import cause_of
 from sim.ui.proto.shut_concerns import shut_concerns_yearly_value
 
@@ -47,22 +43,15 @@ class ShutConcernsValue(unittest.TestCase):
         self.assertIsNone(shut_concerns_yearly_value([(100.0, 900.0)]))
 
 
-class Capabilities(CapabilityMixin):
+def Capabilities(known, running):
     """The tree, what is known and what runs."""
-    NOT_OPERATING_BENEFIT = {"patron": "your protection", "university": "your protection", "school": "literacy"}
-
-    def __init__(self, known, running):
-        self.nodes = {name: {} for name in ("patron", "university", "school")}
-        self.known, self.open = set(known), set(running)
-
-    def has(self, node_id):
-        return node_id in self.known
-
-    def running(self, node_id):
-        return node_id in self.open
-
-    def mechanic(self, node_id, kind):
-        return {"redundant_with": ("school",)} if node_id == "university" else {}
+    benefits = {"patron": "your protection", "university": "your protection", "school": "literacy"}
+    module = production_host.build(
+        tree_nodes={name: {} for name in benefits}, capability_sets=(set(), set(), benefits),
+        techniques_held=set(known),
+        mechanic=lambda kind: {"patron": {}, "school": {}, "university": {"redundant_with": ("school",)}})
+    module.running = lambda node_id: node_id in set(running)
+    return module
 
 
 class CapabilityGaps(unittest.TestCase):
@@ -86,28 +75,13 @@ class CapabilityGaps(unittest.TestCase):
         self.assertEqual(self.ids({"university", "school"}, set()), ["school", "university"])
 
 
-class Reopening(VentureQuotesMixin):
-    SCALABLE_INSTITUTIONS = frozenset()
-    STAFF_CLOSURE_GRACE = 6
-    STAFF_CLOSURE_DISCOUNT = 0.1
-    RESTORE_COST_SHARE_OF_BUILD = 0.3
-    RESTORE_COST_MIN_UPKEEP_YEARS = 2.0
-
-    def __init__(self, venture=True, closure_age=None, capex=1000.0):
-        self.venture, self.age, self.capex = venture, closure_age, capex
-        self.nodes = {"shop": {"up": 50.0}}
-
-    def is_venture(self, node_id):
-        return self.venture
-
-    def venture_capex(self, node_id):
-        return self.capex
-
-    def project_cost(self, node_id):
-        return 2000.0
-
-    def staff_closure_age(self, node_id):
-        return self.age
+def Reopening(venture=True, closure_age=None, up=50.0):
+    """The ventures module over a one-concern tree: a concern's opening fee is 1000 and building it again cost 2000."""
+    module = ventures_host.build(
+        tree_nodes={"shop": {"up": up}}, is_venture=lambda node_id: venture, project_cost=lambda node_id: 2000.0,
+        staff_closure_age=lambda node_id: closure_age)
+    module.venture_capex = lambda node_id: 1000.0
+    return module
 
 
 class ReopenFee(unittest.TestCase):
@@ -127,49 +101,27 @@ class ReopenFee(unittest.TestCase):
         self.assertEqual(Reopening(venture=False).reopen_fee("shop"), 2000.0 * 0.3)
 
     def test_that_share_is_never_less_than_some_years_of_its_upkeep(self):
-        game = Reopening(venture=False)
-        game.nodes["shop"]["up"] = 1000.0
-        self.assertEqual(game.reopen_fee("shop"), 2000.0)
+        self.assertEqual(Reopening(venture=False, up=1000.0).reopen_fee("shop"), 2000.0)
 
 
-class Mothballing(StaffingMixin):
-    CLOSED_BY_CHOICE = "choice"
-
-    def __init__(self, upkeep=0.0, hands=(0.0, 0.0), running=True, granted=False, done=True):
-        self.closed = []
-        self.hands = hands
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(
-            done={"shop"} if done else set(), granted={"shop"} if granted else set(),
-            operating={"shop"} if running else set()))
-        self.nodes = {"shop": {"up": upkeep, "rev": 0.0, "cat": "craft"}}
-
-    def venture_hands(self, node_id):
-        return self.hands
-
-    def never_abandon(self, node_id):
-        return False
-
-    def venture_real_earnings(self, node_id):
-        return 0.0
-
-    def venture_real_upkeep(self, node_id):
-        return 0.0
-
-    def close_work(self, node_id, reason):
-        self.closed.append((node_id, reason))
-
-    def reopen_fee(self, node_id, units):
-        return 10.0
-
-    def reopen_units(self, node_id):
-        return 1.0
+def Mothballing(upkeep=0.0, hands=(0.0, 0.0), running=True, granted=False, done=True):
+    """The projects module over a one-concern tree, with what closing it asks recorded in `.closed`."""
+    projects = types.SimpleNamespace(done={"shop"} if done else set(), granted={"shop"} if granted else set(),
+                                     operating={"shop"} if running else set())
+    module = projects_host.build(
+        projects_record=projects, tree={"shop": {"up": upkeep, "rev": 0.0, "cat": "craft"}}, venture_hands=lambda node_id: hands,
+        never_abandon=lambda node_id: False, venture_real_earnings=lambda node_id: 0.0, venture_real_upkeep=lambda node_id: 0.0,
+        reopen_fee=lambda node_id: 10.0, money_text=lambda amount, grouped=False, short=False: "%g" % amount)
+    module.closed = []
+    module.CLOSED_BY_CHOICE = "choice"
+    module.close_work = lambda node_id, reason: module.closed.append((node_id, reason))
+    return module
 
 
 class Mothball(unittest.TestCase):
     def mothball(self, **kwargs):
         game = Mothballing(**kwargs)
-        with mock.patch.object(projects_staffing, "money_text", lambda money, sim, grouped=False: "%g" % money):
-            ok, note = game.mothball_work("shop")
+        ok, note = game.mothball_work("shop")
         return game, ok, note
 
     def test_a_concern_with_no_money_upkeep_but_staff_tied_up_is_released(self):
@@ -202,35 +154,20 @@ class Mothball(unittest.TestCase):
         self.assertFalse(ok)
 
 
-class Ramp(ProductionMixin):
-    def __init__(self, opened=None, done_year=None, year=130):
-        self.opened, self.done_year_value = opened, done_year
-        business = types.SimpleNamespace(opened_year_of=lambda node_id, default: opened if opened is not None else default)
-        self.state = types.SimpleNamespace(
-            projects=types.SimpleNamespace(business=business, done_year={"shop": done_year} if done_year is not None else {}),
-            scenario=types.SimpleNamespace(year=year))
-        self.cfg = {"revenue_ramp_years": 3}
-
-    def industry_depth(self, node_id):
-        return 0.0
+def Ramp(opened=None, done_year=None, year=130):
+    module = production_host.build(
+        year=year, game_setting={"revenue_ramp_years": 3}, done_year={"shop": done_year} if done_year is not None else {},
+        venture_opened_year=lambda node_id, default: opened if opened is not None else default)
+    module.industry_depth = lambda node_id: 0.0
+    return module
 
 
-class Opening(VenturesMixin):
-    """The tree and what is known, granted and running, for the refusals that come before any money moves."""
-    SCALABLE_INSTITUTIONS = frozenset()
-
-    def __init__(self, done=True, granted=False, practisable=False, venture=True, operating=False):
-        self.nodes = {"shop": {}}
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(
-            done={"shop"} if done else set(), granted={"shop"} if granted else set(),
-            operating={"shop"} if operating else set()))
-        self.practisable, self.venture = practisable, venture
-
-    def _practisable(self, node_id):
-        return self.practisable
-
-    def is_venture(self, node_id):
-        return self.venture
+def Opening(done=True, granted=False, practisable=False, venture=True, operating=False):
+    """The ventures module over the tree and what is known, granted and running, for the refusals that come before any money moves."""
+    return ventures_host.build(
+        tree_nodes={"shop": {}}, is_venture=lambda node_id: venture, practisable=lambda node_id: practisable,
+        projects_record=ventures_host.projects_record(
+            done={"shop"} if done else set(), granted={"shop"} if granted else set(), operating={"shop"} if operating else set()))
 
 
 class OpenRefusals(unittest.TestCase):
@@ -260,7 +197,7 @@ class OpenRefusals(unittest.TestCase):
 
 class VentureRamp(unittest.TestCase):
     def age_used(self, **kwargs):
-        with mock.patch.object(economy_production.plant_figures, "ramp", return_value=0.5) as ramp:
+        with mock.patch.object(production_revenue.plant_figures, "ramp", return_value=0.5) as ramp:
             Ramp(**kwargs).venture_ramp("shop")
         return ramp.call_args.args[0]
 
@@ -274,10 +211,18 @@ class VentureRamp(unittest.TestCase):
         self.assertEqual(self.age_used(opened=None, done_year=100, year=104), 4)
 
     def test_the_ramp_is_the_plant_figures_over_the_configured_years(self):
-        with mock.patch.object(economy_production.plant_figures, "ramp", return_value=0.5) as ramp:
+        with mock.patch.object(production_revenue.plant_figures, "ramp", return_value=0.5) as ramp:
             result = Ramp(opened=130, year=131).venture_ramp("shop")
         self.assertEqual(result, 0.5)
         self.assertEqual(ramp.call_args.args[:3], (1, 3, 0.0))
+
+
+class OperatingWorks(unittest.TestCase):
+    def test_the_open_works_are_the_live_set_of_the_seats_plants(self):
+        module = ventures_host.build(operating={"shop"})
+        self.assertEqual(set(module.operating()), {"shop"})
+        module.seat.business.open_plant("mill", 100)
+        self.assertEqual(set(module.operating()), {"shop", "mill"})
 
 
 if __name__ == "__main__":

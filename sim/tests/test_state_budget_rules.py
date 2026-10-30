@@ -6,7 +6,7 @@ import unittest
 
 from sim.agents import budget
 from sim.agents.tuning import ADMINISTRATIVE_SPAN, ARMY_ADJUSTMENT_RATE, LEVY_RATE_CEILING
-from sim.engine import state_notice_rules as rules
+from sim.polity import state_notice_rules as rules
 
 WAGE = {"soldier": 10.0, "scribe": 30.0}
 PRICE_PER_TONNE = 200.0

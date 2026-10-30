@@ -3,6 +3,7 @@
 
 QUICK_TOPIC = True
 
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
@@ -11,6 +12,7 @@ from sim.refusal import facts_of
 from sim.labour.labour_market_api import LabourMarket
 from sim.labour.labour_staff_ledger import StaffLedgerMixin
 from sim.labour.staff_book import StaffBookMixin
+from sim.tests import event_stand_in
 
 HOURS = 2000.0
 POOLS = {"common": 5000.0, "rare": 30.0}
@@ -37,7 +39,7 @@ class StubLabour(StaffBookMixin):
 def stub_market():
     household = SimpleNamespace(labour_pressure_records={}, employees={})
     world = SimpleNamespace(
-        state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=0)),
+        workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=0)),
         HOURS_PER_PERSON_YEAR=HOURS, wages={"gleaner": 1, "common": 1, "rare": 1},
         trade_family=lambda trade: "craft", price_index=1.0, wage_index=1.0,
         actor_staff_fte=lambda trade: 0.0,
@@ -73,8 +75,9 @@ class CoverLabour(StaffLedgerMixin, StaffBookMixin):
 
     def __init__(self, found):
         household = SimpleNamespace(employees={}, log=[])
-        self._world = SimpleNamespace(state=SimpleNamespace(household=household,
+        self._world = SimpleNamespace(workforce=household, view=workforce_stand_in.view_of(household), state=SimpleNamespace(household=household,
                                                             scenario=SimpleNamespace(year=1)))
+        event_stand_in.stood_in(self._world)
         self._found = found
 
     def hire(self, trade, count):

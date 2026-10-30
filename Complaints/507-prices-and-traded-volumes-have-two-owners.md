@@ -1,10 +1,10 @@
 # Prices and traded volumes have two owners: the engine's price solver and the agent economy
 
-**Status:** partly - owner decision (2026-10-14): the agent economy is the only owner of prices and volumes; the solver becomes a cost-of-making calculator only. Stages 1 to 3 are built and 4 and 5 partly (the plan's status line, `docs/architecture/ONE_PRICE_OWNER_PLAN.md`, is the live record); the rest and the report path below are open
+**Status:** partly - owner decision (2026-10-14): the agent economy is the only owner of prices and volumes; the solver becomes a cost-of-making calculator only. The module move gave each side one owner module: `sim/markets/` (the market book, clearing, the goods market and the agent economy's port) and `sim/prices/` (the solver and calculator, read through views by other modules). Stages 1 to 3 are built and 4 and 5 partly (the plan's status line, `docs/architecture/ONE_PRICE_OWNER_PLAN.md`, is the live record); what is open is the solver's remaining readers and the report path below
 
-Closed 115 made the agent economy the only economy. The engine's solver (`prices.solved_prices`, `sim/engine/prices.py`,
-`solve_prices*.py`) no longer has a demand model or clearing (stage 1), but project costs, the wage schedule
-(`wage_schedule.py`), producer costs (`producer_costs.py`), the price basis (`incumbent_prices.py`) and the market
+Closed 115 made the agent economy the only economy. The engine's solver (`prices.solved_prices`, `sim/prices/prices.py`,
+`sim/prices/solve_prices*.py`) no longer has a demand model or clearing (stage 1), but project costs, the wage schedule
+(`sim/workforce/wage_schedule.py`) and the market
 factor on node output still read its tables, while the agent economy clears real markets each year. Which readers
 still do is in the plan's section 1.1 and the measure below.
 
@@ -27,8 +27,8 @@ to the economy's prices through `sim.economy.api`. Measure progress with
 
 ## Report path (outside review)
 
-`GoodsMarket` (`sim/engine/goods_market_api.py`) quotes from the agent economy, but `GoodsMarket.state`
-returns `Sim.market_state` (`sim/engine/market_clearing.py`; `goods_market_api.py`, method `state`), computed from the older `world.market`
+`GoodsMarket` (`sim/markets/goods_market.py`) quotes from the agent economy, but `GoodsMarket.state`
+returns `Sim.market_state` (`sim/markets/clearing.py`; `goods_market.py`, method `state`), computed from the older `world.market`
 model and its `market_book` capacity and stock, and `GoodsMarket.add_stock` writes to that older stock.
 So one interface reports a different market from the one it trades in. Reports should be derived from
 the same clearing and settlement results as transactions; the cost-of-making answer stays, named as a

@@ -86,6 +86,9 @@ from sim.engine.state import ActorRecord as _Record, ActorsState as _ActorsState
 class _TonnesWorld:
     year = 100
 
+    def demonstrated(self):
+        return set()
+
     def __init__(self, makers):
         self.makers, self.asked = frozenset(makers), []
 
@@ -122,6 +125,8 @@ def _registry_of_firms(count):
             kind="firm", business=_Business.running(["plain_%03d" % number]),
             workforce={"smith": 1.5})
     registry = _Registry(state)
+    # the stub world answers only what firms and interest groups ask; the other spawners stay out of it
+    registry.extensions.spawners[:] = [entry for entry in registry.extensions.spawners if entry[0] in ("firm_entry", "interest_groups")]
     for number in [n for n in (17, 42) if n < count]:
         registry.actors["firm:%03d" % number].concerns.add("steelworks")
     return registry
@@ -142,11 +147,6 @@ check("...and an actor with no concern making the material asks the world about 
 # --- the staffing tally survives an actor's turn that left staff as it was found.
 _registry = _registry_of_firms(10)
 _registry.consider_entry = lambda world: []
-# the stub world answers only what firms and interest groups ask; the other spawners stay out of it
-from sim.agents import registry as _registry_module
-_saved_spawners = list(_registry_module.SPAWNERS)
-_registry_module.SPAWNERS[:] = [entry for entry in _registry_module.SPAWNERS
-                                if entry[0] in ("firm_entry", "interest_groups")]
 for _actor in _registry.actors.values():
     _actor.advance = lambda world: None
 _registry.staff_by_trade()
@@ -272,5 +272,3 @@ check("...and the count is right", _registry.concerns_in("cloth", _loom_nodes) =
 _registry.actors["firm:003"].concerns.add("forge")
 check("...and a firm taking on a concern is counted at once",
       _registry.concerns_in("metal", _loom_nodes) == 1 and _registry.concerns_in("cloth", _loom_nodes) == 20)
-
-_registry_module.SPAWNERS[:] = _saved_spawners   # the registry's spawner list is shared by every topic in the process

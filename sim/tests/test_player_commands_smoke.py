@@ -4,8 +4,10 @@ every spelling. The exclusion list rules are test_exclusion_rules, the parser an
 test_player_choice_routes. No years run."""
 import unittest
 
+from sim.knowledge.api import LearnTechnique
 from sim.tests.harness import NODES, S, unopened_sim
 from sim.ui.proto.typed import parse_typed
+from sim.projects.api import AutoOpenVentures
 
 
 def _typed(game, line):
@@ -21,9 +23,9 @@ def _ids(rows):
 class RushPreviewAndExclusionsTest(unittest.TestCase):
     def test_preview_starts_nothing_and_lists_the_ids_rush_then_starts_leaving_out_an_excluded_node(self):
         game = unopened_sim(capital=2_000_000)
-        victim = next(node_id for node_id in game.order if game.can_start(node_id))
+        victim = next(node_id for node_id in game.view("project_order")() if game.view("start_check")(node_id, False, None, False)[0])
         self.assertTrue(_typed(game, "exclude %s" % victim)["ok"])
-        self.assertIn(victim, game.state.projects.excluded)
+        self.assertIn(victim, game.view("exclusions")())
         preview = _typed(game, "rush preview limit:3")
         self.assertFalse(game.active)
         self.assertNotIn(victim, _ids(preview["would_start"]))
@@ -36,11 +38,10 @@ class RushPreviewAndExclusionsTest(unittest.TestCase):
 
     def test_auto_open_skips_an_excluded_concern(self):
         game = unopened_sim(capital=2_000_000)
-        venture = next(node_id for node_id in NODES if game.is_venture(node_id) and NODES[node_id]["rev"] > NODES[node_id]["up"])
-        game.done.add(venture)
-        game._done_changed()
-        game.state.projects.excluded.add(venture)
-        game.auto_open_ventures()
+        venture = next(node_id for node_id in NODES if game.view("is_venture")[node_id] and NODES[node_id]["rev"] > NODES[node_id]["up"])
+        game.send(LearnTechnique(venture))
+        game.view("exclusions")().add(venture)
+        game.send(AutoOpenVentures())
         self.assertNotIn(venture, game.operating)
 
 
@@ -51,8 +52,8 @@ class QuoteAndSchoolTest(unittest.TestCase):
         capital = game.capital
         _typed(game, "quote farm 20")
         self.assertEqual(game.capital, capital)
-        game.trades_created.add("chemist")
-        game.labour.market.press("chemist", 100)
+        game.state.seats[game.state.acting_seat].modules["workforce"].trades_created.add("chemist")
+        game.view("legacy_labour")().market.press("chemist", 100)
         for line in ("buy school chemist 1", "buy trade school chemist 1", "buy trade_school chemist 1"):
             reply = _typed(game, line)
             self.assertTrue(reply.get("ok"), (line, reply))

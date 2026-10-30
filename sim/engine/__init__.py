@@ -21,12 +21,11 @@ and pretending otherwise by handing each module its own object would have meant
 threading the same state through in pieces. The mixin lets each subject live in
 its own file without inventing boundaries the model does not have.
 
-`Sim` inherits from eight mixins rather than six. The other two,
-`ForwardingPropertiesMixin` (core_properties.py) and `StepPhasesMixin`
-(core_step_phases.py), are not subjects: they are mechanical lifts of
-`core.py`'s own bulk into files of their own, so `core.py` holds the class
-and one year's loop rather than every property and every phase of that loop
-as well. See `sim/ARCHITECTURE.md` for the current base list and the script
+The facts the root states on itself (`year`, `civ`, `done`, ...) are declared in `core.py` through
+root_facts.py, not by a mixin. The year's
+steps the root runs itself are plain functions in year_steps.py and the seat
+registry's are in seat_registry.py, so `core.py` holds the class and a
+one-line method for each. See `sim/ARCHITECTURE.md` for the current base list and the script
 that derives it.
 
 Enter through simulator.py, which is what every note, test and instruction in

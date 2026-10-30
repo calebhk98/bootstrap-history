@@ -7,56 +7,68 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine import shortage_conditions
-from sim.engine.fog import FogMixin
+from sim.materials import rules as shortage_conditions
+from sim.tests import materials_stand_in
+from sim.knowledge.api import FOG_KIND_HINTS, hidden_prerequisite_kinds, missing_prereq_message
 from sim.ui.cli_interactive import _play_print_welcome
 from sim.ui.proto.event_groups import group_disaster_events
 from sim.ui.proto.help import _agent_help
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
 
-def _game(year=100):
-    return SimpleNamespace(state=SimpleNamespace(scenario=SimpleNamespace(year=year),
-                                                 holdings=SimpleNamespace(shortage_condition=None)),
-                           material_shortfall_t=lambda material: 0.0)
+def _game(year=100, shortfall=0.0):
+    """The materials module over a clock the test moves, with the shortfall of any material fixed."""
+    clock = Game(year=year)
+    module = materials_stand_in.build(year=lambda: clock.year)
+    module.material_shortfall = lambda material: shortfall
+    module.clock_year = clock
+    return module
+
+
+def _year_on(game, years=1):
+    game.clock_year.year += years
+
+
+def _news(game, material, throughput):
+    return game.note_shortage(material, throughput)
 
 
 # --- 79: a shortage that persists is one standing condition, not a message a year
 shortage = _game()
-check("a first shortage is worth an event", shortage_conditions.note_shortage(shortage, "charcoal", 0.46))
-shortage.state.scenario.year += 1
-check("the same shortage a year later is not a new event", not shortage_conditions.note_shortage(shortage, "charcoal", 0.45))
-shortage.state.scenario.year += 1
-check("a material change in throughput is a new event", shortage_conditions.note_shortage(shortage, "charcoal", 0.20))
-check("a different material is a new event", shortage_conditions.note_shortage(shortage, "coal", 0.20))
-shortage.state.scenario.year += 3
-rows = shortage_conditions.condition_rows(shortage)
+check("a first shortage is worth an event", _news(shortage, "charcoal", 0.46))
+_year_on(shortage)
+check("the same shortage a year later is not a new event", not _news(shortage, "charcoal", 0.45))
+_year_on(shortage)
+check("a material change in throughput is a new event", _news(shortage, "charcoal", 0.20))
+check("a different material is a new event", _news(shortage, "coal", 0.20))
+_year_on(shortage, 3)
+rows = shortage.shortage_conditions()
 check("the standing condition names material, throughput and how long it has lasted",
       len(rows) == 1 and rows[0]["material"] == "coal" and rows[0]["years"] == 4 and rows[0]["throughput"] == 0.20, rows)
-shortage_conditions.clear_shortage(shortage)
-check("a resolved shortage leaves no condition", not shortage_conditions.condition_rows(shortage))
-check("and the next shortage is news again", shortage_conditions.note_shortage(shortage, "coal", 0.5))
+shortage.step_shortage_notes()      # the reading is back to full pace: nothing is slowed, the condition ends
+check("a resolved shortage leaves no condition", not shortage.shortage_conditions())
+check("and the next shortage is news again", _news(shortage, "coal", 0.5))
 
 steady = _game()
-shortage_conditions.note_shortage(steady, "coal", 0.5)
-steady.state.scenario.year += 1
-shortage_conditions.note_shortage(steady, "coal", 0.5 + shortage_conditions.STEADY_BAND / 2)
-check("a move inside the steady band reads as steady", shortage_conditions.condition_rows(steady)[0]["trend"] == "steady")
-shortage_conditions.note_shortage(steady, "coal", 0.5 + shortage_conditions.STEADY_BAND / 2 + 0.05)
-check("a rise beyond the band reads as improving", shortage_conditions.condition_rows(steady)[0]["trend"] == "improving")
-shortage_conditions.note_shortage(steady, "coal", 0.3)
-check("a fall beyond the band reads as worsening", shortage_conditions.condition_rows(steady)[0]["trend"] == "worsening")
+_news(steady, "coal", 0.5)
+_year_on(steady)
+_news(steady, "coal", 0.5 + shortage_conditions.STEADY_BAND / 2)
+check("a move inside the steady band reads as steady", steady.shortage_conditions()[0]["trend"] == "steady")
+_news(steady, "coal", 0.5 + shortage_conditions.STEADY_BAND / 2 + 0.05)
+check("a rise beyond the band reads as improving", steady.shortage_conditions()[0]["trend"] == "improving")
+_news(steady, "coal", 0.3)
+check("a fall beyond the band reads as worsening", steady.shortage_conditions()[0]["trend"] == "worsening")
 edge = _game()
-shortage_conditions.note_shortage(edge, "coal", 0.5)
+_news(edge, "coal", 0.5)
 check("a throughput move just under the material change is not news, and one at it is",
-      not shortage_conditions.note_shortage(edge, "coal", 0.5 - shortage_conditions.MATERIAL_THROUGHPUT_CHANGE + 0.01)
-      and shortage_conditions.note_shortage(edge, "coal", 0.5 - shortage_conditions.MATERIAL_THROUGHPUT_CHANGE - 0.01))
-deficit_game = _game()
-deficit_game.material_shortfall_t = lambda material: 12.34
-shortage_conditions.note_shortage(deficit_game, "coal", 0.5)
+      not _news(edge, "coal", 0.5 - shortage_conditions.MATERIAL_THROUGHPUT_CHANGE + 0.01)
+      and _news(edge, "coal", 0.5 - shortage_conditions.MATERIAL_THROUGHPUT_CHANGE - 0.01))
+deficit_game = _game(shortfall=12.34)
+_news(deficit_game, "coal", 0.5)
 check("a deficit in tonnes a year rides on the row when the material is short",
-      shortage_conditions.condition_rows(deficit_game)[0]["deficit_tonnes_per_year"] == 12.3)
+      deficit_game.shortage_conditions()[0]["deficit_tonnes_per_year"] == 12.3)
 # presentation: the standing-condition line names the material, throughput, deficit and trend
 line = shortage_conditions.condition_line({"material": "alum_kg", "throughput": 0.46, "deficit_tonnes_per_year": 12.3,
                                            "years": 3, "trend": "worsening"})
@@ -89,33 +101,34 @@ NODES_OF_KIND = {
 }
 
 
-class _Fogged(FogMixin):
-    civ = {"name": "Stubland"}
-
-    def __init__(self, done):
-        self.nodes = NODES_OF_KIND
-        self.state = SimpleNamespace(_fog=True, projects=SimpleNamespace(done=set(done), active={}, revealed=set()))
-
-    def is_visible(self, node_id, _memo=None):
-        return node_id not in ("near_hidden", "far_hidden")
+def _visible_but_for_the_two_hidden(node_id):
+    return node_id not in ("near_hidden", "far_hidden")
 
 
-near = _Fogged(done={"done_one"})
+def _hidden_kinds(hidden_ids, done):
+    return hidden_prerequisite_kinds(NODES_OF_KIND, hidden_ids, done)
+
+
+def _message(missing, done):
+    return missing_prereq_message(NODES_OF_KIND, missing, _visible_but_for_the_two_hidden, True, done)
+
+
+done_one = {"done_one"}
 check("a hidden prerequisite near known work (half its own prerequisites built) names its kind",
-      near._hidden_prerequisite_kinds(["near_hidden"]) == [FogMixin.FOG_KIND_HINTS["INSTITUTION"]])
-check("one far from anything known gets no kind hint", near._hidden_prerequisite_kinds(["far_hidden"]) == [])
-message = near.missing_prereq_message(["near_hidden"])
+      _hidden_kinds(["near_hidden"], done_one) == [FOG_KIND_HINTS["INSTITUTION"]])
+check("one far from anything known gets no kind hint", _hidden_kinds(["far_hidden"], done_one) == [])
+message = _message(["near_hidden"], done_one)
 check("a hidden prerequisite still hides its identity", "near_hidden" not in message and "Near" not in message, message)
 # presentation: the fog sentence names the kind of thing
 check("...and the message names its kind", "institution" in message.lower(), message)
 check("the message for the far one carries no kind",
-      "institution" not in near.missing_prereq_message(["far_hidden"]).lower()
-      and "idea or body" not in near.missing_prereq_message(["far_hidden"]).lower())
+      "institution" not in _message(["far_hidden"], done_one).lower()
+      and "idea or body" not in _message(["far_hidden"], done_one).lower())
 check("a hidden prerequisite with no prerequisites of its own counts as near",
-      near._hidden_prerequisite_kinds(["leaf_resource"]) == [FogMixin.FOG_KIND_HINTS["RESOURCE"]])
+      _hidden_kinds(["leaf_resource"], done_one) == [FOG_KIND_HINTS["RESOURCE"]])
 
 # --- 99 and 102: the first-screen help points at the beginner index and at sittings
-help_reply = _agent_help(SimpleNamespace(fog=False), "commands")
+help_reply = _agent_help(Game(fog=False), "commands")
 first_key = next(iter(help_reply))
 # presentation: the first heading of the commands page
 check("help commands opens with a short beginner index",
@@ -123,7 +136,7 @@ check("help commands opens with a short beginner index",
 
 welcome = io.StringIO()
 with contextlib.redirect_stdout(welcome):
-    _play_print_welcome(SimpleNamespace(year=100, capital=1000.0, civ={"id": "stub"}, fog=False), "poor_scholar")
+    _play_print_welcome(Game(year=100, capital=1000.0, civ={"id": "stub"}, fog=False), "poor_scholar")
 # presentation: the welcome screen names the help topics
 check("the welcome screen points at the sittings topic and the beginner index",
       "help sittings" in welcome.getvalue() and "help commands" in welcome.getvalue(), welcome.getvalue()[-400:])

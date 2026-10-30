@@ -1,19 +1,27 @@
 """Complaints/45, the forest half: the woodland a civilisation can hold follows the ground it holds, not the number of
-region labels the ground is filed under. The rule is sim/engine/forest_ceiling.py, called on civilisations built here
+region labels the ground is filed under. The rule is sim/resources/ceilings.py, called on civilisations built here
 and read against the real map (no game is built)."""
 QUICK_TOPIC = True
 
 import unittest
 
 from sim.engine.data import load_civ
-from sim.engine.economy_mining import MiningMixin
-from sim.engine.forest_ceiling import forest_ceiling_hectares, held_land_area_km2, revenue_scale_multiple
+from sim.resources import constants as resource_constants
+from sim.resources.ceilings import forest_ceiling_hectares, revenue_scale_multiple
 from sim.geography.api import layer_value, open_map
+from sim.tests import land_host
 
 WORLD_MAP = open_map()
+
+
+def held_land_area_km2(civilisation, world_map):
+    """The land area the land module gives the tiles the civilisation holds on the map."""
+    module = land_host.build(civilisation)
+    module._map_cache = world_map
+    return module.land_area_of(module.tiles_listed_by(civilisation))
 REACH = 0.6
-BASE = MiningMixin.FOREST_HA_PER_MILLION_KM2_BASE
-PER_CAPACITY = MiningMixin.FOREST_HA_PER_MILLION_KM2_PER_SC
+BASE = resource_constants.FOREST_HA_PER_MILLION_KM2_BASE
+PER_CAPACITY = resource_constants.FOREST_HA_PER_MILLION_KM2_PER_SC
 
 
 def territory(*region_labels):

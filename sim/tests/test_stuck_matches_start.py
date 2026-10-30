@@ -2,49 +2,32 @@
 Complaint 640: both rules are called on a stand-in game that answers the few questions they ask; no game is played."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
-
 from .harness import check
 
-from sim.engine.projects_starting import StartingMixin
 from sim.refusal import cause_of, facts_of
+from sim.tests import projects_host
 from sim.ui.proto import dispatch_inspection_stuck as dispatch_inspection
+from sim.tests.ui_stand_in import FactViews
 
 PRICE = 1000.0
 LINE = 600.0
 
 
-class StartGame(StartingMixin):
-    """A game that holds a cash balance, a credit line, work in hand and a bill for each node; only the money rule is real."""
+class StartGame(FactViews):
+    """A game that holds a cash balance, a credit line, work in hand and a bill for each node; the money rule is the
+    projects module's own, built with just those figures."""
 
     def __init__(self, capital, owed=0.0):
-        projects = SimpleNamespace(active={"in_hand": {"cost_left": owed}} if owed else {}, paid_towards={}, operating=set(),
-                                   done=set(), granted=set())
-        self.state = SimpleNamespace(projects=projects, household=SimpleNamespace(capital=capital, employees={}))
-        self.civ = {}
-        self.mine_capacity = {}
-        self.done, self.active = set(), projects.active
-
-    def project_cost(self, node_id):
-        return PRICE
-
-    def project_material_upfront_refusal(self, node_id):
-        return None
-
-    def credit_limit(self):
-        return LINE
-
-    def _stock_key(self, material):
-        return material
-
-    def _material_stock(self):
-        return {}
+        state = projects_host.projects_state(active={"in_hand": {"cost_left": owed}} if owed else {})
+        self.projects = projects_host.build(
+            projects_record=state, acting_balance=capital, credit_limit=LINE, project_cost=lambda node_id: PRICE)
+        self.done, self.active = set(), state.active
 
     def start_reason(self, node_id):
         return (node_id != "locked", "")
 
     def start_refusal(self, node_id, extra_owed=0.0):
-        return self._money_refusal(node_id, extra_owed)
+        return self.projects.money_refusal(node_id, extra_owed)
 
 
 NODES = {"cheap": {}, "locked": {}, "dear": {}}

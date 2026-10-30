@@ -1,7 +1,9 @@
 """A stand-in world for `Labour` (a real civilisation file and a real `Population`), so labour rules run with no game built."""
 from types import SimpleNamespace
 
-from sim.engine import data, solve_prices_core
+from sim.prices import solve_prices_core
+
+from sim.engine import data
 from sim.geography import api as geography
 from sim.world import demography
 
@@ -11,13 +13,14 @@ def stand_in_world(civ_id="rome_100ad", total=None):
     population = demography.Population.stationary(float(civ["population"]) / 50.0, seed=1)
     if total is not None:
         shrink(population, total)
+    household = SimpleNamespace(base_tile=None, employees={}, trades_created=set(), trade_schools={})
     return SimpleNamespace(
+        workforce=household, society=SimpleNamespace(society_labour_hours={}, wage_tightness_factors={}),
         civ=civ, urban_fraction=lambda: float(civ.get("urban_fraction", 0.0)), home_tiles_held=lambda: geography.tiles_held(civ), people_by_tile=lambda: None, pop_scale=1.0,
-        population=population, state=SimpleNamespace(household=SimpleNamespace(base_tile=None, employees={}, trades_created=set(),
-                                                                                  trade_schools={}),
-                                                     economy=SimpleNamespace(improvements={}, society_labour_hours={}),
-                                                     projects=SimpleNamespace(done=set())),
-        held_and_running=lambda: frozenset(civ.get("starting_techs", ())), trades_absent=set(), wages=data.WAGES, trade_family=data.trade_family,
+        provided_town_population=lambda tile, nominal_people: None, has_town_premiums=lambda: False,
+        population=population, projects=SimpleNamespace(done=set(), done_year={}, granted=set(), operating=set(), active={}), balance=0.0,
+        bondage_years_left=0, set_farm_land=lambda hectares, quality: None,
+        held_and_running=lambda: frozenset(civ.get("starting_techs", ())), built_ways=lambda: {}, trades_absent=set(), wages=data.WAGES, trade_family=data.trade_family,
         literacy=lambda field: 0.05, HOURS_PER_PERSON_YEAR=2000.0, actor_staff_fte=lambda trade: 0.0, economy=SimpleNamespace(agent_people_by_trade=lambda: None),
         techniques_available_to=solve_prices_core.techniques_available_to,
         trade_registry={trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}

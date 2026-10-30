@@ -5,11 +5,12 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.civ_cost import civ_cost_factor, multiplier_for
+from sim.diffusion.civ_cost import civ_cost_factor, multiplier_for
 from sim.engine.core import Sim
-from sim.engine.economy import EconomyMixin
-from sim.engine.hazard_relief import HazardReliefMixin
-from sim.engine.value_weight import shifted
+from sim.hazards import constants
+from sim.tests import hazards_host
+from sim.tests import projects_host
+from sim.polity.value_weight import VALUE_WEIGHT_CEILING, VALUE_WEIGHT_FLOOR, shifted
 from sim.labour.labour_population import PopulationMixin
 
 MULTIPLIERS = {"ships": 0.5, "infrastructure": 2.0, "commerce": 1.5, "chemical": 3.0}
@@ -63,45 +64,36 @@ class CivCostTests(unittest.TestCase):
 
 class MoneyFactorTests(unittest.TestCase):
     def test_a_quoted_cost_means_the_price_level_and_not_the_coins_silver(self):
-        stub = SimpleNamespace(price_index=1.7, money_real=1.0)
-        before = EconomyMixin.cost_money_factor(stub)
-        stub.money_real = 0.005
-        self.assertEqual(EconomyMixin.cost_money_factor(stub), before)
+        money_real = [1.0]
+        module = projects_host.build(price_index=1.7, money_real=lambda: money_real[0])
+        before = module.cost_money_factor()
+        money_real[0] = 0.005
+        self.assertEqual(module.cost_money_factor(), before)
         self.assertEqual(before, 1.7)
 
 
-class Defended(HazardReliefMixin):
-    """Just what hazard_relief_entries reads: a table of counters, which of them stand, and the own mines."""
-    STATE_MIL_RELIEF_PER_WEAPON_OUTPUT = 0.04
-    STATE_MIL_RELIEF_PER_WEAPON_SACK = 0.06
+def rows_of(counters):
+    """The mechanics module's rows ({kind: [(order, node, share, label)]}) of a table of counters."""
+    return {kind: [(index, node, share, label) for index, (node, share, label) in enumerate(entries)]
+            for kind, entries in counters.items()}
 
-    def __init__(self, strengths=None, counters=None, gold=0.0, silver=0.0, adopted=None):
-        self.HAZARD_COUNTERS = counters if counters is not None else {
+
+class Defended:
+    """The hazards module over a table of counters, which of them stand (running) or are shut (built, not running), the
+    own mines and what the country has adopted."""
+
+    def __init__(self, running=(), closed=(), counters=None, gold=0.0, silver=0.0, adopted=None):
+        counters = counters if counters is not None else {
             "staff_loss": [("sanitation", 0.4, "sanitation"), ("quarantine", 0.5, "quarantine")],
-            "real_erosion": [("_own_gold", 0.6, "your own gold"), ("_own_silver", 0.3, "your own silver")],
             "sack_chance": [("walls", 0.5, "walls"), ("cannon", 0.4, "cannon"), ("garrison", 0.5, "garrison")]}
-        self.strengths, self.adopted = strengths or {}, adopted or {}
-        self.mine_capacity = {"gold": gold, "silver": silver}
-        self.state = SimpleNamespace(projects=SimpleNamespace(closures={}))
-        self.nodes = {name: {"name": name} for name in ("sanitation", "quarantine", "walls", "cannon", "garrison")}
+        standing, adopted = set(running), adopted or {}
+        self.module = hazards_host.build(
+            hazard_counter_rows=rows_of(counters), techniques_held=standing | set(closed), running=lambda node: node in standing,
+            tree=lambda node: {"name": node}, civ_diffusion=lambda node: adopted.get(node, 0.0),
+            mine_capacity={"gold": gold, "silver": silver})
 
-    def _counter_strength(self, node):
-        return self.strengths.get(node, 0.0)
-
-    def _counter_requirements(self, node, kind, label):
-        return ()
-
-    def counter_supply_gap(self, node, kind, label):
-        return 1.0, None
-
-    def civ_diffusion(self, node):
-        return self.adopted.get(node, 0.0)
-
-    def _military_war_relief(self):
-        return 1.0, None
-
-    def _state_military_diffusion_relief(self, per_weapon):
-        return 1.0, None
+    def hazard_relief(self, kind, beyond_national=False):
+        return self.module.hazard_relief(kind, beyond_national)
 
 
 class HazardReliefTests(unittest.TestCase):
@@ -109,21 +101,21 @@ class HazardReliefTests(unittest.TestCase):
         self.assertEqual(Defended().hazard_relief("staff_loss"), (1.0, []))
 
     def test_medicine_blunts_a_plague(self):
-        relief, why = Defended({"sanitation": 1.0}).hazard_relief("staff_loss")
+        relief, why = Defended({"sanitation"}).hazard_relief("staff_loss")
         self.assertAlmostEqual(relief, 0.6)
         self.assertEqual(why, ["sanitation"])
 
     def test_each_defence_removes_a_share_of_what_is_left_so_five_partial_answers_are_strong(self):
-        relief, _ = Defended({"sanitation": 1.0, "quarantine": 1.0}).hazard_relief("staff_loss")
+        relief, _ = Defended({"sanitation", "quarantine"}).hazard_relief("staff_loss")
         self.assertAlmostEqual(relief, 0.6 * 0.5)
 
-    def test_a_defence_only_partly_standing_blunts_by_that_part(self):
-        relief, why = Defended({"sanitation": 0.5}).hazard_relief("staff_loss")
-        self.assertAlmostEqual(relief, 1.0 - 0.4 * 0.5)
+    def test_a_defence_shut_down_blunts_by_the_part_that_lingers(self):
+        relief, why = Defended(closed={"sanitation"}).hazard_relief("staff_loss")
+        self.assertAlmostEqual(relief, 1.0 - 0.4 * constants.KNOWLEDGE_RESIDUE_AFTER_CLOSURE)
         self.assertIn("lapsed", why[0])      # a part-standing defence is told as closed
 
     def test_your_own_gold_mine_blunts_a_debasement(self):
-        self.assertAlmostEqual(Defended(gold=1.0).hazard_relief("real_erosion")[0], 0.4)
+        self.assertAlmostEqual(Defended(gold=1.0).hazard_relief("real_erosion")[0], 1.0 - constants.HAZARD_EROSION_OWN_GOLD)
         self.assertEqual(Defended(gold=0.0).hazard_relief("real_erosion")[0], 1.0)
 
     def test_a_trace_of_gold_does_not_count_as_a_mine(self):
@@ -136,16 +128,15 @@ class HazardReliefTests(unittest.TestCase):
         self.assertLess(silver, 1.0)
 
     def test_every_military_counter_standing_blunts_a_sacking_but_never_zeroes_it(self):
-        everything = Defended({"walls": 1.0, "cannon": 1.0, "garrison": 1.0})
+        everything = Defended({"walls", "cannon", "garrison"})
         relief, why = everything.hazard_relief("sack_chance")
         self.assertGreater(relief, 0.0)
         self.assertLess(relief, Defended().hazard_relief("sack_chance")[0])
         self.assertEqual(len(why), 3)
 
     def test_what_the_country_has_adopted_does_not_count_twice_for_the_household(self):
-        alone = Defended({"sanitation": 1.0}).hazard_relief("staff_loss", beyond_national=True)[0]
-        adopted = Defended({"sanitation": 1.0}, adopted={"sanitation": 0.5}).hazard_relief(
-            "staff_loss", beyond_national=True)[0]
+        alone = Defended({"sanitation"}).hazard_relief("staff_loss", beyond_national=True)[0]
+        adopted = Defended({"sanitation"}, adopted={"sanitation": 0.5}).hazard_relief("staff_loss", beyond_national=True)[0]
         self.assertGreater(adopted, alone)
         self.assertAlmostEqual(adopted, 1.0 - 0.4 * 0.5)
 
@@ -159,7 +150,7 @@ class TradeAvailabilityTests(unittest.TestCase):
     def population(self, absent=("machinist",), created=(), schools=None):
         world = SimpleNamespace(
             trades_absent=set(absent),
-            state=SimpleNamespace(household=SimpleNamespace(trades_created=set(created), trade_schools=schools or {})))
+            workforce=SimpleNamespace(trades_created=set(created), trade_schools=schools or {}))
         return SimpleNamespace(_world=world)
 
     def available(self, trade, **kwargs):
@@ -189,7 +180,7 @@ class ValueWeightTests(unittest.TestCase):
         self.assertEqual(shifted(1.4, 0.5, -1.0, 1.5), 1.5)
 
     def test_the_engines_bounds_are_a_floor_below_a_ceiling(self):
-        self.assertLess(Sim.VALUE_WEIGHT_FLOOR, Sim.VALUE_WEIGHT_CEILING)
+        self.assertLess(VALUE_WEIGHT_FLOOR, VALUE_WEIGHT_CEILING)
 
 
 if __name__ == "__main__":

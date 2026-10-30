@@ -13,8 +13,13 @@ import unittest
 from unittest import mock
 
 from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
-from sim.engine import foreign_capacity, material_availability, prices as engine_prices, solve_prices
-from sim.engine.goods_market_offers import GoodsOffers, HOME_SELLER
+from sim.prices import prices as engine_prices, solve_prices
+from sim.markets.goods_offers import GoodsOffers, HOME_SELLER
+from sim.foreign_trade.constants import FOREIGN_OUTPUT_PER_POPULATION_SHARE
+from sim.foreign_trade.module import ForeignTrade
+from sim.foreign_trade.state import ForeignTradeWorld
+from sim.projects.api import START_CHECKS
+from sim.tests import materials_stand_in, module_harness
 
 
 def _wage_document():
@@ -71,7 +76,10 @@ class _Route:
 
 def _fake_sim(home_prices, partner_makes, partner_prices, gated=(), supply=None, lift_in=math.inf):
     supply = supply or {}
+    remembered = {}     # what the market keeps for the acting seat
     return types.SimpleNamespace(
+        civ={"id": "home"}, remembered=remembered.get, remember=remembered.__setitem__, not_traded_materials=frozenset,
+        border_terms=lambda destination, source: (0.0, False),
         _price_tables=lambda: ({}, {material: ("gated" if material in gated else "solved")
                                     for material in home_prices}),
         foreign_supply_tonnes=lambda partner, material: supply.get(material, 1000.0),
@@ -79,11 +87,9 @@ def _fake_sim(home_prices, partner_makes, partner_prices, gated=(), supply=None,
         _material_tag=lambda material: (material, material),
         _material_prices=lambda: home_prices,
         foreign_economies=lambda: ["partner"],
-        state=types.SimpleNamespace(projects=types.SimpleNamespace(done=()),
-                                    scenario=types.SimpleNamespace(year=100)),
+        year=100, state=types.SimpleNamespace(projects=types.SimpleNamespace()), techniques_held=frozenset,
         market_rate=lambda: 0.05,
         partner_price_level=lambda partner: 1.0,
-        household=types.SimpleNamespace(),
         _foreign_economy_facts=lambda partner: {"solved_materials": frozenset(partner_makes),
                                                 "prices_in_home_money": partner_prices},
         _trader_margin_share=lambda partner, route: 0.1,
@@ -143,9 +149,9 @@ class SellerInReachTests(unittest.TestCase):
         self.assertIsNone(offers.unit_price("cassia_kg"))
 
     def test_a_partner_that_will_not_let_it_cross_a_border_does_not_sell_it(self):
-        with mock.patch("sim.engine.foreign_economies.not_traded_materials", lambda: frozenset({"cassia_kg"})):
-            offers = _Offers(self.sim)
-            self.assertIsNone(offers.offered_by("cassia_kg"))
+        self.sim.not_traded_materials = lambda: frozenset({"cassia_kg"})
+        offers = _Offers(self.sim)
+        self.assertIsNone(offers.offered_by("cassia_kg"))
 
 
 class CheapestSellerInReachTests(unittest.TestCase):
@@ -204,36 +210,27 @@ class ImportVolumeTests(unittest.TestCase):
         self.assertEqual(self._offers(supply=300.0, lift_in=0.0).import_tonnes_available("cassia_kg"), 0.0)
 
 
-class _Partner(foreign_capacity.ForeignCapacityMixin):
-    DEFAULT_POPULATION_100AD = 100.0
+def _Partner(can_make=True, opening=(0.0, 0.0), mined=False, book=None, curated=True, own_population=50.0):
+    """The foreign-trade module over one partner whose facts, chain and opening are written out; the national output of
+    every commodity is 1000 tonnes, stated for 100 people (a curated commodity) or for this society's own population."""
+    class Stubbed(ForeignTrade):
+        def partner_facts(self, civilization_id):
+            return {"solved_materials": frozenset({"ore_kg"})}
 
-    def __init__(self, can_make=True, opening=(0.0, 0.0), mined=False, book=None, curated=True, own_population=50.0):
-        self.res = {"empire_output_100ad": {"ore_kg": 1.0} if curated else {}}
-        self.civ = {"population": own_population}
-        self.state = types.SimpleNamespace(economy=types.SimpleNamespace(
-            foreign_market_book={"partner": book or {}}))
-        self._can_make, self._opening, self._mined = can_make, opening, mined
+        def partner_civ(self, civilization_id):
+            return {"population": 10.0}
 
-    def _foreign_economy_facts(self, civilization_id):
-        return {"solved_materials": frozenset({"ore_kg"})}
+        def _can_make(self, civilization_id, material, solved, _seen=None):
+            return can_make
 
-    def _material_tag(self, material):
-        return material, material
+        def foreign_opening(self, civilization_id, commodity, solved):
+            return opening
 
-    def partner_civ(self, civilization_id):
-        return {"population": 10.0}
-
-    def _foreign_can_make(self, civilization_id, material, solved):
-        return self._can_make
-
-    def foreign_opening(self, civilization_id, commodity, solved):
-        return self._opening
-
-    def _tracked_mineral(self, commodity):
-        return self._mined
-
-    def _national_output_tonnes(self, commodity):
-        return 1000.0
+        def _tracked_mineral(self, commodity):
+            return mined
+    return module_harness.build(Stubbed, world=ForeignTradeWorld(market_book={"partner": book or {}}), views={
+        "material_commodity": lambda material: material,
+        "national_output": lambda commodity: (1000.0, 100.0 if curated else own_population)})
 
 
 class PartnerSupplyTests(unittest.TestCase):
@@ -257,51 +254,45 @@ class PartnerSupplyTests(unittest.TestCase):
         self.assertEqual(self._supply(_Partner(mined=True)), 0.0)
 
     def test_an_input_only_good_follows_the_partners_size_against_the_table_it_is_stated_for(self):
-        self.assertAlmostEqual(self._supply(_Partner()), 1000.0 * 10.0 / 100.0 * foreign_capacity.FOREIGN_OUTPUT_PER_POPULATION_SHARE)
+        self.assertAlmostEqual(self._supply(_Partner()), 1000.0 * 10.0 / 100.0 * FOREIGN_OUTPUT_PER_POPULATION_SHARE)
 
     def test_a_good_outside_the_reference_table_follows_this_societys_own_size(self):
-        self.assertAlmostEqual(self._supply(_Partner(curated=False)), 1000.0 * 10.0 / 50.0 * foreign_capacity.FOREIGN_OUTPUT_PER_POPULATION_SHARE)
+        self.assertAlmostEqual(self._supply(_Partner(curated=False)), 1000.0 * 10.0 / 50.0 * FOREIGN_OUTPUT_PER_POPULATION_SHARE)
 
 
 class ProjectNeedsASellerTests(unittest.TestCase):
 
+    NODE = {"mat": {"cobalt_kg": 100.0, "wheat_kg": 10.0}}
+
     def _project(self, offers, stock_tonnes=0.0):
-        node = {"mat": {"cobalt_kg": 100.0, "wheat_kg": 10.0}}
-        game = types.SimpleNamespace(
-            nodes={"alloy_works": node}, goods_market=offers,
-            project_material_needs=lambda node_id: dict(node["mat"]),
-            _material_tag=lambda material: (material, material),
-            material_stock_t=lambda key: stock_tonnes)
-        return game
+        return materials_stand_in.build(tree_nodes={"alloy_works": self.NODE}, can_be_bought=offers.can_be_bought,
+                                        goods_stock=lambda key: stock_tonnes)
+
+    def _verdict(self, game, why):
+        return game.start_gate_material_seller("alloy_works", self.NODE, False, None, why)
 
     def test_a_project_needing_an_unsold_material_cannot_start_and_says_why(self):
         offers = _Offers(_fake_sim({"wheat_kg": 4.0}, set(), {}))
-        game = self._project(offers)
-        verdict = material_availability.check_materials_have_a_seller(game, "alloy_works", game.nodes["alloy_works"],
-                                                                      False, None, True)
+        verdict = self._verdict(self._project(offers), True)
         self.assertFalse(verdict[0])
         self.assertIn("cobalt_kg", verdict[1])
         self.assertNotIn("wheat_kg", verdict[1])
-        self.assertTrue(material_availability.check_materials_have_a_seller.blocker_kind == "supply")
+
+    def test_the_gate_reports_the_blocker_of_supply(self):
+        (check,) = [check for check in START_CHECKS if check.source == "start_gate_material_seller"]
+        self.assertEqual((check.cause, check.kind), ("materials_have_a_seller", "supply"))
 
     def test_the_boolean_answer_needs_no_sentence(self):
         offers = _Offers(_fake_sim({"wheat_kg": 4.0}, set(), {}))
-        game = self._project(offers)
-        verdict = material_availability.check_materials_have_a_seller(game, "alloy_works", game.nodes["alloy_works"],
-                                                                      False, None, False)
-        self.assertEqual(verdict, (False, None))
+        self.assertEqual(self._verdict(self._project(offers), False), (False, None))
 
     def test_a_partner_that_sells_it_lets_the_project_start(self):
         offers = _Offers(_fake_sim({"wheat_kg": 4.0}, {"cobalt_kg"}, {"cobalt_kg": 20.0}))
-        game = self._project(offers)
-        self.assertIsNone(material_availability.check_materials_have_a_seller(
-            game, "alloy_works", game.nodes["alloy_works"], False, None, True))
+        self.assertIsNone(self._verdict(self._project(offers), True))
 
     def test_stock_already_held_needs_no_seller(self):
         offers = _Offers(_fake_sim({"wheat_kg": 4.0}, set(), {}))
-        game = self._project(offers, stock_tonnes=math.inf)
-        self.assertIsNone(material_availability.check_materials_have_a_seller(
-            game, "alloy_works", game.nodes["alloy_works"], False, None, True))
+        self.assertIsNone(self._verdict(self._project(offers, stock_tonnes=math.inf), True))
 
 
 class AlternativeEnergyCycleTests(unittest.TestCase):

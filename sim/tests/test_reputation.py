@@ -9,30 +9,25 @@ from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.projects_capability import CapabilityMixin
-from sim.engine.projects_completion import CompletionMixin
+from sim.projects import constants as projects_constants
+from sim.tests import production_host, projects_host
 
 QUICK_TOPIC = True
 
 
-class _Finishing(CompletionMixin):
-    """The reputation gain of a finished node, over a state interest the test sets. It has no `operating` of any kind,
-    so the gain cannot read whether the node was ever opened."""
-
-    def __init__(self, interest):
-        self.interest = interest
-
-    def state_interest(self, node):
-        return self.interest
+def _Finishing(interest):
+    """The reputation gain of a finished node, over a state interest the test sets. The module has no `operating` of any kind
+    set up, so the gain cannot read whether the node was ever opened."""
+    return projects_host.build(state_interest=lambda node: interest, operating=None)
 
 
 _base = _Finishing(0.0).reputation_gain_of({"rev": 0})
 check("finishing a node with no revenue and no state interest adds the base standing",
-      _base == CompletionMixin.REPUTATION_GAIN_BASE, _base)
+      _base == projects_constants.REPUTATION_GAIN_BASE, _base)
 check("revenue adds the revenue bonus",
-      abs(_Finishing(0.0).reputation_gain_of({"rev": 5}) - _base - CompletionMixin.REPUTATION_GAIN_REVENUE_BONUS) < 1e-12)
+      abs(_Finishing(0.0).reputation_gain_of({"rev": 5}) - _base - projects_constants.REPUTATION_GAIN_REVENUE_BONUS) < 1e-12)
 check("state approval adds its coefficient times the interest, and disapproval subtracts nothing",
-      abs(_Finishing(2.0).reputation_gain_of({"rev": 0}) - _base - 2.0 * CompletionMixin.REPUTATION_GAIN_STATE_INTEREST_COEFFICIENT) < 1e-12
+      abs(_Finishing(2.0).reputation_gain_of({"rev": 0}) - _base - 2.0 * projects_constants.REPUTATION_GAIN_STATE_INTEREST_COEFFICIENT) < 1e-12
       and _Finishing(-3.0).reputation_gain_of({"rev": 0}) == _base)
 # FINDING (diagnosed, not changed): standing rewards completion, not use. The stand-in above has no set of running
 # concerns, so a gain that read one would raise; it does not.
@@ -40,12 +35,9 @@ check("the gain reads only the node and the state's regard, so a node finished a
       _Finishing(1.0).reputation_gain_of({"rev": 1}) > _base)
 
 
-class _Concerns(CapabilityMixin):
+def _Concerns(nodes, granted=()):
     """What makes a node a going concern: it earns or costs to keep, and the society did not already have it."""
-
-    def __init__(self, nodes, granted=()):
-        self.nodes = nodes
-        self.state = SimpleNamespace(projects=SimpleNamespace(granted=set(granted)))
+    return production_host.build(tree_nodes=nodes, techniques_granted=set(granted))
 
 
 _nodes = {"theory": {"rev": 0.0, "up": 0.0}, "shop": {"rev": 10.0, "up": 0.0}, "plant": {"rev": 0.0, "up": 5.0}}

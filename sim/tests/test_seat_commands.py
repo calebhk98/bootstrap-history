@@ -8,8 +8,11 @@ import contextlib
 
 from .harness import check
 
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
+from sim.engine.state import FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, bind_seat, seat_from_template
+from sim.knowledge.api import KnowledgeSeat
+from sim.knowledge.rules import SeatTechniques
+from sim.seats.api import SeatsSeat
 from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.dispatch_seats import seat_rows
@@ -28,13 +31,19 @@ check("a seat id that is not a string is a refusal", seat is None and refusal["o
 check("the addressing key is not an argument of the handler", without_seat({"cmd": "step", "as": "second", "years": 2}) == {"cmd": "step", "years": 2}, None)
 
 
+from sim.tests.ui_stand_in import FactViews
+
 # ---- the same command, different households
-class Game:
+class Game(FactViews):
     """The root state with the real alias rebinding, which is all a handler reads."""
 
     def __init__(self):
-        self.state = SimulationState(household=HouseholdState(capital=100.0), projects=ProjectsState(), founder=FounderState())
-        self.state.seats["second"] = seat_from_template({}, 50.0, 1e9, {})
+        self.state = SimulationState(household=HouseholdState(), founder=FounderState())
+        self.purses = {FIRST_SEAT_ID: 100.0, "second": 50.0}   # what each seat's purse holds
+        self.state.seats["second"] = seat_from_template({}, {})
+        for held in self.state.seats.values():
+            held.modules.setdefault("seats", SeatsSeat())
+            held.modules.setdefault("knowledge", KnowledgeSeat())
         self.session_seat = None
         self.year = 100
         self.civ = {"id": "home"}
@@ -50,13 +59,20 @@ class Game:
 
     @property
     def capital(self):
-        return self.state.household.capital
+        return self.purses[self.state.acting_seat]
 
     def recurring_net(self):
         return 0.0
 
-    def ended_seats(self):
-        return [seat_id for seat_id, held in self.state.seats.items() if held.founder.dead_reason]
+    def view(self, name):
+        if name == "dead_reasons":
+            return lambda: {seat_id: self.state.seats[seat_id].modules["seats"].dead_reason for seat_id in self.view("ended_seats")()}
+        if name == "acting_balance":
+            return lambda: self.purses[self.state.acting_seat]
+        if name == "techniques_by_seat":
+            return lambda: {seat_id: SeatTechniques(frozenset(held.modules["knowledge"].done), frozenset(held.modules["knowledge"].granted))
+                            for seat_id, held in self.state.seats.items()}
+        return FactViews.view(self, name)
 
 
 game = Game()
@@ -75,7 +91,7 @@ check("without `as` the first seat's household changes", first.household.saving_
 send({"cmd": "saving", "id": "plan_a", "target": 22.0, "as": "second"})
 check("with `as` the named seat's household changes and the first is as it was",
       second.household.saving_target == 22.0 and first.household.saving_target == 11.0, None)
-check("the acting seat is restored after a command for another seat", game.state.acting_seat == FIRST_SEAT_ID and game.state.household is first.household, None)
+check("the acting seat is restored after a command for another seat", game.state.acting_seat == FIRST_SEAT_ID and game.state.acting_record.household is first.household, None)
 refused = send({"cmd": "saving", "id": "plan_a", "target": 99.0, "as": "ghost"})
 check("a command for an unknown seat changes no household",
       refused["ok"] is False and first.household.saving_target == 11.0 and second.household.saving_target == 22.0, refused)
@@ -87,7 +103,7 @@ check("a session seat takes the commands that name no seat", second.household.sa
 rows = seat_rows(game)
 check("the seats list names each seat and shows the addressed seat's purse only",
       [row["seat"] for row in rows] == [FIRST_SEAT_ID, "second"] and "capital" in rows[0] and "capital" not in rows[1], rows)
-second.founder.dead_reason = "denounced: as a sorcerer"
+second.modules["seats"].dead_reason = "denounced: as a sorcerer"
 check("a seat whose run ended says why", seat_rows(game)[1]["ended"] == "denounced: as a sorcerer" and seat_rows(game)[0]["ended"] is None, None)
 reply = handlers["seats"](game, nodes, {"cmd": "seats"}, None)
 check("the seats command answers ok with the seats and the year", reply["ok"] and len(reply["seats"]) == 2 and reply["year"] == 100, reply)

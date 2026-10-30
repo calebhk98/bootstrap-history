@@ -7,8 +7,9 @@ import unittest
 from types import SimpleNamespace
 
 from sim.ui.proto.dispatch import _cmd_step
+from sim.tests.ui_stand_in import Game
 
-GAME = SimpleNamespace(year=100, end_year=200)
+GAME = Game(year=100, end_year=200)
 
 
 def step(years):

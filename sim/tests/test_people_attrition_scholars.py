@@ -5,16 +5,18 @@ closure and ordering; typed-line spellings. The rules are called on the numbers 
 agent loop's save before its reply and the start credit forecast are in test_agent_save_before_reply."""
 import math
 from types import SimpleNamespace
+from sim.tests.ui_stand_in import Game
 
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
 
-from sim.agents.household import Household
-from sim.engine.economy_credit import CreditMixin
-from sim.engine.mechanics import MechanicsMixin
-from sim.engine.project_materials import ProjectMaterialsMixin
-from sim.engine.shortage_sizing import nitre_bed_yearly_spend
-from sim.engine.society_adoption import AdoptionMixin
+from sim.knowledge.api import KnowledgeSeat, RevealNodes
+from sim.knowledge.module import Knowledge
+from sim.mechanics.module import Mechanics
+from sim.tests import module_harness
+from sim.tests import materials_stand_in
+from sim.resources.sizing import nitre_bed_yearly_spend
+from sim.diffusion.rules import staff_sources
 from sim.labour.labour_bondage import BondageMixin
 from sim.labour.labour_capacity import CapacityMixin
 from sim.labour.labour_training import TrainingMixin
@@ -99,43 +101,45 @@ check("...though it asks for more when the wall is open, so the check above meas
 
 # ONLY `scholar` COUNTS AS A TRAINED SCHOLAR, though the market groups scribes with them.
 pools = SimpleNamespace(
-    _world=SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(
-        freedmen=0.0, slaves=0.0, training=[], granted_staff={"scholars": 1.0}, scholars=0.0, artisans=0.0))),
+    _world=SimpleNamespace(workforce=SimpleNamespace(
+        freedmen=0.0, slaves=0.0, training=[], granted_staff={"scholars": 1.0}, scholars=0.0, artisans=0.0)),
     employed_by_trade=lambda: {"scribe": 3.0, "scholar": 2.0, "smith": 4.0},
     is_craft_trade=lambda trade: trade == "smith", employed=lambda trade: {"scribe": 3.0, "scholar": 2.0}.get(trade, 0.0),
     WORKER_EQUIVALENT_UNTRAINED=1.0, FREEDMAN_ARTISAN_PRODUCTIVITY=1.0, TRAINED_SLAVE_ARTISAN_PRODUCTIVITY=1.0)
 BondageMixin._resync_pools(pools)
-household = pools._world.state.household
+household = pools._world.workforce
 check("hiring scribes does not inflate the trained-scholar headcount; scholars and what an institution granted count",
       household.scholars == 2.0 + 1.0 and household.artisans == 4.0, (household.scholars, household.artisans))
 
 
-class Advice(MechanicsMixin, AdoptionMixin):
+class Advice:
     nodes = NODES
+
+    def _effect_terms(self, channel):
+        return module_harness.build(Mechanics, views={"tree_nodes": NODES}).effect_terms(channel)
 
 
 check("the advice on how to get scholars never points at a different trade family's trade, which would not even count",
       all("scribe" not in why and "chemist" not in why and "merchant" not in why and "engineer" not in why   # presentation: the authored wording of the advice
-          for _node, why in Advice().STAFF_SOURCES.get("scholars", [])),
-      Advice().STAFF_SOURCES.get("scholars"))
+          for _node, why in staff_sources(Advice()._effect_terms("staff_advice")).get("scholars", [])),
+      staff_sources(Advice()._effect_terms("staff_advice")).get("scholars"))
 
 # --- SAVE INTEGRITY, JOB 2a: FOG CAN BE REWOUND. `revealed` is a ratchet: assigning to it may grow what this running
 # session has seen, never shrink it.
-projects = SimpleNamespace(revealed={"identity_cover", "workshop_first"})
-ratchet = SimpleNamespace(_state=SimpleNamespace(projects=projects))
-Household.revealed.fset(ratchet, {"identity_cover"})
-check("fog cannot be rewound: assigning an earlier set keeps everything this session has already seen",
-      projects.revealed == {"identity_cover", "workshop_first"}, sorted(projects.revealed))
-Household.revealed.fset(ratchet, {"identity_cover", "metallurgy"})
-check("...and assigning more grows it", projects.revealed == {"identity_cover", "workshop_first", "metallurgy"})
-fresh = SimpleNamespace(_state=SimpleNamespace(projects=SimpleNamespace(revealed=None)))
-Household.revealed.fset(fresh, {"identity_cover"})
+ratchet = module_harness.build(Knowledge, seat=KnowledgeSeat(revealed={"identity_cover", "workshop_first"}))
+ratchet.reveal_nodes(RevealNodes(("identity_cover",)))
+check("fog cannot be rewound: revealing an earlier set keeps everything this session has already seen",
+      ratchet.seat.revealed == {"identity_cover", "workshop_first"}, sorted(ratchet.seat.revealed))
+ratchet.reveal_nodes(RevealNodes(("identity_cover", "metallurgy")))
+check("...and revealing more grows it", ratchet.seat.revealed == {"identity_cover", "workshop_first", "metallurgy"})
+fresh = module_harness.build(Knowledge, seat=KnowledgeSeat())
+fresh.reveal_nodes(RevealNodes(("identity_cover",)))
 check("a fresh resume still sees only what that save file actually recorded",
-      fresh._state.projects.revealed == {"identity_cover"}, fresh._state.projects.revealed)
+      fresh.seat.revealed == {"identity_cover"}, fresh.seat.revealed)
 
 # planner.py works backward from the goal by critical-path method (CPM) over its prerequisite closure, instead of
 # walking a hand-written list. These checks pin the structural properties the measured comparison depends on.
-_p_s = SimpleNamespace(done=set(), granted=set(), _is_foreign_only=lambda node_id: False)
+_p_s = Game(done=set(), granted=set(), _is_foreign_only=lambda node_id: False)
 _p_order, _p_c, _p_extras, _p_staff = PLANNER.backward_plan(NODES, GOAL, _p_s, side_branches=0)
 _p_need = S.closure(NODES, GOAL)
 check("the planner's closure matches its own order's count for the goal",
@@ -205,20 +209,20 @@ check("a project you can pay for outright says nothing about credit",
 
 
 def failure_stand_in(risk, cost_now, up_front, active=False):
-    return SimpleNamespace(
-        nodes={"work": {"risk": risk}}, FAILURE_RESET_SHARE=0.4, state=SimpleNamespace(projects=SimpleNamespace(
-            active={"work": {}} if active else {})),
-        project_cost=lambda node_id: cost_now, project_cost_now=lambda node_id: cost_now,
-        _up_front_materials_money=lambda node_id: up_front)
+    module = materials_stand_in.build(
+        tree_nodes={"work": {"risk": risk}}, failure_reset_share=0.4,
+        projects_record=materials_stand_in.projects(active={"work": {}} if active else {}),
+        project_cost=lambda node_id: cost_now, project_cost_now=lambda node_id: cost_now)
+    module.up_front_materials_money = lambda node_id: up_front
+    return module
 
 
 stand_in = failure_stand_in(0.1, 1000.0, 300.0)
-stand_in.failure_bill = lambda node_id: ProjectMaterialsMixin.failure_bill(stand_in, node_id)
-loss = ProjectMaterialsMixin.failure_loss(stand_in, "work")
+loss = stand_in.failure_loss("work")
 check("a failure costs the reset share of the money bill at risk, which is never more than that share of the total",
       abs(loss - 0.4 * (1000.0 - 300.0)) < 1e-9 and loss <= 0.4 * 1000.0, loss)
 check("...and a work that cannot fail is not given an imaginary danger",
-      ProjectMaterialsMixin.failure_loss(failure_stand_in(0, 1000.0, 300.0), "work") == 0.0)
+      failure_stand_in(0, 1000.0, 300.0).failure_loss("work") == 0.0)
 
 # --- DEVELOPER MARKERS IN PLAYER PROSE, THE SECOND TIME. A strip pass removed
 # 1,108 `[AUDIT: ...]` markers from node notes after a first-time tester found
@@ -369,7 +373,7 @@ check("...and does not order them, which was measured and made Rome's run "
       "perpetual upkeep against a household that starts with four hundred",
       all(node_id not in _p_order for node_id in _p_staff),
       [node_id for node_id in _p_staff if node_id in _p_order])
-from sim.engine.mechanics import staff_capacity_sources
+from sim.mechanics.api import staff_capacity_sources
 _staff_sources = staff_capacity_sources(NODES)
 check("the staffing list is read from the same table staff_capacity() "
       "itself iterates, so the two cannot drift apart",

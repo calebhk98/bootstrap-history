@@ -3,12 +3,17 @@ market. Each method is called on a stand-in carrying only what it reads; no game
 test_one_goods_market."""
 import types
 import unittest
+from sim.tests import market_stand_in
 from unittest import mock
 
 from sim.agents.api import Actor
-from sim.engine.agents_port import SimWorld
-from sim.engine.economy_materials import MaterialSupplyMixin
-from sim.engine.goods_market_api import GoodsMarket
+from sim.actors.world import ActorWorld
+from sim.markets.module import Markets
+from sim.markets.api import SellMaterial
+from sim.tests import module_harness
+from sim.markets.goods_market import GoodsMarket
+from sim.tests.world_stand_in import fake_needs
+from sim.markets.api import NoteActorSale
 
 QUICK_TOPIC = True
 
@@ -58,17 +63,16 @@ class FounderSaleTests(unittest.TestCase):
         seen = []
         market = types.SimpleNamespace(acting="the asking seat", sell=lambda seller, material, tonnes: seen.append((seller, material, tonnes)) or 2.5)
         game = types.SimpleNamespace(goods_market=market)
-        self.assertEqual(MaterialSupplyMixin.sell_material_stock(game, MATERIAL, 3.0), 2.5)
+        self.assertEqual(market_stand_in.markets_over(goods_market=game.goods_market).sell_material(SellMaterial(MATERIAL, 3.0)), 2.5)
         self.assertEqual(seen, [("the asking seat", MATERIAL, 3.0)])
 
 
 class ActorWiringTests(unittest.TestCase):
     def test_an_actors_sale_is_noted_in_the_economys_book_with_the_concerns_that_made_it(self):
-        noted = []
-        world = types.SimpleNamespace(_sim=types.SimpleNamespace(economy=types.SimpleNamespace(
-            note_actor_sale=lambda *arguments: noted.append(arguments))))
-        SimWorld.market_sale(world, "firm:iron1", "pig_iron_kg", 7.0, [("blast_furnace", 7.0)])
-        self.assertEqual(noted, [("firm:iron1", "pig_iron_kg", 7.0, [("blast_furnace", 7.0)])])
+        needs = fake_needs()
+        world = types.SimpleNamespace(needs=needs)
+        ActorWorld.market_sale(world, "firm:iron1", "pig_iron_kg", 7.0, [("blast_furnace", 7.0)])
+        self.assertEqual(needs.sent, [NoteActorSale("firm:iron1", "pig_iron_kg", 7.0, [("blast_furnace", 7.0)])])
 
     def test_an_actor_puts_what_its_concerns_make_into_the_market_each_at_its_own_cost(self):
         sales = []
@@ -83,23 +87,23 @@ class ActorWiringTests(unittest.TestCase):
     def test_takings_of_a_concern_outside_the_goods_categories_carry_the_output_market_factor(self):
         for factor in (0.5, 1.0, 2.0):
             world = takings_world("ENGINEERING", factor, ramp=0.8)
-            self.assertAlmostEqual(SimWorld.concern_takings(world, "blast_furnace", 90), 100.0 * 0.8 * factor)
+            self.assertAlmostEqual(ActorWorld.concern_takings(world, "blast_furnace", 90), 100.0 * 0.8 * factor)
 
     def test_the_same_concern_split_with_rivals_takes_a_share(self):
-        alone = SimWorld.concern_takings(takings_world("ENGINEERING", 1.5), "blast_furnace", 90, rivals=0.0)
-        shared = SimWorld.concern_takings(takings_world("ENGINEERING", 1.5), "blast_furnace", 90, rivals=3.0)
+        alone = ActorWorld.concern_takings(takings_world("ENGINEERING", 1.5), "blast_furnace", 90, rivals=0.0)
+        shared = ActorWorld.concern_takings(takings_world("ENGINEERING", 1.5), "blast_furnace", 90, rivals=3.0)
         self.assertAlmostEqual(shared, alone / 4.0)
 
     def test_a_goods_category_takes_the_categorys_factor_in_place_of_a_share_of_rivals(self):
         world = takings_world("GOODS", 1.5, category_factor=0.25)
-        self.assertAlmostEqual(SimWorld.concern_takings(world, "kiln", 90, rivals=3.0), 100.0 * 1.5 * 0.25)
+        self.assertAlmostEqual(ActorWorld.concern_takings(world, "kiln", 90, rivals=3.0), 100.0 * 1.5 * 0.25)
 
 
 def takings_world(category, factor, ramp=1.0, category_factor=1.0):
-    sim = types.SimpleNamespace(
-        GOODS_CATEGORIES=("GOODS",), concern_takings=lambda node_id, at_ramp: 100.0 * at_ramp,
+    needs = fake_needs(
+        concern_takings=lambda node_id, at_ramp: 100.0 * at_ramp,
         node_output_market_factor=lambda node: factor, goods_category_factor=lambda cat: category_factor)
-    return types.SimpleNamespace(_sim=sim, nodes={"blast_furnace": {"cat": category}, "kiln": {"cat": category}},
+    return types.SimpleNamespace(needs=needs, goods_category_names=("GOODS",), nodes={"blast_furnace": {"cat": category}, "kiln": {"cat": category}},
                                  ramp=lambda opened_year, node_id=None: ramp)
 
 

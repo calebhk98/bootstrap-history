@@ -11,7 +11,6 @@ from typing import Any, List, Optional
 from . import business_books, enforcement, firm_entry, ledger
 from .edges import EDGE_POOLED_CAPITAL
 from .records import ActorRecord
-from .registry import register_spawner
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE, ENTRY_STAKE_BUFFER, VALUE_HORIZON_YEARS
 from .tuning_spinoff import SPINOFF_CHANCE_PER_STAFF_YEAR, SPINOFF_MIN_YEARS
 
@@ -57,9 +56,8 @@ def release_leaver(parent: Any, node_id: str, world: Any, index: int) -> None:
 		if draw <= 0.0:
 			trade = candidate
 			break
-	release = getattr(world, "release_seat_staff", None) if parent.kind == "household" else None
-	if release is not None:
-		release(parent.actor_id, trade, 1.0)
+	if parent.kind == "household":
+		world.release_seat_staff(parent.actor_id, trade, 1.0)
 	else:
 		left = parent.workforce[trade] - 1.0
 		if left > 1e-9:
@@ -70,7 +68,7 @@ def release_leaver(parent: Any, node_id: str, world: Any, index: int) -> None:
 
 def parents_of(registry: Any, world: Any) -> List[Any]:
 	"""Businesses whose staff may leave: firms, players and seats (the founder's households), in id order."""
-	seats = getattr(world, "seat_parties", lambda: {})()
+	seats = world.seat_parties()
 	parents = [registry.actors[parent_id] for parent_id in sorted(registry.actors)
 			   if registry.actors[parent_id].kind in ("firm", "player")]
 	return parents + [seats[seat_id] for seat_id in sorted(seats)]
@@ -137,6 +135,3 @@ def _found_rival(registry: Any, world: Any, parent: Any, node_id: str, pool: Lis
 		ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), firm, own, EDGE_POOLED_CAPITAL)
 	firm.business.open_plant(node_id, world.year, tile)
 	return firm_id
-
-
-register_spawner("spinoffs", consider_spinoffs)

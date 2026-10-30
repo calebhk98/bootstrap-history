@@ -6,22 +6,27 @@ and the seizure of a plant are test_business_review; the cap on work in hand is 
 QUICK_TOPIC = True
 
 import unittest
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from sim.agents import business_review
 from sim.agents.api import Business
 from sim.constants import REGISTRY
 from sim.engine import data as engine_data
-from sim.engine.economy_credit import CreditMixin
-from sim.engine.hazard_window import hazards_not_yet_past
-from sim.engine.payroll_trim import payroll_means, staff_to_let_go
-from sim.engine.projects_review import SeatReview
-from sim.engine.projects_venture_quotes import VentureQuotesMixin
+from sim.hazards.window import hazards_not_yet_past
+from sim.workforce.payroll_trim import payroll_means, staff_to_let_go
+from sim.projects.review import SeatReview
 from sim.engine.seat_defaults import default_policy
-from sim.engine.shock_year import ShockYearMixin
-from sim.refusal import cause_of, facts_of
+from sim.tests import polity_host
+from sim.polity.api import ShiftValueWeight
+from sim.projects.api import ReviewVentures
+from sim.reporting.api import RecordEvent
+from sim.tests import hazards_host, module_harness, projects_host, ventures_host
 from sim.ui.proto.dispatch_ventures import _cmd_policy
 from sim.ui.proto.state_waiting import _staff_fraction_note
+from sim.finance.state import FinanceSeat
+from sim.tests import finance_host
+from sim.tests.ui_stand_in import Game
 
 
 class _Owner(business_review.Reviewable):
@@ -85,9 +90,9 @@ class SeatSparesWhatItMustKeep(unittest.TestCase):
     """The founder's seat spares knowledge (never abandoned) and what the society granted; the rest it may shed."""
 
     def _seat(self, never_abandoned=(), granted=()):
-        sim = SimpleNamespace(state=SimpleNamespace(scenario=SimpleNamespace(year=1), projects=SimpleNamespace(granted=set(granted))),
-                              never_abandon=lambda node_id: node_id in never_abandoned)
-        return SeatReview(SimpleNamespace(_sim=sim))
+        module = projects_host.build(projects_record=Game(granted=set(granted)), year=1,
+                                     never_abandon=lambda node_id: node_id in never_abandoned)
+        return SeatReview(module, Game())
 
     def test_knowledge_and_what_is_granted_are_spared(self):
         seat = self._seat(never_abandoned={"theory"}, granted={"road"})
@@ -101,51 +106,49 @@ class SeatSparesWhatItMustKeep(unittest.TestCase):
 class LogNamesWhatClosed(unittest.TestCase):
     """The log says which concerns a seat shed, so a player can see what was lost and that the knowledge is kept."""
 
-    def _household(self, capital):
-        return SimpleNamespace(capital=capital, log=[])
+    def _events(self, module):
+        return [command for command in module_harness.sent(module) if isinstance(command, RecordEvent)]
 
     def _shed(self, closed, capital):
-        household = self._household(capital)
-        host = SimpleNamespace(state=SimpleNamespace(household=household),
-                               review_ventures=lambda rules, year: [business_review.Closure(key, business_review.LOSS_MAKING) for key in closed])
-        CreditMixin.shed_loss_makers(host, 100)
-        return household.log
+        module = finance_host.build(acting_balance=capital, answers={
+            ReviewVentures: lambda command: [business_review.Closure(key, business_review.LOSS_MAKING) for key in closed]})
+        module.shed_loss_makers(100)
+        return self._events(module)
+
+    def _owing(self, closures):
+        household = Game(capital=-1000.0, slaves=0, freedmen=0, artisans=0, scholars=0)
+        module = finance_host.build(
+            household=household, answers={
+                ReviewVentures: lambda command: [business_review.Closure(key, business_review.CREDITOR_SEIZURE) for key in closures]})
+        module.credit_limit = lambda revenue=None, upkeep=None, capital=None: 0.0
+        module.answer_exhausted_credit(100)
+        return self._events(module)
 
     def test_a_shed_concern_is_named_in_the_log_with_a_coded_kind(self):
-        log = self._shed(["md2_sand_filtration"], -5.0)
-        self.assertEqual(len(log), 1)
-        self.assertEqual(cause_of(log[0][1]), "arrears_closed_concerns")
-        self.assertEqual(facts_of(log[0][1])["concerns"], ["md2_sand_filtration"])
+        events = self._shed(["md2_sand_filtration"], -5.0)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0].kind, "arrears_closed_concerns")
+        self.assertEqual(events[0].facts["concerns"], ["md2_sand_filtration"])
 
     def test_nothing_shed_logs_nothing(self):
         self.assertEqual(self._shed([], -5.0), [])
 
     def test_the_log_says_when_it_was_arrears_that_forced_it(self):
-        in_arrears = str(self._shed(["a"], -5.0)[0][1])
-        solvent = str(self._shed(["a"], 5.0)[0][1])
+        in_arrears = self._shed(["a"], -5.0)[0].text
+        solvent = self._shed(["a"], 5.0)[0].text
         # presentation: the line says the closure was forced by arrears only when it was
         self.assertIn("in arrears", in_arrears)
         self.assertNotIn("in arrears", solvent)
 
     def test_creditors_taking_concerns_are_named_in_the_log(self):
-        household = SimpleNamespace(capital=-1000.0, log=[], slaves=0, freedmen=0)
-        host = SimpleNamespace(
-            state=SimpleNamespace(household=household, projects=SimpleNamespace(active={})),
-            credit_limit=lambda: 0.0, mothball_mines=lambda: None,
-            review_ventures=lambda rules, year: [business_review.Closure("shop", business_review.CREDITOR_SEIZURE)])
-        CreditMixin.answer_exhausted_credit(host, 100)
-        taken = [line for _year, line in household.log if cause_of(line) == "creditors_took"]
+        taken = [event for event in self._owing(["shop"]) if event.kind == "creditors_took"]
         self.assertEqual(len(taken), 1)
         # presentation: the line names the concern and promises the knowledge is kept
-        self.assertIn("shop", taken[0])
-        self.assertIn("knowledge", taken[0])
+        self.assertIn("shop", taken[0].text)
+        self.assertIn("knowledge", taken[0].text)
 
     def test_creditors_who_took_nothing_say_nothing(self):
-        household = SimpleNamespace(capital=-1000.0, log=[], slaves=0, freedmen=0)
-        host = SimpleNamespace(state=SimpleNamespace(household=household, projects=SimpleNamespace(active={})),
-                               credit_limit=lambda: 0.0, mothball_mines=lambda: None, review_ventures=lambda rules, year: [])
-        CreditMixin.answer_exhausted_credit(host, 100)
-        self.assertEqual(household.log, [])
+        self.assertEqual(self._owing([]), [])
 
 
 class PayrollLetGo(unittest.TestCase):
@@ -203,10 +206,10 @@ class SwitchThatCannotAct(unittest.TestCase):
     """`policy` says which switches are on but cannot act today."""
 
     def _policy_reply(self, capital, frozen_until=0, year=100):
-        household = SimpleNamespace(reserve_craftsmen=0, reserve_scholars=0)
-        game = SimpleNamespace(policy={"auto_hire": True, "auto_open": True}, capital=capital, year=year,
-                               credit_frozen_until=frozen_until, state=SimpleNamespace(household=household,
-                                                                                     projects=SimpleNamespace(excluded=set())))
+        household = Game(reserve_craftsmen=0, reserve_scholars=0)
+        game = Game(policy={"auto_hire": True, "auto_open": True}, capital=capital, year=year,
+                               credit_frozen_until=frozen_until, workforce=household, view=workforce_stand_in.view_of(household, exclusions=set, keep_staffed=set), state=Game(household=household,
+                                                                                     projects=Game(excluded=set())))
         return _cmd_policy(game, {}, {"cmd": "policy"}, None)
 
     def test_in_arrears_hiring_and_opening_say_they_cannot_act(self):
@@ -223,43 +226,39 @@ class SwitchThatCannotAct(unittest.TestCase):
 class StallDiagnosis(unittest.TestCase):
     """A run that has effectively stopped says so and what would restart it; a solvent one is not told it is stuck."""
 
-    def _household(self, capital=-900.0, insolvent_years=12):
-        return SimpleNamespace(capital=capital, insolvent_years=insolvent_years)
-
     def _host(self, capital=-900.0, insolvent_years=12, revenue=0.0, standing_pay=0.0, would_earn=500.0, hours=2000.0):
-        return SimpleNamespace(
-            state=SimpleNamespace(household=self._household(capital, insolvent_years),
-                                  projects=SimpleNamespace(operating=set())),
-            nodes={}, debt_interest_rate=lambda: 0.05, revenue_capacity=lambda: revenue, upkeep=lambda: 100.0,
-            living_cost=lambda _rev=0, _upkeep=0: 200.0, mine_operating_cost=lambda: 0.0, held_trade=lambda: None,
-            labour=SimpleNamespace(hours_for_sale=lambda: hours, best_wage_trade=lambda: "scribe",
-                                   work_for_wages_dry_run=lambda trade, hours: (would_earn, None),
-                                   standing_job_pay=lambda trade: standing_pay, wage_bill=lambda: 0.0))
+        module = finance_host.build(seat=FinanceSeat(insolvent_years=insolvent_years), acting_balance=capital, revenue_capacity=revenue,
+                                    upkeep=100.0, hours_for_sale=hours, best_wage_trade="scribe",
+                                    work_for_wages_dry_run=lambda trade, hours: (would_earn, None),
+                                    standing_job_pay=lambda trade: standing_pay)
+        module.debt_interest_rate = lambda: 0.05
+        module.living_cost = lambda revenue=0, upkeep=0, capital=None: 200.0
+        return module
 
     def test_a_long_arrears_run_that_loses_money_says_it_is_stuck_and_what_would_change_it(self):
-        diagnosis = CreditMixin.stall_diagnosis(self._host())
+        diagnosis = self._host().stall_diagnosis()
         self.assertTrue(diagnosis)
         self.assertTrue(any(reason.startswith("work as a ") for reason in diagnosis["what_would_change_it"]))
 
     def test_wage_work_is_advised_only_when_it_pays_more_than_the_standing_job(self):
-        better = CreditMixin.stall_diagnosis(self._host(standing_pay=100.0, would_earn=500.0))
-        worse = CreditMixin.stall_diagnosis(self._host(standing_pay=900.0, would_earn=500.0))
+        better = self._host(standing_pay=100.0, would_earn=500.0).stall_diagnosis()
+        worse = self._host(standing_pay=900.0, would_earn=500.0).stall_diagnosis()
         self.assertTrue(any(reason.startswith("work as a ") for reason in better["what_would_change_it"]))
         self.assertFalse(any(reason.startswith("work as a ") for reason in worse["what_would_change_it"]))
 
     def test_a_solvent_run_is_not_told_it_is_stuck(self):
-        self.assertIsNone(CreditMixin.stall_diagnosis(self._host(capital=500.0)))
+        self.assertIsNone(self._host(capital=500.0).stall_diagnosis())
 
     def test_a_short_spell_in_arrears_is_not_a_stall(self):
-        self.assertIsNone(CreditMixin.stall_diagnosis(self._host(insolvent_years=3)))
+        self.assertIsNone(self._host(insolvent_years=3).stall_diagnosis())
 
     def test_a_run_that_earns_more_than_it_costs_is_not_stuck(self):
-        self.assertIsNone(CreditMixin.stall_diagnosis(self._host(revenue=1.0e6)))
+        self.assertIsNone(self._host(revenue=1.0e6).stall_diagnosis())
 
 
 class StaffFractions(unittest.TestCase):
     def _staff(self, scholars, artisans, employees=None):
-        return SimpleNamespace(scholars=scholars, artisans=artisans, employees=employees or {})
+        return Game(view=lambda name: (lambda: {"scholars": scholars, "artisans": artisans, "employees": employees or {}}))
 
     def test_a_fractional_staff_count_comes_with_an_explanation(self):
         self.assertTrue(_staff_fraction_note(self._staff(1.32, 3.0)))
@@ -273,22 +272,21 @@ class ReopeningIsNeverFree(unittest.TestCase):
     """Shutting a work down and bringing it back costs at least some years of its upkeep, however cheap it was to build."""
 
     def _host(self, upkeep, build_cost, venture=False):
-        return SimpleNamespace(
-            nodes={"w": {"up": upkeep}}, is_venture=lambda node_id: venture, venture_capex=lambda node_id: 7.0,
-            project_cost=lambda node_id: build_cost, RESTORE_COST_SHARE_OF_BUILD=0.3,
-            RESTORE_COST_MIN_UPKEEP_YEARS=REGISTRY["RESTORE_COST_MIN_UPKEEP_YEARS"]["value"],
-            staff_closure_age=lambda node_id: None, STAFF_CLOSURE_GRACE=3, STAFF_CLOSURE_DISCOUNT=0.1)
+        return ventures_host.build(
+            tree_nodes={"w": {"up": upkeep}}, is_venture=lambda node_id: venture, project_cost=lambda node_id: build_cost,
+            staff_closure_age=lambda node_id: None)
 
     def test_the_floor_is_the_declared_years_of_upkeep(self):
         self.assertGreaterEqual(REGISTRY["RESTORE_COST_MIN_UPKEEP_YEARS"]["value"], 1.0)
-        host = self._host(upkeep=20.0, build_cost=1.0)
-        self.assertEqual(VentureQuotesMixin.reopen_fee(host, "w"), 20.0 * host.RESTORE_COST_MIN_UPKEEP_YEARS)
+        self.assertEqual(self._host(upkeep=20.0, build_cost=1.0).reopen_fee("w"),
+                         20.0 * REGISTRY["RESTORE_COST_MIN_UPKEEP_YEARS"]["value"])
 
     def test_a_costly_build_costs_its_share_to_restore(self):
-        self.assertEqual(VentureQuotesMixin.reopen_fee(self._host(upkeep=1.0, build_cost=1000.0), "w"), 300.0)
+        self.assertEqual(self._host(upkeep=1.0, build_cost=1000.0).reopen_fee("w"),
+                         1000.0 * REGISTRY["RESTORE_COST_SHARE_OF_BUILD"]["value"])
 
     def test_a_round_trip_costs_at_least_a_year_of_upkeep(self):
-        self.assertGreaterEqual(VentureQuotesMixin.reopen_fee(self._host(upkeep=20.0, build_cost=0.0), "w"), 20.0)
+        self.assertGreaterEqual(self._host(upkeep=20.0, build_cost=0.0).reopen_fee("w"), 20.0)
 
 
 class HazardValuesLandGradually(unittest.TestCase):
@@ -297,47 +295,50 @@ class HazardValuesLandGradually(unittest.TestCase):
     START, END = 995, 1100
 
     def _host(self, weights):
-        household = SimpleNamespace(log=[])
-        return SimpleNamespace(value_weights=dict(weights), VALUE_WEIGHT_FLOOR=-5.0, VALUE_WEIGHT_CEILING=5.0,
-                               state=SimpleNamespace(seats={"seat": SimpleNamespace(household=household)})), household
+        game = Game(value_weights=dict(weights))
+        module = hazards_host.build(answers={ShiftValueWeight: polity_host.shifting(game.value_weights)})
+        return game, module
 
     def _run(self, hazard, weights, years):
-        host, household = self._host(weights)
+        game, module = self._host(weights)
+        log = []
         for year in years:
-            ShockYearMixin._shock_values_seats(host, {"seat": hazard}, year, hazard["years"][0], hazard["years"][1])
-        return host, household
+            before = len(module_harness.sent(module))
+            module.values_seats({"seat": hazard}, year, hazard["years"][0], hazard["years"][1])
+            log += [(year, command) for command in module_harness.sent(module)[before:] if isinstance(command, RecordEvent)]
+        return game, log
 
     def test_one_year_moves_a_fraction_of_the_total_not_the_whole_amount(self):
         hazard = {"name": "Christianisation", "years": [self.START, self.END], "values": {"w_religious_rigidity": 1.06}}
-        host, _household = self._run(hazard, {"w_religious_rigidity": 0.0}, [self.START])
+        host, _log = self._run(hazard, {"w_religious_rigidity": 0.0}, [self.START])
         self.assertGreater(host.value_weights["w_religious_rigidity"], 0.0)
         self.assertLess(host.value_weights["w_religious_rigidity"], 0.5 * 1.06)
 
     def test_the_full_delta_has_landed_by_the_last_year(self):
         hazard = {"name": "Christianisation", "years": [self.START, self.END], "values": {"w_religious_rigidity": 1.06}}
-        host, _household = self._run(hazard, {"w_religious_rigidity": 0.0}, range(self.START, self.END + 1))
+        host, _log = self._run(hazard, {"w_religious_rigidity": 0.0}, range(self.START, self.END + 1))
         self.assertAlmostEqual(host.value_weights["w_religious_rigidity"], 1.06, places=6)
 
     def test_it_is_logged_at_the_start_every_ten_years_and_at_the_end_not_only_once(self):
         hazard = {"name": "Christianisation", "years": [self.START, self.END], "values": {"w_religious_rigidity": 1.06}}
-        _host, household = self._run(hazard, {"w_religious_rigidity": 0.0}, range(self.START, self.END + 1))
-        years = [year for year, _line in household.log]
+        _host, log = self._run(hazard, {"w_religious_rigidity": 0.0}, range(self.START, self.END + 1))
+        years = [year for year, _command in log]
         self.assertIn(self.START, years)
         self.assertIn(self.END, years)
         self.assertTrue(any(self.START < year < self.END for year in years))
         self.assertGreaterEqual(len(years), 3)
-        self.assertTrue(all(cause_of(line) == "hazard_values_shift" for _year, line in household.log))
+        self.assertTrue(all(command.kind == "hazard_values_shift" for _year, command in log))
 
     def test_a_hazard_that_carries_only_a_values_delta_still_moves_the_society(self):
         hazard = {"name": "values-only test hazard", "values": {"w_novelty": -0.2}, "years": [900, 909]}
-        host, _household = self._run(hazard, {"w_novelty": 0.5}, range(900, 910))
+        host, _log = self._run(hazard, {"w_novelty": 0.5}, range(900, 910))
         self.assertAlmostEqual(host.value_weights["w_novelty"], 0.3, places=6)
 
     def test_a_field_the_society_does_not_have_is_ignored(self):
         hazard = {"name": "x", "values": {"w_unknown": 1.0}, "years": [900, 909]}
-        host, household = self._run(hazard, {"w_novelty": 0.5}, range(900, 910))
+        host, log = self._run(hazard, {"w_novelty": 0.5}, range(900, 910))
         self.assertEqual(host.value_weights, {"w_novelty": 0.5})
-        self.assertEqual(household.log, [])
+        self.assertEqual(log, [])
 
 
 class ChristianisationIsData(unittest.TestCase):

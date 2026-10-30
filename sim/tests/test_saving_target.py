@@ -9,6 +9,7 @@ from sim.ui.proto.dispatch_saving import _cmd_saving
 from sim.ui.proto.render_typed import _RENDERERS
 from sim.ui.proto.saving_plan import saving_plan, saving_reason
 from sim.ui.proto.typed import parse_typed
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -16,8 +17,8 @@ PROJECT = sorted(NODES)[0]
 
 
 def _saver(cash=2_000.0, income=500.0, year=100, project_cost=900.0):
-    return SimpleNamespace(
-        state=SimpleNamespace(household=SimpleNamespace(saving_for=None, saving_target=0.0)),
+    return Game(
+        state=Game(acting_record=Game(household=Game(saving_for=None, saving_target=0.0))),
         capital=cash, year=year, recurring_net=lambda: income, project_cost=lambda node_id: project_cost,
         civ={"id": "stub"})
 
@@ -60,7 +61,7 @@ check("with no surplus there is no affordable year",
 check("...and the stuck row says it is never reached",
       "never" in saving_reason(losing)["why"])
 check("a zero income is no surplus either",
-      saving_plan(SimpleNamespace(**dict(vars(losing), recurring_net=lambda: 0.0)))["year_affordable"] is None)
+      saving_plan(Game(**dict(vars(losing), recurring_net=lambda: 0.0)))["year_affordable"] is None)
 
 reached = _saver()
 check("a target already in hand is affordable this year",
@@ -74,7 +75,7 @@ fresh = _saver()
 check("an unknown project is refused", _ask(fresh, id="no_such_node").get("ok") is False)
 check("a negative amount is refused", _ask(fresh, id=PROJECT, target=-5).get("ok") is False)
 check("a flag is not an amount", _ask(fresh, id=PROJECT, target=True).get("ok") is False)
-check("a refused target sets nothing", fresh.state.household.saving_for is None)
+check("a refused target sets nothing", fresh.state.acting_record.household.saving_for is None)
 
 cleared = _ask(reached, off=True)
 check("off clears the target", cleared["ok"] and cleared["saving"] is None, cleared)

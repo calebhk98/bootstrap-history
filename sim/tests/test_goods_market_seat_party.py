@@ -1,22 +1,29 @@
 """The goods market names the acting seat as its party: two seats do not collide in the year's flows, the posted price
 leaves out only the asking seat's orders (small fixture, no game)."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.agents_port_household import HouseholdPort
-from sim.engine.goods_market_api import GoodsMarket
-from sim.engine.market_clearing import MarketClearingMixin
-from sim.engine.state import FounderState, HouseholdState, ProjectsState
+from sim.tests.money_host import MoneyHost
+from sim.markets.goods_market import GoodsMarket
+from sim.markets.module import Markets
+from sim.markets.state import MarketsWorld
+from sim.tests import module_harness
+from sim.engine.state import FounderState, HouseholdState
 from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
 
 QUICK_TOPIC = True
 
 
-class FixtureSim(MarketClearingMixin):
+class FixtureSim:
     """The state and the seat switch; the market code reads nothing else for flows."""
 
     def __init__(self):
-        self.state = HouseholdPort().fresh_state(100.0)
-        self.state.seats["second"] = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(),
-                                               founder=FounderState())
+        self.year = 100
+        self.state = MoneyHost(capital=100.0).state
+        self.state.seats["second"] = SeatState(household=HouseholdState(), founder=FounderState())
+        self.markets = module_harness.build(Markets, world=MarketsWorld(), views={
+            "year": lambda: self.year, "seat_list": lambda: {"joined": list(self.state.seats)}})
+
+    def _market_flows(self):
+        return self.markets.legacy_market_flows()
 
     def act_as(self, seat_id):
         sim = self
@@ -56,7 +63,7 @@ bind_seat(sim.state, second)
 check("the stamp for caches leaves out the asking seat only", stamp != market.others_stamp(), None)
 bind_seat(sim.state, first)
 
-sim.state.scenario.year += 1
+sim.year += 1
 sim._market_flows()
 check("a new year clears every seat's flows and keeps the firm's standing sale",
       market.sold_tonnes("iron", first) == 0.0 and market.sold_tonnes("iron", second) == 0.0

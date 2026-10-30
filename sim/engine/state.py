@@ -7,14 +7,13 @@ values, and invalidation plumbing remain non-persistent implementation details.
 import collections
 import contextlib
 import dataclasses
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from typing import (
 	TYPE_CHECKING, Any, Callable, DefaultDict, Dict, List,
 	Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
 )
 
 from sim.agents.api import ActorRecord, ActorsState, Business  # noqa: F401
-from sim.engine import cash_book
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
 from sim.invalidating import ActiveProjectState, _InvalidatingDict
 from sim.refusal import Refusal, as_record, from_record, is_record
@@ -25,469 +24,81 @@ if TYPE_CHECKING:
 
 @dataclass
 class HouseholdState:
-	"""The founder's household finances, standing staff, standing, and biographical history."""
-	capital: float
-	total_spend: float = 0.0
-	bounties_paid: int = 0
-	wages_paid: float = 0.0
-	wages_prepaid: float = 0.0
-	wages_earned: Optional[float] = None
-	interest_paid: Optional[float] = None
-	reputation: float = 5.0
-	scandal: float = 0.0
-	scandal_last_year: Optional[float] = None
-	eminence: float = 0.0
-	familiarity: float = 0.0
-	protection: float = 0.0
-	# how the household answers the state's demands: "comply" or "refuse" (sim/agents/demand_answer.py)
-	demand_stance: str = "comply"
-	# money's worth of service offered the state when negotiating; wealth held out of its sight; and how far
-	# the state holds the household's refusals against it (0..1)
-	service_offer: float = 0.0
-	concealed: float = 0.0
-	defiance: float = 0.0
-	bribes_ytd: float = 0.0
-	slaves: int = 0
-	freedmen: int = 0
-	manumitted_total: int = 0
-	atrocity: int = 0
-	bondage_years_left: float = 0.0
-	bondage_debt: float = 0.0
-	credit_frozen_until: int = 0
-	insolvent_years: int = 0
-	last_withdrawal: Optional[int] = None
-	last_settlement: int = -999
-	# interest the household could not draw on its facility, and the consecutive years it has owed some (sim/agents/borrowing.py)
-	interest_arrears: float = 0.0
-	arrears_years: int = 0
-	spend_last_year: Optional[float] = None
-	# the cash book (sim/engine/cash_book.py): the open period's entries by cause, cash at its start,
-	# and the last few closed years
-	cash_flow: Dict[str, float] = field(default_factory=dict)
-	cash_mark: Optional[float] = None
-	cash_periods: List[Dict[str, Any]] = field(default_factory=list)
-	# the cause book (sim/engine/cause_book.py): rows for wage, notice and closure changes, and the readings they are measured from
-	cause_rows: List[Dict[str, Any]] = field(default_factory=list)
-	cause_mark: Optional[Dict[str, float]] = None
-
-	# Workforce and human capital
-	scholars: float = 0.0
-	artisans: float = 0.0
-	directors_extra: float = 0.0
-	employees: Dict[str, float] = field(default_factory=dict)
-	trades_created: Set[str] = field(default_factory=set)
-	trades_endemic: Set[str] = field(default_factory=set)
-	trade_introduced_year: Dict[str, int] = field(default_factory=dict)
-	contract_hours: Dict[str, float] = field(default_factory=dict)
-	commissioned: Dict[str, float] = field(default_factory=dict)
-	teaching_hours_this_year: float = 0.0
-	relocation_hours_this_year: float = 0.0
-	supervision_hours_this_year: float = 0.0
-	base_tile: Optional[str] = None
-	hour_allocations: Dict[str, float] = field(default_factory=dict)
-	# standing order id -> [hours ordered, shortfall kind] last reported as unused, so repeats stay quiet
-	unused_hours_reported: Dict[str, List[Any]] = field(default_factory=dict)
-	work_trade: Optional[str] = None
-	last_taught: Dict[str, int] = field(default_factory=dict)
-	training: List[List[Any]] = field(default_factory=list)
-	wage_hours_this_year: float = 0.0
-	wage_income_this_year: float = 0.0
-	wage_work_last_year: Optional[Dict[str, float]] = None
-	log: List[Tuple[Any, str]] = field(default_factory=list)
-	granted_staff: Optional[Dict[str, float]] = None
-	hours_this_year: Optional[Dict[str, float]] = None
-	trade_schools: Optional[int] = None
-	labour_pressure_records: Dict[str, Any] = field(default_factory=dict)
-	worker_housing_places: Optional[int] = None
-	# spare generic hands the reserve_staff policy keeps above what concerns hold (`reserve`)
-	reserve_craftsmen: int = 0
-	# yearly pay per person by trade as last settled; follows the market while keep_pay_at_market is on
-	staff_pay_held: Dict[str, float] = field(default_factory=dict)
-	reserve_scholars: int = 0
+	"""The founder's household's standing staff, standing, and biographical history (its money is the ledger's)."""
 	# a planned project and the cash target put by for it (`saving`)
 	saving_for: Optional[str] = None
 	saving_target: float = 0.0
-	# what the automatic policies did in the last few years (`automation`)
-	automation_audit: List[Any] = field(default_factory=list)
-	_said_deputies: int = 0
-	_said_near_limit: Optional[bool] = None
-	_said_autoopen: Optional[Dict[str, int]] = None
-	_said_eminence: int = -999
-	_said_requisition: int = -999
-	_said_notice_approach: int = 0
-	last_military_demand: int = -999
-	_said_confiscation_band: int = -1
-
-	# ---- the purse: an account in the actors' book (sim/agents/purses.py) once the state is attached to it ----
-	def attach(self, purses: Any, account: str) -> None:
-		"""Keep this household's purse as account `account` in `purses`. Cash it held before being attached is
-		placed there once, unless the book already knows the account (a loaded game)."""
-		held = self.__dict__.pop("_local_capital", 0.0)
-		self.__dict__["_purses"], self.__dict__["_account"] = purses, account
-		if held and not purses.has_account(account):
-			purses.set_net(account, held, "opening")
-
-	@property
-	def ledger_purses(self) -> Any:
-		return self.__dict__.get("_purses")
-
-	@property
-	def account(self) -> str:
-		return self.__dict__.get("_account", "")
-
-	def note_income(self, purpose: Any, amount: float) -> None:
-		"""Money that came in by a posting in the book, entered in the cash book under its cause."""
-		cash_book.record(self, 1.0, float(amount), purpose)
-
-	def note_outlay(self, purpose: Any, amount: float) -> None:
-		"""Money that went out by a posting in the book, entered in the cash book under its cause."""
-		cash_book.record(self, -1.0, float(amount), purpose)
-
-	def credit(self, amount: float, purpose: Any) -> None:
-		"""Money in, entered in the cash book under its cause."""
-		self.capital += float(amount)
-		cash_book.record(self, 1.0, float(amount), purpose)
-
-	def debit(self, amount: float, purpose: Any) -> None:
-		"""Money out, entered in the cash book under its cause."""
-		self.capital -= float(amount)
-		cash_book.record(self, -1.0, float(amount), purpose)
-
-	def reset_cash(self, new_capital: float, purpose: Any) -> None:
-		"""Set the purse to an exact figure (a settlement), entering the difference under its cause."""
-		difference = new_capital - self.capital
-		self.capital = new_capital
-		cash_book.record(self, 1.0, difference, purpose)
-
-	def cost_capital(self, amount: float, purpose: Any = "expenditure") -> None:
-		"""Pay out of the purse and track total spend."""
-		self.debit(amount, purpose)
-		self.total_spend += float(amount)
-
-	def costCapital(self, amount: float, purpose: Any = "expenditure") -> None:
-		"""Alias for cost_capital following camelCase convention."""
-		self.cost_capital(amount, purpose)
-
-	def add_capital(self, amount: float, purpose: Any = "receipts") -> None:
-		"""Credit capital into household purse."""
-		self.credit(amount, purpose)
-
-	def add_reputation(self, delta: float) -> None:
-		"""Increase household reputation standing."""
-		self.reputation += float(delta)
-
-	def deduct_reputation(self, delta: float) -> None:
-		"""Decrease household reputation standing."""
-		self.reputation -= float(delta)
-
-	def add_scandal(self, delta: float) -> None:
-		"""Increase accumulated scandal."""
-		self.scandal += float(delta)
-
-	def record_spend(self, amount: float) -> None:
-		"""Record spend without altering capital balance directly."""
-		self.total_spend += float(amount)
-
-
-def _purse_net(household: HouseholdState) -> float:
-	purses = household.__dict__.get("_purses")
-	if purses is None:
-		return household.__dict__.get("_local_capital", 0.0)
-	return purses.net(household.__dict__["_account"])
-
-
-def _set_purse_net(household: HouseholdState, value: float) -> None:
-	purses = household.__dict__.get("_purses")
-	if purses is None:
-		household.__dict__["_local_capital"] = float(value)
-	else:
-		purses.set_net(household.__dict__["_account"], float(value), "set")
-
-
-# the purse is the household's net position in the actors' book (purse less what it has drawn on its facility)
-HouseholdState.capital = property(_purse_net, _set_purse_net)  # type: ignore[assignment]
-
-
-@dataclass
-class ProjectsState:
-	"""Research projects, active engineering ventures, and technological capability."""
-	active: Dict[str, ActiveProjectState] = field(default_factory=dict)
-	done: Set[str] = field(default_factory=set)
-	done_year: Optional[Dict[str, int]] = None
-	# the founder's businesses and their plants: what is running, switched off, how big and since when
-	businesses: List[Business] = field(default_factory=lambda: [Business(business_id="founder")])
-	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
-	# trade -> technique -> retained worker-years of anyone running it (sim/labour/tenure.py, industry_depth.py)
-	tenure: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	tenure_headcount: Dict[str, float] = field(default_factory=dict)
-	industry_seeded: bool = False
-	# technique -> worker-years a year the society's opening producers put in (industry_depth.py)
-	industry_opening_rate: Dict[str, float] = field(default_factory=dict)
-	bountied: Set[str] = field(default_factory=set)
-	granted: Set[str] = field(default_factory=set)
-	paid_towards: Dict[str, float] = field(default_factory=dict)
-	forgotten: Dict[str, int] = field(default_factory=dict)
-	trade_hours_used: Dict[str, float] = field(default_factory=dict)
-	revealed: Set[str] = field(default_factory=set)
-	# node id -> what the founder chose to do with the invention: {"mode", "published_year",
-	# "licensees": {actor id -> {"fee", "royalty", "year"}}}; a node absent from it is on the default
-	disclosures: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-	# concerns whose staff the yearly step hires for before the closure rule (`keep <id> staffed`)
-	keep_staffed: Set[str] = field(default_factory=set)
-	# node ids, `category:<cat>` and `trait:<trait>` the automatic starters (rush, auto_open, auto_commission) skip
-	excluded: Set[str] = field(default_factory=set)
-	stalled: int = 0
-	# every work ever shut for want of staff; kept after it reopens
-	ever_closed_for_staff: Set[str] = field(default_factory=set)
-	# this year's staffing closures and reopenings: year, closed, reopened, short (resource -> amount)
-	staffing_tally: Dict[str, object] = field(default_factory=dict)
-
-	@property
-	def business(self) -> Business:
-		"""The seat's own business, which holds the plants it runs."""
-		return self.businesses[0]
-
-	@property
-	def operating(self):
-		return self.business.operating()
-
-	@operating.setter
-	def operating(self, value) -> None:
-		self._replace_keys(self.business.operating(), value)
-
-	@property
-	def mothballed(self):
-		return self.business.mothballed()
-
-	@mothballed.setter
-	def mothballed(self, value) -> None:
-		self._replace_keys(self.business.mothballed(), value)
-
-	@property
-	def closures(self):
-		"""{work id: {"reason", "year"}} of the shut works that record why (read only)."""
-		return self.business.closures()
-
-	@staticmethod
-	def _replace_keys(view, value) -> None:
-		if value is view:
-			return
-		wanted = set(value or ())
-		for key in [key for key in view if key not in wanted]:
-			view.discard(key)
-		for key in sorted(wanted):
-			view.add(key)
-
-	def active_keys_sorted(self) -> List[str]:
-		"""Return active project ids in the canonical resolution order.
-
-		Callers that aggregate or mutate project state must not inherit dict
-		insertion order from a save file or command history.
-		"""
-		return sorted(self.active)
-
-	def operating_keys_sorted(self) -> List[str]:
-		"""Return operating project ids independently of set/hash order."""
-		return sorted(self.operating)
-
-	def done_keys_sorted(self) -> List[str]:
-		"""Return completed project ids independently of set/hash order."""
-		return sorted(self.done)
 
 
 @dataclass
 class EconomyState:
 	"""Physical plants, extractive workings, durable inventory, and material flows."""
-	# edge key (a port: tile id) -> {way: true} of the roads, track, canals, bridges and ports built (ways.py); geography's routes read it
-	improvements: Dict[str, Dict[str, bool]] = field(default_factory=dict)
-	# the same key -> {way: {due year, crew trade and hours a year, engineered, year last pressed}} of the ways paid for and being built (ways.py)
-	ways_under_construction: Dict[str, Dict[str, Dict[str, Any]]] = field(default_factory=dict)
-	# tile -> {owner: country or seat id, control: control level} (tile_ownership.py); seeded from the civilisation files
-	tile_owners: Dict[str, Dict[str, str]] = field(default_factory=dict)
-	# claims the seeding refused because another civilisation file already held the tile: {tile, owner, claimant}
-	tile_claim_conflicts: List[Dict[str, Any]] = field(default_factory=list)
-	# armies, the food they took from tiles this year and the tiles an army took: {armies, drawn, held_since, next_id} (campaign_actors.py)
-	campaigns: Dict[str, Any] = field(default_factory=dict)
-	# dated records of what changed in the world and why, shared by every seat (world_events.py)
-	world_events: List[Dict[str, Any]] = field(default_factory=list)
-	# tile -> {construction node id: capacity built there} (works.py)
-	works: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	# tile -> {construction node id: [year it is finished, capacity]} of works paid for and being built (works.py)
-	works_under_construction: Dict[str, Dict[str, List[float]]] = field(default_factory=dict)
-	# tile -> {species id: share of the game left} for hunted species below a full stock (food_supply.py)
-	wild_stock: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	# tile -> share of its native soil nitrogen pool left, for cropped tiles below native (soil_nitrogen_year.py)
-	soil_nitrogen: Dict[str, float] = field(default_factory=dict)
-	# tile -> tonnes of standing timber felled below the tile's full stock; a missing tile is untouched (economy_port_timber.py)
-	forest_felled: Dict[str, float] = field(default_factory=dict)
-	# stock material -> units of the held herd the society's producers keep, which the founder is not billed to raise
-	society_herds: Dict[str, float] = field(default_factory=dict)
-	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
-	output_factor: float = 1.0
-	# real output per person over the opening's, measured when the market closes (real_output.py)
-	output_per_head: float = 1.0
-	# material -> its price in labour hours the first year households were offered it, which values it in real output
-	introduction_prices: Dict[str, float] = field(default_factory=dict)
-	# node -> the year some producer was first seen running it (technique_spread.py)
-	technique_first_run: Dict[str, int] = field(default_factory=dict)
-	technique_record_started: bool = False
-	money_real: float = 1.0
-	# commodity -> society capacity, stock and last price ratio (market_clearing.py)
-	market_book: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	# the year's purchases and sales by commodity and party, and the founder's draws (goods_market_api.py)
-	market_flows: Optional[Dict[str, Any]] = None
-	# foreign economy id -> commodity -> its capacity, stock and price ratio (foreign_economies.py)
-	foreign_market_book: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
-	# foreign economy id -> material -> tonnes actors carried to and from it this year (foreign_actor_trade.py)
-	foreign_actor_trade: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
-	# material -> tonnes actors landed in the home market and took from it this year (foreign_actor_trade.py)
-	home_actor_trade: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	# material -> the market price ratio wages read, as of the last year's close (real_price_ratios.py)
-	wage_market_ratios: Dict[str, float] = field(default_factory=dict)
-	# good -> its agent-economy price at the first close, the baseline of real price ratios (real_price_ratios.py)
-	agent_baseline_prices: Dict[str, float] = field(default_factory=dict)
-	# coin metal -> the market's price over the incumbents' cost at the last year's close (coin_revaluation.py)
-	coin_metal_ratios: Dict[str, float] = field(default_factory=dict)
-	# foreign economy id -> goods and coin paid, and the route's lift (foreign_payments.py)
-	foreign_ledger: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	capacity_pool: Dict[str, float] = field(default_factory=dict)
-	# year -> value of goods this society imported ("in") and exported ("out") that year, in its money;
-	# the state's customs read the last completed year (foreign_payments.py)
-	foreign_trade_by_year: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	society_labour_hours: Dict[str, float] = field(default_factory=dict)
-	wage_tightness_factors: Dict[str, float] = field(default_factory=dict)
-	# whether the money an hour of work is worth is the agent economy's unskilled wage (set when the economy
-	# first opens and the opening's money is repriced to it)
-	money_from_economy: bool = False
 	# the money an hour of work was worth when the tree's money fields were last counted (opening_money.py)
 	nodes_money_per_labour_hour: Optional[float] = None
 
 
 @dataclass
-class GovernanceState:
-	"""Institutions and civic administrative units."""
-	gov: float = 0.0
-
-
-@dataclass
 class FounderState:
-	"""Founder biology, lifespan, and personal capacity."""
-	founder_alive: bool = True
-	life_left: float = 40.0
-	dead_reason: Optional[str] = None
-	director_hours_spent_founder: float = 0.0
-	living_cost_paid: float = 0.0
-	policy: Dict[str, Any] = field(default_factory=dict)
-	last_patron_death: Optional[int] = None
+	"""What the interface remembers of the founder's death (the founder's life and policy are the seats module's)."""
 	_founder_death_aged: Optional[int] = None
 	_founder_death_year: Optional[int] = None
 
 
 @dataclass
-class ScenarioState:
-	"""Simulation scenario configuration and timeline."""
-	year: int = 100
-	weather_salt: int = 0     # this game's own weather history, drawn from its dice (Complaint 384)
-	_said_debasement: Optional[int] = None
-	_said_output: Optional[Dict[str, int]] = None
-	_said_wage_cascade: int = -999    # last year a wage-cascade note was printed
-	_literacy_said: int = -999        # last year a literacy-census note was printed
-	_said_condition: Set[str] = field(default_factory=set)  # hazard-condition messages already printed once
-
-
-@dataclass
-class PopulationState:
-	"""World demography and agriculture state linkage."""
-	pop_children: float = 0.0
-	pop_working_age: float = 0.0
-	pop_elderly: float = 0.0
-	population_change_last_year: Optional[float] = None
-	# the nation's people-weighted food eaten over need in the economy's last closed year (food_eaten.py)
-	food_eaten_over_need: Optional[float] = None
-	# the same by tile, and the people by tile as [children, working_age, elderly] (regional_people.py)
-	regional_eaten_over_need: Dict[str, float] = field(default_factory=dict)
-	regions: Dict[str, List[float]] = field(default_factory=dict)
-	# the share of each region's people living in town, seeded at the opening from the civilisation's typed urban share (urban_share.py)
-	urban_share_of_people: Dict[str, float] = field(default_factory=dict)
-	# one dict per simulated year: year, population, births, deaths, nutrition_ratio
-	yearly_record: List[Any] = field(default_factory=list)
-
-
-@dataclass
-class DiseaseState:
-	"""Epidemics in the nation: who is susceptible, infected or immune, by pathogen and age band."""
-	records: Dict[str, Any] = field(default_factory=dict)   # pathogen id -> age band -> saved Patch (sim/disease)
-	introduced: Dict[str, List[int]] = field(default_factory=dict)   # pathogen id -> years it arrived
-	deaths: Dict[str, int] = field(default_factory=dict)   # pathogen id -> deaths so far
-
-
-@dataclass
 class SimulationState:
 	"""Root coordinator aggregating authoritative persistent subsystem states."""
-	# household, projects, founder, governance, holdings and seat_progress alias the acting seat's objects and are not saved (seats are)
-	household: Optional[HouseholdState] = field(default=None, metadata={"alias": True})
-	projects: Optional[ProjectsState] = field(default=None, metadata={"alias": True})
+	# household, holdings, seat_progress and founder only build the first seat when `seats` is empty; they are not kept
+	household: InitVar[Optional[HouseholdState]] = None
 	economy: Optional[EconomyState] = None
-	governance: Optional[GovernanceState] = field(default=None, metadata={"alias": True})
-	holdings: Optional[HoldingsState] = field(default=None, metadata={"alias": True})
-	seat_progress: Optional[SeatProgressState] = field(default=None, metadata={"alias": True})
-	founder: Optional[FounderState] = field(default=None, metadata={"alias": True})
+	holdings: InitVar[Optional[HoldingsState]] = None
+	seat_progress: InitVar[Optional[SeatProgressState]] = None
+	founder: InitVar[Optional[FounderState]] = None
 	seats: Dict[str, "SeatState"] = field(default_factory=dict)
 	acting_seat: str = "founder"
-	scenario: Optional[ScenarioState] = None
-	population: Optional[PopulationState] = None
-	disease: DiseaseState = field(default_factory=DiseaseState)
-	actors: Optional[ActorsState] = None
 	_civ: Optional[str] = None
-	_weights: Dict[str, Any] = field(default_factory=dict)
-	_fog: bool = False
-	_fuzzy_estimates: bool = False
-	_fuzzy_salt: int = 0
 	_immortal: bool = True
 	_rng: Optional[List[Any]] = None
 	_seed: Optional[Union[int, str]] = None
 	_game_version: Optional[str] = None  # which build wrote the save; shown to people, never checked on load
-	# declared store -> {tile, actor or "actor|actor" key: value differing from the default} (mod_stores.py)
-	stores: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+	modules: Dict[str, Any] = field(default_factory=dict)          # module id -> its world state (sim/assembly slots)
+	assembly_record: Dict[str, Any] = field(default_factory=dict)  # which modules, layers and mods wrote this game
 	interface: Dict[str, Any] = field(default_factory=dict)  # the UI's own memory; the engine never reads it
 
-	def __post_init__(self) -> None:
-		from sim.engine.state_seat import FIRST_SEAT_ID, SeatState, bind_seat
-		if not self.seats:   # built from the three objects directly: they become the first seat
+	def __post_init__(self, household, holdings, seat_progress, founder) -> None:
+		from sim.engine.state_seat import FIRST_SEAT_ID, SeatState
+		if not self.seats:   # built from the objects directly: they become the first seat
 			self.acting_seat = FIRST_SEAT_ID
-			given = {name: getattr(self, name) for name in ("governance", "holdings", "seat_progress")}
+			given = {"holdings": holdings, "seat_progress": seat_progress}
 			self.seats[FIRST_SEAT_ID] = SeatState(
-				self.household, self.projects, self.founder,
-				**{name: value for name, value in given.items() if value is not None})
-		bind_seat(self, self.acting_seat)
-		self.attach_purses()
-
-	def attach_purses(self) -> None:
-		"""Every seat's household keeps its purse in the actors' book, under the seat's id."""
-		if self.actors is not None:
-			for seat_id, seat in self.seats.items():
-				seat.household.attach(self.actors.purses, seat_id)
+				household, founder, **{name: value for name, value in given.items() if value is not None})
 
 	@property
-	def _goal(self) -> Optional[str]:
-		return self.seats[self.acting_seat].goal
+	def acting_record(self) -> "SeatState":
+		"""The acting seat's record: its household, founder, holdings and progress."""
+		return self.seats[self.acting_seat]
 
-	@_goal.setter
-	def _goal(self, value: Optional[str]) -> None:
-		self.seats[self.acting_seat].goal = value
+	@property
+	def actors(self) -> Optional[ActorsState]:
+		"""The actors' records: the actors module's world slot (None before the assembly has made it; a save read back holds
+		it as plain data until the module set revives it)."""
+		held = self.modules.get("actors")
+		return held if isinstance(held, ActorsState) else None
+
+	@actors.setter
+	def actors(self, value: Optional[ActorsState]) -> None:
+		self.modules["actors"] = value
+
+
+for _build_only in ("household", "holdings", "seat_progress", "founder"):
+	delattr(SimulationState, _build_only)   # a build argument leaves no attribute to read: a stale reader raises
 
 
 ALL_STATE_CLASSES = (
 	HouseholdState,
-	ProjectsState,
 	EconomyState,
-	GovernanceState,
 	FounderState,
 	HoldingsState,
 	SeatProgressState,
-	ScenarioState,
-	PopulationState,
-	DiseaseState,
 	ActorsState,
 )
 
@@ -552,7 +163,7 @@ def serialize_state(obj: Any) -> Any:
 			val = getattr(obj, f.name)
 			out[f.name] = serialize_state(val)
 		return out
-	from sim.engine.economy import _InvalidatingSet
+	from sim.invalidating import _InvalidatingSet
 	if isinstance(obj, (set, _InvalidatingSet)):
 		return {"__set__": sorted(serialize_state(x) for x in obj)}
 	if isinstance(obj, (dict, _InvalidatingDict, collections.defaultdict, collections.Counter)):

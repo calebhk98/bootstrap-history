@@ -2,10 +2,11 @@
 import math
 import random
 
-from sim.engine import node_payback_diagnostic
+from sim.production.api import node_payback_diagnostic
 from sim.engine.ui_port import (Sim, civilization_ids, default_civilisation_id, format_occupational_report,
                                 hours_by_trade_of_all_employers, load, load_civ, occupational_report,
                                 people_by_trade_of_all_employers)
+from sim.engine import ui_port
 
 FIGURE_LABELS = (
     ("staple_volatility", "std dev of the staple's yearly log price change"),
@@ -31,7 +32,7 @@ def occupation_lines(game):
     """Each occupation group's share of working people (the basis of the bands), then of the year's hours, against
     its plausibility band."""
     people = people_by_trade_of_all_employers(game.labour)
-    hours = hours_by_trade_of_all_employers(game.labour, game.state.economy.society_labour_hours)
+    hours = hours_by_trade_of_all_employers(game.labour, game.view("society_labour_hours")())
     return (["by people (main occupation)"] + ([] if people is None else format_occupational_report(occupational_report(people)))
             + ["by hours worked"] + format_occupational_report(occupational_report(hours)))
 
@@ -40,12 +41,12 @@ def check_one(nodes, civ_id, seed, years, metals, staple=None, occupations=None)
     """Play `years` years of `civ_id` and return the port's health report; `occupations`, a list, receives the
     occupation lines."""
     game = Sim(nodes, [], random.Random(seed), events=False, manual=True, civ=load_civ(civ_id))
-    game.done_year = {}
+    ui_port.reset_done_years(game)
     for _year in range(years):
         game.step()
     if occupations is not None:
         occupations.extend(occupation_lines(game))
-    return game.economy.health(metals, staple)
+    return game.view("legacy_economy")().health(metals, staple)
 
 
 def cmd_economy_check(args):

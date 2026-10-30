@@ -9,15 +9,16 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.economy_credit import CreditMixin
+from sim.tests import finance_host
 from sim.ui.proto.render_screen_state import render_state
 from sim.ui.proto.stock_gate_rows import rows_for_player
 
 BREAKDOWN = {"cash_on_hand": 400.0, "credit_available_now": 250.0, "surplus_allowance_over_years": 1000.0,
              "sustainable_annual_surplus": 200.0, "already_committed": 900.0}
-stand_in = SimpleNamespace(funding_breakdown=lambda: dict(BREAKDOWN))
+stand_in = finance_host.build()
+stand_in.funding_breakdown = lambda: dict(BREAKDOWN)
 check("the funding capacity is cash, the credit available now and the surplus allowance, and not the surplus or the commitments",
-      CreditMixin.funding_capacity(stand_in) == 1650.0)
+      stand_in.funding_capacity() == 1650.0)
 
 GATES = [{"material": "eggs", "needed": 0.02, "held": 0.0, "brought_by": None},
          {"material": "herd", "needed": 5.0, "held": 0.0, "brought_by": "import_herd"},

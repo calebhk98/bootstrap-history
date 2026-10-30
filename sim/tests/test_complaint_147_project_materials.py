@@ -1,9 +1,9 @@
 """Complaints/147: a project pays for the materials it is MISSING, at today's market price, and draws owned stock first.
 
-A research node declares only quantities. The bill (`compute_material_bill`) takes what is held in stock, then what the
+A research node declares only quantities. The bill (`material_bill`) takes what is held in stock, then what the
 founder's own output covers over the build, and prices the rest at the market quote, the part beyond a year's market
-supply at today's spot quote. It is called here on a stub game whose stock, output, supply and quotes are set by the test,
-and `project_material_parts`, `project_own_output_claim`, `project_material_needs` and `bounty_price` on stubs too.
+supply at today's spot quote. It is called here on figures set by the test, and `project_material_parts`,
+`project_own_output_claim`, `project_material_needs` and `bounty_price` on the materials module over plain views.
 The wiring (starting a project, `why`, `quote material`) is test_complaint_147_bill_wiring."""
 QUICK_TOPIC = True
 
@@ -11,7 +11,11 @@ import os
 import types
 import unittest
 
-from sim.engine.project_materials import ProjectMaterialsMixin, compute_material_bill
+from sim.materials import rules
+from sim.projects.api import constants as project_constants
+from sim.materials.constants import COKE_PER_CHARCOAL
+from sim.tests import materials_stand_in
+from sim.world.material_units import tonnes_per_unit
 from sim.ui.proto.techtree import _material_row
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -33,13 +37,14 @@ def a_view(stock=None, own=None, market=None, own_supply=None, unpriced=()):
         return mean * tonnes, (mean if tonnes else BASE_PRICE * (1.0 + CLIMB * already))
 
     return types.SimpleNamespace(
-        LAB_SCALE_SUFFIX="_g", _material_tag=lambda material: TAGS[material], material_stock_t=lambda emp_key: stock.get(emp_key, 0.0),
-        _unclaimed_own_supply=lambda tag, node_id: own.get(tag, 0.0), _own_material_supply=lambda tag: own_supply.get(tag, 0.0),
-        _material_market_tonnes=lambda emp_key: market.get(emp_key, 1000.0), material_purchase_cost=quote)
+        material_pool=lambda material: TAGS[material], goods_stock=lambda emp_key: stock.get(emp_key, 0.0),
+        unclaimed_own=lambda tag: own.get(tag, 0.0), own_supply=lambda tag: own_supply.get(tag, 0.0),
+        market_tonnes=lambda emp_key: market.get(emp_key, 1000.0), material_purchase_cost=quote)
 
 
 def bill(view, needs, span=1.0):
-    return compute_material_bill(view, "node", needs, span)
+    return rules.material_bill(needs, span, tonnes_per_unit, view.material_pool, view.goods_stock, view.unclaimed_own,
+                               view.material_purchase_cost, view.market_tonnes, view.own_supply)
 
 
 def row_of(result, material):
@@ -80,7 +85,7 @@ class OwnOutput(unittest.TestCase):
         self.assertLess(owner["missing_tonnes"], bare["missing_tonnes"])
         self.assertLess(owner["cost_of_missing"], bare["cost_of_missing"])
         self.assertLessEqual(owner["price_per_tonne"], bare["price_per_tonne"] * (1.0 + 1e-9))
-        shown = _material_row(owner, owner_view)
+        shown = _material_row(owner, None)
         self.assertGreater(shown["own_supply_tonnes_per_year"], 0)
         # presentation: the why row names the owned supply
         self.assertIn("own", shown["scarcity_note"])
@@ -88,28 +93,26 @@ class OwnOutput(unittest.TestCase):
 
     def test_without_owned_supply_the_why_row_carries_no_note(self):
         bare = row_of(bill(a_view(), {"charcoal_kg": 4000.0}), "charcoal_kg")
-        shown = _material_row(bare, a_view())
+        shown = _material_row(bare, None)
         self.assertEqual(shown["own_supply_tonnes_per_year"], 0)
         self.assertNotIn("scarcity_note", shown)
 
     def test_a_project_claims_the_output_it_draws_so_the_next_counts_only_what_is_left(self):
-        game = types.SimpleNamespace(
-            nodes={"first": {"build_yrs": 4}},
-            project_material_bill=lambda node_id: {"rows": [
-                {"material": "charcoal_kg", "held_from_own_output_tonnes": 8.0},
-                {"material": "coal_kg", "held_from_own_output_tonnes": 0.0}]},
-            _material_tag=lambda material: TAGS[material])
-        self.assertEqual(ProjectMaterialsMixin.project_own_output_claim(game, "first"), {"forest1": 2.0})
+        game = materials_stand_in.build(tree_nodes={"first": {"build_yrs": 4}})
+        game.project_material_bill = lambda node_id: {"rows": [
+            {"material": "charcoal_kg", "held_from_own_output_tonnes": 8.0},
+            {"material": "coal_kg", "held_from_own_output_tonnes": 0.0}]}
+        self.assertEqual(game.project_own_output_claim("first"), {"forest1": 2.0})
 
     def test_the_unclaimed_supply_is_the_output_less_what_other_running_projects_claimed(self):
         active = {"first": {"own_output_claim": {"forest1": 2.0}}, "second": {"own_output_claim": {"forest1": 0.5}},
                   "third": {}}
-        game = types.SimpleNamespace(state=types.SimpleNamespace(projects=types.SimpleNamespace(active=active)),
-                                     _own_material_supply=lambda tag: 3.0)
-        self.assertAlmostEqual(ProjectMaterialsMixin._unclaimed_own_supply(game, "forest1", "third"), 0.5)
-        self.assertAlmostEqual(ProjectMaterialsMixin._unclaimed_own_supply(game, "forest1", "first"), 2.5)
-        game._own_material_supply = lambda tag: 2.0   # the others claimed more than there is
-        self.assertEqual(ProjectMaterialsMixin._unclaimed_own_supply(game, "forest1", "third"), 0.0)
+        game = materials_stand_in.build(projects_record=materials_stand_in.projects(active=active))
+        game.own_material_supply = lambda tag: 3.0
+        self.assertAlmostEqual(game.unclaimed_own_supply("forest1", "third"), 0.5)
+        self.assertAlmostEqual(game.unclaimed_own_supply("forest1", "first"), 2.5)
+        game.own_material_supply = lambda tag: 2.0   # the others claimed more than there is
+        self.assertEqual(game.unclaimed_own_supply("forest1", "third"), 0.0)
 
 
 class MarketPrice(unittest.TestCase):
@@ -156,8 +159,9 @@ class InstalmentsBeyondAYearsSupply(unittest.TestCase):
         self.assertLess(self.row["cost_of_missing"], whole_order)
 
     def test_up_front_money_is_the_deliverable_part_only(self):
-        game = types.SimpleNamespace(project_material_bill=lambda node_id: {"rows": [self.row], "cost_of_missing": self.row["cost_of_missing"]})
-        total, up_front = ProjectMaterialsMixin.project_material_parts(game, "node")
+        game = materials_stand_in.build()
+        game.project_material_bill = lambda node_id: {"rows": [self.row], "cost_of_missing": self.row["cost_of_missing"]}
+        total, up_front = game.project_material_parts("node")
         self.assertAlmostEqual(up_front, self.row["cost_of_deliverable"])
         self.assertLess(up_front, total)
 
@@ -173,24 +177,22 @@ class InstalmentsBeyondAYearsSupply(unittest.TestCase):
 
 
 class Needs(unittest.TestCase):
-    def game(self, fuel):
-        return types.SimpleNamespace(nodes={"node": {"mat": {"charcoal_kg": 100.0, "tin_kg": 5.0}}}, chosen_fuel=lambda node_id: fuel,
-                                     COKE_PER_CHARCOAL=0.5)
+    NODE = {"mat": {"charcoal_kg": 100.0, "tin_kg": 5.0}}
 
     def test_a_project_needs_what_its_node_declares(self):
-        self.assertEqual(dict(ProjectMaterialsMixin.project_material_needs(self.game("charcoal"), "node")),
-                         {"charcoal_kg": 100.0, "tin_kg": 5.0})
+        self.assertEqual(dict(rules.project_needs(self.NODE, False)), {"charcoal_kg": 100.0, "tin_kg": 5.0})
 
     def test_with_coke_chosen_coal_stands_in_for_the_charcoal(self):
-        self.assertEqual(dict(ProjectMaterialsMixin.project_material_needs(self.game("coke"), "node")),
-                         {"coal_kg": 50.0, "tin_kg": 5.0})
+        needs = rules.project_needs(self.NODE, True)
+        self.assertEqual(set(needs), {"coal_kg", "tin_kg"})
+        self.assertAlmostEqual(needs["coal_kg"], 100.0 * COKE_PER_CHARCOAL)
+        self.assertEqual(needs["tin_kg"], 5.0)
 
 
 class BountyAndSource(unittest.TestCase):
     def test_a_bounty_is_a_multiple_of_what_this_society_would_pay_to_build_it(self):
-        game = types.SimpleNamespace(project_cost_now=lambda node_id: 900.0, opposition_factor=lambda node_id: 1.5,
-                                     BOUNTY_PRICE_MULTIPLIER=4.0)
-        self.assertAlmostEqual(ProjectMaterialsMixin.bounty_price(game, "node"), 900.0 / 1.5 * 4.0)
+        game = materials_stand_in.build(project_cost_now=lambda node_id: 900.0, opposition_factor=lambda node_id: 1.5)
+        self.assertAlmostEqual(game.bounty_price("node"), 900.0 / 1.5 * project_constants.BOUNTY_PRICE_MULTIPLIER)
 
 
 

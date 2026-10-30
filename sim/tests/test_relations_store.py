@@ -10,28 +10,32 @@ import json
 
 from .harness import check
 
-from sim.engine.mod_stores import StoreBook
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
+from sim.tests.store_stand_in import base_book
+from sim.engine.state import FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import bind_seat, seat_from_template
 from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import run_as_seat
 from sim.agents.api import relations
+from sim.tests.seat_views_stand_in import give_seats_slots
+from sim.tests.ui_stand_in import FactViews
 
 
-class Game:
+class Game(FactViews):
     """The root state with the real alias rebinding, the stores and the country questions a handler asks."""
 
     def __init__(self):
-        self.state = SimulationState(household=HouseholdState(capital=100.0), projects=ProjectsState(), founder=FounderState())
-        self.state.seats["northern"] = seat_from_template({"country": "han"}, 50.0, 1e9, {})
+        self.state = SimulationState(household=HouseholdState(), founder=FounderState())
+        self.state.seats["northern"] = seat_from_template({"country": "han"}, {})
+        give_seats_slots(self.state)
         self.session_seat = None
         self.year = 100
         self.civ = {"id": "rome"}
+        self.saved_stores = {}
 
     @property
     def stores(self):
-        return StoreBook(self.state.stores)
+        return base_book(self.saved_stores)
 
     def partner_countries(self):
         return ["han", "parthia"]
@@ -61,7 +65,7 @@ blank = send({"cmd": "relations", "with": "han"})
 check("an unrecorded pair is neutral with no history and no note",
       blank["ok"] and blank["country"] == "rome" and blank["with"] == "han" and blank["ours"]["stance"] == "neutral"
       and blank["ours"]["history"] == [] and blank["ours"]["note"] == "", blank)
-check("reading writes nothing", game.state.stores.get("relations", {}) == {}, game.state.stores)
+check("reading writes nothing", game.saved_stores.get("relations", {}) == {}, game.saved_stores)
 
 # ---- a seat sets its own country's side: stance, a treaty term, a note
 reply = send({"cmd": "set_relation", "with": "han", "stance": "friendly"})
@@ -71,7 +75,7 @@ check("a treaty term is recorded under its name", reply["ok"] and reply["ours"][
 reply = send({"cmd": "set_relation", "with": "han", "note": "their envoy lied about the silk weights"})
 # presentation: the subject is the player's own note, stored and returned as written
 check("a note on another power is recorded", reply["ok"] and reply["ours"]["note"].startswith("their envoy"), reply)
-check("the record is keyed by the ordered pair of countries", set(game.state.stores["relations"]) == {"rome|han"}, game.state.stores)
+check("the record is keyed by the ordered pair of countries", set(game.saved_stores["relations"]) == {"rome|han"}, game.saved_stores)
 
 # ---- the other country's side stays its own
 refused = send({"cmd": "set_relation", "with": "han", "side": "han", "stance": "hostile"})
@@ -87,8 +91,8 @@ check("an unknown stance is refused with the stances",
       refused["ok"] is False and refused["cause"] == "unknown_stance" and "friendly" in refused["choices"], refused)
 refused = send({"cmd": "set_relation", "with": "han"})
 check("a call that sets nothing is refused", refused["ok"] is False and refused["cause"] == "nothing_to_set", refused)
-check("refusals changed nothing", set(game.state.stores["relations"]) == {"rome|han"}
-      and relations.read(game.stores, "rome", "han")["stance"] == "friendly", game.state.stores)
+check("refusals changed nothing", set(game.saved_stores["relations"]) == {"rome|han"}
+      and relations.read(game.stores, "rome", "han")["stance"] == "friendly", game.saved_stores)
 
 # ---- the other side's view: public fields show, the private note does not
 theirs = send({"cmd": "relations", "with": "rome", "as": "northern"})
@@ -99,7 +103,7 @@ check("it sees the other side's stance and terms but not their note",
 send({"cmd": "set_relation", "with": "rome", "note": "keep the tea secret", "as": "northern"})
 # presentation: the subject is the player's own note, stored and returned as written
 check("each country keeps its own side", relations.read(game.stores, "han", "rome")["note"] == "keep the tea secret"
-      and relations.read(game.stores, "rome", "han")["note"].startswith("their envoy"), game.state.stores)
+      and relations.read(game.stores, "rome", "han")["note"].startswith("their envoy"), game.saved_stores)
 
 # ---- a mechanism appends dated events; both sides carry them
 relations.record_event(game.stores, "rome", "han", game.year, "tribute_paid", amount=12.0)
@@ -113,9 +117,9 @@ for _ in range(relations.MAX_HISTORY + 5):
     relations.record_event(game.stores, "rome", "han", game.year, "tick")
 check("history is bounded", len(relations.read(game.stores, "rome", "han")["history"]) == relations.MAX_HISTORY, None)
 
-# ---- saved with the game: the stores dict is state, so a JSON round trip keeps it
+# ---- saved with the game: the stores' values are state, so a JSON round trip keeps them
 revived = Game()
-revived.state.stores = json.loads(json.dumps(game.state.stores))
+revived.saved_stores = json.loads(json.dumps(game.saved_stores))
 check("a saved and loaded game reads the same record",
       relations.read(revived.stores, "rome", "han") == relations.read(game.stores, "rome", "han"), None)
 
@@ -123,7 +127,7 @@ check("a saved and loaded game reads the same record",
 del game.state.seats["northern"]
 # presentation: the subject is the player's own note, stored and returned as written
 check("a country's note survives the loss of its seat",
-      relations.read(game.stores, "han", "rome")["note"] == "keep the tea secret", game.state.stores)
-before = copy.deepcopy(game.state.stores)
+      relations.read(game.stores, "han", "rome")["note"] == "keep the tea secret", game.saved_stores)
+before = copy.deepcopy(game.saved_stores)
 send({"cmd": "relations", "with": "han"})
-check("reading never writes", game.state.stores == before, None)
+check("reading never writes", game.saved_stores == before, None)

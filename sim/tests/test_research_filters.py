@@ -11,10 +11,11 @@ import re
 import tempfile
 
 from sim.engine import topic_tags as _topic_tags
-from sim.engine.mods import ModError as _ModError
+from sim.content.api import ModError as _ModError
 from sim.ui.proto import tree_filters
 from sim.ui.proto.tree_filters import tags_of
 from sim.ui.proto.typed import parse_typed as _parse_typed_line
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -28,7 +29,7 @@ HIDDEN = [node_id for node_id in IDS[80:] if len(NODES[node_id]["name"]) > 12][:
 
 def _game(fog):
     visible = DONE | ACTIVE | set(STARTABLE) | HEARD
-    return SimpleNamespace(
+    return Game(
         fog=fog, done=set(DONE), active={node_id: {} for node_id in ACTIVE}, revealed=set(HEARD) | set(STARTABLE),
         project_cost=lambda node_id: 100.0, start_reason=lambda node_id: (False, "not yet"),
         is_visible=lambda node_id: node_id in visible, stock_needed_by=lambda node_id: [])

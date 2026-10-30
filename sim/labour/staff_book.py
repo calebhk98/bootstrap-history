@@ -1,7 +1,7 @@
 """Who is hired by whom: the one book of the founder's staff, and the views of every employer's staff
 against the people the country supplies.
 
-The founder's household keeps its staff as a trade-to-head-count map (`household.employees`); only this
+The founder's household keeps its staff as a trade-to-head-count map (the workforce module's `employees`); only this
 mixin reads or writes it from labour, and code outside labour asks `sim.labour`. Firms and states keep
 their own staff in the agent registry; `reserved_people` adds both so one trade's reservations read from
 one place. Complaint 556.
@@ -14,19 +14,19 @@ class StaffBookMixin:
 
     def employed(self, trade):
         """People of one trade on the founder's books."""
-        return self._world.state.household.employees.get(trade, 0.0)
+        return self._world.workforce.employees.get(trade, 0.0)
 
     def employed_by_trade(self):
         """A copy of the founder's staff, trade to head count."""
-        return dict(self._world.state.household.employees)
+        return dict(self._world.workforce.employees)
 
     def employed_total(self):
         """Everyone on the founder's books."""
-        return sum(self._world.state.household.employees.values())
+        return sum(self._world.workforce.employees.values())
 
     def set_employed(self, trade, people):
         """Put the founder's head count of a trade at `people`; a count of nothing leaves the trade off the books."""
-        employees = self._world.state.household.employees
+        employees = self._world.workforce.employees
         if people:
             employees[trade] = people
         else:

@@ -3,7 +3,7 @@ written-out known and hidden nodes and reads the returned values.
 
 Which commands go through the shared filter and which build their own:
 
-Shared filter (`scrub_hidden_ids`, reached through `FogMixin.fog_scrub`; `missing_prereq_message` is the one way to turn a
+Shared filter (`scrub_hidden_ids`, reached through the module's `fog_scrub`; `missing_prereq_message` is the one way to turn a
 missing list into words, tested in test_fog_leak3): `why` (start_blocked_reason and the blockers' text), `bounty`
 (missing_prereq_message), `log` (_log_scrub), and every command that takes an id (the guard in the command dispatch,
 tested in test_fog_reply_rules and test_names_and_fog).
@@ -17,9 +17,12 @@ QUICK_TOPIC = True
 import json
 import types
 import unittest
+from sim.knowledge.api import KnowledgeSeat, ReplaceTree
 from unittest import mock
 
-from sim.engine.fog import FogMixin, HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
+from sim.knowledge.api import HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
+from sim.knowledge.module import Knowledge
+from sim.tests import module_harness
 from sim.ui.proto import anatomy, economy, goals_watch, tree_filters
 from sim.ui.proto.dispatch_notes import _entry, _project_name
 from sim.ui.proto.dispatch_options import _fogged
@@ -29,6 +32,7 @@ from sim.ui.proto.screen_commitments import _goal, _institutions
 from sim.ui.proto.screen_education import _schools
 from sim.ui.proto.state_log import _log_scrub
 from sim.ui.proto.techtree import _explain_visible_prerequisites
+from sim.tests.ui_stand_in import Game
 
 KNOWN, HIDDEN, HIDDEN_LONGER = "iron_smelting", "zz_hidden_theory", "zz_hidden_theory_applied"
 IDS = {KNOWN: "Iron smelting", HIDDEN: "Hidden theory", HIDDEN_LONGER: "Hidden theory applied"}
@@ -49,7 +53,7 @@ def seen(reply):
 
 def stand_in(fog=True, **fields):
     heard = fields.pop("heard", {KNOWN})
-    game = types.SimpleNamespace(
+    game = Game(
         nodes=NODES, fog=fog, goal=HIDDEN_LONGER, done=set(), granted=set(), active={}, forgotten={},
         is_visible=lambda node_id, _memo=None: (not fog) or node_id in heard)
     game.__dict__.update(fields)
@@ -74,9 +78,11 @@ class SharedFilterTests(unittest.TestCase):
                          "mod:%s and %s" % (HIDDEN, HIDDEN_ID_PLACEHOLDER))
 
     def fog_scrub(self, text, fog=True):
-        game = stand_in(fog=fog)
-        game.state = types.SimpleNamespace(_fog=fog)
-        return FogMixin.fog_scrub(game, text)
+        knowledge = module_harness.build(Knowledge, seat=KnowledgeSeat(revealed={KNOWN}), views={
+            "fog_of_war": fog, "active_projects": {},
+            "start_check": lambda node_id, ignore_trade, memo, why: (False, None)})
+        knowledge.replace_tree(ReplaceTree(NODES))
+        return knowledge.fog_scrub(text)
 
     def test_fog_scrub_hides_ids_the_player_has_not_heard_of(self):
         self.assertEqual(seen(self.fog_scrub(self.text())), [])
@@ -239,7 +245,7 @@ class MetricAndEconomyTests(unittest.TestCase):
 
     def test_power_tiers_name_only_the_rungs_the_player_has_heard_of(self):
         nodes = self.power_nodes()
-        game = stand_in(nodes=nodes, has=lambda node_id: node_id == KNOWN, installed_generation_kw_by_tier=lambda: {KNOWN: 5.0})
+        game = stand_in(nodes=nodes, done={KNOWN}, installed_generation_kw_by_tier=lambda: {KNOWN: 5.0})
         tiers, highest = economy._power_tiers(game, nodes)
         self.assertEqual([tier["id"] for tier in tiers], [KNOWN])
         self.assertEqual(highest, "workshop power")
@@ -248,7 +254,7 @@ class MetricAndEconomyTests(unittest.TestCase):
     def test_projects_waiting_on_power_leave_out_hidden_ones(self):
         nodes = dict(self.power_nodes(), **{"seen_user": node("Seen user", pre=[KNOWN]),
                                             "hidden_user": node("Hidden user", pre=[KNOWN])})
-        game = stand_in(nodes=nodes, heard={KNOWN, "seen_user"}, has=lambda node_id: False)
+        game = stand_in(nodes=nodes, heard={KNOWN, "seen_user"})
         reply = economy._power_waiting_on(game, nodes, False)
         self.assertEqual(json.dumps(reply).count("hidden_user"), 0)
         self.assertIn("seen_user", json.dumps(reply))

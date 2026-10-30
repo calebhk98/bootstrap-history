@@ -10,6 +10,7 @@ import tempfile
 import unittest
 
 from sim.agents.api import Business
+from sim.knowledge.api import KnowledgeSeat
 from sim.tests.harness import check
 
 
@@ -19,53 +20,32 @@ def _test_automatic_field_persistence():
 		ActiveProjectState,
 		EconomyState,
 		FounderState,
-		GovernanceState,
 		HoldingsState,
 		HouseholdState,
-		PopulationState,
-		ProjectsState,
-		ScenarioState,
+		
 		SimulationState,
 		deserialize_state,
 		serialize_state,
 	)
 
 	proj = ActiveProjectState(ph_left=80.0, cost_left=300.0, yrs=1.0, spent=100.0, lab_left={"mason": 15.0})
-	hh = HouseholdState(
-		capital=1250.0,
-		reputation=7.5,
-		trades_created={"mason", "carpenter"},
-		employees={"carpenter": 2.0},
-	)
-	projects = ProjectsState(
-		active={"arch": proj},
-		done={"stone_cutting"},
-		businesses=[Business.running(["stone_cutting"], opened_year=100)],
-	)
+	hh = HouseholdState(saving_target=1250.0)
 	econ = EconomyState()
-	holdings = HoldingsState(
-		mines=[{"id": "m1", "ore": "iron", "capex": 500.0}],
-		forest_ha=120.0,
-		shortages={"charcoal": 3},
-	)
-	gov = GovernanceState(gov=0.5)
-	founder = FounderState(founder_alive=True, life_left=28.0)
-	scenario = ScenarioState(year=115)
-	pop = PopulationState(pop_children=20e6, pop_working_age=35e6, pop_elderly=10e6)
+	holdings = HoldingsState(_dashboard_history=[120.0])
+	founder = FounderState(_founder_death_year=28)
 
 	state = SimulationState(
 		household=hh,
-		projects=projects,
 		economy=econ,
 		holdings=holdings,
-		governance=gov,
 		founder=founder,
-		scenario=scenario,
-		population=pop,
 		_civ="rome_100ad",
-		_fog=False,
 	)
-	state._goal = "aqueduct"
+	state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
+	from sim.projects.state import ProjectsSeat
+	state.seats[state.acting_seat].modules["projects"] = ProjectsSeat(active={"arch": proj})
+	from sim.seats.state import SeatsSeat
+	state.seats[state.acting_seat].modules["seats"] = SeatsSeat(goal="aqueduct")
 
 	blob = serialize_state(state)
 	if not isinstance(blob, dict):
@@ -74,16 +54,19 @@ def _test_automatic_field_persistence():
 		return False, "serialized state carries a version stamp"
 
 	restored = deserialize_state(blob)
-	if restored.household.capital != 1250.0 or restored.household.reputation != 7.5:
-		return False, f"Household capital/reputation mismatch: {restored.household.capital}, {restored.household.reputation}"
-	if restored.projects.done != {"stone_cutting"}:
-		return False, f"Projects done mismatch: {restored.projects.done}"
-	if "arch" not in restored.projects.active:
-		return False, f"Projects active missing 'arch': {restored.projects.active}"
-	if restored.projects.active["arch"].ph_left != 80.0:
-		return False, f"Active project ph_left mismatch: {restored.projects.active['arch'].ph_left}"
-	if restored.holdings.shortages.get("charcoal") != 3:
-		return False, f"Shortages mismatch: {restored.holdings.shortages}"
+	if restored.acting_record.household.saving_target != 1250.0:
+		return False, f"Household saving target mismatch: {restored.acting_record.household.saving_target}"
+	if restored.seats[restored.acting_seat].modules["knowledge"]["done"] != {"__set__": ["stone_cutting"]}:   # the module set revives it
+		return False, f"Knowledge done mismatch: {restored.seats[restored.acting_seat].modules['knowledge']}"
+	restored_active = restored.seats[restored.acting_seat].modules["projects"]["active"]
+	if "arch" not in restored_active:
+		return False, f"Projects active missing 'arch': {restored_active}"
+	if restored_active["arch"]["ph_left"] != 80.0:
+		return False, f"Active project ph_left mismatch: {restored_active['arch']['ph_left']}"
+	from sim.materials.state import MaterialsSeat
+	seat = deserialize_state(serialize_state(MaterialsSeat(shortages=collections.Counter({"charcoal": 3}))), MaterialsSeat)
+	if seat.shortages.get("charcoal") != 3:
+		return False, f"Shortages mismatch: {seat.shortages}"
 
 	return True, "Automatic field persistence verified"
 
@@ -127,54 +110,52 @@ check("Nested project state reconstruction", _ok, _detail)
 
 def _test_runtime_type_reconstruction():
 	"""Verify sets, Counters, defaultdicts, and invalidating collections have correct runtime types."""
-	from sim.engine.economy import _InvalidatingDict, _InvalidatingSet
+	from sim.invalidating import _InvalidatingDict, _InvalidatingSet
 	from sim.engine.state import (
 		ActiveProjectState,
 		EconomyState,
 		HoldingsState,
 		HouseholdState,
-		ProjectsState,
+		
 		SimulationState,
 		deserialize_state,
 		serialize_state,
 	)
 
-	hh = HouseholdState(
-		capital=500.0,
-		trades_created={"tailor", "weaver"},
-		employees={"weaver": 3.0},
-	)
-	projects = ProjectsState(
-		active={"loom": ActiveProjectState(ph_left=20.0)},
-		businesses=[Business.running(["spinning_wheel"], opened_year=90)],
-		failed_attempts=collections.defaultdict(int, {"steam_engine": 2}),
-	)
+	hh = HouseholdState(saving_target=500.0)
 	econ = EconomyState()
-	holdings = HoldingsState(shortages=collections.Counter({"iron": 4}))
+	holdings = HoldingsState()
 
 	state = SimulationState(
 		household=hh,
-		projects=projects,
 		economy=econ,
 		holdings=holdings,
-		governance=None,
 		founder=None,
-		scenario=None,
 	)
 
 	blob = serialize_state(state)
 	restored = deserialize_state(blob)
 
-	if not isinstance(restored.household.trades_created, set):
-		return False, f"trades_created is not set: {type(restored.household.trades_created)}"
-	if "spinning_wheel" not in restored.projects.operating or restored.projects.business.opened_year_of("spinning_wheel", 0) != 90:
-		return False, f"the business did not round trip: {restored.projects.business}"
-	if not isinstance(restored.projects.failed_attempts, collections.defaultdict):
-		return False, f"failed_attempts is not defaultdict: {type(restored.projects.failed_attempts)}"
-	if not isinstance(restored.holdings.shortages, collections.Counter):
-		return False, f"shortages is not Counter: {type(restored.holdings.shortages)}"
-	if not isinstance(restored.projects.active["loom"], ActiveProjectState):
-		return False, f"active['loom'] is not ActiveProjectState: {type(restored.projects.active['loom'])}"
+	from sim.workforce.api import WorkforceSeat
+	staff = deserialize_state(serialize_state(WorkforceSeat(trades_created={"tailor", "weaver"}, employees={"weaver": 3.0})), WorkforceSeat)
+	if not isinstance(staff.trades_created, set):
+		return False, f"trades_created is not set: {type(staff.trades_created)}"
+	from sim.ventures.state import VenturesSeat
+	ventures = deserialize_state(serialize_state(VenturesSeat(businesses=[Business.running(["spinning_wheel"], opened_year=90)])), VenturesSeat)
+	if "spinning_wheel" not in ventures.business.operating() or ventures.business.opened_year_of("spinning_wheel", 0) != 90:
+		return False, f"the business did not round trip: {ventures.business}"
+	from sim.projects.state import ProjectsSeat
+	counts = deserialize_state(serialize_state(ProjectsSeat(failed_attempts=collections.defaultdict(int, {"steam_engine": 2}))), ProjectsSeat)
+	if not isinstance(counts.failed_attempts, collections.defaultdict) or counts.failed_attempts["steam_engine"] != 2:
+		return False, f"failed_attempts is not defaultdict: {type(counts.failed_attempts)}"
+	from sim.materials.state import MaterialsSeat
+	seat = deserialize_state(serialize_state(MaterialsSeat(shortages=collections.Counter({"iron": 4}))), MaterialsSeat)
+	if not isinstance(seat.shortages, collections.Counter):
+		return False, f"shortages is not Counter: {type(seat.shortages)}"
+	from sim.projects.state import ProjectsSeat
+	loom = deserialize_state(serialize_state(ProjectsSeat(active={"loom": ActiveProjectState(ph_left=20.0)})), ProjectsSeat).active["loom"]
+	if not isinstance(loom, ActiveProjectState):
+		return False, f"active['loom'] is not ActiveProjectState: {type(loom)}"
 
 	return True, "Runtime type reconstruction verified"
 
@@ -185,22 +166,17 @@ check("Runtime type reconstruction", _ok, _detail)
 
 def _test_transient_cache_exclusion():
 	"""Verify transient version counters and cache fields are excluded from serialized output."""
-	from sim.engine.state import HouseholdState, ProjectsState, SimulationState, serialize_state
+	from sim.engine.state import HouseholdState, SimulationState, serialize_state
 
-	hh = HouseholdState(capital=1000.0)
-	projects = ProjectsState()
+	hh = HouseholdState(saving_target=1000.0)
 	state = SimulationState(
 		household=hh,
-		projects=projects,
 		economy=None,
-		governance=None,
 		founder=None,
-		scenario=None,
 	)
 
 	blob = serialize_state(state)
 	hh_blob = blob["seats"]["founder"]["household"]
-	proj_blob = blob["seats"]["founder"]["projects"]
 
 	for transient in ("_done_ver", "_operating_ver", "_active_ver", "_workforce_ver", "_cap_factor"):
 		if transient in hh_blob or transient in blob:
@@ -218,46 +194,23 @@ def _valid_save():
 	"""A save blob a state serializes to, with the metadata the writer adds, and the stand-in game that would load it."""
 	from types import SimpleNamespace
 	from sim.engine.state import (
-		EconomyState, FounderState, GovernanceState, HoldingsState, HouseholdState, PopulationState, ProjectsState,
-		ScenarioState, SimulationState, serialize_state,
+		EconomyState, FounderState, HoldingsState, HouseholdState,
+		SimulationState, serialize_state,
 	)
 	state = SimulationState(
-		household=HouseholdState(capital=1250.0), projects=ProjectsState(done={"stone_cutting"}), economy=EconomyState(),
-		holdings=HoldingsState(), governance=GovernanceState(gov=0.5), founder=FounderState(), scenario=ScenarioState(year=115),
-		population=PopulationState())
-	state._goal = "aqueduct"
+		household=HouseholdState(saving_target=1250.0), economy=EconomyState(),
+		holdings=HoldingsState(), founder=FounderState())
+	state.seats[state.acting_seat].modules["knowledge"] = KnowledgeSeat(done={"stone_cutting"})
+	from sim.projects.state import ProjectsSeat
+	state.seats[state.acting_seat].modules["projects"] = ProjectsSeat()
+	from sim.seats.state import SeatsSeat
+	state.seats[state.acting_seat].modules["seats"] = SeatsSeat(goal="aqueduct")
 	blob = serialize_state(state)
-	blob.update({"_civ": "rome_100ad", "_weights": {}, "_fog": False, "_immortal": True,
+	blob.update({"_civ": "rome_100ad", "_weights": {}, "_immortal": True,
 	             "_rng": [3, list(random.Random(1).getstate()[1]), None]})
+	blob["modules"]["scenario"] = {"year": 115, "fog": False}
 	game = SimpleNamespace(nodes={"aqueduct": {}, "stone_cutting": {}}, civ={"id": "rome_100ad"})
 	return blob, game
-
-
-def _test_cache_reset_after_load():
-	"""Verify the caches a game derives from its state are wiped, and its containers re-wrapped, on save and load."""
-	from types import SimpleNamespace
-	from sim.engine.economy import EconomyMixin
-
-	caches = ("_done_seq", "_cap_factor", "_revenue_cache_key", "_revenue_cache_val", "_annual_mat_demand_cache",
-	          "_rev_up_candidates_cache", "_practice_cache", "_goods_cat_state_cache", "_goods_category_ratios_cache",
-	          "_income_factor_cache", "_goods_mkt_op_factor_cache", "_material_demand_cache", "_demand_by_tag_cache")
-	household = SimpleNamespace(**{name: 1.7 for name in caches})
-	rewrapped = []
-	game = SimpleNamespace(household=household, _done_changed=lambda: rewrapped.append("done"),
-	                       _reset_operating=lambda: rewrapped.append("operating"),
-	                       _reset_active=lambda: rewrapped.append("active"),
-	                       _reset_workforce=lambda: rewrapped.append("workforce"))
-	EconomyMixin._reset_economic_caches(game)
-	held = [name for name in caches if getattr(household, name) is not None]
-	if held:
-		return False, f"caches still held after the reset: {held}"
-	if rewrapped != ["done", "operating", "active", "workforce"]:
-		return False, f"containers not re-wrapped: {rewrapped}"
-	return True, "Cache reset after load verified"
-
-
-_ok, _detail = _test_cache_reset_after_load()
-check("Cache reset after load", _ok, _detail)
 
 
 def _test_v3_save_shape_validation():
@@ -270,9 +223,9 @@ def _test_v3_save_shape_validation():
 		return False, f"Valid v3 save was rejected: {err}"
 
 	bad_missing_section = dict(valid_blob)
-	bad_missing_section["seats"] = {"founder": {k: v for k, v in valid_blob["seats"]["founder"].items() if k != "projects"}}
+	bad_missing_section["seats"] = {"founder": {k: v for k, v in valid_blob["seats"]["founder"].items() if k != "holdings"}}
 	err = _validate_save(bad_missing_section, game)
-	if not err or "projects" not in err:
+	if not err or "holdings" not in err:
 		return False, f"Missing section was not rejected properly: {err}"
 
 	bad_missing_meta = dict(valid_blob)
@@ -319,7 +272,7 @@ def _test_flat_legacy_v2_save_rejected_by_load_state():
 	import json
 	from types import SimpleNamespace
 	from sim.engine.saveload import load_state
-	state = SimpleNamespace(household=SimpleNamespace(capital=1250.0))
+	state = SimpleNamespace(acting_record=SimpleNamespace(household=SimpleNamespace(saving_target=1250.0)))
 	game = SimpleNamespace(nodes={"printing_press": {}}, civ={"id": "rome_100ad"}, state=state, fog=False)
 	flat_v2_blob = {
 		"_civ": "rome_100ad",
@@ -342,7 +295,7 @@ def _test_flat_legacy_v2_save_rejected_by_load_state():
 			raised_err = str(err)
 		if raised_err is None:
 			return False, "load_state unexpectedly succeeded on flat v2 save file"
-		if game.state is not state or state.household.capital != 1250.0:
+		if game.state is not state or state.acting_record.household.saving_target != 1250.0:
 			return False, "the game was changed despite the load failing"
 	finally:
 		if os.path.exists(save_path):

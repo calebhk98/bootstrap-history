@@ -1,5 +1,5 @@
 """The calendar a failed attempt banks toward the next one, called on built numbers."""
-from sim.engine.retry_calendar import retry_calendar_retain
+from sim.projects.retry_calendar import retry_calendar_retain
 
 from .harness import check
 

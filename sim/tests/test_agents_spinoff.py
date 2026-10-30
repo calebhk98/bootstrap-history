@@ -8,7 +8,7 @@ from .harness import check
 from sim.agents.business_plant import Plant
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
 from sim.agents import exchange_commands, player, spinoff  # noqa: F401
-from sim.agents import registry as registry_module
+from sim.agents.shipped import shipped_spawners
 
 from .agents_fake_world import FakeWorld, make_node
 
@@ -51,7 +51,7 @@ def make_parent(kind="firm", staff=500.0):
 
 world = make_world()
 registry, parent = make_parent()
-check("the spawner is registered", "spinoffs" in dict(registry_module.SPAWNERS))
+check("the spawner is shipped", "spinoffs" in dict(shipped_spawners()))
 
 # ---- the chance: staff and years --------------------------------------------------------------------
 few = spinoff.leavers_expected(make_parent(staff=10.0)[1], "mill", world)

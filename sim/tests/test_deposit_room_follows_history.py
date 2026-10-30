@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.deposit_history import historical_rates
+from sim.resources.deposit_history import historical_rates
 from sim.geography import api as geography
 from sim.tests.test_mine_names_a_deposit import _Host
 
@@ -17,7 +17,7 @@ class DepositRoomTests(unittest.TestCase):
         host = _Host()
         checked = 0
         for resource_id in ("iron", "copper", "tin", "lead", "silver", "gold", "mercury"):
-            rates = historical_rates(host.world_map, resource_id)
+            rates = historical_rates(host.module.needs.deposit_catalogue()["metals"], resource_id)
             for row in host.found_deposits(resource_id):
                 if row["id"] in rates:
                     checked += 1

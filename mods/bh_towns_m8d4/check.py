@@ -3,9 +3,11 @@ import glob
 import importlib.util
 import json
 import os
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
+sys.path.insert(0, ROOT)   # the hooks import the mod door, sim.mod_api
 spec = importlib.util.spec_from_file_location("hooks", os.path.join(HERE, "hooks.py"))
 hooks = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(hooks)

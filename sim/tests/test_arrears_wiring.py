@@ -8,22 +8,17 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import project_funding
-from sim.engine.step_phase_projects import ProjectProgressPhaseMixin
+from sim.projects.api import funding as project_funding
+from sim.tests import projects_host
 from sim.ui.proto import dispatch_inspection_stuck
 from sim.ui.proto.dispatch_inspection_stuck import _stuck_work_in_hand
 from sim.ui.proto.economy import _portfolio_rows
+from sim.tests.ui_stand_in import Game
 
 
-class Gate(ProjectProgressPhaseMixin):
-    def __init__(self, capital):
-        self.state = types.SimpleNamespace(household=types.SimpleNamespace(capital=capital))
-
-    def living_cost(self, _rev=None, _upkeep=None):
-        return 0.0
-
-    def credit_limit(self, _rev=None, _upkeep=None):
-        return 0.0
+def Gate(capital):
+    """The projects module over a household with this purse and no credit line or living cost."""
+    return projects_host.build(acting_balance=capital, living_cost=lambda *arguments: 0.0, credit_limit=lambda *arguments: 0.0)
 
 
 CONTEXT = {"revenue": 0.0, "upkeep": 0.0, "mine_operating": 0.0}
@@ -69,7 +64,7 @@ class ReplyRelays(unittest.TestCase):
         self.assertEqual(rows[0]["why_underfunded"], self.CAUSE)
 
     def test_the_stuck_screen_names_the_cause_and_calls_the_project_money_bound(self):
-        sim = types.SimpleNamespace(
+        sim = Game(
             active={"academy": {"cost_left": 100.0, "spent": 0.0, "ph_left": 50.0, "yrs": 0.0,
                                 "why_underfunded": self.CAUSE}},
             project_cost=lambda node_id: 100.0, calendar_floor=lambda node_id: 3.0)

@@ -6,12 +6,11 @@ A human or LLM player acts only through queued orders (`player_commands.py`) and
 an AI player also decides for itself.
 """
 import math
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from . import business_books, ledger, research, research_choice
 from .base import RecordedActor
 from .player_commands import CommandRejected, run_orders
-from .registry import register_actor_kind
 from .tuning_player import PLAYER_VISIBLE_EXPOSURE
 
 
@@ -23,6 +22,8 @@ class Player(RecordedActor):
 	rivals_of: Optional[Callable[[str, str], float]] = None
 	# Set by the registry: the actor with an id, or None; how a payment finds its payee.
 	find_actor: Optional[Callable[[str], Any]] = None
+	# Set by the registry: the orders a player can give, by name; None runs the shipped ones.
+	command_table: Optional[Dict[str, Callable[[Any, Dict[str, Any], Any], str]]] = None
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
 		return 0.0
@@ -103,6 +104,3 @@ class Player(RecordedActor):
 		self.workforce.clear()
 		self.work_on_research(world)
 		self.operate(world)
-
-
-register_actor_kind("player", Player)

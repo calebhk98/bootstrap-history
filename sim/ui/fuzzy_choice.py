@@ -1,4 +1,5 @@
 """The fuzzy-estimates option as the command line and the options screen decide it."""
+from sim.engine import ui_port
 
 TURN_ON_PROMPT = "   Turn fuzzy estimates on now? [y/N] "
 EXPLANATION = ("From now on the needs of unfinished work are shown as estimates that tighten as you start and finish it. "
@@ -19,7 +20,7 @@ def turn_fuzzy_estimates_on(sim, ask, say, explain):
     explanation and `say(text)` the outcome."""
     explain(EXPLANATION)
     if ask(TURN_ON_PROMPT, ["y", "n"], "n") == "y":
-        sim.fuzzy_estimates = True
+        ui_port.set_fuzzy_estimates(sim, True)
         say("   -- done. Fuzzy estimates are on.")
         return True
     say("   -- unchanged.")

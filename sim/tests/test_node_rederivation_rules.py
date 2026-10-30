@@ -5,8 +5,11 @@ only the caching and wiring are called."""
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine import node_rederive, node_revenue, prices as price_solver, solve_prices
-from sim.engine.node_rederive import NodeRederiveMixin, held_gate_set
+from sim.prices import prices as price_solver, solve_prices
+
+from sim.engine import node_rederive
+from sim.production import node_revenue
+from sim.engine.node_rederive import held_gate_set
 
 from .harness import *  # noqa: F401,F403
 
@@ -76,7 +79,7 @@ with mock.patch.dict(node_revenue._DERIVED_FOR_CIVILISATION, clear=True), \
 def _game(derived_gates, held):
     log = []
     game = SimpleNamespace(
-        _derived_gate_set=derived_gates, _society_held_techs=lambda: held, start_civ={"id": "testland"}, nodes={"old": {}},
+        _derived_gate_set=derived_gates, view=lambda name: (lambda: held), start_civ={"id": "testland"}, nodes={"old": {}},
         state=SimpleNamespace(economy=SimpleNamespace(nodes_money_per_labour_hour=None)),
         _done_changed=lambda: log.append("done"), _operating_changed=lambda: log.append("operating"), log=log)
     return game
@@ -89,10 +92,10 @@ with mock.patch.object(node_rederive, "build_schedule", return_value=schedule), 
         mock.patch.object(node_rederive.opening_money, "priced_nodes", return_value={"new": {}}), \
         mock.patch.object(price_solver, "all_gate_nodes", return_value={GATE}):
     unchanged = _game(frozenset({GATE}), {GATE, "plain_tech"})
-    NodeRederiveMixin.refresh_derived_nodes(unchanged)
+    node_rederive.refresh_derived_nodes(unchanged)
     check("a society whose gate set has not changed is not re-derived", not derive.called and unchanged.nodes == {"old": {}} and unchanged.log == [])
     learned = _game(frozenset(), {GATE})
-    NodeRederiveMixin.refresh_derived_nodes(learned)
+    node_rederive.refresh_derived_nodes(learned)
     check("a society that has learned a gate is re-derived at the techniques it holds",
           derive.call_args.kwargs["held_techs"] == {GATE} and learned.nodes == {"new": {}} and learned._derived_gate_set == frozenset({GATE}), derive.call_args)
     check("the new figures are priced in the schedule's coin and the memos told", price.call_args.args[1:] == (schedule.wages_per_hour(), 2.0)

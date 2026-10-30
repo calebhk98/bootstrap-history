@@ -9,7 +9,10 @@ earliest `before`; the order is a pure function of the registrations, so it is t
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Sequence
 
-from .mods_base import ModError
+from sim.content.api import ModError
+from sim.scenario.api import AdvanceYear
+
+from . import year_steps
 
 SEAT = "seat"
 WORLD = "world"
@@ -25,68 +28,75 @@ class Phase:
 	before: Sequence[str] = ()
 
 
+def module_seat_phase(name: str) -> Callable:
+	"""A seat phase a module runs: its declared method is called with the seat id."""
+	return lambda sim, seat_id: sim.assembly.phase_handler(name)(seat_id)
+
+
+def module_world_phase(name: str) -> Callable:
+	"""A world phase a module runs: its declared method is called with the seats still in play."""
+	return lambda sim, seats: sim.assembly.phase_handler(name)(seats)
+
+
 def _still_playing(sim, seats):
-	return [seat_id for seat_id in seats if seat_id not in sim.ended_seats()]
-
-
-def _random_events(sim, seats):
-	if sim.events:
-		sim._random_events(sim.state.scenario.year, _still_playing(sim, seats))
+	return [seat_id for seat_id in seats if seat_id not in sim.view("ended_seats")()]
 
 
 def _advance_year(sim, seats):
-	sim.state.scenario.year += 1
+	sim.send(AdvanceYear())
 
 
 SHIPPED: List[Phase] = [
-	Phase("begin_seat_year", SEAT, lambda sim, seat_id: sim.begin_seat_year()),
-	Phase("begin_world_year", WORLD, lambda sim, seats: sim.begin_world_year()),
-	Phase("apprenticeships", SEAT, lambda sim, seat_id: sim._step_apprenticeships()),
-	Phase("staff", SEAT, lambda sim, seat_id: sim._step_staff()),
-	Phase("money_seat", SEAT, lambda sim, seat_id: sim._step_money_seat()),
-	Phase("money_world", WORLD, lambda sim, seats: sim._step_money_world()),
-	Phase("win_conditions", SEAT, lambda sim, seat_id: sim._step_win_conditions()),
-	Phase("dated_shocks", WORLD, lambda sim, seats: sim._step_dated_shocks(seats)),
+	Phase("begin_seat_year", SEAT, module_seat_phase("begin_seat_year")),
+	Phase("trim_audit", SEAT, module_seat_phase("trim_audit")),
+	Phase("hear_of_other_seats", SEAT, module_seat_phase("hear_of_other_seats")),
+	Phase("begin_world_year", WORLD, lambda sim, seats: year_steps.begin_world_year(sim)),
+	Phase("apprenticeships", SEAT, module_seat_phase("apprenticeships")),
+	Phase("staff", SEAT, module_seat_phase("staff")),
+	Phase("money_seat", SEAT, lambda sim, seat_id: year_steps.money_seat(sim)),
+	Phase("money_world", WORLD, lambda sim, seats: year_steps.money_world(sim)),
+	Phase("win_conditions", SEAT, module_seat_phase("win_conditions")),
+	Phase("dated_shocks", WORLD, module_world_phase("dated_shocks")),
 	Phase("drop_ended_seats", WORLD, _still_playing),
-	Phase("seat_work", SEAT, lambda sim, seat_id: sim._run_seat_work()),
-	Phase("market", WORLD, lambda sim, seats: sim._step_market()),
-	Phase("wild_stock", WORLD, lambda sim, seats: sim.step_wild_stock()),
-	Phase("soil_nitrogen", WORLD, lambda sim, seats: sim.step_soil_nitrogen()),
-	Phase("living_stock", SEAT, lambda sim, seat_id: sim.step_living_stock()),
-	Phase("defence_stores", SEAT, lambda sim, seat_id: sim.step_defence_stores()),
-	Phase("random_events", WORLD, _random_events),
-	Phase("world_hazards", WORLD, lambda sim, seats: sim.step_world_hazards(seats)),
-	Phase("campaigns", WORLD, lambda sim, seats: sim.step_campaigns()),
-	Phase("revolts", WORLD, lambda sim, seats: sim.step_revolts()),
-	Phase("famine_watch", WORLD, lambda sim, seats: sim.step_famine_watch(seats)),
-	Phase("credit_limit", SEAT, lambda sim, seat_id: sim.enforce_credit_limit(sim.state.scenario.year)),
+	Phase("seat_prelude", SEAT, module_seat_phase("seat_prelude")),
+	Phase("start_projects", SEAT, module_seat_phase("start_projects")),
+	Phase("materials", SEAT, module_seat_phase("materials")),
+	Phase("material_shortage_notes", SEAT, module_seat_phase("material_shortage_notes")),
+	Phase("seat_work", SEAT, lambda sim, seat_id: year_steps.seat_work(sim)),
+	Phase("founder_mortality", SEAT, module_seat_phase("founder_mortality")),
+	Phase("market", WORLD, module_world_phase("market")),
+	Phase("coin_revaluation", WORLD, module_world_phase("coin_revaluation")),
+	Phase("wage_market_ratios", WORLD, module_world_phase("wage_market_ratios")),
+	Phase("wild_stock", WORLD, module_world_phase("wild_stock")),
+	Phase("soil_nitrogen", WORLD, module_world_phase("soil_nitrogen")),
+	Phase("living_stock", SEAT, module_seat_phase("living_stock")),
+	Phase("defence_stores", SEAT, module_seat_phase("defence_stores")),
+	Phase("random_events", WORLD, module_world_phase("random_events")),
+	Phase("world_hazards", WORLD, module_world_phase("world_hazards")),
+	Phase("campaigns", WORLD, module_world_phase("campaigns")),
+	Phase("revolts", WORLD, module_world_phase("revolts")),
+	Phase("famine_watch", WORLD, module_world_phase("famine_watch")),
+	Phase("credit_limit", SEAT, module_seat_phase("credit_limit")),
 	Phase("advance_year", WORLD, _advance_year),
 ]
-
-MOD_PHASES: List[Phase] = []     # registered by mod code, in mod load order
-
-
-def register_mod_phase(phase: Phase) -> None:
-	MOD_PHASES.append(phase)
-
 
 def _describe(phase: Phase) -> str:
 	return "mod %s phase %s" % (phase.owner, phase.name) if phase.owner else "shipped phase %s" % phase.name
 
 
-def _mod_order(known: Dict[str, Phase]) -> List[Phase]:
+def _mod_order(known: Dict[str, Phase], mod_phases: Sequence[Phase]) -> List[Phase]:
 	"""Mod phases sorted so every mod phase follows the mod phases it depends on; ties keep registration order."""
-	names = {phase.name: phase for phase in MOD_PHASES}
-	for phase in MOD_PHASES:
+	names = {phase.name: phase for phase in mod_phases}
+	for phase in mod_phases:
 		for reference in list(phase.after) + list(phase.before):
 			if reference not in known and reference not in names:
 				raise ModError("%s names the unknown phase %r" % (_describe(phase), reference))
 	depends = {phase.name: [reference for reference in phase.after if reference in names]
-	           + [other.name for other in MOD_PHASES if phase.name in other.before] for phase in MOD_PHASES}
+	           + [other.name for other in mod_phases if phase.name in other.before] for phase in mod_phases}
 	# depends[x] lists the mod phases that must run before x
 	done: List[Phase] = []
 	placed = set()
-	pending = list(MOD_PHASES)
+	pending = list(mod_phases)
 	while pending:
 		ready = next((phase for phase in pending if all(name in placed for name in depends[phase.name])), None)
 		if ready is None:
@@ -99,13 +109,13 @@ def _mod_order(known: Dict[str, Phase]) -> List[Phase]:
 	return done
 
 
-def ordered_phases() -> List[Phase]:
-	"""The shipped phases with the mod phases placed by their constraints; ModError on an unknown name or a conflict."""
+def ordered_phases(mod_phases: Sequence[Phase] = ()) -> List[Phase]:
+	"""The shipped phases with the game's mod phases placed by their constraints; ModError on an unknown name or a conflict."""
 	phases = list(SHIPPED)
-	if not MOD_PHASES:
+	if not mod_phases:
 		return phases
 	known = {phase.name: phase for phase in SHIPPED}
-	for phase in _mod_order(known):
+	for phase in _mod_order(known, mod_phases):
 		names = [other.name for other in phases]
 		afters = [name for name in phase.after if name in names]
 		befores = [name for name in phase.before if name in names]
@@ -126,8 +136,8 @@ def ordered_phases() -> List[Phase]:
 
 def run_phases(sim, phases: Optional[List[Phase]] = None) -> None:
 	"""Run the year's phases in order."""
-	phases = ordered_phases() if phases is None else phases
-	seats = sim.playing_seats() or [sim.state.acting_seat]
+	phases = ordered_phases(sim.assembly.applied.phases) if phases is None else phases
+	seats = sim.view("seat_list")()["playing"] or [sim.state.acting_seat]
 	index = 0
 	while index < len(phases) and seats:
 		phase = phases[index]

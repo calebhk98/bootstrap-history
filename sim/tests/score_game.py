@@ -2,10 +2,13 @@
 values the test sets, so each scoring rule is called on inputs the test builds (no game is run)."""
 from types import SimpleNamespace
 
-from sim.engine.state import FounderState, ProjectsState
+from sim.engine.state import FounderState
 
 
-class ScoreGame:
+from sim.tests.ui_stand_in import FactViews
+
+
+class ScoreGame(FactViews):
     """What `score_report` reads of a game. Every number is a plain attribute."""
 
     CAPABILITY_INSTITUTIONS = frozenset({"workshop_first", "school_founded", "identity_cover"})
@@ -32,20 +35,25 @@ class ScoreGame:
         self.slaves = 0
         self.manumitted_total = 0
         self.founder_alive = True
+        self.ever_closed_for_staff = set()
         self.units = {}
         self.literacy_values = {"literacy_general": 0.05, "literacy_elite": 0.5}
         self.general_ceiling = 0.2
         self.elite_ceiling = 0.8
         self.headcount = 10.0
         self.wage = 100.0
-        self.state = SimpleNamespace(projects=ProjectsState(), founder=FounderState(),
-                                     interface={}, seat_progress=SimpleNamespace(score_last_seen=None))
-        self._goal_critical_floor = 20.0
+        self.state = SimpleNamespace(acting_record=SimpleNamespace(founder=FounderState(),
+                                     interface={}, seat_progress=SimpleNamespace(score_last_seen=None)))
+        self.goal_critical_floor = 20.0
         self.shut_for_staff = {}
         self.labour = SimpleNamespace(
             headcount=lambda: self.headcount,
             base_annual_wage=lambda trade: self.wage,
             market=SimpleNamespace(in_current_money=lambda amount: amount))
+
+    @property
+    def staff(self):
+        return {"slaves": self.slaves, "manumitted_total": self.manumitted_total}
 
     def literacy(self, name):
         return self.literacy_values[name]

@@ -26,16 +26,16 @@ def _log_scrub(sim, text):
     """
     if isinstance(text, NoteLine):
         return text
-    text = sim.fog_scrub(text)
-    if not sim.fog or not text:
+    text = sim.view("fog_scrub")(text)
+    if not sim.view("fog_of_war")() or not text:
         return text
     memo = {}
-    for node_id, node in sim.nodes.items():
+    for node_id, node in sim.view("tree_nodes")().items():
         node_name = node.get("name")
-        if node_name and node_name in text and not sim.is_visible(node_id, _memo=memo):
+        if node_name and node_name in text and not sim.view("visibility")(node_id, memo):
             text = text.replace(
                 node_name, "something you have since forgotten"
-                    if node_id in (sim.forgotten or {}) else
+                    if node_id in (sim.view("techniques_forgotten")() or {}) else
                     "something you have not heard of")
     return text
 
@@ -113,7 +113,7 @@ def _agent_log_search_rows(sim, rows, find, order):
         # something called X exists, which is the same leak the visibility
         # guard on `why` exists to close, reached from a different command.
         rows = [row for row in rows if find in row[1][1].lower()]
-        if sim.fog:
+        if sim.view("fog_of_war")():
             # THE RECHECK IS THE EXPENSIVE HALF, one node sweep per candidate
             # line, so a common word over a run's whole history could be
             # thousands of sweeps. Capped to the most recent slice, which is
@@ -184,7 +184,7 @@ def _agent_log(sim, cmd=None):
     suggested, and there is no `all:true` here the way `available` has one.
     """
     cmd = cmd or {}
-    log = sorted(list(sim.log or []) + note_log_rows(sim), key=lambda row: row[0])  # notes join their year
+    log = sorted(list(sim.view("event_log")() or []) + note_log_rows(sim), key=lambda row: row[0])  # notes join their year
     only_fail, find, since, before = _agent_log_parse_filters(cmd)
     order, limit, offset = _agent_log_parse_paging(cmd)
     rows = _agent_log_filter_rows(log, since, before, only_fail)

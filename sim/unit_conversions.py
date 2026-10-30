@@ -20,8 +20,8 @@ WHY A NEW MODULE RATHER THAN sim/world/shared_constants.py, WHICH ALREADY
 DOES THIS FOR sim/world/. Two reasons. First, scope: shared_constants.py's
 own docstring states its boundary explicitly ("Every constant declared
 here is a sim/world/ domain fact... no dependence on sim/engine/") and a
-unit conversion is needed on both sides of that boundary - sim/engine/
-economy_materials.py converts kilograms to tonnes exactly as often as
+unit conversion is needed on both sides of that boundary - sim/materials/
+rules.py converts kilograms to tonnes exactly as often as
 sim/world/deposits.py does, for the same reason (both work in kilograms
 internally and report in tonnes/year). Putting mass and distance
 conversions in a file that has declared itself sim/world/-only would
@@ -60,7 +60,7 @@ WHY kind="physical_constant" RATHER THAN A NEW KIND. sim/constants.py's
 own KINDS section does not list anything for "true by construction,
 confidence beyond A." A new kind was considered and rejected: this
 project's engine already has a working precedent, not a hypothetical one -
-sim/engine/economy_electricity.py's HOURS_PER_YEAR (8,760.0, "365 days x 24
+sim/materials/constants.py's HOURS_PER_YEAR (8,760.0, "365 days x 24
 hours") and sim/world/demand.py's own DAYS_PER_YEAR (365.25, a calendar
 fact) are BOTH already declared `kind="physical_constant", confidence="A"`,
 and both are exactly this category: numbers fixed by definition rather
@@ -79,7 +79,7 @@ unit conversion - this task's own report names two examples deliberately
 left alone: sim/geography/transport.py's GRAVITATIONAL_ACCELERATION_M_PER_S2
 (already its own `declare()`, next to the one function that uses it, and
 not touched by this module) and a rounding-to-the-nearest-hundred step in
-sim/engine/economy_freight.py's own nitre-bed sizing, which divides and
+the resources module's nitre-bed sizing, which divides and
 re-multiplies by 100 to pick a round purchase quantity rather than to
 convert a fraction to a percentage - the same number, a different job,
 and CLAUDE.md's own naming section makes the identical argument for

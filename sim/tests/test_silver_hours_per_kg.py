@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.prices import _default_production_entries
+from sim.prices.prices import _default_production_entries
 from sim.world import deposits, ore_dressing
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 

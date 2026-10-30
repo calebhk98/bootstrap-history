@@ -6,9 +6,10 @@ household. The allocator's callers, the standing work order and a save are in te
 
 QUICK_TOPIC = True
 from types import SimpleNamespace
+from sim.tests import workforce_stand_in
 
 from .harness import *  # noqa: F401,F403
-from sim.engine import hour_offer
+from sim.projects import hour_offer
 from sim.refusal import cause_of
 from sim.ui.proto.dispatch_labour import _cmd_allocate
 
@@ -64,8 +65,8 @@ known_nodes = {"academy_network": {"name": "Academy Network"}}
 
 
 def standing(household_allocations=None, active=None):
-    return SimpleNamespace(hour_allocations=household_allocations if household_allocations is not None else {},
-                           active=active if active is not None else {}, work_trade=None)
+    return workforce_stand_in.Game(hour_allocations=household_allocations if household_allocations is not None else {},
+                                   active=active if active is not None else {}, work_trade=None)
 
 
 household = standing()

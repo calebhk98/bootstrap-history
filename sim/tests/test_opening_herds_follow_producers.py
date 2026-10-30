@@ -7,7 +7,9 @@ import os
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.data import ROOT
-from sim.engine.opening_herd_rules import herd_units_kept, opening_herds
+from sim.living_stock.api import rules
+
+herd_units_kept, opening_herds = rules.herd_units_kept, rules.opening_herds
 
 QUICK_TOPIC = True
 

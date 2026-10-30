@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import solve_prices
+from sim.prices import solve_prices
 
 
 class CapabilityFloorByCarrierTests(unittest.TestCase):

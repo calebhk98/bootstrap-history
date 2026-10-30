@@ -29,6 +29,7 @@ class CountryStateView(CollectionView):
 	profile: Any
 	_shared: Any
 	_holder: Any
+	_assessed = None   # this year's assessments; set by revenue_assessments
 
 	# ---- revenue
 	def revenue_forms(self) -> List[Dict[str, Any]]:
@@ -37,7 +38,7 @@ class CountryStateView(CollectionView):
 
 	def revenue_assessments(self) -> List[revenue.Assessment]:
 		"""Every declared form assessed on this year's base; kept for the year this scope lives."""
-		if getattr(self, "_assessed", None) is None:
+		if self._assessed is None:
 			self._assessed = revenue.assess(self)
 		return self._assessed
 
@@ -174,7 +175,7 @@ class CountryStateView(CollectionView):
 	def levy_shares(self, scale: float, protection: float = 0.0, state: Any = None) -> Any:
 		"""(requisition, office) shares of income this country's state assesses at a visible scale: its own capacity,
 		tax share and the rates its shortfall set last year."""
-		requisition, office = self.government().levy_rates() if hasattr(self.government(), "levy_rates") else (0.0, 0.0)
+		requisition, office = self.government().levy_rates()
 		return self._shared.levy_shares(scale, protection, (self.state_reach(), self.tax_share(), requisition, office))
 
 	# ---- credit

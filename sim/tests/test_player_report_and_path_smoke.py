@@ -2,7 +2,8 @@
 rules under the replies are the tree and protocol topics. No years run."""
 import unittest
 
-from sim.engine.data import closure
+from sim.knowledge.api import closure
+from sim.knowledge.api import LearnTechnique
 from sim.tests.harness import GOAL, NODES, S, unopened_sim
 from sim.ui.proto.score import final_report
 
@@ -30,13 +31,12 @@ class PathAndWhyTest(unittest.TestCase):
     def test_the_chain_behind_a_node_is_the_sum_of_what_each_of_them_would_cost(self):
         reply = _ask(self.game, cmd="why", id="telescope")
         behind = sorted(closure(NODES, "telescope") - {"telescope"} - set(self.game.done))
-        self.assertAlmostEqual(reply["chain_cost"], sum(self.game.project_cost(node_id) for node_id in behind), delta=0.5)
+        self.assertAlmostEqual(reply["chain_cost"], sum(self.game.view("project_cost")(node_id) for node_id in behind), delta=0.5)
 
     def test_the_chain_counts_down_as_prerequisites_are_built_and_the_whole_road_stays_the_same(self):
         before = _ask(self.game, cmd="why", id="telescope")
         for node_id in ("patron_local", "workshop_first", "identity_cover"):
-            self.game.done.add(node_id)
-        self.game._done_changed()
+            self.game.send(LearnTechnique(node_id))
         after = _ask(self.game, cmd="why", id="telescope")
         self.assertLess(after["chain_size"], before["chain_size"])
         self.assertLess(after["chain_founder_hours"], before["chain_founder_hours"])
@@ -45,8 +45,7 @@ class PathAndWhyTest(unittest.TestCase):
 
     def test_path_names_what_on_the_route_is_shut_rather_than_unbuilt_and_how_to_reopen_it(self):
         game = unopened_sim()
-        game.done.add("lead_chamber")
-        game._done_changed()
+        game.send(LearnTechnique("lead_chamber"))
         game.mothballed.add("lead_chamber")
         reply = _ask(game, cmd="path", id=GOAL)
         self.assertIn("lead_chamber", reply.get("on_this_route_but_shut_down") or [])

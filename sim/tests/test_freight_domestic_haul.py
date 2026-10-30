@@ -101,9 +101,9 @@ class Droving(unittest.TestCase):
         self.assertNotIn("drove", geography.modes_carrying("goods"))
 
     def test_only_stock_marked_walks_goes_by_drove(self):
-        from sim.engine.domestic_haul import DomesticHaulMixin
-        from sim.engine.living_stock_yearly import stock_rates
-        classes = {material: DomesticHaulMixin._cargo_class(None, material) for material in stock_rates()}
+        from sim.freight.route import cargo_class_of
+        from sim.living_stock.api import stock_rates
+        classes = {material: cargo_class_of(stock_rates().get(material)) for material in stock_rates()}
         walking = {material for material, cargo in classes.items() if cargo == "living_stock"}
         self.assertTrue(walking)
         self.assertEqual(walking, {material for material, row in stock_rates().items() if row.get("walks")})
@@ -137,28 +137,28 @@ class Droving(unittest.TestCase):
 
 
 class HaulArithmetic(unittest.TestCase):
-    """The class, mode and unjoined-haul rules (`haul_route`) and the herd's loss on the road, on given inputs."""
+    """The class, mode and unjoined-haul rules (`sim/freight/route.py`) and the herd's loss on the road, on given inputs."""
 
     def test_stock_that_walks_is_living_stock_and_anything_else_is_goods(self):
-        from sim.engine.haul_route import cargo_class_of
+        from sim.freight.route import cargo_class_of
         self.assertEqual(cargo_class_of({"walks": True}), "living_stock")
         self.assertEqual(cargo_class_of({"walks": False}), "goods")
         self.assertEqual(cargo_class_of({}), "goods")
         self.assertEqual(cargo_class_of(None), "goods")
 
     def test_goods_go_by_the_cart_and_stock_by_the_first_walking_mode_else_the_cart(self):
-        from sim.engine.haul_route import domestic_haul_mode
+        from sim.freight.route import domestic_haul_mode
         self.assertEqual(domestic_haul_mode("goods", ["drove"], "cart"), "cart")
         self.assertEqual(domestic_haul_mode("living_stock", ["drove", "foot"], "cart"), "drove")
         self.assertEqual(domestic_haul_mode("living_stock", [], "cart"), "cart")
 
     def test_an_unjoined_haul_is_one_leg_at_the_rate_plus_the_dues_once(self):
-        from sim.engine.haul_route import unjoined_haul_cost
+        from sim.freight.route import unjoined_haul_cost
         self.assertAlmostEqual(unjoined_haul_cost(0.5, 200.0, 7.0), 107.0)
         self.assertAlmostEqual(unjoined_haul_cost(0.5, 0.0, 7.0), 7.0)
 
     def test_the_cargo_share_counts_a_herds_loss_on_the_road_over_interest_alone(self):
-        from sim.engine.haul_route import Leg, Route, domestic_cargo_cost_share
+        from sim.freight.route import Leg, Route, domestic_cargo_cost_share
         route = Route((Leg("a", "b", "drove", 400.0, 0.0, 20.0),))
         interest_only = domestic_cargo_cost_share(0.0, {}, route, 0.05)
         with_loss = domestic_cargo_cost_share(0.0, {"drove": 0.01}, route, 0.05)

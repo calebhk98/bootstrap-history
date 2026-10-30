@@ -4,7 +4,7 @@ test_labour_productivity_scenario)."""
 import types
 import unittest
 
-from sim.engine.diffusion_curve import knowledge_half_life, leaked_share
+from sim.diffusion.diffusion_curve import knowledge_half_life, leaked_share
 from sim.engine import validate_material_gating as _gating
 from sim.labour.api import Labour
 
@@ -21,7 +21,7 @@ class _Stub:
     def __init__(self, sources, done=(), research=1.0):
         self._world = types.SimpleNamespace(
             LABOUR_PRODUCTIVITY_SOURCES=tuple(sources),
-            state=types.SimpleNamespace(projects=types.SimpleNamespace(done=set(done))),
+            projects=types.SimpleNamespace(done=set(done)),
             research_productivity=lambda: research)
 
 

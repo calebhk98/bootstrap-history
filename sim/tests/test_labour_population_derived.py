@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 
 from sim.labour.workforce_spinup import FARM_TRADE
 
@@ -25,7 +26,7 @@ class _StubLabour(PopulationMixin):
         household = types.SimpleNamespace(trades_created=set(), trade_schools={})
         self._world = types.SimpleNamespace(
             wages={trade: 1.0 for trade in families}, trades_absent=set(absent), trade_family=lambda trade: families.get(trade, "craft"),
-            state=types.SimpleNamespace(household=household, economy=types.SimpleNamespace(society_labour_hours=dict(hours or {}))),
+            workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household, economy=types.SimpleNamespace()), society=types.SimpleNamespace(society_labour_hours=dict(hours or {})),
             trade_registry={trade: {"literate": True} for trade in literate},
             population=types.SimpleNamespace(working_age=WORKING_PEOPLE, total=2.0 * WORKING_PEOPLE))
 

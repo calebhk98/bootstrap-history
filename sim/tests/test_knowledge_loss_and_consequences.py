@@ -1,5 +1,5 @@
 """Complaint 233/237: a rebuild keeps what survives, derived from state: a dispersed copy of the record, people who still
-practise the node's trades, and plant built on it. Called on a stub over the real `RebuildMixin`; the effect on a game's
+practise the node's trades, and plant built on it. Called on the projects module over a society's facts; the effect on a game's
 cost and the failure, effect, benefit, patron and succession readouts are in `test_knowledge_loss_and_consequences_scenario`."""
 
 QUICK_TOPIC = True
@@ -7,31 +7,27 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.projects_rebuild import RebuildMixin
+from sim.knowledge.api import CORPUS_HEDGE_LOSS_CHANCE_NONE
+from sim.projects.constants import REBUILD_RETAINED_CEILING
+from sim.tests import projects_host
 
 NODE = "furnace"
-NONE_CHANCE = 0.5      # the corpus hedge's loss chance with no copy dispersed
+NONE_CHANCE = CORPUS_HEDGE_LOSS_CHANCE_NONE   # the corpus hedge's loss chance with no copy dispersed
 
 
-class Society(RebuildMixin):
-    """A society holding a forgotten node, with the survivors given."""
-    CORPUS_HEDGE_LOSS_CHANCE_NONE = NONE_CHANCE
-
-    def __init__(self, forgotten=True, hedge_chance=NONE_CHANCE, practitioners=(), dependents_done=0, dependents=4):
-        self.nodes = {NODE: {"pre": [], "lab": {"smith": 1.0, "miner": 1.0}}}
-        done = set()
-        for index in range(dependents):
-            dependent = "dependent_%d" % index
-            self.nodes[dependent] = {"pre": [NODE], "lab": {}}
-            if index < dependents_done:
-                done.add(dependent)
-        self.state = SimpleNamespace(
-            projects=SimpleNamespace(forgotten={NODE: 100} if forgotten else {}, done=done, active={}),
-            household=SimpleNamespace(employees={trade: 5.0 for trade in practitioners}))
-        self.hedge_chance = hedge_chance
-
-    def corpus_hedge(self):
-        return self.hedge_chance, None, None
+def Society(forgotten=True, hedge_chance=NONE_CHANCE, practitioners=(), dependents_done=0, dependents=4):
+    """The projects module over a society holding a forgotten node, with the survivors given."""
+    nodes = {NODE: {"pre": [], "lab": {"smith": 1.0, "miner": 1.0}}}
+    done = set()
+    for index in range(dependents):
+        dependent = "dependent_%d" % index
+        nodes[dependent] = {"pre": [NODE], "lab": {}}
+        if index < dependents_done:
+            done.add(dependent)
+    return projects_host.build(
+        tree=nodes, techniques_held=done, projects_record=SimpleNamespace(done=done, active={}),
+        techniques_forgotten={NODE: 100} if forgotten else {}, corpus_hedge=(hedge_chance, None, None),
+        staff={"employees": {trade: 5.0 for trade in practitioners}})
 
 
 class RebuildRetainedShare(unittest.TestCase):
@@ -61,7 +57,7 @@ class RebuildRetainedShare(unittest.TestCase):
 
     def test_everything_surviving_keeps_the_ceiling_and_never_more(self):
         full = Society(hedge_chance=0.0, practitioners=("smith", "miner"), dependents_done=4)
-        self.assertAlmostEqual(full.rebuild_retained_share(NODE), full.REBUILD_RETAINED_CEILING)
+        self.assertAlmostEqual(full.rebuild_retained_share(NODE), REBUILD_RETAINED_CEILING)
 
     def test_the_work_left_is_what_the_rebuild_does_not_keep(self):
         society = Society(hedge_chance=0.1, practitioners=("smith",))

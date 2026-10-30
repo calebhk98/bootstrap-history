@@ -5,6 +5,8 @@ that seat (`Sim.act_as`), so handlers keep reading the acting seat."""
 from . import command_registry
 from typing import Any, Iterable, Mapping, Optional, Tuple
 
+from sim.seats.api import COUNTRY_SEAT
+
 SEAT_KEY = "as"
 
 
@@ -37,15 +39,15 @@ COUNTRY_SEAT_COMMANDS = frozenset({"seats", "join", "handover", "help", "save", 
                                    "world_events", "step"})
 
 
-def _command_name(cmd):
-    entry = command_registry.resolve(cmd.get("cmd") if isinstance(cmd, dict) and isinstance(cmd.get("cmd"), str) else "")
+def _command_name(sim, cmd):
+    entry = command_registry.table_of(sim).resolve(cmd.get("cmd") if isinstance(cmd, dict) and isinstance(cmd.get("cmd"), str) else "")
     return entry["name"] if entry else None
 
 
 def country_seat_refusal(sim, seat_id, cmd):
     """A refusal when `cmd` needs a household and `seat_id` holds a country's government, else None."""
-    name = _command_name(cmd)
-    if sim.state.seats[seat_id].holds_household or name is None or name in COUNTRY_SEAT_COMMANDS:
+    name = _command_name(sim, cmd)
+    if sim.view("seat_kind")[seat_id] != COUNTRY_SEAT or name is None or name in COUNTRY_SEAT_COMMANDS:
         return None
     return {"ok": False, "cause": "country_seat_has_no_household", "choices": sorted(COUNTRY_SEAT_COMMANDS),
             "error": "seat %r holds a country's government and has no household, so %r does not apply to it. "
@@ -54,14 +56,14 @@ def country_seat_refusal(sim, seat_id, cmd):
 
 def run_as_seat(sim, cmd, reply):
     """Answer `cmd` with `reply(command)` while the addressed seat acts; a refusal when no such seat exists."""
-    seat_id, refusal = addressed_seat(sim.state.seats, cmd, getattr(sim, "session_seat", None))
+    seat_id, refusal = addressed_seat(sim.view("seat_list")()["joined"], cmd, sim.session_seat)
     if refusal:
         return refusal
     refusal = country_seat_refusal(sim, seat_id, cmd)
     if refusal:
         return refusal
-    if not sim.state.seats[seat_id].holds_household and _command_name(cmd) == "step":
-        playing = sim.playing_seats()
+    if sim.view("seat_kind")[seat_id] == COUNTRY_SEAT and _command_name(sim, cmd) == "step":
+        playing = sim.view("seat_list")()["playing"]
         if not playing:
             return {"ok": False, "cause": "no_household_seat",
                     "error": "no household seat is playing, so the year has no one to run it. Nothing was changed."}

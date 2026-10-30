@@ -7,7 +7,7 @@
 """
 from typing import Any, List, Mapping
 
-from . import node_output
+from sim.production.api import node_output
 
 
 def check_no_typed_revenue(nodes: Mapping[str, Mapping[str, Any]]) -> List[str]:

@@ -1,9 +1,9 @@
 """Complaint 524: a year in arrears with no income charges living costs without the dependants its income cannot carry, and
-nets off the wages paid in advance. `living_cost_charged` on numbers built here. Which dependants the income cannot carry is
+nets off the wages paid in advance. `living_cost_charged` (sim/workforce/rules.py) on numbers built here. Which dependants the income cannot carry is
 test_ruined_household_dependants."""
 import unittest
 
-from sim.engine.living_cost_charge import living_cost_charged
+from sim.workforce.rules import living_cost_charged
 
 QUICK_TOPIC = True
 

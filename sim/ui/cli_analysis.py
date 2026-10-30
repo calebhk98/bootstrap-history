@@ -213,7 +213,7 @@ WHY_OPPOSITION_COST_PCT = declare(
     unit="percent added per unit of state opposition (-gov)", source=None,
     confidence="C",
     why="The 'costs X% more' a `why` screen quotes for an opposed node - 100 "
-        "times engine/economy.py's own declared OPPOSITION_COST_PER_UNIT "
+        "times the projects module's declared OPPOSITION_COST_PER_UNIT "
         "(0.25), which opposition_factor() actually applies to project cost. "
         "Declared separately, at the matching value, because this file has "
         "no live Sim to read that constant off of in cmd_why (no Sim object "

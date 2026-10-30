@@ -7,8 +7,8 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.economy import carried_book, country_figures
-from sim.engine import country_trade_years
-from sim.engine.economy_port_country import CountryAnswers
+from sim.foreign_trade.api import country_trade_years
+from sim.markets.port_country import CountryAnswers
 from sim.tests.country_stand_in import NORTH, two_country_economy
 
 book = {}
@@ -37,11 +37,11 @@ check("the book by good is the merchants' alone (the off-map flows have no good)
 # the port attributes the year's external-edge trade to the country whose tile the port stands on
 from types import SimpleNamespace
 
-from sim.engine.economy_port_year import AgentEconomy
+from sim.markets.port_year import AgentEconomy
 
 kept = {}
 port = SimpleNamespace(stored=kept, _economy=SimpleNamespace(setup=SimpleNamespace(port_tile="north_port", country_of=lambda tile: "north")),
-					   _sim=SimpleNamespace(state=SimpleNamespace(scenario=SimpleNamespace(year=120))))
+					   _sim=SimpleNamespace(year=120))
 AgentEconomy._note_off_map_trade(port, 40.0, 25.0)
 check("the port's off-map trade of a year is booked to the country of its tile, and kept with the economy's record",
 	  kept["country_trade_by_year"] == {"north": {"120": {"in": 40.0, "out": 25.0}}}, kept)

@@ -9,9 +9,9 @@ from sim.engine.ui_port import closure, money_text, plain_number
 def _agent_end_reason(sim):
     """None while the run is live; otherwise why it stopped, for state() and
     to refuse further start/stop/bounty/buy commands once it has."""
-    end_year = getattr(sim, "end_year", sim.cfg["start_year"] + sim.cfg["horizon_years"])
-    if sim.dead_reason:
-        return sim.dead_reason
+    end_year = sim.view("horizon_end_year")()
+    if sim.view("founder")()["dead_reason"]:
+        return sim.view("founder")()["dead_reason"]
     # REACHING THE GOAL IS NOT AN ENDING: the goal's prerequisite closure
     # is 168 nodes of 2,833, so a won run has barely touched the tree, and
     # stopping immediately after the victory screen would waste the most
@@ -22,11 +22,11 @@ def _agent_end_reason(sim):
     # `run` and `compare` are unaffected: Sim.run() in core.py stops at the goal
     # on its own, which is what every measurement in this repository wants and
     # what keeps a dice-free trial cheap. This is the interactive path only.
-    if sim.year >= end_year:
+    if sim.view("year")() >= end_year:
         # Under fog there IS no stated goal, so saying the player failed to
         # reach one is incoherent: a goal they were never shown and had no
         # way to set.
-        if sim.fog:
+        if sim.view("fog_of_war")():
             # AND IT MUST CHECK s.goal_year, the same as the non-fog branch
             # two lines below: telling a player at the end that they were
             # never aiming at anything is a lie when `help` already names
@@ -34,22 +34,22 @@ def _agent_end_reason(sim):
             # kept building must be told that, not unconditionally "did
             # not reach %s". One rule must not live differently in the two
             # branches.
-            _goal_name = (sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes
+            _goal_name = (sim.view("tree_nodes")()[sim.view("goal")()["node"]]["name"].lower() if sim.view("goal")()["node"] in sim.view("tree_nodes")()
                          else "the goal")
-            if sim.goal_year:
+            if sim.view("goal")()["year"]:
                 return Refusal("horizon_goal_reached", "the horizon at %d AD is reached. You reached %s in "
                                "%d AD and kept building for %d years after it."
-                               % (end_year, _goal_name, sim.goal_year,
-                                  end_year - sim.goal_year))
+                               % (end_year, _goal_name, sim.view("goal")()["year"],
+                                  end_year - sim.view("goal")()["year"]))
             return Refusal("horizon_goal_missed", "the horizon at %d AD is reached. You built %d things of your "
                            "own and did not reach %s."
-                           % (end_year, len(sim.done - sim.granted), _goal_name))
-        if sim.goal_year:
+                           % (end_year, len(sim.view("techniques_held")() - sim.view("techniques_granted")()), _goal_name))
+        if sim.view("goal")()["year"]:
             return Refusal("horizon_goal_reached", "the horizon at %d AD is reached. You reached %s in %d AD "
                            "and kept building for %d years after it."
                            % (end_year,
-                              sim.nodes[sim.goal]["name"].lower() if sim.goal in sim.nodes
-                              else "the goal", sim.goal_year, end_year - sim.goal_year))
+                              sim.view("tree_nodes")()[sim.view("goal")()["node"]]["name"].lower() if sim.view("goal")()["node"] in sim.view("tree_nodes")()
+                              else "the goal", sim.view("goal")()["year"], end_year - sim.view("goal")()["year"]))
         return Refusal("horizon_goal_missed", "ran out of horizon (%d AD) without reaching the goal" % end_year)
     return None
 
@@ -91,9 +91,9 @@ def _staff_fraction_note(sim):
     company's headcount can be "40.5 FTE" without anyone being cut in
     half. Arithmetic is unchanged; this only names what the number means.
     """
-    if (abs(sim.scholars - round(sim.scholars)) < 0.02
-            and abs(sim.artisans - round(sim.artisans)) < 0.02
-            and all(abs(value - round(value)) < 0.02 for value in sim.employees.values())):
+    if (abs(sim.view("staff")()["scholars"] - round(sim.view("staff")()["scholars"])) < 0.02
+            and abs(sim.view("staff")()["artisans"] - round(sim.view("staff")()["artisans"])) < 0.02
+            and all(abs(value - round(value)) < 0.02 for value in sim.view("staff")()["employees"].values())):
         return None
     return ("these are continuous full-time-equivalents, not a count of "
             "whole people: hiring phases in, training takes years, and "
@@ -126,17 +126,17 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
     # apart.
     staffing_short = []
     booked_short = []
-    portfolio_demand = sim.trade_demand_vs_supply()
+    portfolio_demand = sim.view("trade_demand_vs_supply")()
     for trade, want in (node["lab"] or {}).items():
         need = min(want / max(1.0, node["yrs"]), lab_left.get(trade, want))
         if need <= 0:
             continue
-        supply = sim.labour.hours_you_can_call_on(trade)
+        supply = sim.view("hours_you_can_call_on")[trade]
         total_demand = portfolio_demand.get(trade, {}).get(
             "demand_hours_this_year", need)
         # The society's capacity is the durable fact a player can act on;
         # this year's bookings only matter when they are what binds.
-        kind = sim.trade_shortage_kind(trade, need, total_demand)
+        kind = sim.view("trade_shortage_kind")(trade, need, total_demand)
         if kind == "staffing":
             staffing_short.append(
                 "%s (wants %.0f hours a year; this society can "
@@ -178,15 +178,15 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
         # holding far more than what is owed is not a diagnosis, it is a
         # contradiction; what it is actually waiting on is the calendar
         # pace, and that has to be said.
-        per_year = sim.project_cost(node_id) * frac
-        if per_year > 0.5 and sim.spending_power("buy") >= per_year:
+        per_year = sim.view("project_cost")(node_id) * frac
+        if per_year > 0.5 and sim.view("spending_power")("buy") >= per_year:
             return Refusal("money_pace", "the pace it can absorb money: at most %s a year goes into "
                            "this (%s still owed, about %.0f more year%s at that rate). "
                            "Money in hand cannot buy it down faster"
                            % (money_text(per_year, sim, grouped=True), money_text(bill, sim, grouped=True),
                               math.ceil(bill / per_year),
                               "" if math.ceil(bill / per_year) == 1 else "s"))
-        if sim.spending_power("buy") <= 0.5:
+        if sim.view("spending_power")("buy") <= 0.5:
             return Refusal("money_blocked", "money: fully blocked until funding is available; %s is "
                            "still owed and you cannot raise any of the next %s "
                            "instalment now"
@@ -208,20 +208,20 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
     # it is genuinely biting (2% is noise); resource_throttle() itself is the
     # one place that number is computed, read here rather than re-derived.
     # a question, not a step: the stock and draws the throttle works out are not kept
-    _thr, _binding = sim.peek_project_resource_throttle(node_id)
+    _thr, _binding = sim.view("resource_throttle")(node_id)
     if _thr < 0.98 and _binding:
         return Refusal("materials", "materials: this project consumes %s, whose shortage has it "
                        "running at %d%% of the pace its hours alone "
                        "would allow; 'capacity' shows the shortfall"
                        % (_binding, round(_thr * 100)))
     # Rank, count and pool come from the live queue the allocator also uses.
-    _rank, _count, _total = sim.hour_standing(node_id) or (None, None, None)
+    _rank, _count, _total = sim.view("hour_standing")(node_id) or (None, None, None)
     if _rank and _count and _count > 1:
         return Refusal("founder_hours", "your hours: priority #%d of %d active projects sharing "
                        "this year's %s directed hours; 'portfolio' shows what "
                        "each one is getting and why"
                        % (_rank, _count, plain_number(_total or 0.0)))
-    free_hours = max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed())
+    free_hours = max(0.0, sim.view("hours_available")["director_pool"] - sim.view("hours_available")["director_committed"])
     return Refusal("founder_hours", "your hours: %s of your own hours of work are still to do, and "
                    "you have %s uncommitted this year"
                    % (plain_number(progress["ph_left"]), plain_number(free_hours)))
@@ -233,7 +233,7 @@ def _goal_progress_count(sim, nodes):
     is used in _agent_state for why the total itself has to stay withheld
     until the run ends.
     """
-    goal = sim.goal
+    goal = sim.view("goal")()["node"]
     if not goal or goal not in nodes:
         return None
     need = ui_port.goal_closure(sim)
@@ -243,7 +243,7 @@ def _goal_progress_count(sim, nodes):
             ui_port.set_goal_closure(sim, need)
         except Exception:
             return None
-    return sum(1 for node_id in need if node_id in sim.done)
+    return sum(1 for node_id in need if node_id in sim.view("techniques_held")())
 
 
 def _founder_death_info(sim):
@@ -253,7 +253,7 @@ def _founder_death_info(sim):
     saves the age and year (_founder_death_aged/_founder_death_year) the moment it sees the line, so this answers
     from those first and scans the log (saved with its kinds) only for a Sim driven straight off the engine.
     """
-    if sim.founder_alive:
+    if sim.view("founder")()["alive"]:
         return None
     aged = ui_port.founder_death_aged(sim)
     if aged is not None:
@@ -261,7 +261,7 @@ def _founder_death_info(sim):
     cache = ui_port.founder_death_cache(sim)
     if cache is not None:
         return cache
-    for year, msg in sim.log:
+    for year, msg in sim.view("event_log")():
         if cause_of(msg) == "founder_dies":
             cache = {"year": year, "aged_about": facts_of(msg).get("aged")}
             ui_port.set_founder_death_cache(sim, cache)
@@ -287,7 +287,7 @@ def _worth_knowing_early(sim):
     """
     if ui_port.said_command_index(sim):
         return None
-    if sim.year > sim.cfg.get("start_year", sim.year) + 3:
+    if sim.view("year")() > sim.view("game_config")().get("start_year", sim.view("year")()) + 3:
         return None
     ui_port.set_said_command_index(sim, True)
     return ("{\"cmd\":\"help\",\"topic\":\"commands\"} lists the entire "

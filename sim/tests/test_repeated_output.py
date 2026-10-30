@@ -10,24 +10,25 @@ from sim.ui.proto.explain_once import already_explained
 from sim.ui.proto.render_screen_available import _available_row
 from sim.ui.proto.render_screen_state import _state_completed_head_lines
 from sim.ui.proto.render_screen_state_blocks import _state_founder
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
 
 def _game(year=100):
-    return SimpleNamespace(year=year, state=SimpleNamespace(seat_progress=SimpleNamespace(_said_explanations=None)))
+    return Game(year=year, state=Game(acting_record=Game(seat_progress=Game(_said_explanations=None))))
 
 
 # --- (a) a long explanation is shown the first time, then a pointer
 game = _game()
 check("the first time a topic is asked for it is not yet explained", already_explained(game, "staffing_share", {}) is False)
 check("the second time it is, and the topic is remembered with the year it was first shown",
-      already_explained(game, "staffing_share", {}) is True and game.state.seat_progress._said_explanations == {"staffing_share": 100})
+      already_explained(game, "staffing_share", {}) is True and game.state.acting_record.seat_progress._said_explanations == {"staffing_share": 100})
 check("asking for `full` shows it again", already_explained(game, "staffing_share", {"full": True}) is False)
 check("a different topic is independent", already_explained(game, "staffing_means", {}) is False)
 game.year = 105
 already_explained(game, "staffing_share", {})
-check("the year of first showing is not overwritten later", game.state.seat_progress._said_explanations["staffing_share"] == 100)
+check("the year of first showing is not overwritten later", game.state.acting_record.seat_progress._said_explanations["staffing_share"] == 100)
 check("the first time with `full` still marks it shown",
       already_explained(_game(), "x", {"full": True}) is False)
 fresh = _game()

@@ -117,12 +117,13 @@ class SaveTests(unittest.TestCase):
 
 class OneRuleTests(unittest.TestCase):
     def test_the_founders_term_and_the_cohorts_come_from_one_rule(self):
-        from sim.engine.economy_credit import CreditMixin
+        from sim.finance.constants import DEBT_BONDAGE_DEFAULT_TERM_YEARS
+        from sim.tests import finance_host
+
         def term(civ):
-            world = types.SimpleNamespace(civ=civ, DEBT_BONDAGE_DEFAULT_TERM_YEARS=CreditMixin.DEBT_BONDAGE_DEFAULT_TERM_YEARS)
-            return CreditMixin.debt_bondage_term_years(world)
+            return finance_host.build(civilisation=civ).debt_bondage_term_years()
         self.assertEqual(term({"debt_bondage": True, "bondage_years": 7.0}), 7.0)
-        self.assertEqual(term({"debt_bondage": True}), CreditMixin.DEBT_BONDAGE_DEFAULT_TERM_YEARS)
+        self.assertEqual(term({"debt_bondage": True}), DEBT_BONDAGE_DEFAULT_TERM_YEARS)
         self.assertEqual(term({"debt_bondage": False, "bondage_years": 7.0}), 0.0)
 
 

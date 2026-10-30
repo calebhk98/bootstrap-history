@@ -5,6 +5,7 @@ from sim.refusal import cause_of
 from .state_waiting import _agent_end_reason, _waiting_on, _worth_knowing_early
 from .state_shut_staffing import shut_for_want_of_staff
 from .shut_concerns import shut_concerns_yearly_value
+from .util import known
 
 
 def _agent_state_active_projects(sim, nodes):
@@ -15,13 +16,13 @@ def _agent_state_active_projects(sim, nodes):
     was split this way.
     """
     active = {}
-    for node_id, progress in sim.active.items():
+    for node_id, progress in sim.view("active_projects")().items():
         node = nodes[node_id]
-        _standing = sim.hour_standing(node_id) or (None, None, None)
+        _standing = sim.view("hour_standing")(node_id) or (None, None, None)
         bill = progress.get("cost_left")
         _at_risk = progress.get("stalled_years", 0)
         if bill is None:
-            bill = max(0.0, sim.project_cost(node_id) - progress["spent"])
+            bill = max(0.0, sim.view("project_cost")(node_id) - progress["spent"])
         waiting = _waiting_on(sim, nodes, node_id, progress, bill)
         active[node_id] = {"name": node["name"], "founder_hours_left": round(progress["ph_left"], 1),
                      "founder_hours_total": node["ph"], "years_in_progress": progress["yrs"],
@@ -78,23 +79,23 @@ def _agent_state_active_projects(sim, nodes):
                      "hours_directed_this_year": progress.get("hours_directed_this_year"),
                      # THE LIVE RISK: what the dice use now, after any failed
                      # attempts, beside the first-attempt figure.
-                     "chance_of_failure_now": sim.effective_risk(node_id),
+                     "chance_of_failure_now": sim.view("effective_risk")(node_id),
                      "chance_of_failure_before_any_attempt": node["risk"] or None,
-                     "bountied": node_id in sim.bountied}
+                     "bountied": node_id in sim.view("bountied")()}
     return active
 
 
 def _agent_state_headline_money(sim, end_year):
     """year, horizon, capital, and the standing income/upkeep lines."""
     return {
-        "year": sim.year,
+        "year": sim.view("year")(),
         # HOW MUCH TIME IS LEFT: the horizon must not be announced only in
         # one help topic and nowhere in a reply anybody reads every turn.
         # A clock you cannot see is not a constraint, it is an ambush.
-        "horizon_year": end_year, "years_left": max(0, end_year - sim.year),
-        "capital": round(sim.capital, 1), "revenue": round(sim.revenue(), 1),
-        "coin_hoard": sim.coin_hoard_report(),
-        "upkeep": round(sim.upkeep(), 1),
+        "horizon_year": end_year, "years_left": max(0, end_year - sim.view("year")()),
+        "capital": round(sim.view("acting_balance")(), 1), "revenue": round(sim.view("revenue_estimate")(), 1),
+        "coin_hoard": sim.view("coin_hoard_report")(),
+        "upkeep": round(sim.view("upkeep")(), 1),
         # Capital can fall even with both revenue and upkeep reported as
         # zero if nothing here shows where it went: living costs (food,
         # rent, tax and keeping up appearances) are charged regardless,
@@ -107,9 +108,9 @@ def _agent_state_headline_money(sim, end_year):
         # under one label would read a growing payroll as a spiralling
         # cost of living to anyone watching only `state`, one of the four
         # screens the welcome text calls essential.
-        "living_cost": round(sim.living_cost() - sim.labour.wage_bill(), 1),
-        "wage_bill": round(sim.labour.wage_bill(), 1),
-        "mine_operating_cost": round(sim.mine_operating_cost(), 1),
+        "living_cost": round(sim.view("living_cost")() - sim.view("wage_bill")(), 1),
+        "wage_bill": round(sim.view("wage_bill")(), 1),
+        "mine_operating_cost": round(sim.view("mine_operating_cost")(), 1),
     }
 
 
@@ -124,30 +125,30 @@ def _agent_state_operations(sim, nodes):
         # escapable ... work for wages: you have 2000 of your own hours left
         # this year", and every action it recommended was then refused with
         # "the run has ended". Advice you cannot take is not advice.
-        "stuck": (None if _agent_end_reason(sim) else sim.stall_diagnosis()),
-        "concerns_you_run": len(sim.operating),
+        "stuck": (None if _agent_end_reason(sim) else sim.view("stall_diagnosis")()),
+        "concerns_you_run": len(sim.view("operating")()),
         "you_know_how_to_run_but_have_not_opened": sum(
-            1 for node_id in sim.done if sim.is_venture(node_id) and node_id not in sim.operating),
+            1 for node_id in sim.view("techniques_held")() if sim.view("is_venture")[node_id] and node_id not in sim.view("operating")()),
         # WHAT THAT IS COSTING YOU, in money, on the main screen: a
         # per-completion log line saying "open it" is easily lost among
         # many others, and a count of shut shops is not a reason to act.
         # A yearly figure is.
         "shut_concerns_would_earn_a_year": shut_concerns_yearly_value(
-            [(sim.venture_real_earnings(node_id), sim.venture_real_upkeep(node_id)) for node_id in sim.done
-             if sim.is_venture(node_id) and node_id not in sim.operating]),
+            [(sim.view("venture_real_earnings")(node_id), sim.view("venture_real_upkeep")(node_id)) for node_id in sim.view("techniques_held")()
+             if sim.view("is_venture")[node_id] and node_id not in sim.view("operating")()]),
         # THE SAME GAP, for the handful of capabilities whose running()-gated
         # payout is not revenue at all - protection, standing, credit, a
         # staff ceiling - and so never showed up in shut_concerns above. This
         # is `state`, the screen a player actually rereads every year, which
         # is exactly where the corpus bug's lesson said a DONE/OPERATING
         # split has to be loud: see ProjectsMixin.capability_gaps.
-        "critical_capabilities_not_operating": sim.capability_gaps() or None,
+        "critical_capabilities_not_operating": sim.view("capability_gaps")() or None,
         # Which people each shut, profitable concern is short of.
         "shut_for_want_of_staff": shut_for_want_of_staff(sim, nodes),
         # Specialists on the payroll that no project or open concern uses.
-        "idle_specialists": sim.labour.idle_specialists() or None,
+        "idle_specialists": sim.view("idle_specialists")() or None,
         # Open concerns that one death would close.
-        "depends_on_one_person": sim.labour.sole_supervisors() or None,
+        "depends_on_one_person": sim.view("sole_supervisors")() or None,
     }
 
 
@@ -164,27 +165,27 @@ def _agent_state_spend_and_net(sim):
         # no field, so project_spend_this_year has to sit alongside it.
         # Named for what it is. The roll happens after the spending loop, so this
         # is the year just simulated, not the one before it.
-        "project_spend_this_year": round(getattr(sim, "spend_last_year", 0.0), 1),
+        "project_spend_this_year": round(known(sim.view("spend_last_year")(), 0.0), 1),
         # INTEREST IS A COST AND BELONGS IN THE NET: arrears compound, so a
         # net that ignores them can print a positive figure while capital
         # is actually falling and accelerating - it must not tell a
         # household in a debt spiral that it is recovering.
         "interest_on_arrears_this_year": round(
-            max(0.0, -sim.capital) * sim.debt_interest_rate(), 1),
+            max(0.0, -sim.view("acting_balance")()) * sim.view("debt_interest_rate")(), 1),
         # LESS THE YEAR YOU HAVE ALREADY PAID FOR: `hire` takes a finder's
         # fee and the first year's wages in advance, and step() nets that
         # advance off the living cost it charges. This forecast has to do
         # the same, or it double-bills the first year by the whole wage
         # bill, in the one year the player is most likely to look.
         "wages_you_have_already_paid_this_year": round(
-            sim.wages_prepaid, 1) or None,
-        "net_after_project_spend": round(sim.revenue() - sim.upkeep()
-                                         - sim.recurring_living_cost(sim.revenue(), sim.upkeep())
-                                         + min(sim.recurring_living_cost(sim.revenue(), sim.upkeep()),
-                                               sim.wages_prepaid)
-                                         - sim.mine_operating_cost()
-                                         - max(0.0, -sim.capital) * sim.debt_interest_rate()
-                                         - getattr(sim, "spend_last_year", 0.0), 1),
+            sim.view("pay_book")()["prepaid"], 1) or None,
+        "net_after_project_spend": round(sim.view("revenue_estimate")() - sim.view("upkeep")()
+                                         - sim.view("recurring_living_cost")(sim.view("revenue_estimate")(), sim.view("upkeep")())
+                                         + min(sim.view("recurring_living_cost")(sim.view("revenue_estimate")(), sim.view("upkeep")()),
+                                               sim.view("pay_book")()["prepaid"])
+                                         - sim.view("mine_operating_cost")()
+                                         - max(0.0, -sim.view("acting_balance")()) * sim.view("debt_interest_rate")()
+                                         - known(sim.view("spend_last_year")(), 0.0), 1),
         # THE STANDING FIGURE HAS TO READ THE STANDING REVENUE: this counts
         # "the STANDING flows only" per the comment on shut_concerns above -
         # the household's ordinary-year position, not this particular
@@ -194,9 +195,9 @@ def _agent_state_spend_and_net(sim):
         # is what credit_limit() already reads, with the identical
         # reasoning in its own docstring ("a lender does not cut your
         # line because you took a job this year").
-        "net_per_year": round(sim.recurring_net(), 1),
+        "net_per_year": round(sim.view("recurring_net")(), 1),
         # The same figure `money` prints, from the one method both read.
-        "sustainable_debt": round(sim.sustainable_debt(), 1),
+        "sustainable_debt": round(sim.view("sustainable_debt")(), 1),
     }
 
 
@@ -207,7 +208,7 @@ def training_in_hand(sim):
     return [{"artisan_capacity": round(row[0], 2), "ready_year": row[1],
              "trade": (row[2] if len(row) > 2 else None),
              "people": (row[3] if len(row) > 3 else None)}
-            for row in sim.training]
+            for row in sim.view("training_queue")()]
 
 
 def _agent_state_training_and_hours(sim, active, full):
@@ -225,7 +226,7 @@ def _agent_state_training_and_hours(sim, active, full):
         # FREE is the pool less the hours already spent on wage work, or
         # this would report free hours that `work` then refuses to honour.
         "founder_hours_available": round(
-            max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed()), 1),
+            max(0.0, sim.view("hours_available")["director_pool"] - sim.view("hours_available")["director_committed"]), 1),
         # FREE HOURS, SHOUTED, WHEN THEY ARE GOING TO WASTE, not one quiet
         # number among fifty: running a single calendar-floor project can
         # leave thousands of founder-hours spent on nothing for a whole
@@ -241,7 +242,7 @@ def _agent_state_training_and_hours(sim, active, full):
         # switch off - it is the world taking back something nobody is
         # left to watch - and a concern that shuts itself now reopens once
         # restaffed. The year's notice matters here, not a cure.
-        "supervision_close_to_the_edge": sim.staffing_closure_warnings() or None,
+        "supervision_close_to_the_edge": sim.view("staffing_closure_warnings")() or None,
         # SAID ONCE, EARLY, NOT EVERY TURN: `help commands` is a complete
         # index of everything the game can do - log, values, money,
         # automation, save/load - and `log` is an exact paginated history
@@ -262,23 +263,23 @@ def _agent_state_training_and_hours(sim, active, full):
         **({"worth_knowing_early": _worth_knowing_early(sim)} if not full else {}),
         "free_hours_going_unused": free_hours_going_unused(sim, active),
         "founder_hours_sold_for_wages_this_year": round(
-            sim.wage_hours_this_year, 1),
+            sim.view("hour_commitments")()["wage_hours"], 1),
         # WHERE THE HOURS COME FROM: the pool can grow well past a single
         # founder's own hours, and that has to be explained here rather
         # than left unexplained. It is not the founder working harder: it
         # is the deputies an institution gives you, each of whom directs
         # work in your name.
         "where_your_hours_come_from": {
-            "you": round(sim.cfg["founder_hours_per_year"]
-                         * (0.25 if sim.bondage_years_left > 0 else 1.0), 1)
-                   if sim.founder_alive else 0.0,
-            "deputies_who_direct_work_for_you": round(sim.directors_extra, 2),
-            "hours_each_deputy_adds": sim.cfg["director_hours_per_year"],
+            "you": round(sim.view("game_config")()["founder_hours_per_year"]
+                         * (0.25 if sim.view("debt_status")()["bondage_years_left"] > 0 else 1.0), 1)
+                   if sim.view("founder")()["alive"] else 0.0,
+            "deputies_who_direct_work_for_you": round(sim.view("staff")()["directors_extra"], 2),
+            "hours_each_deputy_adds": sim.view("game_config")()["director_hours_per_year"],
         },
         "founder_hours_spent_teaching_this_year": round(
-            sim.teaching_hours_this_year, 1),
+            sim.view("hour_commitments")()["teaching_hours"], 1),
         # LAST YEAR'S HOURS, ACCOUNTED FOR. Set in step(); see the comment
         # there. available is this year's fresh figure, not last year's -
         # read it alongside, not in place of, hours_this_year.
-        "hours_this_year": getattr(sim, "hours_this_year", None),
+        "hours_this_year": sim.view("hour_commitments")()["last_year"],
     }

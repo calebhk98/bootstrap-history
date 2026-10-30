@@ -77,7 +77,7 @@ def _canon(value):
         # repr() rather than round(): a change that alters the last bit of a
         # float IS a change, and this harness exists to catch exactly that.
         return repr(value)
-    if isinstance(value, set):
+    if isinstance(value, (set, frozenset)):
         return ["__set__"] + sorted(_canon(item) for item in value)
     if isinstance(value, dict):
         return {str(key): _canon(value[key]) for key in sorted(value, key=str)}
@@ -93,10 +93,13 @@ def _resolve_field(sim, field):
     if hasattr(sim, "household") and hasattr(sim.household, field):
         return getattr(sim.household, field)
     if hasattr(sim, "state") and sim.state:
-        for sub_name in ("household", "projects", "economy", "holdings", "governance", "seat_progress", "founder", "scenario", "population"):
+        for sub_name in ("household", "projects", "economy", "holdings", "seat_progress", "founder"):
             sub = getattr(sim.state, sub_name, None)
             if sub is not None and hasattr(sub, field):
                 return getattr(sub, field)
+        for slot in list(sim.state.modules.values()) + list(sim.state.seats[sim.state.acting_seat].modules.values()):
+            if hasattr(slot, field):
+                return getattr(slot, field)
     return None
 
 
@@ -139,7 +142,12 @@ QUICK_SCENARIOS = [
 def build(scenario):
     sim = S.Sim(NODES, ORDER, random.Random(scenario["seed"]), events=scenario["events"],
               manual=False, civ=S.load_civ(scenario["civ"]))
-    sim.goal, sim.done_year = GOAL, {}
+    sim.goal = GOAL
+    if hasattr(getattr(sim.state, "projects", None), "done_year"):   # a checkout from before the knowledge module owned the record
+        sim.done_year = {}
+    else:
+        from sim.knowledge.api import StartDoneYearRecord
+        sim.send(StartDoneYearRecord())
     if scenario["fog"]:
         sim.fog = True
     return sim
@@ -157,7 +165,7 @@ def run(scenario, keep_states=False):
     start_time = time.process_time()
     per_year, states = [], []
     for _ in range(scenario["years"]):
-        if sim.dead_reason:
+        if sim.view("founder")()["dead_reason"]:
             break
         sim.step()
         state = state_of(sim)

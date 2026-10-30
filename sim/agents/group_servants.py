@@ -14,7 +14,6 @@ from . import budget, ledger
 from .edges import EDGE_STATE_SPENDING
 from .group_tuning import STRATUM_GRIEVANCE_THRESHOLD, STRATUM_WELFARE_MEMORY_RATE
 from .group_tuning_stakes import (DESERTION_RATE, LOYALTY_ADJUSTMENT_RATE, MUTINY_LOYALTY, OFFICE_FEE_SHARE_OF_REVENUE)
-from .registry import register_spawner
 from .sector import Sector
 
 OFFICE_HOLDERS = "office_holders"
@@ -146,6 +145,3 @@ def run_servants(registry: Any, world: Any) -> List[str]:
 			run_army_year(government, world)
 			moved.append(government.actor_id)
 	return moved
-
-
-register_spawner("state_servants", run_servants)

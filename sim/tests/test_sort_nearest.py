@@ -8,13 +8,12 @@ QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.projects_capability import CapabilityMixin
+from sim.tests import production_host
 
 
-class Tree(CapabilityMixin):
-    """The tree over the real concern rule; nothing is granted."""
-    nodes = NODES
-    state = SimpleNamespace(projects=SimpleNamespace(granted=set()))
+def Tree(granted=()):
+    """The tree over the real concern rule; nothing is granted unless asked."""
+    return production_host.build(tree_nodes=NODES, techniques_granted=set(granted))
 
 
 # `available sort nearest` measured distance to becoming startable, never distance to a goal;
@@ -45,8 +44,7 @@ check("a husbandry method does not open its own shop; the farm it improves does"
       (shared.is_venture("ag2_hybridisation"), shared.is_venture("crop_rotation")))
 check("a trade practised for a fee (an assay office) still opens as a concern",
       shared.is_venture("fin_assay_office"), shared.is_venture("fin_assay_office"))
-granted_tree = Tree()
-granted_tree.state = SimpleNamespace(projects=SimpleNamespace(granted={"crop_rotation"}))
+granted_tree = Tree({"crop_rotation"})
 check("a node a seat was granted is not a venture of its own", not granted_tree.is_venture("crop_rotation") and shared.is_venture("crop_rotation"))
 venture_count = sum(1 for node_id in NODES if shared.is_venture(node_id))
 check("the count of nodes offered to `open` is neither inflated by notations nor collapsed toward zero",

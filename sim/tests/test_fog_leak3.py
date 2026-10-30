@@ -1,6 +1,6 @@
 """Fog leak 3: `bounty` named hidden prerequisites outright where `why` correctly said only "N other things you have not
 heard of yet", because `bounty` built its own missing-prerequisites list with no fog filter. There is now one filter,
-`FogMixin.missing_prereq_message`, and `bounty_refusal` calls it. Rules, each called on built inputs (a fogged stub
+`missing_prereq_message`, and `bounty_refusal` calls it. Rules, each called on built inputs (a fogged stub
 with a tree of a few nodes, no game):
 
 1. `missing_prereq_message` prints no id the player has not heard of, and says "have not heard of" instead.
@@ -14,10 +14,12 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.fog import FogMixin
+from sim.knowledge.api import missing_prereq_message
 from sim.refusal import cause_of
 from sim.ui.proto.quote_spending import bounty_refusal
 from sim.ui.protocol import parse_typed
+from sim.tests.ui_stand_in import Game
+from sim.tests.ui_stand_in import FactViews
 
 NODES = {
 	"target": {"id": "target", "name": "Target", "pre": ["seen_prereq", "hidden_prereq_a", "hidden_prereq_b"],
@@ -33,20 +35,22 @@ NODES = {
 HIDDEN = ("hidden_prereq_a", "hidden_prereq_b")
 
 
-class FoggedStub(FogMixin):
+class FoggedStub(FactViews):
 	"""A fogged founder who has heard of every node but the two hidden prerequisites."""
 
-	FOG_KIND_HINTS = FogMixin.FOG_KIND_HINTS
 	civ = {"name": "Stubland"}
 
 	def __init__(self, fog=True):
 		self.nodes = NODES
-		self.state = SimpleNamespace(_fog=fog, projects=SimpleNamespace(done=set(), active={}, revealed=set()))
+		self.state = Game(_fog=fog, projects=Game(done=set(), active={}, revealed=set()))
 		self.done = self.state.projects.done
 		self.active = self.state.projects.active
 
 	def is_visible(self, node_id, _memo=None):
 		return not self.state._fog or node_id not in HIDDEN
+
+	def missing_prereq_message(self, missing, _memo=None):
+		return missing_prereq_message(self.nodes, missing, self.is_visible, self.state._fog, self.state.projects.done)
 
 	def bounty_eligible(self, node_id):
 		return False

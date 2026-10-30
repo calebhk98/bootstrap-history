@@ -7,12 +7,20 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import society_adoption
-from sim.engine.society_adoption import AdoptionMixin
-from sim.engine.society_hazards import HazardsMixin
-from sim.refusal import cause_of, facts_of
+from sim.diffusion.api import ApplyTechEffects
+from sim.diffusion.module import Diffusion
+from sim.polity.state import PolitySeat
+from sim.tests import polity_host
+from sim.hazards import constants
+from sim.polity.api import RaiseScandal, ScaleProtection
+from sim.polity.api import ShiftValueWeight
+from sim.refusal import cause_of
+from sim.reporting.api import RecordEvent
+from sim.tests import hazards_host, literacy_stand_in, module_harness
 from sim.ui.proto.scandal_trend import years_until_scandal_crosses_the_line
 from sim.ui.proto.state_succession import succession_block
+from sim.tests import event_stand_in
+from sim.tests.ui_stand_in import Game
 
 
 class ScandalTrend(unittest.TestCase):
@@ -40,50 +48,46 @@ class Rolls:
         return 0.0 if self.calls == 1 else 0.99
 
 
-class PatronDeath(HazardsMixin):
-    def __init__(self, scandal_last_year):
-        self.rng = Rolls()
-        self.civ = {}
-        self.manual = False
-        self.price_index = 1.0
-        self.labour = types.SimpleNamespace(money_per_labour_hour=lambda: 1.0)
-        self.policy = {"auto_court_heir": False}
-        self.state = types.SimpleNamespace(
-            founder=types.SimpleNamespace(last_patron_death=None),
-            household=types.SimpleNamespace(scandal=10.0, scandal_last_year=scandal_last_year, protection=0.9, log=[]))
+class PatronDeath:
+    """The hazards module for one seat whose patron dies this year (the first draw is low), and the commands it sends."""
 
-    def running_with_mechanic(self, name):
-        return True
+    def __init__(self):
+        self.module = hazards_host.build(
+            game_random=Rolls(), running_mechanics=lambda name: [("a patron", {})],
+            founder={"alive": True, "life_left": 30.0, "dead_reason": None, "policy": {"auto_court_heir": False}},
+            standing={"protection": 0.9, "scandal": 10.0, "bribes_year_to_date": 0.0})
+        self.module.random_events_for_seat(100)
+
+    def sent(self, kind):
+        return [command for command in module_harness.sent(self.module) if isinstance(command, kind)]
 
 
 class PatronDies(unittest.TestCase):
 
-    def test_the_scandal_jumps_and_last_years_mark_moves_with_it_so_the_jump_is_no_trend(self):
-        game = PatronDeath(scandal_last_year=10.0)
-        game._random_events_for_seat(100)
-        household = game.state.household
-        self.assertEqual(household.scandal, 10.0 + game.PATRON_DEATH_SCANDAL)
-        self.assertEqual(household.scandal - household.scandal_last_year, 0.0)
+    def test_the_death_raises_the_scandal_by_the_declared_jump(self):
+        raised, = PatronDeath().sent(RaiseScandal)
+        self.assertEqual(raised.scandal, constants.PATRON_DEATH_SCANDAL)
 
-    def test_with_no_mark_to_move_the_scandal_still_jumps(self):
-        game = PatronDeath(scandal_last_year=None)
-        game._random_events_for_seat(100)
-        self.assertEqual(game.state.household.scandal, 10.0 + game.PATRON_DEATH_SCANDAL)
-        self.assertIsNone(game.state.household.scandal_last_year)
+    def test_the_scandal_jump_moves_last_years_mark_with_it_so_the_jump_is_no_trend(self):
+        for last_year, expected in ((10.0, 10.0 + constants.PATRON_DEATH_SCANDAL), (None, None)):
+            seat = PolitySeat(scandal=10.0, scandal_last_year=last_year)
+            polity_host.build(seat=seat).raise_scandal(RaiseScandal(constants.PATRON_DEATH_SCANDAL))
+            self.assertEqual(seat.scandal, 10.0 + constants.PATRON_DEATH_SCANDAL)
+            self.assertEqual(seat.scandal_last_year, expected)
 
     def test_protection_falls_by_the_retention_share_and_the_death_is_logged_with_its_kind(self):
-        game = PatronDeath(scandal_last_year=10.0)
-        game._random_events_for_seat(100)
-        self.assertAlmostEqual(game.state.household.protection, 0.9 * game.PATRON_DEATH_PROTECTION_RETENTION)
-        self.assertEqual(cause_of(game.state.household.log[0][1]), "patron_dies")
+        game = PatronDeath()
+        scaled, = game.sent(ScaleProtection)
+        self.assertEqual(scaled.share, constants.PATRON_DEATH_PROTECTION_RETENTION)
+        self.assertEqual([event.kind for event in game.sent(RecordEvent)], ["patron_dies"])
 
 
 class Succession(unittest.TestCase):
 
     def game(self, carry, deputies):
-        return types.SimpleNamespace(
-            state=types.SimpleNamespace(household=types.SimpleNamespace(directors_extra=deputies)),
-            DEPUTIES_CARRY_THE_WORK_FROM=1.0, deputies_carry_the_work=lambda: carry, deputy_hours=lambda: 400.0,
+        return Game(
+            staff={"directors_extra": deputies}, 
+            patronage={"deputies_needed": 1.0, "deputies_carry_the_work": carry}, game_config={"director_hours_per_year": 2000.0},
             STAFF_CAPACITY_SOURCES=[], nodes={}, has=lambda node_id: False)
 
     def test_deputies_short_of_the_threshold_are_reported_as_not_carrying_the_work(self):
@@ -95,66 +99,70 @@ class Succession(unittest.TestCase):
         self.assertTrue(succession_block(self.game(True, 5.0))["deputies_carry_the_work"])
 
 
-class Society(AdoptionMixin):
+class Reading:
+    """A country's reading shares that records what it is taught."""
+
     def __init__(self):
-        self.value_weights = {"w_novelty": 0.0}
-        self.literacy_values = {"literacy_general": 0.1, "literacy_elite": 0.5}
+        self.values = {"literacy_general": 0.1, "literacy_elite": 0.5}
         self.taught = []
-        self.state = types.SimpleNamespace(household=types.SimpleNamespace(log=[]), scenario=types.SimpleNamespace(year=100))
-        self.nodes = {"press": {"name": "Press"}}
 
-    def literacy(self, field):
-        return self.literacy_values[field]
-
-    def literacy_ceiling_elite(self):
-        return 0.97
-
-    def literacy_ceiling_general(self):
-        return 0.9
-
-    def literacy_ceiling_common(self):
-        return 0.9
-
-    def country_literacy(self):
-        return types.SimpleNamespace(teach=self.teach)
+    def get(self, field):
+        return self.values[field]
 
     def teach(self, field, target, ceiling):
         self.taught.append((field, target, ceiling))
-        self.literacy_values[field] = target
+        self.values[field] = target
 
-    def coverage_nodes(self):
-        return set()
+
+class Society:
+    """The diffusion module over a tree of one node, a society with one value weight and a country that reads."""
+
+    def __init__(self, effects):
+        self.value_weights = {"w_novelty": 0.0}
+        self.reading = Reading()
+        ceilings = {"literacy_general": 0.9, "literacy_elite": 0.97, "common": 0.9}
+
+        class Taught(Diffusion):
+            def literacy_ceiling(self, field):
+                return ceilings[field]
+        views, answers = literacy_stand_in.over(self.reading)
+        self.module = module_harness.build(Taught, views={
+            "tech_effects": {"press": effects}.get, **views,
+            "tree": {"press": {"name": "Press"}}.get, "coverage": lambda: set()},
+            answers={ShiftValueWeight: polity_host.shifting(self.value_weights), **answers})
+
+    def events(self):
+        return [command for command in module_harness.sent(self.module) if isinstance(command, RecordEvent)]
 
 
 class TechEffects(unittest.TestCase):
 
     def apply(self, effects):
-        game = Society()
-        with mock.patch.dict(society_adoption.TECH_EFFECTS, {"press": effects}, clear=False):
-            game.apply_tech_effects("press")
+        game = Society(effects)
+        game.module.apply_tech_effects(ApplyTechEffects("press"))
         return game
 
     def test_a_literacy_effect_logs_the_old_and_new_value_as_a_field(self):
         game = self.apply({"literacy_general": 0.2})
-        (_year, line), = game.state.household.log
-        self.assertEqual(cause_of(line), "society_changed")
-        before, after = facts_of(line)["changes"]["literacy_general"]
+        (event,) = game.events()
+        self.assertEqual(event.kind, "society_changed")
+        before, after = event.facts["changes"]["literacy_general"]
         self.assertEqual(before, 0.1)
-        self.assertEqual(after, game.literacy_values["literacy_general"])
+        self.assertEqual(after, game.reading.values["literacy_general"])
         self.assertGreater(after, before)
 
     def test_a_value_effect_shifts_the_weight_and_logs_before_and_after(self):
         game = self.apply({"w_novelty": 0.3})
-        (_year, line), = game.state.household.log
-        before, after = facts_of(line)["changes"]["w_novelty"]
+        (event,) = game.events()
+        before, after = event.facts["changes"]["w_novelty"]
         self.assertEqual(before, 0.0)
         self.assertEqual(after, game.value_weights["w_novelty"])
         self.assertNotEqual(after, before)
 
     def test_a_tech_with_no_effect_logs_nothing(self):
-        game = Society()
-        game.apply_tech_effects("nothing_here")
-        self.assertEqual(game.state.household.log, [])
+        game = Society(None)
+        game.module.apply_tech_effects(ApplyTechEffects("press"))
+        self.assertEqual(game.events(), [])
 
 
 if __name__ == "__main__":

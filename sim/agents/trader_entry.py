@@ -67,15 +67,9 @@ def trader_entry(registry: Any, world: Any) -> List[str]:
 		while "trader:%d" % number in registry.state.records:
 			number += 1
 		trader_id = "trader:%d" % number
-		country_of_place = getattr(world, "country_of_place", None)
 		trader = registry.add(trader_id, ActorRecord(
 			kind="trader", name=trader_id, location=route["source"], founded_year=world.year,
-			country=country_of_place(route["source"]) if country_of_place else None))
+			country=world.country_of_place(route["source"])))
 		ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), trader, route["capital"], EDGE_POOLED_CAPITAL)
 		founded.append(trader_id)
 	return founded
-
-
-from .registry import register_spawner  # noqa: E402
-
-register_spawner("trader_entry", trader_entry)

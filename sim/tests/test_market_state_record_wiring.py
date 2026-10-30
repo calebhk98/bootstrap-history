@@ -5,11 +5,14 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import market_stand_in
 from unittest import mock
 
-from sim.engine import agents_port_stakes, market_clearing
-from sim.engine.agents_port_stakes import StakeView
-from sim.engine.market_clearing import MarketClearingMixin
+from sim.actors.world_stakes import StakeView
+from sim.markets import clearing
+from sim.markets.module import Markets
+from sim.tests import module_harness
+from sim.tests.world_stand_in import fake_needs
 
 CLOSING = types.SimpleNamespace(price_ratio=1.1, society_sales_tonnes=7.0, unsold_tonnes=8.0, unmet_demand_tonnes=9.0)
 
@@ -19,21 +22,22 @@ def stand_in(record):
         floor_ratio=0.5, ceiling_ratio=2.0, household_demand_at_anchor_tonnes=3.0, actor_supply_tonnes=1.0,
         actor_demand_tonnes=2.0, founder_sales_tonnes=0.0)
     outcome = types.SimpleNamespace(price_ratio=1.0)
-    return types.SimpleNamespace(
-        _material_tag=lambda material: (material, None),
-        _market_outcome=lambda commodity, with_flows=False: (
-            (conditions, CLOSING) if with_flows else (conditions, outcome)),
-        _market_entry=lambda commodity: {"capacity_tonnes": 1.0, "reference_tonnes": 2.0, "stock_tonnes": 3.0},
+    module = market_stand_in.markets_over(
         economy=types.SimpleNamespace(agent_market_record=lambda commodity: record),
         goods_market=types.SimpleNamespace(
             bought_tonnes=lambda commodity, party: 0.0, drawn_tonnes=lambda commodity: 0.0,
-            acting_party_id="founder", others_offers=lambda commodity: []))
+            acting_party_id="founder", others_offers=lambda commodity: []),
+        material_pool=lambda material: (material, None))
+    module.market_outcome = lambda commodity, with_flows=False: (
+        (conditions, CLOSING) if with_flows else (conditions, outcome))
+    module.market_entry = lambda commodity: {"capacity_tonnes": 1.0, "reference_tonnes": 2.0, "stock_tonnes": 3.0}
+    return module
 
 
 class MarketState(unittest.TestCase):
     def state(self, record):
-        with mock.patch.object(market_clearing.market, "society_sales_displaced_by_founder", lambda conditions: 0.0):
-            return MarketClearingMixin.market_state(stand_in(record), "iron")
+        with mock.patch.object(clearing.market, "society_sales_displaced_by_founder", lambda conditions: 0.0):
+            return stand_in(record).market_state("iron")
 
     def test_sales_unsold_and_unmet_are_the_economys_record_when_it_has_one(self):
         state = self.state({"sold": 1.0, "unsold": 2.0, "unmet": 3.0})
@@ -47,18 +51,16 @@ class MarketState(unittest.TestCase):
 
     def test_a_commodity_with_no_market_has_no_state(self):
         view = stand_in(None)
-        view._market_outcome = lambda commodity, with_flows=False: None
-        self.assertIsNone(MarketClearingMixin.market_state(view, "iron"))
+        view.market_outcome = lambda commodity, with_flows=False: None
+        self.assertIsNone(view.market_state("iron"))
 
 
 class TithableSales(unittest.TestCase):
     def value(self, quotes, states):
-        sim = types.SimpleNamespace(
-            economy=types.SimpleNamespace(commodity_of=lambda material: material),
-            market_state=lambda commodity: states.get(commodity))
-        view = types.SimpleNamespace(_sim=sim, _commodity_quote=lambda commodity: quotes.get(commodity))
-        with mock.patch.object(agents_port_stakes.need_substitutes, "serving", lambda need: ["wheat", "rice", "ghost"]):
-            return StakeView.tithable_sales_value(view, "food")
+        needs = fake_needs(material_commodity=lambda material: material, market_state=lambda commodity: states.get(commodity),
+                           materials_serving=lambda need: ["wheat", "rice", "ghost"])
+        view = types.SimpleNamespace(needs=needs, _commodity_quote=lambda commodity: quotes.get(commodity))
+        return StakeView.tithable_sales_value(view, "food")
 
     def test_the_value_is_the_sold_tonnes_at_the_buy_quote_summed_over_the_needs_commodities(self):
         quotes = {"wheat": {"buy_per_tonne": 10.0}, "rice": {"buy_per_tonne": 20.0}}

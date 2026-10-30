@@ -7,31 +7,36 @@ what it reads, with the sim's cost functions returning figures written out here.
 QUICK_TOPIC = True
 UNDER_TEST = {"hire"}   # the method this module tests, called on a stand-in
 
+from sim.tests import workforce_stand_in
 from types import SimpleNamespace
 
 from .harness import check
 
 from sim.labour.labour_training import TrainingMixin
-from sim.engine.project_materials import ProjectMaterialsMixin
-from sim.engine.projects_starting import StartingMixin
+from sim.agents.api import edges
+from sim.ledger.api import PayEdge
+from sim.projects.api import PostBounty, constants as project_constants
+from sim.tests import finance_host, module_harness, projects_host
 from sim.refusal import Refusal
 from sim.ui.proto import quote_spending
+from sim.tests.ui_stand_in import Game
 
 
 def quote_game(**attributes):
-    labour = SimpleNamespace(
+    labour = Game(
         hire_check=lambda trade, count: (count, 412.34, None),
         commission_check=lambda trade, hours: (207.77, None),
-        market=SimpleNamespace(quote_annual=lambda trade, count: 400.04))
+        market=Game(quote_annual=lambda trade, count: 400.04))
     defaults = dict(
-        capital=5000.0, labour=labour, BOUNTY_PRICE_MULTIPLIER=3.0, done=set(), operating=set(), active={}, civ={"name": "Testland"},
+        capital=5000.0, labour=labour, done=set(), operating=set(), active={}, civ={"name": "Testland"},
         bounty_price=lambda node_id: 9000.06, bounty_eligible=lambda node_id: True, project_cost_now=lambda node_id: 3000.0,
         opening_fee=lambda node_id, units: (812.34, 1.0), is_venture=lambda node_id: True,
         venture_upkeep_quote=lambda node_id, units: {"now": 61.1, "at_full_staffing": 120.9},
         venture_real_earnings=lambda node_id, units, fully_ramped: 300.0, spending_power=lambda kind: 1000.0,
         opening_shortfall=lambda node_id: None)
     defaults.update(attributes)
-    return SimpleNamespace(**defaults)
+    defaults.setdefault("view", finance_host.purchase_views(defaults["spending_power"]))
+    return Game(**defaults)
 
 
 NODES = {"mill": {"name": "Mill", "pre": [], "cat": "craft"}}
@@ -39,7 +44,7 @@ NODES = {"mill": {"name": "Mill", "pre": [], "cat": "craft"}}
 hire = quote_spending._quote_hire(quote_game(), NODES, {"trade": "Smith", "n": 2})
 check("quote hire shows the fee hire_check returns, rounded to a tenth, and the wage due each later year",
       hire["paid_now"] == 412.3 and hire["from_next_year_per_year"] == 800.1 and hire["people"] == 2 and hire["trade"] == "smith", hire)
-refusing = quote_game(labour=SimpleNamespace(hire_check=lambda trade, count: (None, None, Refusal("no_such_trade", "no such trade"))))
+refusing = quote_game(labour=Game(hire_check=lambda trade, count: (None, None, Refusal("no_such_trade", "no such trade"))))
 check("quote hire passes hire_check's refusal on", quote_spending._quote_hire(refusing, NODES, {"trade": "x"}).get("ok") is False)
 check("quote hire refuses a count that is not a number",
       quote_spending._quote_hire(quote_game(), NODES, {"trade": "smith", "n": "banana"}).get("ok") is False)
@@ -47,7 +52,7 @@ check("quote hire refuses a count that is not a number",
 commission = quote_spending._quote_commission(quote_game(), NODES, {"trade": "smith", "hours": 100})
 check("quote commission shows the fee commission_check returns", commission["paid_now"] == 207.8 and commission["hours"] == 100, commission)
 check("quote commission passes commission_check's refusal on",
-      quote_spending._quote_commission(quote_game(labour=SimpleNamespace(commission_check=lambda trade, hours: (None, "no"))), NODES,
+      quote_spending._quote_commission(quote_game(labour=Game(commission_check=lambda trade, hours: (None, "no"))), NODES,
                                        {"trade": "smith", "hours": 5}).get("ok") is False)
 
 opened = quote_spending._quote_open(quote_game(done={"mill"}), NODES, {"id": "mill"})
@@ -67,7 +72,7 @@ check("quote open refuses what is not worked out, not a concern, or already runn
 
 bounty = quote_spending._quote_bounty(quote_game(), NODES, {"id": "mill"})
 check("quote bounty shows bounty_price's figure, the multiplier and that it is allowed",
-      bounty["paid_now"] == 9000.1 and bounty["price_multiplier"] == 3.0 and bounty["eligible"] is True, bounty)
+      bounty["paid_now"] == 9000.1 and bounty["price_multiplier"] == project_constants.BOUNTY_PRICE_MULTIPLIER and bounty["eligible"] is True, bounty)
 refused = quote_spending._quote_bounty(quote_game(bounty_eligible=lambda node_id: False), NODES, {"id": "mill"})
 check("quote bounty for what the craft cannot recognise says it is not eligible and carries the refusal",
       refused["eligible"] is False and refused["refusal"].cause == "not_bounty_eligible", refused)
@@ -78,11 +83,11 @@ class Payer(TrainingMixin):
 
     def __init__(self, fee):
         self.paid = []
-        household = SimpleNamespace(wages_prepaid=0.0, contract_hours={}, commissioned={})
-        self._world = SimpleNamespace(
-            wages={"smith": 1.0}, state=SimpleNamespace(household=household), EDGE_WORKERS="workers", HOURS_PER_PERSON_YEAR=2000.0,
-            pay_edge=lambda edge, money, purpose: self.paid.append((edge, money, purpose)), money_text=lambda money, grouped=False: "%.0f" % money)
-        self.labour_market = SimpleNamespace(hire=lambda *arguments: None)
+        household = Game(wages_prepaid=0.0, contract_hours={}, commissioned={})
+        self._world = Game(
+            wages={"smith": 1.0}, workforce=household, view=workforce_stand_in.view_of(household), state=Game(household=household), EDGE_WORKERS="workers", HOURS_PER_PERSON_YEAR=2000.0,
+            send=lambda command: self.paid.append((command.edge, command.amount, command.purpose)), money_text=lambda money, grouped=False: "%.0f" % money)
+        self.labour_market = Game(hire=lambda *arguments: None)
         self.fee = fee
         self.hire_asked = []
 
@@ -125,32 +130,20 @@ refusing_payer.commission_check = lambda trade, hours: (None, "refused")
 check("a commission refused by its check pays nothing", refusing_payer.commission("smith", 100) == (False, "refused") and not refusing_payer.paid)
 
 
-class Poster(StartingMixin):
-    """The parts of a Sim a bounty touches."""
-
-    def __init__(self, capital, price):
-        self.nodes = {"mill": {"name": "Mill"}}
-        self.state = SimpleNamespace(
-            household=SimpleNamespace(capital=capital, total_spend=0.0, bounties_paid=0, log=[]),
-            projects=SimpleNamespace(active={}, bountied=set()), scenario=SimpleNamespace(year=100))
-        self.price = price
-        self.paid = []
-
-    def bounty_price(self, node_id):
-        return self.price
-
-    def pay_edge(self, edge, money, purpose):
-        self.paid.append((money, purpose))
-
-    def initialize_project(self, node_id, **fields):
-        self.state.projects.active[node_id] = {}
-
-    def money_text(self, money, *arguments, **keywords):
-        return "%.0f" % money
+def poster(capital, price):
+    """The projects module with what a bounty touches: the prize and the purse."""
+    state = projects_host.projects_state()
+    module = projects_host.build(tree={"mill": {"name": "Mill"}}, bounty_price=lambda node_id: price, acting_balance=capital,
+                                 projects_record=state)
+    module.initialize_project = lambda node_id, **fields: state.active.update({node_id: {}})
+    return module
 
 
-poster = Poster(10000.0, 9000.06)
+paying = poster(10000.0, 9000.06)
 check("post_bounty pays exactly bounty_price, the figure quote bounty shows",
-      poster.post_bounty("mill") is True and poster.paid == [(9000.06, "bounties posted")], poster.paid)
-broke = Poster(100.0, 9000.06)
-check("post_bounty pays nothing when the prize passes the cash", broke.post_bounty("mill") is False and not broke.paid)
+      paying.post_bounty(PostBounty("mill")) is True
+      and [command for command in module_harness.sent(paying) if isinstance(command, PayEdge)]
+      == [PayEdge(edges.EDGE_WORKERS, 9000.06, "bounties posted")], module_harness.sent(paying))
+broke = poster(100.0, 9000.06)
+check("post_bounty pays nothing when the prize passes the cash",
+      broke.post_bounty(PostBounty("mill")) is False and not module_harness.sent(broke))

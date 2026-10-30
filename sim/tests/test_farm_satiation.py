@@ -7,14 +7,14 @@ import unittest
 
 from sim.constants import REGISTRY
 from sim.default_civilisation import REPOSITORY_ROOT
-from sim.engine import need_data
+from sim.content import api as content
 from sim.labour import farm_intake
 from sim.world import agriculture, demand
 
 
 class SatiationDataTests(unittest.TestCase):
     def test_food_need_declares_a_satiation_level_equal_to_the_biological_limit(self):
-        food = need_data.load_needs(REPOSITORY_ROOT)["needs"]["food"]
+        food = content.load_needs(REPOSITORY_ROOT)["needs"]["food"]
         limit = agriculture.MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE * demand.FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR
         self.assertAlmostEqual(food["satiation_per_capita_per_year"], limit, delta=0.005 * limit)
 

@@ -29,7 +29,7 @@ from collections import defaultdict
 
 from sim.engine.ui_port import load_production_catalog
 from sim.engine.ui_port import (
-    category_traits, tree_merge, validate_material_gating, validate_node_money, node_revenue_census, validate_copy_visibility, validate_production,
+    check_category_traits, build_tree, merge_problems, validate_material_gating, validate_node_money, node_revenue_census, validate_copy_visibility, validate_production,
     validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.engine.ui_port import default_civilisation_id
 from sim.engine.ui_port import (
@@ -53,6 +53,7 @@ from .founder_budget import founder_budget, path_is_feasible_alone
 # imports its own copies of what it needs straight from .protocol.
 from .protocol import civ_of_save, goal_of_save
 from sim.constants import declare
+from sim.seats.api import SetFounderLife
 from sim.game_version import GAME_VERSION
 
 
@@ -379,19 +380,19 @@ def _print_validate_ok(errs):
 def _data_source_errors(nodes):
     """Malformed production entries, and branch-merge collisions or data-loss events."""
     return (["data/production: " + problem for problem in validate_production.production_problems(nodes)]
-            + ["data/branches: " + problem for problem in tree_merge.merge_problems(tree_merge.build_tree())])
+            + ["data/branches: " + problem for problem in merge_problems(build_tree())])
 
 
 def _dead_end_lines(nodes, production):
     """Complaints/533: produced goods nothing consumes (findings, not errors)."""
     from sim.engine import validate_dead_ends
-    from sim.engine.need_data import load_needs
-    from sim.engine.catalog import _trade_fields, load_trade_registry
+    from sim.content.api import load_needs
+    from sim.content.api import load_trade_registry, trade_fields
     from sim.json_files import read_json
     lives = read_json(os.path.join(ROOT, "data", "world", "service_lives.json")).get("years", {})
     tree_materials = {material for node in nodes.values() for material in (node.get("mat") or {})}
     return validate_dead_ends.report_lines(production, load_needs(ROOT, MODDIR)["goods"], lives,
-                                           {trade: _trade_fields(record) for trade, record in load_trade_registry(ROOT, production).items()},
+                                           {trade: trade_fields(record) for trade, record in load_trade_registry(ROOT, production).items()},
                                            validate_dead_ends.state_goods(), tree_materials)
 
 
@@ -420,14 +421,14 @@ def cmd_validate(args):
     errs += _data_source_errors(nodes)
     errs += cli_mods.mod_findings()
     errs += validate_map.map_problems()
-    errs += category_traits.check_category_traits(nodes.values())
+    errs += check_category_traits(nodes.values(), MODDIR)
     errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
     from sim.engine.ui_port import civ_start_check
     errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
     errs += [problem for civ_id, civ in civ_start_check.load_civilisations(ROOT).items()
              for problem in units.check_civ_units(units.registry(), civ_id, civ)]
-    from sim.engine import validate_event_causes
-    errs += validate_event_causes.check_event_causes(civ_start_check.load_civilisations(ROOT), set(nodes))
+    from sim.hazards.api import cause_check
+    errs += cause_check(civ_start_check.load_civilisations(ROOT), set(nodes))
     errs += validate_running_gates.check_running_gates(nodes)
     from sim.engine import validate_note_quality
     print("\n".join(validate_note_quality.report_lines(nodes)))
@@ -487,7 +488,7 @@ def _validate_civilisation_starts(nodes, production):
 def _validate_ore_reach(civilisations, production):
     """Complaints/516: metals a civilisation demands that no deposit within its reach supplies."""
     from sim.engine import validate_ore_reach
-    from sim.engine.need_data import load_needs
+    from sim.content.api import load_needs
     errors, warnings = validate_ore_reach.ore_reach_findings(
         civilisations, production, load_needs(ROOT, MODDIR)["goods"])
     for message in warnings:
@@ -499,9 +500,9 @@ def _validate_basket_supply(civ_start_check, civilisations, production):
     """Complaints/391: goods households buy that no technique held at the start or partner supplies."""
     import json
     from sim.engine import civ_basket_check
-    from sim.engine.need_data import load_needs
+    from sim.content.api import load_needs
     from sim.engine.ui_port import foreign_economy_document
-    economies = foreign_economy_document()["economies"]
+    economies = foreign_economy_document(MODDIR)["economies"]
     errors, warnings = civ_basket_check.basket_supply_findings(
         civilisations, production, load_needs(ROOT, MODDIR)["goods"], economies)
     for message in warnings:
@@ -705,7 +706,8 @@ def _summarise_goal_closure(results, quantile_of):
 def _summarise_failure_modes(results):
     causes = defaultdict(int)
     for run in results:
-        if run.dead_reason: causes[run.dead_reason.split(":")[0]] += 1
+        dead_reason = run.view("founder")()["dead_reason"]
+        if dead_reason: causes[dead_reason.split(":")[0]] += 1
         elif not run.goal_year: causes["ran out of horizon"] += 1
     if causes:
         print("failure modes       :")
@@ -798,7 +800,7 @@ def _summarise_year_reached(results, finished, success_count, run_count):
 def _summarise_shortages(results, run_count):
     shortage_counter = collections.Counter()
     for run in results:
-        shortage_counter.update(run.shortages)
+        shortage_counter.update(run.view("material_shortages")())
     if shortage_counter:
         # RELABELLED, NOT RECOMPUTED: this is a SUM across every run, not a
         # median of anything, so the label must say so. A true per-material
@@ -812,7 +814,7 @@ def _summarise_shortages(results, run_count):
 
 
 def _summarise_misc_stats(results):
-    forest_hectares = sorted(run.forest_ha for run in results)
+    forest_hectares = sorted(run.view("forest_hectares")() for run in results)
     print("coppice woodland owned: median %.0f hectares" % forest_hectares[len(forest_hectares) // 2])
     reputations = sorted(run.reputation for run in results)
     print("final reputation    : median %.0f/100" % reputations[len(reputations) // 2])
@@ -1198,7 +1200,7 @@ def _run_sweep_point(nodes, order, bounties, goal, args, cfg, life):
         sim = Sim(nodes, order, random.Random(args.seed + i), events=True, cfg=cfg,
                   bounty_set=bounties)
         if life is not None:
-            sim.life_left = float(life)
+            sim.send(SetFounderLife(float(life)))
         res.append(sim.run(goal, args.horizon))
     return res
 
@@ -1207,7 +1209,7 @@ def _sweep_point_failure_causes(res):
     failure_causes = defaultdict(int)
     for run in res:
         if not run.goal_year:
-            failure_causes[(run.dead_reason or "ran out of horizon").split(":")[0]] += 1
+            failure_causes[(run.view("founder")()["dead_reason"] or "ran out of horizon").split(":")[0]] += 1
     return failure_causes
 
 

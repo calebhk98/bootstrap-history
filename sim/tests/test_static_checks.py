@@ -7,7 +7,7 @@ import re
 from .harness import check
 
 # CHECK: Player-facing tech node notes contain no Complaints/ or file paths.
-from sim.engine.tree_source import load_base_tree as _load_base_tree
+from sim.content.tree_source import load_base_tree as _load_base_tree
 _tech_data = _load_base_tree()
 
 _bad_nodes = []

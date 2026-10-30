@@ -5,7 +5,7 @@ import json
 import os
 import unittest
 
-from sim.engine.catalog import load_production_catalog
+from sim.content.catalog import load_production_catalog
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _PRODUCTION = load_production_catalog(_ROOT)

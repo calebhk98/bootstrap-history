@@ -1,55 +1,60 @@
-"""A screen's question about a material throttle does not change the game: `_peek_throttle` hands back the answer and
-puts back the stock, the draws, the shortage count and the memos the question touched. Called on a stub that holds what it
-reads; the same question asked of a running game is in test_peek_resource_throttle_scenario."""
-import collections
-from types import SimpleNamespace
+"""A screen's question about the material throttle does not change the game, and the reading a step takes is the one the
+question gave: `throttle_quote` answers from the books without banking, noting or counting anything; `apply_throttle` banks
+what the year leaves, notes the market's draw, counts the shortage once and replays the reading while nothing has changed.
+Called on the materials module over plain views; the same question asked of a running game is in
+test_peek_resource_throttle_scenario."""
+QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.economy_electricity import ElectricityMixin
+from sim.ledger.api import BankStock, rules as ledger_rules
+from sim.markets.api import NoteDraw, ResetDraws
+from sim.materials.api import ApplyThrottle
+from sim.tests import materials_stand_in, module_harness
 
-QUICK_TOPIC = True
-
-
-def asked_game():
-    stock = {"iron": 5.0}
-    flows = {"draws": 1}
-    holdings = SimpleNamespace(throttle=1.0, binding=None, shortages=collections.Counter({"coal": 2}),
-                               _material_stock_opening={"iron": 5.0})
-    household = SimpleNamespace(_stock_throttle_sig=("sig",), _stock_throttle_cache=(1.0, None), _material_demand_cache={"a": 1})
-    market = SimpleNamespace(snapshot_flows=lambda: dict(flows), restore_flows=lambda saved: flows.update(saved) or
-                             [flows.pop(key) for key in list(flows) if key not in saved])
-    return SimpleNamespace(state=SimpleNamespace(holdings=holdings), household=household, goods_market=market,
-                           _material_stock=lambda: stock), stock, flows
+FURNACE = {"mat": {"iron_ore_kg": 10000.0}, "build_yrs": 1, "up": 0, "pre": []}
 
 
-def throttling(game, stock, flows):
-    """What a real throttle call does to the state it works on."""
-    def compute():
-        stock["iron"] = 0.0
-        flows["draws"] = 9
-        game.state.holdings.throttle, game.state.holdings.binding = 0.4, "iron"
-        game.state.holdings.shortages["iron"] += 1
-        game.state.holdings._material_stock_opening["iron"] = 0.0
-        game.household._stock_throttle_sig = ("changed",)
-        game.household._stock_throttle_cache = (0.4, "iron")
-        game.household._material_demand_cache = None
-        return 0.4
-    return compute
+def furnace_module():
+    """A furnace under construction wants 10 tonnes a year of iron; the seat holds 5 and the market offers 2."""
+    stock = ledger_rules.StockLedger({"iron": 5.0})
+
+    def bank(command):
+        for commodity, tonnes in command.tonnes:
+            stock[commodity] = tonnes
+        stock.writes += 1
+
+    module = materials_stand_in.build(
+        tree_nodes={"furnace": FURNACE}, projects_record=materials_stand_in.projects(active={"furnace": {}}),
+        active_projects_version=1, techniques_version=1, held_goods=stock, goods_stock_opening={"iron": 5.0},
+        answers={BankStock: bank})
+    module.market_tonnes = lambda commodity: 2.0
+    return module, stock
 
 
-game, stock, flows = asked_game()
-factor, binding = ElectricityMixin._peek_throttle(game, throttling(game, stock, flows))
-check("the peek answers what the throttle is and which pool binds it", (factor, binding) == (0.4, "iron"), (factor, binding))
-check("the stock the question banked is put back", stock == {"iron": 5.0}, stock)
-check("the draws it noted are put back", flows == {"draws": 1}, flows)
-check("the throttle and binding the holdings carried are put back",
-      (game.state.holdings.throttle, game.state.holdings.binding) == (1.0, None),
-      (game.state.holdings.throttle, game.state.holdings.binding))
-check("the shortage it counted is put back", game.state.holdings.shortages == collections.Counter({"coal": 2}),
-      game.state.holdings.shortages)
-check("the opening stock it recorded is put back", game.state.holdings._material_stock_opening == {"iron": 5.0},
-      game.state.holdings._material_stock_opening)
-check("the memos of the last real throttle are put back",
-      (game.household._stock_throttle_sig, game.household._stock_throttle_cache, game.household._material_demand_cache)
-      == (("sig",), (1.0, None), {"a": 1}), vars(game.household))
+module, stock = furnace_module()
+pace, binding = module.throttle_quote()
+check("the quote answers what the pace is and which pool binds it", (pace, binding) == (0.7, "iron"), (pace, binding))
+check("...and the same for the project that draws the pool", module.throttle_quote("furnace") == (0.7, "iron"))
+check("it sent nothing", module_harness.sent(module) == [], module_harness.sent(module))
+check("the stock is as it was", dict(stock) == {"iron": 5.0} and stock.writes == 0, dict(stock))
+check("the pace, the binding and the shortage count are as they were",
+      (module.seat.throttle, module.seat.binding, dict(module.seat.shortages)) == (1.0, None, {}))
+
+taken = module.apply_throttle(ApplyThrottle())
+check("the reading a step takes is the one the question gave", taken == pace, taken)
+sent = module_harness.sent(module)
+check("it banks what the year leaves, resets the draws and notes the market's",
+      [type(command) for command in sent] == [BankStock, ResetDraws, NoteDraw]
+      and sent[0].tonnes == (("iron", 0.0),) and (sent[2].commodity, sent[2].tonnes) == ("iron", 2.0), sent)
+check("it counts the shortage once and keeps the pace and the binding",
+      (module.seat.throttle, module.seat.binding, dict(module.seat.shortages)) == (0.7, "iron", {"iron": 1}))
+module.apply_throttle(ApplyThrottle())
+check("a repeat with nothing changed replays the reading: nothing more is sent or counted",
+      len(module_harness.sent(module)) == 3 and dict(module.seat.shortages) == {"iron": 1})
+check("the question after the step gets the same answer", module.throttle_quote() == (0.7, "iron"))
+stock.writes += 1       # a trade changed the books
+module.apply_throttle(ApplyThrottle())
+check("a change to the books is read again", dict(module.seat.shortages) == {"iron": 2}, dict(module.seat.shortages))
+check("a project's pace is the reading's when it draws the pool that binds",
+      module.apply_throttle(ApplyThrottle("furnace")) == 0.7)

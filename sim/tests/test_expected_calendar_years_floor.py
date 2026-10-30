@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.completion_schedule import expected_years_to_succeed
+from sim.projects.completion_schedule import expected_years_to_succeed
 
 FLOOR = 8.0
 

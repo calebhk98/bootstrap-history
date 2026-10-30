@@ -8,8 +8,9 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.agents_port_revenue import RevenueView
-from sim.engine.economy_port_year import AgentEconomy
+from sim.actors.world_revenue import RevenueView
+from sim.tests.world_stand_in import fake_needs
+from sim.markets.port_year import AgentEconomy
 
 GOOD = "cloth_kg"
 UNITS_BY_TILE = {"a": {GOOD: 4000.0, "wheat_kg": 9000.0}, "b": {GOOD: 1000.0}, "far": {GOOD: 7000.0}}
@@ -25,7 +26,7 @@ class OutputView(RevenueView):
     """The revenue questions over a stand-in game that holds tiles a and b and answers tonnes by tile."""
 
     def __init__(self, by_tile):
-        self._sim = SimpleNamespace(economy=SimpleNamespace(agent_output_tonnes_by_tile=lambda: by_tile))
+        self.needs = fake_needs(agent_output_tonnes_by_tile=lambda: by_tile)
 
     def held_tiles(self):
         return ["a", "b"]

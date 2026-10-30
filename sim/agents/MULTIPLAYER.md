@@ -2,8 +2,8 @@
 
 Every party the founder deals with is an actor in `ActorRegistry`. That includes other players, the
 home state, foreign states, competitor firms, traders and the bodies of people (strata). The engine
-sees only the registry, through `api.py` and its adapters (`sim/engine/agents_port*.py`,
-`sim/engine/society_actors.py`). One actor or fifty, nothing outside this package changes.
+sees only the registry, through `api.py` and its adapters (`sim/actors/world*.py`,
+`sim/actors/module.py`). One actor or fifty, nothing outside this package changes.
 
 Research behind the choices: `RESEARCH.md`.
 
@@ -14,7 +14,7 @@ holds one `CountryProfile` per country. Both are seeded once, at the first actor
 with the game. Each save therefore keeps the world it began with: a Rome start and a Han start get
 different casts, and nothing about either is in code.
 
-Where the seed comes from (engine adapter `agents_port_cast.py`):
+Where the seed comes from (the actors module, `sim/actors/cast.py`):
 
 1. The civilisation the game was started with. It becomes `home_country` and gets the home
    government.
@@ -26,17 +26,18 @@ Where the seed comes from (engine adapter `agents_port_cast.py`):
 ## Countries and their trees
 
 Every record carries `country` (None means the home country). The registry hands an actor of another
-country a scoped world (`register_world_scope`). That world answers country questions from the
+country a scoped world (the actors module's `actor_world_scope` point). That world answers country questions from the
 profile: population, capacity, the baseline tree (the country's `starting_techs`) and its own
 government. Shared questions such as the year, the market and randomness pass straight through to
 the shared world. A firm in a country therefore starts from that country's techniques, as does a
 trader or a player who belongs to it.
 
-## Kinds and spawners are registered, never enumerated
+## Kinds and spawners are provided, never enumerated
 
-- `register_actor_kind(kind, cls)` lets a mod add a kind of actor.
-- `register_spawner(name, fn)` adds a rule that founds actors after the year's turns. Firm entry,
-  interest groups and trader entry are spawners.
+- The actors module's `actor_kinds` point lets a mod add a kind of actor (`api.actor_kind(kind, cls)`).
+- Its `actor_spawners` point adds a rule that founds actors after the year's turns (`api.spawner(name, fn)`). Firm entry,
+  interest groups and trader entry are spawners. What the game ships is listed in `shipped.py`.
+- `actor_policies` and `player_commands` add policies and the orders a player can give.
 - No code names a civilisation, a node or a particular actor.
 
 ## Who decides

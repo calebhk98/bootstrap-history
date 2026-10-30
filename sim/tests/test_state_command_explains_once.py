@@ -8,6 +8,7 @@ import unittest
 from unittest import mock
 
 from sim.ui.proto import dispatch_inspection
+from sim.tests.ui_stand_in import Game
 
 SHUT = "you_know_how_to_run_but_have_not_opened"
 SEEN = "shut_concerns_pointer_seen"
@@ -19,7 +20,7 @@ def ask(game, reply, **command):
 
 
 def stand_in_game():
-    return SimpleNamespace(year=100, state=SimpleNamespace(seat_progress=SimpleNamespace(_said_explanations=None)))
+    return Game(year=100, state=Game(acting_record=Game(seat_progress=Game(_said_explanations=None))))
 
 
 class StateExplainsShutConcernsOnce(unittest.TestCase):

@@ -8,7 +8,6 @@ from typing import Any, Dict, List
 
 from . import demand_answer, ledger
 from .edges import EDGE_OFFICIALS
-from .registry import register_spawner
 
 
 def settle_year(actor: Any, world: Any) -> Dict[str, float]:
@@ -40,6 +39,3 @@ def settle_all(registry: Any, world: Any) -> List[str]:
 			settle_year(actor, registry.world_for(actor, world))
 			settled.append(actor_id)
 	return settled
-
-
-register_spawner("demand_year", settle_all)

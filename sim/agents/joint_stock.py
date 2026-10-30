@@ -9,7 +9,6 @@ import math
 from typing import Any, Dict, Iterable, List
 
 from . import ledger
-from .registry import register_spawner
 from .tuning import VALUE_HORIZON_YEARS
 from .tuning_patent import DIVIDEND_PAYOUT_SHARE
 
@@ -85,10 +84,9 @@ def issuers_among(registry: Any, world: Any) -> List[Any]:
 		issuer = registry.actors[issuer_id]
 		if issuer.record.exited_year is None and issuer.record.issued > 0.0:
 			found.append((issuer_id, issuer, issuer.record.last_margin))
-	seat_margin = getattr(world, "seat_margin", None)
-	for seat_id, party in sorted(getattr(world, "seat_parties", lambda: {})().items()):
-		if seat_margin is not None and party.record.issued > 0.0:
-			found.append((seat_id, party, seat_margin(seat_id)))
+	for seat_id, party in sorted(world.seat_parties().items()):
+		if party.record.issued > 0.0:
+			found.append((seat_id, party, world.seat_margin(seat_id)))
 	return found
 
 
@@ -100,10 +98,9 @@ def issuers_among(registry: Any, world: Any) -> List[Any]:
 		issuer = registry.actors[issuer_id]
 		if issuer.record.exited_year is None and issuer.record.issued > 0.0:
 			found.append((issuer_id, issuer, issuer.record.last_margin))
-	seat_margin = getattr(world, "seat_margin", None)
-	for seat_id, party in sorted(getattr(world, "seat_parties", lambda: {})().items()):
-		if seat_margin is not None and party.record.issued > 0.0:
-			found.append((seat_id, party, seat_margin(seat_id)))
+	for seat_id, party in sorted(world.seat_parties().items()):
+		if party.record.issued > 0.0:
+			found.append((seat_id, party, world.seat_margin(seat_id)))
 	return found
 
 
@@ -112,7 +109,7 @@ def pay_dividends(registry: Any, world: Any) -> float:
 	by share, never more than its purse; returns the total paid."""
 	paid = 0.0
 	holders = dict(registry.actors)
-	holders.update(getattr(world, "seat_parties", lambda: {})())
+	holders.update(world.seat_parties())
 	for issuer_id, issuer, margin in issuers_among(registry, world):
 		pool = min(DIVIDEND_PAYOUT_SHARE * max(0.0, margin), max(0.0, issuer.money))
 		if pool <= 0.0:
@@ -129,6 +126,3 @@ def dividends(registry: Any, world: Any) -> List[str]:
 	"""Yearly: pay dividends. Founds no actors."""
 	pay_dividends(registry, world)
 	return []
-
-
-register_spawner("dividends", dividends)

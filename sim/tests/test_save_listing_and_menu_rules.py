@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from unittest import mock
 
+from sim.agents.api import Purses
 from sim.engine import settings
 from sim.engine.data import resolve_goal, selectable_goals
 from sim.engine.saveload import goal_of_blob
@@ -17,9 +18,12 @@ from sim.ui.proto import economy as economy_commands
 from sim.ui.proto import util as proto_util
 
 
-def save_blob(year=100, capital=250.0, alive=True, goal="goal_node"):
-    seat = {"goal": goal, "household": {"capital": capital}, "founder": {"founder_alive": alive}}
-    return {"_civ": "rome_100ad", "acting_seat": "a", "seats": {"a": seat}, "scenario": {"year": year}}
+def save_blob(year=100, capital=250.0, alive=True, goal="goal_node", goal_year=None):
+    seat = {"household": {}, "modules": {"seats": {"founder_alive": alive, "goal": goal, "goal_year": goal_year}}}
+    purses = Purses()
+    purses.set_net("a", capital, "opening")   # the seat's purse is its account in the actors' book
+    return {"_civ": "rome_100ad", "acting_seat": "a", "seats": {"a": seat},
+            "modules": {"scenario": {"year": year}, "actors": {"purses": purses.to_canon_dict()}}}
 
 
 class ListSaves(unittest.TestCase):
@@ -34,10 +38,30 @@ class ListSaves(unittest.TestCase):
         return {row["filename"]: row for row in settings.list_saves(self.directory)}
 
     def test_a_row_carries_the_year_capital_founder_status_and_goal_of_its_save(self):
-        self.write("g.json", json.dumps(save_blob(year=137, capital=88.5, alive=False, goal="transistor")))
+        self.write("g.json", json.dumps(save_blob(year=137, capital=88.5, alive=False, goal="transistor", goal_year=131)))
         row = self.rows()["g.json"]
-        self.assertEqual((row["readable"], row["year"], row["capital"], row["founder_alive"], row["goal"]),
-                         (True, 137, 88.5, False, "transistor"))
+        self.assertEqual((row["readable"], row["year"], row["capital"], row["founder_alive"], row["goal"], row["goal_year"]),
+                         (True, 137, 88.5, False, "transistor", 131))
+
+    def test_a_save_with_no_book_has_no_capital_to_show(self):
+        blob = save_blob()
+        del blob["modules"]["actors"]
+        self.write("g.json", json.dumps(blob))
+        self.assertIsNone(self.rows()["g.json"]["capital"])
+
+    def test_a_row_lists_the_nodes_its_save_holds_from_the_knowledge_modules_slot(self):
+        blob = save_blob()
+        blob["seats"]["a"]["modules"]["knowledge"] = {"done": {"__set__": ["fire", "wheel"]}}
+        self.write("g.json", json.dumps(blob))
+        self.assertEqual(self.rows()["g.json"]["done"], ["fire", "wheel"])
+
+    def test_a_row_carries_the_standing_and_the_people_from_the_polity_and_workforce_slots(self):
+        blob = save_blob()
+        blob["seats"]["a"]["modules"]["polity"] = {"reputation": 7.5}
+        blob["seats"]["a"]["modules"]["workforce"] = {"scholars": 3.0, "artisans": 4.0}
+        self.write("g.json", json.dumps(blob))
+        row = self.rows()["g.json"]
+        self.assertEqual((row["reputation"], row["scholars"], row["artisans"]), (7.5, 3.0, 4.0))
 
     def test_an_unparseable_file_is_listed_as_unreadable(self):
         self.write("broken.json", "{not json")

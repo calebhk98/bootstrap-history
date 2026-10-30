@@ -2,7 +2,7 @@
 lowers the haul between them, the setup carries the ways, the live economy rebuilds its carriage table when
 a way is finished, and the spin-up cache key sees them.
 
-sim/economy/tile_costs.py, sim/economy/setup.py, sim/economy/economy.py, sim/engine/economy_port_key.py.
+sim/economy/tile_costs.py, sim/economy/setup.py, sim/economy/economy.py, sim/markets/port_key.py.
 """
 QUICK_TOPIC = True
 
@@ -15,7 +15,7 @@ from sim.economy import economy as economy_module
 from sim.economy.economy import Economy
 from sim.economy import tile_costs
 from sim.economy.setup import EconomySetup
-from sim.engine import economy_port_key
+from sim.markets import port_key
 from sim.geography import api as geography_api
 from sim.tests import economy_fixture
 from sim.tests.test_economy_tile_costs import grid
@@ -90,7 +90,7 @@ class SetupAndEconomyTests(unittest.TestCase):
     def test_the_spin_up_key_sees_the_ways(self):
         self.assertIn("improvements", {field.name for field in dataclasses.fields(EconomySetup)})
         built = dataclasses.replace(self.setup, improvements=self.edge)
-        self.assertNotEqual(economy_port_key.setup_digest(self.setup), economy_port_key.setup_digest(built))
+        self.assertNotEqual(port_key.setup_digest(self.setup), port_key.setup_digest(built))
 
 
 if __name__ == "__main__":

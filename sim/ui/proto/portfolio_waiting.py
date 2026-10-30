@@ -20,17 +20,17 @@ def waiting_to_start(sim, nodes):
     """One group per blocker kind among visible, unbuilt, idle nodes whose prerequisites are met."""
     by_kind = {}
     for node_id in nodes:
-        if node_id in sim.done or node_id in sim.active or any(pre not in sim.done for pre in nodes[node_id]["pre"]):
+        if node_id in sim.view("techniques_held")() or node_id in sim.view("active_projects")() or any(pre not in sim.view("techniques_held")() for pre in nodes[node_id]["pre"]):
             continue
         if not ui_port.visible_to_player(sim, node_id):
             continue
-        blockers = sim.start_blockers(node_id)
+        blockers = sim.view("start_blockers")(node_id)
         if not blockers or any(blocker["kind"] in _NOT_WAITING for blocker in blockers):
             continue
         by_kind.setdefault(blockers[0]["kind"], []).append(node_id)
     groups = []
     for kind in WAITING_KIND_ORDER + tuple(sorted(set(by_kind) - set(WAITING_KIND_ORDER))):
-        members = sorted(by_kind.get(kind, ()), key=sim.project_cost)
+        members = sorted(by_kind.get(kind, ()), key=sim.view("project_cost"))
         if members:
             groups.append({"kind": kind, "count": len(members), "projects": members[:SHOWN_PER_GROUP],
                            "what_it_means": _MEANING.get(kind) or BLOCKER_MEANING.get(kind, "")})

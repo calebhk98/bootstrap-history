@@ -5,12 +5,15 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine.blockers import BlockersMixin
-from sim.engine.completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
-from sim.engine.economy_electricity import ElectricityMixin
-from sim.engine.economy_freight import FreightMixin
-from sim.engine.fog import FogMixin
+from sim.tests import projects_host
+from sim.projects.completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
+from sim.tests import materials_stand_in, resources_stand_in
+from sim.knowledge.api import closure
+from sim.seats.module import Seats
+from sim.seats.state import SeatsSeat
+from sim.tests import module_harness
 from sim.ui.proto.economy import _power_tiers
+from sim.tests.ui_stand_in import Game
 
 THRESHOLD, MINIMUM, SCALE = 5, 2.0, 90.0
 
@@ -64,15 +67,11 @@ class PowerCapabilityReadouts(unittest.TestCase):
         "power_line": {"mechanics": {"power_generation": {"tier": "cap_power_grid", "role": "transmission"}}},
     }
 
-    def _generation_host(self, done):
-        nodes = self.NODES
-        return SimpleNamespace(
-            state=SimpleNamespace(projects=SimpleNamespace(done=set(done))), nodes=nodes,
-            nodes_with_mechanic=lambda mechanic: [node_id for node_id, node in nodes.items() if mechanic in node["mechanics"]],
-            mechanic=lambda node_id, mechanic: nodes[node_id]["mechanics"][mechanic])
-
     def _installed(self, done):
-        return ElectricityMixin.installed_generation_kw_by_tier(self._generation_host(done))
+        mechanic = {name: {node_id: node["mechanics"][name] for node_id, node in self.NODES.items() if name in node["mechanics"]}
+                    for name in ("power_tier", "power_generation")}
+        module = materials_stand_in.build(projects_record=materials_stand_in.projects(done=done), mechanic=mechanic)
+        return module.installed_generation_kw_by_tier()
 
     def test_a_grid_capability_with_no_station_has_no_installed_generation(self):
         self.assertEqual(self._installed({"cap_power_grid"}), {})
@@ -84,7 +83,7 @@ class PowerCapabilityReadouts(unittest.TestCase):
         self.assertEqual(self._installed({"power_line"}), {})
 
     def _tiers(self, done, installed):
-        host = SimpleNamespace(installed_generation_kw_by_tier=lambda: installed, is_visible=lambda node_id: True,
+        host = Game(installed_generation_kw_by_tier=lambda: installed, is_visible=lambda node_id: True,
                                has=lambda node_id: node_id in done)
         tiers, highest = _power_tiers(host, self.NODES)
         return {tier["id"]: tier for tier in tiers}, highest
@@ -102,7 +101,7 @@ class PowerCapabilityReadouts(unittest.TestCase):
         self.assertFalse(tiers["cap_power_steam"]["no_generation_installed"])
 
     def test_a_tier_not_visible_is_not_named(self):
-        host = SimpleNamespace(installed_generation_kw_by_tier=dict, is_visible=lambda node_id: node_id == "cap_power_water",
+        host = Game(installed_generation_kw_by_tier=dict, is_visible=lambda node_id: node_id == "cap_power_water",
                                has=lambda node_id: False)
         tiers, _highest = _power_tiers(host, self.NODES)
         self.assertEqual([tier["id"] for tier in tiers], ["cap_power_water"])
@@ -110,20 +109,9 @@ class PowerCapabilityReadouts(unittest.TestCase):
     def _gate_host(self, done):
         nodes = self.NODES
 
-        class Host(BlockersMixin):
-            state = SimpleNamespace(projects=SimpleNamespace(done=set(done)))
-            nodes = None
-
-            def _visible_to_player(self, node_id):
-                return True
-
-            def missing_prereq_message(self, missing):
-                return "needs " + ", ".join(missing)
-
-            def generation_capacity_kw(self):
-                return 120.0
-        Host.nodes = nodes
-        return Host()
+        return projects_host.build(
+            tree=lambda node_id: nodes.get(node_id), techniques_held=set(done), visible_to_player=lambda node_id: True,
+            prerequisite_message=lambda missing, memo: "needs " + ", ".join(missing), generation=120.0)
 
     def test_a_missing_power_capability_is_a_power_gate_that_installed_generation_does_not_satisfy(self):
         entries = self._gate_host({"en_alternator"})._missing_prereq_entries(
@@ -145,9 +133,10 @@ class MineAlreadyBeingSunk(unittest.TestCase):
     """Complaints/235: a mine already being sunk is subtracted from the shortfall."""
 
     def _plan(self, tranches, shortfall=100.0):
-        host = SimpleNamespace(MINE_OPEX_MATERIALS=("coal", "lead"), mine_capacity={}, civ={},
-                               state=SimpleNamespace(holdings=SimpleNamespace(mine_tranches=tranches)))
-        return FreightMixin.shortage_remedy_plan(host, "coal", shortfall)
+        module = resources_stand_in.build()
+        module.works_materials = lambda: ("coal", "lead")
+        module.seat.mine_tranches = tranches
+        return module.shortage_remedy_plan("coal", shortfall)
 
     def test_with_nothing_sunk_the_plan_proposes_the_full_mine(self):
         self.assertIn("buy mine coal 100", self._plan([])["commands"])
@@ -171,19 +160,21 @@ class MineAlreadyBeingSunk(unittest.TestCase):
 class OnTheRoadToTheGoal(unittest.TestCase):
     """Complaints/264: a fog-safe yes or no for what lies on the road to the goal."""
 
-    def _host(self):
+    def _seats(self):
         nodes = {"goal": {"pre": ["middle"], "req_any": []}, "middle": {"pre": ["root"], "req_any": []},
                  "root": {"pre": [], "req_any": []}, "side": {"pre": ["root"], "req_any": []}}
-        return SimpleNamespace(nodes=nodes, state=SimpleNamespace(_goal="goal"))
+        module = module_harness.build(Seats, seat=SeatsSeat(), views={"tree_closure": lambda goal: closure(nodes, goal)})
+        module.goal = lambda: {"node": "goal"}
+        return module
 
     def test_a_node_the_goal_needs_is_on_the_road_and_one_it_does_not_is_off_it(self):
-        host = self._host()
-        self.assertTrue(FogMixin.on_road_to_goal(host, "middle"))
-        self.assertTrue(FogMixin.on_road_to_goal(host, "root"))
-        self.assertFalse(FogMixin.on_road_to_goal(host, "side"))
+        module = self._seats()
+        self.assertTrue(module.on_road_to_goal("middle"))
+        self.assertTrue(module.on_road_to_goal("root"))
+        self.assertFalse(module.on_road_to_goal("side"))
 
     def test_the_answer_is_a_bool_with_no_distance(self):
-        self.assertIsInstance(FogMixin.on_road_to_goal(self._host(), "middle"), bool)
+        self.assertIsInstance(self._seats().on_road_to_goal("middle"), bool)
 
 
 if __name__ == "__main__":

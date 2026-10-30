@@ -1,6 +1,6 @@
 """Age-cohort population dynamics: how many people, of what age, and why.
 
-WHAT THIS REPLACES. `Sim._demographic_recovery` (sim/engine/core.py) tracks
+WHAT THIS REPLACES. `Sim._demographic_recovery` (removed) tracked
 population as one scalar, `pop_scale`, plus a `pop_deficit` that a hazard adds
 to and that decays back toward zero on a fixed exponential clock (tau derived
 from how long England took to regain its pre-Black-Death population). That is
@@ -47,7 +47,7 @@ dressed up as precision.
 
 WHAT THIS MODULE DOES NOT DO. It does not know where food comes from -
 `sim/world/agriculture.py` hands `step()` a number of calories available per
-day (see `sim/engine/core.py`'s `_demographic_recovery` for the wiring), and
+day (see `sim/demography/recovery.py` for the wiring), and
 this module treats that as an exogenous input, the same way it currently
 treats immigration and emigration. It also
 does not track sex explicitly (see FEMALE_SHARE_OF_WORKING_AGE_POPULATION's
@@ -495,7 +495,7 @@ NUTRITION_YEAR_TO_YEAR_NOISE_STD = declare(
         "also damp the INPUT side of this with grain storage, carrying a "
         "good year's surplus into a bad year; that storage now exists one "
         "layer up, at the point food actually reaches this module (sim/"
-        "engine/core.py's `Sim.farm_stock_kg`). Between the two changes, "
+        "demography's seat farm holding). Between the two changes, "
         "less of the original problem remains, but the mortality floor is "
         "real and sourced (see _excess_mortality_multiplier), not a gap "
         "left for convenience, so turning noise on here without a real "
@@ -1074,7 +1074,7 @@ class Population(object):
         start_total = self.total
         ratio = self.nutrition_ratio(food_available_calories_per_day, jitter=jitter)
         # Excess baseline mortality of crowded towns, as a share of the baseline rate, supplied by a town provider
-        # (sim/labour/town_providers.py); zero when no provider gives one.
+        # (the workforce module's `town_mortality_premium` point); zero when no provider gives one.
         urban_premium = max(0.0, urban_mortality_premium)
 
         deaths_children = self.children * min(

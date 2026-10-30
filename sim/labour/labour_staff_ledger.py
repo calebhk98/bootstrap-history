@@ -6,11 +6,11 @@ against the household actor's `employees`, so a firm or state can use them.
 """
 import math
 
-from sim.refusal import LogLine
 from sim.world import demography
 
 from . import trade_data
 from .staff_events import staff_lost_line
+from sim.reporting.api import RecordEvent
 
 
 class StaffLedgerMixin:
@@ -29,7 +29,7 @@ class StaffLedgerMixin:
         world = self._world
         stops = sorted(world.concerns_to_close_for_staffing())
         # plain line: staff_lost_line builds the LogLine and its kind
-        world.state.household.log.append((world.state.scenario.year, staff_lost_line(
+        self._world.send(RecordEvent.from_line(staff_lost_line(
             cause, counts, stops, self.yearly_value_of(stops))))
 
     def yearly_value_of(self, node_ids):
@@ -45,7 +45,7 @@ class StaffLedgerMixin:
     def trades_drawn_on(self):
         """Specialist trades some active project or open concern needs, with why."""
         drawn = {}
-        projects = self._world.state.projects
+        projects = self._world.projects
         for node_id in sorted(projects.active):
             node = self._world.nodes.get(node_id)
             if not node:
@@ -70,13 +70,13 @@ class StaffLedgerMixin:
                 continue
             rows.append({"trade": trade, "count": round(count, 1),
                          "wage_bill_per_year": round(count * self.labour_market.quote_annual(trade), 1),
-                         "taught_by_you": trade in self._world.state.household.trades_created})
+                         "taught_by_you": trade in self._world.workforce.trades_created})
         return rows
 
     def sole_supervisors(self):
         """Open concerns whose specialist foreman trade has exactly one person."""
         rows = []
-        for node_id in sorted(self._world.state.projects.operating):
+        for node_id in sorted(self._world.projects.operating):
             if node_id not in self._world.nodes:
                 continue
             trade, _fte = self._world.venture_foreman(node_id)
@@ -88,14 +88,14 @@ class StaffLedgerMixin:
 
     def workforce_report(self):
         """Where the payroll is fragile: single-person dependencies, expected yearly losses, reserve and training."""
-        household = self._world.state.household
-        policy = self._world.state.founder.policy
+        workforce = self._world.workforce
+        policy = self._world.policy
         return {
             "depends_on_one_person": self.sole_supervisors(),
             "expected_losses_per_year": round(self.employed_total() * demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE, 2),
-            "reserve": ({"craftsmen": household.reserve_craftsmen, "scholars": household.reserve_scholars}
+            "reserve": ({"craftsmen": workforce.reserve_craftsmen, "scholars": workforce.reserve_scholars}
                         if policy.get("reserve_staff", False) else None),
-            "in_training": len(household.training),
+            "in_training": len(workforce.training),
         }
 
     def hire_to_cover(self, trade, short, label, partial=False):
@@ -110,20 +110,17 @@ class StaffLedgerMixin:
             short = min(short, max(0, int(self.household_room() + 1e-9)))
             if short <= 0:
                 return 0
-        household = self._world.state.household
         before = self.employed(trade)
         hired, _why = self.hire(trade, short)
         found = int(round(self.employed(trade) - before))
         if not hired or found <= 0:
             return 0
-        household.log.append((self._world.state.scenario.year, LogLine(
-            "policy_hire", "%s: you hire %d %s%s to keep your concerns supervised"
-            % (label, found, trade, "" if found == 1 else "s"), policy=label, trade=trade, count=found)))
+        self._world.send(RecordEvent.of("policy_hire", "%s: you hire %d %s%s to keep your concerns supervised"
+            % (label, found, trade, "" if found == 1 else "s"), policy=label, trade=trade, count=found))
         return found
 
     def replace_lost_foremen(self):
         """auto_replace_foreman: hire the specialists open concerns need and lack."""
-        household = self._world.state.household
         for trade, used in sorted(self._world.venture_foremen_used().items()):
             short = math.ceil(used - self.employed(trade) - 0.01)
             self.hire_to_cover(trade, short, "auto_replace_foreman")

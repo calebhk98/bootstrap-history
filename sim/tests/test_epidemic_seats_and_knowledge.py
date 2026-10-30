@@ -1,76 +1,66 @@
 """An epidemic year cuts each playing seat's staff by the working-age share the disease model killed, a quiet year takes
-nothing (`DiseasePortMixin.epidemic_hits_seats`), and a node with neither revenue nor upkeep is knowledge, not a venture
-(`CapabilityMixin.is_venture`). Each rule is called on a stand-in carrying only what it reads."""
+nothing (the disease module's `hit_seats`), and a node with neither revenue nor upkeep is knowledge, not a venture
+(the production module's `is_venture`). Each rule is called on a stand-in carrying only what it reads."""
 QUICK_TOPIC = True
 
 import contextlib
 import types
 import unittest
 
-from sim.engine.disease_port import DiseasePortMixin
-from sim.engine.projects_capability import CapabilityMixin
+from sim.disease.api import HitSeatsWithEpidemic
+from sim.disease.module import Disease
+from sim.hazards.api import LoseCapital
+from sim.reporting.api import RecordEvent
+from sim.tests import module_harness, production_host
+from sim.workforce.api import LoseStaff
 
 
-class _Seat(DiseasePortMixin):
-    """The members `epidemic_hits_seats` reads from the game, recording the survival it is told to apply."""
-    PLAGUE_CASH_LOSS_SHARE = 0.0
+@contextlib.contextmanager
+def _act_as(seat_id):
+    yield
 
-    def __init__(self, working_age):
-        self.population = types.SimpleNamespace(working_age=working_age)
-        self.state = types.SimpleNamespace(household=types.SimpleNamespace(
-            scholars=5000.0, artisans=5000.0, employees={}, directors_extra=2.0, log=[]))
-        self.labour = types.SimpleNamespace(staff_snapshot=lambda: {}, log_staff_reduction=lambda name, before: None)
-        self.survival_applied = []
 
-    def playing_seats(self):
-        return ["founder"]
-
-    @contextlib.contextmanager
-    def act_as(self, seat_id):
-        yield
-
-    def apply_staff_survival(self, survival):
-        self.survival_applied.append(survival)
-
-    def lose_capital(self, amount, reason):
-        return 0.0
+def _module(working_age):
+    """The disease module over one seat of 10000 people, its views answered by plain values; it loses no cash."""
+    return module_harness.build(Disease, views={
+        "working_age": working_age, "seat_list": {"playing": ["founder"]}, "act_as": _act_as,
+        },
+        answers={LoseCapital: 0.0, LoseStaff: lambda command: {"people_before": 10000.0, "people_after": 7500.0}})
 
 
 class EpidemicHitsSeatsTest(unittest.TestCase):
     def test_an_epidemic_year_applies_the_survival_of_the_working_age_share_killed(self):
-        seat = _Seat(working_age=7500.0)
-        share = seat.epidemic_hits_seats({"working_age": 2500.0}, 100)
+        module = _module(7500.0)
+        share = module.hit_seats(HitSeatsWithEpidemic({"working_age": 2500.0}, 100))
         self.assertAlmostEqual(share, 0.25, places=12)
-        self.assertEqual(len(seat.survival_applied), 1)
-        self.assertAlmostEqual(seat.survival_applied[0], 0.75, places=12)
-        self.assertAlmostEqual(seat.state.household.directors_extra, 2.0 * 0.75, places=12)
+        sent = module_harness.sent(module)
+        losses = [command for command in sent if isinstance(command, LoseStaff)]
+        self.assertEqual(len(losses), 1)
+        self.assertAlmostEqual(losses[0].survival_share, 0.75, places=12)
+        self.assertAlmostEqual(losses[0].deputies_share, 0.75, places=12)
+        events = [command for command in sent if isinstance(command, RecordEvent)]
+        self.assertEqual((len(events), events[0].kind, events[0].facts["took_nothing"]), (1, "hazard_hit", False))
 
     def test_a_quiet_year_takes_nothing(self):
-        seat = _Seat(working_age=7500.0)
-        self.assertEqual(seat.epidemic_hits_seats({}, 100), 0.0)
-        self.assertEqual(seat.survival_applied, [])
-        self.assertEqual(seat.state.household.directors_extra, 2.0)
-        self.assertEqual(seat.state.household.log, [])
+        module = _module(7500.0)
+        self.assertEqual(module.hit_seats(HitSeatsWithEpidemic({}, 100)), 0.0)
+        self.assertEqual(module_harness.sent(module), [])
 
 
 class KnowledgeIsNotAVentureTest(unittest.TestCase):
     def _game(self, granted=()):
-        game = types.SimpleNamespace()
         nodes = {"knowledge": {"rev": 0, "up": 0}, "earner": {"rev": 5.0, "up": 0}, "keeper": {"rev": 0, "up": 2.0}}
-        game.nodes = nodes
-        game.state = types.SimpleNamespace(projects=types.SimpleNamespace(granted=set(granted)))
-        game.is_concern_node = lambda node_id: CapabilityMixin.is_concern_node(game, node_id)
-        return game
+        return production_host.build(tree_nodes=nodes, techniques_granted=set(granted))
 
     def test_only_a_node_that_earns_or_costs_to_keep_is_a_venture(self):
         game = self._game()
-        self.assertFalse(CapabilityMixin.is_venture(game, "knowledge"))
-        self.assertTrue(CapabilityMixin.is_venture(game, "earner"))
-        self.assertTrue(CapabilityMixin.is_venture(game, "keeper"))
+        self.assertFalse(game.is_venture("knowledge"))
+        self.assertTrue(game.is_venture("earner"))
+        self.assertTrue(game.is_venture("keeper"))
 
     def test_a_granted_node_is_never_a_venture(self):
         game = self._game(granted=("earner",))
-        self.assertFalse(CapabilityMixin.is_venture(game, "earner"))
+        self.assertFalse(game.is_venture("earner"))
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ import unittest
 from sim.economy import households_own, producers
 from sim.economy.tool_wear import tool_bids, with_tool_wear
 from sim.economy.types import GoodSpec, Recipe
-from sim.engine.economy_port_setup import tool_wear_recipes
+from sim.markets.port_setup import tool_wear_recipes
 
 HOURS_PER_YEAR = 2000.0
 LIFE = 5.0

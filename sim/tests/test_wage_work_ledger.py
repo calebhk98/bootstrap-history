@@ -8,28 +8,28 @@ import unittest
 from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 from sim.ui.proto.render_screens_economy import _money_wage_work_lines
 
-from .test_material_production_commands import _Founder
+from sim.tests import resources_stand_in
 
 
-class _Miner(_Founder):
-    MINE_OPEX_MATERIALS = ("gold",)
-
-    def material_shortfall_t(self, material, by_tag=None):
-        return 0.0
+def _miner(capacity=None):
+    """The resources module for a gold miner whose materials show no shortfall."""
+    module = resources_stand_in.build(views={"material_shortfall": lambda material, by_tag=None: 0.0})
+    module.works_materials = lambda: ("gold",)
+    if capacity:
+        module.seat.mines.append({"material": "gold", "capacity": capacity})
+    return module
 
 
 class ShortageRemedyTests(unittest.TestCase):
 
     def test_no_workings_and_no_shortfall_says_to_sink_one(self):
-        plan = _Miner(cash=0.0).shortage_remedy_plan("gold")
+        plan = _miner().shortage_remedy_plan("gold")
         self.assertEqual(plan["kind"], "dig_mine")
         self.assertFalse(plan["has_working"])
         self.assertIn("buy mine gold 1", plan["commands"])
 
     def test_workings_that_cover_demand_say_so_with_no_shortfall(self):
-        founder = _Miner(cash=0.0)
-        founder.mine_capacity = {"gold": 5.0}
-        plan = founder.shortage_remedy_plan("gold")
+        plan = _miner(capacity=5.0).shortage_remedy_plan("gold")
         self.assertEqual(plan["kind"], "dig_mine")
         self.assertTrue(plan["has_working"])
         self.assertLess(plan["short_tonnes"], 1.0)

@@ -5,10 +5,14 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 
 from sim.refusal import cause_of, facts_of
 from sim.labour.labour_wage_ledger import WageLedgerMixin
 from sim.ui.proto.dispatch_labour import _cmd_work
+from sim.tests import event_stand_in
+from sim.tests.ui_stand_in import StandIn
+from sim.workforce.api import WorkForWages
 
 
 def household(**fields):
@@ -22,9 +26,12 @@ class Books(WageLedgerMixin):
 
     def __init__(self, held=None, year=100):
         self.held = held or household()
-        self._world = types.SimpleNamespace(
+        self._world = workforce_stand_in.World(
+            workforce=self.held, view=workforce_stand_in.view_of(self.held), year=year,
             state=types.SimpleNamespace(household=self.held, scenario=types.SimpleNamespace(year=year)),
-            plain_number=lambda number: "%g" % number, money_text=lambda money, grouped=False, short=False: "%g" % money)
+            plain_number=lambda number: "%g" % number, money_text=lambda money, grouped=False, short=False: "%g" % money,
+            logged_events=lambda: len(self.held.log))
+        event_stand_in.stood_in(self._world)
 
     def work_for_wages(self, trade, hours):
         self.held.capital += 30.0
@@ -65,20 +72,18 @@ class ClosingTheYear(unittest.TestCase):
 
 
 class DryRun(unittest.TestCase):
-    def test_the_dry_run_returns_the_pay_and_puts_every_book_and_the_log_back(self):
+    def test_the_dry_run_asks_for_a_quote_and_returns_its_pay_and_note(self):
+        asked = []
         books = Books()
-        pay, _note = books.work_for_wages_dry_run("scholar", 1500)
-        self.assertEqual(pay, 30.0)
-        self.assertEqual((books.held.capital, books.held.wage_hours_this_year, books.held.wage_income_this_year,
-                          books.held.wages_earned, books.held.log), (100.0, 0.0, 0.0, 0.0, []))
+        books.work_for_wages = lambda trade, hours, commit=True: asked.append((trade, hours, commit)) or (30.0, "note")
+        self.assertEqual(books.work_for_wages_dry_run("scholar", 1500), (30.0, "note"))
+        self.assertEqual(asked, [("scholar", 1500, False)])
 
 
 class WorkCommand(unittest.TestCase):
     def game(self):
-        labour = types.SimpleNamespace(
-            work_for_wages=lambda trade, hours: (312.46, None), work_for_wages_dry_run=lambda trade, hours: (312.46, None),
-            director_pool=lambda: 2000.0, director_hours_committed=lambda: 500.0)
-        return types.SimpleNamespace(labour=labour, capital=900.0)
+        return StandIn(answers={WorkForWages: (312.46, None)}, work_for_wages_dry_run=lambda trade, hours: (312.46, None),
+                       hours_available={"director_pool": 2000.0, "director_committed": 500.0}, acting_balance=900.0)
 
     def test_a_preview_states_the_wage_and_says_nothing_changed(self):
         reply = _cmd_work(self.game(), {}, {"cmd": "work", "trade": "scholar", "hours": 1500, "preview": True}, None)
@@ -94,7 +99,7 @@ class WorkCommand(unittest.TestCase):
 
     def test_a_refused_sale_is_not_ok_and_earns_nothing(self):
         game = self.game()
-        game.labour.work_for_wages = lambda trade, hours: (0.0, "hours must be greater than zero")
+        game.answers[WorkForWages] = (0.0, "hours must be greater than zero")
         reply = _cmd_work(game, {}, {"cmd": "work", "trade": "scholar", "hours": 0}, None)
         self.assertIs(reply["ok"], False)
 

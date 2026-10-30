@@ -127,7 +127,8 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__f
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-from sim.engine.data import TRADES_ABSENT, closure, load, load_civ, resolve_goal
+from sim.engine.data import TRADES_ABSENT, load, load_civ, resolve_goal
+from sim.knowledge.api import closure
 from sim.engine.core import Sim
 
 from sim.engine.default_civilisation import default_civilisation_id
@@ -190,7 +191,7 @@ def diagnose_scarce_trades(sim, nodes, outstanding, backlog_ratio=6.0):
         if backlog / supply > backlog_ratio:
             scarce[trade] = {"contested": contested, "backlog": backlog,
                          "supply_per_year": supply,
-                         "employees": sim.employees.get(trade, 0.0)}
+                         "employees": sim.view("staff")()["employees"].get(trade, 0.0)}
     return scarce
 
 
@@ -238,12 +239,12 @@ def diagnose_capital_trap(sim, need, min_closure_frac=0.9):
     """
     if sim.capital >= 0:
         return None
-    if sim.scholars > 1.0 or sim.artisans > 1.0:
+    if sim.view("staff")()["scholars"] > 1.0 or sim.view("staff")()["artisans"] > 1.0:
         return None
     done_frac = sum(1 for node_id in need if node_id in sim.done) / max(1, len(need))
     if done_frac >= min_closure_frac:
         return None
-    return {"capital": sim.capital, "scholars": sim.scholars, "artisans": sim.artisans,
+    return {"capital": sim.capital, "scholars": sim.view("staff")()["scholars"], "artisans": sim.view("staff")()["artisans"],
             "closure_done_frac": done_frac}
 
 

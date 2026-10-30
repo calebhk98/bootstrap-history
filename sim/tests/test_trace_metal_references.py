@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 import unittest
 import warnings
 
-from sim.engine import joint_allocation
+from sim.prices import joint_allocation
 from sim.tests.test_joint_allocation import solve_ungated
 
 

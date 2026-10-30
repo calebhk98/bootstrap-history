@@ -1,12 +1,15 @@
 """The world event log (Complaint 493, 640): the `world_events` command reads the log of a stand-in game and filters it by
-window and kind, and the log is part of the saved economy state."""
+window and kind, and the log is part of the hazards module's saved state."""
 QUICK_TOPIC = True
 
 import types
 import unittest
 
-from sim.engine.state import EconomyState, deserialize_state, serialize_state
+from sim.engine.state import deserialize_state, serialize_state
+from sim.hazards.state import HazardsWorld
+from sim.tests import hazards_host
 from sim.ui.proto.dispatch_world_events import _cmd_world_events
+from sim.tests.ui_stand_in import Game
 
 LOG = [
     {"year": 90, "kind": "flood", "actors": ["rome"], "tiles": [], "cause": "river", "facts": {"population_loss": 5.0}},
@@ -17,8 +20,9 @@ LOG = [
 
 
 def game():
-    economy = types.SimpleNamespace(world_events=[dict(row) for row in LOG])
-    return types.SimpleNamespace(state=types.SimpleNamespace(economy=economy, scenario=types.SimpleNamespace(year=100)))
+    module = hazards_host.build(world=HazardsWorld(world_events=[dict(row) for row in LOG]))
+    return Game(state=Game(scenario=Game(year=100)),
+                                 view=lambda name: module.world_events)
 
 
 class WorldEventsCommandTests(unittest.TestCase):
@@ -37,10 +41,9 @@ class WorldEventsCommandTests(unittest.TestCase):
 
 class WorldEventsSaveTests(unittest.TestCase):
     def test_the_log_round_trips_through_serialize_and_deserialize(self):
-        economy = EconomyState()
-        economy.world_events = [dict(row) for row in LOG]
-        again = deserialize_state(serialize_state(economy), EconomyState)
-        self.assertEqual(again.world_events, LOG)
+        world = HazardsWorld(world_events=[dict(row) for row in LOG], said_output={"a war": 210}, said_debasement=214)
+        again = deserialize_state(serialize_state(world), HazardsWorld)
+        self.assertEqual(again, world)
 
 
 if __name__ == "__main__":

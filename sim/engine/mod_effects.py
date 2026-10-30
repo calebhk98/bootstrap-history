@@ -1,23 +1,45 @@
 """Effect operations: the supported way for mod code, and the base game's own systems, to change the world.
 
-Each operation goes through the normal rules: money moves through the ledger against a named edge, goods through the
-economy's book against a named edge (so the conservation checks see them), people through the population and strata,
-a tile through `transfer_tile`, a store through `sim.stores.write`. Every operation that changes the world needs a
-cause and writes it to the world event log (sim/engine/world_events.py). A mod reaches these as `api.effects`; its
-kinds and edge names are forced into its `<mod_id>:` namespace. The base game uses `BASE_EFFECTS`."""
+Each operation goes through the normal rules: it sends the owner's command (money through the ledger against a named edge,
+goods through the economy's book against a named edge so the conservation checks see them, people through the population and
+strata, a tile through `TransferTile`, a store through `WriteStore`). Every operation that changes the world needs a cause and
+writes it to the world event log (the hazards module). A mod reaches these as `api.effects`, called with the mod's `ModAccess`,
+so the commands and views an effect uses must be declared by the mod (`EFFECT_NEEDS`; `api.uses_effects(...)` declares them);
+its kinds and edge names are forced into its `<mod_id>:` namespace. The base game uses `BASE_EFFECTS` with a game."""
 from typing import Any, Iterable, Optional
 
-from sim.agents import api as agents_api
 from sim.agents.api import edges as edge_names
 from . import economy_port_effects as economy_api
 
-from . import world_events
-from .mods_base import ModError
-from .mods_ids import SEPARATOR
+from sim.actors.api import MoveStratumPeople
+
+from sim.demography.api import KillPeople
+from sim.hazards.api import RecordWorldEvent
+from sim.land.api import TransferTile
+from sim.ledger.api import PayActor, PayActorFromEdge, PayEdgeFrom
+from sim.markets.api import MoveGoods
+from sim.refusal import Refusal
+from sim.stores.api import WriteStore
+
+from sim.content.api import ModError
+from sim.content.api import SEPARATOR
 
 KNOWN_EDGES = frozenset(value for name, value in vars(edge_names).items() if name.startswith("EDGE_") and isinstance(value, str)) \
     | {economy_api.EDGE_PRODUCTION, economy_api.EDGE_CONSUMPTION, economy_api.EDGE_WEAR, economy_api.EDGE_EXTERNAL}
 EDGE_PREFIX = "edge:"
+# effect -> (views it reads, commands it sends): what a mod declares to use it
+EFFECT_NEEDS = {
+    "pay": (("cast",), (PayActor,)),
+    "pay_edge": (("cast",), (PayEdgeFrom,)),
+    "receive_from_edge": (("cast",), (PayActorFromEdge,)),
+    "add_goods": ((), (MoveGoods,)),
+    "remove_goods": ((), (MoveGoods,)),
+    "kill_people": ((), (KillPeople,)),
+    "move_people": ((), (MoveStratumPeople, RecordWorldEvent)),
+    "transfer_tile": ((), (TransferTile,)),
+    "write_store": ((), (WriteStore,)),
+    "record_event": ((), (RecordWorldEvent,)),
+}
 
 
 class ModEffects:
@@ -51,30 +73,32 @@ class ModEffects:
 
     def pay(self, sim: Any, payer_id: str, payee_id: str, amount: float, purpose: str) -> None:
         """Move coin between two actors through the ledger."""
-        payer, payee = self._actor(sim, payer_id), self._actor(sim, payee_id)
-        agents_api.ledger.transfer(payer, payee, self._amount(amount), self.need_cause(purpose))
+        self._actor(sim, payer_id), self._actor(sim, payee_id)
+        sim.send(PayActor(payer_id, payee_id, self._amount(amount), self.need_cause(purpose)))
 
     def pay_edge(self, sim: Any, actor_id: str, edge: str, amount: float, purpose: str) -> None:
         """An actor pays a named edge: the coin leaves every purse and the edge keeps what crossed it."""
-        agents_api.ledger.transfer(self._actor(sim, actor_id), sim.edge(self.edge_name(edge)), self._amount(amount), self.need_cause(purpose))
+        self._actor(sim, actor_id)
+        sim.send(PayEdgeFrom(actor_id, self.edge_name(edge), self._amount(amount), self.need_cause(purpose)))
 
     def receive_from_edge(self, sim: Any, actor_id: str, edge: str, amount: float, purpose: str) -> None:
         """A named edge pays an actor: coin enters the purses, and the edge's book shows where it came from."""
-        agents_api.ledger.transfer(sim.edge(self.edge_name(edge)), self._actor(sim, actor_id), self._amount(amount), self.need_cause(purpose))
+        self._actor(sim, actor_id)
+        sim.send(PayActorFromEdge(self.edge_name(edge), actor_id, self._amount(amount), self.need_cause(purpose)))
 
     # ---- goods ------------------------------------------------------------------------------------------
 
     def add_goods(self, sim: Any, account_id: str, good: str, tile: str, quantity: float, cause: str,
                   edge: str = economy_api.EDGE_PRODUCTION) -> None:
         """Goods come into the world at a tile, into an account of the economy's book, from a named edge."""
-        move = economy_api.GoodsMove(self.edge_name(edge), account_id, good, tile, self._amount(quantity), self._goods_purpose(cause))
-        economy_api.move_goods(self._economy(sim), [move])
+        move = MoveGoods(self.edge_name(edge), account_id, good, tile, self._amount(quantity), self._goods_purpose(cause))
+        sim.send(move)
 
     def remove_goods(self, sim: Any, account_id: str, good: str, tile: str, quantity: float, cause: str,
                      edge: str = economy_api.EDGE_CONSUMPTION) -> None:
         """Goods leave the world from an account at a tile, to a named edge; more than the account holds is refused."""
-        move = economy_api.GoodsMove(account_id, self.edge_name(edge), good, tile, self._amount(quantity), self._goods_purpose(cause))
-        economy_api.move_goods(self._economy(sim), [move])
+        move = MoveGoods(account_id, self.edge_name(edge), good, tile, self._amount(quantity), self._goods_purpose(cause))
+        sim.send(move)
 
     # ---- people -----------------------------------------------------------------------------------------
 
@@ -85,39 +109,31 @@ class ModEffects:
         cause = self.need_cause(cause)
         if not 0.0 <= share <= 1.0:
             raise ModError("%s: a death share is between 0 and 1, not %r" % (self.label(), share))
-        before = people_of(sim, country)
-        if country == sim.civ["id"]:
-            sim._apply_population_mortality_shock(share)
-        else:
-            for actor in strata_of(sim, country):
-                actor.record.members *= 1.0 - share
-        return world_events.record(sim, self.kind(kind), actors=[country], tiles=tiles, cause=cause,
-                                   died=before - people_of(sim, country), **facts)
+        return sim.send(KillPeople(country, share, cause, kind=self.kind(kind), tiles=tuple(tiles), facts=dict(facts)))
 
     def move_people(self, sim: Any, from_stratum_id: str, to_stratum_id: str, count: float, cause: str) -> dict:
         """Move people between two strata (migration, or reassignment to another class); the total stays the same."""
         cause = self.need_cause(cause)
-        source, target = self._stratum(sim, from_stratum_id), self._stratum(sim, to_stratum_id)
-        moved = min(self._amount(count), source.record.members)
-        source.record.members -= moved
-        target.record.members += moved
-        countries = [source.record.country or sim.civ["id"], target.record.country or sim.civ["id"]]
-        return world_events.record(sim, self.kind("people_moved"), actors=sorted(set(countries)), cause=cause,
-                                   moved=moved, from_stratum=from_stratum_id, to_stratum=to_stratum_id)
+        answer = sim.send(MoveStratumPeople(from_stratum_id, to_stratum_id, self._amount(count)))
+        if isinstance(answer, Refusal):
+            raise ModError("%s: %s" % (self.label(), answer))
+        return sim.send(RecordWorldEvent(self.kind("people_moved"), actors=tuple(sorted(set(answer["countries"]))), cause=cause,
+                                         facts=dict(moved=answer["moved"], from_stratum=from_stratum_id, to_stratum=to_stratum_id)))
 
     # ---- tiles, stores, events ----------------------------------------------------------------------------
 
     def transfer_tile(self, sim: Any, tile_id: str, to_actor: Optional[str], cause: str, control: Optional[str] = None) -> Optional[str]:
         """Give a tile to a country or seat (None releases it); the world event log records it with the cause."""
-        return sim.transfer_tile(tile_id, to_actor, control, cause=self.need_cause(cause))
+        return sim.send(TransferTile(tile_id, to_actor, self.need_cause(cause), control))
 
     def write_store(self, sim: Any, name: str, key: Any, value: Any) -> None:
         """Write one value of a store this owner declared; another owner's store is an error."""
-        sim.stores.write(name, key, value, self.owner)
+        sim.send(WriteStore(name, key, value, self.owner))
 
     def record_event(self, sim: Any, kind: str, cause: str, actors: Iterable[str] = (), tiles: Iterable[str] = (), **facts: Any) -> dict:
         """Write a record to the world event log."""
-        return world_events.record(sim, self.kind(kind), actors=actors, tiles=tiles, cause=self.need_cause(cause), **facts)
+        return sim.send(RecordWorldEvent(self.kind(kind), actors=tuple(actors), tiles=tuple(tiles), cause=self.need_cause(cause),
+                                         facts=dict(facts)))
 
     # ---- helpers ------------------------------------------------------------------------------------------
 
@@ -130,30 +146,21 @@ class ModEffects:
         return "%s: %s" % (self.label(), self.need_cause(cause))
 
     def _actor(self, sim: Any, actor_id: str) -> Any:
-        actor = sim.actors.get(actor_id)
+        actor = sim.view("cast")().get(actor_id)
         if actor is None:
             raise ModError("%s: no actor %r" % (self.label(), actor_id))
         return actor
 
-    def _stratum(self, sim: Any, stratum_id: str) -> Any:
-        actor = self._actor(sim, stratum_id)
-        if actor.record.kind != "stratum":
-            raise ModError("%s: %r is not a stratum" % (self.label(), stratum_id))
-        return actor
-
-    @staticmethod
-    def _economy(sim: Any) -> Any:
-        return sim.economy.agent.economy()
 
 
 def strata_of(sim: Any, country: str) -> list:
-    return [actor for actor in sim.actors.of_kind("stratum") if (actor.record.country or sim.civ["id"]) == country]
+    return [actor for actor in sim.view("cast")().of_kind("stratum") if (actor.record.country or sim.civ["id"]) == country]
 
 
 def people_of(sim: Any, country: str) -> float:
     """How many people the country holds: the home society's population, or a partner's strata."""
     if country == sim.civ["id"]:
-        return float(sim.population.total)
+        return float(sim.view("population")().total)
     return sum(actor.record.members for actor in strata_of(sim, country))
 
 

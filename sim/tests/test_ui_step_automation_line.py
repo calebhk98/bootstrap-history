@@ -3,10 +3,8 @@ screen and the audit window are called on rows built here; which rows the step r
 test_step_automation_rows."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
-from sim.engine import automation_audit
 from sim.ui.proto.render_screen_step import render_step
 from sim.ui.proto.step_automation import automation_lines
 
@@ -40,20 +38,6 @@ class AutomationLineTests(unittest.TestCase):
         text = render_step({"ok": True, "completed": [], "events": []})
         self.assertEqual(text.count(FULL_STATE_POINTER), 1)
         self.assertEqual(text.splitlines()[-1], FULL_STATE_POINTER)
-
-
-class AuditWindowTests(unittest.TestCase):
-
-    def _game(self, year):
-        household = types.SimpleNamespace(automation_audit=[{"year": 99, "what": "old"}, {"year": 100, "what": "last"},
-                                                            {"year": 101, "what": "now"}])
-        return types.SimpleNamespace(state=types.SimpleNamespace(
-            scenario=types.SimpleNamespace(year=year), household=household))
-
-    def test_the_rows_are_those_of_the_years_just_played_oldest_first(self):
-        game = self._game(102)
-        self.assertEqual([row["what"] for row in automation_audit.rows(game, 1)], ["now"])
-        self.assertEqual([row["what"] for row in automation_audit.rows(game, 3)], ["old", "last", "now"])
 
 
 if __name__ == "__main__":

@@ -76,4 +76,4 @@ firm.record.last_margin = 0.0
 firm.record.plan[equity_need.NEED_KEY] = 1000.0
 check("a firm that earns nothing sells no equity", equity_round.raise_equity(registry, world, firm) == 0.0)
 
-check("the spawner is registered", "equity_rounds" in dict(__import__("sim.agents.registry", fromlist=["SPAWNERS"]).SPAWNERS))
+check("the spawner is shipped", "equity_rounds" in dict(__import__("sim.agents.shipped", fromlist=["shipped_spawners"]).shipped_spawners()))

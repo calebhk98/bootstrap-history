@@ -2,8 +2,7 @@
 from typing import Any, Callable, Dict, List
 
 from . import enforcement, exchange, joint_stock, patent, spinoff  # noqa: F401  (patent and spinoff register commands and spawners)
-from .player_commands import CommandRejected, register_command
-from .registry import register_spawner
+from .player_commands import CommandRejected
 from .tuning import VALUE_HORIZON_YEARS
 
 
@@ -22,9 +21,6 @@ def decline(player: Any, order: Dict[str, Any], world: Any) -> str:
 	return exchange.decline(player, order.get("offer"))
 
 
-register_command("offer", offer)
-register_command("accept", accept)
-register_command("decline", decline)
 
 
 # ---- the AI's answer ----------------------------------------------------------------------
@@ -83,7 +79,7 @@ def finder(registry: Any, world: Any) -> Callable[[str], Any]:
 
 	def find(actor_id: str) -> Any:
 		found = registry.get(actor_id)
-		if found is None and getattr(world, "seat_parties", None) is not None:
+		if found is None:
 			if not seats:
 				seats.update(world.seat_parties())
 			found = seats.get(actor_id)
@@ -102,13 +98,9 @@ def exchange_answers(registry: Any, world: Any) -> List[str]:
 	return []
 
 
-register_spawner("exchange_answers", exchange_answers)
 
 
 def patent_enforcement(registry: Any, world: Any) -> List[str]:
 	"""Yearly: holders pursue the operators of their patented concerns who have no licence. Founds no actors."""
 	enforcement.enforce_patents(registry, world)
 	return []
-
-
-register_spawner("patent_enforcement", patent_enforcement)

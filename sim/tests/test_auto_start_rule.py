@@ -4,8 +4,9 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.auto_start_rule import judge_start_candidate
-from sim.engine.shortage_sizing import auto_mine_order_tonnes
+from sim.projects.api import auto_start
+judge_start_candidate = auto_start.judge_start_candidate
+from sim.resources.sizing import auto_mine_order_tonnes
 
 
 def judge(active=0, cap=5, startable=True, cost=10.0, room=100.0):

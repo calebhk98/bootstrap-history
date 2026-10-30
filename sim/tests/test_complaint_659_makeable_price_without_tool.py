@@ -5,8 +5,8 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy.types import Recipe
-from sim.engine.economy_port_closure import makeable_prices
-from sim.engine.economy_port_setup import tool_wear_recipes
+from sim.markets.port_closure import makeable_prices
+from sim.markets.port_setup import tool_wear_recipes
 
 REGISTRY = {"hand": {"tool_basket": ["iron"], "tool_stock_per_worker": {"iron": 1.0}, "tool_hours_factor_by_hand": 2.0}}
 LIVES = {"iron": 4.0}

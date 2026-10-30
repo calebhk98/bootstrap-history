@@ -6,12 +6,13 @@ from types import SimpleNamespace
 from unittest import mock
 
 from sim.ui import cli_interactive
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
 
 def options_with(typed_lines):
-    game = SimpleNamespace(civ={"id": "rome_100ad", "name": "Rome"}, cfg={"start_year": 100, "horizon_years": 500, "immortal": True},
+    game = Game(civ={"id": "rome_100ad", "name": "Rome"}, cfg={"start_year": 100, "horizon_years": 500, "immortal": True},
                            fog=False, fuzzy_estimates=False, year=100, end_year=600)
     cli_interactive.LINES_PUSHED_BACK.clear()
     with mock.patch("builtins.input", side_effect=list(typed_lines)), mock.patch("builtins.print"), \

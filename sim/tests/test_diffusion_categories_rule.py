@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 from .harness import check, NODES, _hazard
 
-from sim.engine.diffusion_rules import medical_relief, spread_share
+from sim.diffusion.diffusion_rules import medical_relief, spread_share
 
 _FOOD_NODE, _MED_NODES, _MIL_NODES2, _INFO_NODE = (
     "crop_rotation",

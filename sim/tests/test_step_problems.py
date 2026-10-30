@@ -5,13 +5,14 @@ QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.hazard_relief import HazardReliefMixin
-from sim.engine.society_state_pressure import StatePressureMixin
+from sim.tests import hazards_host, polity_host
+from sim.polity import constants as polity_constants
 from sim.ui.proto import render_screen_step as _render_big
 from sim.ui.proto.dispatch_inspection_society import _cmd_risk
 from sim.ui.proto.render_screens_status import render_risk, render_score
 from sim.ui.proto.score_total import score_total
 from sim.ui.proto.step_problems import step_problems, problems_lines, route_nodes, route_startable
+from sim.tests.ui_stand_in import Game
 
 events = [{"year": 101, "message": "interest on 330 denarii of arrears at 10.9% a year", "event_kind": "arrears_interest"},
           {"year": 102, "message": "CREDIT EXHAUSTED: 3 projects stopped", "event_kind": "credit_exhausted"},
@@ -35,7 +36,7 @@ check("the step screen ends with the problems block, then the one pointer line",
 
 # ---- the goal route and whether anything on it can be begun -------------------------------------------------
 nodes = {"goal": {"pre": ["middle"]}, "middle": {"pre": ["root"]}, "root": {"pre": []}, "side": {"pre": []}}
-route_game = SimpleNamespace(goal="goal", nodes=nodes, done=set(), active={}, can_start=lambda node_id: node_id == "root")
+route_game = Game(goal="goal", nodes=nodes, done=set(), active={}, can_start=lambda node_id: node_id == "root")
 route = route_nodes(route_game)
 check("the goal route is the goal and everything it needs, and nothing beside it", route == {"goal", "middle", "root"}, route)
 check("a route with a startable step is startable", route_startable(route_game, route) is True)
@@ -43,48 +44,42 @@ route_game.can_start = lambda node_id: False
 check("a route with nothing startable is not", route_startable(route_game, route) is False)
 route_game.done = set(route)
 check("a finished route has nothing to start", route_startable(route_game, route) is None)
-check("a game with no goal has no route", route_nodes(SimpleNamespace(goal=None, nodes=nodes)) == set())
+check("a game with no goal has no route", route_nodes(Game(goal=None, nodes=nodes)) == set())
 
 
 # ---- a lapsed hedge names the concern whose closure lapsed it ----------------------------------------------
-class HedgeGame(HazardReliefMixin):
-    HAZARD_COUNTERS = {"staff_loss": [("sanitation_antisepsis", 0.5, "Sand filter")]}
+class HedgeGame:
+    """The hazards module with one sanitation hedge built, running or shut."""
 
-    def __init__(self, strength):
-        self.nodes = {"sanitation_antisepsis": {"name": "Antiseptic sanitation"}}
-        self.state = SimpleNamespace(projects=SimpleNamespace(closures={}))
-        self.strength = strength
+    def __init__(self, running):
+        self.module = hazards_host.build(
+            hazard_counter_rows={"staff_loss": [(0, "sanitation_antisepsis", 0.5, "Sand filter")]},
+            tree=lambda node: {"name": "Antiseptic sanitation"}, techniques_held={"sanitation_antisepsis"},
+            running=lambda node: running)
 
-    def _counter_strength(self, node):
-        return self.strength
-
-    def _counter_requirements(self, node, kind, label):
-        return ()
-
-    def counter_supply_gap(self, node, kind, label):
-        return 1.0, None
+    def hazard_relief_detail(self, kind):
+        return self.module.hazard_relief_detail(kind)
 
 
-_multiplier, _why, lapsed_names = HedgeGame(0.5).hazard_relief_detail("staff_loss")
+_multiplier, _why, lapsed_names = HedgeGame(False).hazard_relief_detail("staff_loss")
 check("a lapsed hedge names the concern whose closure lapsed it", lapsed_names == ["Antiseptic sanitation"], lapsed_names)
-running = HedgeGame(1.0).hazard_relief_detail("staff_loss")
+running = HedgeGame(True).hazard_relief_detail("staff_loss")
 check("a hedge that is running lapses nothing and takes its full share off", running[2] == [] and abs(running[0] - 0.5) < 1e-12, running)
 
 # ---- the risk reply carries the confiscation block ----------------------------------------------------------
-LABELS = ("a patron", "standing", "being useful to the state")
+LABELS = polity_constants.CONFISCATION_PROTECTION_LABELS
 
 
-class PressureGame(StatePressureMixin):
-    CONFISCATION_PROTECTION_LABELS = LABELS
+def pressure_module():
+    module = polity_host.build()
+    module.confiscation_risk = lambda: (0.123456, [LABELS[0]])
+    return module
 
-    def confiscation_risk(self):
-        return 0.123456, [LABELS[0]]
 
-
-status = PressureGame().confiscation_status()
+status = pressure_module().confiscation_status()
 check("the confiscation status gives the chance, what holds it off and what is not yet in force",
       status == {"chance_this_year": 0.1235, "held_off_by": [LABELS[0]], "not_yet_in_force": list(LABELS[1:])}, status)
-risk_game = SimpleNamespace(knowledge_risk=lambda: {}, year=100, confiscation_status=lambda: status, interest_groups=lambda: [])
+risk_game = Game(knowledge_risk=lambda: {}, year=100, confiscation_status=lambda: status, interest_groups=lambda: [])
 risk_reply = _cmd_risk(risk_game, {}, {"cmd": "risk"}, None)
 check("risk reply carries the confiscation block", risk_reply["confiscation"] == status, sorted(risk_reply))
 risk_text = render_risk(risk_reply)

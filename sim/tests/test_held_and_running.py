@@ -7,10 +7,13 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.engine import action_results, validate_action_results
-from sim.engine.geography_port import GeographyWorld
-from sim.engine.held_works import HeldWorksMixin
-from sim.engine.labour_port import LabourWorld
+from sim.engine import validate_action_results
+from sim.land import action_results
+from sim.land.map_views import GeographyInputs
+from sim.land.module import Land
+from sim.land.state import LandSeat, LandWorld
+from sim.tests import module_harness
+from sim.workforce.world import WorkforceWorld
 
 NODES = {
     "harbour": {"id": "harbour", "up": 5.0, "rev": 0.0},
@@ -22,21 +25,29 @@ NODES = {
 }
 
 
-class _Host(HeldWorksMixin):
+class _Host:
+    """The land module over plain values for the views the held answer reads."""
 
     def __init__(self, done, operating, granted=(), starting=("lore",)):
-        self.nodes = NODES
-        self.civ = {"starting_techs": list(starting)}
-        self.state = SimpleNamespace(
-            projects=SimpleNamespace(done=set(done), granted=set(granted), operating=set(operating)),
-            economy=SimpleNamespace(improvements={}))
-        self.household = SimpleNamespace(done_version=1, operating_version=1)
+        self.done, self.operating, self.granted = set(done), set(operating), set(granted)
+        self.versions = [1, 1]
+        self.module = module_harness.build(
+            Land, world=LandWorld(), seat=LandSeat(),
+            views={"techniques_version": lambda: self.versions[0], "operating_version": lambda: self.versions[1], "tree_nodes": NODES,
+                   "techniques_held": lambda: self.done, "techniques_granted": lambda: self.granted,
+                   "running": self.running, "civilisation": {"starting_techs": list(starting)}})
 
     def running(self, node_id):
-        node = self.nodes[node_id]
-        if node_id not in self.state.projects.done:
+        node = NODES[node_id]
+        if node_id not in self.done:
             return False
-        return node_id in self.state.projects.operating if (node["up"] or node["rev"]) else True
+        return node_id in self.operating if (node["up"] or node["rev"]) else True
+
+    def held_and_running(self, include_starting=True):
+        return self.module.held_techniques(include_starting)
+
+    def partner_gate_refusal(self, civilization_id):
+        return self.module.partner_gate_refusal(civilization_id)
 
 
 class ResultTokenTests(unittest.TestCase):
@@ -98,15 +109,15 @@ class HeldAndRunningTests(unittest.TestCase):
     def test_the_answer_follows_a_change_in_what_is_open(self):
         host = _Host(done={"harbour"}, operating=())
         self.assertNotIn("harbour", host.held_and_running())
-        host.state.projects.operating.add("harbour")
-        host.household.operating_version += 1
+        host.operating.add("harbour")
+        host.versions[1] += 1
         self.assertIn("harbour", host.held_and_running())
 
 
 class AuthoredDataTests(unittest.TestCase):
 
     def test_every_route_a_lane_asks_for_is_returned_by_an_authored_expedition(self):
-        from sim.engine import tree_merge
+        from sim.content import tree_merge
         from sim.geography.api import open_map
         nodes = {node["id"]: node for node in tree_merge.build_tree().tree["nodes"]}
         world_map = open_map()
@@ -120,18 +131,18 @@ class AuthoredDataTests(unittest.TestCase):
 class CallersTests(unittest.TestCase):
 
     def test_geography_reads_the_one_answer(self):
-        sim = SimpleNamespace(held_and_running=lambda include_starting=True: {"a", "b"} if include_starting else {"b"})
-        self.assertEqual(GeographyWorld(sim).held_nodes, {"a", "b"})
+        module = SimpleNamespace(needs=SimpleNamespace(held_techniques=lambda include_starting: {"a", "b"} if include_starting else {"b"}))
+        self.assertEqual(GeographyInputs(module).held_nodes, {"a", "b"})
 
     def test_labour_reads_the_one_answer(self):
-        sim = SimpleNamespace(held_and_running=lambda include_starting=True: frozenset({"a"}))
-        self.assertEqual(LabourWorld(sim).held_and_running(), frozenset({"a"}))
+        needs = SimpleNamespace(held_techniques=lambda include_starting: frozenset({"a"}))
+        self.assertEqual(WorkforceWorld(needs, None).held_and_running(), frozenset({"a"}))
 
     def test_a_partner_an_action_returns_is_refused_until_it_is_held(self):
         host = _Host(done=set(), operating=())
         self.assertIn("distant_realm", host.partner_gate_refusal("distant_realm") or "")
-        host.state.projects.done.add("voyage")
-        host.household.done_version += 1
+        host.done.add("voyage")
+        host.versions[0] += 1
         self.assertIsNone(host.partner_gate_refusal("distant_realm"))
         self.assertIsNone(host.partner_gate_refusal("never_returned_by_anything"))
 

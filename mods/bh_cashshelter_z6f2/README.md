@@ -9,7 +9,7 @@ Every hazard takes from the acting household's own purse (`household.capital`), 
 
 - fire (`FIRE_CAPITAL_LOSS`), plague (`PLAGUE_CASH_LOSS_SHARE` times the staff share killed) and debasement
   (`REAL_EROSION_CASH_LOSS_SHARE` times the erosion) take a share of the purse and nothing else;
-- a sack and banditry take theft shares by kind of holding (`sim/engine/theft_exposure.py`): most of the purse is
+- a sack and banditry take theft shares by kind of holding (`sim/coin/theft_exposure.py`): most of the purse is
   coin and is mostly guarded, so they take far more of the portable goods than of the purse;
 - a treasury or eminence confiscation takes a share of the purse less what is concealed.
 
@@ -58,8 +58,7 @@ its own loss record, regional hazards that carry a place).
   money that is not in the purse when you want to spend it.
 - The state's confiscation, and the treasury notice, count only the purse. Nothing models the state finding a
   deposit, so lodging coin also hides it from confiscation; that is stronger than the real world and is the one
-  place the shelter may be too generous. The mod registers its claims with `register_wealth_claims` when the engine
-  has it; see `Complaints/638-confiscation-ignores-claims-on-other-actors.md` (proof of concept on branch
+  place the shelter may be too generous. The mod provides its claims to the polity module's `wealth_claims` point; see `Complaints/638-confiscation-ignores-claims-on-other-actors.md` (proof of concept on branch
   `engine-confiscation-counts-claims`).
 - Debasement lowers the worth of all coin (`money_real`); a holder's coin is not spared.
 - The mod does not shelter goods, land or the people a plague and a sack take.

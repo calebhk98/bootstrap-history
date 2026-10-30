@@ -1,82 +1,34 @@
-"""The one affordability rule for buying things outright.
+"""The one affordability rule for buying things outright, asked with the game in hand.
 
-Every quote of an affordable amount and every purchase gate asks here, so a
-quoted amount is always purchasable. The budget is the actor's ordinary
-spending power: cash plus the share of the credit line a lender advances
-against a purchase. Any actor with a household and a credit line uses it.
-"""
-import math
+The rule and its budget are the finance module's (`sim/finance/purchase_rules.py`, and the views `purchase_budget`, `can_pay`,
+`affordable_units`, `purchase_refusal`); the screens and the gates that still hold the game ask them here. Each line goes when
+its last caller reads the view itself."""
+from sim.finance.api import purchase_rules
 
-from sim.refusal import Refusal
-
-from sim.engine import cash_remedies
-from sim.engine.units_prose import money_text
-
-BUDGET_KIND = "buy"
-# Tolerance for float noise when a cost is exactly the budget.
-_EPSILON = 1e-9
+affordable_whole_units = purchase_rules.affordable_whole_units
+afford_means = purchase_rules.afford_means
 
 
 def purchase_budget(actor):
     """Most the actor can spend on one outright purchase right now."""
-    return actor.spending_power(BUDGET_KIND)
+    return actor.view("purchase_budget")()
 
 
 def can_pay(actor, cost):
     """True when the cost fits inside the purchase budget."""
-    return cost <= purchase_budget(actor) + _EPSILON
+    return actor.view("can_pay")(cost)
 
 
 def affordable_units(actor, unit_cost, decimals=1):
     """Units the budget buys, rounded down so the quoted figure is buyable."""
-    scale = 10 ** decimals
-    budget = purchase_budget(actor)
-    unit_cost = max(unit_cost, 1e-9)
-    units = budget / unit_cost
-    rounded = math.floor(units * scale + _EPSILON) / scale
-    # the float-noise allowance must not round a figure up past what the budget pays
-    return rounded if rounded * unit_cost <= budget + _EPSILON else math.floor(units * scale) / scale
-
-
-def affordable_whole_units(budget, base_unit_cost, cost_of_units, steps=20):
-    """Whole units whose bill `cost_of_units(n)` (rising with n) the budget covers, found by bisection from the
-    most the base unit cost allows."""
-    lower, upper = 0.0, budget / max(base_unit_cost, 1e-9)
-    affordable = 0.0
-    for _ in range(steps):
-        middle = (lower + upper) / 2.0
-        if cost_of_units(middle) <= budget:
-            affordable = middle
-            lower = middle
-        else:
-            upper = middle
-    return int(affordable)
-
-
-def afford_means():
-    """Player-facing statement of what the budget counts."""
-    return "cash plus the share of your credit line a lender advances against a purchase"
+    return actor.view("affordable_units")(unit_cost, decimals)
 
 
 def remedies_text(actor):
     """The commands that raise cash or cut costs, or an empty string."""
-    lines = cash_remedies.cash_remedies(actor)
-    return (" To raise cash: " + "; ".join(lines) + ".") if lines else ""
+    return actor.view("purchase_remedies_text")()
 
 
 def refusal_text(actor, what, cost):
-    """Refusal that states the rule, the budget, the amount short and the
-    commands that raise cash."""
-    budget = purchase_budget(actor)
-    short = max(0.0, cost - budget)
-    share = actor.SPENDING_DRAW_SHARE_ORDINARY
-    return Refusal("cash_short", "cannot afford %s: it costs %s and you could raise %s, "
-                   "so you are %s short. The rule: %s (cash %s, %d%% of your credit "
-                   "line of %s, net of any debt). Earning or paying down %s "
-                   "would allow it.%s Nothing was changed."
-                   % (what, money_text(cost, actor, grouped=True), money_text(budget, actor, grouped=True),
-                      money_text(short, actor, grouped=True), afford_means(),
-                      money_text(actor.capital, actor, grouped=True), round(share * 100),
-                      money_text(actor.credit_limit(), actor, grouped=True), money_text(short, actor, grouped=True),
-                      remedies_text(actor)),
-                   cost=cost, budget=budget, short=short)
+    """Refusal that states the rule, the budget, the amount short and the commands that raise cash."""
+    return actor.view("purchase_refusal")(what, cost)

@@ -6,6 +6,7 @@ labour core holds in them (agent economy on), else to the need the recipe graph 
 Nothing here moves people between trades: the labour core does that (sim/labour/market/DESIGN.md).
 """
 import sim.geography.api as geography
+from sim.demography.api import SetClearedFarmland, SetFarmHoursNeeded
 from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
@@ -145,11 +146,14 @@ def farm_hours_after(current_hours, needed_hours, total_hours):
 class LabourAllocationMixin:
     """Labour method that sizes this year's farm workforce."""
 
+    _need_shares_cache = None          # (techniques reached, shares) of the last answer; set by _non_farm_need_shares
+    _clearing_hours_this_year = 0.0    # hours the farm workforce spends clearing land; set when the year sizes it
+
     def _non_farm_need_shares(self):
         """Each non-farm trade's share of need from household demand through
         the recipe graph; with no recipe available, the current split."""
-        reached = frozenset(self._world.civ["starting_techs"]) | frozenset(self._world.state.projects.done)
-        cached = getattr(self, "_need_shares_cache", None)
+        reached = frozenset(self._world.civ["starting_techs"]) | frozenset(self._world.projects.done)
+        cached = self._need_shares_cache
         if cached is None or cached[0] != reached:
             shares = workforce_spinup.need_shares_by_trade(
                 labour_market.production_data(), reached, self._world.techniques_available_to,
@@ -158,7 +162,7 @@ class LabourAllocationMixin:
             cached = self._need_shares_cache = (reached, shares)
         if cached[1]:
             return cached[1]
-        hours = self._world.state.economy.society_labour_hours
+        hours = self._world.society.society_labour_hours
         rest = sum(value for trade, value in hours.items() if trade != FARM_TRADE)
         return {trade: value / rest for trade, value in hours.items()
                 if trade != FARM_TRADE and rest > 0.0}
@@ -183,13 +187,12 @@ class LabourAllocationMixin:
 
     def _hours_needed_by_trade(self, total_hours=None):
         """Hours each trade is needed for out of the society's hours (the labour allocation)."""
-        economy = self._world.state.economy
-        holdings = self._world.state.holdings
-        hours = economy.society_labour_hours
+        hours_needed = self._world.farm_holdings()["hours_needed"]
+        hours = self._world.society.society_labour_hours
         if total_hours is None:
             total_hours = sum(hours.values())
         farm_now = hours.get(FARM_TRADE, 0.0)
-        farm_needed = farm_now if holdings.farm_hours_needed is None else holdings.farm_hours_needed
+        farm_needed = farm_now if hours_needed is None else hours_needed
         return hours_needed_by_trade(self._non_farm_need_shares(), total_hours, farm_needed)
 
     def _hours_needed_for_wages(self):
@@ -209,13 +212,13 @@ class LabourAllocationMixin:
 
     def _set_farm_area(self, hectares):
         """Cleared area and the quality of the best-first ground it covers."""
-        self._world.farm_land = agriculture.Land(hectares, quality_of_area(self._world.farm_ladder, hectares))
-        self._world.state.holdings.farm_cleared_hectares = hectares
+        self._world.set_farm_land(hectares, quality_of_area(self._world.farm_ladder, hectares))
+        self._world.send(SetClearedFarmland(hectares))
 
     def _apply_land_clearing(self):
         """Hands beyond what the farm can crop spent the year clearing;
         the ground is ready for next year."""
-        hours = getattr(self, "_clearing_hours_this_year", 0.0)
+        hours = self._clearing_hours_this_year
         cleared = cleared_hectares(hours, self._world.farm_land.hectares, self._world.farm_arable_ceiling)
         if cleared > 0.0:
             self._set_farm_area(self._world.farm_land.hectares + cleared)
@@ -223,8 +226,8 @@ class LabourAllocationMixin:
     def _farming_technique(self):
         """This society's farming technique from the technologies it holds,
         each weighted by how far it has spread."""
-        projects = self._world.state.projects
-        year = self._world.state.scenario.year
+        projects = self._world.projects
+        year = self._world.year
         starting = set(self._world.civ.get("starting_techs", ()))
         adoption = {}
         declarations = {node_id: self._world.mechanic(node_id, "farming_technique")
@@ -241,7 +244,7 @@ class LabourAllocationMixin:
 
     def farm_share_of_hours(self):
         """Share of the society's working hours spent farming."""
-        hours = self._world.state.economy.society_labour_hours
+        hours = self._world.society.society_labour_hours
         if hours:
             return hours[FARM_TRADE] / sum(hours.values())
         adult_equivalent = self._world.adult_equivalent_population(self._world.population)
@@ -271,7 +274,7 @@ class LabourAllocationMixin:
         """What an extra hand's hour on the cleared land (the harvest model's marginal product) is worth in
         food at the staple's price, less the share of the harvest the state takes, over an hour of the unskilled wage,
         both from the agent economy; None while either is missing."""
-        marginal_product = self._world.state.holdings.farm_last_marginal_product
+        marginal_product = self._world.farm_holdings()["last_marginal_product"]
         wage = self._world.economy_unskilled_wage()
         prices = self._world.economy.agent_prices()
         price = prices.get(wage_provider.staple_material(self._world.civ)) if prices else None
@@ -289,7 +292,7 @@ class LabourAllocationMixin:
         reserve_kg = agriculture.granary_capacity_kg(
             adult_equivalent_population
             * agriculture.annual_food_demand_kg_per_person(technique.crop))
-        stock_kg = self._world.farm_stock_kg
+        stock_kg = self._world.farm_holdings()["stock_kg"]
         year = agriculture.Storage(stock_kg=stock_kg, seed=0).step(
             worked_land, hectares_worked * farming_technique.hours_per_hectare(technique),
             adult_equivalent_population, crop=technique.crop,
@@ -334,31 +337,32 @@ class LabourAllocationMixin:
     def _allocate_farm_workforce(self, adult_equivalent_population):
         """Farm FTE for this year, after the labour market reacts to last
         year's harvest."""
-        economy = self._world.state.economy
-        holdings = self._world.state.holdings
+        society = self._world.society
         technique = self._farming_technique()
         baseline_fte = self._expected_year_farm_need(
             self._share_farm_fte(adult_equivalent_population, technique),
             adult_equivalent_population, technique)
         total_hours = self._society_hours_available()
-        farm_hours_now = current_farm_hours(economy.society_labour_hours, total_hours, baseline_fte)
-        last_shortfall_kg = holdings.farm_last_shortfall_kg
+        farm_hours_now = current_farm_hours(society.society_labour_hours, total_hours, baseline_fte)
+        holding = self._world.farm_holdings()
+        last_shortfall_kg = holding["last_shortfall_kg"]
         current_fte = farm_hours_now / HOURS_PER_FARM_WORKER_YEAR
         if last_shortfall_kg is None:
             need_fte = current_fte
         else:
             need_fte = farm_workers_needed(
                 baseline_fte, current_fte, last_shortfall_kg,
-                holdings.farm_last_marginal_product,
+                holding["last_marginal_product"],
                 self._world.farm_land.hectares, self._clearable_hectares(),
                 technique=technique)
         need_fte = max(need_fte, self._kept_farm_workers(
             current_fte, adult_equivalent_population, technique))
-        holdings.farm_hours_needed = need_fte * HOURS_PER_FARM_WORKER_YEAR
-        farm_hours = farm_hours_after(farm_hours_now, min(holdings.farm_hours_needed, total_hours), total_hours)
-        economy.society_labour_hours = society_hours(
+        hours_needed = need_fte * HOURS_PER_FARM_WORKER_YEAR
+        self._world.send(SetFarmHoursNeeded(hours_needed))
+        farm_hours = farm_hours_after(farm_hours_now, min(hours_needed, total_hours), total_hours)
+        society.society_labour_hours = society_hours(
             total_hours, farm_hours, self._non_farm_shares(total_hours - farm_hours))
-        farm_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
+        farm_fte = society.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
         self._clearing_hours_this_year = hours_spent_clearing(farm_fte, self._world.farm_land.hectares, technique)
         self._world.farm_technique_this_year = technique
         return farm_fte

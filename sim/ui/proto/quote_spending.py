@@ -9,6 +9,7 @@ an amount.
 from .util import _qty
 from sim.refusal import Refusal
 from sim.engine.ui_port import purchase_rule
+from sim.engine import ui_port
 
 
 def bounty_refusal(sim, nodes, node_id):
@@ -16,22 +17,22 @@ def bounty_refusal(sim, nodes, node_id):
     `quote bounty` both ask this."""
     if node_id not in nodes:
         return "unknown node id %r" % node_id
-    if node_id in sim.done:
+    if node_id in sim.view("techniques_held")():
         return "%s is already done" % node_id
     # Eligibility comes before the active-project rule: an active project's
     # prerequisites are already met, so this depends only on craft recognition.
-    if not sim.bounty_eligible(node_id):
+    if not sim.view("bounty_eligible")(node_id):
         node = nodes[node_id]
-        missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in sim.done]
+        missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in sim.view("techniques_held")()]
         if missing:
             # The same fog filter `why` uses, so a prerequisite never leaks as a spoiler.
-            return sim.missing_prereq_message(missing)
+            return sim.view("prerequisite_message")(missing, None)
         return Refusal("not_bounty_eligible", "not bounty-eligible (category %s): a craftsman in %s could not "
                        "recognise success at this without understanding the theory, so "
                        "there is nothing to award the prize for. A bounty works where "
                        "the craft already exists here and success is visible."
-                       % (node["cat"], sim.civ.get("name", "this society")))
-    if node_id in sim.active:
+                       % (node["cat"], sim.view("civilisation")().get("name", "this society")))
+    if node_id in sim.view("active_projects")():
         return Refusal("already_active", "%s is already active; stop it first if you want to switch to a "
                        "bounty instead" % node_id)
     return None
@@ -42,13 +43,13 @@ def _quote_bounty(sim, nodes, cmd):
     refusal = bounty_refusal(sim, nodes, node_id)
     if node_id not in nodes:
         return {"ok": False, "error": refusal}
-    price = sim.bounty_price(node_id)
+    price = sim.view("bounty_price")(node_id)
     reply = {"ok": True, "what": "bounty", "id": node_id,
              "eligible": refusal is None,
              "paid_now": round(price, 1),
-             "price_multiplier": sim.BOUNTY_PRICE_MULTIPLIER,
-             "ordinary_build_cost": round(sim.project_cost_now(node_id), 1),
-             "you_have": round(sim.capital, 1),
+             "price_multiplier": ui_port.project_constants.BOUNTY_PRICE_MULTIPLIER,
+             "ordinary_build_cost": round(sim.view("project_cost_now")(node_id), 1),
+             "you_have": round(sim.view("acting_balance")(), 1),
              "you_could_raise": round(purchase_rule.purchase_budget(sim), 1),
              "afford_means": purchase_rule.afford_means(),
              "can_afford": purchase_rule.can_pay(sim, price),
@@ -69,14 +70,14 @@ def _quote_hire(sim, nodes, cmd):
     count, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err}
-    count, fee, refusal = sim.labour.hire_check(trade, count)
+    count, fee, refusal = sim.view("hire_check")(trade, count)
     if refusal:
         return {"ok": False, "error": refusal}
-    per_year = sim.labour.market.quote_annual(trade, count) * count
+    per_year = sim.view("labour_market")().quote_annual(trade, count) * count
     return {"ok": True, "what": "hire", "trade": trade, "people": count,
             "paid_now": round(fee, 1),
             "from_next_year_per_year": round(per_year, 1),
-            "you_have": round(sim.capital, 1),
+            "you_have": round(sim.view("acting_balance")(), 1),
             "note": "Hiring pays a finder's fee that is also the first year's "
                     "wage, now; the same wage is due every year after."}
 
@@ -86,11 +87,11 @@ def _quote_commission(sim, nodes, cmd):
     hours, err = _qty(cmd, "hours") if "hours" in cmd else _qty(cmd, "n")
     if err:
         return {"ok": False, "error": err}
-    fee, refusal = sim.labour.commission_check(trade, hours)
+    fee, refusal = sim.view("commission_check")(trade, hours)
     if refusal:
         return {"ok": False, "error": refusal}
     return {"ok": True, "what": "commission", "trade": trade, "hours": hours,
-            "paid_now": round(fee, 1), "you_have": round(sim.capital, 1),
+            "paid_now": round(fee, 1), "you_have": round(sim.view("acting_balance")(), 1),
             "note": COMMISSION_NOTE}
 
 
@@ -99,15 +100,15 @@ def _quote_train(sim, nodes, cmd):
     count, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err}
-    plan, refusal = sim.labour.train_check(trade, count, cmd.get("from"))
+    plan, refusal = sim.view("train_check")(trade, count, cmd.get("from"))
     if refusal:
         return {"ok": False, "error": refusal}
     return {"ok": True, "what": "train", "trade": trade, "people": plan["count"],
             "paid_now": round(plan["fee"], 1),
             "your_hours": round(plan["hours"], 1),
             "wage_bill_added_per_year": round(
-                sim.labour.trainee_wage_bill(trade, plan["count"]), 1),
-            "you_have": round(sim.capital, 1),
+                sim.view("trainee_wage_bill")(trade, plan["count"]), 1),
+            "you_have": round(sim.view("acting_balance")(), 1),
             "note": "Teaching pays their keep now and takes your own hours. "
                     "When they finish they join the payroll automatically and "
                     "the wage bill rises by the figure above every year."}
@@ -121,25 +122,25 @@ def _quote_open(sim, nodes, cmd):
     node_id = cmd.get("id") or cmd.get("material")
     if node_id not in nodes:
         return {"ok": False, "error": "unknown node id %r" % (node_id,)}
-    if node_id not in sim.done:
+    if node_id not in sim.view("techniques_held")():
         return {"ok": False, "error": "you have not worked out how to do that yet, "
                                       "so there is nothing to open"}
-    if not sim.is_venture(node_id):
+    if not sim.view("is_venture")[node_id]:
         return {"ok": False, "error": "that is knowledge, not a going concern: "
                                       "there is nothing to open"}
-    if node_id in sim.operating:
+    if node_id in sim.view("operating")():
         return {"ok": False, "error": "you are already running that"}
-    fee, units = sim.opening_fee(node_id, cmd.get("units"))
-    upkeep = sim.venture_upkeep_quote(node_id, units)
+    fee, units = sim.view("opening_fee")(node_id, cmd.get("units"))
+    upkeep = sim.view("venture_upkeep_quote")(node_id, units)
     reply = {"ok": True, "what": "open", "id": node_id, "paid_now": round(fee, 1),
              "size": units,
              "earns_a_year_when_ramped": round(
-                 sim.venture_real_earnings(node_id, units, fully_ramped=True), 1),
+                 sim.view("venture_real_earnings")(node_id, units, True), 1),
              "costs_a_year_to_run": round(upkeep["now"], 1),
              "costs_a_year_at_full_staffing": round(upkeep["at_full_staffing"], 1),
-             "you_have": round(sim.capital, 1),
-             "can_afford": fee <= sim.spending_power("open")}
-    shortfall = sim.opening_shortfall(node_id)
+             "you_have": round(sim.view("acting_balance")(), 1),
+             "can_afford": fee <= sim.view("spending_power")("open")}
+    shortfall = sim.view("opening_shortfall")(node_id)
     if shortfall:
         reply["staff_short"] = ("needs %.1f scholars and %.1f craftsmen to "
                                 "supervise; %.1f and %.1f are free" % shortfall)
@@ -153,7 +154,7 @@ def _quote_sell(sim, nodes, cmd):
     node_id = str(cmd.get("id") or "")
     if not node_id:
         return {"ok": False, "error": "which concern? 'quote sell concern <id>'; 'ventures' lists the ones you run"}
-    reply = sim.quote_concern_sale(node_id)
+    reply = sim.view("concern_sale_quote")(node_id)
     if not reply.get("ok"):
         return reply
     return {"ok": True, "what": "sell", "concern": node_id, "price": reply["price"], "buyer": reply["buyer"],

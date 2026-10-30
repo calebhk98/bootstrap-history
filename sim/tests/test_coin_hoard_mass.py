@@ -1,14 +1,16 @@
 """Complaint 273: a treasury of coin has a mass from its coin metal and a guard-and-vault cost from that mass. The
-rules are `coin_metal` (plain arithmetic) and `CoinHoardMixin.coin_hoard` on a stub game. The screens that show the hoard
-is rounded for them by `coin_hoard_report`; the step's charge is `coin_keeping_due`, both on a stub game."""
+rules are `coin_metal` (plain arithmetic) and the coin module's `coin_hoard` view over plain values. The screens that show
+the hoard have it rounded by `rules.hoard_report`; the step's charge is `rules.keeping_due` (and the module's quote)."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 import sim.engine.core  # noqa: F401  (loads the engine in its import order)
-from sim.engine.coin_hoard import KEEPING_BASIS, CoinHoardMixin
+from sim.coin import rules
+from sim.coin.constants import KEEPING_BASIS
+from sim.coin.module import Coin
 from sim.engine.data import load_civ
+from sim.tests import module_harness
 from sim.world import coin_metal
 
 KG_PER_UNIT = 4.0
@@ -16,13 +18,10 @@ GUARD_HOURS = 60.0
 MONEY_PER_HOUR = 2.0
 
 
-def stub_game(civ_id, capital):
-    game = types.SimpleNamespace(civ=load_civ(civ_id), capital=capital,
-                                 labour=types.SimpleNamespace(money_per_labour_hour=lambda: MONEY_PER_HOUR))
-    game.coin_kg_per_unit = lambda: CoinHoardMixin.coin_kg_per_unit(game)
-    game.coin_keeping_cost_per_year = lambda money: CoinHoardMixin.coin_keeping_cost_per_year(game, money)
-    game.coin_hoard = lambda: CoinHoardMixin.coin_hoard(game)
-    return game
+def coin_module(civ_id, capital, credit_limit=0.0):
+    """The coin module over a civilisation, a purse and a credit line."""
+    return module_harness.build(Coin, views={"civilisation": load_civ(civ_id), "acting_balance": capital,
+                                             "money_per_labour_hour": MONEY_PER_HOUR, "credit_limit": credit_limit})
 
 
 class HoardMass(unittest.TestCase):
@@ -50,59 +49,60 @@ class HoardMass(unittest.TestCase):
 class HoardOfACivilisation(unittest.TestCase):
 
     def test_the_hoard_names_the_civilisations_own_coin_metal(self):
-        rome, han = stub_game("rome_100ad", 1.0e6).coin_hoard(), stub_game("han_china_100ad", 1.0e6).coin_hoard()
+        rome, han = coin_module("rome_100ad", 1.0e6).coin_hoard(), coin_module("han_china_100ad", 1.0e6).coin_hoard()
         self.assertEqual(rome["metal"], load_civ("rome_100ad")["coin_standard"]["material"])
         self.assertEqual(han["metal"], load_civ("han_china_100ad")["coin_standard"]["material"])
         self.assertNotEqual(rome["metal"], han["metal"])
 
     def test_the_hoard_mass_uses_the_civilisations_metal_in_one_coin(self):
-        game = stub_game("rome_100ad", 1.0e6)
-        self.assertAlmostEqual(game.coin_hoard()["tonnes"], 1.0e6 * load_civ("rome_100ad")["coin_standard"]["kg_per_unit"] / 1000.0)
+        module = coin_module("rome_100ad", 1.0e6)
+        self.assertAlmostEqual(module.coin_hoard()["tonnes"], 1.0e6 * load_civ("rome_100ad")["coin_standard"]["kg_per_unit"] / 1000.0)
 
     def test_the_hoard_states_its_basis_and_costs_money_to_keep(self):
-        hoard = stub_game("han_china_100ad", 1.0e6).coin_hoard()
+        hoard = coin_module("han_china_100ad", 1.0e6).coin_hoard()
         self.assertGreater(hoard["keeping_cost_per_year"], 0.0)
         self.assertEqual(hoard["basis"], KEEPING_BASIS)
 
     def test_a_purse_in_debt_holds_no_coin_and_owes_nothing(self):
-        hoard = stub_game("han_china_100ad", -5.0).coin_hoard()
+        hoard = coin_module("han_china_100ad", -5.0).coin_hoard()
         self.assertEqual((hoard["tonnes"], hoard["keeping_cost_per_year"]), (0.0, 0.0))
 
     def test_twice_the_money_is_twice_the_hoard(self):
-        once, twice = stub_game("han_china_100ad", 1.0e6).coin_hoard(), stub_game("han_china_100ad", 2.0e6).coin_hoard()
+        once, twice = coin_module("han_china_100ad", 1.0e6).coin_hoard(), coin_module("han_china_100ad", 2.0e6).coin_hoard()
         self.assertAlmostEqual(twice["tonnes"], 2.0 * once["tonnes"])
         self.assertAlmostEqual(twice["keeping_cost_per_year"], 2.0 * once["keeping_cost_per_year"])
-
-
-def keeping_game(capital, credit_limit, keeping_cost):
-    """A household with `capital` and a credit line, holding a hoard that costs `keeping_cost` a year to guard."""
-    return types.SimpleNamespace(state=types.SimpleNamespace(household=types.SimpleNamespace(capital=capital)),
-                                 credit_limit=lambda: credit_limit,
-                                 coin_hoard=lambda: {"keeping_cost_per_year": keeping_cost})
 
 
 class KeepingPaidFromWhatTheHouseholdCanBear(unittest.TestCase):
 
     def test_a_household_with_room_pays_what_the_hoard_owes(self):
-        owed, paid = CoinHoardMixin.coin_keeping_due(keeping_game(1.0e6, 0.0, 250.0), 0.0, 0.0, 0.0, 0.0)
-        self.assertEqual((owed, paid), (250.0, 250.0))
+        self.assertEqual(rules.keeping_due(250.0, 1.0e6, 0.0, 0.0, 0.0, 0.0, 0.0), (250.0, 250.0))
 
     def test_the_guard_is_paid_from_what_is_left_after_the_years_other_costs(self):
         # room = capital 1000 + credit line 500 + revenue 100 - upkeep 20 - living 1560 - mines 10 = 10
-        owed, paid = CoinHoardMixin.coin_keeping_due(keeping_game(1000.0, 500.0, 250.0), 100.0, 20.0, 1560.0, 10.0)
-        self.assertEqual((owed, paid), (250.0, 10.0))
+        self.assertEqual(rules.keeping_due(250.0, 1000.0, 500.0, 100.0, 20.0, 1560.0, 10.0), (250.0, 10.0))
 
     def test_a_household_with_no_room_pays_nothing_never_a_negative_sum(self):
-        owed, paid = CoinHoardMixin.coin_keeping_due(keeping_game(10.0, 0.0, 250.0), 0.0, 0.0, 1.0e9, 0.0)
-        self.assertEqual((owed, paid), (250.0, 0.0))
+        self.assertEqual(rules.keeping_due(250.0, 10.0, 0.0, 0.0, 0.0, 1.0e9, 0.0), (250.0, 0.0))
+
+    def test_the_module_owes_the_hoards_keeping_cost_and_pays_it_from_a_purse_with_room(self):
+        module = coin_module("han_china_100ad", 1.0e6)
+        owed, paid = module.coin_keeping_due(0.0, 0.0, 0.0, 0.0)
+        self.assertEqual(owed, module.coin_hoard()["keeping_cost_per_year"])
+        self.assertEqual(paid, owed)
+
+    def test_the_module_pays_only_the_room_a_purse_in_the_red_leaves(self):
+        module = coin_module("han_china_100ad", 1000.0, credit_limit=500.0)
+        owed, paid = module.coin_keeping_due(100.0, 20.0, 1.0e9, 10.0)
+        self.assertGreater(owed, 0.0)
+        self.assertEqual(paid, 0.0)
 
 
 class HoardReportForTheScreens(unittest.TestCase):
 
     def test_the_report_is_the_hoard_rounded_with_its_metal_and_basis(self):
-        game = types.SimpleNamespace(coin_hoard=lambda: {"metal": "silver", "tonnes": 1.23456, "keeping_cost_per_year": 98.7654,
-                                                         "basis": "guards"})
-        self.assertEqual(CoinHoardMixin.coin_hoard_report(game),
+        held = {"metal": "silver", "tonnes": 1.23456, "keeping_cost_per_year": 98.7654, "basis": "guards"}
+        self.assertEqual(rules.hoard_report(held),
                          {"metal": "silver", "tonnes": 1.235, "keeping_cost_per_year": 98.8, "basis": "guards"})
 
 

@@ -10,6 +10,7 @@ from sim.ui.proto.dispatch import _agent_dispatch_inner
 from sim.ui.proto.name_candidates import candidates_the_player_may_see
 from sim.ui.proto.nodes import _did_you_mean, _resolve_by_name
 from sim.ui.proto.techtree import _SORT_KEYS, _available_params, _heard_all_sorted, _sort_startable_list
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
@@ -42,7 +43,7 @@ check("...and a vague guess does not silently resolve to the goal",
 nodes = {"a": {"name": "Alpha", "risk": 0.3, "ph": 5, "yrs": 1}, "b": {"name": "Beta", "risk": 0.1, "ph": 9, "yrs": 2},
          "c": {"name": "Gamma", "risk": 0.2, "ph": 1, "yrs": 3}}
 costs = {"a": 30.0, "b": 10.0, "c": 20.0}
-game = SimpleNamespace(project_cost=costs.get)
+game = Game(project_cost=costs.get)
 check("a plain page defaults to cheapest first", _sort_startable_list(game, nodes, ["a", "b", "c"], None, False) == ["b", "c", "a"])
 check("available can be sorted by risk", _sort_startable_list(game, nodes, ["a", "b", "c"], _SORT_KEYS["risk"], False) == ["b", "c", "a"])
 check("...and reversed",
@@ -58,7 +59,7 @@ check("a quoted word that is not a subject heading is a search word", quoted[1] 
 # --- Fog: `available`'s heard-of block respects `find`.
 tree = {"atomic_theory": {"name": "Atomic theory", "pre": ["x"], "note": "", "tags": []},
         "dyeing": {"name": "Dyeing", "pre": [], "note": "", "tags": []}}
-stand_in = SimpleNamespace(revealed={"atomic_theory", "dyeing"}, done=set(), active={},
+stand_in = Game(revealed={"atomic_theory", "dyeing"}, done=set(), active={},
                            start_reason=lambda node_id: (False, "not yet"))
 check("a search matching nothing heard of lists nothing from the heard-of block",
       _heard_all_sorted(stand_in, tree, "zzzznonexistentxyz", "", None, False) == [])
@@ -71,7 +72,7 @@ check("the heard-of list is nearest first: fewest missing prerequisites",
 
 # --- The dispatch step that turns a typed name into an id, on a stand-in game (the step runs before any handler reads the game).
 def _name_stand_in(fog, heard=()):
-    return SimpleNamespace(nodes=NODES, fog=fog, goal=GOAL, done=set(), active={}, revealed=set(heard), is_visible=lambda node_id, _memo=None: node_id in heard)
+    return Game(nodes=NODES, fog=fog, goal=GOAL, done=set(), active={}, revealed=set(heard), is_visible=lambda node_id, _memo=None: node_id in heard)
 
 
 def _name_reply(game, command, name):

@@ -8,9 +8,10 @@ from sim.ui.proto.help import _agent_help
 from sim.ui.proto.render_screen_state import render_state
 from sim.ui.proto.render_screen_state_views import SECTIONS
 from sim.ui.proto.typed import parse_typed
+from sim.tests.ui_stand_in import FactViews
 
 
-class _Stub:
+class _Stub(FactViews):
     fog = False
 
 

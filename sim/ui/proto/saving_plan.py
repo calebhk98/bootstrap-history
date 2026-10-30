@@ -5,21 +5,22 @@ One function builds the plan; the `saving` reply and the `stuck` row both read i
 
 import math
 from sim.engine.ui_port import money_text, tagged
+from sim.engine import ui_port
 
 
 def saving_plan(sim):
     """The standing plan as a dict, or None when the household is not saving for anything."""
-    household = sim.state.household
+    household = ui_port.saving_book(sim)
     node_id = household.saving_for
     if not node_id:
         return None
     target = household.saving_target
-    cash = sim.capital
-    income = sim.recurring_net()
+    cash = sim.view("acting_balance")()
+    income = sim.view("recurring_net")()
     if cash >= target:
-        year_affordable = sim.year
+        year_affordable = sim.view("year")()
     elif income > 0:
-        year_affordable = sim.year + int(math.ceil((target - cash) / income))
+        year_affordable = sim.view("year")() + int(math.ceil((target - cash) / income))
     else:
         year_affordable = None
     return tagged({"id": node_id, "target": round(target, 1), "cash": round(cash, 1),
@@ -32,7 +33,7 @@ def saving_reason(sim):
     plan = saving_plan(sim)
     if plan is None:
         return None
-    when = ("it is in hand now" if plan["year_affordable"] == sim.year
+    when = ("it is in hand now" if plan["year_affordable"] == sim.view("year")()
             else "at the current net income of %s a year that is %s"
                  % (money_text(plan["net_income_per_year"], sim, grouped=True),
                     "the year %d" % plan["year_affordable"] if plan["year_affordable"] is not None

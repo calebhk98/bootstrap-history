@@ -6,8 +6,8 @@ from .event_kinds import is_severe_failure
 
 def newly_startable_goal(sim, was_startable):
     """Name of the goal when it just became startable, else None."""
-    if sim.goal in sim.nodes and not was_startable and sim.goal not in sim.done and sim.can_start(sim.goal):
-        return sim.nodes[sim.goal]["name"]
+    if sim.view("goal")()["node"] in sim.view("tree_nodes")() and not was_startable and sim.view("goal")()["node"] not in sim.view("techniques_held")() and sim.view("start_check")(sim.view("goal")()["node"], False, None, False)[0]:
+        return sim.view("tree_nodes")()[sim.view("goal")()["node"]]["name"]
     return None
 
 

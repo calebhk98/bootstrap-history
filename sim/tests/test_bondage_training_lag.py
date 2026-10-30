@@ -5,10 +5,13 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from sim.tests import workforce_stand_in
 from unittest import mock
 
 from sim.labour import labour_bondage
 from sim.labour.labour_bondage import BondageMixin
+from sim.ledger.api import PayEdge
+from sim.polity.api import GainReputation
 
 YEAR = 100
 PRICE = 250.0
@@ -18,16 +21,22 @@ class Bondage(BondageMixin):
     """The household, holdings and money that buying and freeing people touch."""
 
     def __init__(self, cash=1000.0, room=100.0, employees=None):
-        self.cash, self.room, self.paid = cash, room, []
+        self.cash, self.room, self.paid, self.sent = cash, room, [], []
         self.staff = employees or {}
-        self.household = types.SimpleNamespace(slaves=0, freedmen=0, manumitted_total=0, artisans=0.0, scholars=0.0, training=[],
-                                               reputation=0.0)
-        self.holdings = types.SimpleNamespace(market_pressure=0.0)
+        self.household = types.SimpleNamespace(slaves=0, freedmen=0, manumitted_total=0, artisans=0.0, scholars=0.0, training=[], granted_staff=None,
+                                               reputation=0.0, market_pressure=0.0)
+        self.refusals = []
         self._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(household=self.household, holdings=self.holdings, scenario=types.SimpleNamespace(year=YEAR)),
-            household=self.household, can_pay=lambda price: price <= self.cash, EDGE_SLAVE_TRADERS="slave_traders",
-            pay_edge=lambda edge, price, text: self.paid.append(price),
+            workforce=self.household, view=workforce_stand_in.view_of(self.household), year=YEAR,
+            note_buy_refusal=self.refusals.append, can_pay=lambda price: price <= self.cash, EDGE_SLAVE_TRADERS="slave_traders",
+            send=self._send,
             refusal_text=lambda what, price: "cannot afford %s" % what)
+
+    def _send(self, command):
+        if isinstance(command, PayEdge):
+            self.paid.append(command.amount)
+        else:
+            self.sent.append(command)
 
     def household_room(self):
         return self.room
@@ -62,12 +71,17 @@ class BuySlaves(unittest.TestCase):
     def test_the_price_is_paid_and_the_slaves_and_the_markets_pressure_are_counted(self):
         game = Bondage()
         game.buy_slaves(12)
-        self.assertEqual((game.paid, game.household.slaves, game.holdings.market_pressure), ([PRICE], 12, 12))
+        self.assertEqual((game.paid, game.household.slaves, game.household.market_pressure), ([PRICE], 12, 12))
 
     def test_a_purchase_the_purse_cannot_cover_buys_nobody_and_queues_nobody(self):
         game = Bondage(cash=PRICE - 1.0)
         self.assertEqual(game.buy_slaves(12), 0)
         self.assertEqual((game.household.slaves, game.household.training, game.paid), (0, [], []))
+
+    def test_a_purchase_the_purse_cannot_cover_notes_the_refusal_with_the_figures(self):
+        game = Bondage(cash=PRICE - 1.0)
+        game.buy_slaves(12)
+        self.assertEqual(game.refusals, ["cannot afford 12 slaves"])
 
     def test_a_purchase_beyond_the_households_room_buys_nobody(self):
         game = Bondage(room=5.0)
@@ -97,6 +111,10 @@ class Manumit(unittest.TestCase):
         self.assertEqual(game.household.artisans, 0.0)
         worth = game.WORKER_EQUIVALENT_UNTRAINED + game.MANUMISSION_ARTISAN_UPLIFT
         self.assertAlmostEqual(game.household.training[0][0], 4 * worth)
+
+    def test_freeing_people_gains_reputation_that_stops_at_the_ceiling(self):
+        game, _freed = self.freed()
+        self.assertEqual([type(command) for command in game.sent], [GainReputation])
 
     def test_nobody_to_free_changes_nothing(self):
         game = Bondage()

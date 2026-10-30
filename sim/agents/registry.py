@@ -1,49 +1,20 @@
 """The set of actors other than the founder's household, and their yearly turn."""
 from bisect import bisect_left, insort
 from itertools import accumulate
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set
 
 from .records import ActorRecord, ActorsState
 
 from .base import RecordedActor
 from .concern_totals import ConcernTotals
 from .entry_round import NicheEntry
+from .extensions import ActorExtensions
 from . import adoption, awareness, patent_index, research, taxpayer_income
 from .firm import Firm
 from .government import Government
 from .group import InterestGroup
 from .policy import make_policy
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE
-
-# kind -> class; `register_actor_kind` adds to it, so a mod can bring its own kind of actor
-ACTOR_CLASSES: Dict[str, Any] = {"firm": Firm, "government": Government, "interest_group": InterestGroup}
-
-# what founds new actors after every actor has had its year, in the order registered: (name, spawner),
-# each spawner a function (registry, world) -> ids of the actors it founded
-SPAWNERS: List[Tuple[str, Callable[["ActorRegistry", Any], List[str]]]] = []
-
-# builds the world an actor of another country sees from the shared world, that country's profile
-# and the registry; None until a scope is registered, when every actor sees the shared world
-WORLD_SCOPE: List[Optional[Callable[[Any, Any, "ActorRegistry"], Any]]] = [None]
-
-
-def register_actor_kind(kind: str, actor_class: Any) -> None:
-	"""Make records of `kind` build `actor_class` objects."""
-	ACTOR_CLASSES[kind] = actor_class
-
-
-def register_spawner(name: str, spawner: Callable[["ActorRegistry", Any], List[str]]) -> None:
-	"""Run `spawner` every year after the actors' turns; registering a name again replaces it."""
-	for index, (existing, _old) in enumerate(SPAWNERS):
-		if existing == name:
-			SPAWNERS[index] = (name, spawner)
-			return
-	SPAWNERS.append((name, spawner))
-
-
-def register_world_scope(scope: Callable[[Any, Any, "ActorRegistry"], Any]) -> None:
-	"""`scope(world, profile, registry)` is the world an actor of the country `profile` sees."""
-	WORLD_SCOPE[0] = scope
 
 
 class _ConcernWatch:
@@ -77,8 +48,12 @@ class _ConcernWatch:
 class ActorRegistry:
 	"""Builds actor objects over the persistent records and runs their year."""
 
-	def __init__(self, state: ActorsState) -> None:
+	def __init__(self, state: ActorsState, extensions: Optional[ActorExtensions] = None) -> None:
 		self.state = state
+		if extensions is None:   # a registry made outside a game holds what the game ships
+			from .shipped import shipped_extensions
+			extensions = shipped_extensions()
+		self.extensions = extensions
 		self.actors: Dict[str, RecordedActor] = {}
 		self.world: Any = None
 		# which firms hold each concern (kept current by _ConcernWatch), and the ids in order
@@ -104,7 +79,7 @@ class ActorRegistry:
 		self._totals = ConcernTotals()
 		# country -> the world its actors see this year (rebuilt every `advance`)
 		self._scoped: Dict[str, Any] = {}
-		# node -> (year, cost): what researching it cost when last worked out (see SimWorld.research_cost)
+		# node -> (year, cost): what researching it cost when last worked out (see ActorWorld.research_cost)
 		self._research_costs: Dict[str, Any] = {}
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
@@ -119,12 +94,12 @@ class ActorRegistry:
 				self._totals.forget(actor_id)
 				for holding in self._holders.values():
 					holding.discard(actor_id)
-		if record.kind not in ACTOR_CLASSES:
+		if record.kind not in self.extensions.kinds:
 			owner = record.kind.partition(":")[0] if ":" in record.kind else ""
 			raise ValueError("actor %s is of kind %r, which is not registered%s" % (
 				actor_id, record.kind, "; it comes from mod %s, which is not installed or whose code is not allowed" % owner
 				if owner else ""))
-		actor = ACTOR_CLASSES[record.kind](actor_id, record, make_policy(record.policy_kind))
+		actor = self.extensions.kinds[record.kind](actor_id, record, make_policy(record.policy_kind, self.extensions.policies))
 		actor.attach(self.state.purses)
 		if hasattr(type(actor), "rivals_of"):
 			# an actor that runs concerns in the shared market: it counts its rivals and is counted as one
@@ -133,6 +108,8 @@ class ActorRegistry:
 				actor.on_capacity_change = self.note_capacity_change
 			if hasattr(type(actor), "find_actor"):
 				actor.find_actor = self.get
+			if hasattr(type(actor), "command_table"):
+				actor.command_table = self.extensions.commands
 			watch = _ConcernWatch(actor_id, self._holders, self.version, self._totals, record, self.concern_set_version)
 			record.business.watch = watch
 			watch()
@@ -316,7 +293,7 @@ class ActorRegistry:
 
 	def world_of_country(self, country: Optional[str], world: Any) -> Any:
 		"""The world a country's actors see: the shared one for the home country, else the country's scope."""
-		scope = WORLD_SCOPE[0]
+		scope = self.extensions.world_scope
 		if scope is None or not country or country == self.state.home_country or country not in self.state.countries:
 			return world
 		scoped = self._scoped.get(country)
@@ -427,7 +404,7 @@ class ActorRegistry:
 		research.diffuse(researchers, world)
 		for actor in sorted(researchers, key=lambda each: each.identity()):
 			adoption.advance_actor(actor, self.world_for(actor, world))
-		for _name, spawner in list(SPAWNERS):
+		for _name, spawner in list(self.extensions.spawners):
 			spawner(self, world)
 		# entry and group formation change staff after the last count; whatever reads before the next
 		# year's first actor (the founder's own turn) sees what is there, as a reloaded game does.
@@ -501,7 +478,3 @@ class ActorRegistry:
 			self._bans = {group.record.subject: group.record.name for group in self.home_actors("interest_group")
 						  if group.record.exited_year is None and group.record.demands and not group.record.technique}
 		return self._bans
-
-
-register_spawner("firm_entry", lambda registry, world: registry.consider_entry(world))
-register_spawner("interest_groups", lambda registry, world: registry.consider_groups(world))

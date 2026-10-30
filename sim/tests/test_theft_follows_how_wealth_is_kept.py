@@ -3,14 +3,14 @@ the state's order, not on the money held alone; stolen money goes to the thieves
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 
-from sim.agents.purses import Purses
-from sim.agents.edges import Edge, EDGE_THIEVES
-from sim.engine import theft_exposure
-from sim.engine.holdings_exposure import Exposure
-from sim.engine.theft_charge import TheftChargeMixin
+from sim.agents.edges import EDGE_THIEVES
+from sim.coin import theft_exposure
+from sim.coin.exposure import Exposure
+from sim.coin.module import Coin
+from sim.ledger.api import PayEdge
+from sim.tests import module_harness
 
 VALUE = 1000.0
 ANNUAL = theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE
@@ -50,36 +50,19 @@ class TheftExposure(unittest.TestCase):
         self.assertAlmostEqual(sum(by_kind.values()), loss_of(holdings))
 
 
-class FakePurse:
-    def __init__(self, money):
-        self.money = money
-
-    def credit(self, amount, purpose):
-        self.money += amount
-
-    def debit(self, amount, purpose):
-        self.money -= amount
-
-
 class TheftPaidToThieves(unittest.TestCase):
 
-    def test_stolen_money_is_conserved_and_lands_with_the_thieves(self):
-        balances = Purses()
-        thieves = Edge(EDGE_THIEVES, balances)
-        purse = FakePurse(VALUE)
-        world = types.SimpleNamespace(edge=lambda name: thieves)
-        exposure = Exposure(values={"coin": purse.money}, purse=purse.money)
-        stolen = TheftChargeMixin.steal_from(world, purse, exposure, ANNUAL, **CALM)
+    def test_stolen_money_is_asked_of_the_purse_for_the_thieves(self):
+        module = module_harness.build(Coin)
+        stolen = module.steal_from(None, Exposure(values={"coin": VALUE}, purse=VALUE), ANNUAL, **CALM)
         self.assertGreater(stolen, 0.0)
-        self.assertAlmostEqual(purse.money + balances.purse(EDGE_THIEVES), VALUE)
-        self.assertAlmostEqual(balances.purse(EDGE_THIEVES), stolen)
+        self.assertLess(stolen, VALUE)
+        self.assertEqual(module_harness.sent(module), [PayEdge(EDGE_THIEVES, stolen, "theft")])
 
     def test_nothing_is_stolen_from_a_purse_holding_no_coin(self):
-        purse = FakePurse(-20.0)
-        world = types.SimpleNamespace(edge=lambda name: Edge(EDGE_THIEVES, Purses()))
-        exposure = Exposure(values={}, purse=0.0)
-        self.assertEqual(TheftChargeMixin.steal_from(world, purse, exposure, ANNUAL, **CALM), 0.0)
-        self.assertEqual(purse.money, -20.0)
+        module = module_harness.build(Coin)
+        self.assertEqual(module.steal_from(None, Exposure(values={}, purse=0.0), ANNUAL, **CALM), 0.0)
+        self.assertEqual(module_harness.sent(module), [])
 
 
 if __name__ == "__main__":

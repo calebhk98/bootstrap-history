@@ -1,9 +1,8 @@
 """`mod-allow`, and the mod findings `validate` reports (code mods, command declarations)."""
 from sim import constants
 from sim.engine import ui_port
-from sim.engine.ui_port import MODDIR, code_report, constant_overrides, get_ordered_mods
-
-from .proto import mod_commands
+from sim.content.api import constant_overrides, get_ordered_mods
+from sim.engine.ui_port import MODDIR, code_report
 
 
 def cmd_mod_allow(args):
@@ -25,7 +24,7 @@ def mod_findings():
     for line in code_report(MODDIR):
         print("WARNING: " + line)
     try:
-        mod_commands.load_mod_commands()
+        ui_port.build_assembly(MODDIR, False).views["interface_declared"]()   # the commands and figures the mods declare
         overrides = constant_overrides(MODDIR)
     except ValueError as error:
         return ["mods: %s" % error]

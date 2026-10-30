@@ -4,9 +4,8 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, RecordedActor
-from sim.agents import registry as registry_module
-from sim.agents import country_view  # noqa: F401  (registers the country scope)
+from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, RecordedActor, shipped_extensions
+from sim.agents import country_view  # noqa: F401  (the country scope)
 from sim.agents.cast import cast_from_civilisations, profile_from_civilisation, seed_cast
 from sim.agents.country_view import CountryWorld, NoCountryEconomy
 from sim.agents.protocols import World
@@ -81,7 +80,8 @@ class Observer(RecordedActor):
 	kind = "observer"
 
 
-registry_module.register_actor_kind("observer", Observer)
+EXTENSIONS = shipped_extensions()
+EXTENSIONS.kinds["observer"] = Observer
 
 # ---- profiles from civilisation dicts ---------------------------------------------------
 bare = profile_from_civilisation({"id": "alpha"})
@@ -132,7 +132,7 @@ check("a lone civilisation is a cast of one government", [entry.actor_id for ent
 
 # ---- seeding ----------------------------------------------------------------------------
 state = ActorsState()
-registry = ActorRegistry(state)
+registry = ActorRegistry(state, EXTENSIONS)
 created = seed_cast(registry, home_country, entries, profiles)
 check("seeding creates a record per entry", set(created) == set(by_id) and set(registry.actors) == set(by_id), created)
 check("seeding sets the home country and stores the roster",
@@ -147,7 +147,7 @@ registry.actors["government:beta"].debit(3.0, "edge:test")
 check("seeding twice creates nothing and leaves existing actors alone",
 	  seed_cast(registry, home_country, entries, profiles) == [] and registry.actors["government:beta"].money == 7.0)
 loaded = deserialize_state(serialize_state(state), ActorsState)
-reloaded = ActorRegistry(loaded)
+reloaded = ActorRegistry(loaded, EXTENSIONS)
 check("the roster survives save and load and seeds nothing new",
 	  seed_cast(reloaded, home_country, entries, profiles) == [] and set(reloaded.actors) == set(by_id)
 	  and loaded.countries["beta"].starting_techs == {"loom"} and loaded.cast["observer:1"].params == {"knowledge": ["wheel"]})
@@ -161,7 +161,7 @@ world.baseline = {"shared_tech"}
 world.nodes["wheel"] = make_node("wheel")
 home_actor = registry.actors["government:alpha"]
 beta_actor = registry.actors["government:beta"]
-check("a country's scope is registered", registry_module.WORLD_SCOPE[0] is not None)
+check("a country's scope is shipped", EXTENSIONS.world_scope is not None)
 check("a home actor sees the shared world", registry.world_for(home_actor, world) is world)
 beta_world = registry.world_for(beta_actor, world)
 check("a foreign actor sees its country's world", isinstance(beta_world, CountryWorld) and beta_world.civ_id == "beta")
@@ -213,7 +213,7 @@ world.demonstrated_nodes = {"wheel"}
 world.nodes["wheel"] = make_node("wheel", hours=100.0, years=1.0)
 world.nodes["wheel"]["gains"] = {"military": 1000.0}
 state2 = ActorsState()
-registry2 = ActorRegistry(state2)
+registry2 = ActorRegistry(state2, EXTENSIONS)
 seed_cast(registry2, "alpha", [entry for entry in entries if entry.actor_id == "government:beta"], profiles)
 government = registry2.actors["government:beta"]
 world.distances = {"algeria_02": 0.0}

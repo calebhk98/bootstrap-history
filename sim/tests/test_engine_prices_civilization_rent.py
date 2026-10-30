@@ -1,4 +1,4 @@
-"""Land rent is per civilisation (RENT NEEDS A CIVILIZATION in sim/engine/prices.py). `solved_prices_at_wages` keys its cache on
+"""Land rent is per civilisation (RENT NEEDS A CIVILIZATION in sim/prices/prices.py). `solved_prices_at_wages` keys its cache on
 the civilisation as well as the gate nodes held, so two civilisations holding the same gate nodes never share a land price,
 and an unset civilisation is the default one; `_solve_to_json` charges the opening's stand-in rent for that civilisation unless
 the caller names a rent. The solver and the rent stand-in are recorders; no price solve. The rent rule itself is in
@@ -9,7 +9,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import prices
+from sim.prices import prices
 
 DEFAULT_CIVILISATION = "default_civ"
 STORED = {"prices_in_labour_hours": {"hectare_land": 1.0}, "resolvable_materials": ["hectare_land"],

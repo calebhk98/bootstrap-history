@@ -1,25 +1,35 @@
 """Complaint 572: when a trade a project needs will first have hands. The start gate, the start reply and the stall gate read
-one rule (`projects_trade_wait`), called here on a stub game with trainees in training."""
+one rule (the projects module's `trade_wait`), called here on the module over a labour market with trainees in training."""
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
-
 from .harness import check
 
-from sim.engine.projects_trade_wait import (STALL_YEARS_BEFORE_ABANDONMENT, trade_wait_outlasts_the_project,
-                                            trades_the_project_waits_for, years_until_trade_has_hands)
+from sim.projects.start_rules import STALL_YEARS_BEFORE_ABANDONMENT
+from sim.tests import projects_host
 
 YEAR = 100
 
 
 def stub_game(supply, training):
-    """A game whose labour market has these hands by trade and whose household has these trainees: (label, year they
-    join, trade, how many)."""
-    return SimpleNamespace(
-        labour=SimpleNamespace(market_supply=lambda trade: supply.get(trade, 0.0)),
-        state=SimpleNamespace(scenario=SimpleNamespace(year=YEAR), household=SimpleNamespace(training=[list(row) for row in training])),
-        nodes={"project": {"lab": {"machinist": 50.0, "smith": 20.0, "idle_trade": 0.0}}})
+    """The projects module over a labour market with these hands by trade and a household with these trainees: (label, year
+    they join, trade, how many)."""
+    rows = [list(row) for row in training]
+    return projects_host.build(
+        market_supply=lambda trade: supply.get(trade, 0.0), training_queue=lambda: rows, year=YEAR,
+        tree={"project": {"lab": {"machinist": 50.0, "smith": 20.0, "idle_trade": 0.0}}})
+
+
+def years_until_trade_has_hands(game, trade):
+    return game.years_until_trade_has_hands(trade)
+
+
+def trades_the_project_waits_for(game, node_id):
+    return game.trades_the_project_waits_for(node_id)
+
+
+def trade_wait_outlasts_the_project(game, trade):
+    return game.trade_wait_outlasts(trade)
 
 
 # ---- years until a trade has hands --------------------------------------------------------------------------------

@@ -12,8 +12,8 @@ from .harness import check
 
 from sim.economy import api as economy_api
 from sim.economy.types import EDGE_MINT, EDGE_WEAR
-from sim.engine.economy_port import EconomyPort
-from sim.engine.economy_port_year import AgentEconomy
+from sim.markets.port import EconomyPort
+from sim.markets.port_year import AgentEconomy
 
 read_saved_result = AgentEconomy.spin_up_result
 read_game_result = EconomyPort.spin_up_result

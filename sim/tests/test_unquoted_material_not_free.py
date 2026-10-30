@@ -12,7 +12,8 @@ from .harness import check
 from sim.agents import budget, budget_lines, budget_works, government_levers, state_enterprises
 from sim.agents.api import ActorRecord, Government
 from sim.agents.budget_line import Line
-from sim.engine.agents_port_budget import BudgetView
+from sim.actors.world_budget import BudgetView
+from sim.tests.world_stand_in import fake_needs
 
 from .agents_fake_world import FakeWorld
 
@@ -77,8 +78,7 @@ class Shipyard(Market):
 
 # ---- the home market port: no quote is no price, not a free one -----------------------------------------------
 def port_with(quote):
-	economy = types.SimpleNamespace(purchase_cost=lambda material, tonnes: quote)
-	return types.SimpleNamespace(_sim=types.SimpleNamespace(economy=economy))
+	return types.SimpleNamespace(needs=fake_needs(material_purchase_cost=lambda material, tonnes: quote))
 
 
 check("the home port prices a quoted material at the quote", BudgetView.material_cost(port_with((42.0, "home")), IRON, 3.0) == 42.0)

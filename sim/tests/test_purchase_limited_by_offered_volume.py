@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.goods_market_api import GoodsMarket
+from sim.markets.goods_market import GoodsMarket
 
 OFFERED = 40.0
 REFERENCE = 7.0

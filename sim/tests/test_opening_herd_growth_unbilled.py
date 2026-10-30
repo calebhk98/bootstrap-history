@@ -2,7 +2,9 @@
 for their growth; only head beyond the producers' is the founder's to raise (Complaints/558)."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.stock_growth_billing import founder_billed_growth
+from sim.living_stock.api import rules
+
+founder_billed_growth = rules.founder_billed_growth
 
 QUICK_TOPIC = True
 

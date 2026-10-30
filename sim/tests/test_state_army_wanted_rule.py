@@ -7,16 +7,16 @@ import types
 import unittest
 
 from sim.agents.api import army_goal
-from sim.engine.agents_port import SimWorld
+from sim.actors.world import ActorWorld
+from sim.tests.world_stand_in import fake_needs
 
 OPENING = 4000.0
 HAZARDS = [{"sack_chance": 0.1, "years": [200, 260]}, {"years": [0, 999]}]
 
 
 def world_in(year, hazards=HAZARDS):
-    scenario = types.SimpleNamespace(year=year)
-    sim = types.SimpleNamespace(civ={"standing_army": OPENING, "hazards": hazards}, state=types.SimpleNamespace(scenario=scenario))
-    return SimWorld(sim)
+    needs = fake_needs(civilisation={"standing_army": OPENING, "hazards": hazards}, year=year)
+    return ActorWorld(types.SimpleNamespace(needs=needs))
 
 
 class ArmyWantedTests(unittest.TestCase):

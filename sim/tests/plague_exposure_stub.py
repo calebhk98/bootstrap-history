@@ -1,44 +1,28 @@
-"""A nation stub for the staff-loss exposure rules: the real `HazardReliefMixin` arithmetic and the real
-`_counter_strength`, over a table of counters, the nodes built and running, and the nation's own relief and adoption."""
-from types import SimpleNamespace
-
-from sim.engine.hazard_relief import HazardReliefMixin
-from sim.engine.society_hazards import HazardsMixin
+"""A nation for the staff-loss exposure rules: the real hazards module over a table of counters, the nodes built and running,
+and the nation's own relief and adoption."""
+from sim.tests import hazards_host
 
 HISTORICAL_STAFF_LOSS = 0.28
 SANITATION_SHARE = 0.4
 PREPAREDNESS_SHARE = 0.3
+COUNTERS = {"staff_loss": [(0, "sanitation_antisepsis", SANITATION_SHARE, "sanitation"),
+                           (1, "plague_preparedness", PREPAREDNESS_SHARE, "preparedness")]}
 
 
-class PlagueNation(HazardReliefMixin):
-    HAZARD_COUNTERS = {"staff_loss": [("sanitation_antisepsis", SANITATION_SHARE, "sanitation"),
-                                      ("plague_preparedness", PREPAREDNESS_SHARE, "preparedness")]}
-    KNOWLEDGE_RESIDUE_AFTER_CLOSURE = HazardsMixin.KNOWLEDGE_RESIDUE_AFTER_CLOSURE
-    _counter_strength = HazardsMixin._counter_strength
+class PlagueNation:
 
     def __init__(self, built=(), running=(), national_relief=0.0):
-        self.built, self.operating, self.national_relief = set(built), set(running), national_relief
-        self.mine_capacity = {}
-        self.state = SimpleNamespace(projects=SimpleNamespace(closures={}))
-        self.nodes = {node: {"name": node} for node in ("sanitation_antisepsis", "plague_preparedness")}
+        operating = set(running)
+        self.module = hazards_host.build(
+            hazard_counter_rows=COUNTERS, techniques_held=set(built), running=lambda node: node in operating,
+            tree=lambda node: {"name": node}, civ_diffusion=lambda node: national_relief,
+            diffusion_relief=lambda kind, per_weapon=0.0: national_relief if kind == "medical" else (1.0, None))
 
-    def has(self, node):
-        return node in self.built
+    def hazard_relief(self, kind):
+        return self.module.hazard_relief(kind)
 
-    def running(self, node):
-        return node in self.operating
-
-    def medical_diffusion_relief(self):
-        return self.national_relief
-
-    def civ_diffusion(self, node):
-        return self.national_relief
-
-    def _counter_requirements(self, node, kind, label):
-        return ()
-
-    def counter_supply_gap(self, node, kind, label):
-        return 1.0, None
+    def staff_loss_exposure(self, historical):
+        return self.module.staff_loss_exposure(historical)
 
     def survivors_share(self):
         """The share of a household's staff left after one wave of the historical plague."""

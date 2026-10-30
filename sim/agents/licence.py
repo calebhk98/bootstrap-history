@@ -31,7 +31,7 @@ def terms_problem(licensee: Any, fee: float, royalty: float, node_id: Any = None
 def grant(licensor: Any, licensee: Any, node_id: str, fee: float, world: Any) -> bool:
 	"""The licensee pays `fee` to the licensor and can make `node_id` at once. False, and nothing
 	moves, when there is nothing the licensee still lacks or when someone else holds the patent."""
-	entry = getattr(world, "patent_entry", lambda _node: None)(node_id)
+	entry = world.patent_entry(node_id)
 	if entry is not None and entry["holder"] != getattr(licensor, "actor_id", None):
 		return False
 	chain = imitation.missing_chain(node_id, world, licensee)

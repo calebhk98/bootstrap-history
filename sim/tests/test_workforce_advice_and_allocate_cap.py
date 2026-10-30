@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import json
 import unittest
 
-from sim.engine.society_adoption import AdoptionMixin
+from sim.diffusion.rules import staff_hire_advice
 from sim.ui.proto import typed
 from sim.ui.proto.allocation_cap import capped_to_useful
 
@@ -19,14 +19,14 @@ class HireAdviceTests(unittest.TestCase):
 
     def test_the_scholar_advice_is_a_hire_command_sized_to_the_deficit(self):
         for deficit in (1, 2, 5):
-            command = _hire_command(AdoptionMixin.staff_hire_advice(None, "scholars", deficit))
+            command = _hire_command(staff_hire_advice("scholars", deficit))
             self.assertEqual((command["cmd"], command["trade"], command["n"]), ("hire", "scholar", deficit))
 
     def test_with_no_known_deficit_the_advice_is_a_typical_order(self):
-        self.assertGreater(_hire_command(AdoptionMixin.staff_hire_advice(None, "scholars"))["n"], 0)
+        self.assertGreater(_hire_command(staff_hire_advice("scholars"))["n"], 0)
 
     def test_the_craft_advice_is_sized_to_the_deficit_too(self):
-        self.assertEqual(_hire_command(AdoptionMixin.staff_hire_advice(None, "artisans", 4))["n"], 4)
+        self.assertEqual(_hire_command(staff_hire_advice("artisans", 4))["n"], 4)
 
 
 class AllocateUsefulTests(unittest.TestCase):

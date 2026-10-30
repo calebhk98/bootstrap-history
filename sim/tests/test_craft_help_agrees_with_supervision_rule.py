@@ -7,13 +7,14 @@ import unittest
 
 from sim.labour.labour_capacity import CapacityMixin
 from sim.ui.proto.dispatch_ventures import _non_craft_labour_names
+from sim.tests.ui_stand_in import Game
 
 FAMILIES = {"labourer": "labour", "porter": "labour", "smith": "craft", "chemist": "scholar"}
 
 
 class _Labour(CapacityMixin):
     def __init__(self):
-        self._world = types.SimpleNamespace(wages={trade: 1.0 for trade in FAMILIES}, trade_family=FAMILIES.get)
+        self._world = Game(wages={trade: 1.0 for trade in FAMILIES}, trade_family=FAMILIES.get)
 
 
 class CraftHelpTests(unittest.TestCase):
@@ -29,7 +30,7 @@ class CraftHelpTests(unittest.TestCase):
         self.assertIn("labourer", report["not_craft"])
 
     def test_the_help_names_the_labouring_trades_as_not_craft(self):
-        sim = types.SimpleNamespace(labour=_Labour())
+        sim = Game(labour=_Labour())
         names = _non_craft_labour_names(sim)
         self.assertIn("labourers", names)
         self.assertNotIn("smiths", names)

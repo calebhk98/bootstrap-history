@@ -6,7 +6,6 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.agents import registry as registry_module
 from sim.agents.api import Business
 from sim.agents.registry import ActorRegistry
 from sim.engine.state import ActorRecord, ActorsState
@@ -16,6 +15,9 @@ TRADES = ("smith", "scribe")
 
 class IdleWorld:
     year = 100
+
+    def demonstrated(self):
+        return set()
 
     def sectors(self):
         return {}
@@ -56,15 +58,8 @@ def fresh_sum(registry, trade):
 
 
 class StaffBetweenYears(unittest.TestCase):
-    def setUp(self):
-        self.saved_spawners = list(registry_module.SPAWNERS)
-        registry_module.SPAWNERS[:] = []
-
-    def tearDown(self):
-        registry_module.SPAWNERS[:] = self.saved_spawners
-
     def advance_with(self, registry, spawner, read_during_last_turn=True):
-        registry_module.SPAWNERS[:] = [("test_spawner", spawner)]
+        registry.extensions.spawners[:] = [("test_spawner", spawner)]
         if read_during_last_turn:
             registry.actors["firm:004"].advance = lambda world: registry.staff_fte("smith")
         registry.advance(IdleWorld())

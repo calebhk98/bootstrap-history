@@ -8,7 +8,7 @@ prerequisite (a prerequisite instrument would make the declaration vacuous).
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.data import closure
+from sim.knowledge.api import closure
 
 REQUIRED_KEYS = ("instrument", "quantity", "needed", "unit", "needed_words")
 declared = {node_id: node["mechanics"]["diagnosis_instrument"]

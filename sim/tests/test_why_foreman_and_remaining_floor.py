@@ -7,7 +7,7 @@ import unittest
 
 from .harness import NODES
 from sim.engine.critical_path_remaining import remaining_critical_path_years
-from sim.engine.data import closure, critical_path
+from sim.knowledge.api import closure, critical_path
 from sim.ui.proto.render_screen_why import _why_chain, _why_staff_keep_open
 
 GOAL = "point_contact_transistor"

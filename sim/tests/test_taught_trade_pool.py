@@ -9,8 +9,9 @@ from .harness import check
 
 from sim.agents import business_crew
 from sim.agents.business import Business
-from sim.engine.agents_port import SimWorld
+from sim.actors.world import ActorWorld
 from sim.engine.data import TRADES_ABSENT
+from sim.tests.world_stand_in import fake_needs
 
 TAUGHT = sorted(TRADES_ABSENT)[0]
 
@@ -32,9 +33,13 @@ class Labour:
 def make_world(taught=12.0, founder_staff=2.0, actor_staff=3.0):
     labour = Labour()
     labour.taught = taught
-    seats = {"founder": types.SimpleNamespace(household=types.SimpleNamespace(employees={TAUGHT: founder_staff, "smith": 5.0}))}
     actors = types.SimpleNamespace(home_staff_fte=lambda trade, excluding=None: actor_staff if trade == TAUGHT else 0.0)
-    return SimWorld(types.SimpleNamespace(labour=labour, state=types.SimpleNamespace(seats=seats), actors=actors))
+    needs = fake_needs(trade_available=labour.trade_available, people_who_exist=labour.people_who_exist,
+                       taught_trade_people=labour.taught_trade_people, trades_absent=TRADES_ABSENT,
+                       staff_on_all_books=lambda trade: {TAUGHT: founder_staff, "smith": 5.0}.get(trade, 0.0))
+    world = ActorWorld(types.SimpleNamespace(needs=needs, cast=lambda: actors))
+    world.labour = labour
+    return world
 
 
 check("the trade the founder teaches is one nobody here practises", TAUGHT in TRADES_ABSENT, TAUGHT)
@@ -42,7 +47,7 @@ check("the pool is what the founder taught, less the founder's staff and the oth
       make_world().free_fte(TAUGHT, "firm:1") == 12.0 - 2.0 - 3.0)
 check("a taught trade has a pool", make_world().free_fte(TAUGHT, "firm:1") is not None)
 world = make_world()
-world._sim.labour.available = False
+world.labour.available = False
 check("a trade that is not available stays without a pool", world.free_fte(TAUGHT, "firm:1") is None)
 check("when the founder and others hold all of it, none is free", make_world(taught=4.0).free_fte(TAUGHT, "firm:1") == 0.0)
 check("a trade people practise already is drawn from the whole country's people", make_world().free_fte("smith", "firm:1") == 1000.0 - 5.0 - 0.0)

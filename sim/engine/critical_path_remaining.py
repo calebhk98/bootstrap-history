@@ -1,7 +1,7 @@
-"""The serial floor still ahead of an actor, as opposed to data.critical_path,
+"""The serial floor still ahead of an actor, as opposed to the knowledge rule critical_path,
 which is the floor from scratch.
 """
-from .data import closure, hard_pre, topo_order
+from sim.knowledge.api import closure, hard_pre, topo_order
 
 
 def remaining_critical_path_years(nodes, goal, done, active_years_left=None):

@@ -2,7 +2,7 @@
 shortage line already use."""
 
 import sim.engine.ui_port as ui_port
-from sim.engine.shortage_conditions import material_words
+from sim.engine.ui_port import material_words
 from sim.ui.market_report import priceable_materials
 
 from .economy import _material_capacity_rows
@@ -11,10 +11,10 @@ from .economy import _material_capacity_rows
 def _drawing_nodes(sim, material):
     """(running projects, finished things) whose listed materials include `material`, as [{"id", "name"}]."""
     def entries(node_ids):
-        return [{"id": node_id, "name": sim.nodes[node_id]["name"]} for node_id in sorted(node_ids)
-                if material in (sim.nodes[node_id].get("mat") or {})]
-    finished = [node_id for node_id in sim.done if sim.nodes[node_id].get("up", 0) > 0]
-    return entries(sim.active), entries(finished)
+        return [{"id": node_id, "name": sim.view("tree_nodes")()[node_id]["name"]} for node_id in sorted(node_ids)
+                if material in (sim.view("tree_nodes")()[node_id].get("mat") or {})]
+    finished = [node_id for node_id in sim.view("techniques_held")() if sim.view("tree_nodes")()[node_id].get("up", 0) > 0]
+    return entries(sim.view("active_projects")()), entries(finished)
 
 
 def material_story(sim, material):
@@ -25,7 +25,7 @@ def material_story(sim, material):
         return None
     reply = {"ok": True, "material_story": material, "name": material_words(material),
              "needed_by_running_projects": working, "drawn_by_finished_work": standing}
-    quote = sim.material_trade_quote(material) if priced else None
+    quote = sim.view("goods_quote")[material] if priced else None
     if quote is not None:
         reply["buy_per_tonne"] = round(quote["buy_per_tonne"], 2)
         reply["sell_per_tonne"] = round(quote["sell_per_tonne"], 2)

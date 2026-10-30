@@ -1,10 +1,11 @@
-"""Everything keyed by a seat's id that is not a field of the seat: when a seat is handed over, the replacement
-takes its place in each of these stores (sim/engine/seat_handover.py).
+"""Everything the engine keeps keyed by a seat's id that is not a field of the seat: when a seat is moved to another id
+(sim/engine/seat_move.py), the replacement takes its place in each of these stores.
 
 Moved by renaming the leaver's id to the replacement's, so nothing is paid and no total changes: accounts, debts,
-claims and goods (sim/agents/purses.py, sim/economy/api.py), the other seats' offers, shares, licences and
-disclosures, the other actors' records, and the year's market flows.
+claims and goods (sim/agents/purses.py, sim/economy/api.py), the other seats' holdings, the other actors' records, and the
+markets module's books and the year's market flows. The seats module renames its own stores (offers, shares, licences and disclosures).
 """
+from sim.markets.api import RenameMarketSeat
 from sim.rekey import rekey
 
 
@@ -15,16 +16,6 @@ def rename_seat_references(sim, from_id: str, to_id: str) -> None:
 		state.actors.purses.rename_account(from_id, to_id)
 		for record in state.actors.records.values():
 			rekey(record, from_id, to_id)
-	agent_economy = getattr(getattr(sim, "economy", None), "agent", None)
-	if agent_economy is not None:
-		agent_economy.rename_agent(from_id, to_id)
-	if state.economy is not None and state.economy.market_flows:
-		rekey(state.economy.market_flows, from_id, to_id)
+	sim.send(RenameMarketSeat(from_id, to_id))      # the markets module: the agent economy's books, the year's flows, the seat's party
 	for seat in state.seats.values():
 		rekey(seat.holdings, from_id, to_id)
-		rekey(seat.projects.disclosures, from_id, to_id)
-		seat.holdings.offers[:] = [offer for offer in seat.holdings.offers if offer.get("from") != offer.get("to")]
-	state.seats[to_id].holdings.shares_held.pop(to_id, None)   # a stake in oneself is no stake
-	parties = getattr(getattr(sim, "goods_market", None), "forget_seat_party", None)
-	if parties is not None:
-		parties(from_id)

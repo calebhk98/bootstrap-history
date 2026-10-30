@@ -13,11 +13,11 @@ import tempfile
 from .harness import *  # noqa: F401,F403
 
 from sim.agents.api import (Actor, ActorRegistry, ActorsState, CallbackPolicy, Firm, Government,
-                               RecordedActor, register_policy)
+                               RecordedActor, shipped_extensions)
 from sim.agents import imitation
 from sim.agents.policy import IdlePolicy
 from sim.engine.state import ActorRecord
-from sim.engine.mods import get_ordered_mods, load_mod_tree
+from sim.content.api import get_ordered_mods, load_mod_tree
 
 from .agents_fake_world import FakeWorld
 
@@ -156,10 +156,11 @@ chooser.decision_policy = CallbackPolicy(lambda actor, decision: ["test_visible"
 chooser.consider_imitation(policy_world)
 check("a callback policy chooses for the actor and cannot pick what is not on offer",
       set(chooser.works) == {"test_visible"})
-register_policy("test_never", IdlePolicy)
+policy_extensions = shipped_extensions()
+policy_extensions.policies["test_never"] = IdlePolicy
 chooser.record.policy_kind = "test_never"
-check("a registered policy is restored by name",
-      isinstance(ActorRegistry(policy_registry.state).get("government:home").decision_policy, IdlePolicy))
+check("a provided policy is restored by name",
+      isinstance(ActorRegistry(policy_registry.state, policy_extensions).get("government:home").decision_policy, IdlePolicy))
 
 
 # ---- a mod can declare gains ----------------------------------------------------------------------------------------

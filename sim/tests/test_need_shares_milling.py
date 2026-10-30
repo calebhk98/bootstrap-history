@@ -4,8 +4,8 @@ import json
 import os
 import unittest
 
-from sim.engine.catalog import load_production_catalog
-from sim.engine.solve_prices_core import techniques_available_to
+from sim.content.catalog import load_production_catalog
+from sim.prices.solve_prices_core import techniques_available_to
 from unittest import mock
 
 from sim.labour import workforce_carriage, workforce_spinup

@@ -5,15 +5,15 @@ QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.blockers import BLOCKER_KINDS
+from sim.projects.api import BLOCKER_KINDS, START_CHECKS
 from sim.labour.labour_staff_ledger import StaffLedgerMixin
 from sim.refusal import cause_of
 from sim.ui.proto.step_alerts import step_alerts, alert_severity
 from sim.ui.proto.step_stops import severe_stop_reason
+from sim.tests import event_stand_in
 
 # --- 129: every start check declares the kind of blocker it reports
-undeclared = [check_function.__name__ for check_function in S.Sim._START_REASON_CHECKS
-              if getattr(check_function, "blocker_kind", None) not in BLOCKER_KINDS]
+undeclared = [check.cause for check in START_CHECKS if check.kind not in BLOCKER_KINDS]
 check("every start check declares a known blocker kind", not undeclared, undeclared)
 
 # --- 241: a pure concept (science, no materials, no trades) cannot fail by luck
@@ -56,6 +56,7 @@ def departures(cause, counts, stops=()):
     ledger = SimpleNamespace(_world=SimpleNamespace(
         concerns_to_close_for_staffing=lambda: list(stops), stopped_yearly_value=lambda node_ids: 0.0,
         state=SimpleNamespace(household=SimpleNamespace(log=log), scenario=SimpleNamespace(year=100))))
+    event_stand_in.stood_in(ledger._world)
     ledger.yearly_value_of = lambda node_ids: ledger._world.stopped_yearly_value(node_ids)
     StaffLedgerMixin.log_staff_lost(ledger, cause, counts)
     return [message for _, message in log]

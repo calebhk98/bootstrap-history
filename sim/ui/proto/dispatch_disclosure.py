@@ -1,6 +1,7 @@
 """The disclose command: what to do with an invention you made (keep it secret, license it, publish it)."""
 
 from .command_registry import command
+from sim.engine import ui_port
 
 
 def _number(cmd, key):
@@ -26,13 +27,12 @@ def _number(cmd, key):
 def _cmd_disclose(sim, nodes, cmd, ended):
     node_id = cmd.get("id")
     if node_id is None:
-        return {"ok": True, "inventions": sim.disclosure_listing(),
-                "can_license_to": sim.licensable_actor_ids()}
+        return {"ok": True, "inventions": sim.view("disclosure_listing")(),
+                "can_license_to": sim.view("licensable_actor_ids")()}
     fee, royalty = _number(cmd, "fee"), _number(cmd, "royalty")
     if fee is None or royalty is None:
         return {"ok": False, "error": "fee and royalty must be numbers"}
-    reply = sim.disclose(node_id, str(cmd.get("mode", "")).strip().lower(),
-                         licensee=cmd.get("licensee"), fee=fee, royalty=royalty)
+    reply = sim.send(ui_port.Disclose(node_id, str(cmd.get("mode", "")).strip().lower(), cmd.get("licensee"), fee, royalty))
     if reply["ok"]:
-        reply["inventions"] = sim.disclosure_listing()
+        reply["inventions"] = sim.view("disclosure_listing")()
     return reply

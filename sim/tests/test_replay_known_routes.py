@@ -7,13 +7,16 @@ from types import SimpleNamespace
 from .harness import check
 from sim.ui import replay
 from sim.ui.memory import remembered
+from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True
 
 
 def _stub(done=(), granted=(), fog=True, revealed=()):
-    return SimpleNamespace(done=set(done), granted=set(granted), fog=fog, revealed=set(revealed), capital=100.0,
-                           state=SimpleNamespace(interface={}))
+    game = Game(done=set(done), granted=set(granted), fog=fog, revealed=set(revealed), capital=100.0,
+                state=Game(interface={}))
+    game.send = lambda command: game.revealed.update(command.node_ids)
+    return game
 
 
 with tempfile.TemporaryDirectory() as folder:

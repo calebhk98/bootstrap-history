@@ -6,6 +6,7 @@ The ids live in the new game's save through `revealed`; UI memory records which 
 import json
 import os
 
+from sim.engine import ui_port
 from .memory import remembered
 
 TOPIC = "replay"
@@ -13,7 +14,7 @@ TOPIC = "replay"
 
 def built_routes(sim):
     """Ids the player built themselves, not what their society already had."""
-    return sorted(set(sim.done) - set(sim.granted))
+    return sorted(set(sim.view("techniques_held")()) - set(sim.view("techniques_granted")()))
 
 
 def routes_path(session):
@@ -51,10 +52,10 @@ def record_end_of_run(sim, session):
 
 def apply_known_routes(sim, route_ids, node_ids):
     """Lift fog for the ids this game's tree has. Returns the ids applied (none when fog is off)."""
-    if not sim.fog:
+    if not sim.view("fog_of_war")():
         return []
     applied = sorted(set(route_ids) & set(node_ids))
-    sim.revealed = set(sim.revealed) | set(applied)
+    sim.send(ui_port.RevealNodes(tuple(applied)))
     memory = remembered(sim, TOPIC)
     memory["carried"] = sorted(set(memory.get("carried", [])) | set(applied))
     return applied

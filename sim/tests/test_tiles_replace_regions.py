@@ -13,6 +13,7 @@ import unittest
 
 from sim.geography.api import load_geography, regions_of_tiles, tiles_held
 
+from sim.tests import land_host
 from sim.world import deposits
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -88,15 +89,16 @@ class ForestAreaReadsTilesTests(unittest.TestCase):
 
     def test_home_land_area_is_the_sum_of_the_tiles(self):
         from sim.engine.data import load_civ
-        from sim.engine.forest_ceiling import held_land_area_km2
         civilisation = load_civ("rome_100ad")
         tiles = _geography()["land_tiles"]["tiles"]
         expected = sum(tiles[tile_id]["land_area_km2"] for tile_id in tiles_held(civilisation))
-        self.assertAlmostEqual(held_land_area_km2(civilisation), expected, places=6)
+        module = land_host.build(civilisation)
+        self.assertAlmostEqual(module.land_area_of(module.tiles_listed_by(civilisation)), expected, places=6)
 
     def test_a_civilisation_holding_no_tile_has_no_land(self):
-        from sim.engine.forest_ceiling import held_land_area_km2
-        self.assertEqual(held_land_area_km2({"home_tiles": []}), 0.0)
+        civilisation = {"home_tiles": []}
+        module = land_host.build(civilisation)
+        self.assertEqual(module.land_area_of(module.tiles_listed_by(civilisation)), 0.0)
 
 
 class NoModuleReadsRegionLabelsForTileDataTests(unittest.TestCase):
@@ -114,21 +116,21 @@ class NoModuleReadsRegionLabelsForTileDataTests(unittest.TestCase):
 
     def test_farm_land_and_weather_cells_follow_the_tiles_held(self):
         from types import SimpleNamespace
-        from sim.engine.core import Sim
+        from sim.agriculture import rules
+        from sim.agriculture.constants import FARM_WEATHER_POOLED_CELL_CAP
+        from sim.tests import land_host
         from sim.geography import food_society
         from sim.world import land
 
-        def stand_in(civilisation):
-            game = SimpleNamespace(civ=civilisation, world_map=None)
-            game._cap_pooled_farm_weather_cells = lambda cells: Sim._cap_pooled_farm_weather_cells(game, cells)
-            game._raw_farm_weather_cells = lambda: Sim._raw_farm_weather_cells(game)
-            return game
+        def cells_of(civilisation):
+            rows = land_host.build(civilisation).held_tile_geometry()
+            return rules.pooled_cells(rules.raw_cells(rows), FARM_WEATHER_POOLED_CELL_CAP)
 
         labelled, tiled = self._civilisation(False), self._civilisation(True)
-        territory = Sim._compute_farm_weather_cells(stand_in(tiled))
+        territory = cells_of(tiled)
         self.assertTrue(territory)
         self.assertEqual([cell.cell_id for cell in territory],
-                         [cell.cell_id for cell in Sim._compute_farm_weather_cells(stand_in(labelled))])
+                         [cell.cell_id for cell in cells_of(labelled)])
         self.assertAlmostEqual(sum(cell.weight for cell in territory), 1.0)
         tiled_sites = food_society.crop_sites(tiled, None, 0.7, {})
         labelled_sites = food_society.crop_sites(labelled, None, 0.7, {})
