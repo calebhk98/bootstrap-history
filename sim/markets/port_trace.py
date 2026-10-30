@@ -8,15 +8,16 @@ from sim.economy import api as economy_api
 
 from . import port_sites
 from .port_setup import build_setup
+from .port_trace_columns import macro_columns
 from .port_year import YearInputs
 
 COLUMNS = ("year", "price_level", "money_supply", "rate", "wear", "struck", "change", "metal_held", "wage", "hired_hours",
-           "idle_hours")
+           "idle_hours", "unemployment", "real_output")
 
 
 def spin_up_trace(game, years):
-    """[{year, price_level, money_supply, rate, wear, struck, change, metal_held, wage, hired_hours, idle_hours}]
-    for `years` years of the
+    """[{year, price_level, money_supply, rate, wear, struck, change, metal_held, wage, hired_hours, idle_hours,
+    unemployment, real_output}] (the last four of the macro columns from port_trace_columns.py) for `years` years of the
     first stage on the opening `game` saved. `wear` is the coin worn away that year, `struck` the coin the
     mint paid out net of what it melted, `change` the year's change in the money stock, `metal_held` the metal
     the mint holds at the year's end (economy units). `wage` is the unskilled trade's mean wage that year (economy
@@ -31,8 +32,9 @@ def spin_up_trace(game, years):
     for year in range(years):
         outcome = economy.step(inputs)
         row = {"year": year, "price_level": outcome.basket_price_level, "money_supply": outcome.money_supply,
-               "rate": outcome.rate, "wage": outcome.wages.get(setup.unskilled_trade, 0.0),
+               "rate": outcome.rate,
                "hired_hours": outcome.hired_hours, "idle_hours": outcome.idle_hours}
+        row.update(macro_columns(outcome, setup.unskilled_trade, economy_api.spin_up_state(economy, outcome)["real_output"]))
         row.update(economy_api.money_year_figures(economy, outcome))
         rows.append(row)
     return rows

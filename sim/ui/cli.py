@@ -1470,6 +1470,7 @@ def main():
                                "price level, the money stock and the mint's strikes by year; slow (minutes)")
     subparser.add_argument("--civ", default="", help="civilisation id (default: the default one)")
     subparser.add_argument("--years", type=int, default=60, help="years to run (default 60)")
+    subparser.add_argument("--csv", default="", help="also write year, price level, wage, unemployment and real output to this CSV file")
     subparser = sub.add_parser("spin-up-sensitivity", help="run a civilisation's spin-up under variants of how the economy "
                                "adjusts and print each variant's price-level and wage drift, cycle amplitude and period; "
                                "one spin-up per variant (minutes each on Rome)")
