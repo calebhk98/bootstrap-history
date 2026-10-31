@@ -7,6 +7,17 @@ import unittest
 from sim.economy import households_buffer_stock as stock
 
 
+class ShareWealthCarriedTests(unittest.TestCase):
+    def test_the_wealth_recorded_at_the_last_close_is_the_wealth_the_year_starts_with(self):
+        self.assertEqual(stock.share_wealth_carried(recorded=500.0, current=40.0), 500.0)
+
+    def test_a_household_with_no_record_reads_the_current_wealth(self):
+        self.assertEqual(stock.share_wealth_carried(recorded=None, current=40.0), 40.0)
+
+    def test_a_recorded_zero_is_a_record(self):
+        self.assertEqual(stock.share_wealth_carried(recorded=0.0, current=40.0), 0.0)
+
+
 class SpendingBudgetTests(unittest.TestCase):
     def test_the_yearly_share_compounds_the_monthly_share(self):
         self.assertAlmostEqual(stock.yearly_cash_share(0.01), 1.0 - 0.99 ** 12)

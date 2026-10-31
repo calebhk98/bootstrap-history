@@ -43,6 +43,7 @@ class Cohort:
     cash_target: float = 0.0           # 0 until the first close; goods_orders then computes it
     last_basket_price_level: float = 1.0
     last_year_income: float = 0.0
+    share_wealth: Optional[float] = None   # what it owned of the firms at the last close (None before one)
     last_year_spending: float = 0.0
     expected_spending: float = 0.0     # smoothed spending that sizes the stock of durables it wants
     expected_floor_cost: float = 0.0   # smoothed cost of the cohort's need floors; spending beyond it sizes durables

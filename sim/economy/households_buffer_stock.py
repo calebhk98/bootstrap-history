@@ -7,6 +7,8 @@ and line 127 (without trading the budget is capped at the payment account). The 
 the manual (section 3.3.2) describes is commented out in that file; this follows the live line. The C sets no
 default for either constant; the manual's section 10.1.3 gives them.
 """
+from typing import Optional
+
 from sim.constants import declare
 
 MONTHS_PER_YEAR = 12
@@ -51,6 +53,14 @@ def spending_budget(mean_net_income: float, cash: float, share_wealth: float, cl
         target = WEALTH_INCOME_RATIO_TARGET / MONTHS_PER_YEAR * mean_net_income
         budget += yearly_cash_share() * (share_wealth - target)
     return max(0.0, min(cash, budget))
+
+
+def share_wealth_carried(recorded: Optional[float], current: float) -> float:
+    """The share wealth the spending rule reads for the year: what the household owned at the last close (year end,
+    producers' cash back from the year's sales), not the reading at the goods orders, by which the producers have paid
+    the year's wages and what they own is mostly out of their accounts. With no record (a new household) the
+    current reading."""
+    return current if recorded is None else recorded
 
 
 def mean_net_income(income_this_year: float, last_year_income: float) -> float:

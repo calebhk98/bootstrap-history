@@ -489,4 +489,5 @@ def _strike_opening_cash(setup, record, view, extra_spending) -> None:
         purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0),
                                                        extra_spending=extra_spending.get(cohort.agent_id, 0.0))
         transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, purse, "opening coin"))
+        record.cohorts[cohort.agent_id] = replaced(cohort, share_wealth=owned.get(cohort.agent_id, 0.0))
     record.book.transfer_many([transfer for transfer in transfers if transfer.amount > 0.0])

@@ -51,6 +51,7 @@ def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: M
     first_good = next((need.goods[0][0] for need in basket.needs if need.goods), None)
     floor_cost = subsistence_cost_per_person(need_prices(basket, view, cohort.tile)) * cohort.people
     expected, level, target = cohort.expected_inflation, cohort.last_basket_price_level, cohort.cash_target
+    share_wealth = cohort.share_wealth
     if first_good is not None:
         money = view.currency_of(view.area_of(first_good, cohort.tile))
         level = view.basket_price_level(money)
@@ -59,11 +60,12 @@ def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: M
             observed = level / cohort.last_basket_price_level - 1.0
         expected = currency.update_expected_inflation(cohort.expected_inflation, observed)
         # the cash the spending rule rests at: the one figure for cash wanted (mint, lending and the opening read it)
+        share_wealth = equity_of(view, cohort.agent_id)
         target = opening_resting.resting_household_purse(
             households_buffer_stock.mean_net_income(income_received, cohort.last_year_income),
-            equity_of(view, cohort.agent_id), claims_of(view, cohort.agent_id, money))
+            share_wealth, claims_of(view, cohort.agent_id, money))
     return renewed(cohort, expected_inflation=expected, last_basket_price_level=level, cash_target=target,
-                   last_year_income=income_received, last_year_spending=spent,
+                   share_wealth=share_wealth, last_year_income=income_received, last_year_spending=spent,
                    expected_spending=durable_stock.update_expected_spending(cohort.expected_spending, spent),
                    expected_floor_cost=durable_stock.update_expected_spending(cohort.expected_floor_cost, floor_cost),
                    unmet_floor_by_need=unmet,
