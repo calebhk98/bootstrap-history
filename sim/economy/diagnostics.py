@@ -101,3 +101,17 @@ def _median(values) -> float:
 def _mean(values) -> float:
     values = [value for value in values if not math.isnan(value)]
     return statistics.fmean(values) if values else math.nan
+
+
+def person_equivalent_unemployment(markets: Iterable[tuple]) -> Optional[float]:
+    """Share of the people who offered hours that the labour markets left without work, from rows of
+    (people, hours offered, hours hired) per (trade, area) market. The core hires hours, not named people, so a
+    market's people are taken to share its unhired hours evenly: people times idle over offered. A market that
+    offered nothing is outside the labour force; None when no market did."""
+    seeking = unhired = 0.0
+    for people, offered, hired in markets:
+        if people <= 0.0 or offered <= 0.0:
+            continue
+        seeking += people
+        unhired += people * max(0.0, 1.0 - hired / offered)
+    return unhired / seeking if seeking > 0.0 else None
