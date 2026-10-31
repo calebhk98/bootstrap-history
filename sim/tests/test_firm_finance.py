@@ -102,9 +102,6 @@ class BankruptcyTests(unittest.TestCase):
         self.assertAlmostEqual(lost, 70.0)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 from types import SimpleNamespace
 
@@ -164,3 +161,39 @@ class WriteOffTests(unittest.TestCase):
         record = SimpleNamespace(loans=[Loan("l1", "bank", "f1", "coin", 90.0)], credit_losses={}, remembered_defaults={})
         self.assertEqual(firm_year.write_off(record, "f1", 0.0), 0.0)
         self.assertEqual(record.credit_losses, {})
+
+
+class ExcessCashTests(unittest.TestCase):
+    def test_cash_to_keep_is_production_commitments_replacement_and_a_buffer_of_the_costs(self):
+        kept = finance.cash_to_keep(production=40.0, commitments=20.0, replacement=10.0, running_costs=100.0)
+        self.assertAlmostEqual(kept, 70.0 + finance.CASH_BUFFER_SHARE_OF_COSTS * 100.0)
+
+    def test_cash_above_what_is_kept_is_excess(self):
+        self.assertAlmostEqual(finance.excess_cash(cash=500.0, kept=120.0), 380.0)
+
+    def test_cash_below_what_is_kept_has_no_excess(self):
+        self.assertEqual(finance.excess_cash(cash=100.0, kept=120.0), 0.0)
+
+    def test_the_payout_is_the_larger_of_the_earnings_rule_and_the_excess(self):
+        self.assertAlmostEqual(finance.payout(rule_dividend=14.0, excess=380.0), 380.0)
+        self.assertAlmostEqual(finance.payout(rule_dividend=14.0, excess=3.0), 14.0)
+
+
+class SettledExcessTests(unittest.TestCase):
+    def test_a_sound_producer_with_cash_above_its_needs_pays_the_excess(self):
+        year = settle(cash=1000.0, cash_kept=100.0)
+        self.assertEqual(year.state, "ok")
+        self.assertAlmostEqual(year.dividend, 900.0)
+
+    def test_a_loss_making_producer_still_pays_the_excess(self):
+        self.assertAlmostEqual(settle(revenue=10.0, cash=1000.0, cash_kept=100.0).dividend, 900.0)
+
+    def test_a_crisis_still_cuts_the_dividend(self):
+        self.assertAlmostEqual(settle(cash=75.0, cash_kept=100.0).dividend, 15.0)
+
+    def test_a_bankrupt_producer_pays_nothing(self):
+        self.assertEqual(settle(equity_value=-1.0, assets=100.0, debt=101.0, cash=1000.0, cash_kept=100.0).dividend, 0.0)
+
+
+if __name__ == "__main__":
+    unittest.main()

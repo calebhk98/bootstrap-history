@@ -42,6 +42,13 @@ BANKRUPTCY_IDLE_YEARS = declare(
     why="Eurace@Unibi, Firm_set_bankruptcy_illiquidity and Firm_set_bankruptcy_insolvency: a bankrupt firm is inactive "
         "for const_bankruptcy_idle_period iterations before it resumes: 240 in Eurace@Unibi shipped state its/0_after_2k_transient.xml (opened), a year of its "
         "20-day months.")
+CASH_BUFFER_SHARE_OF_COSTS = declare(
+    "CASH_BUFFER_SHARE_OF_COSTS", 0.25, kind="temporary_heuristic", unit="share of last year's running costs kept as a buffer",
+    source=None, confidence="D", retire="Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md",
+    why="A producer pays out the cash beyond what next year needs (working capital, commitments, plant to rebuild) "
+        "and a buffer against a year's sales falling short of the plan. The buffer follows the variance of its sales "
+        "and the credit it can draw on, which are not modelled; Eurace@Unibi has no such rule (it pays a share of "
+        "earnings, and owners' cash then sits in firms).")
 ARREARS_EPSILON = 1e-9
 
 
@@ -74,6 +81,22 @@ def dividend_total(net_earnings_history: Sequence[float], revenue_history: Seque
     if average_revenue < 1e-6 or cash < FULL_PAYOUT_YEARS_OF_REVENUE * average_revenue:
         return DIVIDEND_EARNINGS_RATIO * average_earnings, False
     return average_earnings, True
+
+
+def cash_to_keep(production: float, commitments: float, replacement: float, running_costs: float) -> float:
+    """The cash a producer holds back at the year's end: next year's production spending, the interest and
+    installments due, the plant it will rebuild, and a buffer of the year's running costs."""
+    return production + commitments + replacement + CASH_BUFFER_SHARE_OF_COSTS * max(0.0, running_costs)
+
+
+def excess_cash(cash: float, kept: float) -> float:
+    """Cash beyond what the producer keeps; none when it holds less."""
+    return max(0.0, cash - kept)
+
+
+def payout(rule_dividend: float, excess: float) -> float:
+    """The earnings rule's dividend, or the excess cash when that is more: the owners get cash the business does not need."""
+    return max(rule_dividend, excess)
 
 
 def liquidity_needs(cash: float, production: float, financial: float, dividend: float) -> Liquidity:
