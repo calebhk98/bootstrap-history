@@ -7,7 +7,7 @@ market the sold-out seller does so on the spot, since buyers are standing there 
 buyers' unspent money was involuntary saving and the price the market remembered stayed below the crossing.
 """
 import math
-from typing import List, Sequence
+from typing import List, Mapping, Optional, Sequence
 
 from sim.book import ROUNDING_SHARE
 
@@ -17,9 +17,13 @@ from .types import Offer
 SEARCH_PRECISION = 1e-4     # numerical tolerance of the bisection on the ask level, not a model number
 
 
-def _lifted(offers: Sequence[Offer], raisable: Sequence[int], level: float) -> List[Offer]:
+def _lifted(offers: Sequence[Offer], raisable: Sequence[int], level: float,
+            limits: Optional[Mapping[int, float]] = None) -> List[Offer]:
+    """`offers` with each raisable ask at `level`, no higher than its own limit (an ask already above its limit stays)."""
     chosen = set(raisable)
-    return [Offer(each.seller, each.good, each.area, each.tile, each.quantity, max(each.reservation_price, level))
+    limits = limits or {}
+    return [Offer(each.seller, each.good, each.area, each.tile, each.quantity,
+                  max(each.reservation_price, min(level, limits.get(index, math.inf))))
             if index in chosen else each for index, each in enumerate(offers)]
 
 
@@ -38,9 +42,11 @@ def price_ceiling(buyers: goods_market.Buyers, supply: float) -> float:
     return min(highest, money / supply if supply > 0.0 else math.inf)
 
 
-def raise_asks(buyers: goods_market.Buyers, offers: Sequence[Offer], raisable: Sequence[int]) -> List[Offer]:
+def raise_asks(buyers: goods_market.Buyers, offers: Sequence[Offer], raisable: Sequence[int],
+               limits: Optional[Mapping[int, float]] = None) -> List[Offer]:
     """`offers` with the asks of the `raisable` indices (nothing moves unless the buyers ask for the whole stock now) lifted to the highest
-    common level at which the buyers still ask for the whole stock (an ask above the level stays), no higher than the buyers could pay for the stock."""
+    common level at which the buyers still ask for the whole stock (an ask above the level stays), no higher than the buyers could pay for the stock.
+    `limits` (index -> the most that seller may ask, the band above its cost) hold a seller below the common level."""
     offers = list(offers)
     if not raisable or not _demand_covers(buyers, offers):
         return offers
@@ -49,13 +55,17 @@ def raise_asks(buyers: goods_market.Buyers, offers: Sequence[Offer], raisable: S
     ceiling = price_ceiling(buyers, supply)
     if lowest <= 0.0 or not math.isfinite(ceiling) or ceiling <= lowest:
         return offers
+    if limits:
+        ceiling = min(ceiling, max(limits.get(index, math.inf) for index in raisable))
+        if ceiling <= lowest:
+            return offers
     low, high = lowest, ceiling
-    if not _demand_covers(buyers, _lifted(offers, raisable, lowest * (1.0 + SEARCH_PRECISION))):
+    if not _demand_covers(buyers, _lifted(offers, raisable, lowest * (1.0 + SEARCH_PRECISION), limits)):
         return offers
     while high / low - 1.0 > SEARCH_PRECISION:
         middle = math.sqrt(low) * math.sqrt(high)
-        if _demand_covers(buyers, _lifted(offers, raisable, middle)):
+        if _demand_covers(buyers, _lifted(offers, raisable, middle, limits)):
             low = middle
         else:
             high = middle
-    return _lifted(offers, raisable, low)
+    return _lifted(offers, raisable, low, limits)
