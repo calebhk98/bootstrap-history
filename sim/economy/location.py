@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .entrant_rent import site_rent_per_run
-from . import labour_state, location_inputs, sites, unit_cost
+from . import crop_sites, labour_state, location_inputs, sites, unit_cost
 from .market_areas import MarketArea
 from .producers import Producer, live_input_prices
 from .setup import labour_area
@@ -111,8 +111,9 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
     (sites.UNSITED_EXTRACTION_ANYWHERE)."""
     by_recipe = sites.limits_by_recipe(setup.site_limits)
     population = setup.opening_population_by_tile
+    placed = _placed_tiles(setup, recipe)
     suited = tuple(tile for tile in sites.suited_tiles(recipe, setup.tiles, area.tiles, setup.recipe_allowed)
-                   if _crops_on(setup, recipe, tile))
+                   if tile in placed)
     if not suited:
         return {}
     if recipe.site_bound and not by_recipe.get(recipe.recipe_id):
@@ -132,9 +133,13 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
     return split_runs(runs, weights, {})
 
 
-def _crops_on(setup, recipe: Recipe, tile: TileId) -> bool:
-    """False where the recipe takes the tile's yield and the tile yields nothing: a run there makes nothing."""
-    return setup.yield_factor_by_recipe_tile.get(recipe.recipe_id + "@" + tile, 1.0) > 0.0
+def _placed_tiles(setup, recipe: Recipe) -> frozenset:
+    """The tiles the opening may place the recipe on: where a run pays at the opening's prices and wages (the test the
+    first year's plan applies), over every tile it can run on, not one area's (crop_sites.sites)."""
+    every = sites.suited_tiles(recipe, setup.tiles, sorted(setup.tiles), setup.recipe_allowed)
+    return frozenset(crop_sites.sites(
+        {tile: setup.yield_factor_by_recipe_tile.get(recipe.recipe_id + "@" + tile, 1.0) for tile in every},
+        recipe, setup.opening_prices, setup.opening_wages))
 
 
 def entry_siting(setup, record, view, area_map, carriage) -> Siting:

@@ -23,7 +23,7 @@ def yields_keyed(factor_scale=1.0):
 
 def setup_with(yield_factor_by_recipe_tile):
     return types.SimpleNamespace(
-        recipes=fixture.recipes(), opening_prices={fixture.GRAIN: 1.0}, opening_wages={fixture.LABOURER: 1.0},
+        recipes=fixture.recipes(), opening_prices={fixture.GRAIN: 100.0}, opening_wages={fixture.LABOURER: 1.0},
         yield_factor_by_recipe_tile=yield_factor_by_recipe_tile, opening_population_by_tile=dict(PEOPLE),
         tiles={tile: None for tile in PEOPLE}, recipe_allowed=lambda recipe_id, tile: True)
 
