@@ -1,0 +1,618 @@
+From 9810c11e54a505869d590d91e76184a70a76bf54 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 20:32:37 +0000
+Subject: [PATCH] Intake and migration for idle workers: vacancies are room to
+ learn a trade picked up in a season, switchers choose among trades with room,
+ idle workers weigh other areas' trades they can enter, migration in rounds
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WXrfievykJ3StG4swPtute
+---
+ sim/labour/market/DESIGN.md             |  13 ++-
+ sim/labour/market/entrants.py           |  10 ++-
+ sim/labour/market/migration.py          | 113 ++++++++++++++++++++----
+ sim/labour/market/switching.py          |  36 +++++---
+ sim/labour/market/training.py           |  49 ++++++++--
+ sim/tests/test_labour_core_migration.py |  67 ++++++++++++++
+ sim/tests/test_labour_core_switching.py |  29 +++++-
+ sim/tests/test_labour_core_training.py  |  30 +++++++
+ 8 files changed, 300 insertions(+), 47 deletions(-)
+
+diff --git a/sim/labour/market/DESIGN.md b/sim/labour/market/DESIGN.md
+index 33a738d..ccce46b 100644
+--- a/sim/labour/market/DESIGN.md
++++ b/sim/labour/market/DESIGN.md
+@@ -36,7 +36,9 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
+    - Those who do not finish join the fallback trade.
+    - Yearly intake to a trade in an area is capped by its teachers:
+      `incumbent workers * apprentices_per_master / training_years + school seats`.
+-   - A trade with no incumbents and no school cannot reproduce.
++   - A trade with no incumbents and no school cannot reproduce, unless it is learned on the job (training no longer than
++     `training.LEARNED_ON_THE_JOB_YEARS`, a season's work): there an employer's vacancy is room to learn, so places are
++     the larger of the teachers' room and the vacancies employers could not fill (`training.vacancy_workers`).
+ 4. **Entrants** (`entrants.py`). The coming-of-age cohort chooses a trade, band by band, by logit over:
+    `completion_chance * present_value(income_at_graduation) + (1 - completion_chance) * present_value(fallback income) + taste_scale * log(jobs in the trade)`.
+    - The cohort chooses in rounds (`expectations.DECISION_ROUNDS_PER_YEAR`); each round sees the places
+@@ -67,12 +69,19 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
+    - A destination is weighed by `income_at_graduation` whether or not it has workers already, and
+      switchers also choose in rounds. Weighing a trade that has workers by its pay today made a shortage
+      the apprentices would fill still draw switchers and flooded it.
+-   - Switchers become trainees of the new trade and use the same intake.
++   - Switchers become trainees of the new trade and use the same intake. They choose among the trades that have room
++     (`training.open_places`), so a full workshop does not take a share of the logit only to send its people back.
+    - A trade's workers who sold no hours this year reconsider at the share that found no work, if that is over the
+      yearly consideration share: only those without work look about.
+ 6. **Migration** (`migration.py`). Workers re-weigh their area against the routes out of it, with a stay option.
+    - The comparison is the log of real expected wage (expected wage over subsistence) in the same trade, less the moving cost in years of subsistence.
+    - Only listed routes are considered, so the cost is areas × routes × trades.
++   - A trade's workers who sold no hours (over the share who look about anyway) also weigh, at that share, every other
++     trade they can take up at once or within a season (`training.learned_on_the_job`) that a route's area hires in, at the
++     same moving cost; a trade dead in the worker's own area is not a reason to stay. Those entering a trade with a season's
++     training become its trainees through the same places.
++   - The year's moving is done in rounds (`expectations.DECISION_ROUNDS_PER_YEAR`); each round reads incomes with the earlier
++     rounds' arrivals counted (`expectations.hours_arrived_since`).
+ 
+ Every logit uses a log-sum-exp guard. Every move takes people out of one count and puts the same float
+ into another, and a test checks that people are conserved.
+diff --git a/sim/labour/market/entrants.py b/sim/labour/market/entrants.py
+index efa615f..23ccd21 100644
+--- a/sim/labour/market/entrants.py
++++ b/sim/labour/market/entrants.py
+@@ -86,11 +86,11 @@ def _place_area(state: MarketState, inputs: YearInputs, clearings: Mapping, area
+                      for trade in candidates}
+         income.update(fresh)
+         values.update(_band_values(inputs, list(fresh), income, fallback, size_terms))
+-        taken = _place_round(state, inputs, area, people, report, candidates, values, scale, fallback)
++        taken = _place_round(state, inputs, clearings, area, people, report, candidates, values, scale, fallback)
+         stale = [trade for trade in candidates if trade in taken]
+ 
+ 
+-def _place_round(state: MarketState, inputs: YearInputs, area: str, people: float, report: YearReport,
++def _place_round(state: MarketState, inputs: YearInputs, clearings: Mapping, area: str, people: float, report: YearReport,
+                  candidates: List[str], values: Mapping[str, List[float]], scale: float, fallback: str) -> set:
+     """One round of choices; returns the trades that took people."""
+     waiting = aptitude.split_evenly(people)
+@@ -107,13 +107,15 @@ def _place_round(state: MarketState, inputs: YearInputs, area: str, people: floa
+             bands = wanting[trade]
+             if aptitude.band_total(bands) <= 0.0:
+                 continue
+-            refused = training.enrol(state, inputs, area, trade, bands)
++            refused = training.enrol(state, inputs, area, trade, bands, 1.0,
++                                     training.vacancy_workers(inputs, clearings, area, trade))
+             places.pop(trade, None)
+             entered[trade] = entered.get(trade, 0.0) + aptitude.band_total(bands) - aptitude.band_total(refused)
+             aptitude.add_bands(waiting, refused)
+         for trade in open_trades:
+             if trade not in places:
+-                places[trade] = training.open_places(state, inputs, area, trade)
++                places[trade] = training.open_places(state, inputs, area, trade,
++                                                     training.vacancy_workers(inputs, clearings, area, trade))
+         open_trades = [trade for trade in open_trades if places[trade] > OPEN_PLACES_TOLERANCE]
+     leftover = aptitude.band_total(waiting)
+     if leftover > 0.0:
+diff --git a/sim/labour/market/migration.py b/sim/labour/market/migration.py
+index 415a110..72a0749 100644
+--- a/sim/labour/market/migration.py
++++ b/sim/labour/market/migration.py
+@@ -13,7 +13,9 @@ from typing import Dict, List, Optional, Tuple
+ 
+ from sim.constants import declare
+ 
+-from .expectations import expected_income, index_clearings, logit_shares
++from . import aptitude, training
++from . import expectations
++from .expectations import DECISION_ROUNDS_PER_YEAR, expected_income, idle_share_of, income_at_graduation, index_clearings, logit_shares
+ from .records import Clearing, MarketState, Route, YearInputs, YearReport
+ 
+ MIGRATION_TASTE_SCALE = declare(
+@@ -38,12 +40,19 @@ STAY = "stay"
+ 
+ 
+ def _real_income(state, inputs, clearings, area: str, trade: str, cache: Dict[Tuple[str, str], float]) -> float:
+-    """Expected income after the state's take, over the area's subsistence; zero when the area has no subsistence figure."""
++    """Expected income after the state's take, over the area's subsistence; zero when the area has no subsistence figure.
++    A trade with a season's training is weighed by what it pays once learned, as a switcher weighs it."""
+     key = (area, trade)
+     if key not in cache:
+         floor = inputs.subsistence_per_worker_year.get(area, 0.0)
+         kept = 1.0 - min(1.0, max(0.0, inputs.taxed_share.get(area, 0.0)))
+-        cache[key] = kept * expected_income(state, inputs, clearings, area, trade) / floor if floor > 0.0 else 0.0
++        spec = inputs.trades.get(trade)
++        if spec is not None and spec.training_years > 0.0:
++            income = income_at_graduation(state, inputs, clearings, area, trade,
++                                          aptitude.completion_by_band(spec.difficulty))
++        else:
++            income = expected_income(state, inputs, clearings, area, trade)
++        cache[key] = kept * income / floor if floor > 0.0 else 0.0
+     return cache[key]
+ 
+ 
+@@ -51,11 +60,13 @@ def _sorted_routes(routes: List[Route]) -> List[Route]:
+     return sorted(routes, key=lambda route: (route.destination, route.moving_cost))
+ 
+ 
+-def move_shares(real_origin: float, options: List[Tuple[Optional[float], float]]) -> List[float]:
++def move_shares(real_origin: float, options: List[Tuple[Optional[float], float]],
++                considering: Optional[List[float]] = None) -> List[float]:
+     """Share of the people of one place who move along each option this year. An option is the real income at its
+     end (income over that place's subsistence; None or not above zero means it cannot be weighed) and the moving cost
+     in years of the origin's subsistence. Staying is an option scoring zero; only the share who consider moving at all
+-    can go. The rule for workers between market areas and for people between regions alike."""
++    can go (`considering`, per option, replaces that share where a caller knows more people look about). The rule for
++    workers between market areas and for people between regions alike."""
+     scores: Dict[str, float] = {STAY: 0.0}
+     for position, (real_destination, cost_in_years) in enumerate(options):
+         if real_destination is None or real_destination <= 0.0:
+@@ -65,15 +76,74 @@ def move_shares(real_origin: float, options: List[Tuple[Optional[float], float]]
+     if len(scores) == 1:
+         return [0.0] * len(options)
+     shares = logit_shares(scores, MIGRATION_TASTE_SCALE)
+-    return [shares.get(str(position), 0.0) * MIGRATION_CONSIDERATION_SHARE_PER_YEAR for position in range(len(options))]
++    looking = considering if considering is not None else [MIGRATION_CONSIDERATION_SHARE_PER_YEAR] * len(options)
++    return [shares.get(str(position), 0.0) * looking[position] for position in range(len(options))]
++
++
++def _entry_trades(state: MarketState, inputs: YearInputs) -> List[str]:
++    """Trades a worker can take up in another area at once or within a season, whatever his own."""
++    allowed = inputs.enterable_trades
++    return sorted(trade for trade, spec in inputs.trades.items()
++                  if (allowed is None or trade in allowed) and training.learned_on_the_job(spec))
++
++
++def _options(state, inputs, index, origin, trade, routes, floor, entry, cache):
++    """Where a worker of `trade` here could go: the same trade at the end of each route, and where he sold no
++    hours (more than the share who look about anyway), any other trade he can enter at once that a route's area hires in. Each is (real income there, moving
++    cost in years of subsistence, destination, destination trade, share who look at it)."""
++    idle = idle_share_of(index.get((origin, trade)))
++    options = []
++    for route in routes:
++        if route.destination == origin:
++            continue
++        cost = (route.moving_cost + route.expected_penalty) / floor
++        options.append((_real_income(state, inputs, index, route.destination, trade, cache), cost,
++                        route.destination, trade, MIGRATION_CONSIDERATION_SHARE_PER_YEAR))
++        if idle <= MIGRATION_CONSIDERATION_SHARE_PER_YEAR:   # only those who found no work look at another trade
++            continue
++        for other in entry:
++            if other != trade and (route.destination, other) in index:
++                options.append((_real_income(state, inputs, index, route.destination, other, cache), cost,
++                                route.destination, other, idle))
++    return options
++
++
++def _within_vacancies(state: MarketState, inputs: YearInputs, index, flows):
++    """Those changing trade along with their move go only where employers have vacancies left: the hours employers
++    could not fill, less the hands that have joined the trade there since. Where more would come, every origin's
++    people are held back by the same share."""
++    requested: Dict[Tuple[str, str], float] = {}
++    for _origin, destination, trade, there, moved in flows:
++        if there != trade:
++            requested[(destination, there)] = requested.get((destination, there), 0.0) + sum(moved)
++    scale: Dict[Tuple[str, str], float] = {}
++    for (destination, there), total in requested.items():
++        clearing = index[(destination, there)]
++        arrived = expectations.hours_arrived_since(state, inputs, clearing, destination, there)
++        room = max(0.0, clearing.vacant_hours - arrived) / inputs.hours_per_worker_year
++        scale[(destination, there)] = min(1.0, room / total) if total > 0.0 else 0.0
++    return [(origin, destination, trade, there,
++             moved if there == trade else [count * scale[(destination, there)] for count in moved])
++            for origin, destination, trade, there, moved in flows]
+ 
+ 
+ def migrate(state: MarketState, inputs: YearInputs, clearings: Dict[Tuple[str, str], Clearing],
+             report: YearReport) -> None:
+-    """Move workers along the routes; record the net change per area in `report.migrated`."""
++    """Move workers along the routes; record the net change per area in `report.migrated`. The year's moving is done
++    in rounds, each reading the incomes with the earlier rounds' arrivals counted, so a large idle pool does not all
++    pick the same vacancy on last year's figures."""
+     index = clearings if isinstance(clearings, dict) else index_clearings(clearings)
++    entry = _entry_trades(state, inputs)
++    rounds = int(DECISION_ROUNDS_PER_YEAR)
++    for _round in range(rounds):
++        _migrate_round(state, inputs, index, entry, report, 1.0 / rounds)
++
++
++def _migrate_round(state: MarketState, inputs: YearInputs, index, entry: List[str], report: YearReport,
++                   part: float) -> None:
++    """One round: `part` of the year's looking, flows computed from the counts at its start and applied after."""
+     cache: Dict[Tuple[str, str], float] = {}
+-    flows: List[Tuple[str, str, str, List[float]]] = []   # (origin, destination, trade, people per band)
++    flows: List[Tuple[str, str, str, str, List[float]]] = []   # (origin, destination, trade, trade there, people per band)
+ 
+     for origin in sorted(inputs.routes):
+         floor = inputs.subsistence_per_worker_year.get(origin, 0.0)
+@@ -87,19 +157,28 @@ def migrate(state: MarketState, inputs: YearInputs, clearings: Dict[Tuple[str, s
+             real_origin = _real_income(state, inputs, index, origin, trade, cache)
+             if real_origin <= 0.0:
+                 continue
+-            options = [(None, 0.0) if route.destination == origin else
+-                       (_real_income(state, inputs, index, route.destination, trade, cache),
+-                        (route.moving_cost + route.expected_penalty) / floor) for route in routes]
+-            for position, share in enumerate(move_shares(real_origin, options)):
++            options = _options(state, inputs, index, origin, trade, routes, floor, entry, cache)
++            shares = move_shares(real_origin, [(real, cost) for real, cost, _d, _t, _s in options],
++                                 [looking for _r, _c, _d, _t, looking in options])
++            for (_real, _cost, destination, there, _looking), share in zip(options, shares):
+                 if share > 0.0:
+-                    flows.append((origin, routes[position].destination, trade, [count * share for count in bands]))
++                    flows.append((origin, destination, trade, there, [count * share * part for count in bands]))
+ 
+-    for origin, destination, trade, moved in flows:
++    flows = _within_vacancies(state, inputs, index, flows)
++    for origin, destination, trade, there, moved in flows:
+         origin_bands = state.workers[origin][trade]
+-        destination_bands = state.workers.setdefault(destination, {}).setdefault(trade, [0.0] * len(origin_bands))
+         for band, amount in enumerate(moved):
+             origin_bands[band] -= amount
+-            destination_bands[band] += amount
+-        total = sum(moved)
++        if there == trade or inputs.trades[there].training_years <= 0.0:
++            destination_bands = state.workers.setdefault(destination, {}).setdefault(there, [0.0] * len(origin_bands))
++            for band, amount in enumerate(moved):
++                destination_bands[band] += amount
++            refused = [0.0] * len(moved)
++        else:
++            refused = training.enrol(state, inputs, destination, there, moved, 1.0,
++                                     training.vacancy_workers(inputs, index, destination, there))
++        for band, amount in enumerate(refused):
++            origin_bands[band] += amount
++        total = sum(moved) - sum(refused)
+         report.migrated[origin] = report.migrated.get(origin, 0.0) - total
+         report.migrated[destination] = report.migrated.get(destination, 0.0) + total
+diff --git a/sim/labour/market/switching.py b/sim/labour/market/switching.py
+index 498cd72..c734132 100644
+--- a/sim/labour/market/switching.py
++++ b/sim/labour/market/switching.py
+@@ -79,24 +79,31 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, re
+         # a switcher trains first, so a destination is weighed by its income after training (capped at the long-run
+         # training cost), not by today's scarcity wage; a source is weighed by what it pays today (Complaint 678)
+         later_income: Dict[str, float] = {}
+-        planned: Dict[str, tuple] = {}   # source -> (later income it was planned on, odds of each target per band)
++        planned: Dict[str, tuple] = {}   # source -> (later income it was planned on, odds of each target per band, trades with room then)
+         stale = destinations   # trades whose income after training must be re-read (enrolling changes it)
+         for _round in range(rounds):
+             for trade in stale:
+                 later_income[trade] = expectations.income_at_graduation(state, inputs, clearings, area, trade,
+                                                                         chances[trade])
++            with_places = frozenset(trade for trade in destinations
++                                    if training.open_places(state, inputs, area, trade, training.vacancy_workers(
++                                        inputs, clearings, area, trade)) > PLACES_TOLERANCE)
+             moves = _planned_moves(state, inputs, area, sources, destinations, income, later_income, vacancies,
+-                                   subsistence, chances, planned, idle)
+-            stale = _carry_out(state, inputs, report, area, moves)
++                                   subsistence, chances, planned, idle, with_places)
++            stale = _carry_out(state, inputs, clearings, report, area, moves)
+ 
+ 
+-def _odds(inputs, state, area, source, destinations, income, later_income, vacancies, subsistence, chances):
+-    """The odds of each band of `source` workers moving to each worthwhile destination: (targets, per
+-    band the share of each target), or None for a band that stays."""
++PLACES_TOLERANCE = 1e-9   # people; a trade with fewer open places than this takes nobody
++
++
++def _odds(inputs, state, area, source, destinations, income, later_income, vacancies, subsistence, chances,
++          with_places):
++    """The odds of each band of `source` workers moving to each worthwhile destination that has room for
++    them: (targets, per band the share of each target), or None for a band that stays."""
+     rate = inputs.discount_rate
+     remaining = inputs.career_years * REMAINING_CAREER_SHARE
+     own = income[source]
+-    targets = [trade for trade in destinations if trade != source
++    targets = [trade for trade in destinations if trade != source and trade in with_places
+                and (later_income[trade] > own or trade in vacancies)]
+     if not targets:
+         return None
+@@ -145,22 +152,22 @@ def _plan_still_holds(then: Mapping[str, float], later_income: Mapping[str, floa
+ 
+ 
+ def _planned_moves(state, inputs, area, sources, destinations, income, later_income, vacancies,
+-                   subsistence, chances, planned, idle) -> List[Move]:
++                   subsistence, chances, planned, idle, with_places) -> List[Move]:
+     moves: List[Move] = []
+     rounds = expectations.DECISION_ROUNDS_PER_YEAR
+     tolerance = PLAN_REUSE_TOLERANCE * subsistence
+     snapshot = None
+     for source in sources:
+         kept = planned.get(source)
+-        if kept is not None and _plan_still_holds(kept[0], later_income, income[source], kept[1], vacancies,
+-                                                  destinations, tolerance):
++        if kept is not None and kept[2] == with_places and _plan_still_holds(
++                kept[0], later_income, income[source], kept[1], vacancies, destinations, tolerance):
+             odds = kept[1]
+         else:
+             odds = _odds(inputs, state, area, source, destinations, income, later_income, vacancies, subsistence,
+-                         chances)
++                         chances, with_places)
+             if snapshot is None:
+                 snapshot = dict(later_income)
+-            planned[source] = (snapshot, odds)
++            planned[source] = (snapshot, odds, with_places)
+         if odds is None:
+             continue
+         _targets, bands = odds
+@@ -182,7 +189,7 @@ def _planned_moves(state, inputs, area, sources, destinations, income, later_inc
+     return moves
+ 
+ 
+-def _carry_out(state: MarketState, inputs: YearInputs, report: YearReport, area: str,
++def _carry_out(state: MarketState, inputs: YearInputs, clearings: Mapping, report: YearReport, area: str,
+                moves: List[Move]) -> List[str]:
+     """Take the switchers out of their trades and into training. Sources moving to one target on the
+     same training length apply together, and the target's places are shared out between them in
+@@ -200,7 +207,8 @@ def _carry_out(state: MarketState, inputs: YearInputs, report: YearReport, area:
+             combined = senders[0][1]
+         else:
+             combined = [math.fsum(column) for column in zip(*[taken for _source, taken in senders])]
+-        refused = training.enrol(state, inputs, area, target, combined, share)
++        refused = training.enrol(state, inputs, area, target, combined, share,
++                                 training.vacancy_workers(inputs, clearings, area, target))
+         anything_refused = any(refused)
+         for source, taken in senders:
+             moved = aptitude.band_total(taken)
+diff --git a/sim/labour/market/training.py b/sim/labour/market/training.py
+index 83f41a5..ebe776f 100644
+--- a/sim/labour/market/training.py
++++ b/sim/labour/market/training.py
+@@ -22,6 +22,14 @@ APPRENTICES_PER_MASTER = declare(
+         "took none, so the trade-wide ratio is well under one. Not fitted; to be derived from household "
+         "and workshop capacity when that exists.")
+ 
++LEARNED_ON_THE_JOB_YEARS = declare(
++    "LEARNED_ON_THE_JOB_YEARS", 1.0, kind="temporary_heuristic", unit="years of training",
++    source=None, confidence="D", retire="Complaints/644: class size and teacher proficiency from a learning curve",
++    why="A trade learned within a working season (raking and carrying, tending, hauling) is picked up on the job "
++        "by whoever an employer has a vacancy for, so a master's room for an apprentice does not limit it: the "
++        "teachers' cap binds only the trades whose training runs past this, or those with no vacancy. The trade "
++        "data's own source for a short trade says a season (salt worker). Not fitted.")
++
+ GRADUATION_TOLERANCE_YEARS = 1e-9   # float slack when a cohort's remaining years reach zero
+ 
+ 
+@@ -66,19 +74,41 @@ def _incumbents(state: MarketState, area: str, trade: str) -> float:
+     return math.fsum(bands) if bands is not None else 0.0
+ 
+ 
+-def open_places(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
+-    """Trainees this trade can still take on here this year. Infinite for a trade needing no training."""
++def learned_on_the_job(spec) -> bool:
++    """Whether the trade is picked up within a season, so that an employer's vacancy is room enough to learn it."""
++    return spec.training_years <= LEARNED_ON_THE_JOB_YEARS
++
++
++def vacancy_workers(inputs: YearInputs, clearings, area: str, trade: str) -> float:
++    """Workers' worth of hours employers here wanted in the trade and could not fill this year."""
++    clearing = clearings.get((area, trade))
++    if clearing is None or inputs.hours_per_worker_year <= 0.0:
++        return 0.0
++    return max(0.0, clearing.vacant_hours) / inputs.hours_per_worker_year
++
++
++def _capacity(state: MarketState, inputs: YearInputs, area: str, trade: str, vacancies: float) -> float:
++    """Trainees the trade can hold at once here: its teachers' room and school seats, and for a trade learned on the
++    job the vacancies employers want filled."""
+     spec = inputs.trades[trade]
+-    if spec.training_years <= 0.0:
+-        return math.inf
+     seats = _school_places(inputs, area, trade)[0] if inputs.schools else 0.0
+-    return max(0.0, _incumbents(state, area, trade) * APPRENTICES_PER_MASTER + seats - enrolled(state, area, trade))
++    capacity = seats + _incumbents(state, area, trade) * APPRENTICES_PER_MASTER
++    return max(capacity, vacancies) if learned_on_the_job(spec) else capacity
++
++
++def open_places(state: MarketState, inputs: YearInputs, area: str, trade: str, vacancies: float = 0.0) -> float:
++    """Trainees this trade can still take on here this year. Infinite for a trade needing no training. `vacancies`
++    (workers' worth, `vacancy_workers`) are room for a trade learned on the job."""
++    if inputs.trades[trade].training_years <= 0.0:
++        return math.inf
++    return max(0.0, _capacity(state, inputs, area, trade, vacancies) - enrolled(state, area, trade))
+ 
+ 
+ def enrol(state: MarketState, inputs: YearInputs, area: str, trade: str,
+-          bands: Sequence[float], training_share: float = 1.0) -> List[float]:
++          bands: Sequence[float], training_share: float = 1.0, vacancies: float = 0.0) -> List[float]:
+     """Take people (per band) into a trade's training here, as far as places allow. Returns, per band,
+-    those not admitted. `training_share` shortens the training (retraining within a skill family)."""
++    those not admitted. `training_share` shortens the training (retraining within a skill family); `vacancies`
++    are as in `open_places`."""
+     wanting = aptitude.band_total(bands)
+     if wanting <= 0.0:
+         return list(bands)
+@@ -88,12 +118,13 @@ def enrol(state: MarketState, inputs: YearInputs, area: str, trade: str,
+         aptitude.add_bands(aptitude.bands_of(state.workers.setdefault(area, {}), trade), bands)
+         return aptitude.empty_bands()
+     seats, school_bonus = _school_places(inputs, area, trade) if inputs.schools else (0.0, 0.0)
+-    capacity = seats + _incumbents(state, area, trade) * APPRENTICES_PER_MASTER
++    teaching = seats + _incumbents(state, area, trade) * APPRENTICES_PER_MASTER
++    capacity = _capacity(state, inputs, area, trade, vacancies)
+     already = enrolled(state, area, trade)
+     admitted_share = min(1.0, max(0.0, capacity - already) / wanting)
+     if admitted_share <= 0.0:
+         return list(bands)
+-    bonus = school_bonus * (seats / capacity) if capacity > 0.0 else 0.0
++    bonus = school_bonus * (seats / teaching) if teaching > 0.0 else 0.0
+     if admitted_share >= 1.0:
+         admitted = list(bands)
+         refused = aptitude.empty_bands()
+diff --git a/sim/tests/test_labour_core_migration.py b/sim/tests/test_labour_core_migration.py
+index 0734772..6f18e7d 100644
+--- a/sim/tests/test_labour_core_migration.py
++++ b/sim/tests/test_labour_core_migration.py
+@@ -5,6 +5,7 @@ QUICK_TOPIC = True
+ import random
+ import unittest
+ 
++from sim.labour.market import trades
+ from sim.labour.market.migration import migrate
+ from sim.labour.market.records import Clearing, MarketState, Route, YearInputs, YearReport
+ 
+@@ -56,6 +57,72 @@ def run(state, inputs, clearings):
+     return report
+ 
+ 
++def idle_world(destination_wage=2.0, destination_trade="hauler"):
++    """Diggers in a vale where nobody hires them; a port that hires haulers (a trade needing no training)."""
++    specs = trades.trade_specs({"digger": {"family": "toil", "training_years": 0, "fallback": True},
++                                "hauler": {"family": "toil", "training_years": 0},
++                                "reaper": {"family": "toil", "training_years": 1},
++                                "carver": {"family": "craft", "training_years": 4}})
++    state = MarketState(workers={"vale": {"digger": [100.0] * BANDS}, "port": {"digger": [100.0] * BANDS}})
++    inputs = YearInputs(trades=specs, bids=[], subsistence_per_worker_year={"vale": 100.0, "port": 100.0},
++                        hours_per_worker_year=100.0, discount_rate=0.05, career_years=30.0,
++                        routes={"vale": [Route("port", 0.0)], "port": [Route("vale", 0.0)]})
++    dead = Clearing(trade="digger", area="vale", wage=0.0, hours_offered=1000.0, hours_wanted=0.0, hours_hired=0.0,
++                    hired_by_employer={}, paid_by_employer={}, average_wage=0.0)
++    working = clearing("port", "digger", 1.0)
++    hiring = clearing("port", destination_trade, destination_wage)
++    hiring.hours_wanted = 2 * hiring.hours_offered
++    return state, inputs, {("vale", "digger"): dead, ("port", "digger"): working, ("port", destination_trade): hiring}
++
++
++class IdleMigrationTests(unittest.TestCase):
++    def test_idle_workers_move_to_the_trade_another_area_hires_at_once(self):
++        state, inputs, clearings = idle_world()
++        report = run(state, inputs, clearings)
++        self.assertGreater(sum(state.workers["port"].get("hauler", [0.0])), 0.0)
++        self.assertLess(sum(state.workers["vale"]["digger"]), 500.0)
++        self.assertAlmostEqual(report.migrated["port"], -report.migrated["vale"])
++        self.assertAlmostEqual(everyone(state), 1000.0)
++
++    def test_idle_workers_fill_the_vacancies_of_another_area_and_no_more(self):
++        state, inputs, clearings = idle_world()
++        clearings[("port", "hauler")].hours_wanted = clearings[("port", "hauler")].hours_hired + 2.0 * 100.0   # two workers' worth short
++        clearings[("port", "hauler")].hours_held = 0.0   # no hauler worked at the port when it cleared
++        clearings[("vale", "digger")].hours_offered = 1e9   # a pool far larger than the vacancies
++        state.workers["vale"]["digger"] = [1e6] * BANDS
++        run(state, inputs, clearings)
++        arrived = sum(state.workers["port"]["hauler"])
++        self.assertLessEqual(arrived, 2.0 + 1e-9)
++        self.assertGreater(arrived, 1.9)
++
++    def test_idle_workers_moving_to_a_trade_learned_in_a_season_become_trainees_up_to_its_vacancies(self):
++        state, inputs, clearings = idle_world(destination_trade="reaper")
++        clearings[("port", "reaper")].hours_wanted = clearings[("port", "reaper")].hours_offered + 3.0 * 100.0   # three workers' worth short
++        run(state, inputs, clearings)
++        learners = sum(sum(cohort[1]) for cohort in state.trainees["port"]["reaper"])
++        self.assertAlmostEqual(learners, 3.0)
++        self.assertAlmostEqual(everyone(state), 1000.0)
++
++    def test_workers_do_not_move_to_a_trade_that_needs_years_of_training(self):
++        state, inputs, clearings = idle_world(destination_trade="carver")
++        run(state, inputs, clearings)
++        self.assertNotIn("carver", state.workers["port"])
++        self.assertEqual(state.trainees, {})
++
++    def test_workers_with_work_do_not_look_for_another_trade_elsewhere(self):
++        state, inputs, clearings = idle_world()
++        clearings[("vale", "digger")] = clearing("vale", "digger", 1.0)
++        run(state, inputs, clearings)
++        self.assertNotIn("hauler", state.workers["port"])
++
++    def test_a_trade_dead_in_both_areas_sends_nobody(self):
++        state, inputs, clearings = idle_world()
++        del clearings[("port", "hauler")]
++        clearings[("port", "digger")] = clearings[("vale", "digger")]
++        run(state, inputs, clearings)
++        self.assertEqual(state.workers["vale"]["digger"], [100.0] * BANDS)
++
++
+ class MigrationTests(unittest.TestCase):
+     def test_workers_move_toward_the_higher_real_wage(self):
+         state, inputs, clearings = world()
+diff --git a/sim/tests/test_labour_core_switching.py b/sim/tests/test_labour_core_switching.py
+index 0253fbc..1450e02 100644
+--- a/sim/tests/test_labour_core_switching.py
++++ b/sim/tests/test_labour_core_switching.py
+@@ -5,7 +5,7 @@ QUICK_TOPIC = True
+ import copy
+ import unittest
+ 
+-from sim.labour.market import aptitude, switching, trades
++from sim.labour.market import aptitude, switching, trades, training
+ from sim.labour.market.records import Clearing, MarketState, School, YearInputs, YearReport
+ 
+ AREA = "plain"
+@@ -121,6 +121,33 @@ class SwitchingTests(unittest.TestCase):
+ 
+ 
+ 
++class PlacesTests(unittest.TestCase):
++    """A worker does not pick a master who has no room: those who weigh a switch choose among the trades that
++    would take them, so a full workshop does not send half of them back to where they started."""
++
++    def _cutter_intake(self, carvers, enrolled):
++        specs = _specs()
++        inputs = _inputs(specs)
++        inputs.schools = [School("school", "cutter", AREA, 1e6)]   # carver has teachers only
++        bands = aptitude.band_count()
++        state = _state({"digger": 1000.0, "carver": carvers})
++        if enrolled:
++            state.trainees = {AREA: {"carver": [[3.0, [enrolled / bands] * bands, 0.0]]}}
++        report = YearReport()
++        switching.switch_trades(state, inputs, _clearings(
++            {"digger": 0.5, "carver": 2.0, "cutter": 2.0, "healer": 0.5}), report)
++        return report.switched[AREA]["cutter"]
++
++    def test_switchers_skip_a_full_workshop_for_one_with_places(self):
++        full = 10.0 * training.APPRENTICES_PER_MASTER
++        self.assertAlmostEqual(self._cutter_intake(carvers=10.0, enrolled=full),
++                               self._cutter_intake(carvers=0.0, enrolled=0.0))
++
++    def test_switchers_still_pick_a_workshop_with_room(self):
++        self.assertLess(self._cutter_intake(carvers=10.0, enrolled=0.0),
++                        self._cutter_intake(carvers=0.0, enrolled=0.0))
++
++
+ class PipelineTests(unittest.TestCase):
+     """A trade that already has incumbents is weighed by what it will pay once a switcher is trained,
+     the same as one nobody practises: a shortage the people already training will fill draws nobody."""
+diff --git a/sim/tests/test_labour_core_training.py b/sim/tests/test_labour_core_training.py
+index 7a750a1..3fd04cb 100644
+--- a/sim/tests/test_labour_core_training.py
++++ b/sim/tests/test_labour_core_training.py
+@@ -11,6 +11,7 @@ from sim.labour.market import aptitude, records, trades, training
+ REGISTRY = {
+     "digger": {"family": "toil", "training_years": 0},
+     "carver": {"family": "craft", "training_years": 3},
++    "reaper": {"family": "toil", "training_years": 1},
+     "healer": {"family": "lore", "training_years": 6, "difficulty": 1.0},
+     "scrivener": {"family": "lore"},
+ }
+@@ -105,6 +106,35 @@ class TrainingTests(unittest.TestCase):
+         self.assertGreater(places, 0.0)
+         self.assertLess(places, 100.0)
+ 
++    def test_a_trade_learned_within_a_season_takes_as_many_as_employers_have_vacancies_for(self):
++        state = records.MarketState(workers={"vale": {"reaper": aptitude.split_evenly(2.0)}})
++        left = training.enrol(state, inputs(), "vale", "reaper", aptitude.split_evenly(1000.0), 1.0, 600.0)
++        self.assertAlmostEqual(sum(left), 400.0)
++        self.assertAlmostEqual(training.enrolled(state, "vale", "reaper"), 600.0)
++        self.assertEqual(training.open_places(state, inputs(), "vale", "reaper", 600.0), 0.0)
++
++    def test_a_trade_learned_within_a_season_with_no_vacancy_is_limited_by_its_teachers(self):
++        state = records.MarketState(workers={"vale": {"reaper": aptitude.split_evenly(2.0)}})
++        left = training.enrol(state, inputs(), "vale", "reaper", aptitude.split_evenly(1000.0))
++        self.assertAlmostEqual(sum(left), 1000.0 - 2.0 * training.APPRENTICES_PER_MASTER)
++
++    def test_a_vacancy_is_not_room_to_learn_a_trade_that_takes_years(self):
++        state = records.MarketState(workers={"vale": {"carver": aptitude.split_evenly(2.0)}})
++        left = training.enrol(state, inputs(), "vale", "carver", aptitude.split_evenly(1000.0), 1.0, 600.0)
++        self.assertAlmostEqual(sum(left), 1000.0 - 2.0 * training.APPRENTICES_PER_MASTER)
++
++    def test_vacancy_workers_counts_unfilled_hours_in_workers(self):
++        clearing = records.Clearing(trade="reaper", area="vale", wage=1.0, hours_offered=100.0, hours_wanted=500.0,
++                                    hours_hired=100.0, hired_by_employer={}, paid_by_employer={}, average_wage=1.0)
++        self.assertAlmostEqual(training.vacancy_workers(inputs(), {("vale", "reaper"): clearing}, "vale", "reaper"),
++                               400.0 / 2000.0)
++        self.assertEqual(training.vacancy_workers(inputs(), {}, "vale", "reaper"), 0.0)
++
++    def test_a_trade_learned_over_years_is_still_limited_by_its_teachers(self):
++        state = records.MarketState(workers={"vale": {"carver": aptitude.split_evenly(2.0)}})
++        left = training.enrol(state, inputs(), "vale", "carver", aptitude.split_evenly(1000.0))
++        self.assertAlmostEqual(sum(left), 1000.0 - 2.0 * training.APPRENTICES_PER_MASTER)
++
+     def test_attrition_takes_the_same_share_of_everyone(self):
+         state = records.MarketState(workers={"vale": {"digger": aptitude.split_evenly(100.0)}},
+                                     trainees={"vale": {"carver": [[2.0, aptitude.split_evenly(10.0), 0.0]]}})
+-- 
+2.43.0
+

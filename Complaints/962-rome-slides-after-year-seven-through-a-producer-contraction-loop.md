@@ -33,3 +33,11 @@ markets with no extra bid at any wage. The limit is demand for labour, and peopl
 in their area that hire nobody (farmer, labourer, miner hold most idle hours). Side finding: in a few thin areas the
 unskilled wage reads several times the national one, and it becomes every skilled trade's reservation there
 (`unskilled_option`).
+
+**Idle workers reconsider their trade at the share that found no work** (merged): raised Rome's real output in the middle
+years. Two further changes are parked: idle workers leaving a dead trade for their plot (lowered output), and
+`Complaints/reports/962-intake-and-cross-trade-migration.patch.txt` (a trade learned within a season takes people up to
+its unfilled vacancies; idle workers weigh other areas' trades they can enter; migration decides in rounds): refused
+switch requests fall from about three quarters to under half and the people rate drops a couple of points, but real
+output ends about a tenth lower and the cause is untraced. Training intake rests on `APPRENTICES_PER_MASTER` and training
+years with no opened source for most trades.
