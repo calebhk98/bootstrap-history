@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_moves, titles_worked, unit_cost
+from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -320,16 +320,7 @@ class Economy:
         return HourSupply(everyone, plan, work, plot, faced)
 
     def _hectares_held(self) -> Dict[str, float]:
-        """Hectares each cohort may work for itself: the land it holds or leases (titles, tenancies), cut to
-        the tile's arable land if the claims exceed it. Decided before any growing."""
-        record, held = self.record, {}
-        for tile_id in sorted({cohort.tile for cohort in record.cohorts.values()}):
-            tile = self.setup.tiles.get(tile_id)
-            arable = titles_ground.arable_hectares(record, tile_id, tile)
-            asked = {cohort.agent_id: titles_worked.worked_share(record, tile_id, cohort.agent_id) * arable
-                     for cohort in record.cohorts.values() if cohort.tile == tile_id}
-            held.update(titles_worked.allocate_hectares(asked, arable))
-        return held
+        return titles_plots.hectares_held(self.setup, self.record)
 
     def _grow_own(self, offers, ledger: YearLedger, harvest_factor: float = 1.0,
                   kept: Optional[Dict[str, float]] = None) -> None:

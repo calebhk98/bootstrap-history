@@ -16,20 +16,42 @@ from typing import Dict, Mapping, Tuple
 from . import households_buffer_stock, inventory
 
 
-def resting_household_purse(mean_income: float, share_wealth: float, claims: float = 0.0) -> float:
+def resting_household_purse(mean_income: float, share_wealth: float, claims: float = 0.0,
+                            extra_spending: float = 0.0) -> float:
     """The cash a household holds before the year's income arrives so that `households_buffer_stock.spending_budget`,
-    taken after the income is in (cash = purse + income, as the year's orders see it), spends exactly its income.
+    taken after the income is in (cash = purse + income, as the year's orders see it), spends its income plus
+    `extra_spending` (what its own plot frees from the budget: the floors it grows are cut from its bids after the
+    budget is set, so the budget must be that much larger for the money it spends on the market to equal its income).
     Follows the manual's household initialisation (section 10.1.3: payment account from the consumption constants).
-    Without shares the rule's budget is income plus a share of cash and is capped at cash, so spending equals
-    income only when cash is the income: the purse is zero. With shares the budget is income plus the yearly share of
-    (cash + claims + share wealth - target wealth), which is zero at the target: the purse is what brings cash up to
-    the target wealth (WEALTH_INCOME_RATIO_TARGET months of income) beyond the income, never below zero. A
-    post-warm-up Eurace state holds wealth at the target (median 16.7 monthly incomes, of which the payment account
-    is about 9) against the manual's initial 25 (payment account 10 to 15)."""
-    if share_wealth <= 0.0:
+    Without shares and without extra spending the rule's budget is income plus a share of the account held, capped at
+    cash, so spending equals income only when cash is the income: the purse is zero. With shares the budget is
+    income plus the yearly share of (cash + claims + share wealth - target wealth), which is zero at the target
+    (WEALTH_INCOME_RATIO_TARGET months of income): the purse brings cash up to the target wealth beyond the income,
+    never below zero. The extra spending is the yearly share of the account held: the purse is that much larger
+    (and never less than the extra itself, which the cap at cash needs). A post-warm-up Eurace state holds wealth at
+    the target (median 16.7 monthly incomes, of which the payment account is about 9) against the manual's initial 25
+    (payment account 10 to 15)."""
+    extra_spending = max(0.0, extra_spending)
+    if share_wealth <= 0.0 and extra_spending <= 0.0:
         return 0.0
-    target = households_buffer_stock.WEALTH_INCOME_RATIO_TARGET / households_buffer_stock.MONTHS_PER_YEAR * mean_income
-    return max(0.0, target - share_wealth - claims - mean_income)
+    share = households_buffer_stock.yearly_cash_share()
+    share_term = 0.0
+    if share_wealth > 0.0:
+        target = households_buffer_stock.WEALTH_INCOME_RATIO_TARGET / households_buffer_stock.MONTHS_PER_YEAR * mean_income
+        share_term = share * (share_wealth - target)
+    cash = max(mean_income + extra_spending, (extra_spending - share_term) / share - claims)
+    return cash - mean_income
+
+
+def resting_input_stock(planned_runs: float, inputs_per_run: Mapping[str, float], bought_in_year) -> Dict[str, float]:
+    """The inputs a producer opens holding. `producers._input_bids` buys the planned runs' need less what is held and
+    the year uses it all, so a producer at rest holds an input at the year's start only if it cannot buy it before
+    it works (nothing makes it, or its maker clears no earlier: a cycle); the rest (`bought_in_year`) it buys, with
+    the cash `working_capital_target` already gives it."""
+    if planned_runs <= 0.0:
+        return {}
+    return {good: planned_runs * per_run for good, per_run in sorted(inputs_per_run.items())
+            if per_run > 0.0 and good not in bought_in_year}
 
 
 def resting_output_stock(expected_yearly_sales: float, outputs_per_run: Mapping[str, float]) -> Dict[str, float]:

@@ -13,7 +13,8 @@ from typing import Dict, List, Mapping, Tuple
 from sim.constants import declare
 from sim.refusal import Refusal
 
-from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_plans, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from . import recipes as recipes_module
+from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_plans, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -37,6 +38,11 @@ MERCHANT_CAPITAL_SHARE_OF_OUTPUT = declare(
     why="The merchant class's working capital against what the economy makes in a year. Not measured "
         "for any civilisation here; the engine's merchant class capital (merchant_terms) is a "
         "different estimate of the same thing.")
+
+
+# numerical bounds on settling the share of hours producers hire against the demand it implies (opening_own.py)
+OWN_PLOT_PASSES = 8
+OWN_PLOT_TOLERANCE = 1e-4
 
 
 class OpeningIncomeRefused(ValueError):
@@ -96,9 +102,11 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     _open_cohorts(setup, record)
     if plans is not None:
         record.cohorts.update(opening_plans.with_plans(record.cohorts, plans))
-    _settle_income(setup, record, view, priced_goods, replacement)
+    own = opening_own.OwnPlots(setup, record)
+    _settle_income(setup, record, view, priced_goods, replacement, own)
     _seed_durable_stocks(setup, record, view)
-    final_by_tile = _final_demand(setup, record, view, replacement)
+    final_by_tile = _final_demand(setup, record, view, replacement, own=own)
+    record.opening_own_grown = own.grown_totals()
     for country in setup.countries():
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
@@ -106,7 +114,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
-    _strike_opening_cash(setup, record, view)
+    _strike_opening_cash(setup, record, view, own.extra)
     record.workforce = labour_state.opening_workforce(setup, record)   # the mint's capacity follows the money struck
     record.workforce.hired_hours, record.workforce.contract_wages = opening_resting.resting_labour_contracts(
         labour_state.producers_hours_by_employer(setup, record), setup.opening_wages)
@@ -170,37 +178,47 @@ def _open_cohorts(setup, record) -> None:
     titles.seed(record)
 
 
-def _settle_income(setup, record, view, priced_goods, replacement) -> None:
+def _settle_income(setup, record, view, priced_goods, replacement, own) -> None:
     """Households' opening income is the value of the final demand it pays for, not the full-employment ceiling
     (opening_income.py): the producers sized to that demand then pay out the income the households received.
-    Workers are paid alike out of the labour share of it; owners receive the rest by what they own."""
+    Workers are paid alike out of the labour share of it; owners receive the rest by what they own. The demand is what
+    households buy after their own plots (opening_own.py), whose hours depend on the runs that demand takes: at each
+    income the share of hours producers hire is settled first (the least one its own demand agrees with)."""
     people = math.fsum(cohort.people for cohort in record.cohorts.values())
     recipes = setup.recipes
     ceilings = opening_runs.run_ceilings(recipes, sites.limits_by_recipe(setup.site_limits))
     yields = opening_runs.mean_yields(setup, recipes)
     ranked = opening_runs.ranked_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate, None, yields)
+    main = opening_runs.main_outputs(recipes, priced_goods)
     share = {"labour": 0.0}
     memory = opening_bid_memory.BidMemory()
     hands_hours = math.fsum(cohort.working_people for cohort in record.cohorts.values()) * setup.working_hours_per_year
 
     def demand_at(per_head):
         record.cohorts.update(opening_income.with_income(record.cohorts, per_head, share["labour"]))
-        final = _final_demand(setup, record, view, replacement, memory)
-        runs = opening_runs.required_runs(final, ranked, recipes, ceilings, yields)
+        own.share_hired = 0.0       # the least share of hours hired that the demand it implies agrees with (it rises as plots grow less)
+        for _pass in range(OWN_PLOT_PASSES):
+            own.in_kind = 0.0
+            final = _final_demand(setup, record, view, replacement, memory, own)
+            runs = opening_runs.required_runs(final, ranked, recipes, ceilings, yields, main)
+            if own.note_runs(runs, hands_hours) <= OWN_PLOT_TOLERANCE:
+                break
         # only what the working hands can make is income that producers pay out (Complaint 607)
         value = opening_income.value_of(final, priced_goods)
         producible = value * opening_income.producible_share(runs, recipes, hands_hours)
-        share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value)
-        return producible, share["labour"]
+        share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value + own.in_kind)
+        return producible + own.in_kind, share["labour"]     # what they grow is spending in kind: not saved, not bought
 
     settled = opening_income.settled_income_per_head(_full_employment_income_per_head(setup), people, demand_at)
     if isinstance(settled, Refusal):
         raise OpeningIncomeRefused(settled)
     per_head, labour_share = settled
+    share["labour"] = labour_share
+    demand_at(per_head)     # leaves the plots at the settled income's share of hours hired
     record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
 
 
-def _opening_bids(setup, record, view, memory=None, stationary_durables=True):
+def _opening_bids(setup, record, view, memory=None, stationary_durables=True, own=None):
     """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income. A `memory`
     (opening_bid_memory.py) kept across calls that change only incomes spares the work that does not depend on them."""
     memory = opening_bid_memory.BidMemory() if memory is None else memory
@@ -208,9 +226,11 @@ def _opening_bids(setup, record, view, memory=None, stationary_durables=True):
         basket = memory.basket(setup, record, cohort)
         priced = memory.priced(setup, record, view, cohort, basket)
         income = cohort.last_year_income
-        orders = households.goods_orders(cohort, view, income, income, basket, setup.specs,
-                                         priced, shared_store=memory.stores(record, cohort),
-                                         stationary_durables=stationary_durables)
+        def make(cash=income):
+            return households.goods_orders(cohort, view, cash, income, basket, setup.specs,
+                                           priced, shared_store=memory.stores(record, cohort),
+                                           stationary_durables=stationary_durables)
+        orders = make() if own is None else own.resting_orders(record, cohort, income, basket, priced, make)
         for bid in orders.bids:
             price = view.price(bid.good, bid.area)
             if price:
@@ -233,11 +253,11 @@ def _seed_durable_stocks(setup, record, view) -> None:
         record.book.move_many(moves)
 
 
-def _final_demand(setup, record, view, replacement=0.0, memory=None) -> Dict[TileId, Dict[GoodId, float]]:
+def _final_demand(setup, record, view, replacement=0.0, memory=None, own=None) -> Dict[TileId, Dict[GoodId, float]]:
     """What each tile's households buy at the opening prices with the opening income, and the metal the mint
     buys to replace what the money loses (at the capital)."""
     final: Dict[TileId, Dict[GoodId, float]] = {}
-    for cohort, bid, price in _opening_bids(setup, record, view, memory):
+    for cohort, bid, price in _opening_bids(setup, record, view, memory, own=own):
         demand = final.setdefault(cohort.tile, {})
         demand[bid.good] = demand.get(bid.good, 0.0) + goods_market.quantity_at(bid, price)
     if replacement > 0.0:
@@ -401,18 +421,20 @@ def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_lim
 
 
 def _stock_producers_with_inputs(setup, record) -> None:
-    """Each producer opens holding the inputs of the runs it plans for the year (its expected sales: the year uses
-    them and buys the same again, so the stock rests) and the target stock of its outputs
-    (opening_resting.resting_output_stock), so the output rule plans neither a refill nor a run-off. Inputs bought in
-    a year are used in the next, so a chain of producers (ore, smelter, fuel) with nothing in store works one stage in
-    its first year and fills its pipeline over several, while the opening's demand is met from the first."""
+    """Each producer opens holding what it would hold at the start of a year it repeats (opening_resting.resting_input_stock):
+    an input another opened producer makes and clears earlier (a smaller input depth than its own outputs) is bought
+    in the year, the rest (nothing makes it, or a cycle) is held for the planned runs; and the target stock of its
+    outputs (opening_resting.resting_output_stock), so the output rule plans neither a refill nor a run-off."""
+    depth = recipes_module.input_depth(setup.recipes)
+    made = {good for producer in record.producers.values() for good in setup.recipes[producer.recipe_id].outputs}
     moves = []
     for producer in record.producers.values():
         recipe = setup.recipes[producer.recipe_id]
         runs = producer.expected_sales
-        moves.extend(GoodsMove(EDGE_PRODUCTION, producer.agent_id, good, producer.tile, runs * per_run,
-                               "opening stock of inputs")
-                     for good, per_run in sorted(recipe.inputs.items()) if per_run > 0.0 and runs > 0.0)
+        own_depth = min((depth.get(good, 0) for good in recipe.outputs), default=0)
+        bought = {good for good in recipe.inputs if good in made and depth.get(good, 0) < own_depth}
+        moves.extend(GoodsMove(EDGE_PRODUCTION, producer.agent_id, good, producer.tile, quantity, "opening stock of inputs")
+                     for good, quantity in opening_resting.resting_input_stock(runs, recipe.inputs, bought).items())
         moves.extend(GoodsMove(EDGE_PRODUCTION, producer.agent_id, good, producer.tile, quantity, "opening stock of output")
                      for good, quantity in opening_resting.resting_output_stock(runs, recipe.outputs).items())
     if moves:
@@ -441,12 +463,13 @@ def _open_merchants(setup, record, prices, final_by_tile) -> None:
                                                  capital_base=capital)
 
 
-def _strike_opening_cash(setup, record, view) -> None:
+def _strike_opening_cash(setup, record, view, extra_spending) -> None:
     """Each agent's opening purse is struck at the mint. A producer's is the year's variable cost of its expected sales
     (the cash `producers_close.working_capital_target` keeps), a merchant's its capital. A household's follows from
     what it owns of those producers (`equity.holdings`, what the spending rule reads as share wealth): the cash that
     brings cash plus share wealth to the wealth target, at which the rule spends exactly its income
-    (opening_resting.resting_household_purse; Eurace manual 10.1.3)."""
+    (opening_resting.resting_household_purse; Eurace manual 10.1.3), plus what a household whose plot frees part of its
+    budget needs to spend (opening_own.py)."""
     money = setup.currency_id
     transfers: List[Transfer] = []
     for producer in record.producers.values():
@@ -459,6 +482,7 @@ def _strike_opening_cash(setup, record, view) -> None:
     owned = equity.holdings(setup, record, view)
     transfers = []
     for cohort in record.cohorts.values():
-        purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0))
+        purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0),
+                                                       extra_spending=extra_spending.get(cohort.agent_id, 0.0))
         transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, purse, "opening coin"))
     record.book.transfer_many([transfer for transfer in transfers if transfer.amount > 0.0])

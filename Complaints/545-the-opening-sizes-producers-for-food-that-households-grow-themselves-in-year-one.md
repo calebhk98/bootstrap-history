@@ -1,6 +1,6 @@
 # The opening sizes producers for food that households grow themselves in year one
 
-**Status:** partly - the plot fixture's year-one runs match the opening's sizing (473 Update 8); Rome not re-measured (needs a spin-up-trace read)
+**Status:** partly - the opening now sizes producers for what households buy after their own plots (Update 9); the year-one purchases still fall well short of the opening's final demand for a reason that is not the plot (Update 9); Rome's opening did not finish in five minutes, so Rome is not re-measured
 
 Found by an outside reviewer reading the repository, checked against the code.
 
@@ -55,3 +55,44 @@ On `economy_fixture.small_setup(land_per_run=...)` (households grow part of thei
 are within one per cent of the runs the opening sized and the grain bought equals what they produce, so the first-year shortfall
 this complaint describes does not appear on the fixture (the opening's demand is already net of the households' own-plot plan).
 Rome is not re-measured; the claim stays open until `spin-up-trace` is read for it.
+
+## Update 9: the opening runs the year's own-plot rule (opening_own.py)
+
+- The fault was in `opening.py` `_opening_bids`: the bids stopped at `households.goods_orders`, so every floor was sized as bought.
+  `opening_own.OwnPlots` now applies the two functions of the year: `households_own.own_production` on the hours a cohort has left (its
+  working hours less the share producers hire and the household work it does itself) and `year_goods.less_what_it_grew` on the bids.
+  The share producers hire follows from the runs the net demand takes, so `_settle_income` settles it at each income: the least share the
+  demand agrees with (a start from the whole-hours share is a second, worse fixed point where nobody grows anything).
+- The root find of the income saves-nothing condition has no solution once floors are cut (the cut frees budget that is saved at every
+  income; the collapse recorded in 526). The budget the cut frees is therefore counted as spending in kind (`OwnPlots.in_kind`), not as
+  saving, so the opening income still includes the food grown at home. Cash income in year one is below it; that is 526, not fixed here.
+- The muscle-power over-sizing came from a joint recipe: the pig-feeding run (lard) takes bran, bran is made only alongside flour, and
+  the input-output solve ran the mills for the bran (runs = the larger of what each output needs), dumping flour nobody buys, and the
+  muscle that mills it. `opening_runs.required_runs` now holds the users of a by-product to what the runs for its makers' main outputs
+  make (`by_product_ceilings`); the lard falls short instead and the opening basket records the shortfall.
+- Norse (`spin-up-trace --civ norse_900ad --years 3`), hired hours by year: before 4.98e8, 3.02e8, 5.57e7; after 6.02e7, 4.08e7, 7.8e6.
+  Planned revenue of the producers (expected sales at opening prices) against year-one receipts: before 3.4e9 against about 1.1e8;
+  after 2.9e8 against 1.5e7. Year-one volumes of the final goods are still only about a tenth of the opening's final demand for every good,
+  grown-at-home or not: that gap is not the own plot and is open.
+
+## Update 10: the opening household calls the rule with year one's inputs (opening_own.resting_orders)
+
+- Side by side on Norse (`goods_orders`, all cohorts): the opening passed cash equal to income and counted food grown at home as income
+  (`in_kind`), so its income was several times the cash year one pays; year one's household has a purse and a budget the plot's cut
+  leaves unspent. The in-kind income was the largest difference (opening bid budgets about five times year one's).
+- The year cuts the grown floors after the budget is set, so a household that grows its food spends less on the market than its budget.
+  The opening now gives each cohort the purse (`opening_resting.resting_household_purse(..., extra_spending)`) that lets the unchanged
+  spending rule spend its income plus what the plot frees, so market spending equals income. The rule lets a household spend beyond income
+  only up to `WEALTH_DRAWDOWN_LIMIT` of it; the rest is still counted in kind.
+- The planned revenue of the producers is dominated by the recipes of the mint's backing metal (about 60 percent of it) that nobody hires
+  in year one; it is not household demand. Measure with `spin-up-trace` and the hours per recipe planned against hired.
+
+## Update 11: the opening holds only the inputs a producer cannot buy before it works
+
+- `_stock_producers_with_inputs` stocked every input for the whole planned year, so year-one input sales were zero. The input rule
+  (`producers._input_bids`) buys the runs' need less what is held and the year uses it all, so at rest an input is held at the year's
+  start only if nothing makes it or its maker clears no earlier (a cycle). `opening_resting.resting_input_stock` says so; the working
+  capital already covers the inputs bought (`working_capital_target` counts the input cost).
+- Year-one producers' purchases of inputs and receipts: measure with the per-good `ledger.received` of the producers and `ledger.sales_in`
+  on the Norse opening; the receipts rose to about nine tenths of the planned revenue outside the backing metal's recipes.
+- `test_opening_input_stocks`: the known failure (a smelter does not open holding the ore miners sell it) now passes; its decorator is removed.
