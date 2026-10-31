@@ -10,6 +10,7 @@ import math
 
 from . import carried_book, carriage_wear, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
 from .bank_founding import found_from_outside
+from .fixture_setups import GRAIN as FIXTURE_STAPLE, LABOURER as FIXTURE_UNSKILLED_TRADE, small_setup as fixture_small_setup, stationary_setup as fixture_stationary_setup
 from .banks import DEPOSIT_BANKING
 from .funds import POOLED_FUNDS
 from .insurance import INSURANCE_UNDERWRITING, RISK_POOLING
@@ -43,6 +44,7 @@ from .year_labour import trade_premium
 from sim.world import capital_market
 
 __all__ = [
+    "FIXTURE_STAPLE", "FIXTURE_UNSKILLED_TRADE", "fixture_small_setup", "fixture_stationary_setup",
     "YearAccounts", "baseline_checks", "settling", "spin_up_sensitivity",
     "carriage_wear", "crop_sites", "unit_cost", "diagnostics", "household_grinding", "households", "households_work", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "price_response", "prices_at", "offered_units", "watch_tiles",

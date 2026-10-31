@@ -1,21 +1,20 @@
 """`spin-up-trace --fixture`: the hand-built three-tile economy (sim/economy/fixture_setups.py) stepped for quiet years,
 one row per year, so a rule's effect on prices, wages, hours and money shows in under a second."""
 from sim.economy import api as economy_api
-from sim.economy.fixture_setups import GRAIN, LABOURER, small_setup, stationary_setup
 from sim.markets.port_trace_holders import HOLDER_COLUMNS, money_by_holder_columns
 
-FIXTURE_SETUPS = {"small": small_setup, "stationary": stationary_setup}
+FIXTURE_SETUPS = {"small": economy_api.fixture_small_setup, "stationary": economy_api.fixture_stationary_setup}
 FIXTURE_COLUMNS = ("year", "basket_price_level", "unskilled_wage", "staple_price", "real_wage", "hired_hours",
                    "idle_hours", "rate", "money_supply", "hunger") + HOLDER_COLUMNS
 
 
 def fixture_row(economy, outcome, year):
-    """One year's row: the basket price level, the unskilled wage, the staple's price (GRAIN), the real wage (wage over
+    """One year's row: the basket price level, the unskilled wage, the staple's price, the real wage (wage over
     that price; None when either is missing or the price is not positive), the hours hired and idle, the rate, the money
     stock, hunger summed over the tiles, and the money each kind of holder keeps (HOLDER_COLUMNS). Prices and wages
     the outcome does not carry are None."""
-    wage = outcome.wages.get(LABOURER)
-    staple_price = outcome.prices.get(GRAIN)
+    wage = outcome.wages.get(economy_api.FIXTURE_UNSKILLED_TRADE)
+    staple_price = outcome.prices.get(economy_api.FIXTURE_STAPLE)
     real_wage = wage / staple_price if wage is not None and staple_price is not None and staple_price > 0.0 else None
     row = {"year": year, "basket_price_level": outcome.basket_price_level, "unskilled_wage": wage,
            "staple_price": staple_price, "real_wage": real_wage, "hired_hours": outcome.hired_hours,
