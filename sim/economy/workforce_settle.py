@@ -10,7 +10,7 @@ from typing import Dict, Mapping, Tuple
 
 from sim.labour.api import bound_by_hirers, fallback_trade
 
-from . import carriage_hours, producers, state_budget, workforce_version
+from . import carriage_hours, opening_placement, producers, state_budget, workforce_version
 from .labour_state import core_trades, plot_trade, producers_hours_needed, seeded_hours
 from .market_memory import market_key
 
@@ -44,9 +44,9 @@ def trim_to_expected_hours(setup, record, view) -> None:
     wanted = hours_kept(seeded_hours(setup, producers_hours_needed(setup, record)),
                         expected_hours(setup, record, view), state_hours(setup, record, view),
                         carriage_plan_hours(setup, record))
-    hours_per_worker = record.opening_sold_hours_per_worker or setup.working_hours_per_year     # as the opening staffed them
-    trim_people(record.workforce, wanted, fallback, hours_per_worker)
-    send_idle_to_plots(record.workforce, wanted, fallback, plot_trade(setup), hours_per_worker)
+    hours_per_worker = record.opening_sold_hours_by_area or record.opening_sold_hours_per_worker or setup.working_hours_per_year     # as the opening staffed them
+    trim_people(record.workforce, wanted, fallback, hours_per_worker, setup.working_hours_per_year)
+    send_idle_to_plots(record.workforce, wanted, fallback, plot_trade(setup), hours_per_worker, setup.working_hours_per_year)
 
 
 def state_hours(setup, record, view) -> Dict[Tuple[str, str], float]:
@@ -83,14 +83,16 @@ def hours_kept(seeds_by_area: Mapping[str, Mapping[str, float]], wanted: Mapping
     return kept
 
 
-def trim_people(state, wanted: Dict[Tuple[str, str], float], fallback: str, working_hours_per_year: float) -> None:
+def trim_people(state, wanted: Dict[Tuple[str, str], float], fallback: str, working_hours_per_year,
+                default_hours: float = 0.0) -> None:
     """Cut workers, then trainees (who would graduate into the trade and refill it), until each trade holds
-    no more people than its wanted hours need."""
+    no more people than its wanted hours need. `working_hours_per_year` is the hours a person sells, one figure or one per
+    area (`default_hours` for an area it does not name)."""
     workforce_version.bump(state)
     for area, by_trade in state.workers.items():
         for trade, bands in by_trade.items():
             people = sum(bands)
-            keep = wanted.get((area, trade), 0.0) / working_hours_per_year
+            keep = wanted.get((area, trade), 0.0) / opening_placement.hours_per_worker_in(area, working_hours_per_year, default_hours)
             if trade == fallback or people <= keep:
                 continue
             factor = keep / people
@@ -101,7 +103,8 @@ def trim_people(state, wanted: Dict[Tuple[str, str], float], fallback: str, work
         workers = state.workers.setdefault(area, {})
         for trade, cohorts in by_trade.items():
             enrolled = sum(sum(cohort[1]) for cohort in cohorts)
-            room = max(0.0, wanted.get((area, trade), 0.0) / working_hours_per_year - sum(workers.get(trade, [])))
+            room = max(0.0, wanted.get((area, trade), 0.0) / opening_placement.hours_per_worker_in(area, working_hours_per_year, default_hours)
+                       - sum(workers.get(trade, [])))
             if trade == fallback or enrolled <= room:
                 continue
             factor = room / enrolled
@@ -111,7 +114,7 @@ def trim_people(state, wanted: Dict[Tuple[str, str], float], fallback: str, work
 
 
 def send_idle_to_plots(state, wanted: Dict[Tuple[str, str], float], fallback: str, idle_trade: str,
-                       working_hours_per_year: float) -> None:
+                       working_hours_per_year, default_hours: float = 0.0) -> None:
     """The fallback trade keeps the people its wanted hours need; the rest, whom no employer wants, work their own
     plots as `idle_trade`."""
     workforce_version.bump(state)
@@ -120,7 +123,7 @@ def send_idle_to_plots(state, wanted: Dict[Tuple[str, str], float], fallback: st
     for area, by_trade in state.workers.items():
         bands = by_trade.get(fallback)
         people = sum(bands) if bands else 0.0
-        keep = wanted.get((area, fallback), 0.0) / working_hours_per_year
+        keep = wanted.get((area, fallback), 0.0) / opening_placement.hours_per_worker_in(area, working_hours_per_year, default_hours)
         if people <= keep or people <= 0.0:
             continue
         factor = keep / people

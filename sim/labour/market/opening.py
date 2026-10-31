@@ -6,27 +6,38 @@ and the easy trades take who is left. The fallback trade takes the people its ow
 whom no employer needs, work their own plots as the idle trade when one is named, else join the fallback.
 Trainees start empty and wages start unset; a few `year.run_year`s from here settle them.
 """
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping, Optional, Union
 
 from . import aptitude
 from .records import MarketState, TradeSpec
 from .trades import fallback_trade
 
 
+def hours_a_person_sells(area: str, hours_per_worker_year: Union[float, Mapping[str, float]]) -> float:
+    """The hours a person of `area` sells: the area's figure in a mapping (the mapping's largest where it names none), or the one figure."""
+    if not isinstance(hours_per_worker_year, Mapping):
+        return hours_per_worker_year
+    return hours_per_worker_year.get(area) or max(hours_per_worker_year.values(), default=1.0)
+
+
 def opening_state(trades: Mapping[str, TradeSpec], working_people_by_area: Mapping[str, float],
-                  hours_needed: Mapping[str, Mapping[str, float]], hours_per_worker_year: float,
+                  hours_needed: Mapping[str, Mapping[str, float]],
+                  hours_per_worker_year: Union[float, Mapping[str, float]],
                   idle_trade: Optional[str] = None) -> MarketState:
     """`hours_needed[area][trade]` is the yearly hours that area's work asks of each trade. `idle_trade` is the
-    trade of people no employer needs (the households working their own land)."""
+    trade of people no employer needs (the households working their own land). `hours_per_worker_year` is the hours a
+    person sells a year, one figure or one per area: people are placed as hours wanted over the hours a person of
+    their area sells."""
     fallback = fallback_trade(trades)
     state = MarketState()
     for area in sorted(working_people_by_area):
         free = aptitude.split_evenly(max(0.0, working_people_by_area[area]))
         workers: Dict[str, list] = {}
         wanted = hours_needed.get(area, {})
+        hours_per_worker = hours_a_person_sells(area, hours_per_worker_year)
         for trade in sorted((trade for trade in wanted if trade in trades and trade != fallback),
                             key=lambda each: (-trades[each].difficulty, each)):
-            people = max(0.0, wanted[trade]) / hours_per_worker_year
+            people = max(0.0, wanted[trade]) / hours_per_worker
             able = [count * chance for count, chance in zip(free, aptitude.completion_by_band(trades[trade].difficulty))]
             able_total = aptitude.band_total(able)
             if people <= 0.0 or able_total <= 0.0:
@@ -37,7 +48,7 @@ def opening_state(trades: Mapping[str, TradeSpec], working_people_by_area: Mappi
                 free[index] -= value
             workers[trade] = taken
         if idle_trade in trades and idle_trade != fallback:
-            needed = max(0.0, wanted.get(fallback, 0.0)) / hours_per_worker_year
+            needed = max(0.0, wanted.get(fallback, 0.0)) / hours_per_worker
             free_total = aptitude.band_total(free)
             kept = min(1.0, needed / free_total) if free_total > 0.0 else 0.0
             idle = [value * (1.0 - kept) for value in free]
