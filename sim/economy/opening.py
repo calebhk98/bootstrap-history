@@ -113,7 +113,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
-    _strike_opening_cash(setup, record, view)
+    _strike_opening_cash(setup, record, view, own.extra)
     record.workforce = labour_state.opening_workforce(setup, record)   # the mint's capacity follows the money struck
     record.workforce.hired_hours, record.workforce.contract_wages = opening_resting.resting_labour_contracts(
         labour_state.producers_hours_by_employer(setup, record), setup.opening_wages)
@@ -225,11 +225,11 @@ def _opening_bids(setup, record, view, memory=None, stationary_durables=True, ow
         basket = memory.basket(setup, record, cohort)
         priced = memory.priced(setup, record, view, cohort, basket)
         income = cohort.last_year_income
-        def make():
-            return households.goods_orders(cohort, view, income, income, basket, setup.specs,
+        def make(cash=income):
+            return households.goods_orders(cohort, view, cash, income, basket, setup.specs,
                                            priced, shared_store=memory.stores(record, cohort),
                                            stationary_durables=stationary_durables)
-        orders = make() if own is None else own.less_grown(record, cohort, own.orders_at(cohort, income, make), basket, priced)
+        orders = make() if own is None else own.resting_orders(record, cohort, income, basket, priced, make)
         for bid in orders.bids:
             price = view.price(bid.good, bid.area)
             if price:
@@ -460,12 +460,13 @@ def _open_merchants(setup, record, prices, final_by_tile) -> None:
                                                  capital_base=capital)
 
 
-def _strike_opening_cash(setup, record, view) -> None:
+def _strike_opening_cash(setup, record, view, extra_spending) -> None:
     """Each agent's opening purse is struck at the mint. A producer's is the year's variable cost of its expected sales
     (the cash `producers_close.working_capital_target` keeps), a merchant's its capital. A household's follows from
     what it owns of those producers (`equity.holdings`, what the spending rule reads as share wealth): the cash that
     brings cash plus share wealth to the wealth target, at which the rule spends exactly its income
-    (opening_resting.resting_household_purse; Eurace manual 10.1.3)."""
+    (opening_resting.resting_household_purse; Eurace manual 10.1.3), plus what a household whose plot frees part of its
+    budget needs to spend (opening_own.py)."""
     money = setup.currency_id
     transfers: List[Transfer] = []
     for producer in record.producers.values():
@@ -478,6 +479,7 @@ def _strike_opening_cash(setup, record, view) -> None:
     owned = equity.holdings(setup, record, view)
     transfers = []
     for cohort in record.cohorts.values():
-        purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0))
+        purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0),
+                                                       extra_spending=extra_spending.get(cohort.agent_id, 0.0))
         transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, purse, "opening coin"))
     record.book.transfer_many([transfer for transfer in transfers if transfer.amount > 0.0])

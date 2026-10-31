@@ -74,3 +74,15 @@ Rome is not re-measured; the claim stays open until `spin-up-trace` is read for 
   Planned revenue of the producers (expected sales at opening prices) against year-one receipts: before 3.4e9 against about 1.1e8;
   after 2.9e8 against 1.5e7. Year-one volumes of the final goods are still only about a tenth of the opening's final demand for every good,
   grown-at-home or not: that gap is not the own plot and is open.
+
+## Update 10: the opening household calls the rule with year one's inputs (opening_own.resting_orders)
+
+- Side by side on Norse (`goods_orders`, all cohorts): the opening passed cash equal to income and counted food grown at home as income
+  (`in_kind`), so its income was several times the cash year one pays; year one's household has a purse and a budget the plot's cut
+  leaves unspent. The in-kind income was the largest difference (opening bid budgets about five times year one's).
+- The year cuts the grown floors after the budget is set, so a household that grows its food spends less on the market than its budget.
+  The opening now gives each cohort the purse (`opening_resting.resting_household_purse(..., extra_spending)`) that lets the unchanged
+  spending rule spend its income plus what the plot frees, so market spending equals income. The rule lets a household spend beyond income
+  only up to `WEALTH_DRAWDOWN_LIMIT` of it; the rest is still counted in kind.
+- The planned revenue of the producers is dominated by the recipes of the mint's backing metal (about 60 percent of it) that nobody hires
+  in year one; it is not household demand. Measure with `spin-up-trace` and the hours per recipe planned against hired.

@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy import opening_own, opening_runs, year_goods
+from sim.economy import households_buffer_stock, opening_own, opening_resting, opening_runs, year_goods
 from sim.economy.protocols import AgentOrders
 from sim.economy.types import Bid, Recipe
 
@@ -41,6 +41,12 @@ class LessWhatItGrewTests(unittest.TestCase):
         bid = Bid("household", "flour", "area", "tile", 10.0, 10.0, 1.0, 1.0, 100.0)
         cut = year_goods.less_what_it_grew(AgentOrders(bids=(bid,)), cohort, basket, {"food": 5.0}).bids[0]
         self.assertEqual((cut.floor_quantity, cut.flexible_quantity, cut.budget), (5.0, 10.0, 75.0))
+
+
+class RestingPurseExtraSpendingTests(unittest.TestCase):
+    def test_a_purse_for_spending_beyond_income_lets_the_rule_spend_exactly_that_much(self):
+        purse = opening_resting.resting_household_purse(100.0, 0.0, extra_spending=30.0)
+        self.assertAlmostEqual(households_buffer_stock.spending_budget(100.0, 100.0 + purse, 0.0), 130.0)
 
 
 def mill_and_feeder():
