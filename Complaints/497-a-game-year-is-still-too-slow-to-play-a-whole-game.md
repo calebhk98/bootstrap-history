@@ -1,6 +1,6 @@
 # A game year is still too slow to play a whole game
 
-**Status:** partly - opening and per-year cost cut; a year is still several times the target
+**Status:** partly - opening and per-year cost cut; a year is still several times the target, and has not been re-profiled since the goods market and seller pricing were replaced by the Eurace rules (logit clearing in `goods_market_logit.py`, vectorised with numpy; `price_setting.best_price`)
 
 A playtester found a new Rome game took a quarter of an hour of hidden spin-up before the first prompt and
 the better part of a minute per in-game year, so a whole game would take hours of stepping. The target is a
@@ -49,8 +49,8 @@ encoder). None has a cheap exact cut left; the way under is one `play` process f
 The idle-ask check in `seller_offers.strategic_offers` reads what a seller sells off the market's book
 (`goods_market.price_and_sold`) instead of clearing the whole market with fills; a view caches each market area
 by name and tile; merchants group their expectations with fewer lookups. All exact (same stepped save).
-What is left in `clear_goods` is the sellers' reservation search (`seller_book`) and the price root-finds under
-it, then book postings and settlement.
+What is left in `clear_goods` is the sellers' price choice (`seller_offers.strategic_offers` calling `price_setting.best_price`; the
+earlier book search is gone) and the price root-finds under it, then book postings and settlement.
 
 ## Why the rest is hard
 
@@ -105,7 +105,7 @@ Measured (CPU per warm year, years after one warm-up, alternating an exported co
 machine): old 6.57, 6.46, 6.37; new 6.25, 6.01, 5.99, about 0.4 s or six percent. Command: `time.process_time` around
 `Sim.step()` of `harness.sim()`.
 
-Left, measured by `cProfile` of a warm year: `strategic_offers` is `best_reservation` (about 0.5 s of a profiled 15 s
+Left, measured by `cProfile` of a warm year (before the Eurace seller pricing, whose search `best_reservation` is deleted): `strategic_offers` was that search (about 0.5 s of a profiled 15 s
 year) and unit costs; `clear` is mostly `solve_price` and per-market setup, over half of its calls trade nothing;
 `close_agents` is `producers_close.close_year` per producer (expectations and expected run), flat; settlement posting
 and `producers.plan`/`offers` are outside the files this round owned.
@@ -138,7 +138,7 @@ which merchants 2.3; `clear_labour` 3.1; `close_agents` 2.0; `open_entrants` 1.9
 `merchants_credit.credit_request` running a second full route search for the two merchants that borrow (the
 second search sees post-clearing prices and so misses the memo of the first); `wear_and_spoilage` 0.5. In the
 files this round owned nothing above about 0.3 s of real time is left: `settlement._settle` with `Book.post`
-(about 0.27 s; already tight, per-call overhead), `best_reservation` (about 0.33 s; the book clearing and the
+(about 0.27 s; already tight, per-call overhead), the book-search function `best_reservation` since deleted (about 0.33 s; the book clearing and the
 pruned search), `producers.plan` (0.15 s), `close_year` (0.25 s). Not taken: lazy unit costs for crowds in
 `strategic_offers` (the unsold search needs a crowd's cost for its floor in every market that reaches it, and a
 market with nothing unsold is a third of the cost at most, under 0.05 s).

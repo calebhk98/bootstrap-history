@@ -1,6 +1,6 @@
 # Household work is not a need, so there are no servants, cooks or taverns
 
-**Status:** partly - household choice, own-hours withholding, hearth and cooked food, grinding make-or-buy and full-cost hiring are built; land after the opening (473), a whole-game re-measure, an urban marker and servant indivisibility remain
+**Status:** partly - household choice by logit, own-hours withholding, hearth and cooked food, grinding make-or-buy and full-cost hiring are built; land after the opening (473), a whole-game re-measure, an urban marker and servant indivisibility remain
 
 Owner decision (530, 2026-10-20): cooking, fetching water and fuel, cleaning, grinding and childcare take hours every
 household spends, and they are a need met by the household's own hours or by hiring. Religion as a need is out of scope;
@@ -8,32 +8,47 @@ it is a mod (`mods/TASKS.md`).
 
 ## What is built
 
-- `data/world/household_work.json`: hours a person's share of household work takes, by task. Water, fuel and grinding
-  come from Blackden and Wodon (eds), Gender, Time Use, and Poverty in Sub-Saharan Africa, World Bank Working Paper 73,
-  2006, overview p. 9 (opened): an average adult female spends from just under 1 hour to 2 hours 20 minutes a day carrying
-  water, firewood and crops for grinding. Cooking, cleaning and childcare hours: no source found, labelled estimates
-  (confidence D) with a `retire`. Cooking fuel (`cooking_fuel_mj_per_person_per_day`): Johnson and Bryden 2012 (abstract
-  opened).
+- `data/world/household_work.json`: hours a person's share of household work takes, by task, with sources and labelled
+  estimates (see Research needed). Cooking fuel (`cooking_fuel_mj_per_person_per_day`): Johnson and Bryden 2012 (abstract opened).
 - `household_work` need in `data/world/needs.json`, no floor, met by `domestic_service_hour`
   (`data/production/95_household_services.json`), made by the `domestic_servant` trade (group `services_state`).
   `cooked_meal_kg` is the cooked food a cook or eating house makes.
-- `sim/economy/households_work.py` and `household_work_year.py`: a cohort hires all its household work when an hour of its own
-  labour (the wage it faces, averaged over the hours it would sell) is worth more than the servant's price, otherwise none, so
-  hiring follows income and the wage with no typed share (the earlier typed budget share is retired). The servant's price is
-  last year's `domestic_servant` wage, else the tile's subsistence wage per hour.
-- Own hours are kept back: `labour_supply.HourSupply` (earlier `Economy._shortfall_hours`) adds each cohort's own household-work hours to its own-plot hours, so
-  `withhold_hours` cuts the offers; `_grow_own` does not count them as spare hours.
-- Hearth: a cohort has one when it holds a title or a tenancy on its tile (`has_hearth`). A hearth-less cohort gets
-  `without_hearth_basket` (food only from goods marked `ready_to_eat`, no cooking in its household work) and burns no fuel;
-  a cohort with one pays the cooking fuel added to its warmth floor (`households_work.with_cooking_fuel`).
-- Tests: `sim/tests/test_economy_household_work_year.py`, `sim/tests/test_economy_households_work.py`.
+- Hire or do: `households_work.hired_hours` hires the share of a cohort's household work given by a logit on the service
+  price against the worth of an own hour (`price_setting.choice_shares`, `WORK_CHOICE_INTENSITY`, a labelled heuristic), so
+  the share falls smoothly with income and the wage. `household_work_year.service_price_per_hour` reads the price of the goods
+  that serve the need per need unit, the servant's wage only when none is posted. `household_work_year.work_terms` values an
+  own hour at the wage its offers face, weighted by the share of hours expected to sell (`households_work.smoothed_sold_share`
+  over the years; year 0 from the opening's own sizing, `households_work.expected_sold_share` via
+  `household_work_year.expected_shares`) and less the hours spent directing the servant (`households_work.net_hour_value`,
+  `supervision_hours_per_hired_hour` in the data file, no source found, confidence D, with a `retire`).
+- The opening settles the hired share on a cycle by bisecting over households ranked by what an hour hired gains them
+  (`opening_plans._by_margin`) and posts the price at which the servants there are enough
+  (`households_work.service_price_that_fits`).
+- Own hours are kept back: `labour_supply.HourSupply` adds each cohort's own household-work hours to its own-plot hours, so
+  `withhold_hours` cuts the offers. Every other hour is offered to the market (no leisure split); household work is fixed
+  against the labour offer, not chosen against leisure.
+- Hearth: a cohort has one when it holds a title or a tenancy on its tile (`household_work_year.has_hearth`). A hearth-less
+  cohort gets `without_hearth_basket` (food only from goods marked `ready_to_eat`, no cooking in its household work) and burns
+  no fuel; a cohort with one pays the cooking fuel added to its warmth floor (`households_work.with_cooking_fuel`).
+- Grinding is make-or-buy (`sim/economy/household_grinding.py`, used by `household_work_year.grinding_plan`): the needs file
+  marks a grain `milled_as` its flour; a cohort buys the grain milled when the milled good costs less per need unit than the
+  grain plus the grinding hours at the worth of its hour. Hours fall only on the share it grinds by hand. The full load is a
+  labelled heuristic (the source gives no kilograms), `retire` in the data.
+- Tests: `sim/tests/test_economy_household_work_year.py`, `test_economy_households_work.py`,
+  `test_economy_household_grinding.py`, `test_economy_opening_household_plans.py`.
 
-## Still to do
+## What is wrong now
 
 - Land after the opening settles (473), since a new need moves the opening's demand.
-- Re-measure with a whole game: the hours kept back are a large share of the offered hours, and the fuel price moves; compare
-  `simulator.py economy-check` hired share, wage over floor and fuel prices before and after.
+- No whole-game re-measure since the logit hiring and the Eurace rules: hired hours a person, the service share of the
+  opening basket, the market rate and fuel prices have not been measured together. Measure on a default Rome game with
+  `python3 sim/simulator.py economy-check` and `PYTHONPATH=. python3 -W ignore -c "from sim.tests.harness import sim; print(sim(civ='rome_100ad').market_rate())"`.
+- Servants are divisible: a servant below some share of a year cannot be hired. The worth of a freed hour is the average wage
+  its offers face, not the marginal one.
 - No urban marker exists in the economy; when one does, it should also remove the hearth.
+- Cooked food, cleaning and childcare as bought substitutes are not yet data in `household_work.json`.
+- Pre-modern sources put domestic service between a small share of the population and about a third where wealthy; whether the
+  model's hired share falls in that range is not re-measured.
 
 ## Research needed
 
@@ -48,92 +63,7 @@ Issues Paper 6, 2002, Box 1); cooking, cleaning, laundry and care from the Ghana
   without either (Minge-Klevana 1980, the UCLA Time Allocation project) was not found open online.
 - The Burkina Faso table is a secondary reproduction with no survey year or sample size, and its "Household" line (cooking
   among it) is not broken down.
-- Servants per household (the historical servant literature) was not searched; the hire switch rests on wages, not on a count.
-
-## Update: household work shares the choice
-
-Household work's own hours and the hours kept for the plot are the same kind of choice (an hour at home against the wage).
-`HourSupply` keeps the larger of the plan and the plot choice, then adds household work. The fixture has no
-household-work data, so only the plot side is exercised there; leisure is not modelled.
-
-## Update: leisure is modelled, household work still enters at the servant's price (473 Update 8)
-
-A household's hours are shared by `labour_supply.HourSupply`: own-plot plan and household work first (the work still hired or done
-by the all-or-nothing rule against the servant's wage), then the plot by its marginal return, then leisure by a declared
-preference (675), then sale. At the opening the leisure anchor is solved so offered equals hired, so what household work and
-leisure each take of Rome's 2000 hours a worker is still not measured separately: Rome's household-work hours come from the data
-file's estimates (cooking, cleaning and childcare confidence D) and are not re-measured here. The hire/own switch is still a
-step in the wage (households differ in the wage they face, so the aggregate rises step by step); it was not made smooth.
-Cooked food, cleaning and childcare as bought substitutes are not yet data in `household_work.json`.
-
-## Effect measured after the sourced hours (PM)
-
-The opening's typical traded good now sells below its making cost (`price_over_making_cost_band_validation`, see 558). The
-cause is traced in 473 Update 11: the opening is unchanged and the cycle takes a different path. The sourced figures stay.
-
-## Grinding is charged to households that can buy flour (PM, measured)
-
-A default Rome game's market rate is 0.199 at 1cd50f79 and 0.48 (the ceiling) after the sourced hours merged (e72b36c0):
-households have nothing left to save and no lender can be met (state scenarios restated around it; credit work 641).
-Command: `PYTHONPATH=. python3 -W ignore -c "from sim.tests.harness import sim; print(sim(civ='rome_100ad').market_rate())"`.
-Most of `water_fuel_and_grinding` is hand grinding (the Burkina Faso table), charged to every household of every civilisation,
-while the economy also mills grain into flour (`data/production/95_grain_milling.json`) (whether a household can buy it is being checked). Grinding is a
-way of making flour, so it belongs with the household's choice of making or buying (the rule this complaint already has for
-cooked food), not in a fixed daily charge. Water and fuel fetching stay household work.
-
-## Update: grinding is make-or-buy (measured)
-
-- Verified: households eat grain and flour as well as bread. The food need lists wheat, millet and maize (grain), `flour_kg`
-  and `bread_kg` (ready to eat) among others; they buy a mix by cost per unit. `flour_kg` is an ordinary household good in
-  the goods market (priced at the Rome opening; milled by `data/production/95_grain_milling.json`), so no new flour path
-  was needed. What was missing was the weighing of a grain against its milled good.
-- `water_fuel_and_grinding` is split in `data/world/household_work.json` into `water_and_fuel` (44 minutes, fixed) and
-  `grinding` (108 minutes, flagged `scales_with_ground_grain`), from the same Burkina Faso table. The two sum to 152
-  minutes; the old figure rounded that to 2.5 hours, so the needs file satiation moved with it.
-- The rule (`sim/economy/household_grinding.py`, used by `household_work_year.cohort_plan`): the needs file marks a grain
-  `milled_as` its flour. A cohort buys a grain milled when the milled good costs less per need unit than the grain plus
-  the sourced grinding hours per need unit at the worth of its hour (`Cohort.milled_grains`; the grain leaves its food
-  basket). Hours fall only on the share of food it grinds by hand. With no priced milled good, it grinds at the sourced load.
-- Labelled heuristic (`retire` in the data): the table gives no kilograms, so the full load is taken as grinding a diet
-  wholly of grain at the food floor.
-- Tests: `sim/tests/test_economy_household_grinding.py`.
-- Measured market rate (command above), before then after: rome_100ad 0.48 then 0.48; han_china_100ad 0.8 then 0.8;
-  england_1300 0.1919 then 0.147; mexica_1500 0.4 then 0.3. Rome stays at the ceiling: at its opening most cohorts now buy
-  wheat and millet milled, but they still hire nearly all the remaining household work (about 470 hours a person), so
-  grinding was not what held the rate up. Nothing was tuned.
-
-## Why Rome saved nothing: the hire rule priced an hour at the servant's wage, the household paid the service's price (measured)
-
-Trace (scratch probe, not kept; Rome opening, one stepped year, per person, aggregated by income class): at the branch tip and at
-1cd50f79 alike, households spent nearly their whole income on the `household_work` floor (`domestic_service_hour` bids took 231 to
-921 a person of an income of 234 to 887 at 1cd50f79; 237 to 891 of 239 to 905 at the tip), left almost nothing in goods or the
-store, and offered savings of about one thousandth of their cash (cohorts offering: 1 and 3 of 312). The hire switch compared the
-worth of the household's hour with the servant's wage (0.40 to 0.42 an hour), but the household paid the market price of the hour
-of service (9.1 at 1cd50f79, 2.9 at the tip, for a hired 378 and 439 hours a person). So the rule hired at a price it did not pay.
-The rate itself: scarcity wage (8e354ebe) moved it from 0.126 to 0.147; the sourced hours (e72b36c0) took it to 0.48; the second
-credit clearing, with savings of about a millionth of requests, returns the ceiling in both builds (1cd50f79 read 0.199 by where the
-spin-up stopped).
-Fix: `household_work_year.service_price_per_hour` reads the price of the goods that serve the household-work need per need unit,
-the servant's wage only when none is posted. Rule tests in `sim/tests/test_economy_household_work_year.py`. The sourced hours are
-unchanged. After: Rome hires almost nothing (6 of 312 cohorts), does about 466 hours a person itself, offers about a quarter of
-its cash as savings, and the clearings lend at 0.07 to 0.08. Market rate (command above): rome_100ad 0.016, han_china_100ad 0.132,
-england_1300 0.049, mexica_1500 0.375. Rome now reads below the households' own ask floor (the loss share): the opening is
-unsettled, not tuned. Mexica stays high and is not traced here.
-
-## Hired household work is most of the opening's spending (PM, 2026-10-22)
-
-Since the opening is solved with the households' first-year choices (473 Update 19), Rome's households hire about four
-hundred and fifty hours a person a year of domestic service, and domestic service is close to half the opening basket's
-value. The hours come from the same population, so the economy mostly trades household chores between households. The
-hiring rule compares a household's hour worth with the service price and hires all or none; with a narrow gap between the
-two, nearly every household hires everything. Pre-modern sources put domestic service at a minority of the workforce, kept by
-households whose time was worth well above a servant's; the rule should hire only where the gap pays for the service's
-own costs (the servant's keep, supervision, the household's own hour not otherwise sold), and a household that cannot sell its
-freed hours at that worth gains nothing by hiring. Measure: hired hours per person and the service share of the opening
-basket on a default Rome game; a source for the share of servants in a pre-modern workforce should be opened before any figure
-is used.
-
-## Update: hiring pays only for the service's full cost (2026-10-22)
+- Servants per household: only two secondary sources opened (below); the hire switch rests on wages, not on a count.
 
 Sources opened: `humanprogress.org/grim-old-days-peter-lasletts-the-world-we-have-lost/` (a summary of Laslett, The World We Have
 Lost): servants "varied from as low as 4 percent to as high as a third of the population", the high end "in relatively wealthy
@@ -141,23 +71,3 @@ times and places, such as London and parts of Norwich in the 1690s"; `johnhearfi
 no servants line, only "Labourers & Outservants" and the households above them, whose counts include their servants. Not found
 open: Massie 1759, Laslett's own tables, Roman household slaves. So only a range and the point that the wealthy kept servants
 rest on a source (secondary).
-
-Gap: the rule hired all when the average wage over the cohort's offers beat the service's price. It counted every freed hour as
-sold, whatever share of the hours offered found a buyer last year, and it counted no hours spent directing the servant.
-Fix: `household_work_year.work_terms` weights each offer's wage by the share of that labour market's offered hours that sold
-(`households_work.sold_share`, from `record.hours_hired` and `hours_idle`; no history counts as sold) and takes off the
-hours spent directing (`households_work.net_hour_value`; `supervision_hours_per_hired_hour` in the data file, no source found,
-confidence D, with a `retire`). The servant's keep is already in the price. Grinding's make-or-buy keeps the gross hour.
-Tests: `FullCostOfServiceTests` in `sim/tests/test_economy_household_work_year.py`.
-
-Consequence for the opening: with the cost counted, all-hire and none-hire cycled (at everyone hiring the posted service price
-exceeds every hour's worth; at nobody hiring it pays again). `opening_plans.settle` now, on a cycle, bisects on how many of
-the households, ranked by what an hour hired gains them, hire (`_by_margin`); test in
-`sim/tests/test_economy_opening_household_plans.py`. It costs about nine more opening solves: the Rome opening goes from about
-40 s to about 240 s uncached (measured with a scratch probe, `open_economy` on the Rome setup).
-
-Measured on the Rome opening, before then after: hired hours a person a year 456 then 28; service share of the opening's
-priced demand 0.52 then 0.05; domestic service hours per worker 982 then 52, of a 2000 hour year (49% then 2.6% of a worker's
-year). The source's range is 4% to a third of the population, higher where wealthy, so the result sits just under it.
-Still open: the indivisibility of a servant below some share of a year, the marginal rather than the average wage as the
-worth of a freed hour, and the opening's own sale share (it has no labour history, so only the supervision term acts there).
