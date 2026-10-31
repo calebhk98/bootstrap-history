@@ -50,3 +50,14 @@ Rome or the fixtures, but no measured improvement: the old ceiling binds only fo
 textiles, nails), lead is not at its ceiling, and on saved Rome food makers achieve a small share of their planned runs
 in every year while vegetable and millet makers plan a small share of their capacity, to expected sales rather than to
 the unmet bids.
+
+**Land to the paying use** (branch `land-to-paying-use`): `land_market._clear_tile` no longer gives households' own plots
+first claim and the rest pro rata. Claims go in order of what they pay a hectare (`land_priority.allocate_by_bid`): a
+producer bids its runs' value above their other costs, the plots bid the crop margin a hectare returns the cohort
+(`land_lease_year.own_plot_returns`). Producers that outbid the plots take that land (`record.land_ceded`), and the
+households hold the rest (`titles_plots`); the rent goes to title holders as before. On saved Rome, 8 years against the
+branch tip: real output 2.58e10 against 2.13e10, unsold-hours share 0.71 against 0.75, people rate 0.58 against 0.63;
+millet and wheat achieved over planned up, bread and meal down in the early years. On china_32 the plots still outbid
+the millet, wood and wool makers (a hectare returns the plots more than their margin), so the land those makers get is
+small: the tile is short of land at the floors, not only badly shared. No committed command prints it: the
+measurement hooks `land_market.clear_land` and `producers.plan`/`produce` on a saved opened Rome.

@@ -35,6 +35,12 @@ def _outside_options(setup, margins: Mapping[str, Tuple[float, str]], posted: Ma
     return options
 
 
+def own_plot_returns(setup, record, view, options: Mapping[str, List[Option]]) -> Dict[str, float]:
+    """Per tile, what a hectare returns the households working it themselves (the crop margin net of the wage): the
+    return a producer's rent bid must beat for the households to let the land (land_priority.py)."""
+    return {tile: margin for tile, (margin, _recipe) in _margins(setup, record, view, options).items()}
+
+
 def asks(setup, record, view, options: Mapping[str, List[Option]]) -> Dict[str, float]:
     """The rent per hectare landlords ask of tenants on each tile: the posted rent cut to what the tenants can bear
     over their outside option (land_tenancy.rent_ask)."""

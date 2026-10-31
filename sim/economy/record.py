@@ -71,6 +71,7 @@ class EconomyRecord:
     state_budget: StateBudget = field(default_factory=StateBudget)       # the state's revenue and this year's plan
     land_rent: Dict[TileId, float] = field(default_factory=dict)         # rent per hectare producers paid, by tile
     land_mean_value: Dict[TileId, float] = field(default_factory=dict)   # tile -> mean output value a hectare of the uses that set its rent (entrant_rent.py)
+    land_ceded: Dict[TileId, float] = field(default_factory=dict)        # tile -> hectares let to producers that outbid the households' plots (land_priority.py)
     titles: Dict[TileId, Dict[AgentId, float]] = field(default_factory=dict)   # tile -> holder -> share of its land (titles.py)
     tenancies: Dict[TileId, List[Dict[str, Any]]] = field(default_factory=dict)   # tile -> rows of tenant, lessor, share, arrears
     cleared_hectares: Dict[TileId, float] = field(default_factory=dict)   # tile -> ground cleared and taken up, added to its cropland (titles_ground.py)
@@ -158,6 +159,7 @@ class EconomyRecord:
             "state_budget": plain(self.state_budget),
             "land_rent": self.land_rent,
             "land_mean_value": self.land_mean_value,
+            "land_ceded": self.land_ceded,
             "titles": {tile: dict(held) for tile, held in sorted(self.titles.items())},
             "tenancies": {tile: [dict(row) for row in rows] for tile, rows in sorted(self.tenancies.items())},
             "cleared_hectares": dict(sorted(self.cleared_hectares.items())),
@@ -216,6 +218,7 @@ class EconomyRecord:
             state_budget=StateBudget(**record["state_budget"]),
             land_rent=dict(record["land_rent"]),
             land_mean_value=dict(record["land_mean_value"]),
+            land_ceded=dict(record["land_ceded"]),
             titles={tile: dict(held) for tile, held in record["titles"].items()},
             tenancies={tile: [dict(row) for row in rows] for tile, rows in record["tenancies"].items()},
             cleared_hectares=dict(record["cleared_hectares"]),
