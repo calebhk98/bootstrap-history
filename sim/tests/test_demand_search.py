@@ -50,6 +50,21 @@ class RaiseAsksTests(unittest.TestCase):
         self.assertAlmostEqual(raised[0].reservation_price, raised[1].reservation_price, delta=0.01)
         self.assertGreaterEqual(raised[0].reservation_price, 2.0)
 
+    def test_asks_stop_at_each_sellers_limit(self):
+        # the money would carry the level to 10, but one seller may ask 2 at most and the other 3
+        buyers = goods_market.Buyers([buyer(20.0, 100.0)], None)
+        offers = [seller("a", 5.0, 1.0), seller("b", 5.0, 1.0)]
+        raised = demand_search.raise_asks(buyers, offers, [0, 1], {0: 2.0, 1: 3.0})
+        self.assertAlmostEqual(raised[0].reservation_price, 2.0, delta=0.01)
+        self.assertAlmostEqual(raised[1].reservation_price, 3.0, delta=0.01)
+
+    def test_a_seller_asking_above_its_limit_is_not_pulled_down(self):
+        buyers = goods_market.Buyers([buyer(20.0, 100.0)], None)
+        offers = [seller("a", 5.0, 4.0), seller("b", 5.0, 1.0)]
+        raised = demand_search.raise_asks(buyers, offers, [0, 1], {0: 2.0, 1: 3.0})
+        self.assertEqual(raised[0].reservation_price, 4.0)
+        self.assertAlmostEqual(raised[1].reservation_price, 3.0, delta=0.01)
+
     def test_no_excess_demand_leaves_the_asks(self):
         # the buyer wants 4 of the 10 on offer: nobody was turned away
         buyers = goods_market.Buyers([buyer(4.0, 100.0)], None)
