@@ -13,8 +13,8 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import bank_credit_risk
-from .labour import Entry, allocate_in_order, clearing_point, sticky_move
+from . import bank_credit_risk, credit_rate
+from .labour import Entry, allocate_in_order, sticky_move
 from .types import AgentId, CurrencyId, FundsOffer, Loan, LoanRequest, Transfer
 from .replaced import replaced
 
@@ -146,9 +146,9 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
     lowest_ask = min((offer.minimum_rate for offer in offers), default=None)
     entry_floor = max(0.0, lowest_ask) if lowest_ask is not None else 0.0
     able = [ceiling >= entry_floor for ceiling in ceilings]
-    target = clearing_point([(offer.minimum_rate, offer.amount) for offer in offers],
-                            [(ceiling, request.amount) for ceiling, request, can in zip(ceilings, requests, able)
-                             if can])
+    target = credit_rate.base_rate_target([(offer.minimum_rate, offer.amount) for offer in offers],
+                                          [(ceiling, request.amount) for ceiling, request, can in zip(ceilings, requests, able)
+                                           if can])
     if not any(able):       # lenders alone are not a price either
         return Clearing([], last_rate, list(requests), NO_BORROWER_AT_ASK)
     base_rate = sticky_move(last_rate, target, RATE_ADJUSTMENT_SHARE_PER_YEAR)
