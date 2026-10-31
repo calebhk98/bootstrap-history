@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple
 
 from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
+from . import goods_respend, goods_respend_year
 from .household_work_year import basket_key, cohort_basket
 from .market_memory import market_key
 from .offered_price import offered_price
@@ -157,6 +158,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     listed = set(order)
     order += sorted({good for good, _area in order_book} - listed)
     done, cleared, traded = set(), set(), set()
+    left_markets = {}
     costs = None                                  # what each good costs to make, worked out when first needed
     in_kind = [form for form in setup.tax_forms if form.paid_in]
     plant_goods = {producer_id: set(setup.recipes[producer.recipe_id].plant_goods)
@@ -188,6 +190,9 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                     ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
             ledger.note_clearing(result)
             ledger.bids_by_market[(good, area)] = bids
+            left_markets[(good, area)] = goods_respend_year.LeftMarket(
+                bids, result, goods_respend.offers_left(offers, goods_respend_year.sold_by_seller(result)),
+                record.memory.prices.get(key))
             if area in kept:
                 record.curves[key] = market_curves.summarize(bids, offers)
             unmet = unmet_quantity(bids, result.price, result.quantity)
@@ -229,6 +234,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             cleared.add(key)
             if delivered > 0.0:
                 traded.add(key)
+    goods_respend_year.respend(setup, record, view, ledger, left_markets,
+                               lambda cohort: cohort_basket(setup, record, cohort))
     for key in sorted(set(record.memory.volume_weights) - cleared):
         record.memory.note_volume(key, 0.0)
     record.memory.note_trading(traded)

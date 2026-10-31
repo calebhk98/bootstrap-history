@@ -19,7 +19,7 @@ KEY = market_key("brass", "area")
 def one_year(memory, book, bids, offers):
     setup = types.SimpleNamespace(recipes={}, tax_forms=[], currency_id=CURRENCY, opening_prices={"brass": 4.0},
                                   specs={}, state_agent="state", port_tile=None, capital_tile=None)
-    record = types.SimpleNamespace(producers={}, memory=memory, currency=CurrencySpec(CURRENCY, "fiat", None, 0.0, None), book=book, volumes={}, unsold={}, unmet={})
+    record = types.SimpleNamespace(producers={}, cohorts={}, memory=memory, currency=CurrencySpec(CURRENCY, "fiat", None, 0.0, None), book=book, volumes={}, unsold={}, unmet={})
     order_book = {("brass", "area"): (list(bids), list(offers))}
     year_goods.clear_goods(setup, record, None, None, order_book, {}, YearLedger())
 
