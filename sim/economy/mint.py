@@ -3,13 +3,14 @@
 The stock is the metal embodied in the money in circulation: it is seeded with the opening money's
 metal, grows only by what the mint buys (striking), and falls by what it sells (melting). It sells
 only what it holds and strikes only what it buys. A struck coin pays the seller the mint price (parity
-less the issuer's charge) and the charge goes to the issuer as seigniorage; weighed metal and commodity
+less the issuer's charge, `mint_price.py`) and the charge goes to the issuer as seigniorage; weighed metal and commodity
 money are exchanged at parity both ways with no issuer. Fiat has no metal and no mint orders.
 """
 import math
 from typing import Dict
 
-from . import currency, mint_labour
+from . import currency, mint_labour, mint_price
+from .market_memory import market_key
 from .metal_stock import COIN_WEAR_PER_YEAR, METAL_GOODS_LOSS_PER_YEAR
 from .types import EDGE_EXTERNAL, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid, GoodsMove, Offer, Transfer
 
@@ -123,6 +124,9 @@ def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[s
     _lose_worn_metal(record)
     held = stock_by_tile(record.book, metal)
     for tile, quantity in sorted(held.items()):
+        if not mint_price.melting_pays(record.memory.prices.get(market_key(metal, area_map.area_of(metal, tile))),
+                                       currency.mint_parity(spec)):
+            continue
         offer = Offer(EDGE_MINT, metal, area_map.area_of(metal, tile), tile, quantity, currency.mint_parity(spec))
         order_book.setdefault((metal, offer.area), ([], []))[1].append(offer)
     strike_price = currency.mint_price(spec)
@@ -136,12 +140,14 @@ def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[s
     return held
 
 
-def settle_mint(record, held_before: Dict[str, float]) -> None:
-    """After the goods markets: the coin value of the metal the mint took in, less the coin it paid out net
-    for it, is owed to the issuer (seigniorage); then coin that crossed the border is matched with metal."""
+def settle_mint(record, held_before: Dict[str, float], ledger=None) -> None:
+    """After the goods markets: the mint tops the metal's sellers up to the mint price (`mint_price.py`, when the
+    year's `ledger` is given); the coin value of the metal the mint took in, less the coin it paid out net for it, is owed to the issuer (seigniorage); then coin that crossed the border is matched with metal."""
     spec = record.currency
     if not spec.backing_good or spec.backing_per_unit <= 0.0:
         return
+    if ledger is not None and currency.has_mint(spec):
+        mint_price.pay_top_ups(record.book, ledger, spec.currency_id, spec.backing_good, currency.mint_price(spec))
     if currency.has_mint(spec) and spec.issuer is not None:
         taken_in = (math.fsum(stock_by_tile(record.book, spec.backing_good).values())
                     - math.fsum(held_before.values()))

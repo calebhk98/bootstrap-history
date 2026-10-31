@@ -232,7 +232,7 @@ class Economy:
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
         clear_goods(setup, record, view, self.area_map, order_book, plans, ledger, self.watched_tiles)
         land_bid_year.take_up_bought(setup, record)
-        settle_mint(record, mint_held)
+        settle_mint(record, mint_held, ledger)
         close_mint_year(setup, record)
         rent = land_market.settle_year(setup, record, view,
                                        {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},

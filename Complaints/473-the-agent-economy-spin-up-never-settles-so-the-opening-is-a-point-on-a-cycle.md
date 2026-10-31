@@ -802,3 +802,13 @@ are small after the first years, but the spin-up does not settle: the basket pri
 still drift downward over the fifty years. `--fixture small --years 50`: the price level and wage keep falling to the end and the idle
 hours shrink as the wage falls, so it is not settled either. Not re-measured on a civilisation
 (`spin-up-trace --civ rome_100ad --years 60` is the remaining gate). The status stays `partly`.
+
+## Update 23: the mint buys at the mint price and holds its coin metal unless bullion fetches parity (branch mint-pays-mint-price)
+
+Chain, stationary fixture (`sim/economy/fixture_setups.py`: parity 100, mint price 95): the market settles every sale at its mean price, so the mint
+paid the metal's sellers the market price (about 60 to 88) and the issuer kept the whole gap to parity as seigniorage; the makers' expected price
+followed the market, so smelting shrank as ore cost rose. The mint also offered its whole coin metal at parity into the same market; the logit
+choice gave that offer a share of the ornament buyers, and the mint's sales washed against its purchases (net intake negative in some years, about 270 kg sold in year 54).
+Now `mint_price.pay_top_ups` adds, after the markets, the gap between the mint price and the settled price on what the mint bought, shared among the
+metal's sellers by what they sold (seigniorage is then the mint's charge only), and the mint offers its metal only while bullion's remembered price is at least parity
+(`mint_price.melting_pays`). Measure: `simulator.py spin-up-trace --fixture stationary --years 60` with the money columns `wear`, `struck`.
