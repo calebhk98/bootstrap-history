@@ -21,3 +21,9 @@ against planned runs. Measure Rome's trajectory with `python3 sim/simulator.py s
 **What it would take.** An opening that sizes each producer to what its inputs in reach can supply (the same rule the year
 uses to plan within input reach); store demand sized at the replacement of what stores lose, not the gap to a target;
 unmet demand in a market without sellers visible to entry and to producers that could serve it.
+
+**A year-rule candidate, parked** (`Complaints/reports/961-plan-within-input-reach.patch.txt`): producers plan runs only as
+far as their hard inputs reach (nothing on offer gives zero runs; a short fill last year caps the runs; a full fill caps
+nothing). On saved Rome it raises realised over planned runs from year one but lowers hours hired and output a few per
+cent, leaves unemployment unchanged, and plans fall faster than realised runs (the cap sometimes sits below what the
+inputs deliver). Re-measure once inputs move between areas (lead to silver makers, heat to bakers).
