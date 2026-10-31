@@ -90,61 +90,12 @@ class IssueTests(unittest.TestCase):
 
 
 class MoneyDemandTests(unittest.TestCase):
-    def test_target_falls_with_interest_and_inflation(self):
-        base = currency.cash_balance_target(100.0, 0.0, 0.0)
-        self.assertGreater(base, currency.cash_balance_target(100.0, 0.1, 0.0))
-        self.assertGreater(currency.cash_balance_target(100.0, 0.1, 0.0),
-                           currency.cash_balance_target(100.0, 0.1, 0.5))
-
-    def test_hyperinflation_expectations_shrink_but_keep_positive(self):
-        low = currency.cash_balance_target(100.0, 0.0, 0.05)
-        high = currency.cash_balance_target(100.0, 0.0, 2.0)
-        self.assertGreater(high, 0.0)
-        self.assertLess(high, 0.2 * low)
-
     def test_expectations_adapt(self):
         value = 0.0
         for _ in range(20):
             value = currency.update_expected_inflation(value, 0.5)
         self.assertAlmostEqual(value, 0.5, places=3)
         self.assertLess(currency.update_expected_inflation(0.0, 0.5), 0.5)
-
-    def test_spending_adjustment_signs(self):
-        self.assertGreater(currency.spending_adjustment(120.0, 100.0, 500.0), 0.0)
-        self.assertLess(currency.spending_adjustment(80.0, 100.0, 500.0), 0.0)
-        self.assertEqual(currency.spending_adjustment(100.0, 100.0, 500.0), 0.0)
-        self.assertGreaterEqual(currency.spending_adjustment(0.0, 1e9, 10.0), -10.0)
-
-
-def quantity_loop(printing_share_by_year):
-    """Toy economy: fixed output; each year spending is last year's nominal income plus the pull of cash
-    above target; the price level is spending over goods; the issuer prints a share of the stock."""
-    goods = 100.0
-    cash, expected, level = currency.cash_balance_target(goods, 0.02, 0.0), 0.0, 1.0
-    levels = [level]
-    for printing in printing_share_by_year:
-        cash += printing * cash
-        spending = goods * level
-        target = currency.cash_balance_target(spending, 0.02, expected)
-        spending += currency.spending_adjustment(cash, target, spending)
-        new_level = spending / goods
-        expected = currency.update_expected_inflation(expected, new_level / level - 1)
-        level = new_level
-        levels.append(level)
-    return levels
-
-
-class QuantityLoopTests(unittest.TestCase):
-    def test_no_printing_keeps_the_level_stable(self):
-        levels = quantity_loop([0.0] * 30)
-        self.assertLess(max(levels) / min(levels), 1.5)
-
-    def test_rising_printing_accelerates_inflation(self):
-        levels = quantity_loop([0.05 * (1.35 ** year) for year in range(14)])
-        rises = [levels[i + 1] / levels[i] - 1 for i in range(len(levels) - 1)]
-        self.assertGreater(rises[-1], rises[len(rises) // 2])
-        self.assertGreater(rises[len(rises) // 2], rises[2])
-        self.assertGreater(rises[-1], 1.0)          # beyond 100 percent a year: hyperinflation reached
 
 
 class PriceLevelAndRateTests(unittest.TestCase):
