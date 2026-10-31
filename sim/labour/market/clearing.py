@@ -5,6 +5,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 from sim.constants import declare
 
 from . import asks, layoffs
+from .asks import VACANCY_SHARE_THRESHOLD, WAGE_UPDATE_PER_ROUND  # noqa: F401  (declared beside the rounds that use them)
 from .applications import hire_through_rounds
 from .import_cost import ImportCosts
 from .premium import training_premium
@@ -19,20 +20,6 @@ WAGE_SHARE_CLOSED_PER_YEAR = declare(
         "only rises, as Eurace's WAGE_OFFER does, Firm_update_wage_offer in Labour/Firm_Employer_Functions.c). A lower "
         "clearing point is reached at once for new hires: held hours keep their contract (contracted_wage) and the ask "
         "falls by asks.py, so the downward stickiness lives there. The speed is not fitted.")
-
-WAGE_UPDATE_PER_ROUND = declare(
-    "WAGE_UPDATE_PER_ROUND", 0.01, kind="temporary_heuristic", unit="share of the wage added per round of unfilled vacancies",
-    source=None, confidence="D",
-    retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
-    why="Eurace's WAGE_UPDATE (0.01 in the shipped state its/0_after_2k_transient.xml, opened; model.xml's description gives 0.02): an employer with vacancies left raises its offer by "
-        "this share each round (Firm_update_wage_offer, Labour/Firm_Employer_Functions.c). Not fitted.")
-
-VACANCY_SHARE_THRESHOLD = declare(
-    "VACANCY_SHARE_THRESHOLD", 0.05, kind="temporary_heuristic", unit="share of the hours wanted left unfilled",
-    source=None, confidence="D",
-    retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
-    why="Eurace raises the offer only when vacancies exceed MIN_VACANCY (default 2 posts; a count, not a share). "
-        "A market has no post count, so the threshold is the share of wanted hours the supply cannot fill. Not fitted.")
 
 MATCHING_EFFICIENCY_PER_YEAR = declare(
     "MATCHING_EFFICIENCY_PER_YEAR", 2.0, kind="temporary_heuristic", unit="per year",
@@ -143,17 +130,6 @@ def pressure(last: float, reservation: float, offered: float, bids: Sequence[Bid
     return min(1.0, abs(wanted - offered) / offered)
 
 
-def vacancy_raise(wage: float, target: float, wanted: float, offered: float) -> float:
-    """The wage after the rounds of a year in which employers' vacancies stayed open: raised by WAGE_UPDATE_PER_ROUND each
-    round, as Firm_update_wage_offer (Eurace, Labour/Firm_Employer_Functions.c) raises WAGE_OFFER while VACANCIES exceed
-    MIN_VACANCY, but not past the clearing `target` (Eurace's firms stop by budget; here the clearing point is the bound,
-    so the offer cannot overshoot) and never below `wage`. `wanted` and `offered` are hours at last year's wage."""
-    if wanted <= 0.0 or (wanted - offered) / wanted <= VACANCY_SHARE_THRESHOLD:
-        return wage
-    raised = wage * (1.0 + WAGE_UPDATE_PER_ROUND) ** asks.SEARCH_ROUNDS_PER_YEAR
-    return max(wage, min(raised, target))
-
-
 def share_closed(last: float, goal: float) -> float:
     """The share of the gap to `goal` that closes in a year for the wage new hires clear at: a rise is gradual
     (`WAGE_SHARE_CLOSED_PER_YEAR`, an offer only rises step by step); a fall is the whole gap, since the workers' own ask
@@ -169,9 +145,6 @@ def market_wage(last: Optional[float], reservation: float, offered: float, bids:
         return reservation
     target = clearing_target(reservation, offered, bids)
     wage = target if last is None else last + share_closed(last, target) * pressure(last, reservation, offered, bids) * (target - last)
-    if last is not None:     # the sticky move above, then the offer's raise while vacancies stay open
-        wanted = sum(bid.hours for bid in bids if bid.maximum_wage >= max(last, reservation))
-        wage = vacancy_raise(wage, target, wanted, offered)
     if any(bid.maximum_wage >= reservation for bid in bids):
         wage = max(wage, reservation)
     # no employer can pay above its maximum: a wage that lags above every maximum falls to the best of them
@@ -292,13 +265,21 @@ def _wage_with_supply(last, reservation, ceiling, supply, bids):
         return wage_now + gap * (min(goal, ceiling) - wage_now)
 
     wage = goal if last is None else last + share_closed(last, moved(last)) * (moved(last) - last)
-    if last is not None:     # then the offer's raise while vacancies stay open (`vacancy_raise`)
-        at = max(last, reservation)
-        wage = vacancy_raise(wage, min(goal, ceiling), sum(bid.hours for bid in bids if bid.maximum_wage >= at), supply(at))
     if any(bid.maximum_wage >= reservation for bid in bids):
         wage = max(wage, reservation)
     wage = min(wage, max(max(bid.maximum_wage for bid in bids), reservation), ceiling)
     return wage, (wage if last is not None and wage < last else moved(wage))     # a wage that fell has taken the whole move
+
+
+def offer_ceilings(bids: Sequence[Bid], wage: float, paid: Dict[str, float], market_ceiling: float) -> Dict[str, float]:
+    """The most each employer offers in the year's rounds: what its least valuable wanted hour (the lowest tranche
+    whose maximum covers the wage) is worth to it, no more than the market's ceiling (`short_run_ceiling`) and the clearing point (past it the hours wanted fall away), and never
+    under the offer it starts at."""
+    lowest: Dict[str, float] = {}
+    for bid in bids:
+        if bid.maximum_wage >= wage:
+            lowest[bid.employer] = min(lowest.get(bid.employer, math.inf), bid.maximum_wage)
+    return {employer: max(min(cap, market_ceiling), paid.get(employer, 0.0)) for employer, cap in lowest.items()}
 
 
 def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[Bid],
@@ -320,6 +301,7 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     if share_at is None or full <= 0.0:
         offered = full
         wage = min(market_wage(last, reservation, offered, bids), ceiling)
+        goal = clearing_target(reservation, offered, bids) if offered > 0.0 and bids else wage
         # heading: the wage moves toward the clearing target by the same imbalance scaling `market_wage` applies, so
         # the expectation it feeds is continuous across balance (Complaint 664)
         # (a wage that fell has taken the whole move already, so it is its own heading)
@@ -328,6 +310,7 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
                   if offered > 0.0 and bids and not fell else wage)
     else:
         wage, target = _wage_with_supply(last, reservation, ceiling, lambda wage_now: full * share_at(wage_now), bids)
+        goal = supply_target(reservation, lambda wage_now: full * share_at(wage_now), bids) if bids else wage
         offered = full * share_at(wage)
     target = min(target, long_run) if target is not None else None
     contracts = state.contract_wages.get(area, {}).get(trade, {})
@@ -343,7 +326,12 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
         held_pay = {employer: contracted_wage(contracts.get(employer), wage, best_maximum.get(employer, math.inf))
                     for employer in hired}
         # searchers apply to employers' offers round by round (applications.py); the unretained hours start as the pool
-        hire_through_rounds(hired, kept, wanted, paid, held_pay, max(0.0, offered - sum(hired.values())), reservation, lowest)
+        taken = hire_through_rounds(hired, kept, wanted, paid, held_pay, max(0.0, offered - sum(hired.values())),
+                                    reservation, lowest, ceilings=offer_ceilings(bids, wage, paid, min(ceiling, goal)))
+        # the new-hire wage is what the hours taken on were paid, the offers having risen round by round
+        new_hours = sum(taken.values())
+        if new_hours > 0.0:
+            wage = sum(hours * paid[employer] for employer, hours in taken.items()) / new_hours
         before = dict(hired)
         poach(hired, wanted, ranks)
         # hours an employer lost to a better payer leave the kept and the new alike

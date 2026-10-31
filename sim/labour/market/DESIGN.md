@@ -86,15 +86,15 @@ reads `income_at_graduation`; a faster move within a skill family is only the sh
 
 ## Hours bid for and not hired
 
-Bids above the going wage can sit beside idle hands. This is intended, and its cause is the search protocol, not the
-supply schedule. Hours offered at the market's own ask (the pool) are taken in the first round. Each round every employer
-then dismisses a share of what it holds; those hours ask the wage they were paid, which for stayers is the contract
-wage. When the new-hire wage has fallen below the contracts (it falls at once, a contract does not), the dismissed ask
-more than every posted offer, cut their ask a share per round, and stay unmatched for the year while the employer's bid
-value is above its offer. The offer rises in the year only through `vacancy_raise`, once, as the year's starting level;
-it is not raised again round by round. To see the split for one market, run the clearing with
-`SEPARATION_SHARE_PER_ROUND` at zero, or cap the dismissed ask at the offer: either fills every offered hour that the
-bids cover. Measure the idle hours of a trade as the hours searching at the end of `hire_through_rounds`.
+Hours dismissed in a round used to ask the wage they were paid. Where the new-hire wage had fallen below the
+contracts, they asked more than every posted offer and sat idle all year beside employers whose bids were above it.
+Two rules close that, both from the search loop in `applications.py`:
+- An employer whose vacancies stay open raises its offer each round by `WAGE_UPDATE_PER_ROUND` (Eurace's
+  `Firm_update_wage_offer`), not past its least valuable wanted tranche. The trade's new-hire wage is the hours-weighted
+  offer actually paid. There is no separate yearly raise.
+- A searcher's ask is capped at the best offer an employer with a vacancy posts (`capped_asks`): a seller does not ask
+  more than any buyer is seen to pay, as `asks.record` already holds for the market's ask. A cap at an employer's
+  maximum, not its offer, changes nothing, since the maximum sits above the offer the searcher is refused at.
 
 ## Paying above the market
 
