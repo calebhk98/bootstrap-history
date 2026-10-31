@@ -51,3 +51,9 @@ elasticity at the margin gives a fat lower tail, so a producer earning a small s
 share of its capacity and the exit and shedding rules stop working. Needed first: a cost distribution steep only near
 the margin (thin lower tail), or a closure rule. Measured with the held opening wage (patch 1 above) and the sourced
 elasticity together: the decline of hired hours over decades survives, so the producers' curve is not its main cause.
+
+A candidate rule is parked as `Complaints/reports/960-producer-run-share-with-cash-floor.patch.txt`: workplaces' costs
+rise from a cash floor (no run below a share of the cash cost) as a power whose exponent gives the sourced elasticity at
+break-even. Quick tier green with it, exit and shedding intact, the stationary fixture's hired hours flat. Not merged:
+matching a low elasticity at break-even with a hard floor puts a large share of capacity just above the floor (a cliff
+at the shutdown price), the stationary wage settles lower than without it, and it is not measured on a civilisation.
