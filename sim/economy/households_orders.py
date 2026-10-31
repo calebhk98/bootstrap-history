@@ -1,6 +1,6 @@
 """A cohort's goods bids for the year, planned on last year's prices.
 
-Spending this year is income plus the adjustment that brings cash back to its target. The floors of
+Spending this year follows the Eurace consumption budget (households_buffer_stock). The floors of
 the needs (subsistence) are served first; what is left over is surplus spending, split across the needs
 by their budget weights (Stone-Geary: a floor plus a marginal share of the surplus). Inside a need the
 spending goes to goods by cost per need unit. A need with a per-head limit stops taking money at it.
@@ -15,7 +15,7 @@ from typing import Dict, List, Mapping, Optional
 
 from sim.constants import declare
 
-from . import currency, durable_stock, households_buffer_stock
+from . import durable_stock, households_buffer_stock, opening_resting
 from . import lender_ask
 from .credit_view import claims_of, equity_of, loss_rate_of
 from .households_ability import affordable_goods, household_budget_for_need, quantity_per_need_unit
@@ -137,9 +137,6 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
         return AgentOrders()
     first_good = priced[0].goods[0][0]
     area_currency = view.currency_of(view.area_of(first_good, cohort.tile))
-    reference_spending = cohort.last_year_spending or income_this_year
-    target = cohort.cash_target or currency.cash_balance_target(
-        reference_spending, view.interest_rate(area_currency), cohort.expected_inflation)
     floor_cost = math.fsum(need.price_index * need.spec.subsistence_per_person * cohort.people
                            for need in priced)
     # what it has lent counts toward the wealth it spends from, so a loss to default cuts its spending;
@@ -154,6 +151,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                                            cash, owned, income_this_year, floor_cost, cohort.last_year_income)
     mean_income = households_buffer_stock.mean_net_income(income_this_year, cohort.last_year_income)
     budget = households_buffer_stock.spending_budget(mean_income, cash, owned, claims)
+    target = cohort.cash_target or opening_resting.resting_household_purse(mean_income, owned, claims)
     drawdown = min(budget - income_this_year,
                    WEALTH_DRAWDOWN_LIMIT * max(0.0, income_this_year, cohort.last_year_income))
     spending = max(0.0, min(cash, income_this_year + drawdown))

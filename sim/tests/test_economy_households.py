@@ -7,7 +7,7 @@ import dataclasses
 import time
 import unittest
 
-from sim.economy import households
+from sim.economy import households, opening_resting
 from sim.economy.types import EDGE_CONSUMPTION, GoodSpec
 
 NEED_DATA = {
@@ -256,7 +256,25 @@ class CloseTests(unittest.TestCase):
                                        income_received=100.0, spent=90.0)
         self.assertGreater(new.expected_inflation, 0.0)
         self.assertEqual((new.last_year_income, new.last_year_spending), (100.0, 90.0))
+
+    # wanted cash is the resting holding of the spending rule (households_buffer_stock), not a multiple of spending
+    def test_wanted_cash_is_the_resting_holding_of_the_spending_rule(self):
+        view = View()
+        view.equity = lambda agent: 1.0
+        new, _ = households.close_year(cohort(), {"grain": 20000.0}, view, SPECS, BASKET, income_received=12.0, spent=12.0)
+        self.assertAlmostEqual(new.cash_target, opening_resting.resting_household_purse(12.0, 1.0))
         self.assertGreater(new.cash_target, 0.0)
+
+    def test_a_household_without_shares_wants_no_cash_beyond_its_income(self):
+        new, _ = households.close_year(cohort(), {"grain": 20000.0}, View(), SPECS, BASKET, income_received=12.0, spent=12.0)
+        self.assertEqual(new.cash_target, 0.0)
+
+    def test_money_lent_counts_toward_the_wealth_the_rule_holds_as_cash(self):
+        view = View()
+        view.equity = lambda agent: 1.0
+        view.claims = lambda agent, currency: 5.0
+        new, _ = households.close_year(cohort(), {"grain": 20000.0}, view, SPECS, BASKET, income_received=12.0, spent=12.0)
+        self.assertAlmostEqual(new.cash_target, opening_resting.resting_household_purse(12.0, 1.0, 5.0))
 
 
 if __name__ == "__main__":

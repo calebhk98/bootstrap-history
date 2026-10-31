@@ -18,7 +18,6 @@ unsourced for any pre-modern society:
   clears no funds against no requests at the opening (the resting opening gives households no spare cash), so it returns
   the lenders' lowest ask, which is this figure. Until the opening has lenders and borrowers to clear, the opening rate is
   this unsourced figure.
-- `BASE_HOLDING_YEARS` (`sim/economy/currency.py`) is still unchecked and has no source.
 All are declared `temporary_heuristic`; `python3 sim/constants.py --burndown` lists them and their `retire` entries.
 
 **Why it matters.** An unsourced stored figure that moves the whole opening is a hardcoded outcome (CLAUDE.md 4.1, 4.4).

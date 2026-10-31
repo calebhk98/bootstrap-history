@@ -13,23 +13,6 @@ from .types import AgentId, CurrencySpec, GoodId, Transfer
 
 REGIMES = ("struck_coin", "weighed_metal", "commodity", "fiat")
 
-BASE_HOLDING_YEARS = declare(
-    "BASE_HOLDING_YEARS", 0.25, kind="temporary_heuristic", unit="years of spending",
-    why="cash an agent holds when money costs nothing to hold, as years of spending; stands in for the "
-        "velocity of money, which should come from payment-period timing of wages, rents and markets. "
-        "Estimates of historical velocity would fix it.")
-
-HOLDING_COST_ELASTICITY = declare(
-    "HOLDING_COST_ELASTICITY", 4.0, kind="temporary_heuristic", unit="per unit of yearly holding cost",
-    why="how sharply the holding period shrinks as interest plus expected inflation rises: "
-        "holding = base / (1 + elasticity * cost). Chosen so hyperinflation expectations empty purses; "
-        "to be fitted to inflation-versus-real-balance data from hyperinflation episodes.")
-
-SPENDING_ADJUSTMENT_SHARE = declare(
-    "SPENDING_ADJUSTMENT_SHARE", 0.5, kind="temporary_heuristic", unit="share of the cash gap per year",
-    why="share of cash above (below) target that an agent spends (saves) within the year; a stock-adjustment "
-        "speed with no source. Household panel data on windfall spending would fix it.")
-
 EXPECTATION_ADJUSTMENT_SPEED = declare(
     "EXPECTATION_ADJUSTMENT_SPEED", 0.5, kind="temporary_heuristic", unit="share of the surprise per year",
     why="adaptive expectations: share of last year's forecast error taken up this year; standard "
@@ -126,20 +109,6 @@ def debase_by_cut(spec: CurrencySpec, supply: float, cut_share: float, restrike_
     if struck <= 0.0:
         return spec
     return debase(spec, spec.backing_per_unit * supply / (supply + struck))
-
-
-def cash_balance_target(yearly_spending: float, interest_rate: float, expected_inflation: float) -> float:
-    """Cash an agent wants to hold: a holding period of spending that falls as the cost of holding money
-    (interest plus expected inflation) rises, and stays positive."""
-    cost = max(0.0, interest_rate + expected_inflation)
-    return yearly_spending * BASE_HOLDING_YEARS / (1.0 + HOLDING_COST_ELASTICITY * cost)
-
-
-def spending_adjustment(cash: float, target: float, yearly_income: float) -> float:
-    """Extra spending this year (negative: less) from cash above (below) target. Cutting back cannot
-    exceed income; spending extra cannot exceed the cash."""
-    change = SPENDING_ADJUSTMENT_SHARE * (cash - target)
-    return max(-yearly_income, min(change, cash))
 
 
 def update_expected_inflation(previous_expectation: float, observed_inflation: float) -> float:
