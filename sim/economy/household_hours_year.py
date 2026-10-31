@@ -31,6 +31,20 @@ def usable_plot_hours(setup, cohort, options: Mapping[str, Sequence[Option]], he
     return sum(used.values())
 
 
+def cohort_plot_schedule(setup, cohort, available: float, priced, options: Mapping[str, Sequence[Option]], held: float,
+                         hectares_per_hour: Mapping[str, float]):
+    """The hours one cohort keeps for its plot at a wage an hour, given the `available` hours it has and its `priced`
+    needs; None for a cohort with no hours, no land held, or fertility none."""
+    tile = setup.tiles.get(cohort.tile)
+    if available <= 0.0 or tile is None or held <= 0.0 or tile.fertility <= 0.0 or cohort.working_people <= 0.0:
+        return None
+    usable = usable_plot_hours(setup, cohort, options, held)
+    per_worker_hours = available / cohort.working_people
+    marginal = plot_return_per_hour(priced, options, tile.fertility, per_worker_hours,
+                                    cohort.people / cohort.working_people, hectares_per_hour, held / cohort.working_people)
+    return plot_schedule(per_worker_hours, marginal, usable / cohort.working_people, cohort.working_people)
+
+
 def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options: Mapping[str, Sequence[Option]],
                    hectares_held: Mapping[AgentId, float]) -> Dict[AgentId, Callable[[float], float]]:
     """For each cohort with a plot, the hours it keeps for the plot at a wage an hour (a function of the wage); a
@@ -39,17 +53,10 @@ def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options: 
     hectares_per_hour = hectares_per_hour_by_recipe(setup.recipes, setup.land_per_run)
     for cohort_id, cohort in sorted(record.cohorts.items()):
         available = sum(offer.hours for offer in offers if offer.worker == cohort_id)
-        tile = setup.tiles.get(cohort.tile)
-        held = hectares_held.get(cohort_id, 0.0)
-        if available <= 0.0 or tile is None or held <= 0.0 or tile.fertility <= 0.0 or cohort.working_people <= 0.0:
-            continue
-        basket = setup.basket_for(cohort.tile)
-        usable = usable_plot_hours(setup, cohort, options, held)
-        per_worker_hours = available / cohort.working_people
-        marginal = plot_return_per_hour(need_prices(basket, view, cohort.tile), options, tile.fertility, per_worker_hours,
-                                        cohort.people / cohort.working_people, hectares_per_hour,
-                                        held / cohort.working_people)
-        schedules[cohort_id] = plot_schedule(per_worker_hours, marginal, usable / cohort.working_people, cohort.working_people)
+        schedule = cohort_plot_schedule(setup, cohort, available, need_prices(setup.basket_for(cohort.tile), view, cohort.tile),
+                                        options, hectares_held.get(cohort_id, 0.0), hectares_per_hour)
+        if schedule is not None:
+            schedules[cohort_id] = schedule
     return schedules
 
 

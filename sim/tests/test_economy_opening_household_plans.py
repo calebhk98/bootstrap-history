@@ -219,7 +219,7 @@ class SolvedOpeningTests(unittest.TestCase):
 
     def test_where_hands_are_short_the_service_price_rises_but_no_producer_is_dropped(self):
         roomy = opening.open_economy(household_work_setup())[0]
-        scarce_setup = household_work_setup(hours_per_worker=100.0)
+        scarce_setup = household_work_setup(hours_per_worker=150.0)
         scarce = opening.open_economy(scarce_setup)[0]
         posted = [price for key, price in scarce.memory.prices.items() if key.startswith(SERVICE)]
         self.assertGreater(max(posted), scarce_setup.opening_prices[SERVICE])

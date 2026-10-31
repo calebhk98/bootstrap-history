@@ -14,6 +14,12 @@ from typing import Callable, Dict, List, Mapping, Sequence, Tuple
 from .types import AgentId, LabourOffer
 
 
+def hours_kept_at_home(whole: float, plan_hours: float, plot_hours: float, work_hours: float) -> float:
+    """Hours of a cohort's `whole` year that go home: the plot keeps what its plan or its wage-driven choice asks (the
+    greater), the household work comes beside it, and no more than the year goes."""
+    return min(max(plan_hours, plot_hours) + work_hours, whole)
+
+
 @dataclasses.dataclass
 class HourSupply:
     offers: Sequence[LabourOffer]                       # every offer, with the cohort's whole year of hours
@@ -37,8 +43,8 @@ class HourSupply:
         if whole <= 0.0 or offer.hours <= 0.0:
             return 0.0, 0.0
         plot = self.plot_hours_at.get(offer.worker)
-        plot_kept = max(self.plan_hours.get(offer.worker, 0.0), plot(wage) if plot else 0.0)
-        at_home = min(plot_kept + self.work_hours.get(offer.worker, 0.0), whole) * offer.hours / whole
+        at_home = hours_kept_at_home(whole, self.plan_hours.get(offer.worker, 0.0), plot(wage) if plot else 0.0,
+                                     self.work_hours.get(offer.worker, 0.0)) * offer.hours / whole
         return offer.hours - at_home, at_home
 
     def sold_hours_schedule(self, offer: LabourOffer) -> Callable[[float], float]:
@@ -54,8 +60,7 @@ class HourSupply:
         hours = offer.hours
 
         def sold(wage: float) -> float:
-            plot_kept = max(plan, plot(wage) if plot else 0.0)
-            return hours - min(plot_kept + work, whole) * share
+            return hours - hours_kept_at_home(whole, plan, plot(wage) if plot else 0.0, work) * share
         return sold
 
     def share_at(self, trade: str, area: str) -> Callable[[float], float]:
