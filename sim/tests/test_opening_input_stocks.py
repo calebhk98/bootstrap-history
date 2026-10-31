@@ -2,10 +2,8 @@
 0 (producers produce and clear in input-depth order, so a user buys it before it works); an input held as well is
 bought by nobody, and its maker's whole year piles up unsold (a stock the maker's plan then works off by idling).
 
-The first test is a known failure, not a wish: the opening seeds every input for the year (`_stock_producers_with_inputs`).
-Dropping the seed for inputs a maker sells the same year was built and measured on the small fixture: year 0 then trades
-the input, but the dug input's cobweb moves a year earlier and two fixed-bound tests (`economy_vessel_price_fixture`,
-`economy_no_offer_memory`) fail. It lands with the input-bid ceiling (Complaint 473, Update 6)."""
+The opening holds an input only where the producer cannot buy it before it works (opening_resting.resting_input_stock).
+"""
 
 QUICK_TOPIC = True
 
@@ -30,7 +28,6 @@ def opened(recipes, runs):
 
 
 class OpeningInputStockTests(unittest.TestCase):
-    @unittest.expectedFailure
     def test_a_smelter_does_not_open_holding_ore_the_miners_sell_it_in_year_zero(self):
         setup, record = opened(fixture.recipes(), {fixture.MINE: 10.0, fixture.SMELT: 10.0})
         opening._stock_producers_with_inputs(setup, record)
@@ -39,7 +36,7 @@ class OpeningInputStockTests(unittest.TestCase):
     def test_an_input_nothing_opened_makes_is_held_for_the_year(self):
         setup, record = opened(fixture.recipes(), {fixture.SMELT: 10.0})
         opening._stock_producers_with_inputs(setup, record)
-        wanted = 10.0 * (1.0 + opening.OPENING_SPARE_CAPACITY_SHARE) * 1000.0
+        wanted = 10.0 * 1000.0      # the planned runs (expected sales), not the spare capacity
         self.assertAlmostEqual(record.book.stock("producer:" + fixture.SMELT, fixture.ORE, TILE), wanted)
 
     def test_members_of_a_cycle_open_holding_each_others_goods(self):

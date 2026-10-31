@@ -18,6 +18,8 @@ from .setup import labour_area
 from .types import AgentId, TileId
 
 CohortPlan = Tuple[float, float, Tuple[str, ...]]   # (hours hired a person, hours done itself, grains bought milled)
+PLAN_TOLERANCE = 1e-6   # a numerical bound: hours hired a person are a share of the work, so a plan agrees within it
+PLAN_FLOOR_HOURS = 1e-3 # a numerical floor under that tolerance (hours a person) so a plan of nothing can agree
 PLAN_PASSES = 6          # a numerical bound on solving the opening against the plans it implies (a cycle of the choice ends here)
 
 
@@ -29,9 +31,10 @@ class HouseholdPlans:
 
 
 def hands_left_by_tile(setup, record) -> Dict[TileId, float]:
-    """Hours a year each tile's workers have beyond what its producers hire for the runs they expect to sell."""
+    """Hours a year each tile's workers sell beyond what its producers hire for the runs they expect to sell."""
     hired = labour_state.producers_hours_needed(setup, record)
-    return {tile: max(0.0, people * setup.working_share * setup.working_hours_per_year
+    sold = record.opening_sold_hours_per_worker or setup.working_hours_per_year
+    return {tile: max(0.0, people * setup.working_share * sold
                       - math.fsum(hired.get(labour_area(tile), {}).values()))
             for tile, people in setup.opening_population_by_tile.items()}
 
@@ -95,7 +98,8 @@ def with_plans(cohorts: Mapping[AgentId, Cohort], plans: HouseholdPlans) -> Dict
 
 
 def _differs(cohort: Cohort, plan: CohortPlan) -> bool:
-    return cohort.hired_work_per_person != plan[0] or tuple(cohort.milled_grains) != tuple(plan[2])
+    return (abs(cohort.hired_work_per_person - plan[0]) > PLAN_TOLERANCE * max(abs(plan[0]), PLAN_FLOOR_HOURS)
+            or tuple(cohort.milled_grains) != tuple(plan[2]))
 
 
 def agree(cohorts: Mapping[AgentId, Cohort], plans: HouseholdPlans) -> bool:

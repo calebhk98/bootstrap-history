@@ -61,6 +61,8 @@ class EconomyRecord:
     unmet: Dict[str, float] = field(default_factory=dict)                # market_key -> quantity buyers wanted at the year's price beyond what was sold
     opening_basket: Dict[str, float] = field(default_factory=dict)       # good -> quantity at the opening, as far as the opening supplies it
     opening_demand: Dict[str, float] = field(default_factory=dict)       # good -> quantity households were seeded to want, supplied or not
+    opening_own_grown: Dict[str, float] = field(default_factory=dict)    # good -> quantity households were seeded to grow on their own plots
+    opening_sold_hours_per_worker: float = 0.0   # hours a working person was seeded to sell a year (zero: a whole working year)
     opening_demand_by_country: Dict[str, Dict[str, float]] = field(default_factory=dict)  # country -> good -> quantity its households were seeded to want
     expansion_runs: Dict[AgentId, float] = field(default_factory=dict)   # capacity a loan request would build
     index_base_prices: Dict[str, float] = field(default_factory=dict)    # the price level's base; opening if empty
@@ -79,6 +81,7 @@ class EconomyRecord:
     hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
     hours_hired_by_others: Dict[str, float] = field(default_factory=dict)   # labour market_key -> hours hired last year by employers that are not producers (hours_hired_by_others.py)
     hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
+    sold_share_expected: Dict[str, float] = field(default_factory=dict)  # labour market_key -> share of offered hours households expect to sell, smoothed over the years (household_work_year.py)
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
     credit_granted: Dict[AgentId, float] = field(default_factory=dict)   # what the last clearing granted each credit line asked for (credit_lines.py)
@@ -93,7 +96,6 @@ class EconomyRecord:
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
     carried: Dict[str, Dict[str, float]] = field(default_factory=dict)   # tonnes the merchants carried last year: origin tile -> destination tile (sim.geography.flow_ledger)
     carried_goods: Dict[str, Dict[str, Dict[str, List[float]]]] = field(default_factory=dict)   # the same flows by good: good -> origin -> destination -> [tonnes, value at origin's price, value at destination's price] (carried_book.py)
-    leisure_anchor_wage: Dict[TradeId, float] = field(default_factory=dict)   # trade -> the wage at which its workers keep half their free hours as leisure, at the opening's price level (opening_leisure.py)
     fugitives: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # labour area people fled from -> people still away, arrears owed per head, the area they went to (flight_year.py)
     output_by_tile: Dict[TileId, Dict[str, float]] = field(default_factory=dict)   # tile -> good -> units the home producers made last year
 
@@ -145,6 +147,8 @@ class EconomyRecord:
             "unmet": self.unmet,
             "opening_basket": self.opening_basket,
             "opening_demand": self.opening_demand,
+            "opening_own_grown": self.opening_own_grown,
+            "opening_sold_hours_per_worker": self.opening_sold_hours_per_worker,
             "opening_demand_by_country": self.opening_demand_by_country,
             "expansion_runs": self.expansion_runs,
             "index_base_prices": self.index_base_prices,
@@ -163,6 +167,7 @@ class EconomyRecord:
             "hours_hired": self.hours_hired,
             "hours_hired_by_others": self.hours_hired_by_others,
             "hours_idle": self.hours_idle,
+            "sold_share_expected": self.sold_share_expected,
             "funds_offered": self.funds_offered,
             "lent_by_borrower": self.lent_by_borrower,
             "credit_granted": self.credit_granted,
@@ -173,7 +178,6 @@ class EconomyRecord:
             "curves": self.curves,
             "ways": {key: dict(built) for key, built in sorted(self.ways.items())},
             "area_imbalance": self.area_imbalance,
-            "leisure_anchor_wage": dict(sorted(self.leisure_anchor_wage.items())),
             "carried": {key: dict(row) for key, row in sorted(self.carried.items())},
             "carried_goods": self.carried_goods,
             "spin_up_result": dict(self.spin_up_result),
@@ -200,6 +204,8 @@ class EconomyRecord:
             unmet=dict(record["unmet"]),
             opening_basket=dict(record["opening_basket"]),
             opening_demand=dict(record["opening_demand"]),
+            opening_own_grown=dict(record["opening_own_grown"]),
+            opening_sold_hours_per_worker=float(record["opening_sold_hours_per_worker"]),
             opening_demand_by_country={country: dict(demand) for country, demand in record["opening_demand_by_country"].items()},
             expansion_runs=dict(record["expansion_runs"]),
             index_base_prices=dict(record["index_base_prices"]),
@@ -218,6 +224,7 @@ class EconomyRecord:
             hours_hired=dict(record["hours_hired"]),
             hours_hired_by_others=dict(record["hours_hired_by_others"]),
             hours_idle=dict(record["hours_idle"]),
+            sold_share_expected=dict(record["sold_share_expected"]),
             funds_offered=record["funds_offered"],
             lent_by_borrower=dict(record["lent_by_borrower"]),
             credit_granted=dict(record["credit_granted"]),
@@ -228,7 +235,6 @@ class EconomyRecord:
             curves=dict(record["curves"]),
             ways={key: dict(built) for key, built in record["ways"].items()},
             area_imbalance=record["area_imbalance"],
-            leisure_anchor_wage=dict(record["leisure_anchor_wage"]),
             carried={key: dict(row) for key, row in record["carried"].items()},
             carried_goods=record["carried_goods"],
             spin_up_result=dict(record["spin_up_result"]),
@@ -251,7 +257,7 @@ def _merchant_record(merchant: Merchant) -> Dict[str, Any]:
             "capital_base": merchant.capital_base,
             "expected_prices": _pair_keys(merchant.expected_prices),
             "expected_volumes": _pair_keys(merchant.expected_volumes),
-            "routes": {key: list(value) for key, value in _pair_keys(merchant.routes).items()},
+            "routes": {key: [list(leg) for leg in legs] for key, legs in _pair_keys(merchant.routes).items()},
             "carriage_hours_wanted": merchant.carriage_hours_wanted,
             "carriage_money_wanted": merchant.carriage_money_wanted,
             "carrier_wear": merchant.carrier_wear, "carrier_team_days": merchant.carrier_team_days,
@@ -265,7 +271,7 @@ def _merchant_from(record: Dict[str, Any]) -> Merchant:
                     capital_base=record["capital_base"],
                     expected_prices=_split_keys(record["expected_prices"]),
                     expected_volumes=_split_keys(record["expected_volumes"]),
-                    routes={key: tuple(value) for key, value in _split_keys(record["routes"]).items()},
+                    routes={key: tuple(tuple(leg) for leg in legs) for key, legs in _split_keys(record["routes"]).items()},
                     carriage_hours_wanted=record["carriage_hours_wanted"],
                     carriage_money_wanted=record["carriage_money_wanted"],
                     carrier_wear=record["carrier_wear"], carrier_team_days=record["carrier_team_days"],

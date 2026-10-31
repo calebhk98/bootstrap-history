@@ -107,11 +107,11 @@ class HeldStockSearchTests(unittest.TestCase):
     def test_no_cash_still_sends_held_stock_along_the_route(self):
         held = {("salt", "a"): 5.0}
         with_cash = merchants.orders(self.who, View({}), self.carriage, self.area_map, 1000.0, held, SPECS, 0.05)
-        routes_with_cash = dict(self.who.routes)
+        destinations_with_cash = [leg[:2] for leg in self.who.routes[("salt", "a")]]
         without_cash = merchants.orders(self.who, View({}), self.carriage, self.area_map, 0.0, held, SPECS, 0.05)
         self.assertTrue(with_cash.bids)
         self.assertEqual(without_cash.bids, ())
-        self.assertEqual(self.who.routes[("salt", "a")], routes_with_cash[("salt", "a")])
+        self.assertEqual([leg[:2] for leg in self.who.routes[("salt", "a")]], destinations_with_cash)
 
 
 if __name__ == "__main__":

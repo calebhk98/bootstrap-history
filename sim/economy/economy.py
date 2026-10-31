@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_moves, titles_worked, unit_cost
+from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -20,7 +20,7 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import capital_year, household_hours_year, household_work_year, land_bid_year, land_lease_year, opening_leisure
+from . import capital_year, household_hours_year, household_work_year, land_bid_year, land_lease_year
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from . import flight_step
 from .labour_inputs import labour_context
@@ -33,7 +33,7 @@ from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_basket_price_level, wear_and_spoilage)
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
-from .labour_supply import HourSupply, anchor_wage_in_prices
+from .labour_supply import HourSupply
 from .labour_state import people_by_trade
 from .year_labour import clear_labour, labour_offers, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
@@ -95,9 +95,6 @@ class Economy:
         self._own_options = None
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
         self._work_hours: Dict[str, float] = {}     # household work each cohort keeps back this year; set when the year plans it
-        self._leisure_hours: Dict[str, float] = {}  # leisure each cohort takes this year; set when the year clears labour
-        if opening:
-            opening_leisure.seed(self)
 
     def set_improvements(self, improvements: Mapping[str, Mapping[str, Any]]) -> bool:
         """Rebuild the carriage table over these built ways, partition the market areas again over it and
@@ -204,7 +201,6 @@ class Economy:
         flight_step.settle(setup, record, inputs, labour_report, people_before, context, self.carriage)
         state_budget.lapse_unspent_wages(record.state_budget, state_budget.wages_paid(ledger.labour_results, setup.state_agent))
         offers, kept = supply.sold, supply.kept
-        self._leisure_hours = supply.leisure
         ledger.bonded_bought, ledger.bonded_paid, ledger.bonded_lots, bought_held = bonded_purchase.settle(
             record.book, money, labour_report.bonded_lots)
         bondage_hours.hold(record.bonded_held, bought_held)
@@ -315,28 +311,16 @@ class Economy:
         self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone, outside_option or {})
         return plan, self._work_hours
 
-    def _hour_supply(self, everyone, view, outside_option, anchors=None) -> HourSupply:
+    def _hour_supply(self, everyone, view, outside_option) -> HourSupply:
         """The hours households sell as a schedule against the wage (labour_supply.py)."""
         plan, work = self._fixed_home_hours(everyone, view, outside_option)
-        usable: Dict[str, float] = {}
         plot = household_hours_year.plot_schedules(self.setup, self.record, view, everyone, self._own_plot_options(),
-                                                   self._hectares_held(), usable)
-        level = view.perceived_price_level(self.setup.currency_id)
-        anchor_wage = anchor_wage_in_prices(self.record.leisure_anchor_wage if anchors is None else anchors, level)
+                                                   self._hectares_held())
         faced = {(offer.trade, offer.area): view.wage(offer.trade, offer.area) or offer.reservation_wage for offer in everyone}
-        return HourSupply(everyone, plan, work, plot, usable, anchor_wage, faced)
+        return HourSupply(everyone, plan, work, plot, faced)
 
     def _hectares_held(self) -> Dict[str, float]:
-        """Hectares each cohort may work for itself: the land it holds or leases (titles, tenancies), cut to
-        the tile's arable land if the claims exceed it. Decided before any growing."""
-        record, held = self.record, {}
-        for tile_id in sorted({cohort.tile for cohort in record.cohorts.values()}):
-            tile = self.setup.tiles.get(tile_id)
-            arable = titles_ground.arable_hectares(record, tile_id, tile)
-            asked = {cohort.agent_id: titles_worked.worked_share(record, tile_id, cohort.agent_id) * arable
-                     for cohort in record.cohorts.values() if cohort.tile == tile_id}
-            held.update(titles_worked.allocate_hectares(asked, arable))
-        return held
+        return titles_plots.hectares_held(self.setup, self.record)
 
     def _grow_own(self, offers, ledger: YearLedger, harvest_factor: float = 1.0,
                   kept: Optional[Dict[str, float]] = None) -> None:
@@ -351,8 +335,7 @@ class Economy:
             offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours
         for cohort_id, cohort in sorted(record.cohorts.items()):
             idle = (offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
-                    - min(kept.get(cohort_id, 0.0), self._work_hours.get(cohort_id, 0.0)
-                          + self._leisure_hours.get(cohort_id, 0.0)))   # household work and leisure are not spare hours
+                    - min(kept.get(cohort_id, 0.0), self._work_hours.get(cohort_id, 0.0)))   # household work is not spare hours
             tile = setup.tiles.get(cohort.tile)
             hours_used: Dict[str, float] = {}
             moves, grown, units = own_production(cohort, idle, self._own_options, setup.recipes,
@@ -413,7 +396,8 @@ class Economy:
             record.memory.rates[money] = clearing.rate      # a year in which nothing cleared leaves the last cleared rate
         rate = record.memory.rates[money]       # the opening sets one
         # a plant request lenders left unmet is offered to the savers as shares (the money they raise is plant like a loan's)
-        raised = shares.raise_equity(record, money, unmet, funds, every_loan, rate, shares.rate_floor_of(setup))
+        raised = shares.raise_equity(record, money, unmet, funds, every_loan, rate, shares.rate_floor_of(setup),
+                                    record.capital.share_buy_orders)
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
         asked = {request.borrower: request.amount for request in requests}

@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from . import ask_raise, inventory, tool_fallback, unit_cost
+from . import ask_adjust, inventory, practice, tool_fallback, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .planning_price import held_to_band, is_bare_quote
 from .protocols import MarketView
@@ -91,6 +91,10 @@ class Producer:
     land_rent_per_run: float = 0.0          # rent on the land a run works, set yearly by the land market
     land_run_cap: float = -1.0              # runs the land it was granted allows; below zero for no limit
     workshops: int = 1                      # independent workshops it stands for: each newcomer to its recipe and tile joins it
+    net_earnings_history: Tuple[float, ...] = ()   # its last years' net earnings, oldest first (firm_finance.py)
+    revenue_history: Tuple[float, ...] = ()        # its last years' revenue, oldest first
+    idle_years: int = 0                     # years it stays idle after a bankruptcy: no runs, no dividend
+    crew_runs: Mapping[str, float] = field(default_factory=dict)   # runs its crew has made, by trade (practice.py); a trade absent is an established crew
 
 
 @dataclass(frozen=True)
@@ -248,9 +252,11 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
             updated[good] += REGRESSIVE_EXPECTATION_WEIGHT * (updated[good] * break_even - updated[good])
     for good in sorted(bare_quotes & set(cost_covering)):
         updated[good] = held_to_band(updated[good], producer.expected_prices.get(good), cost_covering[good], input_share)
-    for good in ask_raise.sold_out_outputs(producer, recipe, view):
+    for good in ask_adjust.worked_outputs(producer, recipe):
         if good in latest_prices:
-            updated[good] = ask_raise.raised_within_band(updated[good], cost_covering.get(good), input_share=input_share)
+            updated[good] = ask_adjust.adjusted_within_band(
+                updated[good], cost_covering.get(good), ask_adjust.unsold_stock(producer, recipe, view, good),
+                ask_adjust.target_of(producer, recipe, good), input_share=input_share)
     return updated
 
 
@@ -274,6 +280,9 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     """Runs this year and the orders that carry them out. Idle (zero runs, no orders) when a run's
     expected revenue, after the yield, does not cover its variable cost at expected input prices and
     live wages."""
+    if producer.idle_years > 0:
+        return Plan(0.0)
+    recipe = practice.recipe_for(recipe, producer.crew_runs)
     outputs = expected_output_prices(producer, recipe, view)
     market_inputs = paid_input_prices(producer, recipe, view, live_input_prices(producer, recipe, view))
     inputs = expected_input_prices(producer, recipe, view, market_inputs)
@@ -393,41 +402,51 @@ def working_cost_ratio(revenue_per_run: float, variable_cost_per_run: float) -> 
     return _normal_below(score - COST_SPREAD_WITHIN_PRODUCER) / working
 
 
-_main_output_of_recipe: Dict[int, tuple] = {}      # id of a recipe -> (recipe, its main output)
+def paying_output(recipe: Recipe, prices: Mapping[GoodId, float]) -> GoodId:
+    """The output that carries most of a run's value at `prices` (an unpriced output carries none); the first by
+    name among ties, so a recipe with no prices at all is named by its first output."""
+    return max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good] * prices.get(good, 0.0))
 
 
-def main_output(recipe: Recipe) -> GoodId:
-    """The output a run makes most of (the first by name among ties); worked out once per recipe."""
-    kept = _main_output_of_recipe.get(id(recipe))
-    if kept is None or kept[0] is not recipe:
-        kept = _main_output_of_recipe[id(recipe)] = (
-            recipe, max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good]))
-    return kept[1]
+def _bound_by_stock(recipe: Recipe, piling: List[GoodId], output_prices: Mapping[GoodId, float]) -> List[GoodId]:
+    """The piling outputs that still hold the run count back at `output_prices`: the paying output, and any whose
+    value is not less than what a run makes of the rest. A minor output nobody buys is not what the run is for."""
+    value = {good: made * output_prices.get(good, 0.0) for good, made in recipe.outputs.items()}
+    paying = paying_output(recipe, output_prices)
+    total = math.fsum(value.values())
+    return [good for good in piling if good == paying or value[good] >= total - value[good]]
 
 
 def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cost: Optional[float] = None,
                    output_prices: Optional[Mapping[GoodId, float]] = None) -> float:
-    """Runs a producer holding more than its target stock of an output limits itself to: what it expects to
-    sell less a share of the excess (one over STOCK_CLEARING_YEARS), so unsold output is worked off over those years. Below its target, the price decides alone (a cap tied
-    to past sales would follow output down, since nothing sells that is not made). Unlimited while it has no
-    record of sales. With the run's cost and the outputs' prices, outputs that are piling up do not count while
-    what a run makes of the others, at those prices, covers the cost: a joint recipe runs for the output that pays."""
+    """Runs a producer plans from expected demand and its stock, not from price: what it expects to sell plus the gap
+    between its target stock (inventory.target_stock, the safety stock) and what it holds, closed over
+    STOCK_CLEARING_YEARS; a surplus is worked off the same way and a shortfall refilled. This is the production
+    quantity of Eurace@Unibi (Cons_Goods/Firm_Producer_Functions.c, Firm_calc_production_quantity: critical stock less
+    current stock), whose refill is whole in one period where this one is spread. The price only decides whether
+    runs pay at all (`plan`). Unlimited while it has no record of sales. With the run's cost and the outputs'
+    prices, outputs that are piling up do not count while what a run makes of the others, at those prices, covers
+    the cost: a joint recipe runs for the output that pays, and plans from the gaps of those others. With the prices
+    alone, a pile of a minor output (less value in a run than the rest) does not hold the runs back either, covered
+    or not (`_bound_by_stock`)."""
     if producer.expected_sales <= 0.0:
         return math.inf
     sales = producer.expected_sales
     target = inventory.target_stock(sales)
-    excess = {good: view.stock(producer.agent_id, good, producer.tile) / made - target
-              for good, made in recipe.outputs.items() if made > 0.0}
-    piling = [good for good, over in excess.items() if over > 0.0]
-    if not piling:
-        return math.inf
-    if run_cost is not None and output_prices is not None:
+    gap = {good: target - view.stock(producer.agent_id, good, producer.tile) / made
+           for good, made in recipe.outputs.items() if made > 0.0}
+    piling = [good for good, short in gap.items() if short < 0.0]
+    counted = list(gap)
+    if piling and output_prices is not None:
+        bound = _bound_by_stock(recipe, piling, output_prices)
+        counted = [good for good in gap if good not in piling or good in bound]
+    if piling and run_cost is not None and output_prices is not None:
         sells = math.fsum(made * output_prices.get(good, 0.0) for good, made in recipe.outputs.items()
                           if good not in piling) * producer.yield_factor
         if sells > 0.0 and sells >= run_cost:      # nothing else sold covers nothing: a costless run is not paid for by it
-            return math.inf
-    # excess is drawn down over STOCK_CLEARING_YEARS: output falls to zero only for stock that cannot clear in them
-    return max(0.0, sales - max(excess[good] for good in piling) / STOCK_CLEARING_YEARS)
+            counted = [good for good in gap if good not in piling]
+    # the gap that binds is the smallest shortfall (or largest surplus): a joint run cannot make one output alone
+    return max(0.0, sales + min(gap[good] for good in counted) / STOCK_CLEARING_YEARS)
 
 
 def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> List[LabourBid]:
@@ -485,6 +504,7 @@ def produce(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, flo
     what goes in. Tools are not an input that stops a run: a run short of its tool draws the recipe's next
     tool (`tool_fallbacks`), then works by hand, and the extra hours that takes can lower the runs the hours
     hired allow."""
+    recipe = practice.recipe_for(recipe, producer.crew_runs)
     limit = producer.capacity_runs if runs_planned is None else min(runs_planned, producer.capacity_runs)
     for good, per_run in recipe.hard_inputs.items():
         limit = min(limit, inputs_held.get(good, 0.0) / per_run)

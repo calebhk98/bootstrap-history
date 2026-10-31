@@ -4,10 +4,11 @@ it hires become its floor of the `household_work` need, bought from domestic ser
 import dataclasses
 from typing import Dict, Mapping, Sequence, Tuple
 
-from . import household_grinding, households_work, titles_worked
+from . import household_grinding, households_work, labour_state, titles_worked
 from .households_basket import need_prices
 from .households_cohort import Cohort
 from .market_memory import market_key
+from .offered_price import offered_price
 from .setup import labour_area
 from .types import AgentId, LabourOffer
 
@@ -73,7 +74,7 @@ def service_price_per_hour(setup, view, tile, wage_price: float) -> float:
         if need.need_id != WORK_NEED:
             continue
         for good, effect in need.goods:
-            posted = view.price(good, area(good, tile))
+            posted = offered_price(view, good, area(good, tile))
             if posted is not None and posted > 0.0 and effect > 0.0:
                 prices.append(posted / effect)
     return min(prices) if prices else wage_price
@@ -87,23 +88,44 @@ def cohort_split(setup, record, view, cohort: Cohort, offers: Sequence[LabourOff
     return hired, own
 
 
-def sold_share_at(record, trade, area) -> float:
-    """Share of the hours offered in a labour market that sold last year (all of them with no history)."""
-    key = market_key(trade, area)
-    return households_work.sold_share(getattr(record, "hours_hired", {}).get(key, 0.0),
-                                      getattr(record, "hours_idle", {}).get(key, 0.0))
+def expected_shares(setup, record, offers: Sequence[LabourOffer]) -> Dict[Tuple[str, str], float]:
+    """{(trade, area): share of the offered hours its producers' planned runs hire}: the opening's own sizing of labour
+    demand (labour_state.producers_hours_needed) over the hours households offer."""
+    needed = labour_state.producers_hours_needed(setup, record)
+    offered: Dict[Tuple[str, str], float] = {}
+    for offer in offers:
+        offered[(offer.trade, offer.area)] = offered.get((offer.trade, offer.area), 0.0) + offer.hours
+    return {(trade, area): households_work.expected_sold_share(needed.get(area, {}).get(trade, 0.0), hours)
+            for (trade, area), hours in offered.items()}
+
+
+def lacks_history(record, offers: Sequence[LabourOffer]) -> bool:
+    """Whether some offer is in a labour market no year has yet shown the households."""
+    history = getattr(record, "sold_share_expected", {})
+    return any(market_key(offer.trade, offer.area) not in history for offer in offers)
+
+
+def sold_share_at(record, trade, area, expected: float = 1.0) -> float:
+    """Share of the hours offered in a labour market that households expect to sell: the share smoothed over the
+    years (`record.sold_share_expected`), else, with no year behind it, `expected` (the opening's sizing)."""
+    return getattr(record, "sold_share_expected", {}).get(market_key(trade, area), expected)
 
 
 def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer],
-               servant_price_fallback_per_hour: float) -> Tuple[float, float, float, Tuple[str, ...]]:
+               servant_price_fallback_per_hour: float, expected: Mapping[Tuple[str, str], float] = None
+               ) -> Tuple[float, float, float, Tuple[str, ...]]:
     """(worth to the cohort of an hour hired, hours of household work it needs, price of an hour hired, grains bought
     milled): what its choice between hiring and doing the work is read from. The worth of an hour is the wage its
-    offers face, counted only for the share of hours that sold, less the hours spent directing the servant. Grinding
+    offers face, counted only for the share of hours expected to sell (smoothed over the years; before any year, the
+    share its producers' planned runs hire, `expected`, read from the record when not given), less the hours spent directing the servant. Grinding
     falls only on the food it grinds by hand, decided at the worth of its own hour (the water and fuel are a fixed
     load either way)."""
     mine = [offer for offer in offers if offer.worker == cohort.agent_id]
+    if expected is None:
+        expected = expected_shares(setup, record, offers) if lacks_history(record, mine) else {}
     value = households_work.hour_value(
-        [(offer.hours, (view.wage(offer.trade, offer.area) or offer.reservation_wage) * sold_share_at(record, offer.trade, offer.area))
+        [(offer.hours, (view.wage(offer.trade, offer.area) or offer.reservation_wage)
+          * sold_share_at(record, offer.trade, offer.area, expected.get((offer.trade, offer.area), 1.0)))
          for offer in mine])
     milled, ground = grinding_plan(setup, record, view, cohort, value)
     needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
@@ -113,13 +135,13 @@ def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer
 
 
 def cohort_plan(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer],
-                servant_price_fallback_per_hour: float, service_price_floor: float = 0.0
-                ) -> Tuple[float, float, Tuple[str, ...]]:
+                servant_price_fallback_per_hour: float, service_price_floor: float = 0.0,
+                expected: Mapping[Tuple[str, str], float] = None) -> Tuple[float, float, Tuple[str, ...]]:
     """(hours hired, hours done itself, grains bought milled) for one cohort. `service_price_floor` is a price an hour
     hired is not below (the opening's, where servants are scarce)."""
     if not setup.household_work:
         return 0.0, 0.0, ()
-    value, needed, price, milled = work_terms(setup, record, view, cohort, offers, servant_price_fallback_per_hour)
+    value, needed, price, milled = work_terms(setup, record, view, cohort, offers, servant_price_fallback_per_hour, expected)
     hired = households_work.hired_hours(needed, value, max(price, service_price_floor))
     return hired, households_work.own_hours(needed, hired), milled
 
@@ -128,18 +150,23 @@ def plans(setup, record, view, offers: Sequence[LabourOffer], outside_option_by_
           service_price_floor_by_tile: Mapping[str, float] = None) -> Dict[AgentId, Tuple[float, float, Tuple[str, ...]]]:
     """Each cohort's (hours hired a person, hours done itself, grains bought milled) for the year; changes nothing."""
     floors = service_price_floor_by_tile or {}
+    expected = expected_shares(setup, record, offers) if setup.household_work and lacks_history(record, offers) else {}
     result: Dict[AgentId, Tuple[float, float, Tuple[str, ...]]] = {}
     for cohort_id, cohort in sorted(record.cohorts.items()):
         fallback = outside_option_by_tile.get(cohort.tile, 0.0) / max(setup.working_hours_per_year, 1e-9)
-        hired, own, milled = cohort_plan(setup, record, view, cohort, offers, fallback, floors.get(cohort.tile, 0.0))
+        hired, own, milled = cohort_plan(setup, record, view, cohort, offers, fallback, floors.get(cohort.tile, 0.0), expected)
         result[cohort_id] = (hired / cohort.people if cohort.people > 0.0 else 0.0, own, milled)
     return result
 
 
 def decide(setup, record, view, offers: Sequence[LabourOffer], outside_option_by_tile: Mapping[str, float]
            ) -> Dict[AgentId, float]:
-    """Settle the year's split for every cohort: store the hired hours a person's share (the cohort's floor) and
+    """Settle the year's split for every cohort: a market no year has shown yet starts from the share its producers
+    hire (kept in `record.sold_share_expected`); store the hired hours a person's share (the cohort's floor) and
     return the own hours of each cohort, which it keeps back from the market."""
+    if setup.household_work and lacks_history(record, offers):
+        for (trade, area), share in sorted(expected_shares(setup, record, offers).items()):
+            record.sold_share_expected.setdefault(market_key(trade, area), share)
     own: Dict[AgentId, float] = {}
     for cohort_id, (per_person, own[cohort_id], milled) in plans(setup, record, view, offers, outside_option_by_tile).items():
         cohort = record.cohorts[cohort_id]

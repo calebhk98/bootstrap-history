@@ -13,8 +13,7 @@ def supply():
     offers = [LabourOffer("farmers", "reaper", "vale", 1000.0, 0.1), LabourOffer("farmers", "reaper", "hill", 400.0, 0.1),
               LabourOffer("idle", "reaper", "vale", 0.0, 0.1), LabourOffer("potters", "reaper", "vale", 600.0, 0.1)]
     return HourSupply(offers=offers, plan_hours={"farmers": 100.0}, work_hours={"farmers": 200.0, "potters": 50.0},
-                      plot_hours_at={"farmers": lambda wage: 900.0 / (1.0 + wage)},
-                      plot_usable={"farmers": 1200.0, "potters": 80.0}, anchor_wage={"reaper": 1.0})
+                      plot_hours_at={"farmers": lambda wage: 900.0 / (1.0 + wage)})
 
 
 class TheScheduleEqualsTheSplit(unittest.TestCase):

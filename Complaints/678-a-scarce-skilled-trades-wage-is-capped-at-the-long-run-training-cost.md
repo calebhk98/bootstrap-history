@@ -39,7 +39,7 @@ an entrant's graduation income stays at the cap. Then re-run the 473 wheat probe
 
 Probe (Rome, `ROME_SPIN_UP_YEARS=3,2`, every labour market, years 0 to 7, by wrapping `clearing.clear_one`): the unskilled
 `labourer` wage of `work@morocco_07` went from 0.23 to 28 in year 3, with 190 thousand hours bid and the area's workers
-offering none of their hours (they keep them for plots and leisure until the wage reaches the plot's worth). `ImportCosts`
+offering none of their hours (they keep them for plots until the wage reaches the plot's worth). `ImportCosts`
 asked whether the workers had the hours (they did), not whether they sold them, so it found no shortage and no cap; the
 unskilled trade has no long-run cap. The wage then entered every skilled trade of the area through `unskilled_option`
 (the reservation) and `trained_substitute_wage` (the long-run cap): furnaceman 28, baker 11, and they decayed over four
@@ -72,9 +72,7 @@ in the thin piped-water market is not closed by this change alone. Measure with 
 ## Left
 
 - The run-up begins past year 12 (473 Update 9); the 20-year wheat path needs the full spin-up.
-- The slow check `test_opening_floor_and_thin_trades` (no trade pays above its trained substitute) reads today's wage and is expected to
-  fail or need rewriting to the heading wage; not run here. A thin trade in the opening could again quote a very high wage (434's potter and
-  glassblower): check with that test.
+- The slow check that no trade pays above its trained substitute (`test_opening_floor_and_thin_trades`) is not in `sim/tests` under that name; a check that a thin trade in the opening does not quote a very high wage (434's potter and glassblower) against the heading wage has still to be written.
 - Related-trade switchers do not read the scarcity wage.
 
 ## Open: the cost book prices own-account hours at a thin hired market's wage

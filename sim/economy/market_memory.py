@@ -10,11 +10,12 @@ from sim.constants import declare
 
 from .accounts import Book
 from .currency import update_expected_inflation
-from .types import QUOTE_OPENING_ESTIMATE, AgentId, AreaId, CurrencyId, GoodId, TileId, TradeId
+from .types import QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE, AgentId, AreaId, CurrencyId, GoodId, TileId, TradeId
 
 KEY_SEPARATOR = "|"
 PRICE_LEVEL_FLOOR_RATIO = 1e-9   # a year in which the median price fell to nothing still leaves a positive level to chain from
 PRICE_TRADED = "traded"     # the kind of a price a market cleared at; any other kind is a quote or an estimate
+PRICE_REMEMBERED = "remembered_price"   # a price from a trade of some earlier year that nothing since has replaced or quoted
 
 OPENING_EXPECTED_INFLATION = declare(
     "OPENING_EXPECTED_INFLATION", 0.0, kind="initial_condition",
@@ -29,15 +30,6 @@ VOLUME_WEIGHT_SPEED = declare(
         "between areas from year to year does not swing it. How long 'usually' is has no measured "
         "basis; a fixed-basket index with weights from earlier years is the same idea.")
 
-PERCEIVED_PRICE_LEVEL_SHARE = declare(
-    "PERCEIVED_PRICE_LEVEL_SHARE", 0.5, kind="temporary_heuristic",
-    unit="share of the gap to last year's chained price level closed in the level households judge prices by",
-    source=None, confidence="D", retire="Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md",
-    why="Households' leisure is worth what it buys, and what it buys is judged against the level they have come to "
-        "expect, not last year's reading alone: a level that jumps up and down year to year, with income following the "
-        "hours worked, sets up a period-two swing in the hours sold (473). The share equals the producers' "
-        "EXPECTATION_ADJUSTMENT_SHARE, another unsourced adaptive-expectation share; it was not tuned to this "
-        "fixture. A derived rule would take households' own expected inflation and its uncertainty.")
 
 USUAL_PRICE_SPEED = declare(
     "USUAL_PRICE_SPEED", 0.1, kind="temporary_heuristic",
@@ -61,7 +53,6 @@ class MarketMemory:
     basket_price_levels: Dict[CurrencyId, float] = field(default_factory=dict)
     expected_inflation: Dict[CurrencyId, float] = field(default_factory=dict)
     price_levels: Dict[CurrencyId, float] = field(default_factory=dict)   # the opening's level (1.0) chained by each year's observed inflation (the weighted median): what real figures are turned nominal with
-    perceived_price_levels: Dict[CurrencyId, float] = field(default_factory=dict)   # `price_levels` moved part of the way each year: the level households scale their leisure anchor by
     observed_inflation: Dict[CurrencyId, float] = field(default_factory=dict)   # last year's, the weighted median of price changes
     last_year_prices: Dict[str, float] = field(default_factory=dict)    # good: national price the year before, for that median
     currency_of_area: Dict[AreaId, CurrencyId] = field(default_factory=dict)
@@ -80,7 +71,17 @@ class MarketMemory:
             return PRICE_TRADED
         if key not in self.prices:
             return None
-        return self.quote_kinds.get(key, QUOTE_OPENING_ESTIMATE)
+        if key in self.quote_kinds:
+            return self.quote_kinds[key]
+        return PRICE_REMEMBERED if key in self.trade_age else QUOTE_OPENING_ESTIMATE
+
+    def offered_price(self, key: str) -> Optional[float]:
+        """What a buyer can see to buy at: a price the market traded at, an ask still posted, or the opening's own
+        estimate before any clearing; None for a bid ceiling, a cost quote or a price remembered from an old trade
+        (nothing is on offer at those)."""
+        if self.price_kind(key) in (PRICE_TRADED, QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE):
+            return self.prices.get(key)
+        return None
 
     def price_kinds_by_good(self) -> Dict[str, str]:
         """The kind each good's price has across its markets: traded when any market of it traded last year,
@@ -136,8 +137,6 @@ class MarketMemory:
             self.observed_inflation[currency] = observed_inflation
             before = self.price_levels.get(currency, 1.0)
             self.price_levels[currency] = before * max(PRICE_LEVEL_FLOOR_RATIO, 1.0 + observed_inflation)
-            perceived = self.perceived_price_levels.get(currency, before)
-            self.perceived_price_levels[currency] = perceived + PERCEIVED_PRICE_LEVEL_SHARE * (self.price_levels[currency] - perceived)
         self.basket_price_levels[currency] = level
 
 
@@ -167,18 +166,23 @@ class YearView:
         return list(map(prices.get, keys[1]))
 
     def price_rows(self, goods, tile: TileId) -> list:
-        """(good, price, usual price) for each of `goods` in the market area it trades in on `tile`."""
+        """(good, offered price, usual price) for each of `goods` in the market area it trades in on `tile`."""
         keys = self._keys_at_tile.get(tile)
         if keys is None or keys[0] is not goods:
             keys = self._keys_at_tile[tile] = (goods, [(good, good + KEY_SEPARATOR + self.area_of(good, tile))
                                                         for good in goods])
-        prices, usual_prices = self._memory.prices, self._memory.usual_prices
-        return [(good, prices.get(key), usual_prices.get(key)) for good, key in keys[1]]
+        usual_prices, offered = self._memory.usual_prices, self._memory.offered_price
+        return [(good, offered(key), usual_prices.get(key)) for good, key in keys[1]]
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The planning price: last year's traded price, or, where nothing traded, the quote (`quote_kind`
         says which). A reader that needs a price both sides agreed to uses `cleared_price`."""
         return self._memory.prices.get(good + KEY_SEPARATOR + area)
+
+    def offered_price(self, good: GoodId, area: AreaId) -> Optional[float]:
+        """What a buyer can buy at: the traded price or an ask still posted (`MarketMemory.offered_price`); None
+        where nothing is on offer. A buyer reads this, never `price`."""
+        return self._memory.offered_price(good + KEY_SEPARATOR + area)
 
     def present_prices_at(self, names: tuple, tile: TileId, wages: bool = False) -> Dict[str, float]:
         """`price` (or `wage` when `wages`) of each of `names` (goods or trades, one tuple kept by the caller) in its
@@ -239,9 +243,6 @@ class YearView:
 
     def chained_price_level(self, currency: CurrencyId) -> float:
         return self._memory.price_levels.get(currency, 1.0)
-
-    def perceived_price_level(self, currency: CurrencyId) -> float:
-        return self._memory.perceived_price_levels.get(currency, self.chained_price_level(currency))
 
     def expected_inflation(self, currency: CurrencyId) -> float:
         return self._memory.expected_inflation.get(currency, OPENING_EXPECTED_INFLATION)

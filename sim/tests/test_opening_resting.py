@@ -1,0 +1,53 @@
+"""The opening is a resting state of the current rules (Eurace user manual chapter 10: stocks that agree with the
+rules from the start). Each rule below is one plain function over written-out inputs."""
+
+QUICK_TOPIC = True
+
+import unittest
+
+from sim.economy import households_buffer_stock, inventory, opening_resting
+
+
+class RestingPurseTests(unittest.TestCase):
+    def test_a_household_with_no_shares_opens_with_no_cash_beyond_the_income_it_is_about_to_receive(self):
+        self.assertEqual(opening_resting.resting_household_purse(mean_income=12.0, share_wealth=0.0), 0.0)
+
+    def test_spending_at_that_purse_is_the_income(self):
+        income = 12.0
+        purse = opening_resting.resting_household_purse(income, share_wealth=0.0)
+        self.assertAlmostEqual(households_buffer_stock.spending_budget(income, purse + income, 0.0), income)
+
+    def test_a_household_with_shares_holds_cash_up_to_the_wealth_target_and_spends_its_income(self):
+        income, shares = 12.0, 1.0
+        purse = opening_resting.resting_household_purse(income, share_wealth=shares)
+        target = households_buffer_stock.WEALTH_INCOME_RATIO_TARGET / 12.0 * income
+        self.assertAlmostEqual(purse + income + shares, target)
+        self.assertAlmostEqual(households_buffer_stock.spending_budget(income, purse + income, shares), income)
+
+    def test_shares_beyond_the_target_leave_no_cash_to_hold(self):
+        self.assertEqual(opening_resting.resting_household_purse(12.0, share_wealth=100.0), 0.0)
+
+
+class RestingStockTests(unittest.TestCase):
+    def test_a_producer_opens_holding_the_target_stock_of_each_output_for_its_expected_sales(self):
+        stock = opening_resting.resting_output_stock(120.0, {"grain": 2.0, "straw": 1.0})
+        self.assertEqual(stock, {"grain": inventory.target_stock(120.0) * 2.0, "straw": inventory.target_stock(120.0)})
+
+    def test_no_expected_sales_hold_no_stock(self):
+        self.assertEqual(opening_resting.resting_output_stock(0.0, {"grain": 2.0}), {})
+
+
+class RestingContractsTests(unittest.TestCase):
+    def test_each_employer_opens_holding_the_hours_it_hires_at_the_trades_opening_wage(self):
+        needed = {"vale": {"reaper": {"farm_a": 300.0, "farm_b": 0.0}, "smith": {"farm_a": 50.0}}}
+        held, wages = opening_resting.resting_labour_contracts(needed, {"reaper": 1.0, "smith": 1.5})
+        self.assertEqual(held, {"vale": {"reaper": {"farm_a": 300.0}, "smith": {"farm_a": 50.0}}})
+        self.assertEqual(wages, {"vale": {"reaper": {"farm_a": 1.0}, "smith": {"farm_a": 1.5}}})
+
+    def test_a_trade_with_no_opening_wage_holds_no_contract(self):
+        held, wages = opening_resting.resting_labour_contracts({"vale": {"reaper": {"farm_a": 300.0}}}, {})
+        self.assertEqual((held, wages), ({}, {}))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -52,7 +52,7 @@ class Ports:
         return self._needs.techniques_held()
 
     def receive(self, nodes: Iterable[str], granted: bool) -> None:
-        self._needs.send(ReceiveTechniques(tuple(nodes), granted))
+        self._needs.send(ReceiveTechniques(tuple(nodes), granted, self._needs.year()))
 
     def dealing(self, field: str) -> Any:
         return self._needs.seat_dealings[self._seat_id][field]

@@ -8,7 +8,7 @@ from typing import Any, Dict, FrozenSet, Optional, Tuple
 
 from sim.assembly.api import Module
 
-from . import category_traits, fog_words, rules, tree_paths
+from . import category_traits, fog_words, held, rules, tree_paths
 from .commands import (ForgetTechnique, HandOverTechniques, LearnTechnique, NoteTechniquesChanged, ReceiveTechniques, RevealFrom, RevealNodes,
                        StartDoneYearRecord, ReplaceTree)
 from .constants import CORPUS_HEDGE_FRACTION_LOST_NONE, CORPUS_HEDGE_LOSS_CHANCE_NONE
@@ -56,7 +56,7 @@ class Knowledge(Module):
 
     def techniques_version(self) -> tuple:
         """The change counter of the acting seat's held set, for memos over what is held: it moves exactly when the caches over
-        the held set are told to drop (`LearnTechnique`, `ForgetTechnique`, `NoteTechniquesChanged`), not when a set is received."""
+        the held set are told to drop (`LearnTechnique`, `ForgetTechnique`, `NoteTechniquesChanged`), including when techniques are received."""
         return self.seat_version(HELD_CHANGES)
 
     def techniques_revealed(self) -> FrozenSet[str]:
@@ -157,41 +157,55 @@ class Knowledge(Module):
                                    self.needs.relied_on_running[node_id], self.needs.on_road_to_goal(node_id))
 
     # ---- commands
-    def learn_technique(self, command: LearnTechnique) -> None:
-        self.seat.done.add(command.node_id)
+    def _acquire(self, seat_id, node_ids, granted=False, years=None) -> None:
+        """The one place a technique is added to a seat's held set, however it came (finished, granted, exchanged, licensed, handed
+        over): it keeps the finish years (`years`, node id to year, written as given), the change counters and the engine's
+        caches over the held set in step with `done`."""
+        seat = self.seat if seat_id is None else self.seat_of(seat_id)
+        with held.writing():
+            seat.done.update(node_ids)
+            if granted:
+                seat.granted.update(node_ids)
+            if years:
+                if seat.done_year is None:
+                    seat.done_year = {}
+                seat.done_year.update(years)
         self.needs.send(RefreshDoneCaches())
-        self.bump_seat(HELD_CHANGES)
-        self.bump_seat(DONE)
-        if command.granted:
-            self.seat.granted.add(command.node_id)
-        if command.year is not None:
-            if self.seat.done_year is None:
-                self.seat.done_year = {}
-            self.seat.done_year[command.node_id] = command.year
+        self.bump_seat(HELD_CHANGES, seat_id)
+        self.bump_seat(DONE, seat_id)
+
+    def _hear(self, seat, node_ids) -> None:
+        with held.writing():
+            seat.revealed.update(node_ids)
+
+    def learn_technique(self, command: LearnTechnique) -> None:
+        self._acquire(None, (command.node_id,), command.granted, None if command.year is None else {command.node_id: command.year})
 
     def receive_techniques(self, command: ReceiveTechniques) -> None:
-        self.seat.done.update(command.node_ids)
-        if command.granted:
-            self.seat.granted.update(command.node_ids)
-        self.bump_seat(DONE)
+        received = None if command.year is None else {node_id: command.year for node_id in command.node_ids}
+        self._acquire(None, command.node_ids, command.granted, rules.years_to_add(self.seat.done_year, received))
 
     def start_done_year_record(self, command: StartDoneYearRecord) -> None:
-        self.seat.done_year = {}
+        with held.writing():
+            self.seat.done_year = {}
         self.bump_seat(DONE)
 
     def hand_over_techniques(self, command: HandOverTechniques) -> int:
         leaver, heir = self.seat_of(command.from_seat_id), self.seat_of(command.to_seat_id)
-        leaver.done |= heir.done
-        leaver.granted |= heir.granted
-        self.bump_seat(DONE, command.from_seat_id)
+        self._acquire(command.from_seat_id, sorted(heir.done), False, rules.years_to_add(leaver.done_year, heir.done_year))
+        with held.writing():
+            leaver.granted.update(heir.granted)
+        self._hear(leaver, heir.revealed)
+        self.bump_seat(REVEALED, command.from_seat_id)
         self.bump_seat(DONE, command.to_seat_id)
         return len(leaver.done)
 
     def forget_technique(self, command: ForgetTechnique) -> None:
-        for node_id in command.node_ids:
-            self.seat.done.discard(node_id)
-            if command.year is not None:
-                self.seat.forgotten[node_id] = command.year
+        with held.writing():
+            for node_id in command.node_ids:
+                self.seat.done.discard(node_id)
+                if command.year is not None:
+                    self.seat.forgotten[node_id] = command.year
         self.needs.send(RefreshDoneCaches())
         self.bump_seat(HELD_CHANGES)
         self.bump_seat(DONE)
@@ -206,9 +220,9 @@ class Knowledge(Module):
     def reveal_from(self, command: RevealFrom) -> None:
         if not self.needs.fog_of_war():
             return
-        self.seat.revealed.update(rules.reveal_targets(self.nodes, command.node_id))
+        self._hear(self.seat, rules.reveal_targets(self.nodes, command.node_id))
         self.bump_seat(REVEALED)
 
     def reveal_nodes(self, command: RevealNodes) -> None:
-        self.seat.revealed.update(command.node_ids)
+        self._hear(self.seat, command.node_ids)
         self.bump_seat(REVEALED)

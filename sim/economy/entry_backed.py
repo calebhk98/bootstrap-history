@@ -9,8 +9,9 @@ from .entry_trial import recipes_by_cost
 from .goods_market import quantity_at
 from .types import AreaId, Bid, GoodId, TileId
 
-# (recipe id, good, tile of the market) -> units of the good wanted at the recipe's full cost and not traded
-UnfilledAtCost = Callable[[str, GoodId, TileId], float]
+# (recipe id, good, tile of the market, yearly output of the good the newcomer is built for) -> units of the good wanted at the
+# recipe's full cost (on its newcomer's practised hours) and not traded
+UnfilledAtCost = Callable[[str, GoodId, TileId, float], float]
 
 
 def unfilled_quantity(bids: Sequence[Bid], cost_per_unit: float, traded_volume: float) -> float:
@@ -27,10 +28,10 @@ def unfilled_at_cost(setup, record, view, area_map, bids_by_market: Mapping[Tupl
     if not bids_by_market:
         return None
 
-    def unfilled(recipe_id: str, good: GoodId, tile: TileId) -> float:
+    def unfilled(recipe_id: str, good: GoodId, tile: TileId, output_per_year: float) -> float:
         bids = bids_by_market.get((good, view.area_of(good, tile)))
         if not bids:
             return 0.0
-        costed = recipes_by_cost(setup, record, view, good, tile, [recipe_id])
+        costed = recipes_by_cost(setup, record, view, good, tile, [recipe_id], output_per_year)
         return unfilled_quantity(bids, costed[0][1], traded(good, tile) or 0.0) if costed else 0.0
     return unfilled

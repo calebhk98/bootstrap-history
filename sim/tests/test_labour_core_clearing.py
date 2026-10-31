@@ -38,9 +38,11 @@ class WageMovement(unittest.TestCase):
     def test_excess_demand_raises_wage_toward_target(self):
         state = make_state(wage=1.0)
         target = clearing.clearing_target(1.0, 1000.0, [bid("a", 2000.0)])
-        wages = [run(state, [bid("a", 2000.0)]).wage for _ in range(4)]
-        self.assertTrue(wages[0] < wages[1] < wages[2] < wages[3] <= target)
+        wages = [run(state, [bid("a", 2000.0)]).new_hire_wage for _ in range(4)]     # hours already held keep their contract
+        # unfilled vacancies raise the offer each round (labour_eurace_offers), so it reaches the target and stops there
+        self.assertTrue(wages[0] < wages[1] <= wages[2] <= wages[3] <= target + 1e-9)
         self.assertGreater(wages[0], 1.0)
+        self.assertAlmostEqual(wages[3], target)
 
     def test_glut_holds_wage_near_reservation(self):
         state = make_state(people=100.0, wage=1.0)
@@ -62,18 +64,14 @@ class PremiumAndFriction(unittest.TestCase):
         self.assertGreater(result.hired_by_employer["rich"], result.hired_by_employer["plain"])
         self.assertGreater(result.paid_by_employer["rich"], result.paid_by_employer["plain"])
 
-    def test_large_new_bid_fills_over_years(self):
-        state = make_state(people=10.0, wage=1.0)
-        bids = [bid("big", 1000.0)]
-        first = run(state, bids).hired_by_employer["big"]
-        second = run(state, bids).hired_by_employer["big"]
-        self.assertLess(first, 1000.0)
-        self.assertGreater(second, first)
+    def test_large_new_bid_fills_within_the_year_by_rounds_of_applications(self):
+        # Eurace applications and acceptances (applications.py): a slack market fills a whole vacancy in the year's rounds
+        first = run(make_state(people=10.0, wage=1.0), [bid("big", 1000.0)]).hired_by_employer["big"]
+        self.assertAlmostEqual(first, 1000.0, places=3)
 
-    def test_premium_raises_fill_fraction(self):
-        plain = run(make_state(people=40.0, wage=1.0), [bid("a", 3000.0)]).hired_by_employer["a"]
-        paying = run(make_state(people=40.0, wage=1.0), [bid("a", 3000.0, premium=0.5)]).hired_by_employer["a"]
-        self.assertGreater(paying, plain)
+    def test_premium_wins_more_of_scarce_hours_than_a_rival_wanting_as_many(self):
+        result = run(make_state(people=10.0, wage=1.0), [bid("plain", 800.0), bid("paying", 800.0, premium=0.5)])
+        self.assertGreater(result.hired_by_employer["paying"], result.hired_by_employer["plain"])
 
 
 class Poaching(unittest.TestCase):

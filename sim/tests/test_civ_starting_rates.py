@@ -1,5 +1,5 @@
 """Interest and tax rates are each civilisation's own starting state: each civ declares them, and the rules that read them
-(the market rate before the economy opens, the arrears rate, the tax in the living cost) are called on the finance module over plain values."""
+(the market rate once the market answers, the opening's solved rate before it, the arrears rate, the tax in the living cost) are called on the finance module over plain values."""
 QUICK_TOPIC = True
 
 
@@ -11,6 +11,7 @@ import unittest
 from sim.tests import workforce_stand_in
 from unittest import mock
 
+from sim.economy.api import opening_market_rate
 from sim.engine import data
 from sim.tests import finance_host
 
@@ -54,18 +55,19 @@ def module(civ_fields, **views):
 
 
 class EngineUsesCivRatesTests(unittest.TestCase):
-    def test_before_the_economy_opens_the_market_rate_is_the_civs_starting_rate(self):
+    def test_before_the_economy_opens_the_market_rate_is_the_solved_opening_rate_not_the_civs_typed_one(self):
+        # the typed starting_interest_rate is a historical reference: whatever it says, the opening's rate is the solved one
         for name in BASE_CIVS + [MOD_CIV]:
             civ = data.load_civ(name)
-            self.assertEqual(module(civ).market_rate(), civ["starting_interest_rate"], name)
+            self.assertEqual(module(civ).market_rate(), opening_market_rate(), name)
 
-    def test_a_civs_base_rate_shifts_the_arrears_rate_one_for_one(self):
-        before = module({"starting_interest_rate": 0.05}).debt_interest_rate()
-        after = module({"starting_interest_rate": 0.15}).debt_interest_rate()
+    def test_the_markets_base_rate_shifts_the_arrears_rate_one_for_one(self):
+        before = module({}, agent_rate=0.05).debt_interest_rate()
+        after = module({}, agent_rate=0.15).debt_interest_rate()
         self.assertAlmostEqual(after - before, 0.1)
 
-    def test_a_dearer_starting_rate_makes_arrears_dearer(self):
-        rates = [module({"starting_interest_rate": value}).debt_interest_rate() for value in (0.05, 0.40)]
+    def test_a_dearer_market_rate_makes_arrears_dearer(self):
+        rates = [module({}, agent_rate=value).debt_interest_rate() for value in (0.05, 0.15)]
         self.assertLess(rates[0], rates[1])
 
     def test_tax_bite_follows_the_civs_tax_share(self):

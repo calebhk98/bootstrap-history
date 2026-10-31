@@ -450,7 +450,7 @@ until the stock sells or the ask reaches the seller's floor, which is what a uni
 replacement cost or holding value, never below the cost of making it (`seller_offers` already computes `unit_value`).
 Rounds are bounded by a convergence rule (no seller moves), not a count, and only sellers with unsold stock are
 revisited, so the cost stays near one clear per market (Complaint 497: measure with `step 3` from a saved game).
-The raise rule (`ask_raise.py`) stays for sold-out sellers, with the between-year markdown replaced by this search.
+The raise rule (`ask_adjust.py`) stays for sellers (now two-sided), with the between-year markdown replaced by this search.
 
 Proof:
 - a seller with unsold stock sells it the same year when buyers exist at any price above its floor (new
@@ -460,7 +460,7 @@ Proof:
   blend's reason: `test_economy_thin_market_price.py`);
 - staple prices do not oscillate more than before (`economy-check`, `test_economy_store_usual_price.py`).
 
-Files: `sim/economy/seller_offers.py`, `seller_pricing.py`, `year_goods.py`, `producers.py`, `ask_raise.py`,
+Files: `sim/economy/seller_offers.py`, `price_setting.py`, `year_goods.py`, `producers.py`, `ask_adjust.py`,
 `sim/labour/market/asks.py` (comment only).
 
 Deletes: `UNSOLD_ASK_MARKDOWN_SHARE`, `UNSOLD_PROBE_SHARE_OF_CAPACITY`, `IDLE_SALE_SHARE`; then
@@ -475,8 +475,8 @@ unreasonable price for years).
   and the level is the highest at which all of them sell out or sit at their floors (bisection on whole-market
   clears). Capping all of them together is what the convergence rule comes to: a seller that undercuts leaves its
   rivals unsold in turn, so revisiting one at a time would race down in tiny steps. A market with no unsold
-  searchable stock clears once. A seller that moved the price (`best_reservation`) holds units back on purpose and
-  is not searched; its raise is bounded by `SOLD_OUT_ASK_RAISE_SHARE`, its cut by its unit value.
+  searchable stock clears once. A seller that re-priced against its rivals (`price_setting.best_price`, called from
+  `seller_offers.strategic_offers`) chose its ask on purpose and is not searched; its raise is bounded by `GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR`, its cut by its unit value.
 - Deleted: `UNSOLD_ASK_MARKDOWN_SHARE`, `UNSOLD_PROBE_SHARE_OF_CAPACITY`, `IDLE_SALE_SHARE`, the yearly markdown in
   `producers.next_expectations` (and `unsold_outputs`), and the crowd's share-of-unsold markdown. Not done:
   `notional.thin_market_prices` and `THIN_MARKET_SHARE_OF_OPENING_DEMAND` stay (remove them once the spin-up shows the thin goods settle without them).

@@ -9,6 +9,7 @@ import unittest
 from sim.economy import household_grinding, household_work_year, households, households_work
 from sim.economy.households_basket import make_basket
 from sim.economy.households_cohort import Cohort
+from sim.economy.market_memory import market_key
 from sim.economy.setup import labour_area
 from sim.economy.types import LabourOffer
 
@@ -49,7 +50,8 @@ def setup():
 def plan(prices, wage_per_hour):
     area = labour_area("t1")
     worker = Cohort(agent_id="c", tile="t1", income_class=0, people=100.0, working_people=50.0, ownership_share=0.0)
-    rec = types.SimpleNamespace(titles={"t1": {"c": 1.0}}, tenancies={}, cohorts={"c": worker})
+    rec = types.SimpleNamespace(titles={"t1": {"c": 1.0}}, tenancies={}, cohorts={"c": worker},
+                               sold_share_expected={market_key("labourer", area): 1.0})
     offers = [LabourOffer("c", "labourer", area, 500.0, wage_per_hour)]
     return household_work_year.cohort_plan(setup(), rec, View({("labourer", area): wage_per_hour}, prices), worker, offers, 0.0)
 
@@ -100,7 +102,8 @@ class GrindingChoiceTests(unittest.TestCase):
         # Complaint 640: the bids leave the grain out, but what the household ate of it from its own plot is food
         worker = Cohort(agent_id="c", tile="t1", income_class=0, people=100.0, working_people=50.0, ownership_share=0.0,
                         milled_grains=("wheat_kg",))
-        rec = types.SimpleNamespace(titles={"t1": {"c": 1.0}}, tenancies={}, cohorts={"c": worker})
+        rec = types.SimpleNamespace(titles={"t1": {"c": 1.0}}, tenancies={}, cohorts={"c": worker},
+                               sold_share_expected={market_key("labourer", labour_area("t1")): 1.0})
         bidding = household_work_year.cohort_basket(setup(), rec, worker)
         eating = household_work_year.cohort_basket(setup(), rec, worker, buying=False)
         self.assertEqual([good for need in bidding.needs if need.need_id == "food" for good, _effect in need.goods], ["flour_kg"])

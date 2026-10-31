@@ -6,7 +6,7 @@ cash back into paying producers that ran out of it."""
 import math
 from typing import Dict, Tuple
 
-from . import credit, location, ownership, sites, unit_cost
+from . import credit, entry_practice, location, ownership, practice, sites, unit_cost
 from .entry_backed import unfilled_at_cost
 from .entry_margin import margin_entry_plans
 from .entrant_rent import site_rent_per_run
@@ -42,7 +42,8 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
     traded = _traded_volume(record, view, area_map)
     plans = entry_plans(setup.recipes, view, unmet, record.land_rent, setup.land_per_run, traded, siting,
                         unfilled_at_cost(setup, record, view, area_map, bids_by_market, traded),
-                        lambda recipe_id, tile: site_rent_per_run(setup, record, view, recipe_id, tile))
+                        lambda recipe_id, tile: site_rent_per_run(setup, record, view, recipe_id, tile),
+                        entry_practice.crews_of_recipe(record.producers))
     if bids_by_market:
         planned = tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans)
         plans += margin_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting)
@@ -61,6 +62,8 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                 continue
             producer = Producer(agent_id=producer_id, owner=owner, recipe_id=plan.recipe_id, tile=plan.tile,
                                 capacity_runs=0.0, expected_sales=plan.runs,
+                                crew_runs=practice.entrant_crew_runs(recipe, [each.crew_runs for each in record.producers.values()
+                                                                              if each.recipe_id == plan.recipe_id]),
                                 yield_factor=sites.yield_at(recipe, plan.tile, by_limits,
                                                             setup.yield_factor_by_recipe_tile.get(key, 1.0)))
         elif record.expansion_runs.get(producer_id, 0.0) > 0.0:     # a working-capital loan builds no plant
@@ -71,7 +74,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
         record.producers[producer_id] = producer
         started += 1
         inputs, wages = live_input_prices(producer, recipe, view), live_wages(producer, recipe, view)
-        stake = min(working_capital_target(recipe, plan.runs, inputs, wages),
+        stake = min(working_capital_target(practice.recipe_for(recipe, producer.crew_runs), plan.runs, inputs, wages),
                     ENTRANT_OWNER_STAKE_SHARE * max(0.0, record.book.balance(producer.owner, money)))
         if stake > 0.0:
             record.book.transfer(Transfer(producer.owner, producer_id, money, stake, "stake in a new workshop"))

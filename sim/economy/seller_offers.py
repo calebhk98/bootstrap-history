@@ -1,34 +1,28 @@
-"""The producers' offers in one market, re-chosen against that market's book before it clears.
+"""The producers' offers in one market, re-priced before it clears.
 
-Each producer in turn (by agent id) reads the buyers' schedules and the other sellers' current offers and,
-if its own offer moves the clearing price (seller_pricing.py), asks the reservation that maximises its
-profit; a producer that does not move the price keeps the reservation `producers.offers` gave it. What a
-unit is worth to the seller unsold is the cheaper of replacing it (its variable cost per unit) and holding
-it (its price-taking reservation), so a seller never prices below what a unit costs it to make or keep.
-A producer that stands for several workshops (Producer.workshops above one) is not a seller but a crowd of
-price takers: it keeps the price-taking reservation and neither searches nor raises. A seller that moves
-the price may also raise its ask above the price-taking one, which holds units back (restraint) when the
-dearer, smaller sale earns more. Only an owner of one workshop searches the book; the searched ask is held
-inside a band above the seller's unit cost (ask_band_multiple). A raise is bounded by the share a sold-out seller
-raises its ask in a year (ask_raise.SOLD_OUT_ASK_RAISE_SHARE) and stops at the band's edge; a cut is not bounded below the unit value, and a seller whose ask goes
-unsold under the price-taking rule is brought down to what sells by unsold_search.py.
+Each producer with units to sell reads the other sellers' asks and the market's size and chooses its reservation as
+Eurace@Unibi's firm sets its price (price_setting.py, after Market_Research/Firm_market_research_functions.c, Firm_set_price):
+the price on a grid around its own that earns most over the year, sales capped by the units it holds. What a unit is
+worth to the seller unsold is the cheaper of replacing it (its variable cost per unit) and holding it (its
+price-taking reservation), so a seller never prices below what a unit costs it to make or keep. A producer that
+stands for several workshops (Producer.workshops above one) is not a seller but a crowd of price takers: it keeps the
+price-taking reservation and neither searches nor raises, and as a rival it counts once per workshop. A seller whose
+market has no sales on record keeps its reservation; one whose reservation is nothing but whose good has a making cost
+opens at the price it expects (opened_ask), never at nothing. The chosen
+ask is held inside a band above the seller's unit cost (ask_band_multiple), and a seller whose ask goes unsold is
+brought down to what sells by unsold_search.py. The reservation itself moves between years with the seller's stock
+against its target (ask_adjust.py), which is the grid's centre.
 """
 import dataclasses
 import math
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Tuple
 
-from . import entry_trial, goods_market, market_curves, seller_pricing
+from . import entry_trial, price_setting
 from . import unit_cost as run_cost
-from .ask_raise import ASK_BAND_CEILING, SOLD_OUT_ASK_RAISE_SHARE, band_edge
+from .ask_adjust import ASK_BAND_CEILING, band_edge
+from .market_memory import market_key
 from .producers import expected_output_prices, live_input_prices, live_wages
-from .types import EDGE_EXTERNAL, Bid, Offer
-
-
-def merged_bids(bids: Sequence[Bid], good: str) -> List[Bid]:
-    """The buyers' schedules merged where they share a reference price, elasticity and ceiling (as the
-    book's summary does), the external edge's own bids kept as they are."""
-    outside = [bid for bid in bids if bid.buyer == EDGE_EXTERNAL]
-    return market_curves.bids_of(market_curves.summarize(bids, []), good) + outside
+from .types import Bid, Offer
 
 
 def unit_cost(setup, record, view, offer: Offer) -> Optional[float]:
@@ -45,7 +39,7 @@ def unit_cost(setup, record, view, offer: Offer) -> Optional[float]:
 
 def input_share_of_cost(setup, record, view, offer: Offer) -> float:
     """The share of a run's variable cost the producer pays for bought inputs (none for a seller that is not a
-    producer or whose cost cannot be priced): the band above cost marks up only the rest (ask_raise.band_edge)."""
+    producer or whose cost cannot be priced): the band above cost marks up only the rest (ask_adjust.band_edge)."""
     producer = record.producers.get(offer.seller)
     if producer is None:
         return 0.0
@@ -53,6 +47,18 @@ def input_share_of_cost(setup, record, view, offer: Offer) -> float:
     inputs = live_input_prices(producer, recipe, view)
     variable = run_cost.variable_cost_per_run(recipe, inputs, live_wages(producer, recipe, view), producer.land_rent_per_run)
     return run_cost.input_cost_per_run(recipe, inputs) / variable if math.isfinite(variable) and variable > 0.0 else 0.0
+
+
+def opened_ask(reservation: float, cost: Optional[float], expected_price: Optional[float], limit: float) -> Optional[float]:
+    """The ask a seller whose reservation is nothing opens at: a good that costs something to make is not given away, so
+    the seller asks the price it expects (held to the top of the band) and the unsold search brings it down to what
+    sells. None when the reservation is positive (it is the ask), the good has no cost that can be priced (a waste
+    product, which the market places at its lowest price), or the seller has no price it expects."""
+    if reservation > 0.0 or cost is None or not math.isfinite(cost) or cost <= 0.0:
+        return None
+    if expected_price is None or not math.isfinite(expected_price) or expected_price <= 0.0:
+        return None
+    return min(expected_price, limit)
 
 
 def unit_value(offer: Offer, cost: float) -> float:
@@ -86,11 +92,10 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
                      last_price: Optional[float], costs: Optional[dict] = None) -> List[Offer]:
     """`offers` with each moving producer's reservation re-chosen, in agent order. A `costs` dict receives
     each offer's `unit_cost` by (seller, tile), for the unsold search of the same market to read."""
+    original = list(offers)
     offers = list(offers)
     if not bids or not offers:
         return offers
-    good = offers[0].good
-    book = buyers = None          # the buyers' side is prepared when a seller first searches against it
     for index in sorted(range(len(offers)), key=lambda each: (offers[each].seller, offers[each].tile)):
         offer = offers[index]
         if offer.quantity <= 0.0:
@@ -100,20 +105,50 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
             costs[(offer.seller, offer.tile)] = cost
         if cost is None:
             continue
+        if offer.reservation_price <= 0.0:       # a perishable or a distressed holder: it asks a price, never nothing
+            producer = record.producers[offer.seller]
+            recipe = setup.recipes[producer.recipe_id]
+            limit = (band_edge(cost, input_share_of_cost(setup, record, view, offer), ask_band_multiple(setup, offer))
+                     if math.isfinite(cost) else math.inf)
+            opened = opened_ask(offer.reservation_price, cost,
+                                expected_output_prices(producer, recipe, view).get(offer.good), limit)
+            if opened is not None:
+                offers[index] = dataclasses.replace(offer, reservation_price=opened)
+                continue
         if stands_for_many(record, offer):
             continue     # a crowd of price takers keeps its reservation; unsold_search.py lowers it to what sells
         value = unit_value(offer, cost)
-        rivals = offers[:index] + offers[index + 1:]
-        ask = max(offer.reservation_price, 0.0)
-        if buyers is None:
-            book = merged_bids(bids, good)
-            buyers = goods_market.Buyers(book, last_price)
+        size = market_size(record, offer)
+        if offer.reservation_price <= 0.0 or size is None:
+            continue      # a seller that sells at any price, or a market with no sales to judge by, keeps its ask
         limit = (band_edge(cost, input_share_of_cost(setup, record, view, offer), ask_band_multiple(setup, offer))
                  if math.isfinite(cost) else math.inf)
-        step = SOLD_OUT_ASK_RAISE_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
-        choice = seller_pricing.best_reservation(
-            book, rivals, offer, value, last_price, ceiling=min(ask + step, max(limit, value)), floor=value,
-            current=ask, buyers=buyers)
-        if choice is not None:
+        choice = price_setting.best_price(offer.reservation_price, value, size, rivals_of(record, original, index), offer.quantity,
+                                          value, max(limit, value))
+        if choice != offer.reservation_price:
             offers[index] = dataclasses.replace(offer, reservation_price=choice)
     return offers
+
+
+def market_size(record, offer: Offer) -> Optional[float]:
+    """What the whole market bought a year, plus what its buyers wanted and did not get, read off the market's memory
+    (the smoothed volume, with no series to fit a trend to: Eurace@Unibi, Market_Research/Firm_market_research_functions.c,
+    Firm_set_market_research_data_pricing, takes the mean of its market sizes when it has too few for a regression); None
+    when the market has no history."""
+    key = market_key(offer.good, offer.area)
+    usual = record.memory.volume_weights.get(key)
+    if usual is None:
+        return None
+    return usual + record.unmet.get(key, 0.0)
+
+
+def rivals_of(record, offers: Sequence[Offer], index: int) -> List[Tuple[float, float]]:
+    """(ask, number of workshops) of every other seller in the market with units to sell, as the book stood before any
+    seller moved (Eurace@Unibi's households choose among the prices last seen), so the answer does not depend on the order
+    sellers are taken in."""
+    rivals = []
+    for other, each in enumerate(offers):
+        if other != index and each.quantity > 0.0 and each.reservation_price > 0.0:
+            producer = record.producers.get(each.seller)
+            rivals.append((each.reservation_price, float(producer.workshops) if producer is not None else 1.0))
+    return rivals

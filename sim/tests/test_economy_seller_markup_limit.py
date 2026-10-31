@@ -45,7 +45,7 @@ def game(substitution=SUBSTITUTION):
     producer = Producer(SELLER, "lord", "melt", TILE, 10.0)
     basket = types.SimpleNamespace(substitution=substitution)
     setup = types.SimpleNamespace(specs={}, recipes={"melt": recipe}, basket_for=lambda tile: basket)
-    record = types.SimpleNamespace(producers={SELLER: producer})
+    record = types.SimpleNamespace(producers={SELLER: producer}, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), unmet={})
     return setup, record
 
 

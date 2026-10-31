@@ -6,7 +6,7 @@ import dataclasses
 import types
 import unittest
 
-from sim.economy import credit, credit_claims, households, households_credit, lending, merchants_credit
+from sim.economy import bank_credit_risk, credit, credit_claims, households, households_credit, lending, merchants_credit
 from sim.economy.accounts import Book
 from sim.economy.credit_view import CreditView
 from sim.economy.households_basket import need_prices
@@ -84,7 +84,7 @@ class HouseholdBorrowingTests(unittest.TestCase):
         who = cohort(people=10.0, last_year_income=10000.0)
         asked = households_credit.subsistence_request(who, 500.0, MONEY, 0.05, 0.0)
         funded, _rate, _unmet = credit.clear([asked], [FundsOffer("rich", MONEY, 5000.0, 0.05)], MONEY, 0.05, {})
-        self.assertGreater(funded[0].rate, 0.05 + credit.LEVERAGE_PREMIUM * 0.99)
+        self.assertGreater(funded[0].rate, 0.05 + bank_credit_risk.markup(1.0) * 0.99)
         thin = dataclasses.replace(asked, maximum_rate=0.1)
         refused, _rate, unmet = credit.clear([thin], [FundsOffer("rich", MONEY, 5000.0, 0.05)], MONEY, 0.05, {})
         self.assertEqual((refused, len(unmet)), ([], 1))
@@ -195,7 +195,7 @@ class DefaultCascadeTests(unittest.TestCase):
 
         def orders(record):
             view = CreditView(MarketMemory(), record.book, _Areas(), MONEY, loans=lambda: record.loans)
-            view.price = View().price
+            view.price = view.offered_price = View().price      # a buyer reads the offered price
             view.area_of = View().area_of
             view.stock = View().stock
             return households.goods_orders(record.cohorts[lender], view, record.book.balance(lender, MONEY),

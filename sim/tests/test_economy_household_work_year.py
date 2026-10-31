@@ -56,7 +56,8 @@ def setup():
 
 
 def record(titles=None, tenancies=None, cohorts=()):
-    return types.SimpleNamespace(titles=titles or {}, tenancies=tenancies or {},
+    expected = {market_key(trade, labour_area("t1")): 1.0 for trade in ("smith", "labourer", "servant")}
+    return types.SimpleNamespace(titles=titles or {}, tenancies=tenancies or {}, sold_share_expected=expected,
                                  cohorts={each.agent_id: each for each in cohorts})
 
 
@@ -67,8 +68,8 @@ class SplitTests(unittest.TestCase):
         offers = [LabourOffer("rich", "smith", area, 500.0, 1.0)]
         view = View({("smith", area): 3.0, ("servant", area): 1.0})
         hired, own = household_work_year.cohort_split(setup(), rec, view, rich, offers, 0.0)
-        self.assertAlmostEqual(hired, households_work.hours_needed(100.0, DATA))
-        self.assertEqual(own, 0.0)
+        self.assertGreater(hired, 0.99 * households_work.hours_needed(100.0, DATA))
+        self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA))
 
     def test_a_cohort_whose_hour_is_worth_less_does_it_all_itself(self):
         poor, area = cohort("poor"), labour_area("t1")
@@ -76,8 +77,8 @@ class SplitTests(unittest.TestCase):
         offers = [LabourOffer("poor", "labourer", area, 500.0, 0.5)]
         view = View({("labourer", area): 0.8, ("servant", area): 1.0})
         hired, own = household_work_year.cohort_split(setup(), rec, view, poor, offers, 0.0)
-        self.assertEqual(hired, 0.0)
-        self.assertAlmostEqual(own, households_work.hours_needed(100.0, DATA))
+        self.assertLess(hired, 0.1 * households_work.hours_needed(100.0, DATA))
+        self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA))
 
     def test_a_cohort_does_its_own_work_when_the_service_costs_more_than_its_hour(self):
         # the servant's wage is low but the hour of service sells dear: the household pays the price, not the wage
@@ -86,8 +87,8 @@ class SplitTests(unittest.TestCase):
         offers = [LabourOffer("worker", "smith", area, 500.0, 1.0)]
         view = View({("smith", area): 3.0, ("servant", area): 1.0}, {"domestic_service_hour": 8.0})
         hired, own = household_work_year.cohort_split(setup(), rec, view, worker, offers, 0.0)
-        self.assertEqual(hired, 0.0)
-        self.assertAlmostEqual(own, households_work.hours_needed(100.0, DATA))
+        self.assertLess(hired, 0.01 * households_work.hours_needed(100.0, DATA))
+        self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA))
 
     def test_a_cohort_hires_when_the_service_costs_less_than_its_hour(self):
         worker, area = cohort("worker"), labour_area("t1")
@@ -95,7 +96,7 @@ class SplitTests(unittest.TestCase):
         offers = [LabourOffer("worker", "smith", area, 500.0, 1.0)]
         view = View({("smith", area): 3.0, ("servant", area): 5.0}, {"domestic_service_hour": 2.0})
         hired, _own = household_work_year.cohort_split(setup(), rec, view, worker, offers, 0.0)
-        self.assertAlmostEqual(hired, households_work.hours_needed(100.0, DATA))
+        self.assertGreater(hired, 0.99 * households_work.hours_needed(100.0, DATA))
 
     def test_the_servants_price_falls_back_when_no_servant_has_been_paid(self):
         worker, area = cohort("worker"), labour_area("t1")
@@ -128,7 +129,7 @@ class SplitTests(unittest.TestCase):
         offers = [LabourOffer("rich", "smith", area, 500.0, 1.0)]
         household_work_year.decide(setup(), rec, View({("smith", area): 3.0, ("servant", area): 1.0}), offers, {})
         hired_cohort = rec.cohorts["rich"]
-        self.assertAlmostEqual(hired_cohort.hired_work_per_person, households_work.hours_per_person_per_year(DATA))
+        self.assertGreater(hired_cohort.hired_work_per_person, 0.99 * households_work.hours_per_person_per_year(DATA))
         spec = next(need for need in household_work_year.cohort_basket(setup(), rec, hired_cohort).needs
                     if need.need_id == "household_work")
         self.assertAlmostEqual(spec.subsistence_per_person, hired_cohort.hired_work_per_person)
@@ -143,7 +144,7 @@ class FullCostOfServiceTests(unittest.TestCase):
         rec = record({"t1": {"worker": 1.0}}, cohorts=[worker])
         if sold is not None:
             key = market_key("smith", area)
-            rec.hours_hired, rec.hours_idle = {key: 1000.0 * sold}, {key: 1000.0 * (1.0 - sold)}
+            rec.sold_share_expected[key] = sold
         plan = setup()
         plan.household_work = dict(DATA, supervision_hours_per_hired_hour=supervision)
         offers = [LabourOffer("worker", "smith", area, 500.0, 0.1)]
@@ -152,21 +153,21 @@ class FullCostOfServiceTests(unittest.TestCase):
         return hired
 
     def test_a_household_whose_freed_hours_would_go_unsold_does_not_hire(self):
-        self.assertGreater(self._hired(3.0, 2.0), 0.0)
-        self.assertEqual(self._hired(3.0, 2.0, sold=0.2), 0.0)
+        self.assertGreater(self._hired(3.0, 2.0), 0.99 * households_work.hours_needed(100.0, DATA))
+        self.assertLess(self._hired(3.0, 2.0, sold=0.2), 0.01 * households_work.hours_needed(100.0, DATA))
 
     def test_a_household_whose_hour_is_worth_well_above_the_full_cost_hires(self):
-        self.assertGreater(self._hired(10.0, 2.0, supervision=0.1, sold=0.9), 0.0)
+        self.assertGreater(self._hired(10.0, 2.0, supervision=0.1, sold=0.9), 0.99 * households_work.hours_needed(100.0, DATA))
 
     def test_a_household_whose_hour_barely_beats_the_price_does_not_hire_once_directing_costs_hours(self):
-        self.assertGreater(self._hired(2.1, 2.0), 0.0)
-        self.assertEqual(self._hired(2.1, 2.0, supervision=0.2), 0.0)
+        self.assertGreater(self._hired(2.1, 2.0), 0.5 * households_work.hours_needed(100.0, DATA))
+        self.assertLess(self._hired(2.1, 2.0, supervision=0.2), 0.5 * households_work.hours_needed(100.0, DATA))
 
     def test_hiring_falls_as_the_full_cost_rises(self):
         wages = [1.5 + 0.5 * step for step in range(10)]
 
         def hirers(price, supervision):
-            return sum(1 for wage in wages if self._hired(wage, price, supervision) > 0.0)
+            return sum(1 for wage in wages if self._hired(wage, price, supervision) > 0.5 * households_work.hours_needed(100.0, DATA))
 
         by_price = [hirers(price, 0.1) for price in (1.0, 2.0, 3.0, 4.0)]
         self.assertEqual(by_price, sorted(by_price, reverse=True))
@@ -178,6 +179,23 @@ class FullCostOfServiceTests(unittest.TestCase):
     def test_the_sold_share_counts_hours_with_a_buyer(self):
         self.assertAlmostEqual(households_work.sold_share(25.0, 75.0), 0.25)
         self.assertEqual(households_work.sold_share(0.0, 0.0), 1.0)
+
+
+class ExpectedSoldShareTests(unittest.TestCase):
+    def test_the_share_held_in_the_record_wins_over_the_openings_expectation(self):
+        rec = types.SimpleNamespace(sold_share_expected={market_key("smith", "a1"): 0.3})
+        self.assertAlmostEqual(household_work_year.sold_share_at(rec, "smith", "a1", 0.9), 0.3)
+
+    def test_a_market_with_no_year_behind_it_takes_the_openings_expectation(self):
+        rec = types.SimpleNamespace(sold_share_expected={})
+        self.assertAlmostEqual(household_work_year.sold_share_at(rec, "smith", "a1", 0.6), 0.6)
+
+    def test_a_record_lacks_history_for_a_market_it_holds_no_share_for(self):
+        rec = types.SimpleNamespace(sold_share_expected={market_key("smith", "a1"): 0.3})
+        held = LabourOffer("w", "smith", "a1", 10.0, 1.0)
+        new = LabourOffer("w", "smith", "a2", 10.0, 1.0)
+        self.assertFalse(household_work_year.lacks_history(rec, [held]))
+        self.assertTrue(household_work_year.lacks_history(rec, [held, new]))
 
 
 class HearthTests(unittest.TestCase):

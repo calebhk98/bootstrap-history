@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 
 from sim.economy import bank_runs, bank_service, banks, secondary_trade
 from sim.economy.secondary_trade import BOND_MARKET
-from sim.economy.types import FundsOffer, Transfer
+from sim.economy.types import EDGE_MINT, FundsOffer, Transfer
 from sim.tests import test_economy_banks as bank_fixtures
 
 MARKET_RATE = 0.05
@@ -20,6 +20,7 @@ class RunFixture(bank_fixtures.BankFixture):
         self.loan.collateral_value = 100000.0         # a loan the savers see as well secured
         self.deposits = banks.deposits_of(self.record, self.bank.agent_id)
         self.buyer = sorted(self.record.cohorts)[3]
+        self.record.book.transfer(Transfer(EDGE_MINT, self.buyer, self.money, 2000.0, "test coin"))   # the saver's pledge (households open with no spare cash)
         self.supply = self.record.book.money_supply(self.money)
 
     def expect_losses(self, rate):

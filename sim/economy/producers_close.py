@@ -14,9 +14,9 @@ from typing import Callable, Collection, List, Mapping, Optional, Sequence, Tupl
 
 from sim.constants import declare
 
-from . import credit, idle_capacity, inventory, unit_cost
+from . import credit, idle_capacity, inventory, plant_investment, unit_cost
 from .producers import (OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, expected_output_prices, live_input_prices,
-                        live_wages, next_expectations, share_working, within_a_years_change)
+                        live_wages, next_expectations, runs_for_stock, share_working, within_a_years_change)
 from .protocols import MarketView
 from .types import AgentId, GoodId, LoanRequest, Recipe, TileId, Transfer
 from .replaced import replaced
@@ -39,11 +39,6 @@ CLOSED_CAPACITY_SHARE = declare(
     why="A producer leaves at once only when next to no workplace in its market could cover its variable cost "
         "at the prices it expects; while some could, the rest close at the pace workplaces change and the "
         "market keeps the makers it has. Below this share the sliver stands for no market at all.")
-EXPANSION_SHARE_PER_YEAR = declare(
-    "EXPANSION_SHARE_PER_YEAR", 0.1, kind="temporary_heuristic",
-    unit="share of current capacity added in a year", source=None, confidence="D",
-    why="Plant takes time to build and a lender to find; how fast a profitable producer grows is "
-        "bounded by both, which are not yet modelled. A bound keeps growth gradual.")
 WORKING_CAPITAL_PURPOSE = "working capital"     # a loan for next year's running costs, never for plant
 
 
@@ -52,7 +47,8 @@ class YearClose:
     producer: Producer
     transfers: Tuple[Transfer, ...] = ()
     loan_request: Optional[LoanRequest] = None
-    expansion_runs: float = 0.0     # capacity the loan, if funded, builds: wear replaced plus growth
+    expansion_runs: float = 0.0     # capacity the loan, if funded, builds: the growth beyond the wear replaced
+    replacement_runs: float = 0.0   # worn capacity next year's plan calls for rebuilt, from the producer's own earnings
     exited: bool = False
 
 
@@ -113,15 +109,15 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
         needed = producer.expected_sales / paying if paying > 0.0 else producer.capacity_runs
         capacity = max(shed, min(capacity, needed))
     target = working_capital_target(recipe, capacity, inputs, wages)
-    request, rebuilt = _expansion(producer, recipe, view, currency, rate, capacity, worked, inputs, wages,
-                                  price_share_after)
+    replacement, growth = _investment(producer, recipe, view, capacity, worked, cost_per_run, wear if has_plant else 0.0)
+    request, grown = _expansion(producer, recipe, view, currency, rate, growth, inputs, wages, price_share_after)
     if request is None:
         request = _working_capital(producer, recipe, currency, worked, capacity, min(cash, target), paying,
                                    revenue_per_run, inputs, wages)
     survivor = replaced(producer, capacity_runs=capacity, years_of_loss=losses,
                        expected_prices=expectations, cash_target=target)
     surplus = max(0.0, cash - target)
-    return YearClose(survivor, _dividend(producer, currency, surplus), request, rebuilt)
+    return YearClose(survivor, _dividend(producer, currency, surplus), request, grown, replacement)
 
 
 def _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods=()) -> Tuple[float, float]:
@@ -175,19 +171,26 @@ def _dividend(producer: Producer, currency: str, amount: float) -> Tuple[Transfe
     return (Transfer(producer.agent_id, producer.owner, currency, amount, "dividend"),)
 
 
-def _expansion(producer, recipe, view, currency, rate, capacity, worked, inputs, wages, price_share_after=None):
-    """A loan to grow, when a run of new capacity would earn more than the live rate at the price expected
+def _investment(producer, recipe, view, capacity, worked, cost_per_run, wear) -> Tuple[float, float]:
+    """(wear to replace, growth to add) in runs: next year's planned runs against the capacity left after wear, as Eurace
+    plans investment (plant_investment.investment_runs). The plan is the runs the producer's expected sales and stock
+    call for (`runs_for_stock`), a year's change from what it worked; a producer with no record of sales plans what it
+    worked, so it replaces wear it uses and grows on no guess."""
+    if recipe.plant_life_years <= 0.0:
+        return 0.0, 0.0
+    wanted = runs_for_stock(producer, recipe, view, cost_per_run, expected_output_prices(producer, recipe, view) or {})
+    planned = within_a_years_change(replaced(producer, last_runs=worked, capacity_runs=producer.capacity_runs),
+                                    worked if math.isinf(wanted) else wanted)
+    return plant_investment.split(plant_investment.investment_runs(planned, capacity, wear), wear)
+
+
+def _expansion(producer, recipe, view, currency, rate, runs, inputs, wages, price_share_after=None):
+    """A loan to grow by `runs`, when a run of new capacity would earn more than the live rate at the price expected
     once the new capacity's output is on the market. Plant that wore out is rebuilt from the producer's own
     cash (the economy's year does it). Only a recipe with plant needs one; without plant the site and the
     owner bound it."""
     value = unit_cost.plant_value_per_run(recipe, inputs, wages)
-    if recipe.plant_life_years <= 0.0 or value <= 0.0 or not math.isfinite(value):
-        return None, 0.0
-    # plant is built for the runs next year can work beyond the capacity left standing, not for idle capacity
-    scale = max(worked, producer.expected_sales)
-    runs = min(EXPANSION_SHARE_PER_YEAR * producer.capacity_runs,
-               scale + OUTPUT_CHANGE_SHARE_PER_YEAR * producer.capacity_runs - capacity)
-    if runs <= 0.0:
+    if recipe.plant_life_years <= 0.0 or value <= 0.0 or not math.isfinite(value) or runs <= 0.0:
         return None, 0.0
     prices = expected_output_prices(producer, recipe, view) or {}
     if price_share_after is not None:

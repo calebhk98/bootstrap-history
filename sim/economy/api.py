@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the markets module's port 
 
 import math
 
-from . import carried_book, carriage_wear, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
+from . import carried_book, carriage_wear, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
 from .bank_founding import found_from_outside
 from .banks import DEPOSIT_BANKING
 from .funds import POOLED_FUNDS
@@ -19,6 +19,7 @@ from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
 from .market_memory import market_key
+from .opening_rate import against_history, opening_market_rate, solved_opening_rate
 from .metal_stock import COIN_WEAR_PER_YEAR
 from .notional import shown_prices, shown_prices_with_kinds
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
@@ -43,7 +44,7 @@ from sim.world import capital_market
 
 __all__ = [
     "YearAccounts", "baseline_checks", "settling", "spin_up_sensitivity",
-    "carriage_wear", "diagnostics", "household_grinding", "households", "households_work", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
+    "carriage_wear", "crop_sites", "unit_cost", "diagnostics", "household_grinding", "households", "households_work", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",

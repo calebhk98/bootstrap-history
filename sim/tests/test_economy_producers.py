@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy import producers, producers_close
+from sim.economy import plant_investment, producers, producers_close
 from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodSpec, Recipe
 
 FARM = Recipe("farm", {"grain": 10.0}, {"seed": 2.0}, {"hand": 5.0})
@@ -199,12 +199,14 @@ class CloseYearTests(unittest.TestCase):
 
     def test_a_loan_to_expand_is_asked_only_when_new_plant_beats_the_rate(self):
         rich = View({"metal": 20.0, "silver": 5.0, "ore": 1.0, "stone": 1.0}, {"smith": 1.0})
-        result = producers_close.close_year(farmer(recipe_id="smelt"), SMELT, 500.0, 50.0, rich)
+        selling = farmer(recipe_id="smelt", expected_sales=10.0, last_runs=10.0)
+        result = producers_close.close_year(selling, SMELT, 500.0, 50.0, rich)
         request = result.loan_request
         self.assertIsNotNone(request)
         self.assertGreater(request.maximum_rate, rich.rate)
         # growth only: plant that wore out is rebuilt from the producer's own cash, not borrowed for
-        self.assertAlmostEqual(result.expansion_runs, producers_close.EXPANSION_SHARE_PER_YEAR * farmer().capacity_runs)
+        self.assertGreater(result.expansion_runs, 0.0)
+        self.assertLessEqual(result.replacement_runs + result.expansion_runs, plant_investment.INVESTMENT_INERTIA * 1.0)
         self.assertAlmostEqual(request.amount, result.expansion_runs * 10.0)
 
     def test_plant_is_not_borrowed_for_while_standing_capacity_sits_idle(self):
@@ -222,8 +224,8 @@ class CloseYearTests(unittest.TestCase):
         full_close = producers_close.close_year(full, SMELT, 500.0, 50.0, rich, worked_runs=100.0)
         near_close = producers_close.close_year(near, SMELT, 500.0, 50.0, rich, worked_runs=70.0)
         self.assertGreater(full_close.expansion_runs, near_close.expansion_runs)
-        self.assertGreater(near_close.expansion_runs, 0.0)
-        self.assertLessEqual(full_close.expansion_runs, producers_close.EXPANSION_SHARE_PER_YEAR * 100.0 + 1e-9)
+        self.assertEqual(near_close.expansion_runs, 0.0)        # selling 70 of 90 standing, it needs no more plant
+        self.assertLessEqual(full_close.replacement_runs + full_close.expansion_runs, plant_investment.INVESTMENT_INERTIA * 10.0 + 1e-9)
         self.assertEqual(full_close.loan_request.years, SMELT.plant_life_years)      # no longer than the plant lasts
 
     def test_expected_prices_move_toward_the_latest_price(self):

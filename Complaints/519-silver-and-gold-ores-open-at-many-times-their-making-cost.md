@@ -1,12 +1,20 @@
 # Silver and gold ores open at many times their making cost
 
-**Status:** partly - the common ores (iron, copper, tin, lead) pass in every civilisation; silver and gold ores, and the metals themselves, still open far above cost
+**Status:** partly - silver producers are no longer sized to the mint's capacity bid (below); the common ores (iron, copper, tin, lead) pass in every civilisation; silver and gold ores, and the metals themselves, still open far above cost
 
 **What is wrong now.** Silver metal trades at tens of times its making cost at an opening, and the ore follows it (Rome and
 England silver ore; Han gold lode ore). Measure: `python3 sim/simulator.py opening-checks` prints a price over its making cost for the full-length opening of each
 civilisation. The one-step validation that used to read the sited ores' ratios was deleted (rule-tests-16): it read one step of an
 unsettled opening (473), could not name the function that broke, and its common-ores check was red on main. When this is
 fixed, a rule test for the silver and gold chain goes with the fix.
+
+**Closed part (producer sizing).** The mint's bid for the coin metal was its whole strike capacity
+(`MINT_YEARLY_STRIKE_SHARE` times the money stock, `mint.yearly_monetisation`). Its unmet part, at a clearing price under the
+strike price, entered `year_close.runs_sold` through `expected_sales.demand_seen`, so the first year's close sized the silver
+producers to the capacity, not to the wear to replace. The mint now takes in what holders want to add plus what the money loses
+(as commodity money already did) and the heuristic is gone. Measure: the probe of silver recipes' `expected_sales` after one
+`spin-up` year. Still open: the price over making cost below, and holders' cash targets after the first year exceeding the
+money stock, which makes the second year's mint bid large (check `cash_target` in `households_close.py`).
 
 **Evidence on the cause** (details in `Complaints/reports/519-history.md`):
 

@@ -9,7 +9,7 @@ import json
 import os
 from typing import Dict
 
-from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, household_grinding, households, households_work,
+from sim.economy.api import (opening_market_rate, EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, household_grinding, households, households_work,
                              plant_builds, recipe_tile_key,
                              recipes_from_production_data, taxes, tile_costs, with_tool_wear)
 from sim.agents import api as agents_api
@@ -17,7 +17,7 @@ from sim.world import demand, need_basket
 from sim.geography.api import sea_freight, settlement
 from sim.labour import api as labour_api
 
-from . import port_closure, port_costs, port_sites
+from . import port_closure, port_costs, port_crop_prices, port_sites
 from .port_stores import opening_store_values
 from sim.freight.api import FREIGHT_DRIVER_WAGE_TRADE, FREIGHT_FEED_PRICE_MATERIAL, SEA_MODE
 
@@ -94,11 +94,13 @@ def opening_values(sim):
                            | {unskilled})
     modes = sim._freight_mode_costs(cargo="goods")
     rates = sim.mode_crews(sorted(modes))
+    people_by_tile = {tile: people * settlement.population_share(tile_ids, tile) for tile in tile_ids}
+    fertility = {tile: spec.fertility for tile, spec in opening_tiles(sim, tile_ids).items()}
     prices = dict(partner_prices)
-    prices.update(port_costs.opening_costs(sim))
+    prices.update(port_crop_prices.opening_costs_at_tiles(sim, production, allowed, fertility, people_by_tile))
     return {
         "partners": partners,
-        "population_by_tile": {tile: people * settlement.population_share(tile_ids, tile) for tile in tile_ids},
+        "population_by_tile": people_by_tile,
         "working_share": sim.population.working_age / people if people > 0.0 else 0.0,
         "recipes": allowed,
         "mint_recipe": mint_recipe,
@@ -106,7 +108,7 @@ def opening_values(sim):
         "wages": {trade: sim.economy.labour.quote(trade) for trade in labour_trades if trade in trades_data},
         "unskilled_trade": unskilled,
         "need_shares": sim.labour.need_shares(),
-        "rate": float(sim.economy.base_rate()),
+        "rate": float(opening_market_rate()),
         "carriage": dict(modes),
         "carriage_balanced": sim._freight_mode_costs(0.0, cargo="goods"),
         "carriage_wage": sim.labour.wage_per_hour(FREIGHT_DRIVER_WAGE_TRADE),
@@ -166,6 +168,13 @@ def _counted(value):
     return float("%.12g" % value)
 
 
+def opening_tiles(sim, tile_ids):
+    """The tiles of the economy's map, with the share of each that is cropped and its fertility."""
+    technique = sim.labour.farming_technique()
+    cropped_share = 1.0 - technique.rotation.fallow_share_of_holding
+    return tile_costs.tiles_from_map(sim.economy_map, list(tile_ids), cropped_share, technique.toolkit.tillage_capacity)
+
+
 def build_setup(sim, opening=None, production=None):
     """The economy's setup from the opening values (`opening_values(sim)` when none are given), with
     money counted in the economy's unit (`coin_per_unit`). `production` is the catalogue the recipes are
@@ -178,9 +187,7 @@ def build_setup(sim, opening=None, production=None):
     world_map = sim.economy_map
     partners = opening.get("partners") or {}
     all_tile_ids = list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]]
-    technique = sim.labour.farming_technique()
-    cropped_share = 1.0 - technique.rotation.fallow_share_of_holding
-    tiles = tile_costs.tiles_from_map(world_map, all_tile_ids, cropped_share, technique.toolkit.tillage_capacity)
+    tiles = opening_tiles(sim, all_tile_ids)
     for partner_id, opened in partners.items():
         for tile in opened["tiles"]:
             tiles[tile] = dataclasses.replace(tiles[tile], country=partner_id)

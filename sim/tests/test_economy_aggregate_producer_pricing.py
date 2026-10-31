@@ -53,7 +53,7 @@ def game(producers):
     recipe = Recipe("farm", {GOOD: 1.0}, {"seed": 1.0}, {"labour": 1.0})
     basket = types.SimpleNamespace(substitution=1.0)
     setup = types.SimpleNamespace(specs={}, recipes={"farm": recipe}, basket_for=lambda tile: basket)
-    return setup, types.SimpleNamespace(producers={each.agent_id: each for each in producers})
+    return setup, types.SimpleNamespace(producers={each.agent_id: each for each in producers}, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), unmet={})
 
 
 def producer(name, workshops):
@@ -65,7 +65,7 @@ def cleared(producers, quantities, bids=None, ask=ASK):
     setup, record = game(producers)
     offers = [Offer(each.agent_id, GOOD, AREA, TILE, quantity, ask) for each, quantity in zip(producers, quantities)]
     chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, 1.0)
-    result = goods_market.clear(bids, chosen, GOOD, AREA, "", 1.0)
+    result = goods_market.clear_at_one_price(bids, chosen, GOOD, AREA, "", 1.0)
     sold = sum(fill.quantity for fill in result.fills if fill.side == "sell")
     return result.price, sold
 

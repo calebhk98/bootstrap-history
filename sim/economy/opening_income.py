@@ -9,7 +9,8 @@ households receive is the income that pays for the demand producers are sized to
 
 The rule: the opening's income per head is the largest income, up to the full-employment ceiling, at which
 households save nothing net. Households spend all of a low income (less the margin their bids leave unspent),
-and above some income they begin to keep a surplus (a savings target on income above their floors). Nothing
+and above some income they begin to keep a surplus (spending is mean income plus a share of the account held, see
+households_buffer_stock). Nothing
 in the final demand spends that saving (no plant, working capital or lending demand is counted), so demand falls
 short of income from there up; income then has no fixed point above that kink and every income below it is one
 (demand equals income). A stationary economy saves nothing net: its saving is matched by demand that does not
@@ -101,6 +102,14 @@ def settled_income_per_head(ceiling: float, people: float, demand_at: Callable[[
                    ceiling=ceiling, low=low, high=high, passes=OPENING_INCOME_PASSES)
 
 
+def producible_share(runs: Mapping[str, float], recipes: Mapping[str, object], hands_hours: float) -> float:
+    """The share of the demand the producers of `runs` could make with the hours the working people have
+    (`hands_hours`, a year): one when the runs' labour hours fit, else hands over hours needed. An income that
+    asks for more than the hands can make is not an income the producers can pay out."""
+    needed = math.fsum(count * math.fsum(recipes[recipe_id].labour_hours.values()) for recipe_id, count in runs.items())
+    return 1.0 if needed <= hands_hours or needed <= 0.0 else max(0.0, hands_hours) / needed
+
+
 def labour_share_of(runs: Mapping[str, float], recipes: Mapping[str, object], wages: Mapping[str, float],
                     value: float) -> float:
     """Share of an output of `value` that the producers of `runs` pay their workers (the rest is rent and the
@@ -128,14 +137,16 @@ def with_income(cohorts: Mapping[str, Cohort], per_head: float, labour_share: fl
     return paid
 
 
-def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, float]) -> float:
+def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, float], yield_factor: float = 1.0) -> float:
     """Share of a producer's plant that works at the opening prices: only the workplaces whose own cost the
-    revenue covers do (producers.share_working), so a producer sized to the runs households' demand needs
-    has that much more plant than it works. A recipe whose revenue does not cover its variable cost at these
-    prices counts as working in full (the opening sizes it to the demand, and the first year's plan finds out)."""
+    revenue (at the tile's yield factor) covers do (producers.share_working), so a producer sized to the runs
+    households' demand needs has that much more plant than it works, and the first year's plan (plant times this
+    share) is the runs it was sized for. A run that cannot be priced counts as working in full (the first year's
+    plan finds out)."""
     from . import producers, unit_cost
     variable = unit_cost.variable_cost_per_run(recipe, prices, wages)
-    revenue = unit_cost.revenue_per_run(recipe, prices)
-    if not math.isfinite(variable) or variable <= 0.0 or revenue < variable:
+    revenue = unit_cost.revenue_per_run(recipe, prices) * yield_factor
+    if not math.isfinite(variable) or variable <= 0.0 or revenue <= 0.0:
         return 1.0
-    return producers.share_working(revenue, variable)
+    share = producers.share_working(revenue, variable)
+    return share if share > 0.0 else 1.0      # a run that earns next to nothing is sized to its runs; the first year's plan finds it does not pay

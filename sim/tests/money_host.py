@@ -58,11 +58,12 @@ class MoneyHost:
         self.employees: Dict[str, float] = {}          # the seats' staff the party reads (one table for every seat)
         self.known: set = set()                       # the nodes the seats hold
         self.received: list = []                      # (nodes, granted) handed to a seat by an exchange
+        self.year = 100                               # the year the seats' parties read
         self.on_receive: Any = None                   # called with (nodes, granted) as the acting seat, when a test keeps the know-how itself
         self.dealings: Dict[str, Any] = {}             # the seats' stored dealings, by seat id (what `party` was given)
         self.businesses: Dict[str, Any] = {}          # the seats' businesses, by seat id
         self.needs = SimpleNamespace(
-            send=self.send, seat_balance=_Keyed(lambda seat_id: self.ledger.seat_balance(seat_id)), act_as=self.act_as,
+            send=self.send, year=lambda: self.year, seat_balance=_Keyed(lambda seat_id: self.ledger.seat_balance(seat_id)), act_as=self.act_as,
             staff=lambda: {"employees": self.employees}, techniques_held=lambda: self.known,
             seat_dealings=_Keyed(lambda seat_id: {name: plain(getattr(self.dealings[seat_id], name)) for name in DEALING_FIELDS}),
             operating=lambda: self.businesses[self.state.acting_seat].operating(),

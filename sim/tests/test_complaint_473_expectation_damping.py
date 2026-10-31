@@ -1,18 +1,13 @@
 """Complaint 473, Update 14: the loop that makes the small economy's staple and labourer wage alternate year to year.
 
 A producer's plan follows its expected price, and the expectation moves only part of the way to each year's price, so a
-price that alternates is met by a plan that alternates less. The hours households sell follow the leisure anchor,
-which is scaled by the price level; the level they scale it by is the level they perceive, moved part of the way to
-last year's chained level (`MarketMemory.perceived_price_levels`), so a level that alternates does not swing the anchor
-at full amplitude."""
+price that alternates is met by a plan that alternates less."""
 
 QUICK_TOPIC = True
 
 import unittest
 
 from sim.economy import producers
-from sim.economy.labour_supply import anchor_wage_in_prices
-from sim.economy.market_memory import MarketMemory
 from sim.economy.replaced import replaced
 from sim.economy.types import Recipe
 
@@ -96,26 +91,6 @@ class ProducerFollowsALaggedExpectation(unittest.TestCase):
         self.assertTrue(all(after >= before - 1e-9 for before, after in zip(runs, runs[1:])), runs)
         self.assertLessEqual(max(runs), settled + 1e-9)
 
-
-class HouseholdsPerceiveTheLevelWithALag(unittest.TestCase):
-    def test_an_alternating_chained_level_reaches_the_perceived_level_damped(self):
-        memory = MarketMemory()
-        chained, perceived = [], []
-        for year in range(30):
-            memory.note_basket_price_level("coin", 1.0, observed_inflation=0.05 * (-1) ** year)
-            chained.append(memory.price_levels["coin"])
-            perceived.append(memory.perceived_price_levels["coin"])
-        self.assertGreater(abs(chained[-1] / chained[-2] - 1.0), 0.04)
-        self.assertLess(abs(perceived[-1] / perceived[-2] - 1.0), 0.5 * abs(chained[-1] / chained[-2] - 1.0))
-
-    def test_a_steady_level_is_perceived_as_it_is_in_time(self):
-        memory = MarketMemory()
-        for _year in range(60):
-            memory.note_basket_price_level("coin", 1.0, observed_inflation=0.02)
-        self.assertAlmostEqual(memory.perceived_price_levels["coin"] / memory.price_levels["coin"], 1.0, delta=0.05)
-
-    def test_the_leisure_anchor_is_scaled_by_the_perceived_level(self):
-        self.assertEqual(anchor_wage_in_prices({"labourer": 1.0, "smith": 2.0}, 1.5), {"labourer": 1.5, "smith": 3.0})
 
 if __name__ == "__main__":
     unittest.main()

@@ -71,7 +71,7 @@ class EquityTests(unittest.TestCase):
         cohorts = {each.agent_id: each for each in (cohort_of(0, 0.1), cohort_of(1, 0.2), cohort_of(2, 0.7))}
         no_plant = SimpleNamespace(plant_life_years=0.0)
         record = SimpleNamespace(
-            cohorts=cohorts, loans=[], shares={}, book=book,
+            cohorts=cohorts, loans=[], shares={}, book=book, capital=SimpleNamespace(share_price_factor=1.0),
             producers={"producer:one": SimpleNamespace(owner="household:t:2", capacity_runs=1.0, recipe_id="farm"),
                        "producer:two": SimpleNamespace(owner="household:t:0", capacity_runs=1.0, recipe_id="farm")})
         setup = SimpleNamespace(currency_id=MONEY, recipes={"farm": no_plant})

@@ -14,8 +14,6 @@ from .constants import (GENERIC_MINE_DEPTH_CLASS, GENERIC_MINE_HARDNESS_CLASS, M
                         REVENUE_SCALE_LABOUR_HOURS)
 from .labour_profile import mine_labour_hours_per_tonne
 
-_PROFILE_CACHE: Dict[Any, Tuple[float, float]] = {}   # (material, the running works' effects) -> labour hours per tonne
-
 
 class MineCosts:
     """Needs: deposit_catalogue, wage, material_price, price_index, money_per_labour_hour, revenue_estimate, effect_best,
@@ -58,12 +56,7 @@ class MineCosts:
     def labour_hours_per_tonne(self, material: str) -> Tuple[float, float]:
         """(build hours per tonne/year, running hours per tonne) of a typical working of `material`, output-weighted across
         its deposits, under the running techniques' effects on the works."""
-        effects = self.mine_works_effects()
-        key = (material, mine_technique.effects_key(effects))
-        cached = _PROFILE_CACHE.get(key)
-        if cached is None:
-            cached = _PROFILE_CACHE[key] = mine_labour_hours_per_tonne(self.reference_deposits(material), effects)
-        return cached
+        return mine_labour_hours_per_tonne(self.reference_deposits(material), self.mine_works_effects())
 
     def capex_opex(self, material: str) -> Tuple[Optional[float], Optional[float]]:
         """(capital per t/yr to sink, running cost per t/yr) for standing production of `material`, from the deposits'

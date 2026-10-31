@@ -21,6 +21,22 @@ ASK_ADJUSTMENT_SHARE_PER_YEAR = declare(
         "and how well it knows what others are paid, which the model does not carry. A goods seller's "
         "unsold stock is marked down inside the year instead (economy/unsold_search.py).")
 
+SEARCH_ROUNDS_PER_YEAR = declare(
+    "SEARCH_ROUNDS_PER_YEAR", 12, kind="temporary_heuristic", unit="rounds of search and wage revision per year",
+    source=None, confidence="D",
+    retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
+    why="Eurace's labour loop (Labour/Firm_Employer_Functions.c, Firm_update_wage_offer; Household_Employee_Functions.c, "
+        "Household_read_application_rejection_update_wage_reservation) revises offers and reservations once a round "
+        "and its raise runs once a month; the yearly step compounds that many rounds. Not fitted.")
+
+RESERVATION_CUT_PER_ROUND = declare(
+    "RESERVATION_CUT_PER_ROUND", 0.01, kind="temporary_heuristic", unit="share of the ask cut per failed search round",
+    source=None, confidence="D",
+    retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
+    why="Eurace's WAGE_RESERVATION_UPDATE (0.01 in the shipped state its/0_after_2k_transient.xml, opened; model.xml's description gives 0.02): an unemployed household cuts its "
+        "reservation wage by this share each round it stays unemployed, never under its floor (there the "
+        "benefit share of last pay; here the wage floor). How fast a family gives ground is not fitted.")
+
 
 def scale_of(state: MarketState, area: str, trade: str) -> float:
     """The ask over the reservation wage; one before any year has moved it."""
@@ -29,12 +45,16 @@ def scale_of(state: MarketState, area: str, trade: str) -> float:
 
 def moved_scale(scale: float, offered: float, wanted: float) -> float:
     """The next ask after a year in which employers wanted `wanted` hours at the wage and `offered` were
-    on offer: lowered by the unsold share, raised by the share of demand that went unmet (capped at one)."""
+    on offer: lowered by the unsold share, raised by the share of demand that went unmet (capped at one).
+    The cut follows Household_read_application_rejection_update_wage_reservation (Eurace, Labour/
+    Household_Employee_Functions.c): each round without work takes `RESERVATION_CUT_PER_ROUND` off the ask, and only
+    the unsold share of the hours is still searching, so the ask falls by that share of the compounded cut."""
     if offered <= 0.0:
         return scale
     if wanted >= offered:
         return scale * (1.0 + ASK_ADJUSTMENT_SHARE_PER_YEAR * min(1.0, (wanted - offered) / offered))
-    return scale * (1.0 - ASK_ADJUSTMENT_SHARE_PER_YEAR * (offered - wanted) / offered)
+    year_cut = 1.0 - (1.0 - RESERVATION_CUT_PER_ROUND) ** SEARCH_ROUNDS_PER_YEAR
+    return scale * (1.0 - year_cut * (offered - wanted) / offered)
 
 
 def record(state: MarketState, area: str, trade: str, offered: float, wanted: float, wage: float,

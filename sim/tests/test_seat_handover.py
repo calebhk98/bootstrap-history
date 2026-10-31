@@ -3,6 +3,7 @@ seat leaves the year. The pure move is called on built seat records; the protoco
 
 QUICK_TOPIC = True
 
+from . import held_fixture
 from .harness import check
 
 from sim.agents.api import relations
@@ -22,8 +23,7 @@ from .seat_views_stand_in import slots_of
 
 
 def give(seat, techs, country, goal):
-    seat.modules["knowledge"].done |= set(techs)
-    seat.modules["knowledge"].granted |= set(techs)
+    held_fixture.hold(seat.modules["knowledge"], techs, granted=True)
     seat.modules["resources"] = ResourcesSeat(mines=[{"material": "iron_ore"}])
     seat.modules["seats"].patents["loom"] = {"owner": "x"}
     seat.modules["seats"].shares_held["guild"] = 3.0

@@ -59,13 +59,14 @@ def wide_margin_view():
 
 
 class WideMarginPlanTests(unittest.TestCase):
-    def test_a_maker_idle_last_year_plans_the_full_yearly_change_and_nothing_else_binds(self):
+    def test_a_maker_idle_last_year_plans_its_expected_sales_and_refill_and_the_price_is_no_limit(self):
         who = cart_maker()
         plan = producers.plan(who, CART, wide_margin_view(), 1e6)
-        self.assertAlmostEqual(plan.runs, producers.OUTPUT_CHANGE_SHARE_PER_YEAR * who.capacity_runs)
+        self.assertAlmostEqual(plan.runs, producers.runs_for_stock(who, CART, wide_margin_view()))
+        self.assertLess(plan.runs, producers.OUTPUT_CHANGE_SHARE_PER_YEAR * who.capacity_runs)       # expected sales bind, not the margin
         wanted_at_price = who.capacity_runs * producers.share_working(1000.0, 4.0 * 15.0 + 70.0 * 0.4 + 165.0)
         self.assertGreater(wanted_at_price, 0.99 * who.capacity_runs)         # the price is no limit
-        self.assertEqual(producers.runs_for_stock(who, CART, wide_margin_view()), float("inf"))
+        self.assertGreater(producers.runs_for_stock(who, CART, wide_margin_view()), who.expected_sales)
 
     def test_the_input_bids_of_such_a_maker_are_ceilinged_above_the_input_prices_by_the_margin_share_each_input_accounts_for(self):
         plan = producers.plan(cart_maker(), CART, wide_margin_view(), 1e6)

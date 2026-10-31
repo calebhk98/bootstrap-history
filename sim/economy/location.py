@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .entrant_rent import site_rent_per_run
-from . import labour_state, location_inputs, sites, unit_cost
+from . import crop_sites, entry_practice, labour_state, location_inputs, practice, sites, unit_cost
 from .market_areas import MarketArea
 from .producers import Producer, live_input_prices
 from .setup import labour_area
@@ -111,8 +111,9 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
     (sites.UNSITED_EXTRACTION_ANYWHERE)."""
     by_recipe = sites.limits_by_recipe(setup.site_limits)
     population = setup.opening_population_by_tile
+    placed = _placed_tiles(setup, recipe)
     suited = tuple(tile for tile in sites.suited_tiles(recipe, setup.tiles, area.tiles, setup.recipe_allowed)
-                   if _crops_on(setup, recipe, tile))
+                   if tile in placed)
     if not suited:
         return {}
     if recipe.site_bound and not by_recipe.get(recipe.recipe_id):
@@ -132,9 +133,13 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
     return split_runs(runs, weights, {})
 
 
-def _crops_on(setup, recipe: Recipe, tile: TileId) -> bool:
-    """False where the recipe takes the tile's yield and the tile yields nothing: a run there makes nothing."""
-    return setup.yield_factor_by_recipe_tile.get(recipe.recipe_id + "@" + tile, 1.0) > 0.0
+def _placed_tiles(setup, recipe: Recipe) -> frozenset:
+    """The tiles the opening may place the recipe on: where a run pays at the opening's prices and wages (the test the
+    first year's plan applies), over every tile it can run on, not one area's (crop_sites.sites)."""
+    every = sites.suited_tiles(recipe, setup.tiles, sorted(setup.tiles), setup.recipe_allowed)
+    return frozenset(crop_sites.sites(
+        {tile: setup.yield_factor_by_recipe_tile.get(recipe.recipe_id + "@" + tile, 1.0) for tile in every},
+        recipe, setup.opening_prices, setup.opening_wages))
 
 
 def entry_siting(setup, record, view, area_map, carriage) -> Siting:
@@ -145,12 +150,14 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     supplies: Dict[str, Mapping] = {}
     tile_parts: Dict[Tuple[str, TileId, float], tuple] = {}    # what a recipe's run on a tile costs apart from the output's carriage
     fixed_goods = location_inputs.fixed_site_goods(setup.recipes, by_recipe)
+    crews_of = entry_practice.crews_of_recipe(record.producers)
     for producer in sites.in_id_order(record.producers):
         key = (producer.recipe_id, producer.tile)
         capacity[key] = capacity.get(key, 0.0) + producer.capacity_runs + record.expansion_runs.get(producer.agent_id, 0.0)
         recipe = setup.recipes[producer.recipe_id]
         working = producer.capacity_runs if producer.last_runs < 0.0 else producer.last_runs
-        committed[producer.tile] = committed.get(producer.tile, 0.0) + working * math.fsum(recipe.labour_hours.values())
+        committed[producer.tile] = committed.get(producer.tile, 0.0) + working * math.fsum(
+            practice.recipe_for(recipe, producer.crew_runs).labour_hours.values())
 
     def siting(recipe_id, demand, runs):
         recipe = setup.recipes[recipe_id]
@@ -169,7 +176,8 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
             fixed_part = tile_parts.get((recipe_id, tile, carriage.scale))
             if fixed_part is None:
                 fixed_part = tile_parts[(recipe_id, tile, carriage.scale)] = _tile_part(
-                    setup, record, view, carriage, recipe, by_recipe, supplies[recipe_id], capacity, committed, tile)
+                    setup, record, view, carriage, recipe, by_recipe, supplies[recipe_id], capacity, committed, tile,
+                    entry_practice.first_year_recipe(recipe, crews_of(recipe_id)))
             variable, factor, input_haul, staffable, headroom = fixed_part
             cost = math.inf if factor <= 0.0 else assembled_cost(
                 variable, carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes, input_haul)
@@ -179,9 +187,10 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     return siting
 
 
-def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capacity, committed, tile):
+def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capacity, committed, tile, first_year=None):
     """(variable cost per run, yield factor, input haul per run, staffable runs, headroom runs) of `recipe` on
-    `tile`: none of it depends on where the output goes, so one entry-siting call reads it once per recipe and tile."""
+    `tile`: none of it depends on where the output goes, so one entry-siting call reads it once per recipe and tile.
+    The runs its idle hands can staff are at `first_year`'s hours (the recipe at its newcomer's first-year practice; the booked recipe without)."""
     probe = Producer("probe", "probe", recipe.recipe_id, tile, 1.0)
     factor = sites.yield_at(recipe, tile, by_recipe, setup.yield_factor_by_recipe_tile.get(
         recipe.recipe_id + "@" + tile, 1.0))
@@ -194,7 +203,7 @@ def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capac
     input_haul = location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies, tile)
     spare = spare_hours(labour_state.people_by_trade(record.workforce, labour_area(tile)), setup.working_hours_per_year,
                         committed.get(tile, 0.0))
-    return (variable, factor, input_haul, staffable_runs(recipe, spare),
+    return (variable, factor, input_haul, staffable_runs(recipe if first_year is None else first_year, spare),
             sites.headroom_runs(recipe, tile, by_recipe, capacity.get((recipe.recipe_id, tile), 0.0)))
 
 

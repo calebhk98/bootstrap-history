@@ -64,12 +64,15 @@ class CarriageHireTests(unittest.TestCase):
 
 
 class EntrantInAHeldMarketTests(unittest.TestCase):
-    def test_a_merchant_with_no_hires_gets_none_where_incumbents_hold_all_the_hours_at_the_same_pay(self):
+    def test_a_merchant_at_the_same_pay_is_hired_only_from_hours_the_incumbent_dismissed(self):
+        # Eurace random dismissals (applications.py): the entrant draws no one from the incumbent's held hours, only
+        # the dismissed ones who apply to it; together they never exceed the hours offered
         from sim.tests.test_labour_core_clearing import bid, make_state, run
         state = make_state(people=10.0, wage=1.0)
         state.hired_hours = {"vale": {"digger": {"farm": 1000.0}}}
         result = run(state, [bid("farm", 2000.0), bid("merchant", 50.0)])
-        self.assertEqual(result.hired_by_employer.get("merchant", 0.0), 0.0)
+        self.assertGreater(result.hired_by_employer.get("merchant", 0.0), 0.0)
+        self.assertLessEqual(sum(result.hired_by_employer.values()), 1000.0 + 1e-6)
 
     def test_the_same_merchant_paying_a_premium_takes_hours_from_the_incumbent(self):
         from sim.tests.test_labour_core_clearing import bid, make_state, run
@@ -94,7 +97,7 @@ def hours_hired_by_farm(merchant_bid_hours):
     for employer in ("farm", "merchant"):
         book.transfer(Transfer(EDGE_MINT, employer, "coin", 1e9, "opening"))
     area = "labour:t1"
-    record = types.SimpleNamespace(book=book, memory=MarketMemory(), producers={},
+    record = types.SimpleNamespace(book=book, memory=MarketMemory(), producers={}, sold_share_expected={},
                                    workforce=MarketState(workers={area: {"plough": split_evenly(0.05)}}))
     setup = types.SimpleNamespace(currency_id="coin", trades={}, unskilled_trade="plough")
     bids = [LabourBid("farm", "plough", area, 100.0, 5.0)]
@@ -148,7 +151,7 @@ class ShortfallTests(unittest.TestCase):
     def test_every_route_is_cut_by_the_same_share(self):
         carriage, _m, _a, _b = world(("salt", "fish"))
         who = merchant()
-        who.routes = {("salt", "a"): ("b", "x"), ("fish", "a"): ("b", "x")}
+        who.routes = {("salt", "a"): (("b", "x", 1.0),), ("fish", "a"): (("b", "x", 1.0),)}
         result = merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0,
                                     {("salt", "a"): 10.0, ("fish", "a"): 4.0},
                                     crew=hire(3.5))
@@ -169,7 +172,7 @@ class CrewWorthTests(unittest.TestCase):
         carriage, _m, area_a, area_b = world()
         who = merchant()
         plan(who, price_at_source, price_at_destination)
-        who.routes = {("salt", "a"): ("b", area_b["salt"])}
+        who.routes = {("salt", "a"): (("b", area_b["salt"], 1.0),)}
         crew = hire(100.0, market_wage=market_wage, area_of=lambda _good, tile: area_a["salt"] if tile == "a" else "elsewhere")
         return merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0}, crew=crew)
 

@@ -6,7 +6,8 @@ from typing import Dict, Tuple
 from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import (carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
+from .expected_sales import demand_seen
+from . import (practice, firm_year, carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes)
 from .household_work_year import basket_key, cohort_basket
 from .households_cohort import renewed
@@ -193,22 +194,39 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
     money = setup.currency_id
     property_income: Dict[str, float] = {}
     traded = {(result.good, result.area): result.quantity for result in ledger.clearings}
+    clearing_prices = {(result.good, result.area): result.price for result in ledger.clearings if result.quantity > 0.0}
     prepared_buyers: Dict = {}
     service_lives = {good: spec.service_life_years for good, spec in setup.specs.items()}
     cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
+    loans_of: Dict[str, list] = {}
+    for loan in record.loans:
+        loans_of.setdefault(loan.borrower, []).append(loan)
+    crews_of_recipe: Dict[str, list] = {}
+    for each in record.producers.values():
+        crews_of_recipe.setdefault(each.recipe_id, []).append(each.crew_runs)
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes[producer.recipe_id]
+        if producer.idle_years > 0:      # bankrupt: idle, no dividend (Eurace@Unibi, Firm_bankruptcy_idle_counter)
+            record.producers[producer_id] = replaced(producer, idle_years=producer.idle_years - 1)
+            shares.note_dividend(record, producer_id, ())
+            continue
         revenue = ledger.sales_in.get(producer_id, 0.0)
         costs = ledger.running_costs(producer_id)
-        per_run = recipe.outputs[producers.main_output(recipe)]
-        worked = ledger.output.get((producer_id, producers.main_output(recipe)), 0.0) / (
-            per_run * producer.yield_factor or per_run)
+        paying = producers.paying_output(recipe, _prices_here(clearing_prices, recipe, area_map.area_of, producer.tile))
+        per_run = recipe.outputs[paying]
+        worked = ledger.output.get((producer_id, paying), 0.0) / (per_run * producer.yield_factor or per_run)
         price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile,
                                                    prepared_buyers)
         closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share,
                                             [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable],
                                             service_lives)
+        year = None
+        if not closed.exited:       # the dividend, the financing check and bankruptcy follow Eurace@Unibi (firm_year.py)
+            closed, _paid, year = firm_year.settle_year(setup, record, view, producer, closed, recipe, revenue, costs,
+                                                        loans_of.get(producer_id, []))
         shares.note_dividend(record, producer_id, closed.transfers)
+        if year is not None and year.write_off_ratio > 0.0:
+            firm_year.write_off(record, producer_id, year.write_off_ratio)
         if closed.exited:
             paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))
             for transfer in paid:
@@ -219,14 +237,16 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         worn = producer.capacity_runs - closed.producer.capacity_runs
         if worn > 0.0:
             ledger.plant_worn[producer_id] = worn
-        if worn > 0.0 and recipe.plant_life_years > 0.0 and revenue > costs:
-            record.worn_runs[producer_id] = worn    # a producer covering its costs rebuilds what wore out
+        if closed.replacement_runs > 0.0 and revenue > costs:
+            record.worn_runs[producer_id] = closed.replacement_runs     # covering its costs, it rebuilds the wear its plan needs
         for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
         if closed.loan_request is not None:
             record.loan_requests.append(closed.loan_request)
             record.expansion_runs[producer_id] = closed.expansion_runs
-        record.producers[producer_id] = _with_sales(closed.producer, recipe, ledger)
+        record.producers[producer_id] = _with_practice(
+            _with_sales(closed.producer, recipe, ledger, record.book, area_map.area_of, traded, clearing_prices), producer.last_runs,
+            {trade: practice.pool_units(crews_of_recipe[producer.recipe_id], trade) for trade in producer.crew_runs})
     prices, volumes = learned_prices(ledger.clearings, record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     ordered = (sorted(prices.items()), sorted(volumes.items()))
@@ -291,12 +311,48 @@ def held_only(moves, book):
             for move in moves]
 
 
-def _with_sales(producer, recipe, ledger: YearLedger):
-    """Expected sales move toward what it sold this year, in runs of its main output."""
-    good = producers.main_output(recipe)
-    per_run = recipe.outputs[good]
-    sold = ledger.sold.get((producer.agent_id, good), 0.0) / per_run
-    worked = ledger.output.get((producer.agent_id, good), 0.0) / (per_run * producer.yield_factor or per_run)
+def _with_practice(producer, runs_last_year, pool):
+    """The crew's practice after the year's runs (practice.py); growth in runs is hired hands."""
+    if not producer.crew_runs:
+        return producer
+    return replaced(producer, crew_runs=practice.crew_runs_after_year(
+        producer.crew_runs, max(0.0, producer.last_runs) / max(1.0, producer.workshops),
+        practice.hired_share(runs_last_year, producer.last_runs), pool))
+
+
+def _prices_here(clearing_prices, recipe, area_of, tile) -> Dict[str, float]:
+    """The year's clearing price of each output of `recipe` in the market of `tile`; an output that did not trade is absent."""
+    here = {}
+    for good in recipe.outputs:
+        price = clearing_prices.get((good, area_of(good, tile)))
+        if price is not None:
+            here[good] = price
+    return here
+
+
+def runs_sold(producer, recipe, ledger: YearLedger, book, area_of, traded, prices) -> float:
+    """Runs of the recipe whose outputs it sold this year: the value sold of all outputs at the year's `prices` over
+    the value of one run's outputs, so an output nobody buys (straw, manure) neither counts nor drags the figure down.
+    An output sells its quantity plus its share of the unmet demand in its market (`traded`: quantity sold by (good,
+    area)). With no output priced, the output that sold most of its run stands for the run."""
+    seen = {}
+    for good, per_run in recipe.outputs.items():
+        market = (good, area_of(good, producer.tile))
+        seen[good] = demand_seen(ledger.sold.get((producer.agent_id, good), 0.0), book.stock(producer.agent_id, good, producer.tile),
+                                 traded.get(market, 0.0), ledger.unmet_demand.get(market, 0.0))
+    value_of_run = math.fsum(per_run * prices.get(good, 0.0) for good, per_run in recipe.outputs.items())
+    if value_of_run > 0.0:
+        return math.fsum(seen[good] * prices.get(good, 0.0) for good in recipe.outputs) / value_of_run
+    return max(seen[good] / per_run for good, per_run in recipe.outputs.items())
+
+
+def _with_sales(producer, recipe, ledger: YearLedger, book, area_of, traded, clearing_prices=None):
+    """Expected sales move toward the runs it sold this year (`runs_sold`), measured by value over all its outputs."""
+    prices = _prices_here(clearing_prices or {}, recipe, area_of, producer.tile)
+    sold = runs_sold(producer, recipe, ledger, book, area_of, traded, prices)
+    paying = producers.paying_output(recipe, prices)
+    per_run = recipe.outputs[paying]
+    worked = ledger.output.get((producer.agent_id, paying), 0.0) / (per_run * producer.yield_factor or per_run)
     if producer.expected_sales <= 0.0:
         return replaced(producer, expected_sales=sold, last_runs=worked)
     share = producers.EXPECTATION_ADJUSTMENT_SHARE
@@ -331,7 +387,6 @@ def rebase_basket_price_level(setup, record) -> None:
     record.index_base_prices = national_prices(record)
     record.memory.basket_price_levels[money] = 1.0
     record.memory.price_levels[money] = 1.0
-    record.memory.perceived_price_levels[money] = 1.0
     record.cohorts = {agent: renewed(cohort, last_basket_price_level=1.0)
                       for agent, cohort in record.cohorts.items()}
 

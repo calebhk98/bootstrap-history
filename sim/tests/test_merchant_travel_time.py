@@ -35,7 +35,7 @@ def shipper(km, good="salt", quantity=10.0):
     """A merchant holding `quantity` of the good on tile a with a route to tile b `km` away, and the dispatch."""
     carriage, _area_map, area_a, area_b = world_apart(km, good)
     who = Merchant("m1", "a", "owner", 100.0)
-    who.routes = {(good, "a"): ("b", area_b)}
+    who.routes = {(good, "a"): (("b", area_b, 1.0),)}
     book = Book()
     book.move(GoodsMove(EDGE_PRODUCTION, "m1", good, "a", quantity, "stock"))
     done = merchants.dispatch(who, (Fill("m1", good, area_a, "a", quantity, 2.0, "buy"),), carriage, SPECS, "coin",

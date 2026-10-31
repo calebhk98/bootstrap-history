@@ -3,7 +3,7 @@
 The log is dated records of what changed in the world and why, shared by every seat, saved with the game, keeping the last
 `event_log_years_kept` years (data/world/world_hazards.json). A record is {year, kind, actors, tiles, cause, facts}.
 
-Needs: year, military_leverage."""
+Needs: year, military_leverage, acting_seat."""
 from typing import Any, Dict, List, Optional
 
 from . import constants, rules, world_data
@@ -39,8 +39,8 @@ class Events:
 			self.bump(OUTPUT)
 
 	def say_once(self, command: Any) -> bool:
-		"""Whether this is the first time `command.key` is sent; it is marked as told."""
-		told = self.world.said_condition
+		"""Whether this is the first time the acting seat sends `command.key`; it is marked as told to that seat."""
+		told = self.seat.said_condition
 		if command.key in told:
 			return False
 		told.add(command.key)
@@ -51,5 +51,6 @@ class Events:
 		return kinds_in_progress(self.needs.civilisation(), year_now)
 
 	def disaster(self) -> Optional[Dict[str, Any]]:
-		"""This year's dated hazards by name, and what the acting seat's log said of them; None when none struck."""
-		return self.disaster_this_year
+		"""This year's dated hazards by name, and what the acting seat's log said of them; None when none struck or the
+		acting seat was not in the year's shocks."""
+		return (self.disaster_this_year or {}).get(self.needs.acting_seat())

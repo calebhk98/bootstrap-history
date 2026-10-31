@@ -16,7 +16,7 @@ from sim.labour.market.records import Bid, Clearing, MarketState, Route, YearInp
 
 
 def plain_sold(held, offer, wage):
-    """`sold_hours_schedule` as it was: the leisure term through `leisure_hours_kept`."""
+    """`sold_hours_schedule` as the plain formula: the hours left after the plot and the household work."""
     whole = held._hours.get(offer.worker, 0.0)
     if whole <= 0.0 or offer.hours <= 0.0:
         return 0.0
@@ -24,8 +24,7 @@ def plain_sold(held, offer, wage):
     plot_kept = max(held.plan_hours.get(offer.worker, 0.0), plot(wage) if plot else 0.0)
     share = offer.hours / whole
     free = offer.hours - min(plot_kept + held.work_hours.get(offer.worker, 0.0), whole) * share
-    eligible = max(0.0, free - max(0.0, held.plot_usable.get(offer.worker, 0.0) - plot_kept) * share)
-    return free - households_hours_offered.leisure_hours_kept(eligible, wage, held.anchor_wage.get(offer.trade))
+    return free
 
 
 class TheSoldScheduleKeepsItsValues(unittest.TestCase):
@@ -39,9 +38,7 @@ class TheSoldScheduleKeepsItsValues(unittest.TestCase):
             held = HourSupply(
                 offers=offers, plan_hours={w: rng.uniform(0, 200) for w in workers[:2]},
                 work_hours={w: rng.uniform(0, 300) for w in workers[1:]},
-                plot_hours_at={w: (lambda wage, scale=rng.uniform(100, 900): scale / (1.0 + max(wage, 0.0))) for w in workers[:3]},
-                plot_usable={w: rng.uniform(0, 1500) for w in workers},
-                anchor_wage={"a": rng.uniform(0.1, 3.0), "b": 0.0})       # "c" has none
+                plot_hours_at={w: (lambda wage, scale=rng.uniform(100, 900): scale / (1.0 + max(wage, 0.0))) for w in workers[:3]})
             for offer in offers:
                 schedule = held.sold_hours_schedule(offer)
                 for wage in (-1.0, 0.0, 0.01, 0.7, 3.0, 50.0):
@@ -66,8 +63,7 @@ class TheGroupedSharesAreTheMarketsShares(unittest.TestCase):
         rng = random.Random(9)
         offers = [LabourOffer("w%d" % rng.randrange(5), rng.choice(["a", "b"]), rng.choice(["vale", "hill", "dale"]),
                               rng.choice([0.0, rng.uniform(10, 900)]), 0.1) for _ in range(30)]
-        held = HourSupply(offers=offers, plan_hours={}, work_hours={}, plot_hours_at={}, plot_usable={},
-                          anchor_wage={"a": 1.0, "b": 2.0})
+        held = HourSupply(offers=offers, plan_hours={}, work_hours={}, plot_hours_at={})
         shares = held.shares()
         self.assertEqual(sorted(shares), sorted({(offer.trade, offer.area) for offer in offers}))
         for market, share in shares.items():

@@ -14,13 +14,21 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
 1. **Clearing** (`clearing.py`), per (trade, area).
    - Every worker offers `hours_per_worker_year` at the area's reservation wage:
      `reservation_wage = subsistence_per_worker_year / hours_per_worker_year * (1 + fatality_risk_per_year * value_of_life_years_of_income)`.
-   - Employers bid hours up to a `maximum_wage`. The market wage moves a share of the way toward the
-     clearing point each year (sticky).
-   - An employer pays `market_wage * (1 + pay_premium)`, capped at its maximum. Hours go to the highest
+   - Employers bid hours up to a `maximum_wage`. The wage new hires clear at rises a share of the way toward the
+     clearing point each year and falls to it at once (Eurace: an offer only rises, nothing lowers a hired worker's
+     wage; the workers' ask falls by `asks.py`, which is the only downward channel).
+   - An employer pays new hires `market_wage * (1 + pay_premium)`, capped at its maximum. Hours go to the highest
      payers first.
-   - Workers who stay with an employer keep their hours. New hires are limited by a matching function
-     of searchers per vacancy, which is recruitment friction: a large new hire fills over several years.
-     A premium raises the employer's matching rate and lets it draw workers from lower payers.
+   - Workers who stay with an employer keep their hours and their contracted wage (`contracted_wage`, kept per employer
+     in `MarketState.contract_wages`): a surplus of workers does not reprice them, and a raised market wage does not lay
+     them off while the employer's maximum still covers the contract. The trade's reported wage (`Clearing.wage`,
+     `MarketState.wages`) is the hours-weighted mean of contracts and new hires; `Clearing.new_hire_wage` is the new hires' own. New hires come from the year's search rounds
+     (`applications.py`, Eurace's protocol): each round every employer dismisses a random share of its workers and reposts
+     the vacancies; searchers (the unretained, and the dismissed asking the wage they were paid) apply to a bounded number
+     of employers whose offer is at or above their ask; an employer takes on as many hours as it has vacancies; a searcher
+     takes the highest offer; searchers who found nothing cut their ask. Recruitment friction is the bounded
+     applications and the dismissals, not a fitted rate. A premium raises the offer, so it wins the acceptance, and lets
+     the employer draw workers from lower payers.
 2. **Attrition.** A share of workers and trainees leave work each year (deaths, retirement; demography's number).
 3. **Training** (`training.py`). Trainee cohorts age a year. At zero years left they graduate.
    - Each band's chance of finishing is `aptitude.completion_chance(band ability + cohort bonus, difficulty)`.
@@ -80,7 +88,7 @@ reads `income_at_graduation`; a faster move within a skill family is only the sh
 
 `Bid.pay_premium` is the actor's lever.
 - It fills first.
-- It matches faster, through `(1 + pay_premium) ** FIRM_LABOUR_SUPPLY_ELASTICITY`.
+- It wins the acceptance of searchers who hold more than one offer (and, in the founder's `recruitable` estimate, matches faster through `(1 + pay_premium) ** FIRM_LABOUR_SUPPLY_ELASTICITY`).
 - It draws from lower payers.
 - It raises the trade's average wage in the area, which pulls entrants, switchers and migrants in later years.
 

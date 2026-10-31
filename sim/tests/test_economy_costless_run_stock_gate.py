@@ -3,7 +3,6 @@ is held to what it expects to sell; an output that is not piling up is what can 
 
 QUICK_TOPIC = True
 
-import math
 import unittest
 
 from sim.economy import producers
@@ -28,7 +27,7 @@ class CostlessRunStockGateTests(unittest.TestCase):
     def test_a_costless_run_with_an_output_that_is_not_piling_up_keeps_running(self):
         view = View({"ground": 200.0}, {"ground": 100.0, "timber": 5.0})
         runs = producers.runs_for_stock(clearer("joint_free"), JOINT_FREE, view, 0.0, {"ground": 100.0, "timber": 5.0})
-        self.assertTrue(math.isinf(runs))
+        self.assertGreaterEqual(runs, 0.5)       # planned from the timber's empty stock: what it expects to sell plus a refill
 
 
 if __name__ == "__main__":

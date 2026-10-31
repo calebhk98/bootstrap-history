@@ -78,7 +78,10 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
   (the one hook is the list of funded amounts in `_lend`). Still open: shares trading between holders after issue,
   a firm choosing equity over debt on cost, and the closed-producer path (`close_idle_producers`) paying its cash
   to the owner alone. Measure: `Economy` fixture tests in `sim/tests/test_economy_shares.py`; on Rome compare the
-  rate, `funds_offered` and `lent_by_borrower` of the first years (`share_issuers` is `len(record.shares)`).
+  rate, `funds_offered` and `lent_by_borrower` of the first years (`share_issuers` is `len(record.shares)`). A producer's
+  year-end finances follow Eurace (`sim/economy/firm_finance.py`, `firm_year.py`): a dividend rule paid to the owner
+  (`ownership.spread` splits it by share), a liquidity check, and two bankruptcy routes that write loans down
+  (`firm_year.write_off`, loans only; shares are not written down).
 
 - **Banks (step 2).** A bank is an agent id with a purse (`sim/economy/banks.py`, `bank_service.py`); a society
   founds banks only once it holds a node declaring `deposit_banking` (`fin_deposit_bank`;
@@ -92,6 +95,11 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
   what it cannot pay is arrears the default rule writes off, borne by the depositors. The founder is paid only
   earnings above the capital it paid in. Heuristics: `BANK_MARGIN_SHARE_OF_OPENING_RATE`,
   `BANK_FOUNDING_SHARE_OF_CASH`, `BANK_CAPITAL_SHARE_OF_LOANS` (reserve share reuses `LENDER_RESERVE_SHARE`).
+  A bank also lends under Eurace@Unibi's credit risk (`sim/economy/bank_credit_risk.py`, `banks.risk_headroom`): each
+  borrower's default probability comes from its leverage, the rate carries a markup on it (`credit.risk_premium`), and
+  `credit.clear_with_cause` refuses any piece whose value at risk exceeds the bank's headroom (a multiple of its equity less
+  the value at risk it already holds). Its four constants (`DEFAULT_PROBABILITY_SENSITIVITY`, `BANK_ALFA`, `BANK_LAMBDA`,
+  `MARKUP_REFERENCE_RATE`) are Eurace's, labelled heuristics that name this complaint in `retire`.
   Still open: depositors choosing among several banks by anything but cover, withdrawals for cash needs, a run
   on a bank that is solvent but illiquid, credit creation beyond the deposits, the player founding a bank by
   command (the economy call is `banks.found`; no engine command yet). On Rome with the node granted the
@@ -149,6 +157,9 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
   go back to it. Test: `--only seat_bank`, `--only seat_bank`.
 
 ## Remainder
+
+- A bank's default probability and its limit are Eurace's formulas (leverage-driven probability, value at risk against a
+  multiple of equity), not an estimate from the losses its own loan record shows; the four constants above retire here.
 
 - Bonds the agents-world pool buys (`sim/agents/bonds.py`, state and firm) have no individual holder, so they have no
   secondary price and no mark in a holder's wealth; the economy-record loans do.

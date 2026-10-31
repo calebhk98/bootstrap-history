@@ -25,7 +25,7 @@ def setup():
 def record(*producers):
     return types.SimpleNamespace(
         currency=CURRENCY,
-        producers={name: types.SimpleNamespace(recipe_id=recipe, tile=tile, expected_sales=sales)
+        producers={name: types.SimpleNamespace(recipe_id=recipe, tile=tile, expected_sales=sales, crew_runs={})
                    for name, recipe, tile, sales in producers})
 
 

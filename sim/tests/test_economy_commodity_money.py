@@ -7,6 +7,7 @@ import types
 import unittest
 
 from sim.economy import mint
+from sim.economy.metal_stock import COIN_WEAR_PER_YEAR, METAL_GOODS_LOSS_PER_YEAR
 from sim.economy.types import CurrencySpec, GoodSpec
 
 METAL = "metal_kg"
@@ -58,10 +59,18 @@ class MonetisationTests(unittest.TestCase):
         setup, record = setup_and_record("commodity", cash_target=10.0)
         self.assertAlmostEqual(mint.yearly_monetisation(setup, record), SPOILAGE * SUPPLY)
 
-    def test_struck_coin_and_weighed_metal_keep_the_mint_capacity(self):
-        for regime in ("struck_coin", "weighed_metal"):
-            setup, record = setup_and_record(regime)
-            self.assertAlmostEqual(mint.yearly_monetisation(setup, record), mint.MINT_YEARLY_STRIKE_SHARE * SUPPLY)
+    def test_a_struck_coin_takes_in_what_holders_want_plus_what_wears(self):
+        setup, record = setup_and_record("struck_coin", cash_target=400.0)
+        wanted = 4 * 400.0
+        self.assertAlmostEqual(mint.yearly_monetisation(setup, record), (wanted - SUPPLY) + COIN_WEAR_PER_YEAR * SUPPLY)
+
+    def test_a_struck_coin_whose_holders_want_no_more_takes_in_only_what_wears(self):
+        setup, record = setup_and_record("struck_coin", cash_target=10.0)
+        self.assertAlmostEqual(mint.yearly_monetisation(setup, record), COIN_WEAR_PER_YEAR * SUPPLY)
+
+    def test_weighed_metal_whose_holders_want_no_more_takes_in_only_what_is_lost(self):
+        setup, record = setup_and_record("weighed_metal", cash_target=10.0)
+        self.assertAlmostEqual(mint.yearly_monetisation(setup, record), METAL_GOODS_LOSS_PER_YEAR * SUPPLY)
 
 
 class MintOrderTests(unittest.TestCase):
@@ -69,9 +78,9 @@ class MintOrderTests(unittest.TestCase):
         setup, record = setup_and_record("commodity", cash_target=0.0)
         self.assertLessEqual(bid_capacity(setup, record), SPOILAGE * SUPPLY * record.currency.backing_per_unit + 1e-9)
 
-    def test_a_struck_coin_mint_bids_for_its_whole_capacity(self):
+    def test_a_struck_coin_mint_bids_no_more_than_holders_want_when_their_cash_is_full(self):
         setup, record = setup_and_record("struck_coin", cash_target=0.0)
-        self.assertAlmostEqual(bid_capacity(setup, record), mint.MINT_YEARLY_STRIKE_SHARE * SUPPLY * record.currency.backing_per_unit)
+        self.assertAlmostEqual(bid_capacity(setup, record), COIN_WEAR_PER_YEAR * SUPPLY * record.currency.backing_per_unit)
 
 
 if __name__ == "__main__":

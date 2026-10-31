@@ -25,7 +25,6 @@ class StartChecks:
 
 	def _setup_start_checks(self) -> None:
 		self._own_checks = {check.cause: getattr(self, "_check_" + check.cause) for check in self.START_CHECKS if not check.source}
-		self._substitution_gaps: Dict[Optional[str], Any] = {}      # acting seat -> the group that last had no option
 
 	# ---- the test ---------------------------------------------------------------------------------------------
 
@@ -117,10 +116,11 @@ class StartChecks:
 		return start_rules.unheld_stock_verdict(self.needs.stock_status[node_id]["missing"], why)
 
 	def _check_substitution(self, node_id, node, ignore_trade, memo, why) -> Verdict:
-		if not self._substitution_quality(node_id)[1]:
+		_quality, ok, gap = self._substitution_result(node_id)
+		if not ok:
 			if not why:
 				return False, None
-			group, options = self._substitution_gaps.get(self.clock.acting_seat) or (None, [])
+			group, options = gap
 			seen = [option_id for option_id in options
 			        if self.needs.tree[option_id] is None or self.needs.visibility(option_id, memo)]
 			return False, ("this needs %s and you have none of the things that "
@@ -296,22 +296,21 @@ class StartChecks:
 		return None
 
 	def _substitution_quality(self, node_id: str) -> Tuple[float, bool]:
+		return self._substitution_result(node_id)[:2]
+
+	def _substitution_result(self, node_id: str) -> Tuple[float, bool, Any]:
 		"""Resolve `req_any` groups: for each, the best option actually held. A steam engine does not REQUIRE coal and
 		steel; it requires a fuel and a pressure vessel. Wood in a bronze boiler works, badly: the quality factor says
-		how badly. The group that had no option is kept for the blocker list to name."""
+		how badly. Returns (quality, ok, the gap of the first group with no option, or None)."""
 		groups = self.needs.tree[node_id].get("req_any") or []
 		if not groups:
-			return 1.0, True
+			return 1.0, True, None
 		done = self.needs.techniques_held()
 		quality, ok, failed = start_rules.substitution_outcome(groups, lambda group: self._group_best(node_id, group, done))
-		self._substitution_gaps[self.clock.acting_seat] = None if ok else start_rules.substitution_gap(failed)
-		return quality, ok
+		return quality, ok, (None if ok else start_rules.substitution_gap(failed))
 
 	def _group_best(self, node_id: str, group: Dict[str, Any], done: Any) -> float:
 		"""The best quality any option in one `req_any` group offers (the gate every actor passes)."""
 		return research_gate.substitute_quality(
 			self.needs.tree[node_id], group, lambda option: option in done,
 			lambda option: self.needs.tree[option] is not None, constants.PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT)
-
-	def last_substitution_gap(self) -> Any:
-		return self._substitution_gaps.get(self.clock.acting_seat)

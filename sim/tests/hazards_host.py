@@ -26,7 +26,7 @@ def _same_seat(seat_id):
 def defaults(seed: int) -> Dict[str, Any]:
 	return {
 		"year": 100, "civilisation": {"id": "rome", "hazards": []}, "events_enabled": True,
-		"game_random": random.Random(seed), "act_as": _same_seat,
+		"game_random": random.Random(seed), "act_as": _same_seat, "acting_seat": "founder",
 		"money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),
 		"seat_list": {"joined": ["founder"], "playing": ["founder"]}, "ended_seats": [],
 		"founder": {"alive": True, "life_left": 30.0, "dead_reason": None, "policy": {}}, "goal": None,

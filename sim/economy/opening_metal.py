@@ -7,18 +7,6 @@ the supply chain behind the coin (ore, smelting, fuel) exists from the first yea
 and the stock does not drain in the years it would take entry to build one.
 """
 from . import mint, opening_runs, sites
-from .metal_stock import COIN_WEAR_PER_YEAR, METAL_GOODS_LOSS_PER_YEAR
-
-
-def yearly_loss_share(setup, spec) -> float:
-    """Share of the money in circulation that the backing good loses in a year, by the regime's own loss."""
-    if spec.regime == "struck_coin":
-        return COIN_WEAR_PER_YEAR
-    if spec.regime == "weighed_metal":
-        return METAL_GOODS_LOSS_PER_YEAR
-    if spec.regime == "commodity":
-        return mint.loss_share(setup, spec)
-    return 0.0
 
 
 def yearly_replacement(setup, record) -> float:
@@ -26,7 +14,7 @@ def yearly_replacement(setup, record) -> float:
     spec = record.currency
     if spec.backing_good is None or spec.backing_per_unit <= 0.0:
         return 0.0
-    return yearly_loss_share(setup, spec) * record.book.money_supply(spec.currency_id) * spec.backing_per_unit
+    return mint.loss_share(setup, spec) * record.book.money_supply(spec.currency_id) * spec.backing_per_unit
 
 
 def marginal_cost(setup, record):
