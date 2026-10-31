@@ -15,8 +15,12 @@ EXPECTED_SPENDING_ADJUSTMENT = declare(
         "income history and habit, which are not modelled; the share is an assumption.")
 
 
-def update_expected_spending(expected: float, spent: float) -> float:
-    """Expected yearly spending after a year in which `spent` was spent (the first year seeds it)."""
+def update_expected_spending(expected: float, spent: float, planned: float = 0.0) -> float:
+    """Expected yearly spending after a year in which `spent` was spent (the first year seeds it). Money the
+    household bid but the shops could not fill (`planned` above `spent`) is spending it set out to make: a year
+    of rationing does not lower what it expects to spend, or the cap on a rise in its spending would ratchet
+    down with the shortage."""
+    spent = max(spent, planned)
     if expected <= 0.0:
         return spent
     return expected + EXPECTED_SPENDING_ADJUSTMENT * (spent - expected)

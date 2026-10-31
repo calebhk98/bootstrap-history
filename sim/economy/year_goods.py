@@ -61,6 +61,8 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
                                          basket, setup.specs, priced,
                                          smooth_rise=not record.settling, shared_store=store_by_tile)
         orders = less_what_it_grew(orders, cohort, basket, ledger.grown_units.get(cohort.agent_id))
+        record.cohorts[cohort.agent_id] = dataclasses.replace(
+            cohort, planned_spending=sum(bid.budget for bid in tool_bids) + sum(bid.budget for bid in orders.bids))
         if own_options:
             savings = sum(offer.amount for offer in orders.funds_offers)     # only what it would otherwise lend
             orders = land_bid_year.with_land_bids(orders, land_bid_year.land_bids(
