@@ -175,8 +175,8 @@ def idle_hours_by_trade(economy, country=None):
 
 def labour_market_rows(economy):
     """(people, hours offered, hours hired) of each (trade, area) labour market in the last clearing, in key order, for
-    `person_equivalent_unemployment`. Offered is hired plus idle; the plot trade (people working their own land) is
-    left out."""
+    `person_equivalent_unemployment`. Offered is hired plus idle; the plot trade (people working their own land, most
+    of the hours and people) is left out, so the unsold-hours share, which keeps it, is a different population."""
     record = economy.record
     plot = labour_state.plot_trade(economy.setup)
     rows = []

@@ -107,7 +107,9 @@ def person_equivalent_unemployment(markets: Iterable[tuple]) -> Optional[float]:
     """Share of the people who offered hours that the labour markets left without work, from rows of
     (people, hours offered, hours hired) per (trade, area) market. The core hires hours, not named people, so a
     market's people are taken to share its unhired hours evenly: people times idle over offered. A market that
-    offered nothing is outside the labour force; None when no market did."""
+    offered nothing is outside the labour force; None when no market did. It covers only the rows it is given, and
+    `labour_market_rows` leaves out the plot trade, so it is the rate of the wage trades, not of everyone. Where hours per
+    person are equal across markets it equals the hours-weighted rate of the same rows."""
     seeking = unhired = 0.0
     for people, offered, hired in markets:
         if people <= 0.0 or offered <= 0.0:
