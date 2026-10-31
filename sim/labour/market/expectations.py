@@ -37,10 +37,18 @@ def expected_income(state: MarketState, inputs: YearInputs, clearings: ClearingI
             # employers want hours nobody here offers: the first to arrive is hired at the market wage
             return max(floor, clearing.entry_wage * inputs.hours_per_worker_year)
         return floor
+    wage = clearing.average_wage
+    offered = clearing.hours_offered
+    arrived = hours_arrived_since(state, inputs, clearing, area, trade)
+    if arrived > 0.0 and clearing.demand:
+        # hands that came since the clearing sell hours too: the wage slides down the bids
+        reservation = reservation_wage(inputs, area, inputs.trades[trade].fatality_risk_per_year)
+        wage = min(wage, target_for_demand(reservation, offered + arrived, clearing.demand))
+        offered += arrived
     # a vacancy beside idle hands is friction: a newcomer finds one of the places employers want filled
-    share = min(1.0, clearing.hours_wanted / clearing.hours_offered) if clearing.hours_offered > 0.0 else 1.0
+    share = min(1.0, clearing.hours_wanted / offered) if offered > 0.0 else 1.0
     # a wage under the outside option does not pay a worker less than it: the hours go to the plot instead
-    earned = max(floor, clearing.average_wage * inputs.hours_per_worker_year)
+    earned = max(floor, wage * inputs.hours_per_worker_year)
     return share * earned + (1.0 - share) * floor
 
 

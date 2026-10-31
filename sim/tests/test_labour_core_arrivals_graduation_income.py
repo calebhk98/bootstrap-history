@@ -46,5 +46,19 @@ class ArrivalsGraduationIncomeTests(unittest.TestCase):
         self.assertAlmostEqual(self._income(3.0), expected)
 
 
+class ArrivalsExpectedIncomeTests(unittest.TestCase):
+    """What a migrant or a switcher weighs for a trade here today (`expected_income`)."""
+
+    def _income(self, diggers):
+        return expectations.expected_income(_state(diggers), _inputs(), _clearing(), AREA, "digger")
+
+    def test_no_arrivals_pays_the_wage_hired_at(self):
+        self.assertAlmostEqual(self._income(1.0), 40.0 * HOURS)
+
+    def test_three_diggers_meet_the_bids_at_the_lower_wage_and_all_find_work(self):
+        # supply 3000 hours: the bids meet it at (10 + 20) / 2 = 15 an hour; 4000 hours wanted, so every hour finds work
+        self.assertAlmostEqual(self._income(3.0), 15.0 * HOURS)
+
+
 if __name__ == "__main__":
     unittest.main()
