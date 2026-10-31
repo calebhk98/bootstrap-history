@@ -43,3 +43,8 @@ when it is next re-recorded.
 Re-recorded after a fixed bug changed a figure (each names the fix): `rome_founder` and `han_two_seats_fog` after
 Complaint 761 (endemic death rates read the tiles the nation holds; within two years Rome holds fewer than its file lists),
 found by undoing each fix of that merge in turn; `norse_session_round_trips` was unchanged.
+
+All three re-recorded after the Eurace@Unibi port (branch `section5-bugs-and-eurace-review`): the opening is now a resting
+state for the ported rules (household spending, firm finance, price setting, wages, the solved opening rate, own-plot
+demand, sold hours), so founders' opening capital and money moved, and the events, alerts and optional fields each
+game state produces differ with it.
