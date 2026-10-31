@@ -12,6 +12,9 @@ from . import unit_cost
 from .types import GoodId, Recipe, TileId
 
 
+FLOAT_SLACK = 1e-9     # relative width within which a revenue and a cost summed in different orders are the same number
+
+
 def lowest_paying_yield(recipe: Recipe, prices: Mapping[GoodId, float], wages: Mapping[str, float]) -> float:
     """The yield factor at which a run's revenue equals its variable cost; 0 where either cannot be priced (the
     first year's plan then finds out, as it does for any run)."""
@@ -24,7 +27,15 @@ def lowest_paying_yield(recipe: Recipe, prices: Mapping[GoodId, float], wages: M
 
 def pays(recipe: Recipe, yield_factor: float, prices: Mapping[GoodId, float], wages: Mapping[str, float]) -> bool:
     """Whether a run at a tile of this yield factor earns at least its variable cost, and the tile grows something."""
-    return yield_factor > 0.0 and yield_factor >= lowest_paying_yield(recipe, prices, wages)
+    return yield_factor > 0.0 and yield_factor * (1.0 + FLOAT_SLACK) >= lowest_paying_yield(recipe, prices, wages)
+
+
+def sites(yield_by_tile: Mapping[TileId, float], recipe: Recipe, prices: Mapping[GoodId, float],
+          wages: Mapping[str, float]) -> List[TileId]:
+    """The tiles a recipe is placed on: those where a run pays; where none does, every tile that grows anything (a good
+    never loses its last site: the first year's plan finds out), in id order."""
+    kept = [tile for tile, factor in sorted(yield_by_tile.items()) if pays(recipe, factor, prices, wages)]
+    return kept or [tile for tile, factor in sorted(yield_by_tile.items()) if factor > 0.0]
 
 
 def paying(yield_by_tile: Mapping[TileId, float], floor: float) -> List[TileId]:

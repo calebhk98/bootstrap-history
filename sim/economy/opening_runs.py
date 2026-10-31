@@ -37,8 +37,9 @@ def mean_yields(setup, recipes: Mapping[str, Recipe], tiles=None) -> Dict[str, f
     for recipe_id in sorted(recipes):
         keyed = [tile for tile in sorted(people) if recipe_tile_key(recipe_id, tile) in setup.yield_factor_by_recipe_tile]
         growing = [tile for tile in sites.suited_tiles(recipes[recipe_id], setup.tiles, keyed, setup.recipe_allowed)
-                   if crop_sites.pays(recipes[recipe_id], setup.yield_factor_by_recipe_tile[recipe_tile_key(recipe_id, tile)],
-                                      setup.opening_prices, setup.opening_wages)]
+                   if setup.yield_factor_by_recipe_tile[recipe_tile_key(recipe_id, tile)] > 0.0]
+        growing = crop_sites.sites({tile: setup.yield_factor_by_recipe_tile[recipe_tile_key(recipe_id, tile)] for tile in growing},
+                                   recipes[recipe_id], setup.opening_prices, setup.opening_wages)
         if growing:
             means[recipe_id] = (math.fsum(people[tile] for tile in growing)
                                 / math.fsum(people[tile] / setup.yield_factor_by_recipe_tile[recipe_tile_key(recipe_id, tile)]

@@ -33,6 +33,23 @@ class PaysTests(unittest.TestCase):
         self.assertFalse(crop_sites.pays(FARM, 0.0, PRICES, {}))
 
 
+class PaysAtCostTests(unittest.TestCase):
+    def test_a_run_priced_at_its_cost_pays_whatever_the_last_digit_of_the_sum(self):
+        at_cost = Recipe("at_cost", outputs={"good": 1.0}, inputs={}, labour_hours={"hand": 3.0})
+        self.assertTrue(crop_sites.pays(at_cost, 1.0, {"good": 0.3}, {"hand": 0.1}))     # 3 * 0.1 is 0.30000000000000004
+
+
+class SitesTests(unittest.TestCase):
+    def test_the_paying_tiles_are_kept_and_the_poorer_ones_dropped(self):
+        self.assertEqual(crop_sites.sites({"a": 0.05, "b": 0.5}, FARM, PRICES, WAGES), ["b"])
+
+    def test_where_no_tile_pays_the_tiles_that_grow_anything_are_kept(self):
+        self.assertEqual(crop_sites.sites({"a": 0.05, "b": 0.02, "c": 0.0}, FARM, PRICES, WAGES), ["a", "b"])
+
+    def test_no_tile_that_grows_anything_gives_none(self):
+        self.assertEqual(crop_sites.sites({"c": 0.0}, FARM, PRICES, WAGES), [])
+
+
 class PayingSetTests(unittest.TestCase):
     def test_tiles_below_the_floor_are_left_out(self):
         self.assertEqual(crop_sites.paying({"a": 0.05, "b": 0.1, "c": 0.9}, 0.1), ["b", "c"])
