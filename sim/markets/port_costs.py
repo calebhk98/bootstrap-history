@@ -20,10 +20,15 @@ def wage_function(sim, production):
     return wage_of
 
 
-def opening_costs(sim):
+def cost_entries():
+    """The production entries the cost table is solved over."""
+    return price_solver.default_production_entries()
+
+
+def opening_costs(sim, production=None):
     """{good: money per unit} the cost of making each good the society can make with the techniques it holds,
-    at the opening wages, rate and rent."""
-    production = price_solver.default_production_entries()
+    at the opening wages, rate and rent. `production` replaces the shared entries (a crop made at its tiles' yield)."""
+    production = cost_entries() if production is None else production
     techniques = sim.techniques_granted() | frozenset(sim.techniques_in_use())
     wage_of = wage_function(sim, production)
     rent_of = long_run_costs.opening_rent_of(techniques, wage_of, sim.civ, production)

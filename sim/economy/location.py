@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .entrant_rent import site_rent_per_run
-from . import labour_state, location_inputs, sites, unit_cost
+from . import crop_sites, labour_state, location_inputs, sites, unit_cost
 from .market_areas import MarketArea
 from .producers import Producer, live_input_prices
 from .setup import labour_area
@@ -133,8 +133,10 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
 
 
 def _crops_on(setup, recipe: Recipe, tile: TileId) -> bool:
-    """False where the recipe takes the tile's yield and the tile yields nothing: a run there makes nothing."""
-    return setup.yield_factor_by_recipe_tile.get(recipe.recipe_id + "@" + tile, 1.0) > 0.0
+    """False where a run there makes nothing, or earns less than it costs at the opening's prices and wages (the
+    test the first year's plan applies): a producer is placed only where it will work."""
+    return crop_sites.pays(recipe, setup.yield_factor_by_recipe_tile.get(recipe.recipe_id + "@" + tile, 1.0),
+                           setup.opening_prices, setup.opening_wages)
 
 
 def entry_siting(setup, record, view, area_map, carriage) -> Siting:

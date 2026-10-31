@@ -8,7 +8,7 @@ the rest is made by the next cheapest.
 import math
 from typing import Dict, List, Mapping, Optional, Tuple
 
-from . import sites, tool_fallback, unit_cost
+from . import crop_sites, sites, tool_fallback, unit_cost
 from .replaced import replaced
 from .setup import recipe_tile_key
 from .types import GoodId, Recipe, TileId
@@ -29,7 +29,7 @@ def national_totals(by_tile: Mapping[TileId, Mapping[GoodId, float]]) -> Dict[Go
 def mean_yields(setup, recipes: Mapping[str, Recipe], tiles=None) -> Dict[str, float]:
     """{crop recipe: yield factor of a run} the opening's runs are sized at. A tile's people eat what its yield grows,
     so the runs for a person's food are one over the tile's yield: the factor is the harmonic mean of the yield
-    factors of the tiles the recipe can run on (climate and technique allowing, and yielding something), weighted
+    factors of the tiles the recipe can run on (climate and technique allowing, and paying at the opening's prices: crop_sites), weighted
     by their people. A recipe the tiles' yield does not touch has no entry, and its run is the recipe's own."""
     people = {tile: count for tile, count in setup.opening_population_by_tile.items()
               if count > 0.0 and (tiles is None or tile in tiles)}
@@ -37,7 +37,8 @@ def mean_yields(setup, recipes: Mapping[str, Recipe], tiles=None) -> Dict[str, f
     for recipe_id in sorted(recipes):
         keyed = [tile for tile in sorted(people) if recipe_tile_key(recipe_id, tile) in setup.yield_factor_by_recipe_tile]
         growing = [tile for tile in sites.suited_tiles(recipes[recipe_id], setup.tiles, keyed, setup.recipe_allowed)
-                   if setup.yield_factor_by_recipe_tile[recipe_tile_key(recipe_id, tile)] > 0.0]
+                   if crop_sites.pays(recipes[recipe_id], setup.yield_factor_by_recipe_tile[recipe_tile_key(recipe_id, tile)],
+                                      setup.opening_prices, setup.opening_wages)]
         if growing:
             means[recipe_id] = (math.fsum(people[tile] for tile in growing)
                                 / math.fsum(people[tile] / setup.yield_factor_by_recipe_tile[recipe_tile_key(recipe_id, tile)]
