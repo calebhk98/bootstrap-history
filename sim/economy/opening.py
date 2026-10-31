@@ -139,7 +139,12 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     sites.apply_site_limits(record, setup)
     opening_runs.fit_to_supply(setup, record)
     rent = opening_rent.settle(setup, record, view, own.hectares_by_tile(record.cohorts))
-    record.property_income = opening_rent.property_income_with_rent(record.property_income, rent)
+    figure = record.property_income
+    record.property_income = opening_rent.property_income_with_rent(figure, rent)
+    incomes = opening_rent.income_after_rent({agent_id: cohort.last_year_income for agent_id, cohort in record.cohorts.items()},
+                                             figure, record.property_income)
+    record.cohorts.update({agent_id: replaced(record.cohorts[agent_id], last_year_income=income)
+                           for agent_id, income in incomes.items()})
     record.index_base_prices = dict(priced_goods)
     _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
@@ -518,6 +523,7 @@ def _strike_opening_cash(setup, record, view, extra_spending) -> None:
     for cohort in record.cohorts.values():
         purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0),
                                                        extra_spending=extra_spending.get(cohort.agent_id, 0.0))
-        transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, purse, "opening coin"))
+        transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, opening_resting.purse_with_property_income(
+            purse, record.property_income.get(cohort.agent_id, 0.0)), "opening coin"))
         record.cohorts[cohort.agent_id] = replaced(cohort, share_wealth=owned.get(cohort.agent_id, 0.0))
     record.book.transfer_many([transfer for transfer in transfers if transfer.amount > 0.0])

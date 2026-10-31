@@ -79,6 +79,15 @@ def property_income_with_rent(property_income: Mapping[AgentId, float], rent: Ma
     return {agent_id: amount for agent_id, amount in sorted(result.items()) if amount > 0.0}
 
 
+def income_after_rent(last_year_income: Mapping[AgentId, float], figure: Mapping[AgentId, float],
+                      received: Mapping[AgentId, float]) -> Dict[AgentId, float]:
+    """Each cohort's income with the property income it was figured (`figure`, by what it owns) swapped for the
+    property income it receives (`received`, rent to the owners of the land): wages are kept, so the first year's
+    spending rule reads the income the cohort is paid."""
+    return {agent_id: income - figure.get(agent_id, 0.0) + received.get(agent_id, 0.0)
+            for agent_id, income in last_year_income.items()}
+
+
 def shares_of_revenue(setup, record) -> Dict[str, float]:
     """The rent each recipe's opening producers pay, over their revenue at the prices the memory holds."""
     rows = []
