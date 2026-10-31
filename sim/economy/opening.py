@@ -14,7 +14,7 @@ from sim.constants import declare
 from sim.refusal import Refusal
 
 from . import recipes as recipes_module
-from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -170,10 +170,16 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     _strike_opening_cash(setup, record, view, own.extra)
     record.opening_sold_hours_per_worker = opening_own.sold_hours_per_worker(
         own.sold_total(), math.fsum(cohort.working_people for cohort in record.cohorts.values()), setup.working_hours_per_year)
+    record.opening_sold_hours_by_area = opening_placement.sold_hours_per_worker_by_area(
+        own.sold, {agent_id: (labour_area(cohort.tile), cohort.working_people) for agent_id, cohort in record.cohorts.items()},
+        record.opening_sold_hours_per_worker)
     record.workforce = labour_state.opening_workforce(      # the mint's capacity follows the money struck
-        setup, record, record.opening_sold_hours_per_worker)
+        setup, record, record.opening_sold_hours_by_area)
     record.workforce.hired_hours, record.workforce.contract_wages = opening_resting.resting_labour_contracts(
-        labour_state.producers_hours_by_employer(setup, record), setup.opening_wages)
+        opening_placement.capped_contracts(labour_state.producers_hours_by_employer(setup, record),
+                                           {area: labour_state.people_by_trade(record.workforce, area) for area in record.workforce.workers},
+                                           record.opening_sold_hours_by_area, record.opening_sold_hours_per_worker),
+        setup.opening_wages)
     mint.seed_opening_metal(setup, record)
     opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
     record.opening_demand = opening_runs.national_totals(final_by_tile)
