@@ -402,16 +402,19 @@ def working_cost_ratio(revenue_per_run: float, variable_cost_per_run: float) -> 
     return _normal_below(score - COST_SPREAD_WITHIN_PRODUCER) / working
 
 
-_main_output_of_recipe: Dict[int, tuple] = {}      # id of a recipe -> (recipe, its main output)
+def paying_output(recipe: Recipe, prices: Mapping[GoodId, float]) -> GoodId:
+    """The output that carries most of a run's value at `prices` (an unpriced output carries none); the first by
+    name among ties, so a recipe with no prices at all is named by its first output."""
+    return max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good] * prices.get(good, 0.0))
 
 
-def main_output(recipe: Recipe) -> GoodId:
-    """The output a run makes most of (the first by name among ties); worked out once per recipe."""
-    kept = _main_output_of_recipe.get(id(recipe))
-    if kept is None or kept[0] is not recipe:
-        kept = _main_output_of_recipe[id(recipe)] = (
-            recipe, max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good]))
-    return kept[1]
+def _bound_by_stock(recipe: Recipe, piling: List[GoodId], output_prices: Mapping[GoodId, float]) -> List[GoodId]:
+    """The piling outputs that still hold the run count back at `output_prices`: the paying output, and any whose
+    value is not less than what a run makes of the rest. A minor output nobody buys is not what the run is for."""
+    value = {good: made * output_prices.get(good, 0.0) for good, made in recipe.outputs.items()}
+    paying = paying_output(recipe, output_prices)
+    total = math.fsum(value.values())
+    return [good for good in piling if good == paying or value[good] >= total - value[good]]
 
 
 def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cost: Optional[float] = None,
@@ -423,7 +426,9 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
     current stock), whose refill is whole in one period where this one is spread. The price only decides whether
     runs pay at all (`plan`). Unlimited while it has no record of sales. With the run's cost and the outputs'
     prices, outputs that are piling up do not count while what a run makes of the others, at those prices, covers
-    the cost: a joint recipe runs for the output that pays, and plans from the gaps of those others."""
+    the cost: a joint recipe runs for the output that pays, and plans from the gaps of those others. With the prices
+    alone, a pile of a minor output (less value in a run than the rest) does not hold the runs back either, covered
+    or not (`_bound_by_stock`)."""
     if producer.expected_sales <= 0.0:
         return math.inf
     sales = producer.expected_sales
@@ -432,6 +437,9 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
            for good, made in recipe.outputs.items() if made > 0.0}
     piling = [good for good, short in gap.items() if short < 0.0]
     counted = list(gap)
+    if piling and output_prices is not None:
+        bound = _bound_by_stock(recipe, piling, output_prices)
+        counted = [good for good in gap if good not in piling or good in bound]
     if piling and run_cost is not None and output_prices is not None:
         sells = math.fsum(made * output_prices.get(good, 0.0) for good, made in recipe.outputs.items()
                           if good not in piling) * producer.yield_factor
