@@ -44,8 +44,9 @@ def trim_to_expected_hours(setup, record, view) -> None:
     wanted = hours_kept(seeded_hours(setup, producers_hours_needed(setup, record)),
                         expected_hours(setup, record, view), state_hours(setup, record, view),
                         carriage_plan_hours(setup, record))
-    trim_people(record.workforce, wanted, fallback, setup.working_hours_per_year)
-    send_idle_to_plots(record.workforce, wanted, fallback, plot_trade(setup), setup.working_hours_per_year)
+    hours_per_worker = record.opening_sold_hours_per_worker or setup.working_hours_per_year     # as the opening staffed them
+    trim_people(record.workforce, wanted, fallback, hours_per_worker)
+    send_idle_to_plots(record.workforce, wanted, fallback, plot_trade(setup), hours_per_worker)
 
 
 def state_hours(setup, record, view) -> Dict[Tuple[str, str], float]:

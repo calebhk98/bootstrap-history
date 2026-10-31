@@ -70,18 +70,19 @@ def seeded_hours(setup, hours_needed: Mapping[str, Mapping[str, float]]) -> Dict
             for seeds in [seed_hours(setup.need_share_by_trade, needed, setup.trades, left_out)] if seeds}
 
 
-def opening_workforce(setup, record) -> MarketState:
+def opening_workforce(setup, record, hours_per_worker: float = None) -> MarketState:
     """Each tile's working people placed in the trades its producers need for the runs they expect to sell
     (the opening sized them to final demand) and its mint at capacity, and in the trades the society's need
     holds that no producer runs staff (seeded_hours); hard trades are staffed from the able, the rest work
-    unskilled. No wage is seeded: the first year's clearing sets them."""
+    unskilled. A person is counted to sell `hours_per_worker` a year (a whole working year by default): the hours his
+    household keeps for its plot and its own work are not the market's. No wage is seeded: the first year's clearing sets them."""
     hours_needed = producers_hours_needed(setup, record)
     for area, seeds in seeded_hours(setup, hours_needed).items():
         hours_needed[area].update(seeds)
     working = {labour_area(tile): people * setup.working_share
                for tile, people in sorted(setup.opening_population_by_tile.items())}
     trades = core_trades(setup, {trade for needed in hours_needed.values() for trade in needed})
-    state = opening_labour_market(trades, working, hours_needed, setup.working_hours_per_year,
+    state = opening_labour_market(trades, working, hours_needed, hours_per_worker or setup.working_hours_per_year,
                                  plot_trade(setup) or None)
     return state
 

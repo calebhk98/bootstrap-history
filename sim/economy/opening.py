@@ -115,7 +115,10 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     _open_merchants(setup, record, priced_goods, final_by_tile)
     carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record, view, own.extra)
-    record.workforce = labour_state.opening_workforce(setup, record)   # the mint's capacity follows the money struck
+    record.opening_sold_hours_per_worker = opening_own.sold_hours_per_worker(
+        own.sold_total(), math.fsum(cohort.working_people for cohort in record.cohorts.values()), setup.working_hours_per_year)
+    record.workforce = labour_state.opening_workforce(      # the mint's capacity follows the money struck
+        setup, record, record.opening_sold_hours_per_worker)
     record.workforce.hired_hours, record.workforce.contract_wages = opening_resting.resting_labour_contracts(
         labour_state.producers_hours_by_employer(setup, record), setup.opening_wages)
     mint.seed_opening_metal(setup, record)
@@ -205,7 +208,7 @@ def _settle_income(setup, record, view, priced_goods, replacement, own) -> None:
                 break
         # only what the working hands can make is income that producers pay out (Complaint 607)
         value = opening_income.value_of(final, priced_goods)
-        producible = value * opening_income.producible_share(runs, recipes, hands_hours)
+        producible = value * opening_income.producible_share(runs, recipes, own.sold_total())
         share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value + own.in_kind)
         return producible + own.in_kind, share["labour"]     # what they grow is spending in kind: not saved, not bought
 

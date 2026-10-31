@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy import households_buffer_stock, opening_own, opening_resting, opening_runs, year_goods
+from sim.economy import household_hours_year, households_buffer_stock, opening_own, opening_resting, opening_runs, year_goods
 from sim.economy.protocols import AgentOrders
 from sim.economy.types import Bid, Recipe
 
@@ -31,6 +31,23 @@ class IdleHoursTests(unittest.TestCase):
 
     def test_idle_hours_are_never_negative(self):
         self.assertEqual(opening_own.idle_hours(1000.0, 0.75, 400.0), 0.0)
+
+
+class SoldHoursTests(unittest.TestCase):
+    def test_the_plot_and_the_household_work_take_their_hours_and_the_rest_is_sold(self):
+        self.assertEqual(opening_own.sold_hours(1000.0, 0.0, 100.0, 536.0), 364.0)
+
+    def test_the_plan_keeps_more_than_the_plot_at_the_wage_when_it_asks_more(self):
+        self.assertEqual(opening_own.sold_hours(1000.0, 300.0, 100.0, 100.0), 600.0)
+
+    def test_nothing_is_sold_when_the_plot_and_the_work_take_the_year(self):
+        self.assertEqual(opening_own.sold_hours(1000.0, 0.0, 600.0, 600.0), 0.0)
+
+    def test_a_person_sells_the_hours_sold_over_the_people_who_work(self):
+        self.assertEqual(opening_own.sold_hours_per_worker(400.0, 4.0, 2000.0), 100.0)
+
+    def test_nobody_working_sells_the_default_year(self):
+        self.assertEqual(opening_own.sold_hours_per_worker(0.0, 0.0, 2000.0), 2000.0)
 
 
 class LessWhatItGrewTests(unittest.TestCase):
@@ -80,3 +97,10 @@ class RequiredRunsByProductTests(unittest.TestCase):
         ranked = {"flour": ["mill"], "bran": ["mill"], "lard": ["feed"]}
         runs = opening_runs.required_runs(demand, ranked, recipes, None, None, {"mill": "flour", "feed": "lard"})
         self.assertEqual((round(runs["mill"], 9), round(runs["feed"], 9)), (1.0, 0.25))
+
+
+class CohortPlotScheduleTests(unittest.TestCase):
+    def test_a_cohort_holding_no_land_keeps_no_hours_for_a_plot(self):
+        setup = types.SimpleNamespace(tiles={"vale": types.SimpleNamespace(fertility=1.0)})
+        cohort = types.SimpleNamespace(tile="vale", working_people=10.0, people=40.0)
+        self.assertIsNone(household_hours_year.cohort_plot_schedule(setup, cohort, 1000.0, [], {}, 0.0, {}))

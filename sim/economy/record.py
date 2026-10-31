@@ -62,6 +62,7 @@ class EconomyRecord:
     opening_basket: Dict[str, float] = field(default_factory=dict)       # good -> quantity at the opening, as far as the opening supplies it
     opening_demand: Dict[str, float] = field(default_factory=dict)       # good -> quantity households were seeded to want, supplied or not
     opening_own_grown: Dict[str, float] = field(default_factory=dict)    # good -> quantity households were seeded to grow on their own plots
+    opening_sold_hours_per_worker: float = 0.0   # hours a working person was seeded to sell a year (zero: a whole working year)
     opening_demand_by_country: Dict[str, Dict[str, float]] = field(default_factory=dict)  # country -> good -> quantity its households were seeded to want
     expansion_runs: Dict[AgentId, float] = field(default_factory=dict)   # capacity a loan request would build
     index_base_prices: Dict[str, float] = field(default_factory=dict)    # the price level's base; opening if empty
@@ -147,6 +148,7 @@ class EconomyRecord:
             "opening_basket": self.opening_basket,
             "opening_demand": self.opening_demand,
             "opening_own_grown": self.opening_own_grown,
+            "opening_sold_hours_per_worker": self.opening_sold_hours_per_worker,
             "opening_demand_by_country": self.opening_demand_by_country,
             "expansion_runs": self.expansion_runs,
             "index_base_prices": self.index_base_prices,
@@ -203,6 +205,7 @@ class EconomyRecord:
             opening_basket=dict(record["opening_basket"]),
             opening_demand=dict(record["opening_demand"]),
             opening_own_grown=dict(record["opening_own_grown"]),
+            opening_sold_hours_per_worker=float(record["opening_sold_hours_per_worker"]),
             opening_demand_by_country={country: dict(demand) for country, demand in record["opening_demand_by_country"].items()},
             expansion_runs=dict(record["expansion_runs"]),
             index_base_prices=dict(record["index_base_prices"]),

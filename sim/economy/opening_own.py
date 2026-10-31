@@ -8,7 +8,7 @@ sized to that demand, so the opening iterates it (`_settle_income` in opening.py
 import math
 from typing import Dict, Mapping, Tuple
 
-from . import household_grinding, households_orders, households_own, households_work, opening_resting, titles_plots, year_goods
+from . import household_grinding, household_hours_year, households_orders, households_own, households_work, labour_ask_floor, labour_supply, opening_resting, titles_plots, year_goods
 from .household_work_year import has_hearth
 from .types import GoodId
 
@@ -27,6 +27,17 @@ def idle_hours(hours: float, share_hired: float, own_work_hours: float) -> float
     return max(0.0, hours * (1.0 - share_hired) - own_work_hours)
 
 
+def sold_hours(whole: float, plan_hours: float, plot_hours: float, work_hours: float) -> float:
+    """Hours of a cohort's `whole` year its households sell at the opening wage under the year's own rule
+    (labour_supply.hours_kept_at_home): what the plan, the plot at that wage and the household work leave."""
+    return whole - labour_supply.hours_kept_at_home(whole, plan_hours, plot_hours, work_hours)
+
+
+def sold_hours_per_worker(sold_total: float, working_people: float, default: float) -> float:
+    """Hours a working person sells a year at rest, the `default` (a whole year) where nobody works."""
+    return sold_total / working_people if working_people > 0.0 else default
+
+
 class OwnPlots:
     """The own-plot rule of a year applied to an opening record's cohorts, at the share of hours producers hire."""
 
@@ -39,6 +50,9 @@ class OwnPlots:
         self.uncut: Dict[str, Tuple[float, object]] = {}   # cohort -> (income, orders before the cut): the asks of one income share them
         self.extra: Dict[str, float] = {}   # cohort -> spending beyond its income that its purse allows (what its plot frees)
         self.in_kind = 0.0      # budget the cuts freed that the rule cannot spend on the market, since it was last zeroed
+        self.sold: Dict[str, float] = {}    # cohort -> hours it sells at the opening wage, at the last ask
+        self.kept_at_home: Dict[str, Tuple[float, float]] = {}   # cohort -> (plan hours, plot hours at the opening wage): neither moves with income
+        self.hectares_per_hour = labour_ask_floor.hectares_per_hour_by_recipe(setup.recipes, setup.land_per_run)
 
     def note_runs(self, runs: Mapping[str, float], hands_hours: float) -> float:
         """Take the hired share the runs imply; returns how far it moved."""
@@ -83,14 +97,36 @@ class OwnPlots:
         """(the orders with each floor cut by the share of it the cohort's plot grows, the budget that frees)."""
         setup = self.setup
         tile = setup.tiles.get(cohort.tile)
-        idle = idle_hours(cohort.working_people * setup.working_hours_per_year, self.share_hired,
-                          self.own_work_hours(record, cohort, priced))
+        own_work = self.own_work_hours(record, cohort, priced)
+        idle = idle_hours(cohort.working_people * setup.working_hours_per_year, self.share_hired, own_work)
         _moves, grown, units = households_own.own_production(
             cohort, idle, self.options, setup.recipes, tile.fertility if tile else 0.0, setup.basket_for(cohort.tile),
             setup.land_per_run, self.held.get(cohort.agent_id, 0.0))
         self.grown[cohort.agent_id] = grown
+        self.sold[cohort.agent_id] = self._sold_hours(cohort, priced, own_work)
         cut = year_goods.less_what_it_grew(orders, cohort, basket, units)
         return cut, math.fsum(bid.budget for bid in orders.bids) - math.fsum(bid.budget for bid in cut.bids)
+
+    def _sold_hours(self, cohort, priced, own_work: float) -> float:
+        """The hours the cohort sells at the opening wage when the year runs (labour_supply.HourSupply): the hours its
+        own-plot plan, its plot at that wage (household_hours_year) and its household work keep back are not sold."""
+        setup = self.setup
+        if cohort.agent_id not in self.kept_at_home:
+            tile = setup.tiles.get(cohort.tile)
+            held = self.held.get(cohort.agent_id, 0.0)
+            plan = households_own.hours_for_own_plan(cohort, self.options, tile.fertility if tile else 0.0, setup.recipes,
+                                                     setup.land_per_run, held)
+            schedule = household_hours_year.cohort_plot_schedule(
+                setup, cohort, cohort.working_people * setup.working_hours_per_year, priced, self.options, held,
+                self.hectares_per_hour)
+            wage = setup.opening_wages.get(setup.unskilled_trade, 0.0)
+            self.kept_at_home[cohort.agent_id] = (plan, schedule(wage) if schedule is not None else 0.0)
+        plan, plot = self.kept_at_home[cohort.agent_id]
+        return sold_hours(cohort.working_people * setup.working_hours_per_year, plan, plot, own_work)
+
+    def sold_total(self) -> float:
+        """Hours the cohorts sell in all at the opening wage, at the last ask."""
+        return math.fsum(self.sold[agent_id] for agent_id in sorted(self.sold))
 
     def grown_totals(self) -> Dict[GoodId, float]:
         """Goods the cohorts grow in all, at the last ask."""
