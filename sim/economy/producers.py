@@ -29,6 +29,7 @@ from .protocols import MarketView
 from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, GoodSpec, GoodsMove, LabourBid,
                     Offer, Recipe, TileId)
 from .replaced import replaced
+from .staffed_runs import change_anchor
 
 EXPECTATION_ADJUSTMENT_SHARE = declare(
     "EXPECTATION_ADJUSTMENT_SHARE", 0.5, kind="temporary_heuristic",
@@ -94,6 +95,7 @@ class Producer:
     net_earnings_history: Tuple[float, ...] = ()   # its last years' net earnings, oldest first (firm_finance.py)
     revenue_history: Tuple[float, ...] = ()        # its last years' revenue, oldest first
     idle_years: int = 0                     # years it stays idle after a bankruptcy: no runs, no dividend
+    staffed_runs: float = -1.0              # runs the hands it hired last year could have worked; below zero when unknown
     crew_runs: Mapping[str, float] = field(default_factory=dict)   # runs its crew has made, by trade (practice.py); a trade absent is an established crew
 
 
@@ -330,7 +332,8 @@ def within_a_years_change(producer: Producer, runs: float) -> float:
     if producer.last_runs < 0.0:
         return runs
     step = OUTPUT_CHANGE_SHARE_PER_YEAR * producer.capacity_runs
-    return max(producer.last_runs - step, min(producer.last_runs + step, runs))
+    anchor = change_anchor(producer.last_runs, min(producer.staffed_runs, producer.capacity_runs))
+    return max(anchor - step, min(anchor + step, runs))
 
 
 def next_years_runs_ceiling(producer: Producer) -> float:
