@@ -77,7 +77,7 @@ class ExitTests(unittest.TestCase):
         view = farm_view(2.0)
         producer = farmer()
         for _year in range(producers_close.LOSS_YEARS_BEFORE_EXIT + 3):
-            result = producers_close.close_year(producer, FARM, 10.0, 100.0, view, 5.0)
+            result = producers_close.close_year(producer, FARM, 150.0, 100.0, view, 5.0)
             producer = result.producer
             self.assertFalse(result.exited)
         self.assertGreater(producer.capacity_runs, 0.0)
@@ -85,7 +85,7 @@ class ExitTests(unittest.TestCase):
     def test_plant_with_a_positive_variable_margin_is_mothballed_and_wears_by_its_life(self):
         view = View({"metal": 20.0, "silver": 5.0, "ore": 1.0, "stone": 1.0}, {"smith": 1.0})
         producer = farmer(recipe_id="smelt", capacity_runs=10.0, years_of_loss=producers_close.LOSS_YEARS_BEFORE_EXIT)
-        result = producers_close.close_year(producer, SMELT, 0.0, 500.0, view, 1.0)
+        result = producers_close.close_year(producer, SMELT, 500.0, 500.0, view, 1.0)
         self.assertFalse(result.exited)
         self.assertAlmostEqual(result.producer.capacity_runs, 9.0)
         self.assertGreater(result.producer.years_of_loss, producers_close.LOSS_YEARS_BEFORE_EXIT)

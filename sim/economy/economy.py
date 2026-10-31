@@ -237,7 +237,7 @@ class Economy:
         rent = land_market.settle_year(setup, record, view,
                                        {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
                                        self._own_hectares, inputs.land_tax_share_of_rent,
-                                       land_lease_year.asks(setup, record, view, self._own_plot_options()))
+                                       land_lease_year.asks(setup, record, view, self._own_plot_options()), ledger)
         interest = self._service_loans(view.year)
         bonded = bondage.service(record, money, ledger.wages_in, placed.value_placed, placed.cash_share)
         record.book.transfer_many(bonded)

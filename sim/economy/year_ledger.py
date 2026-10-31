@@ -61,6 +61,12 @@ class YearLedger:
                 key = (posting.giver, posting.good)
                 self.sold[key] = self.sold.get(key, 0.0) + posting.quantity
 
+    def note_rent(self, postings: Iterable[Transfer]) -> None:
+        """Rent paid out: a cost of the payer's year, though it is not paid in a market (it takes nothing from
+        the payee's receipts)."""
+        for posting in postings:
+            self.money_out[posting.payer] = self.money_out.get(posting.payer, 0.0) + posting.amount
+
     def note_plant_purchases(self, moves: Iterable[object], price: float, plant_goods: Dict[AgentId, Iterable[GoodId]]) -> None:
         """Money producers paid this clearing for goods their own plant is built from."""
         for move in moves:
