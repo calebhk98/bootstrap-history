@@ -194,6 +194,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
     money = setup.currency_id
     property_income: Dict[str, float] = {}
     traded = {(result.good, result.area): result.quantity for result in ledger.clearings}
+    clearing_prices = {(result.good, result.area): result.price for result in ledger.clearings if result.quantity > 0.0}
     prepared_buyers: Dict = {}
     service_lives = {good: spec.service_life_years for good, spec in setup.specs.items()}
     cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
@@ -211,9 +212,9 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
             continue
         revenue = ledger.sales_in.get(producer_id, 0.0)
         costs = ledger.running_costs(producer_id)
-        per_run = recipe.outputs[producers.main_output(recipe)]
-        worked = ledger.output.get((producer_id, producers.main_output(recipe)), 0.0) / (
-            per_run * producer.yield_factor or per_run)
+        paying = producers.paying_output(recipe, _prices_here(clearing_prices, recipe, area_map.area_of, producer.tile))
+        per_run = recipe.outputs[paying]
+        worked = ledger.output.get((producer_id, paying), 0.0) / (per_run * producer.yield_factor or per_run)
         price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile,
                                                    prepared_buyers)
         closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share,
@@ -244,7 +245,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
             record.loan_requests.append(closed.loan_request)
             record.expansion_runs[producer_id] = closed.expansion_runs
         record.producers[producer_id] = _with_practice(
-            _with_sales(closed.producer, recipe, ledger, record.book, area_map.area_of, traded), producer.last_runs,
+            _with_sales(closed.producer, recipe, ledger, record.book, area_map.area_of, traded, clearing_prices), producer.last_runs,
             {trade: practice.pool_units(crews_of_recipe[producer.recipe_id], trade) for trade in producer.crew_runs})
     prices, volumes = learned_prices(ledger.clearings, record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
@@ -319,15 +320,39 @@ def _with_practice(producer, runs_last_year, pool):
         practice.hired_share(runs_last_year, producer.last_runs), pool))
 
 
-def _with_sales(producer, recipe, ledger: YearLedger, book, area_of, traded):
-    """Expected sales move toward what it sold this year, in runs of its main output; a producer that sold out also
-    sees its share of the unmet demand in its market (`traded`: quantity sold by (good, area))."""
-    good = producers.main_output(recipe)
-    per_run = recipe.outputs[good]
-    market = (good, area_of(good, producer.tile))
-    sold = demand_seen(ledger.sold.get((producer.agent_id, good), 0.0), book.stock(producer.agent_id, good, producer.tile),
-                       traded.get(market, 0.0), ledger.unmet_demand.get(market, 0.0)) / per_run
-    worked = ledger.output.get((producer.agent_id, good), 0.0) / (per_run * producer.yield_factor or per_run)
+def _prices_here(clearing_prices, recipe, area_of, tile) -> Dict[str, float]:
+    """The year's clearing price of each output of `recipe` in the market of `tile`; an output that did not trade is absent."""
+    here = {}
+    for good in recipe.outputs:
+        price = clearing_prices.get((good, area_of(good, tile)))
+        if price is not None:
+            here[good] = price
+    return here
+
+
+def runs_sold(producer, recipe, ledger: YearLedger, book, area_of, traded, prices) -> float:
+    """Runs of the recipe whose outputs it sold this year: the value sold of all outputs at the year's `prices` over
+    the value of one run's outputs, so an output nobody buys (straw, manure) neither counts nor drags the figure down.
+    An output sells its quantity plus its share of the unmet demand in its market (`traded`: quantity sold by (good,
+    area)). With no output priced, the output that sold most of its run stands for the run."""
+    seen = {}
+    for good, per_run in recipe.outputs.items():
+        market = (good, area_of(good, producer.tile))
+        seen[good] = demand_seen(ledger.sold.get((producer.agent_id, good), 0.0), book.stock(producer.agent_id, good, producer.tile),
+                                 traded.get(market, 0.0), ledger.unmet_demand.get(market, 0.0))
+    value_of_run = math.fsum(per_run * prices.get(good, 0.0) for good, per_run in recipe.outputs.items())
+    if value_of_run > 0.0:
+        return math.fsum(seen[good] * prices.get(good, 0.0) for good in recipe.outputs) / value_of_run
+    return max(seen[good] / per_run for good, per_run in recipe.outputs.items())
+
+
+def _with_sales(producer, recipe, ledger: YearLedger, book, area_of, traded, clearing_prices=None):
+    """Expected sales move toward the runs it sold this year (`runs_sold`), measured by value over all its outputs."""
+    prices = _prices_here(clearing_prices or {}, recipe, area_of, producer.tile)
+    sold = runs_sold(producer, recipe, ledger, book, area_of, traded, prices)
+    paying = producers.paying_output(recipe, prices)
+    per_run = recipe.outputs[paying]
+    worked = ledger.output.get((producer.agent_id, paying), 0.0) / (per_run * producer.yield_factor or per_run)
     if producer.expected_sales <= 0.0:
         return replaced(producer, expected_sales=sold, last_runs=worked)
     share = producers.EXPECTATION_ADJUSTMENT_SHARE
