@@ -32,3 +32,20 @@ def affordable_goods(goods: Sequence[Tuple[str, float, float, float]],
             return affordable, 1.0, household_budget
         return {good: True for good in affordable}, 1.0, math.inf
     return affordable, share, household_budget
+
+
+def quantity_per_need_unit(goods: Sequence[Tuple[str, float, float, float]], price_index: float,
+                           affordable: Dict[str, bool]) -> Dict[str, float]:
+    """Units of each affordable good one household bids per need unit. The spending shares are
+    renormalised over the affordable goods, and so is what a need unit costs: the money a household
+    plans for a need unit (`price_index`) is spent on them, but never beyond what meets the unit, so a
+    cheap, weak good (many units to a need unit) does not take the whole mix's money in units it cannot
+    use. When the affordable goods are dearer per need unit than the mix, the budget buys less than the
+    unit and the rest stays unmet."""
+    share = math.fsum(row[3] for row in goods if affordable[row[0]])
+    if share <= 0.0:
+        return {}
+    units_per_money = math.fsum(row[3] / share * row[2] / row[1] for row in goods if affordable[row[0]])
+    money_per_unit = min(price_index, 1.0 / units_per_money)
+    return {good: money_per_unit * row_share / share / price
+            for good, price, _effect, row_share in goods if affordable[good]}

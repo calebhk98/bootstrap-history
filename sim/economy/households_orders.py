@@ -18,7 +18,7 @@ from sim.constants import declare
 from . import currency, durable_stock, households_buffer_stock
 from . import lender_ask
 from .credit_view import claims_of, equity_of, loss_rate_of
-from .households_ability import affordable_goods, household_budget_for_need
+from .households_ability import affordable_goods, household_budget_for_need, quantity_per_need_unit
 from .households_basket import (Basket, PricedNeed, need_prices, need_units, price_ceilings, quality_reach,
                                 with_quality_reach)
 from .households_cohort import Cohort
@@ -91,12 +91,13 @@ def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Bas
     flows: Dict[GoodId, float] = {}
     for need in priced:
         need_id = need.spec.need_id
-        affordable, affordable_share, household_cap = affordable_goods(
+        affordable, _affordable_share, _household_cap = affordable_goods(
             need.goods, household_budget_for_need(stock_totals[need_id], need.price_index, cohort.people),
             need.spec.subsistence_per_person > 0.0)
+        quantities = quantity_per_need_unit(need.goods, need.price_index, affordable)
         for good, price, effect, share in need.goods:
             if affordable[good]:
-                per_unit = need.price_index * share / price / affordable_share
+                per_unit = quantities[good]
                 flows[good] = flows.get(good, 0.0) + (stock_floors[need_id] + max(
                     0.0, stock_totals[need_id] - stock_floors[need_id])) * per_unit
     return flows
@@ -173,14 +174,15 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     for need in priced:
         need_id = need.spec.need_id
         ceilings = need.ceilings or price_ceilings(need.goods)
-        affordable, affordable_share, household_cap = affordable_goods(
+        affordable, _affordable_share, household_cap = affordable_goods(
             need.goods, household_budget_for_need(totals[need_id], need.price_index, cohort.people),
             need.spec.subsistence_per_person > 0.0)
+        quantities = quantity_per_need_unit(need.goods, need.price_index, affordable)
         for (good, price, effect, share), ceiling in zip(need.goods, ceilings):
             if not affordable[good]:
                 continue
             ceiling = min(ceiling, household_cap)
-            per_unit = need.price_index * share / price / affordable_share
+            per_unit = quantities[good]
             floor_quantity = floors[need_id] * per_unit
             flexible_quantity = max(0.0, totals[need_id] - floors[need_id]) * per_unit
             flow = floor_quantity + flexible_quantity
