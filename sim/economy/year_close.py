@@ -7,7 +7,7 @@ from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from .expected_sales import demand_seen
-from . import (firm_year, carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
+from . import (practice, firm_year, carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes)
 from .household_work_year import basket_key, cohort_basket
 from .households_cohort import renewed
@@ -200,6 +200,9 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
     loans_of: Dict[str, list] = {}
     for loan in record.loans:
         loans_of.setdefault(loan.borrower, []).append(loan)
+    crews_of_recipe: Dict[str, list] = {}
+    for each in record.producers.values():
+        crews_of_recipe.setdefault(each.recipe_id, []).append(each.crew_runs)
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes[producer.recipe_id]
         if producer.idle_years > 0:      # bankrupt: idle, no dividend (Eurace@Unibi, Firm_bankruptcy_idle_counter)
@@ -240,7 +243,9 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         if closed.loan_request is not None:
             record.loan_requests.append(closed.loan_request)
             record.expansion_runs[producer_id] = closed.expansion_runs
-        record.producers[producer_id] = _with_sales(closed.producer, recipe, ledger, record.book, area_map.area_of, traded)
+        record.producers[producer_id] = _with_practice(
+            _with_sales(closed.producer, recipe, ledger, record.book, area_map.area_of, traded), producer.last_runs,
+            {trade: practice.pool_units(crews_of_recipe[producer.recipe_id], trade) for trade in producer.crew_runs})
     prices, volumes = learned_prices(ledger.clearings, record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     ordered = (sorted(prices.items()), sorted(volumes.items()))
@@ -303,6 +308,15 @@ def held_only(moves, book):
     return [move if is_edge(move.giver) else
             replaced(move, quantity=min(move.quantity, max(0.0, book.stock(move.giver, move.good, move.tile))))
             for move in moves]
+
+
+def _with_practice(producer, runs_last_year, pool):
+    """The crew's practice after the year's runs (practice.py); growth in runs is hired hands."""
+    if not producer.crew_runs:
+        return producer
+    return replaced(producer, crew_runs=practice.crew_runs_after_year(
+        producer.crew_runs, max(0.0, producer.last_runs) / max(1.0, producer.workshops),
+        practice.hired_share(runs_last_year, producer.last_runs), pool))
 
 
 def _with_sales(producer, recipe, ledger: YearLedger, book, area_of, traded):
