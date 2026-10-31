@@ -11,11 +11,11 @@ Entry drawn by a margin where makers already exist was tried and taken out: it m
 swing (Complaints/reports/agent-economy-review-round-four.md).
 """
 import math
-from typing import Dict, List, Mapping, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import unit_cost
+from . import entry_practice, unit_cost
 from .entry import EntryPlan, UnmetDemand
 from .entrant_rent import site_rent_per_run
 from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
@@ -107,7 +107,14 @@ def trial_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tup
             continue
         price = view.price(good, area_id)
         built = 0.0
-        for recipe_id, cost in recipes_by_cost(setup, record, view, good, area.anchor_tile, makers[good]):
+        booked = recipes_by_cost(setup, record, view, good, area.anchor_tile, makers[good])
+        if not booked:
+            continue
+        # the newcomers' learning is judged on the trial share of what the bids take at the price now, or at the
+        # cheapest booked cost's entry price where nothing has sold
+        reference = price if price and price > 0.0 else booked[0][1] * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
+        trial_output = ENTRY_SHARE_OF_UNTRADED_DEMAND * demand_at(bids, reference, reference)
+        for recipe_id, cost in recipes_by_cost(setup, record, view, good, area.anchor_tile, makers[good], trial_output):
             entry_price = cost * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
             wanted = demand_at(bids, entry_price, price if price and price > 0.0 else entry_price) - built
             if wanted <= 0.0:
@@ -126,12 +133,18 @@ def trial_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tup
     return plans
 
 
-def recipes_by_cost(setup, record, view, good, tile, recipe_ids) -> List[Tuple[str, float]]:
-    """(recipe, full cost per unit of `good`) for each recipe that can be costed, cheapest first."""
+def recipes_by_cost(setup, record, view, good, tile, recipe_ids,
+                    output_per_year: Optional[float] = None) -> List[Tuple[str, float]]:
+    """(recipe, full cost per unit of `good`) for each recipe that can be costed, cheapest first. With `output_per_year`
+    (units of `good` a newcomer would make a year) a recipe is costed at the hours its newcomer needs over the years it
+    is judged on (entry_practice.py); without, at the booked hours."""
     rate = view.interest_rate(setup.currency_id)
     ranked = []
     for recipe_id in recipe_ids:
         recipe = setup.recipes[recipe_id]
+        if output_per_year is not None and recipe.outputs.get(good, 0.0) > 0.0:
+            recipe = entry_practice.planned_recipe(recipe, entry_practice.crews_of_recipe(record.producers)(recipe_id),
+                                                   output_per_year / recipe.outputs[good])
         outputs = {each: view.price(each, view.area_of(each, tile)) for each in recipe.outputs}
         outputs = {each: price for each, price in outputs.items() if price is not None}
         rent = site_rent_per_run(setup, record, view, recipe_id, tile)

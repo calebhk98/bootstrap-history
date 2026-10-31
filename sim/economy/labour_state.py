@@ -8,7 +8,7 @@ from typing import Dict, Iterable, Mapping, Tuple
 
 from sim.labour.api import MarketState, TradeSpec, opening_labour_market, seed_hours, trade_specs
 
-from . import mint, mint_labour, workforce_version
+from . import mint, mint_labour, practice, workforce_version
 from .market_memory import market_key
 from .setup import area_tile, labour_area
 
@@ -43,7 +43,7 @@ def producers_hours_needed(setup, record) -> Dict[str, Dict[str, float]]:
     """Yearly hours each labour area's producers need of each trade for the runs they expect to sell, and the mint at capacity."""
     hours_needed: Dict[str, Dict[str, float]] = {}
     for producer in record.producers.values():
-        recipe = setup.recipes[producer.recipe_id]
+        recipe = practice.recipe_for(setup.recipes[producer.recipe_id], producer.crew_runs)
         needed = hours_needed.setdefault(labour_area(producer.tile), {})
         for trade, hours in recipe.labour_hours.items():
             needed[trade] = needed.get(trade, 0.0) + producer.expected_sales * hours
@@ -57,7 +57,7 @@ def producers_hours_by_employer(setup, record) -> Dict[str, Dict[str, Dict[str, 
     """Yearly hours each producer needs of each trade for the runs it expects to sell: area -> trade -> producer."""
     hours: Dict[str, Dict[str, Dict[str, float]]] = {}
     for producer in sorted(record.producers.values(), key=lambda each: each.agent_id):
-        for trade, per_run in setup.recipes[producer.recipe_id].labour_hours.items():
+        for trade, per_run in practice.recipe_for(setup.recipes[producer.recipe_id], producer.crew_runs).labour_hours.items():
             hours.setdefault(labour_area(producer.tile), {}).setdefault(trade, {})[producer.agent_id] = producer.expected_sales * per_run
     return hours
 
