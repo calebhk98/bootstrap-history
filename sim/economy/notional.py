@@ -12,13 +12,13 @@ from typing import Dict, Set, Tuple
 from sim.constants import declare
 
 from . import unit_cost
-from .market_memory import KEY_SEPARATOR, PRICE_TRADED, MarketMemory
+from .market_memory import KEY_SEPARATOR, PRICE_REMEMBERED, PRICE_TRADED, MarketMemory
 from .national_prices import national_prices
 from .recipes import input_depth_order
 
 KIND_MAKING_COST_ESTIMATE = "making_cost_estimate"   # what the cheapest recipe costs at today's prices; nothing traded lately
 KIND_THIN_TRADE_BLEND = "thin_trade_blend"           # a market price blended toward making cost; the market trades a sliver
-KIND_REMEMBERED = "remembered_price"                 # the last price shown, nothing makes the good and nothing traded lately
+KIND_REMEMBERED = PRICE_REMEMBERED                 # the last price shown, nothing makes the good and nothing traded lately
 
 RECENT_TRADE_YEARS = declare(
     "RECENT_TRADE_YEARS", 2, kind="temporary_heuristic",

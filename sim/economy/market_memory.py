@@ -10,11 +10,12 @@ from sim.constants import declare
 
 from .accounts import Book
 from .currency import update_expected_inflation
-from .types import QUOTE_OPENING_ESTIMATE, AgentId, AreaId, CurrencyId, GoodId, TileId, TradeId
+from .types import QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE, AgentId, AreaId, CurrencyId, GoodId, TileId, TradeId
 
 KEY_SEPARATOR = "|"
 PRICE_LEVEL_FLOOR_RATIO = 1e-9   # a year in which the median price fell to nothing still leaves a positive level to chain from
 PRICE_TRADED = "traded"     # the kind of a price a market cleared at; any other kind is a quote or an estimate
+PRICE_REMEMBERED = "remembered_price"   # a price from a trade of some earlier year that nothing since has replaced or quoted
 
 OPENING_EXPECTED_INFLATION = declare(
     "OPENING_EXPECTED_INFLATION", 0.0, kind="initial_condition",
@@ -70,7 +71,17 @@ class MarketMemory:
             return PRICE_TRADED
         if key not in self.prices:
             return None
-        return self.quote_kinds.get(key, QUOTE_OPENING_ESTIMATE)
+        if key in self.quote_kinds:
+            return self.quote_kinds[key]
+        return PRICE_REMEMBERED if key in self.trade_age else QUOTE_OPENING_ESTIMATE
+
+    def offered_price(self, key: str) -> Optional[float]:
+        """What a buyer can see to buy at: a price the market traded at, an ask still posted, or the opening's own
+        estimate before any clearing; None for a bid ceiling, a cost quote or a price remembered from an old trade
+        (nothing is on offer at those)."""
+        if self.price_kind(key) in (PRICE_TRADED, QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE):
+            return self.prices.get(key)
+        return None
 
     def price_kinds_by_good(self) -> Dict[str, str]:
         """The kind each good's price has across its markets: traded when any market of it traded last year,
@@ -155,18 +166,23 @@ class YearView:
         return list(map(prices.get, keys[1]))
 
     def price_rows(self, goods, tile: TileId) -> list:
-        """(good, price, usual price) for each of `goods` in the market area it trades in on `tile`."""
+        """(good, offered price, usual price) for each of `goods` in the market area it trades in on `tile`."""
         keys = self._keys_at_tile.get(tile)
         if keys is None or keys[0] is not goods:
             keys = self._keys_at_tile[tile] = (goods, [(good, good + KEY_SEPARATOR + self.area_of(good, tile))
                                                         for good in goods])
-        prices, usual_prices = self._memory.prices, self._memory.usual_prices
-        return [(good, prices.get(key), usual_prices.get(key)) for good, key in keys[1]]
+        usual_prices, offered = self._memory.usual_prices, self._memory.offered_price
+        return [(good, offered(key), usual_prices.get(key)) for good, key in keys[1]]
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The planning price: last year's traded price, or, where nothing traded, the quote (`quote_kind`
         says which). A reader that needs a price both sides agreed to uses `cleared_price`."""
         return self._memory.prices.get(good + KEY_SEPARATOR + area)
+
+    def offered_price(self, good: GoodId, area: AreaId) -> Optional[float]:
+        """What a buyer can buy at: the traded price or an ask still posted (`MarketMemory.offered_price`); None
+        where nothing is on offer. A buyer reads this, never `price`."""
+        return self._memory.offered_price(good + KEY_SEPARATOR + area)
 
     def present_prices_at(self, names: tuple, tile: TileId, wages: bool = False) -> Dict[str, float]:
         """`price` (or `wage` when `wages`) of each of `names` (goods or trades, one tuple kept by the caller) in its

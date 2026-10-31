@@ -8,6 +8,7 @@ from sim.constants import declare
 
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .inventory import holding_reservation
+from .offered_price import offered_price
 from .store_return import (STORE_SERVICE_UNLIMITED, STORE_STORAGE_COST_PER_KG_YEAR, carrying_return,
                            service_values_per_year, split_by_return)
 from .types import Bid, GoodId, GoodSpec, Offer
@@ -117,7 +118,7 @@ def _store_weights(tile, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tupl
     else:
         for good in specs:
             area = view.area_of(good, tile)
-            price = view.price(good, area)
+            price = offered_price(view, good, area)
             if price:
                 prices[good] = price
                 usual = getattr(view, "usual_price", None)      # a view that keeps no price memory has none

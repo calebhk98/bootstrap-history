@@ -1,6 +1,6 @@
 # A market shows and uses a price where nothing traded
 
-**Status:** partly fixed (clearing, memory, the price index, the cap, the opening estimate's kind and the player's screen; the items under Left remain)
+**Status:** partly fixed (clearing, memory, the price index, the cap, the opening estimate's kind, the player's screen and what buyers read; the items under Left remain)
 
 `goods_market` (`sim/economy/goods_market.py`, the clearing that returns `held_price`) returns the last price when a
 market has no offers, when what is offered is residue, or when no buyer wants anything; `market_memory.py` keeps a
@@ -52,9 +52,26 @@ books: no trade gives no price and a quote; a trade gives its price.
   `memory.prices` or `MarketView` in it).
 - Tests: `test_economy_price_kinds.py`, `test_goods_market_pays_economy_price.py` (the quote's kind).
 
+- Buyers read what is offered, not a remembered price (follows Eurace's consumers, who see only the mall's current
+  prices: `Cons_Goods/Household_Consumer_Functions.c`). `MarketMemory.offered_price` / `YearView.offered_price` /
+  `offered_price.offered_price(view, good, area)` give the traded price, an ask still posted (`lowest_unfilled_ask`) or the
+  opening's estimate before any clearing, and None for a bid ceiling, a cost quote or a price remembered from an old trade.
+  A price from an old trade that nothing replaced now has its own kind, `PRICE_REMEMBERED` (it was reported as the
+  opening estimate). Moved to it: `households_basket.need_prices` (:37), `households_store` (`price_rows` and the
+  fallback read), the tool bids (`year_goods.py` :55) and the work-need price (`household_work_year.py` :76).
+- Readers kept on the planning price, with the reason: producers' output expectations (`producers.py` :114, :227) read the
+  price with the quote kind (`planning_price.is_bare_quote` holds a bare quote to the cost band) because a seller's own
+  last price is its expectation; producers' input costs (`producers.py` :156, :237, `producers_close.py` :126) are
+  estimates, and an input with no price would make a run cost infinity and stop every maker that uses it; the valuations
+  (`producers_close.inventory_value`, `capital_year.py` :126, `land_bid_year.py`, `entry_trial.py`, `entry_margin.py`,
+  `economy.py` :462) are estimates of worth, not purchases.
+
 ## Left
 
-- A no-trade market with nothing to quote keeps its old remembered price (its kind stays the last one recorded).
+- A no-trade market with nothing to quote keeps its old remembered price in the planning memory (buyers no longer read
+  it; its kind is now `remembered_price`).
 - The thin-trade relaxation (`price_after_thin_trade`) still moves a traded price toward cost in the planning memory; the
-  display now labels the blended figure `thin_trade_blend`.
-- Other `view.price(...) or 0.0` reads in `sim/economy/opening.py` (the opening's own, owned by the opening work).
+  display labels the blended figure `thin_trade_blend`. Producers still plan from the memory.
+- Not moved, owned by the parallel work: `merchants.py` (:128, :224, `prices_across`; a merchant buying at a source
+  should read the offered price), `opening.py` (:143, :215 `view.price(...) or 0.0`), `carriage_fleet_book.py` :163.
+- In-band zeros that remain: `land_bid_year.py` :23, `entry_margin.py` :79, `economy.py` :462 read a missing price as 0.0.

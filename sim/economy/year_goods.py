@@ -13,6 +13,7 @@ from . import (land_bid_year, carriage_fleet_book, carriage_wear, goods_market, 
                state_budget, state_store, taxes, tool_wear, unsold_search)
 from .household_work_year import basket_key, cohort_basket
 from .market_memory import market_key
+from .offered_price import offered_price
 from .market_memory_asks import memory_reference_volume, note_bids, note_offers, price_after_resumed_trade, wanted_at
 from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE
 from .market_memory_offers import price_after_thin_trade, price_toward_quote
@@ -52,7 +53,7 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.property_income.get(cohort.agent_id, 0.0)
         cash = record.book.balance(cohort.agent_id, money)
         tool_bids = tool_wear.tool_bids(
-            cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: view.price(good, view.area_of(good, cohort.tile)),
+            cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: offered_price(view, good, view.area_of(good, cohort.tile)),
             lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, ledger.own_plot_hours.get(cohort.agent_id, {}),
             setup.specs, cash)
         add_orders(order_book, AgentOrders(bids=tuple(tool_bids)))
