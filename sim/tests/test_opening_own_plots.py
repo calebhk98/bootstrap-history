@@ -43,6 +43,12 @@ class LessWhatItGrewTests(unittest.TestCase):
         self.assertEqual((cut.floor_quantity, cut.flexible_quantity, cut.budget), (5.0, 10.0, 75.0))
 
 
+class RestingInputStockTests(unittest.TestCase):
+    def test_an_input_bought_in_the_year_is_not_held_at_its_start_and_one_not_bought_is_held_for_the_runs(self):
+        held = opening_resting.resting_input_stock(10.0, {"ore": 100.0, "coal": 5.0}, {"ore"})
+        self.assertEqual(held, {"coal": 50.0})
+
+
 class RestingPurseExtraSpendingTests(unittest.TestCase):
     def test_a_purse_for_spending_beyond_income_lets_the_rule_spend_exactly_that_much(self):
         purse = opening_resting.resting_household_purse(100.0, 0.0, extra_spending=30.0)

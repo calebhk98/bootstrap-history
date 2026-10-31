@@ -43,6 +43,17 @@ def resting_household_purse(mean_income: float, share_wealth: float, claims: flo
     return cash - mean_income
 
 
+def resting_input_stock(planned_runs: float, inputs_per_run: Mapping[str, float], bought_in_year) -> Dict[str, float]:
+    """The inputs a producer opens holding. `producers._input_bids` buys the planned runs' need less what is held and
+    the year uses it all, so a producer at rest holds an input at the year's start only if it cannot buy it before
+    it works (nothing makes it, or its maker clears no earlier: a cycle); the rest (`bought_in_year`) it buys, with
+    the cash `working_capital_target` already gives it."""
+    if planned_runs <= 0.0:
+        return {}
+    return {good: planned_runs * per_run for good, per_run in sorted(inputs_per_run.items())
+            if per_run > 0.0 and good not in bought_in_year}
+
+
 def resting_output_stock(expected_yearly_sales: float, outputs_per_run: Mapping[str, float]) -> Dict[str, float]:
     """The output a producer opens holding: `inventory.target_stock` of its expected sales, per good. The output rule
     (`producers.runs_for_stock`, after Eurace Firm_calc_production_quantity: critical stock less current stock) then

@@ -86,3 +86,13 @@ Rome is not re-measured; the claim stays open until `spin-up-trace` is read for 
   only up to `WEALTH_DRAWDOWN_LIMIT` of it; the rest is still counted in kind.
 - The planned revenue of the producers is dominated by the recipes of the mint's backing metal (about 60 percent of it) that nobody hires
   in year one; it is not household demand. Measure with `spin-up-trace` and the hours per recipe planned against hired.
+
+## Update 11: the opening holds only the inputs a producer cannot buy before it works
+
+- `_stock_producers_with_inputs` stocked every input for the whole planned year, so year-one input sales were zero. The input rule
+  (`producers._input_bids`) buys the runs' need less what is held and the year uses it all, so at rest an input is held at the year's
+  start only if nothing makes it or its maker clears no earlier (a cycle). `opening_resting.resting_input_stock` says so; the working
+  capital already covers the inputs bought (`working_capital_target` counts the input cost).
+- Year-one producers' purchases of inputs and receipts: measure with the per-good `ledger.received` of the producers and `ledger.sales_in`
+  on the Norse opening; the receipts rose to about nine tenths of the planned revenue outside the backing metal's recipes.
+- `test_opening_input_stocks`: the known failure (a smelter does not open holding the ore miners sell it) now passes; its decorator is removed.
