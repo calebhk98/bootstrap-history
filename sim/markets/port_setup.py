@@ -9,7 +9,7 @@ import json
 import os
 from typing import Dict
 
-from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, household_grinding, households, households_work,
+from sim.economy.api import (opening_market_rate, EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, household_grinding, households, households_work,
                              plant_builds, recipe_tile_key,
                              recipes_from_production_data, taxes, tile_costs, with_tool_wear)
 from sim.agents import api as agents_api
@@ -108,7 +108,7 @@ def opening_values(sim):
         "wages": {trade: sim.economy.labour.quote(trade) for trade in labour_trades if trade in trades_data},
         "unskilled_trade": unskilled,
         "need_shares": sim.labour.need_shares(),
-        "rate": float(sim.economy.base_rate()),
+        "rate": float(opening_market_rate()),
         "carriage": dict(modes),
         "carriage_balanced": sim._freight_mode_costs(0.0, cargo="goods"),
         "carriage_wage": sim.labour.wage_per_hour(FREIGHT_DRIVER_WAGE_TRADE),

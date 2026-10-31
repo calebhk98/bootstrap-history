@@ -2,6 +2,7 @@
 from typing import Any, Optional, Tuple
 
 from sim.agents.api import SAVING_SHARE_OF_SURPLUS
+from sim.economy.api import opening_market_rate
 from sim.finance.api import DefaultOnDebt
 from sim.world import demand
 
@@ -17,7 +18,7 @@ class CapitalView:
 		return self.needs.market_rate()
 
 	def starting_rate(self) -> float:
-		return float(self.needs.civilisation()["starting_interest_rate"])
+		return opening_market_rate()
 
 	def credit_headroom(self, actor_id: str) -> Optional[float]:
 		"""What lenders will still advance an actor beyond what others owe; None before the market has met."""

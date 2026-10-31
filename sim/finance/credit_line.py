@@ -7,6 +7,7 @@ acting_balance, money_per_labour_hour, wage_bill, household_bill_per_person, hou
 mine_operating_cost, agent_credit_room."""
 from typing import Any, Dict, Optional, Tuple
 
+from sim.economy.api import opening_market_rate
 from sim.projects.api import funding as project_funding
 
 from . import rules
@@ -55,7 +56,7 @@ class CreditLine:
 		market_rate = self.market_rate()
 		years = CREDIT_SURPLUS_YEARS_MULTIPLE
 		if market_rate > 0:
-			years *= min(1.0, needs.civilisation()["starting_interest_rate"] / market_rate)
+			years *= min(1.0, opening_market_rate() / market_rate)
 		# the running tab carries interest too, so only the earning left after that interest backs new advances
 		serviceable = floor + max(0.0, earning - floor * market_rate) * years
 		return base, floor, serviceable

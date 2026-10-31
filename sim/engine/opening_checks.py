@@ -78,6 +78,21 @@ def wage_over_floor(wage: Optional[float], floor: Optional[float],
     return CheckResult("wage_over_floor", value, lowest, "at least", value >= lowest, {"wage": wage, "floor": floor})
 
 
+# The solved opening rate within this factor of the civilisation's typed historical rate; a reference, wide because
+# the typed figure is a low-confidence record, not a target (data/civilizations/_SCHEMA.md).
+RATE_OVER_HISTORY_BOUND = 5.0
+
+
+def rate_against_history(solved: Optional[float], historical: Optional[float],
+                         bound: float = RATE_OVER_HISTORY_BOUND) -> CheckResult:
+    """The rate the opening solved over the civilisation's typed historical rate. No figure for either: no value, and fail."""
+    if not solved or not historical or solved <= 0.0 or historical <= 0.0:
+        return CheckResult("rate_against_history", None, bound, "within", False, {"solved": solved, "historical": historical})
+    value = solved / historical
+    return CheckResult("rate_against_history", value, bound, "within", 1.0 / bound <= value <= bound,
+                       {"solved": solved, "historical": historical})
+
+
 def spin_up_settled(result: Mapping[str, object], tolerance: float) -> CheckResult:
     """`result` is the opening's `spin_up_result` ({settled, years, gap}). The value is the largest yearly change
     in the last year measured and the bound the tolerance the stage was held to."""
