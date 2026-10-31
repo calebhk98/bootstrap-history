@@ -58,12 +58,13 @@ class BorrowersAgainstFundsTests(unittest.TestCase):
         self.assertEqual(clearing.loans, [])
         self.assertIsNotNone(clearing.cause)
 
-    def test_borrowers_with_a_sky_high_ceiling_and_almost_no_funds_do_not_lift_the_rate_past_the_market_ceiling(self):
+    def test_borrowers_with_a_sky_high_ceiling_and_almost_no_funds_do_not_lift_the_rate_past_the_lenders_ask(self):
         ceiling = 0.2
         clearing = credit.clear_with_cause([request(amount=1000.0, maximum_rate=50.0 * ceiling)],
                                            [offer(amount=1.0, minimum_rate=0.02)], COIN, START_RATE, {}, rate_ceiling=ceiling)
         self.assertLessEqual(clearing.rate, ceiling + 1e-12)
-        self.assertGreater(clearing.rate, START_RATE)
+        self.assertLess(clearing.rate, START_RATE)      # the queue is rationed by quantity: the rate moves to the lender's ask, not up
+        self.assertGreaterEqual(clearing.rate, 0.02)
 
     def test_a_glut_of_funds_does_not_hold_the_rate_above_the_lowest_ask(self):
         funds = [offer(amount=1_000_000.0, minimum_rate=0.02)]

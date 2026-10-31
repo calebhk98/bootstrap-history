@@ -31,6 +31,12 @@ sides would agree to.
 - Tests: `test_economy_lender_ask.py`, `test_economy_banks.py`, `test_economy_credit.py`, `test_economy_credit_real_rate.py`,
   `test_economy_credit_rate_at_ceiling.py`, `test_economy_credit_rate_below_asks.py`, `test_economy_credit_eurace.py`.
 
+- `sim/economy/credit_rate.py`: where borrowers queue for scarce funds the base rate is the dearest ask among the
+  lenders who lend (those holding `MATERIAL_LENDER_SHARE` of the funds or more), not the cap of the last borrower in
+  the queue; the queue is rationed by quantity. Before it, a few units of lendable money set the market rate at
+  whichever borrower's affordability cap stood last, so the fixture's rate swung between its floor and the ceiling and
+  Rome's sat at the ceiling (473). Probe: `Complaints/reports/641-rate-probe.md` style, fixtures `small` and `stationary`.
+
 ## What is wrong now
 
 - Land yield has no live input: no title is bought or sold at a price (`titles_value` capitalises rent at the live rate, so
