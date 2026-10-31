@@ -82,7 +82,12 @@ def trained_substitute_wage(state: MarketState, inputs: YearInputs, area: str, t
 
 def clearing_target(reservation: float, offered: float, bids: Sequence[Bid]) -> float:
     """Price where the offered hours (all at `reservation`) meet bids taken highest maximum first."""
-    live = sorted(((bid.maximum_wage, bid.hours) for bid in bids if bid.maximum_wage >= reservation), reverse=True)
+    return target_for_demand(reservation, offered, [(bid.maximum_wage, bid.hours) for bid in bids])
+
+
+def target_for_demand(reservation: float, offered: float, demand: Sequence[Tuple[float, float]]) -> float:
+    """`clearing_target` over (maximum wage, hours) pairs, the form a Clearing keeps its demand in."""
+    live = sorted(((cap, hours) for cap, hours in demand if cap >= reservation), reverse=True)
     taken = 0.0
     for index, (cap, hours) in enumerate(live):
         taken += hours
@@ -349,7 +354,8 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     average = sum(hours * paid_each[employer] for employer, hours in hired.items()) / total if total > 0.0 else wage
     return Clearing(trade=trade, area=area, wage=reported, hours_offered=offered, hours_wanted=sum(wanted.values()),
                     hours_hired=total, hired_by_employer=hired, paid_by_employer=dict(paid_each), average_wage=average,
-                    target_wage=target, new_hire_wage=wage)
+                    target_wage=target, new_hire_wage=wage, hours_held=full,
+                    demand=tuple((bid.maximum_wage, bid.hours) for bid in bids))
 
 
 def clear_all(state: MarketState, inputs: YearInputs) -> List[Clearing]:
