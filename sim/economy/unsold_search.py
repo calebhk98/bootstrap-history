@@ -42,7 +42,8 @@ def _floors(setup, record, view, offers: Sequence[Offer], original: Sequence[Off
     floors = {}
     for index, offer in enumerate(offers):
         opened = original[index].reservation_price <= 0.0 < offer.reservation_price
-        if offer.quantity <= 0.0 or (offer.reservation_price != original[index].reservation_price and not opened):
+        crowd = seller_offers.stands_for_many(record, offer)      # a crowd's ask is lifted to its expectation, not re-priced
+        if offer.quantity <= 0.0 or (offer.reservation_price != original[index].reservation_price and not opened and not crowd):
             continue
         key = (offer.seller, offer.tile)
         cost = costs[key] if key in costs else seller_offers.unit_cost(setup, record, view, offer)
