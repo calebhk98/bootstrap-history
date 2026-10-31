@@ -14,7 +14,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import unit_cost
+from . import entry_practice, unit_cost
 from .entry_sizing import Traded, sized_runs
 from .goods_market import quantity_at
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
@@ -106,7 +106,8 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                 unmet: Mapping[Tuple[GoodId, AreaId], UnmetDemand],
                 rent_by_tile: Optional[Mapping[TileId, float]] = None,
                 land_per_run: Optional[Mapping[str, float]] = None,
-                traded: Optional[Traded] = None, siting=None, unfilled=None, rent_of=None) -> List[EntryPlan]:
+                traded: Optional[Traded] = None, siting=None, unfilled=None, rent_of=None,
+                crews_of: Optional[entry_practice.CrewsOf] = None) -> List[EntryPlan]:
     """New makers for each market with unmet demand: the known recipes making the good, best return on
     capital at last year's prices first, each that beats the interest rate, each built for a share of what
     the better ones leave of the gap (no limit on how many a year: the gap and the returns decide). Rent per
@@ -115,7 +116,9 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
     a recipe whose size comes to nothing gives way to the next best. With `siting` (location.py) a newcomer
     goes to the tile that suits it, else to the market's anchor. With `unfilled` (entry_backed.py) the bids left
     unfilled at the recipe's full cost count with the trade. With `rent_of(recipe_id, tile)` a newcomer's rent is what its own use pays there
-    (entrant_rent.py), not the tile's mean rent."""
+    (entrant_rent.py), not the tile's mean rent. With `crews_of` (entry_practice.py) a recipe's return is judged on the hours
+    its newcomer will need over the years it is judged on (starting at its peers' practice, learning on the runs it is built
+    for), not the booked hours."""
     rent_by_tile, land_per_run = rent_by_tile or {}, land_per_run or {}
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id in sorted(recipes):
@@ -131,7 +134,11 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
         for recipe_id in makers.get(demand.good, ()):
             rent = rent_of(recipe_id, demand.anchor_tile) if rent_of is not None else \
                 rent_by_tile.get(demand.anchor_tile, 0.0) * land_per_run.get(recipe_id, 0.0)
-            yearly_return = _return_at(recipes[recipe_id], recipe_id, demand.anchor_tile, view, rent)
+            planned = recipes[recipe_id]
+            if crews_of is not None:
+                share_runs = demand.quantity / planned.outputs[demand.good] * ENTRY_SHARE_OF_UNMET_DEMAND
+                planned = entry_practice.planned_recipe(planned, crews_of(recipe_id), share_runs)
+            yearly_return = _return_at(planned, recipe_id, demand.anchor_tile, view, rent)
             if yearly_return > view.interest_rate(currency):
                 ranked.append((-yearly_return, recipe_id))
         remaining = demand.quantity
@@ -141,7 +148,7 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                 break
             whole_gap_runs = remaining / recipe.outputs[demand.good]
             tile = demand.anchor_tile
-            backed = unfilled(recipe_id, demand.good, tile) if unfilled is not None and traded is not None else 0.0
+            backed = unfilled(recipe_id, demand.good, tile, whole_gap_runs * ENTRY_SHARE_OF_UNMET_DEMAND * recipe.outputs[demand.good]) if unfilled is not None and traded is not None else 0.0
             runs = sized_runs(recipe, demand.good, whole_gap_runs * ENTRY_SHARE_OF_UNMET_DEMAND, whole_gap_runs,
                               tile, traded, unfilled=backed)
             if siting is not None and runs > 0.0 and math.isfinite(runs):

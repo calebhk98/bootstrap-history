@@ -1,6 +1,6 @@
 # A trade that has never existed has no way to form
 
-**Status:** partly - first hands, migration, an owners' ask and a buyers' bid for bonded people, held bonded, carried between areas by merchants and a learning-curve rule and its wiring into a producer's hours are built; a trade whose work is a service, the curve's wiring into spoilage, and more `taught_from` links are open (see What is wrong now)
+**Status:** partly - first hands, migration, an owners' ask and a buyers' bid for bonded people, held bonded, carried between areas by merchants and a learning-curve rule and its wiring into a producer's hours and into the entry decision are built; a trade whose work is a service, the curve's wiring into spoilage, and more `taught_from` links are open (see What is wrong now)
 
 **What is wrong now.**
 
@@ -68,6 +68,11 @@ sale records. See also 648.
    the producer stands for: growth in runs is hired hands who bring the recipe's mean practice and close `SKILL_GAP_CLOSED_PER_YEAR`
    of the gap to the crew's (Eurace Household_update_specific_skills), layoffs leave the stayers' practice (no forgetting), a new
    producer starts at the mean of the recipe's other producers or at a first attempt where there are none (Eurace's restarting
-   firm takes the regional mean skill). Tests: `test_economy_practice.py`. Open: spoilage (`error_share`), a quit rate that
-   removes practice apart from layoffs, entrants who join an existing producer's workshops, entry and hours-needed figures still
-   use the booked hours, and the speed is the Eurace mix of skill levels, not a measured one (`retire`d to this complaint).
+   firm takes the regional mean skill). Tests: `test_economy_practice.py`. Entry and hours-needed now use the practised
+   hours: `labour_state.producers_hours_needed` and `producers_hours_by_employer` read each producer's `practice.recipe_for`, and the
+   entry decision (`sim/economy/entry_practice.py`, used by `entry.entry_plans`, `entry_trial.recipes_by_cost`, `entry_backed`,
+   the entry siting's committed and staffable hours, the entrant's working capital) costs a newcomer at the mean of its hours over
+   `LOSS_YEARS_BEFORE_EXIT` years, starting at its peers' practice and learning on the runs it is built for, so a first year that
+   loses and later years that pay enter when the years together pay. Tests: `test_economy_entry_practice.py`. Open: spoilage
+   (`error_share`), a quit rate that removes practice apart from layoffs, entrants who join an existing producer's workshops, the
+   horizon's years weighed equally (no discounting) and the runs used in it being the planned share of the gap, and the speed is the Eurace mix of skill levels, not a measured one (`retire`d to this complaint).

@@ -24,7 +24,7 @@ def unfilled(bids_by_market, traded_volume=200.0, costed=(("pan", COST),)):
     with mock.patch.object(entry_backed, "recipes_by_cost", return_value=list(costed)) as by_cost:
         found = entry_backed.unfilled_at_cost(object(), object(), view, object(), bids_by_market,
                                               lambda good, tile: traded_volume)
-        quantity = found("pan", "salt", "tile") if found is not None else None
+        quantity = found("pan", "salt", "tile", 7.0) if found is not None else None
     return quantity, by_cost
 
 
@@ -40,7 +40,7 @@ class UnfilledAtCostTests(unittest.TestCase):
 
     def test_the_recipe_is_costed_at_the_markets_tile_for_that_good(self):
         _quantity, by_cost = unfilled(self.BIDS)
-        self.assertEqual(by_cost.call_args.args[3:], ("salt", "tile", ["pan"]))
+        self.assertEqual(by_cost.call_args.args[3:], ("salt", "tile", ["pan"], 7.0))
 
     def test_a_market_with_no_bids_has_none_unfilled(self):
         quantity, _by_cost = unfilled({("salt", "elsewhere"): [bid(500.0, 3.0)]})

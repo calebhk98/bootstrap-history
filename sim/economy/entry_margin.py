@@ -78,7 +78,8 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tu
         key = market_key(good, area_id)
         price = view.price(good, area_id) or 0.0
         expected = record.memory.usual_prices.get(key, price)
-        ranked = recipes_by_cost(setup, record, view, good, area.anchor_tile, makers[good])
+        ranked = recipes_by_cost(setup, record, view, good, area.anchor_tile, makers[good],
+                                 MARGIN_ENTRY_GROWTH_SHARE * capacity)
         if not ranked:
             continue
         # the margin must be there in the smoothed price and in the year's price: entry that waited on the
