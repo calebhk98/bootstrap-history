@@ -765,3 +765,13 @@ volatility from the opening. The rules the supply-collapse test joined are `test
 Whole-game relationship checks deleted (Complaint 640): the five `full_length_opening_checks_<civilisation>` topics (red on main) asserted price over making cost, wage over floor, money against wear and spin-up settled on each full-length opening, which cannot name a function. `python3 sim/simulator.py opening-checks` prints the same relationships for every civilisation; the known failures stay tabled in `sim/tests/full_length_opening_support.py` (`EXPECTED_FAILURES`).
 
 The whole-economy stepped-year checks of the stationary fixture (every year within the settling bounds, hours hired holding, ore price, the mint against wear, the first-year wage move against excess hours, households' cash against producers') left the unit tests with `test_opening_stationary_rules`, which now holds only the rules (`opening_stationary.solve`, `opening_leisure.anchors`). Measure the settling claims with `python3 sim/simulator.py spin-up-trace`.
+
+## Update 8: the mint was last in the queue, so cheap bullion never reached it (branch mint-replaces-wear)
+
+Cause of the draining money stock: the mint's bid was served after every other buyer of the metal (`MINT_PRIORITY`), and a
+seller sells at its own ask, so when asks fell with the price level the other buyers of the metal (cheap metal draws more
+demand) took all of it and the mint, which would pay far more than the ask, was rationed to nothing. The profit test was
+sound (`maximum_price` is the mint price; the ask fell well below it). Now the mint is served first among buyers at or below
+its price, and its yearly capacity counts the wear of the coin it strikes (`yearly_monetisation`). Measure:
+`python3 sim/simulator.py spin-up-trace --fixture small --years 40` (and `--fixture stationary`), columns `money_supply`.
+Still short on the small fixture in the middle years: the metal's makers supply less than the mint bids for (producers' side).

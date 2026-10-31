@@ -13,7 +13,7 @@ from . import currency, mint_labour
 from .metal_stock import COIN_WEAR_PER_YEAR, METAL_GOODS_LOSS_PER_YEAR
 from .types import EDGE_EXTERNAL, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid, GoodsMove, Offer, Transfer
 
-MINT_PRIORITY = 9          # the mint is served after every other buyer at the same price
+MINT_PRIORITY = -1         # served before every other buyer: it pays up to the mint price, which bullion holders prefer to the ask
 
 
 def stock_by_tile(book, metal) -> Dict[str, float]:
@@ -74,7 +74,8 @@ def _lose_worn_metal(record) -> None:
 
 def yearly_monetisation(setup, record) -> float:
     """Most money the mint turns metal or a commodity into in a year: what holders want to add to their cash
-    balances, plus what the money loses (wear of coin, loss of weighed metal, spoilage of a commodity). A mint
+    balances, plus what the money loses (wear of coin, loss of weighed metal, spoilage of a commodity) over the
+    year, on the stock after striking. A mint
     that struck without limit would bid for metal no one wants as money, and the producers of the metal would be
     sized to that bid; the price level, not a capacity, then decides how far a surplus of metal becomes money
     (Complaints/reports/economy-research-commodity-money.md)."""
@@ -83,7 +84,8 @@ def yearly_monetisation(setup, record) -> float:
     wanted = (math.fsum(cohort.cash_target for cohort in getattr(record, "cohorts", {}).values())
               + math.fsum(producer.cash_target for producer in getattr(record, "producers", {}).values())
               + math.fsum(merchant.capital_base for merchant in getattr(record, "merchants", {}).values()))
-    return max(0.0, wanted - supply) + loss_share(setup, spec) * supply
+    loss = loss_share(setup, spec)
+    return (max(0.0, wanted - supply) + loss * supply) / (1.0 - loss)       # the money struck wears too, before the year ends
 
 
 def loss_share(setup, spec) -> float:
