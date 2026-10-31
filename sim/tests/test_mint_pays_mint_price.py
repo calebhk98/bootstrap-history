@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.economy.mint_price import melting_pays, top_ups
+from sim.economy.mint_price import melting_pays, received_price, top_ups
 from sim.economy.types import Fill
 
 sells = [Fill("mine_a", "metal", "town", "t1", 600.0, 80.0, "sell"), Fill("mine_b", "metal", "town", "t2", 200.0, 90.0, "sell")]
@@ -26,3 +26,10 @@ check("the book's own edges are not paid a top-up",
 check("the mint holds its coin metal while bullion is cheaper than coin", not melting_pays(88.0, 100.0))
 check("the mint sells coin metal once bullion fetches at least parity", melting_pays(100.0, 100.0))
 check("the mint holds its coin metal with no price remembered", not melting_pays(None, 100.0))
+
+# what a seller of the metal is paid per unit, top-up included: the price makers plan with
+check("the price received per unit sold is the settled price plus the top-up spread over the sellers' sales",
+      abs(received_price(80.0, 100.0, 95.0, sells) - (80.0 + 100.0 * 15.0 / 800.0)) < 1e-9, received_price(80.0, 100.0, 95.0, sells))
+check("with nothing bought the received price is the settled price", received_price(80.0, 0.0, 95.0, sells) == 80.0)
+check("a settled price above the mint price is the received price", received_price(96.0, 100.0, 95.0, sells) == 96.0)
+check("with no sellers the received price is the settled price", received_price(80.0, 100.0, 95.0, []) == 80.0)

@@ -9,7 +9,7 @@ import dataclasses
 import math
 from typing import Dict, List, Tuple
 
-from . import (land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
+from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
 from .household_work_year import basket_key, cohort_basket
 from .market_memory import market_key
@@ -199,7 +199,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             if result.quantity > 0.0:
                 usual = record.memory.volume_weights.get(key, 0.0)
                 reference = memory_reference_volume(usual, wanted_at(bids, old))
-                signal = price_after_trade(old, key in record.memory.quote_kinds, result.price, result.quantity, reference,
+                signal = price_after_trade(old, key in record.memory.quote_kinds, _received_price(setup, record, good, result),
+                                           result.quantity, reference,
                                            quiet_years + dry_years)
                 if result.quantity < REPRESENTATIVE_TRADE_SHARE * usual:
                     if costs is None:
@@ -231,6 +232,14 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     for key in sorted(set(record.memory.volume_weights) - cleared):
         record.memory.note_volume(key, 0.0)
     record.memory.note_trading(traded)
+
+
+def _received_price(setup, record, good, result) -> float:
+    """The price a market's sellers got per unit: the settled price, plus the mint's top-up where it bought coin metal."""
+    spec = record.currency
+    if not currency.has_mint(spec) or good != spec.backing_good:
+        return result.price
+    return mint_price.received_price(result.price, mint_price.mint_bought(result.fills), currency.mint_price(spec), result.fills)
 
 
 def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years):

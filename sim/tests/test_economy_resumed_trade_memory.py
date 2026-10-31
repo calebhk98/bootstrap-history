@@ -10,6 +10,7 @@ from sim.economy.accounts import Book
 from sim.economy.market_memory import MarketMemory, market_key
 from sim.economy.types import EDGE_ISSUE, EDGE_PRODUCTION, Bid, GoodsMove, Offer, Transfer
 from sim.economy.year_ledger import YearLedger
+from sim.economy.types import CurrencySpec
 
 CURRENCY = "coin"
 KEY = market_key("brass", "area")
@@ -18,7 +19,7 @@ KEY = market_key("brass", "area")
 def one_year(memory, book, bids, offers):
     setup = types.SimpleNamespace(recipes={}, tax_forms=[], currency_id=CURRENCY, opening_prices={"brass": 4.0},
                                   specs={}, state_agent="state", port_tile=None, capital_tile=None)
-    record = types.SimpleNamespace(producers={}, memory=memory, book=book, volumes={}, unsold={}, unmet={})
+    record = types.SimpleNamespace(producers={}, memory=memory, currency=CurrencySpec(CURRENCY, "fiat", None, 0.0, None), book=book, volumes={}, unsold={}, unmet={})
     order_book = {("brass", "area"): (list(bids), list(offers))}
     year_goods.clear_goods(setup, record, None, None, order_book, {}, YearLedger())
 
