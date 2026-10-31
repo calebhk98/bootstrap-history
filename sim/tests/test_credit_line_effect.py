@@ -5,13 +5,14 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.finance.constants import CREDIT_LINE_EARNING_MULTIPLE, CREDIT_SURPLUS_YEARS_MULTIPLE
+from sim.economy.api import opening_market_rate
 from sim.mechanics import rules
 from sim.tests import finance_host
 
 MONEY_PER_LABOUR_HOUR = 2.0
 FLOOR = 100.0
 EARNING = 1000.0
-STARTING_RATE = 0.1
+STARTING_RATE = opening_market_rate()   # the rate the opening solves; the credit line is scaled against it
 
 
 def limit_of(specs, acting_seat="founder"):
@@ -22,7 +23,7 @@ def limit_of(specs, acting_seat="founder"):
                                       lambda node_id, spec: rules.effect_size(spec, lambda: 1.0, lambda: MONEY_PER_LABOUR_HOUR))
         return rules.sum_in_order(values, start)
     module = finance_host.build(
-        civilisation={"starting_interest_rate": STARTING_RATE}, money_per_labour_hour=MONEY_PER_LABOUR_HOUR, effect_sum=effect_sum,
+        money_per_labour_hour=MONEY_PER_LABOUR_HOUR, effect_sum=effect_sum,
         revenue_capacity=EARNING, upkeep=0.0, agent_rate=STARTING_RATE)
     module.clock.acting_seat = acting_seat
     module.living_cost = lambda revenue=None, upkeep=None, capital=None: FLOOR

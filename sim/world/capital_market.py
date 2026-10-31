@@ -50,10 +50,10 @@ def bounded_rate(starting_rate: float, rate: float, expected_inflation: float = 
     return min(rate, starting_rate * RATE_CEILING_SHARE + max(0.0, expected_inflation))
 
 
-def market_rate_answered(starting_rate: float, agent_rate: Optional[float]) -> float:
-    """The market rate: the agent credit market's answer held under the ceiling, or the starting rate while
+def market_rate_answered(opening_rate: float, agent_rate: Optional[float]) -> float:
+    """The market rate: the agent credit market's answer held under the ceiling, or the rate the opening solved while
     that market has not yet answered."""
-    return starting_rate if agent_rate is None else bounded_rate(starting_rate, agent_rate)
+    return opening_rate if agent_rate is None else bounded_rate(opening_rate, agent_rate)
 
 
 def capital_recovery_factor(rate: float, life_years: float) -> float:

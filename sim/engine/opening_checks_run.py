@@ -83,7 +83,8 @@ def check_game(game, trace=None) -> List[opening_checks.CheckResult]:
             for group in ("sited_ores", "staple", "coin_metal")] + [
         opening_checks.money_against_wear(rows),
         opening_checks.wage_over_floor(outcome.wages.get(setup.unskilled_trade), outcome.wage_floor_per_hour),
-        opening_checks.spin_up_settled(result, SPIN_UP_TOLERANCE)]
+        opening_checks.spin_up_settled(result, SPIN_UP_TOLERANCE),
+        opening_checks.rate_against_history(setup.opening_rate, game.view("civilisation")().get("starting_interest_rate"))]
 
 
 def check_civilisation(civ_id: str) -> List[opening_checks.CheckResult]:
