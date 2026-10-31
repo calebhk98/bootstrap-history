@@ -79,7 +79,7 @@ stationary. The normal budget caps still bind.
 The opening sets each tile's land rent by the year's own rule (`opening_rent.settle`, which runs `land_market.post_rents` on the
 producers placed), so year one sees the rent it was sized for. A hectare's rent is a share of what it grows, so the prices of the recipes
 that take land are raised until revenue pays cost and rent (`opening_rent.covering_prices`, solved in `opening._with_covering_prices`
-until they stop moving). The rent is paid to the households that own the land and counts in their property income
+until they stop moving: one full household solve, then each pass reopens the economy at the covered prices with the households' settled plans, `opening._reopen`). The rent is paid to the households that own the land and counts in their property income
 (`opening_rent.property_income_with_rent`); the rent and profit part of the income figure is seeded as the first year's property income
 (`opening_income.property_income_of`). Measure: `python3 sim/simulator.py spin-up-trace --fixture stationary --years 50`.
 
