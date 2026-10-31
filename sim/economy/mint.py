@@ -9,18 +9,11 @@ money are exchanged at parity both ways with no issuer. Fiat has no metal and no
 import math
 from typing import Dict
 
-from sim.constants import declare
-
 from . import currency, mint_labour
+from .metal_stock import COIN_WEAR_PER_YEAR, METAL_GOODS_LOSS_PER_YEAR
 from .types import EDGE_EXTERNAL, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid, GoodsMove, Offer, Transfer
 
 MINT_PRIORITY = 9          # the mint is served after every other buyer at the same price
-
-MINT_YEARLY_STRIKE_SHARE = declare(
-    "MINT_YEARLY_STRIKE_SHARE", 1.0, kind="temporary_heuristic", unit="share of the metal in circulation per year",
-    why="most metal the mint will strike in a year, as a share of the metal already in circulating money: "
-        "stands in for mint capacity (furnaces, dies, labour), which is not modelled. A mint ledger of "
-        "output by year (mint accounts, die counts) would fix it.")
 
 
 def stock_by_tile(book, metal) -> Dict[str, float]:
@@ -80,18 +73,13 @@ def _lose_worn_metal(record) -> None:
 
 
 def yearly_monetisation(setup, record) -> float:
-    """Most money the mint turns metal or a commodity into in a year.
-
-    A struck coin's mint strikes up to its capacity (MINT_YEARLY_STRIKE_SHARE of the money in
-    circulation), and the price level then decides whether striking pays; weighed metal is the money
-    itself, so metal mined circulates on the same terms. A commodity money (cacao) is a good mostly used
-    up, and only the beans holders want to add to their cash balances, plus what spoils, become money.
-    Otherwise growing the money commodity would always sell at parity and take land from food without
-    limit (Complaints/reports/economy-research-commodity-money.md)."""
+    """Most money the mint turns metal or a commodity into in a year: what holders want to add to their cash
+    balances, plus what the money loses (wear of coin, loss of weighed metal, spoilage of a commodity). A mint
+    that struck without limit would bid for metal no one wants as money, and the producers of the metal would be
+    sized to that bid; the price level, not a capacity, then decides how far a surplus of metal becomes money
+    (Complaints/reports/economy-research-commodity-money.md)."""
     spec = record.currency
     supply = record.book.money_supply(spec.currency_id)
-    if spec.regime != "commodity":
-        return MINT_YEARLY_STRIKE_SHARE * supply
     wanted = (math.fsum(cohort.cash_target for cohort in getattr(record, "cohorts", {}).values())
               + math.fsum(producer.cash_target for producer in getattr(record, "producers", {}).values())
               + math.fsum(merchant.capital_base for merchant in getattr(record, "merchants", {}).values()))
@@ -99,9 +87,13 @@ def yearly_monetisation(setup, record) -> float:
 
 
 def loss_share(setup, spec) -> float:
-    """Share of a commodity money lost in a year: what the good spoils."""
+    """Share of the money in circulation that the backing good loses in a year, by the regime's own loss."""
+    if spec.regime == "struck_coin":
+        return COIN_WEAR_PER_YEAR
+    if spec.regime == "weighed_metal":
+        return METAL_GOODS_LOSS_PER_YEAR
     backing = getattr(setup, "specs", {}).get(spec.backing_good)
-    return backing.spoilage_per_year if backing is not None else 0.0
+    return backing.spoilage_per_year if spec.regime == "commodity" and backing is not None else 0.0
 
 
 def capacity_fine_kilograms(setup, record) -> float:
