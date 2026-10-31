@@ -52,6 +52,13 @@ def expected_income(state: MarketState, inputs: YearInputs, clearings: ClearingI
     return share * earned + (1.0 - share) * floor
 
 
+def idle_share_of(clearing: Optional[Clearing]) -> float:
+    """The share of a trade's hands that sold no hours this year: all of them where no market was held."""
+    if clearing is None or clearing.hours_offered <= 0.0:
+        return 1.0
+    return min(1.0, max(0.0, 1.0 - clearing.hours_hired / clearing.hours_offered))
+
+
 def annuity_factor(discount_rate: float, years: float) -> float:
     """Present value of one unit a year for `years`, discounted continuously."""
     if years <= 0.0:

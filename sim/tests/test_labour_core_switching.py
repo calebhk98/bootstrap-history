@@ -75,6 +75,18 @@ class SwitchingTests(unittest.TestCase):
         self.assertLess(large.switched[AREA]["carver"],
                         1000.0 * switching.SWITCHING_CONSIDERATION_SHARE_PER_YEAR + 1e-9)
 
+    def test_those_who_sold_no_hours_consider_a_switch_more_than_those_who_did(self):
+        wages = {"digger": 0.5, "carver": 2.5, "cutter": 0.5, "healer": 0.5}
+        _, working = _run({"digger": 1000.0}, wages)
+        idle_clearings = _clearings(wages)
+        idle_clearings[(AREA, "digger")] = Clearing(
+            trade="digger", area=AREA, wage=0.5, hours_offered=HOURS, hours_wanted=0.0, hours_hired=0.0,
+            hired_by_employer={}, paid_by_employer={}, average_wage=0.5)
+        state = _state({"digger": 1000.0})
+        report = YearReport()
+        switching.switch_trades(state, _inputs(_specs()), idle_clearings, report)
+        self.assertGreater(report.switched[AREA]["carver"], working.switched[AREA]["carver"])
+
     def test_switchers_become_trainees_not_workers(self):
         state, report = _run({"digger": 1000.0}, {"digger": 0.5, "carver": 2.0, "cutter": 0.5, "healer": 0.5})
         self.assertAlmostEqual(_trainees(state, "carver"), report.switched[AREA]["carver"])

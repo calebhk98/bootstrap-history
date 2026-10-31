@@ -90,8 +90,8 @@ class DemandTests(unittest.TestCase):
 class AptitudeTests(unittest.TestCase):
     def test_a_hard_trade_stays_thin_where_an_easy_one_with_equal_training_fills(self):
         state = records.MarketState(workers={"vale": town(digger=2000, healer=30, plainhand=30)})
-        year_inputs = inputs([bid("farm", "digger", "vale", 2000), bid("temple", "healer", "vale", 100, 20.0),
-                              bid("office", "plainhand", "vale", 100, 20.0)], entrants=60.0, attrition=0.025)
+        year_inputs = inputs([bid("farm", "digger", "vale", 2000), bid("temple", "healer", "vale", 400, 20.0),
+                              bid("office", "plainhand", "vale", 400, 20.0)], entrants=60.0, attrition=0.025)
         state, _report = run(state, year_inputs, 60)
         healer_wages, plainhand_wages = [], []
         for _year in range(60):   # vertical demand cycles, so compare the averages over a long stretch

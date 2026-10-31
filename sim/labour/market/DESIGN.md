@@ -68,6 +68,8 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
      switchers also choose in rounds. Weighing a trade that has workers by its pay today made a shortage
      the apprentices would fill still draw switchers and flooded it.
    - Switchers become trainees of the new trade and use the same intake.
+   - A trade's workers who sold no hours this year reconsider at the share that found no work, if that is over the
+     yearly consideration share: only those without work look about.
 6. **Migration** (`migration.py`). Workers re-weigh their area against the routes out of it, with a stay option.
    - The comparison is the log of real expected wage (expected wage over subsistence) in the same trade, less the moving cost in years of subsistence.
    - Only listed routes are considered, so the cost is areas × routes × trades.
