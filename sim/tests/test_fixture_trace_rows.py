@@ -66,7 +66,7 @@ class MoneyByHolderTests(unittest.TestCase):
 
 class FixtureRowTests(unittest.TestCase):
     def test_the_row_reads_prices_wages_and_hours_and_the_real_wage(self):
-        row = fixture_row(fake_economy(book_with_money()), fake_outcome(wage=1.0, grain_price=0.25), 3)
+        row = fixture_row(fake_economy(book_with_money()), fake_outcome(wage=1.0, grain_price=0.25), 3, [(100.0, 100.0, 75.0)])
         self.assertEqual(row["year"], 3)
         self.assertEqual(row["basket_price_level"], 1.25)
         self.assertEqual(row["unskilled_wage"], 1.0)
@@ -80,7 +80,7 @@ class FixtureRowTests(unittest.TestCase):
         self.assertAlmostEqual(row["money_households"], 14.0)
 
     def test_a_missing_price_gives_no_real_wage_rather_than_zero(self):
-        row = fixture_row(fake_economy(book_with_money()), fake_outcome(wage=1.0, grain_price=0.0), 0)
+        row = fixture_row(fake_economy(book_with_money()), fake_outcome(wage=1.0, grain_price=0.0), 0, [(100.0, 100.0, 75.0)])
         self.assertIsNone(row["real_wage"])
 
 

@@ -10,6 +10,7 @@ import math
 
 from . import carried_book, carriage_wear, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
 from .bank_founding import found_from_outside
+from .diagnostics import person_equivalent_unemployment
 from .fixture_setups import GRAIN as FIXTURE_STAPLE, LABOURER as FIXTURE_UNSKILLED_TRADE, small_setup as fixture_small_setup, stationary_setup as fixture_stationary_setup
 from .banks import DEPOSIT_BANKING
 from .funds import POOLED_FUNDS
@@ -57,6 +58,7 @@ __all__ = [
     "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
     "settle_agent_takings", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "POOLED_FUNDS", "INSURANCE_UNDERWRITING", "RISK_POOLING", "BOND_MARKET", "SHARE_TRADING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
+    "person_equivalent_unemployment", "labour_market_rows",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -169,6 +171,23 @@ def idle_hours_by_trade(economy, country=None):
     """(hours offered and not hired, hours offered) of each trade in the labour markets of `country` (the home
     country's when the economy holds several) in the last clearing: the jobs the labour core did not find."""
     return country_figures.idle_hours_by_trade(economy, country_figures.home_when_shared(economy, country))
+
+
+def labour_market_rows(economy):
+    """(people, hours offered, hours hired) of each (trade, area) labour market in the last clearing, in key order, for
+    `person_equivalent_unemployment`. Offered is hired plus idle; the plot trade (people working their own land) is
+    left out."""
+    record = economy.record
+    plot = labour_state.plot_trade(economy.setup)
+    rows = []
+    for key in sorted(record.hours_idle):
+        trade, area = key.split(_KEY_SEPARATOR, 1)
+        if trade == plot:
+            continue
+        people = math.fsum(record.workforce.workers.get(area, {}).get(trade, ()))
+        hired = record.hours_hired.get(key, 0.0)
+        rows.append((people, hired + record.hours_idle[key], hired))
+    return rows
 
 
 def wages_by_trade_weighted(economy, country=None):
