@@ -1,0 +1,227 @@
+From 0b8bf0304a7153f682ea8189bd9251c849a0f837 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 10:02:39 +0000
+Subject: [PATCH] Year zero clears at the opening wage and near the opening
+ prices: opening asks follow the contracts held, safety stock is not offered
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WXrfievykJ3StG4swPtute
+---
+ ...ar-below-the-opening-wage-from-year-one.md | 13 ++++++
+ sim/economy/inventory.py                      |  8 ++++
+ sim/economy/year_goods.py                     |  5 ++-
+ sim/labour/market/asks.py                     | 29 +++++++++++---
+ sim/labour/market/clearing.py                 |  5 ++-
+ sim/tests/test_ask_opening_scale.py           | 40 +++++++++++++++++++
+ sim/tests/test_economy_inventory.py           |  9 +++++
+ 7 files changed, 100 insertions(+), 9 deletions(-)
+ create mode 100644 sim/tests/test_ask_opening_scale.py
+
+diff --git a/Complaints/608-the-opening-labour-market-clears-far-below-the-opening-wage-from-year-one.md b/Complaints/608-the-opening-labour-market-clears-far-below-the-opening-wage-from-year-one.md
+index 606f5d4..eeea9cf 100644
+--- a/Complaints/608-the-opening-labour-market-clears-far-below-the-opening-wage-from-year-one.md
++++ b/Complaints/608-the-opening-labour-market-clears-far-below-the-opening-wage-from-year-one.md
+@@ -45,3 +45,16 @@ The leisure split is gone: households offer every hour their plot and household
+ opening wage because each producer opens holding the hours it hires at that wage (`opening_resting.resting_labour_contracts`),
+ not because hours offered equal hours hired; the unhired hours are visible idle hours. Later years still drift down on the
+ stated fixture as new hires clear against the ask floor (see 675).
++
++## Update: year zero clears at the opening wage and near the opening prices (branch opening-wage-year-zero)
++
++Two causes, measured by `python3 sim/simulator.py spin-up-trace --fixture stationary --years 10`. (1) The workers' ask
++started at the bare reservation wage, far under the contracts the opening seeds, so year zero's new hires cleared where
++the hours sold (which rise with the wage through the plot) meet the hours wanted, and the hours-weighted mean over held
++and newly hired hours (each year about half the held hours are separated and re-hired at the going offer) read as a wage
++well under the opening's. A market that opens holding hours now opens asking the contract (`asks.opening_scale`).
++(2) Producers offered their safety stock as well as the year's output, more than buyers' budgets cover, so the price fell
++to the stock's holding reservation; the safety stock is now held back (`inventory.safety_stock_kept`). Still open: the
++stationary fixture's hired hours fall over the years because households spend less than the opening's final demand and
++cash piles up in households (hh cash 3.6M at year 0 to 5.4M at year 7 by the probe in 473), so the wage and price level
++drift down from decade two.
+diff --git a/sim/economy/inventory.py b/sim/economy/inventory.py
+index 277cf4b..e2530d4 100644
+--- a/sim/economy/inventory.py
++++ b/sim/economy/inventory.py
+@@ -100,3 +100,11 @@ def target_stock(expected_yearly_sales: float, months_of_cover: Optional[float]
+     """The stock worth holding to serve expected sales for the months of cover."""
+     cover = DEFAULT_MONTHS_OF_COVER if months_of_cover is None else months_of_cover
+     return max(0.0, expected_yearly_sales) * max(0.0, cover) / 12.0
++
++
++def safety_stock_kept(expected_yearly_sales: float, made_per_run: float) -> float:
++    """The units of an output a seller holds back from the market as its safety stock: the target stock of its expected
++    sales (`target_stock`), in units of the output. Output beyond it is for sale. A seller that offered the safety stock
++    too would put a stock on the market every year that buyers' budgets do not cover, and the price would fall to the
++    holding reservation (`holding_reservation`) of the carry, below the price that pays."""
++    return target_stock(expected_yearly_sales) * max(0.0, made_per_run)
+diff --git a/sim/economy/year_goods.py b/sim/economy/year_goods.py
+index c07d6b7..83c18d1 100644
+--- a/sim/economy/year_goods.py
++++ b/sim/economy/year_goods.py
+@@ -9,7 +9,7 @@ import dataclasses
+ import math
+ from typing import Dict, List, Tuple
+ 
+-from . import (land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
++from . import (inventory, land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
+                state_budget, state_store, taxes, tool_wear, unsold_search)
+ from .household_work_year import basket_key, cohort_basket
+ from .market_memory import market_key
+@@ -270,7 +270,8 @@ def _produce_and_offer(setup, record, view, producer_id, plan, in_kind, order_bo
+     money = setup.currency_id
+     cash = book.balance(producer_id, money)
+     shortfall = seller_cash.shortfall_to_raise(producer.cash_target, cash, ledger.running_costs(producer_id))
+-    keep = {good: recipe.inputs.get(good, 0.0) * producer.capacity_runs for good in recipe.outputs}
++    keep = {good: recipe.inputs.get(good, 0.0) * producer.capacity_runs + inventory.safety_stock_kept(producer.expected_sales, made)
++            for good, made in recipe.outputs.items()}
+     offers = producers.offers(producer, recipe, view, stock, shortfall, view.interest_rate(money), setup.specs, keep)
+     add_orders(order_book, AgentOrders(offers=tuple(offers)))
+ 
+diff --git a/sim/labour/market/asks.py b/sim/labour/market/asks.py
+index 3aaf932..27e63a5 100644
+--- a/sim/labour/market/asks.py
++++ b/sim/labour/market/asks.py
+@@ -8,6 +8,9 @@ than is offered the ask is raised by the share of demand left unmet. Nothing her
+ A family with hours nobody buys still eats from its own plot and savings (the economy keeps those hours
+ back; households_own.py), which is what lets the ask fall.
+ """
++import math
++from typing import Mapping, Optional
++
+ from sim.constants import declare
+ 
+ from .records import MarketState
+@@ -52,9 +55,25 @@ VACANCY_SHARE_THRESHOLD = declare(
+         "A market has no post count, so the threshold is the share of wanted hours the supply cannot fill. Not fitted.")
+ 
+ 
+-def scale_of(state: MarketState, area: str, trade: str) -> float:
+-    """The ask over the reservation wage; one before any year has moved it."""
+-    return state.asks.get(area, {}).get(trade, 1.0)
++def opening_scale(contracts: Mapping[str, float], held: Mapping[str, float], reservation: float) -> float:
++    """The ask of a market that opens holding hours: the hours-weighted contract wage over the reservation wage. A
++    hired worker's reservation is reset to the wage he is paid (Eurace Household_receive_wage, Labour/
++    Household_Employee_Functions.c), so hours that open at a contract ask it; one with nothing held, or no reservation
++    to measure by, asks the reservation itself."""
++    hours = math.fsum(max(0.0, held.get(employer, 0.0)) for employer in contracts)
++    if hours <= 0.0 or reservation <= 0.0:
++        return 1.0
++    return math.fsum(max(0.0, held.get(employer, 0.0)) * wage for employer, wage in sorted(contracts.items())) / hours / reservation
++
++
++def scale_of(state: MarketState, area: str, trade: str, reservation: float = 0.0) -> float:
++    """The ask over the reservation wage. Before any year has moved it, the contracts the market opens holding set it
++    (`opening_scale`, when `reservation` is given), else one."""
++    remembered = state.asks.get(area, {}).get(trade)
++    if remembered is not None:
++        return remembered
++    return opening_scale(state.contract_wages.get(area, {}).get(trade, {}), state.hired_hours.get(area, {}).get(trade, {}),
++                         reservation)
+ 
+ 
+ def moved_scale(scale: float, offered: float, wanted: float) -> float:
+@@ -72,11 +91,11 @@ def moved_scale(scale: float, offered: float, wanted: float) -> float:
+ 
+ 
+ def record(state: MarketState, area: str, trade: str, offered: float, wanted: float, wage: float,
+-           reservation: float, lowest: float = 0.0) -> None:
++           reservation: float, lowest: float = 0.0, before: Optional[float] = None) -> None:
+     """Move the ask for the year just cleared. It is never raised past the wage the hours just fetched (a
+     seller does not ask more than anyone has been seen to pay) and never lowered past `lowest`, the wage
+     floor: what the household costs to keep alive and working, less what its own plot gives."""
+-    before = scale_of(state, area, trade)
++    before = scale_of(state, area, trade, reservation) if before is None else before
+     scale = moved_scale(before, offered, wanted)
+     if scale > before and reservation > 0.0:
+         # a raise only means something where the ask is what the hours fetched; a wage already well above
+diff --git a/sim/labour/market/clearing.py b/sim/labour/market/clearing.py
+index c8620e9..e6d97ff 100644
+--- a/sim/labour/market/clearing.py
++++ b/sim/labour/market/clearing.py
+@@ -290,7 +290,8 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
+     share_at = inputs.hours_share_at.get((trade, area))
+     base_reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
+     lowest = inputs.ask_floor_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
+-    reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, unskilled_option(state, inputs, area, trade))
++    ask_scale = asks.scale_of(state, area, trade, base_reservation)
++    reservation = max(base_reservation * ask_scale, lowest, unskilled_option(state, inputs, area, trade))
+     last = state.entry_wages.get(area, {}).get(trade)
+     if last is None:
+         last = state.wages.get(area, {}).get(trade)
+@@ -342,7 +343,7 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
+     state.entry_wages.setdefault(area, {})[trade] = wage
+     state.wages.setdefault(area, {})[trade] = reported
+     state.contract_wages.setdefault(area, {})[trade] = dict(paid_each)
+-    asks.record(state, area, trade, offered, sum(wanted.values()), wage, base_reservation, lowest)
++    asks.record(state, area, trade, offered, sum(wanted.values()), wage, base_reservation, lowest, before=ask_scale)
+     state.hired_hours.setdefault(area, {})[trade] = dict(hired)
+     total = sum(hired.values())
+     average = sum(hours * paid_each[employer] for employer, hours in hired.items()) / total if total > 0.0 else wage
+diff --git a/sim/tests/test_ask_opening_scale.py b/sim/tests/test_ask_opening_scale.py
+new file mode 100644
+index 0000000..87a7a5f
+--- /dev/null
++++ b/sim/tests/test_ask_opening_scale.py
+@@ -0,0 +1,40 @@
++"""A market that opens holding hours at contracts opens with its workers asking what those contracts pay (a hired
++worker's reservation is reset to the wage, Eurace Household_receive_wage), not the bare reservation wage."""
++
++QUICK_TOPIC = True
++
++import unittest
++
++from sim.labour.market import asks
++from sim.labour.market.records import MarketState
++
++
++class OpeningAskFollowsContracts(unittest.TestCase):
++    def test_ask_is_the_hours_weighted_contract_over_the_reservation(self):
++        scale = asks.opening_scale({"farm": 1.0, "mill": 2.0}, {"farm": 300.0, "mill": 100.0}, 0.5)
++        self.assertAlmostEqual(scale, 1.25 / 0.5)
++
++    def test_no_hours_held_asks_the_reservation_itself(self):
++        self.assertEqual(asks.opening_scale({}, {}, 0.5), 1.0)
++        self.assertEqual(asks.opening_scale({"farm": 1.0}, {"farm": 0.0}, 0.5), 1.0)
++
++    def test_a_reservation_of_nothing_leaves_the_scale_at_one(self):
++        self.assertEqual(asks.opening_scale({"farm": 1.0}, {"farm": 10.0}, 0.0), 1.0)
++
++    def test_a_remembered_scale_is_used_over_the_opening_one(self):
++        state = MarketState()
++        state.asks = {"vale": {"digger": 0.8}}
++        state.contract_wages = {"vale": {"digger": {"farm": 1.0}}}
++        state.hired_hours = {"vale": {"digger": {"farm": 10.0}}}
++        self.assertEqual(asks.scale_of(state, "vale", "digger", 0.5), 0.8)
++
++    def test_an_unremembered_scale_starts_from_the_contracts_held(self):
++        state = MarketState()
++        state.contract_wages = {"vale": {"digger": {"farm": 1.0}}}
++        state.hired_hours = {"vale": {"digger": {"farm": 10.0}}}
++        self.assertEqual(asks.scale_of(state, "vale", "digger", 0.5), 2.0)
++        self.assertEqual(asks.scale_of(state, "vale", "digger"), 1.0)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/sim/tests/test_economy_inventory.py b/sim/tests/test_economy_inventory.py
+index 4427217..0a55a2d 100644
+--- a/sim/tests/test_economy_inventory.py
++++ b/sim/tests/test_economy_inventory.py
+@@ -66,5 +66,14 @@ class TargetStockTests(unittest.TestCase):
+         self.assertEqual(inventory.target_stock(-5.0), 0.0)
+ 
+ 
++class SafetyStockTests(unittest.TestCase):
++    def test_the_stock_kept_back_is_the_target_stock_of_the_output(self):
++        self.assertAlmostEqual(inventory.safety_stock_kept(120.0, 2.0), inventory.target_stock(120.0) * 2.0)
++
++    def test_no_expected_sales_or_no_output_keeps_nothing(self):
++        self.assertEqual(inventory.safety_stock_kept(0.0, 2.0), 0.0)
++        self.assertEqual(inventory.safety_stock_kept(120.0, 0.0), 0.0)
++
++
+ if __name__ == "__main__":
+     unittest.main()
+-- 
+2.43.0
+

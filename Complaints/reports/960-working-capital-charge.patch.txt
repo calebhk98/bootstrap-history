@@ -1,0 +1,526 @@
+From 7c9bb53868d2ced833e115408c21f776bcf1b8c1 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 10:18:20 +0000
+Subject: [PATCH 1/2] Charge the return on working capital in the run cost
+ producers plan with and the opening covers
+
+A producer pays its wages and inputs before it sells; the money so tied up earns the year's rate lent out.
+unit_cost.running_cost_per_run adds that charge (outlay times rate times the years of costs the cash target
+holds) to the variable cost. producers.plan, share_that_pays, the break-even scale and the shedding margin use
+it, and so do the opening's covering prices, working share and unit costs, so both read one function.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WXrfievykJ3StG4swPtute
+---
+ sim/economy/opening.py                        |  6 ++-
+ sim/economy/opening_income.py                 |  4 +-
+ sim/economy/opening_rent.py                   | 14 ++++---
+ sim/economy/opening_runs.py                   |  2 +-
+ sim/economy/producers.py                      | 18 ++++++---
+ sim/economy/producers_close.py                | 17 +++-----
+ sim/economy/unit_cost.py                      | 29 ++++++++++++++
+ sim/tests/test_asks_follow_sales.py           |  2 +-
+ ...mplaint_659_tool_fallback_and_site_room.py |  2 +-
+ sim/tests/test_economy_producer_stale_ask.py  |  2 +-
+ sim/tests/test_opening_consistency_rule.py    |  5 ++-
+ sim/tests/test_opening_fixture_supply.py      |  2 +-
+ sim/tests/test_unit_cost_working_capital.py   | 40 +++++++++++++++++++
+ 13 files changed, 110 insertions(+), 33 deletions(-)
+ create mode 100644 sim/tests/test_unit_cost_working_capital.py
+
+diff --git a/sim/economy/opening.py b/sim/economy/opening.py
+index 2b9b8c2..e0da9a4 100644
+--- a/sim/economy/opening.py
++++ b/sim/economy/opening.py
+@@ -101,7 +101,8 @@ def _with_covering_prices(setup: EconomySetup):
+         record = settled[0]
+         covered = opening_rent.covering_prices(
+             setup.recipes, setup.opening_prices, setup.opening_wages, opening_rent.shares_of_revenue(current, record),
+-            {producer.recipe_id for producer in record.producers.values()}, opening_runs.mean_yields(setup, setup.recipes))
++            {producer.recipe_id for producer in record.producers.values()}, opening_runs.mean_yields(setup, setup.recipes),
++            setup.opening_rate)
+         if all(abs(price - current.opening_prices.get(good, 0.0)) <= COVERING_PRICE_TOLERANCE * price
+                for good, price in covered.items()):
+             break
+@@ -439,7 +440,8 @@ def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_lim
+             continue
+         tile_yield = sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
+             recipe_tile_key(recipe.recipe_id, tile), 1.0))     # a crop recipe is sized at its tile's yield; the engine adds the weather each year
+-        working_share = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages, tile_yield)
++        working_share = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages, tile_yield,
++                                                  0.0, setup.opening_rate)
+         held = record.producers.get(producer_id)
+         if held is not None:      # a second share of the runs on the same tile (a pooled area's) adds to the producer
+             record.producers[producer_id] = replaced(
+diff --git a/sim/economy/opening_income.py b/sim/economy/opening_income.py
+index 0bab6b1..3f96060 100644
+--- a/sim/economy/opening_income.py
++++ b/sim/economy/opening_income.py
+@@ -153,14 +153,14 @@ def property_income_of(cohorts: Mapping[str, Cohort], per_head: float, labour_sh
+ 
+ 
+ def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, float], yield_factor: float = 1.0,
+-                  rent_per_run: float = 0.0) -> float:
++                  rent_per_run: float = 0.0, rate: float = 0.0) -> float:
+     """Share of a producer's plant that works at the opening prices: only the workplaces whose own cost the
+     revenue (at the tile's yield factor) covers do (producers.share_working), so a producer sized to the runs
+     households' demand needs has that much more plant than it works, and the first year's plan (plant times this
+     share) is the runs it was sized for. A run that cannot be priced counts as working in full (the first year's
+     plan finds out)."""
+     from . import producers, unit_cost
+-    variable = unit_cost.variable_cost_per_run(recipe, prices, wages, rent_per_run)
++    variable = unit_cost.running_cost_per_run(recipe, prices, wages, rate, rent_per_run)     # as producers.plan costs a run
+     revenue = unit_cost.revenue_per_run(recipe, prices) * yield_factor
+     if not math.isfinite(variable) or variable <= 0.0 or revenue <= 0.0:
+         return 1.0
+diff --git a/sim/economy/opening_rent.py b/sim/economy/opening_rent.py
+index 90ec579..8f0bafc 100644
+--- a/sim/economy/opening_rent.py
++++ b/sim/economy/opening_rent.py
+@@ -32,21 +32,22 @@ def rent_share_of_revenue(rows: Iterable[Tuple[str, float, float, float]]) -> Di
+ 
+ 
+ def covering_prices(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float], wages: Mapping[str, float],
+-                    rent_share: Mapping[str, float], active: Set[str], yields: Mapping[str, float]) -> Dict[GoodId, float]:
++                    rent_share: Mapping[str, float], active: Set[str], yields: Mapping[str, float],
++                    rate: float = 0.0) -> Dict[GoodId, float]:
+     """`prices` with the main output of each `active` recipe raised, where it must be, until a run's revenue (at its
+-    yield) pays its variable cost, and a rent that is `rent_share[recipe]` of that revenue. A price that already pays
++    yield) pays its variable cost and the return on the working capital it ties up at `rate`, and a rent that is `rent_share[recipe]` of that revenue. A price that already pays
+     stays; an input made dearer raises the price of what uses it (the passes repeat until nothing moves)."""
+     covered = dict(prices)
+     main = opening_runs.main_outputs(recipes, prices)
+     # a recipe the authored prices already leave short of its cost stays short by as much: only rent and dearer inputs are covered
+     shortfall = {recipe_id: min(0.0, _revenue(recipes[recipe_id], prices, yields.get(recipe_id, 1.0))
+-                                - unit_cost.variable_cost_per_run(recipes[recipe_id], prices, wages))
++                                - unit_cost.running_cost_per_run(recipes[recipe_id], prices, wages, rate))
+                  for recipe_id in active}
+     for _pass in range(COVERING_PASSES):
+         moved = False
+         for recipe_id in sorted(active):
+             recipe = recipes[recipe_id]
+-            cost = unit_cost.variable_cost_per_run(recipe, covered, wages)
++            cost = unit_cost.running_cost_per_run(recipe, covered, wages, rate)
+             share = rent_share.get(recipe_id, 0.0)
+             made = recipe.outputs.get(main[recipe_id], 0.0) * yields.get(recipe_id, 1.0)
+             if not math.isfinite(cost) or made <= 0.0 or share >= 1.0:
+@@ -109,9 +110,10 @@ def settle(setup, record, view, plot_hectares_by_tile: Mapping[str, float]) -> D
+         if producer.land_rent_per_run <= 0.0:
+             continue
+         recipe = setup.recipes[producer.recipe_id]
+-        before = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages, producer.yield_factor)
++        before = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages, producer.yield_factor,
++                                              0.0, setup.opening_rate)
+         after = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages, producer.yield_factor,
+-                                             producer.land_rent_per_run)
++                                             producer.land_rent_per_run, setup.opening_rate)
+         record.producers[producer_id] = replaced(producer, capacity_runs=producer.capacity_runs * before / after)
+     owners = {tile: ownership.owner_cohort(record, tile) for tile in result.rent_per_hectare_by_tile}
+     paid = ownership.spread(record, land_market.rent_postings(result, demands, owners, setup.currency_id))
+diff --git a/sim/economy/opening_runs.py b/sim/economy/opening_runs.py
+index 256d170..a917158 100644
+--- a/sim/economy/opening_runs.py
++++ b/sim/economy/opening_runs.py
+@@ -58,7 +58,7 @@ def unit_costs(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float], wa
+     yields = yields or {}
+     costed: Dict[GoodId, List[Tuple[float, str]]] = {}
+     for recipe_id, recipe in sorted(recipes.items()):
+-        cost = (unit_cost.variable_cost_per_run(recipe, prices, wages)
++        cost = (unit_cost.running_cost_per_run(recipe, prices, wages, rate)
+                 + unit_cost.capital_charge_per_run(recipe, prices, wages, rate))
+         if not math.isfinite(cost):
+             continue
+diff --git a/sim/economy/producers.py b/sim/economy/producers.py
+index 22c7be2..a65ae54 100644
+--- a/sim/economy/producers.py
++++ b/sim/economy/producers.py
+@@ -263,6 +263,11 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
+     return updated
+ 
+ 
++def planning_rate(producer: Producer, recipe: Recipe, view: MarketView) -> float:
++    """The interest rate of the currency the producer sells in: what its money tied up before the sale would earn."""
++    return view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
++
++
+ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=None) -> Tuple[Optional[float], float]:
+     """(what the output prices would have to be multiplied by for a run to just repay its variable cost
+     and its plant at the live rate, the share of that cost that is bought inputs); the scale is None when it
+@@ -272,7 +277,7 @@ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=No
+     wages = live_wages(producer, recipe, view) if wages is None else wages
+     revenue = unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor
+     rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
+-    cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run) + unit_cost.capital_charge_per_run(
++    cost = unit_cost.running_cost_per_run(recipe, inputs, wages, rate, producer.land_rent_per_run) + unit_cost.capital_charge_per_run(
+         recipe, inputs, wages, rate)
+     if not (revenue > 0.0 and math.isfinite(cost) and cost > 0.0):
+         return None, 0.0
+@@ -294,7 +299,8 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
+     input_cost = unit_cost.input_cost_per_run(recipe, inputs)
+     labour_cost = unit_cost.labour_cost_per_run(recipe, wages)
+     rent = producer.land_rent_per_run
+-    variable = input_cost + labour_cost + rent
++    rate = planning_rate(producer, recipe, view)
++    variable = input_cost + labour_cost + rent + unit_cost.working_capital_charge_per_run(recipe, inputs, wages, rate)
+     margin = revenue - variable
+     if producer.capacity_runs <= 0.0 or revenue <= 0.0 or not math.isfinite(variable):
+         return Plan(0.0, expected_margin_per_run=margin)
+@@ -318,7 +324,8 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
+     labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost + rent, wages)
+     # an input is bid up to the price at which the run breaks even at the input prices seen now, not at the
+     # lagging expectation the run is planned on, or a scarce input's price ratchets up on its own bid
+-    live_variable = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}) + labour_cost + rent
++    live_variable = (unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}) + labour_cost + rent
++                     + unit_cost.working_capital_charge_per_run(recipe, {**inputs, **market_inputs}, wages, rate))
+     bids = _input_bids(producer, recipe, view, runs, market_inputs, max(cash, 0.0) - runs * labour_cost,
+                        revenue / ratio - live_variable, live_variable, wages)
+     return Plan(runs, tuple(labour_bids), tuple(bids), margin, wanted, runs * labour_cost)
+@@ -348,8 +355,9 @@ def share_that_pays(producer: Producer, recipe: Recipe, view: MarketView,
+     priced. `outputs` is `expected_output_prices` when the caller has it already."""
+     if outputs is None:
+         outputs = expected_output_prices(producer, recipe, view)
+-    variable = (unit_cost.variable_cost_per_run(recipe, expected_input_prices(producer, recipe, view),
+-                                                live_wages(producer, recipe, view), producer.land_rent_per_run))
++    variable = (unit_cost.running_cost_per_run(recipe, expected_input_prices(producer, recipe, view),
++                                               live_wages(producer, recipe, view), planning_rate(producer, recipe, view),
++                                               producer.land_rent_per_run))
+     if not math.isfinite(variable):
+         return 0.0
+     return share_working(unit_cost.revenue_per_run(recipe, outputs) * producer.yield_factor, variable)
+diff --git a/sim/economy/producers_close.py b/sim/economy/producers_close.py
+index 3cf2663..1c309ec 100644
+--- a/sim/economy/producers_close.py
++++ b/sim/economy/producers_close.py
+@@ -14,6 +14,7 @@ from typing import Callable, Collection, List, Mapping, Optional, Sequence, Tupl
+ 
+ from sim.constants import declare
+ 
++from .unit_cost import WORKING_CAPITAL_YEARS_OF_VARIABLE_COST
+ from . import credit, equity, firm_finance as finance, producer_losses, idle_capacity, inventory, plant_investment, producers_working_capital, unit_cost
+ from .producers import (OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, expected_output_prices, live_input_prices,
+                         live_wages, next_expectations, runs_for_stock, share_working, within_a_years_change)
+@@ -28,12 +29,6 @@ LOSS_YEARS_BEFORE_EXIT = declare(
+     why="Entry (entry_margin.py) waits this many years of a standing margin before newcomers come. A producer's own "
+         "exit no longer waits on it: plant is shed when expected sales do not cover running cost. How long newcomers "
+         "wait follows their credit and the time to build, which are not yet tied to the decision.")
+-WORKING_CAPITAL_YEARS_OF_VARIABLE_COST = declare(
+-    "WORKING_CAPITAL_YEARS_OF_VARIABLE_COST", 1.0, kind="temporary_heuristic",
+-    unit="years of full-capacity variable cost", source=None, confidence="D",
+-    why="Inputs and wages are paid before the year's sales in a model with one clearing a year, so "
+-        "a producer keeps a year of them. The true float follows the production cycle and the "
+-        "credit on offer, which are not modelled.")
+ CLOSED_CAPACITY_SHARE = declare(
+     "CLOSED_CAPACITY_SHARE", 0.01, kind="temporary_heuristic",
+     unit="share of a producer's workplaces whose cost the expected revenue covers", source=None, confidence="D",
+@@ -83,7 +78,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
+     loss = worked <= 0.0 or revenue < costs + (charge if math.isfinite(charge) else 0.0)
+     losses = producer.years_of_loss + 1 if loss else 0
+     has_plant = recipe.plant_life_years > 0.0
+-    revenue_per_run, cost_per_run = _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods)
++    revenue_per_run, cost_per_run = _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods, rate)
+     margin = revenue_per_run - cost_per_run
+     paying = share_working(revenue_per_run, cost_per_run) if math.isfinite(margin) else 0.0
+     shedding = margin <= 0.0      # expected sales do not cover running cost, whatever the years behind
+@@ -127,15 +122,15 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
+     return YearClose(survivor, _dividend(producer, currency, surplus), request, grown, replacement)
+ 
+ 
+-def _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods=()) -> Tuple[float, float]:
+-    """(expected revenue, variable cost) of one run at expected prices; plant already built is sunk and left
+-    out. A cost or price that cannot be known counts as no margin: (0, infinity)."""
++def _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods=(), rate=0.0) -> Tuple[float, float]:
++    """(expected revenue, running cost) of one run at expected prices: variable cost and the return forgone on the
++    money it ties up at `rate`; plant already built is sunk and left out. A cost or price that cannot be known counts as no margin: (0, infinity)."""
+     prices = {good: expectations[good] if good in expectations else view.price(good, view.area_of(good, producer.tile))
+               for good in recipe.outputs}
+     if any(price is None for price in prices.values()):
+         return 0.0, math.inf
+     prices = _behind_the_stock(producer, recipe, view, prices, ground_goods)
+-    cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run)
++    cost = unit_cost.running_cost_per_run(recipe, inputs, wages, rate, producer.land_rent_per_run)
+     if not math.isfinite(cost):
+         return 0.0, math.inf
+     return unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor, cost
+diff --git a/sim/economy/unit_cost.py b/sim/economy/unit_cost.py
+index 70bde76..80b3abb 100644
+--- a/sim/economy/unit_cost.py
++++ b/sim/economy/unit_cost.py
+@@ -8,10 +8,19 @@ the yearly share that repays the plant's value over its life.
+ import math
+ from typing import Mapping
+ 
++from sim.constants import declare
+ from sim.world import capital_market
+ 
+ from .types import GoodId, Recipe, TradeId
+ 
++WORKING_CAPITAL_YEARS_OF_VARIABLE_COST = declare(
++    "WORKING_CAPITAL_YEARS_OF_VARIABLE_COST", 1.0, kind="temporary_heuristic",
++    unit="years of full-capacity variable cost", source=None, confidence="D",
++    why="Inputs and wages are paid before the year's sales in a model with one clearing a year, so "
++        "a producer keeps a year of them, and the money so tied up earns nothing: a run is charged the "
++        "rate on that outlay for this long (working_capital_charge). The true float follows the production "
++        "cycle and the credit on offer, which are not modelled.")
++
+ Prices = Mapping[GoodId, float]
+ Wages = Mapping[TradeId, float]
+ 
+@@ -40,6 +49,26 @@ def variable_cost_per_run(recipe: Recipe, input_prices: Prices, wages: Wages, re
+     return input_cost_per_run(recipe, input_prices) + labour_cost_per_run(recipe, wages) + rent
+ 
+ 
++def working_capital_charge(paid_before_sale: float, interest_rate: float, years_tied_up: float) -> float:
++    """What the money paid out before the sale would have earned lent out over the years it is tied up."""
++    return max(0.0, paid_before_sale) * max(0.0, interest_rate) * years_tied_up
++
++
++def working_capital_charge_per_run(recipe: Recipe, input_prices: Prices, wages: Wages, interest_rate: float) -> float:
++    """The return forgone on a run's inputs and labour, paid before its output sells. Rent falls due out of the
++    sales and the plant has its own capital charge, so neither is counted. Infinite when the run cannot be priced."""
++    paid = input_cost_per_run(recipe, input_prices) + labour_cost_per_run(recipe, wages)
++    if not math.isfinite(paid):
++        return math.inf
++    return working_capital_charge(paid, interest_rate, WORKING_CAPITAL_YEARS_OF_VARIABLE_COST)
++
++
++def running_cost_per_run(recipe: Recipe, input_prices: Prices, wages: Wages, interest_rate: float, rent: float = 0.0) -> float:
++    """Variable cost plus the charge on the working capital it ties up: the cost a producer plans a run against."""
++    return (variable_cost_per_run(recipe, input_prices, wages, rent)
++            + working_capital_charge_per_run(recipe, input_prices, wages, interest_rate))
++
++
+ def plant_value_per_run(recipe: Recipe, input_prices: Prices, wages: Wages) -> float:
+     """What the plant for one run of yearly capacity costs to build at these prices and wages."""
+     return _bill(recipe.plant_goods, input_prices) + _bill(recipe.plant_labour_hours, wages)
+diff --git a/sim/tests/test_asks_follow_sales.py b/sim/tests/test_asks_follow_sales.py
+index 9565caa..420b7c4 100644
+--- a/sim/tests/test_asks_follow_sales.py
++++ b/sim/tests/test_asks_follow_sales.py
+@@ -119,7 +119,7 @@ class SellersOfGoodsAskFollowSales(unittest.TestCase):
+         self.assertTrue(all(later > earlier for earlier, later in zip(path, path[1:])), path)
+ 
+     def test_a_producer_that_did_not_run_has_not_sold_out(self):
+-        view = View({"grain": 0.7, "seed": 1.0}, {"hand": 1.0}, stock=0.0)
++        view = View({"grain": 0.7, "seed": 1.0}, {"hand": 1.0}, stock=0.0, rate=0.0)     # no rate: the price is the break-even
+         expected = producers.next_expectations(seller(last_runs=0.0), FARM, view)["grain"]
+         self.assertLessEqual(expected, 0.7 + 1e-9)
+ 
+diff --git a/sim/tests/test_complaint_659_tool_fallback_and_site_room.py b/sim/tests/test_complaint_659_tool_fallback_and_site_room.py
+index 27996cf..7191828 100644
+--- a/sim/tests/test_complaint_659_tool_fallback_and_site_room.py
++++ b/sim/tests/test_complaint_659_tool_fallback_and_site_room.py
+@@ -153,7 +153,7 @@ class OpeningToolShortageTests(unittest.TestCase):
+ class SecondShareOnATileTests(unittest.TestCase):
+     def test_a_second_share_of_the_runs_on_a_tile_adds_to_its_producer(self):
+         recipe = Recipe("dig", {"ore": 1.0}, {}, {"labourer": 1.0})
+-        setup = types.SimpleNamespace(opening_prices={}, opening_wages={}, yield_factor_by_recipe_tile={})
++        setup = types.SimpleNamespace(opening_prices={}, opening_wages={}, opening_rate=0.05, yield_factor_by_recipe_tile={})
+         record = EconomyRecord.__new__(EconomyRecord)
+         record.producers = {}
+         wanted = {}
+diff --git a/sim/tests/test_economy_producer_stale_ask.py b/sim/tests/test_economy_producer_stale_ask.py
+index 2eef9ed..8577bbc 100644
+--- a/sim/tests/test_economy_producer_stale_ask.py
++++ b/sim/tests/test_economy_producer_stale_ask.py
+@@ -49,7 +49,7 @@ def seller(**changes):
+ 
+ def frozen_market(stock):
+     """The market remembers the price the seller already expects: nothing cleared, nothing moved it."""
+-    return View({"grain": 0.7, "seed": 1.0}, {"hand": 1.0}, stock)
++    return View({"grain": 0.7, "seed": 1.0}, {"hand": 1.0}, stock, rate=0.0)     # no rate: the price is the break-even
+ 
+ 
+ class UnsoldAskTests(unittest.TestCase):
+diff --git a/sim/tests/test_opening_consistency_rule.py b/sim/tests/test_opening_consistency_rule.py
+index 0935ffb..0ade11c 100644
+--- a/sim/tests/test_opening_consistency_rule.py
++++ b/sim/tests/test_opening_consistency_rule.py
+@@ -118,7 +118,7 @@ class OpeningStaffingTests(unittest.TestCase):
+         record, _areas, _carriage = opening.open_economy(setup)
+         for producer in record.producers.values():
+             recipe = setup.recipes[producer.recipe_id]
+-            share = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages)
++            share = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages, 1.0, 0.0, setup.opening_rate)
+             self.assertGreater(share, 0.0)
+             self.assertLessEqual(share, 1.0)
+             self.assertAlmostEqual(producer.capacity_runs * share / producer.expected_sales, 1.0, places=6)
+@@ -154,7 +154,8 @@ class CoinWorthTests(unittest.TestCase):
+         from sim.economy import unit_cost
+         record, _areas, _carriage = opening.open_economy(setup)
+         smelt = setup.recipes[fixture.SMELT]
+-        cost_of = lambda recipe: (unit_cost.variable_cost_per_run(recipe, setup.opening_prices, setup.opening_wages)
++        cost_of = lambda recipe: (unit_cost.running_cost_per_run(recipe, setup.opening_prices, setup.opening_wages,
++                                                                 setup.opening_rate)
+                                   + unit_cost.capital_charge_per_run(recipe, setup.opening_prices, setup.opening_wages,
+                                                                      setup.opening_rate)) / recipe.outputs[fixture.METAL]
+         return opening_metal.marginal_cost(setup, record), cost_of(smelt), cost_of(setup.recipes["scrap_metal"])
+diff --git a/sim/tests/test_opening_fixture_supply.py b/sim/tests/test_opening_fixture_supply.py
+index 85f8fdc..62ffa43 100644
+--- a/sim/tests/test_opening_fixture_supply.py
++++ b/sim/tests/test_opening_fixture_supply.py
+@@ -23,7 +23,7 @@ def yields_keyed(factor_scale=1.0):
+ 
+ def setup_with(yield_factor_by_recipe_tile):
+     return types.SimpleNamespace(
+-        recipes=fixture.recipes(), opening_prices={fixture.GRAIN: 100.0}, opening_wages={fixture.LABOURER: 1.0},
++        recipes=fixture.recipes(), opening_prices={fixture.GRAIN: 100.0}, opening_wages={fixture.LABOURER: 1.0}, opening_rate=0.05,
+         yield_factor_by_recipe_tile=yield_factor_by_recipe_tile, opening_population_by_tile=dict(PEOPLE),
+         tiles={tile: None for tile in PEOPLE}, recipe_allowed=lambda recipe_id, tile: True)
+ 
+diff --git a/sim/tests/test_unit_cost_working_capital.py b/sim/tests/test_unit_cost_working_capital.py
+new file mode 100644
+index 0000000..5c783a4
+--- /dev/null
++++ b/sim/tests/test_unit_cost_working_capital.py
+@@ -0,0 +1,40 @@
++"""The return on working capital in a run's cost (sim/economy/unit_cost.py): the outlay paid before the sale, at the rate, for the
++years it is tied up."""
++
++QUICK_TOPIC = True
++
++import math
++import unittest
++
++from sim.economy import unit_cost
++from sim.economy.types import Recipe
++
++SMELT = Recipe("smelt", {"metal": 10.0}, {"ore": 20.0}, {"smith": 5.0}, {"stone": 100.0}, {"mason": 10.0}, 20.0)
++PRICES = {"ore": 1.0, "stone": 2.0}
++WAGES = {"smith": 3.0, "mason": 4.0}
++
++
++class WorkingCapitalChargeTests(unittest.TestCase):
++    def test_charge_is_outlay_times_rate_times_years_tied(self):
++        self.assertAlmostEqual(unit_cost.working_capital_charge(35.0, 0.05, 0.5), 35.0 * 0.05 * 0.5)
++
++    def test_no_rate_or_a_negative_rate_charges_nothing(self):
++        self.assertEqual(unit_cost.working_capital_charge(35.0, 0.0, 1.0), 0.0)
++        self.assertEqual(unit_cost.working_capital_charge(35.0, -0.02, 1.0), 0.0)
++
++    def test_run_charge_is_on_inputs_and_labour_not_plant_or_rent(self):
++        years = unit_cost.WORKING_CAPITAL_YEARS_OF_VARIABLE_COST
++        self.assertAlmostEqual(unit_cost.working_capital_charge_per_run(SMELT, PRICES, WAGES, 0.1), (20.0 + 15.0) * 0.1 * years)
++
++    def test_a_run_that_cannot_be_priced_stays_infinite_even_at_no_rate(self):
++        self.assertTrue(math.isinf(unit_cost.working_capital_charge_per_run(SMELT, {}, WAGES, 0.0)))
++
++    def test_running_cost_is_variable_cost_plus_the_charge(self):
++        plain = unit_cost.variable_cost_per_run(SMELT, PRICES, WAGES, 3.0)
++        charge = unit_cost.working_capital_charge_per_run(SMELT, PRICES, WAGES, 0.1)
++        self.assertAlmostEqual(unit_cost.running_cost_per_run(SMELT, PRICES, WAGES, 0.1, 3.0), plain + charge)
++        self.assertAlmostEqual(unit_cost.running_cost_per_run(SMELT, PRICES, WAGES, 0.0, 3.0), plain)
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.43.0
+
+
+From 6c040b57624bec05a958016c53183e95eeebfe00 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 10:27:32 +0000
+Subject: [PATCH 2/2] Labour bids leave room for the return on working capital
+ in the wage ceiling
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WXrfievykJ3StG4swPtute
+---
+ sim/economy/producers.py                    | 9 +++++----
+ sim/economy/unit_cost.py                    | 7 +++++++
+ sim/tests/test_economy_producers.py         | 5 +++--
+ sim/tests/test_unit_cost_working_capital.py | 9 +++++++++
+ 4 files changed, 24 insertions(+), 6 deletions(-)
+
+diff --git a/sim/economy/producers.py b/sim/economy/producers.py
+index a65ae54..5f192db 100644
+--- a/sim/economy/producers.py
++++ b/sim/economy/producers.py
+@@ -321,7 +321,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
+     if runs <= 0.0 or ratio <= 0.0:
+         return Plan(0.0, expected_margin_per_run=margin, wanted_runs=wanted)
+     # the workplaces that work are the cheaper ones: what an hour or an input is worth is judged at their cost
+-    labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost + rent, wages)
++    labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost, rent, wages, rate)
+     # an input is bid up to the price at which the run breaks even at the input prices seen now, not at the
+     # lagging expectation the run is planned on, or a scarce input's price ratchets up on its own bid
+     live_variable = (unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}) + labour_cost + rent
+@@ -460,10 +460,11 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
+     return max(0.0, sales + min(gap[good] for good in counted) / STOCK_CLEARING_YEARS)
+ 
+ 
+-def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> List[LabourBid]:
++def _labour_bids(producer, recipe, view, runs, revenue, input_cost, rent, wages, rate) -> List[LabourBid]:
+     """Each trade's hours, at most what an hour is worth: the run's revenue less inputs, shared among the
+-    run's trades (`labour_ceilings.joint_labour_ceilings`)."""
+-    ceilings = joint_labour_ceilings(recipe.labour_hours, wages, revenue - input_cost)
++    run's trades (`labour_ceilings.joint_labour_ceilings`), after rent and the return on the money tied up in inputs
++    and in the wages themselves (`unit_cost.wage_bill_ceiling`)."""
++    ceilings = joint_labour_ceilings(recipe.labour_hours, wages, unit_cost.wage_bill_ceiling(revenue, input_cost, rent, rate))
+     return [LabourBid(producer.agent_id, trade, view.area_of(trade, producer.tile),
+                       runs * recipe.labour_hours[trade], ceilings[trade])
+             for trade in sorted(recipe.labour_hours)]
+diff --git a/sim/economy/unit_cost.py b/sim/economy/unit_cost.py
+index 80b3abb..fadea0f 100644
+--- a/sim/economy/unit_cost.py
++++ b/sim/economy/unit_cost.py
+@@ -69,6 +69,13 @@ def running_cost_per_run(recipe: Recipe, input_prices: Prices, wages: Wages, int
+             + working_capital_charge_per_run(recipe, input_prices, wages, interest_rate))
+ 
+ 
++def wage_bill_ceiling(revenue: float, input_cost: float, rent: float, interest_rate: float) -> float:
++    """The most a run can pay in wages: revenue less rent, and less inputs and wages each with the return on the
++    money tied up paying them before the sale (the inverse of `running_cost_per_run` solved for the wage bill)."""
++    factor = 1.0 + working_capital_charge(1.0, interest_rate, WORKING_CAPITAL_YEARS_OF_VARIABLE_COST)
++    return (revenue - rent) / factor - input_cost
++
++
+ def plant_value_per_run(recipe: Recipe, input_prices: Prices, wages: Wages) -> float:
+     """What the plant for one run of yearly capacity costs to build at these prices and wages."""
+     return _bill(recipe.plant_goods, input_prices) + _bill(recipe.plant_labour_hours, wages)
+diff --git a/sim/tests/test_economy_producers.py b/sim/tests/test_economy_producers.py
+index 0873035..0ed720b 100644
+--- a/sim/tests/test_economy_producers.py
++++ b/sim/tests/test_economy_producers.py
+@@ -4,7 +4,7 @@ QUICK_TOPIC = True
+ 
+ import unittest
+ 
+-from sim.economy import plant_investment, producers, producers_close
++from sim.economy import plant_investment, producers, producers_close, unit_cost
+ from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodSpec, Recipe
+ 
+ FARM = Recipe("farm", {"grain": 10.0}, {"seed": 2.0}, {"hand": 5.0})
+@@ -72,7 +72,8 @@ class PlanTests(unittest.TestCase):
+         self.assertAlmostEqual(plan.runs, 10.0, places=2)                    # nearly every workplace pays
+         self.assertAlmostEqual(plan.bids[0].floor_quantity, 2.0 * plan.runs)
+         self.assertAlmostEqual(plan.labour_bids[0].hours, 5.0 * plan.runs)
+-        self.assertGreaterEqual(plan.labour_bids[0].maximum_wage, (20.0 - 2.0) / 5.0 - 1e-9)
++        wage_bill = unit_cost.wage_bill_ceiling(20.0, 2.0, 0.0, farm_view(2.0).rate)    # a run sells for 20, less its inputs and the charge on the money tied up
++        self.assertGreaterEqual(plan.labour_bids[0].maximum_wage, wage_bill / 5.0 - 1e-9)
+         spent = sum(bid.budget for bid in plan.bids) + plan.runs * 5.0
+         self.assertLessEqual(spent, 100.0 + 1e-9)
+ 
+diff --git a/sim/tests/test_unit_cost_working_capital.py b/sim/tests/test_unit_cost_working_capital.py
+index 5c783a4..8057943 100644
+--- a/sim/tests/test_unit_cost_working_capital.py
++++ b/sim/tests/test_unit_cost_working_capital.py
+@@ -35,6 +35,15 @@ class WorkingCapitalChargeTests(unittest.TestCase):
+         self.assertAlmostEqual(unit_cost.running_cost_per_run(SMELT, PRICES, WAGES, 0.1, 3.0), plain + charge)
+         self.assertAlmostEqual(unit_cost.running_cost_per_run(SMELT, PRICES, WAGES, 0.0, 3.0), plain)
+ 
++    def test_wage_bill_ceiling_leaves_room_for_the_charge_on_inputs_and_on_the_wages_themselves(self):
++        years = unit_cost.WORKING_CAPITAL_YEARS_OF_VARIABLE_COST
++        bill = unit_cost.wage_bill_ceiling(100.0, 20.0, 5.0, 0.1)
++        factor = 1.0 + 0.1 * years
++        self.assertAlmostEqual(bill * factor + 20.0 * factor + 5.0, 100.0)
++
++    def test_wage_bill_ceiling_without_a_rate_is_revenue_less_inputs_and_rent(self):
++        self.assertAlmostEqual(unit_cost.wage_bill_ceiling(100.0, 20.0, 5.0, 0.0), 75.0)
++
+ 
+ if __name__ == "__main__":
+     unittest.main()
+-- 
+2.43.0
+
