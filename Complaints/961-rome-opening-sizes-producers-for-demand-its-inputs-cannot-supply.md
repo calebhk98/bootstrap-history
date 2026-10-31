@@ -61,3 +61,10 @@ millet and wheat achieved over planned up, bread and meal down in the early year
 the millet, wood and wool makers (a hectare returns the plots more than their margin), so the land those makers get is
 small: the tile is short of land at the floors, not only badly shared. No committed command prints it: the
 measurement hooks `land_market.clear_land` and `producers.plan`/`produce` on a saved opened Rome.
+
+**Opening sized within input reach, parked** (`Complaints/reports/961-opening-within-input-reach.patch.txt`): the opening
+moves or cuts runs whose inputs no maker in the producer's market area can feed, and sizes store bids to replacement.
+Measured on a fresh Rome opening stepped on the branch's year rules (with households respending rationed budget):
+year 0 is much better (unsold-hours share about 0.38 against 0.51, real output about 6.5e10 against 5.3e10), but the
+economy then declines faster and ends worse by year 11 (people-based rate about 0.73 against 0.60, real output about
+2.7e10 against 3.3e10). Not merged until the later decline is understood.

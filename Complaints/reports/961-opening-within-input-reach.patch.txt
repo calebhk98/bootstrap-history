@@ -1,0 +1,459 @@
+From ad5c4da2138c0cf1705a407c70dcbeb0387f4265 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 18:01:58 +0000
+Subject: [PATCH] Opening sizes producers to the inputs in their market area
+ and store bids to replacement
+
+opening_reach.fit_to_reach moves runs a recipe cannot work where it stands to producers whose areas have the inputs and hours to spare, then cuts the rest to what the area's makers supply. Households' bids for wealth stores are bought at what the holdings lose in a year, not the gap to a target (opening_stores.yearly_replacement).
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WXrfievykJ3StG4swPtute
+---
+ ...ers-for-demand-its-inputs-cannot-supply.md |  10 +-
+ sim/economy/opening.py                        |  11 +-
+ sim/economy/opening_reach.py                  | 174 ++++++++++++++++++
+ sim/economy/opening_stores.py                 |  45 +++--
+ sim/tests/test_economy_opening_stores.py      |  13 ++
+ sim/tests/test_opening_reach.py               |  95 ++++++++++
+ 6 files changed, 332 insertions(+), 16 deletions(-)
+ create mode 100644 sim/economy/opening_reach.py
+ create mode 100644 sim/tests/test_opening_reach.py
+
+diff --git a/Complaints/961-rome-opening-sizes-producers-for-demand-its-inputs-cannot-supply.md b/Complaints/961-rome-opening-sizes-producers-for-demand-its-inputs-cannot-supply.md
+index 32f9bb5..6fe5444 100644
+--- a/Complaints/961-rome-opening-sizes-producers-for-demand-its-inputs-cannot-supply.md
++++ b/Complaints/961-rome-opening-sizes-producers-for-demand-its-inputs-cannot-supply.md
+@@ -1,6 +1,6 @@
+ # Rome's opening sizes producers for demand its inputs cannot supply, and a market with no seller shows no demand
+ 
+-**Status:** open - found tracing Rome's year-one fall on branch claude/labor-market-economy-stability-ueffy1; not fixed
++**Status:** open - found tracing Rome's year-one fall on branch claude/labor-market-economy-stability-ueffy1; the first two bullets are addressed on branch `opening-within-input-reach` (opening sizes producers to the inputs in their market area, store bids to replacement), awaiting a Rome opening to measure; the third is not
+ 
+ **What is wrong.**
+ 
+@@ -15,6 +15,14 @@
+ - `expected_sales.demand_seen` adds unmet demand only in proportion to a producer's own sales, so a market where nobody
+   sold shows its would-be sellers no demand; on Rome over a thousand producers sat in such markets in year one.
+ 
++**Opening within input reach** (branch `opening-within-input-reach`): `opening_reach.fit_to_reach` runs after `fit_to_supply`. On a
++re-opened saved Rome the producers' expected runs were fed only 0.71 by the makers in their own market areas (the share
++the cut `reachable_shares` leaves them), and that share tracks the year-zero achieved over planned runs per recipe (roof tiles
++0.16 against 0.16, brick walls 0.13 against 0.12, olive oil 0.11 against 0.19). Runs a movable recipe cannot work where it
++stands move to its producers whose areas have the inputs and hours to spare; the rest are cut. Store bids are bought at
++`opening_stores.yearly_replacement` (what the holding loses in a year). Measure with the pickled saved economy: the
++reach share before and after `fit_to_reach`, then year zero and one planned against achieved runs.
++
+ **Evidence.** Probes on a saved opened Rome economy (`ROME_SPIN_UP_YEARS=3,2`); no committed command prints realised
+ against planned runs. Measure Rome's trajectory with `python3 sim/simulator.py spin-up-trace --civ rome_100ad`.
+ 
+diff --git a/sim/economy/opening.py b/sim/economy/opening.py
+index d1c658d..d7b124b 100644
+--- a/sim/economy/opening.py
++++ b/sim/economy/opening.py
+@@ -14,7 +14,7 @@ from sim.constants import declare
+ from sim.refusal import Refusal
+ 
+ from . import recipes as recipes_module
+-from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
++from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_reach, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+ from .accounts import Book
+ from .market_areas import AreaMap
+ from .market_memory import MarketMemory, YearView, market_key
+@@ -156,6 +156,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
+         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
+     sites.apply_site_limits(record, setup)
+     opening_runs.fit_to_supply(setup, record)
++    opening_reach.fit_to_reach(setup, record, area_map)
+     rent = opening_rent.settle(setup, record, view, own.hectares_by_tile(record.cohorts))
+     figure = record.property_income
+     record.property_income = opening_rent.property_income_with_rent(figure, rent)
+@@ -320,9 +321,15 @@ def _final_demand(setup, record, view, replacement=0.0, memory=None, own=None) -
+     """What each tile's households buy at the opening prices with the opening income, and the metal the mint
+     buys to replace what the money loses (at the capital)."""
+     final: Dict[TileId, Dict[GoodId, float]] = {}
++    replacing: Dict[GoodId, Dict[str, float]] = {}     # a store of wealth is bought at the replacement of what it loses
+     for cohort, bid, price in _opening_bids(setup, record, view, memory, own=own):
+         demand = final.setdefault(cohort.tile, {})
+-        demand[bid.good] = demand.get(bid.good, 0.0) + goods_market.quantity_at(bid, price)
++        quantity = goods_market.quantity_at(bid, price)
++        if bid.priority == households_store.STORE_PRIORITY:
++            if bid.good not in replacing:
++                replacing[bid.good] = opening_stores.yearly_replacement(setup, record.cohorts, bid.good)
++            quantity = min(quantity, replacing[bid.good].get(cohort.agent_id, 0.0))
++        demand[bid.good] = demand.get(bid.good, 0.0) + quantity
+     if replacement > 0.0:
+         demand = final.setdefault(setup.capital_tile, {})
+         metal = record.currency.backing_good
+diff --git a/sim/economy/opening_reach.py b/sim/economy/opening_reach.py
+new file mode 100644
+index 0000000..2d28f93
+--- /dev/null
++++ b/sim/economy/opening_reach.py
+@@ -0,0 +1,174 @@
++"""Sizing the opening's producers to the inputs in their reach.
++
++A run stops when a hard input is short (producers.produce is Leontief), and in the year an input comes from the
++market area of that good the producer stands in. The placement sizes each recipe to national runs, so an area
++whose users outweigh its makers (an input only some tiles can grow, a maker placed where its output is wanted)
++plans runs its inputs cannot feed. `reachable_shares` finds, for placed producers, the share of its runs each can
++work with the inputs its area's makers supply (themselves cut to what their own inputs allow). `shifted_runs` first
++moves the runs a recipe cannot work where it stands to its producers elsewhere whose areas have the inputs to spare
++(a processor settles where its inputs are, its output carried to where it is wanted), and `fit_to_reach` sets the
++producers' capacity and expected sales to the shifted runs, cut to what is still out of reach.
++"""
++from typing import Callable, Dict, Mapping, NamedTuple, Set, Tuple
++
++from .replaced import replaced
++from .types import GoodId, Recipe, TileId
++
++REACH_PASSES = 40           # numerical bound on cutting users to their area's supply (a chain of makers settles stage by stage)
++REACH_TOLERANCE = 1e-6      # a numerical bound: a share this close to its last is settled
++SHIFT_ROUNDS = 6            # numerical bound on moving runs to where inputs are spare (a move uses up the spare it fills)
++
++AreaOf = Callable[[GoodId, TileId], str]
++Balance = Dict[Tuple[GoodId, str], float]
++
++
++class Worked(NamedTuple):
++    """The runs a placed producer works and the output share a run yields."""
++    recipe_id: str
++    tile: TileId
++    runs: float
++    yield_factor: float
++
++
++def _makers(workers: Mapping[str, Worked], recipes: Mapping[str, Recipe]) -> Set[GoodId]:
++    return {good for worker in workers.values() for good, quantity in recipes[worker.recipe_id].outputs.items() if quantity > 0.0}
++
++
++def _balances(workers: Mapping[str, Worked], share: Mapping[str, float], recipes: Mapping[str, Recipe],
++              area_of: AreaOf, makers: Set[GoodId]) -> Tuple[Balance, Balance]:
++    """(supply, need) of each (good, market area) at the runs `workers` work times `share`: what their recipes make, and
++    what they take of the hard inputs some placed producer makes."""
++    supply: Balance = {}
++    need: Balance = {}
++    for producer_id, worker in sorted(workers.items()):
++        recipe = recipes[worker.recipe_id]
++        worked = worker.runs * share[producer_id]
++        for good, quantity in recipe.outputs.items():
++            if quantity > 0.0:
++                key = (good, area_of(good, worker.tile))
++                supply[key] = supply.get(key, 0.0) + worked * worker.yield_factor * quantity
++        for good, quantity in recipe.hard_inputs.items():
++            if quantity > 0.0 and good in makers:
++                key = (good, area_of(good, worker.tile))
++                need[key] = need.get(key, 0.0) + worked * quantity
++    return supply, need
++
++
++def reachable_shares(workers: Mapping[str, Worked], recipes: Mapping[str, Recipe], area_of: AreaOf) -> Dict[str, float]:
++    """{producer: share of its runs its inputs in reach allow}, 1 for a producer whose inputs are all there. A hard input
++    is counted in a market area only when some placed producer makes it (what nothing makes is stock, not supply). An
++    area's users are cut in proportion to its supply over their need, and a maker cut by its own inputs supplies less."""
++    makers = _makers(workers, recipes)
++    share = {producer_id: 1.0 for producer_id in workers}
++    for _pass in range(REACH_PASSES):
++        supply, need = _balances(workers, share, recipes, area_of, makers)
++        moved = 0.0
++        for producer_id, worker in sorted(workers.items()):
++            factor = 1.0
++            for good, quantity in recipes[worker.recipe_id].hard_inputs.items():
++                key = (good, area_of(good, worker.tile))
++                if quantity > 0.0 and good in makers and need.get(key, 0.0) > supply.get(key, 0.0):
++                    factor = min(factor, max(0.0, supply.get(key, 0.0)) / need[key])
++            if factor < 1.0:
++                moved = max(moved, share[producer_id] * (1.0 - factor))
++                share[producer_id] *= factor
++        if moved <= REACH_TOLERANCE:
++            break
++    return share
++
++
++def shifted_runs(workers: Mapping[str, Worked], recipes: Mapping[str, Recipe], area_of: AreaOf,
++                 spare_hours: Mapping[TileId, float], movable: Set[str]) -> Dict[str, float]:
++    """{producer: runs} after the runs a `movable` recipe's producers cannot work (`reachable_shares`) are moved to the
++    recipe's other producers whose areas have every input to spare, as many as their inputs and the hours `spare_hours`
++    leaves on their tiles allow. The total of a recipe's runs is kept or, where nothing can take them, left as it was."""
++    runs = {producer_id: worker.runs for producer_id, worker in workers.items()}
++    makers = _makers(workers, recipes)
++    spare = dict(spare_hours)
++    for _round in range(SHIFT_ROUNDS):
++        current = {producer_id: worker._replace(runs=runs[producer_id]) for producer_id, worker in workers.items()}
++        share = reachable_shares(current, recipes, area_of)
++        supply, need = _balances(current, share, recipes, area_of, makers)
++        room: Balance = {key: supply[key] - need.get(key, 0.0) for key in supply}
++        moved = False
++        for recipe_id in sorted(movable):
++            recipe = recipes[recipe_id]
++            members = sorted(producer_id for producer_id, worker in current.items() if worker.recipe_id == recipe_id)
++            lost = sum(runs[producer_id] * (1.0 - share[producer_id]) for producer_id in members)
++            if lost <= 0.0:
++                continue
++            hours = sum(recipe.labour_hours.values())
++            takers = {}
++            for producer_id in members:
++                if share[producer_id] < 1.0:
++                    continue
++                tile = current[producer_id].tile
++                keys = [((good, area_of(good, tile)), quantity) for good, quantity in recipe.hard_inputs.items()
++                        if quantity > 0.0 and good in makers]
++                headroom = min([max(0.0, room.get(key, 0.0)) / quantity for key, quantity in keys]
++                               + [spare.get(tile, float("inf")) / hours if hours > 0.0 else float("inf")])
++                if headroom > 0.0 and headroom < float("inf"):
++                    takers[producer_id] = (headroom, keys)
++            if not takers:
++                continue
++            crowd: Dict[Tuple[GoodId, str], int] = {}
++            for _headroom, keys in takers.values():
++                for key, _quantity in keys:
++                    crowd[key] = crowd.get(key, 0) + 1
++            fair = {producer_id: min([max(0.0, room.get(key, 0.0)) / quantity / crowd[key] for key, quantity in keys]
++                                     + [headroom])
++                    for producer_id, (headroom, keys) in takers.items()}
++            moving = min(lost, sum(fair.values()))
++            if moving <= 0.0:
++                continue
++            for producer_id in sorted(fair):
++                added = moving * fair[producer_id] / sum(fair.values())
++                runs[producer_id] += added
++                tile = current[producer_id].tile
++                spare[tile] = spare.get(tile, float("inf")) - added * hours
++                for key, quantity in takers[producer_id][1]:
++                    room[key] = room.get(key, 0.0) - added * quantity
++            for producer_id in members:     # the cut producers give up the moved runs in proportion to what they could not work
++                if share[producer_id] < 1.0:
++                    runs[producer_id] = max(0.0, runs[producer_id] * (1.0 - moving * (1.0 - share[producer_id]) / lost))
++            moved = True
++        if not moved:
++            break
++    return runs
++
++
++def fit_to_reach(setup, record, area_map) -> None:
++    """Size every placed producer to the inputs in its reach: move what a movable recipe cannot work where it stands to
++    its producers whose areas have the inputs to spare (`shifted_runs`), then cut each to the share its inputs allow
++    (`reachable_shares`). Capacity and expected sales change by the same factor."""
++    workers = {producer_id: Worked(producer.recipe_id, producer.tile, producer.expected_sales, producer.yield_factor)
++               for producer_id, producer in sorted(record.producers.items())}
++    movable = {recipe_id for recipe_id, recipe in setup.recipes.items()
++               if not (recipe.service or recipe.site_bound or setup.land_per_run.get(recipe_id, 0.0) > 0.0)
++               and _carries(setup, recipe)}
++    runs = shifted_runs(workers, setup.recipes, area_map.area_of, _spare_hours(setup, record), movable)
++    placed = {producer_id: worker._replace(runs=runs[producer_id]) for producer_id, worker in workers.items()}
++    shares = reachable_shares(placed, setup.recipes, area_map.area_of)
++    for producer_id, worker in workers.items():
++        factor = (runs[producer_id] / worker.runs if worker.runs > 0.0 else 1.0) * shares[producer_id]
++        if factor != 1.0:
++            producer = record.producers[producer_id]
++            record.producers[producer_id] = replaced(
++                producer, capacity_runs=producer.capacity_runs * factor, expected_sales=producer.expected_sales * factor)
++
++
++def _carries(setup, recipe: Recipe) -> bool:
++    """Whether what the recipe mainly makes can be carried to where it is wanted (a service, or a good with no portable
++    form, is made where it is used)."""
++    outputs = [good for good, quantity in recipe.outputs.items() if quantity > 0.0]
++    return bool(outputs) and all(setup.specs[good].portable for good in outputs if good in setup.specs)
++
++
++def _spare_hours(setup, record) -> Dict[TileId, float]:
++    """Hours a year each tile's working people have left after the placed producers' expected runs."""
++    spare = {tile: people * setup.working_share * setup.working_hours_per_year
++             for tile, people in setup.opening_population_by_tile.items()}
++    for producer in record.producers.values():
++        hours = sum(setup.recipes[producer.recipe_id].labour_hours.values())
++        spare[producer.tile] = spare.get(producer.tile, 0.0) - producer.expected_sales * hours
++    return spare
+diff --git a/sim/economy/opening_stores.py b/sim/economy/opening_stores.py
+index de90894..5a347f1 100644
+--- a/sim/economy/opening_stores.py
++++ b/sim/economy/opening_stores.py
+@@ -1,7 +1,7 @@
+ """Opening stocks of durable stores of wealth: the output of past mining that loss has not yet taken,
+ held by households in proportion to their income. The workings come from the deposits (the port
+ reads them from geography); nothing here names a good."""
+-from typing import Mapping, Tuple
++from typing import Dict, Mapping, Tuple
+ 
+ from .metal_stock import METAL_GOODS_LOSS_PER_YEAR
+ from .types import EDGE_PRODUCTION, GoodsMove
+@@ -18,23 +18,42 @@ def retained_output(per_year: float, years_worked: float, years_since_last: floa
+     return per_year * kept ** years_since_last * (1.0 - kept ** years_worked) / loss_per_year
+ 
+ 
++def stock_by_cohort(setup, cohorts, good, loss_per_year: float = METAL_GOODS_LOSS_PER_YEAR) -> Dict[str, float]:
++    """Units of the store `good` each cohort holds at the opening: the deposits' retained output
++    (`setup.opening_store_output`) shared by income (by people where no income is known). A good with no
++    workings, or no mass per unit, is held in none."""
++    spec = setup.specs.get(good)
++    if spec is None or spec.unit_mass_kg <= 0.0:
++        return {}
++    kilograms = sum(retained_output(per_year, years, since, loss_per_year)
++                    for per_year, years, since in setup.opening_store_output.get(good, ()))
++    total_income = sum(cohort.last_year_income for cohort in cohorts.values())
++    total_people = sum(cohort.people for cohort in cohorts.values())
++    held = {}
++    for cohort in sorted(cohorts.values(), key=lambda each: each.agent_id):
++        share = cohort.last_year_income / total_income if total_income > 0.0 else cohort.people / total_people
++        quantity = kilograms * share / spec.unit_mass_kg
++        if quantity > 0.0:
++            held[cohort.agent_id] = quantity
++    return held
++
++
++def yearly_replacement(setup, cohorts, good, loss_per_year: float = METAL_GOODS_LOSS_PER_YEAR) -> Dict[str, float]:
++    """Units of the store `good` each cohort buys a year to stand still: what its holding loses in a year. Households'
++    bids for a store at the opening are sized to this, not to the gap to a target they open far below."""
++    return {cohort_id: quantity * loss_per_year for cohort_id, quantity in stock_by_cohort(setup, cohorts, good, loss_per_year).items()}
++
++
+ def seed_opening_stores(setup, record, store_goods, loss_per_year: float = METAL_GOODS_LOSS_PER_YEAR) -> None:
+     """Give households the opening stock of each of `store_goods` (the goods fit to hold as wealth)
+     that the setup has workings for. A good with no workings (`setup.opening_store_gaps` says why)
+     opens empty."""
+-    total_income = sum(cohort.last_year_income for cohort in record.cohorts.values())
+     moves = []
+-    for good, workings in sorted(setup.opening_store_output.items()):
+-        spec = setup.specs.get(good)
+-        if good not in store_goods or spec is None or spec.unit_mass_kg <= 0.0:
++    for good in sorted(setup.opening_store_output):
++        if good not in store_goods:
+             continue
+-        kilograms = sum(retained_output(per_year, years, since, loss_per_year) for per_year, years, since in workings)
+-        for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
+-            share = (cohort.last_year_income / total_income if total_income > 0.0
+-                     else cohort.people / sum(each.people for each in record.cohorts.values()))
+-            quantity = kilograms * share / spec.unit_mass_kg
+-            if quantity > 0.0:
+-                moves.append(GoodsMove(EDGE_PRODUCTION, cohort.agent_id, good, cohort.tile, quantity,
+-                                       "opening stock of a durable store"))
++        for cohort_id, quantity in stock_by_cohort(setup, record.cohorts, good, loss_per_year).items():
++            moves.append(GoodsMove(EDGE_PRODUCTION, cohort_id, good, record.cohorts[cohort_id].tile, quantity,
++                                   "opening stock of a durable store"))
+     if moves:
+         record.book.move_many(moves)
+diff --git a/sim/tests/test_economy_opening_stores.py b/sim/tests/test_economy_opening_stores.py
+index f8dcb6b..cde69c5 100644
+--- a/sim/tests/test_economy_opening_stores.py
++++ b/sim/tests/test_economy_opening_stores.py
+@@ -93,3 +93,16 @@ class OpeningEconomyTests(unittest.TestCase):
+ 
+ if __name__ == "__main__":
+     unittest.main()
++
++
++class ReplacementTests(unittest.TestCase):
++    def test_a_cohort_replaces_the_share_of_its_holding_a_year_loses(self):
++        setup = setup_with([(10.0, 20.0, 0.0)])
++        held = opening_stores.stock_by_cohort(setup, cohorts(), GOLD, LOSS)
++        replacement = opening_stores.yearly_replacement(setup, cohorts(), GOLD, LOSS)
++        self.assertAlmostEqual(replacement["household:t1:0"], LOSS * held["household:t1:0"])
++        self.assertAlmostEqual(replacement["household:t1:1"], LOSS * held["household:t1:1"])
++        self.assertAlmostEqual(replacement["household:t1:1"], 3.0 * replacement["household:t1:0"])
++
++    def test_a_good_with_no_workings_has_no_replacement(self):
++        self.assertEqual(opening_stores.yearly_replacement(setup_with([]), cohorts(), GOLD, LOSS), {})
+diff --git a/sim/tests/test_opening_reach.py b/sim/tests/test_opening_reach.py
+new file mode 100644
+index 0000000..de64e10
+--- /dev/null
++++ b/sim/tests/test_opening_reach.py
+@@ -0,0 +1,95 @@
++"""The opening cuts producers to the inputs their market area's makers supply (opening_reach.reachable_shares)."""
++
++QUICK_TOPIC = True
++
++import unittest
++
++from sim.economy.opening_reach import Worked, reachable_shares, shifted_runs
++from sim.economy.types import Recipe
++
++
++def recipe(recipe_id, outputs, inputs=None):
++    return Recipe(recipe_id, outputs, inputs or {}, {"labourer": 1.0})
++
++
++RECIPES = {"grow": recipe("grow", {"fibre": 1.0}),
++           "weave": recipe("weave", {"cloth": 1.0}, {"fibre": 2.0}),
++           "sew": recipe("sew", {"coat": 1.0}, {"cloth": 1.0})}
++
++
++def one_area(good, tile):
++    return "all"
++
++
++def by_tile(good, tile):
++    return tile
++
++
++class ReachableSharesTests(unittest.TestCase):
++    def test_users_within_what_their_area_supplies_keep_all_their_runs(self):
++        workers = {"g": Worked("grow", "a", 20.0, 1.0), "w": Worked("weave", "a", 10.0, 1.0)}
++        self.assertEqual(reachable_shares(workers, RECIPES, one_area), {"g": 1.0, "w": 1.0})
++
++    def test_users_beyond_the_supply_are_cut_to_it(self):
++        workers = {"g": Worked("grow", "a", 10.0, 1.0), "w": Worked("weave", "a", 10.0, 1.0)}
++        shares = reachable_shares(workers, RECIPES, one_area)
++        self.assertEqual(shares["g"], 1.0)
++        self.assertAlmostEqual(shares["w"], 0.5)
++
++    def test_a_yield_below_one_shrinks_the_supply(self):
++        workers = {"g": Worked("grow", "a", 20.0, 0.5), "w": Worked("weave", "a", 10.0, 1.0)}
++        self.assertAlmostEqual(reachable_shares(workers, RECIPES, one_area)["w"], 0.5)
++
++    def test_an_area_with_no_maker_of_a_made_input_gets_no_runs(self):
++        workers = {"g": Worked("grow", "a", 20.0, 1.0), "w": Worked("weave", "b", 10.0, 1.0)}
++        self.assertEqual(reachable_shares(workers, RECIPES, by_tile)["w"], 0.0)
++
++    def test_areas_are_cut_on_their_own_supply(self):
++        workers = {"ga": Worked("grow", "a", 20.0, 1.0), "wa": Worked("weave", "a", 10.0, 1.0),
++                   "gb": Worked("grow", "b", 5.0, 1.0), "wb": Worked("weave", "b", 10.0, 1.0)}
++        shares = reachable_shares(workers, RECIPES, by_tile)
++        self.assertEqual(shares["wa"], 1.0)
++        self.assertAlmostEqual(shares["wb"], 0.25)
++
++    def test_a_cut_maker_supplies_less_to_the_next_stage(self):
++        workers = {"g": Worked("grow", "a", 10.0, 1.0), "w": Worked("weave", "a", 10.0, 1.0),
++                   "s": Worked("sew", "a", 10.0, 1.0)}
++        shares = reachable_shares(workers, RECIPES, one_area)
++        self.assertAlmostEqual(shares["w"], 0.5)
++        self.assertAlmostEqual(shares["s"], 0.5)
++
++    def test_an_input_nothing_makes_is_not_a_limit(self):
++        workers = {"w": Worked("weave", "a", 10.0, 1.0)}
++        self.assertEqual(reachable_shares(workers, RECIPES, one_area), {"w": 1.0})
++
++
++class ShiftedRunsTests(unittest.TestCase):
++    def workers(self):
++        return {"gb": Worked("grow", "b", 40.0, 1.0), "wa": Worked("weave", "a", 10.0, 1.0),
++                "wb": Worked("weave", "b", 10.0, 1.0)}
++
++    def test_runs_out_of_reach_move_to_the_producer_whose_area_has_the_input_to_spare(self):
++        runs = shifted_runs(self.workers(), RECIPES, by_tile, {"a": 100.0, "b": 100.0}, {"weave"})
++        self.assertAlmostEqual(runs["wa"], 0.0)
++        self.assertAlmostEqual(runs["wb"], 20.0)
++        self.assertEqual(runs["gb"], 40.0)
++
++    def test_a_recipe_not_movable_keeps_its_runs(self):
++        runs = shifted_runs(self.workers(), RECIPES, by_tile, {"a": 100.0, "b": 100.0}, set())
++        self.assertEqual(runs, {"gb": 40.0, "wa": 10.0, "wb": 10.0})
++
++    def test_the_hours_left_on_a_tile_bound_what_it_takes(self):
++        runs = shifted_runs(self.workers(), RECIPES, by_tile, {"a": 100.0, "b": 4.0}, {"weave"})
++        self.assertAlmostEqual(runs["wb"], 14.0)       # a run takes an hour of labour
++        self.assertAlmostEqual(runs["wa"], 6.0)
++
++    def test_nothing_moves_where_no_other_area_has_the_input_to_spare(self):
++        workers = {"gb": Worked("grow", "b", 20.0, 1.0), "wa": Worked("weave", "a", 10.0, 1.0),
++                   "wb": Worked("weave", "b", 10.0, 1.0)}
++        runs = shifted_runs(workers, RECIPES, by_tile, {"a": 100.0, "b": 100.0}, {"weave"})
++        self.assertEqual(runs["wa"], 10.0)
++        self.assertEqual(runs["wb"], 10.0)
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.43.0
+
