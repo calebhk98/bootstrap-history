@@ -295,9 +295,10 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     if last is None:
         last = state.wages.get(area, {}).get(trade)
     long_run = max(trained_substitute_wage(state, inputs, area, trade), reservation)
-    imported = (import_costs or ImportCosts(state, inputs)).wage(area, trade) if bids else None
+    supply = (import_costs or ImportCosts(state, inputs)).supply(area, trade) if bids else None
+    imported, fetched_share = supply if supply is not None else (None, 0.0)
     # this year's wage may pass the long-run cost (trainees take years to arrive); what entrants expect stays at it
-    ceiling = short_run_ceiling(long_run, reservation, spec.training_years, bids, imported)
+    ceiling = short_run_ceiling(long_run, reservation, spec.training_years, bids, imported, fetched_share)
     if share_at is None or full <= 0.0:
         offered = full
         wage = min(market_wage(last, reservation, offered, bids), ceiling)
