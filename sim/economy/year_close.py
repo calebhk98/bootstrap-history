@@ -7,7 +7,7 @@ from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from .expected_sales import demand_seen
-from . import (practice, firm_year, carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
+from . import (practice, firm_finance, firm_year, carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes)
 from .household_work_year import basket_key, cohort_basket
 from .households_cohort import renewed
@@ -219,7 +219,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
                                                    prepared_buyers)
         closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share,
                                             [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable],
-                                            service_lives)
+                                            service_lives, firm_finance.interest_due(loans_of.get(producer_id, []), producer_id))
         year = None
         if not closed.exited:       # the dividend, the financing check and bankruptcy follow Eurace@Unibi (firm_year.py)
             closed, _paid, year = firm_year.settle_year(setup, record, view, producer, closed, recipe, revenue, costs,
