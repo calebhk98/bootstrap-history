@@ -14,7 +14,7 @@ from sim.constants import declare
 from sim.refusal import Refusal
 
 from . import recipes as recipes_module
-from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_plans, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -40,6 +40,10 @@ MERCHANT_CAPITAL_SHARE_OF_OUTPUT = declare(
         "different estimate of the same thing.")
 
 
+# numerical bounds on raising the opening prices to the rent they must pay (opening_rent.py)
+COVERING_PRICE_PASSES = 4
+COVERING_PRICE_TOLERANCE = 1e-3
+
 # numerical bounds on settling the share of hours producers hire against the demand it implies (opening_own.py)
 OWN_PLOT_PASSES = 8
 OWN_PLOT_TOLERANCE = 1e-4
@@ -53,6 +57,11 @@ class OpeningIncomeRefused(ValueError):
 
 
 def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
+    """The opening at prices that pay the land's rent (`_with_covering_prices`)."""
+    return _with_covering_prices(setup)
+
+
+def _solve_opening(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
     """The opening solved to a fixed point with its households' first-year choices. A first solve leaves a money stock,
     whose yearly loss of its metal is the demand (the mint's) the later solves size the producers of the backing good
     to, along with everyone else's. Each solve is read by the households (what they hire, which grains they buy
@@ -79,6 +88,24 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
         return opening_plans.household_plans(setup, opened[0], opened[1], cache["room"])
     settled = opening_plans.settle(open_with, choose, lambda opened: opened[0].cohorts)
     opening_plans.post_service_prices(settled[0].memory, settled[1], setup, choose(settled).service_price_by_tile)
+    return settled
+
+
+def _with_covering_prices(setup: EconomySetup):
+    """The opening solved (`_solve_opening`) at prices that pay the land's rent as well as the costs. The rent a tile's land
+    fetches depends on what its producers sell and what households' plots take, so the prices are raised from the rent
+    shares the last solve left until they stop moving (opening_rent.py); a setup whose recipes pay no rent is solved once."""
+    current = setup
+    for _pass in range(COVERING_PRICE_PASSES):
+        settled = _solve_opening(current)
+        record = settled[0]
+        covered = opening_rent.covering_prices(
+            setup.recipes, setup.opening_prices, setup.opening_wages, opening_rent.shares_of_revenue(current, record),
+            {producer.recipe_id for producer in record.producers.values()}, opening_runs.mean_yields(setup, setup.recipes))
+        if all(abs(price - current.opening_prices.get(good, 0.0)) <= COVERING_PRICE_TOLERANCE * price
+               for good, price in covered.items()):
+            break
+        current = dataclasses.replace(setup, opening_prices=covered)
     return settled
 
 
@@ -111,6 +138,9 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
     opening_runs.fit_to_supply(setup, record)
+    rent = opening_rent.settle(setup, record, view, own.hectares_by_tile(record.cohorts))
+    record.property_income = opening_rent.property_income_with_rent(record.property_income, rent)
+    record.index_base_prices = dict(priced_goods)
     _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
