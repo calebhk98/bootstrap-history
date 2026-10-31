@@ -152,14 +152,15 @@ def property_income_of(cohorts: Mapping[str, Cohort], per_head: float, labour_sh
     return {agent_id: amount for agent_id, amount in paid.items() if amount > 0.0}
 
 
-def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, float], yield_factor: float = 1.0) -> float:
+def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, float], yield_factor: float = 1.0,
+                  rent_per_run: float = 0.0) -> float:
     """Share of a producer's plant that works at the opening prices: only the workplaces whose own cost the
     revenue (at the tile's yield factor) covers do (producers.share_working), so a producer sized to the runs
     households' demand needs has that much more plant than it works, and the first year's plan (plant times this
     share) is the runs it was sized for. A run that cannot be priced counts as working in full (the first year's
     plan finds out)."""
     from . import producers, unit_cost
-    variable = unit_cost.variable_cost_per_run(recipe, prices, wages)
+    variable = unit_cost.variable_cost_per_run(recipe, prices, wages, rent_per_run)
     revenue = unit_cost.revenue_per_run(recipe, prices) * yield_factor
     if not math.isfinite(variable) or variable <= 0.0 or revenue <= 0.0:
         return 1.0

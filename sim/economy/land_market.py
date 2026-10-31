@@ -200,15 +200,10 @@ def _value_for_rent(setup, view, producer, land_per_run: float, demand: Optional
     return figures[0] if figures is not None and figures[0] > 0.0 else None
 
 
-def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
-                own_plot_hectares: Optional[Mapping[TileId, float]] = None,
-                land_tax_share_of_rent: float = 0.0,
-                tenancy_ask: Optional[Mapping[TileId, float]] = None) -> List[Transfer]:
-    """Clear each tile's land for the runs producers want, set next year's rent (land_lease.posted_rents
-    follows the clearing rent slowly) and caps on the record
-    and its producers, and book the rent: producers pay the tile's owner, shared by ownership.spread. Tenants pay
-    their lessors the posted rent cut to `tenancy_ask` (land_lease_year.asks) where given.
-    Returns the payments made (to cohorts), for the year's property income."""
+def post_rents(setup, record, view, wanted_runs: Mapping[AgentId, float],
+               own_plot_hectares: Optional[Mapping[TileId, float]] = None):
+    """Clear each tile's land for the runs producers want, set the posted rent (land_lease.posted_rents follows the
+    clearing rent slowly) and caps on the record and its producers. Returns (the result, the demands)."""
     demands = demands_of(setup, record, view, wanted_runs)
     arable = {tile_id: titles_ground.arable_hectares(record, tile_id, tile) for tile_id, tile in setup.tiles.items()}
     cleared = clear_land(arable, demands, own_plot_hectares)
@@ -227,6 +222,18 @@ def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
             producer, land_rent_per_run=use_rent_per_hectare(result, producer.tile, _value_for_rent(
                 setup, view, producer, land_per_run, demands_by_agent.get(producer_id))) * land_per_run,
             land_run_cap=granted / land_per_run if granted < asked - 1e-9 else -1.0)
+    return result, demands
+
+
+def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
+                own_plot_hectares: Optional[Mapping[TileId, float]] = None,
+                land_tax_share_of_rent: float = 0.0,
+                tenancy_ask: Optional[Mapping[TileId, float]] = None) -> List[Transfer]:
+    """Set next year's rent (`post_rents`) and book the rent: producers pay the tile's owner, shared by
+    ownership.spread. Tenants pay their lessors the posted rent cut to `tenancy_ask` (land_lease_year.asks) where given.
+    Returns the payments made (to cohorts), for the year's property income."""
+    result, demands = post_rents(setup, record, view, wanted_runs, own_plot_hectares)
+    arable = {tile_id: titles_ground.arable_hectares(record, tile_id, tile) for tile_id, tile in setup.tiles.items()}
     money = setup.currency_id
     owners = {tile: ownership.owner_cohort(record, tile) for tile in result.rent_per_hectare_by_tile}
     cash = {demand.agent_id: record.book.balance(demand.agent_id, money) for demand in demands}
