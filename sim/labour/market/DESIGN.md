@@ -84,6 +84,18 @@ training years, when the shortage the apprentices fill is gone. A worker already
 (`expected_income`) and offers more hours at it through `hours_share_at`. A switcher into a trade also trains, so it
 reads `income_at_graduation`; a faster move within a skill family is only the shorter retraining in `switching.py`.
 
+## Hours bid for and not hired
+
+Hours dismissed in a round used to ask the wage they were paid. Where the new-hire wage had fallen below the
+contracts, they asked more than every posted offer and sat idle all year beside employers whose bids were above it.
+Two rules close that, both from the search loop in `applications.py`:
+- An employer whose vacancies stay open raises its offer each round by `WAGE_UPDATE_PER_ROUND` (Eurace's
+  `Firm_update_wage_offer`), not past its least valuable wanted tranche. The trade's new-hire wage is the hours-weighted
+  offer actually paid. There is no separate yearly raise.
+- A searcher's ask is capped at the best offer an employer with a vacancy posts (`capped_asks`): a seller does not ask
+  more than any buyer is seen to pay, as `asks.record` already holds for the market's ask. A cap at an employer's
+  maximum, not its offer, changes nothing, since the maximum sits above the offer the searcher is refused at.
+
 ## Paying above the market
 
 `Bid.pay_premium` is the actor's lever.
