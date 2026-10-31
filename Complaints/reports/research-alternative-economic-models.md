@@ -417,6 +417,14 @@ The TU Delft link was BROKEN (403). So no new information on the model; language
 The note replaced ACCEPTS, ColonD and HABITAT with other models. Which links are the substitutes was not stated to me.
 They are recorded above as entries in their own right and the three original names stay unidentified.
 
+The owner later quoted the article the three names came from. It uses each name only as a label in a table or a
+sentence, beside a description: "ColonD / Firm-Level Production Network ABMs" (firm-as-node models with physical inputs
+and outputs, attributed to the Santa Fe Institute and the Complexity Science Hub Vienna); "ACCEPTS / ARIO" (an
+input-output agent network for supply-chain shocks); "HABITAT / IIASA Models (MESSAGEix)". The article gives no link,
+author or paper for the three names themselves. Reading (not a sourced claim): they look like labels the article's
+author attached to the families it describes, not names of separate models, so the entries for the firm-level network
+papers, BoARIO and MESSAGEix cover what the article meant and no further search is planned.
+
 ---
 
 ## Evaluation of the proposed architecture
