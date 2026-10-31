@@ -82,11 +82,20 @@ def issues_for(record, requests: Sequence[LoanRequest], market_rate: float) -> L
     return issues
 
 
-def bids_from(record, offers: Sequence[FundsOffer], lent_by_lender: Mapping[AgentId, float]) -> List[ShareBid]:
-    """What each household saver has left after its lending, asking at least the rate it asked as a lender."""
-    return [ShareBid(offer.lender, offer.amount - lent_by_lender.get(offer.lender, 0.0), offer.minimum_rate)
-            for offer in offers if offer.lender in record.cohorts
-            and offer.amount - lent_by_lender.get(offer.lender, 0.0) > EPSILON]
+def bids_from(record, offers: Sequence[FundsOffer], lent_by_lender: Mapping[AgentId, float],
+              buy_orders: Mapping[AgentId, float] = None) -> List[ShareBid]:
+    """What each household saver has left after its lending, asking at least the rate it asked as a lender, and no
+    more than the shares its portfolio decision still orders (household_portfolio.py; a saver with no order is not
+    held to one)."""
+    buy_orders = buy_orders or {}
+    bids = []
+    for offer in offers:
+        left = offer.amount - lent_by_lender.get(offer.lender, 0.0)
+        if offer.lender in buy_orders:
+            left = min(left, buy_orders[offer.lender])
+        if offer.lender in record.cohorts and left > EPSILON:
+            bids.append(ShareBid(offer.lender, left, offer.minimum_rate))
+    return bids
 
 
 def apply(record, fills: Sequence[ShareFill], currency: str) -> Dict[AgentId, float]:
@@ -109,15 +118,17 @@ def apply(record, fills: Sequence[ShareFill], currency: str) -> Dict[AgentId, fl
 
 
 def raise_equity(record, currency: str, unmet: Sequence[LoanRequest], offers: Sequence[FundsOffer],
-                 loans: Sequence, market_rate: float, rate_floor: float) -> Dict[AgentId, float]:
-    """The producers whose plant request went unfunded sell shares to the savers who still hold funds; the money
-    each raised (empty when none did)."""
+                 loans: Sequence, market_rate: float, rate_floor: float,
+                 buy_orders: Mapping[AgentId, float] = None) -> Dict[AgentId, float]:
+    """The producers whose plant request went unfunded sell shares to the savers who still hold funds, each no
+    further than its portfolio order; the money each raised (empty when none did). It reaches the producer's cash
+    (`apply`) and is plant like a loan's."""
     prune(record)
     lent: Dict[AgentId, float] = {}
     for loan in loans:
         lent[loan.lender] = lent.get(loan.lender, 0.0) + loan.principal
     issues = issues_for(record, unmet, market_rate)
-    bids = bids_from(record, offers, lent)
+    bids = bids_from(record, offers, lent, buy_orders)
     if not issues or not bids:
         return {}
     fills, _rate = share_market.clear(issues, bids, market_rate, rate_floor)

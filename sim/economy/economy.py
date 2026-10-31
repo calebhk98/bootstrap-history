@@ -405,7 +405,8 @@ class Economy:
             record.memory.rates[money] = clearing.rate      # a year in which nothing cleared leaves the last cleared rate
         rate = record.memory.rates[money]       # the opening sets one
         # a plant request lenders left unmet is offered to the savers as shares (the money they raise is plant like a loan's)
-        raised = shares.raise_equity(record, money, unmet, funds, every_loan, rate, shares.rate_floor_of(setup))
+        raised = shares.raise_equity(record, money, unmet, funds, every_loan, rate, shares.rate_floor_of(setup),
+                                    record.capital.share_buy_orders)
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
         asked = {request.borrower: request.amount for request in requests}

@@ -87,7 +87,7 @@ def stand_in_record(balances=None):
     cohorts[OWNER] = cohort(OWNER, "town")
     return types.SimpleNamespace(
         book=Book(balances), producers=producers, cohorts=cohorts, shares={}, last_dividends={PRODUCER: 10.0},
-        loans=[], remembered_defaults={}, capital=types.SimpleNamespace(funds={}))
+        loans=[], remembered_defaults={}, capital=types.SimpleNamespace(funds={}, share_price_factor=1.0))
 
 
 def unmet(amount=100.0, yearly_return=0.2):
