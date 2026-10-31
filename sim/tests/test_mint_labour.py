@@ -10,6 +10,7 @@ import unittest
 
 from sim.economy import currency, mint, mint_labour
 from sim.economy.accounts import Book
+from sim.tests.test_economy_mint import BullionAtParity
 from sim.economy.recipes import recipe_from_entry
 from sim.economy.types import EDGE_ISSUE, EDGE_MINT, EDGE_PRODUCTION, GoodsMove, Transfer
 
@@ -64,7 +65,7 @@ def world(spec, recipe="default"):
         civ_id="realm", state_agent="state", currency_id="coin", capital_tile="t1",
         opening_population_by_tile={"t1": 3.0, "t2": 1.0}, tiles={"t1": 0, "t2": 0},
         opening_wages={}, mint_recipe=_recipe() if recipe == "default" else recipe)
-    record = pytypes.SimpleNamespace(book=book, currency=spec)
+    record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity()))
     mint.seed_opening_metal(setup, record)
     return setup, record
 
