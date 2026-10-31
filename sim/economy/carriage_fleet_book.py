@@ -5,7 +5,7 @@ held carriers by service life is booked with every other durable (year_close.wea
 import math
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
-from . import carriage_fleet, carriage_wear
+from . import carriage_fleet, carriage_wear, merchants_legs
 from .carriage_fleet import FleetLimit
 from .merchants import MERCHANT_BID_ELASTICITY
 from .types import AgentId, Bid, EDGE_PRODUCTION, GoodId, GoodsMove, Transfer
@@ -45,14 +45,15 @@ def limit_for(wear, own: Mapping[GoodId, float], hired: Mapping[GoodId, float]) 
 def wear_needed(merchant, held_stock: Mapping[Tuple[GoodId, str], float], specs, wear, goods) -> Dict[GoodId, float]:
     """Units of wear a year of each fleet good in `goods` that carrying the stock on the merchant's routes puts on it."""
     needed: Dict[GoodId, float] = {}
-    for (good, tile), route in sorted(merchant.routes.items()):
-        quantity = held_stock.get((good, tile), 0.0)
-        if route[0] == tile or quantity <= 0.0:
-            continue
-        tonnes = quantity * specs[good].unit_mass_kg / 1000.0
-        for carrier, units in wear.units_per_tonne(tile, route[0]).items():
-            if carrier in goods:
-                needed[carrier] = needed.get(carrier, 0.0) + tonnes * units
+    for (good, tile), legs in sorted(merchant.routes.items()):
+        held = held_stock.get((good, tile), 0.0)
+        for destination, _area, quantity in merchants_legs.split(legs, held):
+            if destination == tile or quantity <= 0.0:
+                continue
+            tonnes = quantity * specs[good].unit_mass_kg / 1000.0
+            for carrier, units in wear.units_per_tonne(tile, destination).items():
+                if carrier in goods:
+                    needed[carrier] = needed.get(carrier, 0.0) + tonnes * units
     return needed
 
 

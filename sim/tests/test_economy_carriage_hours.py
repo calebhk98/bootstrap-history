@@ -151,7 +151,7 @@ class ShortfallTests(unittest.TestCase):
     def test_every_route_is_cut_by_the_same_share(self):
         carriage, _m, _a, _b = world(("salt", "fish"))
         who = merchant()
-        who.routes = {("salt", "a"): ("b", "x"), ("fish", "a"): ("b", "x")}
+        who.routes = {("salt", "a"): (("b", "x", 1.0),), ("fish", "a"): (("b", "x", 1.0),)}
         result = merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0,
                                     {("salt", "a"): 10.0, ("fish", "a"): 4.0},
                                     crew=hire(3.5))
@@ -172,7 +172,7 @@ class CrewWorthTests(unittest.TestCase):
         carriage, _m, area_a, area_b = world()
         who = merchant()
         plan(who, price_at_source, price_at_destination)
-        who.routes = {("salt", "a"): ("b", area_b["salt"])}
+        who.routes = {("salt", "a"): (("b", area_b["salt"], 1.0),)}
         crew = hire(100.0, market_wage=market_wage, area_of=lambda _good, tile: area_a["salt"] if tile == "a" else "elsewhere")
         return merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0}, crew=crew)
 

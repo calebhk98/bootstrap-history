@@ -1,5 +1,6 @@
 """The route search for one good skips what no destination can pay for (flat prices, sources above every
-kept destination price) and must give the rows of a plain search that tries every destination."""
+kept destination price) and must give the rows of a plain search that tries every destination, one row for each
+destination that pays."""
 
 QUICK_TOPIC = True
 
@@ -29,7 +30,7 @@ class LineCarriage:
 
 
 def plain_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=None):
-    """Every source against every priced destination, dearest first, no shortcut."""
+    """Every source against every priced destination, dearest first, no shortcut: a row for each that pays."""
     interest = max(0.0, interest_rate)
     spoilage = min(1.0, max(0.0, spec.spoilage_per_year))
     rows = []
@@ -39,8 +40,6 @@ def plain_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=
         price_here = prices[source.area_id]
         if (source_ids is not None and source.area_id not in source_ids) or not price_here or price_here <= 0.0:
             continue
-        best = None
-        best_net, best_years = 0.0, 1
         for destination in destinations:
             price_there = prices[destination.area_id]
             per_tonne = carriage.costs_from(source.anchor_tile).get(destination.anchor_tile, math.inf)
@@ -52,16 +51,10 @@ def plain_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=
                 if years > 1:
                     net -= (price_here * interest + merchants.merchants_transit.storage_per_unit(spec, 2)) * (years - 1) + price_there * (
                         merchants.merchants_transit.lost_share(spec.spoilage_per_year, years) - spoilage)
-                if net > best_net:
-                    best, best_net, best_years = (destination, per_tonne), net, years
-        if best is None:
-            continue
-        destination, per_tonne = best
-        carriage_per_unit = per_tonne * spec.unit_mass_kg / KILOGRAMS_PER_TONNE
-        outlay = price_here + carriage_per_unit
-        rows.append((-best_net / outlay, good, source, destination, price_here, outlay,
-                     merchants._break_even_price(spec, prices[destination.area_id], carriage_per_unit,
-                                                 interest_rate, best_years)))
+                if net > 0.0:
+                    outlay = price_here + carriage_per_unit
+                    rows.append((-net / outlay, good, source, destination, price_here, outlay,
+                                 merchants._break_even_price(spec, price_there, carriage_per_unit, interest_rate, years)))
     return rows
 
 
