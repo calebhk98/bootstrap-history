@@ -148,4 +148,5 @@ def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, fl
     revenue = unit_cost.revenue_per_run(recipe, prices) * yield_factor
     if not math.isfinite(variable) or variable <= 0.0 or revenue <= 0.0:
         return 1.0
-    return producers.share_working(revenue, variable)
+    share = producers.share_working(revenue, variable)
+    return share if share > 0.0 else 1.0      # a run that earns next to nothing is sized to its runs; the first year's plan finds it does not pay
