@@ -104,13 +104,15 @@ def income_at_graduation(state: MarketState, inputs: YearInputs, clearings: Clea
     if rent <= 0.0:
         return floor
     hours = inputs.hours_per_worker_year
-    shortage_now = clearing.hours_wanted - clearing.hours_offered
-    if shortage_now <= 0.0:
-        return now
     years = inputs.trades[trade].training_years
     staying = max(0.0, 1.0 - inputs.attrition_share.get(area, 0.0)) ** years
     supply_then = (clearing.hours_offered * staying
                    + graduates_coming(state, area, trade, completion_by_band) * hours)
+    # beside idle hands only the share of hours employers want finds work (Harris-Todaro, as `expected_income`)
+    finds_work = min(1.0, clearing.hours_wanted / supply_then) if supply_then > 0.0 else 1.0
+    shortage_now = clearing.hours_wanted - clearing.hours_offered
+    if shortage_now <= 0.0:
+        return floor + (now - floor) * finds_work
     shortage_then = clearing.hours_wanted - supply_then
     remaining = max(0.0, min(1.0, shortage_then / shortage_now))
     return floor + (now - floor) * remaining
