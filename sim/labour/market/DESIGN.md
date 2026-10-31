@@ -51,6 +51,10 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
      part of today's shortage that those already training will not fill. Where there is no shortage today, only the share of
      hours employers want finds work (`finds_work`, as in `expected_income`): a glut shows the floor, however high the lagging wage
      still is.
+   - Hands that have joined a trade needing no training since its clearing (entrants, switchers and migrants take it up at
+     once, so no trainee count shows them) are hours offered too: `income_at_graduation` slides the heading wage down the
+     clearing's demand schedule (`Clearing.demand`) and counts them in the supply then (`expectations.hours_arrived_since`).
+     Without it a thin unskilled market that cleared at its dearest bid drew a twentieth of the whole area's workers in one year.
    - A trade's expected income today (`expected_income`) is Harris-Todaro: the hours that find work earn
      the average wage, the rest earn the outside option. The chance of finding work is hours wanted over
      hours offered, so a few unfilled hours beside idle hands (matching friction) are not a sure job.

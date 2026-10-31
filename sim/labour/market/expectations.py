@@ -9,7 +9,7 @@ from typing import Dict, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from .clearing import reservation_wage
+from .clearing import reservation_wage, target_for_demand
 from .records import Clearing, MarketState, YearInputs
 
 DECISION_ROUNDS_PER_YEAR = declare(
@@ -84,6 +84,20 @@ def graduates_coming(state: MarketState, area: str, trade: str, completion_by_ba
     return total
 
 
+def hours_arrived_since(state: MarketState, inputs: YearInputs, clearing: Clearing, area: str, trade: str) -> float:
+    """Hours offered by workers who joined a trade here since its clearing (entrants, switchers and migrants of a trade
+    needing no training join at once), at the share of its hands that offered hours then. Zero for a trade with
+    training: its newcomers are the trainees `graduates_coming` counts."""
+    if clearing.hours_held is None or inputs.trades[trade].training_years > 0.0:
+        return 0.0
+    now = math.fsum(state.workers.get(area, {}).get(trade, ())) * inputs.hours_per_worker_year
+    arrived = now - clearing.hours_held
+    if arrived <= 0.0:
+        return 0.0
+    sold_share = clearing.hours_offered / clearing.hours_held if clearing.hours_held > 0.0 else 1.0
+    return arrived * min(1.0, sold_share)
+
+
 def income_at_graduation(state: MarketState, inputs: YearInputs, clearings: ClearingIndex, area: str,
                          trade: str, completion_by_band) -> float:
     """What a trade is expected to pay once someone starting its training now has finished.
@@ -99,14 +113,19 @@ def income_at_graduation(state: MarketState, inputs: YearInputs, clearings: Clea
     # a wage lags its market (it closes part of the gap a year): weigh where it is heading, and count
     # only what it pays over the trade's own reservation wage, which already pays for its danger
     reservation = reservation_wage(inputs, area, inputs.trades[trade].fatality_risk_per_year)
-    rent = max(0.0, clearing.heading_wage - reservation) * inputs.hours_per_worker_year
+    arrived = hours_arrived_since(state, inputs, clearing, area, trade)
+    heading = clearing.heading_wage
+    if arrived > 0.0 and clearing.demand:
+        # hands that came since the clearing (no training to wait for) are sold hours too: the wage slides down the bids
+        heading = min(heading, target_for_demand(reservation, clearing.hours_offered + arrived, clearing.demand))
+    rent = max(0.0, heading - reservation) * inputs.hours_per_worker_year
     now = floor + rent
     if rent <= 0.0:
         return floor
     hours = inputs.hours_per_worker_year
     years = inputs.trades[trade].training_years
     staying = max(0.0, 1.0 - inputs.attrition_share.get(area, 0.0)) ** years
-    supply_then = (clearing.hours_offered * staying
+    supply_then = ((clearing.hours_offered + arrived) * staying
                    + graduates_coming(state, area, trade, completion_by_band) * hours)
     # beside idle hands only the share of hours employers want finds work (Harris-Todaro, as `expected_income`)
     finds_work = min(1.0, clearing.hours_wanted / supply_then) if supply_then > 0.0 else 1.0
