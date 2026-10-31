@@ -10,17 +10,18 @@ from . import port_sites
 from .port_setup import build_setup
 from .port_trace_chained import next_chained_index
 from .port_trace_columns import macro_columns
+from .port_trace_holders import HOLDER_COLUMNS, money_by_holder_columns
 from .port_year import YearInputs
 
 COLUMNS = ("year", "price_level", "money_supply", "rate", "wear", "struck", "change", "metal_held", "wage", "hired_hours",
-           "idle_hours", "unemployment", "real_output", "chained_price_level")
+           "idle_hours", "unemployment", "real_output", "chained_price_level") + HOLDER_COLUMNS
 
 
 def spin_up_trace(game, years):
     """[{year, price_level, money_supply, rate, wear, struck, change, metal_held, wage, hired_hours, idle_hours,
-    unemployment, real_output, chained_price_level}] (the macro columns from port_trace_columns.py, then
+    unemployment, real_output, chained_price_level, and HOLDER_COLUMNS}] (the macro columns from port_trace_columns.py, then
     `chained_price_level`: 1 in the first year, then each year's prices over the last year's at this year's output,
-    port_trace_chained.py) for `years` years of the
+    port_trace_chained.py; the money each kind of holder keeps, port_trace_holders.py) for `years` years of the
     first stage on the opening `game` saved. `wear` is the coin worn away that year, `struck` the coin the
     mint paid out net of what it melted, `change` the year's change in the money stock, `metal_held` the metal
     the mint holds at the year's end (economy units). `wage` is the unskilled trade's mean wage that year (economy
@@ -44,6 +45,7 @@ def spin_up_trace(game, years):
         previous_prices = dict(outcome.prices)
         row["chained_price_level"] = chained
         row.update(economy_api.money_year_figures(economy, outcome))
+        row.update(money_by_holder_columns(economy.record.book, economy.setup.currency_id))
         rows.append(row)
     return rows
 
