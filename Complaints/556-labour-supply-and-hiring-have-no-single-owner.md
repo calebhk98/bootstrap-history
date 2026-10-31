@@ -101,3 +101,8 @@ trade nobody plans for or hires is still bounded to nothing. Rule tests: `SeedBo
 After the seed bound, the labour core's opening count of merchants in Rome was measured in the tens, while the population
 report's `estimated_in_the_country` gives tens of thousands. Either the report reads a different stock (the merchant stratum,
 not the trade's workforce) or the two readings disagree; check which before trusting either figure.
+
+## Update: what entrants and switchers read (branch labor-market-economy-stability)
+
+`expectations.income_at_graduation` now counts the chance of finding work (Harris-Todaro, as `expected_income`), so the drain of switchers
+into glutted trades is smaller; the labour year is described in `sim/labour/market/DESIGN.md`. The remaining items above are unchanged.
