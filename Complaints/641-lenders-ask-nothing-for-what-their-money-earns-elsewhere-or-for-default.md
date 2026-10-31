@@ -61,3 +61,11 @@ sides would agree to.
 Feed the two alternatives (titles at a price, a state bond reachable by households), re-measure the opening rate, and retire
 `RATE_FLOOR_SHARE` if the lenders' floor now does its job. Tests call the ask and clearing functions with built offers: a
 glut leaves the rate at the lenders' floor, not zero; a lender with past losses asks more.
+
+## Update: requests cut to what the pledge bears
+
+`sim/economy/credit.py` `clear_with_cause`: a request the premium on its whole amount prices out is funded for the most its
+  pledge bears (`credit_cap.fundable_amount`, bisection on the premium) instead of refused; the borrower is marked in
+  `Clearing.limited` (`collateral_bound`) and the rest stays unmet. A working-capital request pledges the producer's cash, the
+  goods it holds and its plant, not the loan itself (`producers_working_capital.pledgeable_assets`, `request`).
+  Not re-measured on a civilisation; fixtures: `python3 sim/simulator.py spin-up-trace --fixture small --years 50` (the `rate` column).

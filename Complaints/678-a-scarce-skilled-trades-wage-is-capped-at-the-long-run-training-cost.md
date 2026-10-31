@@ -83,3 +83,9 @@ cost). Most farm hours are worked on the household's own plots, not hired. Since
 to its bids, the cost side should value a trade's hours at what an hour of it is worth to the people who work it (the hired
 wage only for the share that is hired, the household's own reservation for the rest), not price every hour at the thin hired
 market's wage. Not yet traced whether that is the whole of the farmer spike. Measure with the 473 Update 11 probe.
+
+## Update 3: the import-wage bound weighs the hours that can be fetched (branch labor-market-economy-stability)
+
+`ImportCosts.supply` gives the bound and the share of the hours wanted that can be fetched at it; `scarcity.short_run_ceiling` takes the
+mean of the capped and the uncapped ceiling weighted by that share, so the bound grows with the hours that can come rather than switching on
+once they cover the whole shortage. The wheat path over 20 years and the slow checks listed under Left are still not re-run.
