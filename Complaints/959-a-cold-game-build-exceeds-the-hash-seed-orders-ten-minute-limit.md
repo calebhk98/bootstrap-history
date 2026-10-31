@@ -20,3 +20,13 @@ first spin-up years from a cold cache.
 **What it would take.** Time a cold `harness.sim()` on main and on the branch with a profiler, name the steps that grew,
 and cut them (or, if the time is inherent, say so here and give the check a limit derived from that measurement, never a
 larger number picked to pass).
+
+## Measured on branch claude/labor-market-economy-stability-ueffy1
+
+The opening's land-rent covering (`opening._with_covering_prices`) adds, after the full solve, up to
+`COVERING_PRICE_PASSES` reopens of two `_open` calls each (one sizes the mint's metal replacement at the covered prices,
+`_reopen`). On the fixtures this multiplies `_open`, the income root-finds and households' `goods_orders` calls by two
+to three; the per-call cost is unchanged. Counted with a scratch wrapper over `sim/economy/fixture_setups.py`'s
+`stationary_setup()` and `small_setup(land_per_run=...)` (no committed command counts them). Cheaper options that move
+the results slightly: size the replacement from the previous pass's record instead of a fresh open, or fewer passes.
+Time Rome's opening with `ROME_SPIN_UP_YEARS=3,2 python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 1`.
