@@ -1,10 +1,13 @@
 """`spin-up-trace`: run a civilisation's hidden spin-up for many years and print the price level, the money
-stock and the mint's strikes by year (sim/markets/port_trace.py)."""
+stock and the mint's strikes by year (sim/markets/port_trace.py). With `--fixture`, step the hand-built economy
+instead (sim/ui/spin_up_fixture_trace.py)."""
 import csv
 import random
 
 from sim.markets import api as markets_api
 from sim.engine.ui_port import Sim, default_civilisation_id, load, load_civ
+from sim.markets.port_trace_holders import HOLDER_COLUMNS
+from sim.ui.spin_up_fixture_trace import FIXTURE_COLUMNS, fixture_trace, format_fixture_trace
 
 MACRO_COLUMNS = ("year", "price_level", "wage", "unemployment", "real_output", "chained_price_level")
 
@@ -26,16 +29,23 @@ def _short(value, pattern):
     return "-" if value is None else pattern % value
 
 
-def write_csv(rows, path):
-    """One row per year of the macro columns (year, price_level, wage, unemployment, real_output, chained_price_level); empty where none."""
+def write_csv(rows, path, columns=MACRO_COLUMNS + HOLDER_COLUMNS):
+    """One row per year of `columns` (by default the macro columns, then the money each kind of holder keeps); empty
+    where none."""
     with open(path, "w", newline="") as handle:
         writer = csv.writer(handle)
-        writer.writerow(MACRO_COLUMNS)
+        writer.writerow(columns)
         for row in rows:
-            writer.writerow(["" if row[name] is None else row[name] for name in MACRO_COLUMNS])
+            writer.writerow(["" if row[name] is None else row[name] for name in columns])
 
 
 def cmd_spin_up_trace(args):
+    if args.fixture:
+        rows = fixture_trace(args.fixture, args.years)
+        print(format_fixture_trace(rows))
+        if args.csv:
+            write_csv(rows, args.csv, FIXTURE_COLUMNS)
+        return 0
     _tree, _prices, nodes, _wages, _goods = load()
     game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(args.civ or default_civilisation_id()))
     rows = markets_api.spin_up_trace(game, args.years)

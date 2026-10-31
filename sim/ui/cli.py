@@ -1467,10 +1467,14 @@ def main():
                            help="print only the concerns that pay their way (Complaint 528), skipping the checks")
     subparser.add_argument("--json", action="store_true", help="print the checks and the concern scan as JSON")
     subparser = sub.add_parser("spin-up-trace", help="run a civilisation's hidden spin-up for many years and print the "
-                               "price level, the money stock and the mint's strikes by year; slow (minutes)")
+                               "price level, the money stock and the mint's strikes by year; slow (minutes), or with "
+                               "--fixture a hand-built economy in under a second")
     subparser.add_argument("--civ", default="", help="civilisation id (default: the default one)")
+    subparser.add_argument("--fixture", default="", choices=("small", "stationary"),
+                           help="step the hand-built fixture economy instead of a civilisation's spin-up")
     subparser.add_argument("--years", type=int, default=60, help="years to run (default 60)")
-    subparser.add_argument("--csv", default="", help="also write year, price level, wage, unemployment and real output to this CSV file")
+    subparser.add_argument("--csv", default="", help="also write the year's columns to this CSV file (macro columns and "
+                           "money by holder for a civilisation; the fixture's columns with --fixture)")
     subparser = sub.add_parser("spin-up-sensitivity", help="run a civilisation's spin-up under variants of how the economy "
                                "adjusts and print each variant's price-level and wage drift, cycle amplitude and period; "
                                "one spin-up per variant (minutes each on Rome)")
