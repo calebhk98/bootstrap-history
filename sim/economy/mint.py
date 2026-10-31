@@ -9,7 +9,7 @@ money are exchanged at parity both ways with no issuer. Fiat has no metal and no
 import math
 from typing import Dict
 
-from . import currency, mint_labour, mint_price
+from . import currency, mint_labour, mint_price, mint_staffing
 from .market_memory import market_key
 from .metal_stock import COIN_WEAR_PER_YEAR, METAL_GOODS_LOSS_PER_YEAR
 from .types import EDGE_EXTERNAL, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid, GoodsMove, Offer, Transfer
@@ -100,17 +100,26 @@ def loss_share(setup, spec) -> float:
 
 
 def capacity_fine_kilograms(setup, record) -> float:
-    """Fine metal the mint can strike in a year: what it bids hours for."""
+    """Fine metal the mint hires hands to strike in a year (`mint_staffing.staffed_money`)."""
     spec = record.currency
-    return yearly_monetisation(setup, record) * spec.backing_per_unit if spec.backing_per_unit > 0.0 else 0.0
+    if spec.backing_per_unit <= 0.0:
+        return 0.0
+    loss = loss_share(setup, spec)
+    worn_money = loss * record.book.money_supply(spec.currency_id) / (1.0 - loss)
+    return mint_staffing.staffed_money(yearly_monetisation(setup, record), worn_money) * spec.backing_per_unit
 
 
 def staff(setup, record, view, labour_bids) -> None:
     """Before the labour market clears: the mint bids for the hours of its yearly capacity."""
     if record.currency.backing_per_unit > 0.0:
         budget = record.state_budget
+        balance = record.book.balance(setup.state_agent, setup.currency_id)
+        agent = mint_labour.mint_agent(setup)
+        before = record.book.balance(agent, setup.currency_id)
         mint_labour.staff(setup, record, view, labour_bids, capacity_fine_kilograms(setup, record),
-                          committed_cash=budget.wage_budget + budget.goods_budget)
+                          committed_cash=budget.wage_budget)
+        funded = record.book.balance(agent, setup.currency_id) - before
+        budget.goods_budget -= mint_staffing.goods_budget_cut(balance, budget.wage_budget, budget.goods_budget, funded)
 
 
 def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[str, float]:

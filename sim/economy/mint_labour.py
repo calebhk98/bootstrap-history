@@ -9,7 +9,7 @@ from typing import Dict, List, Mapping
 
 from sim.constants import declare
 
-from . import currency
+from . import currency, mint_staffing
 from .setup import labour_area
 from .state_budget import STATE_WAGE_CEILING_MULTIPLE
 from .types import LabourBid, Transfer
@@ -46,6 +46,18 @@ def _striking(setup, spec) -> bool:
             and spec.backing_per_unit > 0.0)
 
 
+def scale_bids_to_funds(bids: List[LabourBid], funded: float) -> List[LabourBid]:
+    """The bids with every trade's hours cut by the same share where the bill at their ceilings is more than `funded`:
+    hours the mint cannot pay would be hired and sent away unpaid."""
+    bill = math.fsum(bid.hours * bid.maximum_wage for bid in bids)
+    if funded <= 0.0:
+        return []
+    if bill <= funded:
+        return bids
+    share = funded / bill
+    return [LabourBid(bid.employer, bid.trade, bid.area, bid.hours * share, bid.maximum_wage) for bid in bids]
+
+
 def staff(setup, record, view, labour_bids: List[LabourBid], capacity_fine_kilograms: float,
           committed_cash: float = 0.0) -> None:
     """Bid for the hours the mint needs to strike `capacity_fine_kilograms` this year, at the capital,
@@ -57,16 +69,18 @@ def staff(setup, record, view, labour_bids: List[LabourBid], capacity_fine_kilog
     agent, area = mint_agent(setup), labour_area(setup.capital_tile)
     level = view.chained_price_level(setup.currency_id)
     bids = []
-    for trade, per_kilogram in sorted(hours_per_fine_kilogram(setup.mint_recipe, spec).items()):
+    per_trade = hours_per_fine_kilogram(setup.mint_recipe, spec)
+    value = mint_staffing.hour_value(currency.mint_parity(spec), math.fsum(per_trade.values()))
+    for trade, per_kilogram in sorted(per_trade.items()):
         wage = view.wage(trade, area) or setup.opening_wages.get(trade, 0.0) * level
         if wage > 0.0:
             bids.append(LabourBid(agent, trade, area, capacity_fine_kilograms * per_kilogram,
-                                  wage * STATE_WAGE_CEILING_MULTIPLE))
+                                  max(wage * STATE_WAGE_CEILING_MULTIPLE, value)))
     wage_bill = math.fsum(bid.hours * bid.maximum_wage for bid in bids)
     funded = min(wage_bill, max(0.0, record.book.balance(setup.state_agent, setup.currency_id) - committed_cash))
     if funded > 0.0:
         record.book.transfer(Transfer(setup.state_agent, agent, setup.currency_id, funded, "mint wages funded"))
-    labour_bids.extend(bids)
+    labour_bids.extend(scale_bids_to_funds(bids, funded))
 
 
 def strike_limit_fine_kilograms(setup, spec, hours_hired: Mapping[str, float]) -> float:

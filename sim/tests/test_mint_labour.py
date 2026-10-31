@@ -110,7 +110,7 @@ class Staffing(unittest.TestCase):
         wanted = []
         mint_labour.staff(setup, record, FakeView(), wanted, capacity_fine_kilograms=1.0e6)
         bill = sum(bid.hours * bid.maximum_wage for bid in wanted)
-        self.assertGreater(bill, purse)    # the fixture's bill is more than the purse, as a scarce trade's ceiling makes it
+        self.assertLessEqual(bill, purse * (1.0 + 1e-9))    # hours the purse cannot pay are not bid for
         setup, record = world(spec_of())
         committed = 0.75 * purse
         mint_labour.staff(setup, record, FakeView(), [], capacity_fine_kilograms=1.0e6, committed_cash=committed)
