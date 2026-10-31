@@ -43,3 +43,10 @@ cohorts plan about ten times food demand, prices and wages collapse and real out
 collapses too); bounded by last year's unmet food it changes nothing measurable, because Rome's unmet food is a few per
 cent of the floor. So the plot trade's idle hours are not food the market lacks: in a nearly fed society they have no
 market use, and the unsold-hours share counts them as unemployment.
+
+**Hard-input ceiling from what the run earns, parked** (`Complaints/reports/961-hard-input-ceiling.patch.txt`): a hard
+input's bid ceiling is the run's margin per unit of the input (its own price cancels, so it cannot ratchet). No runaway on
+Rome or the fixtures, but no measured improvement: the old ceiling binds only for a few inputs (vegetables, millet,
+textiles, nails), lead is not at its ceiling, and on saved Rome food makers achieve a small share of their planned runs
+in every year while vegetable and millet makers plan a small share of their capacity, to expected sales rather than to
+the unmet bids.

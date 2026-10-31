@@ -1,0 +1,175 @@
+From 7c4b13fd3a387fd64dab6a3c8299746cedff1437 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 16:40:01 +0000
+Subject: [PATCH] Hard inputs are bid up to what the run can pay for them, not
+ a multiple of their price (Complaint 961)
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WXrfievykJ3StG4swPtute
+---
+ sim/economy/hard_input_ceiling.py             | 18 ++++++++
+ sim/economy/producers.py                      | 20 ++++++---
+ sim/tests/test_economy_hard_input_ceiling.py  | 44 +++++++++++++++++++
+ sim/tests/test_economy_input_ceiling_share.py |  7 +--
+ 4 files changed, 80 insertions(+), 9 deletions(-)
+ create mode 100644 sim/economy/hard_input_ceiling.py
+ create mode 100644 sim/tests/test_economy_hard_input_ceiling.py
+
+diff --git a/sim/economy/hard_input_ceiling.py b/sim/economy/hard_input_ceiling.py
+new file mode 100644
+index 0000000..ecc3ad3
+--- /dev/null
++++ b/sim/economy/hard_input_ceiling.py
+@@ -0,0 +1,18 @@
++"""The most a producer bids for an input its run cannot go ahead without (Complaint 961): what the run can pay for it
++and still pay, not a multiple of the input's price, so the bound does not ratchet with the price bid."""
++
++
++def hard_input_ceiling(price: float, per_run: float, margin_for_input: float) -> float:
++    """The price plus the margin left for this input per unit of it a run uses: at that price the run just pays."""
++    return price + max(0.0, margin_for_input) / per_run
++
++
++def working_capital_charge(variable_cost_per_run: float, interest_rate: float) -> float:
++    """Interest on a year's variable cost a run pays before its sales come in."""
++    return max(0.0, interest_rate) * variable_cost_per_run
++
++
++def margin_share(margin: float, hard_inputs_short: int) -> float:
++    """What each of the hard inputs bought short may take of the run's margin: all of it for one, an equal part of it
++    for several, so their ceilings together never ask more than the run can pay."""
++    return max(0.0, margin) / max(1, hard_inputs_short)
+diff --git a/sim/economy/producers.py b/sim/economy/producers.py
+index 7132d12..c1d2298 100644
+--- a/sim/economy/producers.py
++++ b/sim/economy/producers.py
+@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
+ 
+ from sim.constants import declare
+ 
+-from . import ask_adjust, inventory, practice, tool_fallback, unit_cost
++from . import ask_adjust, hard_input_ceiling, inventory, practice, tool_fallback, unit_cost
+ from .labour_ceilings import joint_labour_ceilings
+ from .planning_price import held_to_band, is_bare_quote
+ from .protocols import MarketView
+@@ -321,8 +321,10 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
+     # an input is bid up to the price at which the run breaks even at the input prices seen now, not at the
+     # lagging expectation the run is planned on, or a scarce input's price ratchets up on its own bid
+     live_variable = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}) + labour_cost + rent
++    rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
++    hard_margin = revenue / ratio - live_variable - hard_input_ceiling.working_capital_charge(live_variable, rate)
+     bids = _input_bids(producer, recipe, view, runs, market_inputs, max(cash, 0.0) - runs * labour_cost,
+-                       revenue / ratio - live_variable, live_variable, wages)
++                       revenue / ratio - live_variable, live_variable, wages, hard_margin)
+     return Plan(runs, tuple(labour_bids), tuple(bids), margin, wanted, runs * labour_cost)
+ 
+ 
+@@ -475,11 +477,12 @@ def input_ceiling(price: float, margin_per_run: float, variable_cost_per_run: fl
+ 
+ 
+ def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_per_run, variable_cost_per_run=0.0,
+-                wages=None) -> List[Bid]:
++                wages=None, hard_margin=None) -> List[Bid]:
+     """Inputs for the planned runs, net of what is held: a floor, not price-sensitive. The budget is
+     the cash left after wages, split by cost share, so the bids never add up to more than the cash.
+     No input is bid for above `input_ceiling`: the run's margin shared by the input's cost share, and the
+-    input's value against its cheapest substitute (the tool basket's later tools, or working by hand)."""
++    input's value against its cheapest substitute (the tool basket's later tools, or working by hand). A hard input
++    with no substitute (`hard_margin` given) is bid up to what the run can pay for it (`hard_input_ceiling`)."""
+     needs = {}
+     for good, per_run in sorted(recipe.inputs.items()):
+         short = runs * per_run - view.stock(producer.agent_id, good, producer.tile)
+@@ -491,11 +494,16 @@ def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_
+             if short > 0.0 and prices.get(step.good, 0.0) > 0.0:
+                 needs[step.good] = needs.get(step.good, 0.0) + short
+     total_cost = sum(quantity * prices[good] for good, quantity in needs.items())
++    values_in_use = {good: tool_fallback.value_in_use(recipe, good, prices, wages or {}) for good in needs}
++    hard_short = [good for good in needs if good in recipe.hard_inputs and values_in_use[good] is None]
+     bids = []
+     for good, quantity in needs.items():
+         share = quantity * prices[good] / total_cost if total_cost > 0.0 else 0.0
+-        worth = input_ceiling(prices[good], margin_per_run, variable_cost_per_run,
+-                              tool_fallback.value_in_use(recipe, good, prices, wages or {}))
++        if hard_margin is not None and good in hard_short:
++            worth = hard_input_ceiling.hard_input_ceiling(prices[good], recipe.hard_inputs[good],
++                                                          hard_input_ceiling.margin_share(hard_margin, len(hard_short)))
++        else:
++            worth = input_ceiling(prices[good], margin_per_run, variable_cost_per_run, values_in_use[good])
+         bids.append(Bid(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile,
+                         quantity, 0.0, prices[good], 0.0, max(0.0, budget_for_inputs) * share,
+                         maximum_price=worth))
+diff --git a/sim/tests/test_economy_hard_input_ceiling.py b/sim/tests/test_economy_hard_input_ceiling.py
+new file mode 100644
+index 0000000..111b38e
+--- /dev/null
++++ b/sim/tests/test_economy_hard_input_ceiling.py
+@@ -0,0 +1,44 @@
++"""Complaint 961: a producer's bid for a hard input (one without which its run cannot go ahead, with no substitute)
++stops at the most the run can pay for it: the run's revenue less the other inputs, labour, rent and the interest on the
++working capital it ties up, per unit of this input. It does not follow the input's own price."""
++
++QUICK_TOPIC = True
++
++import unittest
++
++from sim.economy import hard_input_ceiling
++
++
++class HardInputCeilingTests(unittest.TestCase):
++    def test_the_ceiling_is_the_price_plus_the_margin_left_per_unit_of_the_input(self):
++        # a run uses 0.5 of the input at 2; the margin left after every cost is 3 a run: 2 + 3 / 0.5
++        self.assertAlmostEqual(hard_input_ceiling.hard_input_ceiling(price=2.0, per_run=0.5, margin_for_input=3.0), 8.0)
++
++    def test_no_margin_left_leaves_the_price(self):
++        self.assertEqual(hard_input_ceiling.hard_input_ceiling(2.0, 0.5, -4.0), 2.0)
++
++    def test_the_most_the_run_can_pay_does_not_move_with_the_input_price(self):
++        # revenue 100, other costs 40, the input 0.5 a run: at any price the run pays up to (100 - 40) / 0.5
++        for price in (1.0, 20.0, 119.0):
++            margin = 100.0 - 40.0 - 0.5 * price
++            self.assertAlmostEqual(hard_input_ceiling.hard_input_ceiling(price, 0.5, margin), 120.0)
++
++    def test_working_capital_costs_the_interest_on_a_years_variable_cost(self):
++        self.assertAlmostEqual(hard_input_ceiling.working_capital_charge(variable_cost_per_run=40.0, interest_rate=0.05), 2.0)
++        self.assertEqual(hard_input_ceiling.working_capital_charge(40.0, -0.02), 0.0)
++
++    def test_the_margin_is_shared_among_the_hard_inputs_bought_short(self):
++        self.assertAlmostEqual(hard_input_ceiling.margin_share(margin=6.0, hard_inputs_short=3), 2.0)
++        self.assertEqual(hard_input_ceiling.margin_share(6.0, 0), 6.0)
++        self.assertEqual(hard_input_ceiling.margin_share(-6.0, 2), 0.0)
++
++    def test_the_ceilings_of_inputs_bought_together_add_up_to_no_more_than_the_run_can_pay(self):
++        margin = 6.0
++        share = hard_input_ceiling.margin_share(margin, 2)
++        cost = sum((hard_input_ceiling.hard_input_ceiling(price, per_run, share) - price) * per_run
++                   for price, per_run in ((1.0, 2.0), (5.0, 0.1)))
++        self.assertAlmostEqual(cost, margin)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/sim/tests/test_economy_input_ceiling_share.py b/sim/tests/test_economy_input_ceiling_share.py
+index 553a47b..7963a8c 100644
+--- a/sim/tests/test_economy_input_ceiling_share.py
++++ b/sim/tests/test_economy_input_ceiling_share.py
+@@ -81,13 +81,14 @@ class InputCeilingTests(unittest.TestCase):
+         self.assertEqual(producers.input_ceiling(2.0, 30.0, 10.0, value_in_use=3.0), 3.0)
+         self.assertEqual(producers.input_ceiling(2.0, 30.0, 10.0, value_in_use=100.0), 8.0)
+ 
+-    def test_a_bid_does_not_exceed_the_margin_share_however_wide_the_margin(self):
++    def test_a_hard_input_is_bid_up_to_what_the_run_can_pay_for_it(self):
++        # a run of 10 grain at 100 uses 2 seed and 5 hours at 1: the seed can take what is left per unit, not a multiple of its price
+         view = View({"grain": 100.0, "seed": 1.0}, WAGES)
+         plan = producers.plan(farmer(expected_prices={"grain": 100.0}), SEEDED, view, 1e6)
+         seed = [bid for bid in plan.bids if bid.good == "seed"][0]
+         variable = 2.0 * 1.0 + 5.0 * 1.0       # a run's seed and hours
+-        self.assertLess(seed.maximum_price, 1.0 * (1.0 + 100.0 * 10.0 / variable))      # the old ceiling: the whole run margin over the seed
+-        self.assertAlmostEqual(seed.maximum_price, 1.0 * (1.0 + (10.0 * 100.0 - variable) / variable), delta=0.05 * seed.maximum_price)
++        paid = (10.0 * 100.0 - variable - 0.05 * variable) / 2.0 + 1.0
++        self.assertAlmostEqual(seed.maximum_price, paid, delta=0.05 * paid)
+ 
+     def test_an_iron_tool_is_not_bid_above_what_wooden_tools_save_however_scarce_and_dear(self):
+         # the tool's price has run to ten times the cost of the wooden substitute; the margin would pay far more
+-- 
+2.43.0
+
