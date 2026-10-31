@@ -221,6 +221,16 @@ def sold_by_seller(buyers: Buyers, offers: Sequence[Offer]) -> dict:
     return sold
 
 
+def requested_by_buyers(buyers: Buyers, offers: Sequence[Offer]) -> float:
+    """What the buyers ask for at the offers' asks before any seller runs out (`ClearingResult.demand_at_price` of the same
+    book), without building fills; nothing when the book does not trade."""
+    ordered = in_clearing_order(offers)
+    asks = _asks(buyers, ordered)
+    if not _trades(buyers, ordered, asks):
+        return 0.0
+    return allocate(buyers.bids, ordered, asks, buyers.schedule).requested
+
+
 def price_and_sold(buyers: Buyers, ordered: List[Offer], seller: str) -> Tuple[float, float]:
     """The clearing price and what a seller that is not a book edge sells, as `clear` gives them, without
     building fills. `ordered` is in clearing order (`in_clearing_order`, `with_offer`)."""

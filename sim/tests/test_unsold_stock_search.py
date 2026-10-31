@@ -110,14 +110,23 @@ class UnsoldStockSearchTests(unittest.TestCase):
         self.assertGreater(final["dear"].reservation_price, 1.2 * COST)
         self.assertLess(sold(result, "dear"), 100.0)
 
-    def test_a_market_with_no_unsold_stock_is_left_as_chosen(self):
+    def test_a_market_that_sells_out_with_no_excess_demand_is_left_as_chosen(self):
+        setup, record = game("a")
+        bids = [buyer(50.0, 4.0 * COST)]
+        offers = [offer("a", 50.0, 1.2 * COST)]
+        chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, None)
+        final, _result = unsold_search.clear_with_search(setup, record, View(), bids, offers, chosen,
+                                                         GOOD, AREA, "coin", None)
+        self.assertEqual(final, chosen)
+
+    def test_a_seller_that_sells_out_with_buyers_turned_away_asks_up_to_the_buyers_ceiling(self):
         setup, record = game("a")
         bids = [buyer(100.0, 4.0 * COST)]
         offers = [offer("a", 50.0, 1.2 * COST)]
         chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, None)
         final, _result = unsold_search.clear_with_search(setup, record, View(), bids, offers, chosen,
                                                          GOOD, AREA, "coin", None)
-        self.assertEqual(final, chosen)
+        self.assertAlmostEqual(final[0].reservation_price, 4.0 * COST, delta=0.01 * COST)
 
     def crossings_for(self, view, bids, asks):
         """How many market crossings one search makes for sellers asking `asks` under `view`."""

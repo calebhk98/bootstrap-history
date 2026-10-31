@@ -8,13 +8,15 @@ is unsold, all of them are brought down to a common ask level, each to no lower 
 a seller that undercuts leaves its rivals unsold in turn; the level is the highest at which all of them sell
 out or sit at their floors, found by bisection on whole-market clears. A market with no unsold searchable
 stock clears once, and a seller's ask is moved between years by its stock against the target (ask_adjust.py).
+The mirror runs after it: producers whose buyers were turned away raise their asks to where the buyers still ask for
+the whole stock (demand_search.py).
 """
 import math
 from typing import List, Optional, Sequence, Tuple
 
 from sim.book import ROUNDING_SHARE
 
-from . import goods_market, inventory, seller_offers, titles_value
+from . import demand_search, goods_market, inventory, seller_offers, titles_value
 from .types import Offer
 
 UNSOLD_BOUND_MARGIN = 1e-12    # float noise of two sums of the same demand, not a model number
@@ -126,12 +128,24 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     buyers = goods_market.Buyers(bids, last_price)       # the same bids meet every trial book
     result = goods_market.clear(bids, offers, good, area, currency, last_price, buyers)
     floors = _floors(setup, record, view, offers, original, costs if costs is not None else {})
-    if not floors or not _unsold(_sold_by_offer(result, offers), offers, list(floors)):
-        return offers, result
-    floors = _salvage_floors(floors, offers, buyers)
-    if not floors:
-        return offers, result
-    return search_asks(bids, offers, floors, buyers, good, area, currency, last_price)
+    if floors and _unsold(_sold_by_offer(result, offers), offers, list(floors)):
+        floors = _salvage_floors(floors, offers, buyers)
+        if floors:
+            offers, result = search_asks(bids, offers, floors, buyers, good, area, currency, last_price)
+    return raise_sold_out(record, buyers, bids, offers, result, good, area, currency, last_price)
+
+
+def raise_sold_out(record, buyers: goods_market.Buyers, bids, offers: Sequence[Offer], result, good, area, currency,
+                   last_price: Optional[float]) -> Tuple[List[Offer], object]:
+    """(the offers with the producers' asks raised to where they just sell out (demand_search.py), the market's clearing
+    with them); a market in which buyers were not turned away is returned as it cleared."""
+    if result.quantity >= result.demand_at_price * (1.0 - ROUNDING_SHARE):
+        return list(offers), result
+    producers = [index for index, offer in enumerate(offers) if offer.quantity > 0.0 and offer.seller in record.producers]
+    raised = demand_search.raise_asks(buyers, offers, producers)
+    if raised == list(offers):
+        return list(offers), result
+    return raised, goods_market.clear(bids, raised, good, area, currency, last_price, buyers)
 
 
 def search_asks(bids, offers: Sequence[Offer], floors: dict, buyers: goods_market.Buyers, good, area, currency,
