@@ -114,3 +114,19 @@ $M/lengnick/venv/bin/python -I $M/driver/run.py $M/lengnick/baseline-economy <se
 ```
 The venv (`mesa==0.8.8.1`) exists there, but the driver script `$M/driver/run.py` was never created (the write was part
 of the refused command). It must record per month: unemployed, vacancies, notices, mean price, mean wage.
+
+## Measured run (orchestrator, after the owner allowed running the code)
+
+newwayland/baseline-economy at d9f5cc3 in a venv with mesa 0.8.8.1, the parameters of its `batch_run.py` (1000
+households, 100 firms, household liquidity 3100, firm liquidity 0, price 25, daily wage 68), 21 steps a month, run with
+`-I` (runner `scratchpad/scripts/run_lengnick.py`, not committed). Unemployed share of households by month:
+
+| Seed | Months 0-24 | Months 24-120 | Months 120-1200 |
+|---|---|---|---|
+| 1 | mean 0.195 (from 0.90 to 0.00 by month 10) | mean 0.015, max 0.087 | mean 0.004, max 0.034 |
+| 2 | mean 0.196 | mean 0.014, max 0.094 | mean 0.004, max 0.043 |
+| 3 | mean 0.194 | mean 0.015, max 0.087 | mean 0.004, max 0.033 |
+
+From full unemployment the economy reaches full employment in about ten months (one hire per firm per month) and stays
+within a few per cent of it for a hundred years, with no wage floor (households accept any wage above a reservation
+that falls while unemployed) and labour demand driven by inventory against sales.
