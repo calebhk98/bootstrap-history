@@ -24,3 +24,12 @@ second choice); scarce markets that draw supply (capacity and entry that respond
 plant too); the opening's sizing of stone-block and similar producers to what sells (Complaint 961).
 
 **Measure.** `rome_step.py`-style stepping of a saved opened Rome economy, or `python3 sim/simulator.py spin-up-trace --civ rome_100ad`.
+
+**The ask floor is not the limit.** With households respending rationed budget, output holds but the people-based rate
+in wage trades still rises over a decade. An ablation on a saved Rome opening setting the ask floor
+(`labour_ask_floor.py`) to half or to zero lowers the wage and the price level but changes employment by a couple of
+points: even at a zero wage employers bid for little more, and by year ten nearly all idle hours sit in (trade, area)
+markets with no extra bid at any wage. The limit is demand for labour, and people staying attached for years to trades
+in their area that hire nobody (farmer, labourer, miner hold most idle hours). Side finding: in a few thin areas the
+unskilled wage reads several times the national one, and it becomes every skilled trade's reservation there
+(`unskilled_option`).
