@@ -132,3 +132,22 @@ Where ours differs:
 Nothing here is measured. The reading suggests BAM's low unemployment (by its own docs) comes from every worker
 accepting any offer, firms sized to full-employment output at the start, and 0-10% quarterly output moves, none of
 which our core has; but that is an inference from code, not a result. Running the command above would test it.
+
+## Measured run (orchestrator, after the owner allowed running the package)
+
+BAM Engine at commit 50e14d1, baseline defaults, 1000 periods, three seeds, run with `python3 -I`
+(runner scripts `scratchpad/scripts/run_bam.py` and `run_bam_validation.py`, not committed).
+
+| Seed | Unemployed at production, after 500-period burn-in: mean (std, min-max) | First 50 periods | Unemployed at period end, after contract expiry |
+|---|---|---|---|
+| 0 | 0.053 (0.026, 0.004-0.134) | 0.001 | 0.188 |
+| 1 | 0.056 (0.025, 0.000-0.134) | 0.002 | 0.150 |
+| 2 | 0.059 (0.030, 0.002-0.156) | 0.002 | 0.150 |
+
+The package's validation target (mean 0.065, tolerance 0.025, from the book's Figure 3.2b) is met when employment is
+read where the validation reads it: at `firms_run_production`, after the period's hiring
+(`validation/scenarios/baseline/__init__.py`, `COLLECT_CONFIG`). Read at the end of a period, after fixed-length
+contracts expire and before the next hiring round, the unemployed share is about three times larger. So BAM's
+single-digit unemployment depends on when it is counted: a large share of workers turns over every period and is rehired
+within it. The run starts at full employment (the first periods show near zero) and unemployment emerges over the
+burn-in.
