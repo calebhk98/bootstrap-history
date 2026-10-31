@@ -13,6 +13,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .entrant_rent import site_rent_per_run
 from . import crop_sites, entry_practice, labour_state, location_inputs, practice, sites, unit_cost
+from .location_land import headroom_with_land, land_short_tiles
 from .market_areas import MarketArea
 from .producers import Producer, live_input_prices
 from .setup import labour_area
@@ -150,6 +151,8 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     supplies: Dict[str, Mapping] = {}
     tile_parts: Dict[Tuple[str, TileId, float], tuple] = {}    # what a recipe's run on a tile costs apart from the output's carriage
     fixed_goods = location_inputs.fixed_site_goods(setup.recipes, by_recipe)
+    short_of_land = land_short_tiles((each.tile, each.land_run_cap, setup.land_per_run.get(each.recipe_id, 0.0) > 0.0)
+                                     for each in record.producers.values())
     crews_of = entry_practice.crews_of_recipe(record.producers)
     for producer in sites.in_id_order(record.producers):
         key = (producer.recipe_id, producer.tile)
@@ -162,7 +165,8 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     def siting(recipe_id, demand, runs):
         recipe = setup.recipes[recipe_id]
         area = area_map.market_area_of(demand.good, demand.anchor_tile)
-        if recipe.site_bound and not by_recipe.get(recipe_id) and sites.climate_allows(
+        if recipe.site_bound and not by_recipe.get(recipe_id) and headroom_with_land(
+                1.0, setup.land_per_run.get(recipe_id, 0.0) > 0.0, demand.anchor_tile in short_of_land) > 0.0 and sites.climate_allows(
                 recipe, setup.tiles.get(demand.anchor_tile)) and setup.recipe_allowed(recipe_id, demand.anchor_tile):
             return demand.anchor_tile, runs
         tonnes = output_tonnes(recipe, setup.specs)
@@ -179,6 +183,7 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
                     setup, record, view, carriage, recipe, by_recipe, supplies[recipe_id], capacity, committed, tile,
                     entry_practice.first_year_recipe(recipe, crews_of(recipe_id)))
             variable, factor, input_haul, staffable, headroom = fixed_part
+            headroom = headroom_with_land(headroom, setup.land_per_run.get(recipe_id, 0.0) > 0.0, tile in short_of_land)
             cost = math.inf if factor <= 0.0 else assembled_cost(
                 variable, carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes, input_haul)
             candidates.append(Candidate(tile, cost, staffable, headroom))
