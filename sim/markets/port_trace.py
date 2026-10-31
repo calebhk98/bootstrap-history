@@ -14,12 +14,13 @@ from .port_trace_holders import HOLDER_COLUMNS, money_by_holder_columns
 from .port_year import YearInputs
 
 COLUMNS = ("year", "price_level", "money_supply", "rate", "wear", "struck", "change", "metal_held", "wage", "hired_hours",
-           "idle_hours", "unemployment", "real_output", "chained_price_level") + HOLDER_COLUMNS
+           "idle_hours", "unsold_hours_share", "people_unemployment", "real_output", "chained_price_level") + HOLDER_COLUMNS
 
 
 def spin_up_trace(game, years):
     """[{year, price_level, money_supply, rate, wear, struck, change, metal_held, wage, hired_hours, idle_hours,
-    unemployment, real_output, chained_price_level, and HOLDER_COLUMNS}] (the macro columns from port_trace_columns.py, then
+    unsold_hours_share, people_unemployment, real_output, chained_price_level, and HOLDER_COLUMNS}] (the macro columns from
+    port_trace_columns.py, then
     `chained_price_level`: 1 in the first year, then each year's prices over the last year's at this year's output,
     port_trace_chained.py; the money each kind of holder keeps, port_trace_holders.py) for `years` years of the
     first stage on the opening `game` saved. `wear` is the coin worn away that year, `struck` the coin the
@@ -39,7 +40,8 @@ def spin_up_trace(game, years):
         row = {"year": year, "price_level": outcome.basket_price_level, "money_supply": outcome.money_supply,
                "rate": outcome.rate,
                "hired_hours": outcome.hired_hours, "idle_hours": outcome.idle_hours}
-        row.update(macro_columns(outcome, setup.unskilled_trade, economy_api.spin_up_state(economy, outcome)["real_output"]))
+        row.update(macro_columns(outcome, setup.unskilled_trade, economy_api.spin_up_state(economy, outcome)["real_output"],
+                                 economy_api.labour_market_rows(economy)))
         if previous_prices is not None:
             chained = next_chained_index(chained, previous_prices, outcome.prices, outcome.output)
         previous_prices = dict(outcome.prices)
