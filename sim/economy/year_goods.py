@@ -60,7 +60,7 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
         orders = households.goods_orders(cohort, view, cash - sum(bid.budget for bid in tool_bids), income,
                                          basket, setup.specs, priced,
                                          smooth_rise=not record.settling, shared_store=store_by_tile)
-        orders = _less_what_it_grew(orders, cohort, basket, ledger.grown_units.get(cohort.agent_id))
+        orders = less_what_it_grew(orders, cohort, basket, ledger.grown_units.get(cohort.agent_id))
         if own_options:
             savings = sum(offer.amount for offer in orders.funds_offers)     # only what it would otherwise lend
             orders = land_bid_year.with_land_bids(orders, land_bid_year.land_bids(
@@ -70,7 +70,7 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
     return funds
 
 
-def _less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> AgentOrders:
+def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> AgentOrders:
     """Floors already met from the household's own plot are not bought: each floor bid of a need is
     cut by the share of that need's floor the cohort grew."""
     if not grown_units:
