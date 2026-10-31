@@ -195,7 +195,7 @@ class DefaultCascadeTests(unittest.TestCase):
 
         def orders(record):
             view = CreditView(MarketMemory(), record.book, _Areas(), MONEY, loans=lambda: record.loans)
-            view.price = View().price
+            view.price = view.offered_price = View().price      # a buyer reads the offered price
             view.area_of = View().area_of
             view.stock = View().stock
             return households.goods_orders(record.cohorts[lender], view, record.book.balance(lender, MONEY),

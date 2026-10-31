@@ -11,6 +11,7 @@ from sim.world.need_basket import (Basket, NeedSpec, PricedNeed, make_basket, ne
                                    quality_reach, satiation_limit, subsistence_cost_per_person,
                                    with_quality_reach)
 
+from .offered_price import offered_price
 from .protocols import MarketView
 from .types import TileId
 
@@ -34,7 +35,7 @@ def need_prices(basket: Basket, view: MarketView, tile: TileId) -> List[PricedNe
         goods = tuple(sorted({good for spec in basket.needs for good, _effect in spec.goods}))
         kept = _priced_by_basket[id(basket)] = (basket, goods, {})
     _basket, goods, by_prices = kept
-    prices = {good: view.price(good, view.area_of(good, tile)) for good in goods}
+    prices = {good: offered_price(view, good, view.area_of(good, tile)) for good in goods}
     key = tuple(prices.values())
     priced = by_prices.get(key)
     if priced is None:
