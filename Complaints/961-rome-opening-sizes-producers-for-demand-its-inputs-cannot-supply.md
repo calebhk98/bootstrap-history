@@ -36,3 +36,10 @@ shortfall is a local fuel problem. Parked: `Complaints/reports/961-merchants-lea
 learn the best unfilled bid and the quantity wanted in a market with bids and no seller); on saved Rome it sent
 merchants' cash to other goods first and carried no lead, so it is not merged. Also seen: merchants bid to carry
 `gaming_table_hour`, a service, which should not be carried.
+
+**Own land selling a surplus, parked** (`Complaints/reports/961-own-land-sells-surplus.patch.txt`): a cohort's land beyond
+its floors grows the best-paying food crop for sale, its hours kept where an hour there beats the wage. Unbounded, Rome's
+cohorts plan about ten times food demand, prices and wages collapse and real output halves (the stationary fixture
+collapses too); bounded by last year's unmet food it changes nothing measurable, because Rome's unmet food is a few per
+cent of the floor. So the plot trade's idle hours are not food the market lacks: in a nearly fed society they have no
+market use, and the unsold-hours share counts them as unemployment.

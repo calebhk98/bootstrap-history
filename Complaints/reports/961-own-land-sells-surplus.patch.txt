@@ -1,0 +1,736 @@
+From 2319f02a3cb15848db522d004dd876d523dfb7c5 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 16:14:17 +0000
+Subject: [PATCH 1/2] Own land grows beyond the floors and sells the surplus
+ (WIP)
+
+---
+ sim/economy/economy.py                       |  24 ++-
+ sim/economy/household_hours_year.py          |  57 ++++++--
+ sim/economy/households_surplus.py            | 138 ++++++++++++++++++
+ sim/economy/labour_ask_floor.py              |  10 +-
+ sim/economy/labour_supply.py                 |   1 +
+ sim/economy/year_goods.py                    |   6 +-
+ sim/economy/year_ledger.py                   |   1 +
+ sim/tests/test_economy_households_surplus.py | 146 +++++++++++++++++++
+ 8 files changed, 360 insertions(+), 23 deletions(-)
+ create mode 100644 sim/economy/households_surplus.py
+ create mode 100644 sim/tests/test_economy_households_surplus.py
+
+diff --git a/sim/economy/economy.py b/sim/economy/economy.py
+index 17d7f57..9088648 100644
+--- a/sim/economy/economy.py
++++ b/sim/economy/economy.py
+@@ -21,6 +21,7 @@ from .money_audit import MoneyAudit, year_report
+ from .flow_rates import flow_imbalance
+ from .entry_year import close_idle_producers, open_entrants, restake_owners
+ from . import capital_year, household_hours_year, household_work_year, land_bid_year, land_lease_year
++from . import households_surplus
+ from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
+ from . import flight_step
+ from .labour_inputs import labour_context
+@@ -207,7 +208,7 @@ class Economy:
+         bondage_hours.deliver(ledger.hours_hired, placed)
+         bondage_hours.deliver_held(ledger.hours_hired, held_placed)
+         capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
+-        self._grow_own(offers, ledger, inputs.harvest_factor, kept)
++        self._grow_own(offers, ledger, inputs.harvest_factor, kept, supply.surplus_plans)
+         capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
+         order_book = {}
+         funds = cohort_orders(setup, record, view, ledger, order_book, self._own_plot_options())
+@@ -314,17 +315,19 @@ class Economy:
+     def _hour_supply(self, everyone, view, outside_option) -> HourSupply:
+         """The hours households sell as a schedule against the wage (labour_supply.py)."""
+         plan, work = self._fixed_home_hours(everyone, view, outside_option)
++        surplus_plans: Dict[str, tuple] = {}
+         plot = household_hours_year.plot_schedules(self.setup, self.record, view, everyone, self._own_plot_options(),
+-                                                   self._hectares_held())
++                                                   self._hectares_held(), surplus_plans)
+         faced = {(offer.trade, offer.area): view.wage(offer.trade, offer.area) or offer.reservation_wage for offer in everyone}
+-        return HourSupply(everyone, plan, work, plot, faced)
++        return HourSupply(everyone, plan, work, plot, faced, surplus_plans)
+ 
+     def _hectares_held(self) -> Dict[str, float]:
+         return titles_plots.hectares_held(self.setup, self.record)
+ 
+     def _grow_own(self, offers, ledger: YearLedger, harvest_factor: float = 1.0,
+-                  kept: Optional[Dict[str, float]] = None) -> None:
+-        """Hours kept back and hours nobody hired go into the household's own plot (households_own.py)."""
++                  kept: Optional[Dict[str, float]] = None, surplus_plans: Optional[Dict[str, tuple]] = None) -> None:
++        """Hours kept back and hours nobody hired go into the household's own plot (households_own.py): the floors
++        first, then the land beyond them for sale (households_surplus.py)."""
+         setup, record = self.setup, self.record
+         self._own_plot_options()
+         kept = kept or {}
+@@ -342,6 +345,17 @@ class Economy:
+                                                  (tile.fertility if tile else 0.0) * harvest_factor,
+                                                  setup.basket_for(cohort.tile), setup.land_per_run,
+                                                  held.get(cohort.agent_id, 0.0), hours_used)
++            plan = (surplus_plans or {}).get(cohort_id)
++            if plan:       # the land beyond the floors, worked with the hours they left
++                floors_take = households_surplus.hectares_the_floors_took(hours_used, setup.recipes, setup.land_per_run)
++                sale, quantity, worked, hectares = households_surplus.grow_for_sale(
++                    cohort, plan[0], plan[1], held.get(cohort_id, 0.0), floors_take, max(0.0, idle - sum(hours_used.values())),
++                    (tile.fertility if tile else 0.0) * harvest_factor)
++                if sale is not None:
++                    record.book.move_many([sale])
++                    ledger.grown_for_sale[cohort_id] = {sale.good: quantity}
++                    hours_used[plan[0].recipe_id] = hours_used.get(plan[0].recipe_id, 0.0) + worked
++                    self._own_hectares[cohort.tile] = self._own_hectares.get(cohort.tile, 0.0) + hectares
+             if hours_used:
+                 ledger.own_plot_hours[cohort_id] = hours_used
+             ledger.spare_hours[cohort_id] = max(0.0, idle - sum(hours_used.values()))
+diff --git a/sim/economy/household_hours_year.py b/sim/economy/household_hours_year.py
+index 52ff5ce..0718237 100644
+--- a/sim/economy/household_hours_year.py
++++ b/sim/economy/household_hours_year.py
+@@ -1,11 +1,11 @@
+ """A cohort's hours kept for its own plot rather than offered (Complaints 473, 608): the choice of
+ `households_hours_offered` against the wage it faced and what its plot yields at the prices of what it grows. The
+ hours kept are added to those the own-plot plan and the household work already keep back (`labour_supply.HourSupply`)."""
+-from typing import Callable, Dict, Mapping, Sequence
++from typing import Callable, Dict, Mapping, Optional, Sequence
+ 
+-from . import households_hours_offered
++from . import households_hours_offered, households_surplus
+ from .households_basket import need_prices
+-from .households_own import Option, own_production
++from .households_own import Option, own_production, plot_hectares
+ from .labour_ask_floor import hectares_per_hour_by_recipe, plot_return_per_hour
+ from .types import AgentId, LabourOffer
+ 
+@@ -20,41 +20,68 @@ def wage_faced_per_hour(view, offers: Sequence[LabourOffer]) -> float:
+     return sum(hours * wage for hours, wage in rows) / total if total > 0.0 else 0.0
+ 
+ 
+-def usable_plot_hours(setup, cohort, options: Mapping[str, Sequence[Option]], held: float) -> float:
+-    """Hours of a cohort's work its plot can take: the floors of the needs its land grows, on the land it holds."""
++def surplus_land(setup, record, cohort, priced, options: Mapping[str, Sequence[Option]], held: float,
++                 hectares_per_hour: Mapping[str, float], wage_per_hour: float):
++    """(crop, hectares) the cohort plans to work for sale beyond its floors (households_surplus): the land its floors
++    leave it at the tile's usual fertility, where a hectare nets more than the tile's rent at the wage it faces."""
++    tile = setup.tiles.get(cohort.tile)
++    if tile is None or held <= 0.0 or tile.fertility <= 0.0:
++        return None, 0.0
++    crop = households_surplus.best_surplus_crop(priced, options, hectares_per_hour)
++    floors = {need.need_id: need.subsistence_per_person * cohort.people for need in setup.basket_for(cohort.tile).needs}
++    floors_take = plot_hectares(floors, options, setup.recipes, setup.land_per_run, tile.fertility)
++    return crop, households_surplus.hectares_worked_beyond_floors(
++        held, floors_take, crop, tile.fertility, wage_per_hour, record.land_rent.get(cohort.tile, 0.0))
++
++
++def usable_plot_hours(setup, cohort, options: Mapping[str, Sequence[Option]], held: float,
++                      surplus_crop=None, surplus_hectares: float = 0.0) -> float:
++    """Hours of a cohort's work its plot can take: the floors of the needs its land grows, on the land it holds, and
++    the hours the land beyond them takes for its surplus crop."""
+     tile = setup.tiles.get(cohort.tile)
+     if tile is None or held <= 0.0 or tile.fertility <= 0.0:
+         return 0.0
+     used: Dict[str, float] = {}
+     own_production(cohort, SPARE_HOURS, options, setup.recipes, tile.fertility, setup.basket_for(cohort.tile),
+                    setup.land_per_run, held, used)
+-    return sum(used.values())
++    surplus = households_surplus.hours_the_land_takes(surplus_crop, surplus_hectares) if surplus_crop is not None else 0.0
++    return sum(used.values()) + surplus
+ 
+ 
+ def cohort_plot_schedule(setup, cohort, available: float, priced, options: Mapping[str, Sequence[Option]], held: float,
+-                         hectares_per_hour: Mapping[str, float]):
++                         hectares_per_hour: Mapping[str, float], surplus_crop=None, surplus_hectares: float = 0.0):
+     """The hours one cohort keeps for its plot at a wage an hour, given the `available` hours it has and its `priced`
+-    needs; None for a cohort with no hours, no land held, or fertility none."""
++    needs, and the land it works for sale beyond its floors; None for a cohort with no hours, no land held, or
++    fertility none."""
+     tile = setup.tiles.get(cohort.tile)
+     if available <= 0.0 or tile is None or held <= 0.0 or tile.fertility <= 0.0 or cohort.working_people <= 0.0:
+         return None
+-    usable = usable_plot_hours(setup, cohort, options, held)
++    usable = usable_plot_hours(setup, cohort, options, held, surplus_crop, surplus_hectares)
+     per_worker_hours = available / cohort.working_people
+     marginal = plot_return_per_hour(priced, options, tile.fertility, per_worker_hours,
+-                                    cohort.people / cohort.working_people, hectares_per_hour, held / cohort.working_people)
++                                    cohort.people / cohort.working_people, hectares_per_hour, held / cohort.working_people,
++                                    surplus_crop, surplus_hectares / cohort.working_people)
+     return plot_schedule(per_worker_hours, marginal, usable / cohort.working_people, cohort.working_people)
+ 
+ 
+ def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options: Mapping[str, Sequence[Option]],
+-                   hectares_held: Mapping[AgentId, float]) -> Dict[AgentId, Callable[[float], float]]:
++                   hectares_held: Mapping[AgentId, float], surplus_plans: Optional[Dict] = None
++                   ) -> Dict[AgentId, Callable[[float], float]]:
+     """For each cohort with a plot, the hours it keeps for the plot at a wage an hour (a function of the wage); a
+-    cohort with no land held, or none that grows a need's floor, has none."""
++    cohort with no land held, or none that grows a need's floor, has none. `surplus_plans`, if given, is filled with
++    each cohort's (crop, hectares) worked for sale beyond its floors."""
+     schedules: Dict[AgentId, Callable[[float], float]] = {}
+     hectares_per_hour = hectares_per_hour_by_recipe(setup.recipes, setup.land_per_run)
+     for cohort_id, cohort in sorted(record.cohorts.items()):
+-        available = sum(offer.hours for offer in offers if offer.worker == cohort_id)
+-        schedule = cohort_plot_schedule(setup, cohort, available, need_prices(setup.basket_for(cohort.tile), view, cohort.tile),
+-                                        options, hectares_held.get(cohort_id, 0.0), hectares_per_hour)
++        own_offers = [offer for offer in offers if offer.worker == cohort_id]
++        available = sum(offer.hours for offer in own_offers)
++        priced = need_prices(setup.basket_for(cohort.tile), view, cohort.tile)
++        held = hectares_held.get(cohort_id, 0.0)
++        crop, surplus = surplus_land(setup, record, cohort, priced, options, held, hectares_per_hour,
++                                     wage_faced_per_hour(view, own_offers))
++        if surplus_plans is not None and surplus > 0.0:
++            surplus_plans[cohort_id] = (crop, surplus)
++        schedule = cohort_plot_schedule(setup, cohort, available, priced, options, held, hectares_per_hour, crop, surplus)
+         if schedule is not None:
+             schedules[cohort_id] = schedule
+     return schedules
+diff --git a/sim/economy/households_surplus.py b/sim/economy/households_surplus.py
+new file mode 100644
+index 0000000..19f091d
+--- /dev/null
++++ b/sim/economy/households_surplus.py
+@@ -0,0 +1,138 @@
++"""What a household's own land grows beyond its floors, and sells (Complaints 551, 538).
++
++A household that holds land works it where an hour there is worth more than the wage (households_hours_offered):
++the floors first, then the crop that fetches most per hour at the prices of the market, on the land the floors
++leave. Output on fixed land rises with hours to the labour elasticity (world/land.py), the same curve
++labour_ask_floor.plot_return_per_hour reads, so the hours it keeps and the harvest it gets agree. What the floors
++do not eat is offered on the goods market like any seller's stock. Land is worked beyond the floors only where a
++hectare nets more than the tile's rent, since the holder could let it instead. Plain functions of built inputs.
++"""
++import dataclasses
++import math
++from typing import List, Mapping, Optional, Sequence, Tuple
++
++from sim.world.need_basket import PricedNeed
++from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
++
++from .households_cohort import Cohort
++from .households_own import Option
++from .inventory import holding_reservation
++from .types import EDGE_PRODUCTION, AgentId, GoodId, GoodsMove, Offer, Recipe
++
++FOR_SALE_PURPOSE = "grown for sale"
++
++
++@dataclasses.dataclass(frozen=True)
++class SurplusCrop:
++    recipe_id: str
++    good: GoodId
++    effect: float                # need units one unit of the good gives
++    hours_per_unit: float        # hours a need unit takes at fertility one
++    price_per_unit: float        # money a need unit of it fetches
++    hectares_per_hour: float     # land one hour of the recipe's work takes at its own intensity
++
++
++def best_surplus_crop(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]],
++                      hectares_per_hour: Mapping[str, float]) -> Optional[SurplusCrop]:
++    """The crop on the land beyond the floors: of each need that has a floor and a land-only recipe, the one whose
++    good fetches most money per hour of work. None where no such good has a price."""
++    best: Optional[Tuple[float, SurplusCrop]] = None
++    for need in priced:
++        rows = options.get(need.spec.need_id)
++        if need.spec.subsistence_per_person <= 0.0 or not rows:
++            continue
++        hours_per_unit, recipe_id, good, effect = rows[0]
++        per_hour = hectares_per_hour.get(recipe_id, 0.0)
++        price = next((price for each, price, _effect, _share in need.goods if each == good), None)
++        if hours_per_unit <= 0.0 or per_hour <= 0.0 or effect <= 0.0 or price is None or price <= 0.0:
++            continue
++        crop = SurplusCrop(recipe_id, good, effect, hours_per_unit, price / effect, per_hour)
++        value_per_hour = crop.price_per_unit / hours_per_unit
++        if best is None or value_per_hour > best[0]:
++            best = (value_per_hour, crop)
++    return best[1] if best else None
++
++
++def reference_hours_per_hectare(crop: SurplusCrop, fertility: float) -> float:
++    return 1.0 / (fertility * crop.hectares_per_hour) if fertility > 0.0 else math.inf
++
++
++def units_per_hectare(crop: SurplusCrop, fertility: float, hours_per_hectare: float,
++                      elasticity: float = LABOUR_OUTPUT_ELASTICITY) -> float:
++    """Need units a hectare gives with this many hours on it: the reference yield times hours over the
++    reference hours to the labour elasticity."""
++    if hours_per_hectare <= 0.0 or fertility <= 0.0:
++        return 0.0
++    reference_units = 1.0 / (crop.hectares_per_hour * crop.hours_per_unit)
++    return reference_units * (hours_per_hectare / reference_hours_per_hectare(crop, fertility)) ** elasticity
++
++
++def hours_the_land_takes(crop: SurplusCrop, hectares: float) -> float:
++    """Most hours the hectares take: a run's hours on each run's land."""
++    return max(0.0, hectares) / crop.hectares_per_hour
++
++
++def grow(crop: SurplusCrop, hectares: float, hours: float, fertility: float,
++         elasticity: float = LABOUR_OUTPUT_ELASTICITY) -> Tuple[float, float]:
++    """(quantity of the good grown, hours used) when `hours` are worked on `hectares`, no more than the land takes."""
++    used = min(max(0.0, hours), hours_the_land_takes(crop, hectares))
++    if used <= 0.0 or hectares <= 0.0:
++        return 0.0, 0.0
++    units = hectares * units_per_hectare(crop, fertility, used / hectares, elasticity)
++    return units / crop.effect, used
++
++
++def net_margin_per_hectare(crop: SurplusCrop, fertility: float, wage_per_hour: float,
++                           elasticity: float = LABOUR_OUTPUT_ELASTICITY) -> float:
++    """Most a hectare nets its worker a year: its output at the crop's price less the hours at the wage, at the hours
++    per hectare where the next hour adds the wage (the whole of the land's hours where the wage is not positive)."""
++    cap = hours_the_land_takes(crop, 1.0)
++    if fertility <= 0.0 or cap <= 0.0:
++        return 0.0
++    scale = crop.price_per_unit * units_per_hectare(crop, fertility, 1.0, elasticity)      # money at one hour a hectare
++    hours = cap if wage_per_hour <= 0.0 else min(cap, (elasticity * scale / wage_per_hour) ** (1.0 / (1.0 - elasticity)))
++    return crop.price_per_unit * units_per_hectare(crop, fertility, hours, elasticity) - wage_per_hour * hours
++
++
++def hectares_worked_beyond_floors(held: float, floors_take: float, crop: Optional[SurplusCrop], fertility: float,
++                                  wage_per_hour: float, rent_per_hectare: float) -> float:
++    """The hectares a holder works for sale beyond its floors: the land left once the floors have theirs, where a
++    hectare nets more than the rent it would let for; none without a crop or where the rent is higher."""
++    left = max(0.0, held - max(0.0, floors_take))
++    if crop is None or left <= 0.0 or net_margin_per_hectare(crop, fertility, wage_per_hour) <= max(0.0, rent_per_hectare):
++        return 0.0
++    return left
++
++
++def hectares_the_floors_took(hours_by_recipe: Mapping[str, float], recipes: Mapping[str, Recipe],
++                             land_per_run: Mapping[str, float]) -> float:
++    """Land the hours already worked for the floors take (each recipe's runs on each run's land)."""
++    total = 0.0
++    for recipe_id, hours in sorted(hours_by_recipe.items()):
++        hours_per_run = math.fsum(recipes[recipe_id].labour_hours.values())
++        if hours_per_run > 0.0:
++            total += hours / hours_per_run * land_per_run.get(recipe_id, 0.0)
++    return total
++
++
++def grow_for_sale(cohort: Cohort, crop: SurplusCrop, planned_hectares: float, held: float, floors_take: float,
++                  spare_hours: float, fertility: float) -> Tuple[Optional[GoodsMove], float, float, float]:
++    """(move booking the harvest, quantity, hours used, hectares worked): the spare hours worked on the land planned
++    for the surplus, no more than the floors left of what it holds. None where nothing was grown."""
++    hectares = min(max(0.0, planned_hectares), max(0.0, held - floors_take))
++    quantity, used = grow(crop, hectares, spare_hours, fertility)
++    if quantity <= 0.0:
++        return None, 0.0, 0.0, 0.0
++    return GoodsMove(EDGE_PRODUCTION, cohort.agent_id, crop.good, cohort.tile, quantity, FOR_SALE_PURPOSE), quantity, used, hectares
++
++
++def offers_for_sale(seller: AgentId, tile: str, area_of_good, quantity_by_good: Mapping[GoodId, float],
++                    expected_price, spoilage_of, interest_rate: float) -> List[Offer]:
++    """The surplus put on its market at what carrying it to next year would net (a perishable sells at any price)."""
++    offers = []
++    for good, quantity in sorted(quantity_by_good.items()):
++        if quantity <= 0.0:
++            continue
++        reservation = holding_reservation(expected_price(good) or 0.0, interest_rate, spoilage_of(good), 0.0)
++        offers.append(Offer(seller, good, area_of_good(good), tile, quantity, reservation))
++    return offers
+diff --git a/sim/economy/labour_ask_floor.py b/sim/economy/labour_ask_floor.py
+index ad95118..d48be6e 100644
+--- a/sim/economy/labour_ask_floor.py
++++ b/sim/economy/labour_ask_floor.py
+@@ -38,7 +38,8 @@ def plot_value_per_worker_year(priced: Sequence[PricedNeed], options: Mapping[st
+ 
+ def plot_return_per_hour(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]],
+                          fertility: float, hours_per_worker_year: float, people_per_worker: float,
+-                         hectares_per_hour: Mapping[str, float], hectares_held: Optional[float] = None) -> float:
++                         hectares_per_hour: Mapping[str, float], hectares_held: Optional[float] = None,
++                         surplus_crop=None, surplus_hectares: float = 0.0) -> float:
+     """Money the next hour on the family's plot adds, with the worker's year of hours on it. `hectares_held`, when
+     given and less than the land the floors take, is the land the worker has: the hours are worked on that.
+ 
+@@ -47,7 +48,8 @@ def plot_return_per_hour(priced: Sequence[PricedNeed], options: Mapping[str, Seq
+     for the worker and the people he supports. Hours per hectare on it is the year over that land; a need's
+     yield per hectare is its reference yield times (hours per hectare over the reference hours) to the
+     labour elasticity, and the next hour adds elasticity times yield over hours per hectare, in need units at
+-    the need's price. Needs weigh by the land they take."""
++    the need's price. Needs weigh by the land they take. `surplus_hectares` (per worker) is land held beyond the
++    floors that grows `surplus_crop` (households_surplus) for sale at its price; the hours spread over it too."""
+     if fertility <= 0.0 or hours_per_worker_year <= 0.0:
+         return 0.0
+     grown = []        # (price, hectares, hectares per need unit, reference hours per hectare)
+@@ -61,6 +63,10 @@ def plot_return_per_hour(priced: Sequence[PricedNeed], options: Mapping[str, Seq
+         per_unit = per_hour * rows[0][0]
+         hectares = need.spec.subsistence_per_person * people_per_worker * per_unit
+         grown.append((need.price_index, hectares, per_unit, 1.0 / (fertility * per_hour)))
++    if surplus_crop is not None and surplus_hectares > 0.0:
++        grown.append((surplus_crop.price_per_unit, surplus_hectares,
++                      surplus_crop.hectares_per_hour * surplus_crop.hours_per_unit,
++                      1.0 / (fertility * surplus_crop.hectares_per_hour)))
+     plot = math.fsum(row[1] for row in grown)
+     if plot <= 0.0:
+         return 0.0
+diff --git a/sim/economy/labour_supply.py b/sim/economy/labour_supply.py
+index 05d5548..0784152 100644
+--- a/sim/economy/labour_supply.py
++++ b/sim/economy/labour_supply.py
+@@ -27,6 +27,7 @@ class HourSupply:
+     work_hours: Mapping[AgentId, float]                 # household work it does itself
+     plot_hours_at: Mapping[AgentId, Callable[[float], float]]   # hours its plot keeps at a wage (households_hours_offered.plot_hours_kept)
+     faced_wage: Mapping[Tuple[str, str], float] = dataclasses.field(default_factory=dict)   # (trade, area) -> wage where no market cleared
++    surplus_plans: Mapping[AgentId, tuple] = dataclasses.field(default_factory=dict)    # cohort -> (crop, hectares) worked for sale beyond its floors
+     # filled by `settle`
+     sold: List[LabourOffer] = dataclasses.field(default_factory=list)
+     kept: Dict[AgentId, float] = dataclasses.field(default_factory=dict)
+diff --git a/sim/economy/year_goods.py b/sim/economy/year_goods.py
+index e08d558..1e238c9 100644
+--- a/sim/economy/year_goods.py
++++ b/sim/economy/year_goods.py
+@@ -9,7 +9,7 @@ import dataclasses
+ import math
+ from typing import Dict, List, Tuple
+ 
+-from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
++from . import (households_surplus, currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
+                state_budget, state_store, taxes, tool_wear, unsold_search)
+ from .household_work_year import basket_key, cohort_basket
+ from .market_memory import market_key
+@@ -57,6 +57,10 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
+             lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, ledger.own_plot_hours.get(cohort.agent_id, {}),
+             setup.specs, cash)
+         add_orders(order_book, AgentOrders(bids=tuple(tool_bids)))
++        add_orders(order_book, AgentOrders(offers=tuple(households_surplus.offers_for_sale(
++            cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), ledger.grown_for_sale.get(cohort.agent_id, {}),
++            lambda good: view.price(good, view.area_of(good, cohort.tile)),
++            lambda good: setup.specs[good].spoilage_per_year if good in setup.specs else 0.0, view.interest_rate(money)))))
+         orders = households.goods_orders(cohort, view, cash - sum(bid.budget for bid in tool_bids), income,
+                                          basket, setup.specs, priced,
+                                          smooth_rise=not record.settling, shared_store=store_by_tile)
+diff --git a/sim/economy/year_ledger.py b/sim/economy/year_ledger.py
+index 73b2ce6..aa82a7d 100644
+--- a/sim/economy/year_ledger.py
++++ b/sim/economy/year_ledger.py
+@@ -23,6 +23,7 @@ class YearLedger:
+     hours_sold: Dict[AgentId, float] = field(default_factory=dict)
+     spare_hours: Dict[AgentId, float] = field(default_factory=dict)   # hours a household had left once its own plot took what the land it holds could
+     grown: Dict[AgentId, Dict[GoodId, float]] = field(default_factory=dict)       # made for itself
++    grown_for_sale: Dict[AgentId, Dict[GoodId, float]] = field(default_factory=dict)   # grown on the land beyond its floors, put on the market
+     own_plot_hours: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)   # hours worked on its own plot, by recipe
+     grown_units: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)    # need units of that
+     buy_fills: Dict[AgentId, List[Fill]] = field(default_factory=dict)
+diff --git a/sim/tests/test_economy_households_surplus.py b/sim/tests/test_economy_households_surplus.py
+new file mode 100644
+index 0000000..5cc8104
+--- /dev/null
++++ b/sim/tests/test_economy_households_surplus.py
+@@ -0,0 +1,146 @@
++"""A household's land beyond its floors grows the crop that pays most an hour, and the surplus is sold (Complaint 551)."""
++
++QUICK_TOPIC = True
++
++import unittest
++
++from sim.economy import households_surplus as surplus
++from sim.economy.households_cohort import Cohort
++from sim.economy.labour_ask_floor import plot_return_per_hour
++from sim.economy.types import Recipe
++from sim.world.need_basket import NeedSpec, PricedNeed
++from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
++
++FOOD = PricedNeed(NeedSpec("food", 10.0, 1.0, (("grain", 1.0),)), 2.0, (("grain", 2.0, 1.0, 1.0),))
++CLOTH = PricedNeed(NeedSpec("cloth", 1.0, 1.0, (("linen", 1.0),)), 30.0, (("linen", 30.0, 1.0, 1.0),))
++LUXURY = PricedNeed(NeedSpec("spice", 0.0, 1.0, (("cassia", 1.0),)), 500.0, (("cassia", 500.0, 1.0, 1.0),))
++OPTIONS = {"food": [(5.0, "grow_grain", "grain", 1.0)], "cloth": [(100.0, "grow_flax", "linen", 1.0)],
++           "spice": [(1.0, "grow_cassia", "cassia", 1.0)]}
++HECTARES = {"grow_grain": 0.01, "grow_flax": 0.01, "grow_cassia": 0.01}       # a hundred hours work a hectare
++GRAIN = surplus.SurplusCrop("grow_grain", "grain", 1.0, 5.0, 2.0, 0.01)         # twenty units a hectare at the reference hours
++
++
++class BestCropTests(unittest.TestCase):
++    def test_the_crop_is_the_one_that_pays_most_an_hour(self):
++        # grain fetches 2 for 5 hours (0.4 an hour), linen 30 for 100 hours (0.3 an hour)
++        self.assertEqual(surplus.best_surplus_crop([FOOD, CLOTH], OPTIONS, HECTARES).good, "grain")
++
++    def test_a_dearer_good_wins(self):
++        dear = PricedNeed(CLOTH.spec, 30.0, (("linen", 80.0, 1.0, 1.0),))
++        self.assertEqual(surplus.best_surplus_crop([FOOD, dear], OPTIONS, HECTARES).good, "linen")
++
++    def test_a_need_with_no_floor_is_not_grown_for_sale(self):
++        self.assertEqual(surplus.best_surplus_crop([LUXURY], OPTIONS, HECTARES), None)
++
++    def test_a_good_with_no_price_gives_no_crop(self):
++        self.assertIsNone(surplus.best_surplus_crop([PricedNeed(FOOD.spec, 2.0, (("rice", 2.0, 1.0, 1.0),))], OPTIONS, HECTARES))
++
++
++class GrowTests(unittest.TestCase):
++    def test_the_reference_hours_on_a_hectare_give_the_reference_yield(self):
++        quantity, used = surplus.grow(GRAIN, 1.0, 100.0, 1.0)
++        self.assertAlmostEqual(quantity, 20.0)
++        self.assertAlmostEqual(used, 100.0)
++
++    def test_fewer_hours_give_less_in_all_but_more_per_hour(self):
++        half, _used = surplus.grow(GRAIN, 1.0, 50.0, 1.0)
++        self.assertAlmostEqual(half, 20.0 * 0.5 ** LABOUR_OUTPUT_ELASTICITY)
++        self.assertGreater(half / 50.0, 20.0 / 100.0)
++
++    def test_hours_beyond_what_the_land_takes_are_not_used(self):
++        quantity, used = surplus.grow(GRAIN, 1.0, 500.0, 1.0)
++        self.assertAlmostEqual(used, 100.0)
++        self.assertAlmostEqual(quantity, 20.0)
++
++    def test_no_land_or_no_hours_grows_nothing(self):
++        self.assertEqual(surplus.grow(GRAIN, 0.0, 100.0, 1.0), (0.0, 0.0))
++        self.assertEqual(surplus.grow(GRAIN, 1.0, 0.0, 1.0), (0.0, 0.0))
++
++    def test_poorer_soil_gives_less(self):
++        self.assertLess(surplus.grow(GRAIN, 1.0, 50.0, 0.5)[0], surplus.grow(GRAIN, 1.0, 50.0, 1.0)[0])
++
++    def test_the_harvest_booked_is_the_quantity_grown(self):
++        cohort = Cohort("household:t:0", "t", 0, 10.0, 5.0, 0.3)
++        move, quantity, used, hectares = surplus.grow_for_sale(cohort, GRAIN, 3.0, 5.0, 4.0, 1000.0, 1.0)
++        self.assertEqual((move.good, move.tile, move.quantity), ("grain", "t", quantity))
++        self.assertAlmostEqual(hectares, 1.0)       # five held, four taken by the floors, so one is left of the three planned
++        self.assertAlmostEqual(used, 100.0)
++
++    def test_land_the_floors_took_is_not_worked_again(self):
++        cohort = Cohort("household:t:0", "t", 0, 10.0, 5.0, 0.3)
++        self.assertEqual(surplus.grow_for_sale(cohort, GRAIN, 3.0, 4.0, 4.0, 1000.0, 1.0)[0], None)
++
++
++class MarginAndRentTests(unittest.TestCase):
++    def test_a_higher_wage_lowers_what_a_hectare_nets(self):
++        self.assertGreater(surplus.net_margin_per_hectare(GRAIN, 1.0, 0.1), surplus.net_margin_per_hectare(GRAIN, 1.0, 0.3))
++
++    def test_a_very_high_wage_leaves_a_hectare_netting_little(self):
++        self.assertLess(surplus.net_margin_per_hectare(GRAIN, 1.0, 100.0), 0.1 * surplus.net_margin_per_hectare(GRAIN, 1.0, 0.1))
++
++    def test_the_margin_is_what_the_best_hours_net(self):
++        wage = 0.2
++        best = surplus.net_margin_per_hectare(GRAIN, 1.0, wage)
++        for hours in (10.0, 30.0, 60.0, 90.0, 100.0):
++            self.assertLessEqual(2.0 * surplus.units_per_hectare(GRAIN, 1.0, hours) - wage * hours, best + 1e-9)
++
++    def test_land_beyond_the_floors_is_worked_where_it_nets_more_than_rent(self):
++        margin = surplus.net_margin_per_hectare(GRAIN, 1.0, 0.2)
++        self.assertEqual(surplus.hectares_worked_beyond_floors(10.0, 4.0, GRAIN, 1.0, 0.2, margin * 0.5), 6.0)
++
++    def test_land_is_let_not_worked_where_the_rent_is_higher(self):
++        margin = surplus.net_margin_per_hectare(GRAIN, 1.0, 0.2)
++        self.assertEqual(surplus.hectares_worked_beyond_floors(10.0, 4.0, GRAIN, 1.0, 0.2, margin * 2.0), 0.0)
++
++    def test_no_land_beyond_the_floors_or_no_crop_works_nothing(self):
++        self.assertEqual(surplus.hectares_worked_beyond_floors(3.0, 4.0, GRAIN, 1.0, 0.2, 0.0), 0.0)
++        self.assertEqual(surplus.hectares_worked_beyond_floors(10.0, 4.0, None, 1.0, 0.2, 0.0), 0.0)
++
++
++class PlotReturnWithSurplusTests(unittest.TestCase):
++    def test_land_beyond_the_floors_at_the_crops_price_raises_what_an_hour_adds_when_hours_are_many(self):
++        # 2000 hours on a plot the floors take 0.5 hectare of: with 4 more hectares of grain the hours thin out, but each
++        # hour on the spare land is worth the grain price, so the return per hour is the land-weighted mean
++        bare = plot_return_per_hour([FOOD], OPTIONS, 1.0, 2000.0, 1.0, HECTARES, 0.5)
++        with_more = plot_return_per_hour([FOOD], OPTIONS, 1.0, 2000.0, 1.0, HECTARES, 4.5, GRAIN, 4.0)
++        self.assertGreater(with_more, bare)
++
++    def test_the_surplus_crops_price_sets_the_return(self):
++        cheap = surplus.SurplusCrop("grow_grain", "grain", 1.0, 5.0, 1.0, 0.01)
++        low = plot_return_per_hour([FOOD], OPTIONS, 1.0, 2000.0, 1.0, HECTARES, 4.5, cheap, 4.0)
++        high = plot_return_per_hour([FOOD], OPTIONS, 1.0, 2000.0, 1.0, HECTARES, 4.5, GRAIN, 4.0)
++        self.assertLess(low, high)
++
++    def test_no_surplus_land_leaves_the_return_as_it_was(self):
++        self.assertEqual(plot_return_per_hour([FOOD], OPTIONS, 1.0, 1000.0, 2.0, HECTARES, 5.0, GRAIN, 0.0),
++                         plot_return_per_hour([FOOD], OPTIONS, 1.0, 1000.0, 2.0, HECTARES, 5.0))
++
++    def test_the_surplus_alone_sets_the_return_where_the_floors_grow_nothing(self):
++        self.assertGreater(plot_return_per_hour([CLOTH], {}, 1.0, 1000.0, 1.0, HECTARES, 2.0, GRAIN, 2.0), 0.0)
++
++    def test_the_return_matches_the_yield_the_land_gives(self):
++        # one hectare of grain with all the hours on it: the next hour adds elasticity * output / hours
++        hours = 80.0
++        added = plot_return_per_hour([], {}, 1.0, hours, 1.0, HECTARES, 1.0, GRAIN, 1.0)
++        output = 2.0 * surplus.units_per_hectare(GRAIN, 1.0, hours)
++        self.assertAlmostEqual(added, LABOUR_OUTPUT_ELASTICITY * output / hours)
++
++
++class OffersTests(unittest.TestCase):
++    def offers(self, quantity, spoilage=0.0, price=2.0, rate=0.0):
++        return surplus.offers_for_sale("household:t:0", "t", lambda good: "area", {"grain": quantity},
++                                       lambda good: price, lambda good: spoilage, rate)
++
++    def test_the_surplus_is_put_on_its_market(self):
++        offer, = self.offers(30.0)
++        self.assertEqual((offer.seller, offer.good, offer.area, offer.tile, offer.quantity), ("household:t:0", "grain", "area", "t", 30.0))
++
++    def test_a_perishable_sells_for_less_than_one_that_keeps(self):
++        self.assertLess(self.offers(30.0, spoilage=0.5)[0].reservation_price, self.offers(30.0)[0].reservation_price)
++
++    def test_nothing_grown_offers_nothing(self):
++        self.assertEqual(self.offers(0.0), [])
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.43.0
+
+
+From 3f5d6f03a1b3b35b5d39b484513e314c3f93c18c Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 16:23:51 +0000
+Subject: [PATCH 2/2] Own land grows food beyond the floors for sale, bounded
+ by the market's unmet food
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WXrfievykJ3StG4swPtute
+---
+ sim/economy/household_hours_year.py          | 33 +++++++++++++++-----
+ sim/economy/households_surplus.py            | 29 ++++++++++++++---
+ sim/tests/test_economy_households_surplus.py | 17 ++++++++++
+ 3 files changed, 67 insertions(+), 12 deletions(-)
+
+diff --git a/sim/economy/household_hours_year.py b/sim/economy/household_hours_year.py
+index 0718237..59f20a2 100644
+--- a/sim/economy/household_hours_year.py
++++ b/sim/economy/household_hours_year.py
+@@ -27,7 +27,7 @@ def surplus_land(setup, record, cohort, priced, options: Mapping[str, Sequence[O
+     tile = setup.tiles.get(cohort.tile)
+     if tile is None or held <= 0.0 or tile.fertility <= 0.0:
+         return None, 0.0
+-    crop = households_surplus.best_surplus_crop(priced, options, hectares_per_hour)
++    crop = households_surplus.best_surplus_crop(priced, options, hectares_per_hour, setup.hunger_need)
+     floors = {need.need_id: need.subsistence_per_person * cohort.people for need in setup.basket_for(cohort.tile).needs}
+     floors_take = plot_hectares(floors, options, setup.recipes, setup.land_per_run, tile.fertility)
+     return crop, households_surplus.hectares_worked_beyond_floors(
+@@ -64,6 +64,18 @@ def cohort_plot_schedule(setup, cohort, available: float, priced, options: Mappi
+     return plot_schedule(per_worker_hours, marginal, usable / cohort.working_people, cohort.working_people)
+ 
+ 
++def _within_demand(setup, record, planned: Mapping[AgentId, tuple]) -> Dict[AgentId, tuple]:
++    """Each tile's sellers' plans cut to the food its cohorts went short of last year (households_surplus.scale_to_demand)."""
++    by_tile: Dict[str, Dict[AgentId, tuple]] = {}
++    for cohort_id, plan in planned.items():
++        by_tile.setdefault(record.cohorts[cohort_id].tile, {})[cohort_id] = plan
++    cut: Dict[AgentId, tuple] = {}
++    for tile, plans in sorted(by_tile.items()):
++        unmet = sum(cohort.unmet_floor_by_need.get(setup.hunger_need, 0.0) for cohort in record.cohorts.values() if cohort.tile == tile)
++        cut.update(households_surplus.scale_to_demand(plans, unmet))
++    return {cohort_id: plan for cohort_id, plan in cut.items() if plan[1] > 0.0}
++
++
+ def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options: Mapping[str, Sequence[Option]],
+                    hectares_held: Mapping[AgentId, float], surplus_plans: Optional[Dict] = None
+                    ) -> Dict[AgentId, Callable[[float], float]]:
+@@ -72,16 +84,23 @@ def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options:
+     each cohort's (crop, hectares) worked for sale beyond its floors."""
+     schedules: Dict[AgentId, Callable[[float], float]] = {}
+     hectares_per_hour = hectares_per_hour_by_recipe(setup.recipes, setup.land_per_run)
++    planned: Dict[AgentId, tuple] = {}
+     for cohort_id, cohort in sorted(record.cohorts.items()):
+         own_offers = [offer for offer in offers if offer.worker == cohort_id]
+-        available = sum(offer.hours for offer in own_offers)
+         priced = need_prices(setup.basket_for(cohort.tile), view, cohort.tile)
+-        held = hectares_held.get(cohort_id, 0.0)
+-        crop, surplus = surplus_land(setup, record, cohort, priced, options, held, hectares_per_hour,
++        crop, surplus = surplus_land(setup, record, cohort, priced, options, hectares_held.get(cohort_id, 0.0), hectares_per_hour,
+                                      wage_faced_per_hour(view, own_offers))
+-        if surplus_plans is not None and surplus > 0.0:
+-            surplus_plans[cohort_id] = (crop, surplus)
+-        schedule = cohort_plot_schedule(setup, cohort, available, priced, options, held, hectares_per_hour, crop, surplus)
++        if surplus > 0.0:
++            planned[cohort_id] = (crop, surplus)
++    planned = _within_demand(setup, record, planned)
++    if surplus_plans is not None:
++        surplus_plans.update(planned)
++    for cohort_id, cohort in sorted(record.cohorts.items()):
++        available = sum(offer.hours for offer in offers if offer.worker == cohort_id)
++        priced = need_prices(setup.basket_for(cohort.tile), view, cohort.tile)
++        crop, surplus = planned.get(cohort_id, (None, 0.0))
++        schedule = cohort_plot_schedule(setup, cohort, available, priced, options, hectares_held.get(cohort_id, 0.0),
++                                        hectares_per_hour, crop, surplus)
+         if schedule is not None:
+             schedules[cohort_id] = schedule
+     return schedules
+diff --git a/sim/economy/households_surplus.py b/sim/economy/households_surplus.py
+index 19f091d..e572ffe 100644
+--- a/sim/economy/households_surplus.py
++++ b/sim/economy/households_surplus.py
+@@ -9,7 +9,7 @@ hectare nets more than the tile's rent, since the holder could let it instead. P
+ """
+ import dataclasses
+ import math
+-from typing import List, Mapping, Optional, Sequence, Tuple
++from typing import Dict, List, Mapping, Optional, Sequence, Tuple
+ 
+ from sim.world.need_basket import PricedNeed
+ from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
+@@ -33,13 +33,14 @@ class SurplusCrop:
+ 
+ 
+ def best_surplus_crop(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]],
+-                      hectares_per_hour: Mapping[str, float]) -> Optional[SurplusCrop]:
+-    """The crop on the land beyond the floors: of each need that has a floor and a land-only recipe, the one whose
+-    good fetches most money per hour of work. None where no such good has a price."""
++                      hectares_per_hour: Mapping[str, float], only_need: Optional[str] = None) -> Optional[SurplusCrop]:
++    """The crop on the land beyond the floors: of each need that has a floor and a land-only recipe (just `only_need`
++    when given: a farm grows food for sale, it does not plant a forest), the one whose good fetches most money per
++    hour of work. None where no such good has a price."""
+     best: Optional[Tuple[float, SurplusCrop]] = None
+     for need in priced:
+         rows = options.get(need.spec.need_id)
+-        if need.spec.subsistence_per_person <= 0.0 or not rows:
++        if need.spec.subsistence_per_person <= 0.0 or not rows or (only_need is not None and need.spec.need_id != only_need):
+             continue
+         hours_per_unit, recipe_id, good, effect = rows[0]
+         per_hour = hectares_per_hour.get(recipe_id, 0.0)
+@@ -104,6 +105,24 @@ def hectares_worked_beyond_floors(held: float, floors_take: float, crop: Optiona
+     return left
+ 
+ 
++def hectares_the_market_takes(crop: SurplusCrop, units_wanted: float) -> float:
++    """Land that grows `units_wanted` need units at the reference hours: the most sellers plant for a market that
++    went short by that much."""
++    return max(0.0, units_wanted) * crop.hectares_per_hour * crop.hours_per_unit
++
++
++def scale_to_demand(plans: Mapping[AgentId, Tuple[SurplusCrop, float]], units_unmet: float
++                    ) -> Dict[AgentId, Tuple[SurplusCrop, float]]:
++    """The sellers' planned hectares on one market cut by one factor so that together they grow no more than the
++    need units the market went short of last year: no one plants for a market that is already fed."""
++    if not plans:
++        return {}
++    wanted = hectares_the_market_takes(next(iter(plans.values()))[0], units_unmet)
++    planned = math.fsum(hectares for _crop, hectares in plans.values())
++    scale = min(1.0, wanted / planned) if planned > 0.0 else 0.0
++    return {seller: (crop, hectares * scale) for seller, (crop, hectares) in plans.items()}
++
++
+ def hectares_the_floors_took(hours_by_recipe: Mapping[str, float], recipes: Mapping[str, Recipe],
+                              land_per_run: Mapping[str, float]) -> float:
+     """Land the hours already worked for the floors take (each recipe's runs on each run's land)."""
+diff --git a/sim/tests/test_economy_households_surplus.py b/sim/tests/test_economy_households_surplus.py
+index 5cc8104..6c6c604 100644
+--- a/sim/tests/test_economy_households_surplus.py
++++ b/sim/tests/test_economy_households_surplus.py
+@@ -29,6 +29,9 @@ class BestCropTests(unittest.TestCase):
+         dear = PricedNeed(CLOTH.spec, 30.0, (("linen", 80.0, 1.0, 1.0),))
+         self.assertEqual(surplus.best_surplus_crop([FOOD, dear], OPTIONS, HECTARES).good, "linen")
+ 
++    def test_only_the_named_need_is_grown_for_sale(self):
++        self.assertEqual(surplus.best_surplus_crop([FOOD, CLOTH], OPTIONS, HECTARES, "cloth").good, "linen")
++
+     def test_a_need_with_no_floor_is_not_grown_for_sale(self):
+         self.assertEqual(surplus.best_surplus_crop([LUXURY], OPTIONS, HECTARES), None)
+ 
+@@ -126,6 +129,20 @@ class PlotReturnWithSurplusTests(unittest.TestCase):
+         self.assertAlmostEqual(added, LABOUR_OUTPUT_ELASTICITY * output / hours)
+ 
+ 
++class DemandTests(unittest.TestCase):
++    def test_sellers_together_plant_no_more_than_the_market_went_short_of(self):
++        # 40 need units short is 40 * 0.01 * 5 = 2 hectares at the reference hours
++        cut = surplus.scale_to_demand({"a": (GRAIN, 3.0), "b": (GRAIN, 1.0)}, 40.0)
++        self.assertAlmostEqual(cut["a"][1] + cut["b"][1], 2.0)
++        self.assertAlmostEqual(cut["a"][1] / cut["b"][1], 3.0)
++
++    def test_a_market_that_went_short_of_more_than_they_plan_leaves_the_plans_alone(self):
++        self.assertEqual(surplus.scale_to_demand({"a": (GRAIN, 3.0)}, 1e9)["a"][1], 3.0)
++
++    def test_a_fed_market_takes_no_surplus(self):
++        self.assertEqual(surplus.scale_to_demand({"a": (GRAIN, 3.0)}, 0.0)["a"][1], 0.0)
++
++
+ class OffersTests(unittest.TestCase):
+     def offers(self, quantity, spoilage=0.0, price=2.0, rate=0.0):
+         return surplus.offers_for_sale("household:t:0", "t", lambda good: "area", {"grain": quantity},
+-- 
+2.43.0
+
