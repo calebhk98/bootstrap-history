@@ -16,7 +16,7 @@ class PurseResidue(unittest.TestCase):
         # on the fish route crew pay plus carrier cost, rounded, comes to a hair more than the fee
         specs = {"fish": GoodSpec("fish", 1496.0485584697803, 0.0, 0.0, "food"), "salt": SPECS["salt"]}
         who = merchant()
-        who.routes = {("fish", "a"): ("b", area_b["salt"]), ("salt", "b"): ("a", area_a["salt"])}
+        who.routes = {("fish", "a"): (("b", area_b["salt"], 1.0),), ("salt", "b"): (("a", area_a["salt"], 1.0),)}
         crew = merchants.CrewHire(lambda source, destination: (("carter|a", 1.0),), None, {"carter|a": 0.19976567904521148},
                                   lambda _key: 1.0, lambda _good, tile: "area_" + tile)
         result = merchants.dispatch(who, (), carriage, specs, "coin", 0.0, {("fish", "a"): 10.0, ("salt", "b"): 10.0},
@@ -26,7 +26,7 @@ class PurseResidue(unittest.TestCase):
     def test_a_purse_spent_to_the_last_ulp_posts_without_error(self):
         carriage, _map, area_a, area_b = world()
         who = merchant()
-        who.routes = {("salt", "a"): ("b", area_b["salt"])}
+        who.routes = {("salt", "a"): (("b", area_b["salt"], 1.0),)}
         cash = 3.3000000000000003
         book = Book()
         book.transfer_many([Transfer(EDGE_MINT, who.agent_id, "coin", cash, "seed")])

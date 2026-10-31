@@ -57,8 +57,9 @@ def _merchant_follows(merchant: Merchant, follows: Mapping[str, Mapping[str, str
     merchant.expected_prices = _moved_expectations(merchant.expected_prices, follows)
     merchant.expected_volumes = _moved_expectations(merchant.expected_volumes, follows)
     merchant.price_history = _moved_expectations(merchant.price_history, follows)
-    merchant.routes = {route: (destination, new.area_of(route[0], destination) if route[0] in follows else area)
-                       for route, (destination, area) in merchant.routes.items()}
+    merchant.routes = {route: tuple((destination, new.area_of(route[0], destination) if route[0] in follows else area, weight)
+                                    for destination, area, weight in legs)
+                       for route, legs in merchant.routes.items()}
 
 
 def follow(record: EconomyRecord, old: AreaMap, new: AreaMap) -> None:

@@ -49,14 +49,17 @@ def room_left(expected_volumes: Mapping[Key, float], good: GoodId, source: AreaI
     """Units a merchant may still bid for on a route: into the destination, its own share of the market's
     expected volume less what it holds there and has bid already, and the group's share less what
     merchants have bid already; out of the source, the group's share of what it usually sells less
-    what merchants have bid already. A market whose volume has never been seen sets no limit."""
+    what merchants have bid already. A market whose volume has never been seen is limited by the source's volume
+    alone, and by nothing where that has not been seen either."""
     room = math.inf
     into_volume = expected_volumes.get((good, destination))
+    out_volume = expected_volumes.get((good, source))
     if into_volume is not None:
         mine = own_share * into_volume - held - own.into.get((good, destination), 0.0)
         everyone = MERCHANT_GROUP_SHARE * into_volume - group.into.get((good, destination), 0.0)
         room = min(mine, everyone)
-    out_volume = expected_volumes.get((good, source))
+    elif out_volume is not None:      # a market never seen is tried with the share of what the source sells that a merchant dares supply it
+        room = own_share * out_volume - held - own.into.get((good, destination), 0.0)
     if out_volume is not None:
         room = min(room, MERCHANT_SOURCE_SHARE * out_volume - group.out_of.get((good, source), 0.0))
     return max(0.0, room)
