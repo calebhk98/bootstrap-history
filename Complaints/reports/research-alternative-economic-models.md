@@ -17,6 +17,10 @@ games). No code was changed.
   repository pages I opened did not show a release or commit date; "maintained" below is a reading from the page
   (open issues, commit counts, a recent copyright year), never a confirmed date.
 - No figure below is recalled from memory. Names of models that I could not open are listed at the end.
+- FOLLOW-UP PASS: a second session opened the owner-supplied links. Items marked OPENED (follow-up) were fetched in that
+  session. A PDF that the fetch tool could not read was downloaded and converted to text with `pdftotext`; those are marked
+  OPENED (PDF). "Not shown" means the page showed no such fact. The third-party links were checked for being what they
+  were said to be; section "Follow-up pass" below gives the verdict for each.
 
 ---
 
@@ -28,9 +32,9 @@ Each note: what it is, language, licence, maintained, then the mechanism tied to
 Behavioural agent-based macro forecasting package from the Bank of Italy, built on the model of Poledna et al. Julia,
 Apache-2.0. Appears maintained (many commits; releases list empty, no dates shown). Built from `parameters` and
 `initial_conditions`, run for a number of quarters, with an Austria and an Italy parametrisation and counterfactual scenarios.
-The page does not describe a shock mechanism or the model's rules. Mechanism: the initial conditions come from national
-accounts and input-output tables (SNIPPET ONLY, https://pure.iiasa.ac.at/18339/1/1-s2.0-S0014292122001891-main%20%281%29.pdf
-via search), so the opening is calibrated to a data stationary state. This is the same idea Caiani et al. give for
+The page does not describe a shock mechanism or the model's rules (the rules are read in the follow-up section below from the
+IIASA working paper). Mechanism: the initial conditions come from national accounts and input-output tables (OPENED (PDF),
+https://pure.iiasa.ac.at/id/eprint/16268/1/WP-20-001.pdf, appendix C), so the opening is calibrated to a data stationary state. This is the same idea Caiani et al. give for
 Complaint 473 and `opening_runs`, with nothing new. Nothing applicable beyond that: its sectors are modern national-accounts
 categories (Reading: they cannot be reused for a tenth-century opening without authoring the data, which is the job
 `data/production/` already does).
@@ -46,7 +50,7 @@ tie it to; nothing applicable to the spin-up.
 
 ### JMAB (Caiani, Godin) (OPENED, https://github.com/S120/jmab)
 Java framework for stock-flow consistent agent-based macro models, configured through a Spring beans file. MIT-style text with
-copyright 2016; Java 6 or later. Last updated September 2018 per a search summary (SNIPPET ONLY), so effectively
+copyright 2016; Java 6 or later. The page shows no commit date; the toolkit page (follow-up section) dates its papers to 2016 through 2018, so it looks
 unmaintained. The README names no agents or markets. The benchmark model it runs is Caiani et al. 2016, which the earlier
 report already read (stationary state solved before the run, section 4 of that report). Nothing new; as a library, nothing
 applicable (Java, and the repo has its own engine).
@@ -69,7 +73,7 @@ unemployment and unsold-hours behaviour in the spin-up (the earlier design repor
 (map the phase diagram of the parameters, then place the opening on the good side) is a way to show the opening is not a
 point on a cycle, not an engine feature. No code or licence found.
 
-### Lagom generiC (Mandel, Jaeger, Fuerst and co-authors) (SNIPPET ONLY, https://globalclimateforum.org/2010/03/17/release-of-lagom-generic-2-0-an-agent-based-model-of-growing-economies/)
+### Lagom generiC (Mandel, Jaeger, Fuerst and co-authors) (SNIPPET ONLY; the two owner links yielded only a citation, see follow-up; https://globalclimateforum.org/2010/03/17/release-of-lagom-generic-2-0-an-agent-based-model-of-growing-economies/)
 Prototype agent-based model of disaggregated growing economies with capital accumulation, building on Gintis' work on the
 dynamics of general equilibrium; a three-sector German application is mentioned. Release 2.0 was in 2010; nothing newer
 turned up, so likely unmaintained. Licence and language: no source found. Mechanism: agents that adjust prices
@@ -79,8 +83,8 @@ themselves with a general-equilibrium structure underneath (the Gintis line the 
 ### abcEconomics, ABCE (OPENED, https://abce.readthedocs.io/en/master/)
 Python platform for agent-based trade and production models. Goods are physical objects: a transfer moves the good and the
 giver no longer has it. Firm and Household archetypes, parallel execution, accounting in a separate package (abcFinance).
-Licence: not stated on the page. Maintained: the page shows only a 2017 copyright; an organisation page exists at
-https://github.com/ab-ce (SNIPPET ONLY). Mechanism: conservation by construction (a good cannot be created by a transfer).
+Licence: not stated on the page. Maintained: no. The GitHub repository was archived by its owner on 23 January 2024 and is
+read-only (OPENED (follow-up), https://github.com/AB-CE/abce). Mechanism: conservation by construction (a good cannot be created by a transfer).
 Reading: this repo already has that through its ledger and settlement; nothing applicable. It states nothing on price
 formation.
 
@@ -152,12 +156,12 @@ price-demand iteration with a macro model. Tie: only as the cost-minimising choi
 `opening_runs.choose_recipes` already does with a ranking (see below). Nothing else applicable.
 
 ### 1:1 synthetic firm networks, Poledna and CSH Vienna
-The Poledna forecasting model is OPENED only as a search result summary (SNIPPET ONLY, https://irihs.ihs.ac.at/id/eprint/6453/):
+The Poledna forecasting model is now OPENED (follow-up section below). Earlier summary (SNIPPET ONLY, https://irihs.ihs.ac.at/id/eprint/6453/):
 an agent-based model of a small open economy at 1:1 scale with sectors, input-output and financial links, calibrated from
 national accounts, input-output tables and business demography; it claims forecasting competitive with VAR and DSGE. A
 related CSH Vienna line builds a firm-level production network of a whole country from VAT data
-(https://link.springer.com/10.1038/s41598-022-11522-z, SNIPPET ONLY); I could not confirm that Poledna is an author of
-that paper, and I found no 1:1 synthetic-network paper under his name. Both depend on modern administrative micro data, which
+(https://link.springer.com/10.1038/s41598-022-11522-z); the follow-up pass confirmed this is Diem, Borsos, Reisch, Kertesz and
+Thurner (Scientific Reports 2022), and Poledna is not an author. Both depend on modern administrative micro data, which
 does not exist for a tenth-century opening. Mechanism: one agent per real firm, which this repo cannot calibrate. Nothing
 applicable to the opening; the idea of reporting indirect losses by tracing a firm's removal through the network is a
 possible check for the bankruptcy-cascade question the proposal raises.
@@ -187,6 +191,231 @@ funded project through 2026 per the page; appears maintained. Energy-only; nothi
 Julia modelling language for mathematical optimisation. Its manual states how dual values are read (`dual`,
 `shadow_price`, `reduced_cost`) and notes that duals are available only if the solver returns them. Licence not stated on
 the page I opened. Julia, so not a dependency candidate; useful as the statement of what a dual is.
+
+---
+
+## Follow-up pass: the owner-supplied links
+
+The owner's links came from a third party. Each was opened and checked against what it was said to be. Verdicts:
+OK means it is what was claimed; WRONG means it is a different work; BROKEN means it did not load for me (which does not
+show the page is gone).
+
+### Verdicts on the doubtful items
+
+- **Pichler and Farmer, "Simultaneous supply and demand constraints in input-output networks".** The IDEAS link
+  (https://ideas.repec.org/p/arx/papers/2104.07260.html) is WRONG for that claim. It is the entry for "Quantifying firm-level
+  economic systemic risk from nation-wide supply networks" by Diem, Borsos, Reisch, Kertesz and Thurner (OPENED (follow-up);
+  it shows a 2021 arXiv preprint). The correct Pichler and Farmer reference is arXiv 2101.07818, "Simultaneous supply and
+  demand constraints in input-output networks: The case of Covid-19 in Germany, Italy, and Spain", Anton Pichler and J. Doyne
+  Farmer, econ.GN, first submitted 19 January 2021, revised 5 May 2021 (OPENED (follow-up), https://arxiv.org/abs/2101.07818).
+  The abstract page lists no journal; a search summary gives Economic Systems Research 2022, volume 34, pages 273 to 293
+  (SNIPPET ONLY).
+- **Diem et al. 2022 and arXiv 2104.07260.** The id 2104.07260 is correct for Diem et al., but the title the note gave
+  ("Firm-level production networks") is WRONG. The arXiv HTML page (https://arxiv.org/html/2104.07260v1, OPENED
+  (follow-up), first 100000 of 177121 characters read) is "Quantifying firm-level economic systemic risk from nation-wide
+  supply networks". The journal version, Scientific Reports 2022, volume 12, article 7719 (SNIPPET ONLY, search summary
+  pointing to https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9092945/), carries the same title. So the IDEAS entry and the
+  Diem et al. paper are one work; there is no second paper behind the shared id.
+- **Bacilieri et al.** The PDF link (https://oms-inet.files.svdcdn.com/production/files/Firm-level-production-networks-what-do-we-really-know.pdf)
+  is OK: "Firm-level production networks: what do we (really) know?", Andrea Bacilieri, Andras Borsos, Pablo
+  Astudillo-Estevez and Francois Lafond, INET Oxford Working Paper No. 2023-08, May 2023 (OPENED (PDF), first page). It is the
+  paper whose title the note attached to Diem et al. Abstract: it benchmarks two administrative datasets without a reporting
+  threshold (Ecuador, Hungary) against a commercial dataset and finds the threshold-free ones alike in their network
+  properties.
+- **arXiv 2607.09745.** Exists: SupplyNetPy, "An Open-Source Python Library for High-Fidelity Modeling and Simulation of
+  Arbitrary Supply Chain and Inventory Networks", Tushar Lone and Neha Karanjkar, IIT Goa (OPENED (follow-up),
+  https://arxiv.org/html/2607.09745v1).
+- **arXiv 2607.23313.** Exists but is NOT "OpenCGE / OG-Core": it is "Agentic AI orchestration of heterogeneous economic
+  models for rapid, multi-scenario analysis of energy crises", Golden, Indelicato, Varshney, Messina and Thornsbury (OPENED
+  (follow-up), https://arxiv.org/html/2607.23313v1). It lists OpenCGE (OG-Core / OG-USA, Python, overlapping-generations CGE)
+  and MPSGE.jl among many wrapped models; it is a language-model workflow around other models, not a CGE source. The paper
+  names no licence for OG-Core.
+- **ACCEPTS, ColonD, HABITAT.** I was given the owner's links but not the owner's note text, so I cannot tell which link
+  replaced which name. No link I opened is called ACCEPTS, ColonD or HABITAT, and a further search for ACCEPTS (SNIPPET
+  ONLY) again found no model of that name. The three names stay unidentified. Any substitute is listed on its own below;
+  none is recorded as an identification.
+- **Gill, Lalith, Poledna, Ichimura 2021.** Page found: the dblp record
+  https://dblp1.uni-trier.de/rec/journals/tpds/GillLPHFI21.html and the IIASA record https://pure.iiasa.ac.at/17104 (the
+  IIASA page was BROKEN to me, bot protection; both are SNIPPET ONLY via a search summary). The summary gives the title
+  "High-Performance Computing Implementations of Agent-Based Economic Models for Realizing 1:1 Scale Simulations of Large
+  Economies", IEEE Transactions on Parallel and Distributed Systems, volume 32, number 8, pages 2101 to 2114, 2021, DOI
+  10.1109/TPDS.2021.3060462, authors Amit Gill, Madegedara Lalith, Sebastian Poledna, Muneo Hori, Kohei Fujita and Tsuyoshi
+  Ichimura (the note lists four authors; the summary lists six). I did not read the paper. Its subject is parallel
+  computing speed, so nothing applicable.
+
+### Link-by-link status
+
+| Link | Verdict | What it is |
+|---|---|---|
+| github.com/spjuhel/BoARIO | OK | Python ARIO implementation, GPL-3.0 |
+| spjuhel.github.io/BoARIO/ | OK | Its documentation; front page does not mention rationing or prices; JOSS paper cited |
+| arxiv.org/html/2607.09745v1 | OK | SupplyNetPy (above) |
+| arxiv.org/html/2104.07260v1 | OK, title in note wrong | Diem et al. |
+| ideas.repec.org .../2104.07260 | WRONG for Pichler and Farmer | Diem et al. |
+| oms-inet ... Firm-level-production-networks PDF | OK | Bacilieri et al. 2023 |
+| github.com/iiasa/message_ix | OK | MESSAGEix |
+| github.com/s120/jmab, S120/benchmark | OK | JMAB and its Benchmark model |
+| Sylvain-Barde/begrs_sfc | OK, different thing | Replication files for estimating the Benchmark model's parameters (BEGRS) |
+| sites.google.com/.../java-macro-ab-simulation-toolkit | OK | JMAB toolkit page |
+| github.com/phelps-sg/jabm | OK | JABM, the Java framework JMAB runs on |
+| arxiv.org/abs/1307.5319 | OK | "Tipping points in macroeconomic Agent-Based models" |
+| github.com/KarlNaumann/Mark0 | OK | Mark-0 interface |
+| github.com/bancaditalia/BeforeIT.jl | OK | BeforeIT.jl |
+| researchgate ... 389167105 | BROKEN (403) | Title confirmed instead through arXiv 2502.13267, which I opened |
+| pure.iiasa.ac.at/id/eprint/16268/1/WP-20-001.pdf | OK (PDF) | Working paper version of Poledna et al. |
+| ideas.repec.org .../v151y2023ics0014292122001891.html | OK | Journal version, European Economic Review 151 (2023) |
+| wifo.ac.at ... abm_slides.pdf | OK (PDF) | Slides by Poledna and Kaniovski, WIFO, 5 February 2026 |
+| gitlab.com/dlr-ve/esy/sfctools/framework | OK | sfctools |
+| sfc-models.net/tag/python/ | OK, only a blog | Network site; posts on sfctools, Romanchuk and Takara Python SFC code |
+| github.com/AB-CE/abce, github.com/AB-CE | OK | abcEconomics, archived |
+| abce.readthedocs.io ... 0.9.3b2/pdf | OK (PDF) | Manual; front page says release 0.9.3b0, 5 July 2019 |
+| github.com/marcov64/Lsd | OK | LSD |
+| researchgate ... 227359745 (K+S) | BROKEN (403) | Not read |
+| ews.santannapisa.it | OK | Sant'Anna models page |
+| pypi.org/project/bamengine/ | OK | BAM engine, Python |
+| jasss.org/24/1/3.html | OK, different thing | An extortion model built on BAM (BAMERS), not CATS or BAM itself |
+| docs.pypsa.org/latest/examples/example-2/ | OK | PyPSA three-zone example |
+| github.com/spine-tools/SpineOpt.jl | OK | SpineOpt |
+| julia-mpsge.github.io/MPSGE.jl/ | OK (redirects) | MPSGE.jl docs, read through the `/dev/` page |
+| financeministersforclimate.org ... CFCMA HP4 PDF | BROKEN (403, 503) | Not read |
+| github.com/gama-platform/gama, gama-platform-plugins | OK | GAMA and its plugin organisation |
+| github.com/salesforce/ai-economist | OK | AI Economist (Foundation), archived |
+| coegss.eu .../D3.4.pdf | OK, but only cites Lagom | CoeGSS deliverable D3.4 |
+| research.tudelft.nl .../Navigating_complexity... | BROKEN (403) | Not read |
+
+### Per-item notes (new or changed)
+
+Each: what it is, language, licence, maintained, mechanism tied to a problem, or "nothing applicable".
+
+**BoARIO** (OPENED (follow-up), https://github.com/spjuhel/BoARIO and https://spjuhel.github.io/BoARIO/). Python, GPL-3.0;
+the repository page shows seventeen open issues but no commit or release date, and the documentation footer says "Last
+updated on Oct 29, 2026" (a page build date). The front page does not mention rationing or prices. The mechanisms in the
+main section above stay as read earlier from the maths page. No change.
+
+**Pichler and Farmer** (OPENED (follow-up), https://arxiv.org/abs/2101.07818). Paper; no code on the abstract page. The abstract
+says the impact of a supply and demand shock depends heavily on the rationing rule applied when an industry cannot meet
+incoming demand, and that input bottlenecks drive losses. Tie: CLAUDE.md section 5 (a shortage of one input must not
+silently stop everything). The page does not list the rules; I did not open the paper body. Supports recommendation 5, as a
+reason the rule must be chosen on purpose and tested.
+
+**Diem et al.** (OPENED (follow-up), https://arxiv.org/html/2104.07260v1, partly read). Paper built on Hungarian value-added-tax
+data. Its production function treats essential inputs as strictly complementary and non-essential inputs as substitutable,
+and propagates a firm's failure down to customers (lost supply) and up to suppliers (lost demand). It argues aggregate
+input-output data cannot show this risk. Tie: the bankruptcy-cascade check in the Poledna section below; for the Norse
+collapse it points at the failure path (a producer that cannot pay removes demand from its suppliers), not at the opening's
+sizing. Needs administrative data; nothing applicable as a method to import.
+
+**Bacilieri et al.** Paper about data quality of firm-level networks. Nothing applicable.
+
+**SupplyNetPy** (OPENED (follow-up), https://arxiv.org/html/2607.09745v1). Python on SimPy, MIT per the paper, installable
+with pip; maintenance not shown. Discrete-event supply-chain simulator. A node that cannot fill an order loses or backorders
+the demand, or with a `consume_available` setting uses whatever stock exists; the paper describes no explicit rationing.
+Nothing applicable (inventory policy, not an economy).
+
+**MESSAGEix** (OPENED (follow-up), https://github.com/iiasa/message_ix). Confirmed as before: GAMS core with Python and R
+interfaces, Apache-2.0, many commits, no dates shown; dual prices are not mentioned on the page. Nothing new.
+
+**JMAB family** (OPENED (follow-up)). JMAB (https://github.com/s120/jmab): Java 6 or later, MIT-style notice, copyright 2016
+Caiani and Godin, no dates shown. Benchmark (https://github.com/S120/benchmark): the Benchmark model of Caiani et al. 2016 on
+JMAB, same notice. begrs_sfc (https://github.com/Sylvain-Barde/begrs_sfc): MIT, Python scripts plus a Java archive,
+replication files for estimating that model's parameters; its README warns the original runs needed GPU and multi-CPU
+high-performance nodes. JABM (https://github.com/phelps-sg/jabm): Java framework, copyright 2015 Steve Phelps, no licence in
+the captured text. The Caiani toolkit page (https://sites.google.com/view/alessandro-caiani/java-macro-ab-simulation-toolkit)
+says JMAB runs on JABM and lists model packages (Benchmark, Inequality and innovation, Interbank) with papers from 2016 to
+2018. Nothing applicable beyond what the earlier report took from Caiani et al.; unmaintained by all signs.
+
+**Mark-0** (OPENED (follow-up), https://github.com/KarlNaumann/Mark0). The name exists as code: a repository by Karl
+Naumann-Woleske, MIT, the model in C++ with a Python interface; the page credits Gualdi et al. (2015, 2017), Bouchaud et al.
+(2018) and Sharma et al. (2020), and shows one commit with no date. This closes the earlier "no source named it". The paper
+https://arxiv.org/abs/1307.5319 is "Tipping points in macroeconomic Agent-Based models", Gualdi, Tarzia, Zamponi and
+Bouchaud, Journal of Economic Dynamics and Control 50 (2015), pages 29 to 61; it is the Mark I paper, and the abstract does not
+use "Mark-0". Mechanism as in the main section: the good-to-bad transition set by the asymmetry between hiring and firing
+speed. Reading: relevant to the household help hiring that flipped all-or-nothing, and to the never-settling opening of
+Complaint 473. I did not read the model rules.
+
+**Poledna model, BeforeIT.jl and the working paper.** BeforeIT.jl (https://github.com/bancaditalia/BeforeIT.jl, OPENED
+(follow-up)): Julia, Apache-2.0, seven open issues, no dates shown. Its software paper, "BeforeIT.jl: High-Performance
+Agent-Based Macroeconomics Made Easy", Meligrana et al., arXiv 2502.13267 (OPENED (follow-up),
+https://arxiv.org/abs/2502.13267), says the base model runs much faster than the original MATLAB code. The journal paper is
+"Economic forecasting with an agent-based model", Poledna, Miess, Hommes and Rabitsch, European Economic Review 151 (2023)
+(OPENED (follow-up), https://ideas.repec.org/a/eee/eecrev/v151y2023ics0014292122001891.html). The working paper
+https://pure.iiasa.ac.at/id/eprint/16268/1/WP-20-001.pdf is the earlier version, Poledna, Miess and Hommes, IIASA WP-20-001,
+17 January 2020 (OPENED (PDF)); I read parts of its appendix A with `pdftotext`. Mechanisms:
+(a) Production is the minimum of desired output, intermediate inputs, labour and capital (equation 12); the text says that
+when one limits, "the firm has to scale down activity", so a short input cuts output to what that input supports and not to
+zero. This is the proportional pattern recommendation 5 asks to test.
+(b) Employment: desired employees are desired output over labour productivity, rounded to a whole person, so an additional
+need below a half-time position leaves the workforce unchanged and above it hires one person; vacancies are then filled by
+search and matching, so a firm can fill some of them and not others. That is a threshold on the demand side with partial fill
+on the supply side; I did not read the matching rules (appendix A.2.1), so I cannot say whether it avoids an all-or-nothing flip.
+(c) Unsold output goes to an inventory of finished goods, the firm's demand-expectation error.
+(d) Appendix C gives the initial conditions for the Austrian economy from national accounts, so the opening is data, not a
+solved state.
+Nothing here is a fix for the Norse collapse, whose cause was producers sized without a margin check; the sections I read
+show no such check. Slides by Poledna and Kaniovski (OPENED (PDF),
+https://www.wifo.ac.at/wp-content/uploads/upload-3765/abm_slides.pdf, 5 February 2026): overview of the same model and the
+Dawid and Delli Gatti comparison of behavioural rules; nothing beyond the paper.
+
+**sfctools** (OPENED (follow-up), https://gitlab.com/dlr-ve/esy/sfctools/framework). MIT, 499 commits, 5 tags, 2 releases,
+project created 25 February 2022; language, last commit and archive status not shown. The blog
+https://sfc-models.net/tag/python/ (OPENED (follow-up)) has a July 2023 post introducing it as a Python toolbox for
+stock-flow consistent agent-based modelling with a graphical interface, from the German Aerospace Center, with a JOSS paper.
+The pages do not describe the balance-sheet checks. Earlier reading stands: a test idea, nothing applicable to a named complaint.
+
+**abcEconomics** (OPENED (follow-up), https://github.com/AB-CE/abce, https://github.com/AB-CE and the manual
+https://abce.readthedocs.io/_/downloads/en/0.9.3b2/pdf/). Python, archived 23 January 2024; licence not stated on the
+repository page. The manual front page reads "Release 0.9.3b0", Davoud Taghawi-Nejad, 5 July 2019 (the URL says 0.9.3b2; a
+mismatch I did not resolve). Its trade text says a buyer with insufficient funds gets a partial accept of an offer. Nothing
+applicable.
+
+**K+S and LSD** (OPENED (follow-up), https://github.com/marcov64/Lsd and https://www.ews.santannapisa.it/). LSD: a modelling
+environment for difference-equation models, C++ based with Tcl/Tk, GPL; README header "LSD 8.1 - July 2023"; no commit date
+shown. The Sant'Anna page hosts K+S and variants (basic, finance, energy, labour, multi-industry) with code links to a
+SantAnnaKS/LSD repository, but states the models are the authors' property and may not be copied or distributed without
+written agreement: licence NOT open. The ResearchGate K+S link was BROKEN to me. Mechanism and tie as in the main K+S
+section; nothing applicable to the opening.
+
+**CATS and BAM** (OPENED (follow-up), https://pypi.org/project/bamengine/). `bamengine` 0.10.2, released 9 July 2026, Python
+3.11 or later, MIT, one maintainer, "4 - Beta", numpy-array state; baseline BAM (labour, credit, goods markets) plus
+extensions. The page does not describe rationing or hiring rules. The JASSS link (https://www.jasss.org/24/1/3.html) is NOT
+CATS or BAM but "On the Macroeconomic Effect of Extortion: An Agent-Based Approach" (Platas-Lopez, Guerra-Hernandez,
+Grimaldo, 2021), which extends BAM and has an ODD description of baseline BAM in its appendix (I did not read the last
+4,789 characters of the page, nor the ODD). A numpy implementation is the most stack-compatible code surveyed and a
+possible cross-check for a hire-and-fire rule; no code was run.
+
+**PyPSA marginal prices** (OPENED (follow-up), https://docs.pypsa.org/latest/examples/example-2/). Resolves the earlier gap:
+after `n.optimize()` the example reads `n.buses_t.marginal_price` per zone and shows the `Bus-nodal_balance` constraint; it
+also notes shadow prices for other constraints (generator limits, line capacities) were not assigned to the network. So
+PyPSA returns nodal marginal prices for a balance constraint, now verified. Conclusion unchanged (single homogeneous
+commodity; recommendation 3 rejects duals as opening prices).
+
+**SpineOpt** (OPENED (follow-up), https://github.com/spine-tools/SpineOpt.jl). Julia; the README says LGPL-3.0 or later (the
+page also lists GPL-3.0); a v1.0.0 release is mentioned, no dates shown. Energy-only; nothing applicable.
+
+**CGE** (OPENED (follow-up), https://github.com/julia-mpsge/MPSGE.jl and https://julia-mpsge.github.io/MPSGE.jl/dev/). Julia
+implementation of MPSGE, described as a high-level language for CGE models whose original was a FORTRAN subsystem of GAMS;
+repository MIT, but the PATH solver is closed source and limited to 300 variables and 2,000 nonzeros without its own licence;
+the README says a 1.0.0 release is in preparation. The CFCMA report PDF was BROKEN to me and is not read. The arXiv
+2607.23313 paper is not a CGE source (above). Nothing new beyond `ECONOMY_MODEL_SURVEY.md`.
+
+**GAMA** (OPENED (follow-up), https://github.com/gama-platform/gama and https://github.com/gama-platform-plugins). Java, GPL-3.0,
+described as the main repository for 2025 and later versions; the plugin organisation shows updates through 30 October 2026.
+Nothing applicable.
+
+**AI Economist, Foundation** (OPENED (follow-up), https://github.com/salesforce/ai-economist). Python 3.7 or later,
+BSD-3-Clause, ARCHIVED by its owner on 6 November 2023 (read-only). Gym-style `reset` and `step`, components and scenarios,
+a social planner agent, mobile worker agents with labour as an entity, for learning policy by reinforcement learning. Trade is
+not described on the page. Nothing applicable to the named problems.
+
+**Lagom generiC** (https://coegss.eu/wp-content/uploads/2018/11/D3.4.pdf, OPENED (PDF)). The deliverable is CoeGSS D3.4, dated
+30 June 2018, about domain-specific languages and high-performance computing for synthetic information systems; Lagom
+generiC appears only as a reference ("Lagom generiC: an agent-based model of growing economies", ECF Working Paper 1, 2009).
+The TU Delft link was BROKEN (403). So no new information on the model; language and licence remain NO SOURCE FOUND.
+
+### Substitutes
+
+The note replaced ACCEPTS, ColonD and HABITAT with other models. Which links are the substitutes was not stated to me.
+They are recorded above as entries in their own right and the three original names stay unidentified.
 
 ---
 
@@ -301,12 +530,20 @@ second price owner.
 4. **Spatial Cantillon test.** Add a slow-tier relationship test that a gold injection at one tile raises local prices
    before distant ones, along route cost, once the spin-up settles (blocked by Complaint 473).
 5. **Proportional rationing with input buffers.** Check, against BoARIO's rule, that an input shortage cuts a recipe's runs
-   by the share it is short and not to zero (CLAUDE.md section 5); a rule test on the settlement function.
+   by the share it is short and not to zero (CLAUDE.md section 5); a rule test on the settlement function. Follow-up: two
+   further sources agree on the pattern (output is the minimum over inputs and a short one scales activity down, Poledna
+   et al. working paper equation 12; the rationing rule is a main driver of losses, Pichler and Farmer abstract), so the
+   rule must be chosen on purpose and tested.
 6. **Phase-diagram method for the opening.** Use the Gualdi et al. approach (map the economy's behaviour over the hiring
    and firing asymmetry parameters) to show where the opening sits relative to the good-to-bad transition; this is
-   analysis for Complaint 473, not an engine feature.
+   analysis for Complaint 473, not an engine feature. Follow-up: a Mark-0 code base exists (C++ with a Python interface,
+   MIT, https://github.com/KarlNaumann/Mark0), usable as a reference to compare against, not as a dependency.
 7. **Drop the Eurace claim.** The clone has no sectors; no complaint, but the thin good space deserves a note in
    `NOTICE.md` or the economy architecture docs.
+
+Follow-up change: no recommendation was added or dropped; items 5 and 6 gained sources as marked. The new material gave no
+mechanism for the Norse collapse beyond item 1, nor for the all-or-nothing household help hiring (the Poledna working
+paper rounds labour demand to whole workers with partial vacancy filling, but its matching rules were not read).
 
 Nothing else surveyed deserves a complaint: the Julia and energy frameworks (BeforeIT.jl, Agents.jl, JuMP, PyPSA,
 Calliope, SpineOpt, MESSAGEix), the Python frameworks (AgentPy, Mesa, GAMA, abcEconomics) and the CGE family offer
@@ -314,11 +551,14 @@ nothing the repo lacks that fits its stack and its rules.
 
 ## Models I could not open or identify
 
-- ACCEPTS: NO SOURCE FOUND (ambiguous).
-- ColonD: NO SOURCE FOUND (ambiguous).
-- HABITAT (IIASA): NO SOURCE FOUND (ambiguous).
-- JMAB 2.0: no repository found.
-- Mark-0: no source named it; only Mark I and Peters et al. were found.
-- Not opened (snippet only): K+S paper, CATS and BAM, Lagom generiC, sfctools (PyPI page failed), GTAP, GEMPACK, Envisage,
-  MPSGE, Poledna 1:1 forecasting paper, CSH Vienna VAT network paper, PyPSA marginal-price documentation.
+- ACCEPTS: NO SOURCE FOUND (two searches in the first pass, one more in the follow-up).
+- ColonD: NO SOURCE FOUND.
+- HABITAT (IIASA): NO SOURCE FOUND.
+- Substitutes for the three names were supplied by the owner but not mapped to them; they are not identifications.
+- JMAB 2.0: no repository found; JMAB (version not shown) is the Java toolkit, opened.
+- Links BROKEN to me (403 or 503, not read): the ResearchGate pages for the K+S paper and BeforeIT.jl, the IIASA record
+  17104 (Gill et al. 2021), the finance-ministers CFCMA report, the TU Delft Lagom document.
+- Not opened (snippet only): Gill et al. 2021 paper itself, GTAP, GEMPACK, Envisage, Lengnick-style CATS code, the
+  Economic Systems Research and Scientific Reports journal versions.
+- Opened but no usable model description on the page: Lagom generiC (only a citation), the Bacilieri et al. paper (data quality).
 - The earlier report's HARK, Eurace and Caiani sources remain the only fully read ones for the agent-based design.
