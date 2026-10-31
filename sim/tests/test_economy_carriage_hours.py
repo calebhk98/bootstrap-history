@@ -64,12 +64,15 @@ class CarriageHireTests(unittest.TestCase):
 
 
 class EntrantInAHeldMarketTests(unittest.TestCase):
-    def test_a_merchant_with_no_hires_gets_none_where_incumbents_hold_all_the_hours_at_the_same_pay(self):
+    def test_a_merchant_at_the_same_pay_is_hired_only_from_hours_the_incumbent_dismissed(self):
+        # Eurace random dismissals (applications.py): the entrant draws no one from the incumbent's held hours, only
+        # the dismissed ones who apply to it; together they never exceed the hours offered
         from sim.tests.test_labour_core_clearing import bid, make_state, run
         state = make_state(people=10.0, wage=1.0)
         state.hired_hours = {"vale": {"digger": {"farm": 1000.0}}}
         result = run(state, [bid("farm", 2000.0), bid("merchant", 50.0)])
-        self.assertEqual(result.hired_by_employer.get("merchant", 0.0), 0.0)
+        self.assertGreater(result.hired_by_employer.get("merchant", 0.0), 0.0)
+        self.assertLessEqual(sum(result.hired_by_employer.values()), 1000.0 + 1e-6)
 
     def test_the_same_merchant_paying_a_premium_takes_hours_from_the_incumbent(self):
         from sim.tests.test_labour_core_clearing import bid, make_state, run

@@ -5,6 +5,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 from sim.constants import declare
 
 from . import asks, layoffs
+from .applications import hire_through_rounds
 from .import_cost import ImportCosts
 from .premium import training_premium
 from .trades import fallback_trade
@@ -36,8 +37,9 @@ VACANCY_SHARE_THRESHOLD = declare(
 MATCHING_EFFICIENCY_PER_YEAR = declare(
     "MATCHING_EFFICIENCY_PER_YEAR", 2.0, kind="temporary_heuristic", unit="per year",
     source=None, confidence="D",
-    why="Rate at which vacancies and searchers meet. Set so a slack market fills nearly all of a vacancy in a "
-        "year while a tight one fills part; not fitted.")
+    why="Rate at which vacancies and searchers meet. Used only by the founder's recruitable estimate in "
+        "labour_market_api.py; the clearing itself hires by applications.py. Set so a slack market fills nearly all of "
+        "a vacancy in a year while a tight one fills part; not fitted.")
 
 FIRM_LABOUR_SUPPLY_ELASTICITY = declare(
     "FIRM_LABOUR_SUPPLY_ELASTICITY", 2.0, kind="temporary_heuristic", unit="elasticity of recruits to pay",
@@ -261,26 +263,6 @@ def pay_groups(ranks: Dict[str, float], employers: Sequence[str]) -> List[List[s
     return [groups[wage] for wage in sorted(groups, reverse=True)]
 
 
-def hire_new(hired: Dict[str, float], wanted: Dict[str, float], paid: Dict[str, float], offered: float,
-             wage: float) -> None:
-    """Employers in descending standing (`paid` here is the standing) take new hours from the unretained pool, limited by matching friction."""
-    pool = max(0.0, offered - sum(hired.values()))
-    unserved = sum(max(0.0, wanted[employer] - hired[employer]) for employer in wanted)
-    for group in pay_groups(paid, list(wanted)):
-        needs = {employer: max(0.0, wanted[employer] - hired[employer]) for employer in group}
-        vacancies = sum(needs.values()) if unserved <= 0.0 else unserved
-        searchers_per_vacancy = max(0.0, pool) / vacancies if vacancies > 0.0 else 0.0
-        rate = MATCHING_EFFICIENCY_PER_YEAR * searchers_per_vacancy ** MATCHING_SEARCHER_ELASTICITY
-        takes = {employer: needs[employer] * (1.0 - math.exp(-rate * premium_factor(paid[employer], wage)))
-                 for employer in group}
-        total = sum(takes.values())
-        scale = pool / total if total > pool and total > 0.0 else 1.0
-        for employer in group:
-            hired[employer] += takes[employer] * scale
-        pool = max(0.0, offered - sum(hired.values()))
-        unserved -= sum(needs.values())
-
-
 def poach(hired: Dict[str, float], wanted: Dict[str, float], paid: Dict[str, float]) -> None:
     """Short employers (`paid` here is the standing) draw hours off strictly lower ones, in proportion to what each can give."""
     for group in pay_groups(paid, list(wanted)):
@@ -354,17 +336,20 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     kept = retain(wanted_to_keep, previous, offered) if offered > 0.0 else {}
     hired = {employer: kept.get(employer, 0.0) for employer in ranks} if offered > 0.0 else {employer: 0.0 for employer in wanted}
     wanted = {employer: wanted.get(employer, 0.0) for employer in hired}
+    best_maximum: Dict[str, float] = {}
+    for bid in bids:
+        best_maximum[bid.employer] = max(best_maximum.get(bid.employer, 0.0), bid.maximum_wage)
     if offered > 0.0:
+        held_pay = {employer: contracted_wage(contracts.get(employer), wage, best_maximum.get(employer, math.inf))
+                    for employer in hired}
+        # searchers apply to employers' offers round by round (applications.py); the unretained hours start as the pool
+        hire_through_rounds(hired, kept, wanted, paid, held_pay, max(0.0, offered - sum(hired.values())), reservation, lowest)
         before = dict(hired)
-        hire_new(hired, wanted, ranks, offered, wage)
         poach(hired, wanted, ranks)
         # hours an employer lost to a better payer leave the kept and the new alike
         kept = {employer: hours * min(1.0, hired[employer] / before[employer]) if before.get(employer, 0.0) > 0.0 else 0.0
                 for employer, hours in kept.items()}
     hired = {employer: hours for employer, hours in hired.items() if hours > 0.0}
-    best_maximum: Dict[str, float] = {}
-    for bid in bids:
-        best_maximum[bid.employer] = max(best_maximum.get(bid.employer, 0.0), bid.maximum_wage)
     paid_each, reported = pay_by_employer(kept, hired, contracts, paid, wage, best_maximum)
     state.entry_wages.setdefault(area, {})[trade] = wage
     state.wages.setdefault(area, {})[trade] = reported
