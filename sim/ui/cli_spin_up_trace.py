@@ -6,19 +6,19 @@ import random
 from sim.markets import api as markets_api
 from sim.engine.ui_port import Sim, default_civilisation_id, load, load_civ
 
-MACRO_COLUMNS = ("year", "price_level", "wage", "unemployment", "real_output")
+MACRO_COLUMNS = ("year", "price_level", "wage", "unemployment", "real_output", "chained_price_level")
 
 
 def format_trace(rows):
     """The trace as text: a header, then one line per year."""
-    lines = ["%5s %12s %16s %8s %16s %16s %16s %10s %10s %10s %12s" % (
+    lines = ["%5s %12s %16s %8s %16s %16s %16s %10s %10s %10s %12s %12s" % (
         "year", "price level", "money supply", "rate", "coin worn", "coin struck net", "metal at mint", "wage",
-        "hired", "unemployed", "real output")]
+        "hired", "unemployed", "real output", "chained level")]
     for row in rows:
-        lines.append("%5d %12.4g %16.6g %8.4f %16.6g %16.6g %16.6g %10s %10.3g %10s %12.6g" % (
+        lines.append("%5d %12.4g %16.6g %8.4f %16.6g %16.6g %16.6g %10s %10.3g %10s %12.6g %12.6g" % (
             row["year"], row["price_level"], row["money_supply"], row["rate"], row["wear"], row["struck"],
             row["metal_held"], _short(row["wage"], "%.4f"), row["hired_hours"],
-            _short(row["unemployment"], "%.3f"), row["real_output"]))
+            _short(row["unemployment"], "%.3f"), row["real_output"], row["chained_price_level"]))
     return "\n".join(lines)
 
 
@@ -27,7 +27,7 @@ def _short(value, pattern):
 
 
 def write_csv(rows, path):
-    """One row per year of the macro columns (year, price_level, wage, unemployment, real_output); empty where none."""
+    """One row per year of the macro columns (year, price_level, wage, unemployment, real_output, chained_price_level); empty where none."""
     with open(path, "w", newline="") as handle:
         writer = csv.writer(handle)
         writer.writerow(MACRO_COLUMNS)

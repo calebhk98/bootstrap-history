@@ -8,16 +8,19 @@ from sim.economy import api as economy_api
 
 from . import port_sites
 from .port_setup import build_setup
+from .port_trace_chained import next_chained_index
 from .port_trace_columns import macro_columns
 from .port_year import YearInputs
 
 COLUMNS = ("year", "price_level", "money_supply", "rate", "wear", "struck", "change", "metal_held", "wage", "hired_hours",
-           "idle_hours", "unemployment", "real_output")
+           "idle_hours", "unemployment", "real_output", "chained_price_level")
 
 
 def spin_up_trace(game, years):
     """[{year, price_level, money_supply, rate, wear, struck, change, metal_held, wage, hired_hours, idle_hours,
-    unemployment, real_output}] (the last four of the macro columns from port_trace_columns.py) for `years` years of the
+    unemployment, real_output, chained_price_level}] (the macro columns from port_trace_columns.py, then
+    `chained_price_level`: 1 in the first year, then each year's prices over the last year's at this year's output,
+    port_trace_chained.py) for `years` years of the
     first stage on the opening `game` saved. `wear` is the coin worn away that year, `struck` the coin the
     mint paid out net of what it melted, `change` the year's change in the money stock, `metal_held` the metal
     the mint holds at the year's end (economy units). `wage` is the unskilled trade's mean wage that year (economy
@@ -29,12 +32,17 @@ def spin_up_trace(game, years):
     inputs = YearInputs(year=0, population_by_tile={}, working_age_share=setup.working_share,
                         yield_factor_by_producer=port_sites.crop_yields(economy), engine_orders={})
     rows = []
+    chained, previous_prices = 1.0, None
     for year in range(years):
         outcome = economy.step(inputs)
         row = {"year": year, "price_level": outcome.basket_price_level, "money_supply": outcome.money_supply,
                "rate": outcome.rate,
                "hired_hours": outcome.hired_hours, "idle_hours": outcome.idle_hours}
         row.update(macro_columns(outcome, setup.unskilled_trade, economy_api.spin_up_state(economy, outcome)["real_output"]))
+        if previous_prices is not None:
+            chained = next_chained_index(chained, previous_prices, outcome.prices, outcome.output)
+        previous_prices = dict(outcome.prices)
+        row["chained_price_level"] = chained
         row.update(economy_api.money_year_figures(economy, outcome))
         rows.append(row)
     return rows
