@@ -26,7 +26,7 @@ from typing import Dict, List, Mapping, Optional, Sequence
 
 from sim.constants import declare
 
-from . import ownership, titles, titles_ground, unit_cost
+from . import land_priority, ownership, titles, titles_ground, unit_cost
 from .land_lease import LAND_RENT_ADJUSTMENT_SHARE, posted_rents  # noqa: F401
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import AgentId, CurrencyId, TileId, Transfer
@@ -67,6 +67,7 @@ class LandResult:
     rent_per_hectare_by_tile: Dict[TileId, float]    # mean rent a producer pays per hectare granted
     granted_hectares: Dict[AgentId, float]
     mean_value_by_tile: Dict[TileId, float] = field(default_factory=dict)    # hectare-weighted output value a hectare of its uses
+    ceded_by_tile: Dict[TileId, float] = field(default_factory=dict)         # hectares producers that outbid the households' plots were granted
 
 
 def _weighted(demands: Sequence[LandDemand], attribute: str) -> float:
@@ -106,42 +107,63 @@ def _used_land_quality(fraction: float):
     return knots[-1][1], area / fraction if fraction > 0.0 else knots[0][1]
 
 
-def _clear_tile(supply: float, own_plots: float, demands: Sequence[LandDemand]):
-    """(rent per hectare, hectares granted to each demand) on one tile."""
+def _bid_per_hectare(demand: LandDemand) -> float:
+    """The most a use can pay a hectare: what a hectare's runs fetch above their other costs."""
+    return max(0.0, demand.output_value_per_hectare - demand.other_cost_per_hectare)
+
+
+def _split_land(supply: float, own: float, demands: Sequence[LandDemand], own_value: Optional[float]):
+    """(hectares granted to each demand, hectares the plots keep, hectares granted to demands that outbid the plots).
+    Land goes to the higher bid (land_priority), the plots being a claim at their return a hectare; where that is not known
+    the plots come first."""
+    bids = [_bid_per_hectare(demand) for demand in demands]
+    own_bid = math.inf if own_value is None else max(0.0, own_value)
+    got = land_priority.allocate_by_bid(supply, [(index, bid, demand.hectares) for index, (bid, demand) in enumerate(zip(bids, demands))]
+                                        + [("own", own_bid, own)])
+    granted = [got[index] for index in range(len(demands))]
+    return granted, got["own"], sum(hectares for hectares, bid in zip(granted, bids) if bid > own_bid)
+
+
+def _clear_tile(supply: float, own_plots: float, demands: Sequence[LandDemand], own_value: Optional[float] = None):
+    """(rent per hectare, hectares granted to each demand, hectares granted to demands that outbid the plots) on one tile."""
     own = min(max(0.0, own_plots), supply)
     wanted = sum(demand.hectares for demand in demands)
-    room = supply - own
-    scale = min(1.0, room / wanted) if wanted > 0.0 else 1.0
-    granted = [demand.hectares * scale for demand in demands]
-    in_use = own + sum(granted)
+    granted, own_kept, ceded = _split_land(supply, own, demands, own_value)
+    in_use = own_kept + sum(granted)
     if in_use <= 0.0 or wanted <= 0.0:
-        return 0.0, granted
+        return 0.0, granted, ceded
     value, cost = _weighted(demands, "output_value_per_hectare"), _weighted(demands, "other_cost_per_hectare")
     marginal, mean_fertility = _used_land_quality(in_use / supply if supply > 0.0 else 1.0)
     differential = value * max(0.0, mean_fertility - marginal)
     short = own + wanted > supply * (1.0 + 1e-12)
     scarcity = LAND_SCARCITY_RENT_SHARE * max(0.0, value * marginal - cost) if short else 0.0
-    return differential + scarcity, granted
+    return differential + scarcity, granted, ceded
 
 
 def clear_land(arable_by_tile: Mapping[TileId, float], demands: Sequence[LandDemand],
-               own_plot_hectares: Optional[Mapping[TileId, float]] = None) -> LandResult:
-    """Rent per hectare for each tile that has producers asking for land, and each one's grant."""
+               own_plot_hectares: Optional[Mapping[TileId, float]] = None,
+               own_value_by_tile: Optional[Mapping[TileId, float]] = None) -> LandResult:
+    """Rent per hectare for each tile that has producers asking for land, and each one's grant. `own_value_by_tile` is what a
+    hectare of the households' own plots returns on a tile: where given, land goes to the higher bid, the plots included."""
     own_plot_hectares = own_plot_hectares or {}
+    own_value_by_tile = own_value_by_tile or {}
     by_tile: Dict[TileId, List[LandDemand]] = {}
     for demand in demands:
         by_tile.setdefault(demand.tile, []).append(demand)
     rents: Dict[TileId, float] = {}
     granted: Dict[AgentId, float] = {}
     mean_values: Dict[TileId, float] = {}
+    ceded: Dict[TileId, float] = {}
     for tile, tile_demands in sorted(by_tile.items()):
-        rent, shares = _clear_tile(max(0.0, arable_by_tile.get(tile, 0.0)), own_plot_hectares.get(tile, 0.0),
-                                   tile_demands)
+        rent, shares, tile_ceded = _clear_tile(max(0.0, arable_by_tile.get(tile, 0.0)), own_plot_hectares.get(tile, 0.0),
+                                               tile_demands, own_value_by_tile.get(tile))
         rents[tile] = rent
+        if tile_ceded > 0.0:
+            ceded[tile] = tile_ceded
         mean_values[tile] = _weighted(tile_demands, "output_value_per_hectare")
         for demand, hectares in zip(tile_demands, shares):
             granted[demand.agent_id] = hectares
-    return LandResult(rents, granted, mean_values)
+    return LandResult(rents, granted, mean_values, ceded)
 
 
 def use_rent_per_hectare(result: LandResult, tile: TileId, value_per_hectare: Optional[float]) -> float:
@@ -201,16 +223,18 @@ def _value_for_rent(setup, view, producer, land_per_run: float, demand: Optional
 
 
 def post_rents(setup, record, view, wanted_runs: Mapping[AgentId, float],
-               own_plot_hectares: Optional[Mapping[TileId, float]] = None):
+               own_plot_hectares: Optional[Mapping[TileId, float]] = None,
+               own_value_by_tile: Optional[Mapping[TileId, float]] = None):
     """Clear each tile's land for the runs producers want, set the posted rent (land_lease.posted_rents follows the
     clearing rent slowly) and caps on the record and its producers. Returns (the result, the demands)."""
     demands = demands_of(setup, record, view, wanted_runs)
     arable = {tile_id: titles_ground.arable_hectares(record, tile_id, tile) for tile_id, tile in setup.tiles.items()}
-    cleared = clear_land(arable, demands, own_plot_hectares)
+    cleared = clear_land(arable, demands, own_plot_hectares, own_value_by_tile)
     result = replaced(cleared, rent_per_hectare_by_tile=posted_rents(record.land_rent,
                                                                               cleared.rent_per_hectare_by_tile))
     record.land_rent = dict(result.rent_per_hectare_by_tile)
     record.land_mean_value = dict(result.mean_value_by_tile)
+    record.land_ceded = dict(result.ceded_by_tile)
     demands_by_agent = {demand.agent_id: demand for demand in demands}
     for producer_id, producer in list(record.producers.items()):
         land_per_run = setup.land_per_run.get(producer.recipe_id, 0.0)
@@ -228,12 +252,13 @@ def post_rents(setup, record, view, wanted_runs: Mapping[AgentId, float],
 def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
                 own_plot_hectares: Optional[Mapping[TileId, float]] = None,
                 land_tax_share_of_rent: float = 0.0,
-                tenancy_ask: Optional[Mapping[TileId, float]] = None, ledger=None) -> List[Transfer]:
+                tenancy_ask: Optional[Mapping[TileId, float]] = None, ledger=None,
+                own_value_by_tile: Optional[Mapping[TileId, float]] = None) -> List[Transfer]:
     """Set next year's rent (`post_rents`) and book the rent: producers pay the tile's owner, shared by
     ownership.spread. Tenants pay their lessors the posted rent cut to `tenancy_ask` (land_lease_year.asks) where given.
     Returns the payments made (to cohorts), for the year's property income. The rent producers paid is noted
     in `ledger` as a cost of their year."""
-    result, demands = post_rents(setup, record, view, wanted_runs, own_plot_hectares)
+    result, demands = post_rents(setup, record, view, wanted_runs, own_plot_hectares, own_value_by_tile)
     arable = {tile_id: titles_ground.arable_hectares(record, tile_id, tile) for tile_id, tile in setup.tiles.items()}
     money = setup.currency_id
     owners = {tile: ownership.owner_cohort(record, tile) for tile in result.rent_per_hectare_by_tile}
