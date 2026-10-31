@@ -33,24 +33,33 @@ def firm_net_worth(producer, recipe, cash: float, debt: float, view) -> float:
     return max(0.0, firm_equity(producer, recipe, cash, debt, view))
 
 
-def holdings(setup, record, view) -> Dict[AgentId, float]:
-    """Each cohort's share of the net worth of the producers its tile's owners hold."""
+def producer_worths(setup, record, view) -> Dict[AgentId, float]:
+    """The net worth of each producer a household owns and that has plant."""
     money = setup.currency_id
     debts = credit_claims.debts_by_borrower(record.loans, money)
+    worths: Dict[AgentId, float] = {}
+    for producer_id, producer in sorted(record.producers.items()):
+        if record.cohorts.get(producer.owner) is None or producer.capacity_runs <= 0.0:
+            continue
+        worths[producer_id] = firm_net_worth(producer, setup.recipes[producer.recipe_id], record.book.balance(producer_id, money),
+                                             debts.get(producer_id, 0.0), view)
+    return worths
+
+
+def holdings(setup, record, view) -> Dict[AgentId, float]:
+    """Each cohort's share of the net worth of the producers its tile's owners hold. What holders of a producer's
+    shares own is valued at the share index price (household_portfolio.py), the price their portfolio orders trade at."""
     cohorts_of_tile: Dict[str, list] = {}
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
         cohorts_of_tile.setdefault(cohort.tile, []).append(cohort)
+    factor = record.capital.share_price_factor
     held: Dict[AgentId, float] = {}
-    for producer_id, producer in sorted(record.producers.items()):
-        owner = record.cohorts.get(producer.owner)
-        if owner is None or producer.capacity_runs <= 0.0:
-            continue
-        worth = firm_net_worth(producer, setup.recipes[producer.recipe_id], record.book.balance(producer_id, money),
-                               debts.get(producer_id, 0.0), view)
+    for producer_id, worth in producer_worths(setup, record, view).items():
+        owner = record.cohorts[record.producers[producer_id].owner]
         outside = record.shares.get(producer_id)
         if outside:                      # what holders of its shares own is theirs, not the owner tile's
             for holder, part in outside.items():
-                held[holder] = held.get(holder, 0.0) + part * worth
+                held[holder] = held.get(holder, 0.0) + part * worth * factor
             worth *= max(0.0, 1.0 - sum(outside.values()))
         for agent, amount in distribute_property_income(cohorts_of_tile[owner.tile], worth).items():
             held[agent] = held.get(agent, 0.0) + amount

@@ -1,6 +1,6 @@
 """The capital markets' part of the economy's year, called from `Economy._run_year` so that file holds one line each.
 
-Before the year's lending the holders of shares and loans may sell (secondary_trade.py), the households short of
+Before the year's lending households trade shares to their portfolio fraction (portfolio_year.py), then the holders of shares and loans may sell (secondary_trade.py), the households short of
 cash among them selling for the cash they would otherwise borrow; then depositors review their banks, and a bank
 asked for more than it holds sells loans or fails (bank_runs.py).
 """
@@ -8,7 +8,7 @@ from typing import Dict, List, Sequence
 
 from sim.constants import declare
 
-from . import bank_runs, funds as fund_pools, insurance, lending, secondary_trade
+from . import bank_runs, funds as fund_pools, insurance, lending, portfolio_year, secondary_trade
 from .funds import POOLED_FUNDS
 from .insurance import HARVEST, INSURANCE_UNDERWRITING, RISK_POOLING
 from .secondary_trade import Shortfall
@@ -59,6 +59,7 @@ def before_lending(setup, record, view, ledger, funds: Sequence[FundsOffer], yea
     if pooling:
         funds = funds + [offer for offer in (fund_pools.offer_of(setup, record, fund, rate) for fund in fund_pools.standing(record))
                          if offer is not None]
+    funds = portfolio_year.run(setup, record, view, funds, institutions)       # households buy or sell shares to their portfolio fraction
     if trading and (holds_a_claim(record) or any(offer.lender in record.capital.funds for offer in funds)):
         funds, _trades = secondary_trade.run(setup, record, funds, short, rate, institutions)
     if not record.banks:

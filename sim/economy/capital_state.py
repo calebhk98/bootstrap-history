@@ -54,13 +54,17 @@ class CapitalState:
     policies: List[Policy] = field(default_factory=list)
     exposure: Dict[str, Dict[str, float]] = field(default_factory=dict)    # holder -> hazard -> value exposed
     funds: Dict[str, Fund] = field(default_factory=dict)
+    share_price_factor: float = 1.0                  # the share index price: a factor on each producer's net worth (household_portfolio.py)
+    share_buy_orders: Dict[str, float] = field(default_factory=dict)    # holder -> value of shares its portfolio still orders after this year's matching
 
     def to_plain(self) -> Dict[str, Any]:
         return {"hazards": {key: plain(value) for key, value in sorted(self.hazards.items())},
                 "insurers": {key: plain(value) for key, value in sorted(self.insurers.items())},
                 "policies": [plain(value) for value in self.policies],
                 "exposure": {holder: dict(sorted(held.items())) for holder, held in sorted(self.exposure.items())},
-                "funds": {key: plain(value) for key, value in sorted(self.funds.items())}}
+                "funds": {key: plain(value) for key, value in sorted(self.funds.items())},
+                "share_price_factor": self.share_price_factor,
+                "share_buy_orders": dict(sorted(self.share_buy_orders.items()))}
 
     @classmethod
     def from_plain(cls, record: Dict[str, Any]) -> "CapitalState":
@@ -68,4 +72,6 @@ class CapitalState:
                    insurers={key: Insurer(**value) for key, value in record.get("insurers", {}).items()},
                    policies=[Policy(**value) for value in record.get("policies", [])],
                    exposure={holder: dict(held) for holder, held in record.get("exposure", {}).items()},
-                   funds={key: Fund(**value) for key, value in record.get("funds", {}).items()})
+                   funds={key: Fund(**value) for key, value in record.get("funds", {}).items()},
+                   share_price_factor=record.get("share_price_factor", 1.0),
+                   share_buy_orders=dict(record.get("share_buy_orders", {})))
