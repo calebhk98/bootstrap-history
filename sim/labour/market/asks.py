@@ -30,10 +30,10 @@ SEARCH_ROUNDS_PER_YEAR = declare(
         "and its raise runs once a month; the yearly step compounds that many rounds. Not fitted.")
 
 RESERVATION_CUT_PER_ROUND = declare(
-    "RESERVATION_CUT_PER_ROUND", 0.02, kind="temporary_heuristic", unit="share of the ask cut per failed search round",
+    "RESERVATION_CUT_PER_ROUND", 0.01, kind="temporary_heuristic", unit="share of the ask cut per failed search round",
     source=None, confidence="D",
     retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
-    why="Eurace's WAGE_RESERVATION_UPDATE (default 0.02 in Labour/model.xml): an unemployed household cuts its "
+    why="Eurace's WAGE_RESERVATION_UPDATE (0.01 in the shipped state its/0_after_2k_transient.xml, opened; model.xml's description gives 0.02): an unemployed household cuts its "
         "reservation wage by this share each round it stays unemployed, never under its floor (there the "
         "benefit share of last pay; here the wage floor). How fast a family gives ground is not fitted.")
 

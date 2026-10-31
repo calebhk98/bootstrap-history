@@ -21,10 +21,10 @@ WAGE_SHARE_CLOSED_PER_YEAR = declare(
         "falls by asks.py, so the downward stickiness lives there. The speed is not fitted.")
 
 WAGE_UPDATE_PER_ROUND = declare(
-    "WAGE_UPDATE_PER_ROUND", 0.02, kind="temporary_heuristic", unit="share of the wage added per round of unfilled vacancies",
+    "WAGE_UPDATE_PER_ROUND", 0.01, kind="temporary_heuristic", unit="share of the wage added per round of unfilled vacancies",
     source=None, confidence="D",
     retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
-    why="Eurace's WAGE_UPDATE (default 0.02 in Labour/model.xml): an employer with vacancies left raises its offer by "
+    why="Eurace's WAGE_UPDATE (0.01 in the shipped state its/0_after_2k_transient.xml, opened; model.xml's description gives 0.02): an employer with vacancies left raises its offer by "
         "this share each round (Firm_update_wage_offer, Labour/Firm_Employer_Functions.c). Not fitted.")
 
 VACANCY_SHARE_THRESHOLD = declare(
