@@ -27,3 +27,12 @@ far as their hard inputs reach (nothing on offer gives zero runs; a short fill l
 nothing). On saved Rome it raises realised over planned runs from year one but lowers hours hired and output a few per
 cent, leaves unemployment unchanged, and plans fall faster than realised runs (the cap sometimes sits below what the
 inputs deliver). Re-measure once inputs move between areas (lead to silver makers, heat to bakers).
+
+**Inputs between areas (traced on saved Rome).** Lead for silver makers is mostly a real limit: the silver makers' bids
+for lead stop at `producers.input_ceiling` (the price times one plus the run margin over variable cost), far below what
+a producer that cannot run at all without the input would pay, and carriage from the few lead-smelting areas costs more
+than that ceiling allows to all but a couple of the bidding areas. Heat (`thermal_mj`) is immobile by design, so a heat
+shortfall is a local fuel problem. Parked: `Complaints/reports/961-merchants-learn-unfilled-demand.patch.txt` (merchants
+learn the best unfilled bid and the quantity wanted in a market with bids and no seller); on saved Rome it sent
+merchants' cash to other goods first and carried no lead, so it is not merged. Also seen: merchants bid to carry
+`gaming_table_hour`, a service, which should not be carried.

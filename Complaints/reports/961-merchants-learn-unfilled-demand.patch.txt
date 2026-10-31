@@ -1,0 +1,135 @@
+From a4bf5fd92303004af28fbf6d7d0537d648d91683 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 15:48:14 +0000
+Subject: [PATCH] Merchants learn the standing bids of a market nobody sold
+ into (price and wanted volume)
+
+A market with bids and no offers taught merchants the cost-covering quote and a volume of zero, so a
+destination with unmet demand drew no route. learned_prices now passes the best unfilled bid and the
+quantity wanted (merchant_news.unfilled_demand). Complaint 644, 642.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WXrfievykJ3StG4swPtute
+---
+ sim/economy/merchant_news.py               | 23 +++++++++++++++
+ sim/economy/year_close.py                  | 13 +++++++--
+ sim/tests/test_merchant_unfilled_demand.py | 33 ++++++++++++++++++++++
+ 3 files changed, 66 insertions(+), 3 deletions(-)
+ create mode 100644 sim/economy/merchant_news.py
+ create mode 100644 sim/tests/test_merchant_unfilled_demand.py
+
+diff --git a/sim/economy/merchant_news.py b/sim/economy/merchant_news.py
+new file mode 100644
+index 0000000..6e6fa3d
+--- /dev/null
++++ b/sim/economy/merchant_news.py
+@@ -0,0 +1,23 @@
++"""What a merchant learns from a market where buyers bid and nobody offered.
++
++Buyers' standing bids are posted where a merchant can see them. A market that cleared nothing for want of any
++seller still shows the most a buyer would pay and how much buyers wanted, so a merchant sees a destination worth
++carrying to, in the price and the volume it expects there.
++"""
++from typing import Optional, Sequence, Tuple
++
++from .market_quote import best_unfilled_bid
++from .types import Bid
++
++
++def unfilled_demand(bids: Sequence[Bid], traded: float, offered: float) -> Optional[Tuple[float, float]]:
++    """(best unfilled bid, quantity wanted at it) for a market where nothing traded and nothing was offered;
++    None otherwise, or when no buyer with money names a finite ceiling."""
++    if traded > 0.0 or offered > 0.0:
++        return None
++    ceiling = best_unfilled_bid(bids)
++    if ceiling is None:
++        return None
++    wanted = sum(bid.floor_quantity + bid.flexible_quantity for bid in bids
++                 if bid.budget > 0.0 and bid.maximum_price > 0.0)
++    return (ceiling, wanted) if wanted > 0.0 else None
+diff --git a/sim/economy/year_close.py b/sim/economy/year_close.py
+index aaf1c7e..e1d72dc 100644
+--- a/sim/economy/year_close.py
++++ b/sim/economy/year_close.py
+@@ -11,6 +11,7 @@ from . import (practice, firm_finance, firm_year, carried_book, carriage_fleet_b
+                producers, producers_close, state_budget, tariffs, taxes)
+ from .household_work_year import basket_key, cohort_basket
+ from .households_cohort import renewed
++from . import merchant_news
+ from .market_memory import market_key
+ from .national_prices import national_prices, traded_spending_weights
+ from .notional import recently_traded_goods
+@@ -247,7 +248,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
+         record.producers[producer_id] = _with_practice(
+             _with_sales(closed.producer, recipe, ledger, record.book, area_map.area_of, traded, clearing_prices), producer.last_runs,
+             {trade: practice.pool_units(crews_of_recipe[producer.recipe_id], trade) for trade in producer.crew_runs})
+-    prices, volumes = learned_prices(ledger.clearings, record.memory)
++    prices, volumes = learned_prices(ledger.clearings, record.memory, ledger.bids_by_market)
+     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
+     ordered = (sorted(prices.items()), sorted(volumes.items()))
+     interest_rate = view.interest_rate(money)
+@@ -292,14 +293,20 @@ def _news_lag_of(carriage, home, anchors):
+     return lag_years
+ 
+ 
+-def learned_prices(clearings, memory):
++def learned_prices(clearings, memory, bids_by_market=None):
+     """(prices, volumes) by (good, area) that traders learn from the year: the price the market now
+-    remembers, which for a market that sold nothing is what buyers would have paid."""
++    remembers, which for a market that sold nothing is what buyers would have paid. A market where buyers bid
++    and nobody offered teaches the best standing bid and the quantity wanted (merchant_news)."""
+     prices, volumes = {}, {}
+     for result in clearings:
+         key = (result.good, result.area)
+         prices[key] = memory.prices.get(market_key(result.good, result.area), result.price)
+         volumes[key] = result.quantity
++        if bids_by_market is not None and result.quantity <= 0.0:
++            unfilled = merchant_news.unfilled_demand(bids_by_market.get(key, ()), result.quantity,
++                                                     getattr(result, "offered_at_price", 0.0))
++            if unfilled is not None:
++                prices[key], volumes[key] = unfilled
+     return prices, volumes
+ 
+ 
+diff --git a/sim/tests/test_merchant_unfilled_demand.py b/sim/tests/test_merchant_unfilled_demand.py
+new file mode 100644
+index 0000000..179b504
+--- /dev/null
++++ b/sim/tests/test_merchant_unfilled_demand.py
+@@ -0,0 +1,33 @@
++"""Complaint 644: a merchant sees the bids standing in a market where nothing was offered, as the price and the
++volume the market would take, so a surplus area elsewhere can draw a route to it."""
++
++QUICK_TOPIC = True
++
++import unittest
++
++from sim.economy.merchant_news import unfilled_demand
++from sim.economy.types import Bid
++
++
++def bid(floor_quantity, maximum_price, budget=1e9):
++    return Bid("buyer", "lead_kg", "area", "tile", floor_quantity, 0.0, 1.0, 0.0, budget, 0, maximum_price)
++
++
++class UnfilledDemandTests(unittest.TestCase):
++    def test_bids_with_no_offer_give_the_best_ceiling_and_the_quantity_wanted(self):
++        price, volume = unfilled_demand([bid(100.0, 1.5), bid(50.0, 1.8)], traded=0.0, offered=0.0)
++        self.assertEqual(price, 1.8)
++        self.assertEqual(volume, 150.0)
++
++    def test_a_market_that_traded_teaches_nothing_extra(self):
++        self.assertIsNone(unfilled_demand([bid(100.0, 1.5)], traded=10.0, offered=10.0))
++
++    def test_a_market_with_offers_unsold_teaches_nothing_extra(self):
++        self.assertIsNone(unfilled_demand([bid(100.0, 1.5)], traded=0.0, offered=40.0))
++
++    def test_a_bid_without_a_ceiling_or_cash_is_not_demand(self):
++        self.assertIsNone(unfilled_demand([bid(100.0, float("inf")), bid(100.0, 2.0, budget=0.0)], traded=0.0, offered=0.0))
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.43.0
+
