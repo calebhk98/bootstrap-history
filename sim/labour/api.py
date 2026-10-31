@@ -9,7 +9,8 @@ import them back.
 """
 WALL = "two-way"  # nothing here reaches sim/engine/; the workforce module hands it what it needs (sim/workforce/world.py)
 
-from . import wage_provider, wages
+from . import learning_curve, wage_provider, wages
+from .trade_formation import SOURCE_TASK_FLOOR_FRACTION
 from .market.clearing import clear_all as clear_labour_markets
 from .market.opening import opening_state as opening_labour_market
 from .market.migration import move_shares as migration_shares
@@ -31,6 +32,7 @@ from .staff_targets import scholar_target
 from .tenure import add_tenure, fade_tenure, outflow_shares, tenure_by_trade, tenure_held
 
 __all__ = [
+    "learning_curve", "SOURCE_TASK_FLOOR_FRACTION",
     "fetch_wage", "fetch_wage_samples",
     "occupational_report", "shares_by_group", "hours_by_trade", "hours_by_trade_of_all_employers", "people_by_trade_of_all_employers", "format_occupational_report", "occupation_groups",
     "wage_provider", "wages", "scholar_target", "Labour", "production_data",

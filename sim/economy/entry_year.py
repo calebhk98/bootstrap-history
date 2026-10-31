@@ -6,7 +6,7 @@ cash back into paying producers that ran out of it."""
 import math
 from typing import Dict, Tuple
 
-from . import credit, location, ownership, sites, unit_cost
+from . import credit, location, ownership, practice, sites, unit_cost
 from .entry_backed import unfilled_at_cost
 from .entry_margin import margin_entry_plans
 from .entrant_rent import site_rent_per_run
@@ -61,6 +61,8 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                 continue
             producer = Producer(agent_id=producer_id, owner=owner, recipe_id=plan.recipe_id, tile=plan.tile,
                                 capacity_runs=0.0, expected_sales=plan.runs,
+                                crew_runs=practice.entrant_crew_runs(recipe, [each.crew_runs for each in record.producers.values()
+                                                                              if each.recipe_id == plan.recipe_id]),
                                 yield_factor=sites.yield_at(recipe, plan.tile, by_limits,
                                                             setup.yield_factor_by_recipe_tile.get(key, 1.0)))
         elif record.expansion_runs.get(producer_id, 0.0) > 0.0:     # a working-capital loan builds no plant

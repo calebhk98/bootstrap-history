@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from . import ask_adjust, inventory, tool_fallback, unit_cost
+from . import ask_adjust, inventory, practice, tool_fallback, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .planning_price import held_to_band, is_bare_quote
 from .protocols import MarketView
@@ -94,6 +94,7 @@ class Producer:
     net_earnings_history: Tuple[float, ...] = ()   # its last years' net earnings, oldest first (firm_finance.py)
     revenue_history: Tuple[float, ...] = ()        # its last years' revenue, oldest first
     idle_years: int = 0                     # years it stays idle after a bankruptcy: no runs, no dividend
+    crew_runs: Mapping[str, float] = field(default_factory=dict)   # runs its crew has made, by trade (practice.py); a trade absent is an established crew
 
 
 @dataclass(frozen=True)
@@ -281,6 +282,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     live wages."""
     if producer.idle_years > 0:
         return Plan(0.0)
+    recipe = practice.recipe_for(recipe, producer.crew_runs)
     outputs = expected_output_prices(producer, recipe, view)
     market_inputs = paid_input_prices(producer, recipe, view, live_input_prices(producer, recipe, view))
     inputs = expected_input_prices(producer, recipe, view, market_inputs)
@@ -494,6 +496,7 @@ def produce(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, flo
     what goes in. Tools are not an input that stops a run: a run short of its tool draws the recipe's next
     tool (`tool_fallbacks`), then works by hand, and the extra hours that takes can lower the runs the hours
     hired allow."""
+    recipe = practice.recipe_for(recipe, producer.crew_runs)
     limit = producer.capacity_runs if runs_planned is None else min(runs_planned, producer.capacity_runs)
     for good, per_run in recipe.hard_inputs.items():
         limit = min(limit, inputs_held.get(good, 0.0) / per_run)
