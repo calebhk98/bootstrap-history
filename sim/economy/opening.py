@@ -219,6 +219,7 @@ def _settle_income(setup, record, view, priced_goods, replacement, own) -> None:
     share["labour"] = labour_share
     demand_at(per_head)     # leaves the plots at the settled income's share of hours hired
     record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
+    record.property_income = opening_income.property_income_of(record.cohorts, per_head, labour_share)
 
 
 def _opening_bids(setup, record, view, memory=None, stationary_durables=True, own=None):
