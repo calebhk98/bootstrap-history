@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - a one-year closure test and the stationary quantities now exist (Update 6); the money stock is sustained (Update 4, `spin_up_money_supply` passes); the spin-up still does not settle: the price level and wage drift for decades because the labour market clears far below the cost table's wage (Update 4)
+**Status:** partly - one-year closure test and stationary quantities exist (Update 6); the mint is served first and money is sustained (Updates 4, 8); producers, rent, credit, goods and labour rules reworked (Update 22); the fixtures still drift in price level, wage and money and Rome is not re-measured
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -765,3 +765,50 @@ volatility from the opening. The rules the supply-collapse test joined are `test
 Whole-game relationship checks deleted (Complaint 640): the five `full_length_opening_checks_<civilisation>` topics (red on main) asserted price over making cost, wage over floor, money against wear and spin-up settled on each full-length opening, which cannot name a function. `python3 sim/simulator.py opening-checks` prints the same relationships for every civilisation; the known failures stay tabled in `sim/tests/full_length_opening_support.py` (`EXPECTED_FAILURES`).
 
 The whole-economy stepped-year checks of the stationary fixture (every year within the settling bounds, hours hired holding, ore price, the mint against wear, the first-year wage move against excess hours, households' cash against producers') left the unit tests with `test_opening_stationary_rules`, which now holds only the rules (`opening_stationary.solve`, `opening_leisure.anchors`). Measure the settling claims with `python3 sim/simulator.py spin-up-trace`.
+
+## Update 8: the mint was last in the queue, so cheap bullion never reached it (branch mint-replaces-wear)
+
+Cause of the draining money stock: the mint's bid was served after every other buyer of the metal (`MINT_PRIORITY`), and a
+seller sells at its own ask, so when asks fell with the price level the other buyers of the metal (cheap metal draws more
+demand) took all of it and the mint, which would pay far more than the ask, was rationed to nothing. The profit test was
+sound (`maximum_price` is the mint price; the ask fell well below it). Now the mint is served first among buyers at or below
+its price, and its yearly capacity counts the wear of the coin it strikes (`yearly_monetisation`). Measure:
+`python3 sim/simulator.py spin-up-trace --fixture small --years 40` (and `--fixture stationary`), columns `money_supply`.
+Still short on the small fixture in the middle years: the metal's makers supply less than the mint bids for (producers' side).
+
+## Update 22: producers, rent, credit, goods and labour rules of branch labor-market-economy-stability
+
+What the code does now, each rule with its owner:
+- Producers pay out cash above next year's needs (`firm_finance.cash_to_keep`, `excess_cash`, `payout`, called from `firm_year.py`).
+- Land rent counts in producers' running costs (`year_ledger.note_rent`), and a producer whose remembered earnings are negative closes
+  that share of its capacity, at most a year's change in output (`producer_losses.shed_share`, used by `producers_close.close_year`).
+- Sellers turned away from by buyers raise their asks within the year to where requests meet the stock (`demand_search.raise_asks`,
+  `unsold_search.raise_sold_out`); a sold-out seller's expectation is not pulled to cost (`ask_adjust.regressive_weight`) and a crowd
+  asks its expected price for stock it expects to sell (`seller_offers.expected_ask`).
+- The logit allocation redirects rationed buyers round after round until no stock is reachable (`goods_market_logit.allocate`).
+- Households' expected spending counts what they planned (`durable_stock.update_expected_spending`), and they read share wealth as
+  recorded at the last close (`households_buffer_stock.share_wealth_carried`).
+- The mint is served first among the metal's buyers (`mint.MINT_PRIORITY`; see Update 8 above).
+- The opening sets land rent by the year's own rule and covers it in prices and property income (`opening_rent.py`).
+- Credit rations by quantity at the lenders' ask and cuts a priced-out request to what its pledge bears (641).
+- Labour: offers rise each search round while vacancies stay open, a searcher asks no more than the best posted offer, the import-wage bound
+  weighs the hours that can be fetched, graduation income counts the chance of finding work (`sim/labour/market/DESIGN.md`).
+
+The households' spending-cap merge was titled as ending the stationary fixture's late crash; it did not. The labour-core, rent, shedding
+and switching merges after it did.
+
+Measured on the fixtures with `python3 sim/simulator.py spin-up-trace --fixture stationary --years 50`: hunger is zero and idle hours
+are small after the first years, but the spin-up does not settle: the basket price level, the unskilled wage and the money supply
+still drift downward over the fifty years. `--fixture small --years 50`: the price level and wage keep falling to the end and the idle
+hours shrink as the wage falls, so it is not settled either. Not re-measured on a civilisation
+(`spin-up-trace --civ rome_100ad --years 60` is the remaining gate). The status stays `partly`.
+
+## Update 23: the mint buys at the mint price and holds its coin metal unless bullion fetches parity (branch mint-pays-mint-price)
+
+Chain, stationary fixture (`sim/economy/fixture_setups.py`: parity 100, mint price 95): the market settles every sale at its mean price, so the mint
+paid the metal's sellers the market price (about 60 to 88) and the issuer kept the whole gap to parity as seigniorage; the makers' expected price
+followed the market, so smelting shrank as ore cost rose. The mint also offered its whole coin metal at parity into the same market; the logit
+choice gave that offer a share of the ornament buyers, and the mint's sales washed against its purchases (net intake negative in some years, about 270 kg sold in year 54).
+Now `mint_price.pay_top_ups` adds, after the markets, the gap between the mint price and the settled price on what the mint bought, shared among the
+metal's sellers by what they sold (seigniorage is then the mint's charge only), and the mint offers its metal only while bullion's remembered price is at least parity
+(`mint_price.melting_pays`). Measure: `simulator.py spin-up-trace --fixture stationary --years 60` with the money columns `wear`, `struck`.

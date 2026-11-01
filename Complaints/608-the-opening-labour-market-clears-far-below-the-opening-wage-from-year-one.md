@@ -45,3 +45,12 @@ The leisure split is gone: households offer every hour their plot and household 
 opening wage because each producer opens holding the hours it hires at that wage (`opening_resting.resting_labour_contracts`),
 not because hours offered equal hours hired; the unhired hours are visible idle hours. Later years still drift down on the
 stated fixture as new hires clear against the ask floor (see 675).
+
+## Update: the labour year (branch labor-market-economy-stability)
+
+Offers now rise each search round while vacancies stay open (`applications.raised_offer`), the new-hire wage is the hours-weighted
+offer paid (`clearing.clear_one`), a searcher asks no more than the best posted offer (`applications.capped_asks`), and the import-wage
+bound weighs only the hours that can be fetched (`import_cost.ImportCosts.supply`, `scarcity.short_run_ceiling`). Design:
+`sim/labour/market/DESIGN.md`. Measure: `python3 sim/simulator.py spin-up-trace --fixture stationary --years 50` (and `--fixture small`).
+On the fixtures the wage still drifts down over the years; not re-measured on a civilisation (`--civ rome_100ad --years 60`),
+so the test above (Rome's unskilled wage above its floor over the first decade) is not met. Status stays `partly`.

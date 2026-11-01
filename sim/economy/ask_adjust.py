@@ -52,6 +52,13 @@ def stock_gap(stock: float, target_stock: float) -> float:
     return max(-1.0, min(1.0, (target_stock - stock) / target_stock))
 
 
+def regressive_weight(weight: float, gap: float) -> float:
+    """The share of the gap to cost a seller's expectation closes in a year, given its stock gap (`stock_gap`): the pull
+    toward cost says a price above cost will not last because makers enter, which a seller that sold out with buyers
+    unserved has evidence against. Full at or below its target stock, none when nothing is left."""
+    return weight * (1.0 - max(0.0, min(1.0, gap)))
+
+
 def adjusted_within_band(expected_price: float, break_even_price: Optional[float], stock: float, target_stock: float,
                          ceiling_multiple: float = ASK_BAND_CEILING, input_share: float = 0.0) -> float:
     """`expected_price` moved one step by the gap between `stock` and `target_stock`, inside the band: the price that just

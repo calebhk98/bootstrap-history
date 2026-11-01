@@ -73,14 +73,14 @@ class ClearingTests(unittest.TestCase):
             rates.append(rate)
         self.assertTrue(all(later >= earlier for earlier, later in zip(rates, rates[1:])))
         self.assertTrue(all(value <= first + 1e-9 for value in rates))
-        self.assertGreater(rates[0], 0.04)
+        self.assertAlmostEqual(rates[0], 0.04)      # scarce funds: the lender's ask, the queue of borrowers is rationed
 
-    def test_scarce_funds_cannot_lift_the_base_rate_past_the_ceiling(self):
+    def test_scarce_funds_do_not_lift_the_base_rate_above_the_lenders_ask(self):
         offers = [funds("l", 1.0, 0.04)]
         requests = [request("b", 1000.0, 50.0, 1.0e9)]
         _, uncapped, _ = credit.clear(requests, offers, "coin", None, {})
         loans, capped, unmet = credit.clear(requests, offers, "coin", None, {}, rate_ceiling=0.5)
-        self.assertGreater(uncapped, 0.5)
+        self.assertAlmostEqual(uncapped, 0.04)      # scarce funds price at the lender's ask, not the borrower's cap
         self.assertLessEqual(capped, 0.5)
         self.assertAlmostEqual(sum(item.principal for item in loans), 1.0)     # still rationed to the funds
         self.assertAlmostEqual(sum(item.amount for item in unmet), 999.0)

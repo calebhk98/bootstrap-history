@@ -80,3 +80,12 @@ the solved runs; the households' time split makes offered equal hired) and not f
 Measured cause of the leak, on the stationary fixture: households' cash rises by 41, 76, 24 and 52 thousand in years one to
 four while the producers' cash falls by the same amounts (throwaway probe of `record.book` balances), so savings are not
 returned to producers: this is the leak this complaint is about, and it is what cuts runs year on year (473 Update 8).
+
+## Update: rent and property income at the opening (branch labor-market-economy-stability)
+
+The opening sets land rent by the year's own rule (`opening_rent.settle`, via `land_market.post_rents`), raises prices until the recipes that
+take land cover it (`opening_rent.covering_prices`, `opening._with_covering_prices`), and pays the rent to the households that own the land
+as property income (`opening_rent.property_income_with_rent`); the income figure's rent and profit part is seeded as the first year's
+property income (`opening_income.property_income_of`). Producers pay cash above next year's needs to their owners
+(`firm_finance.payout`), so households' cash is fed by more than wages. The fixed point still has no use for saving. Measure:
+`python3 sim/simulator.py spin-up-trace --fixture stationary --years 50`; not re-measured on a civilisation. Status unchanged.

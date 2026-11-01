@@ -24,15 +24,13 @@ def clear(requests, offers, last_rate=0.12, ceiling=CEILING):
 
 
 class RateAtCeilingCandidateTests(unittest.TestCase):
-    def test_demand_beyond_funds_at_every_rate_prices_at_the_marginal_borrowers_cap_not_the_lenders_ask(self):
+    def test_demand_beyond_funds_at_every_rate_prices_at_the_lenders_ask_not_the_marginal_borrowers_cap(self):
         # lenders ask 0.10, funds 100; demand 300 from borrowers whose caps are all far above the ceiling:
-        # a queue of buyers prices at their cap, so the rate runs to the ceiling with no lender asking for it
+        # the queue is rationed by quantity and the rate stays with the lender, so it never runs to the ceiling
         offers = [funds("lender", 100.0, 0.10)]
         requests = [request("plant_a", 150.0, 1.5), request("plant_b", 150.0, 1.4)]
-        target = credit.clearing_point([(0.10, 100.0)], [(1.5, 150.0), (1.4, 150.0)])
-        self.assertGreater(target, CEILING)
         loans, rate, unmet = clear(requests, offers, last_rate=None)
-        self.assertEqual(rate, CEILING)
+        self.assertAlmostEqual(rate, 0.10)
         self.assertAlmostEqual(sum(loan.principal for loan in loans), 100.0)
         self.assertGreater(sum(left.amount for left in unmet), 0.0)
 
@@ -88,13 +86,13 @@ class RateAtCeilingCandidateTests(unittest.TestCase):
         for gain, outlay in ((1.0, 0.0), (float("inf"), 1.0), (float("nan"), 1.0), (-5.0, 10.0), (1.0, float("inf"))):
             self.assertEqual(credit.earnable_rate(gain, outlay), 0.0)
 
-    def test_the_ceiling_clamp_hides_how_far_the_unclamped_clearing_point_lies(self):  # shape kept: the bound still binds
+    def test_a_borrower_far_above_the_ceiling_does_not_move_the_rate_with_or_without_the_bound(self):
         offers = [funds("lender", 100.0, 0.10)]
         requests = [request("plant_a", 150.0, 3.0)]
         _loans, clamped, _unmet = clear(requests, offers, last_rate=None)
         _loans, free, _unmet = clear(requests, offers, last_rate=None, ceiling=None)
-        self.assertEqual(clamped, CEILING)
-        self.assertGreater(free, 2.0)
+        self.assertAlmostEqual(clamped, 0.10)
+        self.assertAlmostEqual(free, 0.10)
 
 
 if __name__ == "__main__":

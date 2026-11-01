@@ -8,13 +8,16 @@ is unsold, all of them are brought down to a common ask level, each to no lower 
 a seller that undercuts leaves its rivals unsold in turn; the level is the highest at which all of them sell
 out or sit at their floors, found by bisection on whole-market clears. A market with no unsold searchable
 stock clears once, and a seller's ask is moved between years by its stock against the target (ask_adjust.py).
+The mirror runs after it: producers whose buyers were turned away raise their asks to where the buyers still ask for
+the whole stock (demand_search.py).
 """
 import math
 from typing import List, Optional, Sequence, Tuple
 
 from sim.book import ROUNDING_SHARE
 
-from . import goods_market, inventory, seller_offers, titles_value
+from . import demand_search, goods_market, inventory, seller_offers, titles_value
+from .ask_adjust import band_edge
 from .types import Offer
 
 UNSOLD_BOUND_MARGIN = 1e-12    # float noise of two sums of the same demand, not a model number
@@ -42,7 +45,8 @@ def _floors(setup, record, view, offers: Sequence[Offer], original: Sequence[Off
     floors = {}
     for index, offer in enumerate(offers):
         opened = original[index].reservation_price <= 0.0 < offer.reservation_price
-        if offer.quantity <= 0.0 or (offer.reservation_price != original[index].reservation_price and not opened):
+        crowd = seller_offers.stands_for_many(record, offer)      # a crowd's ask is lifted to its expectation, not re-priced
+        if offer.quantity <= 0.0 or (offer.reservation_price != original[index].reservation_price and not opened and not crowd):
             continue
         key = (offer.seller, offer.tile)
         cost = costs[key] if key in costs else seller_offers.unit_cost(setup, record, view, offer)
@@ -125,12 +129,41 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     buyers = goods_market.Buyers(bids, last_price)       # the same bids meet every trial book
     result = goods_market.clear(bids, offers, good, area, currency, last_price, buyers)
     floors = _floors(setup, record, view, offers, original, costs if costs is not None else {})
-    if not floors or not _unsold(_sold_by_offer(result, offers), offers, list(floors)):
-        return offers, result
-    floors = _salvage_floors(floors, offers, buyers)
-    if not floors:
-        return offers, result
-    return search_asks(bids, offers, floors, buyers, good, area, currency, last_price)
+    if floors and _unsold(_sold_by_offer(result, offers), offers, list(floors)):
+        floors = _salvage_floors(floors, offers, buyers)
+        if floors:
+            offers, result = search_asks(bids, offers, floors, buyers, good, area, currency, last_price)
+    return raise_sold_out(record, buyers, bids, offers, result, good, area, currency, last_price,
+                          (setup, view, costs if costs is not None else {}))
+
+
+def ask_limits(setup, record, view, offers: Sequence[Offer], indices: Sequence[int], costs: dict) -> dict:
+    """index -> the most that producer may ask: the top of the band above its unit cost (ask_adjust.band_edge), the same
+    limit its re-pricing and its carried ask keep to. A seller whose cost cannot be priced has no limit."""
+    limits = {}
+    for index in indices:
+        offer = offers[index]
+        key = (offer.seller, offer.tile)
+        cost = costs[key] if key in costs else seller_offers.unit_cost(setup, record, view, offer)
+        if cost is not None and math.isfinite(cost):
+            limits[index] = band_edge(cost, seller_offers.input_share_of_cost(setup, record, view, offer),
+                                      seller_offers.ask_band_multiple(setup, offer))
+    return limits
+
+
+def raise_sold_out(record, buyers: goods_market.Buyers, bids, offers: Sequence[Offer], result, good, area, currency,
+                   last_price: Optional[float], pricing=None) -> Tuple[List[Offer], object]:
+    """(the offers with the producers' asks raised to where they just sell out (demand_search.py), each held to the band
+    above its cost; the market's clearing with them); a market in which buyers were not turned away is returned as it
+    cleared. `pricing` is (setup, view, unit costs by (seller, tile)); without it the asks have no band."""
+    if result.quantity >= result.demand_at_price * (1.0 - ROUNDING_SHARE):
+        return list(offers), result
+    producers = [index for index, offer in enumerate(offers) if offer.quantity > 0.0 and offer.seller in record.producers]
+    limits = ask_limits(pricing[0], record, pricing[1], offers, producers, pricing[2]) if pricing else None
+    raised = demand_search.raise_asks(buyers, offers, producers, limits)
+    if raised == list(offers):
+        return list(offers), result
+    return raised, goods_market.clear(bids, raised, good, area, currency, last_price, buyers)
 
 
 def search_asks(bids, offers: Sequence[Offer], floors: dict, buyers: goods_market.Buyers, good, area, currency,

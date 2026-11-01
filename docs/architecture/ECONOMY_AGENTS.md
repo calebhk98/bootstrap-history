@@ -79,7 +79,9 @@ Complaint 382 lists them.
 (a mint buys metal at parity less its charge and strikes it; the charge is the issuer's seigniorage),
 weighed metal (money is the metal by weight, no issuer), or a commodity (cacao beans). The mint holds
 a real metal stock, sells only what it holds and strikes only what it buys (`mint.py`), so mined metal
-raises the money stock and, with a lag while it sits with savers, prices.
+raises the money stock and, with a lag while it sits with savers, prices. The mint is served first among the metal's
+buyers (`mint.MINT_PRIORITY`: it pays up to the mint price, above the ask, so other buyers cannot leave it rationed to nothing) and
+its yearly capacity counts the wear of the coin it strikes (`yearly_monetisation`).
 
 **The state spends what it raises.** Its revenue buys hours and goods in the same markets as everyone
 (`state_budget.py`); a deficit is covered by its policy's order of borrowing, issuing (fiat) or
@@ -91,10 +93,20 @@ plus, for shares owned, the same share of share wealth over a target (`household
 `Household_determine_consumption_budget`): a household at a steady income does not save out of it. The excess is spent down at a limited pace
 (`WEALTH_DRAWDOWN_LIMIT`, set by the larger of this and last year's income), and a year's spending falls by at most
 a limited share of expected spending (`SPENDING_CUT_LIMIT`), so a swing in the target does not swing demand for
-durables; what they hold
+durables. The cap follows the budget a household placed, not the money a rationed market let it spend
+(`durable_stock.update_expected_spending` takes `planned_spending`), and the share wealth the rule reads is the one recorded at the
+last close, before the year's wages leave the producers' accounts (`households_buffer_stock.share_wealth_carried`); what they hold
 beyond buffer and spending is offered to borrowers. Loans are claims in the lender's wealth
 (`credit_claims.py`): a default is the lender's loss and cuts its spending. Producers borrow for plant,
 merchants for cargo their cash cannot buy, households for a shortfall with income ahead.
+
+**Sellers raise asks when buyers are turned away.** After the unsold search lowers asks to where everything sells
+(`unsold_search.py`), producers whose buyers were turned away raise theirs to the highest common level at which buyers still ask for
+the whole stock, no higher than the buyers could pay (`demand_search.raise_asks`, called by `unsold_search.raise_sold_out`). A sold-out
+seller's expectation is not pulled toward cost (`ask_adjust.regressive_weight`), and a crowd of price takers asks its expected price for
+stock it expects to sell (`seller_offers.expected_ask`). The logit allocation (`goods_market_logit.allocate`) redirects rationed buyers
+to sellers still holding stock, round after round, until no stock is reachable. Credit rations by quantity at the lenders' ask and
+cuts a request the premium prices out to what its pledge bears (`credit_rate.py`, `credit_cap.py`; Complaint 641).
 
 **Demand brings makers.** Where buyers wanted more of a good than was sold, beyond what its makers'
 idle capacity could have added, a recipe the society knows that pays at the price bid starts or grows
@@ -127,6 +139,11 @@ area's anchor, over the site's yield), among tiles with a site and idle hands to
 (`location.py`). Crops grow only on tiles of the climates their data names, and a site-bound recipe stays
 inside the runs and yield geography declares per recipe and tile (`sites.py`); the economy models no
 deposit and reports what it extracted so geography can deplete.
+
+**Producers pay out and shed.** A producer pays its owners the cash above next year's production spending, commitments, plant to
+rebuild and a buffer of its running costs (`firm_finance.cash_to_keep`, `excess_cash`, `payout`). Land rent is a cost of its year
+(`year_ledger.note_rent`), and a producer whose remembered earnings after every cost are negative closes that share of its capacity, no
+more than a year's change in output (`producer_losses.shed_share`).
 
 **Producers leave.** A producer whose year did not cover its costs and plant charge counts a loss year;
 after enough of them, with no variable margin left, it exits: its cash repays its lenders first, the

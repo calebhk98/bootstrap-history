@@ -50,6 +50,7 @@ class OwnPlots:
         self.uncut: Dict[str, Tuple[float, object]] = {}   # cohort -> (income, orders before the cut): the asks of one income share them
         self.extra: Dict[str, float] = {}   # cohort -> spending beyond its income that its purse allows (what its plot frees)
         self.in_kind = 0.0      # budget the cuts freed that the rule cannot spend on the market, since it was last zeroed
+        self.hectares: Dict[str, float] = {}    # cohort -> hectare-years its plot takes, at the last ask
         self.sold: Dict[str, float] = {}    # cohort -> hours it sells at the opening wage, at the last ask
         self.kept_at_home: Dict[str, Tuple[float, float]] = {}   # cohort -> (plan hours, plot hours at the opening wage): neither moves with income
         self.hectares_per_hour = labour_ask_floor.hectares_per_hour_by_recipe(setup.recipes, setup.land_per_run)
@@ -103,6 +104,8 @@ class OwnPlots:
             cohort, idle, self.options, setup.recipes, tile.fertility if tile else 0.0, setup.basket_for(cohort.tile),
             setup.land_per_run, self.held.get(cohort.agent_id, 0.0))
         self.grown[cohort.agent_id] = grown
+        self.hectares[cohort.agent_id] = households_own.plot_hectares(
+            units, self.options, setup.recipes, setup.land_per_run, tile.fertility if tile else 0.0)
         self.sold[cohort.agent_id] = self._sold_hours(cohort, priced, own_work)
         cut = year_goods.less_what_it_grew(orders, cohort, basket, units)
         return cut, math.fsum(bid.budget for bid in orders.bids) - math.fsum(bid.budget for bid in cut.bids)
@@ -127,6 +130,14 @@ class OwnPlots:
     def sold_total(self) -> float:
         """Hours the cohorts sell in all at the opening wage, at the last ask."""
         return math.fsum(self.sold[agent_id] for agent_id in sorted(self.sold))
+
+    def hectares_by_tile(self, cohorts) -> Dict[str, float]:
+        """Hectare-years the cohorts' plots take, by tile, at the last ask."""
+        total: Dict[str, float] = {}
+        for agent_id in sorted(self.hectares):
+            tile = cohorts[agent_id].tile
+            total[tile] = total.get(tile, 0.0) + self.hectares[agent_id]
+        return total
 
     def grown_totals(self) -> Dict[GoodId, float]:
         """Goods the cohorts grow in all, at the last ask."""

@@ -47,7 +47,7 @@ class ImportCostTests(unittest.TestCase):
 
     def test_a_swamped_market_with_neighbours_who_have_enough_spare_hands_stays_near_their_wage_plus_the_move(self):
         wage = vale_wage(state(), {"vale": [Route("dale", MOVING_COST)]})
-        self.assertLess(wage, 2.0 * NEIGHBOUR_WAGE)
+        self.assertLess(wage, 2.5 * NEIGHBOUR_WAGE)      # the thousandth of the hours the spot supplies is priced by the bid
         self.assertGreater(wage, NEIGHBOUR_WAGE)
 
     def test_a_dearer_move_allows_a_higher_wage(self):
@@ -64,7 +64,7 @@ class ImportCostTests(unittest.TestCase):
     def test_hands_beyond_an_empty_area_are_reached_through_it(self):
         routes = {"vale": [Route("glen", MOVING_COST)], "glen": [Route("dale", MOVING_COST)]}
         wage = vale_wage(state(), routes)
-        self.assertLess(wage, 2.0 * NEIGHBOUR_WAGE)
+        self.assertLess(wage, 2.5 * NEIGHBOUR_WAGE)      # the thousandth of the hours the spot supplies is priced by the bid
         self.assertGreater(wage, vale_wage(state(), {"vale": [Route("dale", MOVING_COST)]}))
 
     def test_the_cap_never_undercuts_what_the_workers_ask(self):

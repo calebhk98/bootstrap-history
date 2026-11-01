@@ -86,9 +86,23 @@ class FetchingTrainedHandsBoundsTheWage(unittest.TestCase):
         held = state(healers=1.0, hill_healers=5000.0)
         year_inputs = inputs([hungry(hours=HOURS * 3000.0)], routes={"vale": [Route("hill", 20.0)]})
         fetch = ImportCosts(held, year_inputs).wage("vale", "healer")
+        bound, share = ImportCosts(held, year_inputs).supply("vale", "healer")
         result = settle(held, year_inputs, years=1)
         self.assertIsNotNone(fetch)
-        self.assertLessEqual(result.wage, fetch + 1e-9)
+        self.assertEqual(bound, fetch)
+        # the hands that can be fetched bound the wage; the few hours the spot supplies are priced by the bids
+        self.assertLessEqual(result.wage, share * fetch + (1.0 - share) * 500.0 + 1e-9)
+        self.assertLess(result.wage, 1.2 * fetch)
+
+    def test_hands_that_cannot_fill_the_shortage_still_bound_the_hours_they_can_cover(self):
+        held = state(healers=1.0, hill_healers=5.0)
+        year_inputs = inputs([hungry(hours=HOURS * 3000.0)], routes={"vale": [Route("hill", 20.0)]})
+        costs = ImportCosts(held, year_inputs)
+        self.assertIsNone(costs.wage("vale", "healer"))
+        bound, share = costs.supply("vale", "healer")
+        self.assertGreater(bound, 1.2)
+        self.assertAlmostEqual(share, 5.0 * HOURS / (HOURS * 3000.0))
+        self.assertIsNone(ImportCosts(state(healers=1.0), year_inputs).supply("vale", "healer"))
 
 
 class OwnWorkersOfferMoreHoursAtTheScarcityWage(unittest.TestCase):
@@ -216,6 +230,15 @@ class CeilingFunction(unittest.TestCase):
     def test_an_import_cost_below_the_worth_binds(self):
         self.assertEqual(scarcity.short_run_ceiling(2.0, 1.0, 5.0, [hungry(maximum=9.0)], 3.0), 3.0)
         self.assertEqual(scarcity.short_run_ceiling(2.0, 1.0, 5.0, [hungry(maximum=9.0)], None), 9.0)
+
+    def test_an_import_cost_caps_only_the_share_of_the_hours_that_can_be_fetched(self):
+        # presentation-free rule: the ceiling is the hours-weighted mean of the fetched hours' cost and the local worth
+        bids = [hungry(maximum=9.0)]
+        self.assertEqual(scarcity.short_run_ceiling(2.0, 1.0, 5.0, bids, 3.0, 0.0), 9.0)
+        self.assertAlmostEqual(scarcity.short_run_ceiling(2.0, 1.0, 5.0, bids, 3.0, 0.25), 0.75 * 9.0 + 0.25 * 3.0)
+        self.assertEqual(scarcity.short_run_ceiling(2.0, 1.0, 5.0, bids, 3.0, 1.0), 3.0)
+        # an import cost above the local worth never raises the ceiling
+        self.assertEqual(scarcity.short_run_ceiling(2.0, 1.0, 5.0, bids, 20.0, 0.5), 9.0)
 
 
 if __name__ == "__main__":

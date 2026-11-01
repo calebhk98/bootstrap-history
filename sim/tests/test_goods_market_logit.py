@@ -7,6 +7,8 @@ import math
 import unittest
 
 from sim.economy.goods_market import clear
+from sim.economy.goods_market_demand import DemandSchedule
+from sim.economy.goods_market_logit import allocate
 from sim.economy.price_setting import logit_share
 from sim.economy.types import Bid, Offer
 
@@ -89,6 +91,31 @@ class LogitAllocationTests(unittest.TestCase):
         paid = math.fsum(fill.quantity * fill.price for fill in result.fills if fill.side == "buy")
         received = math.fsum(fill.quantity * fill.price for fill in result.fills if fill.side == "sell")
         self.assertAlmostEqual(paid, received)
+
+
+class FinalPassTests(unittest.TestCase):
+    def test_a_buyer_turned_away_twice_is_served_by_the_seller_still_holding_stock(self):
+        bids = [floor_bid(10.0)]
+        offers = [offer("a", 1.0, 1.0), offer("b", 4.0, 1.0), offer("c", 100.0, 1.0)]
+        allocation = allocate(bids, offers, [1.0, 1.0, 1.0], DemandSchedule(bids))
+        self.assertAlmostEqual(allocation.quantity[0], 10.0)
+        self.assertAlmostEqual(allocation.sold[2], 5.0)
+
+    def test_no_buyer_who_can_reach_a_seller_with_stock_is_left_unserved(self):
+        bids = [floor_bid(6.0, "x"), floor_bid(6.0, "y", maximum_price=1.05), floor_bid(6.0, "z")]
+        offers = [offer("a", 1.0, 1.0), offer("b", 2.0, 1.0), offer("c", 3.0, 1.0), offer("d", 30.0, 1.1)]
+        allocation = allocate(bids, offers, [1.0, 1.0, 1.0, 1.1], DemandSchedule(bids))
+        self.assertAlmostEqual(allocation.quantity[0], 6.0)
+        self.assertAlmostEqual(allocation.quantity[2], 6.0)
+        self.assertAlmostEqual(allocation.sold[0], 1.0)
+        self.assertAlmostEqual(allocation.sold[1], 2.0)
+        self.assertAlmostEqual(allocation.sold[2], 3.0)
+
+    def test_the_final_pass_pays_each_sellers_own_ask(self):
+        bids = [floor_bid(10.0)]
+        offers = [offer("a", 1.0, 1.0), offer("b", 4.0, 1.0), offer("c", 100.0, 1.2)]
+        allocation = allocate(bids, offers, [1.0, 1.0, 1.2], DemandSchedule(bids))
+        self.assertAlmostEqual(allocation.cost[0], allocation.sold[0] + allocation.sold[1] + 1.2 * allocation.sold[2])
 
 
 if __name__ == "__main__":

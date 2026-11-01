@@ -14,19 +14,20 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
 1. **Clearing** (`clearing.py`), per (trade, area).
    - Every worker offers `hours_per_worker_year` at the area's reservation wage:
      `reservation_wage = subsistence_per_worker_year / hours_per_worker_year * (1 + fatality_risk_per_year * value_of_life_years_of_income)`.
-   - Employers bid hours up to a `maximum_wage`. The wage new hires clear at rises a share of the way toward the
+   - Employers bid hours up to a `maximum_wage`. The wage the search rounds start from rises a share of the way toward the
      clearing point each year and falls to it at once (Eurace: an offer only rises, nothing lowers a hired worker's
      wage; the workers' ask falls by `asks.py`, which is the only downward channel).
-   - An employer pays new hires `market_wage * (1 + pay_premium)`, capped at its maximum. Hours go to the highest
-     payers first.
+   - An employer starts at `market_wage * (1 + pay_premium)`, capped at its maximum, and raises its offer each search round
+     while its vacancies stay open (below). Hours go to the highest payers first.
    - Workers who stay with an employer keep their hours and their contracted wage (`contracted_wage`, kept per employer
      in `MarketState.contract_wages`): a surplus of workers does not reprice them, and a raised market wage does not lay
      them off while the employer's maximum still covers the contract. The trade's reported wage (`Clearing.wage`,
-     `MarketState.wages`) is the hours-weighted mean of contracts and new hires; `Clearing.new_hire_wage` is the new hires' own. New hires come from the year's search rounds
+     `MarketState.wages`) is the hours-weighted mean of contracts and new hires; `Clearing.new_hire_wage` is the new hires' own: the
+     hours-weighted mean of the offers actually paid (`clear_one`, from the hours `hire_through_rounds` returns). New hires come from the year's search rounds
      (`applications.py`, Eurace's protocol): each round every employer dismisses a random share of its workers and reposts
      the vacancies; searchers (the unretained, and the dismissed asking the wage they were paid) apply to a bounded number
      of employers whose offer is at or above their ask; an employer takes on as many hours as it has vacancies; a searcher
-     takes the highest offer; searchers who found nothing cut their ask. Recruitment friction is the bounded
+     takes the highest offer; searchers who found nothing cut their ask; an employer whose vacancies stay open raises its offer. Recruitment friction is the bounded
      applications and the dismissals, not a fitted rate. A premium raises the offer, so it wins the acceptance, and lets
      the employer draw workers from lower payers.
 2. **Attrition.** A share of workers and trainees leave work each year (deaths, retirement; demography's number).
@@ -47,8 +48,13 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
    - `income_at_graduation` is the floor plus what the wage the market is heading to
      (`Clearing.target_wage`: where hours offered meet hours wanted, not the sticky wage) pays over the
      trade's own reservation wage, so danger pay is not a reward. It keeps today's premium only for the
-     part of today's shortage that those already training will not fill. A glut shows the floor, however
-     high the lagging wage still is.
+     part of today's shortage that those already training will not fill. Where there is no shortage today, only the share of
+     hours employers want finds work (`finds_work`, as in `expected_income`): a glut shows the floor, however high the lagging wage
+     still is.
+   - Hands that have joined a trade needing no training since its clearing (entrants, switchers and migrants take it up at
+     once, so no trainee count shows them) are hours offered too: `income_at_graduation` slides the heading wage down the
+     clearing's demand schedule (`Clearing.demand`) and counts them in the supply then (`expectations.hours_arrived_since`).
+     Without it a thin unskilled market that cleared at its dearest bid drew a twentieth of the whole area's workers in one year.
    - A trade's expected income today (`expected_income`) is Harris-Todaro: the hours that find work earn
      the average wage, the rest earn the outside option. The chance of finding work is hours wanted over
      hours offered, so a few unfilled hours beside idle hands (matching friction) are not a sure job.
@@ -62,6 +68,8 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
      switchers also choose in rounds. Weighing a trade that has workers by its pay today made a shortage
      the apprentices would fill still draw switchers and flooded it.
    - Switchers become trainees of the new trade and use the same intake.
+   - A trade's workers who sold no hours this year reconsider at the share that found no work, if that is over the
+     yearly consideration share: only those without work look about.
 6. **Migration** (`migration.py`). Workers re-weigh their area against the routes out of it, with a stay option.
    - The comparison is the log of real expected wage (expected wage over subsistence) in the same trade, less the moving cost in years of subsistence.
    - Only listed routes are considered, so the cost is areas × routes × trades.
@@ -74,7 +82,9 @@ into another, and a test checks that people are conserved.
 Training takes years, so a trade whose employers bid far above the cost of training a substitute pays a scarcity
 wage this year. `scarcity.py` bounds it: no training needed means the long-run cost (`clearing.trained_substitute_wage`,
 the unskilled wage times the training premium); otherwise the hours-weighted worth of the bids (one stray bid with few
-hours does not set it), and where trained hands can be fetched, no more than `ImportCosts` says. Fetching counts
+hours does not set it), and where trained hands can be fetched, `ImportCosts.supply` gives the bound and the share of the hours wanted that can come at it.
+The ceiling is the mean of the bid worth and the bound-capped worth weighted by that share (`short_run_ceiling`), so it follows the hours
+that can be fetched instead of switching on once they cover the whole shortage. Fetching counts
 only the hours workers sell at the wage (`hours_share_at`), here and where the hands come from: hours kept for plots
 and leisure are not hands in hand, so an area whose workers sell nothing at the going wage has its shortage priced by
 what fetching costs, not by the dearest bid (an unskilled wage that jumped to a plot's worth and pulled every skilled
@@ -83,6 +93,16 @@ switchers weigh is the clearing's `target_wage`, capped at the long-run cost: a 
 training years, when the shortage the apprentices fill is gone. A worker already in the trade reads today's wage
 (`expected_income`) and offers more hours at it through `hours_share_at`. A switcher into a trade also trains, so it
 reads `income_at_graduation`; a faster move within a skill family is only the shorter retraining in `switching.py`.
+
+## Hours bid for and not hired
+
+Two rules in the search loop of `applications.py` keep hours from sitting idle beside open vacancies:
+- An employer whose vacancies stay open (over `VACANCY_SHARE_THRESHOLD` of the hours it wants) raises its offer each round by
+  `WAGE_UPDATE_PER_ROUND` (Eurace's `Firm_update_wage_offer`, `raised_offer`), not past `offer_ceilings`: what its least valuable
+  wanted tranche is worth to it, the short-run ceiling and the clearing point. An offer is never lowered, and there is no separate
+  yearly raise. The offers end as the mean paid to the hours each employer took on.
+- A searcher's ask is capped at the best offer an employer with a vacancy posts (`capped_asks`): a seller does not ask
+  more than any buyer is seen to pay, as `asks.record` already holds for the market's ask.
 
 ## Paying above the market
 

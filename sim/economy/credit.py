@@ -7,14 +7,14 @@ credit_claims counts in its wealth, is lost and the borrower's debt is gone. A l
 wealth spends and lends less, and may itself fall behind on what it owes, so a cascade follows from
 ordinary rules; credit_claims also keeps the defaulter's record for the next premium.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import math
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import bank_credit_risk
-from .labour import Entry, allocate_in_order, clearing_point, sticky_move
+from . import bank_credit_risk, credit_cap, credit_rate
+from .labour import Entry, allocate_in_order, sticky_move
 from .types import AgentId, CurrencyId, FundsOffer, Loan, LoanRequest, Transfer
 from .replaced import replaced
 
@@ -101,6 +101,7 @@ class Clearing:
                                          # from the last clearing (None when there was none), never a bid or an ask
     unmet: List[LoanRequest]
     cause: Optional[str] = None          # why nothing could clear, when nothing did
+    limited: Mapping[AgentId, str] = field(default_factory=dict)   # borrowers funded for less than they asked, and why (credit_cap)
 
 
 def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currency: CurrencyId,
@@ -134,6 +135,21 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
     offers = [offer for offer in offers if offer.currency == currency and offer.amount > 0]
     if not offers:
         return Clearing([], last_rate, list(requests), NO_OFFERS)      # borrowers' bids alone are not a price
+    asked_amount = {}
+    limited: Dict[AgentId, str] = {}
+    lowest_offered = min(offer.minimum_rate for offer in offers)
+    cut = []
+    for request in requests:
+        # a request the premium on its whole amount prices out is funded for the most its collateral bears
+        taken = credit_cap.fundable_amount(request.amount, existing_debt_by_borrower.get(request.borrower, 0.0),
+                                           request.collateral_value, arrears_by_borrower.get(request.borrower, 0.0),
+                                           request.maximum_rate, max(0.0, lowest_offered), risk_premium)
+        if 0.0 < taken < request.amount:
+            asked_amount[(request.borrower, request.purpose, taken)] = request.amount
+            limited[request.borrower] = credit_cap.COLLATERAL_BOUND
+            request = replaced(request, amount=taken)
+        cut.append(request)
+    requests = cut
     premiums = [risk_premium(existing_debt_by_borrower.get(request.borrower, 0.0) + request.amount,
                              request.collateral_value, arrears_by_borrower.get(request.borrower, 0.0))
                 for request in requests]
@@ -146,9 +162,9 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
     lowest_ask = min((offer.minimum_rate for offer in offers), default=None)
     entry_floor = max(0.0, lowest_ask) if lowest_ask is not None else 0.0
     able = [ceiling >= entry_floor for ceiling in ceilings]
-    target = clearing_point([(offer.minimum_rate, offer.amount) for offer in offers],
-                            [(ceiling, request.amount) for ceiling, request, can in zip(ceilings, requests, able)
-                             if can])
+    target = credit_rate.base_rate_target([(offer.minimum_rate, offer.amount) for offer in offers],
+                                          [(ceiling, request.amount) for ceiling, request, can in zip(ceilings, requests, able)
+                                           if can])
     if not any(able):       # lenders alone are not a price either
         return Clearing([], last_rate, list(requests), NO_BORROWER_AT_ASK)
     base_rate = sticky_move(last_rate, target, RATE_ADJUSTMENT_SHARE_PER_YEAR)
@@ -218,10 +234,10 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
             granted[index] += piece
     unmet = []
     for index, request in enumerate(requests):
-        left = request.amount - granted.get(index, 0.0)
+        left = asked_amount.get((request.borrower, request.purpose, request.amount), request.amount) - granted.get(index, 0.0)
         if left > 1e-9:
             unmet.append(replaced(request, amount=left))
-    return Clearing(loans, base_rate, unmet)
+    return Clearing(loans, base_rate, unmet, limited=limited)
 
 
 def disbursements(loans: Sequence[Loan]) -> List[Transfer]:

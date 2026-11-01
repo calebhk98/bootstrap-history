@@ -9,6 +9,7 @@ from typing import Dict, Tuple
 from . import credit, entry_practice, location, ownership, practice, sites, unit_cost
 from .entry_backed import unfilled_at_cost
 from .entry_margin import margin_entry_plans
+from .entry_spare import idle_runs
 from .entrant_rent import site_rent_per_run
 from .entry_trial import trial_entry_plans
 from .entry import (ENTRANT_OWNER_STAKE_SHARE, UnmetDemand, entrant_loan, entry_plans, gap_beyond_spare,
@@ -152,11 +153,11 @@ def _spare_output(setup, record, view) -> Dict[Tuple[str, str], float]:
     for producer in sites.in_id_order(record.producers):
         recipe = setup.recipes[producer.recipe_id]
         # capacity waiting on a plant loan counts too, so one gap does not bring a newcomer every year
-        idle_runs = (producer.capacity_runs - max(0.0, producer.last_runs)
-                     + record.expansion_runs.get(producer.agent_id, 0.0))
-        if idle_runs <= 0.0:
+        idle = idle_runs(producer.capacity_runs, producer.last_runs, record.expansion_runs.get(producer.agent_id, 0.0),
+                         producer.land_run_cap)
+        if idle <= 0.0:
             continue
         for good, made in recipe.outputs.items():
             key = (good, view.area_of(good, producer.tile))
-            spare[key] = spare.get(key, 0.0) + idle_runs * made * producer.yield_factor
+            spare[key] = spare.get(key, 0.0) + idle * made * producer.yield_factor
     return spare

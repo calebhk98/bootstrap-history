@@ -16,6 +16,14 @@ class DurableStockTests(unittest.TestCase):
         self.assertGreater(later, 100.0)
         self.assertLess(later, 200.0)
 
+    def test_a_year_of_bids_the_shops_could_not_fill_still_counts_as_the_spending_planned(self):
+        # the household bid 100 and 30 of it was rationed away: the spending it expects stays at what it set out to spend
+        self.assertEqual(durable_stock.update_expected_spending(100.0, 70.0, planned=100.0), 100.0)
+        # nothing planned (a household with no orders this year) leaves the update on what was spent
+        self.assertEqual(durable_stock.update_expected_spending(100.0, 70.0), durable_stock.update_expected_spending(100.0, 70.0, planned=0.0))
+        # planned below spent never lowers the year's spending
+        self.assertEqual(durable_stock.update_expected_spending(100.0, 70.0, planned=50.0), 100.0 + durable_stock.EXPECTED_SPENDING_ADJUSTMENT * (70.0 - 100.0))
+
     def test_a_spending_jump_scales_the_flow_down(self):
         self.assertLess(durable_stock.expected_flow_scale(100.0, 200.0), 1.0)
         self.assertEqual(durable_stock.expected_flow_scale(0.0, 200.0), 1.0)

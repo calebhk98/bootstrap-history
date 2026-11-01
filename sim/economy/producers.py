@@ -29,6 +29,7 @@ from .protocols import MarketView
 from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, GoodSpec, GoodsMove, LabourBid,
                     Offer, Recipe, TileId)
 from .replaced import replaced
+from .staffed_runs import change_anchor
 
 EXPECTATION_ADJUSTMENT_SHARE = declare(
     "EXPECTATION_ADJUSTMENT_SHARE", 0.5, kind="temporary_heuristic",
@@ -94,6 +95,7 @@ class Producer:
     net_earnings_history: Tuple[float, ...] = ()   # its last years' net earnings, oldest first (firm_finance.py)
     revenue_history: Tuple[float, ...] = ()        # its last years' revenue, oldest first
     idle_years: int = 0                     # years it stays idle after a bankruptcy: no runs, no dividend
+    staffed_runs: float = -1.0              # runs the hands it hired last year could have worked; below zero when unknown
     crew_runs: Mapping[str, float] = field(default_factory=dict)   # runs its crew has made, by trade (practice.py); a trade absent is an established crew
 
 
@@ -248,8 +250,11 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
     break_even, input_share = _break_even_scale(producer, recipe, view, updated, live_inputs, wages)
     cost_covering = {good: updated[good] * break_even for good in latest_prices} if break_even is not None else {}
     if break_even is not None:
+        worked = set(ask_adjust.worked_outputs(producer, recipe))
         for good in latest_prices:
-            updated[good] += REGRESSIVE_EXPECTATION_WEIGHT * (updated[good] * break_even - updated[good])
+            gap = (ask_adjust.stock_gap(ask_adjust.unsold_stock(producer, recipe, view, good), ask_adjust.target_of(producer, recipe, good))
+                   if good in worked else 0.0)
+            updated[good] += ask_adjust.regressive_weight(REGRESSIVE_EXPECTATION_WEIGHT, gap) * (updated[good] * break_even - updated[good])
     for good in sorted(bare_quotes & set(cost_covering)):
         updated[good] = held_to_band(updated[good], producer.expected_prices.get(good), cost_covering[good], input_share)
     for good in ask_adjust.worked_outputs(producer, recipe):
@@ -327,7 +332,8 @@ def within_a_years_change(producer: Producer, runs: float) -> float:
     if producer.last_runs < 0.0:
         return runs
     step = OUTPUT_CHANGE_SHARE_PER_YEAR * producer.capacity_runs
-    return max(producer.last_runs - step, min(producer.last_runs + step, runs))
+    anchor = change_anchor(producer.last_runs, min(producer.staffed_runs, producer.capacity_runs))
+    return max(anchor - step, min(anchor + step, runs))
 
 
 def next_years_runs_ceiling(producer: Producer) -> float:

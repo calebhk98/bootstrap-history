@@ -31,6 +31,12 @@ sides would agree to.
 - Tests: `test_economy_lender_ask.py`, `test_economy_banks.py`, `test_economy_credit.py`, `test_economy_credit_real_rate.py`,
   `test_economy_credit_rate_at_ceiling.py`, `test_economy_credit_rate_below_asks.py`, `test_economy_credit_eurace.py`.
 
+- `sim/economy/credit_rate.py`: where borrowers queue for scarce funds the base rate is the dearest ask among the
+  lenders who lend (those holding `MATERIAL_LENDER_SHARE` of the funds or more), not the cap of the last borrower in
+  the queue; the queue is rationed by quantity. Before it, a few units of lendable money set the market rate at
+  whichever borrower's affordability cap stood last, so the fixture's rate swung between its floor and the ceiling and
+  Rome's sat at the ceiling (473). Probe: `Complaints/reports/641-rate-probe.md` style, fixtures `small` and `stationary`.
+
 ## What is wrong now
 
 - Land yield has no live input: no title is bought or sold at a price (`titles_value` capitalises rent at the live rate, so
@@ -55,3 +61,11 @@ sides would agree to.
 Feed the two alternatives (titles at a price, a state bond reachable by households), re-measure the opening rate, and retire
 `RATE_FLOOR_SHARE` if the lenders' floor now does its job. Tests call the ask and clearing functions with built offers: a
 glut leaves the rate at the lenders' floor, not zero; a lender with past losses asks more.
+
+## Update: requests cut to what the pledge bears
+
+`sim/economy/credit.py` `clear_with_cause`: a request the premium on its whole amount prices out is funded for the most its
+  pledge bears (`credit_cap.fundable_amount`, bisection on the premium) instead of refused; the borrower is marked in
+  `Clearing.limited` (`collateral_bound`) and the rest stays unmet. A working-capital request pledges the producer's cash, the
+  goods it holds and its plant, not the loan itself (`producers_working_capital.pledgeable_assets`, `request`).
+  Not re-measured on a civilisation; fixtures: `python3 sim/simulator.py spin-up-trace --fixture small --years 50` (the `rate` column).

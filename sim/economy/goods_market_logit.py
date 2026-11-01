@@ -8,11 +8,12 @@ Cons_Goods/Mall_functions.c, Mall_update_mall_stocks_sales_rationing_1 and _2:
     draw: price_setting.choice_shares, the function sellers plan with);
   * a seller whose requests exceed its stock serves each by stock / requests (here lower priority tiers first, then
     pro rata, as goods_market_ration.ration does);
-  * round 2: a household that was rationed does the same among the sellers still holding stock, with the budget it has
-    left, and is rationed again if need be; there is no third round, so what is left is unmet.
+  * round 2 and on: a household that was rationed does the same among the sellers still holding stock, with the budget
+    it has left, and is rationed again if need be, until no rationed household can reach a seller with stock (Eurace
+    stops after round 2; here a buyer walks on to the next stall that has stock).
 Eurace's households have one budget and no price-sensitive quantity; here a buyer's quantity at an ask is its schedule's
 (Bid, goods_market.quantity_at), so a request is the buyer's quantity at that ask times its share, and in round 2 it is
-the quantity unmet, limited by the money unspent and by what the schedule still wants at the new ask. A buyer does not
+the quantity unmet, limited by the budget unspent and by what the schedule still wants at the new ask. A buyer does not
 choose a seller asking above its maximum price (Eurace has no such ceiling; the seller would only be sent buyers who
 cannot take it).
 """
@@ -80,7 +81,7 @@ def _serve(requests: numpy.ndarray, left: numpy.ndarray, tiers: List[Tuple[int, 
 
 
 def allocate(bids: Sequence[Bid], offers: Sequence[Offer], asks: Sequence[float], schedule: DemandSchedule) -> Allocation:
-    """Two rounds of choice among `offers` (asking `asks`, ascending) by `bids` (in tier order, `schedule` their demand)."""
+    """Rounds of choice among `offers` (asking `asks`, ascending) by `bids` (in tier order, `schedule` their demand)."""
     prices = numpy.array(asks, dtype=float)
     quantities = numpy.array([offer.quantity for offer in offers], dtype=float)
     ceilings = schedule.maximum_array()
@@ -100,16 +101,21 @@ def allocate(bids: Sequence[Bid], offers: Sequence[Offer], asks: Sequence[float]
     taken = served.sum(axis=0)
     cost = prices @ served
     unmet = short.sum(axis=0)
-    unmet_money = prices @ short
+    budgets = numpy.array([bid.budget for bid in bids], dtype=float)
 
-    stocked = left > ROUNDING_SHARE * quantities
-    if stocked.any() and (unmet > 0.0).any():
+    # Each further round redirects what the last could not serve, among the sellers still holding stock; a round that
+    # leaves requests short has emptied a seller, so the loop ends within one round per seller.
+    for _round in range(len(offers)):
+        stocked = left > ROUNDING_SHARE * quantities
+        if not stocked.any() or not (unmet > 0.0).any():
+            break
         weights, sums = _weights(prices, stocked, ceilings)
         with numpy.errstate(all="ignore"):
-            again = numpy.minimum(unmet[None, :], unmet_money[None, :] / prices[:, None])
+            again = numpy.minimum(unmet[None, :], numpy.maximum(0.0, budgets - cost)[None, :] / prices[:, None])
         again = numpy.minimum(again, numpy.maximum(0.0, wants - taken[None, :]))
         again[:, unmet <= 0.0] = 0.0
-        served, left, _short = _serve(again * weights[:, None] / sums[None, :], left, tiers)
+        served, left, short = _serve(again * weights[:, None] / sums[None, :], left, tiers)
         taken = taken + served.sum(axis=0)
         cost = cost + prices @ served
+        unmet = short.sum(axis=0)
     return Allocation(taken.tolist(), cost.tolist(), (quantities - left).tolist(), requested)

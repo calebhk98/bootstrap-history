@@ -14,11 +14,12 @@ from typing import Callable, Collection, List, Mapping, Optional, Sequence, Tupl
 
 from sim.constants import declare
 
-from . import credit, idle_capacity, inventory, plant_investment, unit_cost
-from .producers import (OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, expected_output_prices, live_input_prices,
+from . import capacity_growth, credit, equity, firm_finance as finance, producer_losses, idle_capacity, inventory, plant_investment, producers_working_capital, unit_cost
+from .producers import (EXPECTATION_ADJUSTMENT_SHARE, OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, expected_output_prices, live_input_prices,
                         live_wages, next_expectations, runs_for_stock, share_working, within_a_years_change)
 from .protocols import MarketView
 from .types import AgentId, GoodId, LoanRequest, Recipe, TileId, Transfer
+from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .replaced import replaced
 
 LOSS_YEARS_BEFORE_EXIT = declare(
@@ -39,7 +40,6 @@ CLOSED_CAPACITY_SHARE = declare(
     why="A producer leaves at once only when next to no workplace in its market could cover its variable cost "
         "at the prices it expects; while some could, the rest close at the pace workplaces change and the "
         "market keeps the makers it has. Below this share the sliver stands for no market at all.")
-WORKING_CAPITAL_PURPOSE = "working capital"     # a loan for next year's running costs, never for plant
 
 
 @dataclass(frozen=True)
@@ -62,12 +62,17 @@ def working_capital_target(recipe: Recipe, capacity_runs: float, input_prices, w
 def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float, view: MarketView,
                worked_runs: Optional[float] = None,
                price_share_after: Optional[Callable[[GoodId, float], float]] = None,
-               ground_goods: Collection[GoodId] = (), service_lives: Optional[Mapping[GoodId, float]] = None) -> YearClose:
+               ground_goods: Collection[GoodId] = (), service_lives: Optional[Mapping[GoodId, float]] = None,
+               interest: float = 0.0, demand_runs: Optional[float] = None) -> YearClose:
     """`worked_runs` is what the producer ran this year (all its capacity when not given). Idle plant is
     sunk, so the year's capital charge falls only on the capacity worked. `price_share_after(good, added)` is
     the share of a good's price that remains when the producer adds that much output a year (expansion_price.py);
     without it the producer expects the price it sees. `service_lives` maps a good to the years it lasts: idle
-    capacity with tools wears at theirs (idle_capacity.py)."""
+    capacity with tools wears at theirs (idle_capacity.py). `interest` is what the producer's loans cost it a year:
+    with the rent, wages, inputs and wear it makes the year's net earnings, and a producer whose remembered earnings
+    are negative closes that share of its capacity (producer_losses.py), whatever its expected margin says. With
+    `demand_runs` (the runs its buyers called for this year, unmet demand included), a producer with no plant to build
+    whose runs pay and who lost nothing grows toward the sales it will expect (capacity_growth.py)."""
     first_output = min(recipe.outputs)
     currency = view.currency_of(view.area_of(first_output, producer.tile))
     rate = view.interest_rate(currency)
@@ -108,12 +113,21 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
                                  (1.0 - OUTPUT_CHANGE_SHARE_PER_YEAR) * producer.capacity_runs))
         needed = producer.expected_sales / paying if paying > 0.0 else producer.capacity_runs
         capacity = max(shed, min(capacity, needed))
+    depreciation = wear * unit_cost.plant_value_per_run(recipe, inputs, wages) if has_plant else 0.0
+    earnings = finance.net_earnings(revenue, costs, interest, depreciation if math.isfinite(depreciation) else 0.0)
+    lost = producer_losses.shed_share(finance.appended(producer.net_earnings_history, earnings),
+                                      finance.appended(producer.revenue_history, revenue))
+    capacity = min(capacity, producer.capacity_runs * (1.0 - lost))
+    if demand_runs is not None and not has_plant and not shedding and lost <= 0.0:
+        expected = demand_runs if producer.expected_sales <= 0.0 else (
+            producer.expected_sales + EXPECTATION_ADJUSTMENT_SHARE * (demand_runs - producer.expected_sales))
+        capacity = capacity_growth.grown_capacity(capacity, expected, paying, OUTPUT_CHANGE_SHARE_PER_YEAR)
     target = working_capital_target(recipe, capacity, inputs, wages)
     replacement, growth = _investment(producer, recipe, view, capacity, worked, cost_per_run, wear if has_plant else 0.0)
     request, grown = _expansion(producer, recipe, view, currency, rate, growth, inputs, wages, price_share_after)
     if request is None:
         request = _working_capital(producer, recipe, currency, worked, capacity, min(cash, target), paying,
-                                   revenue_per_run, inputs, wages)
+                                   revenue_per_run, inputs, wages, _pledgeable(producer, recipe, view, cash, capacity))
     survivor = replaced(producer, capacity_runs=capacity, years_of_loss=losses,
                        expected_prices=expectations, cash_target=target)
     surplus = max(0.0, cash - target)
@@ -148,21 +162,29 @@ def _behind_the_stock(producer, recipe, view, prices, ground_goods):
         for good, price in prices.items()}
 
 
-def _working_capital(producer, recipe, currency, worked, capacity, cash_kept, paying, revenue_per_run, inputs, wages):
+def _working_capital(producer, recipe, currency, worked, capacity, cash_kept, paying, revenue_per_run, inputs, wages, assets=0.0):
     """A one-year loan for the running cost of the runs next year's plan will smooth toward but the cash kept
     cannot pay for, at no more than the yearly return those runs earn on that cost. None when a run earns
     nothing or the cash covers them."""
     paid_now = unit_cost.variable_cost_per_run(recipe, inputs, wages)
     if not math.isfinite(paid_now) or paid_now <= 0.0 or revenue_per_run <= paid_now:
         return None
-    smoothed = within_a_years_change(replaced(producer, last_runs=worked, capacity_runs=capacity),
+    smoothed = within_a_years_change(replaced(producer, last_runs=worked, staffed_runs=-1.0, capacity_runs=capacity),
                                      capacity * paying)
     short_runs = smoothed - cash_kept / paid_now
     if short_runs <= 0.0:
         return None
     amount = short_runs * paid_now
-    return LoanRequest(producer.agent_id, currency, amount, credit.earnable_rate(revenue_per_run - paid_now, paid_now), 1.0, amount,
-                       WORKING_CAPITAL_PURPOSE)
+    return producers_working_capital.request(producer.agent_id, currency, amount,
+                                             credit.earnable_rate(revenue_per_run - paid_now, paid_now), assets)
+
+
+def _pledgeable(producer, recipe, view, cash, capacity) -> float:
+    """What stands behind a working-capital loan: the cash, the goods the producer holds at its tile and its plant."""
+    area_of = view.area_of
+    goods = [(view.price(good, area_of(good, producer.tile)), view.stock(producer.agent_id, good, producer.tile))
+             for good in sorted(set(recipe.inputs) | set(recipe.outputs))]
+    return producers_working_capital.pledgeable_assets(cash, goods, equity.plant_value(replaced(producer, capacity_runs=capacity), recipe, view))
 
 
 def _dividend(producer: Producer, currency: str, amount: float) -> Tuple[Transfer, ...]:
@@ -179,7 +201,7 @@ def _investment(producer, recipe, view, capacity, worked, cost_per_run, wear) ->
     if recipe.plant_life_years <= 0.0:
         return 0.0, 0.0
     wanted = runs_for_stock(producer, recipe, view, cost_per_run, expected_output_prices(producer, recipe, view) or {})
-    planned = within_a_years_change(replaced(producer, last_runs=worked, capacity_runs=producer.capacity_runs),
+    planned = within_a_years_change(replaced(producer, last_runs=worked, staffed_runs=-1.0, capacity_runs=producer.capacity_runs),
                                     worked if math.isinf(wanted) else wanted)
     return plant_investment.split(plant_investment.investment_runs(planned, capacity, wear), wear)
 

@@ -115,6 +115,8 @@ class Clearing:
     average_wage: float
     new_hire_wage: Optional[float] = None   # the wage hours hired new this year cleared at, before any premium (`wage` is the mean over all hours held, contracts included); none: the wage
     target_wage: Optional[float] = None   # where the wage is heading: toward the price where offered meets wanted hours, scaled by the imbalance; none: the wage
+    hours_held: Optional[float] = None    # every hour the trade's workers here had at the clearing, sold or kept; none: not recorded
+    demand: Tuple[Tuple[float, float], ...] = ()   # (maximum wage, hours) of each bid, the schedule the heading wage slides along as hands arrive
 
     @property
     def entry_wage(self) -> float:

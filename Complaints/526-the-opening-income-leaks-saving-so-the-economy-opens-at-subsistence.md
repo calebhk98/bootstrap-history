@@ -115,3 +115,12 @@ Test migration (rule-tests-04): `economy_state_budget_validation` is deleted (th
 and expectations, more printing raising it further: each read the opened England economy over years and could not name a rule). Printing adds exactly the
 deficit to the supply and the state's purse in `test_economy_agent_state`. `python3 sim/simulator.py economy-check --civs england_1300 --years 8` prints
 the price level and money supply by year.
+
+## Update: rent and property income at the opening (branch labor-market-economy-stability)
+
+The opening sets land rent by the year's own rule (`opening_rent.settle`, via `land_market.post_rents`), raises prices until the recipes that
+take land cover it (`opening_rent.covering_prices`, `opening._with_covering_prices`), and pays the rent to the households that own the land
+as property income (`opening_rent.property_income_with_rent`); the income figure's rent and profit part is seeded as the first year's
+property income (`opening_income.property_income_of`). Producers pay cash above next year's needs to their owners
+(`firm_finance.payout`), so households' cash is fed by more than wages. The fixed point still has no use for saving. Measure:
+`python3 sim/simulator.py spin-up-trace --fixture stationary --years 50`; not re-measured on a civilisation. Status unchanged.

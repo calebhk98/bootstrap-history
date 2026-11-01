@@ -9,8 +9,9 @@ import dataclasses
 import math
 from typing import Dict, List, Tuple
 
-from . import (land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
+from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
+from . import goods_respend, goods_respend_year
 from .household_work_year import basket_key, cohort_basket
 from .market_memory import market_key
 from .offered_price import offered_price
@@ -61,6 +62,8 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
                                          basket, setup.specs, priced,
                                          smooth_rise=not record.settling, shared_store=store_by_tile)
         orders = less_what_it_grew(orders, cohort, basket, ledger.grown_units.get(cohort.agent_id))
+        record.cohorts[cohort.agent_id] = dataclasses.replace(
+            cohort, planned_spending=sum(bid.budget for bid in tool_bids) + sum(bid.budget for bid in orders.bids))
         if own_options:
             savings = sum(offer.amount for offer in orders.funds_offers)     # only what it would otherwise lend
             orders = land_bid_year.with_land_bids(orders, land_bid_year.land_bids(
@@ -155,6 +158,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     listed = set(order)
     order += sorted({good for good, _area in order_book} - listed)
     done, cleared, traded = set(), set(), set()
+    left_markets = {}
     costs = None                                  # what each good costs to make, worked out when first needed
     in_kind = [form for form in setup.tax_forms if form.paid_in]
     plant_goods = {producer_id: set(setup.recipes[producer.recipe_id].plant_goods)
@@ -186,6 +190,9 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                     ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
             ledger.note_clearing(result)
             ledger.bids_by_market[(good, area)] = bids
+            left_markets[(good, area)] = goods_respend_year.LeftMarket(
+                bids, result, goods_respend.offers_left(offers, goods_respend_year.sold_by_seller(result)),
+                record.memory.prices.get(key))
             if area in kept:
                 record.curves[key] = market_curves.summarize(bids, offers)
             unmet = unmet_quantity(bids, result.price, result.quantity)
@@ -197,7 +204,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             if result.quantity > 0.0:
                 usual = record.memory.volume_weights.get(key, 0.0)
                 reference = memory_reference_volume(usual, wanted_at(bids, old))
-                signal = price_after_trade(old, key in record.memory.quote_kinds, result.price, result.quantity, reference,
+                signal = price_after_trade(old, key in record.memory.quote_kinds, _received_price(setup, record, good, result),
+                                           result.quantity, reference,
                                            quiet_years + dry_years)
                 if result.quantity < REPRESENTATIVE_TRADE_SHARE * usual:
                     if costs is None:
@@ -226,9 +234,19 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             cleared.add(key)
             if delivered > 0.0:
                 traded.add(key)
+    goods_respend_year.respend(setup, record, view, ledger, left_markets,
+                               lambda cohort: cohort_basket(setup, record, cohort))
     for key in sorted(set(record.memory.volume_weights) - cleared):
         record.memory.note_volume(key, 0.0)
     record.memory.note_trading(traded)
+
+
+def _received_price(setup, record, good, result) -> float:
+    """The price a market's sellers got per unit: the settled price, plus the mint's top-up where it bought coin metal."""
+    spec = record.currency
+    if not currency.has_mint(spec) or good != spec.backing_good:
+        return result.price
+    return mint_price.received_price(result.price, mint_price.mint_bought(result.fills), currency.mint_price(spec), result.fills)
 
 
 def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years):

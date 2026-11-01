@@ -51,7 +51,7 @@ class ShedOnCostNotYearsTests(unittest.TestCase):
 
     def test_a_producer_whose_sales_cover_cost_is_never_shed_whatever_its_years_of_loss(self):
         producer = farmer(capacity_runs=10.0, years_of_loss=50)
-        result = producers_close.close_year(producer, FARM, 10.0, 100.0, farm_view(2.0), 5.0)
+        result = producers_close.close_year(producer, FARM, 150.0, 100.0, farm_view(2.0), 5.0)
         self.assertFalse(result.exited)
         self.assertAlmostEqual(result.producer.capacity_runs, 10.0)
 
@@ -60,8 +60,8 @@ class ShedOnCostNotYearsTests(unittest.TestCase):
         view = farm_view(0.5)
         needed = farmer(capacity_runs=10.0, expected_sales=9.0, last_runs=9.0)
         idle = farmer(capacity_runs=10.0, expected_sales=0.0, last_runs=1.0)
-        kept = producers_close.close_year(needed, FARM, 3.0, 70.0, view, 9.0).producer.capacity_runs
-        shed = producers_close.close_year(idle, FARM, 3.0, 70.0, view, 1.0).producer.capacity_runs
+        kept = producers_close.close_year(needed, FARM, 100.0, 70.0, view, 9.0).producer.capacity_runs
+        shed = producers_close.close_year(idle, FARM, 100.0, 70.0, view, 1.0).producer.capacity_runs
         self.assertAlmostEqual(kept, 10.0)
         self.assertLess(shed, kept)
 

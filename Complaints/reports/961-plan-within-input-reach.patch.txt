@@ -1,0 +1,315 @@
+From 1fec32ecc98a6e19ddc6d91c2faeb23bc6460719 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 15:40:06 +0000
+Subject: [PATCH] Producers plan runs no further than their hard inputs reach
+
+A producer holds its runs to what it holds plus what it can expect to buy: last year's fill where its order fell short, nothing where the market has nothing on offer, no limit where the order was filled in full. Labour and input bids follow the capped runs.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WXrfievykJ3StG4swPtute
+---
+ sim/economy/input_reach.py    |  81 ++++++++++++++++++++
+ sim/economy/producers.py      |   4 +-
+ sim/economy/year_close.py     |   7 +-
+ sim/tests/test_input_reach.py | 139 ++++++++++++++++++++++++++++++++++
+ 4 files changed, 228 insertions(+), 3 deletions(-)
+ create mode 100644 sim/economy/input_reach.py
+ create mode 100644 sim/tests/test_input_reach.py
+
+diff --git a/sim/economy/input_reach.py b/sim/economy/input_reach.py
+new file mode 100644
+index 0000000..e727230
+--- /dev/null
++++ b/sim/economy/input_reach.py
+@@ -0,0 +1,81 @@
++"""How many runs a producer's inputs can support: what it holds plus what it can expect to buy this year.
++
++An employer does not take on hands for work it has no material for. The expected purchase of a hard input is
++read from what the producer actually got last year against its order (`short_fills`, kept on the producer) and
++from whether anything is on offer in its market area now. An order filled in full leaves no record: the input
++did not bind, so it caps nothing and the plan can grow again. Nothing here names a good or a trade.
++"""
++import math
++from typing import Callable, Dict, Mapping, Optional
++
++# An order counts as filled in full when the fill is within this share of it (rounding in settlement).
++FILLED_IN_FULL_TOLERANCE = 1e-6
++
++
++def short_fills(ordered: Mapping[str, float], got: Mapping[str, float]) -> Dict[str, float]:
++    """Of the goods the producer ordered, the quantity it got for each that was not filled in full. A good
++    filled in full, or not ordered, is absent: it capped nothing."""
++    return {good: got.get(good, 0.0) for good, quantity in ordered.items()
++            if quantity > 0.0 and got.get(good, 0.0) < quantity * (1.0 - FILLED_IN_FULL_TOLERANCE)}
++
++
++def expected_purchases(goods, on_offer: Callable[[str], bool], got_when_short: Mapping[str, float]) -> Dict[str, float]:
++    """Units of each good the producer can expect to buy this year: none where the market has nothing on offer,
++    last year's fill where that fell short of its order, no limit (infinity) otherwise."""
++    expected = {}
++    for good in goods:
++        if not on_offer(good):
++            expected[good] = 0.0
++        else:
++            expected[good] = got_when_short.get(good, math.inf)
++    return expected
++
++
++def runs_within_reach(hard_inputs: Mapping[str, float], held: Mapping[str, float],
++                      expected_purchase: Mapping[str, float]) -> float:
++    """The most runs the hard inputs support: for each, what is held plus what is expected to be bought, over
++    the units a run uses; the scarcest sets it. Infinity for a recipe with no hard input."""
++    reach = math.inf
++    for good, per_run in hard_inputs.items():
++        if per_run <= 0.0:
++            continue
++        units = held.get(good, 0.0) + expected_purchase.get(good, math.inf)
++        reach = min(reach, units / per_run)
++    return reach
++
++
++def runs_for_inputs(producer, hard_inputs: Mapping[str, float], view, planned_runs: float) -> float:
++    """`planned_runs` held to what the producer's hard inputs support."""
++    if not hard_inputs:
++        return planned_runs
++    area_of = view.area_of
++    offered = getattr(view, "offered_price", None)
++
++    def on_offer(good: str) -> bool:
++        return offered is None or offered(good, area_of(good, producer.tile)) is not None
++
++    held = {good: view.stock(producer.agent_id, good, producer.tile) for good in hard_inputs}
++    expected = expected_purchases(hard_inputs, on_offer, dict(producer.input_got_when_short))
++    return min(planned_runs, max(0.0, runs_within_reach(hard_inputs, held, expected)))
++
++
++def ordered_by_buyer(bids_by_market) -> Dict[str, Dict[str, float]]:
++    """The year's orders as buyer -> good -> quantity ordered (the bids' floors, the plan's inputs net of stock)."""
++    ordered: Dict[str, Dict[str, float]] = {}
++    for (good, _area), market_bids in bids_by_market.items():
++        for bid in market_bids:
++            if bid.floor_quantity > 0.0:
++                by_good = ordered.setdefault(bid.buyer, {})
++                by_good[good] = by_good.get(good, 0.0) + bid.floor_quantity
++    return ordered
++
++
++def got_when_short_after_year(hard_inputs, ordered: Mapping[str, float], fills) -> tuple:
++    """What the producer's record of short fills becomes at the year's close: (good, quantity got) pairs, sorted.
++    `ordered` is what it asked for by good; `fills` its buy fills."""
++    got: Dict[str, float] = {}
++    for fill in fills:
++        if fill.good in hard_inputs:
++            got[fill.good] = got.get(fill.good, 0.0) + fill.quantity
++    hard_orders = {good: quantity for good, quantity in ordered.items() if good in hard_inputs}
++    return tuple(sorted(short_fills(hard_orders, got).items()))
+diff --git a/sim/economy/producers.py b/sim/economy/producers.py
+index 22c7be2..6b48dfe 100644
+--- a/sim/economy/producers.py
++++ b/sim/economy/producers.py
+@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
+ 
+ from sim.constants import declare
+ 
+-from . import ask_adjust, inventory, practice, tool_fallback, unit_cost
++from . import ask_adjust, input_reach, inventory, practice, tool_fallback, unit_cost
+ from .labour_ceilings import joint_labour_ceilings
+ from .planning_price import held_to_band, is_bare_quote
+ from .protocols import MarketView
+@@ -94,6 +94,7 @@ class Producer:
+     net_earnings_history: Tuple[float, ...] = ()   # its last years' net earnings, oldest first (firm_finance.py)
+     revenue_history: Tuple[float, ...] = ()        # its last years' revenue, oldest first
+     idle_years: int = 0                     # years it stays idle after a bankruptcy: no runs, no dividend
++    input_got_when_short: Tuple[Tuple[GoodId, float], ...] = ()   # (hard input, units got) last year where the order was not filled in full; a good absent capped nothing (input_reach.py)
+     crew_runs: Mapping[str, float] = field(default_factory=dict)   # runs its crew has made, by trade (practice.py); a trade absent is an established crew
+ 
+ 
+@@ -308,6 +309,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
+     chosen = min(producer.capacity_runs * share_working(revenue, variable),
+                  runs_for_stock(producer, recipe, view, variable, outputs))
+     runs = max(0.0, min(within_a_years_change(producer, chosen), affordable))
++    runs = input_reach.runs_for_inputs(producer, recipe.hard_inputs, view, runs)     # no hands for work it has no material for
+     wanted = runs
+     if producer.land_run_cap >= 0.0:
+         runs = min(runs, producer.land_run_cap)
+diff --git a/sim/economy/year_close.py b/sim/economy/year_close.py
+index aaf1c7e..3e98a9e 100644
+--- a/sim/economy/year_close.py
++++ b/sim/economy/year_close.py
+@@ -7,7 +7,7 @@ from sim.geography.api import flow_ledger
+ from sim.unit_conversions import KILOGRAMS_PER_TONNE
+ 
+ from .expected_sales import demand_seen
+-from . import (practice, firm_finance, firm_year, carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
++from . import (input_reach, practice, firm_finance, firm_year, carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
+                producers, producers_close, state_budget, tariffs, taxes)
+ from .household_work_year import basket_key, cohort_basket
+ from .households_cohort import renewed
+@@ -204,6 +204,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
+     crews_of_recipe: Dict[str, list] = {}
+     for each in record.producers.values():
+         crews_of_recipe.setdefault(each.recipe_id, []).append(each.crew_runs)
++    ordered_inputs = input_reach.ordered_by_buyer(ledger.bids_by_market)
+     for producer_id, producer in sorted(record.producers.items()):
+         recipe = setup.recipes[producer.recipe_id]
+         if producer.idle_years > 0:      # bankrupt: idle, no dividend (Eurace@Unibi, Firm_bankruptcy_idle_counter)
+@@ -244,8 +245,10 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
+         if closed.loan_request is not None:
+             record.loan_requests.append(closed.loan_request)
+             record.expansion_runs[producer_id] = closed.expansion_runs
++        short = input_reach.got_when_short_after_year(recipe.hard_inputs, ordered_inputs.get(producer_id, {}),
++                                                      ledger.buy_fills.get(producer_id, ()))
+         record.producers[producer_id] = _with_practice(
+-            _with_sales(closed.producer, recipe, ledger, record.book, area_map.area_of, traded, clearing_prices), producer.last_runs,
++            _with_sales(replaced(closed.producer, input_got_when_short=short), recipe, ledger, record.book, area_map.area_of, traded, clearing_prices), producer.last_runs,
+             {trade: practice.pool_units(crews_of_recipe[producer.recipe_id], trade) for trade in producer.crew_runs})
+     prices, volumes = learned_prices(ledger.clearings, record.memory)
+     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
+diff --git a/sim/tests/test_input_reach.py b/sim/tests/test_input_reach.py
+new file mode 100644
+index 0000000..999c1b1
+--- /dev/null
++++ b/sim/tests/test_input_reach.py
+@@ -0,0 +1,139 @@
++"""A producer plans runs only as far as its hard inputs reach: what it holds plus what it can expect to buy this year,
++read from last year's fills against its order and from what is on offer in its area (economy/input_reach.py)."""
++
++QUICK_TOPIC = True
++
++import math
++import unittest
++
++from sim.economy import input_reach, producers
++from sim.economy.types import Bid, Fill, Recipe
++
++
++class RunsWithinReachTests(unittest.TestCase):
++    def test_a_hard_input_with_no_supplier_and_none_held_gives_no_runs(self):
++        reach = input_reach.runs_within_reach({"candle": 2.0}, {}, {"candle": 0.0})
++        self.assertEqual(reach, 0.0)
++
++    def test_what_is_held_still_supports_runs_when_nothing_is_on_offer(self):
++        reach = input_reach.runs_within_reach({"candle": 2.0}, {"candle": 6.0}, {"candle": 0.0})
++        self.assertAlmostEqual(reach, 3.0)
++
++    def test_held_plus_last_years_fill_sets_the_runs(self):
++        reach = input_reach.runs_within_reach({"lead": 3.0}, {"lead": 30.0}, {"lead": 60.0})
++        self.assertAlmostEqual(reach, 30.0)
++
++    def test_the_scarcest_input_sets_the_runs(self):
++        reach = input_reach.runs_within_reach({"lead": 3.0, "coal": 1.0}, {"lead": 30.0, "coal": 4.0},
++                                              {"lead": 60.0, "coal": 6.0})
++        self.assertAlmostEqual(reach, 10.0)
++
++    def test_an_input_that_never_bound_caps_nothing(self):
++        reach = input_reach.runs_within_reach({"lead": 3.0}, {}, {"lead": math.inf})
++        self.assertTrue(math.isinf(reach))
++
++    def test_a_recipe_with_no_hard_input_is_not_limited(self):
++        self.assertTrue(math.isinf(input_reach.runs_within_reach({}, {}, {})))
++
++
++class ExpectedPurchasesTests(unittest.TestCase):
++    def test_a_market_with_nothing_on_offer_supplies_nothing(self):
++        expected = input_reach.expected_purchases(["candle"], lambda good: False, {"candle": 50.0})
++        self.assertEqual(expected, {"candle": 0.0})
++
++    def test_a_short_fill_last_year_is_what_to_expect(self):
++        expected = input_reach.expected_purchases(["lead"], lambda good: True, {"lead": 12.0})
++        self.assertEqual(expected, {"lead": 12.0})
++
++    def test_a_good_filled_in_full_last_year_has_no_limit(self):
++        expected = input_reach.expected_purchases(["lead"], lambda good: True, {})
++        self.assertTrue(math.isinf(expected["lead"]))
++
++
++class ShortFillsTests(unittest.TestCase):
++    def test_only_goods_not_filled_in_full_are_kept(self):
++        kept = input_reach.short_fills({"lead": 10.0, "coal": 5.0}, {"lead": 4.0, "coal": 5.0})
++        self.assertEqual(kept, {"lead": 4.0})
++
++    def test_an_order_with_no_fill_keeps_zero(self):
++        self.assertEqual(input_reach.short_fills({"lead": 10.0}, {}), {"lead": 0.0})
++
++    def test_a_good_not_ordered_is_absent(self):
++        self.assertEqual(input_reach.short_fills({}, {"lead": 4.0}), {})
++
++
++class YearCloseRecordTests(unittest.TestCase):
++    def test_the_record_pairs_each_short_hard_input_with_its_fill(self):
++        fills = [Fill("p", "lead", "a", "t", 3.0, 1.0, "buy"), Fill("p", "lead", "a", "t", 1.0, 1.0, "buy"),
++                 Fill("p", "coal", "a", "t", 5.0, 1.0, "buy")]
++        record = input_reach.got_when_short_after_year({"lead": 3.0, "coal": 1.0}, {"lead": 10.0, "coal": 5.0}, fills)
++        self.assertEqual(record, (("lead", 4.0),))
++
++    def test_the_orders_are_summed_by_buyer_and_good(self):
++        bids = {("lead", "a"): [Bid("p", "lead", "a", "t", 6.0, 0.0, 1.0, 0.0, 9.0), Bid("q", "lead", "a", "t", 2.0, 0.0, 1.0, 0.0, 9.0)],
++                ("coal", "a"): [Bid("p", "coal", "a", "t", 1.0, 0.0, 1.0, 0.0, 9.0)]}
++        self.assertEqual(input_reach.ordered_by_buyer(bids), {"p": {"lead": 6.0, "coal": 1.0}, "q": {"lead": 2.0}})
++
++
++GAMING = Recipe("gaming", {"games": 1.0}, {"candle": 2.0}, {"host": 5.0})
++
++
++class View:
++    year = 3
++
++    def __init__(self, offered):
++        self.offered = offered
++
++    def offered_price(self, good, area):
++        return 1.0 if self.offered else None
++
++    def price(self, good, area):
++        return {"games": 100.0, "candle": 1.0}.get(good)
++
++    def wage(self, trade, area):
++        return 1.0
++
++    def interest_rate(self, currency):
++        return 0.05
++
++    def area_of(self, good, tile):
++        return "area"
++
++    def currency_of(self, area):
++        return "coin"
++
++    def basket_price_level(self, currency):
++        return 1.0
++
++    def expected_inflation(self, currency):
++        return 0.0
++
++    def cash(self, agent, currency):
++        return 0.0
++
++    def stock(self, agent, good, tile):
++        return 0.0
++
++
++class RunsForInputsTests(unittest.TestCase):
++    def maker(self, **changes):
++        base = dict(agent_id="g", owner="o", recipe_id="gaming", tile="t", capacity_runs=10.0)
++        base.update(changes)
++        return producers.Producer(**base)
++
++    def test_a_hard_input_nobody_offers_gives_no_runs(self):
++        self.assertEqual(input_reach.runs_for_inputs(self.maker(), GAMING.hard_inputs, View(False), 10.0), 0.0)
++
++    def test_an_input_on_offer_and_never_short_leaves_the_plan(self):
++        self.assertEqual(input_reach.runs_for_inputs(self.maker(), GAMING.hard_inputs, View(True), 10.0), 10.0)
++
++    def test_last_years_short_fill_caps_the_plan(self):
++        short = self.maker(input_got_when_short=(("candle", 8.0),))
++        self.assertAlmostEqual(input_reach.runs_for_inputs(short, GAMING.hard_inputs, View(True), 10.0), 4.0)
++
++    def test_a_recipe_without_hard_inputs_keeps_the_plan(self):
++        self.assertEqual(input_reach.runs_for_inputs(self.maker(), {}, View(False), 10.0), 10.0)
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.43.0
+

@@ -61,6 +61,17 @@ def opened_ask(reservation: float, cost: Optional[float], expected_price: Option
     return min(expected_price, limit)
 
 
+def expected_ask(reservation: float, expected_price: Optional[float], stock: float, expected_sales: float) -> float:
+    """The ask of a seller whose stock is within the year's sales it expects: the price it expects (which ask_adjust.py
+    already keeps from climbing past the band), not
+    the lower price at which it would carry a unit to next year, since every unit is expected to sell this year. A seller
+    asking its walk-away price would see that price back as the market's and expect less each year. The reservation
+    stands when it is higher, when the stock is more than the sales expected, or when there is no expectation."""
+    if expected_price is None or not math.isfinite(expected_price) or expected_sales <= 0.0 or stock > expected_sales:
+        return reservation
+    return max(reservation, expected_price)
+
+
 def unit_value(offer: Offer, cost: float) -> float:
     """What one more unit of the offer's good is worth to its producer unsold."""
     return min(cost, max(offer.reservation_price, 0.0))
@@ -116,7 +127,14 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
                 offers[index] = dataclasses.replace(offer, reservation_price=opened)
                 continue
         if stands_for_many(record, offer):
-            continue     # a crowd of price takers keeps its reservation; unsold_search.py lowers it to what sells
+            # a crowd of price takers asks what it expects for stock it expects to sell; unsold_search.py lowers it to what sells
+            producer = record.producers[offer.seller]
+            recipe = setup.recipes[producer.recipe_id]
+            asked = expected_ask(offer.reservation_price, expected_output_prices(producer, recipe, view).get(offer.good),
+                                 offer.quantity, producer.expected_sales * recipe.outputs.get(offer.good, 0.0))
+            if asked != offer.reservation_price:
+                offers[index] = dataclasses.replace(offer, reservation_price=asked)
+            continue
         value = unit_value(offer, cost)
         size = market_size(record, offer)
         if offer.reservation_price <= 0.0 or size is None:

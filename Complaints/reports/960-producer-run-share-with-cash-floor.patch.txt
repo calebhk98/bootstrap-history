@@ -1,0 +1,510 @@
+From f137dbd37e4ef2dd31357c0935aa0167245fea14 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 31 Oct 2026 10:47:55 +0000
+Subject: [PATCH] Run share with a cash shutdown floor and a sourced low
+ elasticity at the margin (producer_run_share)
+
+share_working no longer a normal CDF: workplace costs have a floor at the cheapest workplace's cash cost, rise as a power
+of the share running, exponent from the short-run supply elasticity, mean cost the producer's. Callers pass the cash
+part of the variable cost (rent excluded). Tests that asserted the old steep curve rewritten to the intended gentle one.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WXrfievykJ3StG4swPtute
+---
+ ...dge-and-a-held-opening-wage-loses-hours.md | 20 ++---
+ data/review/heuristic_baseline.txt            |  1 -
+ sim/economy/opening_income.py                 |  2 +-
+ sim/economy/producer_run_share.py             | 77 ++++++++++++++++++
+ sim/economy/producers.py                      | 61 ++++----------
+ sim/economy/producers_close.py                |  2 +-
+ .../test_complaint_473_expectation_damping.py |  6 +-
+ .../test_economy_delivered_not_proposed.py    |  3 +-
+ sim/tests/test_economy_input_ceiling.py       |  6 +-
+ .../test_economy_input_price_expectations.py  |  2 +-
+ .../test_economy_producer_stock_holding.py    |  2 +-
+ .../test_economy_producer_wide_margin_plan.py |  2 +-
+ sim/tests/test_economy_producers.py           | 10 ++-
+ sim/tests/test_producer_run_share.py          | 79 +++++++++++++++++++
+ 14 files changed, 205 insertions(+), 68 deletions(-)
+ create mode 100644 sim/economy/producer_run_share.py
+ create mode 100644 sim/tests/test_producer_run_share.py
+
+diff --git a/Complaints/960-year-zero-wage-clears-on-a-knife-edge-and-a-held-opening-wage-loses-hours.md b/Complaints/960-year-zero-wage-clears-on-a-knife-edge-and-a-held-opening-wage-loses-hours.md
+index 8ecd1c6..5450028 100644
+--- a/Complaints/960-year-zero-wage-clears-on-a-knife-edge-and-a-held-opening-wage-loses-hours.md
++++ b/Complaints/960-year-zero-wage-clears-on-a-knife-edge-and-a-held-opening-wage-loses-hours.md
+@@ -42,12 +42,14 @@ Eurace answer); an opening whose producers are not at the knife edge of their wo
+ opening's costs, or seeding whole heads so supply is at least demand, `labour_state.opening_workforce`); then apply
+ 1 and 2 and re-measure the 60-year stationary trace and the small fixture.
+ 
+-## Producers' short-run supply response (branch producer-supply-elasticity)
+-
+-Opened sources put the short-run supply elasticity of staple output far below what `producers.share_working`'s spread
+-gives at break-even (`Complaints/reports/research-short-run-supply-elasticity.md`). `producer_supply_spread.py`
+-derives the spread from a target elasticity, but wiring it in fails: a normal cost spread wide enough for a low
+-elasticity at the margin gives a fat lower tail, so a producer earning a small share of its cost still runs a large
+-share of its capacity and the exit and shedding rules stop working. Needed first: a cost distribution steep only near
+-the margin (thin lower tail), or a closure rule. Measured with the held opening wage (patch 1 above) and the sourced
+-elasticity together: the decline of hired hours over decades survives, so the producers' curve is not its main cause.
++## Producers' short-run supply response (branch producer-supply-curve)
++
++Opened sources put the short-run supply elasticity of staple output far below what the old normal-CDF `share_working`
++gave at break-even (`Complaints/reports/research-short-run-supply-elasticity.md`). Widening that normal spread left a
++fat lower tail (a producer earning a tenth of its cost still ran about a quarter of its plant). Replaced by
++`sim/economy/producer_run_share.py`: workplace costs have a floor (the cheapest pays out
++`CHEAPEST_WORKPLACE_COST_SHARE` of the mean's cash cost; rent due anyway is not cash), rise from it as a power of the
++share running, and the exponent gives `SHORT_RUN_SUPPLY_ELASTICITY` at revenue equal to cost with the mean cost equal to
++the producer's. Nothing runs below the cash shutdown price; between it and full capacity the response is gentle.
++Callers pass the cash part of the variable cost (inputs and hired labour, without rent). The floor's size is an
++unsourced heuristic (retire: this complaint). Measure with `python3 sim/simulator.py spin-up-trace --fixture stationary --years 60`.
+diff --git a/data/review/heuristic_baseline.txt b/data/review/heuristic_baseline.txt
+index 857dc63..7b6cf41 100644
+--- a/data/review/heuristic_baseline.txt
++++ b/data/review/heuristic_baseline.txt
+@@ -115,7 +115,6 @@ COPY_RISK_SHARE
+ COPY_TIME_SHARE
+ CORPUS_HEDGE_FRACTION_LOST_NONE
+ CORPUS_HEDGE_LOSS_CHANCE_NONE
+-COST_SPREAD_WITHIN_PRODUCER
+ COST_TAIL_SETTLE_SHARE
+ COUNTRY_OBSERVATION_RANGE_KM
+ COURT_RETAINERS_PER_OFFICIAL
+diff --git a/sim/economy/opening_income.py b/sim/economy/opening_income.py
+index 0bab6b1..043537b 100644
+--- a/sim/economy/opening_income.py
++++ b/sim/economy/opening_income.py
+@@ -164,5 +164,5 @@ def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, fl
+     revenue = unit_cost.revenue_per_run(recipe, prices) * yield_factor
+     if not math.isfinite(variable) or variable <= 0.0 or revenue <= 0.0:
+         return 1.0
+-    share = producers.share_working(revenue, variable)
++    share = producers.share_working(revenue, variable, variable - rent_per_run)
+     return share if share > 0.0 else 1.0      # a run that earns next to nothing is sized to its runs; the first year's plan finds it does not pay
+diff --git a/sim/economy/producer_run_share.py b/sim/economy/producer_run_share.py
+new file mode 100644
+index 0000000..0efc101
+--- /dev/null
++++ b/sim/economy/producer_run_share.py
+@@ -0,0 +1,77 @@
++"""The share of a producer's workplaces that run at an expected revenue.
++
++One producer stands for many workplaces. Their cost per run differs; the producer's variable cost is their mean. A workplace runs in the short run when revenue covers the cash it must pay out (inputs and hired labour);
++rent and the like are due whether it runs or not. The cheapest workplace pays out CHEAPEST_WORKPLACE_COST_SHARE of the
++mean's cash, so no workplace runs below that. Costs rise from that floor as a power of the share running, with the
++exponent that gives the sourced elasticity at break-even and a mean equal to the producer's cost; the share running
++is then a power of the revenue above the floor, gentle between the floor and full capacity.
++"""
++import math
++from typing import Optional
++
++from sim.constants import declare
++
++SHORT_RUN_SUPPLY_ELASTICITY = declare(
++    "SHORT_RUN_SUPPLY_ELASTICITY", 0.225, kind="temporary_heuristic",
++    unit="elasticity of a producer's yearly runs to the price of its output, where revenue equals the mean workplace's cost",
++    source="Haile, Kalkuhl and von Braun 2016, Amer. J. Agric. Econ. 98(1) 172-190 (abstract: own-price supply "
++           "elasticities of four staple crops range from about 0.05 to 0.40; the value is the midpoint, read as a range "
++           "only); Schneider 2012, Oxford Discussion Papers in Economic and Social History 97, Table 5 (short-run wheat, "
++           "barley, oats from about zero to 0.42 across places and periods). "
++           "Complaints/reports/research-short-run-supply-elasticity.md",
++    confidence="D", retire="Complaints/960-year-zero-wage-clears-on-a-knife-edge-and-a-held-opening-wage-loses-hours.md",
++    why="The sources are crop acreage studies; no source was found for crafts or mines and the same figure stands for "
++        "them. The midpoint of the range is a judgement.")
++CHEAPEST_WORKPLACE_COST_SHARE = declare(
++    "CHEAPEST_WORKPLACE_COST_SHARE", 0.5, kind="temporary_heuristic",
++    unit="cash cost of the cheapest workplace one producer stands for, as a share of the mean workplace's",
++    source=None, confidence="D",
++    retire="Complaints/960-year-zero-wage-clears-on-a-knife-edge-and-a-held-opening-wage-loses-hours.md",
++    why="A low elasticity at break-even needs a floor under the workplaces' costs, or the curve has a fat lower tail "
++        "and a producer earning a tenth of its cost still runs a large share of its plant. The floor could come from "
++        "the spread of land fertility and deposit grade across the area's tiles.")
++
++
++def _shape(variable_cost_per_run: float, cash_cost_per_run: Optional[float]):
++    """(floor, exponent, share running at break-even). The workplace costs, in units of the producer's cost, are
++    floor + (1 - floor) * (share / share_at_break_even) ^ (1 / exponent) for share up to one; the exponent makes the
++    elasticity at break-even the sourced one, and the share at break-even makes their mean one."""
++    cash_share = 1.0 if cash_cost_per_run is None else min(1.0, max(0.0, cash_cost_per_run / variable_cost_per_run))
++    floor = CHEAPEST_WORKPLACE_COST_SHARE * cash_share
++    exponent = SHORT_RUN_SUPPLY_ELASTICITY * (1.0 - floor)
++    return floor, exponent, (1.0 / exponent + 1.0) ** -exponent
++
++
++def share_at_break_even(cash_share: float) -> float:
++    """The share of workplaces running where revenue equals the producer's cost, when `cash_share` of that cost is cash."""
++    return _shape(1.0, cash_share)[2]
++
++
++def run_share(revenue_per_run: float, variable_cost_per_run: float, cash_cost_per_run: Optional[float]) -> float:
++    """Share of the workplaces that run. Costs rise with the share as a power of the revenue above the floor,
++    share = share_at_break_even * ((revenue - floor) / (cost - floor)) ^ exponent with exponent = elasticity * (1 - floor / cost),
++    which gives `SHORT_RUN_SUPPLY_ELASTICITY` at revenue equal to cost. `cash_cost_per_run` is the part of the variable
++    cost paid out in cash (None: all of it)."""
++    if variable_cost_per_run <= 0.0:
++        return 1.0
++    if revenue_per_run <= 0.0 or not math.isfinite(variable_cost_per_run):
++        return 0.0
++    ratio = revenue_per_run / variable_cost_per_run
++    if not ratio > 0.0:     # a revenue too small against the cost to compare (the ratio underflows)
++        return 0.0
++    floor, exponent, at_break_even = _shape(variable_cost_per_run, cash_cost_per_run)
++    if ratio <= floor:
++        return 0.0
++    return min(1.0, at_break_even * ((ratio - floor) / (1.0 - floor)) ** exponent)
++
++
++def mean_cost_ratio(revenue_per_run: float, variable_cost_per_run: float, cash_cost_per_run: Optional[float]) -> float:
++    """The average cost of the workplaces that run, against the producer's (the mean of all): one when none run or
++    all do. With the share a power of the revenue above the floor, the workplaces that run cost the floor plus a fixed
++    fraction of the revenue's height above it (the integral of the power law, 1 / (1 / exponent + 1))."""
++    if run_share(revenue_per_run, variable_cost_per_run, cash_cost_per_run) <= 0.0:
++        return 1.0
++    floor, exponent, at_break_even = _shape(variable_cost_per_run, cash_cost_per_run)
++    height = min(revenue_per_run / variable_cost_per_run,
++                 floor + (1.0 - floor) * at_break_even ** (-1.0 / exponent))     # at full capacity the cost stops rising
++    return floor + (height - floor) / (1.0 / exponent + 1.0)
+diff --git a/sim/economy/producers.py b/sim/economy/producers.py
+index 22c7be2..2cbfbcf 100644
+--- a/sim/economy/producers.py
++++ b/sim/economy/producers.py
+@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
+ 
+ from sim.constants import declare
+ 
+-from . import ask_adjust, inventory, practice, tool_fallback, unit_cost
++from . import ask_adjust, inventory, practice, producer_run_share, tool_fallback, unit_cost
+ from .labour_ceilings import joint_labour_ceilings
+ from .planning_price import held_to_band, is_bare_quote
+ from .protocols import MarketView
+@@ -43,14 +43,6 @@ REGRESSIVE_EXPECTATION_WEIGHT = declare(
+     why="Producers who expect only last year's price chase every swing, and a chain of them feeding each "
+         "other swings wider every year (the divergent cobweb). Producers also know that prices far from "
+         "cost do not last; regressive expectations (Nerlove 1958) weigh that in. The weight is unmeasured.")
+-COST_SPREAD_WITHIN_PRODUCER = declare(
+-    "COST_SPREAD_WITHIN_PRODUCER", 0.3, kind="temporary_heuristic",
+-    unit="standard deviation of the log of unit cost across the workplaces one producer stands for",
+-    source=None, confidence="D",
+-    why="One producer agent stands for every workplace running its recipe in its market area; their "
+-        "sites, skills and tools differ, so as the price rises past the average cost more of them find "
+-        "it worth working and output rises smoothly instead of jumping from none to all. The spread "
+-        "could come from the spread of land fertility and deposit grade across the area's tiles.")
+ OUTPUT_CHANGE_SHARE_PER_YEAR = declare(
+     "OUTPUT_CHANGE_SHARE_PER_YEAR", 0.25, kind="temporary_heuristic",
+     unit="share of capacity a producer's yearly runs can rise or fall by", source=None, confidence="D",
+@@ -305,13 +297,13 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
+     paid_now = unit_cost.input_cost_per_run(recipe, paying_prices) + labour_cost     # rent falls due at the year's end, out of the sales
+     affordable = (max(cash, 0.0) + held_value) / paid_now if paid_now > 0.0 else producer.capacity_runs
+     # working off stock is a choice and moves at the year's pace; cash and held inputs bind after it
+-    chosen = min(producer.capacity_runs * share_working(revenue, variable),
++    chosen = min(producer.capacity_runs * share_working(revenue, variable, input_cost + labour_cost),
+                  runs_for_stock(producer, recipe, view, variable, outputs))
+     runs = max(0.0, min(within_a_years_change(producer, chosen), affordable))
+     wanted = runs
+     if producer.land_run_cap >= 0.0:
+         runs = min(runs, producer.land_run_cap)
+-    ratio = working_cost_ratio(revenue, variable)
++    ratio = working_cost_ratio(revenue, variable, input_cost + labour_cost)
+     if runs <= 0.0 or ratio <= 0.0:
+         return Plan(0.0, expected_margin_per_run=margin, wanted_runs=wanted)
+     # the workplaces that work are the cheaper ones: what an hour or an input is worth is judged at their cost
+@@ -348,11 +340,12 @@ def share_that_pays(producer: Producer, recipe: Recipe, view: MarketView,
+     priced. `outputs` is `expected_output_prices` when the caller has it already."""
+     if outputs is None:
+         outputs = expected_output_prices(producer, recipe, view)
+-    variable = (unit_cost.variable_cost_per_run(recipe, expected_input_prices(producer, recipe, view),
+-                                                live_wages(producer, recipe, view), producer.land_rent_per_run))
++    cash = unit_cost.variable_cost_per_run(recipe, expected_input_prices(producer, recipe, view),
++                                           live_wages(producer, recipe, view))
++    variable = cash + producer.land_rent_per_run
+     if not math.isfinite(variable):
+         return 0.0
+-    return share_working(unit_cost.revenue_per_run(recipe, outputs) * producer.yield_factor, variable)
++    return share_working(unit_cost.revenue_per_run(recipe, outputs) * producer.yield_factor, variable, cash)
+ 
+ 
+ def shortfall_at_working_scale(producer: Producer, recipe: Recipe, view: MarketView, cash_shortfall: float,
+@@ -370,39 +363,17 @@ def shortfall_at_working_scale(producer: Producer, recipe: Recipe, view: MarketV
+     return max(0.0, cash_shortfall - unused_share * producer.cash_target)
+ 
+ 
+-def share_working(revenue_per_run: float, variable_cost_per_run: float) -> float:
+-    """Share of the producer's workplaces whose own cost the expected revenue covers: the workplaces'
+-    costs spread log-normally (COST_SPREAD_WITHIN_PRODUCER) with the producer's cost as their mean."""
+-    if variable_cost_per_run <= 0.0:
+-        return 1.0
+-    if revenue_per_run <= 0.0:
+-        return 0.0
+-    return _normal_below(_standard_score(revenue_per_run, variable_cost_per_run))
+-
+-
+-def _standard_score(revenue_per_run: float, mean_cost_per_run: float) -> float:
+-    """How many spreads the revenue sits above the median workplace's cost (the mean is the average)."""
+-    spread = COST_SPREAD_WITHIN_PRODUCER
+-    ratio = revenue_per_run / mean_cost_per_run
+-    if not ratio > 0.0:     # a revenue too small against the cost to compare (the ratio underflows): below every workplace's cost
+-        return -math.inf
+-    return (math.log(ratio) + spread * spread / 2.0) / spread
+-
+-
+-def _normal_below(score: float) -> float:
+-    return 0.5 * (1.0 + math.erf(score / math.sqrt(2.0)))
++def share_working(revenue_per_run: float, variable_cost_per_run: float,
++                  cash_cost_per_run: Optional[float] = None) -> float:
++    """Share of the producer's workplaces that run at this expected revenue (producer_run_share.run_share).
++    `cash_cost_per_run` is the part of the variable cost paid out in cash, without the rent (None: all of it)."""
++    return producer_run_share.run_share(revenue_per_run, variable_cost_per_run, cash_cost_per_run)
+ 
+ 
+-def working_cost_ratio(revenue_per_run: float, variable_cost_per_run: float) -> float:
+-    """The average cost of the workplaces that work, against the producer's average cost: below one,
+-    since only those whose cost the revenue covers work."""
+-    if variable_cost_per_run <= 0.0 or revenue_per_run <= 0.0:
+-        return 1.0
+-    score = _standard_score(revenue_per_run, variable_cost_per_run)
+-    working = _normal_below(score)
+-    if working <= 0.0:
+-        return 1.0
+-    return _normal_below(score - COST_SPREAD_WITHIN_PRODUCER) / working
++def working_cost_ratio(revenue_per_run: float, variable_cost_per_run: float,
++                       cash_cost_per_run: Optional[float] = None) -> float:
++    """The average cost of the workplaces that run against the median workplace's (producer_run_share.mean_cost_ratio)."""
++    return producer_run_share.mean_cost_ratio(revenue_per_run, variable_cost_per_run, cash_cost_per_run)
+ 
+ 
+ def paying_output(recipe: Recipe, prices: Mapping[GoodId, float]) -> GoodId:
+diff --git a/sim/economy/producers_close.py b/sim/economy/producers_close.py
+index 3cf2663..f3d3695 100644
+--- a/sim/economy/producers_close.py
++++ b/sim/economy/producers_close.py
+@@ -85,7 +85,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
+     has_plant = recipe.plant_life_years > 0.0
+     revenue_per_run, cost_per_run = _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods)
+     margin = revenue_per_run - cost_per_run
+-    paying = share_working(revenue_per_run, cost_per_run) if math.isfinite(margin) else 0.0
++    paying = share_working(revenue_per_run, cost_per_run, cost_per_run - producer.land_rent_per_run) if math.isfinite(margin) else 0.0
+     shedding = margin <= 0.0      # expected sales do not cover running cost, whatever the years behind
+     # it leaves at once only when no workplace pays and the market no longer calls for its output: while it still
+     # expects sales, buyers with no other seller lift the price, and the shed below goes no faster than workplaces change
+diff --git a/sim/tests/test_complaint_473_expectation_damping.py b/sim/tests/test_complaint_473_expectation_damping.py
+index acc1547..7638de2 100644
+--- a/sim/tests/test_complaint_473_expectation_damping.py
++++ b/sim/tests/test_complaint_473_expectation_damping.py
+@@ -7,7 +7,7 @@ QUICK_TOPIC = True
+ 
+ import unittest
+ 
+-from sim.economy import producers
++from sim.economy import producer_run_share, producers
+ from sim.economy.replaced import replaced
+ from sim.economy.types import Recipe
+ 
+@@ -51,8 +51,10 @@ class PricesView:
+ 
+ 
+ def producer_at(price):
++    # working the share of its plant that runs at break-even (neither stock nor last year's scale binds the plan)
++    working = 100.0 * producer_run_share.share_at_break_even(1.0)
+     return producers.Producer("p", "owner", "make", "tile", 100.0, 1.0, {"grain": price}, cash_target=0.0,
+-                              expected_sales=55.0, last_runs=55.0)
++                              expected_sales=working, last_runs=working)
+ 
+ 
+ def one_year(producer, price):
+diff --git a/sim/tests/test_economy_delivered_not_proposed.py b/sim/tests/test_economy_delivered_not_proposed.py
+index 88fe72a..67ad015 100644
+--- a/sim/tests/test_economy_delivered_not_proposed.py
++++ b/sim/tests/test_economy_delivered_not_proposed.py
+@@ -33,7 +33,8 @@ class CashPaysAtMarketPricesTests(unittest.TestCase):
+         # Inputs fell from the expected 2.0 to 1.0 a unit: a run costs 7 now, and the cash target is struck at that.
+         producer = farmer(expected_prices={"seed": 2.0})
+         plan = producers.plan(producer, FARM, farm_view(2.0), 7.0 * producer.capacity_runs)
+-        self.assertGreater(plan.runs, 9.9)         # the expected price would stop it at under 8 runs
++        self.assertAlmostEqual(plan.runs, 10.0 * producers.share_working(20.0, 9.0, 9.0))      # the share that pays at the expected cost
++        self.assertGreater(plan.runs, 70.0 / 9.0)         # the expected price would stop it at under 8 runs
+ 
+     def test_cash_short_of_the_market_cost_still_limits_the_runs(self):
+         producer = farmer(expected_prices={"seed": 0.5})
+diff --git a/sim/tests/test_economy_input_ceiling.py b/sim/tests/test_economy_input_ceiling.py
+index 451a396..b87e5d6 100644
+--- a/sim/tests/test_economy_input_ceiling.py
++++ b/sim/tests/test_economy_input_ceiling.py
+@@ -58,7 +58,11 @@ class InputCeilingTests(unittest.TestCase):
+         plan = producers.plan(who, FARM, View({"grain": 2.0, "seed": 10.0}, {"hand": 1.0}), 1e6)
+         self.assertGreater(plan.runs, 0.0)
+         seed = [bid for bid in plan.bids if bid.good == "seed"][0]
+-        self.assertLessEqual(seed.maximum_price, 10.0 + 1e-9)
++        # (rewritten: the run share is gentle, so the workplaces that still run are cheaper than the average and can
++        # afford a little more than the live price; the bid is the price plus the margin they have at live prices)
++        margin = 20.0 / producers.working_cost_ratio(20.0, 7.0, 7.0) - 25.0
++        self.assertAlmostEqual(seed.maximum_price, producers.input_ceiling(10.0, margin, 25.0))
++        self.assertLess(seed.maximum_price, 1.5 * 10.0)
+ 
+     def test_a_run_that_pays_at_the_live_input_price_bids_up_to_the_price_that_breaks_even(self):
+         who = farmer(expected_prices={"grain": 2.0, "seed": 1.0})
+diff --git a/sim/tests/test_economy_input_price_expectations.py b/sim/tests/test_economy_input_price_expectations.py
+index a0a4b97..e332d72 100644
+--- a/sim/tests/test_economy_input_price_expectations.py
++++ b/sim/tests/test_economy_input_price_expectations.py
+@@ -61,7 +61,7 @@ class InputExpectationTests(unittest.TestCase):
+         spike = View({"grain": 0.9, "seed": 3.0})            # live run cost 6 + 5 = 11 against revenue 9
+         forgetful = producers.plan(farmer(), FARM, spike, 1000.0).runs
+         remembering = producers.plan(farmer(expected_prices={"grain": 0.9, "seed": 1.0}), FARM, spike, 1000.0).runs
+-        self.assertGreater(remembering, forgetful + 1.0)
++        self.assertGreater(remembering, forgetful + 0.5)
+ 
+     def test_orders_for_the_input_are_still_priced_at_what_the_market_asks_now(self):
+         spike = View({"grain": 0.9, "seed": 3.0})
+diff --git a/sim/tests/test_economy_producer_stock_holding.py b/sim/tests/test_economy_producer_stock_holding.py
+index 91eda98..d32d71e 100644
+--- a/sim/tests/test_economy_producer_stock_holding.py
++++ b/sim/tests/test_economy_producer_stock_holding.py
+@@ -68,7 +68,7 @@ class DistressAgainstWorkingScaleTests(unittest.TestCase):
+ 
+     def test_a_partly_short_producer_asks_less_than_a_flush_one(self):
+         flush = offered(small_scale_producer(), cash=700.0).reservation_price
+-        short = offered(small_scale_producer(), cash=190.0).reservation_price
++        short = offered(small_scale_producer(), cash=150.0).reservation_price
+         self.assertGreater(flush, short)
+         self.assertGreater(short, 0.0)
+ 
+diff --git a/sim/tests/test_economy_producer_wide_margin_plan.py b/sim/tests/test_economy_producer_wide_margin_plan.py
+index ded54ca..d11b37c 100644
+--- a/sim/tests/test_economy_producer_wide_margin_plan.py
++++ b/sim/tests/test_economy_producer_wide_margin_plan.py
+@@ -65,7 +65,7 @@ class WideMarginPlanTests(unittest.TestCase):
+         self.assertAlmostEqual(plan.runs, producers.runs_for_stock(who, CART, wide_margin_view()))
+         self.assertLess(plan.runs, producers.OUTPUT_CHANGE_SHARE_PER_YEAR * who.capacity_runs)       # expected sales bind, not the margin
+         wanted_at_price = who.capacity_runs * producers.share_working(1000.0, 4.0 * 15.0 + 70.0 * 0.4 + 165.0)
+-        self.assertGreater(wanted_at_price, 0.99 * who.capacity_runs)         # the price is no limit
++        self.assertGreater(wanted_at_price, 0.9 * who.capacity_runs)         # the price is no limit
+         self.assertGreater(producers.runs_for_stock(who, CART, wide_margin_view()), who.expected_sales)
+ 
+     def test_the_input_bids_of_such_a_maker_are_ceilinged_above_the_input_prices_by_the_margin_share_each_input_accounts_for(self):
+diff --git a/sim/tests/test_economy_producers.py b/sim/tests/test_economy_producers.py
+index 0873035..23c252f 100644
+--- a/sim/tests/test_economy_producers.py
++++ b/sim/tests/test_economy_producers.py
+@@ -62,14 +62,15 @@ class PlanTests(unittest.TestCase):
+         far_below = producers.plan(farmer(), FARM, farm_view(0.1), 1000.0)  # revenue 1 against cost 7
+         self.assertLess(far_below.runs, 1e-6)
+         low = producers.plan(farmer(), FARM, farm_view(0.6), 1000.0)         # revenue 6 < cost 7
+-        self.assertLess(low.runs, 5.0)
++        self.assertAlmostEqual(low.runs, 10.0 * producers.share_working(6.0, 7.0, 7.0))      # the response is gentle near the margin
++        self.assertLess(low.runs, 10.0)
+         high = producers.plan(farmer(), FARM, farm_view(0.8), 1000.0)
+         self.assertGreater(high.runs, low.runs)
+         self.assertLess(high.runs, 10.0)
+ 
+     def test_orders_follow_the_plan_and_budgets_stay_within_cash(self):
+         plan = producers.plan(farmer(), FARM, farm_view(2.0), 100.0)         # 7 a run: cash allows 14, cap 10
+-        self.assertAlmostEqual(plan.runs, 10.0, places=2)                    # nearly every workplace pays
++        self.assertAlmostEqual(plan.runs, 10.0 * producers.share_working(20.0, 7.0, 7.0))      # most workplaces pay
+         self.assertAlmostEqual(plan.bids[0].floor_quantity, 2.0 * plan.runs)
+         self.assertAlmostEqual(plan.labour_bids[0].hours, 5.0 * plan.runs)
+         self.assertGreaterEqual(plan.labour_bids[0].maximum_wage, (20.0 - 2.0) / 5.0 - 1e-9)
+@@ -86,14 +87,15 @@ class PlanTests(unittest.TestCase):
+ 
+     def test_cobweb_output_follows_last_years_price_not_this_years(self):
+         expecting_high = farmer(expected_prices={"grain": 2.0})
+-        self.assertGreater(producers.plan(expecting_high, FARM, farm_view(0.1), 1000.0).runs, 9.9)
++        self.assertGreater(producers.plan(expecting_high, FARM, farm_view(0.1), 1000.0).runs, 9.0)
+         expecting_low = farmer(expected_prices={"grain": 0.1})
+         self.assertLess(producers.plan(expecting_low, FARM, farm_view(5.0), 1000.0).runs, 1e-6)
+ 
+     def test_a_poor_harvest_yield_lowers_the_revenue_a_run_counts_on_and_the_runs(self):
+         poor = producers.plan(farmer(yield_factor=0.5), FARM, farm_view(1.0), 1000.0).runs
+         good = producers.plan(farmer(), FARM, farm_view(1.0), 1000.0).runs
+-        self.assertLess(poor, good / 2.0)
++        self.assertAlmostEqual(poor, 10.0 * producers.share_working(5.0, 7.0, 7.0))
++        self.assertLess(poor, good)
+ 
+     def test_no_input_price_means_no_plan(self):
+         view = View({"grain": 5.0}, {"hand": 1.0})
+diff --git a/sim/tests/test_producer_run_share.py b/sim/tests/test_producer_run_share.py
+new file mode 100644
+index 0000000..026d902
+--- /dev/null
++++ b/sim/tests/test_producer_run_share.py
+@@ -0,0 +1,79 @@
++"""`run_share` and `mean_cost_ratio` (sim/economy/producer_run_share.py): the share of a producer's workplaces that run at a
++revenue, with a gentle response near break-even and none below the cash the run must pay out."""
++import math
++import unittest
++
++from sim.economy.producer_run_share import (CHEAPEST_WORKPLACE_COST_SHARE, SHORT_RUN_SUPPLY_ELASTICITY,
++                                            mean_cost_ratio, run_share, share_at_break_even)
++
++QUICK_TOPIC = True
++
++
++class RunShare(unittest.TestCase):
++
++    def test_most_workplaces_run_where_revenue_equals_their_mean_cost(self):
++        self.assertAlmostEqual(run_share(10.0, 10.0, 10.0), share_at_break_even(1.0))
++        self.assertTrue(0.5 < share_at_break_even(1.0) < 1.0)
++
++    def test_every_workplace_runs_at_a_few_times_the_cost_but_not_at_the_cost(self):
++        self.assertEqual(run_share(8.0, 1.0, 1.0), 1.0)
++        self.assertLess(run_share(1.0, 1.0, 1.0), 1.0)
++
++    def test_the_response_to_price_at_break_even_is_the_sourced_elasticity(self):
++        step = 1e-6
++        low, high = run_share(1.0 - step, 1.0, 1.0), run_share(1.0 + step, 1.0, 1.0)
++        elasticity = (math.log(high) - math.log(low)) / (math.log(1.0 + step) - math.log(1.0 - step))
++        self.assertAlmostEqual(elasticity, SHORT_RUN_SUPPLY_ELASTICITY, places=4)
++
++    def test_the_response_at_break_even_holds_when_part_of_the_cost_is_not_cash(self):
++        step = 1e-6
++        low, high = run_share(1.0 - step, 1.0, 0.4), run_share(1.0 + step, 1.0, 0.4)
++        elasticity = (math.log(high) - math.log(low)) / (math.log(1.0 + step) - math.log(1.0 - step))
++        self.assertAlmostEqual(elasticity, SHORT_RUN_SUPPLY_ELASTICITY, places=4)
++
++    def test_a_revenue_a_tenth_of_the_cost_runs_nothing(self):
++        self.assertEqual(run_share(0.1, 1.0, 1.0), 0.0)
++
++    def test_nothing_runs_below_the_cash_the_cheapest_workplace_pays_out(self):
++        cash = 0.6
++        below = CHEAPEST_WORKPLACE_COST_SHARE * cash * 0.99
++        self.assertEqual(run_share(below, 1.0, cash), 0.0)
++
++    def test_rent_that_is_due_anyway_lets_a_run_continue_below_the_full_cost(self):
++        self.assertGreater(run_share(0.4, 1.0, 0.4), 0.0)
++        self.assertEqual(run_share(0.4, 1.0, 1.0), 0.0)
++
++    def test_the_share_rises_with_revenue_and_stays_in_the_unit_interval(self):
++        shares = [run_share(revenue, 1.0, 0.7) for revenue in (0.2, 0.4, 0.6, 1.0, 2.0, 8.0)]
++        self.assertEqual(shares, sorted(shares))
++        self.assertTrue(all(0.0 <= share <= 1.0 for share in shares))
++
++    def test_a_cost_that_is_not_positive_runs_in_full_and_a_revenue_that_is_not_runs_nothing(self):
++        self.assertEqual(run_share(5.0, 0.0, 0.0), 1.0)
++        self.assertEqual(run_share(0.0, 5.0, 5.0), 0.0)
++        self.assertEqual(run_share(5.0, math.inf, math.inf), 0.0)
++        self.assertEqual(run_share(1e-300, 1e300, 1e300), 0.0)
++
++    def test_an_unknown_cash_cost_counts_all_the_cost_as_cash(self):
++        self.assertEqual(run_share(0.8, 1.0, None), run_share(0.8, 1.0, 1.0))
++
++
++class MeanCostRatio(unittest.TestCase):
++
++    def test_the_workplaces_that_run_cost_the_producers_average_when_all_run(self):
++        self.assertAlmostEqual(mean_cost_ratio(8.0, 1.0, 1.0), 1.0)
++
++    def test_the_workplaces_that_run_cost_less_than_the_average_at_break_even(self):
++        self.assertTrue(0.0 < mean_cost_ratio(1.0, 1.0, 1.0) < 1.0)
++
++    def test_with_nothing_running_the_ratio_is_one(self):
++        self.assertEqual(mean_cost_ratio(0.1, 1.0, 1.0), 1.0)
++        self.assertEqual(mean_cost_ratio(1e-300, 1e300, 1e300), 1.0)
++
++    def test_the_workplaces_that_run_cost_no_more_than_the_revenue(self):
++        for revenue in (0.6, 1.0, 3.0):
++            self.assertLessEqual(mean_cost_ratio(revenue, 1.0, 0.8), revenue)
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.43.0
+

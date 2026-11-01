@@ -43,6 +43,13 @@ def resting_household_purse(mean_income: float, share_wealth: float, claims: flo
     return cash - mean_income
 
 
+def purse_with_property_income(purse: float, property_income: float) -> float:
+    """The cash a household opens holding: the purse (`resting_household_purse`, which counts the year's whole income as
+    cash) plus the property income it received at the last close, which is in its account when the year's wages
+    arrive; the purse counts wages only."""
+    return purse + max(0.0, property_income)
+
+
 def resting_input_stock(planned_runs: float, inputs_per_run: Mapping[str, float], bought_in_year) -> Dict[str, float]:
     """The inputs a producer opens holding. `producers._input_bids` buys the planned runs' need less what is held and
     the year uses it all, so a producer at rest holds an input at the year's start only if it cannot buy it before

@@ -105,17 +105,47 @@ class ImportCosts:
         inputs = self.inputs
 
         def offers() -> List[Tuple[float, str]]:
-            found: List[Tuple[float, str]] = []
-            for moving_cost, other in self.reach(area):
-                wage = self.wages.get(other, {}).get(trade)
-                if wage is None:
-                    continue
-                outside = inputs.subsistence_per_worker_year.get(other, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
-                found.append((max(wage, outside) + moving_cost / self.career_hours, other))
-            return found
+            return self._offer_costs(area, trade)
         search = inputs.fetch_wage or fetch_wage
         return search(area, self.wanted.get((area, trade), 0.0), self.wages.get(area, {}).get(trade, 0.0),
                       self.most.get((area, trade), 0.0), offers,
                       lambda other, wage: self.hours_at(other, trade, wage),
                       lambda other: self.wanted.get((other, trade), 0.0),
                       lambda sources: self._spare_of(trade, sources))
+
+    def supply(self, area: str, trade: str) -> Optional[Tuple[float, float]]:
+        """(the wage fetched hands bound, the share of the hours wanted here that can be fetched at it), or None where
+        none can come. Where the spare hands fill the shortage the bound is `wage` and the share is the shortage over
+        the hours wanted; where they do not, the bound is the dearest way in within the highest wage bid, and the
+        share is what the sources spare at it, so the bound grows with the hours that can come instead of
+        switching on once they cover the whole shortage."""
+        wanted = self.wanted.get((area, trade), 0.0)
+        going = self.wages.get(area, {}).get(trade, 0.0)
+        shortage = wanted - self.hours_at(area, trade, going)
+        if wanted <= 0.0 or shortage <= 0.0:
+            return None
+        bound = self.wage(area, trade)
+        sources = [other for _cost, other in self.reach(area) if self.wages.get(other, {}).get(trade) is not None]
+        if bound is None:
+            top = self.most.get((area, trade), 0.0)
+            costs = [cost for cost, _other in self._offer_costs(area, trade) if cost <= top]
+            if not costs:
+                return None
+            bound = max(costs)
+        fetched = sum(max(0.0, self.hours_at(other, trade, bound) - self.wanted.get((other, trade), 0.0)) for other in sources
+                      if self._cost_to(area, trade, other) <= bound)
+        return bound, min(shortage, fetched) / wanted
+
+    def _offer_costs(self, area: str, trade: str) -> List[Tuple[float, str]]:
+        """(wage an area's hands come at, area) for every other area with a wage for the trade."""
+        found: List[Tuple[float, str]] = []
+        for moving_cost, other in self.reach(area):
+            wage = self.wages.get(other, {}).get(trade)
+            if wage is None:
+                continue
+            outside = self.inputs.subsistence_per_worker_year.get(other, 0.0) / max(self.inputs.hours_per_worker_year, 1e-12)
+            found.append((max(wage, outside) + moving_cost / self.career_hours, other))
+        return found
+
+    def _cost_to(self, area: str, trade: str, source: str) -> float:
+        return next((cost for cost, other in self._offer_costs(area, trade) if other == source), math.inf)

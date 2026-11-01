@@ -63,6 +63,7 @@ class EconomyRecord:
     opening_demand: Dict[str, float] = field(default_factory=dict)       # good -> quantity households were seeded to want, supplied or not
     opening_own_grown: Dict[str, float] = field(default_factory=dict)    # good -> quantity households were seeded to grow on their own plots
     opening_sold_hours_per_worker: float = 0.0   # hours a working person was seeded to sell a year (zero: a whole working year)
+    opening_sold_hours_by_area: Dict[str, float] = field(default_factory=dict)   # labour area -> hours a working person there was seeded to sell a year (empty: the one figure above)
     opening_demand_by_country: Dict[str, Dict[str, float]] = field(default_factory=dict)  # country -> good -> quantity its households were seeded to want
     expansion_runs: Dict[AgentId, float] = field(default_factory=dict)   # capacity a loan request would build
     index_base_prices: Dict[str, float] = field(default_factory=dict)    # the price level's base; opening if empty
@@ -70,6 +71,7 @@ class EconomyRecord:
     state_budget: StateBudget = field(default_factory=StateBudget)       # the state's revenue and this year's plan
     land_rent: Dict[TileId, float] = field(default_factory=dict)         # rent per hectare producers paid, by tile
     land_mean_value: Dict[TileId, float] = field(default_factory=dict)   # tile -> mean output value a hectare of the uses that set its rent (entrant_rent.py)
+    land_ceded: Dict[TileId, float] = field(default_factory=dict)        # tile -> hectares let to producers that outbid the households' plots (land_priority.py)
     titles: Dict[TileId, Dict[AgentId, float]] = field(default_factory=dict)   # tile -> holder -> share of its land (titles.py)
     tenancies: Dict[TileId, List[Dict[str, Any]]] = field(default_factory=dict)   # tile -> rows of tenant, lessor, share, arrears
     cleared_hectares: Dict[TileId, float] = field(default_factory=dict)   # tile -> ground cleared and taken up, added to its cropland (titles_ground.py)
@@ -149,6 +151,7 @@ class EconomyRecord:
             "opening_demand": self.opening_demand,
             "opening_own_grown": self.opening_own_grown,
             "opening_sold_hours_per_worker": self.opening_sold_hours_per_worker,
+            "opening_sold_hours_by_area": self.opening_sold_hours_by_area,
             "opening_demand_by_country": self.opening_demand_by_country,
             "expansion_runs": self.expansion_runs,
             "index_base_prices": self.index_base_prices,
@@ -156,6 +159,7 @@ class EconomyRecord:
             "state_budget": plain(self.state_budget),
             "land_rent": self.land_rent,
             "land_mean_value": self.land_mean_value,
+            "land_ceded": self.land_ceded,
             "titles": {tile: dict(held) for tile, held in sorted(self.titles.items())},
             "tenancies": {tile: [dict(row) for row in rows] for tile, rows in sorted(self.tenancies.items())},
             "cleared_hectares": dict(sorted(self.cleared_hectares.items())),
@@ -206,6 +210,7 @@ class EconomyRecord:
             opening_demand=dict(record["opening_demand"]),
             opening_own_grown=dict(record["opening_own_grown"]),
             opening_sold_hours_per_worker=float(record["opening_sold_hours_per_worker"]),
+            opening_sold_hours_by_area=dict(record["opening_sold_hours_by_area"]),
             opening_demand_by_country={country: dict(demand) for country, demand in record["opening_demand_by_country"].items()},
             expansion_runs=dict(record["expansion_runs"]),
             index_base_prices=dict(record["index_base_prices"]),
@@ -213,6 +218,7 @@ class EconomyRecord:
             state_budget=StateBudget(**record["state_budget"]),
             land_rent=dict(record["land_rent"]),
             land_mean_value=dict(record["land_mean_value"]),
+            land_ceded=dict(record["land_ceded"]),
             titles={tile: dict(held) for tile, held in record["titles"].items()},
             tenancies={tile: [dict(row) for row in rows] for tile, rows in record["tenancies"].items()},
             cleared_hectares=dict(record["cleared_hectares"]),

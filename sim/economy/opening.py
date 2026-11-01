@@ -14,7 +14,7 @@ from sim.constants import declare
 from sim.refusal import Refusal
 
 from . import recipes as recipes_module
-from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_plans, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -40,6 +40,10 @@ MERCHANT_CAPITAL_SHARE_OF_OUTPUT = declare(
         "different estimate of the same thing.")
 
 
+# numerical bounds on raising the opening prices to the rent they must pay (opening_rent.py)
+COVERING_PRICE_PASSES = 4
+COVERING_PRICE_TOLERANCE = 1e-3
+
 # numerical bounds on settling the share of hours producers hire against the demand it implies (opening_own.py)
 OWN_PLOT_PASSES = 8
 OWN_PLOT_TOLERANCE = 1e-4
@@ -53,7 +57,12 @@ class OpeningIncomeRefused(ValueError):
 
 
 def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
-    """The opening solved to a fixed point with its households' first-year choices. A first solve leaves a money stock,
+    """The opening at prices that pay the land's rent (`_with_covering_prices`)."""
+    return _with_covering_prices(setup)
+
+
+def _solve_opening(setup: EconomySetup):
+    """(the opening, the service price by tile its households found) solved to a fixed point with its households' first-year choices. A first solve leaves a money stock,
     whose yearly loss of its metal is the demand (the mint's) the later solves size the producers of the backing good
     to, along with everyone else's. Each solve is read by the households (what they hire, which grains they buy
     milled, at its prices and wages) and solved again with those plans in final demand, until they stop changing
@@ -78,7 +87,43 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
                              for tile, hands in opening_plans.hands_left_by_tile(setup, bare).items()}
         return opening_plans.household_plans(setup, opened[0], opened[1], cache["room"])
     settled = opening_plans.settle(open_with, choose, lambda opened: opened[0].cohorts)
-    opening_plans.post_service_prices(settled[0].memory, settled[1], setup, choose(settled).service_price_by_tile)
+    floors = choose(settled).service_price_by_tile
+    opening_plans.post_service_prices(settled[0].memory, settled[1], setup, floors)
+    return settled, floors
+
+
+def _with_covering_prices(setup):
+    """The opening at prices that pay the land's rent as well as the costs. The rent a tile's land fetches depends on what
+    its producers sell and what households' plots take, so the prices are raised from the rent shares the last opening
+    left until they stop moving (opening_rent.py); a setup whose recipes pay no rent is solved once. Only the first
+    pass is the full solve (`_solve_opening`): the households' plans it settled (who hires, which grains are bought
+    milled) are kept for the later passes, which open the economy at the covered prices with those plans (`_reopen`)."""
+    settled, floors = _solve_opening(setup)
+    plans = opening_plans.HouseholdPlans(
+        {agent_id: (cohort.hired_work_per_person, 0.0, cohort.milled_grains) for agent_id, cohort in settled[0].cohorts.items()},
+        floors)
+    current = setup
+    for _pass in range(COVERING_PRICE_PASSES):
+        record = settled[0]
+        covered = opening_rent.covering_prices(
+            setup.recipes, setup.opening_prices, setup.opening_wages, opening_rent.shares_of_revenue(current, record),
+            {producer.recipe_id for producer in record.producers.values()}, opening_runs.mean_yields(setup, setup.recipes))
+        if all(abs(price - current.opening_prices.get(good, 0.0)) <= COVERING_PRICE_TOLERANCE * price
+               for good, price in covered.items()):
+            break
+        current = dataclasses.replace(setup, opening_prices=covered)
+        settled = _reopen(current, plans)
+    return settled
+
+
+def _reopen(setup, plans):
+    """The opening at `setup`'s prices with the households holding `plans` (no new settling of them): the metal the
+    money loses is sized from a first opening at these prices, as in `_solve_opening`, and the service price the plans found
+    is posted again."""
+    first = _open(setup, 0.0)
+    replacement = opening_metal.yearly_replacement(setup, first[0])
+    settled = _open(setup, replacement, plans)
+    opening_plans.post_service_prices(settled[0].memory, settled[1], setup, plans.service_price_by_tile)
     return settled
 
 
@@ -111,16 +156,30 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
     opening_runs.fit_to_supply(setup, record)
+    rent = opening_rent.settle(setup, record, view, own.hectares_by_tile(record.cohorts))
+    figure = record.property_income
+    record.property_income = opening_rent.property_income_with_rent(figure, rent)
+    incomes = opening_rent.income_after_rent({agent_id: cohort.last_year_income for agent_id, cohort in record.cohorts.items()},
+                                             figure, record.property_income)
+    record.cohorts.update({agent_id: replaced(record.cohorts[agent_id], last_year_income=income)
+                           for agent_id, income in incomes.items()})
+    record.index_base_prices = dict(priced_goods)
     _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record, view, own.extra)
     record.opening_sold_hours_per_worker = opening_own.sold_hours_per_worker(
         own.sold_total(), math.fsum(cohort.working_people for cohort in record.cohorts.values()), setup.working_hours_per_year)
+    record.opening_sold_hours_by_area = opening_placement.sold_hours_per_worker_by_area(
+        own.sold, {agent_id: (labour_area(cohort.tile), cohort.working_people) for agent_id, cohort in record.cohorts.items()},
+        record.opening_sold_hours_per_worker)
     record.workforce = labour_state.opening_workforce(      # the mint's capacity follows the money struck
-        setup, record, record.opening_sold_hours_per_worker)
+        setup, record, record.opening_sold_hours_by_area)
     record.workforce.hired_hours, record.workforce.contract_wages = opening_resting.resting_labour_contracts(
-        labour_state.producers_hours_by_employer(setup, record), setup.opening_wages)
+        opening_placement.capped_contracts(labour_state.producers_hours_by_employer(setup, record),
+                                           {area: labour_state.people_by_trade(record.workforce, area) for area in record.workforce.workers},
+                                           record.opening_sold_hours_by_area, record.opening_sold_hours_per_worker),
+        setup.opening_wages)
     mint.seed_opening_metal(setup, record)
     opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
     record.opening_demand = opening_runs.national_totals(final_by_tile)
@@ -219,6 +278,7 @@ def _settle_income(setup, record, view, priced_goods, replacement, own) -> None:
     share["labour"] = labour_share
     demand_at(per_head)     # leaves the plots at the settled income's share of hours hired
     record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
+    record.property_income = opening_income.property_income_of(record.cohorts, per_head, labour_share)
 
 
 def _opening_bids(setup, record, view, memory=None, stationary_durables=True, own=None):
@@ -487,5 +547,7 @@ def _strike_opening_cash(setup, record, view, extra_spending) -> None:
     for cohort in record.cohorts.values():
         purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0),
                                                        extra_spending=extra_spending.get(cohort.agent_id, 0.0))
-        transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, purse, "opening coin"))
+        transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, opening_resting.purse_with_property_income(
+            purse, record.property_income.get(cohort.agent_id, 0.0)), "opening coin"))
+        record.cohorts[cohort.agent_id] = replaced(cohort, share_wealth=owned.get(cohort.agent_id, 0.0))
     record.book.transfer_many([transfer for transfer in transfers if transfer.amount > 0.0])

@@ -73,6 +73,7 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, re
             continue
         income = {trade: expectations.expected_income(state, inputs, clearings, area, trade)
                   for trade in sources}
+        idle = {trade: expectations.idle_share_of(clearings.get((area, trade))) for trade in sources}
         vacancies = {trade for trade in destinations
                      if (area, trade) in clearings and clearings[(area, trade)].vacant_hours > 0.0}
         # a switcher trains first, so a destination is weighed by its income after training (capped at the long-run
@@ -85,7 +86,7 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, re
                 later_income[trade] = expectations.income_at_graduation(state, inputs, clearings, area, trade,
                                                                         chances[trade])
             moves = _planned_moves(state, inputs, area, sources, destinations, income, later_income, vacancies,
-                                   subsistence, chances, planned)
+                                   subsistence, chances, planned, idle)
             stale = _carry_out(state, inputs, report, area, moves)
 
 
@@ -144,7 +145,7 @@ def _plan_still_holds(then: Mapping[str, float], later_income: Mapping[str, floa
 
 
 def _planned_moves(state, inputs, area, sources, destinations, income, later_income, vacancies,
-                   subsistence, chances, planned) -> List[Move]:
+                   subsistence, chances, planned, idle) -> List[Move]:
     moves: List[Move] = []
     rounds = expectations.DECISION_ROUNDS_PER_YEAR
     tolerance = PLAN_REUSE_TOLERANCE * subsistence
@@ -169,7 +170,8 @@ def _planned_moves(state, inputs, area, sources, destinations, income, later_inc
             shares = bands[band]
             if count <= 0.0 or shares is None:
                 continue
-            base = count * SWITCHING_CONSIDERATION_SHARE_PER_YEAR / rounds
+            # those who sold no hours this year look about; those who did mostly do not
+            base = count * max(SWITCHING_CONSIDERATION_SHARE_PER_YEAR, idle[source]) / rounds
             for trade, share in shares:
                 row = rows.get(trade)
                 if row is None:

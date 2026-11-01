@@ -37,6 +37,20 @@ RESERVATION_CUT_PER_ROUND = declare(
         "reservation wage by this share each round it stays unemployed, never under its floor (there the "
         "benefit share of last pay; here the wage floor). How fast a family gives ground is not fitted.")
 
+WAGE_UPDATE_PER_ROUND = declare(
+    "WAGE_UPDATE_PER_ROUND", 0.01, kind="temporary_heuristic", unit="share of the wage added per round of unfilled vacancies",
+    source=None, confidence="D",
+    retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
+    why="Eurace's WAGE_UPDATE (0.01 in the shipped state its/0_after_2k_transient.xml, opened; model.xml's description gives 0.02): an employer with vacancies left raises its offer by "
+        "this share each round (Firm_update_wage_offer, Labour/Firm_Employer_Functions.c). Not fitted.")
+
+VACANCY_SHARE_THRESHOLD = declare(
+    "VACANCY_SHARE_THRESHOLD", 0.05, kind="temporary_heuristic", unit="share of the hours wanted left unfilled",
+    source=None, confidence="D",
+    retire="Complaints/608: a wage method driven by the market\'s own state replaces this fixed fraction",
+    why="Eurace raises the offer only when vacancies exceed MIN_VACANCY (default 2 posts; a count, not a share). "
+        "A market has no post count, so the threshold is the share of wanted hours the supply cannot fill. Not fitted.")
+
 
 def scale_of(state: MarketState, area: str, trade: str) -> float:
     """The ask over the reservation wage; one before any year has moved it."""

@@ -36,13 +36,19 @@ class FakeAreaMap:
         return (self.AREA,)
 
 
+class BullionAtParity:
+    """A price memory in which bullion fetches more than coin is worth, so the mint offers its metal."""
+    def get(self, _key, default=None):
+        return 1e9
+
+
 def economy_of(spec, coin_by_tile=None):
     """A book with coin held by two agents and the opening metal in the mint, as opening.py leaves it."""
     book = Book()
     book.transfer(Transfer(EDGE_ISSUE, "a", "coin", 600.0, "opening"))
     book.transfer(Transfer(EDGE_ISSUE, "b", "coin", 400.0, "opening"))
     setup = pytypes.SimpleNamespace(opening_population_by_tile={"t1": 3.0, "t2": 1.0}, tiles={"t1": 0, "t2": 0})
-    record = pytypes.SimpleNamespace(book=book, currency=spec)
+    record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity()))
     mint.seed_opening_metal(setup, record)
     return setup, record
 

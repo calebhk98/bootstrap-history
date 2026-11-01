@@ -119,14 +119,19 @@ def labour_share_of(runs: Mapping[str, float], recipes: Mapping[str, object], wa
     return min(1.0, bill / value) if value > 0.0 else 0.0
 
 
-def with_income(cohorts: Mapping[str, Cohort], per_head: float, labour_share: float) -> Dict[str, Cohort]:
-    """The cohorts with each class's last year's income: the labour share of the total divided by working people
-    (every worker is paid alike), the rest by what each class owns."""
+def _tile_totals(cohorts: Mapping[str, Cohort]) -> Tuple[Dict[TileId, float], Dict[TileId, float]]:
     working: Dict[TileId, float] = {}
     people: Dict[TileId, float] = {}
     for cohort in cohorts.values():
         working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
         people[cohort.tile] = people.get(cohort.tile, 0.0) + cohort.people
+    return working, people
+
+
+def with_income(cohorts: Mapping[str, Cohort], per_head: float, labour_share: float) -> Dict[str, Cohort]:
+    """The cohorts with each class's last year's income: the labour share of the total divided by working people
+    (every worker is paid alike), the rest by what each class owns."""
+    working, people = _tile_totals(cohorts)
     from .replaced import replaced
     paid = {}
     for agent_id, cohort in cohorts.items():
@@ -137,14 +142,25 @@ def with_income(cohorts: Mapping[str, Cohort], per_head: float, labour_share: fl
     return paid
 
 
-def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, float], yield_factor: float = 1.0) -> float:
+def property_income_of(cohorts: Mapping[str, Cohort], per_head: float, labour_share: float) -> Dict[str, float]:
+    """The part of each class's income figure (`with_income`) that is rent and profit, by what each class owns. The
+    first year's spending rule reads the year's income as wages paid plus last year's property income, so an opening
+    that leaves this out has households spend less than the income they are about to receive."""
+    _working, people = _tile_totals(cohorts)
+    paid = {agent_id: per_head * people[cohort.tile] * (1.0 - labour_share) * cohort.ownership_share
+            for agent_id, cohort in cohorts.items()}
+    return {agent_id: amount for agent_id, amount in paid.items() if amount > 0.0}
+
+
+def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, float], yield_factor: float = 1.0,
+                  rent_per_run: float = 0.0) -> float:
     """Share of a producer's plant that works at the opening prices: only the workplaces whose own cost the
     revenue (at the tile's yield factor) covers do (producers.share_working), so a producer sized to the runs
     households' demand needs has that much more plant than it works, and the first year's plan (plant times this
     share) is the runs it was sized for. A run that cannot be priced counts as working in full (the first year's
     plan finds out)."""
     from . import producers, unit_cost
-    variable = unit_cost.variable_cost_per_run(recipe, prices, wages)
+    variable = unit_cost.variable_cost_per_run(recipe, prices, wages, rent_per_run)
     revenue = unit_cost.revenue_per_run(recipe, prices) * yield_factor
     if not math.isfinite(variable) or variable <= 0.0 or revenue <= 0.0:
         return 1.0

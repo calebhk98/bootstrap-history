@@ -77,7 +77,8 @@ class EntrantTests(unittest.TestCase):
                        healer={"difficulty": 0.0, "training_years": 8})
         _, equal = _run(_inputs(specs), {"digger": 0.5, "carver": 1.0, "healer": 1.0})
         self.assertLess(equal.entered[AREA]["healer"], equal.entered[AREA]["carver"])
-        _, higher = _run(_inputs(specs), {"digger": 0.5, "carver": 1.0, "healer": 3.0})
+        # the wage must outweigh the glut the trade's own apprentices make of its fixed demand
+        _, higher = _run(_inputs(specs), {"digger": 0.5, "carver": 1.0, "healer": 12.0})
         self.assertGreater(higher.entered[AREA]["healer"], higher.entered[AREA]["carver"])
 
     def test_capacity_limited_trade_overflows_to_other_choices(self):
