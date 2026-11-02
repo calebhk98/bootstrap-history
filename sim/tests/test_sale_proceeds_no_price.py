@@ -27,18 +27,16 @@ class CallerTests(unittest.TestCase):
             _sim=Game(_material_tag=lambda material: ("iron",),
                              economy=Game(agent_offered_tonnes=lambda material: None)),
             price_at_tile_per_tonne=lambda material: 10.0, sale_proceeds=lambda *args: None,
-            sold_tonnes=lambda key, party: 0.0, acting_party_id="founder",
+            posted_tonnes=lambda side, key: 0.0, acting_party_id="founder",
             import_tonnes_available=lambda material: None, _carriage_per_tonne=lambda material, price: 1.0)
         self.assertIsNone(GoodsMarket.quote(stand_in, "iron"))
 
     def test_quote_sell_with_no_proceeds_sells_nothing_and_names_no_stock_key(self):
         recorded = []
         stand_in = Game(
-            quote=lambda material: {"stock_key": "iron"}, sold_tonnes=lambda key, party: 0.0,
-            _with_buyers=lambda material, quote: {**quote, "market_available_tonnes_per_year": 100.0},
-            sale_room_tonnes=lambda quote, sold: 100.0,
-            sale_proceeds=lambda *args: recorded.append(args),
-            acting=Game(party_id="founder", held=lambda key: 10.0))
+            quote=lambda material: {"stock_key": "iron"}, posted_tonnes=lambda side, key: 0.0,
+            sale_limits=lambda material: (10.0, 100.0),
+            sale_proceeds=lambda *args: recorded.append(args))
         self.assertEqual(GoodsMarket.quote_sell(stand_in, "iron", 5.0), (None, 0.0, 0.0))
         self.assertEqual(len(recorded), 1)
 

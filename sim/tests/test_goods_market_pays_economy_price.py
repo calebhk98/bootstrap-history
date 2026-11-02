@@ -24,9 +24,13 @@ class _Economy:
         self.opened = True
         self.responses_asked = []
         self.tiles_asked = set()
+        self.posted = {}      # (side, commodity) -> tonnes the acting seat has ordered
 
     def acting_tile(self):
         return "tile"
+
+    def posted_goods_tonnes(self, seat_id, side, commodity):
+        return self.posted.get((side, commodity), 0.0)
 
     def agent_prices_at(self, tile=None):
         return dict(TILE_PRICE_PER_UNIT) if self.opened else None
@@ -148,10 +152,10 @@ class ClimbTests(unittest.TestCase):
         _game, market = stub_game()
         self.assertGreater(market.purchase_cost("wheat_kg", 5.0, already=40.0)[1], market.purchase_cost("wheat_kg", 5.0)[1])
 
-    def test_what_the_founder_bought_this_year_moves_the_price_of_the_next_order(self):
+    def test_what_the_founder_ordered_this_year_moves_the_price_of_the_next_order(self):
         game, market = stub_game()
         before = market.quote("wheat_kg")["buy_per_tonne"]
-        market.note_purchase("founder", "wheat_kg", 50.0)
+        game.economy.posted[("buy", "wheat_kg")] = 50.0
         self.assertGreater(market.quote("wheat_kg")["buy_per_tonne"], before)
 
     def test_a_good_the_economy_has_no_book_for_cannot_be_costed(self):

@@ -53,27 +53,15 @@ class GoodsViews:
 		return self.goods_market.household_prices()
 
 	def commodities_sold_by_acting_party(self):
-		market = self.goods_market
-		return self.economy.goods.commodities_sold_by(market.acting_party_id)
+		return self.goods_market.commodities_sold_by(self.goods_market.acting_party_id)
 
 	def others_trade_stamp(self):
-		"""What every party but the acting seat has sold and bought this year, comparable for equality, for caches whose
+		"""What every seat but the acting one has ordered to buy and sell this year, comparable for equality, for caches whose
 		answers read the posted price."""
 		return self.goods_market.others_stamp()
 
 	def main_material_of(self, commodity):
 		return self.economy.main_material_of(commodity)
-
-	# ---- the market's actors ----
-
-	def actor_supply(self, material):
-		"""Tonnes of `material` that firms and governments sold into the market this year, summed over every actor; the
-		acting seat's own sales are not included."""
-		return self.goods_market.others_sold_tonnes(self.needs.material_commodity[material])
-
-	def actor_demand(self, commodity):
-		"""Tonnes of a commodity that governments bought on the market this year."""
-		return self.goods_market.others_bought_tonnes(commodity)
 
 	# ---- facts the economy and the border settle ----
 

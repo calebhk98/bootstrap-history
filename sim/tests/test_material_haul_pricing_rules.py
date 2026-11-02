@@ -81,7 +81,7 @@ class QuoteVolume(unittest.TestCase):
             _sim=sim, acting_party_id="founder", price_at_tile_per_tonne=lambda material: 10.0,
             import_tonnes_available=lambda material: brought, _carriage_per_tonne=lambda material, price: 1.0,
             purchase_cost=lambda material, tonnes: (0.0, 11.0), sale_proceeds=lambda *args: (0.0, 9.0),
-            sold_tonnes=lambda key, party: 0.0, price_kind=lambda material: "market",
+            posted_tonnes=lambda side, key: 0.0, price_kind=lambda material: "market",
             making_cost_per_tonne=lambda material: None)
         return GoodsMarket.quote(stand_in, "alum_kg")["market_available_tonnes_per_year"]
 

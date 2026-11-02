@@ -1,11 +1,8 @@
-"""The society's yearly market for materials: the year's flows by party and the close of the year.
+"""The society's yearly market for materials: the close of the year and the market's report.
 
-Prices and traded volumes belong to the agent economy (sim/economy, through the port). This module keeps the goods market's
-flows by party and reports a market's sales from the economy's record.
-
-Everyone who buys or sells goes through the goods market, which writes the year's flows by party. The founder's own workings
-enter as a net: output the founder uses himself never reaches the market, so only what he buys, draws beyond his stock and
-sells does. What a firm or the state buys or sells is the same kind of entry.
+Prices and traded volumes belong to the agent economy (sim/economy, through the port), which clears every seat's and actor's
+orders together. This module keeps what the founder's running works drew from the market and reports a market's sales from the
+economy's record.
 """
 from sim.demography.api import RecordFoodEaten, rules as demography_rules
 from sim.foreign_trade.api import ResetActorTradeTallies
@@ -18,35 +15,25 @@ class Clearing:
 	# ---- the year's flows ----
 
 	def legacy_market_flows(self):
-		"""{"year", "bought": {commodity: {party: tonnes}}, "sold": {commodity: {party: tonnes}}, "drawn":
-		{commodity: tonnes}}, written by the goods market. When the year turns the acting seat's flows and draws start
-		again from nothing; every other party's entries stand until it deals again, as a firm's output and the state's
-		purchases are standing orders. The live record: the goods market writes into it."""
+		"""{"year", "drawn": {commodity: tonnes}}: what the founder's running works drew from the market this year, written by
+		the goods market; it starts again from nothing when the year turns. The live record."""
 		world = self.world
 		year = self.needs.year()
-		flows = world.market_flows
-		if not flows or flows.get("year") != year:
-			previous = flows or {}
-			flows = world.market_flows = {"year": year, "drawn": {}}
-			seats = self.needs.seat_list()["joined"]
-			for kind in ("bought", "sold"):
-				standing = {commodity: {party: tonnes for party, tonnes in parties.items() if party not in seats}
-				            for commodity, parties in (previous.get(kind) or {}).items()}
-				flows[kind] = {commodity: parties for commodity, parties in standing.items() if parties}
-		return flows
+		if not world.market_flows or world.market_flows.get("year") != year:
+			world.market_flows = {"year": year, "drawn": {}}
+		return world.market_flows
 
 	# ---- what callers read ----
 
 	def market_state(self, material):
 		"""The market for one material as of now, for reports: what the agent economy's markets of its commodity sold, left
-		unsold and left unmet last year, split into the acting seat's own sales (it sells through the same markets, so the
+		unsold and left unmet last year, split into the acting seat's own sales in that clearing (it sells through the same markets, so the
 		market's total holds them) and everyone else's. None while the economy opens or when the commodity has no priced material."""
 		commodity = self.needs.material_pool[material][0]
 		record = self.economy.agent_market_record(commodity)
 		if record is None:
 			return None
-		market_api = self.goods_market
-		displaced = min(record["sold"], market_api.sold_tonnes(commodity, market_api.acting_party_id))
+		displaced = min(record["sold"], self.economy.seat_traded_tonnes(self.goods_market.acting_party_id, "sold").get(commodity, 0.0))
 		return {
 			"material": commodity,
 			"society_sales_tonnes": record["sold"] - displaced,

@@ -74,10 +74,10 @@ class GoodsPricing:
         return total / slices
 
     def _bought_this_year(self, material):
-        """Tonnes the asking seat has taken from the market this year in the material's commodity, bought or
-        drawn by its running works."""
+        """Tonnes the asking seat has ordered from the market this year in the material's commodity, which the economy
+        has not yet cleared, and its running works have drawn."""
         commodity = self._sim._material_tag(material)[0]
-        return self.bought_tonnes(commodity, self.acting_party_id) + self.drawn_tonnes(commodity)
+        return self.posted_tonnes("buy", commodity) + self.drawn_tonnes(commodity)
 
     def purchase_cost(self, material, tonnes, already=0.0):
         """(money, mean money per tonne) to buy `tonnes` of a material now: the price on the acting tile climbing

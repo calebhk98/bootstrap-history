@@ -13,8 +13,9 @@ from sim.tests.world_stand_in import fake_needs
 
 def stand_in(record, founder_sold=0.0):
     return market_stand_in.markets_over(
-        economy=types.SimpleNamespace(agent_market_record=lambda commodity: record),
-        goods_market=types.SimpleNamespace(sold_tonnes=lambda commodity, party: founder_sold, acting_party_id="founder"),
+        economy=types.SimpleNamespace(agent_market_record=lambda commodity: record,
+                                      seat_traded_tonnes=lambda seat, side: {"iron": founder_sold}),
+        goods_market=types.SimpleNamespace(acting_party_id="founder"),
         material_pool=lambda material: (material, None))
 
 

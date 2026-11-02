@@ -66,11 +66,8 @@ class _Market(GoodsMarket):
     def household_prices(self):
         return {}
 
-    def bought_tonnes(self, commodity, buyer_id=None):
-        return self.bought.get(commodity, 0.0)
-
-    def sold_tonnes(self, commodity, seller_id=None):
-        return 0.0
+    def posted_tonnes(self, side, commodity, seat_id=None):
+        return self.bought.get(commodity, 0.0) if side == "buy" else 0.0
 
     def drawn_tonnes(self, commodity):
         return 0.0
@@ -106,7 +103,7 @@ means = [market.purchase_cost(WHEAT, OFFERED_TONNES * share)[1] for share in (0.
 check("a larger order costs more a tonne", means == sorted(means) and means[-1] > means[0], means)
 earlier = _Market(PAID)
 earlier.bought[WHEAT] = 50.0
-check("tonnes the seat bought earlier in the year count toward the climb",
+check("tonnes the seat ordered earlier in the year count toward the climb",
       earlier.purchase_cost(WHEAT, 10.0)[1] > market.purchase_cost(WHEAT, 10.0)[1])
 sale_means = [market.sale_proceeds(WHEAT, OFFERED_TONNES * share)[1] for share in (0.01, 0.5, 5.0, 50.0)]
 check("a sale fetches less a tonne the more is sold",

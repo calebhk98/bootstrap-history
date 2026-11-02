@@ -315,7 +315,7 @@ Two fixes, usable separately or together:
                                                     rows (`automation`) say so. A mine ordered by
                                                     auto_mine has an `order` id on its audit row,
                                                     its tranche and its working
-      {"cmd":"sell","material":"iron","n":5}       sell stock at the current value
+      {"cmd":"sell","material":"iron","n":5}       offer stock at the year's clearing ("limit": least per tonne); the reply says what was posted
       {"cmd":"sell","what":"concern","id":"<id>"}  sell a concern you run through the exchange: the
                                                     buyer is the AI actor that can make it and pay
                                                     and keeps most money after paying; the price

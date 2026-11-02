@@ -10,6 +10,7 @@ while it opens. The port reads the game through `PortWorld` (port_world.py).
 from sim.economy import api as economy_api
 from sim.production.api import node_upkeep
 
+from . import port_goods_orders
 from .commands import RepriceOpeningMoney
 
 
@@ -242,6 +243,21 @@ class EconomyPort:
     def note_actor_purchase(self, buyer, commodity, tonnes, budget):
         """An actor's tonnes of a commodity it bids for in the agent economy's market this year, with its budget in coin."""
         self.agent.note_purchase(buyer, commodity, tonnes, budget)
+
+    def post_goods_order(self, seat_id, order):
+        """A seat's order for the year's clearing (port_goods_orders.py); nothing settles until then."""
+        port_goods_orders.add_order(self.agent.stored, seat_id, order)
+
+    def posted_goods_orders(self, seat_id=None):
+        """The seat's orders waiting for the clearing, or {seat id: orders} of every seat's."""
+        return port_goods_orders.posted_orders(self.agent.stored, seat_id)
+
+    def posted_goods_tonnes(self, seat_id, side, stock_key):
+        return port_goods_orders.posted_tonnes(self.agent.stored, seat_id, side, stock_key)
+
+    def seat_traded_tonnes(self, seat_id, side):
+        """{commodity: tonnes} the seat "bought" or "sold" in the last clearing."""
+        return port_goods_orders.traded_tonnes(self.agent.stored, seat_id, side)
 
     def actor_held_units(self, buyer, material):
         """Durable units owned by an actor after settled market purchases."""

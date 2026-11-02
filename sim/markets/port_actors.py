@@ -127,15 +127,11 @@ def purchase_orders(economy, purchases: Sequence[dict], tonnes_per_unit: Callabl
     return orders, funding
 
 
-def standing_bids(economy, flows: dict, seats, tile: str, tonnes_per_unit: Callable[[str], float],
+def standing_bids(economy, flows: dict, tile: str, tonnes_per_unit: Callable[[str], float],
                   materials_in: Callable[[str], Sequence[str]]) -> Tuple[Bid, ...]:
-    """The founder's year of draws on materials (bought at the market edge, or taken by running works) as fixed-quantity
-    bids at the economy's price, for firm entry to read. They are not cleared: the engine has already paid."""
-    wanted: Dict[str, float] = {}
-    for commodity, parties in sorted((flows.get("bought") or {}).items()):
-        wanted[commodity] = wanted.get(commodity, 0.0) + sum(tonnes for party, tonnes in parties.items() if party in seats)
-    for commodity, tonnes in sorted((flows.get("drawn") or {}).items()):
-        wanted[commodity] = wanted.get(commodity, 0.0) + tonnes
+    """What the founder's running works drew from the market this year as fixed-quantity bids at the economy's price, for
+    firm entry to read. They are not cleared: the works have already used the goods."""
+    wanted: Dict[str, float] = dict(sorted((flows.get("drawn") or {}).items()))
     view, found = economy.view(), []
     for commodity, tonnes in sorted(wanted.items()):
         good = good_for(economy, commodity, materials_in)
