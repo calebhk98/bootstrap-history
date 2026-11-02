@@ -41,13 +41,13 @@ def outside_option_by_tile(setup, record, view) -> Dict[str, float]:
             for tile, floor in floors.items()}
 
 
-def labour_offers(setup, record, view, subsistence_by_tile, levy_hours_per_worker: float = 0.0) -> List[LabourOffer]:
+def labour_offers(setup, record, view, subsistence_by_tile, levy_hours_per_worker: float = 0.0,
+                  levied_tiles: Sequence[str] = ()) -> List[LabourOffer]:
     """Each cohort's share of the tile's workers in each trade, as hours at the reservation wage. The hours a state
-    levies (`levy_hours_per_worker`) are not the households' to offer."""
-    hours_left = max(0.0, setup.working_hours_per_year - max(0.0, levy_hours_per_worker))
-    if hours_left <= 0.0:
-        return []
+    levies (`levy_hours_per_worker`) come off the hours of the workers on the tiles it holds (`levied_tiles`) before
+    they are offered, never below nothing for an offer."""
     danger = {trade: spec.fatality_risk_per_year for trade, spec in setup.trades.items()}
+    levied = set(levied_tiles)
     offers: List[LabourOffer] = []
     working_by_tile: Dict[str, float] = {}
     for cohort in record.cohorts.values():
@@ -60,8 +60,12 @@ def labour_offers(setup, record, view, subsistence_by_tile, levy_hours_per_worke
         if area not in people_by_area:
             people_by_area[area] = people_by_trade(record.labour.workforce, area)
         workers = {trade: count * share for trade, count in people_by_area[area].items()}
-        offers.extend(households.labour_offers(cohort, workers, view, subsistence_by_tile.get(cohort.tile, 0.0),
-                                               hours_left, danger))
+        made = households.labour_offers(cohort, workers, view, subsistence_by_tile.get(cohort.tile, 0.0),
+                                        setup.working_hours_per_year, danger)
+        if cohort.tile in levied and levy_hours_per_worker > 0.0:
+            kept = max(0.0, 1.0 - levy_hours_per_worker / setup.working_hours_per_year)
+            made = [dataclasses.replace(offer, hours=offer.hours * kept) for offer in made]
+        offers.extend(made)
     return offers
 
 

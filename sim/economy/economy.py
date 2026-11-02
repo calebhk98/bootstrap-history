@@ -24,6 +24,7 @@ from . import capital_year, household_hours_year, household_work_year, land_bid_
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from . import flight_step
 from .labour_inputs import labour_context
+from sim.labour.api import people_in
 from .labour_state import scale_people
 from .opening import open_economy
 from .protocols import YearInputs
@@ -188,7 +189,8 @@ class Economy:
         outside_option = outside_option_by_tile(setup, record, view)
         land_lease_year.lease_in_market(setup, record, view, self._own_plot_options())
         land_bid_year.take_up_own(setup, record, self._own_plot_options())
-        everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker)
+        everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker,
+                                 inputs.population_by_tile)
         context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
         context = dataclasses.replace(context, outlay_room=outlay_room.by_employer(
             plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money)))
@@ -274,7 +276,8 @@ class Economy:
 
     # ---- the year's pieces ------------------------------------------------------------------
     def _follow_population(self, inputs: YearInputs) -> None:
-        """Cohorts and workforce follow the engine's people per tile."""
+        """Demography's people per tile are the one count: the cohorts are rescaled to it, then the labour core's workers
+        and trainees on each tile to the working people the cohorts hold. The core adds no entrants or leavers of its own."""
         if not inputs.population_by_tile:
             return
         record = self.record
@@ -289,10 +292,14 @@ class Economy:
             scale = after / before
             record.cohorts[cohort_id] = replaced(cohort, people=cohort.people * scale,
                                                   working_people=cohort.working_people * scale)
-        for tile, before in people_now.items():
-            after = inputs.population_by_tile.get(tile, before)
-            if before > 0.0 and after != before:
-                scale_people(record.labour.workforce, labour_area(tile), after / before)
+        working: Dict[str, float] = {}
+        for cohort in record.cohorts.values():
+            working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
+        for tile, people in sorted(working.items()):
+            area = labour_area(tile)
+            held = people_in(record.labour.workforce, area)
+            if held > 0.0 and held != people:
+                scale_people(record.labour.workforce, area, people / held)
 
     def _follow_yields(self, inputs: YearInputs) -> None:
         for producer_id, factor in inputs.yield_factor_by_producer.items():
