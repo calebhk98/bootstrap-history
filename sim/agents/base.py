@@ -213,8 +213,7 @@ class Actor(Reviewable, Borrower):
 		return begun
 
 	def work_on_copies(self, world: Any) -> List[str]:
-		"""Advance every copy a year; returns the ids that succeeded."""
-		self.workforce.clear()
+		"""Advance every copy a year; returns the ids that succeeded (its crew is what the labour core hired, kept as it is)."""
 		finished = []
 		for node_id in sorted(self.works):
 			work = self.works[node_id]
