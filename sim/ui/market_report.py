@@ -79,5 +79,6 @@ def market_report(sim, offset=0, limit=DEFAULT_MATERIAL_PAGE, material=None):
 def trade_rows(sim):
     """The acting seat's goods orders waiting for the year's clearing and what the last clearing bought and sold for it."""
     traded = sim.view("seat_goods_traded")()
-    return {"orders": sim.view("seat_goods_orders")(), "traded": {side: dict(traded.get(side) or {}) for side in ("bought", "sold")}}
+    return {"orders": sim.view("seat_goods_orders")(), "traded": {side: dict(traded.get(side) or {}) for side in ("bought", "sold")},
+            "order_results": list(traded.get("orders") or ())}
 

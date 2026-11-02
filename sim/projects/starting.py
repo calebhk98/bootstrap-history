@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional, Tuple
 from sim.agents.api import CommandRejected, edges, research
 from sim.ledger.api import PayEdge
 
-from . import bribe_rules, constants, funding, instantaneous, record_rules, start_rules
+from . import bribe_rules, constants, funding, instantaneous, materials_wait, record_rules, start_rules
 from .commands import Bribe, PostBounty, PutProjectFirst, StartProject, StopProject
 from sim.materials.api import SettleProjectMaterials
 from sim.reporting.api import RecordEvent
@@ -44,7 +44,7 @@ class Starting:
 		record = record_rules.new_record(node, self.rebuild_work_factor(node_id), ph_left, spent, cost_left,
 		                                 include_labour, bill, own_output_claim)
 		if awaiting:
-			record["awaiting_materials"] = list(awaiting)       # the project waits for these orders to be filled at the clearing
+			materials_wait.record_orders(record, awaiting)      # the project waits for these orders to be filled at the clearing
 		active[node_id] = record
 		return record
 
@@ -79,7 +79,7 @@ class Starting:
 			record["ph_left"] += self.precaution_extra_hours(node_id)
 		# A genuinely instantaneous capability should not need an otherwise empty annual turn merely to trip the
 		# completion check. Anything with money, labour, risk, or a calendar floor stays on the normal path.
-		if not awaiting and instantaneous.is_instantaneous(node["ph"], self.calendar_floor(node_id), price, node["lab"], self.effective_risk(node_id)):
+		if not any(not entry.get("refused") for entry in awaiting) and instantaneous.is_instantaneous(node["ph"], self.calendar_floor(node_id), price, node["lab"], self.effective_risk(node_id)):
 			self._complete(node_id)
 			return "done"
 		if paid_now > 0.5:

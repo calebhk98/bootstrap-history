@@ -259,6 +259,18 @@ class EconomyPort:
         """{commodity: tonnes} the seat "bought" or "sold" in the last clearing."""
         return port_goods_orders.traded_tonnes(self.agent.stored, seat_id, side)
 
+    def seat_order_results(self, seat_id):
+        """[result] of each order the last clearing handled for the seat, refused ones with their cause."""
+        return port_goods_orders.order_results(self.agent.stored, seat_id)
+
+    def seat_committed_money(self, seat_id):
+        """Money the seat's posted buy orders reserve, plus the staff funding the port will draw from it this year."""
+        agent = self.agent
+        committed = port_goods_orders.committed_money(port_goods_orders.posted_orders(agent.stored, seat_id))
+        if not agent.opened():
+            return committed
+        return committed + port_goods_orders.staff_funding_coin(self._sim, agent.economy(), seat_id, agent._tile_in_economy)
+
     def actor_held_units(self, buyer, material):
         """Durable units owned by an actor after settled market purchases."""
         return self.agent.held_units(buyer, material)

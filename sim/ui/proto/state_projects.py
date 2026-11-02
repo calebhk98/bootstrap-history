@@ -33,8 +33,10 @@ def _agent_state_active_projects(sim, nodes):
                          "because_nobody_here_can": progress.get("blocked_on_trades")}
                         if _at_risk else {}),
                      # a project started with materials on order waits for the year's clearing to deliver them
-                     **({"held_cause": progress["held_cause"], "awaiting_materials": progress.get("awaiting_materials")}
+                     **({"held_cause": progress["held_cause"], "awaiting_materials": progress.get("awaiting_materials"),
+                         "materials_short": progress.get("materials_short")}
                         if progress.get("held_cause") else {}),
+                     **({"materials_refused": progress["materials_refused"]} if progress.get("materials_refused") else {}),
                      # Say which of the three things a project is actually
                      # waiting for.
                      # WORKED OUT NOW, not read off what last year happened

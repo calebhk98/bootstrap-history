@@ -6,12 +6,12 @@ check. Every random draw the stages make (completion rolls the dice once per att
 project."""
 from sim.agents.api import edges
 from sim.ledger.api import NoteSpend, PayEdge
-from sim.materials.api import ApplyThrottle
+from sim.materials.api import ApplyThrottle, ReorderProjectMaterials
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
 from sim.workforce.api import ResetTradeHours, SpendDirectorHours
 
-from . import funding as project_funding, start_rules
+from . import funding as project_funding, materials_wait, start_rules
 from .arrears_hours_line import arrears_hours_line
 from .hour_offer import hours_offered, unmet_directive_cause
 
@@ -40,7 +40,7 @@ class ProgressPhase:
 		# bookkeeping and completion check. Every dice-touching call these stages make runs exactly once, in exactly this
 		# order, for exactly this project: the stages are called unconditionally in sequence, and only the two early
 		# returns below skip any of them.
-		if self._project_progress_materials_gate(project_state):
+		if self._project_progress_materials_gate(node_id, project_state):
 			return remaining, hired_left, 0.0
 		if self._project_progress_trade_gate(node_id, project_state, node):
 			return remaining, hired_left, 0.0
@@ -57,22 +57,47 @@ class ProgressPhase:
 			_afford_context=_afford_context)
 		return remaining, hired_left, project_state["hours_effective_this_year"]
 
-	def _project_progress_materials_gate(self, project_state):
-		# Stage 0: a project started with materials on order waits until the year's clearing has filled (or dropped) those orders,
-		# as it waits for staff hired at the clearing. True when it is held this year, with the cause on its record.
-		awaited = project_state.get("awaiting_materials")
-		if awaited:
-			outstanding = sorted({order["stock_key"] for order in self.needs.seat_goods_orders()
-			                      if order["side"] == "buy" and order["stock_key"] in awaited})
-			if outstanding:
-				project_state["held_cause"] = "awaiting_materials"
-				project_state["awaiting_materials"] = outstanding
-				project_state["hours_offered_this_year"] = 0.0
-				project_state["hours_effective_this_year"] = 0.0
-				return True
-		project_state.pop("awaiting_materials", None)
-		project_state.pop("held_cause", None)
-		return False
+	def _project_progress_materials_gate(self, node_id, project_state):
+		# Stage 0: a project started with materials on order waits until the year's clearing has run, then until the materials
+		# are in stock. The bill is charged for what the clearing bought, at what it cost; what an order left unbought (it filled
+		# short, or was refused with a cause) is ordered again at the next clearing and the project stays held, with the cause on
+		# its record. Only the project's own orders hold it, not a player's own buy of the same good. True when it is held.
+		on_order = project_state.get("materials_on_order")
+		if not on_order:
+			materials_wait.clear_orders(project_state)
+			return False
+		needs = self.needs
+		if any(order.get("project") == node_id for order in needs.seat_goods_orders()):
+			return self._hold_for_materials(project_state, "awaiting_materials")
+		results = [result for result in needs.seat_goods_traded().get("orders", ())
+		           if result.get("project") == node_id and result["side"] == "buy"]
+		add_back, shortfalls = materials_wait.reconcile(on_order, results)
+		if not shortfalls:
+			self._charge_materials_bill(project_state, add_back)
+			materials_wait.clear_orders(project_state)
+			return False
+		ordered, entries = needs.send(ReorderProjectMaterials(
+			node_id, tuple((shortfall["material"], shortfall["tonnes"]) for shortfall in shortfalls)))
+		self._charge_materials_bill(project_state, add_back - ordered)
+		materials_wait.set_on_order(project_state, materials_wait.kept_after_reorder(entries))
+		project_state["materials_short"] = [
+			{"material": shortfall["material"], "short_tonnes": round(shortfall["tonnes"], 3), "cause": shortfall["cause"]}
+			for shortfall in shortfalls]
+		return self._hold_for_materials(project_state, "materials_short")
+
+	@staticmethod
+	def _charge_materials_bill(project_state, change):
+		# The bill fell by the quote of each order when the project started; it rises by what the clearing did not buy.
+		project_state["cost_left"] = project_state["cost_left"] + change
+		if "bill" in project_state:
+			project_state["bill"] = project_state["bill"] + change
+
+	@staticmethod
+	def _hold_for_materials(project_state, cause):
+		project_state["held_cause"] = cause
+		project_state["hours_offered_this_year"] = 0.0
+		project_state["hours_effective_this_year"] = 0.0
+		return True
 
 	def _project_progress_trade_gate(self, node_id, project_state, node):
 		# Stage 1: is there anybody to do the work. Returns True when the project is stalled or just halted this year, in
