@@ -2,7 +2,7 @@
 
 > **Checked against the code (2026-11):** the "Ours, Rome" row first read 92% unsold, a 64-81% people-based rate and 40 years;
 > none of these is in the cited `rome-unemployment-audit.md`, which runs 16 years (year 15: 0.888 of hours unsold, person-equivalent
-> 0.86). The row now carries the audit's figures. Those figures are from an earlier build and were not re-measured.
+> 0.86). The row now carries the audit's figures. Those figures are from an earlier build, predate the A1/A2 fixes of Complaint 964 and were not re-measured.
 
 Each model was obtained, built and run in this session; its rules were read from the code that ran (file and line in
 its own report). Reports: `model-run-bam.md`, `model-run-lengnick.md`, `model-run-mark0.md`, `model-run-jmab.md`.

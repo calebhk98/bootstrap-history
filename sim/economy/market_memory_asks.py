@@ -6,6 +6,7 @@ from typing import Optional, Sequence
 from sim.constants import declare
 
 from .goods_market import quantity_at
+from .market_memory import MarketMemory
 from .types import EDGE_EXTERNAL, Bid, Offer
 
 def has_no_bids(bids: Sequence[Bid]) -> bool:
@@ -33,24 +34,18 @@ REPRESENTATIVE_TRADE_SHARE = declare(
         "basis.")
 
 
-def note_bids(memory, key: str, bids: Sequence[Bid], offers: Sequence[Offer]) -> int:
+def note_bids(memory: MarketMemory, key: str, bids: Sequence[Bid], offers: Sequence[Offer]) -> int:
     """Count the years a market with offers has had nobody bidding; returns the count before this year."""
-    before = memory.years_without_bids.get(key, 0)
     if offers and has_no_bids(bids):
-        memory.years_without_bids[key] = before + 1
-    else:
-        memory.years_without_bids.pop(key, None)
-    return before
+        return memory.count_year_without_bids(key)
+    return memory.end_years_without_bids(key)
 
 
-def note_offers(memory, key: str, bids: Sequence[Bid], offers: Sequence[Offer]) -> int:
+def note_offers(memory: MarketMemory, key: str, bids: Sequence[Bid], offers: Sequence[Offer]) -> int:
     """Count the years a market with bids has had no seller; returns the count before this year."""
-    before = memory.years_without_offers.get(key, 0)
     if not any(offer.quantity > 0.0 for offer in offers) and not has_no_bids(bids):
-        memory.years_without_offers[key] = before + 1
-    else:
-        memory.years_without_offers.pop(key, None)
-    return before
+        return memory.count_year_without_offers(key)
+    return memory.end_years_without_offers(key)
 
 
 def memory_reference_volume(usual_volume: float, wanted_at_old_price: float) -> float:

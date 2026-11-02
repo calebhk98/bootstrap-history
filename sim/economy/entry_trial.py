@@ -21,6 +21,7 @@ from .entrant_rent import site_rent_per_run
 from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
 from .producers import Producer, live_input_prices_at, live_wages_at
 from .types import AreaId, Bid, GoodId, Recipe
+from .rates import charged_rate
 
 ENTRY_PRICE_MARGIN_SHARE = declare(
     "ENTRY_PRICE_MARGIN_SHARE", 0.25, kind="temporary_heuristic",
@@ -120,7 +121,7 @@ def recipes_by_cost(setup, record, view, good, tile, recipe_ids,
     """(recipe, full cost per unit of `good`) for each recipe that can be costed, cheapest first. With `output_per_year`
     (units of `good` a newcomer would make a year) a recipe is costed at the hours its newcomer needs over the years it
     is judged on (entry_practice.py); without, at the booked hours."""
-    rate = view.interest_rate(setup.currency_id)
+    rate = charged_rate(view.interest_rate(setup.currency_id))
     ranked = []
     for recipe_id in recipe_ids:
         recipe = setup.recipes[recipe_id]

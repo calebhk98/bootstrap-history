@@ -14,8 +14,8 @@ labour supply:
   hour). Households' hours sold barely rise with the wage (the plot keeps a fixed share,
   `households_hours_offered.py`), so the supply schedule is nearly vertical down to the reservation. When hours
   offered exceed hours wanted by a sliver, the clearing target falls to where that vertical schedule meets demand, far
-  under the opening wage; the reported wage is the mean of seeded contracts (`opening_resting.resting_labour_contracts`)
-  and new hires at that low offer (separations put about half the held hours back on the market each year).
+  under the opening wage; the reported wage is one market wage (the hours-weighted mean of the offers paid to the hours taken on in the clearing, `DESIGN.md`; the opening's held hours are `opening_resting.resting_hours_held` and carry no wage of their own)
+  and so follows the new hires' low offer (separations put about half the held hours back on the market each year).
 - Measured: with demand and supply equal to about one part in a billion the wage clears at about four fifths of the
   opening wage; adding a cost that moves the opening's hours sold per worker by a few tenths of a per cent (the
   working-capital charge below) leaves a sliver of idle hours and the year-zero wage falls to about three fifths, with a

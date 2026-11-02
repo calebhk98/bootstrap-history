@@ -50,7 +50,7 @@ class Clearing:
 		economy = self.economy
 		economy.run_agent_year()
 		outcome = economy.agent.outcomes[-1]
-		accounts = getattr(outcome, "accounts", None)
+		accounts = outcome.accounts
 		if accounts is None:
 			self.needs.send(RecordFoodEaten(None, {}))
 		else:

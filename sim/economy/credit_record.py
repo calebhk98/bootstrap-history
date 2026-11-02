@@ -1,14 +1,18 @@
 """What the economy keeps about credit from year to year: the contracts, the requests made at the last close, what
 lenders have lost and what borrowers were lent."""
+import dataclasses
 from dataclasses import dataclass, field
 from typing import Dict, List
 
-from sim.contracts import Contracts
+from sim.contracts import TERM_LOAN, Contracts
 from sim.rekey import rekey
 
 from . import credit_claims
 from .record_parts import OwnedRecord
 from .types import AgentId, Loan, LoanRequest, TileId
+
+
+TRANSFER_TOLERANCE = 1e-9    # numerical: a share of a loan this close to the whole moves the loan itself
 
 
 def _contracts_from(records) -> Contracts:
@@ -64,6 +68,28 @@ class CreditRecord(OwnedRecord):
 
     def add_loans(self, loans: List[Loan]) -> None:
         self.contracts.term_loans.extend(loans)
+
+    def transfer_loan(self, loan: Loan, buyer: AgentId, part: float) -> None:
+        """`buyer` takes `part` (a share, at most one) of the loan's principal with the same share of its arrears and
+        collateral: the whole loan changes lender, a part is split off as a contract of the buyer's own."""
+        if part >= 1.0 - TRANSFER_TOLERANCE:
+            loan.lender = buyer
+            return
+        bought = dataclasses.replace(loan, contract_id="%s|%s" % (loan.loan_id, buyer), lender=buyer,
+                                     principal=loan.principal * part, arrears=loan.arrears * part,
+                                     arrears_interest=loan.arrears_interest * part,
+                                     collateral_value=loan.collateral_value * part,
+                                     collateral_share=loan.collateral_share * part)
+        loan.principal -= bought.principal
+        loan.arrears -= bought.arrears
+        loan.arrears_interest -= bought.arrears_interest
+        loan.collateral_value -= bought.collateral_value
+        loan.collateral_share -= bought.collateral_share
+        self.add_loan(bought)
+
+    def default_term_loans(self, borrower: AgentId) -> None:
+        """The borrower's term loans leave the contracts as defaulted (the losses are booked by the caller)."""
+        self.contracts.default(borrower, TERM_LOAN)
 
     def ask_for_loan(self, request: LoanRequest) -> None:
         """A request that waits for the next lending."""

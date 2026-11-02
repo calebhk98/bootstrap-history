@@ -25,12 +25,15 @@ class FirmYear(NamedTuple):
 
 
 def settled(producer, survivor, revenue: float, running_costs: float, interest: float, depreciation: float,
-            commitments: float, arrears: float, cash: float, equity_value: float, assets: float, debt: float,
+            commitments: float, arrears: float, cash: float, equity_value: float, capital_and_cash: float, debt: float,
             cash_kept: Optional[float] = None) -> FirmYear:
     """Eurace@Unibi's order: income statement, dividend, liquidity needs, the check for illiquidity, the
     cut to the dividend in a crisis, then insolvency. `survivor` is the producer after the close (its cash target is
     the production liquidity needs); `commitments` are the interest and installments next due, `arrears` what it could
-    not pay this year. A producer in order pays at least the cash above `cash_kept` (None: no such rule)."""
+    not pay this year. `capital_and_cash` is what the write-off is scaled to: plant and cash without the stock held
+    (Eurace@Unibi, Firm_bankruptcy_rescale_loans: TOTAL_ASSETS = TOTAL_VALUE_CAPITAL_STOCK + PAYMENT_ACCOUNT), while
+    `equity_value`, which the insolvency test reads, counts the stock. A producer in order pays at least the cash
+    above `cash_kept` (None: no such rule)."""
     earnings = finance.net_earnings(revenue, running_costs, interest, depreciation)
     earnings_history = finance.appended(producer.net_earnings_history, earnings)
     revenue_history = finance.appended(producer.revenue_history, revenue)
@@ -47,7 +50,7 @@ def settled(producer, survivor, revenue: float, running_costs: float, interest: 
         state = "insolvent"
     kept = replaced(survivor, net_earnings_history=earnings_history, revenue_history=revenue_history)
     if state in BANKRUPT_STATES:
-        ratio = finance.write_off_ratio(debt, assets, state == "illiquid")
+        ratio = finance.write_off_ratio(debt, capital_and_cash, state == "illiquid")
         return FirmYear(replaced(kept, idle_years=finance.BANKRUPTCY_IDLE_YEARS), 0.0, state, ratio)
     return FirmYear(kept, max(0.0, min(dividend, cash)), state, 0.0)
 
@@ -62,6 +65,7 @@ def settle_year(setup, record, view, producer, closed, recipe, revenue: float, r
     debt = sum(loan.principal + loan.arrears for loan in loans)
     stock = equity.inventory_value(record, producer, view)
     assets = equity.firm_assets(survivor, recipe, cash, stock, view)
+    capital_and_cash = equity.firm_assets(survivor, recipe, cash, 0.0, view)
     wear = 0.0
     if recipe.plant_life_years > 0.0 and producer.capacity_runs > 0.0:
         per_run = unit_cost.plant_value_per_run(recipe, live_input_prices(producer, recipe, view), live_wages(producer, recipe, view))
@@ -71,7 +75,7 @@ def settle_year(setup, record, view, producer, closed, recipe, revenue: float, r
     kept = finance.cash_to_keep(survivor.cash_target, finance.financial_commitments(loans, producer.agent_id), replacement, running_costs)
     year = settled(producer, survivor, revenue, running_costs, finance.interest_due(loans, producer.agent_id),
                    wear, finance.financial_commitments(loans, producer.agent_id), sum(loan.arrears for loan in loans),
-                   cash, assets - debt, assets, debt, kept)
+                   cash, assets - debt, capital_and_cash, debt, kept)
     transfers = (Transfer(producer.agent_id, producer.owner, money, year.dividend, "dividend"),) if year.dividend > 0.0 else ()
     if year.state in BANKRUPT_STATES:        # a bankrupt producer asks for no loan to grow
         return replaced(closed, producer=year.producer, transfers=(), loan_request=None, expansion_runs=0.0), (), year

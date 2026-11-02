@@ -69,11 +69,16 @@ class MarkMoneyPricedAtEconomy(Command):
 
 @dataclass(frozen=True)
 class BuyMaterial(Command):
-	"""The acting seat orders `tonnes` of a material at the year's clearing, paying no more than `limit_per_tonne` (the quote when
-	None). Answers the posted order, or a refusal; the goods arrive when the year clears."""
+	"""The acting seat orders `tonnes` of a material at the year's clearing, paying the market no more than `limit_per_tonne` (the
+	quote's price when None); carriage to the seat is charged on top when the goods arrive, unless `limit_includes_carriage` says
+	the limit already counts it. `project` tags an order a project waits for; `cost_factor` is the project's opposition and
+	geography factor on the money. Answers the posted order, or a refusal; the goods arrive when the year clears."""
 	material: str
 	tonnes: float
 	limit_per_tonne: Optional[float] = None
+	project: Optional[str] = None
+	cost_factor: float = 1.0
+	limit_includes_carriage: bool = False
 
 
 @dataclass(frozen=True)

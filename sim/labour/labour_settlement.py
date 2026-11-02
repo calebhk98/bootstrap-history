@@ -64,10 +64,9 @@ class SettlementMixin:
         return settlement.distance_km(self.held_tiles(), self.base_tile(), tile)
 
     def _town_population_at(self, tile):
-        """People in `tile`'s town: a set share of the tile's own people (so never more than the nation's), or what a
+        """People in `tile`'s town: a set share of the tile's own people (demography's count, `settlement_tiles`), or what a
         registered town provider says, capped at the tile's people."""
-        homes = self.held_tiles()
-        tile_people = self._world.population.total * settlement.population_share(homes, tile)
+        tile_people = self.settlement_tiles().get(tile, 0.0)
         nominal = tile_people * self.TOWN_MAX_SHARE_OF_TILE
         provided = self._world.provided_town_population(tile, nominal)
         return nominal if provided is None else min(provided, tile_people)

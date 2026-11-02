@@ -253,9 +253,7 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     base_reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
     lowest = inputs.ask_floor_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
     reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, unskilled_option(state, inputs, area, trade))
-    last = state.entry_wages.get(area, {}).get(trade)
-    if last is None:
-        last = state.wages.get(area, {}).get(trade)
+    last = state.wages.get(area, {}).get(trade)
     long_run = max(trained_substitute_wage(state, inputs, area, trade), reservation)
     supply = (import_costs or ImportCosts(state, inputs)).supply(area, trade) if bids else None
     imported, fetched_share = supply if supply is not None else (None, 0.0)
@@ -294,14 +292,13 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
             offered = sold_at(wage)    # the hours sold are those the market settles at
         poach(hired, wanted, ranks)
     hired = {employer: hours for employer, hours in hired.items() if hours > 0.0}
-    state.entry_wages.setdefault(area, {})[trade] = wage
     state.wages.setdefault(area, {})[trade] = wage
     asks.record(state, area, trade, offered, sum(wanted.values()), wage, base_reservation, lowest)
     state.hired_hours.setdefault(area, {})[trade] = dict(hired)
     total = sum(hired.values())
     return Clearing(trade=trade, area=area, wage=wage, hours_offered=offered, hours_wanted=sum(wanted.values()),
-                    hours_hired=total, hired_by_employer=hired, average_wage=wage,
-                    target_wage=target, new_hire_wage=wage, hours_held=full,
+                    hours_hired=total, hired_by_employer=hired,
+                    target_wage=target, hours_held=full,
                     demand=tuple((bid.maximum_wage, bid.hours) for bid in bids))
 
 

@@ -1,5 +1,5 @@
 """Builds the agent economy's setup from a simulation's opening state. Part of the port: with
-economy_port.py, the only engine modules that import `sim.economy`.
+port.py, the only engine modules that import `sim.economy`.
 
 The tree's knowledge stays here: which production entries the society can run is decided by the
 nodes it holds; the economy only receives the recipes.

@@ -23,6 +23,7 @@ from .ask_adjust import ASK_BAND_CEILING, band_edge
 from .market_memory import market_key
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import Bid, Offer
+from .rates import charged_rate
 
 
 def unit_cost(setup, record, view, offer: Offer) -> Optional[float]:
@@ -34,7 +35,7 @@ def unit_cost(setup, record, view, offer: Offer) -> Optional[float]:
     recipe = setup.recipes[producer.recipe_id]
     return run_cost.full_cost_per_unit(
         recipe, offer.good, expected_output_prices(producer, recipe, view), live_input_prices(producer, recipe, view),
-        live_wages(producer, recipe, view), view.interest_rate(setup.currency_id), producer.land_rent_per_run, producer.yield_factor)
+        live_wages(producer, recipe, view), charged_rate(view.interest_rate(setup.currency_id)), producer.land_rent_per_run, producer.yield_factor)
 
 
 def input_share_of_cost(setup, record, view, offer: Offer) -> float:

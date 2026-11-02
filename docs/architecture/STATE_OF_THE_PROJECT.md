@@ -90,8 +90,8 @@ opening (solved stationary state, buffer-stock savings, licences): `Complaints/r
    own work (473), saving with an asset to buy, land titles (538), and own-plot food in the opening (545).
 2. **Regenerate the shipped openings after the opening is fixed, not before** (owner decision): they are stale,
    so a new game computes its own spin-up, and the topics that read full-length openings fail on time until
-   `python3 sim/simulator.py openings --prune` ships them (557, and the 40-year money trace
-   `spin_up_money_supply` keys).
+   `python3 sim/simulator.py openings --prune` ships them (557; the full-length money trace is cached under
+   `opening_checks_run.trace_key`, and no test topic of the name `spin_up_money_supply` exists on this branch).
 3. **The slow topics still failing**, each with its cause in 558: tin against copper (511), bronze's early
    scarcity price, the Norse money regime, printed money reaching prices.
    Measure with `python3 -m sim.tests --slow --timing`.

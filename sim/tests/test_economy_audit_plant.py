@@ -73,9 +73,9 @@ class FollowTests(unittest.TestCase):
         mill = following.record.producers["mill"]
         self.assertEqual((mill.yield_factor, mill.years_of_loss), (0.5, 2))
         following.record.cohorts["c"] = Cohort("c", "t1", 0, 10.0, 5.0, 1.0)
-        following._follow_population(pytypes.SimpleNamespace(population_by_tile={"t1": 20.0}))
+        following._follow_population(pytypes.SimpleNamespace(population_by_tile={"t1": 20.0}, working_people_by_tile={"t1": 8.0}))
         cohort = following.record.cohorts["c"]
-        self.assertEqual((cohort.people, cohort.working_people), (20.0, 10.0))
+        self.assertEqual((cohort.people, cohort.working_people), (20.0, 8.0))
 
 
 if __name__ == "__main__":

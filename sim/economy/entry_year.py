@@ -21,6 +21,7 @@ from .market_memory import market_key
 from .setup import recipe_tile_key
 from .types import GoodsMove, LoanRequest, Transfer
 from .replaced import replaced
+from .rates import charged_rate
 
 
 def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, str], float],
@@ -106,7 +107,7 @@ def _traded_volume(record, view, area_map):
 def restake_owners(setup, record, view) -> None:
     """Owners put working cash back into producers whose runs pay but that ran out of it."""
     money = setup.currency_id
-    rate = view.interest_rate(money)
+    rate = charged_rate(view.interest_rate(money))
     # an owner risks at most the stake share of its cash a year, across all the producers it owns
     budget = {}
     for producer_id, producer in sorted(record.producers.items()):

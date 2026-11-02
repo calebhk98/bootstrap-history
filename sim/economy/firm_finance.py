@@ -140,14 +140,16 @@ def financial_commitments(loans: Iterable, borrower: str) -> float:
     return sum(loan.principal * loan.rate + installment_of(loan) for loan in loans if loan.borrower == borrower)
 
 
-def write_off_ratio(debt: float, assets: float, illiquid: bool) -> float:
+def write_off_ratio(debt: float, capital_and_cash: float, illiquid: bool) -> float:
     """Eurace@Unibi, Firm_bankruptcy_rescale_loans: the share of every loan written off so that the debt falls to
-    the rescaling factor times the assets; an illiquid firm whose assets would let the debt rise takes the factor
+    the rescaling factor times the firm's capital stock plus cash (`TOTAL_ASSETS = TOTAL_VALUE_CAPITAL_STOCK +
+    PAYMENT_ACCOUNT`, Financial_Management/Firm_Financial_Management_Functions.c; the stock held is not counted);
+    an illiquid firm whose capital and cash would let the debt rise takes the factor
     times the debt instead. The whole write-off falls in the one idle year (its months of idle period are our one
     step)."""
     if debt <= ARREARS_EPSILON:
         return 0.0
-    target = DEBT_RESCALING_FACTOR * assets
+    target = DEBT_RESCALING_FACTOR * capital_and_cash
     if illiquid and target > debt:
         target = DEBT_RESCALING_FACTOR * debt
     return min(1.0, max(0.0, (debt - target) / debt))

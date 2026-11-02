@@ -15,7 +15,7 @@ rule) and `Complaints/507` (prices and traded volumes have two owners,
 orders, and the money they pay with. It imports `sim.world`, `sim.constants` and the walled packages' `api.py` (geography, labour), never `sim.engine`.
 The engine reaches it through the markets module's port, `sim/markets/port*.py` (mod effects use `sim/engine/economy_port_effects.py`); the tech tree, the founder, projects
 and screens ask the port questions (a price, a wage, a rate, what a concern takes) and post
-transactions. Both rules are kept by review.
+transactions. The package-wall rule is checked by `tools/check_package_walls.py` (economy, agents, labour, geography and ui; `tools/done_check.sh` fails on it); the rule that the economy never imports the engine is part of it.
 
 Contracts: `sim/economy/types.py` (records) and `sim/economy/protocols.py` (the year order and what
 each module offers). Outside code imports only `sim/economy/api.py`, the package's published surface
@@ -42,11 +42,13 @@ variable cost; a holder of stock at what it expects to get next year less carryi
 seller short of cash for debts or wages below that; a waste product below zero.
 
 **Wages come from the labour core; the interest rate is sticky.** Every employer's staff are bids in the core: the seats', firms' and
-states' staff books and the army are posted as standing bids by `sim/markets/port_staff.py` and the books are the people the
-clearing hired (what is left is `Complaints/964`, `556`). The economy keeps its workforce as
+states' staff books are posted as bids by `sim/markets/port_staff.py` (the standing places plus the one-year
+orders, such as commissions and herd labour, as one bid per trade: `places_with_once`) and the books are the people the
+clearing hired (paid soldiers are the state's staff, posted like any crew; the state's call-up of hours for its works and its conscripts is handed to the economy as hours per worker, `sim/markets/port_levy.py`) (what is left is `Complaints/964`, `556`). The economy keeps its workforce as
 the labour core's `MarketState` (people per tile, trade and ability band; `labour_state.py`) and each
 year hands the core the producers' bids as tranches of falling value (`labour_bids.py`), the outside
-option, entrants and attrition from demography, and routes to bordering tiles (`labour_inputs.py`).
+option and routes to bordering tiles (`labour_inputs.py`). Demography's people per tile are the one count: the core's workers
+and trainees are rescaled to it each year and the core adds no entrants or leavers of its own (`Economy._follow_population`).
 The core sets every (trade, tile) wage and trains, switches and moves people (sim/labour/market/DESIGN.md);
 `year_labour.py` settles what it reports. A trade's training premium is whatever wage draws enough able
 people to it. The interest rate moves by a share of the gap to its clearing level a year, drifting
@@ -188,10 +190,11 @@ sales and purchases as imports and exports, and the customs bases tax the cargo 
 bought for abroad with nothing left in its account owes no export duty (the duty is taken from what the account holds).
 
 **The founder's concerns sell in the same markets**, offered at their output's cost at the economy's
-own prices and wages; the takings go back out over `edge:legacy` (the founder's revenue is still the engine's
-estimate, which the seat's offers only press on the market).
+own prices and wages; the unsold goods go back out over `edge:legacy`. A concern whose output the economy trades is paid what the clearing pays
+for the units buyers took, gross, less its inputs' cost (`sim/markets/port_seats.py settle_seats`, `sim/production/book_sales.py`);
+the engine's revenue estimate covers only the concerns that do not sell in the book.
 
-**Firms', states' and other actors' sales and purchases are book orders** (`sim/markets/port_actors.py`). A
+**Seats', firms', states' and other actors' sales and purchases are book orders.** A seat's buy or sell command waits for the year's clearing as an order (`sim/markets/port_goods_orders.py`); the actors' are handled by `sim/markets/port_actors.py`. A
 `market_sale` is noted through the year and, when the economy's year runs, becomes an offer from an account named for the
 seller, at what its concerns cost to make the good (a good with no concern behind it at what the market pays). What the
 account holds afterwards is the seller's proceeds, turned into its coin over `edge:exchange`; what did not sell goes back

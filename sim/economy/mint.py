@@ -95,7 +95,7 @@ def loss_share(setup, spec) -> float:
         return COIN_WEAR_PER_YEAR
     if spec.regime == "weighed_metal":
         return METAL_GOODS_LOSS_PER_YEAR
-    backing = getattr(setup, "specs", {}).get(spec.backing_good)
+    backing = setup.specs.get(spec.backing_good)
     return backing.spoilage_per_year if spec.regime == "commodity" and backing is not None else 0.0
 
 

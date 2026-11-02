@@ -1,5 +1,8 @@
 # Model run: Lengnick 2013 baseline (newwayland/baseline-economy)
 
+> **Checked against the code (2026-11):** the labour core now pays one market wage per (trade, area); every hour hired is paid it and no employer holds a contract wage of its own (`sim/labour/market/DESIGN.md`, "Clearing"; `contracted_wage` and `contract_wages` no longer exist). Where this report describes per-employer contract wages it describes an earlier build.
+
+
 **Status: code read, then run.** The first attempt was blocked by the permission classifier, so the sections up to "To finish"
 are from reading the code and say "not run"; the run was made afterwards (last section, "Measured run"). Statements below
 that the series is unavailable describe the state before that run.
@@ -92,7 +95,7 @@ Ours: labour core `sim/labour/market/` (DESIGN.md, `applications.py`, `asks.py`)
 | Vacancy opens when inventory is under 0.25 x last month's sales; one per firm per month; stock over 1.0 x sales puts one worker on notice | `plan` sizes runs, hence hours, from expected revenue against variable cost at live wages and cash (`producers.py:282-306`); `sloped_bids` cuts that into 4 tranches | We have no inventory-triggered hiring and no per-period cap on hiring or firing: hours are re-planned each year. A firm whose planned margin is negative bids 0 (`Plan(0.0)`). Theirs is a feedback loop on realised sales and stock; ours is a forward plan with sales entering only through expected prices. |
 | One head hired or fired per firm per month | Each search round every employer dismisses a random share and reposts; 12 rounds a year (`DESIGN.md`, `asks.py`) | Both bound churn; ours by a share, theirs by one head. |
 | Reservation wage ratchets up to current wage, falls 10% a month unemployed, no floor | Ask starts at subsistence + danger pay, floor is the own-plot value (`labour_ask_floor.py`); falls with unsold hours, rises on unmet demand; 1% cut per failed round (`asks.py`) | Theirs has no floor, so pay can go to zero. Ours has a subsistence/plot floor and no ratchet with pay. |
-| Wage up U(0,1.9%) a month while a vacancy is open; down only after 24 months of no vacancy | Up 1% a round while vacancies stay open; hired workers' contracted wages are not lowered (`DESIGN.md`) | Close in spirit; theirs has a slow downward channel for hired workers, ours has none. |
+| Wage up U(0,1.9%) a month while a vacancy is open; down only after 24 months of no vacancy | Up 1% a round while vacancies stay open; there is one market wage, paid to retained hours too, so a hired worker's wage is not held up (`DESIGN.md`) | Close in spirit; theirs has a slow downward channel for hired workers, ours has none. |
 | Household tries 1 to 5 random firms, first open vacancy above reservation wins | Searchers apply to a bounded number of employers whose offer meets their ask and take the highest | Same family; ours takes the best offer, theirs the first. |
 | Everyone offers 1 unit; no inactivity | Hours per worker per year; own-plot hours kept back (`households_own.py`) | Ours has a non-market alternative; theirs has none. |
 | Start at 100% unemployment, hand-set money | Start from the historical state | Theirs does not test a full-employment start. |

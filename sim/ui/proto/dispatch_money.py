@@ -137,7 +137,10 @@ def _order_reply(sim, posted, asked):
         return {"ok": False, "error": posted}
     return {"ok": True, "posted_tonnes": posted["tonnes"], "asked_tonnes": asked, "side": posted["side"],
             "material": posted["material"], "limit_per_tonne": round(posted["limit_per_tonne"], 2),
-            "quote_per_tonne": round(posted["quote_per_tonne"], 2), "settles": "at the year's clearing",
+            "quote_per_tonne": round(posted["quote_per_tonne"], 2),
+            "carriage_per_tonne": round(posted["carriage_per_tonne"], 2),
+            "committed_money": None if posted["committed_money"] is None else round(posted["committed_money"], 1),
+            "settles": "at the year's clearing (carriage is charged on the tonnes that arrive)",
             "capital": round(sim.view("acting_balance")(), 1)}
 
 

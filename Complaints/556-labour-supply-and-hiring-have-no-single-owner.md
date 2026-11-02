@@ -6,8 +6,8 @@ Found by an outside reviewer reading the repository; checked against the code. A
 no worker has been shown counted twice.
 
 - The agent economy keeps workers by area, trade and ability in `record.workforce`.
-- `sim/labour/labour_market_api.py` quotes from the economy's wage but adds its own hiring-pressure
-  record (kept on the household state) and the army's standing draw.
+- `sim/labour/labour_market_api.py` quotes the economy's wage and hires through the labour core (the hiring-pressure
+  record and the army's own draw this item once described are deleted; the state's call-up of hours for works and army is `sim/markets/port_levy.py`).
 - Recruitment reads town supply estimates (`labour_population.py`), the household's employees and
   actors' staffing.
 

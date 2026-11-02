@@ -20,7 +20,7 @@ BANDS = 5
 def clearing(area, wage):
 	hours = 1000.0
 	return Clearing(trade="digger", area=area, wage=wage, hours_offered=hours, hours_wanted=hours, hours_hired=hours,
-					hired_by_employer={}, average_wage=wage)
+					hired_by_employer={})
 
 
 def leavers_from_home(home_take=0.0, away_take=0.0, penalty=0.0):

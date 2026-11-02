@@ -27,7 +27,7 @@ def everyone(state):
 def clearing(area, trade, wage):
     hours = 1000.0
     return Clearing(trade=trade, area=area, wage=wage, hours_offered=hours, hours_wanted=hours,
-                    hours_hired=hours, hired_by_employer={}, average_wage=wage)
+                    hours_hired=hours, hired_by_employer={})
 
 
 def world(vale_wage=1.0, port_wage=2.0, cost=0.0, trainees=False):

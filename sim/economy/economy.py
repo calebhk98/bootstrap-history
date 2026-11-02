@@ -10,6 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
+from .rates import charged_rate
 from . import producer_table
 from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
@@ -29,7 +30,7 @@ from .labour_state import scale_people
 from .opening import open_economy
 from .protocols import YearInputs
 from .record import EconomyRecord
-from .setup import EconomySetup, labour_area
+from .setup import EconomySetup, area_tile, labour_area
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer
 from .national_prices import national_wages
 from .merchants_dispatch import dispatch_merchants
@@ -68,6 +69,7 @@ class YearOutcome:
     bonded_paid: float = 0.0                       # money the buyers paid for them over the exchange edge
     bonded_lots: list = field(default_factory=list)   # the lots bought: origin and destination tile, trade, people, the owners' ask and the carriage paid
     accounts: Optional[YearAccounts] = None        # production, use, consumption, investment, stocks; food eaten; real wage
+    migrated_by_tile: Dict[str, float] = field(default_factory=dict)   # net working people the labour market moved to (+) or from (-) each tile: a request to demography, which moves the people
 
 
 def plant_worth_ratio(yearly_return: float, rate: float, life_years: float) -> float:
@@ -158,6 +160,8 @@ class Economy:
         changes: Dict[str, Any] = {}
         if inputs.tax_rates:
             changes["tax_forms"] = taxes.with_rates(self.setup.tax_forms, inputs.tax_rates)
+        if inputs.working_hours_per_year:   # the year's working day; every reader of the setup's hours sees it
+            changes["working_hours_per_year"] = float(inputs.working_hours_per_year)
         if inputs.site_limits:   # empty keeps the last declared
             changes["site_limits"] = tuple(inputs.site_limits)
         if changes:
@@ -177,7 +181,7 @@ class Economy:
         money = setup.currency_id
         debt_relief.forgive(record, inputs.debt_relief_tiles)
         titles_moves.apply(record, inputs.title_moves)
-        tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates.get(setup.currency_id, 0.0))
+        tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates[setup.currency_id])
         lending.lend_working_capital(setup, record, view)
         plans = {producer_id: producers.plan(producer, setup.recipes[producer.recipe_id], view,
                                              record.book.balance(producer_id, money))
@@ -210,6 +214,7 @@ class Economy:
         people_before = flight_step.people_before(setup, record.labour)
         labour_report = clear_labour(setup, record, labour_bids, everyone, ledger, context, supply=supply)
         flight_step.settle(setup, record, inputs, labour_report, people_before, context, self.carriage)
+        ledger.migrated_by_tile = {area_tile(area): change for area, change in sorted(labour_report.migrated.items()) if change}
         state_budget.lapse_unspent_wages(record.state_budget, state_budget.wages_paid(ledger.labour_results, setup.state_agent))
         offers, kept = supply.sold, supply.kept
         ledger.bonded_bought, ledger.bonded_paid, ledger.bonded_lots, bought_held = bonded_purchase.settle(
@@ -280,21 +285,34 @@ class Economy:
 
     # ---- the year's pieces ------------------------------------------------------------------
     def _follow_population(self, inputs: YearInputs) -> None:
-        """Demography's people per tile are the one count: the cohorts are rescaled to it, then the labour core's workers
-        and trainees on each tile to the working people the cohorts hold. The core adds no entrants or leavers of its own."""
+        """Demography's people and working-age people per tile are the one count: each tile's cohorts are rescaled to its
+        people, and their working people to its working-age people (the working-age share follows demography); then the
+        labour core's workers and trainees on each tile to the working people the cohorts hold. The core adds no entrants
+        or leavers of its own."""
         if not inputs.population_by_tile:
             return
         record = self.record
         people_now: Dict[str, float] = {}
+        working_now: Dict[str, float] = {}
         for cohort in record.cohorts.values():
             people_now[cohort.tile] = people_now.get(cohort.tile, 0.0) + cohort.people
+            working_now[cohort.tile] = working_now.get(cohort.tile, 0.0) + cohort.working_people
         for cohort_id, cohort in sorted(record.cohorts.items()):
-            before = people_now.get(cohort.tile, 0.0)
-            after = inputs.population_by_tile.get(cohort.tile, before)
-            if before <= 0.0 or after == before:
+            tile = cohort.tile
+            before = people_now.get(tile, 0.0)
+            if before <= 0.0:
                 continue
-            scale = after / before
-            households_cohort.rescale_cohort(record.cohorts, cohort_id, scale)
+            after = inputs.population_by_tile.get(tile, before)
+            people = cohort.people * after / before
+            wanted = inputs.working_people_by_tile.get(tile)
+            if wanted is None:
+                working = cohort.working_people * after / before
+            elif working_now[tile] > 0.0:
+                working = cohort.working_people * wanted / working_now[tile]
+            else:
+                working = wanted * cohort.people / before
+            if people != cohort.people or working != cohort.working_people:
+                households_cohort.set_people(record.cohorts, cohort_id, people, working)
         working: Dict[str, float] = {}
         for cohort in record.cohorts.values():
             working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
@@ -437,7 +455,7 @@ class Economy:
         what wore out last year, no dearer than the price at which the plant still earns the live rate."""
         record, setup = self.record, self.setup
         money = setup.currency_id
-        rate = max(view.interest_rate(money), 1e-9)
+        rate = max(charged_rate(view.interest_rate(money)), 1e-9)
         rebuilt: Dict[str, float] = {}
         worn = record.credit.take_rebuilds()
         for producer_id, runs in sorted(worn.items()):
@@ -513,11 +531,11 @@ class Economy:
                 record.goods.add_output(producer.tile, good, quantity)
         prices = national_prices(record)
         return YearOutcome(year=record.memory.year, basket_price_level=level, prices=prices,
-                           wages=mean_wages, rate=record.memory.rates.get(money, 0.0),
+                           wages=mean_wages, rate=record.memory.rates[money],
                            money_supply=record.book.money_supply(money), hunger_by_tile=hunger,
                            output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant, hired_hours=hired,
                            wage_floor_per_hour=ledger.wage_floor_per_hour, extraction=extraction,
                            conservation_residual=check_money(record), money_audit=year_report(record),
                            state_cash=record.book.balance(setup.state_agent, money),
-                           bonded_bought=dict(ledger.bonded_bought), bonded_paid=ledger.bonded_paid, bonded_lots=list(ledger.bonded_lots),
+                           migrated_by_tile=dict(ledger.migrated_by_tile), bonded_bought=dict(ledger.bonded_bought), bonded_paid=ledger.bonded_paid, bonded_lots=list(ledger.bonded_lots),
                            accounts=build_accounts(setup, record, ledger, stocks_at_start, prices, mean_wages))

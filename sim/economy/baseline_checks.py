@@ -74,7 +74,7 @@ def food_eaten_over_need(accounts_by_year: Sequence[YearAccounts]) -> Dict[str, 
 
 def money_replacement(rows: Sequence[Mapping[str, float]], window_years: int) -> float:
     """Coin the mint struck (net of melting) over the coin worn away, across the last `window_years` rows of
-    `economy_port_trace.spin_up_trace`; one when the mint exactly replaces wear."""
+    `sim/markets/port_trace.py spin_up_trace`; one when the mint exactly replaces wear."""
     recent = rows[-window_years:]
     wear = math.fsum(row["wear"] for row in recent)
     return math.fsum(row["struck"] for row in recent) / wear if wear > 0.0 else math.inf

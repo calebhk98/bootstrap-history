@@ -14,6 +14,7 @@ that move a bill as it is filled. Who offers what is in goods_offers.py.
 """
 from sim.refusal import Refusal
 
+from . import port_goods_orders
 from .goods_offers import GoodsOffers
 from .goods_pricing import GoodsPricing
 from .rules import tonnes_sold
@@ -60,14 +61,17 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
 
     def seat_orders(self):
         """The asking seat's posted orders the year's clearing has not yet settled: [{"side", "material", "stock_key", "tonnes",
-        "limit_per_tonne"}], in posting order."""
-        keys = ("side", "material", "stock_key", "tonnes", "limit_per_tonne")
-        return [{key: order[key] for key in keys} for order in self._sim.economy.posted_goods_orders(self.acting_party_id)]
+        "limit_per_tonne", "carriage_per_tonne", "cost_factor", "project"}], in posting order."""
+        keys = ("side", "material", "stock_key", "tonnes", "limit_per_tonne", "carriage_per_tonne", "cost_factor", "project")
+        return [{key: order.get(key) for key in keys} for order in self._sim.economy.posted_goods_orders(self.acting_party_id)]
 
     def seat_trades(self):
-        """What the last clearing bought and sold for the asking seat: {"bought": {stock key: tonnes}, "sold": {stock key: tonnes}}."""
+        """What the last clearing bought and sold for the asking seat: {"bought": {stock key: tonnes}, "sold": {stock key: tonnes},
+        "orders": [one result per order handled, a refused one with its cause]}."""
         economy = self._sim.economy
-        return {side: economy.seat_traded_tonnes(self.acting_party_id, side) for side in ("bought", "sold")}
+        trades = {side: economy.seat_traded_tonnes(self.acting_party_id, side) for side in ("bought", "sold")}
+        trades["orders"] = economy.seat_order_results(self.acting_party_id)
+        return trades
 
     def commodities_sold_by(self, seller_id):
         """Commodities this seat sold into the last clearing."""
@@ -153,30 +157,54 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
 
     # ---- orders -----------------------------------------------------------------------
 
-    def post_order(self, side, material, tonnes, limit_per_tonne=None):
-        """Post the asking seat's order for the year's clearing: "buy" `tonnes` at no more than `limit_per_tonne`, or "sell" them
-        (cut to the stock not already ordered sold) at no less; the quote's mean price over the order when no limit is given.
-        Answers the posted order and the quote, or a refusal. The goods and the money move when the year clears."""
+    def post_order(self, side, material, tonnes, limit_per_tonne=None, project=None, cost_factor=1.0, limit_includes_carriage=False):
+        """Post the asking seat's order for the year's clearing: "buy" `tonnes` paying the market no more than `limit_per_tonne`,
+        or "sell" them (cut to the stock not already ordered sold) at no less; the quote's mean price over the order when no limit
+        is given. A buy's carriage to the seat's tile, and `cost_factor` (a project's opposition and geography) on the money, are
+        charged when the goods arrive; the reply states them. Refused with a cause when the good is not traded, when the seat
+        already has an order the other way in the same good (it would trade with itself), or when the seat's money, counting what
+        its other orders and its staff will draw, would not cover. The goods and the money move when the year clears."""
         quote = self.quote(material)
         tonnes = float(tonnes)
         if not quote:
             return Refusal("no_price", "%s has no price here, so it cannot be ordered." % material, material=material)
         if tonnes <= 0:
             return Refusal("no_quantity", "an order needs a quantity above zero.", material=material)
+        good = self._economy_good(material)
+        if good is None:
+            return Refusal("not_traded", "%s is not traded in the economy, so it cannot be ordered." % material, material=material)
         key = quote["stock_key"]
         buying = side == "buy"
+        economy = self._sim.economy
+        for other in economy.posted_goods_orders(self.acting_party_id):
+            if other["side"] != side and other["good"] == good:
+                return Refusal("opposite_order_posted", "an order to %s %s is already posted this year; a seat does not trade with "
+                               "itself, so this order is refused (cancel that one first)." % (other["side"], material),
+                               material=material, posted_side=other["side"])
         if not buying:
             tonnes = min(tonnes, self.sale_limits(material)[0])
             if tonnes <= 0:
                 return Refusal("not_enough_held", "no %s is held that is not already ordered sold." % material, material=material)
-        mean = (self.purchase_cost(quote["material"], tonnes)[1] if buying
+        carriage = quote["carriage_per_tonne"] if buying else 0.0
+        mean = (self.purchase_cost(quote["material"], tonnes)[1] - carriage if buying
                 else self.sale_proceeds(quote["material"], tonnes, self.posted_tonnes("sell", key))[1])
         limit = float(limit_per_tonne) if limit_per_tonne is not None else mean
-        if buying and not self._sim.can_pay(limit * tonnes):
-            return Refusal("cannot_pay", "the money for that order, at that limit, is not in hand.", material=material,
-                           asked_tonnes=tonnes, limit_per_tonne=limit)
-        self._sim.economy.post_goods_order(self.acting_party_id, {
-            "side": side, "material": quote["material"], "good": self._economy_good(material), "stock_key": key,
-            "tonnes": tonnes, "limit_per_tonne": limit})
+        if buying and limit_per_tonne is not None and limit_includes_carriage:
+            limit -= carriage
+        if limit <= 0:
+            return Refusal("no_limit", "an order needs a price limit above zero%s." % (" once carriage is counted" if buying else ""),
+                           material=material, limit_per_tonne=limit)
+        order = {"side": side, "material": quote["material"], "good": good, "stock_key": key, "tonnes": tonnes,
+                 "limit_per_tonne": limit, "carriage_per_tonne": carriage, "cost_factor": float(cost_factor), "project": project}
+        committed = None
+        if buying:
+            committed = port_goods_orders.reserve(order)[0]
+            if not self._sim.can_pay(committed + economy.seat_committed_money(self.acting_party_id)):
+                return Refusal("cannot_pay", "the money for that order, at that limit and with carriage, is not in hand once the "
+                               "seat's other orders and its staff are counted.", material=material, asked_tonnes=tonnes,
+                               limit_per_tonne=limit, needs_money=committed)
+        economy.post_goods_order(self.acting_party_id, order)
         return {"posted": True, "side": side, "material": quote["material"], "tonnes": tonnes, "limit_per_tonne": limit,
-                "quote_per_tonne": quote["buy_per_tonne"] if buying else quote["sell_per_tonne"]}
+                "carriage_per_tonne": carriage, "cost_factor": order["cost_factor"], "committed_money": committed,
+                "quote_per_tonne": (quote["buy_per_tonne"] - carriage if buying else quote["sell_per_tonne"]),
+                "quote_carriage_per_tonne": carriage}

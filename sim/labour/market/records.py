@@ -106,14 +106,13 @@ class MarketState:
     trainees: Dict[AreaId, Dict[TradeId, List[list]]] = dataclasses.field(default_factory=dict)
     wages: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)
     hired_hours: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)
-    entry_wages: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # the wage new hires cleared at last year: what the next year's offer moves from (`wages` is the mean over all hours held)
     asks: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # ask over the reservation wage (asks.py)
 
 
 @dataclasses.dataclass
 class Clearing:
-    """One (trade, area) market's year. `average_wage` is the one wage an hour every employer pays: hours-weighted over
-    everyone hired, held hours and new alike."""
+    """One (trade, area) market's year. `wage` is the one wage an hour every employer pays, held hours and new alike:
+    what the hours taken on were paid, before any premium."""
     trade: TradeId
     area: AreaId
     wage: float
@@ -121,15 +120,9 @@ class Clearing:
     hours_wanted: float
     hours_hired: float
     hired_by_employer: Dict[str, float]
-    average_wage: float
-    new_hire_wage: Optional[float] = None   # the wage hours hired new this year cleared at, before any premium (the same as `wage`); none: the wage
     target_wage: Optional[float] = None   # where the wage is heading: toward the price where offered meets wanted hours, scaled by the imbalance; none: the wage
     hours_held: Optional[float] = None    # every hour the trade's workers here had at the clearing, sold or kept; none: not recorded
     demand: Tuple[Tuple[float, float], ...] = ()   # (maximum wage, hours) of each bid, the schedule the heading wage slides along as hands arrive
-
-    @property
-    def entry_wage(self) -> float:
-        return self.wage if self.new_hire_wage is None else self.new_hire_wage
 
     @property
     def heading_wage(self) -> float:

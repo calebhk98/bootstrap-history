@@ -6,7 +6,8 @@ subsistence) less the origin's, less the moving cost counted in years of the ori
 Income is what a worker keeps after the state's take in that area (`YearInputs.taxed_share`: a heavier take at home,
 a collective liability falling on the stayers, is a reason to go), and a route's cost includes what a leaver expects to
 pay if recaptured (`Route.expected_penalty`). Staying scores zero. Flows are all computed from the counts at the start of the step and applied after,
-so the order of areas does not matter. Trainees stay where they train.
+so the order of areas does not matter. Trainees stay where they train. The net change per area is a request to the
+owner of people (demography), which moves them once, with its own food-driven moves.
 """
 import math
 from typing import Dict, List, Optional, Tuple

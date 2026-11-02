@@ -107,7 +107,9 @@ names, not attribute reach-through.
 - `ECONOMY_MODEL_SURVEY.md`'s Lengnick and Eurace wage rules match neither model's code; the engine's tightness rule
   (`sim/labour/wages.py`, "in the manner of Lengnick and EURACE") rests on it.
 - Code citing Eurace's `Firm_hire_workers` (does not exist) and "a wage fixed at hire" (Eurace indexes existing
-  wages): `labour/market/clearing.py contracted_wage`, `labour/market/DESIGN.md`.
+  wages): `labour/market/clearing.py contracted_wage`, `labour/market/DESIGN.md`. Fixed (2026-11): `contracted_wage` is gone and
+  the design note says there is one market wage per trade and area, paid to retained hours too; the five reports
+  (`model-run-bam`, `model-run-jmab`, `model-run-lengnick`, `research-labour-models`) carry a note saying the same.
 - Docstrings: `YearView.price` ("traded price" is a smoothed blend), `notional.py` ("never feed back"), `Clearing`
   (`paid_by_employer`), `labour_supply.py`, `year_labour.py`, `record.py` `unsold`/`unmet`.
 - Reports: `research-short-run-supply-elasticity.md` (0.225 is not in the code), `labour-models-compared.md` (Rome

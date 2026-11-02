@@ -1,6 +1,6 @@
 """The agent economy inside a game: opening it, its year, and what the engine's seams read.
 
-Part of the port (with economy_port.py and port_setup.py, the only engine modules that import
+Part of the port (with port.py and port_setup.py, the only engine modules that import
 `sim.economy`). Its whole state lives in the markets module's `agent_economy` record, so a saved game resumes the
 same economy. The engine's own price, wage and rate code asks `answers()`; while the economy opens (it
 reads the engine's own opening figures to build its setup) those figures answer instead.
@@ -10,6 +10,7 @@ import math
 
 from sim.actors import api as actors_api
 from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR, PURSE_CURRENCY
+from sim.demography.api import MovePeople
 from sim.ledger.api import PayExchange, ReceiveFromExchange
 from sim.economy import api as economy_api
 from sim.rekey import rekey
@@ -198,6 +199,8 @@ class AgentEconomy(TilePricesMixin):
         outcome = economy.step(self._inputs(orders, port_cargo.border_accounts(economy, legs)))
         forget_year_figures(self)
         port_bondage.settle_purchases(self._sim, economy, outcome)
+        if outcome.migrated_by_tile:   # the labour market's moves go to demography, which owns where people live
+            self._sim.send(MovePeople(dict(outcome.migrated_by_tile)))
         port_sites.deplete(self._sim, outcome.extraction, self._recipe_outputs())
         self.outcomes.append(outcome)
         self._settle_actor_trade(sales, purchases)
@@ -396,7 +399,11 @@ class AgentEconomy(TilePricesMixin):
         harmed = sim.externality_yield_factors(sim.year)
         yields = port_sites.crop_yields(economy, weather, sim.farm_weather_by_tile(sim.year))
         yields = port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
-        return YearInputs(year=sim.year, population_by_tile=sim.labour.settlement_tiles(),
+        people = sim.labour.settlement_tiles()
+        bands = sim.view("regional_people_by_band")()    # demography's (children, working age, elderly) by tile
+        return YearInputs(year=sim.year, population_by_tile=people,
+                          working_people_by_tile={tile: bands[tile][1] for tile in people if tile in bands},
+                          working_hours_per_year=sim.view("hours_per_person_year")(),
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
                           state_capacity=sim.state_reach(),
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],

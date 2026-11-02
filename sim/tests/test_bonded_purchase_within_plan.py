@@ -19,7 +19,7 @@ FLOOR = 100.0
 def market(trade, vacant_by_employer, wage=1.0):
     bids = [CoreBid(employer, trade, "dale", hours, wage) for employer, hours in sorted(vacant_by_employer.items())]
     clearing = Clearing(trade=trade, area="dale", wage=wage, hours_offered=0.0, hours_wanted=sum(vacant_by_employer.values()),
-                        hours_hired=0.0, hired_by_employer={}, average_wage=wage)
+                        hours_hired=0.0, hired_by_employer={})
     return bids, clearing
 
 

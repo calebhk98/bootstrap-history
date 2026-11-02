@@ -20,10 +20,13 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
      workers' ask falls by `asks.py`). There is one wage per trade and area: retained hours are paid it like new hires, so no
      employer holds a contract of its own. (Eurace instead raises existing employees' wages each month by productivity
      progress times union strength, Statistical_Office/Firm_Statistics_Functions.c; this model has no such step.)
+   - Before the search rounds an employer lays off the hours it holds beyond those it wants (`layoffs.py`,
+     `hours_to_lay_off`, after Eurace's `Firm_set_labour_market_actions`: it counts hours, not employees, and does not pick whom to dismiss);
+     one holding fewer than it wants lays off none. The random dismissals inside the rounds are in `applications.py`.
    - An employer starts at the market wage, capped at its maximum, and raises its offer each search round
      while its vacancies stay open (below). Hours go to the employers with the highest maximum first.
    - Workers who stay with an employer keep their hours (`MarketState.hired_hours`) unless the employer wants fewer, but not their
-     wage. The trade's wage (`Clearing.wage`, `average_wage`, `new_hire_wage`, `MarketState.wages`) is one figure: the
+     wage. The trade's wage (`Clearing.wage`, `MarketState.wages`) is one figure: the
      hours-weighted mean of the offers actually paid to the hours taken on (`clear_one`, from the hours `hire_through_rounds`
      returns), or the wage the rounds start from when none were taken on. Every hour hired is paid it, and the hours households sell are
      counted at it. New hires come from the year's search rounds
@@ -37,7 +40,7 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
    - Each band's chance of finishing is `aptitude.completion_chance(band ability + cohort bonus, difficulty)`.
    - Those who do not finish join the fallback trade.
    - Places to learn at once in a trade in an area are its teachers' (`training.enrol`): `incumbent workers *
-     apprentices_per_master + school seats`, less the trainees already enrolled; there is no division by the training years.
+     APPRENTICES_PER_MASTER + school seats` (the constant `APPRENTICES_PER_MASTER`, `training.py`), less the trainees already enrolled; there is no division by the training years.
      Those who apply beyond the places are refused.
    - A trade with no incumbents and no school cannot reproduce.
 3. **Expected income after training** (`expectations.income_at_graduation`), which switching weighs. People enter the core only
@@ -70,6 +73,14 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
 5. **Migration** (`migration.py`). Workers re-weigh their area against the routes out of it, with a stay option.
    - The comparison is the log of real expected wage (expected wage over subsistence) in the same trade, less the moving cost in years of subsistence.
    - Only listed routes are considered, so the cost is areas × routes × trades.
+
+6. **Formation** (`formation.py`, `formation_bonded.py`), run last. A (trade, area) where employers want hours and no one
+   works or trains in the trade gets its first hands from the routes that need no teacher.
+   - Migrants come first, from the areas that hold the trade, most spare hands first and no more than they can release
+     (`spare_people`, `migration_takes`).
+   - Bonded people are then bought where the area's civilisation allows it, at the owners' ask and the buyers' bid
+     (`bonded_worth.py`); the same purchase also fills vacancies a trade with people still has left.
+   - Conversion needs a teacher and a payer, so the caller's own verbs (training schools) carry it out.
 
 Every logit uses a log-sum-exp guard. Every move takes people out of one count and puts the same float
 into another, and a test checks that people are conserved.

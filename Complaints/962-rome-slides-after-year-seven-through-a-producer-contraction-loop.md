@@ -1,6 +1,8 @@
 # Rome slides after year seven through a producer contraction loop fed by unspent household budgets
 
-**Status:** open - diagnosed on branch claude/labor-market-economy-stability-ueffy1; the rationed-budget part is being fixed there
+**Status:** open - diagnosed on branch claude/labor-market-economy-stability-ueffy1; the rationed-budget part was to be fixed on that branch, but this diagnosis predates the A1/A2 fixes of Complaint 964
+
+**Re-measure:** diagnosed before the A1/A2 fixes of Complaint 964; the figures here are from an earlier build and need re-measuring.
 
 **What is wrong.** On a saved Rome economy stepped on the branch code, real output falls about seven per cent a year from
 year seven, and the unsold-hours share and the people-based rate climb with it. Measured from a copy saved at year seven

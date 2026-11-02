@@ -29,7 +29,7 @@ world object (the table below).
 `python3 tools/check_imports.py` finds imports of modules that do not exist. `python3 tools/check_module_reads.py`
 finds a module reading a view or sending a command that its spec does not declare. `python3 tools/measure/module_graph.py`
 prints the module dependency totals, including reads still answered by the engine bridge.
-Nothing checks the import rule above automatically: keep to it by review.
+`python3 tools/check_package_walls.py` checks the import rule above for `economy`, `agents`, `labour`, `geography` and `ui`, and `tools/done_check.sh` fails when it reports a break. `disease` and `content` are listed below but that checker does not cover them: keep to the rule there by review. `python3 tools/check_record_owners.py` is the companion check for who writes a record's parts.
 
 ## The surfaces
 
