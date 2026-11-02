@@ -161,8 +161,8 @@ def bids(setup, record, view, area_map, merchants_cash: Optional[Dict[str, float
             if units <= 0.0 or good not in area_map.goods():
                 continue
             area = area_map.area_of(good, merchant.home_tile)
-            price = view.price(good, area) or setup.opening_prices.get(good, 0.0)
-            if price <= 0.0 or not math.isfinite(price):
+            price = view.price(good, area)
+            if price is None or price <= 0.0 or not math.isfinite(price):
                 continue
             money = min(units * price, max(0.0, (merchants_cash or {}).get(merchant.agent_id, math.inf)) - budget.get(merchant.agent_id, 0.0))
             if money <= 0.0:

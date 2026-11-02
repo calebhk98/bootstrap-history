@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the markets module's port 
 
 import math
 
-from . import carried_book, carriage_wear, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
+from . import carried_book, carriage_wear, national_prices, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
 from .bank_founding import found_from_outside
 from .diagnostics import person_equivalent_unemployment
 from .fixture_setups import GRAIN as FIXTURE_STAPLE, LABOURER as FIXTURE_UNSKILLED_TRADE, small_setup as fixture_small_setup, stationary_setup as fixture_stationary_setup
@@ -72,11 +72,7 @@ def found_bank_from_outside(economy, founder, capital_units, year, edge):
 
 def traded_volumes(economy):
     """Last year's traded quantity of each good, summed over its markets."""
-    totals = {}
-    for key, volume in economy.record.volumes.items():
-        good = key.split(_KEY_SEPARATOR, 1)[0]
-        totals[good] = totals.get(good, 0.0) + volume
-    return totals
+    return country_figures.traded_volumes(economy, None)
 
 
 def country_traded_volumes(economy, country=None):
@@ -91,8 +87,8 @@ def country_opening_basket(economy, country=None):
 
 def market_record(economy, good):
     """What the markets of one good did last year, summed over its areas, in the good's units: `sold` (traded),
-    `unsold` (what sellers would have sold at the year's price and did not) and `unmet` (what buyers wanted at
-    it beyond what was sold)."""
+    `unsold` (what sellers offered at the price their buyers faced beyond what was delivered) and `unmet` (what
+    buyers asked for at the asks they faced beyond what was delivered), all after the year's second round of buying."""
     record = economy.record
     totals = {"sold": 0.0, "unsold": 0.0, "unmet": 0.0}
     for name, figures in (("sold", record.volumes), ("unsold", record.unsold), ("unmet", record.unmet)):
@@ -196,15 +192,7 @@ def wages_by_trade_weighted(economy, country=None):
     opening seeds, not clearings), except the unskilled trade, whose wage prices the rest. Of `country`'s
     markets (the home country's when the economy holds several)."""
     scope = country_figures.home_when_shared(economy, country)
-    if scope is not None:
-        wages = country_figures.wages_per_hour(economy, scope)
-    else:
-        rows = {}
-        for key, wage in economy.record.memory.wages.items():
-            rows.setdefault(key.split(_KEY_SEPARATOR, 1)[0], []).append((wage, economy.record.hours_hired.get(key, 0.0)))
-        wages = {trade: (sum(wage * hours for wage, hours in pairs) / sum(hours for _wage, hours in pairs)
-                         if sum(hours for _wage, hours in pairs) > 0.0 else sum(wage for wage, _hours in pairs) / len(pairs))
-                 for trade, pairs in rows.items()}
+    wages = country_figures.wages_per_hour(economy, scope)
     idle_and_offered = country_figures.idle_hours_by_trade(economy, scope)
     unskilled = economy.setup.unskilled_trade
     return {trade: wage for trade, wage in wages.items()
@@ -318,28 +306,7 @@ def price_response(economy, good, landed_units, taken_units, tile=None):
     factor = market_curves.price_response(curve, good, memory.prices.get(market_key(good, area)), landed_units, taken_units)
     if factor is None or not math.isfinite(factor):
         return factor
-    return 1.0 + _port_share(economy, good, area) * (factor - 1.0)
-
-
-def _port_share(economy, good, area):
-    """The port area's share of a good's usual traded value, which weighs a move at the port into the national
-    price. Kept per economy until its next year, when prices and weights change."""
-    cache = economy.__dict__.setdefault("_port_shares", {})
-    key = (economy.record.memory.prices is not None and id(economy.record.memory.prices), good, area)
-    if key not in cache:
-        memory = economy.record.memory
-        weights = memory.volume_weights or economy.record.volumes
-        total = 0.0
-        port_value = 0.0
-        port_key = market_key(good, area)
-        for market, price in memory.prices.items():
-            if market.split(_KEY_SEPARATOR, 1)[0] == good:
-                value = price * weights.get(market, 0.0)
-                total += value
-                if market == port_key:
-                    port_value = value
-        cache[key] = port_value / total if total > 0.0 else 1.0
-    return cache[key]
+    return 1.0 + national_prices.port_share(economy.record, good, market_key(good, area)) * (factor - 1.0)
 
 
 def account_balance(economy, agent_id):

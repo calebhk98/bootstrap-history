@@ -19,7 +19,7 @@ from .entry_sizing import Traded, sized_runs
 from .goods_market import quantity_at
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import MarketView
-from .types import AreaId, Bid, GoodId, Recipe, TileId
+from .types import AreaId, Bid, ClearingResult, GoodId, Recipe, TileId
 
 ENTRY_SHARE_OF_UNMET_DEMAND = declare(
     "ENTRY_SHARE_OF_UNMET_DEMAND", 0.5, kind="temporary_heuristic",
@@ -58,12 +58,16 @@ class EntryPlan:
     yearly_return: float
 
 
-def unmet_quantity(bids: Sequence[Bid], price: float, sold: float) -> float:
-    """What buyers wanted at the year's price beyond what was sold (zero when none was priced)."""
-    if price <= 0.0 or not math.isfinite(price):
+def unmet_quantity(bids: Sequence[Bid], result: ClearingResult, delivered: float) -> float:
+    """What buyers asked for beyond what was delivered: at the asks they faced when the market traded
+    (`result.demand_at_price`), else at the figure it carries as a price (zero when none was priced)."""
+    if result.quantity > 0.0:
+        wanted = result.demand_at_price
+    elif result.price > 0.0 and math.isfinite(result.price):
+        wanted = math.fsum(quantity_at(bid, result.price) for bid in bids)
+    else:
         return 0.0
-    wanted = math.fsum(quantity_at(bid, price) for bid in bids)
-    return max(0.0, wanted - sold)
+    return max(0.0, wanted - delivered)
 
 
 def entrant_loan(plant_value: float, owner_stake: float) -> float:

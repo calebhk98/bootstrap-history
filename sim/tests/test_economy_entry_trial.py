@@ -7,7 +7,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.economy import entry_trial
+from sim.economy import entry_trial, unit_cost
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Recipe
 
@@ -22,13 +22,13 @@ def bid(floor, budget, flexible=0.0):
 class FullCostTests(unittest.TestCase):
     def test_cost_shares_a_joint_run_by_value_and_counts_the_plant(self):
         prices = {"metal": 9.0, "slag": 0.1}
-        cost = entry_trial.full_cost_per_unit(SMELT, "metal", prices, {"ore": 0.5, "stone": 1.0}, {"smith": 2.0}, 0.0)
+        cost = unit_cost.full_cost_per_unit(SMELT, "metal", prices, {"ore": 0.5, "stone": 1.0}, {"smith": 2.0}, 0.0)
         run_cost = 100.0 * 0.5 + 5.0 * 2.0 + 2.0 * 1.0 / 10.0
         share = 90.0 / (90.0 + 9.0)
         self.assertAlmostEqual(cost, run_cost * share / 10.0)
 
     def test_an_input_with_no_price_cannot_be_costed(self):
-        self.assertTrue(math.isinf(entry_trial.full_cost_per_unit(SMELT, "metal", {"metal": 9.0}, {}, {"smith": 2.0}, 0.0)))
+        self.assertTrue(math.isinf(unit_cost.full_cost_per_unit(SMELT, "metal", {"metal": 9.0}, {}, {"smith": 2.0}, 0.0)))
 
 
 class DemandAtTests(unittest.TestCase):

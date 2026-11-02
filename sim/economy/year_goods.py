@@ -6,7 +6,6 @@ first of their goods comes up, the state takes its tax in kind from what was gro
 market area of the good clears and settles.
 """
 import dataclasses
-import math
 from typing import Dict, List, Tuple
 
 from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
@@ -130,7 +129,9 @@ def state_orders(setup, record, view, area_map, order_book: OrderBook, keep) -> 
         if surplus <= 0.0 or good not in area_map.goods():
             continue
         area = area_map.area_of(good, tile)
-        expected = view.price(good, area) or 0.0
+        expected = view.price(good, area)
+        if expected is None:
+            continue
         spoilage = setup.specs[good].spoilage_per_year if good in setup.specs else 0.0
         offers.append(Offer(setup.state_agent, good, area, tile, surplus,
                             holding_reservation(expected, rate, spoilage, 0.0)))
@@ -157,7 +158,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     order = input_depth_order(setup.recipes)
     listed = set(order)
     order += sorted({good for good, _area in order_book} - listed)
-    done, cleared, traded = set(), set(), set()
+    done, traded = set(), set()
     left_markets = {}
     costs = None                                  # what each good costs to make, worked out when first needed
     in_kind = [form for form in setup.tax_forms if form.paid_in]
@@ -192,12 +193,9 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             ledger.bids_by_market[(good, area)] = bids
             left_markets[(good, area)] = goods_respend_year.LeftMarket(
                 bids, result, goods_respend.offers_left(offers, goods_respend_year.sold_by_seller(result)),
-                record.memory.prices.get(key))
+                record.memory.prices.get(key), delivered)
             if area in kept:
                 record.curves[key] = market_curves.summarize(bids, offers)
-            unmet = unmet_quantity(bids, result.price, result.quantity)
-            if unmet > 0.0:
-                ledger.unmet_demand[(good, area)] = unmet
             old = record.memory.prices.get(key)
             quiet_years = note_bids(record.memory, key, bids, offers)
             dry_years = note_offers(record.memory, key, bids, offers)
@@ -224,21 +222,34 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
                 record.memory.prices[key] = max(signal, floor)
                 record.memory.note_usual_price(key)
-            record.volumes[key] = delivered
-            record.unsold[key] = max(0.0, result.offered_at_price - result.quantity)
-            record.unmet[key] = unmet
-            record.memory.note_volume(key, delivered)
             record.memory.note_cleared(key, result.price, delivered)
             if delivered > 0.0:
                 record.memory.quote_kinds.pop(key, None)
-            cleared.add(key)
             if delivered > 0.0:
                 traded.add(key)
     goods_respend_year.respend(setup, record, view, ledger, left_markets,
                                lambda cohort: cohort_basket(setup, record, cohort))
-    for key in sorted(set(record.memory.volume_weights) - cleared):
-        record.memory.note_volume(key, 0.0)
+    _record_year_markets(record, ledger, left_markets)
     record.memory.note_trading(traded)
+
+
+def _record_year_markets(record, ledger: YearLedger, left_markets) -> None:
+    """The year's volumes, unsold and unmet of every market, after all rounds; a market with no orders this year has
+    none, and its usual volume moves toward zero."""
+    record.volumes.clear()
+    record.unsold.clear()
+    record.unmet.clear()
+    for (good, area), market in sorted(left_markets.items()):
+        key = market_key(good, area)
+        unmet = unmet_quantity(market.bids, market.result, market.delivered)
+        record.volumes[key] = market.delivered
+        record.unsold[key] = max(0.0, market.result.offered_at_price - market.delivered)
+        record.unmet[key] = unmet
+        if unmet > 0.0:
+            ledger.unmet_demand[(good, area)] = unmet
+        record.memory.note_volume(key, market.delivered)
+    for key in sorted(set(record.memory.volume_weights) - set(record.volumes)):
+        record.memory.note_volume(key, 0.0)
 
 
 def _received_price(setup, record, good, result) -> float:

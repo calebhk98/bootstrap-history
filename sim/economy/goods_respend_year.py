@@ -5,7 +5,6 @@ and a cohort still rationed goes on until nothing more is bought. Money no offer
 from typing import Dict, List, Tuple
 
 from . import goods_market, settlement
-from .market_memory import market_key
 from .goods_respend import cheapest_ask, need_of_good, offers_left, rationed_money, respend_bids
 from .types import Bid, GoodsMove
 
@@ -14,9 +13,10 @@ Market = Tuple[str, str]
 
 class LeftMarket:
     """A cleared market as the second round finds it: its bids and result, the offers with what sold taken off, its
-    last price."""
+    last price, what has been delivered in it."""
 
-    def __init__(self, bids, result, offers, last_price):
+    def __init__(self, bids, result, offers, last_price, delivered):
+        self.delivered = delivered     # goods moved in all rounds so far
         self.bids = bids
         self.result = result
         self.offers = offers
@@ -107,7 +107,7 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
             market = markets[key]
             bids = new_bids[key]
             result = goods_market.clear(bids, market.offers, key[0], key[1], setup.currency_id, market.last_price)
-            _settle(setup, record, ledger, key, result)
+            market.delivered += _settle(record, ledger, result)
             market.offers = offers_left(market.offers, sold_by_seller(result))
             spent_any = spent_any or result.quantity > 0.0
             fallback = cheapest_ask(market.offers)
@@ -118,7 +118,8 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
             break
 
 
-def _settle(setup, record, ledger, key, result) -> None:
+def _settle(record, ledger, result) -> float:
+    """Settle a round's result and return the goods it delivered."""
     delivered = 0.0
     if result.quantity > 0.0:
         done = settlement.settle_goods(record.book, result)
@@ -127,7 +128,4 @@ def _settle(setup, record, ledger, key, result) -> None:
         for shortfall in done.shortfalls:
             ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
     ledger.note_clearing(result)
-    name = market_key(key[0], key[1])
-    record.volumes[name] = record.volumes.get(name, 0.0) + delivered
-    if name in record.unsold:
-        record.unsold[name] = max(0.0, record.unsold[name] - delivered)
+    return delivered

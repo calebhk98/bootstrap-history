@@ -76,7 +76,10 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tu
         if capacity <= 0.0:
             continue                                        # no maker: the trial newcomer's market
         key = market_key(good, area_id)
-        price = view.price(good, area_id) or 0.0
+        price = view.price(good, area_id)
+        if price is None:
+            record.margin_years.pop(key, None)
+            continue
         expected = record.memory.usual_prices.get(key, price)
         ranked = recipes_by_cost(setup, record, view, good, area.anchor_tile, makers[good],
                                  MARGIN_ENTRY_GROWTH_SHARE * capacity)

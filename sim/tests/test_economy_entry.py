@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import entry
-from sim.economy.types import Bid, Recipe
+from sim.economy.types import Bid, ClearingResult, Recipe
 from sim.tests.test_economy_producers import View
 
 SALT = Recipe("boil_salt", {"salt": 10.0}, {"firewood": 5.0}, {"hand": 2.0}, {"pan": 1.0}, {}, 10.0)
@@ -65,11 +65,14 @@ class EntryTests(unittest.TestCase):
 class UnmetQuantityTests(unittest.TestCase):
     def test_a_market_with_buyers_and_no_sellers_has_its_whole_demand_unmet(self):
         bids = [Bid("b", "salt", "area", "tile", 5.0, 10.0, 1.0, 1.0, 1e9, 0)]
-        self.assertAlmostEqual(entry.unmet_quantity(bids, 1.0, 0.0), 15.0)
+        empty = ClearingResult("salt", "area", "coin", 1.0, 0.0, 0.0, 0.0, 5.0, ())
+        self.assertAlmostEqual(entry.unmet_quantity(bids, empty, 0.0), 15.0)
 
-    def test_a_market_that_sold_what_was_wanted_has_none(self):
+    def test_a_market_that_traded_is_judged_at_what_its_buyers_asked_for_less_what_was_delivered(self):
         bids = [Bid("b", "salt", "area", "tile", 5.0, 10.0, 1.0, 1.0, 1e9, 0)]
-        self.assertEqual(entry.unmet_quantity(bids, 1.0, 15.0), 0.0)
+        traded = ClearingResult("salt", "area", "coin", 1.0, 12.0, 15.0, 12.0, 0.0, ())
+        self.assertAlmostEqual(entry.unmet_quantity(bids, traded, 12.0), 3.0)
+        self.assertEqual(entry.unmet_quantity(bids, traded, 15.0), 0.0)
 
 
 class EntrantLoanTests(unittest.TestCase):
