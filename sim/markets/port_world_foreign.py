@@ -8,20 +8,11 @@ class ForeignReads:
 	def partners_in_agent_economy(self):
 		return self._needs.partners_in_agent_economy()
 
-	def foreign_economies(self):
-		return self._needs.foreign_economies()
-
 	def partner_civ(self, civilization_id):
 		return self._needs.partner[civilization_id]["civ"]
 
 	def _foreign_economy_facts(self, civilization_id):
 		return self._needs.partner_facts[civilization_id]
-
-	def foreign_supply_tonnes(self, civilization_id, material):
-		return self._needs.foreign_supply_tonnes(civilization_id, material)
-
-	def foreign_lift_left_tonnes(self, civilization_id, route):
-		return self._needs.lift_left_tonnes(civilization_id, route)
 
 	def partner_price_per_unit(self, partner, material):
 		return self._needs.partner_price_per_unit(partner, material)

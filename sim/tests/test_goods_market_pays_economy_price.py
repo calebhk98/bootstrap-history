@@ -49,7 +49,7 @@ class _Economy:
         return (1.0 + (taken_tonnes / offered) ** 2) / (1.0 + (landed_tonnes / offered) ** 2)
 
 
-def stub_game(partner_makes=(), partner_prices=None):
+def stub_game():
     flows = {"sold": {}, "bought": {}, "drawn": {}}
     game = types.SimpleNamespace(
         economy=_Economy(),
@@ -61,12 +61,9 @@ def stub_game(partner_makes=(), partner_prices=None):
         _material_market_tonnes=lambda key: 1000.0,
         material_carriage_per_tonne=lambda key, price_per_tonne: CARRIAGE_PER_TONNE.get(key, 0.0),
         _market_flows=lambda: flows,
-        foreign_economies=lambda: [],
         year=100, state=types.SimpleNamespace(projects=types.SimpleNamespace(), acting_seat="founder"), techniques_held=frozenset,
-        market_rate=lambda: 0.05, partner_price_level=lambda partner: 1.0,
-        **market_stand_in.market_memory(),
-        _foreign_economy_facts=lambda partner: {"solved_materials": frozenset(partner_makes),
-                                                "prices_in_home_money": partner_prices or {}})
+        market_rate=lambda: 0.05,
+        **market_stand_in.market_memory())
     return game, GoodsMarket(game)
 
 
@@ -108,21 +105,6 @@ class TilePriceTests(unittest.TestCase):
         self.assertIsNone(market.purchase_cost("cobalt_kg", 1.0))
         self.assertIsNone(market.price("cobalt_kg"))
         self.assertFalse(market.can_be_bought("cobalt_kg"))
-
-    def test_a_good_only_a_partner_makes_costs_its_landed_price_and_no_carriage(self):
-        game, market = stub_game(partner_makes={"cassia_kg"}, partner_prices={"cassia_kg": 50.0})
-        market._route_from = lambda partner: types.SimpleNamespace(cost_per_tonne=10.0)
-        game.foreign_economies = lambda: ["partner"]
-        game.foreign_supply_tonnes = lambda partner, material: 1000.0
-        game.foreign_lift_left_tonnes = lambda partner, route: (math.inf, math.inf)
-        game._trader_margin_share = lambda partner, route: 0.1
-        game._cargo_lost_share = lambda route, material, partner: 0.0
-        game._trader_cycle_years = lambda route, partner: 0.1
-        game._agent_cost_per_tonne = lambda partner, route: 0.0
-        quote = market.quote("cassia_kg")
-        landed = market.landed_price("cassia_kg", "partner", market._route_from("partner"))
-        self.assertAlmostEqual(quote["buy_per_tonne"], landed / 0.001)
-        self.assertEqual(quote["carriage_per_tonne"], 0.0)
 
 
 class ClimbTests(unittest.TestCase):

@@ -19,8 +19,8 @@ class TradeView:
 		return str(self.needs.civilisation().get("id"))  # type: ignore[attr-defined]
 
 	def trade_places(self, location: Optional[str]) -> List[str]:
-		"""Every place with a market this year, the home society first; `location` is not filtered."""
-		return [self._home_place()] + list(self.needs.foreign_economies())  # type: ignore[attr-defined]
+		"""Every place with a market this year: the home society; `location` is not filtered."""
+		return [self._home_place()]
 
 	def country_of_place(self, place: str) -> Optional[str]:
 		"""A place is a country; None for the home one, as actors of the home country carry no country."""
@@ -114,14 +114,8 @@ class TradeView:
 		return paid
 
 	def market_depth(self, material: str, place: str) -> float:
-		"""Tonnes a year buyers at a place take; at a partner no more than its market book's demand, the
-		scale its price moves on when traders sell into it."""
-		depth = float(self._depth_by_material(place).get(material, 0.0))
-		if place == self._home_place():
-			return depth
-		needs = self.needs  # type: ignore[attr-defined]
-		entry = needs.partner_book_entry(place, needs.material_commodity[material])
-		return depth if entry is None else min(depth, float(entry["reference_tonnes"]))
+		"""Tonnes a year buyers at a place take."""
+		return float(self._depth_by_material(place).get(material, 0.0))
 
 	def price_after_cargo(self, material: str, place: str, tonnes: float, landing: bool) -> Optional[float]:
 		"""Price per tonne at a place once `tonnes` more of a good land there (`landing`) or are taken from it, on
@@ -130,12 +124,10 @@ class TradeView:
 		price = self.price_at(material, place)
 		if not price:
 			return None
-		if place == self._home_place():
-			landed, taken = self.needs.actor_home_trade[material]  # type: ignore[attr-defined]
-			factor = self.needs.agent_price_response(  # type: ignore[attr-defined]
-				material, landed + (tonnes if landing else 0.0), taken + (0.0 if landing else tonnes))
-			return None if factor is None else price * factor
-		return price * self.needs.partner_price_response(place, material, tonnes, landing)  # type: ignore[attr-defined,no-any-return]
+		landed, taken = self.needs.actor_home_trade[material]  # type: ignore[attr-defined]
+		factor = self.needs.agent_price_response(  # type: ignore[attr-defined]
+			material, landed + (tonnes if landing else 0.0), taken + (0.0 if landing else tonnes))
+		return None if factor is None else price * factor
 
 	def _delivered(self) -> Dict[Tuple[str, str], float]:
 		return self._memo.setdefault("delivered", {})  # type: ignore[attr-defined,no-any-return]

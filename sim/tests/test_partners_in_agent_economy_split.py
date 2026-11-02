@@ -1,4 +1,4 @@
-"""Every enabled partner is a country of the agent economy, and none trades by partner books. The foreign-trade module reads the
+"""Every enabled partner is a country of the agent economy, and none trades by partner books (there are none). The foreign-trade module reads the
 records the test states as a view; no game. The two countries' economy is in test_country_economy."""
 import unittest
 
@@ -18,10 +18,9 @@ def module(year=100, own="rome", variant_of=None):
 
 
 class PartnerSplitTests(unittest.TestCase):
-    def test_every_partner_is_in_the_agent_economy_and_none_trades_by_books(self):
+    def test_every_partner_is_in_the_agent_economy(self):
         trade = module()
         self.assertEqual(trade.partners_in_agent_economy(), ["han", "persia"])
-        self.assertEqual(trade.foreign_economies(), [])
 
     def test_a_game_is_not_its_own_partner(self):
         self.assertEqual(module(own="han").partners_in_agent_economy(), ["persia"])

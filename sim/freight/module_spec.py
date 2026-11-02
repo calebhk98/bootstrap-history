@@ -15,9 +15,9 @@ READS_BY_OWNER = {
     "finance": ("market_rate", "households_loanable_funds"),
     "prices": ("material_prices", "material_price"),
     "land": ("carriage_facts", "mode_carrier", "modes_carrying", "modes_usable", "cheapest_route", "tiles_listed_by", "held_techniques", "techniques_with_results", "built_ways", "tile_owner", "material_source_tiles", "route_km_to"),
-    "markets": ("goods_carried_last_year",),
+    "markets": ("goods_carried_last_year", "country_trade_book"),
     "demography": ("working_age",),
-    "foreign_trade": ("foreign_economies", "partner_market_book", "partner_route", "route_lift_years_per_tonne",
+    "foreign_trade": ("partners", "partner_route", "route_lift_years_per_tonne",
                       "route_capital_per_lift_tonne", "lift_capacity_tonnes", "opening_carriers_per_route"),
     "polity": ("holder_treasury",),
 }

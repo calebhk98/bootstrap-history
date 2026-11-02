@@ -13,7 +13,15 @@ import math
 
 from sim.constants import declare
 
-from . import market
+
+DEFAULT_DEMAND_PRICE_ELASTICITY = declare(
+    "DEFAULT_DEMAND_PRICE_ELASTICITY", 0.5, kind="temporary_heuristic",
+    unit="dimensionless (fall in quantity demanded per rise in price, in logs)",
+    source=None, confidence="D",
+    why="Short-run household and derived demand for a material is inelastic: "
+        "recipes and habits do not change within a year. One value for every "
+        "material; the need model's own substitution between goods "
+        "(NEED_SUBSTITUTION_ELASTICITY) would give a per-material figure.")
 
 BORROWING_PER_OWN_CAPITAL = declare(
     "BORROWING_PER_OWN_CAPITAL", 2.0, kind="engineering_estimate",
@@ -37,7 +45,7 @@ def price_flexibility(price_factor, landed_share):
 def price_flexibility_or_default(flexibility):
     """The flexibility measured, or where no response is known the inverse of the market's default
     demand elasticity."""
-    return 1.0 / market.DEFAULT_DEMAND_PRICE_ELASTICITY if flexibility is None else flexibility
+    return 1.0 / DEFAULT_DEMAND_PRICE_ELASTICITY if flexibility is None else flexibility
 
 
 def monopoly_markup_share(flexibility):
