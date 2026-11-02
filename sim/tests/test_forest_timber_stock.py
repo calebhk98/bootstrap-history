@@ -24,7 +24,7 @@ def _host(felled=None):
     handlers = {FellTimber: module.fell_timber, RegrowTimber: module.regrow_timber}
     return types.SimpleNamespace(module=module, timber_felled=module.timber_felled,
                                  send=lambda command: handlers[type(command)](command),
-                                 **land_views.of({}, ("mode_crews", "modes_carrying", "timber_on_tile")))
+                                 map=types.SimpleNamespace(**land_views.of({}, ("mode_crews", "modes_carrying", "timber_on_tile"))))
 
 
 def _forest_tile():

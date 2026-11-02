@@ -24,7 +24,7 @@ SITE_YIELD_FACTOR = 1.0   # an ore recipe's output per run is ore, whatever its 
 
 def _ore_recipes(sim, outputs_by_recipe):
     """{recipe id: (resource id, ore kg a run)} for the recipes whose output is a catalogue resource's ore."""
-    ore_of = {ore: resource for resource, by_ore in sim.deposit_catalogue()["ore_goods"].items() for ore in by_ore}
+    ore_of = {ore: resource for resource, by_ore in sim.map.deposit_catalogue()["ore_goods"].items() for ore in by_ore}
     return {recipe_id: (ore_of[recipe_id], outputs[recipe_id]) for recipe_id, outputs in sorted(outputs_by_recipe.items())
             if recipe_id in ore_of and outputs.get(recipe_id, 0.0) > 0.0}
 
@@ -32,7 +32,7 @@ def _ore_recipes(sim, outputs_by_recipe):
 def _worked_by_firms(sim, resource_id, tile_ids):
     """The deposits of a resource the economy's firms work: those the seat has found, and the catalogue's on
     the partner economies' tiles among `tile_ids`."""
-    return sim.found_deposits(resource_id) + sim.partner_deposits(resource_id, tile_ids)
+    return sim.foreign.found_deposits(resource_id) + sim.foreign.partner_deposits(resource_id, tile_ids)
 
 
 def site_limits(sim, outputs_by_recipe, tile_ids=()):

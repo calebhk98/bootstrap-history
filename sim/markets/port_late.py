@@ -3,7 +3,7 @@
 Part of the port. The opening fixes the recipes the economy's producers can run; the techniques some
 producer in the society runs later (the founder's, any firm's concerns) allow more entries. This builds
 the opening values with those entries, their trades' wages and the prices of goods that had none; the
-economy is then given what it lacks from a setup built from them (`AgentEconomy.admit_techniques`), the
+economy is then given what it lacks from a setup built from them (`AgentEconomy.admit_techniques` (agent_economy.py)), the
 same setup a resumed game builds from its saved opening.
 """
 from .port_setup import allowed_entries

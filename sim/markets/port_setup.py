@@ -67,7 +67,7 @@ def unskilled_trade(trades_data):
 def partner_openings(sim):
     """{partner id: its tiles, people and recipes} for the partners that are part of the agent economy."""
     from .port_partners import partner_opening
-    return {partner: partner_opening(sim, partner) for partner in sim.partners_in_agent_economy()}
+    return {partner: partner_opening(sim, partner) for partner in sim.foreign.partners_in_agent_economy()}
 
 
 LITERACY_FIELDS = ("literacy_general", "literacy_elite")
@@ -77,7 +77,7 @@ def opening_values(sim):
     """What the setup takes from the engine at the opening: kept in the save so a resumed game rebuilds
     the same markets, producers and price base however the engine's own tables have moved since."""
     civ = sim.civ
-    tile_ids = sim.tiles_held_by(civ)
+    tile_ids = sim.map.tiles_held_by(civ)
     people = float(sim.population.total)
     production = demand.production_data()
     trades_data = _load("world", "trades.json").get("trades", {})
@@ -92,8 +92,8 @@ def opening_values(sim):
     labour_trades = sorted({trade for entry_id in everyone_runs + ([mint_recipe] if mint_recipe else [])
                             for trade in (production[entry_id].get("labour_hours") or {})}
                            | {unskilled})
-    modes = sim._freight_mode_costs(cargo="goods")
-    rates = sim.mode_crews(sorted(modes))
+    modes = sim.foreign.freight_mode_costs(cargo="goods")
+    rates = sim.map.mode_crews(sorted(modes))
     people_by_tile = {tile: people * settlement.population_share(tile_ids, tile) for tile in tile_ids}
     fertility = {tile: spec.fertility for tile, spec in opening_tiles(sim, tile_ids).items()}
     prices = dict(partner_prices)
@@ -110,7 +110,7 @@ def opening_values(sim):
         "need_shares": sim.labour.need_shares(),
         "rate": float(opening_market_rate()),
         "carriage": dict(modes),
-        "carriage_balanced": sim._freight_mode_costs(0.0, cargo="goods"),
+        "carriage_balanced": sim.foreign.freight_mode_costs(0.0, cargo="goods"),
         "carriage_wage": sim.labour.wage_per_hour(unskilled),
         "carriage_crew": {mode: [rate["crew_trade"], rate["crew_hours_per_tonne_km"]]
                           for mode, rate in rates.items()},
@@ -172,7 +172,7 @@ def opening_tiles(sim, tile_ids):
     """The tiles of the economy's map, with the share of each that is cropped and its fertility."""
     technique = sim.labour.farming_technique()
     cropped_share = 1.0 - technique.rotation.fallow_share_of_holding
-    return tile_costs.tiles_from_map(sim.economy_map, list(tile_ids), cropped_share, technique.toolkit.tillage_capacity)
+    return tile_costs.tiles_from_map(sim.map.economy_map, list(tile_ids), cropped_share, technique.toolkit.tillage_capacity)
 
 
 def build_setup(sim, opening=None, production=None):
@@ -183,8 +183,8 @@ def build_setup(sim, opening=None, production=None):
     unit = coin_per_unit(opening)
     opening = in_units(opening)
     civ = sim.civ
-    tile_ids = sim.tiles_held_by(civ)
-    world_map = sim.economy_map
+    tile_ids = sim.map.tiles_held_by(civ)
+    world_map = sim.map.economy_map
     partners = opening.get("partners") or {}
     all_tile_ids = list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]]
     tiles = opening_tiles(sim, all_tile_ids)
@@ -255,7 +255,7 @@ def build_setup(sim, opening=None, production=None):
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
         yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles),
-        basket_by_tile=baskets_by_tile(basket, need_data, sim.tile_climates(all_tile_ids), all_tile_ids), coin_per_unit=unit,
+        basket_by_tile=baskets_by_tile(basket, need_data, sim.map.tile_climates(all_tile_ids), all_tile_ids), coin_per_unit=unit,
         household_work=households_work.load_household_work(), ready_to_eat=households_work.ready_to_eat_goods(need_data),
         milled_as=household_grinding.milled_as_map(need_data),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),

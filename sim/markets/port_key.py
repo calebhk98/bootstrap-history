@@ -8,8 +8,8 @@ import types
 
 from sim.prices.api import solve_cache
 
-# The spin-up runs the port's year module and, through it, the economy package; the interface never loads.
-SPIN_UP_SOURCE_MODULES = ("sim.markets.port_year",)
+# The spin-up runs the port's spin_up_run module and, through it, the economy package; the interface never loads.
+SPIN_UP_SOURCE_MODULES = ("sim.markets.spin_up_run",)
 
 
 KEY_FLOAT_DIGITS = 12

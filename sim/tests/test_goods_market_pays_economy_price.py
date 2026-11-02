@@ -62,7 +62,8 @@ def stub_game():
         _priced_key=lambda tag, prices: tag if tag in prices else None,
         _material_price_per_kg=TABLE_PRICE_PER_UNIT.get,
         _material_market_tonnes=lambda key: 1000.0,
-        material_carriage_per_tonne=lambda key, price_per_tonne: CARRIAGE_PER_TONNE.get(key, 0.0),
+        foreign=types.SimpleNamespace(
+            material_carriage_per_tonne=lambda key, price_per_tonne: CARRIAGE_PER_TONNE.get(key, 0.0)),
         _market_flows=lambda: flows,
         year=100, state=types.SimpleNamespace(projects=types.SimpleNamespace(), acting_seat="founder"), techniques_held=frozenset,
         market_rate=lambda: 0.05,

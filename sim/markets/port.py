@@ -19,30 +19,34 @@ class EconomyPort:
 
     def __init__(self, sim):
         self._sim = sim
-        self._agent = None
+        self._parts = None
 
     @property
     def world(self):
         """What the port reads of the game (port_world.py)."""
         return self._sim
 
-    # ---- the agent economy (port_year.py), the game's one economy ---------------------------
+    # ---- the agent economy (port_parts.py), the game's one economy ---------------------------
+    @property
+    def parts(self):
+        """The parts over the agent economy (port_parts.py); the economy opens when first asked, or at the game's start."""
+        if self._parts is None:
+            from .port_parts import AgentParts
+            self._parts = AgentParts(self._sim)
+        return self._parts
+
     @property
     def agent(self):
-        """The game's agent economy (it opens when first asked, or at the game's start)."""
-        if self._agent is None:
-            from .port_year import AgentEconomy
-            self._agent = AgentEconomy(self._sim)
-        return self._agent
+        """The live agent economy and its record (agent_economy.py)."""
+        return self.parts.agent
 
-    def _answering_agent(self):
-        """The agent economy, opened, when it should answer; None while it opens (the opening reads the
+    def _answering(self):
+        """The parts over the agent economy, opened, when they should answer; None while it opens (the opening reads the
         engine's own figures)."""
-        agent = self.agent
         if self._opening:
             return None
         self.open_agent()
-        return agent
+        return self.parts
 
     def acting_tile(self):
         """The tile the acting seat buys and sells on: where its household operates from."""
@@ -50,125 +54,123 @@ class EconomyPort:
 
     def producer_capacities(self):
         """[(recipe id, capacity in runs)] of every producer in the opened agent economy; empty before it opens."""
-        return self.agent.producer_capacities()
+        return self.parts.producers.capacities()
 
     def agent_prices_at(self, tile=None):
         """The agent economy's price of each good on a tile (the acting one by default) in coin, or None while it
         opens: what a buyer or seller there faces. A good the economy has no market for is absent."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.prices_at(self.acting_tile() if tile is None else tile)
+        parts = self._answering()
+        return None if parts is None else parts.prices.prices_at(self.acting_tile() if tile is None else tile)
 
     def agent_price_kind(self, good):
         """What the agent economy's shown price of a good is (traded, a named quote or an estimate); None while it
         opens or when the economy shows none."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.price_kind(good)
+        parts = self._answering()
+        return None if parts is None else parts.prices.price_kind(good)
 
     def agent_trade_book(self, country):
         """What crossed the country's border last year, by good ({good: {"in_tonnes", "in_value", "out_tonnes",
         "out_value"}}); empty while the economy opens."""
-        agent = self._answering_agent()
-        return {} if agent is None else economy_api.country_figures.trade_book(agent.economy(), country)
+        parts = self._answering()
+        return {} if parts is None else economy_api.country_figures.trade_book(parts.agent.economy(), country)
 
     def agent_offered_tonnes(self, material, tile=None):
         """Tonnes the sellers of a material in the tile's market area held at the last clearing; None while the
         economy opens or when the area has no book for it."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.offered_tonnes(material, self.acting_tile() if tile is None else tile)
+        parts = self._answering()
+        return None if parts is None else parts.prices.offered_tonnes(material, self.acting_tile() if tile is None else tile)
 
     def agent_seat_sale_outlook(self, seat_id, material, quantity):
         """What a seat may count as sold of `quantity` units of a material its concerns make (concern_sales.outlook):
         its last clearing's share and price, else what buyers took last year; None while the economy opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.seat_sale_outlook(seat_id, material, quantity)
+        parts = self._answering()
+        return None if parts is None else parts.seats.sale_outlook(seat_id, material, quantity)
 
     def agent_prices(self):
         """The agent economy's prices by good in coin, or None to use the engine's."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.answers(self._sim.acting_country())[0]
+        parts = self._answering()
+        return None if parts is None else parts.prices.answers(self._sim.acting_country())[0]
 
     def agent_wage_per_hour(self, trade):
         """The wage in the acting seat's own labour markets: its country's when it is a partner country's seat."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.wage_per_hour(trade, self._sim.acting_country())
+        parts = self._answering()
+        return None if parts is None else parts.prices.wage_per_hour(trade, self._sim.acting_country())
 
     def unskilled_wage(self):
         """Money one hour of the unskilled trade is paid in the agent economy, or None until the game's money is
         priced at the economy (the economy's opening reprices it, see reprice_opening_money)."""
         if not self._sim.money_from_economy() or self._opening:
             return None
-        agent = self._answering_agent()
-        return None if agent is None else agent.unskilled_wage_per_hour()
+        parts = self._answering()
+        return None if parts is None else parts.prices.unskilled_wage_per_hour()
 
     def agent_country(self, country):
         """What the agent economy answers for a partner country in it, or None (not in it, or no wage yet)."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.country(country)
+        parts = self._answering()
+        return None if parts is None else parts.households.country(country)
 
     def agent_land_rent_per_hectare(self):
         """Mean rent per hectare-year of the agent economy's land market, in coin; None while it opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.land_rent_per_hectare()
+        parts = self._answering()
+        return None if parts is None else parts.households.land_rent_per_hectare()
 
     def agent_need_floor_costs(self):
         """What a person's floor of each need costs a year on the home tiles, in coin; None while the economy opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.need_floor_costs_per_person_year() or None
+        parts = self._answering()
+        return None if parts is None else parts.households.need_floor_costs_per_person_year() or None
 
     def agent_need_floor_costs_at(self, tile=None):
         """What a person's floor of each need costs a year on a tile (the acting one by default), in coin; None
         while the economy opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.need_floor_costs_at_tile(self.acting_tile() if tile is None else tile) or None
+        parts = self._answering()
+        return None if parts is None else parts.households.need_floor_costs_at_tile(self.acting_tile() if tile is None else tile) or None
 
     def agent_land_rent_at(self, tile):
         """Rent per hectare-year on a tile in coin; None while the economy opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.land_rent_at_tile(tile)
+        parts = self._answering()
+        return None if parts is None else parts.households.land_rent_at_tile(tile)
 
     def agent_land_rent_paid_by_tile(self):
         """Rent paid on each let tile last year in coin; empty while the economy opens."""
-        agent = self._answering_agent()
-        return {} if agent is None else agent.land_rent_paid_by_tile()
+        parts = self._answering()
+        return {} if parts is None else parts.households.land_rent_paid_by_tile()
 
     def agent_output_tonnes_by_tile(self):
         """Tonnes of each good made on each tile last year; empty while the economy opens."""
-        agent = self._answering_agent()
-        return {} if agent is None else agent.output_tonnes_by_tile()
+        parts = self._answering()
+        return {} if parts is None else parts.producers.output_tonnes_by_tile()
 
     def agent_idle_hours_by_trade(self):
         """(hours offered and not hired, hours offered) of each trade last year; empty while the economy opens."""
-        agent = self._answering_agent()
-        return {} if agent is None else agent.idle_hours_by_trade()
+        parts = self._answering()
+        return {} if parts is None else parts.households.idle_hours_by_trade()
 
     def agent_people_by_trade(self):
         """Working people by trade in the agent economy's labour core; None while it opens or has not yet
         opened (opening it is the wage quotes' business, and slow)."""
-        agent = self.agent
-        return None if agent is None or self._opening else agent.people_by_trade()
+        return None if self._opening else self.parts.producers.people_by_trade()
 
     def agent_people_by_tile_and_trade(self):
         """Working people by tile and trade in the agent economy's labour core; None while it opens."""
-        agent = self.agent
-        return None if agent is None or self._opening else agent.people_by_tile_and_trade()
+        return None if self._opening else self.parts.producers.people_by_tile_and_trade()
 
     def agent_rate(self):
-        agent = self._answering_agent()
-        return None if agent is None else agent.rate()
+        parts = self._answering()
+        return None if parts is None else parts.prices.rate()
 
     def agent_credit_room(self, borrower_id):
         """(True, room) when the agent economy answers, with room None before lenders have met; (False, None)
         while it opens."""
-        agent = self._answering_agent()
-        return (False, None) if agent is None else (True, agent.credit_room(borrower_id))
+        parts = self._answering()
+        return (False, None) if parts is None else (True, parts.prices.credit_room(borrower_id))
 
     def agent_price_response(self, material, landed_tonnes, taken_tonnes, tile=None):
         """Factor on a material's home price once `landed_tonnes` more come to market and `taken_tonnes` more are
         bought, by the agent economy's own demand and supply: at the port's market when no tile is named, else on
         that tile's own market area. None while it opens or has no book for the good; infinite when more is taken
         than the sellers hold."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.price_response(material, landed_tonnes, taken_tonnes, tile)
+        parts = self._answering()
+        return None if parts is None else parts.prices.price_response(material, landed_tonnes, taken_tonnes, tile)
 
     def main_material_of(self, commodity):
         """The first priced material of a commodity (its main product), or None when none is priced."""
@@ -180,69 +182,62 @@ class EconomyPort:
     def agent_market_record(self, commodity):
         """{sold, unsold, unmet} tonnes the agent economy's markets of the commodity's main material had last year
         (`sim.economy.api.market_record`); None while the economy opens or when the commodity has no priced material."""
-        agent = self._answering_agent()
+        parts = self._answering()
         material = self.main_material_of(commodity)
-        if agent is None or material is None:
+        if parts is None or material is None:
             return None
-        return agent.market_record(material)
+        return parts.prices.market_record(material)
 
     def agent_good_market_record(self, good):
         """{sold, unsold, unmet} tonnes the agent economy's markets of a good the economy trades had last year; None
         while the economy opens or when it has no market for the good."""
-        agent = self._answering_agent()
-        if agent is None or not agent.trades_good(good):
+        parts = self._answering()
+        if parts is None or not parts.prices.trades_good(good):
             return None
-        return agent.market_record(good)
+        return parts.prices.market_record(good)
 
     def agent_producers_by_good(self):
         """{good: [(tile, recipe id)]} of the producers the agent economy runs; None while it opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.producers_by_good()
+        parts = self._answering()
+        return None if parts is None else parts.producers.by_good()
 
     def agent_producer_runs(self):
         """[{tile, runs, inputs, outputs}] of each producer that ran last year; None while the agent economy opens."""
-        agent = self._answering_agent()
-        if agent is None:
+        parts = self._answering()
+        if parts is None:
             return None
-        economy = agent.economy()
-        recipes = economy_api.recipes_of(economy)
-        rows = []
-        for producer in economy_api.all_producers(economy):
-            recipe = recipes.get(producer.recipe_id)
-            if producer.last_runs > 0.0 and recipe is not None:
-                rows.append({"tile": producer.tile, "runs": producer.last_runs, "inputs": dict(recipe.inputs), "outputs": dict(recipe.outputs)})
-        return rows
+        return parts.producers.runs_last_year()
 
     def agent_worker_years_by_recipe(self):
         """Worker-years a year the agent economy's producers put into each recipe; None while it opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.worker_years_by_recipe()
+        parts = self._answering()
+        return None if parts is None else parts.producers.worker_years_by_recipe()
 
     def agent_producer_capacity_tonnes(self, material):
         """Tonnes a year the agent economy's producers can make of a material; None while it opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.producer_capacity_tonnes(material)
+        parts = self._answering()
+        return None if parts is None else parts.producers.capacity_tonnes(material)
 
     def agent_cohort_incomes(self):
         """[(people, yearly money income)] of the agent economy's household cohorts, poorest per head first,
         or None while the economy opens."""
-        agent = self._answering_agent()
-        if agent is None:
+        parts = self._answering()
+        if parts is None:
             return None
-        return agent.cohort_incomes()
+        return parts.households.cohort_incomes()
 
     def agent_cohort_land_rents(self, tiles=None):
         """[(people, rent received in coin)] in the order of `agent_cohort_incomes`, or None while the economy opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.cohort_land_rents(tiles)
+        parts = self._answering()
+        return None if parts is None else parts.households.cohort_land_rents(tiles)
 
     def note_actor_sale(self, seller, material, tonnes, from_concerns):
         """An actor's tonnes of a material for the agent economy's market this year."""
-        self.agent.note_sale(seller, material, tonnes, from_concerns)
+        self.parts.trade.note_sale(seller, material, tonnes, from_concerns)
 
     def note_actor_purchase(self, buyer, commodity, tonnes, budget):
         """An actor's tonnes of a commodity it bids for in the agent economy's market this year, with its budget in coin."""
-        self.agent.note_purchase(buyer, commodity, tonnes, budget)
+        self.parts.trade.note_purchase(buyer, commodity, tonnes, budget)
 
     def post_goods_order(self, seat_id, order):
         """A seat's order for the year's clearing (port_goods_orders.py); nothing settles until then."""
@@ -269,17 +264,17 @@ class EconomyPort:
         committed = port_goods_orders.committed_money(port_goods_orders.posted_orders(agent.stored, seat_id))
         if not agent.opened():
             return committed
-        return committed + port_goods_orders.staff_funding_coin(self._sim, agent.economy(), seat_id, agent._tile_in_economy)
+        return committed + port_goods_orders.staff_funding_coin(self._sim, agent.economy(), seat_id, agent.tile_in_economy)
 
     def actor_held_units(self, buyer, material):
         """Durable units owned by an actor after settled market purchases."""
-        return self.agent.held_units(buyer, material)
+        return self.parts.trade.held_units(buyer, material)
 
     def fleet_goods(self, buyer):
         """Naval goods the country's available recipes make, with the buyer's durable stock."""
-        agent = self._answering_agent()
-        if agent is not None:
-            return agent.fleet_goods(buyer)
+        parts = self._answering()
+        if parts is not None:
+            return parts.trade.fleet_goods(buyer)
         from .port_setup import _load, allowed_entries
         from sim.prices.api import prices as price_solver
         production = price_solver.default_production_entries()
@@ -291,67 +286,61 @@ class EconomyPort:
 
     def agent_volume_baseline(self, country=None):
         """{good: units the agent economy cleared in the first year it cleared any}; None while it opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.volume_baseline(country)
+        parts = self._answering()
+        return None if parts is None else parts.households.volume_baseline(country)
 
     def agent_traded_volumes(self, country=None):
         """{good: units the agent economy traded last year}; None while it opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.traded_volumes(country)
+        parts = self._answering()
+        return None if parts is None else parts.households.traded_volumes(country)
 
     def agent_opening_basket(self, country=None):
         """({good: units a year households bought at the opening}, {good: opening price in labour hours}) of the
         agent economy; None while it opens."""
-        agent = self._answering_agent()
-        return None if agent is None else agent.opening_basket(country)
+        parts = self._answering()
+        return None if parts is None else parts.households.opening_basket(country)
 
     def producers_stamp(self):
-        """Changes whenever the agent economy's producers might (each year it runs, and when it gains recipes)."""
-        return 0 if self._agent is None else self._agent.producers_stamp()
+        """Changes whenever the agent economy's producers might (each year it runs); saved with the game."""
+        return int(self._sim.agent_record().get("years_run", 0))
 
     def agent_trades_good(self, material):
         """Whether the agent economy has a market for the material (False while it opens)."""
-        agent = self._answering_agent()
-        return agent is not None and agent.trades_good(material)
+        parts = self._answering()
+        return parts is not None and parts.prices.trades_good(material)
 
     def forget_actor_orders(self, actor_id):
         """An actor's sales and purchases noted for this year's market end."""
-        self.agent.forget_orders(actor_id)
+        self.parts.trade.forget_orders(actor_id)
 
     _opening = False
 
     def run_agent_year(self):
-        """The agent economy's year."""
+        """The agent economy's year; the outcome of the year it ran."""
         self.open_agent()
-        self.agent.run_year()
+        return self.parts.year.run_year()
 
     def flush_record(self):
         """Bring the saved copy of the agent economy up to date; the game's save calls this."""
-        if self._agent is not None:
-            self._agent.flush_record()
+        if self._parts is not None:
+            self._parts.agent.flush_record()
 
     def health(self, metals=(), staple=None):
         """The agent economy's health figures over the years this game has played (port_health.py);
         None while the economy opens."""
-        agent = self.agent
-        if agent is None:
-            return None
         from .port_health import health_report
-        return health_report(agent, metals, staple)
+        return health_report(self.agent, metals, staple)
 
     def spin_up_result(self):
         """How the opening's hidden first stage ended: {"settled": whether it met SPIN_UP_TOLERANCE, "years", "gap"};
         empty while the economy opens or when no spin-up ran. A game that opened unsettled opened wherever the
         cycle stood."""
-        agent = self.agent
-        return {} if agent is None else agent.spin_up_result()
+        return self.agent.spin_up_result()
 
     def open_agent(self):
         """Open the agent economy (with its hidden spin-up) on the engine's own opening figures, then count
         the game's money at the economy's wage."""
         agent = self.agent
-        if agent is None:
-            return
         priced = self._sim.money_from_economy()
         if priced and agent.opened():
             return

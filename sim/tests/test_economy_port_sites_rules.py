@@ -24,6 +24,7 @@ class StubSim:
 
     def __init__(self, found, partner):
         self.found, self.partner, self.drawn = found, partner, []
+        self.map = self.foreign = self   # the port reads the catalogue from `map` and the deposits from `foreign`
 
     def found_deposits(self, resource_id):
         return list(self.found) if resource_id == "iron" else []

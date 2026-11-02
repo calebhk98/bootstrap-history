@@ -17,14 +17,14 @@ def agent_with(outcomes, backing_good="metal_kg"):
     setup = types.SimpleNamespace(basket=types.SimpleNamespace(needs=(need,)), hunger_need="food",
                                   currency=types.SimpleNamespace(backing_good=backing_good))
     economy = types.SimpleNamespace(setup=setup)
-    return types.SimpleNamespace(economy=lambda: economy, outcomes=outcomes)
+    return types.SimpleNamespace(economy=lambda: economy, stored={"health_rows": outcomes})
 
 
 def report_of(agent, **options):
     calls = []
 
     def summary(economy, outcomes, staple, metals):
-        calls.append((list(outcomes), staple, list(metals)))
+        calls.append(([vars(each) for each in outcomes], staple, list(metals)))
         return {"hunger_share": 0.25}
 
     with mock.patch.object(port_health, "health_figures", summary), \
@@ -34,9 +34,9 @@ def report_of(agent, **options):
 
 class HealthReportTests(unittest.TestCase):
     def test_the_report_counts_the_years_and_carries_the_summary_of_the_outcomes(self):
-        report, calls = report_of(agent_with(["year one", "year two"]), metals=["gold"], staple="grain_kg")
+        report, calls = report_of(agent_with([{"hired_hours": 1.0}, {"hired_hours": 2.0}]), metals=["gold"], staple="grain_kg")
         self.assertEqual((report["years"], report["staple"], report["figures"]), (2, "grain_kg", {"hunger_share": 0.25}))
-        self.assertEqual(calls, [(["year one", "year two"], "grain_kg", ["gold"])])
+        self.assertEqual(calls, [([{"hired_hours": 1.0}, {"hired_hours": 2.0}], "grain_kg", ["gold"])])
 
     def test_the_staple_is_the_hunger_needs_largest_opening_good(self):
         with mock.patch.object(port_health, "opening_quantities", lambda economy: OPENING):
@@ -47,11 +47,11 @@ class HealthReportTests(unittest.TestCase):
         self.assertEqual((report["years"], report["figures"], calls), (0, {}, []))
 
     def test_metals_default_to_the_currencys_backing_good(self):
-        report, _calls = report_of(agent_with(["year"]), staple="grain_kg")
+        report, _calls = report_of(agent_with([{"hired_hours": 1.0}]), staple="grain_kg")
         self.assertEqual(report["metals"], ["metal_kg"])
 
     def test_a_currency_with_no_backing_good_has_no_default_metals(self):
-        report, _calls = report_of(agent_with(["year"], backing_good=None), staple="grain_kg")
+        report, _calls = report_of(agent_with([{"hired_hours": 1.0}], backing_good=None), staple="grain_kg")
         self.assertEqual(report["metals"], [])
 
 

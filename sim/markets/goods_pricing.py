@@ -43,7 +43,7 @@ class GoodsPricing:
 
     def _carriage_per_tonne(self, material, price_per_tonne):
         """Money per tonne to carry a material the home sells to the buyer."""
-        return self._sim.material_carriage_per_tonne(self._sim._material_tag(material)[0], price_per_tonne)
+        return self._sim.foreign.material_carriage_per_tonne(self._sim._material_tag(material)[0], price_per_tonne)
 
     def _economy_good(self, material):
         """The key the economy trades a material under (a curated commodity is traded as the material it is priced as),

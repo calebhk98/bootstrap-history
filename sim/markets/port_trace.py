@@ -1,16 +1,16 @@
 """The agent economy's hidden first stage run for many years on a built game, one row per year.
 
 `simulator.py spin-up-trace` prints it and the money-supply test reads it. It runs the stage as
-`AgentEconomy._spin_up` does (a fresh economy in its spin-up, no player) on the opening the game saved, but
+`spin_up_run.spin_up` does (a fresh economy in its spin-up, no player) on the opening the game saved, but
 never stops at the tolerance, so a drift that the normal stage would cut short shows.
 """
 from sim.economy import api as economy_api
+from sim.economy.api import YearInputs
 
 from . import port_sites
 from .port_trace_chained import next_chained_index
 from .port_trace_columns import macro_columns
 from .port_trace_holders import HOLDER_COLUMNS, money_by_holder_columns
-from .port_year import YearInputs
 
 COLUMNS = ("year", "price_level", "money_supply", "rate", "wear", "struck", "change", "metal_held", "wage", "hired_hours",
            "idle_hours", "unsold_hours_share", "people_unemployment", "real_output", "chained_price_level") + HOLDER_COLUMNS
