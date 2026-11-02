@@ -118,9 +118,11 @@ names, not attribute reach-through.
 
 ## Questions for the owner
 
-1. Labour through markets (963): should the founder's, firms' and the engine government's staff be employers in the
-   economy's labour core (one pool), with the seat staff book a view of their hires? The cleanup assumes yes.
-2. Food: should demography's farm year be retired in favour of the economy's farms and plots (one food model)?
-   The cleanup leaves it and files the question.
-3. Paying `paid_by_employer` (each employer its own wage, as Eurace pays each employee) versus one average wage:
-   the cleanup pays each employer its own.
+Answered by the owner:
+
+1. The founder, governments and businesses hire from one labour market; every employee is in the economy's labour
+   core, and a seat's staff book is a view of its hires.
+2. Food has one model: the economy's farms and plots; demography's farm year is retired.
+3. One wage per trade and area for every employer. Different rates for different kinds of employer (a player, a
+   country, the public market) are a later enhancement, since the spread within a trade is small next to the spread
+   between trades; `paid_by_employer` and the per-employer premium are removed.
