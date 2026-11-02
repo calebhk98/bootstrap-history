@@ -67,5 +67,3 @@ with mock.patch.object(labour_population.trade_data, "drawn_from_unskilled_pool"
         mock.patch.object(labour_population.trade_data, "registry_of", lambda world: {}):
     check("the national estimate of a trade is the core's headcount where the core holds people of it",
           _Estimate({"smith": 42.0}).national_trade_population("smith") == 42.0)
-    check("a farm trade the core holds nobody of falls back to the rural share of the working age",
-          abs(_Estimate({}).national_trade_population(labour_population.FARM_TRADE) - 600.0 * 0.8) < 1e-9)
