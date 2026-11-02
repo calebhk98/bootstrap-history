@@ -10,7 +10,6 @@ def run_year(state: MarketState, inputs: YearInputs, owned: bool = False) -> Tup
     hands over a copy of its own (`owned`) that nobody else holds."""
     if not owned:
         state = copy_state(state)
-    training.start_enrolment_cache(state)
     report = YearReport()
     report.clearings = clearing.clear_all(state, inputs)
     clearings = expectations.index_clearings(report.clearings)
@@ -20,5 +19,4 @@ def run_year(state: MarketState, inputs: YearInputs, owned: bool = False) -> Tup
     switching.switch_trades(state, inputs, clearings, report)
     migration.migrate(state, inputs, clearings, report)
     formation.form_trades(state, inputs, clearings, report)
-    training.stop_enrolment_cache(state)
     return state, report

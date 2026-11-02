@@ -109,7 +109,6 @@ class MarketState:
     wages: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)
     hired_hours: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)
     entry_wages: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # the wage new hires cleared at last year: what the next year's offer moves from (`wages` is the mean over all hours held)
-    contract_wages: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)   # per employer, the mean wage an hour it holds is paid (clearing.contracted_wage)
     asks: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # ask over the reservation wage (asks.py)
 
 

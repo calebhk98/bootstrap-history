@@ -26,14 +26,10 @@ def sloped_bids(bids: Iterable) -> List[Bid]:
     tranches = []
     count = int(BID_TRANCHES)
     wage_factors = [1.0 + BID_VALUE_SPREAD * (0.5 - (index + 0.5) / BID_TRANCHES) for index in range(count)]
-    new = object.__new__   # a frozen record built by filling its fields directly: far cheaper than its constructor
     for bid in bids:
         if bid.hours <= 0.0:
             continue
         hours = bid.hours / BID_TRANCHES
         for factor in wage_factors:
-            tranche = new(Bid)
-            tranche.__dict__.update(employer=bid.employer, trade=bid.trade, area=bid.area, hours=hours,
-                                    maximum_wage=bid.maximum_wage * factor)
-            tranches.append(tranche)
+            tranches.append(Bid(bid.employer, bid.trade, bid.area, hours, bid.maximum_wage * factor))
     return tranches
