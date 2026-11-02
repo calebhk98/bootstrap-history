@@ -18,7 +18,6 @@ from sim.engine.state import deserialize_state, serialize_state
 from sim.invalidating import ActiveProjectState
 from sim.projects.state import ProjectsSeat
 from sim.projects.api import SettleProjectMaterials
-from sim.tests import projects_host
 from sim.ui.proto.quote_purchases import _quote_material
 from sim.ui.proto.techtree import _explain_cost
 from sim.tests.ui_stand_in import Game

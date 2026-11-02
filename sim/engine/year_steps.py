@@ -46,7 +46,7 @@ def begin_world_year(sim):
 
 def money_seat(sim):
 	"""The acting seat's takings, costs, credit and insolvency."""
-	view, send, state = sim.view, sim.send, sim.state
+	view, send = sim.view, sim.send
 	living_cost = view("living_cost")(None, None, None)
 	living_cost = send(ChargeLivingCost(living_cost, view("dependants_beyond_means")(
 		living_cost, view("revenue_estimate")(), view("upkeep")(), view("mine_operating_cost")())))

@@ -894,7 +894,6 @@ def cmd_civs(args):
         # Files starting with "_" are schema/reference data, not a playable
         # civilization (e.g. _TECH_EFFECTS.json), same convention this file
         # already uses everywhere else for "_"-prefixed keys and entries.
-        civ_filename = civilization_id + ".json"
         civ_data = load_civ(civilization_id)
         value = civ_data["values"]
         print("%-16s %s" % (civ_data["id"], _civ_title(civ_data)))

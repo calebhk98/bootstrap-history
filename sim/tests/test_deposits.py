@@ -677,7 +677,6 @@ class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
         # derived quantity should reproduce resources.json's total to
         # within the same few-percent rounding geography.json's own shares
         # carry (they sum to 1.0-1.02, not exactly 1.0).
-        resources = deposits._load_json(deposits.RESOURCES_FILE)
         for metal in ("iron", "copper", "tin", "lead", "silver"):
             total = sum(deposit.quantity_tonnes_per_year
                         for deposit in deposits.load_deposits(metal))

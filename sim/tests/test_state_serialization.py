@@ -132,7 +132,7 @@ def _test_runtime_type_reconstruction():
 	)
 
 	blob = serialize_state(state)
-	restored = deserialize_state(blob)
+	deserialize_state(blob)
 
 	from sim.workforce.api import WorkforceSeat
 	staff = deserialize_state(serialize_state(WorkforceSeat(trades_created={"tailor", "weaver"}, employees={"weaver": 3.0})), WorkforceSeat)

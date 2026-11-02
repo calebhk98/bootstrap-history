@@ -300,7 +300,6 @@ def _topic_stuck(sim):
 
 @help_topic('log', aliases=['history', 'diary'])
 def _topic_log(sim):
-    fog = sim.view("fog_of_war")()
     return {"log": (
         "Your own history, in the order it happened: what you started, "
         "what finished, what failed and why, a concern opening or "

@@ -125,7 +125,7 @@ class DispatchAndCloseTests(unittest.TestCase):
     def test_bought_goods_are_carried_and_carriage_is_paid(self):
         carriage, area_map, area_a, _b = world()
         who = merchant()
-        orders = plan(who, 2.0, 5.0)
+        plan(who, 2.0, 5.0)
         fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
         result = merchants.dispatch(who, fills, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0})
         self.assertEqual((result.moves[0].tile, result.moves[0].receiver_tile, result.moves[0].quantity), ("a", "b", 10.0))

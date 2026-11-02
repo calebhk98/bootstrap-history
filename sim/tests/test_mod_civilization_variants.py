@@ -65,7 +65,6 @@ class VariantTests(ModTestBase):
                                  second: {"id": second, "variant_of": VARIANT, "name": "second"}})
         civ = self.load(second)
         self.assertEqual((civ["population"], civ["name"]), (11, "second"))
-        loop_a, loop_b = ACME + ":loop_a", ACME + ":loop_b"
         self.add_mod("test_beta_k3f9", civs={"test_beta_k3f9:loop_a": {"variant_of": "test_beta_k3f9:loop_b"},
                                              "test_beta_k3f9:loop_b": {"variant_of": "test_beta_k3f9:loop_a"}})
         with self.assertRaises(ModError) as caught:

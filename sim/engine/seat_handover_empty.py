@@ -51,7 +51,6 @@ def module_state_in_use(state) -> bool:
 def holds_that_would_be_lost(seat) -> List[str]:
 	"""What `seat` holds in the engine's state beyond cash, debts and known techniques, named for the player; empty for
 	an empty seat."""
-	household = seat.household
 	found = []
 	if seat.modules["projects"].active or len(seat.modules["ventures"].business.entry_keys()):
 		found.append("works")

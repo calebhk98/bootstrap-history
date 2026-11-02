@@ -18,7 +18,6 @@ from sim.ui.proto.portfolio_scale import page_rows
 from sim.ui.proto.state_log import _agent_log_filter_rows, _is_failure_line, _log_scrub
 
 from .harness import check
-from sim.refusal import LogLine, cause_of
 
 
 class Stub(StandIn):
