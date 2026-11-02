@@ -1,5 +1,9 @@
 # Research: short-run supply elasticity of staple and craft output to own price
 
+> **Checked against the code (2026-11):** the code's `COST_SPREAD_WITHIN_PRODUCER` (`sim/economy/producers.py`) is still the
+> unsourced 0.3 (confidence D); the spread derived below from 0.225 was never merged. `producers.share_working(0.1, 1.0)` is about
+> zero with the 0.3 spread in the code, not a quarter; the "quarter" figure holds only for the derived spread, which is not in the code.
+
 Input to Complaint 960 (the working share of a producer at break-even is the steepest point of its curve). Labels:
 **[read]** (full text or abstract page opened in this session), **[snippet]** (search-result text only, not opened),
 **[no source found]**.

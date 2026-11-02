@@ -1,9 +1,8 @@
 # Model run: Lengnick 2013 baseline (newwayland/baseline-economy)
 
-**Status: code read, NOT run.** The run was blocked: the permission classifier refused to execute the downloaded
-code (a driver script importing it, in a venv with `mesa==0.8.8.1`, which installed fine). So there is no measured
-unemployment series below, and nothing here is a result "from the run". Everything is from reading the code that
-would run. To get the series, someone with authority must allow running it (commands at the end).
+**Status: code read, then run.** The first attempt was blocked by the permission classifier, so the sections up to "To finish"
+are from reading the code and say "not run"; the run was made afterwards (last section, "Measured run"). Statements below
+that the series is unavailable describe the state before that run.
 
 ## Source and licence
 

@@ -1,5 +1,9 @@
 # Research brief: stable annual clearing, thin metal markets, margin-driven entry
 
+> **Checked against the code (2026-11):** two claims in section 1 were wrong against the source. Mark-0 does not replace a bankrupt firm
+> next step: it revives one with probability `phi` per period (`mark0_covid/mark0_covid.cpp`). "Signals come from inventory, not from price
+> against cost" holds for Lengnick and Mark-0 only; JMAB and Eurace@Unibi price from cost. Section 1 is corrected in place.
+
 An input report, written by a research agent from web searches during economy round four. Key:
 **[read]** means the source was read in full; **[snippet]** means only a search summary was seen;
 **[memory]** means the agent's own recollection or derivation, not verified. EURACE, JAMEL, CATS
@@ -17,9 +21,9 @@ and K+S rule details could not be retrieved.
   - price and output adjust by a few percent, conditioned on demand against output and price
     against the average;
   - the main instability is the asymmetry between hiring and firing speeds;
-  - a bankrupt firm is replaced next step at the average price and output.
-- **Common pattern:** signals come from inventory against demand, not from price against cost.
-  Steps are small. Entry replaces exits one for one, with entrants sized to the incumbent average.
+  - a bankrupt firm is revived, each period with probability `phi` (default 0.1), not replaced the next step (`mark0_covid.cpp`, the loop at line 553).
+- **Common pattern:** in Lengnick and Mark-0 the signals come from inventory against demand. JMAB and Eurace@Unibi
+  price from cost (a mark-up on unit cost). Steps are small. Mark-0 revives exits at a rate, with entrants sized to the incumbent average.
   None of these models uses margin-driven entry.
 
 ## 2. Cobweb
