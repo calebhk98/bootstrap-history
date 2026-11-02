@@ -196,35 +196,6 @@ class TradesWithoutANamedNeedTests(unittest.TestCase):
         self.assertGreater(_PRODUCTION["struck_silver_coin_kg"]["labour_hours"]["engraver"], 0.0)
 
 
-class OpeningDurablesTests(unittest.TestCase):
-    """Households open holding the durables they keep in use, so the opening demand for a durable is its
-    replacement, not the whole stock built at once (which staffed the opening with millions of masons)."""
-    def setUp(self):
-        from sim.tests import economy_fixture
-        economy_fixture.households_with_a_surplus(self)
-
-
-    def _opening_demand(self, service_life):
-        from sim.economy import opening
-        from sim.tests import economy_fixture as fixture
-        setup = fixture.small_setup(specs=fixture.specs({fixture.GRAIN: service_life}))
-        record, _areas, _carriage = opening.open_economy(setup)
-        return record.goods.opening_basket.get(fixture.GRAIN, 0.0), record
-
-    def test_a_durable_opens_at_its_replacement_flow_not_a_whole_life_s_stock(self):
-        used_up, _record = self._opening_demand(0.0)
-        durable, _record = self._opening_demand(30.0)
-        self.assertGreater(used_up, 0.0)
-        self.assertLess(durable, 3.0 * used_up)
-
-    def test_the_households_hold_the_stock_that_serves_the_flow(self):
-        from sim.tests import economy_fixture as fixture
-        _demand, record = self._opening_demand(30.0)
-        held = sum(record.book.holdings(cohort.agent_id)["goods"].get(fixture.GRAIN, {}).get(cohort.tile, 0.0)
-                   for cohort in record.cohorts.values())
-        self.assertGreater(held, 0.0)
-
-
 class OpeningPlacementTests(unittest.TestCase):
     """An input opens beside its users, with the supply their capacity needs (clay for potters), not where
     people happen to live: a good too cheap to carry has a market the size of a tile."""

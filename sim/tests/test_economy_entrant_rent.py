@@ -66,7 +66,7 @@ class EntrySitingByOwnRentTests(unittest.TestCase):
         recipe = fixture.recipes()[fixture.FARM]
         setup = types.SimpleNamespace(opening_wages={fixture.LABOURER: 1.0}, yield_factor_by_recipe_tile={}, specs={},
                                       working_hours_per_year=2000.0)
-        record = types.SimpleNamespace(workforce=None)
+        record = types.SimpleNamespace(labour=types.SimpleNamespace(workforce=None))
         view = types.SimpleNamespace(wage=lambda trade, area: None)
         with mock.patch.object(location, "site_rent_per_run", lambda *_args: rent_of_the_entrants_use[tile]), \
                 mock.patch.object(location, "live_input_prices", lambda *_args: {}), \

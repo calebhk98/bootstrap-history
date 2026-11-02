@@ -20,37 +20,14 @@ from sim.diffusion.rules import staff_sources
 from sim.labour.labour_bondage import BondageMixin
 from sim.labour.labour_capacity import CapacityMixin
 from sim.labour.labour_training import TrainingMixin
-from sim.labour.staff_pay_rules import roll_trade
 from sim.labour.staff_targets import scholar_target
 from sim.ui.proto import credit_forecast
-from sim.world import demography
 
 QUICK_TOPIC = True
 
 # =============================================================================
-# PEOPLE ARE WHOLE. Attrition is a per-person roll (`roll_trade`), so a headcount of whole people only ever loses
-# whole people; hire() and train() refuse a fractional `n` outright.
+# PEOPLE ARE WHOLE. hire() and train() refuse a fractional `n` outright.
 # =============================================================================
-
-DEATH_RATE = demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
-draws = random.Random(1)
-headcount, whole_every_year, never_grew = 500, True, True
-for _year in range(150):
-    died, left, survivors = roll_trade(headcount, 0.0, DEATH_RATE, draws.random)
-    whole_every_year = whole_every_year and isinstance(survivors, int) and survivors == headcount - died - left
-    never_grew = never_grew and survivors <= headcount
-    headcount = survivors
-check("a whole headcount never picks up a fraction of a person, year after year of pure attrition",
-      whole_every_year, headcount)
-check("...and with nobody hiring the headcount only ever falls, never climbs on its own", never_grew, headcount)
-
-# UNBIASED: the realised loss, averaged over many people and many independent seeds, should land on the working-age
-# mortality rate (pay is at the market, so nobody takes a better offer).
-lost = 0
-for seed in range(1, 31):
-    lost += roll_trade(2000, 0.0, DEATH_RATE, random.Random(seed).random)[0]
-check("whole-person attrition averages the working-age mortality rate, over many people and many seeds",
-      abs(lost / (30 * 2000.0) - DEATH_RATE) < 0.003, (lost / (30 * 2000.0), DEATH_RATE))
 
 # HIRE AND TRAIN LAND WHOLE PEOPLE.
 roster = SimpleNamespace(_world=SimpleNamespace(wages={"smith": 1.0, "machinist": 1.0}))

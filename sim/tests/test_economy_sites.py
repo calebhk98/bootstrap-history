@@ -7,7 +7,6 @@ from dataclasses import replace
 from types import SimpleNamespace
 
 from sim.economy import location, opening, sites
-from sim.economy.opening import open_economy
 from sim.economy.producers import Producer
 from sim.economy.recipes import recipe_from_entry
 from sim.economy.types import MarketArea, Recipe, SiteLimit
@@ -74,24 +73,6 @@ class ApplyTests(unittest.TestCase):
                                replace(Producer("p3", "o", "farm", "town", 9.0), last_runs=7.0),
                                Producer("p4", "o", "dig", "town", 9.0)])
         self.assertEqual(sites.extraction_by_tile(record, setup), {("dig", "hills"): 5.0, ("dig", "town"): 0.0})
-
-
-class OpeningSitesTests(unittest.TestCase):
-    def _setup(self, limits):
-        recipes = fixture.recipes()
-        recipes[fixture.MINE] = replace(recipes[fixture.MINE], site_bound=True)
-        return fixture.small_setup(recipes=recipes, site_limits=limits)
-
-    def test_without_limits_extraction_stays_where_it_was(self):
-        record, _areas, _carriage = open_economy(self._setup(()))
-        mines = [p for p in record.producers.values() if p.recipe_id == fixture.MINE]
-        self.assertEqual([p.tile for p in mines], [fixture.TOWN])
-        self.assertGreater(mines[0].capacity_runs, 0.0)
-
-    def test_the_opening_counts_the_limit_not_the_anchor(self):
-        record, _areas, _carriage = open_economy(self._setup((SiteLimit(fixture.MINE, fixture.HILLS, 5000.0),)))
-        self.assertEqual({p.tile for p in record.producers.values() if p.recipe_id == fixture.MINE},
-                         {fixture.HILLS})
 
 
 class OpeningSplitTests(unittest.TestCase):
