@@ -240,7 +240,7 @@ def rederive_soils(path):
     """Rewrite every tile's arable_fraction, fertility_quality_multiplier and heavy_soil_share in the tile grid at `path`
     from the map's layers. Needs no network: run it after any change to sim/geography/soil_derivation.py or
     data/world/geography/parameters/soil.json."""
-    from sim.geography import soil_derivation
+    from sim.geography.api import soil_derivation
     world_map = geography_api.open_map()
     with open(path, encoding="utf-8") as handle:
         grid = json.load(handle)
