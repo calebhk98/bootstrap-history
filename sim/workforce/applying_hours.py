@@ -33,7 +33,6 @@ class ApplyingHours:
         self.seat.director_hours_spent_founder += command.hours
 
     def settle_living_cost(self, command):
-        self.seat.wages_prepaid = 0.0
         self.seat.living_cost_paid += command.amount
 
     def set_wage_hours_sold(self, command):

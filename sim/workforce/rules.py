@@ -63,11 +63,11 @@ def dependant_people(kin_and_retainers, freedmen, slaves):
 	return kin_and_retainers + freedmen + slaves
 
 
-def living_cost_charged(living_cost, dependants_beyond_means, wages_prepaid):
-	"""The living cost to pay this year: the whole cost less the dependants the income cannot carry, less the wages already
-	paid in advance (never below zero for the advance: an advance larger than the cost nets it to zero)."""
+def living_cost_charged(living_cost, dependants_beyond_means, wages_paid_in_clearing):
+	"""The living cost the household pays itself this year: the whole cost less the dependants the income cannot carry, less
+	the staff wages the labour core's clearing pays from the household's purse (never below zero)."""
 	carried = living_cost - dependants_beyond_means
-	return carried - min(carried, wages_prepaid)
+	return carried - min(carried, wages_paid_in_clearing)
 
 
 def market_pressure_after_a_year(pressure, kept_share, flat_fade):

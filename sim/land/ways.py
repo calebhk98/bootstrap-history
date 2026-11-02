@@ -40,7 +40,7 @@ class Ways:
     def way_crew(self, needs: Dict[str, Any]) -> Tuple[int, float]:
         """The crew the labour market finds for a way: whole people of its trade, at most the crew the work calls for, and the
         hours a year they work."""
-        found = self.needs.labour_market().whole_recruits(needs["trade"], needs["crew_people"])
+        found = int(needs["crew_people"])
         return found, ways_rules.crew_hours_a_year(found, needs["crew_hours_per_year"], needs["crew_people"])
 
     def way_quote(self, tile_a: str, tile_b: str, way: str) -> Optional[Dict[str, Any]]:
@@ -94,7 +94,7 @@ class Ways:
                 way, quote["km"], needs.money_text(quote["money"], grouped=True), needs.afford_means())
         needs.send(PayEdge(edges.EDGE_BUILDERS, quote["money"], "building a %s" % way))
         year = needs.year()
-        needs.labour_market().hire(None, quote["trade"], quote["crew_hours"])
+        needs.labour_market().press(quote["trade"], quote["crew_hours"])
         self.world.ways_under_construction.setdefault(key, {})[way] = ways_rules.pending_way(year, quote)
         return True, "started a %s of %.1f km %s for %s%s; a crew of %d will take about %.1f years." % (
             way, quote["km"], place, needs.money_text(quote["money"], grouped=True),

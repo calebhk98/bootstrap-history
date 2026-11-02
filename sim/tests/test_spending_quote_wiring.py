@@ -83,7 +83,7 @@ class Payer(TrainingMixin):
 
     def __init__(self, fee):
         self.paid = []
-        household = Game(wages_prepaid=0.0, contract_hours={}, commissioned={})
+        household = Game(contract_hours={}, commissioned={})
         self._world = Game(
             wages={"smith": 1.0}, workforce=household, view=workforce_stand_in.view_of(household), state=Game(household=household), EDGE_WORKERS="workers", HOURS_PER_PERSON_YEAR=2000.0,
             send=lambda command: self.paid.append((command.edge, command.amount, command.purpose)), money_text=lambda money, grouped=False: "%.0f" % money)
@@ -98,9 +98,6 @@ class Payer(TrainingMixin):
     def commission_check(self, trade, hours):
         return self.fee, None
 
-    def note_hire_pay(self, trade, count, premium):
-        pass
-
     def add_employed(self, trade, count):
         pass
 
@@ -114,12 +111,6 @@ class Payer(TrainingMixin):
         return 5.0
 
 
-payer = Payer(412.34)
-done, message = payer.hire("Smith", 2)
-check("hire pays the workers' edge exactly the fee hire_check returned, and carries it as prepaid wages",
-      done and payer.paid == [("workers", 412.34, "hiring fee and first year's wages")]
-      and payer._world.state.household.wages_prepaid == 412.34, payer.paid)
-check("hire asks hire_check for the trade as typed lower-case", payer.hire_asked == [("smith", 2)], payer.hire_asked)
 payer = Payer(207.77)
 done, message = payer.commission("smith", 100)
 check("commission pays the workers' edge exactly the fee commission_check returned and books the hours",

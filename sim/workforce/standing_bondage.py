@@ -9,7 +9,7 @@ from .commands_hours import SettleLivingCost
 class StandingBondage:
 
 	def charge_living_cost(self, command):
-		charged = rules.living_cost_charged(command.living_cost, command.dependants_beyond_means, self.seat.wages_prepaid)
+		charged = rules.living_cost_charged(command.living_cost, command.dependants_beyond_means, self.labour.wage_bill())
 		self.settle_living_cost(SettleLivingCost(charged))
 		return charged
 

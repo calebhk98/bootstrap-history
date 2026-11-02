@@ -778,8 +778,7 @@ def _agent_economy(sim, cmd=None):
              "wage_foundation": {
                  "base_for_skill_and_difficulty": round(sim.view("base_annual_wage")[trade], 2),
                  **{factor_key: round(value, 3) for factor_key, value in sim.view("labour_market")().cost_factors(trade).items()},
-                 "demographic_scarcity": round(sim.view("wage_index")(), 3),
-                 "local_trade_scarcity": round(sim.view("labour_market")().price_factor(trade), 3)}}
+                 "demographic_scarcity": round(sim.view("wage_index")(), 3)}}
             for trade in sorted(WAGES) if sim.view("trade_available")[trade]]
     return out
 

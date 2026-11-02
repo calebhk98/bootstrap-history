@@ -9,6 +9,15 @@ class Applying:
 		self.labour.set_employed(command.trade, command.headcount)
 		self.labour.resync_pools()
 
+	def staff_arrived(self, command):
+		"""The labour core's clearing filled the seat's places: its staff in the trade are the people hired."""
+		employees = self.seat.employees
+		if command.people > 0.0:
+			employees[command.trade] = command.people
+		else:
+			employees.pop(command.trade, None)
+		self.labour.resync_pools()
+
 	def note_trade_spread(self, command):
 		if command.introduced_year is not None:
 			self.seat.trade_introduced_year[command.trade] = command.introduced_year
@@ -48,8 +57,3 @@ class Applying:
 	def grant_staff(self, command):
 		self.labour.grant_staff(command.scholars, command.artisans)
 
-	def allocate_farm_workforce(self, command):
-		return self.labour.allocate_farm_workforce(command.adult_equivalent_population)
-
-	def apply_land_clearing(self, command):
-		self.labour.apply_land_clearing()

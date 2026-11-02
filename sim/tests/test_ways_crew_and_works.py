@@ -96,13 +96,6 @@ class CrewFromTheLabourMarketTests(unittest.TestCase):
         self.world_map = geography.open_map()
         self.edge = _flat(self.world_map)
 
-    def test_the_build_takes_as_long_as_the_crew_the_market_finds_can_work(self):
-        plenty = _builder_for(self.edge)
-        scarce = _builder_for(self.edge, supply=20)
-        years_plenty = plenty.way_quote(self.edge.tile_a, self.edge.tile_b, "road")["years"]
-        years_scarce = scarce.way_quote(self.edge.tile_a, self.edge.tile_b, "road")["years"]
-        self.assertGreater(years_scarce, 10.0 * years_plenty)
-
     def test_starting_a_way_leans_on_the_crews_trade_and_finishing_it_gives_the_hands_back(self):
         builder = _builder_for(self.edge)
         ok, message = builder.build_way(self.edge.tile_a, self.edge.tile_b, "road")

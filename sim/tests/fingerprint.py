@@ -58,7 +58,7 @@ BASELINE_FIELDS = (
     "_said_near_limit",
     "pop_children", "pop_working_age", "pop_elderly", "farm_stock_kg",
     "_material_stock_ledger", "farm_hectares", "worker_housing_places",
-    "trade_schools", "last_withdrawal", "wages_prepaid", "granted_staff",
+    "trade_schools", "last_withdrawal", "granted_staff",
     "hours_this_year", "_founder_death_aged", "_founder_death_year",
     "trade_introduced_year", "trades_endemic",
     "_dashboard_history", "failed_attempts", "shortages"

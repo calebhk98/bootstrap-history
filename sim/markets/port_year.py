@@ -21,7 +21,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              trade_premium, variable_cost_per_run)
 
 from sim.foreign_trade.api import SettleFlow, country_trade_years
-from . import trade_duty, port_bondage, port_levy, port_actors, port_cargo, port_cropland, port_flight, port_institutions, port_land, port_late, port_seats, port_sites
+from . import trade_duty, port_bondage, port_levy, port_actors, port_cargo, port_cropland, port_flight, port_institutions, port_land, port_late, port_seats, port_sites, port_staff
 from sim.materials.api import ProducerCapacityCache
 from .port_key import spin_up_key
 from .port_coin import priced_at_the_margin
@@ -198,6 +198,9 @@ class AgentEconomy(TilePricesMixin):
         orders.update(cargo_orders)
         self._strike_state_coin(economy)
         sales, purchases = self._actor_trade_orders(orders)
+        staff_orders, staff_posted = port_staff.post(self._sim, economy, sorted(self._sim.playing_seats() or self._sim.state.seats),
+                                                     self._tile_in_economy)
+        orders.update(staff_orders)
         economy_api.watch_tiles(economy, self._seat_tiles())
         outcome = economy.step(self._inputs(orders, port_cargo.border_accounts(economy, legs)))
         self._floor_costs = {}
@@ -205,6 +208,7 @@ class AgentEconomy(TilePricesMixin):
         port_sites.deplete(self._sim, outcome.extraction, self._recipe_outputs())
         self.outcomes.append(outcome)
         self._settle_actor_trade(sales, purchases)
+        port_staff.settle(self._sim, economy, staff_posted)
         self._settle_seats()
         self._sim.settle_trader_cargo(port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
         self._note_off_map_trade(*self._settle_foreign_coin())

@@ -58,12 +58,6 @@ check("the annual quote is an hour's quote times the hours of a person-year",
 check("leaning on a trade does not change its quote",
       unstressed.price_factor(TRADE) == 1.0 and abs(stressed.quote_annual(TRADE) - unstressed.quote_annual(TRADE)) < 1e-12)
 
-# ---- the hire quote is what payroll charges
-check("the finder's fee for one hire is the first year's wage times the scarcity of the market as it stood",
-      abs(stressed.hire_cost(TRADE, 1) - stressed.quote_annual(TRADE) * stressed.price_factor(TRADE)) < 1e-9 * stressed.quote_annual(TRADE),
-      (stressed.hire_cost(TRADE, 1), stressed.quote_annual(TRADE)))
-check("each further hire costs more than the one before, as those before thin the pool",
-      stressed.hire_cost(TRADE, 5) > 5 * stressed.hire_cost(TRADE, 1) * 0.999, (stressed.hire_cost(TRADE, 5), stressed.hire_cost(TRADE, 1)))
 check("no employer reaches a wage through the engine's own methods",
       not any(hasattr(S.Sim, name) for name in ("annual_wage", "market_wage_per_hour", "labour_price_factor",
                                                 "labour_pressure", "_add_labour_pressure", "labour_pay_scale")))

@@ -40,8 +40,7 @@ class Gate(TrainingMixin):
     def __init__(self, power, fee):
         self._world = World(power)
         self.labour_market = Game(
-            price_factor=lambda trade: 1.0, whole_recruits=lambda trade, asked, premium: asked,
-            hire_cost=lambda trade, count, premium=0.0: fee)
+            price_factor=lambda trade: 1.0)
         self.fee = fee
 
     def trade_available(self, trade):
@@ -55,19 +54,6 @@ class Gate(TrainingMixin):
 
     def commission_fee(self, trade, hours):
         return self.fee
-
-
-class HireCheck(unittest.TestCase):
-    def test_a_fee_over_the_purchase_budget_is_refused_cash_short_and_the_gate_asked_for_a_purchase(self):
-        gate = Gate(power=99.0, fee=100.0)
-        count, fee, refusal = gate.hire_check("smith", 2)
-        self.assertEqual((count, fee), (None, None))
-        self.assertEqual(cause_of(refusal), "cash_short")
-        self.assertEqual(gate._world.asked, ["buy"])
-
-    def test_a_fee_the_budget_covers_goes_through_with_its_cost(self):
-        count, fee, refusal = Gate(power=100.0, fee=100.0).hire_check("smith", 2)
-        self.assertEqual((count, fee, refusal), (2.0, 100.0, None))
 
 
 class CommissionCheck(unittest.TestCase):

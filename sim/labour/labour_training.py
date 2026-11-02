@@ -22,7 +22,6 @@ from sim.constants import declare
 from sim.refusal import Refusal
 from . import trade_data, trade_first_hands, trade_formation, trade_supply_rules
 from .hands import contracted_hours_of, hands_available
-from .hire_outcome import hire_result, unfound_note
 from .request_rules import (commission_request_refusal, fire_refusal, teaching_fee, teaching_hours_refusal,
                             train_request_refusal)
 from .room_advice import hire_room_refusal
@@ -165,25 +164,6 @@ class TrainingMixin:
         """Hours of this trade you have already bought from an outside shop."""
         return self._world.workforce.contract_hours.get(trade, 0.0)
 
-    def market_supply_split(self, trade):
-        """(the town's hours, your own people's hours). Same total, said honestly.
-
-        market_supply is hours of this trade AVAILABLE TO YOU, which
-        includes your own staff - so printing it raw after hiring a smith
-        would show the total rising (say, 22,500 to 24,500) and read as
-        hiring having pulled smiths OUT of the market and made more
-        smith-hours available elsewhere. The arithmetic is right and the
-        reading is wrong: the town's own share has not moved at all, only
-        yours has grown, so the two have to be reported apart.
-        """
-        mine = self.employed(trade) * self._world.HOURS_PER_PERSON_YEAR
-        total = self.market_supply(trade)
-        if trade in self._world.trades_absent:
-            # There is no market in these at all; every hour is somebody you
-            # taught, or somebody they taught.
-            return 0.0, total
-        return max(0.0, total - mine), mine
-
     def _cash_in_hand_refusal(self, what, fee):
         """Refusal of a wage, an apprentice's keep or a job's fee for want of
         money. A wage or fee is spent outright, so it draws on the purchase
@@ -191,38 +171,23 @@ class TrainingMixin:
         the same text `start` and `buy` give."""
         return Refusal("cash_short", self._world.refusal_text(what, fee))
 
-    def hire_fee(self, trade, count):
-        """Paid the moment people are taken on: a finder's fee that is also
-        the first year's wage, scaled by how hard the local trade is leaned on."""
-        return self.labour_market.hire_cost(trade, count)
-
     def commission_fee(self, trade, hours):
         """What a one-off job of `hours` costs: a premium over the wage, more
         again when buying deep into what the local market can spare."""
         return self.labour_market.commission_cost(trade, hours, self.COMMISSION_PREMIUM_MULTIPLIER)
 
-    def hire_check(self, trade, count, pay_premium=0.0):
-        """Everything `hire` and `quote hire` agree on before money moves: the
-        whole-person count and the fee, or a refusal. Returns (count, fee, refusal).
-        A big search finds fewer than asked in a year (the market's matching), so `count`
-        returned may be below the request; `pay_premium` is the fraction paid over the market."""
+    def hire_check(self, trade, count):
+        """Everything `hire` and `quote hire` agree on before a bid is posted: the whole-person count and the
+        first year's wages the bid would put at stake, or a refusal. Returns (count, outlay, refusal)."""
         trade = str(trade or "").strip().lower()
         if trade not in self._world.wages:
             return None, None, Refusal("no_such_trade", "no such trade: %s. Trades: %s"
                                        % (trade, ", ".join(sorted(self._world.wages))))
         if isinstance(count, str) or isinstance(count, bool):
-            # `buy` and `start` both type-check and `hire` did not, so "5"
-            # walked straight in where 5 was meant.
             return None, None, Refusal("count_not_a_number", "n must be a number, not %r" % (count,))
         if count <= 0:
             return None, None, Refusal("count_not_positive", "n must be greater than zero. Nothing was changed.")
-        # PEOPLE ARE WHOLE: a household can want a third of another artisan's
-        # worth of work, and it can buy that in hours (`commission`); it
-        # cannot put a third of a person on the payroll, or a roster could
-        # read "0.03 engineers" - wages drawn for somebody who could not
-        # supervise anything because there is no such person. See core.py
-        # step() for the matching constraint on attrition, going the other
-        # way.
+        # people are whole: a staff is a head count of the people the labour core hired
         if abs(count - round(count)) > 1e-6:
             return None, None, Refusal("count_not_whole", "you hire whole people, not %g of one. Hire %d or %d."
                                        % (count, math.floor(count), math.ceil(count)))
@@ -240,84 +205,41 @@ class TrainingMixin:
                                            "already employ %.1f%s: there is nobody left to hire."
                                            % (exist, trade, on_books,
                                               " (firms and the state employ %.1f more)" % rivals if rivals > 0 else ""))
-        # LITERACY IS A WALL, NOT A COST. Money buys the finder's fee below;
-        # it cannot buy people who do not exist. See FINDINGS_ROUND2 section
-        # Q and literate_capacity()'s docstring.
+        # literacy is a wall, not a cost: money cannot buy people who do not exist
         if trade in self.LITERATE_TRADES:
             cap = self.literate_capacity(trade)
             have = self._trade_headcount_pending(trade)
             if crosses_literacy_wall(have, count, cap):
                 return None, None, self._literate_wall_refusal(trade, cap, have)
-        # A finder's fee and the first year in advance, which is what a household
-        # actually pays to take a skilled man off someone else's bench. Buying
-        # deep into a trade's LOCAL supply bids its price up, the same
-        # principle market_pressure already applies to slaves (see
-        # labour market price_factor for why it is not a one-way ratchet: teaching
-        # or hiring your way to a bigger supply of the trade brings the price
-        # back down).
-        _lpf_now = self.labour_market.price_factor(trade)
-        asked = count
-        count = float(self.labour_market.whole_recruits(trade, asked, pay_premium))
-        fee = self.labour_market.hire_cost(trade, count, pay_premium)
-        if fee > self._world.spending_power("buy"):
-            _msg = self._cash_in_hand_refusal(
-                "hiring %g %s%s" % (count, trade, "" if count == 1 else "s"), fee)
-            # SAY WHOSE MARKET THIS IS, where the player actually feels it.
-            # A premium this big is the market saying "you have leaned hard
-            # on the %ss THIS HOUSEHOLD CAN REACH" - one town's worth, not a
-            # claim about the whole country - and a refusal that does not
-            # say so reads as a statement about the Roman Empire's entire
-            # smithing capacity, which is the exact confusion 'population'
-            # exists to head off.
-            if _lpf_now > 1.05:
-                _msg += (" Part of that is the standing wage itself: leaning "
-                         "on the %ss within this household's reach - one "
-                         "town's labour market, not the whole country - has "
-                         "pushed the going rate up %d%%; the population "
-                         "command shows how big that reach actually is."
-                         % (trade, round((_lpf_now - 1.0) * 100)))
-            return None, None, Refusal("cash_short", _msg)
-        room = self.household_room()
+        outlay = count * self.labour_market.quote_annual(trade)
+        if outlay > self._world.spending_power("buy"):
+            return None, None, Refusal("cash_short", self._cash_in_hand_refusal(
+                "offering %g %s%s a year's wages" % (count, trade, "" if count == 1 else "s"), outlay).message)
+        room = self.household_room() - self.staff_posted()
         if count > room:
-            # TRUNCATED, NOT ROUNDED, and it says what a whole number of people
-            # would be: rounding room UP in the message can print "you can
-            # supervise, house and teach 7.0 more people, not 7" while
-            # refusing exactly that request - a refusal that contradicts
-            # itself. A figure a player is meant to act on must never be
-            # rounded in the direction that overstates it.
             return None, None, hire_room_refusal(room, count, self._room_advice())
-        return count, fee, None
+        return count, outlay, None
 
-    def hire(self, trade, count, pay_premium=0.0):
-        """Take someone onto the staff permanently. They are paid every year. A large search finds
-        only part of the crew in a year; the rest must be sought again next year."""
+    def staff_posted(self):
+        """People wanted in the labour core for the household beyond those it hired at the last clearing."""
+        workforce = self._world.workforce
+        return sum(max(0.0, wanted - workforce.employees.get(name, 0.0)) for name, wanted in workforce.staff_wanted.items())
+
+    def hire(self, trade, count):
+        """Offer `count` more places of a trade to the labour core: the household's standing bid for the trade's hours
+        (sim/markets/port_staff.py). The people arrive at the year's clearing, at the economy's wage for the trade,
+        and are paid by it there. Answers what was posted."""
         trade = str(trade or "").strip().lower()
-        asked = count
-        count, fee, refusal = self.hire_check(trade, count, pay_premium)
+        count, _outlay, refusal = self.hire_check(trade, count)
         if refusal:
             return False, refusal
         workforce = self._world.workforce
-        self._world.send(PayEdge(self._world.EDGE_WORKERS, fee, "hiring fee and first year's wages"))
-        # CARRIED FORWARD, so the next step does not bill the same year twice.
-        # See step() 2, where it is netted off living_cost.
-        workforce.wages_prepaid = (workforce.wages_prepaid or 0.0) + fee
-        self.note_hire_pay(trade, float(count), pay_premium)
-        self.add_employed(trade, float(count))
-        self.labour_market.hire(workforce, trade, float(count) * self._world.HOURS_PER_PERSON_YEAR,
-                                pay_premium)
+        workforce.staff_wanted[trade] = max(workforce.staff_wanted.get(trade, 0.0), self.employed(trade)) + count
         self._resync_pools()
-        unfound = unfound_note(count, asked)
-        # SAY HOW MANY, AND HOW MANY YOU NOW HAVE: a reply that only names
-        # the trade, with no number, gives a player no way to notice a
-        # request for eight landing as one. A verb that takes a quantity
-        # has to report the quantity.
-        text = ("%g %s%s taken on for %s (a finder's fee and the "
-                "first year in advance). You now have %.1f, and %.2f "
-                "household place(s) left.%s"
-                % (count, trade, "" if count == 1 else "s",
-                   self._world.money_text(fee, grouped=True), self.employed(trade),
-                   max(0.0, self.household_room()), unfound))
-        return hire_result(text, unfound, count, asked)
+        return True, ("%g %s%s wanted: the labour market fills the places at the year's clearing, at its wage. You now "
+                      "have %.1f and %.1f places posted."
+                      % (count, trade, "" if count == 1 else "s", self.employed(trade),
+                         workforce.staff_wanted[trade]))
 
     def fire(self, trade, count):
         """Let staff go. Their wages stop; so does what they were doing.
@@ -341,7 +263,6 @@ class TrainingMixin:
         gone, left, stopped, workforce.training, _unmet = dismiss(have, workforce.training, trade, count)
         note = None
         if have > 0:
-            self.labour_market.release(workforce, trade, gone * self._world.HOURS_PER_PERSON_YEAR)
             self.set_employed(trade, left)
             note = "let %g %s%s go" % (gone, trade, "s" if gone != 1 else "")
         if stopped > 0:

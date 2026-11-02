@@ -167,6 +167,11 @@ def idle_hours_by_trade(economy, country=None):
     return country_figures.idle_hours_by_trade(economy, country_figures.home_when_shared(economy, country))
 
 
+def hours_hired_by_employer(economy, employer):
+    """{trade: hours} the last labour clearing hired for `employer` (paid hours, bonded included); empty before one."""
+    return dict(economy.record.hours_hired_by_employer.get(employer, {}))
+
+
 def labour_market_rows(economy):
     """(people, hours offered, hours hired) of each (trade, area) labour market in the last clearing, in key order, for
     `person_equivalent_unemployment`. Offered is hired plus idle; the plot trade (people working their own land, most

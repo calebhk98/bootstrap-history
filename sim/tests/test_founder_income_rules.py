@@ -77,21 +77,6 @@ class DependantsBeyondMeansTests(unittest.TestCase):
             self.assertTrue(paid <= max(interest_free_room, living - dependants) + 1e-9, (case, paid))
 
 
-class ChargeLivingCostTests(unittest.TestCase):
-    def charge(self, living, shed, prepaid):
-        seat = WorkforceSeat(wages_prepaid=prepaid, living_cost_paid=0.0)
-        charged = module_harness.build(Workforce, seat=seat, views={}).charge_living_cost(ChargeLivingCost(living, shed))
-        return charged, seat
-
-    def test_the_cost_charged_is_the_living_cost_less_the_dependants_shed_and_the_advance(self):
-        charged, seat = self.charge(living=100.0, shed=30.0, prepaid=20.0)
-        self.assertEqual((charged, seat.living_cost_paid, seat.wages_prepaid), (50.0, 50.0, 0.0))
-
-    def test_an_advance_larger_than_the_cost_nets_it_to_nothing_and_is_used_up(self):
-        charged, seat = self.charge(living=100.0, shed=0.0, prepaid=500.0)
-        self.assertEqual((charged, seat.living_cost_paid, seat.wages_prepaid), (0.0, 0.0, 0.0))
-
-
 class FoundersJobTests(unittest.TestCase):
     def held(self, nodes, practice):
         module = production_host.build(tree_nodes=nodes)

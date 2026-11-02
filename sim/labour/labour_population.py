@@ -99,14 +99,6 @@ class PopulationMixin:
         workforce.trades_created.add(trade)
         return True, None
 
-    def _is_lettered(self, trade):
-        """Whether the trade's pool is bounded by who can read and write, not by what
-        the town's households need made."""
-        scholar_family = self._world.trade_family(trade_data.scholar_trade())
-        return (bool(trade_data.literate_trades(trade_data.registry_of(self._world), (trade,)))
-                or trade in legacy_trade_defaults.LETTERED_BUT_NOT_LITERATE
-                or self._world.trade_family(trade) == scholar_family)
-
     def _working_fraction(self):
         population = self._world.population
         return population.working_age / population.total if population.total > 0 else 0.0
@@ -259,57 +251,19 @@ class PopulationMixin:
             "themselves - approximated as half again your own headcount's "
             "hours, standing in for that second generation, rather than "
             "modelling who-taught-whom explicitly.")
-    def _hiring_cap_inputs(self):
-        """What the hiring cap reads beyond the world stamp: the literacy, the people and where they live."""
-        world = self._world
-        return (world.literacy("literacy_elite"), world.literacy("literacy_general"), world.population.working_age,
-                world.pop_scale, len(world.built_ways()), world.home_tiles_held_version(), self.base_tile())
-
-    def _hiring_cap_before_actors(self, trade):
-        """Hours a year of a trade the town's people offer, before firms' and governments' staff
-        are taken out of it."""
-        base = (self._world.cfg["hired_hours_cap_base"] * self.local_market_share()
-                * (self.POP_SCALE_FLOOR_SHARE
-                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
-        if self._is_lettered(trade):
-            cap = base * self.SCHOLAR_MARKET_SHARE   # literate men are a small fraction of anywhere
-        else:
-            cap = self._people_of_trade_in_reach(trade) * self._world.HOURS_PER_PERSON_YEAR
-        cap = self._world.effect_factor("market_hiring_factor", cap, self.HIRING_MULTIPLIER_EXPONENT)
-        # A trade that needs reading cannot be bought past how many people
-        # here can read; taught literate trades are absent and bounded by
-        # literate_capacity() in train() instead.
-        if trade in self.LITERATE_TRADES:
-            cap *= self.literacy_factor(trade)
-        return cap
-
     def market_supply(self, trade):
-        """Hours a year of this trade the local labour market can actually supply.
-
-        THIS IS ONE TOWN'S MARKET, NOT THE COUNTRY'S - the household this
-        game puts you in charge of draws on one town's labour, the way a
-        real Roman, Han or Norse founder would have. See
-        TOWN_POPULATION_REFERENCE's own comment for why that is a
-        defensible modelling choice and _people_of_trade_in_reach for the people of each trade in it; national_trade_population
-        answers the country-wide question this number is not trying to.
-        """
+        """Hours a year of this trade the labour core offers, as a read-only view: the core's people of it in the tiles
+        reached (the literate trades: the literacy ceiling's people), less the firms' and governments' staff, plus the
+        places of the trade schools. A trade only the founder teaches has the people taught."""
         if not self.trade_available(trade):
             return 0.0
-        workforce = self._world.workforce
-        school_hours = ((workforce.trade_schools or {}).get(trade, 0.0)
-                        * self._world.HOURS_PER_PERSON_YEAR)
+        hours_per_person = self._world.HOURS_PER_PERSON_YEAR
+        school_hours = (self._world.workforce.trade_schools or {}).get(trade, 0.0) * hours_per_person
         if trade in self._world.trades_absent:
-            # firms draw from the same taught people, so what they employ is not on offer
-            return max(0.0, self._taught_trade_people(trade)
-                       - self._world.actor_staff_fte(trade)) * self._world.HOURS_PER_PERSON_YEAR
-        in_core = (self.core_people_by_trade() or {}).get(trade, 0.0)
-        cap = self._world.shared_answer(
-            ("hiring_cap", trade), self._hiring_cap_inputs() + (in_core,),
-            lambda: self._hiring_cap_before_actors(trade), standalone=True)
-        # firms and governments hire from the same pool, so what they employ is not on offer
-        cap = max(0.0, cap - self._world.actor_staff_fte(trade) * self._world.HOURS_PER_PERSON_YEAR)
-        hours = cap + self.employed(trade) * self._world.HOURS_PER_PERSON_YEAR + school_hours
-        return trade_supply_rules.supply_hours(hours, self.people_who_exist(trade), self._world.HOURS_PER_PERSON_YEAR)
+            return max(0.0, self._taught_trade_people(trade) - self._world.actor_staff_fte(trade)) * hours_per_person
+        people = self.literate_capacity(trade) if trade in self.LITERATE_TRADES else self._people_of_trade_in_reach(trade)
+        hours = max(0.0, people - self._world.actor_staff_fte(trade)) * hours_per_person + school_hours
+        return trade_supply_rules.supply_hours(hours, self.people_who_exist(trade), hours_per_person)
 
     def reachable_trade_population(self, trade):
         """What this household's own labour market actually holds of this

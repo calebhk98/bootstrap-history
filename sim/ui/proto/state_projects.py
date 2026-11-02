@@ -178,11 +178,11 @@ def _agent_state_spend_and_net(sim):
         # the same, or it double-bills the first year by the whole wage
         # bill, in the one year the player is most likely to look.
         "wages_you_have_already_paid_this_year": round(
-            sim.view("pay_book")()["prepaid"], 1) or None,
+            sim.view("pay_book")()["paid_in_clearing"], 1) or None,
         "net_after_project_spend": round(sim.view("revenue_estimate")() - sim.view("upkeep")()
                                          - sim.view("recurring_living_cost")(sim.view("revenue_estimate")(), sim.view("upkeep")())
                                          + min(sim.view("recurring_living_cost")(sim.view("revenue_estimate")(), sim.view("upkeep")()),
-                                               sim.view("pay_book")()["prepaid"])
+                                               sim.view("pay_book")()["paid_in_clearing"])
                                          - sim.view("mine_operating_cost")()
                                          - max(0.0, -sim.view("acting_balance")()) * sim.view("debt_interest_rate")()
                                          - known(sim.view("spend_last_year")(), 0.0), 1),

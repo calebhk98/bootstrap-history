@@ -14,7 +14,7 @@ HOURS = {"allocations": "hour_allocations", "work_trade": "work_trade", "wage_ho
          "director_hours_spent": "director_hours_spent_founder"}
 EMPTY = {"employees": {}, "hour_allocations": {}, "contract_hours": {}, "commissioned": {}, "trade_hours_used": {},
          "unused_hours_reported": {}, "last_taught": {}, "trades_created": set(), "trades_endemic": set(), "trade_introduced_year": {},
-         "training": [], "staff_pay_held": {}}
+         "training": [], "staff_wanted": {}}
 
 
 def _get(seat, name, default=0):
@@ -27,8 +27,8 @@ def views_over(seat):
         "staff": lambda: {key: _get(seat, key) for key in STAFF_FIELDS},
         "hour_commitments": lambda: {key: _get(seat, field, None if key in ("work_trade", "last_year", "wage_work_last_year") else 0)
                                      for key, field in HOURS.items()},
-        "pay_book": lambda: {"prepaid": _get(seat, "wages_prepaid"), "earned": _get(seat, "wages_earned", None),
-                             "paid": _get(seat, "wages_paid"), "pay_held": _get(seat, "staff_pay_held"),
+        "pay_book": lambda: {"paid_in_clearing": 0.0, "earned": _get(seat, "wages_earned", None),
+                             "paid": _get(seat, "wages_paid"),
                              "living_cost_paid": _get(seat, "living_cost_paid")},
         "training_queue": lambda: _get(seat, "training"),
         "trade_schools": lambda: _get(seat, "trade_schools", None) or {},

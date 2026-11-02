@@ -5,7 +5,6 @@ every change to a fact another module owns is that owner's command (the farm's l
 is still handed out live: the game's random source (`rng`, shared by every module that draws), the project order (`order`, the projects module's
  `project_order` view), the project sets the views of knowledge and projects return, and the game a mod's provider is handed."""
 from sim.agents.api import edges
-from sim.agriculture.api import SetFarmLand, SetFarmTechnique
 from sim.demography.api import rules as demography_rules
 from sim.prices.api import solve_prices_core
 from sim.seats.api import RememberGoalClosure
@@ -276,10 +275,6 @@ class WorkforceWorld:
     def refusal_text(self, what, cost):
         return self._needs.purchase_refusal(what, cost)
 
-    def harvest_share_taken(self, material):
-        """Share of the harvest of a material the home state's forms take from growers; none without a government."""
-        return self._needs.harvest_share_taken[material]
-
     def housing_price_per_place(self):
         return self._needs.housing_price_per_place()
 
@@ -345,32 +340,9 @@ class WorkforceWorld:
 
     # ---- the farm ----
 
-    def farm_holdings(self):
-        """The acting seat's farm: hectares, granary, what the last farm year left and the hours the farm needs."""
-        return self._needs.farm_holdings()
-
     @property
     def farm_land(self):
         return self._needs.farm_land()
-
-    def set_farm_land(self, hectares, quality):
-        self._needs.send(SetFarmLand(hectares, quality))
-
-    @property
-    def farm_arable_ceiling(self):
-        return self._needs.farm_arable_ceiling()
-
-    @property
-    def farm_ladder(self):
-        return self._needs.farm_ladder()
-
-    @property
-    def farm_technique_this_year(self):
-        return self._needs.farm_technique_this_year()
-
-    @farm_technique_this_year.setter
-    def farm_technique_this_year(self, value):
-        self._needs.send(SetFarmTechnique(value))
 
     # ---- the actors and the hours still wanted ----
 

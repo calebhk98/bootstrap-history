@@ -172,20 +172,10 @@ class SupplyChannels(unittest.TestCase):
         self.assertEqual(Channels(contracted=0.0).hours_you_can_call_on("scribe"), 1000.0)
         self.assertEqual(Channels(contracted=400.0).hours_you_can_call_on("scribe"), 1400.0)
 
-    def test_commissioning_does_not_change_how_many_of_the_trade_live_here(self):
-        before = Channels(contracted=0.0).market_supply_split("scribe")
-        after = Channels(contracted=400.0).market_supply_split("scribe")
-        self.assertEqual(before, after)
-
     def test_productivity_multiplies_the_hours_called_on_and_not_the_supply(self):
         channels = Channels(contracted=400.0, productivity=1.5)
         self.assertEqual(channels.hours_you_can_call_on("scribe"), 1400.0 * 1.5)
         self.assertEqual(channels.market_supply("scribe"), 1000.0)
-
-    def test_the_town_and_your_own_people_are_reported_apart_and_add_to_the_total(self):
-        town, mine = Channels(supply=5000.0, employed=2.0).market_supply_split("scribe")
-        self.assertEqual((town, mine), (1000.0, 4000.0))
-        self.assertEqual(town + mine, 5000.0)
 
     def test_the_hours_bought_are_reported_by_trade(self):
         self.assertEqual(Channels(contracted=400.0).hours_reserved("scribe"), 400.0)

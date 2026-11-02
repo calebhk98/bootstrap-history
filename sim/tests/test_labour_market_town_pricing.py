@@ -70,9 +70,8 @@ check("a commissioned hour is the market's quoted hour times the shop's premium"
 
 # ---- leaning on a trade raises its price; letting people go eases it
 _leaned = _market(supply=1000.0)
-_before = _leaned.hire_cost(TRADE, 1)
 _leaned.hire("employer", TRADE, 500.0)
-check("hiring leans on the trade and raises the fee for finding more", _leaned.pressure(TRADE) == 500.0 and _leaned.hire_cost(TRADE, 1) > _before)
+check("hiring leans on the trade", _leaned.pressure(TRADE) == 500.0)
 _pressed = _leaned.pressure(TRADE)
 _leaned.release("employer", TRADE, 300.0)
 check("releasing hours eases the pressure by exactly those hours", abs(_leaned.pressure(TRADE) - (_pressed - 300.0)) < 1e-9, _leaned.pressure(TRADE))
@@ -97,15 +96,6 @@ class _GrowingSupply(_Market):
 
 
 _scarce = _GrowingSupply(base_supply=3.0 * HOURS)
-_forecast = _scarce.price_factor_after(TRADE, 1.0)
-check("a scarce trade's forecast for hiring one is dearer than the factor as it stands", _forecast > _scarce.price_factor(TRADE), _forecast)
-_scarce._employed[TRADE] = 1.0
-_scarce.press(TRADE, HOURS)
-check("the forecast is the factor once the hire is really on the books", abs(_scarce.price_factor(TRADE) - _forecast) < 1e-12,
-      (_scarce.price_factor(TRADE), _forecast))
-_deep = _GrowingSupply(base_supply=1.0e6 * HOURS)
-check("an abundant trade is hardly moved by one hire", _deep.price_factor_after(TRADE, 1.0) - _deep.price_factor(TRADE) < 1e-9)
-check("the forecast of no people is the factor as it stands", _deep.price_factor_after(TRADE, 0.0) == _deep.price_factor(TRADE))
 check("the pressure factor is capped however hard a trade is leaned on",
       abs(_scarce._price_factor_from(1.0e12, 1.0) - (1.0 + _scarce.LABOUR_PRICE_PRESSURE_COEFFICIENT * _scarce.LABOUR_PRESSURE_SHARE_CAP ** 2)) < 1e-12)
 
