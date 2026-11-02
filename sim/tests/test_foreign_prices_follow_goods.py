@@ -2,6 +2,7 @@
 price the economy shows for that metal on the acting tile, the one number the mint, the cargo and the partners'
 payments all use (Complaint 507, stage 3)."""
 
+from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 QUICK_TOPIC = True
 
 import unittest

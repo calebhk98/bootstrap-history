@@ -8,6 +8,7 @@ from .harness import check
 
 from sim.agents.api import ActorRecord, Business, ActorRegistry, ActorsState
 from sim.agents import equity_need, equity_round, joint_stock
+from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
 
 from .agents_fake_world import FakeWorld, make_node, total_money
 

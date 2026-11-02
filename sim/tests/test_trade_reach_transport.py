@@ -11,6 +11,7 @@ from sim.geography.api import tiles_held
 from sim.labour.labour_settlement import Settlement
 from sim.labour.labour_supply import Supply
 from sim.labour.staff_book import StaffBook
+from sim.tests import harness  # noqa: F401  (isolates the home directory)
 
 NATION = 20.0e6
 HOURS_BY_TRADE = {"smith": 3000.0, "mason": 2000.0, "farmer": 90000.0}

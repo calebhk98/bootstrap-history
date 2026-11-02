@@ -12,6 +12,7 @@ from sim.assembly.api import NeedsAccess
 from sim.engine import mod_code
 from sim.labour.labour_hours import FounderHours
 from sim.workforce.provided import overhead_hours
+from sim.tests import harness  # noqa: F401  (isolates the home directory)
 
 POOL_HOURS = 2000.0
 

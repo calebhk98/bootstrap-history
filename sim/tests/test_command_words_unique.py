@@ -1,6 +1,7 @@
 """command_words_unique: no alias may shadow another command's name, or the alias's handler answers for the command."""
 from .harness import *  # noqa: F401,F403
 from sim.ui.proto import command_registry
+from sim.ui.proto import dispatch  # noqa: F401  (registers every command)
 
 QUICK_TOPIC = True
 

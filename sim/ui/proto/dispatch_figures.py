@@ -2,6 +2,7 @@
 themselves in sim/ui/figures_headline.py; this only reads the registry."""
 
 import sim.engine.ui_port as ui_port
+from sim.ui import figures_headline, figures_world  # noqa: F401  (register the figures)
 from sim.ui.figures import explain_figure, figures_of
 from sim.refusal import Refusal
 from .command_registry import command

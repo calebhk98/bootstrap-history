@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, RecordedActor, shipped_extensions
+from sim.agents import country_view  # noqa: F401  (the country scope)
 from sim.agents.cast import cast_from_civilisations, profile_from_civilisation, seed_cast
 from sim.agents.country_view import CountryWorld, NoCountryEconomy
 from sim.agents.protocols import World

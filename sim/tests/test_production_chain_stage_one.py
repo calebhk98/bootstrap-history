@@ -2,6 +2,7 @@
 inputs, then once on the shipped data."""
 QUICK_TOPIC = True
 
+import json  # noqa: F401
 import os
 import unittest
 

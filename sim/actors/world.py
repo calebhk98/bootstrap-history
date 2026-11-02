@@ -15,6 +15,7 @@ from sim.reporting.api import output_rules
 from sim.markets.api import ForgetActorOrders, NoteActorPurchase, NoteActorSale
 from sim.seats import api as seats_api
 from sim.world import plant_figures
+from sim.world.material_units import tonnes_per_unit  # noqa: F401  (the trade view reads it from here)
 
 from .world_budget import BudgetView
 from .world_capacity import CapacityView

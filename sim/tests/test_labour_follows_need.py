@@ -2,6 +2,7 @@
 test_labour_follows_need_scenario)."""
 QUICK_TOPIC = True
 
+from sim.tests import harness  # noqa: F401  (the suite's shared setup)
 import unittest
 
 from sim.labour import wages

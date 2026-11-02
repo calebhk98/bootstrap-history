@@ -14,6 +14,7 @@ from sim.engine.state import SimulationState, deserialize_state, serialize_state
 from sim.engine.state_seat import COUNTRY_SEAT, FIRST_SEAT_ID, seat_from_template
 from sim.refusal import cause_of
 from sim.ui.proto import command_registry
+import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import country_seat_refusal, run_as_seat
 from sim.tests.ui_stand_in import Game
 

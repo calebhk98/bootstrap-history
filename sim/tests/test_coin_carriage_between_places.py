@@ -2,6 +2,7 @@
 the distance, to the carriers; one place, credit and a party with no place cost nothing; a foreign country's actors
 pay the keeping cost at their own country's pay to their own guards (that half is test_coin_carriage_and_treasury_keeping).
 
+import sim.engine.core  # noqa: F401  (loads the engine in its import order)
 The coin module answers the ledger's `transfer_surcharge` point; the ledger module posts the answer while it listens."""
 
 QUICK_TOPIC = True

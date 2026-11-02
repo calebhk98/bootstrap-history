@@ -5,6 +5,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 from sim.constants import declare
 
 from . import asks, layoffs
+from .asks import VACANCY_SHARE_THRESHOLD, WAGE_UPDATE_PER_ROUND  # noqa: F401  (declared beside the rounds that use them)
 from .applications import hire_through_rounds
 from .import_cost import ImportCosts
 from .premium import training_premium

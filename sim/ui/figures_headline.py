@@ -1,5 +1,6 @@
 """The headline figures a player asks "why did this change?" about.
 
+from . import figures_world  # noqa: E402,F401  (registers the society figures beside these)
 Each reads the engine function that produces the number; nothing is
 recomputed here. Registration is the whole of adding a figure; the ones that only read state
 paths are declared in data/ui/figures.json (`figures_data.py`).

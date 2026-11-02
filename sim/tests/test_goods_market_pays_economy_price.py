@@ -2,6 +2,7 @@
 price on its tile plus carriage, and the climb of price over an order is the economy's own response. Small fixtures: a
 stub game whose economy answers prices, offered tonnes and responses; nothing builds a game."""
 
+from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 QUICK_TOPIC = True
 
 import math

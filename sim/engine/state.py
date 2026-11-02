@@ -1,5 +1,6 @@
 """Authoritative simulation state definitions and explicit subsystem state owners.
 
+from sim.engine import state_seat  # noqa: E402,F401  (registers SeatState, which needs the classes above)
 Every persistent mutable field in the simulation belongs to one authoritative
 state owner defined in this module. Transient caches, version counters, derived
 values, and invalidation plumbing remain non-persistent implementation details.

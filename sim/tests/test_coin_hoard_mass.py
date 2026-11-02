@@ -3,6 +3,7 @@ rules are `coin_metal` (plain arithmetic) and the coin module's `coin_hoard` vie
 the hoard have it rounded by `rules.hoard_report`; the step's charge is `rules.keeping_due` (and the module's quote)."""
 QUICK_TOPIC = True
 
+import sim.engine.core  # noqa: F401  (loads the engine in its import order)
 import unittest
 
 from sim.coin import rules

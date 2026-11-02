@@ -9,6 +9,7 @@ from .harness import check
 from sim.engine.state import deserialize_state, serialize_state
 from sim.land.state import LandSeat
 from sim.ui.proto import command_registry
+import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 
 CHARTER = "ben_settlement_charter"
 SPEC = {"settlers": 20, "outfit_hours_per_settler": 50.0}

@@ -1,5 +1,6 @@
 """A price needs a seller (Complaints/38, 119).
 
+from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 A material no one in reach can make or sell has no price: not a price at the technique that would make
 it if every technology were held. The sellers in reach are the home society's producers (a technique it
 holds or can reach) and a trading partner that makes it, over a route. Everything here runs on small

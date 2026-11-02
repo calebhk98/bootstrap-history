@@ -14,6 +14,7 @@ from sim.knowledge.api import KnowledgeSeat
 from sim.knowledge.rules import SeatTechniques
 from sim.seats.api import SeatsSeat
 from sim.ui.proto import command_registry
+import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.dispatch_seats import seat_rows
 from sim.ui.proto.seat_address import addressed_seat, run_as_seat, without_seat
 

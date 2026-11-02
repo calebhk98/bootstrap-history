@@ -5,6 +5,7 @@ the coin module's `charge_keeping` command handler over plain actors; the househ
 test_coin_keeping_charged."""
 QUICK_TOPIC = True
 
+import sim.engine.core  # noqa: F401  (loads the engine in its import order)
 import types
 import unittest
 

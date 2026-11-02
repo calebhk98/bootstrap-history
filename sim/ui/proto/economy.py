@@ -3,6 +3,7 @@
 import sim.engine.ui_port as ui_port
 from sim.refusal import Refusal, cause_of
 from sim.engine.ui_port import WAGES, trade_family
+from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
 from sim.engine.ui_port import CloseCashPeriod, CloseCausePeriod, plain_number
 from sim.ui.figures import figure_snapshot
 
