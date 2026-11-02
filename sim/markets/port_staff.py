@@ -1,5 +1,8 @@
 """Every employer's staff as standing bids in the agent economy's labour core. Part of the port (it imports `sim.economy.api`).
 
+A seat's one-year orders (`hours_wanted_once`: a commission, the herds' growth labour) are posted with its places as bids for
+this year only; the hours hired are delivered as hours (`HoursArrived`), not staff, and the order is spent.
+
 An employer (a seat, a firm, a state) posts places by trade: a seat's `hire` (`sim.labour.staff_posting()`), an actor's
 `record.staff_wanted`. Each year the places become `LabourBid`s for the employer's staff account at the economy's wage for
 the trade; the account is funded from the employer's purse up to what it can spend, the core clears and pays the fills from
@@ -15,7 +18,7 @@ from sim.economy import api as economy_api
 from sim.economy.api import EDGE_EXCHANGE, AgentOrders, LabourBid, Transfer
 from sim.refusal import Refusal
 from sim.ledger.api import PayEdge, PayExchange, ReceiveFromEdge, ReceiveFromExchange
-from sim.workforce.api import StaffArrived
+from sim.workforce.api import HoursArrived, StaffArrived
 
 STAFF_PREFIX = "staff:"
 
@@ -56,6 +59,31 @@ def staff_of(hired, working_hours):
     return {trade: hours / working_hours for trade, hours in hired.items() if hours > 0.0}
 
 
+def places_with_once(standing, once, working_hours):
+    """{trade: people} the standing places and the one-year orders ({purpose: {trade: hours}}) together, as one bid per trade."""
+    wanted = dict(standing)
+    for orders in once.values():
+        for trade, hours in orders.items():
+            wanted[trade] = wanted.get(trade, 0.0) + hours / working_hours
+    return wanted
+
+
+def split_hired(hired, standing, once, working_hours):
+    """(hours hired for the standing places by trade, {purpose: {trade: hours}} hired for the one-year orders): the hours
+    the clearing hired of a trade are shared between the places and the orders in proportion to what each asked."""
+    asked_once = {trade: math.fsum(orders.get(trade, 0.0) for orders in once.values()) for trade in {t for o in once.values() for t in o}}
+    standing_hired, once_hired = {}, {purpose: {} for purpose in once}
+    for trade, hours in hired.items():
+        order_hours = asked_once.get(trade, 0.0)
+        asked = standing.get(trade, 0.0) * working_hours + order_hours
+        order_share = order_hours / asked if asked > 0.0 else 0.0
+        standing_hired[trade] = hours * (1.0 - order_share)
+        for purpose, orders in once.items():
+            if orders.get(trade, 0.0) > 0.0:
+                once_hired[purpose][trade] = hours * order_share * orders[trade] / order_hours
+    return standing_hired, once_hired
+
+
 def post(sim, economy, seat_ids, tile_of):
     """({account: AgentOrders}, {seat id: the trades it posted}) for the year; each posting seat's money goes into its
     staff account. Every seat is a key: one whose places were not posted (no places, no affordable bid, or the purse
@@ -65,7 +93,7 @@ def post(sim, economy, seat_ids, tile_of):
     for seat_id in seat_ids:
         posted[seat_id] = []
         with sim.act_as(seat_id):
-            wanted = sim.labour.staff_posting()
+            wanted = places_with_once(sim.labour.staff_posting(), sim.labour.once_posting(), setup.working_hours_per_year)
             if not wanted:
                 continue
             bids, units = employer_bids(economy, seat_id, wanted, tile_of(sim.labour.base_tile()), sim.view("spending_power")("buy"))
@@ -85,6 +113,8 @@ def settle(sim, economy, posted):
     setup = economy.setup
     for seat_id, trades in sorted(posted.items()):
         hired = {}
+        with sim.act_as(seat_id):
+            standing, once = sim.labour.staff_posting(), sim.labour.once_posting()
         if trades:
             account = staff_account(seat_id)
             hired = economy_api.hours_hired_by_employer(economy, account)
@@ -92,8 +122,11 @@ def settle(sim, economy, posted):
             with sim.act_as(seat_id):
                 if unspent > 0.0:
                     sim.send(ReceiveFromEdge(edges.EDGE_WORKERS, unspent * setup.coin_per_unit, "wage offers unspent"))
-        staff = staff_of(hired, setup.working_hours_per_year)
+        standing_hired, once_hired = split_hired(hired, standing, once, setup.working_hours_per_year)
+        staff = staff_of(standing_hired, setup.working_hours_per_year)
         with sim.act_as(seat_id):
+            for purpose, hours_by_trade in sorted(once_hired.items()):
+                sim.send(HoursArrived(purpose, hours_by_trade))
             for trade in sorted(set(staff) | set(sim.labour.employed_by_trade())):
                 sim.send(StaffArrived(trade, staff.get(trade, 0.0)))
 

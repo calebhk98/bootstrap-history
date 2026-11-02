@@ -28,6 +28,7 @@ class HoursYear:
 		# Contracted work is bought for a year and expires with it: hours you paid a shop for in 142 are not still sitting
 		# there in 143.
 		workforce.contract_hours = {}
+		workforce.hours_hired_once = {}
 		workforce.teaching_hours_this_year = 0.0
 		workforce.relocation_hours_this_year = 0.0
 		workforce.supervision_hours_this_year = 0.0

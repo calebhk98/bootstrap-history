@@ -27,6 +27,10 @@ class StaffBookMixin:
         """{trade: people} the founder's household has posted in the labour core: the places its staff are hired into."""
         return dict(self._world.workforce.staff_wanted)
 
+    def once_posting(self):
+        """{purpose: {trade: hours}} the founder's household asks the labour core for this year only."""
+        return {purpose: dict(orders) for purpose, orders in self._world.workforce.hours_wanted_once.items() if orders}
+
     def set_employed(self, trade, people):
         """Put the founder's head count of a trade at `people`; a count of nothing leaves the trade off the books."""
         workforce = self._world.workforce

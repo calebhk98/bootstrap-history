@@ -21,7 +21,7 @@ class World:
         self.wages = {"smith": 1.0}
         self.trades_absent = {"smith"}
         self.trade_notes = {}
-        self.workforce = Game(contract_hours={})
+        self.workforce = Game(contract_hours={}, hours_wanted_once={})
         self.state = Game(household=self.workforce,
                                            projects=Game(done=set(), active={}))
 

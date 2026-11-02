@@ -109,11 +109,10 @@ check("shutting a concern down does not make you forget how it worked",
       "done %s operating %s" % ("fin_restaurant" in rome.done, "fin_restaurant" in rome.operating))
 
 rome.capital = 5000.0
-capital_before_commission = rome.capital
 employees_before_commission = dict(rome.view("staff")()["employees"])
 ok_job, _ = rome.view("legacy_labour")().commission("smith", 200)
 check("you can buy a job without employing anybody",
-      ok_job and rome.view("staff")()["employees"] == employees_before_commission and rome.capital < capital_before_commission,
+      ok_job and rome.view("staff")()["employees"] == employees_before_commission and rome.view("hours_reserved")["smith"] >= 200,
       "ok %s employees %r" % (ok_job, rome.view("staff")()["employees"]))
 
 

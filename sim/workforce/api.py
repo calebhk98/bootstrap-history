@@ -4,13 +4,13 @@ WALL = "two-way"  # nothing here imports sim/engine/
 
 from .commands import (BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread,
                        LoseStaff, ReleaseStaff, TakeWageFallback,
-                       SetEmployed, StaffArrived)
+                       SetEmployed, StaffArrived, HoursArrived, PostHoursOnce)
 from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase, TrainStaff,
                               WorkForWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
                              ResetTradeHours, SetReserve, SetWageHoursSold, SettleLivingCost, SpendDirectorHours, WatchStaff)
 from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, FadeMarketPressure, NoteBuyRefusal
-from .state import WorkforceSeat, WorkforceSociety
+from .state import ONCE_COMMISSION, ONCE_STOCK, WorkforceSeat, WorkforceSociety
 from . import rules
 from .wage_schedule import build_schedule
 from .staff_loss_waves import wave_exposure

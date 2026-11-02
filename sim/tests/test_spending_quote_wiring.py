@@ -17,6 +17,7 @@ from sim.ledger.api import PayEdge
 from sim.projects.api import PostBounty, constants as project_constants
 from sim.tests import finance_host, module_harness, projects_host
 from sim.refusal import Refusal
+from sim.workforce.api import PostHoursOnce
 from sim.ui.proto import quote_spending
 from sim.tests.ui_stand_in import Game
 
@@ -49,7 +50,7 @@ check("quote hire refuses a count that is not a number",
       quote_spending._quote_hire(quote_game(), NODES, {"trade": "smith", "n": "banana"}).get("ok") is False)
 
 commission = quote_spending._quote_commission(quote_game(), NODES, {"trade": "smith", "hours": 100})
-check("quote commission shows the fee commission_check returns", commission["paid_now"] == 207.8 and commission["hours"] == 100, commission)
+check("quote commission shows the fee commission_check returns", commission["wage_at_clearing_about"] == 207.8 and commission["hours"] == 100, commission)
 check("quote commission passes commission_check's refusal on",
       quote_spending._quote_commission(quote_game(labour=Game(commission_check=lambda trade, hours: (None, "no"))), NODES,
                                        {"trade": "smith", "hours": 5}).get("ok") is False)
@@ -82,10 +83,10 @@ class Payer(TrainingMixin):
 
     def __init__(self, fee):
         self.paid = []
-        household = Game(contract_hours={}, commissioned={})
+        household = Game(contract_hours={}, commissioned={}, hours_wanted_once={})
         self._world = Game(
             wages={"smith": 1.0}, workforce=household, view=workforce_stand_in.view_of(household), state=Game(household=household), EDGE_WORKERS="workers", HOURS_PER_PERSON_YEAR=2000.0,
-            send=lambda command: self.paid.append((command.edge, command.amount, command.purpose)), money_text=lambda money, grouped=False: "%.0f" % money)
+            send=self.paid.append, money_text=lambda money, grouped=False: "%.0f" % money)
         self.labour_market = Game(hire=lambda *arguments: None)
         self.fee = fee
         self.hire_asked = []
@@ -112,9 +113,8 @@ class Payer(TrainingMixin):
 
 payer = Payer(207.77)
 done, message = payer.commission("smith", 100)
-check("commission pays the workers' edge exactly the fee commission_check returned and books the hours",
-      done and payer.paid == [("workers", 207.77, "commissioned craftsmen")]
-      and payer._world.state.household.contract_hours == {"smith": 100}, payer.paid)
+check("commission posts the hours to the labour core once and pays nothing now",
+      done and payer.paid == [PostHoursOnce("commission", "smith", 100)], payer.paid)
 refusing_payer = Payer(0.0)
 refusing_payer.commission_check = lambda trade, hours: (None, "refused")
 check("a commission refused by its check pays nothing", refusing_payer.commission("smith", 100) == (False, "refused") and not refusing_payer.paid)
