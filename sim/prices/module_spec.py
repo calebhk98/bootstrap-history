@@ -8,8 +8,8 @@ from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from .module import Prices
 
 READS_BY_OWNER = {
-    "knowledge": ("civilisation", "civilisation_record", "year", "techniques_granted", "techniques_held", "operating"),
-    "production": ("techniques_in_use", "price_epoch", "is_venture", "concern_baskets_now", "venture_ramp"),
+    "knowledge": ("civilisation", "civilisation_record", "year", "techniques_granted", "techniques_held"),
+    "production": ("techniques_in_use", "price_epoch"),
     "finance": ("market_rate",),
     "workforce": ("money_per_labour_hour", "labour_quote", "farm_land_hectares", "wage_schedule_for"),
     "markets": ("household_prices", "material_seller", "agent_wage", "agent_land_rent", "producers_stamp"),
@@ -22,7 +22,6 @@ _LIVE = dict(cached=False)
 MODULE_SPECS = (ModuleSpec(
     "prices", Prices,
     publishes=(
-        ViewSpec("calculated_goods_prices", "calculated_goods_prices", kind=QUOTE, **_LIVE),
         ViewSpec("held_goods_prices_in_hours", "held_goods_prices_in_hours", kind=QUOTE, **_LIVE),
         ViewSpec("partner_own_economy", "partner_own_economy", kind=KEYED, **_LIVE),
         ViewSpec("material_prices", "material_prices", **_LIVE),
@@ -34,7 +33,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("material_commodity_map", "material_commodity_map", **_LIVE),
         ViewSpec("commodity_country_output", "commodity_country_output", kind=QUOTE, **_LIVE),
         ViewSpec("commodity_floor_ratio", "commodity_floor_ratio", kind=KEYED, **_LIVE),
-        ViewSpec("concern_offers", "concern_offers", kind=QUOTE, **_LIVE),
         ViewSpec("done_memo", "done_memo", kind=QUOTE, **_LIVE),
         ViewSpec("producers_memo", "producers_memo", kind=QUOTE, **_LIVE),
     ),

@@ -18,7 +18,6 @@ RELOCATIONS = [
     ("/modules/scenario/fuzzy_estimates", "/_fuzzy_estimates"),
     ("/modules/scenario/fuzzy_salt", "/_fuzzy_salt"),
     ("/modules/markets/agent_economy", "/economy/agent_economy"),
-    ("/modules/markets/market_book", "/economy/market_book"),
     ("/modules/markets/market_flows", "/economy/market_flows"),
     ("/modules/markets/money_from_economy", "/economy/money_from_economy"),
     ("/modules/living_stock/society_herds", "/economy/society_herds"),

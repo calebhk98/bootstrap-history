@@ -101,10 +101,6 @@ class Supply:
             return 1.0
         return self.needs.pop_scale() if commodity == "charcoal" else self.needs.mineral_scale[commodity]
 
-    def society_output_tonnes(self, commodity: str) -> float:
-        """What the society's own producers can bring to market a year: the national output scaled to the territory held."""
-        return self.national_output_tonnes(commodity) * self.output_scale(commodity)
-
     def generic_market_share(self, commodity: str) -> float:
         return self.done_memo("market_share", commodity, lambda: self.generic_market_share_uncached(commodity))
 

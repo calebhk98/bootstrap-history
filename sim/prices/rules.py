@@ -98,11 +98,6 @@ def mean_share(shares: Sequence[float]) -> Optional[float]:
     return sum(shares) / len(shares) if shares else None
 
 
-def cheapest_ratio(ratios: Sequence[float]) -> float:
-    """The least of the ratios; one where a concern holds no entry that makes the good."""
-    return min(ratios) if ratios else 1.0
-
-
 def goods_in_coin(goods: Mapping[str, float], document_money_per_hour: float, money_per_hour: float) -> Dict[str, float]:
     """A price table in the money of a wage document, in a coin worth `money_per_hour` to an hour of work."""
     return {material: price / document_money_per_hour * money_per_hour for material, price in goods.items()}

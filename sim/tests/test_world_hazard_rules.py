@@ -34,7 +34,6 @@ def game(strata=(), actors=(), home_people=1000.0):
         state=types.SimpleNamespace(
             scenario=types.SimpleNamespace(year=100),
             economy=types.SimpleNamespace(world_events=[]),
-            modules={"markets": types.SimpleNamespace(market_book={})},
             seats={"first": types.SimpleNamespace(household=types.SimpleNamespace(log=[]))}),
         civ={"id": HOME}, events=True, population=types.SimpleNamespace(total=home_people),
         actors=cast,

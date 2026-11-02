@@ -48,7 +48,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("own_supply_by_commodity", "own_supply_by_commodity", kind=QUOTE, **_LIVE),
         ViewSpec("material_own_supply", "own_material_supply", kind=KEYED, seat_scoped=True, **_LIVE),
         ViewSpec("material_market_tonnes", "market_tonnes", kind=KEYED, seat_scoped=True, **_LIVE),
-        ViewSpec("society_output", "society_output_tonnes", kind=KEYED, **_LIVE),
         ViewSpec("national_output", "national_output", kind=KEYED, **_LIVE),
         ViewSpec("own_production_tags", "own_production_tags", seat_scoped=True, **_LIVE),
         ViewSpec("material_shortfall", "material_shortfall", kind=QUOTE, seat_scoped=True, **_LIVE),
