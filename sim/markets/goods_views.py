@@ -57,11 +57,12 @@ class GoodsViews:
 
 	def seat_goods_orders(self):
 		"""The acting seat's goods orders waiting for the year's clearing: [{"side", "material", "stock_key", "tonnes",
-		"limit_per_tonne"}]."""
+		"limit_per_tonne", "carriage_per_tonne", "cost_factor", "project"}]."""
 		return self.goods_market.seat_orders()
 
 	def seat_goods_traded(self):
-		"""What the last clearing bought and sold for the acting seat: {"bought": {stock key: tonnes}, "sold": {stock key: tonnes}}."""
+		"""What the last clearing bought and sold for the acting seat: {"bought": {stock key: tonnes}, "sold": {stock key: tonnes},
+		"orders": [one result per order, with its project and, when the order was not posted, its refusal's cause]}."""
 		return self.goods_market.seat_trades()
 
 	def others_trade_stamp(self):

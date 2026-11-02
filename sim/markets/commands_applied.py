@@ -42,7 +42,8 @@ class Applying:
 		self.needs.send(RepriceTree())
 
 	def buy_material(self, command):
-		return self.goods_market.post_order("buy", command.material, command.tonnes, command.limit_per_tonne)
+		return self.goods_market.post_order("buy", command.material, command.tonnes, command.limit_per_tonne, command.project,
+		                                    command.cost_factor, command.limit_includes_carriage)
 
 	def sell_material(self, command):
 		return self.goods_market.post_order("sell", command.material, command.tonnes, command.limit_per_tonne)
