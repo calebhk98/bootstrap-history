@@ -2,6 +2,8 @@
 
 **Status:** open - diagnosed on branch claude/labor-market-economy-stability-ueffy1; needs a design decision on how much of the society's labour goes through markets
 
+**Re-measure:** diagnosed before the A1/A2 fixes of Complaint 964; the figures here are from an earlier build and need re-measuring.
+
 **What is wrong.** On a fresh Rome opening stepped on the branch code, the people-based unemployment rate in wage trades
 (`sim/economy/diagnostics.person_equivalent_unemployment`, printed by `spin-up-trace` as `people_unemployment`) starts
 near a fifth and rises to about a half within ten years, and the share of offered hours that nobody hires

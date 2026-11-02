@@ -291,7 +291,7 @@ Leisure is limited to hours the plot could not still use (`HourSupply.parts`): w
 Output: `Complaints/reports/473-trace-9eb35921.txt`. The first four decades are calmer than at 72e81e68 (the price level near
 a hundred at year forty instead of nearer two hundred, hired hours steady), then the economy explodes after year forty: the
 price level, the wage and the rate run away together within a few years (the rate far above one, the wage thousands of
-times its opening). A per-good decomposition of years 35 to 52 is running (`decomp.py` probe, the same as for 72e81e68).
+times its opening). A per-good decomposition of years 35 to 52 is running (a `decomp.py` probe, not committed; the committed copy of the same kind is `Complaints/reports/473-decomposition-probe.py.txt`).
 
 Decomposition of the late runaway (years 35 to 51 at 9eb35921, `Complaints/reports/473-decomposition-9eb35921.txt`; the probe
 is `Complaints/reports/473-decomposition-probe.py.txt`, run from a checkout root with `FROM_YEAR=35 python3 <probe> 52`): wheat,
@@ -549,7 +549,7 @@ the stationary runs times the spare share over the share that works (`opening._a
 nothing in the first plan read them.
 
 Fix (`producers.within_a_years_change`): a producer in its first year plans at most its `expected_sales` (the stationary runs) when it has one; with
-none it plans from its expectation as before. Tests: `sim/tests/test_economy_first_year_plans_from_stationary.py` (a stationary quantity below capacity is
+none it plans from its expectation as before. Tests (the file `test_economy_first_year_plans_from_stationary.py` is no longer in `sim/tests/`; `ls sim/tests | grep stationary` lists what is; it covered: a stationary quantity below capacity is
 planned; none plans from expectation; one above capacity does not lift the plant; after the first year the cap is gone).
 
 Measured with the spin-up uncached (`ROME_CACHE_DIR` empty; probe not committed, `economy_api.blank_economy` + `begin_spin_up` + `step`, Rome, years 1 to 6),
@@ -655,7 +655,7 @@ at the bound). The money-replacement solve is kept: the first solve gives the re
   that price in the service's market (`opening_plans.post_service_prices`), so year one's choice (`household_work_year.decide`) is the opening's. No producer
   is dropped to fit. The area, not the tile, is the market (the service's market areas span several tiles).
 
-Tests: `sim/tests/test_economy_opening_household_plans.py` (a solved opening's grain demand is what its households buy at its prices, flour price high and
+Tests (the file `test_economy_opening_household_plans.py` is no longer in `sim/tests/`; it covered: a solved opening's grain demand is what its households buy at its prices, flour price high and
 low; its cohorts hold what its households choose; the hired hours are service demand, servant hours in the producers and servants in the workforce; where
 hands are short the posted price rises, hiring falls and no other producer is dropped; the rationing rule; the placement order; the fixed point on built
 callables, including a cycle). The four checks on a built economy fail with the opening solved once as before.

@@ -4,8 +4,7 @@
 
 Found closing 479: firms took their crew from the plant while the founder's ventures still took it from takings,
 and nothing stopped the two from diverging, because they are different code. The founder's ventures are `Sim`
-mixin methods (`sim/engine/projects_ventures.py`, `projects_venture_quotes.py`: `open_venture`, upkeep, staffing,
-closure); firms and player seats run concerns in `sim/agents/` (`business_books.operate`, `firm.operate`,
+methods of the `ventures` module (`sim/ventures/`, for example `opening.py open_venture`: upkeep, staffing, closure); firms and player seats run concerns in `sim/agents/` (`business_books.operate`, `firm.operate`,
 `player.operate`). Each rule a business follows (crew, upkeep, takings, closure, sale) can exist in two versions, one
 of which only the founder sees. Measure: `grep -rn "def open_venture\|def operate" sim --include=*.py`.
 
@@ -13,7 +12,7 @@ Why it matters (CLAUDE.md "general actors"; multiplayer): every mechanism the fo
 actor, and a fix in one path silently misses the other.
 
 What it would take: one business object (a firm with plants, see 510) in `sim/agents/`, run by the same code for
-every owner; the founder's commands act on the founder's firms through it, and `projects_ventures.py` keeps only
+every owner; the founder's commands act on the founder's firms through it, and the `ventures` module keeps only
 the founder's choices (what to open, whom to staff it with). A wall test that fails when the engine computes a
 business's crew, upkeep or takings outside that object.
 
@@ -30,7 +29,7 @@ what to build and run, and one production machinery runs every plant.
 
 Read again against the code: the crew rule (`business_crew_rule`), the takings product (`business_books.takings_of_size`), the ramp
 (`plant_figures.ramp`), mothball and restore and the closing rules (`Business.review`) are one implementation for every owner, and the
-founder's `projects_ventures.py`, `projects_venture_quotes.py` (removed) and the actors' world (`sim/actors/world.py`) are adapters that read the node and call them. What is
+founder's `sim/ventures/` and the actors' world (`sim/actors/world.py`) are adapters that read the node and call them. What is
 still two code paths, with a grep that finds each (the allowlist test was removed):
 
 1. **Takings and upkeep at the economy's prices.** `economy_production.concern_takings`/`institution_upkeep`/`concern_revenue` (founder) and

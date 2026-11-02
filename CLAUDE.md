@@ -96,7 +96,7 @@ Check with `ls` before trusting this; directories move.
 | The one door a mod's Python imports | `sim/mod_api.py` |
 | Price solver and calculator | `sim/prices/` |
 | CLI, menus, screens and agent/JSON protocol | `sim/simulator.py`, `sim/ui/`, `sim/PROTOCOL.md` |
-| Structure checks (module graph, undeclared reads, imports, UI views) | `tools/` (`tools/done_check.sh`, `tools/measure/`) |
+| Structure checks (module graph, undeclared reads, imports, UI views, package walls, record-part owners) | `tools/` (`tools/done_check.sh`, `tools/check_package_walls.py`, `tools/check_record_owners.py`, `tools/measure/`) |
 | Tests | `sim/tests/`, run with `python3 -m sim.tests` |
 | Engine shape, measured | `sim/ARCHITECTURE.md` |
 | Design direction, plans, current status | `docs/architecture/` - read its `README.md` first; it names the live plan and the status document |

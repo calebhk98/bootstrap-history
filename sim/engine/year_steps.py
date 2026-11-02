@@ -54,7 +54,7 @@ def money_seat(sim):
 	send(NoteMineCostPaid(mine_cost))
 	revenue, upkeep = view("revenue_estimate")(), view("upkeep")()
 	keeping_owed, keeping = view("coin_keeping_due")(revenue, upkeep, living_cost, mine_cost)
-	# the concerns the clearing pays are credited when it clears (economy_port_year `_settle_seats`)
+	# the concerns the clearing pays are credited when it clears (sim/markets/port_year.py `_settle_seats`)
 	send(ReceiveFromEdge(edges.EDGE_CUSTOMERS, view("estimated_revenue")(), "venture revenue"))
 	send(PayEdge(edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns"))
 	send(PayWages(living_cost, "living costs"))

@@ -1,6 +1,6 @@
 """The agent economy inside a game: opening it, its year, and what the engine's seams read.
 
-Part of the port (with economy_port.py and port_setup.py, the only engine modules that import
+Part of the port (with port.py and port_setup.py, the only engine modules that import
 `sim.economy`). Its whole state lives in the markets module's `agent_economy` record, so a saved game resumes the
 same economy. The engine's own price, wage and rate code asks `answers()`; while the economy opens (it
 reads the engine's own opening figures to build its setup) those figures answer instead.

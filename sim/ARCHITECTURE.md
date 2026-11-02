@@ -92,8 +92,13 @@ is handed: the views and commands it declared with `api.reads(...)` and `api.sen
 
 Run from the repository root.
 
-1. `bash tools/done_check.sh` prints the migration's counts: `Sim`'s bases and mixins left, the module graph
-   summary, undeclared reads, and writes outside the owners of money.
+1. `bash tools/done_check.sh` prints the migration's counts (`Sim`'s bases and mixins left, the module graph
+   summary, undeclared reads, writes outside the owners of money, string reads of `legacy_*` views, walled-package
+   import breaks, economy record parts written by a non-owner) and exits 1 when a gating one is above zero (it prints
+   `failing checks:` and names them). It runs two checks of its own that can be run alone:
+   `python3 tools/check_package_walls.py` (the import walls of `economy`, `agents`, `labour`, `geography` and `ui`,
+   `docs/architecture/PACKAGE_WALLS.md`) and `python3 tools/check_record_owners.py` (a write to an economy record
+   part by a module that does not own it).
 2. `python3 tools/measure/module_graph.py --modules` prints, per module, the views it reads, the commands it
    sends and how many modules depend on it; without `--modules` only the totals.
 3. `python3 tools/check_module_reads.py` lists every view read or command sent that the module's spec does not
@@ -121,13 +126,14 @@ Run from the repository root.
 
 ## 9. Known structural problems
 
-Each is a complaint; read its `**Status:**` line first (`grep -m1 '^\*\*Status' Complaints/NNN-*.md`).
+Each is a complaint; read its `**Status:**` line first (`grep -m1 '^\*\*Status' Complaints/NNN-*.md Complaints/closed/NNN-*.md`; a closed complaint is under `Complaints/closed/`).
 
-- What the economy and labour re-audit left (whole-record functions, seats' goods trades outside the clearing, missing prices
-  read as zero in a few places, tools that print counts and never fail): `Complaints/964`; labour's part is `Complaints/556`.
+- What the economy and labour re-audit left (whole-record functions, missing prices read as zero in a few places, and
+  other items its list names): `Complaints/964`; labour's part is `Complaints/556`. A seat's goods orders wait for the
+  year's clearing (`sim/markets/port_goods_orders.py`).
 - Two owners of prices and traded volumes, the solver and the agent economy: `Complaints/507`
   (`docs/architecture/ONE_PRICE_OWNER_PLAN.md`).
-- Temporary heuristics grow faster than they are retired: `Complaints/509`.
+- Temporary heuristics: `Complaints/closed/509` is closed; `python3 sim/constants.py --burndown` lists those still to retire.
 - Tree nodes are both knowledge and concerns, and the founder's ventures and firms' concerns are two
   implementations: `Complaints/510`, `Complaints/514`.
 - A seat's party writes through other modules' records: `Complaints/931`. Mod code still receives live objects:

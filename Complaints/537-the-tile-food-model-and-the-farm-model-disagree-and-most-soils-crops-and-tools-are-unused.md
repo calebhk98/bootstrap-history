@@ -72,7 +72,7 @@ Within the farm model:
   the markets module's farm sites (`Sim.farm_sites()`).
 - Stage 2: the farm model's ladder and ceiling come from the same `crop_site` (`land.territory_cropland`; `territory_farmland`
   deleted). The ceiling is cropped hectares, quality is the yield factor, so soil, climate and river water vary the farm per
-  tile. `Sim.farm_sites()` (`sim/engine/food_supply.py`) is the seam tests replace.
+  tile. `Sim.farm_sites()` (`sim/agriculture/food.py`) is the seam tests replace.
 - Test: `sim/tests/test_one_food_model.py` checks every held tile's crop kcal against `agriculture.gross_harvest_kg` on the
   tile's own cropped hectares and yield factor, under the default, a better plough and a three-field rotation.
 - Effect on rome_100ad (`PYTHONPATH=. python3 -W ignore`, six years of `run_year`): the farm's quality at opening goes from
@@ -100,7 +100,7 @@ Within the farm model:
   weather times its tile's factor, and the hidden spin-up years apply the tile factor without weather. The opening itself is still
   sized at each recipe's own yield (national runs are quantity over output, in `opening_runs`), so its inputs-have-suppliers
   identity holds; the tile yield shows from the first hidden year.
-- Test: `sim/tests/test_economy_reads_tile_yield.py` (cropland equals geography's and the farm ceiling, the site yield is geography's
+- Test (`test_economy_reads_tile_yield.py` is no longer in `sim/tests/`; `test_economy_port_cropland_yields.py` and `test_economy_crop_yields.py` are the nearest; it covered: cropland equals geography's and the farm ceiling, the site yield is geography's
   factor, a producer on a better-watered tile yields more per run, the year's yield is weather times the tile factor);
   `test_economy_land_market.py` rent follows the yield factor. `test_economy_tile_costs`, `test_economy_market_areas` and
   `test_economy_reads_map_through_geography` changed to read `tiles_from_map` / cropland (subject kept); `test_spin_up_measure`
@@ -156,7 +156,7 @@ farm producers and households' plots are the one food model, and `Sim.farm_sites
   Placement scales each area's runs to its own tiles' mean yield, gives every crop producer its tile's factor, puts none on a tile
   that yields nothing, and shares the runs of an area where the crop cannot grow over the areas where it can (wine was 11 percent
   short of its demand otherwise).
-- Test: `sim/tests/test_opening_crops_at_tile_yield.py`; `opening_inputs_have_suppliers` passes (the arithmetic mean left
+- Test: `test_opening_crops_at_tile_yield.py` is no longer in `sim/tests/`; `opening_inputs_have_suppliers` passes (the arithmetic mean left
   nightsoil 7 percent short, the harmonic mean over the tiles the crop grows on closes it).
 - Effect on rome_100ad (probe: open the economy, hidden years included): wheat price 0.0870 to 0.0911 (economy units), farm share
   of worker-years 0.1033 to 0.0867. `opening_floor_and_thin_trades` "household floors cost a small multiple of the food floor"

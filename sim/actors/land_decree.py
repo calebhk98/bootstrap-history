@@ -1,4 +1,4 @@
-"""The home government's land decree, read from and written to its record; kept apart from `economy_port_land.py`, which
+"""The home government's land decree, read from and written to its record; kept apart from `sim/markets/port_land.py`, which
 never reads a government's record."""
 from sim.agents.api import government_levers_land, land_moves
 
