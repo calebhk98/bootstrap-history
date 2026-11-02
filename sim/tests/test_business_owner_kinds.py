@@ -24,16 +24,18 @@ OPENING_MONEY = 5000.0
 def make_world():
 	world = FakeWorld(year=100)
 	world.nodes["shop"] = make_node("shop", hours=4000.0, revenue=20000.0, upkeep=60.0)
-	world.free_people["labourer"] = 100.0
 	return world
 
 
-def owners_of_one_business():
+def owners_of_one_business(world, crew_found=True):
+	"""One plant per owner kind; `crew_found` gives each the people the labour core would have hired for it."""
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	owners = {}
 	for kind in OWNER_KINDS:
 		owner = registry.add("%s:1" % kind, ActorRecord(kind=kind, money=OPENING_MONEY, founded_year=90))
 		owner.business.adopt(Plant("shop", opened_year=OPENED, size=SIZE))
+		if crew_found:
+			owner.record.workforce.update({trade: people * SIZE for trade, people in world.concern_staff("shop").items()})
 		owners[kind] = owner
 	return owners
 
@@ -45,34 +47,33 @@ def one_year(owner, world):
 
 
 world = make_world()
-owners = owners_of_one_business()
+owners = owners_of_one_business(world)
 results = {kind: one_year(owner, world) for kind, owner in owners.items()}
 check("the three owners' businesses are the same plant", len({tuple((plant.entry_key, plant.size, plant.opened_year)
 	  for plant in owner.business.plants) for owner in owners.values()}) == 1)
 check("the same year gives the same margin and carrying cost to a firm, a player and a state",
 	  len(set(results.values())) == 1 and results["firm"][0] > 0.0, results)
-check("it takes the same crew", len({tuple(sorted(owner.workforce.items())) for owner in owners.values()}) == 1
-	  and owners["firm"].workforce["labourer"] == world.concern_staff("shop")["labourer"] * SIZE, owners["firm"].workforce)
+check("it posts the same places for its crew", len({tuple(sorted(owner.staff_wanted.items())) for owner in owners.values()}) == 1
+	  and owners["firm"].staff_wanted["labourer"] >= world.concern_staff("shop")["labourer"] * SIZE, owners["firm"].staff_wanted)
 check("it finds the same share of its crew", len({owner.staffed_share("shop") for owner in owners.values()}) == 1)
 check("it pays the same: money after the year is the same", len({round(owner.money, 9) for owner in owners.values()}) == 1)
 expected = OPENING_MONEY + world.concern_takings("shop", OPENED, 1.0, SIZE) - world.upkeep("shop", SIZE) \
-	- world.concern_wage_bill("shop", SIZE) - world.site_rent("shop", SIZE)
-check("takings less upkeep, wages and site rent is what the purse gained (managers are posted to the labour market, not paid here)", all(abs(owner.money - expected) < 1e-6 for owner in owners.values()),
+	- world.site_rent("shop", SIZE)
+check("takings less upkeep and site rent is what the purse gained (the crew and the managers are posted to the labour market and paid by its clearing, not here)", all(abs(owner.money - expected) < 1e-6 for owner in owners.values()),
 	  [owner.money for owner in owners.values()])
 check("the books balance per owner: purse = opening + income - outlays",
 	  all(abs(owner.money - (OPENING_MONEY + sum(owner.record.income.values()) - sum(owner.record.outlays.values()))) < 1e-6
 		  for owner in owners.values()))
 
-# ---- a crew the pool cannot supply makes less, for every owner alike ----------------------------------
-world.free_people["labourer"] = 0.0
-owners = owners_of_one_business()
+# ---- a crew the labour core did not hire makes less, for every owner alike ----------------------------------
+owners = owners_of_one_business(world, crew_found=False)
 results = {kind: one_year(owner, world) for kind, owner in owners.items()}
-check("with nobody to hire, no owner finds any of the crew and each loses the same",
+check("with nobody hired, no owner finds any of the crew and each loses the same",
 	  {owner.staffed_share("shop") for owner in owners.values()} == {0.0} and len(set(results.values())) == 1 and results["firm"][0] < 0.0, results)
 
 # ---- closing and moving a plant are the business's too ------------------------------------------------
 world = make_world()
-owners = owners_of_one_business()
+owners = owners_of_one_business(world)
 firm, player = owners["firm"], owners["player"]
 plant = business_closing.release_plant(firm.business, "shop", world)
 check("a plant released leaves its owner with nothing of it", "shop" not in firm.concerns and firm.business.plant_of("shop") is None)
@@ -91,7 +92,7 @@ check("...and the revived business finds its plants by entry", revived.business.
       and list(revived.business.entry_keys()) == list(owner.business.entry_keys()))
 
 # ---- switching a plant off keeps it, for any owner ---------------------------------------------------------
-owner = owners_of_one_business()["government"]
+owner = owners_of_one_business(world)["government"]
 plant = owner.business.plant_of("shop")
 owner.business.mothball("shop", 101, "manual")
 check("a mothballed plant is not operating but is kept with its size and age",

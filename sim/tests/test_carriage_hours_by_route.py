@@ -108,8 +108,8 @@ class AreaWageTests(unittest.TestCase):
         def scale(town_wage, farms_wage):
             wages = {market_key(fixture.LABOURER, labour_area(fixture.TOWN)): town_wage,
                      market_key(fixture.LABOURER, labour_area(fixture.FARMS)): farms_wage}
-            record = type("Record", (), {"memory": type("Memory", (), {"wages": wages})(), "carried": carried,
-                                         "area_imbalance": 1.0})()
+            record = type("Record", (), {"memory": type("Memory", (), {"wages": wages})(),
+                                         "carriage": type("Carriage", (), {"carried": carried, "area_imbalance": 1.0})()})()
             return carriage_hours.wage_scale(setup, record, table)
         self.assertEqual(scale(1.0, 9.0), 1.0)
         self.assertEqual(scale(1.0, 0.1), 1.0)

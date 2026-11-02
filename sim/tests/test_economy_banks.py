@@ -10,6 +10,7 @@ import unittest
 from unittest import mock
 
 from sim.economy import bank_service, banks, credit_claims
+from sim.economy.credit_record import CreditRecord
 from sim.economy.accounts import Book
 from sim.economy.types import EDGE_MINT, FundsOffer, Loan, Transfer
 from sim.tests.bank_fixture import BankFixture  # noqa: F401  (test_bank_runs builds its scenarios on it)
@@ -28,7 +29,7 @@ def record_with(cash):
     book = Book()
     for agent, amount in sorted(cash.items()):
         book.transfer(Transfer(EDGE_MINT, agent, MONEY, amount, "opening"))
-    return types.SimpleNamespace(book=book, cohorts={agent: types.SimpleNamespace(tile="town") for agent in cash if agent != BORROWER}, credit=types.SimpleNamespace(loans=[], loss_rates={}, credit_losses={}, remembered_defaults={}), capital_markets=types.SimpleNamespace(banks={}))
+    return types.SimpleNamespace(book=book, cohorts={agent: types.SimpleNamespace(tile="town") for agent in cash if agent != BORROWER}, credit=CreditRecord(), capital_markets=types.SimpleNamespace(banks={}))
 
 
 def household_cash():

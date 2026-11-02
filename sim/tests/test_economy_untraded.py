@@ -7,6 +7,7 @@ import dataclasses
 import types
 import unittest
 
+from sim.economy.labour_record import LabourRecord
 from sim.economy.market_memory import MarketMemory
 from sim.economy.notional import notional_prices, recently_traded_goods, shown_prices
 from sim.economy.types import Recipe
@@ -18,7 +19,7 @@ def setup_with(recipes, opening):
 
 
 def record_with(memory, basket, base=None):
-    return types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={}, opening_basket=basket, index_base_prices=base or {}))
+    return types.SimpleNamespace(memory=memory, labour=LabourRecord(), goods=types.SimpleNamespace(volumes={}, opening_basket=basket, index_base_prices=base or {}))
 
 
 class TradeAgeTests(unittest.TestCase):

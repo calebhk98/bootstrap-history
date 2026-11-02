@@ -76,6 +76,9 @@ class Book:
     def balance(self, agent, currency):
         return self.balances.get(agent, 0.0)
 
+    def holdings(self, agent):
+        return {"goods": {}}
+
 
 def cohort(agent_id, tile, ownership_share=1.0):
     return Cohort(agent_id, tile, 0, 100.0, 50.0, ownership_share)

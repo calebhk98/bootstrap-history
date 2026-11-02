@@ -8,6 +8,7 @@ import unittest
 
 from sim.economy import bondage, bondage_hours
 from sim.economy.accounts import Book
+from sim.economy.credit_record import CreditRecord
 from sim.economy.types import LabourBid, LabourOffer, Transfer
 
 BONDED = "household:t:0"
@@ -78,7 +79,7 @@ class PlacementTests(unittest.TestCase):
 
 class ServiceTests(unittest.TestCase):
     def record(self, debt=1000.0):
-        record = types.SimpleNamespace(book=Book(), unfree=types.SimpleNamespace(bondage=bonds(debt)), credit=types.SimpleNamespace(credit_losses={CREDITOR: debt}))
+        record = types.SimpleNamespace(book=Book(), unfree=types.SimpleNamespace(bondage=bonds(debt)), credit=CreditRecord(credit_losses={CREDITOR: debt}))
         record.book.transfer(Transfer("edge:legacy", BONDED, "coin", 10000.0, "opening"))
         return record
 

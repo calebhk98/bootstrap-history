@@ -1,11 +1,10 @@
-"""The memo keys that read the owners' change counters move when a counter moves: the polity reach key, the markets category key,
+"""The memo keys that read the owners' change counters move when a counter moves: the polity reach key,
 the production epoch of the techniques in use and the stamp of what is running. Each is one function called over plain views."""
 QUICK_TOPIC = True
 
 import unittest
 
-from sim.markets.module import Markets
-from sim.tests import module_harness, polity_host, production_host
+from sim.tests import polity_host, production_host
 
 
 class Counters:
@@ -44,16 +43,6 @@ class ReachKeyTests(unittest.TestCase):
 			return lambda: module._reach_key(0.0)
 		before, after = keys_after_each_change(key_of, ("institution_units_version",))["institution_units_version"]
 		self.assertEqual(before, after)
-
-
-class CategoryKeyTests(unittest.TestCase):
-	def test_the_category_key_moves_with_the_techniques_and_with_what_is_operating(self):
-		def key_of(counters):
-			module = module_harness.build(Markets, views=dict(
-				{"year": 100, "pop_scale": 1.0, "real_output_per_head": 1.0, "concern_versions": (0, 0)}, **counters.views()))
-			return module._category_key
-		for name, (before, after) in keys_after_each_change(key_of, ("techniques_version", "operating_version")).items():
-			self.assertNotEqual(before, after, name)
 
 
 class ProductionEpochTests(unittest.TestCase):

@@ -69,6 +69,7 @@ def admitted_then_run(share):
 		firm = Firm("firm:%d" % (1000 + number), ActorRecord(kind="firm", founded_year=world.year - 10, money=1.0e9,
 												  business=Business.running(["shop"], opened_year=world.year - 10)))
 		firm.rivals_of = lambda node_id, asking_id, count=admitted: float(count - 1)
+		firm.record.workforce.update(world.concern_staff("shop"))   # the crew the labour core hired for the plant
 		firm.operate(world)
 		weak += firm.record.last_margin <= world.plant_cost("shop", firm, 1.0) * world.market_rate()
 	return admitted, weak

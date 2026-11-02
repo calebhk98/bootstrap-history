@@ -101,10 +101,11 @@ check("a failure is counted", player.record.failed_copies.get("tech") == 1, play
 # ---- opening and closing a concern ---------------------------------------------------------
 world = make_world()
 player = make_player()
+player.record.workforce["labourer"] = 0.05      # the people the labour core hired for the concern (a hundred hours of a 2000 hour year)
 player.record.orders.append({"command": "open", "node": "shop"})
 year_on(player, world)
-check("open runs a concern and yields takings less upkeep and wages",
-	  "shop" in player.concerns and abs(player.money - (1000.0 + 500.0 - 50.0 - 100.0)) < 1e-6, player.money)
+check("open runs a concern and yields takings less upkeep (the crew is paid by the clearing, not here)",
+	  "shop" in player.concerns and abs(player.money - (1000.0 + 500.0 - 50.0)) < 1e-6, player.money)
 check("the concern's margin is on the record", abs(player.business.margin_of("shop") - 350.0) < 1e-6, player.business.plants)
 player.record.orders.append({"command": "close", "node": "shop"})
 before = player.money
@@ -178,6 +179,7 @@ check("a human player with no orders does nothing",
 world = make_world()
 world.nodes["dud"] = make_node("dud", ["base"], revenue=0.0)
 robot = make_player(money=5000.0, controller="ai")
+robot.record.workforce["labourer"] = 1.0
 for _year in range(6):
 	year_on(robot, world)
 check("an AI player researches and opens something profitable within a few years",
@@ -187,6 +189,7 @@ check("an AI player does not research what could never pay", "dud" not in robot.
 # ---- what competitors may enter after ------------------------------------------------------
 world = make_world()
 operator = make_player()
+operator.record.workforce["labourer"] = 1.0
 operator.record.orders.append({"command": "open", "node": "shop"})
 year_on(operator, world)
 world.public_nodes.add("shop")
@@ -203,13 +206,14 @@ world = make_world()
 firm = Firm("firm:1", ActorRecord(kind="firm", money=1000.0, founded_year=90))
 firm.business.adopt(Plant("shop", opened_year=95))
 firm.rivals_of = lambda node_id, asking_id: 1.0
+firm.record.workforce["labourer"] = 0.05
 firm.operate(world)
 managing = firm_entry.management_cost(world, "shop")
-check("a firm's year through the shared rule: the purse gains takings less upkeep and wages; the margin also counts the managers' places posted to the labour market",
-	  managing > 0.0 and abs(firm.money - (1000.0 + 250.0 - 50.0 - 100.0)) < 1e-6
+check("a firm's year through the shared rule: the purse gains takings less upkeep; the margin also counts the crew's wages and the managers' places posted to the labour market",
+	  managing > 0.0 and abs(firm.money - (1000.0 + 250.0 - 50.0)) < 1e-6
 	  and abs(firm.record.last_margin - (100.0 - managing)) < 1e-6, firm.money)
 check("a firm's staffing and loss years are kept", firm.staffed_share("shop") == 1.0 and firm.record.loss_years == 0)
-world.free_people["labourer"] = 0.0
+firm.record.workforce.clear()
 firm.operate(world)
 check("a firm that finds no staff makes nothing and loses its upkeep",
 	  firm.staffed_share("shop") == 0.0 and firm.record.loss_years == 1 and abs(firm.record.last_margin + 50.0 + managing) < 1e-6, firm.record.last_margin)

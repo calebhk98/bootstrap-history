@@ -282,6 +282,9 @@ class ReadersOfRegionalDiseaseTest(unittest.TestCase):
             def frontier_disease_loss(self):
                 return self.loss
 
+            def staple_material(self):
+                return "wheat_kg"
+
             def commodity_of(self, material):
                 return material
 

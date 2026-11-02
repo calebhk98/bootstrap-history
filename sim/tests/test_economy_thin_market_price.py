@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.economy.labour_record import LabourRecord
 from sim.economy.market_memory import MarketMemory
 from sim.economy.notional import shown_prices
 from sim.economy.types import Recipe
@@ -20,7 +21,7 @@ def alloy_game(traded_in_area_a, wanted=100000.0):
     memory = MarketMemory(prices=prices, wages={"labour|a": 0.5}, rates={"coin": 0.0})
     memory.volume_weights = {"alloy|a": traded_in_area_a, "metal|a": 500.0}
     memory.note_trading({"alloy|a", "metal|a"})
-    record = types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={}, opening_basket={"alloy": wanted},
+    record = types.SimpleNamespace(memory=memory, labour=LabourRecord(), goods=types.SimpleNamespace(volumes={}, opening_basket={"alloy": wanted},
                                                                    index_base_prices={}))
     recipe = Recipe("melt", {"alloy": 1.0}, {"metal": 2.0}, {"labour": 4.0})
     setup = types.SimpleNamespace(recipes={"melt": recipe}, opening_prices={}, currency_id="coin",
@@ -35,7 +36,7 @@ def alloy_of_untraded_metal_game():
     memory = MarketMemory(prices=prices, wages={"labour|a": 0.5}, rates={"coin": 0.0})
     memory.volume_weights = {"alloy|a": 2.0}
     memory.note_trading({"alloy|a"})
-    record = types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={}, opening_basket={"alloy": 100000.0},
+    record = types.SimpleNamespace(memory=memory, labour=LabourRecord(), goods=types.SimpleNamespace(volumes={}, opening_basket={"alloy": 100000.0},
                                                                    index_base_prices={}))
     recipes = {"melt": Recipe("melt", {"alloy": 1.0}, {"metal": 2.0}, {"labour": 4.0}),
                "smelt": Recipe("smelt", {"metal": 1.0}, {}, {"labour": 2.0})}

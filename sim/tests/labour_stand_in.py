@@ -21,7 +21,7 @@ def stand_in_world(civ_id="rome_100ad", total=None):
         population=population, projects=SimpleNamespace(done=set(), done_year={}, granted=set(), operating=set(), active={}), balance=0.0,
         bondage_years_left=0, set_farm_land=lambda hectares, quality: None,
         held_and_running=lambda: frozenset(civ.get("starting_techs", ())), built_ways=lambda: {}, trades_absent=set(), wages=data.WAGES, trade_family=data.trade_family,
-        literacy=lambda field: 0.05, HOURS_PER_PERSON_YEAR=2000.0, actor_staff_fte=lambda trade: 0.0, economy=SimpleNamespace(agent_trades=lambda: None, agent_people_by_trade=lambda: None, agent_people_by_tile_and_trade=lambda: None),
+        literacy=lambda field: 0.05, HOURS_PER_PERSON_YEAR=2000.0, actor_staff_fte=lambda trade: 0.0, economy=SimpleNamespace(agent_trades=lambda: None, agent_people_by_trade=lambda: None, agent_people_by_tile_and_trade=lambda: None, agent_idle_hours_by_trade=lambda: {}),
         techniques_available_to=solve_prices_core.techniques_available_to,
         trade_registry={trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}
                         for trade_id, trade in data.TRADE_REGISTRY.items()})

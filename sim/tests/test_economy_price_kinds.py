@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.economy.labour_record import LabourRecord
 from sim.economy import notional, types as economy_types
 from sim.economy.market_memory import PRICE_TRADED, MarketMemory
 from sim.economy.notional import KIND_MAKING_COST_ESTIMATE, KIND_REMEMBERED, shown_prices_with_kinds
@@ -51,7 +52,7 @@ def shown_game():
     memory = memory_with({"grain|a": 3.0, "metal|a": 50.0}, cleared=["grain|a"],
                          quotes={"metal|a": QUOTE_BEST_UNFILLED_BID})
     memory.trade_age = {"grain|a": 1, "metal|a": 99}
-    record = types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={}, opening_basket={}, index_base_prices={}))
+    record = types.SimpleNamespace(memory=memory, labour=LabourRecord(), goods=types.SimpleNamespace(volumes={}, opening_basket={}, index_base_prices={}))
     recipes = {"smelt": Recipe("smelt", {"metal": 1.0}, {}, {"labour": 2.0})}
     setup = types.SimpleNamespace(recipes=recipes, opening_prices={}, currency_id="coin", unskilled_trade="labour")
     return setup, record

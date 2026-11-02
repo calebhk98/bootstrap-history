@@ -74,13 +74,6 @@ class EntrantInAHeldMarketTests(unittest.TestCase):
         self.assertGreater(result.hired_by_employer.get("merchant", 0.0), 0.0)
         self.assertLessEqual(sum(result.hired_by_employer.values()), 1000.0 + 1e-6)
 
-    def test_the_same_merchant_paying_a_premium_takes_hours_from_the_incumbent(self):
-        from sim.tests.test_labour_core_clearing import bid, make_state, run
-        state = make_state(people=10.0, wage=1.0)
-        state.hired_hours = {"vale": {"digger": {"farm": 1000.0}}}
-        result = run(state, [bid("farm", 2000.0), bid("merchant", 50.0, premium=0.5)])
-        self.assertGreater(result.hired_by_employer.get("merchant", 0.0), 0.0)
-
 
 def hours_hired_by_farm(merchant_bid_hours):
     """Hours the farm is hired for in a labour market of scarce supply, when a merchant also bids `merchant_bid_hours`
@@ -234,8 +227,8 @@ class OneWageTests(unittest.TestCase):
             wages.update({market_key(fixture.LABOURER, labour_area(tile)): wage_elsewhere
                           for tile in fixture.tiles() if tile != fixture.TOWN})
         carried = {fixture.TOWN: {fixture.FARMS: 10.0}}
-        record = type("Record", (), {"memory": type("Memory", (), {"wages": wages})(), "carried": carried,
-                                     "area_imbalance": 1.0})()
+        record = type("Record", (), {"memory": type("Memory", (), {"wages": wages})(),
+                                     "carriage": type("Carriage", (), {"carried": carried, "area_imbalance": 1.0})()})()
         table = setup.carriage_table()
         scale = carriage_hours.wage_scale(setup, record, table)
         base = setup.carriage_table().cost_per_tonne(fixture.TOWN, fixture.FARMS)

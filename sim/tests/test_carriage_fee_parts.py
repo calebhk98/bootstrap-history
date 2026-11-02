@@ -84,9 +84,9 @@ class MerchantsBidForFeed(unittest.TestCase):
         self.assertEqual([(bid.buyer, bid.good, bid.floor_quantity, bid.area) for bid in bids], [("m1", FEED_GOOD, 3.0, "area:a")])
         self.assertAlmostEqual(budget["m1"], 12.0)
 
-    def test_a_feed_with_no_price_yet_is_bid_for_at_the_opening_price(self):
-        _bids, budget = carriage_fleet_book.bids(*self.inputs(price=None))
-        self.assertAlmostEqual(budget["m1"], 6.0)
+    def test_a_feed_with_no_price_yet_is_not_bid_for_and_sets_nothing_aside(self):
+        bids, budget = carriage_fleet_book.bids(*self.inputs(price=None))
+        self.assertEqual((bids, budget), ([], {}))
 
     def test_a_merchant_with_no_cash_sets_nothing_aside_and_bids_for_nothing(self):
         bids, budget = carriage_fleet_book.bids(*self.inputs(price=4.0), merchants_cash={"m1": 0.0})

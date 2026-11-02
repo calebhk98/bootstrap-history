@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
+from sim.economy.land_record import LandRecord
 from sim.economy import ownership
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
 from sim.economy.types import Transfer
@@ -13,7 +14,7 @@ from sim.economy.types import Transfer
 def record_with_three_cohorts():
     cohorts = (cohorts_for_tile("t", 3000.0, 0.5, 0.4, class_count=3)
                + cohorts_for_tile("u", 1000.0, 0.5, 0.4, class_count=3))
-    return SimpleNamespace(cohorts={cohort.agent_id: cohort for cohort in cohorts}, producers={}, capital_markets=SimpleNamespace(shares={}))
+    return SimpleNamespace(cohorts={cohort.agent_id: cohort for cohort in cohorts}, producers={}, capital_markets=SimpleNamespace(shares={}), land=LandRecord())
 
 
 class SpreadTests(unittest.TestCase):

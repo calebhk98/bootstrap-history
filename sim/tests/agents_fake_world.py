@@ -19,7 +19,7 @@ class FakeLabourMarket:
 		self.wage_per_hour = wage_per_hour
 		self.hired: Dict[str, float] = {}
 
-	def quote(self, trade: str, hours: float, actor: Any = None) -> float:
+	def quote(self, trade: str) -> float:
 		return self.wage_per_hour
 
 	def hire(self, actor: Any, trade: str, hours: float) -> None:
