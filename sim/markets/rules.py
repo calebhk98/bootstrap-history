@@ -2,7 +2,6 @@
 
 HOME_SELLER = "home"   # the seller id of the home society's own producers, as opposed to a trading partner's id
 
-MINIMUM_FLOOR_RATIO = 0.01   # the clearing searches between floor and ceiling in logs, so the floor stays above nothing
 
 
 def tonnes_sold(asked, held, market_room):
@@ -10,10 +9,6 @@ def tonnes_sold(asked, held, market_room):
 	return min(asked, held, market_room)
 
 
-def floor_ratio(running_share, unsplit_floor_ratio):
-	"""The lowest price over the incumbents' cost their producers sell at: the running share of the cost where it is split,
-	the whole cost (`unsplit_floor_ratio`) where it is not."""
-	return unsplit_floor_ratio if running_share is None else max(MINIMUM_FLOOR_RATIO, running_share)
 
 
 WORKSHOP_CATEGORY = "your own workshop"

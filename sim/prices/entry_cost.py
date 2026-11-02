@@ -44,15 +44,6 @@ class CostBook:
         """What a unit costs a producer whose plant is built: the full cost without the plant's repayment."""
         return self.unit_cost(entry_key, material, include_plant=False)
 
-    def running_share(self, entry_key: str, material: str) -> Optional[float]:
-        """Running cost over full cost of a unit of `material` by this entry (one where it has no plant);
-        None where it cannot be costed."""
-        full = self.unit_cost(entry_key, material)
-        running = self.running_unit_cost(entry_key, material)
-        if full is None or running is None or not full > 0.0:
-            return None
-        return min(1.0, max(0.0, running / full))
-
     def cheapest_entry(self, material: str, techniques: FrozenSet[str]) -> Optional[str]:
         """The entry the held techniques make `material` cheapest by at the book's prices, or None."""
         made = self._cost(material, techniques, True)

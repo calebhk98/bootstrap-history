@@ -4,7 +4,8 @@ the loans a bank holds, the headroom its equity allows, and the rate markup on a
 Follows Credit/Bank_Credit_Functions.c in the Eurace@Unibi source (Bank_rank_credit_requests for the default
 probability and the value at risk of a request, Bank_decide_credit_conditions for the headroom ALFA * EQUITY - VALUE_AT_RISK
 and the markup on the base rate). Eurace's base rate is the central bank's constant; here the base is the lenders' own
-lowest ask (clear in credit.py), so only the markup is ported.
+lowest ask (clear in credit.py), so only the markup is ported. Eurace caps the loan rate at 0.25; the markup here is
+not capped.
 """
 import math
 from typing import Iterable, List, Mapping, Tuple

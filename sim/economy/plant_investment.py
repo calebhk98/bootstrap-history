@@ -14,12 +14,12 @@ from typing import Tuple
 from sim.constants import declare
 
 INVESTMENT_INERTIA = declare(
-    "INVESTMENT_INERTIA", 2.0, kind="temporary_heuristic",
+    "INVESTMENT_INERTIA", 10.0, kind="temporary_heuristic",
     unit="years of wear a producer's yearly plant investment can reach", source=None, confidence="D",
     retire="Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md",
     why="Eurace@Unibi's INV_INERTIA (Cons_Goods/Firm_Producer_Functions.c, Firm_calc_input_demands) caps capital demand at "
-        "this multiple of the units depreciated; the C reads it from the initial data, and the value 2 is the one its "
-        "unit tests (Cons_Goods/unittests/unittest_Firm.c) set. Builders, a lender to find and the time to build bound "
+        "this multiple of the units depreciated; the C reads it from the initial data, and the shipped state "
+        "(its/0_after_2k_transient.xml) sets inv_inertia to 10 (its unit tests, Cons_Goods/unittests/unittest_Firm.c, use 2). Builders, a lender to find and the time to build bound "
         "how fast plant is added; those are not modelled, so a multiple of the wear stands for them.")
 
 

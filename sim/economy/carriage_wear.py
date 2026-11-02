@@ -153,17 +153,23 @@ def settle(merchant: Merchant, book, goods: Sequence[GoodId], units_worn: Mappin
 
 
 def last_prices(setup, record) -> Dict[GoodId, float]:
-    """Each carrier good's price last year, averaged over the areas that cleared it, else the opening's."""
+    """Each carrier good's price last year, averaged over the areas that cleared it, else the opening's; a good with
+    neither is left out."""
     wanted = set(carrier_goods(setup))
     seen: Dict[GoodId, List[float]] = {}
     for key, price in sorted(record.memory.prices.items()):
         good = key.split(MARKET_KEY_SEPARATOR, 1)[0]
         if good in wanted and price > 0.0:
             seen.setdefault(good, []).append(price)
-    return {good: math.fsum(seen[good]) / len(seen[good]) if good in seen else setup.opening_prices.get(good, 0.0)
-            for good in wanted}
+    prices = {good: math.fsum(seen[good]) / len(seen[good]) if good in seen else setup.opening_prices.get(good)
+              for good in wanted}
+    return {good: price for good, price in prices.items() if price is not None}
 
 
-def money_per_tonne(prices: Mapping[GoodId, float], wear: Wear, source: TileId, destination: TileId) -> float:
-    """What the carriers a tonne wears on this haul cost at `prices` (`last_prices`)."""
-    return math.fsum(units * prices.get(good, 0.0) for good, units in wear.units_per_tonne(source, destination).items())
+def money_per_tonne(prices: Mapping[GoodId, float], wear: Wear, source: TileId, destination: TileId) -> Optional[float]:
+    """What the carriers a tonne wears on this haul cost at `prices` (`last_prices`); None when a carrier worn has no
+    price."""
+    worn = wear.units_per_tonne(source, destination)
+    if any(good not in prices for good, units in worn.items() if units > 0.0):
+        return None
+    return math.fsum(units * prices[good] for good, units in worn.items() if units > 0.0)

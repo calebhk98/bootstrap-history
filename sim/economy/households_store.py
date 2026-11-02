@@ -109,21 +109,14 @@ def _store_weights(tile, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tupl
     if not math.isfinite(staple):
         return {}, {}
     prices, usual_prices = {}, {}
-    if hasattr(view, "price_rows"):
-        for good, price, usual in view.price_rows(specs, tile):
-            if price:
-                prices[good] = price
-                if usual:
-                    usual_prices[good] = usual
-    else:
-        for good in specs:
-            area = view.area_of(good, tile)
-            price = offered_price(view, good, area)
-            if price:
-                prices[good] = price
-                usual = getattr(view, "usual_price", None)      # a view that keeps no price memory has none
-                if usual is not None and usual(good, area):
-                    usual_prices[good] = usual(good, area)
+    for good in specs:
+        area = view.area_of(good, tile)
+        price = offered_price(view, good, area)
+        if price:
+            prices[good] = price
+            usual = view.usual_price(good, area)
+            if usual:
+                usual_prices[good] = usual
     weights = store_candidates(specs, prices, staple, usual_prices, service_values_per_year(priced, specs))
     return weights, {good: prices[good] for good in weights}
 

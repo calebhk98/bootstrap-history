@@ -14,7 +14,7 @@ from sim.constants import declare
 from sim.refusal import Refusal
 
 from . import recipes as recipes_module
-from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -211,7 +211,8 @@ def _store_goods(setup, view, area_map, priced_goods) -> set:
     """The goods fit to hold as wealth at the opening prices, as households choose them."""
     tile = setup.capital_tile
     staple = households_store.staple_price_per_kg(households.need_prices(setup.basket_for(tile), view, tile), setup.specs)
-    prices = {good: view.price(good, area_map.area_of(good, tile)) or 0.0 for good in priced_goods}
+    quoted = {good: view.price(good, area_map.area_of(good, tile)) for good in priced_goods}
+    prices = {good: price for good, price in quoted.items() if price is not None}    # a good with no price is not a candidate
     return set(households_store.store_candidates(setup.specs, prices, staple)) if math.isfinite(staple) else set()
 
 

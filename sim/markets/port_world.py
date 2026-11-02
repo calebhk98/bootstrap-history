@@ -209,9 +209,6 @@ class PortWorld(MapReads, ForeignReads):
 	def _material_prices(self):
 		return self._needs.material_prices()
 
-	def _price_tables(self):
-		return self._needs.price_tables()
-
 	def _material_price_per_kg(self, tag):
 		return self._needs.material_price[tag]
 

@@ -53,7 +53,7 @@ __all__ = [
     "YearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
-    "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
+    "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
     "settle_agent_takings", "route_dues_account", "tile_holders", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
@@ -124,14 +124,6 @@ def people_by_tile_and_trade(economy):
     """Working people of the labour core by tile and trade, over every labour area (trainees are not counted)."""
     return {labour_state.area_tile(area): labour_state.people_by_trade(economy.record.labour.workforce, area)
             for area in sorted(economy.record.labour.workforce.workers)}
-
-
-def wages_by_trade(economy):
-    """Last year's wages per hour, as a list of market wages for each trade."""
-    rows = {}
-    for key, wage in economy.record.memory.wages.items():
-        rows.setdefault(key.split(_KEY_SEPARATOR, 1)[0], []).append(wage)
-    return rows
 
 
 def land_rent_per_hectare(economy, country=None):
@@ -564,10 +556,6 @@ def unskilled_trade(economy):
 
 def working_hours_per_year(economy):
     return economy.setup.working_hours_per_year
-
-
-def working_share(economy):
-    return economy.setup.working_share
 
 
 def import_duty_share(economy):

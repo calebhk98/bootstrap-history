@@ -60,8 +60,8 @@ def settle_year(setup, record, view, producer, closed, recipe, revenue: float, r
     survivor = closed.producer
     cash = max(0.0, record.book.balance(producer.agent_id, money))
     debt = sum(loan.principal + loan.arrears for loan in loans)
-    plant = equity.plant_value(survivor, recipe, view)
-    stock = inventory_value(record, producer, view)
+    stock = equity.inventory_value(record, producer, view)
+    assets = equity.firm_assets(survivor, recipe, cash, stock, view)
     wear = 0.0
     if recipe.plant_life_years > 0.0 and producer.capacity_runs > 0.0:
         per_run = unit_cost.plant_value_per_run(recipe, live_input_prices(producer, recipe, view), live_wages(producer, recipe, view))
@@ -71,21 +71,11 @@ def settle_year(setup, record, view, producer, closed, recipe, revenue: float, r
     kept = finance.cash_to_keep(survivor.cash_target, finance.financial_commitments(loans, producer.agent_id), replacement, running_costs)
     year = settled(producer, survivor, revenue, running_costs, finance.interest_due(loans, producer.agent_id),
                    wear, finance.financial_commitments(loans, producer.agent_id), sum(loan.arrears for loan in loans),
-                   cash, cash + plant + stock - debt, cash + plant + stock, debt, kept)
+                   cash, assets - debt, assets, debt, kept)
     transfers = (Transfer(producer.agent_id, producer.owner, money, year.dividend, "dividend"),) if year.dividend > 0.0 else ()
     if year.state in BANKRUPT_STATES:        # a bankrupt producer asks for no loan to grow
         return replaced(closed, producer=year.producer, transfers=(), loan_request=None, expansion_runs=0.0), (), year
     return replaced(closed, producer=year.producer, transfers=transfers), transfers, year
-
-
-def inventory_value(record, producer, view) -> float:
-    """The goods the producer holds, at the prices it sees (Eurace@Unibi counts the inventory in its assets)."""
-    total = 0.0
-    for good, tiles in record.book.holdings(producer.agent_id)["goods"].items():
-        price = view.price(good, view.area_of(good, producer.tile))
-        if price is not None and price > 0.0:
-            total += price * sum(quantity for quantity in tiles.values() if quantity > 0.0)
-    return total
 
 
 def write_off(record, borrower: str, ratio: float) -> float:

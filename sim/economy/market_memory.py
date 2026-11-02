@@ -153,7 +153,6 @@ class YearView:
         self._labour_area_of = labour_area_of
         self._goods = set(area_map.goods())
         self._keys_of_good: Dict[str, tuple] = {}
-        self._keys_at_tile: Dict[str, tuple] = {}
         self._keys_of_names: Dict[tuple, tuple] = {}     # (id of a names tuple, wages) -> (names, tile -> market keys)
         self._area_by_tile: Dict[str, Dict[TileId, AreaId]] = {}    # name -> tile -> its area; the area map does not change
 
@@ -164,15 +163,6 @@ class YearView:
             keys = self._keys_of_good[good] = (areas, [good + KEY_SEPARATOR + area.area_id for area in areas])
         prices = self._memory.prices
         return list(map(prices.get, keys[1]))
-
-    def price_rows(self, goods, tile: TileId) -> list:
-        """(good, offered price, usual price) for each of `goods` in the market area it trades in on `tile`."""
-        keys = self._keys_at_tile.get(tile)
-        if keys is None or keys[0] is not goods:
-            keys = self._keys_at_tile[tile] = (goods, [(good, good + KEY_SEPARATOR + self.area_of(good, tile))
-                                                        for good in goods])
-        usual_prices, offered = self._memory.usual_prices, self._memory.offered_price
-        return [(good, offered(key), usual_prices.get(key)) for good, key in keys[1]]
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The planning price: the remembered price, last year's trade blended with the older price in proportion to

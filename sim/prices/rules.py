@@ -1,5 +1,5 @@
 """The rules of the price tables and cost books as plain functions of plain values."""
-from typing import Any, Dict, FrozenSet, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, FrozenSet, Iterable, List, Mapping, Optional, Tuple
 
 # how near a producer is to making a good, least to most
 REACH = {"gated": 1, "solved": 2}
@@ -51,11 +51,6 @@ def commodity_map(commodities: Mapping[str, Mapping[str, Any]]) -> Dict[str, str
     return mapping
 
 
-def materials_of(commodity_of_material: Mapping[str, str], commodity: str) -> List[str]:
-    """The material keys that trade as one commodity, sorted."""
-    return sorted(material for material, group in commodity_of_material.items() if group == commodity)
-
-
 def entry_indexes(production: Mapping[str, Any]) -> Tuple[Dict[str, List[str]], Dict[FrozenSet[str], List[str]]]:
     """({gate node: keys of the entries it gates}, {outputs: keys of entries making them}), keys in sorted order."""
     by_gate: Dict[str, List[str]] = {}
@@ -91,11 +86,6 @@ def entry_keys_held_for(node_id: str, production: Mapping[str, Any], held: Itera
 def cost_ratio(own: Optional[float], reference: Optional[float]) -> float:
     """A unit made by an entry over the same made by the reference entry; one where either cannot be costed."""
     return own / reference if own is not None and reference else 1.0
-
-
-def mean_share(shares: Sequence[float]) -> Optional[float]:
-    """The mean of the shares, None where there are none."""
-    return sum(shares) / len(shares) if shares else None
 
 
 def goods_in_coin(goods: Mapping[str, float], document_money_per_hour: float, money_per_hour: float) -> Dict[str, float]:

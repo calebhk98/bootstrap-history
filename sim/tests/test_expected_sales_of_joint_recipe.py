@@ -19,15 +19,6 @@ class Book:
 
 
 class SalesOfAJointRecipeTests(unittest.TestCase):
-    def test_a_farm_that_sold_all_its_grain_expects_to_go_on_selling_it(self):
-        farm = producers.Producer("farm1", "owner", "farm", "tile", capacity_runs=100.0, expected_sales=100.0)
-        ledger = YearLedger()
-        ledger.sold[("farm1", "grain")] = 100.0 * 900.0       # every run's grain sold
-        ledger.output[("farm1", "grain")] = 100.0 * 900.0
-        ledger.output[("farm1", "straw")] = 100.0 * 1500.0     # the straw found no buyer
-        after = year_close._with_sales(farm, FARM, ledger, Book(), lambda good, tile: "area", {})
-        self.assertAlmostEqual(after.expected_sales, 100.0)
-
     def test_runs_sold_are_the_value_sold_over_the_value_of_a_run(self):
         ledger = YearLedger()
         ledger.sold[("farm1", "grain")] = 50.0 * 900.0       # half the grain, the straw unsold

@@ -33,6 +33,9 @@ class View:
     def price(self, good, area):
         return self.prices.get(good)
 
+    def usual_price(self, good, area):
+        return None
+
     def interest_rate(self, currency):
         return 0.05
 

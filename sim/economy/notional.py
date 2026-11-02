@@ -14,7 +14,7 @@ from sim.constants import declare
 
 from . import unit_cost
 from .market_memory import KEY_SEPARATOR, PRICE_REMEMBERED, PRICE_TRADED, MarketMemory
-from .national_prices import national_prices, national_wages
+from .national_prices import national_prices, national_wages, usual_volumes
 from .recipes import input_depth_order
 
 KIND_MAKING_COST_ESTIMATE = "making_cost_estimate"   # what the cheapest recipe costs at today's prices; nothing traded lately
@@ -88,7 +88,7 @@ def _traded_volumes(record) -> Dict[str, float]:
     """What each good's markets trade, a market counting for the smaller of what it usually trades and what
     it traded last year, so a market that has dried up does not stand for the good on its remembered volume."""
     traded: Dict[str, float] = {}
-    for key, usual in (record.memory.volume_weights or record.goods.volumes).items():
+    for key, usual in usual_volumes(record).items():
         good = key.split(KEY_SEPARATOR, 1)[0]
         traded[good] = traded.get(good, 0.0) + min(usual, record.goods.volumes.get(key, 0.0))
     return traded
@@ -109,8 +109,9 @@ def making_costs(setup, record) -> Dict[str, float]:
 
 
 def cheapest_cost(setup, good, live, wages, rate):
-    """Cost per unit of the cheapest recipe making `good` at the prices `live` (`unit_cost.full_cost_per_unit`); None
-    when no recipe making it can be priced."""
+    """Cost per unit of the cheapest recipe making `good` at the prices `live` and the live rate
+    (`unit_cost.full_cost_per_unit`; no maker or site is named, so yield 1 and no rent); None when no recipe making it
+    can be priced."""
     best = min((unit_cost.full_cost_per_unit(recipe, good, live, live, wages, rate)
                 for recipe in setup.recipes.values() if recipe.outputs.get(good, 0.0) > 0.0), default=math.inf)
     return best if math.isfinite(best) and best > 0.0 else None

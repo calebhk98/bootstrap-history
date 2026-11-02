@@ -30,6 +30,7 @@ from .protocols import YearInputs
 from .record import EconomyRecord
 from .setup import EconomySetup, labour_area
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer, is_edge
+from .national_prices import national_wages
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_basket_price_level, wear_and_spoilage)
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
@@ -485,16 +486,12 @@ class Economy:
     def _outcome(self, ledger: YearLedger, level: float, extraction, stocks_at_start) -> YearOutcome:
         record, setup = self.record, self.setup
         money = setup.currency_id
-        wages: Dict[str, list] = {}
         idle = vacant = hired = 0.0
         for result in ledger.labour_results:
-            wages.setdefault(result.trade, []).append((result.wage, result.hours_hired))
             hired += result.hours_hired
             idle += result.idle_hours
             vacant += result.vacant_hours
-        mean_wages = {trade: math.fsum(wage * hours for wage, hours in rows) / hours_hired
-                      for trade, rows in sorted(wages.items())
-                      if (hours_hired := math.fsum(hours for _wage, hours in rows)) > 0.0}   # a trade nobody hired has no mean wage
+        mean_wages = national_wages(record)
         hunger: Dict[str, float] = {}
         for cohort in record.cohorts.values():
             short = cohort.unmet_floor_by_need.get(self.setup.hunger_need, 0.0)

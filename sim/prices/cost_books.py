@@ -79,18 +79,3 @@ class CostBooks:
             reference = book.unit_cost(reference_key, material) if reference_key else None
             ratios[key] = rules.cost_ratio(own, reference)
         return ratios[key]
-
-    def commodity_floor_ratio(self, commodity: str) -> Optional[float]:
-        """The share of the incumbents' cost that is running cost, for the entries they make the commodity's materials by:
-        the lowest price their built plant still sells at. None where no entry can be split."""
-        _stamp, book, ratios = self.cost_book()
-        key = ("floor", commodity)
-        if key not in ratios:
-            shares = []
-            for material in rules.materials_of(self.material_commodity_map(), commodity):
-                reference_key = self.reference_entry(material)
-                share = book.running_share(reference_key, material) if reference_key else None
-                if share is not None:
-                    shares.append(share)
-            ratios[key] = rules.mean_share(shares)
-        return ratios[key]

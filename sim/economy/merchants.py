@@ -392,7 +392,7 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
              held_stock: Mapping[Tuple[GoodId, TileId], float],
              carrier_of: Callable[[TileId], Optional[AgentId]] = lambda _tile: EDGE_CARRIAGE,
              crew: Optional[CrewHire] = None,
-             carrier_money: Optional[Callable[[TileId, TileId], float]] = None,
+             carrier_money: Optional[Callable[[TileId, TileId], Optional[float]]] = None,
              margin_kept: bool = False,
              fleet: Optional[carriage_fleet.FleetLimit] = None,
              dues: Optional[Callable[[TileId, TileId], Mapping[str, float]]] = None) -> Dispatch:
@@ -428,7 +428,8 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
                                                   for key, hours in crew.hours_per_tonne(tile, route[0]))
         crew_money = 0.0 if crew is None else min(per_unit, math.fsum(hours * crew.wage.get(key, 0.0)
                                                                       for key, hours in crew_rows))
-        supplied_money = 0.0 if carrier_money is None else min(max(0.0, per_unit - crew_money), carrier_money(tile, route[0]) * tonnes_per_unit)
+        worn_money = None if carrier_money is None else carrier_money(tile, route[0])    # None: no carrier price to charge
+        supplied_money = 0.0 if worn_money is None else min(max(0.0, per_unit - crew_money), worn_money * tonnes_per_unit)
         dues_unit = {} if dues is None else {holder: owed * tonnes_per_unit for holder, owed in dues(tile, route[0]).items()}
         payout_unit = max(0.0, per_unit - crew_money - supplied_money - math.fsum(dues_unit.values()))
         if margin_kept:     # what is left is the owner's: only crew pay for hours nobody was hired for is still paid out

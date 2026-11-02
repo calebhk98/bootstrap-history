@@ -26,15 +26,15 @@ from .types import Bid, Offer
 
 
 def unit_cost(setup, record, view, offer: Offer) -> Optional[float]:
-    """What one unit of the offer's good costs its producer to make at today's prices (infinite when that
-    cannot be priced); None for a seller that is not a producer."""
+    """What one unit of the offer's good costs its producer to make at today's prices, its own yield and rent and the
+    live interest rate on its plant (infinite when that cannot be priced); None for a seller that is not a producer."""
     producer = record.producers.get(offer.seller)
     if producer is None:
         return None
     recipe = setup.recipes[producer.recipe_id]
     return run_cost.full_cost_per_unit(
         recipe, offer.good, expected_output_prices(producer, recipe, view), live_input_prices(producer, recipe, view),
-        live_wages(producer, recipe, view), 0.0, producer.land_rent_per_run, producer.yield_factor)
+        live_wages(producer, recipe, view), view.interest_rate(setup.currency_id), producer.land_rent_per_run, producer.yield_factor)
 
 
 def input_share_of_cost(setup, record, view, offer: Offer) -> float:

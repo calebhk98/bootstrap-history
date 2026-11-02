@@ -5,10 +5,16 @@ from typing import Callable, Dict, List, Mapping, Optional, Set, Tuple
 KEY_SEPARATOR = "|"
 
 
+def usual_volumes(record) -> Mapping[str, float]:
+    """What each market usually trades, by market key: the memory's smoothed volumes; before any is remembered, this
+    year's volumes."""
+    return record.memory.volume_weights or record.goods.volumes
+
+
 def _markets_by_good(record, keep: Optional[Callable[[str, str], bool]]) -> Dict[str, List[Tuple[str, float, bool, float]]]:
     """Each good's priced markets in key order as (key, price, a traded price, weight): the weight is what the
     market usually trades (this year's volume before any is remembered). `keep(good, area)` drops a market."""
-    weights = record.memory.volume_weights or record.goods.volumes
+    weights = usual_volumes(record)
     quoted = record.memory.quote_kinds
     by_good: Dict[str, List[Tuple[str, float, bool, float]]] = {}
     for key, price in sorted(record.memory.prices.items()):

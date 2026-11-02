@@ -32,7 +32,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("commodity_record", "commodity_record", kind=KEYED, **_LIVE),
         ViewSpec("material_commodity_map", "material_commodity_map", **_LIVE),
         ViewSpec("commodity_country_output", "commodity_country_output", kind=QUOTE, **_LIVE),
-        ViewSpec("commodity_floor_ratio", "commodity_floor_ratio", kind=KEYED, **_LIVE),
         ViewSpec("done_memo", "done_memo", kind=QUOTE, **_LIVE),
         ViewSpec("producers_memo", "producers_memo", kind=QUOTE, **_LIVE),
     ),

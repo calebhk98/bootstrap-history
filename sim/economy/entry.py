@@ -14,12 +14,12 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import entry_practice, unit_cost
+from . import entry_practice, market_quote, unit_cost
 from .entry_sizing import Traded, sized_runs
 from .goods_market import quantity_at
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import MarketView
-from .types import AreaId, Bid, ClearingResult, GoodId, Recipe, TileId
+from .types import AreaId, Bid, ClearingResult, GoodId, Offer, Recipe, TileId
 
 ENTRY_SHARE_OF_UNMET_DEMAND = declare(
     "ENTRY_SHARE_OF_UNMET_DEMAND", 0.5, kind="temporary_heuristic",
@@ -58,15 +58,21 @@ class EntryPlan:
     yearly_return: float
 
 
-def unmet_quantity(bids: Sequence[Bid], result: ClearingResult, delivered: float) -> float:
-    """What buyers asked for beyond what was delivered: at the asks they faced when the market traded
-    (`result.demand_at_price`), else at the figure it carries as a price (zero when none was priced)."""
+def wanted_in_round(bids: Sequence[Bid], offers: Sequence[Offer], result: ClearingResult) -> float:
+    """What a round's buyers asked for: at the asks they faced when it traded (`result.demand_at_price`); when it
+    traded nothing, at the lowest ask on offer, or with no ask at the highest ceiling any bid names (0 when none)."""
     if result.quantity > 0.0:
-        wanted = result.demand_at_price
-    elif result.price > 0.0 and math.isfinite(result.price):
-        wanted = math.fsum(quantity_at(bid, result.price) for bid in bids)
-    else:
+        return result.demand_at_price
+    price = market_quote.lowest_unfilled_ask(offers)
+    if price is None:
+        price = market_quote.best_unfilled_bid(bids)
+    if price is None:
         return 0.0
+    return math.fsum(quantity_at(bid, price) for bid in bids)
+
+
+def unmet_quantity(wanted: float, delivered: float) -> float:
+    """What buyers asked for beyond what was delivered, both counted over the same rounds."""
     return max(0.0, wanted - delivered)
 
 
