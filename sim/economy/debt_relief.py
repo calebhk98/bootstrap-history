@@ -27,7 +27,7 @@ def forgive(record, tiles: Iterable[TileId]) -> Dict[str, float]:
         record.credit_losses[loan.lender] = record.credit_losses.get(loan.lender, 0.0) + loan.principal + loan.arrears
     record.loans = kept
     for tile in relieved:
-        for row in getattr(record, "tenancies", {}).get(tile, ()):
+        for row in record.tenancies.get(tile, ()):
             written_off["rent_arrears"] += row["arrears"]
             row["arrears"] = 0.0
     return written_off

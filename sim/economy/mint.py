@@ -82,9 +82,9 @@ def yearly_monetisation(setup, record) -> float:
     (Complaints/reports/economy-research-commodity-money.md)."""
     spec = record.currency
     supply = record.book.money_supply(spec.currency_id)
-    wanted = (math.fsum(cohort.cash_target for cohort in getattr(record, "cohorts", {}).values())
-              + math.fsum(producer.cash_target for producer in getattr(record, "producers", {}).values())
-              + math.fsum(merchant.capital_base for merchant in getattr(record, "merchants", {}).values()))
+    wanted = (math.fsum(cohort.cash_target for cohort in record.cohorts.values())
+              + math.fsum(producer.cash_target for producer in record.producers.values())
+              + math.fsum(merchant.capital_base for merchant in record.merchants.values()))
     loss = loss_share(setup, spec)
     return (max(0.0, wanted - supply) + loss * supply) / (1.0 - loss)       # the money struck wears too, before the year ends
 

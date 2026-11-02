@@ -12,7 +12,7 @@ def tenant_flees(record, tenant: str, fleeing_share: float) -> Dict[str, float]:
     released: Dict[str, float] = {}
     if fleeing_share <= 0.0:
         return released
-    for tile in sorted(getattr(record, "tenancies", {})):
+    for tile in sorted(record.tenancies):
         kept: List[dict] = []
         for row in record.tenancies[tile]:
             if row["tenant"] == tenant:
