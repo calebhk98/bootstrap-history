@@ -110,7 +110,7 @@ METHOD_OF_COMMAND = {
     "ApplyTechEffects": "apply_tech_effects", "AutoOpenVentures": "auto_open_ventures", "Bribe": "bribe",
     "BuildHousing": "build_worker_housing", "BuildWay": "build_way", "BuyMaterial": "buy_material_stock",
     "CarryOutTransfers": "carry_out_transfers", "CloseLapsedDependents": "close_lapsed_dependents",
-    "ClosePartnerBooks": "close_partner_books", "CloseUnstaffedVentures": "close_unstaffed_ventures",
+    "ResetActorTradeTallies": "reset_actor_trade_tallies", "CloseUnstaffedVentures": "close_unstaffed_ventures",
     "DisbandArmy": "disband_army", "Disclose": "disclose", "DrawDeposit": "draw_deposit", "EndRun": "_catastrophe",
     "FoundBank": "seat_found_bank", "HandOverSeat": "hand_over_seat", "LoseCapital": "lose_capital",
     "MakeOffer": "seat_offer", "MothballWork": "mothball_work", "NoteActorHomeTrade": "note_actor_home_trade",

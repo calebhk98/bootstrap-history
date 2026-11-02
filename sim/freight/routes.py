@@ -8,13 +8,13 @@ from .route_choice import choose_route
 
 
 class Routes:
-    """Needs: tiles_listed_by, modes_usable, cheapest_route, civilisation, held_techniques, techniques_with_results, partner_market_book, plus what
+    """Needs: tiles_listed_by, modes_usable, cheapest_route, civilisation, held_techniques, techniques_with_results, country_trade_book, plus what
     Models needs."""
 
     def foreign_flow_imbalance(self, civilization_id):
-        """How one-sided last year's trade with a partner was, from its book: 1 when nothing flowed back (or nothing
-        is known), 0 when tonnes in and out match."""
-        return rules.foreign_flow_imbalance(self.needs.partner_market_book[civilization_id].values())
+        """How one-sided last year's trade with a partner was, from the economy's trade book of the country: 1 when
+        nothing flowed back (or nothing is known), 0 when tonnes in and out match."""
+        return rules.foreign_flow_imbalance(self.needs.country_trade_book[civilization_id].values())
 
     def foreign_route(self, civilization, imbalance=None, cargo=GOODS_CARGO):
         """The cheapest `Route` from the foreign economy's home tiles (its civilisation record) to this society's, or

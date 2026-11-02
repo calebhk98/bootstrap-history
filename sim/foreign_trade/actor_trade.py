@@ -1,7 +1,7 @@
 """Trade that actors (the traders) carry between this society and a partner, as the partner's market sees it.
 
-Actors tally the year's cargo here (`NoteActorTrade`); the tallies reset at the year's end (`ClosePartnerBooks`), the partner's
-price and quantities being the agent economy's. A good the actors carry in a direction this year is theirs: the engine's aggregate
+Actors tally the year's cargo here (`NoteActorTrade`); the tallies reset at the year's end (`ResetActorTradeTallies`).
+A good the actors carry in a direction this year is theirs: the engine's aggregate
 foreign flow and the agent economy's stand-in external orders leave that direction alone (`actors_carry`).
 
 (needs: partner_price_level, market_rate)"""
@@ -38,7 +38,7 @@ class ActorTrade:
         price = self.partner_facts(partner)["prices_in_home_money"].get(material)
         return price * self.needs.partner_price_level[partner] if price else None
 
-    def apply_close_partner_books(self, command: Any) -> None:
+    def apply_reset_actor_trade_tallies(self, command: Any) -> None:
         """The year ends: the actors' tallies reset."""
         self.world.home_actor_trade.clear()
         self.world.actor_trade.clear()

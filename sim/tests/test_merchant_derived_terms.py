@@ -15,7 +15,7 @@ from sim.freight.module import Freight
 from sim.freight.route import Leg, Route
 from sim.geography import freight_cost, provisions, sea_freight, transport
 from sim.tests import land_views, module_harness
-from sim.world import market, merchant_house, merchant_terms
+from sim.world import merchant_house, merchant_terms
 
 CART = transport.draught_freight_physical_inputs(transport.OX, 2, transport.CART, transport.DIRT_TRACK)
 
@@ -216,9 +216,8 @@ class MarkupTests(unittest.TestCase):
                            merchant_terms.competition_markup_share(3, 0.2))
 
     def test_an_unknown_response_falls_back_to_the_markets_default_elasticity(self):
-        from sim.world import market
         self.assertAlmostEqual(merchant_terms.price_flexibility_or_default(None),
-                               1.0 / market.DEFAULT_DEMAND_PRICE_ELASTICITY)
+                               1.0 / merchant_terms.DEFAULT_DEMAND_PRICE_ELASTICITY)
         self.assertEqual(merchant_terms.price_flexibility_or_default(0.3), 0.3)
 
 

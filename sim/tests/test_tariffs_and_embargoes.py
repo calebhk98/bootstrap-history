@@ -23,7 +23,6 @@ from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import run_as_seat
 
-from .test_no_seller_no_price import _Offers, _fake_sim
 from .world_stand_in import fake_needs
 from sim.tests.ui_stand_in import FactViews
 from .seat_views_stand_in import give_seats_slots
@@ -37,55 +36,6 @@ def _border_terms(sim):
     """What the `border_terms` view answers: the relations store's tariff and embargo of one country toward another."""
     return lambda destination, source: (relations.tariff_on(sim.stores, destination, source),
                                         relations.embargoes(sim.stores, destination, source))
-
-
-def _priced_game():
-    sim = _fake_sim(home_prices={}, partner_makes={"cassia_kg"}, partner_prices={"cassia_kg": 50.0})
-    sim.stores, sim.civ = _stores(), {"id": "rome"}
-    sim.border_terms = _border_terms(sim)
-    return sim
-
-
-class TariffOnLandedPrice(unittest.TestCase):
-
-    def test_a_tariff_adds_its_share_of_the_partners_cost_to_the_landed_price(self):
-        sim = _priced_game()
-        offers = _Offers(sim)
-        before = offers.landed_price("cassia_kg", "partner", offers.route)
-        relations.set_side(sim.stores, "rome", "partner", tariff=0.2)
-        after = offers.landed_price("cassia_kg", "partner", offers.route)
-        self.assertAlmostEqual(after - before, 0.2 * 50.0)
-        self.assertAlmostEqual(offers.landed_price("cassia_kg", "partner", offers.route, with_duty=False), before)
-
-    def test_the_partners_tariff_on_us_does_not_raise_what_we_pay(self):
-        sim = _priced_game()
-        offers = _Offers(sim)
-        before = offers.landed_price("cassia_kg", "partner", offers.route)
-        relations.set_side(sim.stores, "partner", "rome", tariff=0.5)
-        self.assertAlmostEqual(offers.landed_price("cassia_kg", "partner", offers.route), before)
-
-    def test_an_embargo_leaves_no_cross_border_offer(self):
-        sim = _priced_game()
-        offers = _Offers(sim)
-        self.assertEqual(offers.offered_by("cassia_kg"), "partner")
-        relations.set_side(sim.stores, "rome", "partner", embargo=True)
-        self.assertIsNone(offers.landed_price("cassia_kg", "partner", offers.route))
-        self.assertIsNone(offers.offered_by("cassia_kg"))
-        self.assertIsNone(offers.unit_price("cassia_kg"))
-
-    def test_a_change_mid_game_is_seen_without_a_stale_price(self):
-        sim = _priced_game()
-        offers = _Offers(sim)
-        open_price = offers.household_prices()["cassia_kg"]
-        relations.set_side(sim.stores, "rome", "partner", tariff=0.2)
-        taxed_price = offers.household_prices()["cassia_kg"]
-        self.assertAlmostEqual(taxed_price - open_price, 10.0)
-        relations.set_side(sim.stores, "rome", "partner", tariff=None)
-        self.assertAlmostEqual(offers.household_prices()["cassia_kg"], open_price)
-        relations.set_side(sim.stores, "rome", "partner", embargo=True)
-        self.assertNotIn("cassia_kg", offers.household_prices())
-        relations.set_side(sim.stores, "rome", "partner", embargo=False)
-        self.assertAlmostEqual(offers.household_prices()["cassia_kg"], open_price)
 
 
 class TheStateCollects(unittest.TestCase):

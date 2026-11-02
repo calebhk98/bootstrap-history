@@ -34,7 +34,8 @@ def buyer(named):
         "foreign_economy_records": [{"civilization": PARTNER, "enabled": True, "from_year": -1000, "until_year": 3000}],
         "year": 100, "civilisation": {"id": "rome_100ad"}, "material_route": lambda civ, material, route: ROUTE,
         "trader_cost_share": cost_share, "trader_agent_cost": lambda civilization_id, route: 5.0,
-        "partner_price_level": lambda civilization_id: 1.0})
+        "agent_country": lambda civilization_id: SimpleNamespace(
+            price_per_tonne=lambda material: 10.0 / tonnes_per_unit(material))})
 
 
 named = []

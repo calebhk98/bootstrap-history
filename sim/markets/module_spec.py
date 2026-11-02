@@ -7,7 +7,7 @@ write the flows and the record in place."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, RepriceTree, ViewSpec
 from sim.demography.api import RecordFoodEaten
 from sim.diffusion.api import NoteFirstRuns
-from sim.foreign_trade.api import ClosePartnerBooks, SettleFlow, SettleTraderCargo
+from sim.foreign_trade.api import ResetActorTradeTallies, SettleFlow, SettleTraderCargo
 from sim.land.api import FinishWays
 from sim.ledger.api import ChangeStock, PayEdge, RescaleHouseholdMoney, PayExchange, ReceiveFromEdge, ReceiveFromExchange
 from sim.reporting.api import CloseRealOutput
@@ -47,8 +47,8 @@ READS_BY_OWNER = {
 	                           "price_tables", "material_price", "material_commodity_map", "material_market_tonnes", "goods_stock",
 	                           "commodity_materials", "not_traded_materials", "can_pay", "project_cost",
 	                           "real_output_hours", "held_techniques", "techniques_spread", "mechanic"),
-	"port: foreign trade and freight": ("foreign_economies", "partner", "partner_facts", "partners_in_agent_economy", "civilisation_record",
-	                                    "foreign_supply_tonnes", "lift_left_tonnes", "partner_price_per_unit", "actors_carry",
+	"port: foreign trade and freight": ("partner", "partner_facts", "partners_in_agent_economy", "civilisation_record",
+	                                    "partner_price_per_unit", "actors_carry",
 	                                    "cargo_legs", "foreign_route", "freight_mode_costs", "material_carriage_per_tonne",
 	                                    "trader_margin_share", "cargo_lost_share", "trader_cycle_years", "trader_agent_cost",
 	                                    "partner_price_level", "partner_coin_opening", "foreign_coin_partner_units", "partner_own_economy"),
@@ -74,7 +74,7 @@ _VIEWS = (
 	("agent_idle_hours_by_trade", None), ("agent_fugitive_share_by_tile", None), ("agent_opening_basket", None),
 	("agent_volume_baseline", None), ("agent_traded_volumes", None), ("agent_producer_capacity", KEYED),
 	("producers_stamp", None), ("producer_capacities", None), ("goods_carried_last_year", None),
-	("country_opening_basket", KEYED), ("country_volume_baseline", KEYED), ("country_traded_volumes", KEYED),
+	("country_trade_book", KEYED), ("country_opening_basket", KEYED), ("country_volume_baseline", KEYED), ("country_traded_volumes", KEYED),
 	("fleet_goods", QUOTE), ("economy_output_value", None), ("coin_stock_value", None),
 	("market_absorption_by_category", QUOTE), ("legacy_market_flows", None), ("legacy_agent_economy", None),
 	("money_from_economy", None), ("unit_mass_kg", QUOTE), ("border_duty_per_tonne", QUOTE),
@@ -103,6 +103,6 @@ MODULE_SPECS = (ModuleSpec(
 	phases=(PhaseHook("market", "step_market"),),
 	kernels=KERNELS,
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-	sends=(RecordFoodEaten, ClosePartnerBooks, CloseRealOutput, FinishWays, RepriceOpeningMoney, RepriceTree, RescaleHouseholdMoney, PayEdge, ReceiveFromEdge, ChangeStock, PayExchange, ReceiveFromExchange,
+	sends=(RecordFoodEaten, ResetActorTradeTallies, CloseRealOutput, FinishWays, RepriceOpeningMoney, RepriceTree, RescaleHouseholdMoney, PayEdge, ReceiveFromEdge, ChangeStock, PayExchange, ReceiveFromExchange,
 	       SettleFlow, SettleTraderCargo, FellTimber, RegrowTimber, DrawDeposit, NoteFirstRuns),
 ),)

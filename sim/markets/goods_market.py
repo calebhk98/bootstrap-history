@@ -179,8 +179,7 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         if price is None:
             return None
         emp_key = sim._material_tag(material)[0]
-        brought = self.import_tonnes_available(material)      # a partner's good: its supply and the carriers' lift
-        offered = None if brought is not None else sim.economy.agent_offered_tonnes(material)
+        offered = sim.economy.agent_offered_tonnes(material)
         proceeds = self.sale_proceeds(material, 0.0, self.sold_tonnes(emp_key, self.acting_party_id))
         if proceeds is None:
             return None
@@ -192,7 +191,6 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
                 "carriage_per_tonne": carriage,
                 "making_cost_per_tonne": self.making_cost_per_tonne(material),
                 "market_available_tonnes_per_year": (
-                    brought if brought is not None else
                     offered if offered is not None else sim._material_market_tonnes(emp_key))}
 
     def price(self, material):

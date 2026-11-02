@@ -6,7 +6,7 @@ from sim.actors.api import NoteTraderMargin
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.ledger.api import PayActorFromEdge, PayEdgeFrom
 
-from .commands import (CloseMarketsTo, ClosePartnerBooks, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, RecordStockTaken,
+from .commands import (CloseMarketsTo, ResetActorTradeTallies, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, RecordStockTaken,
                        SettleFlow, SettleTraderCargo)
 from .module import ForeignTrade
 from .payments import BOOKS
@@ -16,6 +16,7 @@ READS_BY_OWNER = {
     "knowledge": ("civilisation", "year", "techniques_held", "civilisation_record"),
     "seats": ("acting_seat",),
     "prices": ("material_prices", "home_unit_price", "household_prices", "partner_own_economy"),
+    "markets": ("agent_country",),
     "materials": ("material_commodity", "commodity_record"),
     "land": ("partner_gate_refusal",),
     "freight": ("foreign_route", "route_freight_per_tonne", "carrier_models", "material_route", "trader_cost_share",
@@ -35,7 +36,6 @@ MODULE_SPECS = (ModuleSpec(
     publishes=(
         ViewSpec("partners", "partners", **_LIVE),
         ViewSpec("partners_in_agent_economy", "partners_in_agent_economy", **_LIVE),
-        ViewSpec("foreign_economies", "foreign_economies", **_LIVE),
         ViewSpec("partner", "partner", kind=KEYED, **_LIVE),
         ViewSpec("partner_coin_standard", "partner_coin_standard", kind=KEYED, **_LIVE),
         ViewSpec("partner_opening_facts", "partner_opening_facts", kind=KEYED, **_LIVE),
@@ -44,9 +44,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("partner_facts", "partner_facts", kind=KEYED, **_LIVE),
         ViewSpec("partner_route", "partner_route", kind=KEYED, **_LIVE),
         ViewSpec("commodity_materials", "commodity_materials", kind=KEYED, **_LIVE),
-        ViewSpec("foreign_supply_tonnes", "foreign_supply_tonnes", kind=QUOTE),
-        ViewSpec("partner_market_book", "partner_market_book", kind=KEYED, **_LIVE),
-        ViewSpec("partner_book_entry", "partner_book_entry", kind=QUOTE),
         ViewSpec("route_lift_years_per_tonne", "route_lift_years_per_tonne", kind=QUOTE),
         ViewSpec("route_capital_per_lift_tonne", "route_capital_per_lift_tonne", kind=QUOTE),
         ViewSpec("lift_capacity_tonnes", "lift_capacity_tonnes", kind=QUOTE),
@@ -59,7 +56,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("actors_carry", "actors_carry", kind=QUOTE),
         ViewSpec("landed_cost", "landed_cost", kind=QUOTE),
         ViewSpec("partner_price_per_unit", "partner_price_per_unit", kind=QUOTE),
-        ViewSpec("partner_price_response", "partner_price_response", kind=QUOTE),
         ViewSpec("partner_landed_price", "partner_landed_price", kind=QUOTE),
         ViewSpec("partner_carry", "partner_carry", kind=QUOTE),
         ViewSpec("cargo_legs", "cargo_legs", **_LIVE),
@@ -67,7 +63,7 @@ MODULE_SPECS = (ModuleSpec(
     applies=((SettleFlow, "apply_settle_flow"), (RecordStockTaken, "apply_record_stock_taken"),
              (CloseMarketsTo, "apply_close_markets_to"), (NoteActorTrade, "apply_note_actor_trade"),
              (NoteActorHomeTrade, "apply_note_actor_home_trade"), (NoteCargoLeg, "apply_note_cargo_leg"),
-             (SettleTraderCargo, "apply_settle_trader_cargo"), (ClosePartnerBooks, "apply_close_partner_books")),
+             (SettleTraderCargo, "apply_settle_trader_cargo"), (ResetActorTradeTallies, "apply_reset_actor_trade_tallies")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(PayActorFromEdge, PayEdgeFrom, NoteTraderMargin),
 ),)

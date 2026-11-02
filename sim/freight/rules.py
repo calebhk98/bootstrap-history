@@ -47,11 +47,11 @@ def dues_payments(owed: Mapping[Any, float], limit: Optional[float]) -> List[Tup
 
 
 def foreign_flow_imbalance(book_entries: Iterable[Mapping[str, float]]) -> float:
-    """How one-sided last year's trade with a partner was, from its book entries: 1 when nothing flowed back (or
-    nothing is known), 0 when tonnes in and out match."""
+    """How one-sided last year's trade with a partner was, from its trade book entries (in_tonnes, out_tonnes): 1 when
+    nothing flowed back (or nothing is known), 0 when tonnes in and out match."""
     entries = list(book_entries)
-    tonnes_out = sum(max(0.0, entry.get("trade_tonnes", 0.0)) for entry in entries)
-    tonnes_in = sum(max(0.0, -entry.get("trade_tonnes", 0.0)) for entry in entries)
+    tonnes_out = sum(entry.get("out_tonnes", 0.0) for entry in entries)
+    tonnes_in = sum(entry.get("in_tonnes", 0.0) for entry in entries)
     return freight_cost.imbalance_of_flows(tonnes_out, tonnes_in)
 
 

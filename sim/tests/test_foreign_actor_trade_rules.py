@@ -1,6 +1,6 @@
 """Trader actors own the goods they carry between countries (Complaints/115, 405): a cargo is tallied per partner and
 direction (`rules.note_actor_trade`, `rules.actors_carry`), the tallies reset at the year's end
-(`ForeignTrade.apply_close_partner_books`), and the economy's stand-in external orders leave alone a good the actors carry in
+(`ForeignTrade.apply_reset_actor_trade_tallies`), and the economy's stand-in external orders leave alone a good the actors carry in
 that direction (`AgentEconomy._external_orders`). Each rule is called on plain values or on a stand-in that holds only what it
 reads."""
 QUICK_TOPIC = True
@@ -12,7 +12,7 @@ from sim.markets import port_year
 from sim.actors.world_trade import TradeView
 from sim.markets.port_year import AgentEconomy
 from sim.foreign_trade import rules
-from sim.foreign_trade.commands import ClosePartnerBooks, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
+from sim.foreign_trade.commands import ResetActorTradeTallies, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
 from sim.foreign_trade.constants import BOUGHT, SOLD
 from sim.foreign_trade.module import ForeignTrade
 from sim.foreign_trade.state import ForeignTradeWorld
@@ -48,11 +48,11 @@ class TallyTests(unittest.TestCase):
         self.assertAlmostEqual(rules.landed_cost(100.0, 7.0, 0.1), 117.0)
 
 
-class CloseBooksTests(unittest.TestCase):
+class ResetTalliesTests(unittest.TestCase):
     def test_the_year_end_empties_the_tallies(self):
         module = module_harness.build(ForeignTrade, world=ForeignTradeWorld(home_actor_trade={"wheat": {}}))
         rules.note_actor_trade(module.world.actor_trade, PARTNER, "wheat", 3.0, True)
-        module.apply_close_partner_books(ClosePartnerBooks())
+        module.apply_reset_actor_trade_tallies(ResetActorTradeTallies())
         self.assertEqual((module.world.actor_trade, module.world.home_actor_trade), ({}, {}))
 
 
