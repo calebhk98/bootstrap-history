@@ -8,7 +8,6 @@ QUICK_TOPIC = True
 UNDER_TEST = {"hire"}   # the method this module tests, called on a stand-in
 
 from sim.tests import workforce_stand_in
-from types import SimpleNamespace
 
 from .harness import check
 

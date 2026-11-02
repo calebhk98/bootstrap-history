@@ -4,18 +4,14 @@ schedule on inputs built here; the wiring is test_wage_provider_wiring."""
 QUICK_TOPIC = True
 import json
 import os
-import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from sim.prices import prices as engine_prices
 
 from sim.content import catalog
 from sim.engine import data
 from sim.workforce import wage_schedule
-from sim.labour import wage_provider
 from sim.prices.solve_prices_core import wage_ratios_by_trade
 from sim.labour import wages
 

@@ -4,7 +4,6 @@ Only fog is lifted for the carried ids (they join `sim.revealed`); nothing is co
 The ids live in the new game's save through `revealed`; UI memory records which were carried.
 """
 import json
-import os
 
 from sim.engine import ui_port
 from .memory import remembered

@@ -1,5 +1,5 @@
 """What one seat holds and has told its player, apart from the world everyone shares."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 

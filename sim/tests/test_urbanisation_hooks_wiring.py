@@ -4,7 +4,6 @@ called on a recording stand-in for the mod api and `urban_report` is replaced by
 test_urbanisation_mod_registration_rule and the premium reaching deaths is test_urban_mortality_premium."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 

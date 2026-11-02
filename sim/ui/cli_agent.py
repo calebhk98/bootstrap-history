@@ -10,7 +10,7 @@ helpers cli.py also hands to the human-facing `play` command.
 """
 import json, os, random, sys
 
-from sim.engine.ui_port import load, load_civ, STARTING_KITS
+from sim.engine.ui_port import load, load_civ
 from sim.engine.ui_port import Sim
 from . import replay
 from .protocol import _agent_dispatch, _agent_end_reason, _agent_help, load_state, render_pretty, save_state

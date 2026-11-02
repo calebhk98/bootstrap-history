@@ -5,7 +5,6 @@ tree is acyclic on hard prerequisites. `stuck` under fog is test_stuck_road_to_g
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 from sim.tests import production_host

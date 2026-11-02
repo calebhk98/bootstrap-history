@@ -8,11 +8,9 @@ from .harness import check
 
 from sim.polity.api import CarryOutTransfers
 from sim.polity import rules
-from sim.refusal import cause_of, facts_of
 from sim.reporting.api import RecordEvent
 from sim.tests import module_harness, polity_host
 from sim.ui.proto import command_registry
-import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.tests.ui_stand_in import FactViews
 
 

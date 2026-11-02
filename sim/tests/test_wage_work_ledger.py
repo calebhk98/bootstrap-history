@@ -5,7 +5,6 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 from sim.ui.proto.render_screens_economy import _money_wage_work_lines
 
 from sim.tests import resources_stand_in

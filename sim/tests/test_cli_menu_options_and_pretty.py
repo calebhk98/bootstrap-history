@@ -7,7 +7,6 @@ QUICK_TOPIC = True
 import contextlib
 import io
 import random
-import types
 from unittest import mock
 
 from .harness import *  # noqa: F401,F403

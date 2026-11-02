@@ -7,13 +7,11 @@ test_complaint_147_project_materials."""
 QUICK_TOPIC = True
 
 from sim.tests import market_stand_in
-from types import SimpleNamespace
 
 from .harness import check
 
 from sim.markets.goods_market import GoodsMarket
-from sim.markets.module import Markets
-from sim.tests import finance_host, module_harness, projects_host
+from sim.tests import finance_host, projects_host
 from sim.materials.api import SettleProjectMaterials as SettleCommand
 from sim.tests import materials_stand_in
 from sim.engine.state import deserialize_state, serialize_state

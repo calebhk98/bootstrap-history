@@ -2,7 +2,6 @@
 granted set, fog, the revealed set and the interface memory, no game)."""
 import os
 import tempfile
-from types import SimpleNamespace
 
 from .harness import check
 from sim.ui import replay

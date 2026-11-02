@@ -116,7 +116,6 @@ import argparse
 import collections
 import os
 import sys
-import types
 
 # Root the imports at the REPOSITORY, not at sim/, so a module that calls
 # declare() can be reached by its full dotted name (sim.world.agriculture)

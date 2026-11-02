@@ -1,11 +1,9 @@
 """The simulation itself: what one year does, and the loop over years."""
-import copy, os, sys
+import copy
 
-from sim.constants import declare
 from sim.demography.api import OpenPopulation
 from sim.workforce.api import WatchStaff
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
-from sim.engine.state import SimulationState
 from sim.assembly.api import notify_seat_bound
 from .data import (DEFAULTS, kit_capital, load_civ,
                    nodes_in_civ_money)
@@ -20,7 +18,7 @@ from sim.world import land
 
 from sim.land.api import rules as land_rules
 from sim.knowledge.api import LearnTechnique, StartDoneYearRecord, declared_starting_techs
-from . import change_hooks, node_rederive, seat_registry, year_steps
+from . import change_hooks, node_rederive, seat_registry
 from .year_run import run_year
 from sim.knowledge.api import ReplaceTree
 from sim.seats.api import JoinCastSeats, SetFounderLife, SetGoal, SetPolicy

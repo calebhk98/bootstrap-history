@@ -2,7 +2,6 @@
 (Complaints/161). `_ingame_options` called on a stand-in game with `input` supplied; nothing is built. Whether the menu prints
 once is presentation and is not asserted."""
 import unittest
-from types import SimpleNamespace
 from unittest import mock
 
 from sim.ui import cli_interactive

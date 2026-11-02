@@ -5,7 +5,6 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy import secondary_market
 from sim.economy.secondary_market import Ask, Bid, clear, clear_item, clearing_price, present_value
 
 

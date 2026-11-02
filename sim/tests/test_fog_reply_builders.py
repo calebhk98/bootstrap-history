@@ -15,7 +15,6 @@ state (tree_filters._row), and the spelling suggestions (_did_you_mean)."""
 QUICK_TOPIC = True
 
 import json
-import types
 import unittest
 from sim.knowledge.api import KnowledgeSeat, ReplaceTree
 from unittest import mock

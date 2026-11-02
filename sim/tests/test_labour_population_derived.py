@@ -7,7 +7,6 @@ import types
 import unittest
 from sim.tests import workforce_stand_in
 
-from .harness import *  # noqa: F401,F403
 from sim.labour.labour_population import PopulationMixin
 
 WORKING_PEOPLE = 60000.0

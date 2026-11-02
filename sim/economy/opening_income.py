@@ -26,7 +26,6 @@ from typing import Callable, Dict, Mapping, Tuple, Union
 from sim.refusal import Refusal
 
 from .households_cohort import Cohort
-from .households_orders import BUDGET_SAFETY_SHARE
 from .types import GoodId, TileId
 
 # the share of its income a household may leave unspent and still count as saving nothing: above the margin its bids

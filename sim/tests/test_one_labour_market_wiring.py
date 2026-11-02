@@ -3,11 +3,9 @@ promises from next year is what the market then quotes once the hire is on the b
 game is built. The market's own arithmetic is in test_one_labour_market."""
 import types
 import unittest
-from unittest import mock
 
 from sim.actors.world import ActorWorld
 from sim.tests.world_stand_in import fake_needs
-from sim.labour import labour_market_api
 from sim.labour.labour_market_api import LabourMarket
 
 QUICK_TOPIC = True

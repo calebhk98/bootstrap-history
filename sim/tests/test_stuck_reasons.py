@@ -2,7 +2,6 @@
 advised to be opened only when `open` would be accepted. Each builder is called on a stand-in game carrying what it reads."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 

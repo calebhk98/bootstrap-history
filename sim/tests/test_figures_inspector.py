@@ -8,7 +8,6 @@ import unittest
 from types import SimpleNamespace
 
 from sim.ui import figures as figure_registry
-from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
 from sim.tests.interface_fixture import shipped_declared
 from sim.tests.ui_stand_in import FactViews
 

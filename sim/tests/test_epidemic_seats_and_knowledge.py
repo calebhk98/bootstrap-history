@@ -4,7 +4,6 @@ nothing (the disease module's `hit_seats`), and a node with neither revenue nor 
 QUICK_TOPIC = True
 
 import contextlib
-import types
 import unittest
 
 from sim.disease.api import HitSeatsWithEpidemic

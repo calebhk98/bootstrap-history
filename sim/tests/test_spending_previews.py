@@ -11,7 +11,7 @@ from .harness import check
 
 from sim.ledger.api import NoteSpend, PayEdge
 from sim.projects.constants import COST_TAIL_SETTLE_SHARE
-from sim.tests import module_harness, projects_host
+from sim.tests import projects_host
 from sim.ui.proto.typed import parse_typed
 
 # --- 220, 248: the typed preview lines name what they preview

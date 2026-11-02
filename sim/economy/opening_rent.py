@@ -8,7 +8,7 @@ inputs leaves no room for it: the prices of the recipes that take land rise unti
 (`covering_prices`), and the rent is paid to the households that own the land, which their property income counts.
 """
 import math
-from typing import Dict, Iterable, Mapping, Sequence, Set, Tuple
+from typing import Dict, Iterable, Mapping, Set, Tuple
 
 from . import land_market, opening_income, opening_runs, ownership, unit_cost
 from .replaced import replaced

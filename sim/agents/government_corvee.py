@@ -1,7 +1,7 @@
 """A state's labour dues in use: conscripts fill its army unpaid, and the rest of the labour takes the place of the
 wages its roads, buildings and walls would cost, then raises the works it lacks. The hours it takes are the working
 time its people lose (the engine hands them to the economy, which withdraws them from the hours households offer)."""
-from typing import Any, List, Tuple
+from typing import Any, List
 
 from . import revenue_labour, state_works
 from .budget_line import Line

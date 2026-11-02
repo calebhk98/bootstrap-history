@@ -2,7 +2,6 @@
 rules on a stub game built here; the whole-game replies are in test_idle_sized_suggestions_scenario."""
 QUICK_TOPIC = True
 
-import types
 
 from .harness import *  # noqa: F401,F403
 from sim.ui.proto.guidance import development_program, training_suggestions

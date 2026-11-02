@@ -5,7 +5,6 @@ in the product or the working yard. A node that declares nothing keeps the count
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.diffusion.module import Diffusion

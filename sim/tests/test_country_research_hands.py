@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.agents import research_gate
-from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
+from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
 from sim.agents.no_country_economy import NoCountryEconomy
 
 from .country_state_world import StateWorld

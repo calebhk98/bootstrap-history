@@ -3,19 +3,17 @@ on a stand-in game, the addressing and refusal rules on built seats, the seat-ru
 
 QUICK_TOPIC = True
 
-import types
 
 from sim.knowledge.rules import SeatTechniques
 from sim.tests.ui_stand_in import FactViews
 from .harness import check
 
 from sim.engine.seat_move import move_seat_fields
-from sim.seats.api import SeatsSeat, handover_refusal, run_is_over, seats_playing
+from sim.seats.api import handover_refusal, run_is_over, seats_playing
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
 from sim.engine.state_seat import COUNTRY_SEAT, FIRST_SEAT_ID, seat_from_template
 from sim.refusal import cause_of
 from sim.ui.proto import command_registry
-import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import country_seat_refusal, run_as_seat
 from sim.tests.ui_stand_in import Game
 

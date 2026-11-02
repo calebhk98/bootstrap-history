@@ -24,11 +24,6 @@ The compact agent output mode keeps reason-carrying prose; the mode-off path is 
 """
 QUICK_TOPIC = True
 
-import json
-import os
-import subprocess
-import sys
-import types
 
 from .harness import *  # noqa: F401,F403
 

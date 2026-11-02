@@ -135,7 +135,6 @@ sim/tests/test_demand.py's IndustrialBaseIsItsOwnCustomerTests for the
 concrete numbers this claim rests on.
 """
 import collections
-import json
 import os
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
@@ -143,7 +142,7 @@ from sim.constants import declare
 # sim.unit_conversions carries the same "imports nothing but sim.constants"
 # property sim.constants itself already has, so importing it is not the
 # cross-domain wiring this module's own STANDALONE section forbids.
-from sim.unit_conversions import KILOGRAMS_PER_TONNE, KILOGRAMS_PER_GRAM, PERCENT_SCALE
+from sim.unit_conversions import KILOGRAMS_PER_TONNE, KILOGRAMS_PER_GRAM
 
 # ============================================================================
 # DATA FILE LOCATIONS

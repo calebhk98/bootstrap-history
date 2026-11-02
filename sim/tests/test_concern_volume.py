@@ -6,7 +6,6 @@ QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
 
-import copy
 from types import SimpleNamespace
 
 from sim.markets.api import MEAN_INCOME_HOURS_PER_CAPITA

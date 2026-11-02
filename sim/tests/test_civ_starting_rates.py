@@ -8,7 +8,6 @@ import json
 import os
 import tempfile
 import unittest
-from sim.tests import workforce_stand_in
 from unittest import mock
 
 from sim.economy.api import opening_market_rate

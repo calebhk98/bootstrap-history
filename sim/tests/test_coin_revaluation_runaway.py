@@ -4,7 +4,6 @@ it back. A loop of price level -> ratio -> price level stays bounded when the me
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.coin.module import Coin

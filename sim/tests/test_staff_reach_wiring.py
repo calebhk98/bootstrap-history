@@ -6,7 +6,6 @@ QUICK_TOPIC = True
 
 from types import SimpleNamespace
 import unittest
-from unittest import mock
 
 from sim.actors.world_budget import BudgetView
 from sim.tests.world_stand_in import fake_needs

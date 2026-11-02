@@ -4,16 +4,14 @@ game with `set_lever` replaced by a recorder; what each lever does to the record
 
 QUICK_TOPIC = True
 
-import types
 from unittest import mock
 
 from .harness import check
 
 from sim.agents.records import ActorRecord
-from sim.engine.state_seat import COUNTRY_SEAT, FIRST_SEAT_ID, seat_from_template
+from sim.engine.state_seat import COUNTRY_SEAT, seat_from_template
 from sim.refusal import Refusal
 from sim.ui.proto import command_registry
-import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.tests.ui_stand_in import Game
 from sim.tests.ui_stand_in import FactViews
 

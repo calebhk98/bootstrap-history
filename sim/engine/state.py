@@ -9,8 +9,7 @@ import contextlib
 import dataclasses
 from dataclasses import InitVar, dataclass, field
 from typing import (
-	TYPE_CHECKING, Any, Callable, DefaultDict, Dict, List,
-	Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
+    TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
 )
 
 from sim.agents.api import ActorRecord, ActorsState, Business  # noqa: F401
@@ -332,4 +331,3 @@ def deserialize_state(blob: Any, target_type: Optional[type] = None) -> Any:
 	return _deserialize_typed(blob, target_type)
 
 
-from sim.engine import state_seat  # noqa: E402,F401  (registers SeatState, which needs the classes above)

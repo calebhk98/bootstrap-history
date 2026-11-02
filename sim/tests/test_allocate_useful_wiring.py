@@ -3,7 +3,6 @@
 QUICK_TOPIC = True
 
 from sim.tests import workforce_stand_in
-import types
 import unittest
 
 from sim.ui.proto.dispatch_labour import _cmd_allocate

@@ -4,7 +4,6 @@ failing costs the poster nothing and leaves the work to retry, and the coin guar
 credit line."""
 QUICK_TOPIC = True
 
-import collections
 import unittest
 from types import SimpleNamespace
 

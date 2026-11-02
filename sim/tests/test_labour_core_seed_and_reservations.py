@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 from sim.economy import labour_state, workforce_settle
 from sim.labour import trade_seed
-from sim.labour.market import aptitude, opening, records, trades
+from sim.labour.market import opening, records, trades
 from sim.labour.market.records import MarketState
 
 HOURS = 2000.0

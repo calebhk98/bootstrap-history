@@ -5,7 +5,6 @@ hazards module) over plain values carrying only what it reads. The banked calend
 test_industry_depth; the save contract of the retry counts is the `--session` round trip."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 

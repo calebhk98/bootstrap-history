@@ -11,7 +11,7 @@ from sim.actors.api import MoveStratumPeople
 from sim.actors.contact import Contact
 from sim.agents.api import Stratum, stratum_id
 from sim.agents.records import ActorRecord
-from sim.engine.mod_effects import ModEffects, people_of
+from sim.engine.mod_effects import ModEffects
 from sim.agents.api import edges
 from sim.content.api import ModError
 from sim.refusal import Refusal, cause_of

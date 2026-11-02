@@ -4,7 +4,6 @@ engine asks for (`specialist_foreman`)."""
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 

@@ -12,7 +12,6 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 from sim.prices import prices as engine_prices, solve_prices
 from sim.markets.goods_offers import GoodsOffers, HOME_SELLER
 from sim.projects.api import START_CHECKS

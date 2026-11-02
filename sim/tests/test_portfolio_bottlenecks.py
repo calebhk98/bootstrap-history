@@ -2,7 +2,6 @@
 `bottleneck_groups` and `_portfolio_rows` are called on rows and stubs the test builds."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 

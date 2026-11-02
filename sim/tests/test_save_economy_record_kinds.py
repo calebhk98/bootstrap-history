@@ -8,7 +8,7 @@ from sim.economy.accounts import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.record import EconomyRecord
 from sim.economy.state_budget import StateBudget
-from sim.economy.types import CurrencySpec, LoanRequest
+from sim.economy.types import CurrencySpec
 from sim.tests.harness import check
 
 COIN = CurrencySpec("coin", "fiat", None, 0.0, None)

@@ -1,6 +1,6 @@
 """Commands to the owner of the labour market and its people."""
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Optional
 
 from sim.assembly.api import Command
 

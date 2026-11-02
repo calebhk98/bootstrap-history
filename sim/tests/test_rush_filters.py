@@ -2,7 +2,6 @@
 the filter test and the exposure sum are called on nodes and a stand-in game the test builds; the loop that applies them is
 test_rush_loop."""
 import unittest
-from types import SimpleNamespace
 
 from sim.refusal import Refusal
 from sim.ui.proto.rush_filters import parse_rush_filters, passes_rush_filters, rush_exposure

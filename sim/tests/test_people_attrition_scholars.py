@@ -3,7 +3,6 @@
 Staff are whole people; the scholar wall; the fog ratchet; the credit forecast and failure quote; the planner's
 closure and ordering; typed-line spellings. The rules are called on the numbers and stand-ins each check states; the
 agent loop's save before its reply and the start credit forecast are in test_agent_save_before_reply."""
-import math
 from types import SimpleNamespace
 from sim.tests.ui_stand_in import Game
 

@@ -7,7 +7,6 @@ import collections
 import os
 import random
 import tempfile
-import unittest
 
 from sim.agents.api import Business
 from sim.knowledge.api import KnowledgeSeat
@@ -110,7 +109,6 @@ check("Nested project state reconstruction", _ok, _detail)
 
 def _test_runtime_type_reconstruction():
 	"""Verify sets, Counters, defaultdicts, and invalidating collections have correct runtime types."""
-	from sim.invalidating import _InvalidatingDict, _InvalidatingSet
 	from sim.engine.state import (
 		ActiveProjectState,
 		EconomyState,

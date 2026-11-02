@@ -1,7 +1,6 @@
 """Complaint 640: the demography screen's last year is read from the yearly record when no step has run in this process (a loaded game)."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 

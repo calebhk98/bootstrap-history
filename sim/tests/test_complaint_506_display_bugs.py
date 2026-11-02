@@ -3,7 +3,6 @@ name, a list of known materials) called on values built here; the subject of mos
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 from unittest import mock
 
 from sim.agents.group import InterestGroup

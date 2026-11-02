@@ -17,7 +17,7 @@ from sim.world import demand, need_basket
 from sim.geography.api import dues_hours_per_tonne, sea_freight, settlement
 from sim.labour import api as labour_api
 
-from . import port_closure, port_costs, port_crop_prices, port_sites
+from . import port_closure, port_crop_prices, port_sites
 from .port_stores import opening_store_values
 from sim.freight.api import FREIGHT_FEED_PRICE_MATERIAL, SEA_MODE
 

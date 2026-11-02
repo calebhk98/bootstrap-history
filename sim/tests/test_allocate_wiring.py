@@ -12,7 +12,6 @@ from sim.workforce.api import SpendDirectorHours, WorkforceSeat
 from sim.workforce.rules import work_order_shortfall
 from sim.engine.state import deserialize_state, serialize_state
 from sim.tests import projects_host
-from sim.tests import event_stand_in
 from sim.tests.workforce_host import workforce_over
 
 

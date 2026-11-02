@@ -16,7 +16,7 @@ from sim.economy.market_memory import MarketMemory
 from sim.economy.types import CurrencySpec
 from sim.economy.store_return import STORE_STORAGE_COST_PER_KG_YEAR
 from sim.economy.types import EDGE_PRODUCTION, EDGE_SPOILAGE, Fill, GoodsMove, GoodSpec
-from sim.tests.test_economy_merchants import INTEREST_RATE, SPECS, View
+from sim.tests.test_economy_merchants import SPECS, View
 from sim.tests.test_economy_tile_costs import star_tiles, unit_cost_table
 
 NEAR_KM = 300.0           # a few weeks by cart

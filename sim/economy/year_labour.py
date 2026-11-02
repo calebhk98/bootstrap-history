@@ -9,7 +9,6 @@ from typing import Dict, List, Sequence, Tuple
 from sim.labour.api import CAREER_YEARS, people_in, run_labour_year, wages
 
 from . import households, households_work, settlement
-from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import sloped_bids

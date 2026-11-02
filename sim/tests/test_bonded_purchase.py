@@ -11,7 +11,7 @@ from sim.agents.records import CountryProfile
 from sim.agents.stratum import stratum_id
 from sim.economy import bonded_purchase
 from sim.economy.accounts import Book
-from sim.economy.types import EDGE_EXCHANGE, EDGE_MINT, LabourBid, Transfer
+from sim.economy.types import EDGE_EXCHANGE, EDGE_MINT, Transfer
 from sim.labour.market.bonded_worth import BondedLot
 
 from .agents_fake_world import FakeWorld

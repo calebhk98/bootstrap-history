@@ -124,7 +124,7 @@ def default_jobs(count):
 
 
 def record(path, tier, jobs, spin_up=None):
-    from sim.tests import fingerprint
+    pass
     spin_up = _prepare(spin_up)
     scenarios = tier_scenarios(tier)
     started = time.time()

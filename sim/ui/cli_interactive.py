@@ -32,12 +32,12 @@ from `_save_listing` over there, so keeping it here would have made the
 save/load module import back from this one.
 """
 import sim.engine.ui_port as ui_port
-import gc, json, os, random, re, sys, time
+import gc, json, os, random, sys, time
 
 from sim.engine.ui_port import (
-    CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
-    load, load_civ, load_geography, money_short, money_unit_note, STARTING_KITS,
-    win_condition_describe)
+    CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, selectable_goals, load, load_civ, load_geography,
+    money_short, money_unit_note, STARTING_KITS, win_condition_describe,
+)
 from sim.engine.ui_port import EconomyNotOpened, Sim
 from . import protocol as _protocol
 from sim.engine.ui_port import settings

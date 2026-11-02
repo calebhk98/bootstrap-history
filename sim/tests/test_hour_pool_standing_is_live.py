@@ -2,10 +2,8 @@
 when hours were last allocated (Complaint 640: the projects module over plain values)."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
-from .harness import *  # noqa: F401,F403
 from sim.tests import projects_host
 from sim.ui.proto import state_projects as proto_state
 from sim.tests.ui_stand_in import Game

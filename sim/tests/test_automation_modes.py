@@ -5,14 +5,11 @@ on its own. The mode the staff phase takes, the policy switch and the mine order
 in test_automation_wiring."""
 
 QUICK_TOPIC = True
-from sim.tests import workforce_stand_in
-from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 
 from sim.workforce.staff_replacement import REPLACE_ONLY
 from sim.ui.proto.typed import parse_typed
-from sim.tests.workforce_host import workforce_over
 
 # ---- the switch is typed and parsed
 check("typed 'policy auto_hire replace' parses",

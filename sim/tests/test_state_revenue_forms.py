@@ -4,7 +4,6 @@ stand-in world that answers the bases from numbers built here; the year of a sta
 test_state_revenue_forms_scenario."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check, S
 

@@ -3,7 +3,6 @@ each trade's supply, the note when a start would oversubscribe a trade, and the 
 hours. Each rule runs on tables or a stand-in game the test builds (no game): the real `_waiting_on` and the projects module's
 shortage rule over a stand-in of trades, money and queue. The allocator's stored shares are
 test_step_progress_pool_standing."""
-from types import SimpleNamespace
 
 from .harness import check
 

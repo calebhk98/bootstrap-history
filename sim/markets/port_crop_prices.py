@@ -6,7 +6,6 @@ good made from it. The cost table is solved again with each arable recipe's outp
 that supply it (`crop_sites.supply_yield`: those at which a run pays at the price that yield implies), so the price a
 household pays for a staple covers its cost on the tiles that grow it, and the producers placed there pay their way.
 """
-import dataclasses
 from typing import Dict, Mapping
 
 from sim.economy.api import crop_sites, recipes_from_production_data, unit_cost

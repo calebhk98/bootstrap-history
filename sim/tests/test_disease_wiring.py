@@ -5,7 +5,6 @@ carries only what the module's views answer."""
 QUICK_TOPIC = True
 
 import json
-import types
 import unittest
 
 from sim.disease import api as disease

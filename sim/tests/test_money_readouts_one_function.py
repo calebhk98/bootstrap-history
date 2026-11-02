@@ -1,7 +1,6 @@
 """Each preview and the action it previews read one function for the amount (Complaints 261, 216, 236, 210, 240, 212): the AFFORD column
 and the cannot_pay_now mark ask start_refusal, `quote train` and `train` ask the labour plan, `state` reads the sustainable debt from the
 method `money` reads, and the market squeeze rows sum to the deduction. Each is called on a stand-in that writes out what it reads."""
-from types import SimpleNamespace
 from unittest import mock
 
 from sim.markets.module import Markets

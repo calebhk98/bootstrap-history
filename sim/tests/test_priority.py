@@ -3,7 +3,6 @@
 QUICK_TOPIC = True
 
 from sim.tests import workforce_stand_in
-from types import SimpleNamespace
 
 from .harness import check
 

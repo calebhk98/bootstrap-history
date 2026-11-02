@@ -2,11 +2,9 @@
 (Complaint 640: the rule is called on a stand-in that holds only what `upkeep` reads)."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.tests import production_host
-from sim.tests.ui_stand_in import Game
 
 
 def _Household(quotes, operating, practice=()):

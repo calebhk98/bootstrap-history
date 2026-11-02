@@ -64,4 +64,3 @@ def _hazard(sim):
         return {"value": sim.view("hazard_figure")(kind, hazard), "drivers": drivers}
     return {"value": None}
 
-from . import figures_world  # noqa: E402,F401  (registers the society figures beside these)

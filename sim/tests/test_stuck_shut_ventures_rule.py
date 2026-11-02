@@ -5,7 +5,6 @@ charge as numbers written here."""
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 

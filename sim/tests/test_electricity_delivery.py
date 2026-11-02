@@ -5,7 +5,6 @@ generator passes into a consumer by that consumer's electrical share. The tests 
 The real entries' data and physics are test_electricity_delivery_data."""
 QUICK_TOPIC = True
 
-import copy
 import unittest
 
 from sim.prices import prices as price_solver

@@ -2,7 +2,6 @@
 called on a stand-in game that holds only its projects and its training; no game is played."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 

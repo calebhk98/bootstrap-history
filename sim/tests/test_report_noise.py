@@ -3,7 +3,6 @@ disaster grouping, the fog kind hint and the first-screen help, each called on a
 game). The shortage on the state screen is test_state_conditions_block."""
 import contextlib
 import io
-from types import SimpleNamespace
 
 from .harness import check
 

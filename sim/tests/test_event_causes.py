@@ -4,7 +4,6 @@ QUICK_TOPIC = True
 
 import json
 import os
-from types import SimpleNamespace
 
 from .harness import check
 from sim.refusal import cause_of

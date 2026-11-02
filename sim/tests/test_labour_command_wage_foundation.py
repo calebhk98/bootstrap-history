@@ -2,7 +2,6 @@
 test_dynamic_wages; here the handler is called on a stand-in sim and each component of its reply is the stand-in's reading."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.ui.proto.dispatch_labour import _cmd_labour

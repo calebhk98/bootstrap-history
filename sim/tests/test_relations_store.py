@@ -14,7 +14,6 @@ from sim.tests.store_stand_in import base_book
 from sim.engine.state import FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import bind_seat, seat_from_template
 from sim.ui.proto import command_registry
-import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import run_as_seat
 from sim.agents.api import relations
 from sim.tests.seat_views_stand_in import give_seats_slots

@@ -1,5 +1,5 @@
 """The cast's answers about countries, treasuries and the people of the home country, mixed into `Actors`."""
-from typing import Any, Dict, FrozenSet, List, Optional, Tuple
+from typing import Any, Dict, FrozenSet, List, Tuple
 
 from sim.agents.api import tax_burden
 

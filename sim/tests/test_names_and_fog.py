@@ -1,7 +1,6 @@
 """Typed names resolve to ids, fog limits what is suggested, and `available` sorts and pages. The rules are called on the
 tree's names, on ids and sort keys the test states, and on a stand-in game that holds only what they read; the
 name step of the command dispatch is called on a stand-in game too."""
-from types import SimpleNamespace
 from unittest import mock
 
 from .harness import *  # noqa: F401,F403

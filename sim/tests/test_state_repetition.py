@@ -3,7 +3,6 @@ active projects collapses to a bounded list plus a summary by what they wait on.
 (`already_explained`) is called on a stand-in game; the `state` command's use of it is test_state_command_explains_once."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 

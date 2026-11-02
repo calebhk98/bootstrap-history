@@ -3,7 +3,6 @@ named forms, the fog) are called on a stand-in game that holds only what the com
 literacy anatomy reads the education screen's numbers is `test_the_literacy_rows_are_the_education_reports_numbers` here."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 

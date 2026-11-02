@@ -1,7 +1,6 @@
 """Complaint 79: the event stream carries eight severity tiers, worst first."""
 import unittest
 
-from .harness import *  # noqa: F401,F403
 from sim.refusal import LogLine
 from sim.ui.proto import event_severity
 from sim.ui.proto.refusal_cause import event_codes

@@ -10,7 +10,7 @@ QUICK_TOPIC = True
 
 import collections
 from dataclasses import dataclass, field
-from typing import Any, DefaultDict, Dict, List, Optional, Set, Tuple
+from typing import DefaultDict, Dict, List, Optional, Set, Tuple
 
 from sim.engine.state import (
 	ActiveProjectState,

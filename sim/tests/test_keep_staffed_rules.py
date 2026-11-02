@@ -2,13 +2,11 @@
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 
 from sim.labour import labour_staff_controls
 from sim.labour.labour_staff_controls import StaffControlsMixin
-from sim.projects.api import KeepStaffed
 from sim.tests import projects_host
 from sim.ui.proto.dispatch_staff_controls import _cmd_keep
 from sim.tests.ui_stand_in import Game

@@ -4,7 +4,6 @@ tags shows both demands in one capacity row. The rules are called on given numbe
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.materials import rules
 from sim.materials.constants import FIREWOOD_PER_CHARCOAL_MASS_RATIO

@@ -11,7 +11,7 @@ from typing import Dict
 from sim.constants import declare
 
 from . import titles
-from .types import AgentId, TileId
+from .types import TileId
 
 GENERATION_YEARS = declare(
     "TITLE_INHERITANCE_GENERATION_YEARS", 25.0, kind="temporary_heuristic", unit="years",

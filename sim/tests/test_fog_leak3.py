@@ -12,7 +12,6 @@ Every other command's fog filter is its own (the filters are not central); the p
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.knowledge.api import missing_prereq_message
 from sim.refusal import cause_of

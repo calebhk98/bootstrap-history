@@ -4,7 +4,6 @@ movement rules are test_completion_messaging."""
 
 QUICK_TOPIC = True
 
-from collections import Counter
 from types import SimpleNamespace
 
 from .harness import check

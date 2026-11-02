@@ -10,7 +10,6 @@ from .harness import *  # noqa: F401,F403
 
 from sim.agents import borrowing_arrears
 from sim.agents.api import ActorRecord, Business, ActorRegistry, ActorsState
-from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
 
 from sim.agents.api import SeatBorrower
 

@@ -3,7 +3,6 @@ and `exclude` and `include` change the saved list and refuse names that exist no
 commands on a stand-in game."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.projects import exclusion_rules

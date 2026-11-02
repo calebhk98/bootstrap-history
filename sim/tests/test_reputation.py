@@ -5,7 +5,6 @@ from .harness import *  # noqa: F401,F403
 the Norse keel, the blind prerequisite audit), the standing finishing a node adds, and what makes a node a concern. The
 data checks read the tree; the gain and the concern rule run on a stand-in game (no game is built). Who a society is
 granted at the start is test_reputation_scenario."""
-from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 

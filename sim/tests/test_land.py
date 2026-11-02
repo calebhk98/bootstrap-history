@@ -22,7 +22,6 @@ sim/world/land.py: Ricardian rent at the margin of cultivation.
 
 QUICK_TOPIC = True
 
-import json
 import os
 import unittest
 

@@ -3,7 +3,6 @@
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.markets.goods_market import GoodsMarket
 from sim.markets.goods_pricing import GoodsPricing

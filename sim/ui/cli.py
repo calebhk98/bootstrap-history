@@ -33,9 +33,9 @@ from sim.engine.ui_port import (
     validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.engine.ui_port import default_civilisation_id
 from sim.engine.ui_port import (
-    ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
-    selectable_goals, hard_pre, load, load_civ, resolve_goal, STARTING_KITS, STRATS, topo_order,
-    win_condition_describe, money_word)
+    ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals, load,
+    load_civ, resolve_goal, STARTING_KITS, topo_order, win_condition_describe, money_word,
+)
 
 
 import argparse, sys
@@ -498,7 +498,6 @@ def _validate_ore_reach(civilisations, production):
 
 def _validate_basket_supply(civ_start_check, civilisations, production):
     """Complaints/391: goods households buy that no technique held at the start or partner supplies."""
-    import json
     from sim.engine import civ_basket_check
     from sim.content.api import load_needs
     from sim.engine.ui_port import foreign_economy_document

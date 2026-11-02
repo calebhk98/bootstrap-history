@@ -3,7 +3,6 @@ The parser, the sort and the dispatch tables run on inputs and stubs the test bu
 for every target, the rush preview, founding a school) are test_player_commands_smoke."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 

@@ -3,7 +3,6 @@ command is called on a stand-in game that records the school it is asked for, an
 stand-in labour world; no game is built."""
 QUICK_TOPIC = True
 
-import types
 from sim.tests import workforce_stand_in
 
 from .harness import *  # noqa: F401,F403

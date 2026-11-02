@@ -1,5 +1,4 @@
 """mine_stock_accounting: complaint 148, the mines screen columns (Complaint 640: rows built from stub workings, no game)."""
-import types
 
 from .harness import check
 from sim.ui.proto.economy import _mine_rows_for_material

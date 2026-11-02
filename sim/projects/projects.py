@@ -23,7 +23,7 @@ from .halting import halt_active_projects
 from .hour_queue import HourQueue
 from .mothball import Mothball
 from .open_gate import OpenGate
-from .project_order import ORDER, ProjectOrder
+from .project_order import ProjectOrder
 from .precaution import Precaution
 from .progress_hours import ProgressHours
 from .progress_phase import ProgressPhase

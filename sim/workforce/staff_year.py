@@ -5,9 +5,11 @@ from sim.labour.api import scholar_target
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 from sim.world import demography
 
-from .constants import (AUTO_HIRE_ARTISAN_APPROACH_RATE, AUTO_HIRE_CREDIT_ROOM_SHARE, AUTO_HIRE_SCHOLAR_APPROACH_RATE,
-                        AUTO_HIRE_SCHOLAR_EXTRA_SHARE, AUTO_HIRE_SLAVE_CRAFT_CREDIT, DIRECTORS_EXTRA_APPROACH_RATE,
-                        TRADE_REPLACEMENT_AFFORDABILITY_YEARS, TRADE_REPLACEMENT_TARGET_HEADCOUNT)
+from .constants import (
+    AUTO_HIRE_ARTISAN_APPROACH_RATE, AUTO_HIRE_CREDIT_ROOM_SHARE, AUTO_HIRE_SCHOLAR_APPROACH_RATE,
+    AUTO_HIRE_SCHOLAR_EXTRA_SHARE, AUTO_HIRE_SLAVE_CRAFT_CREDIT, DIRECTORS_EXTRA_APPROACH_RATE,
+    TRADE_REPLACEMENT_TARGET_HEADCOUNT,
+)
 from .staff_phase_rules import approach, artisan_goal, craft_headcount, directors_next, has_room_to_hire, scholar_goal
 from .staff_replacement import GROW_STANCE, hire_stance, replacement_wanted
 

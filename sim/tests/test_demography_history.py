@@ -1,8 +1,6 @@
 """demography_history: the shock and recovery rules are called with records built here and the screen is rendered from a
 built reply; the screen's last year from the record is test_demography_screen_last_year."""
 QUICK_TOPIC = True
-import os
-import tempfile
 
 from .harness import *  # noqa: F401,F403
 from sim.engine.saveload import load_state, save_state

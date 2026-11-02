@@ -4,7 +4,6 @@
 service; what it will pay is what that income allows. The credit market rations it through
 the risk premium on a borrower with no collateral. `floor_bids` spends a loan on the floors it was for.
 """
-import dataclasses
 import math
 from typing import List, Mapping, Optional
 

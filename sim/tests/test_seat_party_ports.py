@@ -12,7 +12,6 @@ from sim.actors import seat_exchange
 from sim.actors.api import ALREADY_ABLE, GRANTED, NO_LICENSEE, TERMS_REFUSED, GrantLicence
 from sim.actors.module import Actors
 from sim.actors.seat_parties import Ports
-from sim.knowledge.api import ReceiveTechniques
 from sim.refusal import Refusal
 from sim.agents.api import Plant
 from sim.seats.api import SeatsSeat, SetDealing

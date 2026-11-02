@@ -9,7 +9,6 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-import sim.engine.core  # noqa: F401  (loads the engine in its import order)
 from sim.agents import ledger
 from sim.agents.api import HouseholdParty
 from sim.agents.purses import Purses

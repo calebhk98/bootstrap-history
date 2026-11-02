@@ -16,7 +16,6 @@ sim/world/deposits.py standalone: Ricardian rent from ore grade, depth and hardn
 
 QUICK_TOPIC = True
 
-import json
 import unittest
 
 from sim.world import deposits

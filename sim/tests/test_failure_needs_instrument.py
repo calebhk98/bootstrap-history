@@ -10,7 +10,6 @@ QUICK_TOPIC = True
 
 import random
 import unittest
-from types import SimpleNamespace
 
 from sim.knowledge.api import closure
 from sim.projects.failure_diagnosis import SHORTFALL_FACTOR_RANGE, failure_teaches

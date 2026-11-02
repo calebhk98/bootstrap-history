@@ -7,7 +7,6 @@ gate's countdown and its abandonment, `stop_project`'s kept money and the credit
 warning, and `project_hour_pace`. The crawl of a project short of a trade is test_project_crawl_rules; a start refused for the gross price of a nearly paid project is `cash_covers_start` below."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 
@@ -19,7 +18,7 @@ from sim.projects import progress_rules
 from sim.projects.start_rules import STALL_YEARS_BEFORE_ABANDONMENT
 from sim.reporting.api import RecordEvent
 from sim.labour.hours_sale_warning import starved_projects, starving_warning
-from sim.refusal import cause_of, facts_of
+from sim.refusal import cause_of
 from sim.ui.proto.state_waiting import _waiting_on
 from sim.ui.proto.techtree import _explain_cost
 from sim.tests import module_harness

@@ -4,7 +4,6 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.tests import harness  # noqa: F401  (the suite's shared setup)
 from sim.labour import wages
 
 

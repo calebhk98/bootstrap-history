@@ -3,13 +3,12 @@ term, and the creditor takes the owed share of the hours' product (the wages) un
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.economy import bondage, credit, credit_claims, lending, titles
 from sim.economy.credit import Default
 from sim.economy.types import FundsOffer, LoanRequest, Transfer
-from sim.tests.test_economy_titles import FLOOR_COST, LANDLORD, MONEY, PEASANT, RATE, TILE, make_world, years
+from sim.tests.test_economy_titles import LANDLORD, MONEY, PEASANT, RATE, TILE, make_world
 
 TERM = 10.0
 

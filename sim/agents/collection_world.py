@@ -9,7 +9,6 @@ from typing import Any, Dict, Optional, Iterable
 from sim.geography.api import reach
 
 from . import authority, budget, collection, order
-from .revenue_labour import HOURS_PER_WORKING_DAY
 
 ADMINISTRATION_LINE = "administration"
 FAR_DAYS = 1.0e9

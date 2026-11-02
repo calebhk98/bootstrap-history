@@ -9,7 +9,6 @@ from .harness import check
 
 from sim.agents.api import ActorRecord, Business, ActorRegistry, ActorsState
 from sim.agents.purses import POOL
-from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
 
 from .agents_fake_world import FakeWorld
 

@@ -7,7 +7,6 @@ import types
 import unittest
 
 from sim.geography import api as geography
-from sim.ledger.api import PayEdge
 from sim.refusal import Refusal
 from sim.reporting.api import RecordEvent
 from sim.resources.api import DrawDeposit, OpenMine, Prospect

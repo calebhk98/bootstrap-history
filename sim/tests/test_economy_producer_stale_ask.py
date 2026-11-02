@@ -3,11 +3,10 @@
 
 QUICK_TOPIC = True
 
-import math
 import unittest
 
 from sim.economy import producers
-from sim.economy.types import GoodSpec, Recipe
+from sim.economy.types import Recipe
 
 FARM = Recipe("farm", {"grain": 10.0}, {"seed": 2.0}, {"hand": 5.0})
 

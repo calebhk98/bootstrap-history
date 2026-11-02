@@ -5,7 +5,7 @@ Prices are per tonne in home money (the foreign side is its solved price convert
 What households at a
 place buy for themselves in a year is the depth a trader sizes its cargo to.
 """
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from sim.foreign_trade.api import NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
 from sim.world.material_units import tonnes_per_unit

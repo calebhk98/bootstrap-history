@@ -3,7 +3,6 @@ stand-in world (free hands, room, cash, a recorder for hires and housing, no gam
 forms run on a household record. The default is
 test_reserve_staff_default. The housing sum itself is held by test_auto_hire_buys_room."""
 from sim.tests import workforce_stand_in
-from types import SimpleNamespace
 
 from .harness import check
 

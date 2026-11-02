@@ -3,7 +3,6 @@ declaring the mechanic, and a node that does not declare it gets nothing. Each r
 few hand-written nodes; no game. The scan for node ids in the engine's source is `test_engine_content_ids`."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.seats.api import SeatsSeat

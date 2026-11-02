@@ -15,7 +15,6 @@ re-derives them for the civilisation playing, cached on what they depend on.
 """
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from sim.constants import declare
 
 from sim.world import plant_figures
 

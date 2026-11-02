@@ -5,7 +5,7 @@ A state grants it only where it knows the institution (`world.state_grants_paten
 would run the concern needs the holder's licence. `world.patent_entry(node_id)` is the live right as
 `{"holder", "expires", "licensees"}`, or None.
 """
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from .player_commands import CommandRejected
 from .tuning_patent import PATENT_TERM_YEARS

@@ -7,8 +7,6 @@ QUICK_TOPIC = True
 
 import contextlib
 import io
-import random
-from types import SimpleNamespace
 
 from .harness import check
 from sim.tests import scenario_stand_in

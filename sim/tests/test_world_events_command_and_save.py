@@ -2,7 +2,6 @@
 window and kind, and the log is part of the hazards module's saved state."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.engine.state import deserialize_state, serialize_state

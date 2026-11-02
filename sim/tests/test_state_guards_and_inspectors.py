@@ -4,7 +4,7 @@ from .harness import *  # noqa: F401,F403
 
 QUICK_TOPIC = True
 
-from sim.agents import budget, collection, order
+from sim.agents import collection, order
 from sim.resources.ceilings import mine_ceiling_tonnes
 from sim.coin.api import order_factor
 from .agents_fake_world import FakeWorld

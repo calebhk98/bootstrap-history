@@ -10,7 +10,6 @@ QUICK_TOPIC = True
 
 import importlib
 
-import sim.ui.cli  # noqa: F401  (loads cli_analysis in the order the app does)
 import unittest
 
 # (module, dotted attribute path) that must no longer exist.

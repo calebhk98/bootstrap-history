@@ -2,7 +2,6 @@
 each rule is called on a stand-in game or a reply built here; no game is played."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 from sim.tests import hazards_host, polity_host

@@ -2,7 +2,6 @@
 gives no craft supervision. (Complaints/583 closed the old text; this calls the two on a built trade table.)"""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.labour.labour_capacity import CapacityMixin
