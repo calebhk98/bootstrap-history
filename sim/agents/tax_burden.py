@@ -34,7 +34,6 @@ def land_tax_share_of_rent(world: Any) -> float:
 	a form on the land's value (rent capitalised at the market rate of interest) takes its rate over that rate of
 	interest, per year. Weighted by the share of the state's officials reach; at most all of it."""
 	rate = world.market_rate()
-	material = world.staple_material() if material is None else material
 	taken = 0.0
 	for form in world.revenue_forms():
 		if float(form["rate"]) <= 0.0:

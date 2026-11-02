@@ -90,20 +90,6 @@ def issuers_among(registry: Any, world: Any) -> List[Any]:
 	return found
 
 
-def issuers_among(registry: Any, world: Any) -> List[Any]:
-	"""(issuer id, issuer, margin its dividends come from) for every actor in business that has outside
-	shareholders: those in the registry, and the seats (a seat's margin is what its concerns earn over upkeep)."""
-	found = []
-	for issuer_id in sorted(registry.actors):
-		issuer = registry.actors[issuer_id]
-		if issuer.record.exited_year is None and issuer.record.issued > 0.0:
-			found.append((issuer_id, issuer, issuer.record.last_margin))
-	for seat_id, party in sorted(world.seat_parties().items()):
-		if party.record.issued > 0.0:
-			found.append((seat_id, party, world.seat_margin(seat_id)))
-	return found
-
-
 def pay_dividends(registry: Any, world: Any) -> float:
 	"""Every actor with outside shareholders (in the registry, or a seat) pays them a part of its last margin
 	by share, never more than its purse; returns the total paid."""

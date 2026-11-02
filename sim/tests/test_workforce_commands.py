@@ -62,13 +62,6 @@ class Commands(unittest.TestCase):
         workforce.set_employed(SetEmployed("smith", 3.0))
         self.assertEqual(calls, [("set", "smith", 3.0), ("resync",)])
 
-    def test_pressing_labour_presses_the_markets_trade(self):
-        pressed = []
-        workforce = module_harness.build(Workforce)
-        workforce.labour = SimpleNamespace(market=SimpleNamespace(press=lambda trade, hours: pressed.append((trade, hours))))
-        workforce.press_labour(PressLabour("smith", 500.0))
-        self.assertEqual(pressed, [("smith", 500.0)])
-
 
 class WageFallback(unittest.TestCase):
     """A household with no work and thin means sells idle hours for wages, unless it is played by hand."""

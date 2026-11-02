@@ -59,7 +59,7 @@ def post(sim, economy, seat_ids, tile_of):
             wanted = sim.labour.staff_posting()
             if not wanted:
                 continue
-            bids, units = seat_bids(economy, seat_id, wanted, tile_of(sim.labour.base_tile()), sim.view("spending_power")("buy"))
+            bids, units = employer_bids(economy, seat_id, wanted, tile_of(sim.labour.base_tile()), sim.view("spending_power")("buy"))
             if not bids:
                 continue
             sim.send(PayEdge(edges.EDGE_WORKERS, units * setup.coin_per_unit, "wages offered in the labour market"))

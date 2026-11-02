@@ -1,6 +1,7 @@
 """Bonded purchase between the agents' strata and the economy's labour market (Complaint 644): which tiles allow it,
 who is for sale there, and paying the owners for the people the labour core bought."""
 from sim.agents import api as agents_api
+from sim.economy import api as economy_api
 
 
 def bondage_tiles(sim, economy):
