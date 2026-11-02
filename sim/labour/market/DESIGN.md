@@ -68,6 +68,13 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
      switchers also choose in rounds. Weighing a trade that has workers by its pay today made a shortage
      the apprentices would fill still draw switchers and flooded it.
    - Switchers become trainees of the new trade and use the same intake.
+   - Of those considering a change in a year, `1 / career_years` of a trade's people are the young who have just come of
+     working age (demography adds them to the tile; the core only re-weighs them). They give up the unskilled income, not
+     their trade's, weigh a whole career, and consider a trade paying more than that after training even when the training
+     cost makes it worth less than staying: the training premium is exactly the wage that leaves such a person indifferent,
+     so a rule needing a strict gain over staying could never start or grow a trained trade. The rest are established
+     workers (half a career ahead, only moves worth more than staying). Both enrol as trainees through the same places
+     (teachers or school seats); `Economy._follow_population` scales trainees and workers of a tile by one factor.
    - A trade's workers who sold no hours this year reconsider at the share that found no work, if that is over the
      yearly consideration share: only those without work look about.
 5. **Migration** (`migration.py`). Workers re-weigh their area against the routes out of it, with a stay option.
