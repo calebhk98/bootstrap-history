@@ -96,7 +96,6 @@ class EconomyRecord:
     tax_farms: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # form -> this year's farmer and price; empty between years
     margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row the expected price stood above the entry price
     hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
-    hours_hired_by_others: Dict[str, float] = field(default_factory=dict)   # labour market_key -> hours hired last year by employers that are not producers (hours_hired_by_others.py)
     hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
     sold_share_expected: Dict[str, float] = field(default_factory=dict)  # labour market_key -> share of offered hours households expect to sell, smoothed over the years (household_work_year.py)
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency

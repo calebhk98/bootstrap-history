@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the markets module's port 
 
 import math
 
-from . import carried_book, carriage_wear, national_prices, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
+from . import carried_book, carriage_wear, national_prices, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
 from .bank_founding import found_from_outside
 from .diagnostics import person_equivalent_unemployment
 from .fixture_setups import GRAIN as FIXTURE_STAPLE, LABOURER as FIXTURE_UNSKILLED_TRADE, small_setup as fixture_small_setup, stationary_setup as fixture_stationary_setup
@@ -114,12 +114,10 @@ def opening_prices_in_hours(economy):
 def people_by_trade(economy, country=None):
     """Working people by trade across the labour areas of `country` (the home country when the economy holds
     several and none is named; every area when it holds one), as the labour core's state holds them."""
-    def sum_people():
-        scope = country_figures.home_when_shared(economy, country)
-        if scope is None:
-            return labour_state.people_by_trade_everywhere(economy.record.workforce)
-        return country_figures.people_by_trade(economy, scope)
-    return workforce_version.cached(economy.record.workforce, ("people_by_trade", country), sum_people)
+    scope = country_figures.home_when_shared(economy, country)
+    if scope is None:
+        return labour_state.people_by_trade_everywhere(economy.record.workforce)
+    return country_figures.people_by_trade(economy, scope)
 
 
 def people_by_tile_and_trade(economy):
