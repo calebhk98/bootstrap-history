@@ -15,7 +15,7 @@ from sim.workforce.api import HoursArrived, StaffArrived
 from sim.resources.api import DrawDeposit, FellTimber, RegrowTimber
 
 from .commands import (BuyMaterial, FoundBankFromOutside, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale,
-                       MoveGoods, NoteDraw, NotePurchase, RenameMarketSeat, RepriceOpeningMoney, ResetDraws,
+                       MoveGoods, NoteDraw, RenameMarketSeat, RepriceOpeningMoney, ResetDraws,
                        SellMaterial)
 from .kernels import KERNELS
 from .module import Markets
@@ -65,7 +65,7 @@ _VIEWS = (
 	("can_be_bought", KEYED), ("material_seller", KEYED), ("home_unit_price", KEYED),
 	("household_prices", None), ("commodities_sold_by_acting_party", None), ("others_trade_stamp", None), ("main_material_of", KEYED),
 	("market_state", KEYED), ("opening_population", None),
-	("nodes_in_category", KEYED), ("actor_supply", KEYED), ("actor_demand", KEYED),
+	("nodes_in_category", KEYED),
 	("agent_prices", None), ("agent_prices_at", QUOTE), ("agent_seat_sale_outlook", QUOTE),
 	("agent_producers_by_good", None), ("agent_producer_runs", None), ("agent_worker_years_by_recipe", None), ("agent_wage", KEYED), ("agent_unskilled_wage", None), ("agent_people_by_trade", None),
 	("agent_people_by_tile_and_trade", None), ("agent_land_rent", None), ("agent_land_rent_per_hectare", None),
@@ -95,7 +95,7 @@ def _view(name, kind):
 MODULE_SPECS = (ModuleSpec(
 	"markets", Markets, world_state=MarketsWorld,
 	publishes=tuple(_view(name, kind) for name, kind in _VIEWS),
-	applies=((ResetDraws, "reset_draws"), (NoteDraw, "note_draw"), (NotePurchase, "note_purchase"),
+	applies=((ResetDraws, "reset_draws"), (NoteDraw, "note_draw"),
 	         (ForgetActorOrders, "forget_actor_orders"), (NoteActorSale, "note_actor_sale"),
 	         (NoteActorPurchase, "note_actor_purchase"), (MoveGoods, "move_goods"),
 	         (RenameMarketSeat, "rename_market_seat"),

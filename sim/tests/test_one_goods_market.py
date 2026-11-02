@@ -1,13 +1,10 @@
-"""Complaints 359 and 364: sellers and buyers go through one goods market, and a good nothing offers has no price
-households spend on.
+"""Complaints 359 and 364: a good nothing offers has no price households spend on.
 
-The founder, a firm and the state all deal with `Sim.goods_market`; the same sale is the same entry in the year's flows
-whoever makes it, and a good no home technique in reach offers draws no household spending. The rules are
+A good no home technique in reach offers draws no household spending. The rules are
 called on a `GoodsMarket` over a stand-in game that holds only what each reads; the sales and takings wiring is in test_one_goods_market_wiring."""
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
-from . import module_harness
 
 from sim.tests import market_stand_in
 from sim.markets.goods_market import GoodsMarket
@@ -16,19 +13,10 @@ from sim.prices import rules as price_rules
 from sim.content import api as content
 from sim.engine.data import ROOT
 from sim.markets import household_needs
-from sim.markets.module import Markets
 
 QUICK_TOPIC = True
 
-MATERIAL = "iron"
 FOUNDER = "seat:founder"
-
-
-def markets_over(game):
-    """The markets module over the goods market `game` holds."""
-    markets = module_harness.build(Markets, views={"material_commodity": lambda material: material})
-    markets.goods_market = game.goods_market
-    return markets
 
 
 def stand_in(**changes):
@@ -45,27 +33,6 @@ def stand_in(**changes):
     game._market_flows = lambda: game._flows
     return game
 
-
-# --- the same sale moves the clearing price the same way, whoever makes it ------------------------------------
-TONNES = 5.0
-by_founder, by_firm, untouched = stand_in(), stand_in(), stand_in()
-GoodsMarket(by_founder).note_sale(FOUNDER, MATERIAL, TONNES)
-GoodsMarket(by_firm).note_sale("firm:1", MATERIAL, TONNES)
-check("a sale by the founder and one by a firm are entries of the same kind in the year's flows",
-      by_founder._flows["sold"] == {MATERIAL: {FOUNDER: TONNES}} and by_firm._flows["sold"] == {MATERIAL: {"firm:1": TONNES}})
-check("the founder has no second path in: the old note methods are gone from the engine",
-      not any(hasattr(S.Sim, name) for name in ("market_note_sale", "market_note_purchase", "market_note_draw")))
-
-# --- a buyer other than the founder raises demand in the same book ---------------------------------------------
-by_state, by_founder_buying = stand_in(), stand_in()
-GoodsMarket(by_state).note_purchase("government:rome", MATERIAL, TONNES)
-GoodsMarket(by_founder_buying).note_purchase(FOUNDER, MATERIAL, TONNES)
-by_state.goods_market = GoodsMarket(by_state)
-by_founder_buying.goods_market = GoodsMarket(by_founder_buying)
-check("the state's purchases reach the book as the actors' demand and raise the price",
-      abs(markets_over(by_state).actor_demand(MATERIAL) - TONNES) < 1e-9)
-check("...while the founder's purchases are his own, not the actors'",
-      markets_over(by_founder_buying).actor_demand(MATERIAL) == 0.0)
 
 # --- a good nobody offers has no household price and draws no spending -----------------------------------------
 home_only = stand_in()

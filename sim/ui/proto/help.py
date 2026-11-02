@@ -210,7 +210,7 @@ def _topic_economy(sim):
             "buy school": "buy school smith 2 makes two more smiths' worth "
                                 "of annual labour locally available",
             "materials": "materials shows durable stock and flow; buy material "
-                         "iron 10 or sell iron 5 trades tonnes at current prices",
+                         "iron 10 or sell iron 5 orders tonnes at the year's clearing",
             "buy mine": '{"cmd":"buy","what":"mine","material":"coal","n":500} '
                         "tonnes a year of your own workings; it takes years "
                         "to sink, and it costs to keep standing whether or "

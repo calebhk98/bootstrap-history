@@ -2,7 +2,6 @@
 from sim.assembly.api import RepriceTree
 from sim.economy import api as economy_api
 from sim.ledger.api import RescaleHouseholdMoney
-from sim.rekey import rekey
 
 
 class Applying:
@@ -12,10 +11,6 @@ class Applying:
 
 	def note_draw(self, command):
 		self.goods_market.note_draw(command.commodity, command.tonnes)
-
-	def note_purchase(self, command):
-		market = self.goods_market
-		market.note_purchase(market.acting_party_id, command.commodity, command.tonnes)
 
 	def forget_actor_orders(self, command):
 		self.economy.forget_actor_orders(command.actor_id)
@@ -32,9 +27,6 @@ class Applying:
 
 	def rename_market_seat(self, command):
 		self.economy.agent.rename_agent(command.from_id, command.to_id)
-		if self.world.market_flows:
-			rekey(self.world.market_flows, command.from_id, command.to_id)
-		self.goods_market.forget_seat_party(command.from_id)
 
 	def mark_money_priced_at_economy(self, command):
 		self.world.money_from_economy = True
@@ -50,12 +42,10 @@ class Applying:
 		self.needs.send(RepriceTree())
 
 	def buy_material(self, command):
-		market = self.goods_market
-		return market.buy(market.acting, command.material, command.tonnes)
+		return self.goods_market.post_order("buy", command.material, command.tonnes, command.limit_per_tonne)
 
 	def sell_material(self, command):
-		market = self.goods_market
-		return market.sell(market.acting, command.material, command.tonnes)
+		return self.goods_market.post_order("sell", command.material, command.tonnes, command.limit_per_tonne)
 
 	def found_bank_from_outside(self, command):
 		agent = self.economy.agent

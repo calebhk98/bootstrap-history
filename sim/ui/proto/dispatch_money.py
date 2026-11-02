@@ -125,14 +125,24 @@ def _buy_school(sim, cmd, quantity):
             "capital": round(sim.view("acting_balance")(), 1)}
 
 
-def _buy_material(sim, cmd, quantity):
-    material = cmd.get("material")
-    got = sim.send(ui_port.BuyMaterial(material, quantity))
-    if got <= 0:
-        return {"ok": False, "error": "cannot buy that quantity at the current material quote"}
-    return {"ok": True, "material": material, "bought_tonnes": got,
-            "stock_on_hand_tonnes": sim.view("goods_stock")[ui_port.material_tag(sim, material)[0]],
+def _price_limit(cmd):
+    """The most (buy) or least (sell) per tonne the player states for an order, or None for the quote."""
+    limit = cmd.get("limit")
+    return None if limit in (None, "") else _qty(limit)
+
+
+def _order_reply(sim, posted, asked):
+    """The reply of a goods order: what was posted for the year's clearing and the quote it was set against."""
+    if isinstance(posted, Refusal):
+        return {"ok": False, "error": posted}
+    return {"ok": True, "posted_tonnes": posted["tonnes"], "asked_tonnes": asked, "side": posted["side"],
+            "material": posted["material"], "limit_per_tonne": round(posted["limit_per_tonne"], 2),
+            "quote_per_tonne": round(posted["quote_per_tonne"], 2), "settles": "at the year's clearing",
             "capital": round(sim.view("acting_balance")(), 1)}
+
+
+def _buy_material(sim, cmd, quantity):
+    return _order_reply(sim, sim.send(ui_port.BuyMaterial(cmd.get("material"), quantity, _price_limit(cmd))), quantity)
 
 
 def _buy_mine(sim, cmd, quantity):
@@ -238,7 +248,8 @@ _BUY_HANDLERS = {
          usage=usage_lines(),
          options={"what": ", ".join(target_names()),
                   "n": "the amount, in the unit the usage names",
-                  "unit": "optional: another unit of the same kind (acre, pound, ...), or shown for the unit you display"},
+                  "unit": "optional: another unit of the same kind (acre, pound, ...), or shown for the unit you display",
+                  "limit": "optional, for a material: the most you pay per tonne (the quote if left out)"},
          description="Spends capital on durable things. Ask the price first with quote. "
                      "See the economy topic for what each one does.")
 def _cmd_buy(sim, nodes, cmd, ended):
@@ -270,8 +281,9 @@ def _cmd_buy(sim, nodes, cmd, ended):
          usage=["sell <material> <tonnes>", "sell concern <id>", "sell farm <hectares>"],
          options={"<material>": "a material in stock", "<tonnes>": "amount; add a unit word ('sell iron 50 lb') for another unit",
                   "concern <id>": "a concern you run: the exchange picks the buyer and the price",
-                  "farm <hectares>": "farmland sold back at the price buy farm charges"},
-         description="Material sells at the current value; you can only sell what you hold. A "
+                  "farm <hectares>": "farmland sold back at the price buy farm charges",
+                  "limit": "optional, for a material: the least you take per tonne (the quote if left out)"},
+         description="A material is offered at the year's clearing and sells at the price it clears at, no lower than your limit; you can only sell what you hold. A "
                      "concern goes to the actor the exchange prefers (one that can make it and "
                      "pay), at its recorded margin over the valuation horizon; the know-how stays "
                      "yours. Farmland returns to the land market at what a hectare costs to buy.")
@@ -290,15 +302,10 @@ def _cmd_sell(sim, nodes, cmd, ended):
         return {"ok": False, "error": err or "n must be greater than zero"}
     if sim.view("goods_quote")[material] is None:
         return {"ok": False, "error": sale_orders.no_price_refusal(material)}
-    held, market_room = sim.view("sale_limits")[material]
+    held = sim.view("sale_limits")[material][0]
     if sale_orders.asks_more_than_held(quantity, held):
         return {"ok": False, "error": sale_orders.not_enough_held_refusal(material, held, quantity)}
-    sold = sim.send(ui_port.SellMaterial(material, quantity))
-    if sold <= 0:
-        return {"ok": False, "error": sale_orders.market_full_refusal(material, held, market_room)}
-    held_after, room_after = sim.view("sale_limits")[material]
-    return sale_orders.sale_reply(material, sold, quantity, held_after, room_after, sim.view("acting_balance")())
-
+    return _order_reply(sim, sim.send(ui_port.SellMaterial(material, quantity, _price_limit(cmd))), quantity)
 
 
 @command("money", shape="bare", group="money", aliases=("ledger", "accounts", "cash"),

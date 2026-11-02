@@ -1,69 +1,15 @@
-"""Complaints 359 and 364, the wiring: the founder's stock sale, an actor's sale and a firm's takings all go through the one goods
+"""Complaints 359 and 364, the wiring: an actor's sale and a firm's takings all go through the one goods
 market. Each method is called on a stand-in carrying only what it reads; no game is built. The price rules are in
 test_one_goods_market."""
 import types
 import unittest
-from sim.tests import market_stand_in
-from unittest import mock
 
 from sim.agents.api import Actor
 from sim.actors.world import ActorWorld
-from sim.markets.api import SellMaterial
-from sim.markets.goods_market import GoodsMarket
 from sim.tests.world_stand_in import fake_needs
 from sim.markets.api import NoteActorSale
 
 QUICK_TOPIC = True
-
-MATERIAL = "iron"
-FOUNDER = "seat:founder"
-
-
-class Seller:
-    party_id = FOUNDER
-
-    def __init__(self):
-        self.handed, self.received = [], []
-
-    def hand_over(self, key, tonnes):
-        self.handed.append((key, tonnes))
-
-    def receive(self, money, purpose):
-        self.received.append(money)
-
-
-def market_over_flows():
-    flows = {"sold": {}, "bought": {}, "drawn": {}}
-    game = types.SimpleNamespace(_flows=flows, state=types.SimpleNamespace(acting_seat=FOUNDER))
-    game._market_flows = lambda: flows
-    return GoodsMarket(game)
-
-
-class FounderSaleTests(unittest.TestCase):
-    def test_the_sale_is_entered_in_the_book_under_the_sellers_party_and_paid_for(self):
-        market, seller = market_over_flows(), Seller()
-        with mock.patch.object(GoodsMarket, "quote_sell", lambda self, material, tonnes, who: ("iron_key", 4.0, 120.0)):
-            sold = market.sell(seller, MATERIAL, 5.0)
-        self.assertEqual(sold, 4.0)
-        self.assertEqual(market.sold_tonnes("iron_key", FOUNDER), 4.0)
-        self.assertEqual(market.others_sold_tonnes("iron_key"), 0.0)
-        self.assertEqual(seller.handed, [("iron_key", 4.0)])
-        self.assertEqual(seller.received, [120.0])
-
-    def test_a_sale_the_market_takes_none_of_enters_nothing(self):
-        market, seller = market_over_flows(), Seller()
-        with mock.patch.object(GoodsMarket, "quote_sell", lambda self, material, tonnes, who: (None, 0.0, 0.0)):
-            self.assertEqual(market.sell(seller, MATERIAL, 5.0), 0.0)
-        self.assertEqual(market.sold_tonnes(MATERIAL), 0.0)
-        self.assertEqual(seller.handed, [])
-
-    def test_the_engines_stock_sale_is_the_markets_sale_by_the_asking_seat(self):
-        seen = []
-        market = types.SimpleNamespace(acting="the asking seat", sell=lambda seller, material, tonnes: seen.append((seller, material, tonnes)) or 2.5)
-        game = types.SimpleNamespace(goods_market=market)
-        self.assertEqual(market_stand_in.markets_over(goods_market=game.goods_market).sell_material(SellMaterial(MATERIAL, 3.0)), 2.5)
-        self.assertEqual(seen, [("the asking seat", MATERIAL, 3.0)])
-
 
 class ActorWiringTests(unittest.TestCase):
     def test_an_actors_sale_is_noted_in_the_economys_book_with_the_concerns_that_made_it(self):

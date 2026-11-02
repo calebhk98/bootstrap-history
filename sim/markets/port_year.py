@@ -17,7 +17,7 @@ from sim.economy.api import (EDGE_LEGACY, AgentOrders, Economy, GoodsMove, Offer
                              YearInputs, expected_output_prices, live_input_prices, live_wages,
                              variable_cost_per_run)
 
-from . import port_bondage, port_levy, port_actors, port_cargo, port_cropland, port_flight, port_institutions, port_land, port_late, port_dues, port_seats, port_sites, port_staff
+from . import port_bondage, port_levy, port_actors, port_cargo, port_cropland, port_flight, port_institutions, port_land, port_late, port_dues, port_goods_orders, port_seats, port_sites, port_staff
 from sim.materials.api import ProducerCapacityCache
 from .port_key import spin_up_key
 from .port_coin import priced_at_the_margin
@@ -192,6 +192,8 @@ class AgentEconomy(TilePricesMixin):
         orders.update(staff_orders)
         actor_staff_orders, actor_staff_posted = port_staff.post_actors(self._sim, economy, self._actor_tile)
         orders.update(actor_staff_orders)
+        goods_orders, goods_posted = port_goods_orders.post(self._sim, economy, self.stored.pop("seat_orders", {}), self._tile_in_economy)
+        orders.update(goods_orders)
         economy_api.watch_tiles(economy, self._seat_tiles())
         outcome = economy.step(self._inputs(orders, port_cargo.border_accounts(economy, legs)))
         forget_year_figures(self)
@@ -201,6 +203,7 @@ class AgentEconomy(TilePricesMixin):
         self._settle_actor_trade(sales, purchases)
         port_staff.settle(self._sim, economy, staff_posted)
         port_staff.settle_actors(self._sim, economy, actor_staff_posted)
+        self.stored["seat_trades"] = port_goods_orders.settle(self._sim, economy, goods_posted)
         port_dues.settle(self._sim, economy)
         self._settle_seats()
         self._sim.settle_trader_cargo(port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
@@ -240,7 +243,7 @@ class AgentEconomy(TilePricesMixin):
         """`old` becomes `new` in the economy's records and in the year's stored notes (a seat handed over)."""
         if self.opened():
             economy_api.rename_agent(self.economy(), old, new)
-        for kind in ("seat_takings", "seat_sales", "sales", "purchases"):
+        for kind in ("seat_takings", "seat_sales", "seat_orders", "seat_trades", "sales", "purchases"):
             if kind in self.stored:
                 rekey(self.stored[kind], old, new)
 
@@ -428,13 +431,12 @@ class AgentEconomy(TilePricesMixin):
         return tuple(asks)
 
     def _founder_standing_bids(self):
-        """The founder's year of draws on materials, as bids for firm entry to read (port_actors.standing_bids)."""
-        sim, seats = self._sim, self._sim.state.seats
+        """The founder's running works' draws on materials, as bids for firm entry to read (port_actors.standing_bids)."""
+        sim = self._sim
         tiles = sorted(self._seat_tiles())
         if not tiles:
             return ()
-        return port_actors.standing_bids(self._economy, sim._market_flows(), seats, tiles[0], tonnes_per_unit,
-                                                 sim.economy.materials_in)
+        return port_actors.standing_bids(self._economy, sim._market_flows(), tiles[0], tonnes_per_unit, sim.economy.materials_in)
 
     def _seat_tiles(self):
         """The tiles the playing seats buy and sell on, whose markets' books the economy keeps."""

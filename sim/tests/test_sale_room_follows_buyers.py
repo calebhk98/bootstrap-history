@@ -22,10 +22,6 @@ class SaleRoomTests(unittest.TestCase):
         quote = {"market_available_tonnes_per_year": 70.0, "buyers_take_tonnes_per_year": None}
         self.assertEqual(GoodsMarket.sale_room_tonnes(quote, 10.0), 60.0)
 
-    def test_buying_is_still_cut_to_what_the_sellers_offer(self):
-        quote = {"market_available_tonnes_per_year": 70.0, "buyers_take_tonnes_per_year": 5.0}
-        self.assertEqual(GoodsMarket.market_room_tonnes(quote, 10.0), 60.0)
-
 
 if __name__ == "__main__":
     unittest.main()

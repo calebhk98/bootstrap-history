@@ -8,7 +8,6 @@ from typing import Any, Dict, Optional, Tuple
 
 from sim.agents.api import edges
 from sim.ledger.api import ChangeStock, PayEdge
-from sim.markets.api import NotePurchase
 from sim.projects.api import constants as project_constants
 from sim.world.material_units import tonnes_per_unit
 
@@ -18,7 +17,7 @@ from . import rules
 class ProjectBill:
     """Needs: tree_nodes, active_projects, goods_stock, purchase_quote, shared_bill, opposition_factor,
     material_cost_factor, can_pay, purchase_refusal, project_cost, project_cost_now, cost_money_factor, civ_cost_factor,
-    rebuild_work_factor, failure_reset_share. Sends PayEdge, NotePurchase, ChangeStock."""
+    rebuild_work_factor, failure_reset_share. Sends PayEdge, ChangeStock."""
 
     def project_material_needs(self, node_id: str) -> collections.Counter:
         """{material key: units} the project physically consumes, with the fuel substitution the throttle applies."""
@@ -94,7 +93,6 @@ class ProjectBill:
             money = row["cost_of_deliverable"] * factor
             commodity = self.material_pool(row["material"])[0]
             needs.send(PayEdge(edges.EDGE_MARKET, money, "materials bought for projects"))
-            needs.send(NotePurchase(commodity, tonnes))
             needs.send(ChangeStock(commodity, tonnes))
             paid += money
         return paid

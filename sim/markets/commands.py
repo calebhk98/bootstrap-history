@@ -1,6 +1,6 @@
 """Commands to the owner of the goods market and the agent economy's orders (the markets module)."""
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from sim.assembly.api import Command
 
@@ -13,14 +13,6 @@ class ResetDraws(Command):
 @dataclass(frozen=True)
 class NoteDraw(Command):
     """Running works used `tonnes` of a commodity the seat neither held nor made; nothing for tonnes that are not positive."""
-    commodity: str
-    tonnes: float
-
-
-@dataclass(frozen=True)
-class NotePurchase(Command):
-    """The acting seat bought `tonnes` of a commodity at the market this year (counted in the book; the money and the
-    goods move by the ledger's commands); nothing for tonnes that are not positive."""
     commodity: str
     tonnes: float
 
@@ -77,18 +69,20 @@ class MarkMoneyPricedAtEconomy(Command):
 
 @dataclass(frozen=True)
 class BuyMaterial(Command):
-	"""The acting seat buys `tonnes` of a material at the market (cut to what is offered and affordable); answers the tonnes
-	bought."""
+	"""The acting seat orders `tonnes` of a material at the year's clearing, paying no more than `limit_per_tonne` (the quote when
+	None). Answers the posted order, or a refusal; the goods arrive when the year clears."""
 	material: str
 	tonnes: float
+	limit_per_tonne: Optional[float] = None
 
 
 @dataclass(frozen=True)
 class SellMaterial(Command):
-	"""The acting seat sells `tonnes` of its stock of a material at the market (cut to what is held and absorbed); answers
-	the tonnes sold."""
+	"""The acting seat offers `tonnes` of its stock of a material at the year's clearing, taking no less than `limit_per_tonne`
+	(the quote when None). Answers the posted order, or a refusal; the proceeds arrive when the year clears."""
 	material: str
 	tonnes: float
+	limit_per_tonne: Optional[float] = None
 
 
 @dataclass(frozen=True)

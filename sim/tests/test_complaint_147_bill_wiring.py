@@ -1,5 +1,5 @@
 """Complaints/147: where the project material bill reaches the player and the books. Each method runs on a stand-in `self` carrying only
-what it reads: the quote and the purchase charge one figure (`_quote_material`, `GoodsMarket.buy`), `why` shows the engine's cost
+what it reads: the quote and the purchase charge one figure (`_quote_material`), `why` shows the engine's cost
 (`_explain_cost`), a project's cost is its frozen bill once it runs (`project_cost`), starting pays the up-front materials and fixes
 the bill (`settle_project_materials`, `initialize_project`), and a saved game keeps the bill. The bill's own rules are
 test_complaint_147_project_materials."""
@@ -10,7 +10,6 @@ from sim.tests import market_stand_in
 
 from .harness import check
 
-from sim.markets.goods_market import GoodsMarket
 from sim.tests import finance_host, projects_host
 from sim.materials.api import SettleProjectMaterials as SettleCommand
 from sim.tests import materials_stand_in
@@ -23,34 +22,7 @@ from sim.ui.proto.techtree import _explain_cost
 from sim.tests.ui_stand_in import Game
 
 
-class Buyer:
-    party_id = "buyer"
-
-    def __init__(self):
-        self.paid, self.delivered = [], []
-
-    def can_pay(self, money):
-        return True
-
-
-# ---- the quote is what buying charges
-def stand_in_market(room):
-    settled = []
-    market = Game(
-        quote=lambda material: {"material": material, "stock_key": "coal"},
-        bought_tonnes=lambda key, party: 0.0, market_room_tonnes=lambda quote, bought: room,
-        purchase_cost=lambda material, tonnes, already=0.0: (7.0 * tonnes + tonnes * tonnes, 7.0 + tonnes),
-        settle_purchase=lambda buyer, key, tonnes, money: settled.append((key, tonnes, money)))
-    return market, settled
-
-
-market, settled = stand_in_market(room=100.0)
-got = GoodsMarket.buy(market, Buyer(), "coal_kg", 10.0)
-check("buying settles the tonnes at the money purchase_cost gives for that order", got == 10.0 and settled == [("coal", 10.0, 170.0)], settled)
-market, settled = stand_in_market(room=4.0)
-got = GoodsMarket.buy(market, Buyer(), "coal_kg", 10.0)
-check("an order beyond the market's room is cut and the cut order is what is charged", got == 4.0 and settled == [("coal", 4.0, 44.0)], settled)
-
+# ---- the quote is the charge
 quoted_orders = []
 game = Game(
     material_trade_quote=lambda material: {"material": material, "buy_per_tonne": 7.0, "sell_per_tonne": 6.0,
