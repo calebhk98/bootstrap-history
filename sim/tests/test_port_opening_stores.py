@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 import json
 import os
 import unittest
+from types import SimpleNamespace
 
 from sim.markets.port_stores import opening_store_values
 from sim.tests import land_host
@@ -16,7 +17,8 @@ def stores_of(civ_file):
     with open(os.path.join(DATA, civ_file), encoding="utf-8") as handle:
         civ = json.load(handle)
     land = land_host.build(civ)   # the port asks the land module's views under the names the land module gives them
-    return opening_store_values(land, land.tiles_listed_by(civ), int(civ["year"]))
+    port = SimpleNamespace(map=SimpleNamespace(deposit_catalogue=land.deposit_catalogue, deposits_worked_before=land.deposits_worked_before))
+    return opening_store_values(port, land.tiles_listed_by(civ), int(civ["year"]))
 
 
 class OpeningStoreValueTests(unittest.TestCase):

@@ -1,6 +1,7 @@
 """Complaint 613: foot carriage is the porter trade's work and port handling the dockworker trade's, both named by the
 route mode data, and both are in the transport occupation group."""
 
+import dataclasses
 import json
 import os
 import unittest
@@ -27,8 +28,7 @@ def setup(handling_trade=DOCKWORKER):
         carriage_crew={"foot": (PORTER, FOOT_HOURS), "sail": ("sailor", 0.02)},
         carriage_handling={"sail": PORT_HOURS})
     built.trades.update({PORTER: TradeSpec(PORTER), DOCKWORKER: TradeSpec(DOCKWORKER)})
-    built.carriage_handling_trade = {"sail": handling_trade} if handling_trade else {}
-    return built
+    return dataclasses.replace(built, carriage_handling_trade={"sail": handling_trade} if handling_trade else {})
 
 
 def hours(built, haul):

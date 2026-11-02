@@ -2,7 +2,6 @@
 `GoodsMarket.quote` runs on a market whose price, partner and economy reads are stubbed."""
 QUICK_TOPIC = True
 
-import math
 from types import SimpleNamespace
 
 from .harness import check
@@ -16,19 +15,15 @@ REFERENCE = 7.0
 class _Market(GoodsMarket):
     """A market with one good at a flat price."""
 
-    def __init__(self, offered, brought=None):
+    def __init__(self, offered):
         economy = SimpleNamespace(agent_offered_tonnes=lambda material, tile=None: offered)
         sim = SimpleNamespace(economy=economy, state=SimpleNamespace(acting_seat="seat"),
                               _material_tag=lambda material: (material, None),
                               _material_market_tonnes=lambda key: REFERENCE)
         super().__init__(sim)
-        self.brought = brought
 
     def price_at_tile_per_tonne(self, material):
         return 10.0
-
-    def import_tonnes_available(self, material, partner=None):
-        return self.brought
 
     def _carriage_per_tonne(self, material, price_per_tonne):
         return 1.0
@@ -53,8 +48,5 @@ market = _Market(OFFERED)
 quote = market.quote("wheat")
 check("the quote's market figure is the economy's offered quantity, not the reference tonnes",
       quote["market_available_tonnes_per_year"] == OFFERED, quote)
-check("a partner's good is quoted at what the partner can bring",
-      _Market(OFFERED, brought=12.5).quote("wheat")["market_available_tonnes_per_year"] == 12.5)
-check("with no economy book and no partner the engine's reference tonnes stand",
+check("with no economy book the engine's reference tonnes stand",
       _Market(None).quote("wheat")["market_available_tonnes_per_year"] == REFERENCE)
-check("a partner's unlimited supply is not cut", math.isinf(_Market(OFFERED, brought=math.inf).quote("wheat")["market_available_tonnes_per_year"]))

@@ -61,9 +61,6 @@ class WorksWorld(FakeWorld):
 	def need_floor_costs_per_person_year(self):
 		return {}
 
-	def local_staff(self, trade, people):
-		return people
-
 
 def lines_by_name(lines):
 	return {line.name: line for line in lines}
@@ -103,7 +100,7 @@ before = treasury.money
 treasury.build_works([], world)
 check("a surplus raised the monuments the state lacked", state_works.held(world)["capital_buildings"] > 0.0, state_works.held(world))
 paid = before - treasury.money
-check("it paid masons for them", treasury.workforce.get("mason", 0.0) > 0.0 and paid > 0.0, treasury.workforce)
+check("it paid the builders and posted places for masons", treasury.staff_wanted.get("mason", 0.0) > 0.0 and paid > 0.0, treasury.staff_wanted)
 check("it built toward what it wants and no further",
       state_works.held(world)["capital_buildings"] <= state_works.capital_buildings_wanted(world) + 1e-6)
 check("no outlay is an unnamed one", set(treasury.record.outlays) <= {"building capital_buildings"}, treasury.record.outlays)

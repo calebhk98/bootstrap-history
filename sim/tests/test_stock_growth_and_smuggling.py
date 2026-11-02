@@ -21,6 +21,7 @@ from sim.tests.world_stand_in import fake_needs
 from sim.actors import country_rules
 from sim.polity.state import PolitySeat
 from sim.tests import land_host, polity_host
+from sim.engine import data
 from sim.engine.data import load_civ
 from sim.ledger.api import ChangeStock, PayEdge
 from sim.living_stock.api import ChangeHeld, SmuggleStock, stock_entry, stock_rates
@@ -42,6 +43,11 @@ HERD, SUGAR, EGGS, TEA = "draught_animal_kg", "sugar_cane_sett_kg", "silkworm_eg
 WAGE = 2.0
 
 
+def ample_labour(material):
+    """Hours hired at the last clearing that cover any growth of the stock."""
+    return {trade: 1.0e12 for trade in stock_entry(material)["labour_hours"]}
+
+
 class Purse:
     def __init__(self, capital, game):
         self.capital, self.game, self.paid = capital, game, []
@@ -58,14 +64,8 @@ class Purse:
 
 
 class Market:
-    def __init__(self):
-        self.pressed = {}
-
     def quote(self, trade):
         return WAGE
-
-    def press(self, trade, hours):
-        self.pressed[trade] = self.pressed.get(trade, 0.0) + hours
 
 
 class CountryAnswers:
@@ -185,7 +185,8 @@ class Game:
     def view(self, name):
         """The views the bridge reads of a game: the wild stock (whole here), the seeded cast and the actors' world over this game."""
         needs = fake_needs(labour_market=lambda: self.labour.market, civilisation=self.civ, hours_per_person_year=HOURS_PER_PERSON_YEAR,
-                           year=100, agent_country=lambda country: self.economy.agent_country(country))
+                           year=100, agent_country=lambda country: self.economy.agent_country(country),
+                           trade_registry=lambda: {trade_id: {"family": trade.family, **trade.extra} for trade_id, trade in data.TRADE_REGISTRY.items()})
         world = ActorWorld(types.SimpleNamespace(needs=needs, cast=lambda: self.actors))
         return {"wild_stock": lambda: {}, "seeded_actor_registry": lambda: self.actors, "actor_world": lambda: world}[name]
 
@@ -215,13 +216,13 @@ check("the labour of the growth is posted to the labour core for the next cleari
 _shipped_capacity = stock_land.pasture_capacity_kg
 try:
     stock_land.pasture_capacity_kg = lambda tile, wild, world_map: 10500.0 if tile == place else 0.0
-    tight = Game()
+    tight = Game(hired=ample_labour(HERD))
     tight.grant(HERD, 10000.0)
     tight.module.step_living_stock("founder")
     check("a pasture that carries 500 kg more lets the herd grow by 500 kg less its loss",
           abs(tight.held(HERD) - (10500.0 - 10000.0 * rates["annual_loss"])) < 1e-6, tight.held(HERD))
     stock_land.pasture_capacity_kg = lambda tile, wild, world_map: 9000.0 if tile == place else 0.0
-    full = Game()
+    full = Game(hired=ample_labour(HERD))
     full.grant(HERD, 10000.0)
     full.module.step_living_stock("founder")
     check("a herd on pasture with no room gains nothing and still suffers its loss",
@@ -249,7 +250,7 @@ check("the cane row is raised on arable land and no longer capped at a doubling"
 _shipped_arable = stock_land.arable_hectares
 try:
     stock_land.arable_hectares = lambda tile, world_map: 0.01
-    small = Game()
+    small = Game(hired=ample_labour(SUGAR))
     small.grant(SUGAR, 5000.0)
     small.module.step_living_stock("founder")
     sett = stock_entry(SUGAR)
@@ -257,7 +258,7 @@ try:
     check("a hundredth of a hectare of land raises only what its output per hectare allows",
           abs(small.held(SUGAR) - (5000.0 + room - 5000.0 * sugar["annual_loss"])) < 1e-6, small.held(SUGAR))
     stock_land.arable_hectares = lambda tile, world_map: 1e9
-    wide = Game()
+    wide = Game(hired=ample_labour(SUGAR))
     wide.grant(SUGAR, 5000.0)
     wide.module.step_living_stock("founder")
     check("with land enough the cane multiplies by its sourced rate",

@@ -13,20 +13,13 @@ from sim.agents.records import ActorsState
 
 
 class FakeLabourMarket:
-	"""Every trade is paid one flat wage per hour; hiring and release are only counted."""
+	"""Every trade is paid one flat wage per hour."""
 
 	def __init__(self, wage_per_hour: float = 1.0) -> None:
 		self.wage_per_hour = wage_per_hour
-		self.hired: Dict[str, float] = {}
 
-	def quote(self, trade: str, hours: float, actor: Any = None) -> float:
+	def quote(self, trade: str) -> float:
 		return self.wage_per_hour
-
-	def hire(self, actor: Any, trade: str, hours: float) -> None:
-		self.hired[trade] = self.hired.get(trade, 0.0) + hours
-
-	def release(self, actor: Any, trade: str, hours: float) -> None:
-		self.hired[trade] = self.hired.get(trade, 0.0) - hours
 
 
 class FakeGovernment:

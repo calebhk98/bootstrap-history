@@ -1,5 +1,5 @@
-"""Complaints/416: a way's crew is hired through the labour market for the build years, and the engine
-builds bridges, ports, canals and engineered ways; the roads, bridges and ports are recorded under the keys
+"""Complaints/416: a way is priced at the labour market's hourly rate for its crew's trade and takes the build years its crew's hours
+allow, and the engine builds bridges, ports, canals and engineered ways; the roads, bridges and ports are recorded under the keys
 geography's routes read."""
 QUICK_TOPIC = True
 
@@ -18,38 +18,20 @@ GRANTED = {"civ_road_paved", "lnd_iron_edge_rail", "lnd_bridge", "civ_harbour_do
 
 
 class _LabourMarket:
-    """A market with a fixed number of labourers to be found, recording what is pressed and released."""
-
-    def __init__(self, supply):
-        self.supply = supply
-        self.pressed = []
-        self.released = []
+    """A market that quotes every trade the same hour."""
 
     def quote(self, trade):
         return 2.0
-
-    def whole_recruits(self, trade, people, pay_premium=0.0):
-        return int(min(people, max(1, self.supply)))
-
-    def hire(self, employer, trade, hours, pay_premium=0.0):
-        self.pressed.append((trade, hours))
-        return 2.0
-
-    def press(self, trade, hours):
-        self.pressed.append((trade, hours))
-
-    def release(self, employer, trade, hours):
-        self.released.append((trade, hours))
 
 
 class _Builder:
     """The land module over plain values for the views it reads, as the tests of building a way call it."""
 
-    def __init__(self, held, supply=100000):
+    def __init__(self, held):
         self.year = 100
         self.cash = 1e18
         self.granted = set(GRANTED)
-        self.market = _LabourMarket(supply)
+        self.market = _LabourMarket()
         self.paid = []
         self.module = module_harness.build(
             Land, world=LandWorld(), seat=LandSeat(),
@@ -76,8 +58,8 @@ def _land_edges(world_map):
     return [edge for edge in routes_graph.graph(world_map).edges if edge.edge_class == "land"]
 
 
-def _builder_for(edge, supply=100000):
-    return _Builder({edge.tile_a, edge.tile_b}, supply)
+def _builder_for(edge):
+    return _Builder({edge.tile_a, edge.tile_b})
 
 
 def _flat(world_map):
@@ -89,33 +71,25 @@ def _open(builder, years_on=0.0):
     builder.finish_ways()
 
 
-class CrewFromTheLabourMarketTests(unittest.TestCase):
+class CrewAndBuildTimeTests(unittest.TestCase):
 
     def setUp(self):
         self.world_map = geography.open_map()
         self.edge = _flat(self.world_map)
 
-    def test_starting_a_way_leans_on_the_crews_trade_and_finishing_it_gives_the_hands_back(self):
+    def test_starting_a_way_records_the_crews_trade_and_hours_and_it_opens_when_they_have_worked_them(self):
         builder = _builder_for(self.edge)
+        quote = builder.way_quote(self.edge.tile_a, self.edge.tile_b, "road")
         ok, message = builder.build_way(self.edge.tile_a, self.edge.tile_b, "road")
         self.assertTrue(ok, message)
-        self.assertEqual([trade for trade, _hours in builder.market.pressed], ["labourer"])
-        crew_hours = builder.market.pressed[0][1]
-        self.assertGreater(crew_hours, 0.0)
-        due = next(iter(next(iter(builder.world.ways_under_construction.values())).values()))["due"]
-        self.assertEqual(builder.market.released, [])
-        _open(builder, due - builder.year)
-        self.assertEqual(builder.market.released, [("labourer", crew_hours)])
-
-    def test_each_year_of_the_build_presses_the_market_again(self):
-        builder = _builder_for(self.edge, supply=30)
-        builder.build_way(self.edge.tile_a, self.edge.tile_b, "road")
-        before = len(builder.market.pressed)
-        _open(builder, 1.0)
-        _open(builder, 1.0)
-        self.assertEqual(len(builder.market.pressed), before + 2)
-        _open(builder, 0.0)
-        self.assertEqual(len(builder.market.pressed), before + 2)
+        pending = next(iter(next(iter(builder.world.ways_under_construction.values())).values()))
+        self.assertEqual((pending["trade"], pending["crew_hours"], pending["due"]), ("labourer", quote["crew_hours"], builder.year + quote["years"]))
+        self.assertGreater(quote["crew_hours"], 0.0)
+        _open(builder, quote["years"] / 2.0)
+        self.assertTrue(builder.world.ways_under_construction)
+        _open(builder, quote["years"])
+        self.assertFalse(builder.world.ways_under_construction)
+        self.assertTrue(builder.world.improvements[geography.edge_key(self.edge.tile_a, self.edge.tile_b)]["road"])
 
 
 class EngineeredAndWorksTests(unittest.TestCase):
@@ -185,7 +159,7 @@ class CommandAndSaveTests(unittest.TestCase):
         from sim.engine.state import deserialize_state, serialize_state
         world = LandWorld()
         world.ways_under_construction = {"a|b": {"rail": {"due": 12.5, "trade": "labourer", "crew_hours": 3.0e5,
-                                                         "engineered": True, "pressed": 3}}}
+                                                         "engineered": True}}}
         world.improvements = {"a|b": {"road": True, "engineered": True}, "tile": {"port": True}}
         copy = deserialize_state(serialize_state(world), LandWorld)
         self.assertEqual(copy.ways_under_construction, world.ways_under_construction)

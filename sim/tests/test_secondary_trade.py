@@ -9,6 +9,7 @@ import unittest
 from types import SimpleNamespace
 
 from sim.economy import credit, credit_claims, secondary_trade
+from sim.economy.credit_record import CreditRecord
 from sim.book import Book
 from sim.economy.secondary_trade import BOND_MARKET, SHARE_TRADING, Shortfall
 from sim.economy.types import FundsOffer, Loan, Transfer
@@ -26,7 +27,7 @@ class TradeFixture(unittest.TestCase):
             book.transfer(Transfer("edge:mint", agent, self.money, 1000.0, "opening"))
         self.holder, self.saver, self.other = "household:a", "household:b", "household:c"
         self.producer_id = "producer:one"
-        self.record = SimpleNamespace(book=book, cohorts={self.holder: None, self.saver: None, self.other: None}, producers={self.producer_id: None}, capital_markets=SimpleNamespace(capital=SimpleNamespace(funds={}), banks={}, last_dividends={self.producer_id: 20.0}, shares={self.producer_id: {self.holder: 0.3}}), credit=SimpleNamespace(loans=[], remembered_defaults={}))
+        self.record = SimpleNamespace(book=book, cohorts={self.holder: None, self.saver: None, self.other: None}, producers={self.producer_id: None}, capital_markets=SimpleNamespace(capital=SimpleNamespace(funds={}), banks={}, last_dividends={self.producer_id: 20.0}, shares={self.producer_id: {self.holder: 0.3}}), credit=CreditRecord())
 
     def balance(self, agent):
         return self.record.book.balance(agent, self.money)
