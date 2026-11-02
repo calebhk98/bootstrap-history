@@ -14,7 +14,7 @@ from sim.economy.api import (opening_market_rate, EconomySetup, carriage_wear, S
                              recipes_from_production_data, taxes, tile_costs, with_tool_wear)
 from sim.agents import api as agents_api
 from sim.world import demand, need_basket
-from sim.geography.api import sea_freight, settlement
+from sim.geography.api import dues_hours_per_tonne, sea_freight, settlement
 from sim.labour import api as labour_api
 
 from . import port_closure, port_costs, port_crop_prices, port_sites
@@ -222,12 +222,17 @@ def build_setup(sim, opening=None, production=None):
     wages = dict(opening["wages"])
     by_people = sorted(tile_ids, key=lambda tile: (-population_by_tile[tile], tile))   # the home country's tiles
     coastal = [tile for tile in by_people if tiles[tile].coastal]
+    port_handling = sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages.get(opening["unskilled_trade"], 0.0)
+    dues = {mode: hours * float(opening["carriage_wage"]) for mode, hours in dues_hours_per_tonne(world_map).items()
+            if hours > 0.0}      # tolls and port dues: unskilled hours at the opening wage, paid to the tile's holder (economy/route_dues.py)
     return EconomySetup(
         civ_id=str(civ["id"]),
         currency=_counted_currency(civ, unit),
         state_agent="state:" + str(civ["id"]), tiles=tiles,
         carriage_rates=dict(opening["carriage"]), carriage_rates_balanced=dict(opening["carriage_balanced"]),
-        handling_rates={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages.get(opening["unskilled_trade"], 0.0)},
+        handling_rates={mode: dues.get(mode, 0.0) + (port_handling if mode == SEA_MODE else 0.0)
+                        for mode in sorted(set(dues) | {SEA_MODE})},
+        route_dues=dues,
         carriage_wage=float(opening["carriage_wage"]),
         carriage_crew={mode: (str(crew[0]), float(crew[1])) for mode, crew in opening["carriage_crew"].items()},
         carriage_carriers=carriage_wear.table(

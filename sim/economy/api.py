@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the markets module's port 
 
 import math
 
-from . import carried_book, carriage_wear, national_prices, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
+from . import route_dues, carried_book, carriage_wear, national_prices, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
 from .bank_founding import found_from_outside
 from .diagnostics import person_equivalent_unemployment
 from .fixture_setups import GRAIN as FIXTURE_STAPLE, LABOURER as FIXTURE_UNSKILLED_TRADE, small_setup as fixture_small_setup, stationary_setup as fixture_stationary_setup
@@ -56,7 +56,7 @@ __all__ = [
     "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
-    "settle_agent_takings", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
+    "settle_agent_takings", "route_dues_account", "tile_holders", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "POOLED_FUNDS", "INSURANCE_UNDERWRITING", "RISK_POOLING", "BOND_MARKET", "SHARE_TRADING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
     "person_equivalent_unemployment", "labour_market_rows",
 ]
@@ -374,7 +374,9 @@ def begin_spin_up(economy):
 
 def finish_spin_up(economy):
     """Closes the hidden spin-up years: the price level is rebased to one (expectations of inflation are kept)
-    and the clock returns to zero."""
+    and the clock returns to zero. Route dues the hidden years collected pay no one: they return over the exchange edge."""
+    for holder in tile_holders(economy):
+        settle_agent_takings(economy, route_dues_account(holder), EDGE_EXCHANGE)
     rebase_basket_price_level(economy.setup, economy.record)
     economy.record.settling = False
     economy.record.memory.year = 0
@@ -509,6 +511,16 @@ def economy_countries(economy):
 
 def country_of_tile(economy, tile):
     return economy.setup.country_of(tile)
+
+
+def route_dues_account(holder):
+    """The account the route dues owed to a holder collect in (settle it with `settle_agent_takings`)."""
+    return route_dues.account(holder)
+
+
+def tile_holders(economy):
+    """Every holder of tiles in the economy (the countries and seats their dues are paid to), sorted."""
+    return sorted(economy.setup.countries())
 
 
 def economy_tiles(economy):
