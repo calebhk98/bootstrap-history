@@ -126,3 +126,11 @@ Answered by the owner:
 3. One wage per trade and area for every employer. Different rates for different kinds of employer (a player, a
    country, the public market) are a later enhancement, since the spread within a trade is small next to the spread
    between trades; `paid_by_employer` and the per-employer premium are removed.
+
+Open:
+
+4. A seat's goods purchases and sales settle at once, at the economy's quote, through the ledger's market edge
+   (`sim/markets/goods_market.py` `settle_purchase`/`sell`, the `bought`/`sold`/`drawn` flows), outside the economy's
+   clearing; actors' standing orders go through the clearing. One path would make a seat's buy or sell an order that
+   settles at the year's clearing, as hiring now does. That changes what a player sees (a purchase arrives at the
+   year's end, at the cleared price). Should seats' goods trades move to the clearing?
