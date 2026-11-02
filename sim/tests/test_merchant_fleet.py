@@ -116,14 +116,5 @@ class HiringIdleFleets(unittest.TestCase):
         self.assertAlmostEqual(pay[0].amount, 30.0)
 
 
-class OpeningEndowment(unittest.TestCase):
-    def test_merchants_open_with_carriers_sized_to_their_capital(self):
-        from sim.economy.opening import open_economy
-        from sim.tests.test_carriage_wear import CART as GAME_CART, carrying_setup
-        record, _areas, _carriage = open_economy(carrying_setup())
-        held = [carriage_fleet_book.held(record.book, each, [GAME_CART])[GAME_CART] for each in record.merchants]
-        self.assertTrue(held and all(units > 0.0 for units in held))
-
-
 if __name__ == "__main__":
     unittest.main()

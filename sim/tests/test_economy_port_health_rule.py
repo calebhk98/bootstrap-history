@@ -1,6 +1,6 @@
 """The port's health report names the staple (the hunger need's largest opening good), defaults the metals to the
-good backing the currency, counts the years kept, and hands the outcomes to `diagnostics.summary`. The rule is called on
-a stand-in agent whose economy is written out here; the summary and the opening quantities are recorders."""
+good backing the currency, counts the years kept, and hands the outcomes to `health_figures`. The rule is called on
+a stand-in agent whose economy is written out here; the figures and the opening quantities are recorders."""
 QUICK_TOPIC = True
 import types
 import unittest
@@ -23,11 +23,11 @@ def agent_with(outcomes, backing_good="metal_kg"):
 def report_of(agent, **options):
     calls = []
 
-    def summary(outcomes, setup, staple, metals):
+    def summary(economy, outcomes, staple, metals):
         calls.append((list(outcomes), staple, list(metals)))
         return {"hunger_share": 0.25}
 
-    with mock.patch.object(port_health.diagnostics, "summary", summary), \
+    with mock.patch.object(port_health, "health_figures", summary), \
             mock.patch.object(port_health, "opening_quantities", lambda economy: OPENING):
         return health_report(agent, **options), calls
 
