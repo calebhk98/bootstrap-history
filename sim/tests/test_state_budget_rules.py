@@ -135,6 +135,9 @@ class StubHarvest:
     def __init__(self, tonnes):
         self.tonnes = tonnes
 
+    def staple_material(self):
+        return "wheat_kg"
+
     def harvest_tonnes(self):
         return self.tonnes
 

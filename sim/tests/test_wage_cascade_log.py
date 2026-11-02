@@ -12,7 +12,7 @@ from sim.tests import module_harness
 
 
 def built(change, said=-1000):
-    return module_harness.build(Demography, views={"cleared_wage_change": change}, world=DemographyWorld(said_wage_cascade=said))
+    return module_harness.build(Demography, views={"cleared_wage_change": lambda: change}, world=DemographyWorld(said_wage_cascade=said))
 
 
 class WageCascadeLog(unittest.TestCase):

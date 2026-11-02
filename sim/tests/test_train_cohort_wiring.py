@@ -1,5 +1,5 @@
 """Complaint 644: `Training.train` writes the cohort into the household's training list as the rows `cohort_rows` gives
-(an early slice and the rest), pays the fee, spends the teacher's hours and presses the source trade. Called on a stand-in
+(an early slice and the rest), pays the fee, and spends the teacher's hours. Called on a stand-in
 `self` carrying what it reads; the rows and the stall window are test_trade_first_hands."""
 QUICK_TOPIC = True
 
@@ -20,15 +20,14 @@ class Teacher:
 
     def __init__(self, plan=PLAN, refusal=None):
         self.plan, self.refusal = plan, refusal
-        self.paid, self.pressed = [], []
+        self.paid = []
         self.household = types.SimpleNamespace(training=[], trades_created=set(), teaching_hours_this_year=None)
         self._world = types.SimpleNamespace(
             workforce=self.household, view=workforce_stand_in.view_of(self.household), year=YEAR, state=types.SimpleNamespace(household=self.household, scenario=types.SimpleNamespace(year=YEAR)),
             send=lambda command: self.paid.append((command.amount, command.purpose)), EDGE_WORKERS="workers",
             HOURS_PER_PERSON_YEAR=HOURS_PER_PERSON_YEAR,
             plain_number=lambda number: str(number), money_text=lambda money, grouped=False: str(money))
-        market = types.SimpleNamespace(press=lambda trade, hours: self.pressed.append((trade, hours)))
-        self.training = Training(self._world, advice=None, book=None, capacity=None, hours=self, market=market, supply=None, trades=None)
+        self.training = Training(self._world, advice=None, book=None, capacity=None, hours=self, market=None, supply=None, trades=None)
         self.training.train_check = self.train_check
         self.training._full_years = self._full_years
 
@@ -56,20 +55,19 @@ class TrainTests(unittest.TestCase):
         self.assertEqual(game.household.training, cohort_rows(YEAR, "machinist", 2.0, 4.0, 8.0, 0.5))
         self.assertEqual(len(game.household.training), 2)
 
-    def test_the_fee_is_paid_the_hours_booked_the_trade_created_and_the_source_pressed(self):
+    def test_the_fee_is_paid_the_hours_booked_and_the_trade_created(self):
         game = Teacher()
         game.train("machinist", 2)
         self.assertEqual([money for money, _text in game.paid], [40.0])
         self.assertEqual(game.household.teaching_hours_this_year, 300.0)
         self.assertEqual(game.household.trades_created, {"machinist"})
-        self.assertEqual(game.pressed, [("smith", 2.0 * HOURS_PER_PERSON_YEAR)])
 
     def test_a_refused_plan_changes_nothing(self):
         game = Teacher(refusal="refused")
         trained, refusal = game.train("machinist", 2)
         self.assertFalse(trained)
         self.assertEqual(refusal, "refused")
-        self.assertEqual((game.household.training, game.paid, game.pressed), ([], [], []))
+        self.assertEqual((game.household.training, game.paid), ([], []))
 
 
 if __name__ == "__main__":

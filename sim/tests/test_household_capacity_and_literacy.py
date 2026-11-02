@@ -81,9 +81,6 @@ check("a scholar ceiling adds the institutions that train scholars outright",
       _StubLabour(institutional=7.0).literate_capacity("scholar") > _StubLabour().literate_capacity("scholar") + 6.9)
 check("only a scholar gets the institutional pool", _StubLabour(institutional=7.0).literate_capacity("machinist")
       == _StubLabour().literate_capacity("machinist"))
-check("the people who exist cap a present trade", _StubLabour(existing=1.5).literate_capacity("machinist") == 1.5)
-check("...but not a trade the world has none of yet (absent trades are taught in)",
-      _StubLabour(existing=0.0, absent={"machinist"}).literate_capacity("machinist") > 0.0)
 
 # --- household_room: one number for hire, buy and train.
 check("household room is the places plus the supervision, less the people held",

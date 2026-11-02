@@ -23,7 +23,7 @@ def economy_over(areas=None, prices=None, trade_age=None, curves=None):
     """An economy whose grain market is one area "a" unless `areas` says which area a tile is in."""
     areas = areas or {}
     memory = types.SimpleNamespace(prices=dict(prices or {}), trade_age=dict(trade_age or {}),
-                                   volume_weights={key: 1.0 for key in (prices or {})})
+                                   volume_weights={key: 1.0 for key in (prices or {})}, quote_kinds={})
     return types.SimpleNamespace(
         setup=types.SimpleNamespace(port_tile="port", country_of=lambda tile: "home"),
         area_map=types.SimpleNamespace(area_of=lambda good, tile: areas.get(tile, "a") if good == GRAIN else "other"),

@@ -102,9 +102,10 @@ check("a failure is counted", player.record.failed_copies.get("tech") == 1, play
 world = make_world()
 player = make_player()
 player.record.orders.append({"command": "open", "node": "shop"})
+player.record.workforce["labourer"] = 100.0 / world.hours_per_person_year   # the crew the labour core hired at the last clearing
 year_on(player, world)
-check("open runs a concern and yields takings less upkeep and wages",
-	  "shop" in player.concerns and abs(player.money - (1000.0 + 500.0 - 50.0 - 100.0)) < 1e-6, player.money)
+check("open runs a concern and yields takings less upkeep (the clearing pays the crew)",
+	  "shop" in player.concerns and abs(player.money - (1000.0 + 500.0 - 50.0)) < 1e-6, player.money)
 check("the concern's margin is on the record", abs(player.business.margin_of("shop") - 350.0) < 1e-6, player.business.plants)
 player.record.orders.append({"command": "close", "node": "shop"})
 before = player.money

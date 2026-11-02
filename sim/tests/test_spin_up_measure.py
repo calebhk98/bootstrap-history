@@ -12,6 +12,8 @@ from sim.book import Book, GoodsMove
 from sim.economy import year_close
 from sim.economy.spin_up_state import spin_up_state as year_state_of   # a pure read of a record, not a builder
 from sim.economy.households_cohort import Cohort
+from sim.economy.goods_record import GoodsRecord
+from sim.economy.market_memory import MarketMemory
 
 FULL_GAME = {key: value for key, value in os.environ.items() if key != spin_up.SPIN_UP_YEARS_ENV}
 TOLERANCE = spin_up_run.SPIN_UP_TOLERANCE
@@ -143,13 +145,12 @@ class StateTests(unittest.TestCase):
 class RebaseTests(unittest.TestCase):
     def test_rebasing_keeps_what_households_and_the_market_expect_of_inflation(self):
         money = "coin"
-        memory = types.SimpleNamespace(
-            prices={"wheat_kg|area": 1.5}, volume_weights={}, quote_kinds={}, basket_price_levels={money: 1.8},
-            price_levels={money: 1.7}, expected_inflation={money: 0.07})
+        memory = MarketMemory(
+            prices={"wheat_kg|area": 1.5}, basket_price_levels={money: 1.8}, price_levels={money: 1.7}, expected_inflation={money: 0.07})
         cohorts = {"household:a": Cohort("household:a", "farms", 0, 10.0, 5.0, 0.2, expected_inflation=0.07,
                                          last_basket_price_level=1.8)}
         record = types.SimpleNamespace(memory=memory, cohorts=cohorts,
-                                       goods=types.SimpleNamespace(volumes={"wheat_kg|area": 10.0}, index_base_prices={}))
+                                       goods=GoodsRecord(volumes={"wheat_kg|area": 10.0}))
         year_close.rebase_basket_price_level(types.SimpleNamespace(currency_id=money), record)
         self.assertEqual(record.goods.index_base_prices, {"wheat_kg": 1.5})
         self.assertEqual(memory.basket_price_levels[money], 1.0)

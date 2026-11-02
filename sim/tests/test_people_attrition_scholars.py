@@ -61,8 +61,6 @@ reach = 35.0
 check("the market-reach ceiling for a fresh household is the floor plus its reach scaled by literacy",
       abs(wall_of("scholar") - (1.5 + reach)) < 1e-9, wall_of("scholar"))
 check("a trade that does not read has no literacy wall", wall_of("smith") == float("inf"))
-check("a trade nobody can be found in cannot be had past the people who exist",
-      wall_of("scribe", exist=2.0) == 2.0)
 check("building the institutions that train scholars outright widens the wall by what they hold, for scholars alone",
       abs(wall_of("scholar", institutional=20.0) - wall_of("scholar") - 20.0) < 1e-9
       and wall_of("scribe", institutional=20.0) == wall_of("scribe"))

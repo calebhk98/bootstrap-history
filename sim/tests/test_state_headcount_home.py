@@ -16,14 +16,14 @@ WORKING_AGE = 1.0e6
 
 
 class HomeView(BudgetView):
-    """The budget questions over a stand-in game: its working age, farm hours, last nutrition and the state's granary."""
+    """The budget questions over a stand-in game: its working age, farm share of the hours, last nutrition and the state's granary."""
 
-    def __init__(self, farm_hours=None, nutrition=None, granary=0.0):
+    def __init__(self, farm_share=0.0, nutrition=None, granary=0.0):
         record = ActorRecord(kind="government")
         record.stores["wheat_kg"] = granary
         flows = None if nutrition is None else SimpleNamespace(nutrition_ratio=nutrition)
         self.needs = fake_needs(
-            working_age=WORKING_AGE, population_total=4.0 * WORKING_AGE, farm_holdings={"hours_needed": farm_hours},
+            working_age=WORKING_AGE, population_total=4.0 * WORKING_AGE, farm_share_of_hours=farm_share, civilisation=lambda: {"staple": "wheat_kg"},
             nutrition_ratio_last_year=lambda: None if flows is None else flows.nutrition_ratio)
         self._record = record
 
@@ -33,7 +33,7 @@ class HomeView(BudgetView):
 
 hands = HomeView().state_hands()
 check("the home country's hands are its working age", hands.working_age == WORKING_AGE, hands)
-check("with no farming allocation yet and no famine, no hands are held back", hands.farm_hands == 0.0 and hands.food_ratio == 1.0, hands)
+check("with no farm share of the hours yet and no famine, no hands are held back", hands.farm_hands == 0.0 and hands.food_ratio == 1.0, hands)
 
 view = HomeView()
 record = ActorRecord(kind="government")

@@ -33,7 +33,7 @@ class _Economy:
         return self.paid
 
     def agent_price_kind(self, good):
-        return "traded" if good in self.paid else None
+        return "traded" if self.paid is not None and good in self.paid else None
 
     def acting_tile(self):
         return "tile"
@@ -72,9 +72,6 @@ class _Market(GoodsMarket):
     def drawn_tonnes(self, commodity):
         return 0.0
 
-    def import_tonnes_available(self, material, partner=None):
-        return None
-
 
 PAID = {WHEAT: 0.004, COIN_METAL: 0.9}
 market = _Market(PAID)
@@ -95,8 +92,10 @@ priced_dearer = _Market(PAID, cost_table={WHEAT: 0.001, COIN_METAL: 0.9})
 check("the price is the economy's where it has a market, whatever the cost table says",
       abs(priced_dearer.quote(WHEAT)["price_at_tile_per_tonne"] - per_tonne) <= 1e-9 * per_tonne)
 costed_only = _Market({COIN_METAL: 0.9}, cost_table={WHEAT: 0.002, COIN_METAL: 0.9})
-check("a good the economy has no market for costs what the cost table says",
-      abs(costed_only.quote(WHEAT)["price_at_tile_per_tonne"] - 0.002 / tonnes_per_unit(WHEAT)) < 1e-9)
+check("a good the economy has no market for has no price, whatever the cost table says", costed_only.quote(WHEAT) is None)
+opening = _Market(None, cost_table={WHEAT: 0.002, COIN_METAL: 0.9})
+check("while the economy opens, the cost table's price answers",
+      abs(opening.quote(WHEAT)["price_at_tile_per_tonne"] - 0.002 / tonnes_per_unit(WHEAT)) < 1e-9)
 
 # a larger order costs more a tonne; a larger sale fetches less
 means = [market.purchase_cost(WHEAT, OFFERED_TONNES * share)[1] for share in (0.001, 0.05, 0.3, 0.99)]

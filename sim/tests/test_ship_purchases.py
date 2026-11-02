@@ -46,7 +46,7 @@ class ShipPurchases(unittest.TestCase):
             fleet_goods=lambda: [{"material": "test_hull", "life": 20.0,
                                   "held": 0.0, "crew": {"sailor": 60.0}}],
             trade_exists=lambda trade: True, national_people=lambda trade: 100000.0,
-            pay_per_person_year=lambda trade: 10.0,
+            pay_per_person_year=lambda trade: 10.0, trade_of_role=lambda role: "labourer",
             commodity_of=lambda material: material,
             material_cost=lambda material, tonnes: tonnes * 1000000.0)
         line, = budget_lines.navy_line(world)

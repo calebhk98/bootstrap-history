@@ -26,7 +26,7 @@ def quote_game(**attributes):
     labour = Game(
         hire_check=lambda trade, count: (count, 412.34, None),
         commission_check=lambda trade, hours: (207.77, None),
-        market=Game(quote_annual=lambda trade, count: 400.04))
+        market=Game(quote_annual=lambda trade: 400.04))
     defaults = dict(
         capital=5000.0, labour=labour, done=set(), operating=set(), active={}, civ={"name": "Testland"},
         bounty_price=lambda node_id: 9000.06, bounty_eligible=lambda node_id: True, project_cost_now=lambda node_id: 3000.0,
@@ -43,7 +43,7 @@ NODES = {"mill": {"name": "Mill", "pre": [], "cat": "craft"}}
 
 hire = quote_spending._quote_hire(quote_game(), NODES, {"trade": "Smith", "n": 2})
 check("quote hire shows the fee hire_check returns, rounded to a tenth, and the wage due each later year",
-      hire["paid_now"] == 412.3 and hire["from_next_year_per_year"] == 800.1 and hire["people"] == 2 and hire["trade"] == "smith", hire)
+      hire["first_year_wages_at_stake"] == 412.3 and hire["from_next_year_per_year"] == 800.1 and hire["people"] == 2 and hire["trade"] == "smith", hire)
 refusing = quote_game(labour=Game(hire_check=lambda trade, count: (None, None, Refusal("no_such_trade", "no such trade"))))
 check("quote hire passes hire_check's refusal on", quote_spending._quote_hire(refusing, NODES, {"trade": "x"}).get("ok") is False)
 check("quote hire refuses a count that is not a number",

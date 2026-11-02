@@ -44,9 +44,6 @@ class StateWorld(FakeWorld):
     def national_people(self, trade):
         return 1.0e9
 
-    def local_staff(self, trade, people):
-        return people
-
 
 def standing_need_lines(total):
     from sim.agents import budget

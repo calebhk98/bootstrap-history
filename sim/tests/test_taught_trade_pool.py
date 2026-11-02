@@ -55,27 +55,23 @@ check("a trade people practise already is drawn from the whole country's people"
 
 class Firm:
     actor_id = "firm:1"
-    workforce = {}
 
-    def __init__(self):
-        self.workforce = {}
+    def __init__(self, hired=0.0):
+        self.workforce = {TAUGHT: hired} if hired else {}
+        self.record = types.SimpleNamespace(staff_wanted={})
 
     def capacity_of(self, node_id):
         return 1.0
 
 
 class StaffWorld:
-    def __init__(self, free):
-        self.free = free
-
     def concern_staff(self, node_id):
         return {TAUGHT: 4.0}
 
-    def free_fte(self, trade, actor_id):
-        return self.free
-
 
 firm = Firm()
-check("a firm with no taught people to draw on finds none of its staff", business_crew.staff(Business(), firm, "mill", StaffWorld(0.0)) == 0.0)
-firm = Firm()
-check("a firm takes the share the pool covers", business_crew.staff(Business(), firm, "mill", StaffWorld(3.0)) == 0.75 and firm.workforce[TAUGHT] == 3.0)
+check("a firm with none of the taught people hired finds none of its staff, and posts the places",
+      business_crew.staff(Business(), firm, "mill", StaffWorld()) == 0.0 and firm.record.staff_wanted == {TAUGHT: 4.0}, firm.record.staff_wanted)
+firm = Firm(hired=3.0)
+check("a firm takes the share of its places the labour core has hired people for",
+      business_crew.staff(Business(), firm, "mill", StaffWorld()) == 0.75 and firm.record.staff_wanted == {TAUGHT: 4.0})

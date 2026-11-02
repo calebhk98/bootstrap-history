@@ -1,7 +1,7 @@
 """Complaint 543: the farm's ladder, arable ceiling and cleared ground follow the held tiles as they now are.
 The agriculture module's `farm_territory` builds the ladder and ceiling from the tiles' crop sites (where the soil nitrogen
 stock and the rotation have moved their yield factor and cropped hectares); the engine's `refresh_farm_territory`
-sets them on the farm and re-sizes the cleared area on the new ladder. The labour side is a recorder; the sites are written out."""
+sets them on the farm by command. The sites are written out."""
 QUICK_TOPIC = True
 
 import unittest
@@ -37,15 +37,12 @@ class TerritoryTests(unittest.TestCase):
 
 
 class Farm:
-    def __init__(self, territory, cleared_hectares):
+    def __init__(self, territory):
         self.territory = territory
-        self.cleared_hectares = cleared_hectares
-        self.resized_to = []
         self.sent = []
-        self.labour = SimpleNamespace(set_farm_area=self.resized_to.append)
 
     def view(self, name):
-        return lambda: self.territory if name == "farm_territory" else SimpleNamespace(hectares=self.cleared_hectares)
+        return lambda: self.territory
 
     def send(self, command):
         self.sent.append(command)
@@ -53,14 +50,9 @@ class Farm:
 
 class RefreshTests(unittest.TestCase):
     def test_the_ladder_and_ceiling_are_the_territorys(self):
-        farm = Farm(SimpleNamespace(ladder=[(1.1, 100.0)], cropped_hectares=100.0), 50.0)
+        farm = Farm(SimpleNamespace(ladder=[(1.1, 100.0)], cropped_hectares=100.0))
         refresh_farm_territory(farm)
         self.assertEqual(farm.sent, [SetFarmTerritory([(1.1, 100.0)], 100.0)])
-
-    def test_the_cleared_area_is_kept_and_sized_again_on_the_new_ladder(self):
-        farm = Farm(SimpleNamespace(ladder=[(1.1, 100.0)], cropped_hectares=100.0), 70.0)
-        refresh_farm_territory(farm)
-        self.assertEqual(farm.resized_to, [70.0])
 
 
 if __name__ == "__main__":
