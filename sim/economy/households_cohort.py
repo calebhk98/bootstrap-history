@@ -136,6 +136,11 @@ def rescale_cohort(cohorts: Dict[AgentId, Cohort], cohort_id: AgentId, scale: fl
     cohorts[cohort_id] = replaced(cohort, people=cohort.people * scale, working_people=cohort.working_people * scale)
 
 
+def set_people(cohorts: Dict[AgentId, Cohort], cohort_id: AgentId, people: float, working_people: float) -> None:
+    """The row for `cohort_id` with these people, of whom `working_people` work (never more than the people)."""
+    cohorts[cohort_id] = replaced(cohorts[cohort_id], people=people, working_people=min(working_people, people))
+
+
 def rebase_price_level(cohorts: Dict[AgentId, Cohort]) -> None:
     """Every cohort's last basket price level is one, the new base."""
     cohorts.update({agent: renewed(cohort, last_basket_price_level=1.0) for agent, cohort in cohorts.items()})

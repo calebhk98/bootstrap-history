@@ -1,29 +1,18 @@
-"""The economy's year step for taxed people: who fled, what land they left, who came home (flight_year.py)."""
+"""The economy's year step for taxed people: who fled, what land they left, who came home (flight_year.py). The workers' moves
+are reported (`report.migrated`), not written to the households: demography owns people and moves them (`MovePeople`)."""
 import math
-from typing import Dict, Mapping
+from typing import Dict
 
 from sim.labour.api import people_in
 
-from . import flight_routes, flight_year, households_cohort
+from . import flight_routes, flight_year
 from .labour_inputs import TONNES_CARRIED_PER_MIGRANT
-from .setup import area_tile, labour_area
+from .setup import area_tile
 
 
 def people_before(setup, labour) -> Dict[str, float]:
     """People in each labour area before the year's market moves them; empty when the state takes nothing to flee from."""
     return {area: people_in(labour.workforce, area) for area in labour.workforce.workers}
-
-
-def cohorts_follow_workers(record, change_by_area: Mapping[str, float], people_by_area: Mapping[str, float]) -> None:
-    """The households of an area gain or lose people with the workers who moved in or out: each cohort is scaled by the
-    area's net change over the people it held before (`people_before`)."""
-    for cohort_id, cohort in sorted(record.cohorts.items()):
-        area = labour_area(cohort.tile)
-        before = people_by_area.get(area, 0.0)
-        change = change_by_area.get(area, 0.0)
-        if before > 0.0 and change != 0.0:
-            scale = max(0.0, 1.0 + change / before)
-            households_cohort.rescale_cohort(record.cohorts, cohort_id, scale)
 
 
 def mean_year_income(workforce, hours_per_worker_year: float) -> Dict[str, float]:
@@ -36,7 +25,6 @@ def settle(setup, record, inputs, report, before, context, carriage) -> Dict[str
     """After the year's labour market: tenants of areas people left leave their land, the leavers join the fugitives, and
     fugitives for whom home now beats the refuge come back. Returns the people who came home by area. `inputs` carries the
     state's take, its amnesty and its immunity (`YearInputs`); `context` is the year's labour inputs (subsistence, routes)."""
-    cohorts_follow_workers(record, report.migrated, before)
     subsistence = context.subsistence_per_worker_year
     taxed = flight_routes.taxed_share_by_area(inputs.taxed_share_by_tile)
     if setup.flight is None or (not taxed and not record.unfree.fugitives):
@@ -55,5 +43,6 @@ def settle(setup, record, inputs, report, before, context, carriage) -> Dict[str
         record.labour.workforce, record.unfree.fugitives, taxed, subsistence, income,
         inputs.amnesty_share, inputs.immunity_years, moving_cost, setup.flight.arrears_owed_by_fugitive, setup.flight.share_after_immunity)
     after_return = people_before(setup, record.labour)
-    cohorts_follow_workers(record, {area: after_return.get(area, 0.0) - people for area, people in after_market.items()}, after_market)
+    for area, people in after_market.items():   # those who came home are moves too: demography takes the net with the market's
+        report.migrated[area] = report.migrated.get(area, 0.0) + after_return.get(area, 0.0) - people
     return came

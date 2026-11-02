@@ -17,7 +17,7 @@ from sim.labour.api import migrant_pairs, totals_of_pairs
 from sim.world import regional_population
 from sim.world.demography import Population
 
-from . import rules
+from . import moves, rules
 
 
 class Regions:
@@ -58,6 +58,11 @@ class Regions:
         self.world.food_eaten_over_need = command.national
         self.world.regional_eaten_over_need = dict(command.by_tile)
 
+    def move_people(self, command):
+        """Keep the labour market's moves of the year (net working-age people by tile) for the next yearly step."""
+        for tile, change in command.net_by_tile.items():
+            self.world.moves_asked[tile] = self.world.moves_asked.get(tile, 0.0) + change
+
     def _regional_kcal_per_day(self, regions):
         """{region: calories a day it is fed}: its own households' eaten over need where the economy has booked it, else
         the opening's full ration; open works' relief is shared by need."""
@@ -72,6 +77,8 @@ class Regions:
         """Step every region a year and return the nation's flows; the nation's people become their sum."""
         borders = self.needs.borders_among(list(regions))
         pairs = migrant_pairs(regions, self.world.regional_eaten_over_need, borders, settlement.distance_between_tiles_km)
+        pairs = moves.within_working_age(pairs + moves.pairs_of_net_moves(self.world.moves_asked, regions), regions)   # one rule: food and wage moves together
+        self.world.moves_asked = {}
         self.needs.send(RecordMigrantContact(tuple(pairs)))
         leaving, arriving = totals_of_pairs(pairs)
         food = sum(kcal_by_region.values())
