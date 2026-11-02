@@ -7,7 +7,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.agents.api import EDGE_EXCHANGE, EDGE_OUTSIDE, PURSE_CURRENCY, ActorRegistry, ActorsState, DUES_CAUSE
+from sim.agents.api import EDGE_EXCHANGE, EDGE_OUTSIDE, PURSE_CURRENCY, ActorRegistry, ActorsState
 from sim.engine.state import ActorRecord, deserialize_state, serialize_state
 from sim.ledger.api import (CloseCashPeriod, CreditSeat, DebitSeat, NoteHolderBooking, NoteSeatCash, NoteSpend, OpenCashBook, OpenPurse,
                             BankStock, ChangeStock, DrawDownStock, LedgerSeat, LedgerWorld, PayActor, PayActorFromHousehold, PayEdge, PayExchange,
@@ -127,21 +127,21 @@ class PayActorCommand(unittest.TestCase):
     def pay(self, module, payee):
         paid = []
         with mock.patch("sim.ledger.ledger.ledger.transfer", lambda payer, to, amount, cause: paid.append((payer.actor_id, to.actor_id, amount, cause))):
-            module.pay_actor(PayActor("trader", payee, 4.0, DUES_CAUSE))
+            module.pay_actor(PayActor("trader", payee, 4.0, "route dues"))
         return paid
 
     def test_a_seat_is_paid_as_a_party_in_the_book_under_its_own_id(self):
         module, _opened = self.module()
-        self.assertEqual(self.pay(module, "seat1"), [("trader", "seat1", 4.0, DUES_CAUSE)])
+        self.assertEqual(self.pay(module, "seat1"), [("trader", "seat1", 4.0, "route dues")])
 
     def test_a_government_the_cast_holds_is_paid_without_opening_another(self):
         module, opened = self.module(governments=("rome",))
-        self.assertEqual(self.pay(module, "government:rome"), [("trader", "government:rome", 4.0, DUES_CAUSE)])
+        self.assertEqual(self.pay(module, "government:rome"), [("trader", "government:rome", 4.0, "route dues")])
         self.assertEqual(opened, [])
 
     def test_a_government_the_cast_lacks_is_opened_for_the_payment(self):
         module, opened = self.module()
-        self.assertEqual(self.pay(module, "government:carthage"), [("trader", "government:carthage", 4.0, DUES_CAUSE)])
+        self.assertEqual(self.pay(module, "government:carthage"), [("trader", "government:carthage", 4.0, "route dues")])
         self.assertEqual(opened, ["carthage"])
 
 
