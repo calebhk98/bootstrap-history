@@ -13,7 +13,7 @@ def society_technologies(game: Any) -> Set[str]:
 
 
 def snapshot(game: Any) -> Dict[str, Any]:
-    return {"year": game.year, "population": float(game.view("population")().total), "wage_index": float(game.view("wage_index")()),
+    return {"year": game.year, "population": float(game.view("population")().total), "wage_per_hour": float(game.view("money_per_labour_hour")()),
             "literacy_general": float(game.view("literacy")("literacy_general", None)),
             "literacy_elite": float(game.view("literacy")("literacy_elite", None)),
             "territory_tiles": len(game.view("tiles_listed_by")(game.civ)),

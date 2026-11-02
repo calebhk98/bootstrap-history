@@ -3,7 +3,7 @@ into distributions by year and kept in a cache file, so a run can be compared wi
 tends to do rather than with dated history.
 
 A runner is a function `(civilisation_id, seed, years)` returning one snapshot per year from the opening:
-`{year, population, wage_index, literacy_general, literacy_elite, territory_tiles, technologies}`. The real
+`{year, population, wage_per_hour, literacy_general, literacy_elite, territory_tiles, technologies}`. The real
 runner is `baseline_game.play_baseline`; tests pass a stub.
 """
 import json
@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from sim import cache_root
 
-METRICS = ("population", "wage_index", "literacy_general", "literacy_elite", "territory_tiles")
+METRICS = ("population", "wage_per_hour", "literacy_general", "literacy_elite", "territory_tiles")
 BANDS = (("p10", 0.1), ("median", 0.5), ("p90", 0.9))
 CACHE_NAME = "baseline_ensemble"
 

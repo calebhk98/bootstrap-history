@@ -57,7 +57,7 @@ def raises(call):
     return False
 
 
-beta = CountryProfile(country="beta", population=500_000, wage_index=0.5, price_index=2.0)
+beta = CountryProfile(country="beta", population=500_000, price_index=2.0)
 inside = CountryWorld(Shared(Own()), beta, Holder())
 check("a country in the economy pays what its own labour markets pay, not the home pay scaled",
       inside.pay_per_person_year("labourer") == 321.0, inside.pay_per_person_year("labourer"))

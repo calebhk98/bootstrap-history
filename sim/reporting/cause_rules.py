@@ -1,7 +1,7 @@
 """Why a number moved: (cause, signed amount) rows for wages, state notice and concern closures, as plain values.
 
 Rows are written where things happen; closing the yearly period stamps them with the year and adds what the year's change
-leaves over: the wage index change no shock named, and the change in state notice split by what moved it. Only the last few
+leaves over: the wage change no shock named, and the change in state notice split by what moved it. Only the last few
 years are kept, so a save holds a bounded history."""
 from typing import Any, Callable, Dict, List, Optional
 
@@ -49,9 +49,13 @@ def close_period(rows: List[Row], mark: Optional[Dict[str, float]], now: Dict[st
     `year`, and return the rows within the years kept."""
     if mark is not None:
         named = sum(row["amount"] for row in rows if row["year"] is None and row["kind"] == WAGE)
-        residual = now["wage_index"] - mark["wage_index"] - named
-        if residual:
-            append_row(rows, WAGE, "wage_index", UNSHOCKED_WAGE_CAUSE, residual)
+        residual = now["wage"] - mark["wage"] - named
+        shocks = [row for row in rows if row["year"] is None and row["kind"] == WAGE and row.get("unmeasured")]
+        if residual and shocks:
+            for row in shocks:
+                row["amount"] += residual / len(shocks)
+        elif residual:
+            append_row(rows, WAGE, "wage", UNSHOCKED_WAGE_CAUSE, residual)
         for cause, part in notice_steps(mark, now, notice_of).items():
             if part:
                 append_row(rows, NOTICE, "state_notice", cause, part)

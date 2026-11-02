@@ -222,7 +222,6 @@ class CountryProfile:
 	population: float = 0.0
 	urban_fraction: float = 0.0
 	tax_share: float = 0.0
-	wage_index: float = 1.0
 	price_index: float = 1.0
 	literacy_general: float = 0.0
 	literacy_elite: float = 0.0

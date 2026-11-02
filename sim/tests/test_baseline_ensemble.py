@@ -18,7 +18,7 @@ def stub_runner(civilisation_id, seed, years):
 	"""A population that grows by `seed` a year, a technology each at fixed offsets; offset 0 is the opening."""
 	rows = []
 	for offset in range(years + 1):
-		rows.append({"year": 100 + offset, "population": 1000.0 + seed * offset, "wage_index": 1.0,
+		rows.append({"year": 100 + offset, "population": 1000.0 + seed * offset, "wage_per_hour": 1.0,
 					 "literacy_general": 0.1, "literacy_elite": 0.9, "territory_tiles": 10,
 					 "technologies": sorted(["opening_tech"] + (["early_tech"] if offset >= 2 else [])
 											+ (["late_tech"] if offset >= 3 * seed else []))})
@@ -62,7 +62,7 @@ with tempfile.TemporaryDirectory() as directory:
 		return Game(
 			literacy=lambda field: {"literacy_general": 0.1, "literacy_elite": 0.9}[field],
 			civ={"id": "fixture_civ", "literacy_general": 0.1, "literacy_elite": 0.9},
-			cfg={"start_year": 100}, year=year, wage_index=1.0, population=Game(total=1005.0),
+			cfg={"start_year": 100}, year=year, money_per_labour_hour=1.0, population=Game(total=1005.0),
 			world_map=None, nodes=nodes, done=set(built), granted=set(), tiles_now=10)
 
 	screen_divergence.tile_count = lambda sim: sim.tiles_now

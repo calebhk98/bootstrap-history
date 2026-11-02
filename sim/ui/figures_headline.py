@@ -31,7 +31,7 @@ def _recurring_net(sim):
             "mine running costs": -sim.view("mine_operating_cost")(),
             "interest on arrears": -interest,
         },
-        "drivers": {"price_index": sim.view("price_index")(), "wage_index": sim.view("wage_index")()},
+        "drivers": {"price_index": sim.view("price_index")(), "wage_per_hour": sim.view("money_per_labour_hour")()},
     }
 
 

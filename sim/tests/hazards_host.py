@@ -43,7 +43,6 @@ def defaults(seed: int) -> Dict[str, Any]:
 		"diffusion_relief": lambda kind, per_weapon=0.0: 0.0 if kind == "medical" else (1.0, None),
 		"counter_supply_gap": lambda node_id, kind, label: (1.0, None), "mine_capacity": {},
 		"military_leverage": 0.0, "standing": {"protection": 0.0, "scandal": 0.0, "bribes_year_to_date": 0.0},
-		"wage_index": 1.0,
 		"money_per_labour_hour": 1.0, "acting_balance": 0.0, "money_real": 1.0, "event_log": [], "price_index": 1.0,
 		"partners_in_agent_economy": [], "weather_seed": lambda year, region=None: "seed", "country_strata": lambda country: [],
 		"visibility": lambda node_id, memo=None: True, "techniques_forgotten": {}, "fog_of_war": False, "capability_gaps": [],

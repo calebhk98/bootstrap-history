@@ -33,7 +33,7 @@ check("no record, no recovery reading", recovery([], 100, 5) is None)
 
 # presentation: the demography screen prints shock and recovery sections from a built reply
 screen = {"population": 920, "cohorts": {"children": 300, "working_age": 600, "elderly": 20}, "working_age_share": 0.65,
-          "last_year": None, "disease_burden": 0.5, "wage_index": 1.0, "epidemics_under_way": [],
+          "last_year": None, "disease_burden": 0.5, "wage_per_hour": 1.0, "epidemics_under_way": [],
           "recent_shocks": shocks, "recovery": reading, "trades": [], "not_held": []}
 check("the screen prints shocks and recovery",
       "SHOCK" in _render_pretty("demography", screen) and "RECOVERY" in _render_pretty("demography", screen))

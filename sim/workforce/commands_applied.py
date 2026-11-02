@@ -21,7 +21,7 @@ class Applying:
 			employees.pop(command.trade, None)
 		self.labour.resync_pools()
 
-	def wage_work_paid(self, command):
+	def clearing_settled(self, command):
 		"""What the clearing charged the seat for its places is the wages it paid, and what it paid for the hours the seat
 		offered of its own is its earnings: last year's wage-work summary (the year closed before the clearing) takes it;
 		the offers are spent."""

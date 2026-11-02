@@ -17,7 +17,7 @@
   },
   "price_index": {
    "label": "price level against the starting one", "unit": "index", "digits": 4,
-   "value": "price_index", "drivers": {"wage_index": "wage_index"}
+   "value": "price_index", "drivers": {"wage_per_hour": "wage_per_hour"}
   }
  }
 }

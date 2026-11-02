@@ -15,8 +15,17 @@ echo "inheritance left on Sim, cross-class references: $(printf '%s\n' "$couplin
 echo "module graph (tools/measure/module_graph.py):"
 python3 tools/measure/module_graph.py | sed 's/^/  /'
 
-module_read_count="$(python3 tools/check_module_reads.py | wc -l | tr -d ' ')"
+module_read_output="$(python3 tools/check_module_reads.py 2>&1)"
+module_read_status=$?
+module_read_count="$(printf '%s\n' "$module_read_output" | grep -c .)"
 echo "module reads and sends not declared in their spec: $module_read_count"
+printf '%s\n' "$module_read_output" | grep . | tail -5 | sed 's/^/  /'
+
+# a built game assembles (a module declaring a command or view its implementation lacks fails here)
+ui_view_output="$(python3 tools/check_ui_views.py 2>&1)"
+ui_view_status=$?
+echo "UI views and commands missing from a built game (tools/check_ui_views.py): $(printf '%s\n' "$ui_view_output" | grep -c .)"
+printf '%s\n' "$ui_view_output" | grep . | tail -5 | sed 's/^/  /'
 
 # Owners of money: the ledger (the seats' purses), the actors (sim/agents, each actor's own purse) and markets (sim/economy, the
 # agent economy's book). The seat's party in sim/agents/household*.py reaches the seat's purse, which is the ledger's, so it counts.
@@ -61,13 +70,13 @@ legacy_count="$(printf '%s\n' "$legacy_reads" | grep -c .)"
 echo "string reads of legacy_* views outside tests: $legacy_count"
 printf '%s\n' "$legacy_reads" | grep . | sed 's/^/  /'
 
-wall_output="$(python3 tools/check_package_walls.py)"
+wall_output="$(python3 tools/check_package_walls.py 2>&1)"
 wall_status=$?
 wall_count="$(printf '%s\n' "$wall_output" | grep -c 'imports sim\.')"
 echo "imports of a walled package's submodule from outside it: $wall_count"
 printf '%s\n' "$wall_output" | grep . | sed 's/^/  /'
 
-owner_output="$(python3 tools/check_record_owners.py)"
+owner_output="$(python3 tools/check_record_owners.py 2>&1)"
 owner_status=$?
 echo "writes to an economy record part by a module that does not own it: $(printf '%s\n' "$owner_output" | grep -c .)"
 printf '%s\n' "$owner_output" | grep . | sed 's/^/  /'
@@ -79,7 +88,8 @@ printf '%s\n' "$port_reach" | grep . | sed 's/^/  /'
 # Checks that fail the run when above zero; the other counts above are a backlog and stay informational.
 failed_checks=()
 [ "$mixin_count" -gt 0 ] && failed_checks+=("mixin classes in MRO")
-[ "$module_read_count" -gt 0 ] && failed_checks+=("module reads and sends not declared in their spec")
+{ [ "$module_read_count" -gt 0 ] || [ "$module_read_status" -ne 0 ]; } && failed_checks+=("module reads and sends not declared in their spec")
+{ [ -n "$ui_view_output" ] || [ "$ui_view_status" -ne 0 ]; } && failed_checks+=("UI views and commands (tools/check_ui_views.py)")
 [ "$money_count" -gt 0 ] && failed_checks+=("direct capital/money writes outside owners")
 [ "$legacy_count" -gt 0 ] && failed_checks+=("string reads of legacy_* views outside tests")
 [ "$wall_status" -ne 0 ] && failed_checks+=("package walls (tools/check_package_walls.py)")

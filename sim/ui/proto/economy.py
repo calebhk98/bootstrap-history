@@ -691,7 +691,7 @@ def _dashboard_snapshot(sim):
     return {
         "year": sim.view("year")(),
         "price_index": round(sim.view("price_index")(), 4),
-        "wage_index": round(sim.view("wage_index")(), 4),
+        "wage_per_hour": round(sim.view("money_per_labour_hour")(), 4),
         "literacy_general": round(float(sim.view("literacy")("literacy_general")), 4),
         "literacy_elite": round(float(sim.view("literacy")("literacy_elite")), 4),
         "capital": round(sim.view("acting_balance")(), 1),
@@ -738,13 +738,13 @@ def _agent_economy(sim, cmd=None):
             if base is not None:
                 moved["last_%d_years" % n_yrs] = {
                     "price_index": round(now["price_index"] - base["price_index"], 4),
-                    "wage_index": round(now["wage_index"] - base["wage_index"], 4),
+                    "wage_per_hour": round(now["wage_per_hour"] - base["wage_per_hour"], 4),
                     "literacy_general": round(
                         now["literacy_general"] - base["literacy_general"], 4)}
     out = {
         "ok": True,
         "price_index": round(sim.view("price_index")(), 4),
-        "wage_index": round(sim.view("wage_index")(), 4),
+        "wage_per_hour": round(sim.view("money_per_labour_hour")(), 4),
         "cost_of_living_a_year": round(sim.view("living_cost")() - sim.view("wages_charged_last_year")(), 1),
         "literacy": {"general": round(float(sim.view("literacy")("literacy_general")), 3),
                      "elite": round(float(sim.view("literacy")("literacy_elite")), 3)},
@@ -837,7 +837,7 @@ def _changes_moved(baseline, now):
     subtraction per tracked figure, nothing conditional about any of them."""
     return {
         "price_index": round(now["price_index"] - baseline["price_index"], 4),
-        "wage_index": round(now["wage_index"] - baseline["wage_index"], 4),
+        "wage_per_hour": round(now["wage_per_hour"] - baseline["wage_per_hour"], 4),
         "literacy_general": round(
             now["literacy_general"] - baseline["literacy_general"], 4),
         "literacy_elite": round(
