@@ -1,7 +1,8 @@
 # Labour-market models surveyed for the bootstrapping simulator
 
 > **Checked against the code (2026-11):** `vacancy_raise` does not exist. The wage offer rule is `raised_offer` in
-> `sim/labour/market/applications.py` (rate `WAGE_UPDATE_PER_ROUND`, declared in `asks.py`); the text below now names it.
+> `sim/labour/market/applications.py` (rate `WAGE_UPDATE_PER_ROUND`, declared in `asks.py`); the text below now names it. There is one
+> market wage per (trade, area) now, so no per-employer contract wage (the table row on wage setting says so).
 
 Research report, no code changed. It builds on `Complaints/reports/research-reference-economy-models.md`,
 `research-agent-based-economy-design.md` and `research-alternative-economic-models.md` and does not repeat them.
@@ -127,7 +128,7 @@ Research report, no code changed. It builds on `Complaints/reports/research-refe
 | How a workforce forms and moves | training, teacher cap, entrant logit, `taught_from` | fixed empirical transition graph (network model); capital tiers with decay (WorkSim) |
 | Matching friction | matching function of searchers per vacancy | urn weighted by vacancies (network); Poisson offers by tightness (WorkSim); arrival rate (McCall) |
 | Household hours | all hours offered after plot and leave | utility-maximising hours from an estimated model (LABSim) |
-| Wage setting | clearing; stayers keep contract wages | regime as data (K+S, not verified in detail) |
+| Wage setting | clearing; one market wage per trade and area, retained hours paid it too | regime as data (K+S, not verified in detail) |
 
 ## Recommendations (each a candidate complaint)
 

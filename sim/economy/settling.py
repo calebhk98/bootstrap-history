@@ -88,7 +88,7 @@ def series_settling(name: str, values: Sequence[float], as_ratio: bool, window_y
 
 def settling_report(rows: Sequence[Mapping[str, float]], window_years: int = None) -> List[SeriesSettling]:
     """Settling statistics for the price level, the unskilled wage, the money stock and the interest rate, from
-    yearly rows with those keys (`economy_port_trace.spin_up_trace`)."""
+    yearly rows with those keys (`sim/markets/port_trace.py spin_up_trace`)."""
     return [series_settling(key, [row[key] for row in rows], as_ratio, window_years) for key, as_ratio in SERIES]
 
 

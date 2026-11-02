@@ -17,13 +17,13 @@ Taxes, rent and banditry drive abandonment of marginal land. The full log of wha
   Social History 79). Households here do not have children; the channel needs household division in demography
   (`titles_inheritance.py`, retire: 538 household division in demography). Distress sales after harvest shocks and partible
   inheritance are built and tested as rules (`sim/tests/test_economy_land_concentration_rules.py`).
-- **The concentration check runs on a village fixture, not a full game.** `sim/tests/test_economy_land_concentration.py`
-  (BASELINE VALIDATION, `economy_land_concentration`) runs `sim/tests/land_fixture.py`: households that borrow against
+- **The concentration check on a village fixture is gone.** `test_economy_land_concentration.py` (BASELINE VALIDATION,
+  `economy_land_concentration`) and `land_fixture.py` are deleted from `sim/tests/`; the rules remain. It ran households that borrow against
   their plots and default after a run of failed harvests, over an ensemble of shock histories, against the sourced band by
   denominator (`titles_concentration.LAND_GINI_SOURCED`). Han China and the Mexica have no band (no land Gini found in
   anything opened); no source gives a land top-decile share, so it is printed, not checked. A full game over a century
   where borrowing households default is still not run; print the fixture's path with
-  `python3 -m sim.tests --slow --only economy_land_concentration`.
+  the topic no longer exists, so nothing prints it.
   That a single failed harvest is carried by borrowing and moves no title, and that more households hit means a higher Gini,
   are claims about the multi-year fixture, not one function: they are no longer unit tests; measure them with the same command.
 - **The fixture lands in the band only with partible inheritance on** (default `PARTIBLE_ESTATE_SHARE`); with estates that
@@ -63,11 +63,11 @@ Taxes, rent and banditry drive abandonment of marginal land. The full log of wha
 - Titles, collateral, foreclosure, abandonment, tenancy: `sim/economy/titles*.py`, `sim/tests/test_economy_titles.py`.
 - Rent asks, leases in the market, the tools check: `sim/economy/land_tenancy.py`, `land_lease_year.py`; tests `test_economy_land_tenancy.py`, `test_economy_land_lease_year.py`.
 - Buyers other than cohorts: `land_bid_year.actor_bids`, `firm_land_bids`, `take_up_bought` (any holder); `test_economy_land_buyers.py`.
-- Bonded hours: `sim/economy/bondage_hours.py`; `test_economy_bondage_hours.py`, `test_economy_bondage_hours_scenario.py`.
-- Concentration: `titles_concentration.py`, `sim/tests/land_fixture.py`, `test_economy_land_concentration_rules.py` (channels), `test_economy_land_concentration.py` (validation).
+- Bonded hours: `sim/economy/bondage_hours.py`; `test_economy_bondage_hours.py` (its `_scenario` file is gone).
+- Concentration: `titles_concentration.py`, `test_economy_land_concentration_rules.py` (channels); the validation test and `land_fixture.py` are deleted.
 - Land bid, seller floor and ground handling: `sim/tests/test_economy_land_bid.py`, `test_economy_land_seller_floor.py`, `test_economy_costless_run_stock_gate.py`, `test_economy_ground_not_queued.py`.
 - Bondage: `sim/tests/test_economy_bondage.py`. Debt relief and tax farming: `sim/economy/debt_relief.py`, `tax_farming.py` (policy lever `sim/agents/policy_land.py`).
-- Measure the land market in a game that has no crop buyer: step the Norse game of `sim/tests/test_staff_closure_reopening_scenario.py` and print the clearer's stock, the remembered price and the titles of `sweden_01` each year; there a cohort's earning is the rent only, so a buyer's worth equals the seller's floor and little trades.
+- Measure the land market in a game that has no crop buyer: step a Norse game (the scenario file this once named, `test_staff_closure_reopening_scenario.py`, is deleted) and print the clearer's stock, the remembered price and the titles of `sweden_01` each year; there a cohort's earning is the rent only, so a buyer's worth equals the seller's floor and little trades.
 
 ## Tried and failed
 

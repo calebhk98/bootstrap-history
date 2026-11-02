@@ -49,8 +49,8 @@ Each item names where it lives now; confirm with the command before relying on i
 - **Trader cargo** still prices some home goods at the cost table with the economy's response as a factor
   (pricing them at the economy's port price made home-bound cargo stop after a year).
 - **Farm effort** (`Complaints/513`): farm work is chosen inside the economy; the staple's price near satiation and the sale of surplus past it are open.
-- **Three copies of cost arithmetic**: `sim/prices/solve_prices_core.py`, `sim/economy/unit_cost.py` and
-  `sim/economy/notional.py` (`cheapest_cost`). Merging them into one `sim/world/` kernel changes no behaviour, so
+- **Two copies of cost arithmetic**: `sim/prices/solve_prices_core.py` and `sim/economy/unit_cost.py`
+  (`sim/economy/notional.py` `cheapest_cost` delegates to `unit_cost.full_cost_per_unit`). Merging them into one `sim/world/` kernel changes no behaviour, so
   its proof is the fingerprint.
 - **The settled-economy checks.** The opening still does not settle (`Complaints/473`, `526`, `607`, `608`,
   `960` to `963`); the relationship checks print with `python3 sim/simulator.py opening-checks` (minutes) and the

@@ -61,7 +61,7 @@ even though nothing formally blocks starting this first.
 
 ## Agent economy (current)
 
-The agent economy has pooled credit with household lenders (`sim/economy/credit.py`, `credit_claims.py`, `lending.py`). What exists, what is missing and the heuristics needed are in `Complaints/reports/agent-economy-capital-markets.md`. Complaint 307 no longer applies there (the state offers no funds); the retired engine loan market (`sim/engine/economy_capital_market.py`) is not described here.
+The agent economy has pooled credit with household lenders (`sim/economy/credit.py`, `credit_claims.py`, `lending.py`). What exists, what is missing and the heuristics needed are in `Complaints/reports/agent-economy-capital-markets.md`. Complaint 307 no longer applies there (the state offers no funds); the engine loan market that file once held (`economy_capital_market.py`, deleted) is not described here.
 
 Priority: lower than the work that makes the opening settle (473); it is picked up when that allows. Banks must not exist before a society holds a banking institution; that is already built (step 2 below gates on the `deposit_banking` node).
 
@@ -152,9 +152,9 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
   sells bonds for the cash it lacks at the going rate as coupon and its own borrowing rate as the yield, as a state does;
   `Firm.act` calls it. Test: `--only firm_bonds`.
 
-- **Found a bank (step 9).** `found bank <amount>` (`sim/ui/proto/dispatch_bank.py`, `sim/engine/seat_bank.py`): a seat
+- **Found a bank (step 9).** `found bank <amount>` (`sim/ui/proto/dispatch_bank.py`, `sim/finance/bank.py`): a seat
   that knows a node declaring `deposit_banking` puts its money into a bank of the economy; its earnings above the capital
-  go back to it. Test: `--only seat_bank`, `--only seat_bank`.
+  go back to it. Test: `--only seat_bank`.
 
 ## Remainder
 
