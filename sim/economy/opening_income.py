@@ -40,8 +40,9 @@ OPENING_INCOME_PASSES = 100
 
 def value_of(final_by_tile: Mapping[TileId, Mapping[GoodId, float]], prices: Mapping[GoodId, float]) -> float:
     """Money value of a final demand at the prices given."""
-    return math.fsum(quantity * prices.get(good, 0.0)
-                     for demand in final_by_tile.values() for good, quantity in demand.items())
+    return math.fsum(quantity * prices[good]
+                     for demand in final_by_tile.values() for good, quantity in demand.items()
+                     if prices.get(good) is not None)
 
 
 def settled_income_per_head(ceiling: float, people: float, demand_at: Callable[[float], Tuple[float, float]]

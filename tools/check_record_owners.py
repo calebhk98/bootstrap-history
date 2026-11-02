@@ -4,11 +4,19 @@ Each owned part of `EconomyRecord` (and `memory`, `state_budget`, and the agent 
 `sim/economy` modules allowed to WRITE it: assign a field, item-assign, call a mutating method on a store, or put an
 element back into a table. Reads may cross domains. `sim/markets` owns none and goes through `sim/economy/api.py`.
 
+`book` is the shared ledger and has no owner module: it is written only through `Book`'s own methods (`transfer`,
+`transfer_many`, `move_many`, ...), whose callers `tools/done_check.sh` counts (the book/ledger transfer calls outside
+the owners). A store to a field of the book, or a mutating call on one of its tables, from anywhere in the scanned
+modules is flagged here as a write of `book`.
+
 The files are parsed with `ast`, never run. A write is found through `record.<part>...`, `<x>.record.<part>...`, through
-a local alias of one (`land = record.land`, `rows = record.land.tenancies[tile]`, `for key, row in part.store.items()`)
-and through a parameter annotated with a part's class. A write that goes through a method of the part itself is the
-owner's own code and is not flagged. Prints `file:line: <module> writes <part>` and exits 1 when there is any.
-`--all` lists every write found, owned or not.
+a local alias of one (`land = record.land`, `rows = record.land.tenancies[tile]`, `for key, row in part.store.items()`,
+the same in a comprehension), through a parameter annotated with a part's class and through a parameter named for a part
+(`memory`, `credit`, `land`, ...: the name stands for the part unless the parameter is annotated as something else). The
+mutating calls are the container methods and the methods of `sim.contracts.Contracts` that change a debt (`default`,
+`draw`, `deposit`, ...), so a caller outside the owners reaches them through a method of the part. A write that goes
+through a method of the part itself is the owner's own code and is not flagged. Prints `file:line: <module> writes
+<part>` and exits 1 when there is any. `--all` lists every write found, owned or not.
 """
 import ast
 import os
@@ -22,7 +30,11 @@ from sim.economy.api import EconomyRecord  # noqa: E402
 SCANNED = ("sim/economy", "sim/markets")
 MUTATING_METHODS = frozenset((
     "append", "extend", "insert", "remove", "pop", "popitem", "clear", "update", "setdefault", "add", "discard",
-    "sort", "reverse", "difference_update", "intersection_update", "symmetric_difference_update"))
+    "sort", "reverse", "difference_update", "intersection_update", "symmetric_difference_update",
+    # sim.contracts.Contracts, reached as `credit.contracts`
+    "default", "draw", "deposit", "withdraw", "rename", "adopt", "scale_deposits", "repay_facility", "tidy_facility",
+    "set_facility"))
+LEDGER = "book"      # the shared ledger: no owner module, written only through Book's methods
 READING_METHODS = frozenset(("get", "items", "values", "keys", "copy"))
 PASSING_FUNCTIONS = frozenset(("sorted", "list", "tuple", "reversed", "iter", "enumerate"))
 
@@ -32,6 +44,7 @@ def record_owners():
     owners = {}
     for name, owner_modules in EconomyRecord.owners_by_part().items():
         owners[name] = tuple(owner_modules)
+    owners[LEDGER] = ()
     return owners
 
 
@@ -86,6 +99,8 @@ class Finder(ast.NodeVisitor):
                 name = annotation.value
             if name in self.classes:
                 scope[argument.arg] = self.classes[name]
+            elif name is None and argument.arg in self.parts:      # a parameter named for a part stands for it
+                scope[argument.arg] = argument.arg
             else:
                 scope.pop(argument.arg, None)
         self.scopes.append(scope)
@@ -148,6 +163,25 @@ class Finder(ast.NodeVisitor):
                 self.scopes[-1].pop(name, None)
         for statement in node.body + node.orelse:
             self.visit(statement)
+
+    def comprehension(self, node):
+        """The names a comprehension loops with are aliases of the part its iterable reaches, as in a `for` statement."""
+        for generator in node.generators:
+            self.visit(generator.iter)
+            part = self.part_of(generator.iter)
+            for each in ast.walk(generator.target):
+                if isinstance(each, ast.Name):
+                    if part is not None:
+                        self.scopes[-1][each.id] = part
+                    else:
+                        self.scopes[-1].pop(each.id, None)
+            for condition in generator.ifs:
+                self.visit(condition)
+        for field_name in ("elt", "key", "value"):
+            if hasattr(node, field_name):
+                self.visit(getattr(node, field_name))
+
+    visit_ListComp = visit_SetComp = visit_DictComp = visit_GeneratorExp = comprehension
 
     def visit_Call(self, node):
         if isinstance(node.func, ast.Attribute) and node.func.attr in MUTATING_METHODS:

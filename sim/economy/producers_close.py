@@ -21,6 +21,7 @@ from .protocols import MarketView
 from .types import GoodId, LoanRequest, Recipe, Transfer
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .replaced import replaced
+from .rates import charged_rate
 
 LOSS_YEARS_BEFORE_EXIT = declare(
     "LOSS_YEARS_BEFORE_EXIT", 3, kind="temporary_heuristic", unit="consecutive years",
@@ -75,7 +76,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     whose runs pay and who lost nothing grows toward the sales it will expect (capacity_growth.py)."""
     first_output = min(recipe.outputs)
     currency = view.currency_of(view.area_of(first_output, producer.tile))
-    rate = view.interest_rate(currency)
+    rate = charged_rate(view.interest_rate(currency))
     cash = max(0.0, view.cash(producer.agent_id, currency))
     inputs = live_input_prices(producer, recipe, view)
     wages = live_wages(producer, recipe, view)
@@ -155,7 +156,7 @@ def _behind_the_stock(producer, recipe, view, prices, ground_goods):
     not queue (every hectare yields its rent while held): its price stands."""
     if producer.expected_sales <= 0.0:
         return prices
-    rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
+    rate = charged_rate(view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile))))
     return {good: inventory.queued_holding_value(
         price, max(0.0, view.stock(producer.agent_id, good, producer.tile) - recipe.inputs.get(good, 0.0) * producer.capacity_runs),
         producer.expected_sales * recipe.outputs[good] * producer.yield_factor, rate, 0.0) if good not in ground_goods else price

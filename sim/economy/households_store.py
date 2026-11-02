@@ -12,6 +12,7 @@ from .offered_price import offered_price
 from .store_return import (STORE_SERVICE_UNLIMITED, STORE_STORAGE_COST_PER_KG_YEAR, carrying_return,
                            service_values_per_year, split_by_return)
 from .types import Bid, GoodId, GoodSpec, Offer
+from .rates import charged_rate
 
 STORE_MAX_SPOILAGE = declare(
     "STORE_MAX_SPOILAGE", 0.01, kind="temporary_heuristic", unit="share of a stock lost a year",
@@ -148,7 +149,7 @@ def store_offers(cohort, view, specs, weights, prices, held, wealth_above_buffer
     held_value = math.fsum(held[good] * prices[good] for good in weights)
     if held_value <= 0.0:
         return []
-    rate = view.interest_rate(view.currency_of(view.area_of(next(iter(weights)), cohort.tile)))
+    rate = charged_rate(view.interest_rate(view.currency_of(view.area_of(next(iter(weights)), cohort.tile))))
     target = store_value_target(wealth_above_buffer, cohort.expected_inflation, real_rate)
     excess = max(0.0, held_value - target * (1.0 + STORE_REBALANCE_BAND))
     shortfall = max(0.0, floor_cost - cash)

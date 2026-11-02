@@ -4,6 +4,10 @@ The book holds money and goods; the agents' records hold what they expect and pl
 holds last year's market outcomes; and eight owned sub-records hold one domain each: credit, capital markets, land, goods,
 labour, carriage, tax and unfree labour (`credit_record.py`, `capital_markets_record.py`, `land_record.py`, `goods_record.py`,
 `labour_record.py`, `carriage_record.py`, `tax_record.py`, `unfree_record.py`). Nothing else survives a year.
+
+`book` is the shared ledger and has no owner module: any module moves money and goods, but only through `Book`'s own
+methods (`transfer`, `transfer_many`, `move_many`, ...), never by writing its tables. `tools/done_check.sh` counts the
+calls to them outside the files that define them, and `tools/check_record_owners.py` flags a direct write to `book`.
 """
 import dataclasses
 from dataclasses import dataclass, field

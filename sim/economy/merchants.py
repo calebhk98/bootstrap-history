@@ -422,7 +422,8 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
     With `fleet`, routes also share the carriers the merchant holds or hired: a route carries no more tonnes than
     the wear its scarcest carrier good has left allows, in route order.
     With `dues` ({holder: money per tonne} on a haul), the merchant pays the haul's tolls and port dues to each holder's
-    account, in money, out of the fee: they are no part of the crew's hours or of what the owner keeps."""
+    account, in money, out of the fee: they are no part of the crew's hours or of what the owner keeps. A purse that
+    cannot cover a shipment's dues and fee pays the dues first and the carrier what remains."""
     shipments = []
     spare = None if fleet is None else dict(fleet.capacity)
     fleet_wanted: Dict[str, float] = {}
@@ -491,7 +492,7 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
             merchant.in_transit.append(merchants_transit.Shipment(good, carried, route[0], years - 1))
         moves.append(DeliveredMove(merchant.agent_id, merchants_transit.EDGE_TRANSIT if years > 1 else merchant.agent_id,
                                    good, tile, carried, "carried to market", route[0]))
-        for holder, owed in sorted(dues_unit.items()):
+        for holder, owed in sorted(dues_unit.items()):      # dues come out of the purse before the carrier's fee
             paid = max(0.0, min(carried * owed, purse))
             purse -= paid
             if paid > 0.0:

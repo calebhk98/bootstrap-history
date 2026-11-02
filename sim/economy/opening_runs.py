@@ -10,6 +10,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from . import producer_table
 from . import crop_sites, sites, tool_fallback, unit_cost
+from .producers import paying_output
 from .replaced import replaced
 from .setup import recipe_tile_key
 from .types import GoodId, Recipe, TileId
@@ -68,7 +69,8 @@ def unit_costs(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float], wa
                 continue
             values = _supported_values(recipe, good, prices, required)
             total_value = math.fsum(values.values())
-            share = values[good] / total_value if total_value > 0.0 else 1.0 / len(recipe.outputs)
+            share = (values[good] / total_value if good in values and total_value > 0.0
+                     else quantity / math.fsum(recipe.outputs.values()))
             made = quantity * yields.get(recipe_id, 1.0)
             if made > 0.0:
                 costed.setdefault(good, []).append((cost * share / made, recipe_id))
@@ -92,15 +94,16 @@ def _supported_values(recipe: Recipe, good: GoodId, prices: Mapping[GoodId, floa
                       required: Optional[Mapping[GoodId, float]]) -> Dict[GoodId, float]:
     """Value of one run's outputs when runs are made for `good`: each output at its price, a co-product only up
     to the quantity the opening needs of it (all of it when `required` is not given)."""
-    values = {output: quantity * prices.get(output, 0.0) for output, quantity in recipe.outputs.items()}
-    if required is None or recipe.outputs[good] <= 0.0 or len(values) == 1:
+    values = {output: quantity * prices[output] for output, quantity in recipe.outputs.items()
+              if prices.get(output) is not None}
+    if required is None or recipe.outputs[good] <= 0.0 or len(values) <= 1:
         return values
     runs = required.get(good, 0.0) / recipe.outputs[good]
     if runs <= 0.0:
         return values
     for output, quantity in recipe.outputs.items():
-        if output != good:
-            values[output] = min(quantity, required.get(output, 0.0) / runs) * prices.get(output, 0.0)
+        if output != good and output in values:
+            values[output] = min(quantity, required.get(output, 0.0) / runs) * prices[output]
     return values
 
 
@@ -148,7 +151,7 @@ def required_quantities(final_by_tile, runs: Mapping[str, float], recipes: Mappi
 
 def main_outputs(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float]) -> Dict[str, GoodId]:
     """{recipe: the output a run is mainly for}: the one with the most value at `prices` (ties by id)."""
-    return {recipe_id: max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good] * prices.get(good, 0.0))
+    return {recipe_id: paying_output(recipe, prices)
             for recipe_id, recipe in recipes.items() if recipe.outputs}
 
 

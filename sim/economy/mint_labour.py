@@ -42,7 +42,7 @@ def capacity_hours(setup, spec, capacity_fine_kilograms: float) -> Dict[str, flo
 
 
 def _striking(setup, spec) -> bool:
-    return (getattr(setup, "mint_recipe", None) is not None and currency.has_mint(spec)
+    return (setup.mint_recipe is not None and currency.has_mint(spec)
             and spec.backing_per_unit > 0.0)
 
 

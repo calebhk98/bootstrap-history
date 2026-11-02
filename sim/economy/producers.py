@@ -30,6 +30,7 @@ from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, Goo
                     Offer, Recipe, TileId)
 from .replaced import replaced
 from .staffed_runs import change_anchor
+from .rates import charged_rate
 
 EXPECTATION_ADJUSTMENT_SHARE = declare(
     "EXPECTATION_ADJUSTMENT_SHARE", 0.5, kind="temporary_heuristic",
@@ -273,7 +274,7 @@ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=No
                             recipe, prices)
     wages = live_wages(producer, recipe, view) if wages is None else wages
     revenue = unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor
-    rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
+    rate = charged_rate(view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile))))
     cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run) + unit_cost.capital_charge_per_run(
         recipe, inputs, wages, rate)
     if not (revenue > 0.0 and math.isfinite(cost) and cost > 0.0):
@@ -411,16 +412,20 @@ def working_cost_ratio(revenue_per_run: float, variable_cost_per_run: float) -> 
 def paying_output(recipe: Recipe, prices: Mapping[GoodId, float]) -> GoodId:
     """The output that carries most of a run's value at `prices` (an unpriced output carries none); the first by
     name among ties, so a recipe with no prices at all is named by its first output."""
-    return max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good] * prices.get(good, 0.0))
+    priced = [good for good in sorted(recipe.outputs) if prices.get(good) is not None]
+    if not priced:
+        return min(recipe.outputs)
+    return max(priced, key=lambda good: recipe.outputs[good] * prices[good])
 
 
 def _bound_by_stock(recipe: Recipe, piling: List[GoodId], output_prices: Mapping[GoodId, float]) -> List[GoodId]:
     """The piling outputs that still hold the run count back at `output_prices`: the paying output, and any whose
     value is not less than what a run makes of the rest. A minor output nobody buys is not what the run is for."""
-    value = {good: made * output_prices.get(good, 0.0) for good, made in recipe.outputs.items()}
+    value = {good: made * output_prices[good] for good, made in recipe.outputs.items()
+             if output_prices.get(good) is not None}
     paying = paying_output(recipe, output_prices)
     total = math.fsum(value.values())
-    return [good for good in piling if good == paying or value[good] >= total - value[good]]
+    return [good for good in piling if good == paying or (good in value and value[good] >= total - value[good])]
 
 
 def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cost: Optional[float] = None,
@@ -449,8 +454,8 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
         bound = _bound_by_stock(recipe, piling, output_prices)
         counted = [good for good in gap if good not in piling or good in bound]
     if piling and run_cost is not None and output_prices is not None:
-        sells = math.fsum(made * output_prices.get(good, 0.0) for good, made in recipe.outputs.items()
-                          if good not in piling) * producer.yield_factor
+        sells = math.fsum(made * output_prices[good] for good, made in recipe.outputs.items()
+                          if good not in piling and output_prices.get(good) is not None) * producer.yield_factor
         if sells > 0.0 and sells >= run_cost:      # nothing else sold covers nothing: a costless run is not paid for by it
             counted = [good for good in gap if good not in piling]
     # the gap that binds is the smallest shortfall (or largest surplus): a joint run cannot make one output alone

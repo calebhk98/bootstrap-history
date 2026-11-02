@@ -16,6 +16,7 @@ from . import unit_cost
 from .market_memory import KEY_SEPARATOR, PRICE_REMEMBERED, PRICE_TRADED, MarketMemory
 from .national_prices import national_prices, national_wages, usual_volumes
 from .recipes import input_depth_order
+from .rates import charged_rate
 
 KIND_MAKING_COST_ESTIMATE = "making_cost_estimate"   # what the cheapest recipe costs at today's prices; nothing traded lately
 KIND_THIN_TRADE_BLEND = "thin_trade_blend"           # a market price blended toward making cost; the market trades a sliver
@@ -63,7 +64,7 @@ def _estimated_prices(setup, record, market, thin: bool) -> Dict[str, float]:
     recent = recently_traded_goods(memory)
     traded = _traded_volumes(record) if thin else {}
     wages = national_wages(record)
-    rate = memory.rates.get(setup.currency_id, 0.0)
+    rate = charged_rate(memory.rates.get(setup.currency_id))
     live = dict(market)
     estimated: Dict[str, float] = {}
     for good in input_depth_order(setup.recipes):
@@ -99,7 +100,7 @@ def making_costs(setup, record) -> Dict[str, float]:
     memory = record.memory
     live = national_prices(record)
     wages = national_wages(record)
-    rate = memory.rates.get(setup.currency_id, 0.0)
+    rate = charged_rate(memory.rates.get(setup.currency_id))
     costs: Dict[str, float] = {}
     for good in input_depth_order(setup.recipes):
         best = cheapest_cost(setup, good, live, wages, rate)

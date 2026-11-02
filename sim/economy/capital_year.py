@@ -13,6 +13,7 @@ from .funds import POOLED_FUNDS
 from .insurance import HARVEST, INSURANCE_UNDERWRITING, RISK_POOLING
 from .secondary_trade import Shortfall
 from .types import AgentId, FundsOffer
+from .rates import charged_rate
 
 INSURER_FOUNDING_SHARE_OF_CASH = declare(
     "INSURER_FOUNDING_SHARE_OF_CASH", 0.5, kind="temporary_heuristic",
@@ -45,7 +46,7 @@ def before_lending(setup, record, view, ledger, funds: Sequence[FundsOffer], yea
     """The offers savers bring to the year's lending, after the funds' redemptions, secondary trading and the
     withdrawals from banks. A household short of cash redeems fund units first (at their worth), then sells claims."""
     money = setup.currency_id
-    rate = view.interest_rate(money)
+    rate = charged_rate(view.interest_rate(money))
     funds = list(funds)
     trading = any(name in institutions for name in (secondary_trade.SHARE_TRADING, secondary_trade.BOND_MARKET))
     pooling = POOLED_FUNDS in institutions
@@ -93,7 +94,7 @@ def invest_idle(setup, record, view, funds: Sequence[FundsOffer], kept: Dict[Age
     if POOLED_FUNDS not in institutions or not fund_pools.standing(record):
         return
     money = setup.currency_id
-    rate = view.interest_rate(money)
+    rate = charged_rate(view.interest_rate(money))
     yields = {fund.agent_id: fund_pools.yield_of(setup, record, fund, rate) for fund in fund_pools.standing(record)}
     for offer in sorted(funds, key=lambda each: each.lender):
         if offer.lender not in kept:
@@ -138,7 +139,7 @@ def insure(setup, record, view, harvest_factor: float, year: int, institutions: 
     claims. The year then joins the record, so it prices the next year's cover and not this one's."""
     money = setup.currency_id
     state = record.capital_markets.capital
-    rate = view.interest_rate(money)
+    rate = charged_rate(view.interest_rate(money))
     company_open, mutual_open = INSURANCE_UNDERWRITING in institutions, RISK_POOLING in institutions
     if (company_open or mutual_open) and state.exposure:
         _arrange_cover(record, money, rate, year, company_open, mutual_open)

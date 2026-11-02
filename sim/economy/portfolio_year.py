@@ -15,6 +15,7 @@ from typing import Dict, List, Mapping, Sequence
 
 from . import equity, household_portfolio, secondary_trade
 from .types import AgentId, FundsOffer, Transfer
+from .rates import charged_rate
 
 PORTFOLIO_SALE_PURPOSE = "portfolio sale"
 EPSILON = 1e-9
@@ -65,7 +66,7 @@ def run(setup, record, view, funds: Sequence[FundsOffer], institutions: Sequence
     factor = state.share_price_factor
     prices = {producer_id: factor * worth for producer_id, worth in worths.items() if worth > 0.0}
     expected = household_portfolio.expected_yield(record.capital_markets.last_dividends, prices)
-    fraction = None if expected is None else household_portfolio.fraction_to_invest(view.interest_rate(money), expected)
+    fraction = None if expected is None else household_portfolio.fraction_to_invest(charged_rate(view.interest_rate(money)), expected)
     if fraction is None:
         return list(funds)
     trading = secondary_trade.SHARE_TRADING in institutions

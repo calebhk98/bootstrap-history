@@ -32,7 +32,7 @@ def setup_and_record(regime, cash_target=40.0):
     """Two cohorts, a producer and a merchant with cash targets, whose money is `regime` made of METAL."""
     issuer = "state:fixture" if regime == "struck_coin" else None
     spec = CurrencySpec("coin", regime, METAL, 0.01, issuer, 0.05 if regime == "struck_coin" else 0.0)
-    setup = types.SimpleNamespace(specs={METAL: GoodSpec(METAL, 1.0, SPOILAGE, 0.0, "metal")}, tiles={"town": None}, currency_id="coin")
+    setup = types.SimpleNamespace(specs={METAL: GoodSpec(METAL, 1.0, SPOILAGE, 0.0, "metal")}, tiles={"town": None}, currency_id="coin", mint_recipe=None)
     record = types.SimpleNamespace(
         currency=spec, book=StandInBook(),
         cohorts={name: types.SimpleNamespace(cash_target=cash_target) for name in ("a", "b")},

@@ -174,19 +174,7 @@ def _move_share(record, trade: Trade) -> None:
 def _move_loan(record, loan: Loan, trade: Trade) -> None:
     """The buyer takes `quantity` of the loan's principal, with its part of the arrears, as a contract of its own."""
     part = min(1.0, trade.quantity / loan.principal) if loan.principal > 0.0 else 1.0
-    if part >= 1.0 - EPSILON:
-        loan.lender = trade.buyer
-        return
-    bought = dataclasses.replace(loan, contract_id="%s|%s" % (loan.loan_id, trade.buyer), lender=trade.buyer,
-                                 principal=loan.principal * part, arrears=loan.arrears * part,
-                                 arrears_interest=loan.arrears_interest * part,
-                                 collateral_value=loan.collateral_value * part, collateral_share=loan.collateral_share * part)
-    loan.principal -= bought.principal
-    loan.arrears -= bought.arrears
-    loan.arrears_interest -= bought.arrears_interest
-    loan.collateral_value -= bought.collateral_value
-    loan.collateral_share -= bought.collateral_share
-    record.credit.add_loan(bought)
+    record.credit.transfer_loan(loan, trade.buyer, part)
 
 
 def run(setup, record, offers: Sequence[FundsOffer], short: Mapping[AgentId, Shortfall], market_rate: float,

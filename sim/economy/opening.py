@@ -8,7 +8,7 @@ struck at the mint: the money stock is derived, not authored. After this the mar
 """
 import dataclasses
 import math
-from typing import Dict, List, Mapping, Tuple
+from typing import Dict, List, Tuple
 
 from sim.constants import declare
 from sim.refusal import Refusal
@@ -22,7 +22,7 @@ from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
 from . import merchants
 from .merchants import Merchant
-from .producers import Producer
+from .producers import Producer, paying_output
 from .producers_close import working_capital_target
 from .replaced import replaced
 from .carriage_record import CarriageRecord
@@ -112,7 +112,8 @@ def _with_covering_prices(setup):
         covered = opening_rent.covering_prices(
             setup.recipes, setup.opening_prices, setup.opening_wages, opening_rent.shares_of_revenue(current, record),
             {producer.recipe_id for producer in record.producers.values()}, opening_runs.mean_yields(setup, setup.recipes))
-        if all(abs(price - current.opening_prices.get(good, 0.0)) <= COVERING_PRICE_TOLERANCE * price
+        if all(good in current.opening_prices
+               and abs(price - current.opening_prices[good]) <= COVERING_PRICE_TOLERANCE * price      # an unpriced good has not settled
                for good, price in covered.items()):
             break
         current = dataclasses.replace(setup, opening_prices=covered)
@@ -224,11 +225,11 @@ def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:
                           basket_price_levels={setup.currency_id: 1.0}, last_year_prices=dict(priced_goods))
     for good, price in priced_goods.items():
         for area in area_map.areas(good):
-            memory.prices[market_key(good, area.area_id)] = price
+            memory.set_price(market_key(good, area.area_id), price)
             memory.note_usual_price(market_key(good, area.area_id))
     for trade, wage in setup.opening_wages.items():
         for tile in setup.tiles:
-            memory.wages[market_key(trade, labour_area(tile))] = wage
+            memory.set_wage(market_key(trade, labour_area(tile)), wage)
     return memory
 
 
@@ -335,10 +336,6 @@ def _final_demand(setup, record, view, replacement=0.0, memory=None, own=None) -
     return final
 
 
-def _main_output(recipe: Recipe, prices: Mapping[GoodId, float]) -> GoodId:
-    return max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good] * prices.get(good, 0.0))
-
-
 def _placement_order(runs, recipes, setup) -> List[str]:
     """Recipes in the order they are placed: site-bound recipes with declared limits first (their tiles are
     fixed, so their users are sited by them), then each recipe after every recipe that uses what it makes, so
@@ -348,8 +345,8 @@ def _placement_order(runs, recipes, setup) -> List[str]:
         recipe = recipes[recipe_id]
         for good in list(recipe.inputs) + list(recipe.plant_goods):
             users.setdefault(good, set()).add(recipe_id)
-    produced = {recipe_id: _main_output(recipes[recipe_id], setup.opening_prices) for recipe_id in runs}
-    by_limits = sites.limits_by_recipe(getattr(setup, "site_limits", ()))
+    produced = {recipe_id: paying_output(recipes[recipe_id], setup.opening_prices) for recipe_id in runs}
+    by_limits = sites.limits_by_recipe(setup.site_limits)
     ordered: List[str] = [recipe_id for recipe_id in sorted(runs) if sites.is_sited(recipes[recipe_id], by_limits)]
     hands_only = [recipe_id for recipe_id in sorted(runs) if recipe_id not in ordered and _only_hands(recipes[recipe_id], setup)]
     waiting = [recipe_id for recipe_id in sorted(runs) if recipe_id not in ordered and recipe_id not in hands_only]
@@ -365,7 +362,7 @@ def _placement_order(runs, recipes, setup) -> List[str]:
 def _only_hands(recipe: Recipe, setup) -> bool:
     """A service made from hours alone (nothing bought, no plant, flagged a service in data or with nothing to carry): it is made where it is wanted by
     whoever has hands left, so it is placed after the producers that need a place for their inputs."""
-    spec = getattr(setup, "specs", {}).get(_main_output(recipe, setup.opening_prices))
+    spec = setup.specs.get(paying_output(recipe, setup.opening_prices))
     return (bool(recipe.labour_hours) and not recipe.inputs and not recipe.plant_goods
             and (recipe.service or (spec is not None and not spec.portable)))
 
@@ -400,7 +397,7 @@ def _place_producers(setup, record, area_map, carriage, final_by_tile, incumbent
     for recipe_id in _placement_order(runs, setup.recipes, setup):
         count = runs[recipe_id]
         recipe = setup.recipes[recipe_id]
-        main = _main_output(recipe, setup.opening_prices)
+        main = paying_output(recipe, setup.opening_prices)
         areas = area_map.areas(main) if main in area_map.goods() else ()
         if within is not None:
             areas = tuple(part for part in (_within(area, within) for area in areas) if part is not None)
@@ -519,8 +516,9 @@ def _richest_class(record, tile) -> int:
 
 def _open_merchants(setup, record, prices, final_by_tile) -> None:
     count = max(1, int(round(len(setup.tiles) * MERCHANTS_PER_TILE)))
-    output_value = math.fsum(quantity * prices.get(good, 0.0)
-                             for good, quantity in opening_runs.national_totals(final_by_tile).items())
+    output_value = math.fsum(quantity * prices[good]
+                             for good, quantity in opening_runs.national_totals(final_by_tile).items()
+                             if prices.get(good) is not None)
     capital = output_value * MERCHANT_CAPITAL_SHARE_OF_OUTPUT / count
     by_population = sorted(setup.opening_population_by_tile, key=lambda tile: (-setup.opening_population_by_tile[tile], tile))
     for index in range(count):

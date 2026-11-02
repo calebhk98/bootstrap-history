@@ -77,6 +77,29 @@ class MarketMemory:
     def set_price(self, key: str, price: float) -> None:
         self.prices[key] = price
 
+    def set_wage(self, key: str, wage: float) -> None:
+        self.wages[key] = wage
+
+    def count_year_without_bids(self, key: str) -> int:
+        """A market with offers had nobody bidding this year; returns the years it had gone before."""
+        before = self.years_without_bids.get(key, 0)
+        self.years_without_bids[key] = before + 1
+        return before
+
+    def end_years_without_bids(self, key: str) -> int:
+        """Bids came (or there was nothing to bid on); returns the years without that had gone before."""
+        return self.years_without_bids.pop(key, 0)
+
+    def count_year_without_offers(self, key: str) -> int:
+        """A market with bids had no seller this year; returns the years it had gone before."""
+        before = self.years_without_offers.get(key, 0)
+        self.years_without_offers[key] = before + 1
+        return before
+
+    def end_years_without_offers(self, key: str) -> int:
+        """Sellers came (or nobody was bidding); returns the years without that had gone before."""
+        return self.years_without_offers.pop(key, 0)
+
     def set_quote_kind(self, key: str, kind: str) -> None:
         self.quote_kinds[key] = kind
 
@@ -243,8 +266,10 @@ class YearView:
     def wage(self, trade: TradeId, area: AreaId) -> Optional[float]:
         return self._memory.wages.get(trade + KEY_SEPARATOR + area)
 
-    def interest_rate(self, currency: CurrencyId) -> float:
-        return self._memory.rates.get(currency, 0.0)
+    def interest_rate(self, currency: CurrencyId) -> Optional[float]:
+        """Last year's base lending rate; None for a currency the memory holds no rate for (what a plan then
+        charges is the caller's choice: `rates.charged_rate`)."""
+        return self._memory.rates.get(currency)
 
     def area_of(self, good_or_trade: str, tile: TileId) -> AreaId:
         """A good's market area on this tile; a trade's labour area when the key is not a good."""
