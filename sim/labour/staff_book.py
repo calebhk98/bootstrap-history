@@ -31,6 +31,22 @@ class StaffBookMixin:
         """{purpose: {trade: hours}} the founder's household asks the labour core for this year only."""
         return {purpose: dict(orders) for purpose, orders in self._world.workforce.hours_wanted_once.items() if orders}
 
+    def wage_work_offered(self):
+        """{trade: hours} the founder offers of its own in the labour core this year; paid what the clearing hires of them."""
+        return {trade: hours for trade, hours in self._world.workforce.hours_offered_for_wages.items() if hours > 0.0}
+
+    def newcomers(self):
+        """{trade: people} trained or granted since the last clearing who are not yet in the labour core."""
+        return {trade: people for trade, people in self._world.workforce.newcomers.items() if people > 0.0}
+
+    def add_newcomers(self, trade, people):
+        """Take `people` more of a trade onto the founder's books and queue them for the labour core, where they are hired like anyone."""
+        if people <= 0.0:
+            return
+        self.add_employed(trade, people)
+        newcomers = self._world.workforce.newcomers
+        newcomers[trade] = newcomers.get(trade, 0.0) + people
+
     def set_employed(self, trade, people):
         """Put the founder's head count of a trade at `people`; a count of nothing leaves the trade off the books."""
         workforce = self._world.workforce

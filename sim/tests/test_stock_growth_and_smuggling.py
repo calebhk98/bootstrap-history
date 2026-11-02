@@ -61,7 +61,7 @@ class Market:
     def __init__(self):
         self.pressed = {}
 
-    def quote(self, trade, hours=0.0, employer=None, pay_premium=0.0):
+    def quote(self, trade):
         return WAGE
 
     def press(self, trade, hours):

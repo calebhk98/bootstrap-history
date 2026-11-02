@@ -17,6 +17,12 @@ class FactViews:
 		"""The wage schedule a civilisation opens on, built from the trade registry and the price solver."""
 		return build_schedule(self.needs.trade_records(), civ)
 
+	def wages_charged_last_year(self):
+		"""What the last clearing charged the acting seat for its staff and one-year orders; before any clearing, the payroll
+		the staff on the books would cost at the market wage."""
+		paid = self.seat.wages_paid
+		return self.labour.wage_bill() if paid is None else paid
+
 	def wage_bill(self):
 		"""What the seat's standing staff costs every year, by trade."""
 		return self.labour.wage_bill()

@@ -3,7 +3,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict
 
-from sim.labour.api import MarketState, market_state_from_plain, market_state_to_plain
+from sim.labour.api import MarketState, add_people, market_state_from_plain, market_state_to_plain
 
 from .market_memory import KEY_SEPARATOR
 from .record_parts import OwnedRecord
@@ -41,6 +41,10 @@ class LabourRecord(OwnedRecord):
         """The hours a working person was seeded to sell a year, in all and by labour area."""
         self.opening_sold_hours_per_worker = per_worker
         self.opening_sold_hours_by_area = by_area
+
+    def add_workers(self, area: str, trade: TradeId, people: float) -> None:
+        """People who joined the economy from outside the clearing (a seat's apprentices, staff an institution granted)."""
+        add_people(self.workforce, area, trade, people)
 
     def seed_workforce(self, workforce: MarketState) -> None:
         """The labour core's opening state."""

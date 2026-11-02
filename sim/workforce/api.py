@@ -3,7 +3,7 @@
 WALL = "two-way"  # nothing here imports sim/engine/
 
 from .commands import (BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread,
-                       LoseStaff, ReleaseStaff, TakeWageFallback,
+                       LoseStaff, NewcomersPlaced, NoteClearedWage, ReleaseStaff, TakeWageFallback, ClearingSettled,
                        SetEmployed, StaffArrived, HoursArrived, PostHoursOnce)
 from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase, TrainStaff,
                               WorkForWages)

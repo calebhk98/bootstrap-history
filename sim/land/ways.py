@@ -50,7 +50,7 @@ class Ways:
         needs = geography.build_requirements(tile_a, tile_b, way, self.world_map)
         if needs is None:
             return None
-        hourly_rate = self.needs.labour_market().quote(needs["trade"], needs["labour_hours"])
+        hourly_rate = self.needs.labour_market().quote(needs["trade"])
         bills = []
         for material, tonnes in needs["materials"].items():
             priced = self.needs.purchase_quote(material, tonnes)

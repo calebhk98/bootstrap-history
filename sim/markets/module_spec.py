@@ -11,7 +11,7 @@ from sim.foreign_trade.api import ResetActorTradeTallies, SettleFlow, SettleTrad
 from sim.land.api import FinishWays
 from sim.ledger.api import ChangeStock, PayEdge, RescaleHouseholdMoney, PayExchange, ReceiveFromEdge, ReceiveFromExchange
 from sim.reporting.api import CloseRealOutput
-from sim.workforce.api import HoursArrived, StaffArrived
+from sim.workforce.api import ClearingSettled, HoursArrived, NewcomersPlaced, NoteClearedWage, StaffArrived
 from sim.resources.api import DrawDeposit, FellTimber, RegrowTimber
 
 from .commands import (BuyMaterial, FoundBankFromOutside, ForgetActorOrders, MarkMoneyPricedAtEconomy, NoteActorPurchase, NoteActorSale,
@@ -105,5 +105,5 @@ MODULE_SPECS = (ModuleSpec(
 	kernels=KERNELS,
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(RecordFoodEaten, ResetActorTradeTallies, CloseRealOutput, FinishWays, RepriceOpeningMoney, RepriceTree, RescaleHouseholdMoney, PayEdge, ReceiveFromEdge, ChangeStock, PayExchange, ReceiveFromExchange,
-	       SettleFlow, SettleTraderCargo, FellTimber, RegrowTimber, DrawDeposit, NoteFirstRuns, StaffArrived, HoursArrived),
+	       SettleFlow, SettleTraderCargo, FellTimber, RegrowTimber, DrawDeposit, NoteFirstRuns, StaffArrived, HoursArrived, ClearingSettled, NewcomersPlaced, NoteClearedWage),
 ),)

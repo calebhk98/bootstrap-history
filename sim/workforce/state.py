@@ -10,6 +10,9 @@ STAFF = "staff"     # version channel: the seat's people (employees, scholars, a
 @dataclass
 class WorkforceSociety:
     society_labour_hours: Dict[str, float] = field(default_factory=dict)   # trade -> hours the society's workers of it give in a year
+    # the unskilled hour's cleared wage at the last two clearings (the port notes it after each); the wage event reads the change
+    cleared_wage: Optional[float] = None
+    cleared_wage_before: Optional[float] = None
 
 
 @dataclass
@@ -22,8 +25,8 @@ class WorkforceSeat:
     slaves: int = 0
     freedmen: int = 0
     manumitted_total: int = 0
-    # staff an institution granted outright: {"scholars": n, "artisans": n} (made when first granted)
-    granted_staff: Optional[Dict[str, float]] = None
+    # people trained or granted this year who are not yet in the labour core: trade -> people; the port puts them in before the clearing
+    newcomers: Dict[str, float] = field(default_factory=dict)
     # spare generic hands the reserve_staff policy keeps above what concerns hold
     reserve_craftsmen: int = 0
     reserve_scholars: int = 0
@@ -57,13 +60,14 @@ class WorkforceSeat:
     unused_hours_reported: Dict[str, List[Any]] = field(default_factory=dict)
     work_trade: Optional[str] = None
     wage_hours_this_year: float = 0.0
-    wage_income_this_year: float = 0.0
+    # hours of its own the seat offers in the labour core this year: trade -> hours; paid at the clearing, then spent
+    hours_offered_for_wages: Dict[str, float] = field(default_factory=dict)
     wage_work_last_year: Optional[Dict[str, float]] = None
     hours_this_year: Optional[Dict[str, float]] = None
     trade_hours_used: Dict[str, float] = field(default_factory=dict)
     director_hours_spent_founder: float = 0.0
     # ---- pay ----
-    wages_paid: float = 0.0
+    wages_paid: Optional[float] = None    # what the last clearing charged the seat for its staff and one-year orders; None before one
     wages_earned: Optional[float] = None
     living_cost_paid: float = 0.0
     said_deputies: int = 0

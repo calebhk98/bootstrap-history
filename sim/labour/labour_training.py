@@ -195,11 +195,13 @@ class TrainingMixin:
             return None, None, Refusal("count_not_a_number", "n must be a number, not %r" % (count,))
         if count <= 0:
             return None, None, Refusal("count_not_positive", "n must be greater than zero. Nothing was changed.")
-        # people are whole: a staff is a head count of the people the labour core hired
+        # a command asks for whole people (the staff on the books is the hours the labour core hired over the working year)
         if abs(count - round(count)) > 1e-6:
             return None, None, Refusal("count_not_whole", "you hire whole people, not %g of one. Hire %d or %d."
                                        % (count, math.floor(count), math.ceil(count)))
         count = float(round(count))
+        if self.economy_lacks(trade):
+            return None, None, self._economy_lacks_refusal(trade)
         if not self.trade_available(trade):
             return None, None, Refusal("trade_absent", "there are no %ss to hire in this society at any price: %s "
                                        'Teach one: {"cmd":"train","trade":"%s","n":1}'
@@ -528,11 +530,22 @@ class TrainingMixin:
         return hands_available(workforce.artisans, self._world.founder_alive, contracted,
                                self._world.HOURS_PER_PERSON_YEAR)
 
+    def economy_lacks(self, trade):
+        """Whether the open economy holds no market for the trade, so a place or order for it would not be posted."""
+        held = self._world.economy.agent_trades()
+        return held is not None and trade not in held
+
+    def _economy_lacks_refusal(self, trade):
+        return Refusal("trade_not_in_economy", "the economy holds no %s market, so work in it cannot be posted to the labour market. "
+                       "Nothing was changed." % trade)
+
     def commission_check(self, trade, hours):
         """What `commission` and `quote commission` agree on before money
         moves. Returns (fee, refusal)."""
         trade = str(trade or "").strip().lower()
         known = trade in self._world.wages
+        if known and self.economy_lacks(trade):
+            return None, self._economy_lacks_refusal(trade)
         exists = known and hours > 0 and self.trade_available(trade)
         spare = commission_spare_hours(self.market_supply(trade), self.hours_reserved(trade)) if exists else 0.0
         refusal = commission_request_refusal(known, trade, hours, exists, self._world.trade_notes.get(trade, ""), spare)

@@ -11,7 +11,7 @@ from sim.seats.api import RememberGoalClosure
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 
 from .commands import (BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread,
-                       LoseStaff, ReleaseStaff, SetEmployed, StaffArrived, HoursArrived, PostHoursOnce, TakeWageFallback)
+                       LoseStaff, NewcomersPlaced, NoteClearedWage, ReleaseStaff, SetEmployed, StaffArrived, HoursArrived, PostHoursOnce, TakeWageFallback, ClearingSettled)
 from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase, TrainStaff,
                               WorkForWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
@@ -28,7 +28,7 @@ READS_BY_OWNER = {
     "ledger": ("acting_balance",),
     "polity": ("standing", "rep_factor"),
     "reporting": ("event_log", "last_market_price_ratio", "real_output_per_head"),
-    "markets": ("agent_prices", "agent_wage", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country", "agent_unskilled_wage"),
+    "markets": ("agent_prices", "agent_wage", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_country", "agent_unskilled_wage", "agent_economy_setup"),
     "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction"),
     "agriculture": ("farm_land",),
     "land": ("home_tiles_held", "home_tiles_held_version", "built_ways", "held_techniques"),
@@ -58,6 +58,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("staff_wanted", "staff_wanted", **_SEAT),
         ViewSpec("staff_version", "staff_version", **_SEAT),
         ViewSpec("wage_bill", "wage_bill", **_SEAT),
+        ViewSpec("wages_charged_last_year", "wages_charged_last_year", **_SEAT),
         ViewSpec("unskilled_trade", "unskilled_trade", **_LIVE),
         ViewSpec("starting_wages", "starting_wages", **_LIVE),
         ViewSpec("wage_schedule_for", "wage_schedule_for", kind=QUOTE, **_LIVE),
@@ -94,6 +95,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("town_mortality_premium_by_tile", "town_mortality_premium_by_tile", **_LIVE),
         ViewSpec("wage_index_terms", "wage_index_terms", **_LIVE),
         ViewSpec("wage_index", "wage_index", **_LIVE),
+        ViewSpec("cleared_wage_change", "cleared_wage_change", **_LIVE),
         ViewSpec("wage_materials", "wage_materials", **_LIVE),
         ViewSpec("trade_registry", "trade_registry", **_LIVE),
         ViewSpec("labour_market", "labour_market", **_LIVE),
@@ -144,7 +146,7 @@ MODULE_SPECS = (ModuleSpec(
         # puts every book back after trying the sale: a quote that writes and restores (retire when wage work has a pure rule)
         ViewSpec("work_for_wages_dry_run", "work_for_wages_dry_run", kind=QUOTE, **_SEAT),
     ),
-    applies=((SetEmployed, "set_employed"), (StaffArrived, "staff_arrived"), (HoursArrived, "hours_arrived"), (PostHoursOnce, "post_hours_once"), (NoteTradeSpread, "note_trade_spread"),
+    applies=((SetEmployed, "set_employed"), (StaffArrived, "staff_arrived"), (HoursArrived, "hours_arrived"), (ClearingSettled, "clearing_settled"), (NewcomersPlaced, "newcomers_placed"), (NoteClearedWage, "note_cleared_wage"), (PostHoursOnce, "post_hours_once"), (NoteTradeSpread, "note_trade_spread"),
              (LoseStaff, "lose_staff"), (GrantStaff, "grant_staff"),
              (ReleaseStaff, "release_staff"), (TakeWageFallback, "take_wage_fallback"),
              (CloseHoursYear, "close_hours_year"),

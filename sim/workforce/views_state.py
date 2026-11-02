@@ -28,7 +28,7 @@ class ViewsState:
         """Where the acting seat's year of hours is promised and has gone."""
         seat = self.seat
         return {"allocations": seat.hour_allocations, "work_trade": seat.work_trade, "wage_hours": seat.wage_hours_this_year,
-                "wage_income": seat.wage_income_this_year, "teaching_hours": seat.teaching_hours_this_year,
+                "wages_offered_for": dict(seat.hours_offered_for_wages), "teaching_hours": seat.teaching_hours_this_year,
                 "relocation_hours": seat.relocation_hours_this_year, "supervision_hours": seat.supervision_hours_this_year,
                 "contract_hours": seat.contract_hours, "commissioned": seat.commissioned, "last_year": seat.hours_this_year,
                 "wage_work_last_year": seat.wage_work_last_year, "trade_hours_used": seat.trade_hours_used,
@@ -38,7 +38,7 @@ class ViewsState:
     def pay_book(self):
         """The acting seat's pay books: wages its own work earned and the living cost paid."""
         seat = self.seat
-        return {"paid_in_clearing": self.labour.wage_bill(), "earned": seat.wages_earned, "paid": seat.wages_paid, "living_cost_paid": seat.living_cost_paid}
+        return {"paid_in_clearing": self.wages_charged_last_year(), "earned": seat.wages_earned, "paid": seat.wages_paid, "living_cost_paid": seat.living_cost_paid}
 
     def trade_schools(self):
         """{trade: training seats the acting seat has founded}."""

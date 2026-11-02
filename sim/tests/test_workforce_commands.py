@@ -17,17 +17,11 @@ from sim.workforce.state import WorkforceSeat
 
 class SurvivingPeople(unittest.TestCase):
     def test_everyone_survives_a_share_of_one_and_no_one_a_share_of_zero(self):
-        self.assertEqual(workforce_rules.surviving_people(random.Random(1), 40.0, 1.0), 40.0)
-        self.assertEqual(workforce_rules.surviving_people(random.Random(1), 40.0, 0.0), 0.0)
+        self.assertEqual(workforce_rules.surviving_people(40.0, 1.0), 40.0)
+        self.assertEqual(workforce_rules.surviving_people(40.0, 0.0), 0.0)
 
-    def test_the_headcount_is_whole_and_one_draw_is_made_per_person(self):
-        dice = random.Random(3)
-        kept = workforce_rules.surviving_people(dice, 12.4, 0.5)
-        self.assertEqual(kept, float(int(kept)))
-        mirror = random.Random(3)
-        for _ in range(12):
-            mirror.random()
-        self.assertEqual(dice.random(), mirror.random())
+    def test_the_headcount_scales_by_the_share_and_keeps_its_fraction(self):
+        self.assertAlmostEqual(workforce_rules.surviving_people(12.4, 0.5), 6.2)
 
 
 class Commands(unittest.TestCase):

@@ -19,9 +19,10 @@ class Apprenticeships:
 				count = row[3] if len(row) > 3 else 0.0
 				if self.needs.year() >= completion_year:
 					if trade:
-						# A trade you taught. They are now yours to pay, and
-						# they are that trade and no other.
-						self.labour.add_employed(trade, count)
+						# A trade you taught. They are now yours to pay, they are
+						# that trade and no other, and they join the labour core's
+						# people to be hired at the clearing like anyone.
+						self.labour.add_newcomers(trade, count)
 						self.needs.send(RecordEvent.of("training_finished", "%g %s%s finish their training"
 						                               % (count, trade, "s" if count != 1 else "")))
 						self.labour.resync_pools()

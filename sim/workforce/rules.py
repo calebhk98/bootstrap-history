@@ -4,11 +4,10 @@ import math
 HANDS_TOLERANCE = 1e-9      # a shortfall of hands below this is arithmetic noise, not a person missing
 
 
-def surviving_people(dice, headcount: float, survival_share: float) -> float:
-	"""How many of `headcount` people survive a shock: each is rolled one by one against `survival_share`, so headcounts
-	stay whole. `dice` is the game's random source."""
-	people = int(round(headcount))
-	return float(sum(1 for _ in range(people) if dice.random() >= 1.0 - survival_share))
+def surviving_people(headcount: float, survival_share: float) -> float:
+	"""How many of `headcount` people survive a shock: the share of them, fractions kept (a staff is full-time equivalents,
+	hours over the working year, not whole persons)."""
+	return headcount * survival_share
 
 
 def wage_index_of(base_index, scarcity_elasticity, population_scale, unshocked_scale):

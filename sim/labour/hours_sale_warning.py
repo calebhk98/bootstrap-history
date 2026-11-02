@@ -6,7 +6,7 @@ def sale_at_a_loss_note(pay, job_pay_given_up, money_text):
     if job_pay_given_up <= pay:
         return None
     earned, given_up = round(pay), round(job_pay_given_up)
-    return ("you earned %s, and the standing job those hours were selling was paying %s a year - so this cost you %s. "
+    return ("you expect to earn %s, and the standing job those hours were selling was paying %s a year - so this cost you %s. "
             "Selling hours in a lower-paid trade is for when you need the cash more than the job."
             % (money_text(earned), money_text(given_up), money_text(given_up - earned)))
 

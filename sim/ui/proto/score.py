@@ -181,20 +181,18 @@ def _score_components(sim, nodes, reveal_tree_total):
     # ECONOMY (10%) - capital, but never as a bare denarius figure: each
     # civilisation's currency is a different scale (civs/*.json: "denarius",
     # "wu zhu cash", "hacksilver by weight", "cacao bean and cotton cloth",
-    # each with its own wage_index/price_index multiplier on the shared wage
-    # table) - comparing raw capital across civilisations
+    # each with its own wage level) - comparing raw capital across civilisations
     # would be comparing different units with the same name. Deflating by
     # one ordinary worker-year IN THIS CIVILISATION'S OWN MONEY (an
-    # artisan's annual wage, scaled by this civ's live price_index and
-    # wage_index - the same two multipliers economy.py and labour.py price
-    # everything else with) turns capital into a currency-free "years of an
+    # artisan's annual wage as the labour market quotes it: the cleared wage
+    # of the economy) turns capital into a currency-free "years of an
     # ordinary worker's wage this fortune could buy", which is comparable
     # across civilisations. Log-scaled for the same reason as workforce,
     # against the same methodology: a round anchor ten times the
     # calibration save's 4.41 million worker-years, rounded to a clean
     # figure (50 million), not that save's own number.
     ECONOMY_ANCHOR_WORKER_YEARS = 50_000_000.0
-    reference_wage = max(1e-6, sim.view("labour_market")().in_current_money(sim.view("base_annual_wage")["artisan"]))
+    reference_wage = max(1e-6, sim.view("labour_market")().quote_annual("artisan"))
     worker_years = max(0.0, sim.view("acting_balance")()) / reference_wage
     econ_norm = min(1.0, math.log1p(worker_years)
                     / math.log1p(ECONOMY_ANCHOR_WORKER_YEARS))

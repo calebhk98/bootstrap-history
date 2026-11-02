@@ -46,12 +46,11 @@ class FailedVoyageTests(unittest.TestCase):
         self.assertEqual(host.state.household.employees, {"sailor": 50.0})
         self.assertEqual(host.stock, {"timber_m3": 10.0})
 
-    def test_the_crew_loses_about_the_share_risked_and_the_loss_is_whole_people(self):
+    def test_the_crew_loses_the_share_risked(self):
         host = _Host({"crew": {"sailor": 0.4}}, employees={"sailor": 1000.0, "carpenter": 20.0})
         host.lose_what_was_risked("voyage")
         left = host.state.household.employees["sailor"]
-        self.assertEqual(left, int(left))
-        self.assertTrue(540 < left < 660, left)
+        self.assertAlmostEqual(left, 600.0)
         self.assertEqual(host.state.household.employees["carpenter"], 20.0)
 
     def test_a_crew_lost_entirely_leaves_the_books(self):

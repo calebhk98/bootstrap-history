@@ -349,7 +349,7 @@ def _cmd_money(sim, nodes, cmd, ended):
             **({"materials_costing_you_a_premium": _mat_mkt} if _mat_mkt else {}),
             "what_it_costs_you": {
                 "upkeep_of_what_you_built": round(sim.view("upkeep")(), 1),
-                "living_and_appearances": round(sim.view("living_cost")() - sim.view("wage_bill")(), 1),
+                "living_and_appearances": round(sim.view("living_cost")() - sim.view("wages_charged_last_year")(), 1),
                 # NAME THE PART THAT IS THERE BECAUSE YOU ARE RICH. A break
                 # tester started with a million, built nothing, hired
                 # nobody, and read "living and appearances ~14,990, Net/yr

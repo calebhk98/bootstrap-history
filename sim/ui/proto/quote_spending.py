@@ -73,7 +73,7 @@ def _quote_hire(sim, nodes, cmd):
     count, fee, refusal = sim.view("hire_check")(trade, count)
     if refusal:
         return {"ok": False, "error": refusal}
-    per_year = sim.view("labour_market")().quote_annual(trade, count) * count
+    per_year = sim.view("labour_market")().quote_annual(trade) * count
     return {"ok": True, "what": "hire", "trade": trade, "people": count,
             "first_year_wages_at_stake": round(fee, 1),
             "from_next_year_per_year": round(per_year, 1),

@@ -23,8 +23,8 @@ def plan(actor: Any, node_id: str, world: Any) -> Dict[str, Any]:
 	"""Hours, money and calendar for pioneering one node at full effort."""
 	node = world.nodes[node_id]
 	hours = dict(node.get("lab") or {})
-	base_labour = sum(amount * world.labour_market.quote(trade, 0.0, actor) for trade, amount in hours.items())
-	premium = sum(amount * world.labour_market.quote(trade, 0.0, actor) * HIRING_PREMIUM
+	base_labour = sum(amount * world.labour_market.quote(trade) for trade, amount in hours.items())
+	premium = sum(amount * world.labour_market.quote(trade) * HIRING_PREMIUM
 				  for trade, amount in hours.items() if actor.workforce.get(trade, 0.0) <= 0)
 	other_money = max(0.0, world.research_cost(node_id, RESEARCH_REVIEW_YEARS) - base_labour)
 	return {"hours": hours, "money": other_money + premium, "labour_cost": base_labour,
@@ -34,7 +34,7 @@ def plan(actor: Any, node_id: str, world: Any) -> Dict[str, Any]:
 
 def labour_floor(actor: Any, node_id: str, world: Any) -> float:
 	"""The least the node can cost: its labour hours at the going quote (cheap; the full plan prices the rest)."""
-	return sum(amount * world.labour_market.quote(trade, 0.0, actor)
+	return sum(amount * world.labour_market.quote(trade)
 			   for trade, amount in (world.nodes[node_id].get("lab") or {}).items())
 
 

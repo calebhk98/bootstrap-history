@@ -150,7 +150,7 @@ class Deposits:
         if person_days <= 0:
             return Refusal("no_effort", "say how many person-days to spend prospecting.")
         hours = person_days * PROSPECT_HOURS_PER_PERSON_DAY
-        cost = hours * self.needs.labour_quote(self.mine_trade(), hours)
+        cost = hours * self.needs.labour_quote(self.mine_trade())
         if not self.needs.can_pay(cost):
             return Refusal("cannot_afford", "prospecting %.0f person-days costs about %s; %s." % (
                 person_days, self.needs.money_text(cost, True), self.needs.afford_means()), cost=cost)

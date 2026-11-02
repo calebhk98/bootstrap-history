@@ -111,7 +111,7 @@ def _agent_state_headline_money(sim, end_year):
         # under one label would read a growing payroll as a spiralling
         # cost of living to anyone watching only `state`, one of the four
         # screens the welcome text calls essential.
-        "living_cost": round(sim.view("living_cost")() - sim.view("wage_bill")(), 1),
+        "living_cost": round(sim.view("living_cost")() - sim.view("wages_charged_last_year")(), 1),
         "wage_bill": round(sim.view("wage_bill")(), 1),
         "mine_operating_cost": round(sim.view("mine_operating_cost")(), 1),
     }

@@ -399,11 +399,12 @@ def _money_wage_work_lines(out):
         wage = out.get(key)
         if not wage:
             continue
-        lines.append("  wage work %s: %s hours sold, wage %s"
-                 % (label, _fmt_num(wage.get("hours")), _fmt_num(wage.get("wage_income"))))
+        paid = wage.get("wage_income")
+        lines.append("  wage work %s: %s hours offered%s"
+                 % (label, _fmt_num(wage.get("hours")), ", paid %s" % _fmt_num(paid) if paid is not None else ""))
     if lines:
-        lines.append("    (the wage is paid into capital when the hours are sold and is not in the "
-                     "revenue above; the hours are already out of your standing job)")
+        lines.append("    (the wage is paid into capital at the year's clearing, for the hours employers hire, and is "
+                     "not in the revenue above; the hours are already out of your standing job)")
     return lines
 
 

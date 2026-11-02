@@ -25,7 +25,7 @@ class _LabourMarket:
         self.pressed = []
         self.released = []
 
-    def quote(self, trade, hours=0.0, employer=None, pay_premium=0.0):
+    def quote(self, trade):
         return 2.0
 
     def whole_recruits(self, trade, people, pay_premium=0.0):

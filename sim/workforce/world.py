@@ -331,10 +331,6 @@ class WorkforceWorld:
         return self._owner.wage_index()
 
     @property
-    def wage_index_base(self):
-        return self._owner.wage_index_terms()["base"]
-
-    @property
     def HOURS_PER_PERSON_YEAR(self):
         return self._owner.hours_per_person_year()
 
@@ -441,6 +437,12 @@ class AgentEconomyReads:
 
     def agent_wage_per_hour(self, trade):
         return self._needs.agent_wage[trade]
+
+    def agent_trades(self):
+        """The trades the agent economy holds; None until it opens."""
+        if self._needs.agent_unskilled_wage() is None:
+            return None
+        return frozenset(self._needs.agent_economy_setup().trades)
 
     def agent_country(self, country):
         return self._needs.agent_country[country]
