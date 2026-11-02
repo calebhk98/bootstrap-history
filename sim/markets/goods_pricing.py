@@ -2,22 +2,20 @@
 climb of that price over the order.
 
 The price is the one the agent economy shows on the acting tile (`EconomyPort.agent_prices_at`); a good it has no
-market for has no price, and a good only a partner makes costs the partner's landed price. Carriage is the haul from where the material comes from, on top of the price where it is
+market for has no price. Carriage is the haul from where the material comes from, on top of the price where it is
 sold. The climb is the economy's own price response (`api.price_response`): its last book cleared again with the
 order as one more bid, or the sale as one more offer. A buyer's own earlier purchases this year count as part of
 the order, since the economy has not yet seen them. Nothing here reads a ratio of the market to the cost table.
 """
 import math
 
-from .goods_imports import HOME_SELLER
 from sim.world.material_units import tonnes_per_unit
 
 # Points along an order at which the economy's response is read; the order's mean climb is their mean.
 PRICE_SLICES = 8
 
-# a price the economy does not set: the cost table's while it opens, and a partner's
+# a price the economy does not set: the cost table's while it opens
 KIND_MAKING_COST_TABLE = "making_cost_table"
-KIND_PARTNER_LANDED = "partner_landed_price"
 
 
 class GoodsPricing:
@@ -31,32 +29,25 @@ class GoodsPricing:
 
     def price_at_tile_per_tonne(self, material):
         """Money per tonne to buy a material from the cheapest seller in reach before carriage: the economy's price
-        on the acting tile, else a partner's landed price; None when no one in reach sells it."""
+        on the acting tile; None when no one in reach sells it."""
         per_unit = self.unit_price(material)
         return None if per_unit is None else per_unit / tonnes_per_unit(material)
 
     def price_kind(self, material):
         """What the price of a material is: "traded", a quote named by what it is (best_unfilled_bid,
         lowest_unfilled_ask, cost_covering, opening_estimate), an estimate, the cost table's making cost while the
-        economy opens, or a partner's landed price."""
-        if self.offered_by(material) not in (None, HOME_SELLER):
-            return KIND_PARTNER_LANDED
+        economy opens."""
         good = self._economy_good(material)
         kind = None if good is None else self._sim.economy.agent_price_kind(good)
         return KIND_MAKING_COST_TABLE if kind is None else kind
 
     def _carriage_per_tonne(self, material, price_per_tonne):
-        """Money per tonne to carry a material the home sells to the buyer; a partner's landed price already holds
-        its freight."""
-        if self.offered_by(material) not in (None, HOME_SELLER):
-            return 0.0
+        """Money per tonne to carry a material the home sells to the buyer."""
         return self._sim.material_carriage_per_tonne(self._sim._material_tag(material)[0], price_per_tonne)
 
     def _economy_good(self, material):
         """The key the economy trades a material under (a curated commodity is traded as the material it is priced as),
-        or None when a partner is its only seller."""
-        if self.offered_by(material) not in (None, HOME_SELLER):
-            return None
+        or None when no one sells it."""
         return self._sim._priced_key(material, self._home_prices())
 
     def _climb(self, material, taken_before, tonnes, selling=False):

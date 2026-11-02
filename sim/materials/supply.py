@@ -12,7 +12,7 @@ class Supply:
     """Needs: civilisation, tiles_listed_by, forest_increment, commodity_record, commodity_country_output, material_commodity_map,
     material_prices, mine_works_materials, empire_output, pop_scale, mineral_scale, found_deposits, agent_producer_capacity,
     price_epoch, producers_stamp, running_stamp, effect_best, mechanic, running, forest_hectares,
-    nitre_beds, mine_capacity, mine_depletion, partner_import_tonnes, can_be_bought, goods_stock,
+    nitre_beds, mine_capacity, mine_depletion, can_be_bought, goods_stock,
     held_goods, goods_quote, tree_nodes, visibility, material_freight_factor."""
 
     # ---- the catalogue of what a material is ----
@@ -111,11 +111,6 @@ class Supply:
             return float(self.needs.commodity_record[commodity].get("market_share", GENERIC_MARKET_SHARE_LEDGER_FALLBACK))
         return capacity.DEFAULT_MARKET_SHARE_OF_CAPACITY
 
-    def import_tonnes(self, commodity: str) -> float:
-        """Tonnes a year a trading partner can still bring of `commodity`; zero when the home society is its seller or no
-        one is."""
-        return self.needs.partner_import_tonnes[commodity]
-
     def own_material_supply(self, tag: str) -> float:
         """Tonnes a year of a tracked pool the seat supplies itself, not bought from anyone: mines it sank, woodland it
         bought, nitre beds it built. Workings yield after depletion, not the tonnage sunk."""
@@ -153,8 +148,7 @@ class Supply:
             sea_routes = self.needs.mechanic["supplies_material_by_sea_route"]
             routes = kept[commodity] = sum(
                 1 for node_id in sea_routes if commodity in sea_routes[node_id]["materials"] and self.needs.running[node_id])
-        return rules.market_tonnes(national, share, commodity == "charcoal", standing_factor, scale, routes,
-                                   self.import_tonnes(commodity))
+        return rules.market_tonnes(national, share, commodity == "charcoal", standing_factor, scale, routes)
 
     def own_production_tags(self) -> Set[Tuple[str, str]]:
         """(commodity, tag) for every material the seat produces itself, whether or not anything demands it this year."""
@@ -225,8 +219,7 @@ class Supply:
         tree that would make it."""
         commodity, tag = self.material_pool(material)
         route = rules.supply_route(self.needs.goods_stock[commodity], self.own_material_supply(tag),
-                                   self.market_tonnes(commodity), self.import_tonnes(commodity),
-                                   self.needs.can_be_bought[material])
+                                   self.market_tonnes(commodity), self.needs.can_be_bought[material])
         return {"route": route, "makers": self.makers_of(material)}
 
     def material_unsupplied_sentence(self, material: str) -> str:

@@ -17,7 +17,7 @@ READS_BY_OWNER = {
                   "techniques_version", "operating", "default_population", "pop_scale"),
     "mechanics": ("mechanic", "effect_best", "running_stamp", "running"),
     "ledger": ("goods_stock", "held_goods", "goods_stock_opening"),
-    "markets": ("goods_quote", "can_be_bought", "purchase_quote", "partner_import_tonnes", "agent_producer_capacity",
+    "markets": ("goods_quote", "can_be_bought", "purchase_quote", "agent_producer_capacity",
                 "material_freight_factor"),
     "prices": ("material_prices", "material_commodity_map", "commodity_record", "commodity_country_output", "price_epoch",
                "producers_stamp"),

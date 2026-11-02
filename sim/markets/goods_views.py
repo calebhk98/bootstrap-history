@@ -43,10 +43,6 @@ class GoodsViews:
 		"""Who sells a material to the home society: the home society's own id, a trading partner, or None when no one does."""
 		return self.goods_market.offered_by(material)
 
-	def partner_import_tonnes(self, material):
-		"""Tonnes a year a trading partner can still bring of a material: none, partners sell in the agent economy's markets."""
-		return 0.0
-
 	def home_unit_price(self, material):
 		"""Money per unit the home society's sellers ask for a material (or a curated commodity, by the material it is priced as);
 		None when no home seller offers it."""

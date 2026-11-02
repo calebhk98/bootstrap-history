@@ -1,16 +1,13 @@
 """Trader actors own the goods they carry between countries (Complaints/115, 405): a cargo is tallied per partner and
 direction (`rules.note_actor_trade`, `rules.actors_carry`), the tallies reset at the year's end
-(`ForeignTrade.apply_reset_actor_trade_tallies`), and the economy's stand-in external orders leave alone a good the actors carry in
-that direction (`AgentEconomy._external_orders`). Each rule is called on plain values or on a stand-in that holds only what it
+(`ForeignTrade.apply_reset_actor_trade_tallies`). Each rule is called on plain values or on a stand-in that holds only what it
 reads."""
 QUICK_TOPIC = True
 
 import unittest
 from types import SimpleNamespace
 
-from sim.markets import port_year
 from sim.actors.world_trade import TradeView
-from sim.markets.port_year import AgentEconomy
 from sim.foreign_trade import rules
 from sim.foreign_trade.commands import ResetActorTradeTallies, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
 from sim.foreign_trade.constants import BOUGHT, SOLD
@@ -85,45 +82,6 @@ class ShipTests(unittest.TestCase):
     def test_a_cargo_of_nothing_moves_nothing(self):
         self.assertEqual(self.ship("home", PARTNER)[0], (6.0, 6.0))
         self.assertEqual(TradeView.ship(SimpleNamespace(), "trader", "wheat", 0.0, "home", PARTNER), (0.0, 0.0))
-
-
-class ExternalOrdersTests(unittest.TestCase):
-    def orders(self, carried):
-        recorded = {}
-        sim = SimpleNamespace(
-            foreign_economies=lambda: [PARTNER],
-            goods_market=SimpleNamespace(_route_from=lambda partner: SimpleNamespace(cost_per_tonne=1.0),
-                                         landed_price=lambda good, partner, route, with_duty=True: 10.0),
-            actors_carry=lambda good, to_partner, partner=None: (good, to_partner) in carried,
-            partner_price_per_unit=lambda partner, good: 20.0)
-        economy = SimpleNamespace(
-            setup=SimpleNamespace(import_duty_share={}, coin_per_unit=1.0, port_tile="port"),
-            area_map=SimpleNamespace(goods=lambda: ["wheat", "iron"], area_of=None))
-        game = SimpleNamespace(_sim=sim, _economy=economy, _partner_spending=lambda partners: 1.0)
-
-        def record(landed, exports, available, wanted, area_of, port_tile, export_budget):
-            recorded.update(landed=landed, exports=exports)
-            return "orders"
-
-        with mock.patch.object(port_year.economy_api, "traded_volumes", return_value={"wheat": 5.0, "iron": 5.0}), \
-             mock.patch.object(port_year.economy_api, "opening_quantities", return_value={}), \
-             mock.patch.object(port_year.trade_duty, "export_terms", return_value=(0.0, False)), \
-             mock.patch("sim.engine.material_units.tonnes_per_unit", return_value=1.0), \
-             mock.patch.object(port_year, "external_orders", record):
-            AgentEconomy._external_orders(game)
-        return recorded
-
-    def test_with_no_cargo_both_goods_are_imported_and_exported(self):
-        recorded = self.orders(set())
-        self.assertEqual((sorted(recorded["landed"]), sorted(recorded["exports"])), (["iron", "wheat"], ["iron", "wheat"]))
-
-    def test_a_good_the_actors_export_draws_no_export_bid_but_may_still_be_imported(self):
-        recorded = self.orders({("wheat", True)})
-        self.assertEqual((sorted(recorded["landed"]), sorted(recorded["exports"])), (["iron", "wheat"], ["iron"]))
-
-    def test_a_good_the_actors_import_draws_no_import_offer_but_may_still_be_exported(self):
-        recorded = self.orders({("wheat", False)})
-        self.assertEqual((sorted(recorded["landed"]), sorted(recorded["exports"])), (["iron"], ["iron", "wheat"]))
 
 
 if __name__ == "__main__":
