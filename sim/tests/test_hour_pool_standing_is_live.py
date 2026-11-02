@@ -4,6 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from .harness import *  # noqa: F401,F403
 from sim.tests import projects_host
 from sim.ui.proto import state_projects as proto_state
 from sim.tests.ui_stand_in import Game

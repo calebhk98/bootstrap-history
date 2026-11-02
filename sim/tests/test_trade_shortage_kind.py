@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
+from .harness import *  # noqa: F401,F403
 from sim.tests import projects_host
 
 NODE = "mill"
