@@ -56,6 +56,14 @@ def reservation_wage(inputs: YearInputs, area: str, risk: float) -> float:
     return floor * (1.0 + risk * inputs.value_of_life_years_of_income)
 
 
+def ask_floor(inputs: YearInputs, area: str, base_reservation: float) -> float:
+    """The lowest wage an ask falls to: the area's stated floor (what the household needs less its own plot), or,
+    where none is stated, the reservation wage itself (an area with no stated floor gives no reason to sell under what
+    an hour must pay)."""
+    stated = inputs.ask_floor_per_worker_year.get(area)
+    return base_reservation if stated is None else stated / max(inputs.hours_per_worker_year, 1e-12)
+
+
 def unskilled_option(state: MarketState, inputs: YearInputs, area: str, trade: str) -> float:
     """What a skilled worker can always earn instead: the unskilled wage the area paid last year, taken
     straight up with no retraining, so no trade quotes below it."""
@@ -252,7 +260,7 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     full = workers * inputs.hours_per_worker_year
     sold_at = inputs.sold_schedule(trade, area)
     base_reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
-    lowest = inputs.ask_floor_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
+    lowest = ask_floor(inputs, area, base_reservation)
     reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, unskilled_option(state, inputs, area, trade))
     last = state.wages.get(area, {}).get(trade)
     long_run = max(trained_substitute_wage(state, inputs, area, trade), reservation)
