@@ -47,7 +47,6 @@ from . import foundation, group_servants  # noqa: F401
 from . import demand_answer, demand_commands, demand_year  # noqa: F401
 from .trader import Trader
 from .trader_entry import trader_entry
-from .route_dues_pay import DUES_CAUSE
 
 __all__ = ["Hands", "PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAVERS", "Purses", "demand_answer", "evasion", "flight", "flight_inputs", "liability", "Actor", "RecordedActor", "Business", "Plant", "business_crew_rule", "business_books", "business_plant_books", "HouseholdParty", "SeatPorts", "SeatBorrower", "FounderReview", "exchange_sale", "Firm", "Government",
            "policy_land", "Policy", "ValuePolicy", "ExportPolicy", "exports_allowed", "GOVERNMENT_PREFIX", "CallbackPolicy", "IdlePolicy", "Option",
@@ -59,4 +58,4 @@ __all__ = ["Hands", "PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAV
            "THREAT_ARMY_RESPONSE", "army_goal", "sack_pressure", "FOOD_NEED", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
            "CountryWorld", "CountryLiteracy", "Player", "Stratum", "stratum_id", "seed_strata", "true_up_keep", "bondage_tiles", "bonded_for_sale", "buy_bonded", "add_captives", "captives_from_losses", "captives_from_conquest",
            "strata_definitions", "strata_spawner", "CommandRejected", "narrowed", "exchange", "Trader",
-           "trader_entry", "DUES_CAUSE", "DeclaredKind", "declared_kind_classes"]
+           "trader_entry", "DeclaredKind", "declared_kind_classes"]

@@ -61,6 +61,7 @@ class Haul:
     handlings_by_mode: Tuple[Tuple[str, int], ...] = ()
     km_by_mode: Tuple[Tuple[str, float], ...] = ()          # kilometres a tonne is carried on each mode (geography's)
     team_days_by_mode: Tuple[Tuple[str, float], ...] = ()   # working days of a team a tonne takes on each mode (geography's rates)
+    legs: Tuple[Tuple[TileId, str], ...] = ()               # (tile the leg leaves, mode) for each leg, in order (where route dues are levied)
 
 
 NO_PATH = Haul(math.inf)
@@ -81,7 +82,8 @@ def haul_of(hauled: Mapping[str, object]) -> Haul:
     inputs = hauled.get("inputs") or {}
     return Haul(float(hauled["days"]), tuple(sorted(money.items())), tuple(sorted(handlings.items())),
                 tuple(sorted((inputs.get("km_by_mode") or {}).items())),
-                tuple(sorted((inputs.get("team_days") or {}).items())))
+                tuple(sorted((inputs.get("team_days") or {}).items())),
+                tuple((leg["from"], leg["mode"]) for leg in hauled["legs"]))
 
 
 class CarriageTable:

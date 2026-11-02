@@ -31,7 +31,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import carriage_fleet, inventory, merchants_legs, merchants_nearest, merchants_route_memo, merchants_transit
+from . import carriage_fleet, inventory, route_dues, merchants_legs, merchants_nearest, merchants_route_memo, merchants_transit
 from .accounts import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
@@ -113,6 +113,7 @@ class Dispatch:
     crew_hours_wanted: Dict[str, float] = field(default_factory=dict)   # by crew key, before any cut for want of carriers
     crew_money_wanted: Dict[str, float] = field(default_factory=dict)   # the carriage money those hours stand for, by crew key
     fleet_wanted: Dict[str, float] = field(default_factory=dict)   # wear a year the routes' stock called for, by carrier good, before any cut for want of carriers
+    dues: Tuple[Transfer, ...] = ()     # the route dues paid to the holders' accounts (route_dues.py), apart from the fee
 
 
 def within_purse(transfers: Sequence[Transfer], balance: float) -> Tuple[Transfer, ...]:
@@ -393,7 +394,8 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
              crew: Optional[CrewHire] = None,
              carrier_money: Optional[Callable[[TileId, TileId], float]] = None,
              margin_kept: bool = False,
-             fleet: Optional[carriage_fleet.FleetLimit] = None) -> Dispatch:
+             fleet: Optional[carriage_fleet.FleetLimit] = None,
+             dues: Optional[Callable[[TileId, TileId], Mapping[str, float]]] = None) -> Dispatch:
     """Carry what the merchant holds on each route's source tile (this year's purchases and older stock)
     to the route's destination, paying carriage from `cash` to `carrier_of(source tile)` (the edge when
     it names nobody). `fills` are not needed: what settled is what is held.
@@ -405,7 +407,9 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
     the margin) stays with the merchant that owns the carriers and is paid to nobody; only crew pay owed for
     hours not yet hired (the first year of shipping, which has no plan) still goes to `carrier_of`, as before.
     With `fleet`, routes also share the carriers the merchant holds or hired: a route carries no more tonnes than
-    the wear its scarcest carrier good has left allows, in route order."""
+    the wear its scarcest carrier good has left allows, in route order.
+    With `dues` ({holder: money per tonne} on a haul), the merchant pays the haul's tolls and port dues to each holder's
+    account, in money, out of the fee: they are no part of the crew's hours or of what the owner keeps."""
     shipments = []
     spare = None if fleet is None else dict(fleet.capacity)
     fleet_wanted: Dict[str, float] = {}
@@ -425,12 +429,14 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
         crew_money = 0.0 if crew is None else min(per_unit, math.fsum(hours * crew.wage.get(key, 0.0)
                                                                       for key, hours in crew_rows))
         supplied_money = 0.0 if carrier_money is None else min(max(0.0, per_unit - crew_money), carrier_money(tile, route[0]) * tonnes_per_unit)
-        payout_unit = per_unit - crew_money - supplied_money
+        dues_unit = {} if dues is None else {holder: owed * tonnes_per_unit for holder, owed in dues(tile, route[0]).items()}
+        payout_unit = max(0.0, per_unit - crew_money - supplied_money - math.fsum(dues_unit.values()))
         if margin_kept:     # what is left is the owner's: only crew pay for hours nobody was hired for is still paid out
             unhired = 0.0 if crew is None or crew.hours_hired is not None else math.fsum(
                 hours * crew.market_wage(key) for key, hours in crew_rows)
             payout_unit = min(payout_unit, unhired)
-        affordable = quantity if payout_unit <= 0.0 else min(quantity, remaining / payout_unit)
+        outlay_unit = payout_unit + math.fsum(dues_unit.values())
+        affordable = quantity if outlay_unit <= 0.0 else min(quantity, remaining / outlay_unit)
         if fleet is not None and tonnes_per_unit > 0.0:
             wear_per_tonne = fleet.units_per_tonne(tile, route[0])
             for carrier, units in wear_per_tonne.items():
@@ -448,8 +454,8 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
         for key, hours in crew_rows:      # shared by the route's hours
             wanted[key] = wanted.get(key, 0.0) + quantity * hours
             worth[key] = worth.get(key, 0.0) + quantity * gain * hours / route_hours
-        shipments.append([good, tile, route, quantity, affordable, payout_unit, crew_rows])
-        remaining -= affordable * payout_unit
+        shipments.append([good, tile, route, quantity, affordable, payout_unit, crew_rows, dues_unit])
+        remaining -= affordable * outlay_unit
     cut: Dict[str, float] = {}       # the share of a crew key's hours that was hired, where it falls short
     if crew is not None and crew.hours_hired is not None:
         needed: Dict[str, float] = {}
@@ -458,9 +464,9 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
                 needed[key] = needed.get(key, 0.0) + row[4] * hours
         cut = {key: max(0.0, crew.hours_hired.get(key, 0.0)) / total for key, total in needed.items()
                if total > crew.hours_hired.get(key, 0.0)}
-    moves, transfers, stranded = [], [], []
+    moves, transfers, dues_paid, stranded = [], [], [], []
     purse = max(0.0, cash) * (1.0 - PURSE_ROUNDING_MARGIN)
-    for good, tile, route, quantity, affordable, payout_unit, crew_rows in shipments:
+    for good, tile, route, quantity, affordable, payout_unit, crew_rows, dues_unit in shipments:
         carried = affordable * min([cut[key] for key, _hours in crew_rows if key in cut], default=1.0)
         if carried < quantity:
             stranded.append((good, tile, quantity - carried))
@@ -471,12 +477,17 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
             merchant.in_transit.append(merchants_transit.Shipment(good, carried, route[0], years - 1))
         moves.append(DeliveredMove(merchant.agent_id, merchants_transit.EDGE_TRANSIT if years > 1 else merchant.agent_id,
                                    good, tile, carried, "carried to market", route[0]))
+        for holder, owed in sorted(dues_unit.items()):
+            paid = max(0.0, min(carried * owed, purse))
+            purse -= paid
+            if paid > 0.0:
+                dues_paid.append(Transfer(merchant.agent_id, route_dues.account(holder), currency, paid, "route dues on %s" % good))
         fee = max(0.0, min(carried * payout_unit, purse))      # never above the purse, and a rounding sliver below zero is not cash paid back
         purse -= fee
         if fee > 0.0:
             transfers.append(Transfer(merchant.agent_id, carrier_of(tile) or EDGE_CARRIAGE, currency, fee,
                                       "carriage of %s" % good))
-    return Dispatch(tuple(moves), within_purse(transfers, cash), tuple(stranded), wanted, worth, fleet_wanted)
+    return Dispatch(tuple(moves), within_purse(transfers, cash), tuple(stranded), wanted, worth, fleet_wanted, tuple(dues_paid))
 
 
 def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float],
