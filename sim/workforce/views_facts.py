@@ -21,23 +21,23 @@ class FactViews:
 		"""What the last clearing charged the acting seat for its staff and one-year orders; before any clearing, the payroll
 		the staff on the books would cost at the market wage."""
 		paid = self.seat.wages_paid
-		return self.labour.wage_bill() if paid is None else paid
+		return self.labour.wages.wage_bill() if paid is None else paid
 
 	def wage_bill(self):
 		"""What the seat's standing staff costs every year, by trade."""
-		return self.labour.wage_bill()
+		return self.labour.wages.wage_bill()
 
 	def unskilled_trade(self):
 		"""The registry's flagged fallback trade: the one anyone can take up at once."""
-		return self.labour.unskilled_trade()
+		return self.labour.allocation.unskilled_trade()
 
 	def settlement_tiles(self):
 		"""{tile id: people living there} for the tiles the nation holds."""
-		return self.labour.settlement_tiles()
+		return self.labour.settlement.settlement_tiles()
 
 	def labour_need_shares(self):
 		"""{trade: share of the hours the society's needs ask of it}."""
-		return self.labour.need_shares()
+		return self.labour.allocation.need_shares()
 
 	def opening_wage_index(self):
 		"""The wage index of the civilisation's opening year, which the index is measured against."""

@@ -3,25 +3,19 @@
 Rule tests (Complaint 640): the founder's book accessors and the reservation arithmetic run on a stub world."""
 from types import SimpleNamespace
 
-from sim.labour.staff_book import StaffBookMixin
+from sim.labour.staff_book import StaffBook
 
 from .harness import *  # noqa: F401,F403
 
 QUICK_TOPIC = True
 
 
-class _Book(StaffBookMixin):
+def _Book(other_staff, supply):
     """The owner's book over a stub world: a household with a staff map and the other employers' staff."""
-
-    def __init__(self, other_staff, supply):
-        self._world = SimpleNamespace(
-            workforce=SimpleNamespace(employees={}),
-            actors_staff_nationwide=lambda trade: other_staff.get(trade, 0.0),
-            HOURS_PER_PERSON_YEAR=2000.0)
-        self._supply = supply
-
-    def people_who_exist(self, trade):
-        return self._supply.get(trade, 0.0)
+    return StaffBook(SimpleNamespace(
+        workforce=SimpleNamespace(employees={}),
+        actors_staff_nationwide=lambda trade: other_staff.get(trade, 0.0),
+        HOURS_PER_PERSON_YEAR=2000.0))
 
 
 # ---- the founder's book is the owner's ----
@@ -45,14 +39,20 @@ check("reserved people are the book plus the firms' and states' staff", book.res
 check("reserved hours are people times hours a person-year", book.reserved_hours("artisan") == 6.0 * 2000.0)
 
 from unittest import mock
-from sim.labour import labour_population
+from sim.labour import labour_supply
 
 
-class _Estimate(labour_population.PopulationMixin):
+class _Estimate:
+    """A supply part whose book holds the core's headcounts and whose trades are all available."""
+
     def __init__(self, in_core):
-        self._world = SimpleNamespace(population=SimpleNamespace(total=1000.0, working_age=600.0),
-                                      urban_fraction=lambda: 0.2, trades_absent=())
+        world = SimpleNamespace(population=SimpleNamespace(total=1000.0, working_age=600.0),
+                                urban_fraction=lambda: 0.2, trades_absent=())
         self._in_core = in_core
+        self.supply = labour_supply.Supply(world, book=self, capacity=None, settlement=None, trades=self)
+
+    def national_trade_population(self, trade):
+        return self.supply.national_trade_population(trade)
 
     def trade_available(self, trade):
         return True
@@ -61,9 +61,9 @@ class _Estimate(labour_population.PopulationMixin):
         return self._in_core
 
 
-with mock.patch.object(labour_population.trade_data, "drawn_from_unskilled_pool", lambda trade: False), \
-        mock.patch.object(labour_population.trade_data, "scholar_trade", lambda: "scholar"), \
-        mock.patch.object(labour_population.trade_data, "literate_trades", lambda registry, trades: []), \
-        mock.patch.object(labour_population.trade_data, "registry_of", lambda world: {}):
+with mock.patch.object(labour_supply.trade_data, "drawn_from_unskilled_pool", lambda trade: False), \
+        mock.patch.object(labour_supply.trade_data, "scholar_trade", lambda: "scholar"), \
+        mock.patch.object(labour_supply.trade_data, "literate_trades", lambda registry, trades: []), \
+        mock.patch.object(labour_supply.trade_data, "registry_of", lambda world: {}):
     check("the national estimate of a trade is the core's headcount where the core holds people of it",
           _Estimate({"smith": 42.0}).national_trade_population("smith") == 42.0)

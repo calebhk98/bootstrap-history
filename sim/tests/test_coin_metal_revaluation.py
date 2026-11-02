@@ -8,7 +8,7 @@ import unittest
 
 from sim.coin.module import Coin
 from sim.coin.state import CoinWorld
-from sim.labour.labour_wages import WagesMixin
+from sim.labour.labour_market_api import LabourMarket
 from sim.reporting.api import ReportingWorld
 from sim.reporting.module import Reporting
 from sim.tests import module_harness
@@ -56,18 +56,29 @@ class RevaluationTests(unittest.TestCase):
         self.assertNotIn("gold_kg", ratios)
 
 
-class WageStub(WagesMixin):
-    WAGE_SHARE_FOOD, WAGE_SHARE_HOUSING, WAGE_SHARE_TOOLS, WAGE_SHARE_SKILL_AND_DIFFICULTY = 0.5, 0.0, 0.5, 0.0
+class WageStub:
+    """The labour market's wage factors over a world with the shares and housing written out."""
 
     def __init__(self, ratios):
-        self._world = types.SimpleNamespace(
+        world = types.SimpleNamespace(
             civ={"staple": "wheat_kg"}, trade_registry={"smith": {"tool_basket": ["iron_kg"]}},
             last_market_price_ratio=lambda material: ratios.get(material, 1.0),
             material_price_factor=lambda material: 1.0)
+        self.market = LabourMarket(world, schedule=None, settlement=None, book=None)
+        self.market.WAGE_SHARE_FOOD, self.market.WAGE_SHARE_HOUSING = 0.5, 0.0
+        self.market.WAGE_SHARE_TOOLS, self.market.WAGE_SHARE_SKILL_AND_DIFFICULTY = 0.5, 0.0
+        self.market.town_housing_factor = lambda: 1.0
 
     @property
-    def labour_market(self):
-        return types.SimpleNamespace(town_housing_factor=lambda: 1.0)
+    def _world(self):
+        return self.market._world
+
+    @_world.setter
+    def _world(self, world):
+        self.market._world = world
+
+    def wage_cost_factors(self, trade):
+        return self.market.cost_factors(trade)
 
 
 class WageClearingTests(unittest.TestCase):

@@ -23,22 +23,22 @@ def labour_of(actor_staff=0.0):
     world.effect_factor = lambda channel, value, exponent=None: value
     world.actor_staff_fte = lambda trade: actor_staff
     labour = Labour(world)
-    labour.core_people_by_trade = lambda: {"smith": 1000.0}
-    labour.core_people_by_tile_and_trade = lambda: {labour.base_tile(): {"smith": 100.0}}
+    labour.book.core_people_by_trade = lambda: {"smith": 1000.0}
+    labour.book.core_people_by_tile_and_trade = lambda: {labour.settlement.base_tile(): {"smith": 100.0}}
     return labour
 
 
 class SharedPool(unittest.TestCase):
     def test_what_actors_employ_is_off_the_hours_the_market_supplies(self):
-        free = labour_of(0.0).market_supply("smith")
-        taken = labour_of(5.0).market_supply("smith")
+        free = labour_of(0.0).supply.market_supply("smith")
+        taken = labour_of(5.0).supply.market_supply("smith")
         self.assertAlmostEqual(free - taken, 5.0 * HOURS, delta=1e-6)
 
     def test_hiring_everyone_the_actors_have_not_taken_is_refused_for_want_of_people(self):
         labour = labour_of(0.0)
-        exist = labour.people_who_exist("smith")
-        labour._world.actor_staff_fte = lambda trade: exist - 3.0
-        count, fee, refusal = labour.hire_check("smith", 5)
+        exist = labour.supply.people_who_exist("smith")
+        labour.supply._world.actor_staff_fte = lambda trade: exist - 3.0
+        count, fee, refusal = labour.hiring.hire_check("smith", 5)
         self.assertEqual((count, fee), (None, None))
         self.assertEqual(cause_of(refusal), "nobody_left")
 

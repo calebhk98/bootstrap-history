@@ -19,10 +19,10 @@ class StandingBondage:
 			return
 		_scholars_lacking, craftsmen_lacking = self.needs.staffing_closed_hand_shortfall()      # people are bought as craftsmen
 		count = rules.people_to_buy(
-			self.needs.acting_balance(), self.labour.SLAVE_BASE_PRICE, craftsmen_lacking,
+			self.needs.acting_balance(), self.labour.bondage.SLAVE_BASE_PRICE, craftsmen_lacking,
 			constants.AUTO_BUY_PEOPLE_CAPITAL_FLOOR_IN_PRICES, constants.AUTO_BUY_PEOPLE_CAPITAL_PER_PERSON_IN_PRICES)
 		if count and self.needs.running_mechanics("hosts_bought_people"):
-			got = self.labour.buy_slaves(count)
+			got = self.labour.bondage.buy_slaves(count)
 			if got:
 				self.needs.send(RecordEvent.of("people_bought", "bought %d people for the workshop" % got))
 
@@ -30,7 +30,7 @@ class StandingBondage:
 		if not self.needs.founder()["policy"].get("auto_manumit", not self.needs.automation()["manual"]) or not self.staff()["slaves"]:
 			return
 		if self.needs.game_random().random() < constants.AUTO_MANUMIT_ANNUAL_CHANCE:
-			freed = self.labour.manumit(rules.people_to_free(self.staff()["slaves"], constants.AUTO_MANUMIT_SHARE_DIVISOR))
+			freed = self.labour.bondage.manumit(rules.people_to_free(self.staff()["slaves"], constants.AUTO_MANUMIT_SHARE_DIVISOR))
 			if freed:
 				self.needs.send(RecordEvent.of("people_freed", "freed %d people" % freed))
 

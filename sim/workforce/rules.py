@@ -10,12 +10,6 @@ def surviving_people(headcount: float, survival_share: float) -> float:
 	return headcount * survival_share
 
 
-def wage_index_of(base_index, scarcity_elasticity, population_scale, unshocked_scale):
-	"""The base index raised in proportion to the shortfall of the population scale below its unshocked trend."""
-	shortfall = max(0.0, 1.0 - population_scale / unshocked_scale)
-	return base_index * (1.0 + scarcity_elasticity * shortfall)
-
-
 def wage_materials_of(staple, trade_registry):
 	"""The materials a wage is set against, in order: the staple, then each trade's tool materials (trades in id order),
 	each material once."""

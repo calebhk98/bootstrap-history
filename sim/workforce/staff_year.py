@@ -28,15 +28,15 @@ class StaffYear:
         #    staff smooths toward capacity, which is what the long civilization
         #    runs are calibrated against. With it off, the only things that
         #    change the staff are hire, fire, train, buy and manumit.
-        sc_cap, ar_cap, di_cap = self.labour.staff_capacity()
+        sc_cap, ar_cap, di_cap = self.labour.capacity.staff_capacity()
         attrition_rate = demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
         # Rehire a specialist foreman an open concern just lost, before the
         # staffing rule closes the concern.
         if self.needs.founder()["policy"].get("auto_replace_foreman", False):
-            self.labour.replace_lost_foremen()
+            self.labour.controls.replace_lost_foremen()
         # Hire for the concerns named with `keep <id> staffed`, before the closure rule.
-        self.labour.keep_flagged_concerns_staffed()
-        self.labour.resync_pools()
+        self.labour.controls.keep_flagged_concerns_staffed()
+        self.labour.pools.resync_pools()
         # Nobody dies or leaves the household's staff here: the labour core fills the standing bid each clearing.
         # NOT `capital > 0`: gating hiring on a strictly positive balance
         # creates a catch-22, where a household in arrears could never take
@@ -55,7 +55,7 @@ class StaffYear:
             # used for sc_cap/ar_cap (see the comment there): supervision-room
             # headroom is not a free six people, it is six people you still
             # have to pay for.
-            extra = self.labour.supervision_room() * self.staff_scale()
+            extra = self.labour.capacity.supervision_room() * self.staff_scale()
             # THE SAME WALL hire() AND train() ENFORCE: `target_sc` is capped
             # at `literate_capacity("scholar")`, the wall a player typing
             # `hire scholar N` is refused at, so auto_hire cannot grow the
@@ -67,7 +67,7 @@ class StaffYear:
             # building the institutions staff_capacity() already credits
             # widens this same wall past that well before the goal is in
             # reach).
-            target_sc = scholar_target(sc_cap, extra, AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.labour.literate_capacity("scholar"))
+            target_sc = scholar_target(sc_cap, extra, AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.labour.supply.literate_capacity("scholar"))
             desired_sc = approach(workforce.scholars, target_sc, AUTO_HIRE_SCHOLAR_APPROACH_RATE)
             target_ar = ar_cap + extra
             desired_ar = approach(workforce.artisans, target_ar, AUTO_HIRE_ARTISAN_APPROACH_RATE)
@@ -127,7 +127,7 @@ class StaffYear:
             # ONLY A TRADE SOMETHING DRAWS ON: a project in hand or an open
             # concern. Otherwise the top-up pays idle specialists for decades
             # and rehires ones the player fired (see idle_specialists).
-            _drawn_on = self.labour.trades_drawn_on()
+            _drawn_on = self.labour.ledger.trades_drawn_on()
             for trade_id in sorted(set(workforce.employees) | set(workforce.trades_created)):
                 have = workforce.employees.get(trade_id, 0.0)
                 want = replacement_wanted(trade_id, have, trade_id in workforce.trades_created, _drawn_on,
@@ -136,8 +136,8 @@ class StaffYear:
                     continue
                 if want - have > 0.02:
                     _grow_to(trade_id, want)
-            self.labour.resync_pools()
-        self.labour.hold_staff_reserve()
+            self.labour.pools.resync_pools()
+        self.labour.controls.hold_staff_reserve()
         # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY:
         # letting contracted craftsmen count toward a project's staff
         # requirement only helps a person who thinks to type `commission`
@@ -146,7 +146,7 @@ class StaffYear:
         # the same dead end wearing a different hat.
         if self.needs.founder()["policy"].get("auto_commission", not self.needs.automation()["manual"]):
             _before = self.needs.acting_balance()
-            _commissioned = self.labour.auto_commission_for_blocked()
+            _commissioned = self.labour.commissions.auto_commission_for_blocked()
             if _commissioned:
                 self.needs.send(RecordAutomation("auto_commission", "commission", "%.0f hours of %s" % (_commissioned[2], _commissioned[1]), "%s is blocked only on craftsmen's hands" % _commissioned[0], _before))
         workforce.directors_extra = directors_next(workforce.directors_extra, di_cap,
@@ -164,5 +164,5 @@ class StaffYear:
                                  "your name: your year is %s hours instead of "
                                  "%s. They came with the institutions you built"
                              % (_whole, "y" if _whole == 1 else "ies",
-                                self.needs.plain_number(self.labour.director_pool()),
+                                self.needs.plain_number(self.labour.hours.director_pool()),
                                 self.needs.plain_number(self.needs.game_config()["founder_hours_per_year"]))))

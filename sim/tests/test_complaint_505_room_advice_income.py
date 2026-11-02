@@ -1,12 +1,13 @@
 """Complaint 505: the room advice states the places a node adds at the household's present income, the same figure the
-household's room moves by once the node is open. `room_added_by`, `staff_capacity` and `_room_advice` are called on a stand-in
+household's room moves by once the node is open. `room_added_by`, `staff_capacity` and `room_advice` are called on a stand-in
 for the labour world (Complaint 640: no game is built)."""
 QUICK_TOPIC = True
 
 import types
 import unittest
 
-from sim.labour.labour_capacity import CapacityMixin
+from sim.labour.labour_advice import Advice
+from sim.labour.labour_capacity import Capacity
 from sim.refusal import facts_of
 
 FLAT_PLACES = 40.0
@@ -15,7 +16,7 @@ POPULATION_SCALE = 0.8
 THIN_PURSE, RICH_PURSE = 15.0, 500.0   # people the spare income can pay
 
 
-class StandInLabour(CapacityMixin):
+class StandInLabour:
     """Only what the room figures read: the load the running institutions carry, what the income can pay, the headroom."""
 
     def __init__(self, afford, artisans=BASE_ARTISANS, room_sources=(("freedman_staff", FLAT_PLACES),)):
@@ -27,6 +28,20 @@ class StandInLabour(CapacityMixin):
             closure=lambda nodes, node_id: {node_id}, start_reason=lambda node_id, _why=True: (True, ""),
             money_text=lambda amount, grouped=False: "%g" % amount, housing_price_per_place=lambda: 100.0)
         self.afford, self.artisans = afford, artisans
+        self.capacity = Capacity(self._world, book=None, market=None, schedule=None, trades=None)
+        self.capacity._institutional_load = self._institutional_load
+        self.capacity._staffing_affordability = self._staffing_affordability
+        self.capacity.supervision_room = self.supervision_room
+        self.advice = Advice(self._world, capacity=self.capacity, hands=None)
+
+    def staff_capacity(self):
+        return self.capacity.staff_capacity()
+
+    def room_added_by(self, places):
+        return self.capacity.room_added_by(places)
+
+    def _room_advice(self):
+        return self.advice.room_advice()
 
     def _institutional_load(self, with_directors=False):
         return (0.0, self.artisans, 0.0) if with_directors else (0.0, self.artisans)

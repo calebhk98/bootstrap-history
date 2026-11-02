@@ -8,7 +8,7 @@ import unittest
 from sim.tests import workforce_stand_in
 
 from sim.refusal import cause_of, facts_of
-from sim.labour.labour_wage_ledger import WageLedgerMixin
+from sim.labour.labour_wages import Wages
 from sim.ui.proto.dispatch_labour import _cmd_work
 from sim.tests import event_stand_in
 from sim.tests.ui_stand_in import StandIn
@@ -21,8 +21,8 @@ def household(**fields):
     return types.SimpleNamespace(**books)
 
 
-class Books(WageLedgerMixin):
-    """The household's books and the little of the world the ledger reads."""
+class Books:
+    """The wages part over the household's books and the little of the world the ledger reads."""
 
     def __init__(self, held=None, year=100):
         self.held = held or household()
@@ -32,8 +32,22 @@ class Books(WageLedgerMixin):
             plain_number=lambda number: "%g" % number, money_text=lambda money, grouped=False, short=False: "%g" % money,
             logged_events=lambda: len(self.held.log))
         event_stand_in.stood_in(self._world)
+        self.wages = Wages(self._world, book=None, hours=None, market=None, trades=None)
+        self.wages.work_for_wages = lambda trade, hours, commit=True: self.work_for_wages(trade, hours, commit)
 
-    def work_for_wages(self, trade, hours):
+    def wage_work_this_year(self):
+        return self.wages.wage_work_this_year()
+
+    def log_wage_work(self, trade, hours, pay):
+        return self.wages.log_wage_work(trade, hours, pay)
+
+    def close_wage_year(self):
+        return self.wages.close_wage_year()
+
+    def work_for_wages_dry_run(self, trade, hours):
+        return self.wages.work_for_wages_dry_run(trade, hours)
+
+    def work_for_wages(self, trade, hours, commit=True):
         self.held.capital += 30.0
         self.held.wage_hours_this_year += hours
         self.held.log.append((100, "sold"))

@@ -4,13 +4,13 @@ QUICK_TOPIC = True
 from .harness import *
 
 from sim.engine.data import ANNUAL_WAGE
-from sim.labour.labour_wages import WagesMixin
+from sim.labour.labour_market_api import LabourMarket
 from sim.labour.wage_factors import annual_wage, housing_factor, tools_factor, weighted_factor
 
-SHARES = (WagesMixin.WAGE_SHARE_FOOD, WagesMixin.WAGE_SHARE_HOUSING, WagesMixin.WAGE_SHARE_TOOLS,
-          WagesMixin.WAGE_SHARE_SKILL_AND_DIFFICULTY)
-HOUSING = (WagesMixin.HOUSING_PRESSURE_START_OCCUPANCY, WagesMixin.HOUSING_PRESSURE_BAND,
-           WagesMixin.HOUSING_PRESSURE_MAX_MARKUP)
+SHARES = (LabourMarket.WAGE_SHARE_FOOD, LabourMarket.WAGE_SHARE_HOUSING, LabourMarket.WAGE_SHARE_TOOLS,
+          LabourMarket.WAGE_SHARE_SKILL_AND_DIFFICULTY)
+HOUSING = (LabourMarket.HOUSING_PRESSURE_START_OCCUPANCY, LabourMarket.HOUSING_PRESSURE_BAND,
+           LabourMarket.HOUSING_PRESSURE_MAX_MARKUP)
 
 
 def weighted(food=1.0, housing=1.0, tools=1.0):

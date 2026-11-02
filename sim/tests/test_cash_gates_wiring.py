@@ -6,7 +6,8 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.labour.labour_training import TrainingMixin
+from sim.labour.labour_commissions import Commissions
+from sim.labour.labour_refusals import cash_in_hand_refusal
 from sim.refusal import Refusal, cause_of
 from sim.ui.proto.state_waiting import _waiting_on
 from sim.tests.ui_stand_in import Game
@@ -33,14 +34,21 @@ class World:
         return "cannot afford %s at %s" % (what, fee)
 
 
-class Gate(TrainingMixin):
-    LITERATE_TRADES = ()
+class Gate:
+    """The commissions part over a world, with the trades, supply and hands it asks written out."""
 
     def __init__(self, power, fee):
         self._world = World(power)
-        self.labour_market = Game(
-            price_factor=lambda trade: 1.0)
         self.fee = fee
+        self.commissions = Commissions(self._world, hands=Game(hours_reserved=lambda trade: 0.0), market=None, schedule=None,
+                                       supply=self, trades=self)
+        self.commissions.commission_fee = self.commission_fee
+
+    def commission_check(self, trade, hours):
+        return self.commissions.commission_check(trade, hours)
+
+    def auto_commission_for_blocked(self):
+        return self.commissions.auto_commission_for_blocked()
 
     def trade_available(self, trade):
         return True
@@ -69,8 +77,8 @@ class CommissionCheck(unittest.TestCase):
 
 class CashInHandRefusal(unittest.TestCase):
     def test_it_is_a_cash_short_refusal(self):
-        self.assertIsInstance(Gate(0.0, 1.0)._cash_in_hand_refusal("a fee", 5.0), Refusal)
-        self.assertEqual(cause_of(Gate(0.0, 1.0)._cash_in_hand_refusal("a fee", 5.0)), "cash_short")
+        self.assertIsInstance(cash_in_hand_refusal(World(0.0), "a fee", 5.0), Refusal)
+        self.assertEqual(cause_of(cash_in_hand_refusal(World(0.0), "a fee", 5.0)), "cash_short")
 
 
 class AutoCommission(unittest.TestCase):

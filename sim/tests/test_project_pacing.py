@@ -35,7 +35,7 @@ def a_game(supply=None, demand=None, spending=1.0e9, cost=10000.0, throttle=(1.0
         civ = {}
 
         def trade_shortage_kind(self, trade_id, need, total_demand=None):
-            return progress_rules.shortage_kind(self.labour.hours_you_can_call_on(trade_id), need, total_demand)
+            return progress_rules.shortage_kind(self.labour.hands.hours_you_can_call_on(trade_id), need, total_demand)
 
     game = Game()
     game.trade_demand_vs_supply = lambda: {trade: {"demand_hours_this_year": hours} for trade, hours in demand.items()}

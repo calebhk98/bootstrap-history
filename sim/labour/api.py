@@ -4,7 +4,7 @@ Outside code imports from here and reaches the simulation's labour through `sim.
 (a `Labour`, held by the workforce module, sim/workforce/module.py), never through a submodule or a private name.
 
 `Labour` loads on first use (module `__getattr__`): the engine data modules import this door
-for the wage constants while they are themselves still loading, and the labour mixins would
+for the wage constants while they are themselves still loading, and the labour parts would
 import them back.
 """
 WALL = "two-way"  # nothing here reaches sim/engine/; the workforce module hands it what it needs (sim/workforce/world.py)
@@ -29,6 +29,8 @@ from .wages import CAREER_YEARS
 from .trade_data import role_field, trade_of_role, tool_draw, tool_hours_factors, tool_order
 from .occupational_shares import occupational_report, shares_by_group, hours_by_trade, hours_by_trade_of_all_employers, people_by_trade_of_all_employers, format_report as format_occupational_report, groups_data as occupation_groups
 from .staff_targets import scholar_target
+from .staff_moves import stochastic_round
+from .labour_state_weights import STATE_WEIGHTS
 from .people_added import add_people
 from .tenure import add_tenure, fade_tenure, outflow_shares, tenure_by_trade, tenure_held
 
@@ -36,7 +38,7 @@ __all__ = [
     "learning_curve", "SOURCE_TASK_FLOOR_FRACTION",
     "fetch_wage", "fetch_wage_samples",
     "occupational_report", "shares_by_group", "hours_by_trade", "hours_by_trade_of_all_employers", "people_by_trade_of_all_employers", "format_occupational_report", "occupation_groups",
-    "wage_provider", "wages", "scholar_target", "add_people", "Labour", "production_data",
+    "wage_provider", "wages", "scholar_target", "stochastic_round", "STATE_WEIGHTS", "add_people", "Labour", "production_data",
     "people_fed_per_worker", "CAREER_YEARS", "tool_draw", "tool_hours_factors", "tool_order",
     "add_tenure", "fade_tenure", "outflow_shares", "tenure_by_trade", "tenure_held", "hours_cap_kcal", "capped_kcal", "cap_share",
     # the labour-market core (sim/labour/market/DESIGN.md): plain records in, plain records out

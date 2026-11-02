@@ -1,10 +1,9 @@
 """The views the workforce module publishes."""
-from sim.demography.api import DEFAULT_POPULATION_100AD, POP_SCALE_FLOOR
-from sim.labour.api import wage_provider
+from sim.labour.api import STATE_WEIGHTS, wage_provider
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
 from . import rules
-from .constants import BASE_WORKING_DAY_HOURS, WAGE_SCARCITY_ELASTICITY
+from .constants import BASE_WORKING_DAY_HOURS
 
 
 class Views:
@@ -12,74 +11,74 @@ class Views:
 	# ---- people ----
 
 	def headcount(self):
-		return self.labour.headcount()
+		return self.labour.book.headcount()
 
 	def hours_available(self, pool):
 		labour = self.labour
-		return {"scholar_hands": labour.scholar_hands_available, "craft_hands": labour.craft_hands_available,
-		        "director_pool": labour.director_pool, "director_committed": labour.director_hours_committed,
-		        "hired_cap": labour.market_hours_offered}[pool]()
+		return {"scholar_hands": labour.hands.scholar_hands_available, "craft_hands": labour.hands.craft_hands_available,
+		        "director_pool": labour.hours.director_pool, "director_committed": labour.hours.director_hours_committed,
+		        "hired_cap": labour.supply.market_hours_offered}[pool]()
 
 	def hours_you_can_call_on(self, trade):
 		"""The hours a year of a trade the seat can call on: the market's supply plus the time it has already bought."""
-		return self.labour.hours_you_can_call_on(trade)
+		return self.labour.hands.hours_you_can_call_on(trade)
 
 	def effective_scholars(self):
 		"""The scholars the seat counts (the founder included, while alive)."""
-		return self.labour.effective_scholars()
+		return self.labour.hands.effective_scholars()
 
 	def literacy_references(self):
 		"""The literacy figures hiring and research are measured against."""
 		labour = self.labour
-		return {"factor_cap": labour.LITERACY_FACTOR_CAP, "reference_elite": labour.LITERACY_REFERENCE_ELITE,
-		        "reference_general": labour.LITERACY_REFERENCE_GENERAL}
+		return {"factor_cap": labour.trades.LITERACY_FACTOR_CAP, "reference_elite": labour.trades.LITERACY_REFERENCE_ELITE,
+		        "reference_general": labour.trades.LITERACY_REFERENCE_GENERAL}
 
 	def literacy_capacity(self, trade):
 		"""The most people of `trade` the country's literacy lets the seat hire or teach."""
-		return self.labour.literate_capacity(trade)
+		return self.labour.supply.literate_capacity(trade)
 
 	def farm_share_of_hours(self):
-		return self.labour.farm_share_of_hours()
+		return self.labour.allocation.farm_share_of_hours()
 
 	def training_advice(self, trade_id):
 		"""The facts of teaching one person `trade_id`, read from the labour market. `hours_each` and `years` are None when
 		no trade here can teach it."""
 		labour = self.labour
-		source = labour._source_trade_for(trade_id)
+		source = labour.training.source_trade_for(trade_id)
 		return {"trade": trade_id,
 		        "source_trade": source,
-		        "hours_each": labour.training_hours_per_person(trade_id, source) if source else None,
-		        "years": labour.training_years_from(trade_id, source) if source else None}
+		        "hours_each": labour.training.training_hours_per_person(trade_id, source) if source else None,
+		        "years": labour.training.training_years_from(trade_id, source) if source else None}
 
 	def staff_advice(self, kind, deficit=None):
-		return self.labour.staff_advice(kind, deficit)
+		return self.labour.advice.staff_advice(kind, deficit)
 
 	def project_staffing_shortfall(self, node):
-		return self.labour.project_staffing_shortfall(node)
+		return self.labour.supply.project_staffing_shortfall(node)
 
 	def seat_base_tile(self, seat_id):
 		"""Where the seat works from (its household's base tile, else the capital's)."""
 		with self.needs.act_as(seat_id):
-			return self.labour.base_tile()
+			return self.labour.settlement.base_tile()
 
 	def available_trades(self):
-		return self.labour.available_trades()
+		return self.labour.trades.available_trades()
 
 	def is_craft_trade(self, trade):
-		return self.labour.is_craft_trade(trade)
+		return self.labour.trades.is_craft_trade(trade)
 
 	def taught_trade_people(self, trade):
-		return self.labour.taught_trade_people(trade)
+		return self.labour.supply.taught_trade_people(trade)
 
 	def people_who_exist(self, trade):
-		return self.labour.people_who_exist(trade)
+		return self.labour.supply.people_who_exist(trade)
 
 	def reachable_trade_population(self, trade):
-		return self.labour.reachable_trade_population(trade)
+		return self.labour.supply.reachable_trade_population(trade)
 
 	def base_tile(self):
 		"""Where the acting seat works from."""
-		return self.labour.base_tile()
+		return self.labour.settlement.base_tile()
 
 	def labour_market(self):
 		"""The one labour market every employer asks: quote the economy's wage (the object itself)."""
@@ -88,10 +87,10 @@ class Views:
 	# ---- the market and the wage ----
 
 	def market_supply(self, trade):
-		return self.labour.market_supply(trade)
+		return self.labour.supply.market_supply(trade)
 
 	def trade_available(self, trade):
-		return self.labour.trade_available(trade)
+		return self.labour.trades.trade_available(trade)
 
 	def labour_quote(self, trade):
 		"""Money one hour of a trade costs now: the one wage of the trade."""
@@ -99,30 +98,30 @@ class Views:
 
 	def wage(self, trade):
 		"""Money one hour of a trade is worth on the wage schedule (the labour market's quote is `labour_quote`)."""
-		return self.labour.wage_per_hour(trade)
+		return self.labour.schedule.wage_per_hour(trade)
 
 	def base_annual_wage(self, trade):
 		"""A year's wage of a trade on the opening schedule."""
-		return self.labour.base_annual_wage(trade)
+		return self.labour.schedule.base_annual_wage(trade)
 
 	def trade_population(self, trade):
 		"""An estimate of the people who ply a trade across the country."""
-		return self.labour.national_trade_population(trade)
+		return self.labour.supply.national_trade_population(trade)
 
 	def money_per_labour_hour(self):
-		return self.labour.money_per_labour_hour()
+		return self.labour.schedule.money_per_labour_hour()
 
 	def opening_money_per_labour_hour(self):
-		return self.labour.opening_wage_schedule().money_per_labour_hour
+		return self.labour.schedule.opening_wage_schedule().money_per_labour_hour
 
 	def labour_state_weights(self):
 		"""The weight the labour market's own trait table gives each trait the state cares about."""
-		return self.labour.STATE_WEIGHTS
+		return STATE_WEIGHTS
 
 	def town_mortality_premium_by_tile(self):
 		"""{tile: premium} for the tiles whose town carries a mortality premium from a registered provider (a share of the
 		baseline death rate); empty with no provider."""
-		return self.labour.town_mortality_premium_by_tile()
+		return self.labour.settlement.town_mortality_premium_by_tile()
 
 	def cleared_wage_change(self):
 		"""How far the unskilled hour's cleared wage moved between the last two clearings, as a share; None before there are two."""
@@ -131,32 +130,19 @@ class Views:
 			return None
 		return world.cleared_wage / world.cleared_wage_before - 1.0
 
-	def wage_index_terms(self):
-		"""What the opening's wage level is measured against: the base year's index and how much scarcer labour raises its own price."""
-		return {"base": self.needs.opening_wage_index(), "elasticity": WAGE_SCARCITY_ELASTICITY}
-
-	def wage_index(self):
-		"""The opening's wage level before the economy opens, and the shock log's measure of scarcity (hazards, reporting): labour is
-		dearer the further the nation's people sit below what its unshocked trend would hold. Once the economy opens the
-		cleared wage is the wage; no screen or score reads this index for pay."""
-		terms = self.wage_index_terms()
-		unshocked_trend = max(POP_SCALE_FLOOR, float(self.needs.civilisation().get("population", DEFAULT_POPULATION_100AD))
-		                      / DEFAULT_POPULATION_100AD)
-		return rules.wage_index_of(terms["base"], terms["elasticity"], self.needs.pop_scale(), unshocked_trend)
-
 	def wage_materials(self):
 		"""The materials a wage is set against, in order: the staple, then every trade's tool materials."""
 		return rules.wage_materials_of(wage_provider.staple_material(self.needs.civilisation()), self.trade_registry())
 
 	def trade_registry(self):
 		"""{trade id: {family, training_years, ...the trade's extra fields}}."""
-		return self.labour._world.trade_registry
+		return self.world.trade_registry
 
 	# ---- the farm ----
 
 	def farming_technique(self):
 		"""The society's farming technique (rotation, toolkit, crop) from what it knows."""
-		return self.labour.farming_technique()
+		return self.labour.allocation.farming_technique()
 
 	def farm_land_hectares(self):
 		"""The hectares the society's farm workforce works (the area the farmland model is sized for)."""

@@ -8,13 +8,15 @@ import unittest
 from sim.tests import workforce_stand_in
 
 from .harness import *  # noqa: F401,F403
-from sim.labour.labour_population import PopulationMixin
+from sim.labour.labour_population_report import PopulationReport
+from sim.labour.labour_supply import Supply
+from sim.labour.labour_trades import Trades
 
 WORKING_PEOPLE = 60000.0
 FAMILIES = {"smith": "craft", "scholar": "scholar", "moddedtrade": "craft"}
 
 
-class _StubLabour(PopulationMixin):
+class _StubLabour:
     """Only what a trade's people read: the core's people by tile, the tiles reached and the trade registry."""
 
     def __init__(self, core_by_tile=None, absent=(), literate=()):
@@ -25,6 +27,16 @@ class _StubLabour(PopulationMixin):
             workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household, economy=types.SimpleNamespace()),
             trade_registry={trade: {"literate": True} for trade in literate},
             population=types.SimpleNamespace(working_age=WORKING_PEOPLE, total=2.0 * WORKING_PEOPLE))
+        self.NO_DEMAND_TRADE_SHARE = Supply.NO_DEMAND_TRADE_SHARE
+        trades = Trades(self._world)
+        self.supply = Supply(self._world, book=self, capacity=None, settlement=self, trades=trades)
+        self.report = PopulationReport(self._world, book=self, settlement=self, supply=self.supply, trades=trades)
+
+    def _people_of_trade_in_reach(self, trade):
+        return self.supply._people_of_trade_in_reach(trade)
+
+    def _trade_density_source(self, trade):
+        return self.report._trade_density_source(trade)
 
     def core_people_by_tile_and_trade(self):
         return self._core_by_tile

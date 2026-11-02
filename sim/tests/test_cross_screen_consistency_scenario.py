@@ -83,11 +83,11 @@ check("...and its NEEDS column is the supervision the engine charges",
 # reported the game as having lost count of their household.
 s_cn = unopened_sim(capital=20000.0)
 _kn = next(node_id for node_id in sorted(NODES) if NODES[node_id]["art"] >= 2 and NODES[node_id]["sch"] == 0)
-s_cn.view("legacy_labour")().commission("mason", 4000.0)
+s_cn.labour.commissions.commission("mason", 4000.0)
 _why_cn = S._node_explain(s_cn, NODES, _kn)
 check("`why` counts the same artisans `start` does: yourself and hours bought",
-      abs(_why_cn["you_have"]["artisans"] - round(s_cn.view("legacy_labour")().craft_hands_available(), 1)) < 0.05,
-      (_why_cn["you_have"], s_cn.view("legacy_labour")().craft_hands_available(), s_cn.view("staff")()["artisans"]))
+      abs(_why_cn["you_have"]["artisans"] - round(s_cn.labour.hands.craft_hands_available(), 1)) < 0.05,
+      (_why_cn["you_have"], s_cn.labour.hands.craft_hands_available(), s_cn.view("staff")()["artisans"]))
 check("...and says which people it is counting",
       "yourself" in str(_why_cn.get("you_have_counts")), _why_cn.get("you_have_counts"))
 check("...and it is more than the bare payroll, having bought a mason's year",

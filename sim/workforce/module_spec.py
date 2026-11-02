@@ -1,7 +1,6 @@
 """The workforce module's spec (sim/assembly).
 
-Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_workforce.py and
-the other bridge files) under the name the owner will publish, or a view of a module that has moved. A view the module publishes
+Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_*.py) under the name the owner will publish, or a view of a module that has moved. A view the module publishes
 is uncached while labour writes the seat's people and hours in place (it keeps no count of its writes), so no channel can say
 when they changed; only the payroll reports its changes (the `staff` channel)."""
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
@@ -93,8 +92,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("opening_money_per_labour_hour", "opening_money_per_labour_hour", **_LIVE),
         ViewSpec("labour_state_weights", "labour_state_weights", **_LIVE),
         ViewSpec("town_mortality_premium_by_tile", "town_mortality_premium_by_tile", **_LIVE),
-        ViewSpec("wage_index_terms", "wage_index_terms", **_LIVE),
-        ViewSpec("wage_index", "wage_index", **_LIVE),
         ViewSpec("cleared_wage_change", "cleared_wage_change", **_LIVE),
         ViewSpec("wage_materials", "wage_materials", **_LIVE),
         ViewSpec("trade_registry", "trade_registry", **_LIVE),

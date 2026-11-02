@@ -139,7 +139,7 @@ class LabourMarket:
 
     def _annual(self, trade):
         """The economy's wage for the trade over a year. Only before the economy opens, the opening schedule's with the
-        cost-of-living factors, the price index and the wage index (the opening's wage level: nothing else reads it)."""
+        cost-of-living factors, the price index and the wage index."""
         world = self._world
         wage = world.economy.agent_wage_per_hour(trade)
         if wage is not None:

@@ -1,6 +1,6 @@
 """Complaint 168: every fall in a trade's headcount is logged with its cause, and the people the lines name are the people who
 left. `log_staff_reduction` diffs the headcount against a snapshot and `log_staff_lost` writes the line; the totals are read from
-the line's facts, not its words. Called over the real `StaffLedgerMixin` with a household that has these employees; the yearly
+the line's facts, not its words. Called over the real `StaffLedger` with a household that has these employees; the yearly
 dice that remove people are the staff step's and are not run here."""
 
 QUICK_TOPIC = True
@@ -9,13 +9,13 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.labour.labour_staff_ledger import StaffLedgerMixin
+from sim.labour.labour_staff_ledger import StaffLedger
 from sim.refusal import cause_of, facts_of
 from sim.tests import event_stand_in
 
 
-class Ledger(StaffLedgerMixin):
-    """The ledger over a household with these `employees` and these concerns the staffing rule would shut."""
+class Ledger:
+    """The staff ledger part over a household with these `employees` and these concerns the staffing rule would shut."""
 
     def __init__(self, employees, stops=()):
         self.employees = dict(employees)
@@ -24,9 +24,16 @@ class Ledger(StaffLedgerMixin):
             state=SimpleNamespace(household=SimpleNamespace(log=self.log), scenario=SimpleNamespace(year=100)),
             concerns_to_close_for_staffing=lambda: list(stops), stopped_yearly_value=lambda node_ids: 10.0 * len(node_ids))
         event_stand_in.stood_in(self._world)
+        self.ledger = StaffLedger(self._world, book=self, market=None)
 
     def employed_by_trade(self):
         return dict(self.employees)
+
+    def staff_snapshot(self):
+        return self.ledger.staff_snapshot()
+
+    def log_staff_reduction(self, cause, before):
+        return self.ledger.log_staff_reduction(cause, before)
 
 
 def logged_totals(ledger):

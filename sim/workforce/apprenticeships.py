@@ -22,10 +22,10 @@ class Apprenticeships:
 						# A trade you taught. They are now yours to pay, they are
 						# that trade and no other, and they join the labour core's
 						# people to be hired at the clearing like anyone.
-						self.labour.add_newcomers(trade, count)
+						self.labour.book.add_newcomers(trade, count)
 						self.needs.send(RecordEvent.of("training_finished", "%g %s%s finish their training"
 						                               % (count, trade, "s" if count != 1 else "")))
-						self.labour.resync_pools()
+						self.labour.pools.resync_pools()
 					else:
 						# They are trained now, so _resync_pools counts them
 						# from the people you actually hold - see the note
@@ -39,4 +39,4 @@ class Apprenticeships:
 			# learning off this very list, so recomputing while the matured row
 			# was still on it cost a whole extra year of everybody's time.
 			workforce.training = still
-			self.labour.resync_pools()
+			self.labour.pools.resync_pools()

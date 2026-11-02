@@ -11,7 +11,7 @@ from sim.hazards import constants
 from sim.tests import hazards_host
 from sim.tests import projects_host
 from sim.polity.value_weight import VALUE_WEIGHT_CEILING, VALUE_WEIGHT_FLOOR, shifted
-from sim.labour.labour_population import PopulationMixin
+from sim.labour.labour_trades import Trades
 
 MULTIPLIERS = {"ships": 0.5, "infrastructure": 2.0, "commerce": 1.5, "chemical": 3.0}
 REMEDIES = {"infrastructure": {"node": "public_works_office", "residual": 1.2}}
@@ -154,7 +154,7 @@ class TradeAvailabilityTests(unittest.TestCase):
         return SimpleNamespace(_world=world)
 
     def available(self, trade, **kwargs):
-        return PopulationMixin.trade_available(self.population(**kwargs), trade)
+        return Trades.trade_available(self.population(**kwargs), trade)
 
     def test_a_trade_the_society_has_is_available(self):
         self.assertTrue(self.available("mason"))

@@ -64,7 +64,7 @@ class PlayerLogTests(unittest.TestCase):
 
     def test_a_refused_hire_writes_nothing(self):
         game = stand_in_game()
-        game.labour.hire = lambda trade, quantity: (False, "no one to be had")
+        game.labour.hiring.hire = lambda trade, quantity: (False, "no one to be had")
         reply = _cmd_hire(game, {}, {"cmd": "hire", "trade": "smith", "n": 2}, None)
         self.assertFalse(reply["ok"])
         self.assertEqual(game.log, [])

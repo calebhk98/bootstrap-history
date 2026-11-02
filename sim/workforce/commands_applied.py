@@ -9,8 +9,8 @@ class Applying:
 
 	def set_employed(self, command):
 		"""The acting seat's staff in the trade become `headcount` full-time equivalents, and the hour pools follow."""
-		self.labour.set_employed(command.trade, command.headcount)
-		self.labour.resync_pools()
+		self.labour.book.set_employed(command.trade, command.headcount)
+		self.labour.pools.resync_pools()
 
 	def staff_arrived(self, command):
 		"""The labour core's clearing filled the seat's places: its staff in the trade are the people hired."""
@@ -19,7 +19,7 @@ class Applying:
 			employees[command.trade] = command.people
 		else:
 			employees.pop(command.trade, None)
-		self.labour.resync_pools()
+		self.labour.pools.resync_pools()
 
 	def clearing_settled(self, command):
 		"""What the clearing charged the seat for its places is the wages it paid, and what it paid for the hours the seat
@@ -70,11 +70,11 @@ class Applying:
 
 	def lose_staff(self, command):
 		seat = self.seat
-		before = self.labour.staff_snapshot()
+		before = self.labour.ledger.staff_snapshot()
 		people_before = seat.scholars + seat.artisans + sum(seat.employees.values())
 		self.survive_staff(command.survival_share)
 		seat.directors_extra *= command.deputies_share
-		self.labour.log_staff_reduction(command.cause, before)
+		self.labour.ledger.log_staff_reduction(command.cause, before)
 		return {"people_before": people_before, "people_after": seat.scholars + seat.artisans + sum(seat.employees.values())}
 
 	def survive_staff(self, survival_share):
@@ -92,8 +92,8 @@ class Applying:
 
 	def release_staff(self, command):
 		with self.needs.act_as(command.seat_id):
-			self.labour.fire(command.trade, command.people)
+			self.labour.hiring.fire(command.trade, command.people)
 
 	def grant_staff(self, command):
-		self.labour.grant_staff(command.scholars, command.artisans)
+		self.labour.pools.grant_staff(command.scholars, command.artisans)
 

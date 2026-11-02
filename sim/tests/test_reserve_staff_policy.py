@@ -1,4 +1,4 @@
-"""reserve_staff: the keep-N-spare part of complaint 176. `hold_staff_reserve` runs over the real labour mixin on a
+"""reserve_staff: the keep-N-spare part of complaint 176. `hold_staff_reserve` runs over the real staff-controls part on a
 stand-in world (free hands, room, cash, a recorder for hires and housing, no game); the `reserve` command and its typed
 forms run on a household record. The default is
 test_reserve_staff_default. The housing sum itself is held by test_auto_hire_buys_room."""
@@ -6,7 +6,7 @@ from sim.tests import workforce_stand_in
 
 from .harness import check
 
-from sim.labour.labour_staff_controls import StaffControlsMixin
+from sim.labour.labour_staff_controls import StaffControls
 from sim.labour import trade_data
 from sim.ui.proto.dispatch_staff_controls import _cmd_reserve
 from sim.ui.proto.typed import parse_typed
@@ -19,7 +19,7 @@ CRAFT = trade_data.generic_craft_trade()
 SCHOLAR = trade_data.scholar_trade()
 
 
-class _Labour(StaffControlsMixin):
+class _Labour:
     """The real reserve rule; hiring and housing are recorded instead of done."""
 
     def __init__(self, free_craftsmen, free_scholars, reserve_craftsmen, reserve_scholars, policy_on,
@@ -37,7 +37,12 @@ class _Labour(StaffControlsMixin):
             housing_price_per_place=lambda: price, spending_power=lambda kind: spending,
             build_worker_housing=lambda places: self.housing_built.append(places) or True)
         event_stand_in.stood_in(self._world)
-        self.labour_market = Game(quote_annual=lambda trade: 50.0)
+        market = Game(quote_annual=lambda trade: 50.0)
+        self.controls = StaffControls(self._world, book=None, capacity=self, hiring=None, market=market)
+        self.controls.hire_to_cover = self.hire_to_cover
+
+    def hold_staff_reserve(self):
+        return self.controls.hold_staff_reserve()
 
     def household_room(self):
         return self.room

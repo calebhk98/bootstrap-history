@@ -1,6 +1,6 @@
 """Complaints/416: moving the household's base takes the days of the fastest route over the modes its people hold, not
 a straight-line pace and not the cheapest haul. The route search runs on the small fixture map, the quote on a
-stand-in labour over the real settlement mixin (no game)."""
+stand-in labour over the real settlement and relocation parts (no game)."""
 import itertools
 from types import SimpleNamespace
 
@@ -9,6 +9,7 @@ from .harness import check
 from sim.geography import api as geography_api
 from sim.geography import routes_search
 from sim.labour import labour_settlement
+from sim.labour.labour_relocation import Relocation
 from sim.tests.test_geography_routes import small_map
 
 QUICK_TOPIC = True
@@ -39,26 +40,26 @@ check("and where they differ the fastest is strictly quicker and dearer (a1 to a
 
 
 # --- the base's journey asks the fastest route, over the modes the household holds
-class _Settlement(labour_settlement.SettlementMixin):
-    """The real settlement rule over a base tile, held technologies, a payroll and a director pool."""
+class _Settlement:
+    """The real settlement and relocation rules over a base tile, held technologies, a payroll and a director pool."""
 
     def __init__(self, pool=1000.0, payroll=5000.0, modes=FOOT_AND_CART):
         self.asked = []
         self._pool, self._payroll = pool, payroll
-        self._world = SimpleNamespace(built_ways=lambda: {})
+        world = SimpleNamespace(built_ways=lambda: {})
         self.modes = modes
+        self.settlement = labour_settlement.Settlement(world)
+        self.settlement.base_tile = lambda: "a1"
+        self.settlement.held_technologies = lambda: frozenset({"held_node"})
+        self.relocation = Relocation(world, book=None, hours=SimpleNamespace(director_pool=lambda: self._pool), market=None,
+                                     pools=None, settlement=self.settlement)
+        self.relocation._relocation_wage_bill_per_year = lambda: self._payroll
 
-    def base_tile(self):
-        return "a1"
+    def travel_days_to_tile(self, tile):
+        return self.settlement.travel_days_to_tile(tile)
 
-    def held_technologies(self):
-        return frozenset({"held_node"})
-
-    def director_pool(self):
-        return self._pool
-
-    def _relocation_wage_bill_per_year(self):
-        return self._payroll
+    def relocation_quote(self, tile):
+        return self.relocation.relocation_quote(tile)
 
 
 def _on_small_map(settlement, body):
@@ -93,8 +94,7 @@ class _FixedDays(_Settlement):
         super().__init__(**fields)
         self._days = days
 
-    def travel_days_to_tile(self, tile):
-        return self._days
+        self.settlement.travel_days_to_tile = lambda tile: self._days
 
 
 quote = _FixedDays(73.0, pool=1000.0, payroll=5000.0).relocation_quote("anywhere")

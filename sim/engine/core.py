@@ -286,7 +286,7 @@ class Sim:
 
     @property
     def labour(self):
-        """The workforce module's labour implementation (tests and mods still call its members)."""
+        """The workforce module's labour parts (sim/labour/labour.py): the engine and sim/markets still reach them here."""
         return self.assembly.modules["workforce"].labour
 
     def step(self):

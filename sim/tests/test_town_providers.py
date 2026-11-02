@@ -1,6 +1,6 @@
 """A provided town size sets the size of a tile's town, bounded by the tile's people; None means no opinion.
 
-Complaint 640: the town is read off the settlement mixin over a stand-in world that holds the nation's tiles and people and
+Complaint 640: the town is read off the settlement part over a stand-in world that holds the nation's tiles and people and
 answers with the providers' answers, so no game is built. Which answer wins is `last_answer`, a plain function."""
 QUICK_TOPIC = True
 
@@ -12,14 +12,14 @@ from sim.assembly.api import NeedsAccess
 from sim.engine import mod_code
 from sim.engine.data import load_civ
 from sim.geography.api import tiles_held
-from sim.labour.labour_settlement import SettlementMixin
+from sim.labour.labour_settlement import Settlement
 from sim.workforce.provided import last_answer
 
 NATION = 20.0e6
 
 
-class Town(SettlementMixin):
-    """The settlement mixin over a stand-in world."""
+class Town:
+    """The settlement part over a stand-in world."""
 
     def __init__(self):
         homes = tuple(tiles_held(load_civ("rome_100ad")))
@@ -31,6 +31,7 @@ class Town(SettlementMixin):
             provided_mortality_premium=lambda tile, town: last_answer([function(tile, town) for function in self.premiums]),
             home_tiles_held=lambda: homes, population=types.SimpleNamespace(total=NATION), pop_scale=1.0,
             people_by_tile=lambda: None, workforce=household, view=workforce_stand_in.view_of(household))
+        self.settlement = Settlement(self._world)
 
 
 class TownProviderTests(unittest.TestCase):
@@ -38,20 +39,20 @@ class TownProviderTests(unittest.TestCase):
         self.labour = Town()
 
     def test_no_provider_leaves_the_nominal_town(self):
-        tile = self.labour.base_tile()
-        tile_people = self.labour.settlement_tiles()[tile]
-        self.assertAlmostEqual(self.labour.home_town_population_estimate(),
-                               tile_people * self.labour.TOWN_MAX_SHARE_OF_TILE)
-        self.assertGreater(self.labour.home_town_population_estimate(), 0.0)
+        tile = self.labour.settlement.base_tile()
+        tile_people = self.labour.settlement.settlement_tiles()[tile]
+        self.assertAlmostEqual(self.labour.settlement.home_town_population_estimate(),
+                               tile_people * self.labour.settlement.TOWN_MAX_SHARE_OF_TILE)
+        self.assertGreater(self.labour.settlement.home_town_population_estimate(), 0.0)
 
     def test_provider_sets_the_town_and_none_declines(self):
-        tile = self.labour.base_tile()
-        nominal = self.labour.home_town_population_estimate()
+        tile = self.labour.settlement.base_tile()
+        nominal = self.labour.settlement.home_town_population_estimate()
         self.labour.providers.append(lambda where, size: 0.5 * size)
-        self.assertEqual(self.labour.home_town_population_estimate(), 0.5 * nominal)
+        self.assertEqual(self.labour.settlement.home_town_population_estimate(), 0.5 * nominal)
         self.labour.providers.append(lambda where, size: None)
-        self.assertEqual(self.labour.home_town_population_estimate(), 0.5 * nominal)
-        self.assertIn(tile, self.labour.settlement_tiles())
+        self.assertEqual(self.labour.settlement.home_town_population_estimate(), 0.5 * nominal)
+        self.assertIn(tile, self.labour.settlement.settlement_tiles())
 
     def test_the_last_answer_that_is_not_none_wins(self):
         self.assertEqual(last_answer([1.0, 2.0, None]), 2.0)
@@ -66,14 +67,14 @@ class TownProviderTests(unittest.TestCase):
         self.assertNotIn("town_mortality_premium", api.operations.provided)
 
     def test_provided_town_never_exceeds_the_tile_people(self):
-        tile = self.labour.base_tile()
-        people = self.labour.settlement_tiles()[tile]
+        tile = self.labour.settlement.base_tile()
+        people = self.labour.settlement.settlement_tiles()[tile]
         self.labour.providers.append(lambda where, size: people * 10.0)
-        self.assertEqual(self.labour.home_town_population_estimate(), people)
+        self.assertEqual(self.labour.settlement.home_town_population_estimate(), people)
 
     def test_a_negative_answer_is_a_town_of_none(self):
         self.labour.providers.append(lambda where, size: -5.0)
-        self.assertEqual(self.labour.home_town_population_estimate(), 0.0)
+        self.assertEqual(self.labour.settlement.home_town_population_estimate(), 0.0)
 
 
 if __name__ == "__main__":

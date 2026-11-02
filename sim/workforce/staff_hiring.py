@@ -2,7 +2,7 @@
 The people arrive at the year's clearing (sim/markets/port_staff.py)."""
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip
 
-from sim.labour.staff_moves import stochastic_round
+from sim.labour.api import stochastic_round
 
 from .staff_phase_rules import hires_needed
 

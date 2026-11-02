@@ -50,13 +50,13 @@ class Prelude:
 			def _market_supply(trade):
 				value = _ms_memo.get(trade)
 				if value is None:
-					value = _ms_memo[trade] = self.labour.market_supply(trade)
+					value = _ms_memo[trade] = self.labour.supply.market_supply(trade)
 				return value
 
 			def _trade_avail(trade):
 				value = _ta_memo.get(trade)
 				if value is None:
-					value = _ta_memo[trade] = self.labour.trade_available(trade)
+					value = _ta_memo[trade] = self.labour.trades.trade_available(trade)
 				return value
 			# Anything already in hand that has lost its trade comes FIRST: those
 			# projects are burning a slot and will be halted if nobody turns up.
@@ -98,7 +98,7 @@ class Prelude:
 				value = _gone_memo.get(trade)
 				if value is None:
 					value = _gone_memo[trade] = trade_is_gone(
-						_trade_avail(trade), _market_supply(trade), self.labour.trade_headcount_pending(trade))
+						_trade_avail(trade), _market_supply(trade), self.labour.book.trade_headcount_pending(trade))
 				return value
 			for node_id in self.needs.project_order():
 				if node_id in done_nodes or node_id in active_nodes:
@@ -140,7 +140,7 @@ class Prelude:
 				if _wages > _budget:
 					continue
 				_first = trade_id not in workforce.trades_created
-				taught, _msg = self.labour.train(trade_id, 2)
+				taught, _msg = self.labour.training.train(trade_id, 2)
 				# THE COOLDOWN IS ON TEACHING, NOT ON TRYING. Recording the
 				# attempt meant a refusal - no room in the household, no hours
 				# left, nobody to teach from - burned the trade's whole
@@ -173,11 +173,11 @@ class Prelude:
 			_already = workforce.wage_hours_this_year
 			_want = work_order_shortfall(_wd, _already)
 			if _want > 0.5:
-				_room = max(0.0, self.labour.director_pool() - self.labour.director_hours_committed())
+				_room = max(0.0, self.labour.hours.director_pool() - self.labour.hours.director_hours_committed())
 				_take = min(_want, _room)
 				_got = 0.0
 				if _take > 0.5:
-					_pay, _werr = self.labour.work_for_wages(workforce.work_trade, _take)
+					_pay, _werr = self.labour.wages.work_for_wages(workforce.work_trade, _take)
 					# pay > 0 with an error is a WARNING (a bad trade, or
 					# starving an active project of its last hours), not a
 					# refusal - see work_for_wages's own docstring. The sale

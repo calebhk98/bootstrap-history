@@ -415,9 +415,9 @@ class ProvideTests(OperationCase):
         self.assertEqual(names[:-1], self.spawner_names(self.before))
 
     def test_the_mods_hours_are_charged_in_its_game_only(self):
-        self.assertEqual(self.modded.labour._world.director_overhead_hours(), 50.0)
+        self.assertEqual(self.modded.labour.hours._world.director_overhead_hours(), 50.0)
         for plain in self.plain_games():
-            self.assertEqual(plain.labour._world.director_overhead_hours(), 0.0)
+            self.assertEqual(plain.labour.hours._world.director_overhead_hours(), 0.0)
 
     def test_the_games_without_the_mod_have_one_provider_fewer(self):
         for point in ("actor_spawners", "director_overhead"):

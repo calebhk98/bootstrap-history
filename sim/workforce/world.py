@@ -328,7 +328,7 @@ class WorkforceWorld:
 
     @property
     def wage_index(self):
-        return self._owner.wage_index()
+        return self._owner.opening_wage_index()
 
     @property
     def HOURS_PER_PERSON_YEAR(self):

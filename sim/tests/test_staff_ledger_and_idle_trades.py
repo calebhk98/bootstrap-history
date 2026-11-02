@@ -1,6 +1,6 @@
 """Complaints 167, 164 and the auto_replace_foreman part of 180: idle specialists are surfaced with their wage bill, auto_hire
 replaces only the taught trades something draws on, every staff reduction is logged with its cause, and an open concern that
-hangs on one person is named. The rules are called on a stub over the real `StaffLedgerMixin` (no game) and on
+hangs on one person is named. The rules are called on a stub over the real `StaffLedger` and `StaffControls` (no game) and on
 `replacement_wanted`; that the lines name the people who left is test_staff_reduction_facts."""
 
 QUICK_TOPIC = True
@@ -11,20 +11,21 @@ from .harness import check
 
 from sim.engine.seat_defaults import default_policy
 from sim.workforce.staff_replacement import replacement_wanted
-from sim.labour.labour_staff_ledger import StaffLedgerMixin
+from sim.labour.labour_staff_controls import StaffControls
+from sim.labour.labour_staff_ledger import StaffLedger
 from sim.tests import event_stand_in
 
 TARGET = 3.0
 
 
-class Ledger(StaffLedgerMixin):
-    """The mixin over a household with these `employees`, active projects and open concerns (concern -> foreman trade)."""
+class Ledger:
+    """The ledger and controls parts over a household with these `employees`, active projects and open concerns (concern -> foreman trade)."""
 
     def __init__(self, employees, active=None, foremen=None, taught=(), wages=None):
         self.employees = dict(employees)
         self.log = []
         self.hired = []
-        self.labour_market = SimpleNamespace(quote_annual=lambda trade: (wages or {}).get(trade, 100.0))
+        market = SimpleNamespace(quote_annual=lambda trade: (wages or {}).get(trade, 100.0))
         foremen = foremen or {}
         household = SimpleNamespace(trades_created=set(taught), log=self.log)
         projects = SimpleNamespace(active=active or {}, operating=set(foremen))
@@ -35,6 +36,23 @@ class Ledger(StaffLedgerMixin):
             venture_foreman=lambda node_id: (foremen[node_id], 1.0),
             concerns_to_close_for_staffing=lambda: [], stopped_yearly_value=lambda node_ids: 0.0)
         event_stand_in.stood_in(self._world)
+        self.ledger = StaffLedger(self._world, book=self, market=market)
+        self.controls = StaffControls(self._world, book=self, capacity=self, hiring=self, market=market)
+
+    def idle_specialists(self):
+        return self.ledger.idle_specialists()
+
+    def sole_supervisors(self):
+        return self.ledger.sole_supervisors()
+
+    def staff_snapshot(self):
+        return self.ledger.staff_snapshot()
+
+    def log_staff_reduction(self, cause, before):
+        return self.ledger.log_staff_reduction(cause, before)
+
+    def replace_lost_foremen(self):
+        return self.controls.replace_lost_foremen()
 
     def employed_by_trade(self):
         return dict(self.employees)

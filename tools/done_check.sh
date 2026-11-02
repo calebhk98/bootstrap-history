@@ -9,6 +9,12 @@ echo "sim direct bases, MRO length, callable names:" \
 mixin_count="$(python3 -c "import sys; sys.path.insert(0,'.'); from sim.engine.core import Sim; print(sum(k.__name__.endswith('Mixin') for k in Sim.__mro__))")"
 echo "mixin classes in MRO: $mixin_count"
 
+# mixin classes defined in the large libraries (a class named ...Mixin): labour must hold none (fails the run); markets is reported until its split lands
+labour_mixin_count="$(grep -rhE --include=*.py '^class [A-Za-z0-9_]*Mixin\b' sim/labour | grep -c .)"
+markets_mixin_count="$(grep -rhE --include=*.py '^class [A-Za-z0-9_]*Mixin\b' sim/markets | grep -c .)"
+echo "mixin classes in sim/labour: $labour_mixin_count"
+echo "mixin classes in sim/markets: $markets_mixin_count"
+
 coupling_output="$(python3 tools/measure/coupling.py)"
 echo "inheritance left on Sim, cross-class references: $(printf '%s\n' "$coupling_output" | head -1)"
 
@@ -88,6 +94,7 @@ printf '%s\n' "$port_reach" | grep . | sed 's/^/  /'
 # Checks that fail the run when above zero; the other counts above are a backlog and stay informational.
 failed_checks=()
 [ "$mixin_count" -gt 0 ] && failed_checks+=("mixin classes in MRO")
+[ "$labour_mixin_count" -gt 0 ] && failed_checks+=("mixin classes in sim/labour")
 { [ "$module_read_count" -gt 0 ] || [ "$module_read_status" -ne 0 ]; } && failed_checks+=("module reads and sends not declared in their spec")
 { [ -n "$ui_view_output" ] || [ "$ui_view_status" -ne 0 ]; } && failed_checks+=("UI views and commands (tools/check_ui_views.py)")
 [ "$money_count" -gt 0 ] && failed_checks+=("direct capital/money writes outside owners")

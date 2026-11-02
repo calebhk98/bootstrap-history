@@ -8,8 +8,9 @@ import unittest
 from sim.tests import workforce_stand_in
 from unittest import mock
 
-from sim.labour import labour_bondage
-from sim.labour.labour_bondage import BondageMixin
+from sim.labour import labour_pools
+from sim.labour.labour_bondage import Bondage as BondagePart
+from sim.labour.labour_pools import StaffPools
 from sim.ledger.api import PayEdge
 from sim.polity.api import GainReputation
 
@@ -17,8 +18,8 @@ YEAR = 100
 PRICE = 250.0
 
 
-class Bondage(BondageMixin):
-    """The household, holdings and money that buying and freeing people touch."""
+class Bondage:
+    """The bondage and pools parts over the household, holdings and money that buying and freeing people touch."""
 
     def __init__(self, cash=1000.0, room=100.0, employees=None):
         self.cash, self.room, self.paid, self.sent = cash, room, [], []
@@ -32,6 +33,24 @@ class Bondage(BondageMixin):
             note_buy_refusal=self.refusals.append, can_pay=lambda price: price <= self.cash, EDGE_SLAVE_TRADERS="slave_traders",
             send=self._send,
             refusal_text=lambda what, price: "cannot afford %s" % what)
+        self.pools = StaffPools(self._world, book=self, trades=self)
+        self.bondage = BondagePart(self._world, advice=self, capacity=self, pools=self.pools, schedule=None)
+        self.bondage.slave_quote = self.slave_quote
+        self.WORKER_EQUIVALENT_UNTRAINED = StaffPools.WORKER_EQUIVALENT_UNTRAINED
+        self.TRAINING_YEARS = BondagePart.TRAINING_YEARS
+        self.MANUMISSION_ARTISAN_UPLIFT = BondagePart.MANUMISSION_ARTISAN_UPLIFT
+
+    def buy_slaves(self, people):
+        return self.bondage.buy_slaves(people)
+
+    def manumit(self, people):
+        return self.bondage.manumit(people)
+
+    def _resync_pools(self):
+        return self.pools.resync_pools()
+
+    def _grant_staff(self, scholars=0.0, artisans=0.0):
+        return self.pools.grant_staff(scholars, artisans)
 
     def _send(self, command):
         if isinstance(command, PayEdge):
@@ -59,7 +78,7 @@ class Bondage(BondageMixin):
     def slave_quote(self, people):
         return PRICE
 
-    def _staff_advice(self, kind):
+    def staff_advice(self, kind):
         return "advice"
 
 
@@ -130,7 +149,7 @@ class Manumit(unittest.TestCase):
 
 class GrantsSurviveTheYearsResync(unittest.TestCase):
     def resynced(self, game):
-        with mock.patch.object(labour_bondage.trade_data, "scholar_trade", return_value="scholar"):
+        with mock.patch.object(labour_pools.trade_data, "scholar_trade", return_value="scholar"):
             game._resync_pools()
         return game.household
 
