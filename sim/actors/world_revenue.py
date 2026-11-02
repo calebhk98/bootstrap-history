@@ -1,9 +1,7 @@
 """What a state asks the simulated world when it assesses revenue: its declared forms and the bases they read."""
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
-from sim.agents.collection_world import FAR_DAYS, CollectionView
-from sim.agents import collection
-from sim.agents.api import government_levers, observed_incomes, revenue
+from sim.agents.api import FAR_DAYS, CollectionView, collection, government_levers, observed_incomes, revenue
 from sim.geography.api import arable_hectares, settlement, tiles_held
 from sim.labour.api import wage_provider
 

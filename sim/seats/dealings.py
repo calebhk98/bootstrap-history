@@ -3,8 +3,7 @@ The seat's stored dealings (`SeatsSeat`: patents, shares held and issued, offers
 and the actors module applies the commands that address it to a seat (sim/actors/seat_exchange.py)."""
 from typing import Any, Dict, List
 
-from sim.agents.api import patent
-from sim.agents.tracked import plain
+from sim.agents.api import patent, plain
 
 DEALING_FIELDS = ("patents", "shares_held", "shares_issued", "offers", "offer_serial")
 

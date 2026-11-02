@@ -7,7 +7,7 @@ subsistence; housing is the yearly carrying cost (interest and wear) of building
 from typing import Any, Dict, Optional
 
 from sim.agents.api import FOOD_NEED, observed_incomes
-from sim.geography.places import distance_between_places
+from sim.geography.api import distance_between_places
 from sim.world import need_basket
 
 
