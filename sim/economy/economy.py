@@ -117,7 +117,6 @@ class Economy:
 
     def rebuild_market_areas(self) -> None:
         """Partition the market areas again over the setup's goods (goods the setup gained are new markets)."""
-        self.__dict__.pop("_port_shares", None)
         self._rebuild_carriage()
 
     def follow_flows(self) -> bool:
@@ -162,7 +161,6 @@ class Economy:
             self.change_setup(**changes)
         setup, record = self.setup, self.record
         record.sort_in_saved_order()
-        self.__dict__.pop("_port_shares", None)
         self.follow_flows()
         self.carriage.set_scale(carriage_hours.wage_scale(setup, record, self.carriage))   # the carriers' labour at the year's wage
         record.book.start_year()

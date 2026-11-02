@@ -131,7 +131,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
             producer = record.producers[offer.seller]
             recipe = setup.recipes[producer.recipe_id]
             asked = expected_ask(offer.reservation_price, expected_output_prices(producer, recipe, view).get(offer.good),
-                                 offer.quantity, producer.expected_sales * recipe.outputs.get(offer.good, 0.0))
+                                 offer.quantity, producer.expected_sales * producer.yield_factor * recipe.outputs.get(offer.good, 0.0))
             if asked != offer.reservation_price:
                 offers[index] = dataclasses.replace(offer, reservation_price=asked)
             continue

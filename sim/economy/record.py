@@ -71,9 +71,9 @@ class EconomyRecord:
     losses_seen: Dict[AgentId, float] = field(default_factory=dict)      # credit_losses as of the last year's close
     workforce: MarketState = field(default_factory=MarketState)          # the labour core's state: people by labour area, trade and ability band
     property_income: Dict[AgentId, float] = field(default_factory=dict)  # dividends and interest last year
-    volumes: Dict[str, float] = field(default_factory=dict)              # market_key -> last year's quantity
-    unsold: Dict[str, float] = field(default_factory=dict)               # market_key -> quantity sellers would have sold at the year's price and did not
-    unmet: Dict[str, float] = field(default_factory=dict)                # market_key -> quantity buyers wanted at the year's price beyond what was sold
+    volumes: Dict[str, float] = field(default_factory=dict)              # market_key -> units delivered last year in all rounds; a market with no orders is absent
+    unsold: Dict[str, float] = field(default_factory=dict)               # market_key -> units offered beyond what was delivered last year
+    unmet: Dict[str, float] = field(default_factory=dict)                # market_key -> units buyers asked for at the asks they faced beyond what was delivered last year
     opening_basket: Dict[str, float] = field(default_factory=dict)       # good -> quantity at the opening, as far as the opening supplies it
     opening_demand: Dict[str, float] = field(default_factory=dict)       # good -> quantity households were seeded to want, supplied or not
     opening_own_grown: Dict[str, float] = field(default_factory=dict)    # good -> quantity households were seeded to grow on their own plots
