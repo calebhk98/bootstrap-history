@@ -88,7 +88,7 @@ def summary(specs):
         "largest strongly connected group": largest_group(edges),
         "reads answered by the engine bridge": bridge_reads,
         "reads answered by the assembly (the seat registry)": assembly_reads,
-        "reads of legacy_* views": legacy_reads,
+        "module specs declaring reads of legacy_* views": legacy_reads,
     }
 
 
