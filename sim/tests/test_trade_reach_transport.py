@@ -8,7 +8,6 @@ import unittest
 
 from sim.engine.data import load_civ
 from sim.geography.api import tiles_held
-from sim.labour.labour_capacity import CapacityMixin
 from sim.labour.labour_population import PopulationMixin
 from sim.labour.labour_settlement import SettlementMixin
 from sim.tests import harness  # noqa: F401  (isolates the home directory)
@@ -19,9 +18,6 @@ HOURS_BY_TRADE = {"smith": 3000.0, "mason": 2000.0, "farmer": 90000.0}
 
 class ReachLabour(SettlementMixin, PopulationMixin):
     """The labour mixins that size a town and the people of a trade within reach of it, over a stand-in world."""
-
-    POP_SCALE_FLOOR_SHARE = CapacityMixin.POP_SCALE_FLOOR_SHARE
-    POP_SCALE_VARIABLE_SHARE = CapacityMixin.POP_SCALE_VARIABLE_SHARE
 
     def __init__(self):
         homes = tuple(tiles_held(load_civ("rome_100ad")))

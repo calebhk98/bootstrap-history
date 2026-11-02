@@ -15,7 +15,8 @@ def _economy(prices=None):
     """The freight module over a price table, a flat wage, the market rate and the real map."""
     table = dict(PRICES, **(prices or {}))
     return module_harness.build(Freight, views={
-        "material_prices": lambda: table, "material_price": lambda tag: table.get(tag), "wage": lambda trade: 2.0,
+        "material_prices": lambda: table, "material_price": lambda tag: table.get(tag), "trade_registry": lambda: {"labourer": {"fallback": True}, "sailor": {"role": "sailor"}, "merchant": {"role": "merchant"}},
+            "wage": lambda trade: 2.0,
         "market_rate": lambda: 0.05, **land_views.of({}, FREIGHT_LAND_VIEWS)})
 
 

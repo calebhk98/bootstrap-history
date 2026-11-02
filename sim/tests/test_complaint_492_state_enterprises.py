@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.agents import budget, firm_entry, state_enterprises
+from sim.agents import budget, state_enterprises
 from sim.agents.api import ActorRecord, Government
 
 from .agents_fake_world import FakeWorld, make_node
@@ -57,9 +57,8 @@ check("the state's takings are the plant's takings", abs(state.record.enterprise
 check("the monopoly revenue read for the budget is those takings",
 	  state_enterprises.monopoly_revenue(state.record) == state.record.enterprise_takings)
 wages = world.concern_wage_bill("salt_works")
-management = firm_entry.management_cost(world, "salt_works", 1.0)
-check("the purse gained takings less upkeep, wages and a manager's hours",
-	  abs(state.money - (OPENING_MONEY + TAKINGS - UPKEEP - wages - management)) < 1e-6, state.money)
+check("the purse gained takings less upkeep and wages (the manager's place is posted to the labour market, not paid here)",
+	  abs(state.money - (OPENING_MONEY + TAKINGS - UPKEEP - wages)) < 1e-6, state.money)
 state.sell_output(world)
 check("what the plant made went to market", world.sales == [(state.actor_id, "salt_kg", 1.0)], world.sales)
 
@@ -69,9 +68,8 @@ world.free_people["labourer"] = 0.0
 state_enterprises.open_enterprises(state, world)
 state_enterprises.run(state, world)
 state.sell_output(world)
-management = firm_entry.management_cost(world, "salt_works", 1.0)
-check("with nobody to hire the state's works takes nothing and pays no wages, only upkeep and a manager",
-	  state.record.enterprise_takings == 0.0 and abs(state.money - (OPENING_MONEY - UPKEEP - management)) < 1e-6,
+check("with nobody to hire the state's works takes nothing and pays no wages, only upkeep",
+	  state.record.enterprise_takings == 0.0 and abs(state.money - (OPENING_MONEY - UPKEEP)) < 1e-6,
 	  (state.record.enterprise_takings, state.money))
 check("...and puts no goods on the market", all(tonnes == 0.0 for _seller, _material, tonnes in world.sales), world.sales)
 

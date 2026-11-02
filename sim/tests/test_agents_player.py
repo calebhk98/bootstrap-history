@@ -205,8 +205,8 @@ firm.business.adopt(Plant("shop", opened_year=95))
 firm.rivals_of = lambda node_id, asking_id: 1.0
 firm.operate(world)
 managing = firm_entry.management_cost(world, "shop")
-check("a firm's year through the shared rule: takings less upkeep, wages and management",
-	  managing > 0.0 and abs(firm.money - (1000.0 + 250.0 - 50.0 - 100.0 - managing)) < 1e-6
+check("a firm's year through the shared rule: the purse gains takings less upkeep and wages; the margin also counts the managers' places posted to the labour market",
+	  managing > 0.0 and abs(firm.money - (1000.0 + 250.0 - 50.0 - 100.0)) < 1e-6
 	  and abs(firm.record.last_margin - (100.0 - managing)) < 1e-6, firm.money)
 check("a firm's staffing and loss years are kept", firm.staffed_share("shop") == 1.0 and firm.record.loss_years == 0)
 world.free_people["labourer"] = 0.0

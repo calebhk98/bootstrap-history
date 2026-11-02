@@ -56,8 +56,8 @@ check("it takes the same crew", len({tuple(sorted(owner.workforce.items())) for 
 check("it finds the same share of its crew", len({owner.staffed_share("shop") for owner in owners.values()}) == 1)
 check("it pays the same: money after the year is the same", len({round(owner.money, 9) for owner in owners.values()}) == 1)
 expected = OPENING_MONEY + world.concern_takings("shop", OPENED, 1.0, SIZE) - world.upkeep("shop", SIZE) \
-	- world.concern_wage_bill("shop", SIZE) - results["firm"][1]
-check("takings less upkeep, wages and carrying cost is what the purse gained", all(abs(owner.money - expected) < 1e-6 for owner in owners.values()),
+	- world.concern_wage_bill("shop", SIZE) - world.site_rent("shop", SIZE)
+check("takings less upkeep, wages and site rent is what the purse gained (managers are posted to the labour market, not paid here)", all(abs(owner.money - expected) < 1e-6 for owner in owners.values()),
 	  [owner.money for owner in owners.values()])
 check("the books balance per owner: purse = opening + income - outlays",
 	  all(abs(owner.money - (OPENING_MONEY + sum(owner.record.income.values()) - sum(owner.record.outlays.values()))) < 1e-6

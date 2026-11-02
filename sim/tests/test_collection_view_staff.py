@@ -23,6 +23,9 @@ class OneTileWorld(CollectionView):
     def government(self):
         return SimpleNamespace(record=self.record)
 
+    def trade_of_role(self, role):
+        return "scribe"
+
     def pay_per_person_year(self, trade):
         return PAY
 

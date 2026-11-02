@@ -20,10 +20,12 @@ def labour_of(actor_staff=0.0):
     world = stand_in_world("rome_100ad")
     world.shared_answer = lambda key, inputs, compute, standalone=False: compute()
     world.home_tiles_held_version = lambda: 0
-    world.cfg = {"hired_hours_cap_base": 25000}
     world.effect_factor = lambda channel, value, exponent=None: value
     world.actor_staff_fte = lambda trade: actor_staff
-    return Labour(world)
+    labour = Labour(world)
+    labour.core_people_by_trade = lambda: {"smith": 1000.0}
+    labour.core_people_by_tile_and_trade = lambda: {labour.base_tile(): {"smith": 100.0}}
+    return labour
 
 
 class SharedPool(unittest.TestCase):

@@ -18,6 +18,9 @@ class StubWorld:
         self._territory = types.SimpleNamespace(road_km=road_km, coast_km=coast_km)
         self.urban, self.fleet, self.levers, self.price, self.national = urban, list(fleet), levers or {}, price, national
 
+    def trade_of_role(self, role):
+        return {"unskilled": "labourer", "builder": "mason", "soldier": "soldier", "clerk": "scribe"}[role]
+
     def staple_material(self):
         return "staple_kg"
 
