@@ -25,11 +25,11 @@ class View:
 def offers_with(levy):
     cohort = households.Cohort("household:t:0", "t", 0, 100.0, WORKERS, 0.3)
     record = types.SimpleNamespace(cohorts={cohort.agent_id: cohort},
-                                   workforce=MarketState(workers={"work@t": {"plough": split_evenly(WORKERS)}}))
+                                   labour=types.SimpleNamespace(workforce=MarketState(workers={"work@t": {"plough": split_evenly(WORKERS)}})))
     setup = types.SimpleNamespace(trades={}, working_hours_per_year=HOURS)
     if levy is None:
         return year_labour.labour_offers(setup, record, View(), {"t": 200.0})
-    return year_labour.labour_offers(setup, record, View(), {"t": 200.0}, levy_hours_per_worker=levy)
+    return year_labour.labour_offers(setup, record, View(), {"t": 200.0}, levy_hours_per_worker=levy, levied_tiles=("t",))
 
 
 class LabourLevyTests(unittest.TestCase):

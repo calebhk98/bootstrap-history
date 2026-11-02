@@ -33,6 +33,16 @@ class StubBook:
         self.transfers.extend(transfers)
 
 
+class StubCredit:
+    """The credit record's two lists and the owner method that asks for a loan."""
+
+    def __init__(self):
+        self.loans, self.loan_requests = [], []
+
+    def ask_for_loan(self, request):
+        self.loan_requests.append(request)
+
+
 def currency(regime):
     return CurrencySpec(COIN, regime, None if regime == "fiat" else "metal", 0.0 if regime == "fiat" else 0.01,
                         STATE, 0.0)
@@ -43,7 +53,7 @@ def economy_of(order, regime="fiat", cash=0.0, revenue=REVENUE, **policy_changes
     policy = StatePolicy(financing_order=order, **policy_changes)
     setup = types.SimpleNamespace(currency_id=COIN, state_agent=STATE, state_policy=policy, trades={}, unskilled_trade="labourer",
                                   opening_wages={"labourer": 1.0}, working_hours_per_year=2000.0)
-    record = types.SimpleNamespace(currency=currency(regime), book=StubBook(cash), cohorts={}, state_budget=state_budget.StateBudget(revenue=revenue), credit=types.SimpleNamespace(loans=[], loan_requests=[]))
+    record = types.SimpleNamespace(currency=currency(regime), book=StubBook(cash), cohorts={}, state_budget=state_budget.StateBudget(revenue=revenue), credit=StubCredit())
     view = types.SimpleNamespace(interest_rate=lambda money: 0.05, chained_price_level=lambda money: 1.0, wage=lambda trade, area: None)
     return setup, record, view
 

@@ -48,7 +48,7 @@ check("the bill's price of an order is the goods market's quote for it", asked =
 # ---- why shows the engine's cost
 BILL = {"rows": [], "cost_of_missing": 123.456}
 game = Game(
-    project_material_bill=lambda node_id: BILL, civ_cost_factor=lambda node_id: 1.1, geography=Game(material_cost_factor=lambda node_id: 1.2),
+    project_material_bill=lambda node_id: BILL, civ_cost_factor=lambda node_id: 1.1, material_cost_factor=lambda node_id: 1.2,
     opposition_factor=lambda node_id: 1.0, rebuild_work_factor=lambda node_id: 1.0, cost_money_factor=lambda: 1.0, money_real=1.0, project_cost=lambda node_id: 987.654, year=100,
     done=set(), active={}, paid_towards={})
 cost = _explain_cost(game, {}, "node", {"_labour_cost": 10.0, "cap": 5.0})

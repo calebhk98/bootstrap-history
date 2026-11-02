@@ -15,7 +15,8 @@ OWNERS = {"h1": "home", "h2": "home", "p1": "partner"}
 def economy(volumes, basket=None, demand=None, demand_by_country=None):
     areas = {good: [types.SimpleNamespace(area_id=name, tiles=tiles) for name, tiles in by_area.items()]
              for good, by_area in AREAS.items()}
-    area_map = types.SimpleNamespace(goods=lambda: list(areas), areas=lambda good: areas[good])
+    area_map = types.SimpleNamespace(goods=lambda: list(areas), areas=lambda good: areas[good],
+                                     tile_sets=lambda good: {name: set(tiles) for name, tiles in AREAS[good].items()})
     setup = types.SimpleNamespace(
         tiles=OWNERS, civ_id="home", countries=lambda: ("home", "partner"),
         tiles_of=lambda country: tuple(tile for tile, owner in OWNERS.items() if owner == country))

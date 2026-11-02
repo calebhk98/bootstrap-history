@@ -8,6 +8,8 @@ from unittest import mock
 
 from sim.economy import economy as economy_module
 from sim.economy.accounts import Book
+from sim.economy.capital_markets_record import CapitalMarketsRecord
+from sim.economy.credit_record import CreditRecord
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import LoanRequest
 
@@ -18,7 +20,7 @@ def lend_without_funds(last_rate, ceiling):
     memory = MarketMemory()
     memory.rates[MONEY] = last_rate
     request = LoanRequest("borrower", MONEY, 100.0, ceiling, 4.0, 0.0, "expansion")
-    record = types.SimpleNamespace(memory=memory, merchants={}, book=Book(), producers={}, credit=types.SimpleNamespace(loans=[], loan_requests=[request], expansion_runs={"borrower": 3.0}, remembered_defaults={}), capital_markets=types.SimpleNamespace(shares={}, last_dividends={}, banks={}, capital=types.SimpleNamespace(share_buy_orders={})))
+    record = types.SimpleNamespace(memory=memory, merchants={}, book=Book(), producers={}, credit=CreditRecord(loan_requests=[request], expansion_runs={"borrower": 3.0}), capital_markets=CapitalMarketsRecord())
     fake = types.SimpleNamespace(record=record, setup=types.SimpleNamespace(currency_id=MONEY, opening_rate=0.05), area_map=None,
                                  carriage=None)
     with mock.patch.object(economy_module.lending, "household_requests", return_value=[]), \

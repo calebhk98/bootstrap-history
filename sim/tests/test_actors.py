@@ -117,9 +117,9 @@ check("the government begins copying what it values and ignores the rest",
       and "test_cartoons" not in government.works and "test_faint" not in government.works, sorted(government.works))
 government.money = 1.0e6
 finished = government.work_on_copies(world)
-check("the copy is not finished in the first year, spends the treasury and puts trades to work",
+check("the copy is not finished in the first year, spends the treasury and posts places for its trades",
       "test_gun" not in finished and "test_gun" in government.works
-      and government.workforce.get("labourer", 0.0) > 0 and government.money < 1.0e6, (finished, government.money))
+      and government.staff_wanted.get("labourer", 0.0) > 0 and government.money < 1.0e6, (finished, government.money))
 for _ in range(imitation.copy_years(gun)):
     finished = government.work_on_copies(world)
 check("the copy finishes after its planned time and the state then knows the technique",

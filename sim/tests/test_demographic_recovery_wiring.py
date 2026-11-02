@@ -28,7 +28,7 @@ class Stepped(Demography):
 
 
 def built():
-    views = {}
+    views = {"cleared_wage_change": lambda: None}
     world = DemographyWorld(pop_children=300.0, pop_working_age=600.0, pop_elderly=100.0)
     module = module_harness.build(Stepped, views=views, world=world)
     module.fed = []

@@ -24,7 +24,6 @@ class StateWorld(FakeWorld):
 		self.nodes["salt_works"] = make_node("salt_works", hours=4000.0, revenue=TAKINGS, upkeep=UPKEEP, makes=["salt_kg"])
 		self.nodes["arsenal"] = make_node("arsenal", hours=2000.0, revenue=TAKINGS, upkeep=UPKEEP, makes=["weapons_kg"])
 		self.baseline = {"salt_works", "arsenal"}
-		self.free_people["labourer"] = 100.0
 		self.prices = {"brine_kg": 1.0}
 
 	def government(self):
@@ -34,8 +33,11 @@ class StateWorld(FakeWorld):
 		return material
 
 
-def state_with(monopolies=(), enterprises=(), money=OPENING_MONEY):
+def state_with(monopolies=(), enterprises=(), money=OPENING_MONEY, crew_found=True):
+	"""A state and its world; `crew_found` gives the state the people the labour core would have hired for its plants."""
 	world = StateWorld()
+	if crew_found:
+		world.state.record.workforce["labourer"] = 100.0
 	world.state.record.state_monopolies = set(monopolies)
 	world.state.record.state_enterprises = set(enterprises)
 	world.state.money = money
@@ -51,24 +53,22 @@ state_enterprises.open_enterprises(state, world)
 check("opening again adds no second plant", len(state.business.plants) == 1)
 state_enterprises.run(state, world)
 crew = world.concern_staff("salt_works")["labourer"]
-check("the plant's crew is taken from the labour pool", state.workforce.get("labourer") == crew, state.workforce)
+check("the plant posts its crew's places to the labour market", state.staff_wanted.get("labourer", 0.0) >= crew, state.staff_wanted)
 check("the state's takings are the plant's takings", abs(state.record.enterprise_takings - TAKINGS) < 1e-6,
 	  state.record.enterprise_takings)
 check("the monopoly revenue read for the budget is those takings",
 	  state_enterprises.monopoly_revenue(state.record) == state.record.enterprise_takings)
-wages = world.concern_wage_bill("salt_works")
-check("the purse gained takings less upkeep and wages (the manager's place is posted to the labour market, not paid here)",
-	  abs(state.money - (OPENING_MONEY + TAKINGS - UPKEEP - wages)) < 1e-6, state.money)
+check("the purse gained takings less upkeep (the crew and the manager's place are posted to the labour market and paid by its clearing, not here)",
+	  abs(state.money - (OPENING_MONEY + TAKINGS - UPKEEP)) < 1e-6, state.money)
 state.sell_output(world)
 check("what the plant made went to market", world.sales == [(state.actor_id, "salt_kg", 1.0)], world.sales)
 
 # ---- without a crew nothing is made -----------------------------------------------------------------------
-world, state = state_with(monopolies=["salt_kg"])
-world.free_people["labourer"] = 0.0
+world, state = state_with(monopolies=["salt_kg"], crew_found=False)
 state_enterprises.open_enterprises(state, world)
 state_enterprises.run(state, world)
 state.sell_output(world)
-check("with nobody to hire the state's works takes nothing and pays no wages, only upkeep",
+check("with nobody hired the state's works takes nothing and pays no wages, only upkeep",
 	  state.record.enterprise_takings == 0.0 and abs(state.money - (OPENING_MONEY - UPKEEP)) < 1e-6,
 	  (state.record.enterprise_takings, state.money))
 check("...and puts no goods on the market", all(tonnes == 0.0 for _seller, _material, tonnes in world.sales), world.sales)

@@ -21,6 +21,7 @@ class World:
         self.asked = []
         self.wages = {"smith": 1.0}
         self.trades_absent = {"smith"}
+        self.economy = Game(agent_trades=lambda: None)      # the economy has not narrowed the trades it holds
         self.trade_notes = {}
         self.workforce = Game(contract_hours={}, hours_wanted_once={})
         self.state = Game(household=self.workforce,

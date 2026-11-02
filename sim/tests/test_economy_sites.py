@@ -6,6 +6,7 @@ import unittest
 from dataclasses import replace
 from types import SimpleNamespace
 
+from sim.economy.credit_record import CreditRecord
 from sim.economy import location, opening, sites
 from sim.economy.producers import Producer
 from sim.economy.recipes import recipe_from_entry
@@ -49,7 +50,7 @@ class RulesTests(unittest.TestCase):
 
 class ApplyTests(unittest.TestCase):
     def _record(self, producers):
-        return SimpleNamespace(producers={producer.agent_id: producer for producer in producers}, credit=SimpleNamespace(expansion_runs={}))
+        return SimpleNamespace(producers={producer.agent_id: producer for producer in producers}, credit=CreditRecord())
 
     def test_capacity_is_capped_and_yield_follows_the_limit(self):
         setup = fixture.small_setup(recipes={"dig": _bound()}, site_limits=(SiteLimit("dig", "hills", 5.0, 0.5),))

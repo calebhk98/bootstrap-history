@@ -41,10 +41,17 @@ class ResumeTests(unittest.TestCase):
         self.assertIs(economy.area_map, setup.map)
 
 
+class Carriage(types.SimpleNamespace):
+    """The carriage record's owner method for the emptiness the areas are partitioned for."""
+
+    def set_area_imbalance(self, imbalance):
+        self.area_imbalance = imbalance
+
+
 class FollowFlows(unittest.TestCase):
     def economy(self, saved_imbalance, carried):
         rebuilt = []
-        return types.SimpleNamespace(record=types.SimpleNamespace(carriage=types.SimpleNamespace(area_imbalance=saved_imbalance, carried=carried)),
+        return types.SimpleNamespace(record=types.SimpleNamespace(carriage=Carriage(area_imbalance=saved_imbalance, carried=carried)),
                                      _rebuild_carriage=lambda: rebuilt.append(True) or True, rebuilt=rebuilt)
 
     def test_opposite_flows_change_the_emptiness_and_the_areas_are_partitioned_again(self):
