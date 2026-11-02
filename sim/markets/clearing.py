@@ -47,9 +47,8 @@ class Clearing:
 
 	def market_state(self, material):
 		"""The market for one material as of now, for reports: what the agent economy's markets of its commodity sold, left
-		unsold and left unmet last year, and the tonnes the founder sold into it this year, which the society's producers
-		did not sell (the clearing is the economy's, so every tonne the founder sells is one a producer does not, up to
-		what the market sold, and the society's sales are the rest). None while the economy opens or when the commodity has no priced material."""
+		unsold and left unmet last year, split into the acting seat's own sales (it sells through the same markets, so the
+		market's total holds them) and everyone else's. None while the economy opens or when the commodity has no priced material."""
 		commodity = self.needs.material_pool[material][0]
 		record = self.economy.agent_market_record(commodity)
 		if record is None:
