@@ -326,7 +326,7 @@ FACT_OF_VIEW_MORE = {
     "staff_sources": "STAFF_SOURCES",
     "techniques_forgotten": "forgotten",
     "value_weights": "value_weights",
-    "wage_index": "wage_index",
+    "money_per_labour_hour": "money_per_labour_hour",
 }
 
 METHOD_OF_COMMAND_MORE = {

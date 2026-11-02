@@ -248,8 +248,8 @@ def render_portfolio(out):
 
 def render_economy(out):
     lines = ["THE ECONOMY"]
-    lines.append("  price index %s   wage index %s   cost of living %s/yr"
-             % (_factor(out.get("price_index")), _factor(out.get("wage_index")),
+    lines.append("  price index %s   wage per hour %s   cost of living %s/yr"
+             % (_factor(out.get("price_index")), _factor(out.get("wage_per_hour")),
                 _fmt_num(out.get("cost_of_living_a_year"))))
     lit = out.get("literacy") or {}
     lines.append("  literacy: general %s, elite %s"
@@ -262,9 +262,9 @@ def render_economy(out):
         lines.append("")
         lines.append("  WHAT HAS MOVED MOST")
         for span, vals in sorted(moved.items()):
-            lines.append("    %s: price index %+.3f, wage index %+.3f, literacy %+.3f"
+            lines.append("    %s: price index %+.3f, wage per hour %+.3f, literacy %+.3f"
                      % (span.replace("_", " "), vals["price_index"],
-                        vals["wage_index"], vals["literacy_general"]))
+                        vals["wage_per_hour"], vals["literacy_general"]))
     if out.get("tracked_material_prices"):
         lines.append("")
         lines.append("  MATERIALS ABOVE BOOK PRICE")
@@ -280,8 +280,8 @@ def render_economy(out):
 
 def _changes_moved_lines(out):
     moved = out.get("moved") or {}
-    lines = ["  price index %+.3f   wage index %+.3f   literacy %+.3f (general)"
-             % (moved.get("price_index", 0.0), moved.get("wage_index", 0.0),
+    lines = ["  price index %+.3f   wage per hour %+.3f   literacy %+.3f (general)"
+             % (moved.get("price_index", 0.0), moved.get("wage_per_hour", 0.0),
                 moved.get("literacy_general", 0.0))]
     lines.append("  capital %s%s   revenue %s%s/yr   %s technologies completed"
              % ("+" if moved.get("capital", 0) >= 0 else "", _fmt_num(moved.get("capital")),

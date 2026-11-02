@@ -6,7 +6,7 @@ own log); population, output, the coin and the society's values change once, at 
 order of the calls below; save/load and the equivalence check depend on it.
 
 Needs: civilisation, year, seat_list, game_random, act_as, events_enabled,
-techniques_held, wage_index, money_text, money_real, event_log."""
+techniques_held, money_text, money_real, event_log."""
 from typing import Any, Dict, List, Optional
 
 from sim.demography.api import CutPopulation, RefreshDemographicIndexes
@@ -120,11 +120,10 @@ class Shocks:
 		raw = min(report["raw"] for report in reports.values())
 		if world_hazard is not None and "staff_loss" in world_hazard:
 			raw = self.staff_loss_exposure(world_hazard["staff_loss"])["before_defences"]
-		wage_index_before = self.needs.wage_index()
 		self.needs.send(CutPopulation(raw))
 		for seat_id in reports:
 			with self.needs.act_as(seat_id):
-				self.needs.send(NoteWageShock(met[seat_id].get("name", "a plague"), self.needs.wage_index() - wage_index_before))
+				self.needs.send(NoteWageShock(met[seat_id].get("name", "a plague")))
 		# refresh population and wage screens now, not at year end
 		self.needs.send(RefreshDemographicIndexes(year))
 		for seat_id, report in reports.items():
