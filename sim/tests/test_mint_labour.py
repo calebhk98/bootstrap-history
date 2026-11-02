@@ -65,7 +65,8 @@ def world(spec, recipe="default"):
         civ_id="realm", state_agent="state", currency_id="coin", capital_tile="t1",
         opening_population_by_tile={"t1": 3.0, "t2": 1.0}, tiles={"t1": 0, "t2": 0},
         opening_wages={}, mint_recipe=_recipe() if recipe == "default" else recipe)
-    record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity()))
+    record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity()),
+                                     cohorts={}, producers={}, merchants={})
     mint.seed_opening_metal(setup, record)
     return setup, record
 
