@@ -90,7 +90,8 @@ def start_work(node_id: str, chain: List[str], plan: Dict[str, Any], year: int) 
 
 
 def work_year(actor: Any, node_id: str, work: Dict[str, Any], world: Any, productivity: float = 1.0) -> bool:
-	"""Advance one copy by a year, paying wages and money for what is done.
+	"""Advance one copy by a year. The copy's hours are places posted to the labour market (hired and paid by its clearing);
+	the `money` paid here is the non-labour cost of copying (materials, fees), not wages.
 
 	Returns True when the work has reached completion. Money that falls short
 	slows the work proportionally; nothing is forgiven.

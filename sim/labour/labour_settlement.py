@@ -62,28 +62,14 @@ class SettlementMixin:
     def distance_to_tile_km(self, tile):
         return settlement.distance_km(self.held_tiles(), self.base_tile(), tile)
 
-    def _nominal_town_population(self):
-        """The town the reference size and civilisation scale give here,
-        before the people who actually live nearby bound it."""
-        homes = self.held_tiles()
-        place = settlement.relative_capacity(homes, self.base_tile())
-        return (self.TOWN_POPULATION_REFERENCE * place
-                * (self.POP_SCALE_FLOOR_SHARE
-                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
-
     def _town_population_at(self, tile):
-        """People in `tile`'s town: the nominal town there, never more than a
-        set share of the tile's own people (and so never more than the nation's)."""
+        """People in `tile`'s town: a set share of the tile's own people (so never more than the nation's), or what a
+        registered town provider says, capped at the tile's people."""
         homes = self.held_tiles()
         tile_people = self._world.population.total * settlement.population_share(homes, tile)
-        place = settlement.relative_capacity(homes, tile)
-        nominal = (self.TOWN_POPULATION_REFERENCE * place
-                   * (self.POP_SCALE_FLOOR_SHARE
-                      + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
+        nominal = tile_people * self.TOWN_MAX_SHARE_OF_TILE
         provided = self._world.provided_town_population(tile, nominal)
-        if provided is not None:
-            return min(provided, tile_people)
-        return min(nominal, tile_people * self.TOWN_MAX_SHARE_OF_TILE)
+        return nominal if provided is None else min(provided, tile_people)
 
     def town_mortality_premium_by_tile(self):
         """{tile: premium} for the tiles whose town carries a mortality premium from a registered provider: the premium
@@ -125,15 +111,6 @@ class SettlementMixin:
         within = self.reachable_tiles(days_budget)
         return sum(self._town_population_at(tile) for tile in settlement.tile_ids(homes)
                    if tile == base or tile in within)
-
-    def local_market_share(self):
-        """How much of a full-size market the base's town offers (1.0 at the
-        best tile of an undiminished nation); scales every pool that is not
-        sized straight from the town's headcount."""
-        full = (self.TOWN_POPULATION_REFERENCE
-                * (self.POP_SCALE_FLOOR_SHARE
-                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
-        return self.home_town_population_estimate() / full if full > 0 else 0.0
 
     def _relocation_wage_bill_per_year(self):
         return sum(count * self.labour_market.unscarce_annual(trade)

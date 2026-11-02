@@ -55,7 +55,7 @@ class Traders:
         carriers = self.route_carriers(civilization_id, route)
         if math.isinf(carriers):
             return carriers
-        merchants = self.needs.trade_population["merchant"] / max(1, len(self.needs.partners()))
+        merchants = self.needs.trade_population[self.trade_of_role("merchant")] / max(1, len(self.needs.partners()))
         return merchant_house.houses_on_route(
             carriers, self.carriers_per_house(civilization_id, route), merchants)
 
@@ -63,11 +63,11 @@ class Traders:
         """Money the home merchant class holds of its own: its share of the funds households save, by its wage bill
         against the working population's."""
         return merchant_house.class_own_capital(
-            self.needs.households_loanable_funds(), self.needs.trade_population["merchant"],
-            self.needs.labour_quote("merchant"), self.needs.working_age(), self.needs.labour_quote("labourer"))
+            self.needs.households_loanable_funds(), self.needs.trade_population[self.trade_of_role("merchant")],
+            self.needs.labour_quote(self.trade_of_role("merchant")), self.needs.working_age(), self.needs.labour_quote(self.trade_of_role("unskilled")))
 
     def capital_per_merchant(self):
-        merchants = self.needs.trade_population["merchant"]
+        merchants = self.needs.trade_population[self.trade_of_role("merchant")]
         return self.merchant_own_capital() / merchants if merchants > 0.0 else 0.0
 
     def trader_cycle_years(self, route, civilization_id=None, destination_demand_tonnes=None):
@@ -93,7 +93,7 @@ class Traders:
         """Money for the agents kept at the two ends per tonne a carrier lifts, at the labour market's wage for a
         merchant, a house's agents shared among its carriers."""
         return merchant_terms.agent_cost_per_tonne(
-            self.needs.route_lift_years_per_tonne(route), self.needs.hours_per_person_year(), self.needs.labour_quote("merchant"),
+            self.needs.route_lift_years_per_tonne(route), self.needs.hours_per_person_year(), self.needs.labour_quote(self.trade_of_role("merchant")),
             merchant_house.agents_per_carrier(self.carriers_per_house(civilization_id, route)))
 
     def cargo_lost_share(self, route, material=None, civilization_id=None, destination_demand_tonnes=None):

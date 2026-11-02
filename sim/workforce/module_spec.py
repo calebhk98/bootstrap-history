@@ -107,7 +107,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("taught_trade_people", "taught_trade_people", kind=KEYED, **_LIVE),
         ViewSpec("people_who_exist", "people_who_exist", kind=KEYED, **_LIVE),
         ViewSpec("reachable_trade_population", "reachable_trade_population", kind=KEYED, **_LIVE),
-        ViewSpec("local_market_share", "local_market_share", **_LIVE),
         ViewSpec("base_tile", "base_tile", **_SEAT),
         ViewSpec("last_buy_refusal", "last_buy_refusal", **_SEAT),
         ViewSpec("society_labour_hours", "society_labour_hours", **_LIVE),

@@ -124,6 +124,6 @@ def labour_due(declared: Any, world: Any) -> Assessment:
 	year the days come to, so the money's worth is what the state would pay for the labour."""
 	levy = revenue_labour.levy_of(declared, world)
 	share_of_year = (float(declared["rate"]) * revenue_labour.HOURS_PER_WORKING_DAY) / world.hours_per_person_year
-	base = levy.people * world.pay_per_person_year("labourer")
+	base = levy.people * world.pay_per_person_year(world.trade_of_role("unskilled"))
 	return Assessment(declared["form"], declared["basis"], base, share_of_year, share_of_year * base,
 					  person_days=levy.person_days, labour_to=levy.destination, commute=levy.commute)

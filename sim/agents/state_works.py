@@ -10,14 +10,14 @@ from typing import Any, Callable, Dict, List, Tuple
 from .tuning_spending import (CAPITAL_MASONRY_M2_PER_URBAN_PERSON_PER_SPECTACLE_WEIGHT, FORTIFIED_SHARE_OF_FRONTIER_PER_UNIT_THREAT,
 							  WALL_MASONRY_EQUIVALENT_M2_PER_M, WATER_MASONRY_EQUIVALENT_M2_PER_URBAN_PERSON)
 
-MASON = "mason"
+BUILDER_ROLE = "builder"   # the trade role (data/world/trades.json) whose labour raises the works
 SPECTACLE_WEIGHT = "spectacle"   # the state's taste for monuments, among the weights it values gains by
 
 
 @dataclass(frozen=True)
 class Work:
 	name: str
-	trade: str
+	role: str
 	wanted: Callable[[Any], float]   # stock the state wants, from the world
 	opening_share: float             # share of the stock wanted that stands when the game opens
 
@@ -41,9 +41,9 @@ def capital_buildings_wanted(world: Any) -> float:
 # TEMPORARY HEURISTIC (CLAUDE.md 4.4): walls and water works stand at the opening in the measure the drivers want;
 # monuments are raised from a surplus only.
 WORKS = (
-	Work("fortifications", MASON, fortifications_wanted, 1.0),
-	Work("water_works", MASON, water_works_wanted, 1.0),
-	Work("capital_buildings", MASON, capital_buildings_wanted, 0.0),
+	Work("fortifications", BUILDER_ROLE, fortifications_wanted, 1.0),
+	Work("water_works", BUILDER_ROLE, water_works_wanted, 1.0),
+	Work("capital_buildings", BUILDER_ROLE, capital_buildings_wanted, 0.0),
 )
 
 

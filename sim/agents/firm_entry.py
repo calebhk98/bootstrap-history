@@ -5,18 +5,28 @@ from . import household_wealth, ledger
 from .tuning import ENTRY_EQUITY_SHARE, ENTRANT_EXPECTATION_ADJUSTMENT_SHARE, MANAGEMENT_SPAN_OF_CONTROL, TACIT_SHARE_OF_COPYING
 
 
-def management_cost(world: Any, node_id: str, capacity: float = 1.0) -> Optional[float]:
-	"""Yearly pay for the manager hours a concern run at `capacity` times its founding size needs:
-	the hours of its staff over the span of control, paid as the best paid trade among its staff at the
-	pay of the actor's own country; None when that country pays nothing for a trade of the staff."""
+def management_places(world: Any, node_id: str, capacity: float = 1.0) -> Optional[Tuple[Optional[str], float]]:
+	"""(trade, people) of the managers a concern run at `capacity` times its founding size needs: its staff over the
+	span of control, in the best paid trade among its staff at the pay of the actor's own country; (None, 0) for a
+	concern with no staff; None when that country pays nothing for a trade of the staff."""
 	staff = world.concern_staff(node_id)
 	people = sum(staff.values()) * capacity
 	if people <= 0.0:
-		return 0.0
-	wages = [world.hourly_pay(trade) for trade in staff]
-	if any(wage is None for wage in wages):
+		return None, 0.0
+	pay = {trade: world.hourly_pay(trade) for trade in sorted(staff)}
+	if any(wage is None for wage in pay.values()):
 		return None
-	return people / MANAGEMENT_SPAN_OF_CONTROL * world.hours_per_person_year * max(wages)
+	return max(pay, key=lambda trade: pay[trade]), people / MANAGEMENT_SPAN_OF_CONTROL
+
+
+def management_cost(world: Any, node_id: str, capacity: float = 1.0) -> Optional[float]:
+	"""The yearly pay of the manager places (`management_places`): their hours at the best paid staff trade's pay; the
+	figure an entrant weighs, while a running plant bids for the places in the labour market; None as there."""
+	places = management_places(world, node_id, capacity)
+	if places is None:
+		return None
+	trade, people = places
+	return 0.0 if trade is None else people * world.hours_per_person_year * world.hourly_pay(trade)
 
 
 def firm_tile(registry: Any, actor: Optional[Any]) -> Optional[str]:

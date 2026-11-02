@@ -7,7 +7,6 @@ from sim.geography.api import route_dues_by_holder
 from sim.ledger.api import PayActor
 
 from . import rules
-from .constants import FREIGHT_DRIVER_WAGE_TRADE
 
 
 class Dues:
@@ -15,7 +14,7 @@ class Dues:
 
     def route_dues_per_tonne_by_mode(self):
         """{mode: home money per tonne} of tolls and port dues alone (the carriers' wage on the geography's hours)."""
-        wage = self.needs.wage[FREIGHT_DRIVER_WAGE_TRADE]
+        wage = self.needs.wage[self.trade_of_role("unskilled")]
         return rules.dues_money_per_tonne(self.needs.carriage_facts()["dues_hours_per_tonne"], wage)
 
     def route_dues_by_holder(self, route, tonnes):

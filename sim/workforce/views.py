@@ -18,7 +18,7 @@ class Views:
 		labour = self.labour
 		return {"scholar_hands": labour.scholar_hands_available, "craft_hands": labour.craft_hands_available,
 		        "director_pool": labour.director_pool, "director_committed": labour.director_hours_committed,
-		        "hired_cap": labour.hired_cap}[pool]()
+		        "hired_cap": labour.market_hours_offered}[pool]()
 
 	def hours_you_can_call_on(self, trade):
 		"""The hours a year of a trade the seat can call on: the market's supply plus the time it has already bought."""
@@ -76,9 +76,6 @@ class Views:
 
 	def reachable_trade_population(self, trade):
 		return self.labour.reachable_trade_population(trade)
-
-	def local_market_share(self):
-		return self.labour.local_market_share()
 
 	def base_tile(self):
 		"""Where the acting seat works from."""

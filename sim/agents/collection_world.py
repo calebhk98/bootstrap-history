@@ -36,21 +36,21 @@ class CollectionView:
 
 	def officials_employed(self) -> float:
 		"""Officials on the payroll: those the administration line asks for, less the share it left unpaid."""
-		return self.staff_employed(ADMINISTRATION_LINE, "scribe", budget.officials_kept(self))
+		return self.staff_employed(ADMINISTRATION_LINE, self.trade_of_role("clerk"), budget.officials_kept(self))
 
 	def working_days_per_year(self) -> float:
 		return order.working_days_of(self)
 
 	def guards_employed(self) -> float:
-		return self.staff_employed(order.GUARDS_LINE, order.GUARD_TRADE,
+		return self.staff_employed(order.GUARDS_LINE, self.trade_of_role(order.GUARD_ROLE),
 								   order.guards_kept(self.population_total(), self.working_days_per_year()))  # type: ignore[attr-defined]
 
 	def inspectors_employed(self) -> float:
-		return self.staff_employed(order.INSPECTORS_LINE, order.INSPECTOR_TRADE,
+		return self.staff_employed(order.INSPECTORS_LINE, self.trade_of_role(order.INSPECTOR_ROLE),
 								   order.inspectors_kept(self.population_total(), self.working_days_per_year()))  # type: ignore[attr-defined]
 
 	def foresters_employed(self) -> float:
-		return self.staff_employed(order.FORESTERS_LINE, order.FORESTER_TRADE,
+		return self.staff_employed(order.FORESTERS_LINE, self.trade_of_role(order.FORESTER_ROLE),
 								   order.foresters_kept(self.population_total(), self.working_days_per_year()))  # type: ignore[attr-defined]
 
 	def _collection_ground(self) -> Dict[str, Any]:

@@ -15,21 +15,15 @@ from .budget_line import Line, goods
 from .tuning import ADMINISTRATIVE_SPAN, ARMY_ADJUSTMENT_RATE, LEVY_RATE_CEILING
 from .tuning_spending import THREAT_ARMY_RESPONSE
 
-# What an army wears out, as a material in the tree's own terms.
-EQUIPMENT_MATERIAL = "iron_bar_kg"
-
-# The trade the army is booked in (data/world/trades.json); its people come from the working age.
-SOLDIER_TRADE = "soldier"
-
-
 def army_line(world: Any, soldiers: float, conscripts: float = 0.0) -> List[Line]:
 	"""The force of `soldiers`, of whom `conscripts` serve a labour due and draw no pay; all of it wears equipment."""
 	if soldiers <= 0.0:
 		return []
 	paid = max(0.0, soldiers - conscripts)
 	tonnes = soldiers * world.equipment_kg_per_soldier() / 1000.0
-	return [Line("army", "requisition", {SOLDIER_TRADE: paid} if paid > 0.0 else {},
-				 paid * world.pay_per_person_year(SOLDIER_TRADE), **goods(world, EQUIPMENT_MATERIAL, tonnes))]
+	soldier = world.trade_of_role("soldier")   # the trade the army is booked in (data/world/trades.json)
+	return [Line("army", "requisition", {soldier: paid} if paid > 0.0 else {},
+				 paid * world.pay_per_person_year(soldier), **goods(world, world.equipment_material(), tonnes))]
 
 
 def officials_kept(world: Any) -> float:
@@ -41,8 +35,8 @@ def administration_line(world: Any) -> List[Line]:
 	officials = officials_kept(world)
 	if officials <= 0.0:
 		return []
-	return [Line("administration", "office", {"scribe": officials},
-				 officials * world.pay_per_person_year("scribe"))]
+	clerk = world.trade_of_role("clerk")
+	return [Line("administration", "office", {clerk: officials}, officials * world.pay_per_person_year(clerk))]
 
 
 def concession_lines(claims: Dict[str, float]) -> List[Line]:

@@ -96,6 +96,14 @@ class World(Protocol):
 		"""The material the civilisation's people live on."""
 		...
 
+	def trade_of_role(self, role: str) -> str:
+		"""The trade that plays a role in the state's books (soldier, builder, clerk, unskilled), from the trade data."""
+		...
+
+	def equipment_material(self) -> str:
+		"""The material one soldier wears out, from the soldier trade's data."""
+		...
+
 	def commodity_of(self, material: str) -> str:
 		...
 

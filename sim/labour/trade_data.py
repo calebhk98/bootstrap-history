@@ -115,3 +115,19 @@ def is_generic_staff(trade: str) -> bool:
 
 def drawn_from_unskilled_pool(trade: str) -> bool:
     return trade in legacy_trade_defaults.DRAWN_FROM_UNSKILLED_POOL
+
+
+def trade_of_role(registry: Mapping[str, Mapping[str, Any]], role: str) -> str:
+    """The trade that plays a role in a state's books (soldier, builder, clerk; unskilled is the fallback trade), the
+    first by id that names it. A registry with none refuses."""
+    if role == "unskilled":
+        return market_trades.fallback_trade_of_registry(registry)
+    found = sorted(trade for trade, fields in registry.items() if fields.get("role") == role)
+    if not found:
+        raise ValueError("no trade in the registry has the role %r" % role)
+    return found[0]
+
+
+def role_field(registry: Mapping[str, Mapping[str, Any]], role: str, field: str) -> Any:
+    """A field of the trade that plays `role`; None when it states none."""
+    return registry[trade_of_role(registry, role)].get(field)

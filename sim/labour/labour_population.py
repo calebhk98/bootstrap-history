@@ -146,57 +146,6 @@ class PopulationMixin:
             return False
         return REGISTRY[source_name].get("kind") == "temporary_heuristic"
 
-    # HIRING A HANDFUL OF SMITHS MUST NOT MOVE THE STANDING WAGE. A market
-    # supply pool sized for a single provincial town, not the whole country,
-    # would make hiring five smiths where thousands actually exist move the
-    # price a lot, because the pool itself is the size of a hamlet -
-    # something the game needs to say out loud rather than leave a player to
-    # infer (see the 'population' command, and the framing note in `hire`,
-    # `labour` and each civ's opening briefing). Buying ten slaves is a
-    # DIFFERENT wall - household_room, this household's own capacity to
-    # feed, house and supervise people, checked in hire() below and nothing
-    # to do with market_supply - and is correctly left alone: a household of
-    # one cannot run ten slaves without somewhere to put them, in any
-    # economy, however deep its labour market runs.
-    #
-    # TOWN_POPULATION_REFERENCE is the size of the single market this
-    # household's reach actually represents, at full population scale (Rome
-    # itself, pop_scale == 1.0) - not the whole country, which is exactly the
-    # thing this game needs to say out loud rather than leave a player to
-    # infer (see the 'population' command, and the framing note in `hire`,
-    # `labour` and each civ's opening briefing). ANCHORED, not invented: the
-    # album of the fabri tignuarii of Ostia (CIL XIV 4569, dated 198 AD)
-    # records about 350 quinquennial members of one building-trade guild in a
-    # town usually put at the order of 50,000 people (Meiggs, "Roman Ostia",
-    # 2nd ed. 1973, ch. on the plebs and the collegia) - call it 0.7% of the
-    # town registered in ONE common craft. A floor, not a ceiling: guild
-    # rolls undercount apprentices, slaves, women in the associated trades
-    # and anyone who never joined.
-    #
-    # It shrinks with pop_scale exactly the way hired_hours_cap_base already
-    # does ("a civilization of 1.5 million cannot field what one of 65
-    # million can" - hired_cap()'s own comment) - a smaller civilisation's
-    # own provincial towns are smaller too, which is a separate and
-    # defensible claim from how big ONE of them is.
-    TOWN_POPULATION_REFERENCE = declare(
-        "TOWN_POPULATION_REFERENCE", 50000.0, kind="engineering_estimate",
-        unit="people, at pop_scale=1.0",
-        source="Meiggs, 'Roman Ostia', 2nd ed. 1973 (the album of the "
-               "fabri tignuarii of Ostia, CIL XIV 4569, dated 198 AD, "
-               "records about 350 quinquennial members of one "
-               "building-trade guild in a town usually put at the order "
-               "of 50,000 people).",
-        confidence="C",
-        why="The size of the ONE provincial town this household's labour "
-            "market represents, at full population scale - not the whole "
-            "country. Anchored on a real attestation (guild membership as "
-            "a share of a town of known rough size), used as a floor "
-            "rather than a precise census figure since guild rolls "
-            "undercount apprentices, slaves and women in the trade. This "
-            "sizes a MARKET, not a historical outcome the simulation is "
-            "meant to reproduce - see this constant's own long comment "
-            "above for the full derivation.")
-
     NO_DEMAND_TRADE_SHARE = declare(
         "NO_DEMAND_TRADE_SHARE", 0.00005, kind="temporary_heuristic",
         unit="fraction of the working people", source=None,
@@ -264,6 +213,11 @@ class PopulationMixin:
         people = self.literate_capacity(trade) if trade in self.LITERATE_TRADES else self._people_of_trade_in_reach(trade)
         hours = max(0.0, people - self._world.actor_staff_fte(trade)) * hours_per_person + school_hours
         return trade_supply_rules.supply_hours(hours, self.people_who_exist(trade), hours_per_person)
+
+    def market_hours_offered(self):
+        """Hours a year the labour core offers across every trade the seat can hire (market_supply summed): what projects'
+        hired labour may draw on in a year."""
+        return sum(self.market_supply(trade) for trade in sorted(self._world.wages))
 
     def reachable_trade_population(self, trade):
         """What this household's own labour market actually holds of this
