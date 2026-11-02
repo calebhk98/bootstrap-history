@@ -1,324 +1,18 @@
-"""How many trained, hired or supervised people this household may have -
-and the founder's own hours, the one resource behind all of it.
-
-Split out of labour.py (see that file's own docstring for why). These are
-methods of Labour; they are a mixin only so that they can live in a file of
-their own. Behaviour is unchanged and moved verbatim.
-
-Three ceilings live here together because they answer the same question
-from three different institutions: literacy bounds who a literate trade
-(scholar, scribe, engineer, chemist, machinist, optician, electrician) can
-ever draw from; STAFF_CAPACITY_SOURCES/staff_capacity is what schools,
-patrons and heavy industry train and can afford to keep, once running;
-SUPERVISION_ROOM/supervision_room is the founder's own headroom to direct
-and house people beyond what any institution trained outright. _staff_advice (what to tell a player who has hit one of these walls) sit with them for
-the same reason. household_room, headcount and director_hours_committed
-are the small shared totals `hire`, `train` and `buy_slaves` (labour_
-training.py, labour_bondage.py) all check against, so they live where the
-ceilings they total up already live. director_pool and _stochastic_round
-open the file because every one of these ceilings is ultimately a claim
-about the founder's own scarce hours, or about rounding a continuous target
-onto a whole person without biasing which way growth heads.
-"""
-import math
-
+"""How many trained, hired or supervised people this household may have: the institutional ceiling on trained
+staff, the supervisory headroom beyond it, and the room left once the people already held are counted."""
 from sim.constants import declare
-from sim.refusal import Refusal
-from . import legacy_trade_defaults, trade_data
-from .founder_hours import hours_committed, hours_pool
+
+from . import trade_data
 from .staff_wage_reference import blended_annual_wage
-from .hire_outcome import craft_trades_report
-from .room_advice import room_advice, sources_to_build, sources_to_reopen
-from .staff_advice import staff_remedies
-from .staff_moves import whole_people_under_wall
-from .wage_provider import reference_civilisation
 
 
-
-
-class _LiterateTrades:
-    """The trades whose practice is reading: this world's own on an instance, the shipped set on the class."""
-
-    def __get__(self, instance, owner=None):
-        if instance is None:
-            return frozenset()
-        return trade_data.literate_trades(trade_data.registry_of(instance._world), instance._world.wages)
-
-
-class CapacityMixin:
-    """Literacy, institutional and supervisory ceilings on how many people
-    this household may hire, teach, own or direct - see this module's own
-    docstring for why these particular subjects sit together.
-    """
-
-    def _stochastic_round(self, x):
-        """Round a continuous headcount target to a whole number of people
-        without biasing where it is actually heading.
-
-        PEOPLE ARE WHOLE; THE PATH TOWARD THEM DOES NOT HAVE TO BE. The
-        automatic staff-growth in core.py's step() is a smoothing formula -
-        this year's target minus what you have, times a rate - and that math
-        is exactly what every balance comment near it was tuned against. Had
-        it simply rounded the smoothed figure down every year, growth toward
-        a ceiling of, say, 6 people from 0 would have sat at 5 forever
-        (0.18 of the gap each year, floor()'d, converges just under the next
-        whole number and never crosses it): hiring would have quietly gone
-        dead a person short of every ceiling in the game. Rounding UP every
-        year over-hires just as systematically the other way.
-        A fractional remainder is instead spent as THIS YEAR's chance of the
-        next whole person: 6.4 people is six for certain and a 40% chance of
-        a seventh, drawn from self.rng so it is reproducible. Averaged over
-        many years the realised headcount tracks the old fractional
-        trajectory exactly, and no single year is ever asked to employ part
-        of a person.
-        """
-        x = max(0.0, x)
-        whole = math.floor(x)
-        if self._world.rng.random() < x - whole:
-            whole += 1
-        return float(whole)
-
-    BONDAGE_HOURS_SHARE = declare(
-        "BONDAGE_HOURS_SHARE", 0.25, kind="temporary_heuristic",
-        unit="fraction of founder_hours_per_year", source=None, confidence="D",
-        why="What fraction of a bonded founder's day is still their own to "
-            "spend, the rest being owed to whoever holds the bond. Not zero, "
-            "because nobody works every waking hour and the evenings are "
-            "where this model assumes the work gets done; not derived from "
-            "any actual bondage contract terms, of which this engine has "
-            "none, only picked so bondage costs something real without "
-            "being a total stop.")
-
-    def director_pool(self):
-        # In bondage most of your hours are owed to somebody else, not all: the evenings are where the work gets done.
-        return hours_pool(self._world.founder_alive, self._world.cfg["founder_hours_per_year"],
-                          self._world.bondage_years_left > 0, self.BONDAGE_HOURS_SHARE,
-                          self._world.workforce.directors_extra, self._world.cfg["director_hours_per_year"])
-
-    # ---- literacy bounds who you can hire ----------------------------------
-    # FINDINGS_ROUND2 section Q: every civ file carries literacy_general and
-    # literacy_elite, and apply_tech_effects (society.py) raises them when
-    # paper, printing, schools and libraries are built. Nothing else reading
-    # either number would let a scribe cost the same to hire in a society
-    # where two people in a hundred could read as in one where nine could.
-    #
-    # `scholar` is drawn from the lettered, propertied class - literacy_elite
-    # in the civ file, "fraction of the propertied class that can read". The
-    # rest - `scribe`, and the trades taught into being from ordinary
-    # craftsmen (`engineer`, `chemist`, `machinist`, `optician`) - draw on the
-    # wider literacy_general pool of anyone who can read at all. `merchant` is
-    # left out on purpose: an agent working on commission is not, in this
-    # period, chiefly a reader.
-    # electrician belongs in this set too: it is a taught trade that reads
-    # drawings, exactly like the other four, so excluding it would let it
-    # bypass the literacy ceiling that caps machinists, chemists,
-    # engineers and opticians.
-    LITERATE_TRADES = _LiterateTrades()
-
-    def is_craft_trade(self, trade):
-        return self._world.trade_family(trade) == legacy_trade_defaults.CRAFT_FAMILY
-
-    def craft_trades_report(self):
-        """The trades that supervise as craft and those that do not, by the same test `is_craft_trade` applies."""
-        return craft_trades_report(self._world.wages, self.is_craft_trade)
-    # The literacy this file's trade shares and staff ceilings were already
-    # tuned against, before literacy was read anywhere: the default
-    # civilisation's own numbers, because every other constant in this economy -
-    # price index, cost multipliers - is calibrated relative to it. Below
-    # its own reference literacy stays 1.0 and NOTHING changes for it; a
-    # civilization with less of either number gets a genuinely smaller pool,
-    # in proportion, and a civilization with more (a higher elite literacy
-    # than the reference) is not penalised for having read more.
-    LITERACY_REFERENCE_GENERAL = declare(
-        "LITERACY_REFERENCE_GENERAL", reference_civilisation()["literacy_general"], kind="initial_condition",
-        unit="fraction of population able to read (general)",
-        source="the default civilisation file's own literacy_general field.",
-        confidence="B",
-        why="The default civilisation's starting literacy_general, read here as the "
-            "denominator every OTHER civilisation's literate-trade capacity "
-            "is measured against, because every other constant in this "
-            "economy (price index, cost multipliers) is calibrated "
-            "relative to that civilisation. A real starting condition, "
-            "read from its file, not an invented number.")
-    LITERACY_REFERENCE_ELITE = declare(
-        "LITERACY_REFERENCE_ELITE", reference_civilisation()["literacy_elite"], kind="initial_condition",
-        unit="fraction of the propertied class able to read (elite)",
-        source="the default civilisation file's own literacy_elite field.", confidence="B",
-        why="As LITERACY_REFERENCE_GENERAL, for the lettered, propertied "
-            "pool `scholar` is drawn from.")
-    LITERACY_FACTOR_CAP = declare(
-        "LITERACY_FACTOR_CAP", 4.0, kind="temporary_heuristic",
-        unit="dimensionless multiple of the Rome-reference pool",
-        source=None, confidence="D",
-        why="How far a literacy_factor may rise above 1.0 for a society "
-            "that has read PAST Rome's own reference literacy. Bounded so "
-            "a civilisation is never treated as though it could staff an "
-            "unbounded number of literate trades just because a handful of "
-            "technologies nudged literacy above 0.9; the figure 4.0 is "
-            "tuned headroom, not a measured ceiling on how literate a "
-            "pre-modern society can get.")
-
-    def literacy_factor(self, trade):
-        """0..1: how much of this trade's usual pool this society's literacy
-        can actually fill. 1.0 for anything that is not a literate trade."""
-        if trade not in self.LITERATE_TRADES:
-            return 1.0
-        if trade == trade_data.scholar_trade():
-            lit, ref = self._world.literacy("literacy_elite"), self.LITERACY_REFERENCE_ELITE
-        else:
-            lit, ref = self._world.literacy("literacy_general"), self.LITERACY_REFERENCE_GENERAL
-        # NOT CLAMPED AT ONE: Rome starts AT the reference, so clamping here
-        # would return exactly 1.0 for Rome for ever, no matter how much
-        # printing, movable type, schools and academies raise
-        # literacy_general above it - moving the specialist ceiling not at
-        # all. It is the one thing the argument for printing rests on: a
-        # society that reads more can staff more.
-        #
-        # Bounded at four, because a lettered pool cannot outgrow the town
-        # without the town growing, and because the tech effects that feed it
-        # are deliberately small.
-        return max(0.0, min(self.LITERACY_FACTOR_CAP, float(lit) / ref))
-
-    LITERATE_CAPACITY_FLOOR = declare(
-        "LITERATE_CAPACITY_FLOOR", 1.5, kind="temporary_heuristic",
-        unit="people", source=None, confidence="D",
-        why="A literate trade's hiring ceiling is ADDED to, not maxed "
-            "with, this floor, so a society with almost no literate pool "
-            "(Viking-age Scandinavia's rune-carvers and Latin-reading "
-            "priests) still has SOMEONE findable rather than a ceiling "
-            "that rounds to nobody. The rune-carver and the priest are "
-            "always there; this is what makes that true numerically. "
-            "Picked so the floor is real without swallowing the signal "
-            "literacy_factor is supposed to carry (see this function's "
-            "own docstring on why max() broke the mechanism for Norse).")
-
-    def literate_capacity(self, trade):
-        """The most people this society's literacy lets you have in a literate trade, hired and taught combined: the
-        labour core's people of the trade in the tiles reached (the declared floor share of the working people where the
-        core holds nobody of it) scaled by literacy, plus the small floor, plus (scholar) the people institutions train
-        outright. A headcount ceiling, not an hours one; infinite for a trade that is not literate."""
-        if trade not in self.LITERATE_TRADES:
-            return float("inf")
-        cap = self.LITERATE_CAPACITY_FLOOR + self._people_of_trade_in_reach(trade) * self.literacy_factor(trade)
-        if trade == trade_data.scholar_trade():
-            cap += self.staff_capacity()[0]
-        return cap
-
-    def _literate_wall_refusal(self, trade, cap, have):
-        """The refusal hire() and train() give when literate_capacity() bites.
-
-        SAY HOW MANY YOU CAN HAVE, NOT ONLY THAT YOU CANNOT HAVE SIX: a
-        ceiling quoted as "will not supply more than 5.9 in total, ever, at
-        any price" reads as being capped out entirely, even when the
-        requester holds none and a smaller request would succeed. Say the
-        number they should type.
-
-        AND DO NOT BLAME LITERACY FOR A WALL IT DID NOT BUILD: "this
-        society's literacy will not supply more than X" for every trade
-        alike is a real description of the Norse scribe case and a false
-        one of the Rome scholar case. Rome's literacy_elite starts at
-        0.900 against a field capped at 1.0, so literacy itself can never
-        move this ceiling by more than about eight per cent, while the
-        quantity doing the work is the labour core's people of the
-        trade in reach and, for scholar, the institutional pool literate_capacity() folds in. Both matter; only one is literacy, and saying only
-        "literacy" when the market-reach term is doing most of the work
-        misleads a player into pulling the wrong lever.
-        """
-        _whole = whole_people_under_wall(cap, have)
-        lever = (
-            "Building the institutions that train scholars outright - a "
-            "school, an academy, an imperial patron - is what actually "
-            "moves this number; printing, paper and libraries raise "
-            "literacy itself, which by itself is the smaller of the two."
-            if trade == trade_data.scholar_trade() else
-            "Printing, paper, schools and academies widen the pool - they "
-            "raise how many people here can read, and this ceiling rises "
-            "with it.")
-        return Refusal("literacy_wall", "this household's reach into the labour market for %ss "
-                       "will not stretch past %.1f in total, hired and taught "
-                       "together - not \"this society's literacy\" alone, which "
-                       "only narrows an already-limited reach further - and you "
-                       "have %.1f already (hired and still being taught). %s %s"
-                       % (trade, cap, have,
-                          ("%d more is the most you can take right now." % _whole)
-                          if _whole >= 1 else "There is no room for even one more.",
-                          lever))
-
-    def _trade_headcount_pending(self, trade):
-        """People already on the books in this trade, plus people already
-        being taught into it who are not ready yet - what a fresh hire or a
-        fresh training run would be added ON TOP OF."""
-        workforce = self._world.workforce
-        pending = sum(row[3] for row in workforce.training
-                      if len(row) > 2 and row[2] == trade)
-        return max(self.employed(trade), self._world.workforce.staff_wanted.get(trade, 0.0)) + pending
-
-    # What each of these adds to the CEILING on people, taken from
-    # staff_capacity below so the advice and the arithmetic cannot drift apart.
-    # THESE ARE THE SAME NUMBERS AS STAFF_CAPACITY_SOURCES's own artisan (`ar`)
-    # column below, for every node the two tables share, kept as INT here
-    # (whole household places, for "%d" advice text) rather than the float
-    # STAFF_CAPACITY_SOURCES needs for its own unit-scaled arithmetic - two
-    # declared names per figure rather than one, so a rename or a cast can
-    # never silently turn a place count into a fraction of one.
-    # ROOM_SOURCES: [(node id, places)] from each node's `room_places` (MechanicsMixin).
-    # fin_trial_balance, fin_company_town and fin_chain_store - the
-    # organisation entries added alongside STAFF_CAPACITY_SOURCES above - are
-    # deliberately NOT in ROOM_SOURCES, even though every one of them raises
-    # the same ceiling every other entry here does. _room_advice's own
-    # "nearest first" sort (below) ranks by CLOSURE SIZE, a proxy that holds
-    # for the furnace-and-patronage tree above because a shallow node there
-    # is also a cheap one. It does not hold for the finance branch: the whole
-    # point of fin_chain_store's own note ("requires sophisticated management
-    # and accounting") is that it is a late, expensive, 30,000-denarii
-    # institution sitting only two prerequisites deep (fin_market ->
-    # fin_department_store), so ranking it by closure size alone told a
-    # founder with four hundred denarii in year 100 that the NEAREST way to
-    # more room was a chain of department stores - a measured, not a
-    # theoretical, failure of this heuristic once a second branch of the
-    # tree with a different shape is let into it. The institutions
-    # themselves are real (STAFF_CAPACITY_SOURCES, supervision_room); this
-    # one piece of advice text is not worth teaching the sort to weigh cost
-    # as well as depth for three nodes, so they are simply left unnamed here
-    # - a player who builds them (for their own revenue, or for the
-    # household room staff_capacity() already credits them with) still gets
-    # the room; this function just never tells them to go build one.
-
-    def _places_text(self, places):
-        """The places a node adds at the current income, as a short number."""
-        added = self.room_added_by(places)
-        return "%.1f" % added if added < 10 else "%d" % round(added)
-
-    def _room_advice(self):
-        """What raises the CEILING on people, which is not what buys people.
-
-        The household-room refusal must not hand back _staff_advice, which
-        names hiring, commissioning and buying - every one of which needs
-        room you do not have. The room comes from institutions and heavy
-        industry, and this has to point at those instead.
-        """
-        # A CLOSED ROOM SOURCE IS NOT A MISSING ONE: staff_capacity() already
-        # drops a source's places the moment its venture is not running (see
-        # STAFF_CAPACITY_SOURCES's must_be_running), so the advice below must
-        # distinguish never-built (`k not in projects.done`) from
-        # built-but-not-running - a school built, then shut for want of a
-        # supervisor, must still be named as the cheapest way back, not
-        # just dropped from the count. Filtering only on `done` would tell
-        # a player who hit the ceiling it had been holding up to build
-        # endowment_land or court an imperial patron, instead of simply
-        # reopening what they already own.
-        projects = self._world.projects
-        reopen = sources_to_reopen(self._world.ROOM_SOURCES, projects.done, projects.operating, self._world.nodes,
-                                   self._world.is_venture)
-        # NEAREST FIRST, and nearest means how much of the tree stands between
-        # you and it. Sorted on size alone this offered power_grid (+130) to a
-        # founder with six places - the last node in the game, true and
-        # useless - while workshop_first, one prerequisite away, went unnamed.
-        want = sources_to_build(self._world.ROOM_SOURCES, projects.done, self._world.nodes, self._world.is_visible,
-                                lambda node_id: len(self._world.closure(self._world.nodes, node_id) - projects.done))
-        startable_now = any(self._world.start_reason(node_id, _why=False)[0] for node_id, _places in want)
-        return room_advice(self._world.money_text(self._world.housing_price_per_place(), grouped=True),
-                           reopen, want, startable_now, self._places_text)
+class Capacity:
+    def __init__(self, world, book, market, schedule, trades):
+        self._world = world
+        self.book = book
+        self.market = market
+        self.schedule = schedule
+        self.trades = trades
 
     # WHO TRAINS PEOPLE, AND HOW MANY OF THEM.
     #
@@ -364,6 +58,7 @@ class CapacityMixin:
             "this engine does not model at the household level. Not "
             "derived from DEBT_BASE_RATE or any other rate elsewhere in "
             "the engine; picked as a plausible order of magnitude.")
+
     STAFF_BUDGET_SHARE_OF_SPARE = declare(
         "STAFF_BUDGET_SHARE_OF_SPARE", 0.40, kind="temporary_heuristic",
         unit="fraction of true surplus", source=None, confidence="D",
@@ -371,16 +66,17 @@ class CapacityMixin:
             "the share a household is willing to commit to new staff in a "
             "single year rather than holding back - a caution constant, "
             "not a measured savings rate.")
+
     def staff_wage_reference(self):
         """Blended annual wage, in current money, of the trades that exist from
         the start: what hiring costs the market now, so an affordability
         budget turns into a headcount in the money it is paid in."""
-        market = self.labour_market
+        market = self.market
         wages = [market.unscarce_annual(trade) for trade in sorted(self._world.wages)
                  if trade not in self._world.trades_absent]
         blended = blended_annual_wage(wages)
         return blended if blended is not None else market.unscarce_annual(
-            trade_data.fallback_trade_of(self._world, self.wage_schedule().training_years))
+            trade_data.fallback_trade_of(self._world, self.schedule.wage_schedule().training_years))
 
     STAFF_EXTRA_HEADROOM_WEIGHT = declare(
         "STAFF_EXTRA_HEADROOM_WEIGHT", 1.35, kind="temporary_heuristic",
@@ -391,6 +87,7 @@ class CapacityMixin:
             "both. Tuned so the headroom hiring does not silently crowd "
             "out institutional staffing or the other way round; not "
             "measured against any real relative cost of the two.")
+
     STAFF_POP_SCALE_FLOOR = declare(
         "STAFF_POP_SCALE_FLOOR", 0.45, kind="temporary_heuristic",
         unit="fraction of the institutional ceiling", source=None,
@@ -401,6 +98,7 @@ class CapacityMixin:
             "at all - the softening this function's own comment describes "
             "after 'a first pass made every small civilization fail "
             "outright'. Tuned to that observed failure, not measured.")
+
     STAFF_POP_SCALE_VARIABLE = declare(
         "STAFF_POP_SCALE_VARIABLE", 0.55, kind="temporary_heuristic",
         unit="fraction of the institutional ceiling, scaled by pop_scale",
@@ -408,6 +106,7 @@ class CapacityMixin:
         why="The remaining share of the institutional ceiling that DOES "
             "grow with population, paired with STAFF_POP_SCALE_FLOOR (the "
             "two are tuned to sum to 1.0).")
+
     STAFF_POP_SCALE_EXPONENT = declare(
         "STAFF_POP_SCALE_EXPONENT", 0.35, kind="temporary_heuristic",
         unit="dimensionless exponent on pop_scale", source=None,
@@ -418,6 +117,7 @@ class CapacityMixin:
             "slowly, rather than never. The sub-linear SHAPE is the real "
             "claim (bigger societies are not proportionately easier to "
             "staff from); the exact exponent is tuned, not fitted.")
+
     DIRECTOR_SCALE_HEADROOM = declare(
         "DIRECTOR_SCALE_HEADROOM", 1.3, kind="temporary_heuristic",
         unit="dimensionless", source=None, confidence="D",
@@ -513,7 +213,7 @@ class CapacityMixin:
         # printing, schools and libraries raise literacy_elite
         # (apply_tech_effects, society.py) and widen it again as a run goes
         # on, which is the entire point of building them.
-        scholars *= self.literacy_factor(trade_data.scholar_trade())
+        scholars *= self.trades.literacy_factor(trade_data.scholar_trade())
         if with_directors:
             return scholars, artisans, directors
         return scholars, artisans
@@ -563,10 +263,12 @@ class CapacityMixin:
         "balance, not measured from anything: a real figure would come "
         "from how many workers a person of a given period could actually "
         "keep an eye on.")
+
     SUPERVISION_ROOM_SELF = declare(
         "SUPERVISION_ROOM_SELF", 6.0, kind="temporary_heuristic",
         unit="people", source=None, confidence="D",
         why=_SUPERVISION_ROOM_WHY)
+
     SUPERVISION_ROOM_PER_DIRECTOR_EXTRA = declare(
         "SUPERVISION_ROOM_PER_DIRECTOR_EXTRA", 14.0, kind="temporary_heuristic",
         unit="people per trained deputy", source=None, confidence="D",
@@ -636,105 +338,6 @@ class CapacityMixin:
                              "what_it_is": spec["words"]})
         return rows
 
-    # ---- how a SOCIETY reacts to a TECHNOLOGY -------------------------------
-    STATE_WEIGHT_INFRASTRUCTURE = declare(
-        "STATE_WEIGHT_INFRASTRUCTURE", 0.5, kind="temporary_heuristic",
-        unit="dimensionless state-interest weight", source=None,
-        confidence="D",
-        why="How favourably the state views a technology tagged "
-            "'infrastructure', on the scale state_interest() combines "
-            "these weights with. Roughly ordered by plausible period "
-            "attitude (infrastructure and food welcomed, a status- or "
-            "weapon-democratising technology resisted) but the specific "
-            "magnitudes are tuned game balance, not derived from any "
-            "state's actual recorded policy.")
-    STATE_WEIGHT_FOOD = declare(
-        "STATE_WEIGHT_FOOD", 0.7, kind="temporary_heuristic",
-        unit="dimensionless state-interest weight", source=None,
-        confidence="D", why="See STATE_WEIGHT_INFRASTRUCTURE.")
-    STATE_WEIGHT_MEDICAL = declare(
-        "STATE_WEIGHT_MEDICAL", 0.5, kind="temporary_heuristic",
-        unit="dimensionless state-interest weight", source=None,
-        confidence="D", why="See STATE_WEIGHT_INFRASTRUCTURE.")
-    STATE_WEIGHT_LUXURY = declare(
-        "STATE_WEIGHT_LUXURY", 0.1, kind="temporary_heuristic",
-        unit="dimensionless state-interest weight", source=None,
-        confidence="D", why="See STATE_WEIGHT_INFRASTRUCTURE.")
-    STATE_WEIGHT_SPECTACLE = declare(
-        "STATE_WEIGHT_SPECTACLE", 0.1, kind="temporary_heuristic",
-        unit="dimensionless state-interest weight", source=None,
-        confidence="D", why="See STATE_WEIGHT_INFRASTRUCTURE.")
-    STATE_WEIGHT_INEXPLICABLE = declare(
-        "STATE_WEIGHT_INEXPLICABLE", 0.0, kind="temporary_heuristic",
-        unit="dimensionless state-interest weight", source=None,
-        confidence="D",
-        why="A technology the state has no framework to react to earns "
-            "neither favour nor suspicion by default. See "
-            "STATE_WEIGHT_INFRASTRUCTURE for the rest of this table.")
-    STATE_WEIGHT_STATUS_THREATENING = declare(
-        "STATE_WEIGHT_STATUS_THREATENING", -0.6, kind="temporary_heuristic",
-        unit="dimensionless state-interest weight", source=None,
-        confidence="D", why="See STATE_WEIGHT_INFRASTRUCTURE.")
-    STATE_WEIGHT_WEAPON_DEMOCRATISING = declare(
-        "STATE_WEIGHT_WEAPON_DEMOCRATISING", -0.5, kind="temporary_heuristic",
-        unit="dimensionless state-interest weight", source=None,
-        confidence="D", why="See STATE_WEIGHT_INFRASTRUCTURE.")
-    STATE_WEIGHTS = {"infrastructure": STATE_WEIGHT_INFRASTRUCTURE,
-                     "food": STATE_WEIGHT_FOOD, "medical": STATE_WEIGHT_MEDICAL,
-                     "luxury": STATE_WEIGHT_LUXURY, "spectacle": STATE_WEIGHT_SPECTACLE,
-                     "inexplicable": STATE_WEIGHT_INEXPLICABLE,
-                     "status_threatening": STATE_WEIGHT_STATUS_THREATENING,
-                     "weapon_democratising": STATE_WEIGHT_WEAPON_DEMOCRATISING}
-
-    def _staff_advice(self, kind, deficit=None):
-        """Name the remedy, not just the shortfall - and only remedies you could
-        actually have heard of.
-
-        Advice that says "build workshop_first" while `why workshop_first`
-        replies "you have never heard of that" from the same program in the
-        same second is a contradiction, not help. Hiring is always
-        sayable, because the labour market is in front of you; a named
-        institution is not, until it is.
-
-        `deficit` is how many more people the caller is short; the hire
-        advice is sized to it.
-        """
-        projects = self._world.projects
-
-        def waiting_on_kind(node_id):
-            # Asked DIRECTLY of the node's own requirement, never through start_reason, which calls this function.
-            node = self._world.nodes[node_id]
-            return (node["art"] > self._world.workforce.artisans + 1e-9 if kind == "artisans"
-                    else node["sch"] > self.effective_scholars() + 1e-9)
-
-        steps = staff_remedies(kind, self._world.STAFF_SOURCES.get(kind, []), deficit, projects.done,
-                               projects.operating, self._world.is_venture, self._world.is_visible, waiting_on_kind,
-                               self._world.staff_hire_advice)
-        bits = [sentence for sentence, _remedy in steps]
-        remedies = [remedy for _sentence, remedy in steps]
-        if not bits:
-            return Refusal("staff_advice", "wait: your existing institutions add %s each year." % kind, remedies=[])
-        return Refusal("staff_advice", "To get more %s: %s." % (kind, "; ".join(bits[:3])), remedies=remedies[:3])
-
-    def headcount(self):
-        workforce = self._world.workforce
-        return self.employed_total() + workforce.slaves + workforce.freedmen
-
-    def director_hours_committed(self):
-        """Hours of your own year already spoken for before any project sees them.
-
-        WAGE HOURS BELONG HERE: keeping a separate tally for `work` would let
-        a founder sell an entire year of hours for wages and then still
-        spend a full year's worth of hours on projects in the same year -
-        a free second year inside every year. There is one year, and one
-        pair of hands.
-        """
-        workforce = self._world.workforce
-        return hours_committed(workforce.teaching_hours_this_year,
-                               workforce.relocation_hours_this_year,
-                               (workforce.supervision_hours_this_year or 0.0) + self._world.director_overhead_hours(),
-                               workforce.wage_hours_this_year)
-
     def household_room(self):
         """How many more people this household can feed, house and oversee.
 
@@ -744,4 +347,4 @@ class CapacityMixin:
         through the other.
         """
         return (self.staff_capacity()[1] + self.supervision_room()
-                - self.headcount())
+                - self.book.headcount())

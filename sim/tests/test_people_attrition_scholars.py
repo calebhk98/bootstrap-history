@@ -16,9 +16,11 @@ from sim.tests import module_harness
 from sim.tests import materials_stand_in
 from sim.resources.sizing import nitre_bed_yearly_spend
 from sim.diffusion.rules import staff_sources
-from sim.labour.labour_bondage import BondageMixin
-from sim.labour.labour_capacity import CapacityMixin
-from sim.labour.labour_training import TrainingMixin
+from sim.labour.labour_hiring import Hiring
+from sim.labour.labour_pools import StaffPools
+from sim.labour.labour_refusals import literate_wall_refusal
+from sim.labour.labour_supply import Supply
+from sim.labour.labour_training import Training
 from sim.labour.staff_targets import scholar_target
 from sim.ui.proto import credit_forecast
 
@@ -30,12 +32,12 @@ QUICK_TOPIC = True
 
 # HIRE AND TRAIN LAND WHOLE PEOPLE.
 roster = SimpleNamespace(_world=SimpleNamespace(wages={"smith": 1.0, "machinist": 1.0}))
-refused_hire = TrainingMixin.hire_check(roster, "smith", 2.5)[2]
-refused_train = TrainingMixin.train_check(roster, "machinist", 1.5)[1]
+refused_hire = Hiring.hire_check(roster, "smith", 2.5)[2]
+refused_train = Training.train_check(roster, "machinist", 1.5)[1]
 check("hire refuses a fractional number of people", cause_of(refused_hire) == "count_not_whole", refused_hire)
 check("...and so does train", cause_of(refused_train) == "count_not_whole", refused_train)
 check("a whole number is not refused for being fractional",
-      cause_of(TrainingMixin.train_check(roster, "machinist", 0)[1]) == "count_not_positive")
+      cause_of(Training.train_check(roster, "machinist", 0)[1]) == "count_not_positive")
 
 # =============================================================================
 # THE SCHOLAR WALL. A literate trade's headcount ceiling is a floor plus the market's reach scaled by literacy; for
@@ -45,13 +47,14 @@ check("a whole number is not refused for being fractional",
 
 def wall_of(trade, institutional=0.0, literacy=1.0, exist=1e9, absent=()):
     stand_in = SimpleNamespace(
-        LITERATE_TRADES=frozenset({"scholar", "scribe"}), LITERATE_CAPACITY_FLOOR=1.5,
+        LITERATE_CAPACITY_FLOOR=1.5,
+        trades=SimpleNamespace(LITERATE_TRADES=frozenset({"scholar", "scribe"}), literacy_factor=lambda trade: literacy),
+        capacity=SimpleNamespace(staff_capacity=lambda: (institutional, 0.0, 0.0)),
         _people_of_trade_in_reach=lambda trade: 35.0,
-        literacy_factor=lambda trade: literacy, staff_capacity=lambda: (institutional, 0.0, 0.0),
         people_who_exist=lambda trade: exist,
         _world=SimpleNamespace(pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
                                trades_absent=set(absent)))
-    return CapacityMixin.literate_capacity(stand_in, trade)
+    return Supply.literate_capacity(stand_in, trade)
 
 
 reach = 35.0
@@ -64,7 +67,7 @@ check("building the institutions that train scholars outright widens the wall by
       abs(wall_of("scholar", institutional=20.0) - wall_of("scholar") - 20.0) < 1e-9
       and wall_of("scribe", institutional=20.0) == wall_of("scribe"))
 check("teaching the society to read widens the wall", wall_of("scribe", literacy=1.0) > wall_of("scribe", literacy=0.5))
-wall_refusal = CapacityMixin._literate_wall_refusal(SimpleNamespace(), "scholar", 5.9, 0.0)
+wall_refusal = literate_wall_refusal("scholar", 5.9, 0.0)
 check("the refusal at the wall names the households' reach and literacy, and says how many can be taken",
       cause_of(wall_refusal) == "literacy_wall"
       and "reach" in str(wall_refusal) and "literacy" in str(wall_refusal)    # presentation: the refusal's wording
@@ -79,10 +82,11 @@ check("...though it asks for more when the wall is open, so the check above meas
 pools = SimpleNamespace(
     _world=SimpleNamespace(workforce=SimpleNamespace(
         freedmen=0.0, slaves=0.0, training=[], scholars=0.0, artisans=0.0)),
-    employed_by_trade=lambda: {"scribe": 3.0, "scholar": 2.0, "smith": 4.0},
-    is_craft_trade=lambda trade: trade == "smith", employed=lambda trade: {"scribe": 3.0, "scholar": 2.0}.get(trade, 0.0),
+    book=SimpleNamespace(employed_by_trade=lambda: {"scribe": 3.0, "scholar": 2.0, "smith": 4.0},
+                         employed=lambda trade: {"scribe": 3.0, "scholar": 2.0}.get(trade, 0.0)),
+    trades=SimpleNamespace(is_craft_trade=lambda trade: trade == "smith"),
     WORKER_EQUIVALENT_UNTRAINED=1.0, FREEDMAN_ARTISAN_PRODUCTIVITY=1.0, TRAINED_SLAVE_ARTISAN_PRODUCTIVITY=1.0)
-BondageMixin._resync_pools(pools)
+StaffPools.resync_pools(pools)
 household = pools._world.workforce
 check("hiring scribes does not inflate the trained-scholar headcount; only scholars on the books count",
       household.scholars == 2.0 and household.artisans == 4.0, (household.scholars, household.artisans))

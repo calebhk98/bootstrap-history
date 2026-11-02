@@ -9,7 +9,7 @@ from sim.prices.solve_prices_core import techniques_available_to
 from unittest import mock
 
 from sim.labour import workforce_carriage, workforce_spinup
-from sim.labour.labour_population import PopulationMixin
+from sim.labour.labour_supply import Supply
 
 QUICK_TOPIC = True
 
@@ -57,7 +57,7 @@ class DemandCoversTransportAndBuildingTests(unittest.TestCase):
     def test_rome_sailors_carters_and_plumbers_are_sized_by_need_not_the_floor(self):
         shares = _shares("rome_100ad")
         for trade in ("sailor", "carter", "plumber", "mason", "carpenter"):
-            self.assertGreater(shares.get(trade, 0.0), PopulationMixin.NO_DEMAND_TRADE_SHARE, trade)
+            self.assertGreater(shares.get(trade, 0.0), Supply.NO_DEMAND_TRADE_SHARE, trade)
 
     def test_a_need_s_budget_follows_its_surplus_budget_share_not_an_equal_split(self):
         def recipe(output, trade):

@@ -47,8 +47,8 @@ def hours_by_trade(society_hours: Mapping[str, float], held_hours: Mapping[str, 
 def hours_by_trade_of_all_employers(labour, society_hours: Mapping[str, float]) -> Dict[str, float]:
     """`hours_by_trade` for a running game: what the founder, firms and states keep on staff, by trade."""
     data = groups_data()
-    held = {trade: labour.reserved_hours(trade) for group in data["groups"].values() for trade in group["trades"]}
-    return hours_by_trade(society_hours, held, frozenset(data["outside_society_trades"]), labour.unskilled_trade())
+    held = {trade: labour.book.reserved_hours(trade) for group in data["groups"].values() for trade in group["trades"]}
+    return hours_by_trade(society_hours, held, frozenset(data["outside_society_trades"]), labour.allocation.unskilled_trade())
 
 
 def people_by_trade_of_all_employers(labour):
@@ -57,12 +57,12 @@ def people_by_trade_of_all_employers(labour):
     the labour force by occupation, so a household that farms its own plot and spends the rest of its year on
     other work is counted in farming here, as a head count and not by the hours it spent in the field. None
     while the agent economy has not opened."""
-    core = labour.core_people_by_trade()
+    core = labour.book.core_people_by_trade()
     if core is None:
         return None
     data = groups_data()
-    held = {trade: labour.reserved_people(trade) for group in data["groups"].values() for trade in group["trades"]}
-    return hours_by_trade(core, held, frozenset(data["outside_society_trades"]), labour.unskilled_trade())
+    held = {trade: labour.book.reserved_people(trade) for group in data["groups"].values() for trade in group["trades"]}
+    return hours_by_trade(core, held, frozenset(data["outside_society_trades"]), labour.allocation.unskilled_trade())
 
 
 def shares_by_group(hours_by_trade: Mapping[str, float]) -> Dict[str, float]:

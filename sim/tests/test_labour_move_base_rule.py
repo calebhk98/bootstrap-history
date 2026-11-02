@@ -1,4 +1,4 @@
-"""Moving the household's base (`SettlementMixin.move_base`): which moves are refused and why, and what a move pays and drops.
+"""Moving the household's base (`Relocation.move_base`): which moves are refused and why, and what a move pays and drops.
 Called on a stand-in carrying only what the method reads."""
 QUICK_TOPIC = True
 
@@ -6,7 +6,7 @@ import types
 import unittest
 from sim.tests import workforce_stand_in
 
-from sim.labour.labour_settlement import SettlementMixin
+from sim.labour.labour_relocation import Relocation
 from sim.ledger.api import NoteSpend, PayEdge
 from sim.polity.api import ScaleFamiliarity, ScaleProtection
 
@@ -19,7 +19,7 @@ class _World(types.SimpleNamespace):
         return self.workforce.capital
 
 
-class _Mover(SettlementMixin):
+class _Mover:
     def __init__(self, capital=1000.0, quote=(10.0, 80.0, 50.0)):
         self.household = types.SimpleNamespace(capital=capital, total_spend=0.0, relocation_hours_this_year=0.0,
                                                commissioned={"smith": 400.0}, contract_hours={"smith": 400.0},
@@ -30,7 +30,11 @@ class _Mover(SettlementMixin):
             workforce=self.household, view=workforce_stand_in.view_of(self.household), EDGE_WORKERS="workers",
             money_text=lambda amount, grouped=False: "%.0f" % amount, plain_number=lambda value: "%.0f" % value,
             send=self._send)
-        self.labour_market = types.SimpleNamespace(clear_pressure=self._clear)
+        self.relocation = Relocation(self._world, book=None, hours=None, market=None, pools=self, settlement=self)
+        self.relocation.relocation_quote = self.relocation_quote
+
+    def move_base(self, tile):
+        return self.relocation.move_base(tile)
 
     def _send(self, command):
         if isinstance(command, PayEdge):
@@ -50,7 +54,7 @@ class _Mover(SettlementMixin):
     def relocation_quote(self, tile):
         return None if tile == CUT_OFF else self.quote
 
-    def _resync_pools(self):
+    def resync_pools(self):
         self.pools_resynced += 1
 
     def home_town_population_estimate(self):
@@ -84,8 +88,8 @@ class MoveBaseEffectsTest(unittest.TestCase):
         self.assertEqual(mover.paid, [("workers", 50.0, "relocation")])
         self.assertEqual(household.relocation_hours_this_year, 80.0)
         self.assertEqual((household.commissioned, household.contract_hours), ({}, {}))
-        self.assertEqual(mover.sent, [NoteSpend(50.0), ScaleFamiliarity(SettlementMixin.RELOCATION_STANDING_RETAINED),
-                                      ScaleProtection(SettlementMixin.RELOCATION_STANDING_RETAINED)])
+        self.assertEqual(mover.sent, [NoteSpend(50.0), ScaleFamiliarity(Relocation.RELOCATION_STANDING_RETAINED),
+                                      ScaleProtection(Relocation.RELOCATION_STANDING_RETAINED)])
         self.assertEqual(household.base_tile, TOWN)
         self.assertEqual(mover.pools_resynced, 1)
 

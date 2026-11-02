@@ -1,19 +1,15 @@
-"""Where the household lives: its base tile, the town there, and moving it.
+"""Where the household lives: its base tile, the town there, and how far a hire will travel to it.
 
-The town's people come from the tile's share of the nation, so a smaller
-nation means a smaller town and a poorer tile means a smaller town.
-"""
-import math
-
+The town's people come from the tile's share of the nation, so a smaller nation means a smaller town and a
+poorer tile means a smaller town."""
 from sim.constants import declare
 import sim.geography.api as geography
 from sim.geography.api import settlement
-from sim.polity.api import ScaleFamiliarity, ScaleProtection
-from sim.ledger.api import NoteSpend, PayEdge
-from sim.workforce.api import ONCE_COMMISSION
 
 
-class SettlementMixin:
+class Settlement:
+    def __init__(self, world):
+        self._world = world
 
     TOWN_MAX_SHARE_OF_TILE = declare(
         "TOWN_MAX_SHARE_OF_TILE", 0.5, kind="temporary_heuristic",
@@ -21,6 +17,7 @@ class SettlementMixin:
         why="Largest share of a tile's people that can live in its one "
             "market town. Keeps the town inside the tile's headcount, and so "
             "inside the nation's; the share itself is tuned, not measured.")
+
     HIRE_TRAVEL_DAYS = declare(
         "HIRE_TRAVEL_DAYS", 1.0, kind="temporary_heuristic",
         unit="days of travel", source=None, confidence="D",
@@ -29,13 +26,6 @@ class SettlementMixin:
             "(geography's reach). Sets how many tiles' towns the labour "
             "market reaches; a day on foot or by cart stays inside the "
             "base's own tile, faster ways of travelling reach neighbours.")
-    RELOCATION_STANDING_RETAINED = declare(
-        "RELOCATION_STANDING_RETAINED", 0.3, kind="temporary_heuristic",
-        unit="fraction of familiarity and protection kept", source=None,
-        confidence="D",
-        why="Local standing (how well the town knows you, who protects you) "
-            "does not travel; this share is what a founder's name still "
-            "carries in a place they have just arrived in.")
 
     def held_tiles(self):
         """The tiles this nation holds."""
@@ -112,10 +102,6 @@ class SettlementMixin:
         return sum(self._town_population_at(tile) for tile in settlement.tile_ids(homes)
                    if tile == base or tile in within)
 
-    def _relocation_wage_bill_per_year(self):
-        return sum(count * self.labour_market.unscarce_annual(trade)
-                   for trade, count in self.employed_by_trade().items())
-
     def travel_days_to_tile(self, tile):
         """Days the household needs to reach `tile` by the fastest route over the modes its people hold
         (geography's route over the ways built, weighted by time); None when no route joins the tiles."""
@@ -123,55 +109,3 @@ class SettlementMixin:
         found = geography.route([self.base_tile()], [tile], geography.usable_modes([held]),
                                 self._world.built_ways(), held_nodes=held, fastest=True)
         return None if found is None else found["days"]
-
-    def relocation_quote(self, tile):
-        """(days, hours lost, money) to move the base to `tile`; None when no route joins it to the base."""
-        days = self.travel_days_to_tile(tile)
-        if days is None:
-            return None
-        year_share = min(1.0, days / 365.0)
-        hours = year_share * self.director_pool()
-        # The whole payroll is paid while it walks, and does no other work.
-        money = year_share * self._relocation_wage_bill_per_year()
-        return days, hours, money
-
-    def move_base(self, tile):
-        """Move the household to another tile the nation holds."""
-        tile = str(tile or "").strip()
-        people = self.settlement_tiles()
-        if tile not in people:
-            return False, ("%r is not a tile your nation holds. "
-                           'Type {"cmd":"move_base"} to list them.' % tile)
-        if tile == self.base_tile():
-            return False, "you are already based at %s. Nothing was changed." % tile
-        if people[tile] < 1.0:
-            return False, "nobody lives at %s: no cultivable land feeds anyone there." % tile
-        quote = self.relocation_quote(tile)
-        if quote is None:
-            return False, "no route over the ways your people can travel joins %s to your base." % tile
-        days, hours, money = quote
-        workforce = self._world.workforce
-        balance = self._world.balance
-        if money > balance:
-            return False, ("moving to %s takes about %d days and would cost %s in "
-                           "wages while your household travels; you have %s."
-                           % (tile, math.ceil(days), self._world.money_text(money, grouped=True),
-                              self._world.money_text(balance, grouped=True)))
-        self._world.send(PayEdge(self._world.EDGE_WORKERS, money, "relocation"))
-        self._world.send(NoteSpend(money))
-        workforce.relocation_hours_this_year = (
-            (workforce.relocation_hours_this_year or 0.0) + hours)
-        # Local contracts and the local market's memory stay behind.
-        workforce.commissioned = {}
-        workforce.contract_hours = {}
-        workforce.hours_wanted_once.pop(ONCE_COMMISSION, None)
-        self._world.send(ScaleFamiliarity(self.RELOCATION_STANDING_RETAINED))
-        self._world.send(ScaleProtection(self.RELOCATION_STANDING_RETAINED))
-        workforce.base_tile = tile
-        self._resync_pools()
-        return True, ("moved to %s after about %d days on the road: %s in wages "
-                      "paid, %d hours of your year gone, local contracts "
-                      "dropped and local standing mostly left behind. The town "
-                      "there holds about %s people."
-                      % (tile, math.ceil(days), self._world.money_text(money, grouped=True), round(hours),
-                         self._world.plain_number(self.home_town_population_estimate())))

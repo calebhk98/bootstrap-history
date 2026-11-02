@@ -21,15 +21,15 @@ def _labour(paid, price_level=1.0):
 class FigureInUse(unittest.TestCase):
 
     def test_the_economy_wage_is_the_figure_once_it_is_paid(self):
-        self.assertEqual(_labour(paid=7.25).money_per_labour_hour(), 7.25)
+        self.assertEqual(_labour(paid=7.25).schedule.money_per_labour_hour(), 7.25)
 
     def test_before_the_economy_pays_the_opening_figure_follows_the_price_level(self):
-        opening = _labour(paid=None).money_per_labour_hour()
+        opening = _labour(paid=None).schedule.money_per_labour_hour()
         self.assertGreater(opening, 0.0)
-        self.assertAlmostEqual(_labour(paid=None, price_level=2.0).money_per_labour_hour(), 2.0 * opening)
+        self.assertAlmostEqual(_labour(paid=None, price_level=2.0).schedule.money_per_labour_hour(), 2.0 * opening)
 
     def test_the_economy_wage_replaces_the_opening_figure_whatever_the_price_level(self):
-        self.assertEqual(_labour(paid=7.25, price_level=3.0).money_per_labour_hour(), 7.25)
+        self.assertEqual(_labour(paid=7.25, price_level=3.0).schedule.money_per_labour_hour(), 7.25)
 
 
 class TreeInTheCoin(unittest.TestCase):

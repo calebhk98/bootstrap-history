@@ -7,91 +7,91 @@ class ReportViews:
 
 	def household_room(self):
 		"""How many more people the household can take on (negative when it is over)."""
-		return self.labour.household_room()
+		return self.labour.capacity.household_room()
 
 	def room_advice(self):
 		"""What raises the household's room, in words."""
-		return self.labour.room_advice()
+		return self.labour.advice.room_advice()
 
 	def supervision_room(self):
 		"""How many people the seat's directors can oversee."""
-		return self.labour.supervision_room()
+		return self.labour.capacity.supervision_room()
 
 	def supervision_room_from(self):
 		"""Where the supervision room comes from."""
-		return self.labour.supervision_room_from()
+		return self.labour.capacity.supervision_room_from()
 
 	def sole_supervisors(self):
 		"""The concerns that depend on a single person."""
-		return self.labour.sole_supervisors()
+		return self.labour.ledger.sole_supervisors()
 
 	def idle_specialists(self):
 		"""The specialists with no work to do."""
-		return self.labour.idle_specialists()
+		return self.labour.ledger.idle_specialists()
 
 	# ---- reports ----
 
 	def population_report(self):
-		return self.labour.population_report()
+		return self.labour.report.population_report()
 
 	def workforce_report(self):
-		return self.labour.workforce_report()
+		return self.labour.ledger.workforce_report()
 
 	def craft_trades_report(self):
-		return self.labour.craft_trades_report()
+		return self.labour.trades.craft_trades_report()
 
 	def wage_work_this_year(self):
 		"""What the seat has earned this year working for wages."""
-		return self.labour.wage_work_this_year()
+		return self.labour.wages.wage_work_this_year()
 
 	def home_town_population_estimate(self):
-		return self.labour.home_town_population_estimate()
+		return self.labour.settlement.home_town_population_estimate()
 
 	def literate_trades(self):
 		"""The trades that need reading and writing (answers `in` and iteration)."""
-		return self.labour.LITERATE_TRADES
+		return self.labour.trades.LITERATE_TRADES
 
 	def slave_base_price(self):
 		"""What one enslaved person costs before the number bought raises it."""
-		return self.labour.SLAVE_BASE_PRICE
+		return self.labour.bondage.SLAVE_BASE_PRICE
 
 	# ---- a trade ----
 
 	def hours_reserved(self, trade):
-		return self.labour.hours_reserved(trade)
+		return self.labour.hands.hours_reserved(trade)
 
 	def hours_hired_once(self, purpose):
 		"""{trade: hours} the last clearing hired for the acting seat's one-year order of a purpose."""
 		return dict(self.seat.hours_hired_once.get(purpose, {}))
 
 	def trade_headcount_pending(self, trade):
-		return self.labour.trade_headcount_pending(trade)
+		return self.labour.book.trade_headcount_pending(trade)
 
 	def literacy_factor(self, trade):
-		return self.labour.literacy_factor(trade)
+		return self.labour.trades.literacy_factor(trade)
 
 	def training_hours_per_person(self, trade, source=None):
-		return self.labour.training_hours_per_person(trade, source)
+		return self.labour.training.training_hours_per_person(trade, source)
 
 	# ---- what an order would do, asked before it is sent ----
 
 	def hire_check(self, trade, count):
-		return self.labour.hire_check(trade, count)
+		return self.labour.hiring.hire_check(trade, count)
 
 	def commission_check(self, trade, hours):
-		return self.labour.commission_check(trade, hours)
+		return self.labour.commissions.commission_check(trade, hours)
 
 	def train_check(self, trade, count, source=None):
-		return self.labour.train_check(trade, count, source)
+		return self.labour.training.train_check(trade, count, source)
 
 	def trainee_wage_bill(self, trade, count):
-		return self.labour.trainee_wage_bill(trade, count)
+		return self.labour.training.trainee_wage_bill(trade, count)
 
 	def work_for_wages_dry_run(self, trade, hours):
-		return self.labour.work_for_wages_dry_run(trade, hours)
+		return self.labour.wages.work_for_wages_dry_run(trade, hours)
 
 	def relocation_quote(self, tile):
-		return self.labour.relocation_quote(tile)
+		return self.labour.relocation.relocation_quote(tile)
 
 	def slave_quote(self, people):
-		return self.labour.slave_quote(people)
+		return self.labour.bondage.slave_quote(people)

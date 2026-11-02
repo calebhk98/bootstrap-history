@@ -11,6 +11,20 @@ HOURS_NOT_POSITIVE = "hours_not_positive"
 HOURS_SHORT = "hours_short"
 
 
+def stochastic_round(rng, target):
+    """Round a continuous headcount target to a whole number of people without biasing where it is heading.
+
+    People are whole; the path toward them need not be. A fractional remainder is spent as this year's chance of
+    the next whole person: 6.4 is six for certain and a 40% chance of a seventh, drawn from `rng` so it is
+    reproducible. Rounding down every year would stall growth a person short of every ceiling (0.18 of the gap
+    a year, floored, never crosses the next whole number); rounding up would over-hire the other way."""
+    target = max(0.0, target)
+    whole = math.floor(target)
+    if rng.random() < target - whole:
+        whole += 1
+    return float(whole)
+
+
 def crosses_literacy_wall(have, count, ceiling):
     """Whether taking on `count` more of a lettered trade, over the `have` already employed or being taught, would
     pass the most this society's reading will ever supply."""

@@ -4,28 +4,28 @@
 class ApplyingPeople:
 
 	def hire_staff(self, command):
-		return self.labour.hire(command.trade, command.count)
+		return self.labour.hiring.hire(command.trade, command.count)
 
 	def fire_staff(self, command):
-		return self.labour.fire(command.trade, command.count)
+		return self.labour.hiring.fire(command.trade, command.count)
 
 	def train_staff(self, command):
-		return self.labour.train(command.trade, command.count, command.source)
+		return self.labour.training.train(command.trade, command.count, command.source)
 
 	def commission_hours(self, command):
-		return self.labour.commission(command.trade, command.hours)
+		return self.labour.commissions.commission(command.trade, command.hours)
 
 	def work_for_wages(self, command):
-		return self.labour.work_for_wages(command.trade, command.hours)
+		return self.labour.wages.work_for_wages(command.trade, command.hours)
 
 	def buy_slaves(self, command):
-		return self.labour.buy_slaves(command.people)
+		return self.labour.bondage.buy_slaves(command.people)
 
 	def manumit(self, command):
-		return self.labour.manumit(command.people)
+		return self.labour.bondage.manumit(command.people)
 
 	def found_trade_school(self, command):
-		return self.labour.found_trade_school(command.trade, command.seats)
+		return self.labour.training.found_trade_school(command.trade, command.seats)
 
 	def move_base(self, command):
-		return self.labour.move_base(command.tile)
+		return self.labour.relocation.move_base(command.tile)

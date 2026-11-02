@@ -280,7 +280,7 @@ actors (21), hazards, workforce (20 each), projects (19).
   and the seats module does the rest of a join itself (the purse, the founder's years, the watches, a country seat's holder).
   `ForgetGoalCaches` is gone: the seats module keeps the goal's critical floor beside its closure (`goal_critical_floor`,
   `RememberGoalFloor`), per seat, and `ForgetGoalClosure` drops both. `society_techs` is the actors' view. The bridge still publishes
-  `legacy_economy` (read by engine and UI code), `legacy_labour` (read by tests only) and holds `bridge_land.MODS_DIR`. Measure:
+  `legacy_economy` (read by engine and UI code) and holds `bridge_land.MODS_DIR`. Measure:
   `python3 tools/measure/module_graph.py` (0 modules depend on the bridge, 6 before) and `grep -n "bridge_command" sim/engine/bridge*.py`
   (none).
 - [x] A width review for each module that depends on more than 15 others, written into its catalogue entry: views that

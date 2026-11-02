@@ -11,7 +11,7 @@ from sim.tests import workforce_stand_in
 
 from .harness import check
 
-from sim.labour.labour_training import TrainingMixin
+from sim.labour.labour_commissions import Commissions
 from sim.agents.api import edges
 from sim.ledger.api import PayEdge
 from sim.projects.api import PostBounty, constants as project_constants
@@ -78,7 +78,7 @@ check("quote bounty for what the craft cannot recognise says it is not eligible 
       refused["eligible"] is False and refused["refusal"].cause == "not_bounty_eligible", refused)
 
 
-class Payer(TrainingMixin):
+class Payer:
     """The labour side of a Sim that a hire or commission charge touches, recording the money paid."""
 
     def __init__(self, fee):
@@ -87,9 +87,13 @@ class Payer(TrainingMixin):
         self._world = Game(
             wages={"smith": 1.0}, workforce=household, view=workforce_stand_in.view_of(household), state=Game(household=household), EDGE_WORKERS="workers", HOURS_PER_PERSON_YEAR=2000.0,
             send=self.paid.append, money_text=lambda money, grouped=False: "%.0f" % money)
-        self.labour_market = Game(hire=lambda *arguments: None)
         self.fee = fee
         self.hire_asked = []
+        self.commissions = Commissions(self._world, hands=None, market=None, schedule=None, supply=None, trades=None)
+        self.commissions.commission_check = lambda trade, hours: self.commission_check(trade, hours)
+
+    def commission(self, trade, hours):
+        return self.commissions.commission(trade, hours)
 
     def hire_check(self, trade, count, pay_premium=0.0):
         self.hire_asked.append((trade, count))

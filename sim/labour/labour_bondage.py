@@ -1,119 +1,21 @@
-"""Buying people, freeing them, and keeping the two staff pools honest.
+"""Buying people and freeing them.
 
-These are methods of Labour; they are a mixin only so that they can live in a
-file of their own (see labour.py's own docstring for the split).
-
-buy_slaves and manumit are the two sides of the model CLAUDE.md 3.1 asks
-for rather than hides: Roman labour is cheap because much of it is
-coerced, and manumission is modelled as strictly better on the numbers as
-well as on every other ground. slave_quote is the market depth and rising-
-price curve buy_slaves prices against, the same saturating idea labour_
-population.py applies to ordinary hiring. _grant_staff and _resync_pools
-are the bookkeeping underneath both verbs and underneath every institution
-that hands a household trained people outright (a school's own
-professors, a patron's freedmen): _grant_staff puts them on the books and
-into the labour core, and _resync_pools rebuilds self.household.scholars/
-artisans from the trades actually on the books.
-"""
+buy_slaves and manumit are the two sides of the model CLAUDE.md 3.1 asks for rather than hides: Roman labour is
+cheap because much of it is coerced, and manumission is modelled as strictly better on the numbers as well as
+on every other ground. slave_quote is the market depth and rising-price curve buy_slaves prices against."""
 from sim.constants import declare
 from sim.polity.api import GainReputation
-from . import trade_data
 from .buy_cap import over_room_refusal
 from sim.ledger.api import PayEdge
 
 
-class BondageMixin:
-    """Buying and freeing people, and the pool bookkeeping that keeps
-    trained/granted staff from being overwritten or double-counted - see
-    this module's own docstring for why these sit together.
-    """
-
-
-    def _grant_staff(self, scholars=0.0, artisans=0.0):
-        """An institution hands you people outright, on completion - the
-        school's own professors, the freedmen a patron staffs your workshop
-        with. They are people of the scholar and craft trades like any
-        others: they go on the staff book, where `_resync_pools()` counts
-        them, and into the labour core, where the seat's places hire them at
-        the year's clearing at the market wage.
-        """
-        self.add_newcomers(trade_data.scholar_trade(), scholars)
-        self.add_newcomers(trade_data.generic_craft_trade(), artisans)
-        self._resync_pools()
-
-    FREEDMAN_ARTISAN_PRODUCTIVITY = declare(
-        "FREEDMAN_ARTISAN_PRODUCTIVITY", 1.0, kind="temporary_heuristic",
-        unit="fraction of a full worker's artisan capacity", source=None,
-        confidence="D",
-        why="A trained, freed person counts as a full worker. Paired with "
-            "TRAINED_SLAVE_ARTISAN_PRODUCTIVITY below: the gap between the "
-            "two is this model's stand-in for the real productivity cost "
-            "of coercion, which nothing here derives from an actual "
-            "measured difference in enslaved versus free labour output.")
-    TRAINED_SLAVE_ARTISAN_PRODUCTIVITY = declare(
-        "TRAINED_SLAVE_ARTISAN_PRODUCTIVITY", 0.7, kind="temporary_heuristic",
-        unit="fraction of a full worker's artisan capacity", source=None,
-        confidence="D",
-        why="A trained person still held as a slave is worth less than a "
-            "freedman doing the same work - coerced labour is real but "
-            "worse, which is also the whole argument for manumission "
-            "being strictly better on these numbers (see buy_slaves' own "
-            "docstring). The specific 0.7 is tuned game balance, not a "
-            "measured efficiency gap.")
-
-    def _resync_pools(self):
-        """Recompute the two aggregate pools the tech tree asks for from the
-        actual people on the books. `art` and `sch` in the tree mean "trained
-        people who understand your methods", so they are the sum of the trades,
-        not a number that floats free of them.
-
-        ONLY `scholar` COUNTS AS A TRAINED SCHOLAR. TRADE_FAMILY groups
-        scholar, chemist, engineer, scribe and merchant together as
-        "scholar" - and that grouping is real and stays exactly as it is for
-        market_supply(), where it means "draws on the same small, literate-
-        or-propertied slice of the population", which is equally true of all
-        five. It is not the same claim as "is a trained natural philosopher":
-        a node gated on "2 trained scholars" must be started on the strength
-        of people actually trained as scholars, not on scribes, chemists,
-        engineers or merchants who have never been asked to do a
-        philosopher's work. STAFF_SOURCES - the advice this same household
-        is given on how to get scholars - names only `hire scholar` and
-        never the other four, for the same reason: the five-way grouping is
-        sized for the labour MARKET, not the staff ROSTER. train()'s own
-        docstring already makes the non-interchangeability of the taught
-        trades explicit ("the machinists you made are no use at all when
-        you need a chemist");
-        nothing about a chemist makes them a scholar either.
-
-        WHAT AN INSTITUTION GRANTED OUTRIGHT is on the books as staff of
-        its trade (see _grant_staff), so it is counted with the rest.
-        """
-        workforce = self._world.workforce
-        craft = sum(count for trade, count in self.employed_by_trade().items() if self.is_craft_trade(trade))
-        schol = self.employed(trade_data.scholar_trade())
-        # PEOPLE STILL LEARNING ARE NOT YET CRAFTSMEN. This function
-        # recomputes self.household.artisans from scratch on every call, so
-        # anyone still in the training queue must be excluded from the count
-        # here: counting them early makes the training lag that buy_slaves'
-        # own docstring promises do nothing. Once a training row matures and
-        # step() adds its capacity to self.household.artisans directly, this
-        # function must not count that person via `learning` again - by
-        # then they are simply part of `owned` below.
-        # buy_slaves stores WORKER_EQUIVALENT_UNTRAINED of a worker per person
-        # bought, so that is the divisor that recovers the headcount still
-        # learning.
-        learning = sum(row[0] for row in workforce.training
-                       if len(row) <= 2) / self.WORKER_EQUIVALENT_UNTRAINED
-        owned = max(0.0, workforce.freedmen + workforce.slaves - learning)
-        # Split what is left in the same proportion as what is held.
-        held = workforce.freedmen + workforce.slaves
-        if held > 0:
-            free_share = workforce.freedmen / held
-        else:
-            free_share = 0.0
-        workforce.artisans = (craft + owned * free_share * self.FREEDMAN_ARTISAN_PRODUCTIVITY
-                         + owned * (1.0 - free_share) * self.TRAINED_SLAVE_ARTISAN_PRODUCTIVITY)
-        workforce.scholars = schol
+class Bondage:
+    def __init__(self, world, advice, capacity, pools, schedule):
+        self._world = world
+        self.advice = advice
+        self.capacity = capacity
+        self.pools = pools
+        self.schedule = schedule
 
     TRAINING_YEARS = declare(
         "TRAINING_YEARS", 3.0, kind="temporary_heuristic",
@@ -133,6 +35,7 @@ class BondageMixin:
             "be, even at pop_scale near zero, so a tiny civilisation still "
             "has SOME market rather than an infinitely steep price curve. "
             "Tuned floor, not measured.")
+
     SLAVE_MARKET_DEPTH_SCALE = declare(
         "SLAVE_MARKET_DEPTH_SCALE", 40.0, kind="temporary_heuristic",
         unit="people, at pop_scale=1.0", source=None, confidence="D",
@@ -140,6 +43,7 @@ class BondageMixin:
             "assumed to be before price pressure really bites - a market-"
             "size assumption, not an attested number of people traded "
             "anywhere in this game's period.")
+
     SLAVE_MARKET_DEPTH_POP_EXPONENT = declare(
         "SLAVE_MARKET_DEPTH_POP_EXPONENT", 0.5, kind="temporary_heuristic",
         unit="dimensionless exponent on pop_scale", source=None,
@@ -148,6 +52,7 @@ class BondageMixin:
             "population, the same diminishing-returns shape this file "
             "uses elsewhere for a market that does not scale one-for-one "
             "with population size. Tuned shape, not fitted.")
+
     SLAVE_PRICE_CONGESTION_EXPONENT = declare(
         "SLAVE_PRICE_CONGESTION_EXPONENT", 1.85, kind="temporary_heuristic",
         unit="dimensionless (1 + congestion power)", source=None,
@@ -160,6 +65,7 @@ class BondageMixin:
             "(see this function's own docstring on the exploit this "
             "closed), not derived from an observed price-quantity curve "
             "for any real slave market.")
+
     SLAVE_BASE_PRICE_LABOUR_HOURS = declare(
         "SLAVE_BASE_PRICE_LABOUR_HOURS", 6050.0, kind="hardcoded_outcome",
         unit="labour hours, at price_index=1 and zero market pressure",
@@ -183,10 +89,11 @@ class BondageMixin:
             "from. A real mechanism would price a person the way "
             "labour.py now prices free labour: from local supply, risk "
             "and what the buyer can actually enforce.")
+
     @property
     def SLAVE_BASE_PRICE(self):
         """The base price in this civilisation's coin: the declared hours times what one unskilled hour is worth."""
-        return self.SLAVE_BASE_PRICE_LABOUR_HOURS * self.money_per_labour_hour()
+        return self.SLAVE_BASE_PRICE_LABOUR_HOURS * self.schedule.money_per_labour_hour()
 
     def slave_quote(self, n_people):
         """What buying this many people actually costs, here, today.
@@ -244,8 +151,8 @@ class BondageMixin:
         # housing and oversight exactly as much as a person you pay, more
         # so, so buy_slaves must respect the same household capacity cap as
         # hire rather than bypassing it under a different verb.
-        room = self.household_room()
-        refusal = over_room_refusal(n_people, room, lambda: self._staff_advice("artisans"))
+        room = self.capacity.household_room()
+        refusal = over_room_refusal(n_people, room, lambda: self.advice.staff_advice("artisans"))
         if refusal:
             self._world.note_buy_refusal(refusal)
             return 0
@@ -259,19 +166,9 @@ class BondageMixin:
         workforce.slaves += n_people
         workforce.market_pressure = workforce.market_pressure + n_people
         # Untrained on arrival. They become productive through the workforce's training queue.
-        workforce.training.append([n_people * self.WORKER_EQUIVALENT_UNTRAINED, self._world.year + self.TRAINING_YEARS])
+        workforce.training.append([n_people * self.pools.WORKER_EQUIVALENT_UNTRAINED, self._world.year + self.TRAINING_YEARS])
         return n_people
 
-    WORKER_EQUIVALENT_UNTRAINED = declare(
-        "WORKER_EQUIVALENT_UNTRAINED", 0.55, kind="temporary_heuristic",
-        unit="fraction of a full worker's artisan capacity", source=None,
-        confidence="D",
-        why="What fraction of a full worker a person newly bought is "
-            "assumed to represent, entered into the training queue and "
-            "matured over TRAINING_YEARS. Not a measured productivity "
-            "ratio; picked so the training lag is real (see buy_slaves' "
-            "own docstring on the exploit this closed) without being all "
-            "or nothing.")
     MANUMISSION_ARTISAN_UPLIFT = declare(
         "MANUMISSION_ARTISAN_UPLIFT", 0.45, kind="temporary_heuristic",
         unit="fraction of a full worker's artisan capacity", source=None,
@@ -282,6 +179,7 @@ class BondageMixin:
             "full worker (1.0), so it adds the difference, 0.45 - not "
             "another whole worker. See buy_slaves' own docstring for the "
             "double-counting bug this figure fixed.")
+
     MANUMISSION_REPUTATION_GAIN_PER_PERSON = declare(
         "MANUMISSION_REPUTATION_GAIN_PER_PERSON", 0.4, kind="temporary_heuristic",
         unit="reputation points per person freed, before saturation",
@@ -290,6 +188,7 @@ class BondageMixin:
             "saturation term below discounts it. Tuned game balance, not "
             "a measured social reward for manumission in any specific "
             "period.")
+
     MANUMISSION_REPUTATION_SATURATION_SCALE = declare(
         "MANUMISSION_REPUTATION_SATURATION_SCALE", 25.0, kind="temporary_heuristic",
         unit="people manumitted, for the saturation denominator",
@@ -298,6 +197,7 @@ class BondageMixin:
             "first freedmen you make are a statement; the four hundredth "
             "is a payroll'. The saturating SHAPE is a real claim about "
             "admiration; the scale of it is tuned, not measured.")
+
     MANUMISSION_REPUTATION_GAIN_CAP = declare(
         "MANUMISSION_REPUTATION_GAIN_CAP", 6.0, kind="temporary_heuristic",
         unit="reputation points, per manumit() call", source=None,
@@ -326,13 +226,13 @@ class BondageMixin:
         # trade name in them and no artisan capacity), so read column 0 by
         # index rather than unpacking a row whose width is not fixed.
         in_training = sum(row[0] for row in workforce.training)
-        untrained = min(n_people, int(in_training / self.WORKER_EQUIVALENT_UNTRAINED + 0.5))
+        untrained = min(n_people, int(in_training / self.pools.WORKER_EQUIVALENT_UNTRAINED + 0.5))
         trained_freed = max(0, n_people - untrained)
         workforce.artisans += trained_freed * self.MANUMISSION_ARTISAN_UPLIFT
         if untrained:
-            share = untrained / max(1.0, in_training / self.WORKER_EQUIVALENT_UNTRAINED)
+            share = untrained / max(1.0, in_training / self.pools.WORKER_EQUIVALENT_UNTRAINED)
             for row in workforce.training:
-                row[0] *= 1.0 + self.MANUMISSION_ARTISAN_UPLIFT / self.WORKER_EQUIVALENT_UNTRAINED * min(1.0, share)
+                row[0] *= 1.0 + self.MANUMISSION_ARTISAN_UPLIFT / self.pools.WORKER_EQUIVALENT_UNTRAINED * min(1.0, share)
         # Manumission is publicly admired, and admiration saturates: the
         # first freedmen you make are a statement, the four hundredth is a
         # payroll. The gain is capped so a high-volume series of small

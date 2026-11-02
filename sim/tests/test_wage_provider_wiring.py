@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.labour.labour_wages import WagesMixin
+from sim.labour.labour_wage_schedule import WageSchedule as ScheduleReader
 from sim.labour.wages import WageSchedule
 
 DOCUMENT = {"wage_rates_denarii_per_hour": {"labourer": {"rate": 2.0}, "smith": {"rate": 5.0}}, "money_per_labour_hour": 2.0}
@@ -20,16 +20,21 @@ class StubSchedule:
         return DOCUMENT["wage_rates_denarii_per_hour"][trade]["rate"]
 
 
-class Wages(WagesMixin):
-    """The part of a labour package whose wages come from the economy, else from its schedule."""
+class Wages:
+    """The schedule part of a labour package, whose wages come from the economy, else from its schedule."""
 
     def __init__(self, paid=None, unskilled=None):
-        self._world = types.SimpleNamespace(
+        world = types.SimpleNamespace(
             HOURS_PER_PERSON_YEAR=2000.0, economy_unskilled_wage=lambda: unskilled,
             economy=types.SimpleNamespace(agent_wage_per_hour=lambda trade: paid))
+        self.schedule = ScheduleReader(world)
+        self.schedule.wage_schedule = StubSchedule
 
-    def wage_schedule(self):
-        return StubSchedule()
+    def wage_per_hour(self, trade):
+        return self.schedule.wage_per_hour(trade)
+
+    def base_annual_wage(self, trade):
+        return self.schedule.base_annual_wage(trade)
 
 
 class PayrollReadsTheEconomyThenTheSchedule(unittest.TestCase):

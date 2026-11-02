@@ -9,9 +9,8 @@ from sim.tests import workforce_stand_in
 
 from sim.engine import data
 from sim.workforce.reteach_rules import PROJECT_IN_HAND_SCORE, past_cooldown, teaching_budget, trade_is_gone
-from sim.labour.labour_job import StandingJobMixin
-from sim.labour.labour_training import TrainingMixin
-from sim.labour.labour_wages import WagesMixin
+from sim.labour.labour_hands import Hands
+from sim.labour.labour_wages import Wages
 from sim.refusal import cause_of
 from sim.ui.proto.dispatch_labour import _cmd_hire
 from sim.tests import production_host
@@ -41,10 +40,19 @@ class HeldTradeRule(unittest.TestCase):
         self.assertEqual(data.trade_family("smith"), "craft")
 
 
-class Job(StandingJobMixin):
+class Job:
+    """The founder's hours (the hours part's neighbour) under a wages part that sells them."""
+
     def __init__(self, alive=True, pool=2000.0, committed=500.0, rate=2.0):
-        self._world = Game(founder_alive=alive)
         self.pool, self.committed, self.rate = pool, committed, rate
+        self.wages = Wages(Game(founder_alive=alive), book=None, hours=self, market=None, trades=None)
+        self.wages.wage_for_hours = self.wage_for_hours
+
+    def hours_for_sale(self):
+        return self.wages.hours_for_sale()
+
+    def standing_job_pay(self, trade):
+        return self.wages.standing_job_pay(trade)
 
     def director_pool(self):
         return self.pool
@@ -78,8 +86,8 @@ class StandingJob(unittest.TestCase):
         self.assertAlmostEqual(before - job.standing_job_pay("artisan"), 500.0 * job.rate)
 
 
-class Seller(WagesMixin):
-    """The part of Labour that sells the founder's own hours."""
+class Seller:
+    """The wages part that sells the founder's own hours, over stand-ins for the hours and trades parts."""
 
     def __init__(self, committed=0.0, pool=2000.0):
         household = Game(wage_hours_this_year=0.0, wages_earned=0.0, hours_offered_for_wages={}, reputation=0.0)
@@ -92,6 +100,12 @@ class Seller(WagesMixin):
             money_text=lambda amount, grouped=False: "%d" % amount,
             send=lambda command: self.received.append(command.amount))
         self.pool, self.committed = pool, committed
+        self.wages = Wages(self._world, book=None, hours=self, market=None, trades=self)
+        self.wages.wage_for_hours = self.wage_for_hours
+        self.wages.log_wage_work = self.log_wage_work
+
+    def work_for_wages(self, trade, hours, commit=True):
+        return self.wages.work_for_wages(trade, hours, commit)
 
     def trade_available(self, trade):
         return True
@@ -146,8 +160,8 @@ class SellingHours(unittest.TestCase):
         self.assertEqual(seller.household.wage_hours_this_year, 0.0)
 
 
-class Channels(TrainingMixin):
-    """The town's pool of a trade and the hours bought from an outside shop."""
+class Channels:
+    """The town's pool of a trade and the hours bought from an outside shop, under a hands part."""
 
     def __init__(self, supply=1000.0, contracted=0.0, productivity=1.0, employed=0.0):
         self.contract_hours = {"scribe": contracted}
@@ -155,6 +169,14 @@ class Channels(TrainingMixin):
             workforce=Game(contract_hours=self.contract_hours),
             HOURS_PER_PERSON_YEAR=2000.0, trades_absent=set())
         self.supply, self.productivity, self._employed = supply, productivity, employed
+        self.hands = Hands(self._world, supply=self, trades=None)
+        self.hands.labour_productivity = self.labour_productivity
+
+    def hours_you_can_call_on(self, trade):
+        return self.hands.hours_you_can_call_on(trade)
+
+    def hours_reserved(self, trade):
+        return self.hands.hours_reserved(trade)
 
     def market_supply(self, trade):
         return self.supply
@@ -187,8 +209,8 @@ class Apprentices:
         self.joined = []
         self.state = Game(
             household=Game(training=rows, log=[]), scenario=Game(year=102))
-        self.labour = Game(add_employed=lambda trade, count: self.joined.append((trade, count)),
-                                            resync_pools=lambda: None)
+        self.labour = Game(book=Game(add_newcomers=lambda trade, count: self.joined.append((trade, count))),
+                           pools=Game(resync_pools=lambda: None))
         self.module = workforce_over(self)
 
 

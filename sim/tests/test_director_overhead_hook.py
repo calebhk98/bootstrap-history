@@ -1,7 +1,7 @@
 """Mod code can charge overhead against the directed-hours pool (Complaint 633): the hours count as committed.
 
 The sum of the providers' answers is a function of the answers, the mod door records its provider as an operation, and the
-committed-hours rule is read off the capacity mixin over a stand-in world."""
+committed-hours rule is read off the hours part over a stand-in world."""
 QUICK_TOPIC = True
 
 import types
@@ -10,7 +10,7 @@ from sim.tests import workforce_stand_in
 
 from sim.assembly.api import NeedsAccess
 from sim.engine import mod_code
-from sim.labour.labour_capacity import CapacityMixin
+from sim.labour.labour_hours import FounderHours
 from sim.workforce.provided import overhead_hours
 
 POOL_HOURS = 2000.0
@@ -24,8 +24,8 @@ def labour(overhead_hours):
                                   cfg={"founder_hours_per_year": POOL_HOURS, "director_hours_per_year": 0.0},
                                   founder_alive=True, workforce=household, view=workforce_stand_in.view_of(household), bondage_years_left=0)
     stub = types.SimpleNamespace(_world=world, BONDAGE_HOURS_SHARE=0.25)
-    stub.director_pool = lambda: CapacityMixin.director_pool(stub)
-    stub.director_hours_committed = lambda: CapacityMixin.director_hours_committed(stub)
+    stub.director_pool = lambda: FounderHours.director_pool(stub)
+    stub.director_hours_committed = lambda: FounderHours.director_hours_committed(stub)
     return stub
 
 

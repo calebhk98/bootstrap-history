@@ -6,7 +6,8 @@ import types
 import unittest
 from sim.tests import workforce_stand_in
 
-from sim.labour.labour_population import PopulationMixin
+from sim.labour.labour_supply import Supply
+from sim.labour.labour_trades import Trades
 from sim.labour.workforce_spinup import FARM_TRADE
 from sim.constants import REGISTRY
 
@@ -16,7 +17,7 @@ URBAN_FRACTION = 0.2
 LABOUR_FAMILY = ("porter", "carter", "sailor", "miner")
 
 
-class _Labour(PopulationMixin):
+class _Labour:
     def __init__(self, core):
         self._core = core
         families = {trade: "labour" for trade in LABOUR_FAMILY + (FARM_TRADE, "labourer")}
@@ -28,8 +29,13 @@ class _Labour(PopulationMixin):
             workforce=household, view=workforce_stand_in.view_of(household), state=types.SimpleNamespace(household=household, economy=types.SimpleNamespace()), society=types.SimpleNamespace(society_labour_hours={}),
             population=types.SimpleNamespace(working_age=WORKING, total=TOTAL))
 
+        self.supply = Supply(self._world, book=self, capacity=None, settlement=None, trades=Trades(self._world))
+
     def core_people_by_trade(self):
         return self._core
+
+    def national_trade_population(self, trade):
+        return self.supply.national_trade_population(trade)
 
 
 class CoreHeadcountTests(unittest.TestCase):

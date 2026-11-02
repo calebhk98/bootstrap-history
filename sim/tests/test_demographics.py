@@ -21,23 +21,23 @@ def labour_of(civ_id="rome_100ad"):
 class ReachablePool(unittest.TestCase):
     def test_a_common_trades_reachable_pool_is_the_core_people_of_it_in_the_tiles_reached(self):
         _world, labour = labour_of()
-        labour.core_people_by_tile_and_trade = lambda: {labour.base_tile(): {"smith": 40.0}, "far_tile": {"smith": 900.0}}
-        labour.core_people_by_trade = lambda: {"smith": 1000.0}
-        self.assertAlmostEqual(labour.market_supply("smith"), 40.0 * HOURS)
+        labour.book.core_people_by_tile_and_trade = lambda: {labour.settlement.base_tile(): {"smith": 40.0}, "far_tile": {"smith": 900.0}}
+        labour.book.core_people_by_trade = lambda: {"smith": 1000.0}
+        self.assertAlmostEqual(labour.supply.market_supply("smith"), 40.0 * HOURS)
 
     def test_reachable_trade_population_reads_market_supply_as_people_not_hours(self):
         _world, labour = labour_of()
-        self.assertAlmostEqual(labour.reachable_trade_population("smith"), labour.market_supply("smith") / HOURS, places=6)
+        self.assertAlmostEqual(labour.supply.reachable_trade_population("smith"), labour.supply.market_supply("smith") / HOURS, places=6)
 
     def test_the_country_holds_more_smiths_than_one_households_own_town_reaches(self):
         _world, labour = labour_of()
-        labour.core_people_by_tile_and_trade = lambda: {labour.base_tile(): {"smith": 40.0}}
-        labour.core_people_by_trade = lambda: {"smith": 1000.0}
-        self.assertGreater(labour.national_trade_population("smith"), labour.reachable_trade_population("smith"))
+        labour.book.core_people_by_tile_and_trade = lambda: {labour.settlement.base_tile(): {"smith": 40.0}}
+        labour.book.core_people_by_trade = lambda: {"smith": 1000.0}
+        self.assertGreater(labour.supply.national_trade_population("smith"), labour.supply.reachable_trade_population("smith"))
 
     def test_a_literate_trades_reachable_figure_matches_the_real_hiring_wall(self):
         _world, labour = labour_of("norse_900ad")
-        self.assertEqual(labour.reachable_trade_population("scribe"), labour.literate_capacity("scribe"))
+        self.assertEqual(labour.supply.reachable_trade_population("scribe"), labour.supply.literate_capacity("scribe"))
 
 
 if __name__ == "__main__":

@@ -115,7 +115,7 @@ def unit_context(sim: Any) -> Dict[str, float]:
     """The per-game numbers some units need; none for no game."""
     if sim is None:
         return {}
-    return {"hours_per_coin": 1.0 / sim.labour.money_per_labour_hour()}
+    return {"hours_per_coin": 1.0 / sim.labour.schedule.money_per_labour_hour()}
 
 
 def field_rule(reg: Registry, field: str, parent: Optional[str] = None) -> Optional[Dict[str, Any]]:

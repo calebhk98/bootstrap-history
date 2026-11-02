@@ -12,7 +12,7 @@ from sim.agents.country_view import CountryWorld
 from sim.diffusion.module import Diffusion
 from sim.actors import country_rules
 from sim.tests import module_harness
-from sim.labour.labour_training import TrainingMixin
+from sim.labour.labour_hands import Hands
 
 
 def stratum(country, members, literacy, propertied=False):
@@ -75,10 +75,15 @@ check("a foreign player reads the literacy of its own country's strata", abs(vie
 
 
 # ---- the hours a project can call on
-class Labour(TrainingMixin):
+class Labour:
     def __init__(self, supply, contract, productivity):
         self.supply, self.productivity = supply, productivity
         self._world = SimpleNamespace(workforce=SimpleNamespace(contract_hours={"scholar": contract}))
+        self.hands = Hands(self._world, supply=self, trades=None)
+        self.hands.labour_productivity = self.labour_productivity
+
+    def hours_you_can_call_on(self, trade):
+        return self.hands.hours_you_can_call_on(trade)
 
     def market_supply(self, trade):
         return self.supply

@@ -14,7 +14,7 @@ from sim.labour.buy_cap import over_room_refusal
 from sim.labour.founder_hours import hours_committed, hours_free, hours_pool
 from sim.labour.hands import contracted_hours_of, hands_available
 from sim.labour.hours_sale_warning import sale_at_a_loss_note
-from sim.labour.labour_job import StandingJobMixin
+from sim.labour.labour_wages import Wages
 from sim.labour.staff_advice import staff_remedies
 
 # --- the pool
@@ -35,16 +35,16 @@ check("selling every free hour leaves nothing to spend on projects",
 def standing_job(sold):
     labour = SimpleNamespace(
         _world=SimpleNamespace(founder_alive=True),
-        director_pool=lambda: 2000.0, director_hours_committed=lambda: sold,
+        hours=SimpleNamespace(director_pool=lambda: 2000.0, director_hours_committed=lambda: sold),
         wage_for_hours=lambda trade, hours: hours * 0.5)
-    labour.hours_for_sale = lambda: StandingJobMixin.hours_for_sale(labour)
-    return StandingJobMixin.standing_job_pay(labour, "labourer")
+    labour.hours_for_sale = lambda: Wages.hours_for_sale(labour)
+    return Wages.standing_job_pay(labour, "labourer")
 
 
 check("selling every hour on request takes the whole standing job", standing_job(2000.0) == 0.0)
 check("selling half the hours takes half the standing job", standing_job(1000.0) == 0.5 * standing_job(0.0))
 check("a trade nobody holds earns the job nothing",
-      StandingJobMixin.standing_job_pay(SimpleNamespace(), None) == 0.0)
+      Wages.standing_job_pay(SimpleNamespace(), None) == 0.0)
 
 # --- the cost note of a sale
 # presentation: the sentence and its money format

@@ -1,6 +1,6 @@
 """Complaints 17 to 24: a mortality shock reaches the displayed population at once. The demography module's `cut_population` cuts the
 society's cohorts by the share, unevenly by the declared vulnerability of each age, and
-`PopulationMixin.population_report` shows the cohort model's population against the civilisation's reference."""
+`PopulationReport.population_report` shows the cohort model's population against the civilisation's reference."""
 
 QUICK_TOPIC = True
 
@@ -11,7 +11,7 @@ from .harness import check
 from sim.demography.api import CutPopulation
 from sim.demography.module import Demography
 from sim.demography.state import DemographyWorld
-from sim.labour.labour_population import PopulationMixin
+from sim.labour.labour_population_report import PopulationReport
 from sim.tests import module_harness
 from sim.world import demography
 
@@ -29,10 +29,14 @@ check("the cut is the declared ratio between the ages",
 
 
 # ---- the screen shows the cohort model's population against the reference
-class Labour(PopulationMixin):
+class Labour:
     def __init__(self, total, reference=1000.0):
         self._world = SimpleNamespace(civ={"id": "rome_100ad", "short_name": "Rome", "population": reference}, population=SimpleNamespace(total=total),
                                       urban_fraction=lambda: 0.2, wages={}, plain_number=lambda number: "%d" % number)
+        self.report = PopulationReport(self._world, book=None, settlement=self, supply=None, trades=None)
+
+    def population_report(self):
+        return self.report.population_report()
 
     def home_town_population_estimate(self):
         return 100.0

@@ -6,14 +6,15 @@ QUICK_TOPIC = True
 import types
 
 from .harness import *  # noqa: F401,F403
-from sim.labour.labour_capacity import CapacityMixin
+from sim.labour.labour_advice import Advice
+from sim.labour.labour_capacity import Capacity
+from sim.labour.labour_supply import Supply
 from sim.refusal import facts_of
 
 
-class _StubLabour(CapacityMixin):
-    """Only what the capacity rules read."""
+class _StubLabour:
+    """The neighbours the capacity rules read (book, trades, settlement, capacity), with the supply, capacity and advice parts built over it."""
     LITERATE_TRADES = frozenset({"machinist", "scholar"})
-    LITERATE_CAPACITY_FLOOR = 2.0
 
     def __init__(self, literacy=1.0, institutional=0.0, supervision=0.0, headcount_now=0.0, room_places=0.0,
                  existing=None, absent=(), done=(), operating=(), room_sources=()):
@@ -27,9 +28,21 @@ class _StubLabour(CapacityMixin):
             money_text=lambda amount, grouped=False: "%g" % amount, housing_price_per_place=lambda: 100.0)
         self.literacy, self.institutional, self.supervision = literacy, institutional, supervision
         self.headcount_now, self.room_places, self.existing = headcount_now, room_places, existing
+        self.supply = Supply(self._world, book=self, capacity=self, settlement=self, trades=self)
+        self.supply._people_of_trade_in_reach = lambda trade: 10.0
+        self.capacity = Capacity(self._world, book=self, market=None, schedule=None, trades=self)
+        self.capacity.staff_capacity = self.staff_capacity
+        self.capacity.supervision_room = self.supervision_room
+        self.advice = Advice(self._world, capacity=self, hands=None)
 
-    def _people_of_trade_in_reach(self, trade):
-        return 10.0
+    def literate_capacity(self, trade):
+        return self.supply.literate_capacity(trade)
+
+    def household_room(self):
+        return self.capacity.household_room()
+
+    def _room_advice(self):
+        return self.advice.room_advice()
 
     def literacy_factor(self, trade):
         return self.literacy
@@ -54,14 +67,14 @@ class _StubLabour(CapacityMixin):
 _low = _StubLabour(literacy=0.2).literate_capacity("machinist")
 _high = _StubLabour(literacy=0.9).literate_capacity("machinist")
 check("teaching a society to read raises what it can staff", _high > _low, (_low, _high))
-_floor = _StubLabour.LITERATE_CAPACITY_FLOOR
+_floor = Supply.LITERATE_CAPACITY_FLOOR
 check("...in proportion to literacy above the floor, not without bound",
       abs((_StubLabour(literacy=0.6).literate_capacity("machinist") - _floor)
           - 2.0 * (_StubLabour(literacy=0.3).literate_capacity("machinist") - _floor)) < 1e-9)
 check("a trade that needs no letters is not capped by literacy at all",
       _StubLabour().literate_capacity("smith") == float("inf"))
 check("a floor of findable people stays when no one reads", _StubLabour(literacy=0.0).literate_capacity("machinist")
-      == _StubLabour.LITERATE_CAPACITY_FLOOR)
+      == Supply.LITERATE_CAPACITY_FLOOR)
 check("the floor is added to, not maxed with, the pool: reading still moves the ceiling",
       _StubLabour(literacy=0.01).literate_capacity("machinist") > _StubLabour(literacy=0.0).literate_capacity("machinist"))
 check("a scholar ceiling adds the institutions that train scholars outright",

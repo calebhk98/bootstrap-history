@@ -22,11 +22,7 @@ class World:
     economy = Partners()
 
 
-class Labour:
-    _world = World()
-
-
-market = LabourMarket(Labour())
+market = LabourMarket(World(), schedule=None, settlement=None, book=None)
 check("a person-year in a partner country is what its own markets pay", market.quote_annual_in("labourer", "han") == 250.0, None)
 check("a trade its markets pay nothing for has no quote", market.quote_annual_in("scribe", "han") is None, None)
 check("a country outside the economy has no quote", market.quote_annual_in("labourer", "norse") is None, None)

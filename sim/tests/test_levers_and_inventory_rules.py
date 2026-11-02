@@ -12,8 +12,9 @@ from sim.ledger.api import PayEdge
 from sim.tests import module_harness
 from sim.workforce.api import BuildHousing
 from sim.workforce.module import Workforce
-from sim.labour.labour_capacity import CapacityMixin
-from sim.labour.labour_population import PopulationMixin
+from sim.labour.labour_capacity import Capacity
+from sim.labour.labour_population_report import PopulationReport
+from sim.labour.labour_training import Training
 from sim.ledger.api import rules as ledger_rules
 from sim.tests import materials_stand_in
 from sim.ui.proto.render import render_pretty
@@ -39,7 +40,7 @@ class HousingTests(unittest.TestCase):
                 SUPERVISION_ROOM_SELF=6.0, SUPERVISION_ROOM_PER_DIRECTOR_EXTRA=1.0,
                 _world=types.SimpleNamespace(workforce=household(directors_extra=0.0, worker_housing_places=places),
                                              effect_sum=lambda effect, base: base))
-            return CapacityMixin.supervision_room(stand_in)
+            return Capacity.supervision_room(stand_in)
         self.assertEqual(room(5.0), room(0.0) + 5.0)
 
 
@@ -48,11 +49,11 @@ class TradeSchoolTests(unittest.TestCase):
         held = household(trade_schools=None)
         paid = []
         stand_in = types.SimpleNamespace(
-            trade_available=lambda trade: True,
+            trades=types.SimpleNamespace(trade_available=lambda trade: True),
             _world=workforce_stand_in.World(wages={"chemist": 1.0}, trade_school_price_per_seat=lambda: 50.0,
                                          workforce=held, view=workforce_stand_in.view_of(held), EDGE_WORKERS="workers",
                                          send=lambda command: paid.append(command.amount)))
-        self.assertEqual(PopulationMixin.found_trade_school(stand_in, "chemist", 2), (True, None))
+        self.assertEqual(Training.found_trade_school(stand_in, "chemist", 2), (True, None))
         self.assertEqual(held.trade_schools, {"chemist": 2.0})
         self.assertEqual(held.trades_created, {"chemist"})
         self.assertEqual(paid, [100.0])
@@ -63,10 +64,11 @@ class PopulationReportTests(unittest.TestCase):
         stand_in = types.SimpleNamespace(
             _world=types.SimpleNamespace(civ={"population": 1000.0, "short_name": "Rome"}, population=types.SimpleNamespace(total=1500.0),
                                          urban_fraction=lambda: 0.1, wages={"smith": 1.0}, plain_number=lambda number: "%g" % number),
-            national_trade_population=lambda trade: 900.0, reachable_trade_population=lambda trade: 40.0,
-            trade_available=lambda trade: True, employed=lambda trade: 4.0, _density_is_placeholder=lambda trade: False,
-            home_town_population_estimate=lambda: 5000.0)
-        report = PopulationMixin.population_report(stand_in)
+            supply=types.SimpleNamespace(national_trade_population=lambda trade: 900.0, reachable_trade_population=lambda trade: 40.0),
+            trades=types.SimpleNamespace(trade_available=lambda trade: True), book=types.SimpleNamespace(employed=lambda trade: 4.0),
+            _density_is_placeholder=lambda trade: False,
+            settlement=types.SimpleNamespace(home_town_population_estimate=lambda: 5000.0))
+        report = PopulationReport.population_report(stand_in)
         self.assertEqual(report["trades"][0]["estimated_in_the_country"], 900.0)
         self.assertEqual(report["trades"][0]["within_your_reach"], 40.0)
         self.assertEqual(report["trades"][0]["you_employ"], 4.0)
