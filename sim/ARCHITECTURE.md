@@ -122,10 +122,17 @@ Run from the repository root.
 
 ## 9. Known structural problems
 
-- Two owners of prices and traded volumes, the solver and the agent economy:
-  `Complaints/507-prices-and-traded-volumes-have-two-owners.md`.
-- Temporary heuristics grow faster than they are retired:
-  `Complaints/509-temporary-heuristics-grow-faster-than-they-are-retired.md`.
-- Tree nodes are both knowledge and concerns:
-  `Complaints/510-most-tree-nodes-charge-upkeep-and-make-nothing.md`.
-- The forwarders on `Sim` and the mixin fakes in tests are not gone: command 1.
+Each is a complaint; read its `**Status:**` line first (`grep -m1 '^\*\*Status' Complaints/NNN-*.md`).
+
+- Economy and labour have no single source of truth (labour in two systems, prices in several places, a legacy
+  analytic price model beside the economy's cleared prices): `Complaints/964`, being fixed on branch
+  `economy-labour-single-source-cleanup`; labour's part is `Complaints/556`.
+- Two owners of prices and traded volumes, the solver and the agent economy: `Complaints/507`
+  (`docs/architecture/ONE_PRICE_OWNER_PLAN.md`).
+- Temporary heuristics grow faster than they are retired: `Complaints/509`.
+- Tree nodes are both knowledge and concerns, and the founder's ventures and firms' concerns are two
+  implementations: `Complaints/510`, `Complaints/514`.
+- A seat's party writes through other modules' records: `Complaints/931`. Mod code still receives live objects:
+  `Complaints/955`.
+- Writes of money and goods outside the ledger's owners are counted by command 1 (`book/ledger transfer calls outside
+  owners`); the count is not zero.
