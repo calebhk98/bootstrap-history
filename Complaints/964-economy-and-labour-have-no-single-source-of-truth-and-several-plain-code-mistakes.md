@@ -209,3 +209,13 @@ Left, for the next run to settle:
   supply matches demand (seen by the agent fixing the inflow, from a scratch script): a clearing or wage-stickiness
   problem to measure.
 - Shipped openings need regenerating (the port split changed the spin-up cache keys).
+- God objects left outside economy and labour: `ActorWorld` (sim/actors/world.py, composed of sixteen view classes),
+  `CountryWorld` (sim/agents/country*.py, six), `Government` (sim/agents/government*.py, nine mixins), and the
+  module classes `Actors`, `Markets` and `Disease` composed by inheritance. A branch that turned each mixin into a
+  function module with a one-line delegator per method on the host (several hundred forwarders, more lines than it
+  removed) was not merged: it keeps the god objects and adds the forwarding the repo already treats as debt. The fix is
+  the one `Labour` got: parts that own their state, callers that address the part. A module class whose views and
+  commands the assembly reads from one class (`sim/assembly/assemble.py _implementation`) may keep one-line methods
+  for its declared names only. `Actor(Reviewable, Borrower)` keeps two overridable-default bases.
+- Two runtime breaks this round were found only by reading (a reader called methods its object lacked); a static
+  check of `self.<part>.<method>()` against the part's class would catch these without a run.
