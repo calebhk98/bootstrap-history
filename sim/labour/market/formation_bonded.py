@@ -15,8 +15,10 @@ def _practised_wage(index: Dict, area: str, trade: str) -> Optional[float]:
     return clearing.wage
 
 
-def _floor_per_hour(inputs: YearInputs, area: str) -> float:
-    return inputs.ask_floor_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
+def _floor_per_hour(inputs: YearInputs, area: str) -> Optional[float]:
+    """The area's stated wage floor per hour; None where no floor is stated."""
+    stated = inputs.ask_floor_per_worker_year.get(area)
+    return None if stated is None else stated / max(inputs.hours_per_worker_year, 1e-12)
 
 
 def _training_years(inputs: YearInputs, trade: str) -> float:
@@ -28,8 +30,9 @@ def worth_in(inputs: YearInputs, index: Dict, area: str, trade: str, trade_wage:
     """Present value of a trained person's hours in `area` over a career; None when neither the trade's wage nor the
     area's wage floor is known there, so no price can be named."""
     floor = _floor_per_hour(inputs, area)
-    if floor <= 0.0 and (trade_wage is None or trade_wage <= 0.0):
+    if (floor is None or floor <= 0.0) and (trade_wage is None or trade_wage <= 0.0):
         return None
+    floor = floor if floor is not None else 0.0      # no stated floor bounds the trained wage from below by nothing
     wage = bonded_worth.trained_wage_per_hour(trade_wage, floor, _training_years(inputs, trade),
                                               inputs.discount_rate, inputs.career_years)
     return bonded_worth.worth_of_hours(wage, inputs.hours_per_worker_year, inputs.career_years, inputs.discount_rate)
