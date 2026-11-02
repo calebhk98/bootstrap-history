@@ -47,20 +47,20 @@ stressed = market()
 stressed.press(TRADE, SUPPLY * 0.8)
 check("the stressed market has a scarcity premium above one", stressed.price_factor(TRADE) > 1.05, stressed.price_factor(TRADE))
 rate = stressed.quote(TRADE, 0.0)
-expected = annual_wage(BASE, WEIGHTED, PRICE_INDEX, WAGE_INDEX, stressed.price_factor(TRADE), PAY_SCALE) / HOURS_PER_YEAR
-check("an hour's quote is the wage arithmetic over the base, the cost of living, the indices and the scarcity premium",
+expected = annual_wage(BASE, WEIGHTED, PRICE_INDEX, WAGE_INDEX, 1.0, PAY_SCALE) / HOURS_PER_YEAR
+check("an hour's quote is the wage arithmetic over the base, the cost of living and the indices, with no scarcity premium",
       abs(rate - expected) < 1e-12 * expected, (rate, expected))
 check("the quote does not depend on who asks",
       stressed.quote(TRADE, 100.0, employer="a firm") == stressed.quote(TRADE, 100.0, employer=SimpleNamespace()))
-check("more hours taken on cost more once the premium has risen", stressed.quote(TRADE, 5 * HOURS_PER_YEAR) > rate)
+check("more hours taken on do not move the quote", stressed.quote(TRADE, 5 * HOURS_PER_YEAR) == rate)
 check("the annual quote is an hour's quote times the hours of a person-year",
       abs(stressed.quote_annual(TRADE) - rate * HOURS_PER_YEAR) < 1e-9 * stressed.quote_annual(TRADE))
-check("a trade nobody has leaned on is quoted at the wage table, with no premium",
-      unstressed.price_factor(TRADE) == 1.0 and abs(unstressed.quote_annual(TRADE) - unstressed.unscarce_annual(TRADE)) < 1e-12)
+check("leaning on a trade does not change its quote",
+      unstressed.price_factor(TRADE) == 1.0 and abs(stressed.quote_annual(TRADE) - unstressed.quote_annual(TRADE)) < 1e-12)
 
 # ---- the hire quote is what payroll charges
-check("the finder's fee for one hire is the first year's wage at the market as it stood",
-      abs(stressed.hire_cost(TRADE, 1) - stressed.quote_annual(TRADE)) < 1e-9 * stressed.quote_annual(TRADE),
+check("the finder's fee for one hire is the first year's wage times the scarcity of the market as it stood",
+      abs(stressed.hire_cost(TRADE, 1) - stressed.quote_annual(TRADE) * stressed.price_factor(TRADE)) < 1e-9 * stressed.quote_annual(TRADE),
       (stressed.hire_cost(TRADE, 1), stressed.quote_annual(TRADE)))
 check("each further hire costs more than the one before, as those before thin the pool",
       stressed.hire_cost(TRADE, 5) > 5 * stressed.hire_cost(TRADE, 1) * 0.999, (stressed.hire_cost(TRADE, 5), stressed.hire_cost(TRADE, 1)))

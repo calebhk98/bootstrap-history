@@ -40,16 +40,6 @@ class HoursFollowNeedTests(unittest.TestCase):
         self.assertEqual(hours, {FARM: 600.0, "smith": 100.0, "potter": 300.0})
         self.assertAlmostEqual(sum(hours.values()), TOTAL_HOURS)
 
-    def test_a_tightness_factor_rises_while_a_trade_is_short_and_eases_back_once_it_is_not(self):
-        factor = 1.0
-        for _year in range(20):
-            factor = wages.adjusted_tightness_factor(factor, 300.0, 50.0)
-        peak = factor
-        self.assertGreater(peak, 1.0)
-        for _year in range(400):
-            factor = wages.adjusted_tightness_factor(factor, 300.0, 300.0)
-        self.assertLess(factor, peak)
-
     def test_one_function_gives_the_need_to_allocation_and_wages(self):
         needed = labour_allocation.hours_needed_by_trade(
             {"smith": 0.25, "potter": 0.75}, 1000.0, 600.0)

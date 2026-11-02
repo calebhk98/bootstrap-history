@@ -117,7 +117,7 @@ class Views:
 		return self.labour.money_per_labour_hour()
 
 	def opening_money_per_labour_hour(self):
-		return self.labour.opening_wage_schedule().opening_money_per_labour_hour
+		return self.labour.opening_wage_schedule().money_per_labour_hour
 
 	def labour_state_weights(self):
 		"""The weight the labour market's own trait table gives each trait the state cares about."""

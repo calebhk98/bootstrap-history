@@ -43,13 +43,11 @@ class HireQuoteTests(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-    def test_the_wage_quoted_from_next_year_is_what_the_market_quotes_once_the_hire_is_on_the_books(self):
-        people = 3.0
+    def test_the_wage_quoted_does_not_depend_on_how_many_are_taken_on_or_how_hard_the_trade_is_leaned_on(self):
         market, _labour = real_market(pressure={TRADE: (SUPPLY * 0.8, 0)})
-        promised = market.quote_annual(TRADE, people)
-        self.assertGreater(promised, market.quote_annual(TRADE))
-        on_the_books, _labour = real_market(pressure={TRADE: (SUPPLY * 0.8 + people * HOURS_PER_YEAR, 0)}, employed={TRADE: people})
-        self.assertAlmostEqual(on_the_books.quote_annual(TRADE), promised, delta=0.001 * promised)
+        calm, _labour = real_market()
+        self.assertEqual(market.quote_annual(TRADE, 3.0), market.quote_annual(TRADE))
+        self.assertEqual(market.quote_annual(TRADE), calm.quote_annual(TRADE))
 
     def test_a_hire_asks_the_market_for_its_rate_and_presses_the_hours(self):
         pressed = []

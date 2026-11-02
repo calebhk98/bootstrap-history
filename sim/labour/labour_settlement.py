@@ -115,14 +115,7 @@ class SettlementMixin:
         base = self.base_tile()
         if base is None:
             return {}
-        built = self._world.built_ways()
-        key = (base, held, days_budget, repr(sorted((edge, sorted(ways)) for edge, ways in built.items())))
-        cache = self.__dict__.setdefault("_reachable_tiles_cache", {})
-        if key not in cache:
-            cache.clear()
-            modes = geography.usable_modes([held])
-            cache[key] = geography.reach([base], modes, days_budget, built, held_nodes=held)
-        return cache[key]
+        return geography.reach([base], geography.usable_modes([held]), days_budget, self._world.built_ways(), held_nodes=held)
 
     def reach_population_estimate(self, days_budget=None):
         """People in the home territory's towns within a hire's travel budget of the base,

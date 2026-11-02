@@ -11,7 +11,7 @@ from sim.disease.api import HitSeatsWithEpidemic, RunEpidemicYear
 from sim.hazards.api import RecordWorldEvent
 from sim.land.api import AdvanceColonies
 from sim.reporting.api import RecordEvent
-from sim.workforce.api import AllocateFarmWorkforce, ApplyLandClearing, UpdateWages
+from sim.workforce.api import AllocateFarmWorkforce, ApplyLandClearing
 
 from .commands import (AddCaptives, ChangeFarmland, CutPopulation, KillPeople, NotePopulationChange, OpenPopulation,
                        RecordFoodEaten, RefreshDemographicIndexes, SendSettlers, SetClearedFarmland, SetFarmHoursNeeded,
@@ -68,5 +68,5 @@ MODULE_SPECS = (ModuleSpec(
     extension_points=(ExtensionPoint("externality", LIST),),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(AdvanceColonies, AllocateFarmWorkforce, ApplyLandClearing, HitSeatsWithEpidemic, RecordEvent, RecordMigrantContact,
-           RecordWorldEvent, RunEpidemicYear, ScaleStrata, UpdateWages),
+           RecordWorldEvent, RunEpidemicYear, ScaleStrata),
 ),)

@@ -195,14 +195,6 @@ class LabourAllocationMixin:
         farm_needed = farm_now if hours_needed is None else hours_needed
         return hours_needed_by_trade(self._non_farm_need_shares(), total_hours, farm_needed)
 
-    def _hours_needed_for_wages(self):
-        """What the wage rule weighs against the hours worked: the allocation's need, plus the people
-        under arms as demand on the unskilled pool that the society's hours no longer cover."""
-        needed = self._hours_needed_by_trade()
-        fallback = self.unskilled_trade()
-        needed[fallback] = needed.get(fallback, 0.0) + self._people_under_arms() * HOURS_PER_FARM_WORKER_YEAR
-        return needed
-
     def _clearable_hectares(self):
         """Arable ground held but not yet cleared."""
         ceiling = self._world.farm_arable_ceiling

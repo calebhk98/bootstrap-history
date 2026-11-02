@@ -70,9 +70,9 @@ check("a commissioned hour is the market's quoted hour times the shop's premium"
 
 # ---- leaning on a trade raises its price; letting people go eases it
 _leaned = _market(supply=1000.0)
-_before = _leaned.quote(TRADE)
+_before = _leaned.hire_cost(TRADE, 1)
 _leaned.hire("employer", TRADE, 500.0)
-check("hiring leans on the trade and raises its quote", _leaned.pressure(TRADE) == 500.0 and _leaned.quote(TRADE) > _before)
+check("hiring leans on the trade and raises the fee for finding more", _leaned.pressure(TRADE) == 500.0 and _leaned.hire_cost(TRADE, 1) > _before)
 _pressed = _leaned.pressure(TRADE)
 _leaned.release("employer", TRADE, 300.0)
 check("releasing hours eases the pressure by exactly those hours", abs(_leaned.pressure(TRADE) - (_pressed - 300.0)) < 1e-9, _leaned.pressure(TRADE))

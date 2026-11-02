@@ -2,14 +2,11 @@
 
 An employer (the founder's household, a firm, the state, an interest group)
 holds no wage arithmetic. It asks this market what an hour of a trade costs,
-hires through it, and releases through it. The wage formula, the scarcity
-premium and the record of recent hiring pressure live here and nowhere else;
-tests/test_one_labour_market.py fails when wage arithmetic appears elsewhere.
-
-The market reads the opening schedule (labour_wages.py: subsistence floor,
-training premium, tightness), the cost-of-living factors, the economy's price
-and wage indices, and the local supply a trade has (labour_population.py).
-The pressure record is stored on the household state so a save carries it.
+hires through it, and releases through it. The wage is the economy's
+wage for the trade (labour_wages.py reads it; before the economy opens, the opening schedule with
+the cost-of-living factors and the price and wage indices). The record of recent hiring pressure
+lives here: it sets the fee for finding people and how many a search finds, not the wage, and
+it is stored on the household state so a save carries it.
 """
 import math
 
@@ -182,22 +179,22 @@ class LabourMarket:
                               self._labour.HOUSING_PRESSURE_START_OCCUPANCY, self._labour.HOUSING_PRESSURE_BAND,
                               self._labour.HOUSING_PRESSURE_MAX_MARKUP)
 
-    def _annual(self, trade, scarcity):
+    def _annual(self, trade):
+        """The economy's wage for the trade over a year; before the economy opens, the opening schedule's with the
+        cost-of-living factors."""
         world = self._world
         wage = world.economy.agent_wage_per_hour(trade)
         if wage is not None:
-            return wage * world.HOURS_PER_PERSON_YEAR * scarcity
+            return wage * world.HOURS_PER_PERSON_YEAR
         base = self._labour.base_annual_wage(trade)
         factors = self._labour.wage_cost_factors(trade)
-        return annual_wage(base, factors["weighted"], world.price_index, world.wage_index, scarcity, self.pay_scale())
+        return annual_wage(base, factors["weighted"], world.price_index, world.wage_index, 1.0, self.pay_scale())
 
     def quote_annual(self, trade, people=0.0, employer=None, pay_premium=0.0):
-        """Money one person-year of a trade costs `employer` now. `people` more taken on first move
-        the local scarcity premium to what it will be once they are on the books (zero: as it
-        stands). The rate does not depend on who asks; `employer` is accepted so a market that
-        one day prices one buyer differently has the buyer to hand."""
-        scarcity = self.price_factor_after(trade, people) if people else self.price_factor(trade)
-        return self._annual(trade, scarcity) * (1.0 + pay_premium)
+        """Money one person-year of a trade costs `employer` now: the economy's wage for the trade, the same for
+        every employer and every number taken on (`people` and `employer` are accepted for callers that name them;
+        the fee for finding them is `hire_cost`)."""
+        return self._annual(trade) * (1.0 + pay_premium)
 
     def quote_annual_in(self, trade, country):
         """Money one person-year of a trade costs in another country's labour markets, from the wages those
@@ -207,8 +204,8 @@ class LabourMarket:
         return None if answers is None else answers.pay_per_person_year(trade)
 
     def unscarce_annual(self, trade):
-        """One person-year of a trade before the local scarcity premium (a screen's 'wage table' figure)."""
-        return self._annual(trade, 1.0)
+        """One person-year of a trade at its wage, before any pay premium (a screen's 'wage table' figure)."""
+        return self._annual(trade)
 
     def quote(self, trade, hours=0.0, employer=None, pay_premium=0.0):
         """Money one hour of a trade costs `employer` now, once `hours` a year more are taken on;
