@@ -2,7 +2,7 @@
 from typing import Any, List, Optional, Tuple
 
 from sim.agents.api import DOLE_MATERIAL, Hands, army_goal, demand_answer, sack_pressure, taxpayer_income
-from sim.world import agriculture, demand
+from sim.world import demand
 from sim.geography.api import territory
 
 
@@ -66,12 +66,11 @@ class BudgetView:
 		return kept if kept > 0.0 else self.army_wanted()
 
 	def state_hands(self) -> Any:
-		"""The people and food the country can give its state: the working age, the farm hands the society's
-		farming wants (none known before its first allocation), and the share of the people's food need the last
+		"""The people and food the country can give its state: the working age, the farm hands (the farm
+		share of the hours the labour core booked), and the share of the people's food need the last
 		year's supply met, with the state's own granary making up what the harvest lacked."""
 		needs = self.needs
-		hours = needs.farm_holdings()["hours_needed"]
-		farm_hands = 0.0 if hours is None else hours / agriculture.ANNUAL_LABOUR_HOURS_PER_FARM_WORKER
+		farm_hands = needs.working_age() * needs.farm_share_of_hours()     # the labour core's farm share of the hours worked
 		last_ratio = needs.nutrition_ratio_last_year()
 		ratio = 1.0 if last_ratio is None else last_ratio
 		need_tonnes = self.population_total() * self.subsistence_kg_per_person_year() / 1000.0

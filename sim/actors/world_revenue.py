@@ -5,6 +5,7 @@ from sim.agents.collection_world import FAR_DAYS, CollectionView
 from sim.agents import collection
 from sim.agents.api import government_levers, observed_incomes, revenue
 from sim.geography.api import arable_hectares, settlement, tiles_held
+from sim.labour.api import wage_provider
 
 
 class RevenueView(CollectionView):
@@ -32,12 +33,10 @@ class RevenueView(CollectionView):
 		return sum(assessment.money for assessment in self.revenue_assessments())
 
 	def harvest_tonnes(self) -> float:
-		"""Grain the farm harvested last, in tonnes. Before the first harvest, TEMPORARY HEURISTIC (CLAUDE.md
-		4.4): the people are taken to have harvested what they eat."""
-		kilograms = self.needs.farm_holdings()["last_harvest_kg"]
-		if not kilograms > 0.0:
-			kilograms = self.needs.farm_food_demand_kg()
-		return kilograms / 1000.0
+		"""Tonnes of the staple the economy's producers made last year. Before the economy's first year, TEMPORARY
+		HEURISTIC (CLAUDE.md 4.4; retire: Complaint 964): the people are taken to have harvested what they eat."""
+		tonnes = self.output_tonnes(wage_provider.staple_material(self.needs.civilisation()))
+		return tonnes if tonnes > 0.0 else self.needs.farm_food_demand_kg() / 1000.0
 
 	def output_tonnes(self, material: str, tiles: Optional[FrozenSet[str]] = None) -> float:
 		"""Tonnes of a material the producers on the state's tiles (only `tiles` when given) made last year."""

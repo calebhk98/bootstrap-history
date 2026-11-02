@@ -2,7 +2,7 @@
 import copy, os, sys
 
 from sim.constants import declare
-from sim.demography.api import OpenPopulation, rules as demography_rules
+from sim.demography.api import OpenPopulation
 from sim.workforce.api import WatchStaff
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
 from sim.engine.state import SimulationState
@@ -120,8 +120,6 @@ class Sim:
         land_rules.require_territory(self.civ, held_tiles)
         territory = land.territory_cropland(self.view("farm_sites")())
         self.send(SetFarmTerritory(territory.ladder, territory.cropped_hectares))
-        self.labour.set_farm_area(self._agriculture.farmland_for_population(
-            demography_rules.adult_equivalents(self.view("population")()), ladder=self.view("farm_ladder")()).hectares)
         self.send(RecordOpeningFarm())
         # the weather cells and their correlation are fixed for the life of a run: built now, from the territory as it opens
         self.view("farm_weather_cells")()
@@ -209,7 +207,6 @@ class Sim:
         game_assembly.attach(self)   # the modules read the state as loaded from here on
         cleared = self.view("farm_holdings")()["cleared_hectares"]
         if cleared is not None:
-            self.labour.set_farm_area(cleared)
             refresh_farm_territory(self)
 
         # Sync civ live state and metadata

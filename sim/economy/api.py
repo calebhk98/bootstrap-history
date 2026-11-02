@@ -32,7 +32,7 @@ from .tool_wear import with_tool_wear
 from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs, recipe_tile_key
 from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
-                    GoodsMove, Offer, SiteLimit, Transfer, external_edge)
+                    GoodsMove, LabourBid, Offer, SiteLimit, Transfer, external_edge)
 from .year_accounts import YearAccounts
 from . import baseline_checks, settling, spin_up_sensitivity
 from .unit_cost import variable_cost_per_run
