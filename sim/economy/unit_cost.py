@@ -81,8 +81,15 @@ def return_on_capital(recipe: Recipe, expected_output_prices: Prices, input_pric
 
 def full_cost_per_unit(recipe: Recipe, good: GoodId, output_prices: Prices, input_prices: Prices, wages: Wages,
                        interest_rate: float, rent: float = 0.0, yield_factor: float = 1.0) -> float:
-    """Variable cost and capital charge of a run, per unit of `good` made; a joint run's cost is shared among its
-    outputs by value at `output_prices`. Infinite when a cost cannot be priced or the recipe does not make `good`."""
+    """The one definition of what a unit of `good` costs to make: variable cost (inputs, labour, the rent on the land a
+    run works) plus the plant's capital charge at the LIVE `interest_rate`, per unit made at `yield_factor`. Callers
+    differ only in whose yield and rent they pass: a named producer's (`seller_offers.unit_cost`), a site's for a
+    newcomer (`entry_trial.recipes_by_cost`), or none, yield 1 and no rent, where no maker or site is named
+    (`notional.cheapest_cost`).
+
+    A joint run's cost is shared among its outputs: by value at `output_prices` among the outputs that have a price (an
+    unpriced co-product takes no share); when `good` itself has no price, by its share of the run's physical output
+    quantities. Infinite when a cost cannot be priced or the recipe does not make `good`."""
     made = recipe.outputs.get(good, 0.0) * yield_factor
     if made <= 0.0:
         return math.inf
@@ -92,5 +99,8 @@ def full_cost_per_unit(recipe: Recipe, good: GoodId, output_prices: Prices, inpu
         return math.inf
     revenue = revenue_per_run(recipe, output_prices)
     own_value = recipe.outputs[good] * output_prices.get(good, 0.0)
-    share = own_value / revenue if revenue > 0.0 and own_value > 0.0 else 1.0
+    if revenue > 0.0 and own_value > 0.0:
+        share = own_value / revenue
+    else:
+        share = recipe.outputs[good] / math.fsum(recipe.outputs.values())
     return run_cost * share / made

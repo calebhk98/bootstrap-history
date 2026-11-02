@@ -34,6 +34,9 @@ class OwningView:
     def price(self, good, area):
         return {"grain": 1.0, "beads": 2.0}.get(good)
 
+    def usual_price(self, good, area):
+        return None
+
     def interest_rate(self, currency):
         return 0.05
 

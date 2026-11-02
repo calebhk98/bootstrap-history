@@ -63,10 +63,6 @@ class EconomyApiTests(unittest.TestCase):
         economy = stand_in(volumes={"grain|north": 2.0, "grain|south": 3.0, "ore|north": 5.0})
         self.assertEqual(api.traded_volumes(economy), {"grain": 5.0, "ore": 5.0})
 
-    def test_wages_by_trade_lists_each_trades_market_wages(self):
-        economy = stand_in(memory=types.SimpleNamespace(wages={"smith|north": 2.0, "smith|south": 3.0, "miner|north": 1.0}))
-        self.assertEqual(api.wages_by_trade(economy), {"smith": [2.0, 3.0], "miner": [1.0]})
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -6,9 +6,10 @@ first of their goods comes up, the state takes its tax in kind from what was gro
 market area of the good clears and settles.
 """
 import dataclasses
+import math
 from typing import Dict, List, Tuple
 
-from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
+from . import (currency, mint_price, land_bid_year, carriage_fleet_book, carriage_wear, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
 from . import goods_respend, goods_respend_year
 from .household_work_year import basket_key, cohort_basket
@@ -22,7 +23,8 @@ from .protocols import AgentOrders
 from .recipes import input_depth_order
 from .taxes_bases import YearFacts
 from .types import Bid, GoodsMove, Offer
-from .entry import unmet_quantity
+from .clearing_totals import market_totals
+from .entry import unmet_quantity, wanted_in_round
 from .year_ledger import YearLedger
 
 OrderBook = Dict[Tuple[str, str], Tuple[List[Bid], List[Offer]]]
@@ -158,9 +160,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     order = input_depth_order(setup.recipes)
     listed = set(order)
     order += sorted({good for good, _area in order_book} - listed)
-    done, traded = set(), set()
+    done = set()
     left_markets = {}
-    costs = None                                  # what each good costs to make, worked out when first needed
     in_kind = [form for form in setup.tax_forms if form.paid_in]
     plant_goods = {producer_id: set(setup.recipes[producer.recipe_id].plant_goods)
                    for producer_id, producer in record.producers.items()}
@@ -191,46 +192,62 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                     ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
             ledger.note_clearing(result)
             ledger.bids_by_market[(good, area)] = bids
+            idle_years = note_bids(record.memory, key, bids, offers) + note_offers(record.memory, key, bids, offers)
             left_markets[(good, area)] = goods_respend_year.LeftMarket(
                 bids, result, goods_respend.offers_left(offers, goods_respend_year.sold_by_seller(result)),
-                record.memory.prices.get(key), delivered)
+                record.memory.prices.get(key), delivered, wanted_in_round(bids, offers, result), idle_years)
             if area in kept:
                 record.goods.curves[key] = market_curves.summarize(bids, offers)
-            old = record.memory.prices.get(key)
-            quiet_years = note_bids(record.memory, key, bids, offers)
-            dry_years = note_offers(record.memory, key, bids, offers)
-            if result.quantity > 0.0:
-                usual = record.memory.volume_weights.get(key, 0.0)
-                reference = memory_reference_volume(usual, wanted_at(bids, old))
-                signal = price_after_trade(old, key in record.memory.quote_kinds, _received_price(setup, record, good, result),
-                                           result.quantity, reference,
-                                           quiet_years + dry_years)
-                if result.quantity < REPRESENTATIVE_TRADE_SHARE * usual:
-                    if costs is None:
-                        costs = making_costs(setup, record)
-                    signal = price_after_thin_trade(signal, costs.get(good), result.quantity, usual)
-            else:
-                quote = result.quote
-                if bids and not any(offer.quantity > 0.0 for offer in offers):
-                    if costs is None:
-                        costs = making_costs(setup, record)
-                    quote = market_quote.no_trade_quote(bids, offers, costs.get(good))
-                signal = price_toward_quote(old, quote.price) if quote is not None else None
-                if signal is not None:
-                    record.memory.quote_kinds[key] = quote.kind
-            if signal is not None and signal > 0.0:
-                floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
-                record.memory.prices[key] = max(signal, floor)
-                record.memory.note_usual_price(key)
-            record.memory.note_cleared(key, result.price, delivered)
-            if delivered > 0.0:
-                record.memory.quote_kinds.pop(key, None)
-            if delivered > 0.0:
-                traded.add(key)
     goods_respend_year.respend(setup, record, view, ledger, left_markets,
                                lambda cohort: cohort_basket(setup, record, cohort))
+    _remember_markets(setup, record, left_markets)
     _record_year_markets(record, ledger, left_markets)
-    record.memory.note_trading(traded)
+
+
+def _remember_markets(setup, record, left_markets) -> None:
+    """Each market's memory, once, after every round: the quantity summed over its clearings and the price weighted by
+    quantity (`clearing_totals.market_totals`), so a market that traded only in the respend is remembered as traded.
+    All signals are worked out from last year's memory before any of it moves."""
+    quantity, cleared = market_totals(result for market in left_markets.values() for result in market.results)
+    memory = record.memory
+    costs = None                                  # what each good costs to make, worked out when first needed
+    updates = []
+    for (good, area), market in sorted(left_markets.items()):
+        key = market_key(good, area)
+        old, total = market.last_price, quantity[(good, area)]
+        quote_kind = None
+        if total > 0.0:
+            usual = memory.volume_weights.get(key, 0.0)
+            reference = memory_reference_volume(usual, wanted_at(market.bids, old))
+            signal = price_after_trade(old, key in memory.quote_kinds, _received_price(setup, record, good, market.results),
+                                       total, reference, market.idle_years)
+            if total < REPRESENTATIVE_TRADE_SHARE * usual:
+                if costs is None:
+                    costs = making_costs(setup, record)
+                signal = price_after_thin_trade(signal, costs.get(good), total, usual)
+        else:
+            quote = market.result.quote
+            if market.bids and not market.offers:
+                if costs is None:
+                    costs = making_costs(setup, record)
+                quote = market_quote.no_trade_quote(market.bids, market.offers, costs.get(good))
+            signal = price_toward_quote(old, quote.price) if quote is not None else None
+            if signal is not None:
+                quote_kind = quote.kind
+        updates.append((key, good, signal, quote_kind, cleared[(good, area)], market.delivered))
+    traded = set()
+    for key, good, signal, quote_kind, price, delivered in updates:
+        if quote_kind is not None:
+            memory.quote_kinds[key] = quote_kind
+        if signal is not None and signal > 0.0:
+            floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
+            memory.prices[key] = max(signal, floor)
+            memory.note_usual_price(key)
+        memory.note_cleared(key, price, delivered)
+        if delivered > 0.0:
+            memory.quote_kinds.pop(key, None)
+            traded.add(key)
+    memory.note_trading(traded)
 
 
 def _record_year_markets(record, ledger: YearLedger, left_markets) -> None:
@@ -241,7 +258,7 @@ def _record_year_markets(record, ledger: YearLedger, left_markets) -> None:
     record.goods.unmet.clear()
     for (good, area), market in sorted(left_markets.items()):
         key = market_key(good, area)
-        unmet = unmet_quantity(market.bids, market.result, market.delivered)
+        unmet = unmet_quantity(market.wanted, market.delivered)
         record.goods.volumes[key] = market.delivered
         record.goods.unsold[key] = max(0.0, market.result.offered_at_price - market.delivered)
         record.goods.unmet[key] = unmet
@@ -252,12 +269,16 @@ def _record_year_markets(record, ledger: YearLedger, left_markets) -> None:
         record.memory.note_volume(key, 0.0)
 
 
-def _received_price(setup, record, good, result) -> float:
-    """The price a market's sellers got per unit: the settled price, plus the mint's top-up where it bought coin metal."""
+def _received_price(setup, record, good, results) -> float:
+    """The price a market's sellers got per unit over its clearings, weighted by quantity: the settled price, plus the
+    mint's top-up where it bought coin metal."""
     spec = record.currency
+    traded = [result for result in results if result.quantity > 0.0]
     if not currency.has_mint(spec) or good != spec.backing_good:
-        return result.price
-    return mint_price.received_price(result.price, mint_price.mint_bought(result.fills), currency.mint_price(spec), result.fills)
+        return math.fsum(result.quantity * result.price for result in traded) / math.fsum(result.quantity for result in traded)
+    return math.fsum(result.quantity * mint_price.received_price(result.price, mint_price.mint_bought(result.fills),
+                                                                 currency.mint_price(spec), result.fills)
+                     for result in traded) / math.fsum(result.quantity for result in traded)
 
 
 def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years):

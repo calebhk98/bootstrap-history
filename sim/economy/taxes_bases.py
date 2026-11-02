@@ -27,7 +27,7 @@ class YearFacts:
 
 @dataclass(frozen=True)
 class Base:
-    value: float                     # money's worth of the base
+    value: Optional[float]           # money's worth of the base; None for a good with no price (the quantity still stands)
     quantity: float = 0.0            # physical amount where the base is a good, so a share can be paid in kind
     good: GoodId = ""
     tile: TileId = ""
@@ -44,12 +44,12 @@ def harvest(form, facts: YearFacts, prices: Mapping[GoodId, float]) -> Dict[Agen
     """Each grower's output of the good the form is paid in: a share of what was grown is taken in kind."""
     if not form.paid_in:
         raise ValueError("form %r on basis 'harvest' must name the good it is paid in (paid_in)" % form.name)
-    price = prices.get(form.paid_in, 0.0)
+    price = prices.get(form.paid_in)
     bases = {}
     for (producer, good), quantity in sorted(facts.output.items()):
         tile = facts.producer_tile.get(producer, "")
         if good == form.paid_in and quantity > 0.0 and form.covers(tile):
-            bases[producer] = Base(quantity * price, quantity, good, tile)
+            bases[producer] = Base(None if price is None else quantity * price, quantity, good, tile)
     return bases
 
 

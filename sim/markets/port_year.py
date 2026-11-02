@@ -388,15 +388,12 @@ class AgentEconomy(TilePricesMixin):
 
     def _inputs(self, engine_orders, border_accounts=((), ())) -> YearInputs:
         sim = self._sim
-        population = sim.population
-        total = float(population.total)
         weather = sim._pooled_farm_weather_multiplier(sim.year, harmed=False)   # harm is applied per producer below
         economy = self._economy
         harmed = sim.externality_yield_factors(sim.year)
         yields = port_sites.crop_yields(economy, weather, sim.farm_weather_by_tile(sim.year))
         yields = port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
         return YearInputs(year=sim.year, population_by_tile=sim.labour.settlement_tiles(),
-                          working_age_share=population.working_age / total if total > 0.0 else 0.0,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
                           state_capacity=sim.state_reach(),
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
@@ -459,7 +456,7 @@ class AgentEconomy(TilePricesMixin):
         basket = economy_api.opening_quantities(economy)
         prices = economy_api.opening_prices_of(economy)
         watched = sorted(basket, key=lambda good: -basket[good] * prices.get(good, 0.0))[:SPIN_UP_WATCHED_GOODS]
-        inputs = YearInputs(year=0, population_by_tile={}, working_age_share=economy_api.working_share(economy),
+        inputs = YearInputs(year=0, population_by_tile={},
                             yield_factor_by_producer=port_sites.crop_yields(economy), engine_orders={})
         first_stage = self._settle(economy, inputs, watched)
         economy_api.trim_workforce_to_expected_hours(economy)

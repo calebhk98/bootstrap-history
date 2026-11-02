@@ -110,7 +110,6 @@ class YearInputs:
     """What the engine hands the economy each year, through the port. Physical facts only."""
     year: int
     population_by_tile: Mapping[TileId, float]
-    working_age_share: float
     yield_factor_by_producer: Mapping[AgentId, float]       # weather, depletion, technique: 1.0 is the opening
     engine_orders: Mapping[AgentId, AgentOrders]            # the founder, firms, the state: orders the engine decides
     legacy_transfers: Tuple = ()                            # one-sided engine postings, booked against EDGE_LEGACY

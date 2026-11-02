@@ -12,10 +12,6 @@ from sim.foreign_trade.api import ResetActorTradeTallies
 from sim.land.api import FinishWays
 from sim.reporting.api import CloseRealOutput
 
-from . import rules
-
-UNSPLIT_FLOOR_RATIO = 1.0   # a producer whose cost has no running part to idle on sells at no less than its cost
-
 
 class Clearing:
 
@@ -38,11 +34,6 @@ class Clearing:
 				            for commodity, parties in (previous.get(kind) or {}).items()}
 				flows[kind] = {commodity: parties for commodity, parties in standing.items() if parties}
 		return flows
-
-	def market_floor_ratio(self, commodity):
-		"""The lowest price over the incumbents' cost their producers sell at: a built plant sells at least at what running
-		it costs, the running share of that cost; without a split, at its full cost (the trading partners' books read it)."""
-		return rules.floor_ratio(self.needs.commodity_floor_ratio[commodity], UNSPLIT_FLOOR_RATIO)
 
 	# ---- what callers read ----
 

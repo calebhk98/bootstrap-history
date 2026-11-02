@@ -48,7 +48,7 @@ class LabourLevyTests(unittest.TestCase):
         self.assertEqual(offers_with(HOURS * 2.0), [])
 
     def test_the_engine_hands_the_levy_to_the_economy_each_year(self):
-        inputs = YearInputs(year=1, population_by_tile={}, working_age_share=0.5, yield_factor_by_producer={}, engine_orders={},
+        inputs = YearInputs(year=1, population_by_tile={}, yield_factor_by_producer={}, engine_orders={},
                             labour_levy_hours_per_worker=40.0)
         self.assertEqual(inputs.labour_levy_hours_per_worker, 40.0)
 

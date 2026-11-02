@@ -24,6 +24,9 @@ class View:
     def wage(self, trade, area):
         return 1.0
 
+    def usual_price(self, good, area):
+        return None
+
     def interest_rate(self, currency):
         return 0.05
 

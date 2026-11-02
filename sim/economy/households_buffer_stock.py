@@ -44,8 +44,9 @@ def yearly_cash_share(monthly_share: float = None) -> float:
 def spending_budget(mean_net_income: float, cash: float, share_wealth: float, claims: float = 0.0) -> float:
     """Spending for the year, after Eurace's `Household_determine_consumption_budget`: mean net income, plus the
     yearly share of cash, plus (when the household owns shares) the yearly share of share wealth over the target
-    of WEALTH_INCOME_RATIO_TARGET months of mean net income. Never above cash (Eurace's cap without trading,
-    line 127) and never negative. Eurace's payment account is a bank deposit, a claim on the bank; the money a
+    of WEALTH_INCOME_RATIO_TARGET months of mean net income. Never above cash and never negative. Eurace caps the budget at
+    the payment account (line 127, without trading); here the cap is cash alone, and applies with share wealth too,
+    because lent money is part of the account the share applies to but cannot be spent. Eurace's payment account is a bank deposit, a claim on the bank; the money a
     household has lent here (`claims`) is the same kind of holding, so it is in the account the share applies to
     (a default cuts it), while only cash can be spent."""
     budget = mean_net_income + yearly_cash_share() * (cash + claims)

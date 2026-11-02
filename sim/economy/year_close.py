@@ -13,7 +13,7 @@ from . import (practice, firm_finance, firm_year, carried_book, carriage_fleet_b
 from .household_work_year import basket_key, cohort_basket
 from .households_cohort import renewed
 from .market_memory import market_key
-from .national_prices import national_prices, traded_spending_weights
+from .national_prices import national_prices, traded_spending_weights, usual_volumes
 from .notional import recently_traded_goods
 from .setup import labour_area
 from .taxes_bases import YearFacts
@@ -252,7 +252,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
             record.credit.loan_requests.append(closed.loan_request)
             record.credit.expansion_runs[producer_id] = closed.expansion_runs
         record.producers[producer_id] = _with_practice(
-            _with_sales(closed.producer, recipe, ledger, record.book, area_map.area_of, prices_here, market_capacity), producer.last_runs,
+            _with_sales(closed.producer, recipe, ledger, demand_runs, prices_here), producer.last_runs,
             {trade: practice.pool_units(crews_of_recipe[producer.recipe_id], trade) for trade in producer.crew_runs})
     prices, volumes = learned_prices(ledger.clearings, record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
@@ -361,9 +361,8 @@ def runs_sold(producer, recipe, ledger: YearLedger, book, area_of, prices, marke
     return max(seen[good] / made[good] for good in made)
 
 
-def _with_sales(producer, recipe, ledger: YearLedger, book, area_of, prices, market_capacity=None):
-    """Expected sales move toward the runs it sold this year (`runs_sold`), measured by value over all its outputs."""
-    sold = runs_sold(producer, recipe, ledger, book, area_of, prices, market_capacity)
+def _with_sales(producer, recipe, ledger: YearLedger, sold: float, prices):
+    """Expected sales move toward the runs it sold this year (`sold`, from `runs_sold`)."""
     worked = worked_runs(producer, recipe, ledger, producers.paying_output(recipe, prices))
     staffed = staffed_runs(recipe.labour_hours, ledger.hours_hired.get(producer.agent_id, {}))
     staffed = -1.0 if staffed is None else min(staffed, producer.capacity_runs)
@@ -384,7 +383,7 @@ def remember_basket_price_level(setup, record) -> float:
     base = record.goods.index_base_prices or setup.opening_prices
     level = currency.basket_price_level(prices, base, record.goods.opening_basket)
     # the median's weights are what the goods traded for last year; the opening basket's value stands in until they trade
-    spending = traded_spending_weights(record.memory.volume_weights or record.goods.volumes,
+    spending = traded_spending_weights(usual_volumes(record),
                                        record.memory.last_year_prices or prices, set(record.goods.opening_basket)) \
         or {good: quantity * base.get(good, 0.0) for good, quantity in record.goods.opening_basket.items()}
     record.memory.note_basket_price_level(

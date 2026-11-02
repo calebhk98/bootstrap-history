@@ -88,10 +88,10 @@ def rent_transfers(lessee: AgentId, hired: Mapping[GoodId, float], used: Mapping
     for good, units in sorted(hired.items()):
         beyond = min(units, max(0.0, used.get(good, 0.0) - own.get(good, 0.0)))
         total = math.fsum(lent.get(good, {}).values())
-        if beyond <= 0.0 or total <= 0.0:
+        if beyond <= 0.0 or total <= 0.0 or good not in prices:    # a carrier with no price is not charged for
             continue
         for lessor, amount in lent[good].items():
-            owed[lessor] = owed.get(lessor, 0.0) + beyond * prices.get(good, 0.0) * amount / total
+            owed[lessor] = owed.get(lessor, 0.0) + beyond * prices[good] * amount / total
     sum_owed = math.fsum(owed.values())
     scale = min(1.0, max(0.0, cash) / sum_owed) if sum_owed > 0.0 else 0.0
     return [Transfer(lessee, lessor, currency, money * scale, "carriers hired") for lessor, money in sorted(owed.items())
@@ -130,8 +130,9 @@ def endow(setup, record, carriage, prices: Mapping[GoodId, float], final_by_tile
     for demand in final_by_tile.values():
         for good, quantity in demand.items():
             totals[good] = totals.get(good, 0.0) + quantity
-    tonnes = math.fsum(quantity * setup.specs[good].unit_mass_kg / 1000.0 for good, quantity in totals.items() if good in setup.specs)
-    value = math.fsum(quantity * prices.get(good, 0.0) for good, quantity in totals.items())
+    priced = {good: quantity for good, quantity in totals.items() if good in setup.specs and good in prices}    # a good with no price has no value to count
+    tonnes = math.fsum(quantity * setup.specs[good].unit_mass_kg / 1000.0 for good, quantity in priced.items())
+    value = math.fsum(quantity * prices[good] for good, quantity in priced.items())
     if tonnes <= 0.0:
         return
     moves = opening_fleet(setup, record, carriage_wear.Wear(setup, carriage, record.carriage.area_imbalance), value / tonnes)
