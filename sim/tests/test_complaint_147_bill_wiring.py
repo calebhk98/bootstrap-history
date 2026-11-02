@@ -74,24 +74,24 @@ module.opposition_factor = lambda node_id: 2.0
 check("starting today costs labour, capital and missing materials times the distance and opposition factors",
       module.project_cost_now("node") == (60.0 + 40.0) * 1.5 * 2.0, None)
 
-# ---- starting pays for the materials and fixes the bill
+# ---- starting orders the materials and fixes the bill
 def settling(up_front, paid):
     bought = []
     module = materials_stand_in.build(project_cost_now=lambda node_id: 1000.0)
     module.up_front_materials_money = lambda node_id: up_front
-    module.buy_project_materials = lambda node_id: bought.append(node_id) or paid
+    module.order_project_materials = lambda node_id: bought.append(node_id) or (paid, ["lead"] if paid else [])
     return module, bought
 
 
 game, bought = settling(up_front=300.0, paid=300.0)
-check("starting pays the up-front materials and leaves the rest of the cost to pay in instalments",
-      game.settle_project_materials(SettleCommand("node")) == (700.0, 300.0) and bought == ["node"], bought)
+check("starting orders the up-front materials and leaves the rest of the cost to pay in instalments",
+      game.settle_project_materials(SettleCommand("node")) == (700.0, 300.0, ["lead"]) and bought == ["node"], bought)
 game, bought = settling(up_front=0.0, paid=0.0)
-check("with no materials to buy up front nothing is bought and the whole cost is left", game.settle_project_materials(SettleCommand("node")) == (1000.0, 0.0)
+check("with no materials to buy up front nothing is bought and the whole cost is left", game.settle_project_materials(SettleCommand("node")) == (1000.0, 0.0, [])
       and bought == [], bought)
 
 module = projects_host.build(
-    answers={SettleProjectMaterials: (700.0, 300.0)}, tree={"node": {"ph": 10.0, "lab": {"smith": 4.0}}},
+    answers={SettleProjectMaterials: (700.0, 300.0, [])}, tree={"node": {"ph": 10.0, "lab": {"smith": 4.0}}},
     projects_record=projects_host.projects_state(), own_output_claim=lambda node_id: {"forest": 2.0})
 record = module.initialize_project("node")
 check("a started project's bill is fixed at what was left after paying the materials", record["bill"] == 700.0 and record["cost_left"] == 700.0

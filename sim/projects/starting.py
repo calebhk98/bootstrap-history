@@ -22,13 +22,13 @@ BOUNTY_CRAFT_CATEGORIES = ("glass_optics", "metallurgy", "precision", "power", "
 
 class Starting:
 	def _setup_starting(self) -> None:
-		self.last_materials_paid = 0.0           # money the last start spent on materials now (not saved)
+		self.last_materials_paid = 0.0           # money of the material orders the last start posted (not saved)
 
 	# ---- registering a project ----------------------------------------------------------------------------------
 
 	def initialize_project(self, node_id: str, *, ph_left: Optional[float] = None, spent: float = 0.0,
 	                       cost_left: Optional[float] = None, include_labour: bool = True,
-	                       bill: Optional[float] = None) -> Dict[str, Any]:
+	                       bill: Optional[float] = None, awaiting: Optional[list] = None) -> Dict[str, Any]:
 		"""Create and register one consistently-shaped active project."""
 		node = self.needs.tree[node_id]
 		if node is None:
@@ -39,10 +39,12 @@ class Starting:
 		own_output_claim = None
 		if cost_left is None:
 			own_output_claim = self.needs.own_output_claim(node_id)
-			bill, _materials_paid_now = self.needs.send(SettleProjectMaterials(node_id))
+			bill, _materials_ordered, awaiting = self.needs.send(SettleProjectMaterials(node_id))
 			cost_left = bill
 		record = record_rules.new_record(node, self.rebuild_work_factor(node_id), ph_left, spent, cost_left,
 		                                 include_labour, bill, own_output_claim)
+		if awaiting:
+			record["awaiting_materials"] = list(awaiting)       # the project waits for these orders to be filled at the clearing
 		active[node_id] = record
 		return record
 
@@ -52,8 +54,8 @@ class Starting:
 		capability that needs no year."""
 		needs = self.needs
 		node = needs.tree[node_id]
-		# Materials due now are bought (and banked as stock) first; what is left is the bill paid in instalments.
-		bill, materials_paid_now = needs.send(SettleProjectMaterials(node_id))
+		# Materials due now are ordered for the year's clearing; what is left is the bill paid in instalments.
+		bill, materials_ordered, awaiting = needs.send(SettleProjectMaterials(node_id))
 		if precaution:
 			bill += self.precaution_extra_cost(node_id, bill)
 		price = bill
@@ -69,15 +71,15 @@ class Starting:
 		# lab_left STARTS FULL, SET HERE, not lazily the first time the year's labour is drawn: a lazy start reads a
 		# project already most of the way through its founder-hours and wrongly concludes the hired-labour total is
 		# nearly done too.
-		self.initialize_project(node_id, spent=paid_now, cost_left=price, bill=bill)
-		self.last_materials_paid = materials_paid_now
+		self.initialize_project(node_id, spent=paid_now, cost_left=price, bill=bill, awaiting=awaiting)
+		self.last_materials_paid = materials_ordered
 		if precaution:
 			record = self.seat.active[node_id]
 			record["precaution"] = True
 			record["ph_left"] += self.precaution_extra_hours(node_id)
 		# A genuinely instantaneous capability should not need an otherwise empty annual turn merely to trip the
 		# completion check. Anything with money, labour, risk, or a calendar floor stays on the normal path.
-		if instantaneous.is_instantaneous(node["ph"], self.calendar_floor(node_id), price, node["lab"], self.effective_risk(node_id)):
+		if not awaiting and instantaneous.is_instantaneous(node["ph"], self.calendar_floor(node_id), price, node["lab"], self.effective_risk(node_id)):
 			self._complete(node_id)
 			return "done"
 		if paid_now > 0.5:

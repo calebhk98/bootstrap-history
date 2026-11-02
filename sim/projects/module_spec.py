@@ -45,6 +45,7 @@ READS_BY_OWNER = {
 	"living_stock": ("stock_status", "stock_held"),
 	"defence_stores": ("venture_garrison",),
 	"ledger": ("acting_balance", "goods_stock"),
+	"markets": ("seat_goods_orders",),
 	"scenario": ("money_text", "automation", "society_name", "year", "horizon_end_year", "project_limits", "game_config", "game_random",
 	             "fog_of_war", "plain_number"),
 	"seats": ("win_condition_text", "win_condition_value", "acting_seat", "founder", "goal", "automatic_policy"),

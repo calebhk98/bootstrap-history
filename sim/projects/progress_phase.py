@@ -40,6 +40,8 @@ class ProgressPhase:
 		# bookkeeping and completion check. Every dice-touching call these stages make runs exactly once, in exactly this
 		# order, for exactly this project: the stages are called unconditionally in sequence, and only the two early
 		# returns below skip any of them.
+		if self._project_progress_materials_gate(project_state):
+			return remaining, hired_left, 0.0
 		if self._project_progress_trade_gate(node_id, project_state, node):
 			return remaining, hired_left, 0.0
 		remaining, per, spent_hours, _dir_hours = self._project_progress_offer_hours(
@@ -54,6 +56,23 @@ class ProgressPhase:
 			node_id, project_state, money, refunded, spent_hours, _dir_hours, directed_hours_unused,
 			_afford_context=_afford_context)
 		return remaining, hired_left, project_state["hours_effective_this_year"]
+
+	def _project_progress_materials_gate(self, project_state):
+		# Stage 0: a project started with materials on order waits until the year's clearing has filled (or dropped) those orders,
+		# as it waits for staff hired at the clearing. True when it is held this year, with the cause on its record.
+		awaited = project_state.get("awaiting_materials")
+		if awaited:
+			outstanding = sorted({order["stock_key"] for order in self.needs.seat_goods_orders()
+			                      if order["side"] == "buy" and order["stock_key"] in awaited})
+			if outstanding:
+				project_state["held_cause"] = "awaiting_materials"
+				project_state["awaiting_materials"] = outstanding
+				project_state["hours_offered_this_year"] = 0.0
+				project_state["hours_effective_this_year"] = 0.0
+				return True
+		project_state.pop("awaiting_materials", None)
+		project_state.pop("held_cause", None)
+		return False
 
 	def _project_progress_trade_gate(self, node_id, project_state, node):
 		# Stage 1: is there anybody to do the work. Returns True when the project is stalled or just halted this year, in

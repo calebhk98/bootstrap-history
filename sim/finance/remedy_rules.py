@@ -8,10 +8,10 @@ Remedy = Optional[Tuple[float, str]]
 
 
 def sale_remedy(material: str, tonnes: float, money: float, money_text: Callable[..., str]) -> Remedy:
-	"""Selling a material, worth `money` now for `tonnes`; None when the market pays nothing."""
+	"""Ordering a sale of `tonnes`, which the year's clearing pays about `money` for; None when the market pays nothing."""
 	if money <= 0:
 		return None
-	return money, "sell %s %s (brings %s now)" % (material, "{:,.1f}".format(tonnes), money_text(money, grouped=True))
+	return money, "sell %s %s (the order pays about %s when the year clears)" % (material, "{:,.1f}".format(tonnes), money_text(money, grouped=True))
 
 
 def mothball_remedy(node_id: str, saving: float, money_text: Callable[..., str]) -> Remedy:

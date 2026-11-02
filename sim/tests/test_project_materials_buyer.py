@@ -1,30 +1,29 @@
-"""A project's materials are bought by the acting seat: the purchase pays the market edge and puts the tonnes in the seat's
-stock, in that order, each as the owner's command."""
+"""A project's materials are ordered by the acting seat: each deliverable missing material becomes a buy order for the year's
+clearing, with the quote as its limit, and the tonnes reach the stock when the year clears."""
 import unittest
 
-from sim.agents.api import edges
-from sim.ledger.api import ChangeStock, PayEdge
+from sim.markets.api import BuyMaterial
 from sim.tests import materials_stand_in, module_harness
 
 QUICK_TOPIC = True
 
 
-class MaterialsBoughtByTheActingSeat(unittest.TestCase):
-    def test_purchase_is_settled_for_the_acting_seat(self):
+class MaterialsOrderedByTheActingSeat(unittest.TestCase):
+    def test_a_deliverable_material_is_ordered_at_its_quote(self):
         bill = {"rows": [{"material": "lead_kg", "deliverable_now_tonnes": 2.0, "priced": True, "cost_of_deliverable": 50.0}]}
         module = materials_stand_in.build()
         module.project_material_bill = lambda node_id: bill
-        paid = module.buy_project_materials("any_node")
-        self.assertEqual(paid, 50.0)
-        self.assertEqual(module_harness.sent(module), [PayEdge(edges.EDGE_MARKET, 50.0, "materials bought for projects"),
-                                                         ChangeStock("lead", 2.0)])
+        ordered, awaited = module.order_project_materials("any_node")
+        self.assertEqual(ordered, 50.0)
+        self.assertEqual(awaited, ["lead"])
+        self.assertEqual(module_harness.sent(module), [BuyMaterial("lead_kg", 2.0, 25.0)])
 
-    def test_a_row_with_nothing_deliverable_or_no_price_buys_nothing(self):
+    def test_a_row_with_nothing_deliverable_or_no_price_orders_nothing(self):
         bill = {"rows": [{"material": "lead_kg", "deliverable_now_tonnes": 0.0, "priced": True, "cost_of_deliverable": 0.0},
                          {"material": "tin_kg", "deliverable_now_tonnes": 3.0, "priced": False, "cost_of_deliverable": 9.0}]}
         module = materials_stand_in.build()
         module.project_material_bill = lambda node_id: bill
-        self.assertEqual(module.buy_project_materials("any_node"), 0.0)
+        self.assertEqual(module.order_project_materials("any_node"), (0.0, []))
         self.assertEqual(module_harness.sent(module), [])
 
 
