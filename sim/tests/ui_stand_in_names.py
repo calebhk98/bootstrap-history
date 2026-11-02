@@ -315,7 +315,6 @@ FACT_OF_VIEW_MORE = {
     "event_log": "log",
     "hours_per_person_year": "HOURS_PER_PERSON_YEAR",
     "labour_productivity_sources": "LABOUR_PRODUCTIVITY_SOURCES",
-    "legacy_geography": "geography",
     "material_checks": "MATERIAL_CHECKS",
     "mine_capacity": "mine_capacity",
     "money_real": "money_real",

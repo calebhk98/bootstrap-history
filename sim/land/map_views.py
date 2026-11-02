@@ -77,8 +77,9 @@ class MapViews:
         """The geography data the map describes, for the `Geography` handle to open on."""
         return load_geography(self.world_map)
 
-    def legacy_geography(self) -> Geography:
-        return self.geography
+    def open_geography(self, command: Any) -> None:
+        """Open the geography on the scenario's geography data."""
+        self.geography.open(command.geography_data)
 
     def tile_known(self, tile: str) -> bool:
         return tile in self.world_map.tiles

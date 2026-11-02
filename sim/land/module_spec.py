@@ -11,7 +11,7 @@ from sim.ledger.api import PayEdge
 from sim.reporting.api import RecordEvent
 from sim.stores.api import WriteStore
 
-from .commands import AdvanceColonies, BuildWay, BuildWork, FinishWays, FoundColony, LoseWork, TransferTile
+from .commands import AdvanceColonies, BuildWay, BuildWork, FinishWays, FoundColony, LoseWork, OpenGeography, TransferTile
 from .module import Land
 from .state import LandSeat, LandWorld
 
@@ -52,7 +52,6 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("colonies", "colony_rows", seat_scoped=True, **_LIVE),
         ViewSpec("map_for_agent_economy", "map_for_agent_economy", **_LIVE),
         ViewSpec("geography_data", "geography_data", **_LIVE),
-        ViewSpec("legacy_geography", "legacy_geography", **_LIVE),
         ViewSpec("built_ways", "built_ways", **_LIVE),
         ViewSpec("built_way_km", "built_way_km", kind=QUOTE),
         ViewSpec("way_quote", "way_quote", kind=QUOTE),
@@ -113,7 +112,8 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("nursery_room_units", "nursery_room_units", kind=QUOTE),
     ),
     applies=((TransferTile, "transfer_tile"), (AdvanceColonies, "advance_colonies"), (FoundColony, "found_colony"),
-             (BuildWay, "build_way"), (FinishWays, "finish_ways"), (BuildWork, "build_work"), (LoseWork, "lose_work")),
+             (BuildWay, "build_way"), (FinishWays, "finish_ways"), (BuildWork, "build_work"), (LoseWork, "lose_work"),
+             (OpenGeography, "open_geography")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
     sends=(FollowTileTransfer, PayEdge, RecordEvent, RecordWorldEvent, SendSettlers, WriteStore),
 ),)
