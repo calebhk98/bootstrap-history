@@ -68,6 +68,21 @@ class LabourReads:
 	def settlement_tiles(self):
 		return self._needs.settlement_tiles()
 
+	def staff_posting(self):
+		return self._needs.staff_posting()
+
+	def once_posting(self):
+		return self._needs.once_posting()
+
+	def wage_work_offered(self):
+		return self._needs.wage_work_offered()
+
+	def newcomers(self):
+		return self._needs.newcomers()
+
+	def employed_by_trade(self):
+		return self._needs.employed_by_trade()
+
 
 class PortWorld:
 

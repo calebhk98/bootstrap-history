@@ -50,7 +50,7 @@ class PhysicalConstantsAreInHours(unittest.TestCase):
             COST_HOURS = 12.0
 
             def __init__(self, coin_per_hour):
-                self.labour = SimpleNamespace(money_per_labour_hour=lambda: coin_per_hour)
+                self.view = lambda name: (lambda: coin_per_hour)
 
         self.assertAlmostEqual(Holder(0.5).COST, 6.0)
         self.assertAlmostEqual(Holder(4.0).COST, 48.0)
