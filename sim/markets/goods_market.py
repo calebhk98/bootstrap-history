@@ -58,6 +58,17 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         return tuple((seat, tuple((order["side"], order["stock_key"], order["tonnes"], order["limit_per_tonne"]) for order in orders))
                      for seat, orders in sorted(self._sim.economy.posted_goods_orders().items()) if seat != asking)
 
+    def seat_orders(self):
+        """The asking seat's posted orders the year's clearing has not yet settled: [{"side", "material", "stock_key", "tonnes",
+        "limit_per_tonne"}], in posting order."""
+        keys = ("side", "material", "stock_key", "tonnes", "limit_per_tonne")
+        return [{key: order[key] for key in keys} for order in self._sim.economy.posted_goods_orders(self.acting_party_id)]
+
+    def seat_trades(self):
+        """What the last clearing bought and sold for the asking seat: {"bought": {stock key: tonnes}, "sold": {stock key: tonnes}}."""
+        economy = self._sim.economy
+        return {side: economy.seat_traded_tonnes(self.acting_party_id, side) for side in ("bought", "sold")}
+
     def commodities_sold_by(self, seller_id):
         """Commodities this seat sold into the last clearing."""
         return sorted(self._sim.economy.seat_traded_tonnes(seller_id, "sold"))

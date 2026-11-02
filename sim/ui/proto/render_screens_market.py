@@ -22,8 +22,26 @@ def price_note(row):
     return "; ".join(note for note in notes if note)
 
 
+def _order_lines(out):
+    orders = out.get("orders") or []
+    if not orders:
+        return []
+    lines = ["YOUR ORDERS  (settled when the year clears)",
+             "  %-6s %-26s %10s %10s" % ("SIDE", "MATERIAL", "TONNES", units_text.per_mass_heading("LIMIT"))]
+    lines += ["  %-6s %-26s %10s %10s" % (order["side"], order["material"], _fmt_num(order["tonnes"]), _fmt_num(order["limit_per_tonne"]))
+              for order in orders]
+    return lines + [""]
+
+
+def _traded_lines(out):
+    traded = out.get("traded") or {}
+    lines = ["LAST CLEARING  (%s %s)" % (side, ", ".join("%s %s" % (key, _fmt_num(tonnes)) for key, tonnes in sorted(traded[side].items())))
+             for side in ("bought", "sold") if traded.get(side)]
+    return lines + [""] if lines else []
+
+
 def render_market(out):
-    lines = []
+    lines = _order_lines(out) + _traded_lines(out)
     materials = out.get("materials") or {}
     rows = materials.get("rows") or []
     lines += ["MATERIAL PRICES  (%s-%s of %s; own = you supply it)"

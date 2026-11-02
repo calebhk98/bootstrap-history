@@ -12,7 +12,7 @@ from . import remedy_rules
 class CashRemedies:
 
 	def cash_remedies(self) -> List[str]:
-		"""Lines like "sell iron 40 (brings 1,200 now)", largest amount first."""
+		"""Lines like "sell iron 40 (the order pays about 1,200 when the year clears)", largest amount first."""
 		needs = self.needs
 		money_text = needs.money_text
 		found = []

@@ -17,8 +17,8 @@ class ApplyThrottle(Command):
 
 @dataclass(frozen=True)
 class SettleProjectMaterials(Command):
-    """Buy the materials the market can deliver now for a project (when the money can be raised) and bank them. Answers
-    (what is left to pay in instalments, the materials money paid now)."""
+    """Post buy orders for the materials the market can deliver for a project (when the money can be raised); they arrive at the
+    year's clearing. Answers (what is left to pay in instalments, the money of the orders, the stock keys ordered)."""
     node_id: str
 
 

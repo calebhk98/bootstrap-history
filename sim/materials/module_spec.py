@@ -3,8 +3,8 @@
 Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_*.py) under the name the owner will publish, except the `legacy_*` ones:
 raw state used in place. No view of the module is cached: the stock, the projects and the market behind them are written outside any command of the owners."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, ViewSpec
-from sim.ledger.api import BankStock, ChangeStock, PayEdge
-from sim.markets.api import NoteDraw, ResetDraws
+from sim.ledger.api import BankStock
+from sim.markets.api import BuyMaterial, NoteDraw, ResetDraws
 from sim.reporting.api import RecordEvent
 
 from .channels import READING
@@ -81,6 +81,6 @@ MODULE_SPECS = (ModuleSpec(
              (RestoreReadings, "restore_readings"),
              (CaptureReadings, "capture_readings")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(BankStock, ChangeStock, PayEdge, ResetDraws, NoteDraw, RecordEvent),
+    sends=(BankStock, BuyMaterial, ResetDraws, NoteDraw, RecordEvent),
     phases=(PhaseHook("material_shortage_notes", "step_shortage_notes"),),
 ),)

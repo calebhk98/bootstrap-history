@@ -55,6 +55,15 @@ class GoodsViews:
 	def commodities_sold_by_acting_party(self):
 		return self.goods_market.commodities_sold_by(self.goods_market.acting_party_id)
 
+	def seat_goods_orders(self):
+		"""The acting seat's goods orders waiting for the year's clearing: [{"side", "material", "stock_key", "tonnes",
+		"limit_per_tonne"}]."""
+		return self.goods_market.seat_orders()
+
+	def seat_goods_traded(self):
+		"""What the last clearing bought and sold for the acting seat: {"bought": {stock key: tonnes}, "sold": {stock key: tonnes}}."""
+		return self.goods_market.seat_trades()
+
 	def others_trade_stamp(self):
 		"""What every seat but the acting one has ordered to buy and sell this year, comparable for equality, for caches whose
 		answers read the posted price."""

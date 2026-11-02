@@ -1,13 +1,13 @@
 """What a project pays for materials: quantities in, current market price out.
 
 A node declares only physical quantities. The bill asks the market what the part the seat does not already hold would cost
-today, at the economy's price on the founder's tile plus carriage, the price climbing over the order, and lets the project
-pay that money at the start so the tonnes arrive in stock."""
+today, at the economy's price on the founder's tile plus carriage, the price climbing over the order, and posts the buy
+orders for it at the start; the tonnes arrive in stock at the year's clearing, and the project waits for them (sim/projects)."""
 import collections
 from typing import Any, Dict, Optional, Tuple
 
-from sim.agents.api import edges
-from sim.ledger.api import ChangeStock, PayEdge
+from sim.markets.api import BuyMaterial
+from sim.refusal import Refusal
 from sim.projects.api import constants as project_constants
 from sim.world.material_units import tonnes_per_unit
 
@@ -17,7 +17,7 @@ from . import rules
 class ProjectBill:
     """Needs: tree_nodes, active_projects, goods_stock, purchase_quote, shared_bill, opposition_factor,
     material_cost_factor, can_pay, purchase_refusal, project_cost, project_cost_now, cost_money_factor, civ_cost_factor,
-    rebuild_work_factor, failure_reset_share. Sends PayEdge, ChangeStock."""
+    rebuild_work_factor, failure_reset_share. Sends BuyMaterial."""
 
     def project_material_needs(self, node_id: str) -> collections.Counter:
         """{material key: units} the project physically consumes, with the fuel substitution the throttle applies."""
@@ -64,38 +64,40 @@ class ProjectBill:
                 * needs.civ_cost_factor(node_id) * needs.rebuild_work_factor(node_id))
 
     def up_front_materials_money(self, node_id: str) -> float:
-        """Money the start would spend now on the materials the market can deliver, or zero when the start could not pay it."""
+        """Money the start would put in orders for the materials the market can deliver, or zero when the start could not pay it."""
         _total, up_front = self.project_material_parts(node_id)
         up_front *= self.needs.opposition_factor(node_id) * self.needs.material_cost_factor(node_id)
         if up_front <= 0 or not self.needs.can_pay(up_front):
             return 0.0
         return up_front
 
-    def settle_project_materials(self, command: Any) -> Tuple[float, float]:
-        """Buy the materials the market can deliver now (when the money can be raised): (what is left to pay in
-        instalments, the materials money paid now)."""
+    def settle_project_materials(self, command: Any) -> Tuple[float, float, list]:
+        """Order the materials the market can deliver (when the money can be raised) for the year's clearing: (what is left to
+        pay in instalments, the money of the orders posted, the stock keys the project waits for)."""
         node_id = command.node_id
         full = self.needs.project_cost_now(node_id)
         if self.up_front_materials_money(node_id) <= 0:
-            return full, 0.0
-        paid_now = self.buy_project_materials(node_id)
-        return full - paid_now, paid_now
+            return full, 0.0, []
+        ordered, awaited = self.order_project_materials(node_id)
+        return full - ordered, ordered, awaited
 
-    def buy_project_materials(self, node_id: str) -> float:
-        """Pay for what the market can deliver now of the missing materials and bank it as stock. Returns the money paid."""
+    def order_project_materials(self, node_id: str) -> Tuple[float, list]:
+        """Post a buy order for the part of each missing material the market can deliver, at the quote (with the geography and
+        opposition factors) as the limit. Returns (the money of the orders at their limits, the stock keys ordered)."""
         needs = self.needs
         factor = needs.opposition_factor(node_id) * needs.material_cost_factor(node_id)
-        paid = 0.0
+        ordered, awaited = 0.0, []
         for row in self.project_material_bill(node_id)["rows"]:
             tonnes = row["deliverable_now_tonnes"]
             if tonnes <= 0 or not row["priced"]:
                 continue
             money = row["cost_of_deliverable"] * factor
-            commodity = self.material_pool(row["material"])[0]
-            needs.send(PayEdge(edges.EDGE_MARKET, money, "materials bought for projects"))
-            needs.send(ChangeStock(commodity, tonnes))
-            paid += money
-        return paid
+            posted = needs.send(BuyMaterial(row["material"], tonnes, money / tonnes))
+            if isinstance(posted, Refusal):
+                continue
+            ordered += money
+            awaited.append(self.material_pool(row["material"])[0])
+        return ordered, sorted(set(awaited))
 
     def failure_bill(self, node_id: str) -> float:
         """The money bill the player bears for this project: the frozen bill once it runs, else what a start today would
