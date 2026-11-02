@@ -141,25 +141,48 @@ save. The re-audit found two crashes the round introduced (a seat's staff bids c
 import in `sim/markets/port_bondage.py`), fixed at once, and found with `python3 -m pyflakes sim` that no other
 undefined name remains.
 
-Left, each confirmed in code by the reviewer and checked by the orchestrator:
+Everything that re-audit listed as left has since been fixed on the branch except the whole-record functions and the
+unused imports. Seats' goods trades and project materials are now orders settled at the clearing (owner answer 4),
+commissions and herd labour are one-year labour orders, and each record part names its writers
+(`tools/check_record_owners.py`, failing in `tools/done_check.sh`).
 
-- **Labour.** Seat staff are rounded to whole people while the hours are paid (`sim/markets/port_staff.py`), actors'
-  are not; a seat with no affordable bid keeps its staff unpaid while an actor loses its own. The levy is hours per
-  person of demography's working age subtracted per worker of the core (`sim/markets/port_levy.py`), with a cliff at a
-  full year. The core's workers and the cohorts are both rescaled to the engine's tile population while the core adds
-  its own entrants and leavers, so the two people stocks drift. `hire_check` still reads the heuristic
-  `national_trade_population`. Per-employer contract wages are kept in the clearing though everyone is paid the mean.
-  Hours offered are counted at the pre-round wage and settled at the entry wage.
-- **Goods and prices.** Unmet demand subtracts all rounds' deliveries from the first round's demand; the remembered
-  price, cleared price and trade age follow the first round while volumes follow all rounds. Three cost-of-making
-  calculations disagree (the sellers' ask band charges no interest). Missing prices still read as zero in carriage
-  wear, the carriage fleet book, taxes in kind and one opening line. Two firm-equity definitions (with and without stock).
-  `INVESTMENT_INERTIA` is 2 from a Eurace unit test where Eurace's shipped state uses 10.
-- **Structure.** `bash tools/done_check.sh` passes; the `legacy_labour` view is read only by tests (they reach the live
-  labour object through it). Functions still take the whole record and reach across its parts; `tools/done_check.sh` prints counts
-  but never fails; no tool checks the package walls (three imports past an `api.py`); `YearInputs.working_age_share`,
-  `api.wages_by_trade`, `market_floor_ratio` and `port_world._price_tables` are dead; pyflakes lists many unused imports.
-- **Documentation.** `ONE_PRICE_OWNER_PLAN.md`, `STATE_OWNERSHIP_MAP.md`, `ECONOMY_AGENTS.md`, `PACKAGE_WALLS.md`,
-  `sim/ARCHITECTURE.md` sections 8-9, `sim/labour/market/DESIGN.md` and the `sim/engine` and `sim/world` package
-  docstrings describe deleted code; open Complaints 507, 513, 537, 556, 613 and 657 describe mechanisms this branch
-  removed or fixed; most of the 960 and 961 parked patches no longer apply.
+## Audit pass 3 (commit 2701295)
+
+Six reviewers ran the audit prompt again; the orchestrator opened a citation from each. Left:
+
+- **Project materials.** `settle_project_materials` (`sim/materials/project_bill.py`) cuts the bill by the orders' money at
+  their limits whether or not they fill, and the gate in `sim/projects/progress_phase.py` releases the project when no
+  order is outstanding without checking the materials arrived. The limit includes carriage and the project factors, but
+  the clearing charges the market price and refunds the rest, so those costs vanish. Orders are checked against cash one
+  by one (`goods_market.post_order`), staff bids are funded first, and an order that cannot be paid is dropped silently.
+  The gate also holds on a player's own buy of the same good.
+- **Labour.** The founder's own wage work is paid from `EDGE_EMPLOYERS` at the quote plus a reputation bonus, outside the
+  core (`sim/labour/labour_wages.py work_for_wages`, `labour_job.py`, `wage_fallback.py`). Plague survival rounds
+  fractional staff to whole people (`sim/workforce/rules.py surviving_people`). `labour_market_api.in_current_money`
+  scales the cleared wage again by the civilisation's static wage and price indices, and `wage_index` is still a second
+  wage level (screens, score, demography's wage event). Founder-trained apprentices and granted staff are added to the
+  staff book, not to the core, and vanish at the next settlement. The core's migration is rescaled back to demography's
+  tile totals each year and demography runs its own migration; the working-age share stays the opening's. Staff are
+  funded at a multiple of the wage, so a seat that cannot fund the ceiling loses all its staff for the year. A
+  commission for a trade the economy lacks is dropped while the reply says it was posted. Herd labour hired two years
+  earlier can be reused. Living cost nets an estimated wage bill, not what the clearing paid. Hours per person differ
+  between lit works and the economy's fixed working year.
+- **Goods and prices.** Missing prices still read as zero in revenue ranking (`producers.py paying_output`), the opening
+  (`opening.py`, `opening_runs.py`, `opening_income.py`, `opening_stationary.py`) and a missing interest rate
+  (`notional.making_costs`, `market_memory.interest_rate`). Unsold is measured against the first round's offer. A seat
+  can buy and sell the same good with itself. Dues are priced at the opening wage.
+- **Bankruptcy.** The debt write-off target counts stock; Eurace's `Firm_bankruptcy_rescale_loans` uses capital and
+  cash only (`Financial_Management/Firm_Financial_Management_Functions.c`), so a bankrupt firm with stock gets too small a
+  write-off.
+- **Structure.** `tools/check_record_owners.py` misses writes through unannotated `memory` parameters
+  (`market_memory_asks.py`, `opening.py`, `opening_plans.py`), loan rows changed by `secondary_trade._move_loan`,
+  `Contracts` methods, and tables passed to the owner's helpers from many modules; `book` has no owner. `Labour`
+  (eleven mixins) and the markets port `AgentEconomy` are still god objects; the port keeps unsaved state read across
+  years (`outcomes`, health figures reset on each load). `getattr` on always-present setup fields remains. The
+  `legacy_labour` view exists only for tests.
+- **Documentation.** `PACKAGE_WALLS.md` and `ECONOMY_AGENTS.md` say nothing checks the walls; `STATE_OWNERSHIP_MAP.md`,
+  `sim/markets/state.py` and `sim/ARCHITECTURE.md` section 9 still describe seats' trades outside the clearing;
+  `sim/ARCHITECTURE.md` section 7 and CLAUDE.md section 3 omit the new checks; several docstrings name
+  `economy_port*.py`; five reports and this complaint's earlier text still describe per-employer contract wages;
+  Complaints 962 and 963 were diagnosed before the A1/A2 fixes and need re-measuring, as does
+  `Complaints/reports/rome-unemployment-audit.md`.
