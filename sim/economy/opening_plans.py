@@ -13,7 +13,7 @@ from typing import Callable, Dict, Mapping, Optional, Tuple
 
 from . import household_work_year, households_work, labour_state, year_labour
 from .households_cohort import Cohort
-from .market_memory import YearView, market_key
+from .market_memory import MarketMemory, YearView, market_key
 from .setup import labour_area
 from .types import AgentId, TileId
 
@@ -79,13 +79,13 @@ def _service_market(setup, area_map, tile: TileId) -> str:
     return area_map.area_of(goods[0], tile) if goods else tile
 
 
-def post_service_prices(memory, area_map, setup, floors: Mapping[TileId, float]) -> None:
+def post_service_prices(memory: MarketMemory, area_map, setup, floors: Mapping[TileId, float]) -> None:
     """The service goods' price in each tile whose households found hiring dearer: what an hour hired costs there."""
     for tile, floor in sorted(floors.items()):
         for good, effect in service_goods(setup, tile).items():
             key = market_key(good, area_map.area_of(good, tile))
             if key in memory.prices and memory.prices[key] < floor * effect:
-                memory.prices[key] = floor * effect
+                memory.set_price(key, floor * effect)
                 memory.note_usual_price(key)
 
 

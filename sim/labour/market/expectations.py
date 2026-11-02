@@ -35,9 +35,9 @@ def expected_income(state: MarketState, inputs: YearInputs, clearings: ClearingI
     if clearing is None or clearing.hours_hired <= 0.0:
         if clearing is not None and clearing.vacant_hours > 0.0:
             # employers want hours nobody here offers: the first to arrive is hired at the market wage
-            return max(floor, clearing.entry_wage * inputs.hours_per_worker_year)
+            return max(floor, clearing.wage * inputs.hours_per_worker_year)
         return floor
-    wage = clearing.average_wage
+    wage = clearing.wage
     offered = clearing.hours_offered
     arrived = hours_arrived_since(state, inputs, clearing, area, trade)
     if arrived > 0.0 and clearing.demand:

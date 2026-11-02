@@ -15,7 +15,8 @@ Market = Tuple[str, str]
 class LeftMarket:
     """A cleared market as the second round finds it: its bids and first-round result, the offers with what sold taken
     off, its last price, what has been delivered in it, what its buyers wanted (`wanted_in_round`, summed over the
-    rounds) and the clearings of every round."""
+    rounds), the bids of every round and the clearings of every round. What is unsold is what the last round to
+    clear it left on offer."""
 
     def __init__(self, bids, result, offers, last_price, delivered, wanted, idle_years=0):
         self.delivered = delivered     # goods moved in all rounds so far
@@ -23,9 +24,17 @@ class LeftMarket:
         self.idle_years = idle_years   # years the market lacked bids or offers, before this year
         self.results = [result]
         self.bids = bids
+        self.all_bids = list(bids)     # the bids of every round
+        self.last_offered = result.offered_at_price     # on offer at the last round's price
+        self.last_delivered = delivered                 # moved in the last round
         self.result = result
         self.offers = offers
         self.last_price = last_price
+
+    @property
+    def unsold(self) -> float:
+        """What the last round to clear this market left on offer."""
+        return max(0.0, self.last_offered - self.last_delivered)
 
 
 def sold_by_seller(result) -> Dict[tuple, float]:
@@ -114,7 +123,11 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
             result = goods_market.clear(bids, market.offers, key[0], key[1], setup.currency_id, market.last_price)
             market.wanted += wanted_in_round(bids, market.offers, result)
             market.results.append(result)
-            market.delivered += _settle(record, ledger, result)
+            market.all_bids.extend(bids)
+            moved = _settle(record, ledger, result)
+            market.delivered += moved
+            market.last_offered = result.offered_at_price
+            market.last_delivered = moved
             market.offers = offers_left(market.offers, sold_by_seller(result))
             spent_any = spent_any or result.quantity > 0.0
             fallback = cheapest_ask(market.offers)

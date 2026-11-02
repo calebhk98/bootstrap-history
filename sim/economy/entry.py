@@ -20,6 +20,7 @@ from .goods_market import quantity_at
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import MarketView
 from .types import AreaId, Bid, ClearingResult, GoodId, Offer, Recipe, TileId
+from .rates import charged_rate
 
 ENTRY_SHARE_OF_UNMET_DEMAND = declare(
     "ENTRY_SHARE_OF_UNMET_DEMAND", 0.5, kind="temporary_heuristic",
@@ -149,7 +150,7 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                 share_runs = demand.quantity / planned.outputs[demand.good] * ENTRY_SHARE_OF_UNMET_DEMAND
                 planned = entry_practice.planned_recipe(planned, crews_of(recipe_id), share_runs)
             yearly_return = _return_at(planned, recipe_id, demand.anchor_tile, view, rent)
-            if yearly_return > view.interest_rate(currency):
+            if yearly_return > charged_rate(view.interest_rate(currency)):
                 ranked.append((-yearly_return, recipe_id))
         remaining = demand.quantity
         for negative_return, recipe_id in sorted(ranked):

@@ -55,8 +55,9 @@ def capital_charge_per_run(recipe: Recipe, input_prices: Prices, wages: Wages, i
 
 
 def revenue_per_run(recipe: Recipe, expected_output_prices: Prices) -> float:
-    """Every output at its expected price; an output with no expected price is counted at nothing."""
-    return sum(quantity * expected_output_prices.get(good, 0.0) for good, quantity in recipe.outputs.items())
+    """Every output at its expected price; an output with no expected price is left out of the sum."""
+    return math.fsum(quantity * expected_output_prices[good] for good, quantity in recipe.outputs.items()
+                     if expected_output_prices.get(good) is not None)
 
 
 def expected_margin(recipe: Recipe, expected_output_prices: Prices, input_prices: Prices,
@@ -98,7 +99,8 @@ def full_cost_per_unit(recipe: Recipe, good: GoodId, output_prices: Prices, inpu
     if not math.isfinite(run_cost):
         return math.inf
     revenue = revenue_per_run(recipe, output_prices)
-    own_value = recipe.outputs[good] * output_prices.get(good, 0.0)
+    own_price = output_prices.get(good)
+    own_value = recipe.outputs[good] * own_price if own_price is not None else 0.0
     if revenue > 0.0 and own_value > 0.0:
         share = own_value / revenue
     else:

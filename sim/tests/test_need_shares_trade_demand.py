@@ -207,7 +207,7 @@ class OpeningPlacementTests(unittest.TestCase):
                    "dig": Recipe("dig", {"clay_kg": 1.0}, {}, {"labourer": 1.0}),
                    "wood": Recipe("wood", {"wood_kg": 1.0}, {}, {"labourer": 1.0}),
                    "kiln": Recipe("kiln", {"pot_kg": 0.5}, {"wood_kg": 1.0, "clay_kg": 1.0}, {"potter": 1.0})}
-        setup = type("Setup", (), {"opening_prices": {"pot_kg": 2.0, "clay_kg": 1.0, "wood_kg": 1.0}})()
+        setup = type("Setup", (), {"opening_prices": {"pot_kg": 2.0, "clay_kg": 1.0, "wood_kg": 1.0}, "site_limits": (), "specs": {}})()
         order = opening._placement_order({name: 1.0 for name in recipes}, recipes, setup)
         self.assertLess(order.index("pot"), order.index("dig"))
         self.assertLess(order.index("kiln"), order.index("dig"))
@@ -218,7 +218,7 @@ class OpeningPlacementTests(unittest.TestCase):
         from sim.economy.types import Recipe
         recipes = {"a": Recipe("a", {"a_kg": 1.0}, {"b_kg": 1.0}, {"x": 1.0}),
                    "b": Recipe("b", {"b_kg": 1.0}, {"a_kg": 1.0}, {"x": 1.0})}
-        setup = type("Setup", (), {"opening_prices": {"a_kg": 1.0, "b_kg": 1.0}})()
+        setup = type("Setup", (), {"opening_prices": {"a_kg": 1.0, "b_kg": 1.0}, "site_limits": (), "specs": {}})()
         self.assertEqual(sorted(opening._placement_order({"a": 1.0, "b": 1.0}, recipes, setup)), ["a", "b"])
 
 

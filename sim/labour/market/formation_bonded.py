@@ -12,7 +12,7 @@ def _practised_wage(index: Dict, area: str, trade: str) -> Optional[float]:
     clearing = index.get((area, trade))
     if clearing is None or clearing.hours_hired <= 0.0:
         return None
-    return clearing.average_wage
+    return clearing.wage
 
 
 def _floor_per_hour(inputs: YearInputs, area: str) -> float:

@@ -137,7 +137,8 @@ def _collect_in_kind(form, bases: Mapping[AgentId, Base], facts: YearFacts, stat
             held_left[key] -= paid
         if due - paid > 0.0:
             arrears.append(Arrear(payer, form.name, due - paid, base.good))
-        base_total += base.quantity * (price or 0.0)
+        if price is not None:
+            base_total += base.quantity * price
         due_total += due
         collected_quantity += paid
     if price is None:      # the quantities stand; their worth in money is not known

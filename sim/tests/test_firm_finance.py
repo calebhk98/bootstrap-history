@@ -83,15 +83,15 @@ class BankruptcyTests(unittest.TestCase):
         self.assertFalse(finance.insolvent(0.0))
 
     def test_insolvent_debt_is_rescaled_to_the_factor_times_assets(self):
-        ratio = finance.write_off_ratio(debt=300.0, assets=120.0, illiquid=False)
+        ratio = finance.write_off_ratio(debt=300.0, capital_and_cash=120.0, illiquid=False)
         self.assertAlmostEqual(ratio, 1.0 - finance.DEBT_RESCALING_FACTOR * 120.0 / 300.0)
 
     def test_illiquid_with_assets_beyond_the_debt_rescales_the_debt_itself(self):
-        ratio = finance.write_off_ratio(debt=100.0, assets=900.0, illiquid=True)
+        ratio = finance.write_off_ratio(debt=100.0, capital_and_cash=900.0, illiquid=True)
         self.assertAlmostEqual(ratio, 1.0 - finance.DEBT_RESCALING_FACTOR)
 
     def test_no_debt_writes_nothing_off(self):
-        self.assertEqual(finance.write_off_ratio(debt=0.0, assets=10.0, illiquid=False), 0.0)
+        self.assertEqual(finance.write_off_ratio(debt=0.0, capital_and_cash=10.0, illiquid=False), 0.0)
 
     def test_written_off_loans_lose_the_ratio_of_principal_and_arrears(self):
         loan = Loan("l1", "bank", "f1", "coin", 100.0, arrears=40.0, arrears_interest=10.0)
@@ -111,14 +111,14 @@ from sim.tests.test_economy_producers import farmer
 
 def settle(**changes):
     inputs = dict(producer=farmer(), survivor=farmer(cash_target=40.0), revenue=100.0, running_costs=60.0, interest=0.0,
-                  depreciation=0.0, commitments=20.0, arrears=0.0, cash=200.0, equity_value=300.0, assets=350.0, debt=50.0)
+                  depreciation=0.0, commitments=20.0, arrears=0.0, cash=200.0, equity_value=300.0, capital_and_cash=350.0, debt=50.0)
     inputs.update(changes)
     return firm_year.settled(**inputs)
 
 
 class SettledTests(unittest.TestCase):
     def test_a_sound_producer_pays_the_ratio_of_its_net_earnings_and_remembers_the_year(self):
-        year = settle(revenue=1000.0, running_costs=960.0, cash=100.0, equity_value=120.0, assets=170.0)
+        year = settle(revenue=1000.0, running_costs=960.0, cash=100.0, equity_value=120.0, capital_and_cash=170.0)
         self.assertEqual(year.state, "ok")
         self.assertAlmostEqual(year.dividend, finance.DIVIDEND_EARNINGS_RATIO * 40.0)
         self.assertEqual(year.producer.net_earnings_history, (40.0,))
@@ -133,14 +133,14 @@ class SettledTests(unittest.TestCase):
         self.assertAlmostEqual(year.dividend, 15.0)
 
     def test_arrears_left_after_service_are_illiquidity_and_idle_the_producer_without_dividend(self):
-        year = settle(arrears=5.0, cash=0.0, assets=90.0, debt=150.0, equity_value=-60.0)
+        year = settle(arrears=5.0, cash=0.0, capital_and_cash=90.0, debt=150.0, equity_value=-60.0)
         self.assertEqual(year.state, "illiquid")
         self.assertEqual(year.dividend, 0.0)
         self.assertEqual(year.producer.idle_years, finance.BANKRUPTCY_IDLE_YEARS)
         self.assertGreater(year.write_off_ratio, 0.0)
 
     def test_negative_equity_is_insolvency(self):
-        year = settle(equity_value=-1.0, assets=100.0, debt=101.0)
+        year = settle(equity_value=-1.0, capital_and_cash=100.0, debt=101.0)
         self.assertEqual(year.state, "insolvent")
         self.assertEqual(year.dividend, 0.0)
         self.assertAlmostEqual(year.write_off_ratio, finance.write_off_ratio(101.0, 100.0, False))
@@ -191,7 +191,7 @@ class SettledExcessTests(unittest.TestCase):
         self.assertAlmostEqual(settle(cash=75.0, cash_kept=100.0).dividend, 15.0)
 
     def test_a_bankrupt_producer_pays_nothing(self):
-        self.assertEqual(settle(equity_value=-1.0, assets=100.0, debt=101.0, cash=1000.0, cash_kept=100.0).dividend, 0.0)
+        self.assertEqual(settle(equity_value=-1.0, capital_and_cash=100.0, debt=101.0, cash=1000.0, cash_kept=100.0).dividend, 0.0)
 
 
 if __name__ == "__main__":

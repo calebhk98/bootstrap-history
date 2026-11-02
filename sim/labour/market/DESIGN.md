@@ -23,7 +23,7 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
    - An employer starts at the market wage, capped at its maximum, and raises its offer each search round
      while its vacancies stay open (below). Hours go to the employers with the highest maximum first.
    - Workers who stay with an employer keep their hours (`MarketState.hired_hours`) unless the employer wants fewer, but not their
-     wage. The trade's wage (`Clearing.wage`, `average_wage`, `new_hire_wage`, `MarketState.wages`) is one figure: the
+     wage. The trade's wage (`Clearing.wage`, `MarketState.wages`) is one figure: the
      hours-weighted mean of the offers actually paid to the hours taken on (`clear_one`, from the hours `hire_through_rounds`
      returns), or the wage the rounds start from when none were taken on. Every hour hired is paid it, and the hours households sell are
      counted at it. New hires come from the year's search rounds

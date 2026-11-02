@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple
 
 from . import households_basket, households_store
 from .types import Bid, Offer
+from .rates import charged_rate
 
 
 @dataclass(frozen=True)
@@ -30,7 +31,7 @@ def orders(setup, record, view) -> Tuple[List[Bid], List[Offer], Dict[str, float
         return [], [], {}
     money = setup.currency_id
     cash = record.book.balance(state, money)
-    real_rate = view.interest_rate(money) - holder.expected_inflation
+    real_rate = charged_rate(view.interest_rate(money)) - holder.expected_inflation
     store_value = math.fsum(held[good] * prices[good] for good in weights)
     above_buffer = budget.unplanned_cash + store_value
     bids, _spend = households_store.store_bids(holder, view, setup.specs, basket, weights, prices, held,

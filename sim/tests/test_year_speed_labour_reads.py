@@ -109,7 +109,7 @@ class BondedPurchaseReadsKeepTheirValues(unittest.TestCase):
                         2.0) for _ in range(20)]
             hired = {"e%d" % i: rng.uniform(0, 300) for i in range(6) if rng.random() < 0.5}
             clearing = Clearing(trade="x", area="p", wage=1.0, hours_offered=0.0, hours_wanted=0.0, hours_hired=0.0,
-                                hired_by_employer=hired, average_wage=1.0, target_wage=rng.uniform(0, 2))
+                                hired_by_employer=hired, target_wage=rng.uniform(0, 2))
             room = {"e%d" % i: rng.uniform(-5, 50) for i in range(6) if rng.random() < 0.5}
             hours = {}
             for bid in bids:
@@ -132,7 +132,7 @@ class BondedPurchaseReadsKeepTheirValues(unittest.TestCase):
                             bonded_for_sale={area: {"fitter": 30.0} for area in ("p", "q", "r")},
                             ask_floor_per_worker_year={area: 100.0 for area in ("p", "q", "r")}, outlay_room={"forge": 1.0e9})
         index = {(area, "fitter"): Clearing(trade="fitter", area=area, wage=1.0, hours_offered=0.0, hours_wanted=50000.0,
-                                            hours_hired=0.0, hired_by_employer={}, average_wage=1.0,
+                                            hours_hired=0.0, hired_by_employer={},
                                             target_wage=3.0) for area in ("p", "q", "r")}
 
         def run(shared):

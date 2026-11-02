@@ -23,7 +23,7 @@ def _clearing():
     """One digger sold his hours at the dearest of four bids of one worker's hours each."""
     return {(AREA, "digger"): Clearing(
         trade="digger", area=AREA, wage=40.0, hours_offered=HOURS, hours_wanted=4 * HOURS, hours_hired=HOURS,
-        hired_by_employer={}, average_wage=40.0, target_wage=40.0, hours_held=HOURS,
+        hired_by_employer={}, target_wage=40.0, hours_held=HOURS,
         demand=((40.0, HOURS), (30.0, HOURS), (20.0, HOURS), (10.0, HOURS)))}
 
 

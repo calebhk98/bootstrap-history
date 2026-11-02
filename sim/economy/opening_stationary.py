@@ -66,7 +66,8 @@ def solve(final_by_tile: Mapping[TileId, Mapping[GoodId, float]], recipes: Mappi
 def _plant_wear_cost(recipe: Recipe, prices: Mapping[GoodId, float]) -> float:
     if recipe.plant_life_years <= 0.0:
         return 0.0
-    return math.fsum(quantity * prices.get(good, 0.0) for good, quantity in recipe.plant_goods.items()) / recipe.plant_life_years
+    return math.fsum(quantity * prices[good] for good, quantity in recipe.plant_goods.items()
+                     if prices.get(good) is not None) / recipe.plant_life_years
 
 
 def hours_offered_over_demanded(hours_by_trade: Mapping[str, float], hours_offered: float,
