@@ -71,8 +71,6 @@ class YearInputs:
     hours_per_worker_year: float
     discount_rate: float
     career_years: float
-    entrants: Dict[AreaId, float] = dataclasses.field(default_factory=dict)        # people coming of working age
-    attrition_share: Dict[AreaId, float] = dataclasses.field(default_factory=dict)  # deaths and retirement a year
     routes: Dict[AreaId, List[Route]] = dataclasses.field(default_factory=dict)
     schools: Sequence[School] = ()
     enterable_trades: Optional[frozenset] = None        # None: every trade in `trades`
@@ -155,11 +153,9 @@ class Clearing:
 class YearReport:
     """What happened in the year, for screens, tests and the callers that pay wages."""
     clearings: List[Clearing] = dataclasses.field(default_factory=list)
-    entered: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)
     switched: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # net, by trade
     migrated: Dict[AreaId, float] = dataclasses.field(default_factory=dict)                  # net, by area
     graduated: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)
-    left_work: Dict[AreaId, float] = dataclasses.field(default_factory=dict)
     formed: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)   # first hands of an empty trade by route (formation.py)
     bonded_lots: list = dataclasses.field(default_factory=list)   # BondedLot rows: bonded people bought, from where, at what ask and carriage (bonded_worth.py)
 

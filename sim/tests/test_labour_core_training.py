@@ -105,14 +105,6 @@ class TrainingTests(unittest.TestCase):
         self.assertGreater(places, 0.0)
         self.assertLess(places, 100.0)
 
-    def test_attrition_takes_the_same_share_of_everyone(self):
-        state = records.MarketState(workers={"vale": {"digger": aptitude.split_evenly(100.0)}},
-                                    trainees={"vale": {"carver": [[2.0, aptitude.split_evenly(10.0), 0.0]]}})
-        report = records.YearReport()
-        training.apply_attrition(state, inputs(attrition_share={"vale": 0.1}), report)
-        self.assertAlmostEqual(records.people_in(state), 99.0)
-        self.assertAlmostEqual(report.left_work["vale"], 11.0)
-
     def test_the_state_round_trips_through_plain_data(self):
         state = records.MarketState(workers={"vale": {"digger": aptitude.split_evenly(3.0)}},
                                     wages={"vale": {"digger": 0.5}})

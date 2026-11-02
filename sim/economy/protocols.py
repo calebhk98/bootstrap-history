@@ -115,10 +115,8 @@ class YearInputs:
     legacy_transfers: Tuple = ()                            # one-sided engine postings, booked against EDGE_LEGACY
     harvest_factor: float = 1.0                             # this year's growing weather on households' own plots
     site_limits: Tuple[SiteLimit, ...] = ()                 # the sites' limits now; empty keeps the last declared
-    entrant_share: float = 0.0                              # share of working people a year coming of working age
     import_accounts: Tuple = ()                             # accounts that sell goods landed from abroad: their sales are imports
     export_accounts: Tuple = ()                             # accounts that buy goods for abroad: their purchases are exports
-    attrition_share: float = 0.0                            # share of working people a year dying or retiring
     labour_levy_hours_per_worker: float = 0.0               # hours of each working person's year the state takes (a corvee, conscripts)
     debt_relief_tiles: Tuple[TileId, ...] = ()              # tiles whose households' debts the state cancels this year (debt_relief.py)
     title_moves: Tuple[Tuple[TileId, str, str, float], ...] = ()    # (tile, giver, receiver, share) the state decrees: confiscation, land reform (titles_moves.py)

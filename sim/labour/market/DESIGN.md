@@ -33,39 +33,31 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
      takes the highest offer; searchers who found nothing cut their ask; an employer whose vacancies stay open raises its offer. Recruitment friction is the bounded
      applications and the dismissals, not a fitted rate.
      An employer with a higher maximum is filled first and draws hours from lower ones.
-2. **Attrition.** A share of workers and trainees leave work each year (`YearInputs.attrition_share`; the agent economy hands in none, for the same reason).
-3. **Training** (`training.py`). Trainee cohorts age a year. At zero years left they graduate.
+2. **Training** (`training.py`). Trainee cohorts age a year. At zero years left they graduate.
    - Each band's chance of finishing is `aptitude.completion_chance(band ability + cohort bonus, difficulty)`.
    - Those who do not finish join the fallback trade.
    - Places to learn at once in a trade in an area are its teachers' (`training.enrol`): `incumbent workers *
      apprentices_per_master + school seats`, less the trainees already enrolled; there is no division by the training years.
      Those who apply beyond the places are refused.
    - A trade with no incumbents and no school cannot reproduce.
-4. **Entrants** (`entrants.py`). The coming-of-age cohort (the caller's `YearInputs.entrants`; the agent economy hands in none, as demography's
-   people per tile are the one count and the economy rescales the core's people to them) chooses a trade, band by band, by logit over:
-   `completion_chance * present_value(income_at_graduation) + (1 - completion_chance) * present_value(fallback income) + taste_scale * log(jobs in the trade)`.
-   - The cohort chooses in rounds (`expectations.DECISION_ROUNDS_PER_YEAR`); each round sees the places
-     the earlier ones took. Choices made all at once overshoot a shortage, the trade gluts a
-     training-length later, and wages cycle between floor and ceiling.
-   - The log-jobs term (a size variable) makes a trade with many places draw many and one nobody employs
-     draw almost nobody, however many trades a mod adds. Without it, a logit over many alternatives spreads
-     entrants evenly.
+3. **Expected income after training** (`expectations.income_at_graduation`), which switching weighs. People enter the core only
+   through demography: the economy rescales the core's people on each tile to the working people the cohorts hold, so the core has
+   no entrants or leavers of its own.
    - `income_at_graduation` is the floor plus what the wage the market is heading to
      (`Clearing.target_wage`: where hours offered meet hours wanted, not the sticky wage) pays over the
      trade's own reservation wage, so danger pay is not a reward. It keeps today's premium only for the
      part of today's shortage that those already training will not fill. Where there is no shortage today, only the share of
      hours employers want finds work (`finds_work`, as in `expected_income`): a glut shows the floor, however high the lagging wage
      still is.
-   - Hands that have joined a trade needing no training since its clearing (entrants, switchers and migrants take it up at
+   - Hands that have joined a trade needing no training since its clearing (switchers and migrants take it up at
      once, so no trainee count shows them) are hours offered too: `income_at_graduation` slides the heading wage down the
      clearing's demand schedule (`Clearing.demand`) and counts them in the supply then (`expectations.hours_arrived_since`).
      Without it a thin unskilled market that cleared at its dearest bid drew a twentieth of the whole area's workers in one year.
    - A trade's expected income today (`expected_income`) is Harris-Todaro: the hours that find work earn
      the average wage, the rest earn the outside option. The chance of finding work is hours wanted over
      hours offered, so a few unfilled hours beside idle hands (matching friction) are not a sure job.
-   - Applicants beyond a trade's intake go to their next choice, and finally to the fallback trade.
    - The training premium of a trade is not written anywhere. It is the wage at which enough able people choose the trade.
-5. **Switching** (`switching.py`). Workers re-weigh their trade against the others, with a stay option.
+4. **Switching** (`switching.py`). Workers re-weigh their trade against the others, with a stay option.
    - Only moves worth more than staying are considered. Otherwise float noise and the logit's taste spread leak a large idle trade into a glutted one.
    - The gain is the present value of the expected-wage difference, less the retraining time, in units of a year's subsistence.
    - Retraining within a skill family takes a share of the full training.
@@ -75,7 +67,7 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
    - Switchers become trainees of the new trade and use the same intake.
    - A trade's workers who sold no hours this year reconsider at the share that found no work, if that is over the
      yearly consideration share: only those without work look about.
-6. **Migration** (`migration.py`). Workers re-weigh their area against the routes out of it, with a stay option.
+5. **Migration** (`migration.py`). Workers re-weigh their area against the routes out of it, with a stay option.
    - The comparison is the log of real expected wage (expected wage over subsistence) in the same trade, less the moving cost in years of subsistence.
    - Only listed routes are considered, so the cost is areas × routes × trades.
 
@@ -93,7 +85,7 @@ that can be fetched instead of switching on once they cover the whole shortage. 
 only the hours workers sell at the wage (`hours_sold_at`), here and where the hands come from: hours kept for plots
 and leisure are not hands in hand, so an area whose workers sell nothing at the going wage has its shortage priced by
 what fetching costs, not by the dearest bid (an unskilled wage that jumped to a plot's worth and pulled every skilled
-trade with it, Complaint 678). What entrants and
+trade with it, Complaint 678). What
 switchers weigh is the clearing's `target_wage`, capped at the long-run cost: a person who trains arrives after the
 training years, when the shortage the apprentices fill is gone. A worker already in the trade reads today's wage
 (`expected_income`) and offers more hours at it through `hours_sold_at`. A switcher into a trade also trains, so it
@@ -134,7 +126,7 @@ worker is worth less than the first.
 
 ## Status and what is outside this folder
 
-The core is complete and tested (`python3 -m sim.tests --only labour_core_training,labour_core_clearing,labour_core_entrants,labour_core_switching,labour_core_migration,labour_core_opening,labour_core_year,labour_core_bid_ranking,labour_core_import_cost,labour_core_seed_and_reservations,labour_core_skilled_ceiling,labour_core_substitute_wage,labour_core_supply_schedule`).
+The core is complete and tested (`python3 -m sim.tests --only labour_core_training,labour_core_clearing,labour_core_switching,labour_core_migration,labour_core_opening,labour_core_year,labour_core_bid_ranking,labour_core_import_cost,labour_core_seed_and_reservations,labour_core_skilled_ceiling,labour_core_substitute_wage,labour_core_supply_schedule`).
 The agent economy (on by default) calls it every year (`sim/economy/year_labour.py`) and keeps its state
 in its record, so the core sets the wage every employer is quoted. The engine's hours by trade are
 the core's people by trade (`sim/labour/labour_allocation.py`); until the agent economy has opened they follow
