@@ -1,5 +1,5 @@
-"""The foreign-trade module's rules: how a flow is paid in coin, how much a route's carriers lift, how a cargo leg is kept and
-settled, and which book entries a partner opens. The rules are plain functions called on written-out values; the module's
+"""The foreign-trade module's rules: how a flow is paid in coin, how much a route's carriers lift, and how a cargo leg is kept and
+settled. The rules are plain functions called on written-out values; the module's
 own methods run over plain views (`module_harness`)."""
 
 QUICK_TOPIC = True
@@ -126,18 +126,6 @@ class ModuleBooks(unittest.TestCase):
         ledger = module.world.ledgers["han"]
         self.assertEqual((ledger["lift_year"], ledger["lift_used_in"], ledger["lift_unmet"]), (100, 4.0, 1.0))
         self.assertEqual(ledger["lift_tonnes_per_year"], float("inf"))   # no legs: no limit
-
-    def test_a_partners_book_entry_opens_on_first_use_only_where_it_wants_the_good(self):
-        class Opens(ForeignTrade):
-            def foreign_opening(self, partner, commodity, solved):
-                return (5.0, 8.0) if commodity == "grain" else (0.0, 0.0)
-        module = module_harness.build(Opens, world=ForeignTradeWorld())
-        entry = module.partner_entry("han", "grain", {"solved_materials": ()})
-        self.assertEqual(entry, {"reference_tonnes": 8.0, "capacity_tonnes": 5.0, "stock_tonnes": 0.0,
-                                 "price_ratio": 1.0, "trade_tonnes": 0.0})
-        self.assertIs(module.partner_entry("han", "grain", {"solved_materials": ()}), entry)
-        self.assertIsNone(module.partner_entry("han", "iron", {"solved_materials": ()}))
-        self.assertEqual(list(module.world.market_book["han"]), ["grain"])
 
 
 if __name__ == "__main__":

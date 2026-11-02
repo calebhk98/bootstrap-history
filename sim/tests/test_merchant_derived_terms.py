@@ -333,11 +333,5 @@ class CapitalTests(unittest.TestCase):
         self.assertEqual(merchant_house.borrowing(50.0, 100.0), 0.0)
 
 
-def conditions(demand=1000.0, capacity=500.0):
-    return market.MarketConditions(
-        household_demand_at_anchor_tonnes=demand, committed_demand_tonnes=0.0,
-        society_capacity_tonnes=capacity, actor_supply_tonnes=0.0, founder_sales_tonnes=0.0, stock_tonnes=0.0)
-
-
 if __name__ == "__main__":
     unittest.main()

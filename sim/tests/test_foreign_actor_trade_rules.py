@@ -1,13 +1,12 @@
 """Trader actors own the goods they carry between countries (Complaints/115, 405): a cargo is tallied per partner and
-direction (`rules.note_actor_trade`, `rules.actors_carry`), the partner's book closes on the tally and clears it
-(`ForeignTrade.apply_close_partner_books`), a cargo sold to a partner is extra supply that lowers its price
-(`rules.clear_partner`), and the economy's stand-in external orders leave alone a good the actors carry in that direction
-(`AgentEconomy._external_orders`). Each rule is called on plain values or on a stand-in that holds only what it reads."""
+direction (`rules.note_actor_trade`, `rules.actors_carry`), the tallies reset at the year's end
+(`ForeignTrade.apply_close_partner_books`), and the economy's stand-in external orders leave alone a good the actors carry in
+that direction (`AgentEconomy._external_orders`). Each rule is called on plain values or on a stand-in that holds only what it
+reads."""
 QUICK_TOPIC = True
 
 import unittest
 from types import SimpleNamespace
-from unittest import mock
 
 from sim.markets import port_year
 from sim.actors.world_trade import TradeView
@@ -50,46 +49,11 @@ class TallyTests(unittest.TestCase):
 
 
 class CloseBooksTests(unittest.TestCase):
-    ENTRY = {"capacity_tonnes": 10.0, "stock_tonnes": 5.0, "price_ratio": 1.0, "trade_tonnes": 0.0}
-
-    def test_the_book_clears_on_the_years_cargo_records_the_outcome_and_empties_the_tally(self):
-        cleared = []
-
-        class Booked(ForeignTrade):
-            def partner_facts(self, partner):
-                return {}
-
-            def _import_offers(self, partner, cargo):
-                return {}, {"grain": sum(flow[SOLD] for flow in cargo.values())}
-
-            def partner_entry(self, partner, commodity, facts):
-                return entry
-
-            def _partner_outcome(self, entry, commodity, sold, bought, imports=()):
-                cleared.append((sold, bought))
-                return SimpleNamespace(price_ratio=0.8)
-        entry = dict(self.ENTRY)
-        module = module_harness.build(Booked, views={"material_commodity": lambda material: "grain"}, world=ForeignTradeWorld(
-            market_book={PARTNER: {"grain": entry}}, home_actor_trade={"wheat": {}}))
+    def test_the_year_end_empties_the_tallies(self):
+        module = module_harness.build(ForeignTrade, world=ForeignTradeWorld(home_actor_trade={"wheat": {}}))
         rules.note_actor_trade(module.world.actor_trade, PARTNER, "wheat", 3.0, True)
-        rules.note_actor_trade(module.world.actor_trade, PARTNER, "wheat", 1.0, False)
-        with mock.patch("sim.foreign_trade.rules.market.adjusted_capacity", return_value=9.0), \
-             mock.patch("sim.foreign_trade.rules.market.stock_after_year", return_value=4.0):
-            module.apply_close_partner_books(ClosePartnerBooks())
-        self.assertEqual(cleared, [(3.0, 1.0)])
-        self.assertEqual(entry, {"capacity_tonnes": 9.0, "stock_tonnes": 4.0, "price_ratio": 0.8, "trade_tonnes": 2.0})
+        module.apply_close_partner_books(ClosePartnerBooks())
         self.assertEqual((module.world.actor_trade, module.world.home_actor_trade), ({}, {}))
-
-
-class PartnerOutcomeTests(unittest.TestCase):
-    def outcome(self, sold):
-        entry = {"reference_tonnes": 100.0, "capacity_tonnes": 100.0, "stock_tonnes": 0.0}
-        return rules.clear_partner(entry, 0.6, 6.0, sold, 0.0)
-
-    def test_a_cargo_sold_to_the_partner_lowers_its_price_and_never_raises_it(self):
-        base = self.outcome(0.0).price_ratio
-        self.assertLess(self.outcome(50.0).price_ratio, base)
-        self.assertLessEqual(self.outcome(10.0).price_ratio, base)
 
 
 class ShipTests(unittest.TestCase):

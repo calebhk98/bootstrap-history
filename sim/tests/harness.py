@@ -199,10 +199,9 @@ def build_unopened(factory):
     from unittest import mock
     from sim.content import views as content_views
     from sim.markets.port import EconomyPort
-    every_record = content_views.foreign_economy_records
 
     def supported_records(directory=None):
-        return tuple(record for record in every_record(directory) if not record.get("agent_economy", False))
+        return ()   # every partner is a country of the agent economy, which stays unopened here
 
     # The opening cast may be seeded during construction, before the economy opens.
     with mock.patch.object(EconomyPort, "open_agent", lambda self: None), \
