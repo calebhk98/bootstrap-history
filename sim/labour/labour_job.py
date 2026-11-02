@@ -27,6 +27,6 @@ class StandingJobMixin:
         return self.wage_for_hours(trade, self.hours_for_sale())
 
     def wage_signature(self):
-        """A cheap fingerprint of what moves a trade's market wage within a year (the hiring pressure on
-        it), for callers that cache a figure derived from `standing_job_pay`."""
-        return self.labour_market.pressure_signature()
+        """A cheap fingerprint of what moves a trade's market wage (the economy sets it once a year), for callers
+        that cache a figure derived from `standing_job_pay`."""
+        return self._world.year

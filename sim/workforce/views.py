@@ -85,7 +85,7 @@ class Views:
 		return self.labour.base_tile()
 
 	def labour_market(self):
-		"""The one labour market every employer asks: quote, hire, release, read the pressure (the object itself)."""
+		"""The one labour market every employer asks: quote the economy's wage (the object itself)."""
 		return self.labour.market
 
 	# ---- the market and the wage ----

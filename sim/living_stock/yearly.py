@@ -5,7 +5,6 @@ less the live weight already grazing; one that says "arable" is raised in a nurs
 output per hectare its production entry gives. Growth the land cannot hold or the purse cannot pay is not made."""
 from sim.agents.api import edges
 from sim.ledger.api import PayEdge
-from sim.workforce.api import PressLabour
 
 from . import rules
 from .data import kilograms_per_unit, stock_entry, stock_rates
@@ -17,7 +16,7 @@ GROWS_ON_ARABLE = "arable"
 
 class Yearly:
     """The phase `living_stock` (needs: stock_land, endemic_stock_loss, nursery_room_units, labour_quote, can_pay,
-    acting_balance; sends PayEdge, PressLabour)."""
+    acting_balance; sends PayEdge)."""
 
     def nursery_room_units(self, material, place):
         """Units of the material the place's arable land can raise in a year at its production entry's output per
@@ -38,8 +37,6 @@ class Yearly:
         share = 1.0 if self.needs.can_pay(cost) else min(1.0, max(0.0, self.needs.acting_balance()) / cost)
         if share <= 0.0:
             return 0.0
-        for trade, hours in hours_by_trade.items():
-            self.needs.send(PressLabour(trade, hours * share))
         self.needs.send(PayEdge(edges.EDGE_MARKET, cost * share, "stock raised"))
         return share
 

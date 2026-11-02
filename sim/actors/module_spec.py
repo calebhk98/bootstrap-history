@@ -11,7 +11,6 @@ from sim.agents.api import ActorsState
 from sim.coin.api import ChargeActorsTheft, ChargeKeeping
 from sim.finance.api import DefaultOnDebt, RefreshLenderOffers
 from sim.foreign_trade.api import NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
-from sim.freight.api import PayRouteDues
 from sim.knowledge.api import ReceiveTechniques
 from sim.ledger.api import CreditSeat, DebitSeat, NoteSeatCash, PayActor, RestorePurse
 from sim.markets.api import ForgetActorOrders, NoteActorPurchase, NoteActorSale
@@ -132,6 +131,6 @@ MODULE_SPECS = (ModuleSpec(
 	),
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(ChargeKeeping, ChargeActorsTheft, RefreshLenderOffers, DefaultOnDebt, AccrueExperience, ForgetActorOrders, NoteActorSale,
-	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, PayRouteDues, AddScandal, RecordEvent, PayActor,
+	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, AddScandal, RecordEvent, PayActor,
 	       CreditSeat, DebitSeat, NoteSeatCash, RestorePurse, ReceiveTechniques, SetDealing, ReleasePlant, AdoptPlant),
 ),)

@@ -13,9 +13,6 @@ from .tuning_spending import (COAST_KM_PER_SHIP, COURT_RETAINERS_PER_OFFICIAL,
 							  PUBLIC_BUILDING_LIFE_YEARS, PUBLIC_FLOOR_AREA_PER_URBAN_PERSON_M2,
 							  MAX_STATE_SHARE_OF_TRADE, ROAD_UPKEEP_PERSON_YEARS_PER_KM)
 
-# The staple the dole is paid in, as a material in the tree's own terms.
-DOLE_MATERIAL = "wheat_kg"
-
 
 def paid(world: Any, name: str, kind: str, people: Dict[str, float]) -> Line:
 	"""A line made only of people kept in trades, never more of a trade than the state can take."""
@@ -47,7 +44,7 @@ def dole_line(world: Any) -> List[Line]:
 	tonnes = recipients * world.subsistence_kg_per_person_year() / 1000.0
 	if tonnes <= 0.0:
 		return []
-	return [Line("dole", "requisition", {}, 0.0, **goods(world, DOLE_MATERIAL, tonnes))]
+	return [Line("dole", "requisition", {}, 0.0, **goods(world, world.staple_material(), tonnes))]
 
 
 def navy_line(world: Any) -> List[Line]:

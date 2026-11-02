@@ -28,7 +28,6 @@ from sim.living_stock.module import LivingStock
 from sim.living_stock.state import LivingStockWorld
 from sim.polity.api import RaiseScandal
 from sim.tests import module_harness
-from sim.workforce.api import PressLabour
 from sim.workforce.module import Workforce
 from sim.foreign_trade.api import CloseMarketsTo, RecordStockTaken
 from sim.foreign_trade.module import ForeignTrade
@@ -137,7 +136,6 @@ class Game:
         answers = {
             ChangeStock: lambda command: apply_to_own_stock(self, command),
             PayEdge: lambda command: self.purse.pay(command.amount, command.purpose),
-            PressLabour: self.workforce.press_labour,
             RaiseScandal: self.polity.raise_scandal,
             CloseMarketsTo: self.trade.apply_close_markets_to,
             RecordStockTaken: self.trade.apply_record_stock_taken}

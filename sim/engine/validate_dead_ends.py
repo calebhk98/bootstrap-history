@@ -65,6 +65,6 @@ def report_lines(production, need_goods, service_lives, trade_registry, state_go
 
 
 def state_goods() -> Set[str]:
-    """The goods the state and army budget lines name in code (the dole and the army's equipment)."""
-    from sim.agents.api import DOLE_MATERIAL, EQUIPMENT_MATERIAL
-    return {DOLE_MATERIAL, EQUIPMENT_MATERIAL}
+    """The goods the state and army budget lines name in code (the army's equipment; the dole is the staple, which households consume)."""
+    from sim.agents.api import EQUIPMENT_MATERIAL
+    return {EQUIPMENT_MATERIAL}

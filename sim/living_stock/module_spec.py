@@ -3,7 +3,6 @@ from sim.assembly.api import KEYED, QUOTE, TABLE, ModuleSpec, PhaseHook, ViewSpe
 from sim.foreign_trade.api import CloseMarketsTo, RecordStockTaken, SettleFlow
 from sim.ledger.api import ChangeStock, PayEdge
 from sim.polity.api import RaiseScandal
-from sim.workforce.api import PressLabour
 
 from .commands import BuyStock, ChangeHeld, GrantOpeningHerds, GrantOpeningStock, SmuggleStock
 from .holding import HERDS
@@ -30,6 +29,6 @@ MODULE_SPECS = (ModuleSpec(
            "endemic_stock_loss", "nursery_room_units", "producer_capacities", "labour_quote", "can_pay", "partners",
            "partner", "partner_refusal", "partner_gate", "partner_landed_price", "partner_carry",
            "partner_catch_chance"),
-    sends=(ChangeStock, PayEdge, PressLabour, SettleFlow, RecordStockTaken, CloseMarketsTo, RaiseScandal),
+    sends=(ChangeStock, PayEdge, SettleFlow, RecordStockTaken, CloseMarketsTo, RaiseScandal),
     phases=(PhaseHook("living_stock", "step_living_stock"),),
 ),)

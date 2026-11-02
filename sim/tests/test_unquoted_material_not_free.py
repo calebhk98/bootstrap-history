@@ -18,7 +18,7 @@ from sim.tests.world_stand_in import fake_needs
 from .agents_fake_world import FakeWorld
 
 IRON = budget.EQUIPMENT_MATERIAL
-GRAIN = budget_lines.DOLE_MATERIAL
+GRAIN = "staple_kg"
 IRON_PRICE = 10.0
 GRAIN_PRICE = 4.0
 SHIP_PRICE = 10000.0
@@ -35,6 +35,9 @@ class Market(FakeWorld):
 
 	def commodity_of(self, material):
 		return material
+
+	def staple_material(self):
+		return GRAIN
 
 	def material_cost(self, material, tonnes):
 		return self.prices[material] * tonnes if material in self.prices else None

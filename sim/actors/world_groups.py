@@ -52,29 +52,6 @@ class GroupView:
 				lost, base, lost / wage, 1.0))
 		return sectors
 
-	def squeezed_employers(self) -> List[Sector]:
-		"""Employers of each trade whose price the hiring of the founder and the firms has pushed
-		above the wage table. With a fixed budget they can no longer afford the share of the town's
-		hands that the premium prices out, and the hands the founder and the firms keep are hands
-		they cannot hire; the value lost is those hands at the going wage."""
-		needs = self.needs
-		labour_market = self.labour_market  # type: ignore[attr-defined]
-		sectors = []
-		for trade in labour_market.pressured_trades():
-			factor = labour_market.price_factor(trade)
-			if factor <= 1.0 + 1e-9:
-				continue
-			pool = needs.market_supply[trade] / self.hours_per_person_year  # type: ignore[attr-defined]
-			priced_out = pool * (1.0 - 1.0 / factor)
-			wage = labour_market.unscarce_annual(trade)
-			sectors.append(Sector(
-				"squeezed_employers", trade, "employers of %s in the founder's town" % trade,
-				"hiring by you and the firms has raised the going price of %s by %d%% and priced out about %s hands"
-				% (trade, round((factor - 1.0) * 100), plain_number(priced_out)),
-				priced_out * wage, pool * wage * factor, priced_out * wage / self._annual_labourer_wage(),
-				needs.local_market_share()))
-		return sectors
-
 	def goods_categories(self) -> Dict[str, Dict[str, Any]]:
 		"""Each goods category the founder's and the firms' concerns sell into: how far the price of
 		what it sells has fallen from its opening level, and the share of each trade's work that goes
@@ -118,7 +95,7 @@ class GroupView:
 		def compute() -> Dict[str, Sector]:
 			strata = self.registry.home_actors("stratum")
 			goods = Sector.of_goods(strata, self.goods_categories(), self) if strata else []
-			caused = self.displaced_producers() + goods + self.squeezed_employers()
+			caused = self.displaced_producers() + goods
 			firms = self.registry.home_actors("firm")
 			foundations = [foundation for kind in ("church", "academy") for foundation in self.registry.home_actors(kind)]
 			governments = [government for government in self.registry.of_kind("government")

@@ -22,7 +22,7 @@ RATES = {"artisan": 0.9, "labourer": 0.4, "scribe": 1.1}
 def real_market(pressure=None, employed=None):
     employed = dict(employed or {})
     world = types.SimpleNamespace(
-        workforce=types.SimpleNamespace(labour_pressure_records=dict(pressure or {}), worker_housing_places=None),
+        workforce=types.SimpleNamespace(worker_housing_places=None),
         year=0, state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=0)),
         HOURS_PER_PERSON_YEAR=HOURS_PER_YEAR, price_index=1.5, wage_index=1.3,
         economy=types.SimpleNamespace(agent_wage_per_hour=lambda trade: None), real_output_per_head=lambda: 1.1,
@@ -38,23 +38,11 @@ def real_market(pressure=None, employed=None):
 
 
 class HireQuoteTests(unittest.TestCase):
-    def setUp(self):
-        patcher = mock.patch.object(labour_market_api.trade_data, "fallback_trade_of", lambda world, years: "labourer")
-        patcher.start()
-        self.addCleanup(patcher.stop)
-
     def test_the_wage_quoted_does_not_depend_on_how_many_are_taken_on_or_how_hard_the_trade_is_leaned_on(self):
-        market, _labour = real_market(pressure={TRADE: (SUPPLY * 0.8, 0)})
+        market, _labour = real_market()
         calm, _labour = real_market()
         self.assertEqual(market.quote_annual(TRADE, 3.0), market.quote_annual(TRADE))
         self.assertEqual(market.quote_annual(TRADE), calm.quote_annual(TRADE))
-
-    def test_a_hire_asks_the_market_for_its_rate_and_presses_the_hours(self):
-        pressed = []
-        recorder = types.SimpleNamespace(quote=lambda trade, hours, employer, premium: 3.0,
-                                         press=lambda trade, hours: pressed.append((trade, hours)))
-        self.assertEqual(LabourMarket.hire(recorder, "a firm", TRADE, 4000.0), 3.0)
-        self.assertEqual(pressed, [(TRADE, 4000.0)])
 
 
 class WorldReadsTheOneMarketTests(unittest.TestCase):

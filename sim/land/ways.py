@@ -94,20 +94,12 @@ class Ways:
                 way, quote["km"], needs.money_text(quote["money"], grouped=True), needs.afford_means())
         needs.send(PayEdge(edges.EDGE_BUILDERS, quote["money"], "building a %s" % way))
         year = needs.year()
-        needs.labour_market().press(quote["trade"], quote["crew_hours"])
         self.world.ways_under_construction.setdefault(key, {})[way] = ways_rules.pending_way(year, quote)
         return True, "started a %s of %.1f km %s for %s%s; a crew of %d will take about %.1f years." % (
             way, quote["km"], place, needs.money_text(quote["money"], grouped=True),
             ", engineered through steep ground" if quote["engineered"] else "", quote["crew"], quote["years"])
 
     def finish_ways(self, command: FinishWays) -> None:
-        """Open the ways whose build time has passed, so routes, reach and the economy's carriage see them; the crews of those
-        still building lean on their trade's pool again this year; the works register finishes on the same beat."""
-        market = self.needs.labour_market()
-        for call, trade, hours in ways_rules.open_ways(self.world.ways_under_construction, self.world.improvements,
-                                                       self.needs.year()):
-            if call == "release":
-                market.release(None, trade, hours)
-            else:
-                market.press(trade, hours)
+        """Open the ways whose build time has passed, so routes, reach and the economy's carriage see them; the works register finishes on the same beat."""
+        ways_rules.open_ways(self.world.ways_under_construction, self.world.improvements, self.needs.year())
         self.finish_works()

@@ -49,13 +49,3 @@ class ScheduleDocument(unittest.TestCase):
     def test_the_documents_money_conversion_is_the_schedules_money_per_labour_hour(self):
         schedule = WageSchedule({"labourer": 0.0, "smith": 5.0}, 2.5, 1.0, 0.10)
         self.assertEqual(schedule.document()["money_per_labour_hour"], 2.5)
-
-
-class PressureLivesInTheState(unittest.TestCase):
-    def test_the_labour_pressure_records_are_written_into_the_saved_household(self):
-        blob = serialize_state(WorkforceSeat(labour_pressure_records={"artisan": [2000.0, 100]}))
-        self.assertEqual(blob["labour_pressure_records"], {"artisan": [2000.0, 100]})
-
-
-if __name__ == "__main__":
-    unittest.main()

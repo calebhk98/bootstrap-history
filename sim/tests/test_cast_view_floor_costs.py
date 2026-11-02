@@ -8,11 +8,14 @@ import types
 import unittest
 from unittest import mock
 
-from sim.agents.api import DOLE_MATERIAL, FOOD_NEED
+from sim.agents.api import FOOD_NEED
 from sim.actors import world_cast
 from sim.actors.world_cast import CastView
 
 from .world_stand_in import fake_needs
+
+
+STAPLE = "staple_kg"
 
 
 def stand_in(tile_costs, dole_cost=None):
@@ -23,6 +26,7 @@ def stand_in(tile_costs, dole_cost=None):
         asked.append((material, tonnes))
         return dole_cost
     return types.SimpleNamespace(needs=needs, subsistence_kg_per_person_year=lambda: 250.0, material_cost=material_cost,
+                                 staple_material=lambda: STAPLE,
                                  asked=asked)
 
 
@@ -36,7 +40,7 @@ class NeedFloorCosts(unittest.TestCase):
         with mock.patch.object(world_cast.need_basket, "need_prices", return_value=[]):
             costs = CastView.need_floor_costs_per_person_year(view)
         self.assertEqual(costs, {FOOD_NEED: 9.0})
-        self.assertEqual(view.asked, [(DOLE_MATERIAL, 0.25)])
+        self.assertEqual(view.asked, [(STAPLE, 0.25)])
 
     def test_an_unpriced_dole_leaves_the_floor_empty(self):
         view = stand_in({}, dole_cost=None)

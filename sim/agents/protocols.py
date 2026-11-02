@@ -92,14 +92,15 @@ class World(Protocol):
 	def pay_per_person_year(self, trade: str) -> float:
 		...
 
+	def staple_material(self) -> str:
+		"""The material the civilisation's people live on."""
+		...
+
 	def commodity_of(self, material: str) -> str:
 		...
 
 	def material_cost(self, material: str, tonnes: float) -> Optional[float]:
 		"""Money to buy this many tonnes of a material at the price the market quotes; None when no market sells it."""
-		...
-
-	def local_staff(self, trade: str, people: float) -> float:
 		...
 
 	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
@@ -171,9 +172,6 @@ class World(Protocol):
 	# ---- Who is hurt, and what an interest group can see
 
 	def displaced_producers(self) -> List[Sector]:
-		...
-
-	def squeezed_employers(self) -> List[Sector]:
 		...
 
 	def idle_hours_by_trade(self) -> Dict[str, Tuple[float, float]]:
@@ -567,11 +565,6 @@ class World(Protocol):
 
 	def freight_between(self, source: str, destination: str, material: str, tonnes: float) -> float:
 		"""Money to carry `tonnes` of a material from one place to another."""
-		...
-
-	def pay_route_dues(self, payer: Any, source: str, destination: str, material: str, tonnes: float) -> float:
-		"""The payer pays the tolls and port dues of carrying `tonnes` between two places to the treasuries of
-		whoever holds the tiles they are levied at; returns the money paid, which is part of the freight."""
 		...
 
 	def market_depth(self, material: str, place: str) -> float:

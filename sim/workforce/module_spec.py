@@ -10,7 +10,7 @@ from sim.polity.api import GainReputation, ScaleFamiliarity, ScaleProtection
 from sim.seats.api import RememberGoalClosure
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 
-from .commands import (BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread, PressLabour,
+from .commands import (BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread,
                        LoseStaff, ReleaseStaff, SetEmployed, StaffArrived, TakeWageFallback)
 from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase, TrainStaff,
                               WorkForWages)
@@ -144,7 +144,7 @@ MODULE_SPECS = (ModuleSpec(
         # puts every book back after trying the sale: a quote that writes and restores (retire when wage work has a pure rule)
         ViewSpec("work_for_wages_dry_run", "work_for_wages_dry_run", kind=QUOTE, **_SEAT),
     ),
-    applies=((SetEmployed, "set_employed"), (StaffArrived, "staff_arrived"), (NoteTradeSpread, "note_trade_spread"), (PressLabour, "press_labour"),
+    applies=((SetEmployed, "set_employed"), (StaffArrived, "staff_arrived"), (NoteTradeSpread, "note_trade_spread"),
              (LoseStaff, "lose_staff"), (GrantStaff, "grant_staff"),
              (ReleaseStaff, "release_staff"), (TakeWageFallback, "take_wage_fallback"),
              (CloseHoursYear, "close_hours_year"),

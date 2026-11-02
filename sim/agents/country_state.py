@@ -125,10 +125,6 @@ class CountryStateView(CollectionView):
 			return float(self._answer("working people", economy.working_people()))
 		return float(economy.people_of_trade(trade))
 
-	def local_staff(self, trade: str, people: float) -> float:
-		"""A country's state staff are its own people, not the founder's labour pool."""
-		return 0.0
-
 	# ---- the army
 	def equipment_kg_per_soldier(self) -> float:
 		"""Iron and ammunition one equipped soldier uses a year at the share of the military work the country's own

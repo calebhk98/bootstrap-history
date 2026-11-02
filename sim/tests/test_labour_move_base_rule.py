@@ -84,7 +84,6 @@ class MoveBaseEffectsTest(unittest.TestCase):
         self.assertEqual(mover.paid, [("workers", 50.0, "relocation")])
         self.assertEqual(household.relocation_hours_this_year, 80.0)
         self.assertEqual((household.commissioned, household.contract_hours), ({}, {}))
-        self.assertEqual(mover.pressure_cleared, 1)
         self.assertEqual(mover.sent, [NoteSpend(50.0), ScaleFamiliarity(SettlementMixin.RELOCATION_STANDING_RETAINED),
                                       ScaleProtection(SettlementMixin.RELOCATION_STANDING_RETAINED)])
         self.assertEqual(household.base_tile, TOWN)

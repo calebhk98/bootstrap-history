@@ -2,13 +2,12 @@
 
 A place is a civilisation id: the home society and each foreign economy trading with it this year.
 Prices are per tonne in home money (the foreign side is its solved price converted through its coin).
-Freight between home and a partner is the partner route's freight per tonne. What households at a
+What households at a
 place buy for themselves in a year is the depth a trader sizes its cargo to.
 """
 from typing import Any, Dict, List, Optional, Tuple
 
 from sim.foreign_trade.api import NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg
-from sim.freight.api import PayRouteDues
 from sim.world.material_units import tonnes_per_unit
 
 
@@ -29,11 +28,7 @@ class TradeView:
 	def _prices_per_tonne(self, place: str) -> Dict[str, float]:
 		def compute() -> Dict[str, float]:
 			needs = self.needs  # type: ignore[attr-defined]
-			if place == self._home_place():
-				per_unit = needs.material_prices()
-			else:
-				per_unit = {material: needs.partner_price_per_unit(place, material)
-							for material in needs.partner_facts[place]["prices_in_home_money"]}
+			per_unit = needs.material_prices()
 			prices = {}
 			for material, price in per_unit.items():
 				tonnes = tonnes_per_unit(material)
@@ -44,9 +39,7 @@ class TradeView:
 
 	def _depth_by_material(self, place: str) -> Dict[str, float]:
 		"""Tonnes a year households at a place buy of each good: at home from live prices and size, as the
-		engine's own foreign trade does; a partner at its own solved prices."""
-		if place != self._home_place():
-			return self.needs.partner_household_demand[place]  # type: ignore[attr-defined]
+		engine's own foreign trade does."""
 		def compute() -> Dict[str, float]:
 			needs = self.needs  # type: ignore[attr-defined]
 			per_hour = needs.money_per_labour_hour()
@@ -82,16 +75,10 @@ class TradeView:
 		return self._prices_per_tonne(place).get(material)
 
 	def freight_between(self, source: str, destination: str, material: str, tonnes: float) -> float:
-		"""Carriage over each partner's route between the two places; two partners trade through home, so
-		both legs are paid. Nothing within one place."""
+		"""The tariff on a cargo between two places; nothing within one place."""
 		if source == destination:
 			return 0.0
-		home = self._home_place()
-		per_tonne = 0.0
-		for partner in (source, destination):
-			if partner != home:
-				per_tonne += float(self.needs.partner_facts[partner]["freight_per_tonne"] or 0.0)  # type: ignore[attr-defined]
-		return per_tonne * tonnes + self.duty_between(source, destination, material, tonnes)
+		return self.duty_between(source, destination, material, tonnes)
 
 	def duty_between(self, source: str, destination: str, material: str, tonnes: float) -> float:
 		"""The tariff the destination country's state charges on a cargo from the source country (a share of its value
@@ -99,19 +86,6 @@ class TradeView:
 		if tonnes <= 0.0 or source == destination:
 			return 0.0
 		return float(self.needs.border_duty_per_tonne(source, destination, self.price_at(material, source) or 0.0)) * tonnes
-
-	def pay_route_dues(self, payer: Any, source: str, destination: str, material: str, tonnes: float) -> float:
-		"""Pays each partner route's dues to the holders of the tiles they are levied at, no more than the
-		route's freight; returns the money paid."""
-		if source == destination:
-			return 0.0
-		needs, home, paid = self.needs, self._home_place(), 0.0  # type: ignore[attr-defined]
-		for partner in (source, destination):
-			if partner != home:
-				facts = needs.partner_facts[partner]
-				if facts["route"] is not None:
-					paid += needs.send(PayRouteDues(payer.actor_id, facts["route"], tonnes, float(facts["freight_per_tonne"] or 0.0) * tonnes))
-		return paid
 
 	def market_depth(self, material: str, place: str) -> float:
 		"""Tonnes a year buyers at a place take."""

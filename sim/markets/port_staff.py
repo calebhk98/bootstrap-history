@@ -1,17 +1,19 @@
-"""The seats' staff as standing bids in the agent economy's labour core. Part of the port (it imports `sim.economy.api`).
+"""Every employer's staff as standing bids in the agent economy's labour core. Part of the port (it imports `sim.economy.api`).
 
-A seat's `hire` posts places by trade (`sim.labour.staff_posting()`). Each year the places become `LabourBid`s for the seat's
-staff account at the economy's wage for the trade; the account is funded from the seat's purse up to what it can spend, the
-core clears and pays the fills from that account, and the seat's staff become the people the clearing hired (hours over the
-working year). The money left in the account goes back to the seat. Each hour is paid once, by the clearing.
+An employer (a seat, a firm, a state) posts places by trade: a seat's `hire` (`sim.labour.staff_posting()`), an actor's
+`record.staff_wanted`. Each year the places become `LabourBid`s for the employer's staff account at the economy's wage for
+the trade; the account is funded from the employer's purse up to what it can spend, the core clears and pays the fills from
+that account, and the employer's staff become the people the clearing hired (hours over the working year). The money left
+in the account goes back to the employer. Each hour is paid once, by the clearing.
 """
 import math
 
+from sim.actors import api as actors_api
 from sim.agents.api import edges
 from sim.constants import declare
 from sim.economy import api as economy_api
 from sim.economy.api import EDGE_EXCHANGE, AgentOrders, LabourBid, Transfer
-from sim.ledger.api import PayEdge, ReceiveFromEdge
+from sim.ledger.api import PayEdge, PayExchange, ReceiveFromEdge, ReceiveFromExchange
 from sim.workforce.api import StaffArrived
 
 STAFF_PREFIX = "staff:"
@@ -27,11 +29,11 @@ def staff_account(seat_id):
     return STAFF_PREFIX + seat_id
 
 
-def seat_bids(economy, seat_id, wanted, tile, affordable_coin):
-    """(bids, economy units the bids can cost at most) for one seat's places: each trade's hours at the economy's wage
+def employer_bids(economy, employer_id, wanted, tile, affordable_coin):
+    """(bids, economy units the bids can cost at most) for one employer's places: each trade's hours at the economy's wage
     (the opening wage before the market has one), scaled down together when the ceiling bill exceeds `affordable_coin`."""
     view, setup = economy.view(), economy.setup
-    account = staff_account(seat_id)
+    account = staff_account(employer_id)
     bids = []
     for trade, people in sorted(wanted.items()):
         if people <= 0.0 or trade not in setup.trades:
@@ -80,3 +82,36 @@ def settle(sim, economy, posted):
                 sim.send(ReceiveFromEdge(edges.EDGE_WORKERS, unspent * setup.coin_per_unit, "wage offers unspent"))
             for trade in trades:
                 sim.send(StaffArrived(trade, float(round(hired.get(trade, 0.0) / setup.working_hours_per_year))))
+
+
+def post_actors(sim, economy, tile_of_actor):
+    """({account: AgentOrders}, [ids of the actors that posted]) for the year: the firms', states' and players' places become
+    bids like a seat's; each posting actor's money goes into its staff account."""
+    orders, posted = {}, []
+    setup = economy.setup
+    for actor_id, actor in sorted(sim.actors.actors.items()):
+        if actor.record.exited_year is not None or not actor.record.staff_wanted:
+            continue
+        bids, units = employer_bids(economy, actor_id, actor.record.staff_wanted, tile_of_actor(actor_id), max(0.0, actor.money))
+        if not bids:
+            continue
+        sim.send(PayExchange(actor_id, units * setup.coin_per_unit, "wages offered in the labour market"))
+        economy_api.post_transfers(economy, [Transfer(EDGE_EXCHANGE, staff_account(actor_id), setup.currency_id, units, "wages offered")])
+        orders[staff_account(actor_id)] = AgentOrders(labour_bids=tuple(bids))
+        posted.append(actor_id)
+    return orders, posted
+
+
+def settle_actors(sim, economy, posted):
+    """After the clearing: the money left in each posting actor's account goes back to it, and every actor's staff are the
+    people the clearing hired for it (none for an actor that posted nothing)."""
+    setup = economy.setup
+    staff = {}
+    for actor_id in posted:
+        account = staff_account(actor_id)
+        hired = economy_api.hours_hired_by_employer(economy, account)
+        unspent = economy_api.settle_agent_takings(economy, account, EDGE_EXCHANGE)
+        if unspent > 0.0:
+            sim.send(ReceiveFromExchange(actor_id, unspent * setup.coin_per_unit, "wage offers unspent"))
+        staff[actor_id] = {trade: hours / setup.working_hours_per_year for trade, hours in hired.items() if hours > 0.0}
+    actors_api.set_staff(sim.actors, staff)
