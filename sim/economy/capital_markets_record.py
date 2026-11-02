@@ -17,8 +17,21 @@ class CapitalMarketsRecord(OwnedRecord):
     capital: CapitalState = field(default_factory=CapitalState)          # hazard records, insurers with their policies, and funds, keyed by AgentId (capital_state.py)
     property_income: Dict[AgentId, float] = field(default_factory=dict)  # dividends and interest last year
 
+    OWNERS = ("capital_markets_record", "banks", "funds", "insurance", "shares", "portfolio_year", "secondary_trade", "capital_year")
     AGENT_KEYED = ("banks", "shares", "last_dividends", "capital", "property_income")
     SAVED_SORTED = ("banks", "shares", "last_dividends")
     ENCODERS = {"capital": lambda capital: capital.to_plain()}
     DECODERS = {"banks": lambda value: {key: Bank(**each) for key, each in value.items()},
                 "capital": CapitalState.from_plain}
+
+    def set_property_income(self, income: Dict[AgentId, float]) -> None:
+        """What households received as dividends, interest and rent is `income`."""
+        self.property_income = income
+
+    def add_property_income(self, agent: AgentId, amount: float) -> None:
+        self.property_income[agent] = self.property_income.get(agent, 0.0) + amount
+
+    def forget_producer(self, producer_id: AgentId) -> None:
+        """The producer closed: nobody holds shares in it and it pays no dividend."""
+        self.shares.pop(producer_id, None)
+        self.last_dividends.pop(producer_id, None)

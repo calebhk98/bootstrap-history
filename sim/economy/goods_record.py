@@ -19,3 +19,27 @@ class GoodsRecord(OwnedRecord):
     opening_own_grown: Dict[str, float] = field(default_factory=dict)    # good -> quantity households were seeded to grow on their own plots
     opening_demand_by_country: Dict[str, Dict[str, float]] = field(default_factory=dict)  # country -> good -> quantity its households were seeded to want
     output_by_tile: Dict[TileId, Dict[str, float]] = field(default_factory=dict)   # tile -> good -> units the home producers made last year
+
+    OWNERS = ("goods_record", "year_goods", "entry_margin")
+
+    def reset_output(self) -> None:
+        self.output_by_tile = {}
+
+    def add_output(self, tile: TileId, good: str, quantity: float) -> None:
+        """The home producers on `tile` made `quantity` more of `good`."""
+        row = self.output_by_tile.setdefault(tile, {})
+        row[good] = row.get(good, 0.0) + quantity
+
+    def set_index_base_prices(self, prices: Dict[str, float]) -> None:
+        """The price level's base."""
+        self.index_base_prices = prices
+
+    def seed_opening_own_grown(self, own_grown: Dict[str, float]) -> None:
+        self.opening_own_grown = own_grown
+
+    def seed_opening_demand(self, demand: Dict[str, float], demand_by_country: Dict[str, Dict[str, float]]) -> None:
+        self.opening_demand = demand
+        self.opening_demand_by_country = demand_by_country
+
+    def seed_opening_basket(self, basket: Dict[str, float]) -> None:
+        self.opening_basket = basket

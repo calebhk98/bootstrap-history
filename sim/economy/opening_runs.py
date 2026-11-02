@@ -8,6 +8,7 @@ the rest is made by the next cheapest.
 import math
 from typing import Dict, List, Mapping, Optional, Tuple
 
+from . import producer_table
 from . import crop_sites, sites, tool_fallback, unit_cost
 from .replaced import replaced
 from .setup import recipe_tile_key
@@ -292,9 +293,9 @@ def fit_to_supply(setup, record) -> None:
             if wanted > supply * (1.0 + 1e-9) and wanted > 0.0:
                 factor = supply / wanted
                 for producer_id, producer, _used in users:
-                    record.producers[producer_id] = replaced(
+                    producer_table.put_producer(record.producers, replaced(
                         producer, capacity_runs=producer.capacity_runs * factor,
-                        expected_sales=producer.expected_sales * factor)
+                        expected_sales=producer.expected_sales * factor))
                 held = True
         if not held:
             break

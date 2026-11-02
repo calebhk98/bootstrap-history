@@ -6,6 +6,7 @@ cash back into paying producers that ran out of it."""
 import math
 from typing import Dict, Tuple
 
+from . import producer_table
 from . import credit, entry_practice, location, ownership, practice, sites, unit_cost
 from .entry_backed import unfilled_at_cost
 from .entry_margin import margin_entry_plans
@@ -72,7 +73,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
         if not builds_plant:
             producer = replaced(producer, capacity_runs=producer.capacity_runs + plan.runs,
                                 workshops=producer.workshops + 1)
-        record.producers[producer_id] = producer
+        producer_table.put_producer(record.producers, producer)
         started += 1
         inputs, wages = live_input_prices(producer, recipe, view), live_wages(producer, recipe, view)
         stake = min(working_capital_target(practice.recipe_for(recipe, producer.crew_runs), plan.runs, inputs, wages),
@@ -83,9 +84,9 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
             per_run = unit_cost.plant_value_per_run(recipe, inputs, wages)
             loan = entrant_loan(per_run * plan.runs, stake) if per_run > 0.0 and math.isfinite(per_run) else 0.0
             if loan > 0.0:
-                record.credit.loan_requests.append(LoanRequest(producer_id, money, loan, credit.earnable_rate(plan.yearly_return),
-                                                        recipe.plant_life_years, loan, "enter"))
-                record.credit.expansion_runs[producer_id] = loan / per_run
+                record.credit.ask_for_loan(LoanRequest(producer_id, money, loan, credit.earnable_rate(plan.yearly_return),
+                                                       recipe.plant_life_years, loan, "enter"))
+                record.credit.plan_expansion(producer_id, loan / per_run)
     return started
 
 
@@ -143,7 +144,7 @@ def close_idle_producers(setup, record) -> int:
                  for tile, quantity in sorted(tiles.items()) if quantity > 0.0]
         if moves:
             record.book.move_many(moves)
-        del record.producers[producer_id]
+        producer_table.remove_producer(record.producers, producer_id)
     return len(closing)
 
 

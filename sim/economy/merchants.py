@@ -116,6 +116,19 @@ class Dispatch:
     dues: Tuple[Transfer, ...] = ()     # the route dues paid to the holders' accounts (route_dues.py), apart from the fee
 
 
+def put_merchant(table: Dict[AgentId, Merchant], merchant: Merchant) -> None:
+    """`merchant` is the table's row for its id (`record.merchants` is written only by this module and merchants_dispatch)."""
+    table[merchant.agent_id] = merchant
+
+
+def remap_to_areas(merchant: Merchant, expected_prices, expected_volumes, price_history, routes) -> None:
+    """What the merchant expects and the routes it plans, rewritten over the market areas that replaced the old ones."""
+    merchant.expected_prices = expected_prices
+    merchant.expected_volumes = expected_volumes
+    merchant.price_history = price_history
+    merchant.routes = routes
+
+
 def within_purse(transfers: Sequence[Transfer], balance: float) -> Tuple[Transfer, ...]:
     """The transfers as posted against a purse holding `balance`: all of them when their sum fits the purse (less the
     rounding margin), else each cut by the same share so the sum does."""

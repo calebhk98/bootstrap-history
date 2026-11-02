@@ -67,6 +67,11 @@ wall_count="$(printf '%s\n' "$wall_output" | grep -c 'imports sim\.')"
 echo "imports of a walled package's submodule from outside it: $wall_count"
 printf '%s\n' "$wall_output" | grep . | sed 's/^/  /'
 
+owner_output="$(python3 tools/check_record_owners.py)"
+owner_status=$?
+echo "writes to an economy record part by a module that does not own it: $(printf '%s\n' "$owner_output" | grep -c .)"
+printf '%s\n' "$owner_output" | grep . | sed 's/^/  /'
+
 port_reach="$(grep -rnE '(\beconomy|_economy)\.(record|setup)\b' sim/markets --include='port*.py' | cut -d: -f1,2)"
 echo "economy record/setup reach-through from sim/markets/port*.py: $(printf '%s\n' "$port_reach" | grep -c .)"
 printf '%s\n' "$port_reach" | grep . | sed 's/^/  /'
@@ -78,6 +83,7 @@ failed_checks=()
 [ "$money_count" -gt 0 ] && failed_checks+=("direct capital/money writes outside owners")
 [ "$legacy_count" -gt 0 ] && failed_checks+=("string reads of legacy_* views outside tests")
 [ "$wall_status" -ne 0 ] && failed_checks+=("package walls (tools/check_package_walls.py)")
+[ "$owner_status" -ne 0 ] && failed_checks+=("record part writers (tools/check_record_owners.py)")
 
 if [ "${#failed_checks[@]}" -eq 0 ]; then
   echo "failing checks: none"

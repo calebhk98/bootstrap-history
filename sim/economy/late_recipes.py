@@ -43,5 +43,5 @@ def _open_markets(economy, goods) -> None:
     for good in goods:
         for area in economy.area_map.areas(good):
             key = market_key(good, area.area_id)
-            memory.prices[key] = economy.setup.opening_prices[good]
+            memory.set_price(key, economy.setup.opening_prices[good])
             memory.note_usual_price(key)

@@ -11,6 +11,7 @@ from typing import Dict, Iterable, Mapping, Sequence, Tuple
 
 from sim.constants import declare
 
+from . import producer_table
 from .types import Recipe, SiteLimit, TileId
 
 UNSITED_EXTRACTION_ANYWHERE = declare(
@@ -83,15 +84,12 @@ def apply_site_limits(record, setup) -> None:
             continue
         limit = by_recipe[recipe.recipe_id].get(producer.tile)
         capacity = min(producer.capacity_runs, limit.capacity_runs_per_year) if limit else 0.0
-        record.producers[producer_id] = dataclasses.replace(
-            producer, capacity_runs=capacity, yield_factor=limit.yield_factor if limit else producer.yield_factor)
+        producer_table.put_producer(record.producers, dataclasses.replace(
+            producer, capacity_runs=capacity, yield_factor=limit.yield_factor if limit else producer.yield_factor))
         coming = record.credit.expansion_runs.get(producer_id, 0.0)
         if coming > 0.0:
             room = max(0.0, (limit.capacity_runs_per_year if limit else 0.0) - capacity)
-            if room > 0.0:
-                record.credit.expansion_runs[producer_id] = min(coming, room)
-            else:
-                del record.credit.expansion_runs[producer_id]
+            record.credit.trim_expansion(producer_id, room)
 
 
 def in_id_order(producers):

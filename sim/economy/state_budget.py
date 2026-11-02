@@ -3,7 +3,7 @@ for hours in the labour market and for goods in the goods markets like anyone el
 shortfall by the policy's order (state_finance.py). Goods already in its stores are used before it buys."""
 import math
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
+from typing import ClassVar, Dict, List, Tuple
 
 from sim.constants import declare
 
@@ -27,6 +27,7 @@ STATE_WAGE_CEILING_MULTIPLE = declare(
 
 @dataclass
 class StateBudget:
+    OWNERS: ClassVar[Tuple[str, ...]] = ("state_budget",)   # the sim/economy modules allowed to write this (tools/check_record_owners.py)
     revenue: float = 0.0                 # money the state took in last year (taxes and sales)
     wage_budget: float = 0.0             # this year's plan
     goods_budget: float = 0.0
@@ -38,6 +39,10 @@ class StateBudget:
     need_wanted: Dict[str, float] = field(default_factory=dict)   # goods the lines bid for, so the rest bought is store
     expected_inflation: float = 0.0      # what the treasury expects of prices, as households do
     last_price_level: float = 0.0        # the basket price level when it last updated that expectation
+
+    def cut_goods_budget(self, amount: float) -> None:
+        """The goods line falls by `amount`."""
+        self.goods_budget -= amount
     real_programme: bool = False         # a stated real spending target: its goods are bought as quantities, not as a sum
 
 

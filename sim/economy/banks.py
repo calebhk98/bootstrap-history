@@ -51,8 +51,8 @@ class Bank:
     owner_loss: float = 0.0                                      # the capital its founder lost when the bank failed
 
 
-def is_deposit(record, loan: Loan) -> bool:
-    return loan.borrower in record.capital_markets.banks
+def is_deposit(capital_markets, loan: Loan) -> bool:
+    return loan.borrower in capital_markets.banks
 
 
 def standing(record) -> List[Bank]:
@@ -79,13 +79,13 @@ def capital_of(record, bank_id: AgentId, money: str) -> float:
 
 
 def loans_out(record, bank_id: AgentId) -> float:
-    return sum(loan.principal for loan in record.credit.loans if loan.lender == bank_id and not is_deposit(record, loan))
+    return sum(loan.principal for loan in record.credit.loans if loan.lender == bank_id and not is_deposit(record.capital_markets, loan))
 
 
 def risk_headroom(record, bank_id: AgentId, money: str) -> float:
     """The value at risk the bank may still take on (bank_credit_risk.var_headroom): its equity, what it holds and is
     owed less what it owes depositors, times ALFA, less the value at risk of the loans it has out."""
-    own_loans = [loan for loan in record.credit.loans if loan.lender == bank_id and not is_deposit(record, loan)]
+    own_loans = [loan for loan in record.credit.loans if loan.lender == bank_id and not is_deposit(record.capital_markets, loan)]
     at_risk = bank_credit_risk.value_at_risk(
         bank_credit_risk.exposures(own_loans, credit_claims.principal_by_borrower(record.credit.loans)))
     return bank_credit_risk.var_headroom(capital_of(record, bank_id, money), at_risk)

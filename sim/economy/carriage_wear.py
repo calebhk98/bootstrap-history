@@ -152,12 +152,12 @@ def settle(merchant: Merchant, book, goods: Sequence[GoodId], units_worn: Mappin
     return moves + worn
 
 
-def last_prices(setup, record) -> Dict[GoodId, float]:
+def last_prices(setup, memory) -> Dict[GoodId, float]:
     """Each carrier good's price last year, averaged over the areas that cleared it, else the opening's; a good with
     neither is left out."""
     wanted = set(carrier_goods(setup))
     seen: Dict[GoodId, List[float]] = {}
-    for key, price in sorted(record.memory.prices.items()):
+    for key, price in sorted(memory.prices.items()):
         good = key.split(MARKET_KEY_SEPARATOR, 1)[0]
         if good in wanted and price > 0.0:
             seen.setdefault(good, []).append(price)

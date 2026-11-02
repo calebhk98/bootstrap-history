@@ -1,18 +1,17 @@
 """The economy's year step for taxed people: who fled, what land they left, who came home (flight_year.py)."""
-import dataclasses
 import math
 from typing import Dict, Mapping
 
 from sim.labour.api import people_in
 
-from . import flight_routes, flight_year
+from . import flight_routes, flight_year, households_cohort
 from .labour_inputs import TONNES_CARRIED_PER_MIGRANT
 from .setup import area_tile, labour_area
 
 
-def people_before(setup, record) -> Dict[str, float]:
+def people_before(setup, labour) -> Dict[str, float]:
     """People in each labour area before the year's market moves them; empty when the state takes nothing to flee from."""
-    return {area: people_in(record.labour.workforce, area) for area in record.labour.workforce.workers}
+    return {area: people_in(labour.workforce, area) for area in labour.workforce.workers}
 
 
 def cohorts_follow_workers(record, change_by_area: Mapping[str, float], people_by_area: Mapping[str, float]) -> None:
@@ -24,8 +23,7 @@ def cohorts_follow_workers(record, change_by_area: Mapping[str, float], people_b
         change = change_by_area.get(area, 0.0)
         if before > 0.0 and change != 0.0:
             scale = max(0.0, 1.0 + change / before)
-            record.cohorts[cohort_id] = dataclasses.replace(cohort, people=cohort.people * scale,
-                                                            working_people=cohort.working_people * scale)
+            households_cohort.rescale_cohort(record.cohorts, cohort_id, scale)
 
 
 def mean_year_income(workforce, hours_per_worker_year: float) -> Dict[str, float]:
@@ -52,10 +50,10 @@ def settle(setup, record, inputs, report, before, context, carriage) -> Dict[str
         cost = carriage.cost_per_tonne(area_tile(refuge), area_tile(home)) * TONNES_CARRIED_PER_MIGRANT
         return cost if math.isfinite(cost) else math.inf
 
-    after_market = people_before(setup, record)
+    after_market = people_before(setup, record.labour)
     came = flight_year.return_fugitives(
         record.labour.workforce, record.unfree.fugitives, taxed, subsistence, income,
         inputs.amnesty_share, inputs.immunity_years, moving_cost, setup.flight.arrears_owed_by_fugitive, setup.flight.share_after_immunity)
-    after_return = people_before(setup, record)
+    after_return = people_before(setup, record.labour)
     cohorts_follow_workers(record, {area: after_return.get(area, 0.0) - people for area, people in after_market.items()}, after_market)
     return came

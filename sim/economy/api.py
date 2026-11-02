@@ -371,7 +371,7 @@ def finish_spin_up(economy):
         settle_agent_takings(economy, route_dues_account(holder), EDGE_EXCHANGE)
     rebase_basket_price_level(economy.setup, economy.record)
     economy.record.settling = False
-    economy.record.memory.year = 0
+    economy.record.memory.reset_year()
 
 
 def money_year_figures(economy, outcome):

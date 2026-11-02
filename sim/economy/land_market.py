@@ -26,6 +26,7 @@ from typing import Dict, List, Mapping, Optional, Sequence
 
 from sim.constants import declare
 
+from . import producer_table
 from . import land_priority, ownership, titles, titles_ground, unit_cost
 from .land_lease import LAND_RENT_ADJUSTMENT_SHARE, posted_rents  # noqa: F401
 from .producers import expected_output_prices, live_input_prices, live_wages
@@ -242,10 +243,10 @@ def post_rents(setup, record, view, wanted_runs: Mapping[AgentId, float],
             continue
         asked = next((demand.hectares for demand in demands if demand.agent_id == producer_id), 0.0)
         granted = result.granted_hectares.get(producer_id, asked)
-        record.producers[producer_id] = replaced(
+        producer_table.put_producer(record.producers, replaced(
             producer, land_rent_per_run=use_rent_per_hectare(result, producer.tile, _value_for_rent(
                 setup, view, producer, land_per_run, demands_by_agent.get(producer_id))) * land_per_run,
-            land_run_cap=granted / land_per_run if granted < asked - 1e-9 else -1.0)
+            land_run_cap=granted / land_per_run if granted < asked - 1e-9 else -1.0))
     return result, demands
 
 

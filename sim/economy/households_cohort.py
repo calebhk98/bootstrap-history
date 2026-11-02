@@ -112,3 +112,30 @@ def labour_offers(cohort: Cohort, workers_by_trade: Mapping[TradeId, float], vie
 
 def renewed(cohort: Cohort, **changes) -> Cohort:
     return replaced(cohort, **changes)
+
+
+# The cohort table (`record.cohorts`) is written only here; every other module calls one of these.
+
+def put_cohort(cohorts: Dict[AgentId, Cohort], cohort: Cohort) -> None:
+    """`cohort` is the table's row for its id, new or replacing."""
+    cohorts[cohort.agent_id] = cohort
+
+
+def put_cohorts(cohorts: Dict[AgentId, Cohort], rows: Mapping[AgentId, Cohort]) -> None:
+    cohorts.update(rows)
+
+
+def change_cohort(cohorts: Dict[AgentId, Cohort], cohort_id: AgentId, **changes) -> None:
+    """The row for `cohort_id` with these fields changed."""
+    cohorts[cohort_id] = replaced(cohorts[cohort_id], **changes)
+
+
+def rescale_cohort(cohorts: Dict[AgentId, Cohort], cohort_id: AgentId, scale: float) -> None:
+    """The row for `cohort_id` with its people, and its working people, multiplied by `scale`."""
+    cohort = cohorts[cohort_id]
+    cohorts[cohort_id] = replaced(cohort, people=cohort.people * scale, working_people=cohort.working_people * scale)
+
+
+def rebase_price_level(cohorts: Dict[AgentId, Cohort]) -> None:
+    """Every cohort's last basket price level is one, the new base."""
+    cohorts.update({agent: renewed(cohort, last_basket_price_level=1.0) for agent, cohort in cohorts.items()})

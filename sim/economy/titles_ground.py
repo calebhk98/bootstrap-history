@@ -29,8 +29,6 @@ def add_ground(record, tile_id: TileId, receiver: AgentId, hectares: float, arab
     held[receiver] = held.get(receiver, 0.0) + hectares / (arable_before + hectares)
     for row in record.land.tenancies.get(tile_id, ()):
         row["share"] *= keep
-    for loan in record.credit.loans:
-        if loan.collateral_tile == tile_id:
-            loan.collateral_share *= keep
+    record.credit.shrink_collateral(tile_id, keep)
     record.land.cleared_hectares[tile_id] = record.land.cleared_hectares.get(tile_id, 0.0) + hectares
     return hectares

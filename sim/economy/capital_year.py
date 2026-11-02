@@ -29,8 +29,8 @@ def holds_a_claim(record) -> bool:
     return any(loan.lender in record.cohorts and secondary_trade.tradable(record, loan) for loan in record.credit.loans)
 
 
-def holds_units(record) -> bool:
-    return any(fund.units for fund in record.capital_markets.capital.funds.values())
+def holds_units(capital_markets) -> bool:
+    return any(fund.units for fund in capital_markets.capital.funds.values())
 
 
 def shortfalls(setup, record, view, ledger) -> Dict[AgentId, Shortfall]:
@@ -52,7 +52,7 @@ def before_lending(setup, record, view, ledger, funds: Sequence[FundsOffer], yea
     if pooling and not fund_pools.standing(record) and record.cohorts:
         fund_pools.found(record, max(sorted(record.cohorts), key=lambda cohort_id: record.book.balance(cohort_id, money)), year)
     short: Dict[AgentId, Shortfall] = {}
-    if (pooling and holds_units(record)) or (trading and holds_a_claim(record)):
+    if (pooling and holds_units(record.capital_markets)) or (trading and holds_a_claim(record)):
         short = shortfalls(setup, record, view, ledger)
     if pooling and short:
         funds, short = _redeem_units(setup, record, funds, short, rate, institutions)

@@ -13,11 +13,14 @@ from typing import Dict, List, Mapping, Tuple
 from sim.constants import declare
 from sim.refusal import Refusal
 
+from . import producer_table
+from . import households_cohort
 from . import recipes as recipes_module
 from . import carriage_fleet_book, durable_stock, equity, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
+from . import merchants
 from .merchants import Merchant
 from .producers import Producer
 from .producers_close import working_capital_target
@@ -147,47 +150,47 @@ def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyR
     view = YearView(memory, record.book, area_map, setup.currency_id, labour_area)
     _open_cohorts(setup, record)
     if plans is not None:
-        record.cohorts.update(opening_plans.with_plans(record.cohorts, plans))
+        households_cohort.put_cohorts(record.cohorts, opening_plans.with_plans(record.cohorts, plans))
     own = opening_own.OwnPlots(setup, record)
     _settle_income(setup, record, view, priced_goods, replacement, own)
     _seed_durable_stocks(setup, record, view)
     final_by_tile = _final_demand(setup, record, view, replacement, own=own)
-    record.goods.opening_own_grown = own.grown_totals()
+    record.goods.seed_opening_own_grown(own.grown_totals())
     for country in setup.countries():
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
     opening_runs.fit_to_supply(setup, record)
     rent = opening_rent.settle(setup, record, view, own.hectares_by_tile(record.cohorts))
     figure = record.capital_markets.property_income
-    record.capital_markets.property_income = opening_rent.property_income_with_rent(figure, rent)
+    record.capital_markets.set_property_income(opening_rent.property_income_with_rent(figure, rent))
     incomes = opening_rent.income_after_rent({agent_id: cohort.last_year_income for agent_id, cohort in record.cohorts.items()},
                                              figure, record.capital_markets.property_income)
-    record.cohorts.update({agent_id: replaced(record.cohorts[agent_id], last_year_income=income)
-                           for agent_id, income in incomes.items()})
-    record.goods.index_base_prices = dict(priced_goods)
+    for agent_id, income in incomes.items():
+        households_cohort.change_cohort(record.cohorts, agent_id, last_year_income=income)
+    record.goods.set_index_base_prices(dict(priced_goods))
     _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record, view, own.extra)
-    record.labour.opening_sold_hours_per_worker = opening_own.sold_hours_per_worker(
+    sold_per_worker = opening_own.sold_hours_per_worker(
         own.sold_total(), math.fsum(cohort.working_people for cohort in record.cohorts.values()), setup.working_hours_per_year)
-    record.labour.opening_sold_hours_by_area = opening_placement.sold_hours_per_worker_by_area(
+    sold_by_area = opening_placement.sold_hours_per_worker_by_area(
         own.sold, {agent_id: (labour_area(cohort.tile), cohort.working_people) for agent_id, cohort in record.cohorts.items()},
-        record.labour.opening_sold_hours_per_worker)
-    record.labour.workforce = labour_state.opening_workforce(      # the mint's capacity follows the money struck
-        setup, record, record.labour.opening_sold_hours_by_area)
-    record.labour.workforce.hired_hours = opening_resting.resting_hours_held(
+        sold_per_worker)
+    record.labour.seed_sold_hours(sold_per_worker, sold_by_area)
+    record.labour.seed_workforce(labour_state.opening_workforce(      # the mint's capacity follows the money struck
+        setup, record, sold_by_area))
+    record.labour.seed_hired_hours(opening_resting.resting_hours_held(
         opening_placement.capped_contracts(labour_state.producers_hours_by_employer(setup, record),
                                            {area: labour_state.people_by_trade(record.labour.workforce, area) for area in record.labour.workforce.workers},
-                                           record.labour.opening_sold_hours_by_area, record.labour.opening_sold_hours_per_worker),
-        setup.opening_wages)
+                                           sold_by_area, sold_per_worker),
+        setup.opening_wages))
     mint.seed_opening_metal(setup, record)
     opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
-    record.goods.opening_demand = opening_runs.national_totals(final_by_tile)
-    record.goods.opening_demand_by_country = {
+    record.goods.seed_opening_demand(opening_runs.national_totals(final_by_tile), {
         country: opening_runs.national_totals({tile: final_by_tile[tile] for tile in setup.tiles_of(country) if tile in final_by_tile})
-        for country in setup.countries()}
-    record.goods.opening_basket = opening_basket.supplied_part(setup, record, record.goods.opening_demand)
+        for country in setup.countries()})
+    record.goods.seed_opening_basket(opening_basket.supplied_part(setup, record, record.goods.opening_demand))
     return record, area_map, carriage
 
 
@@ -238,7 +241,7 @@ def _open_cohorts(setup, record) -> None:
     for tile, people in sorted(setup.opening_population_by_tile.items()):
         for cohort in households.cohorts_for_tile(tile, people, setup.working_share, setup.gini,
                                                   opening_income_per_capita=income):
-            record.cohorts[cohort.agent_id] = cohort
+            households_cohort.put_cohort(record.cohorts, cohort)
     titles.seed(record)
 
 
@@ -259,7 +262,7 @@ def _settle_income(setup, record, view, priced_goods, replacement, own) -> None:
     hands_hours = math.fsum(cohort.working_people for cohort in record.cohorts.values()) * setup.working_hours_per_year
 
     def demand_at(per_head):
-        record.cohorts.update(opening_income.with_income(record.cohorts, per_head, share["labour"]))
+        households_cohort.put_cohorts(record.cohorts, opening_income.with_income(record.cohorts, per_head, share["labour"]))
         own.share_hired = 0.0       # the least share of hours hired that the demand it implies agrees with (it rises as plots grow less)
         for _pass in range(OWN_PLOT_PASSES):
             own.in_kind = 0.0
@@ -279,8 +282,8 @@ def _settle_income(setup, record, view, priced_goods, replacement, own) -> None:
     per_head, labour_share = settled
     share["labour"] = labour_share
     demand_at(per_head)     # leaves the plots at the settled income's share of hours hired
-    record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
-    record.capital_markets.property_income = opening_income.property_income_of(record.cohorts, per_head, labour_share)
+    households_cohort.put_cohorts(record.cohorts, opening_income.with_income(record.cohorts, per_head, labour_share))
+    record.capital_markets.set_property_income(opening_income.property_income_of(record.cohorts, per_head, labour_share))
 
 
 def _opening_bids(setup, record, view, memory=None, stationary_durables=True, own=None):
@@ -468,15 +471,15 @@ def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_lim
         working_share = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages, tile_yield)
         held = record.producers.get(producer_id)
         if held is not None:      # a second share of the runs on the same tile (a pooled area's) adds to the producer
-            record.producers[producer_id] = replaced(
+            producer_table.put_producer(record.producers, replaced(
                 held, capacity_runs=held.capacity_runs + capacity / working_share,
-                expected_sales=held.expected_sales + capacity)
+                expected_sales=held.expected_sales + capacity))
         else:
-            record.producers[producer_id] = Producer(
+            producer_table.put_producer(record.producers, Producer(
                 agent_id=producer_id, owner=households.cohort_id(tile, _richest_class(record, tile)),
                 recipe_id=recipe.recipe_id, tile=tile, capacity_runs=capacity / working_share,
                 expected_sales=capacity,
-                yield_factor=tile_yield)
+                yield_factor=tile_yield))
         wanted = input_demand.setdefault(tile, {})
         for good, quantity in recipe.inputs.items():
             wanted[good] = wanted.get(good, 0.0) + capacity * quantity
@@ -523,9 +526,9 @@ def _open_merchants(setup, record, prices, final_by_tile) -> None:
     for index in range(count):
         tile = by_population[index % len(by_population)]
         merchant_id = "merchant:%d" % index
-        record.merchants[merchant_id] = Merchant(agent_id=merchant_id, home_tile=tile,
-                                                 owner=households.cohort_id(tile, _richest_class(record, tile)),
-                                                 capital_base=capital)
+        merchants.put_merchant(record.merchants, Merchant(agent_id=merchant_id, home_tile=tile,
+                                                          owner=households.cohort_id(tile, _richest_class(record, tile)),
+                                                          capital_base=capital))
 
 
 def _strike_opening_cash(setup, record, view, extra_spending) -> None:
@@ -551,5 +554,5 @@ def _strike_opening_cash(setup, record, view, extra_spending) -> None:
                                                        extra_spending=extra_spending.get(cohort.agent_id, 0.0))
         transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, opening_resting.purse_with_property_income(
             purse, record.capital_markets.property_income.get(cohort.agent_id, 0.0)), "opening coin"))
-        record.cohorts[cohort.agent_id] = replaced(cohort, share_wealth=owned.get(cohort.agent_id, 0.0))
+        households_cohort.change_cohort(record.cohorts, cohort.agent_id, share_wealth=owned.get(cohort.agent_id, 0.0))
     record.book.transfer_many([transfer for transfer in transfers if transfer.amount > 0.0])
