@@ -439,8 +439,10 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
         return math.inf
     sales = producer.expected_sales
     target = inventory.target_stock(sales)
-    gap = {good: target - view.stock(producer.agent_id, good, producer.tile) / made
-           for good, made in recipe.outputs.items() if made > 0.0}
+    gap = {good: target - view.stock(producer.agent_id, good, producer.tile) / (made * producer.yield_factor)
+           for good, made in recipe.outputs.items() if made * producer.yield_factor > 0.0}
+    if not gap:      # a plant that yields nothing has no stock to count in runs
+        return sales
     piling = [good for good, short in gap.items() if short < 0.0]
     counted = list(gap)
     if piling and output_prices is not None:
@@ -548,8 +550,9 @@ def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good: 
            keep_back: Optional[Mapping[GoodId, float]] = None) -> List[Offer]:
     """Held output on each output's own market. The reservation is what carrying a unit to next year
     would net at the expected price, lowered when cash is short; what was spent making it does not
-    enter. A perishable's reservation falls to or below zero, so it sells at any price. `keep_back`
-    holds stock the producer needs as input for its own planned runs."""
+    enter. A good with no expected or remembered price is held at its variable cost per unit; with no cost
+    to read either it is not offered. A perishable's reservation falls to or below zero, so it sells at any
+    price. `keep_back` holds stock the producer needs as input for its own planned runs."""
     keep_back = keep_back or {}
     expected = expected_output_prices(producer, recipe, view)
     rows = []
@@ -557,15 +560,28 @@ def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good: 
         quantity = stock_by_good.get(good, 0.0) - keep_back.get(good, 0.0)
         if quantity <= 0.0:
             continue
+        reference = expected.get(good)
+        if reference is None:      # no expectation and no remembered price: what a unit costs to make stands in
+            reference = _variable_cost_per_unit(producer, recipe, view)
+        if reference is None:
+            continue
         spoilage = specs[good].spoilage_per_year if good in specs else 0.0
-        reservation = inventory.holding_reservation(expected.get(good, 0.0), interest_rate, spoilage,
-                                                    STORAGE_COST_PER_UNIT)
+        reservation = inventory.holding_reservation(reference, interest_rate, spoilage, STORAGE_COST_PER_UNIT)
         rows.append((good, quantity, reservation))
     stock_value = sum(quantity * max(reservation, 0.0) for _good, quantity, reservation in rows)
     cash_shortfall = shortfall_at_working_scale(producer, recipe, view, cash_shortfall, expected)
     return [Offer(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile, quantity,
                   inventory.distressed_reservation(reservation, cash_shortfall, stock_value))
             for good, quantity, reservation in rows]
+
+
+def _variable_cost_per_unit(producer: Producer, recipe: Recipe, view: MarketView) -> Optional[float]:
+    """A run's variable cost over the units it makes (every output counted alike); None when an input or wage
+    cannot be priced or the run makes nothing."""
+    units = math.fsum(recipe.outputs.values()) * producer.yield_factor
+    cost = unit_cost.variable_cost_per_run(recipe, expected_input_prices(producer, recipe, view),
+                                           live_wages(producer, recipe, view), producer.land_rent_per_run)
+    return cost / units if units > 0.0 and math.isfinite(cost) else None
 
 
 def with_capacity(producer: Producer, capacity_runs: float) -> Producer:

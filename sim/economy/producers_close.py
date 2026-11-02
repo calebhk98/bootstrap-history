@@ -158,7 +158,7 @@ def _behind_the_stock(producer, recipe, view, prices, ground_goods):
     rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
     return {good: inventory.queued_holding_value(
         price, max(0.0, view.stock(producer.agent_id, good, producer.tile) - recipe.inputs.get(good, 0.0) * producer.capacity_runs),
-        producer.expected_sales * recipe.outputs[good], rate, 0.0) if good not in ground_goods else price
+        producer.expected_sales * recipe.outputs[good] * producer.yield_factor, rate, 0.0) if good not in ground_goods else price
         for good, price in prices.items()}
 
 
