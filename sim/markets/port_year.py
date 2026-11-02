@@ -201,6 +201,8 @@ class AgentEconomy(TilePricesMixin):
         staff_orders, staff_posted = port_staff.post(self._sim, economy, sorted(self._sim.playing_seats() or self._sim.state.seats),
                                                      self._tile_in_economy)
         orders.update(staff_orders)
+        actor_staff_orders, actor_staff_posted = port_staff.post_actors(self._sim, economy, self._actor_tile)
+        orders.update(actor_staff_orders)
         economy_api.watch_tiles(economy, self._seat_tiles())
         outcome = economy.step(self._inputs(orders, port_cargo.border_accounts(economy, legs)))
         self._floor_costs = {}
@@ -209,6 +211,7 @@ class AgentEconomy(TilePricesMixin):
         self.outcomes.append(outcome)
         self._settle_actor_trade(sales, purchases)
         port_staff.settle(self._sim, economy, staff_posted)
+        port_staff.settle_actors(self._sim, economy, actor_staff_posted)
         self._settle_seats()
         self._sim.settle_trader_cargo(port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
         self._note_off_map_trade(*self._settle_foreign_coin())

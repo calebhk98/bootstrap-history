@@ -144,14 +144,12 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		return lines, share
 
 	def spend_on_lines(self, lines: List[budget.Line], share: float, world: Any) -> None:
-		"""Pay the funded `share` of each line: wages into the labour market, other money out to the spending edge, and its
+		"""Pay the funded `share` of each line: wages stay in the purse for the labour market's bids, other money out to the spending edge, and its
 		materials as bids in the agent economy's book."""
 		for line in lines:
 			bought = line.material_cost if line.materials else 0.0   # its materials are bought with bids in the agent economy's book
 			if share > 0.0:
-				if line.labour:
-					world.pay_wages(self, (line.money - bought) * share, line.name)   # the state's pay reaches its people
-				else:
+				if not line.labour:   # a labour line's pay is offered in the labour market (sim/markets/port_staff.py)
 					ledger.transfer(self, world.edge(EDGE_STATE_SPENDING), (line.money - bought) * share, line.name)
 			weight = sum(line.materials.values())
 			for commodity, tonnes in line.materials.items():
@@ -171,10 +169,10 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 			ledger.transfer(self, world.edge(EDGE_PATRONAGE), grant, "patronage")
 
 	def employ_standing(self, lines: List[budget.Line], share: float, world: Any) -> None:
-		"""Staff of the lines it paid for, as far as they reach into the founder's labour market."""
+		"""Post the places of the lines it paid for; the labour core hires for them (soldiers among them) and pays them."""
 		for line in lines:
 			for trade, people in line.labour.items():
-				self.workforce[trade] = self.workforce.get(trade, 0.0) + world.local_staff(trade, people * share)
+				self.staff_wanted[trade] = self.staff_wanted.get(trade, 0.0) + people * share
 
 	def seek_shortfall(self, lines: List[budget.Line], world: Any) -> None:
 		"""Set the rate it takes from the income it can see so that the unfunded need is raised."""
@@ -202,7 +200,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		record.succession_challenger = challenger if disputed and challenger else ""
 
 	def advance(self, world: Any) -> None:
-		held = dict(self.workforce)
+		self.staff_wanted.clear()
 		self.fade_default_record()
 		self.set_bond_terms(world)
 		self.purses.redeem_bonds(self.account_id)
@@ -215,6 +213,3 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		self.build_works(lines, world)
 		self.employ_standing(lines, share, world)
 		self.seek_shortfall(lines, world)
-		if self.record.country is not None:
-			self.workforce.clear()   # a country's state staff are its own people: not the founder's pool, nor counted in it
-		self.press_new_staff(held, world)

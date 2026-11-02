@@ -14,6 +14,9 @@ class ActorRecord:
 	name: str = ""
 	policy_kind: str = "value"
 	money: float = 0.0
+	# people by trade the actor hires: the places it posts this year (rebuilt each year) and the people the labour core
+	# hired for them at the last clearing (written only by the port, sim/markets/port_staff.py)
+	staff_wanted: Dict[str, float] = field(default_factory=dict)
 	workforce: Dict[str, float] = field(default_factory=dict)
 	knowledge: Set[str] = field(default_factory=set)
 	# node id -> year the actor learned it exists (awareness.py); node id -> {stage, share, since} (adoption.py);

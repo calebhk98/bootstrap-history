@@ -6,5 +6,6 @@ from .commands import (AddActor, AdvanceActors, DrawDownActorStore, FollowTileTr
                        MoveStratumPeople, ScaleStrata, SellSeatConcern, SetLenderOffers, SettleLenderInterest)
 from .seat_exchange import ALREADY_ABLE, GRANTED, NO_LICENSEE, TERMS_REFUSED
 from .delivered_goods import keep_deliveries
+from .staff_hired import set_staff
 from .flight_values import government_flight_values
 from . import land_decree, rules

@@ -106,16 +106,6 @@ class BudgetView:
 		"""Available naval vessels, their crews, service lives and a state's holdings (the founder's state's by default)."""
 		return self.needs.fleet_goods(holder_id or self.government().actor_id)
 
-	def local_staff(self, trade: str, people: float) -> float:
-		"""How many of `people` kept in a trade nationwide come out of the founder's own labour
-		market: the share of the nation's people of that trade they are, applied to the pool the
-		founder can reach. Unskilled labour is the whole working age."""
-		nation = self.national_people(trade)
-		if nation <= 0.0:
-			return 0.0
-		reach = self.needs.reachable_trade_population[trade] + self.module.actor_staff_fte(trade)
-		return min(1.0, people / nation) * reach
-
 	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
 		return self.needs.notice_over(scale, capacity)
 

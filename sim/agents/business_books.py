@@ -28,14 +28,10 @@ def operate(business: Business, owner: Any, entry_key: str, world: Any, rivals: 
 	takings = found * books.takings
 	business.note_takings(entry_key, takings)
 	upkeep = books.upkeep
-	wages = found * books.wages
+	wages = found * books.wages   # the margin's estimate: the crew is paid by the labour core's clearing, not here
 	if not world.sells_on_book(entry_key):   # what sells in the book is paid when the year's market clears
 		ledger.transfer(world.edge(EDGE_CUSTOMERS), owner, takings, "takings")
 	ledger.transfer(owner, world.edge(EDGE_SUPPLIERS), upkeep, "upkeep")
-	if owner.record.country is None:
-		world.pay_wages(owner, wages, "wages")
-	else:
-		ledger.transfer(owner, world.edge(EDGE_WORKERS), wages, "wages")
 	state = world.government()
 	levy = 0.0 if state is owner else state.collect(owner, takings, world)   # a state does not levy its own works
 	royalty = world.collect_royalty(owner, entry_key, takings)
