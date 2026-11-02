@@ -22,7 +22,7 @@ business's crew, upkeep or takings outside that object.
 The split is wider than founder against firms: actor businesses run through `sim/agents/business_books.py`
 (takings, upkeep, crew, payments) while the agent economy's `Producer` objects run recipes with their own
 capacity, inputs, workforce, stock and cash, and founder concern output enters the economy through
-`EDGE_LEGACY` (`sim/engine/economy_port_year.py`). Double counting was not established; the risk is a
+`EDGE_LEGACY` (`sim/markets/port_actors.py`). Double counting was not established; the risk is a
 constraint enforced on one path and bypassed on the other. Target: owners (founder, firm, state) decide
 what to build and run, and one production machinery runs every plant.
 
@@ -30,16 +30,16 @@ what to build and run, and one production machinery runs every plant.
 
 Read again against the code: the crew rule (`business_crew_rule`), the takings product (`business_books.takings_of_size`), the ramp
 (`plant_figures.ramp`), mothball and restore and the closing rules (`Business.review`) are one implementation for every owner, and the
-founder's `projects_ventures.py`, `projects_venture_quotes.py` and `agents_port.py` are adapters that read the node and call them. What is
+founder's `projects_ventures.py`, `projects_venture_quotes.py` (removed) and the actors' world (`sim/actors/world.py`) are adapters that read the node and call them. What is
 still two code paths, with a grep that finds each (the allowlist test was removed):
 
 1. **Takings and upkeep at the economy's prices.** `economy_production.concern_takings`/`institution_upkeep`/`concern_revenue` (founder) and
-   `economy_port.concern_upkeep`/`concern_takings`, `agents_port.entry_gross`/`concern_takings` (firms) each read the node's `rev` and `up`.
+   `sim/markets/port.py` `concern_upkeep`/`concern_takings`, `sim/actors/world.py` `entry_gross`/`concern_takings` (firms) each read the node's `rev` and `up`.
    Target: one function of (entry, prices, wages, size) in `sim/world/plant_figures.py`. After 507 stage 5 (the market factor as a function of
    (entry, prices), not of a node).
 2. **The founder is paid from its sale account (done).** `_acting_seat_orders` offers each running concern's output
    (`concern_book_sales.concern_book_offer`, one rule for the clearing, the estimate and the forecast) and
-   `economy_port_seats.settle_seats` (called by `_settle_seats`, in the `market` phase after the clearing) credits the seat's ledger
+   `port_seats.settle_seats` (called by `_settle_seats`, in the `market` phase after the clearing) credits the seat's ledger
    the clearing's proceeds, gross ("concern sales"), and charges the inputs those concerns bought at the economy's prices
    ("inputs of concerns sold in the book"; the estimate was net of them, and the founder does not yet bid for them in the book).
    Upkeep and wages are charged in the money phase as before. The estimate (`estimated_revenue`, credited in `_step_money_seat`

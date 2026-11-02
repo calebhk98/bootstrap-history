@@ -66,7 +66,7 @@ venture's edge and the knowledge half-life, used by `society_diffusion.py`). Del
 Rules are called on inputs the test builds; whole-game checks that remain are named `_scenario` files next to them.
 Extractions into plain functions: `scrub_hidden_ids` (`sim/engine/fog.py`), `sim/world/weather_pooling.py` (the cell correlation
 factor and the pooled harvest multiplier), `remaining_floor_years` (`sim/engine/hazard_hedge_timing.py`), `patron_dies`
-(`sim/engine/patron_death.py`), `dependants_not_carried` (`sim/engine/economy_debt_service.py`).
+(`sim/engine/patron_death.py`), `dependants_not_carried` (`sim/finance/debt_service.py`).
 New quick rule files: `test_typed_front_end` (every typed-line check, taken from the fog, founder-sells and wording files),
 `test_trader_routes_rules`, `test_losable_nodes`; the guns-on-walls, hazard-label and staff-survival rules are classes in
 `test_defence_stores`. Deleted as held elsewhere: `test_hazard_messages_match_mechanics` (now `test_defence_stores`), the
@@ -88,7 +88,7 @@ budget), `test_firm_entry_market`, `test_firm_expansion` (`Firm.expand` on a ret
 (`_enrolment`, `_limited_by`), `test_entry_cost_at_economy_prices` (`CostBook`), `test_every_posting_names_a_counterparty`
 (source scan, edges), `test_explicit_starting_techs`, `test_figures_inspector` (`explain_figure`), `test_mechanics_documented`.
 Extractions, behaviour unchanged: `hours_spent_clearing`, `cleared_hectares`, `quality_of_area` in
-`sim/labour/labour_allocation.py`; `harmed_yields` in `sim/engine/economy_port_sites.py`; `declared_starting_techs` in
+`sim/labour/labour_allocation.py`; `harmed_yields` in `sim/markets/port_sites.py`; `declared_starting_techs` in
 `sim/engine/starting_techs.py`. Whole-game checks stay as named `_scenario` files next to their rules. Deleted as held
 elsewhere: the state budget's debasing, borrowing-first and hours-and-goods runs (`test_economy_agent_state`), the firm
 count and expansion dynamics repeated across the firm scenarios (`test_firm_count_from_costs`, `test_firm_expansion`).
@@ -380,7 +380,7 @@ The multi-decade recovery claims (the wage premium after a mortality cut of near
 
 ## Applied: one-function-02 (economy_location through industry_learning)
 
-Each test calls the one function under test on inputs written out in the test; none builds an `Economy`, runs `fixture.run`, or steps a population or a storage. Extractions (behaviour unchanged): `sim/world/endemic_deaths.py:endemic_excess_deaths` (called from `Population.step`), `sim/engine/completion_schedule.py:expected_years_to_succeed` (called from `expected_calendar_years`), `sim/world/farm_year.py:carried_stock_kg` (called from `run_farm_year`). Rewritten on stand-ins: `economy_port_actors`, `economy_port_health_rule`, `economy_shares`, `economy_state_store`, `economy_tax_farming` (`remember_year`), `funds`, `firms_work_found_deposits`, `firm_income_by_country`, `industry_learning` (`producers_by_good`), `freight_domestic_haul` (`Economy.follow_flows` on a stand-in self), `farm_subsistence_rules` (`gross_harvest_kg`), `expected_calendar_years_floor`, `endemic_disease`, `granary_persistence`.
+Each test calls the one function under test on inputs written out in the test; none builds an `Economy`, runs `fixture.run`, or steps a population or a storage. Extractions (behaviour unchanged): `sim/world/endemic_deaths.py:endemic_excess_deaths` (called from `Population.step`), `sim/engine/completion_schedule.py:expected_years_to_succeed` (called from `expected_calendar_years`), `sim/world/farm_year.py:carried_stock_kg` (called from `run_farm_year`). Rewritten on stand-ins: `port_actors`, `economy_port_health_rule`, `economy_shares`, `economy_state_store`, `economy_tax_farming` (`remember_year`), `funds`, `firms_work_found_deposits`, `firm_income_by_country`, `industry_learning` (`producers_by_good`), `freight_domestic_haul` (`Economy.follow_flows` on a stand-in self), `farm_subsistence_rules` (`gross_harvest_kg`), `expected_calendar_years_floor`, `endemic_disease`, `granary_persistence`.
 
 Deleted as held elsewhere: `economy_no_offer_markets` (`entry.entry_plans` and `market_quote.no_trade_quote` are in `test_economy_entry` and `test_economy_no_offer_memory`), the `Economy`-built record in `economy_market_record_rule` (the record is written out), the record save round trips of `economy_market_record_rule`, `economy_shares`, `economy_tax_farming`, `economy_titles` and `funds` (the record's round trip is one function, `EconomyRecord.to_record` / `from_record`, and is held by the save tests), `economy_service_lives` whole-economy durable runs (`inventory.wear_moves` is in `test_economy_inventory`, the purchase rule is `households_orders._durable_ratio`), `economy_store_sales` conservation and no-durables-unchanged runs (`households_store.store_candidates` returns nothing without service lives, which stays), `economy_title_counterforces` `debt_relief_tiles` wiring (`debt_relief.forgive` is tested; `Economy._run_year` is too long to stand in for), `economy_titles` opening seeds titles (`titles.seed` is tested), `freight_domestic_haul` merchants record carried (`test_carried_book`), `economy_sites` six-year siting run (`sites.apply_site_limits` and `open_economy` are tested).
 

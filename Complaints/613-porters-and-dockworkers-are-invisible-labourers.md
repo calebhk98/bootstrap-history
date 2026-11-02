@@ -12,17 +12,16 @@ largest labour groups, so the labour market never saw the demand for them (see a
 once; no sourced fatality rate, so zero with the absence statement). `data/world/geography/route_modes/modes.json` gives
 foot `crew_trade: porter` and sail `handling_trade: dockworker`. `routes_carriage` passes the trade,
 `EconomySetup.carriage_handling_trade` carries it, and `Crew.hours_by_trade` (`sim/economy/carriage_hours.py`) books
-handling to it. `CARRIAGE_CREW_UNSKILLED_SHARE` (a labelled heuristic) now applies only to modes whose trade asks more
-training than the unskilled one. `occupation_groups.json` lists both in the transport group. Test:
+handling to it. Every mode's crew is bid in its own trade (the heuristic `CARRIAGE_CREW_UNSKILLED_SHARE` is deleted). `occupation_groups.json` lists both in the transport group. Test:
 `sim/tests/test_porters_and_dockworkers.py`.
 
 **What is left.**
 
 - Verify in a whole game that porter workforces form: `python3 -m sim.tests --slow --only occupational_distribution --jobs 1`
   and a multi-year `mexica_1500` run (a 2-year `economy-check --civs mexica_1500 --years 2` ran clean when this was built).
-- `PORT_HANDLING_HOURS_PER_TONNE` stays a labelled heuristic: no source found (a port-economics page gives a longshore crew
+- `sea_freight.PORT_HANDLING_HOURS_PER_TONNE` (read in `sim/markets/port_setup.py`, `sim/freight/models.py`) stays a labelled heuristic: no source found (a port-economics page gives a longshore crew
   5 to 10 tons an hour but not the crew size, so no per-worker figure follows).
-- The sea handling money (`handling_rates`) is still priced at the unskilled wage; porter and dockworker wages come from the
+- The sea handling money (`handling_rates`, `sim/markets/port_setup.py`) is still priced at the unskilled wage; porter and dockworker wages come from the
   labour market, not from it.
 
 **Research needed.** Hours of porter and longshore labour per tonne (Roman Ostia and Portus portage, tlamemeh loads and

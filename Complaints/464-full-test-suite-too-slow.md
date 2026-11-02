@@ -16,7 +16,7 @@ spin-up (`ROME_SPIN_UP_YEARS`, set in `sim/tests/harness.py`), cached apart from
 builds one game of every civilisation before the first topic. `arrears_hours` no longer times out (474 closed: its price solves were slow, not stuck). `insolvency_whole_game` leaves the market close out of
 the years that do not read it and plays a few full market years after the ruin, which is enough to show the founder's money turn round.
 No topic computes a spin-up of its own that a variant of a default game could share: the spin-up key leaves the
-coin out (`economy_port_key.py`), variants that only vary a rate or read the farm or prices are built unopened,
+coin out (`port_key.py`), variants that only vary a rate or read the farm or prices are built unopened,
 and the money-regime runs are one topic per civilisation so the runner can place them side by side. The one
 setup that still needs its own spin-up is the in-memory civilisation's run of every screen.
 Topics that read only a function, a formula or a reply field build their game with `unopened_sim` (item 3); the topics that
@@ -35,7 +35,7 @@ quick topics batched with it.
 ## What would cut it further
 
 1. **Any engine edit re-runs the agent-economy spin-up** (now a short one in the suite). Its key
-   (`economy_port_year.py`, `.cache/agent_economy`) hashes every `.py` under `sim/`, because
+   (`port_year.py`, `.cache/agent_economy`) hashes every `.py` under `sim/`, because
    the spin-up reads a setup built from the whole `Sim`, and only the opening values and the
    civilisation are in the key. Put the setup itself (or its digest) in the key and scope the
    source to what `sim.economy.api` imports, as `prices.py` now does with `source_modules`.

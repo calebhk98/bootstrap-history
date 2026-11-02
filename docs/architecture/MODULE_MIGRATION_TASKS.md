@@ -1,5 +1,7 @@
 # Module migration tasks
 
+Note: this is a record of past work. `TEST_MIGRATION.md`, `sim/engine/cause_book.py`, `sim/engine/view_share.py` and `sim/tests/helpers/views.py` no longer exist, and the engine mixins it plans to remove are gone (`Sim` has no base classes); the current shape is `sim/ARCHITECTURE.md`.
+
 **Status:** in progress on branch `sim-module-registry-plan`, base `mr-base` = `0be2f72` (a local tag; the code there is identical to the branch head before phase 0). The design is
 `MODULE_REGISTRY_PLAN.md`; this file is the execution order and is ticked as each task merges. The work lands as one
 pull request when every box is ticked. `main` is frozen for the duration (owner decision 2026-10-25).

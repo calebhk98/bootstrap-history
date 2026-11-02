@@ -1,7 +1,9 @@
 """Everything one economy carries from year to year, and its round trip to plain JSON for the save.
 
 The book holds money and goods; the agents' records hold what they expect and plan; the memory
-holds last year's market outcomes. Nothing else survives a year.
+holds last year's market outcomes; and eight owned sub-records hold one domain each: credit, capital markets, land, goods,
+labour, carriage, tax and unfree labour (`credit_record.py`, `capital_markets_record.py`, `land_record.py`, `goods_record.py`,
+`labour_record.py`, `carriage_record.py`, `tax_record.py`, `unfree_record.py`). Nothing else survives a year.
 """
 from dataclasses import dataclass, field
 from typing import Any, Dict, Tuple

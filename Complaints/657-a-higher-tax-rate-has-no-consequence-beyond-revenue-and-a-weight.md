@@ -26,11 +26,11 @@ can leave lowers the base next year; an AI state with the loss in its menu raise
 
 ## Built
 
-- **Harvest tax reaches farm effort.** `sim/agents/tax_burden.py` `harvest_share_taken` reads the state's present rates
-  (levers included), the tiles each form covers and the share its officials reach; `LabourWorld.harvest_share_taken`
-  hands it to `_farm_hour_value_over_wage` (`sim/labour/labour_allocation.py`), which decides on
-  `farm_intake.value_over_wage_after_tax`. Hands leave the land by the existing `kept_farm_workers` rule when the ratio falls
-  under one.
+- **Harvest tax and farm effort.** `sim/agents/tax_burden.py` `harvest_share_taken` reads the state's present rates
+  (levers included), the tiles each form covers and the share its officials reach. Its only reader is
+  `sim/campaigns/stability.py`: the farm-hands leg (the labour package's farm allocation and `farm_intake`) is deleted, so
+  nothing yet takes the harvest tax into a household's choice of farm hours against the wage; that choice belongs to the
+  economy's plots and farm producers and is open.
 - **Land tax reaches the owner's holding.** `tax_burden.land_tax_share_of_rent` turns a form on `land_rent` or `land_value`
   into a share of the rent; `YearInputs.land_tax_share_of_rent` carries it to `land_market.settle_year` and
   `titles.settle_tenancies`: a lessor whose managing cost plus the tax exceed the rent lets the title go (`titles.release`, 538).
@@ -40,7 +40,7 @@ can leave lowers the base next year; an AI state with the loss in its menu raise
   unit's saving equals the rising cost of hiding it, up to a ceiling, so a higher rate hides more and a state whose
   officials reach more is hidden from less. `revenue.taxed_actors` assesses only declared income; `fiscal_response.rate_raise_yield`
   nets the extra hiding. The economy's forms hide by the same rule through `EconomySetup.hiding`
-  (`sim/engine/economy_port_setup.py`), so the economy imports nothing from the actors. Customs duties on border imports
+  (`sim/markets/port_setup.py`), so the economy imports nothing from the actors. Customs duties on border imports
   are not under it. `HIDEABLE_SHARE_OF_INCOME` and `HIDING_MARGINAL_COST_AT_CEILING` (`sim/agents/tuning_evasion.py`) are
   labelled heuristics with `retire` 657.
 - Tests: `test_tax_pressure_reaches_decisions.py` (rules called with built inputs; the engine wiring is covered only by
@@ -62,7 +62,7 @@ can leave lowers the base next year; an AI state with the loss in its menu raise
 - Tests: `test_tax_flight_and_liability.py`.
 
 - **Flight is wired into the year.** `YearInputs.taxed_share_by_tile`, `state_reach_by_tile`, `amnesty_share` and `immunity_years` are filled
-  by `sim/engine/economy_port_flight.py` from `sim/agents/flight_inputs.py` (the state's income forms times its reach on the tile, under its liability rule
+  by `sim/markets/port_flight.py` from `sim/agents/flight_inputs.py` (the state's income forms times its reach on the tile, under its liability rule
   with the people who fled counted out of those who remain). `sim/economy/flight_routes.py` turns them into `YearInputs.taxed_share` and each route's
   `expected_penalty` (the actors' `flight.expected_penalty_of_leaving`, handed in as `EconomySetup.flight`, so the economy imports no actor). After the
   labour year `sim/economy/flight_step.py` runs `flight_year.py`: tenants of an area people left leave their land (`titles_flight.tenant_flees`), the leavers

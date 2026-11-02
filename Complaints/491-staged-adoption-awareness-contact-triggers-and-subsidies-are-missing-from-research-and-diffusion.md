@@ -60,7 +60,7 @@ unit count; subsidy and mandate levers on the government (481).
   someone has shown only once it is aware of it (`knows_it_exists`; imitation candidates, the research gate's
   `unaware` cause and `research.diffuse` all read it). Awareness comes yearly with chance `hazard(volume)` from the
   contact volume with the holders (`world.contact_volume`: neighbours by observation range plus tonnes carried
-  between the places, `sim/engine/agents_port_research.py`), recorded contact events (`record_contact`, fading) and a
+  between the places, `sim/actors/world_research.py`), recorded contact events (`record_contact`, fading) and a
   founder's demonstration (`world.exposure`). It gives no skill. Test: `--only staged_adoption`.
 - Done: staged adoption (`sim/agents/adoption.py`): aware, trying (pilot share), adopted; the share follows
   share' = speed * gap * share * (1 - share) with the gap the relative margin over the actor's other concerns
@@ -77,7 +77,7 @@ unit count; subsidy and mandate levers on the government (481).
 - Done: the engine records contact on a conquest (`campaign_year._take` calls `contact_events.after_conquest`) and on a
   migration (`regional_people.step_regions_of_people` calls `contact_events.after_migration` from `migrant_pairs`).
 - Done: purchases a buyer that `keeps_purchases` (a firm) makes at the market are delivered to its `stores`
-  (`economy_port_actors.close` returns the delivery by good; `stock_keeping.add_delivery`).
+  (`port_actors.close` returns the delivery by good; `stock_keeping.add_delivery`).
 - Remainder: (3) no node requires samples brought back from a region (expedition `returns`, rubber and latex);
   (4) the contact and speed constants are heuristics (`sim/agents/tuning_adoption.py`): contact would be retired by a
   measured carrier (tonnes, migrants, routes) and the logistic speed by a curve fitted to Griliches-style adoption

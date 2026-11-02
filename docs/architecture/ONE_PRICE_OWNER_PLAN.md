@@ -1,11 +1,9 @@
 # One price owner: the agent economy
 
-**Status:** partly built. Answers `Complaints/507-prices-and-traded-volumes-have-two-owners.md` (read its
+**Status:** partly built; the static book (stage 6) is deleted. Answers `Complaints/507-prices-and-traded-volumes-have-two-owners.md` (read its
 `**Status:**` line for the live state). Owner decision: the agent economy (`sim/economy/`, reached through
 `sim/markets/`) is the only owner of prices and traded volumes; the price solver (`sim/prices/`) becomes a
-cost-of-making calculator. Sequel to `ONE_DEMAND_MODEL_PLAN.md` (one household demand kernel). Parts of the price
-and labour duplication are being removed under `Complaints/964` (labour single owner, one national price rule,
-the legacy analytic price model); read that complaint instead of this plan for those.
+cost-of-making calculator. Sequel to `ONE_DEMAND_MODEL_PLAN.md` (one household demand kernel). What the price and labour re-audit left is in `Complaints/964`; read that complaint for it.
 
 Rules this plan keeps (CLAUDE.md section 4): no hardcoded outcomes, no content ids in the engine, every
 transitional shortcut labelled, no save migration. A stage changes behaviour on purpose, so the fingerprint proves
@@ -38,8 +36,6 @@ Each item names where it lives now; confirm with the command before relying on i
 - **Unsold stock is searched within the year.** `sim/economy/unsold_search.py` (`clear_with_search`) lowers the asks
   of sellers left with unsold stock to the highest common level at which they sell out or reach their floor; the
   floor includes the queued holding value (`inventory.queued_holding_value`).
-- **Farm effort follows the food price in part.** Farm hands kept past need respond to the staple price over the
-  wage (`sim/labour/farm_intake.py`; `Complaints/513`).
 
 ## What is not built
 
@@ -47,21 +43,12 @@ Each item names where it lives now; confirm with the command before relying on i
   `grep -rn "solved_prices(\|_price_tables()\|_material_prices()" sim --include=*.py | grep -v tests`. Today these
   are the wage schedule's opening anchor (`sim/workforce/wage_schedule.py`), the energy price tables
   (`sim/prices/energy_prices.py`), and the markets module's table reads (`sim/markets/goods_offers.py`,
-  `port.py`, `port_year.py`). The cost table closes the recipe graph at runtime for them, so `ENGINE_SOLVE_TOLERANCE`
+  `sim/markets/port.py` `_material_prices`). The cost table closes the recipe graph at runtime for them, so `ENGINE_SOLVE_TOLERANCE`
   and the interest-rate band (`sim/prices/prices.py`, `sim/engine/shipped_rate_bands.py`) stay until they move.
-- **The static commodity book is still there** (stage 6): `MarketsWorld.market_book` and `market_flows`,
-  `sim/markets/clearing.py`, `sim/markets/demand.py`, `sim/world/market.py`. `market_state` takes sold, unsold and
-  unmet from the economy's record; capacity, stock and the founder-sales terms still come from the book. What is
-  left is in `STATE_OWNERSHIP_MAP.md` ("What is left of 507 stage 6"). `Complaints/964` names the category-ratio
-  entry rule (`sim/markets/rules.py`) and the old ratio mixed into `sim/markets/clearing.py` as a second price model.
-- **Partner economies outside the agent economy** keep a calculator call and the static book
-  (`sim/content/foreign_economies.py`, `sim/markets/port_world_foreign.py`) until the partners are inside the
-  economy (`partners_in_agent_economy`).
+- **The static commodity book is gone.** `market_state` reads sold, unsold and unmet from the economy's record (`sim/markets/clearing.py`); the markets module keeps only the year's flows by party. Partner economies are inside the agent economy (`sim/content/foreign_economies.py`, `sim/markets/port_world_foreign.py`).
 - **Trader cargo** still prices some home goods at the cost table with the economy's response as a factor
   (pricing them at the economy's port price made home-bound cargo stop after a year).
-- **Farm effort** (`Complaints/513`): the need-sized allocation (`farm_workers_needed`,
-  `sim/labour/labour_allocation.py`) is still the floor under the kept hands; the household-by-household choice
-  and the sale of surplus past satiation are open.
+- **Farm effort** (`Complaints/513`): farm work is chosen inside the economy; the staple's price near satiation and the sale of surplus past it are open.
 - **Three copies of cost arithmetic**: `sim/prices/solve_prices_core.py`, `sim/economy/unit_cost.py` and
   `sim/economy/notional.py` (`cheapest_cost`). Merging them into one `sim/world/` kernel changes no behaviour, so
   its proof is the fingerprint.

@@ -56,7 +56,7 @@ class WorkforceWorld:
 
     @property
     def society(self):
-        """The society's labour hours and wage tightness: the module's own world state."""
+        """The society's labour hours by trade: the module's own world state."""
         return self._owner.world
 
     @property
