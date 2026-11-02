@@ -102,7 +102,7 @@ class SetImprovementsTests(unittest.TestCase):
         economy = self.economy({})
         change = Economy.set_improvements
         self.assertTrue(change(economy, {"a|b": {"road": True}}))
-        self.assertEqual(economy.improvements, {"a|b": {"road": True}})
+        self.assertEqual(economy.record.ways, {"a|b": {"road": True}})
         self.assertEqual(economy.record.ways, {"a|b": {"road": True}})
         self.assertEqual(economy.rebuilt, [True])
 

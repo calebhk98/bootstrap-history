@@ -90,25 +90,26 @@ class Economy:
         self.record = record
         self.area_map = area_map
         self.carriage = carriage
-        self.improvements: Dict[str, Dict[str, Any]] = dict(record.ways)   # the ways `carriage` and the areas were built with
         self.watched_tiles: Tuple[str, ...] = ()   # tiles whose market books are kept beside the port's and the capital's; not saved
-        self._own_options = None
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
         self._work_hours: Dict[str, float] = {}     # household work each cohort keeps back this year; set when the year plans it
+
+    def change_setup(self, **changes: Any) -> None:
+        """The one place the setup changes: a new setup with these fields replaced (the old one is never edited in place)."""
+        self.setup = dataclasses.replace(self.setup, **changes)
 
     def set_improvements(self, improvements: Mapping[str, Mapping[str, Any]]) -> bool:
         """Rebuild the carriage table over these built ways, partition the market areas again over it and
         carry the markets' memory to the new areas; False when they are the ways it already has."""
-        if dict(improvements) == self.improvements:
+        if dict(improvements) == self.record.ways:
             return False
-        self.improvements = {key: dict(way) for key, way in improvements.items()}
-        self.record.ways = {key: dict(way) for key, way in self.improvements.items()}
+        self.record.ways = {key: dict(way) for key, way in improvements.items()}
         return self._rebuild_carriage()
 
     def _rebuild_carriage(self) -> bool:
         """Carriage over the current ways and return trips, the market areas partitioned again over it, the
         markets' memory carried to the new areas."""
-        self.carriage = self.setup.carriage_table(self.improvements, self.record.area_imbalance)
+        self.carriage = self.setup.carriage_table(self.record.ways, self.record.area_imbalance)
         area_map = self.setup.area_map(self.carriage)
         follow(self.record, self.area_map, area_map)
         self.area_map = area_map
@@ -152,8 +153,13 @@ class Economy:
             return self._run_year(inputs)
 
     def _run_year(self, inputs: YearInputs) -> YearOutcome:
+        changes: Dict[str, Any] = {}
         if inputs.tax_rates:
-            self.setup = dataclasses.replace(self.setup, tax_forms=taxes.with_rates(self.setup.tax_forms, inputs.tax_rates))
+            changes["tax_forms"] = taxes.with_rates(self.setup.tax_forms, inputs.tax_rates)
+        if inputs.site_limits:   # empty keeps the last declared
+            changes["site_limits"] = tuple(inputs.site_limits)
+        if changes:
+            self.change_setup(**changes)
         setup, record = self.setup, self.record
         record.sort_in_saved_order()
         self.__dict__.pop("_port_shares", None)
@@ -164,7 +170,7 @@ class Economy:
         ledger = YearLedger(import_accounts=frozenset(inputs.import_accounts), export_accounts=frozenset(inputs.export_accounts))
         self._follow_population(inputs)
         self._follow_yields(inputs)
-        sites.apply_site_limits(record, setup, inputs.site_limits)
+        sites.apply_site_limits(record, setup)
         view = self.view()
         money = setup.currency_id
         debt_relief.forgive(record, inputs.debt_relief_tiles)
@@ -295,10 +301,8 @@ class Economy:
                 self.record.producers[producer_id] = replaced(producer, yield_factor=factor)
 
     def _own_plot_options(self):
-        if self._own_options is None:
-            setup = self.setup
-            self._own_options = own_production_options(setup.recipes, setup.land_per_run, setup.basket)
-        return self._own_options
+        setup = self.setup
+        return own_production_options(setup.recipes, setup.land_per_run, setup.basket)
 
     def _fixed_home_hours(self, everyone, view, outside_option) -> Tuple[Dict[str, float], Dict[str, float]]:
         """(own-plot plan hours, household work hours) each cohort keeps back whatever the wage: the plan at the tile's
@@ -327,7 +331,7 @@ class Economy:
                   kept: Optional[Dict[str, float]] = None) -> None:
         """Hours kept back and hours nobody hired go into the household's own plot (households_own.py)."""
         setup, record = self.setup, self.record
-        self._own_plot_options()
+        options = self._own_plot_options()
         kept = kept or {}
         self._own_hectares = {}
         held = self._hectares_held()
@@ -339,7 +343,7 @@ class Economy:
                     - min(kept.get(cohort_id, 0.0), self._work_hours.get(cohort_id, 0.0)))   # household work is not spare hours
             tile = setup.tiles.get(cohort.tile)
             hours_used: Dict[str, float] = {}
-            moves, grown, units = own_production(cohort, idle, self._own_options, setup.recipes,
+            moves, grown, units = own_production(cohort, idle, options, setup.recipes,
                                                  (tile.fertility if tile else 0.0) * harvest_factor,
                                                  setup.basket_for(cohort.tile), setup.land_per_run,
                                                  held.get(cohort.agent_id, 0.0), hours_used)
@@ -350,7 +354,7 @@ class Economy:
                 record.book.move_many(moves)
                 ledger.grown[cohort_id] = grown
                 ledger.grown_units[cohort_id] = units
-                hectares = plot_hectares(units, self._own_options, setup.recipes, setup.land_per_run,
+                hectares = plot_hectares(units, options, setup.recipes, setup.land_per_run,
                                          (tile.fertility if tile else 0.0) * harvest_factor)
                 self._own_hectares[cohort.tile] = self._own_hectares.get(cohort.tile, 0.0) + hectares
 
@@ -488,9 +492,9 @@ class Economy:
             hired += result.hours_hired
             idle += result.idle_hours
             vacant += result.vacant_hours
-        mean_wages = {trade: (math.fsum(wage * hours for wage, hours in rows) / math.fsum(hours for _w, hours in rows)
-                              if math.fsum(hours for _w, hours in rows) > 0.0 else rows[0][0])
-                      for trade, rows in sorted(wages.items())}
+        mean_wages = {trade: math.fsum(wage * hours for wage, hours in rows) / hours_hired
+                      for trade, rows in sorted(wages.items())
+                      if (hours_hired := math.fsum(hours for _wage, hours in rows)) > 0.0}   # a trade nobody hired has no mean wage
         hunger: Dict[str, float] = {}
         for cohort in record.cohorts.values():
             short = cohort.unmet_floor_by_need.get(self.setup.hunger_need, 0.0)

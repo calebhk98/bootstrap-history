@@ -12,25 +12,25 @@ from .market_memory import market_key
 
 def admit_recipes(economy, source) -> bool:
     """Give `economy` the recipes, goods and prices `source` (an EconomySetup) has that it lacks; False when
-    it lacks none. Nothing the economy already has is changed."""
+    it lacks none. Nothing the economy already has is changed; its setup is replaced by one that has them."""
     setup = economy.setup
     new_recipes = [recipe_id for recipe_id in sorted(source.recipes) if recipe_id not in setup.recipes]
     new_goods = [good for good in sorted(source.opening_prices) if good not in setup.opening_prices]
     if not new_recipes and not new_goods:
         return False
-    for recipe_id in new_recipes:
-        setup.recipes[recipe_id] = source.recipes[recipe_id]
-        if recipe_id in source.land_per_run:
-            setup.land_per_run[recipe_id] = source.land_per_run[recipe_id]
-        setup.yield_factor_by_recipe_tile.update({key: factor for key, factor in source.yield_factor_by_recipe_tile.items()
-                                                  if key.partition("@")[0] == recipe_id})
-    for good, spec in source.specs.items():
-        setup.specs.setdefault(good, spec)
-    for trade, wage in source.opening_wages.items():
-        setup.opening_wages.setdefault(trade, wage)
-    setup.recipes_by_country = {country: tuple(recipes) for country, recipes in source.recipes_by_country.items()}
-    for good in new_goods:
-        setup.opening_prices[good] = source.opening_prices[good]
+    added = set(new_recipes)
+    economy.change_setup(
+        recipes={**setup.recipes, **{recipe_id: source.recipes[recipe_id] for recipe_id in new_recipes}},
+        land_per_run={**setup.land_per_run, **{recipe_id: source.land_per_run[recipe_id] for recipe_id in new_recipes
+                                               if recipe_id in source.land_per_run}},
+        yield_factor_by_recipe_tile={**setup.yield_factor_by_recipe_tile,
+                                     **{key: factor for key, factor in source.yield_factor_by_recipe_tile.items()
+                                        if key.partition("@")[0] in added}},
+        specs={**setup.specs, **{good: spec for good, spec in source.specs.items() if good not in setup.specs}},
+        opening_wages={**setup.opening_wages, **{trade: wage for trade, wage in source.opening_wages.items()
+                                                 if trade not in setup.opening_wages}},
+        recipes_by_country={country: tuple(recipes) for country, recipes in source.recipes_by_country.items()},
+        opening_prices={**setup.opening_prices, **{good: source.opening_prices[good] for good in new_goods}})
     if new_goods:
         economy.rebuild_market_areas()
         _open_markets(economy, new_goods)

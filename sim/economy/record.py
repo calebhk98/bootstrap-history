@@ -3,6 +3,7 @@
 The book holds money and goods; the agents' records hold what they expect and plan; the memory
 holds last year's market outcomes. Nothing else survives a year.
 """
+import dataclasses
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Tuple
 
@@ -30,7 +31,21 @@ AGENT_KEYED_FIELDS = ("cohorts", "producers", "merchants", "remembered_defaults"
 
 # the stores `to_record` writes sorted by key, and so a load reads back in that order
 SAVED_SORTED_FIELDS = ("cohorts", "producers", "merchants", "titles", "tenancies", "bondage", "tax_history", "banks", "shares",
-                       "last_dividends", "ways", "carried")
+                       "last_dividends", "ways", "carried", "cleared_hectares", "fugitives")
+
+# fields not saved: they hold only within-year state, empty between years
+TRANSIENT_FIELDS = (
+    "settling",    # true only inside the hidden spin-up, which finishes before any save
+    "tax_farms",   # this year's farmer and price, set and cleared inside the year (its own comment says empty between years)
+)
+
+# the saved key where it differs from the field name
+SAVED_KEYS = {"contracts": "loans"}
+
+
+def _sorted_store(store: Dict[Any, Any]) -> Dict[Any, Any]:
+    """The store in id order, and each inner dict too."""
+    return {key: (dict(sorted(inner.items())) if isinstance(inner, dict) else inner) for key, inner in sorted(store.items())}
 
 
 def _seat_sorted(store: Dict[Any, Any]) -> None:
@@ -128,125 +143,27 @@ class EconomyRecord:
                     _seat_sorted(inner)
 
     def to_record(self, skip_currencies=()) -> Dict[str, Any]:
-        """The record as plain data; money in `skip_currencies` (another owner's currency in the shared book) is left out."""
-        return {
-            "book": self.book.to_record(skip=skip_currencies),
-            "memory": plain(self.memory),
-            "currency": plain(self.currency),
-            "cohorts": {key: plain(value) for key, value in sorted(self.cohorts.items())},
-            "producers": {key: plain(value) for key, value in sorted(self.producers.items())},
-            "merchants": {key: _merchant_record(value) for key, value in sorted(self.merchants.items())},
-            "loans": self.contracts.to_records(facilities=False),
-            "loan_requests": [plain(request) for request in self.loan_requests],
-            "remembered_defaults": self.remembered_defaults,
-            "credit_losses": self.credit_losses,
-            "loss_rates": self.loss_rates,
-            "losses_seen": self.losses_seen,
-            "workforce": market_state_to_plain(self.workforce),
-            "property_income": self.property_income,
-            "volumes": self.volumes,
-            "unsold": self.unsold,
-            "unmet": self.unmet,
-            "opening_basket": self.opening_basket,
-            "opening_demand": self.opening_demand,
-            "opening_own_grown": self.opening_own_grown,
-            "opening_sold_hours_per_worker": self.opening_sold_hours_per_worker,
-            "opening_sold_hours_by_area": self.opening_sold_hours_by_area,
-            "opening_demand_by_country": self.opening_demand_by_country,
-            "expansion_runs": self.expansion_runs,
-            "index_base_prices": self.index_base_prices,
-            "worn_runs": self.worn_runs,
-            "state_budget": plain(self.state_budget),
-            "land_rent": self.land_rent,
-            "land_mean_value": self.land_mean_value,
-            "land_ceded": self.land_ceded,
-            "titles": {tile: dict(held) for tile, held in sorted(self.titles.items())},
-            "tenancies": {tile: [dict(row) for row in rows] for tile, rows in sorted(self.tenancies.items())},
-            "cleared_hectares": dict(sorted(self.cleared_hectares.items())),
-            "fugitives": {area: dict(row) for area, row in sorted(self.fugitives.items())},
-            "bondage": {cohort: dict(bond) for cohort, bond in sorted(self.bondage.items())},
-            "bonded_held": plain(self.bonded_held),
-            "tax_history": {form: dict(row) for form, row in sorted(self.tax_history.items())},
-            "margin_years": self.margin_years,
-            "hours_hired": self.hours_hired,
-            "hours_hired_by_others": self.hours_hired_by_others,
-            "hours_idle": self.hours_idle,
-            "sold_share_expected": self.sold_share_expected,
-            "funds_offered": self.funds_offered,
-            "lent_by_borrower": self.lent_by_borrower,
-            "credit_granted": self.credit_granted,
-            "banks": {key: plain(value) for key, value in sorted(self.banks.items())},
-            "shares": {producer: dict(sorted(held.items())) for producer, held in sorted(self.shares.items())},
-            "last_dividends": dict(sorted(self.last_dividends.items())),
-            "capital": self.capital.to_plain(),
-            "curves": self.curves,
-            "ways": {key: dict(built) for key, built in sorted(self.ways.items())},
-            "area_imbalance": self.area_imbalance,
-            "carried": {key: dict(row) for key, row in sorted(self.carried.items())},
-            "carried_goods": self.carried_goods,
-            "spin_up_result": dict(self.spin_up_result),
-        }
+        """The record as plain data, a field each (`dataclasses.fields`), the stores in SAVED_SORTED_FIELDS written in id
+        order; money in `skip_currencies` (another owner's currency in the shared book) is left out."""
+        saved: Dict[str, Any] = {}
+        for each in dataclasses.fields(self):
+            name = each.name
+            value = getattr(self, name)
+            if name in TRANSIENT_FIELDS:
+                continue
+            if name == "book":
+                saved[name] = self.book.to_record(skip=skip_currencies)
+            elif name in ENCODERS:
+                saved[SAVED_KEYS.get(name, name)] = ENCODERS[name](value)
+            else:
+                saved[name] = plain(_sorted_store(value) if name in SAVED_SORTED_FIELDS else value)
+        return saved
 
     @classmethod
     def from_record(cls, record: Dict[str, Any]) -> "EconomyRecord":
-        built = cls(
-            book=Book.from_record(record["book"]),
-            memory=MarketMemory(**record["memory"]),
-            currency=CurrencySpec(**record["currency"]),
-            cohorts={key: Cohort(**value) for key, value in record["cohorts"].items()},
-            producers={key: Producer(**value) for key, value in record["producers"].items()},
-            merchants={key: _merchant_from(value) for key, value in record["merchants"].items()},
-            loan_requests=[LoanRequest(**request) for request in record["loan_requests"]],
-            remembered_defaults=dict(record["remembered_defaults"]),
-            credit_losses=dict(record["credit_losses"]),
-            loss_rates=dict(record["loss_rates"]),
-            losses_seen=dict(record["losses_seen"]),
-            workforce=market_state_from_plain(record["workforce"]),
-            property_income=dict(record["property_income"]),
-            volumes=dict(record["volumes"]),
-            unsold=dict(record["unsold"]),
-            unmet=dict(record["unmet"]),
-            opening_basket=dict(record["opening_basket"]),
-            opening_demand=dict(record["opening_demand"]),
-            opening_own_grown=dict(record["opening_own_grown"]),
-            opening_sold_hours_per_worker=float(record["opening_sold_hours_per_worker"]),
-            opening_sold_hours_by_area=dict(record["opening_sold_hours_by_area"]),
-            opening_demand_by_country={country: dict(demand) for country, demand in record["opening_demand_by_country"].items()},
-            expansion_runs=dict(record["expansion_runs"]),
-            index_base_prices=dict(record["index_base_prices"]),
-            worn_runs=dict(record["worn_runs"]),
-            state_budget=StateBudget(**record["state_budget"]),
-            land_rent=dict(record["land_rent"]),
-            land_mean_value=dict(record["land_mean_value"]),
-            land_ceded=dict(record["land_ceded"]),
-            titles={tile: dict(held) for tile, held in record["titles"].items()},
-            tenancies={tile: [dict(row) for row in rows] for tile, rows in record["tenancies"].items()},
-            cleared_hectares=dict(record["cleared_hectares"]),
-            fugitives={area: dict(row) for area, row in record["fugitives"].items()},
-            bondage={cohort: dict(bond) for cohort, bond in record["bondage"].items()},
-            bonded_held=plain(record["bonded_held"]),
-            tax_history={form: dict(row) for form, row in record["tax_history"].items()},
-            margin_years=dict(record["margin_years"]),
-            hours_hired=dict(record["hours_hired"]),
-            hours_hired_by_others=dict(record["hours_hired_by_others"]),
-            hours_idle=dict(record["hours_idle"]),
-            sold_share_expected=dict(record["sold_share_expected"]),
-            funds_offered=record["funds_offered"],
-            lent_by_borrower=dict(record["lent_by_borrower"]),
-            credit_granted=dict(record["credit_granted"]),
-            banks={key: Bank(**value) for key, value in record["banks"].items()},
-            shares={producer: dict(held) for producer, held in record["shares"].items()},
-            last_dividends=dict(record["last_dividends"]),
-            capital=CapitalState.from_plain(record["capital"]),
-            curves=dict(record["curves"]),
-            ways={key: dict(built) for key, built in record["ways"].items()},
-            area_imbalance=record["area_imbalance"],
-            carried={key: dict(row) for key, row in record["carried"].items()},
-            carried_goods=record["carried_goods"],
-            spin_up_result=dict(record["spin_up_result"]),
-        )
-        built.contracts.load_records(record["loans"])
-        return built
+        return cls(**{each.name: DECODERS[each.name](record[SAVED_KEYS.get(each.name, each.name)]) if each.name in DECODERS
+                       else plain(record[each.name])
+                       for each in dataclasses.fields(cls) if each.name not in TRANSIENT_FIELDS})
 
 
 def _pair_keys(mapping: Dict[Tuple[str, str], Any]) -> Dict[str, Any]:
@@ -284,3 +201,32 @@ def _merchant_from(record: Dict[str, Any]) -> Merchant:
                     carrier_fleet_wanted=record["carrier_fleet_wanted"],
                     in_transit=[Shipment(**each) for each in record["in_transit"]],
                     price_history=_split_keys(record["price_history"]))
+
+
+def _contracts_from(records: List[Dict[str, Any]]) -> Contracts:
+    contracts = Contracts()
+    contracts.load_records(records)
+    return contracts
+
+
+# the fields the generic copy cannot write or read: a dataclass or a class with its own record, or a key that is not a string
+ENCODERS = {
+    "merchants": lambda merchants: {key: _merchant_record(value) for key, value in sorted(merchants.items())},
+    "contracts": lambda contracts: contracts.to_records(facilities=False),
+    "workforce": market_state_to_plain,
+    "capital": lambda capital: capital.to_plain(),
+}
+DECODERS = {
+    "book": Book.from_record,
+    "memory": lambda value: MarketMemory(**value),
+    "currency": lambda value: CurrencySpec(**value),
+    "cohorts": lambda value: {key: Cohort(**each) for key, each in value.items()},
+    "producers": lambda value: {key: Producer(**each) for key, each in value.items()},
+    "merchants": lambda value: {key: _merchant_from(each) for key, each in value.items()},
+    "contracts": _contracts_from,
+    "loan_requests": lambda value: [LoanRequest(**each) for each in value],
+    "workforce": market_state_from_plain,
+    "state_budget": lambda value: StateBudget(**value),
+    "banks": lambda value: {key: Bank(**each) for key, each in value.items()},
+    "capital": CapitalState.from_plain,
+}

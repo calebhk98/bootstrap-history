@@ -1,4 +1,7 @@
-"""What one civilisation's economy is built from: the facts that do not change from year to year.
+"""What one civilisation's economy is built from: the facts it keeps from year to year.
+
+A setup is never edited in place. A change (a tax rate, a site limit, the state's reach, a recipe a technique allows,
+the tiles' yields) makes a new setup with `dataclasses.replace`, assigned in one place, `Economy.change_setup`.
 
 The markets module's port (sim/markets/port*.py) or a tool fills an `EconomySetup` from data and the engine's
 opening state; nothing in it is a model outcome except the opening prices and wages, which only seed

@@ -71,7 +71,9 @@ class AgentEconomy(TilePricesMixin):
         self._built_from = None          # the stored dict the live economy belongs to; a load replaces it
         self._years_run = 0              # years this object has run: the producers change when one closes
         self._techniques_admitted = None   # the held nodes the economy's recipes were last matched to; not saved
-        self._record_stale = False       # the live economy has moved on since `stored["record"]` was exported
+        self._sale_index = [None, 0, {}]   # note_sale's lookup of the year's sales (port_actors.note_sale keeps it)
+        self._seat_offered = {}          # seat -> (tile, material -> quantity) its concerns put up this year
+        self._seat_inputs = {}           # seat -> what its concerns' inputs cost this year
 
     @property
     def stored(self):
@@ -137,7 +139,6 @@ class AgentEconomy(TilePricesMixin):
         self._floor_costs = {}
         self._answers = None
         self._country_answers = {}
-        self._record_stale = True
 
     def _note_volume_baseline(self):
         """The first year a good clears any quantity in a country's markets is the quantity later years are
@@ -184,8 +185,7 @@ class AgentEconomy(TilePricesMixin):
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
         economy = self.economy()
-        port_cropland.follow_farm_sites(self._sim, economy.setup)
-        economy.setup.state_capacity = self._sim.state_reach()
+        economy.change_setup(state_capacity=self._sim.state_reach(), **port_cropland.follow_farm_sites(self._sim, economy.setup))
         self.sync_ways()
         self.admit_techniques()
         orders = self._seat_orders()
@@ -211,7 +211,6 @@ class AgentEconomy(TilePricesMixin):
         self._answers = None
         self._country_answers = {}
         self._floor_costs = {}
-        self._record_stale = True        # exported when the game is saved (flush_record)
         self._years_run += 1
         self._note_volume_baseline()
         return outcome
@@ -231,7 +230,7 @@ class AgentEconomy(TilePricesMixin):
 
     def note_sale(self, seller, material, tonnes, from_concerns):
         port_actors.note_sale(self.stored.setdefault("sales", []), seller, material, tonnes, from_concerns,
-                                      self.__dict__.setdefault("_sale_index", [None, 0, {}]))
+                                      self._sale_index)
 
     def note_purchase(self, buyer, commodity, tonnes, budget):
         port_actors.note_purchase(self.stored.setdefault("purchases", []), buyer, commodity, tonnes, budget)
@@ -247,7 +246,6 @@ class AgentEconomy(TilePricesMixin):
         """`old` becomes `new` in the economy's records and in the year's stored notes (a seat handed over)."""
         if self.opened():
             economy_api.rename_agent(self.economy(), old, new)
-            self._record_stale = True
         for kind in ("seat_takings", "seat_sales", "sales", "purchases"):
             if kind in self.stored:
                 rekey(self.stored[kind], old, new)
@@ -311,6 +309,7 @@ class AgentEconomy(TilePricesMixin):
         """Every seat's running concerns' output for the year, one agent per seat named by its seat id."""
         sim = self._sim
         orders = {}
+        self._seat_offered, self._seat_inputs = {}, {}
         for seat_id in sorted(sim.playing_seats() or sim.state.seats):   # a seat whose run ended sells nothing
             with sim.act_as(seat_id):
                 orders.update(self._acting_seat_orders(seat_id))
@@ -325,8 +324,8 @@ class AgentEconomy(TilePricesMixin):
         tile = sim.labour.base_tile() if sim.labour.base_tile() in economy.setup.tiles else economy.setup.capital_tile
         view = economy.view()
         moves, offers = [], []
-        offered = self.__dict__.setdefault("_seat_offered", {}).setdefault(agent_id, (tile, {}))[1]
-        inputs = self.__dict__.setdefault("_seat_inputs", {})
+        offered = self._seat_offered.setdefault(agent_id, (tile, {}))[1]
+        inputs = self._seat_inputs
         for node_id in sorted(sim.operating()):
             quantities = sim.concern_book_offer(node_id)
             if not quantities:
@@ -470,9 +469,8 @@ class AgentEconomy(TilePricesMixin):
     def _settle_seats(self):
         """What each seat's goods fetched goes to its ledger, less what its concerns' inputs cost; what did not sell goes
         back to the engine (port_seats.settle_seats)."""
-        offered = self.__dict__.pop("_seat_offered", {})
-        inputs = self.__dict__.pop("_seat_inputs", {})
-        sold, takings = port_seats.settle_seats(self._sim, self._economy, offered, inputs, EDGE_LEGACY)
+        sold, takings = port_seats.settle_seats(self._sim, self._economy, self._seat_offered, self._seat_inputs, EDGE_LEGACY)
+        self._seat_offered, self._seat_inputs = {}, {}
         self.stored["seat_sales"] = {**self.stored.get("seat_sales", {}), **sold}
         self.stored["seat_takings"] = takings
 
@@ -620,11 +618,10 @@ class AgentEconomy(TilePricesMixin):
 
     def _save(self):
         self.stored["record"] = economy_api.export_record(self._economy, (PURSE_CURRENCY,))
-        self._record_stale = False
 
     def flush_record(self):
         """Bring the stored record up to the live economy; the game's save calls this, so a year does not pay for it."""
-        if self._record_stale and self._economy is not None and self._built_from is self.stored:
+        if self._economy is not None and self._built_from is self.stored:
             self._save()
 
     def carried_last_year(self):
