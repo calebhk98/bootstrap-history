@@ -1,11 +1,13 @@
 # The agent economy
 
 Status: the game's only economy. There is no switch: a civilisation that holds no tiles is refused when the game
-is built, and the engine's own opening figures answer only while the economy opens (`sim/tests/harness.unopened_sim`
+is built, and the engine's own opening figures answer only while the economy opens (`sim/tests/harness.py unopened_sim`
 builds a game that stays in that state, for tests of the opening figures). The yearly economy checks measure it
-against plausible ranges.
+against plausible ranges (`python3 sim/simulator.py economy-check`).
 
-Owner decision (2026-10-09, later): retire the agent-economy-off mode; the agent economy is the only economy (supersedes the earlier keep decision).
+Open problems that touch this document are collected in `Complaints/964` (labour single owner, one national price
+rule, the legacy analytic price model) and `Complaints/507` (prices and traded volumes have two owners,
+`ONE_PRICE_OWNER_PLAN.md`); where a section below describes a rule under repair it says so.
 
 ## What it is
 
@@ -39,7 +41,9 @@ demography to read.
 variable cost; a holder of stock at what it expects to get next year less carrying cost and spoilage; a
 seller short of cash for debts or wages below that; a waste product below zero.
 
-**Wages come from the labour core; the interest rate is sticky.** The economy keeps its workforce as
+**Wages come from the labour core; the interest rate is sticky.** (Whether the core is the one owner of who works
+where is open: `Complaints/964`, `Complaints/556`, `Complaints/963`; the engine's staff books and the army do not yet
+draw on it.) The economy keeps its workforce as
 the labour core's `MarketState` (people per tile, trade and ability band; `labour_state.py`) and each
 year hands the core the producers' bids as tranches of falling value (`labour_bids.py`), the outside
 option, entrants and attrition from demography, and routes to bordering tiles (`labour_inputs.py`).
@@ -62,7 +66,7 @@ so the price of the metal in coin stays near the mint's parity and the price of 
 money demand against the stock. Mining cost is the floor below which mines close. The opening money
 stock is derived: what the opening agents want to hold at the seeded prices.
 
-**Space is tiles.** Regions are being deleted. A good's market area is the set of tiles between which
+**Space is tiles.** A good's market area is the set of tiles between which
 carriage costs less than a share of its value, so silver trades across a civilisation and grain within
 a tile or a few. The cost of a haul between tiles is geography's route cost (`sim/economy/tile_costs.py`
 asks `route_costs`, see `sim/geography/INTERFACE.md`): rivers, coasts, grade and sea lanes come from the
@@ -71,8 +75,8 @@ the goods leave, until carriers hire hours in the labour market.
 
 **Stock-flow consistency.** Every movement of money or goods has a counterparty. Money and goods enter
 or leave only through named edge accounts (`types.EDGE_*`). Engine postings that do not yet name a
-payer or payee are booked against `edge:legacy`, whose volume is measured and should fall to zero.
-Complaint 382 lists them.
+payer or payee are booked against `edge:legacy` (`EDGE_LEGACY` in `types.py`); its volume should fall to zero
+(`grep -rn "EDGE_LEGACY" sim --include=*.py` lists the postings; `Complaints/closed/382` is the multi-player plan).
 
 **Money takes each society's own form.** A civilisation's coin standard names its regime: struck coin
 (a mint buys metal at parity less its charge and strikes it; the charge is the issuer's seigniorage),
@@ -105,7 +109,7 @@ the whole stock, no higher than the buyers could pay (`demand_search.raise_asks`
 seller's expectation is not pulled toward cost (`ask_adjust.regressive_weight`), and a crowd of price takers asks its expected price for
 stock it expects to sell (`seller_offers.expected_ask`). The logit allocation (`goods_market_logit.allocate`) redirects rationed buyers
 to sellers still holding stock, round after round, until no stock is reachable. Credit rations by quantity at the lenders' ask and
-cuts a request the premium prices out to what its pledge bears (`credit_rate.py`, `credit_cap.py`; Complaint 641).
+cuts a request the premium prices out to what its pledge bears (`credit_rate.py`, `credit_cap.py`; open: `Complaints/641`).
 
 **Demand brings makers.** Where buyers wanted more of a good than was sold, beyond what its makers'
 idle capacity could have added, a recipe the society knows that pays at the price bid starts or grows
@@ -117,12 +121,12 @@ matches them to the techniques some producer in the society runs (the founder's,
 newly allowed recipe, with a market for any good that had none, is handed to the economy through its api
 (`sim/markets/port_late.py`, `sim/economy/late_recipes.py`); the saved opening carries them, so a resumed game
 rebuilds the same set. Real output follows the economy's cleared quantity only for goods such a recipe makes
-(Complaint 478); for every other good it still reads the opening's reference. Every recipe that pays draws a newcomer, best first, each for a share of
+(`Complaints/closed/478`); for every other good it still reads the opening's reference. Every recipe that pays draws a newcomer, best first, each for a share of
 what the better ones leave: no cap on newcomers per market a year. Where makers exist and sellers have
 raised asks until buyers are no longer turned away, a market whose usual (smoothed) price stays above
 its cheapest recipe's entry price for as many years as a loser waits to exit draws newcomers sized to
 what the bids take at the entry price, no faster than incumbents change their output
-(`entry_margin.py`); the first attempt at this destabilised staple prices
+(`entry_margin.py`); an earlier attempt at this destabilised staple prices
 (`Complaints/reports/agent-economy-review-round-four.md`, "Tried and not merged").
 
 **Workers ask what they can sell for, down to a floor.** A worker's ask falls while hours go unsold
@@ -199,7 +203,7 @@ a line's materials this way and the rest of the line as before. The actors' coin
 currencies of one book (the actors' accounts live in the economy's book once it opens; each owner saves only its own
 currency), meeting at `edge:exchange` at the opening wage that fixes the unit.
 
-## Actors' money and debt in the book (Complaint 115)
+## Actors' money and debt in the book (`Complaints/closed/115`)
 
 The engine's actors (firms, the state, traders, interest groups and the strata) keep their money as accounts in a
 double-entry book (`sim/book.py`, the class the economy's own agents use; the actors' instance is
@@ -225,25 +229,27 @@ the actors. The decision for who may owe what, and to whom:
   credit ceiling are still the ones `Borrower.credit_ceiling` reads (the agent economy's credit market answers
   them); the savers are a labelled stand-in for cohorts' savings, which are in the same book but not yet the lenders.
 
-## One money per labour hour (Complaint 115)
+## One money per labour hour (`Complaints/closed/115`)
 
 What an hour of work is worth in the game's coin is one figure: the agent economy's wage for the unskilled trade
 (`EconomyPort.unskilled_wage`, read by the labour package's `wage_schedule`). Before the economy has opened there is
 no wage to read, so the opening is counted at the price solver's figure (the coin's labour cost); the economy's
-opening (`sim/engine/opening_money.py`, called from `open_agent`) then reprices everything counted at that figure, the
+opening (`open_agent` in `sim/markets/port.py` sends `RepriceOpeningMoney`; `sim/engine/opening_money.py` does the
+repricing) then reprices everything counted at that figure, the
 founder's and every seat's purse and the tree's money fields, by the ratio of the two, and sets
-`state.economy.money_from_economy`. From then on living costs, node money, the constants stated in labour hours
+the markets module's `money_from_economy` flag. From then on living costs, node money, the constants stated in labour hours
 (`money_units.PricedInLabourHours`) and hiring all use the economy's wage, so a purse buys the hours it was meant to.
-The two figures differ by a large factor because the solver costs the coin's metal at its labour hours, while the
+The two figures differ because the solver costs the coin's metal at its labour hours, while the
 economy fixes the metal's price in coin and lets goods and wages follow the money stock. Measure both with
-`python3 -m sim.tests --jobs 1 --only one_money_per_labour_hour` (slow: it opens the economy).
+`python3 -m sim.tests --jobs 1 --only one_money_per_labour_hour` (slow: it opens the economy). The solver side
+of this is part of the legacy analytic price model being retired under `Complaints/964`.
 
 ## Domestic trade has one owner
 
 Trade between the places of the home country is the economy's merchants (`sim/economy/merchants.py`): agents in the
 book with cash, who buy where a good is cheap and carry it to where it is dear, paying the carriers. Trader actors take
 the routes that cross a border (their cargo accounts are in the book). Giving trader actors a second domestic router
-would carry the same gap twice, the duplication that Complaint 405 closed for foreign trade, so there is none.
+would carry the same gap twice, the duplication that `Complaints/closed/405` closed for foreign trade, so there is none.
 
 ## Heuristics
 
