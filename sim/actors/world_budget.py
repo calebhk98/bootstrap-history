@@ -1,7 +1,8 @@
 """What a state asks the simulated world when it budgets: its people, its prices, its taxpayers."""
 from typing import Any, List, Optional, Tuple
 
-from sim.agents.api import DOLE_MATERIAL, Hands, army_goal, demand_answer, sack_pressure, taxpayer_income
+from sim.agents.api import Hands, army_goal, demand_answer, sack_pressure, taxpayer_income
+from sim.labour.api import wage_provider
 from sim.world import demand
 from sim.geography.api import territory
 
@@ -74,7 +75,7 @@ class BudgetView:
 		last_ratio = needs.nutrition_ratio_last_year()
 		ratio = 1.0 if last_ratio is None else last_ratio
 		need_tonnes = self.population_total() * self.subsistence_kg_per_person_year() / 1000.0
-		granary = self.government().record.stores.get(DOLE_MATERIAL, 0.0)
+		granary = self.government().record.stores.get(self.staple_material(), 0.0)
 		return Hands(needs.working_age(), farm_hands, min(1.0, ratio + (granary / need_tonnes if need_tonnes > 0.0 else 0.0)))
 
 	def patron_ask(self) -> float:
@@ -90,6 +91,10 @@ class BudgetView:
 
 	def equipment_kg_at_adoption(self, adoption: float) -> float:
 		return self.needs.military_equipment_burden(adoption)
+
+	def staple_material(self) -> str:
+		"""The material the civilisation's people live on, from its data."""
+		return wage_provider.staple_material(self.needs.civilisation())
 
 	def pay_per_person_year(self, trade: str) -> float:
 		return self.labour_market.quote_annual(trade)  # type: ignore[attr-defined]

@@ -71,7 +71,7 @@ def campaign_line(world: Any, soldiers: float) -> List[Line]:
 	tonnes = marching * days * SOLDIER_GRAIN_KG_PER_DAY / 1000.0
 	if tonnes <= 0.0:
 		return []
-	return [Line("campaign", "requisition", {}, 0.0, **goods(world, budget_lines.DOLE_MATERIAL, tonnes))]
+	return [Line("campaign", "requisition", {}, 0.0, **goods(world, world.staple_material(), tonnes))]
 
 
 def donative_line(world: Any, soldiers: float) -> List[Line]:

@@ -8,9 +8,6 @@ here and one line in `BASES`; no civilisation's id appears.
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, FrozenSet, Optional, Tuple
 
-# The grain the harvest is counted in, as a material in the tree's own terms.
-HARVEST_MATERIAL = "wheat_kg"
-
 
 @dataclass(frozen=True)
 class Base:
@@ -20,16 +17,17 @@ class Base:
 	payers: Tuple[Tuple[Any, float], ...] = ()  # (actor, income) where the base is held by actors the state taxes
 
 
-def harvest(world: Any, tiles: Optional[FrozenSet[str]] = None, material: str = HARVEST_MATERIAL) -> Base:
+def harvest(world: Any, tiles: Optional[FrozenSet[str]] = None, material: Optional[str] = None) -> Base:
 	"""What the land yielded of the good a form is paid in. Grain is the farm's harvest (on named tiles, their
 	share of it: TEMPORARY HEURISTIC (CLAUDE.md 4.4), spread over the state's tiles by arable hectares, as no
 	harvest is recorded by tile, retire: Complaint 622); any other good is what the country's producers made of
 	it last year, tile by tile."""
-	if material != HARVEST_MATERIAL:
+	staple = world.staple_material()   # the grain the harvest is counted in: the civilisation's staple
+	if material is not None and material != staple:
 		tonnes = world.output_tonnes(material, tiles)
 		return Base(tonnes * world.material_price(material), tonnes, material)
 	tonnes = world.harvest_tonnes() * (1.0 if tiles is None else world.arable_share(tiles))
-	return Base(tonnes * world.material_price(HARVEST_MATERIAL), tonnes, HARVEST_MATERIAL)
+	return Base(tonnes * world.material_price(staple), tonnes, staple)
 
 
 def adult_labour_years(world: Any) -> Base:

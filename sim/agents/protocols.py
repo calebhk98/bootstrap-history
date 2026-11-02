@@ -92,6 +92,10 @@ class World(Protocol):
 	def pay_per_person_year(self, trade: str) -> float:
 		...
 
+	def staple_material(self) -> str:
+		"""The material the civilisation's people live on."""
+		...
+
 	def commodity_of(self, material: str) -> str:
 		...
 

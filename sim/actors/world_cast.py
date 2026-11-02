@@ -6,7 +6,7 @@ subsistence; housing is the yearly carrying cost (interest and wear) of building
 """
 from typing import Any, Dict, Optional
 
-from sim.agents.api import DOLE_MATERIAL, FOOD_NEED, observed_incomes
+from sim.agents.api import FOOD_NEED, observed_incomes
 from sim.geography.places import distance_between_places
 from sim.world import need_basket
 
@@ -36,7 +36,7 @@ class CastView:
 				 for need in need_basket.need_prices(basket, prices.get) if need.spec.subsistence_per_person > 0.0}
 		if not costs:
 			tonnes = self.subsistence_kg_per_person_year() / 1000.0  # type: ignore[attr-defined]
-			food_cost = self.material_cost(DOLE_MATERIAL, tonnes)  # type: ignore[attr-defined]
+			food_cost = self.material_cost(self.staple_material(), tonnes)  # type: ignore[attr-defined]
 			if food_cost is not None:
 				costs[FOOD_NEED] = food_cost
 		return costs
