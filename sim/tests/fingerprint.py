@@ -27,7 +27,6 @@ REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
 	sys.path.insert(0, REPO_ROOT)
 from sim import simulator as S
-from sim.engine.saveload import SAVE_FIELDS
 
 TREE, PRICES, NODES, WAGES, GOODS = S.load()
 GOAL = TREE["meta"]["goal_node"]

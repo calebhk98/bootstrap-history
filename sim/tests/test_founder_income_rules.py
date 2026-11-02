@@ -7,16 +7,11 @@ QUICK_TOPIC = True
 
 import unittest
 from types import SimpleNamespace
-from sim.tests.ui_stand_in import Game
 from unittest import mock
 
 from sim.finance.rules import dependants_beyond_means_of
 from sim.production import revenue
 from sim.tests import production_host
-from sim.tests import module_harness
-from sim.workforce.api import ChargeLivingCost
-from sim.workforce.module import Workforce
-from sim.workforce.state import WorkforceSeat
 
 NODE = "workshop"
 

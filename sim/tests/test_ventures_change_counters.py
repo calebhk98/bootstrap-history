@@ -2,7 +2,6 @@
 applies the change, and the views carry the count to the memos keyed on them. Called on the module over plain values; no game."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.tests import ventures_host

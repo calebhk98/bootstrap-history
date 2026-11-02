@@ -1,7 +1,6 @@
 """Opening stocks of durable stores of wealth: the output of past mining that loss has not yet taken,
 held by households in proportion to their income. The workings come from the deposits (the port
 reads them from geography); nothing here names a good."""
-from typing import Mapping, Tuple
 
 from .metal_stock import METAL_GOODS_LOSS_PER_YEAR
 from .types import EDGE_PRODUCTION, GoodsMove

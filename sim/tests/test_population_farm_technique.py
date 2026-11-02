@@ -9,7 +9,6 @@ QUICK_TOPIC = True
 import json
 import os
 import unittest
-from types import SimpleNamespace
 
 from sim.constants import REGISTRY
 from sim.diffusion.literacy_rules import common_ceiling

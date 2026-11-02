@@ -10,7 +10,7 @@ import unittest
 from sim.knowledge.api import KnowledgeSeat
 from sim.reporting.api import ReportingSeat
 from sim.materials.state import MaterialsSeat
-from sim.engine.state import HouseholdState, deserialize_state, serialize_state
+from sim.engine.state import deserialize_state, serialize_state
 from sim.refusal import LogLine, Refusal, cause_of, choices_of, facts_of
 
 

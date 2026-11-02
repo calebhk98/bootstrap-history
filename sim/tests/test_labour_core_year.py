@@ -25,12 +25,11 @@ def bid(employer, trade, area, workers, maximum_wage=5.0):
                        maximum_wage=maximum_wage)
 
 
-def inputs(bids, areas=("vale",), entrants=0.0, attrition=0.0, routes=None, schools=()):
+def inputs(bids, areas=("vale",), routes=None, schools=()):
     return records.YearInputs(
         trades=trades.trade_specs(REGISTRY), bids=bids,
         subsistence_per_worker_year={area: HOURS for area in areas}, hours_per_worker_year=HOURS,
         discount_rate=0.05, career_years=30.0,
-        entrants={area: entrants for area in areas}, attrition_share={area: attrition for area in areas},
         routes=routes or {}, schools=schools)
 
 
@@ -60,16 +59,9 @@ class ConservationTests(unittest.TestCase):
         state, _report = run(state, year_inputs, 10)
         self.assertAlmostEqual(records.people_in(state), before, places=6)
 
-    def test_entrants_and_attrition_are_the_only_doors(self):
-        state = records.MarketState(workers={"vale": town(digger=1000, carver=100)})
-        year_inputs = inputs([bid("farm", "digger", "vale", 900)], entrants=30.0, attrition=0.02)
-        before = records.people_in(state)
-        state, report = year.run_year(state, year_inputs)
-        self.assertAlmostEqual(records.people_in(state), before + 30.0 - report.left_work["vale"], places=6)
-
     def test_the_given_state_is_not_changed(self):
         state = records.MarketState(workers={"vale": town(digger=100)})
-        year.run_year(state, inputs([bid("farm", "digger", "vale", 50)], entrants=10.0))
+        year.run_year(state, inputs([bid("farm", "digger", "vale", 50)]))
         self.assertEqual(workers(state, "vale", "digger"), 100.0)
 
 
@@ -77,8 +69,7 @@ class DemandTests(unittest.TestCase):
     def test_demand_raises_the_wage_and_pulls_people_in(self):
         state = records.MarketState(workers={"vale": town(digger=1000, carver=20)})
         # the yard wants no more carvers than the trade can come to hold, so the shortage ends and the wage falls
-        year_inputs = inputs([bid("farm", "digger", "vale", 1000), bid("yard", "carver", "vale", 60)],
-                             entrants=60.0, attrition=0.02)
+        year_inputs = inputs([bid("farm", "digger", "vale", 1000), bid("yard", "carver", "vale", 60)])
         state, report = run(state, year_inputs, 3)
         early_wage = report.clearing("carver", "vale").wage
         self.assertGreater(early_wage, report.clearing("digger", "vale").wage)
@@ -91,7 +82,7 @@ class AptitudeTests(unittest.TestCase):
     def test_a_hard_trade_stays_thin_where_an_easy_one_with_equal_training_fills(self):
         state = records.MarketState(workers={"vale": town(digger=2000, healer=30, plainhand=30)})
         year_inputs = inputs([bid("farm", "digger", "vale", 2000), bid("temple", "healer", "vale", 400, 20.0),
-                              bid("office", "plainhand", "vale", 400, 20.0)], entrants=60.0, attrition=0.025)
+                              bid("office", "plainhand", "vale", 400, 20.0)])
         state, _report = run(state, year_inputs, 60)
         healer_wages, plainhand_wages = [], []
         for _year in range(60):   # vertical demand cycles, so compare the averages over a long stretch
@@ -120,10 +111,10 @@ class SchoolTests(unittest.TestCase):
     def test_a_school_seeds_a_trade_nobody_practised(self):
         state = records.MarketState(workers={"vale": town(digger=1000)})
         bids = [bid("farm", "digger", "vale", 1000), bid("yard", "joiner", "vale", 40, 10.0)]
-        without, _report = run(state, inputs(bids, entrants=20.0), 6)
+        without, _report = run(state, inputs(bids), 6)
         self.assertEqual(workers(without, "vale", "joiner"), 0.0)
         school = records.School(owner="founder", trade="joiner", area="vale", seats=20.0)
-        taught, _report = run(state, inputs(bids, entrants=20.0, schools=[school]), 6)
+        taught, _report = run(state, inputs(bids, schools=[school]), 6)
         self.assertGreater(workers(taught, "vale", "joiner"), 0.0)
 
 
@@ -140,13 +131,13 @@ class MigrationTests(unittest.TestCase):
 
 class SteadinessTests(unittest.TestCase):
     """With demand that falls with the wage, a trained trade settles above the floor and stays there:
-    entrants weigh those already in training, and nobody switches into a trade that pays no more."""
+    switchers weigh those already in training, and nobody switches into a trade that pays no more."""
 
     def test_a_trained_trade_settles_at_a_premium_without_cycling(self):
         state = records.MarketState(workers={"vale": town(digger=2400, carver=30, joiner=30)})
         sloped = [bid("employer%d" % tranche, trade, "vale", workers / 5.0, 3.0 * (1.3 - 0.3 * tranche))
                   for tranche in range(5) for trade, workers in (("carver", 30), ("joiner", 30), ("digger", 2000))]
-        year_inputs = inputs(sloped, entrants=85.0, attrition=1 / 30.0)
+        year_inputs = inputs(sloped)
         state, _report = run(state, year_inputs, 80)
         wages = []
         for _year in range(40):
@@ -172,7 +163,7 @@ class SpeedTests(unittest.TestCase):
                          records.Route(areas[index - 1], 100.0)] for index, area in enumerate(areas)}
         bids = [bid("employer", trade, area, 30 + index % 7, 6.0)
                 for index, area in enumerate(areas) for trade in REGISTRY]
-        year_inputs = inputs(bids, areas=areas, entrants=20.0, attrition=0.02, routes=routes)
+        year_inputs = inputs(bids, areas=areas, routes=routes)
         started = time.process_time()
         year.run_year(state, year_inputs)
         self.assertLess(time.process_time() - started, 2.0)

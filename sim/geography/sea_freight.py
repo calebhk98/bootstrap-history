@@ -13,7 +13,6 @@ import functools
 import math
 
 from sim.constants import declare
-from sim.unit_conversions import METERS_PER_KILOMETER
 
 from .provisions import person_provisions_kg_per_day, PERSON_GRAIN_RATION_KG_PER_DAY
 from .transport import FreightPhysicalInputs

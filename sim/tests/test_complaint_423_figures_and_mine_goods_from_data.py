@@ -7,7 +7,6 @@ import json
 import os
 import tempfile
 import unittest
-from types import SimpleNamespace
 
 from sim.tests import resources_stand_in
 from sim.content.api import ModError

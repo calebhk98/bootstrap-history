@@ -11,7 +11,7 @@ retire: ONE_PRICE_OWNER_PLAN.md stage 5.
 
 Money is the labour hour times what an hour is worth, which follows the one coin stock, so every price here, traded or
 not, moves with money against goods."""
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from . import engine_seam, rules
 from . import prices as price_solver

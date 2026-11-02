@@ -5,7 +5,7 @@ losing its capital. Rules on a bank built by hand."""
 
 QUICK_TOPIC = True
 
-from sim.economy import bank_runs, bank_service, banks, secondary_trade
+from sim.economy import bank_runs, bank_service, banks
 from sim.economy.secondary_trade import BOND_MARKET
 from sim.economy.types import EDGE_MINT, FundsOffer, Transfer
 from sim.tests import test_economy_banks as bank_fixtures

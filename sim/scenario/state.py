@@ -1,5 +1,5 @@
 """The state the scenario module owns: the clock and the modes the game was set up with."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass

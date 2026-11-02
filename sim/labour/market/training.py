@@ -115,22 +115,3 @@ def advance(state: MarketState, inputs: YearInputs, report: YearReport) -> None:
                 del by_trade[trade]
         if not by_trade:
             del state.trainees[area]
-
-
-def apply_attrition(state: MarketState, inputs: YearInputs, report: YearReport) -> None:
-    """Deaths and retirement take the same share of every worker and trainee in an area."""
-    for area, share in sorted(inputs.attrition_share.items()):
-        keep = 1.0 - min(1.0, max(0.0, share))
-        before = 0.0
-        after = 0.0
-        for bands in state.workers.get(area, {}).values():
-            before += aptitude.band_total(bands)
-            for index, value in enumerate(bands):
-                bands[index] = value * keep
-            after += aptitude.band_total(bands)
-        for cohorts in state.trainees.get(area, {}).values():
-            for cohort in cohorts:
-                before += aptitude.band_total(cohort[1])
-                cohort[1] = [value * keep for value in cohort[1]]
-                after += aptitude.band_total(cohort[1])
-        report.left_work[area] = report.left_work.get(area, 0.0) + (before - after)

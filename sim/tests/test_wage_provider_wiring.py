@@ -6,8 +6,6 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.state import serialize_state
-from sim.workforce.api import WorkforceSeat
 from sim.labour.labour_wages import WagesMixin
 from sim.labour.wages import WageSchedule
 

@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.agents import ledger, payroll
+from sim.agents import payroll
 from sim.agents.api import ActorRecord, ActorsState
 from sim.agents.firm import Firm
 from sim.agents.purses import COIN, DEBT_FLOOR, EDGE_SAVERS

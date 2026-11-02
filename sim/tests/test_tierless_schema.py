@@ -9,7 +9,6 @@ import copy
 import glob
 import json
 import os
-import tempfile
 import unittest
 from unittest import mock
 

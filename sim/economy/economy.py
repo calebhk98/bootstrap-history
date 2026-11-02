@@ -12,7 +12,6 @@ from sim.world import capital_market
 
 from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
-from .market_areas import AreaMap
 from .market_areas_follow import follow
 from .market_memory import YearView
 from .mint import mint_orders, settle_mint, staff as staff_mint
@@ -30,7 +29,7 @@ from .opening import open_economy
 from .protocols import YearInputs
 from .record import EconomyRecord
 from .setup import EconomySetup, labour_area
-from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer, is_edge
+from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer
 from .national_prices import national_wages
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_basket_price_level, wear_and_spoilage)

@@ -2,7 +2,6 @@
 `waiting_to_start` and `_add_last_year_hours` are called on stubs the test builds."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 

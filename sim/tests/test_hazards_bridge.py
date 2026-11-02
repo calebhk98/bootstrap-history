@@ -6,7 +6,6 @@ import unittest
 from types import SimpleNamespace
 
 from sim.projects.api import ResetProjectProgress
-from sim.reporting.api import RecordEvent
 from sim.tests import projects_host, ventures_host
 from sim.ventures.api import ShutForgotten
 

@@ -3,7 +3,6 @@ from an ordinary concern, and the first training of a new trade says hiring is a
 the dispatcher calls it. The membership rule (`CAPABILITY_INSTITUTIONS`) is data from the `capability` mechanic, tested in
 test_round8g_display."""
 import unittest
-from types import SimpleNamespace
 
 from sim.refusal import LogLine
 

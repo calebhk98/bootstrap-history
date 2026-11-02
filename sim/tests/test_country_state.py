@@ -13,7 +13,7 @@ from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile
 from sim.agents.cast import profile_from_civilisation
 from sim.geography.api import territory
 
-from sim.agents.api import Stratum, stratum_id
+from sim.agents.api import stratum_id
 from sim.agents.records import ActorRecord
 
 from .country_state_world import StateWorld

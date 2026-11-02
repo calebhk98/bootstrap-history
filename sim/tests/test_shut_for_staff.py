@@ -4,7 +4,6 @@ shortfall of each concern) and the lines rendered from rows."""
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 

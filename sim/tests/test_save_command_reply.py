@@ -4,7 +4,6 @@ carries the refusal's `cause` and `facts` (never only prose); an unsafe or missi
 test_save_refusal_rules."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 

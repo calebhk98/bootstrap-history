@@ -5,7 +5,7 @@ borrow depends on who will stand behind it: the standing earning, its name, the 
 Needs: revenue_capacity, revenue_estimate, upkeep, standing, forest_hectares, effect_sum, effect_values, civilisation, price_index,
 acting_balance, money_per_labour_hour, wage_bill, household_bill_per_person, household_dependant_people, committed_cost,
 mine_operating_cost, agent_credit_room."""
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from sim.economy.api import opening_market_rate
 from sim.projects.api import funding as project_funding

@@ -251,8 +251,6 @@ names into this module's own namespace for exactly that reason: nothing
 elsewhere in the repository needs to know these three files exist.
 """
 import collections
-import random
-from typing import Optional
 
 from sim.constants import declare
 from sim.world.farm_labour import (REFERENCE_LABOUR_HOURS_PER_HECTARE, WHEAT_HOE_HOURS_PER_HECTARE,
@@ -1377,21 +1375,11 @@ HISTORICAL_FARM_POPULATION_SHARE_HIGH = declare(
 # the other two siblings at import time and loads first; agriculture_storage
 # depends on agriculture_yield; agriculture_labour depends on both.
 from .agriculture_yield import (
-    Land,
-    _max_hectares_harvestable_by_labour,
-    draw_weather_multiplier,
-    gross_harvest_kg,
-    hectares_reaped_per_worker_hour,
-    marginal_product_of_labour_kg_per_hour,
-    max_hectares_reapable_by_crew,
+    Land, _max_hectares_harvestable_by_labour, draw_weather_multiplier, gross_harvest_kg,
+    marginal_product_of_labour_kg_per_hour, max_hectares_reapable_by_crew,
 )
 from .agriculture_storage import (
-    Storage,
-    YearFlows,
-    annual_food_demand_kg_per_person,
-    calculate_granary_runway,
-    granary_capacity_kg,
-    stock_to_carry_forward_kg,
+    Storage, annual_food_demand_kg_per_person, granary_capacity_kg, stock_to_carry_forward_kg,
 )
 from .agriculture_labour import (
     farm_workers_fte_for_population,

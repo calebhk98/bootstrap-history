@@ -8,7 +8,7 @@ an AI player also decides for itself.
 import math
 from typing import Any, Callable, Dict, List, Optional
 
-from . import business_books, ledger, research, research_choice
+from . import business_books, ledger, research_choice
 from .base import RecordedActor
 from .player_commands import CommandRejected, run_orders
 from .tuning_player import PLAYER_VISIBLE_EXPOSURE

@@ -207,7 +207,6 @@ check("nested mutation and alias invalidation", _ok, _detail)
 
 def _test_workforce_container_api_completeness():
 	"""Edge case: dictionary mutating APIs on household.employees increment _workforce_count."""
-	sim_inst = CONTAINERS
 	WORKFORCE.seat.employees["smith"] = 5.0
 	ver0 = WORKFORCE.staff_version()
 

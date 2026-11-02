@@ -6,7 +6,6 @@ that used them).
 QUICK_TOPIC = True
 
 import inspect
-import json
 import os
 import unittest
 

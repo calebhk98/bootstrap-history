@@ -5,7 +5,6 @@ QUICK_TOPIC = True
 
 import unittest
 
-import sim.engine.core  # noqa: F401  (loads the engine in its import order)
 from sim.coin import rules
 from sim.coin.constants import KEEPING_BASIS
 from sim.coin.module import Coin

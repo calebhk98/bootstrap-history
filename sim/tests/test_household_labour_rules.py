@@ -4,7 +4,6 @@ founder left. Each rule is called on a stand-in carrying only what it reads."""
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 from sim.tests import workforce_stand_in
 
@@ -15,7 +14,7 @@ from sim.labour.labour_training import TrainingMixin
 from sim.labour.labour_wages import WagesMixin
 from sim.refusal import cause_of
 from sim.ui.proto.dispatch_labour import _cmd_hire
-from sim.tests import event_stand_in, production_host
+from sim.tests import production_host
 from sim.tests.workforce_host import workforce_over
 from sim.tests.ui_stand_in import Game
 

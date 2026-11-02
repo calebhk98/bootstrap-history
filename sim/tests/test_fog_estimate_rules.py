@@ -3,7 +3,6 @@ society's values. Each rule is called on a stand-in game carrying only what it r
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.ui.proto.economy import _agent_values

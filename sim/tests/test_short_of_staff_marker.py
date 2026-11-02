@@ -2,7 +2,6 @@
 what is under contract count (`techtree._short_of_staff`). Called on a stand-in labour."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.ui.proto.techtree import _short_of_staff

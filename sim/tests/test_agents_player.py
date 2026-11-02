@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.agents.business_plant import Plant
-from sim.agents.api import ActorRecord, Firm, ledger
+from sim.agents.api import ActorRecord, Firm
 from sim.agents import firm_entry
 from sim.agents.player import Player
 from sim.agents.shipped import shipped_commands, shipped_kinds

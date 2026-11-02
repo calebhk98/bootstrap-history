@@ -3,7 +3,6 @@ rule (`already_explained`) is called on a stub game holding a seat's progress re
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 

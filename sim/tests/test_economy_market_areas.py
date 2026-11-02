@@ -4,7 +4,7 @@ Synthetic grid for the rules."""
 QUICK_TOPIC = True
 import unittest
 
-from sim.economy import market_areas, tile_costs
+from sim.economy import market_areas
 from sim.economy.types import GoodSpec
 from sim.tests.test_economy_tile_costs import grid, grid_table
 

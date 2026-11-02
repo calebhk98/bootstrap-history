@@ -4,7 +4,6 @@ reports each line's kind and facts. Handlers and the reply are called on a hand-
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.refusal import LogLine
 from sim.ui.proto.dispatch_labour import _cmd_fire, _cmd_hire

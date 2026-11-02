@@ -1,8 +1,7 @@
 """How far a quote, as against a price a market settled at, may pull a producer's expectation."""
-from typing import Mapping, Optional
+from typing import Optional
 
 from . import ask_adjust
-from .market_memory import PRICE_TRADED
 from .types import QUOTE_BEST_UNFILLED_BID, QUOTE_LOWEST_UNFILLED_ASK
 
 # A best unfilled bid is one buyer's ceiling (the largest maximum among the bids, not a price anyone paid) and a lowest

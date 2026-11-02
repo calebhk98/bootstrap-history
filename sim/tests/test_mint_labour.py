@@ -12,7 +12,7 @@ from sim.economy import currency, mint, mint_labour
 from sim.economy.accounts import Book
 from sim.tests.test_economy_mint import BullionAtParity
 from sim.economy.recipes import recipe_from_entry
-from sim.economy.types import EDGE_ISSUE, EDGE_MINT, EDGE_PRODUCTION, GoodsMove, Transfer
+from sim.economy.types import EDGE_ISSUE, Transfer
 
 DATA = os.path.join(os.path.dirname(__file__), "..", "..", "data")
 METAL = "silver_kg"

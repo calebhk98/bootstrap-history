@@ -7,7 +7,6 @@ test_solve_cache_and_warm_start_rules.
 
 QUICK_TOPIC = True
 
-import copy
 import os
 import shutil
 import tempfile

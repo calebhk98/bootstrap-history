@@ -32,7 +32,6 @@ _EQUIVALENCE_GROUPS = (
 def _registry_values():
     """{name: declared value} once the world modules that declare the grouped quantities are imported."""
     from sim import constants
-    from sim.world import demand, demography, military_logistics, shared_constants  # noqa: F401  (declare on import)
     return {name: entry["value"] for name, entry in constants.REGISTRY.items()}
 
 

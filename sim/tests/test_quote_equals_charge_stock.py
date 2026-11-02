@@ -3,7 +3,6 @@ settlements (`BuyStock`, `SmuggleStock`, applied by the living-stock module) rea
 buyer pays, caught or not. The module is built by the harness, the screen runs on a stand-in game."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 from unittest import mock
 
 from .harness import check

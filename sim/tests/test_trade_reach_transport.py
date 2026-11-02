@@ -10,7 +10,6 @@ from sim.engine.data import load_civ
 from sim.geography.api import tiles_held
 from sim.labour.labour_population import PopulationMixin
 from sim.labour.labour_settlement import SettlementMixin
-from sim.tests import harness  # noqa: F401  (isolates the home directory)
 
 NATION = 20.0e6
 HOURS_BY_TRADE = {"smith": 3000.0, "mason": 2000.0, "farmer": 90000.0}

@@ -11,7 +11,6 @@ from sim.engine.seat_move import move_seat_fields
 from sim.engine.state_seat import seat_from_template
 from sim.refusal import cause_of
 from sim.seats.api import handover_refusal
-import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto import command_registry
 from sim.ui.proto.notes_store import add_note, all_notes, hand_over_notes
 from sim.ui.proto.seat_address import run_as_seat

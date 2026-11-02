@@ -11,7 +11,6 @@ from sim.tests import workforce_stand_in
 from sim.assembly.api import NeedsAccess
 from sim.engine import mod_code
 from sim.labour.labour_capacity import CapacityMixin
-from sim.tests import harness  # noqa: F401  (isolates the home directory)
 from sim.workforce.provided import overhead_hours
 
 POOL_HOURS = 2000.0

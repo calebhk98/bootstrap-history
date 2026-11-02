@@ -9,7 +9,6 @@ QUICK_TOPIC = True
 import json
 import re
 import unittest
-from types import SimpleNamespace
 
 from sim.engine import units as U
 from sim.engine import units_prose as P

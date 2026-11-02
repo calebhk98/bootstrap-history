@@ -16,7 +16,6 @@ from sim.prices import prices
 from sim.markets import port_actors
 from sim.tests import prices_stand_in
 from sim.engine.state import ActorRecord, ActorsState
-from sim.tests.ui_stand_in import Game
 from sim.tests import module_harness, production_host
 
 

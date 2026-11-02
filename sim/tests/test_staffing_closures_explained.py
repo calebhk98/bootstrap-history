@@ -6,7 +6,6 @@ test_staffing_warnings."""
 QUICK_TOPIC = True
 
 import re
-from types import SimpleNamespace
 
 from .harness import check
 

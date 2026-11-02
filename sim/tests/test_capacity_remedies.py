@@ -6,7 +6,6 @@ QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
 
-import types
 
 from sim.resources.sizing import mine_shortfall_after_sinking, mine_size_tonnes, nitre_bed_square_metres
 from sim.ui.proto.capacity_remedies import capacity_remedies, render_remedies

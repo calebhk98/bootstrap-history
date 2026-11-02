@@ -1,7 +1,7 @@
-"""Workers re-weigh their trade against the others, with a stay option (DESIGN.md, step 5).
+"""Workers re-weigh their trade against the others, with a stay option (DESIGN.md, step 4).
 
 A switcher becomes a trainee of the new trade (shorter within a skill family) through the same places
-as entrants; those not admitted stay in their old trade. The fallback trade takes people straight in.
+as any trainee; those not admitted stay in their old trade. The fallback trade takes people straight in.
 """
 import math
 from operator import sub

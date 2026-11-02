@@ -5,7 +5,6 @@ standing, from a reply built here (presentation: the order of the state screen's
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 

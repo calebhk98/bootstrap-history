@@ -6,7 +6,7 @@ share of the gap. Bids that went unfilled at prices the newcomer's cost would me
 so a market starved by makers too small to supply it can grow. What the size leaves out is not stored: the gap is still there next year and is sized
 again, against a market that has grown with the newcomer's own orders."""
 import math
-from typing import Callable, Mapping, Optional
+from typing import Callable, Optional
 
 from sim.constants import declare
 

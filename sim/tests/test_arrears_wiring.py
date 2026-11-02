@@ -4,7 +4,6 @@ carries the cause. The portfolio rows and the `stuck` screen carry that cause. T
 test_arrears_hours and test_arrears_visibility."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 

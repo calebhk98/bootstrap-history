@@ -1,6 +1,5 @@
 """Complaint 369: a technique one producer runs reaches the other concerns in its line only after the copying
 time, and the opening's techniques are held from the start."""
-from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 from sim.agents.api import imitation

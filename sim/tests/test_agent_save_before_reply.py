@@ -3,7 +3,6 @@ produced it (`cli_agent._agent_loop`), and a `start` short of cash carries the b
 credit line and rate (`credit_forecast.start_credit_forecast`). Called on stand-ins for the dispatcher, the save policy and the
 game; no process is spawned and no game is built."""
 import io
-import types
 import unittest
 from unittest import mock
 

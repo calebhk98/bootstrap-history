@@ -2,7 +2,6 @@
 runs on a stand-in world (a real civilisation file and a real `Population`); the `population` report's rows are in test_population_report_rows and the hire refusal in test_cash_gates_wiring."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.labour.labour import Labour

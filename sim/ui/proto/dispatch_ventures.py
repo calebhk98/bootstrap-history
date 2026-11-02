@@ -465,7 +465,6 @@ def _cmd_rush(sim, nodes, cmd, ended):
     #
     # Committing a couple of years of everyone's attention is a decision a
     # player might reasonably make. Committing four centuries of it is not.
-    _hours_room = max(0.0, sim.view("hours_available")["director_pool"] - sim.view("hours_available")["director_committed"])
     _HORIZON_YEARS = 2.0
     _budget = sim.view("hours_available")["director_pool"] * _HORIZON_YEARS
     # budget fixed up front from the shared purchase rule, so the reserve holds as projects start

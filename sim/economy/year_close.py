@@ -10,7 +10,7 @@ from .staffed_runs import staffed_runs
 from .expected_sales import demand_seen, market_capacities
 from . import (practice, firm_finance, firm_year, carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, route_dues, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes)
-from .household_work_year import basket_key, cohort_basket
+from .household_work_year import cohort_basket
 from .households_cohort import renewed
 from .market_memory import market_key
 from .national_prices import national_prices, traded_spending_weights, usual_volumes

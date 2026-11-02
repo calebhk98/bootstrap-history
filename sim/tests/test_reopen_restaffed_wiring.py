@@ -5,7 +5,6 @@ module runs over plain values, the ventures module's answer to the review replac
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 

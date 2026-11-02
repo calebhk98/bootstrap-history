@@ -2,7 +2,6 @@
 
 QUICK_TOPIC = True
 
-import unittest
 from sim.tests.harness import check
 
 

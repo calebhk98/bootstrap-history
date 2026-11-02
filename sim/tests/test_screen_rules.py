@@ -2,7 +2,6 @@
 the rule reads: which tiles and neighbours the map lists, how the education screen splits the schooling gain and names what limits
 literacy, which status a dated event has and whether fog hides its name, and the figures the demography screen takes from a year's flows.
 The registration and the aliases are test_missing_screens."""
-from types import SimpleNamespace
 from unittest import mock
 
 from sim.diffusion import constants as diffusion_constants

@@ -4,7 +4,6 @@ and blocker lookups replaced by recorders. The reply's field is read in `dispatc
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 from unittest import mock
 
 from .harness import check

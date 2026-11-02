@@ -1,7 +1,6 @@
-"""What the economy hands the labour core each year besides the bids: the outside option, people coming
-of working age and leaving work, and the routes between tiles.
+"""What the economy hands the labour core each year besides the bids: the outside option and the routes
+between tiles.
 
-Entrants and attrition are shares of working people the engine takes from demography (`YearInputs`).
 A route runs to each bordering tile; moving a person costs carrying him and his belongings the cheapest
 way between the tiles.
 """

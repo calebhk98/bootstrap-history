@@ -11,7 +11,7 @@ from sim.economy import debt_relief, titles, titles_inheritance, titles_manageme
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
 from sim.economy.credit_claims import debts_by_borrower
 from sim.economy.types import Loan, Transfer
-from sim.tests.test_economy_titles import LANDLORD, MONEY, PEASANT, RATE, RENT_PER_HECTARE, TILE, make_world
+from sim.tests.test_economy_titles import LANDLORD, MONEY, PEASANT, RENT_PER_HECTARE, TILE, make_world
 
 
 def concentrate(record, amount):

@@ -10,7 +10,7 @@
 """
 import math
 from dataclasses import dataclass
-from typing import Callable, Collection, List, Mapping, Optional, Sequence, Tuple
+from typing import Callable, Collection, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
@@ -18,7 +18,7 @@ from . import capacity_growth, credit, equity, firm_finance as finance, producer
 from .producers import (EXPECTATION_ADJUSTMENT_SHARE, OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, expected_output_prices, live_input_prices,
                         live_wages, next_expectations, runs_for_stock, share_working, within_a_years_change)
 from .protocols import MarketView
-from .types import AgentId, GoodId, LoanRequest, Recipe, TileId, Transfer
+from .types import GoodId, LoanRequest, Recipe, Transfer
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .replaced import replaced
 

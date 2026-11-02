@@ -4,7 +4,6 @@ with a reason_kind, an auto_mine order carries its id from its audit row to the 
 The decisions are in test_auto_start_rule and test_automation_modes."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.workforce.staff_replacement import GROW_STANCE, REPLACE_ONLY, REPLACE_STANCE, hire_stance

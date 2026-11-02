@@ -4,7 +4,6 @@ checks that `risk` told the truth and that a sack's own report matches the headc
 test_knowledge_risk_and_sacking_scenario)."""
 QUICK_TOPIC = True
 
-import types
 
 from .harness import *  # noqa: F401,F403
 from sim.knowledge.api import closure

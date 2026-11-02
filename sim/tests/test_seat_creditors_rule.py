@@ -18,7 +18,6 @@ def _seat(capital, limit, upkeep=100.0, size=2.0):
         acting_balance=capital, credit_limit=lambda *arguments: limit, year=1,
         venture_size=lambda entry_key: size)
     world = SimpleNamespace(upkeep=lambda entry_key, plant_size: upkeep * plant_size)
-    received = [command for command in module_harness.sent(module) if isinstance(command, ReceiveFromEdge)]
     return SeatReview(module, world), module
 
 

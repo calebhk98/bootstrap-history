@@ -2,7 +2,6 @@
 bonded in the economy's hours. Each rule is called on built inputs; no game."""
 QUICK_TOPIC = True
 
-import math
 
 from .harness import *  # noqa: F401,F403
 

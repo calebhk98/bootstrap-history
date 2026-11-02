@@ -3,8 +3,6 @@ reserve, the institutions open or closed); the rendering on a built reply. The g
 checked to exist on `Sim`."""
 QUICK_TOPIC = True
 
-import types
-from sim.tests import workforce_stand_in
 from unittest import mock
 
 from .harness import *  # noqa: F401,F403

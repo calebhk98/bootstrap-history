@@ -31,7 +31,6 @@ check("a price at a technique the society holds carries no such note",
 
 
 # ---- the screen's numbers, from a stand-in sim (what test_market_screen_scenario ran in a whole game)
-import types
 import unittest
 from unittest import mock
 

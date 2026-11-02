@@ -4,7 +4,6 @@ the repeated window of a hazard on `risk`, the money warnings of a `path`, the s
 capabilities). The commands over a stand-in are test_capability_and_train_handlers."""
 import copy
 import re
-from types import SimpleNamespace
 
 from .harness import check, NODES, S
 

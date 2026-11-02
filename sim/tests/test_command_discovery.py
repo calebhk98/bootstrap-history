@@ -6,7 +6,6 @@ from the registry, and every command parses its documented typed usage.
 """
 QUICK_TOPIC = True
 
-import types
 
 from .harness import *  # noqa: F401,F403
 from sim.ui.proto import command_registry as _registry

@@ -3,7 +3,6 @@ be bought; a venture's `why` reply carries the specialist foreman `open` demands
 of an active project."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.engine.critical_path_remaining import active_years_left

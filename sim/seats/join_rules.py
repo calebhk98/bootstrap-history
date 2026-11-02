@@ -3,7 +3,6 @@ from typing import Any, Callable, Iterable, List, Mapping, Optional
 
 from sim.refusal import Refusal
 
-from .state import COUNTRY_SEAT
 
 
 

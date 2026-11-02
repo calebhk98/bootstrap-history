@@ -3,7 +3,6 @@ the rule is called on a stub game built here; the `state` and `path` replies on 
 test_knowledge_loss_warning_scenario)."""
 QUICK_TOPIC = True
 
-import types
 
 from .harness import *  # noqa: F401,F403
 from sim.engine.knowledge_warning import WARNING_HORIZON_YEARS, knowledge_loss_warning, warning_lines

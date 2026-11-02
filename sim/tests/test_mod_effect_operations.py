@@ -3,7 +3,6 @@ economy's book against a named edge, a death share is sent to the demography own
 through the game's own transfer with the cause, and the base game's hazards use kill_people. Each is called on a stand-in game with the
 collaborator replaced by a recorder; the argument rules are test_mod_effects."""
 from types import SimpleNamespace
-from unittest import mock
 
 from sim.agents.api import edges
 from sim.demography.api import KillPeople
@@ -13,11 +12,8 @@ from sim.engine.mod_effects import ModEffects
 from sim.content.api import ModError
 from sim.land.api import TransferTile
 from sim.ledger.api import PayActor, PayActorFromEdge, PayEdgeFrom
-from sim.refusal import cause_of
 
-from .bridge_send import attach_send
 from .harness import *  # noqa: F401,F403
-from sim.tests import event_stand_in
 from sim.tests.ui_stand_in import Game
 
 QUICK_TOPIC = True

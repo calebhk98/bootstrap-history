@@ -8,7 +8,7 @@ import os
 from .harness import *  # noqa: F401,F403
 
 from sim.economy import labour
-from sim.content.catalog import Trade, trade_fields, trade_from
+from sim.content.catalog import trade_fields, trade_from
 from sim.labour import trade_data
 
 DATA = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "world")

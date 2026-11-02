@@ -6,10 +6,9 @@ QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
 
-from sim.agents import ledger
-from sim.agents.api import ActorsState, ActorRegistry, profile_from_civilisation, seed_strata, stratum_id
+from sim.agents.api import ActorsState, ActorRegistry, profile_from_civilisation, seed_strata
 from sim.agents.strata_seed import follow_population
-from sim.agents.stratum_year import settle_keep, true_up_keep, grow, EDGE_ECONOMY
+from sim.agents.stratum_year import settle_keep, true_up_keep, grow
 
 from .agents_fake_world import FakeWorld
 

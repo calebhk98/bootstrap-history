@@ -3,7 +3,6 @@ wealth, and a default's loss moves on to the lender's own spending and borrowing
 
 QUICK_TOPIC = True
 
-import dataclasses
 import unittest
 
 from sim.economy import credit, credit_claims, households

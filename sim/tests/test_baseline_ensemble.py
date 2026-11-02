@@ -6,7 +6,6 @@ QUICK_TOPIC = True
 import json
 import os
 import tempfile
-from types import SimpleNamespace
 
 from .harness import check
 

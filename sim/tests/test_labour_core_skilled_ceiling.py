@@ -27,8 +27,7 @@ def inputs(smith_maximum, smiths_wanted=SMITHS * 20.0):
             records.Bid("works", "smith", "vale", smiths_wanted * HOURS, smith_maximum)]
     return records.YearInputs(trades=trades.trade_specs(REGISTRY), bids=bids,
                               subsistence_per_worker_year={"vale": HOURS}, hours_per_worker_year=HOURS,
-                              discount_rate=DISCOUNT, career_years=CAREER,
-                              entrants={"vale": SMITHS}, attrition_share={"vale": 0.03})
+                              discount_rate=DISCOUNT, career_years=CAREER)
 
 
 def start():
@@ -56,7 +55,7 @@ def trainees_of(state):
 
 
 class CeilingCapsTheExpectationNotTheHours(unittest.TestCase):
-    """The long-run ceiling bounds what entrants expect (the clearing's heading wage), not the hours hired; this
+    """The long-run ceiling bounds what switchers expect (the clearing's heading wage), not the hours hired; this
     year's wage may pass it (Complaint 678, test_scarcity_wage_short_run.py)."""
 
     def test_employers_far_above_the_ceiling_are_expected_to_pay_the_ceiling(self):

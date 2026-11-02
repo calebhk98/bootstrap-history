@@ -4,7 +4,7 @@ It values only the margin between a good's price where it is cheap and where it 
 carriage, the interest the cargo's capital would earn and a share lost on the way. The goods move
 through the world's market; the trader books what it paid, what it got and the carriage.
 """
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 from . import ledger
 from .base import RecordedActor

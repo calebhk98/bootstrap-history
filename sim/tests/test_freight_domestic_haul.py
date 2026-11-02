@@ -9,7 +9,6 @@ import unittest
 
 from sim.geography import api as geography
 from sim.geography import droving, flow_ledger, freight_cost, routes_graph
-from sim.geography.api import dues_hours_per_tonne
 
 
 # A tile outside the default civilisation's ground that only carts join to it.

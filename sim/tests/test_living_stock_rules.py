@@ -4,7 +4,6 @@ it reads; each test calls one method of it (or one rule) and reads what it answe
 test_living_stock_scenario and test_living_stock_trade_scenario."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 

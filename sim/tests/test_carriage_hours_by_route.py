@@ -4,7 +4,6 @@ handled port adds handling hours, and the hours are bid and paid at the area the
 QUICK_TOPIC = True
 
 import unittest
-from unittest import mock
 
 from sim.economy import carriage_hours, merchants
 from sim.economy.market_memory import market_key

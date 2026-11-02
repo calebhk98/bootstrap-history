@@ -4,10 +4,8 @@ QUICK_TOPIC = True
 
 import json
 import os
-from types import SimpleNamespace
 
 from .harness import check
-from .ui_stand_in import Game
 
 from sim.hazards import cause_report
 from sim.hazards.cause_quantities import QUANTITIES

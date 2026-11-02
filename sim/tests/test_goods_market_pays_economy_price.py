@@ -8,7 +8,6 @@ import math
 import types
 import unittest
 
-from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 from sim.tests import market_stand_in
 from sim.markets.goods_market import GoodsMarket
 

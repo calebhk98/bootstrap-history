@@ -4,7 +4,6 @@ held in (the sum runs over floats)."""
 QUICK_TOPIC = True
 
 import itertools
-import types
 import unittest
 
 from sim.ui.proto.score_institutions import institutions_component

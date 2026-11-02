@@ -9,7 +9,7 @@ Standalone: the route graph, compile and rates modules of this package.
 import heapq
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
-from sim.geography import routes_compile, routes_modes, routes_rates, routes_graph
+from sim.geography import routes_compile, routes_modes, routes_graph
 from sim.geography.map_source import WorldMap
 from sim.geography.routes_cost_tree import least_cost_tree
 

@@ -4,7 +4,6 @@ banner quotes the standing ledger and wage work only when it beats the standing 
 test_affordability_and_credit."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 import unittest
 
 from sim.finance.affordability import spending_power_of

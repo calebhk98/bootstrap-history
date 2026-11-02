@@ -4,7 +4,6 @@ quotes, on a first attempt and a later one, and makes one draw per attempt."""
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.projects.risk_rules import attempt_fails
 from sim.tests import projects_host

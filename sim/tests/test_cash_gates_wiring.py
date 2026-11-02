@@ -4,7 +4,6 @@ reads the same figure to tell the calendar's pace from a want of money. The rule
 test_affordability_and_credit; these are the callers, over stand-ins."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.labour.labour_training import TrainingMixin

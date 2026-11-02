@@ -13,7 +13,6 @@ from sim.engine import mod_code
 from sim.engine.data import load_civ
 from sim.geography.api import tiles_held
 from sim.labour.labour_settlement import SettlementMixin
-from sim.tests import harness  # noqa: F401  (isolates the home directory)
 from sim.workforce.provided import last_answer
 
 NATION = 20.0e6

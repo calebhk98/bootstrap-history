@@ -75,7 +75,7 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__f
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-from sim.engine.data import STRATS, downstream_count, load, load_civ, resolve_goal
+from sim.engine.data import downstream_count, load, load_civ, resolve_goal
 from sim.knowledge.api import closure, hard_pre, topo_order
 from sim.engine.core import Sim
 from sim.engine.units_prose import money_text

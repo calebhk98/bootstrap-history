@@ -1,7 +1,7 @@
 """The coin module's spec (sim/assembly).
 
 """
-from sim.assembly.api import KEYED, QUOTE, TABLE, ModuleSpec, PhaseHook, Provision, ViewSpec
+from sim.assembly.api import KEYED, QUOTE, ModuleSpec, PhaseHook, Provision, ViewSpec
 from sim.actors.api import DrawDownActorStore, HoldEdgeGoods
 from sim.demography.api import TakeFromGranary
 from sim.ledger.api import DrawDownStock, PayEdge, PayEdgeFrom

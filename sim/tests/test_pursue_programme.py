@@ -3,7 +3,6 @@
 test_pursue_programme_scenario."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import check
 

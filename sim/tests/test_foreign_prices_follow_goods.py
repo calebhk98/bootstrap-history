@@ -6,7 +6,6 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 from sim.foreign_trade.module import ForeignTrade
 from sim.tests import module_harness
 from sim.tests.test_goods_market_pays_economy_price import TILE_PRICE_PER_UNIT, stub_game

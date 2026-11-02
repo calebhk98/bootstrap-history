@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.tests import materials_stand_in, module_harness, production_host
+from sim.tests import materials_stand_in, production_host
 from sim.workforce.api import SetWageHoursSold
 
 

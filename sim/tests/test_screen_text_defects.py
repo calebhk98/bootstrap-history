@@ -1,6 +1,6 @@
 """Screen text that read wrongly or said too little: Complaints/195 (score change line), 204 (sack chance wording),
 280 (option ids). Each rule is called on a built hazard, a stand-in game for the score, or the tree's data."""
-from .harness import check, NODES, S
+from .harness import check, NODES
 
 from sim.tests.score_game import ScoreGame
 from sim.ui import cli

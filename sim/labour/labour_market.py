@@ -5,7 +5,6 @@ Who works in which trade is the labour core's business (sim/labour/market/); the
 come from its people (labour_allocation.py).
 """
 import collections
-import json
 import os
 from typing import Any, Dict, Optional, Tuple
 

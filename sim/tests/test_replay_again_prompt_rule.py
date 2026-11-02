@@ -3,7 +3,6 @@ import contextlib
 import io
 import os
 import tempfile
-from types import SimpleNamespace
 
 from .harness import check
 from sim.ui import cli_interactive, replay

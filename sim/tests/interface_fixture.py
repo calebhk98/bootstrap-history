@@ -1,7 +1,6 @@
 """The commands and figures a mods directory gives a game, without building a whole game: the interface module of an assembly
 over that directory (its data views read the directory, and run the mods' allowed code)."""
 import functools
-import os
 from unittest import mock
 
 from sim.engine import bridge_land, game_assembly

@@ -1,5 +1,5 @@
 """What the installed mods of one directory contribute, as plain functions of that directory."""
-from typing import Any, Dict, FrozenSet, List, Mapping, Optional, Tuple
+from typing import Any, Dict, FrozenSet, List, Tuple
 
 from sim.default_civilisation import REPOSITORY_ROOT
 from sim.stores.api import StoreSpec

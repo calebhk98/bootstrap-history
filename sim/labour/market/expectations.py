@@ -138,9 +138,7 @@ def income_at_graduation(state: MarketState, inputs: YearInputs, clearings: Clea
     if rent <= 0.0:
         return floor
     hours = inputs.hours_per_worker_year
-    years = inputs.trades[trade].training_years
-    staying = max(0.0, 1.0 - inputs.attrition_share.get(area, 0.0)) ** years
-    supply_then = ((clearing.hours_offered + arrived) * staying
+    supply_then = ((clearing.hours_offered + arrived)
                    + graduates_coming(state, area, trade, completion_by_band) * hours)
     # beside idle hands only the share of hours employers want finds work (Harris-Todaro, as `expected_income`)
     finds_work = min(1.0, clearing.hours_wanted / supply_then) if supply_then > 0.0 else 1.0

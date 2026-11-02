@@ -3,7 +3,6 @@ power figures and the short or full `economy` reply."""
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.ui.proto import economy

@@ -1,7 +1,6 @@
 """help_registry: help is generated from the command registry, so no command can be missing from it."""
 from .harness import *  # noqa: F401,F403
 
-from types import SimpleNamespace
 from sim.ui.proto.help import _agent_help
 from sim.tests.ui_stand_in import Game
 

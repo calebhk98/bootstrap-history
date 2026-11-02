@@ -5,7 +5,6 @@ module built over plain values (no game is built). Determinism across two games 
 test_weather_multiplier_ignores_dice; the century bar (population above its start) is `python3 sim/simulator.py baseline-ensemble`."""
 import random
 import statistics
-from types import SimpleNamespace
 
 from .harness import check
 

@@ -5,7 +5,6 @@ QUICK_TOPIC = True
 
 import types
 import unittest
-from unittest import mock
 
 from sim.economy import api as economy_api
 from sim.markets import port_institutions

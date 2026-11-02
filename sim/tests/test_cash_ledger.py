@@ -65,7 +65,6 @@ check("the book shows opening plus causes equal to closing",
 
 # --- the cash figure reads its causes from the ledger: explain_figure on a written-out year
 from sim.ui import figures as figure_registry
-from sim.ui import figures_headline  # noqa: F401  (registers the cash figure)
 from sim.tests.ui_stand_in import Game
 
 this_year = {"venture revenue": 500.0, "living costs": -200.0}

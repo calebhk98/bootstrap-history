@@ -7,7 +7,6 @@ QUICK_TOPIC = True
 
 import unittest
 from sim.tests import workforce_stand_in
-from types import SimpleNamespace
 
 from sim.agents import business_review
 from sim.agents.api import Business

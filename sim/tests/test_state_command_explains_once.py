@@ -3,7 +3,6 @@ called with its reply builder replaced by a recorder and a stand-in game; the on
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 import unittest
 from unittest import mock
 

@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.agents import taxpayer_income
-from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, Firm, seed_cast
+from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
 from sim.agents.business import Business
 from sim.agents.business_plant import MOTHBALLED, Plant
 

@@ -1,6 +1,5 @@
 """The spread of workplace costs inside one producer, derived from a short-run supply elasticity."""
 
-import math
 from statistics import NormalDist
 
 _STANDARD_NORMAL = NormalDist()

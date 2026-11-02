@@ -2,7 +2,6 @@
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.ui.proto.guidance import leverage_points
 from sim.tests.ui_stand_in import Game

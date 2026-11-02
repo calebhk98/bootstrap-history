@@ -4,7 +4,6 @@ stand-in `self` whose attributes are written out and whose collaborators are pla
 `institution_unit_cost`. No game is built. What the benefactions branch declares is test_complaint_190_benefactions."""
 import unittest
 from unittest import mock
-from types import SimpleNamespace
 
 from sim.diffusion.module import Diffusion
 from sim.production import capability

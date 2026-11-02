@@ -4,7 +4,6 @@ QUICK_TOPIC = True
 
 import json
 import unittest.mock
-from types import SimpleNamespace
 import unittest
 
 from sim.engine import mod_code

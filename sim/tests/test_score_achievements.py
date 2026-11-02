@@ -2,7 +2,6 @@
 staff costs never_understaffed for good, closing by choice does not."""
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 from sim.ui.proto.score import _score_achievements

@@ -1,7 +1,6 @@
 """Complaint 294: `stuck` stops recommending the cheapest start while a savings target stands. `_stuck_started_nothing` called
 with and without the saving flag on a stand-in game. The plan and its row are test_saving_target."""
 import unittest
-from types import SimpleNamespace
 
 from sim.ui.proto.dispatch_inspection_stuck import _stuck_started_nothing
 from sim.tests.ui_stand_in import Game

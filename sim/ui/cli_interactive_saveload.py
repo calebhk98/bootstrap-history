@@ -26,7 +26,7 @@ reason for being split is gone and they belong back together, not wired
 with a workaround.
 """
 
-import json, os
+import os
 
 from sim.engine.ui_port import CIVDIR, civilization_ids, closure, load, load_civ
 from sim.engine.ui_port import settings

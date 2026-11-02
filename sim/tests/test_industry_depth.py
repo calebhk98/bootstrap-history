@@ -5,7 +5,6 @@ the ramp, lowers the failure risk and lifts the scale a concern can reach."""
 
 QUICK_TOPIC = True
 
-import collections
 import types
 import unittest
 

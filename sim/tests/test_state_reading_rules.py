@@ -3,9 +3,7 @@ effect on the society is logged. Each rule is called on a stand-in carrying only
 
 QUICK_TOPIC = True
 
-import types
 import unittest
-from unittest import mock
 
 from sim.diffusion.api import ApplyTechEffects
 from sim.diffusion.module import Diffusion
@@ -14,12 +12,10 @@ from sim.tests import polity_host
 from sim.hazards import constants
 from sim.polity.api import RaiseScandal, ScaleProtection
 from sim.polity.api import ShiftValueWeight
-from sim.refusal import cause_of
 from sim.reporting.api import RecordEvent
 from sim.tests import hazards_host, literacy_stand_in, module_harness
 from sim.ui.proto.scandal_trend import years_until_scandal_crosses_the_line
 from sim.ui.proto.state_succession import succession_block
-from sim.tests import event_stand_in
 from sim.tests.ui_stand_in import Game
 
 

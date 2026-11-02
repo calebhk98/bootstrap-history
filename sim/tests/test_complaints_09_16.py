@@ -4,7 +4,6 @@ credit forecast calls its figures, and the help index. The same in a real game i
 (The money_blocked and money_unfunded waiting causes are held by test_project_pacing and test_scheduling_legibility.)"""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.projects.api import instantaneous

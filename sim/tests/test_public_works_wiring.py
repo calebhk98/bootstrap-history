@@ -3,7 +3,6 @@ roll-out, lit working day and schooling flow read the works, each method called 
 
 QUICK_TOPIC = True
 
-from types import SimpleNamespace
 from unittest import mock
 
 from .harness import check

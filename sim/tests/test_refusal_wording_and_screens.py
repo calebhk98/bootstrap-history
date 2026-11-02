@@ -3,7 +3,6 @@ groups what is running from what is not, and "nothing else rests on this" means 
 over built views (stage of the patron, interest and fog set by the test); the screens are rendered from built
 replies (no game). The concerns auto_open considers are test_auto_open_candidates."""
 import collections
-from types import SimpleNamespace
 
 from .harness import check, NODES
 

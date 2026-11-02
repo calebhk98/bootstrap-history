@@ -5,7 +5,6 @@ rendering on a built reply."""
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
 from sim.ui.proto import screen_education
 from sim.ui.proto.render_screens_world import render_education

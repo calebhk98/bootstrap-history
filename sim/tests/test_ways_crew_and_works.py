@@ -3,7 +3,6 @@ builds bridges, ports, canals and engineered ways; the roads, bridges and ports 
 geography's routes read."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
 from sim.finance import purchase_rules

@@ -1,7 +1,7 @@
 """Text screen for `market`."""
 
 from sim.ui import units_text
-from .util import _fmt_num, _pct
+from .util import _fmt_num
 
 PRICE_BASIS_NOTE = {"gated": "priced at a technique you do not have",
                     "imported": "bought from a trading partner, delivered"}

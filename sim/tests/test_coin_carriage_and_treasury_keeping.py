@@ -8,7 +8,6 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-import sim.engine.core  # noqa: F401  (loads the engine in its import order)
 from sim.agents.edges import EDGE_COIN_GUARDS
 from sim.coin.commands import ChargeKeeping
 from sim.coin.constants import COIN_GUARD_HOURS_PER_TONNE_YEAR, KEEPING_CAUSE

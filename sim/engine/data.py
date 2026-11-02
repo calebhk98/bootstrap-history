@@ -20,21 +20,20 @@ No third-party dependencies. Python 3.8+.
 Design notes and the full protocol: sim/PROTOCOL.md
 """
 
-import functools, json, math, os, sys
+import functools, json, os, sys
 sys.setrecursionlimit(20000)
 import collections
-from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
+from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Tuple, TypedDict
 from sim.prices.api import identity_cache
 from sim.scenario.api import money_short, money_word, rules as scenario_rules  # noqa: F401 - the coin's words are the scenario module's
 IdentityCache = identity_cache.IdentityCache
 from sim.geography.api import haversine_km, load_geography
-from sim.content.api import ModError, get_ordered_mods, load_mod_tree
+from sim.content.api import get_ordered_mods, load_mod_tree
 from sim.content.api import MissingVariantBase
 from sim.content.api import load_win_condition_labels
 from sim.seats.api import describe_win_condition
 
 from .mod_world_data import load_starting_kits
-from sim.content.api import merge_mod_map
 from sim.content.api import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
 from sim.prices.api import energy_prices
@@ -43,9 +42,10 @@ from sim.production.api import node_revenue
 from sim.labour.api import wage_provider
 from .default_civilisation import default_civilisation_id
 from sim.workforce.api import build_schedule
-from sim.content.api import (family_of_trade, load_base_tree, load_mod_tree_nodes, load_production_catalog,
-                             load_tech_effects, load_trade_registry, trade_notes, trade_registry, trades_absent,
-                             validate_mod_material_paths)
+from sim.content.api import (
+    family_of_trade, load_base_tree, load_production_catalog, load_tech_effects, load_trade_registry, trade_notes,
+    trade_registry, trades_absent, validate_mod_material_paths,
+)
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
 # dictionary read straight from a JSON file (branches,

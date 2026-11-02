@@ -15,7 +15,6 @@ from sim.finance.constants import BONDAGE_LABOUR_SHARE, BONDAGE_WAGE_MARKUP
 from sim.finance.rules import bondage_repayment, serve_bondage_year
 from sim.finance.state import FinanceSeat
 from sim.tests import finance_host
-from sim.tests.ui_stand_in import Game
 
 
 def bondage_module(labourer_quote):

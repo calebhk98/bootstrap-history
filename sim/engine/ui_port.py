@@ -79,12 +79,12 @@ from sim.workforce.api import (BuildHousing, BuySlaves, CommissionHours, FireSta
 
 # A new game's options, set once by the command line or the options screen before the first step.
 
-def begin_game(sim, goal, end_year, fog, fuzzy_estimates):
+def begin_game(sim, goal, end_year, fog, fuzzy_wanted):
     sim.send(SetGoal(goal))
     sim.send(StartDoneYearRecord())
     sim.send(SetEndYear(end_year))
     sim.send(SetFog(bool(fog)))
-    set_fuzzy_estimates(sim, fuzzy_estimates)
+    set_fuzzy_estimates(sim, fuzzy_wanted)
 
 
 def reset_done_years(sim):

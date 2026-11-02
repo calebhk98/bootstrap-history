@@ -6,7 +6,6 @@ from . import available_args, command_registry
 from sim.engine.ui_port import units
 from sim.refusal import Refusal
 from .buy_targets import canonical_target
-from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
 from .help import example_node_id
 from .render_screen_state_views import SECTIONS
