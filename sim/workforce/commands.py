@@ -1,6 +1,6 @@
 """Commands to the owner of the labour market and its people."""
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
 from sim.assembly.api import Command
 
@@ -17,6 +17,22 @@ class StaffArrived(Command):
 	"""The acting seat's staff in `trade` are the `people` the labour core's clearing hired for it; the standing bid stays."""
 	trade: str
 	people: float
+
+
+@dataclass(frozen=True)
+class HoursArrived(Command):
+	"""The labour core's clearing filled the acting seat's one-year order of a purpose: `hours_by_trade` are the hours hired
+	(a commission's become its contract hours). The order is spent either way."""
+	purpose: str
+	hours_by_trade: Any
+
+
+@dataclass(frozen=True)
+class PostHoursOnce(Command):
+	"""The acting seat asks the labour core for `hours` more of `trade` this year only, for a purpose. Answers nothing."""
+	purpose: str
+	trade: str
+	hours: float
 
 
 @dataclass(frozen=True)

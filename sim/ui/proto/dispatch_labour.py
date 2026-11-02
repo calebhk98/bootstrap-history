@@ -442,8 +442,8 @@ def _cmd_train(sim, nodes, cmd, ended):
          summary="buy a job rather than a person",
          usage=["commission <trade> <hours>"],
          options={"<trade>": "the trade", "<hours>": "hours of that trade's work"},
-         description="Pays for hours of a trade's work once, with no continuing wage. "
-                     "The hours last this year only and cannot supervise a concern. "
+         description="Asks the labour market for hours of a trade's work once, with no continuing wage; they are hired "
+                     "and paid at the year's clearing. The hours last one year only and cannot supervise a concern. "
                      "`quote commission <trade> <hours>` shows the price first.")
 def _cmd_commission(sim, nodes, cmd, ended):
     if ended:
@@ -451,12 +451,11 @@ def _cmd_commission(sim, nodes, cmd, ended):
     hours, err = _qty(cmd, "hours")
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
-    fee_paid, _refusal = sim.view("commission_check")(cmd.get("trade"), hours)
     commissioned, msg = sim.send(ui_port.CommissionHours(cmd.get("trade"), hours))
     if not commissioned:
         return {"ok": False, "error": msg}
-    return {"ok": True, "commissioned": msg, "capital": round(sim.view("acting_balance")(), 1),
-            "paid_now": round(fee_paid, 1), "note": COMMISSION_NOTE}
+    return {"ok": True, "posted": msg, "capital": round(sim.view("acting_balance")(), 1),
+            "hours_posted": hours, "note": COMMISSION_NOTE}
 
 
 @command("move_base", group="labour", aliases=("move", "relocate", "moveto"),

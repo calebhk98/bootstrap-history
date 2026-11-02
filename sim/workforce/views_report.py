@@ -60,6 +60,10 @@ class ReportViews:
 	def hours_reserved(self, trade):
 		return self.labour.hours_reserved(trade)
 
+	def hours_hired_once(self, purpose):
+		"""{trade: hours} the last clearing hired for the acting seat's one-year order of a purpose."""
+		return dict(self.seat.hours_hired_once.get(purpose, {}))
+
 	def trade_headcount_pending(self, trade):
 		return self.labour.trade_headcount_pending(trade)
 

@@ -63,16 +63,18 @@ def growth_labour(entry, material, units):
     return {trade: hours * batches for trade, hours in sorted((entry.get("labour_hours") or {}).items())}
 
 
-def paid_share(cost, can_pay, balance):
-    """The share of a growth's labour the purse could pay for (1 when all of it)."""
-    if cost <= 0.0:
-        return 1.0
-    return 1.0 if can_pay else min(1.0, max(0.0, balance) / cost)
+def hired_share(hours_by_trade, hired):
+    """The share (0 to 1) of a growth's labour the hours hired cover, the least covered trade deciding; the hours it
+    uses are taken off `hired` ({trade: hours}, changed in place)."""
+    share = min([1.0] + [hired.get(trade, 0.0) / hours for trade, hours in hours_by_trade.items() if hours > 0.0])
+    for trade, hours in hours_by_trade.items():
+        hired[trade] = max(0.0, hired.get(trade, 0.0) - hours * share)
+    return share
 
 
 def material_year(held, rates, room, loss, society_head, paid_share_of):
     """(units after the year, units grown) of one held stock. Growth is held to `room`; the founder's part of it is
-    billed, and `paid_share_of(billed units)` is the share of that the labour could be paid for."""
+    billed, and `paid_share_of(billed units)` is the share of that the labour hired covers."""
     grown = stock_dynamics.next_units(
         held, rates["natural_increase"], 0.0, rates["breeding_minimum_units"], room) - held
     if grown > 0.0:

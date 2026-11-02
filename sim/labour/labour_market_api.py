@@ -106,9 +106,9 @@ class LabourMarket:
         world = self._world
         return self.quote_annual(trade, hours / world.HOURS_PER_PERSON_YEAR) / world.HOURS_PER_PERSON_YEAR
 
-    def commission_cost(self, trade, hours, premium):
-        """What a one-off job of `hours` costs: the hour the market quotes, times a shop's `premium`."""
-        return hours * premium * self.quote(trade)
+    def commission_cost(self, trade, hours):
+        """What a one-off job of `hours` costs: the hour the market quotes."""
+        return hours * self.quote(trade)
 
     def in_current_money(self, schedule_amount):
         """An amount at the opening schedule's prices, in today's money."""

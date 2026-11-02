@@ -27,6 +27,7 @@ from sim.living_stock.api import ChangeHeld, SmuggleStock, stock_entry, stock_ra
 from sim.living_stock.module import LivingStock
 from sim.living_stock.state import LivingStockWorld
 from sim.polity.api import RaiseScandal
+from sim.workforce.api import PostHoursOnce
 from sim.tests import module_harness
 from sim.workforce.module import Workforce
 from sim.foreign_trade.api import CloseMarketsTo, RecordStockTaken
@@ -94,7 +95,9 @@ class Game:
     STATE_CAPACITY_DEFAULT = 0.7
     HOURS_PER_PERSON_YEAR = HOURS_PER_PERSON_YEAR
 
-    def __init__(self, capital=1e6, governed=True):
+    def __init__(self, capital=1e6, governed=True, hired=None):
+        self.hired = {} if hired is None else hired
+        self.posted = []
         self.civ = load_civ(HOME)
         self.world_map = open_map()
         self.geography = Geography(types.SimpleNamespace(civ=self.civ, world_map=self.world_map))
@@ -128,13 +131,14 @@ class Game:
             "stock_land": self.land.stock_land, "year": 100, "acting_balance": lambda: self.purse.capital,
             "endemic_stock_loss": self.land.endemic_stock_loss,
             "nursery_room_units": self.land.nursery_room_units,
-            "labour_quote": self.workforce.labour_quote, "can_pay": self.purse.can_pay,
+            "hours_hired_once": lambda purpose: dict(self.hired), "can_pay": self.purse.can_pay,
             "partners": self.trade.partners, "partner": self.trade.partner,
             "partner_refusal": self.trade.partner_refusal, "partner_gate": self.trade.partner_gate,
             "partner_carry": self.trade.partner_carry,
             "partner_catch_chance": lambda civ, share: country_rules.partner_catch_chance(self.actors, self.view("actor_world")(), civ, share)}
         answers = {
             ChangeStock: lambda command: apply_to_own_stock(self, command),
+            PostHoursOnce: self.posted.append,
             PayEdge: lambda command: self.purse.pay(command.amount, command.purpose),
             RaiseScandal: self.polity.raise_scandal,
             CloseMarketsTo: self.trade.apply_close_markets_to,
@@ -192,20 +196,20 @@ place = game.land.stock_land()["place"]
 check("held stock stands on one of the tiles its holder holds", place in tiles_held(game.civ, game.world_map), place)
 check("...the same one each time", game.land.stock_land()["place"] == place)
 
-# ---- a herd grows by its rule when feed and purse allow, and pays its labour ------------------
+# ---- a herd grows by its rule when feed allows and the labour it asked for last clearing was hired -------------
 rates = stock_rates()[HERD]
 check("the herd row says it grazes", rates.get("grows_on") == "pasture", rates)
+entry = stock_entry(HERD)
+growth = 10000.0 * rates["natural_increase"]
+needed = {trade: growth / entry["outputs"][HERD] * hours for trade, hours in entry["labour_hours"].items()}
+game = Game(hired={trade: hours * 2.0 for trade, hours in needed.items()})
 game.grant(HERD, 10000.0)
 game.module.step_living_stock("founder")
-growth = 10000.0 * rates["natural_increase"]
-check("an ample pasture and purse give the stated rule",
+check("an ample pasture and the labour hired give the stated rule",
       abs(game.held(HERD) - (10000.0 + growth - 10000.0 * rates["annual_loss"])) < 1e-6, game.held(HERD))
-entry = stock_entry(HERD)
-hours = growth / entry["outputs"][HERD] * sum(entry["labour_hours"].values())   # whichever trades raise the herd
-check("the growth is paid for in labour at the going wage",
-      game.purse.paid and abs(game.purse.paid[0][1] - hours * WAGE) < 1e-6, game.purse.paid)
-check("...and the hours press on the labour market",
-      abs(sum(game.labour.market.pressed.values()) - hours) < 1e-6, game.labour.market.pressed)
+check("the labour of the growth is posted to the labour core for the next clearing, and nothing is paid now",
+      sorted((order.trade, round(order.hours, 6)) for order in game.posted) == sorted((trade, round(hours, 6)) for trade, hours in needed.items())
+      and not game.purse.paid, game.posted)
 
 # ---- pasture limits the increase ------------------------------------------------------------------
 _shipped_capacity = stock_land.pasture_capacity_kg
@@ -222,20 +226,20 @@ try:
     full.module.step_living_stock("founder")
     check("a herd on pasture with no room gains nothing and still suffers its loss",
           abs(full.held(HERD) - 10000.0 * (1.0 - rates["annual_loss"])) < 1e-6, full.held(HERD))
-    check("...and buys no labour for growth it did not make", not full.purse.paid, full.purse.paid)
+    check("...and posts no labour for growth it did not make", not full.posted, full.posted)
 finally:
     stock_land.pasture_capacity_kg = _shipped_capacity
 
-# ---- the purse limits it too ----------------------------------------------------------------------
-poor = Game(capital=0.0)
+# ---- the labour hired limits it too ----------------------------------------------------------------
+poor = Game()
 poor.grant(HERD, 10000.0)
 poor.module.step_living_stock("founder")
-check("a holder who cannot pay for the labour gets no growth",
-      abs(poor.held(HERD) - 10000.0 * (1.0 - rates["annual_loss"])) < 1e-6, poor.held(HERD))
-partly = Game(capital=hours * WAGE / 2.0)
+check("a herd whose labour was not hired gets no growth, and asks for it again",
+      abs(poor.held(HERD) - 10000.0 * (1.0 - rates["annual_loss"])) < 1e-6 and poor.posted, poor.held(HERD))
+partly = Game(hired={trade: hours / 2.0 for trade, hours in needed.items()})
 partly.grant(HERD, 10000.0)
 partly.module.step_living_stock("founder")
-check("a holder who can pay for half of it gets half of the growth",
+check("a herd with half its labour hired gets half of the growth",
       abs(partly.held(HERD) - (10000.0 + growth / 2.0 - 10000.0 * rates["annual_loss"])) < 1e-6, partly.held(HERD))
 
 # ---- a nursery is held to the arable land of its place ---------------------------------------------
@@ -264,7 +268,7 @@ finally:
 eggs = Game()
 eggs.grant(EGGS, 1.0)
 eggs.module.step_living_stock("founder")
-check("stock that does not breed buys no labour", not eggs.purse.paid and eggs.held(EGGS) < 1.0, eggs.purse.paid)
+check("stock that does not breed posts no labour", not eggs.posted and eggs.held(EGGS) < 1.0, eggs.posted)
 
 # ---- the partner sells what it holds and does not hold back -----------------------------------------
 buyer = Game()

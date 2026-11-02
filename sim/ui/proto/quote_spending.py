@@ -91,7 +91,7 @@ def _quote_commission(sim, nodes, cmd):
     if refusal:
         return {"ok": False, "error": refusal}
     return {"ok": True, "what": "commission", "trade": trade, "hours": hours,
-            "paid_now": round(fee, 1), "you_have": round(sim.view("acting_balance")(), 1),
+            "wage_at_clearing_about": round(fee, 1), "you_have": round(sim.view("acting_balance")(), 1),
             "note": COMMISSION_NOTE}
 
 
@@ -114,8 +114,8 @@ def _quote_train(sim, nodes, cmd):
                     "the wage bill rises by the figure above every year."}
 
 
-COMMISSION_NOTE = ("Commissioned hours are available to your projects this "
-                   "year only, and cannot supervise a concern.")
+COMMISSION_NOTE = ("Commissioning posts the hours to the labour market: they are hired and paid at the year's clearing, "
+                   "at its wage, and are available to your projects the year after, that year only. They cannot supervise a concern.")
 
 
 def _quote_open(sim, nodes, cmd):

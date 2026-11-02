@@ -1,5 +1,6 @@
 """The commands the workforce module applies."""
 from . import rules
+from .state import ONCE_COMMISSION
 
 
 class Applying:
@@ -17,6 +18,21 @@ class Applying:
 		else:
 			employees.pop(command.trade, None)
 		self.labour.resync_pools()
+
+	def hours_arrived(self, command):
+		"""The clearing filled the seat's one-year order of a purpose; the order is spent."""
+		seat = self.seat
+		seat.hours_wanted_once.pop(command.purpose, None)
+		hired = {trade: hours for trade, hours in command.hours_by_trade.items() if hours > 0.0}
+		seat.hours_hired_once[command.purpose] = hired
+		if command.purpose == ONCE_COMMISSION:
+			for trade, hours in hired.items():
+				seat.contract_hours[trade] = seat.contract_hours.get(trade, 0.0) + hours
+				seat.commissioned[trade] = seat.commissioned.get(trade, 0.0) + hours
+
+	def post_hours_once(self, command):
+		orders = self.seat.hours_wanted_once.setdefault(command.purpose, {})
+		orders[command.trade] = orders.get(command.trade, 0.0) + command.hours
 
 	def note_trade_spread(self, command):
 		if command.introduced_year is not None:

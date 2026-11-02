@@ -27,6 +27,7 @@ from .request_rules import (commission_request_refusal, fire_refusal, teaching_f
 from .room_advice import hire_room_refusal
 from .staff_moves import (apprentices_of, commission_spare_hours, crosses_literacy_wall, dismiss)
 from sim.ledger.api import PayEdge
+from sim.workforce.api import ONCE_COMMISSION, PostHoursOnce
 
 
 class TrainingMixin:
@@ -160,9 +161,17 @@ class TrainingMixin:
         return ((self.market_supply(trade) + self._world.workforce.contract_hours.get(trade, 0.0))
                 * self.labour_productivity(trade))
 
+    def commissioned_hours(self):
+        """{trade: hours} bought from outside shops: the contracts the clearing delivered and the orders it has not yet filled."""
+        workforce = self._world.workforce
+        hours = dict(workforce.contract_hours)
+        for trade, ordered in workforce.hours_wanted_once.get(ONCE_COMMISSION, {}).items():
+            hours[trade] = hours.get(trade, 0.0) + ordered
+        return hours
+
     def hours_reserved(self, trade):
         """Hours of this trade you have already bought from an outside shop."""
-        return self._world.workforce.contract_hours.get(trade, 0.0)
+        return self.commissioned_hours().get(trade, 0.0)
 
     def _cash_in_hand_refusal(self, what, fee):
         """Refusal of a wage, an apprentice's keep or a job's fee for want of
@@ -172,9 +181,8 @@ class TrainingMixin:
         return Refusal("cash_short", self._world.refusal_text(what, fee))
 
     def commission_fee(self, trade, hours):
-        """What a one-off job of `hours` costs: a premium over the wage, more
-        again when buying deep into what the local market can spare."""
-        return self.labour_market.commission_cost(trade, hours, self.COMMISSION_PREMIUM_MULTIPLIER)
+        """What a one-off job of `hours` costs at the trade's wage now; the clearing pays the wage it sets."""
+        return self.labour_market.commission_cost(trade, hours)
 
     def hire_check(self, trade, count):
         """Everything `hire` and `quote hire` agree on before a bid is posted: the whole-person count and the
@@ -466,7 +474,6 @@ class TrainingMixin:
                 need = self._world.goal_closure = set()
         seen = 0
         done_nodes, active_nodes = self._world.projects.done, self._world.projects.active
-        workforce = self._world.workforce
         for node_id in self._world.order:
             if seen >= look:
                 break
@@ -488,7 +495,7 @@ class TrainingMixin:
             for trade in sorted(self._world.wages):
                 if not self.is_craft_trade(trade) or not self.trade_available(trade):
                     continue
-                spare = commission_spare_hours(self.market_supply(trade), workforce.contract_hours.get(trade, 0.0))
+                spare = commission_spare_hours(self.market_supply(trade), self.hours_reserved(trade))
                 if spare < hours:
                     continue
                 if best is None or self.wage_per_hour(trade) < self.wage_per_hour(best):
@@ -509,7 +516,7 @@ class TrainingMixin:
         you can attempt a thing that needs one, and buying a job rather than a
         person is the whole point of `commission`."""
         workforce = self._world.workforce
-        contracted = contracted_hours_of(workforce.contract_hours, self.is_craft_trade)
+        contracted = contracted_hours_of(self.commissioned_hours(), self.is_craft_trade)
         # AND YOURSELF. effective_scholars() has always counted the founder as
         # one of the scholars - "you are your own natural philosopher" - and
         # nothing counted them as a pair of hands, though the premise of the
@@ -521,41 +528,16 @@ class TrainingMixin:
         return hands_available(workforce.artisans, self._world.founder_alive, contracted,
                                self._world.HOURS_PER_PERSON_YEAR)
 
-    COMMISSION_PREMIUM_MULTIPLIER = declare(
-        "COMMISSION_PREMIUM_MULTIPLIER", 1.6, kind="temporary_heuristic",
-        unit="dimensionless multiplier on the trade's ordinary wage rate",
-        source=None, confidence="D",
-        why="What a shop charges for a one-off job over what it pays its "
-            "own man for a year, before local scarcity (labour_price_"
-            "factor) adds anything further. Tuned so commissioning is a "
-            "real premium over hiring rather than a free substitute for "
-            "it, not measured from any real subcontracting markup. NOTE "
-            "for Complaints/34 ('buying scholar hours fails for want of "
-            "scholars'): this function's own gates - trade_available(), "
-            "market_supply(trade) for the spare-hours ceiling, and this "
-            "fee against spending_power('buy') - do not test "
-            "self.household.employees for `trade` at all, and "
-            "market_supply('scholar') (see that function) is independent "
-            "of whether any scholars are currently on staff. Nothing in "
-            "this file's commission()/market_supply() path refuses a "
-            "scholar commission for want of existing scholar employees; "
-            "if the complaint reproduces, the refusal is not coming from "
-            "here.")
-
     def commission_check(self, trade, hours):
         """What `commission` and `quote commission` agree on before money
         moves. Returns (fee, refusal)."""
         trade = str(trade or "").strip().lower()
-        workforce = self._world.workforce
         known = trade in self._world.wages
         exists = known and hours > 0 and self.trade_available(trade)
-        spare = commission_spare_hours(self.market_supply(trade), workforce.contract_hours.get(trade, 0.0)) if exists else 0.0
+        spare = commission_spare_hours(self.market_supply(trade), self.hours_reserved(trade)) if exists else 0.0
         refusal = commission_request_refusal(known, trade, hours, exists, self._world.trade_notes.get(trade, ""), spare)
         if refusal:
             return None, refusal
-        # A shop charges more for a one-off than it pays its own man for a
-        # year, and more again if you are buying deep into what the local
-        # market can spare this year (see labour market price_factor).
         fee = self.commission_fee(trade, hours)
         if fee > self._world.spending_power("buy"):
             return None, self._cash_in_hand_refusal(
@@ -563,23 +545,13 @@ class TrainingMixin:
         return fee, None
 
     def commission(self, trade, hours):
-        """Pay for a job, not for a person.
-
-        Sometimes what is needed is some copper wire, not a full-time
-        smith on the payroll. This buys a specific piece of work from
-        somebody else's shop at a premium over their wage, with no
-        standing obligation either way.
-
-        The fee is a price for a finished job from another shop (wage times a premium that covers its overhead), paid to
-        the market edge: not wages. TEMPORARY HEURISTIC, retire: Complaint 964 (a job becomes a labour bid of the
-        seat for the year through sim/markets/port_staff.py).
-        """
+        """Ask the labour core for a job, not a person: `hours` of the trade for this year only, with no standing
+        obligation. They are posted with the household's places and filled at the year's clearing (sim/markets/port_staff.py),
+        at the wage the clearing sets; the hours arrive as contract hours then. Answers (posted, message)."""
         trade = str(trade or "").strip().lower()
         fee, refusal = self.commission_check(trade, hours)
         if refusal:
             return False, refusal
-        workforce = self._world.workforce
-        self._world.send(PayEdge(self._world.EDGE_WORKERS, fee, "commissioned craftsmen"))
-        workforce.contract_hours[trade] = workforce.contract_hours.get(trade, 0.0) + hours
-        workforce.commissioned[trade] = workforce.commissioned.get(trade, 0.0) + hours
-        return True, ("%.0f hours of a %s bought for %s" % (hours, trade, self._world.money_text(fee)))
+        self._world.send(PostHoursOnce(ONCE_COMMISSION, trade, hours))
+        return True, ("%.0f hours of a %s posted to the labour market: they are hired at the year's clearing at its wage "
+                      "(about %s at today's)" % (hours, trade, self._world.money_text(fee)))

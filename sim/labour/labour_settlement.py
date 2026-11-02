@@ -10,6 +10,7 @@ import sim.geography.api as geography
 from sim.geography.api import settlement
 from sim.polity.api import ScaleFamiliarity, ScaleProtection
 from sim.ledger.api import NoteSpend, PayEdge
+from sim.workforce.api import ONCE_COMMISSION
 
 
 class SettlementMixin:
@@ -164,6 +165,7 @@ class SettlementMixin:
         # Local contracts and the local market's memory stay behind.
         workforce.commissioned = {}
         workforce.contract_hours = {}
+        workforce.hours_wanted_once.pop(ONCE_COMMISSION, None)
         self._world.send(ScaleFamiliarity(self.RELOCATION_STANDING_RETAINED))
         self._world.send(ScaleProtection(self.RELOCATION_STANDING_RETAINED))
         workforce.base_tile = tile

@@ -2,6 +2,8 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
 
+ONCE_COMMISSION = "commission"   # one-year orders by purpose: hours of a trade bought for this year only
+ONCE_STOCK = "stock"             # the herds' growth labour
 STAFF = "staff"     # version channel: the seat's people (employees, scholars, artisans, deputies, slaves, freedmen)
 
 
@@ -31,6 +33,10 @@ class WorkforceSeat:
     worker_housing_places: Optional[int] = None
     # the standing bid in the labour core: people wanted by trade (the places `hire` posts); `employees` is what the core hired last clearing
     staff_wanted: Dict[str, float] = field(default_factory=dict)
+    # one-year orders in the labour core, purpose -> trade -> hours: posted with the standing places, cleared at the clearing;
+    # `hours_hired_once` is what the last clearing hired for each purpose
+    hours_wanted_once: Dict[str, Dict[str, float]] = field(default_factory=dict)
+    hours_hired_once: Dict[str, Dict[str, float]] = field(default_factory=dict)
     # the tile the household chose to operate from (None: the nation's default tile)
     base_tile: Optional[str] = None
     # how far the household's buying has bid up the people market; fades each year

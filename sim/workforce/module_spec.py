@@ -11,7 +11,7 @@ from sim.seats.api import RememberGoalClosure
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 
 from .commands import (BuildHousing, CloseHoursYear, GrantStaff, NoteTradeSpread,
-                       LoseStaff, ReleaseStaff, SetEmployed, StaffArrived, TakeWageFallback)
+                       LoseStaff, ReleaseStaff, SetEmployed, StaffArrived, HoursArrived, PostHoursOnce, TakeWageFallback)
 from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeSchool, HireStaff, Manumit, MoveBase, TrainStaff,
                               WorkForWages)
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
@@ -131,6 +131,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("literate_trades", "literate_trades", **_LIVE),
         ViewSpec("slave_base_price", "slave_base_price", **_LIVE),
         ViewSpec("hours_reserved", "hours_reserved", kind=KEYED, **_SEAT),
+        ViewSpec("hours_hired_once", "hours_hired_once", kind=QUOTE, **_SEAT),
         ViewSpec("trade_headcount_pending", "trade_headcount_pending", kind=KEYED, **_SEAT),
         ViewSpec("literacy_factor", "literacy_factor", kind=KEYED, **_SEAT),
         ViewSpec("relocation_quote", "relocation_quote", kind=KEYED, **_SEAT),
@@ -143,7 +144,7 @@ MODULE_SPECS = (ModuleSpec(
         # puts every book back after trying the sale: a quote that writes and restores (retire when wage work has a pure rule)
         ViewSpec("work_for_wages_dry_run", "work_for_wages_dry_run", kind=QUOTE, **_SEAT),
     ),
-    applies=((SetEmployed, "set_employed"), (StaffArrived, "staff_arrived"), (NoteTradeSpread, "note_trade_spread"),
+    applies=((SetEmployed, "set_employed"), (StaffArrived, "staff_arrived"), (HoursArrived, "hours_arrived"), (PostHoursOnce, "post_hours_once"), (NoteTradeSpread, "note_trade_spread"),
              (LoseStaff, "lose_staff"), (GrantStaff, "grant_staff"),
              (ReleaseStaff, "release_staff"), (TakeWageFallback, "take_wage_fallback"),
              (CloseHoursYear, "close_hours_year"),
