@@ -413,7 +413,7 @@ Two fixes, usable separately or together:
                                                     "disease_burden", "epidemics_under_way",
                                                     "trades", "not_held".
       {"cmd":"divergence"}                         start values against now ("population",
-                                                    "wage_index", "price_index",
+                                                    "wage_per_hour", "price_index",
                                                     "literacy_general", "literacy_elite",
                                                     "territory"), "technologies_you_built",
                                                     "dated_events" (status happened, under

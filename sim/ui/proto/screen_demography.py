@@ -58,7 +58,7 @@ def demography_report(sim):
                               if key != "expected_deaths_by_tile"},
         "recent_shocks": recent_shocks(sim.view("yearly_record")()),
         "recovery": recovery(sim.view("yearly_record")(), total, sim.view("year")()),
-        "wage_index": round(sim.view("wage_index")(), 4),
+        "wage_per_hour": round(sim.view("money_per_labour_hour")(), 4),
         "trades": sim.view("population_report")()["trades"],
         "not_held": ["the model has three age cohorts, not single years of age",
                      "the recovery figure extrapolates recent growth; it does not model "
