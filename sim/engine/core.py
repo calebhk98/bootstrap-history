@@ -284,11 +284,6 @@ class Sim:
     def _operating_changed(self):
         change_hooks.operating_changed(self)
 
-    @property
-    def labour(self):
-        """The workforce module's labour parts (sim/labour/labour.py): the engine and sim/markets still reach them here."""
-        return self.assembly.modules["workforce"].labour
-
     def step(self):
         """Advance every seat one year (the order and what runs once or per seat: year_run.py)."""
         run_year(self)

@@ -19,8 +19,8 @@ class OrgHierarchyModTests(unittest.TestCase):
     def setUpClass(cls):
         cls.games = ModGames([MOD])
         cls.game = cls.games.unopened()
-        cls.charged_before = cls.game.labour.hours._world.director_overhead_hours()
-        cls.game.labour.book.set_employed("scribe", STAFF)   # a hire is posted and arrives at the clearing; the book is set directly
+        cls.charged_before = cls.game.assembly.modules["workforce"].labour.hours._world.director_overhead_hours()
+        cls.game.assembly.modules["workforce"].labour.book.set_employed("scribe", STAFF)   # a hire is posted and arrives at the clearing; the book is set directly
 
     @classmethod
     def tearDownClass(cls):
@@ -39,7 +39,7 @@ class OrgHierarchyModTests(unittest.TestCase):
         manager_hours = float(self.game.view("game_config")()["director_hours_per_year"])
         expected = HIERARCHY.apex_overhead_hours(self.staff(), manager_hours, parameters, set(self.game.view("techniques_held")()), 0)
         self.assertGreater(expected, 0.0)
-        self.assertEqual(self.game.labour.hours._world.director_overhead_hours(), expected)
+        self.assertEqual(self.game.assembly.modules["workforce"].labour.hours._world.director_overhead_hours(), expected)
 
     def test_the_hierarchy_command_reads_the_same_staff(self):
         reply = _agent_dispatch_inner(self.game, {}, {"cmd": MOD + ":hierarchy"})

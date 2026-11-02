@@ -3,13 +3,13 @@
 A seat's one-year orders (`hours_wanted_once`: a commission, the herds' growth labour) are posted with its places as bids for
 this year only; the hours hired are delivered as hours (`HoursArrived`), not staff, and the order is spent.
 
-An employer (a seat, a firm, a state) posts places by trade: a seat's `hire` (`sim.labour.staff_posting()`), an actor's
+An employer (a seat, a firm, a state) posts places by trade: a seat's `hire` (`staff_posting`), an actor's
 `record.staff_wanted`. Each year the places become `LabourBid`s for the employer's staff account at the economy's wage for
 the trade; the account is funded from the employer's purse up to what it can spend, the core clears and pays the fills from
 that account, and the employer's staff become the people the clearing hired (hours over the working year, not rounded). The money left
 in the account goes back to the employer, and what was spent is the wages the clearing charged it. Each hour is paid once, by the clearing.
 
-A seat's own hours (`sim.labour.wage_work_offered()`) are offers in the same clearing, for an account `work:<seat>`; the seat is
+A seat's own hours (`wage_work_offered`) are offers in the same clearing, for an account `work:<seat>`; the seat is
 paid what the clearing hired of them, at the market's one wage, after it. The people a seat trained or was granted since the last clearing
 are put into the core before it.
 """

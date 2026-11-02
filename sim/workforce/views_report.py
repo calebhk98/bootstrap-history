@@ -1,7 +1,38 @@
 """The views the workforce module publishes for what the screens tell the player about its people: room, hours, quotes and reports."""
+from sim.labour.api import hours_by_trade_of_all_employers, people_by_trade_of_all_employers
 
 
 class ReportViews:
+
+	# ---- what the seat has posted in the labour core, read by the markets module when it clears ----
+
+	def staff_posting(self):
+		"""{trade: people} the acting seat has posted in the labour core: the places its staff are hired into."""
+		return self.labour.book.staff_posting()
+
+	def once_posting(self):
+		"""{purpose: {trade: hours}} the acting seat asks the labour core for this year only."""
+		return self.labour.book.once_posting()
+
+	def wage_work_offered(self):
+		"""{trade: hours} the acting seat offers of its own in the labour core this year."""
+		return self.labour.book.wage_work_offered()
+
+	def newcomers(self):
+		"""{trade: people} trained or granted since the last clearing who are not yet in the labour core."""
+		return self.labour.book.newcomers()
+
+	def employed_by_trade(self):
+		"""A copy of the acting seat's staff, trade to head count."""
+		return self.labour.book.employed_by_trade()
+
+	def occupation_people_by_trade(self):
+		"""Working people by main occupation across every employer; None while the agent economy has not opened."""
+		return people_by_trade_of_all_employers(self.labour)
+
+	def occupation_hours_by_trade(self):
+		"""The year's hours by trade across every employer."""
+		return hours_by_trade_of_all_employers(self.labour, self.world.society_labour_hours)
 
 	# ---- room and supervision ----
 

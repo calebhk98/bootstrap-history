@@ -1,7 +1,7 @@
 """The only door into sim/labour/: what code outside the package may import.
 
-Outside code imports from here and reaches the simulation's labour through `sim.labour`
-(a `Labour`, held by the workforce module, sim/workforce/module.py), never through a submodule or a private name.
+Outside code imports from here and asks the workforce module's views for the simulation's labour (a `Labour`, held by
+the module, sim/workforce/module.py), never through a submodule or a private name.
 
 `Labour` loads on first use (module `__getattr__`): the engine data modules import this door
 for the wage constants while they are themselves still loading, and the labour parts would

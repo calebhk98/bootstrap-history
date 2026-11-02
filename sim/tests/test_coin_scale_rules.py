@@ -33,7 +33,7 @@ class _Declared:
 
 def _reader(rate):
     reader = _Declared()
-    reader.labour = SimpleNamespace(money_per_labour_hour=lambda: rate)
+    reader.view = lambda name: (lambda: rate)
     return reader
 
 
