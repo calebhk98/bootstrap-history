@@ -28,7 +28,7 @@ addition to the roadmap, not a duplicate.
 
 ## What already exists
 
-`sim/engine/economy_credit.py` (the `CreditMixin`) is the entire live capital
+The engine-side capital market (`sim/finance/capital_market.py`, `sim/finance/bank.py`) and the agent economy's pooled credit (below) are the live capital
 mechanism: a household credit line with an interest rate and an affordability
 ceiling. There is no banking sector, no bond market, no equity instrument and
 no independent capital pool that a firm other than the founder's own
@@ -85,7 +85,7 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
 
 - **Banks (step 2).** A bank is an agent id with a purse (`sim/economy/banks.py`, `bank_service.py`); a society
   founds banks only once it holds a node declaring `deposit_banking` (`fin_deposit_bank`;
-  `sim/engine/economy_port_institutions.py` hands the economy the names), and its richest household founds one
+  `sim/markets/port_institutions.py` hands the economy the names), and its richest household founds one
   when none stands (any agent may call `banks.found`). Households pledge their offered funds to the bank; the
   bank offers its free cash plus the pledges less a reserve, asking its depositors' rates plus a margin, and takes
   a deposit only for the loans it makes (the pool's way: interest is paid on no more than was lent), then returns

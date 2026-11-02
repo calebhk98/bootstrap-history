@@ -444,7 +444,7 @@ and re-measure with `python3 sim/simulator.py spin-up-trace`. Run the fingerprin
 - Eurace: I did not read the two Dawid et al. papers (the repository copy served a bot check; the search result is SNIPPET
   ONLY). The user manual is the 2011 version; the code is later (2014 to 2016), and the manual and code can differ. The
   price grid range constants were not traced to their definition.
-- Eurace's `its/0_after_2k_transient.xml.tar.bz2` was not opened; any claim about what it holds is a guess from its name.
+- Eurace's `its/0_after_2k_transient.xml.tar.bz2` was not opened when this report was written; any claim here about what it holds is a guess from its name. It has since been opened (by a later review); read that review's account of the state it holds in preference to anything this report says about it.
 - HARK: I read the consumption-saving module headers, the stable-point code, the steady-state method and `Market.solve`; I
   did not run any of them, and I did not check which of the project's dependency rules apply.
 - Caiani: a PDF to text conversion garbles some equation symbols; the structure of 3.7 (markup up when inventories

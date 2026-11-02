@@ -53,7 +53,7 @@ The cycle reaches the player. Over the first two decades the `money` screen's ma
 digits to the ceiling `bounded_rate` sets (four times the civilisation's `starting_interest_rate`,
 `sim/world/capital_market.py`), and stayed there for several years. Over the same years "funds lenders hold"
 fell to about a quarter of its year-104 figure. Funds lenders hold is built mostly from `household_saving()`
-(`sim/engine/economy_capital_market.py`), so household saving collapsed. The founder's borrowing is far too
+(`sim/finance/capital_market.py`, `sim/actors/world_capital.py` `household_saving`), so household saving collapsed. The founder's borrowing is far too
 small to move it. A founder who had borrowed at a normal rate to hire staff paid well over half the debt in
 interest each year and went insolvent. Wages (and with them the workshop's revenue, which is a markup on
 wages) fell through the same years. Reproduce by stepping a year at a time and reading `money`.
@@ -166,7 +166,7 @@ Not reproducible on the fixture: 545 (the fixture has no land per run, so househ
 the stock gate is not the first mover once the seed is gone (the gate binds in year 1 only on the seeded run).
 
 Orchestrator commands (minutes each, shared cores; not run here): `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`
-and the settling statistic over its rows (`sim.economy.settling.settling_report`, as `economy_port_trace.spin_up_trace` feeds it).
+and the settling statistic over its rows (`sim.economy.settling.settling_report`, as `port_trace.spin_up_trace` feeds it).
 
 ## Update 7: hours offered are a choice against the plot; the stationary fixture rests (branch opening-labour-supply-and-seed)
 
@@ -518,7 +518,7 @@ through" (ore_kg) fails before and after, as noted in Update 14.
 
 ### Update 16 (later): the 92 a kg was a remembered bid ceiling blended with a sliver of trade
 
-Traced with the spin-up uncached (probe not committed: `economy_port_year.SPIN_UP_CACHE_DIRECTORY` set to a temporary directory, wrapping `producers.plan`
+Traced with the spin-up uncached (probe not committed: `port_year.SPIN_UP_CACHE_DIRECTORY` set to a temporary directory, wrapping `producers.plan`
 and `unsold_search.clear_with_search` for wheat at france_05). The parent's 0.71 was a `cost_covering` quote on a market where nothing traded and the
 producer held no stock, not a price. With wheat running, the spin-up cobwebs: year 1 plans the plant's whole capacity at the opening estimate (238 million kg
 held after it), the price falls to 0.1, no one plans in year 4 (stock gone), a buyer's ceiling of 130 is remembered as a `best_unfilled_bid`, year 5 plans

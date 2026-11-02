@@ -5,8 +5,8 @@ is built, and the engine's own opening figures answer only while the economy ope
 builds a game that stays in that state, for tests of the opening figures). The yearly economy checks measure it
 against plausible ranges (`python3 sim/simulator.py economy-check`).
 
-Open problems that touch this document are collected in `Complaints/964` (labour single owner, one national price
-rule, the legacy analytic price model) and `Complaints/507` (prices and traded volumes have two owners,
+Open problems that touch this document are collected in `Complaints/964` (what the labour and goods re-audit left, one national price
+rule) and `Complaints/507` (prices and traded volumes have two owners,
 `ONE_PRICE_OWNER_PLAN.md`); where a section below describes a rule under repair it says so.
 
 ## What it is
@@ -41,9 +41,9 @@ demography to read.
 variable cost; a holder of stock at what it expects to get next year less carrying cost and spoilage; a
 seller short of cash for debts or wages below that; a waste product below zero.
 
-**Wages come from the labour core; the interest rate is sticky.** (Whether the core is the one owner of who works
-where is open: `Complaints/964`, `Complaints/556`, `Complaints/963`; the engine's staff books and the army do not yet
-draw on it.) The economy keeps its workforce as
+**Wages come from the labour core; the interest rate is sticky.** Every employer's staff are bids in the core: the seats', firms' and
+states' staff books and the army are posted as standing bids by `sim/markets/port_staff.py` and the books are the people the
+clearing hired (what is left is `Complaints/964`, `556`). The economy keeps its workforce as
 the labour core's `MarketState` (people per tile, trade and ability band; `labour_state.py`) and each
 year hands the core the producers' bids as tranches of falling value (`labour_bids.py`), the outside
 option, entrants and attrition from demography, and routes to bordering tiles (`labour_inputs.py`).
@@ -70,8 +70,7 @@ stock is derived: what the opening agents want to hold at the seeded prices.
 carriage costs less than a share of its value, so silver trades across a civilisation and grain within
 a tile or a few. The cost of a haul between tiles is geography's route cost (`sim/economy/tile_costs.py`
 asks `route_costs`, see `sim/geography/INTERFACE.md`): rivers, coasts, grade and sea lanes come from the
-map, and the economy supplies only its money per tonne-km for each mode. Carriage is the carters' pay: it goes as wages to the poorest households of the tile
-the goods leave, until carriers hire hours in the labour market.
+map, and the economy supplies only its money per tonne-km for each mode. Carriage crews bid in the labour core in their mode's own trade (`sim/economy/carriage_hours.py`), and carriage is their pay.
 
 **Stock-flow consistency.** Every movement of money or goods has a counterparty. Money and goods enter
 or leave only through named edge accounts (`types.EDGE_*`). Engine postings that do not yet name a
@@ -240,9 +239,7 @@ founder's and every seat's purse and the tree's money fields, by the ratio of th
 the markets module's `money_from_economy` flag. From then on living costs, node money, the constants stated in labour hours
 (`money_units.PricedInLabourHours`) and hiring all use the economy's wage, so a purse buys the hours it was meant to.
 The two figures differ because the solver costs the coin's metal at its labour hours, while the
-economy fixes the metal's price in coin and lets goods and wages follow the money stock. Measure both with
-`python3 -m sim.tests --jobs 1 --only one_money_per_labour_hour` (slow: it opens the economy). The solver side
-of this is part of the legacy analytic price model being retired under `Complaints/964`.
+economy fixes the metal's price in coin and lets goods and wages follow the money stock. The tests are `sim/tests/test_one_money_per_labour_hour.py` and `test_open_agent_reprices_money.py`.
 
 ## Domestic trade has one owner
 

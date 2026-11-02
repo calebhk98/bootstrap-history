@@ -7,8 +7,8 @@ Found by an outside reviewer reading the repository; checked against the code.
 - `sim/engine/real_output.py` values the quantity markets sell at fixed opening prices. A household that
   stops growing its food and buys the same amount raises real output without eating better; one that
   goes back to its plot lowers it.
-- The live economy reaches it partly: the agent-volume bridge in `sim/engine/economy_port_year.py`
-  tracks goods from techniques introduced after the opening.
+- The live economy reaches it partly: the volume baseline and traded volumes (`sim/reporting/output.py`, fed by the economy's `traded_volumes`)
+  track goods from techniques introduced after the opening.
 - No report separates physical production, intermediate use, final consumption, investment,
   inventories and self-consumption, or shows food adequacy and purchasing power by cohort.
 

@@ -2,6 +2,8 @@
 
 **Status:** open - two candidate changes parked as patches; neither merged
 
+On the branch economy-labour-single-source-cleanup none of the three parked patches (`960-opening-ask-at-contract-wage`, `960-working-capital-charge`, `960-producer-run-share-with-cash-floor`) applies (checked with the apply check of each); the diagnoses were made before that branch changed the economy and labour code and need re-measuring.
+
 Part of Complaint 608 (the opening's labour market clears below the opening wage).
 
 **What is wrong.** On `stationary_setup()` (`sim/economy/fixture_setups.py`), the fixture built to rest, the opening

@@ -110,7 +110,7 @@ Run from the repository root.
 
 ## 8. Before you change state
 
-1. Find the owner module of the fact (`sim/<module>/module_spec.py`, or the catalogue file) and change it there.
+1. Find the owner module of the fact (`sim/<module>/module_spec.py`) and change it there.
 2. List its readers: grep the view's name, and run command 2. A change to a view's shape is a change to every
    reader.
 3. Another module's fact is changed by sending its command, never by writing the field; add the command to the
@@ -123,9 +123,8 @@ Run from the repository root.
 
 Each is a complaint; read its `**Status:**` line first (`grep -m1 '^\*\*Status' Complaints/NNN-*.md`).
 
-- Economy and labour have no single source of truth (labour in two systems, prices in several places, a legacy
-  analytic price model beside the economy's cleared prices): `Complaints/964`, being fixed on branch
-  `economy-labour-single-source-cleanup`; labour's part is `Complaints/556`.
+- What the economy and labour re-audit left (whole-record functions, seats' goods trades outside the clearing, missing prices
+  read as zero in a few places, tools that print counts and never fail): `Complaints/964`; labour's part is `Complaints/556`.
 - Two owners of prices and traded volumes, the solver and the agent economy: `Complaints/507`
   (`docs/architecture/ONE_PRICE_OWNER_PLAN.md`).
 - Temporary heuristics grow faster than they are retired: `Complaints/509`.

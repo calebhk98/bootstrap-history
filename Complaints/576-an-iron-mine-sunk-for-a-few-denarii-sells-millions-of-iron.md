@@ -13,10 +13,8 @@ a bounded multiple of its cost per tonne.
 
 ## Trace of the mine output's sale path (founder-sells-into-clearing)
 
-A mine does not sell anything by itself. `sim/engine/economy_mining.py` turns a tranche into a working
-(`commission_mines`), whose yearly tonnes (`mine_yield_t_for`) are an own supply (`_own_material_supply("mine:<material>")`,
-`sim/engine/economy_materials.py`) that the founder's works draw on as an input. Ore the founder sells goes through the
-`sell` order (`GoodsMarket.sell`, `sim/engine/goods_market_api.py`), which is not the home-ask path of 668: it pays
+A mine does not sell anything by itself. `commission_mines` (`sim/resources/workings.py`) turns a tranche into a working, whose yearly tonnes (`mine_yield_t_for`) are an own supply (`_own_material_supply("mine:<material>")`, no longer in the code; grep `mine:` for the current reader) that the founder's works draw on as an input. Ore the founder sells goes through the
+`sell` order (`GoodsMarket.sell`, `sim/markets/goods_market.py`), which is not the home-ask path of 668: it pays
 `sale_proceeds` (the economy's price on the tile falling with the tonnes sold) at once, cut to `market_room_tonnes`, which was
 the tonnes the sellers offered, not what buyers want. That cap is now `sale_room_tonnes`: no more than the buyers took
 and still wanted last year (`market_record` sold plus unmet) where the economy trades the good, so a good no one bought

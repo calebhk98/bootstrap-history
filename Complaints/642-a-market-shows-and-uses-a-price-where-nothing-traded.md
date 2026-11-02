@@ -34,7 +34,7 @@ books: no trade gives no price and a quote; a trade gives its price.
   - planning price, traded or quote, with `MarketView.quote_kind` saying which: `MarketView.price` and
     `prices_across` / `price_rows` (households, producers, entry, merchants), `learned_prices` (traders);
   - display: `notional.py` still estimates goods that have not traded lately; interface and engine readers of
-    `memory.prices` (`engine/commodities.py`, `engine/economy_port_actors.py`) have not been moved to
+    `memory.prices` (`engine/commodities.py`, `engine/port_actors.py`) have not been moved to
     `quote_kind`.
 - Tests: `test_economy_no_trade_no_price.py` (built books: a trade gives its price and no quote; no trade gives no
   price and a named quote; the index follows traded areas; the view names a quote), `test_economy_frozen_markets.py`,
@@ -47,8 +47,8 @@ books: no trade gives no price and a quote; a trade gives its price.
 - Readers moved: `GoodsMarket.quote` carries `price_kind` (`goods_market_pricing.price_kind`: the economy's kind,
   `making_cost_table` where the economy has no market, `partner_landed_price`); the `market` screen row shows "no trade:
   <cause>" for any price that is not a trade (`render_screens_market.price_note`); the founder's standing bid takes no price
-  where there is none (`economy_port_actors.standing_price`) and the seat sales weights no longer read a missing price
-  as 0.0 (`economy_port_seats.record_year`). `engine/commodities.py` reads no market price (no read of
+  where there is none (`port_actors.standing_price`) and the seat sales weights no longer read a missing price
+  as 0.0 (`port_seats.record_year`). `engine/commodities.py` reads no market price (no read of
   `memory.prices` or `MarketView` in it).
 - Tests: `test_economy_price_kinds.py`, `test_goods_market_pays_economy_price.py` (the quote's kind).
 

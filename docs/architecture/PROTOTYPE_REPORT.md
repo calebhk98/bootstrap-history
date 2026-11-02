@@ -1,5 +1,7 @@
 # Prototype gate: the ledger, living stock and project starting
 
+Note: this is a record of past work. `sim/engine/bridge_shared.py` and the forwarder mixins named below no longer exist; the engine bridge is `sim/engine/bridge*.py` and `Sim` has no base classes (`sim/ARCHITECTURE.md`).
+
 **Status:** decided 2026-10-26 - go, with the changes in section 3 made before the next modules move. Task 2.4 of
 `MODULE_MIGRATION_TASKS.md`.
 

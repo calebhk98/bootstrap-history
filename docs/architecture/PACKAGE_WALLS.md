@@ -67,8 +67,8 @@ surface is missing a member.
 
 - **The engine bridge.** Reads a module still needs from the engine are published by `sim/engine/bridge*.py`;
   `python3 tools/measure/module_graph.py` prints how many remain (it counts reads answered by the bridge).
-- **Forwarders on `Sim`.** Engine, mod and test code that is not yet in a module still calls `Sim` methods
-  that forward to views (`sim/engine/forward_*.py`); `bash tools/done_check.sh` prints how many bases remain.
+- **Calls on `Sim`.** Engine, mod and test code that is not yet in a module still calls `Sim` methods that read views;
+  `bash tools/done_check.sh` prints the method count.
 - **Adapter breadth.** `WorkforceWorld`, `PortWorld` and the actors' world expose many members because the
   packages' code reached for many. Each member is a named dependency, so narrowing them is ordinary work
   inside one module.

@@ -106,8 +106,8 @@ loop. Breaks: multi-sector but stylised, and convergence needs many agents.
 
 **Lengnick baseline.** Households and firms only. Monthly: firms adjust wage
 and price and headcount from their own inventory and vacancy signals;
-households search a small set of shops and jobs; runs a long burn-in to
-remove arbitrary starting conditions. Reproduces a Phillips curve, a
+households search a small set of shops and jobs; the paper runs a long burn-in to
+remove arbitrary starting conditions (the replication's `batch_run.py` sets `burn_in = 0`, so the replication does not). Reproduces a Phillips curve, a
 Beveridge curve and a right-skewed firm size distribution
 ([Lengnick 2013](https://www.sciencedirect.com/science/article/abs/pii/S0167268112002806),
 [working paper PDF](https://www.econstor.eu/bitstream/10419/45012/1/654079951.pdf),

@@ -26,9 +26,7 @@ money stock, which makes the second year's mint bid large (check `cash_target` i
   reconcile the silver recipe chain with 349.
 
 **What it would take.** Settle the opening's price level (473, 526); reconcile silver and gold recipe labour with the sources
-(349); then re-run the test and remove the expected-failure marker. A partner's export budget
-(`_partner_spending`, `sim/engine/economy_port_year.py`) is sized by the cost table's price for the coin metal until the
-metal's price is near its cost; move it to `GoodsMarket.home_unit_price` then.
+(349); then re-run the test and remove the expected-failure marker. A partner's export budget was sized by the cost table's price for the coin metal (the function that did it, `_partner_spending`, is gone; read the partners' spending in `sim/markets/port_year.py` and `sim/markets/household_views.py`); size it by `GoodsMarket.home_unit_price` once the metal's price is near its cost.
 
 **Tried and why it failed.**
 

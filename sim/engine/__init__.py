@@ -1,33 +1,15 @@
-"""The engine, split by subject.
+"""The composition root of the game and what only the root does.
 
-The split is about where you look to find something; it changes nothing
-about what the model does.
+`core.py` holds `Sim`: the saved state, the random source, the seats and the loop over years. `Sim` has no base classes;
+the rules live in the modules (`sim/<module>/`, assembled by `game_assembly.py`), and `Sim` reaches them through views and
+commands. The year's steps the root runs itself are plain functions in `year_steps.py`, `year_run.py` and `year_phases.py`;
+the seat registry's are in `seat_registry.py`; the root's own facts are declared in `root_facts.py`.
 
-    data       loading the tree, prices, geography and civilisations
-    geography  where things are, and what that costs to reach
-    economy    money, materials, and the works that consume both
-    labour     people: hiring, teaching, buying, paying
-    society    what a society believes, and what it does to you for being large
-    fog        what the player can see, and what their work risks losing
-    projects   starting, stopping, finishing and abandoning a piece of work
-    core       the Sim class: one year, and the loop over years
-    protocol   the JSON a player or an agent speaks
-    cli        the command line
+    core, state*, saveload      the root, its saved state and the save round trip
+    bridge*                     reads a module still needs from the root
+    data, settings*             loading the tree and civilisations, and the game's settings
+    ui_port                     what the screens read; economy_port_effects: what mods reach in the economy
+    validate*, opening_checks*  data checks and the opening's relationship checks
 
-The six subject modules are mixins rather than separate objects. That is a
-deliberate compromise: Sim's state is one interlocking thing - revenue depends
-on staff, staff on money, money on hazards, hazards on what you have built -
-and pretending otherwise by handing each module its own object would have meant
-threading the same state through in pieces. The mixin lets each subject live in
-its own file without inventing boundaries the model does not have.
-
-The facts the root states on itself (`year`, `civ`, `done`, ...) are declared in `core.py` through
-root_facts.py, not by a mixin. The year's
-steps the root runs itself are plain functions in year_steps.py and the seat
-registry's are in seat_registry.py, so `core.py` holds the class and a
-one-line method for each. See `sim/ARCHITECTURE.md` for the current base list and the script
-that derives it.
-
-Enter through simulator.py, which is what every note, test and instruction in
-this project refers to.
+See `sim/ARCHITECTURE.md` for the shape and the commands that measure it. Enter through `sim/simulator.py`.
 """
