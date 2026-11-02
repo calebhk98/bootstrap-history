@@ -232,9 +232,6 @@ class ActorWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, St
 		(itself included) have joined the `rivals` already selling."""
 		needs = self.needs
 		takings = needs.concern_takings(node_id, 1.0) * needs.node_output_market_factor(self.nodes[node_id])
-		category = self.nodes[node_id].get("cat")
-		if category in self.goods_category_names:
-			return takings * needs.goods_category_factor_with_entrants(category, entrants)
 		return takings / (rivals + entrants)
 
 	def concern_margin(self, node_id: str) -> float:
@@ -272,16 +269,11 @@ class ActorWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, St
 		return float(self.needs.industry_scale_ceiling[node_id])
 
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
-		"""Yearly takings of a concern an actor runs at `capacity` times its founding size. A goods
-		category has one market shared by every operator, the founder's and the actors', so each unit
-		of capacity gets its share of the demand; a concern with no market model splits with the
-		capacity of its rivals."""
+		"""Yearly takings of a concern an actor runs at `capacity` times its founding size, at the
+		prices the economy cleared, split with the capacity of its rivals."""
 		needs = self.needs
 		takings = business_books.takings_of_size(needs.concern_takings(node_id, self.ramp(opened_year, node_id)), capacity,
 												 needs.node_output_market_factor(self.nodes[node_id]))
-		category = self.nodes[node_id].get("cat")
-		if category in self.goods_category_names:
-			return takings * needs.goods_category_factor(category)
 		return takings / (capacity + rivals)
 
 	def concerns_making(self, material: str) -> Any:

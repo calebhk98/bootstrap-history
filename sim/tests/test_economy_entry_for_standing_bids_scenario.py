@@ -9,9 +9,9 @@ class RomeCarriersAreMakeableTests(unittest.TestCase):
 
     def test_rome_prices_the_carriers_its_merchants_wear(self):
         from sim.markets import port_setup
-        from sim.tests.harness import unopened_sim
+        from sim.tests.harness import economy_port, unopened_sim
         game = unopened_sim()
-        setup = port_setup.build_setup(game.view("legacy_economy")().world)
+        setup = port_setup.build_setup(economy_port(game).world)
         for carrier in ("pack_saddle", "river_barge", "merchant_ship"):
             self.assertIn(carrier, setup.opening_prices, carrier)
 

@@ -143,10 +143,6 @@ def material_stock(sim):
     return sim.view("held_goods")()
 
 
-def goods_category_ratios(sim, category):
-    return sim.view("goods_category_ratios")(category, 0)
-
-
 def own_production_tags(sim):
     return sim.view("own_production_tags")()
 

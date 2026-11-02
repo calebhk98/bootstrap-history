@@ -7,7 +7,6 @@ import unittest
 from sim.invalidating import _InvalidatingDict
 from sim.knowledge.api import KnowledgeSeat
 from sim.knowledge.module import HELD_CHANGES, Knowledge
-from sim.markets.module import Markets
 from sim.materials.module import Materials
 from sim.production.caches import SeatMemos
 from sim.production.module import Production
@@ -29,13 +28,6 @@ class SeatBoundHooks(unittest.TestCase):
         module.clock.act_as("a")
         module.seat_bound()
         self.assertEqual(module._memos, {})
-
-    def test_markets_drops_the_acting_seats_goods_category_figures_and_no_other_seats(self):
-        module = module_harness.build(Markets)
-        module._caches = {("a", "goods_cat_state"): 1, ("a", "income_factor"): 2, ("a", "kept"): 3, ("b", "income_factor"): 4}
-        module.clock.act_as("a")
-        module.seat_bound()
-        self.assertEqual(module._caches, {("a", "kept"): 3, ("b", "income_factor"): 4})
 
     def test_materials_drops_the_acting_seats_remembered_demand(self):
         module = module_harness.build(Materials)

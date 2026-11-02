@@ -33,8 +33,7 @@ class BookSales:
 
 	def concern_book_inputs_cost(self, node_id):
 		"""What the concern's year of inputs costs at the economy's prices, charged to the seat because the clearing
-		pays the gross of its sales (the estimate was net of them); a price the economy lacks falls back to the
-		long-run cost at today's price level."""
+		pays the gross of its sales (the estimate was net of them); an input the economy shows no price for is left out."""
 		needs = self.needs
 		baskets = self.concern_baskets_now(node_id)
 		if baskets is None:
@@ -44,8 +43,5 @@ class BookSales:
 
 		def price_of(material):
 			key = price_rules.priced_key(material, economy_prices, needs.commodity_record[material])
-			if key is not None:
-				return economy_prices[key]
-			cost = needs.material_prices().get(material)    # read only for a good the economy has no price for
-			return None if cost is None else cost * needs.price_index()
+			return None if key is None else economy_prices[key]
 		return concern_sales.inputs_cost(baskets.purchases, self.concern_book_scale(node_id), price_of)

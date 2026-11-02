@@ -102,19 +102,11 @@ class VisibleScale(unittest.TestCase):
 
 
 class ConcernTakings(unittest.TestCase):
-    def _world(self, category, factor=0.5):
+    def test_a_concern_splits_its_takings_with_its_rivals_capacity(self):
         module = types.SimpleNamespace(needs=fake_needs(
-            tree_nodes={"loom": {"cat": category}}, goods_categories=lambda: ("textiles",),
-            game_setting={"revenue_ramp_years": 5}, year=10, ramp_share_at_full_depth=0.5,
-            industry_depth=lambda node_id: 0.0, concern_takings=lambda node_id, ramp: 1000.0,
-            node_output_market_factor=lambda node: 1.0, goods_category_factor=lambda cat: factor))
-        return ActorWorld(module)
-
-    def test_a_goods_category_shares_one_market_among_every_seller(self):
-        self.assertEqual(self._world("textiles", 0.5).concern_takings("loom", 10, rivals=3.0, capacity=2.0), 2000.0 * 0.5)
-
-    def test_a_concern_with_no_market_model_splits_with_its_rivals_capacity(self):
-        self.assertEqual(self._world("metals").concern_takings("loom", 10, rivals=2.0, capacity=2.0), 2000.0 / 4.0)
+            tree_nodes={"loom": {"cat": "textiles"}}, game_setting={"revenue_ramp_years": 5}, year=10, ramp_share_at_full_depth=0.5,
+            industry_depth=lambda node_id: 0.0, concern_takings=lambda node_id, ramp: 1000.0, node_output_market_factor=lambda node: 1.0))
+        self.assertEqual(ActorWorld(module).concern_takings("loom", 10, rivals=2.0, capacity=2.0), 2000.0 / 4.0)
 
 
 if __name__ == "__main__":

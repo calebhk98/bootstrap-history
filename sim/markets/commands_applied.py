@@ -30,9 +30,6 @@ class Applying:
 		move = economy_api.GoodsMove(command.giver, command.receiver, command.good, command.tile, command.quantity, command.purpose)
 		economy_api.move_goods(self.economy.agent.economy(), [move])
 
-	def open_market_book_command(self, command):
-		self.open_market_book()
-
 	def rename_market_seat(self, command):
 		self.economy.agent.rename_agent(command.from_id, command.to_id)
 		if self.world.market_flows:

@@ -12,7 +12,6 @@ from sim.ledger.api import PayEdge
 from sim.tests import module_harness
 from sim.workforce.api import BuildHousing
 from sim.workforce.module import Workforce
-from sim.markets import rules
 from sim.labour.labour_capacity import CapacityMixin
 from sim.labour.labour_population import PopulationMixin
 from sim.ledger.api import rules as ledger_rules
@@ -22,14 +21,6 @@ from sim.ui.proto.render import render_pretty
 
 def household(**fields):
     return types.SimpleNamespace(**{"capital": 1_000_000.0, "trades_created": set(), **fields})
-
-
-class FarmlandTests(unittest.TestCase):
-    def test_farmland_lowers_the_essential_price_ratio_below_neutral(self):
-        def ratio(farm_hectares):
-            return rules.essential_price_ratio([None], farm_hectares)
-        self.assertEqual(ratio(0.0), 1.0)
-        self.assertLess(ratio(120.0), 1.0)
 
 
 class HousingTests(unittest.TestCase):

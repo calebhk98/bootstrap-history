@@ -15,7 +15,7 @@ from sim.knowledge.api import StartDoneYearRecord
 from sim.prices.api import solve_cache
 from sim.markets import api as markets_api
 from sim.markets.api import (SPIN_UP_MAXIMUM_YEARS, SPIN_UP_SOURCE_MODULES, SPIN_UP_TOLERANCE, SPIN_UP_YEARS_ENV, opening_setup,
-                             spin_up_key, traded_staple)
+                             spin_up_key)
 from . import concern_scan_run, opening_checks
 from .data import load, load_civ
 from .core import Sim
@@ -58,10 +58,9 @@ def sited_ore_ratios(game, prices, costs, stale) -> Dict[str, float]:
 def price_ratios(game) -> Dict[str, Dict[str, float]]:
     """{group: {good: price over making cost}} for the sited ores, the staple and the coin metal, after one step;
     only goods whose markets cleared lately (a stale good's shown price is its cost, not a trade)."""
-    agent = game.view("legacy_economy")().agent
-    setup = agent.economy().setup
-    prices, costs, stale = game.view("legacy_economy")().agent_prices(), game.view("material_prices")(), agent.stale_goods()
-    named = {"staple": traded_staple(agent, stale), "coin_metal": setup.currency.backing_good}
+    setup = game.view("agent_economy_setup")()
+    prices, costs, stale = game.view("agent_prices")(), game.view("material_prices")(), game.view("agent_stale_goods")()
+    named = {"staple": game.view("agent_traded_staple")(), "coin_metal": setup.currency.backing_good}
     ratios = {"sited_ores": sited_ore_ratios(game, prices, costs, stale)}
     for group, good in named.items():
         usable = good and good not in stale and prices.get(good) and costs.get(good)
@@ -72,12 +71,12 @@ def price_ratios(game) -> Dict[str, Dict[str, float]]:
 def check_game(game, trace=None) -> List[opening_checks.CheckResult]:
     """Every check on an opened, unplayed game of a full-length opening. It steps the game one year (the
     price and wage figures are the first year's), so the caller passes a game it will not keep playing."""
-    result = dict(game.view("legacy_economy")().spin_up_result())
+    result = dict(game.view("agent_spin_up_result")())
     rows = opening_trace(game) if trace is None else trace
     game.send(StartDoneYearRecord())
     game.step()
-    outcome = game.view("legacy_economy")().agent.outcomes[-1]
-    setup = game.view("legacy_economy")().agent.economy().setup
+    outcome = game.view("agent_last_outcome")()
+    setup = game.view("agent_economy_setup")()
     ratios = price_ratios(game)
     return [opening_checks.price_over_cost("price_over_cost_" + group, ratios[group])
             for group in ("sited_ores", "staple", "coin_metal")] + [

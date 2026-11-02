@@ -1,12 +1,11 @@
 """The memoised economic readers (Complaint 640) recompute exactly when the state they read changes, on stand-ins that carry only what
-each method reads: `revenue`, `annual_material_demand` and the goods-category ratios. Whether the version counters move when the
+each method reads: `revenue`, `annual_material_demand`. Whether the version counters move when the
 household is edited is test_household_invalidation_containers."""
 QUICK_TOPIC = True
 
 import types
 import unittest
 
-from sim.markets.module import Markets
 from sim.tests import materials_stand_in, module_harness, production_host
 from sim.workforce.api import SetWageHoursSold
 
@@ -139,68 +138,6 @@ class AnnualMaterialDemandTest(unittest.TestCase):
         sim.household.active_version += 1
         sim.annual_material_demand()["fake_kg"] = 999.0
         self.assertNotIn("fake_kg", sim.annual_material_demand())
-
-
-class GoodsStandIn:
-    """The markets module over plain values for the views the category ratios read; `concerns` sellers in the category."""
-
-    def __init__(self, concerns):
-        self.concerns = concerns
-        self.calls = 0
-        self.operating_version = 0
-        self.market_version = 0
-        self.module = module_harness.build(Markets, views={
-            "year": 100, "pop_scale": 1.0, "real_output_per_head": 1.0,
-            "techniques_version": 0, "operating_version": lambda: self.operating_version, "concern_versions": lambda: (self.market_version, 0),
-            "farm_holdings": {"hectares": 0.0}})
-        self.module.goods_category_state = self._state
-        self.module.goods_reach_factor = lambda: 1.0
-        self.module.income_factor = lambda: 1.0
-
-    def _state(self, category):
-        self.calls += 1
-        return (self.concerns, 0.0, {"tau": 10.0, "eta": 1.0, "floor": 0.1}) if self.concerns else None
-
-    def ratios(self, category):
-        return self.module.goods_category_ratios(category)
-
-    def factor(self, category):
-        return self.module.goods_category_factor(category)
-
-
-class GoodsCategoryRatiosTest(unittest.TestCase):
-    def test_a_repeated_question_is_answered_from_the_first_computation(self):
-        sim = GoodsStandIn(1)
-        first = sim.ratios("textiles")
-        self.assertEqual(sim.ratios("textiles"), first)
-        self.assertEqual(sim.calls, 1)
-
-    def test_a_change_of_operating_set_or_actor_market_recomputes(self):
-        sim = GoodsStandIn(1)
-        sim.ratios("textiles")
-        sim.operating_version += 1
-        sim.ratios("textiles")
-        sim.market_version += 1
-        sim.ratios("textiles")
-        self.assertEqual(sim.calls, 3)
-
-    def test_nothing_operating_in_the_category_gives_no_ratios_and_a_neutral_factor(self):
-        sim = GoodsStandIn(0)
-        self.assertIsNone(sim.ratios("textiles"))
-        self.assertEqual(sim.factor("textiles"), 1.0)
-
-    def test_a_second_concern_in_the_category_lowers_each_sellers_factor(self):
-        single = GoodsStandIn(1).factor("textiles")
-        double = GoodsStandIn(2).factor("textiles")
-        self.assertLess(double, single)
-
-    def test_the_factor_is_remembered_until_the_operating_set_changes(self):
-        sim = GoodsStandIn(1)
-        first = sim.factor("textiles")
-        sim.concerns = 2
-        self.assertEqual(sim.factor("textiles"), first)
-        sim.operating_version += 1
-        self.assertLess(sim.factor("textiles"), first)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 """What interest groups can see of who is hurt: producers the founder's sales displace and
 employers whose hands the founder's hiring bids up. Mixed into `ActorWorld`."""
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from sim.agents.api import CONCESSION_PREFIX, Sector, sector_key
 from sim.polity.api import AddScandal
@@ -92,15 +92,26 @@ class GroupView:
 			for trade, trade_hours in (node.get("lab") or {}).items():
 				totals[trade] = totals.get(trade, 0.0) + trade_hours
 		categories = {}
+		operating = set(needs.operating())
 		for category in sorted(hours):
-			ratio = needs.goods_category_price_ratio[category]
+			founder_concerns = len(operating.intersection(needs.nodes_in_category[category]))
+			actors_concerns = self.module.actor_concerns_in(category)
+			ratio = self._category_price_ratio(category) if founder_concerns + actors_concerns else None
 			if ratio is None or ratio >= 1.0:
 				continue
-			sellers = needs.goods_category_state[category][0]
 			categories[category] = {"price_depression": 1.0 - ratio, "trade_weights": {
 				trade: trade_hours / totals[trade] for trade, trade_hours in hours[category].items()},
-				"founder_share": founder_share_of_sellers(sellers, self.module.actor_concerns_in(category))}
+				"founder_share": founder_share_of_sellers(founder_concerns + actors_concerns, actors_concerns)}
 		return categories
+
+	def _category_price_ratio(self, category: str) -> Optional[float]:
+		"""The economy's cleared prices for what the category's concerns sell over their long-run prices (the mean over the
+		concerns whose takings are derived from output); None when none is."""
+		needs = self.needs
+		nodes = needs.tree_nodes()
+		factors = [needs.node_output_market_factor(nodes[node_id]) for node_id in needs.nodes_in_category[category]
+		           if needs.concern_baskets_now[node_id] is not None]
+		return sum(factors) / len(factors) if factors else None
 
 	def sectors(self) -> Dict[str, Sector]:
 		"""Everyone hurt this year, by key."""

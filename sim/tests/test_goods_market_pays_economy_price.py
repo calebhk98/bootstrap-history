@@ -50,7 +50,7 @@ class _Economy:
 
 
 def stub_game(partner_makes=(), partner_prices=None):
-    flows = {"sold": {}, "bought": {}, "drawn": {}, "reservation": {}}
+    flows = {"sold": {}, "bought": {}, "drawn": {}}
     game = types.SimpleNamespace(
         economy=_Economy(),
         _price_tables=lambda: ({}, {material: "solved" for material in TABLE_PRICE_PER_UNIT}),
@@ -91,14 +91,14 @@ class TilePriceTests(unittest.TestCase):
         game.economy.opened = False
         self.assertAlmostEqual(market.quote("wheat_kg")["buy_per_tonne"], TABLE_PRICE_PER_UNIT["wheat_kg"] * 1000.0)
 
-    def test_a_good_the_economy_does_not_trade_but_a_technique_makes_costs_what_it_costs_to_make(self):
+    def test_a_good_the_economy_does_not_trade_has_no_price_though_a_technique_makes_it(self):
         _game, market = stub_game()
-        self.assertAlmostEqual(market.quote("alum_kg")["buy_per_tonne"], TABLE_PRICE_PER_UNIT["alum_kg"] * 1000.0)
+        self.assertIsNone(market.quote("alum_kg"))
+        self.assertIsNone(market.price_at_tile_per_tonne("alum_kg"))
 
     def test_the_quote_names_what_the_price_is(self):
         game, market = stub_game()
         self.assertEqual(market.quote("wheat_kg")["price_kind"], "traded")
-        self.assertEqual(market.quote("alum_kg")["price_kind"], "making_cost_table")
         game.economy.opened = False
         self.assertEqual(market.quote("wheat_kg")["price_kind"], "making_cost_table")
 
@@ -173,9 +173,9 @@ class ClimbTests(unittest.TestCase):
         market.note_purchase("founder", "wheat_kg", 50.0)
         self.assertGreater(market.quote("wheat_kg")["buy_per_tonne"], before)
 
-    def test_the_economy_without_a_book_for_the_good_adds_no_climb(self):
+    def test_a_good_the_economy_has_no_book_for_cannot_be_costed(self):
         _game, market = stub_game()
-        self.assertAlmostEqual(market.purchase_cost("alum_kg", 50.0)[1], TABLE_PRICE_PER_UNIT["alum_kg"] * 1000.0)
+        self.assertIsNone(market.purchase_cost("alum_kg", 50.0))
 
 
 class SaleTests(unittest.TestCase):

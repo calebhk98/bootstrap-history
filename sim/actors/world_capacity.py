@@ -21,14 +21,10 @@ class CapacityView:
 		"""Yearly margin gained by growing a concern from `capacity` to `capacity + step`: the takings
 		at the price the larger supply leaves, less the upkeep and wages of the added size."""
 		needs = self.needs
-		base = needs.concern_takings(node_id, self.ramp(opened_year, node_id))  # type: ignore[attr-defined]
-		category = self.nodes[node_id].get("cat")  # type: ignore[attr-defined]
-		if category in self.goods_category_names:  # type: ignore[attr-defined]
-			before = capacity * base * needs.goods_category_factor(category)
-			after = (capacity + step) * base * needs.goods_category_factor_with_entrants(category, step)
-		else:
-			before = base * capacity / (capacity + rivals)
-			after = base * (capacity + step) / (capacity + step + rivals)
+		base = (needs.concern_takings(node_id, self.ramp(opened_year, node_id))  # type: ignore[attr-defined]
+		        * needs.node_output_market_factor(self.nodes[node_id]))  # type: ignore[attr-defined]
+		before = base * capacity / (capacity + rivals)
+		after = base * (capacity + step) / (capacity + step + rivals)
 		return (after - before) - (self.running_cost(node_id, capacity + step) - self.running_cost(node_id, capacity))
 
 	def plant_cost(self, node_id: str, actor: Any, step: float) -> float:

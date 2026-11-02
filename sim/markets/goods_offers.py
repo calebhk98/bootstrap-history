@@ -66,9 +66,10 @@ class GoodsOffers(GoodsImports):
                 * tonnes_per_unit(material))
 
     def _home_prices(self, at_cost=False):
-        """{material: money per unit} the home society's sellers ask at the acting tile: the economy's price
-        where it has a market for the good, the cost of making it (the cost table) where it has none or while
-        it opens. The same object while neither has changed. `at_cost` gives the cost table itself."""
+        """{material: money per unit} the home society's sellers ask at the acting tile: the economy's price, for the
+        goods it has a market for; a good it has none for is absent, not priced at its cost. While the economy opens the
+        cost table answers (the opening is built from it). The same object while neither has changed. `at_cost` gives the
+        cost table itself, for the readers that want what making a good costs."""
         sim = self._sim
         table = sim._material_prices()
         if at_cost:
@@ -79,7 +80,7 @@ class GoodsOffers(GoodsImports):
         held = sim.remembered("home_prices")
         if held is not None and held[0] is table and held[1] is paid:
             return held[2]
-        merged = {material: paid.get(material, cost) for material, cost in table.items()}
+        merged = {material: paid[material] for material in table if material in paid}
         sim.remember("home_prices", (table, paid, merged))
         return merged
 
@@ -139,7 +140,7 @@ class GoodsOffers(GoodsImports):
 
     def household_prices(self):
         """{material: money per unit} households are asked to pay: the economy's price on the acting tile where the
-        home society makes it (its cost of making while the economy opens or has no market for the good), the
+        home society makes it and the economy has a market for it (the cost of making while the economy opens), the
         landed price where only a partner offers it, nothing where no one does. The same object while nothing it
         reads has changed."""
         return self._worked_out_offers()[0]
@@ -159,8 +160,3 @@ class GoodsOffers(GoodsImports):
         """HOME_SELLER when a technique the society holds or can reach makes the material, the
         trading partner's id when only a partner offers it, None when nothing does."""
         return self._worked_out_offers()[1].get(material)
-
-    def commodity_is_unsourced(self, commodity):
-        """Whether no material filed under this commodity has a seller in reach."""
-        sellers = self._worked_out_offers()[1]
-        return not any(material in sellers for material in self._sim._commodity_materials(commodity))

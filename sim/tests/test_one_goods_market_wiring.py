@@ -35,7 +35,7 @@ class Seller:
 
 
 def market_over_flows():
-    flows = {"sold": {}, "bought": {}, "drawn": {}, "reservation": {}}
+    flows = {"sold": {}, "bought": {}, "drawn": {}}
     game = types.SimpleNamespace(_flows=flows, state=types.SimpleNamespace(acting_seat=FOUNDER))
     game._market_flows = lambda: flows
     return GoodsMarket(game)
@@ -94,15 +94,11 @@ class ActorWiringTests(unittest.TestCase):
         shared = ActorWorld.concern_takings(takings_world("ENGINEERING", 1.5), "blast_furnace", 90, rivals=3.0)
         self.assertAlmostEqual(shared, alone / 4.0)
 
-    def test_a_goods_category_takes_the_categorys_factor_in_place_of_a_share_of_rivals(self):
-        world = takings_world("GOODS", 1.5, category_factor=0.25)
-        self.assertAlmostEqual(ActorWorld.concern_takings(world, "kiln", 90, rivals=3.0), 100.0 * 1.5 * 0.25)
 
-
-def takings_world(category, factor, ramp=1.0, category_factor=1.0):
+def takings_world(category, factor, ramp=1.0):
     needs = fake_needs(
         concern_takings=lambda node_id, at_ramp: 100.0 * at_ramp,
-        node_output_market_factor=lambda node: factor, goods_category_factor=lambda cat: category_factor)
+        node_output_market_factor=lambda node: factor)
     return types.SimpleNamespace(needs=needs, goods_category_names=("GOODS",), nodes={"blast_furnace": {"cat": category}, "kiln": {"cat": category}},
                                  ramp=lambda opened_year, node_id=None: ramp)
 

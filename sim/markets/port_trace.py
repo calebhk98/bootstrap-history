@@ -7,7 +7,6 @@ never stops at the tolerance, so a drift that the normal stage would cut short s
 from sim.economy import api as economy_api
 
 from . import port_sites
-from .port_setup import build_setup
 from .port_trace_chained import next_chained_index
 from .port_trace_columns import macro_columns
 from .port_trace_holders import HOLDER_COLUMNS, money_by_holder_columns
@@ -27,8 +26,7 @@ def spin_up_trace(game, years):
     mint paid out net of what it melted, `change` the year's change in the money stock, `metal_held` the metal
     the mint holds at the year's end (economy units). `wage` is the unskilled trade's mean wage that year (economy
     units), `hired_hours` and `idle_hours` the hours employers took and the hours offered that nobody took."""
-    world = game.view("legacy_economy")().world
-    setup = build_setup(world, world.agent_record()["opening"])
+    setup = game.view("agent_opening_setup")()
     economy = economy_api.blank_economy(setup)
     economy_api.begin_spin_up(economy)
     inputs = YearInputs(year=0, population_by_tile={}, working_age_share=setup.working_share,

@@ -65,20 +65,16 @@ class InputsCostTests(unittest.TestCase):
         game = _Game(baskets=baskets(purchases={"ore": 10.0}), economy_prices={"ore": 3.0})
         self.assertAlmostEqual(game.concern_book_inputs_cost("mill"), 10.0 * 0.4 * 3.0)
 
-    def test_an_input_the_economy_lacks_falls_back_to_the_long_run_cost_at_todays_price_level(self):
-        game = _Game(baskets=baskets(purchases={"salt": 10.0}), economy_prices={"ore": 3.0})
-        self.assertAlmostEqual(game.concern_book_inputs_cost("mill"), 10.0 * 0.4 * 4.0 * 2.0)
-
-    def test_an_input_nothing_prices_is_left_out(self):
+    def test_an_input_the_economy_shows_no_price_for_is_left_out(self):
         game = _Game(baskets=baskets(purchases={"air": 10.0, "ore": 1.0}), economy_prices={"ore": 3.0})
         self.assertAlmostEqual(game.concern_book_inputs_cost("mill"), 1.0 * 0.4 * 3.0)
 
     def test_no_baskets_cost_nothing(self):
         self.assertEqual(_Game(baskets=None).concern_book_inputs_cost("mill"), 0.0)
 
-    def test_an_economy_without_prices_still_answers_from_the_long_run_costs(self):
+    def test_an_economy_without_prices_leaves_every_input_out(self):
         game = _Game(baskets=baskets(purchases={"salt": 1.0}), economy_prices=None)
-        self.assertAlmostEqual(game.concern_book_inputs_cost("mill"), 0.4 * 8.0)
+        self.assertEqual(game.concern_book_inputs_cost("mill"), 0.0)
 
 
 if __name__ == "__main__":

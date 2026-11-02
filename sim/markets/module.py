@@ -19,9 +19,6 @@ from .goods_views import GoodsViews
 from .port import EconomyPort
 from .port_world import PortWorld
 
-# the remembered figures a seat switch drops (the clearing's and the household demand's are keyed on what they read)
-_DROPPED_ON_RESET = ("goods_cat_state", "goods_category_ratios", "income_factor", "goods_mkt_op_factor")
-
 
 class Markets(Clearing, Categories, Demand, HouseholdNeeds, Absorption, GoodsViews, AgentViews, Applying, Module):
 
@@ -49,11 +46,6 @@ class Markets(Clearing, Categories, Demand, HouseholdNeeds, Absorption, GoodsVie
 		if remembered is None:
 			remembered = self._caches[key] = {}
 		return remembered
-
-	def seat_bound(self):
-		"""The acting seat's remembered goods-category figures are dropped."""
-		for name in _DROPPED_ON_RESET:
-			self._caches.pop((self.clock.acting_seat, name), None)
 
 	def legacy_agent_economy(self):
 		"""The agent economy's record, where the traders' cargo legs are kept; the port and the foreign trade module write it in place."""

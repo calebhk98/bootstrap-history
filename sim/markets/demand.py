@@ -80,17 +80,6 @@ class Demand:
 		self._set_seat_cache("household_demand", (key, prices, ratios, new_units))
 		return ratios, new_units
 
-	def economy_size_ratio(self):
-		"""Population over the opening's: what demand follows for a commodity the household model does not reach."""
-		# TEMPORARY HEURISTIC: unreached commodities scale one-for-one with population.
-		return float(self.needs.population_total()) / self.opening_population()
-
-	def household_demand_ratio(self, commodity):
-		ratios = self.household_demand_ratios()
-		if commodity in ratios:
-			return ratios[commodity]
-		return self.economy_size_ratio()
-
 	def static_book_basket(self):
 		"""{"prices": {material: opening price in labour hours}, "units": {material: units a year households bought at the
 		opening}, "commodity": {material: its commodity}}. A function of the starting techniques and the civilisation only,
