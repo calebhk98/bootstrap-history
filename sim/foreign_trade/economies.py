@@ -1,10 +1,8 @@
-"""Other economies as participants in the home society's markets: who they are, what they sell and why they refuse.
+"""Other economies as participants in the home society's markets: who they are and why they refuse.
 
 An economy named in the foreign-economies data has its own solved long-run costs (its civilisation file's technologies, wage
-and coin), a population that sizes its market, and a place on the map. For each commodity it keeps a book like the society's
-(capacity, stock, price ratio) and clears it every year together with the home market, so imports cap a home shortage and
-exports lift the price abroad. Prices of both sides are compared in home money: a foreign price in its own coin is worth the
-coin's metal at the home price of that metal.
+and coin), a population that sizes its market, and a place on the map. Its prices and quantities are the agent economy's (its tiles are in it); the figures here are the civilisation file's, in
+home money: a foreign price in its own coin is worth the coin's metal at the home price of that metal.
 
 (needs: foreign_economy_records, civilisation, civilisation_record, partner_own_economy, year, acting_seat, techniques_held,
 material_prices, home_unit_price, household_prices, material_commodity, commodity_record, partner_gate_refusal,
@@ -21,22 +19,29 @@ from . import rules
 class Economies:
 
     def partners(self) -> List[str]:
-        """Every economy enabled for this year, sorted by id: those trading by the partner books and those that are part of
-        the agent economy."""
+        """Every economy enabled for this year, sorted by id. Each is a country of the one agent economy."""
         civilisation = self.needs.civilisation()
         return rules.partner_countries(self.needs.foreign_economy_records(), self.needs.year(), civilisation.get("id"),
                                        civilisation.get("variant_of"))
 
     def partners_in_agent_economy(self) -> List[str]:
-        """The enabled economies whose tiles, people and producers are in the agent economy itself."""
-        inside = rules.agent_economy_ids(self.needs.foreign_economy_records())
-        return [partner for partner in self.partners() if partner in inside]
+        return self.partners()
 
     def foreign_economies(self) -> List[str]:
-        """Economies trading with this society this year by the partner books, sorted by id: the enabled ones that are not
-        themselves in the agent economy."""
-        inside = set(self.partners_in_agent_economy())
-        return [partner for partner in self.partners() if partner not in inside]
+        """Partners outside the agent economy: none, every partner is in it. Readers of this view are dead code."""
+        return []
+
+    def partner_market_book(self, civilization_id: str) -> Dict[str, Dict[str, float]]:
+        return {}
+
+    def partner_book_entry(self, civilization_id: str, commodity: str) -> Optional[Dict[str, float]]:
+        return None
+
+    def foreign_supply_tonnes(self, civilization_id: str, material: str) -> float:
+        return 0.0
+
+    def partner_price_response(self, partner: str, material: str, tonnes: float, landing: bool) -> float:
+        return 1.0
 
     def partner_civ(self, civilization_id: str) -> Dict[str, Any]:
         """The civilisation `civilization_id` as its file gives it (mods applied, checked), loaded once and kept for the

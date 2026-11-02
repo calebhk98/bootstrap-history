@@ -15,11 +15,8 @@ from unittest import mock
 from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 from sim.prices import prices as engine_prices, solve_prices
 from sim.markets.goods_offers import GoodsOffers, HOME_SELLER
-from sim.foreign_trade.constants import FOREIGN_OUTPUT_PER_POPULATION_SHARE
-from sim.foreign_trade.module import ForeignTrade
-from sim.foreign_trade.state import ForeignTradeWorld
 from sim.projects.api import START_CHECKS
-from sim.tests import materials_stand_in, module_harness
+from sim.tests import materials_stand_in
 
 
 def _wage_document():
@@ -208,56 +205,6 @@ class ImportVolumeTests(unittest.TestCase):
 
     def test_a_route_with_no_lift_brings_nothing(self):
         self.assertEqual(self._offers(supply=300.0, lift_in=0.0).import_tonnes_available("cassia_kg"), 0.0)
-
-
-def _Partner(can_make=True, opening=(0.0, 0.0), mined=False, book=None, curated=True, own_population=50.0):
-    """The foreign-trade module over one partner whose facts, chain and opening are written out; the national output of
-    every commodity is 1000 tonnes, stated for 100 people (a curated commodity) or for this society's own population."""
-    class Stubbed(ForeignTrade):
-        def partner_facts(self, civilization_id):
-            return {"solved_materials": frozenset({"ore_kg"})}
-
-        def partner_civ(self, civilization_id):
-            return {"population": 10.0}
-
-        def _can_make(self, civilization_id, material, solved, _seen=None):
-            return can_make
-
-        def foreign_opening(self, civilization_id, commodity, solved):
-            return opening
-
-        def _tracked_mineral(self, commodity):
-            return mined
-    return module_harness.build(Stubbed, world=ForeignTradeWorld(market_book={"partner": book or {}}), views={
-        "material_commodity": lambda material: material,
-        "national_output": lambda commodity: (1000.0, 100.0 if curated else own_population)})
-
-
-class PartnerSupplyTests(unittest.TestCase):
-    """A partner sells no more than it makes or holds."""
-
-    def _supply(self, partner, material="ore_kg"):
-        return partner.foreign_supply_tonnes("partner", material)
-
-    def test_a_good_the_partner_cannot_make_supplies_nothing(self):
-        self.assertEqual(self._supply(_Partner(can_make=False)), 0.0)
-        self.assertEqual(self._supply(_Partner(), material="cobalt_kg"), 0.0)
-
-    def test_an_opened_book_supplies_its_capacity_and_stock(self):
-        book = {"ore_kg": {"capacity_tonnes": 7.0, "stock_tonnes": 3.0}}
-        self.assertEqual(self._supply(_Partner(book=book)), 10.0)
-
-    def test_the_opening_capacity_stands_before_the_book_opens(self):
-        self.assertEqual(self._supply(_Partner(opening=(25.0, 40.0))), 25.0)
-
-    def test_a_mined_good_with_no_deposit_in_its_regions_supplies_nothing(self):
-        self.assertEqual(self._supply(_Partner(mined=True)), 0.0)
-
-    def test_an_input_only_good_follows_the_partners_size_against_the_table_it_is_stated_for(self):
-        self.assertAlmostEqual(self._supply(_Partner()), 1000.0 * 10.0 / 100.0 * FOREIGN_OUTPUT_PER_POPULATION_SHARE)
-
-    def test_a_good_outside_the_reference_table_follows_this_societys_own_size(self):
-        self.assertAlmostEqual(self._supply(_Partner(curated=False)), 1000.0 * 10.0 / 50.0 * FOREIGN_OUTPUT_PER_POPULATION_SHARE)
 
 
 class ProjectNeedsASellerTests(unittest.TestCase):
