@@ -1,6 +1,5 @@
 """Complaints 429, 443, 444: trade facts, fatality risks and goods' service lives are read from data. Stub registries use
-invented trade ids; the shipped trades and service-life files are read as data. That the port hands the economy the risk and
-the lives is test_game_port_and_portfolio_smoke."""
+invented trade ids; the shipped trades and service-life files are read as data."""
 QUICK_TOPIC = True
 
 import json

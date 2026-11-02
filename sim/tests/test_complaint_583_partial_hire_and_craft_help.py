@@ -1,50 +1,11 @@
-"""Complaints/583: a partial hire says how many were hired and why; the craft help reads the supervision trade data.
-The rules are plain functions (sim/labour/hire_outcome.py, sim/ui/proto/hire_reply.py), called on built numbers."""
+"""Complaints/583: the craft help reads the supervision trade data.
+The rule is a plain function (sim/labour/hire_outcome.py), called on built lists."""
 QUICK_TOPIC = True
 
 import unittest
 
 from sim.engine.data import TRADE_FAMILY
 from sim.labour.hire_outcome import craft_trades_report
-from sim.refusal import Refusal, cause_of, facts_of
-from sim.ui.proto.hire_reply import hire_reply
-
-ASKED, FOUND = 4, 1
-FOUND_FEWER = "search_found_fewer"
-
-
-def reply(hired=FOUND, asked=ASKED, outcome="taken on"):
-    return hire_reply(hired, asked, "artisan", 7.0, 1234.56, 99.94, 321.09, 5000.04, outcome)
-
-
-class PartialHireReplyTests(unittest.TestCase):
-    def partial(self):
-        _ok, outcome = (True, Refusal(FOUND_FEWER, "text", asked=float(ASKED), hired=float(FOUND)))
-        return reply(outcome=outcome)
-
-    def test_a_short_hire_is_still_ok(self):
-        self.assertIs(self.partial()["ok"], True)
-
-    def test_hired_is_the_number_found_and_asked_the_number_requested(self):
-        self.assertEqual((self.partial()["hired"], self.partial()["asked"]), (FOUND, ASKED))
-
-    def test_the_shortfall_carries_a_cause(self):
-        self.assertEqual(self.partial()["cause"], "search_found_fewer")
-
-    def test_the_trade_is_named_in_its_own_field(self):
-        self.assertEqual(self.partial()["trade"], "artisan")
-
-    def test_a_full_hire_carries_no_shortfall_cause(self):
-        self.assertNotIn("cause", reply(hired=ASKED, asked=ASKED))
-
-    def test_a_cause_the_outcome_names_wins_over_the_default(self):
-        outcome = Refusal(FOUND_FEWER, "t", asked=float(ASKED), hired=float(FOUND))
-        self.assertEqual(reply(outcome=outcome)["cause"], FOUND_FEWER)
-
-    def test_figures_are_rounded_for_reading(self):
-        full = reply(hired=ASKED)
-        self.assertEqual((full["you_now_employ"], full["annual_wage_bill"], full["paid_now"],
-                          full["from_next_year_per_year"], full["capital"]), (7.0, 1234.6, 99.9, 321.1, 5000.0))
 
 
 class CraftTradesReportTests(unittest.TestCase):

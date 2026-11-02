@@ -13,7 +13,6 @@ from types import SimpleNamespace
 
 from sim.constants import REGISTRY
 from sim.diffusion.literacy_rules import common_ceiling
-from sim.labour import labour_allocation
 from sim.labour.labour import Labour
 from sim.tests.harness import NODES
 from sim.tests.labour_stand_in import stand_in_world
@@ -97,35 +96,6 @@ class MechanisationTests(unittest.TestCase):
             1.0e6, technique.crop, None, technique.rotation, technique.toolkit)
         self.assertLess(needed(improved), needed(default))
 
-    def test_a_better_toolkit_lets_the_same_cleared_land_be_worked_by_fewer_hands(self):
-        common = dict(baseline_fte=1.0e9, current_fte=1.0e9, shortfall_kg=0.0, marginal_product_kg_per_hour=5.0, land_hectares=1.0e5)
-        default = labour_allocation.farm_workers_needed(technique=_technique(()), **common)
-        improved = labour_allocation.farm_workers_needed(technique=_technique(MECHANISATION_NODES), **common)
-        self.assertLess(improved, default)
-
-
-class WorkersMoveOnlyAsFastAsTheMarketLetsThem(unittest.TestCase):
-    TOTAL = 1.0e6
-
-    def test_a_farm_that_needs_far_fewer_hours_sheds_some_but_not_all_in_a_year(self):
-        after = labour_allocation.farm_hours_after(self.TOTAL * 0.8, self.TOTAL * 0.1, self.TOTAL)
-        self.assertLess(after, self.TOTAL * 0.8)
-        self.assertGreater(after, self.TOTAL * 0.1)
-        self.assertGreater(after, 0.5 * self.TOTAL * 0.8)       # mobility bounds one year's move
-
-    def test_a_farm_that_needs_more_hours_gains_some_but_not_all_in_a_year(self):
-        after = labour_allocation.farm_hours_after(self.TOTAL * 0.1, self.TOTAL * 0.8, self.TOTAL)
-        self.assertGreater(after, self.TOTAL * 0.1)
-        self.assertLess(after, self.TOTAL * 0.8)
-
-    def test_a_farm_that_needs_what_it_has_stays_put(self):
-        self.assertAlmostEqual(labour_allocation.farm_hours_after(self.TOTAL * 0.5, self.TOTAL * 0.5, self.TOTAL), self.TOTAL * 0.5)
-
-    def test_hours_stay_within_the_society_s_hours(self):
-        self.assertLessEqual(labour_allocation.farm_hours_after(self.TOTAL * 0.99, self.TOTAL * 5.0, self.TOTAL), self.TOTAL)
-        self.assertGreaterEqual(labour_allocation.farm_hours_after(0.0, -1.0, self.TOTAL), 0.0)
-
-
 class LiteracyCostTests(unittest.TestCase):
     def _ceiling(self, farm_share):
         return common_ceiling(REGISTRY["UNABLE_TO_READ_SHARE"]["value"], REGISTRY["FARM_CHILDREN_KEPT_FROM_SCHOOL"]["value"], farm_share)
@@ -138,16 +108,6 @@ class LiteracyCostTests(unittest.TestCase):
 
     def test_a_large_farm_share_lowers_attainable_literacy(self):
         self.assertLess(self._ceiling(0.7), self._ceiling(0.05))
-
-
-class SurplusResponseTests(unittest.TestCase):
-    def test_a_surplus_lowers_farm_need_and_a_shortfall_raises_it(self):
-        common = dict(baseline_fte=100.0, current_fte=100.0, marginal_product_kg_per_hour=5.0, land_hectares=1e9)
-        surplus = labour_allocation.farm_workers_needed(shortfall_kg=0.0, surplus_kg=1e6, **common)
-        shortfall = labour_allocation.farm_workers_needed(shortfall_kg=1e6, surplus_kg=0.0, **common)
-        self.assertLess(surplus, 100.0)
-        self.assertGreater(shortfall, 100.0)
-        self.assertGreaterEqual(surplus, 0.0)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 """Stock bought from a partner is charged what it was quoted. The quote handlers (`quote_living_stock`, `quote_smuggled_stock`) and the
 settlements (`BuyStock`, `SmuggleStock`, applied by the living-stock module) read one terms dict, so the figure the quote shows is the figure the
-buyer pays, caught or not. The module is built by the harness, the screen runs on a stand-in game; the dispatcher-wide table is test_quote_matches_charge_scenario."""
+buyer pays, caught or not. The module is built by the harness, the screen runs on a stand-in game."""
 QUICK_TOPIC = True
 
 from types import SimpleNamespace
