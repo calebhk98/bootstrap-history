@@ -162,10 +162,10 @@ class WagesMixin(WageLedgerMixin):
         expensive to keep, so a large staff of the people you actually need is a
         real commitment rather than a number that drifts upward on its own.
 
-        The rate is the market's wage for the trade, the same for every employer; leaning on a trade's local
-        supply shows only in the fee `hire` charged to bring someone on.
+        The rate is the economy's wage for the trade, the same for every employer. The labour core pays it in
+        the year's clearing (sim/markets/port_staff.py); this figure is what the staff the core hired will cost.
         """
-        return wage_bill_of(self.employed_by_trade(), self.staff_pay)
+        return wage_bill_of(self.employed_by_trade(), self.labour_market.quote_annual)
 
     HOUSING_PRESSURE_START_OCCUPANCY = declare(
         "HOUSING_PRESSURE_START_OCCUPANCY", 0.75, kind="temporary_heuristic",

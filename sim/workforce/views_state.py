@@ -12,6 +12,10 @@ class ViewsState:
                 "manumitted_total": seat.manumitted_total, "reserve_craftsmen": seat.reserve_craftsmen,
                 "reserve_scholars": seat.reserve_scholars}
 
+    def staff_wanted(self):
+        """{trade: people} the acting seat has posted in the labour core: the standing bid its staff are hired through."""
+        return self.seat.staff_wanted
+
     def staff_on_all_books(self, trade):
         """People of `trade` on the payroll of every seat together."""
         return sum(self.seat_of(seat_id).employees.get(trade, 0.0) for seat_id in self.needs.seat_list()["joined"])
@@ -32,10 +36,9 @@ class ViewsState:
                 "director_hours_spent": seat.director_hours_spent_founder}
 
     def pay_book(self):
-        """The acting seat's pay books: wages paid in advance, wages its own work earned, the pay last settled by trade."""
+        """The acting seat's pay books: wages its own work earned and the living cost paid."""
         seat = self.seat
-        return {"prepaid": seat.wages_prepaid, "earned": seat.wages_earned, "paid": seat.wages_paid, "pay_held": seat.staff_pay_held,
-                "living_cost_paid": seat.living_cost_paid}
+        return {"paid_in_clearing": self.labour.wage_bill(), "earned": seat.wages_earned, "paid": seat.wages_paid, "living_cost_paid": seat.living_cost_paid}
 
     def trade_schools(self):
         """{trade: training seats the acting seat has founded}."""

@@ -5,17 +5,13 @@ holds no wage arithmetic. It asks this market what an hour of a trade costs,
 hires through it, and releases through it. The wage is the economy's
 wage for the trade (labour_wages.py reads it; before the economy opens, the opening schedule with
 the cost-of-living factors and the price and wage indices). The record of recent hiring pressure
-lives here: it sets the fee for finding people and how many a search finds, not the wage, and
-it is stored on the household state so a save carries it.
+lives here: it is read by the groups' wage rule only, and stored on the household state so a save carries it.
 """
-import math
-
 from sim.constants import declare
 
 from . import trade_data
 from .wage_factors import annual_wage, housing_factor
-from .market.clearing import (FIRM_LABOUR_SUPPLY_ELASTICITY, MATCHING_EFFICIENCY_PER_YEAR,
-                              MATCHING_SEARCHER_ELASTICITY)
+from .market.clearing import FIRM_LABOUR_SUPPLY_ELASTICITY
 
 
 class LabourMarket:
@@ -119,22 +115,6 @@ class LabourMarket:
         been leaned on against the people the local market has of it."""
         return self._price_factor_from(self.pressure(trade), self._labour.market_supply(trade))
 
-    def price_factor_after(self, trade, people):
-        """The price factor the instant `people` more are on the books: the hire being weighed, not
-        the market as it stands. Adds them to the household's headcount of the trade to read the
-        supply they widen, then takes them off again."""
-        people = max(0.0, people)
-        if people <= 0:
-            return self.price_factor(trade)
-        before = self._labour.employed(trade)
-        self._labour.set_employed(trade, before + people)
-        try:
-            supply_after = self._labour.market_supply(trade)
-        finally:
-            self._labour.set_employed(trade, before)
-        pressure_after = self.pressure(trade) + people * self._world.HOURS_PER_PERSON_YEAR
-        return self._price_factor_from(pressure_after, supply_after)
-
     # ---- the wage ----
 
     def cost_factors(self, trade):
@@ -193,7 +173,7 @@ class LabourMarket:
     def quote_annual(self, trade, people=0.0, employer=None, pay_premium=0.0):
         """Money one person-year of a trade costs `employer` now: the economy's wage for the trade, the same for
         every employer and every number taken on (`people` and `employer` are accepted for callers that name them;
-        the fee for finding them is `hire_cost`)."""
+        a hire is a standing bid in the labour core, sim/markets/port_staff.py)."""
         return self._annual(trade) * (1.0 + pay_premium)
 
     def quote_annual_in(self, trade, country):
@@ -213,37 +193,6 @@ class LabourMarket:
         world = self._world
         people = hours / world.HOURS_PER_PERSON_YEAR
         return self.quote_annual(trade, people, employer, pay_premium) / world.HOURS_PER_PERSON_YEAR
-
-    def recruitable(self, trade, people, pay_premium=0.0):
-        """How many of `people` an employer can expect to find this year in the local market: the
-        matching form of the market core, with searchers the local hours not already taken."""
-        people = max(0.0, people)
-        if people <= 0.0:
-            return 0.0
-        searchers = max(0.0, self._labour.market_supply(trade) - self.pressure(trade))
-        vacancies = people * self._world.HOURS_PER_PERSON_YEAR
-        rate = (MATCHING_EFFICIENCY_PER_YEAR * (1.0 + pay_premium) ** FIRM_LABOUR_SUPPLY_ELASTICITY
-                * (searchers / vacancies) ** MATCHING_SEARCHER_ELASTICITY)
-        return min(people, people * (1.0 - math.exp(-rate)))
-
-    def hire_cost(self, trade, people, pay_premium=0.0):
-        """The finder's fee for taking on `people` of a trade: the first year's wage at the table
-        rate, which is what payroll charges once they are in. The first person is found at the
-        going scarcity; each further one costs more because those before them have thinned the
-        pool, so the fee uses the mean of the scarcity now and after all but the last are taken."""
-        if people <= 0:
-            return 0.0
-        scarcity = 0.5 * (self.price_factor(trade) + self.price_factor_after(trade, people - 1.0))
-        return people * self.unscarce_annual(trade) * scarcity * (1.0 + pay_premium)
-
-    def whole_recruits(self, trade, people, pay_premium=0.0):
-        """Whole people of the `people` asked for that a search finds this year: the matching
-        outcome rounded to nearest, never fewer than one so a single hire is never refused for
-        search alone (its scarcity shows in the price)."""
-        if people <= 0:
-            return 0
-        found = self.recruitable(trade, people, pay_premium)
-        return int(min(people, max(1, math.floor(found + 0.5))))
 
     def commission_cost(self, trade, hours, premium):
         """What a one-off job of `hours` costs: the hour the market quotes, times a shop's `premium`."""

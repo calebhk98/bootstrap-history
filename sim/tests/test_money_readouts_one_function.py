@@ -60,9 +60,9 @@ check("train charges what the quote states and repeats the same wage bill",
 
 # --- the state's sustainable debt is the method's figure, rounded as `money` rounds it.
 debtor = Game(
-    spend_last_year=0.0, capital=-50000.0, wages_prepaid=0.0, debt_interest_rate=lambda: 0.05, revenue=lambda: 100.0, upkeep=lambda: 10.0,
+    spend_last_year=0.0, capital=-50000.0, debt_interest_rate=lambda: 0.05, revenue=lambda: 100.0, upkeep=lambda: 10.0,
     recurring_living_cost=lambda revenue, upkeep: 20.0, mine_operating_cost=lambda: 0.0, recurring_net=lambda: 70.0,
-    sustainable_debt=lambda: 1234.567, view=lambda name: (lambda: {"prepaid": 0.0} if name == "pay_book" else 0.0))
+    sustainable_debt=lambda: 1234.567, view=lambda name: (lambda: {"paid_in_clearing": 0.0} if name == "pay_book" else 0.0))
 check("state reads sustainable_debt from the sim method, rounded to one place",
       _agent_state_spend_and_net(debtor)["sustainable_debt"] == 1234.6)
 

@@ -9,7 +9,7 @@ one place. Complaint 556.
 
 
 class StaffBookMixin:
-    """Methods of Labour: the founder's payroll and the reservations."""
+    """Methods of Labour: the founder's staff (what the labour core hired for the household) and the reservations."""
 
     def employed(self, trade):
         """People of one trade on the founder's books."""
@@ -23,9 +23,20 @@ class StaffBookMixin:
         """Everyone on the founder's books."""
         return sum(self._world.workforce.employees.values())
 
+    def staff_posting(self):
+        """{trade: people} the founder's household has posted in the labour core: the places its staff are hired into."""
+        return dict(self._world.workforce.staff_wanted)
+
     def set_employed(self, trade, people):
         """Put the founder's head count of a trade at `people`; a count of nothing leaves the trade off the books."""
-        employees = self._world.workforce.employees
+        workforce = self._world.workforce
+        employees = workforce.employees
+        if people != employees.get(trade, 0.0):    # a change made outside the clearing moves the standing bid with it
+            wanted = max(0.0, workforce.staff_wanted.get(trade, 0.0) + people - employees.get(trade, 0.0))
+            if wanted:
+                workforce.staff_wanted[trade] = wanted
+            else:
+                workforce.staff_wanted.pop(trade, None)
         if people:
             employees[trade] = people
         else:

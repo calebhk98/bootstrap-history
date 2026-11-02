@@ -1,18 +1,15 @@
 """The workforce module's yearly staff step: attrition, wage affordability and keeping concerns staffed.
 
 It runs as the `staff` phase of each seat's year."""
-from sim.agents.api import edges
 from sim.labour.api import scholar_target
-from sim.ledger.api import PayEdge
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 from sim.world import demography
 
 from .constants import (AUTO_HIRE_ARTISAN_APPROACH_RATE, AUTO_HIRE_CREDIT_ROOM_SHARE, AUTO_HIRE_SCHOLAR_APPROACH_RATE,
                         AUTO_HIRE_SCHOLAR_EXTRA_SHARE, AUTO_HIRE_SLAVE_CRAFT_CREDIT, DIRECTORS_EXTRA_APPROACH_RATE,
                         TRADE_REPLACEMENT_AFFORDABILITY_YEARS, TRADE_REPLACEMENT_TARGET_HEADCOUNT)
-from .payroll_trim import payroll_means
-from .staff_phase_rules import approach, artisan_goal, can_afford_replacement, craft_headcount, directors_next, has_room_to_hire, scholar_goal
-from .staff_replacement import GROW_STANCE, REPLACE_STANCE, hire_stance, replacement_wanted
+from .staff_phase_rules import approach, artisan_goal, craft_headcount, directors_next, has_room_to_hire, scholar_goal
+from .staff_replacement import GROW_STANCE, hire_stance, replacement_wanted
 
 
 class StaffYear:
@@ -31,12 +28,6 @@ class StaffYear:
         #    change the staff are hire, fire, train, buy and manumit.
         sc_cap, ar_cap, di_cap = self.labour.staff_capacity()
         attrition_rate = demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
-        # PEOPLE ARE WHOLE: each person on the books is rolled individually against the game's dice (trades sorted so
-        # draws are reproducible): they die at the working-age mortality rate, or take a better offer at the
-        # rate the market moves workers off a lower payer, which is none when pay is at the going wage.
-        self.labour.settle_staff_pay()
-        _died, _left = self.labour.roll_staff_year(self.needs.game_random())
-        _lost = {trade: _died.get(trade, 0) + _left.get(trade, 0) for trade in set(_died) | set(_left)}
         # Rehire a specialist foreman an open concern just lost, before the
         # staffing rule closes the concern.
         if self.needs.founder()["policy"].get("auto_replace_foreman", False):
@@ -44,47 +35,7 @@ class StaffYear:
         # Hire for the concerns named with `keep <id> staffed`, before the closure rule.
         self.labour.keep_flagged_concerns_staffed()
         self.labour.resync_pools()
-        # AND SAY SO, once the rehiring has had its chance: a loss that still leaves a running concern short is
-        # what the staffing rule is about to close.
-        if _lost:
-            for cause, counts in (("death", _died), ("better offers", _left)):
-                self.labour.log_staff_lost(cause, {trade_id: count for trade_id, count in counts.items() if count})
-        # A HOUSEHOLD THAT CANNOT PAY ITS PEOPLE LETS THEM GO. This is the whole
-        # answer to "you built it from nothing, so you must be able to rebuild
-        # it": a payroll a household cannot carry and never reduces keeps a
-        # ruined run frozen indefinitely, worse than shedding staff, living
-        # cheaply and starting again.
-        #
-        # THE TRIGGER MUST BE "CANNOT PAY AFTER CREDIT", NOT `capital < 0`:
-        # being overdrawn is not being unable to pay. A household with credit
-        # left borrows and makes payroll; that is what credit is for, and
-        # enforce_credit_limit already models the point where it runs out.
-        # Letting staff go the first year capital dips a denarius below zero,
-        # with the lender still willing, is not what an enterprise does.
-        #
-        # THE GAP BEING CLOSED MUST EXCLUDE living_cost()'S OWN WAGE BILL:
-        # living_cost() INCLUDES the wage bill, so measuring the deficit
-        # directly against it would close the payroll PLUS the founder's own
-        # food, rent and appearances - firing people cannot buy your own
-        # dinner. Whenever base living exceeds revenue, which it does in
-        # every early game, that would run the shedding loop off the end of
-        # the staff list and empty it.
-        #
-        # The honest rule is that your people are paid out of what is left after
-        # everything else, INCLUDING what somebody will still lend you, and you
-        # shed only the part of the payroll that will not cover.
-        payroll = self.labour.wage_bill()
-        other = (self.needs.upkeep() + (self.needs.living_cost() - payroll)
-                 + self.needs.mine_operating_cost())
-        can_pay = payroll_means(self.needs.revenue_estimate(), other, self.needs.acting_balance(), self.needs.credit_limit())
-        # NOT GATED BY A POLICY, and this is the one automatic thing that is not.
-        # A policy switch is for something the game decides FOR you - who to
-        # hire, what to mothball - and every one of those is yours to turn off.
-        # People leaving a household that has no money and no credit to pay them
-        # is not a decision the game is making on your behalf, it is the world
-        # answering one you already made, the same as the arrears bleed below.
-        # The `policy` reply says so in as many words.
-        self.shed_unpayable_staff(payroll, can_pay)
+        # Nobody dies or leaves the household's staff here: the labour core fills the standing bid each clearing.
         # NOT `capital > 0`: gating hiring on a strictly positive balance
         # creates a catch-22, where a household in arrears could never take
         # on the people whose work is the only way out of arrears. A run
@@ -97,9 +48,6 @@ class StaffYear:
         _hire_room = has_room_to_hire(self.needs.acting_balance(), self.needs.credit_limit(), AUTO_HIRE_CREDIT_ROOM_SHARE)
         _hire_mode = self.needs.founder()["policy"].get("auto_hire", not self.needs.automation()["manual"])
         _hire_stance = hire_stance(_hire_mode, _hire_room)
-        if _hire_stance == REPLACE_STANCE:
-            self.replace_lost_staff(_lost)
-            self.labour.resync_pools()
         if _hire_stance == GROW_STANCE:
             # Scaled by the SAME affordability figure staff_capacity() just
             # used for sc_cap/ar_cap (see the comment there): supervision-room
@@ -189,13 +137,8 @@ class StaffYear:
                                           TRADE_REPLACEMENT_TARGET_HEADCOUNT)
                 if want is None:
                     continue
-                short = want - have
-                if short > 0.02 and can_afford_replacement(self.needs.acting_balance(), self.labour.market.quote_annual(trade_id),
-                                                           TRADE_REPLACEMENT_AFFORDABILITY_YEARS):
-                    _before = self.needs.acting_balance()
-                    self.labour.set_employed(trade_id, have + short)
-                    self.needs.send(PayEdge(edges.EDGE_WORKERS, short * self.labour.market.quote_annual(trade_id), "wages advanced for replacement staff"))
-                    self.needs.send(RecordAutomation("auto_hire", "replace", "%.1f %s" % (short, trade_id), "something draws on the trade and %.1f are held against a target of %.1f" % (have, want), _before))
+                if want - have > 0.02:
+                    _grow_to(trade_id, want)
             self.labour.resync_pools()
         self.labour.hold_staff_reserve()
         # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY:

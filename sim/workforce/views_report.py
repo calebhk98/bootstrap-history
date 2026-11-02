@@ -57,9 +57,6 @@ class ReportViews:
 
 	# ---- a trade ----
 
-	def market_supply_split(self, trade):
-		return self.labour.market_supply_split(trade)
-
 	def hours_reserved(self, trade):
 		return self.labour.hours_reserved(trade)
 

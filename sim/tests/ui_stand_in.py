@@ -165,7 +165,7 @@ LABOUR_METHOD_OF_VIEW = {
     "train_check": "train_check", "trainee_wage_bill": "trainee_wage_bill", "work_for_wages_dry_run": "work_for_wages_dry_run",
     "hours_you_can_call_on": "hours_you_can_call_on", "literacy_capacity": "literate_capacity", "market_supply": "market_supply",
     "trade_available": "trade_available", "base_annual_wage": "base_annual_wage", "wage": "wage_per_hour",
-    "market_supply_split": "market_supply_split", "hours_reserved": "hours_reserved",
+    "hours_reserved": "hours_reserved",
     "trade_headcount_pending": "trade_headcount_pending", "literacy_factor": "literacy_factor",
     "relocation_quote": "relocation_quote", "slave_quote": "slave_quote",
 }

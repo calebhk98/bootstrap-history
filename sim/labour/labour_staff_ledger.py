@@ -110,10 +110,9 @@ class StaffLedgerMixin:
             short = min(short, max(0, int(self.household_room() + 1e-9)))
             if short <= 0:
                 return 0
-        before = self.employed(trade)
         hired, _why = self.hire(trade, short)
-        found = int(round(self.employed(trade) - before))
-        if not hired or found <= 0:
+        found = int(round(short))
+        if not hired:
             return 0
         self._world.send(RecordEvent.of("policy_hire", "%s: you hire %d %s%s to keep your concerns supervised"
             % (label, found, trade, "" if found == 1 else "s"), policy=label, trade=trade, count=found))

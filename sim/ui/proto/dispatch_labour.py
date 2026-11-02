@@ -174,7 +174,6 @@ def _cmd_labour(sim, nodes, cmd, ended):
         # THE PRICE YOU ACTUALLY PAY, not the table price: leaning on a
         # trade's local supply bids it up, and the premium has to appear
         # here, not only in the bill.
-        _lpf = sim.view("labour_market")().price_factor(trade)
         entry = {"trade": trade,
              "a_year_of_one": round(sim.view("labour_market")().quote_annual(trade), 0),
              "you_employ": round(sim.view("staff")()["employees"].get(trade, 0.0), 2)}
@@ -183,7 +182,6 @@ def _cmd_labour(sim, nodes, cmd, ended):
                 "base_for_skill_and_difficulty": round(sim.view("base_annual_wage")[trade], 2),
                 **{factor_key: round(value, 3) for factor_key, value in sim.view("labour_market")().cost_factors(trade).items()},
                 "demographic_scarcity": round(sim.view("wage_index")(), 3),
-                "local_trade_scarcity": round(_lpf, 3),
                 "society_price_level": round(sim.view("price_index")(), 3),
             }
         # SAME EXPLANATION AS THE FULL LIST'S, for whoever asks about
@@ -210,28 +208,11 @@ def _cmd_labour(sim, nodes, cmd, ended):
             entry["what_widens_it"] = ("printing, paper, schools and academies - "
                                    "they raise how many people here can "
                                    "read, and this ceiling rises with it")
-        if _lpf > 1.005:
-            entry["dearer_than_usual_by"] = "%d%%" % ((_lpf - 1.0) * 100)
-            # "HERE" IS ONE TOWN, NOT THE COUNTRY. Reading this as a claim
-            # about the whole of Rome or Han China makes the game read as
-            # absurd, so this line has to be clear it is not that. See the
-            # population command for the country-wide figure this
-            # household's own reach is being measured against.
-            entry["because"] = ("you have taken on a large share of the %ss "
-                            "within this household's reach - one town's "
-                            "labour market, not the whole country; the "
-                            "population command shows how the two "
-                            "compare. Teaching more of the trade, or "
-                            "anything that widens the supply, brings it "
-                            "back down" % trade)
         if long:
             entry.update({"kind": trade_family(trade),
                       "wage_per_hour": round(sim.view("labour_market")().in_current_money(sim.view("wage")[trade]), 3),
-                      # SPLIT, because the total includes your own people
-                      # and calling all of it "the market" made hiring look
-                      # like it created smiths out of nothing.
-                      "hours_the_market_can_supply": round(sim.view("market_supply_split")[trade][0], 0),
-                      "hours_your_own_people_add": round(sim.view("market_supply_split")[trade][1], 0),
+                      "hours_the_labour_market_offers": round(sim.view("market_supply")[trade], 0),
+                      "places_posted_for_you": round(sim.view("staff_wanted")().get(trade, 0.0), 2),
                       # AND THE SECOND CHANNEL: there are two distinct
                       # capacities, who you can HIRE here and what an
                       # outside shop will take on at a premium, and both
@@ -255,49 +236,6 @@ def _cmd_labour(sim, nodes, cmd, ended):
                                 "the ones they have taught since" % trade)
                                if trade in sim.view("trade_spread")()["created"]
                                else TRADE_NOTES.get(trade, ""))})
-            # THE HIRE YOU ARE CONTEMPLATING, NOT THE MARKET AS IT STANDS.
-            # a_year_of_one above is true the instant it is quoted and can
-            # be false one command later: hiring is what moves
-            # labour market price_factor, and wage_bill charges the NEW factor
-            # to every head of the trade you then have, not only the one
-            # you added, so the standing wage bill after hiring can be far
-            # higher than "a year of one" quoted before the hire. See
-            # labour market price_factor_after's own docstring for the
-            # full account; this is that forecast, priced and put on the
-            # one screen a player actually reads before committing.
-            if sim.view("trade_available")[trade]:
-                _lpf_after = sim.view("labour_market")().price_factor_after(trade, 1.0)
-                _rate_after = round(
-                    sim.view("labour_market")().unscarce_annual(trade) * _lpf_after, 0)
-                # ALWAYS SHOWN, QUIETLY: this is the number the task is
-                # actually about, and it belongs on the screen whether or
-                # not the move is large enough to also earn the banner
-                # below.
-                entry["a_year_of_one_after_you_hire_one"] = _rate_after
-                # THE BANNER IS FOR SCARCITY, NOT ARITHMETIC. One more
-                # hire measurably moves the price of almost any trade in
-                # a town this size - labourer's base pool is roughly a
-                # dozen person-years, so even it crosses a 0.5% move from
-                # a single hire. Flagging that every time would be a
-                # warning nobody reads by the tenth trade. 5% (the same
-                # bound `labour_pressure` itself treats as worth a name,
-                # see labour market price_factor's own note on what "roughly
-                # doubles the price at the whole of it" means) is where a
-                # single hire stops being noise and starts being the
-                # reason your wage bill actually moved - true of a rare,
-                # thin-market trade and false of a common one like
-                # labourer or smith.
-                if _lpf_after > 1.05:
-                    _have = sim.view("staff")()["employees"].get(trade, 0.0)
-                    entry["hiring_moves_the_price"] = True
-                    # NOT JUST THE NEW HIRE. The whole point is that this
-                    # rate applies to everyone you already have too, the
-                    # instant you take one more on - so the bill, not
-                    # only the per-head rate, is what has to be shown.
-                    entry["wage_bill_for_this_trade_now"] = round(
-                        _have * entry["a_year_of_one"], 0)
-                    entry["wage_bill_for_this_trade_after_hiring_one_more"] = round(
-                        (_have + 1.0) * _rate_after, 0)
         return entry
     if one:
         entry = row(one, long=True)
@@ -312,7 +250,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
     # supply: 0 hours" - a direct contradiction between the two screens.
     # It is every trade there is actually somebody here to hire.
     hirable = sorted(trade for trade in WAGES
-                     if sim.view("trade_available")[trade] and sim.view("market_supply_split")[trade][0] > 0)
+                     if sim.view("trade_available")[trade] and sim.view("market_supply")[trade] > 0)
     taught_only = sorted(trade for trade in WAGES
                          if sim.view("trade_available")[trade] and trade not in hirable)
     absent = sorted(trade for trade in WAGES if not sim.view("trade_available")[trade])
@@ -406,10 +344,7 @@ def _cmd_hire(sim, nodes, cmd, ended):
     quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
-    wages_before = sim.view("wage_bill")()
     trade_id = str(cmd.get("trade")).lower()
-    headcount_before = sim.view("staff")()["employees"].get(trade_id, 0.0)
-    _count, fee_paid, _refusal = sim.view("hire_check")(cmd.get("trade"), quantity)
     hired, err = sim.send(ui_port.HireStaff(cmd.get("trade"), quantity))
     if not hired:
         return {"ok": False, "error": err}
@@ -421,9 +356,8 @@ def _cmd_hire(sim, nodes, cmd, ended):
     # using it here rather than rebuilding one from cmd["n"] keeps the log
     # honest about what actually happened, not just what was asked for.
     sim.send(RecordEvent.of("hire_ordered", err or ("hired %s %s" % (cmd.get("n"), cmd.get("trade")))))
-    hired_count = round(sim.view("staff")()["employees"].get(trade_id, 0.0) - headcount_before)
-    return hire_reply(hired_count, quantity, cmd.get("trade"), sim.view("staff")()["employees"].get(trade_id, 0.0), sim.view("wage_bill")(),
-                      fee_paid, sim.view("wage_bill")() - wages_before, sim.view("acting_balance")(), err)
+    return hire_reply(quantity, cmd.get("trade"), sim.view("staff")()["employees"].get(trade_id, 0.0),
+                      sim.view("staff_wanted")().get(trade_id, 0.0), sim.view("wage_bill")(), err)
 
 
 
@@ -439,7 +373,7 @@ def _cmd_fire(sim, nodes, cmd, ended):
     fired, err = sim.send(ui_port.FireStaff(cmd.get("trade"), quantity))
     if not fired:
         return {"ok": False, "error": err}
-    advance_credit = min(sim.view("living_cost")(), sim.view("pay_book")()["prepaid"])
+    advance_credit = min(sim.view("living_cost")(), sim.view("pay_book")()["paid_in_clearing"])
     # Same reasoning as `hire` above: `err` here is fire()'s own success
     # message, which says exactly what happened - staff let go, an
     # apprenticeship cancelled, or both - and cmd["n"] alone would not.

@@ -119,10 +119,10 @@ class HoursYear(unittest.TestCase):
 
 
 class LivingCost(unittest.TestCase):
-    def test_settling_the_living_cost_uses_up_the_advance_and_adds_the_bill_to_what_was_paid(self):
-        seat = WorkforceSeat(wages_prepaid=20.0, living_cost_paid=100.0)
+    def test_settling_the_living_cost_adds_the_bill_to_what_was_paid(self):
+        seat = WorkforceSeat(living_cost_paid=100.0)
         module_harness.build(Workforce, seat=seat, views={}).settle_living_cost(SettleLivingCost(50.0))
-        self.assertEqual((seat.wages_prepaid, seat.living_cost_paid), (0.0, 150.0))
+        self.assertEqual(seat.living_cost_paid, 150.0)
 
 
 class StandingPolicyRules(unittest.TestCase):

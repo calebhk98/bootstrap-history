@@ -29,8 +29,8 @@ class WorkforceSeat:
     training: List[List[Any]] = field(default_factory=list)
     trade_schools: Optional[int] = None
     worker_housing_places: Optional[int] = None
-    # yearly pay per person by trade as last settled; follows the market while keep_pay_at_market is on
-    staff_pay_held: Dict[str, float] = field(default_factory=dict)
+    # the standing bid in the labour core: people wanted by trade (the places `hire` posts); `employees` is what the core hired last clearing
+    staff_wanted: Dict[str, float] = field(default_factory=dict)
     # the tile the household chose to operate from (None: the nation's default tile)
     base_tile: Optional[str] = None
     # how far the household's buying has bid up the people market; fades each year
@@ -59,7 +59,6 @@ class WorkforceSeat:
     director_hours_spent_founder: float = 0.0
     # ---- pay ----
     wages_paid: float = 0.0
-    wages_prepaid: float = 0.0
     wages_earned: Optional[float] = None
     living_cost_paid: float = 0.0
     said_deputies: int = 0

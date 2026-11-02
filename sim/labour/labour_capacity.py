@@ -361,7 +361,7 @@ class CapacityMixin:
         workforce = self._world.workforce
         pending = sum(row[3] for row in workforce.training
                       if len(row) > 2 and row[2] == trade)
-        return self.employed(trade) + pending
+        return max(self.employed(trade), self._world.workforce.staff_wanted.get(trade, 0.0)) + pending
 
     # What each of these adds to the CEILING on people, taken from
     # staff_capacity below so the advice and the arithmetic cannot drift apart.

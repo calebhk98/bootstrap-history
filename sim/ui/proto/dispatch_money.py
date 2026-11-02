@@ -316,7 +316,7 @@ def _cmd_money(sim, nodes, cmd, ended):
     # The living cost is the one the household pays once the dependants its income cannot carry are shed, as
     # net_per_year counts it.
     _living = sim.view("recurring_living_cost")(sim.view("revenue_estimate")(), sim.view("upkeep")())
-    _prepaid = min(_living, sim.view("pay_book")()["prepaid"])
+    _prepaid = min(_living, sim.view("pay_book")()["paid_in_clearing"])
     fixed = (sim.view("upkeep")() + _living - _prepaid
              + sim.view("mine_operating_cost")())
     _ramp = sim.view("still_ramping")()

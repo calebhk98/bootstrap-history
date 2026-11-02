@@ -27,7 +27,7 @@ from .types import AgentId, CurrencySpec, Loan, LoanRequest, TileId, TradeId
 # the record's fields whose annotation names an AgentId (a test reads the source and holds this list to it)
 AGENT_KEYED_FIELDS = ("cohorts", "producers", "merchants", "remembered_defaults", "credit_losses", "loss_rates", "losses_seen", "property_income",
                       "expansion_runs", "worn_runs", "titles", "bondage", "lent_by_borrower", "credit_granted", "banks", "shares",
-                      "last_dividends", "capital", "bonded_held")
+                      "last_dividends", "capital", "bonded_held", "hours_hired_by_employer")
 
 # the stores `to_record` writes sorted by key, and so a load reads back in that order
 SAVED_SORTED_FIELDS = ("cohorts", "producers", "merchants", "titles", "tenancies", "bondage", "tax_history", "banks", "shares",
@@ -96,6 +96,7 @@ class EconomyRecord:
     tax_farms: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # form -> this year's farmer and price; empty between years
     margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row the expected price stood above the entry price
     hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
+    hours_hired_by_employer: Dict[AgentId, Dict[TradeId, float]] = field(default_factory=dict)   # employer -> trade -> hours the last clearing hired for it
     hours_hired_by_others: Dict[str, float] = field(default_factory=dict)   # labour market_key -> hours hired last year by employers that are not producers (hours_hired_by_others.py)
     hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
     sold_share_expected: Dict[str, float] = field(default_factory=dict)  # labour market_key -> share of offered hours households expect to sell, smoothed over the years (household_work_year.py)

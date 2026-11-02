@@ -68,7 +68,6 @@ class StaffControlsMixin:
         hired, reply = self.hire(trade, count)
         if hired or getattr(reply, "cause", None) != "household_room":
             return hired, reply
-        found = float(self.labour_market.whole_recruits(trade, count, 0.0))
-        if not self.buy_room_for(found, self.labour_market.hire_cost(trade, found, 0.0), label):
+        if not self.buy_room_for(float(count), count * self.labour_market.quote_annual(trade), label):
             return hired, reply
         return self.hire(trade, count)

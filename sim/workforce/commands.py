@@ -20,6 +20,13 @@ class SetEmployed(Command):
 
 
 @dataclass(frozen=True)
+class StaffArrived(Command):
+	"""The acting seat's staff in `trade` are the `people` the labour core's clearing hired for it; the standing bid stays."""
+	trade: str
+	people: float
+
+
+@dataclass(frozen=True)
 class NoteTradeSpread(Command):
 	"""The acting seat's record of a taught trade: the year it was first seen taught (`introduced_year`, when
 	given) and whether it has become endemic to the society (`endemic`, when true)."""
@@ -53,18 +60,6 @@ class ReleaseStaff(Command):
 	seat_id: str
 	trade: str
 	people: float
-
-
-@dataclass(frozen=True)
-class AllocateFarmWorkforce(Command):
-	"""The society's farm workforce for a year is sized for a people of `adult_equivalent_population`, the year's farming
-	technique is chosen and the farm's hours needed are set. Answers the full-time equivalents on the farm."""
-	adult_equivalent_population: float
-
-
-@dataclass(frozen=True)
-class ApplyLandClearing(Command):
-	"""Hands beyond what the farm can crop spent the year clearing: the farm area grows by what they cleared."""
 
 
 @dataclass(frozen=True)

@@ -75,11 +75,11 @@ def _quote_hire(sim, nodes, cmd):
         return {"ok": False, "error": refusal}
     per_year = sim.view("labour_market")().quote_annual(trade, count) * count
     return {"ok": True, "what": "hire", "trade": trade, "people": count,
-            "paid_now": round(fee, 1),
+            "first_year_wages_at_stake": round(fee, 1),
             "from_next_year_per_year": round(per_year, 1),
             "you_have": round(sim.view("acting_balance")(), 1),
-            "note": "Hiring pays a finder's fee that is also the first year's "
-                    "wage, now; the same wage is due every year after."}
+            "note": "Hiring posts places in the labour market; it fills them at the "
+                    "year's clearing and pays the wage from your purse then, and every year after."}
 
 
 def _quote_commission(sim, nodes, cmd):
