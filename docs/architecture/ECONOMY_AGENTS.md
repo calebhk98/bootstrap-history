@@ -44,7 +44,7 @@ seller short of cash for debts or wages below that; a waste product below zero.
 **Wages come from the labour core; the interest rate is sticky.** Every employer's staff are bids in the core: the seats', firms' and
 states' staff books are posted as bids by `sim/markets/port_staff.py` (the standing places plus the one-year
 orders, such as commissions and herd labour, as one bid per trade: `places_with_once`) and the books are the people the
-clearing hired (the state's call-up of hours for its works and army is handed to the economy as hours per worker, `sim/markets/port_levy.py`) (what is left is `Complaints/964`, `556`). The economy keeps its workforce as
+clearing hired (paid soldiers are the state's staff, posted like any crew; the state's call-up of hours for its works and its conscripts is handed to the economy as hours per worker, `sim/markets/port_levy.py`) (what is left is `Complaints/964`, `556`). The economy keeps its workforce as
 the labour core's `MarketState` (people per tile, trade and ability band; `labour_state.py`) and each
 year hands the core the producers' bids as tranches of falling value (`labour_bids.py`), the outside
 option and routes to bordering tiles (`labour_inputs.py`). Demography's people per tile are the one count: the core's workers
