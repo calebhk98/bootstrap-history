@@ -1,5 +1,8 @@
 # Labour-market models surveyed for the bootstrapping simulator
 
+> **Checked against the code (2026-11):** `vacancy_raise` does not exist. The wage offer rule is `raised_offer` in
+> `sim/labour/market/applications.py` (rate `WAGE_UPDATE_PER_ROUND`, declared in `asks.py`); the text below now names it.
+
 Research report, no code changed. It builds on `Complaints/reports/research-reference-economy-models.md`,
 `research-agent-based-economy-design.md` and `research-alternative-economic-models.md` and does not repeat them.
 
@@ -55,8 +58,8 @@ Research report, no code changed. It builds on `Complaints/reports/research-refe
 - Compared with ours: our ask falls by the unsold share, with Eurace's per-round cut compounded
   (`moved_scale` in `sim/labour/market/asks.py`), and floors at the plot return (`sim/economy/labour_ask_floor.py`). Their
   reservation utility also decays with unemployment, so the shape agrees; theirs has no household plot, hence no floor. The
-  hiring norm that relaxes while a vacancy stays open mirrors our wage offer rising with unfilled vacancies (`vacancy_raise`
-  in `clearing.py`). Their capital decay when idle has no counterpart in `sim/labour/learning_curve.py`.
+  hiring norm that relaxes while a vacancy stays open mirrors our wage offer rising with unfilled vacancies (`raised_offer`
+  in `sim/labour/market/applications.py`, by `WAGE_UPDATE_PER_ROUND`). Their capital decay when idle has no counterpart in `sim/labour/learning_curve.py`.
 - Bearing: 678: a relaxing hiring norm is a second way a scarce trade's vacancy resolves besides the wage rising (reading,
   untested). 473: nothing applicable. Their contract institutions are modern French law.
 

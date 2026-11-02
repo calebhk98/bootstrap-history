@@ -41,8 +41,8 @@ Other documents are inputs or background and may lag the code.
 | `Complaints/reports/research-reference-economy-models.md` | Capitalism Lab, Eurace@Unibi, HARK and Caiani et al. 2016 read against the opening, thin-market prices, the interest rate, unhired labour and year cost, with licences and a ranked recommendation for issue #61. Read it before redesigning the economy. | Ours, from external sources |
 
 Read them in that order. For the economy, `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan and
-`Complaints/119-delete-prices-json.md` is its concrete exit checklist for the
-legacy file (it is an issue, so it is tracked with the others);
+`Complaints/closed/119-delete-prices-json.md` records the deletion of the
+legacy price file (it is an issue, so it is tracked with the others);
 `PM_ASSESSMENT.md` is the reasoning that led to it; `STATE_OF_THE_PROJECT.md`
 is where its milestone table is kept current; the two external documents
 are inputs to all of them.

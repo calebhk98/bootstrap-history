@@ -10,9 +10,9 @@
 - Other implementation: NetLogo, `github.com/alexplatasl/BAMmodel` (not read; the package's own paper says it deviates
   on several metrics).
 
-## Run status: NOT RUN
+## Run status: first attempt refused; run later (see "Measured run" at the end)
 
-The measured unemployment series the brief asks for does not exist. The one attempt to run the package (`python3 -I`
+Before the later run, the measured unemployment series the brief asks for does not exist. The one attempt to run the package (`python3 -I`
 on a runner script that put the package's `src/` on `sys.path` and stepped 1000 periods) was refused by the session's
 permission classifier ("Code from External"). I did not retry or route around it. Everything below is from reading
 the code, with file and line; none of it is observed behaviour. To run it, approve:

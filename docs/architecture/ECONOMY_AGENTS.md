@@ -11,14 +11,13 @@ Owner decision (2026-10-09, later): retire the agent-economy-off mode; the agent
 
 `sim/economy/` is a standalone package: agents that hold money and goods, markets that clear their
 orders, and the money they pay with. It imports `sim.world`, `sim.constants` and the walled packages' `api.py` (geography, labour), never `sim.engine`.
-The engine reaches it only through `sim/engine/economy_port*.py`; the tech tree, the founder, projects
+The engine reaches it through the markets module's port, `sim/markets/port*.py` (mod effects use `sim/engine/economy_port_effects.py`); the tech tree, the founder, projects
 and screens ask the port questions (a price, a wage, a rate, what a concern takes) and post
 transactions. Both rules are kept by review.
 
 Contracts: `sim/economy/types.py` (records) and `sim/economy/protocols.py` (the year order and what
 each module offers). Outside code imports only `sim/economy/api.py`, the package's published surface
-(`docs/architecture/PACKAGE_WALLS.md`). The port reads the map from the engine's geography (the base map
-with the active mods' overlays, `sim/engine/geography_port.py`) and hands the economy its tiles and that map
+(`docs/architecture/PACKAGE_WALLS.md`). The port reads the map from the geography module (`map_for_agent_economy`, `sim/markets/port_world_map.py`) and hands the economy its tiles and that map
 through the setup.
 
 ## Choices and why
@@ -30,7 +29,7 @@ the dynamics come from what carries between years: stocks and the reservation pr
 set, output decided on last year's price (a cobweb lag), producers idling and exiting, cash balances,
 debts and the money stock.
 
-**Buyers' schedules carry a floor and a budget.** `Bid.quantity_at(price)` is a floor (what is needed
+**Buyers' schedules carry a floor and a budget.** `goods_market.quantity_at(bid, price)` is a floor (what is needed
 whatever the price) plus a part that falls with price, capped by what the buyer can pay. With no
 seller the price rises until budgets bind, so there is no price ceiling or floor constant: a famine
 price is the price at which the poorest cohort's money runs out, and the unmet floor is recorded for
@@ -116,7 +115,7 @@ its own full cost plus a margin, since its remembered price is stale (`entry_tri
 known recipe gets no maker. The recipes the society knows are not fixed at the opening: each year the port
 matches them to the techniques some producer in the society runs (the founder's, any firm's concerns), and a
 newly allowed recipe, with a market for any good that had none, is handed to the economy through its api
-(`economy_port_late.py`, `sim/economy/late_recipes.py`); the saved opening carries them, so a resumed game
+(`sim/markets/port_late.py`, `sim/economy/late_recipes.py`); the saved opening carries them, so a resumed game
 rebuilds the same set. Real output follows the economy's cleared quantity only for goods such a recipe makes
 (Complaint 478); for every other good it still reads the opening's reference. Every recipe that pays draws a newcomer, best first, each for a share of
 what the better ones leave: no cap on newcomers per market a year. Where makers exist and sellers have
@@ -168,16 +167,16 @@ solver's costs until prices and the interest rate settle, cached on disk per civ
 the data and source).
 
 **Other countries** trade as external sellers and buyers booked against `edge:external`, at the
-partners' prices. The year's trade settles in the partners' coin ledgers (`foreign_payments`), so a
+partners' prices. The year's trade settles in the partners' coin ledgers (`sim/foreign_trade/payments.py`), so a
 partner paying out coin sees its prices fall, and it spends at most a share of the coin it holds
 (price-specie flow). The types allow partners to become full economies, and later players.
 
 **Trader actors' cargo** is not booked against `edge:external`. Each cargo leg that touches home gets an account in
-the book (`sim/engine/economy_port_cargo.py`): a landing cargo arrives over the partner's own edge
+the book (`sim/markets/port_cargo.py`): a landing cargo arrives over the partner's own edge
 (`external_edge(partner)`) and is offered, a taking cargo is bought with funds the trader put in; after the clear the
 account's money goes back to the trader's purse over `edge:cargo` and the goods nobody took return over the
 partner's edge. The partner's side settles in that partner's coin ledger and the route's carriers
-(`sim/engine/trader_cargo.py`), and the trader's purse is trued up from its decision-time booking to the result.
+(`sim/foreign_trade/cargo.py`), and the trader's purse is trued up from its decision-time booking to the result.
 The trader's purse is an account in the same book (see "Actors' money and debt in the book"); the cargo account is funded
 and emptied over `edge:cargo`, and the trader's booked result is trued up to what the book gave.
 A landing cargo's sales and a taking cargo's purchases cross the border, so the state's customs assess them: the
@@ -189,7 +188,7 @@ bought for abroad with nothing left in its account owes no export duty (the duty
 own prices and wages; the takings go back out over `edge:legacy` (the founder's revenue is still the engine's
 estimate, which the seat's offers only press on the market).
 
-**Firms', states' and other actors' sales and purchases are book orders** (`sim/engine/economy_port_actors.py`). A
+**Firms', states' and other actors' sales and purchases are book orders** (`sim/markets/port_actors.py`). A
 `market_sale` is noted through the year and, when the economy's year runs, becomes an offer from an account named for the
 seller, at what its concerns cost to make the good (a good with no concern behind it at what the market pays). What the
 account holds afterwards is the seller's proceeds, turned into its coin over `edge:exchange`; what did not sell goes back

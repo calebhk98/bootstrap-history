@@ -1,5 +1,10 @@
 # ABM design research: price formation, settling, credit, entry, labour matching
 
+> **Checked against the code (2026-11):** the citations of our code below describe the code when this was written. `seller_pricing.py` (the
+> dominant-firm optimiser) and `ask_raise.py` (the 5 percent raise cap) were deleted; `sim/economy/ask_adjust.py` and
+> `sim/economy/price_setting.py` replaced them, and `seller_offers.py` and the other file:line citations have moved. Read the
+> findings about the models as research; re-find any claim about our code with grep before acting on it.
+
 Sourcing key. OPENED = I fetched and read the text this session (local copy in the scratchpad pdfs folder). SNIPPET = search result text only. NONE = no source found / page blocked. Nothing here is from memory. No game is evidence; game notes are labelled.
 
 ## 1. Mechanisms with sources

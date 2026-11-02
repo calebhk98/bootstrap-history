@@ -1,6 +1,6 @@
 # Labour supply and hiring have no single owner
 
-**Status:** partly done. The founder's staff book has one owner (`sim/labour/staff_book.py`); the core is seeded with every trade the society's need names (`labour_state.seeded_hours`, `sim/labour/trade_seed.py`); hires are viewed out of the core's people by tile and trade (`core_reservations.py`); open: the real-game check and the two share heuristics (below).
+**Status:** partly done. The founder's staff book has one owner (`sim/labour/staff_book.py`); the core is seeded with every trade the society's need names (`labour_state.seeded_hours`, `sim/labour/trade_seed.py`); the core's free people by tile and trade and the hours-reserved check exist as views with no production caller (`staff_book.py`, `core_reservations.py`), so a hire is still not taken out of the core; the remaining work is carried by Complaint 964 (labour through the economy's labour core); open: the real-game check and the two share heuristics (below).
 
 Found by an outside reviewer reading the repository; checked against the code. An integration risk:
 no worker has been shown counted twice.
@@ -40,8 +40,8 @@ Done (behaviour preserving, quick tier and the labour, staffing, firm and save t
   `add_employed`, plus the views `reserved_people`, `reserved_hours`, `supplied_people`, `unreserved_people`,
   `core_people_by_trade`) owns the founder's staff. Every labour module and the engine's staffing phases
   read and write through it; `sim/tests/test_labour_single_owner.py` walls the writes.
-- Still outside the owner: the plague survival roll in `sim/engine/society_hazards.py` (listed as a test
-  exception until the disease work lands), and the dict wrapper in `core.py` / `economy.py`.
+- Still outside the owner: `sim/workforce/` (`staff_year.py`, `staff_hiring.py`, `commands_applied.py`) reads and
+  writes the seat's `employees` dict directly. The plague survival roll there (`commands_applied.py`) writes `seat.employees` directly; the yearly staff roll (`roll_staff_year` in `labour_staff_pay.py`) goes through the owner.
 
 Done (behaviour change; the figures below are one measurement on an opened Rome game, re-measure with this command: `python3 -m sim.tests --slow --only labour_single_owner`):
 
@@ -65,14 +65,16 @@ Done (seeding and reservations; rule tests in `test_labour_core_seed_and_reserva
   with hours in the ratio of its need share to the staffed trades' (`trade_seed.seed_hours`); the post-spin-up trim keeps those hours. The
   need shares ride in the opening values (`need_shares`, `EconomySetup.need_share_by_trade`).
 - Before the core opens, a labour-family trade's national estimate is its own share of work (porters and carters differ), not one town share.
-- The founder's hires are taken out of the core's people at the base tile by trade (`Labour.free_core_people_by_tile`, `reservations_over_core`);
-  `core_reservations.reserved_hours_within_people` is the hours-reserved boundary.
+- Views of the core's people left after the founder's hires, by tile and trade (`Labour.free_core_people_by_tile`, `free_core_people`,
+  `reservations_over_core` in `staff_book.py`), and the hours-reserved check `core_reservations.reserved_hours_within_people`, are built
+  and tested on their own. Nothing in production calls them: hires are not taken out of the core's people (Complaint 964).
 - Carriage crews are bid in each mode's own trade; `CARRIAGE_CREW_UNSKILLED_SHARE` is deleted (552).
 
 ## Remaining
 
 - Run a real Rome game and read the headcounts the seeding gave (carter, porter, sailor); the seeds keep their people only while an employer bids for them, and the core's yearly clearing moves unemployed people away (re-measure before closing).
-- Move the plague survival roll (`sim/engine/society_hazards.py`) and the `core.py` / `economy.py` dict wrapper under the owner.
+- Make hires draw on the core's people (call the free-people views from the hire path) and move the direct `employees` writes in
+  `sim/workforce/` under the owner; this is Complaint 964.
 - `UNSKILLED_POOL_TOWN_SHARE` (the town's hiring cap for the farm, army and fallback trades) and `NO_DEMAND_TRADE_SHARE` (rank trades and the estimate before the core opens) stay, each with `retire` naming this complaint, until the town cap reads the core's people by tile.
 
 ## The opening seeds a glut in trades no producer staffs (PM, measured 2026-10-22)

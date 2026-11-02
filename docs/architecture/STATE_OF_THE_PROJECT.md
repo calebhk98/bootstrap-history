@@ -37,10 +37,10 @@ Measure with these; none of their output is copied here.
 | 0 | the production side (`data/production/`) | Built and validated by `python3 sim/simulator.py validate`, which also lists the materials that have a production entry but no seller in reach of a start. |
 | 1 | provenance and a burndown | Working. A rising count of declared heuristics means the audit is finding more, not that the project is regressing. |
 | 2 | the synthetic world | Not started and not needed: domain models were built standalone under `sim/world/` and wired in afterwards. |
-| 3 | actors | `Actor` base with `Household`, `Government` and `Firm` in `sim/agents/` (see `ACTORS.md`). Governments and firms imitate founder inventions, enter where demand is unmet and share one labour pool and goods market with everyone else (`Complaints/closed/103-add-independent-firms-imitation-entrepreneurship.md`). |
+| 3 | actors | `Actor` base with `Household`, `Government` and `Firm` in `sim/agents/` (see `ACTORS.md`). Governments and firms imitate founder inventions, enter where demand is unmet (`Complaints/closed/103-add-independent-firms-imitation-entrepreneurship.md`). |
 | 4 | food and people | Wired: agriculture and demography run through the engine's yearly demographic step, with a persistent granary and weather pooling. See `WIRING_MILESTONE_4.md`. |
 | 5 | the wage and the price solve | The solver gives every good a cost of making; the book file is deleted. On the default agent economy wages, prices and the interest rate are the year's market clearing, and money is a stock held in accounts, struck from each civilisation's coin metal. A node earns only from the output of the entries that name it in `operated_by`; typed revenue is deleted (the REVENUE lines of `validate` count both kinds). |
-| 5c | the agent economy | The default economy (`sim/economy/`, described in `ECONOMY_AGENTS.md`): households, producers, merchants, a lender pool, a mint and the state, with every market clearing each year. The engine reaches it only through `sim/engine/economy_port*.py`. Measure: `python3 -m sim.tests --list` for the economy topics, `python3 sim/constants.py --kind temporary_heuristic` for its declared shortcuts. |
+| 5c | the agent economy | The default economy (`sim/economy/`, described in `ECONOMY_AGENTS.md`): households, producers, merchants, a lender pool, a mint and the state, with every market clearing each year. The engine reaches it through the markets module's port, `sim/markets/port*.py`, and the mod-effects port `sim/engine/economy_port_effects.py`. Who staffs through the economy's labour core is open (`Complaints/963`, `964`). Measure: `python3 -m sim.tests --list` for the economy topics, `python3 sim/constants.py --kind temporary_heuristic` for its declared shortcuts. |
 | 5b | when a technique exists (era gate) | Built; every technique states what it needs and when, and the solver refuses techniques that cannot reach a needed temperature. Coverage: `python3 sim/simulator.py validate`. |
 | 6+ | transport, settlements, state finance, war | Transport is wired into freight cost and into market areas on the tile map. Military logistics is wired into state pressure. The state raises and spends money in the same markets and covers a deficit by borrowing, issuing or debasing. War has no dedicated module (list what is open with the status grep below). |
 
@@ -49,20 +49,14 @@ Measure with these; none of their output is copied here.
 Each point names the issue that tracks it; read its status line before acting.
 
 - **Node earnings.** Most nodes make no product and so earn nothing from
-  output; whether a concern's takings follow the techniques in use is
-  `Complaints/369`, and every entry an output-earning node runs states a plant (closed, `Complaints/closed/335`).
-- **Deeper capital markets.** A pooled
-  household-funded credit market exists; banks, bonds, equity and insurance
-  do not (`Complaints/106`).
+  output (closed: `Complaints/closed/369`, `Complaints/closed/335`).
+- **Deeper capital markets.** Pooled credit, banks, bonds, equity, insurance and funds
+  have code under `sim/economy/`; what remains is listed in `Complaints/106`.
 - **Disease.** `sim/disease/` is wired into `step_year` for every civilisation
-  (`sim/disease/module.py`): the nation is one patch of three age bands. A
-  pathogen arrives from the outside sources a civilisation file names (map
-  tiles, initial conditions only), with a chance that falls with the days of
-  travel from the source to the tiles held; deaths, staff loss and timing come
-  from the model (`sim/disease/module.py` hands the toll to each seat).
-  No civilisation file carries a dated plague. Still open: a patch per tile
-  from the per-tile populations, contact scaled by trade volume, the outside
-  world as simulated actors (`Complaints/490`).
+  (`sim/disease/module.py`). A pathogen arrives from the outside sources a
+  civilisation file names (map tiles, initial conditions only); deaths, staff
+  loss and timing come from the model. No civilisation file carries a dated
+  plague. What is open is the outside world as simulated actors (`Complaints/closed/490` names where it went).
 
 ## Order of work
 
@@ -74,8 +68,7 @@ and the engine applies one, both come from one function. What is left, in order:
    something the game gets wrong.
 2. **Requests**: the remaining open requests, after the owner decisions in
    their status lines and bodies (several say "wait" or "lower priority").
-3. **Finish actors** (`Complaints/106`, `110`): deeper capital markets and
-   interest groups.
+3. **Finish actors** (`Complaints/106`): deeper capital markets.
 4. **Mod system** (`mods/TASKS.md`) and the remaining hardcoded outcomes
    (`python3 sim/constants.py --burndown`).
 5. **The fantasy equipment mod** (`Complaints/469`), last, as an acceptance
@@ -86,26 +79,23 @@ is still to do.
 
 ## Where the economy work stands
 
-The accounting defects an outside review found are fixed (546, 547, 548 closed; 529 closed), and several
-mechanisms moved toward physical inputs (513, 517, 531, 532, 534, 535, 550, 552, 559, 560 partly). What blocks
-the rest is the opening: the hidden spin-up drifts for decades (473), and every change elsewhere moves where it
-stops, so price and volume checks that read a particular year flip with unrelated merges. Reference-model research for the opening (solved stationary state, buffer-stock savings, licences): `Complaints/reports/research-reference-economy-models.md`. In order:
+Which accounting defects and mechanisms are fixed is in each issue's status line (`grep -m1 '^\*\*Status' Complaints/5*.md`).
+What blocks the rest is the opening: the hidden spin-up drifts for decades (473), and every change elsewhere moves where it
+stops, so price and volume checks that read a particular year flip with unrelated merges. Reference-model research for the
+opening (solved stationary state, buffer-stock savings, licences): `Complaints/reports/research-reference-economy-models.md`. In order:
 
-1. **The opening (526, with 473, 527, 545).** Households' savings wish has almost nothing to absorb it at the
-   opening, so the opening's income falls toward the floors and the wage drifts down through the spin-up
-   (526 "Measured cause"). The opening finding its own interest rate was built (branch `fix-526-opening-rate`)
-   and measured: it lifts the settled income a little and the wage still collapses in the first spin-up years,
-   so it is not merged. Next: the opening wage (`wage_schedule`, anchored on the coin metal's table cost) against
-   what labour earns at the households' own work (473), then saving with an asset to buy, land titles (538). 545 (own-plot food in the opening) can land only with 526: alone it drives
-   the settled income toward nothing (branch `fix-545-opening-grows-its-own`).
+1. **The opening (526, with 473, 545).** 526 is the umbrella and names the plans that carry it. The opening
+   solves its own interest rate (`sim/economy/opening_rate.py`, called from `sim/markets/port_setup.py`); the typed
+   `starting_interest_rate` is a reference only. Remaining: the opening wage against what labour earns at the households'
+   own work (473), saving with an asset to buy, land titles (538), and own-plot food in the opening (545).
 2. **Regenerate the shipped openings after the opening is fixed, not before** (owner decision): they are stale,
    so a new game computes its own spin-up, and the topics that read full-length openings fail on time until
    `python3 sim/simulator.py openings --prune` ships them (557, and the 40-year money trace
    `spin_up_money_supply` keys).
 3. **The slow topics still failing**, each with its cause in 558: tin against copper (511), bronze's early
-   scarcity price, the Norse money regime, printed money reaching prices, the partner's glut cycle (553).
+   scarcity price, the Norse money regime, printed money reaching prices.
    Measure with `python3 -m sim.tests --slow --timing`.
-4. **A year's cost (497)**: flat profile; the next cuts are model changes (fewer agents) or compiled clearing.
+4. **A year's cost (497)**: not re-profiled since the goods market was replaced; see its status line.
 
 Rules this work kept, for whoever picks it up:
 
@@ -114,5 +104,5 @@ Rules this work kept, for whoever picks it up:
   rule broke is itself the defect and is rewritten as a test of that rule's function (Complaint 640). Change a
   fixture only to keep its subject, never to find a window, a good or a bound that happens to pass.
 - Speed changes must leave a stepped game's save byte-identical (sorted keys), with the CPU saving measured.
-- A figure needs a source someone read; a recalled figure is unsourced (Complaint 646 lists those still in the data). Parked on purpose: issues with status `pinned`
+- A figure needs a source someone read; a recalled figure is unsourced (Complaint 646 is closed and split by domain; its status line names the successors). Parked on purpose: issues with status `pinned`
 (`grep -l '^\*\*Status:\*\* pinned' Complaints/*.md`).

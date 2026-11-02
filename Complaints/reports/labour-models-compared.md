@@ -1,5 +1,9 @@
 # Labour markets of four reference models, run here, against ours
 
+> **Checked against the code (2026-11):** the "Ours, Rome" row first read 92% unsold, a 64-81% people-based rate and 40 years;
+> none of these is in the cited `rome-unemployment-audit.md`, which runs 16 years (year 15: 0.888 of hours unsold, person-equivalent
+> 0.86). The row now carries the audit's figures. Those figures are from an earlier build and were not re-measured.
+
 Each model was obtained, built and run in this session; its rules were read from the code that ran (file and line in
 its own report). Reports: `model-run-bam.md`, `model-run-lengnick.md`, `model-run-mark0.md`, `model-run-jmab.md`.
 Ours: `rome-unemployment-audit.md`. Measured unemployment is the run's own, not the paper's.
@@ -12,7 +16,7 @@ Ours: `rome-unemployment-audit.md`. Measured unemployment is the run's own, not 
 | Lengnick 2013 (newwayland replication, AGPL) | 100% to 0% in about ten months | about 0.4% | 1200 months, 3 seeds |
 | Mark-0 (KarlNaumann, MIT) | 50% to about 0.4% when hiring outpaces firing | about 0.4%, but a bankruptcy cascade can tip it to 80-98% | thousands of periods, several seeds and settings |
 | Caiani benchmark (JMAB) | exactly 8% by calibration | 5-9%, mean about 7.5% | 400 quarters, seed 1 |
-| Ours, Rome | 52% of offered hours unsold | about 92% unsold; people-based rate in wage trades 64-81% by the middle years | saved opened economy, 40 years |
+| Ours, Rome | 52% of offered hours unsold | 0.888 of offered hours unsold at year 15; person-equivalent unemployment 0.52 at year 0 to 0.86 at year 15 (`rome-unemployment-audit.md`) | saved opened economy, 16 years |
 
 ## How each sizes and fills jobs
 

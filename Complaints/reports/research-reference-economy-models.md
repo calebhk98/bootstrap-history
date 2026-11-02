@@ -1,5 +1,9 @@
 # Reference economy models: Capitalism Lab, Eurace@Unibi, Econ-ARK HARK, Caiani et al. 2016
 
+> **Checked against the code (2026-11):** the Eurace credit-rate formula first given in section 2 ("Credit") is the 2011 manual's. The C
+> code (`Credit/Bank_Credit_Functions.c`) sets interest = `ECB_INTEREST_RATE * (1 + BANK_LAMBDA * bankruptcy_prob + U(0,1))`, capped at
+> 0.25, with bankruptcy probability `1 - exp(-0.10 * (d + c) / e)`. Section 2 now states the C formula.
+
 Research report for issue #61 (make the opening a steady state), Complaint 473 and its relatives
 (606, 607, 641, 642, 643, 655, 497). It adds to, and does not replace,
 `Complaints/reports/research-agent-based-economy-design.md` (Lengnick, Caiani, Wiese, Peters) and
@@ -100,9 +104,10 @@ days and monthly planning.
 - **Credit.** The central bank base rate is a constant in the model (user manual 7.1.2: "The ECB base interest rate is a
   constant in the model"). Banks pay deposits at base rate times one minus a markdown, and lend to a firm at the base
   rate plus a firm-specific markup. In `Bank decide credit conditions` the bank computes a bankruptcy probability from
-  the firm's debt plus request over equity, `1 - exp(-(debt + request)/equity)`, caps credit by the bank's excess value
+  the firm's debt plus request over equity, `1 - exp(-0.10 * (debt + request)/equity)`, caps credit by the bank's excess value
   at risk (alpha times equity minus value at risk) and by excess liquidity over a reserve ratio, and charges
-  `MIN_INTEREST + BANK_GAMMA * new_value_at_risk * 0.01 * random(0,1)`. A bank already in debt to the central bank
+  `ECB_INTEREST_RATE * (1 + BANK_LAMBDA * bankruptcy_probability + U(0,1))`, capped at 0.25
+  (`Credit/Bank_Credit_Functions.c`). The `MIN_INTEREST + BANK_GAMMA * ...` formula is the 2011 manual's, not this code's. A bank already in debt to the central bank
   does not lend. Firms accept loans lowest rate first.
 
 ### Price and wage setting

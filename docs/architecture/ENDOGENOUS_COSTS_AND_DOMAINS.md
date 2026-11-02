@@ -312,9 +312,9 @@ asking which of `sim/world/`'s modules `sim/engine/` imports at all:**
     land.py                 imported by sim/engine/core.py
     transport.py            imported by sim/engine/economy.py (as freight_physics)
     military_logistics.py   imported by sim/engine/society.py
-    deposits.py             imported ONLY by sim/engine/solve_prices.py - reaches the
+    deposits.py             imported ONLY by sim/prices/solve_prices.py - reaches the
                              engine only through the (currently off) solved-price path
-    demand.py               imported by NOTHING under sim/engine/ or sim/engine/solve_prices.py
+    demand.py               imported by NOTHING under sim/engine/ or sim/prices/solve_prices.py
     labour_market.py        imported by NOTHING under sim/engine/
 
 Five of eight wired directly, one reachable only through a switch that
@@ -332,7 +332,7 @@ land) and capital are in; the gap barely moved where the margin is not
 forced - mercury stays ~1,440x below book, attributed to an unmodelled
 state monopoly rather than a missing mechanism. `sim/world/demand.py` now
 exists and, in isolation, reverses the silver/lead joint-byproduct result
-exactly as predicted - but it is not imported by `sim/engine/solve_prices.py`,
+exactly as predicted - but it is not imported by `sim/prices/solve_prices.py`,
 so the solver's production code path still uses a plain mass split. Wiring
 `demand.py` into the solver is therefore now the single most direct way to
 close `Complaints/29` and move the needle described in this paragraph,
@@ -507,7 +507,7 @@ machinery, with no famine modifier anywhere.
 
 ## Milestone 5 - The wage, and the price solve
 
-**The material half is done.** `sim/engine/solve_prices.py` solves the system in
+**The material half is done.** `sim/prices/solve_prices.py` solves the system in
 Part 2 and converges: 1,076 iterations, residual 0.0, all 182 materials
 priced in labour-hours, none unreachable. `--why` gives a recursive cost
 breakdown, which matters more than the headline number because it is what
