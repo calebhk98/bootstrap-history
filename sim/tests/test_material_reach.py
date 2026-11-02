@@ -60,4 +60,4 @@ class RouteTests(unittest.TestCase):
         self.assertIn("cannot be bought", founder.material_unsupplied_sentence("alum_kg"))
 
     def test_a_supplied_good_has_nothing_to_explain(self):
-        self.assertEqual(_Founder(_Market("partner", 3.0)).material_unsupplied_sentence("alum_kg"), "")
+        self.assertEqual(_Founder(_Market(HOME_SELLER, None), market_tonnes=3.0).material_unsupplied_sentence("alum_kg"), "")

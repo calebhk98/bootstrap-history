@@ -29,7 +29,7 @@ def stand_in_labour_views():
 
 class LabourCommandTests(unittest.TestCase):
     def test_detail_carries_every_wage_component_the_sim_reports(self):
-        sim = Game(staff={"employees": {}}, trade_spread={"created": set(), "absent": [], "endemic": set(), "introduced_year": {}}, wage_index=1.5, price_index=2.0, **stand_in_labour_views())
+        sim = Game(staff={"employees": {}}, staff_wanted={}, trade_spread={"created": set(), "absent": [], "endemic": set(), "introduced_year": {}}, price_index=2.0, **stand_in_labour_views())
         detail = _cmd_labour(sim, {}, {"cmd": "labour", "trade": "smith"}, False)
         foundation = detail["trade"]["wage_foundation"]
         self.assertEqual(foundation["base_for_skill_and_difficulty"], 70.0)

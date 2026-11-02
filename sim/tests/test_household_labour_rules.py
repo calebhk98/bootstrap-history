@@ -166,7 +166,7 @@ class Channels:
     def __init__(self, supply=1000.0, contracted=0.0, productivity=1.0, employed=0.0):
         self.contract_hours = {"scribe": contracted}
         self._world = Game(
-            workforce=Game(contract_hours=self.contract_hours),
+            workforce=Game(contract_hours=self.contract_hours, hours_wanted_once={}),
             HOURS_PER_PERSON_YEAR=2000.0, trades_absent=set())
         self.supply, self.productivity, self._employed = supply, productivity, employed
         self.hands = Hands(self._world, supply=self, trades=None)

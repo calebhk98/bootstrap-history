@@ -82,7 +82,7 @@ class SeaCrew(unittest.TestCase):
 class FlowImbalance(unittest.TestCase):
 
     def test_a_partner_taking_less_than_it_sends_leaves_the_return_part_empty(self):
-        entries = [{"trade_tonnes": 30.0}, {"trade_tonnes": -10.0}]
+        entries = [{"out_tonnes": 30.0}, {"in_tonnes": 10.0}]
         self.assertAlmostEqual(rules.foreign_flow_imbalance(entries), freight_cost.imbalance_of_flows(30.0, 10.0))
 
 

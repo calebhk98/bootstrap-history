@@ -106,6 +106,7 @@ class BankruptcyTests(unittest.TestCase):
 from types import SimpleNamespace
 
 from sim.economy import firm_year
+from sim.economy.credit_record import CreditRecord
 from sim.tests.test_economy_producers import farmer
 
 
@@ -146,9 +147,15 @@ class SettledTests(unittest.TestCase):
         self.assertAlmostEqual(year.write_off_ratio, finance.write_off_ratio(101.0, 100.0, False))
 
 
+def credit_with(loans):
+    credit = CreditRecord()
+    credit.add_loans(loans)
+    return credit
+
+
 class WriteOffTests(unittest.TestCase):
     def test_the_lender_books_its_loss_and_the_borrower_keeps_the_rest(self):
-        record = SimpleNamespace(credit=SimpleNamespace(loans=[Loan("l1", "bank", "f1", "coin", 90.0), Loan("l2", "bank", "f2", "coin", 90.0)], credit_losses={}, remembered_defaults={}))
+        record = SimpleNamespace(credit=credit_with([Loan("l1", "bank", "f1", "coin", 90.0), Loan("l2", "bank", "f2", "coin", 90.0)]))
         lost = firm_year.write_off(record, "f1", 0.5)
         self.assertAlmostEqual(lost, 45.0)
         self.assertAlmostEqual(record.credit.credit_losses["bank"], 45.0)
@@ -157,7 +164,7 @@ class WriteOffTests(unittest.TestCase):
         self.assertAlmostEqual(record.credit.remembered_defaults["f1"], 45.0)
 
     def test_a_ratio_of_zero_changes_nothing(self):
-        record = SimpleNamespace(credit=SimpleNamespace(loans=[Loan("l1", "bank", "f1", "coin", 90.0)], credit_losses={}, remembered_defaults={}))
+        record = SimpleNamespace(credit=credit_with([Loan("l1", "bank", "f1", "coin", 90.0)]))
         self.assertEqual(firm_year.write_off(record, "f1", 0.0), 0.0)
         self.assertEqual(record.credit.credit_losses, {})
 

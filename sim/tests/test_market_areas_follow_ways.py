@@ -8,6 +8,7 @@ import types
 import unittest
 
 from sim.economy.accounts import Book
+from sim.economy.carriage_record import CarriageRecord
 from sim.economy.economy import Economy
 from sim.economy.market_areas_follow import follow, old_areas_by_new
 from sim.economy.market_memory import KEY_SEPARATOR, MarketMemory, market_key
@@ -87,9 +88,9 @@ class FollowTests(unittest.TestCase):
 
 
 class SetImprovementsTests(unittest.TestCase):
-    def economy(self, improvements):
+    def economy(self, ways):
         rebuilt = []
-        return types.SimpleNamespace(improvements=improvements, record=types.SimpleNamespace(carriage=types.SimpleNamespace(ways={})),
+        return types.SimpleNamespace(record=types.SimpleNamespace(carriage=CarriageRecord(ways=ways)),
                                      _rebuild_carriage=lambda: rebuilt.append(True) or True, rebuilt=rebuilt)
 
     def test_unchanged_ways_leave_the_areas_alone(self):
@@ -102,7 +103,6 @@ class SetImprovementsTests(unittest.TestCase):
         economy = self.economy({})
         change = Economy.set_improvements
         self.assertTrue(change(economy, {"a|b": {"road": True}}))
-        self.assertEqual(economy.record.carriage.ways, {"a|b": {"road": True}})
         self.assertEqual(economy.record.carriage.ways, {"a|b": {"road": True}})
         self.assertEqual(economy.rebuilt, [True])
 

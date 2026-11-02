@@ -13,18 +13,22 @@ from sim.markets import port_levy
 
 
 def stub_game(hours_by_destination, working_age, has_government=True):
-    """A game whose home state has taken these hours this year, among this many working-age people."""
+    """A game whose home state has taken these hours this year, among this many working people of the core on its tile
+    (the core also holds people on a tile the nation does not hold, who carry none of it)."""
     government = Government("government:home", ActorRecord(kind="government"))
     government.record.corvee_hours = dict(hours_by_destination)
     return SimpleNamespace(actors=SimpleNamespace(government_of=lambda country: government if has_government else None),
-                           population=SimpleNamespace(working_age=working_age))
+                           labour=SimpleNamespace(
+                               core_people_by_tile_and_trade=lambda: {"home": {"farmer": working_age / 2.0, "smith": working_age / 2.0},
+                                                                      "abroad": {"farmer": 5000.0}},
+                               settlement_tiles=lambda: {"home": 900.0}))
 
 
-check("hours taken for works and army are spread over the working age",
+check("hours taken for works and army are spread over the core's working people on the nation's tiles",
       port_levy.levy_hours_per_worker(stub_game({"works": 600.0, "army": 400.0}, 100.0)) == 10.0)
 check("a state that took no hours takes none from each worker",
       port_levy.levy_hours_per_worker(stub_game({}, 100.0)) == 0.0)
-check("a country with no working-age people loses no hours per worker",
+check("a country with no working people in the core loses no hours per worker",
       port_levy.levy_hours_per_worker(stub_game({"works": 600.0}, 0.0)) == 0.0)
 check("before a state exists nothing is taken",
       port_levy.levy_hours_per_worker(stub_game({"works": 600.0}, 100.0, has_government=False)) == 0.0)

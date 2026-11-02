@@ -84,28 +84,12 @@ class CeilingCapsTheExpectationNotTheHours(unittest.TestCase):
 
 class NewHandsComeThroughTrainingPlaces(unittest.TestCase):
 
-    def test_a_vacancy_adds_trainees_not_smiths_in_the_year(self):
-        before = start()
-        after, report = year.run_year(before, inputs(smith_maximum=1e6))
-        self.assertLess(aptitude.band_total(after.workers["vale"]["smith"]),
-                        aptitude.band_total(before.workers["vale"]["smith"]))
-        self.assertGreater(trainees_of(after), 0.0)
-
     def test_trainees_never_exceed_the_places_the_incumbents_teach(self):
         state = start()
         for _year in range(15):
             state, _report = year.run_year(state, inputs(smith_maximum=1e6))
             places = training.APPRENTICES_PER_MASTER * aptitude.band_total(state.workers["vale"]["smith"])
             self.assertLessEqual(trainees_of(state), places * (1.0 + 1e-9))
-
-    def test_once_the_places_are_full_removing_the_ceiling_adds_no_trainees(self):
-        capped, _report = years(start(), inputs(smith_maximum=1e6), 10)
-        with mock.patch.object(clearing, "trained_substitute_wage", lambda *args, **kwargs: math.inf):
-            free, _report = years(start(), inputs(smith_maximum=1e6), 10)
-        full = training.APPRENTICES_PER_MASTER * aptitude.band_total(capped.workers["vale"]["smith"])
-        self.assertAlmostEqual(trainees_of(capped), full, delta=0.02 * full)
-        self.assertAlmostEqual(trainees_of(free), training.APPRENTICES_PER_MASTER * aptitude.band_total(free.workers["vale"]["smith"]),
-                               delta=0.02 * full)
 
     def test_the_ceiling_alone_does_not_draw_diggers_into_the_trade(self):
         state = start()

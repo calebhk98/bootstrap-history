@@ -70,10 +70,10 @@ class FlowImbalanceTests(unittest.TestCase):
         return rules.foreign_flow_imbalance(book.values())
 
     def test_flows_that_match_are_balanced(self):
-        self.assertEqual(self.imbalance({"iron": {"trade_tonnes": 10.0}, "cloth": {"trade_tonnes": -10.0}}), 0.0)
+        self.assertEqual(self.imbalance({"iron": {"out_tonnes": 10.0}, "cloth": {"in_tonnes": 10.0}}), 0.0)
 
     def test_flow_one_way_is_fully_one_sided(self):
-        self.assertEqual(self.imbalance({"iron": {"trade_tonnes": 10.0}}), 1.0)
+        self.assertEqual(self.imbalance({"iron": {"out_tonnes": 10.0}}), 1.0)
 
     def test_no_book_is_fully_one_sided(self):
         self.assertEqual(self.imbalance({}), 1.0)

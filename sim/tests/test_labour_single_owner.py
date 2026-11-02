@@ -13,7 +13,7 @@ QUICK_TOPIC = True
 def _Book(other_staff, supply):
     """The owner's book over a stub world: a household with a staff map and the other employers' staff."""
     return StaffBook(SimpleNamespace(
-        workforce=SimpleNamespace(employees={}),
+        workforce=SimpleNamespace(employees={}, staff_wanted={}),
         actors_staff_nationwide=lambda trade: other_staff.get(trade, 0.0),
         HOURS_PER_PERSON_YEAR=2000.0))
 
