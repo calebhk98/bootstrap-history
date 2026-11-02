@@ -188,3 +188,24 @@ Six reviewers ran the audit prompt again; the orchestrator opened a citation fro
   `economy_port*.py`; five reports and this complaint's earlier text still describe per-employer contract wages;
   Complaints 962 and 963 were diagnosed before the A1/A2 fixes and need re-measuring, as does
   `Complaints/reports/rome-unemployment-audit.md`.
+
+## The one run of the suite (after audit pass 3's fixes)
+
+`python3 -m sim.tests --slow` was run once on commit 70a6d6b: most failures were tests whose stand-ins or expectations
+the branch had outdated (fixed or deleted by reading, since the owner allowed one run). It exposed real bugs, fixed:
+the workforce read an undeclared economy view in every hire check; a state's surplus works read a field the work no
+longer has; an actor's copying cleared the crew the labour core had hired, so firms never found staff; the
+unused-import pass had removed imports kept for what importing does (figures, commands, kinds, seat state, constants);
+and with the core's entrants deleted no trade could start or grow (the young now weigh a whole career against the
+unskilled wage, `sim/labour/market/switching.py`).
+
+Left, for the next run to settle:
+
+- The suite has not been run since those fixes; tests were fixed by reading only.
+- `sim/tests/protocol_golden/*.json` need re-recording (`python3 -m sim.tests.test_protocol_golden --record`).
+- `religion_mod_smoke`, `urbanisation_mod_smoke`, `mod_kernels_smoke`, `pollution_mod_smoke` and `hash_seed_order`
+  timed out at the topic limit; read as slow, not hung.
+- In a sloped-demand fixture of the labour core a trained trade's wage falls below its workers' reservation while
+  supply matches demand (seen by the agent fixing the inflow, from a scratch script): a clearing or wage-stickiness
+  problem to measure.
+- Shipped openings need regenerating (the port split changed the spin-up cache keys).
