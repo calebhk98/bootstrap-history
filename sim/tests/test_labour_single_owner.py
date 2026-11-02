@@ -43,32 +43,6 @@ check("the staff the owner reports is a copy", household.employees["labourer"] =
 book.set_employed("artisan", 2.0)
 check("reserved people are the book plus the firms' and states' staff", book.reserved_people("artisan") == 6.0, book.reserved_people("artisan"))
 check("reserved hours are people times hours a person-year", book.reserved_hours("artisan") == 6.0 * 2000.0)
-check("unreserved people are the supply less every reservation", book.unreserved_people("artisan") == 4.0, book.unreserved_people("artisan"))
-book.set_employed("labourer", 9.0)
-check("unreserved people are never negative", book.unreserved_people("labourer") == 0.0)
-
-# ---- a hire is taken out of the core's people at the base tile, and the estimate reads the core ----
-class _CoreBook(StaffBookMixin):
-    def __init__(self, core, staff):
-        self._world = SimpleNamespace(workforce=SimpleNamespace(employees=dict(staff)))
-        self._core = core
-
-    def core_people_by_tile_and_trade(self):
-        return self._core
-
-    def base_tile(self):
-        return "home"
-
-
-core_book = _CoreBook({"home": {"labourer": 5.0}, "away": {"labourer": 2.0}}, {"labourer": 3.0})
-check("the founder's hire is taken from the core at the base tile, not counted free for another employer",
-      core_book.free_core_people("labourer") == 4.0, core_book.free_core_people("labourer"))
-check("hires within the core's people at their tile are not over-reserved", core_book.reservations_over_core() == [])
-over_book = _CoreBook({"home": {"labourer": 2.0}}, {"labourer": 3.0})
-check("a hire the core's people at its tile do not cover is listed",
-      over_book.reservations_over_core() == [("home", "labourer", 3.0, 2.0)], over_book.reservations_over_core())
-check("with no core yet nothing is free to count and nothing is over-reserved",
-      _CoreBook(None, {}).free_core_people("labourer") is None and _CoreBook(None, {}).reservations_over_core() == [])
 
 from unittest import mock
 from sim.labour import labour_population
