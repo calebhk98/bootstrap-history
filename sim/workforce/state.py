@@ -40,7 +40,6 @@ class WorkforceSeat:
     trades_endemic: Set[str] = field(default_factory=set)
     trade_introduced_year: Dict[str, int] = field(default_factory=dict)
     last_taught: Dict[str, int] = field(default_factory=dict)
-    labour_pressure_records: Dict[str, Any] = field(default_factory=dict)
     # ---- hours ----
     contract_hours: Dict[str, float] = field(default_factory=dict)
     commissioned: Dict[str, float] = field(default_factory=dict)

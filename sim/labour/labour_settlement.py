@@ -187,7 +187,6 @@ class SettlementMixin:
         # Local contracts and the local market's memory stay behind.
         workforce.commissioned = {}
         workforce.contract_hours = {}
-        self.labour_market.clear_pressure()
         self._world.send(ScaleFamiliarity(self.RELOCATION_STANDING_RETAINED))
         self._world.send(ScaleProtection(self.RELOCATION_STANDING_RETAINED))
         workforce.base_tile = tile

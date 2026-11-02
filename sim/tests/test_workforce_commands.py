@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 from sim.tests import module_harness
 from sim.workforce import rules as workforce_rules
-from sim.workforce.api import LoseStaff, NoteTradeSpread, PressLabour, SetEmployed, TakeWageFallback
+from sim.workforce.api import LoseStaff, NoteTradeSpread, SetEmployed, TakeWageFallback
 from sim.workforce.api import AutoBuyPeople, AutoManumit, CloseHoursYear, FadeMarketPressure, NoteBuyRefusal, SettleLivingCost
 from sim.reporting.api import RecordEvent
 from sim.workforce.constants import AUTO_MANUMIT_ANNUAL_CHANCE, MARKET_PRESSURE_ANNUAL_FADE, MARKET_PRESSURE_DECAY, WAGE_FALLBACK_LIVING_COST_YEARS, WAGE_FALLBACK_MAX_HOURS, WAGE_FALLBACK_MIN_HOURS

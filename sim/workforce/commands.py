@@ -6,13 +6,6 @@ from sim.assembly.api import Command
 
 
 @dataclass(frozen=True)
-class PressLabour(Command):
-	"""Record demand for `hours` a year of a trade that is not a hire, which raises that trade's wage pressure."""
-	trade: str
-	hours: float
-
-
-@dataclass(frozen=True)
 class SetEmployed(Command):
 	"""The acting seat's staff in `trade` become `headcount` full-time equivalents, and the hour pools follow."""
 	trade: str

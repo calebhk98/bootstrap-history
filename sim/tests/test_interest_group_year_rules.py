@@ -237,8 +237,7 @@ class HurtSectors(unittest.TestCase):
             commodities_sold_by_acting_party=["iron"], main_material_of=lambda commodity: commodity,
             material_trade_quote=lambda material: quote, market_state=lambda commodity: state,
             market_supply=lambda trade: 2.0e6, local_market_share=0.8, mass_rate_text=lambda amount, **options: "%s a year" % amount)
-        view.labour_market = types.SimpleNamespace(pressured_trades=lambda: pressured or [], price_factor=lambda trade: factor,
-                                                   unscarce_annual=lambda trade: 100.0)
+        view.labour_market = types.SimpleNamespace(unscarce_annual=lambda trade: 100.0)
         view.hours_per_person_year = 2000.0
         view.pay_per_person_year = lambda trade: 100.0
         return view
@@ -256,17 +255,6 @@ class HurtSectors(unittest.TestCase):
     def test_a_commodity_with_no_market_or_no_quote_makes_no_sector(self):
         self.assertEqual(self.view(None, {"buy_per_tonne": 50.0}).displaced_producers(), [])
         self.assertEqual(self.view({"displaced_by_founder_tonnes": 1.0, "society_sales_tonnes": 1.0}, None).displaced_producers(), [])
-
-    def test_a_trade_priced_above_the_table_squeezes_its_employers_by_the_hands_priced_out(self):
-        view = self.view(None, None, pressured=["artisan"], factor=2.0)
-        (sector,) = view.squeezed_employers()
-        pool = 2.0e6 / 2000.0
-        self.assertEqual((sector.kind, sector.subject), ("squeezed_employers", "artisan"))
-        self.assertAlmostEqual(sector.lost_income, pool * 0.5 * 100.0)
-        self.assertEqual(sector.scope, 0.8)
-
-    def test_a_trade_nobody_pressed_squeezes_no_one(self):
-        self.assertEqual(self.view(None, None, pressured=["labourer"], factor=1.0).squeezed_employers(), [])
 
 
 if __name__ == "__main__":

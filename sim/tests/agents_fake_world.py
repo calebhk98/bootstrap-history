@@ -55,6 +55,9 @@ class FakeWorld:
 
 	hours_per_person_year = 2000.0
 
+	def staple_material(self) -> str:
+		return "wheat_kg"
+
 	def __init__(self, year: int = 100, seed: int = 1) -> None:
 		self.year = year
 		self.seed = seed

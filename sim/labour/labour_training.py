@@ -411,7 +411,6 @@ class TrainingMixin:
         rows = trade_first_hands.cohort_rows(
             current_year, trade, float(count), years, self._full_years(trade), plan["uncovered"])
         workforce.training.extend(rows)
-        self.labour_market.press(frm, float(count) * self._world.HOURS_PER_PERSON_YEAR)
         # SAY WHAT IT TOOK: teaching can quietly eat most of a year's
         # founder-hours, with nothing left afterward to supervise what it
         # just cost elsewhere to run - the reply has to report the actual
@@ -579,5 +578,4 @@ class TrainingMixin:
         self._world.send(PayEdge(self._world.EDGE_WORKERS, fee, "commissioned craftsmen"))
         workforce.contract_hours[trade] = workforce.contract_hours.get(trade, 0.0) + hours
         workforce.commissioned[trade] = workforce.commissioned.get(trade, 0.0) + hours
-        self.labour_market.hire(workforce, trade, hours)
         return True, ("%.0f hours of a %s bought for %s" % (hours, trade, self._world.money_text(fee)))

@@ -224,7 +224,6 @@ check("the state pays the lines it keeps from its purse", share > 0.0 and {line.
 check("revenue by form is booked for the forms it declares",
 	  set(government.record.revenue_by_form) >= {form["form"] for form in FORMS[:2]}, government.record.revenue_by_form)
 check("what it takes in kind enters its stores", government.record.stores.get("wheat_kg", 0.0) > 0.0, government.record.stores)
-check("its own staff are not the founder's labour pool", world.local_staff("scribe", 50.0) == 0.0)
 check("nobody is its patron and no interest group holds a claim on it", world.patron_ask() == 0.0 and world.group_claims() == {})
 
 # ---- equipment per soldier follows how much of the military work the country's own state holds --------------

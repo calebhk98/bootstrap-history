@@ -24,9 +24,6 @@ class Applying:
 		if command.endemic:
 			self.seat.trades_endemic.add(command.trade)
 
-	def press_labour(self, command):
-		self.labour.market.press(command.trade, command.hours)
-
 	def lose_staff(self, command):
 		seat = self.seat
 		before = self.labour.staff_snapshot()

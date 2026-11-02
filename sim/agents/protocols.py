@@ -174,9 +174,6 @@ class World(Protocol):
 	def displaced_producers(self) -> List[Sector]:
 		...
 
-	def squeezed_employers(self) -> List[Sector]:
-		...
-
 	def idle_hours_by_trade(self) -> Dict[str, Tuple[float, float]]:
 		"""(hours offered and not hired, hours offered) of each trade in the labour core's last clearing; empty without an agent economy."""
 		...

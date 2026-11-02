@@ -52,10 +52,3 @@ class ScheduleDocument(unittest.TestCase):
 
 
 class PressureLivesInTheState(unittest.TestCase):
-    def test_the_labour_pressure_records_are_written_into_the_saved_household(self):
-        blob = serialize_state(WorkforceSeat(labour_pressure_records={"artisan": [2000.0, 100]}))
-        self.assertEqual(blob["labour_pressure_records"], {"artisan": [2000.0, 100]})
-
-
-if __name__ == "__main__":
-    unittest.main()

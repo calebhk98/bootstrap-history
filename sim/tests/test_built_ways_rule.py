@@ -57,17 +57,11 @@ class WaysRulesTests(unittest.TestCase):
         self.assertEqual(ways_rules.crew_hours_a_year(5, 1000.0, 10), 500.0)
         self.assertEqual(ways_rules.way_years(1000.0, 500.0), 2.0)
 
-    def test_a_way_whose_time_has_passed_opens_and_gives_back_its_crew(self):
-        pending = {"a|b": {"road": {"due": 10.0, "trade": "labourer", "crew_hours": 40.0, "engineered": True, "pressed": 9}}}
+    def test_a_way_whose_time_has_passed_opens(self):
+        pending = {"a|b": {"road": {"due": 10.0, "trade": "labourer", "crew_hours": 40.0, "engineered": True}}}
         built = {}
-        calls = ways_rules.open_ways(pending, built, 10.0)
-        self.assertEqual((pending, built, calls), ({}, {"a|b": {"road": True, "engineered": True}}, [("release", "labourer", 40.0)]))
-
-    def test_a_way_still_building_leans_on_its_trade_once_a_year(self):
-        pending = {"a|b": {"road": {"due": 12.0, "trade": "labourer", "crew_hours": 40.0, "engineered": False, "pressed": 9}}}
-        self.assertEqual(ways_rules.open_ways(pending, {}, 10.0), [("press", "labourer", 40.0)])
-        self.assertEqual(pending["a|b"]["road"]["pressed"], 10.0)
-        self.assertEqual(ways_rules.open_ways(pending, {}, 10.0), [])
+        ways_rules.open_ways(pending, built, 10.0)
+        self.assertEqual((pending, built), ({}, {"a|b": {"road": True, "engineered": True}}))
 
     def test_a_start_is_refused_for_an_unknown_technology_a_standing_way_or_one_being_built(self):
         quote = {"node": "road_node"}
