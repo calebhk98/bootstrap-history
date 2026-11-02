@@ -1,6 +1,6 @@
 # Economy and labour have no single source of truth, and several plain code mistakes bias producers and hiring
 
-**Status:** open - audit of 2026-11-01 on the code after PR 110; being fixed on branch economy-labour-single-source-cleanup
+**Status:** partly - most of A, B, C, D fixed on branch economy-labour-single-source-cleanup; a re-audit of that branch (below) lists what is left
 
 Found by a read-only audit (one orchestrator, six reviewers), every item opened in code. Re-run the audit with
 `Complaints/reports/economy-labour-audit-prompt.md`. Complaints 962 and 963 were diagnosed by ablation on code that
@@ -134,3 +134,36 @@ Open:
    clearing; actors' standing orders go through the clearing. One path would make a seat's buy or sell an order that
    settles at the year's clearing, as hiring now does. That changes what a player sees (a purchase arrives at the
    year's end, at the cleared price). Should seats' goods trades move to the clearing?
+
+## Re-audit of the cleanup branch
+
+Six reviewers ran `Complaints/reports/economy-labour-audit-prompt.md` on the branch after the cleanup round (nothing was
+run but compile and import checks, by the owner's rule for that round). Fixed and confirmed in code: A1, A2, A3, A4, A6,
+A7, A8, A9, A10, A11, A12; one training premium; the engine wage tightness rule; the analytic category price model, the
+static market book and partner books; demography's farm year and the engine farm allocation; seats', firms' and states'
+staff hired through the labour core; `workforce_version` and the other economy caches; the frozen setup; the dynamic
+save. The re-audit found two crashes the round introduced (a seat's staff bids called a renamed function; a missing
+import in `sim/markets/port_bondage.py`), fixed at once, and found with `python3 -m pyflakes sim` that no other
+undefined name remains.
+
+Left, each confirmed in code by the reviewer and checked by the orchestrator:
+
+- **Labour.** Seat staff are rounded to whole people while the hours are paid (`sim/markets/port_staff.py`), actors'
+  are not; a seat with no affordable bid keeps its staff unpaid while an actor loses its own. The levy is hours per
+  person of demography's working age subtracted per worker of the core (`sim/markets/port_levy.py`), with a cliff at a
+  full year. The core's workers and the cohorts are both rescaled to the engine's tile population while the core adds
+  its own entrants and leavers, so the two people stocks drift. `hire_check` still reads the heuristic
+  `national_trade_population`. Per-employer contract wages are kept in the clearing though everyone is paid the mean.
+  Hours offered are counted at the pre-round wage and settled at the entry wage.
+- **Goods and prices.** Unmet demand subtracts all rounds' deliveries from the first round's demand; the remembered
+  price, cleared price and trade age follow the first round while volumes follow all rounds. Three cost-of-making
+  calculations disagree (the sellers' ask band charges no interest). Missing prices still read as zero in carriage
+  wear, the carriage fleet book, taxes in kind and one opening line. Two firm-equity definitions (with and without stock).
+  `INVESTMENT_INERTIA` is 2 from a Eurace unit test where Eurace's shipped state uses 10.
+- **Structure.** Functions still take the whole record and reach across its parts; `tools/done_check.sh` prints counts
+  but never fails; no tool checks the package walls (three imports past an `api.py`); `YearInputs.working_age_share`,
+  `api.wages_by_trade`, `market_floor_ratio` and `port_world._price_tables` are dead; pyflakes lists many unused imports.
+- **Documentation.** `ONE_PRICE_OWNER_PLAN.md`, `STATE_OWNERSHIP_MAP.md`, `ECONOMY_AGENTS.md`, `PACKAGE_WALLS.md`,
+  `sim/ARCHITECTURE.md` sections 8-9, `sim/labour/market/DESIGN.md` and the `sim/engine` and `sim/world` package
+  docstrings describe deleted code; open Complaints 507, 513, 537, 556, 613 and 657 describe mechanisms this branch
+  removed or fixed; most of the 960 and 961 parked patches no longer apply.
