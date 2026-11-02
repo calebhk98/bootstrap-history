@@ -31,8 +31,8 @@ def left_for_households(setup, record):
 def goods_over_supply(setup, record):
     left = left_for_households(setup, record)
     return {good: wanted / left.get(good, 0.0) if left.get(good, 0.0) > 0.0 else float("inf")
-            for good, wanted in record.opening_basket.items() if wanted > BAND * max(left.get(good, 0.0), 0.0)
-            and wanted > ROUNDING_SHARE * record.opening_demand.get(good, 0.0)}
+            for good, wanted in record.goods.opening_basket.items() if wanted > BAND * max(left.get(good, 0.0), 0.0)
+            and wanted > ROUNDING_SHARE * record.goods.opening_demand.get(good, 0.0)}
 
 
 def limited_metal_setup(mine_runs):
@@ -51,7 +51,7 @@ class OpeningBasketAgreesTests(unittest.TestCase):
         setup = limited_metal_setup(mine_runs=1.0e6)
         record, _areas, _carriage = opening.open_economy(setup)
         self.assertEqual(goods_over_supply(setup, record), {})
-        self.assertGreater(sum(record.opening_basket.values()), 0.0)
+        self.assertGreater(sum(record.goods.opening_basket.values()), 0.0)
 
     def test_the_fixture_economy_basket_agrees_with_its_supply(self):
         setup = fixture.small_setup()
@@ -62,7 +62,7 @@ class OpeningBasketAgreesTests(unittest.TestCase):
         from sim.economy import currency
         setup = fixture.small_setup()
         record, _areas, _carriage = opening.open_economy(setup)
-        self.assertEqual(currency.basket_price_level(setup.opening_prices, setup.opening_prices, record.opening_basket), 1.0)
+        self.assertEqual(currency.basket_price_level(setup.opening_prices, setup.opening_prices, record.goods.opening_basket), 1.0)
 
 
 if __name__ == "__main__":

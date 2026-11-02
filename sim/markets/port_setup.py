@@ -240,7 +240,6 @@ def build_setup(sim, opening=None, production=None):
         held_nodes=tuple(opening["held_nodes"]),
         specs=specs, recipes=recipes, mint_recipe=mint_recipe, basket=basket, trades=trades,
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),
-        state_capacity=1.0,   # follows the officials: `run_year` sets it from `Sim.state_reach()` before each year
         hiding=agents_api.evasion.hidden_share,   # the one hiding rule the actor layer uses (Complaint 657)
         flight=agents_api.flight,   # the actor layer's flight rules (Complaint 657)
         working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),

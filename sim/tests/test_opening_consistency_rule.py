@@ -16,7 +16,7 @@ QUICK_TOPIC = True
 
 
 def national_value(record, prices):
-    return sum(quantity * prices.get(good, 0.0) for good, quantity in record.opening_basket.items())
+    return sum(quantity * prices.get(good, 0.0) for good, quantity in record.goods.opening_basket.items())
 
 
 class OpeningIncomeTests(unittest.TestCase):
@@ -110,7 +110,7 @@ class OpeningStaffingTests(unittest.TestCase):
             for trade, hours in setup.recipes[producer.recipe_id].labour_hours.items():
                 wanted[trade] = wanted.get(trade, 0.0) + producer.expected_sales * hours
         for trade in (fixture.MINER, fixture.SMITH):
-            held = sum(sum(bands.get(trade, [])) for bands in record.workforce.workers.values()) * setup.working_hours_per_year
+            held = sum(sum(bands.get(trade, [])) for bands in record.labour.workforce.workers.values()) * setup.working_hours_per_year
             self.assertGreaterEqual(held, 0.99 * wanted.get(trade, 0.0), trade)
 
     def test_plant_is_larger_than_the_runs_to_work_by_the_share_of_it_that_does_not_work(self):

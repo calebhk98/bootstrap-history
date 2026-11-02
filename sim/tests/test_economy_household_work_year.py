@@ -57,7 +57,7 @@ def setup():
 
 def record(titles=None, tenancies=None, cohorts=()):
     expected = {market_key(trade, labour_area("t1")): 1.0 for trade in ("smith", "labourer", "servant")}
-    return types.SimpleNamespace(sold_share_expected=expected, cohorts={each.agent_id: each for each in cohorts}, land=types.SimpleNamespace(titles=titles or {}, tenancies=tenancies or {}))
+    return types.SimpleNamespace(labour=types.SimpleNamespace(sold_share_expected=expected), cohorts={each.agent_id: each for each in cohorts}, land=types.SimpleNamespace(titles=titles or {}, tenancies=tenancies or {}))
 
 
 class SplitTests(unittest.TestCase):
@@ -143,7 +143,7 @@ class FullCostOfServiceTests(unittest.TestCase):
         rec = record({"t1": {"worker": 1.0}}, cohorts=[worker])
         if sold is not None:
             key = market_key("smith", area)
-            rec.sold_share_expected[key] = sold
+            rec.labour.sold_share_expected[key] = sold
         plan = setup()
         plan.household_work = dict(DATA, supervision_hours_per_hired_hour=supervision)
         offers = [LabourOffer("worker", "smith", area, 500.0, 0.1)]
@@ -182,15 +182,15 @@ class FullCostOfServiceTests(unittest.TestCase):
 
 class ExpectedSoldShareTests(unittest.TestCase):
     def test_the_share_held_in_the_record_wins_over_the_openings_expectation(self):
-        rec = types.SimpleNamespace(sold_share_expected={market_key("smith", "a1"): 0.3})
+        rec = types.SimpleNamespace(labour=types.SimpleNamespace(sold_share_expected={market_key("smith", "a1"): 0.3}))
         self.assertAlmostEqual(household_work_year.sold_share_at(rec, "smith", "a1", 0.9), 0.3)
 
     def test_a_market_with_no_year_behind_it_takes_the_openings_expectation(self):
-        rec = types.SimpleNamespace(sold_share_expected={})
+        rec = types.SimpleNamespace(labour=types.SimpleNamespace(sold_share_expected={}))
         self.assertAlmostEqual(household_work_year.sold_share_at(rec, "smith", "a1", 0.6), 0.6)
 
     def test_a_record_lacks_history_for_a_market_it_holds_no_share_for(self):
-        rec = types.SimpleNamespace(sold_share_expected={market_key("smith", "a1"): 0.3})
+        rec = types.SimpleNamespace(labour=types.SimpleNamespace(sold_share_expected={market_key("smith", "a1"): 0.3}))
         held = LabourOffer("w", "smith", "a1", 10.0, 1.0)
         new = LabourOffer("w", "smith", "a2", 10.0, 1.0)
         self.assertFalse(household_work_year.lacks_history(rec, [held]))

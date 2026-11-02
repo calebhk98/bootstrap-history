@@ -151,7 +151,7 @@ class RebaseTests(unittest.TestCase):
                                          last_basket_price_level=1.8)}
         record = types.SimpleNamespace(memory=memory, volumes={"wheat_kg|area": 10.0}, cohorts=cohorts, index_base_prices={})
         year_close.rebase_basket_price_level(types.SimpleNamespace(currency_id=money), record)
-        self.assertEqual(record.index_base_prices, {"wheat_kg": 1.5})
+        self.assertEqual(record.goods.index_base_prices, {"wheat_kg": 1.5})
         self.assertEqual(memory.basket_price_levels[money], 1.0)
         self.assertEqual(memory.expected_inflation[money], 0.07)
         for cohort in record.cohorts.values():

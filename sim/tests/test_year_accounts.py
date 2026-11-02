@@ -40,8 +40,8 @@ def accounts_of(grown=0.0, stocks_at_start=None):
                             opening_population_by_tile={TILE: PEOPLE}, opening_wages={LABOURER: WAGE_OPENING},
                             opening_prices=OPENING_PRICES, working_hours_per_year=2000.0, recipes={})
     cohort = Cohort(COHORT, TILE, 0, PEOPLE, PEOPLE / 2, 0.3, last_year_income=4000.0)
-    record = SimpleNamespace(book=book, cohorts={COHORT: cohort}, producers={}, opening_basket={GRAIN: PEOPLE},
-                             index_base_prices={}, memory=SimpleNamespace(year=3))
+    record = SimpleNamespace(book=book, cohorts={COHORT: cohort}, producers={}, goods=SimpleNamespace(opening_basket={GRAIN: PEOPLE}, index_base_prices={}),
+                             memory=SimpleNamespace(year=3))
     ledger = SimpleNamespace(received={COHORT: {GRAIN: 60.0 - grown}}, grown={COHORT: {GRAIN: grown}} if grown else {},
                              clearings=[SimpleNamespace(good=GRAIN, quantity=60.0 - grown)], plant_worn={})
     accounts = year_accounts.build(setup, record, ledger, {} if stocks_at_start is None else stocks_at_start,

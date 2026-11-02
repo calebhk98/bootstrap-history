@@ -43,7 +43,7 @@ def offered_units(economy, good: str, tile: str) -> Optional[float]:
     """Units the sellers in the tile's market area for the good held at its last clearing; None when the area
     has no book for it."""
     area = _area_on(economy, good, tile)
-    curve = None if area is None else economy.record.curves.get(market_key(good, area))
+    curve = None if area is None else economy.record.goods.curves.get(market_key(good, area))
     if curve is None:
         return None
     return math.fsum(quantity for _price, quantity in curve["offers"])
@@ -54,7 +54,7 @@ def price_response_at(economy, good: str, tile: str, landed_units: float, taken_
     `taken_units` more are bought; None when the area's book traded nothing, infinite when more is taken than
     the sellers hold."""
     area = _area_on(economy, good, tile)
-    curve = None if area is None else economy.record.curves.get(market_key(good, area))
+    curve = None if area is None else economy.record.goods.curves.get(market_key(good, area))
     if curve is None:
         return None
     return market_curves.price_response(curve, good, economy.record.memory.prices.get(market_key(good, area)),

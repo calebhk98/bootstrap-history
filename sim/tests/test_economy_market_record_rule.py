@@ -8,7 +8,7 @@ from sim.economy import api as economy_api
 
 
 def economy_with(volumes, unsold, unmet):
-    record = types.SimpleNamespace(volumes=dict(volumes), unsold=dict(unsold), unmet=dict(unmet))
+    record = types.SimpleNamespace(goods=types.SimpleNamespace(volumes=dict(volumes), unsold=dict(unsold), unmet=dict(unmet)))
     return types.SimpleNamespace(record=record)
 
 

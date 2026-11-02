@@ -11,6 +11,7 @@ from sim.economy import api
 from sim.economy.setup import TradeSpec
 from sim.markets import port_year
 from sim.markets.port_year import AgentEconomy
+from sim.tests.labour_record_stand_in import labour_record
 
 SCRIBE, LABOURER, TOWN = "scribe", "labourer", "town"
 STALE_SEED_WAGE = 500.0
@@ -24,8 +25,8 @@ def economy_with_unhired_scribe():
         trades={LABOURER: TradeSpec(LABOURER), SCRIBE: TradeSpec(SCRIBE, training_years=6.0)})
     record = types.SimpleNamespace(
         memory=types.SimpleNamespace(wages={"%s|work@%s" % (LABOURER, TOWN): 1.2, "%s|work@%s" % (SCRIBE, TOWN): STALE_SEED_WAGE}),
-        hours_hired={"%s|work@%s" % (LABOURER, TOWN): 900.0},
-        hours_idle={"%s|work@%s" % (LABOURER, TOWN): 100.0, "%s|work@%s" % (SCRIBE, TOWN): 50.0})
+        labour=labour_record({"%s|work@%s" % (LABOURER, TOWN): 900.0},
+                             {"%s|work@%s" % (LABOURER, TOWN): 100.0, "%s|work@%s" % (SCRIBE, TOWN): 50.0}))
     return types.SimpleNamespace(setup=setup, record=record)
 
 

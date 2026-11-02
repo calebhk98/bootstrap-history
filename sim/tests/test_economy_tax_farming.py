@@ -70,14 +70,14 @@ class RememberYearTests(unittest.TestCase):
         return types.SimpleNamespace(form=form, base_value=base, collected_value=collected)
 
     def test_a_year_of_tax_leaves_the_forms_base_and_the_states_take_in_the_record(self):
-        record = types.SimpleNamespace(taxes=types.SimpleNamespace(tax_history={}))
-        tax_farming.remember_year(record, [self.assessment("poll", 1000.0, 40.0)], (), 0.5)
-        self.assertEqual(record.taxes.tax_history, {"poll": {"base": 1000.0, "state_take": 40.0}})
+        taxes = types.SimpleNamespace(tax_history={})
+        tax_farming.remember_year(taxes, [self.assessment("poll", 1000.0, 40.0)], (), 0.5)
+        self.assertEqual(taxes.tax_history, {"poll": {"base": 1000.0, "state_take": 40.0}})
 
     def test_a_farmed_forms_take_is_scaled_from_the_farmers_reach_back_to_the_states(self):
-        record = types.SimpleNamespace(taxes=types.SimpleNamespace(tax_history={}))
-        tax_farming.remember_year(record, [self.assessment("poll", 1000.0, 90.0)], ("poll",), 0.5, reach=0.9)
-        self.assertAlmostEqual(record.taxes.tax_history["poll"]["state_take"], 90.0 * 0.5 / 0.9)
+        taxes = types.SimpleNamespace(tax_history={})
+        tax_farming.remember_year(taxes, [self.assessment("poll", 1000.0, 90.0)], ("poll",), 0.5, reach=0.9)
+        self.assertAlmostEqual(taxes.tax_history["poll"]["state_take"], 90.0 * 0.5 / 0.9)
 
 
 class StateChoiceTests(unittest.TestCase):

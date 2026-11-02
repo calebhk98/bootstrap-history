@@ -73,7 +73,7 @@ def loan_value(loan: Loan, rate: float) -> float:
 
 def share_value(record, producer_id: AgentId, rate: float, rate_floor: float) -> float:
     """The whole equity of a producer at `rate`: the present value of the dividend it paid last."""
-    return shares.whole_value(record, producer_id, rate, rate_floor)
+    return shares.whole_value(record.capital_markets, producer_id, rate, rate_floor)
 
 
 def _own_rate(offers: Mapping[AgentId, FundsOffer], agent: AgentId, market_rate: float) -> float:

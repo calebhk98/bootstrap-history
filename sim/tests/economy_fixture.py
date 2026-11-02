@@ -23,7 +23,7 @@ from sim.economy.types import TileSpec
 def quiet_year(setup: EconomySetup, **changes) -> YearInputs:
     """A year with the opening's people and no engine orders."""
     inputs = YearInputs(year=0, population_by_tile={}, working_age_share=setup.working_share,
-                        yield_factor_by_producer={}, engine_orders={})
+                        yield_factor_by_producer={}, engine_orders={}, state_capacity=0.5)
     return dataclasses.replace(inputs, **changes) if changes else inputs
 
 

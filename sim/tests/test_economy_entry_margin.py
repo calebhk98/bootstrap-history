@@ -58,7 +58,7 @@ def market(price=1e3, usual=1e3, makers=True):
     """(setup, record, view, area_map) for a trinket market of one area and one tile, at `price`; with `makers` one carver works there."""
     setup = types.SimpleNamespace(recipes={CARVE: CARVE_RECIPE})
     producers = {"carver": Producer("carver", "owner", CARVE, TILE, INCUMBENT_RUNS)} if makers else {}
-    record = types.SimpleNamespace(producers=producers, margin_years={}, memory=types.SimpleNamespace(usual_prices={KEY: usual}), credit=types.SimpleNamespace(expansion_runs={}))
+    record = types.SimpleNamespace(producers=producers, goods=types.SimpleNamespace(margin_years={}), memory=types.SimpleNamespace(usual_prices={KEY: usual}), credit=types.SimpleNamespace(expansion_runs={}))
     area = types.SimpleNamespace(area_id=AREA, anchor_tile=TILE, tiles=(TILE,))
     area_map = types.SimpleNamespace(goods=lambda: [TRINKET], areas=lambda good: [area])
     return setup, record, types.SimpleNamespace(price=lambda good, area_id: price), area_map
@@ -80,29 +80,29 @@ class MarketTests(unittest.TestCase):
         counts = [len(plans(setup, record, view, area_map, buyer())) for _year in range(LOSS_YEARS_BEFORE_EXIT)]
         self.assertEqual(counts[:-1], [0] * (LOSS_YEARS_BEFORE_EXIT - 1))
         self.assertGreater(counts[-1], 0)
-        self.assertEqual(record.margin_years[KEY], LOSS_YEARS_BEFORE_EXIT)
+        self.assertEqual(record.goods.margin_years[KEY], LOSS_YEARS_BEFORE_EXIT)
 
     def test_newcomers_once_the_margin_has_lasted_add_no_faster_than_incumbents_grow(self):
         setup, record, view, area_map = market()
-        record.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
+        record.goods.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
         found = plans(setup, record, view, area_map, buyer())
         added = sum(plan.runs * CARVE_RECIPE.outputs[TRINKET] for plan in found)
         self.assertAlmostEqual(added, entry_margin.MARGIN_ENTRY_GROWTH_SHARE * INCUMBENT_OUTPUT)
 
     def test_a_price_that_falls_to_the_entry_price_ends_the_streak_and_draws_nobody(self):
         setup, record, view, area_map = market(price=12.0, usual=1e3)    # the year's price is under the entry price (10 times 1.25 is 12.5)
-        record.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
+        record.goods.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
         self.assertEqual(plans(setup, record, view, area_map, buyer()), [])
-        self.assertEqual(record.margin_years[KEY], 0)
+        self.assertEqual(record.goods.margin_years[KEY], 0)
 
     def test_no_newcomer_where_no_buyer_bid(self):
         setup, record, view, area_map = market()
-        record.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
+        record.goods.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
         self.assertEqual(plans(setup, record, view, area_map, {(TRINKET, AREA): []}), [])
 
     def test_a_market_with_no_maker_is_left_to_the_trial_newcomer(self):
         setup, record, view, area_map = market(makers=False)
-        record.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
+        record.goods.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
         self.assertEqual(plans(setup, record, view, area_map, buyer()), [])
 
 

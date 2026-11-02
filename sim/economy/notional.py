@@ -72,7 +72,7 @@ def _estimated_prices(setup, record, market, thin: bool) -> Dict[str, float]:
             if cost is not None:
                 estimated[good] = live[good] = cost
             continue
-        wanted = record.opening_basket.get(good, 0.0)
+        wanted = record.goods.opening_basket.get(good, 0.0)
         if not thin or wanted <= 0.0:
             continue
         depth = min(1.0, traded.get(good, 0.0) / (THIN_MARKET_SHARE_OF_OPENING_DEMAND * wanted))
@@ -88,9 +88,9 @@ def _traded_volumes(record) -> Dict[str, float]:
     """What each good's markets trade, a market counting for the smaller of what it usually trades and what
     it traded last year, so a market that has dried up does not stand for the good on its remembered volume."""
     traded: Dict[str, float] = {}
-    for key, usual in (record.memory.volume_weights or record.volumes).items():
+    for key, usual in (record.memory.volume_weights or record.goods.volumes).items():
         good = key.split(KEY_SEPARATOR, 1)[0]
-        traded[good] = traded.get(good, 0.0) + min(usual, record.volumes.get(key, 0.0))
+        traded[good] = traded.get(good, 0.0) + min(usual, record.goods.volumes.get(key, 0.0))
     return traded
 
 

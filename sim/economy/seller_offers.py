@@ -157,7 +157,7 @@ def market_size(record, offer: Offer) -> Optional[float]:
     usual = record.memory.volume_weights.get(key)
     if usual is None:
         return None
-    return usual + record.unmet.get(key, 0.0)
+    return usual + record.goods.unmet.get(key, 0.0)
 
 
 def rivals_of(record, offers: Sequence[Offer], index: int) -> List[Tuple[float, float]]:

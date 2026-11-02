@@ -27,7 +27,7 @@ def economy_over(areas=None, prices=None, trade_age=None, curves=None):
     return types.SimpleNamespace(
         setup=types.SimpleNamespace(port_tile="port", country_of=lambda tile: "home"),
         area_map=types.SimpleNamespace(area_of=lambda good, tile: areas.get(tile, "a") if good == GRAIN else "other"),
-        record=types.SimpleNamespace(memory=memory, curves=dict(curves or {}), volumes={}))
+        record=types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(curves=dict(curves or {}), volumes={})))
 
 
 def prices_on(economy, tile, shown=None, stale=()):

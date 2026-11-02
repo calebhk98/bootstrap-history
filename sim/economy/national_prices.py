@@ -8,7 +8,7 @@ KEY_SEPARATOR = "|"
 def _markets_by_good(record, keep: Optional[Callable[[str, str], bool]]) -> Dict[str, List[Tuple[str, float, bool, float]]]:
     """Each good's priced markets in key order as (key, price, a traded price, weight): the weight is what the
     market usually trades (this year's volume before any is remembered). `keep(good, area)` drops a market."""
-    weights = record.memory.volume_weights or record.volumes
+    weights = record.memory.volume_weights or record.goods.volumes
     quoted = record.memory.quote_kinds
     by_good: Dict[str, List[Tuple[str, float, bool, float]]] = {}
     for key, price in sorted(record.memory.prices.items()):
@@ -46,7 +46,7 @@ def national_wages(record, keep: Optional[Callable[[str], bool]] = None) -> Dict
     rows: Dict[str, List[Tuple[float, float]]] = {}
     for key, wage in sorted(record.memory.wages.items()):
         if keep is None or keep(key):
-            rows.setdefault(key.split(KEY_SEPARATOR, 1)[0], []).append((wage, record.hours_hired.get(key, 0.0)))
+            rows.setdefault(key.split(KEY_SEPARATOR, 1)[0], []).append((wage, record.labour.hours_hired_in(key)))
     wages = {}
     for trade, pairs in rows.items():
         hours = math.fsum(weight for _wage, weight in pairs)

@@ -16,7 +16,7 @@ from .record import EconomyRecord
 
 _MEMORY_MARKETS = ("prices", "usual_prices", "volume_weights", "trade_age", "years_without_bids",
                    "years_without_offers", "cleared_prices")
-_RECORD_MARKETS = ("volumes", "unsold", "unmet", "margin_years", "curves")
+_GOODS_MARKETS = ("volumes", "unsold", "unmet", "margin_years", "curves")
 
 
 def old_areas_by_new(old: AreaMap, new: AreaMap) -> Dict[str, Dict[str, str]]:
@@ -69,8 +69,8 @@ def follow(record: EconomyRecord, old: AreaMap, new: AreaMap) -> None:
     memory = record.memory
     for name in _MEMORY_MARKETS:
         setattr(memory, name, _moved(getattr(memory, name), follows, old_ids))
-    for name in _RECORD_MARKETS:
-        setattr(record, name, _moved(getattr(record, name), follows, old_ids))
+    for name in _GOODS_MARKETS:
+        setattr(record.goods, name, _moved(getattr(record.goods, name), follows, old_ids))
     every_old_id = frozenset().union(*old_ids.values())
     currency_of_area = {area_id: currency for area_id, currency in memory.currency_of_area.items()
                         if area_id not in every_old_id}

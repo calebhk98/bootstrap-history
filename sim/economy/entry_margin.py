@@ -60,7 +60,7 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tu
                        planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None) -> List[EntryPlan]:
     """Newcomers for each market with makers whose expected price has stood above its entry price for
     long enough: every recipe whose entry price is under the expected price, cheapest first, shares the
-    year's growth. Keeps the market's streak in `record.margin_years`."""
+    year's growth. Keeps the market's streak in `record.goods.margin_years`."""
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id in sorted(setup.recipes):
         for good in setup.recipes[recipe_id].outputs:
@@ -78,7 +78,7 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tu
         key = market_key(good, area_id)
         price = view.price(good, area_id)
         if price is None:
-            record.margin_years.pop(key, None)
+            record.goods.margin_years.pop(key, None)
             continue
         expected = record.memory.usual_prices.get(key, price)
         ranked = recipes_by_cost(setup, record, view, good, area.anchor_tile, makers[good],
@@ -87,10 +87,10 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tu
             continue
         # the margin must be there in the smoothed price and in the year's price: entry that waited on the
         # smoothed price alone kept adding makers for years after the price had fallen to cost
-        record.margin_years[key] = margin_streak(
-            record.margin_years.get(key, 0), min(expected, price) if price > 0.0 else expected,
+        record.goods.margin_years[key] = margin_streak(
+            record.goods.margin_years.get(key, 0), min(expected, price) if price > 0.0 else expected,
             ranked[0][1] * (1.0 + ENTRY_PRICE_MARGIN_SHARE))
-        if (good, area_id) in skip or not margin_has_lasted(record.margin_years[key]):
+        if (good, area_id) in skip or not margin_has_lasted(record.goods.margin_years[key]):
             continue
         room = MARGIN_ENTRY_GROWTH_SHARE * capacity
         for recipe_id, cost in ranked:

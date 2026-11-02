@@ -19,8 +19,8 @@ def economy(volumes, basket=None, demand=None, demand_by_country=None):
     setup = types.SimpleNamespace(
         tiles=OWNERS, civ_id="home", countries=lambda: ("home", "partner"),
         tiles_of=lambda country: tuple(tile for tile, owner in OWNERS.items() if owner == country))
-    record = types.SimpleNamespace(volumes=volumes, opening_basket=basket or {}, opening_demand=demand or {},
-                                   opening_demand_by_country=demand_by_country or {})
+    record = types.SimpleNamespace(goods=types.SimpleNamespace(volumes=volumes, opening_basket=basket or {}, opening_demand=demand or {},
+                                                               opening_demand_by_country=demand_by_country or {}))
     return types.SimpleNamespace(setup=setup, record=record, area_map=area_map)
 
 

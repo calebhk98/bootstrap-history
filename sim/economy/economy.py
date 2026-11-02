@@ -165,7 +165,8 @@ class Economy:
         self.carriage.set_scale(carriage_hours.wage_scale(setup, record, self.carriage))   # the carriers' labour at the year's wage
         record.book.start_year()
         stocks_at_start = stocks_held(record.book)
-        ledger = YearLedger(import_accounts=frozenset(inputs.import_accounts), export_accounts=frozenset(inputs.export_accounts))
+        ledger = YearLedger(import_accounts=frozenset(inputs.import_accounts), export_accounts=frozenset(inputs.export_accounts),
+                             state_capacity=inputs.state_capacity)
         self._follow_population(inputs)
         self._follow_yields(inputs)
         sites.apply_site_limits(record, setup)
@@ -192,7 +193,7 @@ class Economy:
         context = dataclasses.replace(context, outlay_room=outlay_room.by_employer(
             plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money)))
         held_placed = bondage_hours.place_held(
-            record.unfree.bonded_held, lambda area, trade: people_by_trade(record.workforce, area).get(trade, 0.0), everyone, labour_bids,
+            record.unfree.bonded_held, lambda area, trade: people_by_trade(record.labour.workforce, area).get(trade, 0.0), everyone, labour_bids,
             setup.working_hours_per_year, context.ask_floor_per_worker_year, labour_area)
         record.book.transfer_many([Transfer(employer, cohort, money, amount, "keep of bonded") for employer, cohort, amount
                                    in bondage_hours.payable_keep(held_placed.keep, lambda employer: record.book.balance(employer, money))])
@@ -210,7 +211,7 @@ class Economy:
         bondage_hours.hold(record.unfree.bonded_held, bought_held)
         bondage_hours.deliver(ledger.hours_hired, placed)
         bondage_hours.deliver_held(ledger.hours_hired, held_placed)
-        record.hours_hired_by_employer = {agent: dict(trades) for agent, trades in sorted(ledger.hours_hired.items())}   # what seats' staff books read
+        record.labour.hours_hired_by_employer = {agent: dict(trades) for agent, trades in sorted(ledger.hours_hired.items())}   # what seats' staff books read
         capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
@@ -291,7 +292,7 @@ class Economy:
         for tile, before in people_now.items():
             after = inputs.population_by_tile.get(tile, before)
             if before > 0.0 and after != before:
-                scale_people(record.workforce, labour_area(tile), after / before)
+                scale_people(record.labour.workforce, labour_area(tile), after / before)
 
     def _follow_yields(self, inputs: YearInputs) -> None:
         for producer_id, factor in inputs.yield_factor_by_producer.items():
@@ -502,11 +503,11 @@ class Economy:
         output: Dict[str, float] = {}
         for (_agent, good), quantity in ledger.output.items():
             output[good] = output.get(good, 0.0) + quantity
-        record.output_by_tile = {}
+        record.goods.output_by_tile = {}
         for (agent, good), quantity in sorted(ledger.output.items()):
             producer = record.producers.get(agent)
             if producer is not None and quantity > 0.0:
-                row = record.output_by_tile.setdefault(producer.tile, {})
+                row = record.goods.output_by_tile.setdefault(producer.tile, {})
                 row[good] = row.get(good, 0.0) + quantity
         prices = national_prices(record)
         return YearOutcome(year=record.memory.year, basket_price_level=level, prices=prices,
