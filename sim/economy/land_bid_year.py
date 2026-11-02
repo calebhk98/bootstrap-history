@@ -13,14 +13,19 @@ from .types import EDGE_CONSUMPTION, Bid, GoodsMove
 
 def best_margin(setup, view, cohort, options: Mapping[str, List[Option]], tile_spec):
     """(crop margin per hectare, hours a hectare takes, recipe id) of the recipe, of those the cohort grows its needs
-    with, that nets most at the prices and the wage it sees. The margin is net of the wage, so a rising wage lowers it."""
-    wage = view.wage(setup.servant_trade, labour_area(cohort.tile)) or 0.0
+    with, that nets most at the prices and the wage it sees. The margin is net of the wage, so a rising wage lowers it. A recipe
+    with an unpriced output is left out, and with no wage there is no margin."""
+    wage = view.wage(setup.servant_trade, labour_area(cohort.tile))
+    if wage is None:
+        return (0.0, 0.0, "")
     rows = []
     for recipe_id in sorted({rows_of_need[0][1] for rows_of_need in options.values() if rows_of_need}):   # the recipe it grows each need with
         recipe, land = setup.recipes[recipe_id], setup.land_per_run.get(recipe_id, 0.0)
         if not recipe.climate_classes or not sites.climate_allows(recipe, tile_spec):    # a crop grows in a climate; a mine's ground is its deposit
             continue
-        prices = {good: view.price(good, view.area_of(good, cohort.tile)) or 0.0 for good in recipe.outputs}
+        prices = {good: view.price(good, view.area_of(good, cohort.tile)) for good in recipe.outputs}
+        if None in prices.values():
+            continue
         rows.append((land_bid.crop_margin_per_hectare(recipe, land, tile_spec.fertility, prices, wage),
                      land_bid.hours_per_hectare(recipe, land), recipe_id))
     return max(rows, default=(0.0, 0.0, ""))

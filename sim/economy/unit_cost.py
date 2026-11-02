@@ -77,3 +77,20 @@ def return_on_capital(recipe: Recipe, expected_output_prices: Prices, input_pric
     if not math.isfinite(employed) or employed <= 0.0:
         return 0.0
     return (revenue_per_run(recipe, expected_output_prices) - variable) / employed
+
+
+def full_cost_per_unit(recipe: Recipe, good: GoodId, output_prices: Prices, input_prices: Prices, wages: Wages,
+                       interest_rate: float, rent: float = 0.0, yield_factor: float = 1.0) -> float:
+    """Variable cost and capital charge of a run, per unit of `good` made; a joint run's cost is shared among its
+    outputs by value at `output_prices`. Infinite when a cost cannot be priced or the recipe does not make `good`."""
+    made = recipe.outputs.get(good, 0.0) * yield_factor
+    if made <= 0.0:
+        return math.inf
+    run_cost = (variable_cost_per_run(recipe, input_prices, wages, rent)
+                + capital_charge_per_run(recipe, input_prices, wages, interest_rate))
+    if not math.isfinite(run_cost):
+        return math.inf
+    revenue = revenue_per_run(recipe, output_prices)
+    own_value = recipe.outputs[good] * output_prices.get(good, 0.0)
+    share = own_value / revenue if revenue > 0.0 and own_value > 0.0 else 1.0
+    return run_cost * share / made

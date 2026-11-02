@@ -17,7 +17,7 @@ import dataclasses
 import math
 from typing import List, Optional, Sequence, Tuple
 
-from . import entry_trial, price_setting
+from . import price_setting
 from . import unit_cost as run_cost
 from .ask_adjust import ASK_BAND_CEILING, band_edge
 from .market_memory import market_key
@@ -32,7 +32,7 @@ def unit_cost(setup, record, view, offer: Offer) -> Optional[float]:
     if producer is None:
         return None
     recipe = setup.recipes[producer.recipe_id]
-    return entry_trial.full_cost_per_unit(
+    return run_cost.full_cost_per_unit(
         recipe, offer.good, expected_output_prices(producer, recipe, view), live_input_prices(producer, recipe, view),
         live_wages(producer, recipe, view), 0.0, producer.land_rent_per_run, producer.yield_factor)
 

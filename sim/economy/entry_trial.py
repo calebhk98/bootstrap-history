@@ -30,24 +30,6 @@ ENTRY_PRICE_MARGIN_SHARE = declare(
         "margin should follow the sunk cost and the uncertainty; neither is derived yet.")
 
 
-def full_cost_per_unit(recipe: Recipe, good: GoodId, output_prices: Mapping[GoodId, float],
-                       input_prices: Mapping[GoodId, float], wages: Mapping[str, float], rate: float,
-                       rent: float = 0.0, yield_factor: float = 1.0) -> float:
-    """Variable cost and capital charge of a run, per unit of `good`; a joint run's cost is shared among
-    its outputs by value at `output_prices`. Infinite when a cost cannot be priced."""
-    made = recipe.outputs.get(good, 0.0) * yield_factor
-    if made <= 0.0:
-        return math.inf
-    run_cost = (unit_cost.variable_cost_per_run(recipe, input_prices, wages, rent)
-                + unit_cost.capital_charge_per_run(recipe, input_prices, wages, rate))
-    if not math.isfinite(run_cost):
-        return math.inf
-    revenue = unit_cost.revenue_per_run(recipe, output_prices)
-    own_value = recipe.outputs[good] * output_prices.get(good, 0.0)
-    share = own_value / revenue if revenue > 0.0 and own_value > 0.0 else 1.0
-    return run_cost * share / made
-
-
 def demand_at(bids: Sequence[Bid], price: float, price_now: float) -> float:
     """What the bids, made at `price_now`, would take at `price`. A bid's floor is needed whatever the
     price; the rest of its budget, beyond what the floor costs now, is spending a buyer shares out by
@@ -148,8 +130,8 @@ def recipes_by_cost(setup, record, view, good, tile, recipe_ids,
         outputs = {each: view.price(each, view.area_of(each, tile)) for each in recipe.outputs}
         outputs = {each: price for each, price in outputs.items() if price is not None}
         rent = site_rent_per_run(setup, record, view, recipe_id, tile)
-        cost = full_cost_per_unit(recipe, good, outputs, live_input_prices_at(tile, recipe, view),
-                                  live_wages_at(tile, recipe, view), rate, rent)
+        cost = unit_cost.full_cost_per_unit(recipe, good, outputs, live_input_prices_at(tile, recipe, view),
+                                            live_wages_at(tile, recipe, view), rate, rent)
         if math.isfinite(cost) and cost > 0.0:
             ranked.append((recipe_id, cost))
     return sorted(ranked, key=lambda item: (item[1], item[0]))

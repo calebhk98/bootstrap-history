@@ -9,6 +9,7 @@ from typing import Dict, Optional, Set
 
 from . import carried_book, households
 from .market_memory import KEY_SEPARATOR, YearView
+from .national_prices import national_prices, national_wages
 from .setup import LABOUR_AREA_PREFIX, labour_area
 from .types import TileId
 
@@ -38,19 +39,9 @@ def _labour_key_in(key: str, tiles: Set[TileId]) -> bool:
 
 
 def wages_per_hour(economy, country: Optional[str]) -> Dict[str, float]:
-    """Last year's wage per hour of each trade in the country's labour markets, weighted by the hours hired
-    there (the plain mean for a trade that hired nowhere)."""
+    """Last year's wage per hour of each trade in the country's labour markets (`national_prices.national_wages`)."""
     tiles = country_tiles(economy, country)
-    rows: Dict[str, list] = {}
-    for key, wage in economy.record.memory.wages.items():
-        if _labour_key_in(key, tiles):
-            rows.setdefault(key.split(KEY_SEPARATOR, 1)[0], []).append((wage, economy.record.hours_hired.get(key, 0.0)))
-    wages = {}
-    for trade, pairs in rows.items():
-        hours = math.fsum(weight for _wage, weight in pairs)
-        wages[trade] = (math.fsum(wage * weight for wage, weight in pairs) / hours if hours > 0.0
-                        else math.fsum(wage for wage, _weight in pairs) / len(pairs))
-    return dict(sorted(wages.items()))
+    return dict(sorted(national_wages(economy.record, lambda key: _labour_key_in(key, tiles)).items()))
 
 
 def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:
@@ -88,56 +79,24 @@ def _area_tiles(economy, good: str) -> Dict[str, Set[TileId]]:
 
 
 def prices(economy, country: Optional[str]) -> Dict[str, float]:
-    """Each good's price over the market areas that touch the country's tiles, weighted by what each trades
-    (this year's volume before any is remembered). The answer is kept with copies of the prices and weights it
-    was read from and reused only while both compare equal to the live ones."""
-    record = economy.record
-    live_prices = record.memory.prices
-    live_weights = record.memory.volume_weights or record.volumes
-    kept = economy.__dict__.setdefault("_country_price_memo", {})
-    entry = kept.get(country)
-    if entry is not None and entry[0] == live_prices and entry[1] == live_weights:
-        return dict(entry[2])
-    result = scan_prices(economy, country)
-    kept[country] = (dict(live_prices), dict(live_weights), result)
-    return dict(result)
-
-
-def scan_prices(economy, country: Optional[str]) -> Dict[str, float]:
-    """`prices` read afresh from the record's markets."""
+    """Each good's price over the market areas that touch the country's tiles (`national_prices.national_prices`;
+    every area for None)."""
+    if country is None:
+        return national_prices(economy.record)
     tiles = country_tiles(economy, country)
-    record = economy.record
-    weights = record.memory.volume_weights or record.volumes
-    totals: Dict[str, tuple] = {}
     areas_of: Dict[str, Dict[str, Set[TileId]]] = {}
-    for key, price in sorted(record.memory.prices.items()):
-        good, area = key.split(KEY_SEPARATOR, 1)
+
+    def touches(good: str, area: str) -> bool:
         by_area = areas_of.get(good)
         if by_area is None:
             by_area = areas_of[good] = _area_tiles(economy, good)
-        if area in by_area and not (by_area[area] & tiles):
-            continue
-        volume = weights.get(key, 0.0)
-        value, quantity, plain = totals.get(good, (0.0, 0.0, 0.0))
-        totals[good] = (value + price * volume, quantity + volume, plain or price)
-    return {good: (value / quantity if quantity > 0.0 else plain) for good, (value, quantity, plain) in sorted(totals.items())}
+        return area not in by_area or bool(by_area[area] & tiles)
+    return national_prices(economy.record, touches)
 
 
 def traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:
     """Last year's traded quantity of each good over the market areas that touch the country's tiles (every
-    market for None). Reused while the volumes it read compare equal to the live ones."""
-    live = economy.record.volumes
-    kept = economy.__dict__.setdefault("_country_volume_memo", {})
-    entry = kept.get(country)
-    if entry is not None and entry[0] == live:
-        return dict(entry[1])
-    result = scan_volumes(economy, country)
-    kept[country] = (dict(live), result)
-    return dict(result)
-
-
-def scan_volumes(economy, country: Optional[str]) -> Dict[str, float]:
-    """`traded_volumes` read afresh from the record's volumes."""
+    market for None)."""
     tiles = country_tiles(economy, country)
     totals: Dict[str, float] = {}
     areas_of: Dict[str, Dict[str, Set[TileId]]] = {}
